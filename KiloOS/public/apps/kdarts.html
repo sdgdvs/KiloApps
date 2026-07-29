@@ -129,12 +129,14 @@
       <button onclick="setMode('cricket')">Cricket</button>
       <button onclick="setMode('atc')">ATC</button>
       <button onclick="setMode('blitz')">Blitz</button>
-      <button onclick="startCampaign(0)" style="background:#0055aa; border-color:#0077ff;">Campaign (15 Stages)</button>
+      <button onclick="setMode('killer')">Killer</button>
+      <button onclick="startCampaign(0)" style="background:#0055aa; border-color:#0077ff;">Campaign (20 Stages)</button>
     </div>
     <div class="btn-group">
       <button id="btnFocus" onclick="activateFocus()">Focus (F)</button>
       <button id="btnMagnet" onclick="activateMagnet()">Magnet (M)</button>
       <button id="btnUndoDart" onclick="activateUndoDart()">Undo Dart (U)</button>
+      <button id="btnLaser" onclick="activateLaser()">Laser (L)</button>
       <button onclick="saveState()">Save</button>
       <button onclick="loadState()">Load</button>
       <button onclick="undo()">Undo Turn</button>
@@ -157,13 +159,14 @@
       <button onclick="toggleHelp()">Help</button>
     </div>
     
-    <div id="title-bar">QUICK MATCH - Mode: 501</div>
+    <div id="title-bar">QUICK MATCH - Mode: 501 Double Out</div>
     <div id="score">P1: 501 | AI: 501</div>
     <div id="status">Game On! Player 1 Turn - Throw 3 Darts</div>
     <div id="badges">
       <span id="badgeFocus">Focus: 2/2</span>
       <span id="badgeMagnet">Magnet: 2/2</span>
       <span id="badgeUndo">Undo: 1/1</span>
+      <span id="badgeLaser">Laser: 2/2</span>
       <span id="badgeWind">Wind: 0 mph</span>
     </div>
   </div>
@@ -172,28 +175,31 @@
     <canvas id="gameCanvas" width="600" height="600"></canvas>
     
     <div id="helpPanel" class="panel">
-      <h3 style="margin-top:0; color:#00d2ff;">KDarts - 3D Visual Edition</h3>
+      <h3 style="margin-top:0; color:#00d2ff;">KDarts - 3D Visual Edition (Loop 7 Expansion)</h3>
       <h4 style="margin-bottom:4px; color:#ffd700;">General Controls</h4>
       <p style="font-size:13px; margin-top:0;">Aim with mouse and click to throw. Aim wobbles dynamically over time. Throw 3 darts per turn.</p>
       
-      <h4 style="margin-bottom:4px; color:#ffd700;">Power-Ups & Shortcuts</h4>
+      <h4 style="margin-bottom:4px; color:#ffd700;">Power-Ups & Active Skills</h4>
       <ul style="font-size:13px; padding-left:20px; margin-top:0;">
-        <li><strong>Focus (F):</strong> Slows crosshair wobble speed by 50%. (2 uses)</li>
+        <li><strong>Focus (F):</strong> Slows crosshair wobble speed by 75%. (2 uses)</li>
         <li><strong>Magnet (M):</strong> Expands hit tolerance for Double and Triple rings. (2 uses)</li>
         <li><strong>Undo Dart (U):</strong> Cancel and re-throw 1 bad dart in current turn. (1 use/leg)</li>
-        <li><strong>1-5 Keys:</strong> Switch Modes | <strong>C Key:</strong> Campaign Mode</li>
+        <li><strong>Laser Sight (L):</strong> Displays exact trajectory prediction line arc. (2 uses)</li>
+        <li><strong>1-6 Keys:</strong> Switch Modes | <strong>C Key:</strong> Campaign Mode</li>
       </ul>
 
       <h4 style="margin-bottom:4px; color:#ffd700;">Game Modes</h4>
       <p style="font-size:13px; margin-top:0;">
-        <strong>501 / 301:</strong> Reach exactly 0. Bust if &lt; 0 or = 1.<br>
+        <strong>501 Double Out:</strong> Reach 0 with a Double checkout!<br>
+        <strong>301:</strong> Reach exactly 0.<br>
         <strong>Cricket:</strong> Close 15-20 and Bullseye (3 hits each).<br>
         <strong>Around the Clock (ATC):</strong> Hit numbers 1 through 20 in sequence.<br>
-        <strong>Bullseye Blitz:</strong> First to score 10 Bullseye hits (Outer=1, Inner=2).
+        <strong>Bullseye Blitz:</strong> First to score 10 Bullseye hits.<br>
+        <strong>Killer Darts:</strong> Become Killer, reduce opponent's 5 lives to 0!
       </p>
 
-      <h4 style="margin-bottom:4px; color:#ffd700;">15-Stage Campaign</h4>
-      <p style="font-size:13px; margin-top:0;">Progressive AI difficulty, dynamic wind drift, and wobble mechanics across 15 distinct stages!</p>
+      <h4 style="margin-bottom:4px; color:#ffd700;">20-Stage Campaign</h4>
+      <p style="font-size:13px; margin-top:0;">Progressive AI difficulty, crosswind gusts, and wobble mechanics across 20 distinct stages leading to the Stage 20 World Championship Finals!</p>
       
       <div style="text-align: right; margin-top: 15px;">
         <button onclick="toggleHelp()">Close</button>
@@ -286,20 +292,25 @@ function playSound(type) {
 
 const CAMPAIGN_STAGES = [
     {name: "Local Pub", opponent: "Rookie Rick", mode: "301", aiErr: 120, wobble: 10, wind: 0},
-    {name: "Amateur Open", opponent: "Amateur Andy", mode: "atc", aiErr: 105, wobble: 12, wind: 2},
-    {name: "League Qualifier", opponent: "Pub Regular Pete", mode: "301", aiErr: 90, wobble: 14, wind: 3},
-    {name: "Town Championship", opponent: "Local Hero Luke", mode: "cricket", aiErr: 80, wobble: 15, wind: 4},
-    {name: "County Clash", opponent: "District Champ Dave", mode: "blitz", aiErr: 70, wobble: 16, wind: 5},
-    {name: "Regional Cup", opponent: "Regional Ace Ray", mode: "501", aiErr: 62, wobble: 18, wind: 6},
-    {name: "State Invitational", opponent: "State Master Sam", mode: "atc", aiErr: 54, wobble: 20, wind: 7},
-    {name: "National Qualifier", opponent: "Pro Qualifier Phil", mode: "blitz", aiErr: 46, wobble: 22, wind: 8},
-    {name: "National Semifinal", opponent: "National Pro Ned", mode: "cricket", aiErr: 38, wobble: 24, wind: 9},
-    {name: "National Final", opponent: "National Champ Nick", mode: "501", aiErr: 32, wobble: 26, wind: 10},
-    {name: "International Masters", opponent: "Euro Champ Eric", mode: "301", aiErr: 26, wobble: 28, wind: 11},
-    {name: "Grand Prix", opponent: "Grand Prix Finalist Gary", mode: "cricket", aiErr: 20, wobble: 30, wind: 12},
-    {name: "Premier League", opponent: "Premier Star Paul", mode: "atc", aiErr: 15, wobble: 32, wind: 13},
-    {name: "World Semis", opponent: "World Contender Will", mode: "blitz", aiErr: 10, wobble: 34, wind: 14},
-    {name: "World Final", opponent: "World Champion Vic", mode: "501", aiErr: 5, wobble: 36, wind: 15}
+    {name: "Amateur Open", opponent: "Amateur Andy", mode: "atc", aiErr: 110, wobble: 11, wind: 2},
+    {name: "League Qualifier", opponent: "Pub Regular Pete", mode: "301", aiErr: 100, wobble: 12, wind: 3},
+    {name: "Town Championship", opponent: "Local Hero Luke", mode: "cricket", aiErr: 90, wobble: 13, wind: 4},
+    {name: "County Clash", opponent: "District Champ Dave", mode: "blitz", aiErr: 80, wobble: 14, wind: 5},
+    {name: "Regional Cup", opponent: "Regional Ace Ray", mode: "killer", aiErr: 72, wobble: 15, wind: 6},
+    {name: "State Invitational", opponent: "State Master Sam", mode: "501", aiErr: 65, wobble: 16, wind: 7},
+    {name: "National Qualifier", opponent: "Pro Qualifier Phil", mode: "atc", aiErr: 58, wobble: 18, wind: 8},
+    {name: "National Semifinal", opponent: "National Pro Ned", mode: "cricket", aiErr: 50, wobble: 20, wind: 9},
+    {name: "National Final", opponent: "National Champ Nick", mode: "501", aiErr: 44, wobble: 22, wind: 10},
+    {name: "International Masters", opponent: "Euro Champ Eric", mode: "blitz", aiErr: 38, wobble: 24, wind: 11},
+    {name: "Grand Prix", opponent: "Grand Prix Finalist Gary", mode: "killer", aiErr: 32, wobble: 26, wind: 12},
+    {name: "Premier League", opponent: "Premier Star Paul", mode: "301", aiErr: 26, wobble: 28, wind: 13},
+    {name: "World Tour", opponent: "Continental Ace Connor", mode: "cricket", aiErr: 22, wobble: 30, wind: 14},
+    {name: "World Semis", opponent: "World Contender Will", mode: "blitz", aiErr: 18, wobble: 32, wind: 15},
+    {name: "World Trophy", opponent: "Elite Striker Sean", mode: "atc", aiErr: 14, wobble: 34, wind: 16},
+    {name: "Global Masters", opponent: "Master Thrower Max", mode: "killer", aiErr: 10, wobble: 36, wind: 17},
+    {name: "Super League Final", opponent: "Champion Chris", mode: "501", aiErr: 7, wobble: 38, wind: 18},
+    {name: "World Championship Semis", opponent: "Legend Lance", mode: "cricket", aiErr: 4, wobble: 40, wind: 19},
+    {name: "World Championship Finals", opponent: "World Champion Vic", mode: "501", aiErr: 2, wobble: 42, wind: 20}
 ];
 
 let isCampaign = false;
@@ -313,6 +324,8 @@ let prevScores = [501, 501];
 let cricketHits = [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
 let atcTarget = [1, 1];
 let blitzHits = [0, 0];
+let killerLives = [5, 5];
+let isKiller = [false, false];
 
 let totalDarts = [0, 0];
 let highestCheckout = [0, 0];
@@ -322,6 +335,8 @@ let focusUses = [2, 2];
 let magnetActive = [false, false];
 let magnetUses = [2, 2];
 let undoUses = [1, 1];
+let laserActive = [false, false];
+let laserUses = [2, 2];
 
 let windX = 0, windY = 0;
 let windSpeed = 0, windAngle = 0;
@@ -403,10 +418,12 @@ function updateBadges() {
     document.getElementById('badgeFocus').innerText = `Focus(F): ${focusUses[currentPlayer]}/2 ${focusActive[currentPlayer]?'[ACTIVE]':''}`;
     document.getElementById('badgeMagnet').innerText = `Magnet(M): ${magnetUses[currentPlayer]}/2 ${magnetActive[currentPlayer]?'[ACTIVE]':''}`;
     document.getElementById('badgeUndo').innerText = `Undo(U): ${undoUses[currentPlayer]}/1`;
+    document.getElementById('badgeLaser').innerText = `Laser(L): ${laserUses[currentPlayer]}/2 ${laserActive[currentPlayer]?'[ACTIVE]':''}`;
     document.getElementById('badgeWind').innerText = `Wind: ${windSpeed} mph`;
     
     document.getElementById('btnFocus').className = focusActive[currentPlayer] ? 'active-pwr' : '';
     document.getElementById('btnMagnet').className = magnetActive[currentPlayer] ? 'active-pwr' : '';
+    document.getElementById('btnLaser').className = laserActive[currentPlayer] ? 'active-pwr' : '';
 }
 
 function activateFocus() {
@@ -414,7 +431,7 @@ function activateFocus() {
         focusActive[currentPlayer] = true;
         focusUses[currentPlayer]--;
         playSound('powerup');
-        statusEl.innerText = "Precision Focus Active! Aim wobble slowed by 50%";
+        statusEl.innerText = "Precision Focus Active! Aim wobble slowed by 75%";
         updateBadges();
     }
 }
@@ -425,6 +442,16 @@ function activateMagnet() {
         magnetUses[currentPlayer]--;
         playSound('powerup');
         statusEl.innerText = "Ring Magnet Active! Double & Triple zones expanded";
+        updateBadges();
+    }
+}
+
+function activateLaser() {
+    if (laserUses[currentPlayer] > 0 && !laserActive[currentPlayer]) {
+        laserActive[currentPlayer] = true;
+        laserUses[currentPlayer]--;
+        playSound('powerup');
+        statusEl.innerText = "Laser Sight Active! Trajectory prediction line enabled.";
         updateBadges();
     }
 }
@@ -455,6 +482,8 @@ function activateUndoDart() {
             if (number === 25) {
                 blitzHits[currentPlayer] = Math.max(0, blitzHits[currentPlayer] - mult);
             }
+        } else if (gameMode === 'killer') {
+            if (killerLives[1 - currentPlayer] < 5) killerLives[1 - currentPlayer]++;
         }
         
         if (state === 'TURN_END') state = 'PLAYING';
@@ -467,8 +496,8 @@ function activateUndoDart() {
 function getSnapshot() {
     return JSON.stringify({
         isCampaign, campaignStage, gameMode, aiDifficulty, currentPlayer,
-        cricketHits, atcTarget, blitzHits, totalDarts, highestCheckout,
-        scores, prevScores, focusActive, focusUses, magnetActive, magnetUses, undoUses,
+        cricketHits, atcTarget, blitzHits, killerLives, isKiller, totalDarts, highestCheckout,
+        scores, prevScores, focusActive, focusUses, magnetActive, magnetUses, undoUses, laserActive, laserUses,
         dartsLeft, state, darts: darts.map(d => ({...d}))
     });
 }
@@ -483,6 +512,8 @@ function restoreSnapshot(snap) {
     cricketHits = s.cricketHits;
     atcTarget = s.atcTarget;
     blitzHits = s.blitzHits;
+    killerLives = s.killerLives || [5, 5];
+    isKiller = s.isKiller || [false, false];
     totalDarts = s.totalDarts;
     highestCheckout = s.highestCheckout;
     scores = s.scores;
@@ -492,6 +523,8 @@ function restoreSnapshot(snap) {
     magnetActive = s.magnetActive;
     magnetUses = s.magnetUses;
     undoUses = s.undoUses;
+    laserActive = s.laserActive || [false, false];
+    laserUses = s.laserUses || [2, 2];
     dartsLeft = s.dartsLeft;
     state = s.state;
     darts = s.darts;
@@ -533,17 +566,17 @@ function setDifficulty(diff) {
 function saveState() {
     const stateObj = {
         isCampaign, campaignStage, gameMode, aiDifficulty, currentPlayer,
-        cricketHits, atcTarget, blitzHits, totalDarts, highestCheckout,
-        scores, prevScores, focusUses, magnetUses, undoUses, dartsLeft, state
+        cricketHits, atcTarget, blitzHits, killerLives, isKiller, totalDarts, highestCheckout,
+        scores, prevScores, focusUses, magnetUses, undoUses, laserUses, dartsLeft, state
     };
-    localStorage.setItem('kdarts_save_loop6', JSON.stringify(stateObj));
+    localStorage.setItem('kdarts_save_loop7', JSON.stringify(stateObj));
     const oldMsg = statusEl.innerText;
     statusEl.innerText = "Game Saved Successfully!";
     setTimeout(() => { if (statusEl.innerText === "Game Saved Successfully!") statusEl.innerText = oldMsg; }, 1500);
 }
 
 function loadState() {
-    const saved = localStorage.getItem('kdarts_save_loop6');
+    const saved = localStorage.getItem('kdarts_save_loop7');
     if (saved) {
         try {
             const stateObj = JSON.parse(saved);
@@ -555,6 +588,8 @@ function loadState() {
             cricketHits = stateObj.cricketHits;
             atcTarget = stateObj.atcTarget || [1, 1];
             blitzHits = stateObj.blitzHits || [0, 0];
+            killerLives = stateObj.killerLives || [5, 5];
+            isKiller = stateObj.isKiller || [false, false];
             totalDarts = stateObj.totalDarts;
             highestCheckout = stateObj.highestCheckout || [0, 0];
             scores = stateObj.scores;
@@ -562,6 +597,7 @@ function loadState() {
             focusUses = stateObj.focusUses || [2, 2];
             magnetUses = stateObj.magnetUses || [2, 2];
             undoUses = stateObj.undoUses || [1, 1];
+            laserUses = stateObj.laserUses || [2, 2];
             dartsLeft = stateObj.dartsLeft;
             state = stateObj.state;
             darts = [];
@@ -601,10 +637,12 @@ function setMode(mode) {
     cricketHits = [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
     atcTarget = [1, 1];
     blitzHits = [0, 0];
+    killerLives = [5, 5];
+    isKiller = [false, false];
     totalDarts = [0, 0];
     highestCheckout = [0, 0];
-    focusUses = [2, 2]; magnetUses = [2, 2]; undoUses = [1, 1];
-    focusActive = [false, false]; magnetActive = [false, false];
+    focusUses = [2, 2]; magnetUses = [2, 2]; undoUses = [1, 1]; laserUses = [2, 2];
+    focusActive = [false, false]; magnetActive = [false, false]; laserActive = [false, false];
     
     updateWind();
     statusEl.innerText = "Game On! Player 1 Turn - Throw 3 Darts";
@@ -628,13 +666,15 @@ function startCampaign(stage) {
     cricketHits = [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
     atcTarget = [1, 1];
     blitzHits = [0, 0];
+    killerLives = [5, 5];
+    isKiller = [false, false];
     totalDarts = [0, 0];
     highestCheckout = [0, 0];
-    focusUses = [2, 2]; magnetUses = [2, 2]; undoUses = [1, 1];
-    focusActive = [false, false]; magnetActive = [false, false];
+    focusUses = [2, 2]; magnetUses = [2, 2]; undoUses = [1, 1]; laserUses = [2, 2];
+    focusActive = [false, false]; magnetActive = [false, false]; laserActive = [false, false];
     
     updateWind();
-    statusEl.innerText = `Stage ${stage+1}/15: ${CAMPAIGN_STAGES[stage].name} vs ${CAMPAIGN_STAGES[stage].opponent}`;
+    statusEl.innerText = `Stage ${stage+1}/20: ${CAMPAIGN_STAGES[stage].name} vs ${CAMPAIGN_STAGES[stage].opponent}`;
     updateScoreUI();
 }
 
@@ -642,9 +682,9 @@ function updateScoreUI() {
     let p2Name = isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty === 'Human' ? 'P2' : 'AI');
     
     if (isCampaign) {
-        titleEl.innerText = `CAMPAIGN STAGE ${campaignStage+1}/15 - ${CAMPAIGN_STAGES[campaignStage].name} (${p2Name})`;
+        titleEl.innerText = `CAMPAIGN STAGE ${campaignStage+1}/20 - ${CAMPAIGN_STAGES[campaignStage].name} (${p2Name})`;
     } else {
-        const mNames = { '501': '501', '301': '301', 'cricket': 'Cricket', 'atc': 'Around the Clock', 'blitz': 'Bullseye Blitz' };
+        const mNames = { '501': '501 Double Out', '301': '301', 'cricket': 'Cricket', 'atc': 'Around the Clock', 'blitz': 'Bullseye Blitz', 'killer': 'Killer Darts' };
         titleEl.innerText = `QUICK MATCH - Mode: ${mNames[gameMode]} vs ${p2Name}`;
     }
 
@@ -667,6 +707,8 @@ function updateScoreUI() {
         scoreEl.innerHTML = `P1 Target: ${atcTarget[0]}/20 | ${p2Name} Target: ${atcTarget[1]}/20`;
     } else if (gameMode === 'blitz') {
         scoreEl.innerHTML = `P1 Bulls: ${blitzHits[0]}/10 | ${p2Name} Bulls: ${blitzHits[1]}/10`;
+    } else if (gameMode === 'killer') {
+        scoreEl.innerHTML = `<span style="color:#ff5858">P1 Lives: ${killerLives[0]} | ${p2Name} Lives: ${killerLives[1]}</span>`;
     }
 }
 
@@ -683,6 +725,7 @@ function nextTurn() {
         prevScores[currentPlayer] = scores[currentPlayer];
         focusActive[currentPlayer] = false;
         magnetActive[currentPlayer] = false;
+        laserActive[currentPlayer] = false;
         currentPlayer = 1 - currentPlayer;
         state = 'PLAYING';
         updateWind();
@@ -697,7 +740,7 @@ function nextTurn() {
     } else if (state === 'WON') {
         if (isCampaign) {
             if (currentPlayer === 0) {
-                if (campaignStage < 14) {
+                if (campaignStage < 19) {
                     startCampaign(campaignStage + 1);
                 } else {
                     statusEl.innerText = "CAMPAIGN VICTORY! You are the World Champion!";
@@ -739,14 +782,38 @@ function throwDart(rawX, rawY) {
 
     let turnName = currentPlayer === 0 ? "Player 1" : (isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty === 'Human' ? "Player 2" : "AI"));
 
-    if (gameMode === '501' || gameMode === '301') {
+    if (gameMode === '501') {
         scores[currentPlayer] -= pts;
         if (scores[currentPlayer] < 0 || scores[currentPlayer] === 1) {
             statusEl.innerText = `${turnName} Bust!`;
             scores[currentPlayer] = prevScores[currentPlayer];
             state = 'TURN_END';
         } else if (scores[currentPlayer] === 0) {
-            statusEl.innerText = `${turnName} Wins!`;
+            if (hit.mult === 2) {
+                statusEl.innerText = `${turnName} Wins with Double Out!`;
+                if (prevScores[currentPlayer] > highestCheckout[currentPlayer]) {
+                    highestCheckout[currentPlayer] = prevScores[currentPlayer];
+                }
+                state = 'WON';
+            } else {
+                statusEl.innerText = `${turnName} Bust! Must finish on a Double.`;
+                scores[currentPlayer] = prevScores[currentPlayer];
+                state = 'TURN_END';
+            }
+        } else if (dartsLeft === 0) {
+            statusEl.innerText = `${turnName} Turn Over. Score: ${scores[currentPlayer]}`;
+            state = 'TURN_END';
+        } else {
+            statusEl.innerText = `${turnName} Hit ${pts}! Darts left: ${dartsLeft}`;
+        }
+    } else if (gameMode === '301') {
+        scores[currentPlayer] -= pts;
+        if (scores[currentPlayer] < 0 || scores[currentPlayer] === 1) {
+            statusEl.innerText = `${turnName} Bust!`;
+            scores[currentPlayer] = prevScores[currentPlayer];
+            state = 'TURN_END';
+        } else if (scores[currentPlayer] === 0) {
+            statusEl.innerText = `${turnName} Wins 301!`;
             if (prevScores[currentPlayer] > highestCheckout[currentPlayer]) {
                 highestCheckout[currentPlayer] = prevScores[currentPlayer];
             }
@@ -808,6 +875,34 @@ function throwDart(rawX, rawY) {
         } else {
             statusEl.innerText = `Miss Bullseye! Darts left: ${dartsLeft}`;
         }
+    } else if (gameMode === 'killer') {
+        let targetSector = currentPlayer === 0 ? 20 : 19;
+        let oppSector = currentPlayer === 0 ? 19 : 20;
+        if (!isKiller[currentPlayer]) {
+            if (hit.number === targetSector) {
+                isKiller[currentPlayer] = true;
+                statusEl.innerText = `${turnName} unlocked KILLER status!`;
+            } else {
+                statusEl.innerText = `${turnName} missed sector ${targetSector}! Darts left: ${dartsLeft}`;
+            }
+        } else {
+            if (hit.number === oppSector || hit.mult >= 2) {
+                let dmg = hit.mult;
+                killerLives[1 - currentPlayer] -= dmg;
+                if (killerLives[1 - currentPlayer] <= 0) {
+                    killerLives[1 - currentPlayer] = 0;
+                    statusEl.innerText = `${turnName} KILLER VICTORY! Opponent eliminated!`;
+                    state = 'WON';
+                } else {
+                    statusEl.innerText = `${turnName} HIT! Opponent -${dmg} Lives (Left: ${killerLives[1 - currentPlayer]})`;
+                }
+            } else if (dartsLeft === 0) {
+                statusEl.innerText = `${turnName} Turn Over. Opponent Lives: ${killerLives[1 - currentPlayer]}`;
+                state = 'TURN_END';
+            } else {
+                statusEl.innerText = `Miss! Darts left: ${dartsLeft}`;
+            }
+        }
     }
     updateScoreUI();
 
@@ -851,6 +946,9 @@ function aiThrow() {
     } else if (gameMode === 'blitz') {
         targetNum = 25;
         targetMult = 2;
+    } else if (gameMode === 'killer') {
+        targetNum = (!isKiller[1]) ? 19 : 20;
+        targetMult = 3;
     }
     
     let rad = 0;
@@ -1306,10 +1404,10 @@ function drawDetailedDart(ctx, x, y, scale, angle, styleColor, isAnimating) {
 }
 
 function update() {
-    let speedMult = focusActive[currentPlayer] ? 0.5 : 1.0;
+    let speedMult = focusActive[currentPlayer] ? 0.25 : 1.0;
     t += 0.05 * speedMult;
     
-    let amp = currentWobbleAmp * (focusActive[currentPlayer] ? 0.5 : 1.0);
+    let amp = currentWobbleAmp * (focusActive[currentPlayer] ? 0.25 : 1.0);
     wobbleX = Math.sin(t * 1.3) * amp + Math.sin(t * 0.8) * (amp * 0.6);
     wobbleY = Math.cos(t * 1.5) * amp + Math.sin(t * 0.9) * (amp * 0.6);
     
@@ -1433,13 +1531,32 @@ function update() {
 
     let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
     if (state === 'PLAYING' && isP1OrHuman) {
-        const tx = mouseX + wobbleX;
-        const ty = mouseY + wobbleY;
+        const tx = mouseX + wobbleX + windX;
+        const ty = mouseY + wobbleY + windY;
         
+        // Laser Sight Arc Preview
+        if (laserActive[currentPlayer]) {
+            ctx.beginPath();
+            ctx.moveTo(300, 600);
+            ctx.lineTo(tx, ty);
+            ctx.strokeStyle = '#ff0080';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.beginPath();
+            ctx.arc(tx, ty, 8, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ff0080';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        const crossColor = focusActive[currentPlayer] ? '#00ff88' : (laserActive[currentPlayer] ? '#ff0080' : '#ffff00');
         ctx.beginPath();
         ctx.moveTo(tx - 18, ty); ctx.lineTo(tx + 18, ty);
         ctx.moveTo(tx, ty - 18); ctx.lineTo(tx, ty + 18);
-        ctx.strokeStyle = focusActive[currentPlayer] ? '#00ff88' : '#ffff00';
+        ctx.strokeStyle = crossColor;
         ctx.lineWidth = 2;
         ctx.stroke();
         
@@ -1449,13 +1566,13 @@ function update() {
 
         ctx.beginPath();
         ctx.arc(tx, ty, 3, 0, Math.PI * 2);
-        ctx.fillStyle = focusActive[currentPlayer] ? '#00ff88' : '#ffff00';
+        ctx.fillStyle = crossColor;
         ctx.fill();
         
         if (windSpeed > 0) {
             ctx.beginPath();
-            ctx.moveTo(tx, ty);
-            ctx.lineTo(tx + windX, ty + windY);
+            ctx.moveTo(mouseX + wobbleX, mouseY + wobbleY);
+            ctx.lineTo(tx, ty);
             ctx.strokeStyle = '#ff6464';
             ctx.lineWidth = 1.8;
             ctx.setLineDash([3, 3]);
@@ -1468,6 +1585,30 @@ function update() {
     
     requestAnimationFrame(update);
 }
+
+canvas.addEventListener('click', (e) => {
+    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
+    if (state === 'PLAYING' && isP1OrHuman) {
+        throwDart(mouseX + wobbleX, mouseY + wobbleY);
+    } else if ((state === 'TURN_END' || state === 'WON' || state === 'CAMPAIGN_OVER') && isP1OrHuman) {
+        nextTurn();
+    }
+});
+
+window.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === 'f') activateFocus();
+    else if (k === 'm') activateMagnet();
+    else if (k === 'u') activateUndoDart();
+    else if (k === 'l') activateLaser();
+    else if (k === 'c') startCampaign(0);
+    else if (k === '1') setMode('501');
+    else if (k === '2') setMode('301');
+    else if (k === '3') setMode('cricket');
+    else if (k === '4') setMode('atc');
+    else if (k === '5') setMode('blitz');
+    else if (k === '6') setMode('killer');
+});
 
 update();
 </script>

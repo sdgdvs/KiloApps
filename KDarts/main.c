@@ -23,6 +23,7 @@
 #define MODE_CRICKET 2
 #define MODE_ATC 3
 #define MODE_BLITZ 4
+#define MODE_KILLER 5
 
 typedef struct {
     const char* name;
@@ -33,22 +34,27 @@ typedef struct {
     int wind;
 } CampaignStage;
 
-static const CampaignStage CAMPAIGN_STAGES[15] = {
+static const CampaignStage CAMPAIGN_STAGES[20] = {
     {"Local Pub", "Rookie Rick", MODE_301, 120, 10, 0},
-    {"Amateur Open", "Amateur Andy", MODE_ATC, 105, 12, 2},
-    {"League Qualifier", "Pub Regular Pete", MODE_301, 90, 14, 3},
-    {"Town Championship", "Local Hero Luke", MODE_CRICKET, 80, 15, 4},
-    {"County Clash", "District Champ Dave", MODE_BLITZ, 70, 16, 5},
-    {"Regional Cup", "Regional Ace Ray", MODE_501, 62, 18, 6},
-    {"State Invitational", "State Master Sam", MODE_ATC, 54, 20, 7},
-    {"National Qualifier", "Pro Qualifier Phil", MODE_BLITZ, 46, 22, 8},
-    {"National Semifinal", "National Pro Ned", MODE_CRICKET, 38, 24, 9},
-    {"National Final", "National Champ Nick", MODE_501, 32, 26, 10},
-    {"International Masters", "Euro Champ Eric", MODE_301, 26, 28, 11},
-    {"Grand Prix", "Grand Prix Finalist Gary", MODE_CRICKET, 20, 30, 12},
-    {"Premier League", "Premier Star Paul", MODE_ATC, 15, 32, 13},
-    {"World Semis", "World Contender Will", MODE_BLITZ, 10, 34, 14},
-    {"World Final", "World Champion Vic", MODE_501, 5, 36, 15}
+    {"Amateur Open", "Amateur Andy", MODE_ATC, 110, 11, 2},
+    {"League Qualifier", "Pub Regular Pete", MODE_301, 100, 12, 3},
+    {"Town Championship", "Local Hero Luke", MODE_CRICKET, 90, 13, 4},
+    {"County Clash", "District Champ Dave", MODE_BLITZ, 80, 14, 5},
+    {"Regional Cup", "Regional Ace Ray", MODE_KILLER, 72, 15, 6},
+    {"State Invitational", "State Master Sam", MODE_501, 65, 16, 7},
+    {"National Qualifier", "Pro Qualifier Phil", MODE_ATC, 58, 18, 8},
+    {"National Semifinal", "National Pro Ned", MODE_CRICKET, 50, 20, 9},
+    {"National Final", "National Champ Nick", MODE_501, 44, 22, 10},
+    {"International Masters", "Euro Champ Eric", MODE_BLITZ, 38, 24, 11},
+    {"Grand Prix", "Grand Prix Finalist Gary", MODE_KILLER, 32, 26, 12},
+    {"Premier League", "Premier Star Paul", MODE_301, 26, 28, 13},
+    {"World Tour", "Continental Ace Connor", MODE_CRICKET, 22, 30, 14},
+    {"World Semis", "World Contender Will", MODE_BLITZ, 18, 32, 15},
+    {"World Trophy", "Elite Striker Sean", MODE_ATC, 14, 34, 16},
+    {"Global Masters", "Master Thrower Max", MODE_KILLER, 10, 36, 17},
+    {"Super League Final", "Champion Chris", MODE_501, 7, 38, 18},
+    {"World Championship Semis", "Legend Lance", MODE_CRICKET, 4, 40, 19},
+    {"World Championship Finals", "World Champion Vic", MODE_501, 2, 42, 20}
 };
 
 DWORD WINAPI PlaySoundThread(LPVOID lpParam) {
@@ -162,6 +168,8 @@ int prevScores[2] = {501, 501};
 int cricketHits[2][7] = {{0}};
 int atcTarget[2] = {1, 1};
 int blitzHits[2] = {0, 0};
+int killerLives[2] = {5, 5};
+int isKiller[2] = {0, 0};
 
 int totalDarts[2] = {0, 0};
 int highestCheckout[2] = {0, 0};
@@ -171,6 +179,8 @@ int focusUses[2] = {2, 2};
 int magnetActive[2] = {0, 0};
 int magnetUses[2] = {2, 2};
 int undoUses[2] = {1, 1};
+int laserActive[2] = {0, 0};
+int laserUses[2] = {2, 2};
 
 float windX = 0.0f, windY = 0.0f;
 int windSpeed = 0;
@@ -196,6 +206,8 @@ typedef struct {
     int cricketHits[2][7];
     int atcTarget[2];
     int blitzHits[2];
+    int killerLives[2];
+    int isKiller[2];
     int totalDarts[2];
     int highestCheckout[2];
     int scores[2];
@@ -205,6 +217,8 @@ typedef struct {
     int magnetActive[2];
     int magnetUses[2];
     int undoUses[2];
+    int laserActive[2];
+    int laserUses[2];
     int dartsLeft;
     int gameState;
     int dartsCount;
@@ -226,6 +240,8 @@ void GetSnapshot(GameStateSnapshot* st) {
     memcpy(st->cricketHits, cricketHits, sizeof(cricketHits));
     memcpy(st->atcTarget, atcTarget, sizeof(atcTarget));
     memcpy(st->blitzHits, blitzHits, sizeof(blitzHits));
+    memcpy(st->killerLives, killerLives, sizeof(killerLives));
+    memcpy(st->isKiller, isKiller, sizeof(isKiller));
     memcpy(st->totalDarts, totalDarts, sizeof(totalDarts));
     memcpy(st->highestCheckout, highestCheckout, sizeof(highestCheckout));
     memcpy(st->scores, scores, sizeof(scores));
@@ -235,6 +251,8 @@ void GetSnapshot(GameStateSnapshot* st) {
     memcpy(st->magnetActive, magnetActive, sizeof(magnetActive));
     memcpy(st->magnetUses, magnetUses, sizeof(magnetUses));
     memcpy(st->undoUses, undoUses, sizeof(undoUses));
+    memcpy(st->laserActive, laserActive, sizeof(laserActive));
+    memcpy(st->laserUses, laserUses, sizeof(laserUses));
     st->dartsLeft = dartsLeft;
     st->gameState = gameState;
     st->dartsCount = dartsCount;
@@ -250,6 +268,8 @@ void RestoreSnapshot(GameStateSnapshot* st) {
     memcpy(cricketHits, st->cricketHits, sizeof(cricketHits));
     memcpy(atcTarget, st->atcTarget, sizeof(atcTarget));
     memcpy(blitzHits, st->blitzHits, sizeof(blitzHits));
+    memcpy(killerLives, st->killerLives, sizeof(killerLives));
+    memcpy(isKiller, st->isKiller, sizeof(isKiller));
     memcpy(totalDarts, st->totalDarts, sizeof(totalDarts));
     memcpy(highestCheckout, st->highestCheckout, sizeof(highestCheckout));
     memcpy(scores, st->scores, sizeof(scores));
@@ -259,6 +279,8 @@ void RestoreSnapshot(GameStateSnapshot* st) {
     memcpy(magnetActive, st->magnetActive, sizeof(magnetActive));
     memcpy(magnetUses, st->magnetUses, sizeof(magnetUses));
     memcpy(undoUses, st->undoUses, sizeof(undoUses));
+    memcpy(laserActive, st->laserActive, sizeof(laserActive));
+    memcpy(laserUses, st->laserUses, sizeof(laserUses));
     dartsLeft = st->dartsLeft;
     gameState = st->gameState;
     dartsCount = st->dartsCount;
@@ -351,8 +373,12 @@ void SetMode(int mode) {
     focusUses[0] = 2; focusUses[1] = 2;
     magnetUses[0] = 2; magnetUses[1] = 2;
     undoUses[0] = 1; undoUses[1] = 1;
+    laserUses[0] = 2; laserUses[1] = 2;
     focusActive[0] = 0; focusActive[1] = 0;
     magnetActive[0] = 0; magnetActive[1] = 0;
+    laserActive[0] = 0; laserActive[1] = 0;
+    killerLives[0] = 5; killerLives[1] = 5;
+    isKiller[0] = 0; isKiller[1] = 0;
     
     if (mode == MODE_501) {
         scores[0] = 501; scores[1] = 501;
@@ -366,6 +392,8 @@ void SetMode(int mode) {
         atcTarget[0] = 1; atcTarget[1] = 1;
     } else if (mode == MODE_BLITZ) {
         blitzHits[0] = 0; blitzHits[1] = 0;
+    } else if (mode == MODE_KILLER) {
+        killerLives[0] = 5; killerLives[1] = 5;
     }
     
     UpdateWind();
@@ -387,8 +415,12 @@ void StartCampaign(int stage) {
     focusUses[0] = 2; focusUses[1] = 2;
     magnetUses[0] = 2; magnetUses[1] = 2;
     undoUses[0] = 1; undoUses[1] = 1;
+    laserUses[0] = 2; laserUses[1] = 2;
     focusActive[0] = 0; focusActive[1] = 0;
     magnetActive[0] = 0; magnetActive[1] = 0;
+    laserActive[0] = 0; laserActive[1] = 0;
+    killerLives[0] = 5; killerLives[1] = 5;
+    isKiller[0] = 0; isKiller[1] = 0;
     
     if (gameMode == MODE_501) {
         scores[0] = 501; scores[1] = 501;
@@ -402,10 +434,12 @@ void StartCampaign(int stage) {
         atcTarget[0] = 1; atcTarget[1] = 1;
     } else if (gameMode == MODE_BLITZ) {
         blitzHits[0] = 0; blitzHits[1] = 0;
+    } else if (gameMode == MODE_KILLER) {
+        killerLives[0] = 5; killerLives[1] = 5;
     }
     
     UpdateWind();
-    sprintf(statusMsg, "Stage %d/15: %s vs %s", stage + 1, CAMPAIGN_STAGES[stage].name, CAMPAIGN_STAGES[stage].opponent);
+    sprintf(statusMsg, "Stage %d/20: %s vs %s", stage + 1, CAMPAIGN_STAGES[stage].name, CAMPAIGN_STAGES[stage].opponent);
 }
 
 void ActivateFocus(HWND hwnd) {
@@ -413,7 +447,7 @@ void ActivateFocus(HWND hwnd) {
         focusActive[currentPlayer] = 1;
         focusUses[currentPlayer]--;
         PlayGameSound(4);
-        sprintf(statusMsg, "Precision Focus Active! Aim wobble slowed by 50%%");
+        sprintf(statusMsg, "Precision Focus Active! Aim wobble slowed by 75%%");
         InvalidateRect(hwnd, NULL, FALSE);
     }
 }
@@ -424,6 +458,16 @@ void ActivateMagnet(HWND hwnd) {
         magnetUses[currentPlayer]--;
         PlayGameSound(4);
         sprintf(statusMsg, "Ring Magnet Active! Double & Triple zones expanded");
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
+void ActivateLaser(HWND hwnd) {
+    if (laserUses[currentPlayer] > 0 && !laserActive[currentPlayer]) {
+        laserActive[currentPlayer] = 1;
+        laserUses[currentPlayer]--;
+        PlayGameSound(4);
+        sprintf(statusMsg, "Laser Sight Active! Trajectory prediction line enabled.");
         InvalidateRect(hwnd, NULL, FALSE);
     }
 }
@@ -465,6 +509,8 @@ void ActivateUndoDart(HWND hwnd) {
                 blitzHits[currentPlayer] -= mult;
                 if (blitzHits[currentPlayer] < 0) blitzHits[currentPlayer] = 0;
             }
+        } else if (gameMode == MODE_KILLER) {
+            if (killerLives[1 - currentPlayer] < 5) killerLives[1 - currentPlayer]++;
         }
         
         if (gameState == 1) gameState = 0;
@@ -516,6 +562,8 @@ void SaveState(HWND hwnd) {
         fwrite(cricketHits, sizeof(int), 14, f);
         fwrite(atcTarget, sizeof(int), 2, f);
         fwrite(blitzHits, sizeof(int), 2, f);
+        fwrite(killerLives, sizeof(int), 2, f);
+        fwrite(isKiller, sizeof(int), 2, f);
         fwrite(totalDarts, sizeof(int), 2, f);
         fwrite(scores, sizeof(int), 2, f);
         fwrite(prevScores, sizeof(int), 2, f);
@@ -525,6 +573,7 @@ void SaveState(HWND hwnd) {
         fwrite(focusUses, sizeof(int), 2, f);
         fwrite(magnetUses, sizeof(int), 2, f);
         fwrite(undoUses, sizeof(int), 2, f);
+        fwrite(laserUses, sizeof(int), 2, f);
         fwrite(&soundEnabled, sizeof(int), 1, f);
         fwrite(&dartStyle, sizeof(int), 1, f);
         fclose(f);
@@ -544,6 +593,8 @@ void LoadState(HWND hwnd) {
         fread(cricketHits, sizeof(int), 14, f);
         fread(atcTarget, sizeof(int), 2, f);
         fread(blitzHits, sizeof(int), 2, f);
+        fread(killerLives, sizeof(int), 2, f);
+        fread(isKiller, sizeof(int), 2, f);
         fread(totalDarts, sizeof(int), 2, f);
         fread(scores, sizeof(int), 2, f);
         fread(prevScores, sizeof(int), 2, f);
@@ -553,6 +604,7 @@ void LoadState(HWND hwnd) {
         fread(focusUses, sizeof(int), 2, f);
         fread(magnetUses, sizeof(int), 2, f);
         fread(undoUses, sizeof(int), 2, f);
+        fread(laserUses, sizeof(int), 2, f);
         fread(&soundEnabled, sizeof(int), 1, f);
         fread(&dartStyle, sizeof(int), 1, f);
         fclose(f);
@@ -578,6 +630,7 @@ void NextTurn(HWND hwnd) {
         prevScores[currentPlayer] = scores[currentPlayer];
         focusActive[currentPlayer] = 0;
         magnetActive[currentPlayer] = 0;
+        laserActive[currentPlayer] = 0;
         currentPlayer = 1 - currentPlayer;
         gameState = 0;
         UpdateWind();
@@ -588,7 +641,7 @@ void NextTurn(HWND hwnd) {
     } else if (gameState == 2) {
         if (isCampaign) {
             if (currentPlayer == 0) {
-                if (campaignStage < 14) {
+                if (campaignStage < 19) {
                     StartCampaign(campaignStage + 1);
                 } else {
                     sprintf(statusMsg, "CAMPAIGN VICTORY! You are the World Champion!");
@@ -636,6 +689,9 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
         } else if (gameMode == MODE_BLITZ) {
             targetNum = 25;
             targetMult = 2;
+        } else if (gameMode == MODE_KILLER) {
+            targetNum = (!isKiller[1]) ? 19 : 20;
+            targetMult = 3;
         }
         
         float rad = 0;
@@ -701,14 +757,38 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
     
     const char* turnName = currentPlayer == 0 ? "Player 1" : (isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty == 4 ? "Player 2" : "AI"));
     
-    if (gameMode == MODE_501 || gameMode == MODE_301) {
+    if (gameMode == MODE_501) {
         scores[currentPlayer] -= pts;
         if (scores[currentPlayer] < 0 || scores[currentPlayer] == 1) {
             sprintf(statusMsg, "%s Bust!", turnName);
             scores[currentPlayer] = prevScores[currentPlayer];
             gameState = 1;
         } else if (scores[currentPlayer] == 0) {
-            sprintf(statusMsg, "%s Wins!", turnName);
+            if (mult == 2) {
+                sprintf(statusMsg, "%s Wins with Double Out!", turnName);
+                if (prevScores[currentPlayer] > highestCheckout[currentPlayer]) {
+                    highestCheckout[currentPlayer] = prevScores[currentPlayer];
+                }
+                gameState = 2;
+            } else {
+                sprintf(statusMsg, "%s Bust! Must finish on a Double.", turnName);
+                scores[currentPlayer] = prevScores[currentPlayer];
+                gameState = 1;
+            }
+        } else if (dartsLeft == 0) {
+            sprintf(statusMsg, "%s Turn Over. Score: %d", turnName, scores[currentPlayer]);
+            gameState = 1;
+        } else {
+            sprintf(statusMsg, "%s Hit %d! Darts left: %d", turnName, pts, dartsLeft);
+        }
+    } else if (gameMode == MODE_301) {
+        scores[currentPlayer] -= pts;
+        if (scores[currentPlayer] < 0 || scores[currentPlayer] == 1) {
+            sprintf(statusMsg, "%s Bust!", turnName);
+            scores[currentPlayer] = prevScores[currentPlayer];
+            gameState = 1;
+        } else if (scores[currentPlayer] == 0) {
+            sprintf(statusMsg, "%s Wins 301!", turnName);
             if (prevScores[currentPlayer] > highestCheckout[currentPlayer]) {
                 highestCheckout[currentPlayer] = prevScores[currentPlayer];
             }
@@ -781,6 +861,34 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
             gameState = 1;
         } else {
             sprintf(statusMsg, "Miss Bullseye! Darts left: %d", dartsLeft);
+        }
+    } else if (gameMode == MODE_KILLER) {
+        int targetSector = (currentPlayer == 0) ? 20 : 19;
+        int oppSector = (currentPlayer == 0) ? 19 : 20;
+        if (!isKiller[currentPlayer]) {
+            if (number == targetSector) {
+                isKiller[currentPlayer] = 1;
+                sprintf(statusMsg, "%s unlocked KILLER status!", turnName);
+            } else {
+                sprintf(statusMsg, "%s missed sector %d! Darts left: %d", turnName, targetSector, dartsLeft);
+            }
+        } else {
+            if (number == oppSector || mult >= 2) {
+                int dmg = mult;
+                killerLives[1 - currentPlayer] -= dmg;
+                if (killerLives[1 - currentPlayer] <= 0) {
+                    killerLives[1 - currentPlayer] = 0;
+                    sprintf(statusMsg, "%s KILLER VICTORY! Opponent eliminated!", turnName);
+                    gameState = 2;
+                } else {
+                    sprintf(statusMsg, "%s HIT! Opponent -%d Lives (Left: %d)", turnName, dmg, killerLives[1 - currentPlayer]);
+                }
+            } else if (dartsLeft == 0) {
+                sprintf(statusMsg, "%s Turn Over. Opponent Lives: %d", turnName, killerLives[1 - currentPlayer]);
+                gameState = 1;
+            } else {
+                sprintf(statusMsg, "Miss! Darts left: %d", dartsLeft);
+            }
         }
     }
     InvalidateRect(hwnd, NULL, FALSE);
@@ -1077,43 +1185,47 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             srand((unsigned int)time(NULL));
             // Row 1: Modes & Campaign
             CreateWindow("BUTTON", "501", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         20, 15, 50, 26, hwnd, (HMENU)101, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         20, 15, 45, 26, hwnd, (HMENU)101, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "301", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         75, 15, 50, 26, hwnd, (HMENU)111, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         70, 15, 45, 26, hwnd, (HMENU)111, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Cricket", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         130, 15, 60, 26, hwnd, (HMENU)102, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         120, 15, 55, 26, hwnd, (HMENU)102, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "ATC", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         195, 15, 50, 26, hwnd, (HMENU)112, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         180, 15, 45, 26, hwnd, (HMENU)112, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Blitz", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         250, 15, 50, 26, hwnd, (HMENU)113, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         230, 15, 45, 26, hwnd, (HMENU)113, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Killer", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         280, 15, 50, 26, hwnd, (HMENU)118, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Campaign", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         305, 15, 80, 26, hwnd, (HMENU)114, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         335, 15, 75, 26, hwnd, (HMENU)114, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             // Row 2: Power-Ups & State
             CreateWindow("BUTTON", "Focus (F)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         390, 15, 75, 26, hwnd, (HMENU)115, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         415, 15, 70, 26, hwnd, (HMENU)115, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Magnet (M)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         470, 15, 85, 26, hwnd, (HMENU)116, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         490, 15, 80, 26, hwnd, (HMENU)116, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Undo Dart", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         560, 15, 75, 26, hwnd, (HMENU)117, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         640, 15, 50, 26, hwnd, (HMENU)104, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         575, 15, 70, 26, hwnd, (HMENU)117, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Laser (L)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         650, 15, 65, 26, hwnd, (HMENU)119, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             // Row 3: Settings & Utility
+            CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         20, 46, 50, 26, hwnd, (HMENU)104, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         20, 46, 50, 26, hwnd, (HMENU)105, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         75, 46, 50, 26, hwnd, (HMENU)105, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Undo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         75, 46, 50, 26, hwnd, (HMENU)108, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         130, 46, 50, 26, hwnd, (HMENU)108, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Redo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         130, 46, 50, 26, hwnd, (HMENU)109, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         185, 46, 50, 26, hwnd, (HMENU)109, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Vs AI: Medium", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         185, 46, 110, 26, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         240, 46, 110, 26, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Sound", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         300, 46, 60, 26, hwnd, (HMENU)106, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         355, 46, 60, 26, hwnd, (HMENU)106, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Style", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         365, 46, 55, 26, hwnd, (HMENU)107, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         420, 46, 55, 26, hwnd, (HMENU)107, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         425, 46, 50, 26, hwnd, (HMENU)110, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         480, 46, 50, 26, hwnd, (HMENU)110, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             SetTimer(hwnd, TIMER_ID, 16, NULL);
             return 0;
@@ -1124,10 +1236,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             else if (LOWORD(wParam) == 102) { SetMode(MODE_CRICKET); InvalidateRect(hwnd, NULL, FALSE); }
             else if (LOWORD(wParam) == 112) { SetMode(MODE_ATC); InvalidateRect(hwnd, NULL, FALSE); }
             else if (LOWORD(wParam) == 113) { SetMode(MODE_BLITZ); InvalidateRect(hwnd, NULL, FALSE); }
+            else if (LOWORD(wParam) == 118) { SetMode(MODE_KILLER); InvalidateRect(hwnd, NULL, FALSE); }
             else if (LOWORD(wParam) == 114) { StartCampaign(0); InvalidateRect(hwnd, NULL, FALSE); }
             else if (LOWORD(wParam) == 115) { ActivateFocus(hwnd); }
             else if (LOWORD(wParam) == 116) { ActivateMagnet(hwnd); }
             else if (LOWORD(wParam) == 117) { ActivateUndoDart(hwnd); }
+            else if (LOWORD(wParam) == 119) { ActivateLaser(hwnd); }
             else if (LOWORD(wParam) == 103) {
                 aiDifficulty = (aiDifficulty + 1) % 5;
                 char buf[30];
@@ -1152,17 +1266,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             else if (LOWORD(wParam) == 109) { Redo(hwnd); }
             else if (LOWORD(wParam) == 110) {
                 MessageBox(hwnd, 
-                    "KDarts - 3D Visual Edition:\n\n"
+                    "KDarts - 3D Visual Edition (Loop 7 Expansion):\n\n"
                     "Controls:\n"
-                    "- Aim with mouse, click to throw. Press F for Focus (slows wobble), M for Magnet (expands double/triple rings), U for Undo Dart (re-throw 1 bad dart).\n"
-                    "- Keyboard: 1-5 for Modes, C for Campaign, F for Focus, M for Magnet, U for Undo Dart.\n\n"
+                    "- Aim with mouse, click to throw.\n"
+                    "- Press F: Focus (slows wobble 75%)\n"
+                    "- Press M: Magnet (expands double/triple hitboxes)\n"
+                    "- Press U: Undo Dart (re-throw 1 bad dart per leg)\n"
+                    "- Press L: Laser Sight (predicts exact trajectory arc)\n"
+                    "- Keys 1-6: Switch Modes | Key C: Campaign Mode\n\n"
                     "Game Modes:\n"
-                    "1. 501 / 301: Reach exactly 0. Bust if score goes below 0 or to 1.\n"
-                    "2. Cricket: Close 15-20 and Bullseye (3 hits each).\n"
-                    "3. Around the Clock (ATC): Hit numbers 1 to 20 in sequence.\n"
-                    "4. Bullseye Blitz: First to score 10 Bullseye hits (Outer=1, Inner=2).\n\n"
+                    "1. 501 Double Out: Reach 0 with a Double checkout!\n"
+                    "2. 301: Reach exactly 0.\n"
+                    "3. Cricket: Close 15-20 and Bullseye.\n"
+                    "4. Around the Clock (ATC): Hit numbers 1 to 20 in sequence.\n"
+                    "5. Bullseye Blitz: First to score 10 Bullseye hits.\n"
+                    "6. Killer Darts: Become Killer, reduce opponent's 5 lives to 0!\n\n"
                     "Campaign Mode:\n"
-                    "Advance through 15 progressive stages featuring increasing AI difficulty, wind mechanics, and wobble!", 
+                    "20 progressive stages from Rookie Rick to World Championship Finals against World Champion Vic!", 
                     "How to Play KDarts", MB_OK | MB_ICONINFORMATION);
             }
             return 0;
@@ -1171,20 +1291,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (wParam == 'F' || wParam == 'f') ActivateFocus(hwnd);
             else if (wParam == 'M' || wParam == 'm') ActivateMagnet(hwnd);
             else if (wParam == 'U' || wParam == 'u') ActivateUndoDart(hwnd);
+            else if (wParam == 'L' || wParam == 'l') ActivateLaser(hwnd);
             else if (wParam == 'C' || wParam == 'c') { StartCampaign(0); InvalidateRect(hwnd, NULL, FALSE); }
             else if (wParam == '1') { SetMode(MODE_501); InvalidateRect(hwnd, NULL, FALSE); }
             else if (wParam == '2') { SetMode(MODE_301); InvalidateRect(hwnd, NULL, FALSE); }
             else if (wParam == '3') { SetMode(MODE_CRICKET); InvalidateRect(hwnd, NULL, FALSE); }
             else if (wParam == '4') { SetMode(MODE_ATC); InvalidateRect(hwnd, NULL, FALSE); }
             else if (wParam == '5') { SetMode(MODE_BLITZ); InvalidateRect(hwnd, NULL, FALSE); }
+            else if (wParam == '6') { SetMode(MODE_KILLER); InvalidateRect(hwnd, NULL, FALSE); }
             return 0;
 
         case WM_TIMER: {
-            float speedMult = focusActive[currentPlayer] ? 0.5f : 1.0f;
+            float speedMult = focusActive[currentPlayer] ? 0.25f : 1.0f;
             t += 0.05f * speedMult;
             
             float amp = (float)currentWobbleAmp;
-            if (focusActive[currentPlayer]) amp *= 0.5f;
+            if (focusActive[currentPlayer]) amp *= 0.25f;
             wobbleX = (int)(sinf(t * 1.3f) * amp + sinf(t * 0.8f) * (amp * 0.6f));
             wobbleY = (int)(cosf(t * 1.5f) * amp + sinf(t * 0.9f) * (amp * 0.6f));
             
@@ -1349,9 +1471,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTextColor(memDC, RGB(255, 215, 0));
             char titleLine[128];
             if (isCampaign) {
-                sprintf(titleLine, "CAMPAIGN STAGE %d/15 - %s (%s)", campaignStage + 1, CAMPAIGN_STAGES[campaignStage].name, p2Name);
+                sprintf(titleLine, "CAMPAIGN STAGE %d/20 - %s (%s)", campaignStage + 1, CAMPAIGN_STAGES[campaignStage].name, p2Name);
             } else {
-                const char* mNames[] = {"501", "301", "Cricket", "Around the Clock", "Bullseye Blitz"};
+                const char* mNames[] = {"501 Double Out", "301", "Cricket", "Around the Clock", "Bullseye Blitz", "Killer Darts"};
                 sprintf(titleLine, "QUICK MATCH - Mode: %s vs %s", mNames[gameMode], p2Name);
             }
             SIZE sz;
@@ -1404,6 +1526,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 sprintf(scoreStr, "P1 Bulls: %d/10  |  %s Bulls: %d/10", blitzHits[0], p2Name, blitzHits[1]);
                 GetTextExtentPoint32(memDC, scoreStr, strlen(scoreStr), &sz);
                 TextOut(memDC, CX - sz.cx/2, 98, scoreStr, strlen(scoreStr));
+            } else if (gameMode == MODE_KILLER) {
+                SelectObject(memDC, largeFont);
+                SetTextColor(memDC, RGB(255, 88, 88));
+                char scoreStr[64];
+                sprintf(scoreStr, "P1 Lives: %d  |  %s Lives: %d", killerLives[0], p2Name, killerLives[1]);
+                GetTextExtentPoint32(memDC, scoreStr, strlen(scoreStr), &sz);
+                TextOut(memDC, CX - sz.cx/2, 98, scoreStr, strlen(scoreStr));
             }
             
             SelectObject(memDC, font);
@@ -1411,11 +1540,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             GetTextExtentPoint32(memDC, statusMsg, strlen(statusMsg), &sz);
             TextOut(memDC, CX - sz.cx/2, 138, statusMsg, strlen(statusMsg));
             
-            char pwrBadge[128];
-            sprintf(pwrBadge, "Focus(F): %d/2 %s | Magnet(M): %d/2 %s | Undo(U): %d/1 | Wind: %d mph", 
+            char pwrBadge[140];
+            sprintf(pwrBadge, "Focus(F): %d/2 %s | Magnet(M): %d/2 %s | Undo(U): %d/1 | Laser(L): %d/2 %s | Wind: %d mph", 
                     focusUses[currentPlayer], focusActive[currentPlayer] ? "[ACTIVE]" : "",
                     magnetUses[currentPlayer], magnetActive[currentPlayer] ? "[ACTIVE]" : "",
-                    undoUses[currentPlayer], windSpeed);
+                    undoUses[currentPlayer],
+                    laserUses[currentPlayer], laserActive[currentPlayer] ? "[ACTIVE]" : "",
+                    windSpeed);
             SetTextColor(memDC, RGB(150, 150, 160));
             GetTextExtentPoint32(memDC, pwrBadge, strlen(pwrBadge), &sz);
             TextOut(memDC, CX - sz.cx/2, 152, pwrBadge, strlen(pwrBadge));
@@ -1467,13 +1598,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 TextOut(memDC, tx - sz.cx/2, ty - sz.cy/2, scoreTexts[i].text, strlen(scoreTexts[i].text));
             }
 
-            // Crosshair
+            // Crosshair & Laser Sight Arc
             int isP1OrHuman = (currentPlayer == 0 || (!isCampaign && aiDifficulty == 4));
             if (gameState == 0 && isP1OrHuman) {
-                int tx = mouseX + wobbleX + shakeX;
-                int ty = mouseY + wobbleY + shakeY;
+                int tx = mouseX + wobbleX + (int)windX + shakeX;
+                int ty = mouseY + wobbleY + (int)windY + shakeY;
                 
-                COLORREF crossColor = focusActive[currentPlayer] ? RGB(0, 255, 128) : RGB(255, 255, 0);
+                if (laserActive[currentPlayer]) {
+                    HPEN lPen = CreatePen(PS_DOT, 2, RGB(255, 0, 128));
+                    HPEN oldLPen = (HPEN)SelectObject(memDC, lPen);
+                    MoveToEx(memDC, CX, 750, NULL);
+                    LineTo(memDC, tx, ty);
+                    SelectObject(memDC, oldLPen);
+                    DeleteObject(lPen);
+                    DrawCircleGDI(memDC, tx, ty, 8, RGB(255, 0, 128), RGB(255, 255, 255));
+                }
+
+                COLORREF crossColor = focusActive[currentPlayer] ? RGB(0, 255, 128) : (laserActive[currentPlayer] ? RGB(255, 0, 128) : RGB(255, 255, 0));
                 HPEN cPen = CreatePen(PS_SOLID, 2, crossColor);
                 HPEN oldCPen = (HPEN)SelectObject(memDC, cPen);
                 
@@ -1486,8 +1627,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (windSpeed > 0) {
                     HPEN wPen = CreatePen(PS_DOT, 1, RGB(255, 100, 100));
                     SelectObject(memDC, wPen);
-                    MoveToEx(memDC, tx, ty, NULL);
-                    LineTo(memDC, tx + (int)windX, ty + (int)windY);
+                    MoveToEx(memDC, mouseX + wobbleX + shakeX, mouseY + wobbleY + shakeY, NULL);
+                    LineTo(memDC, tx, ty);
                     DeleteObject(wPen);
                 }
                 
