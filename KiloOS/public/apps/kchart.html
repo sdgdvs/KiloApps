@@ -3,595 +3,1241 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KChart</title>
+<title>KChart Studio - Advanced Data Visualization</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-color: #09090b;
-    --card-bg: rgba(255, 255, 255, 0.04);
-    --border-color: rgba(255, 255, 255, 0.12);
-    --text-main: #ffffff;
+    --card-bg: rgba(24, 24, 27, 0.7);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --text-main: #f4f4f5;
     --text-muted: #a1a1aa;
-    --btn-bg: rgba(255, 255, 255, 0.08);
-    --btn-hover: rgba(255, 255, 255, 0.18);
-    --focus-ring: #3b82f6;
+    --btn-bg: rgba(255, 255, 255, 0.06);
+    --btn-hover: rgba(255, 255, 255, 0.14);
+    --btn-active: rgba(255, 255, 255, 0.22);
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --focus-ring: #60a5fa;
+    --input-bg: rgba(0, 0, 0, 0.3);
+    --input-border: rgba(255, 255, 255, 0.15);
   }
-  * { box-sizing: border-box; }
-  body { 
-    margin: 0; 
-    font-family: 'Inter', -apple-system, sans-serif; 
-    background: radial-gradient(circle at top right, #1e1b4b, var(--bg-color) 80%); 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    min-height: 100vh; 
-    overflow: hidden; 
-    user-select: none; 
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #09090b 70%);
     color: var(--text-main);
-  }
-  .chart-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 24px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    max-width: 520px;
-    width: 90%;
+    overflow-x: hidden;
   }
-  .chart-header {
-    width: 100%;
+
+  /* Header Bar */
+  header {
+    background: rgba(15, 15, 20, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 12px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
-  .chart-title {
-    font-size: 18px;
+
+  .logo-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-weight: 700;
+    font-size: 18px;
     letter-spacing: -0.02em;
-    color: #f4f4f5;
+    color: #ffffff;
   }
-  .chart-mode-badge {
-    font-size: 12px;
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  /* Main Workspace Layout */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    padding: 20px;
+    flex: 1;
+    max-width: 1600px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 1024px) {
+    .workspace {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Card Component */
+  .panel-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel-title {
+    font-size: 15px;
     font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 12px;
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
-    border: 1px solid rgba(96, 165, 250, 0.3);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    color: #e4e4e7;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  .canvas-wrapper {
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .btn-group {
+    display: flex;
+    background: var(--input-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  button, .btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--text-main);
+    background: var(--btn-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    outline: none;
+    user-select: none;
+  }
+
+  button:hover, .btn:hover {
+    background: var(--btn-hover);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+  }
+
+  button:active, .btn:active {
+    transform: translateY(1px);
+    background: var(--btn-active);
+  }
+
+  .btn-group button {
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: var(--text-muted);
+  }
+
+  .btn-group button.active {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  }
+
+  select {
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-main);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  select:focus {
+    border-color: var(--focus-ring);
+  }
+
+  /* Canvas Area */
+  .canvas-container {
     position: relative;
     width: 100%;
-    height: 260px;
+    height: 480px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
   }
-  canvas { 
+
+  canvas {
     width: 100%;
     height: 100%;
     display: block;
-    border-radius: 8px;
     outline: none;
   }
-  canvas:focus-visible {
-    box-shadow: 0 0 0 2px var(--focus-ring);
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
   }
-  .controls {
+
+  .stat-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 12px;
     display: flex;
-    gap: 12px;
-    margin-top: 20px;
+    flex-direction: column;
+    gap: 4px;
   }
-  button { 
-    padding: 10px 22px; 
-    font-size: 14px; 
-    font-weight: 600; 
-    font-family: 'Inter', sans-serif;
-    cursor: pointer; 
-    border: 1px solid var(--border-color); 
-    border-radius: 20px; 
-    background: var(--btn-bg); 
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  /* Table Editor */
+  .table-wrapper {
+    max-height: 320px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th, td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  th {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-family: inherit;
     color: var(--text-main);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(8px);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
     outline: none;
   }
-  button:hover { 
-    background: var(--btn-hover); 
-    transform: translateY(-1px); 
-    box-shadow: 0 6px 16px rgba(0,0,0,0.3); 
+
+  input[type="text"]:focus, input[type="number"]:focus {
+    border-color: var(--focus-ring);
   }
-  button:focus-visible {
-    box-shadow: 0 0 0 2px var(--focus-ring);
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 6px;
   }
-  button:active { 
-    transform: translateY(1px) scale(0.97); 
+
+  .btn-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
   }
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+
+  .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.4);
+  }
+
+  .file-input-hidden {
+    display: none;
+  }
+
+  .drop-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(59, 130, 246, 0.1);
+    color: #ffffff;
+  }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
   }
 </style>
 </head>
 <body>
-<div class="chart-card">
-  <div class="chart-header">
-    <div class="chart-title">Data Analytics</div>
-    <div id="modeBadge" class="chart-mode-badge">Bar View</div>
+
+<header>
+  <div class="logo-title">
+    <div class="logo-icon">📊</div>
+    <span>KChart Studio</span>
   </div>
-  <div class="canvas-wrapper">
-    <canvas id="cvs" tabindex="0" role="img" aria-label="Data chart visualization. Use left and right arrow keys to inspect values."></canvas>
+  <div class="header-actions">
+    <select id="presetSelect" aria-label="Load Sample Presets">
+      <option value="">-- Sample Presets --</option>
+      <option value="sales">Quarterly Revenue</option>
+      <option value="tech">Tech Stack Share</option>
+      <option value="weather">Monthly Temperature</option>
+      <option value="grades">Exam Score Dist</option>
+      <option value="fitness">Weekly Activity (Hrs)</option>
+    </select>
+
+    <select id="themeSelect" aria-label="Select Color Theme">
+      <option value="teal">Cyber Teal</option>
+      <option value="neon">Neon Sunset</option>
+      <option value="emerald">Emerald Forest</option>
+      <option value="warm">Sunset Warmth</option>
+      <option value="synth">Synthwave</option>
+      <option value="slate">Dark Slate</option>
+    </select>
+
+    <button id="btnExportPng">📷 PNG</button>
+    <button id="btnExportCsv">📄 CSV</button>
+    <button id="btnExportJson">📦 JSON</button>
+    <button id="btnImportTrigger">📥 Import</button>
+    <input type="file" id="fileInput" class="file-input-hidden" accept=".csv,.json">
   </div>
-  <div class="controls">
-    <button id="btnRand" aria-label="Randomize chart data">Randomize</button>
-    <button id="btnToggle" aria-label="Toggle chart type between Bar, Line, and Donut">Toggle Type</button>
+</header>
+
+<div class="workspace">
+  <!-- Left Side: Main Chart & Controls -->
+  <div class="panel-card">
+    <div class="panel-title">
+      <span>Visualization Canvas</span>
+      <div class="toolbar">
+        <div class="btn-group" id="chartTypeGroup">
+          <button data-type="bar" class="active">Bar</button>
+          <button data-type="line">Line</button>
+          <button data-type="area">Area</button>
+          <button data-type="pie">Pie</button>
+          <button data-type="donut">Doughnut</button>
+          <button data-type="radar">Radar</button>
+        </div>
+        <button id="btnRandomize">🎲 Randomize</button>
+      </div>
+    </div>
+
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="chartCanvas" tabindex="0" aria-label="Interactive Chart Canvas"></canvas>
+    </div>
+
+    <!-- Statistical Analysis Suite -->
+    <div class="panel-title" style="margin-top: 4px;">
+      <span>Statistical Analysis Suite</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><span class="stat-label">Count</span><span class="stat-value" id="statCount">0</span></div>
+      <div class="stat-box"><span class="stat-label">Total</span><span class="stat-value" id="statTotal">0</span></div>
+      <div class="stat-box"><span class="stat-label">Mean</span><span class="stat-value" id="statMean">0</span></div>
+      <div class="stat-box"><span class="stat-label">Median</span><span class="stat-value" id="statMedian">0</span></div>
+      <div class="stat-box"><span class="stat-label">Std Dev</span><span class="stat-value" id="statStdDev">0</span></div>
+      <div class="stat-box"><span class="stat-label">Min</span><span class="stat-value" id="statMin">0</span></div>
+      <div class="stat-box"><span class="stat-label">Max</span><span class="stat-value" id="statMax">0</span></div>
+    </div>
   </div>
-  <div id="srDesc" class="sr-only" aria-live="polite">Chart loaded. Values: Q1: 20, Q2: 60, Q3: 45, Q4: 80, Q5: 30.</div>
+
+  <!-- Right Side: Data Table Editor & Import -->
+  <div class="panel-card">
+    <div class="panel-title">
+      <span>Data Table Editor</span>
+      <button id="btnAddRow" class="btn-sm">+ Add Point</button>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 24px;"></th>
+            <th>Label</th>
+            <th style="width: 90px;">Value</th>
+            <th style="width: 32px;"></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Rows dynamically rendered -->
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <button id="btnSortAsc" class="btn-sm">▲ Sort Asc</button>
+      <button id="btnSortDesc" class="btn-sm">▼ Sort Desc</button>
+      <button id="btnClear" class="btn-sm btn-danger">Clear All</button>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      Drag & Drop CSV / JSON file here to load
+    </div>
+  </div>
 </div>
 
 <script>
-  const cvs = document.getElementById('cvs');
-  const ctx = cvs.getContext('2d');
-  const btnRand = document.getElementById('btnRand');
-  const btnToggle = document.getElementById('btnToggle');
-  const modeBadge = document.getElementById('modeBadge');
-  const srDesc = document.getElementById('srDesc');
+  // Palettes
+  const THEMES = {
+    teal: ["rgb(20, 184, 166)", "rgb(245, 158, 11)", "rgb(236, 72, 153)", "rgb(139, 92, 246)", "rgb(59, 130, 246)", "rgb(16, 185, 129)", "rgb(244, 63, 94)"],
+    neon: ["rgb(244, 114, 182)", "rgb(56, 189, 248)", "rgb(250, 204, 21)", "rgb(74, 222, 128)", "rgb(192, 132, 252)", "rgb(251, 146, 60)", "rgb(34, 211, 238)"],
+    emerald: ["rgb(16, 185, 129)", "rgb(52, 211, 153)", "rgb(5, 150, 105)", "rgb(110, 231, 183)", "rgb(20, 83, 45)", "rgb(167, 243, 208)", "rgb(4, 120, 87)"],
+    warm: ["rgb(245, 158, 11)", "rgb(239, 68, 68)", "rgb(217, 119, 6)", "rgb(249, 115, 22)", "rgb(252, 211, 77)", "rgb(185, 28, 28)", "rgb(253, 186, 116)"],
+    synth: ["rgb(236, 72, 153)", "rgb(168, 85, 247)", "rgb(6, 182, 212)", "rgb(234, 179, 8)", "rgb(244, 63, 94)", "rgb(99, 102, 241)", "rgb(34, 197, 94)"],
+    slate: ["rgb(99, 102, 241)", "rgb(59, 130, 246)", "rgb(14, 165, 233)", "rgb(100, 116, 139)", "rgb(168, 85, 247)", "rgb(71, 85, 105)", "rgb(38, 38, 38)"]
+  };
 
-  // Chart Modes: 0 = Bar, 1 = Line, 2 = Donut
-  let chartMode = 0;
-  const modes = ["Bar View", "Line View", "Donut View"];
+  const PRESETS = {
+    sales: [
+      { label: "Q1 Rev", value: 450 },
+      { label: "Q2 Rev", value: 680 },
+      { label: "Q3 Rev", value: 520 },
+      { label: "Q4 Rev", value: 890 }
+    ],
+    tech: [
+      { label: "React", value: 42 },
+      { label: "Vue", value: 24 },
+      { label: "Svelte", value: 18 },
+      { label: "Angular", value: 16 }
+    ],
+    weather: [
+      { label: "Jan", value: 12 }, { label: "Feb", value: 14 },
+      { label: "Mar", value: 18 }, { label: "Apr", value: 22 },
+      { label: "May", value: 27 }, { label: "Jun", value: 31 },
+      { label: "Jul", value: 35 }, { label: "Aug", value: 34 }
+    ],
+    grades: [
+      { label: "Grade A", value: 28 },
+      { label: "Grade B", value: 45 },
+      { label: "Grade C", value: 32 },
+      { label: "Grade D", value: 12 },
+      { label: "Grade F", value: 5 }
+    ],
+    fitness: [
+      { label: "Mon", value: 1.5 }, { label: "Tue", value: 2.0 },
+      { label: "Wed", value: 0.5 }, { label: "Thu", value: 2.5 },
+      { label: "Fri", value: 1.8 }, { label: "Sat", value: 3.2 },
+      { label: "Sun", value: 2.1 }
+    ]
+  };
 
-  let hoverX = -1;
-  let hoverY = -1;
-  let hoveredIndex = -1;
-
-  let values = [20, 60, 45, 80, 30];
-  let target = [20, 60, 45, 80, 30];
-  const labels = ["Q1", "Q2", "Q3", "Q4", "Q5"];
-  const colors = [
-      "rgb(20, 184, 166)", // Teal
-      "rgb(245, 158, 11)", // Orange
-      "rgb(236, 72, 153)", // Pink
-      "rgb(139, 92, 246)", // Purple
-      "rgb(59, 130, 246)"  // Blue
+  // Dataset State
+  let data = [
+    { label: "Q1", value: 20 },
+    { label: "Q2", value: 60 },
+    { label: "Q3", value: 45 },
+    { label: "Q4", value: 80 },
+    { label: "Q5", value: 30 }
   ];
 
-  let width = 400;
-  let height = 260;
+  let currentTheme = "teal";
+  let chartType = "bar"; // bar, line, area, pie, donut, radar
+  let hoveredIndex = -1;
+  let hoverX = -1, hoverY = -1;
+
+  // DOM Elements
+  const canvas = document.getElementById('chartCanvas');
+  const ctx = canvas.getContext('2d');
+  const tableBody = document.getElementById('tableBody');
+
+  // Stats DOM
+  const statCount = document.getElementById('statCount');
+  const statTotal = document.getElementById('statTotal');
+  const statMean = document.getElementById('statMean');
+  const statMedian = document.getElementById('statMedian');
+  const statStdDev = document.getElementById('statStdDev');
+  const statMin = document.getElementById('statMin');
+  const statMax = document.getElementById('statMax');
+
+  let canvasW = 600, canvasH = 480;
+
+  function getColor(index) {
+    const palette = THEMES[currentTheme] || THEMES.teal;
+    return palette[index % palette.length];
+  }
 
   function resizeCanvas() {
-      const rect = cvs.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      width = rect.width || 400;
-      height = rect.height || 260;
-      
-      cvs.width = width * dpr;
-      cvs.height = height * dpr;
-      ctx.resetTransform();
-      ctx.scale(dpr, dpr);
-      draw();
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvasW = rect.width || 600;
+    canvasH = rect.height || 480;
+    canvas.width = canvasW * dpr;
+    canvas.height = canvasH * dpr;
+    ctx.resetTransform();
+    ctx.scale(dpr, dpr);
+    renderChart();
+  }
+
+  function computeStats() {
+    if (data.length === 0) {
+      statCount.textContent = "0";
+      statTotal.textContent = "0";
+      statMean.textContent = "0";
+      statMedian.textContent = "0";
+      statStdDev.textContent = "0";
+      statMin.textContent = "0";
+      statMax.textContent = "0";
+      return;
+    }
+    const vals = data.map(d => Number(d.value) || 0);
+    const count = vals.length;
+    const total = vals.reduce((a, b) => a + b, 0);
+    const mean = total / count;
+
+    const sorted = [...vals].sort((a, b) => a - b);
+    let median = 0;
+    if (count % 2 === 0) {
+      median = (sorted[count / 2 - 1] + sorted[count / 2]) / 2;
+    } else {
+      median = sorted[Math.floor(count / 2)];
+    }
+
+    const variance = vals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / count;
+    const stdDev = Math.sqrt(variance);
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+
+    statCount.textContent = count;
+    statTotal.textContent = total.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    statMean.textContent = mean.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    statMedian.textContent = median.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    statStdDev.textContent = stdDev.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    statMin.textContent = min.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    statMax.textContent = max.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  function renderTable() {
+    tableBody.innerHTML = '';
+    data.forEach((item, index) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="color-dot" style="background: ${getColor(index)}"></span></td>
+        <td><input type="text" value="${escapeHtml(item.label)}" data-index="${index}" class="lbl-input"></td>
+        <td><input type="number" value="${item.value}" data-index="${index}" class="val-input" step="any"></td>
+        <td><button class="btn-sm btn-danger del-btn" data-index="${index}">✕</button></td>
+      `;
+      tableBody.appendChild(tr);
+    });
+
+    // Attach listeners
+    tableBody.querySelectorAll('.lbl-input').forEach(input => {
+      input.oninput = (e) => {
+        const idx = parseInt(e.target.dataset.index);
+        data[idx].label = e.target.value;
+        renderChart();
+      };
+    });
+    tableBody.querySelectorAll('.val-input').forEach(input => {
+      input.oninput = (e) => {
+        const idx = parseInt(e.target.dataset.index);
+        data[idx].value = parseFloat(e.target.value) || 0;
+        computeStats();
+        renderChart();
+      };
+    });
+    tableBody.querySelectorAll('.del-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        const idx = parseInt(e.target.dataset.index);
+        data.splice(idx, 1);
+        updateAll();
+      };
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
   function drawRoundedRect(ctx, x, y, w, h, r) {
-      if (w <= 0 || h <= 0) return;
-      r = Math.min(r, w / 2, h / 2);
-      if (r < 0) r = 0;
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h);
-      ctx.lineTo(x, y + h);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
+    if (w <= 0 || h <= 0) return;
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x, y + h);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
   }
 
-  function draw() {
-      ctx.clearRect(0, 0, width, height);
+  // Render Engine
+  function renderChart() {
+    ctx.clearRect(0, 0, canvasW, canvasH);
 
-      if (chartMode === 2) {
-          drawDonutChart();
-          return;
-      }
-
-      let chartX = 45;
-      let chartY = 20;
-      let chartW = width - 65;
-      let chartH = height - 55;
-
-      // Safe max value determination (prevent div by zero)
-      const maxVal = Math.max(1, ...values, ...target);
-
-      // Grid lines & Y-axis labels
-      ctx.font = "11px 'Inter', sans-serif";
+    if (data.length === 0) {
+      ctx.font = "14px 'Inter', sans-serif";
       ctx.fillStyle = "#71717a";
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
+      ctx.textAlign = "center";
+      ctx.fillText("No data available. Add items in the table editor.", canvasW / 2, canvasH / 2);
+      return;
+    }
 
-      for (let i = 0; i <= 4; i++) {
-          let y = chartY + (chartH / 4) * i;
-          let valNum = Math.round(maxVal - (maxVal / 4) * i);
-          
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(chartX, y);
-          ctx.lineTo(chartX + chartW, y);
-          ctx.stroke();
+    if (chartType === 'pie' || chartType === 'donut') {
+      renderPieOrDonut(chartType === 'donut');
+    } else if (chartType === 'radar') {
+      renderRadar();
+    } else {
+      renderAxesAndCartesian();
+    }
+  }
 
-          ctx.fillText(valNum.toString(), chartX - 8, y);
-      }
+  function renderAxesAndCartesian() {
+    const padL = 50, padR = 25, padT = 30, padB = 45;
+    const chartW = canvasW - padL - padR;
+    const chartH = canvasH - padT - padB;
 
-      // Draw Axes
+    const vals = data.map(d => Math.max(0, Number(d.value) || 0));
+    const maxVal = Math.max(1, ...vals);
+
+    // Y Axis Grid & Labels
+    ctx.font = "11px 'Inter', sans-serif";
+    ctx.fillStyle = "#71717a";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    const ticks = 5;
+    for (let i = 0; i <= ticks; i++) {
+      const y = padT + (chartH / ticks) * i;
+      const valNum = Math.round(maxVal - (maxVal / ticks) * i);
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(chartX, chartY);
-      ctx.lineTo(chartX, chartY + chartH);
-      ctx.lineTo(chartX + chartW, chartY + chartH);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
-      ctx.lineWidth = 1.5;
+      ctx.moveTo(padL, y);
+      ctx.lineTo(padL + chartW, y);
       ctx.stroke();
 
-      let n = values.length;
-      let barW = Math.min(36, Math.max(16, (chartW / n) * 0.5));
-      let spacing = (chartW - (n * barW)) / (n + 1);
+      ctx.fillText(valNum.toString(), padL - 8, y);
+    }
 
-      ctx.font = "12px 'Inter', sans-serif";
+    // Draw Axes
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, padT + chartH);
+    ctx.lineTo(padL + chartW, padT + chartH);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    const n = data.length;
+    const step = chartW / n;
+    const barW = Math.min(48, Math.max(16, step * 0.6));
+
+    if (chartType === 'bar') {
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
 
-      if (chartMode === 0) {
-          // Bar Chart
-          for (let i = 0; i < n; i++) {
-              let safeVal = Math.max(0, values[i]);
-              let bh = (safeVal / maxVal) * chartH;
-              let bx = chartX + spacing + i * (barW + spacing);
-              let by = chartY + chartH - bh;
-
-              if (bh > 0.5) {
-                  ctx.shadowBlur = hoveredIndex === i ? 18 : 8;
-                  ctx.shadowColor = colors[i % colors.length];
-                  ctx.fillStyle = colors[i % colors.length];
-                  drawRoundedRect(ctx, bx, by, barW, bh, 5);
-                  ctx.fill();
-              }
-
-              ctx.shadowBlur = 0;
-              ctx.fillStyle = hoveredIndex === i ? "#ffffff" : "#a1a1aa";
-              ctx.fontWeight = hoveredIndex === i ? "600" : "400";
-              ctx.fillText(labels[i], bx + barW / 2, chartY + chartH + 8);
-          }
-      } else if (chartMode === 1) {
-          // Line Chart with area fill
-          ctx.shadowBlur = 0;
-
-          // Translucent gradient area fill
-          let areaGrad = ctx.createLinearGradient(0, chartY, 0, chartY + chartH);
-          areaGrad.addColorStop(0, "rgba(20, 184, 166, 0.35)");
-          areaGrad.addColorStop(1, "rgba(20, 184, 166, 0.0)");
-
-          ctx.beginPath();
-          let pts = [];
-          for (let i = 0; i < n; i++) {
-              let safeVal = Math.max(0, values[i]);
-              let bh = (safeVal / maxVal) * chartH;
-              let bx = chartX + spacing + i * (barW + spacing) + barW / 2;
-              let by = chartY + chartH - bh;
-              pts.push({ x: bx, y: by });
-              if (i === 0) ctx.moveTo(bx, by);
-              else ctx.lineTo(bx, by);
-          }
-          ctx.strokeStyle = colors[0];
-          ctx.lineWidth = 3;
-          ctx.stroke();
-
-          // Fill area
-          if (pts.length > 0) {
-              ctx.lineTo(pts[pts.length - 1].x, chartY + chartH);
-              ctx.lineTo(pts[0].x, chartY + chartH);
-              ctx.closePath();
-              ctx.fillStyle = areaGrad;
-              ctx.fill();
-          }
-
-          // Points and labels
-          for (let i = 0; i < n; i++) {
-              let bx = pts[i].x;
-              let by = pts[i].y;
-              let isHov = hoveredIndex === i;
-
-              ctx.beginPath();
-              ctx.arc(bx, by, isHov ? 8 : 5, 0, Math.PI * 2);
-              ctx.fillStyle = colors[i % colors.length];
-              ctx.shadowBlur = isHov ? 12 : 0;
-              ctx.shadowColor = colors[i % colors.length];
-              ctx.fill();
-
-              ctx.shadowBlur = 0;
-              ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
-              ctx.fillText(labels[i], bx, chartY + chartH + 8);
-          }
-      }
-
-      drawTooltip();
-  }
-
-  function drawDonutChart() {
-      let total = values.reduce((a, b) => a + Math.max(0, b), 0);
-      let cx = width / 2 - 40;
-      let cy = height / 2;
-      let outerR = Math.min(width, height) * 0.35;
-      let innerR = outerR * 0.55;
-
-      if (total <= 0) total = 1; // Div by zero guard
-
-      let startAngle = -Math.PI / 2;
-      let n = values.length;
-
       for (let i = 0; i < n; i++) {
-          let val = Math.max(0, values[i]);
-          let sliceAngle = (val / total) * (Math.PI * 2);
-          let endAngle = startAngle + sliceAngle;
-          let isHov = hoveredIndex === i;
-          let offsetR = isHov ? 6 : 0;
+        const val = vals[i];
+        const bh = (val / maxVal) * chartH;
+        const bx = padL + i * step + (step - barW) / 2;
+        const by = padT + chartH - bh;
+        const isHov = hoveredIndex === i;
 
-          let midAngle = startAngle + sliceAngle / 2;
-          let dx = Math.cos(midAngle) * offsetR;
-          let dy = Math.sin(midAngle) * offsetR;
-
-          ctx.beginPath();
-          ctx.arc(cx + dx, cy + dy, outerR, startAngle, endAngle);
-          ctx.arc(cx + dx, cy + dy, innerR, endAngle, startAngle, true);
-          ctx.closePath();
-
-          ctx.fillStyle = colors[i % colors.length];
-          ctx.shadowBlur = isHov ? 16 : 0;
-          ctx.shadowColor = colors[i % colors.length];
+        if (bh > 0.5) {
+          ctx.shadowBlur = isHov ? 16 : 6;
+          ctx.shadowColor = getColor(i);
+          ctx.fillStyle = getColor(i);
+          drawRoundedRect(ctx, bx, by, barW, bh, 6);
           ctx.fill();
-          ctx.shadowBlur = 0;
+        }
 
-          startAngle = endAngle;
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+        ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
+        ctx.fillText(data[i].label, bx + barW / 2, padT + chartH + 8);
       }
-
-      // Legend
-      let legX = width - 110;
-      let legY = height / 2 - (n * 22) / 2;
-      ctx.font = "12px 'Inter', sans-serif";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-
+    } else if (chartType === 'line' || chartType === 'area') {
+      const pts = [];
       for (let i = 0; i < n; i++) {
-          let isHov = hoveredIndex === i;
-          let y = legY + i * 22;
-
-          ctx.fillStyle = colors[i % colors.length];
-          ctx.beginPath();
-          ctx.arc(legX, y, 5, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
-          ctx.fontWeight = isHov ? "600" : "400";
-          let val = Math.round(values[i]);
-          ctx.fillText(`${labels[i]}: ${val}`, legX + 12, y);
+        const val = vals[i];
+        const bh = (val / maxVal) * chartH;
+        const bx = padL + i * step + step / 2;
+        const by = padT + chartH - bh;
+        pts.push({ x: bx, y: by });
       }
 
-      drawTooltip();
-  }
+      if (chartType === 'area') {
+        const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+        grad.addColorStop(0, getColor(0).replace("rgb", "rgba").replace(")", ", 0.4)"));
+        grad.addColorStop(1, getColor(0).replace("rgb", "rgba").replace(")", ", 0.0)"));
 
-  function drawTooltip() {
-      if (hoveredIndex === -1 || animating) return;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, padT + chartH);
+        pts.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.lineTo(pts[pts.length - 1].x, padT + chartH);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
 
-      let val = Math.round(values[hoveredIndex]);
-      let txt = `${labels[hoveredIndex]}: ${val}`;
-      ctx.font = "600 12px 'Inter', sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      
-      let tw = ctx.measureText(txt).width;
-      let th = 26;
-      let tx = hoverX + 12;
-      let ty = hoverY - 12 - th;
-
-      // Tooltip position clamping
-      if (tx + tw + 16 > width - 8) tx = hoverX - tw - 20;
-      if (tx < 8) tx = 8;
-      if (ty < 8) ty = hoverY + 16;
-      if (ty + th > height - 8) ty = height - th - 8;
-
-      ctx.shadowBlur = 12;
-      ctx.shadowColor = "rgba(0,0,0,0.6)";
-      ctx.fillStyle = "rgba(18, 18, 22, 0.95)";
-      
-      drawRoundedRect(ctx, tx, ty, tw + 16, th, 6);
-      ctx.fill();
-      
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-      ctx.lineWidth = 1;
+      // Line path
+      ctx.beginPath();
+      pts.forEach((p, idx) => {
+        if (idx === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.strokeStyle = getColor(0);
+      ctx.lineWidth = 3;
       ctx.stroke();
 
+      // Dots & Labels
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      pts.forEach((p, i) => {
+        const isHov = hoveredIndex === i;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, isHov ? 8 : 5, 0, Math.PI * 2);
+        ctx.fillStyle = getColor(i);
+        ctx.shadowBlur = isHov ? 14 : 0;
+        ctx.shadowColor = getColor(i);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+        ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
+        ctx.fillText(data[i].label, p.x, padT + chartH + 8);
+      });
+    }
+
+    drawTooltipCartesian(padL, padT, chartW, chartH, maxVal, step, barW);
+  }
+
+  function renderPieOrDonut(isDonut) {
+    const total = data.reduce((a, b) => a + Math.max(0, Number(b.value) || 0), 0) || 1;
+    const cx = canvasW / 2 - 60;
+    const cy = canvasH / 2;
+    const outerR = Math.min(canvasW, canvasH) * 0.35;
+    const innerR = isDonut ? outerR * 0.55 : 0;
+
+    let startAngle = -Math.PI / 2;
+    data.forEach((item, i) => {
+      const val = Math.max(0, Number(item.value) || 0);
+      const sliceAngle = (val / total) * Math.PI * 2;
+      const endAngle = startAngle + sliceAngle;
+      const isHov = hoveredIndex === i;
+      const offsetR = isHov ? 8 : 0;
+
+      const midAngle = startAngle + sliceAngle / 2;
+      const dx = Math.cos(midAngle) * offsetR;
+      const dy = Math.sin(midAngle) * offsetR;
+
+      ctx.beginPath();
+      ctx.arc(cx + dx, cy + dy, outerR, startAngle, endAngle);
+      if (isDonut) {
+        ctx.arc(cx + dx, cy + dy, innerR, endAngle, startAngle, true);
+      } else {
+        ctx.lineTo(cx + dx, cy + dy);
+      }
+      ctx.closePath();
+
+      ctx.fillStyle = getColor(i);
+      ctx.shadowBlur = isHov ? 16 : 0;
+      ctx.shadowColor = getColor(i);
+      ctx.fill();
       ctx.shadowBlur = 0;
+
+      startAngle = endAngle;
+    });
+
+    // Donut Center Text
+    if (isDonut) {
+      ctx.font = "700 18px 'Inter', sans-serif";
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(txt, tx + (tw + 16) / 2, ty + th / 2);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(total.toLocaleString(undefined, { maximumFractionDigits: 1 }), cx, cy);
+      ctx.font = "11px 'Inter', sans-serif";
+      ctx.fillStyle = "#a1a1aa";
+      ctx.fillText("TOTAL", cx, cy + 18);
+    }
+
+    // Legend
+    const legX = canvasW - 130;
+    const legY = cy - (data.length * 22) / 2;
+    ctx.font = "12px 'Inter', sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+
+    data.forEach((item, i) => {
+      const y = legY + i * 22;
+      const isHov = hoveredIndex === i;
+
+      ctx.fillStyle = getColor(i);
+      ctx.beginPath();
+      ctx.arc(legX, y, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+      ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
+      const pct = Math.round(((Number(item.value) || 0) / total) * 100);
+      ctx.fillText(`${item.label}: ${item.value} (${pct}%)`, legX + 12, y);
+    });
+
+    drawTooltipPolar(cx, cy, outerR, innerR, total);
   }
 
-  let animating = false;
-  function update() {
-      let changed = false;
-      for (let i = 0; i < values.length; i++) {
-          let diff = target[i] - values[i];
-          if (Math.abs(diff) > 0.1) {
-              values[i] += diff * 0.12;
-              changed = true;
-          } else {
-              values[i] = target[i];
-          }
+  function renderRadar() {
+    const cx = canvasW / 2;
+    const cy = canvasH / 2;
+    const radius = Math.min(canvasW, canvasH) * 0.35;
+    const n = data.length;
+
+    if (n < 3) {
+      ctx.font = "14px 'Inter', sans-serif";
+      ctx.fillStyle = "#71717a";
+      ctx.textAlign = "center";
+      ctx.fillText("Radar chart requires at least 3 data points.", cx, cy);
+      return;
+    }
+
+    const vals = data.map(d => Math.max(0, Number(d.value) || 0));
+    const maxVal = Math.max(1, ...vals);
+    const angleStep = (Math.PI * 2) / n;
+
+    // Web Grid concentric polygons
+    const gridLevels = 4;
+    for (let level = 1; level <= gridLevels; level++) {
+      const r = (radius / gridLevels) * level;
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const angle = -Math.PI / 2 + i * angleStep;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
-      draw();
-      if (changed) {
-          requestAnimationFrame(update);
-      } else {
-          animating = false;
-          updateScreenReader();
-      }
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Spokes & Axis Labels
+    ctx.font = "12px 'Inter', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    for (let i = 0; i < n; i++) {
+      const angle = -Math.PI / 2 + i * angleStep;
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle) * radius;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.stroke();
+
+      const labelDist = radius + 20;
+      const lx = cx + Math.cos(angle) * labelDist;
+      const ly = cy + Math.sin(angle) * labelDist;
+      const isHov = hoveredIndex === i;
+      ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+      ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
+      ctx.fillText(data[i].label, lx, ly);
+    }
+
+    // Data Polygon
+    const dataPts = [];
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const val = vals[i];
+      const r = (val / maxVal) * radius;
+      const angle = -Math.PI / 2 + i * angleStep;
+      const x = cx + Math.cos(angle) * r;
+      const y = cy + Math.sin(angle) * r;
+      dataPts.push({ x, y });
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+
+    ctx.fillStyle = getColor(0).replace("rgb", "rgba").replace(")", ", 0.35)");
+    ctx.fill();
+    ctx.strokeStyle = getColor(0);
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Data Points
+    dataPts.forEach((p, i) => {
+      const isHov = hoveredIndex === i;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, isHov ? 7 : 4, 0, Math.PI * 2);
+      ctx.fillStyle = getColor(i);
+      ctx.fill();
+    });
+
+    drawTooltipRadar(dataPts);
   }
 
-  function updateScreenReader() {
-      let desc = labels.map((l, idx) => `${l}: ${Math.round(values[idx])}`).join(', ');
-      srDesc.textContent = `Chart updated. Current values: ${desc}`;
+  function drawTooltipCartesian(padL, padT, chartW, chartH, maxVal, step, barW) {
+    if (hoveredIndex === -1 || hoveredIndex >= data.length) return;
+    const item = data[hoveredIndex];
+    drawTooltipBox(`${item.label}: ${item.value}`);
   }
 
-  btnRand.onclick = () => {
-      for (let i = 0; i < values.length; i++) {
-          target[i] = 10 + Math.floor(Math.random() * 90);
-      }
-      if (!animating) {
-          animating = true;
-          update();
-      }
-  };
+  function drawTooltipPolar(cx, cy, outerR, innerR, total) {
+    if (hoveredIndex === -1 || hoveredIndex >= data.length) return;
+    const item = data[hoveredIndex];
+    const pct = Math.round(((Number(item.value) || 0) / total) * 100);
+    drawTooltipBox(`${item.label}: ${item.value} (${pct}%)`);
+  }
 
-  btnToggle.onclick = () => {
-      chartMode = (chartMode + 1) % modes.length;
-      modeBadge.textContent = modes[chartMode];
-      draw();
-  };
+  function drawTooltipRadar(pts) {
+    if (hoveredIndex === -1 || hoveredIndex >= data.length) return;
+    const item = data[hoveredIndex];
+    drawTooltipBox(`${item.label}: ${item.value}`);
+  }
 
+  function drawTooltipBox(txt) {
+    ctx.font = "600 12px 'Inter', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const tw = ctx.measureText(txt).width;
+    const th = 26;
+    let tx = hoverX + 12;
+    let ty = hoverY - 12 - th;
+
+    if (tx + tw + 16 > canvasW - 8) tx = hoverX - tw - 20;
+    if (tx < 8) tx = 8;
+    if (ty < 8) ty = hoverY + 16;
+    if (ty + th > canvasH - 8) ty = canvasH - th - 8;
+
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "rgba(0,0,0,0.6)";
+    ctx.fillStyle = "rgba(18, 18, 22, 0.95)";
+    drawRoundedRect(ctx, tx, ty, tw + 16, th, 6);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(txt, tx + (tw + 16) / 2, ty + th / 2);
+  }
+
+  // Hover detection
   function handlePointerMove(clientX, clientY) {
-      const rect = cvs.getBoundingClientRect();
-      hoverX = clientX - rect.left;
-      hoverY = clientY - rect.top;
+    const rect = canvas.getBoundingClientRect();
+    hoverX = clientX - rect.left;
+    hoverY = clientY - rect.top;
 
-      let newHover = -1;
-      let n = values.length;
+    let newHover = -1;
+    const n = data.length;
+    if (n === 0) return;
 
-      if (chartMode === 2) {
-          // Donut hover check
-          let cx = width / 2 - 40;
-          let cy = height / 2;
-          let dx = hoverX - cx;
-          let dy = hoverY - cy;
-          let dist = Math.sqrt(dx * dx + dy * dy);
-          let outerR = Math.min(width, height) * 0.35;
-          let innerR = outerR * 0.55;
+    if (chartType === 'pie' || chartType === 'donut') {
+      const cx = canvasW / 2 - 60;
+      const cy = canvasH / 2;
+      const dx = hoverX - cx;
+      const dy = hoverY - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const outerR = Math.min(canvasW, canvasH) * 0.35;
+      const innerR = chartType === 'donut' ? outerR * 0.55 : 0;
+      const total = data.reduce((a, b) => a + Math.max(0, Number(b.value) || 0), 0) || 1;
 
-          if (dist >= innerR && dist <= outerR + 10) {
-              let angle = Math.atan2(dy, dx);
-              if (angle < -Math.PI / 2) angle += Math.PI * 2;
-              let total = values.reduce((a, b) => a + Math.max(0, b), 0) || 1;
-              let currAngle = -Math.PI / 2;
+      if (dist >= innerR && dist <= outerR + 10) {
+        let angle = Math.atan2(dy, dx);
+        if (angle < -Math.PI / 2) angle += Math.PI * 2;
+        let currAngle = -Math.PI / 2;
 
-              for (let i = 0; i < n; i++) {
-                  let sliceAngle = (Math.max(0, values[i]) / total) * (Math.PI * 2);
-                  if (angle >= currAngle && angle <= currAngle + sliceAngle) {
-                      newHover = i;
-                      break;
-                  }
-                  currAngle += sliceAngle;
-              }
+        for (let i = 0; i < n; i++) {
+          const sliceAngle = (Math.max(0, Number(data[i].value) || 0) / total) * Math.PI * 2;
+          if (angle >= currAngle && angle <= currAngle + sliceAngle) {
+            newHover = i;
+            break;
           }
-      } else {
-          // Bar & Line hover check
-          let chartX = 45;
-          let chartY = 20;
-          let chartW = width - 65;
-          let chartH = height - 55;
-          let maxVal = Math.max(1, ...values);
-
-          let barW = Math.min(36, Math.max(16, (chartW / n) * 0.5));
-          let spacing = (chartW - (n * barW)) / (n + 1);
-
-          for (let i = 0; i < n; i++) {
-              let bh = (Math.max(0, values[i]) / maxVal) * chartH;
-              let bx, by, bw, h;
-
-              if (chartMode === 0) {
-                  bx = chartX + spacing + i * (barW + spacing);
-                  by = chartY + chartH - bh;
-                  bw = barW;
-                  h = bh;
-              } else {
-                  bx = chartX + spacing + i * (barW + spacing) + barW / 2 - 12;
-                  by = chartY + chartH - bh - 12;
-                  bw = 24;
-                  h = 24;
-              }
-
-              if (hoverX >= bx && hoverX <= bx + bw && hoverY >= by - 5 && hoverY <= chartY + chartH) {
-                  newHover = i;
-                  break;
-              }
-          }
+          currAngle += sliceAngle;
+        }
       }
+    } else if (chartType === 'radar') {
+      const cx = canvasW / 2;
+      const cy = canvasH / 2;
+      const angleStep = (Math.PI * 2) / n;
+      const dx = hoverX - cx;
+      const dy = hoverY - cy;
+      let angle = Math.atan2(dy, dx);
+      if (angle < -Math.PI / 2) angle += Math.PI * 2;
 
-      if (newHover !== hoveredIndex || (newHover !== -1 && !animating)) {
-          hoveredIndex = newHover;
-          if (!animating) draw();
+      for (let i = 0; i < n; i++) {
+        const spokeAngle = -Math.PI / 2 + i * angleStep;
+        let diff = Math.abs(angle - spokeAngle);
+        if (diff > Math.PI) diff = Math.PI * 2 - diff;
+        if (diff < angleStep / 2) {
+          newHover = i;
+          break;
+        }
       }
+    } else {
+      const padL = 50, padR = 25, padT = 30, padB = 45;
+      const chartW = canvasW - padL - padR;
+      const step = chartW / n;
+      for (let i = 0; i < n; i++) {
+        const bx = padL + i * step;
+        if (hoverX >= bx && hoverX <= bx + step && hoverY >= padT && hoverY <= canvasH - padB) {
+          newHover = i;
+          break;
+        }
+      }
+    }
+
+    if (newHover !== hoveredIndex) {
+      hoveredIndex = newHover;
+      renderChart();
+    }
   }
 
-  cvs.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
-  cvs.addEventListener('mouseleave', () => {
-      if (hoveredIndex !== -1) {
-          hoveredIndex = -1;
-          if (!animating) draw();
-      }
-  });
-
-  // Touch Support
-  cvs.addEventListener('touchstart', (e) => {
-      if (e.touches.length > 0) {
-          handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
-      }
-  }, { passive: true });
-  cvs.addEventListener('touchmove', (e) => {
-      if (e.touches.length > 0) {
-          handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
-      }
-  }, { passive: true });
-  cvs.addEventListener('touchend', () => {
+  canvas.onmousemove = (e) => handlePointerMove(e.clientX, e.clientY);
+  canvas.onmouseleave = () => {
+    if (hoveredIndex !== -1) {
       hoveredIndex = -1;
-      if (!animating) draw();
-  });
+      renderChart();
+    }
+  };
 
-  // Keyboard accessibility
-  cvs.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-          hoveredIndex = (hoveredIndex + 1) % values.length;
-          hoverX = width / 2;
-          hoverY = height / 2;
-          draw();
-          e.preventDefault();
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-          hoveredIndex = (hoveredIndex - 1 + values.length) % values.length;
-          hoverX = width / 2;
-          hoverY = height / 2;
-          draw();
-          e.preventDefault();
-      } else if (e.key === 'Enter' || e.key === ' ') {
-          btnRand.click();
-          e.preventDefault();
-      } else if (e.key === 't' || e.key === 'T') {
-          btnToggle.click();
-          e.preventDefault();
+  // State update wrapper
+  function updateAll() {
+    renderTable();
+    computeStats();
+    renderChart();
+  }
+
+  // Button Listeners
+  document.getElementById('chartTypeGroup').onclick = (e) => {
+    if (e.target.tagName === 'BUTTON') {
+      document.querySelectorAll('#chartTypeGroup button').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      chartType = e.target.dataset.type;
+      renderChart();
+    }
+  };
+
+  document.getElementById('themeSelect').onchange = (e) => {
+    currentTheme = e.target.value;
+    updateAll();
+  };
+
+  document.getElementById('presetSelect').onchange = (e) => {
+    const val = e.target.value;
+    if (val && PRESETS[val]) {
+      data = JSON.parse(JSON.stringify(PRESETS[val]));
+      updateAll();
+    }
+  };
+
+  document.getElementById('btnRandomize').onclick = () => {
+    data.forEach(item => {
+      item.value = Math.floor(10 + Math.random() * 90);
+    });
+    updateAll();
+  };
+
+  document.getElementById('btnAddRow').onclick = () => {
+    data.push({ label: `Item ${data.length + 1}`, value: Math.floor(10 + Math.random() * 50) });
+    updateAll();
+  };
+
+  document.getElementById('btnSortAsc').onclick = () => {
+    data.sort((a, b) => a.value - b.value);
+    updateAll();
+  };
+
+  document.getElementById('btnSortDesc').onclick = () => {
+    data.sort((a, b) => b.value - a.value);
+    updateAll();
+  };
+
+  document.getElementById('btnClear').onclick = () => {
+    data = [];
+    updateAll();
+  };
+
+  // Export handlers
+  document.getElementById('btnExportPng').onclick = () => {
+    const link = document.createElement('a');
+    link.download = 'KChart_export.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  document.getElementById('btnExportCsv').onclick = () => {
+    let csv = "Label,Value\n";
+    data.forEach(d => {
+      csv += `"${d.label.replace(/"/g, '""')}",${d.value}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.download = 'kchart_data.csv';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  };
+
+  document.getElementById('btnExportJson').onclick = () => {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.download = 'kchart_data.json';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  };
+
+  // Import handlers
+  const fileInput = document.getElementById('fileInput');
+  document.getElementById('btnImportTrigger').onclick = () => fileInput.click();
+
+  fileInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) loadFile(file);
+  };
+
+  const dropZone = document.getElementById('dropZone');
+  dropZone.onclick = () => fileInput.click();
+
+  dropZone.ondragover = (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  };
+  dropZone.ondragleave = () => dropZone.classList.remove('dragover');
+  dropZone.ondrop = (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      loadFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  function loadFile(file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target.result;
+      if (file.name.endsWith('.json') || content.trim().startsWith('[')) {
+        try {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed)) {
+            data = parsed.map((item, i) => ({
+              label: item.label || item.name || `Point ${i + 1}`,
+              value: Number(item.value || item.val || 0)
+            }));
+            updateAll();
+          }
+        } catch (err) {
+          alert("Invalid JSON format.");
+        }
+      } else {
+        // Parse CSV
+        const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+        const newData = [];
+        lines.forEach((line, idx) => {
+          if (idx === 0 && (line.toLowerCase().includes('label') || line.toLowerCase().includes('name'))) return;
+          const parts = line.split(',');
+          if (parts.length >= 2) {
+            const lbl = parts[0].replace(/^"|"$/g, '').trim();
+            const val = parseFloat(parts[1].replace(/^"|"$/g, '').trim()) || 0;
+            newData.push({ label: lbl, value: val });
+          }
+        });
+        if (newData.length > 0) {
+          data = newData;
+          updateAll();
+        }
       }
-  });
+    };
+    reader.readAsText(file);
+  }
 
+  // Window resize
   window.addEventListener('resize', resizeCanvas);
+  
+  // Init
   resizeCanvas();
+  updateAll();
 </script>
 </body>
 </html>
-
