@@ -358,7 +358,7 @@ unsigned char transferBuf[132];
 int transferBytesTotal = 0;
 char transferStatusMsg[128] = "";
 
-HWND hBtnXmDl, hBtnXmUl, hBtnZmDl, hBtnZmUl;
+HWND hBtnXmDl, hBtnXmUl, hBtnZmDl, hBtnZmUl, hBtnDoor, hBtnArt;
 unsigned char sigBuf[6] = {0};
 
 /* ZMODEM State */
@@ -1739,7 +1739,47 @@ void ProcessByteAndAutoLogin(unsigned char ch) {
     }
 }
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+void StreamAnsiString(const char* str) {
+    while (*str) {
+        ProcessTelnetByte((unsigned char)*str++);
+    }
+}
+
+void RunDoorGameStream(int choice) {
+    ClearScreen();
+    if (choice == 0) {
+        StreamAnsiString("\x1B[1;31m=====================================================\r\n");
+        StreamAnsiString("\x1B[1;33m       LEGEND OF THE RED DRAGON (L.O.R.D.)           \r\n");
+        StreamAnsiString("\x1B[1;31m=====================================================\r\n\x1B[0;37m");
+        StreamAnsiString("Warrior: Level 1 | HP: 20/20 | Gold: 100 | Fights: 15\r\n\r\n");
+        StreamAnsiString("\x1B[1;32m(F)orest Hunt  (I)nn & Tavern  (A)rmory  (B)ank  (Q)uit\r\n");
+        StreamAnsiString("\x1B[1;36m-> You enter the dark forest... A Forest Goblin appears!\r\n");
+        StreamAnsiString("\x1B[1;33m-> You strike the goblin with your Stick! +30 Gold!\r\n\x1B[0m");
+    } else {
+        StreamAnsiString("\x1B[1;34m=====================================================\r\n");
+        StreamAnsiString("\x1B[1;36m          TRADEWARS 2015 SPACE ADVENTURE            \r\n");
+        StreamAnsiString("\x1B[1;34m=====================================================\r\n\x1B[0;37m");
+        StreamAnsiString("Sector 1 (Sol) | Credits: $1,000 | Holds: 10 | Shields: 100%\r\n\r\n");
+        StreamAnsiString("\x1B[1;35m(W)arp Sector  (P)ort Trade  (C)ombat Pirates  (Q)uit\r\n");
+        StreamAnsiString("\x1B[1;32m-> Warping to Sector 5... Space Port detected!\r\n\x1B[0m");
+    }
+}
+
+void RunAnsiArtStream(void) {
+    ClearScreen();
+    StreamAnsiString("\x1B[1;36m╔══════════════════════════════════════════════════════════════════════════════╗\r\n");
+    StreamAnsiString("║\x1B[1;33m  __  __ _                ___ ___ ___                                       \x1B[1;36m║\r\n");
+    StreamAnsiString("║\x1B[1;33m |  \\/  (_)__ _ _ ___    | _ ) _ ) __|                                      \x1B[1;36m║\r\n");
+    StreamAnsiString("║\x1B[1;33m | |\\/| | / _| '_/ _ \\   | _ \\ _ \\__ \\                                      \x1B[1;36m║\r\n");
+    StreamAnsiString("║\x1B[1;33m |_|  |_|_\\__|_| \\___/   |___/___/___/                                      \x1B[1;36m║\r\n");
+    StreamAnsiString("║                                                                            ║\r\n");
+    StreamAnsiString("║\x1B[0;37m  RETRO ANSI ART GALLERY EDITION               v2.0 — Native C      \x1B[1;36m║\r\n");
+    StreamAnsiString("╚══════════════════════════════════════════════════════════════════════════════╝\x1B[0m\r\n");
+}
+
+LRESULT CALLBACK WndProc
+(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             unsigned int i;
@@ -1799,6 +1839,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 dpiScale(976), dpiScale(4), dpiScale(40), dpiScale(22), hwnd, (HMENU)112, 0, 0);
 
+            hBtnDoor = CreateWindowA("BUTTON", "Door", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(1020), dpiScale(4), dpiScale(45), dpiScale(22), hwnd, (HMENU)113, 0, 0);
+
+            hBtnArt = CreateWindowA("BUTTON", "Art", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(1069), dpiScale(4), dpiScale(35), dpiScale(22), hwnd, (HMENU)114, 0, 0);
+
             SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
 
             /* Status bar */
@@ -1819,6 +1865,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnSettings, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnCapture, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnDoor, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnArt, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hUIFont, TRUE);
 
             ClearScreen();
@@ -2044,6 +2092,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (LOWORD(wParam) == 112) {
                 DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_HELP), hwnd, HelpProc, 0);
+            } else if (LOWORD(wParam) == 113) {
+                if (MessageBoxA(hwnd, "Launch Legend of the Red Dragon (L.O.R.D.)?\nClick NO for TradeWars 2015.", "Door Games Mini-Suite", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                    RunDoorGameStream(0);
+                } else {
+                    RunDoorGameStream(1);
+                }
+            } else if (LOWORD(wParam) == 114) {
+                RunAnsiArtStream();
             }
             break;
         }

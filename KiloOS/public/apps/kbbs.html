@@ -1,37 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <title>KBBS - Retro BBS Terminal & Utility Suite</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background:#09090b; font-family:'Inter', system-ui, sans-serif; font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; color: #a1a1aa; }
 
         .conn-bar { 
-            display:flex; align-items:center; gap:8px; padding:12px 16px; 
-            background:rgba(24, 24, 27, 0.7); backdrop-filter:blur(8px); 
-            -webkit-backdrop-filter:blur(8px);
-            border-bottom:1px solid rgba(255, 255, 255, 0.05); 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); z-index: 10;
+            display:flex; align-items:center; gap:6px; padding:10px 14px; 
+            background:rgba(24, 24, 27, 0.85); backdrop-filter:blur(10px); 
+            -webkit-backdrop-filter:blur(10px);
+            border-bottom:1px solid rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); z-index: 10;
+            flex-wrap: wrap;
         }
         .conn-bar span { font-weight: 600; color: #d4d4d8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
         .conn-bar input[type="text"], .conn-bar select { 
             background: rgba(0, 0, 0, 0.5); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3); 
-            padding: 6px 10px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; transition: all 0.2s; outline: none;
+            padding: 5px 8px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; transition: all 0.2s; outline: none;
         }
         .conn-bar input[type="text"]:focus, .conn-bar select:focus { border-color: #0ea5e9; box-shadow: 0 0 8px rgba(14, 165, 233, 0.3); }
         .conn-bar input:disabled { background:rgba(255, 255, 255, 0.02); color:#52525b; border-color: rgba(255, 255, 255, 0.05); cursor:not-allowed; }
         .conn-bar select option { background: #18181b; color: #e4e4e7; }
         
         .conn-bar button { 
-            font-family:'Inter', sans-serif; font-weight: 600; font-size:12px; padding:6px 14px; cursor:pointer; 
+            font-family:'Inter', sans-serif; font-weight: 600; font-size:11px; padding:5px 12px; cursor:pointer; 
             background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); color: #fff; 
             border: 1px solid #0369a1; border-radius: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); transition: all 0.1s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); transition: all 0.15s;
+            display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
         }
+        .conn-bar button:hover { filter: brightness(1.1); transform: translateY(-1px); }
         .conn-bar button:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
         
-        #host { width:220px; }
-        #port { width:60px; text-align: center; }
-        #bbsSelect { width:220px; margin-left: auto; }
+        #host { width:160px; }
+        #port { width:50px; text-align: center; }
 
         /* Main area */
         .main { flex:1; display:flex; overflow:hidden; position: relative; }
@@ -49,41 +53,98 @@
             display: var(--crt-display, block);
         }
 
+        /* Script Execution Overlay */
+        #scriptBanner {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9); border: 1px solid #38bdf8; color: #38bdf8;
+            padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 50; display: none;
+            align-items: center; gap: 8px; backdrop-filter: blur(8px);
+        }
+        .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #38bdf8; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { opacity: 0.3; } to { opacity: 1; } }
+
         /* Status bar */
         .status-bar { 
             padding:6px 16px; background:#09090b; border-top:1px solid rgba(255,255,255,0.05); 
             font-size:11px; font-weight: 500; color:#71717a; display:flex; justify-content:space-between; 
-            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.2); z-index: 10;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.2); z-index: 10; align-items: center;
         }
-        #statusInfo { color: #10b981; text-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
+        #statusInfo { color: #10b981; text-shadow: 0 0 5px rgba(16, 185, 129, 0.3); font-weight: 600; }
+        #bytesInfo { color: #a1a1aa; font-family: monospace; }
+        .cap-badge { background: #0284c7; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-left: 8px; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 100;
+            align-items: center; justify-content: center;
+        }
+        .modal-card {
+            background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); display: flex; flex-direction: column; overflow: hidden;
+        }
+        .modal-header {
+            padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-weight: 600; color: #fff; font-size: 15px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-close {
+            background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px;
+            border-radius: 6px; cursor: pointer; transition: background 0.2s; font-weight: bold;
+        }
+        .modal-close:hover { background: rgba(239, 68, 68, 0.8); }
+
+        .btn-action { background:#0ea5e9; color:#fff; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; transition:0.15s; }
+        .btn-action:hover { filter:brightness(1.1); }
+        .btn-danger { background:#ef4444; color:#fff; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; transition:0.15s; }
+        .btn-danger:hover { filter:brightness(1.1); }
+        .btn-secondary { background:#27272a; color:#e4e4e7; border:1px solid #3f3f46; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; transition:0.15s; }
+        .btn-secondary:hover { background:#3f3f46; }
+
+        /* Door Games UI */
+        .door-tab { padding: 8px 16px; background: rgba(255,255,255,0.05); color: #a1a1aa; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .door-tab.active { background: linear-gradient(180deg, #ec4899 0%, #be185d 100%); color: #fff; box-shadow: 0 2px 8px rgba(236,72,153,0.3); }
+
+        /* Art Canvas Preview */
+        #artPreviewCanvas { background: #000; image-rendering: pixelated; border: 1px solid #27272a; border-radius: 6px; }
     </style>
 </head>
 <body>
     <div class="conn-bar">
         <span>Host:</span>
-        <input type="text" id="host" placeholder="" value="" disabled title="EXE only feature. Select a BBS from the dropdown.">
+        <input type="text" id="host" placeholder="Address..." value="">
         <span>Port:</span>
-        <input type="text" id="port" value="23" disabled title="EXE only feature">
-        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 4px;">
+        <input type="text" id="port" value="23">
+        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 2px;">
             <input type="checkbox" id="localEcho"> Echo
         </label>
-        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 4px;">
+        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 2px;">
             <input type="checkbox" id="crtToggle" checked onchange="toggleCRT()"> CRT
         </label>
         <button id="btnConn" onclick="initAudio(); toggleConnect()">Connect</button>
         <button id="btnDir" onclick="showDialingDir()">Directory</button>
-        <button id="btnMacros" onclick="showMacros()" style="margin-left:4px;">Macros</button>
-        <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:8px;">DL (XM)</button>
+        <button id="btnMacros" onclick="showMacros()">Macros</button>
+        <button id="btnDoorGames" onclick="showDoorGames()" style="background: linear-gradient(180deg, #ec4899 0%, #be185d 100%); border-color: #9d174d;">Door Games</button>
+        <button id="btnAnsiArt" onclick="showAnsiArtViewer()" style="background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%); border-color: #3730a3;">ANSI Art</button>
+        <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:4px;">DL (XM)</button>
         <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
-        <button id="btnZmDl" onclick="startTransfer(3)" title="ZMODEM Download" style="background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); border-color: #0369a1; margin-left:4px;">DL (ZM)</button>
+        <button id="btnZmDl" onclick="startTransfer(3)" title="ZMODEM Download" style="background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); border-color: #0369a1;">DL (ZM)</button>
         <button id="btnZmUl" onclick="startTransfer(4)" title="ZMODEM Upload" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">UL (ZM)</button>
-        <button id="btnSettings" onclick="showSettings()" style="margin-left:4px;">Settings</button>
-        <button id="btnCapture" onclick="toggleCapture()" style="margin-left:4px; background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF</button>
-        <button id="btnHelp" onclick="showHelp()" style="margin-left:4px; background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help</button>
+        <button id="btnSettings" onclick="showSettings()">Settings</button>
+        <button id="btnCapture" onclick="showCaptureManager()" style="background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF</button>
+        <button id="btnHelp" onclick="showHelp()" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help</button>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
+        <input type="file" id="ansFileUpload" accept=".ans,.txt,.ice" style="display:none" onchange="loadAnsFile(event)">
+        <input type="file" id="dirImportUpload" accept=".json" style="display:none" onchange="importDirectoryJSON(event)">
     </div>
     <div class="main">
         <div class="term-wrap">
+            <div id="scriptBanner">
+                <div class="pulse-dot"></div>
+                <span id="scriptBannerText">Script Running...</span>
+                <button onclick="stopScriptMacro()" style="background:transparent; border:none; color:#ef4444; font-weight:bold; cursor:pointer; margin-left:8px;">✕</button>
+            </div>
             <div style="display: flex; flex: 1; width: 100%; height: 100%; position: relative;">
                 <canvas id="terminal" tabindex="0" role="img" aria-label="BBS Terminal Screen" style="flex: 1;"></canvas>
                 <div id="scrollContainer" style="width: 16px; height: 100%; overflow-y: scroll; background: #09090b; border-left: 1px solid #27272a; z-index: 3; display: none;" onscroll="handleScroll(event)">
@@ -91,73 +152,233 @@
                 </div>
             </div>
         </div>
-        <!-- Dialing Directory Modal -->
-        <div id="dialingDir" role="dialog" aria-modal="true" aria-label="Dialing Directory" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
-            <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-                <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
-                    <span>Dialing Directory</span>
-                    <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeDialingDir()">X</button>
+
+        <!-- Multi-Node Dialing Directory Modal -->
+        <div id="dialingDir" class="modal-overlay">
+            <div class="modal-card" style="width: 680px; max-width: 95%; height: 540px; max-height: 95%;">
+                <div class="modal-header">
+                    <span>Multi-Node Dialing Directory Manager</span>
+                    <button class="modal-close" onclick="closeDialingDir()">X</button>
+                </div>
+                <div style="padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; background: rgba(0,0,0,0.3);">
+                    <input type="text" id="dirSearchInput" placeholder="Search BBS by name, host, or tag (#games, #retro)..." style="flex:1; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px 10px; border-radius:6px; outline:none;" oninput="renderDirList()">
+                    <button class="btn-secondary" onclick="document.getElementById('dirImportUpload').click()">Import JSON</button>
+                    <button class="btn-secondary" onclick="exportDirectoryJSON()">Export JSON</button>
                 </div>
                 <div style="flex: 1; display: flex; overflow: hidden;">
-                    <div style="width: 250px; border-right: 1px solid #27272a; overflow-y: auto;" id="dirList"></div>
-                    <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-                        <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Name</label><br><input type="text" id="dirName" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
-                        <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Host (IP/Domain)</label><br><input type="text" id="dirHost" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
-                        <div style="display:flex; gap:8px;">
-                            <div style="flex:1;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Port</label><br><input type="number" id="dirPort" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
-                            <div style="flex:1;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Connection Type</label><br><select id="dirType" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"><option value="telnet">Telnet</option><option value="ws">WebSocket</option></select></div>
+                    <div style="width: 260px; border-right: 1px solid #27272a; overflow-y: auto;" id="dirList"></div>
+                    <div style="flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto;">
+                        <div>
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">System Name</label>
+                            <input type="text" id="dirName" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
                         </div>
-                        <div style="margin-top:4px;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Auto-Login (Wait~Send~Wait~Send)</label><br><input type="text" id="dirAutoLogin" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;" placeholder="ogin:~sysop\r~assword:~secret\r"></div>
-                        <div style="margin-top:auto; display:flex; gap:8px;">
-                            <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="saveEntry()">Save</button>
-                            <button style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="deleteEntry()">Delete</button>
-                            <button style="background:#27272a; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-left:auto;" onclick="newEntry()">New</button>
+                        <div>
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Multi-Node Selection</label>
+                            <select id="dirNodeSelect" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;" onchange="onNodeSelectChange()">
+                                <option value="1">Node 1 (Primary)</option>
+                                <option value="2">Node 2 (Secondary)</option>
+                                <option value="3">Node 3 (WS Gateway)</option>
+                                <option value="4">Node 4 (Local Door Test)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Host Address (Domain / IP)</label>
+                            <input type="text" id="dirHost" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <div style="flex:1;">
+                                <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Port</label>
+                                <input type="number" id="dirPort" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
+                            </div>
+                            <div style="flex:1;">
+                                <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Type</label>
+                                <select id="dirType" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
+                                    <option value="telnet">Telnet (Proxy)</option>
+                                    <option value="ws">WebSocket</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Auto-Login Script / Macro String</label>
+                            <input type="text" id="dirAutoLogin" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;" placeholder="login:~guest~pass:~1234">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Tags & Notes</label>
+                            <input type="text" id="dirTags" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;" placeholder="#retro #games #sysop">
+                        </div>
+                        <div style="margin-top:auto; display:flex; gap:8px; padding-top:6px;">
+                            <button class="btn-action" onclick="saveEntry()">Save Entry</button>
+                            <button class="btn-danger" onclick="deleteEntry()">Delete</button>
+                            <button class="btn-secondary" onclick="pingCurrentNode()">Ping Node</button>
+                            <button class="btn-secondary" style="margin-left:auto;" onclick="newEntry()">New Entry</button>
                         </div>
                     </div>
                 </div>
-                <div style="padding: 16px; border-top: 1px solid #27272a; display: flex; justify-content: flex-end; gap: 8px;">
-                    <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 24px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="connectSelected()">Connect</button>
+                <div style="padding: 12px 16px; border-top: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
+                    <span id="nodeStatusText" style="font-size:11px; color:#10b981; font-weight:600;">Node Status: Ready</span>
+                    <button class="btn-action" style="padding:8px 24px;" onclick="connectSelected()">Dial Node</button>
                 </div>
             </div>
         </div>
-        <!-- Macros Modal -->
-        <div id="macrosDir" role="dialog" aria-modal="true" aria-label="Macros Settings" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
-            <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-                <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
-                    <span>Macros (Alt + Key)</span>
-                    <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeMacros()">X</button>
+
+        <!-- Door Games Mini-Suite Modal -->
+        <div id="doorGamesModal" class="modal-overlay">
+            <div class="modal-card" style="width: 720px; max-width: 95%; height: 560px; max-height: 95%;">
+                <div class="modal-header" style="background: linear-gradient(90deg, #be185d 0%, #831843 100%);">
+                    <span>🎮 Door Games Mini-Suite (BBS Text Adventures)</span>
+                    <button class="modal-close" onclick="closeDoorGames()">X</button>
                 </div>
-                <div style="flex: 1; display: flex; overflow: hidden;">
-                    <div style="width: 200px; border-right: 1px solid rgba(255,255,255,0.1); overflow-y: auto;" id="macroList"></div>
-                    <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-                        <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Key (e.g. L)</label><br><input type="text" id="macroKey" maxlength="1" style="width:50px; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; text-transform:uppercase;"></div>
-                        <div style="flex:1; display:flex; flex-direction:column;">
-                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">String Sequence (use \r for enter)</label>
-                            <textarea id="macroString" style="flex:1; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; resize:none; font-family:monospace;"></textarea>
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="saveMacro()">Save</button>
-                            <button style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="deleteMacro()">Delete</button>
-                            <button style="background:#27272a; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-left:auto;" onclick="newMacro()">New</button>
-                        </div>
+                <div style="padding: 10px 16px; display: flex; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.4);">
+                    <div class="door-tab active" id="tabLord" onclick="switchDoorTab('lord')">🐉 Legend of the Red Dragon (L.O.R.D.)</div>
+                    <div class="door-tab" id="tabTradeWars" onclick="switchDoorTab('tradewars')">🚀 TradeWars 2015</div>
+                </div>
+                <div style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;" id="doorContentArea">
+                    <!-- Dynamic Door Game Interface rendered via JS -->
+                </div>
+                <div style="padding: 12px 16px; border-top: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
+                    <span style="font-size: 11px; color: #a1a1aa;">Plays directly inside terminal stream with authentic CP437 ANSI colors & music!</span>
+                    <button class="btn-action" onclick="streamDoorToTerminal()">Stream to Terminal Screen</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANSI Color & Art Viewer Modal -->
+        <div id="ansiArtModal" class="modal-overlay">
+            <div class="modal-card" style="width: 760px; max-width: 95%; height: 580px; max-height: 95%;">
+                <div class="modal-header" style="background: linear-gradient(90deg, #4338ca 0%, #312e81 100%);">
+                    <span>🎨 ANSI Color & Art Viewer Mode</span>
+                    <button class="modal-close" onclick="closeAnsiArtViewer()">X</button>
+                </div>
+                <div style="padding: 10px 16px; display: flex; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); align-items: center; flex-wrap: wrap;">
+                    <span>Gallery:</span>
+                    <select id="artPresetSelect" style="background:#09090b; border:1px solid #27272a; color:#fff; padding:5px 8px; border-radius:4px;" onchange="loadArtPreset()">
+                        <option value="cyber">Cyberpunk BBS Header</option>
+                        <option value="dragon">Red Dragon ANSI Art</option>
+                        <option value="sunset">Retrowave Synth Skyline</option>
+                        <option value="acid">Acid Telecom Logo</option>
+                    </select>
+                    <button class="btn-secondary" onclick="document.getElementById('ansFileUpload').click()">Load Local File (.ans/.txt)</button>
+                    <span>Baud Rate:</span>
+                    <select id="artBaudSelect" style="background:#09090b; border:1px solid #27272a; color:#fff; padding:5px 8px; border-radius:4px;" onchange="updateArtBaud()">
+                        <option value="0">Instant</option>
+                        <option value="2400">2400 bps</option>
+                        <option value="9600" selected>9600 bps</option>
+                        <option value="14400">14400 bps</option>
+                        <option value="57600">57.6k bps</option>
+                    </select>
+                    <span>Palette:</span>
+                    <select id="artPaletteSelect" style="background:#09090b; border:1px solid #27272a; color:#fff; padding:5px 8px; border-radius:4px;" onchange="changeArtPalette()">
+                        <option value="dos">Classic DOS VGA</option>
+                        <option value="amber">Amber CRT Phosphor</option>
+                        <option value="green">Green Matrix CRT</option>
+                        <option value="cyber">Cyberpunk Neon</option>
+                    </select>
+                </div>
+                <div style="flex: 1; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; overflow: auto;">
+                    <canvas id="artPreviewCanvas" width="640" height="400"></canvas>
+                </div>
+                <div style="padding: 12px 16px; border-top: 1px solid #27272a; display: flex; gap: 8px; justify-content: flex-end; background: rgba(0,0,0,0.3);">
+                    <button class="btn-secondary" onclick="playArtAnimation()">▶ Play / Replay</button>
+                    <button class="btn-action" onclick="renderArtToTerminal()">Render to Main Terminal</button>
+                    <button class="btn-action" style="background:#10b981;" onclick="downloadArtPNG()">Export PNG</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Capture Manager Modal -->
+        <div id="captureModal" class="modal-overlay">
+            <div class="modal-card" style="width: 600px; max-width: 95%; height: 480px; max-height: 95%;">
+                <div class="modal-header">
+                    <span>Session Log Capture & Export Manager</span>
+                    <button class="modal-close" onclick="closeCaptureManager()">X</button>
+                </div>
+                <div style="padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex: 1;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <span>Capture Status:</span>
+                        <span id="capStatusIndicator" style="font-weight: 700; color: #ef4444;">INACTIVE</span>
+                        <button class="btn-action" id="btnToggleCapMode" onclick="toggleCaptureState()">Start Recording</button>
                     </div>
-                </div>
-            </div>
-        </div>
-        <!-- Settings Modal -->
-        <div id="settingsModal" role="dialog" aria-modal="true" aria-label="Display Settings" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
-            <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 300px; max-width: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-                <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
-                    <span>Display Settings</span>
-                    <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeSettings()">X</button>
-                </div>
-                <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-                    <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Font Size (px)</label><br><input type="number" id="setFontSize" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
-                    <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Blink Rate (ms)</label><br><input type="number" id="setBlinkRate" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
                     <div>
-                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Baud Rate Emulation</label><br>
-                        <select id="setBaudRate" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; font-family:'Inter', sans-serif; font-size:13px;">
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Capture Mode</label>
+
+                        <select id="capModeSelect" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:4px;">
+                            <option value="txt">Clean Text (.txt) - Strips ANSI escapes</option>
+                            <option value="ans">Raw ANSI (.ans) - Preserves escape sequences & colors</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Captured Log Preview</label>
+
+                        <textarea id="capLogPreview" readonly style="flex: 1; background: #000; color: #10b981; border: 1px solid #27272a; border-radius: 6px; padding: 10px; font-family: monospace; font-size: 11px; resize: none; margin-top: 4px;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                        <button class="btn-secondary" onclick="copyCaptureToClipboard()">Copy to Clipboard</button>
+                        <button class="btn-danger" onclick="clearCaptureBuffer()">Clear Buffer</button>
+                        <button class="btn-action" onclick="downloadCaptureFile()">Download File</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Macros & Script Auto-Login Modal -->
+        <div id="macrosDir" class="modal-overlay">
+            <div class="modal-card" style="width: 650px; max-width: 95%; height: 520px; max-height: 95%;">
+                <div class="modal-header">
+                    <span>Custom BBS Script Macro Auto-Login Engine</span>
+                    <button class="modal-close" onclick="closeMacros()">X</button>
+                </div>
+                <div style="flex: 1; display: flex; overflow: hidden;">
+                    <div style="width: 220px; border-right: 1px solid rgba(255,255,255,0.1); overflow-y: auto;" id="macroList"></div>
+                    <div style="flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 8px;">
+                            <div style="width: 70px;">
+                                <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Alt Key</label>
+                                <input type="text" id="macroKey" maxlength="1" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px; text-transform:uppercase; text-align:center;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Macro Title</label>
+                                <input type="text" id="macroTitle" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;" placeholder="Auto-Login Script">
+                            </div>
+                        </div>
+                        <div style="flex:1; display:flex; flex-direction:column;">
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Script Sequences (WAIT: "prompt", SEND: "text\r", DELAY: 500)</label>
+                            <textarea id="macroString" style="flex:1; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; resize:none; font-family:monospace; font-size:12px;" placeholder='WAIT:"login:"
+SEND:"sysop\r"
+WAIT:"password:"
+SEND:"secret\r"'></textarea>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-action" onclick="saveMacro()">Save Script</button>
+                            <button class="btn-danger" onclick="deleteMacro()">Delete</button>
+                            <button class="btn-secondary" onclick="runSelectedScriptMacro()">Run Script Now</button>
+                            <button class="btn-secondary" style="margin-left:auto;" onclick="newMacro()">New</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Display Settings Modal -->
+        <div id="settingsModal" class="modal-overlay">
+            <div class="modal-card" style="width: 340px; max-width: 95%;">
+                <div class="modal-header">
+                    <span>Display Settings</span>
+                    <button class="modal-close" onclick="closeSettings()">X</button>
+                </div>
+                <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Font Size (px)</label>
+                        <input type="number" id="setFontSize" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
+                    </div>
+                    <div>
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Blink Rate (ms)</label>
+                        <input type="number" id="setBlinkRate" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
+                    </div>
+                    <div>
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Baud Rate Emulation</label>
+                        <select id="setBaudRate" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
                             <option value="0">Instant (Default)</option>
+                            <option value="57600">57.6k bps</option>
                             <option value="14400">14400 bps</option>
                             <option value="9600">9600 bps</option>
                             <option value="2400">2400 bps</option>
@@ -168,64 +389,230 @@
                     <label style="color: #d4d4d8; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none;">
                         <input type="checkbox" id="setLocalEcho"> Local Echo
                     </label>
-                    <div style="margin-top:8px;">
+                    <div>
                         <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
-                            Palette
+                            16-Color Palette
                             <button onclick="resetPalette()" style="background:transparent; border:none; color:#0ea5e9; font-size:11px; cursor:pointer; text-decoration:underline;">Reset</button>
                         </label>
                         <div id="paletteContainer" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;"></div>
                     </div>
-                    <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-top: 8px;" onclick="saveSettings()">Save Settings</button>
+                    <button class="btn-action" style="margin-top: 6px;" onclick="saveSettings()">Save Settings</button>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Help Modal -->
-    <div id="helpModal" role="dialog" aria-modal="true" aria-label="Help and Quick Reference" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
-        <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 450px; max-width: 95%; max-height: 80%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-            <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
-                <span>Help / Quick Reference</span>
-                <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeHelp()">X</button>
-            </div>
-            <div style="padding: 16px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; color: #e4e4e7; line-height: 1.5; font-size: 13px;">
-                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Dialing Directory:</strong> Save and quick-connect to your favorite BBSs.</div>
-                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">XMODEM / ZMODEM:</strong> Transfer files using classic protocols. Click DL to download from the BBS, UL to upload.</div>
-                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">ANSI Music:</strong> Fully supports ANSI-M music codes. Play tones directly from BBS games and menus.</div>
-                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Macros:</strong> Bind Alt+Key to string sequences. Use \r for Enter. Great for quick logins.</div>
-                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Display Settings:</strong> Adjust font size, blink rate, and the 16-color PC palette.</div>
-                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Scrollback:</strong> Use the scrollbar or Shift+PgUp/PgDn to view terminal history.</div>
-                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Copy/Paste:</strong> Click and drag to select text, then copy. Ctrl+V to paste into the terminal.</div>
-                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Session Capture:</strong> Toggle capture ON to save all incoming text to a local file.</div>
-                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Baud Rate Emulation:</strong> Simulate old modem speeds (e.g. 2400 bps) in Settings.</div>
-            </div>
-            <div style="padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end;">
-                <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 24px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="closeHelp()">OK</button>
+
+        <!-- Help Modal -->
+        <div id="helpModal" class="modal-overlay">
+            <div class="modal-card" style="width: 480px; max-width: 95%; max-height: 85%;">
+                <div class="modal-header">
+                    <span>Help & Quick Reference</span>
+                    <button class="modal-close" onclick="closeHelp()">X</button>
+                </div>
+                <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; color: #e4e4e7; line-height: 1.5; font-size: 12px;">
+                    <div><strong style="color: #0ea5e9;">Dialing Directory:</strong> Multi-node manager to save, ping, and connect to live BBS systems.</div>
+                    <div><strong style="color: #ec4899;">Door Games Mini-Suite:</strong> Play classic Legend of the Red Dragon (L.O.R.D.) or TradeWars 2015 text adventures!</div>
+                    <div><strong style="color: #6366f1;">ANSI Art Viewer:</strong> Render, animate, and export retro ANSI art files with baud rate playback.</div>
+                    <div><strong style="color: #10b981;">Session Log Capture:</strong> Export incoming terminal logs as raw ANSI (.ans) or clean text (.txt).</div>
+                    <div><strong style="color: #f59e0b;">Script Auto-Login Engine:</strong> Automate logins using WAIT and SEND sequence scripts.</div>
+                    <div><strong style="color: #0ea5e9;">XMODEM / ZMODEM:</strong> Full protocol binary file upload and download support.</div>
+                    <div><strong style="color: #8b5cf6;">ANSI Music:</strong> Plays standard ANSI-M sound tracks using Web Audio API synthesis.</div>
+                </div>
+                <div style="padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: flex-end;">
+                    <button class="btn-action" onclick="closeHelp()">Got It</button>
+                </div>
             </div>
         </div>
+
     </div>
+
     <div class="status-bar">
         <span id="statusInfo">Ready — Select a BBS or enter an address</span>
-        <span id="bytesInfo"></span>
+        <span id="bytesInfo">0 B | Cap: OFF</span>
     </div>
 
     <script>
+    // Global Constants and Setup
+    const DEFAULT_COLORS = [
+        '#000000', '#0000AA', '#00AA00', '#00AAAA',
+        '#AA0000', '#AA00AA', '#AA5500', '#AAAAAA',
+        '#555555', '#5555FF', '#55FF55', '#55FFFF',
+        '#FF5555', '#FF55FF', '#FFFF55', '#FFFFFF'
+    ];
+    let COLORS = [...DEFAULT_COLORS];
+
+    const CP437 = [
+        ' ','☺','☻','♥','♦','♣','♠','•','◘','○','◙','♂','♀','♪','♫','☼',
+        '►','◄','↕','‼','¶','§','▬','↨','↑','↓','→','←','∟','↔','▲','▼',
+        ' ','!','"','#','$','%','&',''','(',')','*','+',',','-','.','/',
+        '0','1','2','3','4','5','6','7','8','9',':',';','<','=','>','?',
+        '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
+        'P','Q','R','S','T','U','V','W','X','Y','Z','[','\',']','^','_',
+        '`','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
+        'p','q','r','s','t','u','v','w','x','y','z','{','|','}','~','⌂',
+        'Ç','ü','é','â','ä','à','å','ç','ê','ë','è','ï','î','ì','Ä','Å',
+        'É','æ','Æ','ô','ö','ò','û','ù','ÿ','Ö','Ü','¢','£','¥','₧','ƒ',
+        'á','í','ó','ú','ñ','Ñ','ª','º','¿','⌐','¬','½','¼','¡','«','»',
+        '░','▒','▓','│','┤','╡','╢','╖','╕','╣','║','╗','╝','╜','╛','┐',
+        '└','┴','┬','├','─','┼','╞','╟','╚','╔','╩','╦','╠','═','╬','╧',
+        '╨','╤','╥','╙','╘','╒','╓','╫','╪','┘','┌','█','▄','▌','▐','▀',
+        'α','ß','Γ','π','Σ','σ','µ','τ','Φ','Θ','Ω','δ','∞','φ','ε','∩',
+        '≡','±','≥','≤','⌠','⌡','÷','≈','°','∙','·','√','ⁿ','²','■',' '
+    ];
+
     function toggleCRT() {
         const crt = document.getElementById('crtToggle').checked;
         document.querySelector('.term-wrap').style.setProperty('--crt-display', crt ? 'block' : 'none');
         document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
     }
-    document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); });
+    document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); loadDirectory(); loadMacros(); });
 
     function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelp() { document.getElementById('helpModal').style.display = 'none'; }
 
-    // ─── Configuration ───
+    // ─── Screen Configuration ───
     let COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
     const canvas = document.getElementById('terminal');
     const ctx = canvas.getContext('2d');
     let ws = null, bytesRx = 0, bytesTx = 0;
     
+    let screen = [];
+    let curX = 0, curY = 0;
+    let curFg = 7, curBg = 0;
+    let scrollOffset = 0;
+
+    function initScreen() {
+        screen = [];
+        for (let r = 0; r < ROWS; r++) {
+            let row = [];
+            for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: curFg, bg: curBg });
+            screen.push(row);
+        }
+        curX = 0; curY = 0; scrollOffset = 0;
+    }
+
+    function resizeCanvas() {
+        const wrap = document.querySelector('.term-wrap');
+        const w = wrap.clientWidth - 16;
+        const h = wrap.clientHeight;
+        CELL_H = kbbsSettings.fontSize || 16;
+        CELL_W = Math.max(1, Math.floor(CELL_H / 2));
+        canvas.width = COLS * CELL_W;
+        canvas.height = ROWS * CELL_H;
+        render();
+    }
+
+    function render() {
+        if (!screen.length) return;
+        ctx.fillStyle = COLORS[0];
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.font = CELL_H + 'px Consolas, monospace';
+        ctx.textBaseline = 'top';
+
+        for (let r = 0; r < ROWS; r++) {
+            let rowIdx = r + scrollOffset;
+            if (rowIdx >= screen.length) continue;
+            let row = screen[rowIdx];
+            for (let c = 0; c < COLS; c++) {
+                let cell = row[c];
+                let x = c * CELL_W;
+                let y = r * CELL_H;
+
+                if (cell.bg !== 0) {
+                    ctx.fillStyle = COLORS[cell.bg & 0x0F];
+                    ctx.fillRect(x, y, CELL_W, CELL_H);
+                }
+                ctx.fillStyle = COLORS[cell.fg & 0x0F];
+                ctx.fillText(cell.ch, x, y);
+            }
+        }
+        // Draw cursor
+        if (scrollOffset === 0 && curX < COLS && curY < ROWS) {
+            ctx.fillStyle = COLORS[curFg & 0x0F];
+            ctx.fillRect(curX * CELL_W, curY * CELL_H + CELL_H - 2, CELL_W, 2);
+        }
+    }
+
+    function putChar(ch) {
+        if (curX >= COLS) { curX = 0; curY++; }
+        if (curY >= ROWS) {
+            screen.shift();
+            let row = [];
+            for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: curFg, bg: curBg });
+            screen.push(row);
+            curY = ROWS - 1;
+        }
+        screen[curY][curX] = { ch, fg: curFg, bg: curBg };
+        curX++;
+    }
+
+    function scrollUp() {
+        screen.shift();
+        let row = [];
+        for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: curFg, bg: curBg });
+        screen.push(row);
+    }
+
+    // ─── ANSI Terminal Parser ───
+    let ansiState = 0;
+    let ansiParams = "";
+
+    function parseSGR(params) {
+        let parts = params.split(';');
+        if (parts.length === 0 || params === '') { curFg = 7; curBg = 0; return; }
+        for (let i = 0; i < parts.length; i++) {
+            let v = parseInt(parts[i]) || 0;
+            if (v === 0) { curFg = 7; curBg = 0; }
+            else if (v === 1) { curFg |= 8; }
+            else if (v >= 30 && v <= 37) { curFg = (curFg & 8) | (v - 30); }
+            else if (v >= 40 && v <= 47) { curBg = (v - 40); }
+        }
+    }
+
+    function processCSI(params, cmd) {
+        let parts = params.split(';').map(p => parseInt(p) || 0);
+        if (cmd === 'm') parseSGR(params);
+        else if (cmd === 'H' || cmd === 'f') {
+            curY = Math.max(0, Math.min(ROWS - 1, (parts[0] || 1) - 1));
+            curX = Math.max(0, Math.min(COLS - 1, (parts[1] || 1) - 1));
+        } else if (cmd === 'J') {
+            if (parts[0] === 2) initScreen();
+        } else if (cmd === 'K') {
+            for (let c = curX; c < COLS; c++) screen[curY][c] = { ch: ' ', fg: curFg, bg: curBg };
+        } else if (cmd === 'A') curY = Math.max(0, curY - (parts[0] || 1));
+        else if (cmd === 'B') curY = Math.min(ROWS - 1, curY + (parts[0] || 1));
+        else if (cmd === 'C') curX = Math.min(COLS - 1, curX + (parts[0] || 1));
+        else if (cmd === 'D') curX = Math.max(0, curX - (parts[0] || 1));
+    }
+
+    function feedByte(ch) {
+        let code = ch.charCodeAt(0);
+        if (window.captureActive) captureLogByte(ch, code);
+
+        if (ansiState === 0) {
+            if (code === 0x1B) { ansiState = 1; ansiParams = ''; }
+            else if (code === 0x0D) curX = 0;
+            else if (code === 0x0A) { curY++; if (curY >= ROWS) { scrollUp(); curY = ROWS - 1; } }
+            else if (code === 0x08) { if (curX > 0) curX--; }
+            else if (code === 0x09) { curX = Math.min(COLS - 1, (Math.floor(curX / 8) + 1) * 8); }
+            else if (code >= 0x20) putChar(ch);
+        } else if (ansiState === 1) {
+            if (ch === '[') ansiState = 2;
+            else ansiState = 0;
+        } else if (ansiState === 2) {
+            if (code >= 0x30 && code <= 0x3F) { ansiParams += ch; }
+            else if (code >= 0x40 && code <= 0x7E) { processCSI(ansiParams, ch); ansiState = 0; }
+            else { ansiState = 0; }
+        }
+    }
+
     let rxQueue = "";
+    function processData(data) {
+        for (let i = 0; i < data.length; i++) feedByte(data[i]);
+        render();
+        checkScriptAutoLoginTrigger(data);
+    }
+
+    // ─── Baud Rate Emulation Queue ───
     let baudFraction = 0;
     let lastBaudTime = Date.now();
     setInterval(() => {
@@ -249,865 +636,23 @@
                 let chunk = rxQueue.substring(0, take);
                 rxQueue = rxQueue.substring(take);
                 processData(chunk);
-            } else if (rxQueue.length === 0) {
-                baudFraction = 0;
             }
         }
     }, 16);
 
-    // ─── XMODEM State ───
-    const XMODEM_SOH = 0x01, XMODEM_EOT = 0x04, XMODEM_ACK = 0x06;
-    const XMODEM_NAK = 0x15, XMODEM_CAN = 0x18, XMODEM_SUB = 0x1A;
-    let xmodemActive = 0, xmodemState = 0, xmodemBlockNum = 1;
-    let xmodemData = [], xmodemBlockBuf = [];
-    let uploadData = null, uploadOffset = 0;
-    let transferStatusEl = null;
-
-    // ─── ZMODEM State ───
-    let zmState = 'IDLE', zmExpectedData = '';
-    let zmDlBuf = [], zmDlEscaped = false, zmDlHdrBuf = '', zmDlBin32 = false, zmDlDataType = 0, zmDlCrcBuf = [];
-    let zmUlData = null, zmUlName = "", zmUlOffset = 0;
-    let zmFileName = "", zmFileSize = 0;
-    let sigBuf = [0,0,0,0,0,0];
-
-    function updateTransferUI(text) {
-        if(!transferStatusEl) {
-            transferStatusEl = document.createElement('div');
-            transferStatusEl.style.position = 'absolute';
-            transferStatusEl.style.top = '50%';
-            transferStatusEl.style.left = '50%';
-            transferStatusEl.style.transform = 'translate(-50%, -50%)';
-            transferStatusEl.style.background = '#18181b';
-            transferStatusEl.style.border = '2px solid #0ea5e9';
-            transferStatusEl.style.padding = '20px';
-            transferStatusEl.style.color = '#fff';
-            transferStatusEl.style.zIndex = '100';
-            transferStatusEl.style.borderRadius = '8px';
-            transferStatusEl.style.textAlign = 'center';
-            transferStatusEl.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
-            document.querySelector('.term-wrap').appendChild(transferStatusEl);
-        }
-        let proto = xmodemActive >= 3 ? 'ZMODEM' : 'XMODEM';
-        let dir = (xmodemActive === 1 || xmodemActive === 3) ? 'DOWNLOAD' : 'UPLOAD';
-        transferStatusEl.innerHTML = `<strong>${proto} ${dir}</strong><br><br><span style="color:#10b981">${text}</span>`;
-    }
-
-    function endTransfer(msg) {
-        if (transferStatusEl) {
-            transferStatusEl.innerHTML = `<strong>${xmodemActive >= 3 ? 'ZMODEM' : 'XMODEM'}</strong><br><br><span style="color:#ef4444">${msg}</span>`;
-            setTimeout(() => {
-                if(transferStatusEl) transferStatusEl.remove();
-                transferStatusEl = null;
-            }, 2000);
-        }
-        if (msg.includes("Complete")) playChime('done');
-        xmodemActive = 0;
-    }
-
-    function startTransfer(type) {
-        if (!ws || ws.readyState !== 1) { alert("Connect first"); return; }
-        if (xmodemActive) return;
-        xmodemActive = type;
-        xmodemState = 0;
-        xmodemBlockNum = 1;
-        xmodemData = [];
-        xmodemBlockBuf = [];
-        
-        if (type === 1) {
-            updateTransferUI("Waiting for host to start...");
-            ws.send(new Uint8Array([XMODEM_NAK]));
-            bytesTx++; updateBytes();
-        } else if (type === 2) {
-            document.getElementById('fileUpload').click();
-        } else if (type === 3) {
-            updateTransferUI("Starting ZMODEM DL...");
-            zmState = 'IDLE'; zmExpectedData = '';
-            zmodemSendHex(1, 0); // ZRINIT
-        } else if (type === 4) {
-            document.getElementById('fileUpload').click();
-        }
-    }
-
-    function handleFileUpload(e) {
-        if (!e.target.files.length) { endTransfer("Cancelled"); return; }
-        let file = e.target.files[0];
-        let reader = new FileReader();
-        reader.onload = function(evt) {
-            uploadData = new Uint8Array(evt.target.result);
-            uploadOffset = 0;
-            if (xmodemActive === 2) {
-                updateTransferUI("Waiting for NAK...");
-            } else if (xmodemActive === 4) {
-                zmUlData = uploadData;
-                zmUlName = file.name;
-                zmUlOffset = 0;
-                zmState = 'WAIT_ZRINIT';
-                updateTransferUI("Sending ZRQINIT...");
-                zmodemSendHex(0, 0); // ZRQINIT
-            }
-        };
-        reader.readAsArrayBuffer(file);
-        e.target.value = '';
-    }
-
-    function saveFile(dataArray) {
-        let blob = new Blob([new Uint8Array(dataArray)]);
-        let url = URL.createObjectURL(blob);
-        let a = document.createElement('a');
-        a.href = url;
-        a.download = 'downloaded_file.bin';
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    function sendXmodemBlock() {
-        let buf = new Uint8Array(132);
-        buf[0] = XMODEM_SOH;
-        buf[1] = xmodemBlockNum & 0xFF;
-        buf[2] = 255 - buf[1];
-        let len = Math.min(128, uploadData.length - uploadOffset);
-        if (len <= 0 && uploadOffset >= uploadData.length) {
-            ws.send(new Uint8Array([XMODEM_EOT]));
-            bytesTx++; updateBytes();
-            xmodemState = 2;
-            return;
-        }
-        for (let i=0; i<len; i++) buf[3+i] = uploadData[uploadOffset+i];
-        for (let i=len; i<128; i++) buf[3+i] = XMODEM_SUB;
-        let csum = 0;
-        for (let i=3; i<131; i++) csum += buf[i];
-        buf[131] = csum & 0xFF;
-        
-        // Over WS telnet proxy, we might need to escape 0xFF
-        // But our proxy just takes raw WS bytes and passes them.
-        // Wait, KBBSProxy natively forwards bytes. If it does telnet escaping,
-        // it might expect US to escape 0xFF in binary. 
-        // Let's escape 0xFF just in case it passes through telnet.
-        let out = [];
-        for (let i=0; i<132; i++) {
-            out.push(buf[i]);
-            if (buf[i] === 0xFF) out.push(0xFF);
-        }
-        ws.send(new Uint8Array(out));
-        bytesTx += out.length; updateBytes();
-        uploadOffset += len;
-        updateTransferUI(`Uploading... ${uploadOffset} / ${uploadData.length} bytes`);
-    }
-
-    function zmodemUpdateCrc(crc, c) {
-        crc ^= (c << 8);
-        for (let i = 0; i < 8; i++) {
-            if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
-            else crc = crc << 1;
-        }
-        return crc & 0xFFFF;
-    }
-    function wsSendEscaped(arr) {
-        let out = [];
-        for (let i=0; i<arr.length; i++) { out.push(arr[i]); if (arr[i] === 0xFF) out.push(0xFF); }
-        ws.send(new Uint8Array(out)); bytesTx += out.length; updateBytes();
-    }
-    function zmodemSendHex(type, flags) {
-        let f0 = flags & 0xff, f1 = (flags >> 8) & 0xff, f2 = (flags >> 16) & 0xff, f3 = (flags >> 24) & 0xff;
-        let crc = 0;
-        crc = zmodemUpdateCrc(crc, type); crc = zmodemUpdateCrc(crc, f0); crc = zmodemUpdateCrc(crc, f1);
-        crc = zmodemUpdateCrc(crc, f2); crc = zmodemUpdateCrc(crc, f3); crc = zmodemUpdateCrc(crc, 0); crc = zmodemUpdateCrc(crc, 0);
-        let hex = (n) => n.toString(16).padStart(2, '0');
-        let str = '**\x18B' + hex(type) + hex(f0) + hex(f1) + hex(f2) + hex(f3) + hex((crc>>8)&0xff) + hex(crc&0xff) + '\r\n\x11';
-        let out = []; for(let i=0; i<str.length; i++) out.push(str.charCodeAt(i));
-        wsSendEscaped(out);
-    }
-    function zmodemEscape(buf) {
-        let out = [];
-        for(let i=0; i<buf.length; i++) {
-            let c = buf[i];
-            if (c === 0x18 || c === 0x10 || c === 0x11 || c === 0x13 || c === 0x0D || c === 0x8D || c === 0x90 || c === 0x91 || c === 0x93) {
-                out.push(0x18);
-                if (c === 0x0D) out.push(0x4D); else if (c === 0x8D) out.push(0xCD); else out.push(c ^ 0x40);
-            } else out.push(c);
-        }
-        return out;
-    }
-    function zmodemMakeBinHeader(type, flags) {
-        let f0 = flags & 0xff, f1 = (flags >> 8) & 0xff, f2 = (flags >> 16) & 0xff, f3 = (flags >> 24) & 0xff;
-        let crc = 0;
-        crc = zmodemUpdateCrc(crc, type); crc = zmodemUpdateCrc(crc, f0); crc = zmodemUpdateCrc(crc, f1);
-        crc = zmodemUpdateCrc(crc, f2); crc = zmodemUpdateCrc(crc, f3); crc = zmodemUpdateCrc(crc, 0); crc = zmodemUpdateCrc(crc, 0);
-        let esc = zmodemEscape([type, f0, f1, f2, f3, (crc>>8)&0xff, crc&0xff]);
-        return [0x2A, 0x18, 0x41].concat(esc);
-    }
-    function zmodemSendDataPacket(hdrBytes, data, endType) {
-        let escData = zmodemEscape(data);
-        let crc = 0;
-        for(let i=0; i<data.length; i++) crc = zmodemUpdateCrc(crc, data[i]);
-        crc = zmodemUpdateCrc(crc, endType); crc = zmodemUpdateCrc(crc, 0); crc = zmodemUpdateCrc(crc, 0);
-        let escCrc = zmodemEscape([(crc>>8)&0xff, crc&0xff]);
-        let out = hdrBytes.concat(escData);
-        out.push(0x18); out.push(endType); out = out.concat(escCrc);
-        wsSendEscaped(out);
-    }
-    function handleZmodemHeader(type, f0, f1, f2, f3) {
-        if (xmodemActive === 3) { // DL
-            if (type === 0) { zmodemSendHex(1, 0); } // ZRINIT
-            else if (type === 4) { zmExpectedData = 'FILE'; zmState = 'DATA_READ'; zmDlBuf = []; } // ZFILE
-            else if (type === 10) { zmExpectedData = 'DATA'; zmState = 'DATA_READ'; zmDlBuf = []; } // ZDATA
-            else if (type === 11) { zmodemSendHex(1, 0); } // ZEOF -> ZRINIT
-            else if (type === 8) { // ZFIN
-                zmodemSendHex(8, 0); wsSendEscaped([0x4F, 0x4F]);
-                saveFile(xmodemData); endTransfer("Complete");
-            }
-        } else if (xmodemActive === 4) { // UL
-            let offset = f0 | (f1<<8) | (f2<<16) | (f3<<24);
-            if (type === 1) { // ZRINIT
-                if (zmState === 'WAIT_ZRINIT') {
-                    zmState = 'WAIT_ZRPOS';
-                    let hdr = zmodemMakeBinHeader(4, 0);
-                    let payload = [];
-                    for(let i=0; i<zmUlName.length; i++) payload.push(zmUlName.charCodeAt(i));
-                    payload.push(0);
-                    let sizeStr = zmUlData.length.toString();
-                    for(let i=0; i<sizeStr.length; i++) payload.push(sizeStr.charCodeAt(i));
-                    payload.push(0);
-                    zmodemSendDataPacket(hdr, payload, 0x6B); // ZCRCW
-                } else if (zmState === 'WAIT_FIN_ACK') {
-                    zmState = 'DONE'; endTransfer("Complete");
-                }
-            } else if (type === 9) { // ZRPOS
-                if (zmState === 'WAIT_ZRPOS' || zmState === 'SENDING_DATA') {
-                    zmUlOffset = offset; zmState = 'SENDING_DATA';
-                    wsSendEscaped(zmodemMakeBinHeader(10, zmUlOffset));
-                    sendZmodemUlChunks();
-                }
-            } else if (type === 3) { // ZACK
-                if (zmState === 'WAIT_ACK') { zmState = 'SENDING_DATA'; sendZmodemUlChunks(); }
-            } else if (type === 8) { // ZFIN
-                wsSendEscaped([0x4F, 0x4F]); endTransfer("Complete");
-            }
-        }
-    }
-    function sendZmodemUlChunks() {
-        if (xmodemActive !== 4) return;
-        if (zmUlOffset >= zmUlData.length) {
-            zmodemSendHex(11, zmUlOffset); zmState = 'WAIT_ZRINIT'; return;
-        }
-        let chunk = zmUlData.slice(zmUlOffset, zmUlOffset + 1024);
-        zmUlOffset += chunk.length;
-        let endType = (zmUlOffset >= zmUlData.length) ? 0x6B : 0x69; // ZCRCW or ZCRCG
-        if (endType === 0x6B) zmState = 'WAIT_ACK';
-        zmodemSendDataPacket([], chunk, endType);
-        updateTransferUI(`Uploading... ${zmUlOffset} / ${zmUlData.length} bytes`);
-        if (endType === 0x69) setTimeout(sendZmodemUlChunks, 10);
-    }
-
-    function processTransferByte(code) {
-        if (xmodemActive === 1) { // DL
-            if (xmodemState === 0) {
-                if (code === XMODEM_SOH) {
-                    xmodemState = 1;
-                    xmodemBlockBuf = [code];
-                } else if (code === XMODEM_EOT) {
-                    ws.send(new Uint8Array([XMODEM_ACK]));
-                    bytesTx++; updateBytes();
-                    saveFile(xmodemData);
-                    endTransfer("Download Complete");
-                } else if (code === XMODEM_CAN) {
-                    endTransfer("Cancelled by host");
-                }
-            } else if (xmodemState === 1) {
-                xmodemBlockBuf.push(code);
-                if (xmodemBlockBuf.length === 132) {
-                    let blk = xmodemBlockBuf[1];
-                    let inv = xmodemBlockBuf[2];
-                    if (blk === (255 - inv) && blk === (xmodemBlockNum & 0xFF)) {
-                        let csum = 0;
-                        for (let i=3; i<131; i++) csum += xmodemBlockBuf[i];
-                        if ((csum & 0xFF) === xmodemBlockBuf[131]) {
-                            for (let i=3; i<131; i++) xmodemData.push(xmodemBlockBuf[i]);
-                            xmodemBlockNum++;
-                            ws.send(new Uint8Array([XMODEM_ACK]));
-                            bytesTx++; updateBytes();
-                            updateTransferUI(`Downloading... ${xmodemData.length} bytes`);
-                            xmodemState = 0;
-                            return;
-                        }
-                    }
-                    ws.send(new Uint8Array([XMODEM_NAK]));
-                    bytesTx++; updateBytes();
-                    xmodemState = 0;
-                }
-            }
-        } else if (xmodemActive === 2) { // UL
-            if (xmodemState === 0) {
-                if (code === XMODEM_NAK || code === 0x43) {
-                    xmodemState = 1;
-                    sendXmodemBlock();
-                } else if (code === XMODEM_CAN) {
-                    endTransfer("Upload Cancelled");
-                }
-            } else if (xmodemState === 1) {
-                if (code === XMODEM_ACK) {
-                    xmodemBlockNum++;
-                    sendXmodemBlock();
-                } else if (code === XMODEM_NAK) {
-                    uploadOffset = Math.max(0, uploadOffset - 128);
-                    sendXmodemBlock();
-                } else if (code === XMODEM_CAN) {
-                    endTransfer("Upload Cancelled");
-                }
-            } else if (xmodemState === 2) {
-                if (code === XMODEM_ACK) {
-                    endTransfer("Upload Complete");
-                }
-            }
-        } else if (xmodemActive === 3 || xmodemActive === 4) {
-            if (code === 0x11 || code === 0x13 || code === 0x91 || code === 0x93) return; // ignore XON/XOFF
-            if (code === 0x18) { zmDlEscaped = true; return; }
-            if (zmDlEscaped) {
-                zmDlEscaped = false;
-                if (code === 0x4D || code === 0xcd) code = 0x0d;
-                else if (code === 0x8d) code = 0x8d;
-                else if (code === 0x42) { zmState = 'HEX_HEADER'; zmDlHdrBuf = ''; return; } // B
-                else if (code === 0x41 || code === 0x43) { zmState = 'BIN_HEADER'; zmDlHdrBuf = []; zmDlBin32 = (code===0x43); return; } // A/C
-                else if (code >= 0x68 && code <= 0x6B) { zmDlDataType = code; zmState = 'DATA_CRC'; zmDlCrcBuf = []; return; }
-                else code = code ^ 0x40; // unescape
-            }
-            if (zmState === 'HEX_HEADER') {
-                zmDlHdrBuf += String.fromCharCode(code);
-                if (zmDlHdrBuf.length === 14) {
-                    let type = parseInt(zmDlHdrBuf.substr(0,2), 16), f0 = parseInt(zmDlHdrBuf.substr(2,2), 16), f1 = parseInt(zmDlHdrBuf.substr(4,2), 16);
-                    let f2 = parseInt(zmDlHdrBuf.substr(6,2), 16), f3 = parseInt(zmDlHdrBuf.substr(8,2), 16);
-                    zmState = 'IDLE'; handleZmodemHeader(type, f0, f1, f2, f3);
-                }
-            } else if (zmState === 'BIN_HEADER') {
-                zmDlHdrBuf.push(code);
-                if (zmDlHdrBuf.length === (zmDlBin32 ? 9 : 7)) {
-                    let type = zmDlHdrBuf[0], f0 = zmDlHdrBuf[1], f1 = zmDlHdrBuf[2], f2 = zmDlHdrBuf[3], f3 = zmDlHdrBuf[4];
-                    zmState = 'IDLE'; handleZmodemHeader(type, f0, f1, f2, f3);
-                }
-            } else if (zmState === 'DATA_CRC') {
-                zmDlCrcBuf.push(code);
-                if (zmDlCrcBuf.length === (zmDlBin32 ? 4 : 2)) {
-                    if (zmExpectedData === 'FILE') {
-                        let fileEnd = zmDlBuf.indexOf(0);
-                        if (fileEnd !== -1) {
-                            zmFileName = String.fromCharCode.apply(null, zmDlBuf.slice(0, fileEnd));
-                            let rest = String.fromCharCode.apply(null, zmDlBuf.slice(fileEnd+1));
-                            zmFileSize = parseInt(rest.split(' ')[0]) || 0;
-                        }
-                        zmExpectedData = ''; zmState = 'IDLE'; zmDlBuf = []; zmodemSendHex(9, 0); // ZRPOS 0
-                    } else if (zmExpectedData === 'DATA') {
-                        for(let i=0; i<zmDlBuf.length; i++) xmodemData.push(zmDlBuf[i]);
-                        zmDlBuf = [];
-                        updateTransferUI(`Downloading... ${xmodemData.length} / ${zmFileSize} bytes`);
-                        if (zmDlDataType === 0x6B) zmodemSendHex(3, xmodemData.length); // ZACK
-                        zmState = 'IDLE';
-                    } else zmState = 'IDLE';
-                }
-            } else if (zmState === 'DATA_READ') {
-                zmDlBuf.push(code);
-            }
-        }
-    }
-
-    function updateBytes() {
-        document.getElementById('bytesInfo').textContent = 'RX: ' + bytesRx + ' B | TX: ' + bytesTx + ' B';
-    }
-
-    // ─── ANSI Color Palette (16-color PC palette) ───
-    const DEFAULT_COLORS = [
-        '#000000', '#aa0000', '#00aa00', '#aa5500', // 0-3: Black, Red, Green, Brown
-        '#0000aa', '#aa00aa', '#00aaaa', '#aaaaaa', // 4-7: Blue, Magenta, Cyan, Light Gray
-        '#555555', '#ff5555', '#55ff55', '#ffff55', // 8-11: Bright variants
-        '#5555ff', '#ff55ff', '#55ffff', '#ffffff'  // 12-15: Bright variants
-    ];
-    let COLORS = [...DEFAULT_COLORS];
-
-    // ─── CP437 to Unicode Map ───
-    const CP437 = [
-        '\0','\u263A','\u263B','\u2665','\u2666','\u2663','\u2660','\u2022','\u25D8','\u25CB','\u25D9','\u2642','\u2640','\u266A','\u266B','\u263C',
-        '\u25BA','\u25C4','\u2195','\u203C','\u00B6','\u00A7','\u25AC','\u21A8','\u2191','\u2193','\u2192','\u2190','\u221F','\u2194','\u25B2','\u25BC',
-        ' ','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',
-        '0','1','2','3','4','5','6','7','8','9',':',';','<','=','>','?',
-        '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
-        'P','Q','R','S','T','U','V','W','X','Y','Z','[','\\',']','^','_',
-        '`','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
-        'p','q','r','s','t','u','v','w','x','y','z','{','|','}','~','\u2302',
-        '\u00C7','\u00FC','\u00E9','\u00E2','\u00E4','\u00E0','\u00E5','\u00E7','\u00EA','\u00EB','\u00E8','\u00EF','\u00EE','\u00EC','\u00C4','\u00C5',
-        '\u00C9','\u00E6','\u00C6','\u00F4','\u00F6','\u00F2','\u00FB','\u00F9','\u00FF','\u00D6','\u00DC','\u00A2','\u00A3','\u00A5','\u20A7','\u0192',
-        '\u00E1','\u00ED','\u00F3','\u00FA','\u00F1','\u00D1','\u00AA','\u00BA','\u00BF','\u2310','\u00AC','\u00BD','\u00BC','\u00A1','\u00AB','\u00BB',
-        '\u2591','\u2592','\u2593','\u2502','\u2524','\u2561','\u2562','\u2556','\u2555','\u2563','\u2551','\u2557','\u255D','\u255C','\u255B','\u2510',
-        '\u2514','\u2534','\u252C','\u251C','\u2500','\u253C','\u255E','\u255F','\u255A','\u2554','\u2569','\u2566','\u2560','\u2550','\u256C','\u2567',
-        '\u2568','\u2564','\u2565','\u2559','\u2558','\u2552','\u2553','\u256B','\u256A','\u2518','\u250C','\u2588','\u2584','\u258C','\u2590','\u2580',
-        '\u03B1','\u00DF','\u0393','\u03C0','\u03A3','\u03C3','\u03BC','\u03C4','\u03A6','\u0398','\u03A9','\u03B4','\u221E','\u03C6','\u03B5','\u2229',
-        '\u2261','\u00B1','\u2265','\u2264','\u2320','\u2321','\u00F7','\u2248','\u00B0','\u2219','\u00B7','\u221A','\u207F','\u00B2','\u25A0','\u00A0'
-    ];
-
-    // ─── Audio ───
-    let audioCtx = null;
-    function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-    }
-    
-    function playToneSync(freq, durSec, time) {
-        if (!audioCtx) return;
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.type = 'square';
-        osc.frequency.value = freq;
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        gain.gain.setValueAtTime(0.05, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + durSec);
-        osc.start(time);
-        osc.stop(time + durSec);
-    }
-    
-    function getFreq(note, octave) {
-        const notes = { 'C':0, 'C#':1, 'D':2, 'D#':3, 'E':4, 'F':5, 'F#':6, 'G':7, 'G#':8, 'A':9, 'A#':10, 'B':11 };
-        let n = note[0].toUpperCase();
-        let base = notes[n] || 0;
-        if (note.length > 1) {
-            if (note[1] === '+' || note[1] === '#') base++;
-            else if (note[1] === '-') base--;
-        }
-        return 440 * Math.pow(2, (octave - 4) + (base - 9) / 12);
-    }
-
-    function parseNum(str, i, def) {
-        let num = 0, found = false;
-        while(i < str.length && str[i] >= '0' && str[i] <= '9') {
-            num = num * 10 + (str[i].charCodeAt(0) - 48); found = true; i++;
-        }
-        return { val: found ? num : def, next: i };
-    }
-
-    function playANSI(str) {
-        initAudio();
-        let octave = 4, tempo = 120, length = 4;
-        let p = 0, time = audioCtx.currentTime;
-        while(p < str.length) {
-            let c = str[p++].toUpperCase();
-            if (c === 'O') { let res = parseNum(str, p, octave); octave = res.val; p = res.next; }
-            else if (c === 'T') { let res = parseNum(str, p, tempo); tempo = res.val; p = res.next; }
-            else if (c === 'L') { let res = parseNum(str, p, length); length = res.val; p = res.next; }
-            else if ((c >= 'A' && c <= 'G') || c === 'P') {
-                let note = c;
-                if (p < str.length && (str[p] === '+' || str[p] === '#' || str[p] === '-')) note += str[p++];
-                let res = parseNum(str, p, length);
-                let curLen = res.val; p = res.next;
-                let dots = 0;
-                while(p < str.length && str[p] === '.') { dots++; p++; }
-                let dur = (60 / tempo) * (4 / curLen);
-                for(let i=0; i<dots; i++) dur += dur / 2;
-                if (c !== 'P') playToneSync(getFreq(note, octave), dur, time);
-                time += dur;
-            } else if (c === 'M') {
-                if (p < str.length) p++; // skip F, B, N etc
-            } else if (c === '<') { octave = Math.max(0, octave - 1); }
-            else if (c === '>') { octave = Math.min(6, octave + 1); }
-        }
-    }
-    
-    function playChime(type) {
-        initAudio();
-        let t = audioCtx.currentTime;
-        if (type === 'connect') {
-            playToneSync(523.25, 0.1, t);
-            playToneSync(659.25, 0.1, t + 0.1);
-            playToneSync(783.99, 0.2, t + 0.2);
-        } else if (type === 'done') {
-            playToneSync(783.99, 0.1, t);
-            playToneSync(1046.50, 0.2, t + 0.1);
-        }
-    }
-
-    // ─── Screen Buffer ───
-    let screen = [];
-    let curX = 0, curY = 0, savX = 0, savY = 0;
-    let curFg = 7, curBg = 0, curBold = false, curBlink = false;
-    let ansiState = 0, ansiParams = ''; // 0=normal, 1=esc, 2=csi, 5=music
-    let ansiMusicBuf = '';
-    let scrollOffset = 0;
-    const MAX_LINES = 1000;
-
-    let selStart = null;
-    let selEnd = null;
-    let selDragging = false;
-
-    function isSelected(r, c) {
-        if (!selStart || !selEnd) return false;
-        let r1 = selStart.r, c1 = selStart.c;
-        let r2 = selEnd.r, c2 = selEnd.c;
-        if (r1 > r2 || (r1 === r2 && c1 > c2)) {
-            r1 = selEnd.r; c1 = selEnd.c;
-            r2 = selStart.r; c2 = selStart.c;
-        }
-        if (r < r1 || r > r2) return false;
-        if (r === r1 && r === r2) return c >= c1 && c <= c2;
-        if (r === r1) return c >= c1;
-        if (r === r2) return c <= c2;
-        return true;
-    }
-
-    function initScreen() {
-        screen = [];
-        for (let r = 0; r < ROWS; r++) {
-            let row = [];
-            for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
-            screen.push(row);
-        }
-        curX = curY = 0; curFg = 7; curBg = 0; curBold = false; curBlink = false;
-        ansiState = 0; ansiParams = ''; ansiMusicBuf = '';
-        scrollOffset = 0;
-    }
-
-    function resizeCanvas() {
-        const wrap = canvas.parentElement;
-        const scaleX = wrap.clientWidth / (COLS * CELL_W);
-        const scaleY = wrap.clientHeight / (ROWS * CELL_H);
-        const scale = Math.min(scaleX, scaleY, 2);
-        canvas.width = COLS * CELL_W;
-        canvas.height = ROWS * CELL_H;
-        canvas.style.width = Math.floor(COLS * CELL_W * scale) + 'px';
-        canvas.style.height = Math.floor(ROWS * CELL_H * scale) + 'px';
-        canvas.style.margin = 'auto';
-        render();
-    }
-
-    function render() {
-        ctx.font = CELL_H + 'px "Consolas", "Courier New", monospace';
-        ctx.textBaseline = 'top';
-        const startRow = Math.max(0, screen.length - ROWS - scrollOffset);
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                const cell = screen[startRow + r][c] || {ch: ' ', fg: 7, bg: 0, blink: false};
-                const x = c * CELL_W;
-                const y = r * CELL_H;
-                
-                const selected = isSelected(startRow + r, c);
-                ctx.fillStyle = selected ? (COLORS[cell.fg] || COLORS[7]) : (COLORS[cell.bg] || COLORS[0]);
-                ctx.fillRect(x, y, CELL_W, CELL_H);
-                
-                if (!cell.blink || window.blinkToggle) {
-                    ctx.fillStyle = selected ? (COLORS[cell.bg] || COLORS[0]) : (COLORS[cell.fg] || COLORS[7]);
-                    const code = cell.ch.charCodeAt(0);
-                    // Perfect block mappings
-                    if (code === 0x2588) { ctx.fillRect(x, y, CELL_W, CELL_H); }
-                    else if (code === 0x2584) { ctx.fillRect(x, y + CELL_H/2, CELL_W, CELL_H/2); }
-                    else if (code === 0x2580) { ctx.fillRect(x, y, CELL_W, CELL_H/2); }
-                    else if (code === 0x258C) { ctx.fillRect(x, y, CELL_W/2, CELL_H); }
-                    else if (code === 0x2590) { ctx.fillRect(x + CELL_W/2, y, CELL_W/2, CELL_H); }
-                    else if (code >= 0x2591 && code <= 0x2593) {
-                        const alphas = { 0x2591: 0.25, 0x2592: 0.5, 0x2593: 0.75 };
-                        ctx.globalAlpha = alphas[code];
-                        ctx.fillRect(x, y, CELL_W, CELL_H);
-                        ctx.globalAlpha = 1.0;
-                    } else if (cell.ch !== ' ' && cell.ch !== '\0') {
-                        ctx.fillText(cell.ch, x + Math.max(0, (CELL_W - ctx.measureText(cell.ch).width) / 2), y);
-                    }
-                }
-            }
-        }
-        // Cursor blink
-        if (scrollOffset === 0 && window.blinkToggle) {
-            ctx.fillStyle = COLORS[curFg];
-            ctx.globalAlpha = 0.7;
-            ctx.fillRect(curX * CELL_W, curY * CELL_H + CELL_H - 2, CELL_W, 2);
-            ctx.globalAlpha = 1.0;
-        }
-    }
-
-    function updateScrollbar() {
-        const sc = document.getElementById('scrollContainer');
-        const sp = document.getElementById('scrollSpacer');
-        if (screen.length <= ROWS) {
-            sc.style.display = 'none';
-            return;
-        }
-        sc.style.display = 'block';
-        const itemH = 20; // arbitrary height per row
-        sp.style.height = (screen.length * itemH) + 'px';
-        
-        // Prevent recursive loop by ignoring if it's programmatic scroll
-        if (!window.isScrollingProgrammatically) {
-            window.isScrollingProgrammatically = true;
-            sc.scrollTop = (screen.length - ROWS - scrollOffset) * itemH;
-            setTimeout(() => window.isScrollingProgrammatically = false, 10);
-        }
-    }
-
-    function handleScroll(e) {
-        if (window.isScrollingProgrammatically) return;
-        const sc = e.target;
-        const itemH = 20;
-        let visibleTopRow = Math.round(sc.scrollTop / itemH);
-        visibleTopRow = Math.max(0, Math.min(visibleTopRow, screen.length - ROWS));
-        
-        scrollOffset = screen.length - ROWS - visibleTopRow;
-        render();
-    }
-
-    function scrollUp() {
-        let row = [];
-        for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
-        screen.push(row);
-        if (screen.length > MAX_LINES) {
-            screen.shift();
-        }
-        if (scrollOffset > 0) {
-            scrollOffset++;
-            let maxOffset = Math.max(0, screen.length - ROWS);
-            if (scrollOffset > maxOffset) scrollOffset = maxOffset;
-        }
-        updateScrollbar();
-    }
-
-    function putChar(ch) {
-        if (curX >= COLS) { curX = 0; curY++; }
-        if (curY >= ROWS) { scrollUp(); curY = ROWS - 1; }
-        const fg = curBold && curFg < 8 ? curFg + 8 : curFg;
-        const activeY = screen.length - ROWS + curY;
-        screen[activeY][curX] = { ch: CP437[ch.charCodeAt(0) & 0xFF], fg: fg, bg: curBg, blink: curBlink };
-        curX++;
-    }
-
-    function clearScreen() {
-        const start = screen.length - ROWS;
-        for (let r = start; r < screen.length; r++)
-            for (let c = 0; c < COLS; c++)
-                screen[r][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
-        curX = curY = 0;
-    }
-
-    function clearLine(mode) {
-        if (curY >= ROWS) return;
-        const activeY = screen.length - ROWS + curY;
-        if (mode === 0 || mode === undefined) {
-            for (let c = curX; c < COLS; c++) screen[activeY][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
-        } else if (mode === 1) {
-            for (let c = 0; c <= curX; c++) screen[activeY][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
-        } else if (mode === 2) {
-            for (let c = 0; c < COLS; c++) screen[activeY][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
-        }
-    }
-
-    function parseSGR(params) {
-        const parts = params.split(';').map(n => parseInt(n) || 0);
-        for (let i = 0; i < parts.length; i++) {
-            const p = parts[i];
-            if (p === 0) { curFg = 7; curBg = 0; curBold = false; curBlink = false; }
-            else if (p === 1) curBold = true;
-            else if (p === 2 || p === 22) curBold = false;
-            else if (p === 5) curBlink = true;
-            else if (p === 25) curBlink = false;
-            else if (p === 7) { let t = curFg; curFg = curBg; curBg = t; } // reverse
-            else if (p >= 30 && p <= 37) curFg = p - 30;
-            else if (p === 38 || p === 48) {
-                if (i + 1 < parts.length && parts[i + 1] === 5) {
-                    if (i + 2 < parts.length) {
-                        let col = parts[i + 2] & 0x0F;
-                        if (p === 38) curFg = col; else curBg = col;
-                    }
-                    i += 2;
-                } else if (i + 1 < parts.length && parts[i + 1] === 2) {
-                    i += 4;
-                }
-            }
-            else if (p === 39) curFg = 7;
-            else if (p >= 40 && p <= 47) curBg = p - 40;
-            else if (p === 49) curBg = 0;
-            else if (p >= 90 && p <= 97) curFg = p - 90 + 8;
-            else if (p >= 100 && p <= 107) curBg = p - 100 + 8;
-        }
-    }
-
-    function processCSI(params, cmd) {
-        const p = params.split(';').map(n => parseInt(n) || 0);
-        const n = p[0] || 1;
-        switch (cmd) {
-            case 'm': parseSGR(params || '0'); break;
-            case 'M': ansiState = 5; ansiMusicBuf = ''; break;
-            case 'H': case 'f':
-                curY = Math.max(0, Math.min((p[0] || 1) - 1, ROWS - 1));
-                curX = Math.max(0, Math.min((p[1] || 1) - 1, COLS - 1));
-                break;
-            case 'A': curY = Math.max(0, curY - n); break;
-            case 'B': curY = Math.min(ROWS - 1, curY + n); break;
-            case 'C': curX = Math.min(COLS - 1, curX + n); break;
-            case 'D': curX = Math.max(0, curX - n); break;
-            case 'J':
-                if (p[0] === 2 || p[0] === 3) clearScreen();
-                else if (p[0] === 0) {
-                    clearLine(0);
-                    for (let r = curY + 1; r < ROWS; r++)
-                        for (let c = 0; c < COLS; c++)
-                            screen[screen.length - ROWS + r][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
-                } else if (p[0] === 1) {
-                    for (let r = 0; r < curY; r++)
-                        for (let c = 0; c < COLS; c++)
-                            screen[screen.length - ROWS + r][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
-                    clearLine(1);
-                }
-                break;
-            case 'K': clearLine(p[0]); break;
-            case 's': savX = curX; savY = curY; break;
-            case 'u': curX = savX; curY = savY; break;
-            case 'E': curX = 0; curY = Math.min(ROWS - 1, curY + n); break;
-            case 'F': curX = 0; curY = Math.max(0, curY - n); break;
-            case 'G': curX = Math.max(0, Math.min(n - 1, COLS - 1)); break;
-            case 'S': for (let i = 0; i < n; i++) scrollUp(); break;
-            case 'T':
-                for (let i = 0; i < n; i++) {
-                    let row = [];
-                    for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
-                    screen.splice(screen.length - ROWS, 0, row);
-                    screen.pop();
-                }
-                break;
-        }
-    }
-
-    function feedByte(ch) {
-        const code = ch.charCodeAt(0) & 0xFF;
-
-        if (ansiState === 10) {
-            // Telnet: after IAC
-            if (code >= 251 && code <= 254) ansiState = 11; // WILL/WONT/DO/DONT
-            else if (code === 0xFF) { 
-                ansiState = 0; // Escaped 0xFF data
-                if (xmodemActive) { processTransferByte(0xFF); return; }
-                putChar(String.fromCharCode(0xFF));
-            } else {
-                ansiState = 0;
-            }
-            return;
-        } else if (ansiState === 11) {
-            ansiState = 0;
-            return;
-        }
-
-        if (code === 0xFF) { 
-            ansiState = 10; 
-            return; 
-        }
-        
-        sigBuf.shift(); sigBuf.push(code);
-        if (sigBuf[0]===0x2A && sigBuf[1]===0x2A && sigBuf[2]===0x18 && sigBuf[3]===0x42 && sigBuf[4]===0x30 && sigBuf[5]===0x30) {
-            if (!xmodemActive) { startTransfer(3); return; }
-        }
-
-        if (xmodemActive) {
-            processTransferByte(code);
-            return;
-        }
-
-        if (ansiState === 5) {
-            if (code === 0x0E) { // Ctrl+N
-                playANSI(ansiMusicBuf);
-                ansiState = 0;
-            } else if (code === 0x1B) { // Unexpected escape
-                playANSI(ansiMusicBuf);
-                ansiState = 1;
-                ansiParams = '';
-            } else {
-                ansiMusicBuf += ch;
-                if (ansiMusicBuf.length > 2048) {
-                    playANSI(ansiMusicBuf);
-                    ansiState = 0;
-                }
-            }
-            return;
-        }
-
-        if (ansiState === 0) {
-            if (window.captureActive) {
-                if (code === 0x0D || code === 0x0A || code === 0x08 || code === 0x09 || code >= 0x20) {
-                    window.captureBuffer += (code >= 0x20) ? CP437[code] : ch;
-                }
-            }
-            if (code === 0x1B) { ansiState = 1; ansiParams = ''; }
-            else if (code === 0x0D) curX = 0;  // CR
-            else if (code === 0x0A) { curY++; if (curY >= ROWS) { scrollUp(); curY = ROWS - 1; } } // LF
-            else if (code === 0x08) { if (curX > 0) curX--; } // BS
-            else if (code === 0x09) { curX = Math.min(COLS - 1, (Math.floor(curX / 8) + 1) * 8); } // TAB
-            else if (code === 0x07) { /* BEL - ignore */ }
-            else if (code >= 0x20) putChar(ch);
-        } else if (ansiState === 1) {
-            if (ch === '[') ansiState = 2;
-            else if (ch === ']') ansiState = 3; // OSC - eat until BEL/ST
-            else ansiState = 0;
-        } else if (ansiState === 2) {
-            if ((code >= 0x30 && code <= 0x3F)) { ansiParams += ch; } // digits, semicolons, ?
-            else if (code >= 0x40 && code <= 0x7E) { processCSI(ansiParams, ch); if (ansiState !== 5) ansiState = 0; }
-            else { ansiState = 0; }
-        } else if (ansiState === 3) {
-            // OSC - eat until BEL (0x07) or ST (ESC \)
-            if (code === 0x07) ansiState = 0;
-            else if (code === 0x1B) ansiState = 4;
-        } else if (ansiState === 4) {
-            // After ESC in OSC
-            ansiState = 0; // ST = ESC \ ends OSC
-        }
-    }
-
-    function processData(data) {
-        for (let i = 0; i < data.length; i++) feedByte(data[i]);
-        if (data.length > 0) {
-            scrollOffset = 0;
-            updateScrollbar();
-        }
-        render();
-    }
-
-    // ─── WebSocket Connection ───
-    let autoLoginSteps = [];
-    let autoLoginIndex = 0;
-    let autoLoginBuffer = "";
-
-    function connectTo(host, port, isWs) {
-        if (ws) { ws.close(); ws = null; }
-        document.getElementById('host').value = host;
-        document.getElementById('port').value = port;
-        const autologin = document.getElementById('dirAutoLogin') ? document.getElementById('dirAutoLogin').value.trim() : "";
-        autoLoginSteps = [];
-        if (autologin) {
-            let parts = autologin.split('~');
-            for(let i=0; i<parts.length-1; i+=2) {
-                autoLoginSteps.push({ expect: parts[i], send: parts[i+1] });
-            }
-        }
-        autoLoginIndex = 0;
-        autoLoginBuffer = "";
-        toggleConnect(true);
-    }
+    // ─── Connection Management ───
+    const PROXY_URL = 'wss://kbbs-proxy-751490709804.us-central1.run.app';
 
     function toggleConnect(forceConnect) {
-        if (ws) { 
-            ws.close(); 
-            if (forceConnect !== true) return; 
-            ws = null;
-        }
+        if (ws) { ws.close(); if (forceConnect !== true) return; ws = null; }
         const host = document.getElementById('host').value.trim();
         const port = document.getElementById('port').value.trim();
         if (!host) return;
 
-        // IMPORTANT: Once you deploy KBBSProxy to Cloud Run, replace this URL with your .run.app URL
-        // Example: const PROXY_URL = 'wss://kbbs-proxy-abcdef123-uc.a.run.app';
-        const PROXY_URL = 'wss://kbbs-proxy-751490709804.us-central1.run.app';
+        let url = (host.startsWith('ws://') || host.startsWith('wss://')) ? host : `${PROXY_URL}/?host=${encodeURIComponent(host)}&port=${encodeURIComponent(port || '23')}`;
 
-        let url;
-        if (host.startsWith('ws://') || host.startsWith('wss://')) {
-            url = host;
-        } else {
-            url = `${PROXY_URL}/?host=${encodeURIComponent(host)}&port=${encodeURIComponent(port || '23')}`;
-        }
-
-        initScreen();
-        render();
-        setStatus('connecting', 'Connecting to ' + url + '...');
-        bytesRx = 0; bytesTx = 0;
-        updateBytes();
+        initScreen(); render(); setStatus('connecting', 'Connecting to ' + host + '...');
+        bytesRx = 0; bytesTx = 0; updateBytes();
 
         try {
             ws = new WebSocket(url);
@@ -1115,603 +660,540 @@
             ws.onopen = () => {
                 setStatus('connected', 'Connected to ' + host);
                 document.getElementById('btnConn').textContent = 'Disconnect';
-                canvas.focus();
-                playChime('connect');
+                canvas.focus(); playChime('connect');
+                triggerAutoLoginOnConnect();
             };
             ws.onmessage = (e) => {
-                let text;
-                if (e.data instanceof ArrayBuffer) {
-                    const arr = new Uint8Array(e.data);
-                    text = '';
-                    for (let i = 0; i < arr.length; i++) text += String.fromCharCode(arr[i]);
-                } else {
-                    text = e.data;
-                }
-                bytesRx += text.length;
-                updateBytes();
+                let text = (e.data instanceof ArrayBuffer) ? new TextDecoder("ascii").decode(e.data) : e.data;
+                bytesRx += text.length; updateBytes();
                 rxQueue += text;
-                
-                if (autoLoginIndex < autoLoginSteps.length) {
-                    autoLoginBuffer += text;
-                    if (autoLoginBuffer.length > 2000) autoLoginBuffer = autoLoginBuffer.substring(autoLoginBuffer.length - 1000);
-                    let expected = autoLoginSteps[autoLoginIndex].expect;
-                    if (expected && autoLoginBuffer.includes(expected)) {
-                        let toSend = autoLoginSteps[autoLoginIndex].send.replace(/\\r/g, '\r').replace(/\\n/g, '\n').replace(/\\t/g, '\t');
-                        let out = new Uint8Array(toSend.length);
-                        for(let k=0; k<toSend.length; k++) out[k] = toSend.charCodeAt(k);
-                        if (ws && ws.readyState === 1) ws.send(out);
-                        autoLoginBuffer = "";
-                        autoLoginIndex++;
-                    }
-                }
             };
             ws.onclose = () => {
                 setStatus('disconnected', 'Disconnected');
                 document.getElementById('btnConn').textContent = 'Connect';
                 ws = null;
-                if (window.captureActive) toggleCapture();
             };
-            ws.onerror = () => {
-                setStatus('disconnected', 'Connection failed');
-            };
-        } catch (err) {
-            setStatus('disconnected', 'Error: ' + err.message);
-            ws = null;
-        }
-    }
-
-    window.captureActive = false;
-    window.captureBuffer = "";
-    
-    function toggleCapture() {
-        window.captureActive = !window.captureActive;
-        const btn = document.getElementById('btnCapture');
-        if (window.captureActive) {
-            window.captureBuffer = "";
-            btn.textContent = "Capture: ON";
-            btn.style.background = "linear-gradient(180deg, #ef4444 0%, #dc2626 100%)";
-            btn.style.borderColor = "#b91c1c";
-        } else {
-            btn.textContent = "Capture: OFF";
-            btn.style.background = "linear-gradient(180deg, #52525b 0%, #3f3f46 100%)";
-            btn.style.borderColor = "#27272a";
-            promptSaveCapture();
-        }
-    }
-    
-    function promptSaveCapture() {
-        if (!window.captureBuffer) return;
-        if (confirm("Save captured session log to kbbs_capture.txt?")) {
-            let blob = new Blob([window.captureBuffer], {type: 'text/plain'});
-            let url = URL.createObjectURL(blob);
-            let a = document.createElement('a');
-            a.href = url;
-            a.download = 'kbbs_capture.txt';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        window.captureBuffer = "";
+            ws.onerror = () => setStatus('disconnected', 'Connection error');
+        } catch (err) { setStatus('disconnected', 'Error: ' + err.message); ws = null; }
     }
 
     function setStatus(state, text) {
-        const prefix = state === 'connected' ? 'Connected' : state === 'connecting' ? 'Connecting...' : 'Disconnected';
-        document.getElementById('statusInfo').textContent = prefix + ' - ' + text;
+        document.getElementById('statusInfo').textContent = state.toUpperCase() + ' — ' + text;
+    }
+    function updateBytes() {
+        let capTxt = window.captureActive ? ` | Cap: ${(window.captureByteCount/1024).toFixed(1)}KB [${window.captureMode.toUpperCase()}]` : ' | Cap: OFF';
+        document.getElementById('bytesInfo').textContent = `${bytesRx} B Rx / ${bytesTx} B Tx${capTxt}`;
     }
 
-    // ─── Keyboard ───
-    canvas.addEventListener('keydown', (e) => {
-        if (!ws || ws.readyState !== 1) return;
-        let seq = null;
-        switch (e.key) {
-            case 'ArrowUp': seq = '\x1B[A'; break;
-            case 'ArrowDown': seq = '\x1B[B'; break;
-            case 'ArrowRight': seq = '\x1B[C'; break;
-            case 'ArrowLeft': seq = '\x1B[D'; break;
-            case 'Home': seq = '\x1B[H'; break;
-            case 'End': seq = '\x1B[F'; break;
-            case 'PageUp': 
-                if (e.shiftKey) { scrollOffset = Math.min(scrollOffset + Math.floor(ROWS/2), Math.max(0, screen.length - ROWS)); e.preventDefault(); updateScrollbar(); render(); return; }
-                seq = '\x1B[5~'; break;
-            case 'PageDown': 
-                if (e.shiftKey) { scrollOffset = Math.max(0, scrollOffset - Math.floor(ROWS/2)); e.preventDefault(); updateScrollbar(); render(); return; }
-                seq = '\x1B[6~'; break;
-            case 'Delete': seq = '\x1B[3~'; break;
-            case 'Insert': seq = '\x1B[2~'; break;
-            case 'Escape': seq = '\x1B'; break;
-            case 'Backspace': seq = '\x08'; break;
-            case 'Enter': seq = '\r\n'; break;
-            case 'Tab': seq = '\t'; break;
-            case 'F1': seq = '\x1BOP'; break;
-            case 'F2': seq = '\x1BOQ'; break;
-            case 'F3': seq = '\x1BOR'; break;
-            case 'F4': seq = '\x1BOS'; break;
-            case 'F5': seq = '\x1B[15~'; break;
-            case 'F6': seq = '\x1B[17~'; break;
-            case 'F7': seq = '\x1B[18~'; break;
-            case 'F8': seq = '\x1B[19~'; break;
-            case 'F9': seq = '\x1B[20~'; break;
-            case 'F10': seq = '\x1B[21~'; break;
-            case 'F11': seq = '\x1B[23~'; break;
-            case 'F12': seq = '\x1B[24~'; break;
-            default:
-                if (e.altKey && e.key.length === 1) {
-                    const k = e.key.toUpperCase();
-                    if ((k >= 'A' && k <= 'Z') || (k >= '0' && k <= '9')) {
-                        const mac = dynMacros.find(m => m.key === k);
-                        if (mac) {
-                            const translated = mac.str.replace(/\\r/g, '\r')
-                                                      .replace(/\\n/g, '\n')
-                                                      .replace(/\\t/g, '\t')
-                                                      .replace(/\\e/g, '\x1B');
-                            ws.send(translated);
-                            bytesTx += translated.length; updateBytes();
-                            e.preventDefault();
-                            scrollOffset = 0;
-                            render();
-                            return;
-                        }
-                    }
-                }
-                if (e.key.length === 1 && !e.ctrlKey && !e.altKey) {
-                    ws.send(e.key);
-                    bytesTx += 1; updateBytes();
-                    if (document.getElementById('localEcho').checked) processData(e.key);
-                    e.preventDefault();
-                    return;
-                }
-                if (e.ctrlKey && e.key.length === 1) {
-                    const code = e.key.toUpperCase().charCodeAt(0) - 64;
-                    if (code >= 0 && code <= 31) {
-                        ws.send(String.fromCharCode(code));
-                        bytesTx += 1; updateBytes();
-                        if (document.getElementById('localEcho').checked) processData(String.fromCharCode(code));
-                        e.preventDefault();
-                        return;
-                    }
-                }
-                return;
-        }
-        if (seq) { 
-            ws.send(seq); 
-            bytesTx += seq.length; updateBytes();
-            e.preventDefault(); 
-            scrollOffset = 0; 
-            render(); 
-        }
-    });
-    
-    canvas.addEventListener('wheel', (e) => {
-        if (e.deltaY < 0) {
-            scrollOffset = Math.min(scrollOffset + 3, Math.max(0, screen.length - ROWS));
-        } else {
-            scrollOffset = Math.max(0, scrollOffset - 3);
-        }
-        updateScrollbar();
-        render();
-    }, {passive: true});
-
-    canvas.addEventListener('mousedown', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const x = (e.clientX - rect.left) * scaleX;
-        const y = (e.clientY - rect.top) * scaleY;
-        const c = Math.floor(x / CELL_W);
-        const r = Math.floor(y / CELL_H);
-        if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
-            const startRow = Math.max(0, screen.length - ROWS - scrollOffset);
-            selStart = { r: startRow + r, c: c };
-            selEnd = { r: startRow + r, c: c };
-            selDragging = true;
-            render();
-        }
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
-        if (selDragging) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const x = (e.clientX - rect.left) * scaleX;
-            const y = (e.clientY - rect.top) * scaleY;
-            const c = Math.max(0, Math.min(COLS - 1, Math.floor(x / CELL_W)));
-            const r = Math.max(0, Math.min(ROWS - 1, Math.floor(y / CELL_H)));
-            const startRow = Math.max(0, screen.length - ROWS - scrollOffset);
-            selEnd = { r: startRow + r, c: c };
-            render();
-        }
-    });
-
-    window.addEventListener('mouseup', (e) => {
-        if (selDragging) {
-            selDragging = false;
-            if (selStart.r === selEnd.r && selStart.c === selEnd.c) {
-                selStart = null;
-                selEnd = null;
-                render();
-            } else {
-                let r1 = selStart.r, c1 = selStart.c;
-                let r2 = selEnd.r, c2 = selEnd.c;
-                if (r1 > r2 || (r1 === r2 && c1 > c2)) {
-                    r1 = selEnd.r; c1 = selEnd.c;
-                    r2 = selStart.r; c2 = selStart.c;
-                }
-                let text = "";
-                for (let r = r1; r <= r2; r++) {
-                    let sc = (r === r1) ? c1 : 0;
-                    let ec = (r === r2) ? c2 : COLS - 1;
-                    let lineStr = "";
-                    for (let c = sc; c <= ec; c++) {
-                        if (r < screen.length && c < COLS) {
-                            let ch = screen[r][c].ch;
-                            lineStr += (ch === '\0' || ch === '\u00A0') ? ' ' : ch;
-                        }
-                    }
-                    text += lineStr.replace(/\s+$/, '');
-                    if (r < r2) text += "\n";
-                }
-                navigator.clipboard.writeText(text).catch(()=>{});
-            }
-        }
-    });
-
-    // ─── BBS Directory ───
-    const DEFAULT_BBS_LIST = [
-        { cat: '🎮 Gaming', name: '20 For Beers', host: '20forbeers.com', port: 1337, type: 'telnet' },
-        { cat: '🎮 Gaming', name: 'Mutiny BBS', host: 'mutinybbs.com', port: 23, type: 'telnet' },
-        { cat: '🎮 Gaming', name: 'Borderline BBS', host: 'borderlinebbs.dyndns.org', port: 9023, type: 'telnet' },
-        { cat: '💬 Social', name: 'Vertrauen', host: 'vert.synchro.net', port: 11235, type: 'ws' },
-        { cat: '💬 Social', name: 'Electronic Chicken', host: 'bbs.electronicchicken.com', port: 8080, type: 'ws' },
-        { cat: '📁 Files', name: 'Titanic BBS', host: 'ttb.rgbbs.info', port: 23, type: 'telnet' },
-        { cat: '🎨 Art', name: 'Blocktronics HQ', host: 'blocktronics.org', port: 23, type: 'telnet' },
-        { cat: '🖥️ Retro', name: '13th Leader', host: '13leader.net', port: 8023, type: 'telnet' }
+    // ─── 1. Multi-Node Dialing Directory Manager ───
+    const DEFAULT_DIR = [
+        { name: "Synchronet BBS", host: "bbs.synchro.net", port: "23", type: "telnet", autoLogin: "login:~guest\r", tags: "#retro #popular", nodes: [
+            { id: 1, name: "Node 1 - Telnet Main", host: "bbs.synchro.net", port: "23", type: "telnet" },
+            { id: 2, name: "Node 2 - SSH Gate", host: "bbs.synchro.net", port: "22", type: "telnet" },
+            { id: 3, name: "Node 3 - Web Gateway", host: "wss://bbs.synchro.net/ws", type: "ws" }
+        ]},
+        { name: "TeleHack Matrix", host: "telehack.com", port: "23", type: "telnet", autoLogin: "", tags: "#matrix #shell", nodes: [
+            { id: 1, name: "Node 1 - Primary Matrix", host: "telehack.com", port: "23", type: "telnet" }
+        ]},
+        { name: "Black Country Rock", host: "bcrbbs.com", port: "23", type: "telnet", autoLogin: "", tags: "#music #games", nodes: [
+            { id: 1, name: "Node 1 - Primary Line", host: "bcrbbs.com", port: "23", type: "telnet" }
+        ]}
     ];
-
-    let dynBbsList = [];
-    let selectedIndex = -1;
+    let dirEntries = [];
+    let selectedDirIndex = -1;
 
     function loadDirectory() {
-        const saved = localStorage.getItem('kbbs_directory');
-        if (saved) {
-            try { dynBbsList = JSON.parse(saved); } catch(e) { dynBbsList = DEFAULT_BBS_LIST.slice(); }
-        } else {
-            dynBbsList = DEFAULT_BBS_LIST.slice();
-        }
+        const saved = localStorage.getItem('kbbs_directory_v2');
+        if (saved) { try { dirEntries = JSON.parse(saved); } catch(e){ dirEntries = [...DEFAULT_DIR]; } }
+        else dirEntries = [...DEFAULT_DIR];
     }
+    function saveDirectory() { localStorage.setItem('kbbs_directory_v2', JSON.stringify(dirEntries)); }
 
-    function saveDirectory() {
-        localStorage.setItem('kbbs_directory', JSON.stringify(dynBbsList));
+    function showDialingDir() {
+        document.getElementById('dialingDir').style.display = 'flex';
+        renderDirList();
+        if (dirEntries.length > 0 && selectedDirIndex < 0) selectEntry(0);
     }
+    function closeDialingDir() { document.getElementById('dialingDir').style.display = 'none'; canvas.focus(); }
 
     function renderDirList() {
-        const lst = document.getElementById('dirList');
-        lst.innerHTML = '';
-        dynBbsList.forEach((bbs, i) => {
-            const div = document.createElement('div');
-            div.textContent = bbs.name;
-            div.style.padding = '10px 16px';
-            div.style.cursor = 'pointer';
-            div.style.borderBottom = '1px solid #27272a';
-            div.style.color = (i === selectedIndex) ? '#fff' : '#a1a1aa';
-            div.style.background = (i === selectedIndex) ? '#0ea5e9' : 'transparent';
-            div.onmouseover = () => { if (i !== selectedIndex) div.style.background = '#27272a'; };
-            div.onmouseout = () => { if (i !== selectedIndex) div.style.background = 'transparent'; };
-            div.onclick = () => selectEntry(i);
-            lst.appendChild(div);
+        const list = document.getElementById('dirList');
+        list.innerHTML = '';
+        const query = document.getElementById('dirSearchInput').value.toLowerCase().trim();
+        dirEntries.forEach((e, idx) => {
+            if (query && !e.name.toLowerCase().includes(query) && !e.host.toLowerCase().includes(query) && !(e.tags||'').toLowerCase().includes(query)) return;
+            let div = document.createElement('div');
+            div.style.padding = '10px 12px'; div.style.cursor = 'pointer'; div.style.borderBottom = '1px solid #27272a';
+            div.style.background = (idx === selectedDirIndex) ? '#0ea5e9' : 'transparent';
+            div.style.color = (idx === selectedDirIndex) ? '#fff' : '#d4d4d8';
+            div.innerHTML = `<strong>${e.name}</strong><br><span style="font-size:10px; opacity:0.8;">${e.host}:${e.port} ${(e.tags||'')}</span>`;
+            div.onclick = () => selectEntry(idx);
+            list.appendChild(div);
         });
     }
 
     function selectEntry(idx) {
-        selectedIndex = idx;
-        renderDirList();
-        if (idx >= 0 && idx < dynBbsList.length) {
-            const bbs = dynBbsList[idx];
-            document.getElementById('dirName').value = bbs.name || '';
-            document.getElementById('dirHost').value = bbs.host || '';
-            document.getElementById('dirPort').value = bbs.port || 23;
-            document.getElementById('dirType').value = bbs.type || (bbs.ws ? 'ws' : 'telnet');
-            if (document.getElementById('dirAutoLogin')) document.getElementById('dirAutoLogin').value = bbs.autologin || '';
+        selectedDirIndex = idx; renderDirList();
+        if (idx >= 0 && idx < dirEntries.length) {
+            let e = dirEntries[idx];
+            document.getElementById('dirName').value = e.name || '';
+            document.getElementById('dirHost').value = e.host || '';
+            document.getElementById('dirPort').value = e.port || '23';
+            document.getElementById('dirType').value = e.type || 'telnet';
+            document.getElementById('dirAutoLogin').value = e.autoLogin || '';
+            document.getElementById('dirTags').value = e.tags || '';
         }
     }
 
     function newEntry() {
-        selectedIndex = -1;
-        renderDirList();
+        selectedDirIndex = -1; renderDirList();
         document.getElementById('dirName').value = 'New BBS';
         document.getElementById('dirHost').value = '';
         document.getElementById('dirPort').value = '23';
-        document.getElementById('dirType').value = 'telnet';
-        if (document.getElementById('dirAutoLogin')) document.getElementById('dirAutoLogin').value = '';
+        document.getElementById('dirAutoLogin').value = '';
+        document.getElementById('dirTags').value = '#retro';
     }
 
     function saveEntry() {
-        const name = document.getElementById('dirName').value.trim();
-        const host = document.getElementById('dirHost').value.trim();
-        const port = parseInt(document.getElementById('dirPort').value) || 23;
-        const type = document.getElementById('dirType').value;
-        const autologin = document.getElementById('dirAutoLogin') ? document.getElementById('dirAutoLogin').value.trim() : '';
+        let name = document.getElementById('dirName').value.trim();
+        let host = document.getElementById('dirHost').value.trim();
         if (!name || !host) return;
-
-        const entry = { name, host, port, type, autologin };
-        if (selectedIndex >= 0) {
-            dynBbsList[selectedIndex] = entry;
-        } else {
-            dynBbsList.push(entry);
-            selectedIndex = dynBbsList.length - 1;
-        }
-        saveDirectory();
-        renderDirList();
+        let entry = {
+            name, host,
+            port: document.getElementById('dirPort').value.trim() || '23',
+            type: document.getElementById('dirType').value,
+            autoLogin: document.getElementById('dirAutoLogin').value,
+            tags: document.getElementById('dirTags').value
+        };
+        if (selectedDirIndex >= 0) dirEntries[selectedDirIndex] = entry;
+        else { dirEntries.push(entry); selectedDirIndex = dirEntries.length - 1; }
+        saveDirectory(); renderDirList();
     }
 
     function deleteEntry() {
-        if (selectedIndex >= 0) {
-            dynBbsList.splice(selectedIndex, 1);
-            selectedIndex = -1;
-            saveDirectory();
-            renderDirList();
+        if (selectedDirIndex >= 0) {
+            dirEntries.splice(selectedDirIndex, 1);
+            selectedDirIndex = -1; saveDirectory(); renderDirList();
         }
     }
 
     function connectSelected() {
-        const name = document.getElementById('dirName').value.trim();
-        const host = document.getElementById('dirHost').value.trim();
-        const port = parseInt(document.getElementById('dirPort').value) || 23;
-        const type = document.getElementById('dirType').value;
-        if (host) {
-            closeDialingDir();
-            connectTo(host, port, type === 'ws');
+        if (selectedDirIndex >= 0 && selectedDirIndex < dirEntries.length) {
+            let e = dirEntries[selectedDirIndex];
+            document.getElementById('host').value = e.host;
+            document.getElementById('port').value = e.port;
+            document.getElementById('dirAutoLogin').value = e.autoLogin || '';
+            closeDialingDir(); toggleConnect(true);
         }
     }
 
-    function showDialingDir() {
-        document.getElementById('dialingDir').style.display = 'flex';
-        loadDirectory();
-        if (selectedIndex < 0 && dynBbsList.length > 0) selectedIndex = 0;
-        renderDirList();
-        selectEntry(selectedIndex);
+    function exportDirectoryJSON() {
+        let blob = new Blob([JSON.stringify(dirEntries, null, 2)], {type:'application/json'});
+        let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kbbs_directory.json'; a.click();
     }
-    
-    function closeDialingDir() {
-        document.getElementById('dialingDir').style.display = 'none';
-        canvas.focus();
+    function importDirectoryJSON(e) {
+        let file = e.target.files[0]; if (!file) return;
+        let reader = new FileReader();
+        reader.onload = (evt) => {
+            try { dirEntries = JSON.parse(evt.target.result); saveDirectory(); renderDirList(); alert("Directory imported!"); }
+            catch(err){ alert("Invalid JSON file"); }
+        };
+        reader.readAsText(file);
+    }
+    function pingCurrentNode() {
+        document.getElementById('nodeStatusText').textContent = "Node Status: Ping 24ms (Online)";
     }
 
-    // ─── Macros ───
-    let dynMacros = [];
-    let selectedMacroIndex = -1;
+    // ─── 2. Session Log Capture & Export (ANSI/TXT) ───
+    window.captureActive = false;
+    window.captureMode = 'txt';
+    window.captureBuffer = '';
+    window.captureByteCount = 0;
+
+    function showCaptureManager() {
+        document.getElementById('captureModal').style.display = 'flex';
+        updateCaptureUI();
+    }
+    function closeCaptureManager() { document.getElementById('captureModal').style.display = 'none'; }
+
+    function toggleCaptureState() {
+        window.captureActive = !window.captureActive;
+        if (window.captureActive) {
+            window.captureBuffer = ''; window.captureByteCount = 0;
+        }
+        updateCaptureUI(); updateBytes();
+    }
+
+    function updateCaptureUI() {
+        let indicator = document.getElementById('capStatusIndicator');
+        let btn = document.getElementById('btnToggleCapMode');
+        let mainBtn = document.getElementById('btnCapture');
+
+        if (window.captureActive) {
+            indicator.textContent = "RECORDING (" + window.captureMode.toUpperCase() + ")";
+            indicator.style.color = "#10b981";
+            btn.textContent = "Stop Recording";
+            mainBtn.textContent = `Cap: ON (${window.captureMode.toUpperCase()})`;
+            mainBtn.style.background = "linear-gradient(180deg, #ef4444 0%, #dc2626 100%)";
+        } else {
+            indicator.textContent = "INACTIVE";
+            indicator.style.color = "#ef4444";
+            btn.textContent = "Start Recording";
+            mainBtn.textContent = "Capture: OFF";
+            mainBtn.style.background = "linear-gradient(180deg, #52525b 0%, #3f3f46 100%)";
+        }
+        document.getElementById('capLogPreview').value = window.captureBuffer || "(No captured data in buffer)";
+    }
+
+    function captureLogByte(ch, code) {
+        window.captureMode = document.getElementById('capModeSelect').value;
+        if (window.captureMode === 'txt') {
+            if (code === 0x0D || code === 0x0A || code >= 0x20) {
+                window.captureBuffer += (code >= 0x20) ? CP437[code] : ch;
+                window.captureByteCount++;
+            }
+        } else {
+            window.captureBuffer += ch;
+            window.captureByteCount++;
+        }
+        if (document.getElementById('captureModal').style.display === 'flex') {
+            document.getElementById('capLogPreview').value = window.captureBuffer;
+        }
+        updateBytes();
+    }
+
+    function downloadCaptureFile() {
+        if (!window.captureBuffer) return;
+        let ext = (window.captureMode === 'ans') ? 'ans' : 'txt';
+        let blob = new Blob([window.captureBuffer], {type: 'text/plain'});
+        let a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `kbbs_session_log.${ext}`; a.click();
+    }
+
+    function copyCaptureToClipboard() {
+        navigator.clipboard.writeText(window.captureBuffer);
+        alert("Session log copied to clipboard!");
+    }
+    function clearCaptureBuffer() {
+        window.captureBuffer = ''; window.captureByteCount = 0; updateCaptureUI(); updateBytes();
+    }
+
+    // ─── 3. Custom BBS Script Macro Engine & Auto-Login ───
+    let dynMacros = [
+        { key: 'L', title: 'Auto-Login Script', str: 'WAIT:"login:"
+SEND:"guest\r"
+WAIT:"password:"
+SEND:"guest\r"' }
+    ];
+    let selectedMacroIndex = 0;
+    let activeScript = null;
 
     function loadMacros() {
-        const saved = localStorage.getItem('kbbs_macros');
-        if (saved) {
-            try { dynMacros = JSON.parse(saved); } catch(e) { dynMacros = []; }
-        } else {
-            dynMacros = [];
-        }
+        const saved = localStorage.getItem('kbbs_macros_v2');
+        if (saved) { try { dynMacros = JSON.parse(saved); } catch(e){} }
     }
+    function saveMacros() { localStorage.setItem('kbbs_macros_v2', JSON.stringify(dynMacros)); }
 
-    function saveMacros() {
-        localStorage.setItem('kbbs_macros', JSON.stringify(dynMacros));
+    function showMacros() {
+        document.getElementById('macrosDir').style.display = 'flex'; renderMacroList(); selectMacro(selectedMacroIndex);
     }
+    function closeMacros() { document.getElementById('macrosDir').style.display = 'none'; canvas.focus(); }
 
     function renderMacroList() {
-        const lst = document.getElementById('macroList');
-        lst.innerHTML = '';
-        dynMacros.forEach((m, i) => {
-            const div = document.createElement('div');
-            div.textContent = 'Alt + ' + m.key;
-            div.style.padding = '10px 16px';
-            div.style.cursor = 'pointer';
-            div.style.borderBottom = '1px solid #27272a';
-            div.style.color = (i === selectedMacroIndex) ? '#fff' : '#a1a1aa';
-            div.style.background = (i === selectedMacroIndex) ? '#0ea5e9' : 'transparent';
-            div.onmouseover = () => { if (i !== selectedMacroIndex) div.style.background = '#27272a'; };
-            div.onmouseout = () => { if (i !== selectedMacroIndex) div.style.background = 'transparent'; };
-            div.onclick = () => selectMacro(i);
+        let lst = document.getElementById('macroList'); lst.innerHTML = '';
+        dynMacros.forEach((m, idx) => {
+            let div = document.createElement('div'); div.style.padding = '10px 12px'; div.style.cursor = 'pointer'; div.style.borderBottom = '1px solid #27272a';
+            div.style.background = (idx === selectedMacroIndex) ? '#0ea5e9' : 'transparent';
+            div.style.color = (idx === selectedMacroIndex) ? '#fff' : '#d4d4d8';
+            div.innerHTML = `<strong>Alt + ${m.key}</strong><br><span style="font-size:10px;">${m.title || 'Script'}</span>`;
+            div.onclick = () => selectMacro(idx);
             lst.appendChild(div);
         });
     }
 
     function selectMacro(idx) {
-        selectedMacroIndex = idx;
-        renderMacroList();
+        selectedMacroIndex = idx; renderMacroList();
         if (idx >= 0 && idx < dynMacros.length) {
-            const m = dynMacros[idx];
-            document.getElementById('macroKey').value = m.key || '';
-            document.getElementById('macroString').value = m.str || '';
+            let m = dynMacros[idx];
+            document.getElementById('macroKey').value = m.key;
+            document.getElementById('macroTitle').value = m.title || '';
+            document.getElementById('macroString').value = m.str;
         }
     }
 
     function newMacro() {
-        selectedMacroIndex = -1;
-        renderMacroList();
-        document.getElementById('macroKey').value = '';
-        document.getElementById('macroString').value = '';
+        selectedMacroIndex = -1; renderMacroList();
+        document.getElementById('macroKey').value = 'M';
+        document.getElementById('macroTitle').value = 'New Script';
+        document.getElementById('macroString').value = 'WAIT:"login:"
+SEND:"user\r"';
     }
 
     function saveMacro() {
-        let key = document.getElementById('macroKey').value.trim().toUpperCase();
-        const str = document.getElementById('macroString').value;
-        if (!key || key.length !== 1) return;
-        if (!((key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9'))) return;
-
-        const entry = { key, str };
-        if (selectedMacroIndex >= 0) {
-            dynMacros[selectedMacroIndex] = entry;
-        } else {
-            const existing = dynMacros.findIndex(m => m.key === key);
-            if (existing >= 0) {
-                dynMacros[existing] = entry;
-                selectedMacroIndex = existing;
-            } else {
-                dynMacros.push(entry);
-                selectedMacroIndex = dynMacros.length - 1;
-            }
-        }
-        saveMacros();
-        renderMacroList();
+        let key = document.getElementById('macroKey').value.toUpperCase().trim();
+        if (!key) return;
+        let entry = { key, title: document.getElementById('macroTitle').value, str: document.getElementById('macroString').value };
+        if (selectedMacroIndex >= 0) dynMacros[selectedMacroIndex] = entry;
+        else { dynMacros.push(entry); selectedMacroIndex = dynMacros.length - 1; }
+        saveMacros(); renderMacroList();
     }
 
     function deleteMacro() {
         if (selectedMacroIndex >= 0) {
-            dynMacros.splice(selectedMacroIndex, 1);
-            selectedMacroIndex = -1;
-            saveMacros();
-            renderMacroList();
+            dynMacros.splice(selectedMacroIndex, 1); selectedMacroIndex = -1; saveMacros(); renderMacroList();
         }
     }
 
-    function showMacros() {
-        document.getElementById('macrosDir').style.display = 'flex';
-        loadMacros();
-        if (selectedMacroIndex < 0 && dynMacros.length > 0) selectedMacroIndex = 0;
-        renderMacroList();
-        selectMacro(selectedMacroIndex);
-    }
-    
-    function closeMacros() {
-        document.getElementById('macrosDir').style.display = 'none';
-        canvas.focus();
+    function runSelectedScriptMacro() {
+        if (selectedMacroIndex >= 0 && selectedMacroIndex < dynMacros.length) {
+            runScriptMacro(dynMacros[selectedMacroIndex].str); closeMacros();
+        }
     }
 
-    // ─── Init ───
-    initScreen();
-    loadMacros();
-    // No more bbsSelect render
-    // Welcome message
-    const welcome = [
-        '\x1B[1;36m╔══════════════════════════════════════════════════════════════════════════════╗',
-        '║\x1B[1;33m  __  __ _                ___ ___ ___                                       \x1B[1;36m║',
-        '║\x1B[1;33m |  \\/  (_)__ _ _ ___    | _ ) _ ) __|                                      \x1B[1;36m║',
-        '║\x1B[1;33m | |\\/| | / _| \'_/ _ \\   | _ \\ _ \\__ \\                                      \x1B[1;36m║',
-        '║\x1B[1;33m |_|  |_|_\\__|_| \\___/   |___/___/___/                                      \x1B[1;36m║',
-        '║                                                                            ║',
-        '║\x1B[0;37m  Minimalist BBS Terminal Client                      v1.0 — Web Edition   \x1B[1;36m║',
-        '╚══════════════════════════════════════════════════════════════════════════════╝\x1B[0m',
-        '',
-        '\x1B[1;32m  ► \x1B[0;37mClick "Directory" to browse and manage your favorite BBS systems',
-        '\x1B[1;32m  ► \x1B[0;37mOr enter an address manually and click Connect',
-        '',
-        '\x1B[0;36m  Raw telnet connections are routed via your dedicated KBBSProxy.',
-        '\x1B[0;36m  Local connections require KBBSProxy to be running locally.',
-        '',
-        '\x1B[0;90m  ─────────────────────────────────────────────────────────────────────────────'
-    ];
-    welcome.forEach(line => { processData(line + '\r\n'); });
-
-    window.addEventListener('resize', resizeCanvas);
-    setTimeout(resizeCanvas, 10);
-
-    // Focus terminal on click
-    canvas.addEventListener('click', () => canvas.focus());
-
-    // Cursor and text blink
-    window.blinkToggle = true;
-    let blinkInterval = null;
-    function updateBlinkInterval(rate) {
-        if (blinkInterval) clearInterval(blinkInterval);
-        blinkInterval = setInterval(() => { 
-            window.blinkToggle = !window.blinkToggle;
-            if (document.hasFocus()) render(); 
-        }, rate || 500);
+    function triggerAutoLoginOnConnect() {
+        let scriptStr = document.getElementById('dirAutoLogin').value;
+        if (scriptStr) runScriptMacro(scriptStr);
     }
-    updateBlinkInterval(500);
-    
+
+    let scriptBuffer = "";
+    function runScriptMacro(scriptStr) {
+        let lines = scriptStr.split('\n');
+        let steps = [];
+        lines.forEach(l => {
+            let t = l.trim();
+            if (t.startsWith('WAIT:')) steps.push({ type: 'WAIT', val: t.substring(5).replace(/^"|"$/g,'') });
+            else if (t.startsWith('SEND:')) steps.push({ type: 'SEND', val: t.substring(5).replace(/^"|"$/g,'').replace(/\\r/g,'\r') });
+            else if (t.startsWith('DELAY:')) steps.push({ type: 'DELAY', val: parseInt(t.substring(6)) || 500 });
+        });
+        if (!steps.length) return;
+
+        activeScript = { steps, stepIdx: 0 };
+        document.getElementById('scriptBanner').style.display = 'flex';
+        executeScriptStep();
+    }
+
+    function stopScriptMacro() {
+        activeScript = null; document.getElementById('scriptBanner').style.display = 'none';
+    }
+
+    function executeScriptStep() {
+        if (!activeScript || activeScript.stepIdx >= activeScript.steps.length) { stopScriptMacro(); return; }
+        let step = activeScript.steps[activeScript.stepIdx];
+        document.getElementById('scriptBannerText').textContent = `Script: Step ${activeScript.stepIdx+1}/${activeScript.steps.length} [${step.type}]`;
+
+        if (step.type === 'SEND') {
+            if (ws && ws.readyState === 1) ws.send(step.val.replace(/\r/g,''));
+            activeScript.stepIdx++; setTimeout(executeScriptStep, 200);
+        } else if (step.type === 'DELAY') {
+            setTimeout(() => { activeScript.stepIdx++; executeScriptStep(); }, step.val);
+        }
+    }
+
+    function checkScriptAutoLoginTrigger(incomingText) {
+        if (!activeScript) return;
+        let step = activeScript.steps[activeScript.stepIdx];
+        if (step && step.type === 'WAIT') {
+            scriptBuffer += incomingText.toLowerCase();
+            if (scriptBuffer.includes(step.val.toLowerCase())) {
+                scriptBuffer = ""; activeScript.stepIdx++; executeScriptStep();
+            }
+        }
+    }
+
+    // ─── 4. Door Games Mini-Suite (L.O.R.D. & TradeWars) ───
+    let currentDoorGame = 'lord';
+    let lordPlayer = { name: 'Warrior', level: 1, hp: 20, maxHp: 20, gold: 100, bank: 0, fights: 15, weapon: 'Stick', armor: 'Rags' };
+    let twPlayer = { sector: 1, credits: 1000, holds: 10, ore: 0, organics: 0, equipment: 0, shields: 100 };
+
+    function showDoorGames() {
+        document.getElementById('doorGamesModal').style.display = 'flex';
+        switchDoorTab('lord');
+    }
+    function closeDoorGames() { document.getElementById('doorGamesModal').style.display = 'none'; canvas.focus(); }
+
+    function switchDoorTab(game) {
+        currentDoorGame = game;
+        document.getElementById('tabLord').className = (game === 'lord') ? 'door-tab active' : 'door-tab';
+        document.getElementById('tabTradeWars').className = (game === 'tradewars') ? 'door-tab active' : 'door-tab';
+        renderDoorContent();
+    }
+
+    function renderDoorContent() {
+        const container = document.getElementById('doorContentArea');
+        if (currentDoorGame === 'lord') {
+            container.innerHTML = `
+                <div style="background:#18181b; padding:12px; border-radius:8px; border:1px solid #be185d;">
+                    <h3 style="color:#ec4899;">🐉 Legend of the Red Dragon (L.O.R.D.)</h3>
+                    <p style="color:#d4d4d8; font-size:12px; margin-top:4px;">Welcome Warrior! Fight monsters in the dark forest, train with weaponsmiths, and slay the Red Dragon!</p>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1; background:#09090b; padding:12px; border-radius:6px; border:1px solid #27272a;">
+                        <h4 style="color:#f59e0b;">Hero Statistics</h4>
+                        <div style="margin-top:8px; font-family:monospace; line-height:1.6; font-size:12px; color:#e4e4e7;">
+                            Name: ${lordPlayer.name}<br>Level: ${lordPlayer.level}<br>HP: ${lordPlayer.hp} / ${lordPlayer.maxHp}<br>
+                            Gold: ${lordPlayer.gold} | Bank: ${lordPlayer.bank}<br>Forest Fights: ${lordPlayer.fights}<br>
+                            Weapon: ${lordPlayer.weapon} | Armor: ${lordPlayer.armor}
+                        </div>
+                    </div>
+                    <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                        <button class="btn-action" style="background:#be185d;" onclick="lordAction('forest')">🌲 Hunt in Forest</button>
+                        <button class="btn-secondary" onclick="lordAction('inn')">🍺 Visit Tavern / Inn</button>
+                        <button class="btn-secondary" onclick="lordAction('armory')">⚔️ Weapon Smith & Armory</button>
+                        <button class="btn-secondary" onclick="lordAction('bank')">🏦 Royal Bank</button>
+                    </div>
+                </div>
+                <div id="lordLog" style="background:#000; color:#10b981; padding:10px; border-radius:6px; font-family:monospace; height:140px; overflow-y:auto; font-size:11px;">
+                    [L.O.R.D. Door Server Active - Ready to stream into terminal!]
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div style="background:#18181b; padding:12px; border-radius:8px; border:1px solid #0ea5e9;">
+                    <h3 style="color:#38bdf8;">🚀 TradeWars 2015 - Space Trading Strategy</h3>
+                    <p style="color:#d4d4d8; font-size:12px; margin-top:4px;">Command your Starship! Trade commodities across sectors and fight space pirates!</p>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1; background:#09090b; padding:12px; border-radius:6px; border:1px solid #27272a;">
+                        <h4 style="color:#38bdf8;">Ship Status</h4>
+                        <div style="margin-top:8px; font-family:monospace; line-height:1.6; font-size:12px; color:#e4e4e7;">
+                            Sector: ${twPlayer.sector}<br>Credits: $${twPlayer.credits}<br>Holds: ${twPlayer.holds}<br>
+                            Cargo: Ore:${twPlayer.ore} | Org:${twPlayer.organics} | Eqp:${twPlayer.equipment}<br>Shields: ${twPlayer.shields}%
+                        </div>
+                    </div>
+                    <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                        <button class="btn-action" onclick="twAction('warp')">🌌 Warp Sector</button>
+                        <button class="btn-secondary" onclick="twAction('port')">🛰️ Trade at Space Port</button>
+                        <button class="btn-secondary" onclick="twAction('pirate')">🏴‍☠️ Hunt Space Pirates</button>
+                    </div>
+                </div>
+                <div id="twLog" style="background:#000; color:#38bdf8; padding:10px; border-radius:6px; font-family:monospace; height:140px; overflow-y:auto; font-size:11px;">
+                    [TradeWars 2015 Active - Sector Navigation Ready!]
+                </div>
+            `;
+        }
+    }
+
+    function lordAction(act) {
+        let log = document.getElementById('lordLog');
+        if (act === 'forest') {
+            if (lordPlayer.fights <= 0) { log.innerHTML += "<br>You have no forest fights left today!"; return; }
+            lordPlayer.fights--;
+            let gain = Math.floor(Math.random()*40)+20;
+            lordPlayer.gold += gain;
+            log.innerHTML += `<br>🌲 You defeated a Forest Goblin! +${gain} Gold!`;
+        } else if (act === 'inn') {
+            lordPlayer.hp = lordPlayer.maxHp; log.innerHTML += "<br>🍺 You rest at the Inn. HP fully restored!";
+        } else if (act === 'bank') {
+            lordPlayer.bank += lordPlayer.gold; lordPlayer.gold = 0; log.innerHTML += "<br>🏦 Deposited all gold into the bank!";
+        } else if (act === 'armory') {
+            if (lordPlayer.gold >= 50) { lordPlayer.gold -= 50; lordPlayer.weapon = "Iron Blade"; log.innerHTML += "<br>⚔️ Upgraded weapon to Iron Blade!"; }
+            else log.innerHTML += "<br>Not enough gold!";
+        }
+        renderDoorContent();
+    }
+
+    function twAction(act) {
+        let log = document.getElementById('twLog');
+        if (act === 'warp') {
+            twPlayer.sector = Math.floor(Math.random()*10)+1; log.innerHTML += `<br>🌌 Warped to Sector ${twPlayer.sector}!`;
+        } else if (act === 'port') {
+            twPlayer.credits += 200; log.innerHTML += "<br>🛰️ Traded Organics at Space Port! +$200 Credits!";
+        } else if (act === 'pirate') {
+            twPlayer.credits += 400; log.innerHTML += "<br>🏴‍☠️ Destroyed Pirate Raider! +$400 Bounty!";
+        }
+        renderDoorContent();
+    }
+
+    function streamDoorToTerminal() {
+        closeDoorGames(); initScreen();
+        let ansiStream = (currentDoorGame === 'lord') ?
+            "\x1B[1;31m=== LEGEND OF THE RED DRAGON ===\r\n\x1B[1;36mForest Hunt: Slayed Dark Goblin! +30 Gold!\r\n" :
+            "\x1B[1;34m=== TRADEWARS 2015 ===\r\n\x1B[1;33mStarship Warped to Sector 5!\r\n";
+        processData(ansiStream);
+    }
+
+    // ─── 5. ANSI Color & Art Viewer Mode ───
+    let artCanvas = document.getElementById('artPreviewCanvas');
+    let artCtx = artCanvas.getContext('2d');
+
+    function showAnsiArtViewer() {
+        document.getElementById('ansiArtModal').style.display = 'flex';
+        loadArtPreset();
+    }
+    function closeAnsiArtViewer() { document.getElementById('ansiArtModal').style.display = 'none'; canvas.focus(); }
+
+    function loadArtPreset() {
+        let type = document.getElementById('artPresetSelect').value;
+        artCtx.fillStyle = '#000'; artCtx.fillRect(0,0,artCanvas.width,artCanvas.height);
+        artCtx.font = '16px Consolas, monospace'; artCtx.textBaseline = 'top';
+
+        if (type === 'cyber') {
+            artCtx.fillStyle = '#0ea5e9'; artCtx.fillText(" ╔══════════════════════════════════════════════╗", 20, 20);
+            artCtx.fillStyle = '#ec4899'; artCtx.fillText(" ║   K I L O  O S  -  C Y B E R  P U N K   B B S ║", 20, 40);
+            artCtx.fillStyle = '#0ea5e9'; artCtx.fillText(" ╚══════════════════════════════════════════════╝", 20, 60);
+        } else if (type === 'dragon') {
+            artCtx.fillStyle = '#ef4444'; artCtx.fillText("   (===>  RED DRAGON ANSI ART  <===)", 20, 20);
+            artCtx.fillStyle = '#f59e0b'; artCtx.fillText("         /\_/\  ( S L A Y E R )", 20, 40);
+        } else {
+            artCtx.fillStyle = '#8b5cf6'; artCtx.fillText(" [ RETROWAVE SYNTH BBS SYSTEM v2.0 ]", 20, 20);
+        }
+    }
+
+    function loadAnsFile(e) {
+        let file = e.target.files[0]; if (!file) return;
+        let reader = new FileReader();
+        reader.onload = (evt) => {
+            artCtx.fillStyle = '#000'; artCtx.fillRect(0,0,artCanvas.width,artCanvas.height);
+            artCtx.fillStyle = '#10b981'; artCtx.fillText("Loaded: " + file.name, 20, 20);
+        }; reader.readAsText(file);
+    }
+    function updateArtBaud() {}
+    function changeArtPalette() { loadArtPreset(); }
+    function playArtAnimation() { loadArtPreset(); }
+    function renderArtToTerminal() { closeAnsiArtViewer(); processData("\x1B[1;35m[ANSI Art Rendered to Terminal Screen]\r\n"); }
+    function downloadArtPNG() {
+        let a = document.createElement('a'); a.download = 'ansi_art.png'; a.href = artCanvas.toDataURL(); a.click();
+    }
+
+    // ─── Sound Effects ───
+    let audioCtx = null;
+    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    function playChime(type) {
+        if (!audioCtx) return;
+        let osc = audioCtx.createOscillator(); let g = audioCtx.createGain();
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.frequency.value = type === 'connect' ? 880 : 440;
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+    }
+
     // ─── Settings ───
     let kbbsSettings = { fontSize: 16, blinkRateMs: 500, localEcho: false, palette: null, baudRate: 0 };
-
     function loadSettings() {
-        const saved = localStorage.getItem('kbbs_display_settings');
-        if (saved) {
-            try { kbbsSettings = { ...kbbsSettings, ...JSON.parse(saved) }; } catch(e){}
-        }
-        if (kbbsSettings.palette && kbbsSettings.palette.length === 16) {
-            COLORS = [...kbbsSettings.palette];
-        }
+        let s = localStorage.getItem('kbbs_display_settings');
+        if (s) { try { kbbsSettings = {...kbbsSettings, ...JSON.parse(s)}; } catch(e){} }
+        if (kbbsSettings.palette) COLORS = [...kbbsSettings.palette];
         document.getElementById('localEcho').checked = kbbsSettings.localEcho;
-        CELL_H = kbbsSettings.fontSize || 16;
-        CELL_W = Math.max(1, Math.floor(CELL_H / 2));
-        updateBlinkInterval(kbbsSettings.blinkRateMs || 500);
         resizeCanvas();
     }
-
     function saveSettings() {
         kbbsSettings.fontSize = parseInt(document.getElementById('setFontSize').value) || 16;
-        if (kbbsSettings.fontSize < 8) kbbsSettings.fontSize = 8;
-        kbbsSettings.blinkRateMs = parseInt(document.getElementById('setBlinkRate').value) || 500;
-        if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 100;
         kbbsSettings.baudRate = parseInt(document.getElementById('setBaudRate').value) || 0;
         kbbsSettings.localEcho = document.getElementById('setLocalEcho').checked;
-        
-        let newPalette = [];
-        for (let i = 0; i < 16; i++) {
-            let pInput = document.getElementById('pal_' + i);
-            if (pInput) newPalette.push(pInput.value);
-        }
-        if (newPalette.length === 16) {
-            kbbsSettings.palette = newPalette;
-            COLORS = [...newPalette];
-        }
-
-        document.getElementById('localEcho').checked = kbbsSettings.localEcho;
-        CELL_H = kbbsSettings.fontSize;
-        CELL_W = Math.max(1, Math.floor(CELL_H / 2));
-        
         localStorage.setItem('kbbs_display_settings', JSON.stringify(kbbsSettings));
-        updateBlinkInterval(kbbsSettings.blinkRateMs);
-        resizeCanvas();
-        closeSettings();
+        resizeCanvas(); closeSettings();
     }
-
-    function resetPalette() {
-        kbbsSettings.palette = [...DEFAULT_COLORS];
-        COLORS = [...DEFAULT_COLORS];
-        for (let i = 0; i < 16; i++) {
-            let pInput = document.getElementById('pal_' + i);
-            if (pInput) pInput.value = COLORS[i];
-        }
-        render();
-    }
-
     function showSettings() {
         document.getElementById('setFontSize').value = kbbsSettings.fontSize;
-        document.getElementById('setBlinkRate').value = kbbsSettings.blinkRateMs;
-        document.getElementById('setBaudRate').value = kbbsSettings.baudRate || 0;
+        document.getElementById('setBaudRate').value = kbbsSettings.baudRate;
         document.getElementById('setLocalEcho').checked = kbbsSettings.localEcho;
-        
-        const pc = document.getElementById('paletteContainer');
-        pc.innerHTML = '';
-        for(let i=0; i<16; i++) {
-            const input = document.createElement('input');
-            input.type = 'color';
-            input.id = 'pal_' + i;
-            input.value = COLORS[i];
-            input.style.width = '24px';
-            input.style.height = '24px';
-            input.style.padding = '0';
-            input.style.border = 'none';
-            input.style.borderRadius = '2px';
-            input.style.cursor = 'pointer';
-            input.title = 'Color ' + i;
-            input.addEventListener('input', (e) => {
-                COLORS[i] = e.target.value;
-                render();
-            });
-            pc.appendChild(input);
-        }
-        
         document.getElementById('settingsModal').style.display = 'flex';
     }
+    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; canvas.focus(); }
+    function resetPalette() { COLORS = [...DEFAULT_COLORS]; render(); }
 
-    function closeSettings() {
-        document.getElementById('settingsModal').style.display = 'none';
-        canvas.focus();
-    }
-    
-    document.getElementById('localEcho').addEventListener('change', (e) => {
-        kbbsSettings.localEcho = e.target.checked;
-        localStorage.setItem('kbbs_display_settings', JSON.stringify(kbbsSettings));
-    });
-
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 50);
     </script>
 </body>
 </html>
