@@ -10,47 +10,58 @@
 #define BTN_BLUE   3
 #define BTN_PURPLE 4
 #define BTN_CYAN   5
+#define BTN_ORANGE 6
+#define BTN_PINK   7
 
-#define TIMER_SEQUENCE 1
-#define TIMER_FLASH    2
+#define TIMER_SEQUENCE  1
+#define TIMER_FLASH     2
 #define TIMER_GAME_OVER 3
-#define TIMER_ANIM     4
+#define TIMER_ANIM      4
+#define TIMER_COUNTDOWN 5
 
-#define MODE_CLASSIC 0
-#define MODE_REVERSE 1
-#define MODE_SPEED   2
-#define MODE_ENDLESS 3
-#define MODE_CAMPAIGN 4
-#define MODE_CHAOS   5
+#define MODE_4BTN_CLASSIC 0
+#define MODE_6BTN_HEX     1
+#define MODE_8BTN_OCTO    2
+#define MODE_CHAOS_REV    3
+#define MODE_PITCH_AUDIO  4
+#define MODE_SPEED        5
+#define MODE_ENDLESS      6
+#define MODE_CAMPAIGN     7
+#define MODE_CHAOS        8
 
-#define NUM_MODES 6
+#define NUM_MODES 9
 
 typedef struct {
     int target_len;
     int num_colors;
     int speed_ms;
-    int modifier; // 0: Normal, 1: Reverse, 2: Chaos
+    int modifier; // 0: Normal, 1: Reverse, 2: Chaos, 3: Chaos Reverse
 } CampaignStage;
 
-CampaignStage campaign_stages[15] = {
-    {3, 4, 400, 0}, // Stage 1
-    {4, 4, 380, 0}, // Stage 2
-    {5, 4, 350, 0}, // Stage 3
-    {5, 5, 350, 0}, // Stage 4
-    {6, 5, 250, 0}, // Stage 5 (Speedy)
-    {6, 5, 350, 1}, // Stage 6 (Reverse)
-    {7, 5, 320, 0}, // Stage 7
-    {8, 6, 300, 0}, // Stage 8
-    {8, 6, 280, 2}, // Stage 9 (Chaos)
-    {9, 6, 220, 0}, // Stage 10 (Speedy)
-    {10, 6, 280, 0}, // Stage 11
-    {10, 6, 300, 1}, // Stage 12 (Reverse)
-    {11, 6, 250, 2}, // Stage 13 (Chaos)
-    {12, 6, 220, 1}, // Stage 14 (Reverse Speed)
-    {14, 6, 180, 2}  // Stage 15 (Final Chaos Boss)
+CampaignStage campaign_stages[20] = {
+    {4,  4, 400, 0}, // Stage 1
+    {5,  4, 380, 0}, // Stage 2
+    {6,  4, 350, 0}, // Stage 3
+    {7,  4, 320, 1}, // Stage 4 (Reverse)
+    {8,  4, 250, 0}, // Stage 5 (Speedy 4)
+    {8,  6, 350, 0}, // Stage 6 (Hex Intro)
+    {10, 6, 320, 1}, // Stage 7 (Reverse Hex)
+    {12, 6, 300, 2}, // Stage 8 (Chaos Hex)
+    {12, 6, 250, 0}, // Stage 9 (Speedy Hex)
+    {14, 6, 220, 3}, // Stage 10 (Chaos Reverse Hex)
+    {15, 8, 300, 0}, // Stage 11 (Octo Intro)
+    {16, 8, 280, 1}, // Stage 12 (Reverse Octo)
+    {18, 8, 250, 2}, // Stage 13 (Chaos Octo)
+    {20, 8, 220, 3}, // Stage 14 (Chaos Reverse Octo)
+    {22, 8, 200, 0}, // Stage 15 (Fast Octo)
+    {24, 8, 180, 1}, // Stage 16 (Reverse Fast Octo)
+    {25, 8, 160, 2}, // Stage 17 (Chaos Fast Octo)
+    {26, 8, 140, 3}, // Stage 18 (Chaos Reverse Fast Octo)
+    {28, 8, 120, 2}, // Stage 19 (Extreme Chaos Octo)
+    {30, 8, 100, 3}  // Stage 20 (Grandmaster Memory Master Challenge)
 };
 
-int btn_freqs[6] = {415, 329, 261, 196, 493, 146};
+int btn_freqs[8] = {415, 329, 261, 196, 493, 146, 554, 659};
 
 DWORD WINAPI PlayBeep(LPVOID lpParam) {
     INT_PTR param = (INT_PTR)lpParam;
@@ -74,8 +85,9 @@ HWND hwndHelpBtn;
 HWND hwndHintBtn;
 HWND hwndSlowBtn;
 HWND hwndShieldBtn;
+HWND hwndFreezeBtn;
 
-int current_mode = MODE_CLASSIC;
+int current_mode = MODE_4BTN_CLASSIC;
 
 int sequence[1000];
 int sequence_length = 0;
@@ -89,35 +101,50 @@ int game_over_flash_count = 0;
 int hints_remaining = 3;
 int slowmo_remaining = 2;
 int shields_remaining = 1;
+int freezes_remaining = 2;
 
 int is_slowmo_active = 0;
+int is_time_frozen = 0;
+int input_countdown = 150; // 15.0 seconds in 100ms units
 int current_stage = 1;
 
-RECT btn_rects[6];
-COLORREF btn_colors[6] = {
+RECT btn_rects[8];
+COLORREF btn_colors[8] = {
     RGB(0, 170, 50),   // Green
     RGB(200, 0, 0),    // Red
     RGB(210, 170, 0),  // Yellow
     RGB(0, 80, 210),   // Blue
     RGB(160, 0, 200),  // Purple
-    RGB(0, 180, 190)   // Cyan
+    RGB(0, 180, 190),  // Cyan
+    RGB(240, 110, 0),  // Orange
+    RGB(255, 60, 150)  // Pink
 };
-COLORREF flash_colors[6] = {
+COLORREF flash_colors[8] = {
     RGB(50, 255, 100),
     RGB(255, 70, 70),
     RGB(255, 255, 80),
     RGB(60, 160, 255),
     RGB(240, 80, 255),
-    RGB(60, 240, 255)
+    RGB(60, 240, 255),
+    RGB(255, 170, 60),
+    RGB(255, 140, 200)
 };
 
 char status_text[128] = "Press Space to Start";
 int score = 0;
-int high_scores[NUM_MODES] = {0, 0, 0, 0, 0, 0};
+int high_scores[NUM_MODES] = {0};
 int stat_games_played = 0;
 int stat_longest_streak = 0;
 int stat_best_time = 0;
 time_t start_time = 0;
+
+int GetActiveButtonCount() {
+    if (current_mode == MODE_4BTN_CLASSIC) return 4;
+    if (current_mode == MODE_6BTN_HEX) return 6;
+    if (current_mode == MODE_8BTN_OCTO) return 8;
+    if (current_mode == MODE_CAMPAIGN) return campaign_stages[current_stage - 1].num_colors;
+    return 6;
+}
 
 // --- PARTICLE & GRAPHICS ANIMATION ENGINE ---
 typedef struct {
@@ -144,7 +171,7 @@ typedef struct {
 SparkParticle spark_particles[MAX_SPARKS];
 
 void TriggerSoundRipple(int btn_idx) {
-    if (btn_idx < 0 || btn_idx >= 6) return;
+    if (btn_idx < 0 || btn_idx >= 8) return;
     int cx = (btn_rects[btn_idx].left + btn_rects[btn_idx].right) / 2;
     int cy = (btn_rects[btn_idx].top + btn_rects[btn_idx].bottom) / 2;
     for (int i = 0; i < MAX_RIPPLES; i++) {
@@ -161,7 +188,10 @@ void TriggerSoundRipple(int btn_idx) {
 }
 
 void TriggerVictoryFireworks(int cx, int cy) {
-    COLORREF colors[6] = {RGB(0, 255, 200), RGB(255, 50, 100), RGB(255, 255, 50), RGB(50, 150, 255), RGB(220, 50, 255), RGB(50, 255, 100)};
+    COLORREF colors[8] = {
+        RGB(0, 255, 200), RGB(255, 50, 100), RGB(255, 255, 50), RGB(50, 150, 255),
+        RGB(220, 50, 255), RGB(50, 255, 100), RGB(255, 160, 40), RGB(255, 100, 180)
+    };
     for (int i = 0; i < MAX_SPARKS; i++) {
         float angle = ((float)rand() / RAND_MAX) * 6.28318f;
         float speed = 2.0f + ((float)rand() / RAND_MAX) * 6.0f;
@@ -171,7 +201,7 @@ void TriggerVictoryFireworks(int cx, int cy) {
         spark_particles[i].vy = sinf(angle) * speed - 1.5f;
         spark_particles[i].life = 1.0f;
         spark_particles[i].decay = 0.02f + ((float)rand() / RAND_MAX) * 0.02f;
-        spark_particles[i].color = colors[rand() % 6];
+        spark_particles[i].color = colors[rand() % 8];
         spark_particles[i].active = 1;
     }
 }
@@ -214,12 +244,15 @@ void UpdateParticles() {
 }
 
 void LoadHighScores() {
-    high_scores[MODE_CLASSIC]  = GetPrivateProfileInt("HighScores", "Classic", 0, ".\\ksimon.ini");
-    high_scores[MODE_REVERSE]  = GetPrivateProfileInt("HighScores", "Reverse", 0, ".\\ksimon.ini");
-    high_scores[MODE_SPEED]    = GetPrivateProfileInt("HighScores", "Speed", 0, ".\\ksimon.ini");
-    high_scores[MODE_ENDLESS]  = GetPrivateProfileInt("HighScores", "Endless", 0, ".\\ksimon.ini");
-    high_scores[MODE_CAMPAIGN] = GetPrivateProfileInt("HighScores", "Campaign", 0, ".\\ksimon.ini");
-    high_scores[MODE_CHAOS]    = GetPrivateProfileInt("HighScores", "Chaos", 0, ".\\ksimon.ini");
+    high_scores[MODE_4BTN_CLASSIC] = GetPrivateProfileInt("HighScores", "Classic4", 0, ".\\ksimon.ini");
+    high_scores[MODE_6BTN_HEX]     = GetPrivateProfileInt("HighScores", "Hex6", 0, ".\\ksimon.ini");
+    high_scores[MODE_8BTN_OCTO]    = GetPrivateProfileInt("HighScores", "Octo8", 0, ".\\ksimon.ini");
+    high_scores[MODE_CHAOS_REV]   = GetPrivateProfileInt("HighScores", "ChaosRev", 0, ".\\ksimon.ini");
+    high_scores[MODE_PITCH_AUDIO] = GetPrivateProfileInt("HighScores", "PitchAudio", 0, ".\\ksimon.ini");
+    high_scores[MODE_SPEED]       = GetPrivateProfileInt("HighScores", "Speed", 0, ".\\ksimon.ini");
+    high_scores[MODE_ENDLESS]     = GetPrivateProfileInt("HighScores", "Endless", 0, ".\\ksimon.ini");
+    high_scores[MODE_CAMPAIGN]    = GetPrivateProfileInt("HighScores", "Campaign", 0, ".\\ksimon.ini");
+    high_scores[MODE_CHAOS]       = GetPrivateProfileInt("HighScores", "Chaos", 0, ".\\ksimon.ini");
     
     stat_games_played   = GetPrivateProfileInt("Stats", "GamesPlayed", 0, ".\\ksimon.ini");
     stat_longest_streak = GetPrivateProfileInt("Stats", "LongestStreak", 0, ".\\ksimon.ini");
@@ -229,12 +262,12 @@ void LoadHighScores() {
 void SaveHighScore(int mode, int s) {
     char str[32];
     sprintf(str, "%d", s);
-    if (mode == MODE_CLASSIC)       WritePrivateProfileString("HighScores", "Classic", str, ".\\ksimon.ini");
-    else if (mode == MODE_REVERSE)  WritePrivateProfileString("HighScores", "Reverse", str, ".\\ksimon.ini");
-    else if (mode == MODE_SPEED)    WritePrivateProfileString("HighScores", "Speed", str, ".\\ksimon.ini");
-    else if (mode == MODE_ENDLESS)  WritePrivateProfileString("HighScores", "Endless", str, ".\\ksimon.ini");
-    else if (mode == MODE_CAMPAIGN) WritePrivateProfileString("HighScores", "Campaign", str, ".\\ksimon.ini");
-    else if (mode == MODE_CHAOS)    WritePrivateProfileString("HighScores", "Chaos", str, ".\\ksimon.ini");
+    const char* keys[NUM_MODES] = {
+        "Classic4", "Hex6", "Octo8", "ChaosRev", "PitchAudio", "Speed", "Endless", "Campaign", "Chaos"
+    };
+    if (mode >= 0 && mode < NUM_MODES) {
+        WritePrivateProfileString("HighScores", keys[mode], str, ".\\ksimon.ini");
+    }
 }
 
 void SaveStats() {
@@ -268,6 +301,8 @@ void SaveGameState() {
     WritePrivateProfileString("GameState", "Slowmo", temp, ".\\ksimon.ini");
     sprintf(temp, "%d", shields_remaining);
     WritePrivateProfileString("GameState", "Shields", temp, ".\\ksimon.ini");
+    sprintf(temp, "%d", freezes_remaining);
+    WritePrivateProfileString("GameState", "Freezes", temp, ".\\ksimon.ini");
     sprintf(temp, "%d", current_stage);
     WritePrivateProfileString("GameState", "Stage", temp, ".\\ksimon.ini");
     strcpy(status_text, "Game Saved!");
@@ -282,12 +317,13 @@ void LoadGameState() {
         return;
     }
     sequence_length = len;
-    current_mode = GetPrivateProfileInt("GameState", "Mode", MODE_CLASSIC, ".\\ksimon.ini");
+    current_mode = GetPrivateProfileInt("GameState", "Mode", MODE_4BTN_CLASSIC, ".\\ksimon.ini");
     int elapsed = GetPrivateProfileInt("GameState", "ElapsedTime", 0, ".\\ksimon.ini");
     start_time = time(NULL) - elapsed;
     hints_remaining = GetPrivateProfileInt("GameState", "Hints", 3, ".\\ksimon.ini");
     slowmo_remaining = GetPrivateProfileInt("GameState", "Slowmo", 2, ".\\ksimon.ini");
     shields_remaining = GetPrivateProfileInt("GameState", "Shields", 1, ".\\ksimon.ini");
+    freezes_remaining = GetPrivateProfileInt("GameState", "Freezes", 2, ".\\ksimon.ini");
     current_stage = GetPrivateProfileInt("GameState", "Stage", 1, ".\\ksimon.ini");
     
     char str[2048] = {0};
@@ -330,7 +366,7 @@ void DrawButtonIcon(HDC hdc, int btn_idx, int cx, int cy, COLORREF color) {
     HGDIOBJ oldBrush = SelectObject(hdc, brush);
 
     if (btn_idx == BTN_GREEN) {
-        // 🎼 Treble Clef / Note
+        // 🎼 Treble Clef
         Ellipse(hdc, cx - 10, cy + 2, cx - 2, cy + 10);
         MoveToEx(hdc, cx - 2, cy + 6, NULL);
         LineTo(hdc, cx - 2, cy - 12);
@@ -379,6 +415,19 @@ void DrawButtonIcon(HDC hdc, int btn_idx, int cx, int cy, COLORREF color) {
             {cx - 3, cy + 14}, {cx + 9, cy - 1}, {cx, cy - 1}
         };
         Polygon(hdc, pts, 6);
+    } else if (btn_idx == BTN_ORANGE) {
+        // 🔥 Flame
+        POINT pts[5] = {
+            {cx, cy - 14}, {cx + 8, cy - 2}, {cx + 5, cy + 12},
+            {cx - 5, cy + 12}, {cx - 8, cy - 2}
+        };
+        Polygon(hdc, pts, 5);
+    } else if (btn_idx == BTN_PINK) {
+        // 💖 Heart
+        Ellipse(hdc, cx - 12, cy - 10, cx, cy + 2);
+        Ellipse(hdc, cx, cy - 10, cx + 12, cy + 2);
+        POINT pts[3] = {{cx - 11, cy - 1}, {cx + 11, cy - 1}, {cx, cy + 14}};
+        Polygon(hdc, pts, 3);
     }
 
     SelectObject(hdc, oldPen);
@@ -387,20 +436,62 @@ void DrawButtonIcon(HDC hdc, int btn_idx, int cx, int cy, COLORREF color) {
     DeleteObject(brush);
 }
 
+void LayoutButtons(int width, int height) {
+    int cx = width / 2;
+    int cy = (height + 170) / 2;
+    int num_btns = GetActiveButtonCount();
+
+    if (num_btns == 4) {
+        int size = 76;
+        int spacing = 16;
+        int c1 = cx - size - spacing/2;
+        int c2 = cx + spacing/2;
+        SetRect(&btn_rects[0], c1, cy - size - spacing/2, c1 + size, cy - spacing/2);
+        SetRect(&btn_rects[1], c2, cy - size - spacing/2, c2 + size, cy - spacing/2);
+        SetRect(&btn_rects[2], c1, cy + spacing/2, c1 + size, cy + size + spacing/2);
+        SetRect(&btn_rects[3], c2, cy + spacing/2, c2 + size, cy + size + spacing/2);
+    } else if (num_btns == 6) {
+        int size = 72;
+        int spacing = 12;
+        int c1 = cx - size - size/2 - spacing;
+        int c2 = cx - size/2;
+        int c3 = cx + size/2 + spacing;
+        SetRect(&btn_rects[0], c1, cy - size - spacing, c1 + size, cy - spacing);
+        SetRect(&btn_rects[1], c2, cy - size - spacing, c2 + size, cy - spacing);
+        SetRect(&btn_rects[2], c3, cy - size - spacing, c3 + size, cy - spacing);
+        SetRect(&btn_rects[3], c1, cy + spacing, c1 + size, cy + size + spacing);
+        SetRect(&btn_rects[4], c2, cy + spacing, c2 + size, cy + size + spacing);
+        SetRect(&btn_rects[5], c3, cy + spacing, c3 + size, cy + size + spacing);
+    } else { // 8 buttons
+        int size = 64;
+        int spacing = 8;
+        int c1 = cx - 2*size - 15;
+        int c2 = cx - size - 5;
+        int c3 = cx + 5;
+        int c4 = cx + size + 15;
+        SetRect(&btn_rects[0], c1, cy - size - spacing, c1 + size, cy - spacing);
+        SetRect(&btn_rects[1], c2, cy - size - spacing, c2 + size, cy - spacing);
+        SetRect(&btn_rects[2], c3, cy - size - spacing, c3 + size, cy - spacing);
+        SetRect(&btn_rects[3], c4, cy - size - spacing, c4 + size, cy - spacing);
+        SetRect(&btn_rects[4], c1, cy + spacing, c1 + size, cy + size + spacing);
+        SetRect(&btn_rects[5], c2, cy + spacing, c2 + size, cy + size + spacing);
+        SetRect(&btn_rects[6], c3, cy + spacing, c3 + size, cy + size + spacing);
+        SetRect(&btn_rects[7], c4, cy + spacing, c4 + size, cy + size + spacing);
+    }
+}
+
 void DrawBoard(HDC hdc, int width, int height) {
-    // 1. Background Fill with game over flash state
     COLORREF bgColor = game_over_flash ? RGB(140, 0, 0) : RGB(18, 18, 24);
     HBRUSH bgBrush = CreateSolidBrush(bgColor);
     RECT fullRc = {0, 0, width, height};
     FillRect(hdc, &fullRc, bgBrush);
     DeleteObject(bgBrush);
 
-    // 2. Center 3D Circular Arcade Console Base
     int cx = width / 2;
     int cy = (height + 170) / 2;
     int consoleRadius = 200;
 
-    // Outer Metallic Chrome Rim
+    // Outer Metallic Rim
     for (int r = consoleRadius; r >= consoleRadius - 12; r--) {
         int v = 60 + (consoleRadius - r) * 12;
         if (v > 220) v = 220;
@@ -420,7 +511,7 @@ void DrawBoard(HDC hdc, int width, int height) {
     SelectObject(hdc, oldBrush);
     DeleteObject(faceBrush);
 
-    // 8 Metallic Screws around Rim
+    // Screws
     for (int i = 0; i < 8; i++) {
         float a = i * 0.785398f;
         int sx = cx + (int)(cosf(a) * (consoleRadius - 6));
@@ -440,7 +531,7 @@ void DrawBoard(HDC hdc, int width, int height) {
         DeleteObject(sPen);
     }
 
-    // 3. Render Sound Wave Ripple Rings
+    // Sound Ripples
     for (int i = 0; i < MAX_RIPPLES; i++) {
         if (sound_ripples[i].active) {
             int r = (int)sound_ripples[i].radius;
@@ -454,24 +545,29 @@ void DrawBoard(HDC hdc, int width, int height) {
         }
     }
 
-    // 4. Render 6 Glossy 3D Quadrant LED Buttons
-    const char* keyLabels[6] = {"Q", "W", "E", "A", "S", "D"};
-    for (int i = 0; i < 6; i++) {
+    // Render Buttons
+    int num_btns = GetActiveButtonCount();
+    const char* keyLabels[8] = {"Q", "W", "E", "R", "A", "S", "D", "F"};
+    if (num_btns == 4) {
+        keyLabels[0] = "Q"; keyLabels[1] = "W"; keyLabels[2] = "A"; keyLabels[3] = "S";
+    }
+
+    for (int i = 0; i < num_btns; i++) {
         RECT r = btn_rects[i];
         int isFlash = (flash_btn == i);
         if (isFlash) {
             InflateRect(&r, 3, 3);
         }
 
-        // Outer Dark Bezel
+        // Bezel
         HBRUSH bezelBrush = CreateSolidBrush(RGB(10, 10, 15));
         RECT rBezel = r;
         InflateRect(&rBezel, 2, 2);
         FillRect(hdc, &rBezel, bezelBrush);
         DeleteObject(bezelBrush);
 
-        // Neon Glow Halo on Flash
-        if (isFlash) {
+        // Glow
+        if (isFlash && current_mode != MODE_PITCH_AUDIO) {
             COLORREF gCol = flash_colors[i];
             for (int g = 8; g >= 1; g -= 2) {
                 RECT rGlow = r;
@@ -486,13 +582,16 @@ void DrawBoard(HDC hdc, int width, int height) {
             }
         }
 
-        // Glossy Button Body Fill
-        COLORREF cFill = isFlash ? flash_colors[i] : btn_colors[i];
+        // Body Fill (Pitch Audio mode hides colors during sequence flash)
+        COLORREF cFill = btn_colors[i];
+        if (isFlash) {
+            cFill = (current_mode == MODE_PITCH_AUDIO && is_playing_sequence) ? RGB(70, 70, 80) : flash_colors[i];
+        }
         HBRUSH btnBrush = CreateSolidBrush(cFill);
         FillRect(hdc, &r, btnBrush);
         DeleteObject(btnBrush);
 
-        // 3D Bevel Top-Left Glass Specular Line & Bottom Drop Edge
+        // 3D Bevel
         HPEN hiPen = CreatePen(PS_SOLID, 2, isFlash ? RGB(255, 255, 255) : RGB(220, 220, 220));
         HGDIOBJ oldP = SelectObject(hdc, hiPen);
         MoveToEx(hdc, r.left, r.bottom - 2, NULL);
@@ -507,18 +606,17 @@ void DrawBoard(HDC hdc, int width, int height) {
         DeleteObject(hiPen);
         DeleteObject(shPen);
 
-        // Inner Vector Icon
+        // Icon & Label
         int bCx = (r.left + r.right) / 2;
         int bCy = (r.top + r.bottom) / 2 - 4;
         DrawButtonIcon(hdc, i, bCx, bCy, isFlash ? RGB(255, 255, 255) : RGB(230, 230, 230));
 
-        // Keycap Label Text
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, isFlash ? RGB(255, 255, 255) : RGB(180, 180, 180));
-        TextOutA(hdc, r.left + 6, r.bottom - 18, keyLabels[i], 1);
+        TextOutA(hdc, r.left + 6, r.bottom - 18, keyLabels[i], strlen(keyLabels[i]));
     }
 
-    // 5. Center Metal Control Disc & LED Digital Score Display
+    // Center Disc
     int discR = 45;
     HBRUSH discB = CreateSolidBrush(RGB(42, 44, 54));
     HGDIOBJ oldB = SelectObject(hdc, discB);
@@ -534,35 +632,38 @@ void DrawBoard(HDC hdc, int width, int height) {
     SelectObject(hdc, oldBr);
     DeleteObject(dPen);
 
-    // Dark Green Glass Digital LED Display Box
-    RECT ledRc = {cx - 30, cy - 18, cx + 30, cy + 6};
+    // LED Score Box
+    RECT ledRc = {cx - 32, cy - 18, cx + 32, cy + 6};
     HBRUSH ledB = CreateSolidBrush(RGB(6, 22, 14));
     FillRect(hdc, &ledRc, ledB);
     DeleteObject(ledB);
 
-    // Digital LED Score Text
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, RGB(0, 255, 204));
-    HFONT ledFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
+    SetTextColor(hdc, is_time_frozen ? RGB(100, 220, 255) : RGB(0, 255, 204));
+    HFONT ledFont = CreateFontA(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
     HGDIOBJ oldF = SelectObject(hdc, ledFont);
-    char scoreStr[16];
-    sprintf(scoreStr, "%02d", score);
+    char scoreStr[32];
+    if (!is_playing_sequence && sequence_length > 0) {
+        if (is_time_frozen) sprintf(scoreStr, "FROZ");
+        else sprintf(scoreStr, "%02d|%02d", score, input_countdown / 10);
+    } else {
+        sprintf(scoreStr, "%02d", score);
+    }
     DrawTextA(hdc, scoreStr, -1, &ledRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     SelectObject(hdc, oldF);
     DeleteObject(ledFont);
 
-    // Power Indicator LED Dot
-    HBRUSH pwrB = CreateSolidBrush(is_playing_sequence ? RGB(255, 255, 0) : (sequence_length > 0 ? RGB(0, 255, 0) : RGB(0, 136, 204)));
+    // Power Indicator Dot
+    HBRUSH pwrB = CreateSolidBrush(is_playing_sequence ? RGB(255, 255, 0) : (sequence_length > 0 ? (is_time_frozen ? RGB(0, 200, 255) : RGB(0, 255, 0)) : RGB(0, 136, 204)));
     oldB = SelectObject(hdc, pwrB);
     Ellipse(hdc, cx - 4, cy + 12, cx + 4, cy + 20);
     SelectObject(hdc, oldB);
     DeleteObject(pwrB);
 
-    // "K-SIMON" Silver Label
     SetTextColor(hdc, RGB(150, 150, 160));
     TextOutA(hdc, cx - 22, cy + 24, "K-SIMON", 7);
 
-    // 6. Celebration Fireworks & Error Shards Particles
+    // Particles
     for (int i = 0; i < MAX_SPARKS; i++) {
         if (spark_particles[i].active) {
             int px = (int)spark_particles[i].x;
@@ -574,7 +675,7 @@ void DrawBoard(HDC hdc, int width, int height) {
         }
     }
 
-    // 7. HUD Text Overlay
+    // HUD Text
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(0, 255, 204));
     TextOutA(hdc, 10, 8, status_text, strlen(status_text));
@@ -590,28 +691,30 @@ void DrawBoard(HDC hdc, int width, int height) {
     TextOutA(hdc, 10, 44, stats_text, strlen(stats_text));
 
     char pwr_text[128];
-    sprintf(pwr_text, "Hints (H): %d | Slow (F): %d | Shields (J): %d", hints_remaining, slowmo_remaining, shields_remaining);
+    sprintf(pwr_text, "Hint(H):%d | Slow(S):%d | Shield(B):%d | Freeze(F):%d", 
+            hints_remaining, slowmo_remaining, shields_remaining, freezes_remaining);
     SetTextColor(hdc, RGB(255, 215, 0));
     TextOutA(hdc, 10, 62, pwr_text, strlen(pwr_text));
 
     if (current_mode == MODE_CAMPAIGN) {
         char stage_text[128];
-        const char* mod_str = "Normal";
+        const char* mod_str = "NORMAL";
         if (campaign_stages[current_stage-1].modifier == 1) mod_str = "REVERSE";
         else if (campaign_stages[current_stage-1].modifier == 2) mod_str = "CHAOS";
-        sprintf(stage_text, "Campaign Stage: %d/15 [%s] (Target Len: %d)", 
-                current_stage, mod_str, campaign_stages[current_stage-1].target_len);
+        else if (campaign_stages[current_stage-1].modifier == 3) mod_str = "CHAOS REVERSE";
+        sprintf(stage_text, "Campaign Stage: %d/20 [%s] (Target Len: %d | Btns: %d)", 
+                current_stage, mod_str, campaign_stages[current_stage-1].target_len, campaign_stages[current_stage-1].num_colors);
         SetTextColor(hdc, RGB(0, 255, 204));
         TextOutA(hdc, 10, 80, stage_text, strlen(stage_text));
-    } else if (current_mode == MODE_CHAOS) {
+    } else if (current_mode == MODE_PITCH_AUDIO) {
+        SetTextColor(hdc, RGB(255, 200, 50));
+        TextOutA(hdc, 10, 80, "Mode: PITCH AUDIO - Sound-Only! Hear the tone pitch!", 53);
+    } else if (current_mode == MODE_CHAOS_REV) {
         SetTextColor(hdc, RGB(255, 100, 255));
-        TextOutA(hdc, 10, 80, "Mode: CHAOS - Unpredictable speeds & pitches!", 45);
-    } else if (current_mode == MODE_REVERSE) {
-        SetTextColor(hdc, RGB(255, 200, 100));
-        TextOutA(hdc, 10, 80, "Mode: REVERSE - Repeat sequence backwards!", 42);
+        TextOutA(hdc, 10, 80, "Mode: CHAOS REVERSE - Random pitch/speed & Reverse!", 51);
     } else {
         SetTextColor(hdc, RGB(180, 180, 180));
-        TextOutA(hdc, 10, 80, "Controls: Q,W,E / A,S,D or 1-6 keys", 35);
+        TextOutA(hdc, 10, 80, "Controls: Q,W,E,R / A,S,D,F or 1-8 keys", 39);
     }
 }
 
@@ -624,10 +727,15 @@ void StartGame() {
     hints_remaining = 3;
     slowmo_remaining = 2;
     shields_remaining = 1;
+    freezes_remaining = 2;
     current_stage = 1;
     is_slowmo_active = 0;
+    is_time_frozen = 0;
     is_playing_sequence = 1;
     start_time = time(NULL);
+    RECT rc;
+    GetClientRect(hwndMain, &rc);
+    LayoutButtons(rc.right, rc.bottom);
     strcpy(status_text, "Get Ready...");
     InvalidateRect(hwndMain, NULL, FALSE);
     SetTimer(hwndMain, TIMER_SEQUENCE, 1000, NULL);
@@ -635,10 +743,10 @@ void StartGame() {
 
 void NextRound() {
     player_step = 0;
-    int num_colors = 6;
-    if (current_mode == MODE_CAMPAIGN) {
-        num_colors = campaign_stages[current_stage - 1].num_colors;
-    }
+    is_time_frozen = 0;
+    input_countdown = (current_mode == MODE_SPEED) ? 100 : 150;
+    
+    int num_colors = GetActiveButtonCount();
     sequence[sequence_length++] = rand() % num_colors;
     score = sequence_length - 1;
     is_playing_sequence = 1;
@@ -678,8 +786,46 @@ void UseShield() {
     }
 }
 
+void UseFreeze() {
+    if (!is_playing_sequence && sequence_length > 0 && freezes_remaining > 0 && !is_time_frozen) {
+        freezes_remaining--;
+        is_time_frozen = 1;
+        sprintf(status_text, "Time Frozen! (%d Freezes left)", freezes_remaining);
+        InvalidateRect(hwndMain, NULL, FALSE);
+    }
+}
+
+void TriggerGameOver() {
+    KillTimer(hwndMain, TIMER_COUNTDOWN);
+    RECT rc;
+    GetClientRect(hwndMain, &rc);
+    TriggerErrorShards(rc.right / 2, rc.bottom / 2);
+    PlaySoundAsync(100, 800);
+    game_over_flash_count = 0;
+    game_over_flash = 1;
+    SetTimer(hwndMain, TIMER_GAME_OVER, 100, NULL);
+    if (score > high_scores[current_mode]) {
+        high_scores[current_mode] = score;
+        SaveHighScore(current_mode, score);
+        sprintf(status_text, "Game Over! Score: %d (New High Score!)", score);
+    } else {
+        sprintf(status_text, "Game Over! Score: %d (Space to restart)", score);
+    }
+    
+    stat_games_played++;
+    if (score > stat_longest_streak) stat_longest_streak = score;
+    int elapsed = (int)(time(NULL) - start_time);
+    if (elapsed > stat_best_time) stat_best_time = elapsed;
+    SaveStats();
+    sequence_length = 0;
+    EnableWindow(hwndModeBox, TRUE);
+    EnableWindow(hwndSaveBtn, FALSE);
+    InvalidateRect(hwndMain, NULL, FALSE);
+}
+
 void HandleClick(int btn_id) {
     if (is_playing_sequence || sequence_length == 0) return;
+    if (btn_id >= GetActiveButtonCount()) return;
 
     flash_btn = btn_id;
     TriggerSoundRipple(btn_id);
@@ -688,10 +834,11 @@ void HandleClick(int btn_id) {
     SetTimer(hwndMain, TIMER_FLASH, (current_mode == MODE_SPEED) ? 150 : 300, NULL);
 
     int is_reverse = 0;
-    if (current_mode == MODE_REVERSE) {
+    if (current_mode == MODE_CHAOS_REV) {
         is_reverse = 1;
-    } else if (current_mode == MODE_CAMPAIGN && campaign_stages[current_stage-1].modifier == 1) {
-        is_reverse = 1;
+    } else if (current_mode == MODE_CAMPAIGN) {
+        int mod = campaign_stages[current_stage-1].modifier;
+        if (mod == 1 || mod == 3) is_reverse = 1;
     }
 
     int expected_index;
@@ -711,30 +858,7 @@ void HandleClick(int btn_id) {
             return;
         }
 
-        RECT rc;
-        GetClientRect(hwndMain, &rc);
-        TriggerErrorShards(rc.right / 2, rc.bottom / 2);
-        PlaySoundAsync(100, 800);
-        game_over_flash_count = 0;
-        game_over_flash = 1;
-        SetTimer(hwndMain, TIMER_GAME_OVER, 100, NULL);
-        if (score > high_scores[current_mode]) {
-            high_scores[current_mode] = score;
-            SaveHighScore(current_mode, score);
-            sprintf(status_text, "Game Over! Score: %d (New High Score!)", score);
-        } else {
-            sprintf(status_text, "Game Over! Score: %d (Space to restart)", score);
-        }
-        
-        stat_games_played++;
-        if (score > stat_longest_streak) stat_longest_streak = score;
-        int elapsed = (int)(time(NULL) - start_time);
-        if (elapsed > stat_best_time) stat_best_time = elapsed;
-        SaveStats();
-        sequence_length = 0;
-        EnableWindow(hwndModeBox, TRUE);
-        EnableWindow(hwndSaveBtn, FALSE);
-        InvalidateRect(hwndMain, NULL, FALSE);
+        TriggerGameOver();
         return;
     }
 
@@ -742,6 +866,7 @@ void HandleClick(int btn_id) {
 
     player_step++;
     if (player_step == sequence_length) {
+        KillTimer(hwndMain, TIMER_COUNTDOWN);
         if (current_mode == MODE_CAMPAIGN) {
             int target = campaign_stages[current_stage - 1].target_len;
             if (sequence_length >= target) {
@@ -749,10 +874,10 @@ void HandleClick(int btn_id) {
                 RECT rc;
                 GetClientRect(hwndMain, &rc);
                 TriggerVictoryFireworks(rc.right / 2, rc.bottom / 2);
-                if (current_stage > 15) {
-                    strcpy(status_text, "Campaign Complete! YOU WIN!");
+                if (current_stage > 20) {
+                    strcpy(status_text, "GRANDMASTER VICTORY! Campaign Complete!");
                     is_playing_sequence = 1;
-                    score += 100;
+                    score += 200;
                     if (score > high_scores[current_mode]) {
                         high_scores[current_mode] = score;
                         SaveHighScore(current_mode, score);
@@ -767,11 +892,13 @@ void HandleClick(int btn_id) {
                     InvalidateRect(hwndMain, NULL, FALSE);
                     return;
                 } else {
-                    sprintf(status_text, "Stage %d Cleared! +1 Powerups", current_stage - 1);
+                    sprintf(status_text, "Stage %d Cleared! +1 Skill Charges", current_stage - 1);
                     hints_remaining++;
                     slowmo_remaining++;
                     shields_remaining++;
+                    freezes_remaining++;
                     sequence_length = 0;
+                    LayoutButtons(rc.right, rc.bottom);
                 }
             } else {
                 strcpy(status_text, "Good! Get ready...");
@@ -794,30 +921,35 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hwndModeBox = CreateWindowEx(
                 0, "COMBOBOX", "", 
                 CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL, 
-                10, 110, 130, 150, hwnd, (HMENU)1001, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Classic Mode");
-            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Reverse Mode");
+                10, 110, 160, 200, hwnd, (HMENU)1001, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"4-Button Classic");
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"6-Button Hex");
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"8-Button Octo");
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Chaos Reverse");
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Pitch Audio");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Speed Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Endless Mode");
-            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Campaign Mode");
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Campaign (20 Stages)");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Chaos Mode");
-            SendMessage(hwndModeBox, CB_SETCURSEL, 0, 0);
+            SendMessage(hwndModeBox, CB_SETCURSEL, current_mode, 0);
 
-            hwndSaveBtn   = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 145, 110, 50, 25, hwnd, (HMENU)1002, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndLoadBtn   = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 110, 50, 25, hwnd, (HMENU)1003, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndResetBtn  = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 255, 110, 50, 25, hwnd, (HMENU)1004, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndHelpBtn   = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 110, 50, 25, hwnd, (HMENU)1005, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndSaveBtn   = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 175, 110, 45, 25, hwnd, (HMENU)1002, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndLoadBtn   = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 223, 110, 45, 25, hwnd, (HMENU)1003, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndResetBtn  = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 271, 110, 45, 25, hwnd, (HMENU)1004, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndHelpBtn   = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 319, 110, 45, 25, hwnd, (HMENU)1005, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             hwndHintBtn   = CreateWindowEx(0, "BUTTON", "Hint (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 140, 75, 25, hwnd, (HMENU)1006, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndSlowBtn   = CreateWindowEx(0, "BUTTON", "Slow (F)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 140, 75, 25, hwnd, (HMENU)1007, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndShieldBtn = CreateWindowEx(0, "BUTTON", "Shield (J)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 140, 75, 25, hwnd, (HMENU)1008, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndSlowBtn   = CreateWindowEx(0, "BUTTON", "Slow (S)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 140, 75, 25, hwnd, (HMENU)1007, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndShieldBtn = CreateWindowEx(0, "BUTTON", "Shield (B)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 140, 75, 25, hwnd, (HMENU)1008, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndFreezeBtn = CreateWindowEx(0, "BUTTON", "Freeze (F)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 250, 140, 75, 25, hwnd, (HMENU)1009, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             EnableWindow(hwndSaveBtn, FALSE);
-            SetTimer(hwnd, TIMER_ANIM, 16, NULL); // 60 FPS animation timer
+            SetTimer(hwnd, TIMER_ANIM, 16, NULL); // 60 FPS animation
             break;
         case WM_COMMAND:
             if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == 1001) {
                 current_mode = SendMessage(hwndModeBox, CB_GETCURSEL, 0, 0);
+                RECT rc; GetClientRect(hwnd, &rc); LayoutButtons(rc.right, rc.bottom);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (LOWORD(wParam) == 1002) {
                 SaveGameState();
@@ -827,49 +959,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 ResetStats();
             } else if (LOWORD(wParam) == 1005) {
                 MessageBox(hwnd, "KSimon 3D Arcade - How to Play\n\n"
-                                 "Rules:\n"
-                                 "Observe the pattern of glowing 3D LED buttons and repeat it back. The sequence grows each round.\n\n"
+                                 "Observe the sequence of LED buttons & pitch tones and repeat it back.\n\n"
                                  "Controls:\n"
                                  "Mouse: Click colored buttons.\n"
-                                 "Keyboard: Q, W, E (Top Row) / A, S, D (Bottom Row) or 1-6 keys.\n"
+                                 "Keyboard: Q,W,E,R (Top) / A,S,D,F (Bottom) or 1-8 keys.\n"
                                  "Space: Start game.\n"
-                                 "H: Use Hint (Replays sequence).\n"
-                                 "F: Use Slow-Mo (2x slower replay speed).\n"
-                                 "J: Shield (Absorbs 1 mistake).\n\n"
+                                 "H: Sequence Replay Hint (Replays sequence at slow speed).\n"
+                                 "S / L: Slow-Motion Flash (Halves flash playback speed).\n"
+                                 "B / J: Strike Shield (Protects against 1 wrong button).\n"
+                                 "F / T: Time Freeze (Pauses stage input countdown).\n\n"
                                  "Modes:\n"
-                                 "- Classic: Standard 6 colors.\n"
-                                 "- Reverse: Repeat sequence backwards.\n"
-                                 "- Speed: Faster flashing.\n"
-                                 "- Endless: Only new color flashes each round.\n"
-                                 "- Campaign: 15 stages with varying speeds, sequence targets & Reverse/Chaos modifiers.\n"
-                                 "- Chaos: Unpredictable speeds & pitch variations.", "Help / How-to-Play", MB_OK | MB_ICONINFORMATION);
+                                 "- 4-Button Classic / 6-Button Hex / 8-Button Octo\n"
+                                 "- Chaos Reverse: Random pitches/speeds + Reverse playback!\n"
+                                 "- Pitch Audio: Sound-only memory training without color flash hints!\n"
+                                 "- Campaign: 20 stages culminating in Stage 20 Grandmaster Challenge!", "Help / How-to-Play", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == 1006) {
                 UseHint();
             } else if (LOWORD(wParam) == 1007) {
                 UseSlowmo();
             } else if (LOWORD(wParam) == 1008) {
                 UseShield();
+            } else if (LOWORD(wParam) == 1009) {
+                UseFreeze();
             }
             break;
         case WM_SIZE: {
             int width = LOWORD(lParam);
             int height = HIWORD(lParam);
-            int cx = width / 2;
-            int cy = (height + 170) / 2;
-            int size = 76;
-            int spacing = 12;
-            
-            int c1 = cx - size - size/2 - spacing;
-            int c2 = cx - size/2;
-            int c3 = cx + size/2 + spacing;
-            
-            SetRect(&btn_rects[0], c1, cy - size - spacing, c1 + size, cy - spacing);
-            SetRect(&btn_rects[1], c2, cy - size - spacing, c2 + size, cy - spacing);
-            SetRect(&btn_rects[2], c3, cy - size - spacing, c3 + size, cy - spacing);
-            
-            SetRect(&btn_rects[3], c1, cy + spacing, c1 + size, cy + size + spacing);
-            SetRect(&btn_rects[4], c2, cy + spacing, c2 + size, cy + size + spacing);
-            SetRect(&btn_rects[5], c3, cy + spacing, c3 + size, cy + size + spacing);
+            LayoutButtons(width, height);
             break;
         }
         case WM_LBUTTONDOWN: {
@@ -877,7 +994,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             POINT pt;
             pt.x = LOWORD(lParam);
             pt.y = HIWORD(lParam);
-            for (int i = 0; i < 6; i++) {
+            int num_btns = GetActiveButtonCount();
+            for (int i = 0; i < num_btns; i++) {
                 if (PtInRect(&btn_rects[i], pt)) {
                     HandleClick(i);
                     break;
@@ -890,23 +1008,35 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 StartGame();
             } else if (wParam == 'H') {
                 UseHint();
-            } else if (wParam == 'F') {
+            } else if (wParam == 'L') {
                 UseSlowmo();
-            } else if (wParam == 'J') {
+            } else if (wParam == 'B' || wParam == 'J') {
                 UseShield();
+            } else if (wParam == 'T') {
+                UseFreeze();
             } else if (!is_playing_sequence && sequence_length > 0) {
-                if (wParam == 'Q' || wParam == '1') {
-                    HandleClick(0);
-                } else if (wParam == 'W' || wParam == '2') {
-                    HandleClick(1);
-                } else if (wParam == 'E' || wParam == '3') {
-                    HandleClick(2);
-                } else if (wParam == 'A' || wParam == '4') {
-                    HandleClick(3);
-                } else if (wParam == 'S' || wParam == '5') {
-                    HandleClick(4);
-                } else if (wParam == 'D' || wParam == '6') {
-                    HandleClick(5);
+                int num_btns = GetActiveButtonCount();
+                if (num_btns == 4) {
+                    if (wParam == 'Q' || wParam == '1') HandleClick(0);
+                    else if (wParam == 'W' || wParam == '2') HandleClick(1);
+                    else if (wParam == 'A' || wParam == '3') HandleClick(2);
+                    else if (wParam == 'S' || wParam == '4') HandleClick(3);
+                } else if (num_btns == 6) {
+                    if (wParam == 'Q' || wParam == '1') HandleClick(0);
+                    else if (wParam == 'W' || wParam == '2') HandleClick(1);
+                    else if (wParam == 'E' || wParam == '3') HandleClick(2);
+                    else if (wParam == 'A' || wParam == '4') HandleClick(3);
+                    else if (wParam == 'S' || wParam == '5') HandleClick(4);
+                    else if (wParam == 'D' || wParam == '6') HandleClick(5);
+                } else {
+                    if (wParam == 'Q' || wParam == '1') HandleClick(0);
+                    else if (wParam == 'W' || wParam == '2') HandleClick(1);
+                    else if (wParam == 'E' || wParam == '3') HandleClick(2);
+                    else if (wParam == 'R' || wParam == '4') HandleClick(3);
+                    else if (wParam == 'A' || wParam == '5') HandleClick(4);
+                    else if (wParam == 'S' || wParam == '6') HandleClick(5);
+                    else if (wParam == 'D' || wParam == '7') HandleClick(6);
+                    else if (wParam == 'F' || wParam == '8') HandleClick(7);
                 }
             }
             break;
@@ -914,6 +1044,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (wParam == TIMER_ANIM) {
                 UpdateParticles();
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == TIMER_COUNTDOWN) {
+                if (!is_playing_sequence && sequence_length > 0 && !is_time_frozen) {
+                    input_countdown--;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    if (input_countdown <= 0) {
+                        if (shields_remaining > 0) {
+                            shields_remaining--;
+                            PlaySoundAsync(750, 300);
+                            input_countdown = 100;
+                            player_step = 0;
+                            sprintf(status_text, "Time Expired! Shield Absorbed Error!");
+                            InvalidateRect(hwndMain, NULL, FALSE);
+                        } else {
+                            TriggerGameOver();
+                        }
+                    }
+                }
             } else if (wParam == TIMER_FLASH) {
                 KillTimer(hwnd, TIMER_FLASH);
                 flash_btn = -1;
@@ -939,10 +1086,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             is_playing_sequence = 0;
                             is_slowmo_active = 0;
                             int is_reverse = 0;
-                            if (current_mode == MODE_REVERSE) {
+                            if (current_mode == MODE_CHAOS_REV) {
                                 is_reverse = 1;
-                            } else if (current_mode == MODE_CAMPAIGN && campaign_stages[current_stage-1].modifier == 1) {
-                                is_reverse = 1;
+                            } else if (current_mode == MODE_CAMPAIGN) {
+                                int mod = campaign_stages[current_stage-1].modifier;
+                                if (mod == 1 || mod == 3) is_reverse = 1;
                             }
                             if (is_reverse) {
                                 strcpy(status_text, "Your Turn (REVERSE)!");
@@ -951,6 +1099,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             }
                             EnableWindow(hwndSaveBtn, TRUE);
                             InvalidateRect(hwndMain, NULL, FALSE);
+                            SetTimer(hwnd, TIMER_COUNTDOWN, 100, NULL);
                         } else {
                             flash_btn = sequence[current_flash_index++];
                             TriggerSoundRipple(flash_btn);
@@ -958,14 +1107,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             int speed_factor = sequence_length - 1;
                             if (speed_factor < 0) speed_factor = 0;
                             
-                            int f_dur = 400 - speed_factor * 20;
+                            int f_dur = 400 - speed_factor * 15;
                             if (current_mode == MODE_SPEED) {
                                 f_dur = 200 - speed_factor * 10;
                                 if (f_dur < 80) f_dur = 80;
                             } else if (current_mode == MODE_CAMPAIGN) {
-                                f_dur = campaign_stages[current_stage - 1].speed_ms - speed_factor * 8;
+                                f_dur = campaign_stages[current_stage - 1].speed_ms - speed_factor * 5;
                                 if (f_dur < 100) f_dur = 100;
-                            } else if (current_mode == MODE_CHAOS) {
+                            } else if (current_mode == MODE_CHAOS || current_mode == MODE_CHAOS_REV) {
                                 f_dur = 150 + rand() % 250;
                             } else {
                                 if (f_dur < 150) f_dur = 150;
@@ -974,7 +1123,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             if (is_slowmo_active) f_dur *= 2;
 
                             int pitch = btn_freqs[flash_btn];
-                            if (current_mode == MODE_CHAOS || (current_mode == MODE_CAMPAIGN && campaign_stages[current_stage-1].modifier == 2)) {
+                            int isChaos = (current_mode == MODE_CHAOS || current_mode == MODE_CHAOS_REV || 
+                                          (current_mode == MODE_CAMPAIGN && (campaign_stages[current_stage-1].modifier == 2 || campaign_stages[current_stage-1].modifier == 3)));
+                            if (isChaos) {
                                 pitch += (rand() % 160) - 80;
                             }
 
@@ -987,14 +1138,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         int speed_factor = sequence_length - 1;
                         if (speed_factor < 0) speed_factor = 0;
                         
-                        int p_dur = 200 - speed_factor * 10;
+                        int p_dur = 200 - speed_factor * 8;
                         if (current_mode == MODE_SPEED) {
                             p_dur = 100 - speed_factor * 5;
                             if (p_dur < 40) p_dur = 40;
                         } else if (current_mode == MODE_CAMPAIGN) {
-                            p_dur = (campaign_stages[current_stage - 1].speed_ms / 2) - speed_factor * 4;
+                            p_dur = (campaign_stages[current_stage - 1].speed_ms / 2) - speed_factor * 3;
                             if (p_dur < 50) p_dur = 50;
-                        } else if (current_mode == MODE_CHAOS) {
+                        } else if (current_mode == MODE_CHAOS || current_mode == MODE_CHAOS_REV) {
                             p_dur = 80 + rand() % 120;
                         } else {
                             if (p_dur < 75) p_dur = 75;
@@ -1046,7 +1197,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KSimon 3D Arcade",
         WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-        540, 600, NULL, NULL, hInstance, NULL
+        560, 620, NULL, NULL, hInstance, NULL
     );
 
     if (hwnd == NULL) return 0;

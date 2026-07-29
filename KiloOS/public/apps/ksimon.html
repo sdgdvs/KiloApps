@@ -19,7 +19,7 @@
   }
   #game-container {
     text-align: center;
-    max-width: 540px;
+    max-width: 560px;
     width: 100%;
     padding: 15px;
     box-sizing: border-box;
@@ -43,8 +43,8 @@
   }
   #arcade-canvas-wrap {
     position: relative;
-    width: 460px;
-    height: 380px;
+    width: 480px;
+    height: 390px;
     margin: 10px auto;
     border-radius: 50%;
     box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.1);
@@ -55,7 +55,6 @@
     border-radius: 50%;
   }
 
-  /* Hidden fallback buttons for accessibility/tests */
   .simon-board-hidden {
     display: none;
   }
@@ -160,7 +159,7 @@
     background: #1a1a24;
     padding: 24px;
     border-radius: 12px;
-    max-width: 440px;
+    max-width: 460px;
     text-align: left;
     border: 1px solid #00ffcc44;
     box-shadow: 0 0 30px rgba(0,255,204,0.2);
@@ -177,17 +176,17 @@
 <div id="game-container">
   <h1>KSimon 3D</h1>
   <div class="header-stats">
-    Score: <span id="score">0</span> | High Score (<span id="high-score-mode">Classic</span>): <span id="high-score">0</span>
+    Score: <span id="score">0</span> | High Score (<span id="high-score-mode">4-Button Classic</span>): <span id="high-score">0</span>
   </div>
   <div id="campaign-stage" style="display:none; color:#00ffcc; margin-top:3px; font-weight:bold;">
-    Campaign Stage: <span id="stage-val">1</span>/15 [<span id="stage-mod-val">NORMAL</span>] (Target: <span id="stage-target-val">3</span>)
+    Campaign Stage: <span id="stage-val">1</span>/20 [<span id="stage-mod-val">NORMAL</span>] (Target: <span id="stage-target-val">4</span> | Btns: <span id="stage-btns-val">4</span>)
   </div>
   <div id="powerups-display">
-    Hints (H): <span id="hints-val">3</span> | Slow (F): <span id="slowmo-val">2</span> | Shields (J): <span id="shields-val">1</span>
+    Hints (H): <span id="hints-val">3</span> | Slow (S): <span id="slowmo-val">2</span> | Shields (B): <span id="shields-val">1</span> | Freeze (F): <span id="freeze-val">2</span>
   </div>
 
   <div id="arcade-canvas-wrap">
-    <canvas id="simon-canvas" width="460" height="380"></canvas>
+    <canvas id="simon-canvas" width="480" height="390"></canvas>
   </div>
 
   <div class="simon-board-hidden">
@@ -197,22 +196,28 @@
     <button id="btn-3" class="simon-btn"></button>
     <button id="btn-4" class="simon-btn"></button>
     <button id="btn-5" class="simon-btn"></button>
+    <button id="btn-6" class="simon-btn"></button>
+    <button id="btn-7" class="simon-btn"></button>
   </div>
 
   <div id="controls">
     <select id="mode-select">
-      <option value="classic">Mode: Classic</option>
-      <option value="reverse">Mode: Reverse</option>
+      <option value="4btn">Mode: 4-Button Classic</option>
+      <option value="6btn">Mode: 6-Button Hex</option>
+      <option value="8btn">Mode: 8-Button Octo</option>
+      <option value="chaos_rev">Mode: Chaos Reverse</option>
+      <option value="pitch_audio">Mode: Pitch Audio (Sound-Only)</option>
       <option value="speed">Mode: Speed</option>
       <option value="endless">Mode: Endless</option>
-      <option value="campaign">Mode: Campaign</option>
+      <option value="campaign">Mode: Campaign (20 Stages)</option>
       <option value="chaos">Mode: Chaos</option>
     </select>
     <button id="start-btn">Start Game</button>
     <div style="margin-top: 8px;">
       <button id="hint-btn" class="action-btn pwr-btn" disabled>Hint (H)</button>
-      <button id="slowmo-btn" class="action-btn pwr-btn" disabled>Slow (F)</button>
-      <button id="shield-btn" class="action-btn pwr-btn" disabled>Shield (J)</button>
+      <button id="slowmo-btn" class="action-btn pwr-btn" disabled>Slow (S)</button>
+      <button id="shield-btn" class="action-btn pwr-btn" disabled>Shield (B)</button>
+      <button id="freeze-btn" class="action-btn pwr-btn" disabled>Freeze (F)</button>
     </div>
     <div style="margin-top: 6px;">
       <button id="save-btn" class="action-btn" disabled>Save Game</button>
@@ -231,36 +236,34 @@
   <div class="modal-content">
     <button class="close-btn" id="close-help-btn">X</button>
     <h2>How to Play KSimon 3D</h2>
-    <p><strong>Rules:</strong> Watch the sequence of LED buttons & tones and repeat it back. The sequence grows each round.</p>
+    <p><strong>Rules:</strong> Watch the sequence of LED buttons & pitch tones and repeat it back. The sequence grows each round.</p>
     <p><strong>Controls:</strong></p>
     <ul>
       <li>Mouse: Click the 3D glossy console buttons.</li>
-      <li>Keyboard: Q, W, E (Top Row) / A, S, D (Bottom Row) or 1-6 keys.</li>
+      <li>Keyboard: Q, W, E, R (Top Row) / A, S, D, F (Bottom Row) or 1-8 keys.</li>
       <li>Space: Start game.</li>
-      <li>H: Hint (Replays current sequence).</li>
-      <li>F: Slow-Mo (2x slower playback speed).</li>
-      <li>J: Shield (Absorbs 1 mistake).</li>
+      <li>H: Hint (Replays current sequence at slow speed).</li>
+      <li>S / L: Slow-Mo (Halves playback speed for stage).</li>
+      <li>B / J: Strike Shield (Protects against 1 wrong button press).</li>
+      <li>F / T: Time Freeze (Pauses stage input countdown).</li>
     </ul>
     <p><strong>Modes:</strong></p>
     <ul>
-      <li><strong>Classic:</strong> Standard 6 color memory game.</li>
-      <li><strong>Reverse:</strong> Repeat sequence in reverse order.</li>
-      <li><strong>Speed:</strong> Fast flashing playback.</li>
-      <li><strong>Endless:</strong> Only the newest color flashes each round.</li>
-      <li><strong>Campaign:</strong> 15 stages with varying speeds, target lengths, and modifiers.</li>
-      <li><strong>Chaos:</strong> Unpredictable flash speeds and pitch variations!</li>
+      <li><strong>4-Button / 6-Button / 8-Button:</strong> Progressive button layout grid challenges.</li>
+      <li><strong>Chaos Reverse:</strong> Unpredictable pitch tones & reverse input order!</li>
+      <li><strong>Pitch Audio:</strong> Sound-only mode without color hints!</li>
+      <li><strong>Speed:</strong> Ultra fast playback and 10s countdown timer.</li>
+      <li><strong>Campaign:</strong> 20 stages culminating in Stage 20 Grandmaster Memory Master Challenge!</li>
     </ul>
   </div>
 </div>
 
 <script>
   const btns = [
-    document.getElementById('btn-0'),
-    document.getElementById('btn-1'),
-    document.getElementById('btn-2'),
-    document.getElementById('btn-3'),
-    document.getElementById('btn-4'),
-    document.getElementById('btn-5')
+    document.getElementById('btn-0'), document.getElementById('btn-1'),
+    document.getElementById('btn-2'), document.getElementById('btn-3'),
+    document.getElementById('btn-4'), document.getElementById('btn-5'),
+    document.getElementById('btn-6'), document.getElementById('btn-7')
   ];
   const startBtn = document.getElementById('start-btn');
   const modeSelect = document.getElementById('mode-select');
@@ -276,11 +279,13 @@
   const hintsVal = document.getElementById('hints-val');
   const slowmoVal = document.getElementById('slowmo-val');
   const shieldsVal = document.getElementById('shields-val');
+  const freezeVal = document.getElementById('freeze-val');
   
   const campaignStage = document.getElementById('campaign-stage');
   const stageVal = document.getElementById('stage-val');
   const stageModVal = document.getElementById('stage-mod-val');
   const stageTargetVal = document.getElementById('stage-target-val');
+  const stageBtnsVal = document.getElementById('stage-btns-val');
 
   const saveBtn = document.getElementById('save-btn');
   const loadBtn = document.getElementById('load-btn');
@@ -289,25 +294,31 @@
   const hintBtn = document.getElementById('hint-btn');
   const slowmoBtn = document.getElementById('slowmo-btn');
   const shieldBtn = document.getElementById('shield-btn');
+  const freezeBtn = document.getElementById('freeze-btn');
   const helpModal = document.getElementById('help-modal');
   const closeHelpBtn = document.getElementById('close-help-btn');
 
   const campaignStages = [
-      { targetLen: 3, numColors: 4, speedMs: 400, modifier: 0 },
-      { targetLen: 4, numColors: 4, speedMs: 380, modifier: 0 },
-      { targetLen: 5, numColors: 4, speedMs: 350, modifier: 0 },
-      { targetLen: 5, numColors: 5, speedMs: 350, modifier: 0 },
-      { targetLen: 6, numColors: 5, speedMs: 250, modifier: 0 },
-      { targetLen: 6, numColors: 5, speedMs: 350, modifier: 1 },
-      { targetLen: 7, numColors: 5, speedMs: 320, modifier: 0 },
-      { targetLen: 8, numColors: 6, speedMs: 300, modifier: 0 },
-      { targetLen: 8, numColors: 6, speedMs: 280, modifier: 2 },
-      { targetLen: 9, numColors: 6, speedMs: 220, modifier: 0 },
-      { targetLen: 10, numColors: 6, speedMs: 280, modifier: 0 },
-      { targetLen: 10, numColors: 6, speedMs: 300, modifier: 1 },
-      { targetLen: 11, numColors: 6, speedMs: 250, modifier: 2 },
-      { targetLen: 12, numColors: 6, speedMs: 220, modifier: 1 },
-      { targetLen: 14, numColors: 6, speedMs: 180, modifier: 2 }
+      { targetLen: 4,  numColors: 4, speedMs: 400, modifier: 0 },
+      { targetLen: 5,  numColors: 4, speedMs: 380, modifier: 0 },
+      { targetLen: 6,  numColors: 4, speedMs: 350, modifier: 0 },
+      { targetLen: 7,  numColors: 4, speedMs: 320, modifier: 1 },
+      { targetLen: 8,  numColors: 4, speedMs: 250, modifier: 0 },
+      { targetLen: 8,  numColors: 6, speedMs: 350, modifier: 0 },
+      { targetLen: 10, numColors: 6, speedMs: 320, modifier: 1 },
+      { targetLen: 12, numColors: 6, speedMs: 300, modifier: 2 },
+      { targetLen: 12, numColors: 6, speedMs: 250, modifier: 0 },
+      { targetLen: 14, numColors: 6, speedMs: 220, modifier: 3 },
+      { targetLen: 15, numColors: 8, speedMs: 300, modifier: 0 },
+      { targetLen: 16, numColors: 8, speedMs: 280, modifier: 1 },
+      { targetLen: 18, numColors: 8, speedMs: 250, modifier: 2 },
+      { targetLen: 20, numColors: 8, speedMs: 220, modifier: 3 },
+      { targetLen: 22, numColors: 8, speedMs: 200, modifier: 0 },
+      { targetLen: 24, numColors: 8, speedMs: 180, modifier: 1 },
+      { targetLen: 25, numColors: 8, speedMs: 160, modifier: 2 },
+      { targetLen: 26, numColors: 8, speedMs: 140, modifier: 3 },
+      { targetLen: 28, numColors: 8, speedMs: 120, modifier: 2 },
+      { targetLen: 30, numColors: 8, speedMs: 100, modifier: 3 }
   ];
 
   function getStat(key) { return parseInt(localStorage.getItem('KSimon_Stat_' + key)) || 0; }
@@ -328,17 +339,33 @@
   let sequence = [];
   let playerSequence = [];
   let isPlayingSequence = false;
-  let currentMode = 'classic';
+  let currentMode = '4btn';
   let currentStage = 1;
   
   let hintsRemaining = 3;
   let slowmoRemaining = 2;
   let shieldsRemaining = 1;
+  let freezesRemaining = 2;
   let isSlowmoActive = false;
+  let isTimeFrozen = false;
+
+  let inputTimer = null;
+  let inputCountdown = 15;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const freqs = [415, 329, 261, 196, 493, 146];
+  const freqs = [415, 329, 261, 196, 493, 146, 554, 659];
   const freqWrong = 100;
+
+  function getActiveButtonCount() {
+    if (currentMode === '4btn') return 4;
+    if (currentMode === '6btn') return 6;
+    if (currentMode === '8btn') return 8;
+    if (currentMode === 'campaign') {
+      let stg = campaignStages[currentStage - 1] || campaignStages[0];
+      return stg.numColors;
+    }
+    return 6;
+  }
 
   // --- CANVAS GRAPHICS & SPRITE ENGINE ---
   const canvas = document.getElementById('simon-canvas');
@@ -348,9 +375,11 @@
     { id: 0, label: 'Q', name: 'Green',  baseColor: '#00aa33', flashColor: '#33ff66', glowColor: '#00ff66', icon: 'clef' },
     { id: 1, label: 'W', name: 'Red',    baseColor: '#cc0000', flashColor: '#ff4444', glowColor: '#ff3333', icon: 'note' },
     { id: 2, label: 'E', name: 'Yellow', baseColor: '#d4aa00', flashColor: '#ffff44', glowColor: '#ffff33', icon: 'star' },
-    { id: 3, label: 'A', name: 'Blue',   baseColor: '#0055dd', flashColor: '#4499ff', glowColor: '#33aaff', icon: 'sparkle' },
-    { id: 4, label: 'S', name: 'Purple', baseColor: '#9900cc', flashColor: '#e044ff', glowColor: '#e033ff', icon: 'diamond' },
-    { id: 5, label: 'D', name: 'Cyan',   baseColor: '#00b3b3', flashColor: '#44ffff', glowColor: '#33ffff', icon: 'lightning' }
+    { id: 3, label: 'R', name: 'Blue',   baseColor: '#0055dd', flashColor: '#4499ff', glowColor: '#33aaff', icon: 'sparkle' },
+    { id: 4, label: 'A', name: 'Purple', baseColor: '#9900cc', flashColor: '#e044ff', glowColor: '#e033ff', icon: 'diamond' },
+    { id: 5, label: 'S', name: 'Cyan',   baseColor: '#00b3b3', flashColor: '#44ffff', glowColor: '#33ffff', icon: 'lightning' },
+    { id: 6, label: 'D', name: 'Orange', baseColor: '#f06e00', flashColor: '#ff9933', glowColor: '#ffaa33', icon: 'flame' },
+    { id: 7, label: 'F', name: 'Pink',   baseColor: '#ff3c96', flashColor: '#ff88cc', glowColor: '#ff66bb', icon: 'heart' }
   ];
 
   let buttonStates = buttonConfigs.map(cfg => ({
@@ -358,10 +387,9 @@
     active: false,
     scale: 1.0,
     glowIntensity: 0.0,
-    x: 0, y: 0, radius: 42
+    x: 0, y: 0, radius: 40
   }));
 
-  // Particles & FX lists
   let soundRipples = [];
   let fireworks = [];
   let errorShards = [];
@@ -369,34 +397,50 @@
   function layoutButtons() {
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    const size = 42;
-    const gapX = 110;
-    const gapY = 105;
+    const numBtns = getActiveButtonCount();
 
-    // Row 1 (Q, W, E)
-    buttonStates[0].x = cx - gapX; buttonStates[0].y = cy - gapY + 12;
-    buttonStates[1].x = cx;        buttonStates[1].y = cy - gapY + 12;
-    buttonStates[2].x = cx + gapX; buttonStates[2].y = cy - gapY + 12;
-
-    // Row 2 (A, S, D)
-    buttonStates[3].x = cx - gapX; buttonStates[3].y = cy + gapY - 12;
-    buttonStates[4].x = cx;        buttonStates[4].y = cy + gapY - 12;
-    buttonStates[5].x = cx + gapX; buttonStates[5].y = cy + gapY - 12;
+    if (numBtns === 4) {
+      const gapX = 65, gapY = 70;
+      buttonStates[0].x = cx - gapX; buttonStates[0].y = cy - gapY; buttonStates[0].label = 'Q';
+      buttonStates[1].x = cx + gapX; buttonStates[1].y = cy - gapY; buttonStates[1].label = 'W';
+      buttonStates[2].x = cx - gapX; buttonStates[2].y = cy + gapY; buttonStates[2].label = 'A';
+      buttonStates[3].x = cx + gapX; buttonStates[3].y = cy + gapY; buttonStates[3].label = 'S';
+      buttonStates.forEach(b => b.radius = 42);
+    } else if (numBtns === 6) {
+      const gapX = 115, gapY = 75;
+      buttonStates[0].x = cx - gapX; buttonStates[0].y = cy - gapY; buttonStates[0].label = 'Q';
+      buttonStates[1].x = cx;        buttonStates[1].y = cy - gapY; buttonStates[1].label = 'W';
+      buttonStates[2].x = cx + gapX; buttonStates[2].y = cy - gapY; buttonStates[2].label = 'E';
+      buttonStates[3].x = cx - gapX; buttonStates[3].y = cy + gapY; buttonStates[3].label = 'A';
+      buttonStates[4].x = cx;        buttonStates[4].y = cy + gapY; buttonStates[4].label = 'S';
+      buttonStates[5].x = cx + gapX; buttonStates[5].y = cy + gapY; buttonStates[5].label = 'D';
+      buttonStates.forEach(b => b.radius = 38);
+    } else { // 8 buttons
+      const gapX1 = 145, gapX2 = 48, gapY = 75;
+      buttonStates[0].x = cx - gapX1; buttonStates[0].y = cy - gapY; buttonStates[0].label = 'Q';
+      buttonStates[1].x = cx - gapX2; buttonStates[1].y = cy - gapY; buttonStates[1].label = 'W';
+      buttonStates[2].x = cx + gapX2; buttonStates[2].y = cy - gapY; buttonStates[2].label = 'E';
+      buttonStates[3].x = cx + gapX1; buttonStates[3].y = cy - gapY; buttonStates[3].label = 'R';
+      buttonStates[4].x = cx - gapX1; buttonStates[4].y = cy + gapY; buttonStates[4].label = 'A';
+      buttonStates[5].x = cx - gapX2; buttonStates[5].y = cy + gapY; buttonStates[5].label = 'S';
+      buttonStates[6].x = cx + gapX2; buttonStates[6].y = cy + gapY; buttonStates[6].label = 'D';
+      buttonStates[7].x = cx + gapX1; buttonStates[7].y = cy + gapY; buttonStates[7].label = 'F';
+      buttonStates.forEach(b => b.radius = 34);
+    }
   }
   layoutButtons();
 
   function triggerButtonFlash(index) {
-    if (index >= 0 && index < 6) {
+    if (index >= 0 && index < getActiveButtonCount()) {
       buttonStates[index].active = true;
       buttonStates[index].glowIntensity = 1.0;
       buttonStates[index].scale = 1.08;
 
-      // Spawn sound wave ripple ring
       soundRipples.push({
         x: buttonStates[index].x,
         y: buttonStates[index].y,
-        radius: 35,
-        maxRadius: 100,
+        radius: 30,
+        maxRadius: 90,
         color: buttonStates[index].glowColor,
         alpha: 1.0
       });
@@ -404,7 +448,7 @@
   }
 
   function releaseButtonFlash(index) {
-    if (index >= 0 && index < 6) {
+    if (index >= 0 && index < getActiveButtonCount()) {
       buttonStates[index].active = false;
     }
   }
@@ -412,7 +456,7 @@
   function triggerVictoryFireworks() {
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    const colors = ['#00ffcc', '#ff3366', '#ffff33', '#33aaff', '#e033ff', '#33ff66'];
+    const colors = ['#00ffcc', '#ff3366', '#ffff33', '#33aaff', '#e033ff', '#33ff66', '#ffaa33', '#ff66bb'];
     for (let i = 0; i < 60; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 2 + Math.random() * 6;
@@ -456,7 +500,6 @@
     ctx.lineJoin = 'round';
 
     if (iconType === 'clef') {
-      // 🎼 Treble Clef
       ctx.beginPath();
       ctx.arc(x - 2, y + 4, 4, 0, Math.PI * 2);
       ctx.moveTo(x - 2, y + 4);
@@ -464,7 +507,6 @@
       ctx.quadraticCurveTo(x - 10, y - 4, x + 2, y + 10);
       ctx.stroke();
     } else if (iconType === 'note') {
-      // 🎵 Twin Eighth Notes
       ctx.beginPath();
       ctx.arc(x - 7, y + 7, 4, 0, Math.PI * 2);
       ctx.arc(x + 5, y + 4, 4, 0, Math.PI * 2);
@@ -474,43 +516,31 @@
       ctx.lineTo(x + 9, y - 11); ctx.lineTo(x + 9, y + 4);
       ctx.stroke();
     } else if (iconType === 'star') {
-      // ⭐ 5-Pointed Star
       ctx.beginPath();
       for (let i = 0; i < 5; i++) {
         const aOuter = (i * 4 * Math.PI / 5) - Math.PI / 2;
         const aInner = aOuter + (2 * Math.PI / 10);
-        const rO = size * 0.45;
-        const rI = size * 0.2;
-        const pxO = x + Math.cos(aOuter) * rO;
-        const pyO = y + Math.sin(aOuter) * rO;
-        const pxI = x + Math.cos(aInner) * rI;
-        const pyI = y + Math.sin(aInner) * rI;
-        if (i === 0) ctx.moveTo(pxO, pyO);
-        else ctx.lineTo(pxO, pyO);
+        const rO = size * 0.45, rI = size * 0.2;
+        const pxO = x + Math.cos(aOuter) * rO, pyO = y + Math.sin(aOuter) * rO;
+        const pxI = x + Math.cos(aInner) * rI, pyI = y + Math.sin(aInner) * rI;
+        if (i === 0) ctx.moveTo(pxO, pyO); else ctx.lineTo(pxO, pyO);
         ctx.lineTo(pxI, pyI);
       }
       ctx.closePath();
       ctx.fill();
     } else if (iconType === 'sparkle') {
-      // ✨ 4-Pointed Sparkle Star
       ctx.beginPath();
-      const rO = size * 0.45;
-      const rI = size * 0.12;
+      const rO = size * 0.45, rI = size * 0.12;
       for (let i = 0; i < 4; i++) {
-        const aOuter = (i * Math.PI / 2);
-        const aInner = aOuter + Math.PI / 4;
-        const pxO = x + Math.cos(aOuter) * rO;
-        const pyO = y + Math.sin(aOuter) * rO;
-        const pxI = x + Math.cos(aInner) * rI;
-        const pyI = y + Math.sin(aInner) * rI;
-        if (i === 0) ctx.moveTo(pxO, pyO);
-        else ctx.lineTo(pxO, pyO);
+        const aOuter = (i * Math.PI / 2), aInner = aOuter + Math.PI / 4;
+        const pxO = x + Math.cos(aOuter) * rO, pyO = y + Math.sin(aOuter) * rO;
+        const pxI = x + Math.cos(aInner) * rI, pyI = y + Math.sin(aInner) * rI;
+        if (i === 0) ctx.moveTo(pxO, pyO); else ctx.lineTo(pxO, pyO);
         ctx.lineTo(pxI, pyI);
       }
       ctx.closePath();
       ctx.fill();
     } else if (iconType === 'diamond') {
-      // 💎 Gem Diamond
       ctx.beginPath();
       ctx.moveTo(x, y - size * 0.4);
       ctx.lineTo(x + size * 0.4, y - size * 0.1);
@@ -518,9 +548,7 @@
       ctx.lineTo(x - size * 0.4, y - size * 0.1);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeRect(x - size * 0.2, y - size * 0.3, size * 0.4, size * 0.2);
     } else if (iconType === 'lightning') {
-      // ⚡ Lightning Bolt
       ctx.beginPath();
       ctx.moveTo(x + 2, y - size * 0.45);
       ctx.lineTo(x - size * 0.35, y + 2);
@@ -528,6 +556,21 @@
       ctx.lineTo(x - 2, y + size * 0.45);
       ctx.lineTo(x + size * 0.35, y - 2);
       ctx.lineTo(x, y - 2);
+      ctx.closePath();
+      ctx.fill();
+    } else if (iconType === 'flame') {
+      ctx.beginPath();
+      ctx.moveTo(x, y - size * 0.45);
+      ctx.quadraticCurveTo(x + size*0.4, y, x + size*0.25, y + size*0.4);
+      ctx.quadraticCurveTo(x, y + size*0.5, x - size*0.25, y + size*0.4);
+      ctx.quadraticCurveTo(x - size*0.4, y, x, y - size*0.45);
+      ctx.closePath();
+      ctx.fill();
+    } else if (iconType === 'heart') {
+      ctx.beginPath();
+      ctx.arc(x - size*0.2, y - size*0.15, size*0.2, Math.PI, 0);
+      ctx.arc(x + size*0.2, y - size*0.15, size*0.2, Math.PI, 0);
+      ctx.lineTo(x, y + size*0.45);
       ctx.closePath();
       ctx.fill();
     }
@@ -542,8 +585,7 @@
 
     ctx.clearRect(0, 0, w, h);
 
-    // 1. Draw 3D Arcade Console Outer Outer Ring (Chrome Housing)
-    const consoleRadius = 180;
+    const consoleRadius = 185;
     const outerGrad = ctx.createRadialGradient(cx, cy, consoleRadius - 20, cx, cy, consoleRadius);
     outerGrad.addColorStop(0, '#2b2b36');
     outerGrad.addColorStop(0.7, '#15151c');
@@ -558,7 +600,6 @@
     ctx.shadowOffsetY = 10;
     ctx.fill();
 
-    // Metallic Chrome Rim Edge
     const rimGrad = ctx.createRadialGradient(cx - 50, cy - 50, 100, cx, cy, consoleRadius);
     rimGrad.addColorStop(0, '#777788');
     rimGrad.addColorStop(0.3, '#dddde8');
@@ -570,7 +611,6 @@
     ctx.strokeStyle = rimGrad;
     ctx.stroke();
 
-    // 8 Radial Chrome Screws around the Rim
     for (let i = 0; i < 8; i++) {
       const a = (i * Math.PI / 4);
       const sx = cx + Math.cos(a) * (consoleRadius - 8);
@@ -584,7 +624,6 @@
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Screw cross slot
       ctx.beginPath();
       ctx.moveTo(sx - 2.5, sy); ctx.lineTo(sx + 2.5, sy);
       ctx.moveTo(sx, sy - 2.5); ctx.lineTo(sx, sy + 2.5);
@@ -592,7 +631,6 @@
       ctx.stroke();
     }
 
-    // 2. Sound Wave Ripple Rings (Behind buttons)
     for (let i = soundRipples.length - 1; i >= 0; i--) {
       const r = soundRipples[i];
       ctx.save();
@@ -611,9 +649,9 @@
       }
     }
 
-    // 3. Render 6 Glossy 3D Quadrant LED Buttons
-    buttonStates.forEach(btn => {
-      // Glow decay animation
+    const activeCount = getActiveButtonCount();
+    for (let i = 0; i < activeCount; i++) {
+      const btn = buttonStates[i];
       if (!btn.active && btn.glowIntensity > 0) {
         btn.glowIntensity -= 0.05;
         if (btn.glowIntensity < 0) btn.glowIntensity = 0;
@@ -627,8 +665,7 @@
       ctx.translate(btn.x, btn.y);
       ctx.scale(btn.scale, btn.scale);
 
-      // Neon Expanding Glow Halo
-      if (btn.glowIntensity > 0) {
+      if (btn.glowIntensity > 0 && currentMode !== 'pitch_audio') {
         const haloGrad = ctx.createRadialGradient(0, 0, btn.radius * 0.8, 0, 0, btn.radius * 1.7);
         haloGrad.addColorStop(0, btn.glowColor);
         haloGrad.addColorStop(1, 'transparent');
@@ -640,18 +677,22 @@
         ctx.globalAlpha = 1.0;
       }
 
-      // Outer Recessed Shadow/Bezel
       ctx.beginPath();
       ctx.arc(0, 3, btn.radius + 3, 0, Math.PI * 2);
       ctx.fillStyle = '#0a0a0f';
       ctx.fill();
 
-      // 3D Glossy Button Fill
       const btnGrad = ctx.createRadialGradient(-btn.radius*0.3, -btn.radius*0.3, 5, 0, 0, btn.radius);
       if (btn.active) {
-        btnGrad.addColorStop(0, '#ffffff');
-        btnGrad.addColorStop(0.3, btn.flashColor);
-        btnGrad.addColorStop(1, btn.glowColor);
+        if (currentMode === 'pitch_audio' && isPlayingSequence) {
+          btnGrad.addColorStop(0, '#555566');
+          btnGrad.addColorStop(0.3, '#333344');
+          btnGrad.addColorStop(1, '#111122');
+        } else {
+          btnGrad.addColorStop(0, '#ffffff');
+          btnGrad.addColorStop(0.3, btn.flashColor);
+          btnGrad.addColorStop(1, btn.glowColor);
+        }
       } else {
         btnGrad.addColorStop(0, '#ffffff88');
         btnGrad.addColorStop(0.2, btn.baseColor);
@@ -663,39 +704,33 @@
       ctx.fillStyle = btnGrad;
       ctx.fill();
 
-      // Top Glass Specular Arc Highlight
       ctx.beginPath();
       ctx.arc(0, -btn.radius * 0.2, btn.radius * 0.75, Math.PI * 0.85, Math.PI * 2.15);
       ctx.strokeStyle = btn.active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)';
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // Button Border Rim
       ctx.beginPath();
       ctx.arc(0, 0, btn.radius, 0, Math.PI * 2);
       ctx.strokeStyle = btn.active ? '#ffffff' : 'rgba(255,255,255,0.2)';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Inner Icon
       const iconColor = btn.active ? '#ffffff' : '#e0e0e0';
-      drawIcon(ctx, btn.icon, 0, -2, 34, iconColor);
+      drawIcon(ctx, btn.icon, 0, -2, btn.radius * 0.8, iconColor);
 
-      // Keyboard Key Label (Q, W, E, A, S, D)
       ctx.font = 'bold 11px sans-serif';
       ctx.fillStyle = btn.active ? '#ffffff' : 'rgba(255,255,255,0.6)';
       ctx.textAlign = 'center';
-      ctx.fillText(btn.label, 0, btn.radius - 8);
+      ctx.fillText(btn.label, 0, btn.radius - 6);
 
       ctx.restore();
-    });
+    }
 
-    // 4. Center Metallic Control Disc & LED Digital Score Display
     const discRadius = 54;
     ctx.save();
     ctx.translate(cx, cy);
 
-    // Center Steel Disc
     const centerGrad = ctx.createRadialGradient(-15, -15, 5, 0, 0, discRadius);
     centerGrad.addColorStop(0, '#555566');
     centerGrad.addColorStop(0.6, '#2a2a35');
@@ -712,40 +747,45 @@
     ctx.strokeStyle = '#777788';
     ctx.stroke();
 
-    // Dark Green Glass Digital LED Display Box
     ctx.fillStyle = '#06160e';
-    ctx.strokeStyle = '#00ffcc44';
+    ctx.strokeStyle = isTimeFrozen ? '#00ccff' : '#00ffcc44';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(-36, -22, 72, 28, 4);
+    ctx.roundRect(-38, -22, 76, 28, 4);
     ctx.fill();
     ctx.stroke();
 
-    // Digital Score Number
-    ctx.font = 'bold 18px monospace';
-    ctx.fillStyle = '#00ffcc';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillStyle = isTimeFrozen ? '#00ccff' : '#00ffcc';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const scoreVal = sequence.length > 0 ? (sequence.length - 1) : 0;
     const scoreStr = scoreVal < 10 ? '0' + scoreVal : '' + scoreVal;
-    ctx.fillText(scoreStr, 0, -8);
+    
+    if (!isPlayingSequence && sequence.length > 0) {
+      if (isTimeFrozen) {
+        ctx.fillText("FROZEN", 0, -8);
+      } else {
+        const timerStr = inputCountdown < 10 ? '0' + inputCountdown : '' + inputCountdown;
+        ctx.fillText(scoreStr + '|' + timerStr + 's', 0, -8);
+      }
+    } else {
+      ctx.fillText(scoreStr, 0, -8);
+    }
 
-    // Power Indicator LED Dot
     ctx.beginPath();
     ctx.arc(0, 16, 4, 0, Math.PI * 2);
     if (isPlayingSequence) ctx.fillStyle = '#ffff00';
-    else if (sequence.length > 0) ctx.fillStyle = '#00ff00';
+    else if (sequence.length > 0) ctx.fillStyle = isTimeFrozen ? '#00ccff' : '#00ff00';
     else ctx.fillStyle = '#0088cc';
     ctx.fill();
 
-    // "K-SIMON" embossed label
     ctx.font = '900 8px sans-serif';
     ctx.fillStyle = '#888899';
     ctx.fillText('K-SIMON', 0, 26);
 
     ctx.restore();
 
-    // 5. Celebration Victory Fireworks
     for (let i = fireworks.length - 1; i >= 0; i--) {
       const p = fireworks[i];
       ctx.save();
@@ -760,12 +800,11 @@
 
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.08; // gravity
+      p.vy += 0.08;
       p.life -= p.decay;
       if (p.life <= 0) fireworks.splice(i, 1);
     }
 
-    // 6. Error Red Flash Shatter Shards
     for (let i = errorShards.length - 1; i >= 0; i--) {
       const p = errorShards[i];
       ctx.save();
@@ -792,18 +831,17 @@
   }
   requestAnimationFrame(renderCanvas);
 
-  // Canvas Click Detection
   canvas.addEventListener('mousedown', (e) => {
     if (isPlayingSequence || sequence.length === 0) return;
     const rect = canvas.getBoundingClientRect();
     const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
     const my = (e.clientY - rect.top) * (canvas.height / rect.height);
 
-    for (let i = 0; i < buttonStates.length; i++) {
+    const activeCount = getActiveButtonCount();
+    for (let i = 0; i < activeCount; i++) {
       const btn = buttonStates[i];
-      const dx = mx - btn.x;
-      const dy = my - btn.y;
-      if (dx * dx + dy * dy <= btn.radius * btn.radius) {
+      const dist = Math.hypot(mx - btn.x, my - btn.y);
+      if (dist <= btn.radius) {
         triggerButtonFlash(i);
         handlePlayerInput(i);
         break;
@@ -812,20 +850,18 @@
   });
 
   canvas.addEventListener('mouseup', () => {
-    buttonStates.forEach((b, i) => releaseButtonFlash(i));
+    buttonStates.forEach((_, i) => releaseButtonFlash(i));
   });
 
-  // --- GAME LOGIC ---
-
   function playTone(freq, duration) {
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
-    osc.type = 'square';
+    
+    osc.type = 'triangle';
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
     
     osc.connect(gainNode);
@@ -849,10 +885,16 @@
         let stg = campaignStages[currentStage - 1] || campaignStages[0];
         stageVal.innerText = currentStage;
         stageTargetVal.innerText = stg.targetLen;
-        stageModVal.innerText = stg.modifier === 1 ? 'REVERSE' : (stg.modifier === 2 ? 'CHAOS' : 'NORMAL');
+        stageBtnsVal.innerText = stg.numColors;
+        let modStr = 'NORMAL';
+        if (stg.modifier === 1) modStr = 'REVERSE';
+        else if (stg.modifier === 2) modStr = 'CHAOS';
+        else if (stg.modifier === 3) modStr = 'CHAOS REVERSE';
+        stageModVal.innerText = modStr;
     } else {
         campaignStage.style.display = 'none';
     }
+    layoutButtons();
   }
 
   modeSelect.addEventListener('change', updateHighScoreDisplay);
@@ -870,7 +912,6 @@
           hintsRemaining--;
           updateDisplays();
           statusDisplay.innerText = "Hint: Watch...";
-          if (audioCtx.state === 'suspended') audioCtx.resume();
           playSequence();
       }
   }
@@ -881,7 +922,6 @@
           isSlowmoActive = true;
           updateDisplays();
           statusDisplay.innerText = "Slow-Mo Active! Watch...";
-          if (audioCtx.state === 'suspended') audioCtx.resume();
           playSequence();
       }
   }
@@ -892,9 +932,43 @@
       }
   }
 
+  function useFreeze() {
+      if (!isPlayingSequence && sequence.length > 0 && freezesRemaining > 0 && !isTimeFrozen) {
+          freezesRemaining--;
+          isTimeFrozen = true;
+          statusDisplay.innerText = `Time Frozen! (${freezesRemaining} Freezes left)`;
+          updateDisplays();
+      }
+  }
+
   hintBtn.addEventListener('click', useHint);
   slowmoBtn.addEventListener('click', useSlowmo);
   shieldBtn.addEventListener('click', useShield);
+  freezeBtn.addEventListener('click', useFreeze);
+
+  function startInputCountdown() {
+      clearInterval(inputTimer);
+      inputCountdown = currentMode === 'speed' ? 10 : 15;
+      isTimeFrozen = false;
+      inputTimer = setInterval(() => {
+          if (!isPlayingSequence && sequence.length > 0 && !isTimeFrozen) {
+              inputCountdown--;
+              if (inputCountdown <= 0) {
+                  clearInterval(inputTimer);
+                  if (shieldsRemaining > 0) {
+                      shieldsRemaining--;
+                      playTone(750, 300);
+                      statusDisplay.innerText = "Time Expired! Shield Absorbed Error!";
+                      playerSequence = [];
+                      updateDisplays();
+                      startInputCountdown();
+                  } else {
+                      handleGameOver();
+                  }
+              }
+          }
+      }, 1000);
+  }
 
   function saveGameState() {
     if (sequence.length === 0 || isPlayingSequence) return;
@@ -905,6 +979,7 @@
       hintsRemaining: hintsRemaining,
       slowmoRemaining: slowmoRemaining,
       shieldsRemaining: shieldsRemaining,
+      freezesRemaining: freezesRemaining,
       elapsedTime: Date.now() - startTime
     };
     localStorage.setItem('KSimon_GameState', JSON.stringify(gameState));
@@ -924,6 +999,7 @@
     hintsRemaining = gameState.hintsRemaining !== undefined ? gameState.hintsRemaining : 3;
     slowmoRemaining = gameState.slowmoRemaining !== undefined ? gameState.slowmoRemaining : 2;
     shieldsRemaining = gameState.shieldsRemaining !== undefined ? gameState.shieldsRemaining : 1;
+    freezesRemaining = gameState.freezesRemaining !== undefined ? gameState.freezesRemaining : 2;
     startTime = Date.now() - gameState.elapsedTime;
     
     modeSelect.value = currentMode;
@@ -937,7 +1013,6 @@
     
     playerSequence = [];
     statusDisplay.innerText = "Game Loaded! Watch...";
-    if (audioCtx.state === 'suspended') audioCtx.resume();
     playSequence();
   }
 
@@ -971,24 +1046,51 @@
         useHint();
         return;
     }
-    if (e.key.toLowerCase() === 'f') {
+    if (e.key.toLowerCase() === 's' && isPlayingSequence) {
         useSlowmo();
         return;
     }
-    if (e.key.toLowerCase() === 'j') {
+    if (e.key.toLowerCase() === 'l') {
+        useSlowmo();
+        return;
+    }
+    if (e.key.toLowerCase() === 'b' || e.key.toLowerCase() === 'j') {
         useShield();
         return;
     }
-    if (isPlayingSequence || sequence.length === 0) return;
-    let index = -1;
-    switch(e.key.toLowerCase()) {
-      case 'q': case '1': index = 0; break;
-      case 'w': case '2': index = 1; break;
-      case 'e': case '3': index = 2; break;
-      case 'a': case '4': index = 3; break;
-      case 's': case '5': index = 4; break;
-      case 'd': case '6': index = 5; break;
+    if (e.key.toLowerCase() === 't') {
+        useFreeze();
+        return;
     }
+    if (isPlayingSequence || sequence.length === 0) return;
+    
+    let index = -1;
+    const numBtns = getActiveButtonCount();
+    const k = e.key.toLowerCase();
+    
+    if (numBtns === 4) {
+      if (k === 'q' || k === '1') index = 0;
+      else if (k === 'w' || k === '2') index = 1;
+      else if (k === 'a' || k === '3') index = 2;
+      else if (k === 's' || k === '4') index = 3;
+    } else if (numBtns === 6) {
+      if (k === 'q' || k === '1') index = 0;
+      else if (k === 'w' || k === '2') index = 1;
+      else if (k === 'e' || k === '3') index = 2;
+      else if (k === 'a' || k === '4') index = 3;
+      else if (k === 's' || k === '5') index = 4;
+      else if (k === 'd' || k === '6') index = 5;
+    } else { // 8 buttons
+      if (k === 'q' || k === '1') index = 0;
+      else if (k === 'w' || k === '2') index = 1;
+      else if (k === 'e' || k === '3') index = 2;
+      else if (k === 'r' || k === '4') index = 3;
+      else if (k === 'a' || k === '5') index = 4;
+      else if (k === 's' || k === '6') index = 5;
+      else if (k === 'd' || k === '7') index = 6;
+      else if (k === 'f' || k === '8') index = 7;
+    }
+
     if (index !== -1) {
       e.preventDefault();
       triggerButtonFlash(index);
@@ -998,14 +1100,15 @@
 
   document.addEventListener('keyup', (e) => {
     let index = -1;
-    switch(e.key.toLowerCase()) {
-      case 'q': case '1': index = 0; break;
-      case 'w': case '2': index = 1; break;
-      case 'e': case '3': index = 2; break;
-      case 'a': case '4': index = 3; break;
-      case 's': case '5': index = 4; break;
-      case 'd': case '6': index = 5; break;
-    }
+    const k = e.key.toLowerCase();
+    if (k === 'q' || k === '1') index = 0;
+    else if (k === 'w' || k === '2') index = 1;
+    else if (k === 'e' || k === '3') index = 2;
+    else if (k === 'r' || k === '4') index = 3;
+    else if (k === 'a' || k === '5') index = 4;
+    else if (k === 's' || k === '6') index = 5;
+    else if (k === 'd' || k === '7') index = 6;
+    else if (k === 'f' || k === '8') index = 7;
     if (index !== -1) releaseButtonFlash(index);
   });
 
@@ -1013,15 +1116,22 @@
       hintsVal.innerText = hintsRemaining;
       slowmoVal.innerText = slowmoRemaining;
       shieldsVal.innerText = shieldsRemaining;
+      freezeVal.innerText = freezesRemaining;
       
       let stg = campaignStages[currentStage - 1] || campaignStages[0];
       stageVal.innerText = currentStage;
       stageTargetVal.innerText = stg.targetLen;
-      stageModVal.innerText = stg.modifier === 1 ? 'REVERSE' : (stg.modifier === 2 ? 'CHAOS' : 'NORMAL');
+      stageBtnsVal.innerText = stg.numColors;
+      let modStr = 'NORMAL';
+      if (stg.modifier === 1) modStr = 'REVERSE';
+      else if (stg.modifier === 2) modStr = 'CHAOS';
+      else if (stg.modifier === 3) modStr = 'CHAOS REVERSE';
+      stageModVal.innerText = modStr;
       
       hintBtn.disabled = hintsRemaining <= 0 || isPlayingSequence || sequence.length === 0;
       slowmoBtn.disabled = slowmoRemaining <= 0 || isPlayingSequence || sequence.length === 0;
       shieldBtn.disabled = shieldsRemaining <= 0 || sequence.length === 0;
+      freezeBtn.disabled = freezesRemaining <= 0 || isPlayingSequence || sequence.length === 0 || isTimeFrozen;
   }
 
   function startGame() {
@@ -1036,7 +1146,9 @@
     hintsRemaining = 3;
     slowmoRemaining = 2;
     shieldsRemaining = 1;
+    freezesRemaining = 2;
     isSlowmoActive = false;
+    isTimeFrozen = false;
     scoreDisplay.innerText = "0";
     statusDisplay.innerText = "Get Ready...";
     startBtn.disabled = true;
@@ -1047,13 +1159,9 @@
 
   function nextRound() {
     playerSequence = [];
+    clearInterval(inputTimer);
     
-    let numColors = 6;
-    if (currentMode === 'campaign') {
-        let stg = campaignStages[currentStage - 1] || campaignStages[0];
-        numColors = stg.numColors;
-    }
-    
+    let numColors = getActiveButtonCount();
     sequence.push(Math.floor(Math.random() * numColors));
     scoreDisplay.innerText = (sequence.length - 1).toString();
     playSequence();
@@ -1062,30 +1170,31 @@
   function playSequence() {
     isPlayingSequence = true;
     saveBtn.disabled = true;
+    clearInterval(inputTimer);
     updateDisplays();
     statusDisplay.innerText = isSlowmoActive ? "Watch (Slow-Mo)..." : "Watch...";
     let i = currentMode === 'endless' ? Math.max(0, sequence.length - 1) : 0;
     
     let speedFactor = Math.max(0, sequence.length - 1);
-    let flashDuration = 400 - (speedFactor * 20);
+    let flashDuration = 400 - (speedFactor * 15);
     if (currentMode === 'speed') {
         flashDuration = Math.max(80, 200 - (speedFactor * 10));
     } else if (currentMode === 'campaign') {
         let stg = campaignStages[currentStage - 1] || campaignStages[0];
-        flashDuration = Math.max(100, stg.speedMs - (speedFactor * 8));
-    } else if (currentMode === 'chaos') {
+        flashDuration = Math.max(100, stg.speedMs - (speedFactor * 5));
+    } else if (currentMode === 'chaos' || currentMode === 'chaos_rev') {
         flashDuration = 150 + Math.floor(Math.random() * 250);
     } else {
         flashDuration = Math.max(150, flashDuration);
     }
 
-    let pauseDuration = Math.max(75, 200 - (speedFactor * 10));
+    let pauseDuration = Math.max(75, 200 - (speedFactor * 8));
     if (currentMode === 'speed') {
         pauseDuration = Math.max(40, 100 - (speedFactor * 5));
     } else if (currentMode === 'campaign') {
         let stg = campaignStages[currentStage - 1] || campaignStages[0];
-        pauseDuration = Math.max(50, Math.floor(stg.speedMs / 2) - (speedFactor * 4));
-    } else if (currentMode === 'chaos') {
+        pauseDuration = Math.max(50, Math.floor(stg.speedMs / 2) - (speedFactor * 3));
+    } else if (currentMode === 'chaos' || currentMode === 'chaos_rev') {
         pauseDuration = 80 + Math.floor(Math.random() * 120);
     }
 
@@ -1098,17 +1207,18 @@
       if (i >= sequence.length) {
         isPlayingSequence = false;
         isSlowmoActive = false;
-        let isRev = currentMode === 'reverse' || (currentMode === 'campaign' && campaignStages[currentStage-1].modifier === 1);
+        let isRev = currentMode === 'chaos_rev' || (currentMode === 'campaign' && (campaignStages[currentStage-1].modifier === 1 || campaignStages[currentStage-1].modifier === 3));
         statusDisplay.innerText = isRev ? "Your Turn (REVERSE)!" : "Your Turn!";
         saveBtn.disabled = false;
         updateDisplays();
+        startInputCountdown();
         return;
       }
       const index = sequence[i];
       triggerButtonFlash(index);
       
       let toneFreq = freqs[index];
-      let isChaos = currentMode === 'chaos' || (currentMode === 'campaign' && campaignStages[currentStage-1].modifier === 2);
+      let isChaos = currentMode === 'chaos' || currentMode === 'chaos_rev' || (currentMode === 'campaign' && (campaignStages[currentStage-1].modifier === 2 || campaignStages[currentStage-1].modifier === 3));
       if (isChaos) {
           toneFreq += Math.floor(Math.random() * 160) - 80;
       }
@@ -1124,24 +1234,8 @@
     flashNext();
   }
 
-  function handlePlayerInput(index) {
-    playerSequence.push(index);
-
-    const currentStep = playerSequence.length - 1;
-    let isRev = currentMode === 'reverse' || (currentMode === 'campaign' && campaignStages[currentStage-1].modifier === 1);
-    let expectedIndex = isRev ? sequence[sequence.length - 1 - currentStep] : sequence[currentStep];
-
-    if (playerSequence[currentStep] !== expectedIndex) {
-      if (shieldsRemaining > 0) {
-          shieldsRemaining--;
-          playTone(750, 300);
-          playerSequence = [];
-          statusDisplay.innerText = `Shield Absorbed Error! (${shieldsRemaining} Shields left)`;
-          updateDisplays();
-          return;
-      }
-
-      // Game Over Error FX
+  function handleGameOver() {
+      clearInterval(inputTimer);
       document.body.classList.add('game-over-flash');
       setTimeout(() => document.body.classList.remove('game-over-flash'), 500);
       triggerErrorBurst();
@@ -1169,21 +1263,42 @@
       modeSelect.disabled = false;
       saveBtn.disabled = true;
       updateDisplays();
+  }
+
+  function handlePlayerInput(index) {
+    playerSequence.push(index);
+
+    const currentStep = playerSequence.length - 1;
+    let isRev = currentMode === 'chaos_rev' || (currentMode === 'campaign' && (campaignStages[currentStage-1].modifier === 1 || campaignStages[currentStage-1].modifier === 3));
+    let expectedIndex = isRev ? sequence[sequence.length - 1 - currentStep] : sequence[currentStep];
+
+    if (playerSequence[currentStep] !== expectedIndex) {
+      if (shieldsRemaining > 0) {
+          shieldsRemaining--;
+          playTone(750, 300);
+          playerSequence = [];
+          statusDisplay.innerText = `Shield Absorbed Error! (${shieldsRemaining} Shields left)`;
+          updateDisplays();
+          return;
+      }
+
+      handleGameOver();
       return;
     }
 
     playTone(freqs[index], 200);
 
     if (playerSequence.length === sequence.length) {
+      clearInterval(inputTimer);
       if (currentMode === 'campaign') {
           let stg = campaignStages[currentStage - 1] || campaignStages[0];
           if (sequence.length >= stg.targetLen) {
               currentStage++;
               triggerVictoryFireworks();
-              if (currentStage > 15) {
-                  statusDisplay.innerText = "Campaign Complete! YOU WIN!";
+              if (currentStage > 20) {
+                  statusDisplay.innerText = "GRANDMASTER VICTORY! Campaign Complete!";
                   isPlayingSequence = true;
-                  let finalScore = sequence.length - 1 + 100;
+                  let finalScore = sequence.length - 1 + 200;
                   if (finalScore > getHighScore(currentMode)) {
                       setHighScore(currentMode, finalScore);
                       updateHighScoreDisplay();
@@ -1203,10 +1318,11 @@
                   updateDisplays();
                   return;
               } else {
-                  statusDisplay.innerText = "Stage " + (currentStage - 1) + " Cleared! +1 Powerups";
+                  statusDisplay.innerText = "Stage " + (currentStage - 1) + " Cleared! +1 Skill Charges";
                   hintsRemaining++;
                   slowmoRemaining++;
                   shieldsRemaining++;
+                  freezesRemaining++;
                   sequence = [];
               }
           } else {
