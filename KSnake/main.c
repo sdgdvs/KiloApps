@@ -727,14 +727,15 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
     if (index == 0) {
         HBRUSH headBrush = CreateSolidBrush(is_ghost ? RGB(0, 210, 211) : (speed_active_timer > 0 ? RGB(230, 126, 34) : RGB(46, 204, 113)));
         HPEN headPen = CreatePen(PS_SOLID, 1, is_ghost ? RGB(0, 180, 200) : RGB(30, 130, 70));
-        HBRUSH eyeBrush, pupilBrush;
+        HBRUSH eyeBrush, pupilBrush, tongueBrush;
         int eye1_x, eye1_y, eye2_x, eye2_y;
 
         oldBrush = (HBRUSH)SelectObject(hdc, headBrush);
         oldPen = (HPEN)SelectObject(hdc, headPen);
 
-        Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
+        Ellipse(hdc, px, py, px + CELL_SIZE, py + CELL_SIZE); // Slightly larger head
 
+        // Eyes
         eyeBrush = CreateSolidBrush(RGB(255, 255, 255));
         SelectObject(hdc, eyeBrush);
 
@@ -743,13 +744,28 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
         eye2_x = cx - d_y * 3 + d_x * 2;
         eye2_y = cy - d_x * 3 + d_y * 2;
 
-        Ellipse(hdc, eye1_x - 2, eye1_y - 2, eye1_x + 2, eye1_y + 2);
-        Ellipse(hdc, eye2_x - 2, eye2_y - 2, eye2_x + 2, eye2_y + 2);
+        Ellipse(hdc, eye1_x - 3, eye1_y - 3, eye1_x + 3, eye1_y + 3);
+        Ellipse(hdc, eye2_x - 3, eye2_y - 3, eye2_x + 3, eye2_y + 3);
 
         pupilBrush = CreateSolidBrush(RGB(30, 39, 46));
         SelectObject(hdc, pupilBrush);
-        Ellipse(hdc, eye1_x + d_x - 1, eye1_y + d_y - 1, eye1_x + d_x + 1, eye1_y + d_y + 1);
-        Ellipse(hdc, eye2_x + d_x - 1, eye2_y + d_y - 1, eye2_x + d_x + 1, eye2_y + d_y + 1);
+        Ellipse(hdc, eye1_x + d_x - 1, eye1_y + d_y - 1, eye1_x + d_x + 2, eye1_y + d_y + 2);
+        Ellipse(hdc, eye2_x + d_x - 1, eye2_y + d_y - 1, eye2_x + d_x + 2, eye2_y + d_y + 2);
+
+        // Tongue (flickering based on anim_tick)
+        if ((anim_tick % 4) < 2) {
+            tongueBrush = CreateSolidBrush(RGB(255, 71, 87));
+            SelectObject(hdc, tongueBrush);
+            POINT tonguePts[3];
+            tonguePts[0].x = cx + d_x * (CELL_SIZE/2);
+            tonguePts[0].y = cy + d_y * (CELL_SIZE/2);
+            tonguePts[1].x = cx + d_x * (CELL_SIZE/2 + 4) + d_y * 2;
+            tonguePts[1].y = cy + d_y * (CELL_SIZE/2 + 4) + d_x * 2;
+            tonguePts[2].x = cx + d_x * (CELL_SIZE/2 + 4) - d_y * 2;
+            tonguePts[2].y = cy + d_y * (CELL_SIZE/2 + 4) - d_x * 2;
+            Polygon(hdc, tonguePts, 3);
+            DeleteObject(tongueBrush);
+        }
 
         DeleteObject(eyeBrush); DeleteObject(pupilBrush);
 
@@ -758,13 +774,19 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
     } else {
         HBRUSH bodyBrush = CreateSolidBrush(is_ghost ? RGB(72, 219, 251) : (speed_active_timer > 0 ? RGB(241, 196, 15) : (index % 2 == 0 ? RGB(46, 204, 113) : RGB(33, 140, 116))));
         HPEN bodyPen = CreatePen(PS_SOLID, 1, RGB(25, 110, 90));
-        int inset = 1 + index / 15;
+        int inset = 1 + index / 12;
         if (inset > 4) inset = 4;
-
+        
         oldBrush = (HBRUSH)SelectObject(hdc, bodyBrush);
         oldPen = (HPEN)SelectObject(hdc, bodyPen);
 
         Ellipse(hdc, px + inset, py + inset, px + CELL_SIZE - inset, py + CELL_SIZE - inset);
+        
+        // Scale highlight
+        HBRUSH hlBrush = CreateSolidBrush(RGB(100, 230, 150));
+        SelectObject(hdc, hlBrush);
+        Ellipse(hdc, px + inset + 1, py + inset + 1, px + inset + 4, py + inset + 4);
+        DeleteObject(hlBrush);
 
         SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
         DeleteObject(bodyBrush); DeleteObject(bodyPen);
@@ -773,12 +795,28 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
 
 void DrawRivalGDI(HDC hdc, int x, int y, int index) {
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 30;
-    HBRUSH brush = CreateSolidBrush(index == 0 ? RGB(155, 89, 182) : RGB(142, 68, 173));
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+    HBRUSH brush = CreateSolidBrush(index == 0 ? RGB(44, 62, 80) : RGB(52, 73, 94));
+    HPEN pen = CreatePen(PS_SOLID, 1, RGB(20, 30, 40));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
 
     Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
+    
+    if (index == 0) {
+        HBRUSH eyeBrush = CreateSolidBrush(RGB(231, 76, 60));
+        SelectObject(hdc, eyeBrush);
+        Ellipse(hdc, px+3, py+3, px+6, py+6);
+        Ellipse(hdc, px+CELL_SIZE-6, py+3, px+CELL_SIZE-3, py+6);
+        DeleteObject(eyeBrush);
+    }
+    
+    // Legs
+    HPEN legPen = CreatePen(PS_SOLID, 2, RGB(44, 62, 80));
+    SelectObject(hdc, legPen);
+    int wiggle = (anim_tick + index) % 2 == 0 ? 2 : -2;
+    MoveToEx(hdc, px+2, py+CELL_SIZE/2, NULL); LineTo(hdc, px-2-wiggle, py+CELL_SIZE/2+wiggle);
+    MoveToEx(hdc, px+CELL_SIZE-2, py+CELL_SIZE/2, NULL); LineTo(hdc, px+CELL_SIZE+2+wiggle, py+CELL_SIZE/2-wiggle);
+    DeleteObject(legPen);
 
     SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
     DeleteObject(brush); DeleteObject(pen);
@@ -786,12 +824,30 @@ void DrawRivalGDI(HDC hdc, int x, int y, int index) {
 
 void DrawBossGDI(HDC hdc, int x, int y, int index) {
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 30;
-    HBRUSH brush = CreateSolidBrush(index == 0 ? RGB(255, 0, 85) : RGB(192, 57, 43));
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
+    HBRUSH brush = CreateSolidBrush(index == 0 ? RGB(45, 52, 54) : RGB(99, 110, 114));
+    HPEN pen = CreatePen(PS_SOLID, 1, RGB(178, 190, 195));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
 
     Rectangle(hdc, px, py, px + CELL_SIZE, py + CELL_SIZE);
+    
+    if (index == 0) {
+        // Red Pulsing Eye
+        int pulse = (anim_tick % 10) > 5 ? 1 : 0;
+        HBRUSH eyeBrush = CreateSolidBrush(pulse ? RGB(255, 118, 117) : RGB(214, 48, 49));
+        SelectObject(hdc, eyeBrush);
+        Ellipse(hdc, px+4, py+4, px+CELL_SIZE-4, py+CELL_SIZE-4);
+        DeleteObject(eyeBrush);
+    } else {
+        // Metal rivets
+        HBRUSH rivetBrush = CreateSolidBrush(RGB(45, 52, 54));
+        SelectObject(hdc, rivetBrush);
+        Ellipse(hdc, px+2, py+2, px+4, py+4);
+        Ellipse(hdc, px+CELL_SIZE-4, py+2, px+CELL_SIZE-2, py+4);
+        Ellipse(hdc, px+2, py+CELL_SIZE-4, px+4, py+CELL_SIZE-2);
+        Ellipse(hdc, px+CELL_SIZE-4, py+CELL_SIZE-4, px+CELL_SIZE-2, py+CELL_SIZE-2);
+        DeleteObject(rivetBrush);
+    }
 
     SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
     DeleteObject(brush); DeleteObject(pen);
@@ -804,7 +860,34 @@ void DrawGemGDI(HDC hdc, int x, int y, COLORREF color) {
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
 
-    Ellipse(hdc, px + 2, py + 2, px + CELL_SIZE - 2, py + CELL_SIZE - 2);
+    if (color == RGB(255, 215, 0)) { // Star
+        POINT pts[10];
+        int cx = px + CELL_SIZE/2, cy = py + CELL_SIZE/2;
+        int i;
+        for (i = 0; i < 10; i++) {
+            double angle = i * 3.14159 / 5 - 3.14159 / 2;
+            int r = (i % 2 == 0) ? (CELL_SIZE/2) : (CELL_SIZE/4);
+            pts[i].x = cx + (int)(cos(angle) * r);
+            pts[i].y = cy + (int)(sin(angle) * r);
+        }
+        Polygon(hdc, pts, 10);
+    } else {
+        Ellipse(hdc, px + 2, py + 2, px + CELL_SIZE - 2, py + CELL_SIZE - 2);
+        // Add a shine for berry/apple
+        HBRUSH shine = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, shine);
+        Ellipse(hdc, px+4, py+4, px+6, py+6);
+        DeleteObject(shine);
+        
+        // Stem if apple (assuming red is apple)
+        if (color == RGB(255, 71, 87)) {
+            HPEN stem = CreatePen(PS_SOLID, 2, RGB(116, 81, 45));
+            SelectObject(hdc, stem);
+            MoveToEx(hdc, px+CELL_SIZE/2, py+2, NULL);
+            LineTo(hdc, px+CELL_SIZE/2, py-2);
+            DeleteObject(stem);
+        }
+    }
 
     SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
     DeleteObject(brush); DeleteObject(pen);
@@ -817,7 +900,12 @@ void DrawPortalGDI(HDC hdc, int x, int y, COLORREF color) {
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
 
+    // Inner swirl effect using concentric circles based on time
+    int offset = anim_tick % 4;
     Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
+    
+    SelectObject(hdc, GetStockObject(HOLLOW_BRUSH));
+    Ellipse(hdc, px + 3 + offset, py + 3, px + CELL_SIZE - 3 - offset, py + CELL_SIZE - 3);
 
     SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
     DeleteObject(brush); DeleteObject(pen);
@@ -825,10 +913,34 @@ void DrawPortalGDI(HDC hdc, int x, int y, COLORREF color) {
 
 void DrawObstacleGDI(HDC hdc, int x, int y) {
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 30;
-    RECT r = { px, py, px + CELL_SIZE - 1, py + CELL_SIZE - 1 };
-    HBRUSH bgBrush = CreateSolidBrush(RGB(75, 101, 132));
+    RECT r = { px, py, px + CELL_SIZE, py + CELL_SIZE };
+    HBRUSH bgBrush = CreateSolidBrush(RGB(87, 101, 116));
     FillRect(hdc, &r, bgBrush);
-    DeleteObject(bgBrush);
+    
+    // Highlight
+    RECT hlt = { px, py, px + CELL_SIZE, py + 2 };
+    HBRUSH hlBrush = CreateSolidBrush(RGB(131, 149, 167));
+    FillRect(hdc, &hlt, hlBrush);
+    RECT hll = { px, py, px + 2, py + CELL_SIZE };
+    FillRect(hdc, &hll, hlBrush);
+    
+    // Shadow
+    RECT sdt = { px + CELL_SIZE - 2, py, px + CELL_SIZE, py + CELL_SIZE };
+    HBRUSH sdBrush = CreateSolidBrush(RGB(34, 47, 62));
+    FillRect(hdc, &sdt, sdBrush);
+    RECT sdb = { px, py + CELL_SIZE - 2, px + CELL_SIZE, py + CELL_SIZE };
+    FillRect(hdc, &sdb, sdBrush);
+    
+    // Crack
+    HPEN crackPen = CreatePen(PS_SOLID, 1, RGB(34, 47, 62));
+    HPEN oldPen = (HPEN)SelectObject(hdc, crackPen);
+    MoveToEx(hdc, px+3, py+3, NULL);
+    LineTo(hdc, px+7, py+7);
+    LineTo(hdc, px+5, py+11);
+    SelectObject(hdc, oldPen);
+    DeleteObject(crackPen);
+    
+    DeleteObject(bgBrush); DeleteObject(hlBrush); DeleteObject(sdBrush);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
