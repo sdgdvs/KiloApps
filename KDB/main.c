@@ -1,8 +1,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commctrl.h>
+#include <commdlg.h>
 
-#define W 560
+#define W 640
 #define H 480
 #define IDC_SEARCH 101
 #define IDC_ADD_ID 102
@@ -11,10 +12,17 @@
 #define IDC_ADD_ROLE 105
 #define IDC_ADD_BTN 106
 #define IDC_DEL_BTN 107
+#define IDC_PWD 108
+#define IDC_EXPORT_CSV 109
+#define IDC_IMPORT_CSV 110
+#define IDC_EXPORT_JSON 111
+#define IDC_IMPORT_JSON 112
+#define IDC_RELOAD_BTN 113
 
 HWND hListView;
 HWND hSearch;
 HWND hAddId, hAddName, hAddDept, hAddRole, hAddBtn, hDelBtn;
+HWND hPwd, hExpCSV, hImpCSV, hExpJSON, hImpJSON, hReload;
 HFONT hFont;
 HBRUSH hBgBrush;
 HBRUSH hEditBgBrush;
@@ -39,6 +47,23 @@ Record data[MAX_RECORDS] = {
     {"105", "Evan Wright", "HR", "Manager"}
 };
 int data_count = 5;
+
+#pragma function(memcpy)
+void* __cdecl memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
+int atoi(const char* str) {
+    int res = 0;
+    while (*str >= '0' && *str <= '9') {
+        res = res * 10 + (*str - '0');
+        str++;
+    }
+    return res;
+}
 
 char ToLower(char c) {
     if (c >= 'A' && c <= 'Z') return c + 32;
@@ -70,63 +95,141 @@ const char* FindChar(const char* str, char c) {
     return NULL;
 }
 
+const char* FindStr(const char* haystack, const char* needle) {
+    if (!*needle) return haystack;
+    while (*haystack) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (*h && *n && *h == *n) { h++; n++; }
+        if (!*n) return haystack;
+        haystack++;
+    }
+    return NULL;
+}
+
+void CryptData(char* buffer, int len, const char* key) {
+    if (!key || !*key) return;
+    int klen = lstrlenA(key);
+    for (int i = 0; i < len; i++) {
+        buffer[i] ^= key[i % klen];
+    }
+}
+
 void SaveDataToFile() {
+    char key[64] = {0};
+    if (hPwd) GetWindowTextA(hPwd, key, sizeof(key));
     HANDLE hFile = CreateFileA(FILE_NAME, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
-        WriteFile(hFile, &data_count, sizeof(int), &written, NULL);
-        WriteFile(hFile, data, sizeof(Record) * data_count, &written, NULL);
+        int magic = key[0] ? 0x4B444245 : 0x4B444231;
+        WriteFile(hFile, &magic, sizeof(int), &written, NULL);
+        
+        int bufferSize = sizeof(int) + sizeof(Record) * data_count;
+        char* buffer = (char*)GlobalAlloc(GMEM_FIXED, bufferSize);
+        if (buffer) {
+            memcpy(buffer, &data_count, sizeof(int));
+            memcpy(buffer + sizeof(int), data, sizeof(Record) * data_count);
+            
+            if (key[0]) CryptData(buffer, bufferSize, key);
+            
+            WriteFile(hFile, buffer, bufferSize, &written, NULL);
+            GlobalFree(buffer);
+        }
         CloseHandle(hFile);
     }
 }
 
 void LoadDataFromFile() {
+    char key[64] = {0};
+    if (hPwd) GetWindowTextA(hPwd, key, sizeof(key));
     HANDLE hFile = CreateFileA(FILE_NAME, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD readBytes = 0;
-        int count = 0;
-        if (ReadFile(hFile, &count, sizeof(int), &readBytes, NULL) && readBytes == sizeof(int)) {
-            if (count >= 0 && count <= MAX_RECORDS) {
-                if (ReadFile(hFile, data, sizeof(Record) * count, &readBytes, NULL) && readBytes == (DWORD)(sizeof(Record) * count)) {
-                    data_count = count;
+        int magic = 0;
+        if (ReadFile(hFile, &magic, sizeof(int), &readBytes, NULL) && readBytes == sizeof(int)) {
+            int encrypted = (magic == 0x4B444245);
+            if (encrypted && !key[0]) {
+                CloseHandle(hFile);
+                // Can't load without key.
+                data_count = 0;
+                return;
+            }
+            
+            DWORD size = GetFileSize(hFile, NULL) - sizeof(int);
+            if (size > 0 && size < 1000000) {
+                char* buffer = (char*)GlobalAlloc(GMEM_FIXED, size);
+                if (buffer) {
+                    if (ReadFile(hFile, buffer, size, &readBytes, NULL) && readBytes == size) {
+                        if (encrypted) CryptData(buffer, size, key);
+                        int count = 0;
+                        memcpy(&count, buffer, sizeof(int));
+                        if (count >= 0 && count <= MAX_RECORDS) {
+                            memcpy(data, buffer + sizeof(int), count * sizeof(Record));
+                            data_count = count;
+                        } else {
+                            data_count = 0; // Failed decryption
+                        }
+                    }
+                    GlobalFree(buffer);
                 }
             }
         }
         CloseHandle(hFile);
+    } else {
+        data_count = 5;
     }
 }
 
-// Bounded Query Matcher supporting dept:val, role:val, id:val, name:val or general text
+// Bounded Query Matcher supporting multiple terms
 int MatchQuery(const Record* rec, const char* query) {
     if (!query || !*query) return 1;
-
-    char buf[128];
+    char buf[256];
     lstrcpynA(buf, query, sizeof(buf));
     
-    // Check for column query e.g. "dept:engineering"
-    char* colon = (char*)FindChar(buf, ':');
-    if (colon) {
-        *colon = '\0';
-        char* field = buf;
-        char* val = colon + 1;
-        while (*field == ' ') field++;
-        while (*val == ' ') val++;
-
-        if (lstrcmpiA(field, "dept") == 0 || lstrcmpiA(field, "department") == 0) {
-            return StrContainsI(rec->dept, val);
-        } else if (lstrcmpiA(field, "role") == 0) {
-            return StrContainsI(rec->role, val);
-        } else if (lstrcmpiA(field, "id") == 0) {
-            return StrContainsI(rec->id, val);
-        } else if (lstrcmpiA(field, "name") == 0) {
-            return StrContainsI(rec->name, val);
+    char* p = buf;
+    while (*p) {
+        while (*p == ' ') p++;
+        if (!*p) break;
+        char* end = p;
+        while (*end && *end != ' ') end++;
+        if (*end) {
+            *end = '\0';
+            end++;
         }
+        
+        char* term = p;
+        p = end; // next
+        
+        int match = 0;
+        char* colon = (char*)FindChar(term, ':');
+        if (colon) {
+            *colon = '\0';
+            char* field = term;
+            char* val = colon + 1;
+            if (lstrcmpiA(field, "dept") == 0 || lstrcmpiA(field, "department") == 0) {
+                match = StrContainsI(rec->dept, val);
+            } else if (lstrcmpiA(field, "role") == 0) {
+                match = StrContainsI(rec->role, val);
+            } else if (lstrcmpiA(field, "id") == 0) {
+                match = StrContainsI(rec->id, val);
+            } else if (lstrcmpiA(field, "name") == 0) {
+                match = StrContainsI(rec->name, val);
+            }
+        } else if (term[0] == 'i' && term[1] == 'd' && term[2] == '>') {
+            int num = atoi(term + 3);
+            match = (atoi(rec->id) > num);
+        } else if (term[0] == 'i' && term[1] == 'd' && term[2] == '<') {
+            int num = atoi(term + 3);
+            match = (atoi(rec->id) < num);
+        } else {
+            match = StrContainsI(rec->id, term) ||
+                    StrContainsI(rec->name, term) ||
+                    StrContainsI(rec->dept, term) ||
+                    StrContainsI(rec->role, term);
+        }
+        if (!match) return 0;
     }
-
-    return StrContainsI(rec->id, query) ||
-           StrContainsI(rec->name, query) ||
-           StrContainsI(rec->dept, query) ||
-           StrContainsI(rec->role, query);
+    return 1;
 }
 
 void PopulateListView(const char* filter) {
@@ -178,12 +281,179 @@ void AutoScaleListViewColumns(int totalWidth) {
     ListView_SetColumnWidth(hListView, 3, colRole);
 }
 
-void InitListView(HWND hwnd) {
-    LoadDataFromFile();
+int PromptFile(HWND hwnd, char* outPath, int isSave, const char* filter, const char* ext) {
+    OPENFILENAMEA ofn;
+    memset(&ofn, 0, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = outPath;
+    outPath[0] = '\0';
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrFilter = filter;
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = ext;
+    ofn.Flags = OFN_PATHMUSTEXIST | (isSave ? OFN_OVERWRITEPROMPT : OFN_FILEMUSTEXIST);
+    if (isSave) return GetSaveFileNameA(&ofn);
+    return GetOpenFileNameA(&ofn);
+}
 
-    hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
-        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-        10, 10, W - 35, 25, hwnd, (HMENU)IDC_SEARCH, GetModuleHandle(NULL), NULL);
+void ExportCSV(HWND hwnd) {
+    char path[MAX_PATH];
+    if (PromptFile(hwnd, path, 1, "CSV Files\0*.csv\0All Files\0*.*\0", "csv")) {
+        HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD w;
+            const char* header = "ID,Name,Department,Role\r\n";
+            WriteFile(hFile, header, lstrlenA(header), &w, NULL);
+            char buf[512];
+            for (int i = 0; i < data_count; i++) {
+                wsprintfA(buf, "\"%s\",\"%s\",\"%s\",\"%s\"\r\n", data[i].id, data[i].name, data[i].dept, data[i].role);
+                WriteFile(hFile, buf, lstrlenA(buf), &w, NULL);
+            }
+            CloseHandle(hFile);
+            MessageBoxA(hwnd, "Exported successfully", "Success", MB_OK);
+        }
+    }
+}
+
+void ImportCSV(HWND hwnd) {
+    char path[MAX_PATH];
+    if (PromptFile(hwnd, path, 0, "CSV Files\0*.csv\0All Files\0*.*\0", "csv")) {
+        HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD size = GetFileSize(hFile, NULL);
+            char* buf = (char*)GlobalAlloc(GMEM_FIXED, size + 1);
+            if (buf) {
+                DWORD r;
+                ReadFile(hFile, buf, size, &r, NULL);
+                buf[size] = 0;
+                
+                char* p = buf;
+                int line = 0;
+                while (*p && data_count < MAX_RECORDS) {
+                    char* next = p;
+                    while (*next && *next != '\n') next++;
+                    if (*next) { *next = 0; next++; }
+                    if (line > 0 && lstrlenA(p) > 5) {
+                        char* id = p;
+                        char* name = (char*)FindChar(id, ','); if (name) { *name = 0; name++; }
+                        char* dept = name ? (char*)FindChar(name, ',') : NULL; if (dept) { *dept = 0; dept++; }
+                        char* role = dept ? (char*)FindChar(dept, ',') : NULL; if (role) { *role = 0; role++; }
+                        if (id && name && dept && role) {
+                            if (id[0] == '"') { id++; id[lstrlenA(id)-1] = 0; }
+                            if (name[0] == '"') { name++; name[lstrlenA(name)-1] = 0; }
+                            if (dept[0] == '"') { dept++; dept[lstrlenA(dept)-1] = 0; }
+                            if (role[0] == '"') { role++; role[lstrlenA(role)-1] = 0; }
+                            char* ret = (char*)FindChar(role, '\r'); if (ret) *ret = 0;
+                            
+                            int dup = 0;
+                            for (int i = 0; i < data_count; i++) { if (lstrcmpiA(data[i].id, id) == 0) dup = 1; }
+                            if (!dup) {
+                                lstrcpynA(data[data_count].id, id, 16);
+                                lstrcpynA(data[data_count].name, name, 64);
+                                lstrcpynA(data[data_count].dept, dept, 64);
+                                lstrcpynA(data[data_count].role, role, 64);
+                                data_count++;
+                            }
+                        }
+                    }
+                    p = next;
+                    line++;
+                }
+                GlobalFree(buf);
+            }
+            CloseHandle(hFile);
+            SaveDataToFile();
+            char msg[128]; wsprintfA(msg, "Imported CSV. Total: %d", data_count);
+            MessageBoxA(hwnd, msg, "Success", MB_OK);
+        }
+    }
+}
+
+void ExportJSON(HWND hwnd) {
+    char path[MAX_PATH];
+    if (PromptFile(hwnd, path, 1, "JSON Files\0*.json\0All Files\0*.*\0", "json")) {
+        HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD w;
+            WriteFile(hFile, "[\r\n", 3, &w, NULL);
+            char buf[512];
+            for (int i = 0; i < data_count; i++) {
+                wsprintfA(buf, "  {\"id\":\"%s\", \"name\":\"%s\", \"dept\":\"%s\", \"role\":\"%s\"}%s\r\n", 
+                    data[i].id, data[i].name, data[i].dept, data[i].role, (i == data_count - 1) ? "" : ",");
+                WriteFile(hFile, buf, lstrlenA(buf), &w, NULL);
+            }
+            WriteFile(hFile, "]\r\n", 3, &w, NULL);
+            CloseHandle(hFile);
+            MessageBoxA(hwnd, "Exported successfully", "Success", MB_OK);
+        }
+    }
+}
+
+void GetJsonString(const char* objStart, const char* objEnd, const char* key, char* out, int outLen) {
+    char search[32]; wsprintfA(search, "\"%s\"", key);
+    const char* p = FindStr(objStart, search);
+    if (p && p < objEnd) {
+        p += lstrlenA(search);
+        while (p < objEnd && (*p == ' ' || *p == ':')) p++;
+        if (p < objEnd && *p == '"') {
+            p++;
+            int i = 0;
+            while (p < objEnd && *p != '"' && i < outLen - 1) {
+                out[i++] = *p++;
+            }
+            out[i] = 0;
+        }
+    }
+}
+
+void ImportJSON(HWND hwnd) {
+    char path[MAX_PATH];
+    if (PromptFile(hwnd, path, 0, "JSON Files\0*.json\0All Files\0*.*\0", "json")) {
+        HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD size = GetFileSize(hFile, NULL);
+            char* buf = (char*)GlobalAlloc(GMEM_FIXED, size + 1);
+            if (buf) {
+                DWORD r; ReadFile(hFile, buf, size, &r, NULL); buf[size] = 0;
+                const char* p = buf;
+                while (*p && data_count < MAX_RECORDS) {
+                    p = FindChar(p, '{'); if (!p) break;
+                    const char* end = FindChar(p, '}'); if (!end) break;
+                    char id[64]={0}, name[64]={0}, dept[64]={0}, role[64]={0};
+                    GetJsonString(p, end, "id", id, 16); GetJsonString(p, end, "name", name, 64);
+                    GetJsonString(p, end, "dept", dept, 64); GetJsonString(p, end, "role", role, 64);
+                    if (id[0] && name[0]) {
+                        int dup = 0; for (int i = 0; i < data_count; i++) if (lstrcmpiA(data[i].id, id) == 0) dup = 1;
+                        if (!dup) {
+                            lstrcpynA(data[data_count].id, id, 16); lstrcpynA(data[data_count].name, name, 64);
+                            lstrcpynA(data[data_count].dept, dept, 64); lstrcpynA(data[data_count].role, role, 64);
+                            data_count++;
+                        }
+                    }
+                    p = end + 1;
+                }
+                GlobalFree(buf);
+            }
+            CloseHandle(hFile);
+            SaveDataToFile();
+            char msg[128]; wsprintfA(msg, "Imported JSON. Total: %d", data_count);
+            MessageBoxA(hwnd, msg, "Success", MB_OK);
+        }
+    }
+}
+
+void InitListView(HWND hwnd) {
+    hPwd = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_PASSWORD, 10, 10, 100, 25, hwnd, (HMENU)IDC_PWD, GetModuleHandle(NULL), NULL);
+    hReload = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE, 115, 10, 45, 25, hwnd, (HMENU)IDC_RELOAD_BTN, GetModuleHandle(NULL), NULL);
+    hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 165, 10, 180, 25, hwnd, (HMENU)IDC_SEARCH, GetModuleHandle(NULL), NULL);
+    
+    hExpCSV = CreateWindowEx(0, "BUTTON", "ExCSV", WS_CHILD | WS_VISIBLE, 350, 10, 50, 25, hwnd, (HMENU)IDC_EXPORT_CSV, GetModuleHandle(NULL), NULL);
+    hImpCSV = CreateWindowEx(0, "BUTTON", "ImCSV", WS_CHILD | WS_VISIBLE, 405, 10, 50, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
+    hExpJSON = CreateWindowEx(0, "BUTTON", "ExJSON", WS_CHILD | WS_VISIBLE, 460, 10, 55, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
+    hImpJSON = CreateWindowEx(0, "BUTTON", "ImJSON", WS_CHILD | WS_VISIBLE, 520, 10, 55, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
+    
+    LoadDataFromFile();
 
     hListView = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, "",
         WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL,
@@ -205,6 +475,13 @@ void InitListView(HWND hwnd) {
     hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
     SendMessage(hListView, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hPwd, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hReload, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hExpCSV, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hImpCSV, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hExpJSON, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hImpJSON, WM_SETFONT, (WPARAM)hFont, TRUE);
+    
     SendMessage(hAddId, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hAddName, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hAddDept, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -213,6 +490,7 @@ void InitListView(HWND hwnd) {
     SendMessage(hDelBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
     // Set placeholder cue banners
+    SendMessageA(hPwd, EM_SETCUEBANNER, FALSE, (LPARAM)"Key");
     SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)"Search / Query (e.g. dept:engineering)...");
     SendMessageA(hAddId, EM_SETCUEBANNER, FALSE, (LPARAM)"ID");
     SendMessageA(hAddName, EM_SETCUEBANNER, FALSE, (LPARAM)"Name");
@@ -255,6 +533,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (LOWORD(wParam) == IDC_SEARCH && HIWORD(wParam) == EN_CHANGE) {
                 char buf[128];
                 GetWindowTextA(hSearch, buf, sizeof(buf));
+                PopulateListView(buf);
+            } else if (LOWORD(wParam) == IDC_RELOAD_BTN) {
+                LoadDataFromFile();
+                char buf[128]; GetWindowTextA(hSearch, buf, sizeof(buf));
+                PopulateListView(buf);
+            } else if (LOWORD(wParam) == IDC_EXPORT_CSV) {
+                ExportCSV(hwnd);
+            } else if (LOWORD(wParam) == IDC_IMPORT_CSV) {
+                ImportCSV(hwnd);
+                char buf[128]; GetWindowTextA(hSearch, buf, sizeof(buf));
+                PopulateListView(buf);
+            } else if (LOWORD(wParam) == IDC_EXPORT_JSON) {
+                ExportJSON(hwnd);
+            } else if (LOWORD(wParam) == IDC_IMPORT_JSON) {
+                ImportJSON(hwnd);
+                char buf[128]; GetWindowTextA(hSearch, buf, sizeof(buf));
                 PopulateListView(buf);
             } else if (LOWORD(wParam) == IDC_ADD_BTN) {
                 if (data_count >= MAX_RECORDS) {
@@ -337,7 +631,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nh = HIWORD(lParam);
             if (nw < 100 || nh < 100) break;
 
-            MoveWindow(hSearch, 10, 10, nw - 20, 25, TRUE);
+            MoveWindow(hPwd, 10, 10, 80, 25, TRUE);
+            MoveWindow(hReload, 95, 10, 45, 25, TRUE);
+            
+            int right_btns_w = 230;
+            int sh = nw - 20 - 140 - right_btns_w; 
+            if (sh < 50) sh = 50;
+            MoveWindow(hSearch, 145, 10, sh, 25, TRUE);
+            
+            MoveWindow(hExpCSV, 145 + sh + 5, 10, 50, 25, TRUE);
+            MoveWindow(hImpCSV, 145 + sh + 60, 10, 50, 25, TRUE);
+            MoveWindow(hExpJSON, 145 + sh + 115, 10, 55, 25, TRUE);
+            MoveWindow(hImpJSON, 145 + sh + 175, 10, 55, 25, TRUE);
+
             MoveWindow(hListView, 10, 45, nw - 20, nh - 90, TRUE);
             
             int by = nh - 35;
