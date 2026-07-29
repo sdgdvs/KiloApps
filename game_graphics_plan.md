@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KPac
 - KSnake
 - KTetris
 - KBreakout
@@ -109,10 +108,12 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAlchemy
 - KQuest
 - KSpace
+- KPac
 
 
 ## Completed Work Log
 
+- **KPac (Loop 2):** Implemented 4-frame smooth Pac-Man chomp animation with direction-dependent mouth angles and speed glow aura, ghost death return eyes floating back to ghost house, ghost scared blue-to-white warning flash frame animation, 5 level-based bonus fruit sprites with float bounce, power pellet eating energy shockwave rings, maze wall corner junction caps with neon glow, and victory maze flash animation for both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 - **KSpace (Loop 2):** Implemented multi-stage animated engine exhaust thrusters (tri-color plasma core + wingtip maneuvering flames + thruster particle trail), enemy ship explosion animations with tumbling debris chunks & kinetic shockwave rings, animated shield impact ripples, weapon firing muzzle flashes & plasma projectile motion glow trails, animated deep-space nebula background with 3-layer parallax starfield, and boss phase 2 enraged transformation animations (lightning arcs, core overload pulse, rage aura) for both Web Canvas (kspace.html) and Native C Win32 GDI (KSpace/main.c).
 - **KQuest (Loop 1):** Implemented custom Hero class sprites (Warrior, Mage, Rogue) with idle & attack animation cycles, 6 distinct monster sprites (Slime, Goblin, Skeleton, Orc Warrior, Fire Drake, Demon Lord Overlord), environment tile backdrops for town, mines, crypts, volcanic caverns, and boss rush colosseum, combat spell FX (Fireball, Lightning Strike, Heal sparkles, Berserk aura), floating damage text popups, and victory celebration banner with falling confetti particles for both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).
 

@@ -478,6 +478,7 @@
   let score = 0, gameOver = 0, dotCount = 0, frameCount = 0;
   let level = 1;
   let frightTimer = 0;
+  let victoryTimer = 0;
   let highScore = parseInt(localStorage.getItem('kpac_highscore') || 0);
   let statsGamesPlayed = parseInt(localStorage.getItem('kpac_games') || 0);
   let statsGhostsEaten = parseInt(localStorage.getItem('kpac_ghosts') || 0);
@@ -630,6 +631,7 @@
 
   let popups = [];
   let particles = [];
+  let shockwaves = [];
 
   function addSparks(cx, cy, color, count=8) {
       for (let i = 0; i < count; i++) {
@@ -649,6 +651,10 @@
       popups.push({ x: cx, y: cy, text: text, color: color, life: 20 });
   }
 
+  function addShockwave(cx, cy, color='#ffb852') {
+      shockwaves.push({ x: cx, y: cy, r: 2, maxR: 28, alpha: 1.0, color: color });
+  }
+
   function init(keepScore) {
       if (!keepScore) { score = 0; level = 1; lives = getInitLives(); }
       const mapIndex = (level - 1) % 20;
@@ -663,18 +669,18 @@
       // Ghost 3: Clyde (Orange Patrol)
       // Ghost 4: Sue (Purple Stalker)
       ghosts = [
-          {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0},
-          {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0},
-          {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0},
-          {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0},
-          {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0}
+          {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0},
+          {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0},
+          {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0},
+          {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0},
+          {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0}
       ];
 
       if (level === 20) {
           // Stage 20 Ghost King Boss
-          ghosts.push({x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0});
-          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0});
-          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0});
+          ghosts.push({x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0});
+          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0});
+          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0});
           numGhosts = 6;
           bossHp = 8;
           bossMaxHp = 8;
@@ -690,6 +696,7 @@
       }
 
       frightTimer = 0;
+      victoryTimer = 0;
       freezeSkillTimer = 0; freezeCooldown = 0;
       speedSkillTimer = 0; speedCooldown = 0;
       magnetSkillTimer = 0; magnetCooldown = 0;
@@ -700,6 +707,7 @@
       fruitTimer = 0;
       popups = [];
       particles = [];
+      shockwaves = [];
       
       for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
@@ -727,6 +735,23 @@
           return;
       }
       if (paused) return;
+
+      if (victoryTimer > 0) {
+          victoryTimer--;
+          if (victoryTimer === 0) {
+              if (level === 20) {
+                  gameOver = 2; // Campaign Victory!
+                  statsGamesPlayed++;
+                  localStorage.setItem('kpac_games', statsGamesPlayed);
+                  playSound(1200, 0.8, 'sine');
+              } else {
+                  level++;
+                  playSound(800, 0.5, 'sine');
+                  init(true);
+              }
+          }
+          return;
+      }
       
       if (keys['ArrowLeft'] || keys['a']) { ndx = -1; ndy = 0; }
       if (keys['ArrowRight'] || keys['d']) { ndx = 1; ndy = 0; }
@@ -750,7 +775,7 @@
               phantomSpawnTimer = 0;
               for (let k = 6; k <= 7; k++) {
                   if (ghosts[k].phantomTimer <= 0) {
-                      ghosts[k] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 80};
+                      ghosts[k] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 80, isDead: 0};
                       if (numGhosts < 8) numGhosts = 8;
                       break;
                   }
@@ -760,6 +785,20 @@
       for (let k = 6; k <= 7; k++) {
           if (ghosts[k].isPhantom && ghosts[k].phantomTimer > 0) {
               ghosts[k].phantomTimer--;
+          }
+      }
+
+      // Dead Ghost Returning Eyes Step (Move float eyes back to Ghost House)
+      for (let i = 0; i < numGhosts; i++) {
+          let g = ghosts[i];
+          if (g.isDead) {
+              if (frameCount % 2 === 0) {
+                  if (g.x < 7) g.x++;
+                  else if (g.x > 7) g.x--;
+                  if (g.y < 6) g.y++;
+                  else if (g.y > 6) g.y--;
+                  if (g.x === 7 && g.y === 6) g.isDead = 0; // Respawned!
+              }
           }
       }
       
@@ -773,6 +812,7 @@
           const dirs = [[1,0], [-1,0], [0,1], [0,-1]];
           for (let i = 0; i < numGhosts; i++) {
               let g = ghosts[i];
+              if (g.isDead) continue;
               if (g.isPhantom && g.phantomTimer <= 0) continue;
 
               let oldX = g.x, oldY = g.y;
@@ -861,16 +901,20 @@
                       score += 40; frightTimer = 50; playSound(300, 0.3, 'sawtooth');
                       addPopup(cx, cy, '+40', '#ffb852');
                       addSparks(cx, cy, '#ffb852', 10);
+                      addShockwave(cx, cy, '#ffb852');
+                      addShockwave(cx, cy, '#ffffff');
                   }
                   else if (map[py][px] === 4) {
                       score += 20; speedSkillTimer = 80; playSound(900, 0.1, 'triangle');
                       addPopup(cx, cy, 'SPEED!', '#00ffff');
                       addSparks(cx, cy, '#00ffff', 8);
+                      addShockwave(cx, cy, '#00ffff');
                   }
                   else if (map[py][px] === 5) {
                       score += 30; freezeSkillTimer = 60; playSound(700, 0.2, 'sine');
                       addPopup(cx, cy, 'FREEZE!', '#ffffff');
                       addSparks(cx, cy, '#ffffff', 8);
+                      addShockwave(cx, cy, '#80deea');
                   }
                   else {
                       score += 10; playSound(600, 0.05, 'square');
@@ -880,16 +924,8 @@
                   map[py][px] = 0;
                   dotCount--;
                   if (dotCount === 0) {
-                      if (level === 20) {
-                          gameOver = 2; // Victory!
-                          statsGamesPlayed++;
-                          localStorage.setItem('kpac_games', statsGamesPlayed);
-                          playSound(1200, 0.8, 'sine');
-                      } else {
-                          level++;
-                          playSound(800, 0.5, 'sine');
-                          init(true);
-                      }
+                      victoryTimer = 30;
+                      playSound(1200, 0.5, 'sine');
                   }
               }
           }
@@ -903,7 +939,7 @@
                   if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
                       if (map[r][c] >= 2 && map[r][c] <= 5) {
                           let cx = c * TS + TS/2, cy = r * TS + TS/2;
-                          if (map[r][c] === 3) { score += 40; frightTimer = 50; addPopup(cx, cy, '+40', '#ffb852'); }
+                          if (map[r][c] === 3) { score += 40; frightTimer = 50; addPopup(cx, cy, '+40', '#ffb852'); addShockwave(cx, cy, '#ffb852'); }
                           else if (map[r][c] === 4) { score += 20; speedSkillTimer = 80; addPopup(cx, cy, 'SPEED!', '#00ffff'); }
                           else if (map[r][c] === 5) { score += 30; freezeSkillTimer = 60; addPopup(cx, cy, 'FREEZE!', '#ffffff'); }
                           else { score += 10; }
@@ -918,6 +954,7 @@
       
       for (let i = 0; i < numGhosts; i++) {
           let g = ghosts[i];
+          if (g.isDead) continue; // Floating dead eyes don't collide with Pac-Man
           if (g.isPhantom && g.phantomTimer <= 0) continue;
 
           if (px === g.x && py === g.y) {
@@ -928,11 +965,12 @@
                       score += 500;
                       addPopup(cx, cy, 'BOSS HIT! -1HP', '#ffd700');
                       addSparks(cx, cy, '#ffd700', 16);
+                      addShockwave(cx, cy, '#ffd700');
                       g.x = 7; g.y = 6;
                       playSound(900, 0.3, 'square');
                       if (bossHp <= 0) {
                           score += 2000;
-                          gameOver = 2; // Victory!
+                          victoryTimer = 30;
                           statsGamesPlayed++;
                           localStorage.setItem('kpac_games', statsGamesPlayed);
                       }
@@ -940,6 +978,7 @@
                       score += 100;
                       g.phantomTimer = 0;
                       addPopup(cx, cy, '+100', '#ce93d8');
+                      addShockwave(cx, cy, '#ce93d8');
                   } else {
                       score += 200;
                       statsGhostsEaten++;
@@ -949,7 +988,8 @@
                       playSound(800, 0.1, 'triangle');
                       addPopup(cx, cy, '+200', '#ffeb3b');
                       addSparks(cx, cy, '#ff1744', 12);
-                      g.x = 7; g.y = 6;
+                      addShockwave(cx, cy, '#00ffff');
+                      g.isDead = 1; // Float eyes return to ghost house!
                   }
               } else if (shieldActive) {
                   // Ghost Shield Absorbs hit!
@@ -957,6 +997,7 @@
                   g.x = 7; g.y = 6;
                   addPopup(cx, cy, 'SHIELD ABSORBED!', '#00e5ff');
                   addSparks(cx, cy, '#00e5ff', 16);
+                  addShockwave(cx, cy, '#00e5ff');
                   playSound(1000, 0.3, 'sine');
               } else {
                   playSound(200, 0.5, 'sawtooth');
@@ -969,12 +1010,12 @@
                   } else {
                       px = 7; py = 12;
                       pdx = 0; pdy = 0; ndx = 0; ndy = 0;
-                      ghosts[0] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0};
-                      ghosts[1] = {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0};
-                      ghosts[2] = {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0};
-                      ghosts[3] = {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0};
-                      ghosts[4] = {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0};
-                      if (level === 20) ghosts[5] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0};
+                      ghosts[0] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                      ghosts[1] = {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                      ghosts[2] = {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                      ghosts[3] = {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                      ghosts[4] = {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                      if (level === 20) ghosts[5] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0};
                   }
                   break;
               }
@@ -993,6 +1034,7 @@
               let cx = 7 * TS + TS/2, cy = 12 * TS + TS/2;
               addPopup(cx, cy, '+500', '#ff1744');
               addSparks(cx, cy, '#00e676', 14);
+              addShockwave(cx, cy, '#00e676');
               if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
               if (score > statsMaxScore) { statsMaxScore = score; localStorage.setItem('kpac_maxscore', statsMaxScore); }
               fruitActive = 0;
@@ -1012,6 +1054,12 @@
           pop.life--;
           if (pop.life <= 0) popups.splice(i, 1);
       }
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+          let s = shockwaves[i];
+          s.r += 1.8;
+          s.alpha -= 0.06;
+          if (s.alpha <= 0 || s.r >= s.maxR) shockwaves.splice(i, 1);
+      }
       
       frameCount++;
   }
@@ -1026,11 +1074,22 @@
       let nL = c > 0 && map[r][c-1] === 1;
       let nR = c < COLS-1 && map[r][c+1] === 1;
 
-      ctx.strokeStyle = '#1e88e5';
+      let wallColor = '#1e88e5';
+      let wallHighlight = '#64b5f6';
+      if (victoryTimer > 0) {
+          const colors = ['#ffffff', '#00ffff', '#ffd700', '#1e88e5'];
+          wallColor = colors[(victoryTimer + r + c) % colors.length];
+          wallHighlight = '#ffffff';
+      }
+
+      ctx.save();
+      ctx.shadowColor = wallColor;
+      ctx.shadowBlur = 6;
+      ctx.strokeStyle = wallColor;
       ctx.lineWidth = 2;
       ctx.strokeRect(x + 2, y + 2, TS - 4, TS - 4);
 
-      ctx.strokeStyle = '#64b5f6';
+      ctx.strokeStyle = wallHighlight;
       ctx.lineWidth = 1;
       ctx.beginPath();
       if (!nU) { ctx.moveTo(x, y + 1); ctx.lineTo(x + TS, y + 1); }
@@ -1038,6 +1097,14 @@
       if (!nL) { ctx.moveTo(x + 1, y); ctx.lineTo(x + 1, y + TS); }
       if (!nR) { ctx.moveTo(x + TS - 1, y); ctx.lineTo(x + TS - 1, y + TS); }
       ctx.stroke();
+
+      // Corner junction caps
+      ctx.fillStyle = wallHighlight;
+      if (nU && nR) { ctx.fillRect(x + TS - 3, y, 3, 3); }
+      if (nU && nL) { ctx.fillRect(x, y, 3, 3); }
+      if (nD && nR) { ctx.fillRect(x + TS - 3, y + TS - 3, 3, 3); }
+      if (nD && nL) { ctx.fillRect(x, y + TS - 3, 3, 3); }
+      ctx.restore();
   }
 
   function drawDot(ctx, c, r) {
@@ -1055,19 +1122,19 @@
       let cx = c * TS + TS/2, cy = r * TS + TS/2;
       let radius = 4.5 + Math.sin(frame * 0.3) * 1.5;
       
-      let radGrad = ctx.createRadialGradient(cx, cy, 1, cx, cy, radius + 4);
+      let radGrad = ctx.createRadialGradient(cx, cy, 1, cx, cy, radius + 5);
       radGrad.addColorStop(0, '#ffffff');
       radGrad.addColorStop(0.5, '#ffb852');
       radGrad.addColorStop(1, 'rgba(255, 184, 82, 0)');
       
       ctx.fillStyle = radGrad;
       ctx.beginPath();
-      ctx.arc(cx, cy, radius + 4, 0, Math.PI * 2);
+      ctx.arc(cx, cy, radius + 5, 0, Math.PI * 2);
       ctx.fill();
       
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(cx, cy, radius * 0.7, 0, Math.PI * 2);
+      ctx.arc(cx, cy, radius * 0.75, 0, Math.PI * 2);
       ctx.fill();
   }
 
@@ -1101,30 +1168,38 @@
   }
 
   function drawFruit(ctx, c, r) {
-      let cx = c * TS + TS/2, cy = r * TS + TS/2;
-      ctx.strokeStyle = '#4caf50';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx - 3, cy + 1);
-      ctx.quadraticCurveTo(cx - 1, cy - 5, cx + 2, cy - 6);
-      ctx.moveTo(cx + 3, cy + 2);
-      ctx.quadraticCurveTo(cx + 1, cy - 5, cx + 2, cy - 6);
-      ctx.stroke();
-      
-      ctx.fillStyle = '#81c784';
-      ctx.beginPath();
-      ctx.arc(cx + 4, cy - 5, 2, 0, Math.PI * 2);
-      ctx.fill();
+      let bounceY = Math.sin(frameCount * 0.25) * 3;
+      let cx = c * TS + TS/2, cy = r * TS + TS/2 + bounceY;
+      let fruitType = Math.floor((level - 1) / 2) % 5; // 0=Cherry, 1=Strawberry, 2=Peach, 3=Apple, 4=Watermelon
 
-      ctx.fillStyle = '#d50000';
-      ctx.beginPath();
-      ctx.arc(cx - 3, cy + 2, 3.5, 0, Math.PI * 2);
-      ctx.arc(cx + 3, cy + 3, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(cx - 4, cy + 1, 1.5, 1.5);
-      ctx.fillRect(cx + 2, cy + 2, 1.5, 1.5);
+      if (fruitType === 0) { // Cherry
+          ctx.strokeStyle = '#4caf50'; ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(cx - 3, cy + 1); ctx.quadraticCurveTo(cx - 1, cy - 5, cx + 2, cy - 6);
+          ctx.moveTo(cx + 3, cy + 2); ctx.quadraticCurveTo(cx + 1, cy - 5, cx + 2, cy - 6);
+          ctx.stroke();
+          ctx.fillStyle = '#81c784'; ctx.beginPath(); ctx.arc(cx + 4, cy - 5, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#d50000'; ctx.beginPath();
+          ctx.arc(cx - 3, cy + 2, 3.5, 0, Math.PI * 2);
+          ctx.arc(cx + 3, cy + 3, 3.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 4, cy + 1, 1.5, 1.5); ctx.fillRect(cx + 2, cy + 2, 1.5, 1.5);
+      } else if (fruitType === 1) { // Strawberry
+          ctx.fillStyle = '#e53935'; ctx.beginPath();
+          ctx.moveTo(cx, cy + 6); ctx.lineTo(cx - 5, cy - 2); ctx.lineTo(cx + 5, cy - 2); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#4caf50'; ctx.fillRect(cx - 4, cy - 4, 8, 2.5);
+          ctx.fillStyle = '#ffeb3b'; ctx.fillRect(cx - 2, cy, 1, 1); ctx.fillRect(cx + 2, cy, 1, 1); ctx.fillRect(cx, cy + 3, 1, 1);
+      } else if (fruitType === 2) { // Peach/Orange
+          ctx.fillStyle = '#ff9800'; ctx.beginPath(); ctx.arc(cx, cy + 1, 5.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#4caf50'; ctx.fillRect(cx - 1, cy - 6, 4, 2);
+      } else if (fruitType === 3) { // Apple
+          ctx.fillStyle = '#f44336'; ctx.beginPath(); ctx.arc(cx, cy + 1, 5.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#795548'; ctx.fillRect(cx - 1, cy - 6, 2, 3);
+          ctx.fillStyle = '#4caf50'; ctx.fillRect(cx + 1, cy - 6, 3, 2);
+      } else { // Melon Slice
+          ctx.fillStyle = '#2e7d32'; ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI, false); ctx.fill();
+          ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(cx, cy, 4.5, 0, Math.PI, false); ctx.fill();
+          ctx.fillStyle = '#000000'; ctx.fillRect(cx - 2, cy + 2, 1, 1); ctx.fillRect(cx + 2, cy + 2, 1, 1);
+      }
   }
 
   function drawPacman(ctx, px, py, pdx, pdy, frame, speedTimer) {
@@ -1136,7 +1211,22 @@
       else if (pdy === 1) angle = Math.PI / 2;
       else if (pdy === -1) angle = 3 * Math.PI / 2;
 
-      let mouth = 0.05 + Math.abs(Math.sin(frame * 0.4)) * 0.35 * Math.PI;
+      // 4-frame smooth chomp animation frame sequence
+      const chompFrames = [0.45 * Math.PI, 0.28 * Math.PI, 0.05 * Math.PI, 0.28 * Math.PI];
+      let mouth = chompFrames[frame % 4];
+
+      // Speed glow aura & motion trail
+      if (speedTimer > 0 || pdx !== 0 || pdy !== 0) {
+          ctx.save();
+          ctx.strokeStyle = speedTimer > 0 ? 'rgba(0, 255, 255, 0.6)' : 'rgba(255, 235, 59, 0.3)';
+          ctx.lineWidth = 3;
+          ctx.shadowColor = speedTimer > 0 ? '#00ffff' : '#ffeb3b';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(cx - pdx * 4, cy - pdy * 4, TS/2, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+      }
 
       if (shieldActive) {
           ctx.strokeStyle = '#00e5ff';
@@ -1147,12 +1237,6 @@
           ctx.arc(cx, cy, TS/2 + 3, 0, Math.PI * 2);
           ctx.stroke();
           ctx.shadowBlur = 0;
-      } else if (speedTimer > 0) {
-          ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(cx, cy, TS/2 + 2, 0, Math.PI * 2);
-          ctx.stroke();
       }
 
       ctx.fillStyle = shieldActive ? '#00e5ff' : '#ffeb3b';
@@ -1178,6 +1262,23 @@
       let w = TS - 4;
       let x = cx - w/2, y = cy - w/2;
 
+      // Dead eyes floating back to ghost house
+      if (g.isDead) {
+          let eyeDx = Math.sign(7 - g.x) * 2;
+          let eyeDy = Math.sign(6 - g.y) * 2;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.ellipse(cx - 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
+          ctx.ellipse(cx + 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#1565c0';
+          ctx.beginPath();
+          ctx.arc(cx - 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
+          ctx.arc(cx + 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+          return;
+      }
+
       let isScared = frightTimer > 0;
       let isFlashing = isScared && frightTimer < 15 && Math.floor(frightTimer / 2) % 2 === 0;
 
@@ -1188,7 +1289,8 @@
       ctx.arc(cx, y + w/2, w/2, Math.PI, 0, false);
       ctx.lineTo(x + w, y + w);
 
-      let skirtOffset = Math.sin(frame * 0.5 + g.x) * 1.5;
+      // 2-frame skirt wobbly wave animation
+      let skirtOffset = (frame % 2 === 0) ? 1.5 : -1.5;
       let step = w / 3;
       ctx.lineTo(x + w - step * 0.5, y + w - 3 + skirtOffset);
       ctx.lineTo(x + w - step, y + w);
@@ -1230,7 +1332,7 @@
           ctx.fillRect(cx + 2, cy - 3, 2, 2);
 
           ctx.strokeStyle = isFlashing ? '#d50000' : '#ffffff';
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 1.2;
           ctx.beginPath();
           ctx.moveTo(cx - 5, cy + 2);
           ctx.lineTo(cx - 3, cy + 4);
@@ -1266,10 +1368,21 @@
           drawFruit(ctx, 7, 12);
       }
       
-      drawPacman(ctx, px, py, pdx, pdy, frameCount, speedTimer);
+      drawPacman(ctx, px, py, pdx, pdy, frameCount, speedSkillTimer);
       
       for (let i = 0; i < numGhosts; i++) {
           drawGhost(ctx, ghosts[i], frameCount, frightTimer);
+      }
+
+      for (let s of shockwaves) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, s.alpha);
+          ctx.strokeStyle = s.color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
       }
 
       for (let p of particles) {
@@ -1301,7 +1414,11 @@
           ctx.fillText(saveMsgText, 85, 175);
       }
 
-      if (gameOver) {
+      if (victoryTimer > 0) {
+          ctx.fillStyle = '#00e676';
+          ctx.font = 'bold 14px monospace';
+          ctx.fillText('MAZE CLEARED!', 90, 150);
+      } else if (gameOver) {
           if (gameOver === 2) {
               ctx.fillStyle = '#00e676';
               ctx.font = 'bold 12px monospace';
