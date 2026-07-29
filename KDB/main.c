@@ -3,8 +3,8 @@
 #include <commctrl.h>
 #include <commdlg.h>
 
-#define W 640
-#define H 480
+#define W 800
+#define H 600
 #define IDC_SEARCH 101
 #define IDC_ADD_ID 102
 #define IDC_ADD_NAME 103
@@ -472,7 +472,7 @@ void InitListView(HWND hwnd) {
     SendMessage(hListView, LVM_SETTEXTBKCOLOR, 0, (LPARAM)RGB(35, 40, 45));
     SendMessage(hListView, LVM_SETBKCOLOR, 0, (LPARAM)RGB(26, 32, 38));
     
-    hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+    hFont = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
     SendMessage(hListView, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hPwd, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -699,6 +699,14 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN && msg.wParam == 'H') {
+            char cls[64] = {0};
+            GetClassNameA(msg.hwnd, cls, sizeof(cls));
+            if (lstrcmpiA(cls, "EDIT") != 0) {
+                MessageBoxA(hwnd, "KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 200 records.\n- Export and import via CSV or JSON.", "KDB Help", MB_OK | MB_ICONINFORMATION);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

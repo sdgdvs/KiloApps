@@ -92,12 +92,12 @@ Healthy round-robin. 47 total completed items. Recent: KPong (2P PvP + power-ups
 
 | Agent | Schedule | Plan File | Model |
 |---|---|---|---|
-| Feature Expander | Every 2h (:00) | `app_work_plan.md` | Gemini 3.6 Flash High |
-| Quality & Build | Every 3h (:00) | `app_fix_plan.md` | Gemini 3.6 Flash High |
-| Game Content Expander | Every 2h (:30) | `game_content_plan.md` | Gemini 3.6 Flash High |
-| App Creator | Every 1h (:15) | `new_app_plan.md` | Gemini 3.6 Flash High |
-| Game Graphics | Every 2h (:45) | `game_graphics_plan.md` | Gemini 3.6 Flash High |
-| Usability Agent | Every 2h (:15) | `usability_plan.md` | Gemini 3.6 Flash High |
+| Feature Expander | Every 2h (:00) | `app_work_plan.md` | Gemini 3.1 Pro |
+| Quality & Build | Every 3h (:00) | `app_fix_plan.md` | Gemini 3.1 Pro |
+| Game Content Expander | Every 2h (:30) | `game_content_plan.md` | Gemini 3.1 Pro |
+| App Creator | Every 1h (:15) | `new_app_plan.md` | Gemini 3.1 Pro |
+| Game Graphics | Every 2h (:45) | `game_graphics_plan.md` | Gemini 3.1 Pro |
+| Usability Agent | Every 2h (:15) | `usability_plan.md` | Gemini 3.1 Pro |
 | Director #1 | Every 3 days | (reviews all plan files) | Claude Opus 4.6 |
 | Director #2 | Every 3 days (offset) | (reviews all plan files) | Claude Opus 4.6 |
 

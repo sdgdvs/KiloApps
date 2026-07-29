@@ -78,10 +78,12 @@
     gap: 10px;
     align-items: center;
     flex-grow: 1;
-    max-width: 500px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
   .search-box {
     flex-grow: 1;
+    min-width: 200px;
     position: relative;
   }
   .search-box input {
@@ -323,7 +325,7 @@
     </div>
   </div>
   <div class="query-hint">
-    Syntax tips: Combine terms (e.g. <code>dept:engineering role:lead</code>). Supports <code>id>102</code>, <code>id<105</code>, <code>name:alice</code>. Encryption key auto-saves encrypted payload.
+    Syntax tips: Combine terms (e.g. <code>dept:engineering role:lead</code>). Supports <code>id>102</code>, <code>id<105</code>, <code>name:alice</code>. Encryption key auto-saves encrypted payload. <strong>(Press H for Help)</strong>
   </div>
   <div class="table-container">
     <table id="empTable">
@@ -874,6 +876,19 @@ function resetToDefaults() {
 
 // Initial load
 loadRecords();
+
+if (window.parent !== window) {
+  window.parent.postMessage({ type: 'OS_RESIZE_WINDOW', width: 800, height: 600 }, '*');
+}
+window.resizeTo(800, 600);
+
+
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    alert("KDB Database Manager - Help\n\n- Search query supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 500 records.\n- Export and import via CSV or JSON.");
+  }
+});
+
 </script>
 </body>
 </html>
