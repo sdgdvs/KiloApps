@@ -124,7 +124,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KRogue     | Tier 1 | Loop 7 done (30 levels, 6 biomes, 5 spells) | Loop 8: New enemy types, item crafting, quest NPCs, deeper Abyss/Void biome content |
 | KQuest     | Tier 1 | Loop 6 done (15 chapters, bosses, 4 spells) | Loop 7: Side quests, NPC dialogue, equipment upgrades, more chapter variety |
 | KStarship  | Tier 1 | Loop 6 done (15 sectors, subsystems, 7 enemies) | Loop 7: Crew management, trade routes, narrative events, tech tree |
 | KSpace     | Tier 1 | Loop 7 done (20 waves, bosses, 4 skills) | Loop 8: New enemy formations, weapon upgrades, scoring combos |
@@ -133,6 +132,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KPac       | Tier 1 | Loop 7 done (20 mazes, 5 ghosts, Ghost King) | Loop 8: New maze hazards, ghost behaviors, scoring variety |
 | KBreakout  | Tier 1 | Loop 7 done (20 stages, Boss Fortress) | Loop 8: New brick types, boss variety, level editor concepts |
 | KSnake     | Tier 1 | Loop 7 done (20 stages, Hydra boss, rival AI) | Loop 8: New environments, food variety, rival AI behaviors |
+| KRogue     | Tier 1 | Loop 8 done (40 levels, new enemies, crafting, NPCs) | Loop 9: Advanced trap mechanics, boss rematches, cursed items |
 | KAlchemy   | Tier 1 | Creator building (Phase 12/14) | Wait for Creator to finish — then Loop 1 content pass |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
@@ -158,6 +158,9 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 
 ## Progress Log
+
+**Loop 8**
+- [x] KRogue (Expanded to 40 levels, added Abyss biome, new enemies (Void Walker, Abyss Fiend, Deep Worm, Abyssal Overlord), Crafting Anvil, and Quest NPCs to both EXE and HTML)
 
 **Loop 7**
 - [x] KReversi (Expanded Campaign Mode to 20 stages, 4 AI Personalities, 2X Double-Flip bonus tiles, and Bomb Disc [B], Freeze AI [F], Optimal Hint [H], Undo [U] active skills to both EXE and HTML)
