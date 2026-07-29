@@ -3,42 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KGo</title>
+<title>KGo - Modern Go / Baduk Master</title>
 <style>
   body {
     margin: 0;
-    padding: 20px;
-    background-color: #181818;
+    padding: 16px;
+    background-color: #121212;
     color: #e0e0e0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
   }
-  h1 { margin-top: 0; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+  h1 { 
+    margin: 0 0 6px 0; 
+    color: #fff; 
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    font-size: 1.8em;
+  }
   .status-container {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+    background: #1e1e1e;
+    padding: 8px 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 1px solid #333;
+    max-width: 600px;
+    width: 90%;
   }
   .status {
-    font-size: 1.25em;
+    font-size: 1.15em;
     font-weight: 600;
     color: #ffd700;
   }
   .stage-info {
-    font-size: 0.95em;
+    font-size: 0.9em;
     color: #aaa;
+    margin-top: 3px;
+  }
+  .analyzer-banner {
+    font-size: 0.9em;
+    color: #00ffc8;
+    font-weight: 600;
     margin-top: 4px;
+    min-height: 18px;
+  }
+  .board-container {
+    position: relative;
+    padding: 14px;
+    background: repeating-linear-gradient(85deg, #744e14 0px, #744e14 16px, #4a2e14 18px, #744e14 34px, #3c220a 38px);
+    border: 8px solid #3d230d;
+    border-radius: 10px;
+    box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.8), 0 14px 32px rgba(0,0,0,0.8);
+    margin-bottom: 12px;
   }
   .board {
     display: grid;
     background: repeating-linear-gradient(85deg, #dcb35c 0px, #dcb35c 16px, #d3a74e 18px, #e2ba64 34px, #cfa247 38px), linear-gradient(135deg, #e6c06c, #c89c44);
     background-blend-mode: multiply;
-    padding: 16px;
+    padding: 14px;
     gap: 0;
-    border: 7px solid #4a2e14;
-    border-radius: 8px;
-    box-shadow: inset 0 0 12px rgba(60, 30, 5, 0.65), inset 0 0 2px rgba(0, 0, 0, 0.9), 0 12px 28px rgba(0,0,0,0.7);
+    border: 2px solid #8c5d26;
+    border-radius: 4px;
+    box-shadow: inset 0 0 10px rgba(60, 30, 5, 0.6);
     position: relative;
   }
   .cell {
@@ -95,6 +123,7 @@
     height: 26px;
     border-radius: 50%;
     z-index: 3;
+    transition: transform 0.15s ease-out;
   }
   .stone.new {
     animation: placeAnim 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -112,6 +141,14 @@
   }
   .stone.atari {
     box-shadow: 0 0 0 3px #ffcc00, 2px 3px 6px rgba(0,0,0,0.7);
+    animation: pulseAtari 1s infinite alternate;
+  }
+  @keyframes pulseAtari {
+    0% { box-shadow: 0 0 0 2px #ffcc00; }
+    100% { box-shadow: 0 0 0 4px #ff3300, 0 0 10px #ff3300; }
+  }
+  .stone.group-highlight {
+    box-shadow: 0 0 0 3px #00ffc8, 0 0 12px #00ffc8;
   }
   .black {
     background: radial-gradient(circle at 35% 35%, #4c525f 0%, #262930 35%, #111215 75%, #08080a 100%);
@@ -148,14 +185,63 @@
     animation: pulseLastMove 1.2s infinite ease-in-out;
     pointer-events: none;
   }
-  .stone.white .last-move-ring {
-    border-color: #d000ff;
-    box-shadow: 0 0 6px #d000ff;
+
+  .hint-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 3px solid #ffd700;
+    box-shadow: 0 0 10px #ffd700, inset 0 0 8px #ffd700;
+    z-index: 4;
+    animation: pulseHint 1s infinite alternate;
+    pointer-events: none;
   }
-  @keyframes pulseLastMove {
+  @keyframes pulseHint {
     0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.7; }
-    50% { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.7; }
+    100% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  }
+
+  .ko-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px dashed #ff3333;
+    z-index: 4;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: #ff3333;
+  }
+
+  .liberty-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #28c850;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    box-shadow: 0 0 6px rgba(40, 200, 80, 0.8);
+    pointer-events: none;
   }
 
   .territory-marker {
@@ -167,94 +253,80 @@
     height: 10px;
     border-radius: 50%;
     z-index: 2;
-    animation: territoryGlow 1.5s infinite alternate ease-in-out;
+    pointer-events: none;
   }
   .territory-marker.B {
-    background: radial-gradient(circle at 35% 35%, #70c5ff, #0077dd);
-    box-shadow: 0 0 8px rgba(0, 150, 255, 0.9);
+    background-color: #0096ff;
+    box-shadow: 0 0 6px #0096ff;
   }
   .territory-marker.W {
-    background: radial-gradient(circle at 35% 35%, #ff8888, #dd1111);
-    box-shadow: 0 0 8px rgba(255, 60, 60, 0.9);
-  }
-  @keyframes territoryGlow {
-    0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.7; }
-    100% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+    background-color: #ff3c3c;
+    box-shadow: 0 0 6px #ff3c3c;
   }
 
   .capture-spark {
     position: absolute;
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
     pointer-events: none;
     z-index: 10;
-    animation: sparkFade 0.45s cubic-bezier(0.1, 0.7, 0.1, 1) forwards;
+    animation: sparkFly 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
-  @keyframes sparkFade {
-    0% { opacity: 1; transform: translate(0, 0) scale(1.6); }
-    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
-  }
-
-  .hint-ring {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 3px solid #ffd700;
-    box-shadow: 0 0 8px #ffd700;
-    z-index: 4;
-    animation: pulseHint 1s infinite alternate;
-  }
-  @keyframes pulseHint {
-    0% { transform: scale(0.9); opacity: 0.7; }
-    100% { transform: scale(1.1); opacity: 1; }
+  @keyframes sparkFly {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
   }
 
   .controls {
-    margin-top: 18px;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
-    max-width: 680px;
+    max-width: 660px;
+    background: #1a1a1a;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #333;
   }
   button, select {
-    background-color: #2a2a2a;
+    background: #2a2a2a;
     color: #fff;
     border: 1px solid #444;
-    padding: 6px 14px;
-    cursor: pointer;
+    padding: 6px 12px;
     border-radius: 4px;
-    font-size: 13px;
+    cursor: pointer;
+    font-size: 0.85em;
     font-weight: 500;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
   }
-  button:hover, select:hover { background-color: #3a3a3a; border-color: #666; }
-  button.active { background-color: #1a5fb4; border-color: #3584e4; }
-
+  button:hover, select:hover {
+    background: #3a3a3a;
+    border-color: #ffd700;
+  }
+  button.active {
+    background: #4a3b00;
+    border-color: #ffd700;
+    color: #ffd700;
+  }
+  
   .modal {
     display: none;
     position: fixed;
-    z-index: 10;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.8);
-    align-items: center;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 100;
     justify-content: center;
+    align-items: center;
   }
   .modal-content {
-    background-color: #2a2a2a;
+    background-color: #222;
     padding: 20px;
-    border: 1px solid #444;
+    border: 1px solid #555;
     border-radius: 8px;
-    width: 80%;
-    max-width: 520px;
-    max-height: 80%;
+    width: 85%;
+    max-width: 540px;
+    max-height: 80vh;
     overflow-y: auto;
   }
   .modal-content h2 { margin-top: 0; color: #ffd700; }
@@ -270,17 +342,21 @@
   <div class="status-container">
     <div class="status">Current Turn: Black</div>
     <div class="stage-info" id="stage-info">Komi: 6.5</div>
+    <div class="analyzer-banner" id="analyzer-banner"></div>
   </div>
-  <div class="board" id="board"></div>
+  <div class="board-container">
+    <div class="board" id="board"></div>
+  </div>
   <div class="controls">
     <button id="btn-pass">Pass</button>
     <button id="btn-resign">Resign</button>
     <button id="btn-undo">Undo (U)</button>
-    <button id="btn-redo">Redo</button>
     <button id="btn-hint">Hint (H)</button>
     <button id="btn-estimate">Territory (T)</button>
+    <button id="btn-analyzer">Analyzer (S)</button>
     <button id="btn-score">Score Game</button>
-    <button id="btn-campaign">Campaign</button>
+    <button id="btn-campaign">Campaign (20 Stages)</button>
+    <button id="btn-tsume">Tsumego Puzzles</button>
     <button id="btn-save">Save</button>
     <button id="btn-load">Load</button>
     <button id="btn-stats">Stats</button>
@@ -291,10 +367,11 @@
       <option value="19">19x19</option>
     </select>
     <button id="btn-new">New Game</button>
-    <label style="display:flex;align-items:center;margin-left:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="ai-toggle" checked> VS AI (White)</label>
+    <label style="display:flex;align-items:center;margin-left:6px;cursor:pointer;font-size:12px;"><input type="checkbox" id="ai-toggle" checked> VS AI (White)</label>
     <select id="ai-difficulty">
       <option value="territorial">Territorial AI</option>
       <option value="influence">Influence AI</option>
+      <option value="balanced">Balanced AI</option>
       <option value="grandmaster" selected>Grandmaster AI</option>
     </select>
   </div>
@@ -303,19 +380,19 @@
     <div class="modal-content">
       <button id="btn-close-help" class="close-btn">Close</button>
       <h2>How to Play KGo</h2>
-      <p><strong>Goal:</strong> Control more territory (empty points) than your opponent.</p>
+      <p><strong>Goal:</strong> Control more territory (empty intersections) than your opponent.</p>
       <ul>
-        <li>Players (Black and White) take turns placing stones on board intersections.</li>
         <li><strong>Liberties & Capture:</strong> Stones must have at least 1 empty adjacent point (liberty). If surrounded, they are captured.</li>
-        <li><strong>Ko Rule:</strong> Cannot recreate the exact previous board state.</li>
+        <li><strong>Superko Rule:</strong> Recreating ANY previous board state in game history is strictly prohibited.</li>
         <li><strong>Suicide Rule:</strong> Cannot place a stone with 0 liberties unless it captures opponent stones.</li>
-        <li><strong>Scoring:</strong> Empty intersections surrounded + captured stones + Komi (White bonus).</li>
+        <li><strong>Scoring:</strong> Territory + Captures + Komi (White bonus).</li>
       </ul>
-      <h3>Hotkeys & Features:</h3>
+      <h3>Active Skills & Assistance:</h3>
       <ul>
-        <li><strong>U Key:</strong> Undo last move pair (VS AI).</li>
-        <li><strong>H Key:</strong> AI Hint - Evaluates and highlights the optimal move.</li>
-        <li><strong>T Key:</strong> Territory Estimator - Overlays current territory estimation & flags stones in Atari (yellow border).</li>
+        <li><strong>U Key:</strong> Undo last move pair (VS AI) or last move.</li>
+        <li><strong>H Key:</strong> Optimal AI Hint - Evaluates & highlights the top move with score.</li>
+        <li><strong>T Key:</strong> Territory Estimator - Overlays map of controlled territory & Atari danger warnings.</li>
+        <li><strong>S Key:</strong> Group Liberty Analyzer - Highlights stone groups & displays numbered liberty badges on adjacent empty points.</li>
       </ul>
     </div>
   </div>
@@ -328,42 +405,54 @@
   let history = [];
   let captures = { B: 0, W: 0 };
   let lastMove = {x: -1, y: -1};
+  let hoverPos = {x: -1, y: -1};
   let capturedStonesForAnim = [];
   let undoStack = [];
   let redoStack = [];
 
   let currentKomi = 6.5;
   let hintCell = null;
+  let hintScore = 0;
   let showEstimator = false;
+  let showAnalyzer = false;
   let territoryMap = [];
   let atariStones = [];
+  let koMap = [];
 
   const campaign = [
     {size: 9, handicap: 5, komi: 0.5, aiPersonality: 'territorial', name: "Stage 1: Novice Field", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 9, handicap: 3, komi: 0.5, aiPersonality: 'influence', name: "Stage 2: Corner Skirmish", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 9, handicap: 0, komi: 0.5, aiPersonality: 'territorial', name: "Stage 3: Tsumego - Corner Snapback", isTsumego: true, 
      initialStones: [{x:1,y:0,color:'W'}, {x:1,y:1,color:'W'}, {x:0,y:1,color:'W'}, {x:2,y:0,color:'B'}, {x:2,y:1,color:'B'}, {x:1,y:2,color:'B'}, {x:0,y:2,color:'B'}], 
-     targetDesc: "Capture White's corner group at (0,0)!"},
-    {size: 9, handicap: 2, komi: 0.5, aiPersonality: 'influence', name: "Stage 4: Tactical Border", isTsumego: false, initialStones: [], targetDesc: ""},
+     targetDesc: "Capture White's corner group at (0,0) via snapback!"},
+    {size: 9, handicap: 2, komi: 0.5, aiPersonality: 'balanced', name: "Stage 4: Tactical Border", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 9, handicap: 0, komi: 6.5, aiPersonality: 'grandmaster', name: "Stage 5: 9x9 Master Duel", isTsumego: false, initialStones: [], targetDesc: ""},
-    {size: 13, handicap: 5, komi: 0.5, aiPersonality: 'territorial', name: "Stage 6: Medium Horizon", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 13, handicap: 7, komi: 0.5, aiPersonality: 'territorial', name: "Stage 6: Medium Horizon", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 13, handicap: 0, komi: 0.5, aiPersonality: 'influence', name: "Stage 7: Tsumego - Side Crane's Nest", isTsumego: true, 
      initialStones: [{x:3,y:2,color:'W'}, {x:4,y:2,color:'W'}, {x:5,y:2,color:'W'}, {x:3,y:3,color:'B'}, {x:6,y:2,color:'B'}, {x:4,y:1,color:'B'}, {x:5,y:1,color:'B'}, {x:4,y:3,color:'W'}], 
      targetDesc: "Expose White's weakness on the side!"},
-    {size: 13, handicap: 3, komi: 0.5, aiPersonality: 'territorial', name: "Stage 8: Pincer Conflict", isTsumego: false, initialStones: [], targetDesc: ""},
-    {size: 13, handicap: 1, komi: 6.5, aiPersonality: 'influence', name: "Stage 9: Influence Battle", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 13, handicap: 4, komi: 0.5, aiPersonality: 'balanced', name: "Stage 8: Pincer Conflict", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 13, handicap: 2, komi: 6.5, aiPersonality: 'influence', name: "Stage 9: Influence Battle", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 13, handicap: 0, komi: 6.5, aiPersonality: 'grandmaster', name: "Stage 10: 13x13 Grandmaster", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'territorial', name: "Stage 11: Tsumego - Making Two Eyes", isTsumego: true, 
      initialStones: [{x:1,y:1,color:'B'}, {x:2,y:1,color:'B'}, {x:3,y:1,color:'B'}, {x:3,y:0,color:'B'}, {x:0,y:2,color:'W'}, {x:1,y:2,color:'W'}, {x:2,y:2,color:'W'}, {x:3,y:2,color:'W'}], 
      targetDesc: "Play the vital point to secure two eyes for Black!"},
-    {size: 19, handicap: 6, komi: 0.5, aiPersonality: 'influence', name: "Stage 12: Great Wall Siege", isTsumego: false, initialStones: [], targetDesc: ""},
-    {size: 19, handicap: 3, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 13: Dragon Slayer", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 19, handicap: 8, komi: 0.5, aiPersonality: 'influence', name: "Stage 12: Great Wall Siege", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 19, handicap: 5, komi: 0.5, aiPersonality: 'balanced', name: "Stage 13: Dragon Slayer", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 14: Tsumego - Under the Stones", isTsumego: true, 
      initialStones: [{x:9,y:9,color:'W'}, {x:10,y:9,color:'W'}, {x:9,y:10,color:'W'}, {x:10,y:10,color:'W'}, {x:8,y:9,color:'B'}, {x:11,y:9,color:'B'}, {x:8,y:10,color:'B'}, {x:11,y:10,color:'B'}, {x:9,y:11,color:'B'}], 
      targetDesc: "Surround and collapse White's central shape!"},
-    {size: 19, handicap: 0, komi: 7.5, aiPersonality: 'grandmaster', name: "Stage 15: KGo Championship", isTsumego: false, initialStones: [], targetDesc: ""}
+    {size: 19, handicap: 3, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 15: Dragon Slayer Elite", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'balanced', name: "Stage 16: Tsumego - Belly Attachment", isTsumego: true,
+     initialStones: [{x:5,y:5,color:'W'}, {x:5,y:6,color:'W'}, {x:6,y:5,color:'W'}, {x:4,y:5,color:'B'}, {x:4,y:6,color:'B'}, {x:5,y:4,color:'B'}, {x:6,y:4,color:'B'}, {x:7,y:5,color:'B'}, {x:6,y:7,color:'B'}, {x:5,y:7,color:'B'}],
+     targetDesc: "Play the belly attachment tesuji at (6,6) to capture White!"},
+    {size: 19, handicap: 2, komi: 6.5, aiPersonality: 'influence', name: "Stage 17: Center Star Invasion", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 19, handicap: 1, komi: 6.5, aiPersonality: 'balanced', name: "Stage 18: Even Corner Clash", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 19, handicap: 0, komi: 7.5, aiPersonality: 'grandmaster', name: "Stage 19: KGo Championship Final", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 19, handicap: 0, komi: 7.5, aiPersonality: 'grandmaster', name: "Stage 20: Grandmaster Go Legend Challenge", isTsumego: false, initialStones: [], targetDesc: ""}
   ];
   let currentCampaignStage = -1;
+  let currentTsumegoIdx = 0;
 
   function placeHandicapStones(boardSize, count) {
     if (count <= 0) return;
@@ -382,7 +471,7 @@
   }
 
   function startCampaignStage() {
-    if (currentCampaignStage >= 15 || currentCampaignStage < 0) return;
+    if (currentCampaignStage >= 20 || currentCampaignStage < 0) return;
     let stage = campaign[currentCampaignStage];
     size = stage.size;
     currentKomi = stage.komi;
@@ -404,6 +493,13 @@
     
     let info = `${stage.name}\nBoard: ${size}x${size} | Handicap: ${stage.handicap} | Komi: ${stage.komi}\nAI Personality: ${stage.aiPersonality.toUpperCase()}\n\n${stage.isTsumego ? stage.targetDesc : 'Goal: Control more territory than White!'}`;
     alert(info);
+  }
+
+  function loadTsumegoPuzzle(index) {
+    const tsumegoStages = [2, 6, 10, 13, 15]; // Stage 3, 7, 11, 14, 16
+    currentTsumegoIdx = index % tsumegoStages.length;
+    currentCampaignStage = tsumegoStages[currentTsumegoIdx];
+    startCampaignStage();
   }
 
   let stats = { played: 0, aiWins: 0, aiLosses: 0, localB: 0, localW: 0 };
@@ -469,6 +565,7 @@
     history = [];
     captures = { B: 0, W: 0 };
     lastMove = {x: -1, y: -1};
+    hoverPos = {x: -1, y: -1};
     capturedStonesForAnim = [];
     undoStack = [];
     redoStack = [];
@@ -537,6 +634,20 @@
     }
   }
 
+  function computeKoOverlay() {
+    koMap = Array(size).fill(null).map(() => Array(size).fill(false));
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (board[y][x] === null) {
+          let res = isValidMove(x, y, currentPlayer);
+          if (!res.valid) {
+            koMap[y][x] = true;
+          }
+        }
+      }
+    }
+  }
+
   function isHoshi(x, y, boardSize) {
     if (boardSize === 9) {
       return (x === 2 || x === 6) && (y === 2 || y === 6) || (x === 4 && y === 4);
@@ -551,8 +662,8 @@
   function spawnCaptureSparks(stones) {
     if (!stones || !stones.length) return;
     stones.forEach(s => {
-      const cellX = (s.x + 0.5) * 30 + 16;
-      const cellY = (s.y + 0.5) * 30 + 16;
+      const cellX = (s.x + 0.5) * 30 + 14;
+      const cellY = (s.y + 0.5) * 30 + 14;
       const count = 10;
       for (let i = 0; i < count; i++) {
         const spark = document.createElement('div');
@@ -576,6 +687,26 @@
     });
   }
 
+  function getGroupLibertiesList(groupStones, color) {
+    let liberties = [];
+    let visLib = Array(size).fill(null).map(() => Array(size).fill(false));
+    const dirs = [[0,1], [1,0], [0,-1], [-1,0]];
+    
+    groupStones.forEach(s => {
+      for (let d of dirs) {
+        let nx = s.x + d[0];
+        let ny = s.y + d[1];
+        if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+          if (board[ny][nx] === null && !visLib[ny][nx]) {
+            visLib[ny][nx] = true;
+            liberties.push({x: nx, y: ny});
+          }
+        }
+      }
+    });
+    return liberties;
+  }
+
   function drawBoard() {
     boardEl.innerHTML = '';
     boardEl.style.gridTemplateColumns = `repeat(${size}, 30px)`;
@@ -583,6 +714,30 @@
     
     if (showEstimator) {
       computeTerritoryAndAtari();
+    }
+    computeKoOverlay();
+
+    let targetX = -1, targetY = -1;
+    if (hoverPos.x >= 0 && hoverPos.y >= 0 && board[hoverPos.y][hoverPos.x] !== null) {
+      targetX = hoverPos.x; targetY = hoverPos.y;
+    } else if (lastMove.x >= 0 && lastMove.y >= 0 && board[lastMove.y][lastMove.x] !== null) {
+      targetX = lastMove.x; targetY = lastMove.y;
+    }
+
+    let analyzedGroup = [];
+    let analyzedLiberties = [];
+    if (showAnalyzer && targetX >= 0 && targetY >= 0 && board[targetY][targetX] !== null) {
+      let color = board[targetY][targetX];
+      let vis = Array(size).fill(null).map(() => Array(size).fill(false));
+      getGroup(targetX, targetY, color, vis, analyzedGroup);
+      analyzedLiberties = getGroupLibertiesList(analyzedGroup, color);
+
+      let status = analyzedLiberties.length === 1 ? 'ATARI DANGER!' : (analyzedLiberties.length === 2 ? 'Vulnerable' : 'Safe');
+      document.getElementById('analyzer-banner').innerText = `Group Analyzer: ${color === 'B' ? 'Black' : 'White'} group of ${analyzedGroup.length} stones | Liberties: ${analyzedLiberties.length} (${status})`;
+    } else if (hintCell) {
+      document.getElementById('analyzer-banner').innerText = `AI Hint: Recommended move at (${hintCell.x}, ${hintCell.y}) [Score: ${hintScore}]`;
+    } else {
+      document.getElementById('analyzer-banner').innerText = '';
     }
 
     for (let y = 0; y < size; y++) {
@@ -603,6 +758,13 @@
           cell.appendChild(hoshi);
         }
         
+        if (koMap[y][x] && board[y][x] === null) {
+          const koEl = document.createElement('div');
+          koEl.className = 'ko-overlay';
+          koEl.innerText = 'X';
+          cell.appendChild(koEl);
+        }
+
         if (showEstimator && board[y][x] === null && territoryMap[y][x]) {
           const tm = document.createElement('div');
           tm.className = `territory-marker ${territoryMap[y][x]}`;
@@ -614,6 +776,7 @@
           let classes = `stone ${board[y][x] === 'B' ? 'black' : 'white'}`;
           if (lastMove.x === x && lastMove.y === y) classes += ' new';
           if (showEstimator && atariStones.some(s => s.x === x && s.y === y)) classes += ' atari';
+          if (showAnalyzer && analyzedGroup.some(s => s.x === x && s.y === y)) classes += ' group-highlight';
           stone.className = classes;
 
           if (lastMove.x === x && lastMove.y === y) {
@@ -635,12 +798,29 @@
           cell.appendChild(ghost);
         }
 
+        if (showAnalyzer && analyzedLiberties) {
+          let libIdx = analyzedLiberties.findIndex(l => l.x === x && l.y === y);
+          if (libIdx !== -1) {
+            const badge = document.createElement('div');
+            badge.className = 'liberty-badge';
+            badge.innerText = libIdx + 1;
+            cell.appendChild(badge);
+          }
+        }
+
         if (hintCell && hintCell.x === x && hintCell.y === y && board[y][x] === null) {
           const hr = document.createElement('div');
           hr.className = 'hint-ring';
           cell.appendChild(hr);
         }
         
+        cell.addEventListener('mouseenter', () => {
+          hoverPos = {x, y};
+          if (showAnalyzer && board[y][x] !== null) drawBoard();
+        });
+        cell.addEventListener('mouseleave', () => {
+          hoverPos = {x: -1, y: -1};
+        });
         cell.addEventListener('click', () => placeStone(x, y));
         boardEl.appendChild(cell);
       }
@@ -758,8 +938,8 @@
       if (currentCampaignStage !== -1) {
         if (totalB > totalW) {
           currentCampaignStage++;
-          if (currentCampaignStage >= 15) {
-            alert(msg + "\n\nCongratulations! You completed all 15 Campaign Stages!");
+          if (currentCampaignStage >= 20) {
+            alert(msg + "\n\nCONGRATULATIONS! You completed all 20 Campaign Stages and conquered the Stage 20 Grandmaster Go Legend Challenge!");
             currentCampaignStage = -1;
             initBoard();
           } else {
@@ -807,7 +987,7 @@
     if (history.includes(state)) {
       board = boardBackup;
       captures = capBackup;
-      alert("Ko rule violation.");
+      alert("Superko rule violation (recreating previous position).");
       return;
     }
     
@@ -948,6 +1128,43 @@
     return score;
   }
 
+  function evaluateMoveBalanced(x, y, color) {
+    let opp = color === 'B' ? 'W' : 'B';
+    let boardBackup = deepCopy(board);
+    let capBackup = { ...captures };
+    
+    board[y][x] = color;
+    let caps = checkCaptures(opp, false);
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    let myLiberties = getLiberties(x, y, color, visited);
+    
+    let score = caps * 50 + myLiberties * 3;
+    
+    let distEdgeX = Math.min(x, size - 1 - x);
+    let distEdgeY = Math.min(y, size - 1 - y);
+    if (distEdgeX >= 2 && distEdgeX <= 4 && distEdgeY >= 2 && distEdgeY <= 4) {
+      score += 20;
+    }
+    
+    const dirs = [[0,1], [1,0], [0,-1], [-1,0]];
+    for (let d of dirs) {
+      let nx = x + d[0];
+      let ny = y + d[1];
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        if (board[ny][nx] === opp) {
+          let v2 = Array(size).fill(null).map(() => Array(size).fill(false));
+          if (getLiberties(nx, ny, opp, v2) <= 2) score += 20;
+        } else if (board[ny][nx] === color) {
+          score += 10;
+        }
+      }
+    }
+    
+    board = boardBackup;
+    captures = capBackup;
+    return score;
+  }
+
   function evaluateMoveGrandmaster(x, y, color) {
     let opp = color === 'B' ? 'W' : 'B';
     let boardBackup = deepCopy(board);
@@ -971,13 +1188,13 @@
     board[y][x] = color;
     let caps = checkCaptures(opp, false);
     
-    let score = caps * 50;
+    let score = caps * 80;
     let visited = Array(size).fill(null).map(() => Array(size).fill(false));
     let myLiberties = getLiberties(x, y, color, visited);
-    score += myLiberties * 4;
+    score += myLiberties * 5;
     
     if (savingAtari && myLiberties > 1) {
-      score += 35;
+      score += 60;
     }
     
     for (let d of dirs) {
@@ -987,8 +1204,8 @@
         if (board[ny][nx] === opp) {
           let v2 = Array(size).fill(null).map(() => Array(size).fill(false));
           let oppLib = getLiberties(nx, ny, opp, v2);
-          if (oppLib === 1) score += 25;
-          else if (oppLib === 2) score += 15;
+          if (oppLib === 1) score += 50;
+          else if (oppLib === 2) score += 25;
         }
       }
     }
@@ -996,7 +1213,8 @@
     let cx = Math.floor(size / 2);
     let cy = Math.floor(size / 2);
     let dist = Math.abs(x - cx) + Math.abs(y - cy);
-    score += (size - dist);
+    score += (size - dist) * 2;
+    if (isHoshi(x, y, size)) score += 15;
     
     board = boardBackup;
     captures = capBackup;
@@ -1007,7 +1225,7 @@
     if (currentPlayer !== 'W') return;
     
     let personality = document.getElementById('ai-difficulty').value;
-    if (currentCampaignStage >= 0 && currentCampaignStage < 15) {
+    if (currentCampaignStage >= 0 && currentCampaignStage < 20) {
       personality = campaign[currentCampaignStage].aiPersonality;
     }
     
@@ -1027,6 +1245,7 @@
         let score = 0;
         if (personality === 'territorial') score = evaluateMoveTerritorial(m.x, m.y, 'W');
         else if (personality === 'influence') score = evaluateMoveInfluence(m.x, m.y, 'W');
+        else if (personality === 'balanced') score = evaluateMoveBalanced(m.x, m.y, 'W');
         else score = evaluateMoveGrandmaster(m.x, m.y, 'W');
 
         if (score > bestScore) {
@@ -1056,6 +1275,7 @@
           let score = evaluateMoveGrandmaster(x, y, currentPlayer);
           if (score > bestScore) {
             bestScore = score;
+            hintScore = score;
             hintCell = {x, y};
           }
         }
@@ -1074,7 +1294,7 @@
       statusText = `${campaign[currentCampaignStage].name} - ${statusText}`;
     }
     document.querySelector('.status').innerText = statusText;
-    document.getElementById('stage-info').innerText = `Komi: ${currentKomi}${hintCell ? ' | HINT ACTIVE' : ''}${showEstimator ? ' | TERRITORY ESTIMATOR ON' : ''}`;
+    document.getElementById('stage-info').innerText = `Komi: ${currentKomi}${hintCell ? ' | HINT ACTIVE' : ''}${showEstimator ? ' | ESTIMATOR ON' : ''}${showAnalyzer ? ' | ANALYZER ON' : ''}`;
   }
 
   document.getElementById('btn-pass').addEventListener('click', () => {
@@ -1122,32 +1342,18 @@
 
   document.getElementById('btn-undo').addEventListener('click', doUndo);
 
-  document.getElementById('btn-redo').addEventListener('click', () => {
-    if (redoStack.length === 0) return;
-    undoStack.push({
-      board: deepCopy(board),
-      currentPlayer,
-      captures: { ...captures },
-      lastMove: { ...lastMove },
-      history: [...history]
-    });
-    let state = redoStack.pop();
-    board = state.board;
-    currentPlayer = state.currentPlayer;
-    captures = state.captures;
-    lastMove = state.lastMove;
-    history = state.history;
-    capturedStonesForAnim = [];
-    hintCell = null;
-    updateStatus();
-    drawBoard();
-  });
-
   document.getElementById('btn-hint').addEventListener('click', calculateHint);
   
   document.getElementById('btn-estimate').addEventListener('click', () => {
     showEstimator = !showEstimator;
     document.getElementById('btn-estimate').classList.toggle('active', showEstimator);
+    updateStatus();
+    drawBoard();
+  });
+
+  document.getElementById('btn-analyzer').addEventListener('click', () => {
+    showAnalyzer = !showAnalyzer;
+    document.getElementById('btn-analyzer').classList.toggle('active', showAnalyzer);
     updateStatus();
     drawBoard();
   });
@@ -1235,6 +1441,11 @@
     startCampaignStage();
   });
 
+  document.getElementById('btn-tsume').addEventListener('click', () => {
+    currentTsumegoIdx = (currentTsumegoIdx + 1) % 5;
+    loadTsumegoPuzzle(currentTsumegoIdx);
+  });
+
   document.getElementById('btn-help').addEventListener('click', () => {
     document.getElementById('help-modal').style.display = 'flex';
   });
@@ -1249,6 +1460,8 @@
       calculateHint();
     } else if (e.key === 't' || e.key === 'T') {
       document.getElementById('btn-estimate').click();
+    } else if (e.key === 's' || e.key === 'S') {
+      document.getElementById('btn-analyzer').click();
     }
   });
 

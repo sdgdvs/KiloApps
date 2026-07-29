@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <math.h>
 
 #define ID_BTN_PASS 101
 #define ID_BTN_RESIGN 102
@@ -20,6 +21,8 @@
 #define ID_BTN_CAMPAIGN 114
 #define ID_BTN_HINT 115
 #define ID_BTN_ESTIMATE 116
+#define ID_BTN_ANALYZER 117
+#define ID_BTN_TSUMEGO 118
 
 typedef struct {
     int x;
@@ -31,7 +34,7 @@ typedef struct {
     int size;          // 9, 13, 19
     int handicap;      // 0..9
     float komi;        // 0.5, 6.5, 7.5
-    int aiPersonality; // 0=Territorial, 1=Influence, 2=Grandmaster
+    int aiPersonality; // 0=Territorial, 1=Influence, 2=Balanced, 3=Grandmaster
     char name[64];
     int isTsumego;     // 1 if puzzle stage
     int stoneCount;
@@ -39,34 +42,42 @@ typedef struct {
     char targetDesc[128];
 } CampaignStage;
 
-CampaignStage campaign[15] = {
+CampaignStage campaign[20] = {
     {9, 5, 0.5f, 0, "Stage 1: Novice Field", 0, 0, {}, ""},
     {9, 3, 0.5f, 1, "Stage 2: Corner Skirmish", 0, 0, {}, ""},
     {9, 0, 0.5f, 0, "Stage 3: Tsumego - Corner Snapback", 1, 7, 
      {{1,0,2}, {1,1,2}, {0,1,2}, {2,0,1}, {2,1,1}, {1,2,1}, {0,2,1}}, 
-     "Capture White's corner group at (0,0)!"},
-    {9, 2, 0.5f, 1, "Stage 4: Tactical Border", 0, 0, {}, ""},
-    {9, 0, 6.5f, 2, "Stage 5: 9x9 Master Duel", 0, 0, {}, ""},
-    {13, 5, 0.5f, 0, "Stage 6: Medium Horizon", 0, 0, {}, ""},
+     "Capture White's corner group at (0,0) via snapback!"},
+    {9, 2, 0.5f, 2, "Stage 4: Tactical Border", 0, 0, {}, ""},
+    {9, 0, 6.5f, 3, "Stage 5: 9x9 Master Duel", 0, 0, {}, ""},
+    {13, 7, 0.5f, 0, "Stage 6: Medium Horizon", 0, 0, {}, ""},
     {13, 0, 0.5f, 1, "Stage 7: Tsumego - Side Crane's Nest", 1, 8,
      {{3,2,2}, {4,2,2}, {5,2,2}, {3,3,1}, {6,2,1}, {4,1,1}, {5,1,1}, {4,3,2}},
      "Expose White's weakness on the side!"},
-    {13, 3, 0.5f, 0, "Stage 8: Pincer Conflict", 0, 0, {}, ""},
-    {13, 1, 6.5f, 1, "Stage 9: Influence Battle", 0, 0, {}, ""},
-    {13, 0, 6.5f, 2, "Stage 10: 13x13 Grandmaster", 0, 0, {}, ""},
+    {13, 4, 0.5f, 2, "Stage 8: Pincer Conflict", 0, 0, {}, ""},
+    {13, 2, 6.5f, 1, "Stage 9: Influence Battle", 0, 0, {}, ""},
+    {13, 0, 6.5f, 3, "Stage 10: 13x13 Grandmaster", 0, 0, {}, ""},
     {19, 0, 0.5f, 0, "Stage 11: Tsumego - Making Two Eyes", 1, 8,
      {{1,1,1}, {2,1,1}, {3,1,1}, {3,0,1}, {0,2,2}, {1,2,2}, {2,2,2}, {3,2,2}},
      "Play the vital point to secure two eyes for Black!"},
-    {19, 6, 0.5f, 1, "Stage 12: Great Wall Siege", 0, 0, {}, ""},
-    {19, 3, 0.5f, 2, "Stage 13: Dragon Slayer", 0, 0, {}, ""},
-    {19, 0, 0.5f, 2, "Stage 14: Tsumego - Under the Stones", 1, 9,
+    {19, 8, 0.5f, 1, "Stage 12: Great Wall Siege", 0, 0, {}, ""},
+    {19, 5, 0.5f, 2, "Stage 13: Dragon Slayer", 0, 0, {}, ""},
+    {19, 0, 0.5f, 3, "Stage 14: Tsumego - Under the Stones", 1, 9,
      {{9,9,2}, {10,9,2}, {9,10,2}, {10,10,2}, {8,9,1}, {11,9,1}, {8,10,1}, {11,10,1}, {9,11,1}},
      "Surround and collapse White's central shape!"},
-    {19, 0, 7.5f, 2, "Stage 15: KGo Championship", 0, 0, {}, ""}
+    {19, 3, 0.5f, 3, "Stage 15: Dragon Slayer Elite", 0, 0, {}, ""},
+    {19, 0, 0.5f, 2, "Stage 16: Tsumego - Belly Attachment", 1, 10,
+     {{5,5,2}, {5,6,2}, {6,5,2}, {4,5,1}, {4,6,1}, {5,4,1}, {6,4,1}, {7,5,1}, {6,7,1}, {5,7,1}},
+     "Play the belly attachment tesuji at (6,6) to capture White!"},
+    {19, 2, 6.5f, 1, "Stage 17: Center Star Invasion", 0, 0, {}, ""},
+    {19, 1, 6.5f, 2, "Stage 18: Even Corner Clash", 0, 0, {}, ""},
+    {19, 0, 7.5f, 3, "Stage 19: KGo Championship Final", 0, 0, {}, ""},
+    {19, 0, 7.5f, 3, "Stage 20: Grandmaster Go Legend Challenge", 0, 0, {}, ""}
 };
 
 int currentCampaignStage = -1;
 float currentKomi = 6.5f;
+int currentTsumegoIndex = 0;
 
 typedef struct {
     int played;
@@ -130,6 +141,14 @@ int capturedAnimColor[19*19];
 int capturedAnimCount = 0;
 int captureAnimRadius = 0;
 
+int hintX = -1, hintY = -1;
+int hintScore = 0;
+int showEstimator = 0;
+int showAnalyzer = 0;
+char territoryMap[19][19] = {0}; // 1=Black, 2=White
+char atariMap[19][19] = {0};     // 1=Group in Atari
+char koMap[19][19] = {0};        // 1=Forbidden Ko / Superko intersection
+
 typedef struct {
     float x, y;
     float vx, vy;
@@ -139,6 +158,11 @@ typedef struct {
 #define MAX_SPARKS 64
 SparkParticle sparkParticles[MAX_SPARKS];
 int sparkCount = 0;
+
+void InitBoard();
+int GetLiberties(int x, int y, int color, char visited[19][19]);
+void GetGroup(int x, int y, int color, char visited[19][19], POINT group[], int *groupSize);
+int EvaluateMoveGrandmaster(int x, int y, int color);
 
 int IsHoshi(int x, int y, int size) {
     if (size == 9) {
@@ -150,16 +174,6 @@ int IsHoshi(int x, int y, int size) {
     }
     return 0;
 }
-
-int hintX = -1, hintY = -1;
-int showEstimator = 0;
-char territoryMap[19][19] = {0}; // 1=Black, 2=White
-char atariMap[19][19] = {0};     // 1=Group in Atari
-
-void InitBoard();
-int GetLiberties(int x, int y, int color, char visited[19][19]);
-void GetGroup(int x, int y, int color, char visited[19][19], POINT group[], int *groupSize);
-int EvaluateMoveGrandmaster(int x, int y, int color);
 
 DWORD WINAPI PlaySoundThread(LPVOID lpParam) {
     int type = (int)(intptr_t)lpParam;
@@ -181,6 +195,16 @@ void PlayGameSound(int type) {
 
 void CopyBoard(char dst[19][19], char src[19][19]) {
     memcpy(dst, src, sizeof(char) * 19 * 19);
+}
+
+int IsSuperko(char testBoard[19][19]) {
+    if (memcmp(testBoard, prevBoard, sizeof(char) * 19 * 19) == 0) return 1;
+    for (int i = 0; i < undoCount; i++) {
+        if (memcmp(testBoard, undoStack[i].board, sizeof(char) * 19 * 19) == 0) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 void PushUndo(char bBackup[19][19], int cBackup[3], int pBackup) {
@@ -282,6 +306,28 @@ void GetGroup(int x, int y, int color, char visited[19][19], POINT group[], int 
     GetGroup(x, y+1, color, visited, group, groupSize);
 }
 
+void GetGroupLibertiesList(POINT group[], int groupSize, int color, POINT liberties[], int *libertyCount) {
+    *libertyCount = 0;
+    char visLib[19][19] = {0};
+    int dx[] = {0, 1, 0, -1};
+    int dy[] = {1, 0, -1, 0};
+    
+    for (int i = 0; i < groupSize; i++) {
+        for (int d = 0; d < 4; d++) {
+            int nx = group[i].x + dx[d];
+            int ny = group[i].y + dy[d];
+            if (nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize) {
+                if (board[ny][nx] == 0 && !visLib[ny][nx]) {
+                    visLib[ny][nx] = 1;
+                    liberties[*libertyCount].x = nx;
+                    liberties[*libertyCount].y = ny;
+                    (*libertyCount)++;
+                }
+            }
+        }
+    }
+}
+
 int CheckCaptures(int color, int realMove) {
     int totalCaptured = 0;
     for (int y = 0; y < boardSize; y++) {
@@ -334,11 +380,11 @@ int IsValidMove(int x, int y, int color, int *outCaptures) {
         return 0; // suicide
     }
     
-    if (memcmp(board, prevBoard, sizeof(char) * 19 * 19) == 0) {
+    if (IsSuperko(board)) {
         CopyBoard(board, boardBackup);
         captures[1] = capBackup[1];
         captures[2] = capBackup[2];
-        return 0; // ko
+        return 0; // ko / superko
     }
     
     CopyBoard(board, boardBackup);
@@ -347,215 +393,18 @@ int IsValidMove(int x, int y, int color, int *outCaptures) {
     return 1;
 }
 
-void CalculateHint() {
-    hintX = -1;
-    hintY = -1;
-    int bestScore = -9999;
+void ComputeKoOverlay() {
+    memset(koMap, 0, sizeof(koMap));
     for (int y = 0; y < boardSize; y++) {
         for (int x = 0; x < boardSize; x++) {
-            int caps = 0;
-            if (IsValidMove(x, y, currentPlayer, &caps)) {
-                int score = EvaluateMoveGrandmaster(x, y, currentPlayer);
-                if (score > bestScore) {
-                    bestScore = score;
-                    hintX = x;
-                    hintY = y;
+            if (board[y][x] == 0) {
+                int caps = 0;
+                if (!IsValidMove(x, y, currentPlayer, &caps)) {
+                    koMap[y][x] = 1;
                 }
             }
         }
     }
-}
-
-void ComputeTerritoryAndAtari() {
-    memset(territoryMap, 0, sizeof(territoryMap));
-    memset(atariMap, 0, sizeof(atariMap));
-    
-    char visited[19][19] = {0};
-    
-    for (int y = 0; y < boardSize; y++) {
-        for (int x = 0; x < boardSize; x++) {
-            if (board[y][x] == 0 && !visited[y][x]) {
-                int touchesB = 0, touchesW = 0;
-                POINT queue[19*19];
-                int head = 0, tail = 0;
-                queue[tail].x = x; queue[tail].y = y; tail++;
-                visited[y][x] = 1;
-                
-                POINT region[19*19];
-                int regionCount = 0;
-                
-                while (head < tail) {
-                    POINT p = queue[head++];
-                    region[regionCount++] = p;
-                    
-                    int dx[] = {0, 1, 0, -1};
-                    int dy[] = {1, 0, -1, 0};
-                    for (int i = 0; i < 4; i++) {
-                        int nx = p.x + dx[i];
-                        int ny = p.y + dy[i];
-                        if (nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize) {
-                            if (board[ny][nx] == 1) touchesB = 1;
-                            else if (board[ny][nx] == 2) touchesW = 1;
-                            else if (!visited[ny][nx]) {
-                                visited[ny][nx] = 1;
-                                queue[tail].x = nx; queue[tail].y = ny; tail++;
-                            }
-                        }
-                    }
-                }
-                
-                int owner = 0;
-                if (touchesB && !touchesW) owner = 1;
-                else if (touchesW && !touchesB) owner = 2;
-                
-                for (int r = 0; r < regionCount; r++) {
-                    territoryMap[region[r].y][region[r].x] = (char)owner;
-                }
-            }
-        }
-    }
-    
-    char groupVisited[19][19] = {0};
-    for (int y = 0; y < boardSize; y++) {
-        for (int x = 0; x < boardSize; x++) {
-            if (board[y][x] != 0 && !groupVisited[y][x]) {
-                char vLib[19][19] = {0};
-                int libCount = GetLiberties(x, y, board[y][x], vLib);
-                if (libCount == 1) {
-                    POINT grp[19*19];
-                    int grpSize = 0;
-                    GetGroup(x, y, board[y][x], groupVisited, grp, &grpSize);
-                    for (int g = 0; g < grpSize; g++) {
-                        atariMap[grp[g].y][grp[g].x] = 1;
-                    }
-                }
-            }
-        }
-    }
-}
-
-void PlaceStone(HWND hwnd, int x, int y) {
-    if (board[y][x] != 0) return;
-    
-    char boardBackup[19][19];
-    CopyBoard(boardBackup, board);
-    int capBackup[3] = { captures[0], captures[1], captures[2] };
-    
-    board[y][x] = (char)currentPlayer;
-    
-    int opp = currentPlayer == 1 ? 2 : 1;
-    capturedAnimCount = 0;
-    int caps = CheckCaptures(opp, 1);
-    
-    char visited[19][19] = {0};
-    if (GetLiberties(x, y, currentPlayer, visited) == 0) {
-        CopyBoard(board, boardBackup);
-        captures[1] = capBackup[1];
-        captures[2] = capBackup[2];
-        if (currentPlayer == 1) MessageBox(hwnd, "Suicide move is not allowed.", "Invalid Move", MB_OK);
-        return;
-    }
-    
-    if (memcmp(board, prevBoard, sizeof(char) * 19 * 19) == 0) {
-        CopyBoard(board, boardBackup);
-        captures[1] = capBackup[1];
-        captures[2] = capBackup[2];
-        if (currentPlayer == 1) MessageBox(hwnd, "Ko rule violation.", "Invalid Move", MB_OK);
-        return;
-    }
-    
-    PushUndo(boardBackup, capBackup, currentPlayer);
-    CopyBoard(prevBoard, boardBackup);
-    currentPlayer = opp;
-    hintX = -1; hintY = -1;
-    lastMoveX = x;
-    lastMoveY = y;
-    
-    if (caps > 0) PlayGameSound(2);
-    else PlayGameSound(1);
-    
-    animX = x;
-    animY = y;
-    animRadius = 0;
-    SetTimer(hwnd, 1, 16, NULL);
-    
-    if (caps > 0) {
-        captureAnimRadius = 13;
-        for (int i = 0; i < capturedAnimCount; i++) {
-            int cx = 40 + capturedAnimStones[i].x * 30;
-            int cy = 40 + capturedAnimStones[i].y * 30;
-            for (int p = 0; p < 8 && sparkCount < MAX_SPARKS; p++) {
-                sparkParticles[sparkCount].x = (float)cx;
-                sparkParticles[sparkCount].y = (float)cy;
-                float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
-                float speed = 2.0f + (float)(rand() % 25) / 10.0f;
-                sparkParticles[sparkCount].vx = cosf(angle) * speed;
-                sparkParticles[sparkCount].vy = sinf(angle) * speed;
-                sparkParticles[sparkCount].color = capturedAnimColor[i];
-                sparkParticles[sparkCount].life = 16;
-                sparkCount++;
-            }
-        }
-        SetTimer(hwnd, 3, 16, NULL);
-    }
-    
-    InvalidateRect(hwnd, NULL, TRUE);
-    
-    if (currentPlayer == 2 && SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
-        SetTimer(hwnd, 2, 500, NULL);
-    }
-}
-
-void PlaceHandicapStones(int size, int count) {
-    if (count <= 0) return;
-    int pts9[5][2] = {{2,2}, {6,6}, {6,2}, {2,6}, {4,4}};
-    int pts13[5][2] = {{3,3}, {9,9}, {9,3}, {3,9}, {6,6}};
-    int pts19[9][2] = {{3,3}, {15,15}, {15,3}, {3,15}, {9,9}, {9,3}, {9,15}, {3,9}, {15,9}};
-    int (*pts)[2];
-    int maxPts = 0;
-    if (size == 9) { pts = pts9; maxPts = 5; }
-    else if (size == 13) { pts = pts13; maxPts = 5; }
-    else { pts = pts19; maxPts = 9; }
-    if (count > maxPts) count = maxPts;
-    for(int i=0; i<count; i++) {
-        board[pts[i][1]][pts[i][0]] = 1; 
-    }
-    currentPlayer = 2; 
-    CopyBoard(prevBoard, board);
-}
-
-void StartCampaignStage(HWND hwnd) {
-    if (currentCampaignStage >= 15 || currentCampaignStage < 0) return;
-    boardSize = campaign[currentCampaignStage].size;
-    int handicap = campaign[currentCampaignStage].handicap;
-    currentKomi = campaign[currentCampaignStage].komi;
-    int diff = campaign[currentCampaignStage].aiPersonality;
-    
-    SendMessage(GetDlgItem(hwnd, ID_CB_SIZE), CB_SETCURSEL, boardSize==9?0:(boardSize==13?1:2), 0);
-    SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_SETCHECK, BST_CHECKED, 0);
-    SendMessage(GetDlgItem(hwnd, ID_CB_DIFFICULTY), CB_SETCURSEL, diff, 0);
-    
-    InitBoard();
-    
-    if (campaign[currentCampaignStage].isTsumego) {
-        for (int i = 0; i < campaign[currentCampaignStage].stoneCount; i++) {
-            StonePos sp = campaign[currentCampaignStage].initialStones[i];
-            board[sp.y][sp.x] = (char)sp.color;
-        }
-        CopyBoard(prevBoard, board);
-    } else {
-        PlaceHandicapStones(boardSize, handicap);
-    }
-    
-    hintX = -1; hintY = -1;
-    InvalidateRect(hwnd, NULL, TRUE);
-    
-    char msg[384];
-    sprintf(msg, "%s\nBoard: %dx%d | Handicap: %d | Komi: %.1f\nAI Personality: %s\n\n%s", 
-        campaign[currentCampaignStage].name, boardSize, boardSize, handicap, currentKomi,
-        diff==0?"Territorial/Defensive":(diff==1?"Influence/Aggressive":"Grandmaster"),
-        campaign[currentCampaignStage].isTsumego ? campaign[currentCampaignStage].targetDesc : "Goal: Surround more territory than White!");
-    MessageBox(hwnd, msg, "Campaign Stage", MB_OK);
 }
 
 int EvaluateMoveTerritorial(int x, int y, int color) {
@@ -640,6 +489,49 @@ int EvaluateMoveInfluence(int x, int y, int color) {
     return score;
 }
 
+int EvaluateMoveBalanced(int x, int y, int color) {
+    int opp = color == 1 ? 2 : 1;
+    char boardBackup[19][19];
+    CopyBoard(boardBackup, board);
+    int capBackup[3] = { captures[0], captures[1], captures[2] };
+    
+    board[y][x] = (char)color;
+    int caps = CheckCaptures(opp, 0);
+    
+    char visited[19][19] = {0};
+    int myLiberties = GetLiberties(x, y, color, visited);
+    
+    int score = caps * 50 + myLiberties * 3;
+    
+    int distEdgeX = x < (boardSize - 1 - x) ? x : (boardSize - 1 - x);
+    int distEdgeY = y < (boardSize - 1 - y) ? y : (boardSize - 1 - y);
+    if (distEdgeX >= 2 && distEdgeX <= 4 && distEdgeY >= 2 && distEdgeY <= 4) {
+        score += 20;
+    }
+    
+    int dx[] = {0, 1, 0, -1};
+    int dy[] = {1, 0, -1, 0};
+    for (int i = 0; i < 4; i++) {
+        int nx = x + dx[i];
+        int ny = y + dy[i];
+        if (nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize) {
+            if (board[ny][nx] == opp) {
+                char v2[19][19] = {0};
+                if (GetLiberties(nx, ny, opp, v2) <= 2) {
+                    score += 20;
+                }
+            } else if (board[ny][nx] == color) {
+                score += 10;
+            }
+        }
+    }
+    
+    CopyBoard(board, boardBackup);
+    captures[1] = capBackup[1];
+    captures[2] = capBackup[2];
+    return score;
+}
+
 int EvaluateMoveGrandmaster(int x, int y, int color) {
     int opp = color == 1 ? 2 : 1;
     char boardBackup[19][19];
@@ -665,13 +557,13 @@ int EvaluateMoveGrandmaster(int x, int y, int color) {
     board[y][x] = (char)color;
     int caps = CheckCaptures(opp, 0);
     
-    int score = caps * 50;
+    int score = caps * 80;
     char visited[19][19] = {0};
     int myLiberties = GetLiberties(x, y, color, visited);
-    score += myLiberties * 4;
+    score += myLiberties * 5;
     
     if (savingAtari && myLiberties > 1) {
-        score += 35;
+        score += 60;
     }
     
     for (int i = 0; i < 4; i++) {
@@ -682,9 +574,9 @@ int EvaluateMoveGrandmaster(int x, int y, int color) {
                 char v2[19][19] = {0};
                 int oppLib = GetLiberties(nx, ny, opp, v2);
                 if (oppLib == 1) {
-                    score += 25;
+                    score += 50;
                 } else if (oppLib == 2) {
-                    score += 15;
+                    score += 25;
                 }
             }
         }
@@ -693,7 +585,8 @@ int EvaluateMoveGrandmaster(int x, int y, int color) {
     int cx = boardSize / 2;
     int cy = boardSize / 2;
     int dist = abs(x - cx) + abs(y - cy);
-    score += (boardSize - dist);
+    score += (boardSize - dist) * 2;
+    if (IsHoshi(x, y, boardSize)) score += 15;
     
     CopyBoard(board, boardBackup);
     captures[1] = capBackup[1];
@@ -701,11 +594,233 @@ int EvaluateMoveGrandmaster(int x, int y, int color) {
     return score;
 }
 
+void CalculateHint() {
+    hintX = -1;
+    hintY = -1;
+    hintScore = -9999;
+    for (int y = 0; y < boardSize; y++) {
+        for (int x = 0; x < boardSize; x++) {
+            int caps = 0;
+            if (IsValidMove(x, y, currentPlayer, &caps)) {
+                int score = EvaluateMoveGrandmaster(x, y, currentPlayer);
+                if (score > hintScore) {
+                    hintScore = score;
+                    hintX = x;
+                    hintY = y;
+                }
+            }
+        }
+    }
+}
+
+void ComputeTerritoryAndAtari() {
+    memset(territoryMap, 0, sizeof(territoryMap));
+    memset(atariMap, 0, sizeof(atariMap));
+    
+    char visited[19][19] = {0};
+    
+    for (int y = 0; y < boardSize; y++) {
+        for (int x = 0; x < boardSize; x++) {
+            if (board[y][x] == 0 && !visited[y][x]) {
+                int touchesB = 0, touchesW = 0;
+                POINT queue[19*19];
+                int head = 0, tail = 0;
+                queue[tail].x = x; queue[tail].y = y; tail++;
+                visited[y][x] = 1;
+                
+                POINT region[19*19];
+                int regionCount = 0;
+                
+                while (head < tail) {
+                    POINT p = queue[head++];
+                    region[regionCount++] = p;
+                    
+                    int dx[] = {0, 1, 0, -1};
+                    int dy[] = {1, 0, -1, 0};
+                    for (int i = 0; i < 4; i++) {
+                        int nx = p.x + dx[i];
+                        int ny = p.y + dy[i];
+                        if (nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize) {
+                            if (board[ny][nx] == 1) touchesB = 1;
+                            else if (board[ny][nx] == 2) touchesW = 1;
+                            else if (!visited[ny][nx]) {
+                                visited[ny][nx] = 1;
+                                queue[tail].x = nx; queue[tail].y = ny; tail++;
+                            }
+                        }
+                    }
+                }
+                
+                int owner = 0;
+                if (touchesB && !touchesW) owner = 1;
+                else if (touchesW && !touchesB) owner = 2;
+                
+                for (int r = 0; r < regionCount; r++) {
+                    territoryMap[region[r].y][region[r].x] = (char)owner;
+                }
+            }
+        }
+    }
+    
+    char groupVisited[19][19] = {0};
+    for (int y = 0; y < boardSize; y++) {
+        for (int x = 0; x < boardSize; x++) {
+            if (board[y][x] != 0 && !groupVisited[y][x]) {
+                char vLib[19][19] = {0};
+                int libCount = GetLiberties(x, y, board[y][x], vLib);
+                if (libCount == 1) {
+                    POINT grp[19*19];
+                    int grpSize = 0;
+                    GetGroup(x, y, board[y][x], groupVisited, grp, &grpSize);
+                    for (int g = 0; g < grpSize; g++) {
+                        atariMap[grp[g].y][grp[g].x] = 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void MakeAIMove(HWND hwnd);
+
+void PlaceStone(HWND hwnd, int x, int y) {
+    if (board[y][x] != 0) return;
+    
+    char boardBackup[19][19];
+    CopyBoard(boardBackup, board);
+    int capBackup[3] = { captures[0], captures[1], captures[2] };
+    
+    board[y][x] = (char)currentPlayer;
+    
+    int opp = currentPlayer == 1 ? 2 : 1;
+    capturedAnimCount = 0;
+    int caps = CheckCaptures(opp, 1);
+    
+    char visited[19][19] = {0};
+    if (GetLiberties(x, y, currentPlayer, visited) == 0) {
+        CopyBoard(board, boardBackup);
+        captures[1] = capBackup[1];
+        captures[2] = capBackup[2];
+        if (currentPlayer == 1) MessageBox(hwnd, "Suicide move is not allowed.", "Invalid Move", MB_OK);
+        return;
+    }
+    
+    if (IsSuperko(board)) {
+        CopyBoard(board, boardBackup);
+        captures[1] = capBackup[1];
+        captures[2] = capBackup[2];
+        if (currentPlayer == 1) MessageBox(hwnd, "Superko rule violation (recreating previous position).", "Invalid Move", MB_OK);
+        return;
+    }
+    
+    PushUndo(boardBackup, capBackup, currentPlayer);
+    CopyBoard(prevBoard, boardBackup);
+    currentPlayer = opp;
+    hintX = -1; hintY = -1;
+    lastMoveX = x;
+    lastMoveY = y;
+    
+    if (caps > 0) PlayGameSound(2);
+    else PlayGameSound(1);
+    
+    animX = x;
+    animY = y;
+    animRadius = 0;
+    SetTimer(hwnd, 1, 16, NULL);
+    
+    if (caps > 0) {
+        captureAnimRadius = 13;
+        for (int i = 0; i < capturedAnimCount; i++) {
+            int cx = 40 + capturedAnimStones[i].x * 30;
+            int cy = 40 + capturedAnimStones[i].y * 30;
+            for (int p = 0; p < 8 && sparkCount < MAX_SPARKS; p++) {
+                sparkParticles[sparkCount].x = (float)cx;
+                sparkParticles[sparkCount].y = (float)cy;
+                float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
+                float speed = 2.0f + (float)(rand() % 25) / 10.0f;
+                sparkParticles[sparkCount].vx = cosf(angle) * speed;
+                sparkParticles[sparkCount].vy = sinf(angle) * speed;
+                sparkParticles[sparkCount].color = capturedAnimColor[i];
+                sparkParticles[sparkCount].life = 16;
+                sparkCount++;
+            }
+        }
+        SetTimer(hwnd, 3, 16, NULL);
+    }
+    
+    InvalidateRect(hwnd, NULL, TRUE);
+    
+    if (currentPlayer == 2 && SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
+        SetTimer(hwnd, 2, 500, NULL);
+    }
+}
+
+void PlaceHandicapStones(int size, int count) {
+    if (count <= 0) return;
+    int pts9[5][2] = {{2,2}, {6,6}, {6,2}, {2,6}, {4,4}};
+    int pts13[5][2] = {{3,3}, {9,9}, {9,3}, {3,9}, {6,6}};
+    int pts19[9][2] = {{3,3}, {15,15}, {15,3}, {3,15}, {9,9}, {9,3}, {9,15}, {3,9}, {15,9}};
+    int (*pts)[2];
+    int maxPts = 0;
+    if (size == 9) { pts = pts9; maxPts = 5; }
+    else if (size == 13) { pts = pts13; maxPts = 5; }
+    else { pts = pts19; maxPts = 9; }
+    if (count > maxPts) count = maxPts;
+    for(int i=0; i<count; i++) {
+        board[pts[i][1]][pts[i][0]] = 1; 
+    }
+    currentPlayer = 2; 
+    CopyBoard(prevBoard, board);
+}
+
+void StartCampaignStage(HWND hwnd) {
+    if (currentCampaignStage >= 20 || currentCampaignStage < 0) return;
+    boardSize = campaign[currentCampaignStage].size;
+    int handicap = campaign[currentCampaignStage].handicap;
+    currentKomi = campaign[currentCampaignStage].komi;
+    int diff = campaign[currentCampaignStage].aiPersonality;
+    
+    SendMessage(GetDlgItem(hwnd, ID_CB_SIZE), CB_SETCURSEL, boardSize==9?0:(boardSize==13?1:2), 0);
+    SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_SETCHECK, BST_CHECKED, 0);
+    SendMessage(GetDlgItem(hwnd, ID_CB_DIFFICULTY), CB_SETCURSEL, diff, 0);
+    
+    InitBoard();
+    
+    if (campaign[currentCampaignStage].isTsumego) {
+        for (int i = 0; i < campaign[currentCampaignStage].stoneCount; i++) {
+            StonePos sp = campaign[currentCampaignStage].initialStones[i];
+            board[sp.y][sp.x] = (char)sp.color;
+        }
+        CopyBoard(prevBoard, board);
+    } else {
+        PlaceHandicapStones(boardSize, handicap);
+    }
+    
+    hintX = -1; hintY = -1;
+    InvalidateRect(hwnd, NULL, TRUE);
+    
+    const char *pName[] = {"Territorial", "Influence", "Balanced", "Grandmaster"};
+    char msg[384];
+    sprintf(msg, "%s\nBoard: %dx%d | Handicap: %d | Komi: %.1f\nAI Personality: %s\n\n%s", 
+        campaign[currentCampaignStage].name, boardSize, boardSize, handicap, currentKomi,
+        pName[diff],
+        campaign[currentCampaignStage].isTsumego ? campaign[currentCampaignStage].targetDesc : "Goal: Surround more territory than White!");
+    MessageBox(hwnd, msg, "Campaign Stage", MB_OK);
+}
+
+void LoadTsumegoPuzzle(HWND hwnd, int index) {
+    int puzzleStages[] = {2, 6, 10, 13, 15}; // Indices 0..4 mapped to stage 3, 7, 11, 14, 16
+    if (index < 0 || index >= 5) index = 0;
+    currentTsumegoIndex = index;
+    currentCampaignStage = puzzleStages[index];
+    StartCampaignStage(hwnd);
+}
+
 void MakeAIMove(HWND hwnd) {
     if (currentPlayer != 2) return;
     
     int personality = 1;
-    if (currentCampaignStage >= 0 && currentCampaignStage < 15) {
+    if (currentCampaignStage >= 0 && currentCampaignStage < 20) {
         personality = campaign[currentCampaignStage].aiPersonality;
     } else {
         personality = SendMessage(GetDlgItem(hwnd, ID_CB_DIFFICULTY), CB_GETCURSEL, 0, 0);
@@ -735,6 +850,8 @@ void MakeAIMove(HWND hwnd) {
                 score = EvaluateMoveTerritorial(validMoves[i].x, validMoves[i].y, 2);
             } else if (personality == 1) {
                 score = EvaluateMoveInfluence(validMoves[i].x, validMoves[i].y, 2);
+            } else if (personality == 2) {
+                score = EvaluateMoveBalanced(validMoves[i].x, validMoves[i].y, 2);
             } else {
                 score = EvaluateMoveGrandmaster(validMoves[i].x, validMoves[i].y, 2);
             }
@@ -881,8 +998,8 @@ void CalculateScore(HWND hwnd) {
     if (currentCampaignStage != -1) {
         if (winner == 1) {
             currentCampaignStage++;
-            if (currentCampaignStage >= 15) {
-                sprintf(msg, "Black: %.1f vs White: %.1f\n\nBlack wins!\n\nCongratulations! You completed all 15 Campaign Stages of KGo!", totalB, totalW);
+            if (currentCampaignStage >= 20) {
+                sprintf(msg, "Black: %.1f vs White: %.1f\n\nBlack wins!\n\nCONGRATULATIONS! You completed all 20 Campaign Stages and conquered the Stage 20 Grandmaster Go Legend Challenge!", totalB, totalW);
                 currentCampaignStage = -1;
             } else {
                 sprintf(msg, "Black: %.1f vs White: %.1f\n\nBlack wins!\n\nAdvancing to Campaign Stage %d!", totalB, totalW, currentCampaignStage + 1);
@@ -918,47 +1035,52 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     switch (uMsg) {
         case WM_CREATE:
             hBtnPass = CreateWindow("BUTTON", "Pass", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                20, 600, 50, 30, hwnd, (HMENU)ID_BTN_PASS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                15, 620, 45, 30, hwnd, (HMENU)ID_BTN_PASS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             hBtnResign = CreateWindow("BUTTON", "Resign", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                75, 600, 55, 30, hwnd, (HMENU)ID_BTN_RESIGN, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                65, 620, 50, 30, hwnd, (HMENU)ID_BTN_RESIGN, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Score", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                135, 600, 50, 30, hwnd, (HMENU)ID_BTN_SCORE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                120, 620, 45, 30, hwnd, (HMENU)ID_BTN_SCORE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             hBtnNew = CreateWindow("BUTTON", "New", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                190, 600, 45, 30, hwnd, (HMENU)ID_BTN_NEW, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                170, 620, 40, 30, hwnd, (HMENU)ID_BTN_NEW, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             hCbSize = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
-                240, 600, 75, 100, hwnd, (HMENU)ID_CB_SIZE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                215, 620, 70, 100, hwnd, (HMENU)ID_CB_SIZE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             SendMessage(hCbSize, CB_ADDSTRING, 0, (LPARAM)"9x9");
             SendMessage(hCbSize, CB_ADDSTRING, 0, (LPARAM)"13x13");
             SendMessage(hCbSize, CB_ADDSTRING, 0, (LPARAM)"19x19");
             SendMessage(hCbSize, CB_SETCURSEL, 0, 0);
 
             hCbAi = CreateWindow("BUTTON", "VS AI (White)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
-                325, 600, 110, 30, hwnd, (HMENU)ID_CB_AI, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                290, 620, 100, 30, hwnd, (HMENU)ID_CB_AI, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             SendMessage(hCbAi, BM_SETCHECK, BST_CHECKED, 0);
 
             hCbDifficulty = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
-                440, 600, 115, 100, hwnd, (HMENU)ID_CB_DIFFICULTY, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                395, 620, 115, 120, hwnd, (HMENU)ID_CB_DIFFICULTY, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Territorial");
             SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Influence");
+            SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Balanced");
             SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Grandmaster");
-            SendMessage(hCbDifficulty, CB_SETCURSEL, 2, 0);
+            SendMessage(hCbDifficulty, CB_SETCURSEL, 3, 0);
 
             CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                20, 640, 45, 30, hwnd, (HMENU)ID_BTN_SAVE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                15, 660, 45, 30, hwnd, (HMENU)ID_BTN_SAVE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                70, 640, 45, 30, hwnd, (HMENU)ID_BTN_LOAD, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                65, 660, 45, 30, hwnd, (HMENU)ID_BTN_LOAD, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Undo(U)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                120, 640, 60, 30, hwnd, (HMENU)ID_BTN_UNDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                115, 660, 55, 30, hwnd, (HMENU)ID_BTN_UNDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Hint(H)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                185, 640, 55, 30, hwnd, (HMENU)ID_BTN_HINT, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                175, 660, 55, 30, hwnd, (HMENU)ID_BTN_HINT, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Est(T)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                245, 640, 50, 30, hwnd, (HMENU)ID_BTN_ESTIMATE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                235, 660, 45, 30, hwnd, (HMENU)ID_BTN_ESTIMATE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Analyzer(S)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                285, 660, 75, 30, hwnd, (HMENU)ID_BTN_ANALYZER, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Campaign", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                300, 640, 75, 30, hwnd, (HMENU)ID_BTN_CAMPAIGN, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                365, 660, 65, 30, hwnd, (HMENU)ID_BTN_CAMPAIGN, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Tsumego", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                435, 660, 60, 30, hwnd, (HMENU)ID_BTN_TSUMEGO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Stats", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                380, 640, 50, 30, hwnd, (HMENU)ID_BTN_STATS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                500, 660, 45, 30, hwnd, (HMENU)ID_BTN_STATS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                435, 640, 50, 30, hwnd, (HMENU)ID_BTN_HELP, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                550, 660, 45, 30, hwnd, (HMENU)ID_BTN_HELP, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             return 0;
 
         case WM_TIMER:
@@ -1001,6 +1123,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'T' || wParam == 't') {
                 showEstimator = !showEstimator;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'S' || wParam == 's') {
+                showAnalyzer = !showAnalyzer;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             return 0;
@@ -1058,6 +1183,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int cellSize = 30;
             int boardW = (boardSize - 1) * cellSize;
             
+            ComputeKoOverlay();
+
             // Outer shadow
             HBRUSH shadowBrush = CreateSolidBrush(RGB(10, 10, 10));
             RECT shadowRect = { padding - 15 + 6, padding - 15 + 6, padding + boardW + 15 + 6, padding + boardW + 15 + 6 };
@@ -1116,6 +1243,28 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             DeleteObject(hoshiBrush);
             
+            // Ko & Superko forbidden overlay indicators
+            for (int r = 0; r < boardSize; r++) {
+                for (int c = 0; c < boardSize; c++) {
+                    if (koMap[r][c] && board[r][c] == 0) {
+                        int cx = padding + c * cellSize;
+                        int cy = padding + r * cellSize;
+                        HPEN koPen = CreatePen(PS_DOT, 1, RGB(255, 50, 50));
+                        HBRUSH hollowB = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+                        HPEN oldP = SelectObject(hdc, koPen);
+                        HBRUSH oldB = SelectObject(hdc, hollowB);
+                        Ellipse(hdc, cx - 8, cy - 8, cx + 8, cy + 8);
+                        MoveToEx(hdc, cx - 4, cy - 4, NULL);
+                        LineTo(hdc, cx + 4, cy + 4);
+                        MoveToEx(hdc, cx + 4, cy - 4, NULL);
+                        LineTo(hdc, cx - 4, cy + 4);
+                        SelectObject(hdc, oldP);
+                        SelectObject(hdc, oldB);
+                        DeleteObject(koPen);
+                    }
+                }
+            }
+
             // Territory estimation visualizer
             if (showEstimator) {
                 ComputeTerritoryAndAtari();
@@ -1148,6 +1297,66 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         }
                     }
                 }
+            }
+
+            // Group Liberty Analyzer highlighting
+            int targetX = -1, targetY = -1;
+            if (hoverX >= 0 && hoverY >= 0 && board[hoverY][hoverX] != 0) {
+                targetX = hoverX; targetY = hoverY;
+            } else if (lastMoveX >= 0 && lastMoveY >= 0 && board[lastMoveY][lastMoveX] != 0) {
+                targetX = lastMoveX; targetY = lastMoveY;
+            }
+            
+            char analyzerStatusStr[128] = "";
+            if (showAnalyzer && targetX >= 0 && targetY >= 0 && board[targetY][targetX] != 0) {
+                int targetColor = board[targetY][targetX];
+                char visGrp[19][19] = {0};
+                POINT grpStones[19*19];
+                int grpSize = 0;
+                GetGroup(targetX, targetY, targetColor, visGrp, grpStones, &grpSize);
+                
+                POINT liberties[19*19];
+                int libCount = 0;
+                GetGroupLibertiesList(grpStones, grpSize, targetColor, liberties, &libCount);
+                
+                // Highlight group stones
+                HPEN grpPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 200));
+                HBRUSH hollowB = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+                HPEN oldP = SelectObject(hdc, grpPen);
+                HBRUSH oldB = SelectObject(hdc, hollowB);
+                for (int i = 0; i < grpSize; i++) {
+                    int cx = padding + grpStones[i].x * cellSize;
+                    int cy = padding + grpStones[i].y * cellSize;
+                    Ellipse(hdc, cx - 14, cy - 14, cx + 14, cy + 14);
+                }
+                SelectObject(hdc, oldP);
+                SelectObject(hdc, oldB);
+                DeleteObject(grpPen);
+                
+                // Render green numbered liberty indicators
+                HBRUSH libBrush = CreateSolidBrush(RGB(40, 200, 80));
+                HFONT fontSmall = CreateFont(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+                HFONT oldFont = SelectObject(hdc, fontSmall);
+                SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(hdc, RGB(255, 255, 255));
+                for (int l = 0; l < libCount; l++) {
+                    int cx = padding + liberties[l].x * cellSize;
+                    int cy = padding + liberties[l].y * cellSize;
+                    SelectObject(hdc, nullPen);
+                    SelectObject(hdc, libBrush);
+                    Ellipse(hdc, cx - 7, cy - 7, cx + 7, cy + 7);
+                    char numBuf[8];
+                    sprintf(numBuf, "%d", l + 1);
+                    RECT txtRect = {cx - 7, cy - 7, cx + 7, cy + 7};
+                    DrawText(hdc, numBuf, -1, &txtRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                }
+                SelectObject(hdc, oldFont);
+                DeleteObject(fontSmall);
+                DeleteObject(libBrush);
+                
+                sprintf(analyzerStatusStr, "Group Analyzer: %s group | Size: %d stones | Liberties: %d (%s)",
+                    targetColor == 1 ? "Black" : "White", grpSize, libCount,
+                    libCount == 1 ? "ATARI DANGER!" : (libCount == 2 ? "Vulnerable" : "Safe"));
             }
 
             // Draw 3D Slate & Shell stones
@@ -1294,21 +1503,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(224, 224, 224));
-            char status[128];
+            char status[256];
             if (currentCampaignStage != -1) {
-                sprintf(status, "%s | Turn: %s | Komi: %.1f%s", 
+                sprintf(status, "%s | Turn: %s | Komi: %.1f%s%s%s", 
                     campaign[currentCampaignStage].name,
                     currentPlayer == 1 ? "Black" : "White",
                     currentKomi,
-                    showEstimator ? " | Est: ON" : "");
+                    hintX != -1 ? " | HINT ACTIVE" : "",
+                    showEstimator ? " | EST ON" : "",
+                    showAnalyzer ? " | ANALYZER ON" : "");
             } else {
-                sprintf(status, "KGo - Turn: %s | Komi: %.1f%s%s", 
+                sprintf(status, "KGo - Turn: %s | Komi: %.1f%s%s%s", 
                     currentPlayer == 1 ? "Black" : "White",
                     currentKomi,
                     hintX != -1 ? " | HINT ACTIVE" : "",
-                    showEstimator ? " | EST ACTIVE" : "");
+                    showEstimator ? " | EST ON" : "",
+                    showAnalyzer ? " | ANALYZER ON" : "");
             }
             TextOut(hdc, 20, 10, status, strlen(status));
+
+            if (strlen(analyzerStatusStr) > 0) {
+                SetTextColor(hdc, RGB(0, 255, 200));
+                TextOut(hdc, 20, 595, analyzerStatusStr, strlen(analyzerStatusStr));
+            } else if (hintX != -1 && hintY != -1) {
+                char hintStr[128];
+                sprintf(hintStr, "AI Hint: Optimal Move at (%d, %d) with score %d", hintX, hintY, hintScore);
+                SetTextColor(hdc, RGB(255, 215, 0));
+                TextOut(hdc, 20, 595, hintStr, strlen(hintStr));
+            }
 
             EndPaint(hwnd, &ps);
             return 0;
@@ -1365,26 +1587,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_BTN_ESTIMATE) {
                 showEstimator = !showEstimator;
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == ID_BTN_ANALYZER) {
+                showAnalyzer = !showAnalyzer;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == ID_BTN_CAMPAIGN) {
+                currentCampaignStage = 0;
+                StartCampaignStage(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_TSUMEGO) {
+                currentTsumegoIndex = (currentTsumegoIndex + 1) % 5;
+                LoadTsumegoPuzzle(hwnd, currentTsumegoIndex);
             } else if (LOWORD(wParam) == ID_BTN_STATS) {
                 char smsg[256];
                 sprintf(smsg, "Statistics:\nGames Played: %d\n\nvs AI Mode:\nWins: %d\nLosses: %d\n\nLocal Mode:\nBlack Wins: %d\nWhite Wins: %d",
                         stats.played, stats.aiWins, stats.aiLosses, stats.localB, stats.localW);
                 MessageBox(hwnd, smsg, "Statistics", MB_OK);
-            } else if (LOWORD(wParam) == ID_BTN_CAMPAIGN) {
-                currentCampaignStage = 0;
-                StartCampaignStage(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 MessageBox(hwnd, 
                     "Goal: Control more territory (empty points) than your opponent.\n\n"
                     "- Players (Black & White) take turns placing stones on intersections.\n"
                     "- Stones must have at least one empty adjacent point (liberty).\n"
                     "- If surrounded, stones are captured and removed.\n"
-                    "- Ko Rule: Cannot recreate the exact previous board position.\n"
+                    "- Superko Rule: Cannot recreate ANY previous board position.\n"
                     "- Suicide Rule: Cannot place a stone with no liberties unless it captures.\n\n"
-                    "Hotkeys & Assistance:\n"
-                    "- Press 'U' (or Undo): Take back move.\n"
-                    "- Press 'H' (or Hint): Evaluate & highlight optimal move.\n"
-                    "- Press 'T' (or Est): Toggle Territory overlay & group danger warning.",
+                    "Active Skills & Assistance:\n"
+                    "- Press 'U' (or Undo): Revert last turn move pair.\n"
+                    "- Press 'H' (or Hint): Calculate & highlight optimal AI candidate move.\n"
+                    "- Press 'T' (or Est): Toggle Territory map overlay & group danger warning.\n"
+                    "- Press 'S' (or Analyzer): Toggle Group Liberty Analyzer overlay & numbered liberties.\n"
+                    "- Click 'Tsumego': Practice life-and-death Tsumego puzzles.",
                     "How to Play KGo", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_CB_SIZE && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = SendMessage(hCbSize, CB_GETCURSEL, 0, 0);
@@ -1419,7 +1649,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KGo",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 620, 720,
+        CW_USEDEFAULT, CW_USEDEFAULT, 680, 750,
         NULL, NULL, hInstance, NULL
     );
 
