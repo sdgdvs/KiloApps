@@ -165,14 +165,25 @@
       } catch (e) {}
   }
 
-  function getPST(pType, x, y, isWhite) {
+  function getPST(pType, x, y, isWhite, isEndgame = false) {
       let row = isWhite ? y : 7 - y;
       let center = (x >= 3 && x <= 4 && row >= 3 && row <= 4) ? 12 : 
                    (x >= 2 && x <= 5 && row >= 2 && row <= 5) ? 6 : 0;
-      if (pType === 1) { if (row <= 1) return 50; if (row === 2) return 20; if (row === 3) return 10; return 0; }
+      if (pType === 1) { 
+          if (isEndgame) {
+              if (row <= 1) return 80; if (row === 2) return 40; if (row === 3) return 20;
+          } else {
+              if (row <= 1) return 50; if (row === 2) return 20; if (row === 3) return 10;
+          }
+          return 0; 
+      }
       if (pType === 2) return center * 3;
       if (pType === 3) return center * 2;
-      if (pType === 6) { if (row >= 6 && (x <= 2 || x >= 5)) return 20; return -center * 2; }
+      if (pType === 6) { 
+          if (isEndgame) return center * 3;
+          if (row >= 6 && (x <= 2 || x >= 5)) return 20; 
+          return -center * 2; 
+      }
       return center;
   }
   const pieceValues = [0, 100, 320, 330, 500, 900, 20000, 100, 320, 330, 500, 900, 20000];
@@ -374,6 +385,18 @@
 
   function evaluateBoardStatic() {
       let score = 0;
+      let wMat = 0, bMat = 0;
+      for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+              let p = board[y][x];
+              if (p !== 0 && p !== 6 && p !== 12 && p !== 1 && p !== 7) {
+                  if (p <= 6) wMat += pieceValues[p];
+                  else bMat += pieceValues[p];
+              }
+          }
+      }
+      let isEndgame = (wMat < 1500 && bMat < 1500);
+
       for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
               let p = board[y][x];
@@ -381,7 +404,7 @@
               let isWhite = p <= 6;
               let pType = isWhite ? p : p - 6;
               let val = pieceValues[p];
-              let pst = getPST(pType, x, y, isWhite);
+              let pst = getPST(pType, x, y, isWhite, isEndgame);
               if (isWhite) score -= (val + pst);
               else score += (val + pst);
           }
@@ -930,15 +953,28 @@
                                   let score = 0;
                                   let pType = board[sy][sx] - 6;
 
+                                  let isEndgame = false;
+                                  let wMat = 0, bMat = 0;
+                                  for (let ry = 0; ry < 8; ry++) {
+                                      for (let rx = 0; rx < 8; rx++) {
+                                          let rp = board[ry][rx];
+                                          if (rp !== 0 && rp !== 6 && rp !== 12 && rp !== 1 && rp !== 7) {
+                                              if (rp <= 6) wMat += pieceValues[rp]; else bMat += pieceValues[rp];
+                                          }
+                                      }
+                                  }
+                                  isEndgame = (wMat < 1500 && bMat < 1500);
+
                                   if (aiPersonality === 1) { // Easy
-                                      score = (dstP !== 0 ? pieceValues[dstP] : 0) + (Math.random() * 80 - 40);
+                                      score = (dstP !== 0 ? pieceValues[dstP] : 0) + (Math.random() * 40 - 20);
+                                      if (isSquareAttacked(tx, ty, true)) score -= Math.floor(pieceValues[board[sy][sx]] / 2);
                                   } else if (aiPersonality === 2) { // Medium
-                                      score = (dstP !== 0 ? pieceValues[dstP] * 1.5 : 0) + getPST(pType, tx, ty, false);
-                                      if (isSquareAttacked(tx, ty, true)) score -= Math.floor(pieceValues[board[sy][sx]] / 12);
+                                      score = (dstP !== 0 ? pieceValues[dstP] * 1.5 : 0) + getPST(pType, tx, ty, false, isEndgame);
+                                      if (isSquareAttacked(tx, ty, true)) score -= Math.floor(pieceValues[board[sy][sx]] / 2);
                                   } else if (aiPersonality === 3) { // Hard
-                                      score = (dstP !== 0 ? pieceValues[dstP] : 0) + getPST(pType, tx, ty, false);
-                                      if (isSquareAttacked(tx, ty, true)) score -= Math.floor(pieceValues[board[sy][sx]] / 5);
-                                      if (tx >= 2 && tx <= 5 && ty >= 2 && ty <= 5) score += 30;
+                                      let ms = makeMoveSim(sx, sy, tx, ty);
+                                      score = minimaxAB(1, -999999, 999999, false); // 2-ply
+                                      unmakeMoveSim(sx, sy, tx, ty, ms);
                                   } else { // Master Minimax
                                       let ms = makeMoveSim(sx, sy, tx, ty);
                                       let searchDepth = (gameMode === 0 && currentStage === 20) ? 4 : 3;

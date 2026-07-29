@@ -194,22 +194,32 @@ static void SpawnCaptureSparks(int px, int py) {
 int IsSquareAttacked(int tx, int ty, int byWhite);
 int IsValidMove(int sx, int sy, int tx, int ty, int isAttackCheck);
 
-int GetPST(int pType, int x, int y, int isWhite) {
+int GetPST(int pType, int x, int y, int isWhite, int isEndgame) {
     int row = isWhite ? y : 7 - y;
     int center = (x >= 3 && x <= 4 && row >= 3 && row <= 4) ? 12 : 
                  (x >= 2 && x <= 5 && row >= 2 && row <= 5) ? 6 : 0;
     
     if (pType == 1) { // Pawn
-        if (row <= 1) return 50; 
-        if (row == 2) return 20;
-        if (row == 3) return 10;
+        if (isEndgame) {
+            if (row <= 1) return 80;
+            if (row == 2) return 40;
+            if (row == 3) return 20;
+        } else {
+            if (row <= 1) return 50; 
+            if (row == 2) return 20;
+            if (row == 3) return 10;
+        }
         return 0;
     }
     if (pType == 2) return center * 3; // Knight
     if (pType == 3) return center * 2; // Bishop
     if (pType == 6) { // King
-        if (row >= 6 && (x <= 2 || x >= 5)) return 20; 
-        return -center * 2; 
+        if (isEndgame) {
+            return center * 3;
+        } else {
+            if (row >= 6 && (x <= 2 || x >= 5)) return 20; 
+            return -center * 2; 
+        }
     }
     return center;
 }
@@ -362,6 +372,18 @@ int HasLegalMoves(int isWhite) {
 
 int EvaluateBoardStatic(void) {
     int score = 0;
+    int wMat = 0, bMat = 0;
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            int p = board[y][x];
+            if (p != 0 && p != 6 && p != 12 && p != 1 && p != 7) {
+                if (p <= 6) wMat += pieceValues[p];
+                else bMat += pieceValues[p];
+            }
+        }
+    }
+    int isEndgame = (wMat < 1500 && bMat < 1500);
+
     for (int y = 0; y < 8; y++) {
         for (int x = 0; x < 8; x++) {
             int p = board[y][x];
@@ -369,7 +391,7 @@ int EvaluateBoardStatic(void) {
             int isWhite = (p <= 6);
             int pType = isWhite ? p : p - 6;
             int val = pieceValues[p];
-            int pst = GetPST(pType, x, y, isWhite);
+            int pst = GetPST(pType, x, y, isWhite, isEndgame);
             if (isWhite) score -= (val + pst);
             else score += (val + pst);
         }
@@ -1180,15 +1202,29 @@ void DoBlackAIMove(void) {
                                 int dstP = board[ty][tx];
                                 int pType = board[sy][sx] - 6;
 
+                                int isEndgame = 0; // We can approximate or recalculate
+                                int wMat = 0, bMat = 0;
+                                for (int ry = 0; ry < 8; ry++) {
+                                    for (int rx = 0; rx < 8; rx++) {
+                                        int rp = board[ry][rx];
+                                        if (rp != 0 && rp != 6 && rp != 12 && rp != 1 && rp != 7) {
+                                            if (rp <= 6) wMat += pieceValues[rp]; else bMat += pieceValues[rp];
+                                        }
+                                    }
+                                }
+                                isEndgame = (wMat < 1500 && bMat < 1500);
+
                                 if (aiPersonality == 1) { // Easy
-                                    score = (dstP != 0 ? pieceValues[dstP] : 0) + (my_rand() % 80 - 40);
+                                    score = (dstP != 0 ? pieceValues[dstP] : 0) + (my_rand() % 40 - 20);
+                                    if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 2);
                                 } else if (aiPersonality == 2) { // Medium
-                                    score = (int)(dstP != 0 ? pieceValues[dstP] * 1.5f : 0) + GetPST(pType, tx, ty, 0);
-                                    if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 12);
+                                    score = (int)(dstP != 0 ? pieceValues[dstP] * 1.5f : 0) + GetPST(pType, tx, ty, 0, isEndgame);
+                                    if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 2);
                                 } else if (aiPersonality == 3) { // Hard
-                                    score = (dstP != 0 ? pieceValues[dstP] : 0) + GetPST(pType, tx, ty, 0);
-                                    if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 5);
-                                    if (tx >= 2 && tx <= 5 && ty >= 2 && ty <= 5) score += 30;
+                                    MoveState ms;
+                                    MakeMoveSim(sx, sy, tx, ty, &ms);
+                                    score = MinimaxAB(1, -999999, 999999, 0); // 2-ply total
+                                    UnmakeMoveSim(sx, sy, tx, ty, &ms);
                                 } else { // Master Minimax
                                     MoveState ms;
                                     MakeMoveSim(sx, sy, tx, ty, &ms);
