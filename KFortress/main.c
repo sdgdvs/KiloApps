@@ -18,17 +18,18 @@ float custom_sqrtf(float val) {
 #define TIMER_INTERVAL 33 // ~30 FPS
 
 // Colors
-#define BG_COLOR RGB(15, 19, 29)
-#define CARD_BG RGB(26, 32, 44)
-#define BORDER_COLOR RGB(51, 61, 82)
-#define TEXT_GOLD RGB(255, 215, 0)
-#define TEXT_WHITE RGB(241, 245, 249)
+#define BG_COLOR RGB(10, 12, 16)
+#define CARD_BG RGB(30, 34, 42)
+#define BORDER_COLOR RGB(74, 85, 104)
+#define TEXT_GOLD RGB(251, 191, 36)
+#define TEXT_RED RGB(244, 63, 94)
+#define TEXT_WHITE RGB(226, 232, 240)
 #define TEXT_MUTED RGB(148, 163, 184)
-#define PATH_COLOR RGB(38, 46, 62)
-#define PATH_BORDER RGB(71, 85, 105)
-#define CASTLE_COLOR RGB(100, 116, 139)
-#define TOWER_SLOT_BG RGB(30, 41, 59)
-#define TOWER_SLOT_HOVER RGB(51, 65, 85)
+#define PATH_COLOR RGB(26, 32, 44)
+#define PATH_BORDER RGB(74, 85, 104)
+#define CASTLE_COLOR RGB(71, 85, 105)
+#define TOWER_SLOT_BG RGB(44, 50, 62)
+#define TOWER_SLOT_HOVER RGB(60, 68, 82)
 #define GOBLIN_GREEN RGB(22, 163, 74)
 
 #define MAX_SLOTS 12
@@ -395,10 +396,18 @@ void Render(HDC hdc, HWND hwnd) {
 
     SetTextColor(memDC, TEXT_GOLD);
     wsprintfA(buf, "Gold: %d", g_gold);
+    SetTextColor(memDC, RGB(180, 140, 20));
+    TextOutA(memDC, w - 321, 25, buf, (int)lstrlenA(buf));
+    TextOutA(memDC, w - 319, 23, buf, (int)lstrlenA(buf));
+    SetTextColor(memDC, TEXT_GOLD);
     TextOutA(memDC, w - 320, 24, buf, (int)lstrlenA(buf));
 
-    SetTextColor(memDC, RGB(239, 68, 68));
+    SetTextColor(memDC, TEXT_RED);
     wsprintfA(buf, "Base HP: %d/%d", g_baseHp, g_maxBaseHp);
+    SetTextColor(memDC, RGB(150, 30, 50));
+    TextOutA(memDC, w - 211, 25, buf, (int)lstrlenA(buf));
+    TextOutA(memDC, w - 209, 23, buf, (int)lstrlenA(buf));
+    SetTextColor(memDC, TEXT_RED);
     TextOutA(memDC, w - 210, 24, buf, (int)lstrlenA(buf));
 
     SetTextColor(memDC, TEXT_WHITE);
@@ -433,19 +442,25 @@ void Render(HDC hdc, HWND hwnd) {
 
     // Draw Range Circle for selected slot
     if (g_selectedSlot != -1) {
-        HPEN rangePen = CreatePen(PS_DOT, 1, TEXT_GOLD);
+        HPEN glowPen1 = CreatePen(PS_SOLID, 4, RGB(120, 90, 20));
+        HPEN glowPen2 = CreatePen(PS_SOLID, 1, TEXT_GOLD);
         HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
-        HPEN oP = (HPEN)SelectObject(memDC, rangePen);
-        HBRUSH oB = (HBRUSH)SelectObject(memDC, nullBrush);
-
+        
         int sx = g_slots[g_selectedSlot].x;
         int sy = g_slots[g_selectedSlot].y;
         int r = g_slots[g_selectedSlot].range;
+        
+        HPEN oP = (HPEN)SelectObject(memDC, glowPen1);
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, nullBrush);
+        Ellipse(memDC, sx - r, sy - r, sx + r, sy + r);
+        
+        SelectObject(memDC, glowPen2);
         Ellipse(memDC, sx - r, sy - r, sx + r, sy + r);
 
         SelectObject(memDC, oP);
         SelectObject(memDC, oB);
-        DeleteObject(rangePen);
+        DeleteObject(glowPen1);
+        DeleteObject(glowPen2);
     }
 
     // Draw Spawn Gate
@@ -519,7 +534,14 @@ void Render(HDC hdc, HWND hwnd) {
         if (hpRatio < 0.0f) hpRatio = 0.0f;
 
         DrawRoundedRect(memDC, ex - barW / 2, ey - 18, ex + barW / 2, ey - 18 + barH, RGB(20, 20, 20), RGB(0, 0, 0), 2);
-        COLORREF hpColor = hpRatio > 0.5f ? RGB(34, 197, 94) : (hpRatio > 0.25f ? RGB(234, 179, 8) : RGB(239, 68, 68));
+        COLORREF hpColor = hpRatio > 0.5f ? RGB(34, 197, 94) : (hpRatio > 0.25f ? RGB(234, 179, 8) : TEXT_RED);
+        
+        // Neon Glow Outline
+        HBRUSH hpBrushGlow = CreateSolidBrush(hpColor);
+        RECT hpRGlow = { ex - barW / 2 - 1, ey - 18 - 1, ex - barW / 2 + (int)(barW * hpRatio) + 1, ey - 18 + barH + 1 };
+        FrameRect(memDC, &hpRGlow, hpBrushGlow);
+        DeleteObject(hpBrushGlow);
+
         HBRUSH hpBrush = CreateSolidBrush(hpColor);
         RECT hpR = { ex - barW / 2, ey - 18, ex - barW / 2 + (int)(barW * hpRatio), ey - 18 + barH };
         FillRect(memDC, &hpR, hpBrush);

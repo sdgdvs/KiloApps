@@ -6,20 +6,21 @@
   <title>KFortress - Fantasy Tower Defense & Siege Defense</title>
   <style>
     :root {
-      --bg-color: #0f131d;
-      --card-bg: #1a202c;
-      --card-hover: #252d3d;
-      --border-color: #333d52;
-      --gold-color: #ffd700;
-      --gold-glow: rgba(255, 215, 0, 0.35);
-      --red-color: #ef4444;
+      --bg-color: #0a0c10;
+      --card-bg: #1e222a;
+      --card-hover: #2c323e;
+      --border-color: #4a5568;
+      --gold-color: #fbbf24;
+      --gold-glow: rgba(251, 191, 36, 0.8);
+      --red-color: #f43f5e;
+      --red-glow: rgba(244, 63, 94, 0.8);
       --green-color: #10b981;
       --blue-color: #3b82f6;
-      --text-white: #f1f5f9;
+      --text-white: #e2e8f0;
       --text-muted: #94a3b8;
-      --path-color: #262e3e;
-      --path-border: #475569;
-      --castle-color: #64748b;
+      --path-color: #1a202c;
+      --path-border: #4a5568;
+      --castle-color: #475569;
     }
 
     * {
@@ -89,8 +90,8 @@
       box-shadow: inset 0 1px 3px rgba(255,255,255,0.05);
     }
 
-    .stat-gold { color: var(--gold-color); border-color: rgba(255, 215, 0, 0.4); }
-    .stat-hp { color: var(--red-color); border-color: rgba(239, 68, 68, 0.4); }
+    .stat-gold { color: var(--gold-color); border-color: var(--gold-color); box-shadow: 0 0 10px var(--gold-glow), inset 0 0 5px var(--gold-glow); text-shadow: 0 0 8px var(--gold-glow); }
+    .stat-hp { color: var(--red-color); border-color: var(--red-color); box-shadow: 0 0 10px var(--red-glow), inset 0 0 5px var(--red-glow); text-shadow: 0 0 8px var(--red-glow); }
     .stat-wave { color: var(--text-white); border-color: rgba(255, 255, 255, 0.2); }
 
     .main-container {
@@ -709,7 +710,7 @@
       const scaledSlots = getScaledSlots();
 
       // Clear & Draw Background
-      ctx.fillStyle = '#141a26';
+      ctx.fillStyle = '#0a0c10';
       ctx.fillRect(0, 0, w, h);
 
       // Draw Grid Pattern Accent
@@ -790,13 +791,16 @@
         const slot = scaledSlots[selectedSlotIndex];
         ctx.beginPath();
         ctx.arc(slot.sx, slot.sy, 130, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 215, 0, 0.08)';
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
         ctx.lineWidth = 1.5;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#fbbf24';
         ctx.setLineDash([6, 4]);
         ctx.stroke();
         ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
       }
 
       // Draw Slots & Towers
@@ -871,8 +875,14 @@
 
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fillRect(e.x - barW / 2, e.y - 20, barW, barH);
-        ctx.fillStyle = hpPercent > 0.5 ? '#22c55e' : (hpPercent > 0.25 ? '#eab308' : '#ef4444');
+        
+        const hpColor = hpPercent > 0.5 ? '#22c55e' : (hpPercent > 0.25 ? '#eab308' : '#ef4444');
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = hpColor;
+        ctx.fillStyle = hpColor;
         ctx.fillRect(e.x - barW / 2, e.y - 20, barW * hpPercent, barH);
+        ctx.shadowBlur = 0;
+
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 1;
         ctx.strokeRect(e.x - barW / 2, e.y - 20, barW, barH);
