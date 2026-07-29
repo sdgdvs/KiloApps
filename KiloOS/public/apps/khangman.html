@@ -26,7 +26,7 @@
             border-radius: 12px;
             padding: 24px;
             width: 100%;
-            max-width: 530px;
+            max-width: 540px;
             text-align: center;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 12px 36px rgba(0, 0, 0, 0.75);
             position: relative;
@@ -142,7 +142,7 @@
 
         #message {
             height: 26px;
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 15px;
             font-weight: bold;
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -151,10 +151,10 @@
             color: white;
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 6px;
-            padding: 8px 14px;
+            padding: 8px 12px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
             box-shadow: 0 3px 0 rgba(0,0,0,0.4);
             transition: transform 0.1s, opacity 0.15s, box-shadow 0.1s;
         }
@@ -207,20 +207,16 @@
     </div>
     
     <select id="category" onchange="handleCategoryChange()" style="margin-bottom: 15px; padding: 7px 10px; background: #1c2432; color: #e0e6ed; border: 1px solid #3a485c; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);">
-        <option value="Technology">Technology</option>
         <option value="Animals">Animals</option>
-        <option value="Countries">Countries</option>
         <option value="Science">Science</option>
+        <option value="Countries">Countries</option>
         <option value="Movies">Movies</option>
-        <option value="Sports">Sports</option>
+        <option value="Tech">Tech</option>
+        <option value="Myth">Myth</option>
         <option value="Food">Food</option>
-        <option value="Music">Music</option>
-        <option value="History">History</option>
-        <option value="Mythology">Mythology</option>
-        <option value="Space">Space</option>
         <option value="Literature">Literature</option>
-        <option value="Geography">Geography</option>
-        <option value="Pop Culture">Pop Culture</option>
+        <option value="Space">Space</option>
+        <option value="Sports">Sports</option>
         <option value="Custom">Custom</option>
     </select>
     
@@ -237,16 +233,24 @@
     
     <div id="keyboard"></div>
     
-    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-        <button class="btn" onclick="useBomb()" id="bomb-btn" style="background-color: #e53935;">Bomb(1)</button>
-        <button class="btn" onclick="useHint()" id="hint-btn" style="background-color: #fb8c00;">Hint</button>
-        <button class="btn" onclick="useShield()" id="shield-btn" style="background-color: #8e24aa;">Shield(1)</button>
-        <button class="btn" onclick="startCampaign()" id="campaign-btn" style="background-color: #00897b;">Campaign</button>
+    <!-- Row 1: Active Skills -->
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+        <button class="btn" onclick="useVowelReveal()" id="vowel-btn" style="background-color: #009688;">Vowel[V](2)</button>
+        <button class="btn" onclick="useConsonantRadar()" id="radar-btn" style="background-color: #fb8c00;">Radar[H](2)</button>
+        <button class="btn" onclick="useShield()" id="shield-btn" style="background-color: #8e24aa;">Shield[S](2)</button>
+        <button class="btn" onclick="useFreezeTimer()" id="freeze-btn" style="background-color: #03a9f4;">Freeze[F](2)</button>
+        <button class="btn" onclick="useBomb()" id="bomb-btn" style="background-color: #e53935;">Bomb[B](2)</button>
+    </div>
+
+    <!-- Row 2: Game Modes -->
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+        <button class="btn" onclick="startCampaign()" id="campaign-btn" style="background-color: #00897b;">Campaign (20)</button>
         <button class="btn" onclick="startBlitz()" id="blitz-btn" style="background-color: #d81b60;">Blitz Mode</button>
         <button class="btn" onclick="gameMode = 0; initGame()" style="background-color: #0288d1;">Freeplay</button>
     </div>
 
-    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px;">
+    <!-- Row 3: Utility & Save -->
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 6px;">
         <button class="btn" onclick="saveGameState()" style="background-color: #43a047;">Save</button>
         <button class="btn" onclick="loadGameState()" style="background-color: #6a1b9a;">Load</button>
         <button class="btn" onclick="showHelp()" style="background-color: #1e88e5;">Help</button>
@@ -256,20 +260,22 @@
 </div>
 
 <div id="help-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
-    <div style="background: #161c26; padding: 25px; border-radius: 12px; max-width: 440px; text-align: left; border: 2px solid #3a485c; color: #e0e6ed; box-shadow: 0 8px 32px rgba(0,0,0,0.8);">
+    <div style="background: #161c26; padding: 25px; border-radius: 12px; max-width: 460px; text-align: left; border: 2px solid #3a485c; color: #e0e6ed; box-shadow: 0 8px 32px rgba(0,0,0,0.8);">
         <h2 style="color: #4facfe; margin-top: 0;">How to Play KHangman</h2>
-        <p><strong>Rules:</strong> Guess the hidden word one letter at a time using your physical or on-screen keyboard.</p>
+        <p><strong>Rules:</strong> Guess the hidden word letter by letter before your strikes run out.</p>
         <p><strong>Game Modes:</strong></p>
         <ul>
-            <li><strong>Freeplay:</strong> Classic un-timed Hangman mode.</li>
-            <li><strong>Campaign Mode:</strong> 15 stages of increasing difficulty across categories.</li>
+            <li><strong>Freeplay:</strong> Classic Hangman mode with custom or chosen categories.</li>
+            <li><strong>Campaign Mode:</strong> 20 stages across 10 categories (4-14 letters, 3-6 strikes) ending in Stage 20 Polymath Grandmaster Challenge!</li>
             <li><strong>Time Attack Blitz:</strong> 60s timer! +2s per correct letter, +15s per word solved!</li>
         </ul>
-        <p><strong>Power-Ups:</strong></p>
+        <p><strong>Active Skills & Power-Ups:</strong></p>
         <ul>
-            <li><strong>Bomb:</strong> Eliminates 3 incorrect letters from keyboard.</li>
-            <li><strong>Hint:</strong> Reveals 1 correct letter in word.</li>
-            <li><strong>Shield:</strong> Absorbs 1 wrong letter guess penalty automatically.</li>
+            <li><strong>Vowel Reveal [V]:</strong> Instantly reveals 1 hidden vowel in target word.</li>
+            <li><strong>Consonant Radar [H]:</strong> Reveals 1 hidden consonant.</li>
+            <li><strong>Strike Shield [S]:</strong> Absorbs 1 incorrect letter guess strike.</li>
+            <li><strong>Freeze Timer [F]:</strong> Freezes stage/blitz timer for 15 seconds.</li>
+            <li><strong>Bomb Nuke [B]:</strong> Eliminates 3 incorrect letters from keyboard.</li>
         </ul>
         <div style="text-align: right; margin-top: 20px;">
             <button onclick="hideHelp()" class="btn" style="background-color: #e53935;">Close</button>
@@ -279,33 +285,57 @@
 
 <script>
     const CATEGORIES = {
-        "Technology": ["COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER", "INTERNET", "BROWSER", "HARDWARE", "NETWORK", "DATABASE", "KEYBOARD", "MONITOR", "ALGORITHM", "COMPILER", "PROCESSOR", "MEMORY", "VARIABLE", "FUNCTION", "ROUTER", "SERVER"],
-        "Animals": ["ELEPHANT", "GIRAFFE", "KANGAROO", "PENGUIN", "DOLPHIN", "TIGER", "MONKEY", "CHEETAH", "GORILLA", "RHINO", "ALLIGATOR", "CROCODILE", "PLATYPUS", "OSTRICH", "OCTOPUS", "PANTHER", "LEOPARD", "WALRUS", "CHIMPANZEE", "HIPPOPOTAMUS"],
-        "Countries": ["AUSTRALIA", "BRAZIL", "CANADA", "DENMARK", "EGYPT", "FRANCE", "GERMANY", "JAPAN", "MEXICO", "SPAIN", "ARGENTINA", "BELGIUM", "CHILE", "GREECE", "INDIA", "ITALY", "NORWAY", "SWEDEN", "THAILAND", "VIETNAM"],
-        "Science": ["PHYSICS", "CHEMISTRY", "BIOLOGY", "ASTRONOMY", "GEOLOGY", "GRAVITY", "MOLECULE", "ATOM", "ENERGY", "RADIATION", "ECOLOGY", "GENETICS", "EVOLUTION", "QUANTUM", "VELOCITY", "PARTICLE", "THERMODYNAMICS", "NEUROLOGY", "BACTERIA", "TELESCOPE"],
-        "Movies": ["TITANIC", "AVATAR", "GLADIATOR", "MATRIX", "INCEPTION", "GODFATHER", "JAWS", "ROCKY", "TERMINATOR", "ALIEN", "JURASSIC", "CASABLANCA", "SUPERMAN", "BATMAN", "SPIDERMAN", "AVENGERS", "PREDATOR", "GHOSTBUSTERS", "HALLOWEEN", "PSYCHO"],
-        "Sports": ["BASKETBALL", "FOOTBALL", "BASEBALL", "SOCCER", "TENNIS", "CRICKET", "VOLLEYBALL", "RUGBY", "GOLF", "HOCKEY", "BADMINTON", "SWIMMING", "BOXING", "WRESTLING", "CYCLING", "ARCHERY", "FENCING", "GYMNASTICS", "MARATHON", "SURFING"],
-        "Food": ["PIZZA", "BURGER", "SUSHI", "PASTA", "TACO", "STEAK", "SALAD", "SOUP", "SANDWICH", "NOODLES", "PANCAKE", "WAFFLE", "CHICKEN", "CHEESE", "BREAD", "RICE", "POTATO", "APPLE", "BANANA", "CHOCOLATE"],
-        "Music": ["GUITAR", "PIANO", "DRUMS", "VIOLIN", "FLUTE", "TRUMPET", "SAXOPHONE", "CELLO", "BASS", "VOCALS", "MELODY", "RHYTHM", "CHORD", "ORCHESTRA", "SYMPHONY", "JAZZ", "ROCK", "BLUES", "CLASSICAL", "POP"],
-        "History": ["ROME", "GREECE", "EGYPT", "EMPIRE", "REVOLUTION", "WAR", "KING", "QUEEN", "KNIGHT", "CASTLE", "PYRAMID", "PHARAOH", "GLADIATOR", "SAMURAI", "NINJA", "VIKING", "PIRATE", "COLONY", "TREATY", "DISCOVERY"],
-        "Mythology": ["ZEUS", "HERCULES", "ODYSSEY", "VALHALLA", "PEGASUS", "MINOTAUR", "POSEIDON", "HADES", "ATHENA", "THOR", "LOKI", "ANUBIS", "PHOENIX", "CENTAUR", "CHIMERA", "CERBERUS", "KRAKEN", "TITAN", "MEDUSA", "SPHINX"],
-        "Space": ["SUPERNOVA", "NEBULA", "ASTEROID", "EXOPLANET", "BLACKHOLE", "GALAXY", "METEOR", "SATELLITE", "ECLIPSE", "COSMOS", "TACHYON", "HUBBLE", "QUASAR", "PULSAR", "LIGHTYEAR", "ORBIT", "COMET", "STARDUST", "PARSEC", "GRAVITY"],
-        "Literature": ["SHAKESPEARE", "SHERLOCK", "DRACULA", "ORWELL", "HOMER", "TOLKIEN", "DICKENS", "NOVEL", "FICTION", "POETRY", "MONTAGUE", "GATSBY", "MOBYCOLD", "ODYSSEY", "INFERNO", "UTOPIA", "HAMLET", "MACBETH", "BEOWULF", "ILIAD"],
-        "Geography": ["AMAZON", "EVEREST", "SAHARA", "HIMALAYAS", "PACIFIC", "ATLANTIC", "ANDES", "ARCHIPELAGO", "CANYON", "PENINSULA", "CONTINENT", "EQUATOR", "GLACIER", "VOLCANO", "REEF", "TUNDRA", "SAVANNA", "ISTHMUS", "ISLAND", "PLATEAU"],
-        "Pop Culture": ["NETFLIX", "TIKTOK", "PODCAST", "GAMING", "STREAMING", "ANIME", "MARVEL", "DISNEY", "ESPORTS", "MEME", "COSPLAY", "SPOTIFY", "FANDOM", "BINGE", "TRENDING", "VLOGGER", "INFLUENCER", "REELS", "YOUTUBE", "AVATAR"]
+        "Animals": ["BEAR", "DEER", "LION", "PUMA", "WOLF", "TIGER", "ZEBRA", "MONKEY", "EAGLE", "RABBIT", "FALCON", "JAGUAR", "WALRUS", "ELEPHANT", "GIRAFFE", "KANGAROO", "PENGUIN", "DOLPHIN", "CHEETAH", "GORILLA", "OCTOPUS", "PANTHER", "LEOPARD", "ALLIGATOR", "PLATYPUS", "CHIMPANZEE", "HIPPOPOTAMUS", "RHINOCEROS", "SALAMANDER", "RATTLESNAKE"],
+        "Science": ["ATOM", "CELL", "ACID", "WAVE", "MASS", "GENE", "PROTON", "PHYSICS", "BIOLOGY", "GEOLOGY", "GRAVITY", "QUANTUM", "CHEMISTRY", "ASTRONOMY", "MOLECULE", "RADIATION", "ECOLOGY", "GENETICS", "EVOLUTION", "VELOCITY", "PARTICLE", "NEUROLOGY", "BACTERIA", "TELESCOPE", "THERMODYNAMICS", "PHOTOSYNTHESIS", "ASTROPHYSICS", "CHROMOSOME", "NEUROSCIENCE", "SPECTROSCOPY"],
+        "Countries": ["EGYPT", "CHILE", "INDIA", "ITALY", "JAPAN", "MEXICO", "SPAIN", "DENMARK", "FRANCE", "GREECE", "NORWAY", "SWEDEN", "AUSTRALIA", "BRAZIL", "CANADA", "GERMANY", "ARGENTINA", "BELGIUM", "PORTUGAL", "THAILAND", "VIETNAM", "COLOMBIA", "SWITZERLAND", "PHILIPPINES", "NETHERLANDS", "MADAGASCAR", "AFGHANISTAN", "LIECHTENSTEIN", "AZERBAIJAN", "LUXEMBOURG"],
+        "Movies": ["JAWS", "ALIEN", "ROCKY", "AVATAR", "MATRIX", "TITANIC", "BATMAN", "PSYCHO", "GLADIATOR", "INCEPTION", "GODFATHER", "TERMINATOR", "JURASSIC", "SUPERMAN", "SPIDERMAN", "AVENGERS", "PREDATOR", "CASABLANCA", "GHOSTBUSTERS", "HALLOWEEN", "INTERSTELLAR", "GOODFELLAS", "BRAVEHEART", "RATATOUILLE", "OPPENHEIMER", "PULPFICTION", "GOODWILLHUNTING", "PIRATESCARIBBEAN", "SCHINDLERLIST", "BLADERUNNER"],
+        "Tech": ["BYTE", "DATA", "CODE", "WIRE", "CHIP", "ROUTER", "SERVER", "MEMORY", "BROWSER", "NETWORK", "COMPUTER", "SOFTWARE", "INTERNET", "HARDWARE", "DATABASE", "KEYBOARD", "MONITOR", "COMPILER", "PROCESSOR", "VARIABLE", "FUNCTION", "APPLICATION", "DEVELOPER", "ALGORITHM", "MICROPROCESSOR", "CYBERSECURITY", "TELECOMMUNICATIONS", "SUPERCOMPUTER", "SUPERCONDUCTOR", "CRYPTOGRAPHY"],
+        "Myth": ["ZEUS", "THOR", "LOKI", "HADES", "TITAN", "HYDRA", "SPHINX", "MEDUSA", "HERCULES", "ODYSSEY", "VALHALLA", "PEGASUS", "MINOTAUR", "POSEIDON", "ATHENA", "ANUBIS", "PHOENIX", "CENTAUR", "CHIMERA", "CERBERUS", "KRAKEN", "LEVIATHAN", "OUROBOROS", "BEHEMOTH", "VALKYRIE", "EXCALIBUR", "PROMETHEUS", "NEPTUNE", "HAMMERTHOR", "GARDENEDEN"],
+        "Food": ["TACO", "SOUP", "RICE", "MEAT", "PIZZA", "BURGER", "SUSHI", "PASTA", "STEAK", "SALAD", "WAFFLE", "CHEESE", "BREAD", "SANDWICH", "NOODLES", "PANCAKE", "CHICKEN", "POTATO", "BANANA", "CHOCOLATE", "SPAGHETTI", "BURRITO", "CROISSANT", "GUACAMOLE", "CHEESECAKE", "ENCHILADA", "MAYONNAISE", "CAPPUCCINO", "RATATOUILLE", "MARGHERITA"],
+        "Literature": ["NOVEL", "POEM", "BARD", "ILIAD", "HOMER", "UTOPIA", "HAMLET", "MACBETH", "ORWELL", "GATSBY", "POETRY", "MONTAGUE", "INFERNO", "BEOWULF", "DICKENS", "TOLKIEN", "DRACULA", "SHERLOCK", "SHAKESPEARE", "FRANKENSTEIN", "ODYSSEY", "MYTHOLOGY", "BIOGRAPHY", "ENCYCLOPEDIA", "WARANDPEACE", "CRIMEANDPUNISHMENT", "GREATGATSBY", "MOBYDICK", "PRIDEPREJUDICE", "LESMISERABLES"],
+        "Space": ["MOON", "STAR", "MARS", "ORBIT", "COMET", "NEBULA", "METEOR", "COSMOS", "ASTEROID", "EXOPLANET", "BLACKHOLE", "GALAXY", "SATELLITE", "ECLIPSE", "TACHYON", "HUBBLE", "QUASAR", "PULSAR", "PARSEC", "GRAVITY", "SUPERNOVA", "LIGHTYEAR", "CONSTELLATION", "ASTROPHYSICS", "EXOSPHERE", "PLANETARIUM", "INTERSTELLAR", "SOLARSYS", "EVENTHORIZON", "MICROGRAVITY"],
+        "Sports": ["GOLF", "BOXING", "RUGBY", "TENNIS", "SOCCER", "HOCKEY", "RACING", "SKIING", "BASEBALL", "FOOTBALL", "CRICKET", "SWIMMING", "WRESTLING", "CYCLING", "ARCHERY", "FENCING", "SURFING", "MARATHON", "BASKETBALL", "VOLLEYBALL", "BADMINTON", "GYMNASTICS", "SKATEBOARDING", "SNOWBOARDING", "WEIGHTLIFTING", "BOBSLEDDING", "WATERPOLO", "TRACKANDFIELD", "BODYBUILDING", "TRIATHLON"]
     };
-    const CATEGORY_NAMES = ["Technology", "Animals", "Countries", "Science", "Movies", "Sports", "Food", "Music", "History", "Mythology", "Space", "Literature", "Geography", "Pop Culture"];
     
-    let gameMode = 0; // 0: Freeplay, 1: Campaign (15 Stages), 2: Time Attack Blitz
+    const CAMPAIGN_STAGES = [
+        { stage: 1,  cat: "Animals",    name: "Stage 1: Safari Starter",       minLen: 4,  maxLen: 6,  maxErrors: 6 },
+        { stage: 2,  cat: "Science",    name: "Stage 2: Lab Foundations",     minLen: 4,  maxLen: 6,  maxErrors: 6 },
+        { stage: 3,  cat: "Countries",  name: "Stage 3: World Explorer",      minLen: 5,  maxLen: 7,  maxErrors: 6 },
+        { stage: 4,  cat: "Movies",     name: "Stage 4: Cinema Classic",      minLen: 5,  maxLen: 7,  maxErrors: 6 },
+        { stage: 5,  cat: "Tech",       name: "Stage 5: Digital Age",         minLen: 5,  maxLen: 8,  maxErrors: 6 },
+        { stage: 6,  cat: "Myth",       name: "Stage 6: Mythic Lore",         minLen: 5,  maxLen: 8,  maxErrors: 5 },
+        { stage: 7,  cat: "Food",       name: "Stage 7: Gourmet Bistro",      minLen: 6,  maxLen: 9,  maxErrors: 5 },
+        { stage: 8,  cat: "Literature", name: "Stage 8: Literary Master",     minLen: 6,  maxLen: 9,  maxErrors: 5 },
+        { stage: 9,  cat: "Space",      name: "Stage 9: Cosmic Voyage",       minLen: 6,  maxLen: 9,  maxErrors: 5 },
+        { stage: 10, cat: "Sports",     name: "Stage 10: Arena Champion",     minLen: 6,  maxLen: 9,  maxErrors: 5 },
+        { stage: 11, cat: "Animals",    name: "Stage 11: Wild Fauna",         minLen: 7,  maxLen: 10, maxErrors: 4 },
+        { stage: 12, cat: "Science",    name: "Stage 12: Quantum Realm",      minLen: 8,  maxLen: 11, maxErrors: 4 },
+        { stage: 13, cat: "Countries",  name: "Stage 13: Global Frontier",    minLen: 8,  maxLen: 11, maxErrors: 4 },
+        { stage: 14, cat: "Movies",     name: "Stage 14: Blockbuster Vault",  minLen: 8,  maxLen: 12, maxErrors: 4 },
+        { stage: 15, cat: "Tech",       name: "Stage 15: Cyber Core",         minLen: 9,  maxLen: 12, maxErrors: 4 },
+        { stage: 16, cat: "Myth",       name: "Stage 16: Olympian Pantheon",  minLen: 9,  maxLen: 13, maxErrors: 3 },
+        { stage: 17, cat: "Food",       name: "Stage 17: Culinary Perfection", minLen: 9, maxLen: 13, maxErrors: 3 },
+        { stage: 18, cat: "Literature", name: "Stage 18: Great Classics",     minLen: 10, maxLen: 14, maxErrors: 3 },
+        { stage: 19, cat: "Space",      name: "Stage 19: Deep Galaxy",        minLen: 10, maxLen: 14, maxErrors: 3 },
+        { stage: 20, cat: "Polymath",   name: "Stage 20: Polymath Grandmaster",minLen: 10, maxLen: 14, maxErrors: 3 }
+    ];
+
+    let gameMode = 0; // 0: Freeplay, 1: Campaign (20 Stages), 2: Time Attack Blitz
     let maxErrors = 6;
     let word = "";
     let guessed = new Set();
     let errors = 0;
     let gameEnded = false;
-    let hintUsed = false;
     let campaignLevel = 1;
-    let bombs = 1;
-    let shields = 1;
+    
+    // Active Skills
+    let vowelReveals = 2;
+    let consonantRadars = 2;
+    let shields = 2;
+    let freezes = 2;
+    let bombs = 2;
+    let freezeTimerSeconds = 0;
+
     let blitzTime = 60;
     let blitzWords = 0;
     let blitzTimerId = null;
@@ -403,6 +433,22 @@
             gain.gain.linearRampToValueAtTime(0, now + 0.25);
             osc.start(now);
             osc.stop(now + 0.25);
+        } else if (type === 'vowel') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(900, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'freeze') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(400, now + 0.2);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
         }
     }
 
@@ -447,12 +493,15 @@
             category: document.getElementById('category').value,
             guessed: Array.from(guessed),
             errors: errors,
-            hintUsed: hintUsed,
             gameMode: gameMode,
             campaignLevel: campaignLevel,
             maxErrors: maxErrors,
-            bombs: bombs,
+            vowelReveals: vowelReveals,
+            consonantRadars: consonantRadars,
             shields: shields,
+            freezes: freezes,
+            bombs: bombs,
+            freezeTimerSeconds: freezeTimerSeconds,
             blitzTime: blitzTime,
             blitzWords: blitzWords
         };
@@ -474,21 +523,20 @@
                 }
                 guessed = new Set(state.guessed);
                 errors = state.errors;
-                hintUsed = state.hintUsed;
                 gameMode = state.gameMode || 0;
                 campaignLevel = state.campaignLevel || 1;
                 maxErrors = state.maxErrors || 6;
-                bombs = state.bombs !== undefined ? state.bombs : 1;
-                shields = state.shields !== undefined ? state.shields : 1;
+                vowelReveals = state.vowelReveals !== undefined ? state.vowelReveals : 2;
+                consonantRadars = state.consonantRadars !== undefined ? state.consonantRadars : 2;
+                shields = state.shields !== undefined ? state.shields : 2;
+                freezes = state.freezes !== undefined ? state.freezes : 2;
+                bombs = state.bombs !== undefined ? state.bombs : 2;
+                freezeTimerSeconds = state.freezeTimerSeconds || 0;
                 blitzTime = state.blitzTime || 60;
                 blitzWords = state.blitzWords || 0;
                 gameEnded = false;
                 
-                document.getElementById('hint-btn').disabled = hintUsed;
-                document.getElementById('bomb-btn').disabled = bombs <= 0;
-                document.getElementById('bomb-btn').innerText = `Bomb(${bombs})`;
-                document.getElementById('shield-btn').disabled = shields <= 0;
-                document.getElementById('shield-btn').innerText = `Shield(${shields})`;
+                updateSkillButtons();
                 document.getElementById('message').innerText = "Game loaded. Guess a letter";
                 document.getElementById('message').style.color = "#e0e6ed";
                 document.getElementById('word-display').classList.remove('win-animation');
@@ -503,6 +551,23 @@
         } else {
             alert("No saved game found.");
         }
+    }
+
+    function updateSkillButtons() {
+        document.getElementById('vowel-btn').innerText = `Vowel[V](${vowelReveals})`;
+        document.getElementById('vowel-btn').disabled = vowelReveals <= 0 || gameEnded;
+        
+        document.getElementById('radar-btn').innerText = `Radar[H](${consonantRadars})`;
+        document.getElementById('radar-btn').disabled = consonantRadars <= 0 || gameEnded;
+        
+        document.getElementById('shield-btn').innerText = `Shield[S](${shields})`;
+        document.getElementById('shield-btn').disabled = shields <= 0 || gameEnded;
+        
+        document.getElementById('freeze-btn').innerText = `Freeze[F](${freezes})`;
+        document.getElementById('freeze-btn').disabled = freezes <= 0 || gameEnded;
+        
+        document.getElementById('bomb-btn').innerText = `Bomb[B](${bombs})`;
+        document.getElementById('bomb-btn').disabled = bombs <= 0 || gameEnded;
     }
 
     // --- High-Quality 3D Wooden Gallows, Animated Character & FX Canvas ---
@@ -626,19 +691,16 @@
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, 240, 200);
 
-        // Slate chalk border vignetting
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
         ctx.lineWidth = 1;
         for (let i = 20; i < 240; i += 30) {
             ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 200); ctx.stroke();
         }
 
-        // 2. High-Quality 3D Wooden Gallows
-        // Base Beam (Shadow + Wood Texturing)
+        // 2. 3D Wooden Gallows
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fillRect(15, 185, 210, 10);
 
-        // Base 3D Wooden Beam
         let baseGrad = ctx.createLinearGradient(20, 175, 20, 185);
         baseGrad.addColorStop(0, '#8b5a2b');
         baseGrad.addColorStop(0.5, '#5c3a21');
@@ -649,7 +711,6 @@
         ctx.lineWidth = 1;
         ctx.strokeRect(20, 175, 200, 10);
 
-        // Vertical Wood Post
         let postGrad = ctx.createLinearGradient(45, 0, 61, 0);
         postGrad.addColorStop(0, '#aa7440');
         postGrad.addColorStop(0.3, '#734624');
@@ -657,7 +718,6 @@
         ctx.fillStyle = postGrad;
         ctx.fillRect(45, 18, 16, 157);
 
-        // Post Wood Grain Lines
         ctx.strokeStyle = 'rgba(40, 20, 10, 0.6)';
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -665,7 +725,6 @@
         ctx.moveTo(57, 18); ctx.lineTo(57, 175);
         ctx.stroke();
 
-        // Horizontal Crossbeam
         let beamGrad = ctx.createLinearGradient(45, 16, 45, 30);
         beamGrad.addColorStop(0, '#9e6732');
         beamGrad.addColorStop(0.5, '#693e1b');
@@ -673,7 +732,6 @@
         ctx.fillStyle = beamGrad;
         ctx.fillRect(45, 16, 130, 14);
 
-        // Diagonal Support Brace
         ctx.save();
         ctx.fillStyle = '#693e1b';
         ctx.beginPath();
@@ -687,11 +745,9 @@
         ctx.stroke();
         ctx.restore();
 
-        // Brass Metal Brackets & Rivets
         ctx.fillStyle = '#d4af37';
-        ctx.fillRect(43, 14, 20, 18); // top joint bracket
-        ctx.fillRect(43, 165, 20, 12); // base bracket
-        // Rivet dots
+        ctx.fillRect(43, 14, 20, 18);
+        ctx.fillRect(43, 165, 20, 12);
         ctx.fillStyle = '#4a3707';
         ctx.beginPath();
         ctx.arc(48, 20, 2, 0, Math.PI * 2);
@@ -700,7 +756,6 @@
         ctx.arc(58, 171, 2, 0, Math.PI * 2);
         ctx.fill();
 
-        // Pulley Wheel at top right
         ctx.fillStyle = '#d4af37';
         ctx.beginPath();
         ctx.arc(165, 23, 9, 0, Math.PI * 2);
@@ -710,7 +765,7 @@
         ctx.arc(165, 23, 3, 0, Math.PI * 2);
         ctx.fill();
 
-        // 3. Rope & Animated Noose Physics
+        // 3. Rope & Noose Physics
         let nooseSway = Math.sin(animTime * 2) * (0.04 + errors * 0.025);
         if (gameEnded && isWin()) nooseSway = Math.sin(animTime * 6) * 0.08;
         
@@ -727,7 +782,6 @@
         ctx.lineTo(hangX, hangY);
         ctx.stroke();
 
-        // Twisted rope texture lines
         ctx.strokeStyle = '#8b7355';
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -735,7 +789,7 @@
         ctx.lineTo(hangX - 1, hangY);
         ctx.stroke();
 
-        // 4. Character Sprite Rendering (Added Limb-by-Limb with Expressive Animated Polish)
+        // 4. Character Sprite Rendering
         const cx = hangX;
         const cy = hangY;
         const idleBounce = (gameEnded && isWin()) ? Math.abs(Math.sin(animTime * 8)) * 12 : Math.sin(animTime * 3) * 2;
@@ -745,7 +799,6 @@
             const headY = cy + 16 - idleBounce;
             const headR = 15;
 
-            // Soft Head Base & Blushing Cheeks
             ctx.fillStyle = '#ffdfc4';
             ctx.beginPath();
             ctx.arc(cx, headY, headR, 0, Math.PI * 2);
@@ -754,15 +807,12 @@
             ctx.lineWidth = 2.5;
             ctx.stroke();
 
-            // Hair / Cute Cap
             ctx.fillStyle = '#0288d1';
             ctx.beginPath();
             ctx.arc(cx, headY - 4, headR - 1, Math.PI, Math.PI * 2);
             ctx.fill();
-            // Cap Brim
             ctx.fillRect(cx - headR - 2, headY - 5, (headR + 2) * 2, 4);
 
-            // Blushing cheeks
             ctx.fillStyle = 'rgba(255, 120, 120, 0.55)';
             ctx.beginPath();
             ctx.arc(cx - 7, headY + 3, 3.5, 0, Math.PI * 2);
@@ -772,7 +822,6 @@
             // Eyes
             ctx.fillStyle = '#1a237e';
             if (gameEnded && isWin()) {
-                // Happy Sparkle Eyes ^ ^
                 ctx.strokeStyle = '#1b5e20';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -780,7 +829,6 @@
                 ctx.arc(cx + 6, headY - 1, 3, Math.PI, Math.PI * 2);
                 ctx.stroke();
             } else if (gameEnded && !isWin()) {
-                // Dead X_X Eyes
                 ctx.strokeStyle = '#b71c1c';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -790,7 +838,6 @@
                 ctx.moveTo(cx + 8, headY - 4); ctx.lineTo(cx + 3, headY + 1);
                 ctx.stroke();
             } else if (isBlinking) {
-                // Blinking closed eye line
                 ctx.strokeStyle = '#263238';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -798,13 +845,11 @@
                 ctx.moveTo(cx + 3, headY - 1); ctx.lineTo(cx + 8, headY - 1);
                 ctx.stroke();
             } else {
-                // Normal / Scared Eyes
                 const eyeR = (errors >= maxErrors - 1) ? 4 : 3;
                 ctx.beginPath();
                 ctx.arc(cx - 6, headY - 1, eyeR, 0, Math.PI * 2);
                 ctx.arc(cx + 6, headY - 1, eyeR, 0, Math.PI * 2);
                 ctx.fill();
-                // Pupil highlight white dot
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.arc(cx - 7, headY - 2, 1, 0, Math.PI * 2);
@@ -817,34 +862,25 @@
             ctx.lineWidth = 2;
             ctx.beginPath();
             if (gameEnded && isWin()) {
-                ctx.arc(cx, headY + 4, 5, 0, Math.PI); // Big Smile
+                ctx.arc(cx, headY + 4, 5, 0, Math.PI);
             } else if (gameEnded && !isWin()) {
-                ctx.arc(cx, headY + 7, 4, Math.PI, Math.PI * 2); // Frown
+                ctx.arc(cx, headY + 7, 4, Math.PI, Math.PI * 2);
             } else if (errors >= 4) {
-                ctx.arc(cx, headY + 5, 3, 0, Math.PI * 2); // Scared 'O'
+                ctx.arc(cx, headY + 5, 3, 0, Math.PI * 2);
             } else {
-                ctx.arc(cx, headY + 4, 3, 0, Math.PI); // Gentle smile
+                ctx.arc(cx, headY + 4, 3, 0, Math.PI);
             }
             ctx.stroke();
-
-            // Sweat drop on forehead when errors high
-            if (errors >= maxErrors - 1 && !gameEnded) {
-                ctx.fillStyle = '#4fc3f7';
-                ctx.beginPath();
-                ctx.arc(cx + 12, headY - 6 + Math.sin(animTime * 6) * 2, 2.5, 0, Math.PI * 2);
-                ctx.fill();
-            }
 
             // Torso (Error 2)
             if (errors > 1) {
                 const bodyY1 = headY + headR;
                 const bodyY2 = bodyY1 + 35;
-                ctx.fillStyle = '#00897b'; // Vest/Shirt
+                ctx.fillStyle = '#00897b';
                 ctx.fillRect(cx - 8, bodyY1, 16, 35);
                 ctx.strokeStyle = '#004d40';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(cx - 8, bodyY1, 16, 35);
-                // Yellow buttons
                 ctx.fillStyle = '#ffeb3b';
                 ctx.beginPath();
                 ctx.arc(cx, bodyY1 + 8, 2, 0, Math.PI * 2);
@@ -882,7 +918,6 @@
                     ctx.moveTo(cx - 5, bodyY2);
                     ctx.lineTo(lLegX, bodyY2 + 25);
                     ctx.stroke();
-                    // Boot
                     ctx.fillStyle = '#3e2723';
                     ctx.fillRect(lLegX - 4, bodyY2 + 23, 7, 5);
                 }
@@ -896,21 +931,16 @@
                     ctx.moveTo(cx + 5, bodyY2);
                     ctx.lineTo(rLegX, bodyY2 + 25);
                     ctx.stroke();
-                    // Boot
                     ctx.fillStyle = '#3e2723';
                     ctx.fillRect(rLegX - 3, bodyY2 + 23, 7, 5);
                 }
             }
         }
 
-        // 5. Update and Draw Particle Overlay (Confetti / Rain)
+        // 5. Update and Draw Particles
         updateAndDrawParticles(ctx);
 
         requestAnimationFrame(renderHangmanCanvas);
-    }
-
-    function drawHangman() {
-        // Handled dynamically by renderHangmanCanvas loop!
     }
 
     function updateKeyboardStates() {
@@ -963,7 +993,7 @@
     }
 
     function startCampaign() {
-        if (gameEnded && isWin() && gameMode === 1 && campaignLevel < 15) {
+        if (gameEnded && isWin() && gameMode === 1 && campaignLevel < 20) {
             campaignLevel++;
         } else {
             gameMode = 1;
@@ -982,6 +1012,18 @@
     function startBlitzTimer() {
         if (blitzTimerId) clearInterval(blitzTimerId);
         blitzTimerId = setInterval(() => {
+            if (freezeTimerSeconds > 0) {
+                freezeTimerSeconds--;
+                const msgEl = document.getElementById('message');
+                if (gameMode === 2) {
+                    msgEl.innerText = `⚡ Blitz Time: ${blitzTime}s | Words: ${blitzWords} | ❄️ FROZEN (${freezeTimerSeconds}s)`;
+                } else if (gameMode === 1) {
+                    const st = CAMPAIGN_STAGES[campaignLevel - 1];
+                    msgEl.innerText = `${st.name} | ❄️ FROZEN (${freezeTimerSeconds}s)`;
+                }
+                return;
+            }
+
             if (gameMode === 2 && !gameEnded) {
                 blitzTime--;
                 const msgEl = document.getElementById('message');
@@ -1007,31 +1049,50 @@
     }
 
     function selectNewWord() {
-        const category = document.getElementById('category').value;
-        let words = CATEGORIES[category];
-        
-        if (category === "Custom") {
-            const customInput = document.getElementById('custom-words').value;
-            if (customInput.trim() !== "") {
-                const parsedWords = customInput.split(',').map(w => w.trim().toUpperCase().replace(/[^A-Z]/g, '')).filter(w => w.length > 0);
-                if (parsedWords.length > 0) {
-                    CATEGORIES["Custom"] = parsedWords;
-                    words = parsedWords;
+        let words = [];
+        if (gameMode === 1) { // Campaign stage selection based on length
+            const st = CAMPAIGN_STAGES[campaignLevel - 1];
+            maxErrors = st.maxErrors;
+            
+            if (st.cat !== "Polymath") {
+                document.getElementById('category').value = st.cat;
+                words = CATEGORIES[st.cat].filter(w => w.length >= st.minLen && w.length <= st.maxLen);
+            } else { // Stage 20 Polymath Grandmaster
+                document.getElementById('category').value = "Animals";
+                let allWords = [];
+                for (let c in CATEGORIES) {
+                    if (c !== "Custom") allWords = allWords.concat(CATEGORIES[c]);
+                }
+                words = allWords.filter(w => w.length >= st.minLen && w.length <= st.maxLen);
+            }
+            if (words.length === 0) words = CATEGORIES[st.cat] || CATEGORIES["Animals"];
+        } else {
+            const category = document.getElementById('category').value;
+            words = CATEGORIES[category] || CATEGORIES["Animals"];
+            
+            if (category === "Custom") {
+                const customInput = document.getElementById('custom-words').value;
+                if (customInput.trim() !== "") {
+                    const parsedWords = customInput.split(',').map(w => w.trim().toUpperCase().replace(/[^A-Z]/g, '')).filter(w => w.length > 0);
+                    if (parsedWords.length > 0) {
+                        CATEGORIES["Custom"] = parsedWords;
+                        words = parsedWords;
+                    } else {
+                        CATEGORIES["Custom"] = ["CUSTOM"];
+                        words = CATEGORIES["Custom"];
+                    }
                 } else {
-                    CATEGORIES["Custom"] = ["CUSTOM"];
+                    if (!CATEGORIES["Custom"] || CATEGORIES["Custom"].length === 0) {
+                        CATEGORIES["Custom"] = ["CUSTOM"];
+                    }
                     words = CATEGORIES["Custom"];
                 }
-            } else {
-                if (!CATEGORIES["Custom"] || CATEGORIES["Custom"].length === 0) {
-                    CATEGORIES["Custom"] = ["CUSTOM"];
-                }
-                words = CATEGORIES["Custom"];
             }
         }
+
         word = words[Math.floor(Math.random() * words.length)];
         guessed.clear();
         errors = 0;
-        hintUsed = false;
         particles = [];
     }
 
@@ -1039,47 +1100,40 @@
         if (blitzTimerId) clearInterval(blitzTimerId);
         
         if (gameMode === 1) { // Campaign
-            const catName = CATEGORY_NAMES[(campaignLevel - 1) % CATEGORY_NAMES.length];
-            document.getElementById('category').value = catName;
-            
-            if (campaignLevel <= 3) maxErrors = 7;
-            else if (campaignLevel <= 7) maxErrors = 6;
-            else if (campaignLevel <= 11) maxErrors = 5;
-            else maxErrors = 4;
-            
-            if (campaignLevel === 1) {
-                bombs = 3;
-                shields = 2;
-            }
-            document.getElementById('campaign-btn').innerText = (gameEnded && isWin() && campaignLevel < 15) ? "Next Stage" : "Campaign";
+            vowelReveals = 2;
+            consonantRadars = 2;
+            shields = 2;
+            freezes = 2;
+            bombs = 2;
+            document.getElementById('campaign-btn').innerText = (gameEnded && isWin() && campaignLevel < 20) ? "Next Stage" : "Campaign (20)";
         } else if (gameMode === 2) { // Time Attack Blitz
             maxErrors = 6;
+            vowelReveals = 3;
+            consonantRadars = 3;
+            shields = 2;
+            freezes = 2;
             bombs = 2;
-            shields = 1;
-            document.getElementById('campaign-btn').innerText = "Campaign";
+            document.getElementById('campaign-btn').innerText = "Campaign (20)";
         } else { // Freeplay
             maxErrors = 6;
-            bombs = 1;
-            shields = 1;
-            document.getElementById('campaign-btn').innerText = "Campaign";
+            vowelReveals = 2;
+            consonantRadars = 2;
+            shields = 2;
+            freezes = 2;
+            bombs = 2;
+            document.getElementById('campaign-btn').innerText = "Campaign (20)";
         }
         
+        freezeTimerSeconds = 0;
         selectNewWord();
         gameEnded = false;
         
-        if (document.getElementById('hint-btn')) document.getElementById('hint-btn').disabled = false;
-        if (document.getElementById('bomb-btn')) {
-            document.getElementById('bomb-btn').disabled = bombs <= 0;
-            document.getElementById('bomb-btn').innerText = `Bomb(${bombs})`;
-        }
-        if (document.getElementById('shield-btn')) {
-            document.getElementById('shield-btn').disabled = shields <= 0;
-            document.getElementById('shield-btn').innerText = `Shield(${shields})`;
-        }
+        updateSkillButtons();
         
         const msgEl = document.getElementById('message');
         if (gameMode === 1) {
-            msgEl.innerText = `Campaign Stage ${campaignLevel} / 15`;
+            const st = CAMPAIGN_STAGES[campaignLevel - 1];
+            msgEl.innerText = `${st.name} (Max Strikes: ${st.maxErrors})`;
             msgEl.style.color = "#ffc107";
         } else if (gameMode === 2) {
             msgEl.innerText = `⚡ Blitz Time: ${blitzTime}s | Words Solved: ${blitzWords}`;
@@ -1096,29 +1150,50 @@
         updateDisplay();
     }
 
-    function useHint() {
-        if (hintUsed || gameEnded) return;
-        
-        let unGuessed = [];
-        for (let char of word) {
-            if (!guessed.has(char)) {
-                unGuessed.push(char);
-            }
+    function useVowelReveal() {
+        if (vowelReveals <= 0 || gameEnded) return;
+        const unGuessedVowels = [...new Set([...word])].filter(ch => ['A', 'E', 'I', 'O', 'U'].includes(ch) && !guessed.has(ch));
+        if (unGuessedVowels.length > 0) {
+            vowelReveals--;
+            updateSkillButtons();
+            playSound('vowel');
+            const targetChar = unGuessedVowels[Math.floor(Math.random() * unGuessedVowels.length)];
+            guess(targetChar);
         }
-        
-        if (unGuessed.length > 0) {
-            let randomChar = unGuessed[Math.floor(Math.random() * unGuessed.length)];
-            hintUsed = true;
-            document.getElementById('hint-btn').disabled = true;
-            guess(randomChar);
+    }
+
+    function useConsonantRadar() {
+        if (consonantRadars <= 0 || gameEnded) return;
+        const unGuessedConsonants = [...new Set([...word])].filter(ch => !['A', 'E', 'I', 'O', 'U'].includes(ch) && !guessed.has(ch));
+        if (unGuessedConsonants.length > 0) {
+            consonantRadars--;
+            updateSkillButtons();
+            playSound('valid');
+            const targetChar = unGuessedConsonants[Math.floor(Math.random() * unGuessedConsonants.length)];
+            guess(targetChar);
+        }
+    }
+
+    function useShield() {
+        if (shields <= 0 || gameEnded) return;
+        alert("Strike Shield absorbs 1 wrong guess automatically!");
+    }
+
+    function useFreezeTimer() {
+        if (freezes <= 0 || gameEnded) return;
+        freezes--;
+        freezeTimerSeconds = 15;
+        updateSkillButtons();
+        playSound('freeze');
+        if (gameMode !== 2 && !blitzTimerId) {
+            startBlitzTimer(); // Enable ticker for freeze timer duration
         }
     }
 
     function useBomb() {
         if (bombs <= 0 || gameEnded) return;
         bombs--;
-        document.getElementById('bomb-btn').innerText = `Bomb(${bombs})`;
-        if (bombs <= 0) document.getElementById('bomb-btn').disabled = true;
+        updateSkillButtons();
         playSound('bomb');
         
         let available = [];
@@ -1140,11 +1215,6 @@
         updateDisplay();
     }
 
-    function useShield() {
-        if (shields <= 0 || gameEnded) return;
-        alert("Shield absorbs 1 wrong guess automatically!");
-    }
-
     function guess(letter) {
         if (guessed.has(letter) || errors >= maxErrors || isWin() || gameEnded) return;
         
@@ -1156,10 +1226,7 @@
         if (!word.includes(letter)) {
             if (shields > 0) {
                 shields--;
-                if (document.getElementById('shield-btn')) {
-                    document.getElementById('shield-btn').innerText = `Shield(${shields})`;
-                    if (shields <= 0) document.getElementById('shield-btn').disabled = true;
-                }
+                updateSkillButtons();
                 playSound('shield');
             } else {
                 errors++;
@@ -1209,17 +1276,17 @@
                 return;
             }
 
-            if (gameMode === 1 && campaignLevel === 15) {
-                msgEl.innerText = "Campaign Complete!";
+            if (gameMode === 1 && campaignLevel === 20) {
+                msgEl.innerText = "Stage 20 Polymath Complete! Champion!";
             } else {
-                msgEl.innerText = "You Win!";
+                msgEl.innerText = "Stage Clear! You Win!";
             }
             msgEl.style.color = "#4caf50";
             document.getElementById('word-display').classList.add('win-animation');
             disableAllKeys();
             if (!gameEnded) {
                 gameEnded = true;
-                if (gameMode === 1) document.getElementById('campaign-btn').innerText = (campaignLevel < 15) ? "Next Stage" : "Campaign";
+                if (gameMode === 1) document.getElementById('campaign-btn').innerText = (campaignLevel < 20) ? "Next Stage" : "Campaign (20)";
                 playSound('win');
                 spawnWinParticles();
                 stats.wins++;
@@ -1237,7 +1304,7 @@
                 if (gameMode === 1) {
                     gameMode = 0;
                     campaignLevel = 1;
-                    document.getElementById('campaign-btn').innerText = "Campaign";
+                    document.getElementById('campaign-btn').innerText = "Campaign (20)";
                 }
                 playSound('lose');
                 spawnLossParticles();
@@ -1256,10 +1323,19 @@
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey || e.altKey || e.metaKey) return;
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
-        if (e.key >= 'a' && e.key <= 'z') {
-            guess(e.key.toUpperCase());
-        } else if (e.key >= 'A' && e.key <= 'Z') {
-            guess(e.key);
+        const keyUpper = e.key.toUpperCase();
+        if (keyUpper === 'V' && vowelReveals > 0 && !gameEnded) {
+            useVowelReveal();
+        } else if (keyUpper === 'H' && consonantRadars > 0 && !gameEnded) {
+            useConsonantRadar();
+        } else if (keyUpper === 'S' && shields > 0 && !gameEnded) {
+            useShield();
+        } else if (keyUpper === 'F' && freezes > 0 && !gameEnded) {
+            useFreezeTimer();
+        } else if (keyUpper === 'B' && bombs > 0 && !gameEnded) {
+            useBomb();
+        } else if (keyUpper >= 'A' && keyUpper <= 'Z') {
+            guess(keyUpper);
         }
     });
 
