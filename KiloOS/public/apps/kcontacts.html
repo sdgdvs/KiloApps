@@ -580,6 +580,7 @@
     let contacts = [];
     let selectedId = null;
     let currentFilter = 'All';
+    const MAX_CONTACTS = 1000;
 
     // Dom Elements
     const contactList = document.getElementById('contactList');
@@ -641,13 +642,20 @@
       return `linear-gradient(135deg, hsl(${h1}, 65%, 45%), hsl(${h2}, 65%, 35%))`;
     }
 
+    function sanitizeCategoryClass(cat) {
+      return (cat || 'Other').replace(/[^a-zA-Z0-9]/g, '');
+    }
+
     // Default Seed Data
     function seedData() {
       const saved = localStorage.getItem('kcontacts_data_v2');
       if (saved) {
         try {
-          contacts = JSON.parse(saved);
-          return;
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            contacts = parsed.slice(0, MAX_CONTACTS);
+            return;
+          }
         } catch (e) {
           console.error("Failed to parse local storage", e);
         }
@@ -703,20 +711,24 @@
     }
 
     function saveContacts() {
-      localStorage.setItem('kcontacts_data_v2', JSON.stringify(contacts));
+      try {
+        localStorage.setItem('kcontacts_data_v2', JSON.stringify(contacts));
+      } catch (e) {
+        showToast('Storage quota exceeded. Could not save to localStorage.');
+      }
     }
 
     // Render Contact List
     function renderList() {
-      const query = searchInput.value.toLowerCase().trim();
+      const rawQuery = searchInput.value.substring(0, 100).toLowerCase().trim();
       contactList.innerHTML = '';
 
       const filtered = contacts.filter(c => {
-        const matchesQuery = !query || 
-          (c.name && c.name.toLowerCase().includes(query)) ||
-          (c.email && c.email.toLowerCase().includes(query)) ||
-          (c.phone && c.phone.toLowerCase().includes(query)) ||
-          (c.company && c.company.toLowerCase().includes(query));
+        const matchesQuery = !rawQuery || 
+          (c.name && c.name.toLowerCase().includes(rawQuery)) ||
+          (c.email && c.email.toLowerCase().includes(rawQuery)) ||
+          (c.phone && c.phone.toLowerCase().includes(rawQuery)) ||
+          (c.company && c.company.toLowerCase().includes(rawQuery));
 
         let matchesCat = true;
         if (currentFilter === 'Favorites') matchesCat = !!c.fav;
@@ -728,7 +740,10 @@
       contactCount.textContent = `${contacts.length} Contact${contacts.length === 1 ? '' : 's'}`;
 
       if (filtered.length === 0) {
-        contactList.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">No matching contacts found.</div>`;
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.cssText = 'padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;';
+        emptyDiv.textContent = 'No matching contacts found.';
+        contactList.appendChild(emptyDiv);
         return;
       }
 
@@ -763,13 +778,13 @@
         const subRow = document.createElement('div');
         subRow.className = 'contact-sub';
         subRow.style.display = 'flex';
-        subRow.style.justifySpaceBetween = 'space-between';
+        subRow.style.justifyContent = 'space-between';
 
         const subText = document.createElement('span');
         subText.textContent = c.phone || c.email || 'No contact details';
 
         const badge = document.createElement('span');
-        badge.className = `category-badge badge-${c.category || 'Other'}`;
+        badge.className = `category-badge badge-${sanitizeCategoryClass(c.category)}`;
         badge.textContent = c.category || 'Other';
 
         subRow.appendChild(subText);
@@ -806,7 +821,7 @@
       headerName.textContent = c.name || 'Unnamed Contact';
       headerFavStar.textContent = c.fav ? '★' : '☆';
       headerFavStar.style.color = c.fav ? 'var(--accent-yellow)' : 'var(--text-muted)';
-      headerCategoryBadge.className = `category-badge badge-${c.category || 'Other'}`;
+      headerCategoryBadge.className = `category-badge badge-${sanitizeCategoryClass(c.category)}`;
       headerCategoryBadge.textContent = c.category || 'Other';
       headerCompany.textContent = c.company ? `${c.company} ${c.title ? '• ' + c.title : ''}` : c.title || '';
 
@@ -823,8 +838,12 @@
 
     // Create New Contact
     document.getElementById('btnNew').onclick = () => {
+      if (contacts.length >= MAX_CONTACTS) {
+        showToast(`Contact limit (${MAX_CONTACTS}) reached.`);
+        return;
+      }
       const newContact = {
-        id: 'c_' + Date.now(),
+        id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
         name: 'New Contact',
         phone: '',
         email: '',
@@ -846,18 +865,19 @@
       const c = contacts.find(item => item.id === selectedId);
       if (!c) return;
 
-      if (!inpName.value.trim()) {
+      const trimmedName = inpName.value.trim().substring(0, 100);
+      if (!trimmedName) {
         alert('Contact name cannot be empty.');
         return;
       }
 
-      c.name = inpName.value.trim();
+      c.name = trimmedName;
       c.category = inpCategory.value;
-      c.phone = inpPhone.value.trim();
-      c.email = inpEmail.value.trim();
-      c.company = inpCompany.value.trim();
-      c.title = inpTitle.value.trim();
-      c.notes = inpNotes.value.trim();
+      c.phone = inpPhone.value.trim().substring(0, 50);
+      c.email = inpEmail.value.trim().substring(0, 100);
+      c.company = inpCompany.value.trim().substring(0, 100);
+      c.title = inpTitle.value.trim().substring(0, 100);
+      c.notes = inpNotes.value.trim().substring(0, 2000);
       c.fav = inpFav.checked;
 
       saveContacts();
@@ -887,7 +907,8 @@
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (c && c.phone) {
-        window.open(`tel:${c.phone}`, '_self');
+        const safePhone = c.phone.replace(/[^0-9+\-\s()]/g, '');
+        window.open(`tel:${encodeURIComponent(safePhone)}`, '_self');
         showToast(`Dialing ${c.phone}...`);
       } else {
         showToast('No phone number specified');
@@ -899,7 +920,8 @@
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (c && c.email) {
-        window.open(`mailto:${c.email}`, '_self');
+        const safeEmail = c.email.replace(/[^\w.@+\-]/g, '');
+        window.open(`mailto:${encodeURIComponent(safeEmail)}`, '_self');
         showToast(`Opening email to ${c.email}...`);
       } else {
         showToast('No email address specified');
@@ -914,6 +936,8 @@
         const text = `Name: ${c.name}\nPhone: ${c.phone}\nEmail: ${c.email}\nCategory: ${c.category}\nCompany: ${c.company}\nNotes: ${c.notes}`;
         navigator.clipboard.writeText(text).then(() => {
           showToast('Copied contact info to clipboard');
+        }).catch(() => {
+          showToast('Failed to copy to clipboard');
         });
       }
     };
@@ -943,17 +967,22 @@
 
       const uniqueList = [];
       for (const c of contacts) {
-        // key by lower name or email
         const key = (c.name || '').toLowerCase().trim();
         if (key && map.has(key)) {
           const existing = map.get(key);
-          // Merge non-empty fields
           if (!existing.phone && c.phone) existing.phone = c.phone;
           if (!existing.email && c.email) existing.email = c.email;
           if (!existing.company && c.company) existing.company = c.company;
           if (!existing.title && c.title) existing.title = c.title;
-          if (!existing.notes && c.notes) existing.notes = c.notes;
-          else if (c.notes && !existing.notes.includes(c.notes)) existing.notes += '\n' + c.notes;
+
+          const existingNotes = existing.notes || '';
+          const cNotes = c.notes || '';
+          if (!existingNotes && cNotes) {
+            existing.notes = cNotes;
+          } else if (cNotes && !existingNotes.includes(cNotes)) {
+            existing.notes = existingNotes + '\n' + cNotes;
+          }
+
           if (c.fav) existing.fav = true;
           mergedCount++;
         } else {
@@ -1003,18 +1032,17 @@
         filename = 'kcontacts_export.csv';
         mimeType = 'text/csv';
       } else {
-        // Default to vCard
         content = contacts.map(c => {
           return [
             'BEGIN:VCARD',
             'VERSION:3.0',
-            `FN:${c.name || ''}`,
-            `TEL;TYPE=CELL:${c.phone || ''}`,
-            `EMAIL;TYPE=INTERNET:${c.email || ''}`,
-            `ORG:${c.company || ''}`,
-            `TITLE:${c.title || ''}`,
-            `CATEGORIES:${c.category || ''}`,
-            `NOTE:${(c.notes || '').replace(/\n/g, '\\n')}`,
+            `FN:${(c.name || '').replace(/\r?\n/g, ' ')}`,
+            `TEL;TYPE=CELL:${(c.phone || '').replace(/\r?\n/g, ' ')}`,
+            `EMAIL;TYPE=INTERNET:${(c.email || '').replace(/\r?\n/g, ' ')}`,
+            `ORG:${(c.company || '').replace(/\r?\n/g, ' ')}`,
+            `TITLE:${(c.title || '').replace(/\r?\n/g, ' ')}`,
+            `CATEGORIES:${(c.category || '').replace(/\r?\n/g, ' ')}`,
+            `NOTE:${(c.notes || '').replace(/\r?\n/g, '\\n')}`,
             'END:VCARD'
           ].join('\r\n');
         }).join('\r\n');
@@ -1043,53 +1071,54 @@
 
       const reader = new FileReader();
       reader.onload = (event) => {
-        const text = event.target.result;
+        const text = event.target.result || '';
         let count = 0;
 
         if (file.name.endsWith('.vcf') || text.includes('BEGIN:VCARD')) {
-          // Parse vCard
           const cards = text.split(/END:VCARD/i);
           cards.forEach(card => {
             if (!card.includes('BEGIN:VCARD')) return;
-            const fnMatch = card.match(/FN:(.*)/i);
-            const telMatch = card.match(/TEL.*:(.*)/i);
-            const emailMatch = card.match(/EMAIL.*:(.*)/i);
-            const catMatch = card.match(/CATEGORIES:(.*)/i);
-            const orgMatch = card.match(/ORG:(.*)/i);
-            const noteMatch = card.match(/NOTE:(.*)/i);
+            if (contacts.length >= MAX_CONTACTS) return;
 
-            if (fnMatch) {
+            const fnMatch = card.match(/(?:FN|N)(?:;[^:]*)?:([^\r\n]*)/i);
+            const telMatch = card.match(/TEL(?:;[^:]*)?:([^\r\n]*)/i);
+            const emailMatch = card.match(/EMAIL(?:;[^:]*)?:([^\r\n]*)/i);
+            const catMatch = card.match(/CATEGORIES(?:;[^:]*)?:([^\r\n]*)/i);
+            const orgMatch = card.match(/ORG(?:;[^:]*)?:([^\r\n]*)/i);
+            const noteMatch = card.match(/NOTE(?:;[^:]*)?:([^\r\n]*)/i);
+
+            if (fnMatch && fnMatch[1].trim()) {
               contacts.push({
-                id: 'c_' + Date.now() + Math.random().toString(36).substr(2, 4),
-                name: fnMatch[1].trim(),
-                phone: telMatch ? telMatch[1].trim() : '',
-                email: emailMatch ? emailMatch[1].trim() : '',
-                category: catMatch ? catMatch[1].trim() : 'Personal',
-                company: orgMatch ? orgMatch[1].trim() : '',
+                id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                name: fnMatch[1].trim().substring(0, 100),
+                phone: telMatch ? telMatch[1].trim().substring(0, 50) : '',
+                email: emailMatch ? emailMatch[1].trim().substring(0, 100) : '',
+                category: catMatch ? catMatch[1].trim().substring(0, 50) : 'Personal',
+                company: orgMatch ? orgMatch[1].trim().substring(0, 100) : '',
                 title: '',
-                notes: noteMatch ? noteMatch[1].replace(/\\n/g, '\n').trim() : '',
+                notes: noteMatch ? noteMatch[1].replace(/\\n/g, '\n').trim().substring(0, 2000) : '',
                 fav: false
               });
               count++;
             }
           });
         } else {
-          // Parse CSV
           const lines = text.split(/\r?\n/);
           for (let i = 1; i < lines.length; i++) {
+            if (contacts.length >= MAX_CONTACTS) break;
             const line = lines[i].trim();
             if (!line) continue;
             const parts = line.split(',').map(s => s.replace(/^"|"$/g, '').trim());
             if (parts.length >= 1 && parts[0]) {
               contacts.push({
-                id: 'c_' + Date.now() + Math.random().toString(36).substr(2, 4),
-                name: parts[0] || 'Imported Contact',
-                phone: parts[1] || '',
-                email: parts[2] || '',
-                category: parts[3] || 'Personal',
-                company: parts[4] || '',
-                title: parts[5] || '',
-                notes: parts[7] || '',
+                id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                name: (parts[0] || 'Imported Contact').substring(0, 100),
+                phone: (parts[1] || '').substring(0, 50),
+                email: (parts[2] || '').substring(0, 100),
+                category: (parts[3] || 'Personal').substring(0, 50),
+                company: (parts[4] || '').substring(0, 100),
+                title: (parts[5] || '').substring(0, 100),
+                notes: (parts[7] || '').substring(0, 2000),
                 fav: parts[6] === 'TRUE'
               });
               count++;

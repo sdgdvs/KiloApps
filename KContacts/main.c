@@ -20,17 +20,25 @@ int my_strlen(const char* s) {
     return len;
 }
 
-void my_strcpy(char* d, const char* s) {
-    if (!d || !s) return;
-    while (*s) *d++ = *s++;
-    *d = 0;
+void my_strncpy(char* d, const char* s, int max_len) {
+    if (!d || max_len <= 0) return;
+    if (!s) { d[0] = 0; return; }
+    int i = 0;
+    while (*s && i < max_len - 1) {
+        d[i++] = *s++;
+    }
+    d[i] = 0;
 }
 
-void my_strcat(char* d, const char* s) {
-    if (!d || !s) return;
-    while (*d) d++;
-    while (*s) *d++ = *s++;
-    *d = 0;
+void my_strncat(char* d, const char* s, int max_len) {
+    if (!d || max_len <= 0) return;
+    if (!s) return;
+    int len = my_strlen(d);
+    int i = len;
+    while (*s && i < max_len - 1) {
+        d[i++] = *s++;
+    }
+    d[i] = 0;
 }
 
 char to_lower(char c) {
@@ -39,7 +47,7 @@ char to_lower(char c) {
 }
 
 int my_stricmp(const char* s1, const char* s2) {
-    if (!s1 || !s2) return 1;
+    if (!s1 || !s2) return (s1 == s2) ? 0 : (s1 ? 1 : -1);
     while (*s1 && *s2) {
         if (to_lower(*s1) != to_lower(*s2)) return to_lower(*s1) - to_lower(*s2);
         s1++; s2++;
@@ -68,9 +76,11 @@ typedef struct {
     int fav;
 } Contact;
 
-Contact contacts[150];
+#define MAX_CONTACTS 150
+
+Contact contacts[MAX_CONTACTS];
 int contact_count = 0;
-int filtered_indices[150];
+int filtered_indices[MAX_CONTACTS];
 int filtered_count = 0;
 
 HWND hList, hEdit, hBtnNew, hBtnDel, hBtnSave, hBtnMerge, hBtnExport, hBtnImport, hBtnCall, hBtnEmail, hSearch, hComboCat, hChkFav;
@@ -79,36 +89,36 @@ HFONT hFont, hBoldFont;
 void LoadDemoData() {
     contact_count = 4;
     
-    my_strcpy(contacts[0].name, "Alice Smith");
-    my_strcpy(contacts[0].phone, "+1 555-0124");
-    my_strcpy(contacts[0].email, "alice.smith@acme.com");
-    my_strcpy(contacts[0].category, "Work");
-    my_strcpy(contacts[0].company, "Acme Corp");
-    my_strcpy(contacts[0].notes, "Lead Architect.");
+    my_strncpy(contacts[0].name, "Alice Smith", sizeof(contacts[0].name));
+    my_strncpy(contacts[0].phone, "+1 555-0124", sizeof(contacts[0].phone));
+    my_strncpy(contacts[0].email, "alice.smith@acme.com", sizeof(contacts[0].email));
+    my_strncpy(contacts[0].category, "Work", sizeof(contacts[0].category));
+    my_strncpy(contacts[0].company, "Acme Corp", sizeof(contacts[0].company));
+    my_strncpy(contacts[0].notes, "Lead Architect.", sizeof(contacts[0].notes));
     contacts[0].fav = 1;
 
-    my_strcpy(contacts[1].name, "Bob Jones");
-    my_strcpy(contacts[1].phone, "+1 555-0189");
-    my_strcpy(contacts[1].email, "bob.jones@gmail.com");
-    my_strcpy(contacts[1].category, "Personal");
-    my_strcpy(contacts[1].company, "");
-    my_strcpy(contacts[1].notes, "Met at tech conference.");
+    my_strncpy(contacts[1].name, "Bob Jones", sizeof(contacts[1].name));
+    my_strncpy(contacts[1].phone, "+1 555-0189", sizeof(contacts[1].phone));
+    my_strncpy(contacts[1].email, "bob.jones@gmail.com", sizeof(contacts[1].email));
+    my_strncpy(contacts[1].category, "Personal", sizeof(contacts[1].category));
+    my_strncpy(contacts[1].company, "", sizeof(contacts[1].company));
+    my_strncpy(contacts[1].notes, "Met at tech conference.", sizeof(contacts[1].notes));
     contacts[1].fav = 0;
 
-    my_strcpy(contacts[2].name, "Carla Rossi");
-    my_strcpy(contacts[2].phone, "+1 555-0199");
-    my_strcpy(contacts[2].email, "carla@designstudio.io");
-    my_strcpy(contacts[2].category, "Work");
-    my_strcpy(contacts[2].company, "Design Studio");
-    my_strcpy(contacts[2].notes, "UX Consultant.");
+    my_strncpy(contacts[2].name, "Carla Rossi", sizeof(contacts[2].name));
+    my_strncpy(contacts[2].phone, "+1 555-0199", sizeof(contacts[2].phone));
+    my_strncpy(contacts[2].email, "carla@designstudio.io", sizeof(contacts[2].email));
+    my_strncpy(contacts[2].category, "Work", sizeof(contacts[2].category));
+    my_strncpy(contacts[2].company, "Design Studio", sizeof(contacts[2].company));
+    my_strncpy(contacts[2].notes, "UX Consultant.", sizeof(contacts[2].notes));
     contacts[2].fav = 1;
 
-    my_strcpy(contacts[3].name, "David Miller");
-    my_strcpy(contacts[3].phone, "+1 555-0143");
-    my_strcpy(contacts[3].email, "dmiller@familynet.org");
-    my_strcpy(contacts[3].category, "Family");
-    my_strcpy(contacts[3].company, "");
-    my_strcpy(contacts[3].notes, "Cousin.");
+    my_strncpy(contacts[3].name, "David Miller", sizeof(contacts[3].name));
+    my_strncpy(contacts[3].phone, "+1 555-0143", sizeof(contacts[3].phone));
+    my_strncpy(contacts[3].email, "dmiller@familynet.org", sizeof(contacts[3].email));
+    my_strncpy(contacts[3].category, "Family", sizeof(contacts[3].category));
+    my_strncpy(contacts[3].company, "", sizeof(contacts[3].company));
+    my_strncpy(contacts[3].notes, "Cousin.", sizeof(contacts[3].notes));
     contacts[3].fav = 0;
 }
 
@@ -145,14 +155,15 @@ void RefreshList() {
             filtered_indices[filtered_count] = i;
             filtered_count++;
 
-            char display[128];
+            char display[256];
             wsprintfA(display, "%s%s [%s]", contacts[i].fav ? "* " : "", contacts[i].name, contacts[i].category[0] ? contacts[i].category : "Other");
             SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)display);
         }
     }
 }
 
-void extract_field(char* text, const char* prefix, char* out, int out_len) {
+void extract_field(const char* text, const char* prefix, char* out, int out_len) {
+    if (!text || !prefix || !out || out_len <= 0) return;
     char* p = my_stristr(text, prefix);
     if (p) {
         p += my_strlen(prefix);
@@ -166,6 +177,33 @@ void extract_field(char* text, const char* prefix, char* out, int out_len) {
     }
 }
 
+void extract_vcard_field(const char* card, const char* key, char* out, int out_len) {
+    if (!out || out_len <= 0) return;
+    out[0] = 0;
+    if (!card || !key) return;
+
+    const char* p = card;
+    int key_len = my_strlen(key);
+
+    while (*p) {
+        if (my_stristr(p, key) == p) {
+            const char* field = p + key_len;
+            while (*field && *field != ':' && *field != '\r' && *field != '\n') {
+                field++;
+            }
+            if (*field == ':') field++;
+            int i = 0;
+            while (*field && *field != '\r' && *field != '\n' && i < out_len - 1) {
+                out[i++] = *field++;
+            }
+            out[i] = 0;
+            return;
+        }
+        while (*p && *p != '\n') p++;
+        if (*p == '\n') p++;
+    }
+}
+
 void MergeDuplicates(HWND hwnd) {
     if (contact_count < 2) {
         MessageBoxA(hwnd, "Not enough contacts to merge.", "KContacts", MB_OK | MB_ICONINFORMATION);
@@ -176,17 +214,16 @@ void MergeDuplicates(HWND hwnd) {
     for (int i = 0; i < contact_count; i++) {
         for (int j = i + 1; j < contact_count; j++) {
             if (my_stricmp(contacts[i].name, contacts[j].name) == 0 && contacts[i].name[0] != 0) {
-                // Merge non-empty details
-                if (contacts[i].phone[0] == 0 && contacts[j].phone[0] != 0) my_strcpy(contacts[i].phone, contacts[j].phone);
-                if (contacts[i].email[0] == 0 && contacts[j].email[0] != 0) my_strcpy(contacts[i].email, contacts[j].email);
-                if (contacts[i].company[0] == 0 && contacts[j].company[0] != 0) my_strcpy(contacts[i].company, contacts[j].company);
-                if (contacts[i].notes[0] == 0 && contacts[j].notes[0] != 0) my_strcpy(contacts[i].notes, contacts[j].notes);
+                if (contacts[i].phone[0] == 0 && contacts[j].phone[0] != 0) my_strncpy(contacts[i].phone, contacts[j].phone, sizeof(contacts[i].phone));
+                if (contacts[i].email[0] == 0 && contacts[j].email[0] != 0) my_strncpy(contacts[i].email, contacts[j].email, sizeof(contacts[i].email));
+                if (contacts[i].company[0] == 0 && contacts[j].company[0] != 0) my_strncpy(contacts[i].company, contacts[j].company, sizeof(contacts[i].company));
+                if (contacts[i].notes[0] == 0 && contacts[j].notes[0] != 0) my_strncpy(contacts[i].notes, contacts[j].notes, sizeof(contacts[i].notes));
                 if (contacts[j].fav) contacts[i].fav = 1;
 
-                // Shift remaining contacts
                 for (int k = j; k < contact_count - 1; k++) {
                     contacts[k] = contacts[k + 1];
                 }
+                memset(&contacts[contact_count - 1], 0, sizeof(Contact));
                 contact_count--;
                 j--;
                 merged++;
@@ -195,6 +232,9 @@ void MergeDuplicates(HWND hwnd) {
     }
 
     RefreshList();
+    SetWindowTextA(hEdit, "");
+    SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
+
     char msg[128];
     wsprintfA(msg, "Duplicate scan completed.\nMerged %d contact(s).", merged);
     MessageBoxA(hwnd, msg, "KContacts Merge", MB_OK | MB_ICONINFORMATION);
@@ -220,7 +260,7 @@ void ExportVCard(HWND hwnd) {
         HANDLE hFile = CreateFileA(filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
             for (int i = 0; i < contact_count; i++) {
-                char buf[512];
+                char buf[1024];
                 wsprintfA(buf, "BEGIN:VCARD\r\nVERSION:3.0\r\nFN:%s\r\nTEL;TYPE=CELL:%s\r\nEMAIL;TYPE=INTERNET:%s\r\nORG:%s\r\nCATEGORIES:%s\r\nNOTE:%s\r\nEND:VCARD\r\n",
                     contacts[i].name, contacts[i].phone, contacts[i].email, contacts[i].company, contacts[i].category, contacts[i].notes);
                 DWORD written = 0;
@@ -233,6 +273,11 @@ void ExportVCard(HWND hwnd) {
 }
 
 void ImportVCard(HWND hwnd) {
+    if (contact_count >= MAX_CONTACTS) {
+        MessageBoxA(hwnd, "Contact capacity reached (150 max). Cannot import.", "KContacts Import", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
     char filepath[MAX_PATH] = "";
     OPENFILENAMEA ofn = {0};
     ofn.lStructSize = sizeof(ofn);
@@ -246,46 +291,47 @@ void ImportVCard(HWND hwnd) {
         HANDLE hFile = CreateFileA(filepath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
             DWORD size = GetFileSize(hFile, NULL);
-            if (size > 0 && size < 100000) {
+            if (size > 0 && size < 2000000) {
                 char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + 1);
-                DWORD read_bytes = 0;
-                ReadFile(hFile, buf, size, &read_bytes, NULL);
-                buf[read_bytes] = 0;
+                if (buf) {
+                    DWORD read_bytes = 0;
+                    ReadFile(hFile, buf, size, &read_bytes, NULL);
+                    buf[read_bytes] = 0;
 
-                int imported = 0;
-                char* p = buf;
-                while (p && *p) {
-                    char* card_start = my_stristr(p, "BEGIN:VCARD");
-                    if (!card_start) break;
-                    char* card_end = my_stristr(card_start, "END:VCARD");
-                    if (!card_end) break;
+                    int imported = 0;
+                    char* p = buf;
+                    while (p && *p) {
+                        char* card_start = my_stristr(p, "BEGIN:VCARD");
+                        if (!card_start) break;
+                        char* card_end = my_stristr(card_start, "END:VCARD");
+                        if (!card_end) break;
 
-                    if (contact_count < 150) {
-                        Contact* c = &contacts[contact_count];
-                        memset(c, 0, sizeof(Contact));
+                        if (contact_count < MAX_CONTACTS) {
+                            Contact* c = &contacts[contact_count];
+                            memset(c, 0, sizeof(Contact));
 
-                        extract_field(card_start, "FN:", c->name, sizeof(c->name));
-                        extract_field(card_start, "TEL;TYPE=CELL:", c->phone, sizeof(c->phone));
-                        if (c->phone[0] == 0) extract_field(card_start, "TEL:", c->phone, sizeof(c->phone));
-                        extract_field(card_start, "EMAIL;TYPE=INTERNET:", c->email, sizeof(c->email));
-                        if (c->email[0] == 0) extract_field(card_start, "EMAIL:", c->email, sizeof(c->email));
-                        extract_field(card_start, "ORG:", c->company, sizeof(c->company));
-                        extract_field(card_start, "CATEGORIES:", c->category, sizeof(c->category));
-                        if (c->category[0] == 0) my_strcpy(c->category, "Personal");
-                        extract_field(card_start, "NOTE:", c->notes, sizeof(c->notes));
+                            extract_vcard_field(card_start, "FN", c->name, sizeof(c->name));
+                            if (c->name[0] == 0) extract_vcard_field(card_start, "N", c->name, sizeof(c->name));
+                            extract_vcard_field(card_start, "TEL", c->phone, sizeof(c->phone));
+                            extract_vcard_field(card_start, "EMAIL", c->email, sizeof(c->email));
+                            extract_vcard_field(card_start, "ORG", c->company, sizeof(c->company));
+                            extract_vcard_field(card_start, "CATEGORIES", c->category, sizeof(c->category));
+                            if (c->category[0] == 0) my_strncpy(c->category, "Personal", sizeof(c->category));
+                            extract_vcard_field(card_start, "NOTE", c->notes, sizeof(c->notes));
 
-                        if (c->name[0] != 0) {
-                            contact_count++;
-                            imported++;
+                            if (c->name[0] != 0) {
+                                contact_count++;
+                                imported++;
+                            }
                         }
+                        p = card_end + 9;
                     }
-                    p = card_end + 9;
+                    HeapFree(GetProcessHeap(), 0, buf);
+                    RefreshList();
+                    char msg[128];
+                    wsprintfA(msg, "Successfully imported %d contact(s) from vCard!", imported);
+                    MessageBoxA(hwnd, msg, "KContacts Import", MB_OK | MB_ICONINFORMATION);
                 }
-                HeapFree(GetProcessHeap(), 0, buf);
-                RefreshList();
-                char msg[128];
-                wsprintfA(msg, "Successfully imported %d contact(s) from vCard!", imported);
-                MessageBoxA(hwnd, msg, "KContacts Import", MB_OK | MB_ICONINFORMATION);
             }
             CloseHandle(hFile);
         }
@@ -359,7 +405,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int list_idx = SendMessageA(hList, LB_GETCURSEL, 0, 0);
                 if (list_idx >= 0 && list_idx < filtered_count) {
                     int real_idx = filtered_indices[list_idx];
-                    char buf[512];
+                    char buf[1024];
                     wsprintfA(buf, "Name: %s\r\nPhone: %s\r\nEmail: %s\r\nCategory: %s\r\nCompany: %s\r\nNotes: %s", 
                         contacts[real_idx].name, contacts[real_idx].phone, contacts[real_idx].email,
                         contacts[real_idx].category, contacts[real_idx].company, contacts[real_idx].notes);
@@ -371,18 +417,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RefreshList();
             }
             else if (control_id == 1002) { // New
-                if (contact_count < 150) {
-                    my_strcpy(contacts[contact_count].name, "New Contact");
-                    my_strcpy(contacts[contact_count].phone, "");
-                    my_strcpy(contacts[contact_count].email, "");
-                    my_strcpy(contacts[contact_count].category, "Personal");
-                    my_strcpy(contacts[contact_count].company, "");
-                    my_strcpy(contacts[contact_count].notes, "");
+                if (contact_count < MAX_CONTACTS) {
+                    my_strncpy(contacts[contact_count].name, "New Contact", sizeof(contacts[contact_count].name));
+                    my_strncpy(contacts[contact_count].phone, "", sizeof(contacts[contact_count].phone));
+                    my_strncpy(contacts[contact_count].email, "", sizeof(contacts[contact_count].email));
+                    my_strncpy(contacts[contact_count].category, "Personal", sizeof(contacts[contact_count].category));
+                    my_strncpy(contacts[contact_count].company, "", sizeof(contacts[contact_count].company));
+                    my_strncpy(contacts[contact_count].notes, "", sizeof(contacts[contact_count].notes));
                     contacts[contact_count].fav = 0;
                     contact_count++;
                     RefreshList();
                     SendMessageA(hList, LB_SETCURSEL, filtered_count - 1, 0);
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                } else {
+                    MessageBoxA(hwnd, "Maximum contact limit (150) reached.", "KContacts", MB_OK | MB_ICONWARNING);
                 }
             }
             else if (control_id == 1003) { // Del
@@ -392,9 +440,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for (int i = real_idx; i < contact_count - 1; i++) {
                         contacts[i] = contacts[i+1];
                     }
+                    memset(&contacts[contact_count - 1], 0, sizeof(Contact));
                     contact_count--;
                     RefreshList();
                     SetWindowTextA(hEdit, "");
+                    SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
                 }
             }
             else if (control_id == 1004) { // Save Details
@@ -404,6 +454,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char buf[1024];
                     GetWindowTextA(hEdit, buf, sizeof(buf));
                     extract_field(buf, "Name: ", contacts[real_idx].name, sizeof(contacts[real_idx].name));
+                    if (contacts[real_idx].name[0] == 0) {
+                        my_strncpy(contacts[real_idx].name, "Unnamed Contact", sizeof(contacts[real_idx].name));
+                    }
                     extract_field(buf, "Phone: ", contacts[real_idx].phone, sizeof(contacts[real_idx].phone));
                     extract_field(buf, "Email: ", contacts[real_idx].email, sizeof(contacts[real_idx].email));
                     extract_field(buf, "Category: ", contacts[real_idx].category, sizeof(contacts[real_idx].category));
@@ -427,7 +480,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (list_idx >= 0 && list_idx < filtered_count) {
                     int real_idx = filtered_indices[list_idx];
                     if (contacts[real_idx].phone[0] != 0) {
-                        char url[128];
+                        char url[256];
                         wsprintfA(url, "tel:%s", contacts[real_idx].phone);
                         ShellExecuteA(hwnd, "open", url, NULL, NULL, SW_SHOWNORMAL);
                     } else {
