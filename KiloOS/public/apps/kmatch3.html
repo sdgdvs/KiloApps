@@ -12,7 +12,18 @@
     margin: 10px 0 5px 0; font-size: 26px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 2px 4px rgba(0,0,0,0.8);
     background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
-  .info { display: flex; justify-content: space-between; width: 400px; margin-bottom: 5px; font-size: 14px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .info { display: flex; justify-content: space-between; width: 400px; margin-bottom: 4px; font-size: 13px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  
+  #bossBarContainer {
+    width: 400px; height: 14px; background: #331111; border: 1.5px solid #ffd700; border-radius: 4px; overflow: hidden; margin-bottom: 4px; display: none; position: relative;
+  }
+  #bossBarFill {
+    width: 100%; height: 100%; background: linear-gradient(90deg, #ff3333 0%, #ff8800 100%); transition: width 0.3s ease-out;
+  }
+  #bossBarText {
+    position: absolute; width: 100%; height: 100%; top: 0; left: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 0 0 4px #000;
+  }
+
   #board {
     width: 400px; height: 400px;
     background: radial-gradient(circle at center, #231b2e 0%, #0c0813 100%);
@@ -22,14 +33,14 @@
   }
 
   .cell {
-    border-radius: 8px; display: flex; justify-content: center; align-items: center;
+    border-radius: 6px; display: flex; justify-content: center; align-items: center;
     cursor: pointer; transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.22s ease-out, left 0.22s ease-out, opacity 0.2s;
-    position: absolute; width: 48px; height: 48px; box-sizing: border-box;
+    position: absolute; box-sizing: border-box;
     background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.4) 100%);
     box-shadow: inset 0 0 6px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.5);
   }
   .powerup-btn {
-    background: linear-gradient(180deg, #444 0%, #222 100%); color: #ffd700; border: 1px solid #777; padding: 5px 10px; cursor: pointer; border-radius: 6px; font-size: 12px; font-weight: bold;
+    background: linear-gradient(180deg, #444 0%, #222 100%); color: #ffd700; border: 1px solid #777; padding: 4px 8px; cursor: pointer; border-radius: 6px; font-size: 11px; font-weight: bold;
     box-shadow: 0 2px 5px rgba(0,0,0,0.5); transition: all 0.2s;
   }
   .powerup-btn:hover { background: linear-gradient(180deg, #555 0%, #333 100%); border-color: #ffd700; transform: translateY(-1px); }
@@ -61,9 +72,9 @@
 </style>
 </head>
 <body>
-  <div style="width: 400px; display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-    <h1 style="margin: 5px 0;">KMatch3</h1>
-    <button onclick="showHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:4px 12px; cursor:pointer; border-radius:4px; font-weight:bold;">Help</button>
+  <div style="width: 400px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+    <h1 style="margin: 2px 0;">KMatch3</h1>
+    <button onclick="showHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:3px 10px; cursor:pointer; border-radius:4px; font-weight:bold; font-size:12px;">Help [F1]</button>
   </div>
   <div class="info">
     <span><select id="mode" onchange="changeMode()" style="background:#333;color:#fff;border:1px solid #555;padding:2px 4px;border-radius:4px;font-weight:bold;"><option value="0">Campaign</option><option value="1">Zen</option><option value="2">Timed Rush</option></select></span>
@@ -71,40 +82,47 @@
     <span>Score: <span id="score">0</span>/<span id="target">800</span></span>
     <span><span id="movesLabel">Moves</span>: <span id="moves">20</span></span>
   </div>
-  <div class="info" style="font-size: 13px; color: #ccc;">
-    <span>Ice: <span id="iceLeft">0</span></span>
-    <span>Stone: <span id="stoneLeft">0</span></span>
-    <span>Best: <span id="bestScore">0</span></span>
-    <span>Combo: x<span id="maxCombo">1</span></span>
+  
+  <div id="bossBarContainer">
+    <div id="bossBarFill"></div>
+    <div id="bossBarText">JEWEL KING BOSS: <span id="bossHPText">100/100</span></div>
   </div>
-  <div class="info" style="justify-content: space-around; margin-top: 2px; margin-bottom: 6px;">
-    <button class="powerup-btn" onclick="useHammer()" id="btnHammer">Hammer (500)</button>
-    <button class="powerup-btn" onclick="useExtraMoves()">+Moves/+15s (500)</button>
-    <button class="powerup-btn" onclick="useShuffle()">Shuffle (500)</button>
+
+  <div class="info" style="font-size: 12px; color: #ccc;">
+    <span id="objContainer">Ice: <span id="iceLeft">0</span> | Stone/Iron: <span id="stoneLeft">0</span></span>
+    <span>Best: <span id="bestScore">0</span> | Combo: x<span id="maxCombo">1</span></span>
+  </div>
+  <div class="info" style="justify-content: space-between; margin-top: 2px; margin-bottom: 4px;">
+    <button class="powerup-btn" onclick="useHammer()" id="btnHammer">[H] Hammer</button>
+    <button class="powerup-btn" onclick="useExtraMoves()" id="btnMoves">[E] +Moves</button>
+    <button class="powerup-btn" onclick="useShuffle()" id="btnShuffle">[S] Shuffle</button>
+    <button class="powerup-btn" onclick="useColorNuke()" id="btnNuke">[L] Color Nuke</button>
   </div>
   <div id="board"></div>
 
   <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background:#2d2d2d; border:2px solid #555; border-radius:8px; padding:20px; width:360px; max-height:85vh; overflow-y:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+    <div style="background:#2d2d2d; border:2px solid #555; border-radius:8px; padding:18px; width:370px; max-height:85vh; overflow-y:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
       <h2 style="margin-top:0; color:#ffd700;">How to Play KMatch3</h2>
       <p>Swap adjacent gems to form lines of 3 or more of the same color.</p>
       <p><b>Special Gems:</b><br/>
-      - <b>Match 4:</b> Line Bomb (destroys row or column).<br/>
+      - <b>Match 4:</b> Line Blaster (destroys row or column).<br/>
       - <b>Match 5:</b> Rainbow Gem (destroys all gems of selected color).<br/>
       - <b>T / L Match:</b> 3x3 Bomb Gem (explodes 3x3 area).</p>
-      <p><b>Obstacles:</b><br/>
+      <p><b>Obstacles & Boss:</b><br/>
       - <b>Ice Tiles:</b> Cannot be moved. Break by matching internal gem.<br/>
-      - <b>Stone Tiles:</b> Locked blocks. Break by matching adjacent gems or using bombs/Hammer!</p>
+      - <b>Stone/Iron Tiles:</b> Shatter in 1 to 3 hits.<br/>
+      - <b>Stage 20 Boss:</b> Jewel King (100 HP, Barrier Gems, Moving Obstacles!).</p>
       <p><b>Game Modes:</b><br/>
-      - <b>Campaign (15 Stages):</b> Beat target scores in move or timed stages.<br/>
+      - <b>Campaign (20 Stages):</b> Dynamic 6x6 to 10x10 boards & objectives.<br/>
       - <b>Zen:</b> Infinite relaxing play.<br/>
       - <b>Timed Rush:</b> Speed challenge against the clock.</p>
-      <p><b>Power-ups (500 Score):</b><br/>
-      - <b>Hammer:</b> Destroy any single gem, ice, or stone tile.<br/>
-      - <b>+Moves / +15s:</b> Add +5 moves or +15 seconds to timer.<br/>
-      - <b>Shuffle:</b> Rearrange all board gems.</p>
-      <div style="text-align:center; margin-top:20px;">
-        <button onclick="hideHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:8px 16px; cursor:pointer; border-radius:4px; font-weight:bold;">Close</button>
+      <p><b>Active Skills (Cost 500 Score):</b><br/>
+      - <b>[H] Hammer:</b> Destroy any single gem, ice, stone, or iron tile.<br/>
+      - <b>[E] +Moves / +15s:</b> Add extra moves or timer seconds.<br/>
+      - <b>[S] Shuffle:</b> Rearrange all board gems.<br/>
+      - <b>[L] Color Nuke:</b> Nuke all gems of target color.</p>
+      <div style="text-align:center; margin-top:15px;">
+        <button onclick="hideHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:6px 14px; cursor:pointer; border-radius:4px; font-weight:bold;">Close</button>
       </div>
     </div>
   </div>
@@ -114,21 +132,26 @@
     function hideHelp() { document.getElementById('helpModal').style.display = 'none'; }
 
     const CAMPAIGN_STAGES = [
-      { targetScore: 800,  moves: 20, timeLimit: 0,  iceCount: 0,  stoneCount: 0,  name: "1: Gem Starter" },
-      { targetScore: 1200, moves: 22, timeLimit: 0,  iceCount: 4,  stoneCount: 0,  name: "2: Frosty Fields" },
-      { targetScore: 1500, moves: 20, timeLimit: 0,  iceCount: 6,  stoneCount: 2,  name: "3: Stony Path" },
-      { targetScore: 1800, moves: 0,  timeLimit: 60, iceCount: 5,  stoneCount: 2,  name: "4: Speed Rush" },
-      { targetScore: 2200, moves: 20, timeLimit: 0,  iceCount: 8,  stoneCount: 4,  name: "5: Frozen Quarry" },
-      { targetScore: 2600, moves: 18, timeLimit: 0,  iceCount: 10, stoneCount: 4,  name: "6: Ice Castle" },
-      { targetScore: 3000, moves: 0,  timeLimit: 55, iceCount: 8,  stoneCount: 6,  name: "7: Clockwork Cavern" },
-      { targetScore: 3500, moves: 22, timeLimit: 0,  iceCount: 12, stoneCount: 6,  name: "8: Stone Fortress" },
-      { targetScore: 4000, moves: 20, timeLimit: 0,  iceCount: 14, stoneCount: 8,  name: "9: Deep Freeze" },
-      { targetScore: 4500, moves: 0,  timeLimit: 50, iceCount: 10, stoneCount: 8,  name: "10: Blizzard Blitz" },
-      { targetScore: 5000, moves: 20, timeLimit: 0,  iceCount: 16, stoneCount: 10, name: "11: Glacier Ridge" },
-      { targetScore: 5500, moves: 18, timeLimit: 0,  iceCount: 18, stoneCount: 10, name: "12: Titan's Vault" },
-      { targetScore: 6000, moves: 0,  timeLimit: 45, iceCount: 15, stoneCount: 12, name: "13: Time Vortex" },
-      { targetScore: 7000, moves: 22, timeLimit: 0,  iceCount: 20, stoneCount: 14, name: "14: Crystal Mine" },
-      { targetScore: 8500, moves: 25, timeLimit: 0,  iceCount: 24, stoneCount: 16, name: "15: Grand Master" }
+      { targetScore: 800,  moves: 20, timeLimit: 0,  iceCount: 0,  stoneCount: 0,  ironCount: 0, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 6,  cols: 6,  name: "1: Gem Starter" },
+      { targetScore: 1200, moves: 22, timeLimit: 0,  iceCount: 6,  stoneCount: 0,  ironCount: 0, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 6,  cols: 6,  name: "2: Frosty Fields" },
+      { targetScore: 1500, moves: 20, timeLimit: 0,  iceCount: 6,  stoneCount: 4,  ironCount: 0, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 7,  cols: 7,  name: "3: Stony Path" },
+      { targetScore: 1800, moves: 0,  timeLimit: 60, iceCount: 6,  stoneCount: 4,  ironCount: 0, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 7,  cols: 7,  name: "4: Speed Rush" },
+      { targetScore: 2200, moves: 20, timeLimit: 0,  iceCount: 8,  stoneCount: 4,  ironCount: 2, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 8,  cols: 8,  name: "5: Iron Quarry" },
+      { targetScore: 2600, moves: 18, timeLimit: 0,  iceCount: 12, stoneCount: 4,  ironCount: 2, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 8,  cols: 8,  name: "6: Ice Citadel" },
+      { targetScore: 3000, moves: 0,  timeLimit: 55, iceCount: 10, stoneCount: 6,  ironCount: 2, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 8,  cols: 8,  name: "7: Clockwork Cavern" },
+      { targetScore: 3500, moves: 22, timeLimit: 0,  iceCount: 14, stoneCount: 6,  ironCount: 4, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 8,  cols: 8,  name: "8: Stone Fortress" },
+      { targetScore: 4000, moves: 22, timeLimit: 0,  iceCount: 8,  stoneCount: 4,  ironCount: 2, redTarget: 15,greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 9,  cols: 9,  name: "9: Ruby Collector" },
+      { targetScore: 4500, moves: 0,  timeLimit: 50, iceCount: 16, stoneCount: 8,  ironCount: 4, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 9,  cols: 9,  name: "10: Blizzard Blitz" },
+      { targetScore: 5000, moves: 20, timeLimit: 0,  iceCount: 18, stoneCount: 8,  ironCount: 4, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 9,  cols: 9,  name: "11: Glacier Ridge" },
+      { targetScore: 5500, moves: 18, timeLimit: 0,  iceCount: 20, stoneCount: 10, ironCount: 6, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 9,  cols: 9,  name: "12: Iron Vault" },
+      { targetScore: 6000, moves: 0,  timeLimit: 45, iceCount: 12, stoneCount: 6,  ironCount: 4, redTarget: 0, greenTarget: 20,blueTarget: 0, bossHP: 0,   rows: 10, cols: 10, name: "13: Emerald Rush" },
+      { targetScore: 7000, moves: 22, timeLimit: 0,  iceCount: 24, stoneCount: 12, ironCount: 6, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 10, cols: 10, name: "14: Crystal Mine" },
+      { targetScore: 8000, moves: 24, timeLimit: 0,  iceCount: 16, stoneCount: 8,  ironCount: 4, redTarget: 0, greenTarget: 0, blueTarget: 25,bossHP: 0,   rows: 10, cols: 10, name: "15: Sapphire Temple" },
+      { targetScore: 9000, moves: 0,  timeLimit: 40, iceCount: 25, stoneCount: 14, ironCount: 6, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 10, cols: 10, name: "16: Time Vortex" },
+      { targetScore: 10000,moves: 20, timeLimit: 0,  iceCount: 28, stoneCount: 16, ironCount: 8, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 10, cols: 10, name: "17: Obsidian Lair" },
+      { targetScore: 12000,moves: 25, timeLimit: 0,  iceCount: 30, stoneCount: 18, ironCount: 10,redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 10, cols: 10, name: "18: Diamond Gauntlet" },
+      { targetScore: 14000,moves: 0,  timeLimit: 45, iceCount: 32, stoneCount: 20, ironCount: 10,redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 10, cols: 10, name: "19: Master's Crucible" },
+      { targetScore: 0,    moves: 30, timeLimit: 0,  iceCount: 10, stoneCount: 10, ironCount: 6, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 100, rows: 10, cols: 10, name: "20: Jewel King Boss" }
     ];
 
     const boardEl = document.getElementById('board');
@@ -138,12 +161,16 @@
     const targetEl = document.getElementById('target');
     const bestScoreEl = document.getElementById('bestScore');
     const maxComboEl = document.getElementById('maxCombo');
-    const iceLeftEl = document.getElementById('iceLeft');
-    const stoneLeftEl = document.getElementById('stoneLeft');
+    const objContainerEl = document.getElementById('objContainer');
+    const bossBarContainerEl = document.getElementById('bossBarContainer');
+    const bossBarFillEl = document.getElementById('bossBarFill');
+    const bossHPTextEl = document.getElementById('bossHPText');
 
-    const ROWS = 8;
-    const COLS = 8;
+    let ROWS = 8;
+    let COLS = 8;
+    let cellSize = 50;
     const COLORS = ['#ff4040', '#40ff40', '#4040ff', '#ffff40', '#ff40ff', '#40ffff'];
+    
     let grid = [];
     let level = 1;
     let score = 0;
@@ -155,10 +182,18 @@
     let lastSwap = null;
     let toDestroy = new Set();
     let stoneToBreak = new Set();
+
+    let collectedRed = 0;
+    let collectedGreen = 0;
+    let collectedBlue = 0;
+    let bossHP = 0;
+    let maxBossHP = 0;
+    let bossMoveTimer = 0;
+
     let gamesPlayed = 0;
     let bestScore = 0;
     let maxCombo = 1;
-    let powerupMode = 0;
+    let powerupMode = 0; // 0 = none, 1 = hammer, 2 = color nuke
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playTone(freq, type, duration) {
@@ -190,7 +225,7 @@
       popup.style.left = x + 'px';
       popup.style.top = y + 'px';
       popup.style.color = color;
-      popup.style.fontSize = '16px';
+      popup.style.fontSize = '15px';
       popup.style.fontWeight = '900';
       popup.style.pointerEvents = 'none';
       popup.style.zIndex = '150';
@@ -209,7 +244,7 @@
     function fireLaserRow(r) {
       let beam = document.createElement('div');
       beam.className = 'laser-beam';
-      beam.style.top = (r * 50 + 20) + 'px';
+      beam.style.top = (r * cellSize + cellSize/2 - 5) + 'px';
       beam.style.left = '0px';
       beam.style.width = '400px';
       beam.style.height = '10px';
@@ -220,7 +255,7 @@
     function fireLaserCol(c) {
       let beam = document.createElement('div');
       beam.className = 'laser-beam';
-      beam.style.left = (c * 50 + 20) + 'px';
+      beam.style.left = (c * cellSize + cellSize/2 - 5) + 'px';
       beam.style.top = '0px';
       beam.style.height = '400px';
       beam.style.width = '10px';
@@ -229,10 +264,10 @@
     }
 
     function createParticles(x, y, color) {
-      for (let i = 0; i < 18; i++) {
+      for (let i = 0; i < 16; i++) {
         let p = document.createElement('div');
         p.className = 'particle';
-        let size = Math.floor(Math.random() * 6) + 4;
+        let size = Math.floor(Math.random() * 5) + 3;
         p.style.width = size + 'px';
         p.style.height = size + 'px';
         p.style.backgroundColor = color;
@@ -279,22 +314,17 @@
       return idx >= 0 ? idx : 0;
     }
 
-    function getGemSVG(colorIdx, type, isStone, isIce) {
-      if (isStone) {
-        return `<svg width="48" height="48" viewBox="0 0 48 48">
-          <defs>
-            <linearGradient id="stoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#7a7a7a"/>
-              <stop offset="50%" stop-color="#545454"/>
-              <stop offset="100%" stop-color="#383838"/>
-            </linearGradient>
-          </defs>
-          <rect x="2" y="2" width="44" height="44" rx="6" fill="url(#stoneGrad)" stroke="#222" stroke-width="2"/>
+    function getGemSVG(colorIdx, type, stoneHits, isIce, isBarrier) {
+      let sz = cellSize - 2;
+      let viewBox = `0 0 ${sz} ${sz}`;
+
+      if (stoneHits > 0) {
+        let col = stoneHits === 1 ? '#545454' : (stoneHits === 2 ? '#383848' : '#222233');
+        return `<svg width="${sz}" height="${sz}" viewBox="0 0 48 48">
+          <rect x="2" y="2" width="44" height="44" rx="6" fill="${col}" stroke="#111" stroke-width="2"/>
           <rect x="5" y="5" width="38" height="38" rx="4" fill="none" stroke="#888" stroke-width="1" opacity="0.6"/>
           <path d="M 10 12 L 20 22 L 16 34 M 20 22 L 32 18 L 38 28" stroke="#1f1f1f" stroke-width="2" fill="none"/>
-          <path d="M 11 13 L 21 23 M 21 23 L 33 19" stroke="#999" stroke-width="1" fill="none" opacity="0.7"/>
-          <circle cx="24" cy="24" r="8" fill="none" stroke="#ffd700" stroke-width="1.5" opacity="0.8"/>
-          <path d="M 24 16 L 24 32 M 16 24 L 32 24" stroke="#ffd700" stroke-width="1.5" opacity="0.8"/>
+          <text x="24" y="30" font-family="sans-serif" font-weight="900" font-size="16" fill="${stoneHits === 1 ? '#ffd700' : '#00e5ff'}" text-anchor="middle">${stoneHits}</text>
         </svg>`;
       }
 
@@ -322,7 +352,6 @@
           </defs>
           <circle cx="24" cy="24" r="20" fill="url(#rbGrad)" stroke="#fff" stroke-width="2"/>
           <path d="M 24 4 L 28 18 L 42 24 L 28 30 L 24 44 L 20 30 L 6 24 L 20 18 Z" fill="#ffd700" stroke="#fff" stroke-width="1.5"/>
-          <path d="M 24 10 L 26 20 L 36 24 L 26 28 L 24 38 L 22 28 L 12 24 L 22 20 Z" fill="#ffffff" opacity="0.9"/>
           <circle cx="24" cy="24" r="4" fill="#ffffff"/>
         `;
       } else {
@@ -334,7 +363,6 @@
             <polygon points="42,16 36,14 36,34 42,32" fill="${g.dark}"/>
             <polygon points="16,42 32,42 36,34 12,34" fill="${g.dark}"/>
             <polygon points="12,14 36,14 36,34 12,34" fill="${g.main}"/>
-            <polygon points="16,6 24,6 20,14 12,14" fill="#ffffff" opacity="0.75"/>
           `;
         } else if (colorIdx === 1) {
           svgContent = `
@@ -342,45 +370,31 @@
             <polygon points="7,9 41,9 35,15 13,15" fill="${g.light}" opacity="0.8"/>
             <polygon points="7,9 13,15 13,33 7,39" fill="${g.light}" opacity="0.4"/>
             <polygon points="41,9 35,15 35,33 41,39" fill="${g.dark}"/>
-            <polygon points="7,39 41,39 35,33 13,33" fill="${g.dark}"/>
             <rect x="13" y="15" width="22" height="18" fill="${g.main}"/>
-            <path d="M 9 11 L 22 11 L 18 15 L 13 15 Z" fill="#ffffff" opacity="0.8"/>
           `;
         } else if (colorIdx === 2) {
           svgContent = `
             <rect x="8" y="8" width="32" height="32" rx="8" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
             <polygon points="24,8 32,16 24,24 16,16" fill="${g.light}" opacity="0.75"/>
             <polygon points="24,24 32,32 24,40 16,32" fill="${g.dark}"/>
-            <polygon points="8,24 16,16 24,24 16,32" fill="${g.light}" opacity="0.45"/>
-            <polygon points="40,24 32,16 24,24 32,32" fill="${g.dark}"/>
             <circle cx="17" cy="15" r="3" fill="#ffffff" opacity="0.85"/>
           `;
         } else if (colorIdx === 3) {
           svgContent = `
             <polygon points="24,5 42,24 24,43 6,24" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
             <polygon points="24,5 42,24 24,24" fill="${g.light}" opacity="0.8"/>
-            <polygon points="24,5 6,24 24,24" fill="${g.light}" opacity="0.5"/>
             <polygon points="24,43 42,24 24,24" fill="${g.dark}"/>
-            <polygon points="24,43 6,24 24,24" fill="${g.dark}" opacity="0.8"/>
-            <polygon points="24,5 31,13 24,20" fill="#ffffff" opacity="0.85"/>
           `;
         } else if (colorIdx === 4) {
           svgContent = `
             <path d="M 24 5 L 40 18 L 36 38 L 12 38 L 8 18 Z" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
             <polygon points="24,5 40,18 24,22" fill="${g.light}" opacity="0.85"/>
-            <polygon points="24,5 8,18 24,22" fill="${g.light}" opacity="0.5"/>
-            <polygon points="8,18 12,38 24,22" fill="${g.dark}" opacity="0.8"/>
             <polygon points="40,18 36,38 24,22" fill="${g.dark}"/>
-            <polygon points="12,38 36,38 24,22" fill="${g.dark}"/>
-            <path d="M 24 5 L 32 12 L 24 16 Z" fill="#ffffff" opacity="0.9"/>
           `;
         } else {
           svgContent = `
             <circle cx="24" cy="24" r="19" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
             <polygon points="24,7 32,15 24,24 16,15" fill="${g.light}" opacity="0.9"/>
-            <polygon points="32,15 41,24 32,33 24,24" fill="${g.dark}"/>
-            <polygon points="24,24 32,33 24,41 16,33" fill="${g.dark}"/>
-            <polygon points="16,15 24,24 16,33 7,24" fill="${g.light}" opacity="0.5"/>
             <circle cx="24" cy="24" r="5" fill="#ffffff" opacity="0.85"/>
           `;
         }
@@ -400,8 +414,6 @@
             <circle cx="24" cy="24" r="20" fill="none" stroke="#ff2244" stroke-width="2"/>
             <rect x="14" y="14" width="20" height="20" rx="4" fill="#111111" opacity="0.85" stroke="#ff3333" stroke-width="1.5"/>
             <text x="24" y="29" font-family="sans-serif" font-weight="900" font-size="13" fill="#ff3333" text-anchor="middle">💣</text>
-            <circle cx="34" cy="14" r="3" fill="#ffaa00"/>
-            <path d="M 34 14 Q 38 10 36 6" fill="none" stroke="#ffffff" stroke-width="1.5"/>
           `;
         }
       }
@@ -413,19 +425,27 @@
         `;
       }
 
-      return `<svg width="48" height="48" viewBox="0 0 48 48">${svgContent}</svg>`;
+      if (isBarrier) {
+        svgContent += `
+          <circle cx="24" cy="24" r="22" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-dasharray="4 2"/>
+        `;
+      }
+
+      return `<svg width="${sz}" height="${sz}" viewBox="0 0 48 48">${svgContent}</svg>`;
     }
 
-    function createCellElement(r, c, color, type, isStone, isIce = false) {
+    function createCellElement(r, c, color, type, stoneHits, isIce = false, isBarrier = false) {
         let cell = document.createElement('div');
         cell.className = 'cell';
         cell.dataset.r = r;
         cell.dataset.c = c;
-        cell.style.top = (r * 50 + 1) + 'px';
-        cell.style.left = (c * 50 + 1) + 'px';
+        cell.style.width = (cellSize - 2) + 'px';
+        cell.style.height = (cellSize - 2) + 'px';
+        cell.style.top = (r * cellSize + 1) + 'px';
+        cell.style.left = (c * cellSize + 1) + 'px';
 
         let cIdx = getColorIndex(color);
-        cell.innerHTML = getGemSVG(cIdx, type, isStone, isIce);
+        cell.innerHTML = getGemSVG(cIdx, type, stoneHits, isIce, isBarrier);
 
         cell.addEventListener('click', onCellClick);
         return cell;
@@ -437,12 +457,30 @@
             for (let c = 0; c < COLS; c++) {
                 if (grid[r] && grid[r][c]) {
                     if (grid[r][c].ice) ice++;
-                    if (grid[r][c].stone) stone++;
+                    if (grid[r][c].stoneHits > 0) stone++;
                 }
             }
         }
-        iceLeftEl.textContent = ice;
-        stoneLeftEl.textContent = stone;
+        
+        const cfg = CAMPAIGN_STAGES[level - 1];
+        if (gameMode === 0 && (cfg.redTarget > 0 || cfg.greenTarget > 0 || cfg.blueTarget > 0)) {
+          let parts = [];
+          if (cfg.redTarget > 0) parts.push(`Red: ${collectedRed}/${cfg.redTarget}`);
+          if (cfg.greenTarget > 0) parts.push(`Grn: ${collectedGreen}/${cfg.greenTarget}`);
+          if (cfg.blueTarget > 0) parts.push(`Blu: ${collectedBlue}/${cfg.blueTarget}`);
+          objContainerEl.textContent = parts.join(' | ');
+        } else {
+          objContainerEl.textContent = `Ice: ${ice} | Stone/Iron: ${stone}`;
+        }
+
+        if (gameMode === 0 && level === 20 && maxBossHP > 0) {
+          bossBarContainerEl.style.display = 'block';
+          let pct = Math.max(0, Math.min(100, (bossHP / maxBossHP) * 100));
+          bossBarFillEl.style.width = pct + '%';
+          bossHPTextEl.textContent = `${bossHP}/${maxBossHP}`;
+        } else {
+          bossBarContainerEl.style.display = 'none';
+        }
     }
 
     function initStage(stageIdx) {
@@ -451,34 +489,48 @@
 
       if (gameMode === 0) {
         if (stageIdx < 1) stageIdx = 1;
-        if (stageIdx > 15) stageIdx = 15;
+        if (stageIdx > 20) stageIdx = 20;
         level = stageIdx;
         const cfg = CAMPAIGN_STAGES[level - 1];
+        ROWS = cfg.rows;
+        COLS = cfg.cols;
         stageNameEl.textContent = cfg.name;
         targetScore = cfg.targetScore;
         moves = cfg.timeLimit > 0 ? cfg.timeLimit : cfg.moves;
+        bossHP = cfg.bossHP;
+        maxBossHP = cfg.bossHP;
         document.getElementById('movesLabel').textContent = cfg.timeLimit > 0 ? "Time" : "Moves";
       } else if (gameMode === 1) {
         level = 1;
+        ROWS = 8; COLS = 8;
         stageNameEl.textContent = "Zen";
         targetScore = 2000;
         moves = '∞';
+        bossHP = 0; maxBossHP = 0;
         document.getElementById('movesLabel').textContent = "Zen";
       } else if (gameMode === 2) {
         level = 1;
+        ROWS = 8; COLS = 8;
         stageNameEl.textContent = "Timed Rush";
         targetScore = 1000;
         moves = 60;
+        bossHP = 0; maxBossHP = 0;
         document.getElementById('movesLabel').textContent = "Time";
       }
 
+      cellSize = Math.floor(400 / Math.max(ROWS, COLS));
       score = 0;
+      collectedRed = 0; collectedGreen = 0; collectedBlue = 0;
+      bossMoveTimer = 0; powerupMode = 0;
+      document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
+
       scoreEl.textContent = score;
       targetEl.textContent = targetScore;
       movesEl.textContent = moves;
 
       let iceToPlace = (gameMode === 0) ? CAMPAIGN_STAGES[level - 1].iceCount : (gameMode === 1 ? 0 : 4);
       let stoneToPlace = (gameMode === 0) ? CAMPAIGN_STAGES[level - 1].stoneCount : 0;
+      let ironToPlace = (gameMode === 0) ? CAMPAIGN_STAGES[level - 1].ironCount : 0;
 
       for (let r = 0; r < ROWS; r++) {
         let row = [];
@@ -490,21 +542,34 @@
             (r >= 2 && grid[r-1][c].color === color && grid[r-2][c].color === color) ||
             (c >= 2 && row[c-1].color === color && row[c-2].color === color)
           );
-          let cell = createCellElement(r, c, color, 0, false);
+          let cell = createCellElement(r, c, color, 0, 0);
           boardEl.appendChild(cell);
-          row.push({ color, type: 0, ice: false, stone: false, el: cell });
+          row.push({ color, type: 0, ice: false, stoneHits: 0, barrier: false, el: cell });
         }
         grid.push(row);
+      }
+
+      while (ironToPlace > 0) {
+        let r = Math.floor(Math.random() * ROWS);
+        let c = Math.floor(Math.random() * COLS);
+        if (grid[r][c].stoneHits === 0) {
+          boardEl.removeChild(grid[r][c].el);
+          let hits = Math.floor(Math.random() * 2) + 2; // 2 or 3 hits
+          let cell = createCellElement(r, c, null, 0, hits);
+          boardEl.appendChild(cell);
+          grid[r][c] = { color: null, type: 0, ice: false, stoneHits: hits, barrier: false, el: cell };
+          ironToPlace--;
+        }
       }
 
       while (stoneToPlace > 0) {
         let r = Math.floor(Math.random() * ROWS);
         let c = Math.floor(Math.random() * COLS);
-        if (!grid[r][c].stone) {
+        if (grid[r][c].stoneHits === 0) {
           boardEl.removeChild(grid[r][c].el);
-          let cell = createCellElement(r, c, null, 0, true);
+          let cell = createCellElement(r, c, null, 0, 1);
           boardEl.appendChild(cell);
-          grid[r][c] = { color: null, type: 0, ice: false, stone: true, el: cell };
+          grid[r][c] = { color: null, type: 0, ice: false, stoneHits: 1, barrier: false, el: cell };
           stoneToPlace--;
         }
       }
@@ -512,9 +577,9 @@
       while (iceToPlace > 0) {
         let r = Math.floor(Math.random() * ROWS);
         let c = Math.floor(Math.random() * COLS);
-        if (!grid[r][c].stone && !grid[r][c].ice) {
+        if (grid[r][c].stoneHits === 0 && !grid[r][c].ice) {
           grid[r][c].ice = true;
-          grid[r][c].el.innerHTML = getGemSVG(getColorIndex(grid[r][c].color), grid[r][c].type, false, true);
+          grid[r][c].el.innerHTML = getGemSVG(getColorIndex(grid[r][c].color), grid[r][c].type, 0, true, false);
           iceToPlace--;
         }
       }
@@ -523,11 +588,39 @@
       saveGame();
     }
 
+    function triggerBossAction() {
+      if (bossHP <= 0) return;
+      let count = 0;
+      for (let i = 0; i < 2; i++) {
+        let r = Math.floor(Math.random() * ROWS);
+        let c = Math.floor(Math.random() * COLS);
+        if (grid[r][c] && grid[r][c].stoneHits === 0) {
+          grid[r][c].barrier = true;
+          grid[r][c].el.innerHTML = getGemSVG(getColorIndex(grid[r][c].color), grid[r][c].type, 0, grid[r][c].ice, true);
+          createParticles(c * cellSize + cellSize/2, r * cellSize + cellSize/2, '#ffd700');
+          count++;
+        }
+      }
+      if (count > 0) {
+        playBadSwapSound();
+        createScorePopup(150, 180, 'BOSS SHIELD BARRIER!', '#ff3333');
+      }
+    }
+
     function useHammer() {
       if (score >= 500) {
         powerupMode = 1;
         playPowerupSound();
+        document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btnHammer').classList.add('active');
+      }
+    }
+    function useColorNuke() {
+      if (score >= 500) {
+        powerupMode = 2;
+        playPowerupSound();
+        document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btnNuke').classList.add('active');
       }
     }
     function useExtraMoves() {
@@ -549,10 +642,10 @@
         playPowerupSound();
         for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
-            if (grid[r][c] && !grid[r][c].stone && !grid[r][c].ice) {
+            if (grid[r][c] && grid[r][c].stoneHits === 0 && !grid[r][c].ice) {
               let color = COLORS[Math.floor(Math.random() * COLORS.length)];
               grid[r][c].color = color;
-              grid[r][c].el.innerHTML = getGemSVG(getColorIndex(color), grid[r][c].type, false, false);
+              grid[r][c].el.innerHTML = getGemSVG(getColorIndex(color), grid[r][c].type, 0, false, grid[r][c].barrier);
             }
           }
         }
@@ -579,8 +672,8 @@
 
     function saveGame() {
       const state = {
-        level, score, moves, targetScore, gameMode,
-        grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice, stone: cell.stone} : null))
+        level, score, moves, targetScore, gameMode, bossHP,
+        grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice, stoneHits: cell.stoneHits, barrier: cell.barrier} : null))
       };
       localStorage.setItem('kmatch3_save', JSON.stringify(state));
     }
@@ -595,13 +688,20 @@
           moves = state.moves;
           targetScore = state.targetScore || 800;
           gameMode = state.gameMode || 0;
+          bossHP = state.bossHP || 0;
           document.getElementById('mode').value = gameMode;
 
-          if (gameMode === 0) stageNameEl.textContent = CAMPAIGN_STAGES[level - 1].name;
-          else if (gameMode === 1) stageNameEl.textContent = "Zen";
-          else stageNameEl.textContent = "Timed Rush";
+          if (gameMode === 0 && level >= 1 && level <= 20) {
+            const cfg = CAMPAIGN_STAGES[level - 1];
+            stageNameEl.textContent = cfg.name;
+            ROWS = cfg.rows; COLS = cfg.cols;
+            maxBossHP = cfg.bossHP;
+          } else {
+            stageNameEl.textContent = gameMode === 1 ? "Zen" : "Timed Rush";
+            ROWS = 8; COLS = 8; maxBossHP = 0;
+          }
 
-          levelEl = level;
+          cellSize = Math.floor(400 / Math.max(ROWS, COLS));
           scoreEl.textContent = score;
           targetEl.textContent = targetScore;
           movesEl.textContent = moves;
@@ -613,9 +713,9 @@
             for (let c = 0; c < COLS; c++) {
               let savedCell = state.grid[r][c];
               if (savedCell) {
-                let cell = createCellElement(r, c, savedCell.color, savedCell.type, savedCell.stone, savedCell.ice);
+                let cell = createCellElement(r, c, savedCell.color, savedCell.type, savedCell.stoneHits, savedCell.ice, savedCell.barrier);
                 boardEl.appendChild(cell);
-                row.push({ color: savedCell.color, type: savedCell.type, ice: savedCell.ice, stone: savedCell.stone, el: cell });
+                row.push({ color: savedCell.color, type: savedCell.type, ice: savedCell.ice, stoneHits: savedCell.stoneHits, barrier: savedCell.barrier, el: cell });
               } else {
                 row.push(null);
               }
@@ -635,9 +735,9 @@
       const r = parseInt(target.dataset.r);
       const c = parseInt(target.dataset.c);
       
-      if (powerupMode === 1) {
+      if (powerupMode === 1) { // Hammer
           powerupMode = 0;
-          document.getElementById('btnHammer').classList.remove('active');
+          document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
           score -= 500; scoreEl.textContent = score;
           isProcessing = true;
           processMatches({hMatches:[], vMatches:[]}, {r: r, c: c, single: true}).then(() => {
@@ -646,9 +746,21 @@
               isProcessing = false;
           });
           return;
+      } else if (powerupMode === 2) { // Color Nuke
+          powerupMode = 0;
+          document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
+          score -= 500; scoreEl.textContent = score;
+          isProcessing = true;
+          let targetC = grid[r][c] && grid[r][c].color ? grid[r][c].color : COLORS[0];
+          processMatches({hMatches:[], vMatches:[]}, {r: r, c: c, color: targetC}).then(() => {
+              checkLevelProgress();
+              saveGame();
+              isProcessing = false;
+          });
+          return;
       }
 
-      if (grid[r][c] && grid[r][c].stone) return;
+      if (grid[r][c] && grid[r][c].stoneHits > 0) return;
 
       if (selectedCell) {
         if (selectedCell.r === r && selectedCell.c === c) {
@@ -672,7 +784,7 @@
     }
 
     async function swapAndCheck(r1, c1, r2, c2) {
-      if (grid[r1][c1].stone || grid[r2][c2].stone || grid[r1][c1].ice || grid[r2][c2].ice) {
+      if (grid[r1][c1].stoneHits > 0 || grid[r2][c2].stoneHits > 0 || grid[r1][c1].ice || grid[r2][c2].ice) {
         playBadSwapSound();
         if (selectedCell) selectedCell.el.classList.remove('selected');
         selectedCell = null;
@@ -706,6 +818,13 @@
           moves--;
           movesEl.textContent = moves;
         }
+
+        bossMoveTimer++;
+        if (gameMode === 0 && bossHP > 0 && bossMoveTimer >= 3) {
+          bossMoveTimer = 0;
+          triggerBossAction();
+        }
+
         await processMatches(matches, specialTrigger);
         checkLevelProgress();
         saveGame();
@@ -723,26 +842,26 @@
       grid[r2][c2] = temp;
       grid[r1][c1].el.dataset.r = r1;
       grid[r1][c1].el.dataset.c = c1;
-      grid[r1][c1].el.style.top = (r1 * 50 + 1) + 'px';
-      grid[r1][c1].el.style.left = (c1 * 50 + 1) + 'px';
+      grid[r1][c1].el.style.top = (r1 * cellSize + 1) + 'px';
+      grid[r1][c1].el.style.left = (c1 * cellSize + 1) + 'px';
       grid[r2][c2].el.dataset.r = r2;
       grid[r2][c2].el.dataset.c = c2;
-      grid[r2][c2].el.style.top = (r2 * 50 + 1) + 'px';
-      grid[r2][c2].el.style.left = (c2 * 50 + 1) + 'px';
+      grid[r2][c2].el.style.top = (r2 * cellSize + 1) + 'px';
+      grid[r2][c2].el.style.left = (c2 * cellSize + 1) + 'px';
     }
 
     function findMatches() {
       let hMatches = [];
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS - 2; c++) {
-          if (!grid[r][c] || grid[r][c].stone) continue;
+          if (!grid[r][c] || grid[r][c].stoneHits > 0) continue;
           let color = grid[r][c].color;
           if (grid[r][c].type === 3) continue;
-          if (color && grid[r][c+1] && grid[r][c+1].color === color && !grid[r][c+1].stone && grid[r][c+1].type !== 3 &&
-              grid[r][c+2] && grid[r][c+2].color === color && !grid[r][c+2].stone && grid[r][c+2].type !== 3) {
+          if (color && grid[r][c+1] && grid[r][c+1].color === color && grid[r][c+1].stoneHits === 0 && grid[r][c+1].type !== 3 &&
+              grid[r][c+2] && grid[r][c+2].color === color && grid[r][c+2].stoneHits === 0 && grid[r][c+2].type !== 3) {
             let group = [];
             let k = c;
-            while(k < COLS && grid[r][k] && grid[r][k].color === color && !grid[r][k].stone && grid[r][k].type !== 3) { group.push({r, c:k}); k++; }
+            while(k < COLS && grid[r][k] && grid[r][k].color === color && grid[r][k].stoneHits === 0 && grid[r][k].type !== 3) { group.push({r, c:k}); k++; }
             hMatches.push(group);
             c = k - 1;
           }
@@ -751,14 +870,14 @@
       let vMatches = [];
       for (let c = 0; c < COLS; c++) {
         for (let r = 0; r < ROWS - 2; r++) {
-          if (!grid[r][c] || grid[r][c].stone) continue;
+          if (!grid[r][c] || grid[r][c].stoneHits > 0) continue;
           let color = grid[r][c].color;
           if (grid[r][c].type === 3) continue;
-          if (color && grid[r+1][c] && grid[r+1][c].color === color && !grid[r+1][c].stone && grid[r+1][c].type !== 3 &&
-              grid[r+2][c] && grid[r+2][c].color === color && !grid[r+2][c].stone && grid[r+2][c].type !== 3) {
+          if (color && grid[r+1][c] && grid[r+1][c].color === color && grid[r+1][c].stoneHits === 0 && grid[r+1][c].type !== 3 &&
+              grid[r+2][c] && grid[r+2][c].color === color && grid[r+2][c].stoneHits === 0 && grid[r+2][c].type !== 3) {
             let group = [];
             let k = r;
-            while(k < ROWS && grid[k][c] && grid[k][c].color === color && !grid[k][c].stone && grid[k][c].type !== 3) { group.push({r:k, c}); k++; }
+            while(k < ROWS && grid[k][c] && grid[k][c].color === color && grid[k][c].stoneHits === 0 && grid[k][c].type !== 3) { group.push({r:k, c}); k++; }
             vMatches.push(group);
             r = k - 1;
           }
@@ -771,7 +890,7 @@
         if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
         if (!grid[r][c]) return;
 
-        if (grid[r][c].stone) {
+        if (grid[r][c].stoneHits > 0) {
             stoneToBreak.add(`${r},${c}`);
             return;
         }
@@ -784,7 +903,7 @@
         let dc = [0, 0, -1, 1];
         for (let i = 0; i < 4; i++) {
             let nr = r + dr[i], nc = c + dc[i];
-            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && grid[nr][nc] && grid[nr][nc].stone) {
+            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && grid[nr][nc] && grid[nr][nc].stoneHits > 0) {
                 stoneToBreak.add(`${nr},${nc}`);
             }
         }
@@ -798,7 +917,7 @@
             let color = COLORS[Math.floor(Math.random() * COLORS.length)];
             for (let i = 0; i < ROWS; i++) {
                 for (let j = 0; j < COLS; j++) {
-                    if (grid[i][j] && grid[i][j].color === color && !grid[i][j].stone && grid[i][j].type !== 3) addDestroy(i, j);
+                    if (grid[i][j] && grid[i][j].color === color && grid[i][j].stoneHits === 0 && grid[i][j].type !== 3) addDestroy(i, j);
                 }
             }
         } else if (cell.type === 4) { // 3x3 Bomb
@@ -820,18 +939,18 @@
         let newSpecials = []; 
 
         if (specialTrigger) {
-            if (grid[specialTrigger.r][specialTrigger.c] && grid[specialTrigger.r][specialTrigger.c].stone) {
+            if (grid[specialTrigger.r][specialTrigger.c] && grid[specialTrigger.r][specialTrigger.c].stoneHits > 0) {
                 stoneToBreak.add(`${specialTrigger.r},${specialTrigger.c}`);
             } else {
                 toDestroy.add(`${specialTrigger.r},${specialTrigger.c}`);
             }
 
             if (specialTrigger.color === 'all') {
-                for(let i=0; i<ROWS; i++) for(let j=0; j<COLS; j++) if(grid[i][j] && !grid[i][j].stone) addDestroy(i,j);
+                for(let i=0; i<ROWS; i++) for(let j=0; j<COLS; j++) if(grid[i][j] && grid[i][j].stoneHits === 0) addDestroy(i,j);
             } else if (specialTrigger.color) {
                 for(let i=0; i<ROWS; i++) {
                     for(let j=0; j<COLS; j++) {
-                        if(grid[i][j] && grid[i][j].color === specialTrigger.color && !grid[i][j].stone) addDestroy(i,j);
+                        if(grid[i][j] && grid[i][j].color === specialTrigger.color && grid[i][j].stoneHits === 0) addDestroy(i,j);
                     }
                 }
             } else if (specialTrigger.cross) {
@@ -847,10 +966,6 @@
 
         let allGroups = [...matches.hMatches, ...matches.vMatches];
         allGroups.forEach(g => {
-            let isTL = false;
-            let hLen = matches.hMatches.find(m => m === g) ? g.length : 0;
-            let vLen = matches.vMatches.find(m => m === g) ? g.length : 0;
-
             let sR = g[0].r, sC = g[0].c;
             if (lastSwap) {
                 let found = g.find(m => (m.r === lastSwap[0].r && m.c === lastSwap[0].c) || (m.r === lastSwap[1].r && m.c === lastSwap[1].c));
@@ -903,27 +1018,47 @@
 
         destroyArr.forEach(m => {
           if (grid[m.r][m.c]) {
+            if (grid[m.r][m.c].color === '#ff4040') collectedRed++;
+            else if (grid[m.r][m.c].color === '#40ff40') collectedGreen++;
+            else if (grid[m.r][m.c].color === '#4040ff') collectedBlue++;
+
+            if (bossHP > 0) {
+              bossHP--;
+              if (grid[m.r][m.c].type > 0) bossHP -= 4;
+              if (bossHP < 0) bossHP = 0;
+            }
+
             if (grid[m.r][m.c].ice) {
                 grid[m.r][m.c].ice = false;
-                grid[m.r][m.c].el.innerHTML = getGemSVG(getColorIndex(grid[m.r][m.c].color), grid[m.r][m.c].type, false, false);
+                grid[m.r][m.c].el.innerHTML = getGemSVG(getColorIndex(grid[m.r][m.c].color), grid[m.r][m.c].type, 0, false, grid[m.r][m.c].barrier);
             }
+            if (grid[m.r][m.c].barrier) {
+                grid[m.r][m.c].barrier = false;
+                grid[m.r][m.c].el.innerHTML = getGemSVG(getColorIndex(grid[m.r][m.c].color), grid[m.r][m.c].type, 0, grid[m.r][m.c].ice, false);
+            }
+
             if (grid[m.r][m.c].type === 1) fireLaserRow(m.r);
             if (grid[m.r][m.c].type === 2) fireLaserCol(m.c);
-            if (grid[m.r][m.c].type === 4) createScorePopup(m.c * 50 + 10, m.r * 50 + 10, 'BOOM!', '#ff3333');
+            if (grid[m.r][m.c].type === 4) createScorePopup(m.c * cellSize + 10, m.r * cellSize + 10, 'BOOM!', '#ff3333');
             let color = grid[m.r][m.c].color || '#ffffff';
             if (grid[m.r][m.c].type === 3) color = '#ffffff';
-            createParticles(m.c * 50 + 25, m.r * 50 + 25, color);
-            createScorePopup(m.c * 50 + 10, m.r * 50 + 10, `+${10 * comboMultiplier}`);
+            createParticles(m.c * cellSize + cellSize/2, m.r * cellSize + cellSize/2, color);
+            createScorePopup(m.c * cellSize + 10, m.r * cellSize + 10, `+${10 * comboMultiplier}`);
             grid[m.r][m.c].el.style.transform = 'scale(0)';
             grid[m.r][m.c].el.style.opacity = '0';
           }
         });
 
         stoneArr.forEach(m => {
-          if (grid[m.r][m.c] && grid[m.r][m.c].stone) {
-            createParticles(m.c * 50 + 25, m.r * 50 + 25, '#999999');
-            grid[m.r][m.c].el.style.transform = 'scale(0)';
-            grid[m.r][m.c].el.style.opacity = '0';
+          if (grid[m.r][m.c] && grid[m.r][m.c].stoneHits > 0) {
+            grid[m.r][m.c].stoneHits--;
+            createParticles(m.c * cellSize + cellSize/2, m.r * cellSize + cellSize/2, '#999999');
+            if (grid[m.r][m.c].stoneHits > 0) {
+              grid[m.r][m.c].el.innerHTML = getGemSVG(0, 0, grid[m.r][m.c].stoneHits, false, false);
+            } else {
+              grid[m.r][m.c].el.style.transform = 'scale(0)';
+              grid[m.r][m.c].el.style.opacity = '0';
+            }
           }
         });
 
@@ -937,7 +1072,7 @@
         });
 
         stoneArr.forEach(m => {
-          if (grid[m.r][m.c]) {
+          if (grid[m.r][m.c] && grid[m.r][m.c].stoneHits === 0) {
             boardEl.removeChild(grid[m.r][m.c].el);
             grid[m.r][m.c] = null;
           }
@@ -947,15 +1082,15 @@
             if (grid[s.r][s.c]) {
                 boardEl.removeChild(grid[s.r][s.c].el);
             }
-            let cell = createCellElement(s.r, s.c, s.color, s.type, false);
+            let cell = createCellElement(s.r, s.c, s.color, s.type, 0);
             boardEl.appendChild(cell);
-            grid[s.r][s.c] = { color: s.color, type: s.type, ice: false, stone: false, el: cell };
+            grid[s.r][s.c] = { color: s.color, type: s.type, ice: false, stoneHits: 0, barrier: false, el: cell };
         });
 
         for (let c = 0; c < COLS; c++) {
           let targetR = ROWS - 1;
           for (let r = ROWS - 1; r >= 0; r--) {
-            if (grid[r][c] && grid[r][c].stone) {
+            if (grid[r][c] && grid[r][c].stoneHits > 0) {
               targetR = r - 1;
               continue;
             }
@@ -963,7 +1098,7 @@
               if (targetR !== r) {
                 grid[targetR][c] = grid[r][c];
                 grid[targetR][c].el.dataset.r = targetR;
-                grid[targetR][c].el.style.top = (targetR * 50 + 1) + 'px';
+                grid[targetR][c].el.style.top = (targetR * cellSize + 1) + 'px';
                 grid[r][c] = null;
               }
               targetR--;
@@ -971,11 +1106,11 @@
           }
           for (let r = targetR; r >= 0; r--) {
             let color = COLORS[Math.floor(Math.random() * COLORS.length)];
-            let cell = createCellElement(r, c, color, 0, false);
+            let cell = createCellElement(r, c, color, 0, 0);
             boardEl.appendChild(cell);
-            grid[r][c] = { color, type: 0, ice: false, stone: false, el: cell };
+            grid[r][c] = { color, type: 0, ice: false, stoneHits: 0, barrier: false, el: cell };
             cell.offsetHeight;
-            cell.style.top = (r * 50 + 1) + 'px';
+            cell.style.top = (r * cellSize + 1) + 'px';
           }
         }
         
@@ -1017,15 +1152,33 @@
           if (score >= level * 2000) { level++; }
           return;
       }
-      if (score >= targetScore) {
+      
+      const cfg = CAMPAIGN_STAGES[level - 1];
+      let cleared = false;
+
+      if (gameMode === 0) {
+        if (level === 20) {
+          cleared = (bossHP <= 0);
+        } else {
+          let scoreMet = (score >= targetScore);
+          let redMet = (cfg.redTarget === 0 || collectedRed >= cfg.redTarget);
+          let grnMet = (cfg.greenTarget === 0 || collectedGreen >= cfg.greenTarget);
+          let bluMet = (cfg.blueTarget === 0 || collectedBlue >= cfg.blueTarget);
+          cleared = (scoreMet && redMet && grnMet && bluMet);
+        }
+      } else if (gameMode === 2) {
+        cleared = (score >= targetScore);
+      }
+
+      if (cleared) {
         playPowerupSound();
         if (gameMode === 0) {
-          if (level < 15) {
+          if (level < 20) {
             alert("Stage Cleared! Advancing to next stage.");
             level++;
             initStage(level);
           } else {
-            alert("CONGRATULATIONS!\nYou have completed all 15 stages of KMatch3 Campaign Mode!");
+            alert("VICTORY!\nYou have defeated the Jewel King and completed all 20 stages of KMatch3!");
             initStage(1);
           }
         } else if (gameMode === 2) {
@@ -1040,6 +1193,17 @@
         gameOver();
       }
     }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '1') { gameMode = 0; document.getElementById('mode').value = '0'; initStage(1); }
+      else if (e.key === '2') { gameMode = 1; document.getElementById('mode').value = '1'; initStage(1); }
+      else if (e.key === '3') { gameMode = 2; document.getElementById('mode').value = '2'; initStage(1); }
+      else if (e.key === 'h' || e.key === 'H') useHammer();
+      else if (e.key === 'e' || e.key === 'E' || e.key === 'm' || e.key === 'M') useExtraMoves();
+      else if (e.key === 's' || e.key === 'S') useShuffle();
+      else if (e.key === 'l' || e.key === 'L') useColorNuke();
+      else if (e.key === 'F1') { e.preventDefault(); showHelp(); }
+    });
 
     setInterval(() => {
         let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);

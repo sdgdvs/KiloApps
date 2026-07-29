@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include <math.h>
 
-#define ROWS 8
-#define COLS 8
-#define CELL_SIZE 50
+#define MAX_ROWS 10
+#define MAX_COLS 10
 #define BOARD_X 50
-#define BOARD_Y 70
+#define BOARD_Y 95
+#define BOARD_SIZE 400
 
 #define TYPE_NONE 0
 #define TYPE_HORIZ 1
@@ -22,37 +22,63 @@ typedef struct {
     int timeLimit;
     int iceCount;
     int stoneCount;
+    int ironCount;
+    int redTarget;
+    int greenTarget;
+    int blueTarget;
+    int bossHP;
+    int rows;
+    int cols;
     const char* name;
 } StageConfig;
 
-static const StageConfig CAMPAIGN_STAGES[15] = {
-    {  800, 20,  0,  0,  0, "1: Gem Starter" },
-    { 1200, 22,  0,  4,  0, "2: Frosty Fields" },
-    { 1500, 20,  0,  6,  2, "3: Stony Path" },
-    { 1800,  0, 60,  5,  2, "4: Speed Rush" },
-    { 2200, 20,  0,  8,  4, "5: Frozen Quarry" },
-    { 2600, 18,  0, 10,  4, "6: Ice Castle" },
-    { 3000,  0, 55,  8,  6, "7: Clockwork Cavern" },
-    { 3500, 22,  0, 12,  6, "8: Stone Fortress" },
-    { 4000, 20,  0, 14,  8, "9: Deep Freeze" },
-    { 4500,  0, 50, 10,  8, "10: Blizzard Blitz" },
-    { 5000, 20,  0, 16, 10, "11: Glacier Ridge" },
-    { 5500, 18,  0, 18, 10, "12: Titan's Vault" },
-    { 6000,  0, 45, 15, 12, "13: Time Vortex" },
-    { 7000, 22,  0, 20, 14, "14: Crystal Mine" },
-    { 8500, 25,  0, 24, 16, "15: Grand Master" }
+static const StageConfig CAMPAIGN_STAGES[20] = {
+    {  800, 20,  0,  0,  0,  0,  0,  0,  0,   0, 6, 6, "1: Gem Starter" },
+    { 1200, 22,  0,  6,  0,  0,  0,  0,  0,   0, 6, 6, "2: Frosty Fields" },
+    { 1500, 20,  0,  6,  4,  0,  0,  0,  0,   0, 7, 7, "3: Stony Path" },
+    { 1800,  0, 60,  6,  4,  0,  0,  0,  0,   0, 7, 7, "4: Speed Rush" },
+    { 2200, 20,  0,  8,  4,  2,  0,  0,  0,   0, 8, 8, "5: Iron Quarry" },
+    { 2600, 18,  0, 12,  4,  2,  0,  0,  0,   0, 8, 8, "6: Ice Citadel" },
+    { 3000,  0, 55, 10,  6,  2,  0,  0,  0,   0, 8, 8, "7: Clockwork Cavern" },
+    { 3500, 22,  0, 14,  6,  4,  0,  0,  0,   0, 8, 8, "8: Stone Fortress" },
+    { 4000, 22,  0,  8,  4,  2, 15,  0,  0,   0, 9, 9, "9: Ruby Collector" },
+    { 4500,  0, 50, 16,  8,  4,  0,  0,  0,   0, 9, 9, "10: Blizzard Blitz" },
+    { 5000, 20,  0, 18,  8,  4,  0,  0,  0,   0, 9, 9, "11: Glacier Ridge" },
+    { 5500, 18,  0, 20, 10,  6,  0,  0,  0,   0, 9, 9, "12: Iron Vault" },
+    { 6000,  0, 45, 12,  6,  4,  0, 20,  0,   0,10,10, "13: Emerald Rush" },
+    { 7000, 22,  0, 24, 12,  6,  0,  0,  0,   0,10,10, "14: Crystal Mine" },
+    { 8000, 24,  0, 16,  8,  4,  0,  0, 25,   0,10,10, "15: Sapphire Temple" },
+    { 9000,  0, 40, 25, 14,  6,  0,  0,  0,   0,10,10, "16: Time Vortex" },
+    {10000, 20,  0, 28, 16,  8,  0,  0,  0,   0,10,10, "17: Obsidian Lair" },
+    {12000, 25,  0, 30, 18, 10,  0,  0,  0,   0,10,10, "18: Diamond Gauntlet" },
+    {14000,  0, 45, 32, 20, 10,  0,  0,  0,   0,10,10, "19: Master's Crucible" },
+    {    0, 30,  0, 10, 10,  6,  0,  0,  0, 100,10,10, "20: Jewel King Boss" }
 };
 
-int grid[ROWS][COLS];
-int typeGrid[ROWS][COLS] = {0};
-int iceGrid[ROWS][COLS] = {0};
-int stoneGrid[ROWS][COLS] = {0};
-int powerupMode = 0; // 0 = none, 1 = hammer
+int rows = 8;
+int cols = 8;
+int cellSize = 50;
+
+int grid[MAX_ROWS][MAX_COLS];
+int typeGrid[MAX_ROWS][MAX_COLS] = {0};
+int iceGrid[MAX_ROWS][MAX_COLS] = {0};
+int stoneGrid[MAX_ROWS][MAX_COLS] = {0};   // 1 = stone (1 hit), 2 = iron (2 hits), 3 = heavy iron (3 hits)
+int barrierGrid[MAX_ROWS][MAX_COLS] = {0}; // 1 = boss barrier shield
+
+int powerupMode = 0; // 0 = none, 1 = hammer, 2 = color nuke
 int score = 0;
 int moves = 20;
 int level = 1;
-int gameMode = 0; // 0 = Campaign (15 Stages), 1 = Zen, 2 = Timed Rush
+int gameMode = 0; // 0 = Campaign (20 Stages), 1 = Zen, 2 = Timed Rush
 int targetScore = 800;
+
+int collectedRed = 0;
+int collectedGreen = 0;
+int collectedBlue = 0;
+int bossHP = 0;
+int maxBossHP = 0;
+int bossMoveTimer = 0;
+
 int selR = -1, selC = -1;
 int isProcessing = 0;
 
@@ -60,9 +86,9 @@ int swapAnim = 0;
 int swapR1 = -1, swapC1 = -1, swapR2 = -1, swapC2 = -1;
 int lastSwapR1 = -1, lastSwapC1 = -1, lastSwapR2 = -1, lastSwapC2 = -1;
 int popAnim = 0;
-int popGrid[ROWS][COLS] = {0};
+int popGrid[MAX_ROWS][MAX_COLS] = {0};
 int dropAnim = 0;
-int dropCount[ROWS][COLS] = {0};
+int dropCount[MAX_ROWS][MAX_COLS] = {0};
 
 int statsGamesPlayed = 0;
 int statsBestScore = 0;
@@ -118,20 +144,33 @@ void UpdateParticles() {
     }
 }
 
-int laserRowTimer[ROWS] = {0};
-int laserColTimer[COLS] = {0};
+int laserRowTimer[MAX_ROWS] = {0};
+int laserColTimer[MAX_COLS] = {0};
 
-void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx, int isIce) {
+void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx, int isIce, int isBarrier) {
+    float scale = (float)size / 50.0f;
+    int r19 = (int)(19 * scale);
+    int r16 = (int)(16 * scale);
+    int r15 = (int)(15 * scale);
+    int r14 = (int)(14 * scale);
+    int r17 = (int)(17 * scale);
+    int r13 = (int)(13 * scale);
+    int r11 = (int)(11 * scale);
+    int r9  = (int)(9  * scale);
+    int r7  = (int)(7  * scale);
+    int r5  = (int)(5  * scale);
+    int r3  = (int)(3  * scale);
+
     if (typeIdx == TYPE_RAINBOW) {
         HBRUSH bgRing = CreateSolidBrush(RGB(255, 215, 0));
         HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
         HBRUSH oldB = (HBRUSH)SelectObject(hdc, bgRing);
         HPEN oldP = (HPEN)SelectObject(hdc, goldPen);
-        Ellipse(hdc, cx - 19, cy - 19, cx + 19, cy + 19);
+        Ellipse(hdc, cx - r19, cy - r19, cx + r19, cy + r19);
         
         POINT pts[16];
         for (int i = 0; i < 16; i++) {
-            float r = (i % 2 == 0) ? 20.0f : 9.0f;
+            float r = (i % 2 == 0) ? (20.0f * scale) : (9.0f * scale);
             float a = (float)i * 3.14159f / 8.0f;
             pts[i].x = cx + (int)(cosf(a) * r);
             pts[i].y = cy + (int)(sinf(a) * r);
@@ -140,7 +179,7 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
 
         HBRUSH coreB = CreateSolidBrush(RGB(255, 255, 255));
         SelectObject(hdc, coreB);
-        Ellipse(hdc, cx - 5, cy - 5, cx + 5, cy + 5);
+        Ellipse(hdc, cx - r5, cy - r5, cx + r5, cy + r5);
         DeleteObject(coreB);
 
         SelectObject(hdc, oldB); SelectObject(hdc, oldP);
@@ -167,68 +206,68 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
 
         int c = colorIdx % 6;
         if (c == 0) {
-            POINT pOct[8] = {{cx-7, cy-17}, {cx+7, cy-17}, {cx+17, cy-7}, {cx+17, cy+7}, {cx+7, cy+17}, {cx-7, cy+17}, {cx-17, cy+7}, {cx-17, cy-7}};
+            POINT pOct[8] = {{cx-r7, cy-r17}, {cx+r7, cy-r17}, {cx+r17, cy-r7}, {cx+r17, cy+r7}, {cx+r7, cy+r17}, {cx-r7, cy+r17}, {cx-r17, cy+r7}, {cx-r17, cy-r7}};
             Polygon(hdc, pOct, 8);
-            POINT pTop[4] = {{cx-7, cy-17}, {cx+7, cy-17}, {cx+11, cy-9}, {cx-11, cy-9}};
-            POINT pBot[4] = {{cx-11, cy+9}, {cx+11, cy+9}, {cx+7, cy+17}, {cx-7, cy+17}};
-            POINT pLeft[4] = {{cx-17, cy-7}, {cx-11, cy-9}, {cx-11, cy+9}, {cx-17, cy+7}};
-            POINT pRight[4] = {{cx+11, cy-9}, {cx+17, cy-7}, {cx+17, cy+7}, {cx+11, cy+9}};
-            POINT pCenter[4] = {{cx-11, cy-9}, {cx+11, cy-9}, {cx+11, cy+9}, {cx-11, cy+9}};
+            POINT pTop[4] = {{cx-r7, cy-r17}, {cx+r7, cy-r17}, {cx+r11, cy-r9}, {cx-r11, cy-r9}};
+            POINT pBot[4] = {{cx-r11, cy+r9}, {cx+r11, cy+r9}, {cx+r7, cy+r17}, {cx-r7, cy+r17}};
+            POINT pLeft[4] = {{cx-r17, cy-r7}, {cx-r11, cy-r9}, {cx-r11, cy+r9}, {cx-r17, cy+r7}};
+            POINT pRight[4] = {{cx+r11, cy-r9}, {cx+r17, cy-r7}, {cx+r17, cy+r7}, {cx+r11, cy+r9}};
+            POINT pCenter[4] = {{cx-r11, cy-r9}, {cx+r11, cy-r9}, {cx+r11, cy+r9}, {cx-r11, cy+r9}};
             SelectObject(hdc, lightB); Polygon(hdc, pTop, 4); Polygon(hdc, pLeft, 4);
             SelectObject(hdc, darkB); Polygon(hdc, pBot, 4); Polygon(hdc, pRight, 4);
             SelectObject(hdc, mainB); Polygon(hdc, pCenter, 4);
-            SelectObject(hdc, whiteB); Ellipse(hdc, cx-5, cy-13, cx-1, cy-9);
+            SelectObject(hdc, whiteB); Ellipse(hdc, cx-r5, cy-r13, cx-r3, cy-r9);
         } else if (c == 1) {
-            RECT rOuter = { cx-16, cy-14, cx+16, cy+14 };
-            RoundRect(hdc, rOuter.left, rOuter.top, rOuter.right, rOuter.bottom, 6, 6);
-            POINT pTop[4] = {{cx-16, cy-14}, {cx+16, cy-14}, {cx+10, cy-8}, {cx-10, cy-8}};
-            POINT pBot[4] = {{cx-10, cy+8}, {cx+10, cy+8}, {cx+16, cy+14}, {cx-16, cy+14}};
-            POINT pLeft[4] = {{cx-16, cy-14}, {cx-10, cy-8}, {cx-10, cy+8}, {cx-16, cy+14}};
-            POINT pRight[4] = {{cx+10, cy-8}, {cx+16, cy-14}, {cx+16, cy+14}, {cx+10, cy+8}};
+            RECT rOuter = { cx-r16, cy-r14, cx+r16, cy+r14 };
+            RoundRect(hdc, rOuter.left, rOuter.top, rOuter.right, rOuter.bottom, (int)(6*scale), (int)(6*scale));
+            POINT pTop[4] = {{cx-r16, cy-r14}, {cx+r16, cy-r14}, {cx+r9, cy-r7}, {cx-r9, cy-r7}};
+            POINT pBot[4] = {{cx-r9, cy+r7}, {cx+r9, cy+r7}, {cx+r16, cy+r14}, {cx-r16, cy+r14}};
+            POINT pLeft[4] = {{cx-r16, cy-r14}, {cx-r9, cy-r7}, {cx-r9, cy+r7}, {cx-r16, cy+r14}};
+            POINT pRight[4] = {{cx+r9, cy-r7}, {cx+r16, cy-r14}, {cx+r16, cy+r14}, {cx+r9, cy+r7}};
             SelectObject(hdc, lightB); Polygon(hdc, pTop, 4); Polygon(hdc, pLeft, 4);
             SelectObject(hdc, darkB); Polygon(hdc, pBot, 4); Polygon(hdc, pRight, 4);
-            RECT rCenter = { cx-10, cy-8, cx+10, cy+8 };
+            RECT rCenter = { cx-r9, cy-r7, cx+r9, cy+r7 };
             SelectObject(hdc, mainB); FillRect(hdc, &rCenter, mainB);
-            SelectObject(hdc, whiteB); Ellipse(hdc, cx-12, cy-12, cx-7, cy-7);
+            SelectObject(hdc, whiteB); Ellipse(hdc, cx-r13, cy-r13, cx-r7, cy-r7);
         } else if (c == 2) {
-            RECT rOuter = { cx-15, cy-15, cx+15, cy+15 };
-            RoundRect(hdc, rOuter.left, rOuter.top, rOuter.right, rOuter.bottom, 8, 8);
-            POINT pStar1[3] = {{cx, cy-15}, {cx+7, cy}, {cx-7, cy}};
-            POINT pStar2[3] = {{cx, cy+15}, {cx+7, cy}, {cx-7, cy}};
-            POINT pStar3[3] = {{cx-15, cy}, {cx, cy-7}, {cx, cy+7}};
-            POINT pStar4[3] = {{cx+15, cy}, {cx, cy-7}, {cx, cy+7}};
+            RECT rOuter = { cx-r15, cy-r15, cx+r15, cy+r15 };
+            RoundRect(hdc, rOuter.left, rOuter.top, rOuter.right, rOuter.bottom, (int)(8*scale), (int)(8*scale));
+            POINT pStar1[3] = {{cx, cy-r15}, {cx+r7, cy}, {cx-r7, cy}};
+            POINT pStar2[3] = {{cx, cy+r15}, {cx+r7, cy}, {cx-r7, cy}};
+            POINT pStar3[3] = {{cx-r15, cy}, {cx, cy-r7}, {cx, cy+r7}};
+            POINT pStar4[3] = {{cx+r15, cy}, {cx, cy-r7}, {cx, cy+r7}};
             SelectObject(hdc, lightB); Polygon(hdc, pStar1, 3); Polygon(hdc, pStar3, 3);
             SelectObject(hdc, darkB); Polygon(hdc, pStar2, 3); Polygon(hdc, pStar4, 3);
-            SelectObject(hdc, whiteB); Ellipse(hdc, cx-7, cy-9, cx-2, cy-4);
+            SelectObject(hdc, whiteB); Ellipse(hdc, cx-r7, cy-r9, cx-r3, cy-r3);
         } else if (c == 3) {
-            POINT pDiamond[4] = {{cx, cy-18}, {cx+17, cy}, {cx, cy+18}, {cx-17, cy}};
+            POINT pDiamond[4] = {{cx, cy-r17}, {cx+r16, cy}, {cx, cy+r17}, {cx-r16, cy}};
             Polygon(hdc, pDiamond, 4);
-            POINT p1[3] = {{cx, cy-18}, {cx+17, cy}, {cx, cy}};
-            POINT p2[3] = {{cx, cy-18}, {cx-17, cy}, {cx, cy}};
-            POINT p3[3] = {{cx, cy+18}, {cx+17, cy}, {cx, cy}};
-            POINT p4[3] = {{cx, cy+18}, {cx-17, cy}, {cx, cy}};
+            POINT p1[3] = {{cx, cy-r17}, {cx+r16, cy}, {cx, cy}};
+            POINT p2[3] = {{cx, cy-r17}, {cx-r16, cy}, {cx, cy}};
+            POINT p3[3] = {{cx, cy+r17}, {cx+r16, cy}, {cx, cy}};
+            POINT p4[3] = {{cx, cy+r17}, {cx-r16, cy}, {cx, cy}};
             SelectObject(hdc, lightB); Polygon(hdc, p1, 3);
             SelectObject(hdc, whiteB); Polygon(hdc, p2, 3);
             SelectObject(hdc, darkB); Polygon(hdc, p3, 3); Polygon(hdc, p4, 3);
         } else if (c == 4) {
-            POINT pHex[6] = {{cx, cy-17}, {cx+15, cy-8}, {cx+13, cy+13}, {cx, cy+17}, {cx-13, cy+13}, {cx-15, cy-8}};
+            POINT pHex[6] = {{cx, cy-r17}, {cx+r15, cy-r7}, {cx+r13, cy+r13}, {cx, cy+r17}, {cx-r13, cy+r13}, {cx-r15, cy-r7}};
             Polygon(hdc, pHex, 6);
-            POINT p1[3] = {{cx, cy-17}, {cx+15, cy-8}, {cx, cy}};
-            POINT p2[3] = {{cx, cy-17}, {cx-15, cy-8}, {cx, cy}};
-            POINT p3[3] = {{cx-15, cy-8}, {cx-13, cy+13}, {cx, cy}};
-            POINT p4[3] = {{cx+15, cy-8}, {cx+13, cy+13}, {cx, cy}};
+            POINT p1[3] = {{cx, cy-r17}, {cx+r15, cy-r7}, {cx, cy}};
+            POINT p2[3] = {{cx, cy-r17}, {cx-r15, cy-r7}, {cx, cy}};
+            POINT p3[3] = {{cx-r15, cy-r7}, {cx-r13, cy+r13}, {cx, cy}};
+            POINT p4[3] = {{cx+r15, cy-r7}, {cx+r13, cy+r13}, {cx, cy}};
             SelectObject(hdc, lightB); Polygon(hdc, p1, 3);
             SelectObject(hdc, whiteB); Polygon(hdc, p2, 3);
             SelectObject(hdc, darkB); Polygon(hdc, p3, 3); Polygon(hdc, p4, 3);
         } else {
-            Ellipse(hdc, cx-16, cy-16, cx+16, cy+16);
-            POINT pStar1[4] = {{cx, cy-16}, {cx+6, cy-6}, {cx, cy}, {cx-6, cy-6}};
-            POINT pStar2[4] = {{cx+16, cy}, {cx+6, cy+6}, {cx, cy}, {cx+6, cy-6}};
-            POINT pStar3[4] = {{cx, cy+16}, {cx-6, cy+6}, {cx, cy}, {cx+6, cy+6}};
-            POINT pStar4[4] = {{cx-17, cy}, {cx-6, cy-6}, {cx, cy}, {cx-6, cy+6}};
+            Ellipse(hdc, cx-r16, cy-r16, cx+r16, cy+r16);
+            POINT pStar1[4] = {{cx, cy-r16}, {cx+r5, cy-r5}, {cx, cy}, {cx-r5, cy-r5}};
+            POINT pStar2[4] = {{cx+r16, cy}, {cx+r5, cy+r5}, {cx, cy}, {cx+r5, cy-r5}};
+            POINT pStar3[4] = {{cx, cy+r16}, {cx-r5, cy+r5}, {cx, cy}, {cx+r5, cy+r5}};
+            POINT pStar4[4] = {{cx-r16, cy}, {cx-r5, cy-r5}, {cx, cy}, {cx-r5, cy+r5}};
             SelectObject(hdc, lightB); Polygon(hdc, pStar1, 4); Polygon(hdc, pStar4, 4);
             SelectObject(hdc, darkB); Polygon(hdc, pStar2, 4); Polygon(hdc, pStar3, 4);
-            SelectObject(hdc, whiteB); Ellipse(hdc, cx-3, cy-3, cx+3, cy+3);
+            SelectObject(hdc, whiteB); Ellipse(hdc, cx-r3, cy-r3, cx+r3, cy+r3);
         }
 
         SelectObject(hdc, oldB); SelectObject(hdc, oldP);
@@ -239,12 +278,12 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
             HBRUSH goldB = CreateSolidBrush(RGB(255, 170, 0));
             HPEN oP = (HPEN)SelectObject(hdc, goldP);
             HBRUSH oB = (HBRUSH)SelectObject(hdc, goldB);
-            Ellipse(hdc, cx-19, cy-19, cx+19, cy+19);
-            POINT arrL[3] = {{cx-16, cy}, {cx-7, cy-5}, {cx-7, cy+5}};
-            POINT arrR[3] = {{cx+16, cy}, {cx+7, cy-5}, {cx+7, cy+5}};
+            Ellipse(hdc, cx-r19, cy-r19, cx+r19, cy+r19);
+            POINT arrL[3] = {{cx-r16, cy}, {cx-r7, cy-r5}, {cx-r7, cy+r5}};
+            POINT arrR[3] = {{cx+r16, cy}, {cx+r7, cy-r5}, {cx+r7, cy+r5}};
             SelectObject(hdc, GetStockObject(WHITE_BRUSH));
             Polygon(hdc, arrL, 3); Polygon(hdc, arrR, 3);
-            RECT lineR = {cx-7, cy-2, cx+7, cy+2};
+            RECT lineR = {cx-r7, cy-(int)(2*scale), cx+r7, cy+(int)(2*scale)};
             FillRect(hdc, &lineR, (HBRUSH)GetStockObject(WHITE_BRUSH));
             SelectObject(hdc, oP); SelectObject(hdc, oB);
             DeleteObject(goldP); DeleteObject(goldB);
@@ -253,12 +292,12 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
             HBRUSH cyanB = CreateSolidBrush(RGB(0, 136, 255));
             HPEN oP = (HPEN)SelectObject(hdc, cyanP);
             HBRUSH oB = (HBRUSH)SelectObject(hdc, cyanB);
-            Ellipse(hdc, cx-19, cy-19, cx+19, cy+19);
-            POINT arrU[3] = {{cx, cy-16}, {cx-5, cy-7}, {cx+5, cy-7}};
-            POINT arrD[3] = {{cx, cy+16}, {cx-5, cy+7}, {cx+5, cy+7}};
+            Ellipse(hdc, cx-r19, cy-r19, cx+r19, cy+r19);
+            POINT arrU[3] = {{cx, cy-r16}, {cx-r5, cy-r7}, {cx+r5, cy-r7}};
+            POINT arrD[3] = {{cx, cy+r16}, {cx-r5, cy+r7}, {cx+r5, cy+r7}};
             SelectObject(hdc, GetStockObject(WHITE_BRUSH));
             Polygon(hdc, arrU, 3); Polygon(hdc, arrD, 3);
-            RECT lineR = {cx-2, cy-7, cx+2, cy+7};
+            RECT lineR = {cx-(int)(2*scale), cy-r7, cx+(int)(2*scale), cy+r7};
             FillRect(hdc, &lineR, (HBRUSH)GetStockObject(WHITE_BRUSH));
             SelectObject(hdc, oP); SelectObject(hdc, oB);
             DeleteObject(cyanP); DeleteObject(cyanB);
@@ -267,14 +306,14 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
             HPEN redP = CreatePen(PS_SOLID, 2, RGB(255, 40, 40));
             HPEN oP = (HPEN)SelectObject(hdc, redP);
             HBRUSH oB = (HBRUSH)SelectObject(hdc, darkBomb);
-            Ellipse(hdc, cx-16, cy-16, cx+16, cy+16);
+            Ellipse(hdc, cx-r16, cy-r16, cx+r16, cy+r16);
             HBRUSH redCore = CreateSolidBrush(RGB(255, 40, 40));
             SelectObject(hdc, redCore);
-            Ellipse(hdc, cx-6, cy-6, cx+6, cy+6);
+            Ellipse(hdc, cx-r5, cy-r5, cx+r5, cy+r5);
             DeleteObject(redCore);
             HBRUSH sparkB = CreateSolidBrush(RGB(255, 200, 0));
             SelectObject(hdc, sparkB);
-            Ellipse(hdc, cx+8, cy-17, cx+14, cy-11);
+            Ellipse(hdc, cx+r7, cy-r16, cx+r13, cy-r9);
             DeleteObject(sparkB);
             SelectObject(hdc, oP); SelectObject(hdc, oB);
             DeleteObject(darkBomb); DeleteObject(redP);
@@ -283,14 +322,24 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
 
     if (isIce) {
         HBRUSH iceBrush = CreateSolidBrush(RGB(0, 229, 255));
-        RECT iRect = { cx-19, cy-19, cx+19, cy+19 };
+        RECT iRect = { cx-r19, cy-r19, cx+r19, cy+r19 };
         FrameRect(hdc, &iRect, iceBrush);
         DeleteObject(iceBrush);
         HPEN iceP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
         HPEN oP = (HPEN)SelectObject(hdc, iceP);
-        MoveToEx(hdc, cx-14, cy-9, NULL); LineTo(hdc, cx+4, cy+9);
-        MoveToEx(hdc, cx+9, cy-14, NULL); LineTo(hdc, cx-9, cy+14);
+        MoveToEx(hdc, cx-r13, cy-r9, NULL); LineTo(hdc, cx+r5, cy+r9);
+        MoveToEx(hdc, cx+r9, cy-r13, NULL); LineTo(hdc, cx-r9, cy+r13);
         SelectObject(hdc, oP); DeleteObject(iceP);
+    }
+
+    if (isBarrier) {
+        HPEN shieldP = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+        HBRUSH shieldB = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HPEN oP = (HPEN)SelectObject(hdc, shieldP);
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, shieldB);
+        Ellipse(hdc, cx-r19-2, cy-r19-2, cx+r19+2, cy+r19+2);
+        SelectObject(hdc, oP); SelectObject(hdc, oB);
+        DeleteObject(shieldP);
     }
 }
 
@@ -320,34 +369,46 @@ void PlayPowerupSound() { Beep(700, 150); }
 void InitStage(int stageIdx) {
     if (gameMode == 0) {
         if (stageIdx < 1) stageIdx = 1;
-        if (stageIdx > 15) stageIdx = 15;
+        if (stageIdx > 20) stageIdx = 20;
         level = stageIdx;
-        targetScore = CAMPAIGN_STAGES[level - 1].targetScore;
-        if (CAMPAIGN_STAGES[level - 1].timeLimit > 0) {
-            moves = CAMPAIGN_STAGES[level - 1].timeLimit;
-        } else {
-            moves = CAMPAIGN_STAGES[level - 1].moves;
-        }
+        const StageConfig *cfg = &CAMPAIGN_STAGES[level - 1];
+        rows = cfg->rows;
+        cols = cfg->cols;
+        targetScore = cfg->targetScore;
+        moves = (cfg->timeLimit > 0) ? cfg->timeLimit : cfg->moves;
+        bossHP = cfg->bossHP;
+        maxBossHP = cfg->bossHP;
     } else if (gameMode == 1) {
         level = 1;
+        rows = 8; cols = 8;
         targetScore = 2000;
         moves = 0;
+        bossHP = 0; maxBossHP = 0;
     } else if (gameMode == 2) {
         level = 1;
+        rows = 8; cols = 8;
         targetScore = 1000;
         moves = 60;
+        bossHP = 0; maxBossHP = 0;
     }
 
+    cellSize = BOARD_SIZE / cols;
     selR = -1; selC = -1;
+    collectedRed = 0; collectedGreen = 0; collectedBlue = 0;
+    bossMoveTimer = 0;
+    powerupMode = 0;
+
     memset(typeGrid, 0, sizeof(typeGrid));
     memset(iceGrid, 0, sizeof(iceGrid));
     memset(stoneGrid, 0, sizeof(stoneGrid));
+    memset(barrierGrid, 0, sizeof(barrierGrid));
 
     int iceToPlace = (gameMode == 0) ? CAMPAIGN_STAGES[level - 1].iceCount : (gameMode == 1 ? 0 : 4);
     int stoneToPlace = (gameMode == 0) ? CAMPAIGN_STAGES[level - 1].stoneCount : 0;
+    int ironToPlace = (gameMode == 0) ? CAMPAIGN_STAGES[level - 1].ironCount : 0;
 
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
             int color;
             do {
                 color = rand() % 6;
@@ -359,23 +420,49 @@ void InitStage(int stageIdx) {
         }
     }
 
-    while (stoneToPlace > 0) {
-        int r = rand() % ROWS;
-        int c = rand() % COLS;
+    while (ironToPlace > 0) {
+        int r = rand() % rows;
+        int c = rand() % cols;
         if (!stoneGrid[r][c]) {
-            stoneGrid[r][c] = 1;
+            stoneGrid[r][c] = 2 + (rand() % 2); // 2 or 3 hits
+            grid[r][c] = -1;
+            ironToPlace--;
+        }
+    }
+
+    while (stoneToPlace > 0) {
+        int r = rand() % rows;
+        int c = rand() % cols;
+        if (!stoneGrid[r][c]) {
+            stoneGrid[r][c] = 1; // 1 hit
             grid[r][c] = -1;
             stoneToPlace--;
         }
     }
 
     while (iceToPlace > 0) {
-        int r = rand() % ROWS;
-        int c = rand() % COLS;
+        int r = rand() % rows;
+        int c = rand() % cols;
         if (!stoneGrid[r][c] && !iceGrid[r][c]) {
             iceGrid[r][c] = 1;
             iceToPlace--;
         }
+    }
+}
+
+void TriggerBossAction(HWND hwnd) {
+    if (bossHP <= 0) return;
+    int count = 0;
+    for (int i = 0; i < 2; i++) {
+        int r = rand() % rows;
+        int c = rand() % cols;
+        if (!stoneGrid[r][c]) {
+            barrierGrid[r][c] = 1;
+            count++;
+        }
+    }
+    if (count > 0) {
+        PlayBadSwapSound();
     }
 }
 
@@ -384,7 +471,11 @@ void DrawBoard(HDC hdc) {
     int isTimedStage = (gameMode == 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode == 2);
     
     if (gameMode == 0) {
-        sprintf(buf, "Stage %s | Score: %d/%d | %s: %d", CAMPAIGN_STAGES[level-1].name, score, targetScore, isTimedStage ? "Time" : "Moves", moves);
+        if (level == 20) {
+            sprintf(buf, "Stage %s | BOSS HP: %d/%d | Moves: %d", CAMPAIGN_STAGES[level-1].name, bossHP, maxBossHP, moves);
+        } else {
+            sprintf(buf, "Stage %s | Score: %d/%d | %s: %d", CAMPAIGN_STAGES[level-1].name, score, targetScore, isTimedStage ? "Time" : "Moves", moves);
+        }
     } else if (gameMode == 1) {
         sprintf(buf, "Zen Mode | Score: %d | Level %d", score, level);
     } else if (gameMode == 2) {
@@ -396,25 +487,53 @@ void DrawBoard(HDC hdc) {
     TextOut(hdc, BOARD_X, 8, buf, strlen(buf));
     
     int iceCount = 0, stoneCount = 0;
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
             if (iceGrid[r][c]) iceCount++;
             if (stoneGrid[r][c]) stoneCount++;
         }
     }
 
     char statsBuf[128];
-    sprintf(statsBuf, "Ice: %d | Stone: %d | Best: %d | Combo: x%d", iceCount, stoneCount, statsBestScore, statsMaxCombo);
+    const StageConfig *cfg = &CAMPAIGN_STAGES[level - 1];
+    if (gameMode == 0 && (cfg->redTarget > 0 || cfg->greenTarget > 0 || cfg->blueTarget > 0)) {
+        sprintf(statsBuf, "Red: %d/%d | Grn: %d/%d | Blu: %d/%d | Best: %d", 
+            collectedRed, cfg->redTarget, collectedGreen, cfg->greenTarget, collectedBlue, cfg->blueTarget, statsBestScore);
+    } else {
+        sprintf(statsBuf, "Ice: %d | Stone/Iron: %d | Best: %d | Combo: x%d", iceCount, stoneCount, statsBestScore, statsMaxCombo);
+    }
     SetTextColor(hdc, RGB(200, 200, 200));
     TextOut(hdc, BOARD_X, 28, statsBuf, strlen(statsBuf));
 
     char powerupBuf[128];
-    sprintf(powerupBuf, "[H] Hammer(500) [M] +Moves/+15s(500) [S] Shuffle(500) [1-3] Mode", powerupMode ? " (ACTIVE)" : "");
+    const char *pModeStr = "";
+    if (powerupMode == 1) pModeStr = " (HAMMER)";
+    else if (powerupMode == 2) pModeStr = " (NUKE)";
+    sprintf(powerupBuf, "[H]Hammer [E]+Moves [S]Shuffle [L]Nuke%s", pModeStr);
     SetTextColor(hdc, powerupMode ? RGB(255, 100, 100) : RGB(255, 215, 0));
     TextOut(hdc, BOARD_X, 46, powerupBuf, strlen(powerupBuf));
 
-    // 3D Golden/Stone Board Outer Frame
-    RECT outerFrame = { BOARD_X - 8, BOARD_Y - 8, BOARD_X + COLS * CELL_SIZE + 8, BOARD_Y + ROWS * CELL_SIZE + 8 };
+    // Boss HP Bar
+    if (gameMode == 0 && maxBossHP > 0) {
+        RECT hpBarBorder = { BOARD_X, 66, BOARD_X + BOARD_SIZE, 78 };
+        HBRUSH bB = CreateSolidBrush(RGB(50, 20, 20));
+        FillRect(hdc, &hpBarBorder, bB);
+        DeleteObject(bB);
+
+        int filledWidth = (int)((float)bossHP / (float)maxBossHP * (float)BOARD_SIZE);
+        if (filledWidth > 0) {
+            RECT hpBarFill = { BOARD_X, 66, BOARD_X + filledWidth, 78 };
+            HBRUSH fB = CreateSolidBrush(RGB(255, 40, 40));
+            FillRect(hdc, &hpBarFill, fB);
+            DeleteObject(fB);
+        }
+        HBRUSH fBorder = CreateSolidBrush(RGB(255, 215, 0));
+        FrameRect(hdc, &hpBarBorder, fBorder);
+        DeleteObject(fBorder);
+    }
+
+    // 3D Outer Frame
+    RECT outerFrame = { BOARD_X - 8, BOARD_Y - 8, BOARD_X + cols * cellSize + 8, BOARD_Y + rows * cellSize + 8 };
     HBRUSH frameBrush = CreateSolidBrush(RGB(160, 115, 15));
     FillRect(hdc, &outerFrame, frameBrush);
     DeleteObject(frameBrush);
@@ -430,7 +549,6 @@ void DrawBoard(HDC hdc) {
     LineTo(hdc, outerFrame.right, outerFrame.bottom);
     LineTo(hdc, outerFrame.left, outerFrame.bottom);
 
-    // Corner Studs
     HBRUSH studB = CreateSolidBrush(RGB(255, 215, 0));
     SelectObject(hdc, studB);
     Ellipse(hdc, outerFrame.left+2, outerFrame.top+2, outerFrame.left+7, outerFrame.top+7);
@@ -440,11 +558,11 @@ void DrawBoard(HDC hdc) {
     SelectObject(hdc, oldPen);
     DeleteObject(studB); DeleteObject(framePenHigh); DeleteObject(framePenLow);
 
-    // Grid Cell Sockets
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
-            RECT rect = { BOARD_X + c * CELL_SIZE, BOARD_Y + r * CELL_SIZE, 
-                          BOARD_X + (c + 1) * CELL_SIZE, BOARD_Y + (r + 1) * CELL_SIZE };
+    // Grid Cells
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            RECT rect = { BOARD_X + c * cellSize, BOARD_Y + r * cellSize, 
+                          BOARD_X + (c + 1) * cellSize, BOARD_Y + (r + 1) * cellSize };
             HBRUSH bg = CreateSolidBrush(RGB(22, 16, 28));
             FillRect(hdc, &rect, bg);
             DeleteObject(bg);
@@ -454,31 +572,31 @@ void DrawBoard(HDC hdc) {
         }
     }
 
-    HRGN hRgn = CreateRectRgn(BOARD_X, BOARD_Y, BOARD_X + COLS * CELL_SIZE, BOARD_Y + ROWS * CELL_SIZE);
+    HRGN hRgn = CreateRectRgn(BOARD_X, BOARD_Y, BOARD_X + cols * cellSize, BOARD_Y + rows * cellSize);
     SelectClipRgn(hdc, hRgn);
 
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
-            int drawX = BOARD_X + c * CELL_SIZE;
-            int drawY = BOARD_Y + r * CELL_SIZE;
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            int drawX = BOARD_X + c * cellSize;
+            int drawY = BOARD_Y + r * cellSize;
 
             if (r == swapR1 && c == swapC1) {
-                drawX += (swapC2 - swapC1) * CELL_SIZE * swapAnim / 10;
-                drawY += (swapR2 - swapR1) * CELL_SIZE * swapAnim / 10;
+                drawX += (swapC2 - swapC1) * cellSize * swapAnim / 10;
+                drawY += (swapR2 - swapR1) * cellSize * swapAnim / 10;
             } else if (r == swapR2 && c == swapC2) {
-                drawX += (swapC1 - swapC2) * CELL_SIZE * swapAnim / 10;
-                drawY += (swapR1 - swapR2) * CELL_SIZE * swapAnim / 10;
+                drawX += (swapC1 - swapC2) * cellSize * swapAnim / 10;
+                drawY += (swapR1 - swapR2) * cellSize * swapAnim / 10;
             }
 
             if (dropAnim > 0 && dropCount[r][c] > 0) {
-                int startY = drawY - (dropCount[r][c] * CELL_SIZE);
+                int startY = drawY - (dropCount[r][c] * cellSize);
                 drawY = startY + (drawY - startY) * dropAnim / 10;
             }
 
-            RECT rect = { drawX, drawY, drawX + CELL_SIZE, drawY + CELL_SIZE };
+            RECT rect = { drawX, drawY, drawX + cellSize, drawY + cellSize };
 
             if (popGrid[r][c] && popAnim > 0) {
-                int shrink = (CELL_SIZE / 2) * popAnim / 10;
+                int shrink = (cellSize / 2) * popAnim / 10;
                 rect.left += shrink;
                 rect.top += shrink;
                 rect.right -= shrink;
@@ -486,32 +604,38 @@ void DrawBoard(HDC hdc) {
                 if (rect.right <= rect.left) continue;
             }
 
-            if (stoneGrid[r][c]) {
-                HBRUSH stoneBrush = CreateSolidBrush(RGB(80, 80, 85));
+            if (stoneGrid[r][c] > 0) {
+                int hitsLeft = stoneGrid[r][c];
+                COLORREF sCol = (hitsLeft == 1) ? RGB(80, 80, 85) : (hitsLeft == 2 ? RGB(50, 50, 60) : RGB(30, 30, 45));
+                HBRUSH stoneBrush = CreateSolidBrush(sCol);
                 FillRect(hdc, &rect, stoneBrush);
                 DeleteObject(stoneBrush);
 
-                HBRUSH stoneBorder = CreateSolidBrush(RGB(50, 50, 55));
+                HBRUSH stoneBorder = CreateSolidBrush(RGB(30, 30, 35));
                 FrameRect(hdc, &rect, stoneBorder);
                 DeleteObject(stoneBorder);
 
-                HPEN pen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+                COLORREF markC = (hitsLeft == 1) ? RGB(255, 215, 0) : RGB(0, 229, 255);
+                HPEN pen = CreatePen(PS_SOLID, 2, markC);
                 HPEN oldPen = (HPEN)SelectObject(hdc, pen);
-                int cx = rect.left + CELL_SIZE/2, cy = rect.top + CELL_SIZE/2;
-                MoveToEx(hdc, cx - 10, cy, NULL); LineTo(hdc, cx + 10, cy);
-                MoveToEx(hdc, cx, cy - 10, NULL); LineTo(hdc, cx, cy + 10);
+                int cx = rect.left + cellSize/2, cy = rect.top + cellSize/2;
+                int off = (int)(cellSize * 0.2f);
+                MoveToEx(hdc, cx - off, cy, NULL); LineTo(hdc, cx + off, cy);
+                if (hitsLeft >= 2) {
+                    MoveToEx(hdc, cx, cy - off, NULL); LineTo(hdc, cx, cy + off);
+                }
                 SelectObject(hdc, oldPen); DeleteObject(pen);
                 continue;
             }
 
             if (grid[r][c] == -1) continue;
 
-            int cx = drawX + CELL_SIZE / 2;
-            int cy = drawY + CELL_SIZE / 2;
-            DrawFacetedGem(hdc, cx, cy, CELL_SIZE, grid[r][c], typeGrid[r][c], iceGrid[r][c]);
+            int cx = drawX + cellSize / 2;
+            int cy = drawY + cellSize / 2;
+            DrawFacetedGem(hdc, cx, cy, cellSize, grid[r][c], typeGrid[r][c], iceGrid[r][c], barrierGrid[r][c]);
 
             if (r == selR && c == selC) {
-                HBRUSH border = CreateSolidBrush((powerupMode == 1) ? RGB(255, 0, 0) : RGB(255, 215, 0));
+                HBRUSH border = CreateSolidBrush((powerupMode > 0) ? RGB(255, 0, 0) : RGB(255, 215, 0));
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
                 
@@ -524,18 +648,19 @@ void DrawBoard(HDC hdc) {
     }
 
     // Laser Beam Overlays
-    for (int r = 0; r < ROWS; r++) {
+    int offLaser = (int)(cellSize * 0.4f);
+    for (int r = 0; r < rows; r++) {
         if (laserRowTimer[r] > 0) {
-            RECT lRect = { BOARD_X, BOARD_Y + r * CELL_SIZE + 18, BOARD_X + COLS * CELL_SIZE, BOARD_Y + r * CELL_SIZE + 32 };
+            RECT lRect = { BOARD_X, BOARD_Y + r * cellSize + offLaser, BOARD_X + cols * cellSize, BOARD_Y + r * cellSize + offLaser + 10 };
             HBRUSH lB = CreateSolidBrush(RGB(255, 255, 255));
             FillRect(hdc, &lRect, lB);
             DeleteObject(lB);
             laserRowTimer[r]--;
         }
     }
-    for (int c = 0; c < COLS; c++) {
+    for (int c = 0; c < cols; c++) {
         if (laserColTimer[c] > 0) {
-            RECT lRect = { BOARD_X + c * CELL_SIZE + 18, BOARD_Y, BOARD_X + c * CELL_SIZE + 32, BOARD_Y + ROWS * CELL_SIZE };
+            RECT lRect = { BOARD_X + c * cellSize + offLaser, BOARD_Y, BOARD_X + c * cellSize + offLaser + 10, BOARD_Y + rows * cellSize };
             HBRUSH lB = CreateSolidBrush(RGB(0, 229, 255));
             FillRect(hdc, &lRect, lB);
             DeleteObject(lB);
@@ -555,12 +680,12 @@ void DrawBoard(HDC hdc) {
     }
 }
 
-int toDestroy[ROWS][COLS] = {0};
-int stoneToBreak[ROWS][COLS] = {0};
+int toDestroy[MAX_ROWS][MAX_COLS] = {0};
+int stoneToBreak[MAX_ROWS][MAX_COLS] = {0};
 
 void AddDestroy(int r, int c) {
-    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
-    if (stoneGrid[r][c]) {
+    if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+    if (stoneGrid[r][c] > 0) {
         stoneToBreak[r][c] = 1;
         return;
     }
@@ -574,22 +699,22 @@ void AddDestroy(int r, int c) {
     for (int i = 0; i < 4; i++) {
         int nr = r + dr[i];
         int nc = c + dc[i];
-        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && stoneGrid[nr][nc]) {
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && stoneGrid[nr][nc] > 0) {
             stoneToBreak[nr][nc] = 1;
         }
     }
 
     if (typeGrid[r][c] == TYPE_HORIZ) {
         laserRowTimer[r] = 10;
-        for (int i = 0; i < COLS; i++) AddDestroy(r, i);
+        for (int i = 0; i < cols; i++) AddDestroy(r, i);
     } else if (typeGrid[r][c] == TYPE_VERT) {
         laserColTimer[c] = 10;
-        for (int i = 0; i < ROWS; i++) AddDestroy(i, c);
+        for (int i = 0; i < rows; i++) AddDestroy(i, c);
     } else if (typeGrid[r][c] == TYPE_RAINBOW) {
         int tcolor = rand() % 6;
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = 0; j < COLS; j++) {
-                if (grid[i][j] == tcolor && typeGrid[i][j] != TYPE_RAINBOW && !stoneGrid[i][j]) AddDestroy(i, j);
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (grid[i][j] == tcolor && typeGrid[i][j] != TYPE_RAINBOW && stoneGrid[i][j] == 0) AddDestroy(i, j);
             }
         }
     } else if (typeGrid[r][c] == TYPE_BOMB) {
@@ -602,20 +727,20 @@ void AddDestroy(int r, int c) {
 }
 
 int CheckMatchPossible() {
-    for (int r=0; r<ROWS; r++) {
-        for (int c=0; c<COLS-2; c++) {
+    for (int r=0; r<rows; r++) {
+        for (int c=0; c<cols-2; c++) {
             int color = grid[r][c];
-            if (color != -1 && !stoneGrid[r][c] && typeGrid[r][c] != TYPE_RAINBOW &&
-                grid[r][c+1] == color && !stoneGrid[r][c+1] && typeGrid[r][c+1] != TYPE_RAINBOW &&
-                grid[r][c+2] == color && !stoneGrid[r][c+2] && typeGrid[r][c+2] != TYPE_RAINBOW) return 1;
+            if (color != -1 && stoneGrid[r][c] == 0 && typeGrid[r][c] != TYPE_RAINBOW &&
+                grid[r][c+1] == color && stoneGrid[r][c+1] == 0 && typeGrid[r][c+1] != TYPE_RAINBOW &&
+                grid[r][c+2] == color && stoneGrid[r][c+2] == 0 && typeGrid[r][c+2] != TYPE_RAINBOW) return 1;
         }
     }
-    for (int c=0; c<COLS; c++) {
-        for (int r=0; r<ROWS-2; r++) {
+    for (int c=0; c<cols; c++) {
+        for (int r=0; r<rows-2; r++) {
             int color = grid[r][c];
-            if (color != -1 && !stoneGrid[r][c] && typeGrid[r][c] != TYPE_RAINBOW &&
-                grid[r+1][c] == color && !stoneGrid[r+1][c] && typeGrid[r+1][c] != TYPE_RAINBOW &&
-                grid[r+2][c] == color && !stoneGrid[r+2][c] && typeGrid[r+2][c] != TYPE_RAINBOW) return 1;
+            if (color != -1 && stoneGrid[r][c] == 0 && typeGrid[r][c] != TYPE_RAINBOW &&
+                grid[r+1][c] == color && stoneGrid[r+1][c] == 0 && typeGrid[r+1][c] != TYPE_RAINBOW &&
+                grid[r+2][c] == color && stoneGrid[r+2][c] == 0 && typeGrid[r+2][c] != TYPE_RAINBOW) return 1;
         }
     }
     return 0;
@@ -640,55 +765,60 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
     while (hasMatches) {
         memset(toDestroy, 0, sizeof(toDestroy));
         memset(stoneToBreak, 0, sizeof(stoneToBreak));
-        int newSpecials[ROWS][COLS] = {0}; 
+        int newSpecials[MAX_ROWS][MAX_COLS] = {0}; 
 
         if (triggerR != -1) {
-            if (stoneGrid[triggerR][triggerC]) {
+            if (stoneGrid[triggerR][triggerC] > 0) {
                 stoneToBreak[triggerR][triggerC] = 1;
             } else {
                 toDestroy[triggerR][triggerC] = 1;
             }
 
             if (triggerColor == 999) { // Rainbow + Rainbow
-                for(int i=0; i<ROWS; i++) for(int j=0; j<COLS; j++) if(!stoneGrid[i][j]) AddDestroy(i, j);
+                for(int i=0; i<rows; i++) for(int j=0; j<cols; j++) if(stoneGrid[i][j] == 0) AddDestroy(i, j);
             } else if (triggerColor == 888) { // Line + Line
                 typeGrid[triggerR][triggerC] = TYPE_HORIZ; AddDestroy(triggerR, triggerC);
                 typeGrid[lastSwapR1][lastSwapC1] = TYPE_VERT; AddDestroy(lastSwapR1, lastSwapC1);
             } else if (triggerColor == 777) { // Hammer
                 AddDestroy(triggerR, triggerC);
+            } else if (triggerColor >= 900 && triggerColor < 906) { // Color Nuke
+                int targetC = triggerColor - 900;
+                for(int i=0; i<rows; i++) for(int j=0; j<cols; j++) {
+                    if (grid[i][j] == targetC && stoneGrid[i][j] == 0) AddDestroy(i, j);
+                }
             } else if (triggerColor >= 0 && triggerColor < 6) { // Rainbow + Color
-                for(int i=0; i<ROWS; i++) for(int j=0; j<COLS; j++) {
-                    if (grid[i][j] == triggerColor && !stoneGrid[i][j]) AddDestroy(i, j);
+                for(int i=0; i<rows; i++) for(int j=0; j<cols; j++) {
+                    if (grid[i][j] == triggerColor && stoneGrid[i][j] == 0) AddDestroy(i, j);
                 }
             }
             triggerR = -1; 
         }
 
-        int hMatchLen[ROWS][COLS] = {0};
-        int vMatchLen[ROWS][COLS] = {0};
+        int hMatchLen[MAX_ROWS][MAX_COLS] = {0};
+        int vMatchLen[MAX_ROWS][MAX_COLS] = {0};
         
-        for (int r=0; r<ROWS; r++) {
-            for (int c=0; c<COLS-2; c++) {
+        for (int r=0; r<rows; r++) {
+            for (int c=0; c<cols-2; c++) {
                 int color = grid[r][c];
-                if (color != -1 && !stoneGrid[r][c] && typeGrid[r][c] != TYPE_RAINBOW && 
-                    grid[r][c+1] == color && !stoneGrid[r][c+1] && typeGrid[r][c+1] != TYPE_RAINBOW && 
-                    grid[r][c+2] == color && !stoneGrid[r][c+2] && typeGrid[r][c+2] != TYPE_RAINBOW) {
+                if (color != -1 && stoneGrid[r][c] == 0 && typeGrid[r][c] != TYPE_RAINBOW && 
+                    grid[r][c+1] == color && stoneGrid[r][c+1] == 0 && typeGrid[r][c+1] != TYPE_RAINBOW && 
+                    grid[r][c+2] == color && stoneGrid[r][c+2] == 0 && typeGrid[r][c+2] != TYPE_RAINBOW) {
                     int k = c;
-                    while(k < COLS && grid[r][k] == color && !stoneGrid[r][k] && typeGrid[r][k] != TYPE_RAINBOW) k++;
+                    while(k < cols && grid[r][k] == color && stoneGrid[r][k] == 0 && typeGrid[r][k] != TYPE_RAINBOW) k++;
                     int len = k - c;
                     for(int i = c; i < k; i++) hMatchLen[r][i] = len;
                     c = k - 1;
                 }
             }
         }
-        for (int c=0; c<COLS; c++) {
-            for (int r=0; r<ROWS-2; r++) {
+        for (int c=0; c<cols; c++) {
+            for (int r=0; r<rows-2; r++) {
                 int color = grid[r][c];
-                if (color != -1 && !stoneGrid[r][c] && typeGrid[r][c] != TYPE_RAINBOW && 
-                    grid[r+1][c] == color && !stoneGrid[r+1][c] && typeGrid[r+1][c] != TYPE_RAINBOW && 
-                    grid[r+2][c] == color && !stoneGrid[r+2][c] && typeGrid[r+2][c] != TYPE_RAINBOW) {
+                if (color != -1 && stoneGrid[r][c] == 0 && typeGrid[r][c] != TYPE_RAINBOW && 
+                    grid[r+1][c] == color && stoneGrid[r+1][c] == 0 && typeGrid[r+1][c] != TYPE_RAINBOW && 
+                    grid[r+2][c] == color && stoneGrid[r+2][c] == 0 && typeGrid[r+2][c] != TYPE_RAINBOW) {
                     int k = r;
-                    while(k < ROWS && grid[k][c] == color && !stoneGrid[k][c] && typeGrid[k][c] != TYPE_RAINBOW) k++;
+                    while(k < rows && grid[k][c] == color && stoneGrid[k][c] == 0 && typeGrid[k][c] != TYPE_RAINBOW) k++;
                     int len = k - r;
                     for(int i = r; i < k; i++) vMatchLen[i][c] = len;
                     r = k - 1;
@@ -696,16 +826,16 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
             }
         }
         
-        for(int r=0; r<ROWS; r++) {
-            for(int c=0; c<COLS; c++) {
+        for(int r=0; r<rows; r++) {
+            for(int c=0; c<cols; c++) {
                 if (hMatchLen[r][c] >= 3 || vMatchLen[r][c] >= 3) {
                     AddDestroy(r, c);
                 }
             }
         }
 
-        for(int r=0; r<ROWS; r++) {
-            for(int c=0; c<COLS; c++) {
+        for(int r=0; r<rows; r++) {
+            for(int c=0; c<cols; c++) {
                 if (hMatchLen[r][c] >= 3 && vMatchLen[r][c] >= 3) { // T / L Bomb Gem
                     newSpecials[r][c] = TYPE_BOMB;
                 } else if (hMatchLen[r][c] >= 5) {
@@ -718,8 +848,8 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
                 }
             }
         }
-        for(int c=0; c<COLS; c++) {
-            for(int r=0; r<ROWS; r++) {
+        for(int c=0; c<cols; c++) {
+            for(int r=0; r<rows; r++) {
                 if (vMatchLen[r][c] >= 5 && !newSpecials[r][c]) {
                     int sR = r;
                     for (int k = r; k < r + vMatchLen[r][c]; k++) {
@@ -730,8 +860,8 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
                 }
             }
         }
-        for(int r=0; r<ROWS; r++) {
-            for(int c=0; c<COLS; c++) {
+        for(int r=0; r<rows; r++) {
+            for(int c=0; c<cols; c++) {
                 if (hMatchLen[r][c] == 4 && !newSpecials[r][c]) {
                     int sC = c;
                     for (int k = c; k < c + 4; k++) {
@@ -742,8 +872,8 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
                 }
             }
         }
-        for(int c=0; c<COLS; c++) {
-            for(int r=0; r<ROWS; r++) {
+        for(int c=0; c<cols; c++) {
+            for(int r=0; r<rows; r++) {
                 if (vMatchLen[r][c] == 4 && !newSpecials[r][c]) {
                     int sR = r;
                     for (int k = r; k < r + 4; k++) {
@@ -756,8 +886,8 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
         }
 
         int anyDestroy = 0;
-        for (int r = 0; r < ROWS; r++) {
-            for (int c = 0; c < COLS; c++) {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
                 if (toDestroy[r][c] || stoneToBreak[r][c]) {
                     anyDestroy = 1;
                 }
@@ -768,8 +898,8 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
             break;
         }
 
-        for(int r=0; r<ROWS; r++) {
-            for(int c=0; c<COLS; c++) {
+        for(int r=0; r<rows; r++) {
+            for(int c=0; c<cols; c++) {
                 if (newSpecials[r][c]) {
                     toDestroy[r][c] = 0;
                 }
@@ -777,17 +907,27 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
         }
 
         int matchCount = 0;
-        for (int r = 0; r < ROWS; r++) {
-            for (int c = 0; c < COLS; c++) {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
                 if (toDestroy[r][c]) {
                     popGrid[r][c] = 1;
                     matchCount++;
+                    if (grid[r][c] == 0) collectedRed++;
+                    else if (grid[r][c] == 1) collectedGreen++;
+                    else if (grid[r][c] == 2) collectedBlue++;
+
+                    if (bossHP > 0) {
+                        bossHP--;
+                        if (typeGrid[r][c] != TYPE_NONE) bossHP -= 4;
+                        if (bossHP < 0) bossHP = 0;
+                    }
+
                     COLORREF pc = (typeGrid[r][c] == TYPE_RAINBOW) ? RGB(255,255,255) : colors[grid[r][c]];
-                    CreateParticles(BOARD_X + c * CELL_SIZE + CELL_SIZE / 2, BOARD_Y + r * CELL_SIZE + CELL_SIZE / 2, pc);
+                    CreateParticles(BOARD_X + c * cellSize + cellSize / 2, BOARD_Y + r * cellSize + cellSize / 2, pc);
                 } else if (stoneToBreak[r][c]) {
                     popGrid[r][c] = 1;
                     score += 20;
-                    CreateParticles(BOARD_X + c * CELL_SIZE + CELL_SIZE / 2, BOARD_Y + r * CELL_SIZE + CELL_SIZE / 2, RGB(160, 160, 160));
+                    CreateParticles(BOARD_X + c * cellSize + cellSize / 2, BOARD_Y + r * cellSize + cellSize / 2, RGB(160, 160, 160));
                 }
             }
         }
@@ -807,23 +947,27 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
         }
         popAnim = 0;
 
-        for (int r = 0; r < ROWS; r++) {
-            for (int c = 0; c < COLS; c++) {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
                 if (popGrid[r][c]) {
                     if (iceGrid[r][c] > 0) iceGrid[r][c] = 0;
+                    if (barrierGrid[r][c] > 0) barrierGrid[r][c] = 0;
                     if (stoneToBreak[r][c]) {
-                        stoneGrid[r][c] = 0;
+                        stoneGrid[r][c]--;
+                        if (stoneGrid[r][c] <= 0) stoneGrid[r][c] = 0;
                         stoneToBreak[r][c] = 0;
                     }
-                    grid[r][c] = -1;
-                    typeGrid[r][c] = TYPE_NONE;
+                    if (toDestroy[r][c]) {
+                        grid[r][c] = -1;
+                        typeGrid[r][c] = TYPE_NONE;
+                    }
                     popGrid[r][c] = 0;
                 }
             }
         }
 
-        for (int r = 0; r < ROWS; r++) {
-            for (int c = 0; c < COLS; c++) {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
                 if (newSpecials[r][c]) {
                     typeGrid[r][c] = newSpecials[r][c];
                 }
@@ -836,10 +980,10 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
             SaveStats();
         }
 
-        for (int c = 0; c < COLS; c++) {
-            int targetR = ROWS - 1;
-            for (int r = ROWS - 1; r >= 0; r--) {
-                if (stoneGrid[r][c]) {
+        for (int c = 0; c < cols; c++) {
+            int targetR = rows - 1;
+            for (int r = rows - 1; r >= 0; r--) {
+                if (stoneGrid[r][c] > 0) {
                     targetR = r - 1;
                     continue;
                 }
@@ -848,9 +992,11 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
                         grid[targetR][c] = grid[r][c];
                         typeGrid[targetR][c] = typeGrid[r][c];
                         iceGrid[targetR][c] = iceGrid[r][c];
+                        barrierGrid[targetR][c] = barrierGrid[r][c];
                         grid[r][c] = -1;
                         typeGrid[r][c] = TYPE_NONE;
                         iceGrid[r][c] = 0;
+                        barrierGrid[r][c] = 0;
                         dropCount[targetR][c] = targetR - r;
                     } else {
                         dropCount[targetR][c] = 0;
@@ -859,10 +1005,11 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
                 }
             }
             for (int r = targetR; r >= 0; r--) {
-                if (!stoneGrid[r][c]) {
+                if (stoneGrid[r][c] == 0) {
                     grid[r][c] = rand() % 6;
                     typeGrid[r][c] = TYPE_NONE;
                     iceGrid[r][c] = 0;
+                    barrierGrid[r][c] = 0;
                     dropCount[r][c] = targetR + 1;
                 }
             }
@@ -876,8 +1023,8 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
             Sleep(15);
         }
         dropAnim = 0;
-        for (int r = 0; r < ROWS; r++) {
-            for (int c = 0; c < COLS; c++) {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
                 dropCount[r][c] = 0;
             }
         }
@@ -894,10 +1041,12 @@ void SaveGame() {
     fwrite(&moves, sizeof(int), 1, f);
     fwrite(&targetScore, sizeof(int), 1, f);
     fwrite(&gameMode, sizeof(int), 1, f);
-    fwrite(grid, sizeof(int), ROWS * COLS, f);
-    fwrite(typeGrid, sizeof(int), ROWS * COLS, f);
-    fwrite(iceGrid, sizeof(int), ROWS * COLS, f);
-    fwrite(stoneGrid, sizeof(int), ROWS * COLS, f);
+    fwrite(grid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(typeGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(iceGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(stoneGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(barrierGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(&bossHP, sizeof(int), 1, f);
     fclose(f);
 }
 
@@ -909,11 +1058,23 @@ int LoadGame() {
     fread(&moves, sizeof(int), 1, f);
     fread(&targetScore, sizeof(int), 1, f);
     if (fread(&gameMode, sizeof(int), 1, f) != 1) gameMode = 0;
-    fread(grid, sizeof(int), ROWS * COLS, f);
-    fread(typeGrid, sizeof(int), ROWS * COLS, f);
-    if (fread(iceGrid, sizeof(int), ROWS * COLS, f) != ROWS * COLS) memset(iceGrid, 0, sizeof(iceGrid));
-    if (fread(stoneGrid, sizeof(int), ROWS * COLS, f) != ROWS * COLS) memset(stoneGrid, 0, sizeof(stoneGrid));
+    fread(grid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(typeGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(iceGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(stoneGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(barrierGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(&bossHP, sizeof(int), 1, f);
     fclose(f);
+
+    if (gameMode == 0 && level >= 1 && level <= 20) {
+        rows = CAMPAIGN_STAGES[level - 1].rows;
+        cols = CAMPAIGN_STAGES[level - 1].cols;
+        maxBossHP = CAMPAIGN_STAGES[level - 1].bossHP;
+    } else {
+        rows = 8; cols = 8;
+        maxBossHP = 0;
+    }
+    cellSize = BOARD_SIZE / cols;
     return 1;
 }
 
@@ -931,15 +1092,33 @@ void CheckLevelProgress(HWND hwnd) {
         SaveGame();
         return;
     }
-    if (score >= targetScore) {
+    
+    const StageConfig *cfg = &CAMPAIGN_STAGES[level - 1];
+    int cleared = 0;
+
+    if (gameMode == 0) {
+        if (level == 20) {
+            cleared = (bossHP <= 0);
+        } else {
+            int scoreMet = (score >= targetScore);
+            int redMet = (cfg->redTarget <= 0 || collectedRed >= cfg->redTarget);
+            int grnMet = (cfg->greenTarget <= 0 || collectedGreen >= cfg->greenTarget);
+            int bluMet = (cfg->blueTarget <= 0 || collectedBlue >= cfg->blueTarget);
+            cleared = (scoreMet && redMet && grnMet && bluMet);
+        }
+    } else if (gameMode == 2) {
+        cleared = (score >= targetScore);
+    }
+
+    if (cleared) {
         PlayPowerupSound();
         if (gameMode == 0) {
-            if (level < 15) {
+            if (level < 20) {
                 MessageBox(hwnd, "Stage Cleared! Advancing to next stage.", "KMatch3", MB_OK | MB_ICONINFORMATION);
                 level++;
                 InitStage(level);
             } else {
-                MessageBox(hwnd, "CONGRATULATIONS!\nYou have completed all 15 stages of KMatch3 Campaign Mode!", "Victory!", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "VICTORY!\nYou have defeated the Jewel King and completed all 20 stages of KMatch3!", "Jewel King Defeated!", MB_OK | MB_ICONINFORMATION);
                 level = 1;
                 InitStage(1);
             }
@@ -970,9 +1149,9 @@ void UseShuffle() {
     if (score >= 500) {
         score -= 500;
         PlayPowerupSound();
-        for (int r = 0; r < ROWS; r++) {
-            for (int c = 0; c < COLS; c++) {
-                if (!stoneGrid[r][c] && !iceGrid[r][c]) {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                if (stoneGrid[r][c] == 0 && iceGrid[r][c] == 0) {
                     grid[r][c] = rand() % 6;
                 }
             }
@@ -1049,14 +1228,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 gameMode = 2; InitStage(1); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'S' || wParam == 's') {
                 UseShuffle(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'M' || wParam == 'm') {
+            } else if (wParam == 'E' || wParam == 'e' || wParam == 'M' || wParam == 'm') {
                 UseExtraMoves(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'H' || wParam == 'h') {
                 if (score >= 500) {
                     powerupMode = 1; PlayPowerupSound(); InvalidateRect(hwnd, NULL, FALSE);
                 }
+            } else if (wParam == 'L' || wParam == 'l') {
+                if (score >= 500) {
+                    powerupMode = 2; PlayPowerupSound(); InvalidateRect(hwnd, NULL, FALSE);
+                }
             } else if (wParam == VK_F1) {
-                MessageBox(hwnd, "How to Play KMatch3:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Bomb (clears row/col).\n- Match 5: Rainbow Gem (clears all of selected color).\n- T/L Shape: 3x3 Bomb Gem.\n- Stone Tiles: Break by adjacent matches or bombs!\n- Ice Tiles: Break by matching internal gem.\n\nPower-ups (Cost 500):\n- [H] Hammer: Smash any single tile/gem.\n- [M] +Moves/+15s: Add extra moves or timer seconds.\n- [S] Shuffle: Rearrange all board gems.\n\nModes:\n- [1] Campaign (15 Stages)\n- [2] Zen Mode\n- [3] Timed Rush", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "How to Play KMatch3:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Blaster (clears row/col).\n- Match 5: Rainbow Gem (clears all of selected color).\n- T/L Shape: 3x3 Bomb Gem.\n- Stone/Iron Tiles: 1-3 hits to shatter!\n- Boss: Stage 20 Jewel King Boss (100 HP, Barrier Gems).\n\nActive Skills (Cost 500):\n- [H] Hammer: Smash any single tile/gem.\n- [E] +Moves/+15s: Add extra moves or timer.\n- [S] Shuffle: Rearrange all board gems.\n- [L] Color Nuke: Nuke all gems of selected color.\n\nModes:\n- [1] Campaign (20 Stages)\n- [2] Zen Mode\n- [3] Timed Rush", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
@@ -1064,10 +1247,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (isProcessing) break;
             int x = LOWORD(lParam) - BOARD_X;
             int y = HIWORD(lParam) - BOARD_Y;
-            if (x >= 0 && x < COLS * CELL_SIZE && y >= 0 && y < ROWS * CELL_SIZE) {
-                int c = x / CELL_SIZE;
-                int r = y / CELL_SIZE;
-                if (powerupMode == 1) {
+            if (x >= 0 && x < cols * cellSize && y >= 0 && y < rows * cellSize) {
+                int c = x / cellSize;
+                int r = y / cellSize;
+                if (powerupMode == 1) { // Hammer
                     score -= 500;
                     powerupMode = 0;
                     isProcessing = 1;
@@ -1077,8 +1260,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     isProcessing = 0;
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
+                } else if (powerupMode == 2) { // Color Nuke
+                    score -= 500;
+                    powerupMode = 0;
+                    isProcessing = 1;
+                    int targetC = (grid[r][c] >= 0) ? grid[r][c] : (rand() % 6);
+                    ProcessMatches(hwnd, r, c, 900 + targetC);
+                    CheckLevelProgress(hwnd);
+                    SaveGame();
+                    isProcessing = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
                 }
-                if (stoneGrid[r][c]) break;
+
+                if (stoneGrid[r][c] > 0) break;
 
                 if (selR == -1) {
                     selR = r; selC = c;
@@ -1088,7 +1283,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         selR = -1; selC = -1;
                         InvalidateRect(hwnd, NULL, FALSE);
                     } else if (abs(selR - r) + abs(selC - c) == 1) {
-                        if (stoneGrid[selR][selC] || stoneGrid[r][c] || iceGrid[selR][selC] || iceGrid[r][c]) {
+                        if (stoneGrid[selR][selC] > 0 || stoneGrid[r][c] > 0 || iceGrid[selR][selC] || iceGrid[r][c]) {
                             PlayBadSwapSound();
                             selR = -1; selC = -1;
                             InvalidateRect(hwnd, NULL, FALSE);
@@ -1123,6 +1318,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (triggerR != -1 || CheckMatchPossible()) {
                             int isTimed = (gameMode == 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode == 2);
                             if (!isTimed && gameMode == 0) moves--;
+
+                            bossMoveTimer++;
+                            if (gameMode == 0 && bossHP > 0 && bossMoveTimer >= 3) {
+                                bossMoveTimer = 0;
+                                TriggerBossAction(hwnd);
+                            }
+
                             ProcessMatches(hwnd, triggerR, triggerC, triggerColor);
                             CheckLevelProgress(hwnd);
                             SaveGame();
@@ -1169,7 +1371,7 @@ void MainEntry() {
 
     HWND hwnd = CreateWindowEx(
         0, "KMatch3Class", "KMatch3",
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 500, 560,
+        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 520, 580,
         NULL, NULL, hInstance, NULL
     );
 
@@ -1185,4 +1387,3 @@ void MainEntry() {
     }
     ExitProcess(0);
 }
-
