@@ -639,6 +639,7 @@ function App() {
       const timer = setTimeout(() => {
         setScreen('os');
         playStartupAudio();
+        setTimeout(() => notify("System Ready", "Welcome to KiloOS. Click the Start button to begin."), 1000);
       }, 3000);
 
       const handleKeyDown = (e) => {
@@ -655,7 +656,7 @@ function App() {
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [screen, playStartupAudio]);
+  }, [screen, playStartupAudio, notify]);
 
   // ARG Arc 3 Phase 5: The Architect's Retaliation
   useEffect(() => {
