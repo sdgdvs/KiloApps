@@ -24,13 +24,12 @@
 
 ---
 
-**Target App:** KChat
+**Target App:** KBBS
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
-- KChat
 - KBBS (Added Auto-Login feature for Dialing Directory)
 - KAudio (Added Sequencer - Record and Playback)
 - KClock (Added Alarms feature)
@@ -77,6 +76,7 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KCalendar (Added Multi-view [Month, Week, Day, Agenda], Event Categories & Color Tagging, Real-time Search & Category Filters, Recurring Events Engine, and iCalendar [.ics]/CSV Import/Export)
 - KChart (Added Multi-Type Charting Engine [Bar, Line, Area, Pie, Doughnut, Radar], Interactive Data Table Editor, Statistical Analysis Suite [Mean, Median, Std Dev, Min/Max], Palette Themes, PNG Image Export, and CSV/JSON Import/Export)
 - KChess (Added PGN Move History Export & Import, FEN Board Position Loader & Exporter, AI Engine Difficulty Levels [Easy, Medium, Hard, Master], Interactive Undo/Redo Move Stack, Best Move Hint arrow/system, and Material Advantage & Captured Pieces Counter)
+- KChat (Added Multi-Room/Channel Support, AI Persona Selector [5 Personalities], Real-time Search & Filtering, Message Pinning & Reactions, and Chat History Export/Import [JSON/TXT])
 
 
 
