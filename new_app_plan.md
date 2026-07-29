@@ -54,8 +54,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KAlchemy (Fantasy crafting & element discovery)
-**Phase:** 13 (next to do)
-**Status:** Phases 1-12 complete
+**Phase:** 14 (next to do)
+**Status:** Phases 1-13 complete
 
 - [x] Phase 1: Scaffold KAlchemy directory (`KAlchemy/`), create web HTML skeleton (`KiloOS/public/apps/kalchemy.html`), register in App.jsx.
 - [x] Phase 2: Core web HTML element discovery game (4 basic elements: Fire, Water, Earth, Air; Transmutation Crucible combining 2 elements; inventory grid & discovery counter).
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Potion Brewing & Effect Tester — Add Potion Brewing cauldrons combining discoverable herbs and essences to create usable buff elixirs (Strength, Invisibility, Mana, Elixir of Life).
 - [x] Phase 11: Master Alchemist Codex & Recipe Book — Add comprehensive searchable grimoire tracking discovered elements, combination histories, flavor lore text, and missing combinations per tier.
 - [x] Phase 12: Multiple Game Modes & Challenges — Add 3 Game Modes (Classic Discovery, Timed Alchemy Blitz, Puzzle Crucible mode with target element goals) and High Score tracking.
-- [ ] Phase 13: Add Sound Effects — Web Audio API bubble simmers, glass clinkers, transmutation zaps, magic fanfares, discovery chimes. Native: Win32 Beep() equivalents.
+- [x] Phase 13: Add Sound Effects — Web Audio API bubble simmers, glass clinkers, transmutation zaps, magic fanfares, discovery chimes. Native: Win32 Beep() equivalents.
 - [ ] Phase 14: Add Comprehensive Help & Grandmaster Manual — How-to-play modal overlay, element tier guide, lab controls reference, and alchemy lore encyclopedia.
 
 ### How to execute the next phase:
