@@ -139,7 +139,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KChess     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI difficulty curve, ensure Easy is beatable, Hard is challenging. Check opening/endgame AI quality. |
 | KGo        | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI difficulty across 9x9/13x13/19x19. Ensure handicap system works. Test Tsumego puzzle quality. |
 | KReversi   | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI difficulty curve, check Minimax depth, ensure board sizes feel right. |
 | KConnect4  | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI difficulty levels. Ensure Grandmaster is genuinely hard. Check blocker cell mechanics. |
@@ -156,11 +155,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSimon     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check sequence speed curve, verify 8-button mode is playable, audit Chaos Reverse fairness. |
 | KMatch3    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check board generation ensures moves exist, verify Boss HP is achievable, audit powerup economy. |
 | KDarts     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check wind/wobble tuning per difficulty, verify AI opponent accuracy curve is fair. |
+| KChess     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, ensure Easy is beatable, Hard is challenging. Check opening/endgame AI quality. |
 
 
 ## Progress Log
 
 **Loop 8**
+- [x] KChess (Balance audit complete: Adjusted AI difficulty curve, implemented endgame awareness in Piece-Square Tables, made Easy beatable and Hard a 2-ply Minimax for both EXE and HTML)
 - [x] KRogue (Expanded to 40 levels, added Abyss biome, new enemies (Void Walker, Abyss Fiend, Deep Worm, Abyssal Overlord), Crafting Anvil, and Quest NPCs to both EXE and HTML)
 
 **Loop 7**
