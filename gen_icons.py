@@ -954,3 +954,300 @@ save_ico("icons/ksys.ico", generate_sys())
 save_ico("icons/kmandel.ico", generate_mandel())
 save_ico("icons/ktimer.ico", generate_timer())
 save_ico("icons/ksynth.ico", generate_synth())
+
+
+def generate_sudoku():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (240, 240, 245))
+    rect(img, 2, 2, 29, 3, (60, 60, 80))
+    rect(img, 2, 28, 29, 29, (60, 60, 80))
+    rect(img, 2, 2, 3, 29, (60, 60, 80))
+    rect(img, 28, 2, 29, 29, (60, 60, 80))
+    rect(img, 10, 2, 11, 29, (60, 60, 80))
+    rect(img, 19, 2, 20, 29, (60, 60, 80))
+    rect(img, 2, 10, 29, 11, (60, 60, 80))
+    rect(img, 2, 19, 29, 20, (60, 60, 80))
+    for p in [6, 15, 24]:
+        line(img, p, 2, p, 29, (180, 180, 200))
+        line(img, 2, p, 29, p, (180, 180, 200))
+    rect(img, 5, 5, 8, 5, (30, 90, 220))
+    rect(img, 5, 6, 5, 7, (30, 90, 220))
+    rect(img, 5, 7, 8, 7, (30, 90, 220))
+    rect(img, 8, 8, 8, 9, (30, 90, 220))
+    rect(img, 5, 9, 8, 9, (30, 90, 220))
+    rect(img, 14, 13, 17, 13, (220, 40, 40))
+    rect(img, 17, 14, 17, 16, (220, 40, 40))
+    rect(img, 14, 15, 16, 15, (220, 40, 40))
+    rect(img, 14, 17, 17, 17, (220, 40, 40))
+    rect(img, 23, 22, 26, 22, (40, 160, 60))
+    rect(img, 23, 23, 23, 24, (40, 160, 60))
+    rect(img, 26, 23, 26, 26, (40, 160, 60))
+    rect(img, 23, 24, 26, 24, (40, 160, 60))
+    rect(img, 23, 26, 26, 26, (40, 160, 60))
+    return img
+
+def generate_connect4():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (20, 80, 200))
+    discs = [
+        (7, 24, (240, 40, 40)),
+        (13, 24, (240, 210, 40)),
+        (19, 24, (240, 40, 40)),
+        (25, 24, (240, 210, 40)),
+        (7, 18, (240, 210, 40)),
+        (13, 18, (240, 40, 40)),
+        (19, 18, (240, 40, 40)),
+        (13, 12, (240, 210, 40)),
+    ]
+    for cx, cy in [(7,6),(13,6),(19,6),(25,6),(7,12),(19,12),(25,12),(7,18),(25,18)]:
+        circle(img, cx, cy, 2, (15, 30, 80))
+    for cx, cy, col in discs:
+        circle(img, cx, cy, 2, col)
+    return img
+
+def generate_hangman():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (35, 35, 45))
+    rect(img, 4, 26, 20, 28, (140, 90, 40))
+    rect(img, 8, 6, 11, 26, (140, 90, 40))
+    rect(img, 8, 6, 24, 9, (140, 90, 40))
+    line(img, 11, 14, 16, 9, (110, 70, 30))
+    rect(img, 21, 9, 21, 13, (210, 180, 120))
+    circle(img, 21, 15, 2, (210, 180, 120))
+    circle(img, 21, 15, 1, (255, 220, 180))
+    line(img, 21, 17, 21, 22, (255, 255, 255))
+    line(img, 21, 19, 18, 21, (255, 255, 255))
+    line(img, 21, 19, 24, 21, (255, 255, 255))
+    line(img, 21, 22, 19, 25, (255, 255, 255))
+    line(img, 21, 22, 23, 25, (255, 255, 255))
+    return img
+
+def generate_simon():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (20, 20, 25))
+    circle(img, 16, 16, 13, (50, 50, 60))
+    rect(img, 4, 4, 15, 15, (0, 220, 60))
+    rect(img, 17, 4, 28, 15, (240, 40, 50))
+    rect(img, 4, 17, 15, 28, (240, 220, 30))
+    rect(img, 17, 17, 28, 28, (30, 120, 240))
+    rect(img, 15, 4, 16, 28, (30, 30, 35))
+    rect(img, 4, 15, 28, 16, (30, 30, 35))
+    circle(img, 16, 16, 5, (30, 30, 40))
+    circle(img, 16, 16, 3, (180, 180, 190))
+    return img
+
+def generate_asteroids():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (5, 5, 15))
+    rect(img, 5, 6, 5, 6, (255, 255, 255))
+    rect(img, 27, 8, 27, 8, (200, 200, 255))
+    rect(img, 7, 25, 7, 25, (255, 255, 200))
+    rect(img, 24, 26, 24, 26, (255, 255, 255))
+    line(img, 10, 24, 6, 27, (0, 255, 255))
+    line(img, 6, 27, 14, 27, (0, 255, 255))
+    line(img, 14, 27, 10, 24, (0, 255, 255))
+    line(img, 10, 23, 10, 12, (255, 255, 0))
+    rect(img, 18, 5, 26, 13, (120, 110, 100))
+    rect(img, 20, 3, 24, 15, (120, 110, 100))
+    rect(img, 20, 7, 22, 9, (80, 75, 70))
+    rect(img, 6, 10, 10, 14, (140, 130, 120))
+    return img
+
+def generate_freecell():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (10, 110, 50))
+    for x in [4, 9, 14, 19]:
+        rect(img, x, 4, x+3, 8, (0, 180, 140))
+        rect(img, x+1, 5, x+2, 7, (10, 110, 50))
+    rect(img, 25, 4, 28, 8, (240, 200, 40))
+    cards = [(4, 11, (255,255,255), (220,30,30)), (10, 13, (255,255,255), (20,20,20)), (16, 10, (255,255,255), (220,30,30)), (22, 12, (255,255,255), (20,20,20))]
+    for cx, cy, bg, pip in cards:
+        rect(img, cx, cy, cx+5, cy+14, bg)
+        rect(img, cx+2, cy+3, cx+3, cy+5, pip)
+    return img
+
+def generate_match3():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (25, 20, 35))
+    circle(img, 7, 7, 3, (240, 40, 60))
+    rect(img, 6, 6, 7, 7, (255, 180, 190))
+    rect(img, 13, 5, 19, 9, (40, 220, 80))
+    rect(img, 15, 6, 16, 7, (200, 255, 210))
+    circle(img, 25, 7, 3, (40, 120, 240))
+    rect(img, 24, 6, 25, 7, (180, 220, 255))
+    line(img, 7, 13, 10, 16, (250, 210, 40))
+    line(img, 10, 16, 7, 19, (250, 210, 40))
+    line(img, 7, 19, 4, 16, (250, 210, 40))
+    line(img, 4, 16, 7, 13, (250, 210, 40))
+    rect(img, 5, 15, 9, 17, (250, 210, 40))
+    circle(img, 16, 16, 4, (180, 50, 230))
+    rect(img, 15, 14, 16, 15, (240, 190, 255))
+    circle(img, 25, 16, 3, (40, 220, 240))
+    line(img, 3, 16, 28, 16, (255, 255, 255))
+    return img
+
+def generate_words():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (45, 30, 20))
+    tiles = [
+        (4, 8, 'K'),
+        (10, 8, 'W'),
+        (16, 8, 'O'),
+        (22, 8, 'R')
+    ]
+    for tx, ty, char in tiles:
+        rect(img, tx, ty, tx+5, ty+14, (245, 235, 210))
+        rect(img, tx+1, ty+1, tx+4, ty+13, (255, 250, 230))
+        rect(img, tx, ty, tx+5, ty, (180, 160, 130))
+        rect(img, tx, ty+14, tx+5, ty+14, (180, 160, 130))
+        rect(img, tx, ty, tx, ty+14, (180, 160, 130))
+        rect(img, tx+5, ty, tx+5, ty+14, (180, 160, 130))
+    line(img, 6, 11, 6, 17, (60, 40, 20))
+    line(img, 6, 14, 8, 11, (60, 40, 20))
+    line(img, 6, 14, 8, 17, (60, 40, 20))
+    line(img, 11, 11, 11, 17, (60, 40, 20))
+    line(img, 11, 17, 12, 14, (60, 40, 20))
+    line(img, 12, 14, 13, 17, (60, 40, 20))
+    line(img, 13, 17, 13, 11, (60, 40, 20))
+    rect(img, 17, 12, 19, 16, (60, 40, 20))
+    rect(img, 18, 13, 18, 15, (255, 250, 230))
+    line(img, 23, 11, 23, 17, (60, 40, 20))
+    rect(img, 23, 11, 25, 14, (60, 40, 20))
+    rect(img, 24, 12, 24, 13, (255, 250, 230))
+    line(img, 24, 14, 25, 17, (60, 40, 20))
+    return img
+
+def generate_go():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (220, 160, 70))
+    for p in [7, 12, 16, 20, 24]:
+        line(img, p, 5, p, 26, (80, 50, 20))
+        line(img, 5, p, 26, p, (80, 50, 20))
+    rect(img, 16, 16, 16, 16, (80, 50, 20))
+    circle(img, 12, 12, 3, (20, 20, 25))
+    rect(img, 11, 11, 11, 11, (100, 100, 110))
+    circle(img, 20, 20, 3, (20, 20, 25))
+    rect(img, 19, 19, 19, 19, (100, 100, 110))
+    circle(img, 20, 12, 3, (245, 245, 250))
+    rect(img, 19, 11, 19, 11, (255, 255, 255))
+    circle(img, 12, 20, 3, (245, 245, 250))
+    rect(img, 11, 19, 11, 19, (255, 255, 255))
+    return img
+
+def generate_darts():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (25, 25, 30))
+    circle(img, 16, 16, 13, (20, 20, 20))
+    circle(img, 16, 16, 11, (220, 210, 180))
+    circle(img, 16, 16, 10, (200, 40, 40))
+    circle(img, 16, 16, 8, (220, 210, 180))
+    circle(img, 16, 16, 6, (40, 160, 60))
+    circle(img, 16, 16, 4, (220, 210, 180))
+    circle(img, 16, 16, 3, (40, 160, 60))
+    circle(img, 16, 16, 1, (220, 40, 40))
+    line(img, 24, 8, 17, 15, (220, 180, 40))
+    rect(img, 23, 7, 27, 10, (40, 200, 240))
+    return img
+
+def generate_towers():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (10, 15, 30))
+    rect(img, 6, 5, 6, 5, (255, 255, 200))
+    rect(img, 25, 6, 25, 6, (255, 255, 255))
+    rect(img, 4, 14, 10, 28, (50, 70, 100))
+    for y in range(16, 27, 3):
+        rect(img, 6, y, 8, y+1, (250, 220, 100))
+    rect(img, 12, 6, 20, 28, (30, 90, 150))
+    rect(img, 15, 2, 16, 6, (220, 40, 40))
+    for y in range(8, 27, 3):
+        rect(img, 14, y, 15, y+1, (100, 240, 255))
+        rect(img, 17, y, 18, y+1, (250, 220, 100))
+    rect(img, 22, 10, 28, 28, (40, 60, 90))
+    for y in range(12, 27, 3):
+        rect(img, 24, y, 26, y+1, (250, 220, 100))
+    return img
+
+def generate_reversi():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (20, 100, 40))
+    rect(img, 2, 2, 29, 3, (120, 70, 30))
+    rect(img, 2, 28, 29, 29, (120, 70, 30))
+    rect(img, 2, 2, 3, 29, (120, 70, 30))
+    rect(img, 28, 2, 29, 29, (120, 70, 30))
+    for p in [9, 15, 21]:
+        line(img, p, 4, p, 27, (15, 75, 30))
+        line(img, 4, p, 27, p, (15, 75, 30))
+    circle(img, 12, 12, 2, (245, 245, 250))
+    circle(img, 18, 12, 2, (20, 20, 25))
+    circle(img, 12, 18, 2, (20, 20, 25))
+    circle(img, 18, 18, 2, (245, 245, 250))
+    circle(img, 24, 18, 1, (240, 240, 60))
+    return img
+
+def generate_quest():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (30, 20, 40))
+    line(img, 6, 25, 25, 6, (240, 200, 40))
+    rect(img, 5, 24, 7, 26, (180, 130, 30))
+    line(img, 25, 25, 6, 6, (140, 90, 200))
+    circle(img, 6, 6, 3, (80, 220, 255))
+    circle(img, 16, 22, 4, (220, 30, 40))
+    rect(img, 15, 16, 17, 18, (200, 200, 220))
+    return img
+
+def generate_starship():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (5, 8, 22))
+    rect(img, 4, 5, 4, 5, (255, 255, 255))
+    rect(img, 26, 24, 26, 24, (255, 255, 255))
+    rect(img, 14, 4, 17, 24, (210, 215, 230))
+    rect(img, 12, 10, 19, 20, (170, 175, 190))
+    rect(img, 7, 16, 24, 22, (130, 135, 150))
+    rect(img, 9, 23, 11, 26, (40, 220, 255))
+    rect(img, 20, 23, 22, 26, (40, 220, 255))
+    rect(img, 15, 25, 16, 28, (40, 220, 255))
+    circle(img, 15, 12, 2, (255, 60, 60))
+    return img
+
+def generate_alchemy():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (20, 15, 30))
+    circle(img, 16, 20, 8, (200, 200, 220))
+    circle(img, 16, 20, 6, (40, 220, 120))
+    rect(img, 14, 6, 18, 14, (200, 200, 220))
+    rect(img, 13, 4, 19, 6, (180, 180, 200))
+    circle(img, 12, 5, 1, (240, 100, 255))
+    circle(img, 18, 3, 1, (100, 240, 255))
+    circle(img, 21, 6, 1, (250, 240, 100))
+    return img
+
+def generate_fortress():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (130, 180, 230))
+    rect(img, 3, 12, 28, 28, (120, 120, 130))
+    for x in range(3, 28, 5):
+        rect(img, x, 8, x+2, 12, (120, 120, 130))
+    rect(img, 12, 18, 19, 28, (90, 55, 25))
+    line(img, 12, 18, 19, 18, (60, 35, 15))
+    line(img, 5, 2, 5, 8, (60, 60, 60))
+    rect(img, 6, 3, 10, 6, (220, 30, 30))
+    return img
+
+
+
+save_ico("icons/ksudoku.ico", generate_sudoku())
+save_ico("icons/kconnect4.ico", generate_connect4())
+save_ico("icons/khangman.ico", generate_hangman())
+save_ico("icons/ksimon.ico", generate_simon())
+save_ico("icons/kasteroids.ico", generate_asteroids())
+save_ico("icons/kfreecell.ico", generate_freecell())
+save_ico("icons/kmatch3.ico", generate_match3())
+save_ico("icons/kwords.ico", generate_words())
+save_ico("icons/kgo.ico", generate_go())
+save_ico("icons/kdarts.ico", generate_darts())
+save_ico("icons/ktowers.ico", generate_towers())
+save_ico("icons/kreversi.ico", generate_reversi())
+save_ico("icons/kquest.ico", generate_quest())
+save_ico("icons/kstarship.ico", generate_starship())
+save_ico("icons/kalchemy.ico", generate_alchemy())
+save_ico("icons/kfortress.ico", generate_fortress())
