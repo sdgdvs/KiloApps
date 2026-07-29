@@ -611,7 +611,7 @@
         t: { name: 'Metric Tons', factor: 1000 },
         lb: { name: 'Pounds', factor: 0.45359237 },
         oz: { name: 'Ounces', factor: 0.028349523125 },
-        st: { name: 'Stone', factor: 6.35029 }
+        st: { name: 'Stone', factor: 6.35029318 }
       },
       temp: {
         c: { name: 'Celsius' },
@@ -628,25 +628,25 @@
       },
       speed: {
         mps: { name: 'Meters / sec (m/s)', factor: 1 },
-        kph: { name: 'Kilometers / hr (km/h)', factor: 0.277778 },
+        kph: { name: 'Kilometers / hr (km/h)', factor: 0.2777777777777778 },
         mph: { name: 'Miles / hr (mph)', factor: 0.44704 },
-        knot: { name: 'Knots', factor: 0.514444 },
+        knot: { name: 'Knots', factor: 0.5144444444444445 },
         fps: { name: 'Feet / sec (ft/s)', factor: 0.3048 }
       },
       area: {
         sqm: { name: 'Square Meters (m²)', factor: 1 },
         sqkm: { name: 'Square Kilometers (km²)', factor: 1000000 },
-        sqft: { name: 'Square Feet (ft²)', factor: 0.092903 },
-        acre: { name: 'Acres', factor: 4046.856 },
+        sqft: { name: 'Square Feet (ft²)', factor: 0.09290304 },
+        acre: { name: 'Acres', factor: 4046.8564224 },
         ha: { name: 'Hectares', factor: 10000 }
       },
       volume: {
         l: { name: 'Liters (L)', factor: 1 },
         ml: { name: 'Milliliters (mL)', factor: 0.001 },
         cbm: { name: 'Cubic Meters (m³)', factor: 1000 },
-        gal: { name: 'Gallons (US)', factor: 3.78541 },
-        qt: { name: 'Quarts (US)', factor: 0.946353 },
-        floz: { name: 'Fluid Ounces (US)', factor: 0.0295735 }
+        gal: { name: 'Gallons (US)', factor: 3.785411784 },
+        qt: { name: 'Quarts (US)', factor: 0.946352946 },
+        floz: { name: 'Fluid Ounces (US)', factor: 0.0295735295625 }
       },
       time: {
         sec: { name: 'Seconds', factor: 1 },
@@ -674,6 +674,16 @@
     let customUnits = JSON.parse(localStorage.getItem('kconv_custom_units') || '[]');
     let historyLog = JSON.parse(localStorage.getItem('kconv_history') || '[]');
 
+    function escapeHTML(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     // Initialize App
     window.onload = () => {
       renderCategories();
@@ -682,6 +692,15 @@
       renderFavorites();
       renderHistory();
       convert();
+
+      // Enter key shortcut for custom units
+      const nameInp = document.getElementById('customUnitName');
+      const factInp = document.getElementById('customFactor');
+      if (nameInp && factInp) {
+        const handleEnter = (e) => { if (e.key === 'Enter') addCustomUnit(); };
+        nameInp.addEventListener('keydown', handleEnter);
+        factInp.addEventListener('keydown', handleEnter);
+      }
     };
 
     function showToast(msg) {
@@ -697,10 +716,13 @@
     }
 
     function switchView(viewName) {
-      document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        const active = tab.id === `tab-${viewName}`;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
       document.querySelectorAll('.view-pane').forEach(pane => pane.classList.remove('active'));
 
-      document.getElementById(`tab-${viewName}`).classList.add('active');
       document.getElementById(`view-${viewName}`).classList.add('active');
 
       if (viewName === 'batch') renderBatch();
@@ -721,7 +743,7 @@
         catBtn.onclick = () => selectCategory(key);
         container.appendChild(catBtn);
 
-        customCatSel.innerHTML += `<option value="${key}">${name}</option>`;
+        customCatSel.innerHTML += `<option value="${key}">${escapeHTML(name)}</option>`;
       }
     }
 
@@ -753,11 +775,12 @@
       const modeUnits = getAllUnitsForCategory(currentCategory);
       let keys = Object.keys(modeUnits);
 
-      keys.forEach((key, idx) => {
+      keys.forEach((key) => {
         const u = modeUnits[key];
-        uf.innerHTML += `<option value="${key}">${u.name}</option>`;
-        ut.innerHTML += `<option value="${key}">${u.name}</option>`;
-        buf.innerHTML += `<option value="${key}">${u.name}</option>`;
+        const safeName = escapeHTML(u.name);
+        uf.innerHTML += `<option value="${key}">${safeName}</option>`;
+        ut.innerHTML += `<option value="${key}">${safeName}</option>`;
+        buf.innerHTML += `<option value="${key}">${safeName}</option>`;
       });
 
       if (keys.length > 1) {
@@ -775,6 +798,9 @@
       }
 
       if (prec === 'auto') {
+        if (num !== 0 && Math.abs(num) < 1e-5) {
+          return num.toExponential(4);
+        }
         let str = num.toFixed(6);
         return str.replace(/\.?0+$/, '');
       }
@@ -797,18 +823,25 @@
       if (!modeUnits[fromKey] || !modeUnits[toKey]) return;
 
       let result = 0;
+      let isBelowAbsZero = false;
+
       if (currentCategory === 'temp') {
         let celsius = 0;
         if (fromKey === 'c') celsius = val;
         else if (fromKey === 'f') celsius = (val - 32) * 5/9;
         else if (fromKey === 'k') celsius = val - 273.15;
 
+        if (celsius < -273.15) isBelowAbsZero = true;
+
         if (toKey === 'c') result = celsius;
         else if (toKey === 'f') result = (celsius * 9/5) + 32;
         else if (toKey === 'k') result = celsius + 273.15;
       } else {
-        const baseVal = val * modeUnits[fromKey].factor;
-        result = baseVal / modeUnits[toKey].factor;
+        const fromFactor = modeUnits[fromKey].factor || 1;
+        const toFactor = modeUnits[toKey].factor || 1;
+        if (toFactor <= 0) return; // Zero division protection
+        const baseVal = val * fromFactor;
+        result = baseVal / toFactor;
       }
 
       const formattedResult = formatNumber(result);
@@ -817,7 +850,9 @@
       // Formula display
       const fromName = modeUnits[fromKey].name;
       const toName = modeUnits[toKey].name;
-      document.getElementById('formulaText').innerText = `${val} ${fromName} = ${formattedResult} ${toName}`;
+      let formulaStr = `${val} ${fromName} = ${formattedResult} ${toName}`;
+      if (isBelowAbsZero) formulaStr += ' ⚠️ (Below Abs Zero)';
+      document.getElementById('formulaText').innerText = formulaStr;
 
       // Log conversion to history (throttled)
       logHistory(currentCategory, val, fromName, formattedResult, toName);
@@ -865,16 +900,19 @@
           else if (key === 'f') res = (celsius * 9/5) + 32;
           else if (key === 'k') res = celsius + 273.15;
         } else {
-          const baseVal = val * modeUnits[fromKey].factor;
-          res = baseVal / u.factor;
+          const fromFactor = modeUnits[fromKey].factor || 1;
+          const uFactor = u.factor || 1;
+          if (uFactor <= 0) continue;
+          const baseVal = val * fromFactor;
+          res = baseVal / uFactor;
         }
 
         const formatted = formatNumber(res);
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${u.name}</strong></td>
-          <td style="color: var(--accent-blue); font-weight:600;">${formatted}</td>
-          <td style="text-align: center;"><button class="btn-sm" onclick="copyToClipboard('${formatted}')">📋 Copy</button></td>
+          <td><strong>${escapeHTML(u.name)}</strong></td>
+          <td style="color: var(--accent-blue); font-weight:600;">${escapeHTML(formatted)}</td>
+          <td style="text-align: center;"><button class="btn-sm" onclick="copyToClipboard('${escapeHTML(formatted)}')">📋 Copy</button></td>
         `;
         tbody.appendChild(tr);
       }
@@ -921,10 +959,10 @@
         card.className = 'fav-card';
         card.innerHTML = `
           <div class="fav-header">
-            <span>${fav.categoryName}</span>
+            <span>${escapeHTML(fav.categoryName)}</span>
             <button class="btn-sm btn-danger" style="padding:2px 6px;" onclick="event.stopPropagation(); removeFavorite(${fav.id})">✕</button>
           </div>
-          <div class="fav-pair">${fav.fromName} ➔ ${fav.toName}</div>
+          <div class="fav-pair">${escapeHTML(fav.fromName)} ➔ ${escapeHTML(fav.toName)}</div>
         `;
         card.onclick = () => loadFavorite(fav);
         container.appendChild(card);
@@ -986,8 +1024,8 @@
       customUnits.forEach(u => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${categories[u.category] || u.category}</td>
-          <td><strong>${u.name}</strong></td>
+          <td>${escapeHTML(categories[u.category] || u.category)}</td>
+          <td><strong>${escapeHTML(u.name)}</strong></td>
           <td>${u.factor}</td>
           <td style="text-align: center;">
             <button class="btn-sm btn-danger" onclick="deleteCustomUnit(${u.id})">Delete</button>
@@ -1041,10 +1079,10 @@
       filtered.forEach(h => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td style="color: var(--text-muted); font-size: 11px;">${h.time}</td>
-          <td>${h.category}</td>
-          <td>${h.from}</td>
-          <td style="color: var(--accent-blue); font-weight:600;">${h.to}</td>
+          <td style="color: var(--text-muted); font-size: 11px;">${escapeHTML(h.time)}</td>
+          <td>${escapeHTML(h.category)}</td>
+          <td>${escapeHTML(h.from)}</td>
+          <td style="color: var(--accent-blue); font-weight:600;">${escapeHTML(h.to)}</td>
         `;
         tbody.appendChild(tr);
       });

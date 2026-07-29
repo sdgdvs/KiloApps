@@ -29,70 +29,72 @@ fopen_t m_fopen;
 fputs_t m_fputs;
 fclose_t m_fclose;
 
+HMODULE hMsvcrt = NULL;
 HWND hCategory, hInput, hOutput, hFrom, hTo, hPrecision, hFormat;
 HWND hBatchOutput, hHistoryOutput, hFavCombo, hFormulaStatic;
 HWND hBtnSingle, hBtnBatch, hBtnFavs, hBtnHistory;
-HFONT hFont, hFontBold;
+HFONT hFont = NULL, hFontBold = NULL;
+WNDPROC OldEditProc = NULL;
 
 char buffer[1024];
 char historyBuffer[4096];
 int currentMode = 0; // 0=Single, 1=Batch, 2=Favs, 3=History
 
 // Categories and Units
-const char* catNames[] = {"Length", "Weight", "Temperature", "Data", "Speed", "Area", "Volume", "Time"};
+const char* catNames[] = {"Length", "Weight", "Temperature", "Data Storage", "Speed", "Area", "Volume", "Time"};
 const int numCats = 8;
 
-const char* lenUnits[] = {"Meters", "Kilometers", "Centimeters", "Millimeters", "Miles", "Yards", "Feet", "Inches"};
-const double lenFactors[] = {1.0, 1000.0, 0.01, 0.001, 1609.344, 0.9144, 0.3048, 0.0254};
-const int lenCount = 8;
+const char* lenUnits[] = {"Meters", "Kilometers", "Centimeters", "Millimeters", "Miles", "Yards", "Feet", "Inches", "Nautical Miles"};
+const double lenFactors[] = {1.0, 1000.0, 0.01, 0.001, 1609.344, 0.9144, 0.3048, 0.0254, 1852.0};
+const int lenCount = 9;
 
-const char* wtUnits[] = {"Kilograms", "Grams", "Milligrams", "Pounds", "Ounces", "Stone"};
-const double wtFactors[] = {1.0, 0.001, 0.000001, 0.45359237, 0.028349523, 6.35029};
-const int wtCount = 6;
+const char* wtUnits[] = {"Kilograms", "Grams", "Milligrams", "Metric Tons", "Pounds", "Ounces", "Stone"};
+const double wtFactors[] = {1.0, 0.001, 0.000001, 1000.0, 0.45359237, 0.028349523125, 6.35029318};
+const int wtCount = 7;
 
 const char* tempUnits[] = {"Celsius", "Fahrenheit", "Kelvin"};
 const int tempCount = 3;
 
-const char* dataUnits[] = {"Bytes", "Kilobytes (KB)", "Megabytes (MB)", "Gigabytes (GB)", "Terabytes (TB)"};
-const double dataFactors[] = {1.0, 1024.0, 1048576.0, 1073741824.0, 1099511627776.0};
-const int dataCount = 5;
+const char* dataUnits[] = {"Bytes", "Kilobytes (KB)", "Megabytes (MB)", "Gigabytes (GB)", "Terabytes (TB)", "Petabytes (PB)"};
+const double dataFactors[] = {1.0, 1024.0, 1048576.0, 1073741824.0, 1099511627776.0, 1125899906842624.0};
+const int dataCount = 6;
 
 const char* speedUnits[] = {"Meters/sec", "Km/hour", "Miles/hour", "Knots", "Feet/sec"};
-const double speedFactors[] = {1.0, 0.277778, 0.44704, 0.514444, 0.3048};
+const double speedFactors[] = {1.0, 0.2777777777777778, 0.44704, 0.5144444444444445, 0.3048};
 const int speedCount = 5;
 
 const char* areaUnits[] = {"Sq Meters", "Sq Kilometers", "Sq Feet", "Acres", "Hectares"};
-const double areaFactors[] = {1.0, 1000000.0, 0.092903, 4046.856, 10000.0};
+const double areaFactors[] = {1.0, 1000000.0, 0.09290304, 4046.8564224, 10000.0};
 const int areaCount = 5;
 
-const char* volUnits[] = {"Liters", "Milliliters", "Cubic Meters", "Gallons (US)", "Fluid Oz"};
-const double volFactors[] = {1.0, 0.001, 1000.0, 3.78541, 0.0295735};
-const int volCount = 5;
+const char* volUnits[] = {"Liters", "Milliliters", "Cubic Meters", "Gallons (US)", "Quarts (US)", "Fluid Oz"};
+const double volFactors[] = {1.0, 0.001, 1000.0, 3.785411784, 0.946352946, 0.0295735295625};
+const int volCount = 6;
 
 const char* timeUnits[] = {"Seconds", "Minutes", "Hours", "Days", "Weeks", "Years"};
 const double timeFactors[] = {1.0, 60.0, 3600.0, 86400.0, 604800.0, 31536000.0};
 const int timeCount = 6;
 
 double GetFactor(int cat, int index) {
-    if (cat == 0 && index < lenCount) return lenFactors[index];
-    if (cat == 1 && index < wtCount) return wtFactors[index];
-    if (cat == 3 && index < dataCount) return dataFactors[index];
-    if (cat == 4 && index < speedCount) return speedFactors[index];
-    if (cat == 5 && index < areaCount) return areaFactors[index];
-    if (cat == 6 && index < volCount) return volFactors[index];
-    if (cat == 7 && index < timeCount) return timeFactors[index];
+    if (cat == 0 && index >= 0 && index < lenCount) return lenFactors[index];
+    if (cat == 1 && index >= 0 && index < wtCount) return wtFactors[index];
+    if (cat == 3 && index >= 0 && index < dataCount) return dataFactors[index];
+    if (cat == 4 && index >= 0 && index < speedCount) return speedFactors[index];
+    if (cat == 5 && index >= 0 && index < areaCount) return areaFactors[index];
+    if (cat == 6 && index >= 0 && index < volCount) return volFactors[index];
+    if (cat == 7 && index >= 0 && index < timeCount) return timeFactors[index];
     return 1.0;
 }
 
 const char* GetUnitName(int cat, int index) {
-    if (cat == 0 && index < lenCount) return lenUnits[index];
-    if (cat == 1 && index < wtCount) return wtUnits[index];
-    if (cat == 2 && index < tempCount) return tempUnits[index];
-    if (cat == 3 && index < dataCount) return dataUnits[index];
-    if (cat == 4 && index < speedCount) return speedUnits[index];
-    if (cat == 5 && index < areaCount) return areaUnits[index];
-    if (cat == 6 && index < volCount) return volUnits[index];
-    if (cat == 7 && index < timeCount) return timeUnits[index];
+    if (cat == 0 && index >= 0 && index < lenCount) return lenUnits[index];
+    if (cat == 1 && index >= 0 && index < wtCount) return wtUnits[index];
+    if (cat == 2 && index >= 0 && index < tempCount) return tempUnits[index];
+    if (cat == 3 && index >= 0 && index < dataCount) return dataUnits[index];
+    if (cat == 4 && index >= 0 && index < speedCount) return speedUnits[index];
+    if (cat == 5 && index >= 0 && index < areaCount) return areaUnits[index];
+    if (cat == 6 && index >= 0 && index < volCount) return volUnits[index];
+    if (cat == 7 && index >= 0 && index < timeCount) return timeUnits[index];
     return "";
 }
 
@@ -122,13 +124,18 @@ void PopulateUnits(int catIdx) {
 }
 
 void FormatValue(double val, char* out, int precIdx, int formatIdx) {
+    if (!out) return;
     if (formatIdx == 1) { // Scientific
         m_sprintf(out, "%.4e", val);
         return;
     }
     
     if (precIdx == 0) { // Auto
-        m_sprintf(out, "%.6g", val);
+        if (val != 0.0 && (val > -1e-5 && val < 1e-5)) {
+            m_sprintf(out, "%.4e", val);
+        } else {
+            m_sprintf(out, "%.6g", val);
+        }
     } else if (precIdx == 1) { // 0 dec
         m_sprintf(out, "%.0f", val);
     } else if (precIdx == 2) { // 2 dec
@@ -143,13 +150,15 @@ void FormatValue(double val, char* out, int precIdx, int formatIdx) {
 }
 
 void AppendHistory(const char* entry) {
+    if (!entry) return;
+    char temp[4096];
     if (historyBuffer[0] != '\0') {
-        char temp[4096];
         m_sprintf(temp, "%s\r\n%s", entry, historyBuffer);
-        lstrcpyA(historyBuffer, temp);
     } else {
-        m_sprintf(historyBuffer, "%s", entry);
+        m_sprintf(temp, "%s", entry);
     }
+    temp[3900] = '\0'; // Safe truncate to prevent buffer overflow
+    lstrcpyA(historyBuffer, temp);
     SetWindowTextA(hHistoryOutput, historyBuffer);
 }
 
@@ -162,25 +171,32 @@ void DoConvert() {
     int precIdx = SendMessageA(hPrecision, CB_GETCURSEL, 0, 0);
     int formatIdx = SendMessageA(hFormat, CB_GETCURSEL, 0, 0);
 
-    if (catIdx == CB_ERR) catIdx = 0;
-    if (fromIdx == CB_ERR) fromIdx = 0;
-    if (toIdx == CB_ERR) toIdx = 0;
-    if (precIdx == CB_ERR) precIdx = 0;
-    if (formatIdx == CB_ERR) formatIdx = 0;
+    if (catIdx == CB_ERR || catIdx < 0 || catIdx >= numCats) catIdx = 0;
+    if (fromIdx == CB_ERR || fromIdx < 0) fromIdx = 0;
+    if (toIdx == CB_ERR || toIdx < 0) toIdx = 0;
+    if (precIdx == CB_ERR || precIdx < 0) precIdx = 0;
+    if (formatIdx == CB_ERR || formatIdx < 0) formatIdx = 0;
 
     double result = 0;
+    BOOL isBelowAbsZero = FALSE;
+
     if (catIdx == 2) { // Temp
         double c = 0;
         if (fromIdx == 0) c = val;
-        else if (fromIdx == 1) c = (val - 32.0) * 5.0/9.0;
+        else if (fromIdx == 1) c = (val - 32.0) * 5.0 / 9.0;
         else if (fromIdx == 2) c = val - 273.15;
         
+        if (c < -273.15) isBelowAbsZero = TRUE;
+
         if (toIdx == 0) result = c;
-        else if (toIdx == 1) result = (c * 9.0/5.0) + 32.0;
+        else if (toIdx == 1) result = (c * 9.0 / 5.0) + 32.0;
         else if (toIdx == 2) result = c + 273.15;
     } else {
-        double baseVal = val * GetFactor(catIdx, fromIdx);
-        result = baseVal / GetFactor(catIdx, toIdx);
+        double fromFactor = GetFactor(catIdx, fromIdx);
+        double toFactor = GetFactor(catIdx, toIdx);
+        if (toFactor <= 0.0) toFactor = 1.0; // Zero-division protection
+        double baseVal = val * fromFactor;
+        result = baseVal / toFactor;
     }
 
     char resStr[128];
@@ -190,8 +206,12 @@ void DoConvert() {
     // Formula label
     const char* fromName = GetUnitName(catIdx, fromIdx);
     const char* toName = GetUnitName(catIdx, toIdx);
-    char eqStr[256];
-    m_sprintf(eqStr, "Formula: %g %s = %s %s", val, fromName, resStr, toName);
+    char eqStr[384];
+    if (isBelowAbsZero) {
+        m_sprintf(eqStr, "Formula: %g %s = %s %s (Below Abs Zero!)", val, fromName, resStr, toName);
+    } else {
+        m_sprintf(eqStr, "Formula: %g %s = %s %s", val, fromName, resStr, toName);
+    }
     SetWindowTextA(hFormulaStatic, eqStr);
 
     // Log entry
@@ -201,7 +221,7 @@ void DoConvert() {
 
     // Update Batch View if visible
     int uCount = GetUnitCount(catIdx);
-    char batchBuf[2048];
+    char batchBuf[3500];
     batchBuf[0] = '\0';
     char line[256];
     for (int i = 0; i < uCount; i++) {
@@ -209,20 +229,24 @@ void DoConvert() {
         if (catIdx == 2) {
             double c = 0;
             if (fromIdx == 0) c = val;
-            else if (fromIdx == 1) c = (val - 32.0) * 5.0/9.0;
+            else if (fromIdx == 1) c = (val - 32.0) * 5.0 / 9.0;
             else if (fromIdx == 2) c = val - 273.15;
 
             if (i == 0) uRes = c;
-            else if (i == 1) uRes = (c * 9.0/5.0) + 32.0;
+            else if (i == 1) uRes = (c * 9.0 / 5.0) + 32.0;
             else if (i == 2) uRes = c + 273.15;
         } else {
+            double fTo = GetFactor(catIdx, i);
+            if (fTo <= 0.0) fTo = 1.0;
             double baseVal = val * GetFactor(catIdx, fromIdx);
-            uRes = baseVal / GetFactor(catIdx, i);
+            uRes = baseVal / fTo;
         }
         char uStr[128];
         FormatValue(uRes, uStr, precIdx, formatIdx);
         m_sprintf(line, "%s: %s\r\n", GetUnitName(catIdx, i), uStr);
-        lstrcatA(batchBuf, line);
+        if (lstrlenA(batchBuf) + lstrlenA(line) < 3400) {
+            lstrcatA(batchBuf, line);
+        }
     }
     SetWindowTextA(hBatchOutput, batchBuf);
 }
@@ -244,15 +268,26 @@ void UpdateViewVisibility() {
     ShowWindow(hHistoryOutput, isHistory ? SW_SHOW : SW_HIDE);
 }
 
+// Subclass Edit Proc to handle ENTER key in Input box
+LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
+        DoConvert();
+        return 0;
+    }
+    return CallWindowProcA(OldEditProc, hwnd, msg, wParam, lParam);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HMODULE hMsvcrt = LoadLibraryA("msvcrt.dll");
-            m_sprintf = (sprintf_t)GetProcAddress(hMsvcrt, "sprintf");
-            m_atof = (atof_t)GetProcAddress(hMsvcrt, "atof");
-            m_fopen = (fopen_t)GetProcAddress(hMsvcrt, "fopen");
-            m_fputs = (fputs_t)GetProcAddress(hMsvcrt, "fputs");
-            m_fclose = (fclose_t)GetProcAddress(hMsvcrt, "fclose");
+            hMsvcrt = LoadLibraryA("msvcrt.dll");
+            if (hMsvcrt) {
+                m_sprintf = (sprintf_t)GetProcAddress(hMsvcrt, "sprintf");
+                m_atof = (atof_t)GetProcAddress(hMsvcrt, "atof");
+                m_fopen = (fopen_t)GetProcAddress(hMsvcrt, "fopen");
+                m_fputs = (fputs_t)GetProcAddress(hMsvcrt, "fputs");
+                m_fclose = (fclose_t)GetProcAddress(hMsvcrt, "fclose");
+            }
 
             historyBuffer[0] = '\0';
 
@@ -275,6 +310,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Single View Controls
             CreateWindowA("STATIC", "Input:", WS_CHILD | WS_VISIBLE, 10, 72, 45, 20, hwnd, NULL, NULL, NULL);
             hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "1", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 60, 70, 100, 22, hwnd, (HMENU)1005, NULL, NULL);
+            OldEditProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             CreateWindowA("STATIC", "From:", WS_CHILD | WS_VISIBLE, 170, 72, 40, 20, hwnd, NULL, NULL, NULL);
             hFrom = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 210, 70, 120, 150, hwnd, (HMENU)1006, NULL, NULL);
@@ -347,6 +383,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (wmId == 1001) { // Convert Button
                 DoConvert();
+            } else if (wmId == 1005 && wmEvent == EN_CHANGE) { // Live input update
+                DoConvert();
             } else if (wmId == 3001) { // Swap Button
                 int fIdx = SendMessageA(hFrom, CB_GETCURSEL, 0, 0);
                 int tIdx = SendMessageA(hTo, CB_GETCURSEL, 0, 0);
@@ -372,23 +410,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PopulateUnits(catIdx);
                 }
                 DoConvert();
+            } else if (wmId == 3003 && wmEvent == CBN_SELCHANGE) { // Favorites selection change
+                int sel = SendMessageA(hFavCombo, CB_GETCURSEL, 0, 0);
+                if (sel != CB_ERR) {
+                    currentMode = 0; // Switch back to single mode to view loaded favorite
+                    UpdateViewVisibility();
+                    DoConvert();
+                }
             } else if (wmId == 4001) { // Export History
                 if (historyBuffer[0] == '\0') {
                     MessageBoxA(hwnd, "History log is empty!", "KConverter", MB_OK | MB_ICONWARNING);
                 } else {
-                    void* f = m_fopen("kconverter_history.txt", "w");
-                    if (f) {
-                        m_fputs(historyBuffer, f);
-                        m_fclose(f);
-                        MessageBoxA(hwnd, "History exported to kconverter_history.txt", "KConverter", MB_OK | MB_ICONINFORMATION);
+                    if (m_fopen && m_fputs && m_fclose) {
+                        void* f = m_fopen("kconverter_history.txt", "w");
+                        if (f) {
+                            m_fputs(historyBuffer, f);
+                            m_fclose(f);
+                            MessageBoxA(hwnd, "History exported to kconverter_history.txt", "KConverter", MB_OK | MB_ICONINFORMATION);
+                        }
                     }
                 }
             }
             break;
         }
         case WM_DESTROY:
-            if (hFont) DeleteObject(hFont);
-            if (hFontBold) DeleteObject(hFontBold);
+            if (hFont) { DeleteObject(hFont); hFont = NULL; }
+            if (hFontBold) { DeleteObject(hFontBold); hFontBold = NULL; }
+            if (hMsvcrt) { FreeLibrary(hMsvcrt); hMsvcrt = NULL; }
             PostQuitMessage(0);
             return 0;
     }
