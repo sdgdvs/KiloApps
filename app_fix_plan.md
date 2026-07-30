@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KMail
+**Target App:** KMandel
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -201,3 +201,5 @@ Pass 1 Complete.
 - **KImage**: Added `img.onload` dimension bounds checking to abort on images exceeding 8192x8192 pixels to prevent memory exhaustion, and implemented 256-byte string bounds and `<`/`>` HTML sanitization in the EXIF parser in `kimage.html`. Updated `LoadBitmapFile` to safely reject images exceeding 8192x8192 bounds, preventing Win32 DIB memory exhaustion and integer overflows in `main.c`.
 
 - **KJournal**: Added HTML entity sanitization for the `mood` variable before DOM injection, and added `try-catch` blocks to `localStorage.setItem` calls to safely handle `QuotaExceededError` bounds in `kjournal.html`. Fixed a buffer reallocation limit in `main.c` by replacing a single `buf_cap *= 2` with a `while` loop to guarantee sufficient capacity for very long text entries, preventing potential Win32 RichEdit string truncation or buffer overflows.
+
+- **KMail**: Added an `escapeHTML` sanitization function to properly bounds-check and encode subjects, senders, bodies, and tags against XSS DOM injection vulnerabilities, and implemented JSON import bounds to safely reject files larger than 500KB or slice imported arrays exceeding 1000 items in `kmail.html`. Added strict length bounds checks to tag appends (`lstrcatA`) in `main.c` to prevent stack buffer overflows.
