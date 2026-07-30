@@ -139,7 +139,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KConnect4  | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI difficulty levels. Ensure Grandmaster is genuinely hard. Check blocker cell mechanics. |
 | KSolitaire | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check deal fairness, ensure Vegas mode scoring is balanced, verify undo/powerup economy. |
 | KFreecell  | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check that all dealt hands are solvable. Verify difficulty constraints make sense. |
 | KSudoku    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit puzzle generation quality. Ensure Easy puzzles have unique solutions and Hard is solvable. |
@@ -156,11 +155,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KChess     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, ensure Easy is beatable, Hard is challenging. Check opening/endgame AI quality. |
 | KGo        | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty across 9x9/13x13/19x19. Ensure handicap system works. Test Tsumego puzzle quality. |
 | KReversi   | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, check Minimax depth, ensure board sizes feel right. |
+| KConnect4  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty levels. Ensure Grandmaster is genuinely hard. Check blocker cell mechanics. |
 
 
 ## Progress Log
 
 **Loop 8**
+- [x] KConnect4 (Balance audit complete: Increased Grandmaster AI minimax depth to 7, fixed top-down physical piece drop logic for blocker cells in both EXE and HTML)
 - [x] KReversi (Balance audit complete: Adjusted Minimax depths for 6x6/8x8/10x10 boards, added 50/50 tie-breaking logic in both EXE and HTML)
 - [x] KSpace (Expanded Campaign with V-Strike formation, Weapon Upgrades powerups, and Scoring Combos to both EXE and HTML)
 - [x] KGo (Balance audit complete: Enhanced AI defensive evaluation, adjusted handicap system, fixed Tsumego puzzle layouts in both EXE and HTML)
