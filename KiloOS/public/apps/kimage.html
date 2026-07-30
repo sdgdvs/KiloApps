@@ -1032,7 +1032,7 @@
   document.getElementById('btnApplyResize').onclick = () => {
     const w = parseInt(document.getElementById('inputWidth').value);
     const h = parseInt(document.getElementById('inputHeight').value);
-    if (!w || !h) return;
+    if (!w || !h || w > 8192 || h > 8192 || w < 1 || h < 1) return;
 
     const resCtx = document.createElement('canvas').getContext('2d');
     resCtx.canvas.width = w;
@@ -1293,12 +1293,17 @@
   }
 
   function getString(view, tiffOffset, entryOffset, littleEndian) {
-    const count = view.getUint32(entryOffset + 4, littleEndian);
+    let count = view.getUint32(entryOffset + 4, littleEndian);
+    if (count > 256) count = 256; // Limit EXIF string length bounds
     const valOffset = count > 4 ? tiffOffset + view.getUint32(entryOffset + 8, littleEndian) : entryOffset + 8;
     let str = '';
+    if (valOffset + count > view.byteLength) count = view.byteLength - valOffset;
+    if (count <= 0) return '';
     for (let i = 0; i < count - 1; i++) {
       const char = view.getUint8(valOffset + i);
       if (char === 0) break;
+      // Prevent XSS by replacing < and >
+      if (char === 60 || char === 62) continue; 
       str += String.fromCharCode(char);
     }
     return str.trim();

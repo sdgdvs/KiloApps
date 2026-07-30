@@ -325,6 +325,7 @@ void FilterBrightness(int delta) {
 
 void FilterBlur() {
     if (!g_pBitsWork || g_bmpW < 3 || g_bmpH < 3) return;
+    if ((long long)g_bmpW * g_bmpH * sizeof(RGBQUAD) > 256 * 1024 * 1024) return;
     SIZE_T bufSize = g_bmpW * g_bmpH * sizeof(RGBQUAD);
     RGBQUAD* temp = (RGBQUAD*)HeapAlloc(GetProcessHeap(), 0, bufSize);
     if (!temp) return;
@@ -397,6 +398,7 @@ void ResizeImageScale(float factor) {
     int nh = (int)(g_bmpH * factor);
     if (nw < 1) nw = 1;
     if (nh < 1) nh = 1;
+    if (nw > 8192 || nh > 8192) return; // Dimension scaling safety bounds
 
     RGBQUAD* pNewBits = NULL;
     HBITMAP hNewBmp = Create32BitDIB(nw, nh, &pNewBits);

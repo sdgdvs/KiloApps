@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import sys
+
+html = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -27,10 +29,10 @@
     position: relative;
     width: 100%;
     height: 100%;
-    cursor: grab;
+    cursor: crosshair;
   }
   #canvas-container:active {
-    cursor: grabbing;
+    cursor: crosshair;
   }
   canvas {
     width: 100%;
@@ -54,6 +56,8 @@
     width: 200px;
     pointer-events: auto;
     user-select: none;
+    max-height: 90vh;
+    overflow-y: auto;
   }
   .control-group {
     display: flex;
@@ -116,6 +120,14 @@
   .loading.active {
     opacity: 1;
   }
+  input[type="color"] {
+    width: 100%;
+    height: 30px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: none;
+  }
 </style>
 </head>
 <body>
@@ -139,9 +151,19 @@
         <button id="btn-undo" disabled aria-label="Undo">Undo</button>
         <button id="btn-redo" disabled aria-label="Redo">Redo</button>
       </div>
-      <button id="btn-save" aria-label="Save Image">Save Image</button>
+      <button id="btn-save" aria-label="Save Image">Save 4K PNG</button>
       <button id="btn-theme" aria-label="Toggle Theme">Toggle Theme</button>
+      <div class="control-group" id="custom-colors" style="display:none;">
+        <label>Custom Palette</label>
+        <div class="row">
+          <input type="color" id="color1" value="#ff0000">
+          <input type="color" id="color2" value="#0000ff">
+        </div>
+      </div>
       <button id="btn-julia" aria-label="Toggle Julia">Toggle Julia</button>
+      <div class="control-group">
+        <label style="font-size: 10px;">Hint: Shift+Click to Pick Julia from Mandelbrot</label>
+      </div>
       <button id="btn-reset" aria-label="Reset View">Reset View</button>
     </div>
   </div>
@@ -157,7 +179,7 @@
     let minRe = -2.0, maxRe = 1.0;
     let minIm = -1.2, maxIm = 1.2;
     let max_iter = 100;
-    let theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW
+    let theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW, 4: Custom
     let isRendering = false;
     let renderRequested = false;
 
@@ -167,6 +189,27 @@
     let history = [];
     let historyIdx = -1;
 
+    let customColor1 = [255, 0, 0];
+    let customColor2 = [0, 0, 255];
+
+    function hexToRgb(hex) {
+        var result = /^#?([a-f\\d]{2})([a-f\\d]{2})([a-f\\d]{2})$/i.exec(hex);
+        return result ? [
+            parseInt(result[1], 16),
+            parseInt(result[2], 16),
+            parseInt(result[3], 16)
+        ] : [255,255,255];
+    }
+    
+    document.getElementById('color1').addEventListener('input', (e) => {
+        customColor1 = hexToRgb(e.target.value);
+        if (theme === 4) requestRender();
+    });
+    document.getElementById('color2').addEventListener('input', (e) => {
+        customColor2 = hexToRgb(e.target.value);
+        if (theme === 4) requestRender();
+    });
+
     // Interaction state
     let isDragging = false;
     let hasDragged = false;
@@ -174,7 +217,7 @@
     let startMinRe, startMaxRe, startMinIm, startMaxIm;
     
     function saveState() {
-        const state = { minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme };
+        const state = { minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, customColor1: [...customColor1], customColor2: [...customColor2] };
         if (historyIdx < history.length - 1) {
             history = history.slice(0, historyIdx + 1);
         }
@@ -191,6 +234,11 @@
         isJulia = state.isJulia;
         juliaCRe = state.juliaCRe; juliaCIm = state.juliaCIm;
         theme = state.theme;
+        customColor1 = [...state.customColor1];
+        customColor2 = [...state.customColor2];
+        document.getElementById('color1').value = '#' + customColor1.map(x => x.toString(16).padStart(2, '0')).join('');
+        document.getElementById('color2').value = '#' + customColor2.map(x => x.toString(16).padStart(2, '0')).join('');
+        document.getElementById('custom-colors').style.display = theme === 4 ? 'block' : 'none';
         updateUndoRedoButtons();
     }
     
@@ -219,80 +267,93 @@
     function updateDisplays() {
       const wRe = maxRe - minRe;
       const baseW = 3.0;
-      const zoom = (baseW / wRe);
-      let zoomStr = zoom < 1000 ? zoom.toFixed(1) : (zoom < 1000000 ? (zoom/1000).toFixed(1) + 'k' : (zoom/1000000).toFixed(1) + 'M');
+      const zoomLevel = (baseW / wRe);
+      let zoomStr = zoomLevel < 1000 ? zoomLevel.toFixed(1) : (zoomLevel < 1000000 ? (zoomLevel/1000).toFixed(1) + 'k' : (zoomLevel/1000000).toFixed(1) + 'M');
       zoomDisp.textContent = zoomStr + 'x';
       iterDisp.textContent = max_iter;
       
-      const needed_iter = Math.floor(100 * Math.pow(zoom, 0.2));
-      if (needed_iter > max_iter && zoom > 5) {
+      const needed_iter = Math.floor(100 * Math.pow(zoomLevel, 0.2));
+      if (needed_iter > max_iter && zoomLevel > 5) {
           max_iter = Math.min(needed_iter, 2000);
       }
     }
 
-    function getColors(n, iter, t) {
-      if (t === 0) { // Fire
-        return [
-          Math.floor((n * 255) / iter),
-          Math.floor((n * n * 255) / (iter * iter)),
-          Math.floor((n * 128) / iter)
-        ];
-      } else if (t === 1) { // Ocean
-        return [
-          Math.floor((n * 128) / iter),
-          Math.floor((n * n * 255) / (iter * iter)),
-          Math.floor((n * 255) / iter)
-        ];
-      } else if (t === 2) { // Cyberpunk
-        let f = n / iter;
-        return [
-          Math.max(0, Math.floor(Math.sin(f * Math.PI) * 255)),
-          Math.max(0, Math.floor(Math.sin(f * Math.PI * 2) * 128)),
-          Math.max(0, Math.floor(Math.cos(f * Math.PI) * 255))
-        ];
-      } else { // BW
-        let f = (n % 20) > 10 ? 255 : 0;
-        return [f, f, f];
-      }
-    }
-
-    function renderBlock(w, h, startY, endY, imgData) {
-      if (w <= 1 || h <= 1) return;
-      const data = imgData.data;
-      const re_factor = (maxRe - minRe) / (w - 1);
-      const im_factor = (maxIm - minIm) / (h - 1);
-      
-      let idx = startY * w * 4;
-      for (let y = startY; y < endY; ++y) {
-          const c_im_view = maxIm - y * im_factor;
-          for (let x = 0; x < w; ++x) {
-              const c_re_view = minRe + x * re_factor;
-              let c_re = isJulia ? juliaCRe : c_re_view;
-              let c_im = isJulia ? juliaCIm : c_im_view;
-              let Z_re = c_re_view, Z_im = c_im_view;
-              let isInside = true;
-              let n = 0;
-              
-              for (n = 0; n < max_iter; ++n) {
-                  const Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
-                  if (Z_re2 + Z_im2 > 4) {
-                      isInside = false;
-                      break;
+    // WEB WORKER LOGIC
+    const workerCode = `
+      self.onmessage = function(e) {
+          const { id, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, customColor1, customColor2 } = e.data;
+          
+          const re_factor = (maxRe - minRe) / (w - 1);
+          const im_factor = (maxIm - minIm) / (h - 1);
+          
+          const buf = new ArrayBuffer((endY - startY) * w * 4);
+          const data = new Uint8ClampedArray(buf);
+          let idx = 0;
+          
+          for (let y = startY; y < endY; ++y) {
+              const c_im_view = maxIm - y * im_factor;
+              for (let x = 0; x < w; ++x) {
+                  const c_re_view = minRe + x * re_factor;
+                  let c_re = isJulia ? juliaCRe : c_re_view;
+                  let c_im = isJulia ? juliaCIm : c_im_view;
+                  let Z_re = c_re_view, Z_im = c_im_view;
+                  let isInside = true;
+                  let n = 0;
+                  
+                  for (n = 0; n < max_iter; ++n) {
+                      const Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
+                      if (Z_re2 + Z_im2 > 4) {
+                          isInside = false;
+                          break;
+                      }
+                      Z_im = 2 * Z_re * Z_im + c_im;
+                      Z_re = Z_re2 - Z_im2 + c_re;
                   }
-                  Z_im = 2 * Z_re * Z_im + c_im;
-                  Z_re = Z_re2 - Z_im2 + c_re;
-              }
-              
-              if (isInside) {
-                  data[idx++] = 0; data[idx++] = 0; data[idx++] = 0; data[idx++] = 255;
-              } else {
-                  const [r, g, b] = getColors(n, max_iter, theme);
-                  data[idx++] = r; data[idx++] = g; data[idx++] = b; data[idx++] = 255;
+                  
+                  if (isInside) {
+                      data[idx++] = 0; data[idx++] = 0; data[idx++] = 0; data[idx++] = 255;
+                  } else {
+                      let r = 0, g = 0, b = 0;
+                      if (theme === 0) { // Fire
+                        r = Math.floor((n * 255) / max_iter);
+                        g = Math.floor((n * n * 255) / (max_iter * max_iter));
+                        b = Math.floor((n * 128) / max_iter);
+                      } else if (theme === 1) { // Ocean
+                        r = Math.floor((n * 128) / max_iter);
+                        g = Math.floor((n * n * 255) / (max_iter * max_iter));
+                        b = Math.floor((n * 255) / max_iter);
+                      } else if (theme === 2) { // Cyberpunk
+                        let f = n / max_iter;
+                        r = Math.max(0, Math.floor(Math.sin(f * Math.PI) * 255));
+                        g = Math.max(0, Math.floor(Math.sin(f * Math.PI * 2) * 128));
+                        b = Math.max(0, Math.floor(Math.cos(f * Math.PI) * 255));
+                      } else if (theme === 3) { // BW
+                        let f = (n % 20) > 10 ? 255 : 0;
+                        r = f; g = f; b = f;
+                      } else if (theme === 4) { // Custom
+                        let f = n / max_iter;
+                        r = Math.floor(customColor1[0] + f * (customColor2[0] - customColor1[0]));
+                        g = Math.floor(customColor1[1] + f * (customColor2[1] - customColor1[1]));
+                        b = Math.floor(customColor1[2] + f * (customColor2[2] - customColor1[2]));
+                      }
+                      data[idx++] = r; data[idx++] = g; data[idx++] = b; data[idx++] = 255;
+                  }
               }
           }
-      }
+          self.postMessage({ id, startY, data: buf }, [buf]);
+      };
+    `;
+    const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+    const workerUrl = URL.createObjectURL(workerBlob);
+    
+    const numWorkers = navigator.hardwareConcurrency || 4;
+    const workers = [];
+    for (let i = 0; i < numWorkers; i++) {
+        workers.push(new Worker(workerUrl));
     }
 
+    let activeWorkers = 0;
+    
     function requestRender() {
         if (isRendering) {
             renderRequested = true;
@@ -303,44 +364,48 @@
         loading.classList.add('active');
         
         requestAnimationFrame(() => {
-            setTimeout(performRender, 10);
+            performRender(canvas, window.innerWidth, window.innerHeight, false, () => {
+                loading.classList.remove('active');
+                isRendering = false;
+                if (renderRequested) requestRender();
+            });
         });
     }
 
-    function performRender() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      if (canvas.width !== w || canvas.height !== h) {
-          canvas.width = w;
-          canvas.height = h;
+    function performRender(targetCanvas, w, h, isOffscreen, callback) {
+      if (!isOffscreen) {
+          if (targetCanvas.width !== w || targetCanvas.height !== h) {
+              targetCanvas.width = w;
+              targetCanvas.height = h;
+          }
+          updateDisplays();
       }
       
-      updateDisplays();
+      const targetCtx = targetCanvas.getContext('2d');
+      const chunkH = Math.ceil(h / numWorkers);
+      activeWorkers = 0;
       
-      const imgData = ctx.createImageData(w, h);
-      
-      const chunks = 4;
-      const chunkH = Math.ceil(h / chunks);
-      
-      let currentChunk = 0;
-      
-      function renderNextChunk() {
-          const startY = currentChunk * chunkH;
+      for (let i = 0; i < numWorkers; i++) {
+          const startY = i * chunkH;
+          if (startY >= h) break;
           const endY = Math.min(h, startY + chunkH);
           
-          if (startY < h) {
-              renderBlock(w, h, startY, endY, imgData);
-              currentChunk++;
-              setTimeout(renderNextChunk, 0);
-          } else {
-              ctx.putImageData(imgData, 0, 0);
-              loading.classList.remove('active');
-              isRendering = false;
-              if (renderRequested) requestRender();
-          }
+          activeWorkers++;
+          
+          workers[i].onmessage = function(e) {
+              const { startY: sy, data } = e.data;
+              const imgData = new ImageData(new Uint8ClampedArray(data), w, endY - startY);
+              targetCtx.putImageData(imgData, 0, sy);
+              activeWorkers--;
+              if (activeWorkers === 0) {
+                  if (callback) callback();
+              }
+          };
+          
+          workers[i].postMessage({
+              id: i, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, customColor1, customColor2
+          });
       }
-      
-      renderNextChunk();
     }
     
     function zoom(factor, centerX, centerY, dontSave) {
@@ -398,7 +463,8 @@
     });
     
     document.getElementById('btn-theme').addEventListener('click', () => {
-        theme = (theme + 1) % 4;
+        theme = (theme + 1) % 5;
+        document.getElementById('custom-colors').style.display = theme === 4 ? 'block' : 'none';
         saveState();
         requestRender();
     });
@@ -413,11 +479,26 @@
 
     document.getElementById('btn-undo').addEventListener('click', undo);
     document.getElementById('btn-redo').addEventListener('click', redo);
+    
     document.getElementById('btn-save').addEventListener('click', () => {
-        const link = document.createElement('a');
-        link.download = 'kmandel.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        loading.textContent = "Rendering 4K PNG...";
+        loading.classList.add('active');
+        
+        // Create an offscreen canvas for 4K (3840x2160)
+        const exportCanvas = document.createElement('canvas');
+        const expW = 3840;
+        const expH = 2160;
+        exportCanvas.width = expW;
+        exportCanvas.height = expH;
+        
+        performRender(exportCanvas, expW, expH, true, () => {
+            const link = document.createElement('a');
+            link.download = 'kmandel_4k.png';
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
+            loading.textContent = "Rendering...";
+            loading.classList.remove('active');
+        });
     });
 
     window.addEventListener('keydown', (e) => {
@@ -463,6 +544,27 @@
     
     container.addEventListener('pointerdown', (e) => {
         if (e.target !== canvas) return;
+        
+        // Interactive Julia bridging
+        if (e.shiftKey && !isJulia) {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const re_factor = (maxRe - minRe) / (w - 1);
+            const im_factor = (maxIm - minIm) / (h - 1);
+            const clickRe = minRe + e.clientX * re_factor;
+            const clickIm = maxIm - e.clientY * im_factor;
+            
+            isJulia = true;
+            juliaCRe = clickRe;
+            juliaCIm = clickIm;
+            minRe = -2.0; maxRe = 2.0;
+            minIm = -2.0; maxIm = 2.0;
+            max_iter = 100;
+            saveState();
+            requestRender();
+            return;
+        }
+
         isDragging = true;
         hasDragged = false;
         dragStartX = e.clientX;
@@ -493,6 +595,7 @@
     });
     
     container.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
         isDragging = false;
         container.releasePointerCapture(e.pointerId);
         if (hasDragged) {
