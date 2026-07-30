@@ -98,6 +98,24 @@ static BOOL g_waveActive = FALSE;
 static BOOL g_gameOver = FALSE;
 static int g_selectedSlot = -1;
 
+typedef struct {
+    float x, y;
+    float targetX, targetY;
+    float hp, maxHp;
+    float speed;
+    int damage;
+    int range;
+    int attackCd;
+    int maxAttackCd;
+    int respawnTimer;
+    int healCd, maxHealCd;
+    int shieldCd, maxShieldCd;
+    int meteorCd, maxMeteorCd;
+    int shieldActive;
+} Hero;
+
+static Hero g_hero;
+
 #define TOWER_ARCHER 1
 #define TOWER_MAGE 2
 #define TOWER_CANNON 3
@@ -180,6 +198,18 @@ void InitGameState() {
     g_spawnQueueHead = 0;
     g_spawnTimer = 0;
 
+    g_hero.x = 400.0f; g_hero.y = 300.0f;
+    g_hero.targetX = 400.0f; g_hero.targetY = 300.0f;
+    g_hero.maxHp = 100.0f; g_hero.hp = 100.0f;
+    g_hero.speed = 2.5f;
+    g_hero.damage = 25; g_hero.range = 60;
+    g_hero.attackCd = 0; g_hero.maxAttackCd = 25;
+    g_hero.respawnTimer = 0;
+    g_hero.healCd = 0; g_hero.maxHealCd = 300;
+    g_hero.shieldCd = 0; g_hero.maxShieldCd = 600;
+    g_hero.meteorCd = 0; g_hero.maxMeteorCd = 450;
+    g_hero.shieldActive = 0;
+
     for (int i = 0; i < MAX_ENEMIES; i++) g_enemies[i].active = FALSE;
     for (int i = 0; i < MAX_PROJECTILES; i++) g_projectiles[i].active = FALSE;
     for (int i = 0; i < MAX_FLOATING_TEXTS; i++) g_floatingTexts[i].active = FALSE;
@@ -221,6 +251,68 @@ void UpdateGameLogic() {
         }
     }
 
+    // Hero Update
+    if (g_hero.healCd > 0) g_hero.healCd--;
+    if (g_hero.shieldCd > 0) g_hero.shieldCd--;
+    if (g_hero.meteorCd > 0) g_hero.meteorCd--;
+    if (g_hero.shieldActive > 0) g_hero.shieldActive--;
+
+    if (g_hero.respawnTimer > 0) {
+        g_hero.respawnTimer--;
+        if (g_hero.respawnTimer <= 0) {
+            g_hero.hp = g_hero.maxHp;
+            g_hero.x = (float)g_waypoints[MAX_WAYPOINTS-1].x;
+            g_hero.y = (float)g_waypoints[MAX_WAYPOINTS-1].y;
+            g_hero.targetX = g_hero.x;
+            g_hero.targetY = g_hero.y;
+            AddFloatingText(g_hero.x, g_hero.y - 20, "RESPAWNED!", TEXT_GOLD);
+        }
+    } else {
+        float hdx = g_hero.targetX - g_hero.x;
+        float hdy = g_hero.targetY - g_hero.y;
+        float hDist = custom_sqrtf(hdx*hdx + hdy*hdy);
+        if (hDist > g_hero.speed) {
+            g_hero.x += (hdx/hDist) * g_hero.speed;
+            g_hero.y += (hdy/hDist) * g_hero.speed;
+        } else {
+            g_hero.x = g_hero.targetX;
+            g_hero.y = g_hero.targetY;
+        }
+
+        if (g_hero.attackCd > 0) g_hero.attackCd--;
+        else {
+            int targetIdx = -1;
+            float closestDist = 9999.0f;
+            for (int e = 0; e < MAX_ENEMIES; e++) {
+                if (g_enemies[e].active) {
+                    float dx = g_enemies[e].x - g_hero.x;
+                    float dy = g_enemies[e].y - g_hero.y;
+                    float dist = custom_sqrtf(dx*dx + dy*dy);
+                    if (dist <= g_hero.range && dist < closestDist) {
+                        closestDist = dist;
+                        targetIdx = e;
+                    }
+                }
+            }
+            if (targetIdx != -1) {
+                g_hero.attackCd = g_hero.maxAttackCd;
+                g_enemies[targetIdx].hp -= g_hero.damage;
+                if (g_enemies[targetIdx].hp <= 0) {
+                    g_enemies[targetIdx].active = FALSE;
+                    int reward = 15;
+                    if (g_enemies[targetIdx].type == ENEMY_OGRE) reward = 100;
+                    else if (g_enemies[targetIdx].type == ENEMY_ORC) reward = 20;
+                    else if (g_enemies[targetIdx].type == ENEMY_HOUND) reward = 10;
+                    g_gold += reward;
+                    char rBuf[16]; wsprintfA(rBuf, "+%dg", reward);
+                    AddFloatingText(g_enemies[targetIdx].x, g_enemies[targetIdx].y - 10, rBuf, TEXT_GOLD);
+                    Beep(700, 25);
+                }
+                Beep(550, 20);
+            }
+        }
+    }
+
     // Update Enemies (Pathfinding)
     int activeEnemyCount = 0;
     for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -239,6 +331,20 @@ void UpdateGameLogic() {
             }
         }
         float currentSpeed = g_enemies[i].slowed ? (g_enemies[i].speed * 0.5f) : g_enemies[i].speed;
+
+        if (g_hero.respawnTimer <= 0 && g_hero.shieldActive <= 0) {
+            float hdx = g_hero.x - g_enemies[i].x;
+            float hdy = g_hero.y - g_enemies[i].y;
+            if (custom_sqrtf(hdx*hdx + hdy*hdy) < (float)(g_enemies[i].radius + 12)) {
+                g_hero.hp -= 0.5f;
+                if (g_hero.hp <= 0) {
+                    g_hero.hp = 0;
+                    g_hero.respawnTimer = 300;
+                    Beep(200, 100);
+                    AddFloatingText(g_hero.x, g_hero.y, "HERO FALLEN!", RGB(239, 68, 68));
+                }
+            }
+        }
 
         int nextIdx = g_enemies[i].waypointIndex + 1;
         if (g_enemies[i].type == ENEMY_GARGOYLE) nextIdx = MAX_WAYPOINTS - 1;
@@ -261,10 +367,15 @@ void UpdateGameLogic() {
             if (g_enemies[i].waypointIndex >= MAX_WAYPOINTS - 1) {
                 // Reached Castle Fortress
                 int dmgToBase = (g_enemies[i].type == ENEMY_OGRE) ? 5 : 1;
+                if (g_hero.shieldActive > 0) dmgToBase = 0;
                 g_baseHp -= dmgToBase;
-                Beep(180, 60);
-                char dmgBuf[16]; wsprintfA(dmgBuf, "-%d HP", dmgToBase);
-                AddFloatingText(g_enemies[i].x - 15, g_enemies[i].y - 20, dmgBuf, RGB(239, 68, 68));
+                if (dmgToBase > 0) {
+                    Beep(180, 60);
+                    char dmgBuf[16]; wsprintfA(dmgBuf, "-%d HP", dmgToBase);
+                    AddFloatingText(g_enemies[i].x - 15, g_enemies[i].y - 20, dmgBuf, RGB(239, 68, 68));
+                } else {
+                    AddFloatingText(g_enemies[i].x - 15, g_enemies[i].y - 20, "BLOCKED!", RGB(59, 130, 246));
+                }
                 g_enemies[i].active = FALSE;
 
                 if (g_baseHp <= 0) {
@@ -734,6 +845,49 @@ void Render(HDC hdc, HWND hwnd) {
         TextOutA(memDC, (int)g_floatingTexts[f].x, (int)g_floatingTexts[f].y, g_floatingTexts[f].text, (int)lstrlenA(g_floatingTexts[f].text));
     }
 
+    // Draw Hero
+    if (g_hero.respawnTimer <= 0) {
+        if (g_hero.shieldActive > 0) {
+            HBRUSH sBrush = CreateSolidBrush(RGB(59, 130, 246));
+            HPEN sPen = CreatePen(PS_SOLID, 2, RGB(96, 165, 250));
+            HBRUSH oB = (HBRUSH)SelectObject(memDC, sBrush);
+            HPEN oP = (HPEN)SelectObject(memDC, sPen);
+            Ellipse(memDC, (int)g_hero.x - 18, (int)g_hero.y - 18, (int)g_hero.x + 18, (int)g_hero.y + 18);
+            SelectObject(memDC, oB);
+            SelectObject(memDC, oP);
+            DeleteObject(sBrush);
+            DeleteObject(sPen);
+        }
+        
+        HBRUSH hBrush = CreateSolidBrush(RGB(245, 158, 11)); // Gold
+        HPEN hPen = CreatePen(PS_SOLID, 2, TEXT_WHITE);
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, hBrush);
+        HPEN oP = (HPEN)SelectObject(memDC, hPen);
+        Ellipse(memDC, (int)g_hero.x - 12, (int)g_hero.y - 12, (int)g_hero.x + 12, (int)g_hero.y + 12);
+        SelectObject(memDC, oB);
+        SelectObject(memDC, oP);
+        DeleteObject(hBrush);
+        DeleteObject(hPen);
+        
+        SetTextColor(memDC, TEXT_WHITE);
+        HFONT hPFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+        HFONT oldPF = (HFONT)SelectObject(memDC, hPFont);
+        TextOutA(memDC, (int)g_hero.x - 5, (int)g_hero.y - 7, "P", 1);
+        SelectObject(memDC, oldPF);
+        DeleteObject(hPFont);
+
+        // HP bar
+        int barW = 24, barH = 4;
+        float hpRatio = g_hero.hp / g_hero.maxHp;
+        if (hpRatio < 0.0f) hpRatio = 0.0f;
+        DrawRoundedRect(memDC, (int)g_hero.x - barW/2, (int)g_hero.y - 20, (int)g_hero.x + barW/2, (int)g_hero.y - 20 + barH, RGB(20,20,20), RGB(0,0,0), 2);
+        HBRUSH hpBrush = CreateSolidBrush(RGB(34, 197, 94));
+        RECT hpR = { (int)g_hero.x - barW/2, (int)g_hero.y - 20, (int)g_hero.x - barW/2 + (int)(barW * hpRatio), (int)g_hero.y - 20 + barH };
+        FillRect(memDC, &hpR, hpBrush);
+        DeleteObject(hpBrush);
+    }
+
     // Game Over Overlay Banner
     if (g_gameOver) {
         DrawRoundedRect(memDC, bfX + 50, bfY + 180, bfX + bfW - 50, bfY + 300, RGB(20, 24, 33), RGB(239, 68, 68), 12);
@@ -798,18 +952,51 @@ void Render(HDC hdc, HWND hwnd) {
     DrawRoundedRect(memDC, sbX + 15, sbY + 245, sbX + sbW - 15, sbY + 285, RGB(225, 29, 72), BORDER_COLOR, 6);
     TextOutA(memDC, sbX + 35, sbY + 257, "RESET DEFENSE", 13);
 
-    // Info Box
-    DrawRoundedRect(memDC, sbX + 15, sbY + 295, sbX + sbW - 15, sbY + sbH - 15, BG_COLOR, BORDER_COLOR, 6);
+    // Hero Section
+    SetTextColor(memDC, TEXT_GOLD);
+    TextOutA(memDC, sbX + 15, sbY + 300, "HERO: PALADIN", 13);
+    
     HFONT hFontBody = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontBody);
+    
+    char hBuf[32];
+    if (g_hero.respawnTimer > 0) {
+        SetTextColor(memDC, TEXT_RED);
+        wsprintfA(hBuf, "HP: 0/100 | Respawn: %ds", (g_hero.respawnTimer/30) + 1);
+    } else {
+        SetTextColor(memDC, g_hero.shieldActive > 0 ? RGB(59, 130, 246) : RGB(34, 197, 94));
+        wsprintfA(hBuf, "HP: %d/100 | %s", (int)g_hero.hp, g_hero.shieldActive > 0 ? "SHIELDED" : "Active");
+    }
+    TextOutA(memDC, sbX + 15, sbY + 320, hBuf, lstrlenA(hBuf));
+
+    // Spell Buttons
+    int btnW = 50;
+    DrawRoundedRect(memDC, sbX + 15, sbY + 340, sbX + 15 + btnW, sbY + 370, g_hero.healCd > 0 ? RGB(100,80,20) : TEXT_GOLD, BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 70, sbY + 340, sbX + 70 + btnW, sbY + 370, g_hero.shieldCd > 0 ? RGB(30,60,100) : RGB(59, 130, 246), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 125, sbY + 340, sbX + 125 + btnW, sbY + 370, g_hero.meteorCd > 0 ? RGB(100,20,20) : TEXT_RED, BORDER_COLOR, 4);
+    
+    SetTextColor(memDC, RGB(0,0,0));
+    char sBuf[16];
+    if (g_hero.healCd > 0) wsprintfA(sBuf, "H(%d)", (g_hero.healCd/30)+1); else wsprintfA(sBuf, "Heal(1)");
+    TextOutA(memDC, sbX + 22, sbY + 350, sBuf, lstrlenA(sBuf));
+    
+    SetTextColor(memDC, TEXT_WHITE);
+    if (g_hero.shieldCd > 0) wsprintfA(sBuf, "S(%d)", (g_hero.shieldCd/30)+1); else wsprintfA(sBuf, "Shld(2)");
+    TextOutA(memDC, sbX + 76, sbY + 350, sBuf, lstrlenA(sBuf));
+    
+    if (g_hero.meteorCd > 0) wsprintfA(sBuf, "M(%d)", (g_hero.meteorCd/30)+1); else wsprintfA(sBuf, "Mtr(3)");
+    TextOutA(memDC, sbX + 130, sbY + 350, sBuf, lstrlenA(sBuf));
+
+    // Info Box
+    DrawRoundedRect(memDC, sbX + 15, sbY + 380, sbX + sbW - 15, sbY + sbH - 15, BG_COLOR, BORDER_COLOR, 6);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 25, sbY + 305, "Phase 7 Features:", 17);
+    TextOutA(memDC, sbX + 25, sbY + 390, "Phase 8 Features:", 17);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, sbX + 25, sbY + 328, "- Orc: Armor vs Arrows", 22);
-    TextOutA(memDC, sbX + 25, sbY + 344, "- Hound: Very fast", 18);
-    TextOutA(memDC, sbX + 25, sbY + 364, "- Gargoyle: Flying", 18);
-    TextOutA(memDC, sbX + 25, sbY + 384, "- Ogre: Boss health", 19);
+    TextOutA(memDC, sbX + 25, sbY + 410, "- Paladin Hero: Click to move", 29);
+    TextOutA(memDC, sbX + 25, sbY + 426, "- Holy Light (1): Heal", 22);
+    TextOutA(memDC, sbX + 25, sbY + 442, "- Shield Wall (2): Invincibility", 32);
+    TextOutA(memDC, sbX + 25, sbY + 458, "- Meteor (3): AoE damage", 24);
 
     DeleteObject(hFontHeader);
     DeleteObject(hFontBody);
@@ -834,6 +1021,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         UpdateGameLogic();
         InvalidateRect(hwnd, NULL, FALSE);
         break;
+
+    case WM_KEYDOWN: {
+        if (wParam == '1' && g_hero.healCd <= 0 && g_hero.respawnTimer <= 0) {
+            g_hero.healCd = g_hero.maxHealCd;
+            g_hero.hp += 50.0f; if(g_hero.hp > g_hero.maxHp) g_hero.hp = g_hero.maxHp;
+            g_baseHp += 5; if(g_baseHp > g_maxBaseHp) g_baseHp = g_maxBaseHp;
+            AddFloatingText(g_hero.x, g_hero.y - 20, "HEAL!", TEXT_GOLD);
+            Beep(800, 50);
+        } else if (wParam == '2' && g_hero.shieldCd <= 0 && g_hero.respawnTimer <= 0) {
+            g_hero.shieldCd = g_hero.maxShieldCd;
+            g_hero.shieldActive = 150;
+            AddFloatingText(g_hero.x, g_hero.y - 20, "SHIELD WALL!", RGB(59, 130, 246));
+            Beep(300, 60);
+        } else if (wParam == '3' && g_hero.meteorCd <= 0 && g_hero.respawnTimer <= 0) {
+            g_hero.meteorCd = g_hero.maxMeteorCd;
+            AddFloatingText(g_hero.x, g_hero.y - 40, "METEOR STRIKE!", TEXT_RED);
+            Beep(150, 100);
+            for (int e = 0; e < MAX_ENEMIES; e++) {
+                if (g_enemies[e].active) {
+                    float dx = g_enemies[e].x - g_hero.x;
+                    float dy = g_enemies[e].y - g_hero.y;
+                    if (custom_sqrtf(dx*dx + dy*dy) <= 150.0f) {
+                        g_enemies[e].hp -= 100;
+                        if (g_enemies[e].hp <= 0) {
+                            g_enemies[e].active = FALSE;
+                            int reward = 15;
+                            if (g_enemies[e].type == ENEMY_OGRE) reward = 100;
+                            else if (g_enemies[e].type == ENEMY_ORC) reward = 20;
+                            else if (g_enemies[e].type == ENEMY_HOUND) reward = 10;
+                            g_gold += reward;
+                            char rBuf[16]; wsprintfA(rBuf, "+%dg", reward);
+                            AddFloatingText(g_enemies[e].x, g_enemies[e].y - 10, rBuf, TEXT_GOLD);
+                        }
+                    }
+                }
+            }
+        }
+        break;
+    }
 
     case WM_LBUTTONDOWN: {
         int x = LOWORD(lParam);
@@ -881,8 +1107,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             InitGameState();
             Beep(300, 60);
         }
+        // Spells
+        else if (x >= sbX + 15 && x <= sbX + 65 && y >= sbY + 340 && y <= sbY + 370) {
+            SendMessage(hwnd, WM_KEYDOWN, '1', 0);
+        }
+        else if (x >= sbX + 70 && x <= sbX + 120 && y >= sbY + 340 && y <= sbY + 370) {
+            SendMessage(hwnd, WM_KEYDOWN, '2', 0);
+        }
+        else if (x >= sbX + 125 && x <= sbX + 175 && y >= sbY + 340 && y <= sbY + 370) {
+            SendMessage(hwnd, WM_KEYDOWN, '3', 0);
+        }
         // Check slot clicks
         else if (!g_gameOver) {
+            BOOL clickedSlot = FALSE;
             g_selectedSlot = -1;
             for (int i = 0; i < g_slotCount; i++) {
                 int dx = x - g_slots[i].x;
@@ -948,8 +1185,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             Beep(500, 30);
                         }
                     }
+                    clickedSlot = TRUE;
                     break;
                 }
+            }
+            if (!clickedSlot && g_hero.respawnTimer <= 0) {
+                // Move hero
+                g_hero.targetX = (float)x;
+                g_hero.targetY = (float)y;
+                Beep(400, 20);
             }
         }
         InvalidateRect(hwnd, NULL, FALSE);
