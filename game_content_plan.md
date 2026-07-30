@@ -139,7 +139,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KSolitaire | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check deal fairness, ensure Vegas mode scoring is balanced, verify undo/powerup economy. |
 | KFreecell  | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check that all dealt hands are solvable. Verify difficulty constraints make sense. |
 | KSudoku    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit puzzle generation quality. Ensure Easy puzzles have unique solutions and Hard is solvable. |
 | K2048      | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check tile spawn rates, verify move-limit stages are achievable, audit powerup balance. |
@@ -156,11 +155,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KGo        | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty across 9x9/13x13/19x19. Ensure handicap system works. Test Tsumego puzzle quality. |
 | KReversi   | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, check Minimax depth, ensure board sizes feel right. |
 | KConnect4  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty levels. Ensure Grandmaster is genuinely hard. Check blocker cell mechanics. |
+| KSolitaire | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check deal fairness, ensure Vegas mode scoring is balanced, verify undo/powerup economy. |
 
 
 ## Progress Log
 
 **Loop 8**
+- [x] KSolitaire (Balance audit complete: Fixed Vegas mode stock pass rules, adjusted economy score deductions for undo and powerups, added score floor for Classic mode in both EXE and HTML)
 - [x] KMaze (Expanded Campaign Mode to new maze themes, puzzle rooms, NPC encounters, and Time Freeze [T] active item to both EXE and HTML)
 - [x] KConnect4 (Balance audit complete: Increased Grandmaster AI minimax depth to 7, fixed top-down physical piece drop logic for blocker cells in both EXE and HTML)
 - [x] KReversi (Balance audit complete: Adjusted Minimax depths for 6x6/8x8/10x10 boards, added 50/50 tie-breaking logic in both EXE and HTML)
