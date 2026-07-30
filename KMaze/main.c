@@ -427,6 +427,55 @@ void InitTextures() {
     }
 }
 
+void UpdateTextures() {
+    for (int y = 0; y < 16; y++) {
+        for (int x = 0; x < 16; x++) {
+            DWORD col = 0;
+            // Exit Portal (t=2) - pulsing rings
+            float dist2 = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
+            float pulse = (float)sin((animFrameCount + dist2 * 10.0f) * 0.1f) * 1.5f;
+            if (dist2 < 3.0f + pulse) col = 0x00FFFFFF;
+            else if (dist2 < 5.5f + pulse) col = 0x0000FF66;
+            else if (dist2 < 7.5f + pulse) col = 0x00009933;
+            else col = 0x00003311;
+            textures[2][y * 16 + x] = col;
+
+            // Key Block (t=3) - bobbing animation
+            int bob = (int)(sin(animFrameCount * 0.1f) * 2.0f);
+            int by = y - bob;
+            int isKey = 0;
+            if (by >= 0 && by < 16) {
+                if ((x >= 6 && x <= 9 && by >= 2 && by <= 5) || (x == 7 && by >= 6 && by <= 12) || (x >= 8 && x <= 10 && by >= 10 && by <= 12)) isKey = 1;
+            }
+            textures[3][y * 16 + x] = isKey ? 0x00FFFF00 : 0x00B8860B;
+
+            // Teleporter Vortex (t=10, 11) - swirling
+            float dx = x - 7.5f;
+            float dy = y - 7.5f;
+            float dist = (float)sqrt(dx*dx + dy*dy);
+            float angle = (float)atan2(dy, dx) + animFrameCount * 0.1f;
+            if (dist < 6.0f && ((int)(dist * 2.0f + angle * 3.0f) % 2 == 0)) {
+                textures[10][y * 16 + x] = 0x00FF00FF;
+                textures[11][y * 16 + x] = 0x00FF00FF;
+            } else {
+                textures[10][y * 16 + x] = 0x00300044;
+                textures[11][y * 16 + x] = 0x00300044;
+            }
+            
+            // Boss / Minotaur eyes breathing
+            int m_breathe = (int)(sin(animFrameCount * 0.15f) * 1.5f);
+            if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) {
+                // Minotaur
+                if (m_breathe > 0) textures[12][y * 16 + x] = 0x00FF8800;
+                else textures[12][y * 16 + x] = 0x00FFFF00;
+                // Minotaur King Boss
+                if (m_breathe > 0) textures[15][y * 16 + x] = 0x00FF0000;
+                else textures[15][y * 16 + x] = 0x00880000;
+            }
+        }
+    }
+}
+
 int GetMapValue(int x, int y) {
     if (x < 0 || y < 0) return 1;
     if (currentLevel == 0) {
@@ -859,6 +908,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_TIMER: {
             animFrameCount++;
+            UpdateTextures();
             UpdateParticles();
             static int minotaurTimer = 0;
             static int activeKeyCooldown = 0;

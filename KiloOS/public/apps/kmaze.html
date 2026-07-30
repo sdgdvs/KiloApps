@@ -363,6 +363,56 @@
   }
   initTextures();
 
+  function updateTextures() {
+      for (let y = 0; y < 16; y++) {
+          for (let x = 0; x < 16; x++) {
+              // Exit Portal (t=2)
+              let dist2 = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
+              let pulse = Math.sin((frameCount + dist2 * 10.0) * 0.1) * 1.5;
+              let r2=0, g2=0, b2=0;
+              if (dist2 < 3.0 + pulse) { r2 = 255; g2 = 255; b2 = 255; }
+              else if (dist2 < 5.5 + pulse) { r2 = 0; g2 = 255; b2 = 100; }
+              else if (dist2 < 7.5 + pulse) { r2 = 0; g2 = 150; b2 = 50; }
+              else { r2 = 0; g2 = 50; b2 = 20; }
+              textures[2][y * 16 + x] = (255 << 24) | (b2 << 16) | (g2 << 8) | r2;
+
+              // Key Block (t=3)
+              let bob = Math.floor(Math.sin(frameCount * 0.1) * 2.0);
+              let by = y - bob;
+              let isKey = (by >= 0 && by < 16) && ((x >= 6 && x <= 9 && by >= 2 && by <= 5) || (x === 7 && by >= 6 && by <= 12) || (x >= 8 && x <= 10 && by >= 10 && by <= 12));
+              let r3 = isKey ? 255 : 184;
+              let g3 = isKey ? 255 : 134;
+              let b3 = isKey ? 0 : 11;
+              textures[3][y * 16 + x] = (255 << 24) | (b3 << 16) | (g3 << 8) | r3;
+
+              // Teleporter Vortex (t=10, 11)
+              let dx = x - 7.5, dy = y - 7.5;
+              let dist = Math.sqrt(dx*dx + dy*dy);
+              let angle = Math.atan2(dy, dx) + frameCount * 0.1;
+              let isVor = dist < 6.0 && (Math.floor(dist * 2.0 + angle * 3.0) % 2 === 0);
+              let r10 = isVor ? 255 : 48;
+              let g10 = 0;
+              let b10 = isVor ? 255 : 68;
+              textures[10][y * 16 + x] = (255 << 24) | (b10 << 16) | (g10 << 8) | r10;
+              textures[11][y * 16 + x] = textures[10][y * 16 + x];
+
+              // Boss / Minotaur eyes breathing
+              let m_breathe = Math.sin(frameCount * 0.15) * 1.5;
+              if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) {
+                  let r12 = m_breathe > 0 ? 255 : 255;
+                  let g12 = m_breathe > 0 ? 136 : 255;
+                  let b12 = 0;
+                  textures[12][y * 16 + x] = (255 << 24) | (b12 << 16) | (g12 << 8) | r12;
+                  
+                  let r15 = m_breathe > 0 ? 255 : 136;
+                  let g15 = 0;
+                  let b15 = 0;
+                  textures[15][y * 16 + x] = (255 << 24) | (b15 << 16) | (g15 << 8) | r15;
+              }
+          }
+      }
+  }
+
   function computePathfinderPath() {
       isPathTile = Array.from({length: map.length}, () => Array(map[0].length).fill(false));
       let targetX = -1, targetY = -1;
@@ -766,6 +816,7 @@
   function update() {
       if (gameState !== 1) return;
       frameCount++;
+      updateTextures();
       
       if (msgTimer > 0) msgTimer--;
       if (pathfinderTimer > 0) {
