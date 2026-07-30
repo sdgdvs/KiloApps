@@ -437,6 +437,9 @@ html = """<!DOCTYPE html>
         const newWRe = (maxRe - minRe) * factor;
         const newWIm = (maxIm - minIm) * factor;
         
+        if (newWRe < 1e-13 || newWRe > 10.0) return;
+
+        
         minRe = centerRe - (centerX / w) * newWRe;
         maxRe = minRe + newWRe;
         

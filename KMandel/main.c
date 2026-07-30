@@ -218,6 +218,9 @@ void Zoom(double factor, int mouseX, int mouseY) {
     double newWRe = (maxRe - minRe) * factor;
     double newWIm = (maxIm - minIm) * factor;
     
+    if (newWRe < 1e-13 || newWRe > 10.0) return;
+
+    
     minRe = centerRe - ((double)mouseX / bmpW) * newWRe;
     maxRe = minRe + newWRe;
     
@@ -227,9 +230,11 @@ void Zoom(double factor, int mouseX, int mouseY) {
     double zoomLevel = 3.0 / newWRe;
     unsigned int needed_iter = 100;
     double temp_z = zoomLevel;
-    while (temp_z > 5.0) {
+    int limit = 0;
+    while (temp_z > 5.0 && limit < 50) {
         needed_iter += 30;
         temp_z /= 2.0;
+        limit++;
     }
     if (needed_iter > max_iter && zoomLevel > 5.0) {
         max_iter = needed_iter;
