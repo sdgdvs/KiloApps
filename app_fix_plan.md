@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KMedia
+**Target App:** KMines
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -209,3 +209,5 @@ Pass 1 Complete.
 - **KMatch3**: Fixed logic bounds bug in `ProcessMatches` for both `kmatch3.html` and `main.c` where dropping gems failed to populate gaps left beneath un-destroyed stone tiles; added a `while(targetR > r)` loop to ensure the board fully populates without leaving empty cells. Fixed GDI resource leaks in `main.c` by ensuring the original device context brush (`oldB2`) is correctly restored after rendering the golden frame studs with `studB`.
 
 - **KMaze**: Fixed JavaScript performance bottleneck in `kmaze.html` pathfinding by optimizing `queue.shift()` calls to an `O(1)` index pointer. Fixed a Win32 GDI object leak in `main.c` by moving `CreateSolidBrush` instantiations outside the minimap drawing loop and properly cleaning them up.
+
+- **KMedia**: Enforced file parsing bounds in `kmedia.html` to prevent memory spikes when parsing overly large subtitle formats, and integrated missing `aria-label` tags into control inputs for accessibility. Resolved GDI object leaks in `main.c` within `ExportFrameToBMP` by ensuring correct `SelectObject` restorations and explicit cleanup functions, and replaced CRT file dependencies with native Win32 equivalents (`CreateFile`, `HeapAlloc`) to fix native binary bounds issues.
