@@ -31,6 +31,8 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Header & Navigation Bar */
@@ -423,7 +425,9 @@
         <button class="btn" id="btnClearHttp">Clear</button>
       </div>
     </div>
-    <div class="content-box" id="httpContentArea">Ready. Select a target URL above and click Execute.</div>
+    <div class="content-box" id="httpContentArea">Welcome to KNet 2.0 Web Interface.
+Ready. Select a target URL above and click Execute.
+(Press 'h' for help)</div>
   </div>
 
   <!-- TAB 2: Ping & Latency Statistics -->
@@ -604,6 +608,13 @@
     btnBack.disabled = navIdx <= 0;
     btnForward.disabled = navIdx >= navHistory.length - 1;
   }
+
+  // Add global keydown listener for help
+  window.addEventListener('keydown', (e) => {
+    if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      alert("KNet Help:\n\n- Select a target URL or type one.\n- Use tabs to switch between HTTP, Ping, Scan, and Logs.\n- View latency stats and export logs.");
+    }
+  });
 
   function addTrafficLog(type, target, status, statusCode, latencyMs, bytes, rawData = '') {
     const entry = {

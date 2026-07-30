@@ -9,8 +9,8 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winmm.lib")
 
-#define W 720
-#define H 540
+#define W 840
+#define H 640
 
 // Control Handles
 HWND hBtnBack;
@@ -354,8 +354,8 @@ void DisplayLogSummary() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            HFONT hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Consolas");
             
             // Top Nav Row
             hBtnBack = CreateWindowEx(0, "BUTTON", "<", WS_CHILD | WS_VISIBLE | WS_DISABLED, 10, 10, 30, 24, hwnd, (HMENU)2, NULL, NULL);
@@ -397,7 +397,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hLogSummaryBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             // Output Display Area
-            hContentEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "KNet 2.0 Diagnostic Suite initialized.\r\nEnter target URL/IP above and click Fetch, Ping Stats, or Port Scan.",
+            hContentEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "KNet 2.0 Diagnostic Suite initialized.\r\nEnter target URL/IP above and click Fetch, Ping Stats, or Port Scan.\r\n(Press 'h' for help)",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
                 10, 74, W - 35, H - 125, hwnd, NULL, NULL, NULL);
             SendMessage(hContentEdit, WM_SETFONT, (WPARAM)hFontMono, TRUE);
@@ -502,6 +502,9 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h') && GetFocus() != hUrlEdit) {
+            MessageBoxA(hwnd, "KNet Help:\n\n- Enter a URL or use Bookmarks.\n- Click Fetch for HTTP GET.\n- Use Ping Stats for latency test.\n- Use Port Scan to check open ports.\n- Logs can be exported to CSV.", "KNet Help", MB_OK | MB_ICONINFORMATION);
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
