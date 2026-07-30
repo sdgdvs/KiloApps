@@ -30,6 +30,14 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
 #define STATE_ACHIEVEMENTS   13
 #define STATE_HELP          14
 #define STATE_TAVERN        15
+#define STATE_UTILS         16
+#define STATE_REPLAYS       17
+#define STATE_CONFIG        18
+
+static int g_KeyBinds[6] = {'1', '2', '3', '4', '5', '6'};
+static char g_MatchReplays[50][128];
+static int g_MatchReplaysCount = 0;
+static int g_BindingAction = -1;
 
 static int g_HelpTab = 0; // 0: How to Play, 1: Controls, 2: Bestiary, 3: Crafting
 void RenderHelpTabLog();
@@ -805,6 +813,14 @@ void ClaimAllCompletedBounties() {
 
 void LogMessage(const char* msg) {
     if (!hLogEdit) return;
+    if (ContainsSubstr(msg, "attacks") || ContainsSubstr(msg, "casts") || ContainsSubstr(msg, "takes") || ContainsSubstr(msg, "heals") || ContainsSubstr(msg, "Damage")) {
+        if (g_MatchReplaysCount < 50) {
+            lstrcpyA(g_MatchReplays[g_MatchReplaysCount++], msg);
+        } else {
+            for(int i=0; i<49; i++) lstrcpyA(g_MatchReplays[i], g_MatchReplays[i+1]);
+            lstrcpyA(g_MatchReplays[49], msg);
+        }
+    }
     int len = GetWindowTextLength(hLogEdit);
     SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
     SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)msg);
@@ -1326,6 +1342,80 @@ void UpdateUI() {
     if (hInfoText) SetWindowTextA(hInfoText, infoBuf);
 }
 
+
+void ExportScoreJSON() {
+    HANDLE hFile = CreateFileA("kquest_score.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[512];
+        wsprintfA(buf, "{\r\n  \"name\": \"%s\",\r\n  \"level\": %d,\r\n  \"hp\": %d,\r\n  \"maxHp\": %d,\r\n  \"mp\": %d,\r\n  \"maxMp\": %d,\r\n  \"str\": %d,\r\n  \"def\": %d,\r\n  \"gold\": %d\r\n}",
+            player.name, player.level, player.hp, player.maxHp, player.mp, player.maxMp, player.str, player.def, player.gold);
+        DWORD written = 0;
+        WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
+        CloseHandle(hFile);
+        LogMessage("💾 High Score JSON Exported to kquest_score.json!");
+    }
+}
+
+char* my_strstr(char* str, const char* sub) {
+    if (!str || !sub) return 0;
+    int i, j;
+    for (i = 0; str[i] != '\0'; i++) {
+        for (j = 0; sub[j] != '\0' && str[i + j] == sub[j]; j++);
+        if (sub[j] == '\0') return &str[i];
+    }
+    return 0;
+}
+
+void ImportScoreJSON() {
+    HANDLE hFile = CreateFileA("kquest_score.json", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[1024];
+        DWORD bytesRead = 0;
+        ReadFile(hFile, buf, sizeof(buf)-1, &bytesRead, NULL);
+        buf[bytesRead] = 0;
+        CloseHandle(hFile);
+        
+        char* namePtr = my_strstr(buf, "\"name\": \"");
+        if (namePtr) {
+            namePtr += 9;
+            int i = 0;
+            while(namePtr[i] != '"' && namePtr[i] != '\0' && i < 31) {
+                player.name[i] = namePtr[i];
+                i++;
+            }
+            player.name[i] = '\0';
+        }
+        
+        #define READ_INT(key, field) do { \
+            char search[32]; \
+            wsprintfA(search, "\"%s\": ", key); \
+            char* ptr = my_strstr(buf, search); \
+            if (ptr) { \
+                ptr += lstrlenA(search); \
+                int val = 0; \
+                while(*ptr >= '0' && *ptr <= '9') { val = val * 10 + (*ptr - '0'); ptr++; } \
+                field = val; \
+            } \
+        } while(0)
+        
+        READ_INT("level", player.level);
+        READ_INT("hp", player.hp);
+        READ_INT("maxHp", player.maxHp);
+        READ_INT("mp", player.mp);
+        READ_INT("maxMp", player.maxMp);
+        READ_INT("str", player.str);
+        READ_INT("def", player.def);
+        READ_INT("gold", player.gold);
+        
+        LogMessage("📂 High Score JSON Imported Successfully!");
+        gameState = STATE_TOWN;
+        SetupButtons();
+        UpdateUI();
+    } else {
+        LogMessage("Could not open kquest_score.json.");
+    }
+}
+
 void SetupButtons() {
     ShowWindow(hBtn1, SW_SHOW);
     ShowWindow(hBtn2, SW_SHOW);
@@ -1352,7 +1442,7 @@ void SetupButtons() {
             SetWindowTextA(hBtn3, invBtn);
             SetWindowTextA(hBtn4, "📜 Board / Train");
             SetWindowTextA(hBtn5, "💾 Save / Load");
-            SetWindowTextA(hBtn6, "🏆 Achievements");
+            SetWindowTextA(hBtn6, "⚙️ System Utils");
             break;
         }
 
@@ -1938,6 +2028,19 @@ void UsePhoenixElixir() {
 }
 
 void HandleButton1() {
+    if (gameState == STATE_UTILS) {
+        gameState = STATE_ACHIEVEMENTS;
+        LogMessage("🏆 Opened Milestones & Achievements Tracker.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_CONFIG) {
+        g_BindingAction = 0;
+        LogMessage("Press any key (A-Z, 0-9) to bind Action 1...");
+        return;
+    }
+
     if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
     if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
@@ -2178,6 +2281,16 @@ void HandleButton1() {
 }
 
 void HandleButton2() {
+    if (gameState == STATE_UTILS) {
+        ExportScoreJSON();
+        return;
+    }
+    if (gameState == STATE_CONFIG) {
+        g_BindingAction = 1;
+        LogMessage("Press any key to bind Action 2...");
+        return;
+    }
+
     if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
     if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
@@ -2407,6 +2520,16 @@ void HandleButton2() {
 }
 
 void HandleButton3() {
+    if (gameState == STATE_UTILS) {
+        ImportScoreJSON();
+        return;
+    }
+    if (gameState == STATE_CONFIG) {
+        g_BindingAction = 2;
+        LogMessage("Press any key to bind Action 3...");
+        return;
+    }
+
     if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
     if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
@@ -2542,6 +2665,19 @@ void HandleButton3() {
 }
 
 void HandleButton4() {
+    if (gameState == STATE_UTILS) {
+        gameState = STATE_REPLAYS;
+        LogMessage("🎥 Match Replay Viewer Opened.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_CONFIG) {
+        g_BindingAction = 3;
+        LogMessage("Press any key to bind Action 4...");
+        return;
+    }
+
     if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
     if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
@@ -2705,6 +2841,19 @@ void HandleButton4() {
 }
 
 void HandleButton5() {
+    if (gameState == STATE_UTILS) {
+        gameState = STATE_CONFIG;
+        LogMessage("⌨️ Keybinds Configuration Opened.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_CONFIG) {
+        g_BindingAction = 4;
+        LogMessage("Press any key to bind Action 5...");
+        return;
+    }
+
     if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
     if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
@@ -2837,6 +2986,21 @@ void HandleButton5() {
 }
 
 void HandleButton6() {
+    if (gameState == STATE_TOWN) {
+        gameState = STATE_UTILS;
+        LogMessage("⚙️ Opened System Utilities.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_UTILS || gameState == STATE_REPLAYS || gameState == STATE_CONFIG) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town Square.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+
     if (gameState == STATE_SAVE_LOAD || gameState == STATE_ACHIEVEMENTS || gameState == STATE_HELP) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town Square.");
@@ -2858,13 +3022,7 @@ void HandleButton6() {
         UpdateUI();
         return;
     }
-    if (gameState == STATE_TOWN) {
-        gameState = STATE_ACHIEVEMENTS;
-        LogMessage("🏆 Opened Milestones & Achievements Tracker.");
-        SetupButtons();
-        UpdateUI();
-        return;
-    }
+
     if (gameState == STATE_QUEST_BOARD) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town Square.");
@@ -3433,9 +3591,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_KEYDOWN: {
+            if (g_BindingAction != -1) {
+                if (wParam >= 0x30 && wParam <= 0x5A) {
+                    g_KeyBinds[g_BindingAction] = (int)wParam;
+                    char msg[64];
+                    wsprintfA(msg, "Action %d bound to '%c'!", g_BindingAction + 1, (char)wParam);
+                    LogMessage(msg);
+                } else {
+                    LogMessage("Invalid key for bind! Try a letter or number.");
+                }
+                g_BindingAction = -1;
+                SetupButtons();
+                return 0;
+            }
+
+            if (wParam == VK_F5) {
+                SaveToSlot(0);
+                return 0;
+            } else if (wParam == VK_F9) {
+                LoadFromSlot(0);
+                return 0;
+            }
+
             if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
-                if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
-    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
+                if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return 0; }
+    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return 0; }
     if (gameState == STATE_HELP) {
                     gameState = STATE_TOWN;
                     LogMessage("Closed Help Overlay. Returned to Town.");
@@ -3446,16 +3626,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 SetupButtons();
                 UpdateUI();
-            } else if (wParam >= '1' && wParam <= '6') {
-                int btnIndex = (int)(wParam - '1');
-                switch (btnIndex) {
-                    case 0: HandleButton1(); break;
-                    case 1: HandleButton2(); break;
-                    case 2: HandleButton3(); break;
-                    case 3: HandleButton4(); break;
-                    case 4: HandleButton5(); break;
-                    case 5: HandleButton6(); break;
-                }
+            } else if (wParam == g_KeyBinds[0]) { SendMessage(hwnd, WM_COMMAND, 201, 0);
+            } else if (wParam == g_KeyBinds[1]) { SendMessage(hwnd, WM_COMMAND, 202, 0);
+            } else if (wParam == g_KeyBinds[2]) { SendMessage(hwnd, WM_COMMAND, 203, 0);
+            } else if (wParam == g_KeyBinds[3]) { SendMessage(hwnd, WM_COMMAND, 204, 0);
+            } else if (wParam == g_KeyBinds[4]) { SendMessage(hwnd, WM_COMMAND, 205, 0);
+            } else if (wParam == g_KeyBinds[5]) { SendMessage(hwnd, WM_COMMAND, 206, 0);
             } else if (wParam == 'S' || wParam == 's') {
                 if (gameState == STATE_COMBAT) {
                     CastHolyShield();

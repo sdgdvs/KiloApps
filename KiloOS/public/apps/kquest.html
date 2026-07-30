@@ -1334,7 +1334,20 @@
     }
 
     // Game State Engine
+    
+    // --- UTILITY FEATURES ---
+    let KEY_BINDS = ['1', '2', '3', '4', '5', '6'];
+    let g_MatchReplays = [];
+    let g_BindingAction = -1; // -1 means not binding
+
+    function addReplayLog(msg) {
+        g_MatchReplays.push({time: new Date().toLocaleTimeString(), text: msg});
+        if (g_MatchReplays.length > 50) g_MatchReplays.shift();
+    }
+
     const STATE = {
+      REPLAYS: 16,
+      CONFIG: 17,
       CHAR_CREATE: 'CHAR_CREATE',
       TOWN: 'TOWN',
       SHOP: 'SHOP',
@@ -1707,6 +1720,7 @@
 
     // Helper: Logging
     function logMsg(msg, category = 'system') {
+      if (category === 'combat' || category === 'spell' || category === 'warning') addReplayLog(msg);
       const logPanel = document.getElementById('log-panel');
       const div = document.createElement('div');
       div.className = `log-entry ${category}`;
@@ -4209,6 +4223,28 @@
     // Global Hotkey Listener for Quick Help & Action Keys
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (g_BindingAction !== -1) {
+        e.preventDefault();
+        KEY_BINDS[g_BindingAction] = e.key.toUpperCase();
+        g_BindingAction = -1;
+        setGameState(STATE.CONFIG);
+        return;
+      }
+
+      if (e.key === 'F5') {
+        e.preventDefault();
+        saveToSlot(0);
+        logMsg('⚡ Quick Saved game to Slot 1 (F5)!', 'system');
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        loadFromSlot(0);
+        logMsg('⚡ Quick Loaded game from Slot 1 (F9)!', 'system');
+        return;
+      }
+
       if (e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === '?') {
         e.preventDefault();
         toggleHelpModal();
@@ -4224,10 +4260,51 @@
       } else if (e.key === 'i' || e.key === 'I') {
         setGameState(STATE.INVENTORY);
       }
+
+      // Check key binds
+      for (let i = 0; i < 6; i++) {
+        if (e.key.toUpperCase() === KEY_BINDS[i].toUpperCase()) {
+          const panel = document.getElementById('controls-panel');
+          if (panel.children[i] && !panel.children[i].disabled) {
+            panel.children[i].click();
+          }
+          break;
+        }
+      }
     });
 
     // Start in Character Creation Mode
     setGameState(STATE.CHAR_CREATE);
+
+    function exportScoreJSON() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(player, null, 2));
+        const a = document.createElement('a');
+        a.href = dataStr;
+        a.download = "kquest_score.json";
+        a.click();
+        logMsg('💾 High Score JSON Exported!', 'system');
+    }
+    function importScoreJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (imported && imported.name) {
+                    player = imported;
+                    logMsg('📂 High Score JSON Imported Successfully!', 'system');
+                    setGameState(STATE.TOWN);
+                } else {
+                    logMsg('❌ Invalid JSON format.', 'warning');
+                }
+            } catch (err) {
+                logMsg('❌ Error parsing JSON.', 'warning');
+            }
+        };
+        reader.readAsText(file);
+    }
+
   </script>
 
   <!-- Phase 14: Comprehensive Help & Codex Overlay -->
@@ -4511,5 +4588,6 @@
       </div>
     </div>
   </div>
+  <input type="file" id="json-import-file" style="display:none;" accept=".json" onchange="importScoreJSON(event)">
 </body>
 </html>
