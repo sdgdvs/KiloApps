@@ -125,7 +125,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KSnake     | Tier 1 | Loop 7 done (20 stages, Hydra boss, rival AI) | Loop 8: New environments, food variety, rival AI behaviors |
 | KRogue     | Tier 1 | Loop 8 done (40 levels, new enemies, crafting, NPCs) | Loop 9: Advanced trap mechanics, boss rematches, cursed items |
 | KQuest     | Tier 1 | Loop 7 done (Tavern, side quests, gear upgrades, 17 biomes) | Loop 8: Job classes, magic system overhaul, companion allies |
 | KStarship  | Tier 1 | Loop 7 done (Crew, trade routes, narrative events, tech tree) | Loop 8: Fleet battles, alien diplomacy, deep space anomalies |
@@ -135,6 +134,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KMaze      | Tier 1 | Loop 8 done (Themes, puzzles, NPCs, Time Freeze) | Loop 9: Advanced trap mechanics, boss rematches, cursed items |
 | KPac       | Tier 1 | Loop 8 done (Hazards, teleport ghost, score multiplier) | Loop 9: Multi-phase bosses, escort missions, branching paths |
 | KBreakout  | Tier 1 | Loop 8 done (30 stages, phantom bricks, custom levels) | Loop 9: Advanced level editor, more hazards, boss rematches |
+| KSnake     | Tier 1 | Loop 8 done (Ghost Berry, Hunter AI, Omega Boss) | Loop 9: Advanced level editor, more hazards, boss rematches |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -161,6 +161,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 8**
+- [x] KSnake (Expanded Campaign Mode to 25 stages ending with Omega Boss Lair, added Ghost Berry food, Hunter AI rivals that chase the player, and fixed C linking bug by replacing math.h trig functions in both EXE and HTML)
 - [x] KSudoku (Balance audit complete: Implemented backtracking solver to guarantee unique solutions for Easy/Medium puzzles, ensured Hard puzzles remain solvable in both EXE and HTML)
 - [x] KBreakout (Expanded Campaign Mode to 30 stages featuring string-based custom level loader, Phantom Glass bricks, Armored bricks, and Stage 30 Final Core Boss variant in both EXE and HTML)
 - [x] KFreecell (Balance audit complete: Implemented inline DFS solver to guarantee dealt hands are solvable, rebalanced campaign constraints for better difficulty curve in both EXE and HTML)
