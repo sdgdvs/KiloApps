@@ -130,6 +130,9 @@
   let highScore = 0;
   let totalKills = 0;
   let enemiesKilled = 0;
+  let comboMultiplier = 1;
+  let comboTimer = 0;
+  let weaponLevel = 0;
   let wave = 1;
   let frameCount = 0;
   let bombFlash = 0;
@@ -454,7 +457,9 @@
       let e = enemies[i];
       e.hp -= 100;
       if (e.hp <= 0) {
-        score += 30;
+        comboTimer = 180;
+        if (comboMultiplier < 10) comboMultiplier++;
+        score += 30 * comboMultiplier;
         enemiesKilled++;
         totalKills++;
         addExplosion(e.x + 10, e.y + 10, 16, '#00e5ff');
@@ -632,7 +637,9 @@
       hp: 3, maxHp: 3,
       shield: false, bombs: 1, maxBombs: 3, weaponType: 0
     };
+    weaponLevel = 0;
     score = 0; wave = 1; enemiesKilled = 0;
+    comboMultiplier = 1; comboTimer = 0;
     spreadTimer = 0; laserTimer = 0; rapidTimer = 0;
     timeStopTimer = 0; timeStopCooldown = 0;
     dashCooldown = 0; invincibleTimer = 0;
@@ -670,10 +677,17 @@
     if (boss) return;
     let startX = 40;
     for (let k = 0; k < 5; k++) {
-      let x = Math.min(W - 30, startX + k * 48);
-      let y = -20 - (k % 3) * 20;
-      let hp = type === 7 ? 8 : (type === 8 ? 18 : 5);
-      enemies.push({ x: x, y: y, type: type, hp: hp, maxHp: hp, dx: (k % 2 === 0 ? 1.5 : -1.5), dy: 2.0, timer: 0, cloaked: false });
+      let x, y, dx, hp = type === 7 ? 8 : (type === 8 ? 18 : (type === 9 ? 6 : 5));
+      if (type === 9) {
+        x = W / 2 - 10 + (k - 2) * 35;
+        y = -20 - Math.abs(k - 2) * 25;
+        dx = 0;
+      } else {
+        x = Math.min(W - 30, startX + k * 48);
+        y = -20 - (k % 3) * 20;
+        dx = k % 2 === 0 ? 1.5 : -1.5;
+      }
+      enemies.push({ x: x, y: y, type: type === 9 ? 2 : type, hp: hp, maxHp: hp, dx: dx, dy: 2.0, timer: 0, cloaked: false });
     }
   }
 
@@ -708,15 +722,18 @@
   }
 
   function destroyBoss() {
-    score += boss.isMothership ? 10000 : (1200 * boss.level);
+    comboTimer = 180;
+    if (comboMultiplier < 10) comboMultiplier++;
+    let baseScore = boss.isMothership ? 10000 : (1200 * boss.level);
+    score += baseScore * comboMultiplier;
     enemiesKilled += 10;
     totalKills += 10;
     addExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, 60, '#ff1744');
     playSound(1);
 
     // Drop Powerups
-    powerups.push({ x: boss.x + 15, y: boss.y + 20, dy: 1.5, type: Math.floor(Math.random() * 8) });
-    powerups.push({ x: boss.x + 45, y: boss.y + 20, dy: 1.5, type: Math.floor(Math.random() * 8) });
+    powerups.push({ x: boss.x + 15, y: boss.y + 20, dy: 1.5, type: Math.floor(Math.random() * 9) });
+    powerups.push({ x: boss.x + 45, y: boss.y + 20, dy: 1.5, type: Math.floor(Math.random() * 9) });
 
     if (boss.isMothership || wave >= 20) {
       boss = null;
@@ -742,16 +759,29 @@
     if (laserTimer > 0) return;
 
     if (spreadTimer > 0 || p.weaponType === 1) {
-      bullets.push({ x: p.x + 8, y: p.y, dx: -2.5, dy: -8, type: 0 });
-      bullets.push({ x: p.x + 8, y: p.y, dx: 0, dy: -9, type: 0 });
-      bullets.push({ x: p.x + 8, y: p.y, dx: 2.5, dy: -8, type: 0 });
+      let maxB = 3 + weaponLevel * 2;
+      let dxs = [0, -2.5, 2.5, -1.25, 1.25, -3.75, 3.75];
+      let dys = [-9, -8, -8, -8.5, -8.5, -7, -7];
+      for (let i = 0; i < maxB; i++) {
+        bullets.push({ x: p.x + 8, y: p.y, dx: dxs[i], dy: dys[i], type: 0 });
+      }
       addMuzzleFlash(p.x + 10, p.y - 2, '#00e5ff', 8);
     } else if (p.weaponType === 3) {
-      bullets.push({ x: p.x + 6, y: p.y, dx: 0, dy: -5, type: 1 });
+      let maxB = 1 + weaponLevel;
+      let dxs = [0, -2, 2];
+      for (let i = 0; i < maxB; i++) {
+        bullets.push({ x: p.x + 6, y: p.y, dx: dxs[i], dy: -5, type: 1 });
+      }
       addMuzzleFlash(p.x + 10, p.y - 2, '#d500f9', 10);
     } else {
-      bullets.push({ x: p.x + 3, y: p.y, dx: 0, dy: -8, type: 0 });
-      bullets.push({ x: p.x + 13, y: p.y, dx: 0, dy: -8, type: 0 });
+      let maxB = 2 + weaponLevel;
+      let offsets = [3, 13, 8, 8];
+      let dys = [-8, -8, -9, -7];
+      let dxs = [0, 0, 0, 0];
+      if (weaponLevel === 2) { dxs[2] = -1.5; dxs[3] = 1.5; }
+      for (let i = 0; i < maxB; i++) {
+        bullets.push({ x: p.x + offsets[i], y: p.y, dx: dxs[i], dy: dys[i], type: 0 });
+      }
       addMuzzleFlash(p.x + 4, p.y, '#00e5ff', 5);
       addMuzzleFlash(p.x + 14, p.y, '#00e5ff', 5);
     }
@@ -767,6 +797,10 @@
     updateSkillButtonsUI();
 
     if (bombFlash > 0) bombFlash--;
+    if (comboTimer > 0) {
+      comboTimer--;
+      if (comboTimer === 0) comboMultiplier = 1;
+    }
 
     // 20-Wave Campaign Progression
     if (modeIndex === 0) {
@@ -778,7 +812,7 @@
         else if (wave === 10 && !boss) spawnBoss(2);
         else if (wave === 15 && !boss) spawnBoss(3);
         else if (wave === 20 && !boss) spawnBoss(4); // Stage 20 Alien Mothership Boss
-        else if (wave % 4 === 0) spawnFormation(Math.random() < 0.5 ? 7 : 8);
+        else if (wave % 4 === 0) spawnFormation(Math.random() < 0.33 ? 9 : (Math.random() < 0.5 ? 7 : 8));
       }
     } else if (modeIndex === 1) {
       wave = 1 + Math.floor(score / 600);
@@ -1065,7 +1099,10 @@
   }
 
   function handleEnemyDefeat(e, index) {
-    score += (e.type === 6 ? 300 : (e.type === 9 ? 200 : (e.type === 8 ? 150 : (e.type === 7 ? 120 : 30))));
+    comboTimer = 180;
+    if (comboMultiplier < 10) comboMultiplier++;
+    let baseScore = (e.type === 6 ? 300 : (e.type === 9 ? 200 : (e.type === 8 ? 150 : (e.type === 7 ? 120 : 30))));
+    score += baseScore * comboMultiplier;
     enemiesKilled++;
     totalKills++;
     playSound(1);
@@ -1079,7 +1116,7 @@
 
     // Powerup Drop Chance (22%)
     if (Math.random() < 0.22) {
-      powerups.push({ x: e.x, y: e.y, dy: 1.8, type: Math.floor(Math.random() * 8) });
+      powerups.push({ x: e.x, y: e.y, dy: 1.8, type: Math.floor(Math.random() * 9) });
     }
 
     enemies.splice(index, 1);
@@ -1094,6 +1131,7 @@
     else if (type === 5) { useTimeStop(); }
     else if (type === 6) { useHyperShield(); addShieldRipple(p.x + 10, p.y + 10, '#ffea00'); }
     else if (type === 7) { dashCooldown = 0; useTacticalDash(); }
+    else if (type === 8) { if (weaponLevel < 2) weaponLevel++; }
   }
 
   function playerHit() {
@@ -1106,6 +1144,7 @@
       playSound(1);
     } else {
       p.hp--;
+      weaponLevel = 0;
       addExplosion(p.x + 10, p.y + 10, 30, '#ff1744');
       playSound(1);
       if (p.hp <= 0) {
@@ -1307,8 +1346,8 @@
     let pulse = 1 + Math.sin(frame * 0.15) * 0.15;
     ctx.scale(pulse, pulse);
 
-    const colors = ['#00e676', '#00e5ff', '#3d5aff', '#ff1744', '#ffea00', '#d500f9', '#ffd700', '#00b0ff'];
-    const labels = ['S', 'L', 'H', 'B', 'R', 'T', 'Y', 'D'];
+    const colors = ['#00e676', '#00e5ff', '#3d5aff', '#ff1744', '#ffea00', '#d500f9', '#ffd700', '#00b0ff', '#ff64c8'];
+    const labels = ['S', 'L', 'H', 'B', 'R', 'T', 'Y', 'D', 'W'];
 
     ctx.fillStyle = colors[pu.type] || '#fff';
     ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();

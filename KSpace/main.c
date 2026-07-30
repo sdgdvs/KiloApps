@@ -100,6 +100,9 @@ int score = 0;
 int highScore = 0;
 int totalKills = 0;
 int enemiesKilled = 0;
+int comboMultiplier = 1;
+int comboTimer = 0;
+int weaponLevel = 0;
 int wave = 1;
 int frameCount = 0;
 int bombFlash = 0;
@@ -438,7 +441,10 @@ void SpawnBoss(int lvl) {
 }
 
 void DestroyBoss() {
-    score += (bossIsMothership ? 10000 : (1200 * bossLevel));
+    comboTimer = 180;
+    if (comboMultiplier < 10) comboMultiplier++;
+    int baseScore = (bossIsMothership ? 10000 : (1200 * bossLevel));
+    score += baseScore * comboMultiplier;
     enemiesKilled += 10;
     totalKills += 10;
     AddExplosion(bossX + 45.0f, bossY + 30.0f, 60, RGB(255, 23, 68));
@@ -452,7 +458,7 @@ void DestroyBoss() {
             pu[k].x = bossX + 15.0f + (k % 3) * 25.0f;
             pu[k].y = bossY + 20.0f;
             pu[k].dy = 1.5f;
-            pu[k].type = (float)(rnd() % 8);
+            pu[k].type = (float)(rnd() % 9);
             if (k >= 2) break;
         }
     }
@@ -515,13 +521,21 @@ void SpawnFormation(int type) {
         for (int i = 0; i < MAX_ENEMIES; i++) {
             if (!e[i].active) {
                 e[i].active = 1.0f;
-                e[i].x = startX + k * 48.0f;
-                if (e[i].x > W - 30) e[i].x = W - 30;
-                e[i].y = -20.0f - (k % 3) * 20.0f;
-                e[i].type = (float)type;
-                e[i].hp = (type == 7) ? 8 : ((type == 8) ? 18 : 5);
+                if (type == 9) {
+                    e[i].x = W / 2.0f - 10.0f + (k - 2) * 35.0f;
+                    float kDiff = (k - 2 < 0) ? -(k - 2) : (k - 2);
+                    e[i].y = -20.0f - kDiff * 25.0f;
+                    e[i].type = 2.0f; // Shooter Saucer
+                    e[i].dx = 0.0f;
+                } else {
+                    e[i].x = startX + k * 48.0f;
+                    if (e[i].x > W - 30) e[i].x = W - 30;
+                    e[i].y = -20.0f - (k % 3) * 20.0f;
+                    e[i].type = (float)type;
+                    e[i].dx = (k % 2 == 0) ? 1.5f : -1.5f;
+                }
+                e[i].hp = (type == 7) ? 8 : ((type == 8) ? 18 : ((type == 9) ? 6 : 5));
                 e[i].maxHp = e[i].hp;
-                e[i].dx = (k % 2 == 0) ? 1.5f : -1.5f;
                 e[i].dy = 2.0f;
                 e[i].timer = 0;
                 e[i].cloaked = 0;
@@ -567,7 +581,9 @@ void UseSmartBomb() {
             e[i].hp -= 100;
             if (e[i].hp <= 0) {
                 e[i].active = 0.0f;
-                score += 30;
+                comboTimer = 180;
+                if (comboMultiplier < 10) comboMultiplier++;
+                score += 30 * comboMultiplier;
                 enemiesKilled++;
                 totalKills++;
                 AddExplosion(e[i].x + 10.0f, e[i].y + 10.0f, 16, RGB(0, 229, 255));
@@ -610,8 +626,9 @@ void Shoot() {
     if (laserTimer > 0) return;
 
     if (spreadTimer > 0 || weaponType == 1) {
-        float dxs[] = {-2.5f, 0.0f, 2.5f};
-        float dys[] = {-8.0f, -9.0f, -8.0f};
+        int maxB = 3 + weaponLevel * 2;
+        float dxs[7] = {0, -2.5f, 2.5f, -1.25f, 1.25f, -3.75f, 3.75f};
+        float dys[7] = {-9.0f, -8.0f, -8.0f, -8.5f, -8.5f, -7.0f, -7.0f};
         int spawned = 0;
         for (int i = 0; i < MAX_BULLETS; i++) {
             if (!b[i].active) {
@@ -622,36 +639,44 @@ void Shoot() {
                 b[i].dy = dys[spawned];
                 b[i].type = 0;
                 spawned++;
-                if (spawned >= 3) break;
+                if (spawned >= maxB) break;
             }
         }
         AddMuzzleFlash(p.x + 10.0f, p.y - 2.0f, RGB(0, 229, 255), 8.0f);
     } else if (weaponType == 3) { // Plasma Orb
+        int maxB = 1 + weaponLevel;
+        float dxs[3] = {0.0f, -2.0f, 2.0f};
+        int spawned = 0;
         for (int i = 0; i < MAX_BULLETS; i++) {
             if (!b[i].active) {
                 b[i].active = 1.0f;
                 b[i].x = p.x + 6.0f;
                 b[i].y = p.y;
-                b[i].dx = 0.0f;
+                b[i].dx = dxs[spawned];
                 b[i].dy = -5.0f;
                 b[i].type = 1;
-                break;
+                spawned++;
+                if (spawned >= maxB) break;
             }
         }
         AddMuzzleFlash(p.x + 10.0f, p.y - 2.0f, RGB(213, 0, 249), 10.0f);
     } else { // Standard Twin Blaster
+        int maxB = 2 + weaponLevel;
+        float offsets[4] = {3.0f, 13.0f, 8.0f, 8.0f};
+        float dys[4] = {-8.0f, -8.0f, -9.0f, -7.0f};
+        float dxs[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+        if (weaponLevel == 2) { dxs[2] = -1.5f; dxs[3] = 1.5f; } // at lvl 2, middle ones angle
         int spawned = 0;
-        float offsets[] = {3.0f, 13.0f};
         for (int i = 0; i < MAX_BULLETS; i++) {
             if (!b[i].active) {
                 b[i].active = 1.0f;
                 b[i].x = p.x + offsets[spawned];
                 b[i].y = p.y;
-                b[i].dx = 0.0f;
-                b[i].dy = -8.0f;
+                b[i].dx = dxs[spawned];
+                b[i].dy = dys[spawned];
                 b[i].type = 0;
                 spawned++;
-                if (spawned >= 2) break;
+                if (spawned >= maxB) break;
             }
         }
         AddMuzzleFlash(p.x + 4.0f, p.y, RGB(0, 229, 255), 5.0f);
@@ -670,7 +695,10 @@ void StartNewGame(int modeIdx) {
     hyperShieldCooldown = 0;
     bombCount = 1;
     weaponType = 0;
+    weaponLevel = 0;
     score = 0;
+    comboMultiplier = 1;
+    comboTimer = 0;
     wave = 1;
     enemiesKilled = 0;
     spreadTimer = 0;
@@ -708,6 +736,7 @@ void PlayerHit() {
         PlaySnd(1);
     } else {
         p.hp--;
+        weaponLevel = 0;
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 30, RGB(255, 23, 68));
         PlaySnd(1);
         if (p.hp <= 0) {
@@ -727,12 +756,17 @@ void ApplyPowerup(int type) {
     else if (type == 5) { UseTimeStop(); }
     else if (type == 6) { UseHyperShield(); AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(255, 234, 0)); }
     else if (type == 7) { dashCooldown = 0; UseTacticalDash(); }
+    else if (type == 8) { if (weaponLevel < 2) weaponLevel++; }
 }
 
 void Update() {
     if (gameState != STATE_PLAYING) return;
 
     if (bombFlash > 0) bombFlash--;
+    if (comboTimer > 0) {
+        comboTimer--;
+        if (comboTimer == 0) comboMultiplier = 1;
+    }
 
     // Mode Progression (20 Waves)
     if (modeIndex == MODE_CLASSIC) {
@@ -745,7 +779,7 @@ void Update() {
             else if (wave == 10 && !bossActive) SpawnBoss(2);
             else if (wave == 15 && !bossActive) SpawnBoss(3);
             else if (wave == 20 && !bossActive) SpawnBoss(4); // Stage 20 Alien Mothership Boss
-            else if (wave % 4 == 0) SpawnFormation(rnd() % 2 == 0 ? 7 : 8);
+            else if (wave % 4 == 0) SpawnFormation(rnd() % 3 == 0 ? 9 : (rnd() % 2 == 0 ? 7 : 8));
         }
     } else if (modeIndex == MODE_ENDURANCE) {
         wave = 1 + (score / 600);
@@ -988,7 +1022,10 @@ void Update() {
 
             if (e[i].hp <= 0) {
                 e[i].active = 0.0f;
-                score += (e[i].type == 6.0f ? 300 : (e[i].type == 9.0f ? 200 : (e[i].type == 8.0f ? 150 : (e[i].type == 7.0f ? 120 : 30))));
+                comboTimer = 180;
+                if (comboMultiplier < 10) comboMultiplier++;
+                int baseScore = (e[i].type == 6.0f ? 300 : (e[i].type == 9.0f ? 200 : (e[i].type == 8.0f ? 150 : (e[i].type == 7.0f ? 120 : 30))));
+                score += baseScore * comboMultiplier;
                 enemiesKilled++;
                 totalKills++;
                 PlaySnd(1);
@@ -1000,7 +1037,7 @@ void Update() {
                     for (int k = 0; k < MAX_POWERUPS; k++) {
                         if (!pu[k].active) {
                             pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 1.8f;
-                            pu[k].type = (float)(rnd() % 8);
+                            pu[k].type = (float)(rnd() % 9);
                             break;
                         }
                     }
@@ -1250,8 +1287,8 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
 
 void DrawPowerupGDI(HDC hdc, float fx, float fy, float ftype) {
     int x = (int)fx, y = (int)fy, type = (int)ftype;
-    COLORREF cols[8] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(61, 90, 255), RGB(255, 23, 68), RGB(255, 234, 0), RGB(213, 0, 249), RGB(255, 215, 0), RGB(0, 176, 255) };
-    COLORREF c = (type >= 0 && type < 8) ? cols[type] : RGB(255, 255, 255);
+    COLORREF cols[9] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(61, 90, 255), RGB(255, 23, 68), RGB(255, 234, 0), RGB(213, 0, 249), RGB(255, 215, 0), RGB(0, 176, 255), RGB(255, 100, 200) };
+    COLORREF c = (type >= 0 && type < 9) ? cols[type] : RGB(255, 255, 255);
     HBRUSH br = CreateSolidBrush(c);
     HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
