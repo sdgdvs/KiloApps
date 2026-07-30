@@ -1,7 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <math.h>
 #include <commdlg.h>
+#include <process.h>
 
 #define W 400
 #define H 400
@@ -15,9 +15,12 @@ int bmpW = 0, bmpH = 0;
 double minRe = -2.0, maxRe = 1.0;
 double minIm = -1.2, maxIm = 1.2;
 unsigned int max_iter = 100;
-int theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW
+int theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW, 4: Custom
 int isJulia = 0;
 double juliaCRe = 0.0, juliaCIm = 0.0;
+
+unsigned char customColor1[3] = {255, 0, 0};
+unsigned char customColor2[3] = {0, 0, 255};
 
 #define MAX_HISTORY 256
 typedef struct {
@@ -26,6 +29,7 @@ typedef struct {
     int isJulia;
     double juliaCRe, juliaCIm;
     int theme;
+    unsigned char cc1[3], cc2[3];
 } ViewState;
 
 ViewState history[MAX_HISTORY];
@@ -49,6 +53,12 @@ void SaveState() {
     history[history_idx].juliaCRe = juliaCRe;
     history[history_idx].juliaCIm = juliaCIm;
     history[history_idx].theme = theme;
+    history[history_idx].cc1[0] = customColor1[0];
+    history[history_idx].cc1[1] = customColor1[1];
+    history[history_idx].cc1[2] = customColor1[2];
+    history[history_idx].cc2[0] = customColor2[0];
+    history[history_idx].cc2[1] = customColor2[1];
+    history[history_idx].cc2[2] = customColor2[2];
     history_max = history_idx;
 }
 
@@ -63,6 +73,12 @@ void LoadState(int idx) {
         juliaCRe = history[idx].juliaCRe;
         juliaCIm = history[idx].juliaCIm;
         theme = history[idx].theme;
+        customColor1[0] = history[idx].cc1[0];
+        customColor1[1] = history[idx].cc1[1];
+        customColor1[2] = history[idx].cc1[2];
+        customColor2[0] = history[idx].cc2[0];
+        customColor2[1] = history[idx].cc2[1];
+        customColor2[2] = history[idx].cc2[2];
     }
 }
 
@@ -76,35 +92,48 @@ void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsig
         *g = (unsigned char)((n * n * 255) / (iter * iter));
         *b = (unsigned char)((n * 255) / iter);
     } else if (t == 2) { // Cyberpunk
-        double f = (double)n / iter;
-        double vr = sin(f * 3.14159) * 255;
-        double vg = sin(f * 3.14159 * 2) * 128;
-        double vb = cos(f * 3.14159) * 255;
-        *r = (unsigned char)(vr < 0 ? 0 : (vr > 255 ? 255 : vr));
-        *g = (unsigned char)(vg < 0 ? 0 : (vg > 255 ? 255 : vg));
-        *b = (unsigned char)(vb < 0 ? 0 : (vb > 255 ? 255 : vb));
-    } else { // BW
+        *r = (unsigned char)((n * 5) % 256);
+        *g = (unsigned char)((n * 2) % 128);
+        *b = (unsigned char)(255 - ((n * 3) % 256));
+    } else if (t == 3) { // BW
         unsigned char v = ((n % 20) > 10) ? 255 : 0;
         *r = v; *g = v; *b = v;
+    } else if (t == 4) { // Custom
+        double f = (double)n / iter;
+        *r = (unsigned char)(customColor1[0] + f * (customColor2[0] - customColor1[0]));
+        *g = (unsigned char)(customColor1[1] + f * (customColor2[1] - customColor1[1]));
+        *b = (unsigned char)(customColor1[2] + f * (customColor2[2] - customColor1[2]));
     }
 }
 
-void RenderMandelbrot(int width, int height) {
-    if (!pixels || width <= 1 || height <= 1) return;
+typedef struct {
+    DWORD* buffer;
+    int width;
+    int height;
+    int startY;
+    int endY;
+    double mRe, mxRe, mIm, mxIm;
+    unsigned int mIter;
+    int isJ;
+    double jCRe, jCIm;
+    int th;
+} RenderTask;
+
+DWORD WINAPI RenderThreadProc(LPVOID lpParam) {
+    RenderTask* task = (RenderTask*)lpParam;
+    double re_factor = (task->mxRe - task->mRe) / (task->width - 1);
+    double im_factor = (task->mxIm - task->mIm) / (task->height - 1);
     
-    double re_factor = (maxRe - minRe) / (width - 1);
-    double im_factor = (maxIm - minIm) / (height - 1);
-    
-    for (int y = 0; y < height; ++y) {
-        double c_im_view = maxIm - y * im_factor;
-        for (int x = 0; x < width; ++x) {
-            double c_re_view = minRe + x * re_factor;
-            double c_re = isJulia ? juliaCRe : c_re_view;
-            double c_im = isJulia ? juliaCIm : c_im_view;
+    for (int y = task->startY; y < task->endY; ++y) {
+        double c_im_view = task->mxIm - y * im_factor;
+        for (int x = 0; x < task->width; ++x) {
+            double c_re_view = task->mRe + x * re_factor;
+            double c_re = task->isJ ? task->jCRe : c_re_view;
+            double c_im = task->isJ ? task->jCIm : c_im_view;
             double Z_re = c_re_view, Z_im = c_im_view;
             int isInside = 1;
             unsigned int n = 0;
-            for (n = 0; n < max_iter; ++n) {
+            for (n = 0; n < task->mIter; ++n) {
                 double Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
                 if (Z_re2 + Z_im2 > 4) {
                     isInside = 0;
@@ -114,13 +143,44 @@ void RenderMandelbrot(int width, int height) {
                 Z_re = Z_re2 - Z_im2 + c_re;
             }
             if (isInside) {
-                pixels[y * width + x] = 0; // Black
+                task->buffer[y * task->width + x] = 0; // Black
             } else {
                 unsigned char r, g, b;
-                GetColors(n, max_iter, theme, &r, &g, &b);
-                pixels[y * width + x] = (r << 16) | (g << 8) | b;
+                GetColors(n, task->mIter, task->th, &r, &g, &b);
+                task->buffer[y * task->width + x] = (r << 16) | (g << 8) | b;
             }
         }
+    }
+    return 0;
+}
+
+void RenderMandelbrotToBuffer(DWORD* buffer, int width, int height) {
+    if (!buffer || width <= 1 || height <= 1) return;
+    
+    int numThreads = 8;
+    HANDLE threads[8];
+    RenderTask tasks[8];
+    
+    int chunkH = height / numThreads;
+    for (int i = 0; i < numThreads; i++) {
+        tasks[i].buffer = buffer;
+        tasks[i].width = width;
+        tasks[i].height = height;
+        tasks[i].startY = i * chunkH;
+        tasks[i].endY = (i == numThreads - 1) ? height : (i + 1) * chunkH;
+        tasks[i].mRe = minRe; tasks[i].mxRe = maxRe;
+        tasks[i].mIm = minIm; tasks[i].mxIm = maxIm;
+        tasks[i].mIter = max_iter;
+        tasks[i].isJ = isJulia;
+        tasks[i].jCRe = juliaCRe; tasks[i].jCIm = juliaCIm;
+        tasks[i].th = theme;
+        
+        threads[i] = CreateThread(NULL, 0, RenderThreadProc, &tasks[i], 0, NULL);
+    }
+    
+    WaitForMultipleObjects(numThreads, threads, TRUE, INFINITE);
+    for (int i = 0; i < numThreads; i++) {
+        CloseHandle(threads[i]);
     }
 }
 
@@ -143,7 +203,7 @@ void ResizeBitmap(HWND hwnd, int width, int height) {
     bmpW = width;
     bmpH = height;
     
-    if (pixels) RenderMandelbrot(width, height);
+    RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
 }
 
 void Zoom(double factor, int mouseX, int mouseY) {
@@ -165,19 +225,36 @@ void Zoom(double factor, int mouseX, int mouseY) {
     minIm = maxIm - newWIm;
     
     double zoomLevel = 3.0 / newWRe;
-    unsigned int needed_iter = (unsigned int)(100 * pow(zoomLevel, 0.2));
+    unsigned int needed_iter = 100;
+    double temp_z = zoomLevel;
+    while (temp_z > 5.0) {
+        needed_iter += 30;
+        temp_z /= 2.0;
+    }
     if (needed_iter > max_iter && zoomLevel > 5.0) {
         max_iter = needed_iter;
         if (max_iter > 2000) max_iter = 2000;
     }
     
-    RenderMandelbrot(bmpW, bmpH);
+    RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
 }
 
-void SaveImage(HWND hwnd) {
-    if (!pixels || bmpW <= 0 || bmpH <= 0) return;
+void SaveImage4K(HWND hwnd) {
+    int expW = 3840;
+    int expH = 2160;
+    int imageSize32 = expW * expH * 4;
+    DWORD* buffer = (DWORD*)HeapAlloc(GetProcessHeap(), 0, imageSize32);
+    if (!buffer) {
+        MessageBox(hwnd, "Failed to allocate memory for 4K export.", "Error", MB_OK);
+        return;
+    }
+    
+    SetWindowText(hwnd, "KMandelApp - Rendering 4K image...");
+    RenderMandelbrotToBuffer(buffer, expW, expH);
+    SetWindowText(hwnd, "KMandel - L/R Click: Zoom, Shift+L: Pick Julia, Z/Y: Undo/Redo, S: Save 4K, R: Reset, T: Theme, C: Colors, J: Julia");
+    
     OPENFILENAME ofn = {0};
-    char szFileName[MAX_PATH] = "kmandel.bmp";
+    char szFileName[MAX_PATH] = "kmandel_4k.bmp";
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
     ofn.lpstrFilter = "Bitmap Files (*.bmp)\0*.bmp\0All Files (*.*)\0*.*\0";
@@ -191,15 +268,14 @@ void SaveImage(HWND hwnd) {
         if (hFile != INVALID_HANDLE_VALUE) {
             BITMAPFILEHEADER bfh = {0};
             BITMAPINFOHEADER bih = {0};
-            int imageSize32 = bmpW * bmpH * 4;
             
             bfh.bfType = 0x4D42;
             bfh.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + imageSize32;
             bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
             
             bih.biSize = sizeof(BITMAPINFOHEADER);
-            bih.biWidth = bmpW;
-            bih.biHeight = -bmpH;
+            bih.biWidth = expW;
+            bih.biHeight = -expH;
             bih.biPlanes = 1;
             bih.biBitCount = 32;
             bih.biCompression = BI_RGB;
@@ -208,9 +284,26 @@ void SaveImage(HWND hwnd) {
             DWORD dwWritten;
             WriteFile(hFile, &bfh, sizeof(BITMAPFILEHEADER), &dwWritten, NULL);
             WriteFile(hFile, &bih, sizeof(BITMAPINFOHEADER), &dwWritten, NULL);
-            WriteFile(hFile, pixels, imageSize32, &dwWritten, NULL);
+            WriteFile(hFile, buffer, imageSize32, &dwWritten, NULL);
             CloseHandle(hFile);
         }
+    }
+    HeapFree(GetProcessHeap(), 0, buffer);
+}
+
+void PickColor(HWND hwnd, unsigned char* color) {
+    CHOOSECOLOR cc;
+    static COLORREF acrCustClr[16]; 
+    memset(&cc, 0, sizeof(cc));
+    cc.lStructSize = sizeof(cc);
+    cc.hwndOwner = hwnd;
+    cc.lpCustColors = (LPDWORD)acrCustClr;
+    cc.rgbResult = RGB(color[0], color[1], color[2]);
+    cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+    if (ChooseColor(&cc)) {
+        color[0] = GetRValue(cc.rgbResult);
+        color[1] = GetGValue(cc.rgbResult);
+        color[2] = GetBValue(cc.rgbResult);
     }
 }
 
@@ -226,9 +319,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
-            Zoom(0.5, x, y); // Zoom in
-            SaveState();
-            InvalidateRect(hwnd, NULL, FALSE);
+            
+            if ((wParam & MK_SHIFT) && !isJulia) {
+                // Interactive Julia bridging
+                double re_factor = (maxRe - minRe) / (bmpW - 1);
+                double im_factor = (maxIm - minIm) / (bmpH - 1);
+                juliaCRe = minRe + x * re_factor;
+                juliaCIm = maxIm - y * im_factor;
+                isJulia = 1;
+                minRe = -2.0; maxRe = 2.0;
+                minIm = -2.0; maxIm = 2.0;
+                max_iter = 100;
+                SaveState();
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else {
+                Zoom(0.5, x, y); // Zoom in
+                SaveState();
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
             break;
         }
         case WM_RBUTTONDOWN: {
@@ -250,12 +359,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 max_iter = 100;
                 SaveState();
-                RenderMandelbrot(bmpW, bmpH);
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'T') {
-                theme = (theme + 1) % 4;
+                theme = (theme + 1) % 5;
                 SaveState();
-                RenderMandelbrot(bmpW, bmpH);
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'C') {
+                theme = 4; // Switch to Custom
+                PickColor(hwnd, customColor1);
+                PickColor(hwnd, customColor2);
+                SaveState();
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'J') {
                 if (!isJulia) {
@@ -271,24 +387,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 max_iter = 100;
                 SaveState();
-                RenderMandelbrot(bmpW, bmpH);
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'Z') {
                 if (history_idx > 0) {
                     history_idx--;
                     LoadState(history_idx);
-                    RenderMandelbrot(bmpW, bmpH);
+                    RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 'Y') {
                 if (history_idx < history_max) {
                     history_idx++;
                     LoadState(history_idx);
-                    RenderMandelbrot(bmpW, bmpH);
+                    RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 'S') {
-                SaveImage(hwnd);
+                SaveImage4K(hwnd);
             }
             break;
         }
@@ -329,10 +445,6 @@ double __cdecl floor(double x) {
     return (double)((int)x);
 }
 
-// Since we use sin and cos now, we just link against standard math functions (which msvcrt provides).
-// The linker options in build.bat should handle it (no special libs needed for basic math if not using /NODEFAULTLIB fully, 
-// wait, build.bat has /NODEFAULTLIB! Let's check how build.bat is defined).
-
 void MainEntry() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
@@ -343,7 +455,7 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - L/R Click: Zoom, Z/Y: Undo/Redo, S: Save, R: Reset, T: Theme, J: Julia", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - L/R Click: Zoom, Shift+L: Pick Julia, Z/Y: Undo/Redo, S: Save 4K, R: Reset, T: Theme, C: Colors, J: Julia", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     SaveState(); // Save initial state
