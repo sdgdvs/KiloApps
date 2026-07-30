@@ -52,69 +52,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KMandel
-# App Work Plan
-
-## DIRECTOR NOTE (2026-07-29): STOP BLANKET FEATURE SPAM — FOCUS ON APP-SPECIFIC UTILITY
-
-**⚠️ READ THIS BEFORE EVERY TURN. This supersedes old loop instructions.**
-
-The old approach of adding generic "Search, Save/Load, and Import/Export" to every single app is OVER. A hex editor needs different features than a music synthesizer. Furthermore, the Feature Expander has been adding gameplay features (bosses, power-ups, campaigns) to Games — **STOP DOING THIS**. Gameplay content belongs to the Game Content agent.
-
-**From now on, apps are split into categories with DIFFERENT work priorities:**
-
-### 🛠️ SYSTEM & DEV TOOLS
-*Apps: KTerm, KSys, KTask, KNet, KPing, KHex, KBase, KConverter, KCalc, KScript, KZip, KFont*
-- **Focus:** Diagnostic depth, granular controls, advanced parsing, system accuracy.
-- **Do:** Add packet sniffing logic, advanced regex search, macro scripting, deep memory inspection, hardware benching, large file handling.
-- **Don't:** Add visual fluff. 
-
-### 📝 PRODUCTIVITY & DATA
-*Apps: KPad, KNote, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass*
-- **Focus:** Data interoperability, workflow efficiency, robust search, data security.
-- **Do:** Add CSV/JSON/Markdown import/export, AES encryption/password protection, multi-tab sessions, tagging, advanced filtering, auto-save.
-- **Don't:** Add basic features that already exist. Deepen the data structures.
-
-### 🎨 MEDIA & CREATIVE
-*Apps: KPaint, KImage, KAudio, KSynth, KMedia, KChart, KGraph, KMandel, KType*
-- **Focus:** Format support, processing algorithms, rendering performance, complex transformations.
-- **Do:** Add new export formats (WAV, PNG, WEBP), audio/image filters (FFT, convolution matrices, ADSR), layer support, waveform visualization.
-- **Don't:** Make them simple toys. Add professional-grade utility features.
-
-### 🎮 GAMES (UTILITY ONLY)
-*Apps: KConnect4, KMaze, KMine, KPac, KQuest, KSnake, KTetris, KSpace, KSolitaire, KRogue, KChess, KPong, KBBS*
-- **Focus:** Meta-features and Engine Utility.
-- **Do:** Add Save/Load states (F5/F9), High Score JSON Export/Import, Replay Viewers, PGN/FEN parsers, custom keybinding config.
-- **Don't:** DO NOT add campaigns, power-ups, new enemies, or bosses. Leave gameplay content to the Game Content agent!
-
----
-
-## Coordination Rules (DO NOT DELETE — required for subagent context)
-
-**Multi-Agent System:** 4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **Feature Expander**.
-- **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
-- **Plan file ownership — only edit YOUR file (`app_work_plan.md`).** Read but NEVER edit:
-  - `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `new_app_plan.md` (Creator agent), `usability_plan.md` (inactive)
-- **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may ONLY add entries to the APPS array. Protocol: `git pull` → make minimal APPS-only change → commit and push IMMEDIATELY before doing other work.
-- **`KiloOS/src/index.css`** — Do NOT edit.
-- **Dual-target model:** Each app has a native C version (`K[Name]/main.c` + `build.bat`) and a web HTML5 version (`KiloOS/public/apps/k[name].html`). Both versions should offer functional parity where feasible. Web HTML files must be single self-contained files (inline CSS + JS, no imports).
-- **Size limit:** No individual KiloApp may exceed 999 kilobytes (web or native).
-- **Testing:** After editing HTML → verify in browser if possible. After editing App.jsx → `cd KiloOS && npm run build`. After editing `.c` files → run the app's `build.bat`.
-- **Version bumping:** If you modify KiloOS shell files, bump the patch version in `KiloOS/package.json`.
-- **CI/CD:** Every push to `main` triggers GitHub Actions → Firebase deploy to `kiloapps.web.app`.
-- **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
-- **Logging discipline:** Keep this plan file concise. A few lines per completed item. Do NOT dump file contents or create verbose logs.
-
----
-
-**Target App:** KPac
+**Target App:** KQuest
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KPac (Added Difficulty Levels and Save/Load Game State)
 - KQuest
 - KNote (Added Real-Time Search, Note Pinning/Unpinning, and Export TXT features)
 - KPass (Added Password Strength & Entropy Assessment and Searchable Vault System)
@@ -161,3 +105,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KScript (Added Advanced Regex Search & Replace, Macro Scripting, Deep Memory Inspector, and Step-Through Debugger)
 - KMaze (Added Save/Load States, Match Replay Viewer, High Score JSON Export/Import, Custom Keybindings)
 - KMine (Added Safe First-Click, Chording, Hint System, Save/Load Game States, High Score JSON Export/Import, Replay Viewer)
+- KPac (Added Difficulty Levels, Save/Load Game State, High Score JSON Export/Import, Match Replay Viewer, Custom Keybindings)
