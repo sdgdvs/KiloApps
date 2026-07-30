@@ -54,8 +54,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFortress (Fantasy Tower Defense & Siege Defense)
-**Phase:** 11 (next to do)
-**Status:** Phases 1-10 complete
+**Phase:** 12 (next to do)
+**Status:** Phases 1-11 complete
 
 - [x] Phase 1: Scaffold KFortress directory (`KFortress/`), create web HTML skeleton (`KiloOS/public/apps/kfortress.html`), register in App.jsx.
 - [x] Phase 2: Core web HTML 2D grid path layout, basic Archer Tower placement, Gold economy, starting enemy wave spawning (Goblins), base HP & pathfinding.
@@ -67,7 +67,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 8: Hero Unit & Active Abilities — Add controllable Paladin Hero unit on the battlefield with active spell cooldowns (Holy Light Heal, Shield Wall, Meteor Strike).
 - [x] Phase 9: Fortress Research Workshop — Add persistent Academy tech tree upgrading starting Gold, base wall durability, Hero cooldowns, and tower damage multipliers.
 - [x] Phase 10: Traps & Consumable Defenses — Add placeable ground traps (Spike Pit, Oil Slick, Barricade) and instant consumable spell scrolls (Firestorm, Blizzard, Gold Magnet).
-- [ ] Phase 11: Multi-Stage Campaign Map — Add 10 distinct battleground maps (Forest Outpost, Desert Pass, Frozen Fortress, Volcanic Citadel) with unique paths and terrain obstacles.
+- [x] Phase 11: Multi-Stage Campaign Map — Add 10 distinct battleground maps (Forest Outpost, Desert Pass, Frozen Fortress, Volcanic Citadel) with unique paths and terrain obstacles.
 - [ ] Phase 12: Multiple Game Modes & Challenges — Add 3 Game Modes (Campaign Mode, Endless Horde Mode, Boss Blitz Mode) with High Score Leaderboards.
 - [ ] Phase 13: Add Sound Effects — Web Audio API arrow WHOOSH, cannon BOOM, magic ZAP, monster GROWL, victory FANFARE. Native: Win32 Beep() equivalents.
 - [ ] Phase 14: Add Comprehensive Help & Commander's Field Guide — How-to-play modal, tower spec sheet, enemy bestiary encyclopedia, and tactical defense strategies manual.

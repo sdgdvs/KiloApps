@@ -40,10 +40,30 @@ float custom_sqrtf(float val) {
 #define MAX_FLOATING_TEXTS 32
 #define MAX_TRAPS 32
 #define MAX_WAYPOINTS 6
+#define MAX_MAPS 10
 
 typedef struct {
     int x, y;
 } Point;
+
+typedef struct {
+    int x, y;
+    char type[4];
+} Obstacle;
+
+typedef struct {
+    char name[32];
+    COLORREF bg;
+    COLORREF path;
+    Point waypoints[MAX_WAYPOINTS];
+    int numSlots;
+    Point slots[MAX_SLOTS];
+    int numObs;
+    Obstacle obs[3];
+} MapDef;
+
+static MapDef g_maps[MAX_MAPS];
+static int g_currentMap = 0;
 
 typedef struct {
     int x, y;
@@ -179,25 +199,98 @@ void AddFloatingText(float x, float y, const char* txt, COLORREF color) {
     }
 }
 
-void InitWaypoints(int bfX, int bfY, int bfW) {
-    g_waypoints[0] = (Point){bfX + 30, bfY + 180};
-    g_waypoints[1] = (Point){bfX + 280, bfY + 180};
-    g_waypoints[2] = (Point){bfX + 280, bfY + 360};
-    g_waypoints[3] = (Point){bfX + 480, bfY + 360};
-    g_waypoints[4] = (Point){bfX + 480, bfY + 200};
-    g_waypoints[5] = (Point){bfX + bfW - 60, bfY + 200};
+void InitMaps() {
+    // 0: Forest Outpost
+    lstrcpyA(g_maps[0].name, "Forest Outpost"); g_maps[0].bg = RGB(10, 26, 10); g_maps[0].path = RGB(45, 55, 45);
+    Point wp0[] = {{40,200}, {330,200}, {330,390}, {520,390}, {520,220}, {730,220}};
+    for(int i=0;i<6;i++) g_maps[0].waypoints[i] = wp0[i];
+    Point sl0[] = {{140,110},{270,110},{400,110},{540,110},{140,300},{270,300},{400,300},{540,300},{140,470},{270,470},{400,470},{540,470}};
+    g_maps[0].numSlots = 12; for(int i=0;i<12;i++) g_maps[0].slots[i] = sl0[i];
+    g_maps[0].numObs = 3; g_maps[0].obs[0]=(Obstacle){100,380,"T"}; g_maps[0].obs[1]=(Obstacle){450,150,"T"}; g_maps[0].obs[2]=(Obstacle){600,400,"T"};
+
+    // 1: Desert Pass
+    lstrcpyA(g_maps[1].name, "Desert Pass"); g_maps[1].bg = RGB(42, 28, 10); g_maps[1].path = RGB(74, 53, 24);
+    Point wp1[] = {{40,100}, {200,100}, {200,450}, {600,450}, {600,200}, {730,200}};
+    for(int i=0;i<6;i++) g_maps[1].waypoints[i] = wp1[i];
+    Point sl1[] = {{120,180},{280,180},{280,380},{500,380},{500,280},{680,280},{120,300}};
+    g_maps[1].numSlots = 7; for(int i=0;i<7;i++) g_maps[1].slots[i] = sl1[i];
+    g_maps[1].numObs = 3; g_maps[1].obs[0]=(Obstacle){350,250,"C"}; g_maps[1].obs[1]=(Obstacle){450,120,"C"}; g_maps[1].obs[2]=(Obstacle){650,350,"R"};
+
+    // 2: Frozen Fortress
+    lstrcpyA(g_maps[2].name, "Frozen Fortress"); g_maps[2].bg = RGB(10, 21, 42); g_maps[2].path = RGB(31, 59, 90);
+    Point wp2[] = {{40,450}, {400,450}, {400,150}, {600,150}, {600,350}, {730,350}};
+    for(int i=0;i<6;i++) g_maps[2].waypoints[i] = wp2[i];
+    Point sl2[] = {{150,350},{300,350},{280,250},{480,250},{500,150},{500,450}};
+    g_maps[2].numSlots = 6; for(int i=0;i<6;i++) g_maps[2].slots[i] = sl2[i];
+    g_maps[2].numObs = 3; g_maps[2].obs[0]=(Obstacle){200,200,"I"}; g_maps[2].obs[1]=(Obstacle){500,80,"S"}; g_maps[2].obs[2]=(Obstacle){150,150,"M"};
+
+    // 3: Volcanic Citadel
+    lstrcpyA(g_maps[3].name, "Volcanic Citadel"); g_maps[3].bg = RGB(42, 10, 10); g_maps[3].path = RGB(74, 28, 28);
+    Point wp3[] = {{40,150}, {150,150}, {150,400}, {500,400}, {500,150}, {730,150}};
+    for(int i=0;i<6;i++) g_maps[3].waypoints[i] = wp3[i];
+    Point sl3[] = {{250,250},{350,250},{250,320},{350,320},{600,250},{600,350}};
+    g_maps[3].numSlots = 6; for(int i=0;i<6;i++) g_maps[3].slots[i] = sl3[i];
+    g_maps[3].numObs = 3; g_maps[3].obs[0]=(Obstacle){300,200,"V"}; g_maps[3].obs[1]=(Obstacle){650,400,"F"}; g_maps[3].obs[2]=(Obstacle){100,300,"F"};
+
+    // 4: Swamp of Sorrows
+    lstrcpyA(g_maps[4].name, "Swamp of Sorrows"); g_maps[4].bg = RGB(21, 42, 21); g_maps[4].path = RGB(44, 62, 44);
+    Point wp4[] = {{40,300}, {250,300}, {250,150}, {600,150}, {600,450}, {730,450}};
+    for(int i=0;i<6;i++) g_maps[4].waypoints[i] = wp4[i];
+    Point sl4[] = {{150,200},{150,400},{350,250},{450,250},{500,350},{700,350}};
+    g_maps[4].numSlots = 6; for(int i=0;i<6;i++) g_maps[4].slots[i] = sl4[i];
+    g_maps[4].numObs = 3; g_maps[4].obs[0]=(Obstacle){200,400,"M"}; g_maps[4].obs[1]=(Obstacle){400,100,"S"}; g_maps[4].obs[2]=(Obstacle){500,250,"W"};
+
+    // 5: Crystal Caves
+    lstrcpyA(g_maps[5].name, "Crystal Caves"); g_maps[5].bg = RGB(26, 10, 42); g_maps[5].path = RGB(53, 31, 74);
+    Point wp5[] = {{40,400}, {200,400}, {200,200}, {450,200}, {450,350}, {730,350}};
+    for(int i=0;i<6;i++) g_maps[5].waypoints[i] = wp5[i];
+    Point sl5[] = {{100,300},{300,300},{300,100},{550,150},{550,450},{650,250}};
+    g_maps[5].numSlots = 6; for(int i=0;i<6;i++) g_maps[5].slots[i] = sl5[i];
+    g_maps[5].numObs = 3; g_maps[5].obs[0]=(Obstacle){150,150,"C"}; g_maps[5].obs[1]=(Obstacle){350,450,"C"}; g_maps[5].obs[2]=(Obstacle){600,100,"C"};
+
+    // 6: Haunted Graveyard
+    lstrcpyA(g_maps[6].name, "Haunted Graveyard"); g_maps[6].bg = RGB(10, 12, 16); g_maps[6].path = RGB(31, 41, 55);
+    Point wp6[] = {{40,250}, {150,250}, {150,100}, {550,100}, {550,300}, {730,300}};
+    for(int i=0;i<6;i++) g_maps[6].waypoints[i] = wp6[i];
+    Point sl6[] = {{250,180},{350,180},{450,180},{250,280},{350,280},{450,280}};
+    g_maps[6].numSlots = 6; for(int i=0;i<6;i++) g_maps[6].slots[i] = sl6[i];
+    g_maps[6].numObs = 3; g_maps[6].obs[0]=(Obstacle){200,400,"G"}; g_maps[6].obs[1]=(Obstacle){400,350,"G"}; g_maps[6].obs[2]=(Obstacle){650,150,"X"};
+
+    // 7: Sky Kingdom
+    lstrcpyA(g_maps[7].name, "Sky Kingdom"); g_maps[7].bg = RGB(10, 37, 58); g_maps[7].path = RGB(47, 90, 122);
+    Point wp7[] = {{40,100}, {300,100}, {300,450}, {600,450}, {600,250}, {730,250}};
+    for(int i=0;i<6;i++) g_maps[7].waypoints[i] = wp7[i];
+    Point sl7[] = {{150,180},{200,280},{400,350},{500,350},{500,150},{700,350}};
+    g_maps[7].numSlots = 6; for(int i=0;i<6;i++) g_maps[7].slots[i] = sl7[i];
+    g_maps[7].numObs = 3; g_maps[7].obs[0]=(Obstacle){100,400,"W"}; g_maps[7].obs[1]=(Obstacle){450,150,"W"}; g_maps[7].obs[2]=(Obstacle){650,100,"W"};
+
+    // 8: Dragon's Peak
+    lstrcpyA(g_maps[8].name, "Dragon's Peak"); g_maps[8].bg = RGB(42, 16, 10); g_maps[8].path = RGB(74, 44, 31);
+    Point wp8[] = {{40,350}, {350,350}, {350,150}, {550,150}, {550,400}, {730,400}};
+    for(int i=0;i<6;i++) g_maps[8].waypoints[i] = wp8[i];
+    Point sl8[] = {{200,250},{300,250},{450,250},{450,350},{650,250},{650,150}};
+    g_maps[8].numSlots = 6; for(int i=0;i<6;i++) g_maps[8].slots[i] = sl8[i];
+    g_maps[8].numObs = 3; g_maps[8].obs[0]=(Obstacle){150,150,"D"}; g_maps[8].obs[1]=(Obstacle){250,450,"F"}; g_maps[8].obs[2]=(Obstacle){500,80,"V"};
+
+    // 9: The Void Abyss
+    lstrcpyA(g_maps[9].name, "The Void Abyss"); g_maps[9].bg = RGB(5, 5, 16); g_maps[9].path = RGB(31, 31, 58);
+    Point wp9[] = {{40,200}, {150,400}, {350,150}, {550,450}, {650,250}, {730,250}};
+    for(int i=0;i<6;i++) g_maps[9].waypoints[i] = wp9[i];
+    Point sl9[] = {{150,250},{250,280},{350,300},{450,250},{550,250},{600,150}};
+    g_maps[9].numSlots = 6; for(int i=0;i<6;i++) g_maps[9].slots[i] = sl9[i];
+    g_maps[9].numObs = 3; g_maps[9].obs[0]=(Obstacle){100,100,"X"}; g_maps[9].obs[1]=(Obstacle){450,100,"X"}; g_maps[9].obs[2]=(Obstacle){300,400,"X"};
 }
 
-void InitTowerSlots(int bfX, int bfY) {
-    int relCoords[12][2] = {
-        {120, 100}, {250, 100}, {380, 100}, {520, 100},
-        {120, 270}, {250, 270}, {380, 270}, {520, 270},
-        {120, 440}, {250, 440}, {380, 440}, {520, 440}
-    };
-    g_slotCount = 12;
-    for (int i = 0; i < 12; i++) {
-        g_slots[i].x = bfX + relCoords[i][0];
-        g_slots[i].y = bfY + relCoords[i][1];
+void LoadCurrentMap(int bfX, int bfY, int bfW) {
+    MapDef *m = &g_maps[g_currentMap];
+    for (int i=0; i<6; i++) {
+        g_waypoints[i].x = bfX + m->waypoints[i].x - 10;
+        g_waypoints[i].y = bfY + m->waypoints[i].y - 20;
+    }
+    g_slotCount = m->numSlots;
+    for (int i=0; i<m->numSlots; i++) {
+        g_slots[i].x = bfX + m->slots[i].x - 10;
+        g_slots[i].y = bfY + m->slots[i].y - 20;
         g_slots[i].occupied = FALSE;
         g_slots[i].towerType = 0;
         g_slots[i].level = 1;
@@ -269,8 +362,8 @@ void InitGameState() {
     for (int i = 0; i < MAX_FLOATING_TEXTS; i++) g_floatingTexts[i].active = FALSE;
 
     int bfX = 10, bfY = 70, bfW = WINDOW_WIDTH - 220;
-    InitWaypoints(bfX, bfY, bfW);
-    InitTowerSlots(bfX, bfY);
+    InitMaps();
+    LoadCurrentMap(bfX, bfY, bfW);
 }
 
 void UpdateGameLogic() {
@@ -712,7 +805,18 @@ void Render(HDC hdc, HWND hwnd) {
 
     // Battlefield Area
     int bfX = 10, bfY = 70, bfW = w - 220, bfH = h - 80;
-    DrawRoundedRect(memDC, bfX, bfY, bfX + bfW, bfY + bfH, CARD_BG, BORDER_COLOR, 8);
+    DrawRoundedRect(memDC, bfX, bfY, bfX + bfW, bfY + bfH, g_maps[g_currentMap].bg, BORDER_COLOR, 8);
+
+    // Draw Map Obstacles
+    HFONT hObsFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+    SelectObject(memDC, hObsFont);
+    SetTextColor(memDC, RGB(255,255,255));
+    SetBkMode(memDC, TRANSPARENT);
+    for (int i=0; i<g_maps[g_currentMap].numObs; i++) {
+        Obstacle* obs = &g_maps[g_currentMap].obs[i];
+        TextOutA(memDC, bfX + obs->x - 10, bfY + obs->y - 20, obs->type, lstrlenA(obs->type));
+    }
+    DeleteObject(hObsFont);
 
     // Draw Winding Path
     POINT pts[MAX_WAYPOINTS];
@@ -721,11 +825,11 @@ void Render(HDC hdc, HWND hwnd) {
         pts[i].y = g_waypoints[i].y;
     }
 
-    HPEN pathPen = CreatePen(PS_SOLID, 42, PATH_COLOR);
+    HPEN pathPen = CreatePen(PS_SOLID, 42, g_maps[g_currentMap].path);
     HPEN oldPen = (HPEN)SelectObject(memDC, pathPen);
     Polyline(memDC, pts, MAX_WAYPOINTS);
 
-    HPEN pathBorderPen = CreatePen(PS_SOLID, 2, PATH_BORDER);
+    HPEN pathBorderPen = CreatePen(PS_SOLID, 2, BORDER_COLOR);
     SelectObject(memDC, pathBorderPen);
     Polyline(memDC, pts, MAX_WAYPOINTS);
     SelectObject(memDC, oldPen);
@@ -1026,11 +1130,25 @@ void Render(HDC hdc, HWND hwnd) {
     int sbX = w - 200, sbY = 70, sbW = 190, sbH = h - 80;
     DrawRoundedRect(memDC, sbX, sbY, sbX + sbW, sbY + sbH, CARD_BG, BORDER_COLOR, 8);
 
+    DrawRoundedRect(memDC, sbX + 5, sbY + 5, sbX + 30, sbY + 25, RGB(44, 50, 62), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + sbW - 35, sbY + 5, sbX + sbW - 10, sbY + 25, RGB(44, 50, 62), BORDER_COLOR, 4);
+    HFONT hFontBtn = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+    SelectObject(memDC, hFontBtn);
+    SetTextColor(memDC, TEXT_WHITE);
+    TextOutA(memDC, sbX + 12, sbY + 8, "<", 1);
+    TextOutA(memDC, sbX + sbW - 25, sbY + 8, ">", 1);
+    SetTextColor(memDC, TEXT_GOLD);
+    char mBuf[32]; wsprintfA(mBuf, "%s", g_maps[g_currentMap].name);
+    TextOutA(memDC, sbX + 35 + (sbW - 70 - lstrlenA(mBuf)*6)/2, sbY + 8, mBuf, lstrlenA(mBuf));
+    DeleteObject(hFontBtn);
+
+    sbY += 25; // Shift everything else down
+
     HFONT hFontHeader = CreateFontA(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontHeader);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 15, sbY + 15, "COMMAND POST", 12);
+    TextOutA(memDC, sbX + 15, sbY + 10, "COMMAND POST", 12);
 
     
     // Shop Info
@@ -1271,6 +1389,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         int sbX = w - 200, sbY = 70, sbW = 190;
+
+        // Map Selector Clicks
+        if (x >= sbX + 5 && x <= sbX + 30 && y >= sbY + 5 && y <= sbY + 25) {
+            if (!g_waveActive) {
+                g_currentMap = (g_currentMap - 1 + MAX_MAPS) % MAX_MAPS;
+                InitGameState();
+                Beep(300, 40);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+        }
+        if (x >= sbX + sbW - 35 && x <= sbX + sbW - 10 && y >= sbY + 5 && y <= sbY + 25) {
+            if (!g_waveActive) {
+                g_currentMap = (g_currentMap + 1) % MAX_MAPS;
+                InitGameState();
+                Beep(300, 40);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+        }
+        
+        sbY += 25;
 
         // Check button clicks
         // Tower Selection Shop

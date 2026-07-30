@@ -381,6 +381,11 @@
       </div>
 
       <h2>COMMAND POST</h2>
+      <div style="display:flex; gap:6px; margin-bottom:8px;">
+        <button class="btn" id="prevMapBtn" style="flex:1; padding:6px; font-size:12px;">◀ Map</button>
+        <div id="mapNameDisplay" style="flex:3; text-align:center; font-size:11px; font-weight:bold; color:var(--gold-color); line-height:28px; background:rgba(0,0,0,0.3); border-radius:4px; border:1px solid var(--border-color);">Forest Outpost</div>
+        <button class="btn" id="nextMapBtn" style="flex:1; padding:6px; font-size:12px;">Map ▶</button>
+      </div>
       <button class="btn btn-primary" id="waveBtn">START WAVE 1</button>
       <button class="btn" id="academyBtn" style="background:#4f46e5; border-color:#4338ca; color:#fff;">RESEARCH ACADEMY</button>
       <button class="btn btn-danger" id="resetBtn">RESET DEFENSE</button>
@@ -475,41 +480,86 @@
     }
     initHero();
 
-    // Tower Slots
-    const slots = [
-      { x: 140, y: 110, occupied: false, tower: null },
-      { x: 270, y: 110, occupied: false, tower: null },
-      { x: 400, y: 110, occupied: false, tower: null },
-      { x: 540, y: 110, occupied: false, tower: null },
-      { x: 140, y: 300, occupied: false, tower: null },
-      { x: 270, y: 300, occupied: false, tower: null },
-      { x: 400, y: 300, occupied: false, tower: null },
-      { x: 540, y: 300, occupied: false, tower: null },
-      { x: 140, y: 470, occupied: false, tower: null },
-      { x: 270, y: 470, occupied: false, tower: null },
-      { x: 400, y: 470, occupied: false, tower: null },
-      { x: 540, y: 470, occupied: false, tower: null }
+    let currentMapIndex = 0;
+    const campaignMaps = [
+      {
+        name: "Forest Outpost", bg: "#0a1a0a", path: "#2d372d",
+        waypoints: [{x:40, y:200}, {x:330, y:200}, {x:330, y:390}, {x:520, y:390}, {x:520, y:220}, {x:730, y:220}],
+        slots: [{x:140, y:110},{x:270, y:110},{x:400, y:110},{x:540, y:110},{x:140, y:300},{x:270, y:300},{x:400, y:300},{x:540, y:300},{x:140, y:470},{x:270, y:470},{x:400, y:470},{x:540, y:470}],
+        obs: [{x:100, y:380, i:'🌲'}, {x:450, y:150, i:'🌲'}, {x:600, y:400, i:'🌲'}]
+      },
+      {
+        name: "Desert Pass", bg: "#2a1c0a", path: "#4a3518",
+        waypoints: [{x:40, y:100}, {x:200, y:100}, {x:200, y:450}, {x:600, y:450}, {x:600, y:200}, {x:730, y:200}],
+        slots: [{x:120, y:180},{x:280, y:180},{x:280, y:380},{x:500, y:380},{x:500, y:280},{x:680, y:280},{x:120, y:300}],
+        obs: [{x:350, y:250, i:'🌵'}, {x:450, y:120, i:'🌵'}, {x:650, y:350, i:'🪨'}]
+      },
+      {
+        name: "Frozen Fortress", bg: "#0a152a", path: "#1f3b5a",
+        waypoints: [{x:40, y:450}, {x:400, y:450}, {x:400, y:150}, {x:600, y:150}, {x:600, y:350}, {x:730, y:350}],
+        slots: [{x:150, y:350},{x:300, y:350},{x:280, y:250},{x:480, y:250},{x:500, y:150},{x:500, y:450}],
+        obs: [{x:200, y:200, i:'❄️'}, {x:500, y:80, i:'⛄'}, {x:150, y:150, i:'🏔️'}]
+      },
+      {
+        name: "Volcanic Citadel", bg: "#2a0a0a", path: "#4a1c1c",
+        waypoints: [{x:40, y:150}, {x:150, y:150}, {x:150, y:400}, {x:500, y:400}, {x:500, y:150}, {x:730, y:150}],
+        slots: [{x:250, y:250},{x:350, y:250},{x:250, y:320},{x:350, y:320},{x:600, y:250},{x:600, y:350}],
+        obs: [{x:300, y:200, i:'🌋'}, {x:650, y:400, i:'🔥'}, {x:100, y:300, i:'🔥'}]
+      },
+      {
+        name: "Swamp of Sorrows", bg: "#152a15", path: "#2c3e2c",
+        waypoints: [{x:40, y:300}, {x:250, y:300}, {x:250, y:150}, {x:600, y:150}, {x:600, y:450}, {x:730, y:450}],
+        slots: [{x:150, y:200},{x:150, y:400},{x:350, y:250},{x:450, y:250},{x:500, y:350},{x:700, y:350}],
+        obs: [{x:200, y:400, i:'🍄'}, {x:400, y:100, i:'🦠'}, {x:500, y:250, i:'🥀'}]
+      },
+      {
+        name: "Crystal Caves", bg: "#1a0a2a", path: "#351f4a",
+        waypoints: [{x:40, y:400}, {x:200, y:400}, {x:200, y:200}, {x:450, y:200}, {x:450, y:350}, {x:730, y:350}],
+        slots: [{x:100, y:300},{x:300, y:300},{x:300, y:100},{x:550, y:150},{x:550, y:450},{x:650, y:250}],
+        obs: [{x:150, y:150, i:'💎'}, {x:350, y:450, i:'🔮'}, {x:600, y:100, i:'✨'}]
+      },
+      {
+        name: "Haunted Graveyard", bg: "#0a0c10", path: "#1f2937",
+        waypoints: [{x:40, y:250}, {x:150, y:250}, {x:150, y:100}, {x:550, y:100}, {x:550, y:300}, {x:730, y:300}],
+        slots: [{x:250, y:180},{x:350, y:180},{x:450, y:180},{x:250, y:280},{x:350, y:280},{x:450, y:280}],
+        obs: [{x:200, y:400, i:'🪦'}, {x:400, y:350, i:'🪦'}, {x:650, y:150, i:'👻'}]
+      },
+      {
+        name: "Sky Kingdom", bg: "#0a253a", path: "#2f5a7a",
+        waypoints: [{x:40, y:100}, {x:300, y:100}, {x:300, y:450}, {x:600, y:450}, {x:600, y:250}, {x:730, y:250}],
+        slots: [{x:150, y:180},{x:200, y:280},{x:400, y:350},{x:500, y:350},{x:500, y:150},{x:700, y:350}],
+        obs: [{x:100, y:400, i:'☁️'}, {x:450, y:150, i:'☁️'}, {x:650, y:100, i:'🕊️'}]
+      },
+      {
+        name: "Dragon's Peak", bg: "#2a100a", path: "#4a2c1f",
+        waypoints: [{x:40, y:350}, {x:350, y:350}, {x:350, y:150}, {x:550, y:150}, {x:550, y:400}, {x:730, y:400}],
+        slots: [{x:200, y:250},{x:300, y:250},{x:450, y:250},{x:450, y:350},{x:650, y:250},{x:650, y:150}],
+        obs: [{x:150, y:150, i:'🐉'}, {x:250, y:450, i:'🔥'}, {x:500, y:80, i:'🌋'}]
+      },
+      {
+        name: "The Void Abyss", bg: "#050510", path: "#1f1f3a",
+        waypoints: [{x:40, y:200}, {x:150, y:400}, {x:350, y:150}, {x:550, y:450}, {x:650, y:250}, {x:730, y:250}],
+        slots: [{x:150, y:250},{x:250, y:280},{x:350, y:300},{x:450, y:250},{x:550, y:250},{x:600, y:150}],
+        obs: [{x:100, y:100, i:'🌌'}, {x:450, y:100, i:'☄️'}, {x:300, y:400, i:'👁️'}]
+      }
     ];
 
-    // Entities Arrays
+    let slots = [];
+    let rawWaypoints = [];
     let enemies = [];
     let projectiles = [];
     let floatingTexts = [];
     let particles = [];
-
     let traps = [];
     let blizzTimer = 0;
 
-
-    // Path Waypoints
-    const rawWaypoints = [
-      { x: 40, y: 200 },
-      { x: 330, y: 200 },
-      { x: 330, y: 390 },
-      { x: 520, y: 390 },
-      { x: 520, y: 220 },
-      { x: 730, y: 220 }
-    ];
+    function loadMap(idx) {
+      currentMapIndex = idx;
+      const map = campaignMaps[idx];
+      rawWaypoints = map.waypoints;
+      slots = map.slots.map(s => ({x: s.x, y: s.y, occupied: false, tower: null}));
+    }
+    loadMap(0);
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -857,6 +907,22 @@
       playBeep(440, 0.1, 'triangle', 0.15);
       setTimeout(() => playBeep(660, 0.15, 'triangle', 0.15), 100);
       updateHUD();
+    });
+
+    document.getElementById('prevMapBtn').addEventListener('click', () => {
+      if (waveInProgress) return;
+      currentMapIndex = (currentMapIndex - 1 + campaignMaps.length) % campaignMaps.length;
+      document.getElementById('mapNameDisplay').textContent = campaignMaps[currentMapIndex].name;
+      loadMap(currentMapIndex);
+      document.getElementById('resetBtn').click();
+    });
+    
+    document.getElementById('nextMapBtn').addEventListener('click', () => {
+      if (waveInProgress) return;
+      currentMapIndex = (currentMapIndex + 1) % campaignMaps.length;
+      document.getElementById('mapNameDisplay').textContent = campaignMaps[currentMapIndex].name;
+      loadMap(currentMapIndex);
+      document.getElementById('resetBtn').click();
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
@@ -1232,8 +1298,10 @@
       const waypoints = getScaledWaypoints();
       const scaledSlots = getScaledSlots();
 
+      const map = campaignMaps[currentMapIndex];
+
       // Clear & Draw Background
-      ctx.fillStyle = '#0a0c10';
+      ctx.fillStyle = map.bg;
       ctx.fillRect(0, 0, w, h);
 
       // Draw Grid Pattern Accent
@@ -1246,6 +1314,15 @@
       for (let y = 0; y < h; y += gridSize) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
       }
+
+      // Draw Obstacles
+      ctx.font = '24px Segoe UI';
+      ctx.textAlign = 'center';
+      map.obs.forEach(o => {
+         const scaleX = w / 800;
+         const scaleY = h / 560;
+         ctx.fillText(o.i, o.x * scaleX, o.y * scaleY);
+      });
 
       
       // Draw Traps
@@ -1289,7 +1366,7 @@
       for (let i = 1; i < waypoints.length; i++) {
         ctx.lineTo(waypoints[i].x, waypoints[i].y);
       }
-      ctx.strokeStyle = '#262e3e';
+      ctx.strokeStyle = map.path;
       ctx.lineWidth = 46;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
