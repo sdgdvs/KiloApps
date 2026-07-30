@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KMandel
+**Target App:** KMatch3
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -203,3 +203,5 @@ Pass 1 Complete.
 - **KJournal**: Added HTML entity sanitization for the `mood` variable before DOM injection, and added `try-catch` blocks to `localStorage.setItem` calls to safely handle `QuotaExceededError` bounds in `kjournal.html`. Fixed a buffer reallocation limit in `main.c` by replacing a single `buf_cap *= 2` with a `while` loop to guarantee sufficient capacity for very long text entries, preventing potential Win32 RichEdit string truncation or buffer overflows.
 
 - **KMail**: Added an `escapeHTML` sanitization function to properly bounds-check and encode subjects, senders, bodies, and tags against XSS DOM injection vulnerabilities, and implemented JSON import bounds to safely reject files larger than 500KB or slice imported arrays exceeding 1000 items in `kmail.html`. Added strict length bounds checks to tag appends (`lstrcatA`) in `main.c` to prevent stack buffer overflows.
+
+- **KMandel**: Fixed infinite looping caused by precision loss at extreme zoom levels by clamping the zoom factor (`newWRe`) bounds in both `kmandel.html` and `main.c`. Implemented performance improvements to the canvas rendering loop and verified math bounds and clean GDI resource handling for fractal generation.
