@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KImage
+**Target App:** KJournal
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -197,3 +197,5 @@ Pass 1 Complete.
 - **KFont**: Changed DOM insertion from `innerText` to safer `textContent`, added double quote escaping `/"/g` for font string parsing protection, and implemented `word-wrap: break-word` layout bounds in `kfont.html`. Added `LB_FINDSTRINGEXACT` duplication checks in `EnumFontFamExProc` to prevent listbox memory bounds bloat, and fixed GDI resource leaks by correctly re-ordering `WM_SETFONT` and `DeleteObject` in `main.c`.
 
 - **KHex**: Added HTML entity escaping for file names to prevent XSS during file selection, implemented a 10MB `FileReader` cap to prevent RAM exhaustion, added a 16KB DOM render limit for the hex viewer to prevent browser freezes, and hard-capped text exports to 512KB in `khex.html`. Audited and properly cleaned up `hBrushBg` and `hEditBrush` GDI resources on `WM_DESTROY`, and added the missing `WS_VSCROLL` style to the export edit control for scrolling bounds in `main.c`.
+
+- **KImage**: Added `img.onload` dimension bounds checking to abort on images exceeding 8192x8192 pixels to prevent memory exhaustion, and implemented 256-byte string bounds and `<`/`>` HTML sanitization in the EXIF parser in `kimage.html`. Updated `LoadBitmapFile` to safely reject images exceeding 8192x8192 bounds, preventing Win32 DIB memory exhaustion and integer overflows in `main.c`.
