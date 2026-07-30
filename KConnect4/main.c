@@ -323,6 +323,8 @@ MoveRecord moveHistory[MAX_ROWS * MAX_COLS * 2];
 int historyCount = 0;
 int replayIndex = -1;
 
+void SaveStats();
+
 void ExportJSON() {
     FILE *f = fopen("kconnect4_data.json", "w");
     if (f) {
@@ -686,20 +688,23 @@ void ApplyGravity() {
 }
 
 bool SimDrop(int col, int p) {
-    for (int r = g_rows - 1; r >= 0; r--) {
-        if (board[r][col] == 0) {
-            board[r][col] = p;
-            int tempWin[MAX_COLS * MAX_ROWS][2];
-            int tempCount = winCellCount;
-            for(int i=0; i<winCellCount; i++) { tempWin[i][0]=winCells[i][0]; tempWin[i][1]=winCells[i][1]; }
-            bool win = CheckWin(r, col, p);
-            for(int i=0; i<tempCount; i++) { winCells[i][0]=tempWin[i][0]; winCells[i][1]=tempWin[i][1]; }
-            winCellCount = tempCount;
-            board[r][col] = 0;
-            return win;
-        }
+    int targetRow = -1;
+    for (int r = 0; r < g_rows; r++) {
+        if (board[r][col] != 0) { targetRow = r - 1; break; }
     }
-    return false;
+    if (targetRow == -1 && board[g_rows-1][col] == 0) targetRow = g_rows - 1;
+    if (targetRow < 0) return false;
+
+    int r = targetRow;
+    board[r][col] = p;
+    int tempWin[MAX_COLS * MAX_ROWS][2];
+    int tempCount = winCellCount;
+    for(int i=0; i<winCellCount; i++) { tempWin[i][0]=winCells[i][0]; tempWin[i][1]=winCells[i][1]; }
+    bool win = CheckWin(r, col, p);
+    for(int i=0; i<tempCount; i++) { winCells[i][0]=tempWin[i][0]; winCells[i][1]=tempWin[i][1]; }
+    winCellCount = tempCount;
+    board[r][col] = 0;
+    return win;
 }
 
 int evaluateWindow(int w[4], int piece) {
@@ -780,10 +785,10 @@ bool isTerminalNode(int b[MAX_ROWS][MAX_COLS]) {
 }
 
 int getNextOpenRow(int b[MAX_ROWS][MAX_COLS], int c) {
-    for (int r = g_rows - 1; r >= 0; r--) {
-        if (b[r][c] == 0) return r;
+    for (int r = 0; r < g_rows; r++) {
+        if (b[r][c] != 0) return r - 1;
     }
-    return -1;
+    return g_rows - 1;
 }
 
 typedef struct {
@@ -851,8 +856,9 @@ MMResult minimax(int b[MAX_ROWS][MAX_COLS], int depth, int alpha, int beta, bool
 }
 
 int GetBestMoveAI(int player) {
-    int depth = 4;
-    if (g_cols > 8) depth = 3;
+    int depth = 5;
+    if (g_cols > 8) depth = 4;
+    if (aiPersonality == 3) depth = (g_cols > 8) ? 6 : 7;
     MMResult res = minimax(board, depth, -20000000, 20000000, (player == 2));
     if (res.col != -1) return res.col;
     int valid[MAX_COLS];
@@ -862,57 +868,61 @@ int GetBestMoveAI(int player) {
 }
 
 void ExecuteDrop(HWND hwnd, int col, int player, int powerType) {
-    for (int r = g_rows - 1; r >= 0; r--) {
-        if (board[r][col] == 0) {
-            int snd = 1;
-            if (powerType == 1) snd = 6;
-            else if (powerType == 2) snd = 7;
-            else if (powerType == 3) snd = 8;
-            PlaySoundEffect(snd);
-            
-            // Record history
-            memcpy(moveHistory[historyCount].board, board, sizeof(board));
-            moveHistory[historyCount].rows = g_rows;
-            moveHistory[historyCount].cols = g_cols;
-            moveHistory[historyCount].currentPlayer = currentPlayer;
-            moveHistory[historyCount].p1Bombs = p1Bombs; moveHistory[historyCount].p2Bombs = p2Bombs;
-            moveHistory[historyCount].p1Drills = p1Drills; moveHistory[historyCount].p2Drills = p2Drills;
-            moveHistory[historyCount].p1Magnets = p1Magnets; moveHistory[historyCount].p2Magnets = p2Magnets;
-            moveHistory[historyCount].p1Freezes = p1Freezes; moveHistory[historyCount].p2Freezes = p2Freezes;
-            moveHistory[historyCount].frozenCol = frozenCol; moveHistory[historyCount].frozenTurns = frozenTurns; moveHistory[historyCount].frozenPlayer = frozenPlayer;
-            moveHistory[historyCount].oldStats = stats;
-            historyCount++;
+    int targetRow = -1;
+    for (int r = 0; r < g_rows; r++) {
+        if (board[r][col] != 0) { targetRow = r - 1; break; }
+    }
+    if (targetRow == -1 && board[g_rows-1][col] == 0) targetRow = g_rows - 1;
+    
+    if (targetRow >= 0) {
+        int r = targetRow;
+        int snd = 1;
+        if (powerType == 1) snd = 6;
+        else if (powerType == 2) snd = 7;
+        else if (powerType == 3) snd = 8;
+        PlaySoundEffect(snd);
+        
+        // Record history
+        memcpy(moveHistory[historyCount].board, board, sizeof(board));
+        moveHistory[historyCount].rows = g_rows;
+        moveHistory[historyCount].cols = g_cols;
+        moveHistory[historyCount].currentPlayer = currentPlayer;
+        moveHistory[historyCount].p1Bombs = p1Bombs; moveHistory[historyCount].p2Bombs = p2Bombs;
+        moveHistory[historyCount].p1Drills = p1Drills; moveHistory[historyCount].p2Drills = p2Drills;
+        moveHistory[historyCount].p1Magnets = p1Magnets; moveHistory[historyCount].p2Magnets = p2Magnets;
+        moveHistory[historyCount].p1Freezes = p1Freezes; moveHistory[historyCount].p2Freezes = p2Freezes;
+        moveHistory[historyCount].frozenCol = frozenCol; moveHistory[historyCount].frozenTurns = frozenTurns; moveHistory[historyCount].frozenPlayer = frozenPlayer;
+        moveHistory[historyCount].oldStats = stats;
+        historyCount++;
 
-            if (powerType == 1) {
-                if (player == 1) p1Bombs--; else p2Bombs--;
-                stats.totalBombs++;
-            } else if (powerType == 2) {
-                if (player == 1) p1Drills--; else p2Drills--;
-                stats.totalDrills++;
-            } else if (powerType == 3) {
-                if (player == 1) p1Magnets--; else p2Magnets--;
-                stats.totalMagnets++;
-            }
-
-            board[r][col] = player;
-            animPlayer = player;
-            animRow = r;
-            animCol = col;
-            animY = 50;
-            animY_float = 50.0f;
-            animVY = 0.0f;
-            animBounceCount = 0;
-
-            int colWidth = 40;
-            animTargetY = 50 + 5 + r * 44;
-            animType = powerType;
-            isAnimating = true;
-            selectedPowerup = 0;
-            UpdatePowerupButtons();
-            
-            SetTimer(hwnd, 2, 16, NULL);
-            break;
+        if (powerType == 1) {
+            if (player == 1) p1Bombs--; else p2Bombs--;
+            stats.totalBombs++;
+        } else if (powerType == 2) {
+            if (player == 1) p1Drills--; else p2Drills--;
+            stats.totalDrills++;
+        } else if (powerType == 3) {
+            if (player == 1) p1Magnets--; else p2Magnets--;
+            stats.totalMagnets++;
         }
+
+        board[r][col] = player;
+        animPlayer = player;
+        animRow = r;
+        animCol = col;
+        animY = 50;
+        animY_float = 50.0f;
+        animVY = 0.0f;
+        animBounceCount = 0;
+
+        int colWidth = 40;
+        animTargetY = 50 + 5 + r * 44;
+        animType = powerType;
+        isAnimating = true;
+        selectedPowerup = 0;
+        UpdatePowerupButtons();
+        
+        SetTimer(hwnd, 2, 16, NULL);
     }
 }
 
@@ -944,9 +954,9 @@ void AIMove(HWND hwnd) {
         }
     } else {
         int depth = 3;
-        if (aiPersonality == 1) depth = 3;
-        else if (aiPersonality == 2) depth = 4;
-        else if (aiPersonality == 3) depth = (g_cols > 8) ? 4 : 5;
+        if (aiPersonality == 1) depth = 4;
+        else if (aiPersonality == 2) depth = 5;
+        else if (aiPersonality == 3) depth = (g_cols > 8) ? 6 : 7;
         
         MMResult res = minimax(board, depth, -20000000, 20000000, true);
         bestCol = res.col;
@@ -985,12 +995,15 @@ void FinishTurnEffects(HWND hwnd) {
             if (ac >= 0 && ac < g_cols) {
                 for (int r = g_rows - 1; r >= 0; r--) {
                     if (board[r][ac] == animPlayer) {
-                        for (int rTarget = g_rows - 1; rTarget >= 0; rTarget--) {
-                            if (board[rTarget][animCol] == 0) {
-                                board[rTarget][animCol] = animPlayer;
-                                board[r][ac] = 0;
-                                break;
-                            }
+                        int targetRow = -1;
+                        for (int rTarget = 0; rTarget < g_rows; rTarget++) {
+                            if (board[rTarget][animCol] != 0) { targetRow = rTarget - 1; break; }
+                        }
+                        if (targetRow == -1 && board[g_rows-1][animCol] == 0) targetRow = g_rows - 1;
+                        if (targetRow >= 0) {
+                            board[targetRow][animCol] = animPlayer;
+                            board[r][ac] = 0;
+                            break;
                         }
                     }
                 }
@@ -1420,12 +1433,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             int hoverRow = -1;
             if (hoverCol != -1 && !isAnimating && gameActive && !(gameMode > 0 && currentPlayer == 2)) {
-                for (int r = g_rows - 1; r >= 0; r--) {
-                    if (board[r][hoverCol] == 0) {
-                        hoverRow = r;
-                        break;
-                    }
+                for (int r = 0; r < g_rows; r++) {
+                    if (board[r][hoverCol] != 0) { hoverRow = r - 1; break; }
                 }
+                if (hoverRow == -1 && board[g_rows-1][hoverCol] == 0) hoverRow = g_rows - 1;
             }
             
             // Draw grid cells with 3D Glossy Discs
