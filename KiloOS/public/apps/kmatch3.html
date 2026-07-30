@@ -1091,6 +1091,15 @@
           let targetR = ROWS - 1;
           for (let r = ROWS - 1; r >= 0; r--) {
             if (grid[r][c] && grid[r][c].stoneHits > 0) {
+              while (targetR > r) {
+                let color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                let cell = createCellElement(targetR, c, color, 0, 0);
+                boardEl.appendChild(cell);
+                grid[targetR][c] = { color, type: 0, ice: false, stoneHits: 0, barrier: false, el: cell };
+                cell.offsetHeight;
+                cell.style.top = (targetR * cellSize + 1) + 'px';
+                targetR--;
+              }
               targetR = r - 1;
               continue;
             }

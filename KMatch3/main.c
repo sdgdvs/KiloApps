@@ -550,11 +550,12 @@ void DrawBoard(HDC hdc) {
     LineTo(hdc, outerFrame.left, outerFrame.bottom);
 
     HBRUSH studB = CreateSolidBrush(RGB(255, 215, 0));
-    SelectObject(hdc, studB);
+    HBRUSH oldB2 = (HBRUSH)SelectObject(hdc, studB);
     Ellipse(hdc, outerFrame.left+2, outerFrame.top+2, outerFrame.left+7, outerFrame.top+7);
     Ellipse(hdc, outerFrame.right-7, outerFrame.top+2, outerFrame.right-2, outerFrame.top+7);
     Ellipse(hdc, outerFrame.left+2, outerFrame.bottom-7, outerFrame.left+7, outerFrame.bottom-2);
     Ellipse(hdc, outerFrame.right-7, outerFrame.bottom-7, outerFrame.right-2, outerFrame.bottom-2);
+    SelectObject(hdc, oldB2);
     SelectObject(hdc, oldPen);
     DeleteObject(studB); DeleteObject(framePenHigh); DeleteObject(framePenLow);
 
@@ -984,6 +985,14 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
             int targetR = rows - 1;
             for (int r = rows - 1; r >= 0; r--) {
                 if (stoneGrid[r][c] > 0) {
+                    while (targetR > r) {
+                        grid[targetR][c] = rand() % 6;
+                        typeGrid[targetR][c] = TYPE_NONE;
+                        iceGrid[targetR][c] = 0;
+                        barrierGrid[targetR][c] = 0;
+                        dropCount[targetR][c] = targetR - r;
+                        targetR--;
+                    }
                     targetR = r - 1;
                     continue;
                 }
