@@ -29,7 +29,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KMaze
 - KMine
 - KPac
 - KQuest
@@ -77,6 +76,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPing
 - KConnect4
 - KScript
+- KMaze
 
 ## Progress Log
 - KConnect4: Usability and UI issues fixed (auto-size, controls, help text, canvas crispness).
@@ -87,3 +87,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMandel: Usability and UI issues fixed (auto-size, crisp text, help instructions).
 - KPing: Usability and UI issues fixed (auto-size, crisp text, help instructions).
 - KScript: Usability and UI issues fixed (auto-size, crisp text, visible controls, layout).
+- KMaze: Usability and UI issues fixed (auto-size, crisp text, help instructions, layout).
