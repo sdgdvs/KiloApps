@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KMaze
+**Target App:** KMedia
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -207,3 +207,5 @@ Pass 1 Complete.
 - **KMandel**: Fixed infinite looping caused by precision loss at extreme zoom levels by clamping the zoom factor (`newWRe`) bounds in both `kmandel.html` and `main.c`. Implemented performance improvements to the canvas rendering loop and verified math bounds and clean GDI resource handling for fractal generation.
 
 - **KMatch3**: Fixed logic bounds bug in `ProcessMatches` for both `kmatch3.html` and `main.c` where dropping gems failed to populate gaps left beneath un-destroyed stone tiles; added a `while(targetR > r)` loop to ensure the board fully populates without leaving empty cells. Fixed GDI resource leaks in `main.c` by ensuring the original device context brush (`oldB2`) is correctly restored after rendering the golden frame studs with `studB`.
+
+- **KMaze**: Fixed JavaScript performance bottleneck in `kmaze.html` pathfinding by optimizing `queue.shift()` calls to an `O(1)` index pointer. Fixed a Win32 GDI object leak in `main.c` by moving `CreateSolidBrush` instantiations outside the minimap drawing loop and properly cleaning them up.
