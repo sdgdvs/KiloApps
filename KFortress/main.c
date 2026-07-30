@@ -38,6 +38,7 @@ float custom_sqrtf(float val) {
 #define MAX_ENEMIES 64
 #define MAX_PROJECTILES 64
 #define MAX_FLOATING_TEXTS 32
+#define MAX_TRAPS 32
 #define MAX_WAYPOINTS 6
 
 typedef struct {
@@ -88,6 +89,16 @@ typedef struct {
     int life;
 } FloatingText;
 
+typedef struct {
+    BOOL active;
+    float x, y;
+    int type; // 1=Spike, 2=Oil, 3=Barricade
+    int charges;
+    float hp;
+    int radius;
+} Trap;
+
+
 // Global State
 static TowerSlot g_slots[MAX_SLOTS];
 static int g_slotCount = 12;
@@ -127,6 +138,9 @@ static Hero g_hero;
 #define TOWER_MAGE 2
 #define TOWER_CANNON 3
 #define TOWER_FROST 4
+#define TRAP_SPIKE 5
+#define TRAP_OIL 6
+#define TRAP_BARRICADE 7
 
 static int g_selectedTowerTypeToBuild = TOWER_ARCHER;
 
@@ -145,6 +159,8 @@ static int g_spawnTimer = 0;
 static Enemy g_enemies[MAX_ENEMIES];
 static Projectile g_projectiles[MAX_PROJECTILES];
 static FloatingText g_floatingTexts[MAX_FLOATING_TEXTS];
+static Trap g_traps[MAX_TRAPS];
+static int g_blizzTimer = 0;
 
 static Point g_waypoints[MAX_WAYPOINTS];
 static int g_nextEnemyId = 1;
@@ -227,6 +243,8 @@ void InitGameState() {
     g_spawnQueueCount = 0;
     g_spawnQueueHead = 0;
     g_spawnTimer = 0;
+    g_blizzTimer = 0;
+    for(int i=0; i<MAX_TRAPS; i++) g_traps[i].active = FALSE;
 
     g_hero.x = 400.0f; g_hero.y = 300.0f;
     g_hero.targetX = 400.0f; g_hero.targetY = 300.0f;
@@ -263,6 +281,8 @@ void UpdateGameLogic() {
         g_spawnTimer++;
         if (g_spawnTimer >= 35) { // ~1.1s
             g_spawnTimer = 0;
+    g_blizzTimer = 0;
+    for(int i=0; i<MAX_TRAPS; i++) g_traps[i].active = FALSE;
             int type = g_spawnQueue[g_spawnQueueHead++];
 
             for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -350,14 +370,16 @@ void UpdateGameLogic() {
     }
 
     // Update Enemies (Pathfinding)
+
+    if (g_blizzTimer > 0) g_blizzTimer--;
     int activeEnemyCount = 0;
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!g_enemies[i].active) continue;
         activeEnemyCount++;
 
-        g_enemies[i].slowed = FALSE;
+        g_enemies[i].slowed = (g_blizzTimer > 0);
         for (int t = 0; t < g_slotCount; t++) {
-            if (g_slots[t].occupied && g_slots[t].towerType == TOWER_FROST) {
+            if (!g_enemies[i].slowed && g_slots[t].occupied && g_slots[t].towerType == TOWER_FROST) {
                 float fdx = g_enemies[i].x - g_slots[t].x;
                 float fdy = g_enemies[i].y - g_slots[t].y;
                 if (custom_sqrtf(fdx*fdx + fdy*fdy) <= (float)g_slots[t].range) {
@@ -366,7 +388,38 @@ void UpdateGameLogic() {
                 }
             }
         }
-        float currentSpeed = g_enemies[i].slowed ? (g_enemies[i].speed * 0.5f) : g_enemies[i].speed;
+        
+        BOOL trapBlocked = FALSE;
+        for (int tr = 0; tr < MAX_TRAPS; tr++) {
+            if (g_traps[tr].active) {
+                float tdx = g_enemies[i].x - g_traps[tr].x;
+                float tdy = g_enemies[i].y - g_traps[tr].y;
+                if (custom_sqrtf(tdx*tdx + tdy*tdy) <= (float)(g_traps[tr].radius + g_enemies[i].radius)) {
+                    if (g_traps[tr].type == TRAP_SPIKE) {
+                        g_enemies[i].hp -= 50;
+                        g_traps[tr].charges--;
+                        if (g_traps[tr].charges <= 0) g_traps[tr].active = FALSE;
+                    } else if (g_traps[tr].type == TRAP_OIL) {
+                        g_enemies[i].slowed = TRUE;
+                    } else if (g_traps[tr].type == TRAP_BARRICADE) {
+                        trapBlocked = TRUE;
+                        g_traps[tr].hp -= 0.5f;
+                        if (g_traps[tr].hp <= 0) g_traps[tr].active = FALSE;
+                    }
+                }
+            }
+        }
+        
+        if (g_enemies[i].hp <= 0) {
+            g_enemies[i].active = FALSE;
+            g_gold += 15;
+            continue;
+        }
+
+        if (trapBlocked) continue;
+
+        float currentSpeed = g_enemies[i].slowed ? (g_enemies[i].speed * 0.4f) : g_enemies[i].speed;
+
 
         if (g_hero.respawnTimer <= 0 && g_hero.shieldActive <= 0) {
             float hdx = g_hero.x - g_enemies[i].x;
@@ -625,7 +678,7 @@ void Render(HDC hdc, HWND hwnd) {
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontSub);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, 140, 26, "Phase 7: Diverse Enemy Bestiary", 31);
+    TextOutA(memDC, 140, 26, "Phase 10: Traps & Consumables", 31);
 
     // Stats HUD
     char buf[128];
@@ -779,7 +832,33 @@ void Render(HDC hdc, HWND hwnd) {
         }
     }
 
+    
+    // Draw Traps
+    for(int tr=0; tr<MAX_TRAPS; tr++) {
+        if(!g_traps[tr].active) continue;
+        int tx = (int)g_traps[tr].x; int ty = (int)g_traps[tr].y; int trr = g_traps[tr].radius;
+        HBRUSH tB = NULL; HPEN tP = NULL; const char* lbl = "";
+        if(g_traps[tr].type == TRAP_SPIKE) { tB = CreateSolidBrush(RGB(100,100,100)); tP = CreatePen(PS_SOLID, 1, RGB(70,70,70)); lbl = "S"; }
+        else if(g_traps[tr].type == TRAP_OIL) { tB = CreateSolidBrush(RGB(20,20,20)); tP = CreatePen(PS_SOLID, 1, RGB(0,0,0)); lbl = "O"; }
+        else if(g_traps[tr].type == TRAP_BARRICADE) { tB = CreateSolidBrush(RGB(139,69,19)); tP = CreatePen(PS_SOLID, 1, RGB(101,67,33)); lbl = "B"; }
+        
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, tB); HPEN oP = (HPEN)SelectObject(memDC, tP);
+        Ellipse(memDC, tx-trr, ty-trr, tx+trr, ty+trr);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(tB); DeleteObject(tP);
+        
+        SetTextColor(memDC, TEXT_WHITE);
+        TextOutA(memDC, tx-4, ty-6, lbl, 1);
+        if(g_traps[tr].type == TRAP_BARRICADE) {
+            DrawRoundedRect(memDC, tx-10, ty-15, tx+10, ty-12, RGB(0,0,0), RGB(0,0,0), 0);
+            HBRUSH hpB = CreateSolidBrush(RGB(34, 197, 94));
+            RECT hpR = { tx-10, ty-15, tx-10 + (int)(20*(g_traps[tr].hp/200.0f)), ty-12 };
+            FillRect(memDC, &hpR, hpB); DeleteObject(hpB);
+        }
+    }
+
     // Draw Enemies
+
     for (int e = 0; e < MAX_ENEMIES; e++) {
         if (!g_enemies[e].active) continue;
 
@@ -953,48 +1032,58 @@ void Render(HDC hdc, HWND hwnd) {
     SetTextColor(memDC, TEXT_GOLD);
     TextOutA(memDC, sbX + 15, sbY + 15, "COMMAND POST", 12);
 
+    
     // Shop Info
     const char* tNames[] = {"Archer [A]", "Mage [M]", "Cannon [C]", "Frost [F]"};
     int tCosts[] = {50, 100, 150, 120};
-    const char* tStats[] = {"Dmg:12 R:130", "Dmg:15 AoE R:110", "Dmg:40 R:150", "Slow Aura R:100"};
     
     for (int i=0; i<4; i++) {
         COLORREF bg = (g_selectedTowerTypeToBuild == i+1) ? RGB(60, 70, 85) : RGB(30, 41, 59);
         COLORREF bd = (g_selectedTowerTypeToBuild == i+1) ? TEXT_GOLD : BORDER_COLOR;
-        DrawRoundedRect(memDC, sbX + 5, sbY + 35 + i*38, sbX + sbW - 5, sbY + 70 + i*38, bg, bd, 4);
+        DrawRoundedRect(memDC, sbX + 5, sbY + 35 + i*37, sbX + sbW - 5, sbY + 68 + i*37, bg, bd, 4);
         SetTextColor(memDC, TEXT_WHITE);
-        TextOutA(memDC, sbX + 10, sbY + 38 + i*38, tNames[i], lstrlenA(tNames[i]));
+        TextOutA(memDC, sbX + 10, sbY + 38 + i*37, tNames[i], lstrlenA(tNames[i]));
         SetTextColor(memDC, TEXT_GOLD);
         char buf[32]; wsprintfA(buf, "%dg", tCosts[i]);
-        TextOutA(memDC, sbX + sbW - 35, sbY + 38 + i*38, buf, lstrlenA(buf));
-        SetTextColor(memDC, TEXT_MUTED);
-        HFONT hSmallFont = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-        HFONT oldF = (HFONT)SelectObject(memDC, hSmallFont);
-        TextOutA(memDC, sbX + 10, sbY + 54 + i*38, tStats[i], lstrlenA(tStats[i]));
-        SelectObject(memDC, oldF);
-        DeleteObject(hSmallFont);
+        TextOutA(memDC, sbX + sbW - 35, sbY + 38 + i*37, buf, lstrlenA(buf));
     }
+    
+    // Traps
+    const char* trapNames[] = {"Spike Trap", "Oil Slick", "Barricade"};
+    int trapCosts[] = {30, 40, 50};
+    for(int i=0; i<3; i++) {
+        COLORREF bg = (g_selectedTowerTypeToBuild == TRAP_SPIKE+i) ? RGB(60, 70, 85) : RGB(30, 41, 59);
+        COLORREF bd = (g_selectedTowerTypeToBuild == TRAP_SPIKE+i) ? TEXT_GOLD : BORDER_COLOR;
+        DrawRoundedRect(memDC, sbX + 5, sbY + 185 + i*28, sbX + sbW - 5, sbY + 210 + i*28, bg, bd, 4);
+        SetTextColor(memDC, TEXT_WHITE); TextOutA(memDC, sbX + 10, sbY + 190 + i*28, trapNames[i], lstrlenA(trapNames[i]));
+        SetTextColor(memDC, TEXT_GOLD); char buf[32]; wsprintfA(buf, "%dg", trapCosts[i]);
+        TextOutA(memDC, sbX + sbW - 35, sbY + 190 + i*28, buf, lstrlenA(buf));
+    }
+
+    // Scrolls
+    DrawRoundedRect(memDC, sbX + 5, sbY + 270, sbX + 62, sbY + 295, RGB(220,38,38), BORDER_COLOR, 4); TextOutA(memDC, sbX+8, sbY+275, "Fire", 4);
+    DrawRoundedRect(memDC, sbX + 65, sbY + 270, sbX + 122, sbY + 295, RGB(37,99,235), BORDER_COLOR, 4); TextOutA(memDC, sbX+68, sbY+275, "Blizz", 5);
+    DrawRoundedRect(memDC, sbX + 125, sbY + 270, sbX + 185, sbY + 295, RGB(217,119,6), BORDER_COLOR, 4); TextOutA(memDC, sbX+128, sbY+275, "Magn", 4);
 
     // Button: Start Wave
     COLORREF btnBg = g_waveActive ? RGB(60, 70, 85) : RGB(16, 185, 129);
-    DrawRoundedRect(memDC, sbX + 15, sbY + 195, sbX + sbW - 15, sbY + 235, btnBg, BORDER_COLOR, 6);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 300, sbX + sbW - 15, sbY + 335, btnBg, BORDER_COLOR, 6);
     SetTextColor(memDC, TEXT_WHITE);
     SelectObject(memDC, hFontHeader);
-    wsprintfA(buf, g_waveActive ? "WAVE IN PROGRESS" : "START WAVE %d", g_wave);
-    TextOutA(memDC, sbX + 25, sbY + 207, buf, (int)lstrlenA(buf));
+    char buf2[32]; wsprintfA(buf2, g_waveActive ? "IN PROGRESS" : "START WAVE %d", g_wave);
+    TextOutA(memDC, sbX + 35, sbY + 310, buf2, (int)lstrlenA(buf2));
 
     // Button: Academy
-    DrawRoundedRect(memDC, sbX + 15, sbY + 245, sbX + sbW - 15, sbY + 285, RGB(79, 70, 229), BORDER_COLOR, 6);
-    TextOutA(memDC, sbX + 35, sbY + 257, "RESEARCH ACADEMY", 16);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 340, sbX + sbW - 15, sbY + 375, RGB(79, 70, 229), BORDER_COLOR, 6);
+    TextOutA(memDC, sbX + 35, sbY + 350, "ACADEMY", 7);
 
     // Button: Reset Game
-    DrawRoundedRect(memDC, sbX + 15, sbY + 295, sbX + sbW - 15, sbY + 335, RGB(225, 29, 72), BORDER_COLOR, 6);
-    TextOutA(memDC, sbX + 35, sbY + 307, "RESET DEFENSE", 13);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 380, sbX + sbW - 15, sbY + 400, RGB(225, 29, 72), BORDER_COLOR, 6);
+    TextOutA(memDC, sbX + 35, sbY + 385, "RESET DEFENSE", 13);
 
     // Hero Section
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 15, sbY + 350, "HERO: PALADIN", 13);
+    TextOutA(memDC, sbX + 15, sbY + 410, "HERO: PALADIN", 13);
     
     HFONT hFontBody = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
@@ -1008,32 +1097,32 @@ void Render(HDC hdc, HWND hwnd) {
         SetTextColor(memDC, g_hero.shieldActive > 0 ? RGB(59, 130, 246) : RGB(34, 197, 94));
         wsprintfA(hBuf, "HP: %d/100 | %s", (int)g_hero.hp, g_hero.shieldActive > 0 ? "SHIELDED" : "Active");
     }
-    TextOutA(memDC, sbX + 15, sbY + 370, hBuf, lstrlenA(hBuf));
+    TextOutA(memDC, sbX + 15, sbY + 430, hBuf, lstrlenA(hBuf));
 
     // Spell Buttons
     int btnW = 50;
-    DrawRoundedRect(memDC, sbX + 15, sbY + 390, sbX + 15 + btnW, sbY + 420, g_hero.healCd > 0 ? RGB(100,80,20) : TEXT_GOLD, BORDER_COLOR, 4);
-    DrawRoundedRect(memDC, sbX + 70, sbY + 390, sbX + 70 + btnW, sbY + 420, g_hero.shieldCd > 0 ? RGB(30,60,100) : RGB(59, 130, 246), BORDER_COLOR, 4);
-    DrawRoundedRect(memDC, sbX + 125, sbY + 390, sbX + 125 + btnW, sbY + 420, g_hero.meteorCd > 0 ? RGB(100,20,20) : TEXT_RED, BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 450, sbX + 15 + btnW, sbY + 480, g_hero.healCd > 0 ? RGB(100,80,20) : TEXT_GOLD, BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 70, sbY + 450, sbX + 70 + btnW, sbY + 480, g_hero.shieldCd > 0 ? RGB(30,60,100) : RGB(59, 130, 246), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 125, sbY + 450, sbX + 125 + btnW, sbY + 480, g_hero.meteorCd > 0 ? RGB(100,20,20) : TEXT_RED, BORDER_COLOR, 4);
     
     SetTextColor(memDC, RGB(0,0,0));
     char sBuf[16];
     if (g_hero.healCd > 0) wsprintfA(sBuf, "H(%d)", (g_hero.healCd/30)+1); else wsprintfA(sBuf, "Heal(1)");
-    TextOutA(memDC, sbX + 22, sbY + 400, sBuf, lstrlenA(sBuf));
+    TextOutA(memDC, sbX + 22, sbY + 460, sBuf, lstrlenA(sBuf));
     
     SetTextColor(memDC, TEXT_WHITE);
     if (g_hero.shieldCd > 0) wsprintfA(sBuf, "S(%d)", (g_hero.shieldCd/30)+1); else wsprintfA(sBuf, "Shld(2)");
-    TextOutA(memDC, sbX + 76, sbY + 400, sBuf, lstrlenA(sBuf));
+    TextOutA(memDC, sbX + 76, sbY + 460, sBuf, lstrlenA(sBuf));
     
     if (g_hero.meteorCd > 0) wsprintfA(sBuf, "M(%d)", (g_hero.meteorCd/30)+1); else wsprintfA(sBuf, "Mtr(3)");
-    TextOutA(memDC, sbX + 130, sbY + 400, sBuf, lstrlenA(sBuf));
+    TextOutA(memDC, sbX + 130, sbY + 460, sBuf, lstrlenA(sBuf));
 
     // Info Box
-    DrawRoundedRect(memDC, sbX + 15, sbY + 430, sbX + sbW - 15, sbY + sbH - 15, BG_COLOR, BORDER_COLOR, 6);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 490, sbX + sbW - 15, sbY + sbH - 10, BG_COLOR, BORDER_COLOR, 6);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 25, sbY + 440, "Phase 9 Features:", 17);
+    TextOutA(memDC, sbX + 25, sbY + 500, "Phase 10: Traps", 15);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, sbX + 25, sbY + 460, "- Paladin Hero + Tech Academy", 29);
+    TextOutA(memDC, sbX + 25, sbY + 520, "Spikes, Oil, Barricades", 23);
 
     DeleteObject(hFontHeader);
     DeleteObject(hFontBody);
@@ -1193,17 +1282,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 return 0;
             }
         }
+        
+        // Shop Info traps
+        for (int i=0; i<3; i++) {
+            if (x >= sbX + 5 && x <= sbX + sbW - 5 && y >= sbY + 185 + i*28 && y <= sbY + 210 + i*28) {
+                g_selectedTowerTypeToBuild = TRAP_SPIKE + i;
+                Beep(400, 20); InvalidateRect(hwnd, NULL, FALSE); return 0;
+            }
+        }
+        
+        // Scrolls
+        if (x >= sbX + 5 && x <= sbX + 62 && y >= sbY + 270 && y <= sbY + 295) {
+            if (g_gold >= 100) { g_gold -= 100; AddFloatingText(400, 300, "FIRESTORM!", TEXT_RED); Beep(100, 300);
+                for(int e=0; e<MAX_ENEMIES; e++) if(g_enemies[e].active) { g_enemies[e].hp -= 150; if(g_enemies[e].hp<=0) { g_enemies[e].active=FALSE; g_gold+=15; } }
+            }
+            InvalidateRect(hwnd, NULL, FALSE); return 0;
+        }
+        if (x >= sbX + 65 && x <= sbX + 122 && y >= sbY + 270 && y <= sbY + 295) {
+            if (g_gold >= 80) { g_gold -= 80; g_blizzTimer = 300; AddFloatingText(400, 300, "BLIZZARD!", RGB(59, 130, 246)); Beep(600, 300); }
+            InvalidateRect(hwnd, NULL, FALSE); return 0;
+        }
+        if (x >= sbX + 125 && x <= sbX + 185 && y >= sbY + 270 && y <= sbY + 295) {
+            if (g_gold >= 60) {
+                g_gold -= 60;
+                int b = 0; for(int e=0; e<MAX_ENEMIES; e++) if(g_enemies[e].active) b += 15;
+                g_gold += b; char buf[32]; wsprintfA(buf, "MAGNET: +%dg", b);
+                AddFloatingText(400, 300, buf, TEXT_GOLD); Beep(800, 200);
+            }
+            InvalidateRect(hwnd, NULL, FALSE); return 0;
+        }
+
         // Start Wave
-        if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 195 && y <= sbY + 235) {
+        if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 300 && y <= sbY + 335) {
             if (!g_waveActive && !g_gameOver) {
                 g_waveActive = TRUE;
                 g_spawnQueueCount = 5 + g_wave * 3;
                 if (g_spawnQueueCount > MAX_SPAWN_QUEUE) g_spawnQueueCount = MAX_SPAWN_QUEUE;
                 g_spawnQueueHead = 0;
                 for (int i = 0; i < g_spawnQueueCount; i++) {
-                    if (g_wave % 5 == 0 && i == 0) {
-                        g_spawnQueue[i] = ENEMY_OGRE;
-                    } else {
+                    if (g_wave % 5 == 0 && i == 0) g_spawnQueue[i] = ENEMY_OGRE;
+                    else {
                         int r = rand() % 100;
                         if (g_wave >= 2 && r < 20) g_spawnQueue[i] = ENEMY_HOUND;
                         else if (g_wave >= 3 && r < 40) g_spawnQueue[i] = ENEMY_ORC;
@@ -1211,31 +1329,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         else g_spawnQueue[i] = ENEMY_GOBLIN;
                     }
                 }
-                g_spawnTimer = 0;
-                Beep(600, 40);
+                g_spawnTimer = 0; Beep(600, 40);
             }
         }
         // Academy
-        else if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 245 && y <= sbY + 285) {
-            g_showAcademy = TRUE;
-            InvalidateRect(hwnd, NULL, FALSE);
-            return 0;
+        else if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 340 && y <= sbY + 375) {
+            g_showAcademy = TRUE; InvalidateRect(hwnd, NULL, FALSE); return 0;
         }
         // Reset Defense
-        else if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 295 && y <= sbY + 335) {
-            InitGameState();
-            Beep(300, 60);
+        else if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 380 && y <= sbY + 400) {
+            InitGameState(); Beep(300, 60);
         }
         // Spells
-        else if (x >= sbX + 15 && x <= sbX + 65 && y >= sbY + 390 && y <= sbY + 420) {
-            SendMessage(hwnd, WM_KEYDOWN, '1', 0);
-        }
-        else if (x >= sbX + 70 && x <= sbX + 120 && y >= sbY + 390 && y <= sbY + 420) {
-            SendMessage(hwnd, WM_KEYDOWN, '2', 0);
-        }
-        else if (x >= sbX + 125 && x <= sbX + 175 && y >= sbY + 390 && y <= sbY + 420) {
-            SendMessage(hwnd, WM_KEYDOWN, '3', 0);
-        }
+        else if (x >= sbX + 15 && x <= sbX + 65 && y >= sbY + 450 && y <= sbY + 480) SendMessage(hwnd, WM_KEYDOWN, '1', 0);
+        else if (x >= sbX + 70 && x <= sbX + 120 && y >= sbY + 450 && y <= sbY + 480) SendMessage(hwnd, WM_KEYDOWN, '2', 0);
+        else if (x >= sbX + 125 && x <= sbX + 175 && y >= sbY + 450 && y <= sbY + 480) SendMessage(hwnd, WM_KEYDOWN, '3', 0);
+
         // Check slot clicks
         else if (!g_gameOver) {
             BOOL clickedSlot = FALSE;
@@ -1309,12 +1418,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
             }
+
             if (!clickedSlot && g_hero.respawnTimer <= 0) {
-                // Move hero
-                g_hero.targetX = (float)x;
-                g_hero.targetY = (float)y;
-                Beep(400, 20);
+                if (g_selectedTowerTypeToBuild >= TRAP_SPIKE && g_selectedTowerTypeToBuild <= TRAP_BARRICADE && x < sbX) {
+                    int c = (g_selectedTowerTypeToBuild == TRAP_SPIKE) ? 30 : ((g_selectedTowerTypeToBuild == TRAP_OIL) ? 40 : 50);
+                    if (g_gold >= c) {
+                        for (int tr = 0; tr < MAX_TRAPS; tr++) {
+                            if (!g_traps[tr].active) {
+                                g_gold -= c;
+                                g_traps[tr].active = TRUE;
+                                g_traps[tr].x = (float)x; g_traps[tr].y = (float)y;
+                                g_traps[tr].type = g_selectedTowerTypeToBuild;
+                                g_traps[tr].charges = (g_selectedTowerTypeToBuild == TRAP_SPIKE) ? 3 : -1;
+                                g_traps[tr].hp = (g_selectedTowerTypeToBuild == TRAP_BARRICADE) ? 200.0f : 0;
+                                g_traps[tr].radius = (g_selectedTowerTypeToBuild == TRAP_OIL) ? 40 : 25;
+                                Beep(300, 40);
+                                break;
+                            }
+                        }
+                    } else { Beep(200, 100); }
+                } else {
+                    g_hero.targetX = (float)x;
+                    g_hero.targetY = (float)y;
+                    Beep(400, 20);
+                }
             }
+
         }
         InvalidateRect(hwnd, NULL, FALSE);
         break;
