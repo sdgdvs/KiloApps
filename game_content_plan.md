@@ -125,7 +125,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KPac       | Tier 1 | Loop 7 done (20 mazes, 5 ghosts, Ghost King) | Loop 8: New maze hazards, ghost behaviors, scoring variety |
 | KBreakout  | Tier 1 | Loop 7 done (20 stages, Boss Fortress) | Loop 8: New brick types, boss variety, level editor concepts |
 | KSnake     | Tier 1 | Loop 7 done (20 stages, Hydra boss, rival AI) | Loop 8: New environments, food variety, rival AI behaviors |
 | KRogue     | Tier 1 | Loop 8 done (40 levels, new enemies, crafting, NPCs) | Loop 9: Advanced trap mechanics, boss rematches, cursed items |
@@ -135,6 +134,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSpace     | Tier 1 | Loop 8 done (Formation 9, Weapons, Combos) | Loop 9: Multi-phase bosses, escort missions, branching paths |
 | KAsteroids | Tier 1 | Loop 8 done (Asteroid belt, missile weapon, cruiser shields) | Loop 9: Branching sector paths, escort missions, new hazards |
 | KMaze      | Tier 1 | Loop 8 done (Themes, puzzles, NPCs, Time Freeze) | Loop 9: Advanced trap mechanics, boss rematches, cursed items |
+| KPac       | Tier 1 | Loop 8 done (Hazards, teleport ghost, score multiplier) | Loop 9: Multi-phase bosses, escort missions, branching paths |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -161,6 +161,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 8**
+- [x] KPac (Expanded Campaign Mode to include maze hazards (tile 6), unpredictable teleport behavior for the Red Ghost on loop 7+, and an 8x scoring multiplier on loop 7+ with 0 fright timer in both EXE and HTML)
 - [x] KSolitaire (Balance audit complete: Fixed Vegas mode stock pass rules, adjusted economy score deductions for undo and powerups, added score floor for Classic mode in both EXE and HTML)
 - [x] KMaze (Expanded Campaign Mode to new maze themes, puzzle rooms, NPC encounters, and Time Freeze [T] active item to both EXE and HTML)
 - [x] KConnect4 (Balance audit complete: Increased Grandmaster AI minimax depth to 7, fixed top-down physical piece drop logic for blocker cells in both EXE and HTML)
