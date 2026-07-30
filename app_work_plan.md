@@ -107,14 +107,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KMine
+**Target App:** KPac
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KMine (Added Safe First-Click, Chording, and Hint System)
 - KPac (Added Difficulty Levels and Save/Load Game State)
 - KQuest
 - KNote (Added Real-Time Search, Note Pinning/Unpinning, and Export TXT features)
@@ -161,3 +160,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KConnect4 (Added Save/Load States, Match Replay Viewer, Stats Tracker, JSON Export)
 - KScript (Added Advanced Regex Search & Replace, Macro Scripting, Deep Memory Inspector, and Step-Through Debugger)
 - KMaze (Added Save/Load States, Match Replay Viewer, High Score JSON Export/Import, Custom Keybindings)
+- KMine (Added Safe First-Click, Chording, Hint System, Save/Load Game States, High Score JSON Export/Import, Replay Viewer)
