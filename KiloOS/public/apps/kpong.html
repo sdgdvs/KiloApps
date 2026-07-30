@@ -1004,6 +1004,24 @@
   function draw() {
       ctx.clearRect(0, 0, W, H);
       
+      // 3D Perspective Grid Background (Loop 2)
+      ctx.save();
+      ctx.strokeStyle = themeIndex === 2 ? 'rgba(255, 113, 206, 0.15)' : 'rgba(0, 229, 255, 0.1)';
+      ctx.lineWidth = 1;
+      let timeNow = Date.now() / 15;
+      for (let i = -W; i < W*2; i += 40) {
+          ctx.beginPath(); ctx.moveTo(W/2, H/2); ctx.lineTo(i, H); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(W/2, H/2); ctx.lineTo(i, 0); ctx.stroke();
+      }
+      for (let i = 1; i <= 12; i++) {
+          let yOffset = ((i * 10 + timeNow) % 120);
+          let yBot = H/2 + (yOffset * yOffset) / 30;
+          let yTop = H/2 - (yOffset * yOffset) / 30;
+          ctx.beginPath(); ctx.moveTo(0, yBot); ctx.lineTo(W, yBot); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, yTop); ctx.lineTo(W, yTop); ctx.stroke();
+      }
+      ctx.restore();
+
       // CRT Scanlines
       ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
       for (let i = 0; i < H; i += 4) ctx.fillRect(0, i, W, 1.5);

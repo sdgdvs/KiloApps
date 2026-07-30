@@ -739,6 +739,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
 
+            // 3D Perspective Grid Background (Loop 2)
+            COLORREF gridCol = (theme_index == 2) ? RGB(100, 30, 80) : RGB(0, 70, 80);
+            HPEN gridPen = CreatePen(PS_SOLID, 1, gridCol);
+            HPEN oldGridPen = (HPEN)SelectObject(memDC, gridPen);
+            for (int i = -W; i < W*2; i += 40) {
+                MoveToEx(memDC, W/2, H/2, NULL); LineTo(memDC, i, H);
+                MoveToEx(memDC, W/2, H/2, NULL); LineTo(memDC, i, 0);
+            }
+            int tNow = GetTickCount() / 15;
+            for (int i = 1; i <= 12; i++) {
+                int yOff = ((i * 10 + tNow) % 120);
+                int yBot = H/2 + (yOff * yOff) / 30;
+                int yTop = H/2 - (yOff * yOff) / 30;
+                MoveToEx(memDC, 0, yBot, NULL); LineTo(memDC, W, yBot);
+                MoveToEx(memDC, 0, yTop, NULL); LineTo(memDC, W, yTop);
+            }
+            SelectObject(memDC, oldGridPen); DeleteObject(gridPen);
+
             // Scanlines
             HPEN scanPen = CreatePen(PS_SOLID, 1, RGB(4, 6, 10));
             HPEN oldPen = (HPEN)SelectObject(memDC, scanPen);
