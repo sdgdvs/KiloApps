@@ -705,6 +705,15 @@
         const blob = new Blob([arrayBuffer], { type: file.type });
         const img = new Image();
         img.onload = () => {
+          if (img.width <= 0 || img.height <= 0 || img.width > 8192 || img.height > 8192) {
+            alert(`Image ${file.name} dimensions out of bounds (max 8192x8192).`);
+            loadedCount++;
+            if (loadedCount === validFiles.length && state.playlist.length > 0) {
+              updatePlaylistUI();
+              if (state.currentIndex === -1) selectImage(0);
+            }
+            return;
+          }
           const exif = parseExif(arrayBuffer);
           state.playlist.push({
             file,

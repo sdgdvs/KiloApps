@@ -145,6 +145,12 @@ void LoadBitmapFile(HWND hwnd, const char* szFile) {
     int w = bm.bmWidth;
     int h = bm.bmHeight;
 
+    if (w <= 0 || h <= 0 || w > 8192 || h > 8192) {
+        DeleteObject(hLoaded);
+        MessageBoxA(hwnd, "Image dimensions out of bounds (max 8192x8192).", "KImage Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
     if (g_hBmpOrig) DeleteObject(g_hBmpOrig);
     g_hBmpOrig = Create32BitDIB(w, h, &g_pBitsOrig);
     g_origW = w;
