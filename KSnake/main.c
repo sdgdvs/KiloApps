@@ -1,6 +1,6 @@
 #include <windows.h>
 
-#define CELL_SIZE 15
+#define CELL_SIZE 25
 #define GRID_WIDTH 20
 #define GRID_HEIGHT 20
 #define TIMER_ID 1
@@ -719,7 +719,7 @@ void ApplyFoodMagnet() {
 }
 
 void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_ghost, int d_x, int d_y) {
-    int px = x * CELL_SIZE, py = y * CELL_SIZE + 30;
+    int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
     int cx = px + CELL_SIZE / 2, cy = py + CELL_SIZE / 2;
 
     HBRUSH oldBrush; HPEN oldPen;
@@ -794,7 +794,7 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
 }
 
 void DrawRivalGDI(HDC hdc, int x, int y, int index) {
-    int px = x * CELL_SIZE, py = y * CELL_SIZE + 30;
+    int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
     HBRUSH brush = CreateSolidBrush(index == 0 ? RGB(44, 62, 80) : RGB(52, 73, 94));
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(20, 30, 40));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
@@ -823,7 +823,7 @@ void DrawRivalGDI(HDC hdc, int x, int y, int index) {
 }
 
 void DrawBossGDI(HDC hdc, int x, int y, int index) {
-    int px = x * CELL_SIZE, py = y * CELL_SIZE + 30;
+    int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
     HBRUSH brush = CreateSolidBrush(index == 0 ? RGB(45, 52, 54) : RGB(99, 110, 114));
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(178, 190, 195));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
@@ -854,7 +854,7 @@ void DrawBossGDI(HDC hdc, int x, int y, int index) {
 }
 
 void DrawGemGDI(HDC hdc, int x, int y, COLORREF color) {
-    int px = x * CELL_SIZE, py = y * CELL_SIZE + 30;
+    int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
     HBRUSH brush = CreateSolidBrush(color);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
@@ -894,7 +894,7 @@ void DrawGemGDI(HDC hdc, int x, int y, COLORREF color) {
 }
 
 void DrawPortalGDI(HDC hdc, int x, int y, COLORREF color) {
-    int px = x * CELL_SIZE, py = y * CELL_SIZE + 30;
+    int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
     HBRUSH brush = CreateSolidBrush(color);
     HPEN pen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
@@ -912,7 +912,7 @@ void DrawPortalGDI(HDC hdc, int x, int y, COLORREF color) {
 }
 
 void DrawObstacleGDI(HDC hdc, int x, int y) {
-    int px = x * CELL_SIZE, py = y * CELL_SIZE + 30;
+    int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
     RECT r = { px, py, px + CELL_SIZE, py + CELL_SIZE };
     HBRUSH bgBrush = CreateSolidBrush(RGB(87, 101, 116));
     FillRect(hdc, &r, bgBrush);
@@ -1183,61 +1183,71 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps; HDC hdc = BeginPaint(hwnd, &ps);
             HBRUSH bg = CreateSolidBrush(RGB(15, 15, 26)); FillRect(hdc, &ps.rcPaint, bg); DeleteObject(bg);
 
+            HFONT hFont = CreateFontA(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
+
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(255, 255, 255));
 
             if (game_state == 0) { // MENU
                 char buf[64];
-                TextOutA(hdc, 70, 20, "KSNAKE ARCADE", 13);
-                wsprintfA(buf, "M - Mode: %s", mode_names[game_mode]); TextOutA(hdc, 40, 55, buf, lstrlenA(buf));
-                wsprintfA(buf, "1-3 - Difficulty: %s", difficulty==0?"Easy":difficulty==1?"Med":"Hard"); TextOutA(hdc, 40, 80, buf, lstrlenA(buf));
-                wsprintfA(buf, "W - Toggle Wrap: %s", (wrap_mode||game_mode==3)?"ON":"OFF"); TextOutA(hdc, 40, 105, buf, lstrlenA(buf));
-                TextOutA(hdc, 40, 130, "H - High Scores Leaderboard", 27);
-                TextOutA(hdc, 40, 155, "R - Resume Saved Game", 21);
-                TextOutA(hdc, 40, 180, "E - Export / I - Import Stats", 29);
-                TextOutA(hdc, 40, 205, "Skills: [G]host [F]reeze [M]agnet", 33);
-                TextOutA(hdc, 50, 245, "[ Press ENTER to Play ]", 23);
+                SetTextColor(hdc, RGB(0, 210, 211));
+                TextOutA(hdc, 170, 40, "KSNAKE ARCADE", 13);
+                SetTextColor(hdc, RGB(255, 255, 255));
+                wsprintfA(buf, "M - Mode: %s", mode_names[game_mode]); TextOutA(hdc, 120, 100, buf, lstrlenA(buf));
+                wsprintfA(buf, "1-3 - Difficulty: %s", difficulty==0?"Easy":difficulty==1?"Med":"Hard"); TextOutA(hdc, 120, 140, buf, lstrlenA(buf));
+                wsprintfA(buf, "W - Toggle Wrap: %s", (wrap_mode||game_mode==3)?"ON":"OFF"); TextOutA(hdc, 120, 180, buf, lstrlenA(buf));
+                TextOutA(hdc, 120, 220, "H - High Scores / Help", 22);
+                TextOutA(hdc, 120, 260, "R - Resume Saved Game", 21);
+                TextOutA(hdc, 120, 300, "E - Export / I - Import Stats", 29);
+                TextOutA(hdc, 120, 340, "Skills: [G]host [F]reeze [M]agnet", 33);
+                SetTextColor(hdc, RGB(76, 209, 55));
+                TextOutA(hdc, 130, 420, "[ Press ENTER to Play ]", 23);
             } else if (game_state == 5) {
                 int i;
                 SetTextColor(hdc, RGB(0, 210, 211));
-                TextOutA(hdc, 60, 20, "TOP 5 LEADERBOARD", 17);
+                TextOutA(hdc, 150, 40, "HIGH SCORES & HELP", 18);
                 SetTextColor(hdc, RGB(255, 255, 255));
+                TextOutA(hdc, 50, 90, "Controls: WASD/Arrows to Move, P to Pause", 41);
+                TextOutA(hdc, 50, 120, "Skills: G=Ghost, F=Freeze, M=Magnet", 35);
+                SetTextColor(hdc, RGB(251, 197, 49));
                 for(i=0; i<5; i++) {
                     char lbuf[64];
                     wsprintfA(lbuf, "%d. %s - %d pts (%s)", i+1, leaderboard[i].name, leaderboard[i].score, leaderboard[i].mode);
-                    TextOutA(hdc, 30, 60 + i * 28, lbuf, lstrlenA(lbuf));
+                    TextOutA(hdc, 120, 180 + i * 32, lbuf, lstrlenA(lbuf));
                 }
-                TextOutA(hdc, 40, 230, "Press ENTER to Return", 21);
+                SetTextColor(hdc, RGB(0, 210, 211));
+                TextOutA(hdc, 140, 380, "Press ENTER to Return", 21);
             } else if (game_state == 3) {
                 SetTextColor(hdc, RGB(251, 197, 49));
-                TextOutA(hdc, 110, 100, "PAUSED", 6);
+                TextOutA(hdc, 210, 200, "PAUSED", 6);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 50, 130, "P: Resume  |  S: Save & Exit", 28);
+                TextOutA(hdc, 120, 250, "P: Resume  |  S: Save & Exit", 28);
             } else if (game_state == 2) {
                 char sbuf[32];
                 SetTextColor(hdc, RGB(255, 71, 87));
-                TextOutA(hdc, 95, 80, "GAME OVER", 9);
+                TextOutA(hdc, 190, 160, "GAME OVER", 9);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                wsprintfA(sbuf, "Final Score: %d", score); TextOutA(hdc, 80, 110, sbuf, lstrlenA(sbuf));
+                wsprintfA(sbuf, "Final Score: %d", score); TextOutA(hdc, 160, 210, sbuf, lstrlenA(sbuf));
 
                 if (is_high_score_entry) {
                     char ibuf[32];
                     SetTextColor(hdc, RGB(76, 209, 55));
-                    TextOutA(hdc, 60, 140, "NEW HIGH SCORE RANK!", 20);
+                    TextOutA(hdc, 130, 270, "NEW HIGH SCORE RANK!", 20);
                     SetTextColor(hdc, RGB(255, 255, 255));
                     wsprintfA(ibuf, "Initials: [%s]", initials_input);
-                    TextOutA(hdc, 75, 170, ibuf, lstrlenA(ibuf));
-                    TextOutA(hdc, 45, 200, "Type Initials & Press ENTER", 27);
+                    TextOutA(hdc, 170, 320, ibuf, lstrlenA(ibuf));
+                    TextOutA(hdc, 110, 370, "Type Initials & Press ENTER", 27);
                 } else {
-                    TextOutA(hdc, 60, 160, "Press ENTER to Return", 21);
+                    TextOutA(hdc, 140, 270, "Press ENTER to Return", 21);
                 }
             } else if (game_state == 4) { // VICTORY!
                 SetTextColor(hdc, RGB(255, 215, 0));
-                TextOutA(hdc, 60, 80, "CAMPAIGN CONQUERED!", 19);
+                TextOutA(hdc, 130, 160, "CAMPAIGN CONQUERED!", 19);
                 SetTextColor(hdc, RGB(76, 209, 55));
-                TextOutA(hdc, 45, 110, "HYDRA VIPER DEFEATED!", 21);
+                TextOutA(hdc, 120, 210, "HYDRA VIPER DEFEATED!", 21);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 60, 160, "Press ENTER to Return", 21);
+                TextOutA(hdc, 140, 300, "Press ENTER to Return", 21);
             } else { // PLAYING
                 int i, r;
                 char score_text[64];
@@ -1286,9 +1296,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     freeze_active > 0 ? "SLOW!" : (freeze_cd == 0 ? "READY" : "CD"),
                     magnet_active > 0 ? "MAG!" : (magnet_cd == 0 ? "READY" : "CD"));
                 SetTextColor(hdc, RGB(72, 219, 251));
-                TextOutA(hdc, 5, 335, hud_text, lstrlenA(hud_text));
+                TextOutA(hdc, 10, 560, hud_text, lstrlenA(hud_text));
             }
 
+            SelectObject(hdc, oldFont);
+            DeleteObject(hFont);
             EndPaint(hwnd, &ps);
             break;
         }
@@ -1317,7 +1329,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     winWidth = GRID_WIDTH * CELL_SIZE + 20;
-    winHeight = GRID_HEIGHT * CELL_SIZE + 95;
+    winHeight = GRID_HEIGHT * CELL_SIZE + 105;
 
     hwnd = CreateWindowEx(0, "KSnakeApp", "KSnake Arcade - Loop 7", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
