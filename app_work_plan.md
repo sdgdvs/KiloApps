@@ -52,14 +52,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KNote
+**Target App:** KPass
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KNote (Added Real-Time Search, Note Pinning/Unpinning, and Export TXT features)
 - KPass (Added Password Strength & Entropy Assessment and Searchable Vault System)
 - KMedia (Added Playback Modes, Speed Controls, Playlist Search Filter, Seeker & Volume, and Keyboard Shortcuts)
 - KNet (Added Traffic Logging, Ping Stats Engine & Port Inspector)
@@ -106,3 +105,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KMine (Added Safe First-Click, Chording, Hint System, Save/Load Game States, High Score JSON Export/Import, Replay Viewer)
 - KPac (Added Difficulty Levels, Save/Load Game State, High Score JSON Export/Import, Match Replay Viewer, Custom Keybindings)
 - KQuest (Added Save/Load States, High Score JSON Export/Import, Match Replay Viewer, Custom Keybindings)
+- KNote (Added Real-Time Search, Note Pinning, TXT Export, JSON/MD Import/Export, AES Encryption, Multi-Tab, Tagging, Auto-save)
