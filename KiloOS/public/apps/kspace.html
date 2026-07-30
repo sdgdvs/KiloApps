@@ -83,6 +83,11 @@
   const skillBar = document.getElementById('skillBar');
   const W = 320, H = 480;
 
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+
   // --- GAME STATES ---
   const STATE_MENU = 0;
   const STATE_MODE_SELECT = 1;
@@ -91,6 +96,7 @@
   const STATE_LEADERBOARD = 4;
   const STATE_GAMEOVER = 5;
   const STATE_VICTORY = 6;
+  const STATE_HELP = 7;
 
   let gameState = STATE_MENU;
   let menuIndex = 0;
@@ -499,7 +505,7 @@
   // --- KEYBOARD & INPUT ---
   const keys = {};
   document.addEventListener('keydown', e => {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar', 'KeyB', 'KeyP', 'Escape'].includes(e.code) || [' ', 'b', 'B', 'p', 'P', 't', 'T', 'd', 'D', 's', 'S'].includes(e.key)) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar', 'KeyB', 'KeyP', 'Escape', 'KeyH'].includes(e.code) || [' ', 'b', 'B', 'p', 'P', 't', 'T', 'd', 'D', 's', 'S', 'h', 'H'].includes(e.key)) {
       e.preventDefault();
     }
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -507,12 +513,18 @@
     keys[e.code] = true;
 
     if (gameState === STATE_MENU) {
-      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      if (e.key === 'h' || e.key === 'H') {
+        gameState = STATE_HELP;
+      } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
         menuIndex = (menuIndex - 1 + (hasSavedGame() ? 4 : 3)) % (hasSavedGame() ? 4 : 3);
       } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
         menuIndex = (menuIndex + 1) % (hasSavedGame() ? 4 : 3);
       } else if (e.key === 'Enter' || e.key === ' ') {
         handleMenuSelect();
+      }
+    } else if (gameState === STATE_HELP) {
+      if (e.key === 'h' || e.key === 'H' || e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+        gameState = STATE_MENU;
       }
     } else if (gameState === STATE_MODE_SELECT) {
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
@@ -595,7 +607,7 @@
           break;
         }
       }
-    } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
+    } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY || gameState === STATE_HELP) {
       gameState = STATE_MENU;
     } else if (gameState === STATE_PLAYING) {
       if (mx > W - 40 && my < 40) {
@@ -1410,6 +1422,7 @@
     if (gameState === STATE_MENU) drawMenuScreen();
     else if (gameState === STATE_MODE_SELECT) drawModeSelectScreen();
     else if (gameState === STATE_LEADERBOARD) drawLeaderboardScreen();
+    else if (gameState === STATE_HELP) drawHelpScreen();
     else if (gameState === STATE_PLAYING || gameState === STATE_PAUSED || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
       drawPlayerShip(p.x, p.y, p.shield, frameCount);
 
@@ -1563,6 +1576,47 @@
         ctx.fillText(options[i], W / 2, y);
       }
     }
+
+    ctx.fillStyle = '#ffea00';
+    ctx.font = '12px monospace';
+    ctx.fillText('[H] Help / Controls', W / 2, H - 30);
+
+    ctx.textAlign = 'left';
+  }
+
+  function drawHelpScreen() {
+    ctx.fillStyle = 'rgba(5, 5, 18, 0.95)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = 'bold 24px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('HOW TO PLAY', W / 2, 60);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px monospace';
+    let instructions = [
+      "ARROWS / DRAG : Move Ship",
+      "SPACE / CLICK : Fire Weapon",
+      "",
+      "--- SKILLS ---",
+      "[T] : Time Stop (Freeze)",
+      "[D] : Tactical Dash (Invincible)",
+      "[B] : Smart Bomb (Clear)",
+      "[S] : Hyper Shield (Protect)",
+      "",
+      "--- ITEMS ---",
+      "S:Spread L:Laser H:Shield",
+      "B:Bomb R:Rapid T:Time Stop",
+      "Y:Hyper Shield D:Dash Refresh",
+      "W:Weapon Upgrade"
+    ];
+    for (let i = 0; i < instructions.length; i++) {
+      ctx.fillText(instructions[i], W / 2, 100 + i * 20);
+    }
+
+    ctx.fillStyle = '#ffea00';
+    ctx.font = '14px monospace';
+    ctx.fillText('Press [H] or ENTER to return', W / 2, H - 40);
     ctx.textAlign = 'left';
   }
 

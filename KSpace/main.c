@@ -23,6 +23,7 @@ long _ftol2(float f) { return (long)f; }
 #define STATE_LEADERBOARD 4
 #define STATE_GAMEOVER 5
 #define STATE_VICTORY 6
+#define STATE_HELP 7
 
 // --- GAME MODES ---
 #define MODE_CLASSIC 0
@@ -1316,8 +1317,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN:
             if (gameState == STATE_MENU) {
-                int opts = HasSavedGame() ? 4 : 3;
-                if (wParam == VK_UP || wParam == 'W') menuIndex = (menuIndex - 1 + opts) % opts;
+                if (wParam == 'H') {
+                    gameState = STATE_HELP;
+                } else {
+                    int opts = HasSavedGame() ? 4 : 3;
+                    if (wParam == VK_UP || wParam == 'W') menuIndex = (menuIndex - 1 + opts) % opts;
                 else if (wParam == VK_DOWN || wParam == 'S') menuIndex = (menuIndex + 1) % opts;
                 else if (wParam == VK_RETURN || wParam == VK_SPACE) {
                     int saved = HasSavedGame();
@@ -1326,6 +1330,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if ((!saved && menuIndex == 1) || (saved && menuIndex == 2)) gameState = STATE_LEADERBOARD;
                     else gameState = STATE_MODE_SELECT;
                 }
+            } else if (gameState == STATE_HELP) {
+                if (wParam == 'H' || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) gameState = STATE_MENU;
             } else if (gameState == STATE_MODE_SELECT) {
                 if (wParam == VK_UP || wParam == 'W') modeIndex = (modeIndex - 1 + 3) % 3;
                 else if (wParam == VK_DOWN || wParam == 'S') modeIndex = (modeIndex + 1) % 3;
@@ -1346,7 +1352,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if (menuIndex == 2) LoadGameState();
                     else if (menuIndex == 3) gameState = STATE_MENU;
                 } else if (wParam == 'P' || wParam == VK_ESCAPE) gameState = STATE_PLAYING;
-            } else if (gameState == STATE_LEADERBOARD || gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) {
+            } else if (gameState == STATE_LEADERBOARD || gameState == STATE_GAMEOVER || gameState == STATE_VICTORY || gameState == STATE_HELP) {
                 if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_ESCAPE) gameState = STATE_MENU;
             }
             break;
@@ -1439,6 +1445,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             TextOutA(memDC, W/2 - lstrlenA(opts[optIdxs[i]])*4, y, opts[optIdxs[i]], lstrlenA(opts[optIdxs[i]]));
                         }
                     }
+                    SetTextColor(memDC, RGB(255, 234, 0));
+                    TextOutA(memDC, W/2 - 60, H - 30, "[H] Help / Controls", 19);
                 } else if (gameState == STATE_MODE_SELECT) {
                     SetTextColor(memDC, RGB(255, 234, 0));
                     TextOutA(memDC, W/2 - 65, 80, "SELECT GAME MODE", 16);
@@ -1456,6 +1464,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     SetTextColor(memDC, RGB(255, 23, 68));
                     TextOutA(memDC, W/2 - 80, H - 40, "Press ENTER to Launch", 21);
+                } else if (gameState == STATE_HELP) {
+                    SetTextColor(memDC, RGB(0, 229, 255));
+                    TextOutA(memDC, W/2 - 45, 60, "HOW TO PLAY", 11);
+                    SetTextColor(memDC, RGB(255, 255, 255));
+                    char* lines[] = {
+                        "ARROWS : Move Ship",
+                        "SPACE  : Fire Weapon",
+                        "",
+                        "--- SKILLS ---",
+                        "T : Time Stop (Freeze)",
+                        "D : Tactical Dash (Invinc.)",
+                        "B : Smart Bomb (Clear)",
+                        "S : Hyper Shield (Protect)",
+                        "",
+                        "--- ITEMS ---",
+                        "S:Spread L:Laser H:Shield",
+                        "B:Bomb R:Rapid T:Time Stop",
+                        "Y:Hyper D:Dash W:Upgrade"
+                    };
+                    for (int i = 0; i < 13; i++) {
+                        TextOutA(memDC, W/2 - 95, 100 + i * 20, lines[i], lstrlenA(lines[i]));
+                    }
+                    SetTextColor(memDC, RGB(255, 234, 0));
+                    TextOutA(memDC, W/2 - 90, H - 40, "Press [H] or ENTER to return", 28);
                 } else if (gameState == STATE_LEADERBOARD) {
                     SetTextColor(memDC, RGB(0, 229, 255));
                     TextOutA(memDC, W/2 - 60, 60, "TOP COMMANDERS", 14);
@@ -1657,8 +1689,10 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
+    RECT wr = {0, 0, W, H};
+    AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     HWND hwnd = CreateWindowEx(0, "KSpaceApp", "KSpace", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W + 16, H + 39, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
