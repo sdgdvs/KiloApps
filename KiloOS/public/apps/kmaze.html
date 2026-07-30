@@ -473,8 +473,9 @@
       let dirs = [[0,1], [0,-1], [1,0], [-1,0]];
       let found = false;
 
-      while (queue.length > 0) {
-          let [cx, cy] = queue.shift();
+      let qHead = 0;
+      while (qHead < queue.length) {
+          let [cx, cy] = queue[qHead++];
           if (cx === targetX && cy === targetY) { found = true; break; }
 
           for (let d of dirs) {

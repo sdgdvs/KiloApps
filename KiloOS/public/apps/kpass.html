@@ -14,6 +14,7 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
   .tabs {
     display: flex;
@@ -93,7 +94,7 @@
     align-items: center;
     gap: 10px;
   }
-  input[type="text"] {
+  input[type="text"], input[type="password"], select {
     flex: 1;
     padding: 10px;
     background: #222;
@@ -128,6 +129,7 @@
   }
   .vault-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 12px;
   }
@@ -151,7 +153,16 @@
     overflow: hidden;
   }
   .vault-label { font-weight: bold; color: #fff; font-size: 15px; }
-  .vault-pass { font-family: monospace; color: #aaa; font-size: 14px; word-break: break-all; }
+  .vault-category {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #2980b9;
+    color: #fff;
+    margin-left: 8px;
+    font-weight: normal;
+  }
+  .vault-pass { font-family: monospace; color: #aaa; font-size: 14px; word-break: break-all; margin-top:4px;}
   .vault-badge {
     font-size: 11px;
     padding: 2px 6px;
@@ -175,15 +186,57 @@
   .btn-danger:hover {
     background: #c0392b;
   }
+
+  /* Lock Screen */
+  #lockScreen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #1e1e1e;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    text-align: center;
+  }
+  #lockScreen h1 {
+    color: #e74c3c;
+    margin-bottom: 20px;
+  }
+  #lockScreen input {
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 15px;
+    font-size: 18px;
+    text-align: center;
+  }
+  #lockScreen button {
+    width: 100%;
+    max-width: 300px;
+  }
+  .setup-msg { color: #aaa; font-size: 13px; margin-top: 10px; max-width: 300px; }
+  #lockError { color: #e74c3c; margin-top: 10px; font-weight: bold; }
 </style>
 </head>
 <body>
+  <!-- Lock Screen Overlay -->
+  <div id="lockScreen">
+    <h1>KPass Vault Locked</h1>
+    <input type="password" id="masterPass" placeholder="Master Password">
+    <button class="primary" id="btnUnlock">Unlock / Setup</button>
+    <div id="lockError"></div>
+    <div class="setup-msg" id="setupMsg">If this is your first time, entering a password will encrypt and set up your vault.</div>
+  </div>
+
   <div id="helpOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; flex-direction: column; justify-content: center; align-items: center; color: #fff; padding: 20px; text-align: center;">
     <h2 style="color: #e74c3c;">KPass Help</h2>
     <p style="max-width: 400px; margin-bottom: 10px;"><strong>Generator:</strong> Customize your password complexity and length, then click Generate. You can save generated passwords to your Vault.</p>
     <p style="max-width: 400px;"><strong>Vault:</strong> View, copy, search, and manage your saved passwords. Import/export is also available.</p>
+    <p style="max-width: 400px;"><strong>Auto-Lock:</strong> The vault auto-locks after 1 minute of inactivity.</p>
     <p style="color: #aaa; margin-top: 20px;">Press 'H' or Click to close</p>
   </div>
+  
   <div class="tabs">
     <div class="tab active" id="tabGen">Generator</div>
     <div class="tab" id="tabVault">Vault (<span id="vaultCount">0</span>)</div>
@@ -217,6 +270,13 @@
       </div>
       <div class="control-row">
         <input type="text" id="labelInput" placeholder="Label (e.g. Work Email)">
+        <select id="catInput" style="max-width: 120px;">
+          <option value="Personal">Personal</option>
+          <option value="Work">Work</option>
+          <option value="Finance">Finance</option>
+          <option value="Social">Social</option>
+          <option value="Other">Other</option>
+        </select>
         <button id="btnSave">Save to Vault</button>
       </div>
       <div class="control-row" style="margin-top: 10px;">
@@ -228,10 +288,20 @@
   
   <div class="content" id="contentVault" style="display: none;">
     <div class="vault-actions">
-      <input type="text" id="vaultSearch" placeholder="Search vault entries...">
-      <button class="btn-sm" id="btnExport" title="Export Vault to JSON">Export</button>
-      <button class="btn-sm" id="btnImport" title="Import Vault from JSON">Import</button>
-      <input type="file" id="fileImport" accept=".json" style="display:none;">
+      <input type="text" id="vaultSearch" placeholder="Search...">
+      <select id="vaultCatFilter" style="max-width: 120px;">
+        <option value="">All Cats</option>
+        <option value="Personal">Personal</option>
+        <option value="Work">Work</option>
+        <option value="Finance">Finance</option>
+        <option value="Social">Social</option>
+        <option value="Other">Other</option>
+      </select>
+      <button class="btn-sm" id="btnExportJSON" title="Export to JSON">JSON</button>
+      <button class="btn-sm" id="btnExportCSV" title="Export to CSV">CSV</button>
+      <button class="btn-sm" id="btnImport" title="Import Vault">Import</button>
+      <button class="btn-sm btn-danger" id="btnLock" title="Lock Vault">Lock</button>
+      <input type="file" id="fileImport" accept=".json,.csv" style="display:none;">
     </div>
     <div class="vault-list" id="vaultList">
       <!-- Vault items go here -->
@@ -239,6 +309,54 @@
   </div>
 
   <script>
+    // Crypto utilities
+    async function deriveKey(password, salt) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+          "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+          { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+          keyMaterial, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]
+      );
+    }
+    async function encryptData(password, text) {
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveKey(password, salt);
+      const enc = new TextEncoder();
+      const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, enc.encode(text));
+      return {
+          salt: btoa(String.fromCharCode(...salt)),
+          iv: btoa(String.fromCharCode(...iv)),
+          cipher: btoa(String.fromCharCode(...new Uint8Array(cipher)))
+      };
+    }
+    async function decryptData(password, encryptedObj) {
+      try {
+        const salt = new Uint8Array(atob(encryptedObj.salt).split('').map(c => c.charCodeAt(0)));
+        const iv = new Uint8Array(atob(encryptedObj.iv).split('').map(c => c.charCodeAt(0)));
+        const cipher = new Uint8Array(atob(encryptedObj.cipher).split('').map(c => c.charCodeAt(0)));
+        const key = await deriveKey(password, salt);
+        const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, cipher);
+        return new TextDecoder().decode(plain);
+      } catch(e) { return null; }
+    }
+
+    // App state
+    let vault = [];
+    let currentMasterPass = null;
+    let autoLockTimer = null;
+    const LOCK_TIMEOUT = 60000; // 1 minute
+
+    const lockScreen = document.getElementById('lockScreen');
+    const masterPassInput = document.getElementById('masterPass');
+    const btnUnlock = document.getElementById('btnUnlock');
+    const lockError = document.getElementById('lockError');
+    const setupMsg = document.getElementById('setupMsg');
+    const btnLock = document.getElementById('btnLock');
+
+    // UI elements
     const tabGen = document.getElementById('tabGen');
     const tabVault = document.getElementById('tabVault');
     const contentGen = document.getElementById('contentGen');
@@ -249,17 +367,83 @@
     const btnCopy = document.getElementById('btnCopy');
     const btnSave = document.getElementById('btnSave');
     const labelInput = document.getElementById('labelInput');
+    const catInput = document.getElementById('catInput');
     const vaultList = document.getElementById('vaultList');
     const vaultCount = document.getElementById('vaultCount');
     const vaultSearch = document.getElementById('vaultSearch');
-    const lblStrength = document.getElementById('lblStrength');
-    const lblEntropy = document.getElementById('lblEntropy');
-    const barStrength = document.getElementById('barStrength');
-    const btnExport = document.getElementById('btnExport');
-    const btnImport = document.getElementById('btnImport');
+    const vaultCatFilter = document.getElementById('vaultCatFilter');
     const fileImport = document.getElementById('fileImport');
-    
-    let vault = JSON.parse(localStorage.getItem('kpass_vault') || '[]');
+
+    // Init lock screen message
+    if(localStorage.getItem('kpass_vault_enc')) {
+        setupMsg.style.display = 'none';
+        btnUnlock.innerText = "Unlock Vault";
+    }
+
+    function resetAutoLock() {
+        if(!currentMasterPass) return;
+        clearTimeout(autoLockTimer);
+        autoLockTimer = setTimeout(lockVault, LOCK_TIMEOUT);
+    }
+    document.addEventListener('mousemove', resetAutoLock);
+    document.addEventListener('keydown', resetAutoLock);
+
+    function lockVault() {
+        currentMasterPass = null;
+        vault = [];
+        lockScreen.style.display = 'flex';
+        masterPassInput.value = '';
+        lockError.innerText = '';
+        renderVault();
+        updateVaultCount();
+        clearTimeout(autoLockTimer);
+    }
+    btnLock.addEventListener('click', lockVault);
+
+    async function saveVault() {
+        if(!currentMasterPass) return;
+        const jsonStr = JSON.stringify(vault);
+        const encData = await encryptData(currentMasterPass, jsonStr);
+        localStorage.setItem('kpass_vault_enc', JSON.stringify(encData));
+    }
+
+    btnUnlock.addEventListener('click', async () => {
+        const pass = masterPassInput.value;
+        if(!pass) { lockError.innerText = "Password cannot be empty"; return; }
+
+        const storedEnc = localStorage.getItem('kpass_vault_enc');
+        if(storedEnc) {
+            try {
+                const encObj = JSON.parse(storedEnc);
+                const decryptedStr = await decryptData(pass, encObj);
+                if(decryptedStr === null) {
+                    lockError.innerText = "Incorrect Master Password";
+                    return;
+                }
+                vault = JSON.parse(decryptedStr);
+                currentMasterPass = pass;
+                lockScreen.style.display = 'none';
+                resetAutoLock();
+                renderVault();
+                updateVaultCount();
+            } catch(e) {
+                lockError.innerText = "Error decrypting vault.";
+            }
+        } else {
+            // First time setup
+            currentMasterPass = pass;
+            vault = [];
+            await saveVault();
+            lockScreen.style.display = 'none';
+            setupMsg.style.display = 'none';
+            btnUnlock.innerText = "Unlock Vault";
+            resetAutoLock();
+        }
+    });
+
+    masterPassInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') btnUnlock.click();
+    });
 
     function switchTab(isGen) {
         if(isGen) {
@@ -281,13 +465,11 @@
     tabVault.addEventListener('click', () => switchTab(false));
 
     document.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT') {
+        if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && lockScreen.style.display === 'none') {
             helpOverlay.style.display = helpOverlay.style.display === 'flex' ? 'none' : 'flex';
         }
     });
-    helpOverlay.addEventListener('click', () => {
-        helpOverlay.style.display = 'none';
-    });
+    helpOverlay.addEventListener('click', () => helpOverlay.style.display = 'none');
 
     const chkUpper = document.getElementById('chkUpper');
     const chkLower = document.getElementById('chkLower');
@@ -300,12 +482,12 @@
         lenVal.innerText = rngLen.value;
         generate();
     });
-    chkUpper.addEventListener('change', generate);
-    chkLower.addEventListener('change', generate);
-    chkNum.addEventListener('change', generate);
-    chkSym.addEventListener('change', generate);
+    [chkUpper, chkLower, chkNum, chkSym].forEach(chk => chk.addEventListener('change', generate));
 
     function evaluateStrength(pass) {
+        const lblStrength = document.getElementById('lblStrength');
+        const lblEntropy = document.getElementById('lblEntropy');
+        const barStrength = document.getElementById('barStrength');
         if(!pass || pass === '...') {
             lblStrength.innerText = "Strength: -";
             lblEntropy.innerText = "0 bits";
@@ -325,22 +507,14 @@
         let color = "#e74c3c";
         let pct = Math.min(100, Math.max(10, Math.round((entropy / 100) * 100)));
 
-        if(entropy >= 80) {
-            rating = "Very Strong";
-            color = "#1abc9c";
-        } else if(entropy >= 60) {
-            rating = "Strong";
-            color = "#2ecc71";
-        } else if(entropy >= 40) {
-            rating = "Fair";
-            color = "#f39c12";
-        }
+        if(entropy >= 80) { rating = "Very Strong"; color = "#1abc9c"; }
+        else if(entropy >= 60) { rating = "Strong"; color = "#2ecc71"; }
+        else if(entropy >= 40) { rating = "Fair"; color = "#f39c12"; }
 
         lblStrength.innerText = "Strength: " + rating;
         lblEntropy.innerText = entropy + " bits";
         barStrength.style.width = pct + "%";
         barStrength.style.backgroundColor = color;
-
         return { rating, entropy };
     }
 
@@ -354,13 +528,14 @@
         
         let pass = "";
         let len = parseInt(rngLen.value);
+        let array = new Uint32Array(len);
+        crypto.getRandomValues(array);
         for(let i=0; i<len; i++) {
-            pass += chars[Math.floor(Math.random() * chars.length)];
+            pass += chars[array[i] % chars.length];
         }
         pwdDisplay.innerText = pass;
         evaluateStrength(pass);
     }
-
     btnGen.addEventListener('click', generate);
 
     btnCopy.addEventListener('click', () => {
@@ -368,18 +543,17 @@
             const oldText = btnCopy.innerText;
             btnCopy.innerText = 'Copied!';
             setTimeout(() => btnCopy.innerText = oldText, 2000);
-        }).catch(() => {
-            alert("Failed to copy password.");
         });
     });
 
-    btnSave.addEventListener('click', () => {
+    btnSave.addEventListener('click', async () => {
         const label = labelInput.value.trim();
         const pass = pwdDisplay.innerText;
+        const cat = catInput.value;
         if (label && pass && pass !== '...') {
             const strInfo = evaluateStrength(pass);
-            vault.push({label, pass, strength: strInfo.rating, date: new Date().toLocaleDateString()});
-            localStorage.setItem('kpass_vault', JSON.stringify(vault));
+            vault.push({label, category: cat, pass, strength: strInfo.rating, date: new Date().toLocaleDateString()});
+            await saveVault();
             labelInput.value = '';
             updateVaultCount();
             alert("Saved to Vault!");
@@ -389,14 +563,18 @@
     });
 
     vaultSearch.addEventListener('input', renderVault);
+    vaultCatFilter.addEventListener('change', renderVault);
 
     function renderVault() {
         vaultList.innerHTML = '';
         const query = vaultSearch.value.trim().toLowerCase();
-        const filtered = vault.filter(item => 
-            item.label.toLowerCase().includes(query) || 
-            item.pass.toLowerCase().includes(query)
-        );
+        const catQuery = vaultCatFilter.value;
+        
+        const filtered = vault.filter(item => {
+            const matchQ = item.label.toLowerCase().includes(query) || item.pass.toLowerCase().includes(query);
+            const matchCat = catQuery ? (item.category === catQuery) : true;
+            return matchQ && matchCat;
+        });
 
         if (filtered.length === 0) {
             vaultList.innerHTML = '<div style="text-align:center;color:#666;margin-top:20px;">' + 
@@ -412,6 +590,7 @@
                 <div class="vault-info">
                     <div>
                         <span class="vault-label"></span>
+                        <span class="vault-category">${item.category || 'Other'}</span>
                         <span class="vault-badge">${item.strength || 'Saved'}</span>
                     </div>
                     <div class="vault-pass"></div>
@@ -428,60 +607,85 @@
     }
 
     window.copyVaultItem = (encodedPass) => {
-        const pass = decodeURIComponent(encodedPass);
-        navigator.clipboard.writeText(pass).then(() => {
-            alert("Password copied to clipboard!");
-        });
+        navigator.clipboard.writeText(decodeURIComponent(encodedPass)).then(() => alert("Copied!"));
     };
 
-    window.deleteItem = (index) => {
+    window.deleteItem = async (index) => {
         vault.splice(index, 1);
-        localStorage.setItem('kpass_vault', JSON.stringify(vault));
+        await saveVault();
         renderVault();
         updateVaultCount();
     };
 
-    btnExport.addEventListener('click', () => {
-        if(vault.length === 0) {
-            alert("Vault is empty!");
-            return;
-        }
+    // Export JSON
+    document.getElementById('btnExportJSON').addEventListener('click', () => {
+        if(vault.length===0){ alert("Empty!"); return;}
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vault, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "kpass_vault.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
+        downloadFile(dataStr, "kpass_vault.json");
     });
 
-    btnImport.addEventListener('click', () => fileImport.click());
+    // Export CSV
+    document.getElementById('btnExportCSV').addEventListener('click', () => {
+        if(vault.length===0){ alert("Empty!"); return;}
+        let csv = "label,category,pass,strength,date\n";
+        vault.forEach(i => {
+            csv += `"${i.label.replace(/"/g, '""')}","${(i.category||'').replace(/"/g, '""')}","${i.pass.replace(/"/g, '""')}","${(i.strength||'').replace(/"/g, '""')}","${(i.date||'').replace(/"/g, '""')}"\n`;
+        });
+        const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+        downloadFile(dataStr, "kpass_vault.csv");
+    });
+
+    function downloadFile(data, filename) {
+        const anchor = document.createElement('a');
+        anchor.href = data;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+    }
+
+    document.getElementById('btnImport').addEventListener('click', () => fileImport.click());
 
     fileImport.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if(!file) return;
         const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const imported = JSON.parse(event.target.result);
-                if(Array.isArray(imported)) {
-                    vault = vault.concat(imported);
-                    localStorage.setItem('kpass_vault', JSON.stringify(vault));
-                    renderVault();
-                    updateVaultCount();
-                    alert("Imported " + imported.length + " entries successfully!");
-                } else {
-                    alert("Invalid vault JSON format.");
+        reader.onload = async (event) => {
+            const text = event.target.result;
+            let imported = [];
+            if(file.name.endsWith('.json')) {
+                try {
+                    imported = JSON.parse(text);
+                    if(!Array.isArray(imported)) throw new Error("Invalid");
+                } catch(err) { return alert("Invalid JSON"); }
+            } else if(file.name.endsWith('.csv')) {
+                let lines = text.split('\n');
+                for(let i=1; i<lines.length; i++) {
+                    if(!lines[i].trim()) continue;
+                    let parts = lines[i].split('","');
+                    if(parts.length >= 3) {
+                        let label = parts[0].replace(/^"/, '').replace(/""/g, '"');
+                        let category = parts[1].replace(/""/g, '"');
+                        let pass = parts[2].replace(/""/g, '"');
+                        let strength = (parts[3]||'').replace(/""/g, '"');
+                        let date = (parts[4]||'').replace(/"$/, '').replace(/""/g, '"');
+                        imported.push({label, category, pass, strength, date});
+                    }
                 }
-            } catch(err) {
-                alert("Failed to parse JSON file.");
+            }
+            if(imported.length > 0) {
+                vault = vault.concat(imported);
+                await saveVault();
+                renderVault();
+                updateVaultCount();
+                alert(`Imported ${imported.length} entries!`);
             }
         };
         reader.readAsText(file);
+        fileImport.value = ''; // Reset
     });
 
     generate();
-    updateVaultCount();
   </script>
 </body>
 </html>

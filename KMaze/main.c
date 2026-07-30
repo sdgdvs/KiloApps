@@ -1553,6 +1553,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HBRUSH mTele = CreateSolidBrush(RGB(255, 0, 255));
                     HBRUSH mPath = CreateSolidBrush(RGB(0, 255, 255));
                     HBRUSH mBoss = CreateSolidBrush(RGB(255, 215, 0));
+                    HBRUSH mMono = CreateSolidBrush(RGB(255, 50, 50));
+                    HBRUSH mPick = CreateSolidBrush(RGB(150, 75, 0));
+                    HBRUSH mStun = CreateSolidBrush(RGB(100, 200, 255));
                     
                     for (int i = 0; i < mmW; i++) {
                         for (int j = 0; j < mmH; j++) {
@@ -1572,9 +1575,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             else if (v == 8) b = mComp;
                             else if (v == 9) b = mSpeed;
                             else if (v == 10 || v == 11) b = mTele;
-                            else if (v == 12) b = CreateSolidBrush(RGB(255, 50, 50));
-                            else if (v == 13) b = CreateSolidBrush(RGB(150, 75, 0));
-                            else if (v == 14) b = CreateSolidBrush(RGB(100, 200, 255));
+                            else if (v == 12) b = mMono;
+                            else if (v == 13) b = mPick;
+                            else if (v == 14) b = mStun;
                             else if (v == 15) b = mBoss;
                             
                             RECT mr = {mmX + i*mmS, mmY + j*mmS, mmX + i*mmS + mmS, mmY + j*mmS + mmS};
@@ -1586,6 +1589,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     DeleteObject(mWall); DeleteObject(mExit); DeleteObject(mKey); DeleteObject(mDoor); DeleteObject(mFloor); DeleteObject(mPlayer); DeleteObject(mCoin);
                     DeleteObject(mTrap); DeleteObject(mComp); DeleteObject(mSpeed); DeleteObject(mTele); DeleteObject(mPath); DeleteObject(mBoss);
+                    DeleteObject(mMono); DeleteObject(mPick); DeleteObject(mStun);
                 }
             }
 
