@@ -422,9 +422,9 @@
   const campaign = [
     {size: 9, handicap: 5, komi: 0.5, aiPersonality: 'territorial', name: "Stage 1: Novice Field", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 9, handicap: 3, komi: 0.5, aiPersonality: 'influence', name: "Stage 2: Corner Skirmish", isTsumego: false, initialStones: [], targetDesc: ""},
-    {size: 9, handicap: 0, komi: 0.5, aiPersonality: 'territorial', name: "Stage 3: Tsumego - Corner Snapback", isTsumego: true, 
+    {size: 9, handicap: 0, komi: 0.5, aiPersonality: 'territorial', name: "Stage 3: Tsumego - Corner Capture", isTsumego: true, 
      initialStones: [{x:1,y:0,color:'W'}, {x:1,y:1,color:'W'}, {x:0,y:1,color:'W'}, {x:2,y:0,color:'B'}, {x:2,y:1,color:'B'}, {x:1,y:2,color:'B'}, {x:0,y:2,color:'B'}], 
-     targetDesc: "Capture White's corner group at (0,0) via snapback!"},
+     targetDesc: "Capture White's corner group at (0,0)!"},
     {size: 9, handicap: 2, komi: 0.5, aiPersonality: 'balanced', name: "Stage 4: Tactical Border", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 9, handicap: 0, komi: 6.5, aiPersonality: 'grandmaster', name: "Stage 5: 9x9 Master Duel", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 13, handicap: 7, komi: 0.5, aiPersonality: 'territorial', name: "Stage 6: Medium Horizon", isTsumego: false, initialStones: [], targetDesc: ""},
@@ -435,13 +435,13 @@
     {size: 13, handicap: 2, komi: 6.5, aiPersonality: 'influence', name: "Stage 9: Influence Battle", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 13, handicap: 0, komi: 6.5, aiPersonality: 'grandmaster', name: "Stage 10: 13x13 Grandmaster", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'territorial', name: "Stage 11: Tsumego - Making Two Eyes", isTsumego: true, 
-     initialStones: [{x:1,y:1,color:'B'}, {x:2,y:1,color:'B'}, {x:3,y:1,color:'B'}, {x:3,y:0,color:'B'}, {x:0,y:2,color:'W'}, {x:1,y:2,color:'W'}, {x:2,y:2,color:'W'}, {x:3,y:2,color:'W'}], 
+     initialStones: [{x:0,y:1,color:'B'}, {x:1,y:1,color:'B'}, {x:2,y:1,color:'B'}, {x:3,y:1,color:'B'}, {x:3,y:0,color:'B'}, {x:0,y:2,color:'W'}, {x:1,y:2,color:'W'}, {x:2,y:2,color:'W'}, {x:3,y:2,color:'W'}, {x:4,y:1,color:'W'}, {x:4,y:0,color:'W'}], 
      targetDesc: "Play the vital point to secure two eyes for Black!"},
     {size: 19, handicap: 8, komi: 0.5, aiPersonality: 'influence', name: "Stage 12: Great Wall Siege", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 19, handicap: 5, komi: 0.5, aiPersonality: 'balanced', name: "Stage 13: Dragon Slayer", isTsumego: false, initialStones: [], targetDesc: ""},
-    {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 14: Tsumego - Under the Stones", isTsumego: true, 
+    {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 14: Tsumego - Surround the Center", isTsumego: true, 
      initialStones: [{x:9,y:9,color:'W'}, {x:10,y:9,color:'W'}, {x:9,y:10,color:'W'}, {x:10,y:10,color:'W'}, {x:8,y:9,color:'B'}, {x:11,y:9,color:'B'}, {x:8,y:10,color:'B'}, {x:11,y:10,color:'B'}, {x:9,y:11,color:'B'}], 
-     targetDesc: "Surround and collapse White's central shape!"},
+     targetDesc: "Surround and capture White's central shape!"},
     {size: 19, handicap: 3, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 15: Dragon Slayer Elite", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'balanced', name: "Stage 16: Tsumego - Belly Attachment", isTsumego: true,
      initialStones: [{x:5,y:5,color:'W'}, {x:5,y:6,color:'W'}, {x:6,y:5,color:'W'}, {x:4,y:5,color:'B'}, {x:4,y:6,color:'B'}, {x:5,y:4,color:'B'}, {x:6,y:4,color:'B'}, {x:7,y:5,color:'B'}, {x:6,y:7,color:'B'}, {x:5,y:7,color:'B'}],
@@ -456,9 +456,9 @@
 
   function placeHandicapStones(boardSize, count) {
     if (count <= 0) return;
-    const pts9 = [[2,2], [6,6], [6,2], [2,6], [4,4]];
-    const pts13 = [[3,3], [9,9], [9,3], [3,9], [6,6]];
-    const pts19 = [[3,3], [15,15], [15,3], [3,15], [9,9], [9,3], [9,15], [3,9], [15,9]];
+    const pts9 = [[6,2], [2,6], [6,6], [2,2], [4,4]];
+    const pts13 = [[9,3], [3,9], [9,9], [3,3], [6,6], [3,6], [9,6], [6,3], [6,9]];
+    const pts19 = [[15,3], [3,15], [15,15], [3,3], [9,9], [3,9], [15,9], [9,3], [9,15]];
     let pts = pts19;
     if (boardSize === 9) pts = pts9;
     else if (boardSize === 13) pts = pts13;
@@ -1065,6 +1065,7 @@
     let myLiberties = getLiberties(x, y, color, visited);
     
     let score = caps * 40 + myLiberties * 3;
+    if (caps === 0 && myLiberties === 1) score -= 500;
     
     let distEdgeX = Math.min(x, size - 1 - x);
     let distEdgeY = Math.min(y, size - 1 - y);
@@ -1103,6 +1104,7 @@
     let myLiberties = getLiberties(x, y, color, visited);
     
     let score = caps * 60 + myLiberties * 2;
+    if (caps === 0 && myLiberties === 1) score -= 500;
     
     let cx = Math.floor(size / 2);
     let cy = Math.floor(size / 2);
@@ -1139,6 +1141,7 @@
     let myLiberties = getLiberties(x, y, color, visited);
     
     let score = caps * 50 + myLiberties * 3;
+    if (caps === 0 && myLiberties === 1) score -= 500;
     
     let distEdgeX = Math.min(x, size - 1 - x);
     let distEdgeY = Math.min(y, size - 1 - y);
@@ -1192,6 +1195,7 @@
     let visited = Array(size).fill(null).map(() => Array(size).fill(false));
     let myLiberties = getLiberties(x, y, color, visited);
     score += myLiberties * 5;
+    if (caps === 0 && myLiberties === 1) score -= 500;
     
     if (savingAtari && myLiberties > 1) {
       score += 60;

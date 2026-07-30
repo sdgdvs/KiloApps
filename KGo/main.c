@@ -45,9 +45,9 @@ typedef struct {
 CampaignStage campaign[20] = {
     {9, 5, 0.5f, 0, "Stage 1: Novice Field", 0, 0, {}, ""},
     {9, 3, 0.5f, 1, "Stage 2: Corner Skirmish", 0, 0, {}, ""},
-    {9, 0, 0.5f, 0, "Stage 3: Tsumego - Corner Snapback", 1, 7, 
+    {9, 0, 0.5f, 0, "Stage 3: Tsumego - Corner Capture", 1, 7, 
      {{1,0,2}, {1,1,2}, {0,1,2}, {2,0,1}, {2,1,1}, {1,2,1}, {0,2,1}}, 
-     "Capture White's corner group at (0,0) via snapback!"},
+     "Capture White's corner group at (0,0)!"},
     {9, 2, 0.5f, 2, "Stage 4: Tactical Border", 0, 0, {}, ""},
     {9, 0, 6.5f, 3, "Stage 5: 9x9 Master Duel", 0, 0, {}, ""},
     {13, 7, 0.5f, 0, "Stage 6: Medium Horizon", 0, 0, {}, ""},
@@ -57,14 +57,14 @@ CampaignStage campaign[20] = {
     {13, 4, 0.5f, 2, "Stage 8: Pincer Conflict", 0, 0, {}, ""},
     {13, 2, 6.5f, 1, "Stage 9: Influence Battle", 0, 0, {}, ""},
     {13, 0, 6.5f, 3, "Stage 10: 13x13 Grandmaster", 0, 0, {}, ""},
-    {19, 0, 0.5f, 0, "Stage 11: Tsumego - Making Two Eyes", 1, 8,
-     {{1,1,1}, {2,1,1}, {3,1,1}, {3,0,1}, {0,2,2}, {1,2,2}, {2,2,2}, {3,2,2}},
+    {19, 0, 0.5f, 0, "Stage 11: Tsumego - Making Two Eyes", 1, 11,
+     {{0,1,1}, {1,1,1}, {2,1,1}, {3,1,1}, {3,0,1}, {0,2,2}, {1,2,2}, {2,2,2}, {3,2,2}, {4,1,2}, {4,0,2}},
      "Play the vital point to secure two eyes for Black!"},
     {19, 8, 0.5f, 1, "Stage 12: Great Wall Siege", 0, 0, {}, ""},
     {19, 5, 0.5f, 2, "Stage 13: Dragon Slayer", 0, 0, {}, ""},
-    {19, 0, 0.5f, 3, "Stage 14: Tsumego - Under the Stones", 1, 9,
+    {19, 0, 0.5f, 3, "Stage 14: Tsumego - Surround the Center", 1, 9,
      {{9,9,2}, {10,9,2}, {9,10,2}, {10,10,2}, {8,9,1}, {11,9,1}, {8,10,1}, {11,10,1}, {9,11,1}},
-     "Surround and collapse White's central shape!"},
+     "Surround and capture White's central shape!"},
     {19, 3, 0.5f, 3, "Stage 15: Dragon Slayer Elite", 0, 0, {}, ""},
     {19, 0, 0.5f, 2, "Stage 16: Tsumego - Belly Attachment", 1, 10,
      {{5,5,2}, {5,6,2}, {6,5,2}, {4,5,1}, {4,6,1}, {5,4,1}, {6,4,1}, {7,5,1}, {6,7,1}, {5,7,1}},
@@ -420,6 +420,7 @@ int EvaluateMoveTerritorial(int x, int y, int color) {
     int myLiberties = GetLiberties(x, y, color, visited);
     
     int score = caps * 40 + myLiberties * 3;
+    if (caps == 0 && myLiberties == 1) score -= 500;
     
     int distEdgeX = x < (boardSize - 1 - x) ? x : (boardSize - 1 - x);
     int distEdgeY = y < (boardSize - 1 - y) ? y : (boardSize - 1 - y);
@@ -462,6 +463,7 @@ int EvaluateMoveInfluence(int x, int y, int color) {
     int myLiberties = GetLiberties(x, y, color, visited);
     
     int score = caps * 60 + myLiberties * 2;
+    if (caps == 0 && myLiberties == 1) score -= 500;
     
     int cx = boardSize / 2;
     int cy = boardSize / 2;
@@ -502,6 +504,7 @@ int EvaluateMoveBalanced(int x, int y, int color) {
     int myLiberties = GetLiberties(x, y, color, visited);
     
     int score = caps * 50 + myLiberties * 3;
+    if (caps == 0 && myLiberties == 1) score -= 500;
     
     int distEdgeX = x < (boardSize - 1 - x) ? x : (boardSize - 1 - x);
     int distEdgeY = y < (boardSize - 1 - y) ? y : (boardSize - 1 - y);
@@ -561,6 +564,7 @@ int EvaluateMoveGrandmaster(int x, int y, int color) {
     char visited[19][19] = {0};
     int myLiberties = GetLiberties(x, y, color, visited);
     score += myLiberties * 5;
+    if (caps == 0 && myLiberties == 1) score -= 500;
     
     if (savingAtari && myLiberties > 1) {
         score += 60;
@@ -757,13 +761,13 @@ void PlaceStone(HWND hwnd, int x, int y) {
 
 void PlaceHandicapStones(int size, int count) {
     if (count <= 0) return;
-    int pts9[5][2] = {{2,2}, {6,6}, {6,2}, {2,6}, {4,4}};
-    int pts13[5][2] = {{3,3}, {9,9}, {9,3}, {3,9}, {6,6}};
-    int pts19[9][2] = {{3,3}, {15,15}, {15,3}, {3,15}, {9,9}, {9,3}, {9,15}, {3,9}, {15,9}};
+    int pts9[5][2] = {{6,2}, {2,6}, {6,6}, {2,2}, {4,4}};
+    int pts13[9][2] = {{9,3}, {3,9}, {9,9}, {3,3}, {6,6}, {3,6}, {9,6}, {6,3}, {6,9}};
+    int pts19[9][2] = {{15,3}, {3,15}, {15,15}, {3,3}, {9,9}, {3,9}, {15,9}, {9,3}, {9,15}};
     int (*pts)[2];
     int maxPts = 0;
     if (size == 9) { pts = pts9; maxPts = 5; }
-    else if (size == 13) { pts = pts13; maxPts = 5; }
+    else if (size == 13) { pts = pts13; maxPts = 9; }
     else { pts = pts19; maxPts = 9; }
     if (count > maxPts) count = maxPts;
     for(int i=0; i<count; i++) {
