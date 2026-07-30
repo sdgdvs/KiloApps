@@ -1,17 +1,25 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
+#include <stdio.h>
 
-#define W 500
-#define H 400
+#define W 800
+#define H 500
 
-HWND hInput;
-HWND hOutput;
-HWND hBtnRun;
-HWND hBtnLoad;
-HWND hBtnSave;
+HWND hInput, hOutput, hMemory, hRegexFind, hRegexRep;
+HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnRec, hBtnPlay, hBtnRep;
 
 int vars[26] = {0};
+int nodeCount = 0;
+const char* debugPtr = NULL;
+char debugInput[4096];
+char outStr[4096];
+char memStr[4096];
+
+int isRecording = 0;
+char macroBuf[4096];
+int macroLen = 0;
+WNDPROC oldEditProc;
 
 int ParseExpr(const char** p);
 
@@ -22,6 +30,7 @@ void SkipWhitespace(const char** p) {
 }
 
 int ParseFactor(const char** p) {
+    nodeCount++;
     SkipWhitespace(p);
     int val = 0;
     if (**p == '(') {
@@ -49,6 +58,7 @@ int ParseFactor(const char** p) {
 }
 
 int ParseTerm(const char** p) {
+    nodeCount++;
     int val = ParseFactor(p);
     while (**p == '*' || **p == '/' || **p == '%') {
         char op = **p;
@@ -62,6 +72,7 @@ int ParseTerm(const char** p) {
 }
 
 int ParseExpr(const char** p) {
+    nodeCount++;
     int val = ParseTerm(p);
     while (**p == '+' || **p == '-') {
         char op = **p;
@@ -74,99 +85,129 @@ int ParseExpr(const char** p) {
 }
 
 void IntToStr(int val, char* buf) {
-    if (val == 0) {
-        buf[0] = '0';
-        buf[1] = '\0';
-        return;
+    wsprintfA(buf, "%d", val);
+}
+int StrLen(const char* s) { int c = 0; while (*s++) c++; return c; }
+
+void UpdateMemoryUI() {
+    memStr[0] = '\0';
+    wsprintfA(memStr, "AST Nodes: %d\r\n\r\n", nodeCount);
+    for (int i=0; i<26; i++) {
+        if (vars[i] != 0) {
+            char t[32];
+            wsprintfA(t, "%c = %d\r\n", 'A'+i, vars[i]);
+            lstrcatA(memStr, t);
+        }
     }
-    char temp[32];
-    int i = 0;
-    int isNeg = val < 0;
-    if (isNeg) val = -val;
-    while (val > 0) {
-        temp[i++] = (val % 10) + '0';
-        val /= 10;
-    }
-    if (isNeg) temp[i++] = '-';
-    int j = 0;
-    while (i > 0) {
-        buf[j++] = temp[--i];
-    }
-    buf[j] = '\0';
+    SetWindowTextA(hMemory, memStr);
+    SetWindowTextA(hOutput, outStr);
 }
 
-int StrLen(const char* s) {
-    int c = 0;
-    while (*s++) c++;
-    return c;
-}
-
-void RunScript() {
-    char input[4096];
-    GetWindowTextA(hInput, input, sizeof(input));
-    for (int i = 0; i < 26; i++) vars[i] = 0;
+int StepScript(int* lastVal) {
+    if (!debugPtr) {
+        GetWindowTextA(hInput, debugInput, sizeof(debugInput));
+        debugPtr = debugInput;
+        for (int i = 0; i < 26; i++) vars[i] = 0;
+        outStr[0] = '\0';
+        nodeCount = 0;
+    }
     
-    char outStr[4096];
-    outStr[0] = '\0';
+    SkipWhitespace(&debugPtr);
+    if (!*debugPtr) {
+        char resStr[32];
+        IntToStr(*lastVal, resStr);
+        int l = StrLen(outStr);
+        if (l < sizeof(outStr) - 64) wsprintfA(outStr + l, "\r\nReturn: %s", resStr);
+        UpdateMemoryUI();
+        debugPtr = NULL; // Finished
+        return 0; // done
+    }
     
-    const char* p = input;
-    int lastVal = 0;
-    while (*p) {
-        SkipWhitespace(&p);
-        if (!*p) break;
-        
-        const char* q = p;
-        if (q[0] == 'p' && q[1] == 'r' && q[2] == 'i' && q[3] == 'n' && q[4] == 't') {
-            char after = q[5];
-            if (after == ' ' || after == '\t' || after == '(' || after == '\0' || after == '\r' || after == '\n' || after == ';') {
-                p += 5;
-                int val = ParseExpr(&p);
-                char vstr[32];
-                IntToStr(val, vstr);
-                int l = StrLen(outStr);
-                if (l < sizeof(outStr) - 64) {
-                    wsprintfA(outStr + l, "Print: %s\r\n", vstr);
-                }
-                lastVal = val;
-                continue;
-            }
-        }
-        
-        int isAssign = 0;
-        int varIdx = -1;
-        if ((*q >= 'a' && *q <= 'z') || (*q >= 'A' && *q <= 'Z')) {
-            char v = *q;
-            q++;
-            while (*q == ' ' || *q == '\t') q++;
-            if (*q == '=') {
-                isAssign = 1;
-                varIdx = (v >= 'a') ? v - 'a' : v - 'A';
-                p = q + 1;
-            }
-        }
-        
-        int val = ParseExpr(&p);
-        if (isAssign) {
-            vars[varIdx] = val;
-            char vname = varIdx + 'A';
+    const char* q = debugPtr;
+    if (q[0] == 'p' && q[1] == 'r' && q[2] == 'i' && q[3] == 'n' && q[4] == 't') {
+        char after = q[5];
+        if (after == ' ' || after == '\t' || after == '(' || after == '\0' || after == '\r' || after == '\n' || after == ';') {
+            debugPtr += 5;
+            int val = ParseExpr(&debugPtr);
             char vstr[32];
             IntToStr(val, vstr);
             int l = StrLen(outStr);
-            if (l < sizeof(outStr) - 64) {
-                wsprintfA(outStr + l, "%c = %s\r\n", vname, vstr);
-            }
+            if (l < sizeof(outStr) - 64) wsprintfA(outStr + l, "Print: %s\r\n", vstr);
+            *lastVal = val;
+            UpdateMemoryUI();
+            return 1;
         }
-        lastVal = val;
     }
     
-    char resStr[32];
-    IntToStr(lastVal, resStr);
-    int l = StrLen(outStr);
-    if (l < sizeof(outStr) - 64) {
-        wsprintfA(outStr + l, "\r\nReturn: %s", resStr);
+    int isAssign = 0;
+    int varIdx = -1;
+    if ((*q >= 'a' && *q <= 'z') || (*q >= 'A' && *q <= 'Z')) {
+        char v = *q;
+        q++;
+        while (*q == ' ' || *q == '\t') q++;
+        if (*q == '=') {
+            isAssign = 1;
+            varIdx = (v >= 'a') ? v - 'a' : v - 'A';
+            debugPtr = q + 1;
+        }
     }
     
-    SetWindowTextA(hOutput, outStr);
+    int val = ParseExpr(&debugPtr);
+    if (isAssign) {
+        vars[varIdx] = val;
+        char vname = varIdx + 'A';
+        char vstr[32];
+        IntToStr(val, vstr);
+        int l = StrLen(outStr);
+        if (l < sizeof(outStr) - 64) wsprintfA(outStr + l, "%c = %s\r\n", vname, vstr);
+    }
+    *lastVal = val;
+    UpdateMemoryUI();
+    return 1;
+}
+
+void RunScript() {
+    debugPtr = NULL;
+    int lastVal = 0;
+    while (StepScript(&lastVal)) {}
+}
+
+LRESULT CALLBACK InputEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_CHAR && isRecording) {
+        if (macroLen < sizeof(macroBuf) - 1) {
+            macroBuf[macroLen++] = (char)wp;
+        }
+    }
+    return CallWindowProc(oldEditProc, hwnd, msg, wp, lp);
+}
+
+void SimpleRegexReplace() {
+    char f[256], r[256], inBuf[4096], outBuf[4096];
+    GetWindowTextA(hRegexFind, f, sizeof(f));
+    GetWindowTextA(hRegexRep, r, sizeof(r));
+    GetWindowTextA(hInput, inBuf, sizeof(inBuf));
+    if (f[0] == '\0') return;
+    
+    outBuf[0] = '\0';
+    char* src = inBuf;
+    char* dst = outBuf;
+    int fLen = StrLen(f);
+    int rLen = StrLen(r);
+    
+    while (*src) {
+        int match = 1;
+        for (int i=0; i<fLen; i++) {
+            if (src[i] == '\0' || src[i] != f[i]) { match = 0; break; }
+        }
+        if (match) {
+            for (int i=0; i<rLen; i++) *dst++ = r[i];
+            src += fLen;
+        } else {
+            *dst++ = *src++;
+        }
+    }
+    *dst = '\0';
+    SetWindowTextA(hInput, outBuf);
 }
 
 HBRUSH hbrBg;
@@ -178,36 +219,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hbrBg = CreateSolidBrush(RGB(30, 30, 30));
             hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
             
+            // Toolbar
+            hBtnRec  = CreateWindowEx(0, "BUTTON", "Rec Macro", WS_CHILD | WS_VISIBLE, 10, 10, 90, 24, hwnd, (HMENU)4, NULL, NULL);
+            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play Macro", WS_CHILD | WS_VISIBLE, 105, 10, 90, 24, hwnd, (HMENU)5, NULL, NULL);
+            hBtnStep = CreateWindowEx(0, "BUTTON", "Step", WS_CHILD | WS_VISIBLE, 200, 10, 60, 24, hwnd, (HMENU)6, NULL, NULL);
+            hBtnRun  = CreateWindowEx(0, "BUTTON", "Run", WS_CHILD | WS_VISIBLE, 265, 10, 60, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE, 330, 10, 60, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnSave = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, 395, 10, 60, 24, hwnd, (HMENU)3, NULL, NULL);
+            
+            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Find...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 470, 10, 80, 24, hwnd, NULL, NULL, NULL);
+            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Rep...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 555, 10, 80, 24, hwnd, NULL, NULL, NULL);
+            hBtnRep    = CreateWindowEx(0, "BUTTON", "Replace", WS_CHILD | WS_VISIBLE, 640, 10, 70, 24, hwnd, (HMENU)7, NULL, NULL);
+            
+            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnLoad, hBtnSave, hRegexFind, hRegexRep, hBtnRep};
+            for(int i=0; i<9; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            // Panels
             hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "a = 10\r\nb = 20\r\nprint a * b + 5\r\nprint a % 3",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
-                10, 44, (W - 30) / 2, H - 95, hwnd, NULL, NULL, NULL);
+                10, 44, 250, H - 95, hwnd, NULL, NULL, NULL);
             SendMessage(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
-            
-            hBtnRun = CreateWindowEx(0, "BUTTON", "Run Script",
-                WS_CHILD | WS_VISIBLE,
-                10, 10, 100, 24, hwnd, (HMENU)1, NULL, NULL);
-            SendMessage(hBtnRun, WM_SETFONT, (WPARAM)hFont, TRUE);
-            
-            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load",
-                WS_CHILD | WS_VISIBLE,
-                120, 10, 80, 24, hwnd, (HMENU)2, NULL, NULL);
-            SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
-            
-            hBtnSave = CreateWindowEx(0, "BUTTON", "Save",
-                WS_CHILD | WS_VISIBLE,
-                210, 10, 80, 24, hwnd, (HMENU)3, NULL, NULL);
-            SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+            oldEditProc = (WNDPROC)SetWindowLongPtr(hInput, GWLP_WNDPROC, (LONG_PTR)InputEditProc);
             
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-                10 + (W - 30) / 2 + 10, 44, (W - 30) / 2, H - 95, hwnd, NULL, NULL, NULL);
+                270, 44, 250, H - 95, hwnd, NULL, NULL, NULL);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            hMemory = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Memory Inspector",
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+                530, 44, 240, H - 95, hwnd, NULL, NULL, NULL);
+            SendMessage(hMemory, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             break;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == 1) {
-                RunScript();
-            } else if (LOWORD(wParam) == 2) {
+            int wmId = LOWORD(wParam);
+            if (wmId == 1) RunScript();
+            else if (wmId == 6) { int lv = 0; StepScript(&lv); }
+            else if (wmId == 4) {
+                isRecording = !isRecording;
+                SetWindowTextA(hBtnRec, isRecording ? "Stop Rec" : "Rec Macro");
+                if (isRecording) macroLen = 0;
+            }
+            else if (wmId == 5) {
+                if (isRecording) {
+                    isRecording = 0;
+                    SetWindowTextA(hBtnRec, "Rec Macro");
+                }
+                SetFocus(hInput);
+                for(int i=0; i<macroLen; i++) {
+                    SendMessage(hInput, WM_CHAR, macroBuf[i], 0);
+                    Sleep(20);
+                }
+            }
+            else if (wmId == 7) SimpleRegexReplace();
+            else if (wmId == 2) {
                 char szFile[260] = {0};
                 OPENFILENAMEA ofn = {0};
                 ofn.lStructSize = sizeof(ofn);
@@ -229,13 +296,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 SetWindowTextA(hInput, buf);
                             }
                             VirtualFree(buf, 0, MEM_RELEASE);
-                        } else {
-                            SetWindowTextA(hInput, "");
                         }
                         CloseHandle(hFile);
                     }
                 }
-            } else if (LOWORD(wParam) == 3) {
+            }
+            else if (wmId == 3) {
                 char szFile[260] = {0};
                 OPENFILENAMEA ofn = {0};
                 ofn.lStructSize = sizeof(ofn);
@@ -256,9 +322,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             DWORD dwWritten;
                             WriteFile(hFile, buf, len, &dwWritten, NULL);
                             VirtualFree(buf, 0, MEM_RELEASE);
-                        } else {
-                            DWORD dwWritten;
-                            WriteFile(hFile, "", 0, &dwWritten, NULL);
                         }
                         CloseHandle(hFile);
                     }
@@ -269,8 +332,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
+            HWND hCtl = (HWND)lParam;
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(220, 220, 220));
+            if (hCtl == hMemory) SetTextColor(hdc, RGB(100, 200, 255));
+            else SetTextColor(hdc, RGB(220, 220, 220));
             return (LRESULT)hbrBg;
         }
         case WM_ERASEBKGND: {
@@ -283,10 +348,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            int halfW = (nw - 30) / 2;
-            MoveWindow(hBtnRun, 10, 10, 100, 24, TRUE);
-            MoveWindow(hInput, 10, 44, halfW, nh - 55, TRUE);
-            MoveWindow(hOutput, 20 + halfW, 44, halfW, nh - 55, TRUE);
+            int panelW = (nw - 40) / 3;
+            MoveWindow(hInput, 10, 44, panelW, nh - 55, TRUE);
+            MoveWindow(hOutput, 20 + panelW, 44, panelW, nh - 55, TRUE);
+            MoveWindow(hMemory, 30 + panelW * 2, 44, panelW, nh - 55, TRUE);
             break;
         }
         case WM_DESTROY:
@@ -304,6 +369,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 void* __cdecl memset(void* dest, int c, size_t count) {
     char* bytes = (char*)dest;
     while (count--) *bytes++ = (char)c;
+    return dest;
+}
+
+#pragma function(memcpy)
+void* __cdecl memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
     return dest;
 }
 

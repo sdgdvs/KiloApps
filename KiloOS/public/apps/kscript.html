@@ -48,6 +48,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
     }
 
     h1 {
@@ -84,6 +86,9 @@
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 1px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     textarea {
@@ -120,10 +125,11 @@
         background: var(--accent);
         color: white;
         border: none;
-        padding: 8px 20px;
+        padding: 8px 15px;
         border-radius: 8px;
         font-family: 'Inter', sans-serif;
         font-weight: 600;
+        font-size: 13px;
         cursor: pointer;
         transition: all 0.2s ease;
         box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
@@ -132,11 +138,20 @@
     button:hover {
         background: var(--accent-hover);
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
     }
     
     button:active {
         transform: translateY(0);
+    }
+    
+    .find-replace input {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid var(--glass-border);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        width: 80px;
     }
 </style>
 </head>
@@ -145,24 +160,38 @@
 <div class="container">
     <div class="header">
         <h1>KScript</h1>
-        <div style="display: flex; gap: 10px;">
-            <button id="btnLoad" aria-label="Load script">Load</button>
-            <button id="btnSave" aria-label="Save script">Save</button>
-            <button id="btnRun" aria-label="Run script">Run Script</button>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="btnRec" style="background:#f43f5e">⏺ Rec Macro</button>
+            <button id="btnPlay" style="background:#10b981">▶ Play</button>
+            <button id="btnStep" style="background:#f59e0b">⏭ Step</button>
+            <button id="btnRun">Run All</button>
+            <button id="btnLoad">Load</button>
+            <button id="btnSave">Save</button>
         </div>
     </div>
     
     <div class="panels">
-        <div class="panel">
-            <div class="panel-header">Input</div>
-            <textarea id="exprInput" spellcheck="false" aria-label="Script input" placeholder="Enter script here...
+        <div class="panel" style="flex: 1.2;">
+            <div class="panel-header">
+                <span>Input</span>
+                <div class="find-replace" style="display:flex; gap:5px;">
+                    <input id="regexFind" placeholder="/pattern/" title="Regex Find">
+                    <input id="regexRep" placeholder="replace" title="Replace With">
+                    <button id="btnRep" style="padding:4px 8px; font-size:11px;">Rep All</button>
+                </div>
+            </div>
+            <textarea id="exprInput" spellcheck="false" placeholder="Enter script here...
 Variables: a = 10
 Math: a * 2 + 5
 print a % 3"></textarea>
         </div>
         <div class="panel">
             <div class="panel-header">Output</div>
-            <div id="outputArea" class="output" aria-label="Script output" aria-live="polite" tabindex="0"></div>
+            <div id="outputArea" class="output"></div>
+        </div>
+        <div class="panel" style="flex: 0.8;">
+            <div class="panel-header">Memory Inspector</div>
+            <div id="memoryArea" class="output" style="color:#38bdf8;"></div>
         </div>
     </div>
 </div>
@@ -172,13 +201,20 @@ print a % 3"></textarea>
     const btnRun = document.getElementById('btnRun');
     const btnLoad = document.getElementById('btnLoad');
     const btnSave = document.getElementById('btnSave');
+    const btnStep = document.getElementById('btnStep');
+    const btnRec = document.getElementById('btnRec');
+    const btnPlay = document.getElementById('btnPlay');
+    const btnRep = document.getElementById('btnRep');
     const outputArea = document.getElementById('outputArea');
+    const memoryArea = document.getElementById('memoryArea');
 
     exprInput.value = "a = 10\nb = 20\nprint a * b + 5\nprint a % 3";
 
-    function runParser(str) {
+    // Generator-based Parser for Step-Through Debugging
+    function* runParserGen(str) {
         let vars = new Array(26).fill(0);
         let outStr = "";
+        let nodeCount = 0;
         
         let idx = 0;
         const peek = () => idx < str.length ? str[idx] : '\0';
@@ -188,33 +224,30 @@ print a % 3"></textarea>
         };
         
         const parseFactor = () => {
+            nodeCount++;
             skipSpace();
             let val = 0;
             let c = peek();
             if (c === '(') {
-                advance();
-                val = parseExpr();
-                skipSpace();
+                advance(); val = parseExpr(); skipSpace();
                 if (peek() === ')') advance();
             } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                 let vIdx = c.toUpperCase().charCodeAt(0) - 65;
-                advance();
-                val = vars[vIdx];
+                advance(); val = vars[vIdx];
             } else {
                 let start = idx;
                 while (peek() >= '0' && peek() <= '9') advance();
                 if (idx > start) val = parseInt(str.substring(start, idx), 10);
                 else if (idx < str.length) advance();
             }
-            skipSpace();
-            return val;
+            skipSpace(); return val;
         };
         
         const parseTerm = () => {
+            nodeCount++;
             let val = parseFactor();
             while (peek() === '*' || peek() === '/' || peek() === '%') {
-                let op = peek();
-                advance();
+                let op = peek(); advance();
                 let nextVal = parseFactor();
                 if (op === '*') val *= nextVal;
                 else if (op === '/') { if (nextVal !== 0) val = Math.trunc(val / nextVal); }
@@ -224,10 +257,10 @@ print a % 3"></textarea>
         };
         
         const parseExpr = () => {
+            nodeCount++;
             let val = parseTerm();
             while (peek() === '+' || peek() === '-') {
-                let op = peek();
-                advance();
+                let op = peek(); advance();
                 let nextVal = parseTerm();
                 if (op === '+') val += nextVal;
                 else val -= nextVal;
@@ -251,9 +284,11 @@ print a % 3"></textarea>
                     let val = parseExpr();
                     outStr += `Print: ${val}\n`;
                     lastVal = val;
+                    yield {vars, outStr, nodeCount, lastVal};
                     continue;
                 }
             }
+            
             let c = peek();
             if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                 let vIdx = c.toUpperCase().charCodeAt(0) - 65;
@@ -276,31 +311,106 @@ print a % 3"></textarea>
                 outStr += `${String.fromCharCode(varIdx + 65)} = ${val}\n`;
             }
             lastVal = val;
+            yield {vars, outStr, nodeCount, lastVal};
         }
         
         outStr += `\nReturn: ${lastVal}`;
-        return outStr;
+        return {vars, outStr, nodeCount, lastVal};
     }
 
-    btnRun.onclick = () => {
-        const expr = exprInput.value;
-        if (!expr.trim()) return;
-        
-        outputArea.classList.remove('error');
-        outputArea.textContent = 'Running...';
-        
-        btnRun.style.transform = 'scale(0.95)';
-        setTimeout(() => btnRun.style.transform = '', 150);
-        
-        setTimeout(() => {
-            try {
-                const result = runParser(expr);
-                outputArea.textContent = result;
-            } catch (err) {
-                outputArea.classList.add('error');
-                outputArea.textContent = `Parse Error:\n${err.message}`;
+    function updateUI(state) {
+        if (!state) return;
+        outputArea.textContent = state.outStr;
+        let mem = `AST Nodes: ${state.nodeCount}\n\n`;
+        for(let i=0; i<26; i++){
+            if (state.vars[i] !== 0) {
+                mem += `${String.fromCharCode(65+i)} = ${state.vars[i]}\n`;
             }
-        }, 50);
+        }
+        memoryArea.textContent = mem;
+    }
+
+    let debugGen = null;
+    
+    btnStep.onclick = () => {
+        if (!debugGen) {
+            outputArea.classList.remove('error');
+            debugGen = runParserGen(exprInput.value);
+        }
+        try {
+            let res = debugGen.next();
+            if (res.value) updateUI(res.value);
+            if (res.done) debugGen = null;
+        } catch(err) {
+            outputArea.classList.add('error');
+            outputArea.textContent = `Parse Error:\n${err.message}`;
+            debugGen = null;
+        }
+    };
+
+    btnRun.onclick = () => {
+        outputArea.classList.remove('error');
+        let gen = runParserGen(exprInput.value);
+        let lastState = null;
+        try {
+            while (true) {
+                let res = gen.next();
+                if (res.value) lastState = res.value;
+                if (res.done) break;
+            }
+            updateUI(lastState);
+        } catch(err) {
+            outputArea.classList.add('error');
+            outputArea.textContent = `Parse Error:\n${err.message}`;
+        }
+        debugGen = null;
+    };
+
+    // Regex Replace
+    btnRep.onclick = () => {
+        try {
+            let pat = document.getElementById('regexFind').value;
+            let rep = document.getElementById('regexRep').value;
+            if (!pat) return;
+            let regex = new RegExp(pat, 'g');
+            exprInput.value = exprInput.value.replace(regex, rep);
+        } catch(e) {
+            alert("Regex Error: " + e.message);
+        }
+    };
+
+    // Macro Engine
+    let isRecording = false;
+    let macroKeys = [];
+    
+    exprInput.addEventListener('keydown', (e) => {
+        if (isRecording) {
+            if (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace') {
+                macroKeys.push(e.key);
+            }
+        }
+    });
+
+    btnRec.onclick = () => {
+        isRecording = !isRecording;
+        btnRec.style.opacity = isRecording ? '0.5' : '1';
+        btnRec.textContent = isRecording ? '⏹ Stop' : '⏺ Rec Macro';
+        if(isRecording) macroKeys = [];
+    };
+
+    btnPlay.onclick = async () => {
+        if (isRecording) btnRec.click();
+        exprInput.focus();
+        for (let key of macroKeys) {
+            if (key === 'Enter') {
+                exprInput.value += '\n';
+            } else if (key === 'Backspace') {
+                exprInput.value = exprInput.value.slice(0, -1);
+            } else {
+                exprInput.value += key;
+            }
+            await new Promise(r => setTimeout(r, 30));
+        }
     };
 
     btnLoad.onclick = () => {
@@ -311,9 +421,7 @@ print a % 3"></textarea>
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = e => {
-                exprInput.value = e.target.result;
-            };
+            reader.onload = e => { exprInput.value = e.target.result; };
             reader.readAsText(file);
         };
         input.click();
