@@ -3,249 +3,475 @@
 <head>
 <title>KMedia</title>
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; height: 100vh; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-  .header { padding: 10px; text-align: center; background: #e0e0e0; border-bottom: 1px solid #ccc; }
-  .title { margin-bottom: 8px; color: #333; font-size: 14px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; }
-  .controls { display: flex; gap: 4px; justify-content: center; margin-bottom: 6px; flex-wrap: wrap; }
-  button { padding: 4px 8px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; background: #f9f9f9; border-radius: 2px; }
-  button:hover { background: #e9e9e9; }
-  button:active { background: #d9d9d9; }
+  body { margin: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; color: #fff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .header { padding: 10px 20px; background: #2d2d2d; border-bottom: 1px solid #444; display: flex; flex-direction: column; gap: 10px; }
+  .title { font-size: 16px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #e0e0e0; }
+  .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  button { padding: 6px 12px; font-size: 13px; cursor: pointer; border: none; background: #4caf50; color: white; border-radius: 4px; transition: background 0.2s; }
+  button:hover { background: #45a049; }
+  button:active { background: #3d8b40; }
+  button.secondary { background: #555; }
+  button.secondary:hover { background: #666; }
+  
+  .main-layout { display: flex; flex: 1; overflow: hidden; }
+  .player-section { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; }
+  
+  .video-container { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+  video { width: 100%; height: 100%; object-fit: contain; }
+  
+  .subtitle-overlay { position: absolute; bottom: 15%; width: 100%; text-align: center; color: yellow; text-shadow: 2px 2px 4px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-size: 24px; font-weight: bold; pointer-events: none; z-index: 10; display: flex; justify-content: center; }
+  .subtitle-text { background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
+  
+  canvas#waveform { width: 100%; height: 80px; background: #111; border-top: 1px solid #333; }
+  
+  .sidebar { width: 300px; background: #222; border-left: 1px solid #333; display: flex; flex-direction: column; overflow-y: auto; }
+  
+  .panel { padding: 15px; border-bottom: 1px solid #333; }
+  .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+  
+  .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+  .slider-row span { width: 70px; color: #ccc; }
+  .slider-row input[type=range] { flex: 1; }
+  .slider-row .val { width: 30px; text-align: right; color: #888; }
+  
+  .playlist { flex: 1; list-style: none; padding: 0; margin: 0; overflow-y: auto; }
+  .playlist-item { padding: 10px 15px; border-bottom: 1px solid #333; cursor: pointer; font-size: 13px; color: #ddd; transition: background 0.2s; }
+  .playlist-item:hover { background: #333; }
+  .playlist-item.active { background: #4caf50; color: white; border-left: 4px solid #81c784; padding-left: 11px; }
+  
   input[type="file"] { display: none; }
-  .search-box { width: 95%; margin: 4px auto; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 2px; box-sizing: border-box; }
-  .seek-bar-container { display: flex; align-items: center; gap: 8px; padding: 4px 10px; font-size: 11px; color: #555; background: #e8e8e8; }
-  .seek-slider { flex: 1; height: 14px; }
-  .vol-slider { width: 60px; height: 14px; }
-  .playlist { flex: 1; overflow-y: auto; background: #fff; padding: 0; margin: 0; list-style: none; }
-  .playlist-item { padding: 8px 15px; border-bottom: 1px solid #eee; cursor: pointer; color: #444; font-size: 13px; }
-  .playlist-item:hover { background: #f0f8ff; }
-  .playlist-item.active { background: #0078d7; color: white; }
+  .search-box { width: 100%; padding: 8px; background: #333; border: none; color: white; font-size: 13px; outline: none; box-sizing: border-box; border-bottom: 1px solid #444; }
+  
+  .seek-bar-container { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #aaa; }
+  .seek-slider { flex: 1; }
+  .vol-slider { width: 80px; }
+  
+  input[type=range] { -webkit-appearance: none; background: transparent; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #4caf50; cursor: pointer; margin-top: -5px; }
+  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #555; border-radius: 2px; }
 </style>
 </head>
 <body>
+
 <div class="header">
-  <div class="title" id="title">No file selected (Press 'H' for help)</div>
+  <div class="title" id="title">No media selected</div>
   <div class="controls">
-    <button id="btnAdd">Add...</button>
-    <button id="btnPlay">Play</button>
-    <button id="btnStop">Stop</button>
-    <button id="btnPrev">Prev</button>
-    <button id="btnNext">Next</button>
-    <button id="btnRemove">Remove</button>
-    <button id="btnClear">Clear</button>
-    <button id="btnMode">Mode: Normal</button>
-    <button id="btnSpeed">Speed: 1.0x</button>
+    <button id="btnAdd">Add Media/Subtitles</button>
+    <button id="btnPlay" class="secondary">Play/Pause</button>
+    <button id="btnStop" class="secondary">Stop</button>
+    <button id="btnPrev" class="secondary">Prev</button>
+    <button id="btnNext" class="secondary">Next</button>
+    <button id="btnRemove" class="secondary">Remove</button>
+    <button id="btnClear" class="secondary">Clear</button>
+    <button id="btnMode" class="secondary">Mode: Normal</button>
+    <button id="btnSpeed" class="secondary">1.0x</button>
+    <button id="btnExport">Export Frame</button>
   </div>
-  <input type="text" id="searchInput" class="search-box" placeholder="Filter playlist..." />
   <div class="seek-bar-container">
     <span id="timeDisplay">0:00 / 0:00</span>
     <input type="range" id="seekSlider" class="seek-slider" min="0" max="100" value="0" step="0.1" />
-    <span>Vol:</span>
+    <span>Vol</span>
     <input type="range" id="volumeSlider" class="vol-slider" min="0" max="1" step="0.05" value="1" />
   </div>
 </div>
-<ul class="playlist" id="playlist"></ul>
-<input type="file" id="fileInput" accept="audio/*,video/*" multiple />
-<audio id="audioPlayer"></audio>
+
+<div class="main-layout">
+  <div class="player-section">
+    <div class="video-container" id="videoContainer">
+      <video id="mediaPlayer" crossorigin="anonymous" playsinline></video>
+      <div class="subtitle-overlay"><div class="subtitle-text" id="subtitleText" style="display:none;"></div></div>
+    </div>
+    <canvas id="waveform" width="1024" height="80"></canvas>
+  </div>
+  
+  <div class="sidebar">
+    <div class="panel">
+      <div class="panel-title">Video Filters</div>
+      <div class="slider-row"><span>Brightness</span><input type="range" id="fBright" min="0" max="2" step="0.05" value="1"><span class="val" id="vBright">1.0</span></div>
+      <div class="slider-row"><span>Contrast</span><input type="range" id="fCont" min="0" max="2" step="0.05" value="1"><span class="val" id="vCont">1.0</span></div>
+      <div class="slider-row"><span>Saturation</span><input type="range" id="fSat" min="0" max="2" step="0.05" value="1"><span class="val" id="vSat">1.0</span></div>
+      <button id="btnResetVideo" class="secondary" style="width:100%; margin-top:5px; font-size:11px;">Reset Video Filters</button>
+    </div>
+    
+    <div class="panel">
+      <div class="panel-title">Audio EQ (DSP)</div>
+      <div class="slider-row"><span>Bass</span><input type="range" id="eqLow" min="-20" max="20" step="1" value="0"><span class="val" id="vLow">0</span></div>
+      <div class="slider-row"><span>Mid</span><input type="range" id="eqMid" min="-20" max="20" step="1" value="0"><span class="val" id="vMid">0</span></div>
+      <div class="slider-row"><span>Treble</span><input type="range" id="eqHigh" min="-20" max="20" step="1" value="0"><span class="val" id="vHigh">0</span></div>
+      <button id="btnResetAudio" class="secondary" style="width:100%; margin-top:5px; font-size:11px;">Reset Audio EQ</button>
+    </div>
+    
+    <input type="text" id="searchInput" class="search-box" placeholder="Search playlist..." />
+    <ul class="playlist" id="playlist"></ul>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="audio/*,video/*,.srt,.vtt" multiple />
+
 <script>
-  const title = document.getElementById('title');
-  const btnAdd = document.getElementById('btnAdd');
-  const btnPlay = document.getElementById('btnPlay');
-  const btnStop = document.getElementById('btnStop');
-  const btnPrev = document.getElementById('btnPrev');
-  const btnNext = document.getElementById('btnNext');
-  const btnRemove = document.getElementById('btnRemove');
-  const btnClear = document.getElementById('btnClear');
-  const btnMode = document.getElementById('btnMode');
-  const btnSpeed = document.getElementById('btnSpeed');
-  const searchInput = document.getElementById('searchInput');
-  const seekSlider = document.getElementById('seekSlider');
-  const volumeSlider = document.getElementById('volumeSlider');
-  const timeDisplay = document.getElementById('timeDisplay');
-  const fileInput = document.getElementById('fileInput');
-  const audioPlayer = document.getElementById('audioPlayer');
-  const playlistEl = document.getElementById('playlist');
+  const UI = {
+    title: document.getElementById('title'),
+    btnAdd: document.getElementById('btnAdd'),
+    btnPlay: document.getElementById('btnPlay'),
+    btnStop: document.getElementById('btnStop'),
+    btnPrev: document.getElementById('btnPrev'),
+    btnNext: document.getElementById('btnNext'),
+    btnRemove: document.getElementById('btnRemove'),
+    btnClear: document.getElementById('btnClear'),
+    btnMode: document.getElementById('btnMode'),
+    btnSpeed: document.getElementById('btnSpeed'),
+    btnExport: document.getElementById('btnExport'),
+    seekSlider: document.getElementById('seekSlider'),
+    volumeSlider: document.getElementById('volumeSlider'),
+    timeDisplay: document.getElementById('timeDisplay'),
+    fileInput: document.getElementById('fileInput'),
+    mediaPlayer: document.getElementById('mediaPlayer'),
+    playlistEl: document.getElementById('playlist'),
+    searchInput: document.getElementById('searchInput'),
+    subText: document.getElementById('subtitleText'),
+    waveform: document.getElementById('waveform'),
+    fBright: document.getElementById('fBright'), fCont: document.getElementById('fCont'), fSat: document.getElementById('fSat'),
+    eqLow: document.getElementById('eqLow'), eqMid: document.getElementById('eqMid'), eqHigh: document.getElementById('eqHigh')
+  };
 
   let playlist = [];
   let currentIndex = -1;
-
-  // Playback Modes: 0: Normal, 1: Repeat All, 2: Repeat 1, 3: Shuffle
+  let subtitles = []; // array of {start, end, text}
+  let audioCtx, analyser, source, eqNodes = {};
+  
   const modes = ['Normal', 'Repeat All', 'Repeat 1', 'Shuffle'];
   let currentModeIndex = 0;
-
-  // Playback Speeds: 1.0, 1.25, 1.5, 2.0, 0.5
   const speeds = [1.0, 1.25, 1.5, 2.0, 0.5];
   let currentSpeedIndex = 0;
 
-  btnAdd.onclick = () => fileInput.click();
+  UI.btnAdd.onclick = () => UI.fileInput.click();
 
-  fileInput.onchange = (e) => {
-      const files = e.target.files;
-      for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const url = URL.createObjectURL(file);
-          playlist.push({ name: file.name, url: url });
+  UI.fileInput.onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    for (let f of files) {
+      if (f.name.endsWith('.srt') || f.name.endsWith('.vtt')) {
+        const text = await f.text();
+        parseSubtitles(text, f.name.endsWith('.srt'));
+        alert('Loaded subtitles: ' + f.name);
+      } else {
+        playlist.push({ name: f.name, url: URL.createObjectURL(f) });
       }
-      renderPlaylist();
-  };
-
-  searchInput.oninput = () => renderPlaylist();
-
-  btnMode.onclick = () => {
-      currentModeIndex = (currentModeIndex + 1) % modes.length;
-      btnMode.textContent = 'Mode: ' + modes[currentModeIndex];
-  };
-
-  btnSpeed.onclick = () => {
-      currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
-      const rate = speeds[currentSpeedIndex];
-      btnSpeed.textContent = 'Speed: ' + rate.toFixed(1) + 'x';
-      audioPlayer.playbackRate = rate;
+    }
+    renderPlaylist();
+    UI.fileInput.value = '';
   };
 
   function renderPlaylist() {
-      playlistEl.innerHTML = '';
-      const filter = searchInput.value.toLowerCase();
-      playlist.forEach((item, index) => {
-          if (filter && !item.name.toLowerCase().includes(filter)) return;
-          const li = document.createElement('li');
-          li.className = 'playlist-item' + (index === currentIndex ? ' active' : '');
-          li.textContent = item.name;
-          li.onclick = () => playTrack(index);
-          playlistEl.appendChild(li);
-      });
+    UI.playlistEl.innerHTML = '';
+    const filter = UI.searchInput.value.toLowerCase();
+    playlist.forEach((item, index) => {
+      if (filter && !item.name.toLowerCase().includes(filter)) return;
+      const li = document.createElement('li');
+      li.className = 'playlist-item' + (index === currentIndex ? ' active' : '');
+      li.textContent = item.name;
+      li.onclick = () => playTrack(index);
+      UI.playlistEl.appendChild(li);
+    });
   }
+
+  UI.searchInput.oninput = renderPlaylist;
 
   function playTrack(index) {
-      if (index >= 0 && index < playlist.length) {
-          currentIndex = index;
-          const track = playlist[index];
-          title.textContent = track.name;
-          audioPlayer.src = track.url;
-          audioPlayer.playbackRate = speeds[currentSpeedIndex];
-          audioPlayer.play();
-          renderPlaylist();
-      }
+    if (index >= 0 && index < playlist.length) {
+      currentIndex = index;
+      const track = playlist[index];
+      UI.title.textContent = track.name;
+      UI.mediaPlayer.src = track.url;
+      UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
+      UI.mediaPlayer.play().catch(e => console.log('Playback error:', e));
+      renderPlaylist();
+      initAudio();
+    }
   }
 
-  btnPlay.onclick = () => {
-      if (audioPlayer.paused && audioPlayer.src) {
-          audioPlayer.play();
-      } else if (!audioPlayer.src && playlist.length > 0) {
-          playTrack(0);
-      } else if (!audioPlayer.paused) {
-          audioPlayer.pause();
+  UI.btnPlay.onclick = () => {
+    if (UI.mediaPlayer.paused && UI.mediaPlayer.src) UI.mediaPlayer.play();
+    else if (!UI.mediaPlayer.src && playlist.length > 0) playTrack(0);
+    else if (!UI.mediaPlayer.paused) UI.mediaPlayer.pause();
+  };
+
+  UI.btnStop.onclick = () => {
+    if (UI.mediaPlayer.src) {
+      UI.mediaPlayer.pause();
+      UI.mediaPlayer.currentTime = 0;
+    }
+  };
+
+  UI.btnPrev.onclick = () => { if (currentIndex > 0) playTrack(currentIndex - 1); };
+  UI.btnNext.onclick = playNextTrackAuto;
+
+  UI.btnRemove.onclick = () => {
+    if (currentIndex >= 0 && currentIndex < playlist.length) {
+      playlist.splice(currentIndex, 1);
+      if (playlist.length === 0) {
+        UI.mediaPlayer.pause();
+        UI.mediaPlayer.removeAttribute('src');
+        UI.title.textContent = 'No media selected';
+        currentIndex = -1;
+      } else {
+        if (currentIndex >= playlist.length) currentIndex = playlist.length - 1;
+        playTrack(currentIndex);
       }
-  };
-
-  btnStop.onclick = () => {
-      if (audioPlayer.src) {
-          audioPlayer.pause();
-          audioPlayer.currentTime = 0;
-      }
-  };
-
-  btnPrev.onclick = () => {
-      if (currentIndex > 0) playTrack(currentIndex - 1);
-  };
-
-  btnNext.onclick = () => {
-      playNextTrackAuto();
-  };
-
-  btnRemove.onclick = () => {
-      if (currentIndex >= 0 && currentIndex < playlist.length) {
-          playlist.splice(currentIndex, 1);
-          if (playlist.length === 0) {
-              audioPlayer.pause();
-              audioPlayer.removeAttribute('src');
-              title.textContent = 'No file selected (Press \'H\' for help)';
-              currentIndex = -1;
-          } else {
-              if (currentIndex >= playlist.length) currentIndex = playlist.length - 1;
-              playTrack(currentIndex);
-          }
-          renderPlaylist();
-      }
-  };
-
-  btnClear.onclick = () => {
-      playlist = [];
-      audioPlayer.pause();
-      audioPlayer.removeAttribute('src');
-      title.textContent = 'No file selected (Press \'H\' for help)';
-      currentIndex = -1;
       renderPlaylist();
+    }
+  };
+
+  UI.btnClear.onclick = () => {
+    playlist = [];
+    UI.mediaPlayer.pause();
+    UI.mediaPlayer.removeAttribute('src');
+    UI.title.textContent = 'No media selected';
+    currentIndex = -1;
+    renderPlaylist();
   };
 
   function playNextTrackAuto() {
-      if (playlist.length === 0) return;
-      if (currentModeIndex === 2) { // Repeat 1
-          if (currentIndex >= 0) playTrack(currentIndex);
-          else playTrack(0);
-      } else if (currentModeIndex === 3) { // Shuffle
-          const next = Math.floor(Math.random() * playlist.length);
-          playTrack(next);
-      } else if (currentModeIndex === 1) { // Repeat All
-          const next = (currentIndex + 1) % playlist.length;
-          playTrack(next);
-      } else { // Normal
-          if (currentIndex + 1 < playlist.length) {
-              playTrack(currentIndex + 1);
-          }
-      }
+    if (playlist.length === 0) return;
+    if (currentModeIndex === 2) playTrack(Math.max(0, currentIndex));
+    else if (currentModeIndex === 3) playTrack(Math.floor(Math.random() * playlist.length));
+    else if (currentModeIndex === 1) playTrack((currentIndex + 1) % playlist.length);
+    else if (currentIndex + 1 < playlist.length) playTrack(currentIndex + 1);
   }
 
-  audioPlayer.onended = () => {
-      playNextTrackAuto();
+  UI.mediaPlayer.onended = playNextTrackAuto;
+
+  UI.btnMode.onclick = () => {
+    currentModeIndex = (currentModeIndex + 1) % modes.length;
+    UI.btnMode.textContent = 'Mode: ' + modes[currentModeIndex];
   };
 
-  // Seeker & Volume handlers
-  audioPlayer.ontimeupdate = () => {
-      if (audioPlayer.duration) {
-          const pct = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-          seekSlider.value = pct;
-          timeDisplay.textContent = formatTime(audioPlayer.currentTime) + ' / ' + formatTime(audioPlayer.duration);
-      } else {
-          seekSlider.value = 0;
-          timeDisplay.textContent = '0:00 / 0:00';
-      }
+  UI.btnSpeed.onclick = () => {
+    currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
+    UI.btnSpeed.textContent = speeds[currentSpeedIndex].toFixed(1) + 'x';
+    UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
   };
 
-  seekSlider.oninput = () => {
-      if (audioPlayer.duration) {
-          audioPlayer.currentTime = (seekSlider.value / 100) * audioPlayer.duration;
-      }
+  // Seeker & Volume
+  setInterval(() => {
+    if (UI.mediaPlayer.duration) {
+      const pct = (UI.mediaPlayer.currentTime / UI.mediaPlayer.duration) * 100;
+      UI.seekSlider.value = pct;
+      UI.timeDisplay.textContent = formatTime(UI.mediaPlayer.currentTime) + ' / ' + formatTime(UI.mediaPlayer.duration);
+      updateSubtitleOverlay(UI.mediaPlayer.currentTime);
+    }
+  }, 250);
+
+  UI.seekSlider.oninput = () => {
+    if (UI.mediaPlayer.duration) {
+      UI.mediaPlayer.currentTime = (UI.seekSlider.value / 100) * UI.mediaPlayer.duration;
+    }
   };
 
-  volumeSlider.oninput = () => {
-      audioPlayer.volume = volumeSlider.value;
-  };
+  UI.volumeSlider.oninput = () => { UI.mediaPlayer.volume = UI.volumeSlider.value; };
 
   function formatTime(secs) {
-      if (isNaN(secs)) return '0:00';
-      const m = Math.floor(secs / 60);
-      const s = Math.floor(secs % 60);
-      return m + ':' + (s < 10 ? '0' : '') + s;
+    if (isNaN(secs)) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
   }
 
-  // Keyboard Shortcuts
-  window.addEventListener('keydown', (e) => {
-      if (document.activeElement === searchInput) return;
-      if (e.code === 'Space') {
-          e.preventDefault();
-          btnPlay.click();
-      } else if (e.code === 'ArrowLeft' || e.key.toLowerCase() === 'p') {
-          btnPrev.click();
-      } else if (e.code === 'ArrowRight' || e.key.toLowerCase() === 'n') {
-          btnNext.click();
-      } else if (e.key.toLowerCase() === 's') {
-          btnStop.click();
-      } else if (e.key.toLowerCase() === 'm') {
-          btnMode.click();
-      } else if (e.key.toLowerCase() === 'h') {
-          alert("Keyboard Shortcuts:\nSpace : Play/Pause\nLeft Arrow / P : Previous Track\nRight Arrow / N : Next Track\nS : Stop\nM : Change Mode\nH : Help");
+  // --- Subtitles ---
+  function timeToSecs(timeStr) {
+    const p = timeStr.replace(',', '.').split(':');
+    let s = 0;
+    if (p.length === 3) s = parseInt(p[0])*3600 + parseInt(p[1])*60 + parseFloat(p[2]);
+    else if (p.length === 2) s = parseInt(p[0])*60 + parseFloat(p[1]);
+    return s;
+  }
+
+  function parseSubtitles(text, isSrt) {
+    subtitles = [];
+    const blocks = text.replace(/\r/g, '').split('\n\n');
+    for (let b of blocks) {
+      const lines = b.split('\n');
+      if (lines.length >= 2) {
+        let timeLine = isSrt ? lines[1] : lines[0]; // VTT might have header/notes
+        let textStart = isSrt ? 2 : 1;
+        if(timeLine && timeLine.includes('-->')) {
+          const times = timeLine.split('-->');
+          if(times.length === 2) {
+            const start = timeToSecs(times[0].trim());
+            const end = timeToSecs(times[1].trim());
+            const txt = lines.slice(textStart).join('<br>');
+            subtitles.push({start, end, text: txt});
+          }
+        } else if (!isSrt && lines.length > 2 && lines[1].includes('-->')) {
+          const times = lines[1].split('-->');
+          if(times.length === 2) {
+            const start = timeToSecs(times[0].trim());
+            const end = timeToSecs(times[1].trim());
+            const txt = lines.slice(2).join('<br>');
+            subtitles.push({start, end, text: txt});
+          }
+        }
       }
-  });
+    }
+  }
+
+  function updateSubtitleOverlay(t) {
+    if (subtitles.length === 0) {
+      UI.subText.style.display = 'none';
+      return;
+    }
+    const sub = subtitles.find(s => t >= s.start && t <= s.end);
+    if (sub) {
+      UI.subText.innerHTML = sub.text;
+      UI.subText.style.display = 'block';
+    } else {
+      UI.subText.style.display = 'none';
+    }
+  }
+
+  // --- Audio DSP & Waveform ---
+  function initAudio() {
+    if (audioCtx) {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      return;
+    }
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if(!AudioContext) return;
+    
+    audioCtx = new AudioContext();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    
+    source = audioCtx.createMediaElementSource(UI.mediaPlayer);
+    
+    eqNodes.low = audioCtx.createBiquadFilter();
+    eqNodes.low.type = 'lowshelf';
+    eqNodes.low.frequency.value = 320;
+    
+    eqNodes.mid = audioCtx.createBiquadFilter();
+    eqNodes.mid.type = 'peaking';
+    eqNodes.mid.frequency.value = 1000;
+    eqNodes.mid.Q.value = 0.5;
+    
+    eqNodes.high = audioCtx.createBiquadFilter();
+    eqNodes.high.type = 'highshelf';
+    eqNodes.high.frequency.value = 3200;
+    
+    source.connect(eqNodes.low);
+    eqNodes.low.connect(eqNodes.mid);
+    eqNodes.mid.connect(eqNodes.high);
+    eqNodes.high.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    
+    drawWaveform();
+  }
+
+  const wCtx = UI.waveform.getContext('2d');
+  function drawWaveform() {
+    requestAnimationFrame(drawWaveform);
+    if (!analyser) return;
+    const w = UI.waveform.width;
+    const h = UI.waveform.height;
+    
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyser.getByteTimeDomainData(dataArray);
+    
+    wCtx.fillStyle = '#111';
+    wCtx.fillRect(0, 0, w, h);
+    
+    wCtx.lineWidth = 2;
+    wCtx.strokeStyle = '#4caf50';
+    wCtx.beginPath();
+    
+    const sliceWidth = w * 1.0 / bufferLength;
+    let x = 0;
+    
+    for (let i = 0; i < bufferLength; i++) {
+      const v = dataArray[i] / 128.0;
+      const y = v * h / 2;
+      if (i === 0) wCtx.moveTo(x, y);
+      else wCtx.lineTo(x, y);
+      x += sliceWidth;
+    }
+    wCtx.lineTo(w, h / 2);
+    wCtx.stroke();
+  }
+
+  // --- Video Filters ---
+  function updateVideoFilters() {
+    const b = UI.fBright.value;
+    const c = UI.fCont.value;
+    const s = UI.fSat.value;
+    document.getElementById('vBright').textContent = parseFloat(b).toFixed(2);
+    document.getElementById('vCont').textContent = parseFloat(c).toFixed(2);
+    document.getElementById('vSat').textContent = parseFloat(s).toFixed(2);
+    UI.mediaPlayer.style.filter = `brightness(${b}) contrast(${c}) saturate(${s})`;
+  }
+  UI.fBright.oninput = updateVideoFilters;
+  UI.fCont.oninput = updateVideoFilters;
+  UI.fSat.oninput = updateVideoFilters;
+
+  document.getElementById('btnResetVideo').onclick = () => {
+    UI.fBright.value = 1; UI.fCont.value = 1; UI.fSat.value = 1;
+    updateVideoFilters();
+  };
+
+  // --- Audio EQ Update ---
+  function updateAudioEQ() {
+    const l = UI.eqLow.value;
+    const m = UI.eqMid.value;
+    const h = UI.eqHigh.value;
+    document.getElementById('vLow').textContent = l + 'dB';
+    document.getElementById('vMid').textContent = m + 'dB';
+    document.getElementById('vHigh').textContent = h + 'dB';
+    if(eqNodes.low) eqNodes.low.gain.value = l;
+    if(eqNodes.mid) eqNodes.mid.gain.value = m;
+    if(eqNodes.high) eqNodes.high.gain.value = h;
+  }
+  UI.eqLow.oninput = updateAudioEQ;
+  UI.eqMid.oninput = updateAudioEQ;
+  UI.eqHigh.oninput = updateAudioEQ;
+
+  document.getElementById('btnResetAudio').onclick = () => {
+    UI.eqLow.value = 0; UI.eqMid.value = 0; UI.eqHigh.value = 0;
+    updateAudioEQ();
+  };
+
+  // --- Frame Export ---
+  UI.btnExport.onclick = () => {
+    if(UI.mediaPlayer.readyState < 2) {
+      alert('No video ready to export.');
+      return;
+    }
+    const vc = document.createElement('canvas');
+    vc.width = UI.mediaPlayer.videoWidth;
+    vc.height = UI.mediaPlayer.videoHeight;
+    if(vc.width === 0 || vc.height === 0) {
+      alert('Cannot export frame (not a video or not loaded).');
+      return;
+    }
+    const vctx = vc.getContext('2d');
+    vctx.filter = UI.mediaPlayer.style.filter || 'none';
+    vctx.drawImage(UI.mediaPlayer, 0, 0, vc.width, vc.height);
+    
+    if (UI.subText.style.display !== 'none') {
+      vctx.font = 'bold 32px sans-serif';
+      vctx.fillStyle = 'yellow';
+      vctx.textAlign = 'center';
+      vctx.shadowColor = 'black';
+      vctx.shadowBlur = 4;
+      vctx.shadowOffsetX = 2;
+      vctx.shadowOffsetY = 2;
+      const text = UI.subText.innerText;
+      vctx.fillText(text, vc.width / 2, vc.height * 0.85);
+    }
+    
+    const dataURL = vc.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = `frame_${Date.now()}.png`;
+    a.click();
+  };
 </script>
 </body>
 </html>

@@ -52,7 +52,7 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KPass
+**Target App:** KMedia
 **Status:** In Queue
 **Current Phase:** In Queue
 

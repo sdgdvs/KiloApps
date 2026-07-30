@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <commdlg.h>
+#include <stdio.h>
 
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
@@ -32,18 +33,7 @@ char* my_strrchr(const char* str, int ch) {
 #define MAX_TRACKS 256
 
 HWND g_hwndMain;
-HWND hTitle;
-HWND hEditSearch;
-HWND hBtnOpen;
-HWND hBtnPlay;
-HWND hBtnStop;
-HWND hBtnPrev;
-HWND hBtnNext;
-HWND hBtnRem;
-HWND hBtnClear;
-HWND hBtnMode;
-HWND hBtnSpeed;
-HWND hListBox;
+HWND hTitle, hEditSearch, hBtnOpen, hBtnPlay, hBtnStop, hBtnPrev, hBtnNext, hBtnRem, hBtnClear, hBtnMode, hBtnSpeed, hBtnExport, hListBox, hSubText;
 
 char g_tracks[MAX_TRACKS][MAX_PATH];
 int g_trackCount = 0;
@@ -52,11 +42,94 @@ char currentFile[MAX_PATH] = {0};
 char mciCmd[512] = {0};
 char g_searchQuery[128] = {0};
 
-int g_playbackMode = 0; // 0: Normal, 1: Repeat All, 2: Repeat 1, 3: Shuffle
-int g_speedIndex = 0;   // 0: 1.0x, 1: 1.25x, 2: 1.5x, 3: 2.0x, 4: 0.5x
+int g_playbackMode = 0;
+int g_speedIndex = 0;
 const int g_speeds[] = {1000, 1250, 1500, 2000, 500};
 const char* g_speedLabels[] = {"Spd: 1.0x", "Spd: 1.25x", "Spd: 1.5x", "Spd: 2.0x", "Spd: 0.5x"};
 const char* g_modeLabels[] = {"Mode: Normal", "Mode: Repeat All", "Mode: Repeat 1", "Mode: Shuffle"};
+
+typedef struct {
+    int start;
+    int end;
+    char text[256];
+} Subtitle;
+
+Subtitle g_subs[500];
+int g_subCount = 0;
+
+int TimeToSec(const char* timeStr) {
+    int h=0, m=0, s=0, ms=0;
+    if (sscanf(timeStr, "%d:%d:%d,%d", &h, &m, &s, &ms) >= 3) {
+        return h * 3600000 + m * 60000 + s * 1000 + ms;
+    }
+    return 0;
+}
+
+void LoadSrt(const char* videoPath) {
+    g_subCount = 0;
+    SetWindowTextA(hSubText, "");
+    char srtPath[MAX_PATH];
+    lstrcpyA(srtPath, videoPath);
+    char* ext = my_strrchr(srtPath, '.');
+    if (ext) {
+        lstrcpyA(ext, ".srt");
+        FILE* f = fopen(srtPath, "r");
+        if (f) {
+            char line[256];
+            int state = 0;
+            Subtitle curSub = {0};
+            while (fgets(line, sizeof(line), f)) {
+                if (line[0] == '\r' || line[0] == '\n') {
+                    if (state == 2 && g_subCount < 500) {
+                        g_subs[g_subCount++] = curSub;
+                    }
+                    state = 0;
+                    curSub.text[0] = '\0';
+                } else if (state == 0) {
+                    state = 1;
+                } else if (state == 1) {
+                    char t1[32]={0}, t2[32]={0};
+                    if (sscanf(line, "%31s --> %31s", t1, t2) >= 2) {
+                        curSub.start = TimeToSec(t1);
+                        curSub.end = TimeToSec(t2);
+                        state = 2;
+                    }
+                } else if (state == 2) {
+                    if (curSub.text[0] != '\0') lstrcatA(curSub.text, "\n");
+                    int len = lstrlenA(line);
+                    while(len > 0 && (line[len-1] == '\r' || line[len-1] == '\n')) {
+                        line[len-1] = '\0';
+                        len--;
+                    }
+                    lstrcatA(curSub.text, line);
+                }
+            }
+            if (state == 2 && g_subCount < 500) g_subs[g_subCount++] = curSub;
+            fclose(f);
+        }
+    }
+}
+
+void UpdateSubtitles() {
+    if (g_subCount == 0 || currentFile[0] == '\0') return;
+    char posStr[64] = {0};
+    mciSendStringA("status myMedia position", posStr, sizeof(posStr), NULL);
+    int pos = 0;
+    sscanf(posStr, "%d", &pos);
+    for (int i = 0; i < g_subCount; i++) {
+        if (pos >= g_subs[i].start && pos <= g_subs[i].end) {
+            char currentTxt[256];
+            GetWindowTextA(hSubText, currentTxt, sizeof(currentTxt));
+            if (lstrcmpA(currentTxt, g_subs[i].text) != 0) {
+                SetWindowTextA(hSubText, g_subs[i].text);
+            }
+            return;
+        }
+    }
+    char currentTxt[256];
+    GetWindowTextA(hSubText, currentTxt, sizeof(currentTxt));
+    if (currentTxt[0] != '\0') SetWindowTextA(hSubText, "");
+}
 
 int ContainsCaseInsensitive(const char* haystack, const char* needle) {
     if (!needle || !*needle) return 1;
@@ -110,7 +183,7 @@ void OpenFileDlg(HWND hwnd) {
     ofn.lpstrFile = szFile;
     ofn.lpstrFile[0] = '\0';
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "Media Files\0*.wav;*.mp3;*.mid\0All Files\0*.*\0";
+    ofn.lpstrFilter = "Media Files\0*.wav;*.mp3;*.mid;*.avi;*.mp4;*.mkv\0All Files\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
     
@@ -146,10 +219,15 @@ void PlayTrackByIndex(int masterIdx) {
         wsprintfA(mciCmd, "open \"%s\" alias myMedia", currentFile);
         mciSendStringA(mciCmd, NULL, 0, NULL);
         
+        wsprintfA(mciCmd, "set myMedia time format ms");
+        mciSendStringA(mciCmd, NULL, 0, NULL);
+
         wsprintfA(mciCmd, "set myMedia speed %d", g_speeds[g_speedIndex]);
         mciSendStringA(mciCmd, NULL, 0, NULL);
         
         mciSendStringA("play myMedia from 0 notify", NULL, 0, g_hwndMain);
+        
+        LoadSrt(currentFile);
         
         int count = SendMessage(hListBox, LB_GETCOUNT, 0, 0);
         for (int i = 0; i < count; i++) {
@@ -174,31 +252,23 @@ void PlaySelectedTrack() {
 
 void PlayNextTrackAuto() {
     if (g_trackCount == 0) return;
-    
-    if (g_playbackMode == 2) { // Repeat 1
-        if (g_currentIndex >= 0 && g_currentIndex < g_trackCount) {
-            PlayTrackByIndex(g_currentIndex);
-        } else {
-            PlayTrackByIndex(0);
-        }
-    } else if (g_playbackMode == 3) { // Shuffle
+    if (g_playbackMode == 2) {
+        if (g_currentIndex >= 0 && g_currentIndex < g_trackCount) PlayTrackByIndex(g_currentIndex);
+        else PlayTrackByIndex(0);
+    } else if (g_playbackMode == 3) {
         int next = GetTickCount() % g_trackCount;
         PlayTrackByIndex(next);
-    } else if (g_playbackMode == 1) { // Repeat All
+    } else if (g_playbackMode == 1) {
         int next = (g_currentIndex + 1) % g_trackCount;
         PlayTrackByIndex(next);
-    } else { // Normal
-        if (g_currentIndex + 1 < g_trackCount) {
-            PlayTrackByIndex(g_currentIndex + 1);
-        }
+    } else {
+        if (g_currentIndex + 1 < g_trackCount) PlayTrackByIndex(g_currentIndex + 1);
     }
 }
 
 void PlayPrevTrack() {
     if (g_trackCount == 0) return;
-    if (g_currentIndex > 0) {
-        PlayTrackByIndex(g_currentIndex - 1);
-    }
+    if (g_currentIndex > 0) PlayTrackByIndex(g_currentIndex - 1);
 }
 
 void CycleMode() {
@@ -225,6 +295,49 @@ void TogglePlayPause() {
 
 void StopTrack() {
     mciSendStringA("stop myMedia", NULL, 0, NULL);
+}
+
+void ExportFrameToBMP() {
+    if (currentFile[0] == '\0') return;
+    
+    // Attempt MCI capture first
+    MCIERROR err = mciSendStringA("capture myMedia as frame.bmp", NULL, 0, NULL);
+    if (err == 0) {
+        MessageBoxA(g_hwndMain, "Frame exported as frame.bmp using MCI.", "Export Frame", MB_OK);
+        return;
+    }
+    
+    // Fallback: Screen capture main window
+    HDC hdcWindow = GetDC(g_hwndMain);
+    HDC hdcMem = CreateCompatibleDC(hdcWindow);
+    RECT rc;
+    GetClientRect(g_hwndMain, &rc);
+    int width = rc.right - rc.left;
+    int height = rc.bottom - rc.top;
+    
+    HBITMAP hbm = CreateCompatibleBitmap(hdcWindow, width, height);
+    SelectObject(hdcMem, hbm);
+    BitBlt(hdcMem, 0, 0, width, height, hdcWindow, 0, 0, SRCCOPY);
+    
+    BITMAPINFOHEADER bi = {sizeof(BITMAPINFOHEADER), width, height, 1, 32, BI_RGB, 0, 0, 0, 0, 0};
+    HANDLE hFile = CreateFileA("frame.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD dwBytesWritten = 0;
+        BITMAPFILEHEADER bmf = {0x4D42, sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + width * height * 4, 0, 0, sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)};
+        WriteFile(hFile, &bmf, sizeof(bmf), &dwBytesWritten, NULL);
+        WriteFile(hFile, &bi, sizeof(bi), &dwBytesWritten, NULL);
+        
+        char* bits = (char*)malloc(width * height * 4);
+        GetDIBits(hdcWindow, hbm, 0, height, bits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+        WriteFile(hFile, bits, width * height * 4, &dwBytesWritten, NULL);
+        free(bits);
+        CloseHandle(hFile);
+        MessageBoxA(g_hwndMain, "Client area exported as frame.bmp.", "Export Frame", MB_OK);
+    }
+    
+    DeleteObject(hbm);
+    DeleteDC(hdcMem);
+    ReleaseDC(g_hwndMain, hdcWindow);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -285,14 +398,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hBtnMode = CreateWindowEx(0, "BUTTON", "Mode: Normal",
                 WS_CHILD | WS_VISIBLE,
-                10, 124, W - 36, 26, hwnd, (HMENU)9, NULL, NULL);
+                10, 124, 160, 26, hwnd, (HMENU)9, NULL, NULL);
             SendMessage(hBtnMode, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnExport = CreateWindowEx(0, "BUTTON", "Export Frame",
+                WS_CHILD | WS_VISIBLE,
+                176, 124, 158, 26, hwnd, (HMENU)12, NULL, NULL);
+            SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | WS_HSCROLL,
-                10, 155, W - 36, 220, hwnd, (HMENU)4, NULL, NULL);
+                10, 155, W - 36, 120, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            HFONT hSubFont = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hSubText = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "",
+                WS_CHILD | WS_VISIBLE | SS_CENTER,
+                10, 280, W - 36, 130, hwnd, NULL, NULL, NULL);
+            SendMessage(hSubText, WM_SETFONT, (WPARAM)hSubFont, TRUE);
+
+            SetTimer(hwnd, 1, 200, NULL);
+            break;
+        }
+        case WM_TIMER: {
+            if (wParam == 1) {
+                UpdateSubtitles();
+            }
             break;
         }
         case WM_COMMAND: {
@@ -342,6 +473,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == 11 && HIWORD(wParam) == EN_CHANGE) {
                 GetWindowTextA(hEditSearch, g_searchQuery, sizeof(g_searchQuery));
                 RefilterPlaylist();
+            } else if (LOWORD(wParam) == 12) {
+                ExportFrameToBMP();
             } else if (LOWORD(wParam) == 4 && HIWORD(wParam) == LBN_DBLCLK) {
                 PlaySelectedTrack();
             }
@@ -354,10 +487,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_CTLCOLORSTATIC: {
+            if ((HWND)lParam == hSubText) {
+                SetBkColor((HDC)wParam, RGB(0, 0, 0));
+                SetTextColor((HDC)wParam, RGB(255, 255, 0));
+                return (LRESULT)GetStockObject(BLACK_BRUSH);
+            }
             SetBkMode((HDC)wParam, TRANSPARENT);
             return (LRESULT)GetSysColorBrush(COLOR_BTNFACE);
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             mciSendStringA("close myMedia", NULL, 0, NULL);
             PostQuitMessage(0);
             break;
