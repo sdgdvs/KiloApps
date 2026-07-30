@@ -1086,9 +1086,17 @@
             if (player.hunger > 0) player.hunger--;
             else { player.hp--; if (player.hp <= 0) { triggerGameOver(); return; } }
 
-            monsters.forEach(m => {
+            for (let i = monsters.length - 1; i >= 0; i--) {
+                let m = monsters[i];
+                if (m.hp <= 0) {
+                    addParticles(m.x, m.y, '#fc8181', 15);
+                    addMsg(`${m.name} dies!`, 'good');
+                    player.xp += 8; total_kills++;
+                    if (m.boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }
+                    monsters.splice(i, 1);
+                    continue;
+                }
                 m.turn++;
-                if (m.hp <= 0) return;
                 let mdx = Math.sign(player.x - m.x), mdy = Math.sign(player.y - m.y);
                 if (m.x + mdx === player.x && m.y + mdy === player.y) {
                     let calcDef = player.def + (equipment.armor ? equipment.armor.val : 0) + (equipment.shield ? equipment.shield.val : 0);
@@ -1100,7 +1108,7 @@
                 } else if (map[m.y + mdy][m.x + mdx] !== '#') {
                     m.x += mdx; m.y += mdy;
                 }
-            });
+            }
         }
 
         function triggerGameOver() {
@@ -1162,6 +1170,7 @@
                             addMsg(`You strike ${monsters[mIdx].name} for ${calcAtk} dmg!`);
                             addFloatText(nx, ny, `-${calcAtk}`, '#e53e3e');
                             if (monsters[mIdx].hp <= 0) {
+                                addParticles(monsters[mIdx].x, monsters[mIdx].y, '#fc8181', 15);
                                 addMsg(`${monsters[mIdx].name} dies!`, 'good');
                                 player.xp += 8; total_kills++;
                                 if (monsters[mIdx].boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }

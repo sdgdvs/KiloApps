@@ -83,7 +83,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KRogue
 - KChess
 - KPong
 - KMines
@@ -112,8 +111,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze
 
 
+- KRogue
+
 ## Completed Work Log
 
+- **KRogue (Loop 2):** Implemented death particle burst effects for both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c) when monsters are killed, integrating cleanly into the combat and spell systems.
 - **KTetris (Loop 2):** Implemented expanding shockwave ring animations for line clears and bomb explosions, pulsing glow aura around the active falling piece, animated scanline effect for the ghost piece projection, and a flickering fuse animation for the bomb piece in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
 - **KSnake (Loop 2):** Implemented detailed drawing logic for snake head (with animated tongue), spider rival with wiggling legs, boss drone with pulsing red eye, detailed gems/stars for food items, swirling animation for portals, and brick textures for obstacles in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).

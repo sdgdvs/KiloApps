@@ -152,6 +152,56 @@ typedef struct {
 #define S_INVISIBILITY 6
 #define S_BLESSING 7
 
+
+#define MAX_PARTICLES 100
+typedef struct {
+    int active;
+    float x, y;
+    float vx, vy;
+    COLORREF color;
+    int life;
+} Particle;
+Particle particles[MAX_PARTICLES];
+
+void spawn_particles(int x, int y, COLORREF color, int count) {
+    for(int j=0; j<count; j++) {
+        for(int i=0; i<MAX_PARTICLES; i++) {
+            if(!particles[i].active) {
+                particles[i].active = 1;
+                particles[i].x = (float)(x * 12 + 6);
+                particles[i].y = (float)(y * 20 + 10);
+                particles[i].vx = (float)(rand_range(0, 200) - 100) / 30.0f;
+                particles[i].vy = (float)(rand_range(0, 200) - 100) / 30.0f;
+                particles[i].color = color;
+                particles[i].life = rand_range(10, 30);
+                break;
+            }
+        }
+    }
+}
+
+void update_particles() {
+    for(int i=0; i<MAX_PARTICLES; i++) {
+        if(particles[i].active) {
+            particles[i].x += particles[i].vx;
+            particles[i].y += particles[i].vy;
+            particles[i].life--;
+            if(particles[i].life <= 0) particles[i].active = 0;
+        }
+    }
+}
+
+void draw_particles(HDC memDC) {
+    for(int i=0; i<MAX_PARTICLES; i++) {
+        if(particles[i].active) {
+            HBRUSH b = CreateSolidBrush(particles[i].color);
+            RECT r = { (int)particles[i].x - 1, (int)particles[i].y - 1, (int)particles[i].x + 2, (int)particles[i].y + 2 };
+            FillRect(memDC, &r, b);
+            DeleteObject(b);
+        }
+    }
+}
+
 typedef struct {
     Tile map[H][W];
     Entity entities[MAX_ENTITIES];
@@ -809,6 +859,7 @@ void gain_xp(Entity* p, int amount) {
 }
 
 void handle_death(Entity* e, Entity* killer) {
+    spawn_particles(e->x, e->y, RGB(255,50,50), 15);
     e->active = 0;
     char buf[100];
     wsprintfA(buf, "%s dies!", e->name);
