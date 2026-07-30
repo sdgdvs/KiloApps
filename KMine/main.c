@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <commdlg.h>
 
 #define W 200
 #define H 200
@@ -7,6 +8,14 @@
 
 #define MAX_ROWS 16
 #define MAX_COLS 30
+#define MAX_MOVES 10000
+
+typedef struct {
+    int t;
+    int x;
+    int y;
+    int b;
+} Move;
 
 int grid[MAX_ROWS][MAX_COLS];
 int state[MAX_ROWS][MAX_COLS]; // 0=hidden, 1=revealed, 2=flagged
@@ -18,20 +27,134 @@ int firstClick = 1;
 int cols = 10;
 int rows = 10;
 int totalMines = 15;
+int currentDiff = 0;
+
+int bestTimes[3] = {-1, -1, -1};
+Move moves[MAX_MOVES];
+int movesCount = 0;
+int isReplaying = 0;
+DWORD startRealTime = 0;
+DWORD replayStartTime = 0;
+int replayMoveIdx = 0;
+
+typedef struct {
+    int grid[MAX_ROWS][MAX_COLS];
+    int state[MAX_ROWS][MAX_COLS];
+    int cols, rows, totalMines, diff;
+    int gameOver, flagsPlaced, timeElapsed, firstClick;
+    Move moves[MAX_MOVES];
+    int movesCount;
+    DWORD timeOffset;
+} QuickSaveData;
+
+QuickSaveData qs;
+int qsValid = 0;
+
+size_t MyStrLen(const char* s) {
+    size_t len = 0;
+    while (*s++) len++;
+    return len;
+}
+
+int MyStrncmp(const char* s1, const char* s2, size_t n) {
+    while (n--) {
+        if (*s1 != *s2) return *s1 - *s2;
+        if (!*s1) break;
+        s1++; s2++;
+    }
+    return 0;
+}
+
+char* MyStrStr(const char* str, const char* substr) {
+    if (!*substr) return (char*)str;
+    while (*str) {
+        const char* p1 = str;
+        const char* p2 = substr;
+        while (*p1 && *p2 && *p1 == *p2) { p1++; p2++; }
+        if (!*p2) return (char*)str;
+        str++;
+    }
+    return NULL;
+}
+
+int MyAtoi(const char* s) {
+    int res = 0;
+    int sign = 1;
+    if (*s == '-') { sign = -1; s++; }
+    while (*s >= '0' && *s <= '9') {
+        res = res * 10 + (*s - '0');
+        s++;
+    }
+    return res * sign;
+}
+
+#pragma function(memcpy)
+void* __cdecl memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
+void SaveStats() {
+    HANDLE hFile = CreateFileA("kmine_stats.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+    
+    char buf[512];
+    char temp[32];
+    lstrcpyA(buf, "{");
+    for (int i=0; i<3; i++) {
+        if (bestTimes[i] == -1) wsprintfA(temp, "\"%d\":null", i);
+        else wsprintfA(temp, "\"%d\":%d", i, bestTimes[i]);
+        lstrcatA(buf, temp);
+        if (i < 2) lstrcatA(buf, ",");
+    }
+    lstrcatA(buf, "}");
+    
+    DWORD written;
+    WriteFile(hFile, buf, MyStrLen(buf), &written, NULL);
+    CloseHandle(hFile);
+}
+
+void LoadStats() {
+    HANDLE hFile = CreateFileA("kmine_stats.json", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+    char buf[512] = {0};
+    DWORD bytesRead = 0;
+    ReadFile(hFile, buf, 511, &bytesRead, NULL);
+    buf[bytesRead] = 0;
+    CloseHandle(hFile);
+    
+    for (int i=0; i<3; i++) {
+        char key[16];
+        wsprintfA(key, "\"%d\":", i);
+        char *p = MyStrStr(buf, key);
+        if (p) {
+            p += MyStrLen(key);
+            while (*p == ' ') p++;
+            if (MyStrncmp(p, "null", 4) != 0) {
+                bestTimes[i] = MyAtoi(p);
+            }
+        }
+    }
+}
 
 void UpdateTitle(HWND hwnd) {
     if (!hwnd) return;
+    char bestStr[32] = "--";
+    if (bestTimes[currentDiff] != -1) wsprintfA(bestStr, "%d", bestTimes[currentDiff]);
+
     if (gameOver == 2) {
-        char buf[64];
-        wsprintfA(buf, "KMine - YOU WIN! Time: %ds (H for Hint)", timeElapsed);
+        char buf[128];
+        wsprintfA(buf, "KMine - YOU WIN! Time: %ds (Best: %ss) | H for Hint", timeElapsed, bestStr);
         SetWindowTextA(hwnd, buf);
     } else if (gameOver == 1) {
-        char buf[64];
-        wsprintfA(buf, "KMine - GAME OVER! Time: %ds (H for Hint)", timeElapsed);
+        char buf[128];
+        wsprintfA(buf, "KMine - GAME OVER! Time: %ds (Best: %ss) | H for Hint", timeElapsed, bestStr);
         SetWindowTextA(hwnd, buf);
     } else {
         char buf[128];
-        wsprintfA(buf, "KMine - Mines: %d | Time: %ds | Press H for Hint", totalMines - flagsPlaced, timeElapsed);
+        wsprintfA(buf, "KMine - Mines: %d | Time: %ds | Best: %ss | H for Hint", totalMines - flagsPlaced, timeElapsed, bestStr);
         SetWindowTextA(hwnd, buf);
     }
 }
@@ -41,6 +164,10 @@ void UpdateTitle(HWND hwnd) {
 #define IDM_INTERMEDIATE 1002
 #define IDM_EXPERT 1003
 #define IDM_HINT 1004
+#define IDM_EXPORT_STATS 1005
+#define IDM_IMPORT_STATS 1006
+#define IDM_WATCH_REPLAY 1007
+
 HMENU hMenu, hSubMenu;
 
 int randSeed = 42;
@@ -82,17 +209,30 @@ void GenerateMines(int safeX, int safeY) {
     }
 }
 
-void InitGame(HWND hwnd) {
-    randSeed = GetTickCount();
+void InitGame(HWND hwnd, int keepGrid) {
+    if (!keepGrid) {
+        randSeed = GetTickCount();
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++) {
+                grid[y][x] = 0;
+            }
+        }
+        movesCount = 0;
+        firstClick = 1;
+    } else {
+        firstClick = 0;
+    }
     gameOver = 0;
     flagsPlaced = 0;
     timeElapsed = 0;
-    firstClick = 1;
-    if (hwnd) KillTimer(hwnd, 1);
+    isReplaying = 0;
+    if (hwnd) {
+        KillTimer(hwnd, 1);
+        KillTimer(hwnd, 2);
+    }
     UpdateTitle(hwnd);
     for (int y = 0; y < rows; y++) {
         for (int x = 0; x < cols; x++) {
-            grid[y][x] = 0;
             state[y][x] = 0;
         }
     }
@@ -154,70 +294,229 @@ void CheckWin(HWND hwnd) {
     }
     if (unrevealed == totalMines) {
         gameOver = 2; // Win
-        KillTimer(hwnd, 1);
+        if (!isReplaying) KillTimer(hwnd, 1);
         UpdateTitle(hwnd);
+        if (!isReplaying) {
+            if (bestTimes[currentDiff] == -1 || timeElapsed < bestTimes[currentDiff]) {
+                bestTimes[currentDiff] = timeElapsed;
+                SaveStats();
+                UpdateTitle(hwnd);
+            }
+        }
+    }
+}
+
+void ApplyAction(HWND hwnd, int x, int y, int btn) {
+    if (btn == 0) {
+        if (firstClick) {
+            firstClick = 0;
+            GenerateMines(x, y);
+            startRealTime = GetTickCount();
+            if (!isReplaying) SetTimer(hwnd, 1, 1000, NULL);
+        }
+        if (state[y][x] == 1) {
+            ChordCell(x, y);
+        } else if (state[y][x] == 0) {
+            Reveal(x, y);
+        }
+        if (gameOver == 1) {
+            if (!isReplaying) KillTimer(hwnd, 1);
+            UpdateTitle(hwnd);
+        } else {
+            CheckWin(hwnd);
+        }
+    } else if (btn == 2) {
+        if (state[y][x] != 1) {
+            if (state[y][x] == 0) {
+                state[y][x] = 2;
+                flagsPlaced++;
+            } else {
+                state[y][x] = 0;
+                flagsPlaced--;
+            }
+            UpdateTitle(hwnd);
+        }
     }
 }
 
 void GiveHint(HWND hwnd) {
-    if (gameOver != 0) return;
+    if (gameOver != 0 || isReplaying) return;
+    int actionX = -1, actionY = -1;
     if (firstClick) {
-        int safeX = cols / 2;
-        int safeY = rows / 2;
-        firstClick = 0;
-        GenerateMines(safeX, safeY);
-        SetTimer(hwnd, 1, 1000, NULL);
-        Reveal(safeX, safeY);
-        CheckWin(hwnd);
-        InvalidateRect(hwnd, NULL, FALSE);
-        return;
-    }
-    int count = 0;
-    for (int y = 0; y < rows; y++) {
-        for (int x = 0; x < cols; x++) {
-            if (state[y][x] == 0 && grid[y][x] != 9) {
-                count++;
+        actionX = cols / 2;
+        actionY = rows / 2;
+    } else {
+        int count = 0;
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++) {
+                if (state[y][x] == 0 && grid[y][x] != 9) count++;
+            }
+        }
+        if (count > 0) {
+            int target = MyRand() % count;
+            int current = 0;
+            for (int y = 0; y < rows; y++) {
+                for (int x = 0; x < cols; x++) {
+                    if (state[y][x] == 0 && grid[y][x] != 9) {
+                        if (current == target) {
+                            actionX = x; actionY = y;
+                            break;
+                        }
+                        current++;
+                    }
+                }
+                if (actionX != -1) break;
             }
         }
     }
-    if (count > 0) {
-        int target = MyRand() % count;
-        int current = 0;
-        for (int y = 0; y < rows; y++) {
-            for (int x = 0; x < cols; x++) {
-                if (state[y][x] == 0 && grid[y][x] != 9) {
-                    if (current == target) {
-                        Reveal(x, y);
-                        if (gameOver == 1) {
-                            KillTimer(hwnd, 1);
-                            UpdateTitle(hwnd);
-                        } else {
-                            CheckWin(hwnd);
-                        }
-                        InvalidateRect(hwnd, NULL, FALSE);
-                        return;
-                    }
-                    current++;
-                }
+    if (actionX != -1 && movesCount < MAX_MOVES) {
+        moves[movesCount].t = GetTickCount() - startRealTime;
+        moves[movesCount].x = actionX;
+        moves[movesCount].y = actionY;
+        moves[movesCount].b = 0;
+        movesCount++;
+        ApplyAction(hwnd, actionX, actionY, 0);
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
+void SetDifficultyWindow(HWND hwnd, int c, int r) {
+    cols = c; rows = r;
+    RECT rc = {0, 0, cols * CELL, rows * CELL};
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
+    SetWindowPos(hwnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
+}
+
+void SetDifficulty(HWND hwnd, int diff) {
+    currentDiff = diff;
+    if (diff == 0) { SetDifficultyWindow(hwnd, 10, 10); totalMines = 15; }
+    else if (diff == 1) { SetDifficultyWindow(hwnd, 16, 16); totalMines = 40; }
+    else if (diff == 2) { SetDifficultyWindow(hwnd, 30, 16); totalMines = 99; }
+    InitGame(hwnd, 0);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void QuickSave(HWND hwnd) {
+    if (gameOver != 0 || firstClick || isReplaying) {
+        MessageBoxA(hwnd, "Cannot quicksave right now.", "Info", MB_OK);
+        return;
+    }
+    memcpy(qs.grid, grid, sizeof(grid));
+    memcpy(qs.state, state, sizeof(state));
+    qs.cols = cols; qs.rows = rows; qs.totalMines = totalMines; qs.diff = currentDiff;
+    qs.gameOver = gameOver; qs.flagsPlaced = flagsPlaced; qs.timeElapsed = timeElapsed;
+    qs.firstClick = firstClick;
+    memcpy(qs.moves, moves, sizeof(Move) * movesCount);
+    qs.movesCount = movesCount;
+    qs.timeOffset = GetTickCount() - startRealTime;
+    qsValid = 1;
+    HANDLE hFile = CreateFileA("kmine_qs.bin", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) { DWORD w; WriteFile(hFile, &qs, sizeof(qs), &w, NULL); CloseHandle(hFile); }
+    MessageBoxA(hwnd, "Quicksaved!", "Info", MB_OK);
+}
+
+void QuickLoad(HWND hwnd) {
+    if (!qsValid) {
+        HANDLE hFile = CreateFileA("kmine_qs.bin", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) { DWORD r; ReadFile(hFile, &qs, sizeof(qs), &r, NULL); CloseHandle(hFile); qsValid = 1; }
+    }
+    if (!qsValid) {
+        MessageBoxA(hwnd, "No quicksave found.", "Info", MB_OK);
+        return;
+    }
+    isReplaying = 0;
+    KillTimer(hwnd, 1);
+    KillTimer(hwnd, 2);
+    
+    currentDiff = qs.diff;
+    SetDifficultyWindow(hwnd, qs.cols, qs.rows);
+    totalMines = qs.totalMines;
+    
+    memcpy(grid, qs.grid, sizeof(grid));
+    memcpy(state, qs.state, sizeof(state));
+    gameOver = qs.gameOver; flagsPlaced = qs.flagsPlaced; timeElapsed = qs.timeElapsed;
+    firstClick = qs.firstClick;
+    memcpy(moves, qs.moves, sizeof(Move) * qs.movesCount);
+    movesCount = qs.movesCount;
+    startRealTime = GetTickCount() - qs.timeOffset;
+    
+    SetTimer(hwnd, 1, 1000, NULL);
+    UpdateTitle(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void StartReplay(HWND hwnd) {
+    if (movesCount == 0) return;
+    InitGame(hwnd, 1);
+    isReplaying = 1;
+    replayStartTime = GetTickCount();
+    replayMoveIdx = 0;
+    SetTimer(hwnd, 2, 16, NULL);
+}
+
+void DoExportStats(HWND hwnd) {
+    OPENFILENAMEA ofn = {0};
+    char szFile[260] = "kmine_stats.json";
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "JSON Files\0*.json\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+    if (GetSaveFileNameA(&ofn)) {
+        HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            char buf[512]; char temp[32]; lstrcpyA(buf, "{");
+            for (int i=0; i<3; i++) {
+                if (bestTimes[i] == -1) wsprintfA(temp, "\"%d\":null", i);
+                else wsprintfA(temp, "\"%d\":%d", i, bestTimes[i]);
+                lstrcatA(buf, temp); if (i < 2) lstrcatA(buf, ",");
             }
+            lstrcatA(buf, "}");
+            DWORD w; WriteFile(hFile, buf, MyStrLen(buf), &w, NULL);
+            CloseHandle(hFile);
+            MessageBoxA(hwnd, "Stats exported successfully.", "Export", MB_OK);
         }
     }
 }
 
-void SetDifficulty(HWND hwnd, int c, int r, int m) {
-    cols = c;
-    rows = r;
-    totalMines = m;
-    RECT rc = {0, 0, cols * CELL, rows * CELL};
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
-    SetWindowPos(hwnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
-    InitGame(hwnd);
-    InvalidateRect(hwnd, NULL, TRUE);
+void DoImportStats(HWND hwnd) {
+    OPENFILENAMEA ofn = {0};
+    char szFile[260] = {0};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "JSON Files\0*.json\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    if (GetOpenFileNameA(&ofn)) {
+        HANDLE hFile = CreateFileA(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            char buf[512] = {0}; DWORD r = 0; ReadFile(hFile, buf, 511, &r, NULL); buf[r] = 0; CloseHandle(hFile);
+            for (int i=0; i<3; i++) {
+                char key[16]; wsprintfA(key, "\"%d\":", i);
+                char *p = MyStrStr(buf, key);
+                if (p) {
+                    p += MyStrLen(key); while (*p == ' ') p++;
+                    if (MyStrncmp(p, "null", 4) != 0) {
+                        int v = MyAtoi(p);
+                        if (bestTimes[i] == -1 || v < bestTimes[i]) bestTimes[i] = v;
+                    }
+                }
+            }
+            SaveStats();
+            UpdateTitle(hwnd);
+            MessageBoxA(hwnd, "Stats imported successfully.", "Import", MB_OK);
+        }
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
+            LoadStats();
             hMenu = CreateMenu();
             hSubMenu = CreatePopupMenu();
             AppendMenuA(hSubMenu, MF_STRING, IDM_RESTART, "New Game\tF2");
@@ -227,82 +526,91 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubMenu, MF_STRING, IDM_EXPERT, "Expert");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubMenu, MF_STRING, IDM_HINT, "Hint\tH");
+            AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubMenu, MF_STRING, IDM_EXPORT_STATS, "Export Stats");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_IMPORT_STATS, "Import Stats");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_WATCH_REPLAY, "Watch Replay");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Game");
             SetMenu(hwnd, hMenu);
-            SetDifficulty(hwnd, 10, 10, 15);
+            SetDifficulty(hwnd, 0);
             break;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDM_RESTART) {
-                InitGame(hwnd);
+                InitGame(hwnd, 0);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (LOWORD(wParam) == IDM_BEGINNER) {
-                SetDifficulty(hwnd, 10, 10, 15);
+                SetDifficulty(hwnd, 0);
             } else if (LOWORD(wParam) == IDM_INTERMEDIATE) {
-                SetDifficulty(hwnd, 16, 16, 40);
+                SetDifficulty(hwnd, 1);
             } else if (LOWORD(wParam) == IDM_EXPERT) {
-                SetDifficulty(hwnd, 30, 16, 99);
+                SetDifficulty(hwnd, 2);
             } else if (LOWORD(wParam) == IDM_HINT) {
                 GiveHint(hwnd);
+            } else if (LOWORD(wParam) == IDM_EXPORT_STATS) {
+                DoExportStats(hwnd);
+            } else if (LOWORD(wParam) == IDM_IMPORT_STATS) {
+                DoImportStats(hwnd);
+            } else if (LOWORD(wParam) == IDM_WATCH_REPLAY) {
+                StartReplay(hwnd);
             }
             break;
         case WM_KEYDOWN:
             if (wParam == 'H') {
                 GiveHint(hwnd);
             } else if (wParam == VK_F2) {
-                InitGame(hwnd);
+                InitGame(hwnd, 0);
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_F5) {
+                QuickSave(hwnd);
+            } else if (wParam == VK_F9) {
+                QuickLoad(hwnd);
             }
             break;
         case WM_TIMER:
-            if (!gameOver) {
-                timeElapsed++;
-                UpdateTitle(hwnd);
+            if (wParam == 1) { // Game timer
+                if (!gameOver && !isReplaying) {
+                    timeElapsed++;
+                    UpdateTitle(hwnd);
+                }
+            } else if (wParam == 2) { // Replay timer
+                if (isReplaying) {
+                    DWORD now = GetTickCount() - replayStartTime;
+                    while (replayMoveIdx < movesCount && now >= moves[replayMoveIdx].t) {
+                        Move m = moves[replayMoveIdx];
+                        ApplyAction(hwnd, m.x, m.y, m.b);
+                        replayMoveIdx++;
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    if (replayMoveIdx >= movesCount) {
+                        isReplaying = 0;
+                        KillTimer(hwnd, 2);
+                    }
+                }
             }
             break;
-        case WM_LBUTTONDOWN: {
-            if (gameOver) {
-                InitGame(hwnd);
-                InvalidateRect(hwnd, NULL, FALSE);
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN: {
+            if (gameOver || isReplaying) {
+                if (gameOver) { InitGame(hwnd, 0); InvalidateRect(hwnd, NULL, FALSE); }
                 break;
             }
             int x = LOWORD(lParam) / CELL;
             int y = HIWORD(lParam) / CELL;
             if (x < 0 || x >= cols || y < 0 || y >= rows) break;
             
-            if (firstClick) {
-                firstClick = 0;
-                GenerateMines(x, y);
-                SetTimer(hwnd, 1, 1000, NULL);
+            int btn = (msg == WM_LBUTTONDOWN) ? 0 : 2;
+            
+            if (firstClick) startRealTime = GetTickCount();
+            if (movesCount < MAX_MOVES) {
+                moves[movesCount].t = GetTickCount() - startRealTime;
+                moves[movesCount].x = x;
+                moves[movesCount].y = y;
+                moves[movesCount].b = btn;
+                movesCount++;
             }
-            if (state[y][x] == 1) {
-                ChordCell(x, y);
-            } else if (state[y][x] == 0) {
-                Reveal(x, y);
-            }
-            if (gameOver == 1) {
-                KillTimer(hwnd, 1);
-                UpdateTitle(hwnd);
-            } else {
-                CheckWin(hwnd);
-            }
+            
+            ApplyAction(hwnd, x, y, btn);
             InvalidateRect(hwnd, NULL, FALSE);
-            break;
-        }
-        case WM_RBUTTONDOWN: {
-            if (gameOver) break;
-            int x = LOWORD(lParam) / CELL;
-            int y = HIWORD(lParam) / CELL;
-            if (x >= 0 && x < cols && y >= 0 && y < rows && state[y][x] != 1) {
-                if (state[y][x] == 0) {
-                    state[y][x] = 2;
-                    flagsPlaced++;
-                } else {
-                    state[y][x] = 0;
-                    flagsPlaced--;
-                }
-                UpdateTitle(hwnd);
-                InvalidateRect(hwnd, NULL, FALSE);
-            }
             break;
         }
         case WM_PAINT: {

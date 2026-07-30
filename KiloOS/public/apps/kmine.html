@@ -5,8 +5,9 @@
 <style>
   body { margin: 0; background-color: #c0c0c0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; font-family: sans-serif; }
   canvas { background-color: #c0c0c0; border: 2px solid #808080; border-right-color: #fff; border-bottom-color: #fff; cursor: pointer; }
-  #controls { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  #controls { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
   button, select { padding: 4px 8px; font-family: inherit; }
+  .stats-box { font-size: 12px; background: #eee; padding: 4px 8px; border: 1px solid #aaa; border-radius: 4px; }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -18,8 +19,14 @@
   </select>
   <button onclick="initGame()">Restart</button>
   <button onclick="giveHint()" title="Press H for Hint">Hint (H)</button>
-  <span id="status" style="font-family: monospace; font-weight: bold; min-width: 160px; display: inline-block;"></span>
+  <span id="status" style="font-family: monospace; font-weight: bold; min-width: 140px; display: inline-block;"></span>
+  <div class="stats-box">Best: <span id="bestTime">--</span>s</div>
+  <button onclick="exportStats()">Export Stats</button>
+  <button onclick="document.getElementById('fileIn').click()">Import Stats</button>
+  <input type="file" id="fileIn" style="display:none" accept=".json" onchange="importStats(event)">
+  <button id="replayBtn" style="display:none;" onclick="startReplay()">Watch Replay</button>
 </div>
+<div style="font-size:12px; margin-bottom: 5px;">F5: Quicksave | F9: Quickload</div>
 <canvas id="cvs"></canvas>
 <script>
   const cvs = document.getElementById('cvs');
@@ -37,6 +44,49 @@
   let timerInterval = null;
   let firstClick = true;
   
+  let bestTimes = { "0": null, "1": null, "2": null };
+  let moves = [];
+  let isReplaying = false;
+  let startRealTime = 0;
+  let quickSaveData = null;
+  
+  function loadStats() {
+      let s = localStorage.getItem('kmine_best');
+      if(s) { try { bestTimes = JSON.parse(s); } catch(e){} }
+      updateBestTimeDisplay();
+  }
+  function saveStats() {
+      localStorage.setItem('kmine_best', JSON.stringify(bestTimes));
+      updateBestTimeDisplay();
+  }
+  function updateBestTimeDisplay() {
+      let d = document.getElementById('diff').value;
+      document.getElementById('bestTime').innerText = bestTimes[d] !== null ? bestTimes[d] : '--';
+  }
+  function exportStats() {
+      let blob = new Blob([JSON.stringify(bestTimes)], {type: 'application/json'});
+      let a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'kmine_stats.json';
+      a.click();
+  }
+  function importStats(e) {
+      let file = e.target.files[0];
+      if(!file) return;
+      let reader = new FileReader();
+      reader.onload = function(ev) {
+          try {
+              let parsed = JSON.parse(ev.target.result);
+              if (parsed && typeof parsed === 'object') {
+                  bestTimes = Object.assign(bestTimes, parsed);
+                  saveStats();
+              }
+          } catch(err) { alert('Invalid JSON'); }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+  }
+
   function updateStatus() {
       const statusEl = document.getElementById('status');
       if (gameOver === 2) {
@@ -52,9 +102,9 @@
   }
   
   function startTimer() {
-      if (!timerInterval) {
+      if (!timerInterval && !isReplaying) {
           timerInterval = setInterval(() => {
-              if (gameOver === 0) {
+              if (gameOver === 0 && !isReplaying) {
                   timeElapsed++;
                   updateStatus();
               }
@@ -80,6 +130,14 @@
           gameOver = 2; // Win
           stopTimer();
           updateStatus();
+          document.getElementById('replayBtn').style.display = 'inline-block';
+          if (!isReplaying) {
+              let d = document.getElementById('diff').value;
+              if (bestTimes[d] === null || timeElapsed < bestTimes[d]) {
+                  bestTimes[d] = timeElapsed;
+                  saveStats();
+              }
+          }
       }
   }
   
@@ -97,6 +155,7 @@
       if (val === "0") { cols = 10; rows = 10; totalMines = 15; }
       else if (val === "1") { cols = 16; rows = 16; totalMines = 40; }
       else if (val === "2") { cols = 30; rows = 16; totalMines = 99; }
+      updateBestTimeDisplay();
       setupCanvas();
       initGame();
   }
@@ -130,16 +189,44 @@
       }
   }
   
-  function initGame() {
+  function initGame(keepGrid = false) {
       gameOver = 0;
       flags = 0;
       timeElapsed = 0;
-      firstClick = true;
+      firstClick = !keepGrid;
+      isReplaying = false;
+      document.getElementById('replayBtn').style.display = 'none';
       stopTimer();
       updateStatus();
-      grid = Array.from({length: rows}, () => Array(cols).fill(0));
+      if (!keepGrid) {
+          grid = Array.from({length: rows}, () => Array(cols).fill(0));
+          moves = [];
+      }
       state = Array.from({length: rows}, () => Array(cols).fill(0));
       draw();
+  }
+
+  function applyAction(x, y, btn) {
+      if (btn === 0) {
+          if (firstClick) {
+              firstClick = false;
+              generateMines(x, y);
+              startRealTime = Date.now();
+              if (!isReplaying) startTimer();
+          }
+          if (state[y][x] === 1) {
+              chord(x, y);
+          } else if (state[y][x] === 0) {
+              reveal(x, y);
+          }
+          if (gameOver === 0) checkWin();
+      } else if (btn === 2) {
+          if (state[y][x] !== 1) {
+              if (state[y][x] === 0) { state[y][x] = 2; flags++; }
+              else { state[y][x] = 0; flags--; }
+              updateStatus();
+          }
+      }
   }
   
   function reveal(x, y) {
@@ -149,6 +236,7 @@
           gameOver = 1;
           stopTimer();
           updateStatus();
+          document.getElementById('replayBtn').style.display = 'inline-block';
           for (let i=0; i<rows; i++) {
               for (let j=0; j<cols; j++) {
                   if (grid[i][j] === 9) state[i][j] = 1;
@@ -172,9 +260,7 @@
           for (let dx = -1; dx <= 1; dx++) {
               let nx = x + dx;
               let ny = y + dy;
-              if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
-                  if (state[ny][nx] === 2) flagCount++;
-              }
+              if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && state[ny][nx] === 2) flagCount++;
           }
       }
       if (flagCount === grid[y][x]) {
@@ -182,10 +268,8 @@
               for (let dx = -1; dx <= 1; dx++) {
                   let nx = x + dx;
                   let ny = y + dy;
-                  if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
-                      if (state[ny][nx] === 0) {
-                          reveal(nx, ny);
-                      }
+                  if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && state[ny][nx] === 0) {
+                      reveal(nx, ny);
                   }
               }
           }
@@ -193,32 +277,89 @@
   }
   
   function giveHint() {
-      if (gameOver !== 0) return;
+      if (gameOver !== 0 || isReplaying) return;
+      let actionX = -1, actionY = -1;
       if (firstClick) {
-          let safeX = Math.floor(cols / 2);
-          let safeY = Math.floor(rows / 2);
-          firstClick = false;
-          generateMines(safeX, safeY);
-          startTimer();
-          reveal(safeX, safeY);
-          checkWin();
-          draw();
-          return;
-      }
-      let safeCells = [];
-      for (let y = 0; y < rows; y++) {
-          for (let x = 0; x < cols; x++) {
-              if (state[y][x] === 0 && grid[y][x] !== 9) {
-                  safeCells.push({x, y});
+          actionX = Math.floor(cols / 2);
+          actionY = Math.floor(rows / 2);
+      } else {
+          let safeCells = [];
+          for (let y = 0; y < rows; y++) {
+              for (let x = 0; x < cols; x++) {
+                  if (state[y][x] === 0 && grid[y][x] !== 9) safeCells.push({x, y});
               }
           }
+          if (safeCells.length > 0) {
+              let choice = safeCells[Math.floor(Math.random() * safeCells.length)];
+              actionX = choice.x; actionY = choice.y;
+          }
       }
-      if (safeCells.length > 0) {
-          let choice = safeCells[Math.floor(Math.random() * safeCells.length)];
-          reveal(choice.x, choice.y);
-          if (gameOver === 0) checkWin();
+      if (actionX !== -1) {
+          moves.push({ t: Date.now() - startRealTime, x: actionX, y: actionY, b: 0 });
+          applyAction(actionX, actionY, 0);
           draw();
       }
+  }
+
+  function startReplay() {
+      if (moves.length === 0) return;
+      initGame(true);
+      isReplaying = true;
+      document.getElementById('replayBtn').style.display = 'none';
+      let replayStartTime = Date.now();
+      let moveIdx = 0;
+      
+      function nextFrame() {
+          if (!isReplaying) return;
+          let now = Date.now() - replayStartTime;
+          while (moveIdx < moves.length && now >= moves[moveIdx].t) {
+              let m = moves[moveIdx];
+              applyAction(m.x, m.y, m.b);
+              moveIdx++;
+          }
+          draw();
+          if (moveIdx < moves.length) {
+              requestAnimationFrame(nextFrame);
+          } else {
+              isReplaying = false;
+          }
+      }
+      requestAnimationFrame(nextFrame);
+  }
+
+  function quickSave() {
+      if (gameOver !== 0 || firstClick || isReplaying) {
+          alert("Cannot quicksave right now.");
+          return;
+      }
+      quickSaveData = {
+          grid: grid.map(r => [...r]),
+          state: state.map(r => [...r]),
+          cols, rows, totalMines, timeElapsed, flags, 
+          moves: JSON.parse(JSON.stringify(moves)),
+          diff: document.getElementById('diff').value,
+          timeOffset: Date.now() - startRealTime
+      };
+      localStorage.setItem('kmine_quicksave', JSON.stringify(quickSaveData));
+      alert("Quicksaved!");
+  }
+
+  function quickLoad() {
+      let s = localStorage.getItem('kmine_quicksave');
+      if (!s) { alert("No quicksave found."); return; }
+      try {
+          let d = JSON.parse(s);
+          cols = d.cols; rows = d.rows; totalMines = d.totalMines;
+          document.getElementById('diff').value = d.diff;
+          setupCanvas();
+          grid = d.grid; state = d.state;
+          timeElapsed = d.timeElapsed; flags = d.flags;
+          moves = d.moves;
+          firstClick = false; gameOver = 0; isReplaying = false;
+          startRealTime = Date.now() - d.timeOffset;
+          stopTimer(); startTimer();
+          updateStatus(); updateBestTimeDisplay(); draw();
+      } catch(e) { alert("Failed to quickload."); }
   }
   
   function draw() {
@@ -235,7 +376,6 @@
               if (state[y][x] === 0 || state[y][x] === 2) {
                   ctx.fillStyle = "#c0c0c0";
                   ctx.fillRect(bx, by, CELL, CELL);
-                  // Raised edge
                   ctx.fillStyle = "#fff";
                   ctx.fillRect(bx, by, CELL, 2);
                   ctx.fillRect(bx, by, 2, CELL);
@@ -250,7 +390,6 @@
               } else if (state[y][x] === 1) {
                   ctx.fillStyle = "#c0c0c0";
                   ctx.fillRect(bx, by, CELL, CELL);
-                  // Sunken edge
                   ctx.fillStyle = "#808080";
                   ctx.fillRect(bx, by, CELL, 1);
                   ctx.fillRect(bx, by, 1, CELL);
@@ -270,50 +409,28 @@
   }
   
   cvs.addEventListener('mousedown', (e) => {
-      if (gameOver !== 0) {
-          initGame();
+      if (gameOver !== 0 || isReplaying) {
+          if (gameOver !== 0) initGame();
           return;
       }
       let rect = cvs.getBoundingClientRect();
-      let x = Math.floor((e.clientX - rect.left) / CELL);
-      let y = Math.floor((e.clientY - rect.top) / CELL);
+      let x = Math.floor((e.clientX - rect.left) / (CELL * (cvs.width / rect.width / (window.devicePixelRatio||1))));
+      let y = Math.floor((e.clientY - rect.top) / (CELL * (cvs.height / rect.height / (window.devicePixelRatio||1))));
       if (x < 0 || x >= cols || y < 0 || y >= rows) return;
       
-      if (e.button === 0) {
-          if (firstClick) {
-              firstClick = false;
-              generateMines(x, y);
-              startTimer();
-          }
-          if (state[y][x] === 1) {
-              chord(x, y);
-          } else if (state[y][x] === 0) {
-              reveal(x, y);
-          }
-          if (gameOver === 0) {
-              checkWin();
-          }
-      } else if (e.button === 2) {
-          if (state[y][x] !== 1) {
-              if (state[y][x] === 0) {
-                  state[y][x] = 2;
-                  flags++;
-              } else {
-                  state[y][x] = 0;
-                  flags--;
-              }
-              updateStatus();
-          }
-      }
+      if (firstClick) startRealTime = Date.now();
+      moves.push({ t: Date.now() - startRealTime, x, y, b: e.button });
+      applyAction(x, y, e.button);
       draw();
   });
   
   window.addEventListener('keydown', (e) => {
-      if (e.key === 'h' || e.key === 'H') {
-          giveHint();
-      }
+      if (e.key === 'h' || e.key === 'H') giveHint();
+      if (e.key === 'F5') { e.preventDefault(); quickSave(); }
+      if (e.key === 'F9') { e.preventDefault(); quickLoad(); }
   });
   
+  loadStats();
   setupCanvas();
   initGame();
 </script>
