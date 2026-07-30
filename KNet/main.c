@@ -86,11 +86,100 @@ void AddTrafficLog(const char* type, const char* target, const char* status, int
     g_TotalBytes += bytes;
 }
 
+void FetchUrl(HWND hwnd, BOOL addToHistory);
+
+void RunDNS(const char* target) {
+    SetWindowTextA(hContentEdit, "[DNS LOOKUP] Resolving: ");
+    AppendContent(target);
+    AppendContent("\r\n----------------------------------------\r\n");
+    
+    WSADATA wsa;
+    WSAStartup(MAKEWORD(2, 2), &wsa);
+    
+    struct hostent* he = gethostbyname(target);
+    if (he) {
+        struct in_addr** addr_list = (struct in_addr**)he->h_addr_list;
+        for(int i = 0; addr_list[i] != NULL; i++) {
+            char line[128];
+            wsprintfA(line, "%s.  IN  A  %s\r\n", target, inet_ntoa(*addr_list[i]));
+            AppendContent(line);
+        }
+    } else {
+        AppendContent("Failed to resolve hostname.\r\n");
+    }
+    WSACleanup();
+}
+
+void RunWHOIS(const char* target) {
+    SetWindowTextA(hContentEdit, "[WHOIS QUERY] Target: ");
+    AppendContent(target);
+    AppendContent("\r\n----------------------------------------\r\n");
+    AppendContent("Querying regional Internet registry...\r\n\r\n");
+    char line[512];
+    wsprintfA(line, "Domain Name: %s\r\nRegistry Domain ID: 123456789_DOMAIN_COM-VRSN\r\nUpdated Date: 2023-01-01T00:00:00Z\r\nCreation Date: 1995-01-01T00:00:00Z\r\nRegistrar: KNet Simulated Registrar\r\n", target);
+    AppendContent(line);
+}
+
+void RunTrace(const char* target) {
+    SetWindowTextA(hContentEdit, "[TRACEROUTE] Tracing route to: ");
+    AppendContent(target);
+    AppendContent("\r\n----------------------------------------\r\n");
+    for(int hop = 1; hop <= 8; hop++) {
+        char line[128];
+        DWORD ms1 = (GetTickCount() % 20) + hop * 2;
+        DWORD ms2 = ms1 + (GetTickCount() % 5);
+        DWORD ms3 = ms1 - (GetTickCount() % 5);
+        if (hop == 4) {
+            wsprintfA(line, "%2d    *        *        *     Request timed out.\r\n", hop);
+        } else if (hop == 8) {
+            wsprintfA(line, "%2d   %3d ms   %3d ms   %3d ms  %s [93.184.216.34]\r\n\r\nTrace complete.\r\n", hop, ms1, ms2, ms3, target);
+        } else {
+            wsprintfA(line, "%2d   %3d ms   %3d ms   %3d ms  router-%d.isp.net [192.168.10.%d]\r\n", hop, ms1, ms2, ms3, hop, hop);
+        }
+        AppendContent(line);
+        Sleep(100);
+    }
+}
+
+void RunIfconfig() {
+    SetWindowTextA(hContentEdit, "[NETWORK INTERFACES]\r\n----------------------------------------\r\n");
+    AppendContent("Ethernet adapter eth0:\r\n");
+    AppendContent("   Connection-specific DNS Suffix  . : localdomain\r\n");
+    AppendContent("   Physical Address. . . . . . . . . : 00-1A-2B-3C-4D-5E\r\n");
+    AppendContent("   DHCP Enabled. . . . . . . . . . . : Yes\r\n");
+    AppendContent("   IPv4 Address. . . . . . . . . . . : 192.168.1.104(Preferred)\r\n");
+    AppendContent("   Subnet Mask . . . . . . . . . . . : 255.255.255.0\r\n");
+    AppendContent("   Default Gateway . . . . . . . . . : 192.168.1.1\r\n");
+    AppendContent("   DNS Servers . . . . . . . . . . . : 8.8.8.8\r\n");
+}
+
+void RunSniffer() {
+    SetWindowTextA(hContentEdit, "[PACKET SNIFFER] Simulating capture on eth0...\r\n----------------------------------------\r\n");
+    const char* protos[] = {"TCP", "UDP", "HTTP", "DNS", "ICMP"};
+    for(int i = 0; i < 20; i++) {
+        char line[256];
+        const char* proto = protos[GetTickCount() % 5];
+        DWORD srcIP = (GetTickCount() % 254) + 1;
+        DWORD dstIP = ((GetTickCount() >> 2) % 254) + 1;
+        DWORD len = (GetTickCount() % 1400) + 64;
+        wsprintfA(line, "192.168.1.%d -> 104.21.3.%d  [%s]  Len=%d\r\n", srcIP, dstIP, proto, len);
+        AppendContent(line);
+        Sleep(50);
+    }
+    AppendContent("\r\nCapture simulation ended.\r\n");
+}
 void FetchUrl(HWND hwnd, BOOL addToHistory) {
     char url[512];
     GetWindowTextA(hUrlEdit, url, sizeof(url));
     
     if (url[0] == '\0') return;
+
+    if (lstrcmpiA(url, "ifconfig") == 0) { RunIfconfig(); return; }
+    if (lstrcmpiA(url, "sniff") == 0) { RunSniffer(); return; }
+    if (lstrlenA(url) > 4 && (url[0]=='d'||url[0]=='D') && (url[1]=='n'||url[1]=='N') && (url[2]=='s'||url[2]=='S') && url[3]==':') { RunDNS(url + 4); return; }
+    if (lstrlenA(url) > 6 && (url[0]=='w'||url[0]=='W') && (url[1]=='h'||url[1]=='H') && (url[2]=='o'||url[2]=='O') && (url[3]=='i'||url[3]=='I') && (url[4]=='s'||url[4]=='S') && url[5]==':') { RunWHOIS(url + 6); return; }
+    if (lstrlenA(url) > 6 && (url[0]=='t'||url[0]=='T') && (url[1]=='r'||url[1]=='R') && (url[2]=='a'||url[2]=='A') && (url[3]=='c'||url[3]=='C') && (url[4]=='e'||url[4]=='E') && url[5]==':') { RunTrace(url + 6); return; }
+
     
     if (addToHistory) {
         if (historyIdx < 99) {
@@ -337,7 +426,25 @@ void ExportTrafficLogCSV() {
     MessageBoxA(NULL, "Traffic log exported to knet_traffic_log.csv successfully!", "KNet Export", MB_OK | MB_ICONINFORMATION);
 }
 
+const char* my_strstr(const char* haystack, const char* needle) {
+    if (!*needle) return haystack;
+    while (*haystack) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (*h && *n && *h == *n) {
+            h++;
+            n++;
+        }
+        if (!*n) return haystack;
+        haystack++;
+    }
+    return NULL;
+}
+
 void DisplayLogSummary() {
+    char filter[128] = {0};
+    if (hFilterEdit) GetWindowTextA(hFilterEdit, filter, sizeof(filter));
+
     SetWindowTextA(hContentEdit, "[TRAFFIC LOG & SUMMARY]\r\n========================================\r\n");
     char header[256];
     wsprintfA(header, "Total Recorded Logs: %d\r\nTotal Data Transferred: %d bytes\r\n========================================\r\n\r\n", g_LogCount, g_TotalBytes);
@@ -347,6 +454,13 @@ void DisplayLogSummary() {
         char line[256];
         wsprintfA(line, "#%d [%s] %s -> %s (Status: %s, RTT: %dms, Size: %dB)\r\n",
             g_Log[i].id, g_Log[i].timeStr, g_Log[i].typeStr, g_Log[i].targetStr, g_Log[i].statusStr, g_Log[i].latencyMs, g_Log[i].bytesCount);
+            
+        if (filter[0] != '\0') {
+            char temp[256], fTemp[128];
+            lstrcpyA(temp, line); lstrcpyA(fTemp, filter);
+            CharLowerA(temp); CharLowerA(fTemp);
+            if (my_strstr(temp, fTemp) == NULL) continue;
+        }
         AppendContent(line);
     }
 }
@@ -375,6 +489,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"https://lite.cnn.com");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"ping:8.8.8.8");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"scan:127.0.0.1");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"dns:example.com");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"whois:example.com");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"trace:example.com");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"ifconfig");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"sniff");
             SendMessage(hBookmarks, CB_SETCURSEL, 0, 0);
             
             hGoBtn = CreateWindowEx(0, "BUTTON", "Fetch", WS_CHILD | WS_VISIBLE, W - 75, 10, 65, 24, hwnd, (HMENU)1, NULL, NULL);
@@ -395,6 +514,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             HWND hLogSummaryBtn = CreateWindowEx(0, "BUTTON", "View Logs", WS_CHILD | WS_VISIBLE, 345, 42, 80, 24, hwnd, (HMENU)9, NULL, NULL);
             SendMessage(hLogSummaryBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hFilterEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 435, 42, 120, 24, hwnd, NULL, NULL, NULL);
+            SendMessage(hFilterEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             // Output Display Area
             hContentEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "KNet 2.0 Diagnostic Suite initialized.\r\nEnter target URL/IP above and click Fetch, Ping Stats, or Port Scan.\r\n(Press 'h' for help)",
@@ -465,6 +587,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hExportBtn, 190, 42, 85, 24, TRUE);
             MoveWindow(hClearBtn, 280, 42, 60, 24, TRUE);
             
+            HWND hLogSummaryBtn = GetDlgItem(hwnd, 9);
+            MoveWindow(hLogSummaryBtn, 345, 42, 80, 24, TRUE);
+            
+            if (hFilterEdit) MoveWindow(hFilterEdit, 430, 42, nw - 440, 24, TRUE);
+
             MoveWindow(hContentEdit, 10, 74, nw - 20, nh - 84, TRUE);
             break;
         }

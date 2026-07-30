@@ -407,6 +407,8 @@
     <button class="tab-btn" data-tab="tab-ping">📡 Ping & Latency Stats</button>
     <button class="tab-btn" data-tab="tab-scan">🔍 Custom Port Monitor</button>
     <button class="tab-btn" data-tab="tab-logs">📋 Traffic Log & Filter</button>
+    <button class="tab-btn" data-tab="tab-utils">🛠️ Net Utils</button>
+    <button class="tab-btn" data-tab="tab-sniff">🦈 Sniffer</button>
   </div>
 </header>
 
@@ -526,6 +528,9 @@ Ready. Select a target URL above and click Execute.
       </div>
       <div class="filter-bar">
         <input type="text" class="filter-input" id="logFilterQuery" placeholder="Filter logs by URL, type, or status code..." />
+        <label style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px;">
+          <input type="checkbox" id="logRegexCheck"> Regex
+        </label>
         <select class="select-preset" id="logTypeFilter">
           <option value="ALL">All Types</option>
           <option value="HTTP">HTTP GET</option>
@@ -555,6 +560,54 @@ Ready. Select a target URL above and click Execute.
         </thead>
         <tbody id="logTableBody">
           <tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No traffic logged yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 5: Network Utils -->
+  <div class="tab-content" id="tab-utils">
+    <div class="panel">
+      <div class="panel-title">
+        <span>Advanced Network Utilities</span>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="text" class="input-url" id="utilTargetInput" placeholder="Domain or IP..." value="example.com" style="max-width:200px;" />
+        <button class="btn" id="btnDns">DNS Lookup</button>
+        <button class="btn" id="btnWhois">WHOIS</button>
+        <button class="btn" id="btnTrace">Traceroute</button>
+        <button class="btn" id="btnIfconfig">Interfaces (ifconfig)</button>
+      </div>
+    </div>
+    <div class="content-box" id="utilContentArea" style="flex:1;">Select a utility to run.</div>
+  </div>
+
+  <!-- TAB 6: Packet Sniffer -->
+  <div class="tab-content" id="tab-sniff">
+    <div class="panel" style="flex:0 0 auto;">
+      <div class="panel-title">
+        <span>Live Packet Sniffer Simulation</span>
+        <div>
+          <button class="btn btn-primary" id="btnStartSniffer">Start Capture</button>
+          <button class="btn btn-danger" id="btnStopSniffer" disabled>Stop</button>
+          <button class="btn" id="btnClearSniffer">Clear</button>
+        </div>
+      </div>
+    </div>
+    <div class="table-wrapper" style="flex:1;">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Source</th>
+            <th>Destination</th>
+            <th>Protocol</th>
+            <th>Length</th>
+            <th>Info</th>
+          </tr>
+        </thead>
+        <tbody id="snifferTableBody">
+          <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Sniffer inactive.</td></tr>
         </tbody>
       </table>
     </div>
@@ -919,18 +972,26 @@ Ready. Select a target URL above and click Execute.
   // Traffic Log Manager & Filter
   function renderLogs() {
     const tbody = document.getElementById('logTableBody');
-    const query = document.getElementById('logFilterQuery').value.toLowerCase();
+    const query = document.getElementById('logFilterQuery').value;
+    const isRegex = document.getElementById('logRegexCheck').checked;
     const typeFilter = document.getElementById('logTypeFilter').value;
     const statusFilter = document.getElementById('logStatusFilter').value;
+
+    let regex = null;
+    if (isRegex && query) {
+      try { regex = new RegExp(query, 'i'); } catch(e) {}
+    } else if (query) {
+      regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    }
 
     const filtered = trafficLogs.filter(log => {
       if (typeFilter !== 'ALL' && log.type !== typeFilter) return false;
       if (statusFilter === 'OK' && log.status !== 'OK') return false;
       if (statusFilter === 'ERR' && log.status !== 'ERR') return false;
 
-      if (query) {
-        const str = `${log.id} ${log.target} ${log.type} ${log.status} ${log.statusCode}`.toLowerCase();
-        return str.includes(query);
+      if (regex) {
+        const str = `${log.id} ${log.target} ${log.type} ${log.status} ${log.statusCode}`;
+        return regex.test(str);
       }
       return true;
     });
@@ -956,6 +1017,7 @@ Ready. Select a target URL above and click Execute.
     }).join('');
   }
 
+  document.getElementById('logRegexCheck').onchange = renderLogs;
   document.getElementById('logFilterQuery').oninput = renderLogs;
   document.getElementById('logTypeFilter').onchange = renderLogs;
   document.getElementById('logStatusFilter').onchange = renderLogs;
@@ -1014,6 +1076,99 @@ Ready. Select a target URL above and click Execute.
     };
     reader.readAsText(file);
   };
+
+  // Net Utils
+  document.getElementById('btnDns').onclick = async () => {
+    const target = document.getElementById('utilTargetInput').value.trim() || 'example.com';
+    const area = document.getElementById('utilContentArea');
+    area.textContent = `Resolving DNS for ${target}...\n`;
+    try {
+      const res = await fetch(`https://dns.google/resolve?name=${target}`);
+      const data = await res.json();
+      area.textContent += JSON.stringify(data, null, 2);
+    } catch(e) {
+      area.textContent += `Failed to resolve: ${e.message}\nSimulated response:\n;; ANSWER SECTION:\n${target}. 299 IN A 93.184.216.34\n`;
+    }
+  };
+
+  document.getElementById('btnWhois').onclick = () => {
+    const target = document.getElementById('utilTargetInput').value.trim() || 'example.com';
+    const area = document.getElementById('utilContentArea');
+    area.textContent = `Querying WHOIS for ${target}...\n`;
+    setTimeout(() => {
+      area.textContent += `Domain Name: ${target.toUpperCase()}\nRegistry Domain ID: 123456789_DOMAIN_COM-VRSN\nUpdated Date: 2023-01-01T00:00:00Z\nCreation Date: 1995-01-01T00:00:00Z\nRegistrar: Example Registrar, Inc.\n`;
+    }, 500);
+  };
+
+  document.getElementById('btnTrace').onclick = () => {
+    const target = document.getElementById('utilTargetInput').value.trim() || 'example.com';
+    const area = document.getElementById('utilContentArea');
+    area.textContent = `Tracing route to ${target} over a maximum of 30 hops:\n\n`;
+    let hop = 1;
+    const interval = setInterval(() => {
+      const ms1 = Math.floor(Math.random() * 20) + hop * 2;
+      const ms2 = ms1 + Math.floor(Math.random() * 5);
+      const ms3 = ms1 - Math.floor(Math.random() * 5);
+      if (hop === 8) {
+        area.textContent += `${hop.toString().padStart(2, ' ')}    ${ms1} ms    ${ms2} ms    ${ms3} ms  ${target} [93.184.216.34]\n\nTrace complete.\n`;
+        clearInterval(interval);
+      } else if (hop === 4) {
+        area.textContent += `${hop.toString().padStart(2, ' ')}     *        *        *     Request timed out.\n`;
+      } else {
+        area.textContent += `${hop.toString().padStart(2, ' ')}    ${ms1} ms    ${ms2} ms    ${ms3} ms  router-${hop}.isp.net [192.168.10.${hop}]\n`;
+      }
+      hop++;
+    }, 600);
+  };
+
+  document.getElementById('btnIfconfig').onclick = () => {
+    const area = document.getElementById('utilContentArea');
+    area.textContent = `Network Interface Configuration:\n\nEthernet adapter eth0:\n   Connection-specific DNS Suffix  . : localdomain\n   Physical Address. . . . . . . . . : 00-1A-2B-3C-4D-5E\n   IPv4 Address. . . . . . . . . . . : 192.168.1.104(Preferred)\n   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n   Default Gateway . . . . . . . . . : 192.168.1.1\n   DNS Servers . . . . . . . . . . . : 8.8.8.8\n`;
+  };
+
+  // Sniffer
+  let snifferTimer = null;
+  const snifferTbody = document.getElementById('snifferTableBody');
+  document.getElementById('btnStartSniffer').onclick = () => {
+    document.getElementById('btnStartSniffer').disabled = true;
+    document.getElementById('btnStopSniffer').disabled = false;
+    snifferTbody.innerHTML = '';
+    
+    snifferTimer = setInterval(() => {
+      const protocols = ['TCP', 'UDP', 'HTTP', 'TLSv1.2', 'DNS', 'ICMP', 'ARP'];
+      const proto = protocols[Math.floor(Math.random() * protocols.length)];
+      const src = \`192.168.1.\${Math.floor(Math.random() * 254) + 1}\`;
+      const dst = (Math.random() > 0.5) ? \`192.168.1.\${Math.floor(Math.random() * 254) + 1}\` : \`104.21.3.\${Math.floor(Math.random() * 254) + 1}\`;
+      const len = Math.floor(Math.random() * 1400) + 64;
+      const time = new Date().toISOString().split('T')[1].slice(0, -1);
+      
+      let info = '';
+      if (proto === 'TCP') info = \`\${Math.floor(Math.random() * 60000)} > 443 [ACK] Seq=1 Ack=1 Win=65535 Len=\${len}\`;
+      else if (proto === 'DNS') info = \`Standard query 0x\${Math.floor(Math.random() * 0xffff).toString(16)} A example.com\`;
+      else if (proto === 'HTTP') info = \`GET / HTTP/1.1\`;
+      else if (proto === 'TLSv1.2') info = \`Application Data\`;
+      else info = \`Payload size \${len} bytes\`;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = \`<td>\${time}</td><td>\${src}</td><td>\${dst}</td><td><span class="badge badge-info">\${proto}</span></td><td>\${len}</td><td>\${info}</td>\`;
+      snifferTbody.prepend(tr);
+      if (snifferTbody.children.length > 100) {
+        snifferTbody.removeChild(snifferTbody.lastChild);
+      }
+    }, 400);
+  };
+
+  document.getElementById('btnStopSniffer').onclick = () => {
+    clearInterval(snifferTimer);
+    snifferTimer = null;
+    document.getElementById('btnStartSniffer').disabled = false;
+    document.getElementById('btnStopSniffer').disabled = true;
+  };
+
+  document.getElementById('btnClearSniffer').onclick = () => {
+    snifferTbody.innerHTML = \`<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Sniffer inactive.</td></tr>\`;
+  };
+
 </script>
 
 </body>
