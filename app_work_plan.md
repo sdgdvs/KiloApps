@@ -52,7 +52,7 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KMedia
+**Target App:** KNet
 **Status:** In Queue
 **Current Phase:** In Queue
 
@@ -60,7 +60,6 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
 
-- KMedia (Added Playback Modes, Speed Controls, Playlist Search Filter, Seeker & Volume, and Keyboard Shortcuts)
 - KNet (Added Traffic Logging, Ping Stats Engine & Port Inspector)
 - KZip (Added Archive Search, Checksum Integrity Verification, Compression Methods, and Encryption Simulation)
 - KPaint (Added Image Filters, Canvas Transforms, Undo/Redo Stack, Brush Shapes and Color Palette Presets)
@@ -107,3 +106,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KQuest (Added Save/Load States, High Score JSON Export/Import, Match Replay Viewer, Custom Keybindings)
 - KNote (Added Real-Time Search, Note Pinning, TXT Export, JSON/MD Import/Export, AES Encryption, Multi-Tab, Tagging, Auto-save)
 - KPass (Added Password Strength & Entropy Assessment and Searchable Vault System, CSV/JSON I/O, AES Crypto, Tagging, Auto-lock)
+- KMedia (Added Playback Modes, Speed Controls, Playlist Search, Waveform Visualizer, Filter Suite, Subtitles, Frame Export)
