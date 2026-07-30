@@ -1555,7 +1555,8 @@
               let p = board[y][x];
               let isAnimatingThisPiece = moveAnimation && Math.floor((moveAnimation.toX - OX) / TS) === x && Math.floor((moveAnimation.toY - OY) / TS) === y;
               if (p !== 0 && !isAnimatingThisPiece) {
-                  drawChessPieceSprite(ctx, p, px + TS / 2, py + TS / 2, TS);
+                  let bob = Math.sin(performance.now() * 0.002 + x + y) * 2.5;
+                  drawChessPieceSprite(ctx, p, px + TS / 2, py + TS / 2 + bob, TS);
               }
           }
       }
@@ -1599,6 +1600,14 @@
           const curX = moveAnimation.fromX + (moveAnimation.toX - moveAnimation.fromX) * easeT;
           const curY = moveAnimation.fromY + (moveAnimation.toY - moveAnimation.fromY) * easeT;
 
+          for (let i = 3; i >= 1; i--) {
+              let trailT = Math.max(0, t - i * 0.15);
+              let trailEase = 1 - (1 - trailT) * (1 - trailT);
+              let tx = moveAnimation.fromX + (moveAnimation.toX - moveAnimation.fromX) * trailEase;
+              let ty = moveAnimation.fromY + (moveAnimation.toY - moveAnimation.fromY) * trailEase;
+              drawChessPieceSprite(ctx, moveAnimation.p, tx, ty, TS, 0.25 - i*0.05, 1.05);
+          }
+
           drawChessPieceSprite(ctx, moveAnimation.p, curX, curY, TS, 1.0, 1.1);
 
           if (t >= 1.0) moveAnimation = null;
@@ -1612,6 +1621,22 @@
           ctx.globalAlpha = pt.life; ctx.fillStyle = pt.color;
           ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size * pt.life, 0, Math.PI * 2); ctx.fill();
           ctx.restore();
+      }
+
+      if (gameOver && (winner === 1 || winner === 2)) {
+          let loserKing = winner === 1 ? 12 : 6;
+          for (let cy = 0; cy < 8; cy++) {
+              for (let cx = 0; cx < 8; cx++) {
+                  if (board[cy][cx] === loserKing) {
+                      let t = (performance.now() % 1500) / 1500;
+                      ctx.beginPath();
+                      ctx.arc(OX + cx * TS + TS / 2, OY + cy * TS + TS / 2, TS * 2 * t, 0, Math.PI * 2);
+                      ctx.strokeStyle = `rgba(239, 68, 68, ${1 - t})`;
+                      ctx.lineWidth = 4 * (1 - t);
+                      ctx.stroke();
+                  }
+              }
+          }
       }
 
       // UI Top Bar: Mode Title & W/L/D stats

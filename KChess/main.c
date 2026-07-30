@@ -1391,7 +1391,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int p = board[y][x];
                     int isAnimatingThisPiece = (g_slide.active && (int)((g_slide.targetX - OX) / TS) == x && (int)((g_slide.targetY - OY) / TS) == y);
                     if (p != 0 && !isAnimatingThisPiece) {
-                        DrawChessPiece(memDC, p, rc.left, rc.top, TS);
+                        int bob = 0;
+                        int phase = ((GetTickCount() / 250) + x + y) % 4;
+                        if (phase == 1 || phase == 3) bob = 1;
+                        else if (phase == 2) bob = 2;
+                        DrawChessPiece(memDC, p, rc.left, rc.top + bob, TS);
                     }
                 }
             }
@@ -1401,6 +1405,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (g_slide.active) {
+                float dx = g_slide.targetX - g_slide.startX;
+                float dy = g_slide.targetY - g_slide.startY;
+                DWORD elapsed = GetTickCount() - g_slide.startTime;
+                float t = (float)elapsed / (float)g_slide.duration;
+                for (int i = 3; i >= 1; i--) {
+                    float trailT = t - (i * 0.15f);
+                    if (trailT < 0.0f) trailT = 0.0f;
+                    float trailEase = 1.0f - (1.0f - trailT) * (1.0f - trailT);
+                    int tx = (int)(g_slide.startX + dx * trailEase);
+                    int ty = (int)(g_slide.startY + dy * trailEase);
+                    DrawChessPiece(memDC, g_slide.p, tx, ty, TS);
+                }
                 DrawChessPiece(memDC, g_slide.p, (int)g_slide.curX, (int)g_slide.curY, TS);
             }
 
@@ -1414,6 +1430,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(memDC, oldPPen);
                     SelectObject(memDC, oldPBrush);
                     DeleteObject(pBrush);
+                }
+            }
+
+            if (gameOver && (winner == 1 || winner == 2)) {
+                int loserKing = (winner == 1) ? 12 : 6;
+                for (int cy = 0; cy < 8; cy++) {
+                    for (int cx = 0; cx < 8; cx++) {
+                        if (board[cy][cx] == loserKing) {
+                            float t = (float)(GetTickCount() % 1500) / 1500.0f;
+                            int radius = (int)(TS * 2.0f * t);
+                            HPEN shockPen = CreatePen(PS_SOLID, (int)(4.0f * (1.0f - t)) + 1, RGB(239, 68, 68));
+                            HGDIOBJ oldPenS = SelectObject(memDC, shockPen);
+                            HGDIOBJ oldBrushS = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                            Ellipse(memDC, OX + cx*TS + TS/2 - radius, OY + cy*TS + TS/2 - radius, OX + cx*TS + TS/2 + radius, OY + cy*TS + TS/2 + radius);
+                            SelectObject(memDC, oldBrushS);
+                            SelectObject(memDC, oldPenS);
+                            DeleteObject(shockPen);
+                        }
+                    }
                 }
             }
 

@@ -83,7 +83,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KChess
 - KPong
 - KMines
 - KAsteroids
@@ -112,8 +111,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 - KRogue
+- KChess
 
 ## Completed Work Log
+
+- **KChess (Loop 2):** Implemented piece idle breathing bobbing animation, slide motion trails, and expanding checkmate shockwave rings for both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
 - **KRogue (Loop 2):** Implemented death particle burst effects for both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c) when monsters are killed, integrating cleanly into the combat and spell systems.
 - **KTetris (Loop 2):** Implemented expanding shockwave ring animations for line clears and bomb explosions, pulsing glow aura around the active falling piece, animated scanline effect for the ghost piece projection, and a flickering fuse animation for the bomb piece in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
