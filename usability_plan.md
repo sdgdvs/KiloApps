@@ -29,7 +29,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KType
 - KSolitaire
 - KTerm
 - KSynth
@@ -77,6 +76,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSnake
 - KTetris
 - KSpace
+- KType
 
 ## Progress Log
 - KConnect4: Usability and UI issues fixed (auto-size, controls, help text, canvas crispness).
@@ -100,3 +100,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSnake: Usability and UI issues fixed (auto-opening size, crisp font, help instructions on main menu and overlay).
 - KTetris: Usability and UI issues fixed (auto-size, controls and help overlay, crisp text scaling, UI discoverability).
 - KSpace: Usability and UI issues fixed (UI scaling and help screen added).
+- KType: Usability and UI issues fixed (auto-opening sizes, crisp text rendering, visual help features added).
