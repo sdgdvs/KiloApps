@@ -321,6 +321,46 @@ typedef struct {
 
 MoveRecord moveHistory[MAX_ROWS * MAX_COLS * 2];
 int historyCount = 0;
+int replayIndex = -1;
+
+void ExportJSON() {
+    FILE *f = fopen("kconnect4_data.json", "w");
+    if (f) {
+        fprintf(f, "{\n  \"stats\": {\n");
+        fprintf(f, "    \"redWins\": %d,\n", stats.redWins);
+        fprintf(f, "    \"yellowWins\": %d,\n", stats.yellowWins);
+        fprintf(f, "    \"draws\": %d,\n", stats.draws);
+        fprintf(f, "    \"streak\": %d,\n", stats.streak);
+        fprintf(f, "    \"bestStreak\": %d,\n", stats.bestStreak);
+        fprintf(f, "    \"lastWinner\": %d,\n", stats.lastWinner);
+        fprintf(f, "    \"maxCampaignStage\": %d\n", stats.maxCampaignStage);
+        fprintf(f, "  }\n}\n");
+        fclose(f);
+        MessageBox(NULL, "Exported to kconnect4_data.json", "Export", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+void ImportJSON(HWND hwnd) {
+    FILE *f = fopen("kconnect4_data.json", "r");
+    if (f) {
+        char line[256];
+        while(fgets(line, sizeof(line), f)) {
+            sscanf(line, " \"redWins\": %d,", &stats.redWins);
+            sscanf(line, " \"yellowWins\": %d,", &stats.yellowWins);
+            sscanf(line, " \"draws\": %d,", &stats.draws);
+            sscanf(line, " \"streak\": %d,", &stats.streak);
+            sscanf(line, " \"bestStreak\": %d,", &stats.bestStreak);
+            sscanf(line, " \"lastWinner\": %d,", &stats.lastWinner);
+            sscanf(line, " \"maxCampaignStage\": %d", &stats.maxCampaignStage);
+        }
+        fclose(f);
+        SaveStats();
+        InvalidateRect(hwnd, NULL, TRUE);
+        MessageBox(hwnd, "Imported kconnect4_data.json", "Import", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBox(hwnd, "kconnect4_data.json not found", "Import Error", MB_OK | MB_ICONWARNING);
+    }
+}
 
 void LoadStats() {
     FILE *f = fopen("kconnect4_stats.bin", "rb");
@@ -428,6 +468,8 @@ void LoadGame(HWND hwnd) {
             if (gameMode == 3 && gameActive) SetTimer(hwnd, 3, 100, NULL);
             else KillTimer(hwnd, 3);
             
+            replayIndex = (gameActive) ? -1 : historyCount - 1;
+            
             InvalidateRect(hwnd, NULL, TRUE);
             MessageBox(hwnd, "Game Loaded Successfully!", "KConnect4", MB_OK | MB_ICONINFORMATION);
         }
@@ -503,6 +545,7 @@ void ResetGame() {
     isAnimating = false;
     winCellCount = 0;
     historyCount = 0;
+    replayIndex = -1;
     selectedPowerup = 0;
     p1Bombs = 2; p2Bombs = 2;
     p1Drills = 2; p2Drills = 2;
@@ -992,6 +1035,11 @@ void FinishTurnEffects(HWND hwnd) {
                 UpdateDiffSelectUI();
             }
         }
+        memcpy(moveHistory[historyCount].board, board, sizeof(board));
+        moveHistory[historyCount].rows = g_rows; moveHistory[historyCount].cols = g_cols;
+        moveHistory[historyCount].currentPlayer = currentPlayer;
+        replayIndex = historyCount;
+        historyCount++;
         SaveStats();
     } else if (CheckWin(animRow, animCol, animPlayer)) {
         if (gameMode > 0 && animPlayer == 2) PlaySoundEffect(3);
@@ -1009,6 +1057,11 @@ void FinishTurnEffects(HWND hwnd) {
             stats.maxCampaignStage++;
             UpdateDiffSelectUI();
         }
+        memcpy(moveHistory[historyCount].board, board, sizeof(board));
+        moveHistory[historyCount].rows = g_rows; moveHistory[historyCount].cols = g_cols;
+        moveHistory[historyCount].currentPlayer = currentPlayer;
+        replayIndex = historyCount;
+        historyCount++;
         SaveStats();
     } else if (CheckDraw()) {
         PlaySoundEffect(5);
@@ -1017,6 +1070,11 @@ void FinishTurnEffects(HWND hwnd) {
         stats.draws++;
         stats.streak = 0;
         stats.lastWinner = 0;
+        memcpy(moveHistory[historyCount].board, board, sizeof(board));
+        moveHistory[historyCount].rows = g_rows; moveHistory[historyCount].cols = g_cols;
+        moveHistory[historyCount].currentPlayer = currentPlayer;
+        replayIndex = historyCount;
+        historyCount++;
         SaveStats();
     } else {
         currentPlayer = (animPlayer == 1) ? 2 : 1;
@@ -1049,8 +1107,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hHelpBtn = CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 400, 518, 60, 28, hwnd, (HMENU)8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             // Row 3 buttons
-            hSaveBtn = CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 551, 65, 28, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hLoadBtn = CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 80, 551, 65, 28, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSaveBtn = CreateWindow("BUTTON", "Save (F5)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 551, 75, 28, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hLoadBtn = CreateWindow("BUTTON", "Load (F9)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 90, 551, 75, 28, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            
+            HWND hExportBtn = CreateWindow("BUTTON", "Export JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 170, 551, 95, 28, hwnd, (HMENU)14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            HWND hImportBtn = CreateWindow("BUTTON", "Import JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 270, 551, 95, 28, hwnd, (HMENU)15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             
             UpdateDiffSelectUI();
             ResetGame();
@@ -1059,7 +1120,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (isAnimating) break;
             int key = (int)wParam;
-            if (key == 'H' || key == 'h') { // AI Hint skill
+            if (key == VK_F5) { // F5 Quicksave
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(6, 0), 0);
+            } else if (key == VK_F9) { // F9 Quickload
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(7, 0), 0);
+            } else if (key == VK_LEFT && !gameActive) { // Replay Prev
+                if (replayIndex > 0) {
+                    replayIndex--;
+                    memcpy(board, moveHistory[replayIndex].board, sizeof(board));
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (key == VK_RIGHT && !gameActive) { // Replay Next
+                if (replayIndex < historyCount - 1) {
+                    replayIndex++;
+                    memcpy(board, moveHistory[replayIndex].board, sizeof(board));
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (key == 'H' || key == 'h') { // AI Hint skill
                 if (gameActive && !(gameMode > 0 && currentPlayer == 2)) {
                     hintCol = GetBestMoveAI(currentPlayer);
                     hintTimer = 150; // show for 150 frames (~3 sec)
@@ -1169,8 +1246,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "Active Skills:\n"
                     "- AI Hint (H): Highlights optimal column.\n"
                     "- Undo Move (U): Reverts last turn pair.\n"
-                    "- Column Freeze (F): Locks 1 opponent column for 2 turns.", 
+                    "- Column Freeze (F): Locks 1 opponent column for 2 turns.\n"
+                    "- Replay Viewer (Left/Right Arrows): Step through match after game ends.", 
                     "Help & Information", MB_OK | MB_ICONINFORMATION);
+            } else if (LOWORD(wParam) == 14) { // Export JSON
+                ExportJSON();
+            } else if (LOWORD(wParam) == 15) { // Import JSON
+                ImportJSON(hwnd);
             } else if (LOWORD(wParam) == 3) { // Undo
                 if (historyCount == 0 || isAnimating) break;
                 
@@ -1278,6 +1360,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else {
                 wsprintf(statusText, "Player %d's turn (%s)%s", currentPlayer, (currentPlayer == 1) ? "Red" : "Yellow",
                          (frozenTurns > 0) ? " [Col Frozen]" : "");
+            }
+            if (!gameActive && historyCount > 0) {
+                char replayText[64];
+                wsprintf(replayText, " | Replay: %d/%d (Arrows L/R)", replayIndex, historyCount - 1);
+                lstrcat(statusText, replayText);
             }
             TextOut(hdc, 20, 15, statusText, lstrlen(statusText));
             

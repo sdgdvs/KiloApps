@@ -293,8 +293,16 @@
     <button onclick="toggleHelp()">Help</button>
   </div>
   <div class="controls-row">
-    <button onclick="saveGame()">Save</button>
-    <button onclick="loadGame()">Load</button>
+    <button onclick="saveGame()">Save (F5)</button>
+    <button onclick="loadGame()">Load (F9)</button>
+    <button onclick="exportJSON()">Export JSON</button>
+    <button onclick="document.getElementById('importFile').click()">Import JSON</button>
+    <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
+  </div>
+  <div class="controls-row" id="replayControls" style="display:none;">
+    <button onclick="replayStep(-1)">&#9664; Prev Move</button>
+    <span id="replayStatus" style="color:#aaa; align-self:center; margin: 0 10px; font-weight:bold;">Replay</span>
+    <button onclick="replayStep(1)">Next Move &#9654;</button>
   </div>
   <div id="stats">
     Wins (Red): <span id="s-red">0</span> |
@@ -342,6 +350,9 @@
     
     let hintCol = -1;
     let animPowerup = 0;
+    
+    let replayHistory = [];
+    let replayIndex = 0;
     
     let turnTimeLeftMs = 7000;
     let speedTimer = null;
@@ -569,6 +580,78 @@
       document.getElementById('s-stage').textContent = stats.maxCampaignStage;
     }
 
+    function endGameSetupReplay() {
+      let finalState = {
+        board: JSON.stringify(board), rows: ROWS, cols: COLS, stats: JSON.stringify(stats), p: currentPlayer,
+        p1b: p1Bombs, p2b: p2Bombs, p1d: p1Drills, p2d: p2Drills, p1m: p1Magnets, p2m: p2Magnets, p1f: p1Freezes, p2f: p2Freezes,
+        fCol: frozenCol, fTurns: frozenTurns, fPlayer: frozenPlayer
+      };
+      replayHistory = [...moveHistory, finalState];
+      replayIndex = replayHistory.length - 1;
+      document.getElementById('replayControls').style.display = 'flex';
+      updateReplayStatus();
+    }
+    
+    function replayStep(dir) {
+      if (gameActive || !replayHistory || replayHistory.length === 0) return;
+      replayIndex += dir;
+      if (replayIndex < 0) replayIndex = 0;
+      if (replayIndex >= replayHistory.length) replayIndex = replayHistory.length - 1;
+      let m = replayHistory[replayIndex];
+      board = JSON.parse(m.board);
+      renderBoard();
+      updateReplayStatus();
+    }
+    function updateReplayStatus() {
+      document.getElementById('replayStatus').textContent = `Move ${replayIndex} / ${replayHistory.length - 1}`;
+    }
+    
+    function exportJSON() {
+      let data = { stats: stats, history: replayHistory && replayHistory.length > 0 ? replayHistory : moveHistory };
+      let blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+      let a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'kconnect4_data.json';
+      a.click();
+    }
+    function importJSON(e) {
+      let file = e.target.files[0];
+      if (!file) return;
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          let data = JSON.parse(e.target.result);
+          if (data.stats) { stats = data.stats; saveStats(); }
+          if (data.history && data.history.length > 0) {
+              replayHistory = data.history;
+              replayIndex = replayHistory.length - 1;
+              let m = replayHistory[replayIndex];
+              board = JSON.parse(m.board);
+              ROWS = m.rows || 6; COLS = m.cols || 7;
+              boardEl.style.setProperty('--cols', COLS);
+              boardEl.style.setProperty('--rows', ROWS);
+              boardEl.innerHTML = '';
+              for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                  const cell = document.createElement('div');
+                  cell.className = 'cell';
+                  cell.id = `cell-${r}-${c}`;
+                  boardEl.appendChild(cell);
+                }
+              }
+              gameActive = false;
+              document.getElementById('replayControls').style.display = 'flex';
+              renderBoard();
+              updateReplayStatus();
+              statusEl.textContent = "Imported Replay Loaded";
+          }
+          alert('Data imported successfully!');
+        } catch(err) { alert('Invalid JSON file'); }
+        document.getElementById('importFile').value = '';
+      };
+      reader.readAsText(file);
+    }
+
     function getStageGridSize(stage) {
       if (stage <= 5) return [6, 7];
       if (stage <= 10) return [7, 8];
@@ -655,6 +738,8 @@
       selectedPowerup = 0; animPowerup = 0;
       isFreezeMode = false; frozenCol = -1; frozenTurns = 0; frozenPlayer = 0;
       hintCol = -1;
+      document.getElementById('replayControls').style.display = 'none';
+      replayHistory = [];
       
       updatePowerupBtns();
       if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
@@ -787,10 +872,14 @@
       }
     });
 
-    // Keybindings listener: H, U, F, B/1, D/2, M/3
+    // Keybindings listener: H, U, F, B/1, D/2, M/3, F5, F9, Arrows
     window.addEventListener('keydown', (e) => {
       const k = e.key.toUpperCase();
-      if (k === 'H') triggerHint();
+      if (k === 'F5') { e.preventDefault(); saveGame(); }
+      else if (k === 'F9') { e.preventDefault(); loadGame(); }
+      else if (e.key === 'ArrowLeft' && !gameActive) replayStep(-1);
+      else if (e.key === 'ArrowRight' && !gameActive) replayStep(1);
+      else if (k === 'H') triggerHint();
       else if (k === 'U') undoMove();
       else if (k === 'F') toggleFreezeSkill();
       else if (k === 'B' || k === '1') togglePowerup(1);
@@ -921,6 +1010,7 @@
                 if (gameMode === 2 && winner === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 20) { stats.maxCampaignStage++; updateDiffSelect(); }
               }
               saveStats(); updateDiffSelect();
+              endGameSetupReplay();
             } else if (checkWin(r, col)) {
               if (gameMode > 0 && currentPlayer === 2) playSound('lose'); else { playSound('win'); spawnConfetti(); }
               const color = currentPlayer === 1 ? 'Red' : 'Yellow';
@@ -932,12 +1022,14 @@
               if (stats.streak > stats.best) stats.best = stats.streak;
               if (gameMode === 2 && currentPlayer === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 20) { stats.maxCampaignStage++; updateDiffSelect(); }
               saveStats(); updateDiffSelect();
+              endGameSetupReplay();
             } else if (checkDraw()) {
               playSound('draw');
               statusEl.textContent = `It's a Draw!`;
               gameActive = false;
               stats.draws++; stats.streak = 0; stats.lastWinner = 0;
               saveStats();
+              endGameSetupReplay();
             } else {
               currentPlayer = currentPlayer === 1 ? 2 : 1;
               turnTimeLeftMs = 7000;
@@ -1015,6 +1107,7 @@
 
     function undoMove() {
       if (moveHistory.length === 0) return;
+      document.getElementById('replayControls').style.display = 'none';
       if (aiTimeout) {
         clearTimeout(aiTimeout);
         aiTimeout = null;
