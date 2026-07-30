@@ -283,7 +283,7 @@
   <header>
     <div class="title-group">
       <h1>KFORTRESS</h1>
-      <span>Phase 5: Multiple Tower Types</span>
+      <span>Phase 6: Tower Upgrade System</span>
     </div>
     <div class="hud-stats">
       <div class="stat-badge stat-gold">🪙 Gold: <span id="goldVal">100</span></div>
@@ -339,11 +339,11 @@
       <button class="btn btn-danger" id="resetBtn">RESET DEFENSE</button>
 
       <div class="info-panel">
-        <strong>Phase 5 Features</strong>
+        <strong>Phase 6 Features</strong>
         <ul>
           <li>Build Archer, Mage, Cannon, or Frost Towers.</li>
-          <li>Mage deals splash, Cannon deals heavy damage.</li>
-          <li>Frost Towers emit a freezing aura that slows.</li>
+          <li>Click a built tower to Upgrade (Max Lvl 3).</li>
+          <li>Upgrades boost damage, range, and attack speed.</li>
           <li>Defeating Goblins yields <b>+15 Gold</b>!</li>
         </ul>
       </div>
@@ -505,6 +505,7 @@
               targetSlot.occupied = true;
               targetSlot.tower = {
                 type: selectedTowerType,
+                level: 1,
                 range: def.range,
                 damage: def.damage,
                 cooldown: 0,
@@ -520,7 +521,30 @@
               spawnFloatingText(slot.sx, slot.sy - 20, "NEED " + def.cost + " GOLD!", "#ef4444");
             }
           } else {
-            playBeep(500, 0.05, 'sine', 0.1);
+            const t = targetSlot.tower;
+            if (t.level < 3) {
+              const def = towerDefs[t.type];
+              const upCost = Math.floor(def.cost * (t.level * 1.5));
+              if (gold >= upCost) {
+                gold -= upCost;
+                t.level++;
+                t.damage = Math.floor(t.damage * 1.4);
+                t.range = Math.floor(t.range * 1.15);
+                t.maxCooldown = Math.max(10, Math.floor(t.maxCooldown * 0.85));
+                if (t.splash) t.splash = Math.floor(t.splash * 1.25);
+                
+                playBeep(600, 0.1, 'square', 0.15);
+                playBeep(900, 0.15, 'triangle', 0.15);
+                spawnFloatingText(slot.sx, slot.sy - 20, "LVL " + t.level + "!", "#fbbf24");
+                spawnParticleEffect(slot.sx, slot.sy, "#fbbf24");
+              } else {
+                playBeep(200, 0.15, 'sawtooth', 0.2);
+                spawnFloatingText(slot.sx, slot.sy - 20, "NEED " + upCost + "g TO UPGRADE!", "#ef4444");
+              }
+            } else {
+              playBeep(500, 0.05, 'sine', 0.1);
+              spawnFloatingText(slot.sx, slot.sy - 20, "MAX LEVEL!", "#94a3b8");
+            }
           }
         }
       });
@@ -907,6 +931,11 @@
           ctx.textAlign = 'center';
           const icon = type === 'Mage' ? '🔮' : (type === 'Cannon' ? '💣' : (type === 'Frost' ? '❄️' : '🏹'));
           ctx.fillText(icon, slot.sx, slot.sy + 5);
+          
+          // Draw level indicator
+          ctx.fillStyle = '#fbbf24';
+          ctx.font = '800 10px Segoe UI';
+          ctx.fillText('L' + rawSlot.tower.level, slot.sx + 14, slot.sy + 14);
           
           if (type === 'Frost') {
             ctx.beginPath();

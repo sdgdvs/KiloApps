@@ -46,10 +46,12 @@ typedef struct {
     int x, y;
     BOOL occupied;
     int towerType; // 0 = none, 1 = archer
+    int level;
     int cooldown;
     int maxCooldown;
     int range;
     int damage;
+    int splash;
 } TowerSlot;
 
 typedef struct {
@@ -145,10 +147,12 @@ void InitTowerSlots(int bfX, int bfY) {
         g_slots[i].y = bfY + relCoords[i][1];
         g_slots[i].occupied = FALSE;
         g_slots[i].towerType = 0;
+        g_slots[i].level = 1;
         g_slots[i].cooldown = 0;
         g_slots[i].maxCooldown = 18; // ~0.6s
         g_slots[i].range = 130;
         g_slots[i].damage = 12;
+        g_slots[i].splash = 0;
     }
 }
 
@@ -291,7 +295,7 @@ void UpdateGameLogic() {
                         g_projectiles[p].speed = (g_slots[i].towerType == TOWER_CANNON) ? 7.0f : 10.0f;
                         g_projectiles[p].damage = g_slots[i].damage;
                         g_projectiles[p].type = g_slots[i].towerType;
-                        g_projectiles[p].splash = (g_slots[i].towerType == TOWER_MAGE) ? 50 : 0;
+                        g_projectiles[p].splash = g_slots[i].splash;
                         Beep((g_slots[i].towerType == TOWER_CANNON) ? 150 : ((g_slots[i].towerType == TOWER_MAGE) ? 600 : 850), 15);
                         break;
                     }
@@ -427,7 +431,7 @@ void Render(HDC hdc, HWND hwnd) {
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontSub);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, 140, 26, "Phase 5: Multiple Tower Types", 29);
+    TextOutA(memDC, 140, 26, "Phase 6: Tower Upgrade System", 29);
 
     // Stats HUD
     char buf[128];
@@ -554,6 +558,16 @@ void Render(HDC hdc, HWND hwnd) {
 
             SetTextColor(memDC, TEXT_WHITE);
             TextOutA(memDC, g_slots[i].x - 9, g_slots[i].y - 8, lbl, 3);
+            
+            SetTextColor(memDC, TEXT_GOLD);
+            char lvlBuf[4];
+            wsprintfA(lvlBuf, "L%d", g_slots[i].level);
+            HFONT hLvlFont = CreateFontA(10, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT oldLF = (HFONT)SelectObject(memDC, hLvlFont);
+            TextOutA(memDC, g_slots[i].x + 4, g_slots[i].y + 4, lvlBuf, lstrlenA(lvlBuf));
+            SelectObject(memDC, oldLF);
+            DeleteObject(hLvlFont);
         } else {
             SetTextColor(memDC, TEXT_MUTED);
             TextOutA(memDC, g_slots[i].x - 4, g_slots[i].y - 12, "+", 1);
@@ -708,12 +722,12 @@ void Render(HDC hdc, HWND hwnd) {
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontBody);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 25, sbY + 305, "Phase 5 Rules:", 14);
+    TextOutA(memDC, sbX + 25, sbY + 305, "Phase 6 Features:", 17);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, sbX + 25, sbY + 328, "- Select Tower type", 19);
-    TextOutA(memDC, sbX + 25, sbY + 344, "- Click (+) to build", 20);
-    TextOutA(memDC, sbX + 25, sbY + 364, "- Mage deals splash", 19);
-    TextOutA(memDC, sbX + 25, sbY + 384, "- Frost slows speed", 19);
+    TextOutA(memDC, sbX + 25, sbY + 328, "- Click (+) to build", 20);
+    TextOutA(memDC, sbX + 25, sbY + 344, "- Click tower to Upgrade", 24);
+    TextOutA(memDC, sbX + 25, sbY + 364, "- Max Level is 3", 16);
+    TextOutA(memDC, sbX + 25, sbY + 384, "- Earn +15g per kill", 20);
 
     DeleteObject(hFontHeader);
     DeleteObject(hFontBody);
@@ -794,10 +808,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             g_gold -= cost;
                             g_slots[i].occupied = TRUE;
                             g_slots[i].towerType = g_selectedTowerTypeToBuild;
+                            g_slots[i].level = 1;
                             g_slots[i].range = rng;
                             g_slots[i].damage = dmg;
                             g_slots[i].maxCooldown = cd;
                             g_slots[i].cooldown = 0;
+                            g_slots[i].splash = (g_selectedTowerTypeToBuild == TOWER_MAGE) ? 50 : 0;
                             char buf[16]; wsprintfA(buf, "-%dg", cost);
                             AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), buf, RGB(239, 68, 68));
                             Beep(800, 40);
@@ -806,7 +822,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             Beep(200, 100);
                         }
                     } else {
-                        Beep(500, 30);
+                        if (g_slots[i].level < 3) {
+                            int baseCost = 50;
+                            if (g_slots[i].towerType == TOWER_MAGE) baseCost = 100;
+                            else if (g_slots[i].towerType == TOWER_CANNON) baseCost = 150;
+                            else if (g_slots[i].towerType == TOWER_FROST) baseCost = 120;
+                            
+                            int upCost = (int)(baseCost * (g_slots[i].level * 1.5f));
+                            if (g_gold >= upCost) {
+                                g_gold -= upCost;
+                                g_slots[i].level++;
+                                g_slots[i].damage = (int)(g_slots[i].damage * 1.4f);
+                                g_slots[i].range = (int)(g_slots[i].range * 1.15f);
+                                g_slots[i].maxCooldown = (int)(g_slots[i].maxCooldown * 0.85f);
+                                if (g_slots[i].maxCooldown < 10) g_slots[i].maxCooldown = 10;
+                                if (g_slots[i].splash > 0) g_slots[i].splash = (int)(g_slots[i].splash * 1.25f);
+                                
+                                char buf[32];
+                                wsprintfA(buf, "LVL %d!", g_slots[i].level);
+                                AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), buf, TEXT_GOLD);
+                                Beep(800, 40);
+                            } else {
+                                char buf[32];
+                                wsprintfA(buf, "NEED %dg!", upCost);
+                                AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), buf, RGB(239, 68, 68));
+                                Beep(200, 100);
+                            }
+                        } else {
+                            AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "MAX LEVEL!", TEXT_MUTED);
+                            Beep(500, 30);
+                        }
                     }
                     break;
                 }
