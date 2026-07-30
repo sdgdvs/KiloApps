@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KMatch3
+**Target App:** KMaze
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -205,3 +205,5 @@ Pass 1 Complete.
 - **KMail**: Added an `escapeHTML` sanitization function to properly bounds-check and encode subjects, senders, bodies, and tags against XSS DOM injection vulnerabilities, and implemented JSON import bounds to safely reject files larger than 500KB or slice imported arrays exceeding 1000 items in `kmail.html`. Added strict length bounds checks to tag appends (`lstrcatA`) in `main.c` to prevent stack buffer overflows.
 
 - **KMandel**: Fixed infinite looping caused by precision loss at extreme zoom levels by clamping the zoom factor (`newWRe`) bounds in both `kmandel.html` and `main.c`. Implemented performance improvements to the canvas rendering loop and verified math bounds and clean GDI resource handling for fractal generation.
+
+- **KMatch3**: Fixed logic bounds bug in `ProcessMatches` for both `kmatch3.html` and `main.c` where dropping gems failed to populate gaps left beneath un-destroyed stone tiles; added a `while(targetR > r)` loop to ensure the board fully populates without leaving empty cells. Fixed GDI resource leaks in `main.c` by ensuring the original device context brush (`oldB2`) is correctly restored after rendering the golden frame studs with `studB`.
