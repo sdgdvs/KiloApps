@@ -178,12 +178,19 @@
 </style>
 </head>
 <body>
+  <div id="helpOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; flex-direction: column; justify-content: center; align-items: center; color: #fff; padding: 20px; text-align: center;">
+    <h2 style="color: #e74c3c;">KPass Help</h2>
+    <p style="max-width: 400px; margin-bottom: 10px;"><strong>Generator:</strong> Customize your password complexity and length, then click Generate. You can save generated passwords to your Vault.</p>
+    <p style="max-width: 400px;"><strong>Vault:</strong> View, copy, search, and manage your saved passwords. Import/export is also available.</p>
+    <p style="color: #aaa; margin-top: 20px;">Press 'H' or Click to close</p>
+  </div>
   <div class="tabs">
     <div class="tab active" id="tabGen">Generator</div>
     <div class="tab" id="tabVault">Vault (<span id="vaultCount">0</span>)</div>
   </div>
   
   <div class="content" id="contentGen">
+    <div style="text-align: center; font-size: 13px; color: #888; margin-bottom: 10px;">Press 'H' for Help</div>
     <div class="display" id="pwdDisplay">...</div>
     
     <!-- Password Strength Meter -->
@@ -237,6 +244,7 @@
     const contentGen = document.getElementById('contentGen');
     const contentVault = document.getElementById('contentVault');
     const pwdDisplay = document.getElementById('pwdDisplay');
+    const helpOverlay = document.getElementById('helpOverlay');
     const btnGen = document.getElementById('btnGen');
     const btnCopy = document.getElementById('btnCopy');
     const btnSave = document.getElementById('btnSave');
@@ -271,6 +279,15 @@
     
     tabGen.addEventListener('click', () => switchTab(true));
     tabVault.addEventListener('click', () => switchTab(false));
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT') {
+            helpOverlay.style.display = helpOverlay.style.display === 'flex' ? 'none' : 'flex';
+        }
+    });
+    helpOverlay.addEventListener('click', () => {
+        helpOverlay.style.display = 'none';
+    });
 
     const chkUpper = document.getElementById('chkUpper');
     const chkLower = document.getElementById('chkLower');

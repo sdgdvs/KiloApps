@@ -259,7 +259,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnGen = CreateWindowA("BUTTON", "Generate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 130, 102, 140, 24, hwnd, (HMENU)1001, NULL, NULL);
             hBtnCopy = CreateWindowA("BUTTON", "Copy Password", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 280, 102, 160, 24, hwnd, (HMENU)1002, NULL, NULL);
 
-            CreateWindowA("STATIC", "--- Vault & Security Manager ---", WS_CHILD | WS_VISIBLE | SS_CENTER, 20, 135, 420, 18, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "--- Vault & Security Manager (Press H for Help) ---", WS_CHILD | WS_VISIBLE | SS_CENTER, 20, 135, 420, 18, hwnd, NULL, NULL, NULL);
 
             hLabelInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 20, 155, 240, 24, hwnd, NULL, NULL, NULL);
             SendMessageA(hLabelInput, EM_SETCUEBANNER, FALSE, (LPARAM)L"Label (e.g. Work Email)");
@@ -382,13 +382,16 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30));
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KPassClass", "KPass Security & Vault Manager", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 475, 450, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KPassClass", "KPass Security & Vault Manager", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 480, 480, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+            MessageBoxA(hwnd, "KPass Help\n\nGenerator: Customize complexity and length, generate passwords, and save them.\nVault: Manage, copy, and delete saved passwords.", "Help", MB_OK | MB_ICONINFORMATION);
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
