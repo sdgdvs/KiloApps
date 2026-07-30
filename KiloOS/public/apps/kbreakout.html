@@ -58,6 +58,8 @@ let state = 0; // 0=start, 1=play, 2=gameover, 3=victory
 let score = 0, high_score = parseInt(localStorage.getItem('kbreakout_hi')||'0');
 let lifetime_bricks = parseInt(localStorage.getItem('kbreakout_bricks')||'0');
 let level = 1, diff = 0, speed = 3.5, lives = 3;
+let frame = 0;
+
 
 // Paddle
 let pad_w = 60, pad_h = 10, pad_x = w/2 - pad_w/2;
@@ -416,6 +418,7 @@ cvs.onclick = () => {
 function loop() {
     requestAnimationFrame(loop);
     ctx.clearRect(0, 0, w, h);
+    frame++;
 
     if (state === 1) {
         // Skill Cooldowns & Durations Update
@@ -747,6 +750,13 @@ function render() {
         ctx.beginPath(); ctx.arc(ufo_x + 15, ufo_y + 3, 6, Math.PI, 0); ctx.fill();
         ctx.fillStyle = '#ff00ff';
         ctx.beginPath(); ctx.ellipse(ufo_x + 15, ufo_y + 6, 15, 4, 0, 0, Math.PI * 2); ctx.fill();
+        
+        // Animated UFO lights
+        for (let i = 0; i < 3; i++) {
+            let lx = ufo_x + 5 + i * 10;
+            ctx.fillStyle = (frame % 30 < 15 && i % 2 === 0) || (frame % 30 >= 15 && i % 2 !== 0) ? '#ffff00' : '#888800';
+            ctx.fillRect(lx - 1, ufo_y + 5, 2, 2);
+        }
     }
     if (ufo_bullet.active && state === 1) {
         ctx.fillStyle = '#ff00ff';
@@ -771,6 +781,11 @@ function render() {
         ctx.fillStyle = '#00ffff';
         ctx.beginPath(); ctx.arc(sx1, sy1, 8, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(sx2, sy2, 8, 0, Math.PI*2); ctx.fill();
+        
+        // Animated Boss Core Ring
+        ctx.strokeStyle = `rgba(255, 255, 0, ${(Math.sin(frame * 0.2) + 1) * 0.5})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(boss_x + boss_w/2, boss_y + boss_h/2, 15 + Math.sin(frame * 0.1) * 5, 0, Math.PI*2); ctx.stroke();
     }
     for (let bb of boss_bullets) {
         ctx.fillStyle = '#ff3377';
@@ -792,6 +807,11 @@ function render() {
         ctx.fillRect(pad_x, py, pad_w, pad_h);
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(pad_x + 4, py + 1, pad_w - 8, 2);
+
+        // Animated Energy Core on Paddle
+        let coreWidth = 10 + Math.sin(frame * 0.2) * 5;
+        ctx.fillStyle = '#00ffff';
+        ctx.fillRect(pad_x + pad_w / 2 - coreWidth / 2, py + 4, coreWidth, 2);
 
         if (dur_laser > 0) {
             ctx.fillStyle = '#00ffff';
@@ -831,6 +851,14 @@ function render() {
         ctx.beginPath(); ctx.arc(b.x + 4, b.y + 4, 5, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = '#ffffff';
         ctx.beginPath(); ctx.arc(b.x + 3, b.y + 3, 2, 0, Math.PI*2); ctx.fill();
+        
+        // Animated spinning core
+        ctx.save();
+        ctx.translate(b.x + 4, b.y + 4);
+        ctx.rotate(frame * 0.3);
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-3, 0); ctx.lineTo(3, 0); ctx.moveTo(0, -3); ctx.lineTo(0, 3); ctx.stroke();
+        ctx.restore();
     }
 
     // Render Particles

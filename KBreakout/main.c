@@ -58,6 +58,7 @@ float power_x = 0, power_y = 0;
 int power_type = 0;
 int paddle_timer = 0;
 int sticky_timer = 0;
+static int frame_counter = 0;
 
 // Active Skills
 int cd_laser = 0, dur_laser = 0;
@@ -376,6 +377,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_TIMER:
             if (state == 1) {
+                frame_counter++;
                 // Skill Timers
                 if (dur_laser > 0) dur_laser--;
                 if (dur_fire > 0) dur_fire--;
@@ -760,6 +762,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RECT uRc = { (int)ufo_x, ufo_y, (int)(ufo_x + 30), ufo_y + 10 };
                     FillRect(memDC, &uRc, uBr);
                     DeleteObject(uBr);
+                    
+                    // Animated UFO lights
+                    for (int i = 0; i < 3; i++) {
+                        int lx = (int)ufo_x + 5 + i * 10;
+                        int blink = ((frame_counter % 30 < 15 && i % 2 == 0) || (frame_counter % 30 >= 15 && i % 2 != 0));
+                        HBRUSH lBr = CreateSolidBrush(blink ? RGB(255, 255, 0) : RGB(136, 136, 0));
+                        RECT lRc = { lx - 1, ufo_y + 5, lx + 1, ufo_y + 7 };
+                        FillRect(memDC, &lRc, lBr);
+                        DeleteObject(lBr);
+                    }
                 }
                 if (ufo_bullet_active) {
                     HBRUSH ubBr = CreateSolidBrush(RGB(255, 0, 255));
@@ -778,6 +790,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char bStr[32];
                     wsprintfA(bStr, "BOSS HP: %d/%d", boss_hp, boss_max_hp);
                     TextOutA(memDC, boss_x + 10, boss_y + 12, bStr, lstrlenA(bStr));
+                    
+                    // Animated Boss Core Ring (Approximated with Ellipse)
+                    int pulse = (frame_counter % 20 < 10) ? 2 : -2;
+                    HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));
+                    HGDIOBJ oldP = SelectObject(memDC, corePen);
+                    HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+                    HGDIOBJ oldB = SelectObject(memDC, nullBr);
+                    int cx = boss_x + boss_w / 2;
+                    int cy = boss_y + boss_h / 2;
+                    int r_boss = 15 + pulse;
+                    Ellipse(memDC, cx - r_boss, cy - r_boss, cx + r_boss, cy + r_boss);
+                    SelectObject(memDC, oldP);
+                    SelectObject(memDC, oldB);
+                    DeleteObject(corePen);
                 }
                 for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
                     if (boss_bullets[i].active) {
@@ -805,6 +831,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RoundRect(memDC, pad_x, H - 40, pad_x + pad_w, H - 40 + pad_h, 6, 6);
                 SelectObject(memDC, oldBrush);
                 DeleteObject(pBrush);
+                
+                // Animated Energy Core on Paddle
+                int coreWidth = 10 + ((frame_counter % 10 < 5) ? 4 : -4);
+                HBRUSH coreBr = CreateSolidBrush(RGB(0, 255, 255));
+                RECT coreRc = { pad_x + pad_w / 2 - coreWidth / 2, H - 40 + 4, pad_x + pad_w / 2 + coreWidth / 2, H - 40 + 6 };
+                FillRect(memDC, &coreRc, coreBr);
+                DeleteObject(coreBr);
 
                 // Draw Lasers
                 HBRUSH lasBr = CreateSolidBrush(RGB(0, 255, 255));
@@ -853,6 +886,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         Ellipse(memDC, (int)balls[i].x, (int)balls[i].y, (int)balls[i].x + 8, (int)balls[i].y + 8);
                         SelectObject(memDC, oB);
                         DeleteObject(bBr);
+                        
+                        // Animated spin core
+                        HPEN wPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                        HGDIOBJ oP = SelectObject(memDC, wPen);
+                        int bx = (int)balls[i].x + 4;
+                        int by = (int)balls[i].y + 4;
+                        if ((frame_counter % 8) < 4) {
+                            MoveToEx(memDC, bx - 2, by, NULL); LineTo(memDC, bx + 2, by);
+                            MoveToEx(memDC, bx, by - 2, NULL); LineTo(memDC, bx, by + 2);
+                        } else {
+                            MoveToEx(memDC, bx - 2, by - 2, NULL); LineTo(memDC, bx + 2, by + 2);
+                            MoveToEx(memDC, bx - 2, by + 2, NULL); LineTo(memDC, bx + 2, by - 2);
+                        }
+                        SelectObject(memDC, oP);
+                        DeleteObject(wPen);
                     }
                 }
 
