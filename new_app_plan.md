@@ -54,14 +54,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFortress (Fantasy Tower Defense & Siege Defense)
-**Phase:** 5 (next to do)
-**Status:** Phases 1-4 complete
+**Phase:** 6 (next to do)
+**Status:** Phases 1-5 complete
 
 - [x] Phase 1: Scaffold KFortress directory (`KFortress/`), create web HTML skeleton (`KiloOS/public/apps/kfortress.html`), register in App.jsx.
 - [x] Phase 2: Core web HTML 2D grid path layout, basic Archer Tower placement, Gold economy, starting enemy wave spawning (Goblins), base HP & pathfinding.
 - [x] Phase 3: Native C version (`KFortress/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
 - [x] Phase 4: Dark fantasy UI styling (stone castle battlements theme, neon health bars, glowing range indicators, golden coin counters).
-- [ ] Phase 5: Multiple Tower Types — Add Mage Towers (splash magic damage), Cannon Towers (heavy armor-piercing damage), and Slow Frost Towers (freezing field aura).
+- [x] Phase 5: Multiple Tower Types — Add Mage Towers (splash magic damage), Cannon Towers (heavy armor-piercing damage), and Slow Frost Towers (freezing field aura).
 - [ ] Phase 6: Tower Upgrade System — Add 3 upgrade levels per tower type enhancing range, attack speed, damage, and special abilities using Gold.
 - [ ] Phase 7: Diverse Enemy Bestiary — Add Orc Warriors (heavy armor), Shadow Hounds (fast sprint speed), Flying Gargoyles (bypass ground paths), and Siege Ogre Bosses with health bars.
 - [ ] Phase 8: Hero Unit & Active Abilities — Add controllable Paladin Hero unit on the battlefield with active spell cooldowns (Holy Light Heal, Shield Wall, Meteor Strike).

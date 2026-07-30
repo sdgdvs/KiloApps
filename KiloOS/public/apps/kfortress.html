@@ -283,7 +283,7 @@
   <header>
     <div class="title-group">
       <h1>KFORTRESS</h1>
-      <span>Phase 3: Native C Parity</span>
+      <span>Phase 5: Multiple Tower Types</span>
     </div>
     <div class="hud-stats">
       <div class="stat-badge stat-gold">🪙 Gold: <span id="goldVal">100</span></div>
@@ -300,12 +300,36 @@
     <div class="sidebar">
       <h2>DEFENSE SHOP</h2>
       <div class="tower-selection">
-        <div class="tower-card selected" id="archerTowerCard">
+        <div class="tower-card selected" data-type="Archer" id="archerTowerCard">
           <div class="tower-icon">🏹</div>
           <div class="tower-info">
             <div class="tower-name">Archer Tower</div>
             <div class="tower-cost">Cost: 50 Gold</div>
-            <div class="tower-stats">Dmg: 12 | Range: 130 | Fast</div>
+            <div class="tower-stats">Dmg: 12 | Range: 130</div>
+          </div>
+        </div>
+        <div class="tower-card" data-type="Mage" id="mageTowerCard">
+          <div class="tower-icon">🔮</div>
+          <div class="tower-info">
+            <div class="tower-name">Mage Tower</div>
+            <div class="tower-cost">Cost: 100 Gold</div>
+            <div class="tower-stats">Dmg: 15 (AoE) | Range: 110</div>
+          </div>
+        </div>
+        <div class="tower-card" data-type="Cannon" id="cannonTowerCard">
+          <div class="tower-icon">💣</div>
+          <div class="tower-info">
+            <div class="tower-name">Cannon Tower</div>
+            <div class="tower-cost">Cost: 150 Gold</div>
+            <div class="tower-stats">Dmg: 40 | Range: 150</div>
+          </div>
+        </div>
+        <div class="tower-card" data-type="Frost" id="frostTowerCard">
+          <div class="tower-icon">❄️</div>
+          <div class="tower-info">
+            <div class="tower-name">Frost Tower</div>
+            <div class="tower-cost">Cost: 120 Gold</div>
+            <div class="tower-stats">Aura: Slow 50% | Range: 100</div>
           </div>
         </div>
       </div>
@@ -315,11 +339,11 @@
       <button class="btn btn-danger" id="resetBtn">RESET DEFENSE</button>
 
       <div class="info-panel">
-        <strong>Phase 3 Features</strong>
+        <strong>Phase 5 Features</strong>
         <ul>
-          <li>Click empty <b>(+)</b> slot with 50g to build Archer Tower.</li>
-          <li>Goblins spawn at Spawn Gate & walk towards Fortress.</li>
-          <li>Archer Towers target & shoot arrows at Goblins in range.</li>
+          <li>Build Archer, Mage, Cannon, or Frost Towers.</li>
+          <li>Mage deals splash, Cannon deals heavy damage.</li>
+          <li>Frost Towers emit a freezing aura that slows.</li>
           <li>Defeating Goblins yields <b>+15 Gold</b>!</li>
         </ul>
       </div>
@@ -393,6 +417,23 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    let selectedTowerType = 'Archer';
+
+    const towerDefs = {
+      Archer: { cost: 50, range: 130, damage: 12, cooldown: 40 },
+      Mage: { cost: 100, range: 110, damage: 15, cooldown: 60, splash: 50 },
+      Cannon: { cost: 150, range: 150, damage: 40, cooldown: 120 },
+      Frost: { cost: 120, range: 100, damage: 0, cooldown: 0 } // Aura
+    };
+
+    document.querySelectorAll('.tower-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.tower-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedTowerType = card.getAttribute('data-type');
+      });
+    });
+
     function updateHUD() {
       document.getElementById('goldVal').textContent = gold;
       document.getElementById('hpVal').textContent = `${Math.max(0, baseHp)}/${maxBaseHp}`;
@@ -458,24 +499,25 @@
           const targetSlot = slots[index];
 
           if (!targetSlot.occupied) {
-            // Build Archer Tower if enough gold
-            if (gold >= 50) {
-              gold -= 50;
+            const def = towerDefs[selectedTowerType];
+            if (gold >= def.cost) {
+              gold -= def.cost;
               targetSlot.occupied = true;
               targetSlot.tower = {
-                type: 'Archer',
-                range: 130,
-                damage: 12,
+                type: selectedTowerType,
+                range: def.range,
+                damage: def.damage,
                 cooldown: 0,
-                maxCooldown: 40 // ~0.65s at 60fps
+                maxCooldown: def.cooldown,
+                splash: def.splash || 0
               };
               playBeep(600, 0.08, 'square', 0.15);
               playBeep(900, 0.1, 'triangle', 0.15);
-              spawnFloatingText(slot.sx, slot.sy - 20, "-50g", "#ef4444");
+              spawnFloatingText(slot.sx, slot.sy - 20, "-" + def.cost + "g", "#ef4444");
             } else {
               // Not enough gold
               playBeep(200, 0.15, 'sawtooth', 0.2);
-              spawnFloatingText(slot.sx, slot.sy - 20, "NEED 50 GOLD!", "#ef4444");
+              spawnFloatingText(slot.sx, slot.sy - 20, "NEED " + def.cost + " GOLD!", "#ef4444");
             }
           } else {
             playBeep(500, 0.05, 'sine', 0.1);
@@ -566,6 +608,20 @@
       // Update Enemies (Pathfinding)
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
+        
+        // Frost Aura Check
+        e.slowed = false;
+        scaledSlots.forEach((slot, index) => {
+          if (slots[index].occupied && slots[index].tower.type === 'Frost') {
+            const dx = e.x - slot.sx;
+            const dy = e.y - slot.sy;
+            if (dx*dx + dy*dy <= slots[index].tower.range * slots[index].tower.range) {
+              e.slowed = true;
+            }
+          }
+        });
+        
+        const currentSpeed = e.slowed ? e.speed * 0.5 : e.speed;
         const targetWP = waypoints[e.waypointIndex + 1];
 
         if (!targetWP) {
@@ -587,13 +643,13 @@
         const dy = targetWP.y - e.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist < e.speed) {
+        if (dist < currentSpeed) {
           e.x = targetWP.x;
           e.y = targetWP.y;
           e.waypointIndex++;
         } else {
-          e.x += (dx / dist) * e.speed;
-          e.y += (dy / dist) * e.speed;
+          e.x += (dx / dist) * currentSpeed;
+          e.y += (dy / dist) * currentSpeed;
         }
       }
 
@@ -603,6 +659,8 @@
         if (!rawSlot.occupied || !rawSlot.tower) return;
 
         const tower = rawSlot.tower;
+        if (tower.type === 'Frost') return; // Frost is an aura
+        
         if (tower.cooldown > 0) {
           tower.cooldown--;
         } else {
@@ -629,10 +687,12 @@
               x: slot.sx,
               y: slot.sy,
               target: target,
-              speed: 9,
-              damage: tower.damage
+              speed: tower.type === 'Cannon' ? 6 : 9,
+              damage: tower.damage,
+              type: tower.type,
+              splash: tower.splash
             });
-            playBeep(850, 0.04, 'sine', 0.08);
+            playBeep(tower.type === 'Cannon' ? 150 : (tower.type === 'Mage' ? 600 : 850), 0.04, 'sine', 0.08);
           }
         }
       });
@@ -651,21 +711,35 @@
 
         if (dist < p.speed) {
           // Impact
-          p.target.hp -= p.damage;
-          spawnParticleEffect(p.target.x, p.target.y, "#ffd700");
-          playBeep(450, 0.04, 'triangle', 0.08);
+          if (p.splash > 0) {
+            enemies.forEach(e2 => {
+              const edx = e2.x - p.target.x;
+              const edy = e2.y - p.target.y;
+              if (Math.sqrt(edx*edx + edy*edy) <= p.splash) {
+                e2.hp -= p.damage;
+                spawnParticleEffect(e2.x, e2.y, "#a855f7");
+              }
+            });
+          } else {
+            p.target.hp -= p.damage;
+            spawnParticleEffect(p.target.x, p.target.y, p.type === 'Cannon' ? "#475569" : "#ffd700");
+          }
+          playBeep(p.type === 'Cannon' ? 200 : (p.type === 'Mage' ? 400 : 450), 0.04, 'triangle', 0.08);
 
-          if (p.target.hp <= 0) {
-            // Enemy Defeated
-            const idx = enemies.indexOf(p.target);
-            if (idx !== -1) {
+          // Clean up dead enemies
+          let deadFound = false;
+          for (let j = enemies.length - 1; j >= 0; j--) {
+            if (enemies[j].hp <= 0) {
               gold += 15;
-              spawnFloatingText(p.target.x, p.target.y - 15, "+15g", "#ffd700");
-              spawnParticleEffect(p.target.x, p.target.y, "#10b981");
-              enemies.splice(idx, 1);
-              playBeep(700, 0.06, 'sine', 0.12);
-              updateHUD();
+              spawnFloatingText(enemies[j].x, enemies[j].y - 15, "+15g", "#ffd700");
+              spawnParticleEffect(enemies[j].x, enemies[j].y, "#10b981");
+              enemies.splice(j, 1);
+              deadFound = true;
             }
+          }
+          if (deadFound) {
+            playBeep(700, 0.06, 'sine', 0.12);
+            updateHUD();
           }
           projectiles.splice(i, 1);
         } else {
@@ -818,20 +892,31 @@
         ctx.stroke();
 
         if (rawSlot.occupied && rawSlot.tower) {
-          // Draw Archer Tower
-          ctx.fillStyle = '#64748b';
+          const type = rawSlot.tower.type;
+          ctx.fillStyle = type === 'Mage' ? '#7e22ce' : (type === 'Cannon' ? '#334155' : (type === 'Frost' ? '#0ea5e9' : '#64748b'));
           ctx.beginPath();
           ctx.arc(slot.sx, slot.sy, 16, 0, Math.PI * 2);
           ctx.fill();
-          ctx.strokeStyle = '#ffd700';
+          ctx.strokeStyle = type === 'Mage' ? '#d8b4fe' : (type === 'Cannon' ? '#94a3b8' : (type === 'Frost' ? '#bae6fd' : '#ffd700'));
           ctx.lineWidth = 2;
           ctx.stroke();
 
-          // Archer icon
-          ctx.fillStyle = '#ffd700';
+          // icon
+          ctx.fillStyle = '#ffffff';
           ctx.font = '14px Segoe UI';
           ctx.textAlign = 'center';
-          ctx.fillText('🏹', slot.sx, slot.sy + 5);
+          const icon = type === 'Mage' ? '🔮' : (type === 'Cannon' ? '💣' : (type === 'Frost' ? '❄️' : '🏹'));
+          ctx.fillText(icon, slot.sx, slot.sy + 5);
+          
+          if (type === 'Frost') {
+            ctx.beginPath();
+            ctx.arc(slot.sx, slot.sy, rawSlot.tower.range, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(14, 165, 233, 0.08)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(14, 165, 233, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
         } else {
           // Empty slot (+) & cost label
           ctx.fillStyle = '#94a3b8';
@@ -848,8 +933,8 @@
       // Draw Enemies (Goblins)
       enemies.forEach(e => {
         // Goblin Body
-        ctx.fillStyle = '#16a34a';
-        ctx.strokeStyle = '#15803d';
+        ctx.fillStyle = e.slowed ? '#3b82f6' : '#16a34a'; // Turn blue if slowed
+        ctx.strokeStyle = e.slowed ? '#1d4ed8' : '#15803d';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
@@ -857,7 +942,7 @@
         ctx.stroke();
 
         // Goblin Ears/Face details
-        ctx.fillStyle = '#15803d';
+        ctx.fillStyle = e.slowed ? '#1d4ed8' : '#15803d';
         ctx.beginPath();
         ctx.arc(e.x - 10, e.y - 4, 4, 0, Math.PI * 2);
         ctx.arc(e.x + 10, e.y - 4, 4, 0, Math.PI * 2);
@@ -888,7 +973,6 @@
         ctx.strokeRect(e.x - barW / 2, e.y - 20, barW, barH);
       });
 
-      // Draw Projectiles (Arrows)
       projectiles.forEach(p => {
         const dx = p.target.x - p.x;
         const dy = p.target.y - p.y;
@@ -898,20 +982,37 @@
         ctx.translate(p.x, p.y);
         ctx.rotate(angle);
 
-        ctx.strokeStyle = '#ffd700';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-8, 0);
-        ctx.lineTo(8, 0);
-        ctx.stroke();
+        if (p.type === 'Mage') {
+          ctx.fillStyle = '#d8b4fe';
+          ctx.beginPath();
+          ctx.arc(0, 0, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = '#a855f7';
+        } else if (p.type === 'Cannon') {
+          ctx.fillStyle = '#1e293b';
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = '#ffd700';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-8, 0);
+          ctx.lineTo(8, 0);
+          ctx.stroke();
 
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.moveTo(8, 0);
-        ctx.lineTo(4, -3);
-        ctx.lineTo(4, 3);
-        ctx.closePath();
-        ctx.fill();
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.moveTo(8, 0);
+          ctx.lineTo(4, -3);
+          ctx.lineTo(4, 3);
+          ctx.closePath();
+          ctx.fill();
+        }
 
         ctx.restore();
       });

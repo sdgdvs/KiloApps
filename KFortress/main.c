@@ -60,6 +60,7 @@ typedef struct {
     float speed;
     int waypointIndex;
     int id;
+    BOOL slowed;
 } Enemy;
 
 typedef struct {
@@ -69,6 +70,8 @@ typedef struct {
     float targetX, targetY;
     float speed;
     int damage;
+    int type;
+    int splash;
 } Projectile;
 
 typedef struct {
@@ -89,6 +92,13 @@ static int g_wave = 1;
 static BOOL g_waveActive = FALSE;
 static BOOL g_gameOver = FALSE;
 static int g_selectedSlot = -1;
+
+#define TOWER_ARCHER 1
+#define TOWER_MAGE 2
+#define TOWER_CANNON 3
+#define TOWER_FROST 4
+
+static int g_selectedTowerTypeToBuild = TOWER_ARCHER;
 
 static int g_goblinsToSpawn = 0;
 static int g_spawnTimer = 0;
@@ -194,12 +204,25 @@ void UpdateGameLogic() {
         if (!g_enemies[i].active) continue;
         activeEnemyCount++;
 
+        g_enemies[i].slowed = FALSE;
+        for (int t = 0; t < g_slotCount; t++) {
+            if (g_slots[t].occupied && g_slots[t].towerType == TOWER_FROST) {
+                float fdx = g_enemies[i].x - g_slots[t].x;
+                float fdy = g_enemies[i].y - g_slots[t].y;
+                if (custom_sqrtf(fdx*fdx + fdy*fdy) <= (float)g_slots[t].range) {
+                    g_enemies[i].slowed = TRUE;
+                    break;
+                }
+            }
+        }
+        float currentSpeed = g_enemies[i].slowed ? (g_enemies[i].speed * 0.5f) : g_enemies[i].speed;
+
         Point targetWP = g_waypoints[g_enemies[i].waypointIndex + 1];
         float dx = targetWP.x - g_enemies[i].x;
         float dy = targetWP.y - g_enemies[i].y;
         float dist = custom_sqrtf(dx * dx + dy * dy);
 
-        if (dist < g_enemies[i].speed) {
+        if (dist < currentSpeed) {
             g_enemies[i].x = (float)targetWP.x;
             g_enemies[i].y = (float)targetWP.y;
             g_enemies[i].waypointIndex++;
@@ -220,14 +243,15 @@ void UpdateGameLogic() {
                 continue;
             }
         } else {
-            g_enemies[i].x += (dx / dist) * g_enemies[i].speed;
-            g_enemies[i].y += (dy / dist) * g_enemies[i].speed;
+            g_enemies[i].x += (dx / dist) * currentSpeed;
+            g_enemies[i].y += (dy / dist) * currentSpeed;
         }
     }
 
     // Update Towers & Target Acquisition
     for (int i = 0; i < g_slotCount; i++) {
         if (!g_slots[i].occupied) continue;
+        if (g_slots[i].towerType == TOWER_FROST) continue;
 
         if (g_slots[i].cooldown > 0) {
             g_slots[i].cooldown--;
@@ -264,9 +288,11 @@ void UpdateGameLogic() {
                         g_projectiles[p].targetEnemyId = g_enemies[targetIdx].id;
                         g_projectiles[p].targetX = g_enemies[targetIdx].x;
                         g_projectiles[p].targetY = g_enemies[targetIdx].y;
-                        g_projectiles[p].speed = 10.0f;
+                        g_projectiles[p].speed = (g_slots[i].towerType == TOWER_CANNON) ? 7.0f : 10.0f;
                         g_projectiles[p].damage = g_slots[i].damage;
-                        Beep(850, 15);
+                        g_projectiles[p].type = g_slots[i].towerType;
+                        g_projectiles[p].splash = (g_slots[i].towerType == TOWER_MAGE) ? 50 : 0;
+                        Beep((g_slots[i].towerType == TOWER_CANNON) ? 150 : ((g_slots[i].towerType == TOWER_MAGE) ? 600 : 850), 15);
                         break;
                     }
                 }
@@ -295,17 +321,32 @@ void UpdateGameLogic() {
 
         if (dist < g_projectiles[p].speed) {
             // Hit target
-            if (targetIdx != -1) {
-                g_enemies[targetIdx].hp -= g_projectiles[p].damage;
-                Beep(450, 15);
-
-                if (g_enemies[targetIdx].hp <= 0) {
-                    g_enemies[targetIdx].active = FALSE;
-                    g_gold += 15;
-                    AddFloatingText(g_enemies[targetIdx].x, g_enemies[targetIdx].y - 10, "+15g", TEXT_GOLD);
-                    Beep(700, 25);
+            if (g_projectiles[p].splash > 0) {
+                for (int e2 = 0; e2 < MAX_ENEMIES; e2++) {
+                    if (!g_enemies[e2].active) continue;
+                    float edx = g_enemies[e2].x - g_projectiles[p].targetX;
+                    float edy = g_enemies[e2].y - g_projectiles[p].targetY;
+                    if (custom_sqrtf(edx*edx + edy*edy) <= (float)g_projectiles[p].splash) {
+                        g_enemies[e2].hp -= g_projectiles[p].damage;
+                        if (g_enemies[e2].hp <= 0) {
+                            g_enemies[e2].active = FALSE;
+                            g_gold += 15;
+                            AddFloatingText(g_enemies[e2].x, g_enemies[e2].y - 10, "+15g", TEXT_GOLD);
+                        }
+                    }
+                }
+            } else {
+                if (targetIdx != -1) {
+                    g_enemies[targetIdx].hp -= g_projectiles[p].damage;
+                    if (g_enemies[targetIdx].hp <= 0) {
+                        g_enemies[targetIdx].active = FALSE;
+                        g_gold += 15;
+                        AddFloatingText(g_enemies[targetIdx].x, g_enemies[targetIdx].y - 10, "+15g", TEXT_GOLD);
+                        Beep(700, 25);
+                    }
                 }
             }
+            Beep((g_projectiles[p].type == TOWER_CANNON) ? 200 : ((g_projectiles[p].type == TOWER_MAGE) ? 400 : 450), 15);
             g_projectiles[p].active = FALSE;
         } else {
             g_projectiles[p].x += (dx / dist) * g_projectiles[p].speed;
@@ -386,7 +427,7 @@ void Render(HDC hdc, HWND hwnd) {
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontSub);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, 140, 26, "Phase 3: Native C Parity", 24);
+    TextOutA(memDC, 140, 26, "Phase 5: Multiple Tower Types", 29);
 
     // Stats HUD
     char buf[128];
@@ -481,9 +522,15 @@ void Render(HDC hdc, HWND hwnd) {
         DrawRoundedRect(memDC, g_slots[i].x - 22, g_slots[i].y - 22, g_slots[i].x + 22, g_slots[i].y + 22, fill, border, 6);
 
         if (g_slots[i].occupied) {
-            // Archer Tower
-            HBRUSH tBrush = CreateSolidBrush(CASTLE_COLOR);
-            HPEN tPen = CreatePen(PS_SOLID, 2, TEXT_GOLD);
+            COLORREF tColor = CASTLE_COLOR;
+            COLORREF bColor = TEXT_GOLD;
+            const char* lbl = "[A]";
+            if (g_slots[i].towerType == TOWER_MAGE) { tColor = RGB(126, 34, 206); bColor = RGB(216, 180, 254); lbl = "[M]"; }
+            else if (g_slots[i].towerType == TOWER_CANNON) { tColor = RGB(51, 65, 85); bColor = RGB(148, 163, 184); lbl = "[C]"; }
+            else if (g_slots[i].towerType == TOWER_FROST) { tColor = RGB(14, 165, 233); bColor = RGB(186, 230, 253); lbl = "[F]"; }
+
+            HBRUSH tBrush = CreateSolidBrush(tColor);
+            HPEN tPen = CreatePen(PS_SOLID, 2, bColor);
             HBRUSH oB = (HBRUSH)SelectObject(memDC, tBrush);
             HPEN oP = (HPEN)SelectObject(memDC, tPen);
 
@@ -494,8 +541,19 @@ void Render(HDC hdc, HWND hwnd) {
             DeleteObject(tBrush);
             DeleteObject(tPen);
 
-            SetTextColor(memDC, TEXT_GOLD);
-            TextOutA(memDC, g_slots[i].x - 9, g_slots[i].y - 8, "[A]", 3);
+            if (g_slots[i].towerType == TOWER_FROST) {
+                HPEN fPen = CreatePen(PS_SOLID, 1, RGB(14, 165, 233));
+                HBRUSH fBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+                HPEN oldFP = (HPEN)SelectObject(memDC, fPen);
+                HBRUSH oldFB = (HBRUSH)SelectObject(memDC, fBrush);
+                Ellipse(memDC, g_slots[i].x - g_slots[i].range, g_slots[i].y - g_slots[i].range, g_slots[i].x + g_slots[i].range, g_slots[i].y + g_slots[i].range);
+                SelectObject(memDC, oldFP);
+                SelectObject(memDC, oldFB);
+                DeleteObject(fPen);
+            }
+
+            SetTextColor(memDC, TEXT_WHITE);
+            TextOutA(memDC, g_slots[i].x - 9, g_slots[i].y - 8, lbl, 3);
         } else {
             SetTextColor(memDC, TEXT_MUTED);
             TextOutA(memDC, g_slots[i].x - 4, g_slots[i].y - 12, "+", 1);
@@ -503,7 +561,12 @@ void Render(HDC hdc, HWND hwnd) {
             HFONT hSmallFont = CreateFontA(10, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
                 OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             SelectObject(memDC, hSmallFont);
-            TextOutA(memDC, g_slots[i].x - 9, g_slots[i].y + 2, "50g", 3);
+            int cost = 50;
+            if (g_selectedTowerTypeToBuild == TOWER_MAGE) cost = 100;
+            else if (g_selectedTowerTypeToBuild == TOWER_CANNON) cost = 150;
+            else if (g_selectedTowerTypeToBuild == TOWER_FROST) cost = 120;
+            char buf[16]; wsprintfA(buf, "%dg", cost);
+            TextOutA(memDC, g_slots[i].x - 10, g_slots[i].y + 2, buf, lstrlenA(buf));
             DeleteObject(hSmallFont);
         }
     }
@@ -515,8 +578,10 @@ void Render(HDC hdc, HWND hwnd) {
         int ex = (int)g_enemies[e].x;
         int ey = (int)g_enemies[e].y;
 
-        HBRUSH gobBrush = CreateSolidBrush(GOBLIN_GREEN);
-        HPEN gobPen = CreatePen(PS_SOLID, 1, RGB(21, 128, 61));
+        COLORREF gColor = g_enemies[e].slowed ? RGB(59, 130, 246) : GOBLIN_GREEN;
+        COLORREF gBorder = g_enemies[e].slowed ? RGB(29, 78, 216) : RGB(21, 128, 61);
+        HBRUSH gobBrush = CreateSolidBrush(gColor);
+        HPEN gobPen = CreatePen(PS_SOLID, 1, gBorder);
         HBRUSH oB = (HBRUSH)SelectObject(memDC, gobBrush);
         HPEN oP = (HPEN)SelectObject(memDC, gobPen);
 
@@ -552,7 +617,11 @@ void Render(HDC hdc, HWND hwnd) {
     for (int p = 0; p < MAX_PROJECTILES; p++) {
         if (!g_projectiles[p].active) continue;
 
-        HPEN arrowPen = CreatePen(PS_SOLID, 2, TEXT_GOLD);
+        COLORREF pColor = TEXT_GOLD;
+        if (g_projectiles[p].type == TOWER_MAGE) pColor = RGB(216, 180, 254);
+        else if (g_projectiles[p].type == TOWER_CANNON) pColor = RGB(30, 41, 59);
+
+        HPEN arrowPen = CreatePen(PS_SOLID, 2, pColor);
         HPEN oP = (HPEN)SelectObject(memDC, arrowPen);
 
         MoveToEx(memDC, (int)g_projectiles[p].x, (int)g_projectiles[p].y, NULL);
@@ -599,38 +668,52 @@ void Render(HDC hdc, HWND hwnd) {
     TextOutA(memDC, sbX + 15, sbY + 15, "COMMAND POST", 12);
 
     // Shop Info
-    DrawRoundedRect(memDC, sbX + 15, sbY + 45, sbX + sbW - 15, sbY + 105, RGB(30, 41, 59), TEXT_GOLD, 6);
-    SetTextColor(memDC, TEXT_WHITE);
-    TextOutA(memDC, sbX + 25, sbY + 52, "Archer Tower [A]", 16);
-    SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 25, sbY + 68, "Cost: 50 Gold", 13);
-    SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, sbX + 25, sbY + 84, "Dmg: 12 | Range: 130", 20);
+    const char* tNames[] = {"Archer [A]", "Mage [M]", "Cannon [C]", "Frost [F]"};
+    int tCosts[] = {50, 100, 150, 120};
+    const char* tStats[] = {"Dmg:12 R:130", "Dmg:15 AoE R:110", "Dmg:40 R:150", "Slow Aura R:100"};
+    
+    for (int i=0; i<4; i++) {
+        COLORREF bg = (g_selectedTowerTypeToBuild == i+1) ? RGB(60, 70, 85) : RGB(30, 41, 59);
+        COLORREF bd = (g_selectedTowerTypeToBuild == i+1) ? TEXT_GOLD : BORDER_COLOR;
+        DrawRoundedRect(memDC, sbX + 5, sbY + 35 + i*38, sbX + sbW - 5, sbY + 70 + i*38, bg, bd, 4);
+        SetTextColor(memDC, TEXT_WHITE);
+        TextOutA(memDC, sbX + 10, sbY + 38 + i*38, tNames[i], lstrlenA(tNames[i]));
+        SetTextColor(memDC, TEXT_GOLD);
+        char buf[32]; wsprintfA(buf, "%dg", tCosts[i]);
+        TextOutA(memDC, sbX + sbW - 35, sbY + 38 + i*38, buf, lstrlenA(buf));
+        SetTextColor(memDC, TEXT_MUTED);
+        HFONT hSmallFont = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+        HFONT oldF = (HFONT)SelectObject(memDC, hSmallFont);
+        TextOutA(memDC, sbX + 10, sbY + 54 + i*38, tStats[i], lstrlenA(tStats[i]));
+        SelectObject(memDC, oldF);
+        DeleteObject(hSmallFont);
+    }
 
     // Button: Start Wave
     COLORREF btnBg = g_waveActive ? RGB(60, 70, 85) : RGB(16, 185, 129);
-    DrawRoundedRect(memDC, sbX + 15, sbY + 120, sbX + sbW - 15, sbY + 165, btnBg, BORDER_COLOR, 6);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 195, sbX + sbW - 15, sbY + 235, btnBg, BORDER_COLOR, 6);
     SetTextColor(memDC, TEXT_WHITE);
     SelectObject(memDC, hFontHeader);
     wsprintfA(buf, g_waveActive ? "WAVE IN PROGRESS" : "START WAVE %d", g_wave);
-    TextOutA(memDC, sbX + 25, sbY + 134, buf, (int)lstrlenA(buf));
+    TextOutA(memDC, sbX + 25, sbY + 207, buf, (int)lstrlenA(buf));
 
     // Button: Reset Game
-    DrawRoundedRect(memDC, sbX + 15, sbY + 180, sbX + sbW - 15, sbY + 220, RGB(225, 29, 72), BORDER_COLOR, 6);
-    TextOutA(memDC, sbX + 35, sbY + 192, "RESET DEFENSE", 13);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 245, sbX + sbW - 15, sbY + 285, RGB(225, 29, 72), BORDER_COLOR, 6);
+    TextOutA(memDC, sbX + 35, sbY + 257, "RESET DEFENSE", 13);
 
     // Info Box
-    DrawRoundedRect(memDC, sbX + 15, sbY + 235, sbX + sbW - 15, sbY + sbH - 15, BG_COLOR, BORDER_COLOR, 6);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 295, sbX + sbW - 15, sbY + sbH - 15, BG_COLOR, BORDER_COLOR, 6);
     HFONT hFontBody = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontBody);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 25, sbY + 245, "Phase 3 Rules:", 14);
+    TextOutA(memDC, sbX + 25, sbY + 305, "Phase 5 Rules:", 14);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, sbX + 25, sbY + 268, "- Click (+) slots to", 20);
-    TextOutA(memDC, sbX + 25, sbY + 284, "  build Archer (50g)", 20);
-    TextOutA(memDC, sbX + 25, sbY + 304, "- Goblins yield +15g", 20);
-    TextOutA(memDC, sbX + 25, sbY + 324, "- Defend Castle HP!", 19);
+    TextOutA(memDC, sbX + 25, sbY + 328, "- Select Tower type", 19);
+    TextOutA(memDC, sbX + 25, sbY + 344, "- Click (+) to build", 20);
+    TextOutA(memDC, sbX + 25, sbY + 364, "- Mage deals splash", 19);
+    TextOutA(memDC, sbX + 25, sbY + 384, "- Frost slows speed", 19);
 
     DeleteObject(hFontHeader);
     DeleteObject(hFontBody);
@@ -666,8 +749,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         int sbX = w - 200, sbY = 70, sbW = 190;
 
         // Check button clicks
+        // Tower Selection Shop
+        for (int i=0; i<4; i++) {
+            if (x >= sbX + 5 && x <= sbX + sbW - 5 && y >= sbY + 35 + i*38 && y <= sbY + 70 + i*38) {
+                g_selectedTowerTypeToBuild = i + 1;
+                Beep(400, 20);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+        }
         // Start Wave
-        if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 120 && y <= sbY + 165) {
+        if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 195 && y <= sbY + 235) {
             if (!g_waveActive && !g_gameOver) {
                 g_waveActive = TRUE;
                 g_goblinsToSpawn = 5 + g_wave * 3;
@@ -676,7 +768,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
         }
         // Reset Defense
-        else if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 180 && y <= sbY + 220) {
+        else if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 245 && y <= sbY + 285) {
             InitGameState();
             Beep(300, 60);
         }
@@ -690,14 +782,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_selectedSlot = i;
 
                     if (!g_slots[i].occupied) {
-                        if (g_gold >= 50) {
-                            g_gold -= 50;
+                        int cost = 50;
+                        int rng = 130;
+                        int dmg = 12;
+                        int cd = 18; // ~0.6s
+                        if (g_selectedTowerTypeToBuild == TOWER_MAGE) { cost = 100; rng = 110; dmg = 15; cd = 30; }
+                        else if (g_selectedTowerTypeToBuild == TOWER_CANNON) { cost = 150; rng = 150; dmg = 40; cd = 60; }
+                        else if (g_selectedTowerTypeToBuild == TOWER_FROST) { cost = 120; rng = 100; dmg = 0; cd = 15; }
+                        
+                        if (g_gold >= cost) {
+                            g_gold -= cost;
                             g_slots[i].occupied = TRUE;
-                            g_slots[i].towerType = 1;
-                            AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "-50g", RGB(239, 68, 68));
+                            g_slots[i].towerType = g_selectedTowerTypeToBuild;
+                            g_slots[i].range = rng;
+                            g_slots[i].damage = dmg;
+                            g_slots[i].maxCooldown = cd;
+                            g_slots[i].cooldown = 0;
+                            char buf[16]; wsprintfA(buf, "-%dg", cost);
+                            AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), buf, RGB(239, 68, 68));
                             Beep(800, 40);
                         } else {
-                            AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "NEED 50G!", RGB(239, 68, 68));
+                            AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "NEED MORE GOLD!", RGB(239, 68, 68));
                             Beep(200, 100);
                         }
                     } else {
