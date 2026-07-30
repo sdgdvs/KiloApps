@@ -25,6 +25,8 @@
 
   body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     background-color: var(--bg-primary);
     color: var(--text-main);
     height: 100vh;
@@ -341,7 +343,7 @@
 </div>
 
 <footer class="status-footer">
-  <span id="statusMessage" aria-live="polite">Ready.</span>
+  <span id="statusMessage" aria-live="polite">Ready. Press 'H' for Help.</span>
   <span id="overallSavings" aria-live="polite">Total Savings: 0%</span>
 </footer>
 
@@ -587,7 +589,12 @@
     statsPill.textContent = `${files.length} Files | ${formatBytes(totalRaw)}`;
     const overallRatio = totalRaw > 0 ? Math.max(0, Math.round(100 - (totalPacked * 100 / totalRaw))) : 0;
     overallSavings.textContent = `Total Savings: ${overallRatio}%`;
-    statusMessage.textContent = `Archive loaded. ${files.length} file(s) present.`;
+    
+    if (files.length === 0) {
+      statusMessage.textContent = `Ready. Press 'H' for Help.`;
+    } else {
+      statusMessage.textContent = `Archive loaded. ${files.length} file(s) present.`;
+    }
   }
 
   searchInput.oninput = () => renderTable();
@@ -846,6 +853,8 @@
       closeModal();
     } else if (e.key === 'Delete' && selectedIndices.size > 0 && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
       btnRemove.click();
+    } else if ((e.key === 'h' || e.key === 'H') && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
+      alert("KZip Help:\n\n- Use 'Add File' to add files to your archive.\n- Use 'Pack' to save it.\n- Use 'Open' to load an existing .kza file.\n- Select files and use 'Extract Selected' to extract them.");
     }
   });
 
@@ -903,6 +912,9 @@
       });
     }
   });
+
+  // Set appropriate auto-opening size
+  window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 680, height: 460 }, '*');
 
   renderTable();
 </script>

@@ -208,8 +208,12 @@ void RefreshList() {
     }
 
     char statusBuf[256];
-    wsprintfA(statusBuf, "Files: %d | Total Raw: %lu B | Compressed: %lu B | Savings: %d%%",
-        numFiles, totalUncomp, totalComp, overallRatio);
+    if (numFiles == 0) {
+        lstrcpyA(statusBuf, "Ready. Press 'H' for Help.");
+    } else {
+        wsprintfA(statusBuf, "Files: %d | Total Raw: %lu B | Compressed: %lu B | Savings: %d%%",
+            numFiles, totalUncomp, totalComp, overallRatio);
+    }
     SetWindowTextA(hStatus, statusBuf);
 }
 
@@ -540,7 +544,7 @@ BOOL CALLBACK SetFontEnumProc(HWND child, LPARAM font) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
 
             // Search Bar Label & Field
             CreateWindowEx(0, "STATIC", "Filter:", WS_CHILD | WS_VISIBLE, 10, 12, 40, 20, hwnd, NULL, NULL, NULL);
@@ -572,7 +576,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 10, 40, W - 35, H - 125, hwnd, (HMENU)100, NULL, NULL);
 
             // Status Bar Label
-            hStatus = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "Ready", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, H - 45, W - 35, 20, hwnd, NULL, NULL, NULL);
+            hStatus = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "Ready. Press 'H' for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, H - 45, W - 35, 20, hwnd, NULL, NULL, NULL);
 
             // Set Fonts
             EnumChildWindows(hwnd, SetFontEnumProc, (LPARAM)hFont);
@@ -695,6 +699,12 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+            HWND hFocus = GetFocus();
+            if (hFocus != hEditSearch && hFocus != hEditPassword) {
+                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' - This help", "Help", MB_OK | MB_ICONINFORMATION);
+            }
+        }
         if (!IsDialogMessage(hwnd, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
