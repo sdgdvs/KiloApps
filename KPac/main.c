@@ -814,6 +814,16 @@ void Update() {
                     ty = py + (MyRand() % 5 - 2);
                 }
 
+                int loopNum = (level - 1) / 20;
+                if (loopNum >= 7 && ghosts[i].type == 0 && (MyRand() % 100 < 5)) {
+                    int nx = px + (MyRand() % 5 - 2);
+                    int ny = py + (MyRand() % 5 - 2);
+                    if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
+                        ghosts[i].x = nx;
+                        ghosts[i].y = ny;
+                    }
+                }
+
                 int best_d = -1;
                 int min_dist = 99999;
                 int randChance = (diffMode == 0) ? 35 : ((diffMode == 2) ? 10 : 20);
@@ -881,25 +891,53 @@ void Update() {
         if (ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
             px = nx;
             py = ny;
-            if (map[py][px] >= 2 && map[py][px] <= 5) {
+            if (map[py][px] == 6) {
+                if (shieldActive) {
+                    shieldActive = 0;
+                    map[py][px] = 0;
+                    AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(255, 69, 0));
+                    lstrcpyA(saveMsgText, "HAZARD ABSORBED!");
+                    saveMsgTimer = 20;
+                    MessageBeep(MB_OK);
+                } else {
+                    lives--;
+                    MessageBeep(MB_ICONHAND);
+                    if (lives <= 0) {
+                        gameOver = 1;
+                        statsGamesPlayed++;
+                        if (score > statsMaxScore) statsMaxScore = score;
+                        SaveHighScore();
+                    } else {
+                        px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+                        ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1};
+                        ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0};
+                        ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0};
+                        ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1};
+                        ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1};
+                        if (level % 20 == 0) ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1};
+                    }
+                }
+            } else if (map[py][px] >= 2 && map[py][px] <= 5) {
+                int loopNum = (level - 1) / 20;
+                int mult = (loopNum >= 7) ? 8 : 1;
                 if (map[py][px] == 3) {
-                    score += 40;
-                    frightTimer = (diffMode == 0) ? 75 : ((diffMode == 2) ? 35 : 50);
+                    score += 40 * mult;
+                    frightTimer = (loopNum >= 7) ? 0 : ((diffMode == 0) ? 75 : ((diffMode == 2) ? 35 : 50));
                     AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(255, 184, 82));
                     AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(255, 255, 255));
                     MessageBeep(MB_OK);
                 } else if (map[py][px] == 4) {
-                    score += 20;
+                    score += 20 * mult;
                     speedSkillTimer = 80;
                     AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(0, 255, 255));
                     MessageBeep(MB_ICONEXCLAMATION);
                 } else if (map[py][px] == 5) {
-                    score += 30;
+                    score += 30 * mult;
                     freezeSkillTimer = 60;
                     AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(128, 222, 234));
                     MessageBeep(MB_ICONINFORMATION);
                 } else {
-                    score += 10;
+                    score += 10 * mult;
                 }
 
                 if (score > highScore) highScore = score;
@@ -923,10 +961,12 @@ void Update() {
             for (int c = px - 3; c <= px + 3; c++) {
                 if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
                     if (map[r][c] >= 2 && map[r][c] <= 5) {
-                        if (map[r][c] == 3) { score += 40; frightTimer = 50; AddShockwave(c * TS + TS/2, r * TS + TS/2, RGB(255, 184, 82)); }
-                        else if (map[r][c] == 4) { score += 20; speedSkillTimer = 80; }
-                        else if (map[r][c] == 5) { score += 30; freezeSkillTimer = 60; }
-                        else { score += 10; }
+                        int loopNum = (level - 1) / 20;
+                        int mult = (loopNum >= 7) ? 8 : 1;
+                        if (map[r][c] == 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; AddShockwave(c * TS + TS/2, r * TS + TS/2, RGB(255, 184, 82)); }
+                        else if (map[r][c] == 4) { score += 20 * mult; speedSkillTimer = 80; }
+                        else if (map[r][c] == 5) { score += 30 * mult; freezeSkillTimer = 60; }
+                        else { score += 10 * mult; }
                         map[r][c] = 0;
                         dotCount--;
                         if (score > highScore) highScore = score;
@@ -936,7 +976,9 @@ void Update() {
             }
         }
         if (fruitActive) {
-            score += 500;
+            int loopNum = (level - 1) / 20;
+            int mult = (loopNum >= 7) ? 8 : 1;
+            score += 500 * mult;
             fruitActive = 0;
         }
     }
@@ -948,24 +990,26 @@ void Update() {
 
         if (px == ghosts[i].x && py == ghosts[i].y) {
             if (frightTimer > 0) {
+                int loopNum = (level - 1) / 20;
+                int mult = (loopNum >= 7) ? 8 : 1;
                 if (ghosts[i].type == 5) { // Ghost King Boss
                     bossHp--;
-                    score += 500;
+                    score += 500 * mult;
                     ghosts[i].x = 7; ghosts[i].y = 6;
                     AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(255, 215, 0));
                     MessageBeep(MB_ICONASTERISK);
                     if (bossHp <= 0) {
-                        score += 2000;
+                        score += 2000 * mult;
                         victoryTimer = 30;
                         statsGamesPlayed++;
                         SaveHighScore();
                     }
                 } else if (ghosts[i].type == 6) { // Phantom Clone
-                    score += 100;
+                    score += 100 * mult;
                     ghosts[i].phantomTimer = 0;
                     AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(206, 147, 216));
                 } else {
-                    score += 200;
+                    score += 200 * mult;
                     statsGhostsEaten++;
                     if (score > highScore) highScore = score;
                     if (score > statsMaxScore) statsMaxScore = score;
@@ -1016,7 +1060,9 @@ void Update() {
         fruitTimer--;
         if (fruitTimer <= 0) fruitActive = 0;
         else if (px == 7 && py == 12) {
-            score += 500;
+            int loopNum = (level - 1) / 20;
+            int mult = (loopNum >= 7) ? 8 : 1;
+            score += 500 * mult;
             AddShockwave(7 * TS + TS/2, 12 * TS + TS/2, RGB(0, 230, 118));
             if (score > highScore) highScore = score;
             if (score > statsMaxScore) statsMaxScore = score;
@@ -1031,6 +1077,15 @@ void Update() {
         if (shockwaves[i].r >= shockwaves[i].maxR) {
             shockwaves[i] = shockwaves[--numShockwaves];
             i--;
+        }
+    }
+
+    int loopNum = (level - 1) / 20;
+    if (loopNum >= 7 && (frameCount % 60 == 0)) {
+        int hx = MyRand() % COLS;
+        int hy = MyRand() % ROWS;
+        if (map[hy][hx] == 0 && (hx != px || hy != py) && (hx != 7 || hy != 6)) {
+            map[hy][hx] = 6;
         }
     }
 
@@ -1241,6 +1296,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT dr = {c * TS + 6, r * TS + 6, c * TS + 14, r * TS + 14};
                         FillRect(memDC, &dr, frBr);
                         DeleteObject(frBr);
+                    } else if (map[r][c] == 6) {
+                        HBRUSH hazBr = CreateSolidBrush(RGB(255, 69, 0));
+                        int pulse = (frameCount % 4 == 0) ? 1 : 0;
+                        RECT dr = {c * TS + 6 - pulse, r * TS + 6 - pulse, c * TS + 14 + pulse, r * TS + 14 + pulse};
+                        FillRect(memDC, &dr, hazBr);
+                        DeleteObject(hazBr);
                     }
                 }
             }

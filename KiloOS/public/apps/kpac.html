@@ -951,6 +951,15 @@
                       ty = py + Math.floor(Math.random() * 5 - 2);
                   }
                   
+                  let loopNum = Math.floor((level - 1) / 20);
+                  if (loopNum >= 7 && g.type === 0 && (Math.random() < 0.05)) {
+                      let nx = px + Math.floor(Math.random() * 5 - 2);
+                      let ny = py + Math.floor(Math.random() * 5 - 2);
+                      if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+                          g.x = nx; g.y = ny;
+                      }
+                  }
+
                   let best_d = -1;
                   let min_dist = 9999;
                   let randThreshold = diffMode === 0 ? 0.35 : (diffMode === 2 ? 0.1 : 0.2);
@@ -1011,29 +1020,58 @@
           
           if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
               px = nx; py = ny;
-              if (map[py][px] >= 2 && map[py][px] <= 5) {
+              if (map[py][px] === 6) {
                   let cx = px * TS + TS/2, cy = py * TS + TS/2;
+                  if (shieldActive) {
+                      shieldActive = 0;
+                      map[py][px] = 0;
+                      addPopup(cx, cy, 'ABSORBED!', '#ff4500');
+                      addSparks(cx, cy, '#ff4500', 16);
+                      addShockwave(cx, cy, '#ff4500');
+                      playSound(1000, 0.3, 'sine');
+                  } else {
+                      playSound(200, 0.5, 'sawtooth');
+                      addSparks(cx, cy, '#ffeb3b', 16);
+                      lives--;
+                      if (lives <= 0) {
+                          gameOver = 1;
+                          statsGamesPlayed++;
+                          localStorage.setItem('kpac_games', statsGamesPlayed);
+                      } else {
+                          px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+                          ghosts[0] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                          ghosts[1] = {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                          ghosts[2] = {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                          ghosts[3] = {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                          ghosts[4] = {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                          if (level % 20 === 0) ghosts[5] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                      }
+                  }
+              } else if (map[py][px] >= 2 && map[py][px] <= 5) {
+                  let cx = px * TS + TS/2, cy = py * TS + TS/2;
+                  let loopNum = Math.floor((level - 1) / 20);
+                  let mult = (loopNum >= 7) ? 8 : 1;
                   if (map[py][px] === 3) {
-                      score += 40; frightTimer = 50; playSound(300, 0.3, 'sawtooth');
-                      addPopup(cx, cy, '+40', '#ffb852');
+                      score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; playSound(300, 0.3, 'sawtooth');
+                      addPopup(cx, cy, '+' + (40 * mult), '#ffb852');
                       addSparks(cx, cy, '#ffb852', 10);
                       addShockwave(cx, cy, '#ffb852');
                       addShockwave(cx, cy, '#ffffff');
                   }
                   else if (map[py][px] === 4) {
-                      score += 20; speedSkillTimer = 80; playSound(900, 0.1, 'triangle');
+                      score += 20 * mult; speedSkillTimer = 80; playSound(900, 0.1, 'triangle');
                       addPopup(cx, cy, 'SPEED!', '#00ffff');
                       addSparks(cx, cy, '#00ffff', 8);
                       addShockwave(cx, cy, '#00ffff');
                   }
                   else if (map[py][px] === 5) {
-                      score += 30; freezeSkillTimer = 60; playSound(700, 0.2, 'sine');
+                      score += 30 * mult; freezeSkillTimer = 60; playSound(700, 0.2, 'sine');
                       addPopup(cx, cy, 'FREEZE!', '#ffffff');
                       addSparks(cx, cy, '#ffffff', 8);
                       addShockwave(cx, cy, '#80deea');
                   }
                   else {
-                      score += 10; playSound(600, 0.05, 'square');
+                      score += 10 * mult; playSound(600, 0.05, 'square');
                   }
                   if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
                   if (score > statsMaxScore) { statsMaxScore = score; localStorage.setItem('kpac_maxscore', statsMaxScore); }
@@ -1055,10 +1093,12 @@
                   if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
                       if (map[r][c] >= 2 && map[r][c] <= 5) {
                           let cx = c * TS + TS/2, cy = r * TS + TS/2;
-                          if (map[r][c] === 3) { score += 40; frightTimer = 50; addPopup(cx, cy, '+40', '#ffb852'); addShockwave(cx, cy, '#ffb852'); }
-                          else if (map[r][c] === 4) { score += 20; speedSkillTimer = 80; addPopup(cx, cy, 'SPEED!', '#00ffff'); }
-                          else if (map[r][c] === 5) { score += 30; freezeSkillTimer = 60; addPopup(cx, cy, 'FREEZE!', '#ffffff'); }
-                          else { score += 10; }
+                          let loopNum = Math.floor((level - 1) / 20);
+                          let mult = (loopNum >= 7) ? 8 : 1;
+                          if (map[r][c] === 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; addPopup(cx, cy, '+' + (40 * mult), '#ffb852'); addShockwave(cx, cy, '#ffb852'); }
+                          else if (map[r][c] === 4) { score += 20 * mult; speedSkillTimer = 80; addPopup(cx, cy, 'SPEED!', '#00ffff'); }
+                          else if (map[r][c] === 5) { score += 30 * mult; freezeSkillTimer = 60; addPopup(cx, cy, 'FREEZE!', '#ffffff'); }
+                          else { score += 10 * mult; }
                           map[r][c] = 0;
                           dotCount--;
                           addSparks(cx, cy, '#ffeb3b', 4);
@@ -1076,33 +1116,35 @@
           if (px === g.x && py === g.y) {
               let cx = px * TS + TS/2, cy = py * TS + TS/2;
               if (frightTimer > 0) {
+                  let loopNum = Math.floor((level - 1) / 20);
+                  let mult = (loopNum >= 7) ? 8 : 1;
                   if (g.type === 5) { // Ghost King Boss
                       bossHp--;
-                      score += 500;
+                      score += 500 * mult;
                       addPopup(cx, cy, 'BOSS HIT! -1HP', '#ffd700');
                       addSparks(cx, cy, '#ffd700', 16);
                       addShockwave(cx, cy, '#ffd700');
                       g.x = 7; g.y = 6;
                       playSound(900, 0.3, 'square');
                       if (bossHp <= 0) {
-                          score += 2000;
+                          score += 2000 * mult;
                           victoryTimer = 30;
                           statsGamesPlayed++;
                           localStorage.setItem('kpac_games', statsGamesPlayed);
                       }
                   } else if (g.type === 6) { // Phantom Clone
-                      score += 100;
+                      score += 100 * mult;
                       g.phantomTimer = 0;
-                      addPopup(cx, cy, '+100', '#ce93d8');
+                      addPopup(cx, cy, '+' + (100 * mult), '#ce93d8');
                       addShockwave(cx, cy, '#ce93d8');
                   } else {
-                      score += 200;
+                      score += 200 * mult;
                       statsGhostsEaten++;
                       localStorage.setItem('kpac_ghosts', statsGhostsEaten);
                       if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
                       if (score > statsMaxScore) { statsMaxScore = score; localStorage.setItem('kpac_maxscore', statsMaxScore); }
                       playSound(800, 0.1, 'triangle');
-                      addPopup(cx, cy, '+200', '#ffeb3b');
+                      addPopup(cx, cy, '+' + (200 * mult), '#ffeb3b');
                       addSparks(cx, cy, '#ff1744', 12);
                       addShockwave(cx, cy, '#00ffff');
                       g.isDead = 1; // Float eyes return to ghost house!
@@ -1146,9 +1188,11 @@
           fruitTimer--;
           if (fruitTimer <= 0) fruitActive = 0;
           else if (px === 7 && py === 12) {
-              score += 500;
+              let loopNum = Math.floor((level - 1) / 20);
+              let mult = (loopNum >= 7) ? 8 : 1;
+              score += 500 * mult;
               let cx = 7 * TS + TS/2, cy = 12 * TS + TS/2;
-              addPopup(cx, cy, '+500', '#ff1744');
+              addPopup(cx, cy, '+' + (500 * mult), '#ff1744');
               addSparks(cx, cy, '#00e676', 14);
               addShockwave(cx, cy, '#00e676');
               if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
@@ -1177,6 +1221,15 @@
           if (s.alpha <= 0 || s.r >= s.maxR) shockwaves.splice(i, 1);
       }
       
+      let loopNum = Math.floor((level - 1) / 20);
+      if (loopNum >= 7 && (frameCount % 60 === 0)) {
+          let hx = Math.floor(Math.random() * COLS);
+          let hy = Math.floor(Math.random() * ROWS);
+          if (map[hy][hx] === 0 && (hx !== px || hy !== py) && (hx !== 7 || hy !== 6)) {
+              map[hy][hx] = 6;
+          }
+      }
+
       frameCount++;
   }
 
@@ -1476,6 +1529,11 @@
                   drawSpeedItem(ctx, c, r, frameCount);
               } else if (map[r][c] === 5) {
                   drawFreezeItem(ctx, c, r, frameCount);
+              } else if (map[r][c] === 6) {
+                  let px = c * TS, py = r * TS;
+                  ctx.fillStyle = '#ff4500';
+                  let pulse = (frameCount % 4 === 0) ? 1 : 0;
+                  ctx.fillRect(px + 4 - pulse, py + 4 - pulse, TS - 8 + pulse * 2, TS - 8 + pulse * 2);
               }
           }
       }
