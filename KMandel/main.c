@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <process.h>
 
-#define W 400
-#define H 400
+#define W 1024
+#define H 768
 
 int _fltused = 0;
 
@@ -251,7 +251,7 @@ void SaveImage4K(HWND hwnd) {
     
     SetWindowText(hwnd, "KMandelApp - Rendering 4K image...");
     RenderMandelbrotToBuffer(buffer, expW, expH);
-    SetWindowText(hwnd, "KMandel - L/R Click: Zoom, Shift+L: Pick Julia, Z/Y: Undo/Redo, S: Save 4K, R: Reset, T: Theme, C: Colors, J: Julia");
+    SetWindowText(hwnd, "KMandel - Press H for Help");
     
     OPENFILENAME ofn = {0};
     char szFileName[MAX_PATH] = "kmandel_4k.bmp";
@@ -405,6 +405,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (wParam == 'S') {
                 SaveImage4K(hwnd);
+            } else if (wParam == 'H') {
+                MessageBox(hwnd, "KMandel Help\n\nL/R Click: Zoom\nShift+L: Pick Julia\nZ/Y: Undo/Redo\nS: Save 4K\nR: Reset\nT: Theme\nC: Colors\nJ: Julia\nH: Help", "Help", MB_OK);
             }
             break;
         }
@@ -455,7 +457,7 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - L/R Click: Zoom, Shift+L: Pick Julia, Z/Y: Undo/Redo, S: Save 4K, R: Reset, T: Theme, C: Colors, J: Julia", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - Press H for Help", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     SaveState(); // Save initial state
