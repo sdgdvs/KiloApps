@@ -79,8 +79,10 @@ int ufo_timer = 200;
 int ufo_bullet_active = 0;
 float ufo_bullet_x = 0, ufo_bullet_y = 0;
 
-// Boss Fortress (Stage 10 & Stage 20)
+// Boss Fortress (Stage 10, 20 & 30)
 int boss_active = 0;
+int boss_type = 1;
+int boss_dx = 0;
 int boss_hp = 50, boss_max_hp = 50;
 int boss_x = W / 2 - 50, boss_y = 35, boss_w = 100, boss_h = 40;
 float boss_shield_angle = 0.0f;
@@ -90,6 +92,7 @@ BossBullet boss_bullets[MAX_BOSS_BULLETS];
 
 // Bricks
 int bricks[ROWS][COLS];
+int brick_hp[ROWS][COLS];
 int bricks_left = 0;
 
 static unsigned int rng_seed = 1337;
@@ -128,6 +131,8 @@ void UpdateParticles() {
 
 COLORREF GetBrickColor(int type, int r, int c) {
     if (type == 9) return RGB(120, 135, 150); // Steel
+    if (type == 8) return RGB(80, 80, 80);    // Armored
+    if (type == 7) return RGB(200, 255, 255); // Phantom
     if (type == 2) return RGB(255, 65, 65);   // 2-Hit Red
     if (type == 3) return RGB(184, 115, 51);  // 3-Hit Bronze
     if (type == 4) return RGB(255, 100, 0);   // Explosive
@@ -179,6 +184,19 @@ void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by) {
         SetTextColor(hdc, RGB(0, 0, 0));
         SetBkMode(hdc, TRANSPARENT);
         TextOutA(hdc, bx + BR_W/2 - 3, by + 1, "?", 1);
+    } else if (type == 7) { // Phantom Glass
+        HPEN phantomPen = CreatePen(PS_DOT, 1, RGB(255, 255, 255));
+        SelectObject(hdc, phantomPen);
+        MoveToEx(hdc, bx + 2, by + 2, NULL); LineTo(hdc, bx + BR_W - 2, by + BR_H - 2);
+        DeleteObject(phantomPen);
+    } else if (type == 8) { // Armored bolts
+        HBRUSH boltBr = CreateSolidBrush(RGB(40, 40, 40));
+        SelectObject(hdc, boltBr);
+        Ellipse(hdc, bx + 2, by + 2, bx + 5, by + 5);
+        Ellipse(hdc, bx + BR_W - 5, by + 2, bx + BR_W - 2, by + 5);
+        Ellipse(hdc, bx + 2, by + BR_H - 5, bx + 5, by + BR_H - 2);
+        Ellipse(hdc, bx + BR_W - 5, by + BR_H - 5, bx + BR_W - 2, by + BR_H - 2);
+        DeleteObject(boltBr);
     }
 
     SelectObject(hdc, oldPen);
@@ -285,9 +303,10 @@ void InitLevel() {
     ufo_active = 0;
     ufo_timer = 200;
 
-    boss_active = (level == 10 || level == 20);
-    if (level == 10) { boss_hp = 25; boss_max_hp = 25; }
-    else if (level == 20) { boss_hp = 50; boss_max_hp = 50; }
+    boss_active = (level % 10 == 0 && level > 0);
+    if (level == 10) { boss_hp = 25; boss_max_hp = 25; boss_type = 1; boss_dx = 2; boss_x = W / 2 - 50; }
+    else if (level == 20) { boss_hp = 50; boss_max_hp = 50; boss_type = 2; boss_dx = 0; boss_x = W / 2 - 50; }
+    else if (level == 30) { boss_hp = 75; boss_max_hp = 75; boss_type = 3; boss_dx = 3; boss_x = W / 2 - 50; }
 
     shield_active = (level >= 14);
     shield_x = 50; shield_dx = (float)(2 + (level >= 16 ? 1 : 0));
@@ -355,9 +374,38 @@ void InitLevel() {
             }
 
             bricks[r][c] = v;
+            brick_hp[r][c] = (v == 8) ? 4 : 0;
             if (v != 0 && v != 9) bricks_left++;
         }
     }
+    
+    // Level Editor Concepts (String Arrays for Stages 21-30)
+    if (level >= 21 && level <= 30) {
+        bricks_left = 0;
+        const char* custom_stages[10][ROWS] = {
+            {"8888888888","7777777777","0000000000","1231231231","0000000000","0000000000"}, // 21
+            {"9000000009","0800000080","0070000700","0006006000","0000550000","0000000000"}, // 22
+            {"8787878787","7878787878","8787878787","7878787878","0000000000","0000000000"}, // 23
+            {"5000000005","0888888880","0877777780","0888888880","0000000000","0000000000"}, // 24
+            {"9999009999","7777007777","8888008888","7777007777","9999009999","0000000000"}, // 25
+            {"8000000008","0800000080","0080000800","0008008000","0000880000","0000000000"}, // 26
+            {"6666666666","7777777777","4444444444","8888888888","7777777777","6666666666"}, // 27
+            {"9876543210","0123456789","9876543210","0123456789","0000000000","0000000000"}, // 28
+            {"8889999888","7779999777","6669999666","5559999555","4449999444","0000000000"}, // 29
+            {"0000000000","0000000000","0008888000","0008888000","0000000000","0000000000"}  // 30
+        };
+        int idx = level - 21;
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                char ch = custom_stages[idx][r][c];
+                int v = (ch >= '0' && ch <= '9') ? (ch - '0') : 0;
+                bricks[r][c] = v;
+                brick_hp[r][c] = (v == 8) ? 4 : 0;
+                if (v != 0 && v != 9) bricks_left++;
+            }
+        }
+    }
+
     if (bricks_left == 0 && !boss_active) { bricks[0][0] = 1; bricks_left = 1; }
 }
 
@@ -434,7 +482,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     SpawnParticles((float)(boss_x + boss_w/2), (float)(boss_y + boss_h/2), RGB(255, 0, 85), 40);
                                     boss_active = 0;
                                     level++;
-                                    if (level > 20) { state = 3; SaveHighScore(); } else InitLevel();
+                                    if (level > 30) { state = 3; SaveHighScore(); } else InitLevel();
                                 }
                                 continue;
                             }
@@ -448,6 +496,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     int type = bricks[r][c];
                                     SpawnParticles(lasers[i].x, lasers[i].y, GetBrickColor(type, r, c), 6);
                                     if (type == 4) TriggerExplosion(r, c);
+                                    else if (type == 7) { bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++; }
+                                    else if (type == 8) {
+                                        brick_hp[r][c]--;
+                                        if (brick_hp[r][c] <= 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; }
+                                        else { score += 5; }
+                                    }
                                     else if (type > 1 && type != 6) { bricks[r][c]--; score += 5; }
                                     else { bricks[r][c] = 0; bricks_left--; score += 10; lifetime_bricks++; }
                                 }
@@ -490,8 +544,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // Boss Attacks & Shields
                 if (boss_active) {
+                    if (boss_type == 1 || boss_type == 3) {
+                        boss_x += boss_dx;
+                        if (boss_x < 10 || boss_x + boss_w > W - 10) boss_dx = -boss_dx;
+                    }
                     boss_shield_angle += 0.04f;
-                    if ((MyRand() % 100 < 3)) {
+                    int fire_chance = (boss_type == 1) ? 2 : ((boss_type == 2) ? 3 : 4);
+                    if ((MyRand() % 100 < fire_chance)) {
                         for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
                             if (!boss_bullets[i].active) {
                                 boss_bullets[i].active = 1;
@@ -594,7 +653,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             SpawnParticles((float)(boss_x + boss_w/2), (float)(boss_y + boss_h/2), RGB(255, 0, 85), 50);
                             boss_active = 0;
                             level++;
-                            if (level > 20) { state = 3; SaveHighScore(); } else InitLevel();
+                            if (level > 30) { state = 3; SaveHighScore(); } else InitLevel();
                             break;
                         }
                     }
@@ -646,6 +705,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 MessageBeep(0xFFFFFFFF);
                                 power_active = 1; power_type = (MyRand() % 7) + 1;
                                 power_x = (float)bx; power_y = (float)by;
+                            } else if (type == 7) { // Phantom Glass
+                                bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++;
+                                SpawnParticles((float)bx, (float)by, RGB(200, 255, 255), 10);
+                                MessageBeep(0xFFFFFFFF);
+                            } else if (type == 8) { // Armored
+                                SpawnParticles((float)bx, (float)by, RGB(80, 80, 80), 8);
+                                if (dur_fire > 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; }
+                                else {
+                                    brick_hp[r][c]--;
+                                    if (brick_hp[r][c] <= 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; }
+                                    else { score += 5; }
+                                    balls[i].dy = -balls[i].dy;
+                                }
+                                MessageBeep(0xFFFFFFFF);
                             } else { // Normal / Reinforced
                                 SpawnParticles((float)bx, (float)by, GetBrickColor(type, r, c), 8);
                                 if (dur_fire > 0) {
@@ -667,7 +740,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                             if (bricks_left <= 0 && !boss_active) {
                                 level++;
-                                if (level > 20) { state = 3; SaveHighScore(); } else InitLevel();
+                                if (level > 30) { state = 3; SaveHighScore(); } else InitLevel();
                                 break;
                             }
                         }
@@ -718,8 +791,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             
             if (state == 0) {
-                char* t1 = "KBREAKOUT - LOOP 7";
-                char* t2 = "20 Stages - Boss Fortress";
+                char* t1 = "KBREAKOUT - LOOP 8";
+                char* t2 = "30 Stages - Level Editor Core";
                 char* t3 = "Press ENTER for Easy";
                 char* t4 = "Press SPACE for Hard";
                 TextOutA(memDC, W/2 - 70, H/2 - 40, t1, lstrlenA(t1));
@@ -791,6 +864,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(bStr, "BOSS HP: %d/%d", boss_hp, boss_max_hp);
                     TextOutA(memDC, boss_x + 10, boss_y + 12, bStr, lstrlenA(bStr));
                     
+                    // Orbital Shields for Boss 2 and 3
+                    if (boss_type == 2 || boss_type == 3) {
+                        int ofs = (frame_counter % 80 < 40) ? (frame_counter % 40) * 2 - 40 : 40 - (frame_counter % 40) * 2;
+                        int sx1 = boss_x + boss_w/2 + ofs;
+                        int sy1 = boss_y + boss_h + 10;
+                        int sx2 = boss_x + boss_w/2 - ofs;
+                        int sy2 = boss_y - 10;
+                        HBRUSH shBr = CreateSolidBrush(RGB(0, 255, 255));
+                        RECT s1 = {sx1-5, sy1-5, sx1+5, sy1+5}; FillRect(memDC, &s1, shBr);
+                        RECT s2 = {sx2-5, sy2-5, sx2+5, sy2+5}; FillRect(memDC, &s2, shBr);
+                        DeleteObject(shBr);
+                    }
+
                     // Animated Boss Core Ring (Approximated with Ellipse)
                     int pulse = (frame_counter % 20 < 10) ? 2 : -2;
                     HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));
@@ -916,7 +1002,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // HUD Top Bar
             char sStr[64];
-            wsprintfA(sStr, "Stg:%d/20 Sc:%d Hi:%d Lv:%d Brks:%d", level, score, high_score, lives, lifetime_bricks);
+            wsprintfA(sStr, "Stg:%d/30 Sc:%d Hi:%d Lv:%d Brks:%d", level, score, high_score, lives, lifetime_bricks);
             TextOutA(memDC, 10, 10, sStr, lstrlenA(sStr));
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);

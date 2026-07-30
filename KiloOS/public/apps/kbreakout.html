@@ -27,7 +27,7 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
 
 <div id="game-container">
     <div id="ui">
-        <div>STG: <span id="stg" class="ui-val">1/20</span></div>
+        <div>STG: <span id="stg" class="ui-val">1/30</span></div>
         <div>SC: <span id="sc" class="ui-val">0</span></div>
         <div>HI: <span id="hi" class="ui-val">0</span></div>
         <div>LIVES: <span id="lv" class="ui-val">3</span></div>
@@ -87,8 +87,8 @@ let ufo_bullet = { active: 0, x: 0, y: 0 };
 // Hazard Shields
 let shield_active = 0, shield_x = 100, shield_y = 120, shield_w = 70, shield_dx = 2;
 
-// Boss Fortress (Stage 20 & Stage 10)
-let boss_active = 0, boss_hp = 50, boss_max_hp = 50;
+// Boss Fortress (Stage 10, 20, 30)
+let boss_active = 0, boss_type = 1, boss_dx = 0, boss_hp = 50, boss_max_hp = 50;
 let boss_x = w/2 - 50, boss_y = 35, boss_w = 100, boss_h = 40;
 let boss_shield_angle = 0;
 let boss_bullets = [];
@@ -96,6 +96,7 @@ let boss_bullets = [];
 // Bricks Grid
 const ROWS = 6, COLS = 10, BR_W = w/COLS, BR_H = 16;
 let bricks = [];
+let brick_hp = [];
 let bricks_left = 0;
 
 // Particle & Trail system
@@ -107,7 +108,10 @@ const STAGE_NAMES = [
     "5. Portal Vault", "6. Invader Matrix", "7. Steel Fortress", "8. Twin Towers",
     "9. Quantum Grid", "10. Outpost Sub-Boss", "11. Spiral Helix", "12. Castle Bastion",
     "13. Aegis Wall", "14. Diamond Vault", "15. Volcanic Core", "16. Shield Generator",
-    "17. Dreadnought", "18. Warp Core", "19. Citadel Gate", "20. BOSS FORTRESS"
+    "17. Dreadnought", "18. Warp Core", "19. Citadel Gate", "20. BOSS FORTRESS",
+    "21. Editor Demo 1", "22. The Eye", "23. Checker Phantom", "24. Caged Core",
+    "25. Fortified Box", "26. X Marks", "27. Mystery Walls", "28. Phantom Blocks",
+    "29. Armored Blocks", "30. FINAL CORE"
 ];
 
 // Web Audio API
@@ -150,6 +154,8 @@ function spawnParticles(x, y, color, count) {
 
 function getBrickColor(type, r, c) {
     if (type === 9) return '#7a8a99'; // Steel
+    if (type === 8) return '#505050'; // Armored
+    if (type === 7) return '#c8ffff'; // Phantom
     if (type === 2) return '#ff4444'; // 2-hit
     if (type === 3) return '#b87333'; // 3-hit Bronze
     if (type === 4) return '#ff6600'; // Explosive
@@ -201,6 +207,17 @@ function drawBrick(r, c, type, bx, by) {
         ctx.font = 'bold 10px monospace';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('?', bx + BR_W/2, by + BR_H/2);
+    } else if (type === 7) { // Phantom Glass
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.setLineDash([2, 2]);
+        ctx.strokeRect(bx + 2, by + 2, BR_W - 4, BR_H - 4);
+        ctx.setLineDash([]);
+    } else if (type === 8) { // Armored bolts
+        ctx.fillStyle = '#282828';
+        ctx.beginPath(); ctx.arc(bx + 4, by + 4, 1.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bx + BR_W - 4, by + 4, 1.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bx + 4, by + BR_H - 4, 1.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bx + BR_W - 4, by + BR_H - 4, 1.5, 0, Math.PI*2); ctx.fill();
     }
 }
 
@@ -231,9 +248,10 @@ function initLevel() {
     }];
 
     // Boss & Shield setup
-    boss_active = (level === 10 || level === 20);
-    if (level === 10) { boss_hp = 25; boss_max_hp = 25; }
-    else if (level === 20) { boss_hp = 50; boss_max_hp = 50; }
+    boss_active = (level % 10 === 0 && level > 0);
+    if (level === 10) { boss_hp = 25; boss_max_hp = 25; boss_type = 1; boss_dx = 2; boss_x = w/2 - 50; }
+    else if (level === 20) { boss_hp = 50; boss_max_hp = 50; boss_type = 2; boss_dx = 0; boss_x = w/2 - 50; }
+    else if (level === 30) { boss_hp = 75; boss_max_hp = 75; boss_type = 3; boss_dx = 3; boss_x = w/2 - 50; }
 
     shield_active = (level >= 14);
     shield_x = 50; shield_dx = 2 + (level >= 16 ? 1 : 0);
@@ -242,8 +260,10 @@ function initLevel() {
     ufo_timer = 200;
 
     // Generate Stage Bricks Architecture
+    brick_hp = [];
     for (let r = 0; r < ROWS; r++) {
         let row = [];
+        let hpRow = [];
         for (let c = 0; c < COLS; c++) {
             let v = 0;
             if (level === 1) {
@@ -292,17 +312,47 @@ function initLevel() {
             }
 
             row.push(v);
+            hpRow.push(v === 8 ? 4 : 0);
             if (v !== 0 && v !== 9) bricks_left++;
         }
         bricks.push(row);
+        brick_hp.push(hpRow);
     }
+
+    // Level Editor Concepts (String Arrays for Stages 21-30)
+    if (level >= 21 && level <= 30) {
+        bricks_left = 0;
+        const custom_stages = [
+            ["8888888888","7777777777","0000000000","1231231231","0000000000","0000000000"], // 21
+            ["9000000009","0800000080","0070000700","0006006000","0000550000","0000000000"], // 22
+            ["8787878787","7878787878","8787878787","7878787878","0000000000","0000000000"], // 23
+            ["5000000005","0888888880","0877777780","0888888880","0000000000","0000000000"], // 24
+            ["9999009999","7777007777","8888008888","7777007777","9999009999","0000000000"], // 25
+            ["8000000008","0800000080","0080000800","0008008000","0000880000","0000000000"], // 26
+            ["6666666666","7777777777","4444444444","8888888888","7777777777","6666666666"], // 27
+            ["9876543210","0123456789","9876543210","0123456789","0000000000","0000000000"], // 28
+            ["8889999888","7779999777","6669999666","5559999555","4449999444","0000000000"], // 29
+            ["0000000000","0000000000","0008888000","0008888000","0000000000","0000000000"]  // 30
+        ];
+        let idx = level - 21;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                let ch = custom_stages[idx][r][c];
+                let v = parseInt(ch) || 0;
+                bricks[r][c] = v;
+                brick_hp[r][c] = (v === 8) ? 4 : 0;
+                if (v !== 0 && v !== 9) bricks_left++;
+            }
+        }
+    }
+
     if (bricks_left === 0 && !boss_active) { bricks[0][0] = 1; bricks_left = 1; }
 
     updateUI();
 }
 
 function updateUI() {
-    document.getElementById('stg').innerText = `${level}/20`;
+    document.getElementById('stg').innerText = `${level}/30`;
     document.getElementById('sc').innerText = score;
     document.getElementById('hi').innerText = high_score;
     document.getElementById('lv').innerText = lives;
@@ -311,7 +361,7 @@ function updateUI() {
     const bBar = document.getElementById('boss-bar-container');
     if (boss_active) {
         bBar.style.display = 'block';
-        document.getElementById('boss-bar-title').innerText = level === 10 ? "STAGE 10 SUB-BOSS OUTPOST" : "STAGE 20 BOSS FORTRESS CORE";
+        document.getElementById('boss-bar-title').innerText = `STAGE ${level} BOSS CORE`;
         let pct = Math.max(0, (boss_hp / boss_max_hp) * 100);
         document.getElementById('boss-bar-fill').style.width = `${pct}%`;
     } else {
@@ -463,7 +513,7 @@ function loop() {
                     spawnParticles(boss_x + boss_w/2, boss_y + boss_h/2, '#ff0055', 40);
                     boss_active = 0;
                     level++;
-                    if (level > 20) { state = 3; SaveHighScore(); } else initLevel();
+                    if (level > 30) { state = 3; SaveHighScore(); } else initLevel();
                 }
                 continue;
             }
@@ -477,6 +527,12 @@ function loop() {
                     let type = bricks[r][c];
                     spawnParticles(bx, by, getBrickColor(type, r, c), 6);
                     if (type === 4) { triggerExplosion(r, c); }
+                    else if (type === 7) { bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++; }
+                    else if (type === 8) {
+                        brick_hp[r][c]--;
+                        if (brick_hp[r][c] <= 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; }
+                        else { score += 5; }
+                    }
                     else if (type > 1 && type !== 6) { bricks[r][c]--; score += 5; }
                     else { bricks[r][c] = 0; bricks_left--; score += 10; lifetime_bricks++; }
                     lasers.splice(i, 1);
@@ -517,8 +573,13 @@ function loop() {
 
         // Update Boss Attacks
         if (boss_active) {
+            if (boss_type === 1 || boss_type === 3) {
+                boss_x += boss_dx;
+                if (boss_x < 10 || boss_x + boss_w > w - 10) boss_dx = -boss_dx;
+            }
             boss_shield_angle += 0.04;
-            if (Math.random() < 0.03 && boss_bullets.length < 4) {
+            let fire_chance = boss_type === 1 ? 0.02 : boss_type === 2 ? 0.03 : 0.04;
+            if (Math.random() < fire_chance && boss_bullets.length < 4) {
                 boss_bullets.push({ x: boss_x + 20, y: boss_y + boss_h, dy: 3 });
                 boss_bullets.push({ x: boss_x + boss_w - 20, y: boss_y + boss_h, dy: 3 });
             }
@@ -613,7 +674,7 @@ function loop() {
                     spawnParticles(boss_x + boss_w/2, boss_y + boss_h/2, '#ff0055', 50);
                     boss_active = 0;
                     level++;
-                    if (level > 20) { state = 3; SaveHighScore(); } else initLevel();
+                    if (level > 30) { state = 3; SaveHighScore(); } else initLevel();
                     break;
                 }
             }
@@ -664,6 +725,21 @@ function loop() {
                         playTone(850, 'sine', 0.1);
                         power_active = 1; power_type = Math.floor(Math.random() * 7) + 1;
                         power_x = bx; power_y = by;
+                    } else if (type === 7) { // Phantom Glass
+                        bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++;
+                        spawnParticles(bx, by, '#c8ffff', 10);
+                        playTone(900, 'square', 0.05);
+                    } else if (type === 8) { // Armored
+                        spawnParticles(bx, by, '#505050', 8);
+                        if (dur_fire > 0) {
+                            bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++;
+                        } else {
+                            brick_hp[r][c]--;
+                            if (brick_hp[r][c] <= 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; }
+                            else score += 5;
+                            b.dy = -b.dy;
+                        }
+                        playTone(500, 'square', 0.05);
                     } else { // Normal / Reinforced
                         spawnParticles(bx, by, getBrickColor(type, r, c), 8);
                         if (dur_fire > 0) {
@@ -686,7 +762,7 @@ function loop() {
 
                     if (bricks_left <= 0 && !boss_active) {
                         level++;
-                        if (level > 20) { state = 3; SaveHighScore(); } else initLevel();
+                        if (level > 30) { state = 3; SaveHighScore(); } else initLevel();
                         break;
                     }
                 }
@@ -773,14 +849,16 @@ function render() {
         ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(`CORE: ${boss_hp}`, boss_x + boss_w/2, boss_y + boss_h/2);
 
-        // Orbiting Shields
-        let sx1 = boss_x + boss_w/2 + Math.cos(boss_shield_angle) * 70;
-        let sy1 = boss_y + boss_h/2 + Math.sin(boss_shield_angle) * 30;
-        let sx2 = boss_x + boss_w/2 - Math.cos(boss_shield_angle) * 70;
-        let sy2 = boss_y + boss_h/2 - Math.sin(boss_shield_angle) * 30;
-        ctx.fillStyle = '#00ffff';
-        ctx.beginPath(); ctx.arc(sx1, sy1, 8, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(sx2, sy2, 8, 0, Math.PI*2); ctx.fill();
+        // Orbiting Shields for Boss 2 & 3
+        if (boss_type === 2 || boss_type === 3) {
+            let sx1 = boss_x + boss_w/2 + Math.cos(boss_shield_angle) * 70;
+            let sy1 = boss_y + boss_h/2 + Math.sin(boss_shield_angle) * 30;
+            let sx2 = boss_x + boss_w/2 - Math.cos(boss_shield_angle) * 70;
+            let sy2 = boss_y + boss_h/2 - Math.sin(boss_shield_angle) * 30;
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath(); ctx.arc(sx1, sy1, 8, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(sx2, sy2, 8, 0, Math.PI*2); ctx.fill();
+        }
         
         // Animated Boss Core Ring
         ctx.strokeStyle = `rgba(255, 255, 0, ${(Math.sin(frame * 0.2) + 1) * 0.5})`;
@@ -877,10 +955,10 @@ function render() {
     ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
     if (state === 0) {
         ctx.font = 'bold 22px monospace';
-        ctx.fillText('KBREAKOUT LOOP 7', w/2, h/2 - 40);
+        ctx.fillText('KBREAKOUT LOOP 8', w/2, h/2 - 40);
         ctx.font = '13px monospace';
         ctx.fillStyle = '#00ffff';
-        ctx.fillText('20 Stages - Boss Fortress - Active Skills', w/2, h/2 - 10);
+        ctx.fillText('30 Stages - Level Editor Core - Active Skills', w/2, h/2 - 10);
         ctx.fillStyle = '#fff';
         ctx.fillText('Press ENTER for Easy Mode', w/2, h/2 + 25);
         ctx.fillText('Press SPACE for Hard Mode', w/2, h/2 + 45);
