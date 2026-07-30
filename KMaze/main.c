@@ -1404,56 +1404,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // UI Text
-            char uiText[128];
-            if (gameState == 0) {
-                wsprintfA(uiText, "KMAZE - ENTER:Start  E:Export I:Import K:Keys  [Played:%d Escaped:%d]", totalGames, totalEscapes);
-            } else if (gameState == 2) {
-                DWORD elapsedSec = (endTime - startTime) / 1000;
-                wsprintfA(uiText, "Escaped 35! Score:%d Time:%ds R:Replay ENTER:Restart", score, elapsedSec);
-            } else if (gameState == 3) {
-                wsprintfA(uiText, "REPLAY MODE - Lvl %d - Frame %d/%d (A/D: scrub, ESC: exit)", replayLevel+1, replayCurFrame, replayFrameCount);
-            } else if (gameState == 4) {
-                wsprintfA(uiText, "KEYBINDS - Click below to bind, ESC to close");
-            } else {
-                DWORD elapsedSec = (GetTickCount() - startTime) / 1000;
-                wsprintfA(uiText, "Lvl:%d/35 Key:%d P:%d C:%d S:%d F:%d Score:%d %ds (K:Keys)", currentLevel + 1, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, score, elapsedSec);
-            }
-            SetBkMode(hdcMem, TRANSPARENT);
-            SetTextColor(hdcMem, RGB(0, 0, 0));
-            TextOutA(hdcMem, 11, 11, uiText, lstrlenA(uiText));
-            SetTextColor(hdcMem, RGB(255, 255, 255));
-            TextOutA(hdcMem, 10, 10, uiText, lstrlenA(uiText));
-            
-            if (gameState == 4) {
-                char kbText[64];
-                int y = 40;
-                const char* names[] = {"Up", "Down", "Left", "Right", "Pickaxe", "Pathfinder", "Speed", "Stun Spray"};
-                int vals[] = {keyBinds.up, keyBinds.down, keyBinds.left, keyBinds.right, keyBinds.pickaxe, keyBinds.pathfinder, keyBinds.speed, keyBinds.stun};
-                for (int i = 0; i < 8; i++) {
-                    if (waitingForKey == i + 1) wsprintfA(kbText, "%s: ...", names[i]);
-                    else wsprintfA(kbText, "%s: %c (%d)", names[i], (char)vals[i], vals[i]);
-                    TextOutA(hdcMem, 40, y, kbText, lstrlenA(kbText));
-                    y += 15;
-                }
-            }
-
-            if (msgTimer > 0) {
-                SetTextColor(hdcMem, RGB(0, 0, 0));
-                TextOutA(hdcMem, W/2 - 59, 31, msgText, lstrlenA(msgText));
-                SetTextColor(hdcMem, RGB(255, 255, 0));
-                TextOutA(hdcMem, W/2 - 60, 30, msgText, lstrlenA(msgText));
-            }
-
-            // Active Items Legend HUD
-            if (gameState == 1) {
-                char itemText[128];
-                wsprintfA(itemText, "[P]Break  [C]Path:%ds  [S]Speed:%ds  [F]Stun:%ds", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000);
-                SetTextColor(hdcMem, RGB(0, 0, 0));
-                TextOutA(hdcMem, 11, H - 19, itemText, lstrlenA(itemText));
-                SetTextColor(hdcMem, RGB(0, 255, 255));
-                TextOutA(hdcMem, 10, H - 20, itemText, lstrlenA(itemText));
-            }
+            // UI graphics are drawn above
 
             // Minimap with direction arrow & Pathfinder Path
             if (gameState == 1 && (hasCompass || pathfinderTimer > 0 || currentLevel < 15)) {
@@ -1526,13 +1477,69 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             StretchBlt(hdc, 0, 0, 640, 480, hdcMem, 0, 0, W, H, SRCCOPY);
+            
+            HFONT hFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
+            HGDIOBJ oldFont = SelectObject(hdc, hFont);
+            
+            // UI Text
+            char uiText[128];
+            if (gameState == 0) {
+                wsprintfA(uiText, "KMAZE - ENTER:Start E:Export I:Import H:Help [Played:%d Escaped:%d]", totalGames, totalEscapes);
+            } else if (gameState == 2) {
+                DWORD elapsedSec = (endTime - startTime) / 1000;
+                wsprintfA(uiText, "Escaped 35! Score:%d Time:%ds R:Replay ENTER:Restart", score, elapsedSec);
+            } else if (gameState == 3) {
+                wsprintfA(uiText, "REPLAY MODE - Lvl %d - Frame %d/%d (A/D: scrub, ESC: exit)", replayLevel+1, replayCurFrame, replayFrameCount);
+            } else if (gameState == 4) {
+                wsprintfA(uiText, "KEYBINDS - Click below to bind, ESC to close");
+            } else {
+                DWORD elapsedSec = (GetTickCount() - startTime) / 1000;
+                wsprintfA(uiText, "Lvl:%d/35 Key:%d P:%d C:%d S:%d F:%d Score:%d %ds (H:Help)", currentLevel + 1, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, score, elapsedSec);
+            }
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, RGB(0, 0, 0));
+            TextOutA(hdc, 22, 22, uiText, lstrlenA(uiText));
+            SetTextColor(hdc, RGB(255, 255, 255));
+            TextOutA(hdc, 20, 20, uiText, lstrlenA(uiText));
+            
+            if (gameState == 4) {
+                char kbText[64];
+                int y = 80;
+                const char* names[] = {"Up", "Down", "Left", "Right", "Pickaxe", "Pathfinder", "Speed", "Stun Spray"};
+                int vals[] = {keyBinds.up, keyBinds.down, keyBinds.left, keyBinds.right, keyBinds.pickaxe, keyBinds.pathfinder, keyBinds.speed, keyBinds.stun};
+                for (int i = 0; i < 8; i++) {
+                    if (waitingForKey == i + 1) wsprintfA(kbText, "%s: ...", names[i]);
+                    else wsprintfA(kbText, "%s: %c (%d)", names[i], (char)vals[i], vals[i]);
+                    TextOutA(hdc, 80, y, kbText, lstrlenA(kbText));
+                    y += 30;
+                }
+            }
+
+            if (msgTimer > 0) {
+                SetTextColor(hdc, RGB(0, 0, 0));
+                TextOutA(hdc, 640/2 - 118, 62, msgText, lstrlenA(msgText));
+                SetTextColor(hdc, RGB(255, 255, 0));
+                TextOutA(hdc, 640/2 - 120, 60, msgText, lstrlenA(msgText));
+            }
+
+            // Active Items Legend HUD
+            if (gameState == 1) {
+                char itemText[128];
+                wsprintfA(itemText, "[P]Break  [C]Path:%ds  [S]Speed:%ds  [F]Stun:%ds", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000);
+                SetTextColor(hdc, RGB(0, 0, 0));
+                TextOutA(hdc, 22, 480 - 38, itemText, lstrlenA(itemText));
+                SetTextColor(hdc, RGB(0, 255, 255));
+                TextOutA(hdc, 20, 480 - 40, itemText, lstrlenA(itemText));
+            }
+            SelectObject(hdc, oldFont);
+            DeleteObject(hFont);
             EndPaint(hwnd, &ps);
             break;
         }
         case WM_LBUTTONDOWN: {
             if (gameState == 4) {
                 int y = HIWORD(lParam);
-                int idx = (y - 40) / 15;
+                int idx = (y - 80) / 30;
                 if (idx >= 0 && idx < 8) waitingForKey = idx + 1;
             }
             break;
@@ -1541,7 +1548,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameState == 0 || gameState == 1) {
                 if (wParam == 'E') ExportStats();
                 if (wParam == 'I') ImportStats();
-                if (wParam == 'K') { prevState = gameState; gameState = 4; }
+                if (wParam == 'K' || wParam == 'H') { prevState = gameState; gameState = 4; }
             }
             if (gameState == 4) {
                 if (wParam == VK_ESCAPE) { waitingForKey = 0; gameState = prevState; }

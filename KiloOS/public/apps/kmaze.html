@@ -4,16 +4,20 @@
 <title>KMaze</title>
 <style>
   body { margin: 0; background-color: #000; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: monospace; user-select: none; }
-  #gameContainer { position: relative; width: 100%; height: 100%; max-width: 640px; max-height: 480px; display: flex; flex-direction: column; }
-  canvas { image-rendering: pixelated; width: 100%; height: calc(100% - 40px); background: #000; }
-  #hudControls { display: flex; width: 100%; height: 40px; background: #111; border-top: 1px solid #333; box-sizing: border-box; justify-content: space-around; align-items: center; }
-  .hudBtn { background: #223; color: #0ff; border: 1px solid #00ffff44; padding: 6px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: background 0.1s; }
+  #gameContainer { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
+  #gameCanvas { image-rendering: pixelated; width: 100%; height: 100%; background: #000; position: absolute; top: 0; left: 0; z-index: 1; }
+  #uiCanvas { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 2; pointer-events: none; }
+  #hudControls { display: flex; width: 100%; height: 40px; background: #111; border-top: 1px solid #333; box-sizing: border-box; justify-content: space-around; align-items: center; z-index: 3; margin-top: auto; }
+  .hudBtn { background: #223; color: #0ff; border: 1px solid #00ffff44; padding: 8px 12px; font-size: 13px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: background 0.1s; }
   .hudBtn:active { background: #055; }
 </style>
 </head>
 <body>
 <div id="gameContainer">
-  <canvas id="gameCanvas" width="320" height="240"></canvas>
+  <div style="position: relative; width: 100%; flex: 1;">
+    <canvas id="gameCanvas" width="320" height="240"></canvas>
+    <canvas id="uiCanvas" width="640" height="480"></canvas>
+  </div>
   <div id="hudControls">
     <button class="hudBtn" onclick="usePickaxe()">[P] Break Wall</button>
     <button class="hudBtn" onclick="usePathfinder()">[C] Pathfinder</button>
@@ -28,6 +32,8 @@
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
+  const uiCanvas = document.getElementById('uiCanvas');
+  const uiCtx = uiCanvas.getContext('2d');
   
   const W = 320, H = 240;
   const maps = [
@@ -678,6 +684,10 @@
               replayLevels = [];
               nextLevel();
           }
+      } else if (e.key === 'h' || e.key === 'H') {
+          if (gameState === 0 || gameState === 1 || gameState === 2) {
+              prevState = gameState; gameState = 4;
+          }
       }
       if (gameState === 4) {
           if (waitingForKey) {
@@ -1081,28 +1091,31 @@
       ctx.putImageData(imgData, 0, 0);
       
       // 3. Draw Particles
+      uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+      uiCtx.save();
+      uiCtx.scale(2, 2);
       for (let p of particles) {
-          ctx.fillStyle = p.color;
-          ctx.fillRect(p.x, p.y, 2, 2);
+          uiCtx.fillStyle = p.color;
+          uiCtx.fillRect(p.x, p.y, 2, 2);
       }
       
       // 4. Equipment HUD & Overlay
       if (gameState === 1) {
           // Held Compass
           if (hasCompass || pathfinderTimer > 0) {
-              ctx.save();
-              ctx.beginPath();
-              ctx.arc(27, H - 27, 16, 0, Math.PI * 2);
-              ctx.fillStyle = '#c89632';
-              ctx.fill();
-              ctx.lineWidth = 2;
-              ctx.strokeStyle = '#ffd700';
-              ctx.stroke();
+              uiCtx.save();
+              uiCtx.beginPath();
+              uiCtx.arc(27, H - 27, 16, 0, Math.PI * 2);
+              uiCtx.fillStyle = '#c89632';
+              uiCtx.fill();
+              uiCtx.lineWidth = 2;
+              uiCtx.strokeStyle = '#ffd700';
+              uiCtx.stroke();
               
-              ctx.beginPath();
-              ctx.arc(27, H - 27, 13, 0, Math.PI * 2);
-              ctx.fillStyle = '#0f1e2d';
-              ctx.fill();
+              uiCtx.beginPath();
+              uiCtx.arc(27, H - 27, 13, 0, Math.PI * 2);
+              uiCtx.fillStyle = '#0f1e2d';
+              uiCtx.fill();
               
               // Target direction needle
               let ex = 8, ey = 8;
@@ -1112,15 +1125,15 @@
                   }
               }
               let targetAngle = Math.atan2(ey - pY, ex - pX) - Math.atan2(dY, dX);
-              ctx.translate(27, H - 27);
-              ctx.rotate(targetAngle);
-              ctx.beginPath();
-              ctx.moveTo(0, 0);
-              ctx.lineTo(10, 0);
-              ctx.strokeStyle = '#ff3333';
-              ctx.lineWidth = 2;
-              ctx.stroke();
-              ctx.restore();
+              uiCtx.translate(27, H - 27);
+              uiCtx.rotate(targetAngle);
+              uiCtx.beginPath();
+              uiCtx.moveTo(0, 0);
+              uiCtx.lineTo(10, 0);
+              uiCtx.strokeStyle = '#ff3333';
+              uiCtx.lineWidth = 2;
+              uiCtx.stroke();
+              uiCtx.restore();
           }
           
           // Held Pickaxe
@@ -1128,59 +1141,60 @@
               let swing = Math.sin(frameCount * 0.3) * 4;
               let bx = W - 45 + swing, by = H - 40 - swing;
               
-              ctx.strokeStyle = '#8b4513';
-              ctx.lineWidth = 4;
-              ctx.beginPath();
-              ctx.moveTo(bx, by + 30);
-              ctx.lineTo(bx + 20, by);
-              ctx.stroke();
+              uiCtx.strokeStyle = '#8b4513';
+              uiCtx.lineWidth = 4;
+              uiCtx.beginPath();
+              uiCtx.moveTo(bx, by + 30);
+              uiCtx.lineTo(bx + 20, by);
+              uiCtx.stroke();
               
-              ctx.strokeStyle = '#b4b4c8';
-              ctx.lineWidth = 3;
-              ctx.beginPath();
-              ctx.moveTo(bx + 10, by - 5);
-              ctx.lineTo(bx + 28, by + 12);
-              ctx.stroke();
+              uiCtx.strokeStyle = '#b4b4c8';
+              uiCtx.lineWidth = 3;
+              uiCtx.beginPath();
+              uiCtx.moveTo(bx + 10, by - 5);
+              uiCtx.lineTo(bx + 28, by + 12);
+              uiCtx.stroke();
           }
       }
       
       // 5. Draw UI
-      ctx.fillStyle = 'white';
-      ctx.font = '12px monospace';
+      uiCtx.fillStyle = 'white';
+      uiCtx.font = '12px monospace';
       if (gameState === 0) {
-          ctx.fillText("KMAZE", W/2 - 20, H/2 - 20);
-          ctx.fillText("Press ENTER to start", W/2 - 70, H/2 + 10);
-          ctx.fillText(`Games: ${totalGames} Escapes: ${totalEscapes}`, W/2 - 70, H/2 + 30);
+          uiCtx.fillText("KMAZE", W/2 - 20, H/2 - 20);
+          uiCtx.fillText("Press ENTER to start", W/2 - 70, H/2 + 10);
+          uiCtx.fillText("Press H for Help / Keys", W/2 - 75, H/2 + 25);
+          uiCtx.fillText(`Games: ${totalGames} Escapes: ${totalEscapes}`, W/2 - 70, H/2 + 40);
       } else if (gameState === 2) {
           let elapsed = (endTime - startTime) / 1000;
-          ctx.fillText("You Escaped 35 Stages!", W/2 - 70, H/2 - 20);
-          ctx.fillText("Score: " + score + " Time: " + elapsed.toFixed(1) + "s", W/2 - 80, H/2);
-          ctx.fillText("Best: " + bestTime.toFixed(1) + "s", W/2 - 40, H/2 + 20);
-          ctx.fillText("Press R for Replay Viewer", W/2 - 80, H/2 + 40);
-          ctx.fillText("Press ENTER to play again", W/2 - 80, H/2 + 55);
+          uiCtx.fillText("You Escaped 35 Stages!", W/2 - 70, H/2 - 20);
+          uiCtx.fillText("Score: " + score + " Time: " + elapsed.toFixed(1) + "s", W/2 - 80, H/2);
+          uiCtx.fillText("Best: " + bestTime.toFixed(1) + "s", W/2 - 40, H/2 + 20);
+          uiCtx.fillText("Press R for Replay Viewer", W/2 - 80, H/2 + 40);
+          uiCtx.fillText("Press ENTER to play again", W/2 - 80, H/2 + 55);
       } else if (gameState === 3) {
-          ctx.fillText(`REPLAY MODE - Lvl ${replayLevels[replayLevelIdx].level+1}`, 10, 15);
-          ctx.fillText(`Frame ${replayFrameIdx}/${replayLevels[replayLevelIdx].frames.length}`, 10, 30);
-          ctx.fillText("<- Prev | Next ->", 10, 45);
-          ctx.fillText("ESC to return", 10, 60);
+          uiCtx.fillText(`REPLAY MODE - Lvl ${replayLevels[replayLevelIdx].level+1}`, 10, 15);
+          uiCtx.fillText(`Frame ${replayFrameIdx}/${replayLevels[replayLevelIdx].frames.length}`, 10, 30);
+          uiCtx.fillText("<- Prev | Next ->", 10, 45);
+          uiCtx.fillText("ESC to return", 10, 60);
       } else if (gameState === 4) {
-          ctx.fillText("KEYBINDS", W/2 - 30, 20);
+          uiCtx.fillText("KEYBINDS", W/2 - 30, 20);
           let y = 40;
           for (let k in keyBinds) {
-              ctx.fillText(`${k}: ${waitingForKey === k ? '...' : keyBinds[k]}`, 40, y);
+              uiCtx.fillText(`${k}: ${waitingForKey === k ? '...' : keyBinds[k]}`, 40, y);
               y += 15;
           }
-          ctx.fillText("Click key name to rebind. Press ESC to close.", 10, H - 20);
+          uiCtx.fillText("Click key name to rebind. Press ESC to close.", 10, H - 20);
       } else {
           let elapsed = (Date.now() - startTime) / 1000;
-          ctx.fillText(`Lvl:${currentLevel+1}/35 Key:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges}`, 10, 15);
-          ctx.fillText(`Score:${score} Time:${elapsed.toFixed(1)}s`, 10, 30);
-          ctx.fillText("V:Save L:Load", W - 90, 15);
+          uiCtx.fillText(`Lvl:${currentLevel+1}/35 Key:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges}`, 10, 15);
+          uiCtx.fillText(`Score:${score} Time:${elapsed.toFixed(1)}s`, 10, 30);
+          uiCtx.fillText("V:Save L:Load", W - 90, 15);
           
           if (msgTimer > 0) {
-              ctx.fillStyle = 'yellow';
-              ctx.fillText(msgText, W/2 - 50, 45);
-              ctx.fillStyle = 'white';
+              uiCtx.fillStyle = 'yellow';
+              uiCtx.fillText(msgText, W/2 - 50, 45);
+              uiCtx.fillStyle = 'white';
           }
           
           // 6. Minimap
@@ -1194,8 +1208,8 @@
               const mmX = W - 10 - mmW * mmS;
               const mmY = 10;
               
-              ctx.fillStyle = '#282832';
-              ctx.fillRect(mmX - 2, mmY - 2, mmW * mmS + 4, mmH * mmS + 4);
+              uiCtx.fillStyle = '#282832';
+              uiCtx.fillRect(mmX - 2, mmY - 2, mmW * mmS + 4, mmH * mmS + 4);
               
               for (let i = 0; i < mmW; i++) {
                   for (let j = 0; j < mmH; j++) {
@@ -1204,28 +1218,29 @@
                           if (distToPlayer > 5.5) continue;
                       }
                       let v = map[i][j];
-                      if (isPathTile[i] && isPathTile[i][j] && pathfinderTimer > 0) ctx.fillStyle = '#0ff';
-                      else if (v === 1 || v === 7) ctx.fillStyle = '#999';
-                      else if (v === 2) ctx.fillStyle = '#0f0';
-                      else if (v === 3) ctx.fillStyle = '#ff0';
-                      else if (v === 4) ctx.fillStyle = '#00f';
-                      else if (v === 5) ctx.fillStyle = '#f80';
-                      else if (v === 6) ctx.fillStyle = '#f30';
-                      else if (v === 8) ctx.fillStyle = '#0ff';
-                      else if (v === 9) ctx.fillStyle = '#ff0';
-                      else if (v === 10 || v === 11) ctx.fillStyle = '#f0f';
-                      else if (v === 12) ctx.fillStyle = '#ff3232';
-                      else if (v === 13) ctx.fillStyle = '#964b00';
-                      else if (v === 14) ctx.fillStyle = '#00ccff';
-                      else if (v === 15) ctx.fillStyle = '#ffd700';
-                      else ctx.fillStyle = '#141419';
-                      ctx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
+                      if (isPathTile[i] && isPathTile[i][j] && pathfinderTimer > 0) uiCtx.fillStyle = '#0ff';
+                      else if (v === 1 || v === 7) uiCtx.fillStyle = '#999';
+                      else if (v === 2) uiCtx.fillStyle = '#0f0';
+                      else if (v === 3) uiCtx.fillStyle = '#ff0';
+                      else if (v === 4) uiCtx.fillStyle = '#00f';
+                      else if (v === 5) uiCtx.fillStyle = '#f80';
+                      else if (v === 6) uiCtx.fillStyle = '#f30';
+                      else if (v === 8) uiCtx.fillStyle = '#0ff';
+                      else if (v === 9) uiCtx.fillStyle = '#ff0';
+                      else if (v === 10 || v === 11) uiCtx.fillStyle = '#f0f';
+                      else if (v === 12) uiCtx.fillStyle = '#ff3232';
+                      else if (v === 13) uiCtx.fillStyle = '#964b00';
+                      else if (v === 14) uiCtx.fillStyle = '#00ccff';
+                      else if (v === 15) uiCtx.fillStyle = '#ffd700';
+                      else uiCtx.fillStyle = '#141419';
+                      uiCtx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
                   }
               }
-              ctx.fillStyle = '#f00';
-              ctx.fillRect(mmX + Math.floor(pX) * mmS, mmY + Math.floor(pY) * mmS, mmS, mmS);
+              uiCtx.fillStyle = '#f00';
+              uiCtx.fillRect(mmX + Math.floor(pX) * mmS, mmY + Math.floor(pY) * mmS, mmS, mmS);
           }
       }
+      uiCtx.restore();
   }
 
   setInterval(() => {
