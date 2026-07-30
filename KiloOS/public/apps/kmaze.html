@@ -23,6 +23,7 @@
     <button class="hudBtn" onclick="usePathfinder()">[C] Pathfinder</button>
     <button class="hudBtn" onclick="useSpeedShoes()">[S] Speed Shoes</button>
     <button class="hudBtn" onclick="useStunSpray()">[F] Stun Spray</button>
+    <button class="hudBtn" onclick="useTimeFreeze()">[T] Time Freeze</button>
     <button class="hudBtn" onclick="prevState=gameState; gameState=4;">Keys</button>
     <button class="hudBtn" onclick="exportStats()">Export</button>
     <button class="hudBtn" onclick="document.getElementById('importFile').click()">Import</button>
@@ -194,6 +195,8 @@
   let speedShoesTimer = 0;
   let stunSprayCharges = 1;
   let stunSprayTimer = 0;
+  let timeFreezeCharges = 1;
+  let timeFreezeTimer = 0;
   let bossHP = 3;
   let map = JSON.parse(JSON.stringify(maps[currentLevel]));
   let isPathTile = [];
@@ -220,7 +223,8 @@
       pickaxe: 'p',
       pathfinder: 'c',
       speed: 's',
-      stun: 'f'
+      stun: 'f',
+      freeze: 't'
   };
   let waitingForKey = null;
   let replayLevels = [];
@@ -279,7 +283,7 @@
   }
 
   // Procedural 16x16 Texture Generator
-  const textures = new Array(16);
+  const textures = new Array(24);
   function initTextures() {
       for (let t = 0; t < 16; t++) {
           textures[t] = new Uint32Array(256);
@@ -353,6 +357,28 @@
                       else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) { r = 255; g = 0; b = 0; }
                       else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) { r = 255; g = 255; b = 255; }
                       else { r = 153; g = 0; b = 0; }
+                  } else if (t === 16) {
+                      if (y >= 4 && y <= 12 && x >= 4 && x <= 11) { r = 0; g = 255; b = 102; }
+                      else if (y < 4 && x >= 6 && x <= 9) { r = 255; g = 204; b = 153; }
+                      else { r = 34; g = 34; b = 34; }
+                  } else if (t === 17) {
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
+                      if (dist < 4.0) { r = 255; g = 0; b = 0; } else { r = 85; g = 85; b = 85; }
+                  } else if (t === 18) {
+                      if (x % 4 === 0) { r = 136; g = 136; b = 136; } else { r = 17; g = 17; b = 17; }
+                  } else if (t === 19) {
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
+                      if (dist < 5.0 && dist > 3.0) { r = 204; g = 204; b = 204; }
+                      else if (dist <= 3.0) { r = 0; g = 136; b = 255; }
+                      else if (x === 7 && y < 3) { r = 255; g = 255; b = 255; }
+                      else { r = 0; g = 0; b = 0; }
+                  } else if (t === 20) {
+                      if ((x * y) % 7 === 0) { r = 0; g = 255; b = 0; } else { r = 34; g = 34; b = 34; }
+                  } else if (t === 21) {
+                      r = Math.min(255, 100 + Math.floor(x * 5)); g = 200; b = 255;
+                  } else if (t === 22) {
+                      let noise = Math.floor(Math.random() * 20);
+                      r = noise; g = noise; b = 50 + noise * 2;
                   } else {
                       r = 170; g = 0; b = 0;
                   }
@@ -455,7 +481,7 @@
               let nx = cx + d[0], ny = cy + d[1];
               if (nx >= 0 && nx < map.length && ny >= 0 && ny < map[0].length && !parent[nx][ny]) {
                   let tile = map[nx][ny];
-                  if ([0,2,3,5,6,8,9,10,11,13,14].includes(tile) || (tile === 4 && keysHeld > 0)) {
+                  if ([0,2,3,5,6,8,9,10,11,13,14,16,17,18,19].includes(tile) || (tile === 4 && keysHeld > 0)) {
                       parent[nx][ny] = [cx, cy];
                       queue.push([nx, ny]);
                   }
@@ -560,6 +586,23 @@
           if (m[rx][ry] === 0 && (rx !== t1x || ry !== t1y) && (rx !== 1 || ry !== 1)) { t2x=rx; t2y=ry; break; }
       }
       if (t1x && t2x) { m[t1x][t1y] = 10; m[t2x][t2y] = 11; }
+      for(let i=0; i < (w*h)/80; i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2)); let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 16;
+      }
+      for(let i=0; i < (w*h)/60; i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2)); let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 19;
+      }
+      let numDoors = Math.floor((w*h)/50);
+      for (let i=0; i < numDoors; i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2)); let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY) && Math.abs(rx - 1) + Math.abs(ry - 1) > 3) m[rx][ry] = 18;
+      }
+      for (let i=0; i < (numDoors > 0 ? 2 : 0); i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2)); let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1)) m[rx][ry] = 17;
+      }
       
       // Stage 35 (level 34) Boss Arena Chamber
       if (currentLevel === 34) {
@@ -590,9 +633,11 @@
       pathfinderCharges = 1;
       speedShoesCharges = 1;
       stunSprayCharges = 1;
+      timeFreezeCharges = 1;
       pathfinderTimer = 0;
       speedShoesTimer = 0;
       stunSprayTimer = 0;
+      timeFreezeTimer = 0;
 
       if (currentLevel > 34) {
           gameState = 2;
@@ -715,6 +760,14 @@
       addParticles(W/2, H/2, '#00ccff', 30);
       msgText = "Minotaur Stun Spray Active (10s)!"; msgTimer = 60;
   }
+  function useTimeFreeze() {
+      if (gameState !== 1 || timeFreezeCharges <= 0) return;
+      timeFreezeCharges--;
+      timeFreezeTimer = 10000;
+      playTone(600, 'square', 0.3);
+      addParticles(W/2, H/2, '#0066ff', 30);
+      msgText = "Time Freeze Active (10s)!"; msgTimer = 60;
+  }
 
   const keys = {};
   document.addEventListener('keydown', e => {
@@ -759,10 +812,11 @@
           if (e.key.toLowerCase() === keyBinds.pathfinder.toLowerCase()) usePathfinder();
           if (e.key.toLowerCase() === keyBinds.speed.toLowerCase()) useSpeedShoes();
           if (e.key.toLowerCase() === keyBinds.stun.toLowerCase()) useStunSpray();
+          if (e.key.toLowerCase() === keyBinds.freeze.toLowerCase()) useTimeFreeze();
           if (e.key === 'v' || e.key === 'V') {
               let saveData = {
                   currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
-                  pathfinderCharges, speedShoesCharges, stunSprayCharges,
+                  pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges,
                   pX, pY, dX, dY, planeX, planeY, map,
                   elapsed: Date.now() - startTime
               };
@@ -784,6 +838,7 @@
                   pathfinderCharges = saveData.pathfinderCharges || 1;
                   speedShoesCharges = saveData.speedShoesCharges || 1;
                   stunSprayCharges = saveData.stunSprayCharges || 1;
+                  timeFreezeCharges = saveData.timeFreezeCharges || 1;
                   pX = saveData.pX; pY = saveData.pY;
                   dX = saveData.dX; dY = saveData.dY;
                   planeX = saveData.planeX; planeY = saveData.planeY;
@@ -825,6 +880,7 @@
       }
       if (speedShoesTimer > 0) speedShoesTimer -= 30;
       if (stunSprayTimer > 0) stunSprayTimer -= 30;
+      if (timeFreezeTimer > 0) timeFreezeTimer -= 30;
 
       // Update particles
       particles = particles.filter(p => {
@@ -836,7 +892,7 @@
       minotaurTimer += 30;
       if (minotaurTimer >= 1000) {
           minotaurTimer = 0;
-          if (stunSprayTimer <= 0) { // Only move if NOT stunned
+          if (stunSprayTimer <= 0 && timeFreezeTimer <= 0) { // Only move if NOT stunned
               let minotaurs = [];
               for (let x = 0; x < map.length; x++) {
                   for (let y = 0; y < map[0].length; y++) {
@@ -892,7 +948,7 @@
       
       let tryMove = (mx, my) => {
           let val = map[Math.floor(mx)] && map[Math.floor(mx)][Math.floor(my)];
-          if ([0,2,3,5,6,7,8,9,10,11,12,13,14,15].includes(val)) return true;
+          if ([0,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,19].includes(val)) return true;
           if (val === 4) {
               if (keysHeld > 0) {
                   keysHeld--;
@@ -1011,6 +1067,22 @@
           score = Math.max(0, score - 150);
           pX = 1.5; pY = 1.5;
           msgText = "Attacked by Minotaur King!"; msgTimer = 60;
+      } else if (curVal === 16) {
+          if (score >= 200) {
+              score -= 200; hasPickaxe++; timeFreezeCharges++;
+              map[Math.floor(pX)][Math.floor(pY)] = 0;
+              playTone(700, 'square', 0.2); addParticles(W/2, H/2, '#00ff66', 25);
+              msgText = "-200 Score: Trade for Pickaxe + Freeze!"; msgTimer = 60;
+          } else { msgText = "Need 200 Score for Merchant!"; msgTimer = 10; }
+      } else if (curVal === 17) {
+          for (let i=0; i<map.length; i++) for (let j=0; j<map[0].length; j++) { if (map[i][j] === 18) map[i][j] = 0; }
+          map[Math.floor(pX)][Math.floor(pY)] = 0;
+          playTone(800, 'square', 0.2); addParticles(W/2, H/2, '#ff0000', 25);
+          msgText = "Puzzle Switch Pressed! Doors Open!"; msgTimer = 60;
+      } else if (curVal === 19) {
+          timeFreezeCharges++; map[Math.floor(pX)][Math.floor(pY)] = 0;
+          playTone(600, 'square', 0.2); addParticles(W/2, H/2, '#0066ff', 15);
+          msgText = "+1 Time Freeze!"; msgTimer = 60;
       }
 
       if (keys[keyBinds.right] || keys[keyBinds.right.toLowerCase()] || keys[keyBinds.right.toUpperCase()]) {
@@ -1113,7 +1185,8 @@
           let texX = Math.floor(wallX * 16) & 15;
           
           if (hit === 7) hit = 1;
-          if (hit < 1 || hit > 15) hit = 1;
+          if (hit < 1 || hit > 22) hit = 1;
+          if (hit === 1) { if (currentLevel >= 30) hit = 22; else if (currentLevel >= 20) hit = 21; else if (currentLevel >= 10) hit = 20; }
           let tex = textures[hit];
           
           let step = 16 / lineHeight;
@@ -1238,7 +1311,7 @@
           uiCtx.fillText("Click key name to rebind. Press ESC to close.", 10, H - 20);
       } else {
           let elapsed = (Date.now() - startTime) / 1000;
-          uiCtx.fillText(`Lvl:${currentLevel+1}/35 Key:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges}`, 10, 15);
+          uiCtx.fillText(`Lvl:${currentLevel+1}/35 Key:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges} T:${timeFreezeCharges}`, 10, 15);
           uiCtx.fillText(`Score:${score} Time:${elapsed.toFixed(1)}s`, 10, 30);
           uiCtx.fillText("V:Save L:Load", W - 90, 15);
           
@@ -1283,6 +1356,10 @@
                       else if (v === 13) uiCtx.fillStyle = '#964b00';
                       else if (v === 14) uiCtx.fillStyle = '#00ccff';
                       else if (v === 15) uiCtx.fillStyle = '#ffd700';
+                      else if (v === 16) uiCtx.fillStyle = '#0f6';
+                      else if (v === 17) uiCtx.fillStyle = '#f00';
+                      else if (v === 18) uiCtx.fillStyle = '#555';
+                      else if (v === 19) uiCtx.fillStyle = '#06f';
                       else uiCtx.fillStyle = '#141419';
                       uiCtx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
                   }
