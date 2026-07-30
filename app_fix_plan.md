@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KJournal
+**Target App:** KMail
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -199,3 +199,5 @@ Pass 1 Complete.
 - **KHex**: Added HTML entity escaping for file names to prevent XSS during file selection, implemented a 10MB `FileReader` cap to prevent RAM exhaustion, added a 16KB DOM render limit for the hex viewer to prevent browser freezes, and hard-capped text exports to 512KB in `khex.html`. Audited and properly cleaned up `hBrushBg` and `hEditBrush` GDI resources on `WM_DESTROY`, and added the missing `WS_VSCROLL` style to the export edit control for scrolling bounds in `main.c`.
 
 - **KImage**: Added `img.onload` dimension bounds checking to abort on images exceeding 8192x8192 pixels to prevent memory exhaustion, and implemented 256-byte string bounds and `<`/`>` HTML sanitization in the EXIF parser in `kimage.html`. Updated `LoadBitmapFile` to safely reject images exceeding 8192x8192 bounds, preventing Win32 DIB memory exhaustion and integer overflows in `main.c`.
+
+- **KJournal**: Added HTML entity sanitization for the `mood` variable before DOM injection, and added `try-catch` blocks to `localStorage.setItem` calls to safely handle `QuotaExceededError` bounds in `kjournal.html`. Fixed a buffer reallocation limit in `main.c` by replacing a single `buf_cap *= 2` with a `while` loop to guarantee sufficient capacity for very long text entries, preventing potential Win32 RichEdit string truncation or buffer overflows.
