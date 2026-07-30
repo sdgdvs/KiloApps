@@ -1503,20 +1503,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &statusRc, statusBrush);
             DeleteObject(statusBrush);
 
+            HFONT hFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT oldFont = (HFONT)SelectObject(memDC, hFont);
+
             SetTextColor(memDC, RGB(255, 215, 0));
             SetBkMode(memDC, TRANSPARENT);
             char statusText[320];
 
             if (state.gameMode == 1) {
-                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  [Stg %d/20]  Wand(W):%d  XRay(X):%d  Shuf(S):%d",
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  [Stg %d/20]  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [Ctrl+H: Hint]",
                     state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.campaignStage,
                     state.wandCharges, state.xrayCharges, state.shuffleCharges);
             } else if (state.gameMode == 2) {
-                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Cash: $%d  Bank: $%d  Wand(W):%d  XRay(X):%d  Shuf(S):%d",
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Cash: $%d  Bank: $%d  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [Ctrl+H: Hint]",
                     state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, stats.vegasCash,
                     state.wandCharges, state.xrayCharges, state.shuffleCharges);
             } else {
-                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  (Draw %d)  Wand(W):%d  XRay(X):%d  Shuf(S):%d",
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  (Draw %d)  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [Ctrl+H: Hint]",
                     state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.drawMode,
                     state.wandCharges, state.xrayCharges, state.shuffleCharges);
             }
@@ -1585,6 +1588,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             BitBlt(hdc, 0, 0, winW, winH, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldFont);
+            DeleteObject(hFont);
             SelectObject(memDC, oldBm);
             DeleteObject(memBm);
             DeleteDC(memDC);
@@ -1614,7 +1619,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KSolitaireApp", "KSolitaire - Klondike Solitaire", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 740, 700, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, 800, 740, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
