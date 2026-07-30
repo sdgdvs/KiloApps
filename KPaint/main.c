@@ -331,44 +331,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             UpdatePen();
             
-            hFont = CreateFontA(13, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Segoe UI");
             
             // Colors
-            hBtnBlack = CreateWindowA("BUTTON", "Black", WS_CHILD | WS_VISIBLE, 5, 5, 50, 22, hwnd, (HMENU)101, NULL, NULL);
-            hBtnRed = CreateWindowA("BUTTON", "Red", WS_CHILD | WS_VISIBLE, 60, 5, 50, 22, hwnd, (HMENU)102, NULL, NULL);
-            hBtnGreen = CreateWindowA("BUTTON", "Green", WS_CHILD | WS_VISIBLE, 5, 30, 50, 22, hwnd, (HMENU)103, NULL, NULL);
-            hBtnBlue = CreateWindowA("BUTTON", "Blue", WS_CHILD | WS_VISIBLE, 60, 30, 50, 22, hwnd, (HMENU)104, NULL, NULL);
-            hBtnYellow = CreateWindowA("BUTTON", "Yellow", WS_CHILD | WS_VISIBLE, 5, 55, 50, 22, hwnd, (HMENU)105, NULL, NULL);
-            hBtnPurple = CreateWindowA("BUTTON", "Purple", WS_CHILD | WS_VISIBLE, 60, 55, 50, 22, hwnd, (HMENU)106, NULL, NULL);
-            hBtnCustomColor = CreateWindowA("BUTTON", "Custom...", WS_CHILD | WS_VISIBLE, 5, 80, 105, 22, hwnd, (HMENU)107, NULL, NULL);
+            hBtnBlack = CreateWindowA("BUTTON", "Black", WS_CHILD | WS_VISIBLE, 5, 5, 58, 22, hwnd, (HMENU)101, NULL, NULL);
+            hBtnRed = CreateWindowA("BUTTON", "Red", WS_CHILD | WS_VISIBLE, 68, 5, 58, 22, hwnd, (HMENU)102, NULL, NULL);
+            hBtnGreen = CreateWindowA("BUTTON", "Green", WS_CHILD | WS_VISIBLE, 5, 30, 58, 22, hwnd, (HMENU)103, NULL, NULL);
+            hBtnBlue = CreateWindowA("BUTTON", "Blue", WS_CHILD | WS_VISIBLE, 68, 30, 58, 22, hwnd, (HMENU)104, NULL, NULL);
+            hBtnYellow = CreateWindowA("BUTTON", "Yellow", WS_CHILD | WS_VISIBLE, 5, 55, 58, 22, hwnd, (HMENU)105, NULL, NULL);
+            hBtnPurple = CreateWindowA("BUTTON", "Purple", WS_CHILD | WS_VISIBLE, 68, 55, 58, 22, hwnd, (HMENU)106, NULL, NULL);
+            hBtnCustomColor = CreateWindowA("BUTTON", "Custom...", WS_CHILD | WS_VISIBLE, 5, 80, 121, 22, hwnd, (HMENU)107, NULL, NULL);
 
             // Tools & Eraser
-            hBtnFreehand = CreateWindowA("BUTTON", "Brush", WS_CHILD | WS_VISIBLE, 5, 110, 50, 22, hwnd, (HMENU)401, NULL, NULL);
-            hBtnLine = CreateWindowA("BUTTON", "Line", WS_CHILD | WS_VISIBLE, 60, 110, 50, 22, hwnd, (HMENU)402, NULL, NULL);
-            hBtnRect = CreateWindowA("BUTTON", "Rect", WS_CHILD | WS_VISIBLE, 5, 135, 50, 22, hwnd, (HMENU)403, NULL, NULL);
-            hBtnEllipse = CreateWindowA("BUTTON", "Ellipse", WS_CHILD | WS_VISIBLE, 60, 135, 50, 22, hwnd, (HMENU)404, NULL, NULL);
-            hBtnSpray = CreateWindowA("BUTTON", "Spray", WS_CHILD | WS_VISIBLE, 5, 160, 50, 22, hwnd, (HMENU)405, NULL, NULL);
-            hBtnEraser = CreateWindowA("BUTTON", "Eraser", WS_CHILD | WS_VISIBLE, 60, 160, 50, 22, hwnd, (HMENU)406, NULL, NULL);
+            hBtnFreehand = CreateWindowA("BUTTON", "Brush", WS_CHILD | WS_VISIBLE, 5, 110, 58, 22, hwnd, (HMENU)401, NULL, NULL);
+            hBtnLine = CreateWindowA("BUTTON", "Line", WS_CHILD | WS_VISIBLE, 68, 110, 58, 22, hwnd, (HMENU)402, NULL, NULL);
+            hBtnRect = CreateWindowA("BUTTON", "Rect", WS_CHILD | WS_VISIBLE, 5, 135, 58, 22, hwnd, (HMENU)403, NULL, NULL);
+            hBtnEllipse = CreateWindowA("BUTTON", "Ellipse", WS_CHILD | WS_VISIBLE, 68, 135, 58, 22, hwnd, (HMENU)404, NULL, NULL);
+            hBtnSpray = CreateWindowA("BUTTON", "Spray", WS_CHILD | WS_VISIBLE, 5, 160, 58, 22, hwnd, (HMENU)405, NULL, NULL);
+            hBtnEraser = CreateWindowA("BUTTON", "Eraser", WS_CHILD | WS_VISIBLE, 68, 160, 58, 22, hwnd, (HMENU)406, NULL, NULL);
 
             // Size & Shape
-            hBtnSizeSmall = CreateWindowA("BUTTON", "2px", WS_CHILD | WS_VISIBLE, 5, 190, 33, 22, hwnd, (HMENU)201, NULL, NULL);
-            hBtnSizeMed = CreateWindowA("BUTTON", "6px", WS_CHILD | WS_VISIBLE, 41, 190, 33, 22, hwnd, (HMENU)202, NULL, NULL);
-            hBtnSizeLarge = CreateWindowA("BUTTON", "14px", WS_CHILD | WS_VISIBLE, 77, 190, 33, 22, hwnd, (HMENU)203, NULL, NULL);
-            hBtnShapeToggle = CreateWindowA("BUTTON", "Shape: Round", WS_CHILD | WS_VISIBLE, 5, 215, 105, 22, hwnd, (HMENU)204, NULL, NULL);
+            hBtnSizeSmall = CreateWindowA("BUTTON", "2px", WS_CHILD | WS_VISIBLE, 5, 190, 38, 22, hwnd, (HMENU)201, NULL, NULL);
+            hBtnSizeMed = CreateWindowA("BUTTON", "6px", WS_CHILD | WS_VISIBLE, 46, 190, 38, 22, hwnd, (HMENU)202, NULL, NULL);
+            hBtnSizeLarge = CreateWindowA("BUTTON", "14px", WS_CHILD | WS_VISIBLE, 87, 190, 39, 22, hwnd, (HMENU)203, NULL, NULL);
+            hBtnShapeToggle = CreateWindowA("BUTTON", "Shape: Round", WS_CHILD | WS_VISIBLE, 5, 215, 121, 22, hwnd, (HMENU)204, NULL, NULL);
 
             // Filters & Transforms
-            hBtnInvert = CreateWindowA("BUTTON", "Invert", WS_CHILD | WS_VISIBLE, 5, 245, 50, 22, hwnd, (HMENU)501, NULL, NULL);
-            hBtnGray = CreateWindowA("BUTTON", "Gray", WS_CHILD | WS_VISIBLE, 60, 245, 50, 22, hwnd, (HMENU)502, NULL, NULL);
-            hBtnBright = CreateWindowA("BUTTON", "+Bright", WS_CHILD | WS_VISIBLE, 5, 270, 50, 22, hwnd, (HMENU)503, NULL, NULL);
-            hBtnFlipH = CreateWindowA("BUTTON", "Flip H", WS_CHILD | WS_VISIBLE, 60, 270, 50, 22, hwnd, (HMENU)504, NULL, NULL);
-            hBtnRotate90 = CreateWindowA("BUTTON", "Rotate 90", WS_CHILD | WS_VISIBLE, 5, 295, 105, 22, hwnd, (HMENU)505, NULL, NULL);
+            hBtnInvert = CreateWindowA("BUTTON", "Invert", WS_CHILD | WS_VISIBLE, 5, 245, 58, 22, hwnd, (HMENU)501, NULL, NULL);
+            hBtnGray = CreateWindowA("BUTTON", "Gray", WS_CHILD | WS_VISIBLE, 68, 245, 58, 22, hwnd, (HMENU)502, NULL, NULL);
+            hBtnBright = CreateWindowA("BUTTON", "+Bright", WS_CHILD | WS_VISIBLE, 5, 270, 58, 22, hwnd, (HMENU)503, NULL, NULL);
+            hBtnFlipH = CreateWindowA("BUTTON", "Flip H", WS_CHILD | WS_VISIBLE, 68, 270, 58, 22, hwnd, (HMENU)504, NULL, NULL);
+            hBtnRotate90 = CreateWindowA("BUTTON", "Rotate 90", WS_CHILD | WS_VISIBLE, 5, 295, 121, 22, hwnd, (HMENU)505, NULL, NULL);
 
             // History & Actions
-            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE, 5, 325, 50, 22, hwnd, (HMENU)601, NULL, NULL);
-            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE, 60, 325, 50, 22, hwnd, (HMENU)602, NULL, NULL);
-            hBtnOpen = CreateWindowA("BUTTON", "Open BMP", WS_CHILD | WS_VISIBLE, 5, 355, 105, 22, hwnd, (HMENU)303, NULL, NULL);
-            hBtnSave = CreateWindowA("BUTTON", "Save BMP", WS_CHILD | WS_VISIBLE, 5, 380, 105, 22, hwnd, (HMENU)302, NULL, NULL);
-            hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE, 5, 405, 105, 22, hwnd, (HMENU)301, NULL, NULL);
+            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE, 5, 325, 58, 22, hwnd, (HMENU)601, NULL, NULL);
+            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE, 68, 325, 58, 22, hwnd, (HMENU)602, NULL, NULL);
+            hBtnOpen = CreateWindowA("BUTTON", "Open BMP", WS_CHILD | WS_VISIBLE, 5, 355, 121, 22, hwnd, (HMENU)303, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save BMP", WS_CHILD | WS_VISIBLE, 5, 380, 121, 22, hwnd, (HMENU)302, NULL, NULL);
+            hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE, 5, 405, 121, 22, hwnd, (HMENU)301, NULL, NULL);
 
             // Set Fonts
             HWND controls[] = {
@@ -474,11 +474,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PerformRedo();
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
+            } else if (wParam == 'H' || wParam == 'h') {
+                MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush, Line, Rect, Ellipse, Spray, Eraser\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- H : Help", "KPaint Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
         case WM_LBUTTONDOWN: {
-            int x = (short)LOWORD(lParam) - 115;
+            int x = (short)LOWORD(lParam) - 130;
             int y = (short)HIWORD(lParam);
             if (x >= 0) {
                 PushUndo();
@@ -488,8 +490,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (currentTool == 0 || currentTool == 5) {
                     HDC hdc = GetDC(hwnd);
                     SelectObject(hdc, hPen);
-                    MoveToEx(hdc, x + 115, y, NULL);
-                    LineTo(hdc, x + 115, y);
+                    MoveToEx(hdc, x + 130, y, NULL);
+                    LineTo(hdc, x + 130, y);
                     ReleaseDC(hwnd, hdc);
                     MoveToEx(hdcMem, x, y, NULL);
                     LineTo(hdcMem, x, y);
@@ -505,23 +507,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetROP2(hdc, R2_NOTXORPEN);
                     SelectObject(hdc, hPen);
                     SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                    if (currentTool == 1) { MoveToEx(hdc, startX + 115, startY, NULL); LineTo(hdc, x + 115, y); }
-                    else if (currentTool == 2) { Rectangle(hdc, startX + 115, startY, x + 115, y); }
-                    else if (currentTool == 3) { Ellipse(hdc, startX + 115, startY, x + 115, y); }
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 130, startY, NULL); LineTo(hdc, x + 130, y); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 130, startY, x + 130, y); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 130, startY, x + 130, y); }
                     ReleaseDC(hwnd, hdc);
                 }
             }
             break;
         }
         case WM_MOUSEMOVE: {
-            int x = (short)LOWORD(lParam) - 115;
+            int x = (short)LOWORD(lParam) - 130;
             int y = (short)HIWORD(lParam);
             if (isPainting && x >= 0) {
                 HDC hdc = GetDC(hwnd);
                 if (currentTool == 0 || currentTool == 5) {
                     SelectObject(hdc, hPen);
-                    MoveToEx(hdc, lastX + 115, lastY, NULL);
-                    LineTo(hdc, x + 115, y);
+                    MoveToEx(hdc, lastX + 130, lastY, NULL);
+                    LineTo(hdc, x + 130, y);
                     MoveToEx(hdcMem, lastX, lastY, NULL);
                     LineTo(hdcMem, x, y);
                 } else if (currentTool == 4) { // Spray
@@ -535,13 +537,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetROP2(hdc, R2_NOTXORPEN);
                     SelectObject(hdc, hPen);
                     SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                    if (currentTool == 1) { MoveToEx(hdc, startX + 115, startY, NULL); LineTo(hdc, lastX + 115, lastY); }
-                    else if (currentTool == 2) { Rectangle(hdc, startX + 115, startY, lastX + 115, lastY); }
-                    else if (currentTool == 3) { Ellipse(hdc, startX + 115, startY, lastX + 115, lastY); }
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 130, startY, NULL); LineTo(hdc, lastX + 130, lastY); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 130, startY, lastX + 130, lastY); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 130, startY, lastX + 130, lastY); }
                     
-                    if (currentTool == 1) { MoveToEx(hdc, startX + 115, startY, NULL); LineTo(hdc, x + 115, y); }
-                    else if (currentTool == 2) { Rectangle(hdc, startX + 115, startY, x + 115, y); }
-                    else if (currentTool == 3) { Ellipse(hdc, startX + 115, startY, x + 115, y); }
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 130, startY, NULL); LineTo(hdc, x + 130, y); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 130, startY, x + 130, y); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 130, startY, x + 130, y); }
                 }
                 ReleaseDC(hwnd, hdc);
                 lastX = x;
@@ -551,16 +553,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_LBUTTONUP: {
             if (isPainting) {
-                int x = (short)LOWORD(lParam) - 115;
+                int x = (short)LOWORD(lParam) - 130;
                 int y = (short)HIWORD(lParam);
                 if (currentTool != 0 && currentTool != 5 && currentTool != 4) {
                     HDC hdc = GetDC(hwnd);
                     SetROP2(hdc, R2_NOTXORPEN);
                     SelectObject(hdc, hPen);
                     SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                    if (currentTool == 1) { MoveToEx(hdc, startX + 115, startY, NULL); LineTo(hdc, lastX + 115, lastY); }
-                    else if (currentTool == 2) { Rectangle(hdc, startX + 115, startY, lastX + 115, lastY); }
-                    else if (currentTool == 3) { Ellipse(hdc, startX + 115, startY, lastX + 115, lastY); }
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 130, startY, NULL); LineTo(hdc, lastX + 130, lastY); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 130, startY, lastX + 130, lastY); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 130, startY, lastX + 130, lastY); }
                     ReleaseDC(hwnd, hdc);
 
                     SelectObject(hdcMem, hPen);
@@ -580,9 +582,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             RECT r;
             GetClientRect(hwnd, &r);
-            RECT sidebar = {0, 0, 115, r.bottom};
+            RECT sidebar = {0, 0, 130, r.bottom};
             FillRect(hdc, &sidebar, (HBRUSH)(COLOR_BTNFACE + 1));
-            BitBlt(hdc, 115, 0, r.right - 115, r.bottom, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, 130, 0, r.right - 130, r.bottom, hdcMem, 0, 0, SRCCOPY);
             EndPaint(hwnd, &ps);
             break;
         }
@@ -609,7 +611,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = NULL;
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 850, 560, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press H for Help", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

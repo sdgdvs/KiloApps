@@ -23,6 +23,8 @@
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   
   body, html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     width: 100%;
     height: 100%;
     background: var(--bg-dark);
@@ -448,7 +450,7 @@
       <span>Pos: <strong id="lbl-pos">0, 0</strong></span>
       <span>Tool: <strong id="lbl-tool">Brush</strong></span>
     </div>
-    <div>Press <strong>Ctrl+Z</strong> to Undo | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill</div>
+    <div>Press <strong>Ctrl+Z</strong> Undo | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>H</strong> Help</div>
   </div>
 
   <script>
@@ -949,6 +951,7 @@
         else if (k === 'r') setTool('rect');
         else if (k === 'c') setTool('ellipse');
         else if (k === 'g') setTool('fill');
+        else if (k === 'h') alert("KPaint Pro Help\n\nTools: Brush, Line, Rect, Ellipse, Fill, Spray, Eraser\n\nShortcuts:\nCtrl+Z : Undo\nCtrl+Y : Redo\nB : Brush\nE : Eraser\nL : Line\nR : Rect\nC : Ellipse\nG : Fill\nH : Help");
       }
     });
 
