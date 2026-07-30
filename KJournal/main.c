@@ -243,7 +243,9 @@ int load_all_entries(JournalEntry *entries, int max_entries) {
         } else if (count > 0) {
             size_t line_len = strlen(line);
             if (buf_len + line_len + 1 > buf_cap) {
-                buf_cap = (buf_cap == 0) ? 1024 : buf_cap * 2;
+                while (buf_len + line_len + 1 > buf_cap) {
+                    buf_cap = (buf_cap == 0) ? MAX_LINE : buf_cap * 2;
+                }
                 buffer = (char *)realloc(buffer, buf_cap);
             }
             if (buf_len == 0) buffer[0] = '\0';

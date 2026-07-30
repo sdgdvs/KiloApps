@@ -602,7 +602,11 @@
   }
 
   function saveEntriesToStorage() {
-    localStorage.setItem('kjournal_data', JSON.stringify(entries));
+    try {
+      localStorage.setItem('kjournal_data', JSON.stringify(entries));
+    } catch (e) {
+      showToast('Storage limit reached! Cannot save data.');
+    }
   }
 
   function loadSettings() {
@@ -613,8 +617,12 @@
   }
 
   function saveSettingsToStorage() {
-    localStorage.setItem('kjournal_settings', JSON.stringify(settings));
-    updateLockBtnState();
+    try {
+      localStorage.setItem('kjournal_settings', JSON.stringify(settings));
+      updateLockBtnState();
+    } catch (e) {
+      showToast('Storage limit reached! Cannot save settings.');
+    }
   }
 
   function updateLockBtnState() {
@@ -885,7 +893,8 @@
 
       const header = document.createElement('div');
       header.className = 'entry-item-header';
-      header.innerHTML = `<span class="entry-item-date">${formatReadableDate(date)}</span><span class="entry-item-mood">${entry.mood || '😊'}</span>`;
+      const cleanMood = (entry.mood || '😊').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      header.innerHTML = `<span class="entry-item-date">${formatReadableDate(date)}</span><span class="entry-item-mood">${cleanMood}</span>`;
 
       const snippet = document.createElement('div');
       snippet.className = 'entry-item-snippet';
