@@ -69,9 +69,9 @@
   </div>
   <div class="seek-bar-container">
     <span id="timeDisplay">0:00 / 0:00</span>
-    <input type="range" id="seekSlider" class="seek-slider" min="0" max="100" value="0" step="0.1" />
+    <input type="range" id="seekSlider" class="seek-slider" min="0" max="100" value="0" step="0.1" aria-label="Seek bar" />
     <span>Vol</span>
-    <input type="range" id="volumeSlider" class="vol-slider" min="0" max="1" step="0.05" value="1" />
+    <input type="range" id="volumeSlider" class="vol-slider" min="0" max="1" step="0.05" value="1" aria-label="Volume" />
   </div>
 </div>
 
@@ -87,26 +87,26 @@
   <div class="sidebar">
     <div class="panel">
       <div class="panel-title">Video Filters</div>
-      <div class="slider-row"><span>Brightness</span><input type="range" id="fBright" min="0" max="2" step="0.05" value="1"><span class="val" id="vBright">1.0</span></div>
-      <div class="slider-row"><span>Contrast</span><input type="range" id="fCont" min="0" max="2" step="0.05" value="1"><span class="val" id="vCont">1.0</span></div>
-      <div class="slider-row"><span>Saturation</span><input type="range" id="fSat" min="0" max="2" step="0.05" value="1"><span class="val" id="vSat">1.0</span></div>
+      <div class="slider-row"><span>Brightness</span><input type="range" id="fBright" min="0" max="2" step="0.05" value="1" aria-label="Brightness"><span class="val" id="vBright">1.0</span></div>
+      <div class="slider-row"><span>Contrast</span><input type="range" id="fCont" min="0" max="2" step="0.05" value="1" aria-label="Contrast"><span class="val" id="vCont">1.0</span></div>
+      <div class="slider-row"><span>Saturation</span><input type="range" id="fSat" min="0" max="2" step="0.05" value="1" aria-label="Saturation"><span class="val" id="vSat">1.0</span></div>
       <button id="btnResetVideo" class="secondary" style="width:100%; margin-top:5px; font-size:11px;">Reset Video Filters</button>
     </div>
     
     <div class="panel">
       <div class="panel-title">Audio EQ (DSP)</div>
-      <div class="slider-row"><span>Bass</span><input type="range" id="eqLow" min="-20" max="20" step="1" value="0"><span class="val" id="vLow">0</span></div>
-      <div class="slider-row"><span>Mid</span><input type="range" id="eqMid" min="-20" max="20" step="1" value="0"><span class="val" id="vMid">0</span></div>
-      <div class="slider-row"><span>Treble</span><input type="range" id="eqHigh" min="-20" max="20" step="1" value="0"><span class="val" id="vHigh">0</span></div>
+      <div class="slider-row"><span>Bass</span><input type="range" id="eqLow" min="-20" max="20" step="1" value="0" aria-label="Bass"><span class="val" id="vLow">0</span></div>
+      <div class="slider-row"><span>Mid</span><input type="range" id="eqMid" min="-20" max="20" step="1" value="0" aria-label="Mid"><span class="val" id="vMid">0</span></div>
+      <div class="slider-row"><span>Treble</span><input type="range" id="eqHigh" min="-20" max="20" step="1" value="0" aria-label="Treble"><span class="val" id="vHigh">0</span></div>
       <button id="btnResetAudio" class="secondary" style="width:100%; margin-top:5px; font-size:11px;">Reset Audio EQ</button>
     </div>
     
-    <input type="text" id="searchInput" class="search-box" placeholder="Search playlist..." />
+    <input type="text" id="searchInput" class="search-box" placeholder="Search playlist..." aria-label="Search playlist" />
     <ul class="playlist" id="playlist"></ul>
   </div>
 </div>
 
-<input type="file" id="fileInput" accept="audio/*,video/*,.srt,.vtt" multiple />
+<input type="file" id="fileInput" accept="audio/*,video/*,.srt,.vtt" multiple aria-label="Open file" />
 
 <script>
   const UI = {
@@ -154,7 +154,9 @@
         parseSubtitles(text, f.name.endsWith('.srt'));
         alert('Loaded subtitles: ' + f.name);
       } else {
-        playlist.push({ name: f.name, url: URL.createObjectURL(f) });
+        if (playlist.length < 500) {
+          playlist.push({ name: f.name, url: URL.createObjectURL(f) });
+        }
       }
     }
     renderPlaylist();
@@ -288,27 +290,33 @@
   function parseSubtitles(text, isSrt) {
     subtitles = [];
     const blocks = text.replace(/\r/g, '').split('\n\n');
+    let limit = 0;
     for (let b of blocks) {
+      if (limit > 5000) break;
+      limit++;
       const lines = b.split('\n');
       if (lines.length >= 2) {
         let timeLine = isSrt ? lines[1] : lines[0]; // VTT might have header/notes
         let textStart = isSrt ? 2 : 1;
         if(timeLine && timeLine.includes('-->')) {
-          const times = timeLine.split('-->');
-          if(times.length === 2) {
-            const start = timeToSecs(times[0].trim());
-            const end = timeToSecs(times[1].trim());
-            const txt = lines.slice(textStart).join('<br>');
-            subtitles.push({start, end, text: txt});
-          }
+            // Check bounds on lines
+            if (lines.length > 50) lines.length = 50;
+            const times = timeLine.split('-->');
+            if(times.length === 2) {
+                const start = timeToSecs(times[0].trim());
+                const end = timeToSecs(times[1].trim());
+                const txt = lines.slice(textStart).join('<br>');
+                subtitles.push({start, end, text: txt});
+            }
         } else if (!isSrt && lines.length > 2 && lines[1].includes('-->')) {
-          const times = lines[1].split('-->');
-          if(times.length === 2) {
-            const start = timeToSecs(times[0].trim());
-            const end = timeToSecs(times[1].trim());
-            const txt = lines.slice(2).join('<br>');
-            subtitles.push({start, end, text: txt});
-          }
+            if (lines.length > 50) lines.length = 50;
+            const times = lines[1].split('-->');
+            if(times.length === 2) {
+                const start = timeToSecs(times[0].trim());
+                const end = timeToSecs(times[1].trim());
+                const txt = lines.slice(2).join('<br>');
+                subtitles.push({start, end, text: txt});
+            }
         }
       }
     }

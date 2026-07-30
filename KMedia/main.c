@@ -57,12 +57,14 @@ typedef struct {
 Subtitle g_subs[500];
 int g_subCount = 0;
 
-int TimeToSec(const char* timeStr) {
-    int h=0, m=0, s=0, ms=0;
-    if (sscanf(timeStr, "%d:%d:%d,%d", &h, &m, &s, &ms) >= 3) {
-        return h * 3600000 + m * 60000 + s * 1000 + ms;
+int str_to_int(const char* str) {
+    int val = 0;
+    while (*str == ' ') str++;
+    while (*str >= '0' && *str <= '9') {
+        val = val * 10 + (*str - '0');
+        str++;
     }
-    return 0;
+    return val;
 }
 
 void LoadSrt(const char* videoPath) {
@@ -73,39 +75,74 @@ void LoadSrt(const char* videoPath) {
     char* ext = my_strrchr(srtPath, '.');
     if (ext) {
         lstrcpyA(ext, ".srt");
-        FILE* f = fopen(srtPath, "r");
-        if (f) {
-            char line[256];
-            int state = 0;
-            Subtitle curSub = {0};
-            while (fgets(line, sizeof(line), f)) {
-                if (line[0] == '\r' || line[0] == '\n') {
-                    if (state == 2 && g_subCount < 500) {
-                        g_subs[g_subCount++] = curSub;
+        HANDLE hFile = CreateFileA(srtPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD size = GetFileSize(hFile, NULL);
+            if (size > 0 && size < 1024*1024) {
+                char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, size + 1);
+                if (buf) {
+                    DWORD read;
+                    if (ReadFile(hFile, buf, size, &read, NULL)) {
+                        buf[read] = '\0';
+                        char* p = buf;
+                        int state = 0;
+                        Subtitle curSub = {0};
+                        while (*p) {
+                            char line[256];
+                            int i = 0;
+                            while (*p && *p != '\n' && i < 255) {
+                                if (*p != '\r') { line[i++] = *p; }
+                                p++;
+                            }
+                            line[i] = '\0';
+                            if (*p == '\n') p++;
+                            
+                            if (line[0] == '\0') {
+                                if (state == 2 && g_subCount < 500) {
+                                    g_subs[g_subCount++] = curSub;
+                                }
+                                state = 0;
+                                curSub.text[0] = '\0';
+                            } else if (state == 0) {
+                                state = 1;
+                            } else if (state == 1) {
+                                int start = 0, end = 0;
+                                const char* arrow = line;
+                                while(*arrow && (*arrow != '-' || arrow[1] != '-' || arrow[2] != '>')) arrow++;
+                                if (*arrow) {
+                                    int h=0, m=0, s=0, ms=0;
+                                    const char* t = line;
+                                    while(*t == ' ') t++;
+                                    while(*t >= '0' && *t <= '9') h = h*10 + (*t++ - '0'); if(*t==':') t++;
+                                    while(*t >= '0' && *t <= '9') m = m*10 + (*t++ - '0'); if(*t==':') t++;
+                                    while(*t >= '0' && *t <= '9') s = s*10 + (*t++ - '0'); if(*t==',') t++;
+                                    while(*t >= '0' && *t <= '9') ms = ms*10 + (*t++ - '0');
+                                    start = h*3600000 + m*60000 + s*1000 + ms;
+                                    
+                                    t = arrow + 3;
+                                    h=0; m=0; s=0; ms=0;
+                                    while(*t == ' ') t++;
+                                    while(*t >= '0' && *t <= '9') h = h*10 + (*t++ - '0'); if(*t==':') t++;
+                                    while(*t >= '0' && *t <= '9') m = m*10 + (*t++ - '0'); if(*t==':') t++;
+                                    while(*t >= '0' && *t <= '9') s = s*10 + (*t++ - '0'); if(*t==',') t++;
+                                    while(*t >= '0' && *t <= '9') ms = ms*10 + (*t++ - '0');
+                                    end = h*3600000 + m*60000 + s*1000 + ms;
+                                    
+                                    curSub.start = start;
+                                    curSub.end = end;
+                                    state = 2;
+                                }
+                            } else if (state == 2) {
+                                if (curSub.text[0] != '\0' && lstrlenA(curSub.text) + 2 < sizeof(curSub.text)) lstrcatA(curSub.text, "\n");
+                                if (lstrlenA(curSub.text) + lstrlenA(line) < sizeof(curSub.text) - 1) lstrcatA(curSub.text, line);
+                            }
+                        }
+                        if (state == 2 && g_subCount < 500) g_subs[g_subCount++] = curSub;
                     }
-                    state = 0;
-                    curSub.text[0] = '\0';
-                } else if (state == 0) {
-                    state = 1;
-                } else if (state == 1) {
-                    char t1[32]={0}, t2[32]={0};
-                    if (sscanf(line, "%31s --> %31s", t1, t2) >= 2) {
-                        curSub.start = TimeToSec(t1);
-                        curSub.end = TimeToSec(t2);
-                        state = 2;
-                    }
-                } else if (state == 2) {
-                    if (curSub.text[0] != '\0') lstrcatA(curSub.text, "\n");
-                    int len = lstrlenA(line);
-                    while(len > 0 && (line[len-1] == '\r' || line[len-1] == '\n')) {
-                        line[len-1] = '\0';
-                        len--;
-                    }
-                    lstrcatA(curSub.text, line);
+                    HeapFree(GetProcessHeap(), 0, buf);
                 }
             }
-            if (state == 2 && g_subCount < 500) g_subs[g_subCount++] = curSub;
-            fclose(f);
+            CloseHandle(hFile);
         }
     }
 }
@@ -114,8 +151,7 @@ void UpdateSubtitles() {
     if (g_subCount == 0 || currentFile[0] == '\0') return;
     char posStr[64] = {0};
     mciSendStringA("status myMedia position", posStr, sizeof(posStr), NULL);
-    int pos = 0;
-    sscanf(posStr, "%d", &pos);
+    int pos = str_to_int(posStr);
     for (int i = 0; i < g_subCount; i++) {
         if (pos >= g_subs[i].start && pos <= g_subs[i].end) {
             char currentTxt[256];
@@ -316,7 +352,7 @@ void ExportFrameToBMP() {
     int height = rc.bottom - rc.top;
     
     HBITMAP hbm = CreateCompatibleBitmap(hdcWindow, width, height);
-    SelectObject(hdcMem, hbm);
+    HBITMAP hOldBmp = (HBITMAP)SelectObject(hdcMem, hbm);
     BitBlt(hdcMem, 0, 0, width, height, hdcWindow, 0, 0, SRCCOPY);
     
     BITMAPINFOHEADER bi = {sizeof(BITMAPINFOHEADER), width, height, 1, 32, BI_RGB, 0, 0, 0, 0, 0};
@@ -327,14 +363,17 @@ void ExportFrameToBMP() {
         WriteFile(hFile, &bmf, sizeof(bmf), &dwBytesWritten, NULL);
         WriteFile(hFile, &bi, sizeof(bi), &dwBytesWritten, NULL);
         
-        char* bits = (char*)malloc(width * height * 4);
-        GetDIBits(hdcWindow, hbm, 0, height, bits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
-        WriteFile(hFile, bits, width * height * 4, &dwBytesWritten, NULL);
-        free(bits);
+        char* bits = (char*)HeapAlloc(GetProcessHeap(), 0, width * height * 4);
+        if (bits) {
+            GetDIBits(hdcWindow, hbm, 0, height, bits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+            WriteFile(hFile, bits, width * height * 4, &dwBytesWritten, NULL);
+            HeapFree(GetProcessHeap(), 0, bits);
+        }
         CloseHandle(hFile);
         MessageBoxA(g_hwndMain, "Client area exported as frame.bmp.", "Export Frame", MB_OK);
     }
     
+    SelectObject(hdcMem, hOldBmp);
     DeleteObject(hbm);
     DeleteDC(hdcMem);
     ReleaseDC(g_hwndMain, hdcWindow);
@@ -498,6 +537,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             KillTimer(hwnd, 1);
             mciSendStringA("close myMedia", NULL, 0, NULL);
+            {
+                HFONT hOldFont1 = (HFONT)SendMessage(hTitle, WM_GETFONT, 0, 0);
+                HFONT hOldFont2 = (HFONT)SendMessage(hSubText, WM_GETFONT, 0, 0);
+                if (hOldFont1) DeleteObject(hOldFont1);
+                if (hOldFont2) DeleteObject(hOldFont2);
+            }
             PostQuitMessage(0);
             break;
         default:
