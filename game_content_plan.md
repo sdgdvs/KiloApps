@@ -139,7 +139,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KFreecell  | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check that all dealt hands are solvable. Verify difficulty constraints make sense. |
 | KSudoku    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit puzzle generation quality. Ensure Easy puzzles have unique solutions and Hard is solvable. |
 | K2048      | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check tile spawn rates, verify move-limit stages are achievable, audit powerup balance. |
 | KMines     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check first-click safety, mine density per difficulty, ensure Sonar powerup isn't overpowered. |
@@ -156,11 +155,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KReversi   | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, check Minimax depth, ensure board sizes feel right. |
 | KConnect4  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty levels. Ensure Grandmaster is genuinely hard. Check blocker cell mechanics. |
 | KSolitaire | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check deal fairness, ensure Vegas mode scoring is balanced, verify undo/powerup economy. |
+| KFreecell  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Checked that all dealt hands are solvable, rebalanced campaign difficulty constraints. |
 
 
 ## Progress Log
 
 **Loop 8**
+- [x] KFreecell (Balance audit complete: Implemented inline DFS solver to guarantee dealt hands are solvable, rebalanced campaign constraints for better difficulty curve in both EXE and HTML)
 - [x] KPac (Expanded Campaign Mode to include maze hazards (tile 6), unpredictable teleport behavior for the Red Ghost on loop 7+, and an 8x scoring multiplier on loop 7+ with 0 fright timer in both EXE and HTML)
 - [x] KSolitaire (Balance audit complete: Fixed Vegas mode stock pass rules, adjusted economy score deductions for undo and powerups, added score floor for Classic mode in both EXE and HTML)
 - [x] KMaze (Expanded Campaign Mode to new maze themes, puzzle rooms, NPC encounters, and Time Freeze [T] active item to both EXE and HTML)
