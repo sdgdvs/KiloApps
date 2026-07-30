@@ -873,12 +873,14 @@ int GetBestMoveForPlayer(int player) {
             memcpy(tempBoard, board, g_boardWidth * g_boardHeight * sizeof(int));
             tempBoard[m] = player;
             for (int f = 0; f < count; f++) tempBoard[flips[f]] = player;
-            int depth = (g_boardWidth == 10) ? 2 : 3;
+            int depth = (g_boardWidth == 10) ? 4 : ((g_boardWidth == 8) ? 5 : 6);
             val = Minimax(tempBoard, g_boardWidth, g_boardHeight, depth, -999999, 999999, 0, player);
         }
 
         if (val > maxVal) {
             maxVal = val;
+            bestMove = m;
+        } else if (val == maxVal && (rand() % 2 == 0)) {
             bestMove = m;
         }
     }

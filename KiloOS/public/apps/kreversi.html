@@ -983,6 +983,7 @@
                 for (let m of moves) {
                     let count = getFlippable(m, player).length;
                     if (count > maxFlips) { maxFlips = count; best = m; }
+                    else if (count === maxFlips && Math.random() < 0.5) { best = m; }
                 }
                 return best;
             } else if (diff === 'positional') {
@@ -992,11 +993,12 @@
                     let count = getFlippable(m, player).length;
                     let val = count * 2 + weights[m];
                     if (val > maxVal) { maxVal = val; best = m; }
+                    else if (val === maxVal && Math.random() < 0.5) { best = m; }
                 }
                 return best;
             } else { // grandmaster minimax
                 let maxVal = -Infinity, best = moves[0];
-                const depth = boardWidth === 10 ? 2 : 3;
+                const depth = boardWidth === 10 ? 4 : (boardWidth === 8 ? 5 : 6);
                 for (let m of moves) {
                     const tempBoard = [...boardState];
                     const flips = getFlippable(m, player);
@@ -1004,6 +1006,7 @@
                     for (let f of flips) tempBoard[f] = player;
                     let val = minimax(tempBoard, boardWidth, boardHeight, depth, -999999, 999999, false, player);
                     if (val > maxVal) { maxVal = val; best = m; }
+                    else if (val === maxVal && Math.random() < 0.5) { best = m; }
                 }
                 return best;
             }
