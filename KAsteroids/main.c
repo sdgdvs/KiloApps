@@ -21,6 +21,7 @@ typedef struct {
     int emp_cooldown;
     int laser_cooldown;
     int shield_cooldown;
+    int missile_cooldown;
     int invincible_timer;
     float anim_frame;
 } Ship;
@@ -47,6 +48,7 @@ typedef struct {
     bool active;
     bool is_enemy;
     bool is_laser;
+    bool is_missile;
 } Bullet;
 
 typedef struct {
@@ -61,6 +63,8 @@ typedef struct {
     int max_hp;
     int freeze_timer;
     float shield_angle;
+    int shield_hp;
+    int shield_recharge_timer;
     float anim_frame;
 } Ufo;
 
@@ -145,6 +149,7 @@ int spread_timer = 0;
 int laser_timer = 0;
 int ufo_spawn_timer = 0;
 bool is_space_storm = false;
+bool is_asteroid_belt = false;
 
 Stats stats = {0};
 
@@ -332,6 +337,8 @@ void SpawnBossUfo(int type) {
     u->shoot_timer = 0;
     u->turret_shoot_timer = 0;
     u->type = type; // 1 = Cruiser Boss, 2 = Stage 20 Alien Mothership Core Boss
+    u->shield_hp = (type == 1) ? 10 : 0;
+    u->shield_recharge_timer = 0;
     u->max_hp = (type == 2) ? 50 : (12 + wave * 2);
     u->hp = u->max_hp;
     u->freeze_timer = 0;
@@ -383,6 +390,14 @@ void SetupWave() {
         } else if (wave == 5 || wave == 10 || wave == 15) {
             SpawnBossUfo(1);
             SpawnAsteroids(2 + wave / 3, wave / 4);
+        } else if (wave == 8 || wave == 13) {
+            SpawnAsteroids(18 + wave, 0);
+            for(int i=0; i<num_asteroids; i++) {
+                if (asteroids[i].active && asteroids[i].level == 3) {
+                    asteroids[i].level = (rand()%2) + 1;
+                    asteroids[i].radius = asteroids[i].level == 2 ? 20.0f : 10.0f;
+                }
+            }
         } else if (wave == 7 || wave == 11 || wave == 16 || wave == 18) {
             // Hunter Squadron wave
             int count = (wave >= 16) ? 5 : 3;
@@ -432,6 +447,7 @@ void InitGame(int mode) {
     ship.emp_cooldown = 0;
     ship.laser_cooldown = 0;
     ship.shield_cooldown = 0;
+    ship.missile_cooldown = 0;
     ship.invincible_timer = 0;
     ship.anim_frame = 0;
 
@@ -453,6 +469,27 @@ void InitGame(int mode) {
     SaveStats();
 
     SetupWave();
+}
+
+
+void TriggerMissile() {
+    if (!ship.active) return;
+    ship.missile_cooldown = 900; // 15s CD
+    PlaySoundEffect(1);
+    for(int m=0; m<5; m++) {
+        if (num_bullets >= 120) break;
+        Bullet* b = &bullets[num_bullets++];
+        b->x = ship.x + cos(ship.angle) * 15.0f;
+        b->y = ship.y + sin(ship.angle) * 15.0f;
+        float ang = ship.angle + (rand()%100 - 50) / 50.0f;
+        b->vx = cos(ang) * 9.0f;
+        b->vy = sin(ang) * 9.0f;
+        b->life = 120;
+        b->active = true;
+        b->is_enemy = false;
+        b->is_laser = false;
+        b->is_missile = true;
+    }
 }
 
 void TriggerEmp() {
@@ -627,6 +664,15 @@ void CheckCollisions() {
                 float dist = sqrt(pow(bullets[i].x - ufos[k].x, 2) + pow(bullets[i].y - ufos[k].y, 2));
                 if (dist < ufos[k].radius) {
                     if (!bullets[i].is_laser) bullets[i].active = false;
+                    
+                    if (ufos[k].type == 1 && ufos[k].shield_hp > 0) {
+                        ufos[k].shield_hp--;
+                        ufos[k].shield_recharge_timer = 0;
+                        CreateExplosion(bullets[i].x, bullets[i].y, RGB(56, 189, 248), 8, 15.0f);
+                        PlaySoundEffect(1);
+                        break;
+                    }
+
                     ufos[k].hp--;
                     stats.shots_hit++;
                     current_shots_hit++;
@@ -825,6 +871,7 @@ void Update() {
     if (ship.emp_cooldown > 0) ship.emp_cooldown--;
     if (ship.laser_cooldown > 0) ship.laser_cooldown--;
     if (ship.shield_cooldown > 0) ship.shield_cooldown--;
+        if (ship.missile_cooldown > 0) ship.missile_cooldown--;
     if (ship.invincible_timer > 0) ship.invincible_timer--;
 
     // Key Hotkey Active Skills (Edge Triggered)
@@ -930,6 +977,46 @@ void Update() {
         bullets[i].x += bullets[i].vx;
         bullets[i].y += bullets[i].vy;
         bullets[i].life--;
+        if (bullets[i].is_missile && !bullets[i].is_enemy) {
+            float best_dist = 400.0f;
+            float target_x = -1, target_y = -1;
+            for(int u=0; u<num_ufos; u++) {
+                if(ufos[u].active) {
+                    float d = sqrt(pow(bullets[i].x - ufos[u].x, 2) + pow(bullets[i].y - ufos[u].y, 2));
+                    if(d < best_dist) { best_dist = d; target_x = ufos[u].x; target_y = ufos[u].y; }
+                }
+            }
+            if (target_x == -1) {
+                for(int a=0; a<num_asteroids; a++) {
+                    if(asteroids[a].active) {
+                        float d = sqrt(pow(bullets[i].x - asteroids[a].x, 2) + pow(bullets[i].y - asteroids[a].y, 2));
+                        if(d < best_dist) { best_dist = d; target_x = asteroids[a].x; target_y = asteroids[a].y; }
+                    }
+                }
+            }
+            if (target_x != -1) {
+                float ang = atan2(target_y - bullets[i].y, target_x - bullets[i].x);
+                float speed = sqrt(bullets[i].vx*bullets[i].vx + bullets[i].vy*bullets[i].vy);
+                float curr_ang = atan2(bullets[i].vy, bullets[i].vx);
+                
+                float diff = ang - curr_ang;
+                while (diff > 3.14159f) diff -= 2*3.14159f;
+                while (diff < -3.14159f) diff += 2*3.14159f;
+                
+                curr_ang += diff * 0.1f;
+                bullets[i].vx = cos(curr_ang) * speed;
+                bullets[i].vy = sin(curr_ang) * speed;
+            }
+            
+            // Add smoke trail
+            if (rand()%100 < 30 && num_particles < 700) {
+                Particle* pt = &particles[num_particles++];
+                pt->x = bullets[i].x; pt->y = bullets[i].y;
+                pt->vx = 0; pt->vy = 0; pt->color = RGB(168, 85, 247);
+                pt->life = 15; pt->max_life = 15; pt->active = true; pt->type = 1; pt->size = 3.0f;
+            }
+        }
+    
         if (bullets[i].life <= 0) bullets[i].active = false;
 
         if (bullets[i].x < 0) bullets[i].x = WIDTH;
@@ -988,6 +1075,13 @@ void Update() {
         ufos[i].x += ufos[i].vx;
         ufos[i].y += ufos[i].vy;
         ufos[i].anim_frame += 0.15f;
+        if (ufos[i].type == 1 && ufos[i].shield_hp < 10) {
+            ufos[i].shield_recharge_timer++;
+            if (ufos[i].shield_recharge_timer > 120) {
+                ufos[i].shield_hp++;
+                ufos[i].shield_recharge_timer = 110;
+            }
+        }
         if (ufos[i].type == 2) ufos[i].shield_angle += 0.03f;
 
         if (ufos[i].y < 0) ufos[i].y = HEIGHT;
@@ -1063,7 +1157,8 @@ void Update() {
             if (dist < ship.radius + 15) {
                 powerups[i].active = false;
                 PlaySoundEffect(4);
-                if (powerups[i].type == 1) { shield_timer = 60 * 10; ship.shield_cooldown = 0; }
+                if (powerups[i].type == 1) { shield_timer = 60 * 10; ship.shield_cooldown = 0;
+    ship.missile_cooldown = 0; }
                 else if (powerups[i].type == 2) spread_timer = 60 * 10;
                 else if (powerups[i].type == 3) { TriggerEmp(); ship.emp_cooldown = 0; }
                 else if (powerups[i].type == 4) { laser_timer = 60 * 10; ship.laser_cooldown = 0; }
@@ -1359,7 +1454,14 @@ void Draw(HDC hdc) {
             SelectObject(hdc, domeB);
             Pie(hdc, (int)(ufos[i].x - r * 0.6f), (int)(ufos[i].y - r * 0.8f), (int)(ufos[i].x + r * 0.6f), (int)(ufos[i].y + r * 0.2f), (int)(ufos[i].x + r * 0.6f), (int)ufos[i].y, (int)(ufos[i].x - r * 0.6f), (int)ufos[i].y);
             DeleteObject(bossPen); DeleteObject(bossBrush); DeleteObject(domeB);
-
+            if (ufos[i].shield_hp > 0) {
+                HPEN csPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+                SelectObject(hdc, csPen);
+                SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Ellipse(hdc, (int)(ufos[i].x - r - 8), (int)(ufos[i].y - r - 8), (int)(ufos[i].x + r + 8), (int)(ufos[i].y + r + 8));
+                DeleteObject(csPen);
+            }
+    
             // Boss HP Bar
             HBRUSH hpBg = CreateSolidBrush(RGB(24, 24, 27));
             HBRUSH hpFg = CreateSolidBrush(RGB(34, 197, 94));
@@ -1392,6 +1494,12 @@ void Draw(HDC hdc) {
             SelectObject(hdc, ep); SelectObject(hdc, eb);
             Ellipse(hdc, (int)(bullets[i].x - 4), (int)(bullets[i].y - 4), (int)(bullets[i].x + 4), (int)(bullets[i].y + 4));
             DeleteObject(ep); DeleteObject(eb);
+        } else if (bullets[i].is_missile) {
+            HPEN mp = CreatePen(PS_SOLID, 2, RGB(217, 70, 239));
+            HBRUSH mb = CreateSolidBrush(RGB(253, 224, 71));
+            SelectObject(hdc, mp); SelectObject(hdc, mb);
+            Ellipse(hdc, (int)(bullets[i].x - 4), (int)(bullets[i].y - 4), (int)(bullets[i].x + 4), (int)(bullets[i].y + 4));
+            DeleteObject(mp); DeleteObject(mb);
         } else if (bullets[i].is_laser) {
             HPEN lp = CreatePen(PS_SOLID, 4, RGB(239, 68, 68));
             SelectObject(hdc, lp);
@@ -1476,26 +1584,41 @@ void Draw(HDC hdc) {
     }
     TextOutA(hdc, 10, 10, scoreStr, strlen(scoreStr));
 
+    
+    if (is_space_storm) {
+        SetTextColor(hdc, RGB(56, 189, 248));
+        TextOutA(hdc, WIDTH / 2 - 80, 40, "SECTOR SPACE STORM", 18);
+    } else if (is_asteroid_belt) {
+        SetTextColor(hdc, RGB(168, 85, 247));
+        TextOutA(hdc, WIDTH / 2 - 90, 40, "DENSE ASTEROID BELT", 19);
+    }
+    
     // Active Skills Bar HUD
     if (ship.active) {
         char skillsStr[160];
         char empBuf[20], laserBuf[20], warpBuf[20], shieldBuf[20];
         
+        
         if (ship.emp_cooldown == 0) sprintf(empBuf, "[E] EMP: READY");
-        else sprintf(empBuf, "[E] EMP: %ds", ship.emp_cooldown / 60 + 1);
+        else sprintf(empBuf, "[E]:%ds", ship.emp_cooldown / 60 + 1);
 
         if (ship.laser_cooldown == 0) sprintf(laserBuf, "[L] Laser: READY");
-        else sprintf(laserBuf, "[L] Laser: %ds", ship.laser_cooldown / 60 + 1);
+        else sprintf(laserBuf, "[L]:%ds", ship.laser_cooldown / 60 + 1);
+        
+        char misBuf[20];
+        if (ship.missile_cooldown == 0) sprintf(misBuf, "[M] Missile: READY");
+        else sprintf(misBuf, "[M]:%ds", ship.missile_cooldown / 60 + 1);
 
-        if (ship.hyperdrive_cooldown == 0) sprintf(warpBuf, "[H/C/Shift] Warp: READY");
-        else sprintf(warpBuf, "[H] Warp: %ds", ship.hyperdrive_cooldown / 60 + 1);
+        if (ship.hyperdrive_cooldown == 0) sprintf(warpBuf, "[H] Warp: READY");
+        else sprintf(warpBuf, "[H]:%ds", ship.hyperdrive_cooldown / 60 + 1);
 
         if (ship.shield_cooldown == 0) sprintf(shieldBuf, "[S] Shield: READY");
-        else sprintf(shieldBuf, "[S] Shield: %ds", ship.shield_cooldown / 60 + 1);
+        else sprintf(shieldBuf, "[S]:%ds", ship.shield_cooldown / 60 + 1);
 
-        sprintf(skillsStr, "%s   %s   %s   %s", empBuf, laserBuf, warpBuf, shieldBuf);
+        sprintf(skillsStr, "%s  %s  %s  %s  %s", empBuf, laserBuf, misBuf, warpBuf, shieldBuf);
         SetTextColor(hdc, RGB(250, 204, 21));
         TextOutA(hdc, 10, 32, skillsStr, strlen(skillsStr));
+
     }
 
     // Draw Game Over / Menu / Stats / Victory

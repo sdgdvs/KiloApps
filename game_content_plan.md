@@ -126,7 +126,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
 | KSpace     | Tier 1 | Loop 7 done (20 waves, bosses, 4 skills) | Loop 8: New enemy formations, weapon upgrades, scoring combos |
-| KAsteroids | Tier 1 | Loop 7 done (20 sectors, Mothership boss) | Loop 8: Asteroid belt environments, weapon variety, shield mechanics |
 | KMaze      | Tier 1 | Loop 7 done (35 stages, Minotaur boss, fog) | Loop 8: New maze themes, puzzle rooms, NPC encounters, deeper item system |
 | KPac       | Tier 1 | Loop 7 done (20 mazes, 5 ghosts, Ghost King) | Loop 8: New maze hazards, ghost behaviors, scoring variety |
 | KBreakout  | Tier 1 | Loop 7 done (20 stages, Boss Fortress) | Loop 8: New brick types, boss variety, level editor concepts |
@@ -135,6 +134,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KQuest     | Tier 1 | Loop 7 done (Tavern, side quests, gear upgrades, 17 biomes) | Loop 8: Job classes, magic system overhaul, companion allies |
 | KStarship  | Tier 1 | Loop 7 done (Crew, trade routes, narrative events, tech tree) | Loop 8: Fleet battles, alien diplomacy, deep space anomalies |
 | KAlchemy   | Tier 1 | Creator building (Phase 12/14) | Wait for Creator to finish — then Loop 1 content pass |
+| KAsteroids | Tier 1 | Loop 8 done (Asteroid belt, missile weapon, cruiser shields) | Loop 9: Branching sector paths, escort missions, new hazards |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -166,6 +166,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KGo (Balance audit complete: Enhanced AI defensive evaluation, adjusted handicap system, fixed Tsumego puzzle layouts in both EXE and HTML)
 - [x] KChess (Balance audit complete: Adjusted AI difficulty curve, implemented endgame awareness in Piece-Square Tables, made Easy beatable and Hard a 2-ply Minimax for both EXE and HTML)
 - [x] KRogue (Expanded to 40 levels, added Abyss biome, new enemies (Void Walker, Abyss Fiend, Deep Worm, Abyssal Overlord), Crafting Anvil, and Quest NPCs to both EXE and HTML)
+- [x] KAsteroids (Added Dense Asteroid Belt environments to Sectors 8 and 13, Missile Swarm active weapon [M], and regenerating Deflector Shields for Cruiser UFOs to both EXE and HTML)
 
 **Loop 7**
 - [x] KStarship (Implemented Crew Management, Deep Space Trade Routes, Sector Campaign Narrative Events, and the Upgrade Bay Tech Tree to both EXE and HTML)

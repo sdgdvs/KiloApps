@@ -115,11 +115,13 @@
             <div class="skills-bar">
                 <button id="btnEmp" class="skill-btn" onclick="triggerEmp()">[E] EMP</button>
                 <button id="btnLaser" class="skill-btn" onclick="triggerLaser()">[L] Laser</button>
+                <button id="btnMissile" class="skill-btn" onclick="triggerMissile()">[M] Missile</button>
                 <button id="btnWarp" class="skill-btn" onclick="triggerHyperdrive()">[H] Warp</button>
                 <button id="btnShield" class="skill-btn" onclick="triggerShield()">[S] Shield</button>
             </div>
         </div>
         <div id="stormBanner">SECTOR SPACE STORM</div>
+        <div id="beltBanner" style="display:none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); color: #c084fc; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(192, 132, 252, 0.8); pointer-events: none; z-index: 10;">DENSE ASTEROID BELT</div>
         <div id="gameOver">
             <h2 id="gameOverTitle">K-ASTEROIDS</h2>
             <div id="menuContent">
@@ -134,7 +136,7 @@
             <div id="helpContent" style="display: none;">
                 <h3 style="color: #38bdf8; margin-top: 0; margin-bottom: 12px; font-size: 22px;">How to Play</h3>
                 <p>Arrows: Rotate & Thrust | Space: Shoot</p>
-                <p style="color: #facc15;">Active Skills: [E]mp, [L]aser, [H]yperdrive, [S]hield</p>
+                <p style="color: #facc15;">Active Skills: [E]mp, [L]aser, [M]issile, [H]yperdrive, [S]hield</p>
                 <p style="margin-top: 8px; font-size: 13px; color: #e4e4e7;">Pickups: [S]hield, [P]spread, [E]mp, [L]aser</p>
                 <p style="margin-top: 15px; color: #facc15;">[B] Back to Menu</p>
             </div>
@@ -157,9 +159,11 @@
         const gameOverDiv = document.getElementById('gameOver');
         const highScoreSpan = document.getElementById('highScoreVal');
         const stormBanner = document.getElementById('stormBanner');
+        const beltBanner = document.getElementById('beltBanner');
 
         const btnEmp = document.getElementById('btnEmp');
         const btnLaser = document.getElementById('btnLaser');
+        const btnMissile = document.getElementById('btnMissile');
         const btnWarp = document.getElementById('btnWarp');
         const btnShield = document.getElementById('btnShield');
 
@@ -338,6 +342,7 @@
                 this.hyperdriveCooldown = 0;
                 this.empCooldown = 0;
                 this.laserCooldown = 0;
+                this.missileCooldown = 0;
                 this.shieldCooldown = 0;
                 this.invincibleTimer = 0;
                 this.animFrame = 0;
@@ -352,6 +357,7 @@
                 if (this.hyperdriveCooldown > 0) this.hyperdriveCooldown--;
                 if (this.empCooldown > 0) this.empCooldown--;
                 if (this.laserCooldown > 0) this.laserCooldown--;
+                if (this.missileCooldown > 0) this.missileCooldown--;
                 if (this.shieldCooldown > 0) this.shieldCooldown--;
                 if (this.invincibleTimer > 0) this.invincibleTimer--;
                 
@@ -369,6 +375,7 @@
                 if (keys['KeyE'] && !prevKeys['KeyE'] && this.empCooldown === 0) triggerEmp();
                 if (keys['KeyL'] && !prevKeys['KeyL'] && this.laserCooldown === 0) triggerLaser();
                 if (keys['KeyS'] && !prevKeys['KeyS'] && this.shieldCooldown === 0) triggerShield();
+                if (keys['KeyM'] && !prevKeys['KeyM'] && this.missileCooldown === 0) triggerMissile();
                 if ((keys['KeyH'] && !prevKeys['KeyH']) || (keys['KeyC'] && !prevKeys['KeyC']) || (keys['ShiftLeft'] && !prevKeys['ShiftLeft'])) triggerHyperdrive();
 
                 // Space Storm Wind Drift
@@ -384,6 +391,41 @@
                 this.vx *= 0.99;
                 this.vy *= 0.99;
 
+                
+                if (this.isMissile && !this.isEnemy) {
+                    let bestDist = 400;
+                    let target = null;
+                    for(let u of ufos) {
+                        if(u.active) {
+                            let d = Math.hypot(this.x - u.x, this.y - u.y);
+                            if(d < bestDist) { bestDist = d; target = u; }
+                        }
+                    }
+                    if (!target) {
+                        for(let a of asteroids) {
+                            if(a.active) {
+                                let d = Math.hypot(this.x - a.x, this.y - a.y);
+                                if(d < bestDist) { bestDist = d; target = a; }
+                            }
+                        }
+                    }
+                    if (target) {
+                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
+                        let speed = Math.hypot(this.vx, this.vy);
+                        let currAng = Math.atan2(this.vy, this.vx);
+                        let diff = ang - currAng;
+                        while(diff > Math.PI) diff -= Math.PI*2;
+                        while(diff < -Math.PI) diff += Math.PI*2;
+                        currAng += diff * 0.1;
+                        this.vx = Math.cos(currAng) * speed;
+                        this.vy = Math.sin(currAng) * speed;
+                    }
+                    if (Math.random() < 0.3) {
+                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
+                        particles[particles.length-1].size = 3;
+                    }
+                }
+    
                 this.x += this.vx;
                 this.y += this.vy;
 
@@ -535,6 +577,41 @@
                 this.active = true;
             }
             update() {
+                
+                if (this.isMissile && !this.isEnemy) {
+                    let bestDist = 400;
+                    let target = null;
+                    for(let u of ufos) {
+                        if(u.active) {
+                            let d = Math.hypot(this.x - u.x, this.y - u.y);
+                            if(d < bestDist) { bestDist = d; target = u; }
+                        }
+                    }
+                    if (!target) {
+                        for(let a of asteroids) {
+                            if(a.active) {
+                                let d = Math.hypot(this.x - a.x, this.y - a.y);
+                                if(d < bestDist) { bestDist = d; target = a; }
+                            }
+                        }
+                    }
+                    if (target) {
+                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
+                        let speed = Math.hypot(this.vx, this.vy);
+                        let currAng = Math.atan2(this.vy, this.vx);
+                        let diff = ang - currAng;
+                        while(diff > Math.PI) diff -= Math.PI*2;
+                        while(diff < -Math.PI) diff += Math.PI*2;
+                        currAng += diff * 0.1;
+                        this.vx = Math.cos(currAng) * speed;
+                        this.vy = Math.sin(currAng) * speed;
+                    }
+                    if (Math.random() < 0.3) {
+                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
+                        particles[particles.length-1].size = 3;
+                    }
+                }
+    
                 this.x += this.vx;
                 this.y += this.vy;
                 this.rot += this.rotSpeed;
@@ -605,7 +682,7 @@
         }
 
         class Bullet {
-            constructor(x, y, angle, isEnemy = false, isLaser = false) {
+            constructor(x, y, angle, isEnemy = false, isLaser = false, isMissile = false) {
                 this.x = x;
                 this.y = y;
                 this.vx = Math.cos(angle) * 9.0;
@@ -614,12 +691,48 @@
                 this.active = true;
                 this.isEnemy = isEnemy;
                 this.isLaser = isLaser;
+                this.isMissile = isMissile;
                 this.trail = [];
             }
             update() {
                 this.trail.push({x: this.x, y: this.y});
                 if (this.trail.length > 5) this.trail.shift();
 
+                
+                if (this.isMissile && !this.isEnemy) {
+                    let bestDist = 400;
+                    let target = null;
+                    for(let u of ufos) {
+                        if(u.active) {
+                            let d = Math.hypot(this.x - u.x, this.y - u.y);
+                            if(d < bestDist) { bestDist = d; target = u; }
+                        }
+                    }
+                    if (!target) {
+                        for(let a of asteroids) {
+                            if(a.active) {
+                                let d = Math.hypot(this.x - a.x, this.y - a.y);
+                                if(d < bestDist) { bestDist = d; target = a; }
+                            }
+                        }
+                    }
+                    if (target) {
+                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
+                        let speed = Math.hypot(this.vx, this.vy);
+                        let currAng = Math.atan2(this.vy, this.vx);
+                        let diff = ang - currAng;
+                        while(diff > Math.PI) diff -= Math.PI*2;
+                        while(diff < -Math.PI) diff += Math.PI*2;
+                        currAng += diff * 0.1;
+                        this.vx = Math.cos(currAng) * speed;
+                        this.vy = Math.sin(currAng) * speed;
+                    }
+                    if (Math.random() < 0.3) {
+                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
+                        particles[particles.length-1].size = 3;
+                    }
+                }
+    
                 this.x += this.vx;
                 this.y += this.vy;
                 this.life--;
@@ -639,6 +752,16 @@
                     ctx.fillStyle = grad;
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                } else if (this.isMissile) {
+                    ctx.save();
+                    let bGrad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 4);
+                    bGrad.addColorStop(0, '#fde047');
+                    bGrad.addColorStop(1, '#d946ef');
+                    ctx.fillStyle = bGrad;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
                 } else if (this.isLaser) {
@@ -688,6 +811,41 @@
                 this.size = (type === 'smoke') ? 4 : (type === 'storm' ? 2 : 2.5);
             }
             update() {
+                
+                if (this.isMissile && !this.isEnemy) {
+                    let bestDist = 400;
+                    let target = null;
+                    for(let u of ufos) {
+                        if(u.active) {
+                            let d = Math.hypot(this.x - u.x, this.y - u.y);
+                            if(d < bestDist) { bestDist = d; target = u; }
+                        }
+                    }
+                    if (!target) {
+                        for(let a of asteroids) {
+                            if(a.active) {
+                                let d = Math.hypot(this.x - a.x, this.y - a.y);
+                                if(d < bestDist) { bestDist = d; target = a; }
+                            }
+                        }
+                    }
+                    if (target) {
+                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
+                        let speed = Math.hypot(this.vx, this.vy);
+                        let currAng = Math.atan2(this.vy, this.vx);
+                        let diff = ang - currAng;
+                        while(diff > Math.PI) diff -= Math.PI*2;
+                        while(diff < -Math.PI) diff += Math.PI*2;
+                        currAng += diff * 0.1;
+                        this.vx = Math.cos(currAng) * speed;
+                        this.vy = Math.sin(currAng) * speed;
+                    }
+                    if (Math.random() < 0.3) {
+                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
+                        particles[particles.length-1].size = 3;
+                    }
+                }
+    
                 this.x += this.vx; this.y += this.vy;
                 if (this.type === 'smoke') {
                     this.size += 0.15;
@@ -745,6 +903,8 @@
                 this.shootTimer = 0;
                 this.freezeTimer = 0;
                 this.shieldAngle = 0;
+                this.shieldHp = (type === 1) ? 10 : 0;
+                this.shieldRechargeTimer = 0;
                 this.maxHp = hp;
                 this.hp = hp;
                 this.animFrame = Math.random() * 100;
@@ -754,9 +914,51 @@
                     this.freezeTimer--;
                     return; // Frozen by EMP!
                 }
+                
+                if (this.isMissile && !this.isEnemy) {
+                    let bestDist = 400;
+                    let target = null;
+                    for(let u of ufos) {
+                        if(u.active) {
+                            let d = Math.hypot(this.x - u.x, this.y - u.y);
+                            if(d < bestDist) { bestDist = d; target = u; }
+                        }
+                    }
+                    if (!target) {
+                        for(let a of asteroids) {
+                            if(a.active) {
+                                let d = Math.hypot(this.x - a.x, this.y - a.y);
+                                if(d < bestDist) { bestDist = d; target = a; }
+                            }
+                        }
+                    }
+                    if (target) {
+                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
+                        let speed = Math.hypot(this.vx, this.vy);
+                        let currAng = Math.atan2(this.vy, this.vx);
+                        let diff = ang - currAng;
+                        while(diff > Math.PI) diff -= Math.PI*2;
+                        while(diff < -Math.PI) diff += Math.PI*2;
+                        currAng += diff * 0.1;
+                        this.vx = Math.cos(currAng) * speed;
+                        this.vy = Math.sin(currAng) * speed;
+                    }
+                    if (Math.random() < 0.3) {
+                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
+                        particles[particles.length-1].size = 3;
+                    }
+                }
+    
                 this.x += this.vx;
                 this.y += this.vy;
                 this.animFrame += 0.15;
+                if (this.type === 1 && this.shieldHp < 10) {
+                    this.shieldRechargeTimer++;
+                    if (this.shieldRechargeTimer > 120) {
+                        this.shieldHp++;
+                        this.shieldRechargeTimer = 110;
+                    }
+                }
                 if (this.type === 2) this.shieldAngle += 0.03;
                 
                 if (this.y < 0) this.y = canvas.height;
@@ -864,6 +1066,13 @@
                     ctx.beginPath();
                     ctx.ellipse(0, 0, r, r * 0.35, 0, 0, Math.PI * 2);
                     ctx.fill(); ctx.stroke();
+                    if (this.shieldHp > 0) {
+                        ctx.strokeStyle = '#38bdf8';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, r + 8, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
 
                     let dGrad = ctx.createRadialGradient(0, -6, 1, 0, -6, r * 0.6);
                     dGrad.addColorStop(0, (this.freezeTimer > 0 ? '#38bdf8' : '#f0abfc'));
@@ -940,6 +1149,41 @@
                 this.animFrame = Math.random() * 100;
             }
             update() {
+                
+                if (this.isMissile && !this.isEnemy) {
+                    let bestDist = 400;
+                    let target = null;
+                    for(let u of ufos) {
+                        if(u.active) {
+                            let d = Math.hypot(this.x - u.x, this.y - u.y);
+                            if(d < bestDist) { bestDist = d; target = u; }
+                        }
+                    }
+                    if (!target) {
+                        for(let a of asteroids) {
+                            if(a.active) {
+                                let d = Math.hypot(this.x - a.x, this.y - a.y);
+                                if(d < bestDist) { bestDist = d; target = a; }
+                            }
+                        }
+                    }
+                    if (target) {
+                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
+                        let speed = Math.hypot(this.vx, this.vy);
+                        let currAng = Math.atan2(this.vy, this.vx);
+                        let diff = ang - currAng;
+                        while(diff > Math.PI) diff -= Math.PI*2;
+                        while(diff < -Math.PI) diff += Math.PI*2;
+                        currAng += diff * 0.1;
+                        this.vx = Math.cos(currAng) * speed;
+                        this.vy = Math.sin(currAng) * speed;
+                    }
+                    if (Math.random() < 0.3) {
+                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
+                        particles[particles.length-1].size = 3;
+                    }
+                }
+    
                 this.x += this.vx; this.y += this.vy;
                 this.animFrame += 0.1;
                 this.life--;
@@ -1003,6 +1247,41 @@
                     this.vx = (this.vx / speed) * 2.8;
                     this.vy = (this.vy / speed) * 2.8;
                 }
+                
+                if (this.isMissile && !this.isEnemy) {
+                    let bestDist = 400;
+                    let target = null;
+                    for(let u of ufos) {
+                        if(u.active) {
+                            let d = Math.hypot(this.x - u.x, this.y - u.y);
+                            if(d < bestDist) { bestDist = d; target = u; }
+                        }
+                    }
+                    if (!target) {
+                        for(let a of asteroids) {
+                            if(a.active) {
+                                let d = Math.hypot(this.x - a.x, this.y - a.y);
+                                if(d < bestDist) { bestDist = d; target = a; }
+                            }
+                        }
+                    }
+                    if (target) {
+                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
+                        let speed = Math.hypot(this.vx, this.vy);
+                        let currAng = Math.atan2(this.vy, this.vx);
+                        let diff = ang - currAng;
+                        while(diff > Math.PI) diff -= Math.PI*2;
+                        while(diff < -Math.PI) diff += Math.PI*2;
+                        currAng += diff * 0.1;
+                        this.vx = Math.cos(currAng) * speed;
+                        this.vy = Math.sin(currAng) * speed;
+                    }
+                    if (Math.random() < 0.3) {
+                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
+                        particles[particles.length-1].size = 3;
+                    }
+                }
+    
                 this.x += this.vx; this.y += this.vy;
                 if (this.x < 0) this.x = canvas.width;
                 if (this.x > canvas.width) this.x = 0;
@@ -1090,11 +1369,14 @@
             mines = [];
             isSpaceStorm = false;
             stormBanner.style.display = 'none';
+            beltBanner.style.display = 'none';
 
             if (gameMode === 3) { // 20-Sector Campaign
                 if ([4, 6, 9, 12, 14, 17, 19].includes(wave)) {
                     isSpaceStorm = true;
                     stormBanner.style.display = 'block';
+                } else if ([8, 13].includes(wave)) {
+                    beltBanner.style.display = 'block';
                 }
 
                 if (wave === 20) {
@@ -1105,6 +1387,16 @@
                     let hp = (wave === 15) ? 30 : (12 + wave * 2);
                     ufos.push(new Ufo(1, hp));
                     spawnAsteroids(2 + Math.floor(wave / 3), Math.floor(wave / 4));
+                } else if ([8, 13].includes(wave)) {
+                    spawnAsteroids(18 + wave, 0);
+                    for (let a of asteroids) {
+                        if (a.level === 3) {
+                            a.level = Math.floor(Math.random()*2) + 1;
+                            a.radius = (a.level === 2) ? 20 : 10;
+                            a.maxHp = 1;
+                            a.hp = 1;
+                        }
+                    }
                 } else if ([7, 11, 16, 18].includes(wave)) {
                     let count = (wave >= 16) ? 5 : 3;
                     spawnHunterSquadron(count);
@@ -1124,6 +1416,17 @@
             }
         }
 
+        
+        function triggerMissile() {
+            if (!ship.active || ship.missileCooldown > 0) return;
+            ship.missileCooldown = 900; // 15s CD
+            playSound('laser');
+            for(let m=0; m<5; m++) {
+                let ang = ship.angle + (Math.random() - 0.5) * 2;
+                bullets.push(new Bullet(ship.x + Math.cos(ship.angle)*15, ship.y + Math.sin(ship.angle)*15, ang, false, false, true));
+            }
+        }
+    
         function triggerEmp() {
             if (!ship.active || ship.empCooldown > 0) return;
             ship.empCooldown = 900; // 15s CD
@@ -1299,6 +1602,15 @@
                         let dist = Math.hypot(b.x - u.x, b.y - u.y);
                         if (dist < u.radius) {
                             if (!b.isLaser) b.active = false;
+                            
+                            if (u.type === 1 && u.shieldHp > 0) {
+                                u.shieldHp--;
+                                u.shieldRechargeTimer = 0;
+                                createExplosion(b.x, b.y, '#38bdf8', 8, 15);
+                                playSound('laser');
+                                break;
+                            }
+
                             u.hp--;
                             stats.shotsHit++;
                             currentShotsHit++;
@@ -1456,6 +1768,9 @@
 
                 btnLaser.className = 'skill-btn' + (ship.laserCooldown > 0 ? ' cooldown' : '');
                 btnLaser.innerText = ship.laserCooldown > 0 ? `[L] Laser ${Math.ceil(ship.laserCooldown / 60)}s` : '[L] Laser';
+
+                btnMissile.className = 'skill-btn' + (ship.missileCooldown > 0 ? ' cooldown' : '');
+                btnMissile.innerText = ship.missileCooldown > 0 ? `[M] Missile ${Math.ceil(ship.missileCooldown / 60)}s` : '[M] Missile';
 
                 btnWarp.className = 'skill-btn' + (ship.hyperdriveCooldown > 0 ? ' cooldown' : '');
                 btnWarp.innerText = ship.hyperdriveCooldown > 0 ? `[H] Warp ${Math.ceil(ship.hyperdriveCooldown / 60)}s` : '[H] Warp';
