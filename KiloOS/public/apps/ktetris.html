@@ -9,7 +9,7 @@
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="370" height="490"></canvas>
+<canvas id="gameCanvas" width="370" height="510"></canvas>
 <script>
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(freq, type, dur) {
@@ -29,6 +29,12 @@
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 370 * dpr;
+  canvas.height = 510 * dpr;
+  canvas.style.width = '370px';
+  canvas.style.height = '510px';
+  ctx.scale(dpr, dpr);
   const CELL = 20;
   const W = 10, H = 20;
   const BOARD_W = W * CELL; // 200px
@@ -73,7 +79,7 @@
 
   let grid = Array(H).fill().map(() => Array(W).fill(0));
   let pc, rot, cx, cy, isBomb = false;
-  let gameOver = false, isPaused = false, startScreen = true, winScreen = false, showLeaderboard = false;
+  let gameOver = false, isPaused = false, startScreen = true, winScreen = false, showLeaderboard = false, showHelp = false;
   let score = 0, lines = 0, level = 1, combo = 0, piecesPlaced = 0;
   let gameMode = MODE_MARATHON, campaignLevel = 1;
   let statLines = [0, 0, 0, 0];
@@ -508,7 +514,7 @@
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
-      if (!gameOver && !isPaused && !startScreen && !winScreen && !showLeaderboard) {
+      if (!gameOver && !isPaused && !startScreen && !winScreen && !showLeaderboard && !showHelp) {
           if (mx >= SIDEBAR_X && mx <= SIDEBAR_X + 140) {
               if (my >= 380 && my <= 400) useRowNuke();
               else if (my >= 400 && my <= 420) usePieceSwap();
@@ -522,6 +528,13 @@
           e.preventDefault();
       }
 
+      if (showHelp) {
+          if (e.key.toLowerCase() === 'h' || e.key === 'Escape' || e.key === 'Enter') {
+              showHelp = false;
+          }
+          return;
+      }
+
       if (startScreen) {
           if (e.key === '1') { gameMode = MODE_MARATHON; startScreen = false; score = 0; init(); return; }
           if (e.key === '2') { gameMode = MODE_SPRINT;   startScreen = false; score = 0; init(); return; }
@@ -529,6 +542,7 @@
           if (e.key === '4') { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; init(); return; }
           if (e.key === '5' || e.key.toLowerCase() === 'l') { showLeaderboard = true; startScreen = false; return; }
           if (e.key.toLowerCase() === 'v' || e.key.toLowerCase() === 'r') { loadGameState(); return; }
+          if (e.key.toLowerCase() === 'h') { showHelp = true; return; }
           return;
       }
 
@@ -544,6 +558,7 @@
       if (gameOver || winScreen) return;
 
       if (e.key.toLowerCase() === 'p') { isPaused = !isPaused; return; }
+      if (e.key.toLowerCase() === 'h') { showHelp = true; return; }
       if (e.key.toLowerCase() === 'v') { saveGameState(); return; }
       if (e.key.toLowerCase() === 'b') { useRowNuke(); return; }
       if (e.key.toLowerCase() === 's') { usePieceSwap(); return; }
@@ -694,7 +709,7 @@
 
   function draw() {
       ctx.fillStyle = '#121218';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, 370, 510);
 
       let offX = 0, offY = 0;
       if (shakeTimer > 0) {
@@ -932,28 +947,59 @@
       ctx.font = '10px system-ui, monospace';
       ctx.fillText('[P] Pause | [V] Save', SIDEBAR_X, 452);
       ctx.fillText('[Space] Hard Drop', SIDEBAR_X, 468);
+      ctx.fillText('[H] Help / Controls', SIDEBAR_X, 484);
 
       // Screens & Overlays
-      if (showLeaderboard) {
+      if (showHelp) {
+          ctx.fillStyle = 'rgba(10, 11, 16, 0.94)';
+          ctx.fillRect(0, 0, 370, 510);
+          ctx.fillStyle = '#00ffff';
+          ctx.font = 'bold 20px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('CONTROLS & HELP', 370 / 2, 45);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '13px system-ui, monospace';
+          ctx.textAlign = 'left';
+          let hints = [
+              "Left/Right : Move Piece",
+              "Up Arrow   : Rotate Piece",
+              "Down Arrow : Soft Drop",
+              "Space      : Hard Drop",
+              "C or Shift : Hold Piece",
+              "B          : Use Nuke Skill",
+              "S          : Use Swap Skill",
+              "F          : Use Freeze Skill",
+              "P          : Pause Game",
+              "V          : Save Game",
+              "H          : Toggle Help"
+          ];
+          hints.forEach((h, idx) => {
+              ctx.fillText(h, 60, 90 + idx * 25);
+          });
+          ctx.fillStyle = '#666677';
+          ctx.textAlign = 'center';
+          ctx.fillText('Press H, ESC, or ENTER to return', 370 / 2, 480);
+          ctx.textAlign = 'left';
+      } else if (showLeaderboard) {
           ctx.fillStyle = 'rgba(10, 11, 16, 0.92)';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
           ctx.fillStyle = '#00ffff';
           ctx.font = 'bold 18px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('LEADERBOARD', canvas.width / 2, 45);
+          ctx.fillText('LEADERBOARD', 370 / 2, 45);
 
           ctx.fillStyle = '#8888aa';
           ctx.font = '11px system-ui, monospace';
-          ctx.fillText('RANK   SCORE   MODE     TIME', canvas.width / 2, 75);
+          ctx.fillText('RANK   SCORE   MODE     TIME', 370 / 2, 75);
 
           ctx.strokeStyle = '#282a36';
-          ctx.beginPath(); ctx.moveTo(20, 85); ctx.lineTo(canvas.width - 20, 85); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(20, 85); ctx.lineTo(370 - 20, 85); ctx.stroke();
 
           if (leaderboard.length === 0) {
               ctx.fillStyle = '#666677';
               ctx.font = '12px system-ui, sans-serif';
-              ctx.fillText('No scores recorded yet!', canvas.width / 2, 140);
+              ctx.fillText('No scores recorded yet!', 370 / 2, 140);
           } else {
               leaderboard.forEach((entry, idx) => {
                   let yPos = 115 + idx * 35;
@@ -972,7 +1018,7 @@
           ctx.fillStyle = '#aaaaaa';
           ctx.font = '12px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('Press ENTER or ESC to return', canvas.width / 2, 430);
+          ctx.fillText('Press ENTER or ESC to return', 370 / 2, 480);
           ctx.textAlign = 'left';
       } else if (gameOver) {
           ctx.fillStyle = 'rgba(0,0,0,0.78)';
@@ -995,16 +1041,16 @@
           ctx.fillText('PRESS ENTER FOR MENU', 20, 230);
       } else if (startScreen) {
           ctx.fillStyle = 'rgba(10, 11, 16, 0.94)';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillRect(0, 0, 370, 510);
 
           ctx.fillStyle = '#00ffff';
           ctx.font = 'bold 24px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('K-TETRIS', canvas.width / 2, 50);
+          ctx.fillText('K-TETRIS', 370 / 2, 50);
 
           ctx.fillStyle = '#8888aa';
           ctx.font = '12px system-ui, sans-serif';
-          ctx.fillText('Select Game Mode:', canvas.width / 2, 85);
+          ctx.fillText('Select Game Mode:', 370 / 2, 85);
 
           let options = [
               "1. Marathon (Endless)",
@@ -1023,16 +1069,20 @@
           ctx.fillStyle = '#00ff66';
           ctx.fillText('5 / [L]. High Scores', 70, 125 + 4 * 32);
 
+          let yOffset = 125 + 5 * 32;
+          ctx.fillStyle = '#ffaa00';
+          ctx.fillText('[H]. Help & Controls', 70, yOffset);
+
           if (hasSavedGame()) {
               ctx.fillStyle = '#ff00ff';
               ctx.font = 'bold 13px system-ui, monospace';
-              ctx.fillText('[V]. Resume Saved Game', 70, 125 + 5 * 32 + 5);
+              ctx.fillText('[V]. Resume Saved Game', 70, yOffset + 32);
           }
 
           ctx.fillStyle = '#666677';
           ctx.font = '11px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('Use number keys (1-5), L, or V', canvas.width / 2, 430);
+          ctx.fillText('Press H for Help, L for Leaderboard', 370 / 2, 480);
           ctx.textAlign = 'left';
       } else if (isPaused) {
           ctx.fillStyle = 'rgba(0,0,0,0.75)';
@@ -1051,7 +1101,7 @@
       const deltaTime = time - lastTime;
       lastTime = time;
 
-      if (!isPaused && !gameOver && !startScreen && !winScreen && !showLeaderboard) {
+      if (!isPaused && !gameOver && !startScreen && !winScreen && !showLeaderboard && !showHelp) {
           modeTimerMs += deltaTime;
 
           if (freezeTimerMs > 0) {

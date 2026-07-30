@@ -66,6 +66,7 @@ int is_paused = 0;
 int start_screen = 1;
 int win_screen = 0;
 int show_leaderboard = 0;
+int show_help = 0;
 
 int game_mode = MODE_MARATHON;
 int campaign_level = 1;
@@ -916,7 +917,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_TIMER:
-            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard) {
+            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help) {
                 mode_timer_ms += 20;
 
                 if (freeze_timer_ms > 0) {
@@ -1000,7 +1001,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN: {
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
-            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard) {
+            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help) {
                 int sideX = W * CELL_SIZE + 15;
                 if (mx >= sideX && mx <= sideX + 140) {
                     if (my >= 350 && my <= 372) { UseRowNuke(); InvalidateRect(hwnd, NULL, FALSE); }
@@ -1012,6 +1013,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN:
+            if (show_help) {
+                if (wParam == 'H' || wParam == VK_ESCAPE || wParam == VK_RETURN) {
+                    show_help = 0;
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+
             if (start_screen) {
                 if (wParam == '1') { game_mode = MODE_MARATHON; start_screen = 0; score = 0; InitGame(); }
                 if (wParam == '2') { game_mode = MODE_SPRINT;   start_screen = 0; score = 0; InitGame(); }
@@ -1019,6 +1028,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == '4') { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); }
                 if (wParam == '5' || wParam == 'L') { show_leaderboard = 1; start_screen = 0; }
                 if (wParam == 'V' || wParam == 'R') { LoadGameStateFromFile(); }
+                if (wParam == 'H') { show_help = 1; }
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
@@ -1045,6 +1055,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (!game_over && !win_screen) {
                 if (wParam == 'P') {
                     is_paused = !is_paused;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+                if (wParam == 'H') {
+                    show_help = 1;
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
@@ -1122,7 +1137,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             
             int total_w = W * CELL_SIZE + 170;
-            int total_h = H * CELL_SIZE + 90;
+            int total_h = H * CELL_SIZE + 110;
 
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, total_w, total_h);
@@ -1162,7 +1177,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             // Draw active & Ghost piece
-            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard) {
+            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help) {
                 unsigned int shape = tetrominos[current_piece][current_rot];
                 int draw_val = current_is_bomb ? 15 : (current_piece + 1);
                 
@@ -1227,6 +1242,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Draw Text Popups
             SetBkMode(memDC, TRANSPARENT);
+            HFONT hFontMain = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT hOldFont = (HFONT)SelectObject(memDC, hFontMain);
             for (int i = 0; i < num_popups; i++) {
                 SetTextColor(memDC, text_popups[i].color);
                 TextOutA(memDC, offX + (int)text_popups[i].x, offY + (int)text_popups[i].y, text_popups[i].text, lstrlenA(text_popups[i].text));
@@ -1369,11 +1387,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Hints
             SetTextColor(memDC, RGB(120, 120, 140));
+            SelectObject(memDC, hFontSmall);
             TextOutA(memDC, sideX, 442, "[P] Pause | [V] Save", 20);
             TextOutA(memDC, sideX, 458, "[Space] Hard Drop", 17);
+            TextOutA(memDC, sideX, 474, "[H] Help / Controls", 19);
 
             // Overlays & Screens
-            if (show_leaderboard) {
+            SelectObject(memDC, hFontMain);
+            if (show_help) {
+                HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16));
+                RECT ovRc = {0, 0, total_w, total_h};
+                FillRect(memDC, &ovRc, ov);
+                DeleteObject(ov);
+                
+                SetTextColor(memDC, RGB(0, 255, 255));
+                TextOutA(memDC, total_w / 2 - 60, 40, "CONTROLS & HELP", 15);
+                
+                SetTextColor(memDC, RGB(255, 255, 255));
+                const char* hints[] = {
+                    "Left/Right : Move Piece",
+                    "Up Arrow   : Rotate Piece",
+                    "Down Arrow : Soft Drop",
+                    "Space      : Hard Drop",
+                    "C or Shift : Hold Piece",
+                    "B          : Use Nuke Skill",
+                    "S          : Use Swap Skill",
+                    "F          : Use Freeze Skill",
+                    "P          : Pause Game",
+                    "V          : Save Game",
+                    "H          : Toggle Help"
+                };
+                for (int i = 0; i < 11; i++) {
+                    TextOutA(memDC, 60, 90 + i * 25, hints[i], lstrlenA(hints[i]));
+                }
+                
+                SetTextColor(memDC, RGB(100, 100, 120));
+                TextOutA(memDC, total_w / 2 - 110, 480, "Press H, ESC, or ENTER to return", 32);
+            } else if (show_leaderboard) {
                 HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16));
                 RECT ovRc = {0, 0, total_w, total_h};
                 FillRect(memDC, &ovRc, ov);
@@ -1447,18 +1497,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, RGB(0, 255, 102));
                 TextOutA(memDC, 45, 235, "5 / [L]. High Scores", 20);
 
+                SetTextColor(memDC, RGB(255, 170, 0));
+                TextOutA(memDC, 45, 265, "[H]. Help & Controls", 20);
+
                 if (HasSavedGame()) {
                     SetTextColor(memDC, RGB(255, 0, 255));
-                    TextOutA(memDC, 45, 270, "[V]. Resume Saved Game", 22);
+                    TextOutA(memDC, 45, 295, "[V]. Resume Saved Game", 22);
                 }
 
                 SetTextColor(memDC, RGB(100, 100, 120));
-                TextOutA(memDC, total_w / 2 - 80, 420, "Use keys (1-5), L, or V", 22);
+                TextOutA(memDC, total_w / 2 - 120, 480, "Press H for Help, L for Leaderboard", 35);
             } else if (is_paused) {
                 SetTextColor(memDC, RGB(255, 255, 0));
                 TextOutA(memDC, 55, H * CELL_SIZE / 2, "PAUSED", 6);
             }
             
+            SelectObject(memDC, hOldFont);
+            DeleteObject(hFontMain);
+            DeleteObject(hFontSmall);
+
             // Divider bar
             HPEN hPen = CreatePen(PS_SOLID, 2, RGB(40, 42, 54));
             HPEN hOldPen = (HPEN)SelectObject(memDC, hPen);
@@ -1494,8 +1551,10 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    int winWidth = W * CELL_SIZE + 170 + 16;
-    int winHeight = H * CELL_SIZE + 90;
+    RECT r = {0, 0, W * CELL_SIZE + 170, H * CELL_SIZE + 110};
+    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
+    int winWidth = r.right - r.left;
+    int winHeight = r.bottom - r.top;
 
     HWND hwnd = CreateWindowEx(0, "KTetrisApp", "KTetris", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
