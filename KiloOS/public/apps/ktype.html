@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KType Studio - Professional Typing Suite & Arcade</title>
+<script>
+  if (window.resizeTo) window.resizeTo(1000, 800);
+</script>
 <style>
   :root {
     --bg-dark: #0b0d14;
@@ -35,6 +38,9 @@
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Header / Nav */
@@ -525,6 +531,7 @@
   </nav>
 
   <div class="header-actions">
+    <button class="icon-btn" id="help-btn" title="Help (Press H)" aria-label="Help" onclick="toggleHelp()">❔</button>
     <button class="icon-btn" id="sound-btn" title="Toggle Sound" aria-label="Toggle Sound Effects" onclick="toggleSound()">🔊</button>
   </div>
 </header>
@@ -703,6 +710,22 @@
   </div>
 </main>
 
+<!-- Help Modal -->
+<div id="help-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+  <div class="card" style="max-width: 500px; width: 90%;">
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">Help & Controls</h2>
+    <ul style="margin-left: 20px; margin-bottom: 20px; line-height: 1.8; color: var(--text-secondary);">
+      <li><strong>Esc</strong>: Restart current test or game</li>
+      <li><strong>Backspace</strong>: Delete previous character</li>
+      <li><strong>Space</strong>: Submit current word</li>
+      <li><strong>H</strong>: Toggle this help screen</li>
+    </ul>
+    <div style="text-align: right;">
+      <button class="btn" onclick="toggleHelp()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // --- Presets Data ---
 const PRESETS = {
@@ -850,6 +873,16 @@ function switchTab(tabId) {
     renderHistoryTable();
   } else if (tabId === 'arcade') {
     initArcadeCanvas();
+  }
+}
+
+function toggleHelp() {
+  const modal = document.getElementById('help-modal');
+  if (modal.style.display === 'none') {
+    modal.style.display = 'flex';
+  } else {
+    modal.style.display = 'none';
+    if (currentTab === 'test') focusInput();
   }
 }
 
@@ -1086,6 +1119,10 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    toggleHelp();
+  }
+
   if (currentTab === 'test') {
     if (e.key === 'Escape') resetTest();
     if (e.key === 'Backspace' && charIndex > 0) {

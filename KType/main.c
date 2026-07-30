@@ -1,8 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 600
-#define H 500
+#define W 800
+#define H 600
 
 // --- Word Lists ---
 const char* commonWords[] = {
@@ -152,8 +152,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             memset(fWords, 0, sizeof(fWords));
             memset(keyHits, 0, sizeof(keyHits));
             memset(keyErrors, 0, sizeof(keyErrors));
-            g_fontNav = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            g_fontMain = CreateFontA(22, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            g_fontNav = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            g_fontMain = CreateFontA(22, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
             SpawnArcadeWord();
             ResetSpeedTest();
             SetTimer(hwnd, 1, 30, NULL);
@@ -205,6 +205,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_F2) { currentMode = 1; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F3) { currentMode = 2; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F4) { currentMode = 3; InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (wParam == VK_F5) { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (wParam == 'H') { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_ESCAPE) {
                 if (currentMode == 0) {
                     arcadeLives = 3; arcadeScore = 0; arcadeCombo = 0;
@@ -344,6 +346,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetTextColor(memDC, (currentMode == 3) ? RGB(0, 242, 254) : RGB(148, 163, 184));
             TextOutA(memDC, 410, 10, "F4: Heatmap", 11);
+
+            SetTextColor(memDC, (currentMode == 4) ? RGB(0, 242, 254) : RGB(148, 163, 184));
+            TextOutA(memDC, 520, 10, "F5/H: Help", 10);
 
             if (g_fontMain) SelectObject(memDC, g_fontMain);
 
@@ -527,6 +532,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 // Legend
                 SetTextColor(memDC, RGB(148, 163, 184));
                 TextOutA(memDC, 40, H - 60, "Legend: Dark = Perfect | Amber = 1-3 Mistypes | Red = >3 Mistypes", 64);
+            } else if (currentMode == 4) { // Help Screen
+                SetTextColor(memDC, RGB(0, 242, 254));
+                TextOutA(memDC, 30, 50, "Help & Controls", 15);
+                SetTextColor(memDC, RGB(248, 250, 252));
+                TextOutA(memDC, 30, 90, "F1: Arcade Cascade Mode", 23);
+                TextOutA(memDC, 30, 120, "F2: 30s Timed Speed Test", 24);
+                TextOutA(memDC, 30, 150, "F3: Code Snippets Speed Test", 28);
+                TextOutA(memDC, 30, 180, "F4: Finger Weakness Heatmap", 27);
+                TextOutA(memDC, 30, 210, "F5 or H: Toggle Help", 20);
+                TextOutA(memDC, 30, 240, "ESC: Restart current mode", 25);
             }
 
             SelectObject(memDC, oldFont);
