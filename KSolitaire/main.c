@@ -267,6 +267,14 @@ void PerformUndo() {
     if (undoCount == 0) return;
     if (redoCount < 256) CopyState(&redoStack[redoCount++], &state);
     CopyState(&state, &undoStack[--undoCount]);
+    
+    if (state.vegasRules) {
+        state.score -= 5;
+    } else {
+        state.score -= 15;
+        if (state.score < 0) state.score = 0;
+    }
+    
     selectedType = -1;
     hintSrcType = -1;
     SaveGameState();
@@ -293,7 +301,7 @@ void NewGame(HWND hwnd) {
     state.moves = 0;
     state.timerSeconds = 0;
     state.gameStarted = 0;
-    state.stockPasses = 0;
+    state.stockPasses = 1;
 
     if (state.campaignStage < 1) state.campaignStage = 1;
     if (state.campaignStage > 20) state.campaignStage = 20;
@@ -576,6 +584,7 @@ int AttemptMove(int srcType, int srcPile, int srcIdx, int dstType, int dstPile, 
         }
         if (!state.vegasRules) {
             state.score += (srcType == 0 ? 5 : (srcType == 2 ? -15 : 0));
+            if (state.score < 0) state.score = 0;
         }
     }
 
@@ -613,6 +622,12 @@ int UseMagicWand(HWND hwnd) {
                 for (int f = 0; f < 4; f++) {
                     if (CanMoveToFoundation(c, f)) {
                         state.wandCharges--;
+                        if (state.vegasRules) {
+                            state.score -= 10;
+                        } else {
+                            state.score -= 50;
+                            if (state.score < 0) state.score = 0;
+                        }
                         AttemptMove(1, t, state.tableau_cnt[t] - 1, 2, f, hwnd);
                         return 1;
                     }
@@ -626,6 +641,12 @@ int UseMagicWand(HWND hwnd) {
         for (int f = 0; f < 4; f++) {
             if (CanMoveToFoundation(c, f)) {
                 state.wandCharges--;
+                if (state.vegasRules) {
+                    state.score -= 10;
+                } else {
+                    state.score -= 50;
+                    if (state.score < 0) state.score = 0;
+                }
                 AttemptMove(0, 0, state.waste_cnt - 1, 2, f, hwnd);
                 return 1;
             }
@@ -642,6 +663,12 @@ int UseXRayVision(HWND hwnd) {
     }
     state.xrayCharges--;
     state.xrayTimer = 5;
+    if (state.vegasRules) {
+        state.score -= 5;
+    } else {
+        state.score -= 25;
+        if (state.score < 0) state.score = 0;
+    }
     MessageBeep(MB_OK);
     InvalidateRect(hwnd, NULL, FALSE);
     return 1;
@@ -658,6 +685,12 @@ int UseShuffleStock(HWND hwnd) {
     }
     PushUndoState();
     state.shuffleCharges--;
+    if (state.vegasRules) {
+        state.score -= 10;
+    } else {
+        state.score -= 50;
+        if (state.score < 0) state.score = 0;
+    }
     Card temp[104];
     int total = 0;
     for (int i = 0; i < state.stock_cnt; i++) {

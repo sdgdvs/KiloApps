@@ -753,7 +753,7 @@ let drawMode = 1;
 let vegasRules = false;
 let suitLocked = false;
 let targetCards = 52;
-let stockPasses = 0;
+let stockPasses = 1;
 let maxStockPasses = 0;
 
 let wandCharges = 3;
@@ -892,7 +892,7 @@ function newGame() {
   stopXRay();
   timerSeconds = 0;
   movesCount = 0;
-  stockPasses = 0;
+  stockPasses = 1;
   gameStarted = false;
   gameWon = false;
   selectedSelection = null;
@@ -1103,6 +1103,13 @@ function undoMove() {
   xrayCharges = prev.xrayCharges !== undefined ? prev.xrayCharges : 3;
   shuffleCharges = prev.shuffleCharges !== undefined ? prev.shuffleCharges : 3;
 
+  if (vegasRules) {
+    scoreCount -= 5;
+  } else {
+    scoreCount -= 15;
+    if (scoreCount < 0) scoreCount = 0;
+  }
+
   selectedSelection = null;
   clearHints();
   playSound('flip');
@@ -1197,6 +1204,12 @@ function useMagicWand() {
         for (let f = 0; f < 4; f++) {
           if (canMoveToFoundation(card, f)) {
             wandCharges--;
+            if (vegasRules) {
+              scoreCount -= 10;
+            } else {
+              scoreCount -= 50;
+              if (scoreCount < 0) scoreCount = 0;
+            }
             attemptMove({ type: 'tableau', pileIdx: t, cardIdx: tableau[t].length - 1 }, 'foundation', f);
             playSound('skill');
             return;
@@ -1212,6 +1225,12 @@ function useMagicWand() {
     for (let f = 0; f < 4; f++) {
       if (canMoveToFoundation(card, f)) {
         wandCharges--;
+        if (vegasRules) {
+          scoreCount -= 10;
+        } else {
+          scoreCount -= 50;
+          if (scoreCount < 0) scoreCount = 0;
+        }
         attemptMove({ type: 'waste', pileIdx: 0, cardIdx: waste.length - 1 }, 'foundation', f);
         playSound('skill');
         return;
@@ -1226,6 +1245,12 @@ function useXRayVision() {
   if (xrayCharges <= 0 || gameWon) { playSound('error'); return; }
   xrayCharges--;
   xrayTimer = 5;
+  if (vegasRules) {
+    scoreCount -= 5;
+  } else {
+    scoreCount -= 25;
+    if (scoreCount < 0) scoreCount = 0;
+  }
   playSound('skill');
 
   if (xrayInterval) clearInterval(xrayInterval);
@@ -1252,6 +1277,12 @@ function useShuffleStock() {
 
   saveState(true);
   shuffleCharges--;
+  if (vegasRules) {
+    scoreCount -= 10;
+  } else {
+    scoreCount -= 50;
+    if (scoreCount < 0) scoreCount = 0;
+  }
   let pool = [];
   while (stock.length > 0) { let c = stock.pop(); c.faceUp = false; pool.push(c); }
   while (waste.length > 0) { let c = waste.pop(); c.faceUp = false; pool.push(c); }
@@ -1442,6 +1473,7 @@ function attemptMove(src, dstType, dstPileIdx) {
     tableau[dstPileIdx].push(...cardsToMove);
     if (!vegasRules) {
       scoreCount += (src.type === 'waste' ? 5 : (src.type === 'foundation' ? -15 : 0));
+      if (scoreCount < 0) scoreCount = 0;
     }
     playSound('place');
   }
