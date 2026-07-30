@@ -635,6 +635,7 @@ HWND hStatusText;
 HWND hInfoText;
 HWND hLogEdit;
 HWND hBtn1, hBtn2, hBtn3, hBtn4, hBtn5, hBtn6;
+static HFONT hUIFont = NULL;
 
 HBRUSH hBgBrush = NULL;
 HBRUSH hPanelBrush = NULL;
@@ -3407,6 +3408,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtn5 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 523, 430, 118, 38, hwnd, (HMENU)205, GetModuleHandle(NULL), NULL);
             hBtn6 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 650, 430, 118, 38, hwnd, (HMENU)206, GetModuleHandle(NULL), NULL);
 
+            hUIFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            SendMessage(hStatusText, WM_SETFONT, (WPARAM)hUIFont, FALSE);
+            SendMessage(hInfoText, WM_SETFONT, (WPARAM)hUIFont, FALSE);
+            SendMessage(hLogEdit, WM_SETFONT, (WPARAM)hUIFont, FALSE);
+            SendMessage(hBtn1, WM_SETFONT, (WPARAM)hUIFont, FALSE);
+            SendMessage(hBtn2, WM_SETFONT, (WPARAM)hUIFont, FALSE);
+            SendMessage(hBtn3, WM_SETFONT, (WPARAM)hUIFont, FALSE);
+            SendMessage(hBtn4, WM_SETFONT, (WPARAM)hUIFont, FALSE);
+            SendMessage(hBtn5, WM_SETFONT, (WPARAM)hUIFont, FALSE);
+            SendMessage(hBtn6, WM_SETFONT, (WPARAM)hUIFont, FALSE);
+
             SetTimer(hwnd, 1, 40, NULL);
 
             InitHero(0);
@@ -3535,8 +3547,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     RegisterClassA(&wc);
 
+    RECT wr = {0, 0, 785, 485};
+    AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     HWND hwnd = CreateWindowA("KQuestClass", "KQuest - Fantasy Dungeon RPG", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-                              CW_USEDEFAULT, CW_USEDEFAULT, 800, 520,
+                              CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top,
                               NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, nCmdShow);
