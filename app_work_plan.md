@@ -107,14 +107,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KPing
+**Target App:** KConnect4
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KPing (Added Traceroute functionality)
 - KConnect4
 - KScript (Added Load and Save script functionality)
 - KMaze (Added Save/Load game functionality)
@@ -161,3 +160,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KFont (Added deep TTF/OTF Font Metadata & Metrics inspection, a Unicode Range & Glyph Viewer with hexadecimal character mapping, and a visual Glyph Kerning & Hinting diagnostics panel)
 - KMail (Added Multi-Tab Email Sessions, AES Encryption/Password Protection, Advanced Tagging & Filtering, and JSON Import/Export)
 - KMandel (Added Multi-threading, Custom Palettes, 4K Export, Julia Sets)
+- KPing (Added Packet Logging, Jitter Analytics, Payload Config, Log Export)
