@@ -107,7 +107,7 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KScript
+**Target App:** KMaze
 **Status:** In Queue
 **Current Phase:** In Queue
 
