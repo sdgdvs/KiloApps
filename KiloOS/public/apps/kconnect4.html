@@ -271,6 +271,7 @@
 </head>
 <body>
   <h1>KConnect4</h1>
+  <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">Press H for Help</div>
   <div id="status">Player 1's turn (Red)</div>
   <div id="timerContainer"><div id="timerBar"></div></div>
   <div id="boardWrapper">
@@ -1418,8 +1419,11 @@
     function resizeFxCanvas() {
       const wrapper = document.getElementById('boardWrapper');
       if (wrapper) {
-        fxCanvas.width = wrapper.clientWidth || 400;
-        fxCanvas.height = wrapper.clientHeight || 350;
+        const dpr = window.devicePixelRatio || 1;
+        fxCanvas.width = (wrapper.clientWidth || 400) * dpr;
+        fxCanvas.height = (wrapper.clientHeight || 350) * dpr;
+        fxCtx.setTransform(1, 0, 0, 1, 0, 0);
+        fxCtx.scale(dpr, dpr);
       }
     }
     window.addEventListener('resize', resizeFxCanvas);
@@ -1427,7 +1431,7 @@
     function spawnConfetti() {
       particles = [];
       const colors = ['#ff5252', '#ffd700', '#4fc3f7', '#69f0ae', '#e040fb', '#ffffff'];
-      const w = fxCanvas.width || 400;
+      const w = fxCanvas.clientWidth || 400;
       for (let i = 0; i < 90; i++) {
         particles.push({
           x: Math.random() * w,
@@ -1445,7 +1449,9 @@
     }
 
     function renderFx() {
-      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+      const h = fxCanvas.clientHeight || 350;
+      const w = fxCanvas.clientWidth || 400;
+      fxCtx.clearRect(0, 0, w, h);
 
       if (winningCells && winningCells.length >= 4) {
         const pts = winningCells.map(([r, c]) => {
@@ -1499,8 +1505,9 @@
         p.vy += 0.08;
         p.rotation += p.vRot;
         p.life -= p.decay;
+        const h = fxCanvas.clientHeight || 350;
 
-        if (p.life <= 0 || p.y > fxCanvas.height + 20) {
+        if (p.life <= 0 || p.y > h + 20) {
           particles.splice(i, 1);
           continue;
         }
@@ -1517,6 +1524,7 @@
       requestAnimationFrame(renderFx);
     }
 
+    if (window.resizeTo) window.resizeTo(600, 750);
     loadStats();
     updateDiffSelect();
     initGame();

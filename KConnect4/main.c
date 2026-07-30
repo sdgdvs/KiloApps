@@ -904,7 +904,6 @@ void ExecuteDrop(HWND hwnd, int col, int player, int powerType) {
             animBounceCount = 0;
 
             int colWidth = 40;
-            int boardLeft = (450 - (g_cols * 44)) / 2 + 10;
             animTargetY = 50 + 5 + r * 44;
             animType = powerType;
             isAnimating = true;
@@ -1381,18 +1380,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(tFg);
             }
             
+            SetTextColor(hdc, RGB(200, 200, 200));
+            TextOut(hdc, 10, 570, "Press 'H' for Help Menu", 23);
+
             SetTextColor(hdc, RGB(170, 170, 170));
             char statsStr[128];
             wsprintf(statsStr, "Wins: Red %d, Yellow %d | Draws: %d | Streak: %d (Best: %d) | Max Stage: %d/20",
                      stats.redWins, stats.yellowWins, stats.draws, stats.streak, stats.bestStreak, stats.maxCampaignStage);
-            TextOut(hdc, 10, 582, statsStr, lstrlen(statsStr));
+            TextOut(hdc, 10, 595, statsStr, lstrlen(statsStr));
             
             // --- Board Layout Calculations ---
             int colWidth = 40;
             int gap = 4;
             int boardW = g_cols * 44 + 10;
             int boardH = g_rows * 44 + 10;
-            int boardLeft = (480 - boardW) / 2 + 10;
+            int boardLeft = (rect.right - rect.left - boardW) / 2;
             int boardTop = 50;
 
             RECT frameOuter = {boardLeft - 6, boardTop - 6, boardLeft + boardW + 6, boardTop + boardH + 6};
@@ -1536,7 +1538,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int xPos = LOWORD(lParam);
             int yPos = HIWORD(lParam);
             int boardW = g_cols * 44 + 10;
-            int boardLeft = (480 - boardW) / 2 + 10;
+            RECT rect; GetClientRect(hwnd, &rect);
+            int boardLeft = (rect.right - rect.left - boardW) / 2;
             
             if (xPos >= boardLeft && xPos <= boardLeft + boardW && yPos >= 50 && yPos <= 50 + g_rows * 44 + 10) {
                 int c = (xPos - boardLeft - 5) / 44;
@@ -1580,7 +1583,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int xPos = LOWORD(lParam);
             int yPos = HIWORD(lParam);
             int boardW = g_cols * 44 + 10;
-            int boardLeft = (480 - boardW) / 2 + 10;
+            RECT rect; GetClientRect(hwnd, &rect);
+            int boardLeft = (rect.right - rect.left - boardW) / 2;
             
             if (xPos >= boardLeft && xPos <= boardLeft + boardW && yPos >= 50 && yPos <= 50 + g_rows * 44 + 10) {
                 int c = (xPos - boardLeft - 5) / 44;
@@ -1621,6 +1625,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    SetProcessDPIAware();
     WNDCLASSEX wc;
     HWND hwnd;
     MSG Msg;
@@ -1644,9 +1649,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     hwnd = CreateWindowEx(
-        0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion",
+        0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion (Press H for Help)",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 500, 650,
+        CW_USEDEFAULT, CW_USEDEFAULT, 540, 720,
         NULL, NULL, hInstance, NULL);
 
     if(hwnd == NULL) {
