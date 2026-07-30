@@ -292,6 +292,18 @@
     </div>
   </header>
 
+  <div id="academyModal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100; justify-content:center; align-items:center;">
+    <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:20px; border-radius:12px; width:450px; box-shadow: 0 0 20px rgba(0,0,0,0.8);">
+      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:15px; font-weight:900;">RESEARCH ACADEMY</h2>
+      <div style="display:flex; flex-direction:column; gap:12px;" id="techList">
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:20px; align-items:center;">
+        <div class="stat-badge stat-gold">🪙 <span id="academyGoldDisplay">0</span></div>
+        <button class="btn btn-danger" id="closeAcademyBtn">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
   <div class="main-container">
     <div class="battlefield-card">
       <canvas id="gameCanvas"></canvas>
@@ -336,6 +348,7 @@
 
       <h2>COMMAND POST</h2>
       <button class="btn btn-primary" id="waveBtn">START WAVE 1</button>
+      <button class="btn" id="academyBtn" style="background:#4f46e5; border-color:#4338ca; color:#fff;">RESEARCH ACADEMY</button>
       <button class="btn btn-danger" id="resetBtn">RESET DEFENSE</button>
 
       <h2>HERO: PALADIN</h2>
@@ -379,10 +392,16 @@
       } catch (e) {}
     }
 
+    // Tech Variables
+    let techStartingGold = parseInt(localStorage.getItem('kf_techGold')) || 0;
+    let techWallHp = parseInt(localStorage.getItem('kf_techWallHp')) || 0;
+    let techHeroCd = parseInt(localStorage.getItem('kf_techHeroCd')) || 0;
+    let techTowerDmg = parseInt(localStorage.getItem('kf_techTowerDmg')) || 0;
+
     // State Variables
-    let gold = 100;
-    let baseHp = 20;
-    let maxBaseHp = 20;
+    let gold = 100 + techStartingGold * 50;
+    let maxBaseHp = 20 + techWallHp * 10;
+    let baseHp = maxBaseHp;
     let wave = 1;
     let waveInProgress = false;
     let gameOver = false;
@@ -406,6 +425,21 @@
       meteorCd: 0, maxMeteorCd: 450,
       shieldActive: 0
     };
+
+    function initHero() {
+      const cdMod = 1 - (techHeroCd * 0.1);
+      hero.maxHealCd = Math.max(30, Math.floor(300 * cdMod));
+      hero.maxShieldCd = Math.max(60, Math.floor(600 * cdMod));
+      hero.maxMeteorCd = Math.max(45, Math.floor(450 * cdMod));
+      hero.hp = hero.maxHp;
+      hero.respawnTimer = 0;
+      hero.healCd = 0;
+      hero.shieldCd = 0;
+      hero.meteorCd = 0;
+      hero.shieldActive = 0;
+      hero.x = 400; hero.y = 300; hero.targetX = 400; hero.targetY = 300;
+    }
+    initHero();
 
     // Tower Slots
     const slots = [
@@ -507,6 +541,59 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    const academyTech = [
+      { id: 'techGold', name: 'Starting Gold (+50)', baseCost: 100, getLvl: () => techStartingGold, setLvl: v => { techStartingGold = v; localStorage.setItem('kf_techGold', v); } },
+      { id: 'techWall', name: 'Wall Durability (+10 HP)', baseCost: 150, getLvl: () => techWallHp, setLvl: v => { techWallHp = v; localStorage.setItem('kf_techWallHp', v); } },
+      { id: 'techHero', name: 'Hero Cooldowns (-10%)', baseCost: 200, getLvl: () => techHeroCd, setLvl: v => { techHeroCd = v; localStorage.setItem('kf_techHeroCd', v); } },
+      { id: 'techDmg', name: 'Tower Damage (+10%)', baseCost: 250, getLvl: () => techTowerDmg, setLvl: v => { techTowerDmg = v; localStorage.setItem('kf_techTowerDmg', v); } }
+    ];
+
+    function updateAcademyUI() {
+      const list = document.getElementById('techList');
+      list.innerHTML = '';
+      academyTech.forEach(t => {
+        const lvl = t.getLvl();
+        const cost = t.baseCost * (lvl + 1);
+        const div = document.createElement('div');
+        div.style = "display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; border:1px solid var(--border-color);";
+        div.innerHTML = `
+          <div>
+            <div style="font-weight:bold; color:var(--text-white);">${t.name}</div>
+            <div style="font-size:12px; color:var(--text-muted);">Level ${lvl}/5</div>
+          </div>
+          <button class="btn" style="padding:6px 12px; font-size:12px; background:${(gold >= cost && lvl < 5) ? 'var(--green-color)' : 'var(--card-hover)'}; color:${(gold >= cost && lvl < 5) ? '#000' : 'var(--text-muted)'};" 
+            onclick="buyTech('${t.id}')">${lvl < 5 ? cost + 'g' : 'MAX'}</button>
+        `;
+        list.appendChild(div);
+      });
+      document.getElementById('academyGoldDisplay').textContent = gold;
+    }
+
+    window.buyTech = function(id) {
+      const t = academyTech.find(x => x.id === id);
+      const lvl = t.getLvl();
+      const cost = t.baseCost * (lvl + 1);
+      if (gold >= cost && lvl < 5) {
+        gold -= cost;
+        t.setLvl(lvl + 1);
+        playBeep(600, 0.1, 'square', 0.15);
+        playBeep(900, 0.15, 'triangle', 0.15);
+        updateAcademyUI();
+        updateHUD();
+      } else {
+        playBeep(200, 0.15, 'sawtooth', 0.2);
+      }
+    };
+
+    document.getElementById('academyBtn').addEventListener('click', () => {
+      document.getElementById('academyModal').style.display = 'flex';
+      updateAcademyUI();
+    });
+
+    document.getElementById('closeAcademyBtn').addEventListener('click', () => {
+      document.getElementById('academyModal').style.display = 'none';
+    });
+
     function castHeal() {
       if (hero.healCd > 0 || hero.respawnTimer > 0) return;
       hero.healCd = hero.maxHealCd;
@@ -600,11 +687,12 @@
             if (gold >= def.cost) {
               gold -= def.cost;
               targetSlot.occupied = true;
+              const dmgMod = 1 + (techTowerDmg * 0.1);
               targetSlot.tower = {
                 type: selectedTowerType,
                 level: 1,
                 range: def.range,
-                damage: def.damage,
+                damage: Math.floor(def.damage * dmgMod),
                 cooldown: 0,
                 maxCooldown: def.cooldown,
                 splash: def.splash || 0
@@ -678,20 +766,15 @@
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
-      gold = 100;
-      baseHp = 20;
+      gold = 100 + techStartingGold * 50;
+      maxBaseHp = 20 + techWallHp * 10;
+      baseHp = maxBaseHp;
       wave = 1;
       waveInProgress = false;
       gameOver = false;
       selectedSlotIndex = -1;
       spawnQueue = [];
-      hero.hp = hero.maxHp;
-      hero.respawnTimer = 0;
-      hero.healCd = 0;
-      hero.shieldCd = 0;
-      hero.meteorCd = 0;
-      hero.shieldActive = 0;
-      hero.x = 400; hero.y = 300; hero.targetX = 400; hero.targetY = 300;
+      initHero();
       enemies = [];
       projectiles = [];
       floatingTexts = [];

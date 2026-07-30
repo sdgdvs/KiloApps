@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int _fltused = 1;
 
@@ -98,6 +99,12 @@ static BOOL g_waveActive = FALSE;
 static BOOL g_gameOver = FALSE;
 static int g_selectedSlot = -1;
 
+int g_techStartingGold = 0;
+int g_techWallHp = 0;
+int g_techHeroCd = 0;
+int g_techTowerDmg = 0;
+BOOL g_showAcademy = FALSE;
+
 typedef struct {
     float x, y;
     float targetX, targetY;
@@ -186,10 +193,33 @@ void InitTowerSlots(int bfX, int bfY) {
     }
 }
 
+void LoadGame() {
+    FILE *f = fopen("kfortress.dat", "rb");
+    if (f) {
+        fread(&g_techStartingGold, sizeof(int), 1, f);
+        fread(&g_techWallHp, sizeof(int), 1, f);
+        fread(&g_techHeroCd, sizeof(int), 1, f);
+        fread(&g_techTowerDmg, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
+
+void SaveGame() {
+    FILE *f = fopen("kfortress.dat", "wb");
+    if (f) {
+        fwrite(&g_techStartingGold, sizeof(int), 1, f);
+        fwrite(&g_techWallHp, sizeof(int), 1, f);
+        fwrite(&g_techHeroCd, sizeof(int), 1, f);
+        fwrite(&g_techTowerDmg, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
+
 void InitGameState() {
-    g_gold = 100;
-    g_baseHp = 20;
-    g_maxBaseHp = 20;
+    LoadGame();
+    g_gold = 100 + g_techStartingGold * 50;
+    g_baseHp = 20 + g_techWallHp * 10;
+    g_maxBaseHp = 20 + g_techWallHp * 10;
     g_wave = 1;
     g_waveActive = FALSE;
     g_gameOver = FALSE;
@@ -205,9 +235,15 @@ void InitGameState() {
     g_hero.damage = 25; g_hero.range = 60;
     g_hero.attackCd = 0; g_hero.maxAttackCd = 25;
     g_hero.respawnTimer = 0;
-    g_hero.healCd = 0; g_hero.maxHealCd = 300;
-    g_hero.shieldCd = 0; g_hero.maxShieldCd = 600;
-    g_hero.meteorCd = 0; g_hero.maxMeteorCd = 450;
+    
+    float cdMod = 1.0f - (g_techHeroCd * 0.1f);
+    g_hero.healCd = 0; g_hero.maxHealCd = (int)(300 * cdMod);
+    if(g_hero.maxHealCd < 30) g_hero.maxHealCd = 30;
+    g_hero.shieldCd = 0; g_hero.maxShieldCd = (int)(600 * cdMod);
+    if(g_hero.maxShieldCd < 60) g_hero.maxShieldCd = 60;
+    g_hero.meteorCd = 0; g_hero.maxMeteorCd = (int)(450 * cdMod);
+    if(g_hero.maxMeteorCd < 45) g_hero.maxMeteorCd = 45;
+    
     g_hero.shieldActive = 0;
 
     for (int i = 0; i < MAX_ENEMIES; i++) g_enemies[i].active = FALSE;
@@ -948,13 +984,17 @@ void Render(HDC hdc, HWND hwnd) {
     wsprintfA(buf, g_waveActive ? "WAVE IN PROGRESS" : "START WAVE %d", g_wave);
     TextOutA(memDC, sbX + 25, sbY + 207, buf, (int)lstrlenA(buf));
 
+    // Button: Academy
+    DrawRoundedRect(memDC, sbX + 15, sbY + 245, sbX + sbW - 15, sbY + 285, RGB(79, 70, 229), BORDER_COLOR, 6);
+    TextOutA(memDC, sbX + 35, sbY + 257, "RESEARCH ACADEMY", 16);
+
     // Button: Reset Game
-    DrawRoundedRect(memDC, sbX + 15, sbY + 245, sbX + sbW - 15, sbY + 285, RGB(225, 29, 72), BORDER_COLOR, 6);
-    TextOutA(memDC, sbX + 35, sbY + 257, "RESET DEFENSE", 13);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 295, sbX + sbW - 15, sbY + 335, RGB(225, 29, 72), BORDER_COLOR, 6);
+    TextOutA(memDC, sbX + 35, sbY + 307, "RESET DEFENSE", 13);
 
     // Hero Section
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 15, sbY + 300, "HERO: PALADIN", 13);
+    TextOutA(memDC, sbX + 15, sbY + 350, "HERO: PALADIN", 13);
     
     HFONT hFontBody = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
@@ -968,38 +1008,83 @@ void Render(HDC hdc, HWND hwnd) {
         SetTextColor(memDC, g_hero.shieldActive > 0 ? RGB(59, 130, 246) : RGB(34, 197, 94));
         wsprintfA(hBuf, "HP: %d/100 | %s", (int)g_hero.hp, g_hero.shieldActive > 0 ? "SHIELDED" : "Active");
     }
-    TextOutA(memDC, sbX + 15, sbY + 320, hBuf, lstrlenA(hBuf));
+    TextOutA(memDC, sbX + 15, sbY + 370, hBuf, lstrlenA(hBuf));
 
     // Spell Buttons
     int btnW = 50;
-    DrawRoundedRect(memDC, sbX + 15, sbY + 340, sbX + 15 + btnW, sbY + 370, g_hero.healCd > 0 ? RGB(100,80,20) : TEXT_GOLD, BORDER_COLOR, 4);
-    DrawRoundedRect(memDC, sbX + 70, sbY + 340, sbX + 70 + btnW, sbY + 370, g_hero.shieldCd > 0 ? RGB(30,60,100) : RGB(59, 130, 246), BORDER_COLOR, 4);
-    DrawRoundedRect(memDC, sbX + 125, sbY + 340, sbX + 125 + btnW, sbY + 370, g_hero.meteorCd > 0 ? RGB(100,20,20) : TEXT_RED, BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 390, sbX + 15 + btnW, sbY + 420, g_hero.healCd > 0 ? RGB(100,80,20) : TEXT_GOLD, BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 70, sbY + 390, sbX + 70 + btnW, sbY + 420, g_hero.shieldCd > 0 ? RGB(30,60,100) : RGB(59, 130, 246), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 125, sbY + 390, sbX + 125 + btnW, sbY + 420, g_hero.meteorCd > 0 ? RGB(100,20,20) : TEXT_RED, BORDER_COLOR, 4);
     
     SetTextColor(memDC, RGB(0,0,0));
     char sBuf[16];
     if (g_hero.healCd > 0) wsprintfA(sBuf, "H(%d)", (g_hero.healCd/30)+1); else wsprintfA(sBuf, "Heal(1)");
-    TextOutA(memDC, sbX + 22, sbY + 350, sBuf, lstrlenA(sBuf));
+    TextOutA(memDC, sbX + 22, sbY + 400, sBuf, lstrlenA(sBuf));
     
     SetTextColor(memDC, TEXT_WHITE);
     if (g_hero.shieldCd > 0) wsprintfA(sBuf, "S(%d)", (g_hero.shieldCd/30)+1); else wsprintfA(sBuf, "Shld(2)");
-    TextOutA(memDC, sbX + 76, sbY + 350, sBuf, lstrlenA(sBuf));
+    TextOutA(memDC, sbX + 76, sbY + 400, sBuf, lstrlenA(sBuf));
     
     if (g_hero.meteorCd > 0) wsprintfA(sBuf, "M(%d)", (g_hero.meteorCd/30)+1); else wsprintfA(sBuf, "Mtr(3)");
-    TextOutA(memDC, sbX + 130, sbY + 350, sBuf, lstrlenA(sBuf));
+    TextOutA(memDC, sbX + 130, sbY + 400, sBuf, lstrlenA(sBuf));
 
     // Info Box
-    DrawRoundedRect(memDC, sbX + 15, sbY + 380, sbX + sbW - 15, sbY + sbH - 15, BG_COLOR, BORDER_COLOR, 6);
+    DrawRoundedRect(memDC, sbX + 15, sbY + 430, sbX + sbW - 15, sbY + sbH - 15, BG_COLOR, BORDER_COLOR, 6);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 25, sbY + 390, "Phase 8 Features:", 17);
+    TextOutA(memDC, sbX + 25, sbY + 440, "Phase 9 Features:", 17);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, sbX + 25, sbY + 410, "- Paladin Hero: Click to move", 29);
-    TextOutA(memDC, sbX + 25, sbY + 426, "- Holy Light (1): Heal", 22);
-    TextOutA(memDC, sbX + 25, sbY + 442, "- Shield Wall (2): Invincibility", 32);
-    TextOutA(memDC, sbX + 25, sbY + 458, "- Meteor (3): AoE damage", 24);
+    TextOutA(memDC, sbX + 25, sbY + 460, "- Paladin Hero + Tech Academy", 29);
 
     DeleteObject(hFontHeader);
     DeleteObject(hFontBody);
+
+    if (g_showAcademy) {
+        int mx = w/2 - 200, my = h/2 - 150;
+        DrawRoundedRect(memDC, mx, my, mx + 400, my + 300, CARD_BG, TEXT_GOLD, 12);
+        
+        HFONT aH = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+        HFONT aB = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+        
+        SelectObject(memDC, aH);
+        SetTextColor(memDC, TEXT_GOLD);
+        TextOutA(memDC, mx + 110, my + 20, "RESEARCH ACADEMY", 16);
+        
+        const char* tNames[] = {"Starting Gold (+50)", "Wall Durability (+10 HP)", "Hero Cooldowns (-10%)", "Tower Damage (+10%)"};
+        int tLevels[] = {g_techStartingGold, g_techWallHp, g_techHeroCd, g_techTowerDmg};
+        int tBaseCosts[] = {100, 150, 200, 250};
+        
+        SelectObject(memDC, aB);
+        for (int i=0; i<4; i++) {
+            DrawRoundedRect(memDC, mx + 20, my + 60 + i*45, mx + 380, my + 95 + i*45, RGB(20,20,20), BORDER_COLOR, 4);
+            SetTextColor(memDC, TEXT_WHITE);
+            TextOutA(memDC, mx + 30, my + 65 + i*45, tNames[i], lstrlenA(tNames[i]));
+            char lvlBuf[32]; wsprintfA(lvlBuf, "Level %d/5", tLevels[i]);
+            SetTextColor(memDC, TEXT_MUTED);
+            TextOutA(memDC, mx + 30, my + 78 + i*45, lvlBuf, lstrlenA(lvlBuf));
+            
+            int cost = tBaseCosts[i] * (tLevels[i] + 1);
+            COLORREF btnC = (g_gold >= cost && tLevels[i] < 5) ? RGB(34, 197, 94) : RGB(44, 50, 62);
+            DrawRoundedRect(memDC, mx + 310, my + 65 + i*45, mx + 370, my + 90 + i*45, btnC, BORDER_COLOR, 4);
+            SetTextColor(memDC, (g_gold >= cost && tLevels[i] < 5) ? RGB(0,0,0) : TEXT_MUTED);
+            if (tLevels[i] < 5) {
+                char cBuf[16]; wsprintfA(cBuf, "%dg", cost);
+                TextOutA(memDC, mx + 325, my + 70 + i*45, cBuf, lstrlenA(cBuf));
+            } else {
+                TextOutA(memDC, mx + 325, my + 70 + i*45, "MAX", 3);
+            }
+        }
+        
+        char gBuf[32]; wsprintfA(gBuf, "Gold: %d", g_gold);
+        SetTextColor(memDC, TEXT_GOLD);
+        TextOutA(memDC, mx + 20, my + 260, gBuf, lstrlenA(gBuf));
+        
+        DrawRoundedRect(memDC, mx + 310, my + 250, mx + 380, my + 280, RGB(220,38,38), BORDER_COLOR, 4);
+        SetTextColor(memDC, TEXT_WHITE);
+        TextOutA(memDC, mx + 326, my + 257, "CLOSE", 5);
+        
+        DeleteObject(aH);
+        DeleteObject(aB);
+    }
 
     // Copy Backbuffer to Window DC
     BitBlt(hdc, 0, 0, w, h, memDC, 0, 0, SRCCOPY);
@@ -1068,6 +1153,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         GetClientRect(hwnd, &clientRect);
         int w = clientRect.right;
         int h = clientRect.bottom;
+        
+        if (g_showAcademy) {
+            int mx = w/2 - 200, my = h/2 - 150;
+            if (x >= mx + 310 && x <= mx + 380 && y >= my + 250 && y <= my + 280) {
+                g_showAcademy = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            int tBaseCosts[] = {100, 150, 200, 250};
+            int* tLevels[] = {&g_techStartingGold, &g_techWallHp, &g_techHeroCd, &g_techTowerDmg};
+            for (int i=0; i<4; i++) {
+                if (x >= mx + 310 && x <= mx + 370 && y >= my + 65 + i*45 && y <= my + 90 + i*45) {
+                    int cost = tBaseCosts[i] * (*tLevels[i] + 1);
+                    if (*tLevels[i] < 5 && g_gold >= cost) {
+                        g_gold -= cost;
+                        (*tLevels[i])++;
+                        SaveGame();
+                        Beep(600, 50); Beep(900, 50);
+                    } else {
+                        Beep(200, 50);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            }
+            return 0;
+        }
+
         int sbX = w - 200, sbY = 70, sbW = 190;
 
         // Check button clicks
@@ -1102,19 +1215,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Beep(600, 40);
             }
         }
-        // Reset Defense
+        // Academy
         else if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 245 && y <= sbY + 285) {
+            g_showAcademy = TRUE;
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
+        }
+        // Reset Defense
+        else if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 295 && y <= sbY + 335) {
             InitGameState();
             Beep(300, 60);
         }
         // Spells
-        else if (x >= sbX + 15 && x <= sbX + 65 && y >= sbY + 340 && y <= sbY + 370) {
+        else if (x >= sbX + 15 && x <= sbX + 65 && y >= sbY + 390 && y <= sbY + 420) {
             SendMessage(hwnd, WM_KEYDOWN, '1', 0);
         }
-        else if (x >= sbX + 70 && x <= sbX + 120 && y >= sbY + 340 && y <= sbY + 370) {
+        else if (x >= sbX + 70 && x <= sbX + 120 && y >= sbY + 390 && y <= sbY + 420) {
             SendMessage(hwnd, WM_KEYDOWN, '2', 0);
         }
-        else if (x >= sbX + 125 && x <= sbX + 175 && y >= sbY + 340 && y <= sbY + 370) {
+        else if (x >= sbX + 125 && x <= sbX + 175 && y >= sbY + 390 && y <= sbY + 420) {
             SendMessage(hwnd, WM_KEYDOWN, '3', 0);
         }
         // Check slot clicks
@@ -1141,11 +1260,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             g_slots[i].occupied = TRUE;
                             g_slots[i].towerType = g_selectedTowerTypeToBuild;
                             g_slots[i].level = 1;
+                            float dmgMod = 1.0f + (g_techTowerDmg * 0.1f);
                             g_slots[i].range = rng;
-                            g_slots[i].damage = dmg;
+                            g_slots[i].damage = (int)(dmg * dmgMod);
                             g_slots[i].maxCooldown = cd;
                             g_slots[i].cooldown = 0;
-                            g_slots[i].splash = (g_selectedTowerTypeToBuild == TOWER_MAGE) ? 50 : 0;
+                            g_slots[i].splash = (g_selectedTowerTypeToBuild == TOWER_MAGE) ? (int)(50 * dmgMod) : 0;
                             char buf[16]; wsprintfA(buf, "-%dg", cost);
                             AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), buf, RGB(239, 68, 68));
                             Beep(800, 40);
