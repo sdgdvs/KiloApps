@@ -400,6 +400,179 @@ void LoadGame(HWND hwnd) {
     }
 }
 
+typedef struct {
+    uint8_t found[4];
+    uint8_t free[MAX_FREE_CELLS];
+    uint8_t tabCount[8];
+    uint8_t tab[8][20];
+} SolverState;
+
+#define SET_SIZE 8192
+uint32_t visited[SET_SIZE];
+int statesExplored = 0;
+
+void ClearVisited() {
+    for(int i=0; i<SET_SIZE; i++) visited[i] = 0;
+}
+void AddVisited(uint32_t h) {
+    int idx = h % SET_SIZE;
+    while(visited[idx] != 0 && visited[idx] != h) {
+        idx = (idx + 1) % SET_SIZE;
+    }
+    visited[idx] = h;
+}
+int HasVisited(uint32_t h) {
+    int idx = h % SET_SIZE;
+    while(visited[idx] != 0) {
+        if (visited[idx] == h) return 1;
+        idx = (idx + 1) % SET_SIZE;
+    }
+    return 0;
+}
+
+uint32_t HashState(SolverState *s, int numFree) {
+    uint32_t h = 0;
+    for(int i=0; i<4; i++) h = (h * 31) + s->found[i];
+    for(int i=0; i<numFree; i++) h = (h * 31) + s->free[i];
+    for(int i=0; i<8; i++) {
+        h = (h * 31) + s->tabCount[i];
+        if (s->tabCount[i] > 0) h = (h * 31) + s->tab[i][s->tabCount[i]-1];
+    }
+    return h == 0 ? 1 : h;
+}
+
+typedef struct { int type, from, to; } SMove;
+
+int IsSafe_Solver(uint8_t val, uint8_t *found) {
+    int r = val & 15;
+    if (r <= 2) return 1;
+    int s = val >> 4;
+    int col = (s==1||s==3)?1:0;
+    int minO = 14;
+    for(int i=0; i<4; i++) {
+        if (((i==1||i==3)?1:0) != col) {
+            if (found[i] < minO) minO = found[i];
+        }
+    }
+    return r <= minO + 1;
+}
+
+int GetMoves(SolverState *s, SMove *moves, int numFree, int buildRule, int emptyKing) {
+    int count = 0;
+    for(int i=0; i<8; i++) {
+        if (s->tabCount[i] > 0) {
+            uint8_t val = s->tab[i][s->tabCount[i]-1];
+            if ((val & 15) == s->found[val >> 4] + 1) {
+                moves[count].type = 0; moves[count].from = i; moves[count].to = 0;
+                if (IsSafe_Solver(val, s->found)) return 1;
+                count++;
+            }
+        }
+    }
+    if (count == 1 && moves[0].type == 0) {} 
+    else {
+        for(int i=0; i<numFree; i++) {
+            if (s->free[i] != 0) {
+                uint8_t val = s->free[i];
+                if ((val & 15) == s->found[val >> 4] + 1) {
+                    moves[count].type = 1; moves[count].from = i; moves[count].to = 0;
+                    if (IsSafe_Solver(val, s->found)) return 1;
+                    count++;
+                }
+            }
+        }
+    }
+    
+    if (count > 0 && IsSafe_Solver(moves[count-1].type == 0 ? s->tab[moves[count-1].from][s->tabCount[moves[count-1].from]-1] : s->free[moves[count-1].from], s->found)) {
+        // Safe move found
+    } else {
+        for(int i=0; i<8; i++) {
+            if (s->tabCount[i] > 0) {
+                uint8_t val = s->tab[i][s->tabCount[i]-1];
+                int r = val & 15, su = val >> 4, col = (su==1||su==3)?1:0;
+                for(int j=0; j<8; j++) {
+                    if (i != j) {
+                        if (s->tabCount[j] == 0) {
+                            if ((!emptyKing || r == 13) && s->tabCount[i] > 1) moves[count++] = (SMove){2, i, j};
+                        } else {
+                            uint8_t tval = s->tab[j][s->tabCount[j]-1];
+                            int tr = tval & 15, tsu = tval >> 4, tcol = (tsu==1||tsu==3)?1:0;
+                            if (buildRule == 1) {
+                                if (tsu == su && r == tr - 1) moves[count++] = (SMove){2, i, j};
+                            } else {
+                                if (tcol != col && r == tr - 1) moves[count++] = (SMove){2, i, j};
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for(int i=0; i<numFree; i++) {
+            if (s->free[i] != 0) {
+                uint8_t val = s->free[i];
+                int r = val & 15, su = val >> 4, col = (su==1||su==3)?1:0;
+                for(int j=0; j<8; j++) {
+                    if (s->tabCount[j] == 0) {
+                        if (!emptyKing || r == 13) moves[count++] = (SMove){3, i, j};
+                    } else {
+                        uint8_t tval = s->tab[j][s->tabCount[j]-1];
+                        int tr = tval & 15, tsu = tval >> 4, tcol = (tsu==1||tsu==3)?1:0;
+                        if (buildRule == 1) {
+                            if (tsu == su && r == tr - 1) moves[count++] = (SMove){3, i, j};
+                        } else {
+                            if (tcol != col && r == tr - 1) moves[count++] = (SMove){3, i, j};
+                        }
+                    }
+                }
+            }
+        }
+        for(int i=0; i<8; i++) {
+            if (s->tabCount[i] > 1) {
+                for(int j=0; j<numFree; j++) {
+                    if (s->free[j] == 0) { moves[count++] = (SMove){4, i, j}; break; }
+                }
+            }
+        }
+    }
+    return count;
+}
+
+void ApplyMove(SolverState *s, SMove *m) {
+    if (m->type == 0) { uint8_t val = s->tab[m->from][--s->tabCount[m->from]]; s->found[val >> 4]++; }
+    else if (m->type == 1) { uint8_t val = s->free[m->from]; s->free[m->from] = 0; s->found[val >> 4]++; }
+    else if (m->type == 2) { uint8_t val = s->tab[m->from][--s->tabCount[m->from]]; s->tab[m->to][s->tabCount[m->to]++] = val; }
+    else if (m->type == 3) { uint8_t val = s->free[m->from]; s->free[m->from] = 0; s->tab[m->to][s->tabCount[m->to]++] = val; }
+    else if (m->type == 4) { uint8_t val = s->tab[m->from][--s->tabCount[m->from]]; s->free[m->to] = val; }
+}
+
+int DFS_Solve(SolverState *s, int numFree, int buildRule, int emptyKing, int maxStates) {
+    statesExplored++;
+    if (statesExplored > maxStates) return 0;
+    if (s->found[0]==13 && s->found[1]==13 && s->found[2]==13 && s->found[3]==13) return 1;
+    
+    uint32_t h = HashState(s, numFree);
+    if (HasVisited(h)) return 0;
+    AddVisited(h);
+    
+    SMove moves[100];
+    int mCount = GetMoves(s, moves, numFree, buildRule, emptyKing);
+    
+    for(int i=0; i<mCount-1; i++) {
+        for(int j=i+1; j<mCount; j++) {
+            int scoreI = (moves[i].type <= 1) ? 100 : ((moves[i].type <= 3) ? 10 : 0);
+            int scoreJ = (moves[j].type <= 1) ? 100 : ((moves[j].type <= 3) ? 10 : 0);
+            if (scoreJ > scoreI) { SMove tmp = moves[i]; moves[i] = moves[j]; moves[j] = tmp; }
+        }
+    }
+    
+    for(int i=0; i<mCount; i++) {
+        SolverState ns = *s;
+        ApplyMove(&ns, &moves[i]);
+        if (DFS_Solve(&ns, numFree, buildRule, emptyKing, maxStates)) return 1;
+    }
+    return 0;
+}
+
 void InitGame() {
     if (gameInProgress && won == 0) {
         statsStreak = 0;
@@ -420,26 +593,26 @@ void InitGame() {
     emptyKingOnly = 0;
     int frozenCount = 0;
     if (gameMode == 2) {
-        if (campaignStage == 1) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 0; }
-        else if (campaignStage == 2) { numFreeCells = 4; buildRule = 1; emptyKingOnly = 0; }
-        else if (campaignStage == 3) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 1; }
-        else if (campaignStage == 4) { numFreeCells = 4; buildRule = 1; emptyKingOnly = 1; }
+        if (campaignStage == 1) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 0; frozenCount = 0; }
+        else if (campaignStage == 2) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 0; frozenCount = 2; }
+        else if (campaignStage == 3) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 1; frozenCount = 0; }
+        else if (campaignStage == 4) { numFreeCells = 4; buildRule = 1; emptyKingOnly = 0; frozenCount = 0; }
         else if (campaignStage == 5) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 0; frozenCount = 4; }
-        else if (campaignStage == 6) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 0; }
-        else if (campaignStage == 7) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 0; }
-        else if (campaignStage == 8) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 1; }
-        else if (campaignStage == 9) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 1; }
-        else if (campaignStage == 10) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 0; frozenCount = 6; }
-        else if (campaignStage == 11) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 1; frozenCount = 6; }
-        else if (campaignStage == 12) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 0; }
-        else if (campaignStage == 13) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 0; }
-        else if (campaignStage == 14) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 1; }
-        else if (campaignStage == 15) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 1; }
-        else if (campaignStage == 16) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 0; frozenCount = 8; }
-        else if (campaignStage == 17) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 0; frozenCount = 8; }
-        else if (campaignStage == 18) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 1; frozenCount = 8; }
-        else if (campaignStage == 19) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 1; frozenCount = 8; }
-        else if (campaignStage >= 20) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 1; frozenCount = 10; }
+        else if (campaignStage == 6) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 0; frozenCount = 0; }
+        else if (campaignStage == 7) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 0; frozenCount = 2; }
+        else if (campaignStage == 8) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 1; frozenCount = 0; }
+        else if (campaignStage == 9) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 0; frozenCount = 0; }
+        else if (campaignStage == 10) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 0; frozenCount = 4; }
+        else if (campaignStage == 11) { numFreeCells = 4; buildRule = 1; emptyKingOnly = 1; frozenCount = 0; }
+        else if (campaignStage == 12) { numFreeCells = 4; buildRule = 1; emptyKingOnly = 0; frozenCount = 4; }
+        else if (campaignStage == 13) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 1; frozenCount = 4; }
+        else if (campaignStage == 14) { numFreeCells = 4; buildRule = 1; emptyKingOnly = 1; frozenCount = 4; }
+        else if (campaignStage == 15) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 1; frozenCount = 0; }
+        else if (campaignStage == 16) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 0; frozenCount = 4; }
+        else if (campaignStage == 17) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 1; frozenCount = 6; }
+        else if (campaignStage == 18) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 0; frozenCount = 0; }
+        else if (campaignStage == 19) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 0; frozenCount = 4; }
+        else if (campaignStage >= 20) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 1; frozenCount = 0; }
     } else {
         numFreeCells = 4;
         buildRule = 0;
@@ -497,6 +670,39 @@ void InitGame() {
     for(int i=0; i<52; i++) {
         tab[c][tabCount[c]++] = *deckPtrs[i];
         c = (c + 1) % 8;
+    }
+
+    if (gameMode != 1) {
+        int shuffles = 0;
+        while (1) {
+            SolverState ss;
+            memset(&ss, 0, sizeof(ss));
+            for(int i=0; i<8; i++) {
+                ss.tabCount[i] = tabCount[i];
+                for(int j=0; j<tabCount[i]; j++) {
+                    ss.tab[i][j] = (tab[i][j].s << 4) | tab[i][j].r;
+                }
+            }
+            ClearVisited();
+            statesExplored = 0;
+            if (DFS_Solve(&ss, numFreeCells, buildRule, emptyKingOnly, 2000)) break;
+            
+            shuffles++;
+            if (shuffles > 50) break; // Fallback
+            
+            for(int i=51; i>0; i--) {
+                int j = rand() % (i + 1);
+                Card *t = deckPtrs[i];
+                deckPtrs[i] = deckPtrs[j];
+                deckPtrs[j] = t;
+            }
+            c = 0;
+            for(int i=0; i<8; i++) tabCount[i] = 0;
+            for(int i=0; i<52; i++) {
+                tab[c][tabCount[c]++] = *deckPtrs[i];
+                c = (c + 1) % 8;
+            }
+        }
     }
 
     if (frozenCount > 0) {

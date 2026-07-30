@@ -737,6 +737,163 @@
       }
     }
 
+    function isHandSolvable(startTab, numFree, bRule, eKing) {
+        const SET_SIZE = 8192;
+        let visited = new Int32Array(SET_SIZE);
+        let statesExplored = 0;
+        function hashState(s) {
+            let h = 0;
+            for(let i=0; i<4; i++) h = (h * 31 + s.found[i]) | 0;
+            for(let i=0; i<numFree; i++) h = (h * 31 + s.free[i]) | 0;
+            for(let i=0; i<8; i++) {
+                h = (h * 31 + s.tabCount[i]) | 0;
+                if (s.tabCount[i] > 0) h = (h * 31 + s.tab[i][s.tabCount[i]-1]) | 0;
+            }
+            return h === 0 ? 1 : h;
+        }
+        function hasVisited(h) {
+            let idx = Math.abs(h) % SET_SIZE;
+            while(visited[idx] !== 0) {
+                if (visited[idx] === h) return true;
+                idx = (idx + 1) % SET_SIZE;
+            }
+            return false;
+        }
+        function addVisited(h) {
+            let idx = Math.abs(h) % SET_SIZE;
+            while(visited[idx] !== 0 && visited[idx] !== h) {
+                idx = (idx + 1) % SET_SIZE;
+            }
+            visited[idx] = h;
+        }
+        function isSafe(val, found) {
+            let r = val & 15;
+            if (r <= 2) return true;
+            let s = val >> 4;
+            let col = (s===1||s===3)?1:0;
+            let minO = 14;
+            for(let i=0; i<4; i++) {
+                if (((i===1||i===3)?1:0) !== col) {
+                    if (found[i] < minO) minO = found[i];
+                }
+            }
+            return r <= minO + 1;
+        }
+        function dfs(s) {
+            statesExplored++;
+            if (statesExplored > 2000) return false;
+            if (s.found[0]===13 && s.found[1]===13 && s.found[2]===13 && s.found[3]===13) return true;
+            let h = hashState(s);
+            if (hasVisited(h)) return false;
+            addVisited(h);
+            let moves = [];
+            for(let i=0; i<8; i++) {
+                if (s.tabCount[i] > 0) {
+                    let val = s.tab[i][s.tabCount[i]-1];
+                    let r = val & 15; let su = val >> 4;
+                    if (r === s.found[su] + 1) {
+                        moves.push({t: 0, f: i, to: 0});
+                        if (isSafe(val, s.found)) { moves = [moves[moves.length-1]]; break; }
+                    }
+                }
+            }
+            if (moves.length === 1 && moves[0].t === 0) {} 
+            else {
+                for(let i=0; i<numFree; i++) {
+                    if (s.free[i] !== 0) {
+                        let val = s.free[i];
+                        let r = val & 15; let su = val >> 4;
+                        if (r === s.found[su] + 1) {
+                            moves.push({t: 1, f: i, to: 0});
+                            if (isSafe(val, s.found)) { moves = [moves[moves.length-1]]; break; }
+                        }
+                    }
+                }
+            }
+            if (moves.length > 0 && isSafe(moves[moves.length-1].t <= 1 ? (moves[moves.length-1].t === 0 ? s.tab[moves[moves.length-1].f][s.tabCount[moves[moves.length-1].f]-1] : s.free[moves[moves.length-1].f]) : 0, s.found)) {
+            } else {
+                for(let i=0; i<8; i++) {
+                    if (s.tabCount[i] > 0) {
+                        let val = s.tab[i][s.tabCount[i]-1];
+                        let r = val & 15; let su = val >> 4;
+                        let col = (su===1||su===3)?1:0;
+                        for(let j=0; j<8; j++) {
+                            if (i !== j) {
+                                if (s.tabCount[j] === 0) {
+                                    if ((!eKing || r === 13) && s.tabCount[i] > 1) moves.push({t: 2, f: i, to: j});
+                                } else {
+                                    let tval = s.tab[j][s.tabCount[j]-1];
+                                    let tr = tval & 15; let tsu = tval >> 4;
+                                    let tcol = (tsu===1||tsu===3)?1:0;
+                                    if (bRule === 1) {
+                                        if (tsu === su && r === tr - 1) moves.push({t: 2, f: i, to: j});
+                                    } else {
+                                        if (tcol !== col && r === tr - 1) moves.push({t: 2, f: i, to: j});
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                for(let i=0; i<numFree; i++) {
+                    if (s.free[i] !== 0) {
+                        let val = s.free[i];
+                        let r = val & 15; let su = val >> 4;
+                        let col = (su===1||su===3)?1:0;
+                        for(let j=0; j<8; j++) {
+                            if (s.tabCount[j] === 0) {
+                                if (!eKing || r === 13) moves.push({t: 3, f: i, to: j});
+                            } else {
+                                let tval = s.tab[j][s.tabCount[j]-1];
+                                let tr = tval & 15; let tsu = tval >> 4;
+                                let tcol = (tsu===1||tsu===3)?1:0;
+                                if (bRule === 1) {
+                                    if (tsu === su && r === tr - 1) moves.push({t: 3, f: i, to: j});
+                                } else {
+                                    if (tcol !== col && r === tr - 1) moves.push({t: 3, f: i, to: j});
+                                }
+                            }
+                        }
+                    }
+                }
+                for(let i=0; i<8; i++) {
+                    if (s.tabCount[i] > 1) {
+                        for(let j=0; j<numFree; j++) {
+                            if (s.free[j] === 0) { moves.push({t: 4, f: i, to: j}); break; }
+                        }
+                    }
+                }
+            }
+            moves.sort((a,b) => {
+                let sa = a.t <= 1 ? 100 : (a.t <= 3 ? 10 : 0);
+                let sb = b.t <= 1 ? 100 : (b.t <= 3 ? 10 : 0);
+                return sb - sa;
+            });
+            for (let m of moves) {
+                let ns = { found: s.found.slice(), free: s.free.slice(), tabCount: s.tabCount.slice(), tab: [] };
+                for(let i=0; i<8; i++) ns.tab.push(s.tab[i].slice());
+                if (m.t === 0) { let v = ns.tab[m.f][--ns.tabCount[m.f]]; ns.found[v>>4]++; }
+                else if (m.t === 1) { let v = ns.free[m.f]; ns.free[m.f] = 0; ns.found[v>>4]++; }
+                else if (m.t === 2) { let v = ns.tab[m.f][--ns.tabCount[m.f]]; ns.tab[m.to][ns.tabCount[m.to]++] = v; }
+                else if (m.t === 3) { let v = ns.free[m.f]; ns.free[m.f] = 0; ns.tab[m.to][ns.tabCount[m.to]++] = v; }
+                else if (m.t === 4) { let v = ns.tab[m.f][--ns.tabCount[m.f]]; ns.free[m.to] = v; }
+                if (dfs(ns)) return true;
+            }
+            return false;
+        }
+        let startS = {
+            found: [0,0,0,0],
+            free: Array(6).fill(0),
+            tabCount: startTab.map(c => c.length),
+            tab: startTab.map(c => {
+                let arr = new Array(20).fill(0);
+                for(let i=0; i<c.length; i++) arr[i] = (c[i].s << 4) | c[i].r;
+                return arr;
+            })
+        };
+        return dfs(startS);
+    }
+
     function initGame() {
       if (gameInProgress) {
         stats.streak = 0;
@@ -775,26 +932,26 @@
       emptyKingOnly = false;
       let frozenCount = 0;
       if (mode === 'campaign') {
-         if(campaignStage === 1) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = false; }
-         else if(campaignStage === 2) { numFreeCells = 4; buildRule = 'suit'; emptyKingOnly = false; }
-         else if(campaignStage === 3) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = true; }
-         else if(campaignStage === 4) { numFreeCells = 4; buildRule = 'suit'; emptyKingOnly = true; }
+         if(campaignStage === 1) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = false; frozenCount = 0; }
+         else if(campaignStage === 2) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = false; frozenCount = 2; }
+         else if(campaignStage === 3) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = true; frozenCount = 0; }
+         else if(campaignStage === 4) { numFreeCells = 4; buildRule = 'suit'; emptyKingOnly = false; frozenCount = 0; }
          else if(campaignStage === 5) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = false; frozenCount = 4; }
-         else if(campaignStage === 6) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = false; }
-         else if(campaignStage === 7) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = false; }
-         else if(campaignStage === 8) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = true; }
-         else if(campaignStage === 9) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = true; }
-         else if(campaignStage === 10) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = false; frozenCount = 6; }
-         else if(campaignStage === 11) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = true; frozenCount = 6; }
-         else if(campaignStage === 12) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = false; }
-         else if(campaignStage === 13) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = false; }
-         else if(campaignStage === 14) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = true; }
-         else if(campaignStage === 15) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = true; }
-         else if(campaignStage === 16) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = false; frozenCount = 8; }
-         else if(campaignStage === 17) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = false; frozenCount = 8; }
-         else if(campaignStage === 18) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = true; frozenCount = 8; }
-         else if(campaignStage === 19) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = true; frozenCount = 8; }
-         else if(campaignStage >= 20) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = true; frozenCount = 10; }
+         else if(campaignStage === 6) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = false; frozenCount = 0; }
+         else if(campaignStage === 7) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = false; frozenCount = 2; }
+         else if(campaignStage === 8) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = true; frozenCount = 0; }
+         else if(campaignStage === 9) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = false; frozenCount = 0; }
+         else if(campaignStage === 10) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = false; frozenCount = 4; }
+         else if(campaignStage === 11) { numFreeCells = 4; buildRule = 'suit'; emptyKingOnly = true; frozenCount = 0; }
+         else if(campaignStage === 12) { numFreeCells = 4; buildRule = 'suit'; emptyKingOnly = false; frozenCount = 4; }
+         else if(campaignStage === 13) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = true; frozenCount = 4; }
+         else if(campaignStage === 14) { numFreeCells = 4; buildRule = 'suit'; emptyKingOnly = true; frozenCount = 4; }
+         else if(campaignStage === 15) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = true; frozenCount = 0; }
+         else if(campaignStage === 16) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = false; frozenCount = 4; }
+         else if(campaignStage === 17) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = true; frozenCount = 6; }
+         else if(campaignStage === 18) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = false; frozenCount = 0; }
+         else if(campaignStage === 19) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = false; frozenCount = 4; }
+         else if(campaignStage >= 20) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = true; frozenCount = 0; }
       } else {
          numFreeCells = 4;
          buildRule = 'color';
@@ -850,6 +1007,26 @@
       for(let i=0; i<52; i++) {
         state.tab[c].push(deck[i]);
         c = (c + 1) % 8;
+      }
+
+      if (mode !== 'numbered') {
+        let shuffles = 0;
+        let bRuleInt = buildRule === 'suit' ? 1 : 0;
+        while (true) {
+          if (isHandSolvable(state.tab, numFreeCells, bRuleInt, emptyKingOnly)) break;
+          shuffles++;
+          if (shuffles > 50) break;
+          for(let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+          }
+          c = 0;
+          state.tab = Array.from({length: 8}, () => []);
+          for(let i=0; i<52; i++) {
+            state.tab[c].push(deck[i]);
+            c = (c + 1) % 8;
+          }
+        }
       }
 
       if (frozenCount > 0) {
