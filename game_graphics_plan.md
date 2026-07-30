@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KTetris
 - KBreakout
 - KMaze
 - KRogue
@@ -109,9 +108,12 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSpace
 - KPac
 - KSnake
+- KTetris
 
 
 ## Completed Work Log
+
+- **KTetris (Loop 2):** Implemented expanding shockwave ring animations for line clears and bomb explosions, pulsing glow aura around the active falling piece, animated scanline effect for the ghost piece projection, and a flickering fuse animation for the bomb piece in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
 - **KSnake (Loop 2):** Implemented detailed drawing logic for snake head (with animated tongue), spider rival with wiggling legs, boss drone with pulsing red eye, detailed gems/stars for food items, swirling animation for portals, and brick textures for obstacles in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 - **KPac (Loop 2):** Implemented 4-frame smooth Pac-Man chomp animation with direction-dependent mouth angles and speed glow aura, ghost death return eyes floating back to ghost house, ghost scared blue-to-white warning flash frame animation, 5 level-based bonus fruit sprites with float bounce, power pellet eating energy shockwave rings, maze wall corner junction caps with neon glow, and victory maze flash animation for both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).

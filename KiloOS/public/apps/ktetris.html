@@ -101,6 +101,7 @@
   let particles = [];
   let popups = [];
   let lineFlashes = [];
+  let shockwaves = [];
 
   function saveLeaderboard(newScore, modeIdx, linesCleared, timeMs) {
       let modeLabel = modeNames[modeIdx];
@@ -176,6 +177,7 @@
 
   function triggerLineFlash(yRow) {
       lineFlashes.push({y: yRow, life: 18, maxLife: 18});
+      shockwaves.push({x: BOARD_W / 2, y: yRow * CELL + CELL / 2, radius: 10, maxRadius: 150, life: 25, maxLife: 25, color: '#ffffff'});
       for (let i = 0; i < 25; i++) {
           let px = Math.random() * BOARD_W;
           let py = yRow * CELL + CELL / 2;
@@ -346,6 +348,7 @@
                       }
                       score += 500;
                       addPopup(BOARD_W / 2, H * CELL / 2, "BOMB BOOM! +500", "#ff3333");
+                      shockwaves.push({x: x * CELL + CELL / 2, y: y * CELL + CELL / 2, radius: 20, maxRadius: 200, life: 30, maxLife: 30, color: '#ff3333'});
                       playSound(150, 'sawtooth', 0.1); setTimeout(() => playSound(100, 'square', 0.2), 100);
                   }
               }
@@ -456,6 +459,7 @@
       particles = [];
       popups = [];
       lineFlashes = [];
+      shockwaves = [];
       nextQueue = [];
       nukeCharges = 2;
       swapCharges = 3;
@@ -589,17 +593,25 @@
   });
 
   // Sprite / 3D Beveled Gem Block Renderer
-  function drawBlock(ctx, px, py, colorIdx, size = CELL, isGhost = false) {
+  function drawBlock(ctx, px, py, colorIdx, size = CELL, drawState = 0) { // drawState: 0=normal, 1=ghost, 2=active
       if (!colorIdx || colorIdx <= 0) return;
       const baseColor = colors[colorIdx] || '#888899';
+      const tick = Date.now();
       
-      if (isGhost) {
+      if (drawState === 1) { // Ghost
           ctx.save();
-          const pulse = 0.4 + 0.25 * Math.sin(Date.now() * 0.009);
+          const pulse = 0.4 + 0.25 * Math.sin(tick * 0.009);
           ctx.globalAlpha = pulse;
           ctx.strokeStyle = baseColor;
           ctx.lineWidth = 1.5;
           ctx.strokeRect(px + 1.5, py + 1.5, size - 3, size - 3);
+          
+          // Animated scanline for ghost
+          const scanY = (tick * 0.05) % size;
+          ctx.fillStyle = baseColor;
+          ctx.globalAlpha = pulse * 0.8;
+          ctx.fillRect(px + 2, py + scanY, size - 4, 2);
+          
           ctx.fillStyle = baseColor;
           ctx.globalAlpha = pulse * 0.15;
           ctx.fillRect(px + 2, py + 2, size - 4, size - 4);
@@ -611,6 +623,12 @@
       const bHi = bevelHi[colorIdx] || '#ffffff';
       const bSh = bevelSh[colorIdx] || '#222222';
       const bSize = Math.max(2, Math.floor(size / 6));
+
+      // Active piece pulsing glow aura
+      if (drawState === 2) {
+          ctx.shadowColor = baseColor;
+          ctx.shadowBlur = 8 + 4 * Math.sin(tick * 0.01);
+      }
 
       // Main Background
       ctx.fillStyle = baseColor;
@@ -655,9 +673,15 @@
 
       // Special details
       if (colorIdx === 15) { // Bomb
-          ctx.fillStyle = '#ffff00';
+          const fuseFlicker = Math.random() > 0.5 ? '#ffff00' : '#ffffff';
+          const innerPulse = Math.abs(Math.sin(tick * 0.015));
+          ctx.fillStyle = '#ff0000';
           ctx.beginPath();
-          ctx.arc(px + size / 2, py + size / 2, Math.max(2, size / 4), 0, Math.PI * 2);
+          ctx.arc(px + size / 2, py + size / 2, Math.max(3, size / 3), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = fuseFlicker;
+          ctx.beginPath();
+          ctx.arc(px + size / 2, py + size / 2, Math.max(1, (size / 4) * innerPulse), 0, Math.PI * 2);
           ctx.fill();
       } else if (colorIdx === 14) { // Garbage
           ctx.fillStyle = '#222233';
@@ -692,7 +716,7 @@
       for (let y = 0; y < H; y++) {
           for (let x = 0; x < W; x++) {
               if (grid[y][x]) {
-                  drawBlock(ctx, offX + x * CELL, offY + y * CELL, grid[y][x], CELL);
+                  drawBlock(ctx, offX + x * CELL, offY + y * CELL, grid[y][x], CELL, 0);
               }
           }
       }
@@ -708,7 +732,7 @@
               for (let j = 0; j < 5; j++) {
                   if (shape & (1 << (24 - (i * 5 + j)))) {
                       if (ghost_y + i >= 0) {
-                          drawBlock(ctx, offX + (cx + j) * CELL, offY + (ghost_y + i) * CELL, drawVal, CELL, true);
+                          drawBlock(ctx, offX + (cx + j) * CELL, offY + (ghost_y + i) * CELL, drawVal, CELL, 1);
                       }
                   }
               }
@@ -719,7 +743,7 @@
               for (let j = 0; j < 5; j++) {
                   if (shape & (1 << (24 - (i * 5 + j)))) {
                       if (cy + i >= 0) {
-                          drawBlock(ctx, offX + (cx + j) * CELL, offY + (cy + i) * CELL, drawVal, CELL, false);
+                          drawBlock(ctx, offX + (cx + j) * CELL, offY + (cy + i) * CELL, drawVal, CELL, 2);
                       }
                   }
               }
@@ -731,6 +755,23 @@
           let alpha = f.life / f.maxLife;
           ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
           ctx.fillRect(offX, offY + f.y * CELL, BOARD_W, CELL);
+      }
+
+      // Shockwaves
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+          let sw = shockwaves[i];
+          let alpha = sw.life / sw.maxLife;
+          let r = sw.radius + (sw.maxRadius - sw.radius) * (1 - alpha);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = sw.color;
+          ctx.lineWidth = 2 + 2 * alpha;
+          ctx.beginPath();
+          ctx.arc(offX + sw.x, offY + sw.y, r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+          sw.life--;
+          if (sw.life <= 0) shockwaves.splice(i, 1);
       }
 
       // Particles

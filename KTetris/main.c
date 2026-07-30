@@ -348,6 +348,16 @@ typedef struct {
 TextPopup text_popups[MAX_POPUPS];
 int num_popups = 0;
 
+typedef struct {
+    float x, y;
+    float radius, max_radius;
+    int life, max_life;
+    COLORREF color;
+} Shockwave;
+#define MAX_SHOCKWAVES 5
+Shockwave shockwaves[MAX_SHOCKWAVES];
+int num_shockwaves = 0;
+
 unsigned int rng_state = 12345;
 int random_int(int max) {
     if (max <= 0) return 0;
@@ -387,6 +397,16 @@ void AddLineFlash(int yRow) {
         line_flashes[num_flashes].life = 15;
         line_flashes[num_flashes].max_life = 15;
         num_flashes++;
+    }
+    if (num_shockwaves < MAX_SHOCKWAVES) {
+        shockwaves[num_shockwaves].x = (W * CELL_SIZE) / 2.0f;
+        shockwaves[num_shockwaves].y = yRow * CELL_SIZE + CELL_SIZE / 2.0f;
+        shockwaves[num_shockwaves].radius = 10.0f;
+        shockwaves[num_shockwaves].max_radius = 150.0f;
+        shockwaves[num_shockwaves].life = 20;
+        shockwaves[num_shockwaves].max_life = 20;
+        shockwaves[num_shockwaves].color = RGB(255, 255, 255);
+        num_shockwaves++;
     }
     for (int i = 0; i < 25; i++) {
         float px = (float)(random_int(W * CELL_SIZE));
@@ -573,6 +593,16 @@ void lock_piece() {
                     }
                     score += 500;
                     AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2), "BOMB BOOM! +500", RGB(255, 50, 50));
+                    if (num_shockwaves < MAX_SHOCKWAVES) {
+                        shockwaves[num_shockwaves].x = (float)(x * CELL_SIZE + CELL_SIZE / 2);
+                        shockwaves[num_shockwaves].y = (float)(y * CELL_SIZE + CELL_SIZE / 2);
+                        shockwaves[num_shockwaves].radius = 20.0f;
+                        shockwaves[num_shockwaves].max_radius = 200.0f;
+                        shockwaves[num_shockwaves].life = 25;
+                        shockwaves[num_shockwaves].max_life = 25;
+                        shockwaves[num_shockwaves].color = RGB(255, 50, 50);
+                        num_shockwaves++;
+                    }
                     Beep(150, 100); Beep(100, 200);
                 }
             }
@@ -710,6 +740,7 @@ void InitGame() {
     num_particles = 0;
     num_flashes = 0;
     num_popups = 0;
+    num_shockwaves = 0;
     gravity_timer = 0;
     mode_timer_ms = 0;
     ultra_time_left_ms = 120000;
@@ -758,13 +789,27 @@ void InitGame() {
     SpawnPiece();
 }
 
-void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhost) {
+#include <math.h>
+
+void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawState, DWORD tick) {
     if (colorIdx <= 0 || colorIdx >= 16) return;
-    if (isGhost) {
+    
+    // Ghost
+    if (drawState == 1) {
         HPEN pen = CreatePen(PS_SOLID, 1, colors[colorIdx]);
         HPEN oldPen = (HPEN)SelectObject(hdc, pen);
         HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
         Rectangle(hdc, px + 1, py + 1, px + size - 1, py + size - 1);
+        
+        // Scanline
+        int scanY = (tick / 20) % size;
+        if (scanY < 2) scanY = 2;
+        if (scanY > size - 4) scanY = size - 4;
+        HBRUSH scanBrush = CreateSolidBrush(colors[colorIdx]);
+        RECT rScan = { px + 2, py + scanY, px + size - 2, py + scanY + 2 };
+        FillRect(hdc, &rScan, scanBrush);
+        DeleteObject(scanBrush);
+        
         MoveToEx(hdc, px + 4, py + size / 2, NULL); LineTo(hdc, px + size - 4, py + size / 2);
         MoveToEx(hdc, px + size / 2, py + 4, NULL); LineTo(hdc, px + size / 2, py + size - 4);
         SelectObject(hdc, oldPen);
@@ -775,6 +820,20 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhos
 
     int bSize = size / 6;
     if (bSize < 2) bSize = 2;
+    
+    // Active Piece Glow Aura Simulation (draw a larger rect behind)
+    if (drawState == 2) {
+        int glowW = (int)(2.0 * sin((tick % 1000) * 0.00628));
+        if (glowW > 0) {
+            HPEN glowPen = CreatePen(PS_SOLID, glowW, colors[colorIdx]);
+            HPEN oldGlowPen = (HPEN)SelectObject(hdc, glowPen);
+            HBRUSH nullBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, px, py, px + size, py + size);
+            SelectObject(hdc, oldGlowPen);
+            SelectObject(hdc, nullBrush);
+            DeleteObject(glowPen);
+        }
+    }
 
     HBRUSH bgBrush = CreateSolidBrush(colors[colorIdx]);
     RECT rMain = { px + 1, py + 1, px + size - 1, py + size - 1 };
@@ -819,10 +878,18 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhos
     DeleteObject(whiteBrush);
 
     if (colorIdx == 15) { // Bomb
-        HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
-        SelectObject(hdc, yellowBrush);
-        Ellipse(hdc, px + size / 4, py + size / 4, px + size * 3 / 4, py + size * 3 / 4);
-        DeleteObject(yellowBrush);
+        int rPulse = (int)(2.0 * sin((tick % 1000) * 0.01));
+        HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
+        SelectObject(hdc, redBrush);
+        Ellipse(hdc, px + size / 4 - rPulse, py + size / 4 - rPulse, px + size * 3 / 4 + rPulse, py + size * 3 / 4 + rPulse);
+        DeleteObject(redBrush);
+        
+        if (random_int(2) == 0) {
+            HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
+            SelectObject(hdc, yellowBrush);
+            Ellipse(hdc, px + size / 2 - 2, py + size / 2 - 2, px + size / 2 + 2, py + size / 2 + 2);
+            DeleteObject(yellowBrush);
+        }
     }
 
     SelectObject(hdc, oldPen);
@@ -914,6 +981,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (line_flashes[i].life <= 0) {
                         line_flashes[i] = line_flashes[num_flashes - 1];
                         num_flashes--;
+                    }
+                }
+                
+                // Update shockwaves
+                for (int i = num_shockwaves - 1; i >= 0; i--) {
+                    shockwaves[i].life--;
+                    if (shockwaves[i].life <= 0) {
+                        shockwaves[i] = shockwaves[num_shockwaves - 1];
+                        num_shockwaves--;
                     }
                 }
 
@@ -1076,10 +1152,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(gridPen);
 
             // Draw grid blocks
+            DWORD currentTick = GetTickCount();
             for (int y = 0; y < H; y++) {
                 for (int x = 0; x < W; x++) {
                     if (grid[y][x]) {
-                        DrawTetrisBlock(memDC, offX + x * CELL_SIZE, offY + y * CELL_SIZE, grid[y][x], CELL_SIZE, 0);
+                        DrawTetrisBlock(memDC, offX + x * CELL_SIZE, offY + y * CELL_SIZE, grid[y][x], CELL_SIZE, 0, currentTick);
                     }
                 }
             }
@@ -1098,7 +1175,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for (int x = 0; x < 5; x++) {
                         if (shape & (1 << (24 - (y * 5 + x)))) {
                             if (ghost_y + y >= 0) {
-                                DrawTetrisBlock(memDC, offX + (current_x + x) * CELL_SIZE, offY + (ghost_y + y) * CELL_SIZE, draw_val, CELL_SIZE, 1);
+                                DrawTetrisBlock(memDC, offX + (current_x + x) * CELL_SIZE, offY + (ghost_y + y) * CELL_SIZE, draw_val, CELL_SIZE, 1, currentTick);
                             }
                         }
                     }
@@ -1110,7 +1187,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (shape & (1 << (24 - (y * 5 + x)))) {
                             int py = current_y + y;
                             if (py >= 0) {
-                                DrawTetrisBlock(memDC, offX + (current_x + x) * CELL_SIZE, offY + py * CELL_SIZE, draw_val, CELL_SIZE, 0);
+                                DrawTetrisBlock(memDC, offX + (current_x + x) * CELL_SIZE, offY + py * CELL_SIZE, draw_val, CELL_SIZE, 2, currentTick);
                             }
                         }
                     }
@@ -1124,6 +1201,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FillRect(memDC, &rFlash, flashBrush);
                 DeleteObject(flashBrush);
             }
+
+            // Draw Shockwaves
+            HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH oldB = (HBRUSH)SelectObject(memDC, nullBrush);
+            for (int i = 0; i < num_shockwaves; i++) {
+                float alpha = (float)shockwaves[i].life / shockwaves[i].max_life;
+                float r = shockwaves[i].radius + (shockwaves[i].max_radius - shockwaves[i].radius) * (1.0f - alpha);
+                int lw = (int)(2.0f + 3.0f * alpha);
+                HPEN sPen = CreatePen(PS_SOLID, lw, shockwaves[i].color);
+                HPEN oldP = (HPEN)SelectObject(memDC, sPen);
+                Ellipse(memDC, offX + (int)(shockwaves[i].x - r), offY + (int)(shockwaves[i].y - r), offX + (int)(shockwaves[i].x + r), offY + (int)(shockwaves[i].y + r));
+                SelectObject(memDC, oldP);
+                DeleteObject(sPen);
+            }
+            SelectObject(memDC, oldB);
 
             // Draw Particles
             for (int i = 0; i < num_particles; i++) {
@@ -1209,7 +1301,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int y = 0; y < 5; y++) {
                     for (int x = 0; x < 5; x++) {
                         if (n0 & (1 << (24 - (y * 5 + x)))) {
-                            DrawTetrisBlock(memDC, sideX + x * 13, 178 + y * 13, v0, 13, 0);
+                            DrawTetrisBlock(memDC, sideX + x * 13, 178 + y * 13, v0, 13, 0, currentTick);
                         }
                     }
                 }
@@ -1220,7 +1312,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int y = 0; y < 5; y++) {
                     for (int x = 0; x < 5; x++) {
                         if (n1 & (1 << (24 - (y * 5 + x)))) {
-                            DrawTetrisBlock(memDC, sideX + x * 9, 248 + y * 9, v1, 9, 0);
+                            DrawTetrisBlock(memDC, sideX + x * 9, 248 + y * 9, v1, 9, 0, currentTick);
                         }
                     }
                 }
@@ -1231,7 +1323,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int y = 0; y < 5; y++) {
                     for (int x = 0; x < 5; x++) {
                         if (n2 & (1 << (24 - (y * 5 + x)))) {
-                            DrawTetrisBlock(memDC, sideX + 65 + x * 9, 248 + y * 9, v2, 9, 0);
+                            DrawTetrisBlock(memDC, sideX + 65 + x * 9, 248 + y * 9, v2, 9, 0, currentTick);
                         }
                     }
                 }
@@ -1247,7 +1339,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int y = 0; y < 5; y++) {
                     for (int x = 0; x < 5; x++) {
                         if (h0 & (1 << (24 - (y * 5 + x)))) {
-                            DrawTetrisBlock(memDC, sideX + x * 11, 312 + y * 11, hv, 11, 0);
+                            DrawTetrisBlock(memDC, sideX + x * 11, 312 + y * 11, hv, 11, 0, currentTick);
                         }
                     }
                 }
