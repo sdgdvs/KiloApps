@@ -125,7 +125,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KSpace     | Tier 1 | Loop 7 done (20 waves, bosses, 4 skills) | Loop 8: New enemy formations, weapon upgrades, scoring combos |
 | KMaze      | Tier 1 | Loop 7 done (35 stages, Minotaur boss, fog) | Loop 8: New maze themes, puzzle rooms, NPC encounters, deeper item system |
 | KPac       | Tier 1 | Loop 7 done (20 mazes, 5 ghosts, Ghost King) | Loop 8: New maze hazards, ghost behaviors, scoring variety |
 | KBreakout  | Tier 1 | Loop 7 done (20 stages, Boss Fortress) | Loop 8: New brick types, boss variety, level editor concepts |
@@ -134,6 +133,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KQuest     | Tier 1 | Loop 7 done (Tavern, side quests, gear upgrades, 17 biomes) | Loop 8: Job classes, magic system overhaul, companion allies |
 | KStarship  | Tier 1 | Loop 7 done (Crew, trade routes, narrative events, tech tree) | Loop 8: Fleet battles, alien diplomacy, deep space anomalies |
 | KAlchemy   | Tier 1 | Creator building (Phase 12/14) | Wait for Creator to finish — then Loop 1 content pass |
+| KSpace     | Tier 1 | Loop 8 done (Formation 9, Weapons, Combos) | Loop 9: Multi-phase bosses, escort missions, branching paths |
 | KAsteroids | Tier 1 | Loop 8 done (Asteroid belt, missile weapon, cruiser shields) | Loop 9: Branching sector paths, escort missions, new hazards |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
