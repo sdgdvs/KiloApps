@@ -937,6 +937,29 @@
             }
         }
 
+        function countSolutionsCore(r, c, countObj) {
+            if (r === gridSize) {
+                countObj.count++;
+                return countObj.count > 1;
+            }
+            let nr = c === gridSize - 1 ? r + 1 : r;
+            let nc = c === gridSize - 1 ? 0 : c + 1;
+            if (board[r][c] !== 0) {
+                return countSolutionsCore(nr, nc, countObj);
+            }
+            for (let v = 1; v <= gridSize; v++) {
+                if (isValidPlacement(r, c, v)) {
+                    board[r][c] = v;
+                    if (countSolutionsCore(nr, nc, countObj)) {
+                        board[r][c] = 0;
+                        return true;
+                    }
+                    board[r][c] = 0;
+                }
+            }
+            return false;
+        }
+
         function generateBoard(gSize = 9, daily = false, rush = false, fogCount = 0, cageCount = 0) {
             gridSize = gSize;
             if (gridSize === 4) { boxW = 2; boxH = 2; }
@@ -1025,11 +1048,30 @@
 
             board = JSON.parse(JSON.stringify(grid));
             let empties = [];
-            while(removal > 0) {
-                let r = Math.floor(rng() * gridSize);
-                let c = Math.floor(rng() * gridSize);
+            let removalTarget = removal;
+            let requireUnique = (removalTarget <= (gridSize * gridSize) / 2);
+            
+            let pos = [];
+            for(let i=0; i<gridSize*gridSize; i++) pos.push(i);
+            shuffleArray(pos, rng);
+
+            let pIdx = 0;
+            while(removal > 0 && pIdx < pos.length) {
+                let r = Math.floor(pos[pIdx] / gridSize);
+                let c = pos[pIdx] % gridSize;
+                pIdx++;
                 if(board[r][c] !== 0) {
+                    let temp = board[r][c];
                     board[r][c] = 0;
+                    
+                    if (requireUnique) {
+                        let countObj = { count: 0 };
+                        countSolutionsCore(0, 0, countObj);
+                        if (countObj.count > 1) {
+                            board[r][c] = temp;
+                            continue;
+                        }
+                    }
                     empties.push({r, c});
                     removal--;
                 }

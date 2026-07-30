@@ -473,6 +473,64 @@ void UpdatePowerupButtons() {
     }
 }
 
+int IsValidPlacement(int r, int c, int num) {
+    for(int i=0; i<gridSize; i++) {
+        if(i != c && board[r][i] == num) return 0;
+        if(i != r && board[i][c] == num) return 0;
+    }
+    int br = (r/boxH)*boxH, bc = (c/boxW)*boxW;
+    for(int i=0; i<boxH; i++) {
+        for(int j=0; j<boxW; j++) {
+            if((br+i != r || bc+j != c) && board[br+i][bc+j] == num) return 0;
+        }
+    }
+    // Killer Sudoku Cage Check
+    if (cage_id[r][c] > 0) {
+        int cid = cage_id[r][c];
+        int cageSum = 0, cageCountCells = 0, cageFilled = 0;
+        for (int cr=0; cr<gridSize; cr++) {
+            for (int cc=0; cc<gridSize; cc++) {
+                if (cage_id[cr][cc] == cid) {
+                    cageCountCells++;
+                    int val = (cr == r && cc == c) ? num : board[cr][cc];
+                    if (val > 0) {
+                        cageFilled++;
+                        cageSum += val;
+                    }
+                }
+            }
+        }
+        if (cageSum > cage_sum[cid] || (cageFilled == cageCountCells && cageSum != cage_sum[cid])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int CountSolutionsCore(int r, int c, int* count) {
+    if (r == gridSize) {
+        (*count)++;
+        return (*count > 1) ? 1 : 0;
+    }
+    int nr = c == gridSize - 1 ? r + 1 : r;
+    int nc = c == gridSize - 1 ? 0 : c + 1;
+    if (board[r][c] != 0) {
+        return CountSolutionsCore(nr, nc, count);
+    }
+    for (int v = 1; v <= gridSize; v++) {
+        if (IsValidPlacement(r, c, v)) {
+            board[r][c] = v;
+            if (CountSolutionsCore(nr, nc, count)) {
+                board[r][c] = 0;
+                return 1;
+            }
+            board[r][c] = 0;
+        }
+    }
+    return 0;
+}
+
+
 void GenerateBoardEx(int gSize, int removal, int isDaily, int fogCount, int cageCount, int isRush) {
     gridSize = gSize;
     if (gridSize == 4) { boxW = 2; boxH = 2; }
@@ -538,11 +596,30 @@ void GenerateBoardEx(int gSize, int removal, int isDaily, int fogCount, int cage
         }
     }
 
-    while(removal > 0) {
-        int r = rand() % gridSize;
-        int c = rand() % gridSize;
+    int removalTarget = removal;
+    int requireUnique = (removalTarget <= (gridSize * gridSize) / 2);
+    
+    int pos[MAX_GRID * MAX_GRID];
+    for(int i=0; i<gridSize*gridSize; i++) pos[i] = i;
+    ShuffleArray(pos, gridSize*gridSize);
+
+    int pIdx = 0;
+    while(removal > 0 && pIdx < gridSize*gridSize) {
+        int r = pos[pIdx] / gridSize;
+        int c = pos[pIdx] % gridSize;
+        pIdx++;
         if(board[r][c] != 0) {
+            int temp = board[r][c];
             board[r][c] = 0;
+            
+            if (requireUnique) {
+                int count = 0;
+                CountSolutionsCore(0, 0, &count);
+                if (count > 1) {
+                    board[r][c] = temp;
+                    continue;
+                }
+            }
             fixed[r][c] = 0;
             removal--;
         }
@@ -1179,7 +1256,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (cage_id[sel_r][sel_c] > 0) {
                                 int cid = cage_id[sel_r][sel_c];
                                 int cageSum = 0, cageCountCells = 0, cageFilled = 0;
-                                int dup = 0;
                                 for (int r=0; r<gridSize; r++) {
                                     for (int c=0; c<gridSize; c++) {
                                         if (cage_id[r][c] == cid) {
