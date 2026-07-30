@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>KSnake - Advanced Arcade (Loop 7)</title>
+    <title>KSnake - Advanced Arcade (Loop 8)</title>
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; padding: 0; background: #0f0f1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; user-select: none; }
@@ -126,6 +126,7 @@
             <div class="legend-item"><span class="dot" style="background:#ffd700"></span>Gold Apple</div>
             <div class="legend-item"><span class="dot" style="background:#8e44ad"></span>Poison Berry</div>
             <div class="legend-item"><span class="dot" style="background:#e67e22"></span>Speed Berry</div>
+            <div class="legend-item"><span class="dot" style="background:#00d2d3"></span>Ghost Berry</div>
             <div class="legend-item"><span class="dot" style="background:#00d2d3"></span>Portal</div>
         </div>
 
@@ -170,6 +171,7 @@
         let goldenApple = null, goldenTimer = 0;
         let poisonBerry = null, poisonTimer = 0, poisonActiveTimer = 0;
         let speedBerry = null, speedTimer = 0, speedActiveTimer = 0;
+        let ghostBerry = null;
 
         // Active Skills (G, F, M)
         let ghostCd = 0, ghostActive = 0;
@@ -404,7 +406,7 @@
             } else if (lvl === 20) {
                 let px = [1, 17, 1, 17], py = [1, 1, 17, 17];
                 for(let k=0; k<4; k++) obstacles.push({x: px[k], y: py[k]});
-                boss.alive = true; boss.hp = 15; boss.maxHp = 15; boss.dir = {x: 0, y: 1};
+                boss.alive = true; boss.hp = (campaignLevel === 25 ? 25 : 15); boss.maxHp = (campaignLevel === 25 ? 25 : 15); boss.dir = {x: 0, y: 1};
                 boss.body = [];
                 for(let k=0; k<8; k++) boss.body.push({x: 10, y: 2 + k});
                 bossBarContainer.style.display = 'block';
@@ -420,7 +422,7 @@
                 let body = [];
                 let rx = (r === 0) ? 16 : 3, ry = (r === 0) ? 14 : 16;
                 for(let b=0; b<4; b++) body.push({x: (r === 0) ? (rx - b) : (rx + b), y: ry});
-                rivals.push({ alive: true, len: 4, respawnTimer: 0, dir: {x: r===0?-1:1, y: 0}, body });
+                rivals.push({ alive: true, len: 4, respawnTimer: 0, dir: {x: r===0?-1:1, y: 0}, body, type: r % 2 });
             }
         }
 
@@ -437,6 +439,7 @@
             goldenApple = null; goldenTimer = 0;
             poisonBerry = null; poisonTimer = 0; poisonActiveTimer = 0;
             speedBerry = null; speedTimer = 0; speedActiveTimer = 0;
+            ghostBerry = null;
             
             ghostCd = 0; ghostActive = 0;
             freezeCd = 0; freezeActive = 0;
@@ -483,7 +486,7 @@
         function updateHeader() {
             document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
             if (gameMode === 'campaign') {
-                document.getElementById('modeDisplay').innerText = (campaignLevel === 20 && boss.alive) ? `L20 BOSS` : `Stage: ${campaignLevel}/20`;
+                document.getElementById('modeDisplay').innerText = ((campaignLevel === 20 || campaignLevel === 25) && boss.alive) ? `L20 BOSS` : `Stage: ${campaignLevel}/25`;
             } else {
                 document.getElementById('modeDisplay').innerText = `Mode: ${gameMode.charAt(0).toUpperCase() + gameMode.slice(1)}`;
             }
@@ -559,6 +562,16 @@
             poisonTimer = 50;
         }
 
+        function placeGhostBerry() {
+            let ok = false;
+            while(!ok) {
+                ghostBerry = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
+                ok = true;
+                if (obstacles.some(o => o.x === ghostBerry.x && o.y === ghostBerry.y)) ok = false;
+                if (snake.some(s => s.x === ghostBerry.x && s.y === ghostBerry.y)) ok = false;
+                if (ghostBerry.x === food.x && ghostBerry.y === food.y) ok = false;
+            }
+        }
         function placeSpeedBerry() {
             let ok = false;
             while(!ok) {
@@ -586,6 +599,7 @@
 
                 let target = food;
                 if (goldenApple) target = goldenApple;
+                if (riv.type === 1) target = snake[0];
                 let bestDir = riv.dir, minDist = 9999;
                 let dirs = [{x:0, y:-1}, {x:0, y:1}, {x:-1, y:0}, {x:1, y:0}];
 
@@ -654,7 +668,7 @@
                 else if (item.y < py) item.y++; else if (item.y > py) item.y--;
             };
 
-            pull(food); pull(goldenApple); pull(poisonBerry); pull(speedBerry);
+            pull(food); pull(goldenApple); pull(poisonBerry); pull(speedBerry); pull(ghostBerry);
         }
 
         function update() {
@@ -732,7 +746,7 @@
 
                 if (gameMode === 'campaign') {
                     applesEaten++;
-                    if (applesEaten >= 8 && campaignLevel < 20) {
+                    if (applesEaten >= 8 && campaignLevel < 25) {
                         campaignLevel++;
                         applesEaten = 0;
                         initCampaignStage(campaignLevel);
@@ -750,6 +764,7 @@
                 if (!goldenApple && Math.random() < 0.20) placeGoldenApple();
                 if (!poisonBerry && Math.random() < 0.20) placePoisonBerry();
                 if (!speedBerry && Math.random() < 0.20) placeSpeedBerry();
+                if (!ghostBerry && Math.random() < 0.20) placeGhostBerry();
             } else {
                 snake.pop();
             }
@@ -781,6 +796,13 @@
                 score += 300;
                 speedActiveTimer = 50;
                 speedBerry = null;
+            }
+            if (ghostBerry && head.x === ghostBerry.x && head.y === ghostBerry.y) {
+                playSound('skill');
+                addEatParticles(ghostBerry.x, ghostBerry.y, '#00d2d3');
+                score += 300;
+                ghostActive = 150;
+                ghostBerry = null;
             }
 
             updateHeader();
@@ -843,7 +865,7 @@
             if (gameState !== 1 && gameState !== 3) return;
             const state = {
                 snake, food, dir, lastDir, gameMode, wrapMode, difficulty, score, scoreMult,
-                currentSpeed, goldenApple, poisonBerry, speedBerry, obstacles, rivals, boss,
+                currentSpeed, goldenApple, poisonBerry, speedBerry, ghostBerry, obstacles, rivals, boss,
                 ghostActive, ghostCd, freezeActive, freezeCd, magnetActive, magnetCd, campaignLevel, applesEaten
             };
             safeSetItem('ksnakeSaveState', state);
@@ -861,7 +883,7 @@
                 snake = state.snake; food = state.food; dir = state.dir; lastDir = state.lastDir;
                 gameMode = state.gameMode; wrapMode = state.wrapMode; difficulty = state.difficulty;
                 score = state.score; scoreMult = state.scoreMult; currentSpeed = state.currentSpeed;
-                goldenApple = state.goldenApple; poisonBerry = state.poisonBerry; speedBerry = state.speedBerry;
+                goldenApple = state.goldenApple; poisonBerry = state.poisonBerry; speedBerry = state.speedBerry; ghostBerry = state.ghostBerry;
                 obstacles = state.obstacles; rivals = state.rivals || []; boss = state.boss || {alive:false};
                 ghostActive = state.ghostActive; ghostCd = state.ghostCd;
                 freezeActive = state.freezeActive; freezeCd = state.freezeCd;
@@ -1003,21 +1025,19 @@
             ctx.restore();
         }
 
-        function drawRivalSegment(s, index) {
+        function drawRivalSegment(s, index, type) {
             let cx = s.x * CELL + CELL / 2, cy = s.y * CELL + CELL / 2;
             let time = Date.now() / 200;
             ctx.save();
             ctx.translate(cx, cy);
             
             if (index === 0) {
-                // Spider Head
-                ctx.fillStyle = '#2c3e50';
+                ctx.fillStyle = type === 1 ? '#c0392b' : '#2c3e50';
                 ctx.beginPath(); ctx.arc(0, 0, CELL/2 - 1, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = '#e74c3c';
                 ctx.beginPath(); ctx.arc(2, -2, 1.5, 0, Math.PI*2); ctx.arc(2, 2, 1.5, 0, Math.PI*2); ctx.fill();
             } else {
-                // Spider Body
-                ctx.fillStyle = '#34495e';
+                ctx.fillStyle = type === 1 ? '#e74c3c' : '#34495e';
                 ctx.beginPath(); ctx.arc(0, 0, CELL/2 - 2, 0, Math.PI * 2); ctx.fill();
             }
             
@@ -1169,11 +1189,12 @@
 
             if (goldenApple) drawGem(goldenApple.x, goldenApple.y, '#ffd700', true);
             if (poisonBerry) drawGem(poisonBerry.x, poisonBerry.y, '#8e44ad', false);
-            if (speedBerry) drawGem(speedBerry.x, speedBerry.y, '#00d2d3', false); // Cyan Ghost Food (Speed)
+            if (speedBerry) drawGem(speedBerry.x, speedBerry.y, '#e67e22', false);
+            if (ghostBerry) drawGem(ghostBerry.x, ghostBerry.y, '#00d2d3', false); // Cyan Ghost Food (Speed)
 
             for (let r of rivals) {
                 if (!r.alive) continue;
-                for (let i = r.body.length - 1; i >= 0; i--) drawRivalSegment(r.body[i], i);
+                for (let i = r.body.length - 1; i >= 0; i--) drawRivalSegment(r.body[i], i, r.type);
             }
 
             if (boss.alive) {

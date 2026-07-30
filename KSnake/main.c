@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <math.h>
 
 #define CELL_SIZE 25
 #define GRID_WIDTH 20
@@ -22,6 +23,7 @@ struct CPUSnake {
     int dir_x, dir_y;
     int alive;
     int respawn_timer;
+    int type;
 };
 
 struct Boss {
@@ -51,6 +53,7 @@ struct Point poison_berry = { -1, -1 };
 int poison_timer = 0, poison_active_timer = 0;
 struct Point speed_berry = { -1, -1 };
 int speed_timer = 0, speed_active_timer = 0;
+struct Point ghost_berry = { -1, -1 };
 
 // Power-ups (Activated Skills: G, F, M)
 int ghost_cd = 0, ghost_active = 0;
@@ -66,7 +69,7 @@ int portal_active = 0;
 int portal_shift_timer = 0;
 
 // CPU Rivals & Boss
-struct CPUSnake rivals[2];
+struct CPUSnake rivals[4];
 int num_rivals = 0;
 struct Boss boss;
 
@@ -101,6 +104,7 @@ void PlaceFood(void);
 void PlaceGoldenApple(void);
 void PlacePoisonBerry(void);
 void PlaceSpeedBerry(void);
+void PlaceGhostBerry(void);
 void InitCampaignStage(int level);
 void InitCPURivals(void);
 void InitGame(void);
@@ -285,6 +289,18 @@ void PlacePoisonBerry() {
     poison_timer = 50;
 }
 
+void PlaceGhostBerry() {
+    int ok = 0;
+    while(!ok) {
+        int i;
+        ghost_berry.x = random_int(GRID_WIDTH); ghost_berry.y = random_int(GRID_HEIGHT);
+        ok = 1;
+        for(i=0; i<num_obstacles; i++) if (ghost_berry.x == obstacles[i].x && ghost_berry.y == obstacles[i].y) ok = 0;
+        for(i=0; i<snake_len; i++) if (ghost_berry.x == snake[i].x && ghost_berry.y == snake[i].y) ok = 0;
+        if (ghost_berry.x == food.x && ghost_berry.y == food.y) ok = 0;
+    }
+}
+
 void PlaceSpeedBerry() {
     int ok = 0;
     while(!ok) {
@@ -304,6 +320,7 @@ void InitCPURivals() {
         int b;
         rivals[r].alive = 1;
         rivals[r].len = 4;
+        rivals[r].type = r % 2;
         rivals[r].respawn_timer = 0;
         rivals[r].dir_x = (r == 0) ? -1 : 1;
         rivals[r].dir_y = 0;
@@ -515,6 +532,44 @@ void InitCampaignStage(int level) {
             boss.body[k].x = 10;
             boss.body[k].y = 2 + k;
         }
+    } else if (level == 21) {
+        for(i=4; i<=15; i++) {
+            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 4; num_obstacles++;
+            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 15; num_obstacles++;
+        }
+        num_rivals = 2;
+    } else if (level == 22) {
+        for(i=6; i<=13; i++) {
+            obstacles[num_obstacles].x = 6; obstacles[num_obstacles].y = i; num_obstacles++;
+            obstacles[num_obstacles].x = 13; obstacles[num_obstacles].y = i; num_obstacles++;
+        }
+        num_rivals = 3;
+    } else if (level == 23) {
+        for(i=2; i<=17; i++) {
+            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = i; num_obstacles++;
+            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 19 - i; num_obstacles++;
+        }
+        num_rivals = 3;
+    } else if (level == 24) {
+        for(i=2; i<=17; i+=2) {
+            for(k=2; k<=17; k+=2) {
+                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = k; num_obstacles++;
+            }
+        }
+        num_rivals = 4;
+    } else if (level == 25) {
+        for(i=0; i<20; i++) {
+            if(i<8 || i>12) {
+                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 0; num_obstacles++;
+                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 19; num_obstacles++;
+                obstacles[num_obstacles].x = 0; obstacles[num_obstacles].y = i; num_obstacles++;
+                obstacles[num_obstacles].x = 19; obstacles[num_obstacles].y = i; num_obstacles++;
+            }
+        }
+        boss.alive = 1; boss.hp = 25; boss.max_hp = 25; boss.len = 10;
+        boss.dir_x = 0; boss.dir_y = 1;
+        for(k=0; k<boss.len; k++) { boss.body[k].x = 10; boss.body[k].y = 2 + k; }
+        num_rivals = 2;
     }
 
     if (num_rivals > 0) InitCPURivals();
@@ -543,6 +598,7 @@ void InitGame() {
     golden_apple.x = -1; golden_timer = 0;
     poison_berry.x = -1; poison_timer = 0; poison_active_timer = 0;
     speed_berry.x = -1; speed_timer = 0; speed_active_timer = 0;
+    ghost_berry.x = -1;
     
     ghost_cd = 0; ghost_active = 0;
     freeze_cd = 0; freeze_active = 0;
@@ -590,6 +646,7 @@ void UpdateCPURivals() {
 
         target = food;
         if (golden_apple.x != -1) target = golden_apple;
+        if (rivals[r].type == 1) target = snake[0];
 
         best_dir_x = rivals[r].dir_x;
         best_dir_y = rivals[r].dir_y;
@@ -716,6 +773,10 @@ void ApplyFoodMagnet() {
         if (speed_berry.x < px) speed_berry.x++; else if (speed_berry.x > px) speed_berry.x--;
         else if (speed_berry.y < py) speed_berry.y++; else if (speed_berry.y > py) speed_berry.y--;
     }
+    if (ghost_berry.x != -1) {
+        if (ghost_berry.x < px) ghost_berry.x++; else if (ghost_berry.x > px) ghost_berry.x--;
+        else if (ghost_berry.y < py) ghost_berry.y++; else if (ghost_berry.y > py) ghost_berry.y--;
+    }
 }
 
 void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_ghost, int d_x, int d_y) {
@@ -793,9 +854,9 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
     }
 }
 
-void DrawRivalGDI(HDC hdc, int x, int y, int index) {
+void DrawRivalGDI(HDC hdc, int x, int y, int index, int type) {
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
-    HBRUSH brush = CreateSolidBrush(index == 0 ? RGB(44, 62, 80) : RGB(52, 73, 94));
+    HBRUSH brush = CreateSolidBrush(type == 1 ? (index == 0 ? RGB(192, 57, 43) : RGB(231, 76, 60)) : (index == 0 ? RGB(44, 62, 80) : RGB(52, 73, 94)));
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(20, 30, 40));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
@@ -864,11 +925,11 @@ void DrawGemGDI(HDC hdc, int x, int y, COLORREF color) {
         POINT pts[10];
         int cx = px + CELL_SIZE/2, cy = py + CELL_SIZE/2;
         int i;
+        int star_x[10] = { 0, 3, 11, 5, 7, 0, -7, -5, -11, -3 };
+        int star_y[10] = { -12, -4, -4, 1, 9, 4, 9, 1, -4, -4 };
         for (i = 0; i < 10; i++) {
-            double angle = i * 3.14159 / 5 - 3.14159 / 2;
-            int r = (i % 2 == 0) ? (CELL_SIZE/2) : (CELL_SIZE/4);
-            pts[i].x = cx + (int)(cos(angle) * r);
-            pts[i].y = cy + (int)(sin(angle) * r);
+            pts[i].x = cx + star_x[i];
+            pts[i].y = cy + star_y[i];
         }
         Polygon(hdc, pts, 10);
     } else {
@@ -1057,7 +1118,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                if (game_mode == 4 && apples_eaten >= 8 && campaign_level < 20) {
+                if (game_mode == 4 && apples_eaten >= 8 && campaign_level < 25) {
                     campaign_level++;
                     InitCampaignStage(campaign_level);
                     apples_eaten = 0;
@@ -1071,6 +1132,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (golden_apple.x == -1 && random_int(100) < 20) PlaceGoldenApple();
                 if (poison_berry.x == -1 && random_int(100) < 20) PlacePoisonBerry();
                 if (speed_berry.x == -1 && random_int(100) < 20) PlaceSpeedBerry();
+                if (ghost_berry.x == -1 && random_int(100) < 20) PlaceGhostBerry();
             }
 
             if (golden_apple.x != -1 && snake[0].x == golden_apple.x && snake[0].y == golden_apple.y) {
@@ -1095,6 +1157,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 score += 300;
                 speed_active_timer = 50;
                 speed_berry.x = -1;
+            }
+            if (ghost_berry.x != -1 && snake[0].x == ghost_berry.x && snake[0].y == ghost_berry.y) {
+                MessageBeep(MB_ICONASTERISK);
+                score += 300;
+                ghost_active = 150;
+                ghost_berry.x = -1;
             }
 
             spd = current_speed;
@@ -1265,10 +1333,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (golden_apple.x != -1) DrawGemGDI(hdc, golden_apple.x, golden_apple.y, RGB(255, 215, 0));
                 if (poison_berry.x != -1) DrawGemGDI(hdc, poison_berry.x, poison_berry.y, RGB(142, 68, 173));
                 if (speed_berry.x != -1) DrawGemGDI(hdc, speed_berry.x, speed_berry.y, RGB(230, 126, 34));
+                if (ghost_berry.x != -1) DrawGemGDI(hdc, ghost_berry.x, ghost_berry.y, RGB(0, 210, 211));
 
                 for(r = 0; r < num_rivals; r++) {
                     if (!rivals[r].alive) continue;
-                    for(i = rivals[r].len - 1; i >= 0; i--) DrawRivalGDI(hdc, rivals[r].body[i].x, rivals[r].body[i].y, i);
+                    for(i = rivals[r].len - 1; i >= 0; i--) DrawRivalGDI(hdc, rivals[r].body[i].x, rivals[r].body[i].y, i, rivals[r].type);
                 }
 
                 if (boss.alive) {
@@ -1280,10 +1349,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 if (game_mode == 4) {
-                    if (campaign_level == 20 && boss.alive) {
+                    if ((campaign_level == 20 || campaign_level == 25) && boss.alive) {
                         wsprintfA(score_text, "Score: %d  L20 BOSS HP: %d/%d", score, boss.hp, boss.max_hp);
                     } else {
-                        wsprintfA(score_text, "Score: %d  Stage: %d/20", score, campaign_level);
+                        wsprintfA(score_text, "Score: %d  Stage: %d/25", score, campaign_level);
                     }
                 } else {
                     wsprintfA(score_text, "Score: %d  Mode: %s", score, mode_names[game_mode]);
@@ -1331,7 +1400,7 @@ void MainEntry() {
     winWidth = GRID_WIDTH * CELL_SIZE + 20;
     winHeight = GRID_HEIGHT * CELL_SIZE + 105;
 
-    hwnd = CreateWindowEx(0, "KSnakeApp", "KSnake Arcade - Loop 7", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    hwnd = CreateWindowEx(0, "KSnakeApp", "KSnake Arcade - Loop 8", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
