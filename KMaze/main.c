@@ -21,6 +21,17 @@ char* __cdecl strcpy(char* dest, const char* src) {
     return dest;
 }
 
+char* my_strstr(const char* haystack, const char* needle) {
+    if (!*needle) return (char*)haystack;
+    for (const char* p = haystack; *p; p++) {
+        const char* h = p;
+        const char* n = needle;
+        while (*n && *h == *n) { h++; n++; }
+        if (!*n) return (char*)p;
+    }
+    return NULL;
+}
+
 int __cdecl abs(int x) { return x < 0 ? -x : x; }
 double __cdecl fabs(double x) { return x < 0.0 ? -x : x; }
 
@@ -276,6 +287,19 @@ int msgTimer = 0;
 float pX = 1.5f, pY = 1.5f;
 float dX = 1.0f, dY = 0.0f;
 float planeX = 0.0f, planeY = 0.66f;
+
+typedef struct { int up, down, left, right, pickaxe, pathfinder, speed, stun; } KeyBinds;
+KeyBinds keyBinds = { VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, 'P', 'C', 'S', 'F' };
+int waitingForKey = 0;
+int prevState = 0;
+
+#define MAX_REPLAY_FRAMES 10000
+typedef struct { float px, py, dx, dy, planex, planey; } ReplayFrame;
+ReplayFrame replayFrames[MAX_REPLAY_FRAMES];
+int replayFrameCount = 0;
+int replayLevel = 0;
+int replayMap[45][45];
+int replayCurFrame = 0;
 
 // 16x16 Textures buffer: 16 types, 256 DWORD colors (0x00RRGGBB)
 DWORD textures[16][256];
@@ -742,6 +766,38 @@ void SaveBest() {
     }
 }
 
+void ExportStats() {
+    HANDLE hFile = CreateFileA("kmaze_stats.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[256];
+        int len = wsprintfA(buf, "{\n  \"bestTime\": %d,\n  \"totalGames\": %d,\n  \"totalEscapes\": %d,\n  \"totalScore\": %d\n}", 
+            (int)bestTime, totalGames, totalEscapes, totalScore);
+        DWORD w = 0;
+        WriteFile(hFile, buf, len, &w, NULL);
+        CloseHandle(hFile);
+        strcpy(msgText, "Exported kmaze_stats.json!"); msgTimer = 60;
+    }
+}
+
+void ImportStats() {
+    HANDLE hFile = CreateFileA("kmaze_stats.json", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[256] = {0};
+        DWORD r = 0;
+        ReadFile(hFile, buf, sizeof(buf)-1, &r, NULL);
+        CloseHandle(hFile);
+        char* p;
+        p = my_strstr(buf, "\"bestTime\":"); if (p) { p += 11; int bt = 0; while(*p==' '||*p=='\t') p++; while(*p>='0'&&*p<='9') { bt = bt*10 + (*p-'0'); p++; } bestTime = (float)bt; }
+        p = my_strstr(buf, "\"totalGames\":"); if (p) { p += 13; int tg = 0; while(*p==' '||*p=='\t') p++; while(*p>='0'&&*p<='9') { tg = tg*10 + (*p-'0'); p++; } totalGames = tg; }
+        p = my_strstr(buf, "\"totalEscapes\":"); if (p) { p += 15; int te = 0; while(*p==' '||*p=='\t') p++; while(*p>='0'&&*p<='9') { te = te*10 + (*p-'0'); p++; } totalEscapes = te; }
+        p = my_strstr(buf, "\"totalScore\":"); if (p) { p += 14; int ts = 0; while(*p==' '||*p=='\t') p++; while(*p>='0'&&*p<='9') { ts = ts*10 + (*p-'0'); p++; } totalScore = ts; }
+        SaveBest();
+        strcpy(msgText, "Imported stats!"); msgTimer = 60;
+    } else {
+        strcpy(msgText, "kmaze_stats.json not found!"); msgTimer = 60;
+    }
+}
+
 void InitGame() {
     srand((unsigned int)GetTickCount());
     LoadBest();
@@ -785,6 +841,10 @@ void NextLevel() {
     pX = 1.5f; pY = 1.5f;
     dX = 1.0f; dY = 0.0f;
     planeX = 0.0f; planeY = 0.66f;
+
+    replayFrameCount = 0;
+    replayLevel = currentLevel;
+    for(int i=0; i<45; i++) for(int j=0; j<45; j++) replayMap[i][j] = GetMapValue(i, j);
 }
 
 HBITMAP hbmCanvas = NULL;
@@ -876,7 +936,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
+            if (gameState == 2 && replayFrameCount > 0 && (GetAsyncKeyState('R') & 0x8000)) {
+                gameState = 3;
+                replayCurFrame = 0;
+                activeKeyCooldown = 300;
+            } else if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
                 if (gameState == 0 || gameState == 2) {
                     gameState = 1;
                     startTime = GetTickCount();
@@ -886,11 +950,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SaveBest();
                     ResetMaps();
                     NextLevel();
+                    activeKeyCooldown = 300;
                 }
             }
             
             if (gameState == 1 && activeKeyCooldown <= 0) {
-                if (GetAsyncKeyState('P') & 0x8000) {
+                if (GetAsyncKeyState(keyBinds.pickaxe) & 0x8000) {
                     if (hasPickaxe > 0) {
                         int tx = (int)(pX + dX * 0.8f);
                         int ty = (int)(pY + dY * 0.8f);
@@ -928,7 +993,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
-                if (GetAsyncKeyState('C') & 0x8000) {
+                if (GetAsyncKeyState(keyBinds.pathfinder) & 0x8000) {
                     if (pathfinderCharges > 0 || hasCompass) {
                         if (pathfinderCharges > 0) pathfinderCharges--;
                         pathfinderTimer = 10000;
@@ -940,7 +1005,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         activeKeyCooldown = 300;
                     }
                 }
-                if (GetAsyncKeyState('S') & 0x8000) {
+                if (GetAsyncKeyState(keyBinds.speed) & 0x8000) {
                     if (speedShoesCharges > 0 || speedBoost) {
                         if (speedShoesCharges > 0) speedShoesCharges--;
                         speedShoesTimer = 8000;
@@ -951,7 +1016,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         activeKeyCooldown = 300;
                     }
                 }
-                if (GetAsyncKeyState('F') & 0x8000) {
+                if (GetAsyncKeyState(keyBinds.stun) & 0x8000) {
                     if (stunSprayCharges > 0) {
                         stunSprayCharges--;
                         stunSprayTimer = 10000;
@@ -1027,18 +1092,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             if (gameState != 1) {
+                if (gameState == 3) {
+                    if (GetAsyncKeyState(VK_RIGHT) & 0x8000 || GetAsyncKeyState('D') & 0x8000) {
+                        if (replayCurFrame < replayFrameCount - 1) replayCurFrame++;
+                    }
+                    if (GetAsyncKeyState(VK_LEFT) & 0x8000 || GetAsyncKeyState('A') & 0x8000) {
+                        if (replayCurFrame > 0) replayCurFrame--;
+                    }
+                }
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
+            }
+
+            if (replayFrameCount < MAX_REPLAY_FRAMES) {
+                replayFrames[replayFrameCount].px = pX;
+                replayFrames[replayFrameCount].py = pY;
+                replayFrames[replayFrameCount].dx = dX;
+                replayFrames[replayFrameCount].dy = dY;
+                replayFrames[replayFrameCount].planex = planeX;
+                replayFrames[replayFrameCount].planey = planeY;
+                replayFrameCount++;
             }
 
             if (GetAsyncKeyState(VK_SHIFT) & 0x8000) {
                 moveSpeed *= 1.5f;
             }
-            if (GetAsyncKeyState(VK_UP) & 0x8000 || GetAsyncKeyState('W') & 0x8000) {
+            if (GetAsyncKeyState(keyBinds.up) & 0x8000) {
                 if (TryMove((int)(pX + dX * moveSpeed), (int)pY)) pX += dX * moveSpeed;
                 if (TryMove((int)pX, (int)(pY + dY * moveSpeed))) pY += dY * moveSpeed;
             }
-            if (GetAsyncKeyState(VK_DOWN) & 0x8000 || GetAsyncKeyState('S') & 0x8000) {
+            if (GetAsyncKeyState(keyBinds.down) & 0x8000) {
                 if (TryMove((int)(pX - dX * moveSpeed), (int)pY)) pX -= dX * moveSpeed;
                 if (TryMove((int)pX, (int)(pY - dY * moveSpeed))) pY -= dY * moveSpeed;
             }
@@ -1129,7 +1212,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 strcpy(msgText, "Attacked by Minotaur King!"); msgTimer = 60;
             }
 
-            if (GetAsyncKeyState(VK_RIGHT) & 0x8000 || GetAsyncKeyState('D') & 0x8000) {
+            if (GetAsyncKeyState(keyBinds.right) & 0x8000) {
                 float oldDX = dX;
                 dX = dX * (float)cos(rotSpeed) - dY * (float)sin(rotSpeed);
                 dY = oldDX * (float)sin(rotSpeed) + dY * (float)cos(rotSpeed);
@@ -1137,7 +1220,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 planeX = planeX * (float)cos(rotSpeed) - planeY * (float)sin(rotSpeed);
                 planeY = oldPlaneX * (float)sin(rotSpeed) + planeY * (float)cos(rotSpeed);
             }
-            if (GetAsyncKeyState(VK_LEFT) & 0x8000 || GetAsyncKeyState('A') & 0x8000) {
+            if (GetAsyncKeyState(keyBinds.left) & 0x8000) {
                 float oldDX = dX;
                 dX = dX * (float)cos(-rotSpeed) - dY * (float)sin(-rotSpeed);
                 dY = oldDX * (float)sin(-rotSpeed) + dY * (float)cos(-rotSpeed);
@@ -1180,13 +1263,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for (int x = 0; x < W; x++) pBits[y * W + x] = floorCol;
                 }
 
+                float drawPX = pX, drawPY = pY, drawDX = dX, drawDY = dY, drawPlaneX = planeX, drawPlaneY = planeY;
+                if (gameState == 3 && replayFrameCount > 0) {
+                    drawPX = replayFrames[replayCurFrame].px;
+                    drawPY = replayFrames[replayCurFrame].py;
+                    drawDX = replayFrames[replayCurFrame].dx;
+                    drawDY = replayFrames[replayCurFrame].dy;
+                    drawPlaneX = replayFrames[replayCurFrame].planex;
+                    drawPlaneY = replayFrames[replayCurFrame].planey;
+                }
                 for (int x = 0; x < W; x++) {
                     float cameraX = 2 * x / (float)W - 1;
-                    float rayDX = dX + planeX * cameraX;
-                    float rayDY = dY + planeY * cameraX;
+                    float rayDX = drawDX + drawPlaneX * cameraX;
+                    float rayDY = drawDY + drawPlaneY * cameraX;
                     
-                    int mapX = (int)pX;
-                    int mapY = (int)pY;
+                    int mapX = (int)drawPX;
+                    int mapY = (int)drawPY;
                     
                     float sideDistX, sideDistY;
                     float deltaDistX = (rayDX == 0) ? 1e30f : (float)fabs(1 / rayDX);
@@ -1210,7 +1302,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             mapY += stepY;
                             side = 1;
                         }
-                        if (GetMapValue(mapX, mapY) > 0) hit = GetMapValue(mapX, mapY);
+                        int mval = (gameState == 3 && mapX >= 0 && mapY >= 0 && mapX < 45 && mapY < 45) ? replayMap[mapX][mapY] : GetMapValue(mapX, mapY);
+                        if (mval > 0) hit = mval;
                     }
                     
                     if (side == 0) perpWallDist = (sideDistX - deltaDistX);
@@ -1223,8 +1316,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int actualEnd = (drawEnd >= H) ? H - 1 : drawEnd;
                     
                     float wallX;
-                    if (side == 0) wallX = pY + perpWallDist * rayDY;
-                    else           wallX = pX + perpWallDist * rayDX;
+                    if (side == 0) wallX = drawPY + perpWallDist * rayDY;
+                    else           wallX = drawPX + perpWallDist * rayDX;
                     wallX -= (float)floor(wallX);
                     int texX = (int)(wallX * 16.0f) & 15;
                     
@@ -1314,19 +1407,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // UI Text
             char uiText[128];
             if (gameState == 0) {
-                wsprintfA(uiText, "KMAZE - Press ENTER to start  [Played:%d Escaped:%d]", totalGames, totalEscapes);
+                wsprintfA(uiText, "KMAZE - ENTER:Start  E:Export I:Import K:Keys  [Played:%d Escaped:%d]", totalGames, totalEscapes);
             } else if (gameState == 2) {
                 DWORD elapsedSec = (endTime - startTime) / 1000;
-                wsprintfA(uiText, "You Escaped 35 Stages! Score: %d Time: %ds (ENTER restart)", score, elapsedSec);
+                wsprintfA(uiText, "Escaped 35! Score:%d Time:%ds R:Replay ENTER:Restart", score, elapsedSec);
+            } else if (gameState == 3) {
+                wsprintfA(uiText, "REPLAY MODE - Lvl %d - Frame %d/%d (A/D: scrub, ESC: exit)", replayLevel+1, replayCurFrame, replayFrameCount);
+            } else if (gameState == 4) {
+                wsprintfA(uiText, "KEYBINDS - Click below to bind, ESC to close");
             } else {
                 DWORD elapsedSec = (GetTickCount() - startTime) / 1000;
-                wsprintfA(uiText, "Lvl:%d/35 Key:%d P:%d C:%d S:%d F:%d Score:%d %ds", currentLevel + 1, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, score, elapsedSec);
+                wsprintfA(uiText, "Lvl:%d/35 Key:%d P:%d C:%d S:%d F:%d Score:%d %ds (K:Keys)", currentLevel + 1, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, score, elapsedSec);
             }
             SetBkMode(hdcMem, TRANSPARENT);
             SetTextColor(hdcMem, RGB(0, 0, 0));
             TextOutA(hdcMem, 11, 11, uiText, lstrlenA(uiText));
             SetTextColor(hdcMem, RGB(255, 255, 255));
             TextOutA(hdcMem, 10, 10, uiText, lstrlenA(uiText));
+            
+            if (gameState == 4) {
+                char kbText[64];
+                int y = 40;
+                const char* names[] = {"Up", "Down", "Left", "Right", "Pickaxe", "Pathfinder", "Speed", "Stun Spray"};
+                int vals[] = {keyBinds.up, keyBinds.down, keyBinds.left, keyBinds.right, keyBinds.pickaxe, keyBinds.pathfinder, keyBinds.speed, keyBinds.stun};
+                for (int i = 0; i < 8; i++) {
+                    if (waitingForKey == i + 1) wsprintfA(kbText, "%s: ...", names[i]);
+                    else wsprintfA(kbText, "%s: %c (%d)", names[i], (char)vals[i], vals[i]);
+                    TextOutA(hdcMem, 40, y, kbText, lstrlenA(kbText));
+                    y += 15;
+                }
+            }
 
             if (msgTimer > 0) {
                 SetTextColor(hdcMem, RGB(0, 0, 0));
@@ -1417,6 +1527,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             StretchBlt(hdc, 0, 0, 640, 480, hdcMem, 0, 0, W, H, SRCCOPY);
             EndPaint(hwnd, &ps);
+            break;
+        }
+        case WM_LBUTTONDOWN: {
+            if (gameState == 4) {
+                int y = HIWORD(lParam);
+                int idx = (y - 40) / 15;
+                if (idx >= 0 && idx < 8) waitingForKey = idx + 1;
+            }
+            break;
+        }
+        case WM_KEYDOWN: {
+            if (gameState == 0 || gameState == 1) {
+                if (wParam == 'E') ExportStats();
+                if (wParam == 'I') ImportStats();
+                if (wParam == 'K') { prevState = gameState; gameState = 4; }
+            }
+            if (gameState == 4) {
+                if (wParam == VK_ESCAPE) { waitingForKey = 0; gameState = prevState; }
+                else if (waitingForKey > 0) {
+                    if (waitingForKey == 1) keyBinds.up = (int)wParam;
+                    if (waitingForKey == 2) keyBinds.down = (int)wParam;
+                    if (waitingForKey == 3) keyBinds.left = (int)wParam;
+                    if (waitingForKey == 4) keyBinds.right = (int)wParam;
+                    if (waitingForKey == 5) keyBinds.pickaxe = (int)wParam;
+                    if (waitingForKey == 6) keyBinds.pathfinder = (int)wParam;
+                    if (waitingForKey == 7) keyBinds.speed = (int)wParam;
+                    if (waitingForKey == 8) keyBinds.stun = (int)wParam;
+                    waitingForKey = 0;
+                }
+            }
+            if (gameState == 3) {
+                if (wParam == VK_ESCAPE) { gameState = 2; }
+            }
             break;
         }
         case WM_DESTROY:

@@ -19,8 +19,12 @@
     <button class="hudBtn" onclick="usePathfinder()">[C] Pathfinder</button>
     <button class="hudBtn" onclick="useSpeedShoes()">[S] Speed Shoes</button>
     <button class="hudBtn" onclick="useStunSpray()">[F] Stun Spray</button>
+    <button class="hudBtn" onclick="prevState=gameState; gameState=4;">Keys</button>
+    <button class="hudBtn" onclick="exportStats()">Export</button>
+    <button class="hudBtn" onclick="document.getElementById('importFile').click()">Import</button>
   </div>
 </div>
+<input type="file" id="importFile" style="display:none" onchange="importStats(event)">
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -200,6 +204,55 @@
   let msgText = "";
   let msgTimer = 0;
   let frameCount = 0;
+
+  // New variables
+  let keyBinds = {
+      up: 'ArrowUp',
+      down: 'ArrowDown',
+      left: 'ArrowLeft',
+      right: 'ArrowRight',
+      pickaxe: 'p',
+      pathfinder: 'c',
+      speed: 's',
+      stun: 'f'
+  };
+  let waitingForKey = null;
+  let replayLevels = [];
+  let replayLevelIdx = 0;
+  let replayFrameIdx = 0;
+  let prevState = 0;
+
+  function exportStats() {
+      let data = { bestTime, totalGames, totalEscapes, totalScore };
+      let blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+      let a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "kmaze_stats.json";
+      a.click();
+  }
+  function importStats(e) {
+      let file = e.target.files[0];
+      if (!file) return;
+      let reader = new FileReader();
+      reader.onload = function(e) {
+          try {
+              let data = JSON.parse(e.target.result);
+              if (data.bestTime !== undefined) bestTime = data.bestTime;
+              if (data.totalGames !== undefined) totalGames = data.totalGames;
+              if (data.totalEscapes !== undefined) totalEscapes = data.totalEscapes;
+              if (data.totalScore !== undefined) totalScore = data.totalScore;
+              localStorage.setItem('kmaze_best', bestTime);
+              localStorage.setItem('kmaze_games', totalGames);
+              localStorage.setItem('kmaze_escapes', totalEscapes);
+              localStorage.setItem('kmaze_score', totalScore);
+              msgText = "Stats Imported!"; msgTimer = 60;
+          } catch (err) {
+              msgText = "Import Failed!"; msgTimer = 60;
+          }
+      };
+      reader.readAsText(file);
+      e.target.value = ''; // Reset
+  }
 
   // Particle System
   let particles = [];
@@ -512,6 +565,12 @@
       pX = 1.5; pY = 1.5;
       dX = 1.0; dY = 0.0;
       planeX = 0.0; planeY = 0.66;
+      
+      replayLevels.push({
+          level: currentLevel,
+          map: JSON.parse(JSON.stringify(map)),
+          frames: []
+      });
   }
   
   let pX = 1.5, pY = 1.5;
@@ -604,7 +663,11 @@
   const keys = {};
   document.addEventListener('keydown', e => {
       keys[e.key] = true;
-      if (e.key === 'Enter') {
+      if (gameState === 2 && (e.key === 'r' || e.key === 'R') && replayLevels.length > 0) {
+          gameState = 3;
+          replayLevelIdx = replayLevels.length - 1; // Play last level replay
+          replayFrameIdx = 0;
+      } else if (e.key === 'Enter') {
           if (gameState === 0 || gameState === 2) {
               gameState = 1;
               startTime = Date.now();
@@ -612,14 +675,30 @@
               score = 0;
               totalGames++;
               localStorage.setItem('kmaze_games', totalGames);
+              replayLevels = [];
               nextLevel();
           }
       }
-      if (gameState === 1) {
-          if (e.key === 'p' || e.key === 'P') usePickaxe();
-          if (e.key === 'c' || e.key === 'C') usePathfinder();
-          if (e.key === 's' || e.key === 'S') useSpeedShoes();
-          if (e.key === 'f' || e.key === 'F') useStunSpray();
+      if (gameState === 4) {
+          if (waitingForKey) {
+              keyBinds[waitingForKey] = e.key;
+              waitingForKey = null;
+          }
+      } else if (gameState === 3) {
+          if (e.key === 'ArrowRight' || e.key === 'd') {
+              replayFrameIdx = Math.min(replayFrameIdx + 1, replayLevels[replayLevelIdx].frames.length - 1);
+          }
+          if (e.key === 'ArrowLeft' || e.key === 'a') {
+              replayFrameIdx = Math.max(replayFrameIdx - 1, 0);
+          }
+          if (e.key === 'Escape') gameState = 2; // Return to win screen
+      } else if (gameState === 4 && e.key === 'Escape') {
+          gameState = prevState;
+      } else if (gameState === 1) {
+          if (e.key.toLowerCase() === keyBinds.pickaxe.toLowerCase()) usePickaxe();
+          if (e.key.toLowerCase() === keyBinds.pathfinder.toLowerCase()) usePathfinder();
+          if (e.key.toLowerCase() === keyBinds.speed.toLowerCase()) useSpeedShoes();
+          if (e.key.toLowerCase() === keyBinds.stun.toLowerCase()) useStunSpray();
           if (e.key === 'v' || e.key === 'V') {
               let saveData = {
                   currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
@@ -658,6 +737,21 @@
       }
   });
   document.addEventListener('keyup', e => keys[e.key] = false);
+
+  canvas.addEventListener('mousedown', e => {
+      if (gameState === 4) {
+          let rect = canvas.getBoundingClientRect();
+          let cy = (e.clientY - rect.top) * (canvas.height / rect.height);
+          let y = 40;
+          for (let k in keyBinds) {
+              if (cy >= y - 10 && cy <= y + 5) {
+                  waitingForKey = k;
+                  break;
+              }
+              y += 15;
+          }
+      }
+  });
 
   function update() {
       if (gameState !== 1) return;
@@ -730,6 +824,11 @@
       if (keys['Shift']) moveSpeed *= 1.5;
       if (speedShoesTimer > 0 || speedBoost) moveSpeed *= 2.0;
       
+      if (replayLevels.length > 0) {
+          let cl = replayLevels[replayLevels.length - 1];
+          cl.frames.push({pX, pY, dX, dY, planeX, planeY});
+      }
+      
       let tryMove = (mx, my) => {
           let val = map[Math.floor(mx)] && map[Math.floor(mx)][Math.floor(my)];
           if ([0,2,3,5,6,7,8,9,10,11,12,13,14,15].includes(val)) return true;
@@ -754,11 +853,11 @@
           return false;
       };
 
-      if (keys['ArrowUp'] || keys['w']) {
+      if (keys[keyBinds.up] || keys[keyBinds.up.toLowerCase()] || keys[keyBinds.up.toUpperCase()]) {
           if (tryMove(pX + dX * moveSpeed, pY)) pX += dX * moveSpeed;
           if (tryMove(pX, pY + dY * moveSpeed)) pY += dY * moveSpeed;
       }
-      if (keys['ArrowDown'] || keys['s']) {
+      if (keys[keyBinds.down] || keys[keyBinds.down.toLowerCase()] || keys[keyBinds.down.toUpperCase()]) {
           if (tryMove(pX - dX * moveSpeed, pY)) pX -= dX * moveSpeed;
           if (tryMove(pX, pY - dY * moveSpeed)) pY -= dY * moveSpeed;
       }
@@ -853,7 +952,7 @@
           msgText = "Attacked by Minotaur King!"; msgTimer = 60;
       }
 
-      if (keys['ArrowRight'] || keys['d']) {
+      if (keys[keyBinds.right] || keys[keyBinds.right.toLowerCase()] || keys[keyBinds.right.toUpperCase()]) {
           let oldDX = dX;
           dX = dX * Math.cos(rotSpeed) - dY * Math.sin(rotSpeed);
           dY = oldDX * Math.sin(rotSpeed) + dY * Math.cos(rotSpeed);
@@ -861,7 +960,7 @@
           planeX = planeX * Math.cos(rotSpeed) - planeY * Math.sin(rotSpeed);
           planeY = oldPlaneX * Math.sin(rotSpeed) + planeY * Math.cos(rotSpeed);
       }
-      if (keys['ArrowLeft'] || keys['a']) {
+      if (keys[keyBinds.left] || keys[keyBinds.left.toLowerCase()] || keys[keyBinds.left.toUpperCase()]) {
           let oldDX = dX;
           dX = dX * Math.cos(-rotSpeed) - dY * Math.sin(-rotSpeed);
           dY = oldDX * Math.sin(-rotSpeed) + dY * Math.cos(-rotSpeed);
@@ -891,13 +990,26 @@
       }
 
       // 2. Raycaster Walls
+      let drawPX = pX, drawPY = pY, drawDX = dX, drawDY = dY, drawPlaneX = planeX, drawPlaneY = planeY;
+      let drawMap = map;
+      if (gameState === 3 && replayLevels.length > 0) {
+          let rLevel = replayLevels[replayLevelIdx];
+          drawMap = rLevel.map;
+          let frame = rLevel.frames[replayFrameIdx];
+          if (frame) {
+              drawPX = frame.pX; drawPY = frame.pY;
+              drawDX = frame.dX; drawDY = frame.dY;
+              drawPlaneX = frame.planeX; drawPlaneY = frame.planeY;
+          }
+      }
+      
       for (let x = 0; x < W; x++) {
           let cameraX = 2 * x / W - 1;
-          let rayDX = dX + planeX * cameraX;
-          let rayDY = dY + planeY * cameraX;
+          let rayDX = drawDX + drawPlaneX * cameraX;
+          let rayDY = drawDY + drawPlaneY * cameraX;
           
-          let mapX = Math.floor(pX);
-          let mapY = Math.floor(pY);
+          let mapX = Math.floor(drawPX);
+          let mapY = Math.floor(drawPY);
           
           let sideDistX, sideDistY;
           let deltaDistX = (rayDX === 0) ? 1e30 : Math.abs(1 / rayDX);
@@ -921,7 +1033,7 @@
                   mapY += stepY;
                   side = 1;
               }
-              if (map[mapX] && map[mapX][mapY] > 0) hit = map[mapX][mapY];
+              if (drawMap[mapX] && drawMap[mapX][mapY] > 0) hit = drawMap[mapX][mapY];
           }
           
           if (side === 0) perpWallDist = (sideDistX - deltaDistX);
@@ -934,8 +1046,8 @@
           let actualEnd = Math.min(H - 1, Math.floor(drawEnd));
           
           let wallX;
-          if (side === 0) wallX = pY + perpWallDist * rayDY;
-          else            wallX = pX + perpWallDist * rayDX;
+          if (side === 0) wallX = drawPY + perpWallDist * rayDY;
+          else            wallX = drawPX + perpWallDist * rayDX;
           wallX -= Math.floor(wallX);
           let texX = Math.floor(wallX * 16) & 15;
           
@@ -1044,7 +1156,21 @@
           ctx.fillText("You Escaped 35 Stages!", W/2 - 70, H/2 - 20);
           ctx.fillText("Score: " + score + " Time: " + elapsed.toFixed(1) + "s", W/2 - 80, H/2);
           ctx.fillText("Best: " + bestTime.toFixed(1) + "s", W/2 - 40, H/2 + 20);
-          ctx.fillText("Press ENTER to play again", W/2 - 80, H/2 + 40);
+          ctx.fillText("Press R for Replay Viewer", W/2 - 80, H/2 + 40);
+          ctx.fillText("Press ENTER to play again", W/2 - 80, H/2 + 55);
+      } else if (gameState === 3) {
+          ctx.fillText(`REPLAY MODE - Lvl ${replayLevels[replayLevelIdx].level+1}`, 10, 15);
+          ctx.fillText(`Frame ${replayFrameIdx}/${replayLevels[replayLevelIdx].frames.length}`, 10, 30);
+          ctx.fillText("<- Prev | Next ->", 10, 45);
+          ctx.fillText("ESC to return", 10, 60);
+      } else if (gameState === 4) {
+          ctx.fillText("KEYBINDS", W/2 - 30, 20);
+          let y = 40;
+          for (let k in keyBinds) {
+              ctx.fillText(`${k}: ${waitingForKey === k ? '...' : keyBinds[k]}`, 40, y);
+              y += 15;
+          }
+          ctx.fillText("Click key name to rebind. Press ESC to close.", 10, H - 20);
       } else {
           let elapsed = (Date.now() - startTime) / 1000;
           ctx.fillText(`Lvl:${currentLevel+1}/35 Key:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges}`, 10, 15);
