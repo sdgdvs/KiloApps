@@ -130,6 +130,11 @@ static BOOL g_waveActive = FALSE;
 static BOOL g_gameOver = FALSE;
 static int g_selectedSlot = -1;
 
+static int g_gameMode = 0; // 0=Campaign, 1=Endless, 2=BossBlitz
+static int g_bossesKilled = 0;
+static int g_hsEndless = 0;
+static int g_hsBoss = 0;
+
 int g_techStartingGold = 0;
 int g_techWallHp = 0;
 int g_techHeroCd = 0;
@@ -309,6 +314,8 @@ void LoadGame() {
         fread(&g_techWallHp, sizeof(int), 1, f);
         fread(&g_techHeroCd, sizeof(int), 1, f);
         fread(&g_techTowerDmg, sizeof(int), 1, f);
+        fread(&g_hsEndless, sizeof(int), 1, f);
+        fread(&g_hsBoss, sizeof(int), 1, f);
         fclose(f);
     }
 }
@@ -320,6 +327,8 @@ void SaveGame() {
         fwrite(&g_techWallHp, sizeof(int), 1, f);
         fwrite(&g_techHeroCd, sizeof(int), 1, f);
         fwrite(&g_techTowerDmg, sizeof(int), 1, f);
+        fwrite(&g_hsEndless, sizeof(int), 1, f);
+        fwrite(&g_hsBoss, sizeof(int), 1, f);
         fclose(f);
     }
 }
@@ -327,9 +336,11 @@ void SaveGame() {
 void InitGameState() {
     LoadGame();
     g_gold = 100 + g_techStartingGold * 50;
+    if (g_gameMode == 2) g_gold += 200;
     g_baseHp = 20 + g_techWallHp * 10;
     g_maxBaseHp = 20 + g_techWallHp * 10;
     g_wave = 1;
+    g_bossesKilled = 0;
     g_waveActive = FALSE;
     g_gameOver = FALSE;
     g_selectedSlot = -1;
@@ -391,7 +402,13 @@ void UpdateGameLogic() {
                     else if (type == ENEMY_ORC) { g_enemies[i].hp = 60 + g_wave * 12; g_enemies[i].speed = 1.2f; g_enemies[i].radius = 13; }
                     else if (type == ENEMY_HOUND) { g_enemies[i].hp = 20 + g_wave * 4; g_enemies[i].speed = 3.5f; g_enemies[i].radius = 9; }
                     else if (type == ENEMY_GARGOYLE) { g_enemies[i].hp = 30 + g_wave * 5; g_enemies[i].speed = 1.8f; g_enemies[i].radius = 12; }
-                    else if (type == ENEMY_OGRE) { g_enemies[i].hp = 150 + g_wave * 30; g_enemies[i].speed = 0.8f; g_enemies[i].radius = 16; }
+                    else if (type == ENEMY_OGRE) { 
+                        g_enemies[i].hp = 150 + g_wave * 30; 
+                        if (g_gameMode == 2) g_enemies[i].hp += g_wave * 50;
+                        g_enemies[i].speed = (g_gameMode == 2) ? 0.8f : 0.6f; 
+                        g_enemies[i].radius = 16; 
+                        Beep(100, 100); Beep(80, 100);
+                    }
                     
                     g_enemies[i].maxHp = g_enemies[i].hp;
                     break;
@@ -449,7 +466,13 @@ void UpdateGameLogic() {
                 if (g_enemies[targetIdx].hp <= 0) {
                     g_enemies[targetIdx].active = FALSE;
                     int reward = 15;
-                    if (g_enemies[targetIdx].type == ENEMY_OGRE) reward = 100;
+                    if (g_enemies[targetIdx].type == ENEMY_OGRE) {
+                        reward = 100;
+                        if (g_gameMode == 2) {
+                            g_bossesKilled++;
+                            if (g_bossesKilled > g_hsBoss) { g_hsBoss = g_bossesKilled; SaveGame(); }
+                        }
+                    }
                     else if (g_enemies[targetIdx].type == ENEMY_ORC) reward = 20;
                     else if (g_enemies[targetIdx].type == ENEMY_HOUND) reward = 10;
                     g_gold += reward;
@@ -552,7 +575,7 @@ void UpdateGameLogic() {
                 if (g_hero.shieldActive > 0) dmgToBase = 0;
                 g_baseHp -= dmgToBase;
                 if (dmgToBase > 0) {
-                    Beep(180, 60);
+                    Beep(100, 100); Beep(80, 100); Beep(180, 60);
                     char dmgBuf[16]; wsprintfA(dmgBuf, "-%d HP", dmgToBase);
                     AddFloatingText(g_enemies[i].x - 15, g_enemies[i].y - 20, dmgBuf, RGB(239, 68, 68));
                 } else {
@@ -618,7 +641,9 @@ void UpdateGameLogic() {
                         g_projectiles[p].damage = g_slots[i].damage;
                         g_projectiles[p].type = g_slots[i].towerType;
                         g_projectiles[p].splash = g_slots[i].splash;
-                        Beep((g_slots[i].towerType == TOWER_CANNON) ? 150 : ((g_slots[i].towerType == TOWER_MAGE) ? 600 : 850), 15);
+                        if (g_slots[i].towerType == TOWER_CANNON) { Beep(150, 80); Beep(100, 80); }
+                        else if (g_slots[i].towerType == TOWER_MAGE) { Beep(900, 40); Beep(1200, 40); }
+                        else { Beep(800, 30); Beep(600, 30); }
                         break;
                     }
                 }
@@ -661,7 +686,10 @@ void UpdateGameLogic() {
                         if (g_enemies[e2].hp <= 0) {
                             g_enemies[e2].active = FALSE;
                             int reward = 15;
-                            if (g_enemies[e2].type == ENEMY_OGRE) reward = 100;
+                            if (g_enemies[e2].type == ENEMY_OGRE) {
+                                reward = 100;
+                                if (g_gameMode == 2) { g_bossesKilled++; if (g_bossesKilled > g_hsBoss) { g_hsBoss = g_bossesKilled; SaveGame(); } }
+                            }
                             else if (g_enemies[e2].type == ENEMY_ORC) reward = 20;
                             else if (g_enemies[e2].type == ENEMY_HOUND) reward = 10;
                             g_gold += reward;
@@ -680,7 +708,10 @@ void UpdateGameLogic() {
                     if (g_enemies[targetIdx].hp <= 0) {
                         g_enemies[targetIdx].active = FALSE;
                         int reward = 15;
-                        if (g_enemies[targetIdx].type == ENEMY_OGRE) reward = 100;
+                        if (g_enemies[targetIdx].type == ENEMY_OGRE) {
+                            reward = 100;
+                            if (g_gameMode == 2) { g_bossesKilled++; if (g_bossesKilled > g_hsBoss) { g_hsBoss = g_bossesKilled; SaveGame(); } }
+                        }
                         else if (g_enemies[targetIdx].type == ENEMY_ORC) reward = 20;
                         else if (g_enemies[targetIdx].type == ENEMY_HOUND) reward = 10;
                         g_gold += reward;
@@ -712,16 +743,19 @@ void UpdateGameLogic() {
     if (g_waveActive && g_spawnQueueHead == g_spawnQueueCount && activeEnemyCount == 0) {
         g_waveActive = FALSE;
         int bonus = 20 + g_wave * 5;
+        if (g_gameMode == 2) bonus = 100 + g_wave * 20;
         g_gold += bonus;
 
         char buf[32];
         wsprintfA(buf, "WAVE CLEAR! +%dg", bonus);
         AddFloatingText((float)(WINDOW_WIDTH / 2 - 50), (float)(WINDOW_HEIGHT / 2), buf, RGB(16, 185, 129));
 
+        if (g_gameMode == 1) {
+            if (g_wave > g_hsEndless) { g_hsEndless = g_wave; SaveGame(); }
+        }
+
         g_wave++;
-        Beep(520, 40);
-        Beep(650, 40);
-        Beep(780, 60);
+        Beep(523, 150); Beep(659, 150); Beep(784, 150); Beep(1046, 300);
     }
 }
 
@@ -771,7 +805,7 @@ void Render(HDC hdc, HWND hwnd) {
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontSub);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, 140, 26, "Phase 10: Traps & Consumables", 31);
+    TextOutA(memDC, 140, 26, "Phase 12: Game Modes", 20);
 
     // Stats HUD
     char buf[128];
@@ -1147,6 +1181,34 @@ void Render(HDC hdc, HWND hwnd) {
     HFONT hFontHeader = CreateFontA(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontHeader);
+    
+    // Modes
+    SetTextColor(memDC, TEXT_GOLD);
+    TextOutA(memDC, sbX + 15, sbY + 10, "GAME MODE", 9);
+    
+    DrawRoundedRect(memDC, sbX + 5, sbY + 30, sbX + 62, sbY + 55, g_gameMode == 0 ? TEXT_GOLD : RGB(44, 50, 62), BORDER_COLOR, 4);
+    SetTextColor(memDC, g_gameMode == 0 ? RGB(0,0,0) : TEXT_WHITE);
+    TextOutA(memDC, sbX + 10, sbY + 35, "Camp", 4);
+    
+    DrawRoundedRect(memDC, sbX + 65, sbY + 30, sbX + 122, sbY + 55, g_gameMode == 1 ? TEXT_GOLD : RGB(44, 50, 62), BORDER_COLOR, 4);
+    SetTextColor(memDC, g_gameMode == 1 ? RGB(0,0,0) : TEXT_WHITE);
+    TextOutA(memDC, sbX + 70, sbY + 35, "Endl", 4);
+    
+    DrawRoundedRect(memDC, sbX + 125, sbY + 30, sbX + 185, sbY + 55, g_gameMode == 2 ? TEXT_GOLD : RGB(44, 50, 62), BORDER_COLOR, 4);
+    SetTextColor(memDC, g_gameMode == 2 ? RGB(0,0,0) : TEXT_WHITE);
+    TextOutA(memDC, sbX + 130, sbY + 35, "Boss", 4);
+
+    HFONT hSmallFont2 = CreateFontA(11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+    SelectObject(memDC, hSmallFont2);
+    SetTextColor(memDC, TEXT_MUTED);
+    char hsBuf[64]; wsprintfA(hsBuf, "Best Endl: %d | Boss: %d", g_hsEndless, g_hsBoss);
+    TextOutA(memDC, sbX + 10, sbY + 60, hsBuf, lstrlenA(hsBuf));
+    DeleteObject(hSmallFont2);
+    
+    sbY += 65;
+
+    SelectObject(memDC, hFontHeader);
     SetTextColor(memDC, TEXT_GOLD);
     TextOutA(memDC, sbX + 15, sbY + 10, "COMMAND POST", 12);
 
@@ -1339,7 +1401,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (g_enemies[e].hp <= 0) {
                             g_enemies[e].active = FALSE;
                             int reward = 15;
-                            if (g_enemies[e].type == ENEMY_OGRE) reward = 100;
+                            if (g_enemies[e].type == ENEMY_OGRE) {
+                                reward = 100;
+                                if (g_gameMode == 2) {
+                                    g_bossesKilled++;
+                                    if (g_bossesKilled > g_hsBoss) { g_hsBoss = g_bossesKilled; SaveGame(); }
+                                }
+                            }
                             else if (g_enemies[e].type == ENEMY_ORC) reward = 20;
                             else if (g_enemies[e].type == ENEMY_HOUND) reward = 10;
                             g_gold += reward;
@@ -1411,6 +1479,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         sbY += 25;
+        
+        // Mode Selection
+        if (!g_waveActive) {
+            if (x >= sbX + 5 && x <= sbX + 62 && y >= sbY + 30 && y <= sbY + 55) { g_gameMode = 0; InitGameState(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            if (x >= sbX + 65 && x <= sbX + 122 && y >= sbY + 30 && y <= sbY + 55) { g_gameMode = 1; InitGameState(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            if (x >= sbX + 125 && x <= sbX + 185 && y >= sbY + 30 && y <= sbY + 55) { g_gameMode = 2; InitGameState(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+        }
+        sbY += 65;
 
         // Check button clicks
         // Tower Selection Shop
@@ -1456,17 +1532,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 300 && y <= sbY + 335) {
             if (!g_waveActive && !g_gameOver) {
                 g_waveActive = TRUE;
-                g_spawnQueueCount = 5 + g_wave * 3;
-                if (g_spawnQueueCount > MAX_SPAWN_QUEUE) g_spawnQueueCount = MAX_SPAWN_QUEUE;
-                g_spawnQueueHead = 0;
-                for (int i = 0; i < g_spawnQueueCount; i++) {
-                    if (g_wave % 5 == 0 && i == 0) g_spawnQueue[i] = ENEMY_OGRE;
-                    else {
-                        int r = rand() % 100;
-                        if (g_wave >= 2 && r < 20) g_spawnQueue[i] = ENEMY_HOUND;
-                        else if (g_wave >= 3 && r < 40) g_spawnQueue[i] = ENEMY_ORC;
-                        else if (g_wave >= 4 && r < 60) g_spawnQueue[i] = ENEMY_GARGOYLE;
-                        else g_spawnQueue[i] = ENEMY_GOBLIN;
+                
+                if (g_gameMode == 2) {
+                    g_spawnQueueCount = g_wave * 2;
+                    if (g_spawnQueueCount > MAX_SPAWN_QUEUE) g_spawnQueueCount = MAX_SPAWN_QUEUE;
+                    g_spawnQueueHead = 0;
+                    for (int i = 0; i < g_spawnQueueCount; i++) g_spawnQueue[i] = ENEMY_OGRE;
+                } else {
+                    g_spawnQueueCount = 5 + g_wave * 3;
+                    if (g_spawnQueueCount > MAX_SPAWN_QUEUE) g_spawnQueueCount = MAX_SPAWN_QUEUE;
+                    g_spawnQueueHead = 0;
+                    for (int i = 0; i < g_spawnQueueCount; i++) {
+                        if (g_wave % 5 == 0 && i == 0) g_spawnQueue[i] = ENEMY_OGRE;
+                        else {
+                            int r = rand() % 100;
+                            if (g_wave >= 2 && r < 20) g_spawnQueue[i] = ENEMY_HOUND;
+                            else if (g_wave >= 3 && r < 40) g_spawnQueue[i] = ENEMY_ORC;
+                            else if (g_wave >= 4 && r < 60) g_spawnQueue[i] = ENEMY_GARGOYLE;
+                            else g_spawnQueue[i] = ENEMY_GOBLIN;
+                        }
                     }
                 }
                 g_spawnTimer = 0; Beep(600, 40);
