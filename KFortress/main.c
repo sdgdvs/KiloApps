@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdlib.h>
 
 int _fltused = 1;
 
@@ -63,6 +64,8 @@ typedef struct {
     int waypointIndex;
     int id;
     BOOL slowed;
+    int type;
+    int radius;
 } Enemy;
 
 typedef struct {
@@ -102,8 +105,17 @@ static int g_selectedSlot = -1;
 
 static int g_selectedTowerTypeToBuild = TOWER_ARCHER;
 
-static int g_goblinsToSpawn = 0;
+#define MAX_SPAWN_QUEUE 100
+static int g_spawnQueue[MAX_SPAWN_QUEUE];
+static int g_spawnQueueCount = 0;
+static int g_spawnQueueHead = 0;
 static int g_spawnTimer = 0;
+
+#define ENEMY_GOBLIN 1
+#define ENEMY_ORC 2
+#define ENEMY_HOUND 3
+#define ENEMY_GARGOYLE 4
+#define ENEMY_OGRE 5
 
 static Enemy g_enemies[MAX_ENEMIES];
 static Projectile g_projectiles[MAX_PROJECTILES];
@@ -164,7 +176,8 @@ void InitGameState() {
     g_waveActive = FALSE;
     g_gameOver = FALSE;
     g_selectedSlot = -1;
-    g_goblinsToSpawn = 0;
+    g_spawnQueueCount = 0;
+    g_spawnQueueHead = 0;
     g_spawnTimer = 0;
 
     for (int i = 0; i < MAX_ENEMIES; i++) g_enemies[i].active = FALSE;
@@ -180,11 +193,11 @@ void UpdateGameLogic() {
     if (g_gameOver) return;
 
     // Spawning Logic
-    if (g_waveActive && g_goblinsToSpawn > 0) {
+    if (g_waveActive && g_spawnQueueHead < g_spawnQueueCount) {
         g_spawnTimer++;
         if (g_spawnTimer >= 35) { // ~1.1s
             g_spawnTimer = 0;
-            g_goblinsToSpawn--;
+            int type = g_spawnQueue[g_spawnQueueHead++];
 
             for (int i = 0; i < MAX_ENEMIES; i++) {
                 if (!g_enemies[i].active) {
@@ -192,10 +205,16 @@ void UpdateGameLogic() {
                     g_enemies[i].id = g_nextEnemyId++;
                     g_enemies[i].x = (float)g_waypoints[0].x;
                     g_enemies[i].y = (float)g_waypoints[0].y;
-                    g_enemies[i].waypointIndex = 0;
-                    g_enemies[i].hp = 25 + g_wave * 5;
+                    g_enemies[i].type = type;
+                    g_enemies[i].waypointIndex = (type == ENEMY_GARGOYLE) ? (MAX_WAYPOINTS - 1) : 0;
+                    
+                    if (type == ENEMY_GOBLIN) { g_enemies[i].hp = 25 + g_wave * 5; g_enemies[i].speed = 2.0f; g_enemies[i].radius = 11; }
+                    else if (type == ENEMY_ORC) { g_enemies[i].hp = 60 + g_wave * 12; g_enemies[i].speed = 1.2f; g_enemies[i].radius = 13; }
+                    else if (type == ENEMY_HOUND) { g_enemies[i].hp = 20 + g_wave * 4; g_enemies[i].speed = 3.5f; g_enemies[i].radius = 9; }
+                    else if (type == ENEMY_GARGOYLE) { g_enemies[i].hp = 30 + g_wave * 5; g_enemies[i].speed = 1.8f; g_enemies[i].radius = 12; }
+                    else if (type == ENEMY_OGRE) { g_enemies[i].hp = 150 + g_wave * 30; g_enemies[i].speed = 0.8f; g_enemies[i].radius = 16; }
+                    
                     g_enemies[i].maxHp = g_enemies[i].hp;
-                    g_enemies[i].speed = 2.0f;
                     break;
                 }
             }
@@ -221,7 +240,10 @@ void UpdateGameLogic() {
         }
         float currentSpeed = g_enemies[i].slowed ? (g_enemies[i].speed * 0.5f) : g_enemies[i].speed;
 
-        Point targetWP = g_waypoints[g_enemies[i].waypointIndex + 1];
+        int nextIdx = g_enemies[i].waypointIndex + 1;
+        if (g_enemies[i].type == ENEMY_GARGOYLE) nextIdx = MAX_WAYPOINTS - 1;
+        
+        Point targetWP = g_waypoints[nextIdx];
         float dx = targetWP.x - g_enemies[i].x;
         float dy = targetWP.y - g_enemies[i].y;
         float dist = custom_sqrtf(dx * dx + dy * dy);
@@ -229,13 +251,20 @@ void UpdateGameLogic() {
         if (dist < currentSpeed) {
             g_enemies[i].x = (float)targetWP.x;
             g_enemies[i].y = (float)targetWP.y;
-            g_enemies[i].waypointIndex++;
+            
+            if (g_enemies[i].type == ENEMY_GARGOYLE) {
+                g_enemies[i].waypointIndex = MAX_WAYPOINTS;
+            } else {
+                g_enemies[i].waypointIndex++;
+            }
 
             if (g_enemies[i].waypointIndex >= MAX_WAYPOINTS - 1) {
                 // Reached Castle Fortress
-                g_baseHp--;
+                int dmgToBase = (g_enemies[i].type == ENEMY_OGRE) ? 5 : 1;
+                g_baseHp -= dmgToBase;
                 Beep(180, 60);
-                AddFloatingText(g_enemies[i].x - 15, g_enemies[i].y - 20, "-1 HP", RGB(239, 68, 68));
+                char dmgBuf[16]; wsprintfA(dmgBuf, "-%d HP", dmgToBase);
+                AddFloatingText(g_enemies[i].x - 15, g_enemies[i].y - 20, dmgBuf, RGB(239, 68, 68));
                 g_enemies[i].active = FALSE;
 
                 if (g_baseHp <= 0) {
@@ -331,21 +360,39 @@ void UpdateGameLogic() {
                     float edx = g_enemies[e2].x - g_projectiles[p].targetX;
                     float edy = g_enemies[e2].y - g_projectiles[p].targetY;
                     if (custom_sqrtf(edx*edx + edy*edy) <= (float)g_projectiles[p].splash) {
-                        g_enemies[e2].hp -= g_projectiles[p].damage;
+                        int dmg = g_projectiles[p].damage;
+                        if (g_enemies[e2].type == ENEMY_ORC && g_projectiles[p].type != TOWER_MAGE && g_projectiles[p].type != TOWER_CANNON) {
+                            dmg = dmg / 2; if (dmg < 1) dmg = 1;
+                        }
+                        g_enemies[e2].hp -= dmg;
                         if (g_enemies[e2].hp <= 0) {
                             g_enemies[e2].active = FALSE;
-                            g_gold += 15;
-                            AddFloatingText(g_enemies[e2].x, g_enemies[e2].y - 10, "+15g", TEXT_GOLD);
+                            int reward = 15;
+                            if (g_enemies[e2].type == ENEMY_OGRE) reward = 100;
+                            else if (g_enemies[e2].type == ENEMY_ORC) reward = 20;
+                            else if (g_enemies[e2].type == ENEMY_HOUND) reward = 10;
+                            g_gold += reward;
+                            char rBuf[16]; wsprintfA(rBuf, "+%dg", reward);
+                            AddFloatingText(g_enemies[e2].x, g_enemies[e2].y - 10, rBuf, TEXT_GOLD);
                         }
                     }
                 }
             } else {
                 if (targetIdx != -1) {
-                    g_enemies[targetIdx].hp -= g_projectiles[p].damage;
+                    int dmg = g_projectiles[p].damage;
+                    if (g_enemies[targetIdx].type == ENEMY_ORC && g_projectiles[p].type != TOWER_MAGE && g_projectiles[p].type != TOWER_CANNON) {
+                        dmg = dmg / 2; if (dmg < 1) dmg = 1;
+                    }
+                    g_enemies[targetIdx].hp -= dmg;
                     if (g_enemies[targetIdx].hp <= 0) {
                         g_enemies[targetIdx].active = FALSE;
-                        g_gold += 15;
-                        AddFloatingText(g_enemies[targetIdx].x, g_enemies[targetIdx].y - 10, "+15g", TEXT_GOLD);
+                        int reward = 15;
+                        if (g_enemies[targetIdx].type == ENEMY_OGRE) reward = 100;
+                        else if (g_enemies[targetIdx].type == ENEMY_ORC) reward = 20;
+                        else if (g_enemies[targetIdx].type == ENEMY_HOUND) reward = 10;
+                        g_gold += reward;
+                        char rBuf[16]; wsprintfA(rBuf, "+%dg", reward);
+                        AddFloatingText(g_enemies[targetIdx].x, g_enemies[targetIdx].y - 10, rBuf, TEXT_GOLD);
                         Beep(700, 25);
                     }
                 }
@@ -369,7 +416,7 @@ void UpdateGameLogic() {
     }
 
     // Check Wave Completion
-    if (g_waveActive && g_goblinsToSpawn == 0 && activeEnemyCount == 0) {
+    if (g_waveActive && g_spawnQueueHead == g_spawnQueueCount && activeEnemyCount == 0) {
         g_waveActive = FALSE;
         int bonus = 20 + g_wave * 5;
         g_gold += bonus;
@@ -431,7 +478,7 @@ void Render(HDC hdc, HWND hwnd) {
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontSub);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, 140, 26, "Phase 6: Tower Upgrade System", 29);
+    TextOutA(memDC, 140, 26, "Phase 7: Diverse Enemy Bestiary", 31);
 
     // Stats HUD
     char buf[128];
@@ -585,44 +632,79 @@ void Render(HDC hdc, HWND hwnd) {
         }
     }
 
-    // Draw Enemies (Goblins)
+    // Draw Enemies
     for (int e = 0; e < MAX_ENEMIES; e++) {
         if (!g_enemies[e].active) continue;
 
         int ex = (int)g_enemies[e].x;
         int ey = (int)g_enemies[e].y;
+        int r = g_enemies[e].radius;
+        int t = g_enemies[e].type;
 
-        COLORREF gColor = g_enemies[e].slowed ? RGB(59, 130, 246) : GOBLIN_GREEN;
-        COLORREF gBorder = g_enemies[e].slowed ? RGB(29, 78, 216) : RGB(21, 128, 61);
+        COLORREF baseColor = GOBLIN_GREEN;
+        if (t == ENEMY_ORC) baseColor = RGB(71, 85, 105);
+        else if (t == ENEMY_HOUND) baseColor = RGB(30, 27, 75);
+        else if (t == ENEMY_GARGOYLE) baseColor = RGB(100, 116, 139);
+        else if (t == ENEMY_OGRE) baseColor = RGB(120, 53, 15);
+
+        COLORREF gColor = g_enemies[e].slowed ? RGB(59, 130, 246) : baseColor;
+        COLORREF gBorder = g_enemies[e].slowed ? RGB(29, 78, 216) : RGB(15, 23, 42);
+        
         HBRUSH gobBrush = CreateSolidBrush(gColor);
         HPEN gobPen = CreatePen(PS_SOLID, 1, gBorder);
         HBRUSH oB = (HBRUSH)SelectObject(memDC, gobBrush);
         HPEN oP = (HPEN)SelectObject(memDC, gobPen);
 
-        Ellipse(memDC, ex - 11, ey - 11, ex + 11, ey + 11);
+        Ellipse(memDC, ex - r, ey - r, ex + r, ey + r);
 
         SelectObject(memDC, oB);
         SelectObject(memDC, oP);
         DeleteObject(gobBrush);
         DeleteObject(gobPen);
 
+        // Draw Label
+        const char* lbl = "G";
+        if (t == ENEMY_ORC) lbl = "O";
+        else if (t == ENEMY_HOUND) lbl = "H";
+        else if (t == ENEMY_GARGOYLE) lbl = "F";
+        else if (t == ENEMY_OGRE) lbl = "B";
+
+        SetTextColor(memDC, TEXT_WHITE);
+        HFONT hEFont = CreateFontA(r + 2, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+        HFONT oldEF = (HFONT)SelectObject(memDC, hEFont);
+        TextOutA(memDC, ex - r/2, ey - r/2 - 2, lbl, 1);
+        SelectObject(memDC, oldEF);
+        DeleteObject(hEFont);
+
         // HP Bar overhead
-        int barW = 24;
-        int barH = 4;
+        int barW = (t == ENEMY_OGRE) ? 40 : 24;
+        int barH = (t == ENEMY_OGRE) ? 6 : 4;
         float hpRatio = (float)g_enemies[e].hp / (float)g_enemies[e].maxHp;
         if (hpRatio < 0.0f) hpRatio = 0.0f;
 
-        DrawRoundedRect(memDC, ex - barW / 2, ey - 18, ex + barW / 2, ey - 18 + barH, RGB(20, 20, 20), RGB(0, 0, 0), 2);
+        DrawRoundedRect(memDC, ex - barW / 2, ey - r - 8, ex + barW / 2, ey - r - 8 + barH, RGB(20, 20, 20), RGB(0, 0, 0), 2);
         COLORREF hpColor = hpRatio > 0.5f ? RGB(34, 197, 94) : (hpRatio > 0.25f ? RGB(234, 179, 8) : TEXT_RED);
         
-        // Neon Glow Outline
-        HBRUSH hpBrushGlow = CreateSolidBrush(hpColor);
-        RECT hpRGlow = { ex - barW / 2 - 1, ey - 18 - 1, ex - barW / 2 + (int)(barW * hpRatio) + 1, ey - 18 + barH + 1 };
-        FrameRect(memDC, &hpRGlow, hpBrushGlow);
-        DeleteObject(hpBrushGlow);
+        if (t == ENEMY_OGRE) {
+            HPEN hpPenO = CreatePen(PS_SOLID, 2, TEXT_GOLD);
+            HPEN oldHpPO = (HPEN)SelectObject(memDC, hpPenO);
+            HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH oldHpB = (HBRUSH)SelectObject(memDC, nullB);
+            Rectangle(memDC, ex - barW / 2, ey - r - 8, ex + barW / 2, ey - r - 8 + barH);
+            SelectObject(memDC, oldHpPO);
+            SelectObject(memDC, oldHpB);
+            DeleteObject(hpPenO);
+        } else {
+            // Neon Glow Outline
+            HBRUSH hpBrushGlow = CreateSolidBrush(hpColor);
+            RECT hpRGlow = { ex - barW / 2 - 1, ey - r - 8 - 1, ex - barW / 2 + (int)(barW * hpRatio) + 1, ey - r - 8 + barH + 1 };
+            FrameRect(memDC, &hpRGlow, hpBrushGlow);
+            DeleteObject(hpBrushGlow);
+        }
 
         HBRUSH hpBrush = CreateSolidBrush(hpColor);
-        RECT hpR = { ex - barW / 2, ey - 18, ex - barW / 2 + (int)(barW * hpRatio), ey - 18 + barH };
+        RECT hpR = { ex - barW / 2, ey - r - 8, ex - barW / 2 + (int)(barW * hpRatio), ey - r - 8 + barH };
         FillRect(memDC, &hpR, hpBrush);
         DeleteObject(hpBrush);
     }
@@ -722,12 +804,12 @@ void Render(HDC hdc, HWND hwnd) {
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontBody);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 25, sbY + 305, "Phase 6 Features:", 17);
+    TextOutA(memDC, sbX + 25, sbY + 305, "Phase 7 Features:", 17);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, sbX + 25, sbY + 328, "- Click (+) to build", 20);
-    TextOutA(memDC, sbX + 25, sbY + 344, "- Click tower to Upgrade", 24);
-    TextOutA(memDC, sbX + 25, sbY + 364, "- Max Level is 3", 16);
-    TextOutA(memDC, sbX + 25, sbY + 384, "- Earn +15g per kill", 20);
+    TextOutA(memDC, sbX + 25, sbY + 328, "- Orc: Armor vs Arrows", 22);
+    TextOutA(memDC, sbX + 25, sbY + 344, "- Hound: Very fast", 18);
+    TextOutA(memDC, sbX + 25, sbY + 364, "- Gargoyle: Flying", 18);
+    TextOutA(memDC, sbX + 25, sbY + 384, "- Ogre: Boss health", 19);
 
     DeleteObject(hFontHeader);
     DeleteObject(hFontBody);
@@ -776,7 +858,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (x >= sbX + 15 && x <= sbX + sbW - 15 && y >= sbY + 195 && y <= sbY + 235) {
             if (!g_waveActive && !g_gameOver) {
                 g_waveActive = TRUE;
-                g_goblinsToSpawn = 5 + g_wave * 3;
+                g_spawnQueueCount = 5 + g_wave * 3;
+                if (g_spawnQueueCount > MAX_SPAWN_QUEUE) g_spawnQueueCount = MAX_SPAWN_QUEUE;
+                g_spawnQueueHead = 0;
+                for (int i = 0; i < g_spawnQueueCount; i++) {
+                    if (g_wave % 5 == 0 && i == 0) {
+                        g_spawnQueue[i] = ENEMY_OGRE;
+                    } else {
+                        int r = rand() % 100;
+                        if (g_wave >= 2 && r < 20) g_spawnQueue[i] = ENEMY_HOUND;
+                        else if (g_wave >= 3 && r < 40) g_spawnQueue[i] = ENEMY_ORC;
+                        else if (g_wave >= 4 && r < 60) g_spawnQueue[i] = ENEMY_GARGOYLE;
+                        else g_spawnQueue[i] = ENEMY_GOBLIN;
+                    }
+                }
                 g_spawnTimer = 0;
                 Beep(600, 40);
             }

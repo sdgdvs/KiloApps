@@ -283,7 +283,7 @@
   <header>
     <div class="title-group">
       <h1>KFORTRESS</h1>
-      <span>Phase 6: Tower Upgrade System</span>
+      <span>Phase 7: Diverse Enemy Bestiary</span>
     </div>
     <div class="hud-stats">
       <div class="stat-badge stat-gold">🪙 Gold: <span id="goldVal">100</span></div>
@@ -339,12 +339,12 @@
       <button class="btn btn-danger" id="resetBtn">RESET DEFENSE</button>
 
       <div class="info-panel">
-        <strong>Phase 6 Features</strong>
+        <strong>Phase 7 Features</strong>
         <ul>
-          <li>Build Archer, Mage, Cannon, or Frost Towers.</li>
-          <li>Click a built tower to Upgrade (Max Lvl 3).</li>
-          <li>Upgrades boost damage, range, and attack speed.</li>
-          <li>Defeating Goblins yields <b>+15 Gold</b>!</li>
+          <li><b>Orc Warriors:</b> Heavy armor resists arrows.</li>
+          <li><b>Shadow Hounds:</b> Very fast sprint speed.</li>
+          <li><b>Gargoyles:</b> Fly straight to the castle.</li>
+          <li><b>Siege Ogres:</b> Bosses with massive health!</li>
         </ul>
       </div>
     </div>
@@ -378,7 +378,7 @@
     let gameOver = false;
     let selectedSlotIndex = -1;
 
-    let goblinsToSpawn = 0;
+    let spawnQueue = [];
     let spawnTimer = 0;
     const SPAWN_INTERVAL = 70; // frames (~1.1s)
 
@@ -444,7 +444,7 @@
         waveBtn.textContent = "DEFENSE FAILED";
         waveBtn.disabled = true;
       } else if (waveInProgress) {
-        waveBtn.textContent = `WAVE ${wave} IN PROGRESS (${enemies.length + goblinsToSpawn} REMAINING)`;
+        waveBtn.textContent = `WAVE ${wave} IN PROGRESS (${enemies.length + spawnQueue.length} REMAINING)`;
         waveBtn.disabled = true;
       } else {
         waveBtn.textContent = `START WAVE ${wave}`;
@@ -554,7 +554,18 @@
     document.getElementById('waveBtn').addEventListener('click', () => {
       if (waveInProgress || gameOver) return;
       waveInProgress = true;
-      goblinsToSpawn = 5 + wave * 3; // Wave 1: 8 Goblins, Wave 2: 11, etc.
+      spawnQueue = [];
+      const total = 5 + wave * 3;
+      for (let i = 0; i < total; i++) {
+        if (wave % 5 === 0 && i === 0) spawnQueue.push('Ogre');
+        else {
+          let rnd = Math.random();
+          if (wave >= 2 && rnd < 0.2) spawnQueue.push('Hound');
+          else if (wave >= 3 && rnd < 0.4) spawnQueue.push('Orc');
+          else if (wave >= 4 && rnd < 0.6) spawnQueue.push('Gargoyle');
+          else spawnQueue.push('Goblin');
+        }
+      }
       spawnTimer = 0;
       playBeep(440, 0.1, 'triangle', 0.15);
       setTimeout(() => playBeep(660, 0.15, 'triangle', 0.15), 100);
@@ -568,7 +579,7 @@
       waveInProgress = false;
       gameOver = false;
       selectedSlotIndex = -1;
-      goblinsToSpawn = 0;
+      spawnQueue = [];
       enemies = [];
       projectiles = [];
       floatingTexts = [];
@@ -609,22 +620,31 @@
       const waypoints = getScaledWaypoints();
       const scaledSlots = getScaledSlots();
 
-      // Spawn Goblins
-      if (waveInProgress && goblinsToSpawn > 0) {
+      // Spawn Enemies
+      if (waveInProgress && spawnQueue.length > 0) {
         spawnTimer++;
         if (spawnTimer >= SPAWN_INTERVAL) {
           spawnTimer = 0;
-          goblinsToSpawn--;
-          const hp = 25 + wave * 5;
+          const type = spawnQueue.shift();
+          let hp, speed, icon, color, radius = 12;
+          if (type === 'Goblin') { hp = 25 + wave*5; speed = 1.6 + Math.random()*0.3; icon = '👺'; color = '#16a34a'; }
+          else if (type === 'Orc') { hp = 60 + wave*12; speed = 1.0; icon = '👹'; color = '#475569'; radius = 14; }
+          else if (type === 'Hound') { hp = 20 + wave*4; speed = 2.8; icon = '🐺'; color = '#1e1b4b'; radius = 10; }
+          else if (type === 'Gargoyle') { hp = 30 + wave*5; speed = 1.4; icon = '🦇'; color = '#64748b'; radius = 13; }
+          else if (type === 'Ogre') { hp = 150 + wave*30; speed = 0.6; icon = '🧌'; color = '#78350f'; radius = 18; }
+
           enemies.push({
             id: Math.random(),
+            type: type,
             x: waypoints[0].x,
             y: waypoints[0].y,
             waypointIndex: 0,
             hp: hp,
             maxHp: hp,
-            speed: 1.6 + Math.random() * 0.3,
-            radius: 12
+            speed: speed,
+            radius: radius,
+            icon: icon,
+            color: color
           });
         }
       }
@@ -646,13 +666,15 @@
         });
         
         const currentSpeed = e.slowed ? e.speed * 0.5 : e.speed;
-        const targetWP = waypoints[e.waypointIndex + 1];
+        let targetWP = waypoints[e.waypointIndex + 1];
+        if (e.type === 'Gargoyle') targetWP = waypoints[waypoints.length - 1];
 
         if (!targetWP) {
           // Reached Castle Fortress
-          baseHp -= 1;
+          let dmgToBase = (e.type === 'Ogre') ? 5 : 1;
+          baseHp -= dmgToBase;
           playBeep(180, 0.15, 'sawtooth', 0.25);
-          spawnFloatingText(waypoints[waypoints.length - 1].x - 20, waypoints[waypoints.length - 1].y - 30, "-1 HP", "#ef4444");
+          spawnFloatingText(waypoints[waypoints.length - 1].x - 20, waypoints[waypoints.length - 1].y - 30, "-" + dmgToBase + " HP", "#ef4444");
           enemies.splice(i, 1);
           if (baseHp <= 0) {
             baseHp = 0;
@@ -670,7 +692,8 @@
         if (dist < currentSpeed) {
           e.x = targetWP.x;
           e.y = targetWP.y;
-          e.waypointIndex++;
+          if (e.type === 'Gargoyle') e.waypointIndex = waypoints.length;
+          else e.waypointIndex++;
         } else {
           e.x += (dx / dist) * currentSpeed;
           e.y += (dy / dist) * currentSpeed;
@@ -740,12 +763,16 @@
               const edx = e2.x - p.target.x;
               const edy = e2.y - p.target.y;
               if (Math.sqrt(edx*edx + edy*edy) <= p.splash) {
-                e2.hp -= p.damage;
+                let dmg = p.damage;
+                if (e2.type === 'Orc' && p.type !== 'Mage' && p.type !== 'Cannon') dmg = Math.max(1, Math.floor(dmg * 0.5));
+                e2.hp -= dmg;
                 spawnParticleEffect(e2.x, e2.y, "#a855f7");
               }
             });
           } else {
-            p.target.hp -= p.damage;
+            let dmg = p.damage;
+            if (p.target.type === 'Orc' && p.type !== 'Mage' && p.type !== 'Cannon') dmg = Math.max(1, Math.floor(dmg * 0.5));
+            p.target.hp -= dmg;
             spawnParticleEffect(p.target.x, p.target.y, p.type === 'Cannon' ? "#475569" : "#ffd700");
           }
           playBeep(p.type === 'Cannon' ? 200 : (p.type === 'Mage' ? 400 : 450), 0.04, 'triangle', 0.08);
@@ -754,8 +781,12 @@
           let deadFound = false;
           for (let j = enemies.length - 1; j >= 0; j--) {
             if (enemies[j].hp <= 0) {
-              gold += 15;
-              spawnFloatingText(enemies[j].x, enemies[j].y - 15, "+15g", "#ffd700");
+              let reward = 15;
+              if (enemies[j].type === 'Ogre') reward = 100;
+              else if (enemies[j].type === 'Orc') reward = 20;
+              else if (enemies[j].type === 'Hound') reward = 10;
+              gold += reward;
+              spawnFloatingText(enemies[j].x, enemies[j].y - 15, "+" + reward + "g", "#ffd700");
               spawnParticleEffect(enemies[j].x, enemies[j].y, "#10b981");
               enemies.splice(j, 1);
               deadFound = true;
@@ -789,7 +820,7 @@
       }
 
       // Check Wave Completion
-      if (waveInProgress && goblinsToSpawn === 0 && enemies.length === 0) {
+      if (waveInProgress && spawnQueue.length === 0 && enemies.length === 0) {
         waveInProgress = false;
         gold += 20 + wave * 5; // End of wave bonus
         spawnFloatingText(canvas.width / 2, canvas.height / 2, `WAVE ${wave} CLEAR! +${20 + wave * 5}g`, "#10b981");
@@ -959,47 +990,48 @@
         }
       });
 
-      // Draw Enemies (Goblins)
+      // Draw Enemies
       enemies.forEach(e => {
-        // Goblin Body
-        ctx.fillStyle = e.slowed ? '#3b82f6' : '#16a34a'; // Turn blue if slowed
-        ctx.strokeStyle = e.slowed ? '#1d4ed8' : '#15803d';
+        ctx.fillStyle = e.slowed ? '#3b82f6' : e.color;
+        ctx.strokeStyle = e.slowed ? '#1d4ed8' : '#0f172a';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
-        // Goblin Ears/Face details
-        ctx.fillStyle = e.slowed ? '#1d4ed8' : '#15803d';
-        ctx.beginPath();
-        ctx.arc(e.x - 10, e.y - 4, 4, 0, Math.PI * 2);
-        ctx.arc(e.x + 10, e.y - 4, 4, 0, Math.PI * 2);
-        ctx.fill();
-
         ctx.fillStyle = '#ffffff';
-        ctx.font = '700 10px Segoe UI';
+        ctx.font = '700 ' + Math.floor(e.radius * 1.2) + 'px Segoe UI';
         ctx.textAlign = 'center';
-        ctx.fillText('👺', e.x, e.y + 4);
+        ctx.fillText(e.icon, e.x, e.y + e.radius/3);
 
-        // HP Bar overhead
-        const barW = 28;
-        const barH = 5;
-        const hpPercent = Math.max(0, e.hp / e.maxHp);
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillRect(e.x - barW / 2, e.y - 20, barW, barH);
-        
-        const hpColor = hpPercent > 0.5 ? '#22c55e' : (hpPercent > 0.25 ? '#eab308' : '#ef4444');
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = hpColor;
-        ctx.fillStyle = hpColor;
-        ctx.fillRect(e.x - barW / 2, e.y - 20, barW * hpPercent, barH);
-        ctx.shadowBlur = 0;
-
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(e.x - barW / 2, e.y - 20, barW, barH);
+        if (e.type === 'Ogre') {
+          const barW = 44;
+          const barH = 6;
+          const hpPercent = Math.max(0, e.hp / e.maxHp);
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+          ctx.fillRect(e.x - barW / 2, e.y - e.radius - 12, barW, barH);
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(e.x - barW / 2, e.y - e.radius - 12, barW * hpPercent, barH);
+          ctx.strokeStyle = '#ffd700';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(e.x - barW / 2, e.y - e.radius - 12, barW, barH);
+        } else {
+          const barW = 28;
+          const barH = 5;
+          const hpPercent = Math.max(0, e.hp / e.maxHp);
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+          ctx.fillRect(e.x - barW / 2, e.y - e.radius - 10, barW, barH);
+          const hpColor = hpPercent > 0.5 ? '#22c55e' : (hpPercent > 0.25 ? '#eab308' : '#ef4444');
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = hpColor;
+          ctx.fillStyle = hpColor;
+          ctx.fillRect(e.x - barW / 2, e.y - e.radius - 10, barW * hpPercent, barH);
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(e.x - barW / 2, e.y - e.radius - 10, barW, barH);
+        }
       });
 
       projectiles.forEach(p => {
