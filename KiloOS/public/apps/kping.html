@@ -19,6 +19,8 @@
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
     color: var(--text); display: flex; flex-direction: column;
     height: 100vh; box-sizing: border-box; overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   .glass {
     background: var(--panel);
@@ -144,7 +146,9 @@
         <div class="dot dot-green"></div>
         <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Session Log</span>
       </div>
-      <textarea id="out" readonly spellcheck="false"></textarea>
+      <textarea id="out" readonly spellcheck="false">Welcome to KPing. Enter a target host and click Ping or Trace to begin.
+
+</textarea>
     </div>
     
     <div class="glass analytics-panel">

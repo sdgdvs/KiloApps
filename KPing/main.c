@@ -24,6 +24,11 @@ HBRUSH hinputBg;
 HFONT hFont;
 HFONT hFontMono;
 
+// Helper to set crisp fonts
+#ifndef CLEARTYPE_QUALITY
+#define CLEARTYPE_QUALITY 5
+#endif
+
 void ExportLog(HWND hwnd) {
     OPENFILENAMEA ofn;
     char szFileName[MAX_PATH] = "kping_log.txt";
@@ -186,15 +191,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hbg = CreateSolidBrush(RGB(15, 23, 42)); // #0f172a
             hinputBg = CreateSolidBrush(RGB(30, 41, 59)); // #1e293b
             
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
-            if (!hFontMono) hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+            if (!hFontMono) hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Courier New");
             
             hStatic = CreateWindowEx(0, "STATIC", "Target Host:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 22, hwnd, NULL, NULL, NULL);
-            hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 100, 15, W - 300, 24, hwnd, NULL, NULL, NULL);
-            hBtnExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE, W - 210, 15, 65, 24, hwnd, (HMENU)3, NULL, NULL);
-            hBtn = CreateWindowEx(0, "BUTTON", "Ping", WS_CHILD | WS_VISIBLE, W - 140, 15, 60, 24, hwnd, (HMENU)1, NULL, NULL);
-            hBtnTrace = CreateWindowEx(0, "BUTTON", "Trace", WS_CHILD | WS_VISIBLE, W - 75, 15, 60, 24, hwnd, (HMENU)2, NULL, NULL);
+            hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 100, 15, W - 315, 24, hwnd, NULL, NULL, NULL);
+            hBtnExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE, W - 205, 15, 65, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Ping", WS_CHILD | WS_VISIBLE, W - 135, 15, 60, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnTrace = CreateWindowEx(0, "BUTTON", "Trace", WS_CHILD | WS_VISIBLE, W - 70, 15, 55, 24, hwnd, (HMENU)2, NULL, NULL);
             
             hStaticCount = CreateWindowEx(0, "STATIC", "Count:", WS_CHILD | WS_VISIBLE, 15, 45, 50, 22, hwnd, NULL, NULL, NULL);
             hInputCount = CreateWindowEx(0, "EDIT", "4", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, 65, 45, 50, 24, hwnd, NULL, NULL, NULL);
@@ -205,7 +210,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hCheckCont = CreateWindowEx(0, "BUTTON", "Continuous", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 310, 45, 100, 22, hwnd, NULL, NULL, NULL);
             hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 420, 45, 90, 22, hwnd, NULL, NULL, NULL);
             
-            hOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 120, hwnd, NULL, NULL, NULL);
+            hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing. Enter a target host and click Ping or Trace to begin.\r\n\r\n", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 120, hwnd, NULL, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFontMono, TRUE);
@@ -259,10 +264,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hInput, 100, 15, nw - 300, 24, TRUE);
-            MoveWindow(hBtnExport, nw - 190, 15, 60, 24, TRUE);
-            MoveWindow(hBtn, nw - 125, 15, 55, 24, TRUE);
-            MoveWindow(hBtnTrace, nw - 65, 15, 55, 24, TRUE);
+            MoveWindow(hInput, 100, 15, nw - 315, 24, TRUE);
+            MoveWindow(hBtnExport, nw - 205, 15, 65, 24, TRUE);
+            MoveWindow(hBtn, nw - 135, 15, 60, 24, TRUE);
+            MoveWindow(hBtnTrace, nw - 70, 15, 55, 24, TRUE);
             MoveWindow(hOutput, 15, 75, nw - 30, nh - 120, TRUE);
             break;
         }
