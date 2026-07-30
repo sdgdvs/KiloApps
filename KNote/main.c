@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <commctrl.h>
 
-#define W 440
-#define H 320
+#define W 640
+#define H 480
 
 HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExport;
 HBRUSH bgBrush, sidebarBrush;
@@ -84,7 +84,7 @@ void LoadNotes() {
     if (numNotes == 0) {
         numNotes = 1;
         pinned[0] = 0;
-        const char* def = "Buy milk\r\nFix that bug\r\nCall mom";
+        const char* def = "Welcome to KNote!\r\n\r\nShortcuts:\r\n- Use the sidebar to switch notes.\r\n- Click New to create a note.\r\n- Click Pin to pin a note to the top.";
         for(int i=0; def[i]; i++) notes[0][i] = def[i];
     }
 }
@@ -222,27 +222,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             bgBrush = CreateSolidBrush(RGB(255, 255, 150));
             sidebarBrush = CreateSolidBrush(RGB(224, 224, 160));
             
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Comic Sans MS");
-            if (!hFont) hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Segoe UI");
             
-            hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 60, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
-            hBtnDel = CreateWindow("BUTTON", "Del", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 60, 0, 60, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
+            hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 75, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
+            hBtnDel = CreateWindow("BUTTON", "Del", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 75, 0, 75, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
             
-            hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 26, 120, 22, hwnd, (HMENU)ID_SEARCH, NULL, NULL);
+            hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 26, 150, 22, hwnd, (HMENU)ID_SEARCH, NULL, NULL);
             SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search...");
 
-            hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 0, 48, 120, H-48, hwnd, (HMENU)ID_LIST, NULL, NULL);
+            hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 0, 48, 150, H-48, hwnd, (HMENU)ID_LIST, NULL, NULL);
             
-            hBtnPin = CreateWindow("BUTTON", "Pin", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 0, 60, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
-            hBtnExport = CreateWindow("BUTTON", "Export TXT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 180, 0, 75, 26, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+            hBtnPin = CreateWindow("BUTTON", "Pin", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 150, 0, 60, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
+            hBtnExport = CreateWindow("BUTTON", "Export TXT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 210, 0, 75, 26, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
 
             hEdit = CreateWindowEx(0, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL,
-                120, 26, W-120, H-46, hwnd, NULL, NULL, NULL);
+                150, 26, W-150, H-46, hwnd, NULL, NULL, NULL);
                 
             hStatus = CreateWindowEx(0, "STATIC", "  Words: 0 | Chars: 0",
                 WS_CHILD | WS_VISIBLE,
-                120, H-20, W-120, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
+                150, H-20, W-150, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
                 
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             HFONT hSys = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
@@ -339,11 +338,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            int sideW = 120;
+            int sideW = 150;
             int topH = 26;
 
-            MoveWindow(hBtnNew, 0, 0, 60, topH, TRUE);
-            MoveWindow(hBtnDel, 60, 0, 60, topH, TRUE);
+            MoveWindow(hBtnNew, 0, 0, 75, topH, TRUE);
+            MoveWindow(hBtnDel, 75, 0, 75, topH, TRUE);
             MoveWindow(hSearch, 0, topH, sideW, 22, TRUE);
             MoveWindow(hList, 0, topH + 22, sideW, nh - (topH + 22), TRUE);
 

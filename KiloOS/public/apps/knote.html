@@ -15,7 +15,7 @@
   .note-item { padding: 8px; border-bottom: 1px solid #ccc; cursor: pointer; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .note-item:hover { background: #d0d090; }
   .note-item.active { background: #ffff96; font-weight: bold; }
-  textarea { flex: 1; width: 100%; box-sizing: border-box; background-color: transparent; border: none; padding: 10px; font-family: "Comic Sans MS", "Segoe UI", sans-serif; font-size: 16px; resize: none; outline: none; }
+  textarea { flex: 1; width: 100%; box-sizing: border-box; background-color: transparent; border: none; padding: 10px; font-family: "Segoe UI", sans-serif; font-size: 16px; resize: none; outline: none; }
 </style>
 </head>
 <body>
@@ -50,7 +50,7 @@
       else {
           let old = localStorage.getItem('knote_data');
           if (old) notes.push({ text: old, pinned: false });
-          else notes.push({ text: "Buy milk\nFix that bug\nCall mom", pinned: false });
+          else notes.push({ text: "Welcome to KNote!\n\nShortcuts:\n- Use the sidebar to switch notes.\n- Click New Note to create a note.\n- Click Pin Note to pin to the top.", pinned: false });
       }
   } catch (e) {
       notes = [{ text: "", pinned: false }];
