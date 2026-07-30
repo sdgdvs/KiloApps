@@ -6,7 +6,7 @@
 #pragma comment(lib, "msvcrt.lib")
 
 #define W 300
-#define H 340
+#define H 350
 #define COLS 15
 #define ROWS 15
 #define TS 20
@@ -465,6 +465,7 @@ void AddShockwave(int x, int y, COLORREF color) {
 int diffMode = 1; // 0 = Easy, 1 = Normal, 2 = Hard
 char saveMsgText[64] = "";
 int saveMsgTimer = 0;
+int showHelp = 1;
 
 int statsGamesPlayed = 0;
 int statsGhostsEaten = 0;
@@ -685,7 +686,7 @@ void TriggerShieldSkill() {
 
 void Update() {
     if (saveMsgTimer > 0) saveMsgTimer--;
-    if (gameOver || paused) return;
+    if (showHelp || gameOver || paused) return;
 
     if (victoryTimer > 0) {
         victoryTimer--;
@@ -1015,15 +1016,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             randSeed = GetTickCount();
             SetTimer(hwnd, 1, 100, NULL);
             break;
-        case WM_KEYDOWN:
+        case WM_KEYDOWN: {
+            if (wParam == 'H' || wParam == 'h') showHelp = !showHelp;
+            if (showHelp) break;
+            // Active Skills hotkeys
             if (wParam == VK_LEFT || wParam == 'A' || wParam == 'a') { ndx = -1; ndy = 0; }
             if (wParam == VK_RIGHT || wParam == 'D' || wParam == 'd') { ndx = 1; ndy = 0; }
             if (wParam == VK_UP || wParam == 'W' || wParam == 'w') { ndx = 0; ndy = -1; }
-            if (wParam == VK_DOWN) { ndx = 0; ndy = 1; }
+            if (wParam == VK_DOWN || wParam == 'S' || wParam == 's') { ndx = 0; ndy = 1; }
 
-            // Active Skills hotkeys
             if (wParam == 'F' || wParam == 'f') TriggerFreezeSkill();
-            if (wParam == 'S' || wParam == 's') TriggerSpeedSkill();
+            if (wParam == 'Z' || wParam == 'z') TriggerSpeedSkill();
             if (wParam == 'M' || wParam == 'm') TriggerMagnetSkill();
             if (wParam == 'B' || wParam == 'b') TriggerShieldSkill();
 
@@ -1035,6 +1038,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 'V' || wParam == 'v') SaveGame();
             if (wParam == 'L' || wParam == 'l') LoadGame();
             break;
+        }
         case WM_TIMER:
             Update();
             InvalidateRect(hwnd, NULL, FALSE);
@@ -1045,8 +1049,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             SelectObject(memDC, hbm);
-
-            HBRUSH bg = CreateSolidBrush(RGB(5, 8, 20));
+            static HFONT hFont = NULL;
+            if (!hFont) hFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
+            SelectObject(memDC, hFont);
+            HBRUSH bg = CreateSolidBrush(RGB(3, 6, 17));
             RECT rc = {0, 0, W, H};
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
@@ -1292,22 +1298,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(255, 255, 255));
             char sstr[128];
             wsprintfA(sstr, "Lv:%d/20 Sc:%d HI:%d Lvs:%d", level, score, highScore, lives);
-            TextOutA(memDC, 2, 0, sstr, lstrlenA(sstr));
+            TextOutA(memDC, 2, 305, sstr, lstrlenA(sstr));
 
             // Skill HUD Line
-            wsprintfA(sstr, "F:%s S:%s M:%s B:%s",
+            wsprintfA(sstr, "F:%s Z:%s M:%s B:%s",
                 freezeCooldown > 0 ? "CD" : "OK",
                 speedCooldown > 0 ? "CD" : "OK",
                 magnetCooldown > 0 ? "CD" : "OK",
                 shieldCooldown > 0 ? "CD" : (shieldActive ? "ON" : "OK"));
             SetTextColor(memDC, RGB(255, 235, 59));
-            TextOutA(memDC, 2, 10, sstr, lstrlenA(sstr));
+            TextOutA(memDC, 2, 320, sstr, lstrlenA(sstr));
+            
+            SetTextColor(memDC, RGB(255, 255, 255));
+            TextOutA(memDC, 2, 335, "[Press H for Help]", 18);
 
             if (level == 20 && bossHp > 0) {
                 char bossStr[64];
                 wsprintfA(bossStr, "BOSS KING HP: %d/%d", bossHp, bossMaxHp);
                 SetTextColor(memDC, RGB(255, 215, 0));
-                TextOutA(memDC, W - 130, 0, bossStr, lstrlenA(bossStr));
+                TextOutA(memDC, W - 130, 305, bossStr, lstrlenA(bossStr));
+            }
+            
+            if (showHelp) {
+                HBRUSH overlay = CreateSolidBrush(RGB(0, 0, 0));
+                RECT overlayRect = {0, 0, W, H};
+                FillRect(memDC, &overlayRect, overlay);
+                DeleteObject(overlay);
+                SetTextColor(memDC, RGB(255, 255, 255));
+                TextOutA(memDC, 70, 40, "KPac - Help & Controls", 22);
+                TextOutA(memDC, 70, 70, "Move: Arrows or WASD", 20);
+                TextOutA(memDC, 70, 90, "Skills: F, Z, M, B", 18);
+                TextOutA(memDC, 70, 110, "Diff: 1(Easy) 2(Norm) 3(Hard)", 29);
+                TextOutA(memDC, 70, 130, "Save/Load: V / L", 16);
+                TextOutA(memDC, 70, 150, "Pause: P", 8);
+                TextOutA(memDC, 50, 180, "Avoid ghosts, eat all dots.", 27);
+                TextOutA(memDC, 30, 200, "Power pellets let you eat ghosts!", 33);
+                SetTextColor(memDC, RGB(0, 230, 118));
+                TextOutA(memDC, 60, 250, "Press H to start/resume", 23);
             }
 
             if (saveMsgTimer > 0) {

@@ -29,7 +29,6 @@
     border: 1px solid #1e88e5;
   }
   canvas {
-    image-rendering: pixelated;
     width: 300px;
     height: 340px;
     border-radius: 6px;
@@ -76,12 +75,12 @@
   }
 </style>
 </head>
-<body>
+<body data-width="340" data-height="430">
 <div id="game-container">
   <canvas id="gameCanvas" width="300" height="340"></canvas>
   <div class="skills-bar">
     <button id="btnFreeze" class="skill-btn" onclick="triggerFreezeSkill()">Freeze [F]</button>
-    <button id="btnSprint" class="skill-btn" onclick="triggerSpeedSkill()">Sprint [S]</button>
+    <button id="btnSprint" class="skill-btn" onclick="triggerSpeedSkill()">Sprint [Z]</button>
     <button id="btnMagnet" class="skill-btn" onclick="triggerMagnetSkill()">Magnet [M]</button>
     <button id="btnShield" class="skill-btn" onclick="triggerShieldSkill()">Shield [B]</button>
   </div>
@@ -90,6 +89,10 @@
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 300 * dpr;
+  canvas.height = 340 * dpr;
+  ctx.scale(dpr, dpr);
   
   const COLS = 15;
   const ROWS = 15;
@@ -491,6 +494,7 @@
   let diffMode = 1; // 0 = Easy, 1 = Normal, 2 = Hard
   let saveMsgText = '';
   let saveMsgTimer = 0;
+  let showHelp = 1;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(freq, dur, type='square') {
@@ -510,6 +514,8 @@
   const keys = {};
   document.addEventListener('keydown', e => {
       keys[e.key] = true;
+      if (e.key === 'h' || e.key === 'H') showHelp = !showHelp;
+      if (showHelp) return;
       if ((e.key === 'p' || e.key === 'P') && !gameOver) paused = !paused;
       if (e.key === '1') { diffMode = 0; saveMsgText = 'DIFF: EASY'; saveMsgTimer = 20; playSound(400, 0.1, 'sine'); }
       if (e.key === '2') { diffMode = 1; saveMsgText = 'DIFF: NORMAL'; saveMsgTimer = 20; playSound(500, 0.1, 'sine'); }
@@ -517,7 +523,7 @@
 
       // Active Skills hotkeys
       if (e.key === 'f' || e.key === 'F') triggerFreezeSkill();
-      if (e.key === 's' || e.key === 'S') triggerSpeedSkill();
+      if (e.key === 'z' || e.key === 'Z') triggerSpeedSkill();
       if (e.key === 'm' || e.key === 'M') triggerMagnetSkill();
       if (e.key === 'b' || e.key === 'B') triggerShieldSkill();
 
@@ -734,7 +740,7 @@
           if (keys['Enter']) init(false);
           return;
       }
-      if (paused) return;
+      if (showHelp || paused) return;
 
       if (victoryTimer > 0) {
           victoryTimer--;
@@ -1400,7 +1406,28 @@
       ctx.font = '10px monospace';
       const diffNames = ['EASY', 'NORM', 'HARD'];
       ctx.fillText(`Lv:${level}/20 Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 308);
-      ctx.fillText(`Diff:${diffNames[diffMode]} [F:Frz S:Spr M:Mag B:Shd V:Save L:Load]`, 4, 320);
+      ctx.fillText(`Diff:${diffNames[diffMode]} Skills: F,Z,M,B Save:V Load:L`, 4, 320);
+      ctx.fillText(`[Press H for Help]`, 4, 332);
+
+      if (showHelp) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+          ctx.fillRect(0, 0, 300, 340);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('KPac - Help & Controls', 150, 40);
+          ctx.font = '12px sans-serif';
+          ctx.fillText('Move: Arrows or WASD', 150, 70);
+          ctx.fillText('Skills: F, Z, M, B (or buttons)', 150, 90);
+          ctx.fillText('Difficulty: 1(Easy), 2(Norm), 3(Hard)', 150, 110);
+          ctx.fillText('Save/Load: V / L', 150, 130);
+          ctx.fillText('Pause: P', 150, 150);
+          ctx.fillText('Avoid ghosts, eat all dots.', 150, 180);
+          ctx.fillText('Power pellets let you eat ghosts!', 150, 200);
+          ctx.fillStyle = '#00e676';
+          ctx.fillText('Press H to start/resume', 150, 250);
+          ctx.textAlign = 'left';
+      }
 
       if (level === 20 && bossHp > 0) {
           ctx.fillStyle = '#ffd700';
