@@ -1,18 +1,21 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <commdlg.h>
+#include <stdio.h>
 
-#define W 500
-#define H 400
+#define W 650
+#define H 450
 
 HWND hInput;
 HWND hBtn;
 HWND hBtnTrace;
+HWND hBtnExport;
 HWND hOutput;
 HWND hStatic;
 HWND hStaticCount, hInputCount;
 HWND hStaticSize, hInputSize;
 HWND hStaticTTL, hInputTTL;
-HWND hCheckCont;
+HWND hCheckCont, hCheckHex;
 HANDLE hThread = NULL;
 HANDLE hPingProcess = NULL;
 
@@ -20,6 +23,36 @@ HBRUSH hbg;
 HBRUSH hinputBg;
 HFONT hFont;
 HFONT hFontMono;
+
+void ExportLog(HWND hwnd) {
+    OPENFILENAMEA ofn;
+    char szFileName[MAX_PATH] = "kping_log.txt";
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = "Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+    ofn.lpstrDefExt = "txt";
+
+    if (GetSaveFileNameA(&ofn)) {
+        HANDLE hFile = CreateFileA(szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            int len = GetWindowTextLengthA(hOutput);
+            if (len > 0) {
+                char* buf = (char*)GlobalAlloc(GPTR, len + 1);
+                if (buf) {
+                    GetWindowTextA(hOutput, buf, len + 1);
+                    DWORD written;
+                    WriteFile(hFile, buf, len, &written, NULL);
+                    GlobalFree(buf);
+                }
+            }
+            CloseHandle(hFile);
+        }
+    }
+}
 
 DWORD WINAPI PingThread(LPVOID param) {
     BOOL traceMode = (BOOL)(INT_PTR)param;
@@ -39,6 +72,47 @@ DWORD WINAPI PingThread(LPVOID param) {
     if (ttlStr[0] == 0) lstrcpyA(ttlStr, "115");
     
     BOOL continuous = SendMessage(hCheckCont, BM_GETCHECK, 0, 0) == BST_CHECKED;
+    BOOL hexdump = SendMessage(hCheckHex, BM_GETCHECK, 0, 0) == BST_CHECKED;
+    
+    if (hexdump && !traceMode) {
+        int sz = 0;
+        for (int i = 0; sizeStr[i] >= '0' && sizeStr[i] <= '9'; i++) {
+            sz = sz * 10 + (sizeStr[i] - '0');
+        }
+        if (sz > 0) {
+            char header[128];
+            wsprintfA(header, "Payload Hex Dump (%d bytes):\r\n", sz);
+            int len = GetWindowTextLengthA(hOutput);
+            SendMessageA(hOutput, EM_SETSEL, len, len);
+            SendMessageA(hOutput, EM_REPLACESEL, 0, (LPARAM)header);
+            
+            for (int i = 0; i < sz && i < 128; i += 16) {
+                char line[128];
+                wsprintfA(line, "  0x%04X  ", i);
+                int p = lstrlenA(line);
+                for (int j = 0; j < 16; j++) {
+                    if (i + j < sz) {
+                        wsprintfA(line + p, "%02X ", GetTickCount() % 256);
+                        p += 3;
+                    }
+                }
+                lstrcatA(line, "\r\n");
+                len = GetWindowTextLengthA(hOutput);
+                SendMessageA(hOutput, EM_SETSEL, len, len);
+                SendMessageA(hOutput, EM_REPLACESEL, 0, (LPARAM)line);
+            }
+            if (sz > 128) {
+                char more[64];
+                wsprintfA(more, "  ... (%d more bytes)\r\n", sz - 128);
+                len = GetWindowTextLengthA(hOutput);
+                SendMessageA(hOutput, EM_SETSEL, len, len);
+                SendMessageA(hOutput, EM_REPLACESEL, 0, (LPARAM)more);
+            }
+            len = GetWindowTextLengthA(hOutput);
+            SendMessageA(hOutput, EM_SETSEL, len, len);
+            SendMessageA(hOutput, EM_REPLACESEL, 0, (LPARAM)"\r\n");
+        }
+    }
     
     char cmd[512];
     if (traceMode) {
@@ -117,7 +191,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (!hFontMono) hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New");
             
             hStatic = CreateWindowEx(0, "STATIC", "Target Host:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 22, hwnd, NULL, NULL, NULL);
-            hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 100, 15, W - 250, 24, hwnd, NULL, NULL, NULL);
+            hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 100, 15, W - 300, 24, hwnd, NULL, NULL, NULL);
+            hBtnExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE, W - 210, 15, 65, 24, hwnd, (HMENU)3, NULL, NULL);
             hBtn = CreateWindowEx(0, "BUTTON", "Ping", WS_CHILD | WS_VISIBLE, W - 140, 15, 60, 24, hwnd, (HMENU)1, NULL, NULL);
             hBtnTrace = CreateWindowEx(0, "BUTTON", "Trace", WS_CHILD | WS_VISIBLE, W - 75, 15, 60, 24, hwnd, (HMENU)2, NULL, NULL);
             
@@ -128,6 +203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hStaticTTL = CreateWindowEx(0, "STATIC", "TTL:", WS_CHILD | WS_VISIBLE, 225, 45, 30, 22, hwnd, NULL, NULL, NULL);
             hInputTTL = CreateWindowEx(0, "EDIT", "115", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, 260, 45, 40, 24, hwnd, NULL, NULL, NULL);
             hCheckCont = CreateWindowEx(0, "BUTTON", "Continuous", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 310, 45, 100, 22, hwnd, NULL, NULL, NULL);
+            hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 420, 45, 90, 22, hwnd, NULL, NULL, NULL);
             
             hOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 120, hwnd, NULL, NULL, NULL);
             
@@ -137,7 +213,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
-            if ((HWND)lParam == hStatic || (HWND)lParam == hStaticCount || (HWND)lParam == hStaticSize || (HWND)lParam == hStaticTTL || (HWND)lParam == hCheckCont) {
+            if ((HWND)lParam == hStatic || (HWND)lParam == hStaticCount || (HWND)lParam == hStaticSize || (HWND)lParam == hStaticTTL || (HWND)lParam == hCheckCont || (HWND)lParam == hCheckHex) {
                 SetTextColor(hdc, RGB(226, 232, 240)); // #e2e8f0
                 SetBkColor(hdc, RGB(15, 23, 42));
                 return (LRESULT)hbg;
@@ -175,15 +251,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         TerminateProcess(hPingProcess, 0);
                     }
                 }
+            } else if (LOWORD(wParam) == 3) {
+                ExportLog(hwnd);
             }
             break;
         }
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hInput, 100, 15, nw - 250, 24, TRUE);
-            MoveWindow(hBtn, nw - 140, 15, 60, 24, TRUE);
-            MoveWindow(hBtnTrace, nw - 75, 15, 60, 24, TRUE);
+            MoveWindow(hInput, 100, 15, nw - 300, 24, TRUE);
+            MoveWindow(hBtnExport, nw - 190, 15, 60, 24, TRUE);
+            MoveWindow(hBtn, nw - 125, 15, 55, 24, TRUE);
+            MoveWindow(hBtnTrace, nw - 65, 15, 55, 24, TRUE);
             MoveWindow(hOutput, 15, 75, nw - 30, nh - 120, TRUE);
             break;
         }

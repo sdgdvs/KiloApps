@@ -58,7 +58,13 @@
   .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
   .btn-danger { background: var(--danger); color: white; }
   .btn-danger:hover { background: #f87171; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+  .btn-secondary { background: #475569; color: white; }
+  .btn-secondary:hover { background: #64748b; transform: translateY(-1px); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+  
+  .terminal-container {
+    flex: 1; display: flex; flex-direction: column; gap: 15px; overflow: hidden;
+  }
   
   .terminal {
     flex: 1; display: flex; flex-direction: column; padding: 15px; border-radius: 12px;
@@ -78,42 +84,83 @@
   ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+  
+  .analytics-panel {
+    height: 120px; display: flex; gap: 15px; border-radius: 12px;
+    background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); padding: 10px; box-sizing: border-box;
+  }
+  .stats-box {
+    display: flex; flex-direction: column; justify-content: center; padding: 10px;
+    background: rgba(255,255,255,0.05); border-radius: 8px; min-width: 120px;
+  }
+  .stats-box span { font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
+  .stats-box strong { font-size: 24px; color: var(--text); margin-top: 5px; }
+  .graph-box {
+    flex: 1; position: relative; display: flex; flex-direction: column;
+  }
+  canvas { flex: 1; width: 100%; height: 100%; border-radius: 4px; background: rgba(0,0,0,0.2); }
 </style>
 </head>
 <body>
   <div class="glass controls">
     <div class="input-group" style="flex: 1; min-width: 150px;">
       <label for="host">Target Host / IP</label>
-      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. google.com" aria-label="Target Host or IP">
+      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. google.com">
     </div>
-    <div class="input-group" style="width: 80px;">
+    <div class="input-group" style="width: 70px;">
       <label for="count">Count</label>
-      <input type="number" id="count" value="4" min="1" max="100" aria-label="Ping Count">
+      <input type="number" id="count" value="4" min="1" max="100">
     </div>
     <div class="input-group" style="width: 80px;">
       <label for="size">Size (B)</label>
-      <input type="number" id="size" value="32" min="1" max="65500" aria-label="Packet Size in Bytes">
+      <input type="number" id="size" value="32" min="1" max="65500">
     </div>
     <div class="input-group" style="width: 70px;">
       <label for="ttl">TTL</label>
-      <input type="number" id="ttl" value="115" min="1" max="255" aria-label="Time to Live">
+      <input type="number" id="ttl" value="115" min="1" max="255">
     </div>
-    <label class="checkbox-group" for="continuous">
-      <input type="checkbox" id="continuous" aria-label="Continuous Ping">
-      <span style="font-size: 13px; font-weight: 500; color: var(--text-muted)">Continuous -t</span>
-    </label>
-    <button id="btnAction" class="btn btn-primary">Start Ping</button>
+    <div class="input-group">
+      <label class="checkbox-group" for="continuous" style="padding: 0; margin-top: auto; margin-bottom: 8px;">
+        <input type="checkbox" id="continuous">
+        <span style="font-size: 12px; color: var(--text-muted)">-t</span>
+      </label>
+    </div>
+    <div class="input-group">
+      <label class="checkbox-group" for="hexdump" style="padding: 0; margin-top: auto; margin-bottom: 8px;">
+        <input type="checkbox" id="hexdump">
+        <span style="font-size: 12px; color: var(--text-muted)">Hex Dump</span>
+      </label>
+    </div>
+    <button id="btnAction" class="btn btn-primary">Ping</button>
     <button id="btnTrace" class="btn btn-primary">Trace</button>
+    <button id="btnExport" class="btn btn-secondary">Export JSON</button>
   </div>
   
-  <div class="glass terminal">
-    <div class="terminal-header">
-      <div class="dot dot-red"></div>
-      <div class="dot dot-yellow"></div>
-      <div class="dot dot-green"></div>
-      <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Session</span>
+  <div class="terminal-container">
+    <div class="glass terminal">
+      <div class="terminal-header">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Session Log</span>
+      </div>
+      <textarea id="out" readonly spellcheck="false"></textarea>
     </div>
-    <textarea id="out" aria-label="Terminal Output" readonly spellcheck="false"></textarea>
+    
+    <div class="glass analytics-panel">
+      <div class="stats-box">
+        <span>Avg Jitter</span>
+        <strong id="valJitter">0ms</strong>
+      </div>
+      <div class="stats-box">
+        <span>Packet Loss</span>
+        <strong id="valLoss">0%</strong>
+      </div>
+      <div class="graph-box">
+        <span style="font-size: 12px; color: var(--text-muted); position: absolute; top: 5px; left: 10px;">Latency & Jitter Analytics (ms)</span>
+        <canvas id="graphCanvas"></canvas>
+      </div>
+    </div>
   </div>
 
 <script>
@@ -122,23 +169,60 @@
   const sizeInput = document.getElementById('size');
   const ttlInput = document.getElementById('ttl');
   const continuousCheck = document.getElementById('continuous');
+  const hexdumpCheck = document.getElementById('hexdump');
   const btnAction = document.getElementById('btnAction');
   const btnTrace = document.getElementById('btnTrace');
+  const btnExport = document.getElementById('btnExport');
   const out = document.getElementById('out');
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  const valJitter = document.getElementById('valJitter');
+  const valLoss = document.getElementById('valLoss');
   
   let pingInterval = null;
   let isPinging = false;
   let isTracing = false;
   let stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
   let currentHost = '';
+  
+  let historyData = [];
+  let logEntries = [];
+
+  function resizeCanvas() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    drawGraph();
+  }
+  window.addEventListener('resize', resizeCanvas);
 
   continuousCheck.addEventListener('change', () => {
     countInput.disabled = continuousCheck.checked;
   });
 
-  function append(text) {
+  function append(text, type="info", rawObj=null) {
       out.value += text;
       out.scrollTop = out.scrollHeight;
+      if (rawObj) {
+          logEntries.push(Object.assign({ timestamp: new Date().toISOString() }, rawObj));
+      } else {
+          logEntries.push({ timestamp: new Date().toISOString(), type, message: text.trim() });
+      }
+  }
+
+  function generateHexDump(size) {
+      let hex = "Payload Hex Dump:\n";
+      for (let i = 0; i < size && i < 128; i += 16) {
+          let chunk = [];
+          for (let j = 0; j < 16; j++) {
+              if (i + j < size) {
+                  chunk.push(Math.floor(Math.random() * 256).toString(16).padStart(2, '0'));
+              }
+          }
+          hex += \`  0x\${i.toString(16).padStart(4, '0')}  \${chunk.join(' ')}\n\`;
+      }
+      if (size > 128) hex += \`  ... (\${size - 128} more bytes)\n\`;
+      return hex;
   }
 
   function startPing() {
@@ -149,13 +233,22 @@
       const continuous = continuousCheck.checked;
       
       out.value = "";
-      append(`Pinging ${currentHost} with ${size} bytes of data:\n\n`);
+      logEntries = [];
+      historyData = [];
+      drawGraph();
+      valJitter.textContent = "0ms";
+      valLoss.textContent = "0%";
+      
+      append(\`Pinging \${currentHost} with \${size} bytes of data:\n\n\`, 'header');
+      if (hexdumpCheck.checked) {
+          append(generateHexDump(size) + "\n", 'hexdump');
+      }
       
       isPinging = true;
       btnAction.textContent = 'Stop';
       btnAction.className = 'btn btn-danger';
       btnTrace.disabled = true;
-      hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true;
+      hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true; hexdumpCheck.disabled = true;
       
       stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
       
@@ -174,34 +267,105 @@
               if (time < stats.min) stats.min = time;
               if (time > stats.max) stats.max = time;
               stats.sum += time;
-              append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=${ttl}\n`);
+              historyData.push(time);
+              append(\`Reply from \${currentHost}: bytes=\${size} time=\${time}ms TTL=\${ttl}\n\`, 'reply', { host: currentHost, bytes: size, time, ttl });
           } else {
               stats.lost++;
-              append(`Request timed out.\n`);
+              historyData.push(null);
+              append(\`Request timed out.\n\`, 'timeout', { host: currentHost, error: 'timeout' });
           }
+          updateAnalytics();
+          drawGraph();
       }, 1000);
   }
   
+  function updateAnalytics() {
+      const lossPercent = Math.round((stats.lost / stats.sent) * 100) || 0;
+      valLoss.textContent = \`\${lossPercent}%\`;
+      
+      let jitterSum = 0;
+      let jitterCount = 0;
+      let lastTime = null;
+      for (let t of historyData) {
+          if (t !== null) {
+              if (lastTime !== null) {
+                  jitterSum += Math.abs(t - lastTime);
+                  jitterCount++;
+              }
+              lastTime = t;
+          }
+      }
+      const avgJitter = jitterCount > 0 ? Math.round(jitterSum / jitterCount) : 0;
+      valJitter.textContent = \`\${avgJitter}ms\`;
+  }
+
+  function drawGraph() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (historyData.length === 0) return;
+      
+      const padding = 20;
+      const w = canvas.width;
+      const h = canvas.height;
+      
+      let maxTime = Math.max(...historyData.filter(d => d !== null));
+      if (maxTime < 50) maxTime = 50;
+      
+      const pts = historyData.length;
+      const stepX = (w - padding * 2) / Math.max(10, pts - 1);
+      
+      ctx.beginPath();
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 2;
+      
+      let first = true;
+      for (let i = 0; i < pts; i++) {
+          const val = historyData[i];
+          const x = padding + i * stepX;
+          if (val === null) {
+              ctx.fillStyle = '#ef4444';
+              ctx.fillRect(x - 2, h - padding - 2, 4, 4);
+              first = true;
+              continue;
+          }
+          const y = h - padding - ((val / maxTime) * (h - padding * 2));
+          
+          if (first) {
+              ctx.moveTo(x, y);
+              first = false;
+          } else {
+              ctx.lineTo(x, y);
+          }
+          
+          ctx.fillStyle = '#3b82f6';
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+      }
+      ctx.stroke();
+  }
+
   function stopPing() {
       if (!isPinging) return;
       clearInterval(pingInterval);
       isPinging = false;
-      btnAction.textContent = 'Start Ping';
+      btnAction.textContent = 'Ping';
       btnAction.className = 'btn btn-primary';
       btnTrace.disabled = false;
-      hostInput.disabled = false; sizeInput.disabled = false; ttlInput.disabled = false; continuousCheck.disabled = false;
+      hostInput.disabled = false; sizeInput.disabled = false; ttlInput.disabled = false; continuousCheck.disabled = false; hexdumpCheck.disabled = false;
       countInput.disabled = continuousCheck.checked;
       
       const lossPercent = Math.round((stats.lost / stats.sent) * 100) || 0;
-      append(`\nPing statistics for ${currentHost}:\n`);
-      append(`    Packets: Sent = ${stats.sent}, Received = ${stats.recv}, Lost = ${stats.lost} (${lossPercent}% loss),\n`);
+      append(\`\nPing statistics for \${currentHost}:\n\`, 'summary_header');
+      append(\`    Packets: Sent = \${stats.sent}, Received = \${stats.recv}, Lost = \${stats.lost} (\${lossPercent}% loss),\n\`, 'summary_packets');
       
       if (stats.recv > 0) {
           const min = stats.min;
           const max = stats.max;
           const avg = Math.round(stats.sum / stats.recv);
-          append(`Approximate round trip times in milli-seconds:\n`);
-          append(`    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms\n`);
+          append(\`Approximate round trip times in milli-seconds:\n\`, 'summary_times_header');
+          append(\`    Minimum = \${min}ms, Maximum = \${max}ms, Average = \${avg}ms\n\`, 'summary_times', { min, max, avg });
       }
   }
 
@@ -218,20 +382,26 @@
       }
       currentHost = hostInput.value.trim() || '127.0.0.1';
       out.value = "";
-      append(`Tracing route to ${currentHost} over a maximum of 30 hops:\n\n`);
+      logEntries = [];
+      historyData = [];
+      valJitter.textContent = "-";
+      valLoss.textContent = "-";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      append(\`Tracing route to \${currentHost} over a maximum of 30 hops:\n\n\`, 'trace_header');
       
       isTracing = true;
-      btnTrace.textContent = 'Stop Trace';
+      btnTrace.textContent = 'Stop';
       btnTrace.className = 'btn btn-danger';
       btnAction.disabled = true;
-      hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true;
+      hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true; hexdumpCheck.disabled = true;
       
       let hop = 1;
       const maxHops = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 8 + Math.floor(Math.random() * 5); 
       
       pingInterval = setInterval(() => {
           if (hop > maxHops) {
-              append(`\nTrace complete.\n`);
+              append(\`\nTrace complete.\n\`, 'trace_complete');
               stopTrace();
               return;
           }
@@ -242,11 +412,12 @@
           
           let ip = "";
           if (hop === maxHops) {
-              ip = currentHost === '127.0.0.1' ? '127.0.0.1' : `93.184.216.${Math.floor(Math.random()*255)}`; 
-              append(` ${hop.toString().padStart(2, ' ')}    ${t1} ms    ${t2} ms    ${t3} ms  ${currentHost} [${ip}]\n`);
+              ip = currentHost === '127.0.0.1' ? '127.0.0.1' : \`93.184.216.\${Math.floor(Math.random()*255)}\`; 
+              append(\` \${hop.toString().padStart(2, ' ')}    \${t1} ms    \${t2} ms    \${t3} ms  \${currentHost} [\${ip}]\n\`, 'trace_hop', { hop, t1, t2, t3, host: currentHost, ip });
           } else {
-              ip = `10.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
-              append(` ${hop.toString().padStart(2, ' ')}    ${t1} ms    ${t2} ms    ${t3} ms  router-${hop}.network [${ip}]\n`);
+              ip = \`10.\${Math.floor(Math.random()*255)}.\${Math.floor(Math.random()*255)}.\${Math.floor(Math.random()*255)}\`;
+              const rHost = \`router-\${hop}.network\`;
+              append(\` \${hop.toString().padStart(2, ' ')}    \${t1} ms    \${t2} ms    \${t3} ms  \${rHost} [\${ip}]\n\`, 'trace_hop', { hop, t1, t2, t3, host: rHost, ip });
           }
           hop++;
       }, 1000);
@@ -259,9 +430,21 @@
       btnTrace.textContent = 'Trace';
       btnTrace.className = 'btn btn-primary';
       btnAction.disabled = false;
-      hostInput.disabled = false; sizeInput.disabled = false; ttlInput.disabled = false; continuousCheck.disabled = false;
+      hostInput.disabled = false; sizeInput.disabled = false; ttlInput.disabled = false; continuousCheck.disabled = false; hexdumpCheck.disabled = false;
       countInput.disabled = continuousCheck.checked;
   }
+  
+  btnExport.onclick = () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logEntries, null, 2));
+      const anchor = document.createElement('a');
+      anchor.setAttribute("href", dataStr);
+      anchor.setAttribute("download", \`kping_log_\${new Date().getTime()}.json\`);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+  };
+
+  setTimeout(resizeCanvas, 100);
 </script>
 </body>
 </html>
