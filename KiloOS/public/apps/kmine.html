@@ -3,22 +3,24 @@
 <head>
 <title>KMine</title>
 <style>
-  body { margin: 0; background-color: #c0c0c0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; }
+  body { margin: 0; background-color: #c0c0c0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; font-family: sans-serif; }
   canvas { background-color: #c0c0c0; border: 2px solid #808080; border-right-color: #fff; border-bottom-color: #fff; cursor: pointer; }
+  #controls { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  button, select { padding: 4px 8px; font-family: inherit; }
 </style>
 </head>
 <body oncontextmenu="return false;">
-<div id="controls" style="margin-bottom: 10px;">
+<div id="controls">
   <select id="diff" onchange="changeDiff()">
     <option value="0">Beginner</option>
     <option value="1">Intermediate</option>
     <option value="2">Expert</option>
   </select>
   <button onclick="initGame()">Restart</button>
-  <button onclick="giveHint()">Hint</button>
-  <span id="status" style="margin-left: 10px; font-family: monospace; font-weight: bold;"></span>
+  <button onclick="giveHint()" title="Press H for Hint">Hint (H)</button>
+  <span id="status" style="font-family: monospace; font-weight: bold; min-width: 160px; display: inline-block;"></span>
 </div>
-<canvas id="cvs" width="200" height="200"></canvas>
+<canvas id="cvs"></canvas>
 <script>
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
@@ -81,13 +83,21 @@
       }
   }
   
+  function setupCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      cvs.width = cols * CELL * dpr;
+      cvs.height = rows * CELL * dpr;
+      cvs.style.width = `${cols * CELL}px`;
+      cvs.style.height = `${rows * CELL}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
   function changeDiff() {
       const val = document.getElementById('diff').value;
       if (val === "0") { cols = 10; rows = 10; totalMines = 15; }
       else if (val === "1") { cols = 16; rows = 16; totalMines = 40; }
       else if (val === "2") { cols = 30; rows = 16; totalMines = 99; }
-      cvs.width = cols * CELL;
-      cvs.height = rows * CELL;
+      setupCanvas();
       initGame();
   }
   
@@ -212,7 +222,7 @@
   }
   
   function draw() {
-      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      ctx.clearRect(0, 0, cols * CELL, rows * CELL);
       ctx.font = "bold 14px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -298,6 +308,13 @@
       draw();
   });
   
+  window.addEventListener('keydown', (e) => {
+      if (e.key === 'h' || e.key === 'H') {
+          giveHint();
+      }
+  });
+  
+  setupCanvas();
   initGame();
 </script>
 </body>

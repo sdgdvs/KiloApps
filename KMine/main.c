@@ -23,15 +23,15 @@ void UpdateTitle(HWND hwnd) {
     if (!hwnd) return;
     if (gameOver == 2) {
         char buf[64];
-        wsprintfA(buf, "KMine - YOU WIN! Time: %ds", timeElapsed);
+        wsprintfA(buf, "KMine - YOU WIN! Time: %ds (H for Hint)", timeElapsed);
         SetWindowTextA(hwnd, buf);
     } else if (gameOver == 1) {
         char buf[64];
-        wsprintfA(buf, "KMine - GAME OVER! Time: %ds", timeElapsed);
+        wsprintfA(buf, "KMine - GAME OVER! Time: %ds (H for Hint)", timeElapsed);
         SetWindowTextA(hwnd, buf);
     } else {
-        char buf[64];
-        wsprintfA(buf, "KMine - Mines: %d | Time: %ds", totalMines - flagsPlaced, timeElapsed);
+        char buf[128];
+        wsprintfA(buf, "KMine - Mines: %d | Time: %ds | Press H for Hint", totalMines - flagsPlaced, timeElapsed);
         SetWindowTextA(hwnd, buf);
     }
 }
@@ -220,13 +220,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             hMenu = CreateMenu();
             hSubMenu = CreatePopupMenu();
-            AppendMenuA(hSubMenu, MF_STRING, IDM_RESTART, "New Game");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_RESTART, "New Game\tF2");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubMenu, MF_STRING, IDM_BEGINNER, "Beginner");
             AppendMenuA(hSubMenu, MF_STRING, IDM_INTERMEDIATE, "Intermediate");
             AppendMenuA(hSubMenu, MF_STRING, IDM_EXPERT, "Expert");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hSubMenu, MF_STRING, IDM_HINT, "Hint");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_HINT, "Hint\tH");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Game");
             SetMenu(hwnd, hMenu);
             SetDifficulty(hwnd, 10, 10, 15);
@@ -243,6 +243,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetDifficulty(hwnd, 30, 16, 99);
             } else if (LOWORD(wParam) == IDM_HINT) {
                 GiveHint(hwnd);
+            }
+            break;
+        case WM_KEYDOWN:
+            if (wParam == 'H') {
+                GiveHint(hwnd);
+            } else if (wParam == VK_F2) {
+                InitGame(hwnd);
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         case WM_TIMER:
@@ -312,7 +320,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &full, bg);
             DeleteObject(bg);
             
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
             
