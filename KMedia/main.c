@@ -27,8 +27,8 @@ char* my_strrchr(const char* str, int ch) {
     return (char*)last;
 }
 
-#define W 340
-#define H 430
+#define W 360
+#define H 460
 #define MAX_TRACKS 256
 
 HWND g_hwndMain;
@@ -232,8 +232,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: {
             HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
-            hTitle = CreateWindowEx(0, "STATIC", "No file selected",
-                WS_CHILD | WS_VISIBLE | SS_CENTER,
+            hTitle = CreateWindowEx(0, "STATIC", "No file selected (Press 'H' for help)",
+                WS_CHILD | WS_VISIBLE | SS_CENTER | 0x4000,
                 10, 10, W - 36, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
 
@@ -245,42 +245,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hBtnOpen = CreateWindowEx(0, "BUTTON", "Add",
                 WS_CHILD | WS_VISIBLE,
-                10, 62, 70, 26, hwnd, (HMENU)1, NULL, NULL);
+                10, 62, 75, 26, hwnd, (HMENU)1, NULL, NULL);
             SendMessage(hBtnOpen, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnPlay = CreateWindowEx(0, "BUTTON", "Play",
                 WS_CHILD | WS_VISIBLE,
-                85, 62, 70, 26, hwnd, (HMENU)2, NULL, NULL);
+                93, 62, 75, 26, hwnd, (HMENU)2, NULL, NULL);
             SendMessage(hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnStop = CreateWindowEx(0, "BUTTON", "Stop",
                 WS_CHILD | WS_VISIBLE,
-                160, 62, 70, 26, hwnd, (HMENU)3, NULL, NULL);
+                176, 62, 75, 26, hwnd, (HMENU)3, NULL, NULL);
             SendMessage(hBtnStop, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnClear = CreateWindowEx(0, "BUTTON", "Clear",
                 WS_CHILD | WS_VISIBLE,
-                235, 62, 70, 26, hwnd, (HMENU)8, NULL, NULL);
+                259, 62, 75, 26, hwnd, (HMENU)8, NULL, NULL);
             SendMessage(hBtnClear, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnPrev = CreateWindowEx(0, "BUTTON", "Prev",
                 WS_CHILD | WS_VISIBLE,
-                10, 93, 70, 26, hwnd, (HMENU)5, NULL, NULL);
+                10, 93, 75, 26, hwnd, (HMENU)5, NULL, NULL);
             SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnNext = CreateWindowEx(0, "BUTTON", "Next",
                 WS_CHILD | WS_VISIBLE,
-                85, 93, 70, 26, hwnd, (HMENU)6, NULL, NULL);
+                93, 93, 75, 26, hwnd, (HMENU)6, NULL, NULL);
             SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnRem = CreateWindowEx(0, "BUTTON", "Remove",
                 WS_CHILD | WS_VISIBLE,
-                160, 93, 70, 26, hwnd, (HMENU)7, NULL, NULL);
+                176, 93, 75, 26, hwnd, (HMENU)7, NULL, NULL);
             SendMessage(hBtnRem, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnSpeed = CreateWindowEx(0, "BUTTON", "Spd: 1.0x",
                 WS_CHILD | WS_VISIBLE,
-                235, 93, 70, 26, hwnd, (HMENU)10, NULL, NULL);
+                259, 93, 75, 26, hwnd, (HMENU)10, NULL, NULL);
             SendMessage(hBtnSpeed, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnMode = CreateWindowEx(0, "BUTTON", "Mode: Normal",
@@ -319,7 +319,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             StopTrack();
                             mciSendStringA("close myMedia", NULL, 0, NULL);
                             currentFile[0] = '\0';
-                            SetWindowTextA(hTitle, "No file selected");
+                            SetWindowTextA(hTitle, "No file selected (Press 'H' for help)");
                             g_currentIndex = -1;
                         } else if (g_currentIndex > masterIdx) {
                             g_currentIndex--;
@@ -333,7 +333,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 currentFile[0] = '\0';
                 StopTrack();
                 mciSendStringA("close myMedia", NULL, 0, NULL);
-                SetWindowTextA(hTitle, "No file selected");
+                SetWindowTextA(hTitle, "No file selected (Press 'H' for help)");
                 RefilterPlaylist();
             } else if (LOWORD(wParam) == 9) {
                 CycleMode();
@@ -402,6 +402,9 @@ void MainEntry() {
                     continue;
                 } else if (msg.wParam == 'M' || msg.wParam == 'm') {
                     CycleMode();
+                    continue;
+                } else if (msg.wParam == 'H' || msg.wParam == 'h') {
+                    MessageBoxA(g_hwndMain, "Keyboard Shortcuts:\nSpace : Play/Pause\nLeft Arrow / P : Previous Track\nRight Arrow / N : Next Track\nS : Stop\nM : Change Mode\nH : Help", "Help", MB_OK | MB_ICONINFORMATION);
                     continue;
                 }
             }
