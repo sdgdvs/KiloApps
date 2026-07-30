@@ -1,6 +1,5 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <stdio.h>
 #include <math.h>
 
 #pragma comment(lib, "msvcrt.lib")
@@ -467,6 +466,21 @@ char saveMsgText[64] = "";
 int saveMsgTimer = 0;
 int showHelp = 1;
 
+int bindState = 0;
+int bindUp = VK_UP, bindDown = VK_DOWN, bindLeft = VK_LEFT, bindRight = VK_RIGHT;
+int bindSkill1 = 'F', bindSkill2 = 'Z', bindSkill3 = 'M', bindSkill4 = 'B';
+
+typedef struct {
+    int frame;
+    int action;
+} ReplayEvent;
+ReplayEvent replays[10000];
+int replayCount = 0;
+int replayPlaybackIndex = 0;
+int replayMode = 0; // 0=off, 1=record, 2=playback
+int replaySeed = 0;
+int replayDiffMode = 1;
+
 int statsGamesPlayed = 0;
 int statsGhostsEaten = 0;
 int statsMaxScore = 0;
@@ -687,6 +701,21 @@ void TriggerShieldSkill() {
 void Update() {
     if (saveMsgTimer > 0) saveMsgTimer--;
     if (showHelp || gameOver || paused) return;
+
+    if (replayMode == 2) {
+        while (replayPlaybackIndex < replayCount && replays[replayPlaybackIndex].frame == frameCount) {
+            int act = replays[replayPlaybackIndex].action;
+            if (act == 1) { ndx = 0; ndy = -1; }
+            else if (act == 2) { ndx = 0; ndy = 1; }
+            else if (act == 3) { ndx = -1; ndy = 0; }
+            else if (act == 4) { ndx = 1; ndy = 0; }
+            else if (act == 5) { TriggerFreezeSkill(); }
+            else if (act == 6) { TriggerSpeedSkill(); }
+            else if (act == 7) { TriggerMagnetSkill(); }
+            else if (act == 8) { TriggerShieldSkill(); }
+            replayPlaybackIndex++;
+        }
+    }
 
     if (victoryTimer > 0) {
         victoryTimer--;
@@ -1017,26 +1046,121 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, 1, 100, NULL);
             break;
         case WM_KEYDOWN: {
-            if (wParam == 'H' || wParam == 'h') showHelp = !showHelp;
+            int key = wParam;
+            if (key >= 'a' && key <= 'z') key -= 32;
+
+            if (bindState > 0) {
+                if (bindState == 1) bindUp = key;
+                else if (bindState == 2) bindDown = key;
+                else if (bindState == 3) bindLeft = key;
+                else if (bindState == 4) bindRight = key;
+                else if (bindState == 5) bindSkill1 = key;
+                else if (bindState == 6) bindSkill2 = key;
+                else if (bindState == 7) bindSkill3 = key;
+                else if (bindState == 8) { bindSkill4 = key; bindState = 0; lstrcpyA(saveMsgText, "KEYS BOUND!"); saveMsgTimer = 30; }
+                if (bindState > 0) bindState++;
+                return 0;
+            }
+
+            if (key == 'K') { bindState = 1; return 0; }
+            if (key == 'H') showHelp = !showHelp;
             if (showHelp) break;
-            // Active Skills hotkeys
-            if (wParam == VK_LEFT || wParam == 'A' || wParam == 'a') { ndx = -1; ndy = 0; }
-            if (wParam == VK_RIGHT || wParam == 'D' || wParam == 'd') { ndx = 1; ndy = 0; }
-            if (wParam == VK_UP || wParam == 'W' || wParam == 'w') { ndx = 0; ndy = -1; }
-            if (wParam == VK_DOWN || wParam == 'S' || wParam == 's') { ndx = 0; ndy = 1; }
 
-            if (wParam == 'F' || wParam == 'f') TriggerFreezeSkill();
-            if (wParam == 'Z' || wParam == 'z') TriggerSpeedSkill();
-            if (wParam == 'M' || wParam == 'm') TriggerMagnetSkill();
-            if (wParam == 'B' || wParam == 'b') TriggerShieldSkill();
+            if (key == 'E') {
+                HANDLE hFile = CreateFileA("kpac_data.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE) {
+                    char buf[256];
+                    wsprintfA(buf, "{\"highScore\":%d,\"statsGamesPlayed\":%d,\"statsGhostsEaten\":%d,\"statsMaxScore\":%d}", highScore, statsGamesPlayed, statsGhostsEaten, statsMaxScore);
+                    DWORD written;
+                    WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
+                    CloseHandle(hFile);
+                    lstrcpyA(saveMsgText, "EXPORTED JSON"); saveMsgTimer = 20; MessageBeep(MB_OK);
+                }
+                return 0;
+            }
+            if (key == 'I') {
+                HANDLE hFile = CreateFileA("kpac_data.json", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE) {
+                    char buf[256]; buf[0] = 0;
+                    DWORD readBytes = 0;
+                    if (ReadFile(hFile, buf, sizeof(buf)-1, &readBytes, NULL) && readBytes > 0) {
+                        char *p = buf;
+                        while (*p && (*p < '0' || *p > '9')) p++;
+                        if (*p) {
+                            int v1 = 0; while (*p >= '0' && *p <= '9') { v1 = v1 * 10 + (*p - '0'); p++; }
+                            while (*p && (*p < '0' || *p > '9')) p++;
+                            if (*p) {
+                                int v2 = 0; while (*p >= '0' && *p <= '9') { v2 = v2 * 10 + (*p - '0'); p++; }
+                                while (*p && (*p < '0' || *p > '9')) p++;
+                                if (*p) {
+                                    int v3 = 0; while (*p >= '0' && *p <= '9') { v3 = v3 * 10 + (*p - '0'); p++; }
+                                    while (*p && (*p < '0' || *p > '9')) p++;
+                                    if (*p) {
+                                        int v4 = 0; while (*p >= '0' && *p <= '9') { v4 = v4 * 10 + (*p - '0'); p++; }
+                                        highScore = v1; statsGamesPlayed = v2; statsGhostsEaten = v3; statsMaxScore = v4;
+                                        SaveHighScore();
+                                        lstrcpyA(saveMsgText, "IMPORTED JSON"); saveMsgTimer = 20; MessageBeep(MB_OK);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    CloseHandle(hFile);
+                }
+                return 0;
+            }
 
-            if (wParam == VK_RETURN && gameOver) Init(0);
-            if (wParam == 'P' || wParam == 'p') paused = !paused;
-            if (wParam == '1') { diffMode = 0; lstrcpyA(saveMsgText, "DIFF: EASY"); saveMsgTimer = 20; MessageBeep(MB_OK); }
-            if (wParam == '2') { diffMode = 1; lstrcpyA(saveMsgText, "DIFF: NORMAL"); saveMsgTimer = 20; MessageBeep(MB_OK); }
-            if (wParam == '3') { diffMode = 2; lstrcpyA(saveMsgText, "DIFF: HARD"); saveMsgTimer = 20; MessageBeep(MB_OK); }
-            if (wParam == 'V' || wParam == 'v') SaveGame();
-            if (wParam == 'L' || wParam == 'l') LoadGame();
+            if (key == 'R') {
+                if (replayMode == 1) { replayMode = 0; lstrcpyA(saveMsgText, "RECORD STOPPED"); saveMsgTimer = 20; }
+                else {
+                    replayMode = 1; replayCount = 0;
+                    replaySeed = GetTickCount(); randSeed = replaySeed;
+                    replayDiffMode = diffMode; Init(0);
+                    lstrcpyA(saveMsgText, "RECORDING..."); saveMsgTimer = 20;
+                }
+                return 0;
+            }
+            if (key == 'T') {
+                if (replayMode == 2) { replayMode = 0; lstrcpyA(saveMsgText, "PLAYBACK STOPPED"); saveMsgTimer = 20; }
+                else if (replayCount > 0) {
+                    replayMode = 2; replayPlaybackIndex = 0;
+                    randSeed = replaySeed; diffMode = replayDiffMode; Init(0);
+                    lstrcpyA(saveMsgText, "PLAYING REPLAY"); saveMsgTimer = 20;
+                }
+                return 0;
+            }
+
+            if (replayMode == 2) break;
+
+            if (key == bindLeft || key == 'A') {
+                if (replayMode == 1 && replayCount < 9999 && (ndx != -1 || ndy != 0)) { replays[replayCount++] = (ReplayEvent){frameCount, 3}; }
+                ndx = -1; ndy = 0;
+            }
+            if (key == bindRight || key == 'D') {
+                if (replayMode == 1 && replayCount < 9999 && (ndx != 1 || ndy != 0)) { replays[replayCount++] = (ReplayEvent){frameCount, 4}; }
+                ndx = 1; ndy = 0;
+            }
+            if (key == bindUp || key == 'W') {
+                if (replayMode == 1 && replayCount < 9999 && (ndx != 0 || ndy != -1)) { replays[replayCount++] = (ReplayEvent){frameCount, 1}; }
+                ndx = 0; ndy = -1;
+            }
+            if (key == bindDown || key == 'S') {
+                if (replayMode == 1 && replayCount < 9999 && (ndx != 0 || ndy != 1)) { replays[replayCount++] = (ReplayEvent){frameCount, 2}; }
+                ndx = 0; ndy = 1;
+            }
+
+            if (key == bindSkill1) { if (replayMode == 1 && replayCount < 9999) { replays[replayCount++] = (ReplayEvent){frameCount, 5}; } TriggerFreezeSkill(); }
+            if (key == bindSkill2) { if (replayMode == 1 && replayCount < 9999) { replays[replayCount++] = (ReplayEvent){frameCount, 6}; } TriggerSpeedSkill(); }
+            if (key == bindSkill3) { if (replayMode == 1 && replayCount < 9999) { replays[replayCount++] = (ReplayEvent){frameCount, 7}; } TriggerMagnetSkill(); }
+            if (key == bindSkill4) { if (replayMode == 1 && replayCount < 9999) { replays[replayCount++] = (ReplayEvent){frameCount, 8}; } TriggerShieldSkill(); }
+
+            if (key == VK_RETURN && gameOver) Init(0);
+            if (key == 'P') paused = !paused;
+            if (key == '1') { diffMode = 0; lstrcpyA(saveMsgText, "DIFF: EASY"); saveMsgTimer = 20; MessageBeep(MB_OK); }
+            if (key == '2') { diffMode = 1; lstrcpyA(saveMsgText, "DIFF: NORMAL"); saveMsgTimer = 20; MessageBeep(MB_OK); }
+            if (key == '3') { diffMode = 2; lstrcpyA(saveMsgText, "DIFF: HARD"); saveMsgTimer = 20; MessageBeep(MB_OK); }
+            if (key == 'V') SaveGame();
+            if (key == 'L') LoadGame();
             break;
         }
         case WM_TIMER:
@@ -1301,16 +1425,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, 2, 305, sstr, lstrlenA(sstr));
 
             // Skill HUD Line
-            wsprintfA(sstr, "F:%s Z:%s M:%s B:%s",
+            char rText[16] = "";
+            if (replayMode == 1) lstrcpyA(rText, " [REC]");
+            else if (replayMode == 2) lstrcpyA(rText, " [PLAY]");
+
+            wsprintfA(sstr, "F:%s Z:%s M:%s B:%s%s",
                 freezeCooldown > 0 ? "CD" : "OK",
                 speedCooldown > 0 ? "CD" : "OK",
                 magnetCooldown > 0 ? "CD" : "OK",
-                shieldCooldown > 0 ? "CD" : (shieldActive ? "ON" : "OK"));
+                shieldCooldown > 0 ? "CD" : (shieldActive ? "ON" : "OK"), rText);
             SetTextColor(memDC, RGB(255, 235, 59));
             TextOutA(memDC, 2, 320, sstr, lstrlenA(sstr));
             
             SetTextColor(memDC, RGB(255, 255, 255));
-            TextOutA(memDC, 2, 335, "[Press H for Help]", 18);
+            TextOutA(memDC, 2, 335, "[H]Help [K]Bind [E]Export [I]Import", 35);
 
             if (level == 20 && bossHp > 0) {
                 char bossStr[64];
@@ -1319,7 +1447,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, W - 130, 305, bossStr, lstrlenA(bossStr));
             }
             
-            if (showHelp) {
+            if (bindState > 0) {
+                HBRUSH overlay = CreateSolidBrush(RGB(0, 0, 0));
+                RECT overlayRect = {0, 0, W, H};
+                FillRect(memDC, &overlayRect, overlay);
+                DeleteObject(overlay);
+                SetTextColor(memDC, RGB(255, 100, 100));
+                char bindMsg[64];
+                char* bindNames[] = {"", "UP", "DOWN", "LEFT", "RIGHT", "SKILL1(FREEZE)", "SKILL2(SPRINT)", "SKILL3(MAGNET)", "SKILL4(SHIELD)"};
+                wsprintfA(bindMsg, "PRESS KEY FOR %s", bindNames[bindState]);
+                TextOutA(memDC, W/2 - 90, H/2, bindMsg, lstrlenA(bindMsg));
+            } else if (showHelp) {
                 HBRUSH overlay = CreateSolidBrush(RGB(0, 0, 0));
                 RECT overlayRect = {0, 0, W, H};
                 FillRect(memDC, &overlayRect, overlay);
@@ -1329,8 +1467,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 70, 70, "Move: Arrows or WASD", 20);
                 TextOutA(memDC, 70, 90, "Skills: F, Z, M, B", 18);
                 TextOutA(memDC, 70, 110, "Diff: 1(Easy) 2(Norm) 3(Hard)", 29);
-                TextOutA(memDC, 70, 130, "Save/Load: V / L", 16);
-                TextOutA(memDC, 70, 150, "Pause: P", 8);
+                TextOutA(memDC, 70, 130, "Save/Load: V / L | Pause: P", 27);
+                TextOutA(memDC, 70, 150, "Replay: R(Rec) T(Play)", 22);
                 TextOutA(memDC, 50, 180, "Avoid ghosts, eat all dots.", 27);
                 TextOutA(memDC, 30, 200, "Power pellets let you eat ghosts!", 33);
                 SetTextColor(memDC, RGB(0, 230, 118));

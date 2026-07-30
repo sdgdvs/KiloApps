@@ -79,10 +79,10 @@
 <div id="game-container">
   <canvas id="gameCanvas" width="300" height="340"></canvas>
   <div class="skills-bar">
-    <button id="btnFreeze" class="skill-btn" onclick="triggerFreezeSkill()">Freeze [F]</button>
-    <button id="btnSprint" class="skill-btn" onclick="triggerSpeedSkill()">Sprint [Z]</button>
-    <button id="btnMagnet" class="skill-btn" onclick="triggerMagnetSkill()">Magnet [M]</button>
-    <button id="btnShield" class="skill-btn" onclick="triggerShieldSkill()">Shield [B]</button>
+    <button id="btnFreeze" class="skill-btn" onclick="attemptSkill('s1')">Freeze [F]</button>
+    <button id="btnSprint" class="skill-btn" onclick="attemptSkill('s2')">Sprint [Z]</button>
+    <button id="btnMagnet" class="skill-btn" onclick="attemptSkill('s3')">Magnet [M]</button>
+    <button id="btnShield" class="skill-btn" onclick="attemptSkill('s4')">Shield [B]</button>
   </div>
 </div>
 
@@ -94,6 +94,12 @@
   canvas.height = 340 * dpr;
   ctx.scale(dpr, dpr);
   
+  let randSeed = 42;
+  Math.random = function() {
+      randSeed = (randSeed * 1103515245 + 12345) & 0x7fffffff;
+      return ((randSeed >>> 16) & 0x7fff) / 32768.0;
+  };
+
   const COLS = 15;
   const ROWS = 15;
   const TS = 20;
@@ -496,6 +502,25 @@
   let saveMsgTimer = 0;
   let showHelp = 1;
 
+  let bindState = 0;
+  let keybinds = {
+      up: ['ArrowUp', 'w', 'W'],
+      down: ['ArrowDown', 's', 'S'],
+      left: ['ArrowLeft', 'a', 'A'],
+      right: ['ArrowRight', 'd', 'D'],
+      skill1: ['f', 'F'],
+      skill2: ['z', 'Z'],
+      skill3: ['m', 'M'],
+      skill4: ['b', 'B']
+  };
+  const isKey = (arr) => arr.some(k => keys[k]);
+
+  let replayMode = 0; // 0=off, 1=record, 2=playback
+  let replays = [];
+  let replayIndex = 0;
+  let replaySeed = 0;
+  let replayDiffMode = 1;
+
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(freq, dur, type='square') {
       if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -514,23 +539,92 @@
   const keys = {};
   document.addEventListener('keydown', e => {
       keys[e.key] = true;
+      if (bindState > 0) {
+          let k = e.key;
+          if (bindState === 1) keybinds.up = [k];
+          else if (bindState === 2) keybinds.down = [k];
+          else if (bindState === 3) keybinds.left = [k];
+          else if (bindState === 4) keybinds.right = [k];
+          else if (bindState === 5) keybinds.skill1 = [k];
+          else if (bindState === 6) keybinds.skill2 = [k];
+          else if (bindState === 7) keybinds.skill3 = [k];
+          else if (bindState === 8) { keybinds.skill4 = [k]; bindState = 0; saveMsgText = 'KEYS BOUND!'; saveMsgTimer = 25; }
+          if (bindState > 0) bindState++;
+          return;
+      }
+      if (e.key === 'k' || e.key === 'K') { bindState = 1; return; }
       if (e.key === 'h' || e.key === 'H') showHelp = !showHelp;
       if (showHelp) return;
+
+      if (e.key === 'e' || e.key === 'E') {
+          let mode = prompt("Type 'E' to Export JSON or 'I' to Import JSON:");
+          if (mode) {
+              if (mode.toUpperCase() === 'E') {
+                  prompt("Copy your save data:", JSON.stringify({highScore, statsGamesPlayed, statsGhostsEaten, statsMaxScore}));
+              } else if (mode.toUpperCase() === 'I') {
+                  let json = prompt("Paste your JSON:");
+                  if (json) {
+                      try {
+                          let data = JSON.parse(json);
+                          if (data.highScore !== undefined) highScore = data.highScore;
+                          if (data.statsGamesPlayed !== undefined) statsGamesPlayed = data.statsGamesPlayed;
+                          if (data.statsGhostsEaten !== undefined) statsGhostsEaten = data.statsGhostsEaten;
+                          if (data.statsMaxScore !== undefined) statsMaxScore = data.statsMaxScore;
+                          localStorage.setItem('kpac_highscore', highScore);
+                          localStorage.setItem('kpac_games', statsGamesPlayed);
+                          localStorage.setItem('kpac_ghosts', statsGhostsEaten);
+                          localStorage.setItem('kpac_maxscore', statsMaxScore);
+                          saveMsgText = 'JSON IMPORTED'; saveMsgTimer = 25;
+                      } catch(err) { alert("Invalid JSON"); }
+                  }
+              }
+          }
+          return;
+      }
+
+      if (e.key === 'r' || e.key === 'R') {
+          if (replayMode === 1) { replayMode = 0; saveMsgText = 'RECORD STOPPED'; saveMsgTimer = 25; }
+          else {
+              replayMode = 1; replays = [];
+              replaySeed = Math.floor(Math.random() * 1000000); randSeed = replaySeed;
+              replayDiffMode = diffMode; init(false);
+              saveMsgText = 'RECORDING...'; saveMsgTimer = 25;
+          }
+          return;
+      }
+      if (e.key === 't' || e.key === 'T') {
+          if (replayMode === 2) { replayMode = 0; saveMsgText = 'PLAYBACK STOPPED'; saveMsgTimer = 25; }
+          else if (replays.length > 0) {
+              replayMode = 2; replayIndex = 0;
+              randSeed = replaySeed; diffMode = replayDiffMode; init(false);
+              saveMsgText = 'PLAYING REPLAY'; saveMsgTimer = 25;
+          }
+          return;
+      }
+
       if ((e.key === 'p' || e.key === 'P') && !gameOver) paused = !paused;
       if (e.key === '1') { diffMode = 0; saveMsgText = 'DIFF: EASY'; saveMsgTimer = 20; playSound(400, 0.1, 'sine'); }
       if (e.key === '2') { diffMode = 1; saveMsgText = 'DIFF: NORMAL'; saveMsgTimer = 20; playSound(500, 0.1, 'sine'); }
       if (e.key === '3') { diffMode = 2; saveMsgText = 'DIFF: HARD'; saveMsgTimer = 20; playSound(600, 0.1, 'sine'); }
 
       // Active Skills hotkeys
-      if (e.key === 'f' || e.key === 'F') triggerFreezeSkill();
-      if (e.key === 'z' || e.key === 'Z') triggerSpeedSkill();
-      if (e.key === 'm' || e.key === 'M') triggerMagnetSkill();
-      if (e.key === 'b' || e.key === 'B') triggerShieldSkill();
+      if (keybinds.skill1.includes(e.key)) attemptSkill('s1');
+      if (keybinds.skill2.includes(e.key)) attemptSkill('s2');
+      if (keybinds.skill3.includes(e.key)) attemptSkill('s3');
+      if (keybinds.skill4.includes(e.key)) attemptSkill('s4');
 
       if ((e.key === 'v' || e.key === 'V') && !gameOver) saveGame();
       if (e.key === 'l' || e.key === 'L') loadGame();
   });
   document.addEventListener('keyup', e => keys[e.key] = false);
+
+  function attemptSkill(type) {
+      if (replayMode === 1) replays.push({f: frameCount, act: type});
+      if (type === 's1') triggerFreezeSkill();
+      if (type === 's2') triggerSpeedSkill();
+      if (type === 's3') triggerMagnetSkill();
+      if (type === 's4') triggerShieldSkill();
+  }
 
   function getInitLives() {
       if (diffMode === 0) return 5;
@@ -759,10 +853,26 @@
           return;
       }
       
-      if (keys['ArrowLeft'] || keys['a']) { ndx = -1; ndy = 0; }
-      if (keys['ArrowRight'] || keys['d']) { ndx = 1; ndy = 0; }
-      if (keys['ArrowUp'] || keys['w']) { ndx = 0; ndy = -1; }
-      if (keys['ArrowDown']) { ndx = 0; ndy = 1; }
+      if (replayMode === 2) {
+          while (replayIndex < replays.length && replays[replayIndex].f === frameCount) {
+              let ev = replays[replayIndex];
+              if (ev.act === 'move') { ndx = ev.nx; ndy = ev.ny; }
+              else if (ev.act === 's1') triggerFreezeSkill();
+              else if (ev.act === 's2') triggerSpeedSkill();
+              else if (ev.act === 's3') triggerMagnetSkill();
+              else if (ev.act === 's4') triggerShieldSkill();
+              replayIndex++;
+          }
+      } else {
+          let oldNdx = ndx, oldNdy = ndy;
+          if (isKey(keybinds.left)) { ndx = -1; ndy = 0; }
+          if (isKey(keybinds.right)) { ndx = 1; ndy = 0; }
+          if (isKey(keybinds.up)) { ndx = 0; ndy = -1; }
+          if (isKey(keybinds.down)) { ndx = 0; ndy = 1; }
+          if (replayMode === 1 && (ndx !== oldNdx || ndy !== oldNdy)) {
+              replays.push({f: frameCount, act: 'move', nx: ndx, ny: ndy});
+          }
+      }
       
       if (freezeCooldown > 0) freezeCooldown--;
       if (speedCooldown > 0) speedCooldown--;
@@ -1406,10 +1516,20 @@
       ctx.font = '10px monospace';
       const diffNames = ['EASY', 'NORM', 'HARD'];
       ctx.fillText(`Lv:${level}/20 Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 308);
-      ctx.fillText(`Diff:${diffNames[diffMode]} Skills: F,Z,M,B Save:V Load:L`, 4, 320);
-      ctx.fillText(`[Press H for Help]`, 4, 332);
+      let rText = replayMode === 1 ? ' [REC]' : (replayMode === 2 ? ' [PLAY]' : '');
+      ctx.fillText(`Diff:${diffNames[diffMode]}${rText} Save:V Load:L Bind:K`, 4, 320);
+      ctx.fillText(`[Press H for Help] Export/Import:E`, 4, 332);
 
-      if (showHelp) {
+      if (bindState > 0) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+          ctx.fillRect(0, 0, 300, 340);
+          ctx.fillStyle = '#ff6464';
+          ctx.font = 'bold 16px sans-serif';
+          ctx.textAlign = 'center';
+          const bindNames = ["", "UP", "DOWN", "LEFT", "RIGHT", "SKILL 1 (FREEZE)", "SKILL 2 (SPRINT)", "SKILL 3 (MAGNET)", "SKILL 4 (SHIELD)"];
+          ctx.fillText(`PRESS KEY FOR ${bindNames[bindState]}`, 150, 170);
+          ctx.textAlign = 'left';
+      } else if (showHelp) {
           ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
           ctx.fillRect(0, 0, 300, 340);
           ctx.fillStyle = '#fff';
@@ -1419,13 +1539,14 @@
           ctx.font = '12px sans-serif';
           ctx.fillText('Move: Arrows or WASD', 150, 70);
           ctx.fillText('Skills: F, Z, M, B (or buttons)', 150, 90);
-          ctx.fillText('Difficulty: 1(Easy), 2(Norm), 3(Hard)', 150, 110);
-          ctx.fillText('Save/Load: V / L', 150, 130);
-          ctx.fillText('Pause: P', 150, 150);
-          ctx.fillText('Avoid ghosts, eat all dots.', 150, 180);
-          ctx.fillText('Power pellets let you eat ghosts!', 150, 200);
+          ctx.fillText('Diff: 1(Easy) 2(Norm) 3(Hard)', 150, 110);
+          ctx.fillText('Save/Load: V / L  |  Pause: P', 150, 130);
+          ctx.fillText('Keybinds: K  |  JSON: E', 150, 150);
+          ctx.fillText('Replay: R(Rec) T(Play)', 150, 170);
+          ctx.fillText('Avoid ghosts, eat all dots.', 150, 200);
+          ctx.fillText('Power pellets let you eat ghosts!', 150, 220);
           ctx.fillStyle = '#00e676';
-          ctx.fillText('Press H to start/resume', 150, 250);
+          ctx.fillText('Press H to start/resume', 150, 260);
           ctx.textAlign = 'left';
       }
 
