@@ -29,6 +29,8 @@
         height: 100vh;
         box-sizing: border-box;
         overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .container {
@@ -167,13 +169,14 @@
             <button id="btnRun">Run All</button>
             <button id="btnLoad">Load</button>
             <button id="btnSave">Save</button>
+            <button id="btnHelp" style="background:#3b82f6">? Help</button>
         </div>
     </div>
     
     <div class="panels">
         <div class="panel" style="flex: 1.2;">
             <div class="panel-header">
-                <span>Input</span>
+                <span>Input (Welcome! Click Help for instructions)</span>
                 <div class="find-replace" style="display:flex; gap:5px;">
                     <input id="regexFind" placeholder="/pattern/" title="Regex Find">
                     <input id="regexRep" placeholder="replace" title="Replace With">
@@ -205,6 +208,7 @@ print a % 3"></textarea>
     const btnRec = document.getElementById('btnRec');
     const btnPlay = document.getElementById('btnPlay');
     const btnRep = document.getElementById('btnRep');
+    const btnHelp = document.getElementById('btnHelp');
     const outputArea = document.getElementById('outputArea');
     const memoryArea = document.getElementById('memoryArea');
 
@@ -377,6 +381,10 @@ print a % 3"></textarea>
         } catch(e) {
             alert("Regex Error: " + e.message);
         }
+    };
+
+    btnHelp.onclick = () => {
+        alert("Welcome to KScript!\n\nWrite equations, assign variables (a-z), and use 'print' to output values.\n\nExample:\na = 10\nprint a * 2\n\nControls:\n- Rec Macro: Record keystrokes\n- Play Macro: Replay them\n- Step: Run line-by-line\n- Run All: Run everything\n- Find/Replace: Supports standard regex");
     };
 
     // Macro Engine

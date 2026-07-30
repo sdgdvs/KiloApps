@@ -3,11 +3,11 @@
 #include <commdlg.h>
 #include <stdio.h>
 
-#define W 800
-#define H 500
+#define W 950
+#define H 650
 
 HWND hInput, hOutput, hMemory, hRegexFind, hRegexRep;
-HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnRec, hBtnPlay, hBtnRep;
+HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp;
 
 int vars[26] = {0};
 int nodeCount = 0;
@@ -217,25 +217,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             hbrBg = CreateSolidBrush(RGB(30, 30, 30));
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             // Toolbar
-            hBtnRec  = CreateWindowEx(0, "BUTTON", "Rec Macro", WS_CHILD | WS_VISIBLE, 10, 10, 90, 24, hwnd, (HMENU)4, NULL, NULL);
-            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play Macro", WS_CHILD | WS_VISIBLE, 105, 10, 90, 24, hwnd, (HMENU)5, NULL, NULL);
-            hBtnStep = CreateWindowEx(0, "BUTTON", "Step", WS_CHILD | WS_VISIBLE, 200, 10, 60, 24, hwnd, (HMENU)6, NULL, NULL);
-            hBtnRun  = CreateWindowEx(0, "BUTTON", "Run", WS_CHILD | WS_VISIBLE, 265, 10, 60, 24, hwnd, (HMENU)1, NULL, NULL);
-            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE, 330, 10, 60, 24, hwnd, (HMENU)2, NULL, NULL);
-            hBtnSave = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, 395, 10, 60, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtnRec  = CreateWindowEx(0, "BUTTON", "Rec Macro", WS_CHILD | WS_VISIBLE, 10, 10, 100, 24, hwnd, (HMENU)4, NULL, NULL);
+            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play Macro", WS_CHILD | WS_VISIBLE, 120, 10, 100, 24, hwnd, (HMENU)5, NULL, NULL);
+            hBtnStep = CreateWindowEx(0, "BUTTON", "Step", WS_CHILD | WS_VISIBLE, 230, 10, 80, 24, hwnd, (HMENU)6, NULL, NULL);
+            hBtnRun  = CreateWindowEx(0, "BUTTON", "Run", WS_CHILD | WS_VISIBLE, 320, 10, 80, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE, 410, 10, 80, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnSave = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, 500, 10, 80, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE, 590, 10, 80, 24, hwnd, (HMENU)8, NULL, NULL);
             
-            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Find...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 470, 10, 80, 24, hwnd, NULL, NULL, NULL);
-            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Rep...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 555, 10, 80, 24, hwnd, NULL, NULL, NULL);
-            hBtnRep    = CreateWindowEx(0, "BUTTON", "Replace", WS_CHILD | WS_VISIBLE, 640, 10, 70, 24, hwnd, (HMENU)7, NULL, NULL);
+            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Find...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 680, 10, 80, 24, hwnd, NULL, NULL, NULL);
+            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Rep...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 770, 10, 80, 24, hwnd, NULL, NULL, NULL);
+            hBtnRep    = CreateWindowEx(0, "BUTTON", "Replace", WS_CHILD | WS_VISIBLE, 860, 10, 70, 24, hwnd, (HMENU)7, NULL, NULL);
             
-            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnLoad, hBtnSave, hRegexFind, hRegexRep, hBtnRep};
-            for(int i=0; i<9; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnLoad, hBtnSave, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
+            for(int i=0; i<10; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
             
             // Panels
-            hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "a = 10\r\nb = 20\r\nprint a * b + 5\r\nprint a % 3",
+            hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "a = 10\r\nb = 20\r\nprint a * b + 5\r\nprint a % 3\r\n// Click Help for instructions",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
                 10, 44, 250, H - 95, hwnd, NULL, NULL, NULL);
             SendMessage(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -274,6 +275,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             else if (wmId == 7) SimpleRegexReplace();
+            else if (wmId == 8) {
+                MessageBoxA(hwnd, "Welcome to KScript!\n\nWrite equations, assign variables (a-z), and use 'print' to output values.\n\nExample:\na = 10\nprint a * 2\n\nControls:\n- Rec Macro: Record keystrokes\n- Play Macro: Replay them\n- Step: Run line-by-line\n- Run: Run everything\n- Find/Replace: Regex support", "KScript Help", MB_OK | MB_ICONINFORMATION);
+            }
             else if (wmId == 2) {
                 char szFile[260] = {0};
                 OPENFILENAMEA ofn = {0};
