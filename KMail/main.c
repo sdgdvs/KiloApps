@@ -370,7 +370,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     Email* em = NULL;
                     for(int i=0; i<num_emails; i++) if(emails[i].id == tabs[currentTabIdx].emailId) em = &emails[i];
                     if(em) {
-                        lstrcatA(em->tags, ",Important");
+                        if (lstrlenA(em->tags) + 11 < sizeof(em->tags)) {
+                            lstrcatA(em->tags, ",Important");
+                        }
                         MessageBox(hwnd, "Appended 'Important' tag.", "Tag", MB_OK);
                         RenderPane();
                         RefreshEmailList();

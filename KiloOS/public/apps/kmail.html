@@ -129,6 +129,17 @@
     }
   }
 
+  function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>'"]/g, tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag]));
+  }
+
   let emails = [
     { id: 1, folder: 'inbox', subject: "Welcome to KiloOS", sender: "sysadmin@kilo.os", body: "Hello User,\n\nWelcome to KiloOS, your new minimalist operating environment.\n\n- SysAdmin", unread: true, tags: ["Work"], encrypted: false },
     { id: 2, folder: 'inbox', subject: "Meeting at 3PM", sender: "boss@kilo.os", body: "Don't forget our meeting at 3PM.", unread: false, tags: ["Urgent", "Work"], encrypted: false },
@@ -164,10 +175,10 @@
       let isSelected = activeTabId && tabs.find(t => t.id === activeTabId && t.emailId === em.id);
       d.className = `item ${em.unread ? 'unread' : ''} ${isSelected ? 'selected' : ''}`;
       
-      let html = `<div class="subject">${em.encrypted ? '🔒 ' : ''}${em.subject}</div>
-                  <div class="sender">${em.folder === 'sent' ? 'To: ' + em.sender : em.sender}</div>
+      let html = `<div class="subject">${em.encrypted ? '🔒 ' : ''}${escapeHTML(em.subject)}</div>
+                  <div class="sender">${em.folder === 'sent' ? 'To: ' + escapeHTML(em.sender) : escapeHTML(em.sender)}</div>
                   <div class="item-tags">`;
-      if(em.tags) em.tags.forEach(t => { html += `<span class="tag">${t}</span>`; });
+      if(em.tags) em.tags.forEach(t => { html += `<span class="tag">${escapeHTML(t)}</span>`; });
       html += `</div>`;
       d.innerHTML = html;
       d.onclick = () => openEmailTab(em.id);
@@ -199,7 +210,7 @@
       activeTabId = existingTab.id;
     } else {
       let tid = 't_' + Date.now();
-      tabs.push({ id: tid, type: 'read', emailId: id, title: em.subject });
+      tabs.push({ id: tid, type: 'read', emailId: id, title: escapeHTML(em.subject) });
       activeTabId = tid;
     }
     renderTabs();
@@ -255,13 +266,13 @@
       let em = emails.find(e => e.id === tab.emailId);
       if(!em) { closeTab(tab.id); return; }
       
-      let tagsHtml = (em.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+      let tagsHtml = (em.tags || []).map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('');
       
       let actionsHtml = `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))">Reply</button>`;
       actionsHtml += `<button onclick="addTag(${em.id})">+ Tag</button>`;
       actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})">Delete</button>`;
 
-      let bodyHtml = em.body;
+      let bodyHtml = escapeHTML(em.body);
       if (em.encrypted) {
         bodyHtml = `<div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:8px; text-align:center;">
           <p>🔒 This message is encrypted.</p>
@@ -273,8 +284,8 @@
       pane.innerHTML = `
         <div class="pane-header">
           <div>
-            <h2 class="pane-subject">${em.encrypted ? '🔒 ' : ''}${em.subject}</h2>
-            <p class="pane-sender">${em.folder==='sent' ? 'To: ' + em.sender : 'From: ' + em.sender}</p>
+            <h2 class="pane-subject">${em.encrypted ? '🔒 ' : ''}${escapeHTML(em.subject)}</h2>
+            <p class="pane-sender">${em.folder==='sent' ? 'To: ' + escapeHTML(em.sender) : 'From: ' + escapeHTML(em.sender)}</p>
             <div class="item-tags" style="margin-top:10px;">${tagsHtml}</div>
           </div>
           <div class="pane-actions">${actionsHtml}</div>
@@ -284,15 +295,15 @@
     } else if (tab.type === 'compose') {
       pane.innerHTML = `
         <div class="compose-body">
-          <input type="text" id="c-to-${tab.id}" placeholder="To" value="${tab.data.to}" oninput="updateTabData('${tab.id}', 'to', this.value)">
-          <input type="text" id="c-sub-${tab.id}" placeholder="Subject" value="${tab.data.sub}" oninput="updateTabData('${tab.id}', 'sub', this.value)">
-          <textarea id="c-body-${tab.id}" placeholder="Write your message here...">${tab.data.body}</textarea>
+          <input type="text" id="c-to-${tab.id}" placeholder="To" value="${escapeHTML(tab.data.to)}" oninput="updateTabData('${tab.id}', 'to', this.value)">
+          <input type="text" id="c-sub-${tab.id}" placeholder="Subject" value="${escapeHTML(tab.data.sub)}" oninput="updateTabData('${tab.id}', 'sub', this.value)">
+          <textarea id="c-body-${tab.id}" placeholder="Write your message here...">${escapeHTML(tab.data.body)}</textarea>
           <div class="compose-actions">
             <div>
               <label style="font-size:13px; display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" id="c-enc-${tab.id}" ${tab.data.encrypted ? 'checked' : ''} onchange="toggleEncrypt('${tab.id}', this.checked)"> Encrypt with Password
               </label>
-              <input type="password" id="c-pass-${tab.id}" placeholder="Password" style="display:${tab.data.encrypted ? 'inline-block' : 'none'}; margin-left:10px; width:150px;" value="${tab.data.password}" oninput="updateTabData('${tab.id}', 'password', this.value)">
+              <input type="password" id="c-pass-${tab.id}" placeholder="Password" style="display:${tab.data.encrypted ? 'inline-block' : 'none'}; margin-left:10px; width:150px;" value="${escapeHTML(tab.data.password)}" oninput="updateTabData('${tab.id}', 'password', this.value)">
             </div>
             <button class="compose-btn" style="margin:0" onclick="sendEmail('${tab.id}')">Send</button>
           </div>
@@ -349,7 +360,7 @@
     if(dec !== null) {
       let resDiv = document.getElementById(`dec-res-${eid}`);
       resDiv.style.display = 'block';
-      resDiv.innerHTML = `<strong>Decrypted Content:</strong><br><br>${dec.replace(/\\n/g, '<br>')}`;
+      resDiv.innerHTML = `<strong>Decrypted Content:</strong><br><br>${escapeHTML(dec).replace(/\\n/g, '<br>')}`;
     } else {
       alert("Incorrect password or corrupted data.");
     }
@@ -393,12 +404,13 @@
   window.importJson = function(event) {
     const file = event.target.files[0];
     if (!file) return;
+    if (file.size > 1024 * 500) { alert("File too large"); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const imported = JSON.parse(e.target.result);
         if(Array.isArray(imported)) {
-          emails = imported;
+          emails = imported.slice(0, 1000); // limit to 1000 items
           nextId = Math.max(...emails.map(m=>m.id), 0) + 1;
           renderList();
           alert("Mailbox imported successfully.");
