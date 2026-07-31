@@ -29,7 +29,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KChart
 - KChess
 - KChat
 - KBBS
@@ -77,8 +76,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KHex
 - KCalc
 - KCalendar
+- KChart
 
 ## Progress Log
+- KChart: Usability and UI issues fixed (auto-opening size, crisp text, help hints, layout).
 - KCalendar: Usability and UI issues fixed (auto-opening size, crisp font, help shortcut, layout).
 - KCalc: Usability and UI issues fixed (auto-opening size, help toast, hotkeys).
 - KHex: Usability and UI issues fixed (auto-opening size, help keybindings, crisp text, layout).
