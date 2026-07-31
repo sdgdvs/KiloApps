@@ -139,7 +139,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| K2048      | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check tile spawn rates, verify move-limit stages are achievable, audit powerup balance. |
 | KMines     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check first-click safety, mine density per difficulty, ensure Sonar powerup isn't overpowered. |
 | KTowers    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Verify optimal move counts are achievable, check locked-disk puzzles are solvable. |
 | KTetris    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check drop speed curve, verify Pentomino pieces don't make late stages impossible. |
@@ -156,11 +155,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSolitaire | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check deal fairness, ensure Vegas mode scoring is balanced, verify undo/powerup economy. |
 | KFreecell  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Checked that all dealt hands are solvable, rebalanced campaign difficulty constraints. |
 | KSudoku    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit puzzle generation quality. Ensure Easy puzzles have unique solutions and Hard is solvable. |
+| K2048      | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check tile spawn rates, verify move-limit stages are achievable, audit powerup balance. |
 
 
 ## Progress Log
 
 **Loop 8**
+- [x] K2048 (Balance audit complete: Adjusted spawn rates to 90/10 for 2/4, mathematically rebalanced move limits for all campaign stages, fixed Stage 29 target, and updated powerup starting stocks in both EXE and HTML)
 - [x] KSnake (Expanded Campaign Mode to 25 stages ending with Omega Boss Lair, added Ghost Berry food, Hunter AI rivals that chase the player, and fixed C linking bug by replacing math.h trig functions in both EXE and HTML)
 - [x] KSudoku (Balance audit complete: Implemented backtracking solver to guarantee unique solutions for Easy/Medium puzzles, ensured Hard puzzles remain solvable in both EXE and HTML)
 - [x] KBreakout (Expanded Campaign Mode to 30 stages featuring string-based custom level loader, Phantom Glass bricks, Armored bricks, and Stage 30 Final Core Boss variant in both EXE and HTML)
