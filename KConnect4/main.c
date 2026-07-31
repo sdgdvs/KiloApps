@@ -87,12 +87,65 @@ void SpawnConfetti() {
     }
 }
 
+void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
+    RECT rect; GetClientRect(hwnd, &rect);
+    int boardW = g_cols * 44 + 10;
+    int boardLeft = (rect.right - rect.left - boardW) / 2;
+    int boardTop = 50;
+    float px = (float)(boardLeft + 5 + c * 44 + 22);
+    float py = (float)(boardTop + 5 + r * 44 + 22);
+
+    g_particleCount = MAX_PARTICLES;
+    if (type == 1) { // Bomb
+        COLORREF pal[] = {RGB(255, 68, 0), RGB(255, 136, 0), RGB(255, 204, 0), RGB(85, 85, 85)};
+        for (int i = 0; i < MAX_PARTICLES; i++) {
+            float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
+            float speed = ((float)(rand() % 100)) / 10.0f + 2.0f;
+            g_particles[i].x = px; g_particles[i].y = py;
+            g_particles[i].vx = cosf(angle) * speed;
+            g_particles[i].vy = sinf(angle) * speed;
+            g_particles[i].rotation = angle;
+            g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 100.0f;
+            g_particles[i].color = pal[rand() % 4];
+            g_particles[i].size = rand() % 10 + 4;
+            g_particles[i].life = rand() % 40 + 30;
+        }
+    } else if (type == 2) { // Drill
+        py += 44.0f;
+        COLORREF pal[] = {RGB(0, 255, 255), RGB(128, 222, 234), RGB(255, 255, 255)};
+        for (int i = 0; i < MAX_PARTICLES; i++) {
+            g_particles[i].x = px + (float)(rand() % 40 - 20); g_particles[i].y = py;
+            g_particles[i].vx = ((float)(rand() % 100) - 50.0f) / 10.0f;
+            g_particles[i].vy = -(((float)(rand() % 100)) / 15.0f + 3.0f);
+            g_particles[i].rotation = ((float)(rand() % 360)) * 3.14159f / 180.0f;
+            g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 100.0f;
+            g_particles[i].color = pal[rand() % 3];
+            g_particles[i].size = rand() % 6 + 2;
+            g_particles[i].life = rand() % 30 + 20;
+        }
+    } else if (type == 3) { // Magnet
+        COLORREF pal[] = {RGB(224, 64, 251), RGB(234, 128, 252), RGB(255, 255, 255)};
+        for (int i = 0; i < MAX_PARTICLES; i++) {
+            float dist = (float)(rand() % 80 + 20);
+            float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
+            g_particles[i].x = px + cosf(angle) * dist; g_particles[i].y = py + sinf(angle) * dist;
+            g_particles[i].vx = -cosf(angle) * (dist / 20.0f);
+            g_particles[i].vy = -sinf(angle) * (dist / 20.0f);
+            g_particles[i].rotation = 0; g_particles[i].vRot = 0;
+            g_particles[i].color = pal[rand() % 3];
+            g_particles[i].size = rand() % 4 + 2;
+            g_particles[i].life = 20; // Fixed lifetime to fly in
+        }
+    }
+}
+
 void UpdateParticles() {
     for (int i = 0; i < g_particleCount; i++) {
         if (g_particles[i].life > 0) {
             g_particles[i].x += g_particles[i].vx;
             g_particles[i].y += g_particles[i].vy;
-            g_particles[i].vy += 0.15f;
+            // Only apply gravity to confetti/bomb/drill, magnet pulls inward and has fixed life behavior
+            if (g_particles[i].vRot != 0) g_particles[i].vy += 0.15f; 
             g_particles[i].rotation += g_particles[i].vRot;
             g_particles[i].life--;
         }
@@ -974,6 +1027,8 @@ void AIMove(HWND hwnd) {
 
 void FinishTurnEffects(HWND hwnd) {
     if (animType == 1) { // Bomb
+        SpawnPowerupParticles(1, animRow, animCol, hwnd);
+        SetTimer(hwnd, 4, 25, NULL);
         for(int dr=-1; dr<=1; dr++) {
             for(int dc=-1; dc<=1; dc++) {
                 int nr = animRow + dr, nc = animCol + dc;
@@ -984,11 +1039,15 @@ void FinishTurnEffects(HWND hwnd) {
         }
         ApplyGravity();
     } else if (animType == 2) { // Drill / Heavy Anvil (destroys cell directly underneath)
+        SpawnPowerupParticles(2, animRow, animCol, hwnd);
+        SetTimer(hwnd, 4, 25, NULL);
         if (animRow + 1 < g_rows && (board[animRow + 1][animCol] == 1 || board[animRow + 1][animCol] == 2 || board[animRow + 1][animCol] == 4)) {
             board[animRow + 1][animCol] = 0;
         }
         ApplyGravity();
     } else if (animType == 3) { // Magnet Disc (pulls friendly discs from adjacent cols)
+        SpawnPowerupParticles(3, animRow, animCol, hwnd);
+        SetTimer(hwnd, 4, 25, NULL);
         int adjCols[2] = {animCol - 1, animCol + 1};
         for (int i = 0; i < 2; i++) {
             int ac = adjCols[i];

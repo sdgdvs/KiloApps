@@ -83,7 +83,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KConnect4
 - KHangman
 - KSimon
 - KMatch3
@@ -112,9 +111,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - K2048
 - KStarship
 - KSolitaire
+- KConnect4
 
 ## Completed Work Log
 
+- **KConnect4 (Loop 2):** Implemented multi-color particle burst animations for the Bomb (fire/orange), Drill (cyan/white), and Magnet (purple/magenta) powerup special effects when triggered in both Web Canvas/HTML (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 - **KSolitaire (Loop 2):** Implemented multi-colored particle burst explosion animations triggered when cards are successfully moved to the foundation piles for both Web Canvas/HTML (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
 - **KStarship (Loop 1):** Implemented animated player starship with thrusters, solar stars with flares, space station with solar panels, rotating asteroids with craters, swirling quantum anomalies, pirate raider ships, and detailed orbital planets with animated tilting rings for both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
