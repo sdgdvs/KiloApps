@@ -27,6 +27,8 @@
     background: var(--bg-primary);
     color: var(--text-main);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     height: 100vh;
     display: flex;
     overflow: hidden;
@@ -356,6 +358,7 @@
         <span>📖</span> KJournal
       </div>
       <div>
+        <button class="icon-btn" onclick="openModal('helpModal')" title="Help (Press h)">❓</button>
         <button class="icon-btn" onclick="openAnalyticsModal()" title="Analytics & Streaks">📊</button>
         <button class="icon-btn" onclick="openSettingsModal()" title="Settings & Security">⚙️</button>
         <button class="icon-btn" onclick="lockApp()" id="lockAppBtn" title="Lock Journal" style="display:none;">🔒</button>
@@ -544,6 +547,32 @@
 <!-- Toast notification -->
 <div id="toast">Saved!</div>
 
+<!-- Help Modal -->
+<div class="modal-backdrop" id="helpModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>ℹ️ KJournal Help</h3>
+      <button class="icon-btn" onclick="closeModal('helpModal')">✕</button>
+    </div>
+    <div class="modal-body" style="font-size: 14px; line-height: 1.6;">
+      <p><strong>Keyboard Shortcuts:</strong></p>
+      <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
+        <li><strong>Press 'h'</strong> to open this help menu.</li>
+        <li><strong>Press 'Esc'</strong> to close any open modal.</li>
+      </ul>
+      <p><strong>Features:</strong></p>
+      <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
+        <li>Select a date from the calendar to view or edit entries.</li>
+        <li>Use hashtags (e.g. #happy) in your text to filter them easily later.</li>
+        <li>Your current writing streak and total words are tracked automatically!</li>
+      </ul>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('helpModal')">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // Core State
   let entries = {}; // { 'YYYY-MM-DD': { text: '', mood: '😀', updatedAt: timestamp } }
@@ -561,6 +590,10 @@
 
   // Initialize App
   function init() {
+    if (window.parent && window.parent.postMessage) {
+      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 1000, height: 700 }, '*');
+    }
+
     loadSettings();
     loadEntries();
 
@@ -1208,6 +1241,18 @@
 
   // Start app on load
   window.onload = init;
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      if (e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        openModal('helpModal');
+      }
+    }
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+    }
+  });
 </script>
 </body>
 </html>

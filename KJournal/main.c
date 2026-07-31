@@ -759,7 +759,28 @@ void export_import_menu() {
     }
 }
 
+void show_help() {
+    clear_screen();
+    printf("=========================================\n");
+    printf("               KJOURNAL HELP             \n");
+    printf("=========================================\n");
+    printf("Welcome to KJournal!\n\n");
+    printf("Features:\n");
+    printf("- Write new entries, auto-saved to journal.txt.\n");
+    printf("- Keep track of your mood each time you write.\n");
+    printf("- Use hashtags (e.g. #happy) to easily search later.\n");
+    printf("- View your writing streaks and mood analytics.\n");
+    printf("- Secure your journal with a 4-digit PIN lock.\n");
+    printf("- Export to Markdown or JSON, and import back!\n\n");
+    printf("Press Enter to return to the main menu...");
+    getchar();
+}
+
 int main() {
+#ifdef _WIN32
+    system("mode con: cols=100 lines=30");
+#endif
+
     if (!verify_pin_on_startup()) {
         return 0;
     }
@@ -778,6 +799,7 @@ int main() {
         printf("5. Mood & Streak Analytics\n");
         printf("6. Security & PIN Lock\n");
         printf("7. Import / Export Data\n");
+        printf("H. Help / Instructions\n");
         printf("8. Exit\n");
         printf("=========================================\n");
         printf("Choice: ");
@@ -798,6 +820,8 @@ int main() {
             security_settings_menu();
         } else if (choice[0] == '7') {
             export_import_menu();
+        } else if (choice[0] == 'h' || choice[0] == 'H') {
+            show_help();
         } else if (choice[0] == '8') {
             break;
         }
