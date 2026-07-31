@@ -26,6 +26,10 @@
     background-color: var(--bg-dark);
     color: var(--text-main);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-width: 850px;
+    min-height: 650px;
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -378,7 +382,19 @@
   }
 </style>
 </head>
-<body>
+<body data-width="900" data-height="700">
+  <div id="helpModal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; color:#fff;">
+    <div style="background:#161922; border:1px solid #00f3ff; padding:20px; border-radius:8px; max-width:400px; text-align:center;">
+      <h2 style="color:#00f3ff; margin-bottom:10px;">KSynth Help</h2>
+      <p style="margin-bottom:10px;">Keyboard Shortcuts:</p>
+      <ul style="list-style:none; padding:0; margin-bottom:20px; color:#aaa; font-size:14px; text-align:left;">
+        <li style="margin-bottom:5px;"><b>[A-K]</b> : Play notes C4 to C5</li>
+        <li style="margin-bottom:5px;"><b>[Z] / [X]</b> : Shift octave down / up</li>
+        <li style="margin-bottom:5px;"><b>[?]</b> : Toggle this help menu</li>
+      </ul>
+      <button class="btn btn-primary" onclick="document.getElementById('helpModal').style.display='none'">Close</button>
+    </div>
+  </div>
 
   <!-- Header & Toolbar -->
   <header>
@@ -405,6 +421,8 @@
       <button id="btnExportSeq" class="btn">🎵 Export Seq</button>
       <button id="btnImportSeq" class="btn">📥 Import Seq</button>
       <input type="file" id="seqFileInput" accept=".json" style="display:none;">
+      
+      <button id="btnHelp" class="btn" onclick="document.getElementById('helpModal').style.display='flex'">❓ Help</button>
     </div>
   </header>
 
@@ -588,7 +606,7 @@
     <div class="panel keyboard-panel">
       <div class="panel-title" style="margin-bottom:4px;">
         <span>Virtual Keyboard (2 Octaves)</span>
-        <span style="font-size:10px; color:var(--text-muted);">Shortcuts: [A-K] Oct 4 | [Z/X] Shift Octave</span>
+        <span style="font-size:10px; color:var(--text-muted);">Shortcuts: [A-K] Oct 4 | [Z/X] Shift Octave | [?] Help</span>
       </div>
       <div class="piano-container" id="pianoContainer"></div>
     </div>
@@ -1235,6 +1253,12 @@
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+    if (e.key === '?') {
+      const hm = document.getElementById('helpModal');
+      hm.style.display = hm.style.display === 'none' ? 'flex' : 'none';
+      return;
+    }
 
     const key = e.key.toLowerCase();
     if (key === 'z') {

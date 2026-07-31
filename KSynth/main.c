@@ -3,8 +3,8 @@
 #include <mmsystem.h>
 #include <stdlib.h>
 
-#define W 640
-#define H 540
+#define W 660
+#define H 400
 
 HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hFreq, hAttack, hDecay, hSustain, hRelease;
 HWND hComboArp, hArpBpm, hArpOct;
@@ -299,7 +299,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     static HFONT hFont = NULL;
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             // Preset Selection
             CreateWindowEx(0, "STATIC", "Preset:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 20, hwnd, NULL, NULL, NULL);
@@ -362,7 +362,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hScopeWnd = CreateWindowEx(WS_EX_CLIENTEDGE, "KSynthScope", "", WS_CHILD | WS_VISIBLE, 280, 12, 330, 240, hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-            CreateWindowEx(0, "STATIC", "Keyboard mapping:\nKeys [A, W, S, E, D, F, T, G, Y, H, U, J, K]\nTrigger notes C4 to C5 in real-time.", WS_CHILD | WS_VISIBLE, 280, 260, 330, 50, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Keyboard mapping:\nKeys [A, W, S, E, D, F, T, G, Y, H, U, J, K]\nTrigger notes C4 to C5 in real-time.\nPress '?' for Help.", WS_CHILD | WS_VISIBLE, 280, 260, 330, 60, hwnd, NULL, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             break;
