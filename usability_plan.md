@@ -29,7 +29,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KPad
 - KImage
 - KHex
 - KCalc
@@ -77,8 +76,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KRead
 - KBase
 - KJournal
+- KPad
 
 ## Progress Log
+- KPad: Usability and UI issues fixed (auto-opening size, crisp text, help menu, startup text).
 - KConnect4: Usability and UI issues fixed (auto-size, controls, help text, canvas crispness).
 - KiloOS Web UI (Shell & Apps): Added welcome notification on OS boot to guide new users.
 - KDB: Usability and UI issues fixed (auto-size, controls, help keys, crisp text, layout).
