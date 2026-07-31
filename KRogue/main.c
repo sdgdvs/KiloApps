@@ -1745,9 +1745,10 @@ void draw_game(HDC hdc) {
 
         SetTextColor(memDC, RGB(255, 215, 0));
         TextOutA(memDC, 20, 150, "Press H to view Run History Leaderboard", 39);
+        TextOutA(memDC, 20, 170, "Press ? for Help", 16);
 
         SetTextColor(memDC, RGB(255, 255, 255));
-        TextOutA(memDC, 20, 180, "Press ENTER to begin your journey...", 36);
+        TextOutA(memDC, 20, 200, "Press ENTER to begin your journey...", 36);
     } else if(g.state == 11) { // Leaderboard screen
         SetTextColor(memDC, RGB(255, 215, 0));
         SetBkColor(memDC, RGB(0,0,0));
@@ -2192,6 +2193,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if(wParam == 'D') g.difficulty = (g.difficulty + 1) % 3;
                 else if(wParam == 'S') g.seed = (g.seed * 3 + 1234) % 90000 + 1000;
                 else if(wParam == 'H') g.state = 11;
+                else if(wParam == VK_OEM_2) g.state = 7;
                 else if(wParam == VK_RETURN) finalize_character();
             } else if(g.state == 11) { // leaderboard
                 if(wParam == VK_ESCAPE || wParam == 'H') g.state = 4;
@@ -2318,7 +2320,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
             } else if(g.state == 7) { // help
-                if(wParam == VK_ESCAPE || wParam == VK_OEM_2) g.state = 0;
+                if(wParam == VK_ESCAPE || wParam == VK_OEM_2) g.state = g.dlevel == 0 ? 4 : 0;
             } else if(g.state == 8) { // message log
                 if(wParam == VK_ESCAPE || wParam == 'V') g.state = 0;
             }

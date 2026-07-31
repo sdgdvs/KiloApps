@@ -204,12 +204,13 @@
                 <button class="btn-action btn-spell" onclick="openSpellbook()">[M] Spellbook</button>
                 <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory & Gear</button>
                 <button class="btn-action btn-lead" onclick="openLeaderboard()">[H] Leaderboard</button>
+                <button class="btn-action" onclick="openHelp()">[?] Help</button>
                 <button class="btn-action" onclick="saveGame()">[S] Quick Save</button>
                 <button class="btn-action" onclick="loadGame()">[L] Load Game</button>
             </div>
             <div id="msg-box"></div>
             <div class="controls-hint">
-                [Arrows] Move/Attack | [.] Wait | [A] Class Ability | [M] Spells | [I] Inventory | [H] Leaderboard | [S] Save | [L] Load
+                [Arrows] Move/Attack | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [H] Leaderboard | [?] Help | [S] Save | [L] Load
             </div>
         </div>
 
@@ -335,6 +336,24 @@
                 </div>
                 <div class="modal-close">
                     <button class="btn-modal-close" onclick="closeModal('modal-leaderboard')">Close [ESC]</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="modal-help" class="modal-overlay" style="display: none;">
+            <div class="modal-card">
+                <div class="modal-header">📖 HOW TO PLAY KROGUE</div>
+                <div style="font-size: 13px; color: #a0aec0; line-height: 1.5;">
+                    <p><b style="color:#63b3ed;">Goal:</b> Descend through 40 floors to slay Astaroth!</p>
+                    <p><b style="color:#63b3ed;">Movement:</b> Use Arrow Keys to move/attack. Press [.] or Numpad 5 to wait a turn.</p>
+                    <p><b style="color:#63b3ed;">Combat:</b> Bump into enemies to attack. Ranged weapons require targeting [F].</p>
+                    <p><b style="color:#63b3ed;">Classes & Magic:</b> Each class has a unique ability [A]. Mages start with spells [M].</p>
+                    <p><b style="color:#63b3ed;">Food & Healing:</b> Eat Food to prevent starvation (HP drain). Use Potions to heal [I].</p>
+                    <p><b style="color:#63b3ed;">Shrines & Anvils:</b> Step on Shrines [^] for buffs. Anvils [T] upgrade equipment.</p>
+                </div>
+                <div class="modal-close">
+                    <button class="btn-modal-close" onclick="closeModal('modal-help')">Close [ESC]</button>
                 </div>
             </div>
         </div>
@@ -803,7 +822,7 @@
                 ctx.fillText("Press [ENTER] to Select Hero & Start Run", canvas.width / 2, 260);
 
                 ctx.fillStyle = '#a0aec0'; ctx.font = '14px sans-serif';
-                ctx.fillText("Press [H] for Leaderboard  |  Press [L] to Resume Saved Run", canvas.width / 2, 310);
+                ctx.fillText("Press [H] for Leaderboard  |  Press [?] for Help  |  Press [L] to Resume Saved Run", canvas.width / 2, 310);
                 return;
             }
 
@@ -1098,6 +1117,10 @@
 
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
+        function openHelp() {
+            document.getElementById('modal-help').style.display = 'flex';
+        }
+
         function endTurn() {
             if (player.invisible_turns > 0) player.invisible_turns--;
             if (player.berserk_turns > 0) player.berserk_turns--;
@@ -1158,7 +1181,7 @@
         // Key Listeners
         window.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
-                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select');
+                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help');
                 return;
             }
 
@@ -1166,6 +1189,7 @@
                 if (e.key === 'Enter') openCharSelect();
                 if (e.key === 'h' || e.key === 'H') openLeaderboard();
                 if (e.key === 'l' || e.key === 'L') loadGame();
+                if (e.key === '?' || e.key === '/') openHelp();
             } else if (state === 1) {
                 let dx = 0, dy = 0, turn = false;
                 if (e.key === 'ArrowUp') { dy = -1; turn = true; }
@@ -1177,6 +1201,7 @@
                 if (e.key === 'i' || e.key === 'I') openInventory();
                 if (e.key === 'm' || e.key === 'M') openSpellbook();
                 if (e.key === 'h' || e.key === 'H') openLeaderboard();
+                if (e.key === '?' || e.key === '/') openHelp();
                 if (e.key === 's' || e.key === 'S') saveGame();
                 if (e.key === 'l' || e.key === 'L') loadGame();
 
