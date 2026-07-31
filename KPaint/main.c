@@ -37,6 +37,9 @@ HWND hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle;
 HWND hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray;
 HWND hBtnUndo, hBtnRedo, hBtnInvert, hBtnGray, hBtnBright, hBtnFlipH, hBtnRotate90;
 HWND hBtnClear, hBtnSave, hBtnOpen;
+
+HWND hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnWand;
+
 HFONT hFont = NULL;
 
 void PushUndo();
@@ -211,6 +214,64 @@ void FilterBrightness(int delta) {
     ReleaseDC(NULL, hdc);
 }
 
+
+void FilterConvolve(int type) {
+    PushUndo();
+    HDC hdc = GetDC(NULL);
+    BITMAPINFO bi = {0};
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = 2000;
+    bi.bmiHeader.biHeight = -2000;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 24;
+    bi.bmiHeader.biCompression = BI_RGB;
+    
+    DWORD bufSize = 2000 * 2000 * 3;
+    BYTE* pSrc = (BYTE*)GlobalAlloc(GPTR, bufSize);
+    BYTE* pDst = (BYTE*)GlobalAlloc(GPTR, bufSize);
+    if (pSrc && pDst) {
+        GetDIBits(hdcMem, hbmCanvas, 0, 2000, pSrc, &bi, DIB_RGB_COLORS);
+        
+        int matrix[9];
+        int div = 1;
+        int offset = 0;
+        
+        if (type == 0) { // Edge
+            int m[] = {-1,-1,-1, -1,8,-1, -1,-1,-1};
+            for(int i=0;i<9;i++) matrix[i]=m[i];
+        } else if (type == 1) { // Sharpen
+            int m[] = {0,-1,0, -1,5,-1, 0,-1,0};
+            for(int i=0;i<9;i++) matrix[i]=m[i];
+        } else if (type == 2) { // Emboss
+            int m[] = {-2,-1,0, -1,1,1, 0,1,2};
+            for(int i=0;i<9;i++) matrix[i]=m[i];
+        }
+
+        for (int y = 1; y < 1999; y++) {
+            for (int x = 1; x < 1999; x++) {
+                int r=0,g=0,b=0;
+                for(int cy=0; cy<3; cy++) {
+                    for(int cx=0; cx<3; cx++) {
+                        int idx = ((y+cy-1)*2000 + (x+cx-1))*3;
+                        int wt = matrix[cy*3+cx];
+                        b += pSrc[idx] * wt;
+                        g += pSrc[idx+1] * wt;
+                        r += pSrc[idx+2] * wt;
+                    }
+                }
+                int dstIdx = (y*2000 + x)*3;
+                pDst[dstIdx] = (BYTE)(b/div + offset < 0 ? 0 : (b/div + offset > 255 ? 255 : b/div + offset));
+                pDst[dstIdx+1] = (BYTE)(g/div + offset < 0 ? 0 : (g/div + offset > 255 ? 255 : g/div + offset));
+                pDst[dstIdx+2] = (BYTE)(r/div + offset < 0 ? 0 : (r/div + offset > 255 ? 255 : r/div + offset));
+            }
+        }
+        SetDIBits(hdcMem, hbmCanvas, 0, 2000, pDst, &bi, DIB_RGB_COLORS);
+    }
+    if (pSrc) GlobalFree(pSrc);
+    if (pDst) GlobalFree(pDst);
+    ReleaseDC(NULL, hdc);
+}
+
 // Transforms
 void FlipHorizontal() {
     PushUndo();
@@ -370,13 +431,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnSave = CreateWindowA("BUTTON", "Save BMP", WS_CHILD | WS_VISIBLE, 5, 380, 121, 22, hwnd, (HMENU)302, NULL, NULL);
             hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE, 5, 405, 121, 22, hwnd, (HMENU)301, NULL, NULL);
 
+            
+            hBtnEdge = CreateWindowA("BUTTON", "Edge", WS_CHILD | WS_VISIBLE, 5, 435, 58, 22, hwnd, (HMENU)506, NULL, NULL);
+            hBtnSharpen = CreateWindowA("BUTTON", "Sharpen", WS_CHILD | WS_VISIBLE, 68, 435, 58, 22, hwnd, (HMENU)507, NULL, NULL);
+            hBtnEmboss = CreateWindowA("BUTTON", "Emboss", WS_CHILD | WS_VISIBLE, 5, 460, 58, 22, hwnd, (HMENU)508, NULL, NULL);
+
             // Set Fonts
             HWND controls[] = {
                 hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnCustomColor,
                 hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray, hBtnEraser,
                 hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle,
                 hBtnInvert, hBtnGray, hBtnBright, hBtnFlipH, hBtnRotate90,
-                hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnClear
+                hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnClear,
+
+                hBtnEdge, hBtnSharpen, hBtnEmboss,
+
             };
             for (int i = 0; i < sizeof(controls)/sizeof(controls[0]); i++) {
                 SendMessage(controls[i], WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -460,6 +529,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == 503) { FilterBrightness(25); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 504) { FlipHorizontal(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 505) { Rotate90CW(); InvalidateRect(hwnd, NULL, FALSE); }
+
+            if (id == 506) { FilterConvolve(0); InvalidateRect(hwnd, NULL, FALSE); }
+            if (id == 507) { FilterConvolve(1); InvalidateRect(hwnd, NULL, FALSE); }
+            if (id == 508) { FilterConvolve(2); InvalidateRect(hwnd, NULL, FALSE); }
+
 
             if (id == 601) { PerformUndo(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 602) { PerformRedo(); InvalidateRect(hwnd, NULL, FALSE); }

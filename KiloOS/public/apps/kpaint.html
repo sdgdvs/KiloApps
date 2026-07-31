@@ -301,6 +301,82 @@
     border-radius: 50%;
     transition: all 0.1s ease;
   }
+
+  /* Layers Panel */
+  .layers-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 10px;
+    border-top: 1px solid var(--panel-border);
+    padding-top: 10px;
+  }
+  .layer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.2);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    border: 1px solid transparent;
+  }
+  .layer-item.active {
+    border-color: var(--primary);
+    background: rgba(59,130,246,0.1);
+  }
+  .layer-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .layer-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .layer-btn:hover { color: var(--text-main); }
+  
+  /* Selection Overlay */
+  #selection-canvas {
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  
+  /* Export dropdown */
+  .export-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  .export-dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: var(--panel-bg);
+    min-width: 100px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+    z-index: 20;
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    right: 0;
+  }
+  .export-dropdown-content a {
+    color: var(--text-main);
+    padding: 8px 12px;
+    text-decoration: none;
+    display: block;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .export-dropdown-content a:hover {
+    background-color: var(--btn-hover);
+  }
+  .export-dropdown:hover .export-dropdown-content {
+    display: block;
+  }
+
 </style>
 </head>
 <body>
@@ -329,10 +405,19 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         Save to OS
       </button>
-      <button class="btn btn-accent" onclick="exportPNG()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Export PNG
-      </button>
+      
+      <div class="export-dropdown">
+        <button class="btn btn-accent">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export ▼
+        </button>
+        <div class="export-dropdown-content">
+          <a onclick="exportImage('png')">PNG</a>
+          <a onclick="exportImage('webp')">WEBP</a>
+          <a onclick="exportImage('bmp')">BMP</a>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -352,6 +437,10 @@
           <button class="btn" id="tool-ellipse" onclick="setTool('ellipse')" title="Ellipse (C)">Ellipse</button>
           <button class="btn" id="tool-fill" onclick="setTool('fill')" title="Bucket Fill (G)">Fill</button>
           <button class="btn" id="tool-spray" onclick="setTool('spray')" title="Airbrush">Spray</button>
+          
+          <button class="btn" id="tool-wand" onclick="setTool('wand')" title="Magic Wand (W)">Wand</button>
+          <button class="btn" id="tool-lasso" onclick="setTool('lasso')" title="Lasso (S)">Lasso</button>
+
           <button class="btn" id="tool-eraser" onclick="setTool('eraser')" title="Eraser (E)">Eraser</button>
         </div>
       </div>
@@ -410,7 +499,33 @@
           <button class="btn" onclick="applyFilter('darken')">-Brightness</button>
           <button class="btn" onclick="applyFilter('contrast')">+Contrast</button>
           <button class="btn" onclick="applyFilter('sepia')">Sepia</button>
+
+          <button class="btn" onclick="applyConvolve('edge')">Edge Detect</button>
+          <button class="btn" onclick="applyConvolve('sharpen')">Sharpen</button>
+          <button class="btn" onclick="applyConvolve('emboss')">Emboss</button>
+
         </div>
+      </div>
+
+      
+      <!-- Layers -->
+      <div>
+        <div class="section-title">Layers</div>
+        <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+          <button class="btn" style="flex:1" onclick="addLayer()">+ Add</button>
+          <button class="btn" style="flex:1" onclick="mergeLayerDown()">Merge</button>
+          <button class="btn" style="flex:1" onclick="deleteLayer()">Del</button>
+        </div>
+        <div class="control-group">
+          <div class="control-label">Blend Mode</div>
+          <select id="layer-blend" onchange="updateBlendMode()">
+            <option value="source-over">Normal</option>
+            <option value="multiply">Multiply</option>
+            <option value="screen">Screen</option>
+            <option value="overlay">Overlay</option>
+          </select>
+        </div>
+        <div class="layers-panel" id="layers-list"></div>
       </div>
 
       <!-- Canvas Transforms -->
@@ -439,6 +554,9 @@
       <div class="canvas-wrapper" id="canvas-wrapper" style="width: 800px; height: 600px;">
         <canvas id="canvas" width="800" height="600"></canvas>
         <canvas id="preview" width="800" height="600"></canvas>
+
+        <canvas id="selection-canvas" width="800" height="600"></canvas>
+
       </div>
     </div>
   </div>
@@ -469,6 +587,198 @@
     let startX = 0, startY = 0;
 
     // History Stack
+    
+    const selCanvas = document.getElementById('selection-canvas');
+    const sctx = selCanvas.getContext('2d');
+    
+    // Layers
+    let layers = [{ id: 0, canvas: canvas, ctx: ctx, visible: true, blend: 'source-over' }];
+    let activeLayerIndex = 0;
+    let layerCounter = 1;
+    let selectionMask = null; // ImageData for magic wand/lasso
+    let lassoPoints = [];
+
+    function updateLayersUI() {
+      const list = document.getElementById('layers-list');
+      list.innerHTML = '';
+      [...layers].reverse().forEach((l, revIdx) => {
+        const idx = layers.length - 1 - revIdx;
+        const div = document.createElement('div');
+        div.className = 'layer-item' + (idx === activeLayerIndex ? ' active' : '');
+        div.onclick = () => selectLayer(idx);
+        
+        const name = document.createElement('span');
+        name.innerText = 'Layer ' + (l.id + 1);
+        
+        const visBtn = document.createElement('button');
+        visBtn.className = 'layer-btn';
+        visBtn.innerText = l.visible ? '👁' : '✖';
+        visBtn.onclick = (e) => { e.stopPropagation(); toggleLayerVis(idx); };
+        
+        div.appendChild(name);
+        div.appendChild(visBtn);
+        list.appendChild(div);
+      });
+      document.getElementById('layer-blend').value = layers[activeLayerIndex].blend;
+    }
+
+    function selectLayer(idx) {
+      activeLayerIndex = idx;
+      // Bring active layer context to top for drawing
+      updateLayersUI();
+    }
+
+    function addLayer() {
+      const c = document.createElement('canvas');
+      c.width = layers[0].canvas.width;
+      c.height = layers[0].canvas.height;
+      c.style.position = 'absolute';
+      c.style.top = '0';
+      c.style.left = '0';
+      c.style.pointerEvents = 'none';
+      document.getElementById('canvas-wrapper').insertBefore(c, previewCanvas);
+      
+      const newCtx = c.getContext('2d', { willReadFrequently: true });
+      layers.push({ id: layerCounter++, canvas: c, ctx: newCtx, visible: true, blend: 'source-over' });
+      activeLayerIndex = layers.length - 1;
+      updateLayersUI();
+      saveState();
+    }
+    
+    function deleteLayer() {
+      if (layers.length <= 1) return;
+      const l = layers[activeLayerIndex];
+      l.canvas.remove();
+      layers.splice(activeLayerIndex, 1);
+      activeLayerIndex = Math.max(0, activeLayerIndex - 1);
+      updateLayersUI();
+      saveState();
+    }
+    
+    function mergeLayerDown() {
+      if (activeLayerIndex === 0) return;
+      const upper = layers[activeLayerIndex];
+      const lower = layers[activeLayerIndex - 1];
+      
+      lower.ctx.globalCompositeOperation = upper.blend;
+      lower.ctx.drawImage(upper.canvas, 0, 0);
+      lower.ctx.globalCompositeOperation = 'source-over';
+      
+      upper.canvas.remove();
+      layers.splice(activeLayerIndex, 1);
+      activeLayerIndex--;
+      updateLayersUI();
+      saveState();
+    }
+
+    function toggleLayerVis(idx) {
+      layers[idx].visible = !layers[idx].visible;
+      layers[idx].canvas.style.display = layers[idx].visible ? 'block' : 'none';
+      updateLayersUI();
+    }
+
+    function updateBlendMode() {
+      const mode = document.getElementById('layer-blend').value;
+      layers[activeLayerIndex].blend = mode;
+      layers[activeLayerIndex].canvas.style.mixBlendMode = mode;
+    }
+    
+    // Override ctx to use active layer's ctx dynamically
+    Object.defineProperty(window, 'ctx', {
+      get: () => layers[activeLayerIndex].ctx
+    });
+
+    Object.defineProperty(window, 'canvas', {
+      get: () => layers[activeLayerIndex].canvas
+    });
+
+    // Convolution function
+    function applyConvolve(type) {
+       const w = canvas.width, h = canvas.height;
+       const imgData = ctx.getImageData(0,0,w,h);
+       const src = imgData.data;
+       const output = ctx.createImageData(w, h);
+       const dst = output.data;
+       
+       let matrix, divisor, offset;
+       if (type === 'edge') {
+           matrix = [
+               -1, -1, -1,
+               -1,  8, -1,
+               -1, -1, -1
+           ];
+           divisor = 1; offset = 0;
+       } else if (type === 'sharpen') {
+           matrix = [
+                0, -1,  0,
+               -1,  5, -1,
+                0, -1,  0
+           ];
+           divisor = 1; offset = 0;
+       } else if (type === 'emboss') {
+           matrix = [
+               -2, -1,  0,
+               -1,  1,  1,
+                0,  1,  2
+           ];
+           divisor = 1; offset = 0;
+       }
+
+       for (let y = 0; y < h; y++) {
+           for (let x = 0; x < w; x++) {
+               let r = 0, g = 0, b = 0, a = src[(y * w + x) * 4 + 3];
+               if (a === 0 && type !== 'emboss') continue;
+               
+               for (let cy = 0; cy < 3; cy++) {
+                   for (let cx = 0; cx < 3; cx++) {
+                       const cpx = Math.min(Math.max(x + cx - 1, 0), w - 1);
+                       const cpy = Math.min(Math.max(y + cy - 1, 0), h - 1);
+                       const idx = (cpy * w + cpx) * 4;
+                       const weight = matrix[cy * 3 + cx];
+                       r += src[idx] * weight;
+                       g += src[idx+1] * weight;
+                       b += src[idx+2] * weight;
+                   }
+               }
+               
+               const dstIdx = (y * w + x) * 4;
+               dst[dstIdx] = Math.min(Math.max((r / divisor) + offset, 0), 255);
+               dst[dstIdx+1] = Math.min(Math.max((g / divisor) + offset, 0), 255);
+               dst[dstIdx+2] = Math.min(Math.max((b / divisor) + offset, 0), 255);
+               dst[dstIdx+3] = a;
+           }
+       }
+       ctx.putImageData(output, 0, 0);
+       saveState();
+    }
+    
+    // Export with format
+    function exportImage(format) {
+      // Create a flattened canvas
+      const tmp = document.createElement('canvas');
+      tmp.width = canvas.width; tmp.height = canvas.height;
+      const tctx = tmp.getContext('2d');
+      tctx.fillStyle = '#ffffff';
+      tctx.fillRect(0, 0, tmp.width, tmp.height);
+      
+      layers.forEach(l => {
+          if (l.visible) {
+              tctx.globalCompositeOperation = l.blend;
+              tctx.drawImage(l.canvas, 0, 0);
+          }
+      });
+      
+      const link = document.createElement('a');
+      link.download = 'kpaint_artwork.' + format;
+      let mime = 'image/png';
+      if (format === 'webp') mime = 'image/webp';
+      else if (format === 'bmp') mime = 'image/bmp'; // Note: Some browsers fallback to png
+      
+      link.href = tmp.toDataURL(mime);
+      link.click();
+    }
+
+
     const undoStack = [];
     const redoStack = [];
     const MAX_UNDO = 25;
@@ -504,14 +814,21 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       loadPalettePreset();
-      updateBrushSettings();
+      updateBrushSettings(); updateLayersUI();
       saveState();
     }
 
     // History Management
+    
     function saveState() {
       if (undoStack.length >= MAX_UNDO) undoStack.shift();
-      undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+      const state = layers.map(l => ({
+          id: l.id,
+          data: l.ctx.getImageData(0, 0, l.canvas.width, l.canvas.height),
+          visible: l.visible,
+          blend: l.blend
+      }));
+      undoStack.push({ state, w: layers[0].canvas.width, h: layers[0].canvas.height });
       redoStack.length = 0; // Clear redo
       updateHistoryButtons();
     }
@@ -519,8 +836,7 @@
     function undo() {
       if (undoStack.length <= 1) return;
       redoStack.push(undoStack.pop());
-      const prevState = undoStack[undoStack.length - 1];
-      ctx.putImageData(prevState, 0, 0);
+      restoreState(undoStack[undoStack.length - 1]);
       updateHistoryButtons();
     }
 
@@ -528,8 +844,51 @@
       if (redoStack.length === 0) return;
       const nextState = redoStack.pop();
       undoStack.push(nextState);
-      ctx.putImageData(nextState, 0, 0);
+      restoreState(nextState);
       updateHistoryButtons();
+    }
+    
+    function restoreState(entry) {
+        if (!entry) return;
+        // resize if needed
+        if (layers[0].canvas.width !== entry.w || layers[0].canvas.height !== entry.h) {
+            layers.forEach(l => { if (l.canvas.id !== 'canvas') l.canvas.remove(); });
+            layers[0].canvas.width = entry.w;
+            layers[0].canvas.height = entry.h;
+            previewCanvas.width = entry.w;
+            previewCanvas.height = entry.h;
+            selCanvas.width = entry.w;
+            selCanvas.height = entry.h;
+            wrapper.style.width = entry.w + 'px';
+            wrapper.style.height = entry.h + 'px';
+            document.getElementById('lbl-dim').innerText = `${entry.w} x ${entry.h}`;
+            layers = [{ id: 0, canvas: document.getElementById('canvas'), ctx: document.getElementById('canvas').getContext('2d'), visible: true, blend: 'source-over' }];
+        }
+        
+        // Match layers
+        while(layers.length > entry.state.length) {
+            layers[layers.length-1].canvas.remove();
+            layers.pop();
+        }
+        while(layers.length < entry.state.length) {
+            const c = document.createElement('canvas');
+            c.width = entry.w; c.height = entry.h;
+            c.style.position = 'absolute'; c.style.top = '0'; c.style.left = '0'; c.style.pointerEvents = 'none';
+            document.getElementById('canvas-wrapper').insertBefore(c, previewCanvas);
+            layers.push({ id: 0, canvas: c, ctx: c.getContext('2d', { willReadFrequently: true }) });
+        }
+        
+        entry.state.forEach((st, i) => {
+            layers[i].id = st.id;
+            layers[i].visible = st.visible;
+            layers[i].blend = st.blend;
+            layers[i].canvas.style.display = st.visible ? 'block' : 'none';
+            layers[i].canvas.style.mixBlendMode = st.blend;
+            layers[i].ctx.putImageData(st.data, 0, 0);
+        });
+        
+        activeLayerIndex = Math.min(activeLayerIndex, layers.length - 1);
+        updateLayersUI();
     }
 
     function updateHistoryButtons() {
@@ -557,13 +916,13 @@
       document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
       if (el) el.classList.add('active');
       document.getElementById('color-picker').value = c.startsWith('#') && c.length === 7 ? c : '#111111';
-      updateBrushSettings();
+      updateBrushSettings(); updateLayersUI();
     }
 
     function setCustomColor(c) {
       currentColor = c;
       document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-      updateBrushSettings();
+      updateBrushSettings(); updateLayersUI();
     }
 
     // Tool Management
@@ -614,6 +973,17 @@
 
       painting = true;
 
+      
+      if (currentTool === 'wand') {
+          // simple wand: just outline selection
+          return;
+      }
+      if (currentTool === 'lasso') {
+          lassoPoints = [pos];
+          painting = true;
+          return;
+      }
+
       if (currentTool === 'freehand' || currentTool === 'eraser' || currentTool === 'spray') {
         ctx.beginPath();
         draw(e);
@@ -625,6 +995,14 @@
       painting = false;
 
       const pos = getMousePos(e);
+
+      
+      if (currentTool === 'lasso') {
+          painting = false;
+          sctx.fillStyle = 'rgba(0,100,255,0.2)';
+          sctx.fill();
+          return;
+      }
 
       if (currentTool !== 'freehand' && currentTool !== 'eraser' && currentTool !== 'spray') {
         // Draw permanent shape
@@ -663,6 +1041,20 @@
       if (!painting) return;
 
       const activeColor = currentTool === 'eraser' ? '#ffffff' : currentColor;
+
+      
+      if (currentTool === 'lasso') {
+          lassoPoints.push(pos);
+          sctx.clearRect(0,0,selCanvas.width,selCanvas.height);
+          sctx.beginPath();
+          sctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+          for(let i=1; i<lassoPoints.length; i++) sctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+          sctx.strokeStyle = '#fff';
+          sctx.setLineDash([5, 5]);
+          sctx.stroke();
+          sctx.setLineDash([]);
+          return;
+      }
 
       if (currentTool === 'freehand' || currentTool === 'eraser') {
         ctx.lineWidth = brushSize;
@@ -866,15 +1258,22 @@
       saveState();
     }
 
+    
     function resizeCanvas(w, h) {
-      canvas.width = w;
-      canvas.height = h;
+      layers.forEach(l => {
+          const dt = l.ctx.getImageData(0,0,l.canvas.width, l.canvas.height);
+          l.canvas.width = w; l.canvas.height = h;
+          l.ctx.putImageData(dt,0,0);
+      });
       previewCanvas.width = w;
       previewCanvas.height = h;
+      selCanvas.width = w;
+      selCanvas.height = h;
       wrapper.style.width = w + 'px';
       wrapper.style.height = h + 'px';
       document.getElementById('lbl-dim').innerText = `${w} x ${h}`;
     }
+
 
     function clearCanvasPrompt() {
       if (confirm('Clear the entire canvas?')) {
