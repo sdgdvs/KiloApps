@@ -31,7 +31,7 @@
         <button id="delBtn">Delete Note</button>
     </div>
     <div id="statusBar" style="padding: 5px; background: #e0e0a0; border-top: 1px solid #ccc; font-size: 13px; font-weight: bold; border-bottom: 1px solid #ccc; white-space: pre-wrap;">  Words: 0 | Chars: 0</div>
-    <textarea id="noteArea" spellcheck="false"></textarea>
+    <textarea id="noteArea" spellcheck="false" maxlength="6000"></textarea>
 </div>
 <script>
   const noteArea = document.getElementById('noteArea');
@@ -69,7 +69,11 @@
   }
   
   function save() {
-      localStorage.setItem('knote_data_multi', JSON.stringify(notes));
+      try {
+          localStorage.setItem('knote_data_multi', JSON.stringify(notes));
+      } catch (e) {
+          alert("Storage quota exceeded! Please delete some notes.");
+      }
       renderList();
   }
   
@@ -121,6 +125,10 @@
   });
   
   newBtn.addEventListener('click', () => {
+      if (notes.length >= 100) {
+          alert("Maximum of 100 notes reached. Please delete some notes first.");
+          return;
+      }
       notes.push({ text: "", pinned: false });
       activeIndex = notes.length - 1;
       save();

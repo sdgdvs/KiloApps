@@ -146,7 +146,7 @@ int StrStrI(const char* haystack, const char* needle) {
 
 void SaveToMemory() {
     if (activeNote >= 0 && !encrypted[activeNote]) {
-        GetWindowTextA(hEdit, notes[activeNote], sizeof(notes[0]));
+        GetWindowTextA(hEdit, notes[activeNote], 6000);
     }
 }
 
@@ -275,7 +275,7 @@ void ImportJSON() {
                 while(*p == ' ' || *p == '\t') p++;
                 if(*p == '"') {
                     p++; char* txt = notes[numNotes]; int j=0;
-                    while(*p && *p != '"' && j < 8190) {
+                    while(*p && *p != '"' && j < 5999) {
                         if(*p == '\\' && *(p+1) == 'n') { txt[j++] = '\n'; p+=2; }
                         else if(*p == '\\' && *(p+1) == 'r') { txt[j++] = '\r'; p+=2; }
                         else if(*p == '\\' && *(p+1) == '"') { txt[j++] = '"'; p+=2; }
@@ -420,6 +420,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_WANTRETURN|ES_AUTOVSCROLL,
                 150, 50, W-150, H-70, hwnd, NULL, NULL, NULL);
+            SendMessage(hEdit, EM_LIMITTEXT, 6000, 0);
             hStatus = CreateWindowEx(0, "STATIC", "  Words: 0 | Chars: 0", WS_CHILD|WS_VISIBLE, 150, H-20, W-150, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
                 
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -493,7 +494,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else {
                         if(PromptPassword(hwnd)) {
                             encrypted[activeNote] = 1;
-                            GetWindowTextA(hEdit, unlockedNotes[activeNote], 8192);
+                            GetWindowTextA(hEdit, unlockedNotes[activeNote], 6000);
                             EncryptString(unlockedNotes[activeNote], password_buf, notes[activeNote]);
                             LoadActiveNote(); RefreshList(); isDirty=1;
                         }
@@ -507,7 +508,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if ((HWND)lParam == hSearch && HIWORD(wParam) == EN_CHANGE) { RefreshList(); }
             else if ((HWND)lParam == hEdit && HIWORD(wParam) == EN_CHANGE) {
                 UpdateStats(); isDirty = 1;
-                if(encrypted[activeNote]) GetWindowTextA(hEdit, unlockedNotes[activeNote], 8192);
+                if(encrypted[activeNote]) GetWindowTextA(hEdit, unlockedNotes[activeNote], 6000);
             }
             break;
         }
