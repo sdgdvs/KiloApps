@@ -81,6 +81,8 @@
     flex-direction: column;
     overflow: hidden;
     transition: background-color 0.3s, color 0.3s;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Progress Bar */
@@ -463,6 +465,7 @@
       <div class="empty-icon">📖</div>
       <h2>No Document Loaded</h2>
       <p>Click <strong>Open</strong> or drag & drop a text file here to begin reading.</p>
+      <p style="font-size: 14px; opacity: 0.8; margin-top: 8px;">(Press <strong>H</strong> for Help)</p>
     </div>
     <div class="content" id="textContent" style="display:none;"></div>
 
@@ -500,6 +503,31 @@
     <div style="padding: 12px; border-top: 1px solid var(--border-color); display: flex; gap: 8px;">
       <button class="btn" id="btnExportJSON" style="flex: 1;">📥 Export JSON</button>
       <button class="btn" id="btnExportTXT" style="flex: 1;">📄 Export TXT</button>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal-content">
+      <div class="modal-title">❓ KRead Help</div>
+      <div style="font-size: 14px; line-height: 1.6; font-family: system-ui, sans-serif; opacity: 0.9;">
+        <p><strong>Shortcuts:</strong></p>
+        <ul style="margin-left: 20px; margin-bottom: 16px;">
+          <li><kbd>H</kbd> - Show this Help</li>
+          <li><kbd>Ctrl</kbd> + <kbd>F</kbd> - Find text</li>
+          <li><kbd>Enter</kbd> / <kbd>Shift</kbd>+<kbd>Enter</kbd> - Next / Previous search match</li>
+          <li><kbd>Esc</kbd> - Close panels/modals</li>
+        </ul>
+        <p><strong>Features:</strong></p>
+        <ul style="margin-left: 20px;">
+          <li>Highlight text and add notes via the popover menu.</li>
+          <li>Track your reading statistics with the <strong>Stats</strong> button.</li>
+          <li>Change themes, font styles, and sizes from the toolbar.</li>
+        </ul>
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+        <button class="btn" id="btnCloseHelp">Close</button>
+      </div>
     </div>
   </div>
 
@@ -595,6 +623,9 @@
 
     const statsModal = document.getElementById('statsModal');
     const btnCloseStats = document.getElementById('btnCloseStats');
+
+    const helpModal = document.getElementById('helpModal');
+    const btnCloseHelp = document.getElementById('btnCloseHelp');
 
     const selectionPopover = document.getElementById('selectionPopover');
     const btnAddNote = document.getElementById('btnAddNote');
@@ -811,6 +842,7 @@
       statsModal.classList.add('open');
     };
     btnCloseStats.onclick = () => statsModal.classList.remove('open');
+    if (btnCloseHelp) btnCloseHelp.onclick = () => helpModal.classList.remove('open');
 
     // File Open & Clear
     fileInp.onchange = (e) => {
@@ -1172,14 +1204,19 @@
 
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
         toggleSearchPanel();
+      } else if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (helpModal) helpModal.classList.add('open');
       } else if (e.key === 'Escape') {
         if (searchPanel.classList.contains('open')) toggleSearchPanel();
         bookmarksDrawer.classList.remove('open');
         notesDrawer.classList.remove('open');
         statsModal.classList.remove('open');
+        if (helpModal) helpModal.classList.remove('open');
       }
     });
 

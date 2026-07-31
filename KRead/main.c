@@ -24,7 +24,7 @@ char g_lastSearchQuery[128] = {0};
 
 void UpdateFont(HWND hwnd) {
     if (hFont) DeleteObject(hFont);
-    hFont = CreateFontA(currentFontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_ROMAN, currentFontFace);
+    hFont = CreateFontA(currentFontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_ROMAN, currentFontFace);
     if (hEdit) {
         SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
@@ -173,6 +173,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HMENU hSubView = CreatePopupMenu();
             AppendMenuA(hSubView, MF_STRING, 1003, "Reading Statistics Engine");
             AppendMenuA(hSubView, MF_STRING, 1004, "Find Text...");
+            AppendMenuA(hSubView, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubView, MF_STRING, 1008, "Help");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubView, "View");
 
             // Bookmarks Menu
@@ -201,7 +203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetMenu(hwnd, hMenu);
 
-            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KRead Native E-Reader.\r\nUse File -> Open to load a document.", 
+            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KRead Native E-Reader.\r\nUse File -> Open to load a document.\r\nUse View -> Help for instructions.", 
                 WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_WANTRETURN, 
                 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
 
@@ -260,6 +262,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PerformSearch(hwnd);
             }
 
+            // Help
+            if (id == 1008) {
+                MessageBoxA(hwnd, "KRead Help:\n\n- File -> Open: Load a text file\n- View -> Find Text: Search for text\n- View -> Statistics: Check reading progress\n- Bookmarks: Save your current position\n- Themes/Fonts: Customize the reader appearance", "KRead Help", MB_OK | MB_ICONINFORMATION);
+            }
+
             // Bookmarks
             if (id == 1005) {
                 DWORD start = 0, end = 0;
@@ -311,7 +318,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 720, 560, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 900, 700, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
