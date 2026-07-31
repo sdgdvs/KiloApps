@@ -96,6 +96,33 @@ typedef struct {
     int type; // 0 = spark, 1 = smoke, 2 = storm
 } Particle;
 
+
+typedef struct {
+    float x, y;
+    char text[32];
+    COLORREF color;
+    int life;
+    int max_life;
+    bool active;
+} FloatingText;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float rot;
+    float rot_speed;
+    COLORREF color;
+    int life;
+    int max_life;
+    bool active;
+    float pts[6];
+} Debris;
+
+FloatingText floatingTexts[50];
+int num_floatingTexts = 0;
+Debris debrisArray[200];
+int num_debrisArray = 0;
+
 typedef struct {
     float x, y;
     float radius;
@@ -265,6 +292,15 @@ long long GetTimeMs() {
     return GetTickCount64();
 }
 
+
+void SpawnFloatingText(float x, float y, int pts, COLORREF color) {
+    if (num_floatingTexts >= 50) return;
+    FloatingText* ft = &floatingTexts[num_floatingTexts++];
+    ft->x = x; ft->y = y; ft->color = color;
+    ft->life = 40; ft->max_life = 40; ft->active = true;
+    sprintf(ft->text, "+%d", pts);
+}
+
 void CreateExplosion(float x, float y, COLORREF color, int count, float max_radius) {
     if (num_shockwaves < 30) {
         Shockwave* sw = &shockwaves[num_shockwaves++];
@@ -272,6 +308,20 @@ void CreateExplosion(float x, float y, COLORREF color, int count, float max_radi
         sw->radius = 2.0f; sw->max_radius = max_radius;
         sw->life = 25; sw->max_life = 25;
         sw->color = color; sw->active = true;
+    }
+
+    
+    for (int d = 0; d < count / 3; d++) {
+        if (num_debrisArray >= 200) break;
+        Debris* db = &debrisArray[num_debrisArray++];
+        db->x = x; db->y = y; db->color = color;
+        float ang = (rand() % 360) * 3.14159f / 180.0f;
+        float spd = 1.0f + (rand() % 40) / 10.0f;
+        db->vx = cos(ang) * spd; db->vy = sin(ang) * spd;
+        db->rot = (rand() % 360) * 3.14159f / 180.0f;
+        db->rot_speed = ((rand() % 100) - 50) / 250.0f;
+        db->life = 45; db->max_life = 45; db->active = true;
+        for (int i=0; i<6; i++) db->pts[i] = ((rand() % 100) - 50) / 3.0f;
     }
 
     for (int p = 0; p < count; p++) {
@@ -511,7 +561,7 @@ void TriggerEmp() {
             ufos[i].hp -= (ufos[i].type == 2 ? 8 : 5);
             if (ufos[i].hp <= 0) {
                 ufos[i].active = false;
-                score += (ufos[i].type == 2) ? 1500 : ((ufos[i].type == 1) ? 500 : 200);
+                int s_add = (ufos[i].type == 2) ? 1500 : ((ufos[i].type == 1) ? 500 : 200); score += s_add; SpawnFloatingText(ufos[i].x, ufos[i].y, s_add, RGB(56, 189, 248));
                 CreateExplosion(ufos[i].x, ufos[i].y, RGB(217, 70, 239), 50, 70.0f);
             }
         }
@@ -527,12 +577,12 @@ void TriggerEmp() {
                 if (asteroids[i].hp <= 0) {
                     asteroids[i].active = false;
                     CreateExplosion(asteroids[i].x, asteroids[i].y, RGB(249, 115, 22), 25, 40.0f);
-                    score += 30;
+                    score += 30; SpawnFloatingText(asteroids[i].x, asteroids[i].y, 30, RGB(249, 115, 22));
                 }
             } else if (asteroids[i].level <= 2) {
                 asteroids[i].active = false;
                 CreateExplosion(asteroids[i].x, asteroids[i].y, RGB(217, 70, 239), 20, 35.0f);
-                score += 15;
+                score += 15; SpawnFloatingText(asteroids[i].x, asteroids[i].y, 15, RGB(253, 224, 71));
             }
         }
     }
@@ -630,7 +680,7 @@ void CheckCollisions() {
                     mines[m].active = false;
                     PlaySoundEffect(2);
                     CreateExplosion(mines[m].x, mines[m].y, RGB(168, 85, 247), 25, 45.0f);
-                    score += 150;
+                    score += 150; SpawnFloatingText(mines[m].x, mines[m].y, 150, RGB(168, 85, 247));
                     stats.shots_hit++;
                     current_shots_hit++;
                     UpdateHighScore();
@@ -686,7 +736,7 @@ void CheckCollisions() {
                         COLORREF exColor = (ufos[k].type == 2) ? RGB(239, 68, 68) : ((ufos[k].type == 1) ? RGB(192, 132, 252) : RGB(239, 68, 68));
                         float exRad = (ufos[k].type == 2) ? 100.0f : ((ufos[k].type == 1) ? 75.0f : 40.0f);
                         CreateExplosion(ufos[k].x, ufos[k].y, exColor, (ufos[k].type == 2 ? 80 : 35), exRad);
-                        score += (ufos[k].type == 2) ? 1500 : ((ufos[k].type == 1) ? 500 : 200);
+                        int s_add = (ufos[k].type == 2) ? 1500 : ((ufos[k].type == 1) ? 500 : 200); score += s_add; SpawnFloatingText(ufos[k].x, ufos[k].y, s_add, RGB(56, 189, 248));
                         UpdateHighScore();
 
                         if (rand() % 100 < 45 && num_powerups < 30) {
@@ -724,7 +774,7 @@ void CheckCollisions() {
                         CreateExplosion(asteroids[j].x, asteroids[j].y, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(148, 163, 184), 25, 45.0f);
                         stats.asteroids_destroyed++;
                         SaveStats();
-                        score += (4 - asteroids[j].level) * 10 + (asteroids[j].is_armored ? 30 : 0);
+                        int s_add = (4 - asteroids[j].level) * 10 + (asteroids[j].is_armored ? 30 : 0); score += s_add; SpawnFloatingText(asteroids[j].x, asteroids[j].y, s_add, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(253, 224, 71));
                         UpdateHighScore();
 
                         if (rand() % 100 < 20 && num_powerups < 30) {
@@ -837,8 +887,34 @@ void CompactArrays() {
     num_powerups = apw;
 
     int am = 0;
+    
     for (int i = 0; i < num_mines; i++) if (mines[i].active) mines[am++] = mines[i];
     num_mines = am;
+    
+    int ad = 0;
+    for (int i = 0; i < num_debrisArray; i++) {
+        if (debrisArray[i].active) {
+            debrisArray[i].x += debrisArray[i].vx;
+            debrisArray[i].y += debrisArray[i].vy;
+            debrisArray[i].rot += debrisArray[i].rot_speed;
+            debrisArray[i].life--;
+            if (debrisArray[i].life <= 0) debrisArray[i].active = false;
+            if (debrisArray[i].active) debrisArray[ad++] = debrisArray[i];
+        }
+    }
+    num_debrisArray = ad;
+    
+    int aft = 0;
+    for (int i = 0; i < num_floatingTexts; i++) {
+        if (floatingTexts[i].active) {
+            floatingTexts[i].y -= 1.5f;
+            floatingTexts[i].life--;
+            if (floatingTexts[i].life <= 0) floatingTexts[i].active = false;
+            if (floatingTexts[i].active) floatingTexts[aft++] = floatingTexts[i];
+        }
+    }
+    num_floatingTexts = aft;
+
 }
 
 void Update() {
@@ -1593,8 +1669,37 @@ void Draw(HDC hdc) {
         TextOutA(hdc, WIDTH / 2 - 90, 40, "DENSE ASTEROID BELT", 19);
     }
     
+    
+    // Draw Debris
+    for (int i = 0; i < num_debrisArray; i++) {
+        if (!debrisArray[i].active) continue;
+        HBRUSH db = CreateSolidBrush(debrisArray[i].color);
+        HPEN dp = CreatePen(PS_SOLID, 1, debrisArray[i].color);
+        SelectObject(hdc, db); SelectObject(hdc, dp);
+        POINT pts[3];
+        for(int p=0; p<3; p++) {
+            float lx = debrisArray[i].pts[p*2];
+            float ly = debrisArray[i].pts[p*2+1];
+            float rx = lx * cos(debrisArray[i].rot) - ly * sin(debrisArray[i].rot);
+            float ry = lx * sin(debrisArray[i].rot) + ly * cos(debrisArray[i].rot);
+            pts[p].x = (int)(debrisArray[i].x + rx);
+            pts[p].y = (int)(debrisArray[i].y + ry);
+        }
+        Polygon(hdc, pts, 3);
+        DeleteObject(db); DeleteObject(dp);
+    }
+
+    // Draw FloatingText
+    SetBkMode(hdc, TRANSPARENT);
+    for (int i = 0; i < num_floatingTexts; i++) {
+        if (!floatingTexts[i].active) continue;
+        SetTextColor(hdc, floatingTexts[i].color);
+        TextOutA(hdc, (int)floatingTexts[i].x - 15, (int)floatingTexts[i].y, floatingTexts[i].text, strlen(floatingTexts[i].text));
+    }
+
     // Active Skills Bar HUD
     if (ship.active) {
+
         char skillsStr[160];
         char empBuf[20], laserBuf[20], warpBuf[20], shieldBuf[20];
         

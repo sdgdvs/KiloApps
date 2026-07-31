@@ -867,6 +867,69 @@
             }
         }
 
+        
+        class FloatingText {
+            constructor(x, y, text, color) {
+                this.x = x; this.y = y; this.text = text; this.color = color;
+                this.life = 40; this.maxLife = 40; this.active = true;
+            }
+            update() {
+                this.y -= 1.5;
+                this.life--;
+                if (this.life <= 0) this.active = false;
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+                ctx.fillStyle = this.color;
+                ctx.font = 'bold 16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+        
+        class Debris {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; this.color = color;
+                let ang = Math.random() * Math.PI * 2;
+                let spd = Math.random() * 4 + 1;
+                this.vx = Math.cos(ang) * spd; this.vy = Math.sin(ang) * spd;
+                this.rot = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.2;
+                this.life = 45; this.maxLife = 45; this.active = true;
+                this.points = [];
+                for (let i=0; i<3; i++) {
+                    this.points.push({
+                        x: (Math.random() - 0.5) * 15,
+                        y: (Math.random() - 0.5) * 15
+                    });
+                }
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.rot += this.rotSpeed;
+                this.life--;
+                if (this.life <= 0) this.active = false;
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rot);
+                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.moveTo(this.points[0].x, this.points[0].y);
+                ctx.lineTo(this.points[1].x, this.points[1].y);
+                ctx.lineTo(this.points[2].x, this.points[2].y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
         class Shockwave {
             constructor(x, y, color, maxRadius = 40) {
                 this.x = x; this.y = y; this.color = color;
@@ -1131,6 +1194,9 @@
         let ufos = [];
         let particles = [];
         let shockwaves = [];
+        let floatingTexts = [];
+        let debrisArray = [];
+
         let ufoSpawnTimer = 0;
         let powerups = [];
         let mines = [];
@@ -1326,6 +1392,10 @@
 
         function createExplosion(x, y, color, particleCount = 30, maxRadius = 45) {
             shockwaves.push(new Shockwave(x, y, color, maxRadius));
+            for (let d = 0; d < particleCount / 3; d++) {
+                debrisArray.push(new Debris(x, y, color));
+            }
+
             for (let p = 0; p < particleCount; p++) {
                 let ang = Math.random() * Math.PI * 2;
                 let spd = Math.random() * 6 + 1;
@@ -1439,7 +1509,7 @@
                 u.hp -= (u.type === 2 ? 8 : 5);
                 if (u.hp <= 0) {
                     u.active = false;
-                    score += (u.type === 2) ? 1500 : ((u.type === 1) ? 500 : 200);
+                    let s_add = (u.type === 2) ? 1500 : ((u.type === 1) ? 500 : 200); score += s_add; floatingTexts.push(new FloatingText(u.x, u.y, '+' + s_add, '#38bdf8'));
                     createExplosion(u.x, u.y, '#d946ef', 50, 70);
                 }
             }
@@ -1448,9 +1518,9 @@
                 if (dist < 280) {
                     if (a.isArmored) {
                         a.hp -= 2;
-                        if (a.hp <= 0) { a.active = false; createExplosion(a.x, a.y, '#f97316', 25, 40); score += 30; }
+                        if (a.hp <= 0) { a.active = false; createExplosion(a.x, a.y, '#f97316', 25, 40); score += 30; floatingTexts.push(new FloatingText(a.x, a.y, '+30', '#f97316')); }
                     } else if (a.level <= 2) {
-                        a.active = false; createExplosion(a.x, a.y, '#d946ef', 20, 35); score += 15;
+                        a.active = false; createExplosion(a.x, a.y, '#d946ef', 20, 35); score += 15; floatingTexts.push(new FloatingText(a.x, a.y, '+15', '#fde047'));
                     }
                 }
             }
@@ -1570,7 +1640,7 @@
                             m.active = false;
                             playSound('explosion');
                             createExplosion(m.x, m.y, '#a855f7', 25, 45);
-                            score += 150;
+                            score += 150; floatingTexts.push(new FloatingText(m.x, m.y, '+150', '#a855f7'));
                             stats.shotsHit++;
                             currentShotsHit++;
                             scoreSpan.innerText = score;
@@ -1621,7 +1691,7 @@
                                 u.active = false;
                                 playSound('explosion');
                                 createExplosion(u.x, u.y, (u.type === 2 ? '#ef4444' : (u.type === 1 ? '#c084fc' : '#ef4444')), (u.type === 2 ? 80 : 35), (u.type === 2 ? 100 : 50));
-                                score += (u.type === 2) ? 1500 : ((u.type === 1) ? 500 : 200);
+                                let s_add = (u.type === 2) ? 1500 : ((u.type === 1) ? 500 : 200); score += s_add; floatingTexts.push(new FloatingText(u.x, u.y, '+' + s_add, '#38bdf8'));
                                 scoreSpan.innerText = score;
                                 updateHighScore();
 
@@ -1654,7 +1724,7 @@
                                 createExplosion(a.x, a.y, a.isArmored ? '#f97316' : '#94a3b8', 25, 45);
                                 stats.asteroidsDestroyed++;
                                 saveStats();
-                                score += (4 - a.level) * 10 + (a.isArmored ? 30 : 0);
+                                let s_add = (4 - a.level) * 10 + (a.isArmored ? 30 : 0); score += s_add; floatingTexts.push(new FloatingText(a.x, a.y, '+' + s_add, a.isArmored ? '#f97316' : '#fde047'));
                                 scoreSpan.innerText = score;
                                 updateHighScore();
 
@@ -1850,6 +1920,9 @@
             particles = particles.filter(p => p.active);
 
             shockwaves.forEach(s => s.update());
+            floatingTexts.forEach(f => f.update());
+            debrisArray.forEach(d => d.update());
+
             shockwaves = shockwaves.filter(s => s.active);
 
             checkCollisions();
@@ -1903,6 +1976,9 @@
             asteroids.forEach(a => a.draw());
             particles.forEach(p => p.draw());
             shockwaves.forEach(s => s.draw());
+            debrisArray.forEach(d => d.draw());
+            floatingTexts.forEach(f => f.draw());
+
         }
 
         function gameLoop() {
