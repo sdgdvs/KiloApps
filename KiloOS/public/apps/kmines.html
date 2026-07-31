@@ -116,8 +116,8 @@
   </div>
 
   <script>
-    let ROWS = 10;
-    let COLS = 10;
+    let ROWS = 9;
+    let COLS = 9;
     let MINES = 10;
     let grid = []; // bitmask: 8:mine, 2:revealed, 4:flagged, 16:question, 32:chest
     let gameOver = false;
@@ -450,9 +450,7 @@
                 for (let j = -1; j <= 1; j++) {
                     let nr = targetR + i, nc = targetC + j;
                     if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                        if (grid[nr][nc] & 8) {
-                            if (!(grid[nr][nc] & 4)) { grid[nr][nc] |= 4; flags++; }
-                        } else {
+                        if (!(grid[nr][nc] & 8)) {
                             if (!(grid[nr][nc] & 2) && !(grid[nr][nc] & 4)) reveal(nr, nc);
                         }
                     }
@@ -546,7 +544,7 @@
       rushMode = true;
       rushTime = 60;
       rushScore = 0;
-      ROWS = 10; COLS = 10; MINES = 10;
+      ROWS = 9; COLS = 9; MINES = 10;
       shields = 0; detectors = 0; sonars = 0; isSpeedrun = false; chestsToPlace = 0;
       document.getElementById('btn-camp').innerText = "Camp: Off (C)";
       init();
@@ -563,7 +561,7 @@
       document.getElementById('btn-camp').classList.remove('active');
       
       currentDiff = level;
-      if (level === 'easy') { ROWS = 10; COLS = 10; MINES = 10; }
+      if (level === 'easy') { ROWS = 9; COLS = 9; MINES = 10; }
       else if (level === 'med') { ROWS = 16; COLS = 16; MINES = 40; }
       else if (level === 'hard') { ROWS = 16; COLS = 30; MINES = 99; }
       shields = 0; detectors = 0; sonars = 0;
@@ -607,22 +605,34 @@
 
     function placeMines(firstR, firstC) {
       let placed = 0;
+      let attempts = 0;
       while (placed < MINES) {
         let r = Math.floor(Math.random() * ROWS);
         let c = Math.floor(Math.random() * COLS);
-        if (grid[r][c] === 0 && (r < firstR - 1 || r > firstR + 1 || c < firstC - 1 || c > firstC + 1)) {
-          grid[r][c] |= 8;
-          placed++;
+        attempts++;
+        if (grid[r][c] === 0) {
+          let in3x3 = (r >= firstR - 1 && r <= firstR + 1 && c >= firstC - 1 && c <= firstC + 1);
+          let isExact = (r === firstR && c === firstC);
+          if (!in3x3 || (attempts > 1000 && !isExact) || attempts > 2000) {
+            grid[r][c] |= 8;
+            placed++;
+          }
         }
       }
 
       let cPlaced = 0;
+      attempts = 0;
       while (cPlaced < chestsToPlace) {
         let r = Math.floor(Math.random() * ROWS);
         let c = Math.floor(Math.random() * COLS);
-        if (grid[r][c] === 0 && (r < firstR - 1 || r > firstR + 1 || c < firstC - 1 || c > firstC + 1)) {
-          grid[r][c] |= 32;
-          cPlaced++;
+        attempts++;
+        if (grid[r][c] === 0) {
+          let in3x3 = (r >= firstR - 1 && r <= firstR + 1 && c >= firstC - 1 && c <= firstC + 1);
+          let isExact = (r === firstR && c === firstC);
+          if (!in3x3 || (attempts > 1000 && !isExact) || attempts > 2000) {
+            grid[r][c] |= 32;
+            cPlaced++;
+          }
         }
       }
 

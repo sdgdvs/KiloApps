@@ -8,8 +8,8 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 
 #define MAX_ROWS 40
 #define MAX_COLS 40
-int rows = 10;
-int cols = 10;
+int rows = 9;
+int cols = 9;
 int mines = 10;
 #define CELL_SIZE 22
 #define HEADER_HEIGHT 68
@@ -242,11 +242,15 @@ void InitGame(int firstClickX, int firstClickY) {
     seed = GetTickCount();
 
     int placed = 0;
+    int attempts = 0;
     while (placed < mines) {
         int r = my_rand() % rows;
         int c = my_rand() % cols;
+        attempts++;
         if ((grid[r][c] & CELL_MINE) == 0) {
-            if (r < firstClickY - 1 || r > firstClickY + 1 || c < firstClickX - 1 || c > firstClickX + 1) {
+            int in3x3 = (r >= firstClickY - 1 && r <= firstClickY + 1 && c >= firstClickX - 1 && c <= firstClickX + 1);
+            int isExact = (r == firstClickY && c == firstClickX);
+            if (!in3x3 || (attempts > 1000 && !isExact) || attempts > 2000) {
                 grid[r][c] |= CELL_MINE;
                 placed++;
             }
@@ -255,11 +259,15 @@ void InitGame(int firstClickX, int firstClickY) {
 
     // Hide Treasure Chests
     int cPlaced = 0;
+    attempts = 0;
     while (cPlaced < chestsToPlace) {
         int r = my_rand() % rows;
         int c = my_rand() % cols;
+        attempts++;
         if ((grid[r][c] & (CELL_MINE | CELL_CHEST)) == 0) {
-            if (r < firstClickY - 1 || r > firstClickY + 1 || c < firstClickX - 1 || c > firstClickX + 1) {
+            int in3x3 = (r >= firstClickY - 1 && r <= firstClickY + 1 && c >= firstClickX - 1 && c <= firstClickX + 1);
+            int isExact = (r == firstClickY && c == firstClickX);
+            if (!in3x3 || (attempts > 1000 && !isExact) || attempts > 2000) {
                 grid[r][c] |= CELL_CHEST;
                 cPlaced++;
             }
@@ -289,7 +297,7 @@ void InitCampaignLevel(HWND hwnd) {
         sonars = 1 + (campaignLevel / 3);
     } else {
         campaignMode = 0;
-        rows = 10; cols = 10; mines = 10; currentDiff = 0;
+        rows = 9; cols = 9; mines = 10; currentDiff = 0;
         shields = 0; detectors = 0; sonars = 0; isSpeedrun = 0; chestsToPlace = 0;
         MessageBoxA(hwnd, "Campaign Complete! You cleared all 20 Stages!", "VICTORY!", MB_OK);
     }
@@ -436,12 +444,7 @@ void UseSonarScan(HWND hwnd) {
             for (int j = -1; j <= 1; j++) {
                 int nr = targetR + i, nc = targetC + j;
                 if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                    if (grid[nr][nc] & CELL_MINE) {
-                        if (!(grid[nr][nc] & CELL_FLAGGED)) {
-                            grid[nr][nc] |= CELL_FLAGGED;
-                            flagsPlaced++;
-                        }
-                    } else {
+                    if (!(grid[nr][nc] & CELL_MINE)) {
                         if (!(grid[nr][nc] & CELL_REVEALED) && !(grid[nr][nc] & CELL_FLAGGED)) {
                             Reveal(nr, nc);
                         }
@@ -1010,11 +1013,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN:
-            if (wParam == '1') { rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=10; cols=10; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
+            if (wParam == '1') { rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=9; cols=9; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
             if (wParam == '2') { rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=16; cols=16; mines=40; currentDiff=1; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
             if (wParam == '3') { rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=16; cols=30; mines=99; currentDiff=2; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
-            if (wParam == '4') { rushMode=1; rushTime=60; rushScore=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=10; cols=10; mines=10; currentDiff=3; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
-            if (wParam == 'C') { rushMode=0; campaignMode = !campaignMode; if (campaignMode) { campaignLevel = 1; InitCampaignLevel(hwnd); } else { campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=10; cols=10; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); } }
+            if (wParam == '4') { rushMode=1; rushTime=60; rushScore=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=9; cols=9; mines=10; currentDiff=3; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
+            if (wParam == 'C') { rushMode=0; campaignMode = !campaignMode; if (campaignMode) { campaignLevel = 1; InitCampaignLevel(hwnd); } else { campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=9; cols=9; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); } }
             if (wParam == 'R') { UseSonarScan(hwnd); }
             if (wParam == 'D') { UseDetectorBot(hwnd); }
             if (wParam == 'S') { UseBlastShield(hwnd); }
