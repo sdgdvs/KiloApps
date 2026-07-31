@@ -54,14 +54,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KColony (Sci-Fi Colony Survival)
-**Phase:** 5 (next to do)
-**Status:** Phase 4 completed, Phase 5 next
+**Phase:** 6 (next to do)
+**Status:** Phase 5 completed, Phase 6 next
 
 - [x] Phase 1: Scaffold KColony directory (`KColony/`), create web HTML skeleton (`KiloOS/public/apps/kcolony.html`), register in App.jsx.
 - [x] Phase 2: Core HTML 2D grid colony layout. Basic resources (Food, Power, Materials). Place basic structures (Solar Panel, Farm, Mine).
 - [x] Phase 3: Native C version (`KColony/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [x] Phase 4: Sci-fi colony UI styling (metallic surfaces, neon accents, holographic data readouts).
-- [ ] Phase 5: Population & Needs — Colonists arrive over time. They consume food and require habitation structures. Unhappiness leads to reduced efficiency.
+- [x] Phase 5: Population & Needs — Colonists arrive over time. They consume food and require habitation structures. Unhappiness leads to reduced efficiency.
 - [ ] Phase 6: Time & Day/Night Cycle — Implement time progression. Solar panels only work during the day. Batteries required for night power.
 - [ ] Phase 7: Tech Tree Research — Build a Laboratory to generate Science points. Unlock advanced structures (Nuclear Reactor, Hydroponics, Laser Defense).
 - [ ] Phase 8: Random Events & Disasters — Add meteor showers, dust storms, and equipment breakdowns that damage structures and require repair.

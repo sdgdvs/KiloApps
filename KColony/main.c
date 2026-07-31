@@ -10,6 +10,10 @@
 int food = 50;
 int power = 50;
 int mat = 50;
+int pop = 0;
+int maxPop = 0;
+int happiness = 100;
+int popWait = 0;
 int selectedType = 0;
 int grid[GRID_W * GRID_H] = {0};
 
@@ -28,6 +32,7 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             if (t == 1) { bgCol = RGB(51, 51, 0); borderCol = RGB(255, 255, 0); textCol = RGB(255, 255, 0); }
             else if (t == 2) { bgCol = RGB(0, 51, 0); borderCol = RGB(0, 255, 0); textCol = RGB(0, 255, 0); }
             else if (t == 3) { bgCol = RGB(51, 0, 51); borderCol = RGB(255, 0, 255); textCol = RGB(255, 0, 255); }
+            else if (t == 4) { bgCol = RGB(0, 51, 51); borderCol = RGB(0, 255, 255); textCol = RGB(0, 255, 255); }
             
             HBRUSH brush = CreateSolidBrush(bgCol);
             FillRect(hdc, &rc, brush);
@@ -49,6 +54,7 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                 if (t == 1) DrawText(hdc, "S", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 2) DrawText(hdc, "F", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 3) DrawText(hdc, "M", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else if (t == 4) DrawText(hdc, "H", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
         }
     }
@@ -59,9 +65,9 @@ void DrawUI(HDC hdc, HFONT hFont) {
     SelectObject(hdc, hFont);
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(0, 255, 255));
-    sprintf(buf, "FOOD: %d   POWER: %d   MAT: %d", food, power, mat);
+    sprintf(buf, "FOOD:%d  PWR:%d  MAT:%d  POP:%d/%d  HAP:%d%%", food, power, mat, pop, maxPop, happiness);
     
-    RECT rcHeader = { 20, 15, 420, 45 };
+    RECT rcHeader = { 20, 15, 620, 45 };
     HBRUSH hdrBrush = CreateSolidBrush(RGB(17, 17, 34));
     FillRect(hdc, &rcHeader, hdrBrush);
     DeleteObject(hdrBrush);
@@ -78,8 +84,8 @@ void DrawUI(HDC hdc, HFONT hFont) {
     DrawText(hdc, buf, -1, &rcHeader, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
     int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 20;
-    const char* labels[] = { "[0] INSPECT", "[1] SOLAR (10M)", "[2] FARM (10M, 5P)", "[3] MINE (10P)" };
-    for (int i = 0; i < 4; i++) {
+    const char* labels[] = { "[0] INSPECT", "[1] SOLAR (10M)", "[2] FARM (10M,5P)", "[3] MINE (10P)", "[4] HAB (15M,5P)" };
+    for (int i = 0; i < 5; i++) {
         RECT rcBtn = { sidebarX, OFFSET_Y + i * 45, sidebarX + 180, OFFSET_Y + i * 45 + 35 };
         
         COLORREF btnBg = (i == selectedType) ? RGB(0, 51, 51) : RGB(17, 17, 34);
@@ -111,15 +117,44 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTimer(hwnd, 1, 2000, NULL);
             break;
         case WM_TIMER: {
-            int pwrProd = 0, foodProd = 0, matProd = 0;
+            int pwrProd = 0, farmCount = 0, mineCount = 0, habCount = 0;
             for(int i=0; i<GRID_W*GRID_H; i++) {
                 if(grid[i]==1) pwrProd += 2;
-                if(grid[i]==2) foodProd += 1;
-                if(grid[i]==3) matProd += 1;
+                if(grid[i]==2) farmCount += 1;
+                if(grid[i]==3) mineCount += 1;
+                if(grid[i]==4) habCount += 1;
             }
+            maxPop = habCount * 5;
+            float eff = happiness / 100.0f;
+            int foodProd = (int)(farmCount * 5 * eff);
+            int matProd = (int)(mineCount * 2 * eff);
+
             power += pwrProd;
             food += foodProd;
             mat += matProd;
+
+            int foodCons = pop;
+            if (food >= foodCons) {
+                food -= foodCons;
+                happiness += 5;
+                if (happiness > 100) happiness = 100;
+            } else {
+                food = 0;
+                happiness -= 10;
+                if (happiness < 0) happiness = 0;
+            }
+
+            if (pop < maxPop && happiness >= 50) {
+                popWait++;
+                if (popWait >= 3) {
+                    pop++;
+                    popWait = 0;
+                }
+            } else if (pop > maxPop) {
+                happiness -= 10;
+                if (happiness < 0) happiness = 0;
+            }
+
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
@@ -129,7 +164,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 20;
             if (x >= sidebarX && x <= sidebarX + 180) {
-                for (int i = 0; i < 4; i++) {
+                for (int i = 0; i < 5; i++) {
                     if (y >= OFFSET_Y + i * 45 && y <= OFFSET_Y + i * 45 + 35) {
                         selectedType = i;
                         InvalidateRect(hwnd, NULL, FALSE);
@@ -148,6 +183,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (selectedType == 1) costMat = 10;
                     else if (selectedType == 2) { costMat = 10; costPwr = 5; }
                     else if (selectedType == 3) costPwr = 10;
+                    else if (selectedType == 4) { costMat = 15; costPwr = 5; }
                     
                     if (mat >= costMat && power >= costPwr) {
                         mat -= costMat;
