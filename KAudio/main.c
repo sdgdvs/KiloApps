@@ -2,8 +2,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#define W 640
-#define H 420
+#define W 840
+#define H 550
 #define NUM_KEYS 13
 #define PI 3.14159265358979323846
 
@@ -47,6 +47,7 @@ int seqPattern[16] = {1, 0, 0, 1,  0, 1, 0, 0,  1, 0, 1, 0,  0, 0, 1, 0};
 int seqPlaying = 0;
 int currentStep = 0;
 DWORD lastStepTime = 0;
+int showHelp = 0;
 
 // Waveform Visualizer Animation Offset
 int visOffset = 0;
@@ -330,6 +331,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportWavFile();
                 break;
             }
+            if (wParam == 'H' && !isRepeat) {
+                showHelp = !showHelp;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
             if (wParam == 'Z' && !isRepeat) {
                 if (isPlaying) {
                     isPlaying = 0;
@@ -421,6 +427,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             wsprintfA(title, "KAudio Pro Native Workstation | Inst: %d | Oct: %+d | P: Seq [%s] | E: Export WAV",
                       instrument, octaveShift, seqPlaying ? "PLAYING" : "STOPPED");
             TextOutA(memDC, 10, 8, title, lstrlenA(title));
+            SetTextColor(memDC, RGB(251, 191, 36));
+            TextOutA(memDC, W - 140, 8, "Press 'H' for Help", 18);
 
             // Draw Sound FX Preset Buttons (y: 35-65)
             HBRUSH btnBrush = CreateSolidBrush(RGB(30, 41, 59));
@@ -510,6 +518,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(white); DeleteObject(activeWhite);
             DeleteObject(activeBlack); DeleteObject(black);
 
+            if (showHelp) {
+                HBRUSH helpBg = CreateSolidBrush(RGB(15, 23, 42));
+                RECT helpRc = {W/2 - 150, H/2 - 100, W/2 + 150, H/2 + 120};
+                FillRect(memDC, &helpRc, helpBg);
+                DeleteObject(helpBg);
+                
+                HPEN borderPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+                HPEN oldP = (HPEN)SelectObject(memDC, borderPen);
+                HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+                HBRUSH oldB = (HBRUSH)SelectObject(memDC, nullBrush);
+                Rectangle(memDC, helpRc.left, helpRc.top, helpRc.right, helpRc.bottom);
+                SelectObject(memDC, oldP);
+                SelectObject(memDC, oldB);
+                DeleteObject(borderPen);
+                
+                SetTextColor(memDC, RGB(56, 189, 248));
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 20, "HELP / INSTRUCTIONS", 19);
+                SetTextColor(memDC, RGB(241, 245, 249));
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 50, "A-K: Play Piano Keys", 20);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 70, "Arrows: Octave / Instrument", 27);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 90, "Z / X: Record / Play", 20);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 110, "P: Play/Stop Sequencer", 22);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 130, "E: Export WAV", 13);
+                SetTextColor(memDC, RGB(244, 63, 94));
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 170, "Press 'H' to close", 18);
+            }
+
             SelectObject(memDC, oldFont);
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, oldBm);
@@ -535,6 +570,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;

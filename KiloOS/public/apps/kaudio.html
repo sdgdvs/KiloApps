@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KAudio Pro Synthesizer & Sound FX Workstation</title>
+<meta name="window-size" content="width=1000,height=800">
+<meta name="window-width" content="1000">
+<meta name="window-height" content="800">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -403,6 +406,7 @@
   <!-- Header -->
   <div class="header">
     <div class="brand">KAudio <span>Pro</span></div>
+    <div style="font-size: 13px; color: #fbbf24; font-weight: 600; cursor: help;" onclick="toggleHelp()">Press 'H' for Help</div>
     <div class="header-actions">
       <div class="control-row" style="margin-right: 10px;">
         <span class="control-label" style="width: auto;">Vol:</span>
@@ -559,7 +563,24 @@
   </div>
 </div>
 
+<div id="helpModal" style="display: none; position: fixed; inset: 0; background: rgba(11, 15, 25, 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
+  <div style="background: rgba(30, 41, 59, 0.95); padding: 30px; border-radius: 12px; border: 1px solid #38bdf8; min-width: 320px;">
+    <h2 style="color: #38bdf8; margin-bottom: 20px; text-align: center;">KAudio Instructions</h2>
+    <div style="display: grid; grid-template-columns: auto auto; gap: 12px; color: #f1f5f9; margin-bottom: 24px; font-size: 14px;">
+      <strong style="text-align: right; color: #fbbf24;">A-K:</strong> <span>Play Piano Keys</span>
+      <strong style="text-align: right; color: #fbbf24;">Arrows:</strong> <span>Change Octave</span>
+      <strong style="text-align: right; color: #fbbf24;">Z / X:</strong> <span>Record / Play</span>
+      <strong style="text-align: right; color: #fbbf24;">P:</strong> <span>Play/Stop Sequencer</span>
+    </div>
+    <div style="text-align: center; color: #f43f5e; font-weight: 600; cursor: pointer; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px;" onclick="toggleHelp()">Press 'H' or Click to Close</div>
+  </div>
+</div>
+
 <script>
+  function toggleHelp() {
+    const m = document.getElementById('helpModal');
+    m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
+  }
   // Audio Context & Nodes Initialization
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let ctx = null;
@@ -908,6 +929,13 @@
       if (recordedEvents.length === 0) return;
       if (isPlaying) stopPlayback();
       else startPlayback();
+    }
+
+    if (e.key.toUpperCase() === 'H' && !e.repeat) {
+      toggleHelp();
+    }
+    if (e.key.toUpperCase() === 'P' && !e.repeat) {
+      btnSeqPlay.click();
     }
 
     if (e.key === 'ArrowLeft') {
