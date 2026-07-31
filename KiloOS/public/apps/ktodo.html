@@ -1202,6 +1202,13 @@
     // Init
     loadTasks();
     renderTasks();
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
+        alert("KTodo Help:\n- Use the top bar to add tasks with categories and priority.\n- Click a task text to cross it out.\n- Click the 📋 icon to add subtasks.\n- Clear finished removes completed tasks.");
+      }
+    });
+    setTimeout(() => showToast("Welcome to KTodo! Press 'h' for help."), 500);
   </script>
 </body>
 </html>

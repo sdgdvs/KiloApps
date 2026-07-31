@@ -490,7 +490,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hStatusText = CreateWindowA("STATIC", "Total: 0 | Active: 0 | Done: 0", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);
 
             // Setup fonts
-            hFont = CreateFontA(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFont = CreateFontA(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             if (!hFont) hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -518,6 +518,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Load sample tasks on startup
             LoadSampleData();
+            MessageBoxA(hwnd, "Welcome to KTodo!\n\nInstructions:\n- Type a task and click '+ Add'\n- Select category, priority, and due date\n- Double-click a task to toggle completion\n- Click '+ Checklist' to add subtasks\n\nPress 'Stats' for productivity summary.", "KTodo - Welcome", MB_OK | MB_ICONINFORMATION);
             break;
         }
 
@@ -618,7 +619,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 485, 380, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
