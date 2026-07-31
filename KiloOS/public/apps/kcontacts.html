@@ -456,10 +456,11 @@
       </div>
 
       <div class="action-grid">
-        <button class="btn btn-primary" id="btnNew"><span>+</span> Add Contact</button>
-        <button class="btn btn-secondary" id="btnMerge"><span>🧹</span> Merge Dups</button>
+        <button class="btn btn-primary" id="btnNew"><span>+</span> Add</button>
+        <button class="btn btn-secondary" id="btnMerge"><span>🧹</span> Merge</button>
         <button class="btn btn-secondary" id="btnImport"><span>📥</span> Import</button>
         <button class="btn btn-secondary" id="btnExport"><span>📤</span> Export</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('helpModal').style.display='flex'" style="grid-column: span 2;"><span>❓</span> Help (Press H)</button>
       </div>
 
       <div class="search-box">
@@ -572,6 +573,20 @@
   <!-- Hidden File Input for Import -->
   <input type="file" id="fileInput" accept=".vcf,.csv,.txt">
 
+  <!-- Help Modal -->
+  <div id="helpModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card); padding: 24px; border-radius: 8px; max-width: 400px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <h2 style="margin-bottom: 12px; font-size: 18px;">KContacts Help</h2>
+      <ul style="margin-left: 20px; margin-bottom: 16px; font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+        <li>Use the sidebar to search or filter contacts.</li>
+        <li>Click <strong>+ Add</strong> to create a new one.</li>
+        <li>Fill out the form on the right and click <strong>Save Changes</strong>.</li>
+        <li>Press <strong>Esc</strong> to close this help dialog.</li>
+      </ul>
+      <button class="btn btn-primary" onclick="document.getElementById('helpModal').style.display='none'" style="width: 100%;">Got it</button>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -581,6 +596,17 @@
     let selectedId = null;
     let currentFilter = 'All';
     const MAX_CONTACTS = 1000;
+
+    // Help Modal Keydown
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        document.getElementById('helpModal').style.display = 'flex';
+      }
+      if (e.key === 'Escape') {
+        document.getElementById('helpModal').style.display = 'none';
+      }
+    });
 
     // Dom Elements
     const contactList = document.getElementById('contactList');
