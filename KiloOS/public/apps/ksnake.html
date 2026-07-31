@@ -67,6 +67,9 @@
                 <button class="btn" id="resumeBtn" onclick="resumeGame()" style="display:none;">[R] Resume</button>
                 <button class="btn" onclick="showLeaderboard()">[H] High Scores / Help</button>
                 <button class="btn" onclick="showExportImport()">[E] Data Ex/Imp</button>
+                <button class="btn" onclick="showConfig()">[C] Config Keys</button>
+                <button class="btn" onclick="showStatsExport()" id="btnStatsExport" style="display:none;">[S] Last Stats</button>
+
             </div>
             <p id="statsDisplay" style="margin-top: 12px; font-size: 13px; color: #8395a7;"></p>
         </div>
@@ -106,6 +109,36 @@
                 <tbody id="leaderboardBody"></tbody>
             </table>
             <button class="btn" onclick="hideOverlays()">Back to Menu</button>
+        </div>
+
+        
+        <!-- KEYBINDS OVERLAY -->
+        <div id="configOverlay" class="overlay" style="display:none;">
+            <h2>KEYBINDINGS</h2>
+            <div style="font-size:14px; text-align:left; width:80%; margin:auto;">
+                <div>Up: <input type="text" id="bindUp" maxlength="10" style="width:70px" readonly></div>
+                <div>Down: <input type="text" id="bindDown" maxlength="10" style="width:70px" readonly></div>
+                <div>Left: <input type="text" id="bindLeft" maxlength="10" style="width:70px" readonly></div>
+                <div>Right: <input type="text" id="bindRight" maxlength="10" style="width:70px" readonly></div>
+                <div>Ghost: <input type="text" id="bindGhost" maxlength="10" style="width:70px" readonly></div>
+                <div>Freeze: <input type="text" id="bindFreeze" maxlength="10" style="width:70px" readonly></div>
+                <div>Magnet: <input type="text" id="bindMagnet" maxlength="10" style="width:70px" readonly></div>
+                <p style="font-size:11px; color:#aaa;">Click input and press key to bind</p>
+            </div>
+            <button class="btn" onclick="saveBinds()">Save Binds</button>
+            <button class="btn" onclick="hideOverlays()">Cancel</button>
+        </div>
+        
+        <!-- MATCH STATS OVERLAY -->
+        <div id="statsExportOverlay" class="overlay" style="display:none;">
+            <h2>MATCH STATS</h2>
+            <p id="matchStatsText" style="white-space:pre-wrap; font-size:14px; color:#fbc531;"></p>
+            <div style="display:flex; gap:8px;">
+                <button class="btn" onclick="exportStatsCSV()">Export CSV</button>
+                <button class="btn" onclick="exportStatsJSON()">Export JSON</button>
+            </div>
+            <button class="btn" onclick="exportReplay()">Export Replay (.ksr)</button>
+            <button class="btn" onclick="hideOverlays()">Close</button>
         </div>
 
         <!-- EXPORT / IMPORT OVERLAY -->
@@ -155,6 +188,27 @@
         const skillGhost = document.getElementById('skillGhost');
         const skillFreeze = document.getElementById('skillFreeze');
         const skillMagnet = document.getElementById('skillMagnet');
+
+        
+        // Replay & Stats System
+        let rngSeed = 12345;
+        function seededRandom() {
+            rngSeed = (rngSeed * 1103515245 + 12345) & 0x7FFFFFFF;
+            return (rngSeed & 0x7FFF) / 0x7FFF;
+        }
+        
+        let matchTicks = 0;
+        let gridCoverage = new Set();
+        let replayData = null;
+        let isReplayMode = false;
+        let replayTick = 0;
+        let replayEvents = {};
+        
+        // Keybindings
+        let keyBinds = JSON.parse(localStorage.getItem('ksnakeKeyBinds')) || {
+            up: 'w', down: 's', left: 'a', right: 'd',
+            ghost: 'g', freeze: 'f', magnet: 'm', pause: 'p'
+        };
 
         // State Variables
         let snake = [], food = null, dir = {x: 1, y: 0}, lastDir = {x: 1, y: 0};
@@ -243,6 +297,88 @@
             try { localStorage.setItem(key, typeof val === 'object' ? JSON.stringify(val) : val); } catch (e) {}
         }
 
+        
+        const configOverlay = document.getElementById('configOverlay');
+        const statsExportOverlay = document.getElementById('statsExportOverlay');
+        
+        let lastMatchStats = null;
+        let lastReplayData = null;
+        
+        function showConfig() {
+            hideOverlays();
+            document.getElementById('bindUp').value = keyBinds.up;
+            document.getElementById('bindDown').value = keyBinds.down;
+            document.getElementById('bindLeft').value = keyBinds.left;
+            document.getElementById('bindRight').value = keyBinds.right;
+            document.getElementById('bindGhost').value = keyBinds.ghost;
+            document.getElementById('bindFreeze').value = keyBinds.freeze;
+            document.getElementById('bindMagnet').value = keyBinds.magnet;
+            configOverlay.style.display = 'flex';
+        }
+        
+        function saveBinds() {
+            keyBinds.up = document.getElementById('bindUp').value;
+            keyBinds.down = document.getElementById('bindDown').value;
+            keyBinds.left = document.getElementById('bindLeft').value;
+            keyBinds.right = document.getElementById('bindRight').value;
+            keyBinds.ghost = document.getElementById('bindGhost').value;
+            keyBinds.freeze = document.getElementById('bindFreeze').value;
+            keyBinds.magnet = document.getElementById('bindMagnet').value;
+            localStorage.setItem('ksnakeKeyBinds', JSON.stringify(keyBinds));
+            hideOverlays();
+        }
+        
+        // Keybind capture
+        ['bindUp', 'bindDown', 'bindLeft', 'bindRight', 'bindGhost', 'bindFreeze', 'bindMagnet'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('keydown', e => {
+                    e.preventDefault();
+                    el.value = e.key.toLowerCase();
+                });
+            }
+        });
+        
+        function showStatsExport() {
+            if (!lastMatchStats) return;
+            hideOverlays();
+            document.getElementById('matchStatsText').innerText = `Time Alive (Ticks): ${lastMatchStats.ticks}\nApples Eaten: ${lastMatchStats.apples}\nGrid Coverage: ${lastMatchStats.coverage}%`;
+            statsExportOverlay.style.display = 'flex';
+        }
+        
+        function exportStatsCSV() {
+            if(!lastMatchStats) return;
+            const csv = `Ticks,Apples,CoveragePct\n${lastMatchStats.ticks},${lastMatchStats.apples},${lastMatchStats.coverage}`;
+            const b = new Blob([csv], {type: 'text/csv'});
+            const u = URL.createObjectURL(b);
+            const a = document.createElement('a'); a.href = u; a.download = 'ksnake_match.csv'; a.click();
+        }
+        function exportStatsJSON() {
+            if(!lastMatchStats) return;
+            const b = new Blob([JSON.stringify(lastMatchStats, null, 2)], {type: 'application/json'});
+            const u = URL.createObjectURL(b);
+            const a = document.createElement('a'); a.href = u; a.download = 'ksnake_match.json'; a.click();
+        }
+        function exportReplay() {
+            if(!lastReplayData) return;
+            const b = new Blob([JSON.stringify(lastReplayData)], {type: 'application/json'});
+            const u = URL.createObjectURL(b);
+            const a = document.createElement('a'); a.href = u; a.download = 'match.ksr'; a.click();
+        }
+        
+        function playReplay(dataStr) {
+            try {
+                let data = JSON.parse(dataStr);
+                if(!data.seed) return;
+                gameMode = data.mode; difficulty = data.diff; wrapMode = data.wrap;
+                rngSeed = data.seed;
+                isReplayMode = true;
+                replayTick = 0;
+                replayEvents = data.events;
+                startNewGameInternal(true);
+            } catch(e) { alert("Invalid replay data."); }
+        }
+
         function updateMenuUI() {
             document.getElementById('currentModeText').innerText = gameMode.toUpperCase();
             const diffs = ['Easy', 'Medium', 'Hard'];
@@ -256,6 +392,7 @@
             
             const savedState = localStorage.getItem('ksnakeSaveState');
             resumeBtn.style.display = savedState ? 'inline-block' : 'none';
+            document.getElementById('btnStatsExport').style.display = lastMatchStats ? 'inline-block' : 'none';
         }
 
         function cycleMode() {
@@ -270,6 +407,8 @@
             pauseOverlay.style.display = 'none';
             leaderboardOverlay.style.display = 'none';
             exportImportOverlay.style.display = 'none';
+            configOverlay.style.display = 'none';
+            statsExportOverlay.style.display = 'none';
             if (gameState === 0) menuOverlay.style.display = 'flex';
         }
 
@@ -426,15 +565,25 @@
             }
         }
 
+        
         function startNewGame() {
+            isReplayMode = false;
+            rngSeed = Date.now();
+            replayData = { seed: rngSeed, mode: gameMode, diff: difficulty, wrap: wrapMode, events: {} };
+            startNewGameInternal(false);
+        }
+        
+        function startNewGameInternal(isReplay) {
             hideOverlays();
-            gamesPlayed++;
+            if(!isReplay) gamesPlayed++;
             safeSetItem('ksnakeGamesPlayed', gamesPlayed);
             
             snake = [{x: 5, y: 5}, {x: 4, y: 5}, {x: 3, y: 5}];
             dir = {x: 1, y: 0}; lastDir = {x: 1, y: 0};
             gameState = 1;
             score = 0; applesEaten = 0; campaignLevel = 1;
+            matchTicks = 0; gridCoverage.clear();
+
             
             goldenApple = null; goldenTimer = 0;
             poisonBerry = null; poisonTimer = 0; poisonActiveTimer = 0;
@@ -456,7 +605,7 @@
                 for(let i=0; i<numObs; i++) {
                     let ok = false;
                     while(!ok) {
-                        let ox = Math.floor(Math.random() * WIDTH), oy = Math.floor(Math.random() * HEIGHT);
+                        let ox = Math.floor(seededRandom() * WIDTH), oy = Math.floor(seededRandom() * HEIGHT);
                         ok = true;
                         if (oy === 5 && ox >= 2 && ox <= 6) ok = false;
                         if (ok) obstacles.push({x: ox, y: oy});
@@ -531,7 +680,7 @@
         function placeFood() {
             let ok = false;
             while(!ok) {
-                food = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
+                food = { x: Math.floor(seededRandom() * WIDTH), y: Math.floor(seededRandom() * HEIGHT) };
                 ok = true;
                 if (obstacles.some(o => o.x === food.x && o.y === food.y)) ok = false;
                 if (snake.some(s => s.x === food.x && s.y === food.y)) ok = false;
@@ -541,7 +690,7 @@
         function placeGoldenApple() {
             let ok = false;
             while(!ok) {
-                goldenApple = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
+                goldenApple = { x: Math.floor(seededRandom() * WIDTH), y: Math.floor(seededRandom() * HEIGHT) };
                 ok = true;
                 if (obstacles.some(o => o.x === goldenApple.x && o.y === goldenApple.y)) ok = false;
                 if (snake.some(s => s.x === goldenApple.x && s.y === goldenApple.y)) ok = false;
@@ -553,7 +702,7 @@
         function placePoisonBerry() {
             let ok = false;
             while(!ok) {
-                poisonBerry = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
+                poisonBerry = { x: Math.floor(seededRandom() * WIDTH), y: Math.floor(seededRandom() * HEIGHT) };
                 ok = true;
                 if (obstacles.some(o => o.x === poisonBerry.x && o.y === poisonBerry.y)) ok = false;
                 if (snake.some(s => s.x === poisonBerry.x && s.y === poisonBerry.y)) ok = false;
@@ -565,7 +714,7 @@
         function placeGhostBerry() {
             let ok = false;
             while(!ok) {
-                ghostBerry = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
+                ghostBerry = { x: Math.floor(seededRandom() * WIDTH), y: Math.floor(seededRandom() * HEIGHT) };
                 ok = true;
                 if (obstacles.some(o => o.x === ghostBerry.x && o.y === ghostBerry.y)) ok = false;
                 if (snake.some(s => s.x === ghostBerry.x && s.y === ghostBerry.y)) ok = false;
@@ -575,7 +724,7 @@
         function placeSpeedBerry() {
             let ok = false;
             while(!ok) {
-                speedBerry = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
+                speedBerry = { x: Math.floor(seededRandom() * WIDTH), y: Math.floor(seededRandom() * HEIGHT) };
                 ok = true;
                 if (obstacles.some(o => o.x === speedBerry.x && o.y === speedBerry.y)) ok = false;
                 if (snake.some(s => s.x === speedBerry.x && s.y === speedBerry.y)) ok = false;
@@ -590,7 +739,7 @@
                 if (!riv.alive) {
                     if (riv.respawnTimer > 0 && --riv.respawnTimer === 0) {
                         riv.alive = true; riv.len = 4;
-                        let rx = Math.floor(Math.random() * WIDTH), ry = Math.floor(Math.random() * HEIGHT);
+                        let rx = Math.floor(seededRandom() * WIDTH), ry = Math.floor(seededRandom() * HEIGHT);
                         riv.body = [{x: rx, y: ry}];
                         for(let b=1; b<4; b++) riv.body.push({x: rx, y: ry});
                     }
@@ -671,8 +820,23 @@
             pull(food); pull(goldenApple); pull(poisonBerry); pull(speedBerry); pull(ghostBerry);
         }
 
+        
         function update() {
             if (gameState !== 1) return;
+            matchTicks++;
+            gridCoverage.add(snake[0].x + ',' + snake[0].y);
+            
+            if (isReplayMode && replayEvents[matchTicks]) {
+                const e = replayEvents[matchTicks];
+                if (e === 'up' && lastDir.y !== 1) dir = {x: 0, y: -1};
+                if (e === 'down' && lastDir.y !== -1) dir = {x: 0, y: 1};
+                if (e === 'left' && lastDir.x !== 1) dir = {x: -1, y: 0};
+                if (e === 'right' && lastDir.x !== -1) dir = {x: 1, y: 0};
+                if (e === 'g') activateSkill('G');
+                if (e === 'f') activateSkill('F');
+                if (e === 'm') activateSkill('M');
+            }
+
 
             if (ghostActive > 0) ghostActive--;
             if (ghostCd > 0) ghostCd--;
@@ -692,8 +856,8 @@
                 portalShiftTimer++;
                 if (portalShiftTimer >= 60) {
                     portalShiftTimer = 0;
-                    portalA = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
-                    portalB = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
+                    portalA = { x: Math.floor(seededRandom() * WIDTH), y: Math.floor(seededRandom() * HEIGHT) };
+                    portalB = { x: Math.floor(seededRandom() * WIDTH), y: Math.floor(seededRandom() * HEIGHT) };
                 }
             }
 
@@ -761,10 +925,10 @@
                 
                 placeFood();
                 
-                if (!goldenApple && Math.random() < 0.20) placeGoldenApple();
-                if (!poisonBerry && Math.random() < 0.20) placePoisonBerry();
-                if (!speedBerry && Math.random() < 0.20) placeSpeedBerry();
-                if (!ghostBerry && Math.random() < 0.20) placeGhostBerry();
+                if (!goldenApple && seededRandom() < 0.20) placeGoldenApple();
+                if (!poisonBerry && seededRandom() < 0.20) placePoisonBerry();
+                if (!speedBerry && seededRandom() < 0.20) placeSpeedBerry();
+                if (!ghostBerry && seededRandom() < 0.20) placeGhostBerry();
             } else {
                 snake.pop();
             }
@@ -808,7 +972,13 @@
             updateHeader();
         }
 
+        
         function triggerGameOver() {
+            if (!isReplayMode) {
+                lastMatchStats = { ticks: matchTicks, apples: applesEaten + totalApples - (parseInt(localStorage.getItem('ksnakeTotalApples'))||0), coverage: ((gridCoverage.size / (WIDTH*HEIGHT))*100).toFixed(2) };
+                lastReplayData = replayData;
+            }
+
             playSound('die');
             gameState = 2;
             if (gameLoop) clearTimeout(gameLoop);
@@ -820,7 +990,13 @@
             gameOverOverlay.style.display = 'flex';
         }
 
+        
         function triggerVictory() {
+            if (!isReplayMode) {
+                lastMatchStats = { ticks: matchTicks, apples: applesEaten + totalApples - (parseInt(localStorage.getItem('ksnakeTotalApples'))||0), coverage: ((gridCoverage.size / (WIDTH*HEIGHT))*100).toFixed(2) };
+                lastReplayData = replayData;
+            }
+
             playSound('victory');
             gameState = 4;
             if (gameLoop) clearTimeout(gameLoop);
@@ -924,10 +1100,16 @@
             alert('Data copied to clipboard!');
         }
 
+        
         function importData() {
             try {
                 const raw = document.getElementById('dataBox').value;
                 const parsed = JSON.parse(raw);
+                if (parsed.seed) {
+                    playReplay(raw);
+                    return;
+                }
+
                 if (parsed.gamesPlayed !== undefined) gamesPlayed = parsed.gamesPlayed;
                 if (parsed.totalApples !== undefined) totalApples = parsed.totalApples;
                 if (parsed.leaderboard && Array.isArray(parsed.leaderboard)) leaderboard = parsed.leaderboard;
@@ -946,8 +1128,8 @@
         function addEatParticles(gx, gy, color) {
             let cx = (gx + 0.5) * CELL, cy = (gy + 0.5) * CELL;
             for (let i = 0; i < 10; i++) {
-                let angle = Math.random() * Math.PI * 2, speed = Math.random() * 2.5 + 1;
-                particles.push({ x: cx, y: cy, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, size: Math.random()*3+2, color: color, life: 1.0 });
+                let angle = seededRandom() * Math.PI * 2, speed = seededRandom() * 2.5 + 1;
+                particles.push({ x: cx, y: cy, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, size: seededRandom()*3+2, color: color, life: 1.0 });
             }
         }
 
@@ -1220,17 +1402,31 @@
                 if (key === 'r') resumeGame();
                 if (key === 'enter') startNewGame();
             } else if (gameState === 1) { // Playing
-                if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key)) e.preventDefault();
-                if ((key === 'arrowup' || key === 'w') && lastDir.y !== 1) dir = {x: 0, y: -1};
-                if ((key === 'arrowdown' || key === 's') && lastDir.y !== -1) dir = {x: 0, y: 1};
-                if ((key === 'arrowleft' || key === 'a') && lastDir.x !== 1) dir = {x: -1, y: 0};
-                if ((key === 'arrowright' || key === 'd') && lastDir.x !== -1) dir = {x: 1, y: 0};
-                
-                if (key === 'g') activateSkill('G');
-                if (key === 'f') activateSkill('F');
-                if (key === 'm') activateSkill('M');
+                if (!isReplayMode) {
+                    if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key)) e.preventDefault();
+                    
+                    let action = null;
+                    if (key === keyBinds.up || key === 'arrowup') action = 'up';
+                    else if (key === keyBinds.down || key === 'arrowdown') action = 'down';
+                    else if (key === keyBinds.left || key === 'arrowleft') action = 'left';
+                    else if (key === keyBinds.right || key === 'arrowright') action = 'right';
+                    else if (key === keyBinds.ghost) action = 'g';
+                    else if (key === keyBinds.freeze) action = 'f';
+                    else if (key === keyBinds.magnet) action = 'm';
+                    
+                    if (action) {
+                        replayData.events[matchTicks + 1] = action; // apply next tick
+                        if (action === 'up' && lastDir.y !== 1) dir = {x: 0, y: -1};
+                        if (action === 'down' && lastDir.y !== -1) dir = {x: 0, y: 1};
+                        if (action === 'left' && lastDir.x !== 1) dir = {x: -1, y: 0};
+                        if (action === 'right' && lastDir.x !== -1) dir = {x: 1, y: 0};
+                        if (action === 'g') activateSkill('G');
+                        if (action === 'f') activateSkill('F');
+                        if (action === 'm') activateSkill('M');
+                    }
+                }
 
-                if (key === 'p') {
+                if (key === 'p' || key === keyBinds.pause) {
                     gameState = 3;
                     pauseOverlay.style.display = 'flex';
                 }

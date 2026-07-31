@@ -1,6 +1,16 @@
 #include <windows.h>
 #include <math.h>
 
+#pragma function(memset)
+void* memset(void* dest, int c, unsigned int count) {
+    char* bytes = (char*)dest;
+    while (count--) {
+        *bytes++ = (char)c;
+    }
+    return dest;
+}
+
+
 #define CELL_SIZE 25
 #define GRID_WIDTH 20
 #define GRID_HEIGHT 20
@@ -35,7 +45,35 @@ struct Boss {
     int alive;
 };
 
-// Game State Enum: 0=Menu, 1=Playing, 2=GameOver, 3=Paused, 4=Victory, 5=Leaderboard
+
+// Replay System
+struct ReplayEvent {
+    int tick;
+    char action;
+};
+struct ReplayEvent replay_events[30000];
+int replay_event_count = 0;
+int is_replay_mode = 0;
+unsigned int match_seed = 0;
+int match_ticks = 0;
+int match_apples_gained = 0;
+int replay_playback_idx = 0;
+char grid_coverage[GRID_WIDTH][GRID_HEIGHT];
+int grid_coverage_count = 0;
+
+// Keybinds
+int bind_up = 'W';
+int bind_down = 'S';
+int bind_left = 'A';
+int bind_right = 'D';
+int bind_ghost = 'G';
+int bind_freeze = 'F';
+int bind_mag = 'M';
+int bind_pause = 'P';
+
+int config_step = 0; // for state 6
+
+// Game State Enum: 0=Menu, 1=Playing, 2=GameOver, 3=Paused, 4=Victory, 5=Leaderboard, 6=Config, 7=Stats/Export
 int game_state = 0; 
 int game_mode = 0; // 0=Classic, 1=Maze, 2=Speed Ramp, 3=Wrap, 4=Campaign
 const char* mode_names[] = { "Classic", "Maze", "Ramp", "Wrap", "Campaign" };
@@ -144,6 +182,68 @@ int my_atoi(const char* str) {
         str++;
     }
     return res;
+}
+
+
+void SaveConfig() {
+    HANDLE hFile = CreateFileA("ksnake_binds.cfg", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bw;
+        WriteFile(hFile, &bind_up, sizeof(int)*8, &bw, NULL); // Writes 8 ints contiguous since they are defined in order? Actually let's be explicit
+        CloseHandle(hFile);
+    }
+}
+void LoadConfig() {
+    HANDLE hFile = CreateFileA("ksnake_binds.cfg", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD br;
+        ReadFile(hFile, &bind_up, sizeof(int)*8, &br, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void ExportReplay() {
+    HANDLE hFile = CreateFileA("match.ksr", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bw;
+        WriteFile(hFile, &match_seed, sizeof(unsigned int), &bw, NULL);
+        WriteFile(hFile, &game_mode, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &difficulty, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &wrap_mode, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &replay_event_count, sizeof(int), &bw, NULL);
+        WriteFile(hFile, replay_events, sizeof(struct ReplayEvent) * replay_event_count, &bw, NULL);
+        CloseHandle(hFile);
+        MessageBoxA(NULL, "Replay saved to match.ksr", "Export", MB_OK);
+    }
+}
+void ImportReplay() {
+    HANDLE hFile = CreateFileA("match.ksr", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD br;
+        ReadFile(hFile, &match_seed, sizeof(unsigned int), &br, NULL);
+        ReadFile(hFile, &game_mode, sizeof(int), &br, NULL);
+        ReadFile(hFile, &difficulty, sizeof(int), &br, NULL);
+        ReadFile(hFile, &wrap_mode, sizeof(int), &br, NULL);
+        ReadFile(hFile, &replay_event_count, sizeof(int), &br, NULL);
+        ReadFile(hFile, replay_events, sizeof(struct ReplayEvent) * replay_event_count, &br, NULL);
+        CloseHandle(hFile);
+        is_replay_mode = 1;
+        InitGame();
+    } else {
+        MessageBoxA(NULL, "match.ksr not found", "Error", MB_OK);
+    }
+}
+void ExportMatchStatsCSV() {
+    HANDLE hFile = CreateFileA("match_stats.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bw;
+        char buf[256];
+        int pct = (grid_coverage_count * 100) / (GRID_WIDTH * GRID_HEIGHT);
+        wsprintfA(buf, "Ticks,Apples,CoveragePct\r\n%d,%d,%d\r\n", match_ticks, match_apples_gained, pct);
+        WriteFile(hFile, buf, lstrlenA(buf), &bw, NULL);
+        CloseHandle(hFile);
+        MessageBoxA(NULL, "Stats saved to match_stats.csv", "Export", MB_OK);
+    }
 }
 
 void LoadStats() {
@@ -575,11 +675,24 @@ void InitCampaignStage(int level) {
     if (num_rivals > 0) InitCPURivals();
 }
 
+
 void InitGame() {
-    int i;
-    games_played++;
-    SaveStats();
+    int i, x, y;
+    if (!is_replay_mode) {
+        match_seed = GetTickCount();
+        replay_event_count = 0;
+        games_played++;
+        SaveStats();
+    }
+    rng_state = match_seed;
+    replay_playback_idx = 0;
+    match_ticks = 0;
+    match_apples_gained = 0;
+    grid_coverage_count = 0;
+    for(x=0; x<GRID_WIDTH; x++) for(y=0; y<GRID_HEIGHT; y++) grid_coverage[x][y] = 0;
+    
     apples_eaten = 0;
+
     snake_len = 3;
     snake[0].x = 5; snake[0].y = 5;
     snake[1].x = 4; snake[1].y = 5;
@@ -1008,12 +1121,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             LoadStats();
+            LoadConfig();
             break;
+
 
         case WM_TIMER: {
             int i, r, effective_wrap, gain, spd;
             if (game_state != 1) break;
             anim_tick++;
+            match_ticks++;
+            if (!grid_coverage[snake[0].x][snake[0].y]) {
+                grid_coverage[snake[0].x][snake[0].y] = 1;
+                grid_coverage_count++;
+            }
+
+            if (is_replay_mode) {
+                while(replay_playback_idx < replay_event_count && replay_events[replay_playback_idx].tick == match_ticks) {
+                    char a = replay_events[replay_playback_idx].action;
+                    if (a == 'U' && last_dir_y != 1) { dir_x = 0; dir_y = -1; }
+                    if (a == 'D' && last_dir_y != -1) { dir_x = 0; dir_y = 1; }
+                    if (a == 'L' && last_dir_x != 1) { dir_x = -1; dir_y = 0; }
+                    if (a == 'R' && last_dir_x != -1) { dir_x = 1; dir_y = 0; }
+                    if (a == 'G') { ghost_active = 50; ghost_cd = 150; }
+                    if (a == 'F') { freeze_active = 100; freeze_cd = 200; }
+                    if (a == 'M') { magnet_active = 80; magnet_cd = 150; }
+                    replay_playback_idx++;
+                }
+            }
+
 
             // Cooldown & Active Timers
             if (ghost_active > 0) ghost_active--;
@@ -1104,10 +1239,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (snake[0].x == food.x && snake[0].y == food.y) {
                 MessageBeep(MB_OK);
                 if (snake_len < 400) { snake[snake_len] = snake[snake_len-1]; snake_len++; }
+
                 gain = score_mult;
                 score += gain;
                 total_apples++;
                 apples_eaten++;
+                match_apples_gained++;
+
                 SaveStats();
 
                 if (boss.alive) {
@@ -1223,26 +1361,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 else if (wParam == 'E') ExportStatsText();
                 else if (wParam == 'I') ImportStatsText();
+                else if (wParam == 'C') { game_state = 6; config_step = 0; InvalidateRect(hwnd, NULL, TRUE); }
+                else if (wParam == 'X') { ImportReplay(); }
+                else if (wParam == 'S') { game_state = 7; InvalidateRect(hwnd, NULL, TRUE); }
                 else if (wParam == VK_RETURN) {
+                    is_replay_mode = 0;
                     InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL);
                 }
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (game_state == 6) { // Config
+                if (config_step == 0) bind_up = wParam;
+                else if (config_step == 1) bind_down = wParam;
+                else if (config_step == 2) bind_left = wParam;
+                else if (config_step == 3) bind_right = wParam;
+                else if (config_step == 4) bind_ghost = wParam;
+                else if (config_step == 5) bind_freeze = wParam;
+                else if (config_step == 6) bind_mag = wParam;
+                else if (config_step == 7) { bind_pause = wParam; SaveConfig(); game_state = 0; }
+                if (game_state == 6) config_step++;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (game_state == 7) { // Stats Export
+                if (wParam == 'C') ExportMatchStatsCSV();
+                else if (wParam == 'R') ExportReplay();
+                else if (wParam == VK_ESCAPE || wParam == VK_RETURN) game_state = 0;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 5) {
                 if (wParam == VK_RETURN || wParam == VK_ESCAPE) { game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 3) {
-                if (wParam == 'P') { game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
-                else if (wParam == 'S') { SaveGameState(); game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
+                if (wParam == bind_pause) { game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
+                else if (wParam == 'Q') { SaveGameState(); game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 2 || game_state == 4) {
                 if (wParam == VK_RETURN && !is_high_score_entry) { game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 1) { // Playing
-                if (wParam == VK_UP && last_dir_y != 1) { dir_x = 0; dir_y = -1; }
-                else if (wParam == VK_DOWN && last_dir_y != -1) { dir_x = 0; dir_y = 1; }
-                else if (wParam == VK_LEFT && last_dir_x != 1) { dir_x = -1; dir_y = 0; }
-                else if (wParam == VK_RIGHT && last_dir_x != -1) { dir_x = 1; dir_y = 0; }
-                else if (wParam == 'G' && ghost_cd == 0) { ghost_active = 50; ghost_cd = 150; }
-                else if (wParam == 'F' && freeze_cd == 0) { freeze_active = 100; freeze_cd = 200; }
-                else if (wParam == 'M' && magnet_cd == 0) { magnet_active = 80; magnet_cd = 150; }
-                else if (wParam == 'P') { game_state = 3; KillTimer(hwnd, TIMER_ID); InvalidateRect(hwnd, NULL, TRUE); }
+                if (!is_replay_mode) {
+                    char a = 0;
+                    if ((wParam == VK_UP || wParam == bind_up) && last_dir_y != 1) { dir_x = 0; dir_y = -1; a = 'U'; }
+                    else if ((wParam == VK_DOWN || wParam == bind_down) && last_dir_y != -1) { dir_x = 0; dir_y = 1; a = 'D'; }
+                    else if ((wParam == VK_LEFT || wParam == bind_left) && last_dir_x != 1) { dir_x = -1; dir_y = 0; a = 'L'; }
+                    else if ((wParam == VK_RIGHT || wParam == bind_right) && last_dir_x != -1) { dir_x = 1; dir_y = 0; a = 'R'; }
+                    else if (wParam == bind_ghost && ghost_cd == 0) { ghost_active = 50; ghost_cd = 150; a = 'G'; }
+                    else if (wParam == bind_freeze && freeze_cd == 0) { freeze_active = 100; freeze_cd = 200; a = 'F'; }
+                    else if (wParam == bind_mag && magnet_cd == 0) { magnet_active = 80; magnet_cd = 150; a = 'M'; }
+                    
+                    if (a != 0 && replay_event_count < 30000) {
+                        replay_events[replay_event_count].tick = match_ticks + 1;
+                        replay_events[replay_event_count].action = a;
+                        replay_event_count++;
+                    }
+                }
+                if (wParam == bind_pause) { game_state = 3; KillTimer(hwnd, TIMER_ID); InvalidateRect(hwnd, NULL, TRUE); }
             }
             break;
         }
@@ -1260,17 +1427,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (game_state == 0) { // MENU
                 char buf[64];
                 SetTextColor(hdc, RGB(0, 210, 211));
-                TextOutA(hdc, 170, 40, "KSNAKE ARCADE", 13);
+                TextOutA(hdc, 170, 20, "KSNAKE ARCADE", 13);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                wsprintfA(buf, "M - Mode: %s", mode_names[game_mode]); TextOutA(hdc, 120, 100, buf, lstrlenA(buf));
-                wsprintfA(buf, "1-3 - Difficulty: %s", difficulty==0?"Easy":difficulty==1?"Med":"Hard"); TextOutA(hdc, 120, 140, buf, lstrlenA(buf));
-                wsprintfA(buf, "W - Toggle Wrap: %s", (wrap_mode||game_mode==3)?"ON":"OFF"); TextOutA(hdc, 120, 180, buf, lstrlenA(buf));
-                TextOutA(hdc, 120, 220, "H - High Scores / Help", 22);
-                TextOutA(hdc, 120, 260, "R - Resume Saved Game", 21);
-                TextOutA(hdc, 120, 300, "E - Export / I - Import Stats", 29);
-                TextOutA(hdc, 120, 340, "Skills: [G]host [F]reeze [M]agnet", 33);
+                wsprintfA(buf, "M - Mode: %s", mode_names[game_mode]); TextOutA(hdc, 120, 60, buf, lstrlenA(buf));
+                wsprintfA(buf, "1-3 - Difficulty: %s", difficulty==0?"Easy":difficulty==1?"Med":"Hard"); TextOutA(hdc, 120, 90, buf, lstrlenA(buf));
+                wsprintfA(buf, "W - Toggle Wrap: %s", (wrap_mode||game_mode==3)?"ON":"OFF"); TextOutA(hdc, 120, 120, buf, lstrlenA(buf));
+                TextOutA(hdc, 120, 150, "C - Config Keys", 15);
+                TextOutA(hdc, 120, 180, "S - Match Stats (Last)", 22);
+                TextOutA(hdc, 120, 210, "X - Play Replay (.ksr)", 22);
+                TextOutA(hdc, 120, 240, "H - High Scores / Help", 22);
+                TextOutA(hdc, 120, 270, "R - Resume Saved Game", 21);
+                TextOutA(hdc, 120, 300, "E/I - Export/Import All", 23);
+                TextOutA(hdc, 120, 340, "Skills: Ghost Freeze Magnet", 27);
                 SetTextColor(hdc, RGB(76, 209, 55));
                 TextOutA(hdc, 130, 420, "[ Press ENTER to Play ]", 23);
+            } else if (game_state == 6) {
+                char buf[64];
+                SetTextColor(hdc, RGB(251, 197, 49));
+                TextOutA(hdc, 160, 40, "KEY CONFIG", 10);
+                SetTextColor(hdc, RGB(255, 255, 255));
+                char* prompts[] = {"Press UP key...", "Press DOWN key...", "Press LEFT key...", "Press RIGHT key...", "Press GHOST key...", "Press FREEZE key...", "Press MAGNET key...", "Press PAUSE key..."};
+                TextOutA(hdc, 140, 100, prompts[config_step], lstrlenA(prompts[config_step]));
+            } else if (game_state == 7) {
+                char buf[128];
+                SetTextColor(hdc, RGB(0, 210, 211));
+                TextOutA(hdc, 160, 40, "MATCH STATS", 11);
+                SetTextColor(hdc, RGB(255, 255, 255));
+                wsprintfA(buf, "Ticks Alive: %d", match_ticks); TextOutA(hdc, 120, 100, buf, lstrlenA(buf));
+                wsprintfA(buf, "Apples Eaten: %d", match_apples_gained); TextOutA(hdc, 120, 140, buf, lstrlenA(buf));
+                wsprintfA(buf, "Coverage: %d%%", (grid_coverage_count*100)/(GRID_WIDTH*GRID_HEIGHT)); TextOutA(hdc, 120, 180, buf, lstrlenA(buf));
+                SetTextColor(hdc, RGB(76, 209, 55));
+                TextOutA(hdc, 120, 260, "C - Export CSV", 14);
+                TextOutA(hdc, 120, 300, "R - Export Replay", 17);
+                TextOutA(hdc, 120, 340, "ESC - Back to Menu", 18);
             } else if (game_state == 5) {
                 int i;
                 SetTextColor(hdc, RGB(0, 210, 211));
@@ -1290,7 +1479,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(hdc, RGB(251, 197, 49));
                 TextOutA(hdc, 210, 200, "PAUSED", 6);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 120, 250, "P: Resume  |  S: Save & Exit", 28);
+                TextOutA(hdc, 120, 250, "PAUSE: Resume  |  Q: Save & Exit", 28);
             } else if (game_state == 2) {
                 char sbuf[32];
                 SetTextColor(hdc, RGB(255, 71, 87));
