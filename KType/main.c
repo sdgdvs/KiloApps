@@ -62,6 +62,9 @@ int keyErrors[26];
 DWORD highArcadeScore = 0;
 DWORD bestWPM = 0;
 
+DWORD lastKeyTime = 0;
+DWORD currentCadence = 0;
+
 // --- Helper Functions ---
 int randSeed = 12345;
 int MyRand() {
@@ -138,6 +141,91 @@ void ResetSpeedTest() {
 void StartSpeedTest() {
     testActive = 1;
     testStartTime = GetTickCount();
+    lastKeyTime = GetTickCount();
+}
+
+// --- Audio Thread ---
+DWORD WINAPI SoundThread(LPVOID lpParam) {
+    DWORD params = (DWORD)(UINT_PTR)lpParam;
+    DWORD freq = params & 0xFFFF;
+    DWORD dur = params >> 16;
+    Beep(freq, dur);
+    return 0;
+}
+void AsyncBeep(DWORD freq, DWORD dur) {
+    DWORD param = freq | (dur << 16);
+    CreateThread(NULL, 0, SoundThread, (LPVOID)(UINT_PTR)param, 0, NULL);
+}
+
+// --- Heatmap Export ---
+void ExportHeatmapBMP(HWND hwnd) {
+    HDC hdc = GetDC(hwnd);
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP hBitmap = CreateCompatibleBitmap(hdc, 800, 400);
+    HBITMAP oldBM = (HBITMAP)SelectObject(memDC, hBitmap);
+    
+    HBRUSH bg = CreateSolidBrush(RGB(13, 15, 24));
+    RECT full = {0, 0, 800, 400};
+    FillRect(memDC, &full, bg);
+    DeleteObject(bg);
+    
+    SetBkMode(memDC, TRANSPARENT);
+    SetTextColor(memDC, RGB(0, 242, 254));
+    TextOutA(memDC, 30, 50, "Finger Weakness & Key Heatmap Analysis", 38);
+    const char* r1 = "QWERTYUIOP"; const char* r2 = "ASDFGHJKL"; const char* r3 = "ZXCVBNM";
+    int startY = 120; int kSize = 40; int i;
+    for (i = 0; i < 10; i++) {
+        int kIdx = r1[i] - 'A'; int errs = keyErrors[kIdx];
+        HBRUSH kBrush = (errs > 3) ? CreateSolidBrush(RGB(239, 68, 68)) : (errs > 0) ? CreateSolidBrush(RGB(245, 158, 11)) : CreateSolidBrush(RGB(30, 41, 59));
+        RECT kRect = {40 + i*48, startY, 40 + i*48 + kSize, startY + kSize}; FillRect(memDC, &kRect, kBrush); DeleteObject(kBrush);
+        char label[2] = {r1[i], '\0'}; SetTextColor(memDC, RGB(248, 250, 252)); TextOutA(memDC, 52 + i*48, startY + 8, label, 1);
+    }
+    for (i = 0; i < 9; i++) {
+        int kIdx = r2[i] - 'A'; int errs = keyErrors[kIdx];
+        HBRUSH kBrush = (errs > 3) ? CreateSolidBrush(RGB(239, 68, 68)) : (errs > 0) ? CreateSolidBrush(RGB(245, 158, 11)) : CreateSolidBrush(RGB(30, 41, 59));
+        RECT kRect = {60 + i*48, startY + 52, 60 + i*48 + kSize, startY + 52 + kSize}; FillRect(memDC, &kRect, kBrush); DeleteObject(kBrush);
+        char label[2] = {r2[i], '\0'}; SetTextColor(memDC, RGB(248, 250, 252)); TextOutA(memDC, 72 + i*48, startY + 60, label, 1);
+    }
+    for (i = 0; i < 7; i++) {
+        int kIdx = r3[i] - 'A'; int errs = keyErrors[kIdx];
+        HBRUSH kBrush = (errs > 3) ? CreateSolidBrush(RGB(239, 68, 68)) : (errs > 0) ? CreateSolidBrush(RGB(245, 158, 11)) : CreateSolidBrush(RGB(30, 41, 59));
+        RECT kRect = {90 + i*48, startY + 104, 90 + i*48 + kSize, startY + 104 + kSize}; FillRect(memDC, &kRect, kBrush); DeleteObject(kBrush);
+        char label[2] = {r3[i], '\0'}; SetTextColor(memDC, RGB(248, 250, 252)); TextOutA(memDC, 102 + i*48, startY + 112, label, 1);
+    }
+    SetTextColor(memDC, RGB(148, 163, 184));
+    TextOutA(memDC, 40, 360, "Legend: Dark = Perfect | Amber = 1-3 Mistypes | Red = >3 Mistypes", 64);
+    
+    BITMAPINFOHEADER bi = {0};
+    bi.biSize = sizeof(BITMAPINFOHEADER);
+    bi.biWidth = 800;
+    bi.biHeight = 400; 
+    bi.biPlanes = 1;
+    bi.biBitCount = 24;
+    bi.biCompression = BI_RGB;
+    
+    DWORD dataSize = ((800 * 24 + 31) / 32) * 4 * 400;
+    BYTE* pixels = (BYTE*)HeapAlloc(GetProcessHeap(), 0, dataSize);
+    GetDIBits(hdc, hBitmap, 0, 400, pixels, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+    
+    HANDLE hFile = CreateFileA("heatmap.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        BITMAPFILEHEADER bmf = {0};
+        bmf.bfType = 0x4D42;
+        bmf.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + dataSize;
+        bmf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+        DWORD written;
+        WriteFile(hFile, &bmf, sizeof(bmf), &written, NULL);
+        WriteFile(hFile, &bi, sizeof(bi), &written, NULL);
+        WriteFile(hFile, pixels, dataSize, &written, NULL);
+        CloseHandle(hFile);
+    }
+    
+    HeapFree(GetProcessHeap(), 0, pixels);
+    SelectObject(memDC, oldBM);
+    DeleteObject(hBitmap);
+    DeleteDC(memDC);
+    ReleaseDC(hwnd, hdc);
+    MessageBoxA(hwnd, "Heatmap exported to heatmap.bmp", "Export Success", MB_OK);
 }
 
 // --- Persistent Font Handles ---
@@ -157,6 +245,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SpawnArcadeWord();
             ResetSpeedTest();
             SetTimer(hwnd, 1, 30, NULL);
+            DragAcceptFiles(hwnd, TRUE);
             break;
 
         case WM_TIMER: {
@@ -206,6 +295,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_F3) { currentMode = 2; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F4) { currentMode = 3; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F5) { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (wParam == VK_F6 && currentMode == 3) { ExportHeatmapBMP(hwnd); break; }
             if (wParam == 'H') { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_ESCAPE) {
                 if (currentMode == 0) {
@@ -277,6 +367,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (currentMode == 1 || currentMode == 2) { // Speed Test logic
                 if (!testActive) StartSpeedTest();
 
+                DWORD nowTime = GetTickCount();
+                if (lastKeyTime > 0) {
+                    DWORD dt = nowTime - lastKeyTime;
+                    currentCadence = (dt > 0) ? (1000 / dt) : 0;
+                }
+                lastKeyTime = nowTime;
+
                 const char** pool = (currentMode == 2) ? codeWords : commonWords;
                 const char* curWord = pool[testWordPool[testWordIndex]];
                 int curWordLen = StrLen(curWord);
@@ -297,12 +394,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (typedLow == expLow) {
                             correctTyped++;
                             if (typedLow >= 'a' && typedLow <= 'z') keyHits[typedLow - 'a']++;
+                            DWORD freq = 300 + (currentCadence * 15);
+                            if (freq > 800) freq = 800;
+                            AsyncBeep(freq, 40);
                         } else {
                             testErrors++;
                             if (typedLow >= 'a' && typedLow <= 'z') keyErrors[typedLow - 'a']++;
+                            AsyncBeep(150, 100);
                         }
                     } else {
                         testErrors++;
+                        AsyncBeep(150, 100);
                     }
                     testCharIndex++;
                 }
@@ -450,10 +552,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 for (i = startIdx; i < startIdx + 8 && i < 40; i++) {
                     const char* w = pool[testWordPool[i]];
+                    int jitterX = 0, jitterY = 0;
+                    if (i == testWordIndex && currentCadence > 5) {
+                        jitterX = (MyRand() % 4) - 2;
+                        jitterY = (MyRand() % 4) - 2;
+                    }
+
                     if (i == testWordIndex) {
                         SetTextColor(memDC, RGB(0, 242, 254));
                         TextOutA(memDC, 40, yPos, "> ", 2);
-                        TextOutA(memDC, 65, yPos, w, StrLen(w));
+                        TextOutA(memDC, 65 + jitterX, yPos + jitterY, w, StrLen(w));
                     } else if (i < testWordIndex) {
                         SetTextColor(memDC, RGB(16, 185, 129));
                         TextOutA(memDC, 65, yPos, w, StrLen(w));
@@ -472,6 +580,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (currentMode == 3) { // QWERTY Heatmap Render
                 SetTextColor(memDC, RGB(0, 242, 254));
                 TextOutA(memDC, 30, 50, "Finger Weakness & Key Heatmap Analysis", 38);
+                SetTextColor(memDC, RGB(148, 163, 184));
+                TextOutA(memDC, 440, 50, "(F6 to Export BMP)", 18);
 
                 const char* r1 = "QWERTYUIOP";
                 const char* r2 = "ASDFGHJKL";
@@ -540,8 +650,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 30, 120, "F2: 30s Timed Speed Test", 24);
                 TextOutA(memDC, 30, 150, "F3: Code Snippets Speed Test", 28);
                 TextOutA(memDC, 30, 180, "F4: Finger Weakness Heatmap", 27);
-                TextOutA(memDC, 30, 210, "F5 or H: Toggle Help", 20);
-                TextOutA(memDC, 30, 240, "ESC: Restart current mode", 25);
+                TextOutA(memDC, 30, 210, "F6: Export Heatmap to BMP", 25);
+                TextOutA(memDC, 30, 240, "F5 or H: Toggle Help", 20);
+                TextOutA(memDC, 30, 270, "ESC: Restart current mode", 25);
             }
 
             SelectObject(memDC, oldFont);
@@ -557,6 +668,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_ERASEBKGND:
             return 1;
+
+        case WM_DROPFILES: {
+            HDROP hDrop = (HDROP)wParam;
+            char filePath[MAX_PATH];
+            if (DragQueryFileA(hDrop, 0, filePath, MAX_PATH)) {
+                if (strstr(filePath, ".ttf") || strstr(filePath, ".otf") || strstr(filePath, ".TTF") || strstr(filePath, ".OTF")) {
+                    if (AddFontResourceExA(filePath, FR_PRIVATE, 0)) {
+                        char fontName[64] = {0};
+                        const char* slash = strrchr(filePath, '\\');
+                        if (slash) slash++; else slash = filePath;
+                        int i = 0;
+                        while (slash[i] && slash[i] != '.' && i < 63) { fontName[i] = slash[i]; i++; }
+                        if (g_fontMain) DeleteObject(g_fontMain);
+                        g_fontMain = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, fontName);
+                        MessageBoxA(hwnd, "Custom font file loaded. (Font face name must match the filename for it to render correctly)", "Font Loaded", MB_OK);
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
+            }
+            DragFinish(hDrop);
+            break;
+        }
 
         case WM_DESTROY:
             KillTimer(hwnd, 1);
