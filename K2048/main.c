@@ -336,15 +336,29 @@ void DrawBadgeIcon(HDC hdc, int x, int y, int size, int val) {
         int r = size / 8;
         int cx = x + size / 2;
         int cy = y + size / 3;
-        HBRUSH bBrush = CreateSolidBrush(RGB(20, 20, 20));
+        
+        int pulse = (frameAnimCount % 10) - 5;
+        if (pulse < 0) pulse = -pulse;
+        int redVal = 20 + pulse * 15;
+        
+        HBRUSH bBrush = CreateSolidBrush(RGB(redVal, 20, 20));
         HPEN bPen = CreatePen(PS_SOLID, 1, RGB(255, 60, 0));
         HBRUSH oldB = (HBRUSH)SelectObject(hdc, bBrush);
         HPEN oldP = (HPEN)SelectObject(hdc, bPen);
         Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
 
         MoveToEx(hdc, cx, cy - r, NULL);
-        LineTo(hdc, cx + r/2, cy - r - 4);
-        SetPixel(hdc, cx + r/2, cy - r - 5, RGB(255, 220, 0));
+        int fuseX = cx + r/2;
+        int fuseY = cy - r - 4;
+        LineTo(hdc, fuseX, fuseY);
+        
+        if (frameAnimCount % 3 == 0) {
+            SetPixel(hdc, fuseX, fuseY - 1, RGB(255, 255, 0));
+            SetPixel(hdc, fuseX + 1, fuseY, RGB(255, 200, 0));
+            SetPixel(hdc, fuseX - 1, fuseY, RGB(255, 100, 0));
+        } else {
+            SetPixel(hdc, fuseX, fuseY - 1, RGB(255, 150, 0));
+        }
 
         SelectObject(hdc, oldB);
         SelectObject(hdc, oldP);
@@ -354,6 +368,11 @@ void DrawBadgeIcon(HDC hdc, int x, int y, int size, int val) {
         int cx = x + size / 2;
         int cy = y + size / 3;
         int s = size / 7;
+        
+        int pulse = (frameAnimCount % 8) - 4;
+        if (pulse < 0) pulse = -pulse;
+        s += pulse / 2;
+        
         POINT star[10] = {
             {cx, cy - s}, {cx + s/3, cy - s/3}, {cx + s, cy - s/3}, {cx + s/2, cy + s/4},
             {cx + 2*s/3, cy + s}, {cx, cy + s/2}, {cx - 2*s/3, cy + s}, {cx - s/2, cy + s/4},
