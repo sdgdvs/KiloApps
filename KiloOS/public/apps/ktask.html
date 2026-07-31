@@ -49,6 +49,8 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Header */
@@ -600,7 +602,7 @@
           <line x1="8" y1="21" x2="16" y2="21"></line>
           <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>
-        KTask Monitor
+        KTask Monitor <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px; font-weight: normal;">(Press 'H' for help)</span>
       </h1>
 
       <div class="nav-tabs" role="tablist">
@@ -1254,6 +1256,9 @@
       } else if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
         e.preventDefault();
         refresh();
+      } else if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        showToast('Shortcuts: [R/F5] Refresh, [Esc] Close/Clear, [H] Help');
       }
     });
 
