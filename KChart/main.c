@@ -145,7 +145,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, 0, 90, 26, hwnd, (HMENU)4, NULL, NULL);
             
-            hBtnFont = CreateFontA(13, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hBtnFont = CreateFontA(13, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             SendMessage(hBtnRandomize, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnToggle, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnTheme, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
@@ -285,6 +285,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_KEYDOWN: {
+            if (wParam == 'H' || wParam == 'h') {
+                MessageBox(hwnd, "KChart Studio Help:\n\n- Use Mode button to switch charts\n- Use Theme to change colors\n- Sort button sorts data\n- Randomize generates new data", "Help", MB_OK | MB_ICONINFORMATION);
+            }
+            break;
+        }
         case WM_TIMER: {
             int changed = 0;
             for (int i = 0; i < NUM_ITEMS; i++) {
@@ -351,14 +357,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
 
-            HFONT hFont = CreateFontA(13, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFont = CreateFontA(13, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
 
             // Title & Mode & Theme Header
             SetTextColor(memDC, RGB(244, 244, 245));
             char titleStr[128];
-            wsprintfA(titleStr, "%s | Theme: %s", modeNames[chartMode], themeNames[currentTheme]);
+            wsprintfA(titleStr, "%s | Theme: %s | Press 'H' for Help", modeNames[chartMode], themeNames[currentTheme]);
             RECT titleR = { 15, 8, W - 15, 26 };
             DrawTextA(memDC, titleStr, -1, &titleR, DT_LEFT | DT_SINGLELINE);
 
@@ -712,7 +718,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KChartApp", "KChart Studio", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 480, 360, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

@@ -28,6 +28,8 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #09090b 70%);
     color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -389,7 +391,7 @@
   <!-- Left Side: Main Chart & Controls -->
   <div class="panel-card">
     <div class="panel-title">
-      <span>Visualization Canvas</span>
+      <span>Visualization Canvas <span style="font-size: 12px; color: var(--text-muted); font-weight: normal; margin-left: 10px;">(Press 'H' for Help)</span></span>
       <div class="toolbar">
         <div class="btn-group" id="chartTypeGroup">
           <button data-type="bar" class="active">Bar</button>
@@ -1234,6 +1236,13 @@
 
   // Window resize
   window.addEventListener('resize', resizeCanvas);
+  
+  // Help shortcut
+  window.addEventListener('keydown', (e) => {
+    if ((e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT') {
+      alert("KChart Studio Help:\n\n- Select chart type from the toolbar.\n- Use the table editor to modify data.\n- Export options are in the top right.\n- Drag & drop a JSON/CSV file to import.");
+    }
+  });
   
   // Init
   resizeCanvas();
