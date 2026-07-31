@@ -94,6 +94,7 @@ typedef struct {
     int type; // 1=heal, 2=weapon, 3=armor, 4=shield, 7=gold
     int subtype; // 0=sword, 1=hammer, 2=spear, 3=bow
     int val;
+    int cursed;
 } Item;
 
 typedef struct {
@@ -526,6 +527,17 @@ void generate_random_item(Item* it) {
         else if(it->subtype == S_INVISIBILITY) { str_cpy(it->name, "Spellbook of Invisibility"); }
         else { str_cpy(it->name, "Spellbook of Divine Blessing"); }
     }
+    if(it->type >= TYPE_WEAPON && it->type <= TYPE_RING) {
+        if(rand_range(0, 100) < 15) {
+            it->cursed = 1;
+            it->val = -rand_range(1, 3);
+            char old_name[32];
+            str_cpy(old_name, it->name);
+            str_cpy(it->name, "Cursed ");
+            str_cat(it->name, old_name);
+            it->fg = RGB(255, 0, 0);
+        }
+    }
 }
 
 void spawn_item(int x, int y) {
@@ -634,7 +646,22 @@ void generate_map() {
     get_player()->x = cx;
     get_player()->y = cy;
     
-    if(g.dlevel == 40) {
+    if(g.dlevel % 10 == 0 && g.dlevel != 40) {
+        g.stair_x = lcx;
+        g.stair_y = lcy;
+        g.map[lcy][lcx].ch = '>';
+        g.map[lcy][lcx].fg = C_STAIRS;
+        for(int i=1; i<MAX_ENTITIES; i++) {
+            if(!g.entities[i].active) {
+                Entity* e = &g.entities[i];
+                e->active = 1; e->x = lcx; e->y = lcy;
+                e->ch = 'B'; e->fg = RGB(255, 100, 100); str_cpy(e->name, "Resurrected Boss");
+                e->hp = e->max_hp = 100 + g.dlevel*5; e->atk = 15 + g.dlevel; e->def = 10 + g.dlevel/2; e->xp = 200;
+                e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON;
+                break;
+            }
+        }
+    } else if(g.dlevel == 40) {
         g.stair_x = -1;
         g.stair_y = -1;
         for(int i=1; i<MAX_ENTITIES; i++) {
@@ -982,7 +1009,7 @@ int process_status_effects(Entity* e) { // returns 1 if died
 void check_trap(Entity* e) {
     if(g.map[e->y][e->x].has_trap) {
         g.map[e->y][e->x].has_trap = 0;
-        int t = rand_range(0, 2);
+        int t = rand_range(0, 4);
         char buf[100];
         if(t == 0) {
             e->status_effect = STATUS_POISON;
@@ -992,7 +1019,7 @@ void check_trap(Entity* e) {
             e->status_effect = STATUS_ROOTED;
             e->status_duration = 5;
             wsprintfA(buf, "%s triggers a root trap!", e->name);
-        } else {
+        } else if(t == 2) {
             wsprintfA(buf, "%s triggers a teleport trap!", e->name);
             int nx, ny;
             do {
@@ -1001,8 +1028,16 @@ void check_trap(Entity* e) {
             } while(!g.map[ny][nx].walkable || get_entity_at(nx, ny));
             e->x = nx; e->y = ny;
             if(e == get_player()) calc_fov_bresenham();
+        } else if(t == 3) {
+            int dmg = 10 + g.dlevel;
+            e->hp -= dmg;
+            wsprintfA(buf, "%s triggers a fire trap for %d dmg!", e->name, dmg);
+        } else {
+            wsprintfA(buf, "%s triggers a summon trap!", e->name);
+            spawn_monster(e->x, e->y);
         }
         if(e == get_player() || (e->x >= 0 && g.map[e->y][e->x].visible)) add_msg(buf);
+        if(e->hp <= 0) handle_death(e, NULL);
     }
 }
 
@@ -1313,6 +1348,10 @@ void unequip_item(int slot) {
     else if(slot == 4) target = &g.equip_ring;
     
     if(target && target->active) {
+        if(target->cursed) {
+            add_msg("You can't unequip a cursed item!");
+            return;
+        }
         for(int i=0; i<MAX_INVENTORY; i++) {
             if(!g.inventory[i].active) {
                 g.inventory[i] = *target;
@@ -1332,6 +1371,11 @@ void equip_item(int inv_idx) {
     if(!g.inventory[inv_idx].active) return;
     Item* it = &g.inventory[inv_idx];
     char buf[100];
+    
+    if(it->type == TYPE_WEAPON && g.equip_weapon.active && g.equip_weapon.cursed) { add_msg("Your equipped weapon is cursed!"); return; }
+    if(it->type == TYPE_ARMOR && g.equip_armor.active && g.equip_armor.cursed) { add_msg("Your equipped armor is cursed!"); return; }
+    if(it->type == TYPE_SHIELD && g.equip_shield.active && g.equip_shield.cursed) { add_msg("Your equipped shield is cursed!"); return; }
+    if(it->type == TYPE_RING && g.equip_ring.active && g.equip_ring.cursed) { add_msg("Your equipped ring is cursed!"); return; }
     
     Item temp = *it;
     

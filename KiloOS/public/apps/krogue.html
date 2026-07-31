@@ -584,6 +584,12 @@
             map[2][2] = '.';
             
             // Stairs
+            if (dlevel % 10 === 0 && dlevel !== 40) {
+                let hp = Math.floor(100 + dlevel * 5);
+                monsters.push({
+                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: 'B', name: 'Resurrected Boss', boss: false, turn: 0
+                });
+            }
             if (dlevel < 40) {
                 items.push({ x: COLS - 3, y: ROWS - 3, ch: '>', type: 'stairs' });
                 map[ROWS - 3][COLS - 3] = '.';
@@ -620,7 +626,7 @@
             }
             for (let t = 0; t < 4 + Math.floor(dlevel / 4); t++) {
                 let tx = rngRange(2, COLS - 3), ty = rngRange(2, ROWS - 3);
-                let trapType = rng() < 0.4 ? 'poison' : (rng() < 0.7 ? 'teleport' : 'root');
+                let trapType = rng() < 0.25 ? 'poison' : (rng() < 0.5 ? 'teleport' : (rng() < 0.75 ? 'root' : (rng() < 0.9 ? 'fire' : 'summon')));
                 traps.push({ x: tx, y: ty, type: trapType, revealed: false });
             }
 
@@ -680,9 +686,15 @@
             } else if (r < 0.8) {
                 return { x: x, y: y, ch: '[', type: 'shield', name: `Tower Shield +${dlevel}`, val: 2 + Math.floor(dlevel/2), fg: '#ecc94b' };
             } else {
-                return { x: x, y: y, ch: '?', type: 'spellbook', spellKey: 'meteor', name: "Spellbook of Meteor", fg: "#b794f4" };
+                it = { x: x, y: y, ch: '?', type: 'spellbook', spellKey: 'meteor', name: "Spellbook of Meteor", fg: "#b794f4" };
             }
-        }
+            if(it.type !== 'spellbook' && it.type !== 'food' && it.type !== 'heal' && it.type !== 'shrine' && rng() < 0.15) {
+                it.cursed = true;
+                it.val = -(1 + rngRange(0, 2));
+                it.name = "Cursed " + it.name;
+                it.fg = '#ff0000';
+            }
+            return it;
 
         // Rendering functions
         function drawWallTile(x, y, biome) {
@@ -963,6 +975,10 @@
                 inventory.splice(idx, 1);
             } else if (it.type === 'weapon' || it.type === 'armor' || it.type === 'shield' || it.type === 'ring') {
                 let slot = it.type;
+                if (equipment[slot] && equipment[slot].cursed) {
+                    addMsg(`Your equipped ${slot} is cursed and cannot be removed!`);
+                    return;
+                }
                 if (equipment[slot]) inventory.push(equipment[slot]);
                 equipment[slot] = it;
                 inventory.splice(idx, 1);
@@ -973,6 +989,10 @@
 
         function unequipSlot(slot) {
             if (equipment[slot]) {
+                if(equipment[slot].cursed) {
+                    addMsg(`Your equipped ${slot} is cursed and cannot be removed!`);
+                    return;
+                }
                 inventory.push(equipment[slot]);
                 addMsg(`Unequipped ${equipment[slot].name}.`, 'good');
                 equipment[slot] = null;
@@ -1082,6 +1102,7 @@
             if (player.invisible_turns > 0) player.invisible_turns--;
             if (player.berserk_turns > 0) player.berserk_turns--;
             if (player.poisoned_turns > 0) { player.hp--; player.poisoned_turns--; if (player.hp <= 0) { triggerGameOver(); return; } }
+            if (player.rooted_turns > 0) player.rooted_turns--;
 
             if (player.hunger > 0) player.hunger--;
             else { player.hp--; if (player.hp <= 0) { triggerGameOver(); return; } }
@@ -1160,8 +1181,12 @@
                 if (e.key === 'l' || e.key === 'L') loadGame();
 
                 if (turn && (dx !== 0 || dy !== 0)) {
-                    let nx = player.x + dx, ny = player.y + dy;
-                    if (map[ny][nx] !== '#') {
+                    if (player.rooted_turns > 0) {
+                        addMsg("You are rooted to the ground and cannot move!");
+                        endTurn();
+                    } else {
+                        let nx = player.x + dx, ny = player.y + dy;
+                        if (map[ny][nx] !== '#') {
                         let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
                         if (mIdx >= 0) {
                             let calcAtk = player.atk + (equipment.weapon ? equipment.weapon.val : 0);
@@ -1183,6 +1208,19 @@
                                 let it = items[itIdx];
                                 if (it.type === 'stairs') { dlevel++; initMap(); return; }
                                 else { inventory.push(it); items.splice(itIdx, 1); addMsg(`Picked up ${it.name}`, 'good'); }
+                            }
+                            let trapIdx = traps.findIndex(t => t.x === nx && t.y === ny);
+                            if (trapIdx >= 0 && !traps[trapIdx].revealed) {
+                                traps[trapIdx].revealed = true;
+                                let ty = traps[trapIdx].type;
+                                if(ty === 'poison') { player.poisoned_turns = 10; addMsg("Triggered a poison trap!", 'msg-combat'); }
+                                else if(ty === 'root') { player.rooted_turns = 5; addMsg("Triggered a root trap!", 'msg-combat'); }
+                                else if(ty === 'teleport') { player.x = rngRange(2, COLS-3); player.y = rngRange(2, ROWS-3); addMsg("Triggered a teleport trap!", 'msg-magic'); }
+                                else if(ty === 'fire') { player.hp -= (10 + dlevel); addFloatText(player.x, player.y, `-${10+dlevel}`, '#e53e3e'); addMsg("Triggered a fire trap!", 'msg-combat'); if(player.hp <= 0) { triggerGameOver(); return; } }
+                                else if(ty === 'summon') { 
+                                    monsters.push({ x: player.x+1, y: player.y, hp: 10, max_hp: 10, ch: 'g', name: 'Summoned Goblin', turn: 0 });
+                                    addMsg("Triggered a summon trap!", 'msg-combat');
+                                }
                             }
                         }
                         endTurn();
