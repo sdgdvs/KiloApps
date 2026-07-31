@@ -13,15 +13,27 @@ int mat = 50;
 int selectedType = 0;
 int grid[GRID_W * GRID_H] = {0};
 
-void DrawGrid(HDC hdc) {
+void DrawGrid(HDC hdc, HFONT hFont) {
+    SelectObject(hdc, hFont);
     for (int y = 0; y < GRID_H; y++) {
         for (int x = 0; x < GRID_W; x++) {
             RECT rc = { OFFSET_X + x * CELL_SIZE, OFFSET_Y + y * CELL_SIZE, OFFSET_X + (x + 1) * CELL_SIZE, OFFSET_Y + (y + 1) * CELL_SIZE };
-            HBRUSH brush = CreateSolidBrush(RGB(34, 34, 34));
+            
+            int t = grid[y * GRID_W + x];
+            
+            COLORREF bgCol = RGB(10, 17, 26);
+            COLORREF borderCol = RGB(0, 51, 51);
+            COLORREF textCol = RGB(0, 255, 255);
+            
+            if (t == 1) { bgCol = RGB(51, 51, 0); borderCol = RGB(255, 255, 0); textCol = RGB(255, 255, 0); }
+            else if (t == 2) { bgCol = RGB(0, 51, 0); borderCol = RGB(0, 255, 0); textCol = RGB(0, 255, 0); }
+            else if (t == 3) { bgCol = RGB(51, 0, 51); borderCol = RGB(255, 0, 255); textCol = RGB(255, 0, 255); }
+            
+            HBRUSH brush = CreateSolidBrush(bgCol);
             FillRect(hdc, &rc, brush);
             DeleteObject(brush);
             
-            HPEN pen = CreatePen(PS_SOLID, 1, RGB(85, 85, 85));
+            HPEN pen = CreatePen(PS_SOLID, 1, borderCol);
             HPEN oldPen = SelectObject(hdc, pen);
             MoveToEx(hdc, rc.left, rc.top, NULL);
             LineTo(hdc, rc.right, rc.top);
@@ -31,31 +43,64 @@ void DrawGrid(HDC hdc) {
             SelectObject(hdc, oldPen);
             DeleteObject(pen);
             
-            int t = grid[y * GRID_W + x];
             if (t > 0) {
                 SetBkMode(hdc, TRANSPARENT);
-                if (t == 1) { SetTextColor(hdc, RGB(255, 255, 0)); DrawText(hdc, "S", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE); }
-                else if (t == 2) { SetTextColor(hdc, RGB(0, 255, 0)); DrawText(hdc, "F", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE); }
-                else if (t == 3) { SetTextColor(hdc, RGB(170, 170, 170)); DrawText(hdc, "M", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE); }
+                SetTextColor(hdc, textCol);
+                if (t == 1) DrawText(hdc, "S", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else if (t == 2) DrawText(hdc, "F", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else if (t == 3) DrawText(hdc, "M", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
         }
     }
 }
 
-void DrawUI(HDC hdc) {
+void DrawUI(HDC hdc, HFONT hFont) {
     char buf[128];
+    SelectObject(hdc, hFont);
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, RGB(255, 255, 255));
-    sprintf(buf, "Food: %d   Power: %d   Materials: %d", food, power, mat);
-    TextOut(hdc, 20, 20, buf, lstrlen(buf));
+    SetTextColor(hdc, RGB(0, 255, 255));
+    sprintf(buf, "FOOD: %d   POWER: %d   MAT: %d", food, power, mat);
+    
+    RECT rcHeader = { 20, 15, 420, 45 };
+    HBRUSH hdrBrush = CreateSolidBrush(RGB(17, 17, 34));
+    FillRect(hdc, &rcHeader, hdrBrush);
+    DeleteObject(hdrBrush);
+    HPEN hdrPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+    HPEN oldPen = SelectObject(hdc, hdrPen);
+    MoveToEx(hdc, rcHeader.left, rcHeader.top, NULL);
+    LineTo(hdc, rcHeader.right, rcHeader.top);
+    LineTo(hdc, rcHeader.right, rcHeader.bottom);
+    LineTo(hdc, rcHeader.left, rcHeader.bottom);
+    LineTo(hdc, rcHeader.left, rcHeader.top);
+    SelectObject(hdc, oldPen);
+    DeleteObject(hdrPen);
+    
+    DrawText(hdc, buf, -1, &rcHeader, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
     int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 20;
-    const char* labels[] = { "0: None", "1: Solar (10 Mat)", "2: Farm (10M, 5P)", "3: Mine (10P)" };
+    const char* labels[] = { "[0] INSPECT", "[1] SOLAR (10M)", "[2] FARM (10M, 5P)", "[3] MINE (10P)" };
     for (int i = 0; i < 4; i++) {
-        RECT rcBtn = { sidebarX, OFFSET_Y + i * 40, sidebarX + 150, OFFSET_Y + i * 40 + 30 };
-        HBRUSH brush = CreateSolidBrush(i == selectedType ? RGB(42, 90, 42) : RGB(68, 68, 68));
+        RECT rcBtn = { sidebarX, OFFSET_Y + i * 45, sidebarX + 180, OFFSET_Y + i * 45 + 35 };
+        
+        COLORREF btnBg = (i == selectedType) ? RGB(0, 51, 51) : RGB(17, 17, 34);
+        COLORREF btnBorder = (i == selectedType) ? RGB(255, 255, 255) : RGB(0, 255, 255);
+        COLORREF btnText = (i == selectedType) ? RGB(255, 255, 255) : RGB(0, 255, 255);
+        
+        HBRUSH brush = CreateSolidBrush(btnBg);
         FillRect(hdc, &rcBtn, brush);
         DeleteObject(brush);
+        
+        HPEN pen = CreatePen(PS_SOLID, (i == selectedType) ? 2 : 1, btnBorder);
+        HPEN oldP = SelectObject(hdc, pen);
+        MoveToEx(hdc, rcBtn.left, rcBtn.top, NULL);
+        LineTo(hdc, rcBtn.right, rcBtn.top);
+        LineTo(hdc, rcBtn.right, rcBtn.bottom);
+        LineTo(hdc, rcBtn.left, rcBtn.bottom);
+        LineTo(hdc, rcBtn.left, rcBtn.top);
+        SelectObject(hdc, oldP);
+        DeleteObject(pen);
+        
+        SetTextColor(hdc, btnText);
         DrawText(hdc, labels[i], -1, &rcBtn, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
 }
@@ -83,9 +128,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int y = HIWORD(lParam);
             
             int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 20;
-            if (x >= sidebarX && x <= sidebarX + 150) {
+            if (x >= sidebarX && x <= sidebarX + 180) {
                 for (int i = 0; i < 4; i++) {
-                    if (y >= OFFSET_Y + i * 40 && y <= OFFSET_Y + i * 40 + 30) {
+                    if (y >= OFFSET_Y + i * 45 && y <= OFFSET_Y + i * 45 + 35) {
                         selectedType = i;
                         InvalidateRect(hwnd, NULL, FALSE);
                         return 0;
@@ -126,12 +171,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HBITMAP hbmMem = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
             HBITMAP hbmOld = SelectObject(hdcMem, hbmMem);
             
-            HBRUSH bg = CreateSolidBrush(RGB(26, 26, 26));
+            HBRUSH bg = CreateSolidBrush(RGB(5, 10, 15));
             FillRect(hdcMem, &rc, bg);
             DeleteObject(bg);
             
-            DrawGrid(hdcMem);
-            DrawUI(hdcMem);
+            HFONT hFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH, "Courier New");
+            
+            DrawGrid(hdcMem, hFont);
+            DrawUI(hdcMem, hFont);
+            
+            DeleteObject(hFont);
             
             BitBlt(hdc, 0, 0, rc.right, rc.bottom, hdcMem, 0, 0, SRCCOPY);
             

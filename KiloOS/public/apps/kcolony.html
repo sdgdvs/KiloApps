@@ -4,17 +4,19 @@
     <meta charset="utf-8">
     <title>KColony</title>
     <style>
-        body { margin: 0; padding: 20px; background-color: #1a1a1a; color: #ffffff; font-family: monospace; user-select: none; }
-        #header { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 10px; background: #333; max-width: 600px; }
-        .res { font-size: 18px; }
+        body { margin: 0; padding: 20px; background-color: #050a0f; color: #00ffff; font-family: 'Courier New', Courier, monospace; user-select: none; }
+        #header { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 15px; background: linear-gradient(145deg, #112, #223); border: 2px solid #00ffff; border-radius: 5px; box-shadow: 0 0 10px #00ffff, inset 0 0 10px #00ffff; max-width: 600px; }
+        .res { font-size: 18px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 5px #00ffff; }
         #main { display: flex; gap: 20px; }
-        #grid { display: grid; grid-template-columns: repeat(20, 20px); grid-template-rows: repeat(20, 20px); gap: 1px; background: #444; border: 2px solid #555; }
-        .cell { width: 20px; height: 20px; background: #222; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-        .cell:hover { background: #555; }
-        #panel { display: flex; flex-direction: column; gap: 10px; width: 200px; }
-        .btn { padding: 10px; background: #444; border: 1px solid #666; color: white; cursor: pointer; text-align: left; font-family: monospace; }
-        .btn.active { background: #2a5a2a; border-color: #4a9a4a; }
-        .btn:hover:not(.active) { background: #555; }
+        #grid { display: grid; grid-template-columns: repeat(20, 20px); grid-template-rows: repeat(20, 20px); gap: 1px; background: #002; border: 2px solid #00ffff; box-shadow: 0 0 15px #00ffff; padding: 2px; }
+        .cell { width: 20px; height: 20px; background: #0a111a; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 1px solid #003333; transition: all 0.2s; }
+        .cell:hover { background: #005555; box-shadow: 0 0 10px #00ffff; }
+        #panel { display: flex; flex-direction: column; gap: 15px; width: 220px; }
+        h3 { margin: 0; padding: 0 0 10px; border-bottom: 1px solid #00ffff; text-shadow: 0 0 5px #00ffff; text-transform: uppercase; }
+        .btn { padding: 12px; background: linear-gradient(145deg, #112, #223); border: 1px solid #00ffff; color: #00ffff; cursor: pointer; text-align: left; font-family: 'Courier New', Courier, monospace; border-radius: 3px; box-shadow: 0 0 5px rgba(0,255,255,0.2); transition: all 0.2s; text-transform: uppercase; font-size: 12px; }
+        .btn.active { background: linear-gradient(145deg, #003333, #005555); border-color: #00ffff; box-shadow: 0 0 15px #00ffff, inset 0 0 10px #00ffff; color: #fff; text-shadow: 0 0 5px #fff; }
+        .btn:hover:not(.active) { background: #113; box-shadow: 0 0 10px #00ffff; }
+        small { display: block; margin-top: 5px; color: #0aa; text-shadow: none; font-size: 10px; }
     </style>
 </head>
 <body>
@@ -76,9 +78,9 @@
             const idx = y * GRID_W + x;
             const cell = document.getElementById(`cell-${x}-${y}`);
             const t = grid[idx];
-            if (t === 1) { cell.innerHTML = 'S'; cell.style.color = '#ff0'; }
-            else if (t === 2) { cell.innerHTML = 'F'; cell.style.color = '#0f0'; }
-            else if (t === 3) { cell.innerHTML = 'M'; cell.style.color = '#aaa'; }
+            if (t === 1) { cell.innerHTML = 'S'; cell.style.color = '#ffff00'; cell.style.textShadow = '0 0 5px #ffff00'; cell.style.background = '#333300'; cell.style.borderColor = '#ffff00'; }
+            else if (t === 2) { cell.innerHTML = 'F'; cell.style.color = '#00ff00'; cell.style.textShadow = '0 0 5px #00ff00'; cell.style.background = '#003300'; cell.style.borderColor = '#00ff00'; }
+            else if (t === 3) { cell.innerHTML = 'M'; cell.style.color = '#ff00ff'; cell.style.textShadow = '0 0 5px #ff00ff'; cell.style.background = '#330033'; cell.style.borderColor = '#ff00ff'; }
         }
 
         function init() {
