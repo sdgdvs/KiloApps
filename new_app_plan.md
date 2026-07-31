@@ -53,24 +53,24 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KFortress (Fantasy Tower Defense & Siege Defense)
-**Phase:** 14 (next to do)
-**Status:** Phases 1-13 complete
+**App:** KColony (Sci-Fi Colony Survival)
+**Phase:** 1 (next to do)
+**Status:** Phase 1 started
 
-- [x] Phase 1: Scaffold KFortress directory (`KFortress/`), create web HTML skeleton (`KiloOS/public/apps/kfortress.html`), register in App.jsx.
-- [x] Phase 2: Core web HTML 2D grid path layout, basic Archer Tower placement, Gold economy, starting enemy wave spawning (Goblins), base HP & pathfinding.
-- [x] Phase 3: Native C version (`KFortress/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
-- [x] Phase 4: Dark fantasy UI styling (stone castle battlements theme, neon health bars, glowing range indicators, golden coin counters).
-- [x] Phase 5: Multiple Tower Types — Add Mage Towers (splash magic damage), Cannon Towers (heavy armor-piercing damage), and Slow Frost Towers (freezing field aura).
-- [x] Phase 6: Tower Upgrade System — Add 3 upgrade levels per tower type enhancing range, attack speed, damage, and special abilities using Gold.
-- [x] Phase 7: Diverse Enemy Bestiary — Add Orc Warriors (heavy armor), Shadow Hounds (fast sprint speed), Flying Gargoyles (bypass ground paths), and Siege Ogre Bosses with health bars.
-- [x] Phase 8: Hero Unit & Active Abilities — Add controllable Paladin Hero unit on the battlefield with active spell cooldowns (Holy Light Heal, Shield Wall, Meteor Strike).
-- [x] Phase 9: Fortress Research Workshop — Add persistent Academy tech tree upgrading starting Gold, base wall durability, Hero cooldowns, and tower damage multipliers.
-- [x] Phase 10: Traps & Consumable Defenses — Add placeable ground traps (Spike Pit, Oil Slick, Barricade) and instant consumable spell scrolls (Firestorm, Blizzard, Gold Magnet).
-- [x] Phase 11: Multi-Stage Campaign Map — Add 10 distinct battleground maps (Forest Outpost, Desert Pass, Frozen Fortress, Volcanic Citadel) with unique paths and terrain obstacles.
-- [x] Phase 12: Multiple Game Modes & Challenges — Add 3 Game Modes (Campaign Mode, Endless Horde Mode, Boss Blitz Mode) with High Score Leaderboards.
-- [x] Phase 13: Add Sound Effects — Web Audio API arrow WHOOSH, cannon BOOM, magic ZAP, monster GROWL, victory FANFARE. Native: Win32 Beep() equivalents.
-- [ ] Phase 14: Add Comprehensive Help & Commander's Field Guide — How-to-play modal, tower spec sheet, enemy bestiary encyclopedia, and tactical defense strategies manual.
+- [ ] Phase 1: Scaffold KColony directory (`KColony/`), create web HTML skeleton (`KiloOS/public/apps/kcolony.html`), register in App.jsx.
+- [ ] Phase 2: Core HTML 2D grid colony layout. Basic resources (Food, Power, Materials). Place basic structures (Solar Panel, Farm, Mine).
+- [ ] Phase 3: Native C version (`KColony/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [ ] Phase 4: Sci-fi colony UI styling (metallic surfaces, neon accents, holographic data readouts).
+- [ ] Phase 5: Population & Needs — Colonists arrive over time. They consume food and require habitation structures. Unhappiness leads to reduced efficiency.
+- [ ] Phase 6: Time & Day/Night Cycle — Implement time progression. Solar panels only work during the day. Batteries required for night power.
+- [ ] Phase 7: Tech Tree Research — Build a Laboratory to generate Science points. Unlock advanced structures (Nuclear Reactor, Hydroponics, Laser Defense).
+- [ ] Phase 8: Random Events & Disasters — Add meteor showers, dust storms, and equipment breakdowns that damage structures and require repair.
+- [ ] Phase 9: Alien Threats — Add hostile alien wildlife that attacks the colony. Build walls and automated defense turrets to protect colonists.
+- [ ] Phase 10: Expeditions — Send colonists on rovers to explore the surrounding map for rare artifacts and resource caches. Text-based encounter resolutions.
+- [ ] Phase 11: Advanced Industry — Build factories to refine basic materials into advanced composites and electronics for late-game structures.
+- [ ] Phase 12: Scenario Modes — Add a Sandbox mode, a 100-Day Survival mode, and a Resource Rush timed mode.
+- [ ] Phase 13: Sound Effects — Web Audio API construction sounds, alarms, ambient wind, laser fire. Native: Win32 Beep equivalents.
+- [ ] Phase 14: Add Comprehensive Help & Administrator's Manual — How-to-play modal, structure spec sheet, tech tree guide, disaster survival strategies.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -157,6 +157,7 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 - KQuest (Phase 14 completed: Added Comprehensive Help / Lore Codex & Recipe Reference to both versions)
 - KStarship (Phase 14 completed: Added Comprehensive Help & Star Captain Codex to both versions)
 - KAlchemy (Phase 14 completed: Added Comprehensive Help & Grandmaster Manual to both versions)
+- KFortress (Phase 14 completed: Added Comprehensive Help & Commander's Field Guide to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 

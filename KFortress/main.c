@@ -140,6 +140,7 @@ int g_techWallHp = 0;
 int g_techHeroCd = 0;
 int g_techTowerDmg = 0;
 BOOL g_showAcademy = FALSE;
+BOOL g_showHelp = FALSE;
 
 typedef struct {
     float x, y;
@@ -833,6 +834,11 @@ void Render(HDC hdc, HWND hwnd) {
     wsprintfA(buf, "Wave: %d", g_wave);
     TextOutA(memDC, w - 90, 24, buf, (int)lstrlenA(buf));
 
+    DrawRoundedRect(memDC, w - 410, 20, w - 340, 45, RGB(59, 130, 246), BORDER_COLOR, 4);
+    SetTextColor(memDC, TEXT_WHITE);
+    SelectObject(memDC, hFontStat);
+    TextOutA(memDC, w - 402, 23, "HELP", 4);
+
     DeleteObject(hFontTitle);
     DeleteObject(hFontSub);
     DeleteObject(hFontStat);
@@ -1355,6 +1361,52 @@ void Render(HDC hdc, HWND hwnd) {
         DeleteObject(aB);
     }
 
+    if (g_showHelp) {
+        int hW = 600, hH = 450;
+        int hX = (w - hW) / 2, hY = (h - hH) / 2;
+        DrawRoundedRect(memDC, hX, hY, hX + hW, hY + hH, CARD_BG, TEXT_GOLD, 12);
+        
+        HFONT hTitle = CreateFontA(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+        HFONT hSec = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+        HFONT hTxt = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+        
+        SelectObject(memDC, hTitle);
+        SetTextColor(memDC, TEXT_GOLD);
+        TextOutA(memDC, hX + 160, hY + 15, "COMMANDER'S FIELD GUIDE", 23);
+        
+        int cy = hY + 50;
+        SelectObject(memDC, hSec); SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "HOW TO PLAY", 11); cy += 20;
+        SelectObject(memDC, hTxt); SetTextColor(memDC, TEXT_WHITE);
+        TextOutA(memDC, hX + 20, cy, "Build towers on empty slots (+) using Gold. Earn Gold by defeating enemies.", 75); cy += 18;
+        TextOutA(memDC, hX + 20, cy, "Protect your Base HP; if it reaches 0, you lose. Use Hero abilities to survive!", 81); cy += 25;
+        
+        SelectObject(memDC, hSec); SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "TOWER SPEC SHEET", 16); cy += 20;
+        SelectObject(memDC, hTxt); SetTextColor(memDC, TEXT_WHITE);
+        TextOutA(memDC, hX + 20, cy, "- Archer (50g): Fast firing, medium range. Good vs Goblins.", 59); cy += 18;
+        TextOutA(memDC, hX + 20, cy, "- Mage (100g): Medium fire rate. Deals Splash (AoE) damage. Excellent vs swarms.", 82); cy += 18;
+        TextOutA(memDC, hX + 20, cy, "- Cannon (150g): Huge single-target damage. Best vs armored Orcs & Ogres.", 73); cy += 18;
+        TextOutA(memDC, hX + 20, cy, "- Frost (120g): No damage, creates freezing aura that slows enemies by 60%.", 75); cy += 25;
+        
+        SelectObject(memDC, hSec); SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "ENEMY BESTIARY", 14); cy += 20;
+        SelectObject(memDC, hTxt); SetTextColor(memDC, TEXT_WHITE);
+        TextOutA(memDC, hX + 20, cy, "- Goblin: Fast, low HP. Basic swarm unit.", 41); cy += 18;
+        TextOutA(memDC, hX + 20, cy, "- Orc: Slow, armored (takes half dmg from Archers). Use Cannons/Magic!", 72); cy += 18;
+        TextOutA(memDC, hX + 20, cy, "- Hound: Very fast, low HP. Slips past slow towers easily.", 58); cy += 18;
+        TextOutA(memDC, hX + 20, cy, "- Gargoyle: Flying unit. Bypasses ground pathing completely.", 60); cy += 18;
+        TextOutA(memDC, hX + 20, cy, "- Ogre Boss: Massive HP, slow. Deals 5 dmg to base. Big gold bounty.", 68); cy += 25;
+        
+        SelectObject(memDC, hSec); SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "TACTICS", 7); cy += 20;
+        SelectObject(memDC, hTxt); SetTextColor(memDC, TEXT_WHITE);
+        TextOutA(memDC, hX + 20, cy, "- Use Hero Shield Wall (2) right before enemies hit your castle to block damage.", 82); cy += 18;
+        TextOutA(memDC, hX + 20, cy, "- Place Frost towers near Cannons so enemies stay in range longer.", 65);
+        
+        DrawRoundedRect(memDC, hX + 225, hY + hH - 45, hX + 375, hY + hH - 15, RGB(16, 185, 129), BORDER_COLOR, 6);
+        SelectObject(memDC, hSec); SetTextColor(memDC, RGB(0,0,0));
+        TextOutA(memDC, hX + 245, hY + hH - 37, "UNDERSTOOD", 10);
+        
+        DeleteObject(hTitle); DeleteObject(hSec); DeleteObject(hTxt);
+    }
+
     // Copy Backbuffer to Window DC
     BitBlt(hdc, 0, 0, w, h, memDC, 0, 0, SRCCOPY);
 
@@ -1429,6 +1481,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         int w = clientRect.right;
         int h = clientRect.bottom;
         
+        if (g_showHelp) {
+            int hW = 600, hH = 450;
+            int hX = (w - hW) / 2, hY = (h - hH) / 2;
+            if (x >= hX + 225 && x <= hX + 375 && y >= hY + hH - 45 && y <= hY + hH - 15) {
+                g_showHelp = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+        }
+        
         if (g_showAcademy) {
             int mx = w/2 - 200, my = h/2 - 150;
             if (x >= mx + 310 && x <= mx + 380 && y >= my + 250 && y <= my + 280) {
@@ -1453,6 +1515,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     return 0;
                 }
             }
+            return 0;
+        }
+
+        // Help Button
+        if (x >= w - 410 && x <= w - 340 && y >= 20 && y <= 45) {
+            g_showHelp = TRUE;
+            InvalidateRect(hwnd, NULL, FALSE);
             return 0;
         }
 
