@@ -462,15 +462,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hControlBrush = CreateSolidBrush(RGB(26, 28, 35));
             hProgressBarBrush = CreateSolidBrush(RGB(90, 139, 212));
 
-            hFontDisplay = CreateFontA(32, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
-            hFontBtn = CreateFontA(14, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hFontSmall = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontDisplay = CreateFontA(32, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
+            hFontBtn = CreateFontA(14, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontSmall = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             // Top Bar Tabs
             hTabSW = CreateWindowA("BUTTON", "[ Stopwatch ]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 10, 92, 30, hwnd, (HMENU)ID_BTN_SW_TAB, NULL, NULL);
             hTabTM = CreateWindowA("BUTTON", "Timer", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 106, 10, 92, 30, hwnd, (HMENU)ID_BTN_TM_TAB, NULL, NULL);
             hTabMT = CreateWindowA("BUTTON", "Multi", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 202, 10, 92, 30, hwnd, (HMENU)ID_BTN_MT_TAB, NULL, NULL);
             hTabPOMO = CreateWindowA("BUTTON", "Pomodoro", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 298, 10, 92, 30, hwnd, (HMENU)ID_BTN_POMO_TAB, NULL, NULL);
+
 
             // Display & Input Controls
             hDisplay = CreateWindowExA(0, "STATIC", "00:00:00.000", WS_CHILD | WS_VISIBLE | SS_CENTER, 10, 50, 380, 40, hwnd, NULL, NULL, NULL);
@@ -507,6 +508,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnPomoReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | BS_PUSHBUTTON, 270, 98, 120, 32, hwnd, (HMENU)ID_BTN_POMO_RESET, NULL, NULL);
             hStaticStats = CreateWindowExA(0, "STATIC", "WORK SESSION\nDone: 0 | Focus: 0 mins", WS_CHILD | SS_CENTER, 10, 145, 380, 60, hwnd, NULL, NULL, NULL);
 
+            HWND hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE | SS_RIGHT, 10, 400, 380, 20, hwnd, NULL, NULL, NULL);
+
             // Font Application
             SendMessageA(hTabSW, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hTabTM, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
@@ -531,6 +534,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnPomoSkip, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hBtnPomoReset, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hStaticStats, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hHelpLabel, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
             SetTimer(hwnd, 1, 25, NULL);
             SwitchMode(MODE_STOPWATCH);
@@ -742,13 +746,22 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(18, 19, 24));
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KTimerClass", "KTimer", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 416, 420, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTimerClass", "KTimer", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 416, 460, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+            HWND hFocus = GetFocus();
+            char className[32] = {0};
+            GetClassNameA(hFocus, className, sizeof(className));
+            if (lstrcmpiA(className, "EDIT") != 0) {
+                MessageBoxA(hwnd, "KTimer Help:\n\n- Stopwatch: Track laps.\n- Timer: Count down.\n- Multi: Multiple timers.\n- Pomodoro: Work/Break cycles.", "Help", MB_OK | MB_ICONINFORMATION);
+                continue;
+            }
+        }
         if (!IsDialogMessage(hwnd, &msg)) {
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
