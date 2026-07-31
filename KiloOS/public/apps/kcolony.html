@@ -21,8 +21,9 @@
 </head>
 <body>
     <div id="header">
+        <div class="res">Time:<span id="res-time">Day 1 (Day)</span></div>
         <div class="res">Food:<span id="res-food">50</span></div>
-        <div class="res">Pwr:<span id="res-power">50</span></div>
+        <div class="res">Pwr:<span id="res-power">50</span>/<span id="res-maxpower">50</span></div>
         <div class="res">Mat:<span id="res-mat">50</span></div>
         <div class="res">Pop:<span id="res-pop">0</span>/<span id="res-maxpop">0</span></div>
         <div class="res">Hap:<span id="res-happy">100</span>%</div>
@@ -36,20 +37,22 @@
             <button class="btn" id="btn-farm" onclick="selectType(2)">Farm<br><small>Cost: 10 Mat, 5 Pwr</small></button>
             <button class="btn" id="btn-mine" onclick="selectType(3)">Mine<br><small>Cost: 10 Pwr</small></button>
             <button class="btn" id="btn-hab" onclick="selectType(4)">Habitat<br><small>Cost: 15 Mat, 5 Pwr</small></button>
+            <button class="btn" id="btn-battery" onclick="selectType(5)">Battery<br><small>Cost: 20 Mat</small></button>
         </div>
     </div>
     <script>
         const GRID_W = 20;
         const GRID_H = 20;
-        let food = 50, power = 50, mat = 50;
+        let food = 50, power = 50, maxPower = 50, mat = 50;
         let pop = 0, maxPop = 0, happiness = 100, popWait = 0;
-        let currentType = 0; // 0=none, 1=solar, 2=farm, 3=mine, 4=hab
+        let tick = 0, day = 1, isDay = true;
+        let currentType = 0; // 0=none, 1=solar, 2=farm, 3=mine, 4=hab, 5=battery
         let grid = new Array(GRID_W * GRID_H).fill(0);
         
         function selectType(type) {
             currentType = type;
             document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-            const btns = ['none', 'solar', 'farm', 'mine', 'hab'];
+            const btns = ['none', 'solar', 'farm', 'mine', 'hab', 'battery'];
             document.getElementById('btn-' + btns[type]).classList.add('active');
         }
 
@@ -63,6 +66,7 @@
             else if (currentType === 2) { costMat = 10; costPwr = 5; }
             else if (currentType === 3) { costPwr = 10; }
             else if (currentType === 4) { costMat = 15; costPwr = 5; }
+            else if (currentType === 5) { costMat = 20; }
 
             if (mat >= costMat && power >= costPwr) {
                 mat -= costMat;
@@ -74,8 +78,10 @@
         }
 
         function updateUI() {
+            document.getElementById('res-time').innerText = `Day ${day} (${isDay ? 'Day' : 'Night'})`;
             document.getElementById('res-food').innerText = food;
             document.getElementById('res-power').innerText = power;
+            document.getElementById('res-maxpower').innerText = maxPower;
             document.getElementById('res-mat').innerText = mat;
             document.getElementById('res-pop').innerText = pop;
             document.getElementById('res-maxpop').innerText = maxPop;
@@ -90,6 +96,7 @@
             else if (t === 2) { cell.innerHTML = 'F'; cell.style.color = '#00ff00'; cell.style.textShadow = '0 0 5px #00ff00'; cell.style.background = '#003300'; cell.style.borderColor = '#00ff00'; }
             else if (t === 3) { cell.innerHTML = 'M'; cell.style.color = '#ff00ff'; cell.style.textShadow = '0 0 5px #ff00ff'; cell.style.background = '#330033'; cell.style.borderColor = '#ff00ff'; }
             else if (t === 4) { cell.innerHTML = 'H'; cell.style.color = '#00ffff'; cell.style.textShadow = '0 0 5px #00ffff'; cell.style.background = '#003333'; cell.style.borderColor = '#00ffff'; }
+            else if (t === 5) { cell.innerHTML = 'B'; cell.style.color = '#ff8800'; cell.style.textShadow = '0 0 5px #ff8800'; cell.style.background = '#331100'; cell.style.borderColor = '#ff8800'; }
         }
 
         function init() {
@@ -106,19 +113,32 @@
             updateUI();
             
             setInterval(() => {
-                let pwrProd = 0, farmCount = 0, mineCount = 0, habCount = 0;
+                tick++;
+                if (tick % 10 === 0) { day++; isDay = true; }
+                else if (tick % 10 === 5) { isDay = false; }
+                
+                let pwrProd = 0, farmCount = 0, mineCount = 0, habCount = 0, batCount = 0;
                 for(let i=0; i<grid.length; i++) {
-                    if(grid[i]===1) pwrProd += 2;
+                    if(grid[i]===1 && isDay) pwrProd += 4; // Boosted solar for day only
                     if(grid[i]===2) farmCount += 1;
                     if(grid[i]===3) mineCount += 1;
                     if(grid[i]===4) habCount += 1;
+                    if(grid[i]===5) batCount += 1;
                 }
                 maxPop = habCount * 5;
-                let eff = happiness / 100.0;
+                maxPower = 50 + batCount * 50;
+                
+                let pwrCons = farmCount + mineCount + habCount; // 1 power per structure
+                power += pwrProd - pwrCons;
+                
+                let pwrEff = 1.0;
+                if (power < 0) { power = 0; pwrEff = 0.5; }
+                if (power > maxPower) power = maxPower;
+
+                let eff = (happiness / 100.0) * pwrEff;
                 let foodProd = Math.floor(farmCount * 5 * eff);
                 let matProd = Math.floor(mineCount * 2 * eff);
 
-                power += pwrProd;
                 food += foodProd;
                 mat += matProd;
 

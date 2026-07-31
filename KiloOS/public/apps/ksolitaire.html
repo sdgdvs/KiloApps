@@ -513,7 +513,6 @@
     pointer-events: auto;
   }
 
-  /* Canvas for Win Waterfall Cascade */
   #win-canvas {
     position: fixed;
     top: 0;
@@ -523,6 +522,21 @@
     pointer-events: none;
     z-index: 900;
     display: none;
+  }
+
+  /* Particle FX */
+  .particle {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 950;
+    animation: burstAnim 0.8s ease-out forwards;
+  }
+  @keyframes burstAnim {
+    0% { transform: translate(0, 0) scale(1.5); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
   }
 </style>
 </head>
@@ -1425,6 +1439,7 @@ function handleCardDoubleClick(type, pileIdx, cardIdx, event) {
       }
 
       selectedSelection = null;
+      spawnParticles(f, 'foundation');
       render();
       checkWin();
       return;
@@ -1493,6 +1508,7 @@ function attemptMove(src, dstType, dstPileIdx) {
   }
 
   movesCount++;
+  if (dstType === 'foundation') spawnParticles(dstPileIdx, 'foundation');
   render();
   checkWin();
   return true;
@@ -1629,6 +1645,31 @@ function autoFinish() {
       clearInterval(stepTimer);
     }
   }, 100);
+}
+
+function spawnParticles(pileIdx, type) {
+  let slot;
+  if (type === 'foundation') slot = document.getElementById(`foundation-${pileIdx}`);
+  if (!slot) return;
+  let rect = slot.getBoundingClientRect();
+  let cx = rect.left + rect.width / 2;
+  let cy = rect.top + rect.height / 2;
+  
+  const colors = ['#ffd700', '#ffffff', '#ff9100', '#00e676'];
+  for (let i = 0; i < 20; i++) {
+    let p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = (cx - 3) + 'px';
+    p.style.top = (cy - 3) + 'px';
+    p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    p.style.boxShadow = `0 0 4px ${p.style.backgroundColor}`;
+    let angle = Math.random() * Math.PI * 2;
+    let dist = Math.random() * 50 + 20;
+    p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+  }
 }
 
 // --- Victory Detection & Solitaire Cascade Waterfall ---
