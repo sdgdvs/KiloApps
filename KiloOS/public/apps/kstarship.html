@@ -3510,18 +3510,38 @@
           const cx = margin + x * cellW + cellW / 2;
           const cy = margin + y * cellH + cellH / 2;
 
+          const time = performance.now() * 0.001;
           if (x === state.shipX && y === state.shipY) {
-            // Player Starship (Glowing Triangle)
+            // Player Starship with Thruster Animation
             ctx.save();
             ctx.translate(cx, cy);
             ctx.fillStyle = '#00f0ff';
             ctx.shadowColor = '#00f0ff';
             ctx.shadowBlur = 12;
+            
+            // Ship Body
             ctx.beginPath();
-            ctx.moveTo(0, -10);
-            ctx.lineTo(7, 8);
-            ctx.lineTo(0, 4);
-            ctx.lineTo(-7, 8);
+            ctx.moveTo(0, -12);
+            ctx.lineTo(8, 6);
+            ctx.lineTo(0, 2);
+            ctx.lineTo(-8, 6);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Cockpit
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, -2, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Animated Thruster Flames
+            const flameLen = 4 + Math.sin(time * 15) * 4;
+            ctx.fillStyle = '#ffaa00';
+            ctx.shadowColor = '#ff3300';
+            ctx.beginPath();
+            ctx.moveTo(-4, 6);
+            ctx.lineTo(0, 6 + flameLen);
+            ctx.lineTo(4, 6);
             ctx.closePath();
             ctx.fill();
             ctx.restore();
@@ -3529,30 +3549,142 @@
             const cell = state.gridMap[y][x];
             if (cell !== CELL_TYPES.EMPTY) {
               if (cell === CELL_TYPES.PLANET) {
-                // Orbital Planet GDI rendering with rings
+                // Orbital Planet with Surface Details
                 ctx.save();
                 ctx.fillStyle = '#00ffaa';
                 ctx.shadowColor = '#00ffaa';
                 ctx.shadowBlur = 8;
+                
+                // Base Planet
                 ctx.beginPath();
                 ctx.arc(cx, cy, 7, 0, Math.PI * 2);
                 ctx.fill();
+                
+                // Planet Surface Details
+                ctx.fillStyle = 'rgba(0, 100, 50, 0.4)';
+                ctx.beginPath();
+                ctx.arc(cx - 2, cy - 2, 2, 0, Math.PI * 2);
+                ctx.arc(cx + 3, cy + 1, 3, 0, Math.PI * 2);
+                ctx.fill();
 
-                // Planet Ring
+                // Planet Ring - Animated Tilt
                 ctx.strokeStyle = 'rgba(0, 255, 170, 0.6)';
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                ctx.ellipse(cx, cy, 11, 4, Math.PI / 6, 0, Math.PI * 2);
+                const tilt = Math.PI / 6 + Math.sin(time) * 0.1;
+                ctx.ellipse(cx, cy, 12, 4, tilt, 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.restore();
-              } else {
-                ctx.font = '16px Consolas';
-                if (cell === CELL_TYPES.STAR) ctx.fillStyle = '#ffee55';
-                else if (cell === CELL_TYPES.STATION) ctx.fillStyle = '#3b82f6';
-                else if (cell === CELL_TYPES.ASTEROID) ctx.fillStyle = '#ffaa00';
-                else if (cell === CELL_TYPES.ANOMALY) ctx.fillStyle = '#b026ff';
-                else if (cell === CELL_TYPES.PIRATE) ctx.fillStyle = '#ff3366';
-                ctx.fillText(cell.symbol, cx, cy);
+              } else if (cell === CELL_TYPES.STAR) {
+                ctx.save();
+                const pulse = 1 + Math.sin(time * 3) * 0.2;
+                ctx.translate(cx, cy);
+                ctx.scale(pulse, pulse);
+                ctx.fillStyle = '#ffee55';
+                ctx.shadowColor = '#ffaa00';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.arc(0, 0, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Solar Flares
+                ctx.fillStyle = 'rgba(255, 170, 0, 0.5)';
+                for (let i = 0; i < 6; i++) {
+                   const angle = time + (i * Math.PI / 3);
+                   ctx.beginPath();
+                   ctx.moveTo(Math.cos(angle) * 7, Math.sin(angle) * 7);
+                   ctx.lineTo(Math.cos(angle + 0.2) * 12, Math.sin(angle + 0.2) * 12);
+                   ctx.lineTo(Math.cos(angle - 0.2) * 12, Math.sin(angle - 0.2) * 12);
+                   ctx.fill();
+                }
+                ctx.restore();
+              } else if (cell === CELL_TYPES.STATION) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                const rot = time * 0.5;
+                ctx.rotate(rot);
+                ctx.fillStyle = '#3b82f6';
+                ctx.shadowColor = '#00f0ff';
+                ctx.shadowBlur = 8;
+                // Core
+                ctx.beginPath();
+                ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                ctx.fill();
+                // Solar Panels
+                ctx.fillStyle = '#1e3a8a';
+                ctx.fillRect(-12, -2, 8, 4);
+                ctx.fillRect(4, -2, 8, 4);
+                ctx.fillRect(-2, -12, 4, 8);
+                ctx.fillRect(-2, 4, 4, 8);
+                ctx.restore();
+              } else if (cell === CELL_TYPES.ASTEROID) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(time);
+                ctx.fillStyle = '#ffaa00';
+                ctx.shadowColor = '#ff6600';
+                ctx.shadowBlur = 5;
+                ctx.beginPath();
+                ctx.moveTo(-6, -4);
+                ctx.lineTo(-2, -8);
+                ctx.lineTo(5, -5);
+                ctx.lineTo(8, 2);
+                ctx.lineTo(3, 8);
+                ctx.lineTo(-5, 5);
+                ctx.closePath();
+                ctx.fill();
+                // Crater
+                ctx.fillStyle = 'rgba(100, 50, 0, 0.5)';
+                ctx.beginPath();
+                ctx.arc(2, 1, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+              } else if (cell === CELL_TYPES.ANOMALY) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(-time * 2);
+                ctx.strokeStyle = '#b026ff';
+                ctx.shadowColor = '#ff00ff';
+                ctx.shadowBlur = 10;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                for (let i = 0; i < 3; i++) {
+                   const angle = (i * Math.PI * 2) / 3;
+                   ctx.moveTo(0, 0);
+                   ctx.quadraticCurveTo(Math.cos(angle + 1) * 10, Math.sin(angle + 1) * 10, Math.cos(angle) * 8, Math.sin(angle) * 8);
+                }
+                ctx.stroke();
+                
+                // Center spark
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(0, 0, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+              } else if (cell === CELL_TYPES.PIRATE) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                const bob = Math.sin(time * 5) * 2;
+                ctx.translate(0, bob);
+                ctx.fillStyle = '#ff3366';
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 10;
+                
+                // Pirate Ship Body (downward triangle)
+                ctx.beginPath();
+                ctx.moveTo(0, 8);
+                ctx.lineTo(8, -6);
+                ctx.lineTo(0, -2);
+                ctx.lineTo(-8, -6);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Angry red cockpit
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(0, 2, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
               }
             }
           }

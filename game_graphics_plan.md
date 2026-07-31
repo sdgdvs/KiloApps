@@ -83,7 +83,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KStarship
 - KSolitaire
 - KConnect4
 - KHangman
@@ -112,8 +111,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMines
 - KAsteroids
 - K2048
+- KStarship
 
 ## Completed Work Log
+
+- **KStarship (Loop 1):** Implemented animated player starship with thrusters, solar stars with flares, space station with solar panels, rotating asteroids with craters, swirling quantum anomalies, pirate raider ships, and detailed orbital planets with animated tilting rings for both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 
 - **KAsteroids (Loop 2):** Implemented animated polygonal debris pieces for asteroid and enemy destruction and floating score text popups for both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 - **KMines (Loop 2):** Implemented animated Blast Shield aura pulsing effect, sweeping circular Sonar Radar scan effect, and a sweeping target laser beam for the Detector Bot in both Web Canvas (kmines.html) and Native C Win32 GDI (KMines/main.c).

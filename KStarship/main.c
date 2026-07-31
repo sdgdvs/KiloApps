@@ -2813,13 +2813,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int cx = startX + gx * cellW + cellW / 2;
                         int cy = startY + gy * cellH + cellH / 2;
 
+                        DWORD tick = GetTickCount();
                         if (gx == g_State.shipX && gy == g_State.shipY) {
-                            // Cyan Vector Triangle Starship
+                            // Player Starship with Thrusters
                             POINT pts[4];
-                            pts[0].x = cx;     pts[0].y = cy - 10;
-                            pts[1].x = cx + 8; pts[1].y = cy + 8;
-                            pts[2].x = cx;     pts[2].y = cy + 4;
-                            pts[3].x = cx - 8; pts[3].y = cy + 8;
+                            pts[0].x = cx;     pts[0].y = cy - 12;
+                            pts[1].x = cx + 8; pts[1].y = cy + 6;
+                            pts[2].x = cx;     pts[2].y = cy + 2;
+                            pts[3].x = cx - 8; pts[3].y = cy + 6;
 
                             HBRUSH hShipB = CreateSolidBrush(RGB(0, 240, 255));
                             HPEN hShipP = CreatePen(PS_SOLID, 1, RGB(200, 255, 255));
@@ -2827,19 +2828,49 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hShipB);
 
                             Polygon(hdc, pts, 4);
+                            
+                            // Cockpit
+                            HBRUSH hCockpitB = CreateSolidBrush(RGB(255, 255, 255));
+                            SelectObject(hdc, hCockpitB);
+                            Ellipse(hdc, cx - 2, cy - 4, cx + 2, cy);
+                            DeleteObject(hCockpitB);
 
+                            // Animated Thrusters
+                            int flameLen = 4 + (tick % 200) / 50;
+                            POINT fPts[3];
+                            fPts[0].x = cx - 4; fPts[0].y = cy + 6;
+                            fPts[1].x = cx;     fPts[1].y = cy + 6 + flameLen;
+                            fPts[2].x = cx + 4; fPts[2].y = cy + 6;
+                            
+                            HBRUSH hFlameB = CreateSolidBrush(RGB(255, 170, 0));
+                            HPEN hFlameP = CreatePen(PS_SOLID, 1, RGB(255, 51, 0));
+                            SelectObject(hdc, hFlameP);
+                            SelectObject(hdc, hFlameB);
+                            Polygon(hdc, fPts, 3);
+                            
                             SelectObject(hdc, hOldP);
                             SelectObject(hdc, hOldB);
                             DeleteObject(hShipP);
                             DeleteObject(hShipB);
+                            DeleteObject(hFlameP);
+                            DeleteObject(hFlameB);
                         } else {
                             int type = g_State.gridMap[gy][gx];
                             if (type == 1) { // Solar Star
+                                int pulse = (tick % 1000) > 500 ? 1 : 0;
                                 HBRUSH hSunB = CreateSolidBrush(RGB(255, 238, 85));
                                 HPEN hSunP = CreatePen(PS_SOLID, 1, RGB(255, 200, 0));
                                 HPEN hOldP = (HPEN)SelectObject(hdc, hSunP);
                                 HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hSunB);
-                                Ellipse(hdc, cx - 7, cy - 7, cx + 7, cy + 7);
+                                int r = 7 + pulse;
+                                Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+                                
+                                // Simple Solar Flares
+                                MoveToEx(hdc, cx, cy - r - 2, NULL); LineTo(hdc, cx, cy - r - 4);
+                                MoveToEx(hdc, cx, cy + r + 2, NULL); LineTo(hdc, cx, cy + r + 4);
+                                MoveToEx(hdc, cx - r - 2, cy, NULL); LineTo(hdc, cx - r - 4, cy);
+                                MoveToEx(hdc, cx + r + 2, cy, NULL); LineTo(hdc, cx + r + 4, cy);
+                                
                                 SelectObject(hdc, hOldP);
                                 SelectObject(hdc, hOldB);
                                 DeleteObject(hSunP);
@@ -2847,49 +2878,89 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             } else if (type == 2) { // Station
                                 HPEN hStP = CreatePen(PS_SOLID, 2, RGB(59, 130, 246));
                                 HPEN hOldP = (HPEN)SelectObject(hdc, hStP);
+                                HBRUSH hStB = CreateSolidBrush(RGB(30, 58, 138)); // Solar panel color
                                 HBRUSH hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                                Ellipse(hdc, cx - 8, cy - 8, cx + 8, cy + 8);
-                                MoveToEx(hdc, cx - 12, cy, NULL); LineTo(hdc, cx + 12, cy);
-                                MoveToEx(hdc, cx, cy - 12, NULL); LineTo(hdc, cx, cy + 12);
+                                
+                                Ellipse(hdc, cx - 4, cy - 4, cx + 4, cy + 4); // Core
+                                
+                                SelectObject(hdc, hStB);
+                                SelectObject(hdc, GetStockObject(NULL_PEN));
+                                // Solar Panels
+                                Rectangle(hdc, cx - 12, cy - 2, cx - 4, cy + 2);
+                                Rectangle(hdc, cx + 4, cy - 2, cx + 12, cy + 2);
+                                Rectangle(hdc, cx - 2, cy - 12, cx + 2, cy - 4);
+                                Rectangle(hdc, cx - 2, cy + 4, cx + 2, cy + 12);
+                                
                                 SelectObject(hdc, hOldP);
                                 SelectObject(hdc, hOldB);
                                 DeleteObject(hStP);
+                                DeleteObject(hStB);
                             } else if (type == 3) { // Asteroid Field
                                 HBRUSH hAstB = CreateSolidBrush(RGB(255, 170, 0));
                                 HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hAstB);
                                 SelectObject(hdc, GetStockObject(NULL_PEN));
-                                Ellipse(hdc, cx - 8, cy - 6, cx - 2, cy);
-                                Ellipse(hdc, cx + 2, cy - 4, cx + 8, cy + 2);
-                                Ellipse(hdc, cx - 4, cy + 2, cx + 2, cy + 8);
+                                
+                                POINT aPts[6];
+                                aPts[0].x = cx - 6; aPts[0].y = cx - 4; // wait, cy
+                                aPts[0].y = cy - 4;
+                                aPts[1].x = cx - 2; aPts[1].y = cy - 8;
+                                aPts[2].x = cx + 5; aPts[2].y = cy - 5;
+                                aPts[3].x = cx + 8; aPts[3].y = cy + 2;
+                                aPts[4].x = cx + 3; aPts[4].y = cy + 8;
+                                aPts[5].x = cx - 5; aPts[5].y = cy + 5;
+                                Polygon(hdc, aPts, 6);
+                                
+                                // Crater
+                                HBRUSH hCraterB = CreateSolidBrush(RGB(200, 100, 0));
+                                SelectObject(hdc, hCraterB);
+                                Ellipse(hdc, cx + 1, cy, cx + 4, cy + 3);
+                                
                                 SelectObject(hdc, hOldB);
                                 DeleteObject(hAstB);
+                                DeleteObject(hCraterB);
                             } else if (type == 4) { // Anomaly
                                 POINT dPts[4];
-                                dPts[0].x = cx;     dPts[0].y = cy - 9;
-                                dPts[1].x = cx + 8; dPts[1].y = cy;
-                                dPts[2].x = cx;     dPts[2].y = cy + 9;
-                                dPts[3].x = cx - 8; dPts[3].y = cy;
+                                int w = 8 + (tick % 300) / 100;
+                                dPts[0].x = cx;     dPts[0].y = cy - w;
+                                dPts[1].x = cx + w; dPts[1].y = cy;
+                                dPts[2].x = cx;     dPts[2].y = cy + w;
+                                dPts[3].x = cx - w; dPts[3].y = cy;
 
                                 HBRUSH hAnomB = CreateSolidBrush(RGB(176, 38, 255));
                                 HPEN hAnomP = CreatePen(PS_SOLID, 1, RGB(220, 150, 255));
                                 HPEN hOldP = (HPEN)SelectObject(hdc, hAnomP);
                                 HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hAnomB);
                                 Polygon(hdc, dPts, 4);
+                                
+                                HBRUSH hWhiteB = CreateSolidBrush(RGB(255, 255, 255));
+                                SelectObject(hdc, hWhiteB);
+                                Ellipse(hdc, cx - 2, cy - 2, cx + 2, cy + 2);
+                                DeleteObject(hWhiteB);
+
                                 SelectObject(hdc, hOldP);
                                 SelectObject(hdc, hOldB);
                                 DeleteObject(hAnomP);
                                 DeleteObject(hAnomB);
                             } else if (type == 5) { // Pirate Raider
-                                POINT pPts[3];
-                                pPts[0].x = cx;     pPts[0].y = cy + 8;
-                                pPts[1].x = cx + 7; pPts[1].y = cy - 7;
-                                pPts[2].x = cx - 7; pPts[2].y = cy - 7;
+                                int bob = (tick % 1000) > 500 ? 1 : 0;
+                                int bcy = cy + bob;
+                                POINT pPts[4];
+                                pPts[0].x = cx;     pPts[0].y = bcy + 8;
+                                pPts[1].x = cx + 8; pPts[1].y = bcy - 6;
+                                pPts[2].x = cx;     pPts[2].y = bcy - 2;
+                                pPts[3].x = cx - 8; pPts[3].y = bcy - 6;
 
                                 HBRUSH hPirB = CreateSolidBrush(RGB(255, 51, 102));
                                 HPEN hPirP = CreatePen(PS_SOLID, 1, RGB(255, 120, 150));
                                 HPEN hOldP = (HPEN)SelectObject(hdc, hPirP);
                                 HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hPirB);
-                                Polygon(hdc, pPts, 3);
+                                Polygon(hdc, pPts, 4);
+                                
+                                HBRUSH hWhiteB = CreateSolidBrush(RGB(255, 255, 255));
+                                SelectObject(hdc, hWhiteB);
+                                Ellipse(hdc, cx - 2, bcy + 1, cx + 2, bcy + 5);
+                                DeleteObject(hWhiteB);
+                                
                                 SelectObject(hdc, hOldP);
                                 SelectObject(hdc, hOldB);
                                 DeleteObject(hPirP);
@@ -2900,11 +2971,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 HPEN hOldP = (HPEN)SelectObject(hdc, hPlP);
                                 HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hPlB);
                                 Ellipse(hdc, cx - 7, cy - 7, cx + 7, cy + 7);
+                                
+                                // Surface details
+                                HBRUSH hDarkB = CreateSolidBrush(RGB(0, 150, 100));
+                                SelectObject(hdc, hDarkB);
+                                SelectObject(hdc, GetStockObject(NULL_PEN));
+                                Ellipse(hdc, cx - 4, cy - 4, cx, cy);
+                                Ellipse(hdc, cx + 1, cy + 2, cx + 6, cy + 6);
+                                DeleteObject(hDarkB);
 
                                 // Ring
                                 HPEN hRingP = CreatePen(PS_SOLID, 1, RGB(0, 220, 150));
                                 SelectObject(hdc, hRingP);
-                                Arc(hdc, cx - 11, cy - 4, cx + 11, cy + 4, cx - 11, cy, cx + 11, cy);
+                                int tilt = (tick % 2000) / 1000;
+                                Arc(hdc, cx - 12, cy - 4 - tilt, cx + 12, cy + 4 + tilt, cx - 12, cy, cx + 12, cy);
                                 DeleteObject(hRingP);
 
                                 SelectObject(hdc, hOldP);
