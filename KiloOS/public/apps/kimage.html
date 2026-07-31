@@ -222,6 +222,8 @@
     max-width: 100%;
     max-height: calc(100vh - 160px);
     object-fit: contain;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
   }
 
   /* Crop Overlay */
@@ -524,9 +526,9 @@
       
       <!-- Empty State -->
       <div class="empty-state" id="emptyState">
-        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <div class="drop-zone-text">Drag & drop image files here</div>
-        <div class="drop-subtext">or click "Open Image(s)" above to browse (Supports PNG, JPG, WEBP, BMP, GIF)</div>
+        <div class="drop-subtext">or click "Open Image(s)" above to browse (Supports PNG, JPG, WEBP, BMP, GIF)<br><br>Press <b>H</b> for Help</div>
       </div>
 
       <!-- Canvas Wrapper -->
@@ -667,7 +669,11 @@
   // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-    if (e.key === 'ArrowLeft') {
+    if (e.key === 'h' || e.key === 'H') {
+      alert("KImage Pro Help\n\nShortcuts:\n- Left/Right Arrow: Navigate images\n- Space: Play/Pause Slideshow\n- F: Toggle Fullscreen\n- O: Open Images");
+    } else if (e.key === 'o' || e.key === 'O') {
+      ui.fileInput.click();
+    } else if (e.key === 'ArrowLeft') {
       selectImage((state.currentIndex - 1 + state.playlist.length) % state.playlist.length);
     } else if (e.key === 'ArrowRight') {
       selectImage((state.currentIndex + 1) % state.playlist.length);

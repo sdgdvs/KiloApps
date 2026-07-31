@@ -2,10 +2,10 @@
 #include <windows.h>
 #include <commdlg.h>
 
-#define WINDOW_WIDTH 920
-#define WINDOW_HEIGHT 640
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 768
 #define TOOLBAR_HEIGHT 42
-#define SIDEBAR_WIDTH 170
+#define SIDEBAR_WIDTH 200
 #define MAX_FILES 256
 #define TIMER_SLIDESHOW 1001
 
@@ -531,7 +531,7 @@ void DrawRGBHistogram(HDC hdc, RECT rc) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(13, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             int x = 6, y = 6, btnH = 28;
 
@@ -716,6 +716,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_KEYDOWN: {
+            if (wParam == 'O') {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_OPEN, 0);
+            } else if (wParam == 'H') {
+                MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- H: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
+            } else if (wParam == VK_SPACE) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_PLAY, 0);
+            } else if (wParam == VK_LEFT) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_PREV, 0);
+            } else if (wParam == VK_RIGHT) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_NEXT, 0);
+            }
+            break;
+        }
         case WM_LBUTTONDOWN: {
             if (!g_hBmpWork) break;
             int mx = (short)LOWORD(lParam);
@@ -840,6 +854,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 SelectObject(hdcMem, oldBmp);
                 DeleteDC(hdcMem);
+            } else {
+                SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(hdc, RGB(148, 163, 184));
+                HFONT hFontBig = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+                HGDIOBJ oldFont2 = SelectObject(hdc, hFontBig);
+                RECT rcMsg;
+                rcMsg.left = 0; rcMsg.top = TOOLBAR_HEIGHT + canvasH/2 - 40;
+                rcMsg.right = canvasW; rcMsg.bottom = rcMsg.top + 80;
+                DrawTextA(hdc, "No Image Loaded\nPress 'O' to Open, or 'H' for Help", -1, &rcMsg, DT_CENTER | DT_TOP);
+                SelectObject(hdc, oldFont2);
+                DeleteObject(hFontBig);
             }
 
             // Draw Sidebar (Inspector Panel)
