@@ -4,25 +4,111 @@
     <meta charset="utf-8">
     <title>KColony</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #1a1a1a;
-            color: #ffffff;
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+        body { margin: 0; padding: 20px; background-color: #1a1a1a; color: #ffffff; font-family: monospace; user-select: none; }
+        #header { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 10px; background: #333; max-width: 600px; }
+        .res { font-size: 18px; }
+        #main { display: flex; gap: 20px; }
+        #grid { display: grid; grid-template-columns: repeat(20, 20px); grid-template-rows: repeat(20, 20px); gap: 1px; background: #444; border: 2px solid #555; }
+        .cell { width: 20px; height: 20px; background: #222; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .cell:hover { background: #555; }
+        #panel { display: flex; flex-direction: column; gap: 10px; width: 200px; }
+        .btn { padding: 10px; background: #444; border: 1px solid #666; color: white; cursor: pointer; text-align: left; font-family: monospace; }
+        .btn.active { background: #2a5a2a; border-color: #4a9a4a; }
+        .btn:hover:not(.active) { background: #555; }
     </style>
 </head>
 <body>
-    <div id="app">
-        <h1>KColony Scaffolding</h1>
+    <div id="header">
+        <div class="res">Food: <span id="res-food">50</span></div>
+        <div class="res">Power: <span id="res-power">50</span></div>
+        <div class="res">Materials: <span id="res-mat">50</span></div>
+    </div>
+    <div id="main">
+        <div id="grid"></div>
+        <div id="panel">
+            <h3>Structures</h3>
+            <button class="btn active" id="btn-none" onclick="selectType(0)">None (Inspect)</button>
+            <button class="btn" id="btn-solar" onclick="selectType(1)">Solar Panel<br><small>Cost: 10 Mat</small></button>
+            <button class="btn" id="btn-farm" onclick="selectType(2)">Farm<br><small>Cost: 10 Mat, 5 Pwr</small></button>
+            <button class="btn" id="btn-mine" onclick="selectType(3)">Mine<br><small>Cost: 10 Pwr</small></button>
+        </div>
     </div>
     <script>
-        console.log('KColony initialized');
+        const GRID_W = 20;
+        const GRID_H = 20;
+        let food = 50, power = 50, mat = 50;
+        let currentType = 0; // 0=none, 1=solar, 2=farm, 3=mine
+        let grid = new Array(GRID_W * GRID_H).fill(0);
+        
+        function selectType(type) {
+            currentType = type;
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            const btns = ['none', 'solar', 'farm', 'mine'];
+            document.getElementById('btn-' + btns[type]).classList.add('active');
+        }
+
+        function build(x, y) {
+            if (currentType === 0) return;
+            const idx = y * GRID_W + x;
+            if (grid[idx] !== 0) return;
+
+            let costMat = 0, costPwr = 0;
+            if (currentType === 1) { costMat = 10; }
+            else if (currentType === 2) { costMat = 10; costPwr = 5; }
+            else if (currentType === 3) { costPwr = 10; }
+
+            if (mat >= costMat && power >= costPwr) {
+                mat -= costMat;
+                power -= costPwr;
+                grid[idx] = currentType;
+                updateUI();
+                renderCell(x, y);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('res-food').innerText = food;
+            document.getElementById('res-power').innerText = power;
+            document.getElementById('res-mat').innerText = mat;
+        }
+
+        function renderCell(x, y) {
+            const idx = y * GRID_W + x;
+            const cell = document.getElementById(`cell-${x}-${y}`);
+            const t = grid[idx];
+            if (t === 1) { cell.innerHTML = 'S'; cell.style.color = '#ff0'; }
+            else if (t === 2) { cell.innerHTML = 'F'; cell.style.color = '#0f0'; }
+            else if (t === 3) { cell.innerHTML = 'M'; cell.style.color = '#aaa'; }
+        }
+
+        function init() {
+            const gridEl = document.getElementById('grid');
+            for (let y = 0; y < GRID_H; y++) {
+                for (let x = 0; x < GRID_W; x++) {
+                    const d = document.createElement('div');
+                    d.className = 'cell';
+                    d.id = `cell-${x}-${y}`;
+                    d.onclick = () => build(x, y);
+                    gridEl.appendChild(d);
+                }
+            }
+            updateUI();
+            
+            setInterval(() => {
+                let pwrProd = 0, foodProd = 0, matProd = 0;
+                for(let i=0; i<grid.length; i++) {
+                    if(grid[i]===1) pwrProd += 2;
+                    if(grid[i]===2) foodProd += 1;
+                    if(grid[i]===3) matProd += 1;
+                }
+                power += pwrProd;
+                food += foodProd;
+                mat += matProd;
+                updateUI();
+            }, 2000);
+        }
+
+        init();
     </script>
 </body>
 </html>
