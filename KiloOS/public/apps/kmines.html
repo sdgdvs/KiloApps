@@ -77,6 +77,12 @@
   }
   .flag-cloth { animation: flag-wave 0.8s ease-in-out infinite; transform-origin: 11px 10px; }
 
+  @keyframes shield-pulse {
+    0%, 100% { box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 15px rgba(122, 162, 247, 0.4); border-color: #7aa2f7; }
+    50% { box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 30px rgba(122, 162, 247, 0.8); border-color: #a9c5ff; }
+  }
+  .board.shield-active { animation: shield-pulse 1.5s infinite alternate; }
+
   #fx-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; }
 </style>
 </head>
@@ -135,6 +141,10 @@
     let shields = 0;   // Blast Shield (S)
     let detectors = 0; // Detector / Flag-Bot (D)
     let sonars = 0;    // Sonar / Radar Scan (R)
+    let sonarTick = 0;
+    let detectorTick = 0;
+    let detectorR = -1;
+    let detectorC = -1;
 
     // Rush & Combo Mode
     let rushMode = false;
@@ -251,7 +261,32 @@
         fxCtx.fill();
       }
       fxCtx.globalAlpha = 1.0;
-      if (particles.length > 0) fxAnimFrame = requestAnimationFrame(updateFX);
+      
+      let now = Date.now();
+      let keepAnimating = false;
+      if (now - sonarTick < 1000) {
+          let radius = (now - sonarTick) * Math.max(fxCanvas.width, fxCanvas.height) / 1000;
+          fxCtx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+          fxCtx.lineWidth = 3;
+          fxCtx.beginPath();
+          fxCtx.arc(fxCanvas.width / 2, fxCanvas.height / 2, radius, 0, Math.PI * 2);
+          fxCtx.stroke();
+          keepAnimating = true;
+      }
+      
+      if (now - detectorTick < 500 && detectorR !== -1) {
+          let px = detectorC * (COLS > 18 ? 22 : 26) + 12;
+          let py = detectorR * (COLS > 18 ? 22 : 26) + 12;
+          fxCtx.strokeStyle = 'rgba(74, 222, 128, 0.8)';
+          fxCtx.lineWidth = 2;
+          fxCtx.beginPath();
+          fxCtx.moveTo(fxCanvas.width / 2, 0);
+          fxCtx.lineTo(px, py);
+          fxCtx.stroke();
+          keepAnimating = true;
+      }
+
+      if (particles.length > 0 || keepAnimating) fxAnimFrame = requestAnimationFrame(updateFX);
       else fxAnimFrame = null;
     }
     
@@ -354,6 +389,12 @@
       } else {
         document.getElementById('status-text').innerText = `FREEPLAY: ${currentDiff.toUpperCase()} Mode (${ROWS}x${COLS})`;
       }
+
+      if (shields > 0) {
+          document.getElementById('board').classList.add('shield-active');
+      } else {
+          document.getElementById('board').classList.remove('shield-active');
+      }
     }
 
     function init() {
@@ -419,6 +460,8 @@
             }
             document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
             playSound(2000, 0.15, 'triangle');
+            sonarTick = Date.now();
+            if (!fxAnimFrame) updateFX();
             updateUIStatus();
             render();
             if (checkWin() && !gameOver) handleWin();
@@ -435,6 +478,10 @@
                     detectors--;
                     document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
                     playSound(1400, 0.12, 'sine');
+                    detectorTick = Date.now();
+                    detectorR = r;
+                    detectorC = c;
+                    if (!fxAnimFrame) updateFX();
                     updateUIStatus();
                     render();
                     return;

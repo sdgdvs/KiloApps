@@ -58,6 +58,11 @@ int totalWins = 0;
 HWND mainHwnd = NULL;
 int mouseCellPressed = 0;
 
+DWORD sonarTick = 0;
+DWORD detectorTick = 0;
+int detectorR = -1;
+int detectorC = -1;
+
 // Particle System (Explosions & Treasure Bursts)
 typedef struct {
     float x, y;
@@ -445,6 +450,7 @@ void UseSonarScan(HWND hwnd) {
             }
         }
         Beep(2000, 120);
+        sonarTick = GetTickCount();
         wsprintfA(statusMsg, "SONAR SCAN ACTIVATED! (3x3)");
         statusMsgTime = GetTickCount() + 2000;
         InvalidateRect(hwnd, NULL, FALSE);
@@ -467,6 +473,9 @@ void UseDetectorBot(HWND hwnd) {
                 grid[r][c] |= CELL_FLAGGED;
                 flagsPlaced++;
                 detectors--;
+                detectorTick = GetTickCount();
+                detectorR = r;
+                detectorC = c;
                 Beep(1400, 100);
                 wsprintfA(statusMsg, "FLAG-BOT AUTO-FLAGGED MINE!");
                 statusMsgTime = GetTickCount() + 2000;
@@ -776,6 +785,38 @@ void DrawBoard(HWND hwnd, HDC hdc) {
     DeleteObject(hLcdFont);
 
     DrawParticles(hdc);
+
+    if (shields > 0) {
+        int pulse = (tick / 15) % 100;
+        if (pulse > 50) pulse = 100 - pulse;
+        HPEN hShieldPen = CreatePen(PS_SOLID, 4, RGB(100 + pulse, 150 + pulse, 255));
+        HGDIOBJ oldPenS = SelectObject(hdc, hShieldPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, 1, HEADER_HEIGHT + 1, cols * CELL_SIZE - 1, rows * CELL_SIZE + HEADER_HEIGHT - 1);
+        SelectObject(hdc, oldPenS);
+        DeleteObject(hShieldPen);
+    }
+
+    if (tick - sonarTick < 1000) {
+        int maxR = cols * CELL_SIZE;
+        if (rows * CELL_SIZE > maxR) maxR = rows * CELL_SIZE;
+        int radius = (tick - sonarTick) * maxR / 1000;
+        HPEN hRadarPen = CreatePen(PS_SOLID, 3, RGB(56, 189, 248));
+        HGDIOBJ oldPenR = SelectObject(hdc, hRadarPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, cols * CELL_SIZE / 2 - radius, rows * CELL_SIZE / 2 + HEADER_HEIGHT - radius, cols * CELL_SIZE / 2 + radius, rows * CELL_SIZE / 2 + HEADER_HEIGHT + radius);
+        SelectObject(hdc, oldPenR);
+        DeleteObject(hRadarPen);
+    }
+
+    if (tick - detectorTick < 500 && detectorR != -1 && detectorC != -1) {
+        HPEN hLaserPen = CreatePen(PS_SOLID, 2, RGB(74, 222, 128));
+        HGDIOBJ oldPenL = SelectObject(hdc, hLaserPen);
+        MoveToEx(hdc, cols * CELL_SIZE / 2, 0, NULL);
+        LineTo(hdc, detectorC * CELL_SIZE + CELL_SIZE / 2, detectorR * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE / 2);
+        SelectObject(hdc, oldPenL);
+        DeleteObject(hLaserPen);
+    }
 }
 
 int CheckWin() {
