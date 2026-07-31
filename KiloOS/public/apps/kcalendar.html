@@ -30,6 +30,8 @@
     margin: 0;
     background: radial-gradient(circle at top right, #1e1b4b, #0f172a 85%);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -629,6 +631,7 @@
     <button class="btn" id="exportIcsBtn" title="Export iCalendar (.ics)">Export .ics</button>
     <button class="btn" id="exportCsvBtn" title="Export CSV">Export CSV</button>
     <button class="btn" id="importBtn" title="Import .ics or .csv">Import</button>
+    <button class="btn" id="helpBtn" title="Help (Press H)">Help (H)</button>
     <input type="file" id="importFileInput" accept=".ics,.csv" />
   </div>
 </div>
@@ -727,6 +730,11 @@
 </div>
 
 <script>
+  // Resize window on open if running in a popup
+  if (window.resizeTo) {
+    window.resizeTo(900, 700);
+  }
+
   // State management
   let currentView = 'month'; // month, week, day, agenda
   let selectedDate = new Date();
@@ -1466,8 +1474,16 @@
   document.getElementById('importBtn').onclick = () => document.getElementById('importFileInput').click();
   document.getElementById('importFileInput').onchange = handleImportFile;
 
+  function showHelp() {
+    alert("KCalendar Help:\n- Use tabs to switch views\n- Click a day or time slot to add events\n- Click an event to edit or delete it\n- Use import/export to sync events\n- Press H anytime outside text boxes for this help");
+  }
+  document.getElementById('helpBtn').onclick = showHelp;
+
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && eventModalOverlay.classList.contains('active')) closeModal();
+    if ((e.key === 'h' || e.key === 'H') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+      showHelp();
+    }
   });
 
   // Init

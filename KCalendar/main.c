@@ -14,6 +14,7 @@
 #define ID_EDIT_SEARCH     1009
 #define ID_BTN_EXPORT_ICS  1010
 #define ID_BTN_EXPORT_CSV  1011
+#define ID_BTN_HELP        1012
 
 #define MAX_EVENTS 1000
 
@@ -34,9 +35,15 @@ static HWND hBtnExportIcs, hBtnExportCsv;
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hEditBrush = NULL;
 static WNDPROC oldEditProc = NULL;
+static HFONT hFont = NULL;
 
 const char* CATEGORIES[] = { "Work", "Personal", "Health", "Important", "Other" };
 const char* RECURRENCES[] = { "None", "Daily", "Weekly", "Monthly", "Yearly" };
+
+static BOOL CALLBACK SetFontCallback(HWND hwnd, LPARAM lParam) {
+    SendMessage(hwnd, WM_SETFONT, (WPARAM)lParam, TRUE);
+    return TRUE;
+}
 
 // --- CRT-free Helper Functions ---
 void* __cdecl memset(void* p, int c, size_t sz) {
@@ -343,6 +350,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             icex.dwICC = ICC_DATE_CLASSES;
             InitCommonControlsEx(&icex);
 
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             hBgBrush = CreateSolidBrush(RGB(15, 23, 42));
             hEditBrush = CreateSolidBrush(RGB(15, 23, 42));
 
@@ -357,7 +365,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hMonthCal, MCM_GETMINREQRECT, 0, (LPARAM)&rc);
             SetWindowPos(hMonthCal, NULL, 10, 10, rc.right, rc.bottom, SWP_NOZORDER);
 
-            int btnY = 10 + rc.bottom + 10;
+            int winWidth = 750;
+            int winHeight = 500;
+            int listX = 10 + rc.right + 15;
+            int rightW = winWidth - listX - 15;
+            int listH = winHeight - 40 - 130; // Leave 130px for inputs at bottom
+
+            // Left column buttons
+            int btnY = 10 + rc.bottom + 15;
             hBtnToday = CreateWindowEx(0, "BUTTON", "Go to Today",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 10, btnY, rc.right, 28, hwnd, (HMENU)ID_BTN_TODAY, GetModuleHandle(NULL), NULL);
@@ -371,57 +386,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 10 + exportW + 5, btnY + 34, exportW, 28, hwnd, (HMENU)ID_BTN_EXPORT_CSV, GetModuleHandle(NULL), NULL);
 
-            int listX = 10 + rc.right + 15;
-            int rightW = 320;
+            CreateWindowEx(0, "BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, btnY + 68, rc.right, 28, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
 
             // Search & Category Filter bar
+            int searchW = rightW - 165;
             hEditSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                listX, 10, 160, 24, hwnd, (HMENU)ID_EDIT_SEARCH, GetModuleHandle(NULL), NULL);
+                listX, 10, searchW, 24, hwnd, (HMENU)ID_EDIT_SEARCH, GetModuleHandle(NULL), NULL);
 
             hComboFilter = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                listX + 165, 10, 155, 120, hwnd, (HMENU)ID_COMBO_FILTER, GetModuleHandle(NULL), NULL);
+                listX + searchW + 5, 10, 160, 120, hwnd, (HMENU)ID_COMBO_FILTER, GetModuleHandle(NULL), NULL);
             
             SendMessage(hComboFilter, CB_ADDSTRING, 0, (LPARAM)"All Categories");
             for (int i = 0; i < 5; i++) SendMessage(hComboFilter, CB_ADDSTRING, 0, (LPARAM)CATEGORIES[i]);
             SendMessage(hComboFilter, CB_SETCURSEL, 0, 0);
 
             // Event List Box
-            int listH = rc.bottom - 60;
             hListEvents = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
                 listX, 40, rightW, listH, hwnd, (HMENU)ID_LIST_EVENTS, GetModuleHandle(NULL), NULL);
 
             // New event input controls
+            int btmY = 40 + listH + 10;
             hEditEvent = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                listX, 40 + listH + 6, rightW, 24, hwnd, (HMENU)ID_EDIT_EVENT, GetModuleHandle(NULL), NULL);
+                listX, btmY, rightW, 24, hwnd, (HMENU)ID_EDIT_EVENT, GetModuleHandle(NULL), NULL);
 
+            btmY += 34;
+            int comboW = (rightW - 5) / 2;
             hComboCategory = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                listX, 40 + listH + 34, 155, 120, hwnd, (HMENU)ID_COMBO_CATEGORY, GetModuleHandle(NULL), NULL);
+                listX, btmY, comboW, 120, hwnd, (HMENU)ID_COMBO_CATEGORY, GetModuleHandle(NULL), NULL);
             for (int i = 0; i < 5; i++) SendMessage(hComboCategory, CB_ADDSTRING, 0, (LPARAM)CATEGORIES[i]);
             SendMessage(hComboCategory, CB_SETCURSEL, 0, 0);
 
             hComboRecur = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                listX + 165, 40 + listH + 34, 155, 120, hwnd, (HMENU)ID_COMBO_RECUR, GetModuleHandle(NULL), NULL);
+                listX + comboW + 5, btmY, comboW, 120, hwnd, (HMENU)ID_COMBO_RECUR, GetModuleHandle(NULL), NULL);
             for (int i = 0; i < 5; i++) SendMessage(hComboRecur, CB_ADDSTRING, 0, (LPARAM)RECURRENCES[i]);
             SendMessage(hComboRecur, CB_SETCURSEL, 0, 0);
 
+            btmY += 34;
             int btnW = (rightW - 5) / 2;
             hBtnAdd = CreateWindowEx(0, "BUTTON", "Add Event",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                listX, 40 + listH + 64, btnW, 28, hwnd, (HMENU)ID_BTN_ADD, GetModuleHandle(NULL), NULL);
+                listX, btmY, btnW, 28, hwnd, (HMENU)ID_BTN_ADD, GetModuleHandle(NULL), NULL);
 
             hBtnDel = CreateWindowEx(0, "BUTTON", "Delete",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                listX + btnW + 5, 40 + listH + 64, btnW, 28, hwnd, (HMENU)ID_BTN_DEL, GetModuleHandle(NULL), NULL);
+                listX + btnW + 5, btmY, btnW, 28, hwnd, (HMENU)ID_BTN_DEL, GetModuleHandle(NULL), NULL);
 
             oldEditProc = (WNDPROC)SetWindowLongPtr(hEditEvent, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
-            RECT winRc = {0, 0, listX + rightW + 15, btnY + 70};
+            EnumChildWindows(hwnd, SetFontCallback, (LPARAM)hFont);
+
+            RECT winRc = {0, 0, winWidth, winHeight};
             AdjustWindowRect(&winRc, GetWindowLong(hwnd, GWL_STYLE), FALSE);
             SetWindowPos(hwnd, NULL, 0, 0, winRc.right - winRc.left, winRc.bottom - winRc.top, SWP_NOMOVE | SWP_NOZORDER);
 
@@ -480,6 +500,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportToIcs();
             } else if (LOWORD(wParam) == ID_BTN_EXPORT_CSV) {
                 ExportToCsv();
+            } else if (LOWORD(wParam) == ID_BTN_HELP) {
+                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date/export\n- Search or filter on top right\n- Double-click to delete\n- Add events at bottom right\n- Press H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_LIST_EVENTS && HIWORD(wParam) == LBN_DBLCLK) {
                 DeleteSelectedEvent();
             }
@@ -494,6 +516,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             if (hBgBrush) { DeleteObject(hBgBrush); hBgBrush = NULL; }
             if (hEditBrush) { DeleteObject(hEditBrush); hEditBrush = NULL; }
+            if (hFont) { DeleteObject(hFont); hFont = NULL; }
             PostQuitMessage(0);
             break;
         default:
@@ -520,6 +543,13 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+            char cls[32] = {0};
+            GetClassNameA(msg.hwnd, cls, 32);
+            if (lstrcmpiA(cls, "EDIT") != 0) {
+                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date/export\n- Search or filter on top right\n- Double-click to delete\n- Add events at bottom right\n- Press H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
