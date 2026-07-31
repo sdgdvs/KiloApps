@@ -52,7 +52,7 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KTetris
+**Target App:** KSpace
 **Status:** In Queue
 **Current Phase:** In Queue
 
@@ -60,7 +60,6 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
 
-- KTetris (Added Hold Piece, 3-Next Queue, Ghost Landing Shadow, Hard Drop, Persistent Leaderboard, Game Modes, and Save/Resume State)
 - KSpace (Added Game Modes [Classic, Endurance, Boss Rush], Weapon Upgrades, Power-ups, Smart Bomb, Boss Waves, Persistent Leaderboard, and Save/Resume State)
 - KType (Added Timed Test Modes, Custom Lesson Import/Export, Real-time WPM/Accuracy Canvas Graphs, Error Heatmap Analysis, and Persistent Leaderboard)
 - KSolitaire (Added Draw 1/3 Rules, Unlimited Undo/Redo, Smart Hint System, Auto-Finish Solver, Win-Rate & Stats Tracker, Deck & Felt Themes, Save/Resume State)
@@ -107,3 +106,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KZip (Added Archive Search, Checksum Verification, Compression, Encryption, Hex Preview, Chunk Vis, Batch Extract, Regex Search, Deep Metadata)
 - KPaint (Added Image Filters, Canvas Transforms, Undo/Redo, Brush Shapes, Color Palettes, Layers, Blend Modes, Convolution, Select Tools, Export)
 - KSnake (Added Leaderboard, Game Modes, Power-ups, Save States, High Score I/O, Match Replay, Keybindings, Stats Export)
+- KTetris (Added Hold Piece, 3-Next Queue, Ghost Landing Shadow, Hard Drop, Leaderboard, Game Modes, Save States, Match Replay, Keybindings, Stats Export, High Score I/O)
