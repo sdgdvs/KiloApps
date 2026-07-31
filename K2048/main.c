@@ -65,11 +65,11 @@ int movesMax = 0;
 int campaignMode = 0;
 int campaignLevel = 1;
 
-int powerups_shuffles = 3;
-int powerups_hammers = 3;
-int powerups_rotates = 3;
-int powerups_upgrades = 3;
-int powerups_undos = 5;
+int powerups_shuffles = 5;
+int powerups_hammers = 5;
+int powerups_rotates = 5;
+int powerups_upgrades = 5;
+int powerups_undos = 10;
 
 typedef struct {
     int level;
@@ -85,36 +85,36 @@ typedef struct {
 } CampaignStage;
 
 static const CampaignStage campaignStages[30] = {
-    {1,  3,  256,  60,   0, 0, 0, 0, 0, "Stage 1: 3x3 Beginner (256)"},
-    {2,  4,  512,  100,  0, 0, 0, 0, 0, "Stage 2: 4x4 Standard (512)"},
-    {3,  4,  512,  80,   0, 0, 2, 0, 0, "Stage 3: Stone Blockers (512)"},
-    {4,  4,  1024, 120, 90, 0, 0, 0, 0, "Stage 4: Sprint Timer (1024)"},
-    {5,  5,  1024, 150,  0, 0, 2, 1, 0, "Stage 5: Frozen Expansion (1024)"},
-    {6,  5,  2048, 180,  0, 0, 0, 0, 1, "Stage 6: Bomb Hazards (2048)"},
-    {7,  5,  2584, 180,  0, 1, 0, 1, 0, "Stage 7: Fibonacci Grid (2584)"},
-    {8,  4,  1536, 100,  0, 2, 2, 0, 0, "Stage 8: Threes Challenge (1536)"},
-    {9,  6,  2048, 200,  0, 0, 4, 0, 0, "Stage 9: Mega 6x6 Field (2048)"},
-    {10, 5,  2048, 150,100, 0, 2, 1, 1, "Stage 10: Frozen & Explosive (2048)"},
-    {11, 4,  2048, 110,  0, 0, 2, 0, 0, "Stage 11: Tight Quarters (2048)"},
-    {12, 5,  4096, 200,  0, 0, 0, 1, 0, "Stage 12: Frostbite 5x5 (4096)"},
-    {13, 5,  4096, 180,  0, 0, 3, 0, 1, "Stage 13: Demolition Zone (4096)"},
-    {14, 6,  4181, 220,  0, 1, 2, 1, 0, "Stage 14: Fibonacci Grand 6x6 (4181)"},
-    {15, 5,  3072, 180,  0, 2, 2, 0, 1, "Stage 15: Threes Mayhem (3072)"},
-    {16, 4,  2048,  90, 60, 0, 0, 0, 0, "Stage 16: Speed Blitz (2048)"},
-    {17, 5,  4096, 160,  0, 0, 4, 1, 0, "Stage 17: Ice & Stone (4096)"},
-    {18, 6,  4096, 200,  0, 0, 3, 1, 1, "Stage 18: Frozen Explosions (4096)"},
-    {19, 5,  4096, 150, 90, 0, 2, 0, 1, "Stage 19: Time Crunch 5x5 (4096)"},
-    {20, 6,  8192, 250,  0, 0, 0, 0, 0, "Stage 20: Titan Field (8192)"},
-    {21, 4,  2048,  80,  0, 0, 3, 1, 0, "Stage 21: Narrow Escape (2048)"},
-    {22, 5,  4096, 170,  0, 0, 3, 1, 1, "Stage 22: Hazard Mayhem (4096)"},
-    {23, 5,  6765, 200,  0, 1, 2, 1, 0, "Stage 23: Fibonacci Master (6765)"},
-    {24, 6,  6144, 250,  0, 2, 4, 0, 1, "Stage 24: Threes Titan (6144)"},
-    {25, 5,  8192, 200,  0, 0, 4, 1, 0, "Stage 25: Fortified Grid (8192)"},
-    {26, 6,  8192, 220,  0, 0, 2, 1, 1, "Stage 26: Glacial Blast 6x6 (8192)"},
-    {27, 5,  8192, 180,120, 0, 3, 1, 1, "Stage 27: Chaos Time Attack (8192)"},
-    {28, 6,  8192, 250,  0, 0, 4, 1, 1, "Stage 28: Minefield 6x6 (8192)"},
-    {29, 6,  8192, 220,150, 1, 3, 1, 1, "Stage 29: Ultimate Trial (8192)"},
-    {30, 6,  8192, 180,180, 0, 4, 1, 1, "Stage 30: 8192 Grandmaster Challenge"}
+    {1,  3,  256,  150,  0, 0, 0, 0, 0, "Stage 1: 3x3 Beginner (256)"},
+    {2,  4,  512,  300,  0, 0, 0, 0, 0, "Stage 2: 4x4 Standard (512)"},
+    {3,  4,  512,  280,  0, 0, 2, 0, 0, "Stage 3: Stone Blockers (512)"},
+    {4,  4,  1024, 600, 90, 0, 0, 0, 0, "Stage 4: Sprint Timer (1024)"},
+    {5,  5,  1024, 650,  0, 0, 2, 1, 0, "Stage 5: Frozen Expansion (1024)"},
+    {6,  5,  2048, 1200, 0, 0, 0, 0, 1, "Stage 6: Bomb Hazards (2048)"},
+    {7,  5,  2584, 2500, 0, 1, 0, 1, 0, "Stage 7: Fibonacci Grid (2584)"},
+    {8,  4,  1536, 1100, 0, 2, 2, 0, 0, "Stage 8: Threes Challenge (1536)"},
+    {9,  6,  2048, 1300, 0, 0, 4, 0, 0, "Stage 9: Mega 6x6 Field (2048)"},
+    {10, 5,  2048, 1250,100, 0, 2, 1, 1, "Stage 10: Frozen & Explosive (2048)"},
+    {11, 4,  2048, 1400, 0, 0, 2, 0, 0, "Stage 11: Tight Quarters (2048)"},
+    {12, 5,  4096, 2600, 0, 0, 0, 1, 0, "Stage 12: Frostbite 5x5 (4096)"},
+    {13, 5,  4096, 2500, 0, 0, 3, 0, 1, "Stage 13: Demolition Zone (4096)"},
+    {14, 6,  4181, 4200, 0, 1, 2, 1, 0, "Stage 14: Fibonacci Grand 6x6 (4181)"},
+    {15, 5,  3072, 2200, 0, 2, 2, 0, 1, "Stage 15: Threes Mayhem (3072)"},
+    {16, 4,  2048, 1100, 60, 0, 0, 0, 0, "Stage 16: Speed Blitz (2048)"},
+    {17, 5,  4096, 2700, 0, 0, 4, 1, 0, "Stage 17: Ice & Stone (4096)"},
+    {18, 6,  4096, 2800, 0, 0, 3, 1, 1, "Stage 18: Frozen Explosions (4096)"},
+    {19, 5,  4096, 2600, 90, 0, 2, 0, 1, "Stage 19: Time Crunch 5x5 (4096)"},
+    {20, 6,  8192, 5500, 0, 0, 0, 0, 0, "Stage 20: Titan Field (8192)"},
+    {21, 4,  2048, 1300, 0, 0, 3, 1, 0, "Stage 21: Narrow Escape (2048)"},
+    {22, 5,  4096, 2800, 0, 0, 3, 1, 1, "Stage 22: Hazard Mayhem (4096)"},
+    {23, 5,  6765, 7000, 0, 1, 2, 1, 0, "Stage 23: Fibonacci Master (6765)"},
+    {24, 6,  6144, 4500, 0, 2, 4, 0, 1, "Stage 24: Threes Titan (6144)"},
+    {25, 5,  8192, 6000, 0, 0, 4, 1, 0, "Stage 25: Fortified Grid (8192)"},
+    {26, 6,  8192, 5800, 0, 0, 2, 1, 1, "Stage 26: Glacial Blast 6x6 (8192)"},
+    {27, 5,  8192, 5500,120, 0, 3, 1, 1, "Stage 27: Chaos Time Attack (8192)"},
+    {28, 6,  8192, 6200, 0, 0, 4, 1, 1, "Stage 28: Minefield 6x6 (8192)"},
+    {29, 6, 10946, 12000,150, 1, 3, 1, 1, "Stage 29: Ultimate Trial (10946)"},
+    {30, 6,  8192, 5000,180, 0, 4, 1, 1, "Stage 30: 8192 Grandmaster Challenge"}
 };
 
 #define MAX_HISTORY 50
@@ -721,11 +721,11 @@ void InitGame() {
     moveCount = 0;
     timeRemaining = 60;
     movesLeft = movesMax;
-    powerups_shuffles = 3;
-    powerups_hammers = 3;
-    powerups_rotates = 3;
-    powerups_upgrades = 3;
-    powerups_undos = 5;
+    powerups_shuffles = 5;
+    powerups_hammers = 5;
+    powerups_rotates = 5;
+    powerups_upgrades = 5;
+    powerups_undos = 10;
     particleCount = 0;
     if (timerActive) {
         KillTimer(mainHwnd, 1);

@@ -647,43 +647,43 @@
         let campaignMode = false;
         let campaignLevel = 1;
 
-        let powerupsShuffles = 3;
-        let powerupsHammers = 3;
-        let powerupsRotates = 3;
-        let powerupsUpgrades = 3;
-        let powerupsUndos = 5;
+        let powerupsShuffles = 5;
+        let powerupsHammers = 5;
+        let powerupsRotates = 5;
+        let powerupsUpgrades = 5;
+        let powerupsUndos = 10;
 
         const campaignStages = [
-            { level: 1,  size: 3, target: 256,  movesMax: 60,  timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 1: 3x3 Beginner (256)" },
-            { level: 2,  size: 4, target: 512,  movesMax: 100, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 2: 4x4 Standard (512)" },
-            { level: 3,  size: 4, target: 512,  movesMax: 80,  timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: false, bombsEnabled: false, desc: "Stage 3: Stone Blockers (512)" },
-            { level: 4,  size: 4, target: 1024, movesMax: 120, timeLimit: 90,  ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 4: Sprint Timer (1024)" },
-            { level: 5,  size: 5, target: 1024, movesMax: 150, timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 5: Frozen Expansion (1024)" },
-            { level: 6,  size: 5, target: 2048, movesMax: 180, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 6: Bomb Hazards (2048)" },
-            { level: 7,  size: 5, target: 2584, movesMax: 180, timeLimit: 0,   ruleset: 'fibonacci', obstacles: 0, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 7: Fibonacci Grid (2584)" },
-            { level: 8,  size: 4, target: 1536, movesMax: 100, timeLimit: 0,   ruleset: 'threes',    obstacles: 2, frozenEnabled: false, bombsEnabled: false, desc: "Stage 8: Threes Challenge (1536)" },
-            { level: 9,  size: 6, target: 2048, movesMax: 200, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: false, bombsEnabled: false, desc: "Stage 9: Mega 6x6 Field (2048)" },
-            { level: 10, size: 5, target: 2048, movesMax: 150, timeLimit: 100, ruleset: 'classic',   obstacles: 2, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 10: Frozen & Explosive (2048)" },
-            { level: 11, size: 4, target: 2048, movesMax: 110, timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: false, bombsEnabled: false, desc: "Stage 11: Tight Quarters (2048)" },
-            { level: 12, size: 5, target: 4096, movesMax: 200, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 12: Frostbite 5x5 (4096)" },
-            { level: 13, size: 5, target: 4096, movesMax: 180, timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 13: Demolition Zone (4096)" },
-            { level: 14, size: 6, target: 4181, movesMax: 220, timeLimit: 0,   ruleset: 'fibonacci', obstacles: 2, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 14: Fibonacci Grand 6x6 (4181)" },
-            { level: 15, size: 5, target: 3072, movesMax: 180, timeLimit: 0,   ruleset: 'threes',    obstacles: 2, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 15: Threes Mayhem (3072)" },
-            { level: 16, size: 4, target: 2048, movesMax: 90,  timeLimit: 60,  ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 16: Speed Blitz (2048)" },
-            { level: 17, size: 5, target: 4096, movesMax: 160, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 17: Ice & Stone (4096)" },
-            { level: 18, size: 6, target: 4096, movesMax: 200, timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 18: Frozen Explosions (4096)" },
-            { level: 19, size: 5, target: 4096, movesMax: 150, timeLimit: 90,  ruleset: 'classic',   obstacles: 2, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 19: Time Crunch 5x5 (4096)" },
-            { level: 20, size: 6, target: 8192, movesMax: 250, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 20: Titan Field (8192)" },
-            { level: 21, size: 4, target: 2048, movesMax: 80,  timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 21: Narrow Escape (2048)" },
-            { level: 22, size: 5, target: 4096, movesMax: 170, timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 22: Hazard Mayhem (4096)" },
-            { level: 23, size: 5, target: 6765, movesMax: 200, timeLimit: 0,   ruleset: 'fibonacci', obstacles: 2, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 23: Fibonacci Master (6765)" },
-            { level: 24, size: 6, target: 6144, movesMax: 250, timeLimit: 0,   ruleset: 'threes',    obstacles: 4, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 24: Threes Titan (6144)" },
-            { level: 25, size: 5, target: 8192, movesMax: 200, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 25: Fortified Grid (8192)" },
-            { level: 26, size: 6, target: 8192, movesMax: 220, timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 26: Glacial Blast 6x6 (8192)" },
-            { level: 27, size: 5, target: 8192, movesMax: 180, timeLimit: 120, ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 27: Chaos Time Attack (8192)" },
-            { level: 28, size: 6, target: 8192, movesMax: 250, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 28: Minefield 6x6 (8192)" },
-            { level: 29, size: 6, target: 8192, movesMax: 220, timeLimit: 150, ruleset: 'fibonacci', obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 29: Ultimate Trial (8192)" },
-            { level: 30, size: 6, target: 8192, movesMax: 180, timeLimit: 180, ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 30: 8192 Grandmaster Challenge" }
+            { level: 1,  size: 3, target: 256,  movesMax: 150,  timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 1: 3x3 Beginner (256)" },
+            { level: 2,  size: 4, target: 512,  movesMax: 300, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 2: 4x4 Standard (512)" },
+            { level: 3,  size: 4, target: 512,  movesMax: 280,  timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: false, bombsEnabled: false, desc: "Stage 3: Stone Blockers (512)" },
+            { level: 4,  size: 4, target: 1024, movesMax: 600, timeLimit: 90,  ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 4: Sprint Timer (1024)" },
+            { level: 5,  size: 5, target: 1024, movesMax: 650, timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 5: Frozen Expansion (1024)" },
+            { level: 6,  size: 5, target: 2048, movesMax: 1200, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 6: Bomb Hazards (2048)" },
+            { level: 7,  size: 5, target: 2584, movesMax: 2500, timeLimit: 0,   ruleset: 'fibonacci', obstacles: 0, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 7: Fibonacci Grid (2584)" },
+            { level: 8,  size: 4, target: 1536, movesMax: 1100, timeLimit: 0,   ruleset: 'threes',    obstacles: 2, frozenEnabled: false, bombsEnabled: false, desc: "Stage 8: Threes Challenge (1536)" },
+            { level: 9,  size: 6, target: 2048, movesMax: 1300, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: false, bombsEnabled: false, desc: "Stage 9: Mega 6x6 Field (2048)" },
+            { level: 10, size: 5, target: 2048, movesMax: 1250, timeLimit: 100, ruleset: 'classic',   obstacles: 2, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 10: Frozen & Explosive (2048)" },
+            { level: 11, size: 4, target: 2048, movesMax: 1400, timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: false, bombsEnabled: false, desc: "Stage 11: Tight Quarters (2048)" },
+            { level: 12, size: 5, target: 4096, movesMax: 2600, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 12: Frostbite 5x5 (4096)" },
+            { level: 13, size: 5, target: 4096, movesMax: 2500, timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 13: Demolition Zone (4096)" },
+            { level: 14, size: 6, target: 4181, movesMax: 4200, timeLimit: 0,   ruleset: 'fibonacci', obstacles: 2, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 14: Fibonacci Grand 6x6 (4181)" },
+            { level: 15, size: 5, target: 3072, movesMax: 2200, timeLimit: 0,   ruleset: 'threes',    obstacles: 2, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 15: Threes Mayhem (3072)" },
+            { level: 16, size: 4, target: 2048, movesMax: 1100,  timeLimit: 60,  ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 16: Speed Blitz (2048)" },
+            { level: 17, size: 5, target: 4096, movesMax: 2700, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 17: Ice & Stone (4096)" },
+            { level: 18, size: 6, target: 4096, movesMax: 2800, timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 18: Frozen Explosions (4096)" },
+            { level: 19, size: 5, target: 4096, movesMax: 2600, timeLimit: 90,  ruleset: 'classic',   obstacles: 2, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 19: Time Crunch 5x5 (4096)" },
+            { level: 20, size: 6, target: 8192, movesMax: 5500, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 20: Titan Field (8192)" },
+            { level: 21, size: 4, target: 2048, movesMax: 1300,  timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 21: Narrow Escape (2048)" },
+            { level: 22, size: 5, target: 4096, movesMax: 2800, timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 22: Hazard Mayhem (4096)" },
+            { level: 23, size: 5, target: 6765, movesMax: 7000, timeLimit: 0,   ruleset: 'fibonacci', obstacles: 2, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 23: Fibonacci Master (6765)" },
+            { level: 24, size: 6, target: 6144, movesMax: 4500, timeLimit: 0,   ruleset: 'threes',    obstacles: 4, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 24: Threes Titan (6144)" },
+            { level: 25, size: 5, target: 8192, movesMax: 6000, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 25: Fortified Grid (8192)" },
+            { level: 26, size: 6, target: 8192, movesMax: 5800, timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 26: Glacial Blast 6x6 (8192)" },
+            { level: 27, size: 5, target: 8192, movesMax: 5500, timeLimit: 120, ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 27: Chaos Time Attack (8192)" },
+            { level: 28, size: 6, target: 8192, movesMax: 6200, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 28: Minefield 6x6 (8192)" },
+            { level: 29, size: 6, target: 10946, movesMax: 12000, timeLimit: 150, ruleset: 'fibonacci', obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 29: Ultimate Trial (10946)" },
+            { level: 30, size: 6, target: 8192, movesMax: 5000, timeLimit: 180, ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 30: 8192 Grandmaster Challenge" }
         ];
 
         function updatePowerupsDisplay() {
@@ -842,11 +842,11 @@
                 historyStack = [];
                 gameStarted = false;
                 moveCount = 0;
-                powerupsShuffles = 3;
-                powerupsHammers = 3;
-                powerupsRotates = 3;
-                powerupsUpgrades = 3;
-                powerupsUndos = 5;
+                powerupsShuffles = 5;
+                powerupsHammers = 5;
+                powerupsRotates = 5;
+                powerupsUpgrades = 5;
+                powerupsUndos = 10;
                 updatePowerupsDisplay();
                 gameOverEl.classList.remove('active');
                 addRandomTile();
@@ -866,11 +866,11 @@
             moveCount = 0;
             timeRemaining = 60;
             movesLeft = movesMax;
-            powerupsShuffles = 3;
-            powerupsHammers = 3;
-            powerupsRotates = 3;
-            powerupsUpgrades = 3;
-            powerupsUndos = 5;
+            powerupsShuffles = 5;
+            powerupsHammers = 5;
+            powerupsRotates = 5;
+            powerupsUpgrades = 5;
+            powerupsUndos = 10;
             updatePowerupsDisplay();
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;
