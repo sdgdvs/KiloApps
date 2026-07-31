@@ -83,7 +83,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSolitaire
 - KConnect4
 - KHangman
 - KSimon
@@ -112,8 +111,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAsteroids
 - K2048
 - KStarship
+- KSolitaire
 
 ## Completed Work Log
+
+- **KSolitaire (Loop 2):** Implemented multi-colored particle burst explosion animations triggered when cards are successfully moved to the foundation piles for both Web Canvas/HTML (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
 - **KStarship (Loop 1):** Implemented animated player starship with thrusters, solar stars with flares, space station with solar panels, rotating asteroids with craters, swirling quantum anomalies, pirate raider ships, and detailed orbital planets with animated tilting rings for both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 

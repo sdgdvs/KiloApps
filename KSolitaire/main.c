@@ -135,6 +135,15 @@ typedef struct {
     int finished;
 } CascadeCard;
 
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    int maxLife;
+    COLORREF color;
+    int active;
+} Particle;
+
 // Memory copy helpers for CRT-less build
 #pragma function(memcpy)
 void *memcpy(void *dest, const void *src, size_t count) {
@@ -182,6 +191,9 @@ int gameWon = 0;
 CascadeCard cascadeCards[52];
 int cascadeFrame = 0;
 int cascadeActive = 0;
+
+Particle particles[128];
+int particleActive = 0;
 
 // Random Seed generator
 unsigned int seed = 1337;
@@ -450,6 +462,36 @@ void ThawAdjacent(int colA, int colB) {
     }
 }
 
+void SpawnParticles(HWND hwnd, int dstPile) {
+    int fx = GAP_X + 3 * (CARD_W + GAP_X) + dstPile * (CARD_W + GAP_X);
+    int fy = 35 + GAP_Y;
+    
+    int cx = fx + CARD_W / 2;
+    int cy = fy + CARD_H / 2;
+    
+    COLORREF colors[4] = {RGB(255, 215, 0), RGB(255, 255, 255), RGB(255, 145, 0), RGB(0, 230, 118)};
+    
+    for (int i = 0; i < 20; i++) {
+        for (int p = 0; p < 128; p++) {
+            if (!particles[p].active) {
+                particles[p].x = (float)cx;
+                particles[p].y = (float)cy;
+                float vx = (float)((rnd() % 100) - 50) / 10.0f;
+                float vy = (float)((rnd() % 100) - 50) / 10.0f;
+                particles[p].vx = vx;
+                particles[p].vy = vy;
+                particles[p].life = 20 + rnd() % 10;
+                particles[p].maxLife = particles[p].life;
+                particles[p].color = colors[rnd() % 4];
+                particles[p].active = 1;
+                break;
+            }
+        }
+    }
+    particleActive = 1;
+    SetTimer(hwnd, 4, 30, NULL);
+}
+
 void StartWinCascade(HWND hwnd) {
     cascadeActive = 1;
     cascadeFrame = 0;
@@ -578,6 +620,7 @@ int AttemptMove(int srcType, int srcPile, int srcIdx, int dstType, int dstPile, 
         }
         state.score += (state.vegasRules ? 5 : (srcType == 0 ? 10 : (srcType == 1 ? 10 : 0)));
         MessageBeep(MB_OK);
+        SpawnParticles(hwnd, dstPile);
     } else if (dstType == 1) {
         for (int i = 0; i < moveCount; i++) {
             state.tableau[dstPile][state.tableau_cnt[dstPile]++] = cardsToMove[i];
@@ -1465,6 +1508,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     ReleaseDC(hwnd, hdc);
                 }
+            } else if (wParam == 4) { // Particles
+                int anyActive = 0;
+                for (int i = 0; i < 128; i++) {
+                    if (particles[i].active) {
+                        particles[i].x += particles[i].vx;
+                        particles[i].y += particles[i].vy;
+                        particles[i].life--;
+                        if (particles[i].life <= 0) {
+                            particles[i].active = 0;
+                        } else {
+                            anyActive = 1;
+                        }
+                    }
+                }
+                if (!anyActive) {
+                    particleActive = 0;
+                    KillTimer(hwnd, 4);
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         }
@@ -1583,6 +1645,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int isHS = (hintSrcType == 1 && hintSrcPile == t && c == hintSrcIdx);
                         int isHD = (hintDstType == 1 && hintDstPile == t && c == tCount - 1);
                         DrawCardGDI(memDC, card, tx, cy, isSel, isHS, isHD);
+                    }
+                }
+            }
+
+            if (particleActive) {
+                for (int i = 0; i < 128; i++) {
+                    if (particles[i].active) {
+                        int size = 2 + (particles[i].life * 3) / particles[i].maxLife;
+                        HBRUSH pb = CreateSolidBrush(particles[i].color);
+                        RECT pr = { (int)particles[i].x - size, (int)particles[i].y - size, (int)particles[i].x + size, (int)particles[i].y + size };
+                        FillRect(memDC, &pr, pb);
+                        DeleteObject(pb);
                     }
                 }
             }
