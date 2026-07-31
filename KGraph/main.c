@@ -213,32 +213,32 @@ static void FindRootsInView(void) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hFontBold = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontSmall = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontBold = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             int topY = 8;
             for (int i = 0; i < MAX_FUNCS; i++) {
                 char label[16];
                 sprintf(label, "y%d =", i + 1);
-                CreateWindowA("STATIC", label, WS_CHILD | WS_VISIBLE, 10, topY + 3, 30, 20, hwnd, NULL, NULL, NULL);
-                hInputs[i] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", funcs[i].expr, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 42, topY, 140, 22, hwnd, NULL, NULL, NULL);
-                hChecks[i] = CreateWindowA("BUTTON", "Show", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 188, topY + 2, 50, 20, hwnd, (HMENU)(HMENU)(1100 + i), NULL, NULL);
+                CreateWindowA("STATIC", label, WS_CHILD | WS_VISIBLE, 10, topY + 4, 35, 20, hwnd, NULL, NULL, NULL);
+                hInputs[i] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", funcs[i].expr, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, topY, 220, 24, hwnd, NULL, NULL, NULL);
+                hChecks[i] = CreateWindowA("BUTTON", "Show", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 280, topY + 2, 60, 20, hwnd, (HMENU)(HMENU)(1100 + i), NULL, NULL);
                 SendMessageA(hChecks[i], BM_SETCHECK, funcs[i].enabled ? BST_CHECKED : BST_UNCHECKED, 0);
 
                 SendMessageA(hInputs[i], WM_SETFONT, (WPARAM)hFontSmall, TRUE);
                 SendMessageA(hChecks[i], WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
-                topY += 26;
+                topY += 30;
             }
 
-            hPlotBtn  = CreateWindowA("BUTTON", "Plot", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 8, 55, 22, hwnd, (HMENU)1001, NULL, NULL);
-            hZoomIn   = CreateWindowA("BUTTON", "+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 305, 8, 30, 22, hwnd, (HMENU)1002, NULL, NULL);
-            hZoomOut  = CreateWindowA("BUTTON", "-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 340, 8, 30, 22, hwnd, (HMENU)1003, NULL, NULL);
-            hResetBtn = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 375, 8, 55, 22, hwnd, (HMENU)1004, NULL, NULL);
-            hRootsBtn = CreateWindowA("BUTTON", "Roots", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 34, 55, 22, hwnd, (HMENU)1005, NULL, NULL);
-            hPresetBtn= CreateWindowA("BUTTON", "Presets", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 305, 34, 70, 22, hwnd, (HMENU)1006, NULL, NULL);
+            hPlotBtn  = CreateWindowA("BUTTON", "Plot", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 360, 8, 80, 30, hwnd, (HMENU)1001, NULL, NULL);
+            hZoomIn   = CreateWindowA("BUTTON", "+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 450, 8, 35, 30, hwnd, (HMENU)1002, NULL, NULL);
+            hZoomOut  = CreateWindowA("BUTTON", "-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 495, 8, 35, 30, hwnd, (HMENU)1003, NULL, NULL);
+            hResetBtn = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 540, 8, 70, 30, hwnd, (HMENU)1004, NULL, NULL);
+            hRootsBtn = CreateWindowA("BUTTON", "Roots", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 360, 45, 80, 30, hwnd, (HMENU)1005, NULL, NULL);
+            hPresetBtn= CreateWindowA("BUTTON", "Presets", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 450, 45, 80, 30, hwnd, (HMENU)1006, NULL, NULL);
 
-            hStatus = CreateWindowA("STATIC", "Ready. Hover mouse over graph to trace values.", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, topY + 5, 480, 20, hwnd, NULL, NULL, NULL);
+            hStatus = CreateWindowA("STATIC", "Ready. Hover mouse to trace values. Press 'H' for help.", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, topY + 5, 600, 20, hwnd, NULL, NULL, NULL);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
             SendMessageA(hPlotBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
@@ -289,8 +289,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
 
+        case WM_KEYDOWN: {
+            if (wParam == 'H' || wParam == 'h') {
+                MessageBoxA(hwnd, "KGraph Controls:\n\n- Type equations in y1, y2, y3.\n- Click 'Plot' to render equations.\n- Click and drag graph to pan.\n- Use + / - buttons to zoom.\n- Check 'Show' to toggle visibility.", "KGraph Help", MB_OK | MB_ICONINFORMATION);
+            }
+            break;
+        }
+
         case WM_LBUTTONDOWN: {
-            if (HIWORD(lParam) > 105) {
+            if (HIWORD(lParam) > 130) {
                 is_dragging = 1;
                 last_mouse.x = LOWORD(lParam);
                 last_mouse.y = HIWORD(lParam);
@@ -306,7 +313,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hover_mouse.y = my;
 
             RECT rect; GetClientRect(hwnd, &rect);
-            int canvasTop = 105;
+            int canvasTop = 130;
             int w = rect.right - rect.left;
             int h = rect.bottom - canvasTop;
 
@@ -350,7 +357,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             RECT rect;
             GetClientRect(hwnd, &rect);
-            int canvasTop = 105;
+            int canvasTop = 130;
             RECT canvasRect = {rect.left, canvasTop, rect.right, rect.bottom};
 
             // Double Buffering
@@ -468,6 +475,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry(void) {
+    SetProcessDPIAware();
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
@@ -476,7 +484,7 @@ void __stdcall MainEntry(void) {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 520, 520, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

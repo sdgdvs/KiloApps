@@ -114,6 +114,7 @@
   /* Sidebar Panels */
   .sidebar {
     width: 380px;
+    flex-shrink: 0;
     background: rgba(19, 23, 36, 0.95);
     border-right: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
@@ -420,24 +421,27 @@
     background: rgba(255, 255, 255, 0.2);
   }
   
-  /* Error Toast */
-  .toast-err {
+  /* Toast Message */
+  .toast-msg {
     position: absolute;
     bottom: 16px;
     left: 16px;
-    background: rgba(239, 68, 68, 0.9);
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    background: rgba(30, 41, 59, 0.95);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #f1f5f9;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
     z-index: 6;
+    white-space: pre-line;
+    line-height: 1.5;
   }
-  .toast-err.visible {
+  .toast-msg.visible {
     opacity: 1;
   }
 </style>
@@ -580,8 +584,8 @@
         <button class="tool-btn" onclick="resetView()" title="Reset View">⟲</button>
       </div>
       
-      <!-- Error Toast -->
-      <div class="toast-err" id="toastErr"></div>
+      <!-- Toast -->
+      <div class="toast-msg" id="toastMsg"></div>
     </div>
     
   </div>
@@ -1340,11 +1344,13 @@
       reader.readAsText(file);
     }
     
-    function showToast(msg) {
-      const t = document.getElementById('toastErr');
+    let toastTimeout;
+    function showToast(msg, duration = 4000) {
+      const t = document.getElementById('toastMsg');
       t.innerText = msg;
       t.classList.add('visible');
-      setTimeout(() => t.classList.remove('visible'), 3000);
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => t.classList.remove('visible'), duration);
     }
     
     // Window Resize Event
@@ -1354,6 +1360,15 @@
     buildFuncCards();
     buildPresets();
     setTimeout(resizeCanvas, 100);
+    setTimeout(() => showToast("Welcome to KGraph!\nPress 'H' for help and controls", 5000), 500);
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key.toLowerCase() === 'h') {
+        showToast("KGraph Controls:\n• Scroll to Zoom\n• Click & Drag to Pan\n• Hover to trace coordinates\n• Use tabs for Calculus & Analysis", 6000);
+      }
+    });
   </script>
 </body>
 </html>
