@@ -160,6 +160,9 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 ## Progress Log
 
+**Loop 9**
+- [x] KRogue (Loop 9: Advanced trap mechanics, boss rematches, cursed items to both EXE and HTML)
+
 **Loop 8**
 - [x] K2048 (Balance audit complete: Adjusted spawn rates to 90/10 for 2/4, mathematically rebalanced move limits for all campaign stages, fixed Stage 29 target, and updated powerup starting stocks in both EXE and HTML)
 - [x] KSnake (Expanded Campaign Mode to 25 stages ending with Omega Boss Lair, added Ghost Berry food, Hunter AI rivals that chase the player, and fixed C linking bug by replacing math.h trig functions in both EXE and HTML)
