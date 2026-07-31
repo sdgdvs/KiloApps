@@ -2,8 +2,8 @@
 #include <windows.h>
 #include <commctrl.h>
 
-#define W 540
-#define H 420
+#define W 900
+#define H 650
 
 #define ID_TAB_CTRL   1001
 #define ID_TXT_MAIN   1002
@@ -86,6 +86,7 @@ void GetSystemAuditText(char* buf, int maxLen) {
         "=================================================================\r\n"
         "       KSYS NATIVE SYSTEM DIAGNOSTICS & HARDWARE REPORT          \r\n"
         "=================================================================\r\n"
+        "-> Press 'H' for Help/Instructions \r\n\r\n"
         "System Uptime      : %u h %u m %u s\r\n"
         "Architecture       : %s\r\n"
         "Logical Processors : %u Cores\r\n"
@@ -313,6 +314,7 @@ void UpdateView() {
     } else if (g_CurrentTab == 1) { // Benchmarks
         wsprintfA(contentBuf,
             "--- DIAGNOSTIC BENCHMARK SUITE ---\r\n\r\n"
+            "-> Press 'H' for Help/Instructions \r\n\r\n"
             "CPU Benchmark Test  : %s\r\n"
             "RAM Throughput Test : %s\r\n"
             "Disk I/O Speed Test : %s\r\n\r\n"
@@ -459,7 +461,7 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press 'H' for Help", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -467,6 +469,9 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN && msg.wParam == 'H') {
+            MessageBoxA(hwnd, "KSys Help Instructions:\n\n1. Hardware Inspector: View live system details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Event Logs: Check background activity.\n4. Report Export: Generate and download summaries.\n\nUse the tabs to navigate.", "KSys Help", MB_OK | MB_ICONINFORMATION);
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

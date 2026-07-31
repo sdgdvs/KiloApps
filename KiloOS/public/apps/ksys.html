@@ -30,6 +30,9 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Header */
@@ -379,7 +382,7 @@
       <div class="brand-logo">KS</div>
       <div class="brand-title">
         <h1>KSys Workstation Diagnostic & Benchmark Suite</h1>
-        <p>System Utility & Hardware Performance Inspector</p>
+        <p>System Utility & Hardware Performance Inspector | <strong>Press 'H' for Help</strong></p>
       </div>
     </div>
     <div class="top-stats">
@@ -600,6 +603,19 @@
     ramScore: null,
     diskScore: null
   };
+
+  // Attempt to resize window for better usability
+  try {
+    if (window.resizeTo) {
+      window.resizeTo(1000, 800);
+    }
+  } catch(e) {}
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      alert("KSys Help Instructions:\n\n1. Component Inspector: View live hardware details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Event History: Check logs of background tasks.\n4. System Report Export: Generate and download system summaries.\n\nUse the tabs at the top to navigate.");
+    }
+  });
 
   function logEvent(level, message) {
     const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
