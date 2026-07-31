@@ -482,7 +482,7 @@
             {
                 id: 'sys_1',
                 user: 'System',
-                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>',
+                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>\nType /help for more instructions.',
                 timestamp: Date.now(),
                 room: '#general',
                 pinned: true,
@@ -951,6 +951,12 @@
         window.send = function() {
             const msg = inputEl.value.trim();
             if (!msg) return;
+
+            if (msg === '/help' || msg.startsWith('/help ')) {
+                addMessage("System", "Help: /nick <name>, /join <#room>, /ai <prompt>. Use UI buttons for Connect, Pin, Export.", currentRoom, false);
+                inputEl.value = '';
+                return;
+            }
 
             if (msg.startsWith('/nick ')) {
                 const newName = msg.substring(6).trim();
