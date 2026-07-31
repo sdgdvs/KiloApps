@@ -1120,10 +1120,13 @@
       const targetA = data[targetIdx + 3];
 
       if (targetR === fillR && targetG === fillG && targetB === fillB) return;
+      if (startX < 0 || startX >= w || startY < 0 || startY >= h) return;
 
       const stack = [[startX, startY]];
+      let maxIters = w * h;
+      let iters = 0;
 
-      while (stack.length > 0) {
+      while (stack.length > 0 && iters++ < maxIters) {
         const [x, y] = stack.pop();
         let currY = y;
 
@@ -1291,6 +1294,10 @@
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
+          if (img.width > 4096 || img.height > 4096) {
+            alert("Image exceeds maximum dimensions (4096x4096).");
+            return;
+          }
           if (img.width !== canvas.width || img.height !== canvas.height) {
             resizeCanvas(img.width, img.height);
           }
@@ -1369,6 +1376,10 @@
       if (res && res.data) {
         const img = new Image();
         img.onload = () => {
+          if (img.width > 4096 || img.height > 4096) {
+            alert("Image exceeds maximum dimensions (4096x4096).");
+            return;
+          }
           if (img.width !== canvas.width || img.height !== canvas.height) {
             resizeCanvas(img.width, img.height);
           }

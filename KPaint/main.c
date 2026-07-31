@@ -78,9 +78,10 @@ void PushUndo() {
     HDC hdcScreen = GetDC(NULL);
     HBITMAP hbmCopy = CreateCompatibleBitmap(hdcScreen, 2000, 2000);
     HDC hdcCopy = CreateCompatibleDC(hdcScreen);
-    SelectObject(hdcCopy, hbmCopy);
+    HBITMAP hOld = (HBITMAP)SelectObject(hdcCopy, hbmCopy);
     BitBlt(hdcCopy, 0, 0, 2000, 2000, hdcMem, 0, 0, SRCCOPY);
     
+    SelectObject(hdcCopy, hOld);
     DeleteDC(hdcCopy);
     ReleaseDC(NULL, hdcScreen);
 
@@ -108,8 +109,9 @@ void PerformUndo() {
     HDC hdcScreen = GetDC(NULL);
     HBITMAP hbmCurrent = CreateCompatibleBitmap(hdcScreen, 2000, 2000);
     HDC hdcCopy = CreateCompatibleDC(hdcScreen);
-    SelectObject(hdcCopy, hbmCurrent);
+    HBITMAP hOld = (HBITMAP)SelectObject(hdcCopy, hbmCurrent);
     BitBlt(hdcCopy, 0, 0, 2000, 2000, hdcMem, 0, 0, SRCCOPY);
+    SelectObject(hdcCopy, hOld);
     DeleteDC(hdcCopy);
     ReleaseDC(NULL, hdcScreen);
 
@@ -122,8 +124,9 @@ void PerformUndo() {
     // Restore from undo stack
     HBITMAP hbmRestore = hbmUndoStack[--undoCount];
     HDC hdcTemp = CreateCompatibleDC(hdcMem);
-    SelectObject(hdcTemp, hbmRestore);
+    HBITMAP hOldTemp = (HBITMAP)SelectObject(hdcTemp, hbmRestore);
     BitBlt(hdcMem, 0, 0, 2000, 2000, hdcTemp, 0, 0, SRCCOPY);
+    SelectObject(hdcTemp, hOldTemp);
     DeleteDC(hdcTemp);
     DeleteObject(hbmRestore);
 }
@@ -135,8 +138,9 @@ void PerformRedo() {
     HDC hdcScreen = GetDC(NULL);
     HBITMAP hbmCurrent = CreateCompatibleBitmap(hdcScreen, 2000, 2000);
     HDC hdcCopy = CreateCompatibleDC(hdcScreen);
-    SelectObject(hdcCopy, hbmCurrent);
+    HBITMAP hOld = (HBITMAP)SelectObject(hdcCopy, hbmCurrent);
     BitBlt(hdcCopy, 0, 0, 2000, 2000, hdcMem, 0, 0, SRCCOPY);
+    SelectObject(hdcCopy, hOld);
     DeleteDC(hdcCopy);
     ReleaseDC(NULL, hdcScreen);
 
@@ -149,8 +153,9 @@ void PerformRedo() {
     // Restore from redo stack
     HBITMAP hbmRestore = hbmRedoStack[--redoCount];
     HDC hdcTemp = CreateCompatibleDC(hdcMem);
-    SelectObject(hdcTemp, hbmRestore);
+    HBITMAP hOldTemp = (HBITMAP)SelectObject(hdcTemp, hbmRestore);
     BitBlt(hdcMem, 0, 0, 2000, 2000, hdcTemp, 0, 0, SRCCOPY);
+    SelectObject(hdcTemp, hOldTemp);
     DeleteDC(hdcTemp);
     DeleteObject(hbmRestore);
 }
@@ -277,9 +282,10 @@ void FlipHorizontal() {
     PushUndo();
     HDC hdcTemp = CreateCompatibleDC(hdcMem);
     HBITMAP hbmTemp = CreateCompatibleBitmap(hdcMem, 2000, 2000);
-    SelectObject(hdcTemp, hbmTemp);
+    HBITMAP hOld = (HBITMAP)SelectObject(hdcTemp, hbmTemp);
     StretchBlt(hdcTemp, 0, 0, 2000, 2000, hdcMem, 1999, 0, -2000, 2000, SRCCOPY);
     BitBlt(hdcMem, 0, 0, 2000, 2000, hdcTemp, 0, 0, SRCCOPY);
+    SelectObject(hdcTemp, hOld);
     DeleteDC(hdcTemp);
     DeleteObject(hbmTemp);
 }
@@ -331,9 +337,10 @@ int SaveBitmap(const char* path, HBITMAP hbm) {
     
     HDC tempDC = CreateCompatibleDC(hdc);
     HBITMAP tempBmp = CreateCompatibleBitmap(hdc, 800, 600);
-    SelectObject(tempDC, tempBmp);
+    HBITMAP hOld = (HBITMAP)SelectObject(tempDC, tempBmp);
     RECT tr = {0,0,800,600}; FillRect(tempDC, &tr, (HBRUSH)GetStockObject(WHITE_BRUSH));
     BitBlt(tempDC, 0, 0, 800, 600, hdcMem, 0, 0, SRCCOPY);
+    SelectObject(tempDC, hOld);
     
     GetDIBits(hdc, tempBmp, 0, 600, lpbitmap, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
@@ -364,12 +371,13 @@ void LoadBitmapFile(HWND hwnd, const char* path) {
     if (hLoaded) {
         PushUndo();
         HDC hdcTemp = CreateCompatibleDC(hdcMem);
-        SelectObject(hdcTemp, hLoaded);
+        HBITMAP hOld = (HBITMAP)SelectObject(hdcTemp, hLoaded);
         BITMAP bmp;
         GetObject(hLoaded, sizeof(BITMAP), &bmp);
         RECT r = {0, 0, 2000, 2000};
         FillRect(hdcMem, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
         BitBlt(hdcMem, 0, 0, bmp.bmWidth, bmp.bmHeight, hdcTemp, 0, 0, SRCCOPY);
+        SelectObject(hdcTemp, hOld);
         DeleteDC(hdcTemp);
         DeleteObject(hLoaded);
         InvalidateRect(hwnd, NULL, FALSE);

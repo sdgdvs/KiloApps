@@ -316,6 +316,20 @@
 
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  @keyframes shatter {
+    0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    25% { transform: translate(-2px, -2px) rotate(-5deg); opacity: 0.8; }
+    50% { transform: translate(2px, -4px) rotate(5deg); opacity: 0.6; }
+    75% { transform: translate(-2px, 2px) rotate(-5deg); opacity: 0.8; }
+    100% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  }
+  .kinetic-bounce { animation: bounce 0.15s ease-out; display: inline-block; }
+  .kinetic-shatter { animation: shatter 0.2s ease-out; display: inline-block; color: var(--accent-amber); text-shadow: 0 0 8px var(--accent-amber); }
+
   .reset-bar {
     display: flex;
     justify-content: center;
@@ -585,6 +599,11 @@
         <div class="metric-label">Mistypes</div>
       </div>
     </div>
+    
+    <div class="card" style="padding: 12px; text-align: center; border: 1px dashed var(--border-color); cursor: pointer;" onclick="document.getElementById('font-file-input').click()" id="font-drop-zone">
+      <input type="file" id="font-file-input" accept=".ttf,.otf" style="display: none;" aria-label="Font file picker">
+      <span style="font-size: 13px; color: var(--text-secondary);">Drop .TTF / .OTF here or click to load Custom Font</span>
+    </div>
 
     <!-- Typing Canvas Container -->
     <div class="card" style="padding: 16px;">
@@ -651,7 +670,10 @@
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="font-size: 18px; font-weight: 700;">Finger Weakness & Error Heatmap Analysis</h3>
-        <button class="btn btn-secondary" onclick="resetHeatmap()">Clear Heatmap Stats</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn" onclick="exportHeatmap()">🖼️ Export Heatmap</button>
+          <button class="btn btn-secondary" onclick="resetHeatmap()">Clear Heatmap Stats</button>
+        </div>
       </div>
 
       <!-- QWERTY Heatmap -->
@@ -763,7 +785,7 @@ const FINGER_MAP = {
 let audioCtx = null;
 let soundEnabled = true;
 
-function playSound(type) {
+function playSound(type, cadence = 0) {
   if (!soundEnabled) return;
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -778,12 +800,23 @@ function playSound(type) {
   const now = audioCtx.currentTime;
 
   if (type === 'key') {
+    let baseFreq = 300 + (cadence * 15);
+    if (baseFreq > 800) baseFreq = 800;
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(450 + Math.random() * 50, now);
-    gain.gain.setValueAtTime(0.04, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    osc.frequency.setValueAtTime(baseFreq, now);
+    
+    let attack = 0.01;
+    let decay = 0.05;
+    let sustain = 0.02;
+    let release = 0.05;
+    
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.08, now + attack);
+    gain.gain.linearRampToValueAtTime(sustain, now + attack + decay);
+    gain.gain.linearRampToValueAtTime(0, now + attack + decay + release);
+    
     osc.start(now);
-    osc.stop(now + 0.04);
+    osc.stop(now + attack + decay + release);
   } else if (type === 'error') {
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(150, now);
@@ -828,6 +861,9 @@ let timeRemaining = 30;
 let totalKeystrokes = 0;
 let correctKeystrokes = 0;
 let errorCount = 0;
+
+let lastKeyTime = 0;
+let currentCadence = 0;
 
 let chartDataWPM = [];
 let chartDataAcc = [];
@@ -1067,6 +1103,13 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
 
   if (!isTestActive) startTest();
 
+  const nowTime = Date.now();
+  if (lastKeyTime > 0) {
+    const dt = nowTime - lastKeyTime;
+    currentCadence = dt > 0 ? (1000 / dt) : 0;
+  }
+  lastKeyTime = nowTime;
+
   const typedChar = inputVal[inputVal.length - 1];
   const targetWord = testWords[wordIndex];
 
@@ -1102,13 +1145,24 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
   const targetKey = (expectedChar || typedChar).toLowerCase();
   if (!keyHeatmapData[targetKey]) keyHeatmapData[targetKey] = { hits: 0, errors: 0 };
 
+  if (charSpan) {
+    charSpan.classList.remove('kinetic-bounce', 'kinetic-shatter');
+    void charSpan.offsetWidth; // trigger reflow
+  }
+
   if (typedChar === expectedChar) {
-    if (charSpan) charSpan.className = 'char correct';
+    if (charSpan) {
+        charSpan.className = 'char correct';
+        if (currentCadence > 10) charSpan.classList.add('kinetic-bounce');
+    }
     correctKeystrokes++;
     keyHeatmapData[targetKey].hits++;
-    playSound('key');
+    playSound('key', currentCadence);
   } else {
-    if (charSpan) charSpan.className = 'char incorrect';
+    if (charSpan) {
+        charSpan.className = 'char incorrect';
+        charSpan.classList.add('kinetic-shatter');
+    }
     errorCount++;
     keyHeatmapData[targetKey].errors++;
     playSound('error');
@@ -1316,6 +1370,63 @@ function resetHeatmap() {
   renderHeatmap();
 }
 
+function exportHeatmap() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 800; canvas.height = 360;
+  const ctx = canvas.getContext('2d');
+  
+  ctx.fillStyle = '#05070c';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.fillStyle = '#00f2fe';
+  ctx.font = '24px sans-serif';
+  ctx.fillText('KType Finger Weakness Heatmap', 30, 40);
+  
+  let startX = 60; let startY = 80; let keySize = 50; let gap = 8;
+  ctx.font = 'bold 16px monospace';
+  ctx.textAlign = 'center';
+  
+  KEYBOARD_LAYOUT.forEach((row, rIdx) => {
+    let x = startX + (rIdx * 25);
+    let y = startY + rIdx * (keySize + gap);
+    row.forEach(key => {
+      const stats = keyHeatmapData[key] || { hits: 0, errors: 0 };
+      const total = stats.hits + stats.errors;
+      const errRate = total > 0 ? (stats.errors / total) : 0;
+      
+      if (stats.errors > 0 && errRate > 0.2) {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+      } else if (stats.errors > 0) {
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+      } else {
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.05)';
+        ctx.strokeStyle = 'rgba(16, 185, 129, 0.3)';
+      }
+      
+      ctx.lineWidth = 1;
+      ctx.fillRect(x, y, keySize, keySize);
+      ctx.strokeRect(x, y, keySize, keySize);
+      
+      ctx.fillStyle = (stats.errors > 0 && errRate > 0.2) ? '#fff' : (stats.errors > 0 ? '#f59e0b' : '#f8fafc');
+      ctx.fillText(key.toUpperCase(), x + keySize/2, y + 22);
+      
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px sans-serif';
+      ctx.fillText(`${stats.errors} err`, x + keySize/2, y + 40);
+      ctx.font = 'bold 16px monospace';
+      
+      x += keySize + gap;
+    });
+  });
+  
+  const link = document.createElement('a');
+  link.download = 'ktype_heatmap.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
 // --- Custom Lessons & Import/Export ---
 function saveCustomLesson() {
   const text = document.getElementById('custom-text-input').value.trim();
@@ -1365,6 +1476,39 @@ function handleFileImport(e) {
   };
   reader.readAsText(file);
 }
+
+function handleFontImport(e) {
+  const file = e.target.files ? e.target.files[0] : (e.dataTransfer ? e.dataTransfer.files[0] : null);
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      const font = new FontFace('CustomUserFont', event.target.result);
+      await font.load();
+      document.fonts.add(font);
+      document.documentElement.style.setProperty('--font-mono', '"CustomUserFont", monospace');
+      alert('Custom font loaded successfully!');
+    } catch (err) {
+      alert('Failed to load custom font.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+document.getElementById('font-file-input').addEventListener('change', handleFontImport);
+
+document.addEventListener('dragover', e => { e.preventDefault(); });
+document.addEventListener('drop', e => { 
+  e.preventDefault(); 
+  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    const file = e.dataTransfer.files[0];
+    if (file.name.endsWith('.ttf') || file.name.endsWith('.otf')) {
+      handleFontImport({ dataTransfer: e.dataTransfer });
+    } else if (file.name.endsWith('.json') || file.name.endsWith('.txt')) {
+      handleFileImport({ target: { files: [file] } });
+    }
+  }
+});
 
 // --- History & Leaderboard ---
 function renderHistoryTable() {
