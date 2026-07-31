@@ -1,8 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 480
-#define H 520
+#define W 520
+#define H 560
 
 // Control IDs
 #define ID_HEX 1
@@ -308,7 +308,7 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
 
             // Section 1: Base Converter
             CreateWindowEx(0, "STATIC", "--- BASE CONVERTER ---", WS_CHILD | WS_VISIBLE, 10, 8, 200, 16, hwnd, NULL, NULL, NULL);
@@ -383,6 +383,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Result / Export preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY, 10, 352, 432, 100, hwnd, NULL, NULL, NULL);
 
+            CreateWindowEx(0, "STATIC", "Press 'h' for Help", WS_CHILD | WS_VISIBLE, 10, 465, 150, 16, hwnd, NULL, NULL, NULL);
+
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             UpdateFields(hHex);
             break;
@@ -412,6 +414,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (id == ID_BTN_DUMP) {
                     ExportHexDump(GetCurrentVal());
                 }
+            }
+            break;
+        }
+        case WM_CHAR: {
+            if (wParam == 'h' || wParam == 'H') {
+                MessageBoxA(hwnd, "KHex Utility Suite\n\n- Convert between Hex, Dec, Bin, etc.\n- Swap Endianness\n- Generate Checksums & Hashes\n- Export as C Array or HexDump\n\nUse the input fields and buttons to operate.", "KHex Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
