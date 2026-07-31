@@ -52,7 +52,7 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KZip
+**Target App:** KPaint
 **Status:** In Queue
 **Current Phase:** In Queue
 
@@ -60,7 +60,6 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
 
-- KZip (Added Archive Search, Checksum Integrity Verification, Compression Methods, and Encryption Simulation)
 - KPaint (Added Image Filters, Canvas Transforms, Undo/Redo Stack, Brush Shapes and Color Palette Presets)
 - KSnake (Added Top 5 Leaderboard, 5 Game Modes, Special Power-ups/Foods, Save/Resume Game State, and High Score Export/Import)
 - KTetris (Added Hold Piece, 3-Next Queue, Ghost Landing Shadow, Hard Drop, Persistent Leaderboard, Game Modes, and Save/Resume State)
@@ -107,3 +106,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KPass (Added Password Strength & Entropy Assessment and Searchable Vault System, CSV/JSON I/O, AES Crypto, Tagging, Auto-lock)
 - KMedia (Added Playback Modes, Speed Controls, Playlist Search, Waveform Visualizer, Filter Suite, Subtitles, Frame Export)
 - KNet (Added Traffic Logging, Ping Stats, Port Inspector, Packet Sniffing, Regex Search, DNS/WHOIS, Traceroute, Ifconfig)
+- KZip (Added Archive Search, Checksum Verification, Compression, Encryption, Hex Preview, Chunk Vis, Batch Extract, Regex Search, Deep Metadata)

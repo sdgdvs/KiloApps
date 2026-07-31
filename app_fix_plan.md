@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KMines
+**Target App:** KNotes
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -211,3 +211,5 @@ Pass 1 Complete.
 - **KMaze**: Fixed JavaScript performance bottleneck in `kmaze.html` pathfinding by optimizing `queue.shift()` calls to an `O(1)` index pointer. Fixed a Win32 GDI object leak in `main.c` by moving `CreateSolidBrush` instantiations outside the minimap drawing loop and properly cleaning them up.
 
 - **KMedia**: Enforced file parsing bounds in `kmedia.html` to prevent memory spikes when parsing overly large subtitle formats, and integrated missing `aria-label` tags into control inputs for accessibility. Resolved GDI object leaks in `main.c` within `ExportFrameToBMP` by ensuring correct `SelectObject` restorations and explicit cleanup functions, and replaced CRT file dependencies with native Win32 equivalents (`CreateFile`, `HeapAlloc`) to fix native binary bounds issues.
+
+- **KMines**: Resolved maximum call stack bounds failures by converting recursive `reveal()` algorithms to iterative queue loops in both `kmines.html` and `main.c`. Patched Win32 GDI object leaks in `main.c` involving fonts (`hSubFont`, `hNumFont`) and sprite drawing pens/brushes by asserting `SelectObject` restorations during rendering phases. Confirmed fixed 40x40 array memory bounds are rigidly protected in native loops.
