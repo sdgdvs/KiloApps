@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KNotes
+**Target App:** KPaint
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -213,3 +213,5 @@ Pass 1 Complete.
 - **KMedia**: Enforced file parsing bounds in `kmedia.html` to prevent memory spikes when parsing overly large subtitle formats, and integrated missing `aria-label` tags into control inputs for accessibility. Resolved GDI object leaks in `main.c` within `ExportFrameToBMP` by ensuring correct `SelectObject` restorations and explicit cleanup functions, and replaced CRT file dependencies with native Win32 equivalents (`CreateFile`, `HeapAlloc`) to fix native binary bounds issues.
 
 - **KMines**: Resolved maximum call stack bounds failures by converting recursive `reveal()` algorithms to iterative queue loops in both `kmines.html` and `main.c`. Patched Win32 GDI object leaks in `main.c` involving fonts (`hSubFont`, `hNumFont`) and sprite drawing pens/brushes by asserting `SelectObject` restorations during rendering phases. Confirmed fixed 40x40 array memory bounds are rigidly protected in native loops.
+
+- **KNotes**: Enforced maximum character bounds limits natively via `EM_LIMITTEXT` (capped at 6,000 chars) and dynamically through JS, mitigating memory/storage bloating. Fortified file saving against DOM/Localstorage buffer exceptions with `try/catch` and constrained total active note count to 100 within the web application bounds. Bounded all global AES string buffers strictly within Win32 text lengths using bounded `GetWindowTextA` parsing limits.
