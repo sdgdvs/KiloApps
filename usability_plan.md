@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KAudio
 - KClock
 - KPong
 - KiloOS Web UI (Shell & Apps)
@@ -78,8 +77,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KChess
 - KChat
 - KBBS
+- KAudio
 
 ## Progress Log
+- KAudio: Usability and UI issues fixed (auto-opening size, crisp text, help overlay, layout).
 - KBBS: Usability and UI issues fixed (auto-opening size, crisp text, help hotkeys, layout).
 - KChess: Usability and UI issues fixed (auto-opening size, crisp text, help indicator, layout).
 - KChart: Usability and UI issues fixed (auto-opening size, crisp text, help hints, layout).
