@@ -1552,12 +1552,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, whiteTurn ? RGB(250, 250, 250) : RGB(148, 163, 184));
                 char turnBuf[128];
                 char* lastSAN = (g_historyIndex > 0 && g_historyStack[g_historyIndex].san[0] != '\0') ? g_historyStack[g_historyIndex].san : "";
-                wsprintfA(turnBuf, "%s %s %s%s",
-                    whiteTurn ? "White's Turn" : "Black's Turn",
-                    blackFrozen ? "(Black Frozen!)" : "",
-                    lastSAN[0] != '\0' ? "| Last: " : "",
-                    lastSAN
-                );
+                if (lastSAN[0] == '\0') {
+                    wsprintfA(turnBuf, "%s %s | Press 'H' for Hint", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
+                } else {
+                    wsprintfA(turnBuf, "%s %s | Last: %s", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "", lastSAN);
+                }
                 DrawTextA(memDC, turnBuf, -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
 
@@ -1804,8 +1803,11 @@ void MainEntry(void) {
     my_srand(GetTickCount());
     LoadStatsFreestanding();
 
-    HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess - AI & Utility Chess Engine", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    DWORD style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
+    RECT winRc = {0, 0, W, H};
+    AdjustWindowRect(&winRc, style, FALSE);
+    HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess - AI & Utility Chess Engine", style,
+        CW_USEDEFAULT, CW_USEDEFAULT, winRc.right - winRc.left, winRc.bottom - winRc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

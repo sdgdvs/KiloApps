@@ -95,6 +95,21 @@
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
   
+  const W = 560;
+  const H = 650;
+  const dpr = window.devicePixelRatio || 1;
+  cvs.style.width = W + 'px';
+  cvs.style.height = H + 'px';
+  cvs.width = W * dpr;
+  cvs.height = H * dpr;
+  ctx.scale(dpr, dpr);
+  
+  setTimeout(() => {
+    let dw = W - window.innerWidth;
+    let dh = H - window.innerHeight;
+    if (Math.abs(dw) > 0 || Math.abs(dh) > 0) window.resizeBy(dw, dh);
+  }, 50);
+
   const TS = 50;
   const OX = 80;
   const OY = 110;
@@ -1218,8 +1233,8 @@
 
   cvs.onmousedown = (e) => {
       const rect = cvs.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+      const mx = (e.clientX - rect.left) * (W / rect.width);
+      const my = (e.clientY - rect.top) * (H / rect.height);
 
       // Bottom skill & action buttons (Y: 530..560)
       if (my >= 530 && my <= 560) {
@@ -1426,16 +1441,16 @@
   function drawBoard() {
       // Clear background
       ctx.fillStyle = "#0a0a0f";
-      ctx.fillRect(0, 0, cvs.width, cvs.height);
+      ctx.fillRect(0, 0, W, H);
 
       // Wood frame border
-      const frameGrad = ctx.createLinearGradient(0, 0, cvs.width, cvs.height);
+      const frameGrad = ctx.createLinearGradient(0, 0, W, H);
       frameGrad.addColorStop(0, '#2d1810');
       frameGrad.addColorStop(0.5, '#1e100a');
       frameGrad.addColorStop(1, '#150a06');
       ctx.fillStyle = frameGrad;
       ctx.beginPath();
-      ctx.roundRect(12, 12, cvs.width - 24, cvs.height - 24, 16);
+      ctx.roundRect(12, 12, W - 24, H - 24, 16);
       ctx.fill();
       ctx.strokeStyle = '#d4af37';
       ctx.lineWidth = 2;
@@ -1652,7 +1667,7 @@
 
       ctx.fillText(modeText, 25, 30);
       ctx.textAlign = "right";
-      ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, cvs.width - 25, 30);
+      ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, W - 25, 30);
 
       // Captured Pieces & Material Counter Display
       const { whiteCaptured, blackCaptured, diff } = getCapturedPieces();
@@ -1675,7 +1690,7 @@
           ctx.font = "bold 13px 'Inter', sans-serif";
           ctx.fillStyle = diff > 0 ? "#5eead4" : "#f43f5e";
           let diffStr = (diff > 0 ? "+" : "") + diff;
-          ctx.fillText(`Material Advantage: ${diffStr}`, cvs.width - 170, 68);
+          ctx.fillText(`Material Advantage: ${diffStr}`, W - 170, 68);
       }
 
       // Bottom Skill & Action Buttons Row (Y: 530..560)
@@ -1709,18 +1724,18 @@
       ctx.font = "bold 14px 'Inter', sans-serif";
       if (gameOver) {
           ctx.fillStyle = "#f59e0b";
-          if (winner === 1) ctx.fillText(gameMode === 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Next Stage" : "Checkmate! White Wins! Press 'R'", cvs.width / 2, cvs.height - 35);
-          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R' to Restart", cvs.width / 2, cvs.height - 35);
-          else ctx.fillText("Stalemate / Draw! Press 'R' to Restart", cvs.width / 2, cvs.height - 35);
+          if (winner === 1) ctx.fillText(gameMode === 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Next Stage" : "Checkmate! White Wins! Press 'R'", W / 2, H - 35);
+          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R' to Restart", W / 2, H - 35);
+          else ctx.fillText("Stalemate / Draw! Press 'R' to Restart", W / 2, H - 35);
       } else if (hintActive && hintText !== "") {
           ctx.fillStyle = "#38bdf8";
-          ctx.fillText(hintText, cvs.width / 2, cvs.height - 35);
+          ctx.fillText(hintText, W / 2, H - 35);
       } else {
           ctx.fillStyle = whiteTurn ? "#f8fafc" : "#94a3b8";
           let turnStr = whiteTurn ? "White's Turn" : "Black's Turn";
           if (blackFrozen) turnStr += " (Black Frozen!)";
-          let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN}` : "";
-          ctx.fillText(turnStr + lastMoveStr, cvs.width / 2, cvs.height - 35);
+          let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN}` : " | Press 'H' for Hint";
+          ctx.fillText(turnStr + lastMoveStr, W / 2, H - 35);
       }
   }
 
