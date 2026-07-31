@@ -426,7 +426,7 @@ SEND:"secret\r"'></textarea>
     </div>
 
     <div class="status-bar">
-        <span id="statusInfo">Ready — Select a BBS or enter an address</span>
+        <span id="statusInfo">Ready — Select a BBS or enter an address (Press 'h' for Help)</span>
         <span id="bytesInfo">0 B | Cap: OFF</span>
     </div>
 
@@ -496,8 +496,13 @@ SEND:"secret\r"'></textarea>
         const h = wrap.clientHeight;
         CELL_H = kbbsSettings.fontSize || 16;
         CELL_W = Math.max(1, Math.floor(CELL_H / 2));
-        canvas.width = COLS * CELL_W;
-        canvas.height = ROWS * CELL_H;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = COLS * CELL_W * dpr;
+        canvas.height = ROWS * CELL_H * dpr;
+        canvas.style.width = (COLS * CELL_W) + 'px';
+        canvas.style.height = (ROWS * CELL_H) + 'px';
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+        ctx.scale(dpr, dpr);
         render();
     }
 
@@ -1191,6 +1196,31 @@ SEND:"user\r"';
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; canvas.focus(); }
     function resetPalette() { COLORS = [...DEFAULT_COLORS]; render(); }
+
+    window.addEventListener('keydown', (e) => {
+        let tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (ws && ws.readyState === 1) {
+            if (e.key.length === 1) {
+                ws.send(e.key);
+                e.preventDefault();
+            } else if (e.key === 'Enter') {
+                ws.send('\r\n');
+                e.preventDefault();
+            } else if (e.key === 'Backspace') {
+                ws.send('\x08');
+                e.preventDefault();
+            } else if (e.key === 'Escape') {
+                ws.send('\x1B');
+                e.preventDefault();
+            }
+        } else {
+            if (e.key.toLowerCase() === 'h') {
+                showHelp();
+                e.preventDefault();
+            }
+        }
+    });
 
     window.addEventListener('resize', resizeCanvas);
     setTimeout(resizeCanvas, 50);

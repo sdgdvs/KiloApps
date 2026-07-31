@@ -1790,11 +1790,11 @@ LRESULT CALLBACK WndProc
             SetTimer(hwnd, 1, kbbsSettings.blinkRateMs, NULL);
             SetTimer(hwnd, 2, 16, NULL);
             hUIFont = CreateFontA(dpiScale(14), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
-                ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                 DEFAULT_PITCH | FF_SWISS, "Tahoma");
 
             hTermFont = CreateFontA(dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
-                DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY,
+                DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                 FIXED_PITCH | FF_MODERN, "Consolas");
 
             /* Top bar controls */
@@ -1848,8 +1848,8 @@ LRESULT CALLBACK WndProc
             SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
 
             /* Status bar */
-            hStatus = CreateWindowA("STATIC", "Disconnected | RX: 0 B | TX: 0 B", WS_CHILD | WS_VISIBLE | SS_LEFT,
-                dpiScale(5), dpiScale(30 + TERM_ROWS * 16 + 4), dpiScale(640), dpiScale(18), hwnd, 0, 0, 0);
+            hStatus = CreateWindowA("STATIC", "Ready - Enter address or Select BBS (Press H for Help) | RX: 0 B | TX: 0 B", WS_CHILD | WS_VISIBLE | SS_LEFT,
+                dpiScale(5), dpiScale(30 + TERM_ROWS * 16 + 4), dpiScale(1100), dpiScale(18), hwnd, 0, 0, 0);
 
             /* Set fonts */
             SendMessageA(hHost, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -2048,7 +2048,7 @@ LRESULT CALLBACK WndProc
                     SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
                     if (hTermFont) DeleteObject(hTermFont);
                     hTermFont = CreateFontA(dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
-                        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY,
+                        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                         FIXED_PITCH | FF_MODERN, "Consolas");
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
@@ -2522,6 +2522,11 @@ LRESULT CALLBACK WndProc
             int seqLen = 0;
             char fkey[6];
 
+            if (wParam == 'H' && sock == INVALID_SOCKET) {
+                SendMessageA(hwnd, WM_COMMAND, 112, 0);
+                break;
+            }
+
             if (sock == INVALID_SOCKET) break;
 
             switch (wParam) {
@@ -2654,7 +2659,7 @@ void __stdcall MainEntry() {
     RegisterClassA(&wc);
 
     /* Terminal: plus padding and bars. */
-    winW = dpiScale(920);
+    winW = dpiScale(1150);
     winH = dpiScale(550);
 
     LoadMacros();
