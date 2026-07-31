@@ -54,10 +54,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KColony (Sci-Fi Colony Survival)
-**Phase:** 1 (next to do)
-**Status:** Phase 1 started
+**Phase:** 2 (next to do)
+**Status:** Phase 2 started
 
-- [ ] Phase 1: Scaffold KColony directory (`KColony/`), create web HTML skeleton (`KiloOS/public/apps/kcolony.html`), register in App.jsx.
+- [x] Phase 1: Scaffold KColony directory (`KColony/`), create web HTML skeleton (`KiloOS/public/apps/kcolony.html`), register in App.jsx.
 - [ ] Phase 2: Core HTML 2D grid colony layout. Basic resources (Food, Power, Materials). Place basic structures (Solar Panel, Farm, Mine).
 - [ ] Phase 3: Native C version (`KColony/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [ ] Phase 4: Sci-fi colony UI styling (metallic surfaces, neon accents, holographic data readouts).
@@ -74,7 +74,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kfortress.html` AND `KFortress/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kcolony.html` AND `KColony/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
