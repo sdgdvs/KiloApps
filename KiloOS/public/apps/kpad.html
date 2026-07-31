@@ -65,6 +65,9 @@
     background: var(--bg-base); 
     color: var(--text-primary);
     display: flex; flex-direction: column; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Glass Menu Header */
@@ -464,6 +467,13 @@
         <div onclick="changeFontSize(1)"><span>Increase Font Size</span></div>
         <div onclick="changeFontSize(-1)"><span>Decrease Font Size</span></div>
         <div onclick="resetFontSize()"><span>Reset Font Size</span></div>
+      </div>
+    </div>
+
+    <div class="menu-btn">Help
+      <div class="dropdown">
+        <div onclick="showHelp()"><span>Keyboard Shortcuts</span><span class="shortcut">F1</span></div>
+        <div onclick="showAbout()"><span>About</span></div>
       </div>
     </div>
 
@@ -1158,6 +1168,14 @@
       return false;
     }
 
+    function showHelp() {
+      alert("KPad Pro Keyboard Shortcuts:\n\nCtrl+N: New Document\nCtrl+O: Open Local File\nCtrl+S: Save\nCtrl+T: New Tab\nCtrl+W: Close Tab\nCtrl+F: Find\nCtrl+H: Replace\nAlt+Z: Toggle Word Wrap\nF5: Insert Time/Date\nF1: Show this help");
+    }
+
+    function showAbout() {
+      alert("KPad Pro\nAdvanced Text & Code Editor for KiloOS");
+    }
+
     // Global Key Shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.ctrlKey && e.key === 'f') { e.preventDefault(); openFind(false); }
@@ -1168,6 +1186,7 @@
       if (e.ctrlKey && e.key === 'o') { e.preventDefault(); openFileNative(); }
       if (e.altKey && e.key === 'z') { e.preventDefault(); toggleWordWrap(); }
       if (e.key === 'F5') { e.preventDefault(); insertDateTime(); }
+      if (e.key === 'F1') { e.preventDefault(); showHelp(); }
     });
 
     // Handle Tab key indenting inside editor
@@ -1189,7 +1208,7 @@
         if (path) { loadVFSFile(path); return; }
       }
       if (!loadSession()) {
-        newTab();
+        createTab("Welcome", "Welcome to KPad Pro!\n\nPress F1 or use the Help menu to view keyboard shortcuts.\n", null, "plaintext");
       }
     };
   </script>

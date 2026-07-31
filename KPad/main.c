@@ -5,8 +5,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define W 640
-#define H 480
+#define W 800
+#define H 600
 #define MAX_TABS 10
 
 typedef struct {
@@ -52,6 +52,8 @@ BOOL g_bWordWrap = FALSE;
 #define ID_TAB_CLOSE       9016
 #define ID_VIEW_STATS      9017
 #define ID_VIEW_WRAP       9018
+#define ID_HELP_SHORTCUTS  9020
+#define ID_HELP_ABOUT      9021
 
 void UpdateStatusBar() {
     if (!g_hStatus || g_NumTabs == 0) return;
@@ -487,6 +489,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_WRAP, "Toggle Word Wrap");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hViewMenu, "View");
 
+            HMENU hHelpMenu = CreatePopupMenu();
+            AppendMenuA(hHelpMenu, MF_STRING, ID_HELP_SHORTCUTS, "Keyboard Shortcuts\tF1");
+            AppendMenuA(hHelpMenu, MF_STRING, ID_HELP_ABOUT, "About");
+            AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hHelpMenu, "Help");
+
             SetMenu(hwnd, hMenu);
 
             g_uFindMsg = RegisterWindowMessageA(FINDMSGSTRINGA);
@@ -501,9 +508,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hTabCtrl = CreateWindowExA(0, WC_TABCONTROLA, "", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE,
                                        0, 0, W, H, hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-            g_hFontGlobal = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            g_hFontGlobal = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
 
-            AddTab("Untitled 1", NULL);
+            AddTab("Welcome", NULL);
+            SetWindowTextA(g_Tabs[0].hEdit, "Welcome to KPad Pro!\r\n\r\nPress F1 or use the Help menu to view keyboard shortcuts.\r\n");
+            g_Tabs[0].isModified = FALSE;
             break;
         }
 
@@ -592,6 +601,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SetWindowLongA(g_Tabs[i].hEdit, GWL_STYLE, style);
                     }
                     break;
+                case ID_HELP_SHORTCUTS:
+                    MessageBoxA(hwnd, "KPad Pro Keyboard Shortcuts:\n\nCtrl+N: New Document\nCtrl+O: Open Local File\nCtrl+S: Save\nCtrl+T: New Tab\nCtrl+W: Close Tab\nCtrl+F: Find\nCtrl+H: Replace\nAlt+Z: Toggle Word Wrap\nF5: Insert Time/Date\nF1: Show this help", "Keyboard Shortcuts", MB_OK | MB_ICONINFORMATION);
+                    break;
+                case ID_HELP_ABOUT:
+                    MessageBoxA(hwnd, "KPad Pro\nAdvanced Text & Code Editor for KiloOS", "About", MB_OK | MB_ICONINFORMATION);
+                    break;
             }
             break;
         }
@@ -663,6 +678,10 @@ void MainEntry() {
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             if (msg.wParam == VK_F5) {
                 SendMessage(hwnd, WM_COMMAND, ID_EDIT_TIME_DATE, 0);
+                continue;
+            }
+            if (msg.wParam == VK_F1) {
+                SendMessage(hwnd, WM_COMMAND, ID_HELP_SHORTCUTS, 0);
                 continue;
             }
             if (ctrl && msg.wParam == 'N') {
