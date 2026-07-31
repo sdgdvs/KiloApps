@@ -337,6 +337,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hHistoryOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 460, 110, hwnd, NULL, NULL, NULL);
             CreateWindowA("BUTTON", "Export History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 185, 130, 24, hwnd, (HMENU)4001, NULL, NULL);
 
+            HWND hHelpText = CreateWindowA("STATIC", "(Press F1 for Help)", WS_CHILD | WS_VISIBLE, 355, 42, 115, 20, hwnd, NULL, NULL, NULL);
+            
+            RegisterHotKey(hwnd, 1, 0, VK_F1);
+
             // Populate Category Combo
             for (int i = 0; i < numCats; i++) {
                 SendMessageA(hCategory, CB_ADDSTRING, 0, (LPARAM)catNames[i]);
@@ -358,8 +362,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             PopulateUnits(0);
 
-            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hFontBold = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontBold = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             SendMessageA(hCategory, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hPrecision, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -372,6 +376,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBatchOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hHistoryOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hFavCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hHelpText, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             UpdateViewVisibility();
             DoConvert();
@@ -433,10 +438,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_HOTKEY: {
+            if (wParam == 1) {
+                MessageBoxA(hwnd, "KConverter Pro Help:\n\n- Convert units by selecting Category, From, and To.\n- Use Batch Mode to see all conversions at once.\n- Pin your favorites for quick access.\n- Export history to track your conversions.", "Help", MB_OK | MB_ICONINFORMATION);
+            }
+            break;
+        }
         case WM_DESTROY:
             if (hFont) { DeleteObject(hFont); hFont = NULL; }
             if (hFontBold) { DeleteObject(hFontBold); hFontBold = NULL; }
             if (hMsvcrt) { FreeLibrary(hMsvcrt); hMsvcrt = NULL; }
+            UnregisterHotKey(hwnd, 1);
             PostQuitMessage(0);
             return 0;
     }
@@ -452,7 +464,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 495, 260, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 515, 290, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

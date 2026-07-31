@@ -411,7 +411,7 @@
     <header class="header">
       <div class="title-group">
         <div class="app-logo">K</div>
-        <div class="header-title">KConverter Pro</div>
+        <div class="header-title">KConverter Pro <span style="font-size: 12px; color: var(--text-muted); font-weight: normal; margin-left: 8px;">(Press H for Help)</span></div>
       </div>
       
       <div class="controls-bar">
@@ -701,6 +701,13 @@
         nameInp.addEventListener('keydown', handleEnter);
         factInp.addEventListener('keydown', handleEnter);
       }
+
+      // Help keyboard shortcut
+      document.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+          alert('KConverter Pro Help:\n\n- Single Convert: Convert between two units instantly.\n- Batch Mode: See how one value converts to all other units in the category.\n- Favorites: Pin frequent conversions for quick access.\n- Custom Units: Define your own units relative to the base unit.\n- History Log: Keeps track of your conversions.\n\nTips:\n- Swap units quickly with the ⇄ button.\n- Copy results to clipboard with the copy button.');
+        }
+      });
     };
 
     function showToast(msg) {
