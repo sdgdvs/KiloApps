@@ -13,10 +13,12 @@
         .cell:hover { background: #005555; box-shadow: 0 0 10px #00ffff; }
         #panel { display: flex; flex-direction: column; gap: 15px; width: 220px; }
         h3 { margin: 0; padding: 0 0 10px; border-bottom: 1px solid #00ffff; text-shadow: 0 0 5px #00ffff; text-transform: uppercase; }
-        .btn { padding: 12px; background: linear-gradient(145deg, #112, #223); border: 1px solid #00ffff; color: #00ffff; cursor: pointer; text-align: left; font-family: 'Courier New', Courier, monospace; border-radius: 3px; box-shadow: 0 0 5px rgba(0,255,255,0.2); transition: all 0.2s; text-transform: uppercase; font-size: 12px; }
+        .btn { padding: 8px; background: linear-gradient(145deg, #112, #223); border: 1px solid #00ffff; color: #00ffff; cursor: pointer; text-align: left; font-family: 'Courier New', Courier, monospace; border-radius: 3px; box-shadow: 0 0 5px rgba(0,255,255,0.2); transition: all 0.2s; text-transform: uppercase; font-size: 11px; }
         .btn.active { background: linear-gradient(145deg, #003333, #005555); border-color: #00ffff; box-shadow: 0 0 15px #00ffff, inset 0 0 10px #00ffff; color: #fff; text-shadow: 0 0 5px #fff; }
         .btn:hover:not(.active) { background: #113; box-shadow: 0 0 10px #00ffff; }
-        small { display: block; margin-top: 5px; color: #0aa; text-shadow: none; font-size: 10px; }
+        .btn.research { border-color: #aa00ff; color: #aa00ff; box-shadow: 0 0 5px rgba(170,0,255,0.2); }
+        .btn.research:hover { box-shadow: 0 0 10px #aa00ff; }
+        small { display: block; margin-top: 3px; color: #0aa; text-shadow: none; font-size: 9px; }
     </style>
 </head>
 <body>
@@ -27,6 +29,7 @@
         <div class="res">Mat:<span id="res-mat">50</span></div>
         <div class="res">Pop:<span id="res-pop">0</span>/<span id="res-maxpop">0</span></div>
         <div class="res">Hap:<span id="res-happy">100</span>%</div>
+        <div class="res">Sci:<span id="res-sci">0</span></div>
     </div>
     <div id="main">
         <div id="grid"></div>
@@ -38,22 +41,50 @@
             <button class="btn" id="btn-mine" onclick="selectType(3)">Mine<br><small>Cost: 10 Pwr</small></button>
             <button class="btn" id="btn-hab" onclick="selectType(4)">Habitat<br><small>Cost: 15 Mat, 5 Pwr</small></button>
             <button class="btn" id="btn-battery" onclick="selectType(5)">Battery<br><small>Cost: 20 Mat</small></button>
+            <button class="btn" id="btn-lab" onclick="selectType(6)">Laboratory<br><small>Cost: 20 Mat, 5 Pwr</small></button>
+            <button class="btn" id="btn-hydro" onclick="selectType(8)" style="display:none">Hydroponics<br><small>Cost: 20 Mat, 10 Pwr</small></button>
+            <button class="btn" id="btn-nuke" onclick="selectType(7)" style="display:none">Nuclear Reactor<br><small>Cost: 50 Mat</small></button>
+            <button class="btn" id="btn-laser" onclick="selectType(9)" style="display:none">Laser Defense<br><small>Cost: 30 Mat, 20 Pwr</small></button>
+            <hr style="border-color:#00ffff; width:100%; margin: 5px 0;">
+            <button class="btn research" id="btn-res-hydro" onclick="research(1)">Res: Hydroponics<br><small>Cost: 50 Sci</small></button>
+            <button class="btn research" id="btn-res-nuke" onclick="research(2)">Res: Nuclear<br><small>Cost: 100 Sci</small></button>
+            <button class="btn research" id="btn-res-laser" onclick="research(3)">Res: Laser Def.<br><small>Cost: 150 Sci</small></button>
         </div>
     </div>
     <script>
         const GRID_W = 20;
         const GRID_H = 20;
         let food = 50, power = 50, maxPower = 50, mat = 50;
-        let pop = 0, maxPop = 0, happiness = 100, popWait = 0;
+        let pop = 0, maxPop = 0, happiness = 100, popWait = 0, sci = 0;
+        let unlockedHydro = false, unlockedNuke = false, unlockedLaser = false;
         let tick = 0, day = 1, isDay = true;
-        let currentType = 0; // 0=none, 1=solar, 2=farm, 3=mine, 4=hab, 5=battery
+        let currentType = 0; // 0=none, 1=solar, 2=farm, 3=mine, 4=hab, 5=battery, 6=lab, 7=nuke, 8=hydro, 9=laser
         let grid = new Array(GRID_W * GRID_H).fill(0);
         
         function selectType(type) {
             currentType = type;
             document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-            const btns = ['none', 'solar', 'farm', 'mine', 'hab', 'battery'];
+            const btns = ['none', 'solar', 'farm', 'mine', 'hab', 'battery', 'lab', 'nuke', 'hydro', 'laser'];
             document.getElementById('btn-' + btns[type]).classList.add('active');
+        }
+
+        function research(r) {
+            if (r === 1 && sci >= 50 && !unlockedHydro) {
+                sci -= 50; unlockedHydro = true;
+                document.getElementById('btn-res-hydro').style.display = 'none';
+                document.getElementById('btn-hydro').style.display = 'block';
+            }
+            if (r === 2 && sci >= 100 && !unlockedNuke) {
+                sci -= 100; unlockedNuke = true;
+                document.getElementById('btn-res-nuke').style.display = 'none';
+                document.getElementById('btn-nuke').style.display = 'block';
+            }
+            if (r === 3 && sci >= 150 && !unlockedLaser) {
+                sci -= 150; unlockedLaser = true;
+                document.getElementById('btn-res-laser').style.display = 'none';
+                document.getElementById('btn-laser').style.display = 'block';
+            }
+            updateUI();
         }
 
         function build(x, y) {
@@ -67,6 +98,10 @@
             else if (currentType === 3) { costPwr = 10; }
             else if (currentType === 4) { costMat = 15; costPwr = 5; }
             else if (currentType === 5) { costMat = 20; }
+            else if (currentType === 6) { costMat = 20; costPwr = 5; }
+            else if (currentType === 7) { costMat = 50; }
+            else if (currentType === 8) { costMat = 20; costPwr = 10; }
+            else if (currentType === 9) { costMat = 30; costPwr = 20; }
 
             if (mat >= costMat && power >= costPwr) {
                 mat -= costMat;
@@ -86,6 +121,7 @@
             document.getElementById('res-pop').innerText = pop;
             document.getElementById('res-maxpop').innerText = maxPop;
             document.getElementById('res-happy').innerText = happiness;
+            document.getElementById('res-sci').innerText = sci;
         }
 
         function renderCell(x, y) {
@@ -97,6 +133,10 @@
             else if (t === 3) { cell.innerHTML = 'M'; cell.style.color = '#ff00ff'; cell.style.textShadow = '0 0 5px #ff00ff'; cell.style.background = '#330033'; cell.style.borderColor = '#ff00ff'; }
             else if (t === 4) { cell.innerHTML = 'H'; cell.style.color = '#00ffff'; cell.style.textShadow = '0 0 5px #00ffff'; cell.style.background = '#003333'; cell.style.borderColor = '#00ffff'; }
             else if (t === 5) { cell.innerHTML = 'B'; cell.style.color = '#ff8800'; cell.style.textShadow = '0 0 5px #ff8800'; cell.style.background = '#331100'; cell.style.borderColor = '#ff8800'; }
+            else if (t === 6) { cell.innerHTML = 'L'; cell.style.color = '#aa00ff'; cell.style.textShadow = '0 0 5px #aa00ff'; cell.style.background = '#220033'; cell.style.borderColor = '#aa00ff'; }
+            else if (t === 7) { cell.innerHTML = 'N'; cell.style.color = '#00ffaa'; cell.style.textShadow = '0 0 5px #00ffaa'; cell.style.background = '#003322'; cell.style.borderColor = '#00ffaa'; }
+            else if (t === 8) { cell.innerHTML = 'Y'; cell.style.color = '#aaff00'; cell.style.textShadow = '0 0 5px #aaff00'; cell.style.background = '#223300'; cell.style.borderColor = '#aaff00'; }
+            else if (t === 9) { cell.innerHTML = 'D'; cell.style.color = '#ff0000'; cell.style.textShadow = '0 0 5px #ff0000'; cell.style.background = '#330000'; cell.style.borderColor = '#ff0000'; }
         }
 
         function init() {
@@ -118,17 +158,23 @@
                 else if (tick % 10 === 5) { isDay = false; }
                 
                 let pwrProd = 0, farmCount = 0, mineCount = 0, habCount = 0, batCount = 0;
+                let labCount = 0, nukeCount = 0, hydroCount = 0, laserCount = 0;
                 for(let i=0; i<grid.length; i++) {
                     if(grid[i]===1 && isDay) pwrProd += 4; // Boosted solar for day only
                     if(grid[i]===2) farmCount += 1;
                     if(grid[i]===3) mineCount += 1;
                     if(grid[i]===4) habCount += 1;
                     if(grid[i]===5) batCount += 1;
+                    if(grid[i]===6) labCount += 1;
+                    if(grid[i]===7) nukeCount += 1;
+                    if(grid[i]===8) hydroCount += 1;
+                    if(grid[i]===9) laserCount += 1;
                 }
                 maxPop = habCount * 5;
                 maxPower = 50 + batCount * 50;
+                pwrProd += nukeCount * 20;
                 
-                let pwrCons = farmCount + mineCount + habCount; // 1 power per structure
+                let pwrCons = farmCount + mineCount + habCount + labCount + hydroCount * 2 + laserCount * 5; // power per structure
                 power += pwrProd - pwrCons;
                 
                 let pwrEff = 1.0;
@@ -136,11 +182,13 @@
                 if (power > maxPower) power = maxPower;
 
                 let eff = (happiness / 100.0) * pwrEff;
-                let foodProd = Math.floor(farmCount * 5 * eff);
+                let foodProd = Math.floor((farmCount * 5 + hydroCount * 15) * eff);
                 let matProd = Math.floor(mineCount * 2 * eff);
+                let sciProd = Math.floor(labCount * 2 * eff);
 
                 food += foodProd;
                 mat += matProd;
+                sci += sciProd;
 
                 let foodCons = pop;
                 if (food >= foodCons) {
