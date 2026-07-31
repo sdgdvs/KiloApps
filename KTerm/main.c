@@ -100,6 +100,7 @@ typedef struct {
 
 HWND hTab, hOut, hIn;
 WNDPROC oldEditProc;
+HFONT g_hFont = NULL;
 
 TabSession g_tabs[MAX_TABS];
 int g_tabCount = 0;
@@ -215,7 +216,7 @@ void AddNewTab(const char* title) {
 
     // Initial banner for tab
     char banner[256];
-    wsprintfA(banner, "KiloOS Terminal v1.2 [%s]\r\nType 'help' for a list of commands.", nameBuf);
+    wsprintfA(banner, "KiloOS Terminal v1.2 [%s]\r\n[Type 'help' for commands | Ctrl+T: New Tab | Ctrl+R: Reverse Search]", nameBuf);
     
     if (g_tabCount == 1) {
         AppendOutput(banner);
@@ -864,10 +865,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SendMessageA(hOut, EM_SETLIMITTEXT, OUT_BUF_SIZE, 0);
 
-            HFONT hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
+            g_hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             SendMessageA(hTab, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
-            SendMessageA(hOut, WM_SETFONT, (WPARAM)hFont, 0);
-            SendMessageA(hIn, WM_SETFONT, (WPARAM)hFont, 0);
+            SendMessageA(hOut, WM_SETFONT, (WPARAM)g_hFont, 0);
+            SendMessageA(hIn, WM_SETFONT, (WPARAM)g_hFont, 0);
             
             oldEditProc = (WNDPROC)SetWindowLongPtrA(hIn, GWLP_WNDPROC, (LONG_PTR)EditProc);
             
@@ -911,6 +912,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HeapFree(GetProcessHeap(), 0, g_tabs[i].outputBuffer);
                 }
             }
+            if (g_hFont) DeleteObject(g_hFont);
             PostQuitMessage(0);
             break;
         default:
@@ -931,7 +933,7 @@ void MainEntry() {
     RegisterClassA(&wc);
 
     HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 640, 440, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
