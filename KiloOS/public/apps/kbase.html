@@ -31,6 +31,8 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Header & Navigation */
@@ -465,7 +467,7 @@
 <header>
   <div class="brand">
     <div class="brand-icon">K</div>
-    <span>KBase Studio</span>
+    <span>KBase Studio <small style="font-weight:normal; color:var(--text-muted); margin-left:10px; font-size:0.8rem;">(Press 'h' for help)</small></span>
   </div>
   <nav>
     <button class="tab-btn active" data-tab="tab-converter">⚡ Multi-Base</button>
@@ -1318,6 +1320,13 @@
     renderBitboard();
     executeBitwiseOp('AND');
     inspectIEEE754();
+  });
+
+  // Help Shortcut
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      alert("KBase Studio Help\n\n- Multi-Base: Live convert between bases and strings.\n- 64-Bit Grid: Click bits to toggle, or use operations.\n- IEEE-754: View internal representation of floats.\n- History: Review your past operations.");
+    }
   });
 </script>
 </body>

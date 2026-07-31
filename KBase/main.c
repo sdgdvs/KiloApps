@@ -319,9 +319,12 @@ void DoBitwiseOp(int op) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             CreateWindowA("STATIC", "Input Buffer / Number:", WS_CHILD | WS_VISIBLE, 10, 10, 200, 18, hwnd, NULL, NULL, NULL);
+            HWND hBtnHelp = CreateWindowA("BUTTON", "Help (?)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 410, 7, 80, 20, hwnd, (HMENU)99, NULL, NULL);
+            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, 0);
+
             hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "42", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN,
                 10, 30, 480, 50, hwnd, NULL, NULL, NULL);
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, 0);
@@ -397,6 +400,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 5) DoUrlDecode();
             else if (id == 6) DoHexEncode();
             else if (id == 7) DoHexDecode();
+            else if (id == 99) MessageBoxA(hwnd, "KBase Help:\n\n- Convert Base: Type number and click Convert.\n- Bitwise: Enter Operand A & B as Hex/Dec.\n- Strings: Encode/Decode/Hash text.", "KBase Help", MB_OK | MB_ICONINFORMATION);
             else if (id == 100) DoConvertBases();
             else if (id >= 10 && id <= 17) DoBitwiseOp(id);
             break;
@@ -427,7 +431,7 @@ void __stdcall MainEntry() {
     
     RegisterClassA(&wc);
     
-    RECT rc = {0, 0, 500, 370};
+    RECT rc = {0, 0, 520, 420};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase - Universal Base & Bitwise Utility", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
