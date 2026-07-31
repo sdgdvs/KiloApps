@@ -310,81 +310,104 @@ int CountMines(int r, int c) {
 
 int CheckWin();
 
-void Reveal(int r, int c) {
-    if (r < 0 || r >= rows || c < 0 || c >= cols) return;
-    if (grid[r][c] & (CELL_REVEALED | CELL_FLAGGED)) return;
+void Reveal(int startR, int startC) {
+    int q[1600][2];
+    int head = 0, tail = 0;
     
-    grid[r][c] |= CELL_REVEALED;
+    if (startR < 0 || startR >= rows || startC < 0 || startC >= cols) return;
+    if (grid[startR][startC] & (CELL_REVEALED | CELL_FLAGGED)) return;
 
-    // Rapid-Clear Combo logic
-    DWORD now = GetTickCount();
-    if (lastRevealTick > 0 && (now - lastRevealTick <= 2000)) {
-        comboCount++;
-    } else {
-        comboCount = 1;
-    }
-    lastRevealTick = now;
-    comboMultiplier = 1 + (comboCount / 3);
-    if (comboMultiplier > 8) comboMultiplier = 8;
+    q[tail][0] = startR;
+    q[tail][1] = startC;
+    tail++;
 
-    if (rushMode) {
-        rushScore += 10 * comboMultiplier;
-    }
+    while (head < tail) {
+        int r = q[head][0];
+        int c = q[head][1];
+        head++;
 
-    // Treasure Chest Uncovered!
-    if (grid[r][c] & CELL_CHEST) {
-        grid[r][c] &= ~CELL_CHEST;
-        int px = c * CELL_SIZE + CELL_SIZE / 2;
-        int py = r * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE / 2;
-        SpawnTreasureFX((float)px, (float)py);
+        if (grid[r][c] & (CELL_REVEALED | CELL_FLAGGED)) continue;
+        grid[r][c] |= CELL_REVEALED;
 
-        int reward = my_rand() % 100;
-        if (reward < 35) {
-            sonars++;
-            wsprintfA(statusMsg, "CHEST: +1 SONAR SCAN! (R)");
-        } else if (reward < 70) {
-            detectors++;
-            wsprintfA(statusMsg, "CHEST: +1 DETECTOR! (D)");
-        } else if (reward < 90) {
-            shields++;
-            wsprintfA(statusMsg, "CHEST: +1 BLAST SHIELD! (S)");
+        // Rapid-Clear Combo logic
+        DWORD now = GetTickCount();
+        if (lastRevealTick > 0 && (now - lastRevealTick <= 2000)) {
+            comboCount++;
         } else {
-            if (isSpeedrun) {
-                speedrunTime += 15;
-                wsprintfA(statusMsg, "CHEST: +15 SECONDS!");
+            comboCount = 1;
+        }
+        lastRevealTick = now;
+        comboMultiplier = 1 + (comboCount / 3);
+        if (comboMultiplier > 8) comboMultiplier = 8;
+
+        if (rushMode) {
+            rushScore += 10 * comboMultiplier;
+        }
+
+        // Treasure Chest Uncovered!
+        if (grid[r][c] & CELL_CHEST) {
+            grid[r][c] &= ~CELL_CHEST;
+            int px = c * CELL_SIZE + CELL_SIZE / 2;
+            int py = r * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE / 2;
+            SpawnTreasureFX((float)px, (float)py);
+
+            int reward = my_rand() % 100;
+            if (reward < 35) {
+                sonars++;
+                wsprintfA(statusMsg, "CHEST: +1 SONAR SCAN! (R)");
+            } else if (reward < 70) {
+                detectors++;
+                wsprintfA(statusMsg, "CHEST: +1 DETECTOR! (D)");
+            } else if (reward < 90) {
+                shields++;
+                wsprintfA(statusMsg, "CHEST: +1 BLAST SHIELD! (S)");
             } else {
-                rushScore += 500;
-                wsprintfA(statusMsg, "CHEST: +500 BONUS SCORE!");
+                if (isSpeedrun) {
+                    speedrunTime += 15;
+                    wsprintfA(statusMsg, "CHEST: +15 SECONDS!");
+                } else {
+                    rushScore += 500;
+                    wsprintfA(statusMsg, "CHEST: +500 BONUS SCORE!");
+                }
+            }
+            statusMsgTime = GetTickCount() + 2500;
+            Beep(1800, 80); Beep(2400, 120);
+        }
+        
+        if (grid[r][c] & CELL_MINE) {
+            int px = c * CELL_SIZE + CELL_SIZE / 2;
+            int py = r * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE / 2;
+            SpawnExplosion((float)px, (float)py);
+
+            if (shields > 0) {
+                shields--;
+                grid[r][c] &= ~CELL_MINE;
+                mines--;
+                wsprintfA(statusMsg, "BLAST SHIELD ABSORBED MINE!");
+                statusMsgTime = GetTickCount() + 2000;
+                Beep(500, 100);
+            } else {
+                gameOver = 1;
+                KillTimer(mainHwnd, 1);
+                Beep(200, 500);
+                return;
             }
         }
-        statusMsgTime = GetTickCount() + 2500;
-        Beep(1800, 80); Beep(2400, 120);
-    }
-    
-    if (grid[r][c] & CELL_MINE) {
-        int px = c * CELL_SIZE + CELL_SIZE / 2;
-        int py = r * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE / 2;
-        SpawnExplosion((float)px, (float)py);
-
-        if (shields > 0) {
-            shields--;
-            grid[r][c] &= ~CELL_MINE;
-            mines--;
-            wsprintfA(statusMsg, "BLAST SHIELD ABSORBED MINE!");
-            statusMsgTime = GetTickCount() + 2000;
-            Beep(500, 100);
-        } else {
-            gameOver = 1;
-            KillTimer(mainHwnd, 1);
-            Beep(200, 500);
-            return;
-        }
-    }
-    
-    if (CountMines(r, c) == 0) {
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                Reveal(r + i, c + j);
+        
+        if (!(grid[r][c] & CELL_MINE) && CountMines(r, c) == 0) {
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    int nr = r + i, nc = c + j;
+                    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                        if (!(grid[nr][nc] & (CELL_REVEALED | CELL_FLAGGED))) {
+                            if (tail < 1600) {
+                                q[tail][0] = nr;
+                                q[tail][1] = nc;
+                                tail++;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -539,15 +562,19 @@ void DrawMineSprite(HDC hdc, int x, int y, int size, int isDetonated, DWORD tick
     MoveToEx(hdc, cx, cy - r - 2, NULL); LineTo(hdc, cx, cy + r + 2);
     MoveToEx(hdc, cx - r + 1, cy - r + 1, NULL); LineTo(hdc, cx + r - 1, cy + r - 1);
     MoveToEx(hdc, cx + r - 1, cy - r + 1, NULL); LineTo(hdc, cx - r + 1, cy + r - 1);
-    DeleteObject(hPenSpike);
 
     HBRUSH hbrBody = CreateSolidBrush(RGB(40, 44, 52));
     HPEN hPenBody = CreatePen(PS_SOLID, 1, RGB(15, 18, 22));
-    SelectObject(hdc, hbrBody); SelectObject(hdc, hPenBody);
+    HGDIOBJ oldBr = SelectObject(hdc, hbrBody);
+    SelectObject(hdc, hPenBody);
+    DeleteObject(hPenSpike);
+    
     Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
-    DeleteObject(hbrBody); DeleteObject(hPenBody);
 
+    SelectObject(hdc, oldBr);
     SelectObject(hdc, oldPen);
+    DeleteObject(hbrBody);
+    DeleteObject(hPenBody);
 }
 
 void DrawChestSprite(HDC hdc, int x, int y, int size) {
@@ -563,14 +590,16 @@ void DrawChestSprite(HDC hdc, int x, int y, int size) {
     HBRUSH hbrLid = CreateSolidBrush(RGB(255, 215, 0));
     SelectObject(hdc, hbrLid);
     RoundRect(hdc, cx - 8, cy - 8, cx + 8, cy - 2, 4, 4);
+    SelectObject(hdc, hbrGold); // Swap out before delete
     DeleteObject(hbrLid);
     // Lock
     HBRUSH hbrLock = CreateSolidBrush(RGB(50, 50, 60));
     SelectObject(hdc, hbrLock);
     Ellipse(hdc, cx - 2, cy - 3, cx + 2, cy + 1);
+    SelectObject(hdc, oldBr); // Restore old
     DeleteObject(hbrLock);
 
-    SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldPen);
     DeleteObject(hbrGold); DeleteObject(hPenDark);
 }
 
@@ -581,22 +610,26 @@ void DrawFlagSprite(HDC hdc, int x, int y, int size, DWORD tick) {
     HGDIOBJ oldBr = SelectObject(hdc, hbrBase);
     HGDIOBJ oldPen = SelectObject(hdc, hPenBase);
     Ellipse(hdc, cx - 6, y + size - 6, cx + 6, y + size - 2);
-    DeleteObject(hbrBase); DeleteObject(hPenBase);
 
     HPEN hPenPole = CreatePen(PS_SOLID, 2, RGB(200, 205, 215));
     SelectObject(hdc, hPenPole);
+    DeleteObject(hPenBase); // Now safe to delete
     MoveToEx(hdc, cx - 3, y + 4, NULL); LineTo(hdc, cx - 3, y + size - 4);
-    DeleteObject(hPenPole);
 
     int waveOffset = ((tick / 150) % 2) * 2;
     POINT pts[3] = { { cx - 2, y + 5 }, { cx + size / 2 + 3 + waveOffset, y + 9 }, { cx - 2, y + 15 } };
     HBRUSH hbrCloth = CreateSolidBrush(RGB(240, 45, 65));
     HPEN hPenCloth = CreatePen(PS_SOLID, 1, RGB(160, 20, 35));
-    SelectObject(hdc, hbrCloth); SelectObject(hdc, hPenCloth);
+    SelectObject(hdc, hbrCloth); 
+    SelectObject(hdc, hPenCloth);
+    DeleteObject(hbrBase); // Now safe to delete
+    DeleteObject(hPenPole); // Now safe to delete
     Polygon(hdc, pts, 3);
-    DeleteObject(hbrCloth); DeleteObject(hPenCloth);
-
-    SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+    
+    SelectObject(hdc, oldBr); 
+    SelectObject(hdc, oldPen);
+    DeleteObject(hbrCloth); 
+    DeleteObject(hPenCloth);
 }
 
 void DrawQuestionSprite(HDC hdc, int x, int y, int size) {
@@ -696,6 +729,9 @@ void DrawBoard(HWND hwnd, HDC hdc) {
         }
         DrawTextA(hdc, szMode, -1, &rcMode, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
+    
+    // Select back the LCD font before deleting the sub font to prevent GDI handle leak
+    SelectObject(hdc, hLcdFont);
     DeleteObject(hSubFont);
 
     // Grid Cells
@@ -735,8 +771,8 @@ void DrawBoard(HWND hwnd, HDC hdc) {
             }
         }
     }
-    DeleteObject(hNumFont);
     SelectObject(hdc, oldFont);
+    DeleteObject(hNumFont);
     DeleteObject(hLcdFont);
 
     DrawParticles(hdc);

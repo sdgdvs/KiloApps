@@ -598,11 +598,11 @@
       return count;
     }
 
-    function reveal(r, c) {
-      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
-      if (grid[r][c] & 2 || grid[r][c] & 4) return;
+    function reveal(startR, startC) {
+      if (startR < 0 || startR >= ROWS || startC < 0 || startC >= COLS) return;
+      if (grid[startR][startC] & 2 || grid[startR][startC] & 4) return;
       
-      grid[r][c] |= 2;
+      let q = [[startR, startC]];
 
       let now = Date.now();
       if (lastRevealTime > 0 && now - lastRevealTime <= 2000) comboCount++;
@@ -612,48 +612,60 @@
 
       if (rushMode) rushScore += 10 * comboMultiplier;
 
-      // Chest opened!
-      if (grid[r][c] & 32) {
-        grid[r][c] &= ~32;
-        const px = c * (COLS > 18 ? 22 : 26) + 12;
-        const py = r * (COLS > 18 ? 22 : 26) + 12;
-        spawnTreasureFX(px, py);
+      while (q.length > 0) {
+        let [r, c] = q.shift();
+        
+        if (grid[r][c] & 2 || grid[r][c] & 4) continue;
+        grid[r][c] |= 2;
 
-        let reward = Math.random();
-        if (reward < 0.35) { sonars++; document.getElementById('status-text').innerText = "CHEST: +1 SONAR SCAN! (R)"; }
-        else if (reward < 0.70) { detectors++; document.getElementById('status-text').innerText = "CHEST: +1 DETECTOR! (D)"; }
-        else if (reward < 0.90) { shields++; document.getElementById('status-text').innerText = "CHEST: +1 BLAST SHIELD! (S)"; }
-        else {
-          if (isSpeedrun) { speedrunTime += 15; document.getElementById('status-text').innerText = "CHEST: +15 SECONDS!"; }
-          else { rushScore += 500; document.getElementById('status-text').innerText = "CHEST: +500 BONUS SCORE!"; }
-        }
-        playSound(1800, 0.15, 'sine');
-        updateUIStatus();
-      }
-      
-      if (grid[r][c] & 8) {
-        const px = c * (COLS > 18 ? 22 : 26) + 12;
-        const py = r * (COLS > 18 ? 22 : 26) + 12;
-        spawnExplosionFX(px, py);
+        // Chest opened!
+        if (grid[r][c] & 32) {
+          grid[r][c] &= ~32;
+          const px = c * (COLS > 18 ? 22 : 26) + 12;
+          const py = r * (COLS > 18 ? 22 : 26) + 12;
+          spawnTreasureFX(px, py);
 
-        if (shields > 0) {
-          shields--;
-          grid[r][c] &= ~8;
-          MINES--;
-          document.getElementById('status-text').innerText = "BLAST SHIELD ABSORBED MINE!";
-          document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
-          playSound(200, 0.2, 'square');
+          let reward = Math.random();
+          if (reward < 0.35) { sonars++; document.getElementById('status-text').innerText = "CHEST: +1 SONAR SCAN! (R)"; }
+          else if (reward < 0.70) { detectors++; document.getElementById('status-text').innerText = "CHEST: +1 DETECTOR! (D)"; }
+          else if (reward < 0.90) { shields++; document.getElementById('status-text').innerText = "CHEST: +1 BLAST SHIELD! (S)"; }
+          else {
+            if (isSpeedrun) { speedrunTime += 15; document.getElementById('status-text').innerText = "CHEST: +15 SECONDS!"; }
+            else { rushScore += 500; document.getElementById('status-text').innerText = "CHEST: +500 BONUS SCORE!"; }
+          }
+          playSound(1800, 0.15, 'sine');
           updateUIStatus();
-        } else {
-          gameOver = true;
-          return;
         }
-      }
-      
-      if (countMines(r, c) === 0) {
-        for (let i = -1; i <= 1; i++) {
-          for (let j = -1; j <= 1; j++) {
-            reveal(r + i, c + j);
+        
+        if (grid[r][c] & 8) {
+          const px = c * (COLS > 18 ? 22 : 26) + 12;
+          const py = r * (COLS > 18 ? 22 : 26) + 12;
+          spawnExplosionFX(px, py);
+
+          if (shields > 0) {
+            shields--;
+            grid[r][c] &= ~8;
+            MINES--;
+            document.getElementById('status-text').innerText = "BLAST SHIELD ABSORBED MINE!";
+            document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
+            playSound(200, 0.2, 'square');
+            updateUIStatus();
+          } else {
+            gameOver = true;
+            return;
+          }
+        }
+        
+        if (!(grid[r][c] & 8) && countMines(r, c) === 0) {
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              let nr = r + i, nc = c + j;
+              if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                if (!(grid[nr][nc] & 2) && !(grid[nr][nc] & 4)) {
+                  q.push([nr, nc]);
+                }
+              }
+            }
           }
         }
       }

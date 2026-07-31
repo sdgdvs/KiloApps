@@ -298,6 +298,7 @@
   <div class="toolbar-group">
     <label for="searchInput" class="toolbar-label">Filter:</label>
     <input type="text" id="searchInput" class="search-input" placeholder="Search files..." aria-label="Filter files by name">
+    <label style="font-size: 11px; display: flex; align-items: center; gap: 3px;"><input type="checkbox" id="regexCheck" aria-label="Use Regex">Regex</label>
   </div>
 
   <div class="toolbar-group">
@@ -321,8 +322,11 @@
   <button id="btnPack" class="btn-primary" aria-label="Pack archive to KZA file">📦 Pack to .kza</button>
   <button id="btnExtractSel" aria-label="Extract selected files">🎯 Extract Selected</button>
   <button id="btnExtractAll" aria-label="Extract all files">⚡ Extract All</button>
+  <button id="btnBatchExtract" aria-label="Batch Extract">📑 Batch Extract</button>
   <button id="btnVerify" aria-label="Verify CRC32 integrity">🛡️ Verify CRC32</button>
+  <button id="btnPreview" aria-label="Deep Preview">🔍 Preview</button>
 </div>
+<input type="file" id="batchInput" multiple accept=".kza" style="display:none">
 
 <div class="table-container" id="dropZone" tabindex="0" aria-label="Archive file list. Press Delete to remove selected files.">
   <table>
@@ -362,6 +366,24 @@
   </div>
 </div>
 
+<!-- Preview Modal -->
+<div class="modal-overlay" id="previewModal" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+  <div class="modal-box" style="width: 700px; max-width: 95%;">
+    <div class="modal-header">
+      <span id="previewTitle">File Preview & Metadata</span>
+      <button style="padding: 2px 8px;" id="btnClosePreview" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" style="max-height: 400px; display: flex; flex-direction: column; gap: 10px;">
+      <div id="deepMetadata" style="font-family: monospace; background: var(--bg-secondary); padding: 8px; border-radius: 4px;"></div>
+      <div id="chunkViz" style="background: var(--bg-secondary); padding: 8px; border-radius: 4px; display: flex; flex-direction: column; gap: 4px;"></div>
+      <div id="hexView" style="font-family: monospace; white-space: pre-wrap; overflow-y: auto; background: var(--bg-primary); padding: 8px; border: 1px solid var(--border-color); height: 200px;"></div>
+    </div>
+    <div style="display: flex; justify-content: flex-end;">
+      <button class="btn-primary" id="btnOkPreview">Close Preview</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let files = [];
   let selectedIndices = new Set();
@@ -371,6 +393,7 @@
 
   const fileTableBody = document.getElementById('fileTableBody');
   const searchInput = document.getElementById('searchInput');
+  const regexCheck = document.getElementById('regexCheck');
   const compMethod = document.getElementById('compMethod');
   const passwordInput = document.getElementById('passwordInput');
   const statsPill = document.getElementById('statsPill');
@@ -385,7 +408,10 @@
   const btnPack = document.getElementById('btnPack');
   const btnExtractSel = document.getElementById('btnExtractSel');
   const btnExtractAll = document.getElementById('btnExtractAll');
+  const btnBatchExtract = document.getElementById('btnBatchExtract');
+  const batchInput = document.getElementById('batchInput');
   const btnVerify = document.getElementById('btnVerify');
+  const btnPreview = document.getElementById('btnPreview');
 
   const verifyModal = document.getElementById('verifyModal');
   const modalReport = document.getElementById('modalReport');
@@ -528,13 +554,24 @@
 
     let totalRaw = 0;
     let totalPacked = 0;
+    let currentOffset = 16;
 
     files.forEach((f, idx) => {
+      f.offset = currentOffset;
+      currentOffset += 4 + f.name.length + 1 + 16 + f.compSize;
+      
       totalRaw += f.uncompSize;
       totalPacked += f.compSize;
 
-      if (filterText && !f.name.toLowerCase().includes(filterText)) {
-        return;
+      if (filterText) {
+        if (regexCheck.checked) {
+          try {
+            const re = new RegExp(filterText, 'i');
+            if (!re.test(f.name)) return;
+          } catch(e) { }
+        } else {
+          if (!f.name.toLowerCase().includes(filterText)) return;
+        }
       }
 
       const tr = document.createElement('tr');
@@ -598,6 +635,7 @@
   }
 
   searchInput.oninput = () => renderTable();
+  regexCheck.onchange = () => renderTable();
 
   selectAll.onchange = (e) => {
     if (e.target.checked) {
@@ -846,6 +884,98 @@
 
   btnCloseModal.onclick = closeModal;
   btnOkModal.onclick = closeModal;
+
+  btnPreview.onclick = () => {
+    if (selectedIndices.size !== 1) return alert("Select exactly one file to preview.");
+    const idx = Array.from(selectedIndices)[0];
+    const f = files[idx];
+    
+    // Metadata
+    document.getElementById('deepMetadata').innerHTML = `
+      <div><strong>Offset (Internal):</strong> 0x${f.offset ? f.offset.toString(16).toUpperCase() : '0000'}</div>
+      <div><strong>Original Size:</strong> ${formatBytes(f.uncompSize)} (${f.uncompSize} B)</div>
+      <div><strong>Compressed Size:</strong> ${formatBytes(f.compSize)} (${f.compSize} B)</div>
+      <div><strong>Timestamp:</strong> N/A (Dynamic KZA)</div>
+    `;
+
+    // Chunk Viz (RLE)
+    const viz = document.getElementById('chunkViz');
+    if (f.method === 1 && f.uncompSize > 0) {
+      const ratio = (f.compSize / f.uncompSize) * 100;
+      viz.innerHTML = `
+        <div style="font-size:11px;">RLE Deflate/Inflate Ratio: ${ratio.toFixed(1)}%</div>
+        <div style="width: 100%; height: 12px; background: var(--bg-primary); border: 1px solid var(--border-color); display: flex;">
+          <div style="width: ${Math.min(ratio, 100)}%; background: var(--accent-blue); height: 100%;"></div>
+        </div>
+      `;
+    } else {
+      viz.innerHTML = `<div style="font-size:11px;">Stored (No Compression Chunking)</div>`;
+    }
+
+    // Hex Generator
+    const raw = f.rawBytes;
+    let hexOut = '';
+    const maxPreview = 512; 
+    const len = Math.min(raw.length, maxPreview);
+    for (let i = 0; i < len; i += 16) {
+      let hex = i.toString(16).padStart(8, '0') + '  ';
+      let ascii = '';
+      for (let j = 0; j < 16; j++) {
+        if (i + j < len) {
+          const b = raw[i + j];
+          hex += b.toString(16).padStart(2, '0').toUpperCase() + ' ';
+          ascii += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+        } else {
+          hex += '   ';
+        }
+        if (j === 7) hex += ' ';
+      }
+      hexOut += hex + ' |' + escapeHtml(ascii) + '|\\n';
+    }
+    if (raw.length > len) hexOut += '\\n... (truncated)';
+    
+    document.getElementById('hexView').innerHTML = hexOut;
+    document.getElementById('previewModal').classList.add('active');
+  };
+
+  document.getElementById('btnClosePreview').onclick = () => document.getElementById('previewModal').classList.remove('active');
+  document.getElementById('btnOkPreview').onclick = () => document.getElementById('previewModal').classList.remove('active');
+
+  btnBatchExtract.onclick = () => batchInput.click();
+  batchInput.onchange = async (e) => {
+    let count = 0;
+    for (const file of e.target.files) {
+      if (!file.name.endsWith('.kza')) continue;
+      const jsonStr = await file.text();
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.magic === 'KZA2') {
+           const pwdHashNum = parsed.pwdHash || 0;
+           let userHashNum = 0;
+           if (parsed.flags & 1) {
+             const userPass = prompt(\`Archive \${file.name} is password protected! Enter Password:\`);
+             if (userPass) userHashNum = parseInt(calculateCRC32(new TextEncoder().encode(userPass)), 16);
+             if (userHashNum !== pwdHashNum) {
+               alert(\`Incorrect password for \${file.name}. Skipping.\`);
+               continue;
+             }
+           }
+           for (const f of parsed.files) {
+              let payload = base64ToUint8(f.data);
+              if (pwdHashNum) payload = cryptXOR(payload, pwdHashNum);
+              let raw = payload;
+              if (f.method === 1) raw = decompressRLE(payload, f.uncompSize);
+              const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(raw);
+              await sendToOS({ type: 'VFS_WRITE', path: '/' + sanitizeFilename(f.name), data: b64 });
+              count++;
+           }
+        }
+      } catch(err) {
+        console.error("Batch extract failed for", file.name, err);
+      }
+    }
+    alert(\`Batch extraction complete: \${count} files extracted.\`);
+  };
 
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {

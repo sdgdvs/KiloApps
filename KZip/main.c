@@ -11,8 +11,8 @@
 #define MAX_FILES 100
 #define MAX_FILE_SIZE (100 * 1024 * 1024) // 100MB limit per file
 
-HWND hListBox, hEditSearch, hEditPassword, hComboCompress;
-HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnVerify;
+HWND hListBox, hEditSearch, hChkRegex, hEditPassword, hComboCompress;
+HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnBatchExtract, hBtnVerify, hBtnPreview;
 HWND hStatus;
 HFONT hFont;
 
@@ -165,6 +165,29 @@ int ContainsString(const char* str, const char* sub) {
     return 0;
 }
 
+int RegexMatch(const char* str, const char* pattern) {
+    if (!pattern || !*pattern) return 1;
+    if (!str) return 0;
+    while (*pattern) {
+        if (*pattern == '*') {
+            while (*pattern == '*') pattern++;
+            if (!*pattern) return 1;
+            while (*str) {
+                if (RegexMatch(str, pattern)) return 1;
+                str++;
+            }
+            return 0;
+        } else if (*pattern == '.' || FastToLower(*str) == FastToLower(*pattern)) {
+            if (!*str) return 0;
+            str++;
+            pattern++;
+        } else {
+            return 0;
+        }
+    }
+    return !*str;
+}
+
 void RefreshList() {
     SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
     numVisible = 0;
@@ -172,13 +195,19 @@ void RefreshList() {
     char filter[128] = {0};
     GetWindowTextA(hEditSearch, filter, sizeof(filter));
 
+    int useRegex = SendMessage(hChkRegex, BM_GETCHECK, 0, 0) == BST_CHECKED;
     DWORD totalUncomp = 0, totalComp = 0;
 
     for (int i = 0; i < numFiles; i++) {
         totalUncomp += archive[i].uncompSize;
         totalComp += archive[i].compSize;
 
-        if (ContainsString(archive[i].name, filter)) {
+        int matched = 1;
+        if (filter[0] != '\0') {
+            matched = useRegex ? RegexMatch(archive[i].name, filter) : ContainsString(archive[i].name, filter);
+        }
+
+        if (matched) {
             visibleIndices[numVisible] = i;
 
             int ratio = 0;
@@ -506,6 +535,81 @@ void ExtractAll() {
     MessageBoxA(NULL, msg, "KZip", MB_OK | MB_ICONINFORMATION);
 }
 
+void ShowPreview(int realIdx) {
+    if (realIdx < 0 || realIdx >= numFiles) return;
+    KFile* f = &archive[realIdx];
+    
+    char tempPath[MAX_PATH];
+    GetTempPathA(MAX_PATH, tempPath);
+    char filePath[MAX_PATH];
+    wsprintfA(filePath, "%s\\kzip_preview.txt", tempPath);
+    
+    HANDLE hFile = CreateFileA(filePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char header[1024];
+        DWORD offset = 16;
+        for (int i = 0; i < realIdx; i++) {
+            offset += 4 + lstrlenA(archive[i].name) + 1 + 16 + archive[i].compSize;
+        }
+        
+        int ratio = 0;
+        if (f->uncompSize > 0) ratio = 100 - (f->compSize * 100 / f->uncompSize);
+        if (ratio < 0) ratio = 0;
+        
+        wsprintfA(header, "--- KZIP FILE PREVIEW ---\r\n"
+                          "Name: %s\r\n"
+                          "Offset (Internal): 0x%08X\r\n"
+                          "Original Size: %lu bytes\r\n"
+                          "Compressed Size: %lu bytes\r\n"
+                          "Method: %s\r\n"
+                          "RLE Savings: %d%%\r\n"
+                          "Timestamp: N/A\r\n"
+                          "-------------------------\r\n\r\n",
+                          f->name, offset, f->uncompSize, f->compSize, 
+                          f->method == 1 ? "RLE" : "Store", ratio);
+        
+        DWORD w;
+        WriteFile(hFile, header, lstrlenA(header), &w, NULL);
+        
+        if (f->data && f->uncompSize > 0) {
+            DWORD len = f->uncompSize > 512 ? 512 : f->uncompSize;
+            for (DWORD i = 0; i < len; i += 16) {
+                char hex[128] = {0};
+                char ascii[32] = {0};
+                wsprintfA(hex, "%08X  ", i);
+                
+                for (DWORD j = 0; j < 16; j++) {
+                    if (i + j < len) {
+                        unsigned char b = (unsigned char)f->data[i + j];
+                        char hb[8];
+                        wsprintfA(hb, "%02X ", b);
+                        lstrcatA(hex, hb);
+                        ascii[j] = (b >= 32 && b <= 126) ? b : '.';
+                    } else {
+                        lstrcatA(hex, "   ");
+                        ascii[j] = ' ';
+                    }
+                    if (j == 7) lstrcatA(hex, " ");
+                }
+                ascii[16] = '\0';
+                
+                char line[256];
+                wsprintfA(line, "%s |%s|\r\n", hex, ascii);
+                WriteFile(hFile, line, lstrlenA(line), &w, NULL);
+            }
+            if (f->uncompSize > len) {
+                char trunc[] = "\r\n... (truncated)\r\n";
+                WriteFile(hFile, trunc, lstrlenA(trunc), &w, NULL);
+            }
+        }
+        CloseHandle(hFile);
+        
+        char cmd[MAX_PATH + 32];
+        wsprintfA(cmd, "notepad.exe \"%s\"", filePath);
+        WinExec(cmd, SW_SHOW);
+    }
+}
+
 void VerifyIntegrity() {
     if (numFiles == 0) {
         MessageBoxA(NULL, "No files in archive to verify.", "KZip Integrity Verification", MB_OK | MB_ICONINFORMATION);
@@ -548,27 +652,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Search Bar Label & Field
             CreateWindowEx(0, "STATIC", "Filter:", WS_CHILD | WS_VISIBLE, 10, 12, 40, 20, hwnd, NULL, NULL, NULL);
-            hEditSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCRAWL, 55, 10, 140, 22, hwnd, (HMENU)101, NULL, NULL);
+            hEditSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCRAWL, 55, 10, 100, 22, hwnd, (HMENU)101, NULL, NULL);
+            hChkRegex = CreateWindowEx(0, "BUTTON", "Regex", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 160, 12, 60, 20, hwnd, (HMENU)105, NULL, NULL);
 
             // Compress Mode Combo
-            CreateWindowEx(0, "STATIC", "Method:", WS_CHILD | WS_VISIBLE, 205, 12, 50, 20, hwnd, NULL, NULL, NULL);
-            hComboCompress = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 260, 10, 100, 120, hwnd, (HMENU)102, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Method:", WS_CHILD | WS_VISIBLE, 220, 12, 50, 20, hwnd, NULL, NULL, NULL);
+            hComboCompress = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 270, 10, 100, 120, hwnd, (HMENU)102, NULL, NULL);
             SendMessageA(hComboCompress, CB_ADDSTRING, 0, (LPARAM)"Store (0%)");
             SendMessageA(hComboCompress, CB_ADDSTRING, 0, (LPARAM)"RLE Fast");
             SendMessage(hComboCompress, CB_SETCURSEL, 1, 0);
 
             // Password Field
-            CreateWindowEx(0, "STATIC", "Pass:", WS_CHILD | WS_VISIBLE, 370, 12, 35, 20, hwnd, NULL, NULL, NULL);
-            hEditPassword = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_PASSWORD | ES_AUTOHSCRAWL, 410, 10, 100, 22, hwnd, (HMENU)103, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Pass:", WS_CHILD | WS_VISIBLE, 380, 12, 35, 20, hwnd, NULL, NULL, NULL);
+            hEditPassword = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_PASSWORD | ES_AUTOHSCRAWL, 415, 10, 100, 22, hwnd, (HMENU)103, NULL, NULL);
 
             // Action Buttons Row
-            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open .kza", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, H - 75, 75, 24, hwnd, (HMENU)1, NULL, NULL);
-            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add File", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 90, H - 75, 70, 24, hwnd, (HMENU)2, NULL, NULL);
-            hBtnRemove = CreateWindowEx(0, "BUTTON", "Remove", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 165, H - 75, 65, 24, hwnd, (HMENU)5, NULL, NULL);
-            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack .kza", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 235, H - 75, 75, 24, hwnd, (HMENU)3, NULL, NULL);
-            hBtnExtractSel = CreateWindowEx(0, "BUTTON", "Extract Sel", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 315, H - 75, 80, 24, hwnd, (HMENU)4, NULL, NULL);
-            hBtnExtractAll = CreateWindowEx(0, "BUTTON", "Extract All", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 400, H - 75, 75, 24, hwnd, (HMENU)6, NULL, NULL);
-            hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify CRC", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 480, H - 75, 75, 24, hwnd, (HMENU)7, NULL, NULL);
+            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, H - 75, 60, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add File", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 75, H - 75, 60, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRemove = CreateWindowEx(0, "BUTTON", "Remove", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 140, H - 75, 60, 24, hwnd, (HMENU)5, NULL, NULL);
+            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 205, H - 75, 60, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtnExtractSel = CreateWindowEx(0, "BUTTON", "Ext. Sel", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 270, H - 75, 65, 24, hwnd, (HMENU)4, NULL, NULL);
+            hBtnExtractAll = CreateWindowEx(0, "BUTTON", "Ext. All", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 340, H - 75, 65, 24, hwnd, (HMENU)6, NULL, NULL);
+            hBtnBatchExtract = CreateWindowEx(0, "BUTTON", "Batch Ext", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 410, H - 75, 70, 24, hwnd, (HMENU)8, NULL, NULL);
+            hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 485, H - 75, 60, 24, hwnd, (HMENU)7, NULL, NULL);
+            hBtnPreview = CreateWindowEx(0, "BUTTON", "Preview", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 550, H - 75, 65, 24, hwnd, (HMENU)9, NULL, NULL);
 
             // ListBox
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
@@ -650,6 +757,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExtractAll();
             } else if (id == 7) { // Verify
                 VerifyIntegrity();
+            } else if (id == 8) { // Batch Extract
+                char file[4096] = {0};
+                OPENFILENAMEA ofn = {0};
+                ofn.lStructSize = sizeof(ofn);
+                ofn.hwndOwner = hwnd;
+                ofn.lpstrFile = file;
+                ofn.nMaxFile = sizeof(file);
+                ofn.lpstrFilter = "KZA Archives\0*.kza\0All Files\0*.*\0";
+                ofn.Flags = OFN_ALLOWMULTISELECT | OFN_EXPLORER;
+                if (GetOpenFileNameA(&ofn)) {
+                    char dir[MAX_PATH] = {0};
+                    lstrcpyA(dir, file);
+                    char* p = file + lstrlenA(file) + 1;
+                    if (*p == '\0') {
+                        // Single file selected
+                        OpenArchive(file);
+                        ExtractAll();
+                    } else {
+                        // Multiple files
+                        while (*p) {
+                            char fullPath[MAX_PATH];
+                            wsprintfA(fullPath, "%s\\%s", dir, p);
+                            OpenArchive(fullPath);
+                            ExtractAll();
+                            p += lstrlenA(p) + 1;
+                        }
+                        MessageBoxA(hwnd, "Batch extraction complete.", "KZip", MB_OK | MB_ICONINFORMATION);
+                    }
+                }
+            } else if (id == 9) { // Preview
+                int sel = (int)SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR && sel < numVisible) {
+                    ShowPreview(visibleIndices[sel]);
+                } else {
+                    MessageBoxA(NULL, "Please select a file to preview.", "KZip", MB_OK | MB_ICONWARNING);
+                }
+            } else if (id == 105 && code == BN_CLICKED) { // Regex Checkbox
+                RefreshList();
             }
             break;
         }
@@ -659,13 +804,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hListBox, 10, 40, nw - 20, nh - 120, TRUE);
 
             int btnY = nh - 70;
-            MoveWindow(hBtnOpen, 10, btnY, 75, 24, TRUE);
-            MoveWindow(hBtnAdd, 90, btnY, 70, 24, TRUE);
-            MoveWindow(hBtnRemove, 165, btnY, 65, 24, TRUE);
-            MoveWindow(hBtnPack, 235, btnY, 75, 24, TRUE);
-            MoveWindow(hBtnExtractSel, 315, btnY, 80, 24, TRUE);
-            MoveWindow(hBtnExtractAll, 400, btnY, 75, 24, TRUE);
-            MoveWindow(hBtnVerify, 480, btnY, 75, 24, TRUE);
+            MoveWindow(hBtnOpen, 10, btnY, 60, 24, TRUE);
+            MoveWindow(hBtnAdd, 75, btnY, 60, 24, TRUE);
+            MoveWindow(hBtnRemove, 140, btnY, 60, 24, TRUE);
+            MoveWindow(hBtnPack, 205, btnY, 60, 24, TRUE);
+            MoveWindow(hBtnExtractSel, 270, btnY, 65, 24, TRUE);
+            MoveWindow(hBtnExtractAll, 340, btnY, 65, 24, TRUE);
+            MoveWindow(hBtnBatchExtract, 410, btnY, 70, 24, TRUE);
+            MoveWindow(hBtnVerify, 485, btnY, 60, 24, TRUE);
+            MoveWindow(hBtnPreview, 550, btnY, 65, 24, TRUE);
 
             MoveWindow(hStatus, 10, nh - 35, nw - 20, 22, TRUE);
             break;
