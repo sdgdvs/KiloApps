@@ -123,9 +123,9 @@ void FormatDisplay(double val) {
 }
 
 void UpdateStatusText() {
-    char statusBuf[64] = "";
+    char statusBuf[64] = "Press 'H' for Help";
     if (memoryStore != 0.0) {
-        m_sprintf(statusBuf, "[M: %.6g]", memoryStore);
+        m_sprintf(statusBuf, "[M: %.6g] | Press 'H' for Help", memoryStore);
     }
     SetWindowTextA(hStatusText, statusBuf);
 }
@@ -342,7 +342,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Displays
             hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, 10, 38, 324, 18, hwnd, NULL, NULL, NULL);
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, 10, 58, 324, 34, hwnd, NULL, NULL, NULL);
-            hStatusText = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 94, 150, 16, hwnd, NULL, NULL, NULL);
+            hStatusText = CreateWindowExA(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 94, 300, 16, hwnd, NULL, NULL, NULL);
 
             hFontMain = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
             hFontSub = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
@@ -566,8 +566,8 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
 
     RegisterClassA(&wc);
-    // Adjusted width and height for tab bar and controls (360x470)
-    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 360, 470, NULL, NULL, wc.hInstance, NULL);
+    // Adjusted width and height for tab bar and controls (380x520)
+    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 380, 520, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -577,6 +577,10 @@ void __stdcall MainEntry() {
         if (msg.message == WM_KEYDOWN) {
             int key = msg.wParam;
             int cmd = 0;
+            if (key == 'H') {
+                MessageBoxA(hwnd, "KCalc Pro Help:\n- Switch modes using the buttons above.\n- Keyboard shortcuts: Numpad/numbers, +, -, *, /, %, ^, Enter, Backspace, Esc.\n- History exports to kcalc_history.txt.", "Help", MB_OK | MB_ICONINFORMATION);
+                continue;
+            }
             if (key >= '0' && key <= '9') {
                 if (!(GetKeyState(VK_SHIFT) & 0x8000)) cmd = key;
                 else if (key == '8') cmd = '*';

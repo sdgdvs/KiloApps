@@ -570,6 +570,7 @@
   </header>
 
   <!-- Workspace -->
+  <div id="helpToast" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(99, 102, 241, 0.9); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; z-index: 1000; pointer-events: none; transition: opacity 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">Press 'h' for help</div>
   <main class="workspace">
     <div class="calc-pane">
       <!-- Screen Display -->
@@ -860,6 +861,10 @@
     populateConstants();
     render();
     loadHistoryFromStorage();
+    setTimeout(() => {
+      const toast = document.getElementById('helpToast');
+      if (toast) toast.style.opacity = '0';
+    }, 4000);
   });
 
   function switchView(viewName) {
@@ -1287,6 +1292,11 @@
   // Global Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {
     if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
+
+    if (e.key === 'h' || e.key === 'H') {
+      alert("KCalc Pro Help:\n- Switch modes using tabs at top.\n- Keyboard shortcuts: 0-9, ., +, -, *, /, %, ^, (, )\n- Enter or = to calculate.\n- Escape to clear all.\n- Backspace to delete last.");
+      return;
+    }
 
     if (e.key >= '0' && e.key <= '9') append(e.key);
     else if (e.key === '.') append('.');
