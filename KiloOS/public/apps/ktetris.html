@@ -77,12 +77,57 @@
   const MODE_CAMPAIGN = 3;
   const modeNames = ["MARATHON", "SPRINT 40L", "ULTRA 2-MIN", "CAMPAIGN"];
 
+  
+  let rngState = 12345;
+  function randomSeed(s) { rngState = s; }
+  function randomInt(max) {
+      if (max <= 0) return 0;
+      rngState = (rngState * 1103515245 + 12345) & 0x7fffffff;
+      return rngState % max;
+  }
+  function randomFloat() { return randomInt(1000000) / 1000000; }
+
   let grid = Array(H).fill().map(() => Array(W).fill(0));
   let pc, rot, cx, cy, isBomb = false;
   let gameOver = false, isPaused = false, startScreen = true, winScreen = false, showLeaderboard = false, showHelp = false;
   let score = 0, lines = 0, level = 1, combo = 0, piecesPlaced = 0;
   let gameMode = MODE_MARATHON, campaignLevel = 1;
   let statLines = [0, 0, 0, 0];
+
+  let keybinds = JSON.parse(localStorage.getItem('ktetris_keys')) || {
+      up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight',
+      drop: ' ', hold: 'c', pause: 'p', nuke: 'b', swap: 's', freeze: 'f'
+  };
+  let showKeybinds = false;
+  let bindIndex = 0;
+  let bindNames = Object.keys(keybinds);
+
+  let currentReplay = { seed: 12345, inputs: [] };
+  let savedReplay = JSON.parse(localStorage.getItem('ktetris_replay'));
+  let isReplaying = false;
+  let replayIndex = 0;
+  let replayTick = 0;
+
+  function exportStats() {
+      let tr = (lines>0) ? (statLines[3]/lines*100).toFixed(1) : 0;
+      let stats = { score, lines, piecesPlaced, time: formatTime(modeTimerMs), tetrisRate: tr, singles: statLines[0], doubles: statLines[1], triples: statLines[2], tetrises: statLines[3] };
+      let jStr = JSON.stringify(stats, null, 2);
+      let cStr = `Score,Lines,Pieces,Time,TetrisRate,Single,Double,Triple,Tetris\n${score},${lines},${piecesPlaced},${formatTime(modeTimerMs)},${tr},${statLines[0]},${statLines[1]},${statLines[2]},${statLines[3]}`;
+      let a1 = document.createElement('a'); a1.href = URL.createObjectURL(new Blob([jStr])); a1.download = 'ktetris_stats.json'; a1.click();
+      let a2 = document.createElement('a'); a2.href = URL.createObjectURL(new Blob([cStr])); a2.download = 'ktetris_stats.csv'; a2.click();
+  }
+
+  function exportLeaderboard() {
+      let a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(leaderboard, null, 2)])); a.download = 'ktetris_hiscores.json'; a.click();
+  }
+  function importLeaderboard() {
+      let input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+      input.onchange = e => {
+          let f = e.target.files[0];
+          if (f) { let r = new FileReader(); r.onload = e2 => { try { leaderboard = JSON.parse(e2.target.result); localStorage.setItem('ktetris_leaderboard', JSON.stringify(leaderboard)); } catch(err) {} }; r.readAsText(f); }
+      }; input.click();
+  }
+
 
   // Active Skills & Hazards
   let nukeCharges = 2;
@@ -159,7 +204,8 @@
           freezeCharges = state.freezeCharges ?? 2;
           freezeTimerMs = state.freezeTimerMs ?? 0;
           
-          startScreen = false; gameOver = false; winScreen = false; isPaused = false; showLeaderboard = false;
+          startScreen = false; gameOver = false;
+      if (!isReplaying) { currentReplay = { seed: Date.now(), inputs: [] }; randomSeed(currentReplay.seed); } else { randomSeed(currentReplay.seed); replayTick = 0; replayIndex = 0; } winScreen = false; isPaused = false; showLeaderboard = false;
           dropInterval = Math.max(40, 500 - (level - 1) * 23);
           addPopup(BOARD_W / 2 - 35, H * CELL / 2, "GAME RESUMED!", "#00ff66");
           playSound(600, 'square', 0.2);
@@ -185,12 +231,12 @@
       lineFlashes.push({y: yRow, life: 18, maxLife: 18});
       shockwaves.push({x: BOARD_W / 2, y: yRow * CELL + CELL / 2, radius: 10, maxRadius: 150, life: 25, maxLife: 25, color: '#ffffff'});
       for (let i = 0; i < 25; i++) {
-          let px = Math.random() * BOARD_W;
+          let px = randomFloat() * BOARD_W;
           let py = yRow * CELL + CELL / 2;
-          let vx = (Math.random() - 0.5) * 7;
-          let vy = (Math.random() - 0.5) * 7;
+          let vx = (randomFloat() - 0.5) * 7;
+          let vy = (randomFloat() - 0.5) * 7;
           let pColors = ['#ffffff', '#ffff55', '#00ffff', '#ff9900', '#ff33ff'];
-          addParticle(px, py, vx, vy, pColors[Math.floor(Math.random() * pColors.length)], Math.random() * 3 + 2, 25);
+          addParticle(px, py, vx, vy, pColors[Math.floor(randomFloat() * pColors.length)], randomFloat() * 3 + 2, 25);
       }
   }
 
@@ -198,11 +244,11 @@
       const pColor = colors[colorVal] || '#ffffff';
       for (let y = Math.max(0, startY); y <= endY; y++) {
           for (let i = 0; i < 2; i++) {
-              addParticle((gridX + Math.random()) * CELL, y * CELL + Math.random() * CELL, (Math.random() - 0.5) * 2, -Math.random() * 2 - 1, pColor, 2, 14);
+              addParticle((gridX + randomFloat()) * CELL, y * CELL + randomFloat() * CELL, (randomFloat() - 0.5) * 2, -randomFloat() * 2 - 1, pColor, 2, 14);
           }
       }
       for (let i = 0; i < 16; i++) {
-          addParticle((gridX + 0.5) * CELL + (Math.random() - 0.5) * CELL * 2, endY * CELL + CELL, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 4 - 2, pColor, 3, 20);
+          addParticle((gridX + 0.5) * CELL + (randomFloat() - 0.5) * CELL * 2, endY * CELL + CELL, (randomFloat() - 0.5) * 6, (randomFloat() - 0.5) * 4 - 2, pColor, 3, 20);
       }
   }
 
@@ -213,7 +259,7 @@
           bag = [];
           for (let i = 0; i < maxPieces; i++) bag.push(i);
           for (let i = bag.length - 1; i > 0; i--) {
-              let j = Math.floor(Math.random() * (i + 1));
+              let j = Math.floor(randomFloat() * (i + 1));
               [bag[i], bag[j]] = [bag[j], bag[i]];
           }
       }
@@ -223,7 +269,7 @@
   function fillNextQueue() {
       while (nextQueue.length < 3) {
           let pcIdx = getRandomPieceIndex();
-          let isB = (Math.floor(Math.random() * 12) === 0);
+          let isB = (Math.floor(randomFloat() * 12) === 0);
           nextQueue.push({ pc: pcIdx, isBomb: isB });
       }
   }
@@ -251,7 +297,7 @@
           for (let x = 0; x < W; x++) {
               if (grid[rY][x] > 0) {
                   let pCol = colors[grid[rY][x]];
-                  for (let p = 0; p < 3; p++) addParticle((x + 0.5) * CELL, (rY + 0.5) * CELL, (Math.random() - 0.5) * 8, -Math.random() * 6 - 2, pCol, 3, 20);
+                  for (let p = 0; p < 3; p++) addParticle((x + 0.5) * CELL, (rY + 0.5) * CELL, (randomFloat() - 0.5) * 8, -randomFloat() * 6 - 2, pCol, 3, 20);
               }
           }
       }
@@ -346,7 +392,7 @@
                               if (ny >= 0 && ny < H && nx >= 0 && nx < W) {
                                   if (grid[ny][nx] > 0) {
                                       let pCol = colors[grid[ny][nx]];
-                                      for(let k=0; k<4; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (Math.random()-0.5)*8, (Math.random()-0.5)*8, pCol, 3, 20);
+                                      for(let k=0; k<4; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (randomFloat()-0.5)*8, (randomFloat()-0.5)*8, pCol, 3, 20);
                                   }
                                   grid[ny][nx] = 0;
                               }
@@ -391,16 +437,16 @@
               if (piecesPlaced % threshold === 0) {
                   grid.shift();
                   let newRow = Array(W).fill(14);
-                  newRow[Math.floor(Math.random() * W)] = 0;
+                  newRow[Math.floor(randomFloat() * W)] = 0;
                   grid.push(newRow);
                   playSound(300, 'square', 0.1);
               }
           } else if (campaignLevel >= 10 && campaignLevel < 15) {
               let threshold = Math.max(3, 18 - campaignLevel);
               if (piecesPlaced % threshold === 0) {
-                  let cols = Math.floor(Math.random() * 3) + 1;
+                  let cols = Math.floor(randomFloat() * 3) + 1;
                   for (let k = 0; k < cols; k++) {
-                      let c = Math.floor(Math.random() * W);
+                      let c = Math.floor(randomFloat() * W);
                       for (let y = 0; y < H - 1; y++) grid[y][c] = grid[y+1][c];
                       grid[H-1][c] = 14;
                   }
@@ -411,8 +457,8 @@
               let eqFreq = Math.max(3, 21 - campaignLevel);
               if (piecesPlaced % eqFreq === 0) {
                   shakeTimer = 12;
-                  let rRow = H - 1 - Math.floor(Math.random() * 8);
-                  let dir = Math.random() < 0.5 ? -1 : 1;
+                  let rRow = H - 1 - Math.floor(randomFloat() * 8);
+                  let dir = randomFloat() < 0.5 ? -1 : 1;
                   if (dir === 1) {
                       let temp = grid[rRow][W - 1];
                       for (let x = W - 1; x > 0; x--) grid[rRow][x] = grid[rRow][x - 1];
@@ -476,7 +522,7 @@
       if (gameMode === MODE_CAMPAIGN) {
           let garbage = Math.min(12, campaignLevel * 2);
           for (let r = 0; r < garbage; r++) {
-              let hole = Math.floor(Math.random() * W);
+              let hole = Math.floor(randomFloat() * W);
               for (let x = 0; x < W; x++) {
                   grid[H - 1 - r][x] = (x === hole) ? 0 : 14;
               }
@@ -490,6 +536,7 @@
       }
 
       gameOver = false;
+      if (!isReplaying) { currentReplay = { seed: Date.now(), inputs: [] }; randomSeed(currentReplay.seed); } else { randomSeed(currentReplay.seed); replayTick = 0; replayIndex = 0; }
       isPaused = false;
       winScreen = false;
       showLeaderboard = false;
@@ -523,12 +570,20 @@
       }
   });
 
+  
   document.addEventListener('keydown', e => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-          e.preventDefault();
-      }
+      let key = e.key === ' ' ? ' ' : (e.key.length === 1 ? e.key.toLowerCase() : e.key);
 
-      if (showHelp) {
+      if (showKeybinds) {
+          e.preventDefault();
+          if (e.key === 'Escape') { showKeybinds = false; startScreen = true; return; }
+          keybinds[bindNames[bindIndex]] = key;
+          localStorage.setItem('ktetris_keys', JSON.stringify(keybinds));
+          bindIndex++;
+          if (bindIndex >= bindNames.length) { showKeybinds = false; startScreen = true; }
+          return;
+      }
+if (showHelp) {
           if (e.key.toLowerCase() === 'h' || e.key === 'Escape' || e.key === 'Enter') {
               showHelp = false;
           }
@@ -536,74 +591,65 @@
       }
 
       if (startScreen) {
-          if (e.key === '1') { gameMode = MODE_MARATHON; startScreen = false; score = 0; init(); return; }
-          if (e.key === '2') { gameMode = MODE_SPRINT;   startScreen = false; score = 0; init(); return; }
-          if (e.key === '3') { gameMode = MODE_ULTRA;    startScreen = false; score = 0; init(); return; }
-          if (e.key === '4') { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; init(); return; }
+          if (e.key === '1') { gameMode = MODE_MARATHON; startScreen = false; score = 0; isReplaying = false; init(); return; }
+          if (e.key === '2') { gameMode = MODE_SPRINT;   startScreen = false; score = 0; isReplaying = false; init(); return; }
+          if (e.key === '3') { gameMode = MODE_ULTRA;    startScreen = false; score = 0; isReplaying = false; init(); return; }
+          if (e.key === '4') { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; isReplaying = false; init(); return; }
           if (e.key === '5' || e.key.toLowerCase() === 'l') { showLeaderboard = true; startScreen = false; return; }
-          if (e.key.toLowerCase() === 'v' || e.key.toLowerCase() === 'r') { loadGameState(); return; }
+          if (e.key.toLowerCase() === 'v' || e.key.toLowerCase() === 'r') { isReplaying = false; loadGameState(); return; }
           if (e.key.toLowerCase() === 'h') { showHelp = true; return; }
+          if (e.key.toLowerCase() === 'k') { showKeybinds = true; bindIndex = 0; startScreen = false; return; }
+          if (e.key.toLowerCase() === 'w' && savedReplay) { isReplaying = true; currentReplay = savedReplay; startScreen = false; init(); return; }
           return;
       }
-
       if (showLeaderboard) {
-          if (e.key === 'Enter' || e.key === 'Escape' || e.key.toLowerCase() === 'b') {
-              showLeaderboard = false; startScreen = true;
-          }
+          if (e.key === 'Enter' || e.key === 'Escape' || e.key.toLowerCase() === 'b') { showLeaderboard = false; startScreen = true; }
+          if (e.key.toLowerCase() === 'e') { exportLeaderboard(); }
+          if (e.key.toLowerCase() === 'i') { importLeaderboard(); }
+          return;
+      }
+      if (winScreen || gameOver) {
+          if (e.key === 'Enter') { startScreen = true; winScreen = false; gameOver = false; return; }
+          if (e.key.toLowerCase() === 'e') { exportStats(); return; }
+          if (e.key.toLowerCase() === 's' && !isReplaying) { localStorage.setItem('ktetris_replay', JSON.stringify(currentReplay)); addPopup(BOARD_W/2-25, H*CELL/2, "REPLAY SAVED!", "#00ff00"); savedReplay = currentReplay; return; }
           return;
       }
 
-      if (winScreen && e.key === 'Enter') { startScreen = true; winScreen = false; return; }
-      if (gameOver && e.key === 'Enter') { startScreen = true; gameOver = false; return; }
-      if (gameOver || winScreen) return;
-
-      if (e.key.toLowerCase() === 'p') { isPaused = !isPaused; return; }
-      if (e.key.toLowerCase() === 'h') { showHelp = true; return; }
-      if (e.key.toLowerCase() === 'v') { saveGameState(); return; }
-      if (e.key.toLowerCase() === 'b') { useRowNuke(); return; }
-      if (e.key.toLowerCase() === 's') { usePieceSwap(); return; }
-      if (e.key.toLowerCase() === 'f') { useGravityFreeze(); return; }
+      if (key === keybinds.pause) { isPaused = !isPaused; return; }
+      if (key === 'h') { showHelp = true; return; }
+      if (key === 'v') { saveGameState(); return; }
+      if (key === keybinds.nuke) { useRowNuke(); if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'nuke'}); return; }
+      if (key === keybinds.swap) { usePieceSwap(); if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'swap'}); return; }
+      if (key === keybinds.freeze) { useGravityFreeze(); if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'freeze'}); return; }
       if (isPaused) return;
 
-      if (e.key === 'ArrowLeft' && !checkCol(pc, rot, cx - 1, cy)) cx--;
-      if (e.key === 'ArrowRight' && !checkCol(pc, rot, cx + 1, cy)) cx++;
-      if (e.key === 'ArrowDown' && !checkCol(pc, rot, cx, cy + 1)) cy++;
-      if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'x' || e.key.toLowerCase() === 'z') {
+      if (key === keybinds.left) { if (!checkCol(pc, rot, cx - 1, cy)) cx--; if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'left'}); }
+      if (key === keybinds.right) { if (!checkCol(pc, rot, cx + 1, cy)) cx++; if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'right'}); }
+      if (key === keybinds.down) { if (!checkCol(pc, rot, cx, cy + 1)) cy++; if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'down'}); }
+      if (key === keybinds.up || key === 'x' || key === 'z') {
           let nr = (rot + 1) % 4;
           if (!checkCol(pc, nr, cx, cy)) rot = nr;
           else if (!checkCol(pc, nr, cx - 1, cy)) { cx--; rot = nr; }
           else if (!checkCol(pc, nr, cx + 1, cy)) { cx++; rot = nr; }
           else if (!checkCol(pc, nr, cx - 2, cy)) { cx -= 2; rot = nr; }
           else if (!checkCol(pc, nr, cx + 2, cy)) { cx += 2; rot = nr; }
+          if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'up'});
       }
-      if (e.key.toLowerCase() === 'c' || e.key === 'Shift') {
+      if (key === keybinds.hold || e.key === 'Shift') {
           if (!holdUsed) {
-              if (holdPc === -1) {
-                  holdPc = pc;
-                  holdIsBomb = isBomb;
-                  spawn();
-              } else {
-                  let temp = pc;
-                  let tempBomb = isBomb;
-                  pc = holdPc;
-                  isBomb = holdIsBomb;
-                  holdPc = temp;
-                  holdIsBomb = tempBomb;
-                  rot = 0; cx = 3; cy = -2;
-              }
-              holdUsed = true;
-              playSound(700, 'sine', 0.08);
+              if (holdPc === -1) { holdPc = pc; holdIsBomb = isBomb; spawn(); } 
+              else { let temp = pc; let tempBomb = isBomb; pc = holdPc; isBomb = holdIsBomb; holdPc = temp; holdIsBomb = tempBomb; rot = 0; cx = 3; cy = -2; }
+              holdUsed = true; playSound(700, 'sine', 0.08);
+              if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'hold'});
           }
       }
-      if (e.key === ' ') {
-          let startY = cy;
-          let dropDist = 0;
+      if (key === keybinds.drop) {
+          let startY = cy; let dropDist = 0;
           while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
-          score += dropDist * 2;
-          spawnDropParticles(cx, startY, cy, isBomb ? 15 : (pc + 1));
-          let oldLevel = campaignLevel;
-          lock();
+          score += dropDist * 2; spawnDropParticles(cx, startY, cy, isBomb ? 15 : (pc + 1));
+          let oldLevel = campaignLevel; lock();
           if (!winScreen && !gameOver && (gameMode !== MODE_CAMPAIGN || campaignLevel === oldLevel)) spawn();
+          if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'drop'});
       }
   });
 
@@ -688,7 +734,7 @@
 
       // Special details
       if (colorIdx === 15) { // Bomb
-          const fuseFlicker = Math.random() > 0.5 ? '#ffff00' : '#ffffff';
+          const fuseFlicker = randomFloat() > 0.5 ? '#ffff00' : '#ffffff';
           const innerPulse = Math.abs(Math.sin(tick * 0.015));
           ctx.fillStyle = '#ff0000';
           ctx.beginPath();
@@ -713,8 +759,8 @@
 
       let offX = 0, offY = 0;
       if (shakeTimer > 0) {
-          offX = Math.floor(Math.random() * 7) - 3;
-          offY = Math.floor(Math.random() * 7) - 3;
+          offX = Math.floor(randomFloat() * 7) - 3;
+          offY = Math.floor(randomFloat() * 7) - 3;
       }
       
       // Grid background lines
@@ -828,7 +874,7 @@
       
       // Mode Header
       ctx.fillStyle = '#00f0f0';
-      ctx.fillText(modeNames[gameMode], SIDEBAR_X, 22);
+      ctx.fillText(modeNames[gameMode] + (isReplaying ? ' [REPLAY]' : ''), SIDEBAR_X, 22);
 
       ctx.fillStyle = '#aaaaaa';
       ctx.font = '11px system-ui, sans-serif';
@@ -980,6 +1026,24 @@
           ctx.textAlign = 'center';
           ctx.fillText('Press H, ESC, or ENTER to return', 370 / 2, 480);
           ctx.textAlign = 'left';
+      } else if (showKeybinds) {
+          ctx.fillStyle = 'rgba(10, 11, 16, 0.94)';
+          ctx.fillRect(0, 0, 370, 510);
+          ctx.fillStyle = '#00ffff';
+          ctx.font = 'bold 20px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('KEYBINDS CONFIG', 185, 50);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '14px system-ui, monospace';
+          ctx.textAlign = 'left';
+          bindNames.forEach((b, i) => {
+              ctx.fillStyle = i === bindIndex ? '#00ff66' : '#aaaaaa';
+              ctx.fillText(b.toUpperCase() + ": " + (i === bindIndex ? "[PRESS KEY]" : keybinds[b]), 50, 100 + i * 25);
+          });
+          ctx.fillStyle = '#666677';
+          ctx.textAlign = 'center';
+          ctx.fillText('Press ESC to cancel', 185, 480);
+          ctx.textAlign = 'left';
       } else if (showLeaderboard) {
           ctx.fillStyle = 'rgba(10, 11, 16, 0.92)';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1018,7 +1082,7 @@
           ctx.fillStyle = '#aaaaaa';
           ctx.font = '12px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('Press ENTER or ESC to return', 370 / 2, 480);
+          ctx.fillText('ENTER: Menu | E: Export | I: Import', 370 / 2, 480);
           ctx.textAlign = 'left';
       } else if (gameOver) {
           ctx.fillStyle = 'rgba(0,0,0,0.78)';
@@ -1028,7 +1092,9 @@
           ctx.fillText('GAME OVER', 35, 185);
           ctx.fillStyle = '#aaaaaa';
           ctx.font = '12px system-ui, monospace';
-          ctx.fillText('PRESS ENTER', 48, 220);
+          ctx.fillText('[ENTER] MENU', 48, 220);
+          ctx.fillText('[E] EXPORT STATS', 48, 240);
+          ctx.fillText('[S] SAVE REPLAY', 48, 260);
       } else if (winScreen) {
           ctx.fillStyle = 'rgba(0,0,0,0.78)';
           ctx.fillRect(10, 130, BOARD_W - 20, 130);
@@ -1038,7 +1104,8 @@
           ctx.fillStyle = '#ffffff';
           ctx.font = '12px system-ui, monospace';
           ctx.fillText(gameMode === MODE_SPRINT ? `TIME: ${formatTime(modeTimerMs)}` : 'STAGE CLEARED!', 30, 205);
-          ctx.fillText('PRESS ENTER FOR MENU', 20, 230);
+          ctx.fillText('[ENTER] MENU', 30, 230);
+          ctx.fillText('[E] EXPORT STATS | [S] SAVE REPLAY', 30, 250);
       } else if (startScreen) {
           ctx.fillStyle = 'rgba(10, 11, 16, 0.94)';
           ctx.fillRect(0, 0, 370, 510);
@@ -1072,11 +1139,15 @@
           let yOffset = 125 + 5 * 32;
           ctx.fillStyle = '#ffaa00';
           ctx.fillText('[H]. Help & Controls', 70, yOffset);
+          ctx.fillStyle = '#00ccff';
+          ctx.fillText('[K]. Configure Keybinds', 70, yOffset + 96);
+          if (savedReplay) { ctx.fillStyle = '#ff55aa'; ctx.fillText('[W]. Watch Last Replay', 70, yOffset + 64); }
+
 
           if (hasSavedGame()) {
               ctx.fillStyle = '#ff00ff';
               ctx.font = 'bold 13px system-ui, monospace';
-              ctx.fillText('[V]. Resume Saved Game', 70, yOffset + 32);
+              ctx.fillText('[V]. Resume Saved Game', 70, yOffset + 96);
           }
 
           ctx.fillStyle = '#666677';
@@ -1101,7 +1172,38 @@
       const deltaTime = time - lastTime;
       lastTime = time;
 
-      if (!isPaused && !gameOver && !startScreen && !winScreen && !showLeaderboard && !showHelp) {
+      if (!isPaused && !gameOver && !startScreen && !winScreen && !showLeaderboard && !showHelp && !showKeybinds) {
+          replayTick += deltaTime;
+          if (isReplaying) {
+              while (replayIndex < currentReplay.inputs.length && currentReplay.inputs[replayIndex].t <= replayTick) {
+                  let k = currentReplay.inputs[replayIndex].k;
+                  if (k === 'left' && !checkCol(pc, rot, cx - 1, cy)) cx--;
+                  if (k === 'right' && !checkCol(pc, rot, cx + 1, cy)) cx++;
+                  if (k === 'down' && !checkCol(pc, rot, cx, cy + 1)) cy++;
+                  if (k === 'up') {
+                      let nr = (rot + 1) % 4;
+                      if (!checkCol(pc, nr, cx, cy)) rot = nr;
+                      else if (!checkCol(pc, nr, cx - 1, cy)) { cx--; rot = nr; }
+                      else if (!checkCol(pc, nr, cx + 1, cy)) { cx++; rot = nr; }
+                  }
+                  if (k === 'hold' && !holdUsed) {
+                      if (holdPc === -1) { holdPc = pc; holdIsBomb = isBomb; spawn(); } 
+                      else { let temp = pc; let tempBomb = isBomb; pc = holdPc; isBomb = holdIsBomb; holdPc = temp; holdIsBomb = tempBomb; rot = 0; cx = 3; cy = -2; }
+                      holdUsed = true; playSound(700, 'sine', 0.08);
+                  }
+                  if (k === 'drop') {
+                      let startY = cy; let dropDist = 0;
+                      while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
+                      score += dropDist * 2; spawnDropParticles(cx, startY, cy, isBomb ? 15 : (pc + 1));
+                      let oldLevel = campaignLevel; lock();
+                      if (!winScreen && !gameOver && (gameMode !== MODE_CAMPAIGN || campaignLevel === oldLevel)) spawn();
+                  }
+                  if (k === 'nuke') useRowNuke();
+                  if (k === 'swap') usePieceSwap();
+                  if (k === 'freeze') useGravityFreeze();
+                  replayIndex++;
+              }
+          }
           modeTimerMs += deltaTime;
 
           if (freezeTimerMs > 0) {
