@@ -24,6 +24,15 @@ long _ftol2(float f) { return (long)f; }
 #define STATE_GAMEOVER 5
 #define STATE_VICTORY 6
 #define STATE_HELP 7
+#define STATE_KEYBINDS 8
+#define STATE_REPLAY 9
+
+int kbUp = VK_UP, kbDown = VK_DOWN, kbLeft = VK_LEFT, kbRight = VK_RIGHT;
+int kbFire = VK_SPACE, kbTimeStop = 'T', kbDash = 'D', kbBomb = 'B', kbShield = 'S', kbPause = 'P';
+
+int shotsFired = 0, shotsHit = 0, timeSurvivedFrames = 0;
+int isReplaying = 0;
+unsigned int initialSeed = 999;
 
 // --- GAME MODES ---
 #define MODE_CLASSIC 0
@@ -279,6 +288,42 @@ void SaveLeaderboard() {
         RegSetValueExA(hKey, "TotalKills", 0, REG_DWORD, (const BYTE*)&totalKills, sizeof(DWORD));
         RegCloseKey(hKey);
     }
+}
+
+void ExportStatsCSV() {
+    HANDLE hFile = CreateFileA("kspace_stats.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+    float acc = shotsFired > 0 ? ((float)shotsHit / shotsFired) * 100.0f : 0.0f;
+    char buf[256];
+    wsprintfA(buf, "Score,Wave,Mode,EnemiesKilled,TimeSurvivedSec,ShotsFired,ShotsHit,AccuracyPct\r\n%d,%d,%d,%d,%d,%d,%d,%d\r\n", score, wave, modeIndex, enemiesKilled, timeSurvivedFrames/60, shotsFired, shotsHit, (int)acc);
+    DWORD written;
+    WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
+    CloseHandle(hFile);
+}
+void ExportStatsJSON() {
+    HANDLE hFile = CreateFileA("kspace_stats.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+    float acc = shotsFired > 0 ? ((float)shotsHit / shotsFired) * 100.0f : 0.0f;
+    char buf[512];
+    wsprintfA(buf, "{\r\n\"score\": %d,\r\n\"wave\": %d,\r\n\"enemiesKilled\": %d,\r\n\"timeSurvivedSeconds\": %d,\r\n\"shotsFired\": %d,\r\n\"shotsHit\": %d,\r\n\"accuracyPct\": %d\r\n}\r\n", score, wave, enemiesKilled, timeSurvivedFrames/60, shotsFired, shotsHit, (int)acc);
+    DWORD written;
+    WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
+    CloseHandle(hFile);
+}
+void ExportHighScoresJSON() {
+    HANDLE hFile = CreateFileA("kspace_highscores.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+    DWORD written;
+    char buf[512];
+    lstrcpyA(buf, "[\r\n");
+    WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
+    for(int i=0; i<MAX_LEADERBOARD; i++) {
+        wsprintfA(buf, "  {\"score\":%d, \"wave\":%d, \"mode\":%d}%s\r\n", leaderboard[i].score, leaderboard[i].wave, leaderboard[i].mode, i==MAX_LEADERBOARD-1 ? "" : ",");
+        WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
+    }
+    lstrcpyA(buf, "]\r\n");
+    WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
+    CloseHandle(hFile);
 }
 
 void AddScoreToLeaderboard(int newScore, int newWave, int mode) {
@@ -623,6 +668,7 @@ void UseHyperShield() {
 }
 
 void Shoot() {
+    shotsFired++;
     PlaySnd(laserTimer > 0 ? 5 : 0);
     if (laserTimer > 0) return;
 
@@ -697,7 +743,7 @@ void StartNewGame(int modeIdx) {
     bombCount = 1;
     weaponType = 0;
     weaponLevel = 0;
-    score = 0;
+    score = 0; shotsFired = 0; shotsHit = 0; timeSurvivedFrames = 0;
     comboMultiplier = 1;
     comboTimer = 0;
     wave = 1;
@@ -762,6 +808,7 @@ void ApplyPowerup(int type) {
 
 void Update() {
     if (gameState != STATE_PLAYING) return;
+    timeSurvivedFrames++;
 
     if (bombFlash > 0) bombFlash--;
     if (comboTimer > 0) {
@@ -799,10 +846,10 @@ void Update() {
 
     // Controls
     float speed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? 7.0f : 4.5f;
-    if ((GetAsyncKeyState(VK_LEFT) & 0x8000)) p.x -= speed;
-    if ((GetAsyncKeyState(VK_RIGHT) & 0x8000)) p.x += speed;
-    if ((GetAsyncKeyState(VK_UP) & 0x8000)) p.y -= speed;
-    if ((GetAsyncKeyState(VK_DOWN) & 0x8000)) p.y += speed;
+    if ((GetAsyncKeyState(kbLeft) & 0x8000)) p.x -= speed;
+    if ((GetAsyncKeyState(kbRight) & 0x8000)) p.x += speed;
+    if ((GetAsyncKeyState(kbUp) & 0x8000)) p.y -= speed;
+    if ((GetAsyncKeyState(kbDown) & 0x8000)) p.y += speed;
 
     if (p.x < 0) p.x = 0;
     if (p.x > W - 20) p.x = W - 20;
@@ -810,7 +857,7 @@ void Update() {
     if (p.y > H - 20) p.y = H - 20;
 
     // Firing
-    if ((GetAsyncKeyState(VK_SPACE) & 0x8001) || (GetAsyncKeyState(VK_RETURN) & 0x8001)) {
+    if ((GetAsyncKeyState(kbFire) & 0x8001) || (GetAsyncKeyState(VK_RETURN) & 0x8001)) {
         int fireRate = (rapidTimer > 0) ? 3 : 7;
         if (frameCount % fireRate == 0) Shoot();
     }
@@ -919,7 +966,7 @@ void Update() {
                         if (IsMothershipShieldActive()) {
                             AddExplosion(b[i].x, b[i].y, 3, RGB(0, 229, 255)); // Deflector absorbed!
                         } else {
-                            bossHp -= (b[i].type == 1.0f) ? 8 : 2;
+                            shotsHit++; bossHp -= (b[i].type == 1.0f) ? 8 : 2;
                             AddExplosion(b[i].x, b[i].y, 4, RGB(255, 23, 68));
                             if (bossHp <= 0) DestroyBoss();
                         }
@@ -927,7 +974,7 @@ void Update() {
                 } else {
                     if (b[i].x >= bossX && b[i].x <= bossX + 60.0f && b[i].y >= bossY && b[i].y <= bossY + 50.0f) {
                         b[i].active = 0.0f;
-                        bossHp -= (b[i].type == 1.0f) ? 8 : 2;
+                        shotsHit++; bossHp -= (b[i].type == 1.0f) ? 8 : 2;
                         AddExplosion(b[i].x, b[i].y, 3, RGB(0, 229, 255));
                         if (bossHp <= 0) DestroyBoss();
                     }
@@ -1014,7 +1061,7 @@ void Update() {
                         // Bullets miss cloaked fighter!
                     } else {
                         b[j].active = 0.0f;
-                        e[i].hp -= (b[j].type == 1.0f) ? 6 : 1;
+                        shotsHit++; e[i].hp -= (b[j].type == 1.0f) ? 6 : 1;
                         AddExplosion(b[j].x, b[j].y, 3, RGB(0, 229, 255));
                     }
                     break;
@@ -1320,7 +1367,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == 'H') {
                     gameState = STATE_HELP;
                 } else {
-                    int opts = HasSavedGame() ? 4 : 3;
+                    int opts = HasSavedGame() ? 5 : 4;
                     if (wParam == VK_UP || wParam == 'W') menuIndex = (menuIndex - 1 + opts) % opts;
                 else if (wParam == VK_DOWN || wParam == 'S') menuIndex = (menuIndex + 1) % opts;
                 else if (wParam == VK_RETURN || wParam == VK_SPACE) {
@@ -1328,7 +1375,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (menuIndex == 0) gameState = STATE_MODE_SELECT;
                     else if (saved && menuIndex == 1) LoadGameState();
                     else if ((!saved && menuIndex == 1) || (saved && menuIndex == 2)) gameState = STATE_LEADERBOARD;
-                    else gameState = STATE_MODE_SELECT;
+                    else if ((!saved && menuIndex == 2) || (saved && menuIndex == 3)) gameState = STATE_MODE_SELECT;
+                    else if ((!saved && menuIndex == 3) || (saved && menuIndex == 4)) { ExportHighScoresJSON(); MessageBoxA(hwnd, "Exported kspace_highscores.json", "Export", MB_OK); }
+                }
                 }
             } else if (gameState == STATE_HELP) {
                 if (wParam == 'H' || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) gameState = STATE_MENU;
@@ -1338,11 +1387,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == VK_RETURN || wParam == VK_SPACE) StartNewGame(modeIndex);
                 else if (wParam == VK_ESCAPE) gameState = STATE_MENU;
             } else if (gameState == STATE_PLAYING) {
-                if (wParam == 'P' || wParam == VK_ESCAPE) { gameState = STATE_PAUSED; menuIndex = 0; }
-                else if (wParam == 'T') UseTimeStop();
-                else if (wParam == 'D') UseTacticalDash();
-                else if (wParam == 'B' || wParam == 'X') UseSmartBomb();
-                else if (wParam == 'S') UseHyperShield();
+                if (wParam == kbPause || wParam == VK_ESCAPE) { gameState = STATE_PAUSED; menuIndex = 0; }
+                else if (wParam == kbTimeStop) UseTimeStop();
+                else if (wParam == kbDash) UseTacticalDash();
+                else if (wParam == kbBomb || wParam == 'X') UseSmartBomb();
+                else if (wParam == kbShield) UseHyperShield();
             } else if (gameState == STATE_PAUSED) {
                 if (wParam == VK_UP || wParam == 'W') menuIndex = (menuIndex - 1 + 4) % 4;
                 else if (wParam == VK_DOWN || wParam == 'S') menuIndex = (menuIndex + 1) % 4;
@@ -1354,6 +1403,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (wParam == 'P' || wParam == VK_ESCAPE) gameState = STATE_PLAYING;
             } else if (gameState == STATE_LEADERBOARD || gameState == STATE_GAMEOVER || gameState == STATE_VICTORY || gameState == STATE_HELP) {
                 if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_ESCAPE) gameState = STATE_MENU;
+                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && wParam == 'E') { ExportStatsCSV(); MessageBoxA(hwnd, "Exported CSV", "Export", MB_OK); }
+                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && wParam == 'J') { ExportStatsJSON(); MessageBoxA(hwnd, "Exported JSON", "Export", MB_OK); }
             }
             break;
 
@@ -1429,10 +1480,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TextOutA(memDC, W/2 - 80, 120, "Loop 7 Space Command", 20);
 
                     int saved = HasSavedGame();
-                    char* opts[] = {"START NEW GAME", "RESUME SAVED GAME", "HIGH SCORES", "SELECT GAME MODE"};
-                    int count = saved ? 4 : 3;
-                    int optIdxs[] = {0, 1, 2, 3};
-                    if (!saved) { optIdxs[1] = 2; optIdxs[2] = 3; }
+                    char* opts[] = {"START NEW GAME", "RESUME SAVED GAME", "HIGH SCORES", "SELECT GAME MODE", "EXPORT SCORES"};
+                    int count = saved ? 5 : 4;
+                    int optIdxs[] = {0, 1, 2, 3, 4};
+                    if (!saved) { optIdxs[1] = 2; optIdxs[2] = 3; optIdxs[3] = 4; }
 
                     for (int i = 0; i < count; i++) {
                         int y = 200 + i * 35;
@@ -1646,7 +1697,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         char finalStr[64];
                         wsprintfA(finalStr, "FINAL SCORE: %d", score);
                         TextOutA(memDC, W/2 - lstrlenA(finalStr)*4, H/2, finalStr, lstrlenA(finalStr));
-                        TextOutA(memDC, W/2 - 80, H/2 + 30, "Press ENTER for Main Menu", 25);
+                        TextOutA(memDC, W/2 - 80, H/2 + 30, "ENTER:Menu E:CSV J:JSON", 23);
                     } else if (gameState == STATE_VICTORY) {
                         SetTextColor(memDC, RGB(0, 230, 118));
                         TextOutA(memDC, W/2 - 65, H/2 - 40, "CAMPAIGN VICTORY!", 17);
@@ -1656,7 +1707,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         char finalStr[64];
                         wsprintfA(finalStr, "FINAL SCORE: %d", score);
                         TextOutA(memDC, W/2 - lstrlenA(finalStr)*4, H/2 + 15, finalStr, lstrlenA(finalStr));
-                        TextOutA(memDC, W/2 - 80, H/2 + 45, "Press ENTER for Main Menu", 25);
+                        TextOutA(memDC, W/2 - 80, H/2 + 45, "ENTER:Menu E:CSV J:JSON", 23);
                     }
                 }
             }
