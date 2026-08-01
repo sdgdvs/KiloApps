@@ -30,6 +30,37 @@
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(1)">Sandbox Mode<br><small>Unlimited Resources & Tech</small></button>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(2)">100-Day Survival<br><small>Survive 100 Days</small></button>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(3)">Resource Rush<br><small>Get 1000 Mat & 100 AdvM by Day 50</small></button>
+        <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="toggleHelp()">Help & Manual<br><small>How to Play</small></button>
+    </div>
+    <div id="help-modal" style="display:none; position:fixed; top:5%; left:10%; width:80%; height:90%; background:rgba(10,20,30,0.95); z-index:200; border:2px solid #00ffff; border-radius:5px; padding:20px; overflow-y:auto; box-shadow:0 0 20px #00ffff; color:#00ffff;">
+        <h2 style="text-shadow: 0 0 10px #00ffff; text-align:center; margin-top:0;">KColony Administrator's Manual</h2>
+        <div style="position:absolute; top:20px; right:20px;"><button class="btn" onclick="toggleHelp()" style="padding:5px 10px;">CLOSE</button></div>
+        <h3>How to Play</h3>
+        <p>Manage your colony's resources: Food, Power, Materials (Mat), and Advanced Materials (AdvM). Expand to support more population (Pop) and keep them happy (Hap). Research tech to unlock advanced structures.</p>
+        <h3>Structure Spec Sheet</h3>
+        <ul style="line-height:1.6;">
+            <li><b>Solar Panel (S):</b> Generates 4 Power during the day.</li>
+            <li><b>Farm (F):</b> Produces 5 Food per tick. Costs 5 Power.</li>
+            <li><b>Mine (M):</b> Produces 2 Mat per tick. Costs 10 Power.</li>
+            <li><b>Habitat (H):</b> Increases Max Pop by 5. Costs 5 Power.</li>
+            <li><b>Battery (B):</b> Increases Max Power by 50. Stores power for night.</li>
+            <li><b>Laboratory (L):</b> Produces 2 Science per tick. Costs 5 Power.</li>
+            <li><b>Nuclear Reactor (N):</b> Generates 20 Power constantly.</li>
+            <li><b>Hydroponics (Y):</b> Produces 15 Food per tick. Costs 10 Power.</li>
+            <li><b>Laser Defense (D):</b> Range 5. Costs 20 Power. Automatically shoots aliens.</li>
+            <li><b>Wall (W):</b> Defensive structure to slow down aliens.</li>
+            <li><b>Turret (T):</b> Range 3. Costs 5 Power. Shoots aliens.</li>
+            <li><b>Factory (C):</b> Converts 2 Mat into 1 AdvM per tick. Costs 10 Power.</li>
+        </ul>
+        <h3>Tech Tree Guide</h3>
+        <p style="line-height:1.6;">1. <b>Hydroponics (50 Sci)</b>: Unlocks highly efficient food production.<br>
+           2. <b>Factory (75 Sci)</b>: Unlocks production of Advanced Materials.<br>
+           3. <b>Nuclear Reactor (100 Sci)</b>: Unlocks massive 24/7 power generation.<br>
+           4. <b>Laser Defense (150 Sci)</b>: Unlocks long-range anti-alien defenses.</p>
+        <h3>Disaster Survival Strategies</h3>
+        <p style="line-height:1.6;">- <b>Meteor Showers & Breakdowns:</b> Have excess Mat (5 per repair) ready to fix damaged structures.<br>
+           - <b>Dust Storms:</b> Solar efficiency drops. Build batteries to survive power outages, or rely on Nuclear Reactors.<br>
+           - <b>Alien Attacks:</b> Build walls to absorb hits and place Turrets/Lasers nearby to neutralize the threat quickly.</p>
     </div>
     <div id="header">
         <div class="res">Time:<span id="res-time">Day 1 (Day)</span></div>
@@ -67,6 +98,7 @@
             <button class="btn research" id="btn-res-laser" onclick="research(3)">Res: Laser Def.<br><small>Cost: 150 Sci</small></button>
             <hr style="border-color:#00ffff; width:100%; margin: 5px 0;">
             <button class="btn expedition" id="btn-exped" onclick="expedition()">Launch Expedition<br><small>Req: 1 Pop | Cost: 20 Mat, 20 Pwr</small></button>
+            <button class="btn" id="btn-help" onclick="toggleHelp()">Help & Manual</button>
         </div>
     </div>
     <script>
@@ -108,6 +140,11 @@
                 noise.start();
             }
             if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function toggleHelp() {
+            const h = document.getElementById('help-modal');
+            h.style.display = h.style.display === 'none' ? 'block' : 'none';
         }
 
         function playTone(freq, type, duration, vol=0.1) {

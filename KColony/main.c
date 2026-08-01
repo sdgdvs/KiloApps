@@ -46,7 +46,8 @@ int unlockedHydro = 0, unlockedNuke = 0, unlockedLaser = 0, unlockedFactory = 0;
 int selectedType = 0;
 int grid[GRID_W * GRID_H] = {0};
 
-int gameState = 0; // 0 = menu, 1 = playing
+int gameState = 0; // 0 = menu, 1 = playing, 2 = help
+int prevState = 0;
 int gameMode = 0; // 0=endless, 1=sandbox, 2=100-day, 3=resource rush
 
 typedef struct {
@@ -71,8 +72,8 @@ void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
     
     DrawText(hdc, "KCOLONY SCENARIOS", -1, &(RECT){0, 80, rc.right, 120}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
-    const char* titles[] = { "1. ENDLESS SURVIVAL", "2. SANDBOX MODE (UNLIMITED)", "3. 100-DAY SURVIVAL", "4. RESOURCE RUSH (1000M, 100A by D50)" };
-    for (int i=0; i<4; i++) {
+    const char* titles[] = { "1. ENDLESS SURVIVAL", "2. SANDBOX MODE (UNLIMITED)", "3. 100-DAY SURVIVAL", "4. RESOURCE RUSH (1000M, 100A by D50)", "5. HELP & MANUAL" };
+    for (int i=0; i<5; i++) {
         RECT bRc = {rc.right/2 - 200, 160 + i*60, rc.right/2 + 200, 200 + i*60};
         HBRUSH br = CreateSolidBrush(RGB(17,17,34));
         FillRect(hdc, &bRc, br);
@@ -83,6 +84,42 @@ void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
         SelectObject(hdc, oldP); DeleteObject(pen);
         DrawText(hdc, titles[i], -1, &bRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
+}
+
+void DrawHelp(HDC hdc, HFONT hFont, RECT rc) {
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(0, 255, 255));
+    SelectObject(hdc, hFont);
+    
+    RECT textRc = {20, 20, rc.right - 20, rc.bottom - 60};
+    const char* helpText = 
+        "KCOLONY ADMINISTRATOR'S MANUAL\n\n"
+        "HOW TO PLAY:\n"
+        "Manage resources (Food, Power, Mat, AdvM). Keep colonists happy and expand.\n"
+        "Research tech to unlock advanced structures.\n\n"
+        "STRUCTURES:\n"
+        "Solar (S): +4 Pwr (Day) | Farm (F): +5 Food, -5 Pwr | Mine (M): +2 Mat, -10 Pwr\n"
+        "Hab (H): +5 Max Pop, -5 Pwr | Battery (B): +50 Max Pwr | Lab (L): +2 Sci, -5 Pwr\n"
+        "Nuke (N): +20 Pwr | Hydro (Y): +15 Food, -10 Pwr | Factory (C): 2 Mat -> 1 AdvM\n"
+        "Wall (W): Defense | Turret (T): Range 3, -5 Pwr | Laser (D): Range 5, -20 Pwr\n\n"
+        "TECH TREE:\n"
+        "Hydroponics (50S): Efficient food. | Factory (75S): Advanced Materials.\n"
+        "Nuclear (100S): 24/7 Power. | Laser (150S): Long-range defense.\n\n"
+        "DISASTERS:\n"
+        "Meteors/Breakdowns: Keep Mat to repair. | Dust Storms: Use Batteries/Nukes.\n"
+        "Alien Attacks: Build Walls and Turrets.\n";
+        
+    DrawText(hdc, helpText, -1, &textRc, DT_LEFT | DT_TOP);
+    
+    RECT btnRc = {rc.right / 2 - 50, rc.bottom - 50, rc.right / 2 + 50, rc.bottom - 20};
+    HBRUSH br = CreateSolidBrush(RGB(17,17,34));
+    FillRect(hdc, &btnRc, br);
+    DeleteObject(br);
+    HPEN pen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+    HPEN oldP = SelectObject(hdc, pen);
+    MoveToEx(hdc, btnRc.left, btnRc.top, NULL); LineTo(hdc, btnRc.right, btnRc.top); LineTo(hdc, btnRc.right, btnRc.bottom); LineTo(hdc, btnRc.left, btnRc.bottom); LineTo(hdc, btnRc.left, btnRc.top);
+    SelectObject(hdc, oldP); DeleteObject(pen);
+    DrawText(hdc, "BACK", -1, &btnRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 void StartGame(HWND hwnd, int mode) {
@@ -259,18 +296,25 @@ void DrawUI(HDC hdc, HFONT hFont) {
     buttons[btnCount].isSelected = 0;
     btnCount++;
 
+    btnY2 += 30;
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 150, btnY2 + 25 };
+    buttons[btnCount].id = 300;
+    strcpy(buttons[btnCount].label, "HELP / MANUAL");
+    buttons[btnCount].isSelected = 0;
+    btnCount++;
+
     for (int i = 0; i < btnCount; i++) {
         COLORREF btnBg = buttons[i].isSelected ? RGB(0, 51, 51) : RGB(17, 17, 34);
         if (buttons[i].id >= 100 && buttons[i].id < 200) btnBg = RGB(34, 17, 51); // purple hue for research
-        else if (buttons[i].id >= 200) btnBg = RGB(51, 34, 0); // orange hue for expedition
+        else if (buttons[i].id == 200) btnBg = RGB(51, 34, 0); // orange hue for expedition
         
         COLORREF btnBorder = buttons[i].isSelected ? RGB(255, 255, 255) : RGB(0, 255, 255);
         if (buttons[i].id >= 100 && buttons[i].id < 200) btnBorder = RGB(170, 0, 255);
-        else if (buttons[i].id >= 200) btnBorder = RGB(255, 170, 0);
+        else if (buttons[i].id == 200) btnBorder = RGB(255, 170, 0);
         
         COLORREF btnText = buttons[i].isSelected ? RGB(255, 255, 255) : RGB(0, 255, 255);
         if (buttons[i].id >= 100 && buttons[i].id < 200) btnText = RGB(170, 0, 255);
-        else if (buttons[i].id >= 200) btnText = RGB(255, 170, 0);
+        else if (buttons[i].id == 200) btnText = RGB(255, 170, 0);
 
         HBRUSH brush = CreateSolidBrush(btnBg);
         FillRect(hdc, &buttons[i].rc, brush);
@@ -512,6 +556,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (y >= 220 && y <= 260) StartGame(hwnd, 1);
                     if (y >= 280 && y <= 320) StartGame(hwnd, 2);
                     if (y >= 340 && y <= 380) StartGame(hwnd, 3);
+                    if (y >= 400 && y <= 440) { prevState = 0; gameState = 2; InvalidateRect(hwnd, NULL, FALSE); }
+                }
+                return 0;
+            }
+            
+            if (gameState == 2) {
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                int cx = rc.right / 2;
+                if (x >= cx - 50 && x <= cx + 50 && y >= rc.bottom - 50 && y <= rc.bottom - 20) {
+                    gameState = prevState;
+                    InvalidateRect(hwnd, NULL, FALSE);
                 }
                 return 0;
             }
@@ -554,6 +610,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             } else {
                                 MessageBox(hwnd, "Not enough resources! Need 1 Pop, 20 Mat, 20 Pwr.", "Expedition Report", MB_OK | MB_ICONWARNING);
                             }
+                        } else if (id == 300) {
+                            prevState = 1;
+                            gameState = 2;
                         }
                         InvalidateRect(hwnd, NULL, FALSE);
                         return 0;
@@ -620,6 +679,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             if (gameState == 0) {
                 DrawMenu(hdcMem, hFont, rc);
+            } else if (gameState == 2) {
+                DrawHelp(hdcMem, hFont, rc);
             } else {
                 DrawGrid(hdcMem, hFont);
                 DrawUI(hdcMem, hFont);

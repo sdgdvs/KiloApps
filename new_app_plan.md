@@ -53,24 +53,24 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KColony (Sci-Fi Colony Survival)
-**Phase:** 14 (next to do)
-**Status:** Phase 13 completed, Phase 14 next
+**App:** KFarm (Farming Simulation)
+**Phase:** 1 (next to do)
+**Status:** Initializing new app
 
-- [x] Phase 1: Scaffold KColony directory (`KColony/`), create web HTML skeleton (`KiloOS/public/apps/kcolony.html`), register in App.jsx.
-- [x] Phase 2: Core HTML 2D grid colony layout. Basic resources (Food, Power, Materials). Place basic structures (Solar Panel, Farm, Mine).
-- [x] Phase 3: Native C version (`KColony/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [x] Phase 4: Sci-fi colony UI styling (metallic surfaces, neon accents, holographic data readouts).
-- [x] Phase 5: Population & Needs — Colonists arrive over time. They consume food and require habitation structures. Unhappiness leads to reduced efficiency.
-- [x] Phase 6: Time & Day/Night Cycle — Implement time progression. Solar panels only work during the day. Batteries required for night power.
-- [x] Phase 7: Tech Tree Research — Build a Laboratory to generate Science points. Unlock advanced structures (Nuclear Reactor, Hydroponics, Laser Defense).
-- [x] Phase 8: Random Events & Disasters — Add meteor showers, dust storms, and equipment breakdowns that damage structures and require repair.
-- [x] Phase 9: Alien Threats — Add hostile alien wildlife that attacks the colony. Build walls and automated defense turrets to protect colonists.
-- [x] Phase 10: Expeditions — Send colonists on rovers to explore the surrounding map for rare artifacts and resource caches. Text-based encounter resolutions.
-- [x] Phase 11: Advanced Industry — Build factories to refine basic materials into advanced composites and electronics for late-game structures.
-- [x] Phase 12: Scenario Modes — Add a Sandbox mode, a 100-Day Survival mode, and a Resource Rush timed mode.
-- [x] Phase 13: Sound Effects — Web Audio API construction sounds, alarms, ambient wind, laser fire. Native: Win32 Beep equivalents.
-- [ ] Phase 14: Add Comprehensive Help & Administrator's Manual — How-to-play modal, structure spec sheet, tech tree guide, disaster survival strategies.
+- [ ] Phase 1: Scaffold KFarm directory (`KFarm/`), create web HTML skeleton (`KiloOS/public/apps/kfarm.html`), register in App.jsx.
+- [ ] Phase 2: Basic farm grid with soil, tilling, and planting basic seeds (wheat).
+- [ ] Phase 3: Native C version (`KFarm/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [ ] Phase 4: Farming UI styling (earthy tones, crop icons, sunny daylight colors).
+- [ ] Phase 5: Day/Night cycle and Water mechanics — crops need water each day to grow.
+- [ ] Phase 6: Multiple crop types (wheat, corn, tomatoes, pumpkins) with different growth times and sell values.
+- [ ] Phase 7: Economy System — sell harvested crops for money. Buy seeds and upgrades.
+- [ ] Phase 8: Animals & Barns — buy chickens and cows for daily eggs/milk.
+- [ ] Phase 9: Farming Tools — upgrade watering can, hoe, and scythe for area-of-effect actions.
+- [ ] Phase 10: Seasons System — Spring, Summer, Fall, Winter. Crops are season-specific.
+- [ ] Phase 11: Weather Events — Rain (auto-waters), Drought (extra water needed), Crow attacks (need scarecrows).
+- [ ] Phase 12: Crafting/Processing — Turn wheat into flour, milk into cheese, eggs into mayo for higher profit.
+- [ ] Phase 13: Sound Effects — web audio nature sounds, animal noises, tool swings. Native: Win32 Beep equivalents.
+- [ ] Phase 14: Comprehensive Help & Farmer's Almanac — How-to-play, crop growth charts, season guides.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KColony (Phase 14 completed: Added Comprehensive Help & Administrator's Manual to both versions)
 - KDarts (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KGo (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KWords (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
