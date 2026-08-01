@@ -83,7 +83,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KHangman
 - KSimon
 - KMatch3
 - KFreecell
@@ -112,9 +111,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarship
 - KSolitaire
 - KConnect4
+- KHangman
 
 ## Completed Work Log
 
+- **KHangman (Loop 2):** Implemented animated ghost that floats up from the body when the player loses, complete with swaying motion, fading alpha transparency, and drop shadows/glow for both Web Canvas/HTML (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 - **KConnect4 (Loop 2):** Implemented multi-color particle burst animations for the Bomb (fire/orange), Drill (cyan/white), and Magnet (purple/magenta) powerup special effects when triggered in both Web Canvas/HTML (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 - **KSolitaire (Loop 2):** Implemented multi-colored particle burst explosion animations triggered when cards are successfully moved to the foundation piles for both Web Canvas/HTML (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 

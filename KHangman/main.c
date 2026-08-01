@@ -117,6 +117,7 @@ int is_muted = 0;
 int shake_frames = 0;
 int win_pulse_phase = 0;
 int blitz_timer_counter = 0;
+int loss_anim_timer = 0;
 
 void PlaySoundEffect(int type) {
     if (is_muted) return;
@@ -429,6 +430,7 @@ void InitGame() {
     shake_frames = 0;
     win_pulse_phase = 0;
     blitz_timer_counter = 0;
+    loss_anim_timer = 0;
 }
 
 void Guess(char c) {
@@ -599,8 +601,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 if (game_over && won && (anim_ticks % 3 == 0)) {
                     SpawnWinParticles();
-                } else if (game_over && !won && (anim_ticks % 4 == 0)) {
-                    SpawnLossParticles();
+                } else if (game_over && !won) {
+                    if (anim_ticks % 4 == 0) SpawnLossParticles();
+                    loss_anim_timer++;
                 }
 
                 if (shake_frames > 0) shake_frames--;
@@ -1020,6 +1023,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 DeleteObject(charPen);
+            }
+
+            // 4.5. Ghost floating up on loss (Loop 2)
+            if (game_over && !won) {
+                int ghostY = (int)(hangY - 20 - loss_anim_timer * 1.5);
+                if (ghostY > -50) {
+                    HPEN noPen = CreatePen(PS_NULL, 0, RGB(0,0,0));
+                    HBRUSH ghostBrush = CreateSolidBrush(RGB(224, 247, 250));
+                    HPEN oldP = (HPEN)SelectObject(memDC, noPen);
+                    HBRUSH oldB = (HBRUSH)SelectObject(memDC, ghostBrush);
+                    
+                    int sway = (int)(sin(loss_anim_timer * 0.15) * 4.0);
+                    Ellipse(memDC, cx - 14 + sway, ghostY - 14, cx + 14 + sway, ghostY + 14);
+                    POINT tail[3];
+                    tail[0].x = cx - 14 + sway; tail[0].y = ghostY + 5;
+                    tail[1].x = cx + 14 + sway; tail[1].y = ghostY + 5;
+                    tail[2].x = cx + sway;      tail[2].y = ghostY + 22;
+                    Polygon(memDC, tail, 3);
+                    
+                    HBRUSH eyeBrush = CreateSolidBrush(RGB(0, 96, 100));
+                    SelectObject(memDC, eyeBrush);
+                    Ellipse(memDC, cx - 7 + sway, ghostY - 6, cx - 3 + sway, ghostY - 2);
+                    Ellipse(memDC, cx + 3 + sway, ghostY - 6, cx + 7 + sway, ghostY - 2);
+                    
+                    Ellipse(memDC, cx - 2 + sway, ghostY + 2, cx + 2 + sway, ghostY + 8);
+                    
+                    SelectObject(memDC, oldP);
+                    SelectObject(memDC, oldB);
+                    DeleteObject(noPen);
+                    DeleteObject(ghostBrush);
+                    DeleteObject(eyeBrush);
+                }
             }
 
             // Word display

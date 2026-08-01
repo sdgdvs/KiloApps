@@ -350,6 +350,7 @@
     let animTime = 0;
     let blinkTimer = 0;
     let isBlinking = false;
+    let lossAnimTimer = 0;
 
     function showHelp() {
         document.getElementById('help-modal').style.display = 'flex';
@@ -935,6 +936,43 @@
                     ctx.fillRect(rLegX - 3, bodyY2 + 23, 7, 5);
                 }
             }
+        }
+
+        // 4.5. Ghost floating up on loss (Loop 2)
+        if (gameEnded && !isWin()) {
+            lossAnimTimer += 1;
+            const ghostY = cy - 20 - lossAnimTimer * 0.8;
+            const ghostAlpha = Math.max(0, 1.0 - lossAnimTimer / 150);
+            if (ghostAlpha > 0) {
+                ctx.save();
+                ctx.globalAlpha = ghostAlpha;
+                ctx.fillStyle = 'rgba(224, 247, 250, 0.85)';
+                ctx.shadowColor = '#80deea';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(cx, ghostY, 14, Math.PI, 0);
+                const sway = Math.sin(lossAnimTimer * 0.15) * 3;
+                ctx.lineTo(cx + 14 + sway, ghostY + 22);
+                ctx.lineTo(cx + 7 + sway, ghostY + 17);
+                ctx.lineTo(cx + sway, ghostY + 22);
+                ctx.lineTo(cx - 7 + sway, ghostY + 17);
+                ctx.lineTo(cx - 14 + sway, ghostY + 22);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#006064';
+                ctx.beginPath();
+                ctx.arc(cx - 5 + sway*0.5, ghostY - 3, 2.5, 0, Math.PI * 2);
+                ctx.arc(cx + 5 + sway*0.5, ghostY - 3, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(cx + sway*0.5, ghostY + 5, 2.5, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        } else {
+            lossAnimTimer = 0;
         }
 
         // 5. Update and Draw Particles
