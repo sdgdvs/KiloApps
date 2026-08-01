@@ -1593,31 +1593,71 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            StretchBlt(hdc, 0, 0, 640, 480, hdcMem, 0, 0, W, H, SRCCOPY);
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            StretchBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcMem, 0, 0, W, H, SRCCOPY);
             
-            HFONT hFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
+            HFONT hFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
             HGDIOBJ oldFont = SelectObject(hdc, hFont);
             
-            // UI Text
-            char uiText[128];
+            SetBkMode(hdc, TRANSPARENT);
             if (gameState == 0) {
-                wsprintfA(uiText, "KMAZE - ENTER:Start E:Export I:Import H:Help [Played:%d Escaped:%d]", totalGames, totalEscapes);
+                const char* t1 = "KMAZE";
+                const char* t2 = "Press ENTER to start";
+                const char* t3 = "Press H for Help / Keys";
+                char t4[64]; wsprintfA(t4, "Games: %d Escapes: %d", totalGames, totalEscapes);
+                
+                SetTextColor(hdc, RGB(0, 0, 0));
+                TextOutA(hdc, clientRect.right/2 - 30 + 2, clientRect.bottom/2 - 40 + 2, t1, lstrlenA(t1));
+                TextOutA(hdc, clientRect.right/2 - 110 + 2, clientRect.bottom/2 - 10 + 2, t2, lstrlenA(t2));
+                TextOutA(hdc, clientRect.right/2 - 130 + 2, clientRect.bottom/2 + 20 + 2, t3, lstrlenA(t3));
+                TextOutA(hdc, clientRect.right/2 - 110 + 2, clientRect.bottom/2 + 50 + 2, t4, lstrlenA(t4));
+                
+                SetTextColor(hdc, RGB(255, 255, 255));
+                TextOutA(hdc, clientRect.right/2 - 30, clientRect.bottom/2 - 40, t1, lstrlenA(t1));
+                TextOutA(hdc, clientRect.right/2 - 110, clientRect.bottom/2 - 10, t2, lstrlenA(t2));
+                TextOutA(hdc, clientRect.right/2 - 130, clientRect.bottom/2 + 20, t3, lstrlenA(t3));
+                TextOutA(hdc, clientRect.right/2 - 110, clientRect.bottom/2 + 50, t4, lstrlenA(t4));
             } else if (gameState == 2) {
                 DWORD elapsedSec = (endTime - startTime) / 1000;
-                wsprintfA(uiText, "Escaped 35! Score:%d Time:%ds R:Replay ENTER:Restart", score, elapsedSec);
+                char t1[64]; wsprintfA(t1, "Escaped 35! Time: %ds", elapsedSec);
+                char t2[64]; wsprintfA(t2, "Score: %d", score);
+                const char* t3 = "Press R for Replay";
+                const char* t4 = "ENTER to Restart";
+                
+                SetTextColor(hdc, RGB(0, 0, 0));
+                TextOutA(hdc, clientRect.right/2 - 110 + 2, clientRect.bottom/2 - 40 + 2, t1, lstrlenA(t1));
+                TextOutA(hdc, clientRect.right/2 - 60 + 2, clientRect.bottom/2 - 10 + 2, t2, lstrlenA(t2));
+                TextOutA(hdc, clientRect.right/2 - 100 + 2, clientRect.bottom/2 + 20 + 2, t3, lstrlenA(t3));
+                TextOutA(hdc, clientRect.right/2 - 90 + 2, clientRect.bottom/2 + 50 + 2, t4, lstrlenA(t4));
+                
+                SetTextColor(hdc, RGB(255, 255, 255));
+                TextOutA(hdc, clientRect.right/2 - 110, clientRect.bottom/2 - 40, t1, lstrlenA(t1));
+                TextOutA(hdc, clientRect.right/2 - 60, clientRect.bottom/2 - 10, t2, lstrlenA(t2));
+                TextOutA(hdc, clientRect.right/2 - 100, clientRect.bottom/2 + 20, t3, lstrlenA(t3));
+                TextOutA(hdc, clientRect.right/2 - 90, clientRect.bottom/2 + 50, t4, lstrlenA(t4));
             } else if (gameState == 3) {
-                wsprintfA(uiText, "REPLAY MODE - Lvl %d - Frame %d/%d (A/D: scrub, ESC: exit)", replayLevel+1, replayCurFrame, replayFrameCount);
+                char uiText[128]; wsprintfA(uiText, "REPLAY Lvl %d - Frame %d/%d (A/D: scrub, ESC: exit)", replayLevel+1, replayCurFrame, replayFrameCount);
+                SetTextColor(hdc, RGB(0, 0, 0)); TextOutA(hdc, 22, 22, uiText, lstrlenA(uiText));
+                SetTextColor(hdc, RGB(255, 255, 255)); TextOutA(hdc, 20, 20, uiText, lstrlenA(uiText));
             } else if (gameState == 4) {
-                wsprintfA(uiText, "KEYBINDS - Click below to bind, ESC to close");
+                const char* uiText = "KEYBINDS - Click below to bind, ESC to close";
+                SetTextColor(hdc, RGB(0, 0, 0)); TextOutA(hdc, 22, 22, uiText, lstrlenA(uiText));
+                SetTextColor(hdc, RGB(255, 255, 255)); TextOutA(hdc, 20, 20, uiText, lstrlenA(uiText));
             } else {
                 DWORD elapsedSec = (GetTickCount() - startTime) / 1000;
-                wsprintfA(uiText, "Lvl:%d/35 Key:%d P:%d C:%d S:%d F:%d T:%d Score:%d %ds (H:Help)", currentLevel + 1, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges, score, elapsedSec);
+                char t1[128]; wsprintfA(t1, "Lvl:%d/35 K:%d P:%d C:%d S:%d F:%d T:%d", currentLevel + 1, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges);
+                char t2[128]; wsprintfA(t2, "Score:%d Time:%ds", score, elapsedSec);
+                const char* t3 = "V:Save L:Load H:Help";
+                
+                SetTextColor(hdc, RGB(0, 0, 0));
+                TextOutA(hdc, 22, 22, t1, lstrlenA(t1)); TextOutA(hdc, 22, 52, t2, lstrlenA(t2));
+                TextOutA(hdc, clientRect.right - 248, 22, t3, lstrlenA(t3));
+                
+                SetTextColor(hdc, RGB(255, 255, 255));
+                TextOutA(hdc, 20, 20, t1, lstrlenA(t1)); TextOutA(hdc, 20, 50, t2, lstrlenA(t2));
+                TextOutA(hdc, clientRect.right - 250, 20, t3, lstrlenA(t3));
             }
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(0, 0, 0));
-            TextOutA(hdc, 22, 22, uiText, lstrlenA(uiText));
-            SetTextColor(hdc, RGB(255, 255, 255));
-            TextOutA(hdc, 20, 20, uiText, lstrlenA(uiText));
             
             if (gameState == 4) {
                 char kbText[64];
@@ -1634,19 +1674,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (msgTimer > 0) {
                 SetTextColor(hdc, RGB(0, 0, 0));
-                TextOutA(hdc, 640/2 - 118, 62, msgText, lstrlenA(msgText));
+                TextOutA(hdc, clientRect.right/2 - 118 + 2, 82, msgText, lstrlenA(msgText));
                 SetTextColor(hdc, RGB(255, 255, 0));
-                TextOutA(hdc, 640/2 - 120, 60, msgText, lstrlenA(msgText));
+                TextOutA(hdc, clientRect.right/2 - 120, 80, msgText, lstrlenA(msgText));
             }
 
             // Active Items Legend HUD
             if (gameState == 1) {
                 char itemText[128];
-                wsprintfA(itemText, "[P]Break  [C]Path:%ds  [S]Speed:%ds  [F]Stun:%ds  [T]Freeze:%ds", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000);
+                wsprintfA(itemText, "[P]Break [C]Path:%ds [S]Speed:%ds [F]Stun:%ds [T]Freeze:%ds", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000);
                 SetTextColor(hdc, RGB(0, 0, 0));
-                TextOutA(hdc, 22, 480 - 38, itemText, lstrlenA(itemText));
+                TextOutA(hdc, 22, clientRect.bottom - 28, itemText, lstrlenA(itemText));
                 SetTextColor(hdc, RGB(0, 255, 255));
-                TextOutA(hdc, 20, 480 - 40, itemText, lstrlenA(itemText));
+                TextOutA(hdc, 20, clientRect.bottom - 30, itemText, lstrlenA(itemText));
             }
             SelectObject(hdc, oldFont);
             DeleteObject(hFont);
