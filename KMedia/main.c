@@ -28,8 +28,8 @@ char* my_strrchr(const char* str, int ch) {
     return (char*)last;
 }
 
-#define W 360
-#define H 460
+#define W 800
+#define H 600
 #define MAX_TRACKS 256
 
 HWND g_hwndMain;
@@ -447,13 +447,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | WS_HSCROLL,
-                10, 155, W - 36, 120, hwnd, (HMENU)4, NULL, NULL);
+                10, 155, W - 36, 280, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             HFONT hSubFont = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             hSubText = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_CENTER,
-                10, 280, W - 36, 130, hwnd, NULL, NULL, NULL);
+                10, 445, W - 36, 105, hwnd, NULL, NULL, NULL);
             SendMessage(hSubText, WM_SETFONT, (WPARAM)hSubFont, TRUE);
 
             SetTimer(hwnd, 1, 200, NULL);

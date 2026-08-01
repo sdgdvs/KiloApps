@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KMedia
 - KNet
 - KZip
 - KPaint
@@ -81,6 +80,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KQuest
 - KNote
 - KPass
+- KMedia
 
 
 ## Progress Log
@@ -145,3 +145,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KQuest: Usability and UI issues fixed (Appropriate window size/visible controls, crisp text, and clear opening instructions).
 - KNote: Usability and UI issues fixed (auto-opening size, visible controls, crisp text, and added "Press F1 for Help" shortcut and instructions).
 - KPass: Usability and UI issues fixed (Appropriate auto-opening size adjusted, DPI awareness enabled, and 'Press H for Help' instruction added).
+- KMedia: Usability and UI issues fixed (Appropriate auto-opening size adjusted, layout issues fixed, help shortcut & modal added, text crispness improved).
