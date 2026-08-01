@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KNote
 - KPass
 - KMedia
 - KNet
@@ -81,6 +80,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMine
 - KPac
 - KQuest
+- KNote
 
 
 ## Progress Log
@@ -143,3 +143,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KChat: Usability and UI issues fixed (auto-opening size, crisp text DPI, help instructions).
 - KPac: Usability and UI issues fixed (Appropriate auto-opening size adjusted, added on-screen D-Pad, made help instructions clearer and crisper).
 - KQuest: Usability and UI issues fixed (Appropriate window size/visible controls, crisp text, and clear opening instructions).
+- KNote: Usability and UI issues fixed (auto-opening size, visible controls, crisp text, and added "Press F1 for Help" shortcut and instructions).
