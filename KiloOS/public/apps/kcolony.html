@@ -18,6 +18,8 @@
         .btn:hover:not(.active) { background: #113; box-shadow: 0 0 10px #00ffff; }
         .btn.research { border-color: #aa00ff; color: #aa00ff; box-shadow: 0 0 5px rgba(170,0,255,0.2); }
         .btn.research:hover { box-shadow: 0 0 10px #aa00ff; }
+        .btn.expedition { border-color: #ffaa00; color: #ffaa00; box-shadow: 0 0 5px rgba(255,170,0,0.2); }
+        .btn.expedition:hover { box-shadow: 0 0 10px #ffaa00; }
         small { display: block; margin-top: 3px; color: #0aa; text-shadow: none; font-size: 9px; }
     </style>
 </head>
@@ -53,6 +55,8 @@
             <button class="btn research" id="btn-res-hydro" onclick="research(1)">Res: Hydroponics<br><small>Cost: 50 Sci</small></button>
             <button class="btn research" id="btn-res-nuke" onclick="research(2)">Res: Nuclear<br><small>Cost: 100 Sci</small></button>
             <button class="btn research" id="btn-res-laser" onclick="research(3)">Res: Laser Def.<br><small>Cost: 150 Sci</small></button>
+            <hr style="border-color:#00ffff; width:100%; margin: 5px 0;">
+            <button class="btn expedition" id="btn-exped" onclick="expedition()">Launch Expedition<br><small>Req: 1 Pop | Cost: 20 Mat, 20 Pwr</small></button>
         </div>
     </div>
     <script>
@@ -74,6 +78,31 @@
             else {
                 const btns = ['none', 'solar', 'farm', 'mine', 'hab', 'battery', 'lab', 'nuke', 'hydro', 'laser', 'wall', 'turret'];
                 document.getElementById('btn-' + btns[type]).classList.add('active');
+            }
+        }
+
+        function expedition() {
+            if (pop >= 1 && mat >= 20 && power >= 20) {
+                mat -= 20;
+                power -= 20;
+                let r = Math.random();
+                if (r < 0.3) {
+                    mat += 50;
+                    food += 50;
+                    alert("Expedition Report:\nRover found a resource cache!\n(+50 Mat, +50 Food)");
+                } else if (r < 0.6) {
+                    sci += 100;
+                    alert("Expedition Report:\nExpedition discovered ancient alien technology!\n(+100 Sci)");
+                } else if (r < 0.8) {
+                    alert("Expedition Report:\nRover broke down in a dust storm. Expedition returned safely but empty-handed.");
+                } else {
+                    pop--;
+                    happiness = Math.max(0, happiness - 10);
+                    alert("Expedition Report:\nExpedition was ambushed by aliens! Rover destroyed and colonist lost.\n(-1 Pop, -10% Happiness)");
+                }
+                updateUI();
+            } else {
+                alert("Not enough resources! Need 1 Pop, 20 Mat, 20 Pwr.");
             }
         }
 

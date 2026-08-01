@@ -743,6 +743,17 @@
     ctx.shadowBlur = 10;
     ctx.fill();
 
+    ctx.save();
+    ctx.clip();
+    const t = Date.now() / 150;
+    for(let i=0; i<8; i++) {
+        const h = 10 + Math.sin(t + i) * 15 + (isPlayingSequence ? Math.random()*20 : 0);
+        ctx.fillStyle = isTimeFrozen ? '#00ccff' : '#00ffcc';
+        ctx.globalAlpha = 0.4;
+        ctx.fillRect(-30 + i*8, 10 - h, 6, h);
+    }
+    ctx.restore();
+
     ctx.lineWidth = 3;
     ctx.strokeStyle = '#777788';
     ctx.stroke();

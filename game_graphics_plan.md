@@ -83,7 +83,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSimon
+
 - KMatch3
 - KFreecell
 - KSudoku
@@ -114,7 +114,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KConnect4
 - KHangman
 
-## Completed Work Log
+## Completed Work Log\n\n- **KSimon (Loop 2):** Implemented animated center disc audio equalizer spectrum analyzer frame cycle, pulsing idle glow breathing animations on buttons, and glitch death effect for both Web Canvas (ksimon.html) and Native C Win32 GDI (KSimon/main.c).
 
 - **KHangman (Loop 2):** Implemented animated ghost that floats up from the body when the player loses, complete with swaying motion, fading alpha transparency, and drop shadows/glow for both Web Canvas/HTML (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 - **KConnect4 (Loop 2):** Implemented multi-color particle burst animations for the Bomb (fire/orange), Drill (cyan/white), and Magnet (purple/magenta) powerup special effects when triggered in both Web Canvas/HTML (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).

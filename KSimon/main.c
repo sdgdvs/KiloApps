@@ -624,6 +624,17 @@ void DrawBoard(HDC hdc, int width, int height) {
     SelectObject(hdc, oldB);
     DeleteObject(discB);
 
+    // Equalizer
+    int t = GetTickCount() / 150;
+    for(int i=0; i<8; i++) {
+        int h = 10 + (int)(sin(t + i) * 15.0) + (is_playing_sequence ? rand() % 20 : 0);
+        RECT eqRc = {cx - 30 + i*8, cy + 10 - h, cx - 24 + i*8, cy + 10};
+        HBRUSH eqB = CreateSolidBrush(is_time_frozen ? RGB(0, 200, 255) : RGB(0, 255, 204));
+        FillRect(hdc, &eqRc, eqB);
+        DeleteObject(eqB);
+    }
+
+
     HPEN dPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 120));
     HGDIOBJ oldP = SelectObject(hdc, dPen);
     HGDIOBJ oldBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));

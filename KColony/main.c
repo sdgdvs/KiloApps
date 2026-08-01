@@ -180,13 +180,26 @@ void DrawUI(HDC hdc, HFONT hFont) {
         btnY += 30;
     }
 
+    btnY += 10;
+    buttons[btnCount].rc = (RECT){ sidebarX, btnY, sidebarX + 180, btnY + 25 };
+    buttons[btnCount].id = 200;
+    strcpy(buttons[btnCount].label, "EXPEDITION");
+    buttons[btnCount].isSelected = 0;
+    btnCount++;
+    btnY += 30;
+
     for (int i = 0; i < btnCount; i++) {
         COLORREF btnBg = buttons[i].isSelected ? RGB(0, 51, 51) : RGB(17, 17, 34);
-        if (buttons[i].id >= 100) btnBg = RGB(34, 17, 51); // purple hue for research
+        if (buttons[i].id >= 100 && buttons[i].id < 200) btnBg = RGB(34, 17, 51); // purple hue for research
+        else if (buttons[i].id >= 200) btnBg = RGB(51, 34, 0); // orange hue for expedition
+        
         COLORREF btnBorder = buttons[i].isSelected ? RGB(255, 255, 255) : RGB(0, 255, 255);
-        if (buttons[i].id >= 100) btnBorder = RGB(170, 0, 255);
+        if (buttons[i].id >= 100 && buttons[i].id < 200) btnBorder = RGB(170, 0, 255);
+        else if (buttons[i].id >= 200) btnBorder = RGB(255, 170, 0);
+        
         COLORREF btnText = buttons[i].isSelected ? RGB(255, 255, 255) : RGB(0, 255, 255);
-        if (buttons[i].id >= 100) btnText = RGB(170, 0, 255);
+        if (buttons[i].id >= 100 && buttons[i].id < 200) btnText = RGB(170, 0, 255);
+        else if (buttons[i].id >= 200) btnText = RGB(255, 170, 0);
 
         HBRUSH brush = CreateSolidBrush(btnBg);
         FillRect(hdc, &buttons[i].rc, brush);
@@ -396,6 +409,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             sci -= 100; unlockedNuke = 1;
                         } else if (id == 103 && sci >= 150 && !unlockedLaser) {
                             sci -= 150; unlockedLaser = 1;
+                        } else if (id == 200) {
+                            if (pop >= 1 && mat >= 20 && power >= 20) {
+                                mat -= 20;
+                                power -= 20;
+                                int r = rand() % 100;
+                                if (r < 30) {
+                                    mat += 50;
+                                    food += 50;
+                                    MessageBox(hwnd, "Rover found a resource cache!\n(+50 Mat, +50 Food)", "Expedition Report", MB_OK | MB_ICONINFORMATION);
+                                } else if (r < 60) {
+                                    sci += 100;
+                                    MessageBox(hwnd, "Expedition discovered ancient alien technology!\n(+100 Sci)", "Expedition Report", MB_OK | MB_ICONINFORMATION);
+                                } else if (r < 80) {
+                                    MessageBox(hwnd, "Rover broke down in a dust storm. Expedition returned safely but empty-handed.", "Expedition Report", MB_OK | MB_ICONWARNING);
+                                } else {
+                                    pop--;
+                                    happiness -= 10;
+                                    if (happiness < 0) happiness = 0;
+                                    MessageBox(hwnd, "Expedition was ambushed by aliens! Rover destroyed and colonist lost.\n(-1 Pop, -10% Happiness)", "Expedition Report", MB_OK | MB_ICONERROR);
+                                }
+                            } else {
+                                MessageBox(hwnd, "Not enough resources! Need 1 Pop, 20 Mat, 20 Pwr.", "Expedition Report", MB_OK | MB_ICONWARNING);
+                            }
                         }
                         InvalidateRect(hwnd, NULL, FALSE);
                         return 0;
