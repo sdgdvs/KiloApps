@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KPaint
 - KSnake
 - KTetris
 - KSpace
@@ -81,6 +80,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMedia
 - KNet
 - KZip
+- KPaint
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -147,3 +147,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMedia: Usability and UI issues fixed (Appropriate auto-opening size adjusted, layout issues fixed, help shortcut & modal added, text crispness improved).
 - KNet: Usability and UI issues fixed (auto-opening size, DPI scaling, and help shortcut).
 - KZip: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 800x600, help modal added, DPI awareness enabled for crisp fonts).
+- KPaint: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 1100x700, added scrollbars to native, fixed save logic, and DPI awareness enabled for crisp fonts).
