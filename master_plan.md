@@ -11,36 +11,35 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path` (e.g., using `[System.Environment]::GetEnvironmentVariable`). Doing this deletes the injected Antigravity runtime paths from the active agent's environment, causing the agent to immediately crash and enter a termination loop. If a specific tool like `crinkler` is missing, you must only APPEND to the path (e.g. `$env:Path += ";C:\path\to\tool"`), or better yet, simply restart the environment so it inherits the system paths natively. The PATH instructions have been removed from all MD files.
 
-## Current State (as of 2026-07-29 12:00 PST)
-- **Total Apps:** 73 registered in App.jsx.
-- **KiloOS Version:** 0.3.64
-- **Games:** 27 titles + KFortress (Phase 2 of 14, building).
+## Current State (as of 2026-08-01 04:00 UTC)
+- **Total Apps:** 82 registered in App.jsx (+9 since Jul 29).
+- **KiloOS Version:** 0.3.65+
+- **Games:** 29 titles (KColony Phase 8/14 building).
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
 
-### Game Library (28 titles, incl. KFortress in progress)
-K2048, KAlchemy ✅, KAsteroids, KBreakout, KChess, KConnect4, KDarts, KFortress (WIP), KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KWords.
+### Game Library (29 titles)
+K2048, KAlchemy, KAsteroids, KBreakout, KChess, KColony (WIP), KConnect4, KDarts, KFortress (WIP), KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KWords.
 
 ### Content Depth
-- **ALL 27 games at Loop 7 complete.** 20-35 stage campaigns, boss encounters, active skill hotkeys across every game.
-- **KRogue at Loop 8** (40 levels, Abyss biome, crafting, NPCs).
-- **Classic games now entering Balance & Usability passes** per Director directive — no more campaign spam for board/puzzle games.
-- **KAlchemy:** Phase 14 COMPLETE (all 14 phases done). Creator has moved to KFortress.
+- **Deep Games progressing:** KRogue at Loop 9 (traps, boss rematches, cursed items). KSpace/KAsteroids/KSnake/KBreakout/KMaze/KPac all at Loop 8.
+- **Classic Games: 9/17 Balance Passes COMPLETE** (Chess, Go, Reversi, Connect4, Solitaire, Freecell, Sudoku, K2048, KMines). 8 remaining (Towers, Tetris, Pong, Hangman, Words, Simon, Match3, Darts).
+- **The Deep/Classic split directive (Jul 29) is working perfectly.** No more campaign spam on board games.
 
 ### Graphics Agent
-**Loop 1 complete for 27/27 games.** Loop 2 underway — KPac (Loop 2) and KSpace (Loop 2) done with enhanced animations, environmental FX, and particle systems. KQuest (Loop 1) also completed.
+**Loop 2 deep in progress.** 15+ games done in Loop 2 (KHangman, KConnect4, KSolitaire, K2048, KAsteroids, KMines, KPong, KChess, KRogue, KTetris, KSnake, KPac, KSpace, KBreakout, KMaze). Queue: KSimon → KMatch3 → KFreecell → KSudoku → KGo → KDarts → KTowers → KWords → KReversi → KAlchemy → remaining.
 
 ### QA
-**Pass 3 in progress.** Pass 1 (46 apps) and Pass 2 (46 apps) both complete. Pass 3: K2048, KAudio, KBBS, KCalc, KCalendar, KChart, KChat, KChess, KClock, KColor, KContacts, KConverter, KDB, KExplorer done. Now targeting KFont.
+**Pass 3 deep in progress.** QA completed: KFont, KHex, KImage, KJournal, KMail, KMandel, KMatch3, KMaze, KMedia, KMines, KNotes, KPaint (+prior Pass 3 apps). Now targeting **KPassword**. Systematic focus on security (XSS, bounds), GDI leaks, and memory safety.
 
 ### Feature Expander
-Healthy round-robin. 47 total completed items. Recent: KPong (2P PvP + power-ups), KClock (multi-city, alarms), KAudio (ADSR + sequencer), KBBS (door games), KChat (multi-room), KChart (multi-type), KChess (PGN/FEN). Currently targeting KDB.
+Healthy round-robin. 62+ completed items. Recent: KConnect4 (Save/Load), KScript (Debugger), KMaze (Replay), KMine (Hint), KPac (Save/Load), KQuest (Save/Load), KNote (AES encryption), KPass (AES vault), KMedia (Subtitles), KNet (Traceroute), KZip (Compression), KPaint (Layers). Now targeting **KType**.
 
 ### Creator
-**19 apps completed through full 14-phase lifecycle.** KAlchemy Phase 14 complete ✅. Now building **KFortress** (Fantasy Tower Defense) — Phase 2 done (core 2D grid, Archer Towers, Gold economy, Goblin waves). Phase 3 next (native C version).
+**20 apps completed through full 14-phase lifecycle.** KAlchemy ✅. Now building **KColony** (Sci-Fi Colony Survival) — Phase 8/14 done (Random Events & Disasters). Phase 9 next (Alien Threats). Very healthy pace.
 
 ### Usability Agent
-**Newly activated.** First commit: Welcome notification on KiloOS boot. Round-robin queue with all 47+ apps. Schedule: Every 2h.
+**Highly active.** ~20 apps processed in first sweep. Common fixes: auto-opening window size, crisp text rendering (canvas DPI), "Press H for Help" keybindings, layout issues. Recently: KDB, KPong, KClock, KAudio, KBBS, KChat, KChess, KChart, KCalendar, KCalc, KHex, KImage, KPad, KJournal, KBase, KRead, KContacts, KTimer, KTodo, KGraph. Now targeting **KFont**.
 
 ## Milestones
 
@@ -71,24 +70,29 @@ Healthy round-robin. 47 total completed items. Recent: KPong (2P PvP + power-ups
 24. **KAlchemy completed (all 14 phases)** — July 29. ✅
 25. **19 apps created through full 14-phase lifecycle** — July 29. ✅
 26. **Usability Agent activated** — July 29.
-27. **Graphics Loop 2 started** — KPac, KSpace, KQuest done — July 29.
+27. **Graphics Loop 2 started** — 15+ games done — July 29-Aug 1. 🎯
+28. **Deep/Classic game split directive implemented** — Jul 29. Game balance passes begun.
+29. **9/17 Classic Games Balance Passes COMPLETE** — Aug 1. ✅
+30. **80+ apps milestone reached** — Aug 1. 🎯
+31. **Model reverted to Gemini 3.1 Pro** — Jul 29 (Flash used too many tokens).
 
 ### Active 🔄
-28. Games agent: **Balance & Usability passes for Classic games** + Loop 8+ content for Deep games.
-29. Graphics agent: Loop 2 in progress (animations, environmental art, particles).
-30. Creator: KFortress Phase 3 of 14 (native C parity).
-31. Feature Expander: Round-robin perpetual (targeting KDB).
-32. QA: Pass 3 regression/performance checks (targeting KFont).
-33. Usability: Round-robin UX audit (targeting KDB).
+32. Games agent: **Balance passes for remaining 8 Classic games** + Loop 9+ content for Deep games.
+33. Graphics agent: Loop 2 in progress (~15/27 done).
+34. Creator: KColony Phase 9 of 14 (Alien Threats).
+35. Feature Expander: Round-robin perpetual (targeting KType).
+36. QA: Pass 3 regression/security checks (targeting KPassword).
+37. Usability: Round-robin UX audit (targeting KFont).
 
 ### Upcoming 📋
-34. Games Balance Pass for all 18 Classic games — AI difficulty tuning, first-play experience.
-35. Games Loop 9+ for Deep games — content nearing commercial depth.
-36. Graphics Loop 2 completion for all 27 games.
-37. KFortress completion (14 phases, ~2 weeks at current Creator pace).
-38. Build pipeline improvements: automated size-limit checks.
+38. Complete all Classic Games Balance Passes (8 remaining).
+39. Graphics Loop 2 completion for all 27+ games.
+40. KColony completion (14 phases, ~6 phases remaining).
+41. QA Pass 3 completion for all apps.
+42. Usability audit completion for all 82 apps.
+43. Consider next Creator project after KColony.
 
-## Active Agent Fleet (as of 2026-07-29)
+## Active Agent Fleet (as of 2026-08-01)
 
 | Agent | Schedule | Plan File | Model |
 |---|---|---|---|
@@ -98,8 +102,8 @@ Healthy round-robin. 47 total completed items. Recent: KPong (2P PvP + power-ups
 | App Creator | Every 1h (:15) | `new_app_plan.md` | Gemini 3.1 Pro |
 | Game Graphics | Every 2h (:45) | `game_graphics_plan.md` | Gemini 3.1 Pro |
 | Usability Agent | Every 2h (:15) | `usability_plan.md` | Gemini 3.1 Pro |
-| Director #1 | Every 3 days | (reviews all plan files) | Claude Opus 4.6 |
-| Director #2 | Every 3 days (offset) | (reviews all plan files) | Claude Opus 4.6 |
+| Director #1 | Every 3 days | (reviews all plan files) | Gemini 3.1 Pro |
+| Director #2 | Every 3 days (offset) | (reviews all plan files) | Gemini 3.1 Pro |
 
 ## Agent Workflow Rules
 - **Workflow Rules:** Worker agents focus on feature expansion and new app creation. Visual polish is for the Usability agent and Graphics agent only.

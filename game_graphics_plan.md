@@ -100,7 +100,8 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTetris
 - KBreakout
 - KMaze
-
+- KColony
+- KFortress
 
 - KRogue
 - KChess

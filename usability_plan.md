@@ -78,6 +78,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPong
 - KiloOS Web UI (Shell & Apps)
 - KDB
+- KColony
+- KFortress
+- KAlchemy
+
 
 ## Progress Log
 - KDB: Usability and UI issues fixed (auto-opening size, crisp text, button layout, help popup).
