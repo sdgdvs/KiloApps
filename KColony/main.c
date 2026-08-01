@@ -15,6 +15,7 @@ int food = 50;
 int power = 50;
 int maxPower = 50;
 int mat = 50;
+int advm = 0;
 int pop = 0;
 int maxPop = 0;
 int happiness = 100;
@@ -23,7 +24,7 @@ int tick = 0;
 int day = 1;
 int isDay = 1;
 int sci = 0;
-int unlockedHydro = 0, unlockedNuke = 0, unlockedLaser = 0;
+int unlockedHydro = 0, unlockedNuke = 0, unlockedLaser = 0, unlockedFactory = 0;
 int selectedType = 0;
 int grid[GRID_W * GRID_H] = {0};
 
@@ -66,6 +67,7 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             else if (t == 9) { bgCol = RGB(51, 0, 0); borderCol = RGB(255, 0, 0); textCol = RGB(255, 0, 0); }
             else if (t == 10) { bgCol = RGB(34, 34, 34); borderCol = RGB(136, 136, 136); textCol = RGB(136, 136, 136); }
             else if (t == 11) { bgCol = RGB(51, 34, 0); borderCol = RGB(255, 170, 0); textCol = RGB(255, 170, 0); }
+            else if (t == 12) { bgCol = RGB(68, 68, 68); borderCol = RGB(204, 204, 204); textCol = RGB(204, 204, 204); }
             
             HBRUSH brush = CreateSolidBrush(bgCol);
             FillRect(hdc, &rc, brush);
@@ -96,6 +98,7 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                 else if (t == 9) DrawText(hdc, "D", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 10) DrawText(hdc, "W", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 11) DrawText(hdc, "T", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else if (t == 12) DrawText(hdc, "C", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
         }
     }
@@ -113,7 +116,7 @@ void DrawUI(HDC hdc, HFONT hFont) {
     SelectObject(hdc, hFont);
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(0, 255, 255));
-    sprintf(buf, "DAY %d (%s) F:%d P:%d/%d M:%d POP:%d/%d HAP:%d%% SCI:%d", day, isDay ? "DAY" : "NIGHT", food, power, maxPower, mat, pop, maxPop, happiness, sci);
+    sprintf(buf, "DAY %d (%s) F:%d P:%d/%d M:%d A:%d POP:%d/%d HAP:%d%% SCI:%d", day, isDay ? "DAY" : "NIGHT", food, power, maxPower, mat, advm, pop, maxPop, happiness, sci);
     
     RECT rcHeader = { 20, 15, 620, 45 };
     HBRUSH hdrBrush = CreateSolidBrush(RGB(17, 17, 34));
@@ -138,14 +141,15 @@ void DrawUI(HDC hdc, HFONT hFont) {
     }
 
     int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 20;
-    const char* labels[] = { "[-1] REPAIR", "[0] INSPECT", "[1] SOLAR", "[2] FARM", "[3] MINE", "[4] HAB", "[5] BATT", "[6] LAB", "[7] NUKE", "[8] HYDRO", "[9] LASER", "[10] WALL", "[11] TURRET" };
+    const char* labels[] = { "[-1] REPAIR", "[0] INSPECT", "[1] SOLAR", "[2] FARM", "[3] MINE", "[4] HAB", "[5] BATT", "[6] LAB", "[7] NUKE", "[8] HYDRO", "[9] LASER", "[10] WALL", "[11] TURRET", "[12] FACTORY" };
     
     btnCount = 0;
     int btnY = OFFSET_Y;
-    for (int i = -1; i < 12; i++) {
+    for (int i = -1; i < 13; i++) {
         if (i == 7 && !unlockedNuke) continue;
         if (i == 8 && !unlockedHydro) continue;
         if (i == 9 && !unlockedLaser) continue;
+        if (i == 12 && !unlockedFactory) continue;
         
         buttons[btnCount].rc = (RECT){ sidebarX, btnY, sidebarX + 180, btnY + 25 };
         buttons[btnCount].id = i;
@@ -154,39 +158,47 @@ void DrawUI(HDC hdc, HFONT hFont) {
         btnCount++;
         btnY += 30;
     }
-    btnY += 10;
+    int btnY2 = OFFSET_Y;
+    int sidebarX2 = sidebarX + 190;
     if (!unlockedHydro) {
-        buttons[btnCount].rc = (RECT){ sidebarX, btnY, sidebarX + 180, btnY + 25 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 150, btnY2 + 25 };
         buttons[btnCount].id = 101;
         strcpy(buttons[btnCount].label, "RES HYDRO(50S)");
         buttons[btnCount].isSelected = 0;
         btnCount++;
-        btnY += 30;
+        btnY2 += 30;
     }
     if (!unlockedNuke) {
-        buttons[btnCount].rc = (RECT){ sidebarX, btnY, sidebarX + 180, btnY + 25 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 150, btnY2 + 25 };
         buttons[btnCount].id = 102;
         strcpy(buttons[btnCount].label, "RES NUKE(100S)");
         buttons[btnCount].isSelected = 0;
         btnCount++;
-        btnY += 30;
+        btnY2 += 30;
     }
     if (!unlockedLaser) {
-        buttons[btnCount].rc = (RECT){ sidebarX, btnY, sidebarX + 180, btnY + 25 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 150, btnY2 + 25 };
         buttons[btnCount].id = 103;
         strcpy(buttons[btnCount].label, "RES LASER(150S)");
         buttons[btnCount].isSelected = 0;
         btnCount++;
-        btnY += 30;
+        btnY2 += 30;
+    }
+    if (!unlockedFactory) {
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 150, btnY2 + 25 };
+        buttons[btnCount].id = 104;
+        strcpy(buttons[btnCount].label, "RES FACTORY(75S)");
+        buttons[btnCount].isSelected = 0;
+        btnCount++;
+        btnY2 += 30;
     }
 
-    btnY += 10;
-    buttons[btnCount].rc = (RECT){ sidebarX, btnY, sidebarX + 180, btnY + 25 };
+    btnY2 += 10;
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 150, btnY2 + 25 };
     buttons[btnCount].id = 200;
     strcpy(buttons[btnCount].label, "EXPEDITION");
     buttons[btnCount].isSelected = 0;
     btnCount++;
-    btnY += 30;
 
     for (int i = 0; i < btnCount; i++) {
         COLORREF btnBg = buttons[i].isSelected ? RGB(0, 51, 51) : RGB(17, 17, 34);
@@ -334,7 +346,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
             int pwrProd = 0, farmCount = 0, mineCount = 0, habCount = 0, batCount = 0;
-            int labCount = 0, nukeCount = 0, hydroCount = 0, laserCount = 0, turretCount = 0;
+            int labCount = 0, nukeCount = 0, hydroCount = 0, laserCount = 0, turretCount = 0, factoryCount = 0;
             for(int i=0; i<GRID_W*GRID_H; i++) {
                 if(grid[i]==1 && isDay && dustStormTicks <= 0) pwrProd += 4;
                 if(grid[i]==2) farmCount += 1;
@@ -346,12 +358,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if(grid[i]==8) hydroCount += 1;
                 if(grid[i]==9) laserCount += 1;
                 if(grid[i]==11) turretCount += 1;
+                if(grid[i]==12) factoryCount += 1;
             }
             maxPop = habCount * 5;
             maxPower = 50 + batCount * 50;
             pwrProd += nukeCount * 20;
             
-            int pwrCons = farmCount + mineCount + habCount + labCount + hydroCount * 2 + laserCount * 5 + turretCount * 2;
+            int pwrCons = farmCount + mineCount + habCount + labCount + hydroCount * 2 + laserCount * 5 + turretCount * 2 + factoryCount * 10;
             power += pwrProd - pwrCons;
             
             float pwrEff = 1.0f;
@@ -366,6 +379,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             food += foodProd;
             mat += matProd;
             sci += sciProd;
+
+            int factoryActive = (int)(factoryCount * eff);
+            int matConsForAdv = factoryActive * 2;
+            int advmProd = 0;
+            if (mat >= matConsForAdv) {
+                mat -= matConsForAdv;
+                advmProd = factoryActive;
+            } else {
+                advmProd = mat / 2;
+                mat -= advmProd * 2;
+            }
+            advm += advmProd;
 
             int foodCons = pop;
             if (food >= foodCons) {
@@ -397,9 +422,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int y = HIWORD(lParam);
             
             int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 20;
-            if (x >= sidebarX && x <= sidebarX + 180) {
+            if (x >= sidebarX) {
                 for (int i = 0; i < btnCount; i++) {
-                    if (y >= buttons[i].rc.top && y <= buttons[i].rc.bottom) {
+                    if (x >= buttons[i].rc.left && x <= buttons[i].rc.right && y >= buttons[i].rc.top && y <= buttons[i].rc.bottom) {
                         int id = buttons[i].id;
                         if (id < 100) {
                             selectedType = id;
@@ -409,6 +434,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             sci -= 100; unlockedNuke = 1;
                         } else if (id == 103 && sci >= 150 && !unlockedLaser) {
                             sci -= 150; unlockedLaser = 1;
+                        } else if (id == 104 && sci >= 75 && !unlockedFactory) {
+                            sci -= 75; unlockedFactory = 1;
                         } else if (id == 200) {
                             if (pop >= 1 && mat >= 20 && power >= 20) {
                                 mat -= 20;
@@ -451,22 +478,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                 } else if (selectedType > 0 && grid[idx] == 0) {
-                    int costMat = 0, costPwr = 0;
+                    int costMat = 0, costPwr = 0, costAdv = 0;
                     if (selectedType == 1) costMat = 10;
                     else if (selectedType == 2) { costMat = 10; costPwr = 5; }
                     else if (selectedType == 3) costPwr = 10;
                     else if (selectedType == 4) { costMat = 15; costPwr = 5; }
                     else if (selectedType == 5) costMat = 20;
                     else if (selectedType == 6) { costMat = 20; costPwr = 5; }
-                    else if (selectedType == 7) costMat = 50;
+                    else if (selectedType == 7) { costMat = 20; costAdv = 10; }
                     else if (selectedType == 8) { costMat = 20; costPwr = 10; }
-                    else if (selectedType == 9) { costMat = 30; costPwr = 20; }
+                    else if (selectedType == 9) { costMat = 10; costAdv = 10; costPwr = 20; }
                     else if (selectedType == 10) { costMat = 5; }
                     else if (selectedType == 11) { costMat = 15; costPwr = 5; }
+                    else if (selectedType == 12) { costMat = 30; costPwr = 10; }
                     
-                    if (mat >= costMat && power >= costPwr) {
+                    if (mat >= costMat && power >= costPwr && advm >= costAdv) {
                         mat -= costMat;
                         power -= costPwr;
+                        advm -= costAdv;
                         grid[idx] = selectedType;
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
