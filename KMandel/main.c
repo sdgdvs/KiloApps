@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <process.h>
 
-#define W 1024
-#define H 768
+#define W 1280
+#define H 720
 
 int _fltused = 0;
 
@@ -425,6 +425,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdcMem, hOld);
                 DeleteDC(hdcMem);
             }
+            SetBkMode(hdc, TRANSPARENT);
+            HFONT hFont = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+                                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
+                                     DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+            SetTextColor(hdc, RGB(0, 0, 0));
+            TextOut(hdc, 11, bmpH - 29, "Press H for Help", 16);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            TextOut(hdc, 10, bmpH - 30, "Press H for Help", 16);
+            SelectObject(hdc, hOldFont);
+            DeleteObject(hFont);
             EndPaint(hwnd, &ps);
             break;
         }
@@ -467,7 +478,7 @@ void MainEntry() {
 
     SaveState(); // Save initial state
 
-    ShowWindow(hwnd, SW_SHOW);
+    ShowWindow(hwnd, SW_SHOWMAXIMIZED);
     UpdateWindow(hwnd);
 
     MSG msg;
