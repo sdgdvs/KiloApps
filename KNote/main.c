@@ -8,8 +8,8 @@
 #pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "comctl32.lib")
 
-#define W 720
-#define H 520
+#define W 800
+#define H 600
 
 HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportJson, hBtnImport, hBtnLock, hTab;
 HBRUSH bgBrush, sidebarBrush;
@@ -181,7 +181,7 @@ void LoadNotes() {
     }
     if (numNotes == 0) {
         numNotes = 1; pinned[0] = 0; encrypted[0] = 0;
-        const char* def = "Welcome to KNote!\r\n- #tags supported\n- Tabs available\n- AES encryption";
+        const char* def = "Welcome to KNote!\r\n- #tags supported\r\n- Tabs available\r\n- AES encryption\r\n- Press F1 for Help";
         lstrcpyA(notes[0], def);
     }
 }
@@ -400,38 +400,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             WNDCLASS pc = {0}; pc.lpfnWndProc = PassWndProc; pc.lpszClassName = "PassWnd"; pc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
             RegisterClass(&pc);
 
-            bgBrush = CreateSolidBrush(RGB(255, 255, 150));
-            sidebarBrush = CreateSolidBrush(RGB(224, 224, 160));
+            bgBrush = CreateSolidBrush(RGB(255, 253, 231));
+            sidebarBrush = CreateSolidBrush(RGB(255, 249, 196));
             hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
             
-            hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 0, 0, 75, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
-            hBtnDel = CreateWindow("BUTTON", "Del", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 75, 0, 75, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
-            hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 0, 26, 150, 22, hwnd, (HMENU)ID_SEARCH, NULL, NULL);
+            hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 0, 0, 100, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
+            hBtnDel = CreateWindow("BUTTON", "Del", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 100, 0, 100, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
+            hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 0, 26, 200, 22, hwnd, (HMENU)ID_SEARCH, NULL, NULL);
             SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search tags...");
-            hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD|WS_VISIBLE|WS_VSCROLL|LBS_NOTIFY, 0, 48, 150, H-48, hwnd, (HMENU)ID_LIST, NULL, NULL);
+            hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD|WS_VISIBLE|WS_VSCROLL|LBS_NOTIFY, 0, 48, 200, H-48, hwnd, (HMENU)ID_LIST, NULL, NULL);
             
-            hBtnPin = CreateWindow("BUTTON", "Pin", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 150, 0, 50, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
-            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 200, 0, 60, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
-            hBtnExportMd = CreateWindow("BUTTON", "Exp MD", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 260, 0, 60, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
-            hBtnExportJson = CreateWindow("BUTTON", "Exp JS", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 320, 0, 60, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
-            hBtnImport = CreateWindow("BUTTON", "Imp JS", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 380, 0, 60, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+            hBtnPin = CreateWindow("BUTTON", "Pin", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 200, 0, 60, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
+            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 260, 0, 60, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
+            hBtnExportMd = CreateWindow("BUTTON", "Export MD", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 320, 0, 90, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
+            hBtnExportJson = CreateWindow("BUTTON", "Export JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 410, 0, 100, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
+            hBtnImport = CreateWindow("BUTTON", "Import JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 510, 0, 100, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
 
-            hTab = CreateWindow(WC_TABCONTROL, "", WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE, 150, 26, W-150, 24, hwnd, (HMENU)ID_TAB, NULL, NULL);
+            hTab = CreateWindow(WC_TABCONTROL, "", WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE, 200, 26, W-200, 24, hwnd, (HMENU)ID_TAB, NULL, NULL);
 
             hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_WANTRETURN|ES_AUTOVSCROLL,
-                150, 50, W-150, H-70, hwnd, NULL, NULL, NULL);
+                200, 50, W-200, H-70, hwnd, NULL, NULL, NULL);
             SendMessage(hEdit, EM_LIMITTEXT, 6000, 0);
-            hStatus = CreateWindowEx(0, "STATIC", "  Words: 0 | Chars: 0", WS_CHILD|WS_VISIBLE, 150, H-20, W-150, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
+            hStatus = CreateWindowEx(0, "STATIC", "  Words: 0 | Chars: 0", WS_CHILD|WS_VISIBLE, 200, H-20, W-200, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
                 
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HFONT hSys = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-            SendMessage(hList, WM_SETFONT, (WPARAM)hSys, TRUE);
-            SendMessage(hSearch, WM_SETFONT, (WPARAM)hSys, TRUE);
-            SendMessage(hBtnNew, WM_SETFONT, (WPARAM)hSys, TRUE); SendMessage(hBtnDel, WM_SETFONT, (WPARAM)hSys, TRUE);
-            SendMessage(hBtnPin, WM_SETFONT, (WPARAM)hSys, TRUE); SendMessage(hBtnLock, WM_SETFONT, (WPARAM)hSys, TRUE);
-            SendMessage(hBtnExportMd, WM_SETFONT, (WPARAM)hSys, TRUE); SendMessage(hBtnExportJson, WM_SETFONT, (WPARAM)hSys, TRUE);
-            SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hSys, TRUE); SendMessage(hStatus, WM_SETFONT, (WPARAM)hSys, TRUE);
-            SendMessage(hTab, WM_SETFONT, (WPARAM)hSys, TRUE);
+            SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnNew, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hBtnDel, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnPin, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hBtnLock, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnExportMd, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hBtnExportJson, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hTab, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             LoadNotes();
             if(numNotes>0) OpenTab(0);
@@ -513,20 +512,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_CTLCOLOREDIT: {
-            HDC hdc = (HDC)wParam; SetBkColor(hdc, RGB(255, 255, 150)); return (LRESULT)bgBrush;
+            HDC hdc = (HDC)wParam; SetBkColor(hdc, RGB(255, 253, 231)); return (LRESULT)bgBrush;
         }
         case WM_CTLCOLORSTATIC: {
-            if ((HWND)lParam == hStatus) { HDC hdc = (HDC)wParam; SetBkColor(hdc, RGB(224, 224, 160)); return (LRESULT)sidebarBrush; }
+            if ((HWND)lParam == hStatus) { HDC hdc = (HDC)wParam; SetBkColor(hdc, RGB(255, 249, 196)); return (LRESULT)sidebarBrush; }
             return DefWindowProc(hwnd, msg, wParam, lParam);
         }
-        case WM_CTLCOLORLISTBOX: { HDC hdc = (HDC)wParam; SetBkColor(hdc, RGB(224, 224, 160)); return (LRESULT)sidebarBrush; }
+        case WM_CTLCOLORLISTBOX: { HDC hdc = (HDC)wParam; SetBkColor(hdc, RGB(255, 249, 196)); return (LRESULT)sidebarBrush; }
         case WM_SIZE: {
-            int nw = LOWORD(lParam), nh = HIWORD(lParam); int sideW = 150, topH = 26;
-            MoveWindow(hBtnNew, 0, 0, 75, topH, TRUE); MoveWindow(hBtnDel, 75, 0, 75, topH, TRUE);
+            int nw = LOWORD(lParam), nh = HIWORD(lParam); int sideW = 200, topH = 26;
+            MoveWindow(hBtnNew, 0, 0, 100, topH, TRUE); MoveWindow(hBtnDel, 100, 0, 100, topH, TRUE);
             MoveWindow(hSearch, 0, topH, sideW, 22, TRUE); MoveWindow(hList, 0, topH + 22, sideW, nh - (topH + 22), TRUE);
-            MoveWindow(hBtnPin, sideW, 0, 50, topH, TRUE); MoveWindow(hBtnLock, sideW + 50, 0, 60, topH, TRUE);
-            MoveWindow(hBtnExportMd, sideW + 110, 0, 60, topH, TRUE); MoveWindow(hBtnExportJson, sideW + 170, 0, 60, topH, TRUE);
-            MoveWindow(hBtnImport, sideW + 230, 0, 60, topH, TRUE);
+            MoveWindow(hBtnPin, sideW, 0, 60, topH, TRUE); MoveWindow(hBtnLock, sideW + 60, 0, 60, topH, TRUE);
+            MoveWindow(hBtnExportMd, sideW + 120, 0, 90, topH, TRUE); MoveWindow(hBtnExportJson, sideW + 210, 0, 100, topH, TRUE);
+            MoveWindow(hBtnImport, sideW + 310, 0, 100, topH, TRUE);
             MoveWindow(hTab, sideW, topH, nw - sideW, 24, TRUE);
             MoveWindow(hEdit, sideW, topH + 24, nw - sideW, nh - topH - 44, TRUE);
             MoveWindow(hStatus, sideW, nh - 20, nw - sideW, 20, TRUE);
@@ -562,10 +561,17 @@ char* __cdecl strstr(const char* h, const char* n) {
 void MainEntry() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0}; wc.lpfnWndProc = WndProc; wc.hInstance = hInstance; wc.lpszClassName = "KNoteApp";
-    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1)); wc.hbrBackground = CreateSolidBrush(RGB(255, 255, 150));
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1)); wc.hbrBackground = CreateSolidBrush(RGB(255, 253, 231));
     RegisterClass(&wc);
-    HWND hwnd = CreateWindowEx(WS_EX_TOOLWINDOW, "KNoteApp", "KNote", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    HWND hwnd = CreateWindowEx(0, "KNoteApp", "KNote", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
     ShowWindow(hwnd, SW_SHOW); UpdateWindow(hwnd);
-    MSG msg; while (GetMessage(&msg, NULL, 0, 0) > 0) { TranslateMessage(&msg); DispatchMessage(&msg); }
+    MSG msg; 
+    while (GetMessage(&msg, NULL, 0, 0) > 0) { 
+        if (msg.message == WM_KEYDOWN && msg.wParam == VK_F1) {
+            MessageBox(hwnd, "KNote Help:\r\n- Use left sidebar to manage notes.\r\n- Type in the search box to filter by text/tags.\r\n- Use 'Lock' to encrypt a note.\r\n- 'Export' saves notes to files.", "Help", MB_OK | MB_ICONINFORMATION);
+        }
+        TranslateMessage(&msg); 
+        DispatchMessage(&msg); 
+    }
     ExitProcess(0);
 }

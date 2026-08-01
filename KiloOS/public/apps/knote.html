@@ -3,24 +3,25 @@
 <head>
 <title>KNote</title>
 <style>
-  body { margin: 0; background-color: #ffff96; display: flex; height: 100vh; overflow: hidden; font-family: sans-serif; }
-  .sidebar { width: 150px; background: #e0e0a0; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
-  .main { flex: 1; display: flex; flex-direction: column; }
-  .toolbar { padding: 5px; display: flex; justify-content: flex-end; border-bottom: 1px solid #ccc; gap: 5px; }
-  button { background: #ffcccc; border: 1px solid #ff9999; border-radius: 3px; padding: 3px 8px; cursor: pointer; font-family: sans-serif; font-size: 12px; }
-  button:hover { background: #ff9999; }
-  .search-box { padding: 5px; border-bottom: 1px solid #ccc; }
-  .search-box input { width: 100%; box-sizing: border-box; padding: 4px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px; }
+  body { margin: 0; background-color: #fffde7; display: flex; height: 100vh; overflow: hidden; font-family: "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  .sidebar { width: 220px; background: #fff9c4; border-right: 1px solid #e0e0a0; display: flex; flex-direction: column; }
+  .main { flex: 1; display: flex; flex-direction: column; background: #fffef0; }
+  .toolbar { padding: 8px; display: flex; justify-content: flex-end; border-bottom: 1px solid #e0e0a0; gap: 8px; background: #fff9c4; }
+  button { background: #fff; border: 1px solid #d0d090; border-radius: 4px; padding: 5px 12px; cursor: pointer; font-family: "Segoe UI", sans-serif; font-size: 13px; transition: background 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  button:hover { background: #f0f0c0; }
+  .search-box { padding: 8px; border-bottom: 1px solid #e0e0a0; }
+  .search-box input { width: 100%; box-sizing: border-box; padding: 6px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; font-family: "Segoe UI", sans-serif; }
   .note-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
-  .note-item { padding: 8px; border-bottom: 1px solid #ccc; cursor: pointer; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .note-item:hover { background: #d0d090; }
-  .note-item.active { background: #ffff96; font-weight: bold; }
-  textarea { flex: 1; width: 100%; box-sizing: border-box; background-color: transparent; border: none; padding: 10px; font-family: "Segoe UI", sans-serif; font-size: 16px; resize: none; outline: none; }
+  .note-item { padding: 10px; border-bottom: 1px solid #f0f0c0; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background 0.1s; }
+  .note-item:hover { background: #fff59d; }
+  .note-item.active { background: #fff176; font-weight: bold; border-left: 3px solid #fbc02d; padding-left: 7px; }
+  textarea { flex: 1; width: 100%; box-sizing: border-box; background-color: transparent; border: none; padding: 15px; font-family: "Segoe UI", sans-serif; font-size: 15px; resize: none; outline: none; line-height: 1.5; }
+  #statusBar { padding: 6px 15px; background: #fff9c4; border-top: 1px solid #e0e0a0; font-size: 12px; color: #555; white-space: pre-wrap; }
 </style>
 </head>
 <body>
 <div class="sidebar">
-    <div style="padding: 5px;"><button id="newBtn" style="width: 100%">New Note</button></div>
+    <div style="padding: 8px;"><button id="newBtn" style="width: 100%">New Note</button></div>
     <div class="search-box"><input type="text" id="searchInput" placeholder="Search notes..."></div>
     <ul class="note-list" id="noteList"></ul>
 </div>
@@ -30,7 +31,7 @@
         <button id="exportBtn">Export TXT</button>
         <button id="delBtn">Delete Note</button>
     </div>
-    <div id="statusBar" style="padding: 5px; background: #e0e0a0; border-top: 1px solid #ccc; font-size: 13px; font-weight: bold; border-bottom: 1px solid #ccc; white-space: pre-wrap;">  Words: 0 | Chars: 0</div>
+    <div id="statusBar">  Words: 0 | Chars: 0</div>
     <textarea id="noteArea" spellcheck="false" maxlength="6000"></textarea>
 </div>
 <script>
@@ -50,10 +51,10 @@
       else {
           let old = localStorage.getItem('knote_data');
           if (old) notes.push({ text: old, pinned: false });
-          else notes.push({ text: "Welcome to KNote!\n\nShortcuts:\n- Use the sidebar to switch notes.\n- Click New Note to create a note.\n- Click Pin Note to pin to the top.", pinned: false });
+          else notes.push({ text: "Welcome to KNote!\n\nShortcuts:\n- Use the sidebar to switch notes.\n- Click New Note to create a note.\n- Click Pin Note to pin to the top.\n- Press F1 for Help.", pinned: false });
       }
   } catch (e) {
-      notes = [{ text: "", pinned: false }];
+      notes = [{ text: "Welcome to KNote!\n\nShortcuts:\n- Press F1 for Help.", pinned: false }];
   }
   
   if (notes.length === 0) notes.push({ text: "", pinned: false });
@@ -163,6 +164,17 @@
       a.click();
       document.body.removeChild(a);
   });
+  
+  window.addEventListener('keydown', (e) => {
+      if (e.key === 'F1') {
+          e.preventDefault();
+          alert("KNote Help:\n\n- Use the left sidebar to manage and search notes.\n- Click 'New Note' to add a note.\n- Use the toolbar to pin, export, or delete the current note.\n- Data is saved automatically in your browser.");
+      }
+  });
+
+  if (window.resizeTo) {
+      try { window.resizeTo(800, 600); } catch(e) {}
+  }
   
   loadActive();
 </script>
