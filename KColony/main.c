@@ -28,8 +28,14 @@ int selectedType = 0;
 int grid[GRID_W * GRID_H] = {0};
 
 typedef struct {
+    int x, y, hp;
+} Alien;
+Alien aliens[100];
+int alienCount = 0;
+
+typedef struct {
     RECT rc;
-    int id; // 0-9 for build, 101-103 for research
+    int id; // 0-11 for build, 101-103 for research
     char label[32];
     int isSelected;
 } Button;
@@ -48,7 +54,7 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             COLORREF borderCol = RGB(0, 51, 51);
             COLORREF textCol = RGB(0, 255, 255);
             
-            if (t > 10) { bgCol = RGB(51, 0, 0); borderCol = RGB(255, 0, 0); textCol = RGB(255, 0, 0); }
+            if (t > 20) { bgCol = RGB(51, 0, 0); borderCol = RGB(255, 0, 0); textCol = RGB(255, 0, 0); }
             else if (t == 1) { bgCol = RGB(51, 51, 0); borderCol = RGB(255, 255, 0); textCol = RGB(255, 255, 0); }
             else if (t == 2) { bgCol = RGB(0, 51, 0); borderCol = RGB(0, 255, 0); textCol = RGB(0, 255, 0); }
             else if (t == 3) { bgCol = RGB(51, 0, 51); borderCol = RGB(255, 0, 255); textCol = RGB(255, 0, 255); }
@@ -58,6 +64,8 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             else if (t == 7) { bgCol = RGB(0, 51, 34); borderCol = RGB(0, 255, 170); textCol = RGB(0, 255, 170); }
             else if (t == 8) { bgCol = RGB(34, 51, 0); borderCol = RGB(170, 255, 0); textCol = RGB(170, 255, 0); }
             else if (t == 9) { bgCol = RGB(51, 0, 0); borderCol = RGB(255, 0, 0); textCol = RGB(255, 0, 0); }
+            else if (t == 10) { bgCol = RGB(34, 34, 34); borderCol = RGB(136, 136, 136); textCol = RGB(136, 136, 136); }
+            else if (t == 11) { bgCol = RGB(51, 34, 0); borderCol = RGB(255, 170, 0); textCol = RGB(255, 170, 0); }
             
             HBRUSH brush = CreateSolidBrush(bgCol);
             FillRect(hdc, &rc, brush);
@@ -76,7 +84,7 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             if (t > 0) {
                 SetBkMode(hdc, TRANSPARENT);
                 SetTextColor(hdc, textCol);
-                if (t > 10) DrawText(hdc, "X", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                if (t > 20) DrawText(hdc, "X", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 1) DrawText(hdc, "S", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 2) DrawText(hdc, "F", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 3) DrawText(hdc, "M", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -86,8 +94,17 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                 else if (t == 7) DrawText(hdc, "N", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 8) DrawText(hdc, "Y", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 9) DrawText(hdc, "D", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else if (t == 10) DrawText(hdc, "W", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else if (t == 11) DrawText(hdc, "T", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
         }
+    }
+    
+    for (int i = 0; i < alienCount; i++) {
+        RECT rc = { OFFSET_X + aliens[i].x * CELL_SIZE, OFFSET_Y + aliens[i].y * CELL_SIZE, OFFSET_X + (aliens[i].x + 1) * CELL_SIZE, OFFSET_Y + (aliens[i].y + 1) * CELL_SIZE };
+        SetTextColor(hdc, RGB(255, 0, 255));
+        SetBkMode(hdc, TRANSPARENT);
+        DrawText(hdc, "A", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
 }
 
@@ -121,11 +138,11 @@ void DrawUI(HDC hdc, HFONT hFont) {
     }
 
     int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 20;
-    const char* labels[] = { "[-1] REPAIR", "[0] INSPECT", "[1] SOLAR", "[2] FARM", "[3] MINE", "[4] HAB", "[5] BATT", "[6] LAB", "[7] NUKE", "[8] HYDRO", "[9] LASER" };
+    const char* labels[] = { "[-1] REPAIR", "[0] INSPECT", "[1] SOLAR", "[2] FARM", "[3] MINE", "[4] HAB", "[5] BATT", "[6] LAB", "[7] NUKE", "[8] HYDRO", "[9] LASER", "[10] WALL", "[11] TURRET" };
     
     btnCount = 0;
     int btnY = OFFSET_Y;
-    for (int i = -1; i < 10; i++) {
+    for (int i = -1; i < 12; i++) {
         if (i == 7 && !unlockedNuke) continue;
         if (i == 8 && !unlockedHydro) continue;
         if (i == 9 && !unlockedLaser) continue;
@@ -207,14 +224,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int targets[GRID_W * GRID_H];
                 int targetCount = 0;
                 for (int i = 0; i < GRID_W * GRID_H; i++) {
-                    if (grid[i] > 0 && grid[i] <= 9) targets[targetCount++] = i;
+                    if (grid[i] > 0 && grid[i] <= 11) targets[targetCount++] = i;
                 }
                 
                 if (r < 33 && targetCount > 0) {
                     int hits = targetCount < 3 ? targetCount : 3;
                     for (int i = 0; i < hits; i++) {
                         int idx = targets[rand() % targetCount];
-                        if (grid[idx] > 0 && grid[idx] <= 9) grid[idx] += 10;
+                        if (grid[idx] > 0 && grid[idx] <= 11) grid[idx] += 20;
                     }
                     strcpy(msgText, "METEOR SHOWER! Structures damaged.");
                     msgTicks = 5;
@@ -224,7 +241,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     msgTicks = 10;
                 } else if (targetCount > 0) {
                     int idx = targets[rand() % targetCount];
-                    if (grid[idx] > 0 && grid[idx] <= 9) grid[idx] += 10;
+                    if (grid[idx] > 0 && grid[idx] <= 11) grid[idx] += 20;
                     strcpy(msgText, "EQUIPMENT BREAKDOWN!");
                     msgTicks = 5;
                 }
@@ -232,9 +249,79 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             if (dustStormTicks > 0) dustStormTicks--;
             if (msgTicks > 0) msgTicks--;
+
+            for (int i = 0; i < GRID_W * GRID_H; i++) {
+                int type = grid[i] > 20 ? 0 : grid[i];
+                if (type == 9 || type == 11) {
+                    int range = type == 9 ? 5 : 3;
+                    int tx = i % GRID_W, ty = i / GRID_W;
+                    for (int a = 0; a < alienCount; a++) {
+                        int dist = abs(tx - aliens[a].x) + abs(ty - aliens[a].y);
+                        if (dist <= range && power > 0) {
+                            aliens[a].hp--;
+                            if (aliens[a].hp <= 0) {
+                                aliens[a] = aliens[--alienCount];
+                                a--;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (tick % 2 == 0) {
+                for (int a = 0; a < alienCount; a++) {
+                    int targetIdx = -1, minDist = 999;
+                    for (int i = 0; i < GRID_W * GRID_H; i++) {
+                        if (grid[i] > 0 && grid[i] <= 20) {
+                            int tx = i % GRID_W, ty = i / GRID_W;
+                            int dist = abs(tx - aliens[a].x) + abs(ty - aliens[a].y);
+                            if (dist < minDist) { minDist = dist; targetIdx = i; }
+                        }
+                    }
+                    if (targetIdx != -1) {
+                        if (minDist <= 1) {
+                            if (grid[targetIdx] <= 20) {
+                                grid[targetIdx] += 20;
+                                strcpy(msgText, "ALIEN ATTACK! Structure damaged.");
+                                msgTicks = 5;
+                            }
+                            aliens[a] = aliens[--alienCount];
+                            a--;
+                        } else {
+                            int tx = targetIdx % GRID_W, ty = targetIdx / GRID_W;
+                            if (rand() % 2 == 0 && aliens[a].x != tx) aliens[a].x += (tx > aliens[a].x ? 1 : -1);
+                            else if (aliens[a].y != ty) aliens[a].y += (ty > aliens[a].y ? 1 : -1);
+                            else aliens[a].x += (tx > aliens[a].x ? 1 : -1);
+                        }
+                    } else {
+                        aliens[a].x += (rand() % 3) - 1;
+                        aliens[a].y += (rand() % 3) - 1;
+                    }
+                    if (aliens[a].x < 0) aliens[a].x = 0;
+                    if (aliens[a].x >= GRID_W) aliens[a].x = GRID_W - 1;
+                    if (aliens[a].y < 0) aliens[a].y = 0;
+                    if (aliens[a].y >= GRID_H) aliens[a].y = GRID_H - 1;
+                }
+            }
+
+            if (day > 2 && (rand() % 100) < 10 && alienCount < 100) {
+                int spawnEdge = rand() % 4;
+                int ax = 0, ay = 0;
+                if (spawnEdge == 0) { ax = rand() % GRID_W; ay = 0; }
+                else if (spawnEdge == 1) { ax = rand() % GRID_W; ay = GRID_H - 1; }
+                else if (spawnEdge == 2) { ax = 0; ay = rand() % GRID_H; }
+                else { ax = GRID_W - 1; ay = rand() % GRID_H; }
+                aliens[alienCount].x = ax;
+                aliens[alienCount].y = ay;
+                aliens[alienCount].hp = 3;
+                alienCount++;
+                strcpy(msgText, "ALIEN SPOTTED!");
+                msgTicks = 5;
+            }
             
             int pwrProd = 0, farmCount = 0, mineCount = 0, habCount = 0, batCount = 0;
-            int labCount = 0, nukeCount = 0, hydroCount = 0, laserCount = 0;
+            int labCount = 0, nukeCount = 0, hydroCount = 0, laserCount = 0, turretCount = 0;
             for(int i=0; i<GRID_W*GRID_H; i++) {
                 if(grid[i]==1 && isDay && dustStormTicks <= 0) pwrProd += 4;
                 if(grid[i]==2) farmCount += 1;
@@ -245,12 +332,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if(grid[i]==7) nukeCount += 1;
                 if(grid[i]==8) hydroCount += 1;
                 if(grid[i]==9) laserCount += 1;
+                if(grid[i]==11) turretCount += 1;
             }
             maxPop = habCount * 5;
             maxPower = 50 + batCount * 50;
             pwrProd += nukeCount * 20;
             
-            int pwrCons = farmCount + mineCount + habCount + labCount + hydroCount * 2 + laserCount * 5;
+            int pwrCons = farmCount + mineCount + habCount + labCount + hydroCount * 2 + laserCount * 5 + turretCount * 2;
             power += pwrProd - pwrCons;
             
             float pwrEff = 1.0f;
@@ -320,10 +408,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int gy = (y - OFFSET_Y) / CELL_SIZE;
                 int idx = gy * GRID_W + gx;
                 
-                if (selectedType == -1 && grid[idx] > 10) {
+                if (selectedType == -1 && grid[idx] > 20) {
                     if (mat >= 5) {
                         mat -= 5;
-                        grid[idx] -= 10;
+                        grid[idx] -= 20;
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                 } else if (selectedType > 0 && grid[idx] == 0) {
@@ -337,6 +425,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     else if (selectedType == 7) costMat = 50;
                     else if (selectedType == 8) { costMat = 20; costPwr = 10; }
                     else if (selectedType == 9) { costMat = 30; costPwr = 20; }
+                    else if (selectedType == 10) { costMat = 5; }
+                    else if (selectedType == 11) { costMat = 15; costPwr = 5; }
                     
                     if (mat >= costMat && power >= costPwr) {
                         mat -= costMat;
