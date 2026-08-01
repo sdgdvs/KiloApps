@@ -24,6 +24,13 @@
     </style>
 </head>
 <body>
+    <div id="start-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,10,15,0.95); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#00ffff;">
+        <h1 style="text-shadow: 0 0 10px #00ffff;">KColony Scenarios</h1>
+        <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(0)">Endless Survival<br><small>Standard Mode</small></button>
+        <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(1)">Sandbox Mode<br><small>Unlimited Resources & Tech</small></button>
+        <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(2)">100-Day Survival<br><small>Survive 100 Days</small></button>
+        <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(3)">Resource Rush<br><small>Get 1000 Mat & 100 AdvM by Day 50</small></button>
+    </div>
     <div id="header">
         <div class="res">Time:<span id="res-time">Day 1 (Day)</span></div>
         <div class="res">Food:<span id="res-food">50</span></div>
@@ -73,6 +80,50 @@
         let currentType = 0; // -1=repair, 0=none, 1=solar, 2=farm, 3=mine, 4=hab, 5=battery, 6=lab, 7=nuke, 8=hydro, 9=laser, 10=wall, 11=turret, 12=factory
         let grid = new Array(GRID_W * GRID_H).fill(0);
         let aliens = [];
+        
+        let gameMode = 0;
+        let gameState = 0; // 0=menu, 1=playing
+
+        function startGame(mode) {
+            gameMode = mode;
+            gameState = 1;
+            food = 50; power = 50; maxPower = 50; mat = 50; advm = 0;
+            pop = 0; maxPop = 0; happiness = 100; popWait = 0; sci = 0;
+            unlockedHydro = false; unlockedNuke = false; unlockedLaser = false; unlockedFactory = false;
+            tick = 0; day = 1; isDay = true;
+            dustStormTicks = 0; msgTicks = 0; msgText = "";
+            grid.fill(0);
+            aliens = [];
+            currentType = 0;
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-none').classList.add('active');
+            
+            document.getElementById('btn-hydro').style.display = 'none';
+            document.getElementById('btn-res-hydro').style.display = 'block';
+            document.getElementById('btn-nuke').style.display = 'none';
+            document.getElementById('btn-res-nuke').style.display = 'block';
+            document.getElementById('btn-laser').style.display = 'none';
+            document.getElementById('btn-res-laser').style.display = 'block';
+            document.getElementById('btn-factory').style.display = 'none';
+            document.getElementById('btn-res-factory').style.display = 'block';
+
+            if (mode === 1) {
+                food = 9999; power = 9999; maxPower = 9999; mat = 9999; advm = 9999; sci = 9999;
+                unlockedHydro = true; unlockedNuke = true; unlockedLaser = true; unlockedFactory = true;
+                document.getElementById('btn-res-hydro').style.display = 'none';
+                document.getElementById('btn-hydro').style.display = 'block';
+                document.getElementById('btn-res-nuke').style.display = 'none';
+                document.getElementById('btn-nuke').style.display = 'block';
+                document.getElementById('btn-res-laser').style.display = 'none';
+                document.getElementById('btn-laser').style.display = 'block';
+                document.getElementById('btn-res-factory').style.display = 'none';
+                document.getElementById('btn-factory').style.display = 'block';
+            }
+            
+            document.getElementById('start-screen').style.display = 'none';
+            updateUI();
+            renderAll();
+        }
         
         function selectType(type) {
             currentType = type;
@@ -134,6 +185,7 @@
         }
 
         function build(x, y) {
+            if (gameState !== 1) return;
             if (currentType === 0) return;
             const idx = y * GRID_W + x;
 
@@ -236,6 +288,7 @@
             updateUI();
             
             setInterval(() => {
+                if (gameState !== 1) return;
                 tick++;
                 if (tick % 10 === 0) { day++; isDay = true; }
                 else if (tick % 10 === 5) { isDay = false; }
@@ -407,6 +460,23 @@
                 }
 
                 updateUI();
+                
+                if (gameMode === 2 && day >= 100) {
+                    alert("You survived 100 days! You Win!");
+                    gameState = 0;
+                    document.getElementById('start-screen').style.display = 'flex';
+                }
+                if (gameMode === 3) {
+                    if (mat >= 1000 && advm >= 100) {
+                        alert("You reached the goal on day " + day + "! You Win!");
+                        gameState = 0;
+                        document.getElementById('start-screen').style.display = 'flex';
+                    } else if (day > 50) {
+                        alert("Day 50 reached without meeting quota! Game Over.");
+                        gameState = 0;
+                        document.getElementById('start-screen').style.display = 'flex';
+                    }
+                }
             }, 2000);
         }
 

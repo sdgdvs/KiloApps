@@ -28,6 +28,9 @@ int unlockedHydro = 0, unlockedNuke = 0, unlockedLaser = 0, unlockedFactory = 0;
 int selectedType = 0;
 int grid[GRID_W * GRID_H] = {0};
 
+int gameState = 0; // 0 = menu, 1 = playing
+int gameMode = 0; // 0=endless, 1=sandbox, 2=100-day, 3=resource rush
+
 typedef struct {
     int x, y, hp;
 } Alien;
@@ -42,6 +45,44 @@ typedef struct {
 } Button;
 Button buttons[20];
 int btnCount = 0;
+
+void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(0, 255, 255));
+    SelectObject(hdc, hFont);
+    
+    DrawText(hdc, "KCOLONY SCENARIOS", -1, &(RECT){0, 80, rc.right, 120}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    
+    const char* titles[] = { "1. ENDLESS SURVIVAL", "2. SANDBOX MODE (UNLIMITED)", "3. 100-DAY SURVIVAL", "4. RESOURCE RUSH (1000M, 100A by D50)" };
+    for (int i=0; i<4; i++) {
+        RECT bRc = {rc.right/2 - 200, 160 + i*60, rc.right/2 + 200, 200 + i*60};
+        HBRUSH br = CreateSolidBrush(RGB(17,17,34));
+        FillRect(hdc, &bRc, br);
+        DeleteObject(br);
+        HPEN pen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+        HPEN oldP = SelectObject(hdc, pen);
+        MoveToEx(hdc, bRc.left, bRc.top, NULL); LineTo(hdc, bRc.right, bRc.top); LineTo(hdc, bRc.right, bRc.bottom); LineTo(hdc, bRc.left, bRc.bottom); LineTo(hdc, bRc.left, bRc.top);
+        SelectObject(hdc, oldP); DeleteObject(pen);
+        DrawText(hdc, titles[i], -1, &bRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    }
+}
+
+void StartGame(HWND hwnd, int mode) {
+    gameState = 1;
+    gameMode = mode;
+    food = 50; power = 50; maxPower = 50; mat = 50; advm = 0;
+    pop = 0; maxPop = 0; happiness = 100; sci = 0; popWait = 0;
+    day = 1; isDay = 1; tick = 0;
+    unlockedHydro = 0; unlockedNuke = 0; unlockedLaser = 0; unlockedFactory = 0;
+    alienCount = 0;
+    memset(grid, 0, sizeof(grid));
+    
+    if (mode == 1) { 
+        food = 9999; power = 9999; maxPower = 9999; mat = 9999; advm = 9999; sci = 9999;
+        unlockedHydro = 1; unlockedNuke = 1; unlockedLaser = 1; unlockedFactory = 1;
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
+}
 
 void DrawGrid(HDC hdc, HFONT hFont) {
     SelectObject(hdc, hFont);
@@ -239,6 +280,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTimer(hwnd, 1, 2000, NULL);
             break;
         case WM_TIMER: {
+            if (gameState != 1) break;
             tick++;
             if (tick % 10 == 0) { day++; isDay = 1; }
             else if (tick % 10 == 5) { isDay = 0; }
@@ -414,12 +456,41 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (happiness < 0) happiness = 0;
             }
 
+            if (gameMode == 2 && day >= 100) {
+                MessageBox(hwnd, "You survived 100 days! You Win!", "Scenario Complete", MB_OK);
+                gameState = 0;
+            }
+            if (gameMode == 3) {
+                if (mat >= 1000 && advm >= 100) {
+                    char buf[128];
+                    sprintf(buf, "You reached the goal on day %d! You Win!", day);
+                    MessageBox(hwnd, buf, "Scenario Complete", MB_OK);
+                    gameState = 0;
+                } else if (day > 50) {
+                    MessageBox(hwnd, "Day 50 reached without meeting quota! Game Over.", "Scenario Failed", MB_OK);
+                    gameState = 0;
+                }
+            }
+
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
+            
+            if (gameState == 0) {
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                int cx = rc.right / 2;
+                if (x >= cx - 200 && x <= cx + 200) {
+                    if (y >= 160 && y <= 200) StartGame(hwnd, 0);
+                    if (y >= 220 && y <= 260) StartGame(hwnd, 1);
+                    if (y >= 280 && y <= 320) StartGame(hwnd, 2);
+                    if (y >= 340 && y <= 380) StartGame(hwnd, 3);
+                }
+                return 0;
+            }
             
             int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 20;
             if (x >= sidebarX) {
@@ -521,8 +592,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             HFONT hFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH, "Courier New");
             
-            DrawGrid(hdcMem, hFont);
-            DrawUI(hdcMem, hFont);
+            if (gameState == 0) {
+                DrawMenu(hdcMem, hFont, rc);
+            } else {
+                DrawGrid(hdcMem, hFont);
+                DrawUI(hdcMem, hFont);
+            }
             
             DeleteObject(hFont);
             
