@@ -93,6 +93,7 @@ int campaign_level = 1;
 int win_screen = 0;
 int is_paused = 0;
 int show_stats_overlay = 0;
+int show_help_overlay = 1;
 
 int game_mode = 0; // 0: Classic, 1: Obstacle Arena, 2: Power-Up Frenzy, 3: Multi-Ball, 4: Campaign
 int is_pvp = 0;    // 0: 1P vs AI, 1: 2P Local PvP
@@ -379,6 +380,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 'V') is_pvp = !is_pvp;
             if (wParam == 'T') theme_index = (theme_index + 1) % 4;
             if (wParam == 'L') show_stats_overlay = !show_stats_overlay;
+            if (wParam == 'H') show_help_overlay = !show_help_overlay;
             if (wParam == VK_F5) SaveGameState();
             if (wParam == VK_F9) LoadGameState();
             break;
@@ -924,11 +926,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(255, 255, 255));
             TextOutA(memDC, W / 2 - 20, 8, scoreStr, lstrlenA(scoreStr));
 
-            char modeHud[64];
+            char modeHud[80];
             char* mNames[] = {"Classic", "Obstacles", "Frenzy", "Multi-Ball", "Campaign"};
-            wsprintfA(modeHud, "%s | %s", is_pvp ? "2P PVP" : "1P AI", mNames[game_mode]);
+            wsprintfA(modeHud, "%s | %s | 'H' Help", is_pvp ? "2P PVP" : "1P AI", mNames[game_mode]);
             SetTextColor(memDC, RGB(255, 215, 0));
-            TextOutA(memDC, W / 2 - 50, 26, modeHud, lstrlenA(modeHud));
+            TextOutA(memDC, W / 2 - 65, 26, modeHud, lstrlenA(modeHud));
 
             // Skills Footer HUD Bar
             char skillsStr[128];
@@ -968,6 +970,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 45, H - 55, "Press 'L' to Close Overlay", 26);
             }
 
+            if (show_help_overlay) {
+                HBRUSH helpB = CreateSolidBrush(RGB(10, 30, 20));
+                RECT helpR = { 30, 30, W - 30, H - 30 };
+                FillRect(memDC, &helpR, helpB);
+                FrameRect(memDC, &helpR, (HBRUSH)GetStockObject(WHITE_BRUSH));
+                DeleteObject(helpB);
+
+                SetTextColor(memDC, RGB(0, 255, 150));
+                TextOutA(memDC, 45, 40, "=== HOW TO PLAY ===", 19);
+
+                SetTextColor(memDC, RGB(255, 255, 255));
+                TextOutA(memDC, 45, 65, "P1: W/S (or Up/Down)", 20);
+                TextOutA(memDC, 45, 85, "P2: Up/Down (in PvP)", 20);
+                TextOutA(memDC, 45, 110, "Skills: [F] Slow, [E] Mega, [B] Fireball", 40);
+                TextOutA(memDC, 45, 130, "System: [Space] Pause, [M] Mode", 31);
+                TextOutA(memDC, 45, 150, "        [V] PvP, [T] Theme, [L] Stats", 37);
+                TextOutA(memDC, 45, 175, "[F5] Save Game  |  [F9] Load Game", 33);
+                
+                SetTextColor(memDC, RGB(200, 200, 200));
+                TextOutA(memDC, 45, H - 55, "Press 'H' to Close Help", 23);
+            }
+
             if (is_paused) {
                 HBRUSH overlayB = CreateSolidBrush(RGB(5, 10, 20));
                 RECT overR = { 0, 0, W, H };
@@ -998,7 +1022,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, W / 2 - 60, H / 2 + 10, restartStr, lstrlenA(restartStr));
             }
 
-            BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            SetStretchBltMode(hdc, COLORONCOLOR);
+            StretchBlt(hdc, 0, 0, W * 2, H * 2, memDC, 0, 0, W, H, SRCCOPY);
             SelectObject(memDC, hOld);
             DeleteObject(hbm);
             DeleteDC(memDC);
@@ -1027,8 +1052,10 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
+    RECT winRect = { 0, 0, W * 2, H * 2 };
+    AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     HWND hwnd = CreateWindowEx(0, "KPongApp", "KPong", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W + 16, H + 39, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

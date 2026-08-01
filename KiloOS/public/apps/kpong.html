@@ -63,7 +63,7 @@
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
     display: flex; flex-direction: column; align-items: center; gap: 10px;
-    max-width: 520px; width: 100%;
+    max-width: 940px; width: 100%;
   }
 
   .header-bar {
@@ -186,13 +186,31 @@
     <div class="p2-score" id="s2" aria-label="Player 2 Score" aria-live="polite">0</div>
   </div>
 
-  <canvas id="gameCanvas" width="450" height="320" aria-label="Pong Game Canvas" tabindex="0"></canvas>
+  <canvas id="gameCanvas" width="900" height="640" style="width: 900px; height: 640px; max-width: 100%; height: auto;" aria-label="Pong Game Canvas" tabindex="0"></canvas>
 
   <div class="skills-bar">
     <button class="skill-btn" id="btn-slow" onclick="triggerSkill('slow')">⚡ [F] Slow-Mo</button>
     <button class="skill-btn" id="btn-mega" onclick="triggerSkill('mega')">🛡️ [E] Mega</button>
     <button class="skill-btn" id="btn-fire" onclick="triggerSkill('fire')">🔥 [B] Fireball</button>
     <button class="btn-sm" style="padding: 6px 12px; height: auto;" onclick="togglePause()" id="btn-pause">⏸️ Pause (Space)</button>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal">
+    <h2>📖 How to Play & Controls</h2>
+    <p style="font-size: 14px; margin-bottom: 12px; color: var(--text-color);">Welcome to KPONG! The ultimate arcade pong experience.</p>
+    <table>
+      <tr><th>P1 Controls</th><td>W / S (or Up / Down in 1P mode)</td></tr>
+      <tr><th>P2 Controls</th><td>Up / Down (in 2P Local PvP mode)</td></tr>
+      <tr><th>Skills</th><td>[F] Slow-Mo | [E] Mega Paddle | [B] Fireball</td></tr>
+      <tr><th>System</th><td>[Space] Pause | [M] Mode | [V] PvP | [T] Theme</td></tr>
+      <tr><th>Save/Load</th><td>[F5] Save Game | [F9] Load Game</td></tr>
+    </table>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeHelpModal()">Got it!</button>
+    </div>
   </div>
 </div>
 
@@ -466,6 +484,10 @@
       if(e.key === 'e' || e.key === 'E') triggerSkill('mega');
       if(e.key === 'b' || e.key === 'B') triggerSkill('fire');
       if(e.key === ' ') togglePause();
+      if(e.key === 'h' || e.key === 'H') {
+          if (document.getElementById('helpModal').classList.contains('active')) closeHelpModal();
+          else openHelpModal();
+      }
       if(e.key === 'm' || e.key === 'M') cycleGameMode();
       if(e.key === 'v' || e.key === 'V') togglePvPMode();
       if(e.key === 't' || e.key === 'T') cycleTheme();
@@ -474,6 +496,15 @@
   });
   document.addEventListener('keyup', e => { keys[e.key] = false; });
   window.addEventListener('blur', () => { for(let k in keys) keys[k] = false; });
+
+  function openHelpModal() { document.getElementById('helpModal').classList.add('active'); }
+  function closeHelpModal() { document.getElementById('helpModal').classList.remove('active'); }
+
+  // Auto-open help on first load
+  if (!localStorage.getItem('kpong_has_played')) {
+      openHelpModal();
+      localStorage.setItem('kpong_has_played', 'true');
+  }
 
   // Persistence: Save / Load State
   function saveGameState() {
@@ -1002,7 +1033,9 @@
   }
 
   function draw() {
-      ctx.clearRect(0, 0, W, H);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.scale(2, 2);
       
       // 3D Perspective Grid Background (Loop 2)
       ctx.save();
@@ -1114,7 +1147,7 @@
       
       // HUD Header Overlay
       ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.font = '12px Inter'; ctx.textAlign = 'center';
-      ctx.fillText("RALLY: " + rally + "  HIGH: " + stats.highRally + "  WINS: " + stats.wins, W/2, 20);
+      ctx.fillText("RALLY: " + rally + "  HIGH: " + stats.highRally + "  WINS: " + stats.wins + "  |  Press 'H' for Help", W/2, 20);
 
       if (gameMode === 4) {
           ctx.fillStyle = '#ffd700';
@@ -1144,6 +1177,7 @@
           ctx.shadowBlur = 0; ctx.fillStyle = 'white'; ctx.font = '14px Inter';
           ctx.fillText("Press 'R' to Restart", W/2, H/2 + 35);
       }
+      ctx.restore();
   }
 
   resetBalls();
