@@ -1,12 +1,12 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 800
-#define H 550
+#define W 900
+#define H 650
 
 HWND hList, hSizeList;
 HWND hCustomText, hBold, hItalic;
-HWND hTabMetrics, hTabGlyphs, hTabDiag, hTabSample;
+HWND hTabMetrics, hTabGlyphs, hTabDiag, hTabSample, hHelpBtn;
 HWND hPanel, hRangeList;
 
 HFONT hCurrentFont = NULL;
@@ -119,7 +119,7 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int y = 140;
                 int sizes[] = {10, 12, 16, 20, 24, 32};
                 for(int i=0; i<6; i++) {
-                    HFONT hSz = CreateFontA(sizes[i], 0, 0, 0, isBold?FW_BOLD:FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, currentFontName);
+                    HFONT hSz = CreateFontA(sizes[i], 0, 0, 0, isBold?FW_BOLD:FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, currentFontName);
                     SelectObject(hdc, hSz);
                     wsprintfA(buf, "%dpx: The quick brown fox", sizes[i]);
                     TextOutA(hdc, 10, y, buf, lstrlenA(buf));
@@ -162,7 +162,7 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM font) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             CreateWindowEx(0, "STATIC", "System Fonts:", WS_CHILD | WS_VISIBLE, 10, 10, 150, 20, hwnd, NULL, NULL, NULL);
             hList = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_SORT, 10, 30, 150, 160, hwnd, (HMENU)1, NULL, NULL);
@@ -185,6 +185,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hTabGlyphs = CreateWindowEx(0, "BUTTON", "Glyphs", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 260, 10, 80, 20, hwnd, (HMENU)11, NULL, NULL);
             hTabDiag = CreateWindowEx(0, "BUTTON", "Diagnostics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 350, 10, 100, 20, hwnd, (HMENU)12, NULL, NULL);
             hTabSample = CreateWindowEx(0, "BUTTON", "Sample", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 460, 10, 80, 20, hwnd, (HMENU)13, NULL, NULL);
+            hHelpBtn = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 550, 10, 60, 20, hwnd, (HMENU)15, NULL, NULL);
             
             SendMessage(hTabMetrics, BM_SETCHECK, BST_CHECKED, 0);
 
@@ -226,7 +227,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) >= 10 && LOWORD(wParam) <= 13 && HIWORD(wParam) == BN_CLICKED) {
+            if (LOWORD(wParam) == 15 && HIWORD(wParam) == BN_CLICKED) {
+                MessageBox(hwnd, "Metrics & OS/2: Inspect font measurements and bounds.\nUnicode Ranges: View glyphs organized by unicode block.\nDiagnostics: Check visual kerning and hinting at various sizes.\nSample: Test how the font looks with custom text.", "KFont Help", MB_OK | MB_ICONINFORMATION);
+            }
+            else if (LOWORD(wParam) >= 10 && LOWORD(wParam) <= 13 && HIWORD(wParam) == BN_CLICKED) {
                 currentTab = LOWORD(wParam) - 10;
                 ShowWindow(hRangeList, currentTab == 1 ? SW_SHOW : SW_HIDE);
                 InvalidateRect(hPanel, NULL, TRUE);
@@ -259,7 +263,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     
                     HFONT hOldFont = hCurrentFont;
-                    hCurrentFont = CreateFontA(currentSize, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, currentFontName);
+                    hCurrentFont = CreateFontA(currentSize, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, currentFontName);
                     if (hOldFont) DeleteObject(hOldFont);
                     InvalidateRect(hPanel, NULL, TRUE);
                 }
@@ -323,6 +327,12 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+            if (GetFocus() != hCustomText) {
+                MessageBox(hwnd, "Metrics & OS/2: Inspect font measurements and bounds.\nUnicode Ranges: View glyphs organized by unicode block.\nDiagnostics: Check visual kerning and hinting at various sizes.\nSample: Test how the font looks with custom text.", "KFont Help", MB_OK | MB_ICONINFORMATION);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
