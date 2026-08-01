@@ -1498,8 +1498,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(255, 235, 59));
             TextOutA(memDC, 2, 320, sstr, lstrlenA(sstr));
             
-            SetTextColor(memDC, RGB(255, 255, 255));
-            TextOutA(memDC, 2, 335, "[H]Help [K]Bind [E]Export [I]Import", 35);
+            SetTextColor(memDC, RGB(0, 255, 200));
+            TextOutA(memDC, 2, 335, "[Press H for Help] [K]Bind [E]Exp", 33);
 
             if (level == 20 && bossHp > 0) {
                 char bossStr[64];
@@ -1584,8 +1584,12 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
+    RECT rect = {0, 0, W, H};
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
+    int winW = rect.right - rect.left;
+    int winH = rect.bottom - rect.top;
     HWND hwnd = CreateWindowEx(0, "KPacApp", "KPac", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W + 16, H + 39, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

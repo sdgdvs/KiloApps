@@ -75,7 +75,7 @@
   }
 </style>
 </head>
-<body data-width="340" data-height="430">
+<body data-width="360" data-height="530">
 <div id="game-container">
   <canvas id="gameCanvas" width="300" height="340"></canvas>
   <div class="skills-bar">
@@ -83,6 +83,14 @@
     <button id="btnSprint" class="skill-btn" onclick="attemptSkill('s2')">Sprint [Z]</button>
     <button id="btnMagnet" class="skill-btn" onclick="attemptSkill('s3')">Magnet [M]</button>
     <button id="btnShield" class="skill-btn" onclick="attemptSkill('s4')">Shield [B]</button>
+  </div>
+  <div style="display: flex; flex-direction: column; align-items: center; margin-top: 12px; gap: 4px;">
+    <button class="skill-btn" style="width: 50px; height: 30px; font-size: 14px;" onmousedown="ndx=0;ndy=-1" ontouchstart="ndx=0;ndy=-1;event.preventDefault()">▲</button>
+    <div style="display: flex; gap: 4px;">
+      <button class="skill-btn" style="width: 50px; height: 30px; font-size: 14px;" onmousedown="ndx=-1;ndy=0" ontouchstart="ndx=-1;ndy=0;event.preventDefault()">◀</button>
+      <button class="skill-btn" style="width: 50px; height: 30px; font-size: 14px;" onmousedown="ndx=0;ndy=1" ontouchstart="ndx=0;ndy=1;event.preventDefault()">▼</button>
+      <button class="skill-btn" style="width: 50px; height: 30px; font-size: 14px;" onmousedown="ndx=1;ndy=0" ontouchstart="ndx=1;ndy=0;event.preventDefault()">▶</button>
+    </div>
   </div>
 </div>
 
@@ -1571,12 +1579,14 @@
       }
       
       ctx.fillStyle = '#fff';
-      ctx.font = '10px monospace';
+      ctx.font = '11px monospace';
+      ctx.textBaseline = 'top';
       const diffNames = ['EASY', 'NORM', 'HARD'];
-      ctx.fillText(`Lv:${level}/20 Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 308);
+      ctx.fillText(`Lv:${level}/20 Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 302);
       let rText = replayMode === 1 ? ' [REC]' : (replayMode === 2 ? ' [PLAY]' : '');
-      ctx.fillText(`Diff:${diffNames[diffMode]}${rText} Save:V Load:L Bind:K`, 4, 320);
-      ctx.fillText(`[Press H for Help] Export/Import:E`, 4, 332);
+      ctx.fillText(`Diff:${diffNames[diffMode]}${rText} Save:V Load:L Bind:K`, 4, 316);
+      ctx.fillStyle = '#00ffcc';
+      ctx.fillText(`[Press H for Help] Export/Import:E`, 4, 330);
 
       if (bindState > 0) {
           ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
