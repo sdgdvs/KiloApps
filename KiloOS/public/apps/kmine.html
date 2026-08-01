@@ -14,7 +14,7 @@
 <div id="controls">
   <select id="diff" onchange="changeDiff()">
     <option value="0">Beginner</option>
-    <option value="1">Intermediate</option>
+    <option value="1" selected>Intermediate</option>
     <option value="2">Expert</option>
   </select>
   <button onclick="initGame()">Restart</button>
@@ -26,16 +26,16 @@
   <input type="file" id="fileIn" style="display:none" accept=".json" onchange="importStats(event)">
   <button id="replayBtn" style="display:none;" onclick="startReplay()">Watch Replay</button>
 </div>
-<div style="font-size:12px; margin-bottom: 5px;">F5: Quicksave | F9: Quickload</div>
+<div style="font-size:14px; font-weight: bold; margin-bottom: 5px;">Press H for Hint | F5: Quicksave | F9: Quickload</div>
 <canvas id="cvs"></canvas>
 <script>
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
   
-  const CELL = 20;
-  let cols = 10;
-  let rows = 10;
-  let totalMines = 15;
+  const CELL = 30;
+  let cols = 16;
+  let rows = 16;
+  let totalMines = 40;
   let grid = [];
   let state = [];
   let gameOver = 0; // 0: playing, 1: lost, 2: won
@@ -364,7 +364,7 @@
   
   function draw() {
       ctx.clearRect(0, 0, cols * CELL, rows * CELL);
-      ctx.font = "bold 14px Arial";
+      ctx.font = "bold 18px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       
@@ -405,6 +405,15 @@
                   }
               }
           }
+      }
+      
+      if (firstClick && gameOver === 0) {
+          ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+          ctx.fillRect(0, (rows*CELL)/2 - 30, cols*CELL, 60);
+          ctx.fillStyle = "black";
+          ctx.font = "bold 16px Arial";
+          ctx.fillText("L-Click: Reveal | R-Click: Flag", (cols*CELL)/2, (rows*CELL)/2 - 10);
+          ctx.fillText("Press 'H' for Hint", (cols*CELL)/2, (rows*CELL)/2 + 15);
       }
   }
   

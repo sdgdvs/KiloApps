@@ -4,7 +4,7 @@
 
 #define W 200
 #define H 200
-#define CELL 20
+#define CELL 30
 
 #define MAX_ROWS 16
 #define MAX_COLS 30
@@ -24,10 +24,10 @@ int flagsPlaced = 0;
 int timeElapsed = 0;
 int firstClick = 1;
 
-int cols = 10;
-int rows = 10;
-int totalMines = 15;
-int currentDiff = 0;
+int cols = 16;
+int rows = 16;
+int totalMines = 40;
+int currentDiff = 1;
 
 int bestTimes[3] = {-1, -1, -1};
 Move moves[MAX_MOVES];
@@ -532,7 +532,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubMenu, MF_STRING, IDM_WATCH_REPLAY, "Watch Replay");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Game");
             SetMenu(hwnd, hMenu);
-            SetDifficulty(hwnd, 0);
+            SetDifficulty(hwnd, 1);
             break;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDM_RESTART) {
@@ -628,7 +628,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &full, bg);
             DeleteObject(bg);
             
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFont = CreateFontA(20, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
             
@@ -659,6 +659,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
+            if (firstClick && gameOver == 0) {
+                RECT rBox = { w/2 - 130, h/2 - 30, w/2 + 130, h/2 + 30 };
+                HBRUSH whiteBrush = CreateSolidBrush(RGB(240, 240, 240));
+                FillRect(memDC, &rBox, whiteBrush);
+                DeleteObject(whiteBrush);
+                DrawEdge(memDC, &rBox, EDGE_RAISED, BF_RECT);
+                
+                SetBkMode(memDC, TRANSPARENT);
+                SetTextColor(memDC, RGB(0, 0, 0));
+                HFONT smallFont = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+                HGDIOBJ oldSmallFont = SelectObject(memDC, smallFont);
+                
+                RECT rText1 = { rBox.left, rBox.top + 5, rBox.right, rBox.top + 25 };
+                RECT rText2 = { rBox.left, rBox.top + 30, rBox.right, rBox.top + 50 };
+                DrawTextA(memDC, "L-Click: Reveal | R-Click: Flag", -1, &rText1, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                DrawTextA(memDC, "Press 'H' for Hint", -1, &rText2, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                
+                SelectObject(memDC, oldSmallFont);
+                DeleteObject(smallFont);
+            }
+
             SelectObject(memDC, oldFont);
             DeleteObject(hFont);
             
@@ -695,7 +716,7 @@ void MainEntry() {
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClass(&wc);
 
-    RECT r = {0, 0, 10 * CELL, 10 * CELL};
+    RECT r = {0, 0, 16 * CELL, 16 * CELL};
     AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
     HWND hwnd = CreateWindowEx(0, "KMineApp", "KMine", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, NULL);
