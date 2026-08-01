@@ -54,8 +54,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KColony (Sci-Fi Colony Survival)
-**Phase:** 8 (next to do)
-**Status:** Phase 7 completed, Phase 8 next
+**Phase:** 9 (next to do)
+**Status:** Phase 8 completed, Phase 9 next
 
 - [x] Phase 1: Scaffold KColony directory (`KColony/`), create web HTML skeleton (`KiloOS/public/apps/kcolony.html`), register in App.jsx.
 - [x] Phase 2: Core HTML 2D grid colony layout. Basic resources (Food, Power, Materials). Place basic structures (Solar Panel, Farm, Mine).
@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Population & Needs — Colonists arrive over time. They consume food and require habitation structures. Unhappiness leads to reduced efficiency.
 - [x] Phase 6: Time & Day/Night Cycle — Implement time progression. Solar panels only work during the day. Batteries required for night power.
 - [x] Phase 7: Tech Tree Research — Build a Laboratory to generate Science points. Unlock advanced structures (Nuclear Reactor, Hydroponics, Laser Defense).
-- [ ] Phase 8: Random Events & Disasters — Add meteor showers, dust storms, and equipment breakdowns that damage structures and require repair.
+- [x] Phase 8: Random Events & Disasters — Add meteor showers, dust storms, and equipment breakdowns that damage structures and require repair.
 - [ ] Phase 9: Alien Threats — Add hostile alien wildlife that attacks the colony. Build walls and automated defense turrets to protect colonists.
 - [ ] Phase 10: Expeditions — Send colonists on rovers to explore the surrounding map for rare artifacts and resource caches. Text-based encounter resolutions.
 - [ ] Phase 11: Advanced Industry — Build factories to refine basic materials into advanced composites and electronics for late-game structures.

@@ -5,7 +5,11 @@
 #define GRID_H 20
 #define CELL_SIZE 20
 #define OFFSET_X 20
-#define OFFSET_Y 60
+#define OFFSET_Y 80
+
+int dustStormTicks = 0;
+int msgTicks = 0;
+char msgText[128] = "";
 
 int food = 50;
 int power = 50;
@@ -44,7 +48,8 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             COLORREF borderCol = RGB(0, 51, 51);
             COLORREF textCol = RGB(0, 255, 255);
             
-            if (t == 1) { bgCol = RGB(51, 51, 0); borderCol = RGB(255, 255, 0); textCol = RGB(255, 255, 0); }
+            if (t > 10) { bgCol = RGB(51, 0, 0); borderCol = RGB(255, 0, 0); textCol = RGB(255, 0, 0); }
+            else if (t == 1) { bgCol = RGB(51, 51, 0); borderCol = RGB(255, 255, 0); textCol = RGB(255, 255, 0); }
             else if (t == 2) { bgCol = RGB(0, 51, 0); borderCol = RGB(0, 255, 0); textCol = RGB(0, 255, 0); }
             else if (t == 3) { bgCol = RGB(51, 0, 51); borderCol = RGB(255, 0, 255); textCol = RGB(255, 0, 255); }
             else if (t == 4) { bgCol = RGB(0, 51, 51); borderCol = RGB(0, 255, 255); textCol = RGB(0, 255, 255); }
@@ -71,7 +76,8 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             if (t > 0) {
                 SetBkMode(hdc, TRANSPARENT);
                 SetTextColor(hdc, textCol);
-                if (t == 1) DrawText(hdc, "S", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                if (t > 10) DrawText(hdc, "X", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else if (t == 1) DrawText(hdc, "S", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 2) DrawText(hdc, "F", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 3) DrawText(hdc, "M", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (t == 4) DrawText(hdc, "H", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -108,19 +114,25 @@ void DrawUI(HDC hdc, HFONT hFont) {
     
     DrawText(hdc, buf, -1, &rcHeader, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
+    if (msgTicks > 0) {
+        RECT rcMsg = { 20, 55, 620, 75 };
+        SetTextColor(hdc, RGB(255, 0, 0));
+        DrawText(hdc, msgText, -1, &rcMsg, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    }
+
     int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 20;
-    const char* labels[] = { "[0] INSPECT", "[1] SOLAR", "[2] FARM", "[3] MINE", "[4] HAB", "[5] BATT", "[6] LAB", "[7] NUKE", "[8] HYDRO", "[9] LASER" };
+    const char* labels[] = { "[-1] REPAIR", "[0] INSPECT", "[1] SOLAR", "[2] FARM", "[3] MINE", "[4] HAB", "[5] BATT", "[6] LAB", "[7] NUKE", "[8] HYDRO", "[9] LASER" };
     
     btnCount = 0;
     int btnY = OFFSET_Y;
-    for (int i = 0; i < 10; i++) {
+    for (int i = -1; i < 10; i++) {
         if (i == 7 && !unlockedNuke) continue;
         if (i == 8 && !unlockedHydro) continue;
         if (i == 9 && !unlockedLaser) continue;
         
         buttons[btnCount].rc = (RECT){ sidebarX, btnY, sidebarX + 180, btnY + 25 };
         buttons[btnCount].id = i;
-        strcpy(buttons[btnCount].label, labels[i]);
+        strcpy(buttons[btnCount].label, labels[i + 1]);
         buttons[btnCount].isSelected = (i == selectedType);
         btnCount++;
         btnY += 30;
@@ -181,6 +193,7 @@ void DrawUI(HDC hdc, HFONT hFont) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
+            srand(GetTickCount());
             SetTimer(hwnd, 1, 2000, NULL);
             break;
         case WM_TIMER: {
@@ -188,10 +201,42 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (tick % 10 == 0) { day++; isDay = 1; }
             else if (tick % 10 == 5) { isDay = 0; }
             
+            // Random Events
+            if (rand() % 100 < 5) { // 5% chance per tick
+                int r = rand() % 100;
+                int targets[GRID_W * GRID_H];
+                int targetCount = 0;
+                for (int i = 0; i < GRID_W * GRID_H; i++) {
+                    if (grid[i] > 0 && grid[i] <= 9) targets[targetCount++] = i;
+                }
+                
+                if (r < 33 && targetCount > 0) {
+                    int hits = targetCount < 3 ? targetCount : 3;
+                    for (int i = 0; i < hits; i++) {
+                        int idx = targets[rand() % targetCount];
+                        if (grid[idx] > 0 && grid[idx] <= 9) grid[idx] += 10;
+                    }
+                    strcpy(msgText, "METEOR SHOWER! Structures damaged.");
+                    msgTicks = 5;
+                } else if (r < 66) {
+                    dustStormTicks = 10;
+                    strcpy(msgText, "DUST STORM! Solar power reduced.");
+                    msgTicks = 10;
+                } else if (targetCount > 0) {
+                    int idx = targets[rand() % targetCount];
+                    if (grid[idx] > 0 && grid[idx] <= 9) grid[idx] += 10;
+                    strcpy(msgText, "EQUIPMENT BREAKDOWN!");
+                    msgTicks = 5;
+                }
+            }
+            
+            if (dustStormTicks > 0) dustStormTicks--;
+            if (msgTicks > 0) msgTicks--;
+            
             int pwrProd = 0, farmCount = 0, mineCount = 0, habCount = 0, batCount = 0;
             int labCount = 0, nukeCount = 0, hydroCount = 0, laserCount = 0;
             for(int i=0; i<GRID_W*GRID_H; i++) {
-                if(grid[i]==1 && isDay) pwrProd += 4;
+                if(grid[i]==1 && isDay && dustStormTicks <= 0) pwrProd += 4;
                 if(grid[i]==2) farmCount += 1;
                 if(grid[i]==3) mineCount += 1;
                 if(grid[i]==4) habCount += 1;
@@ -275,7 +320,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int gy = (y - OFFSET_Y) / CELL_SIZE;
                 int idx = gy * GRID_W + gx;
                 
-                if (selectedType != 0 && grid[idx] == 0) {
+                if (selectedType == -1 && grid[idx] > 10) {
+                    if (mat >= 5) {
+                        mat -= 5;
+                        grid[idx] -= 10;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                } else if (selectedType > 0 && grid[idx] == 0) {
                     int costMat = 0, costPwr = 0;
                     if (selectedType == 1) costMat = 10;
                     else if (selectedType == 2) { costMat = 10; costPwr = 5; }
