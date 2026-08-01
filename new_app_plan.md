@@ -54,10 +54,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFarm (Farming Simulation)
-**Phase:** 1 (next to do)
+**Phase:** 2 (next to do)
 **Status:** Initializing new app
 
-- [ ] Phase 1: Scaffold KFarm directory (`KFarm/`), create web HTML skeleton (`KiloOS/public/apps/kfarm.html`), register in App.jsx.
+- [x] Phase 1: Scaffold KFarm directory (`KFarm/`), create web HTML skeleton (`KiloOS/public/apps/kfarm.html`), register in App.jsx.
 - [ ] Phase 2: Basic farm grid with soil, tilling, and planting basic seeds (wheat).
 - [ ] Phase 3: Native C version (`KFarm/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [ ] Phase 4: Farming UI styling (earthy tones, crop icons, sunny daylight colors).
