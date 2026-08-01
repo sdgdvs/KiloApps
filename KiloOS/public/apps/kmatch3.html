@@ -59,6 +59,18 @@
   .particle {
     position: absolute; pointer-events: none; z-index: 100; border-radius: 50%;
   }
+  .hint-anim {
+    animation: hintWiggle 1.5s infinite ease-in-out;
+    z-index: 15;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  @keyframes hintWiggle {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    10% { transform: scale(1.1) rotate(5deg); filter: brightness(1.3); }
+    20% { transform: scale(1.1) rotate(-5deg); filter: brightness(1.3); }
+    30% { transform: scale(1.1) rotate(5deg); filter: brightness(1.3); }
+    40% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+  }
   .laser-beam {
     position: absolute; pointer-events: none; z-index: 90;
     background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0) 100%);
@@ -182,6 +194,8 @@
     let lastSwap = null;
     let toDestroy = new Set();
     let stoneToBreak = new Set();
+    let hintTimer = 0;
+    let currentHint = null;
 
     let collectedRed = 0;
     let collectedGreen = 0;
@@ -522,6 +536,8 @@
       score = 0;
       collectedRed = 0; collectedGreen = 0; collectedBlue = 0;
       bossMoveTimer = 0; powerupMode = 0;
+      hintTimer = 0;
+      clearHint();
       document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
 
       scoreEl.textContent = score;
@@ -731,6 +747,8 @@
 
     function onCellClick(e) {
       if (isProcessing) return;
+      hintTimer = 0;
+      clearHint();
       let target = e.currentTarget;
       const r = parseInt(target.dataset.r);
       const c = parseInt(target.dataset.c);
@@ -1214,12 +1232,51 @@
       else if (e.key === 'F1') { e.preventDefault(); showHelp(); }
     });
 
+    function findHint() {
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (!grid[r][c] || grid[r][c].stoneHits > 0 || grid[r][c].ice) continue;
+          if (c < COLS - 1 && grid[r][c+1] && grid[r][c+1].stoneHits === 0 && !grid[r][c+1].ice) {
+            swap(r, c, r, c+1);
+            let m = findMatches();
+            swap(r, c, r, c+1);
+            if (m.hMatches.length > 0 || m.vMatches.length > 0) return [{r,c}, {r, c:c+1}];
+          }
+          if (r < ROWS - 1 && grid[r+1][c] && grid[r+1][c].stoneHits === 0 && !grid[r+1][c].ice) {
+            swap(r, c, r+1, c);
+            let m = findMatches();
+            swap(r, c, r+1, c);
+            if (m.hMatches.length > 0 || m.vMatches.length > 0) return [{r,c}, {r:r+1, c}];
+          }
+        }
+      }
+      return null;
+    }
+
+    function clearHint() {
+      if (currentHint) {
+        if (grid[currentHint[0].r][currentHint[0].c]) grid[currentHint[0].r][currentHint[0].c].el.classList.remove('hint-anim');
+        if (grid[currentHint[1].r][currentHint[1].c]) grid[currentHint[1].r][currentHint[1].c].el.classList.remove('hint-anim');
+        currentHint = null;
+      }
+    }
+
     setInterval(() => {
         let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
         if (isTimed && typeof moves === 'number' && moves > 0 && !isProcessing) {
             moves--;
             movesEl.textContent = moves;
             if (moves <= 0) gameOver();
+        }
+        if (!isProcessing) {
+            hintTimer++;
+            if (hintTimer >= 4 && !currentHint) {
+                currentHint = findHint();
+                if (currentHint) {
+                    grid[currentHint[0].r][currentHint[0].c].el.classList.add('hint-anim');
+                    grid[currentHint[1].r][currentHint[1].c].el.classList.add('hint-anim');
+                }
+            }
         }
     }, 1000);
 

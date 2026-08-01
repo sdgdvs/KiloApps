@@ -85,6 +85,8 @@ int isProcessing = 0;
 int swapAnim = 0;
 int swapR1 = -1, swapC1 = -1, swapR2 = -1, swapC2 = -1;
 int lastSwapR1 = -1, lastSwapC1 = -1, lastSwapR2 = -1, lastSwapC2 = -1;
+int hintTimer = 0;
+int hintR1 = -1, hintC1 = -1, hintR2 = -1, hintC2 = -1;
 int popAnim = 0;
 int popGrid[MAX_ROWS][MAX_COLS] = {0};
 int dropAnim = 0;
@@ -644,6 +646,14 @@ void DrawBoard(HDC hdc) {
                 border = CreateSolidBrush(RGB(255, 255, 255));
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
+            } else if ((r == hintR1 && c == hintC1) || (r == hintR2 && c == hintC2)) {
+                HBRUSH border = CreateSolidBrush(RGB(255, 255, 255));
+                FrameRect(hdc, &rect, border);
+                DeleteObject(border);
+                rect.left += 1; rect.top += 1; rect.right -= 1; rect.bottom -= 1;
+                border = CreateSolidBrush(RGB(255, 255, 255));
+                FrameRect(hdc, &rect, border);
+                DeleteObject(border);
             }
         }
     }
@@ -722,6 +732,31 @@ void AddDestroy(int r, int c) {
         for (int dr2 = -1; dr2 <= 1; dr2++) {
             for (int dc2 = -1; dc2 <= 1; dc2++) {
                 AddDestroy(r + dr2, c + dc2);
+            }
+        }
+    }
+}
+
+void ClearHint() {
+    hintTimer = 0;
+    hintR1 = -1; hintC1 = -1; hintR2 = -1; hintC2 = -1;
+}
+
+void FindHint() {
+    for (int r=0; r<rows; r++) {
+        for (int c=0; c<cols; c++) {
+            if (grid[r][c] == -1 || stoneGrid[r][c] > 0 || iceGrid[r][c]) continue;
+            if (c < cols - 1 && grid[r][c+1] != -1 && stoneGrid[r][c+1] == 0 && !iceGrid[r][c+1]) {
+                int temp = grid[r][c]; grid[r][c] = grid[r][c+1]; grid[r][c+1] = temp;
+                int m = CheckMatchPossible();
+                temp = grid[r][c]; grid[r][c] = grid[r][c+1]; grid[r][c+1] = temp;
+                if (m) { hintR1 = r; hintC1 = c; hintR2 = r; hintC2 = c+1; return; }
+            }
+            if (r < rows - 1 && grid[r+1][c] != -1 && stoneGrid[r+1][c] == 0 && !iceGrid[r+1][c]) {
+                int temp = grid[r][c]; grid[r][c] = grid[r+1][c]; grid[r+1][c] = temp;
+                int m = CheckMatchPossible();
+                temp = grid[r][c]; grid[r][c] = grid[r+1][c]; grid[r+1][c] = temp;
+                if (m) { hintR1 = r; hintC1 = c; hintR2 = r+1; hintC2 = c; return; }
             }
         }
     }
@@ -1188,6 +1223,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, FALSE);
                     if (moves <= 0) GameOver(hwnd);
                 }
+                if (!isProcessing) {
+                    hintTimer++;
+                    if (hintTimer >= 4 && hintR1 == -1) {
+                        FindHint();
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                }
                 break;
             }
             int needsUpdate = 0;
@@ -1254,6 +1296,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_LBUTTONDOWN: {
             if (isProcessing) break;
+            ClearHint();
+            InvalidateRect(hwnd, NULL, FALSE);
             int x = LOWORD(lParam) - BOARD_X;
             int y = HIWORD(lParam) - BOARD_Y;
             if (x >= 0 && x < cols * cellSize && y >= 0 && y < rows * cellSize) {
