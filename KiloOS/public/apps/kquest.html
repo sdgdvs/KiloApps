@@ -514,7 +514,7 @@
     }
   </style>
 </head>
-<body>
+<body data-width="1000" data-height="720">
 
   <!-- Header -->
   <header>
@@ -699,6 +699,15 @@
       GFX.canvas = document.getElementById('kquest-gfx-canvas');
       if (!GFX.canvas) return;
       GFX.ctx = GFX.canvas.getContext('2d');
+      
+      // High DPI scaling for crisp canvas text and graphics
+      const dpr = window.devicePixelRatio || 1;
+      const baseWidth = 680;
+      const baseHeight = 220;
+      GFX.canvas.width = baseWidth * dpr;
+      GFX.canvas.height = baseHeight * dpr;
+      GFX.ctx.scale(dpr, dpr);
+
       requestAnimationFrame(gfxLoop);
     }
 

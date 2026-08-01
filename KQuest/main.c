@@ -3474,7 +3474,7 @@ void RenderGdiScene(HDC hdc, int w, int h) {
     }
 
     SetBkMode(hdc, TRANSPARENT);
-    HFONT hFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+    HFONT hFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
 
     for (int i = g_GdiFloatCount - 1; i >= 0; i--) {
@@ -3501,7 +3501,7 @@ void RenderGdiScene(HDC hdc, int w, int h) {
 
         SetTextColor(hdc, RGB(17, 17, 27));
         SetBkMode(hdc, TRANSPARENT);
-        HFONT hBanFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+        HFONT hBanFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
         HFONT hOldF = (HFONT)SelectObject(hdc, hBanFont);
         DrawTextA(hdc, g_GdiBannerTitle, -1, &bannerR, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
         SelectObject(hdc, hOldF); DeleteObject(hBanFont);
@@ -3583,6 +3583,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
+            LogMessage("Press 'H' at any time to view the Help & Codex.");
             LogMessage("Phase 14: Comprehensive Help & Lore Codex Active (Press F1 / H or click Help)!");
             break;
         }
@@ -3723,9 +3724,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     RegisterClassA(&wc);
 
-    RECT wr = {0, 0, 785, 485};
+    RECT wr = {0, 0, 785, 520};
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowA("KQuestClass", "KQuest - Fantasy Dungeon RPG", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    HWND hwnd = CreateWindowA("KQuestClass", "KQuest - Fantasy Dungeon RPG (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
                               CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top,
                               NULL, NULL, hInstance, NULL);
 
