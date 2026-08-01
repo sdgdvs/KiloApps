@@ -76,10 +76,12 @@
   </div>
   
   <div style="flex:1"></div>
-  <button class="compose-btn" style="background:#059669;" onclick="document.getElementById('import-file').click()">Import JSON</button>
-  <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json">
-  <button class="compose-btn" style="background:#0284c7; margin-top:-10px;" onclick="exportJson()">Export JSON</button>
-  <button class="compose-btn" style="background:var(--danger); margin-top:-10px;" onclick="emptyTrash()">Empty Trash</button>
+  <div style="display:flex; flex-direction:column; gap:10px; padding: 0 15px;">
+    <button class="compose-btn" style="margin:0; background:#059669;" onclick="document.getElementById('import-file').click()">Import JSON</button>
+    <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json">
+    <button class="compose-btn" style="margin:0; background:#0284c7;" onclick="exportJson()">Export JSON</button>
+    <button class="compose-btn" style="margin:0; background:var(--danger);" onclick="emptyTrash()">Empty Trash</button>
+  </div>
 </div>
 
 <div class="list" id="list"></div>
@@ -426,6 +428,10 @@
       alert("KMail Help:\n\n- Click 'New Message' to compose.\n- Select folders on the left.\n- Search and filter by tags.\n- Tabs let you open multiple emails.");
     }
   });
+
+  if (window.opener) {
+    window.resizeTo(1024, 768);
+  }
 
   renderList();
 </script>

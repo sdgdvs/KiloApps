@@ -171,7 +171,7 @@ void CloseCurrentTab() {
 void RenderPane() {
     if(currentTabIdx == -1) {
         SetWindowTextA(hTitle, "No email selected");
-        SetWindowTextA(hBody, "Select an email from the list to read, or click 'Compose' to write a new one.\r\n\r\nFeatures:\r\n- Switch between Inbox, Sent, and Trash folders.\r\n- Search and filter by tags.\r\n- Open multiple emails in tabs.\r\n- Encrypt your messages with a password.");
+        SetWindowTextA(hBody, "Select an email from the list to read, or click 'Compose' to write a new one.\r\n\r\nFeatures:\r\n- Switch between Inbox, Sent, and Trash folders.\r\n- Search and filter by tags.\r\n- Open multiple emails in tabs.\r\n- Encrypt your messages with a password.\r\n\r\nPress 'h' for help.");
         ShowWindow(hBtnTag, SW_HIDE);
         ShowWindow(hBtnDecrypt, SW_HIDE);
         SetWindowLong(hBody, GWL_STYLE, GetWindowLong(hBody, GWL_STYLE) | ES_READONLY);
@@ -423,7 +423,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             MoveWindow(hSearchBox, 120, 50, 200, 25, TRUE);
             MoveWindow(hTagFilter, 120, 80, 200, 25, TRUE);
-            MoveWindow(hEmails, 120, 110, 200, nh - 160, TRUE);
+            MoveWindow(hEmails, 120, 110, 200, nh - 120, TRUE);
             
             MoveWindow(hBtnDelete, nw - 110, 10, 90, 30, TRUE);
             
@@ -433,7 +433,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnTag, 330, 125, 80, 25, TRUE);
             MoveWindow(hBtnDecrypt, 420, 125, 80, 25, TRUE);
             
-            MoveWindow(hBody, 330, 155, nw - 340, nh - 200, TRUE);
+            MoveWindow(hBody, 330, 155, nw - 340, nh - 165, TRUE);
             break;
         }
         case WM_CTLCOLORSTATIC: {
@@ -485,6 +485,15 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+            HWND hFocus = GetFocus();
+            char cls[64] = {0};
+            GetClassNameA(hFocus, cls, 64);
+            if (lstrcmpiA(cls, "EDIT") != 0) {
+                MessageBoxA(hwnd, "KMail Help:\n\n- Click 'Compose' to write.\n- Select folders on the left.\n- Search and filter by tags.\n- Tabs let you open multiple emails.", "Help", MB_OK);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
