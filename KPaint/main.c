@@ -23,6 +23,7 @@ int curSize = 4;
 int brushShape = 0; // 0 = Round, 1 = Square
 int currentTool = 0; // 0=Freehand, 1=Line, 2=Rect, 3=Ellipse, 4=Spray, 5=Eraser
 int startX = 0, startY = 0;
+int scrollX = 0, scrollY = 0;
 
 // History Stack (Undo / Redo)
 #define MAX_HISTORY 10
@@ -325,24 +326,24 @@ int SaveBitmap(const char* path, HBITMAP hbm) {
     HDC hdc = GetDC(NULL);
     BITMAPINFOHEADER bi = {0};
     bi.biSize = sizeof(BITMAPINFOHEADER);
-    bi.biWidth = 800;
-    bi.biHeight = 600;
+    bi.biWidth = 2000;
+    bi.biHeight = 2000;
     bi.biPlanes = 1;
     bi.biBitCount = 24;
     bi.biCompression = BI_RGB;
 
-    DWORD dwBmpSize = ((800 * 24 + 31) / 32) * 4 * 600;
+    DWORD dwBmpSize = ((2000 * 24 + 31) / 32) * 4 * 2000;
     HANDLE hDIB = GlobalAlloc(GHND, dwBmpSize);
     char* lpbitmap = (char*)GlobalLock(hDIB);
     
     HDC tempDC = CreateCompatibleDC(hdc);
-    HBITMAP tempBmp = CreateCompatibleBitmap(hdc, 800, 600);
+    HBITMAP tempBmp = CreateCompatibleBitmap(hdc, 2000, 2000);
     HBITMAP hOld = (HBITMAP)SelectObject(tempDC, tempBmp);
-    RECT tr = {0,0,800,600}; FillRect(tempDC, &tr, (HBRUSH)GetStockObject(WHITE_BRUSH));
-    BitBlt(tempDC, 0, 0, 800, 600, hdcMem, 0, 0, SRCCOPY);
+    RECT tr = {0,0,2000,2000}; FillRect(tempDC, &tr, (HBRUSH)GetStockObject(WHITE_BRUSH));
+    BitBlt(tempDC, 0, 0, 2000, 2000, hdcMem, 0, 0, SRCCOPY);
     SelectObject(tempDC, hOld);
     
-    GetDIBits(hdc, tempBmp, 0, 600, lpbitmap, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+    GetDIBits(hdc, tempBmp, 0, 2000, lpbitmap, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
     HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -396,6 +397,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             RECT r = {0, 0, 2000, 2000};
             FillRect(hdcMem, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            HFONT hWelcomeFont = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
+            SetTextColor(hdcMem, RGB(150, 150, 150));
+            SetBkMode(hdcMem, TRANSPARENT);
+            HFONT hOldF = (HFONT)SelectObject(hdcMem, hWelcomeFont);
+            TextOutA(hdcMem, 20, 20, "Welcome to KPaint Pro! Press H for Help", 39);
+            SelectObject(hdcMem, hOldF);
+            DeleteObject(hWelcomeFont);
+            
             ReleaseDC(hwnd, hdc);
             
             UpdatePen();
@@ -562,9 +572,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_LBUTTONDOWN: {
-            int x = (short)LOWORD(lParam) - 130;
-            int y = (short)HIWORD(lParam);
-            if (x >= 0) {
+            int x = (short)LOWORD(lParam) - 130 + scrollX;
+            int y = (short)HIWORD(lParam) + scrollY;
+            if ((short)LOWORD(lParam) >= 130) {
                 PushUndo();
                 isPainting = 1;
                 startX = x; startY = y;
@@ -572,8 +582,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (currentTool == 0 || currentTool == 5) {
                     HDC hdc = GetDC(hwnd);
                     SelectObject(hdc, hPen);
-                    MoveToEx(hdc, x + 130, y, NULL);
-                    LineTo(hdc, x + 130, y);
+                    MoveToEx(hdc, x + 130 - scrollX, y - scrollY, NULL);
+                    LineTo(hdc, x + 130 - scrollX, y - scrollY);
                     ReleaseDC(hwnd, hdc);
                     MoveToEx(hdcMem, x, y, NULL);
                     LineTo(hdcMem, x, y);
@@ -589,23 +599,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetROP2(hdc, R2_NOTXORPEN);
                     SelectObject(hdc, hPen);
                     SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                    if (currentTool == 1) { MoveToEx(hdc, startX + 130, startY, NULL); LineTo(hdc, x + 130, y); }
-                    else if (currentTool == 2) { Rectangle(hdc, startX + 130, startY, x + 130, y); }
-                    else if (currentTool == 3) { Ellipse(hdc, startX + 130, startY, x + 130, y); }
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 130 - scrollX, startY - scrollY, NULL); LineTo(hdc, x + 130 - scrollX, y - scrollY); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 130 - scrollX, startY - scrollY, x + 130 - scrollX, y - scrollY); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 130 - scrollX, startY - scrollY, x + 130 - scrollX, y - scrollY); }
                     ReleaseDC(hwnd, hdc);
                 }
             }
             break;
         }
         case WM_MOUSEMOVE: {
-            int x = (short)LOWORD(lParam) - 130;
-            int y = (short)HIWORD(lParam);
-            if (isPainting && x >= 0) {
+            int x = (short)LOWORD(lParam) - 130 + scrollX;
+            int y = (short)HIWORD(lParam) + scrollY;
+            if (isPainting && (short)LOWORD(lParam) >= 130) {
                 HDC hdc = GetDC(hwnd);
                 if (currentTool == 0 || currentTool == 5) {
                     SelectObject(hdc, hPen);
-                    MoveToEx(hdc, lastX + 130, lastY, NULL);
-                    LineTo(hdc, x + 130, y);
+                    MoveToEx(hdc, lastX + 130 - scrollX, lastY - scrollY, NULL);
+                    LineTo(hdc, x + 130 - scrollX, y - scrollY);
                     MoveToEx(hdcMem, lastX, lastY, NULL);
                     LineTo(hdcMem, x, y);
                 } else if (currentTool == 4) { // Spray
@@ -619,13 +629,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetROP2(hdc, R2_NOTXORPEN);
                     SelectObject(hdc, hPen);
                     SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                    if (currentTool == 1) { MoveToEx(hdc, startX + 130, startY, NULL); LineTo(hdc, lastX + 130, lastY); }
-                    else if (currentTool == 2) { Rectangle(hdc, startX + 130, startY, lastX + 130, lastY); }
-                    else if (currentTool == 3) { Ellipse(hdc, startX + 130, startY, lastX + 130, lastY); }
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 130 - scrollX, startY - scrollY, NULL); LineTo(hdc, lastX + 130 - scrollX, lastY - scrollY); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 130 - scrollX, startY - scrollY, lastX + 130 - scrollX, lastY - scrollY); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 130 - scrollX, startY - scrollY, lastX + 130 - scrollX, lastY - scrollY); }
                     
-                    if (currentTool == 1) { MoveToEx(hdc, startX + 130, startY, NULL); LineTo(hdc, x + 130, y); }
-                    else if (currentTool == 2) { Rectangle(hdc, startX + 130, startY, x + 130, y); }
-                    else if (currentTool == 3) { Ellipse(hdc, startX + 130, startY, x + 130, y); }
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 130 - scrollX, startY - scrollY, NULL); LineTo(hdc, x + 130 - scrollX, y - scrollY); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 130 - scrollX, startY - scrollY, x + 130 - scrollX, y - scrollY); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 130 - scrollX, startY - scrollY, x + 130 - scrollX, y - scrollY); }
                 }
                 ReleaseDC(hwnd, hdc);
                 lastX = x;
@@ -635,16 +645,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_LBUTTONUP: {
             if (isPainting) {
-                int x = (short)LOWORD(lParam) - 130;
-                int y = (short)HIWORD(lParam);
+                int x = (short)LOWORD(lParam) - 130 + scrollX;
+                int y = (short)HIWORD(lParam) + scrollY;
                 if (currentTool != 0 && currentTool != 5 && currentTool != 4) {
                     HDC hdc = GetDC(hwnd);
                     SetROP2(hdc, R2_NOTXORPEN);
                     SelectObject(hdc, hPen);
                     SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                    if (currentTool == 1) { MoveToEx(hdc, startX + 130, startY, NULL); LineTo(hdc, lastX + 130, lastY); }
-                    else if (currentTool == 2) { Rectangle(hdc, startX + 130, startY, lastX + 130, lastY); }
-                    else if (currentTool == 3) { Ellipse(hdc, startX + 130, startY, lastX + 130, lastY); }
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 130 - scrollX, startY - scrollY, NULL); LineTo(hdc, lastX + 130 - scrollX, lastY - scrollY); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 130 - scrollX, startY - scrollY, lastX + 130 - scrollX, lastY - scrollY); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 130 - scrollX, startY - scrollY, lastX + 130 - scrollX, lastY - scrollY); }
                     ReleaseDC(hwnd, hdc);
 
                     SelectObject(hdcMem, hPen);
@@ -666,8 +676,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             GetClientRect(hwnd, &r);
             RECT sidebar = {0, 0, 130, r.bottom};
             FillRect(hdc, &sidebar, (HBRUSH)(COLOR_BTNFACE + 1));
-            BitBlt(hdc, 130, 0, r.right - 130, r.bottom, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, 130, 0, r.right - 130, r.bottom, hdcMem, scrollX, scrollY, SRCCOPY);
             EndPaint(hwnd, &ps);
+            break;
+        }
+        case WM_SIZE: {
+            SCROLLINFO si = {0};
+            si.cbSize = sizeof(SCROLLINFO);
+            si.fMask = SIF_RANGE | SIF_PAGE;
+            si.nMin = 0;
+            si.nMax = 1999;
+            si.nPage = HIWORD(lParam);
+            SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+            si.nPage = max(0, LOWORD(lParam) - 130);
+            SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
+            break;
+        }
+        case WM_VSCROLL: {
+            int action = LOWORD(wParam);
+            if (action == SB_LINEUP) scrollY -= 20;
+            else if (action == SB_LINEDOWN) scrollY += 20;
+            else if (action == SB_PAGEUP) scrollY -= 100;
+            else if (action == SB_PAGEDOWN) scrollY += 100;
+            else if (action == SB_THUMBTRACK) scrollY = HIWORD(wParam);
+            if (scrollY < 0) scrollY = 0;
+            if (scrollY > 2000 - HIWORD(lParam)) scrollY = max(0, 2000 - HIWORD(lParam));
+            SetScrollPos(hwnd, SB_VERT, scrollY, TRUE);
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        case WM_HSCROLL: {
+            int action = LOWORD(wParam);
+            if (action == SB_LINELEFT) scrollX -= 20;
+            else if (action == SB_LINERIGHT) scrollX += 20;
+            else if (action == SB_PAGELEFT) scrollX -= 100;
+            else if (action == SB_PAGERIGHT) scrollX += 100;
+            else if (action == SB_THUMBTRACK) scrollX = HIWORD(wParam);
+            if (scrollX < 0) scrollX = 0;
+            if (scrollX > 2000 - (LOWORD(lParam) - 130)) scrollX = max(0, 2000 - (LOWORD(lParam) - 130));
+            SetScrollPos(hwnd, SB_HORZ, scrollX, TRUE);
+            InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
         case WM_DESTROY:
@@ -693,7 +741,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = NULL;
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press H for Help", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

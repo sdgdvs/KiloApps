@@ -245,8 +245,8 @@
   .canvas-container {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
     background: #090a0f;
     position: relative;
     overflow: auto;
@@ -259,6 +259,7 @@
     border-radius: 4px;
     background: #ffffff;
     transition: transform 0.1s ease;
+    margin: auto;
   }
 
   canvas {
@@ -266,6 +267,7 @@
     top: 0;
     left: 0;
     border-radius: 4px;
+    image-rendering: pixelated;
   }
   #canvas { z-index: 1; background: #ffffff; cursor: crosshair; }
   #preview { z-index: 2; pointer-events: none; }
@@ -813,6 +815,12 @@
     function initCanvas() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Add opening instruction
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '24px Inter, sans-serif';
+      ctx.fillText('Welcome to KPaint Pro! Press H for Help', 20, 40);
+
       loadPalettePreset();
       updateBrushSettings(); updateLayersUI();
       saveState();
