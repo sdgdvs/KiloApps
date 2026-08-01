@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KMail
 - KMandel
 - KPing
 - KConnect4
@@ -81,9 +80,11 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFortress
 - KAlchemy
 - KFont
+- KMail
 
 
 ## Progress Log
+- KMail: Usability and UI issues fixed (auto-opening size, fixed layout margins, press h for help shortcut).
 - KFont: Usability and UI issues fixed (auto-opening size, crisp text, visible help button).
 - KDB: Usability and UI issues fixed (auto-opening size, crisp text, button layout, help popup).
 - KPong: Usability and UI issues fixed (auto-opening size, crisp text, help HUD, layout).
