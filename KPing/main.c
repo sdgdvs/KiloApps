@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <stdio.h>
 
-#define W 650
-#define H 450
+#define W 700
+#define H 500
 
 HWND hInput;
 HWND hBtn;
@@ -210,7 +210,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hCheckCont = CreateWindowEx(0, "BUTTON", "Continuous", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 310, 45, 100, 22, hwnd, NULL, NULL, NULL);
             hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 420, 45, 90, 22, hwnd, NULL, NULL, NULL);
             
-            hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing. Enter a target host and click Ping or Trace to begin.\r\n\r\n", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 120, hwnd, NULL, NULL, NULL);
+            hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing. Enter a target host and click Ping or Trace to begin. Press 'h' for help.\r\n\r\n", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 120, hwnd, NULL, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFontMono, TRUE);
@@ -271,6 +271,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hOutput, 15, 75, nw - 30, nh - 120, TRUE);
             break;
         }
+        case WM_GETMINMAXINFO: {
+            MINMAXINFO* mmi = (MINMAXINFO*)lParam;
+            mmi->ptMinTrackSize.x = 550;
+            mmi->ptMinTrackSize.y = 400;
+            return 0;
+        }
         case WM_DESTROY:
             DeleteObject((HBRUSH)GetClassLongPtr(hwnd, GCLP_HBRBACKGROUND));
             DeleteObject(hbg);
@@ -312,6 +318,24 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN && msg.wParam == 'H') {
+            HWND hFocus = GetFocus();
+            if (hFocus != hInput && hFocus != hInputCount && hFocus != hInputSize && hFocus != hInputTTL) {
+                const char* helpMsg = "\r\n--- KPing Help ---\r\n"
+                                      "Ping: Send ICMP echo requests to the target host.\r\n"
+                                      "Trace: Trace the route to the target host.\r\n"
+                                      "Count: Number of requests to send.\r\n"
+                                      "Size: Packet size in bytes.\r\n"
+                                      "TTL: Time To Live for packets.\r\n"
+                                      "Continuous: Ping until stopped.\r\n"
+                                      "Hex Dump: Display payload in hex format.\r\n"
+                                      "Export: Save the log to a file.\r\n"
+                                      "------------------\r\n\r\n";
+                int len = GetWindowTextLengthA(hOutput);
+                SendMessageA(hOutput, EM_SETSEL, len, len);
+                SendMessageA(hOutput, EM_REPLACESEL, 0, (LPARAM)helpMsg);
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
