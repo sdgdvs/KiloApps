@@ -371,7 +371,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Export / Import Config & Status Bar
             hBtnExport = CreateWindowA("BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 446, 55, 22, hwnd, (HMENU)14, NULL, NULL);
             hBtnImport = CreateWindowA("BUTTON", "Import", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 70, 446, 55, 22, hwnd, (HMENU)15, NULL, NULL);
-            hStatusDisplay = CreateWindowA("STATIC", "Ready", WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE, 130, 446, 120, 22, hwnd, NULL, NULL, NULL);
+            hStatusDisplay = CreateWindowA("STATIC", "Ready (H: Help)", WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE, 130, 446, 120, 22, hwnd, NULL, NULL, NULL);
             SendMessageA(hStatusDisplay, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
             hBtnSilenceAlarm = CreateWindowA("BUTTON", "Dismiss 🔔", WS_CHILD | BS_PUSHBUTTON, 10, 472, 115, 24, hwnd, (HMENU)11, NULL, NULL);
@@ -477,7 +477,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UpdateDisplays(hwnd);
             } else if (id == 11) { // Dismiss Alarm
                 alarmRinging = 0;
-                SetWindowTextA(hStatusDisplay, "Ready");
+                SetWindowTextA(hStatusDisplay, "Ready (H: Help)");
                 ShowWindow(hBtnSilenceAlarm, SW_HIDE);
                 ShowWindow(hBtnSnoozeAlarm, SW_HIDE);
             } else if (id == 12) { // Toggle Alarm Enable/Disable
@@ -527,6 +527,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_KEYDOWN:
+            if (wParam == 'H' || wParam == 'h') {
+                MessageBoxA(hwnd, "KClock Help:\n\n- Tabs: Click buttons to navigate.\n- Export/Import: Save your settings to kclock_config.txt.\n- Stopwatch: Press Start/Lap/Stop.\n- World Clock: Cycle through cities.\n\nKeyboard Shortcuts:\n- Press 'H' to view this help.", "KClock Help", MB_OK | MB_ICONINFORMATION);
+            }
+            break;
         case WM_DESTROY:
             KillTimer(hwnd, 1);
             if (hFont) DeleteObject(hFont);
@@ -549,8 +554,8 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    // Client area size: 260x505
-    RECT rc = {0, 0, 260, 505};
+    // Client area size: 280x530
+    RECT rc = {0, 0, 280, 530};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(WS_EX_COMPOSITED, "KClockClass", "KClock", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);

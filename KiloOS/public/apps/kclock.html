@@ -34,6 +34,8 @@
     flex-direction: column;
     overflow: hidden;
     user-select: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Header & Navigation */
@@ -614,6 +616,7 @@
       <button class="tab" role="tab" id="tab-btn-settings" aria-selected="false" aria-controls="tab-settings" onclick="switchTab('settings')">Settings</button>
     </div>
     <div class="header-actions">
+      <div style="font-size: 11px; color: var(--text-muted); margin-right: 8px;">Press 'h' for help</div>
       <button class="icon-btn" id="sound-toggle-btn" onclick="toggleSound()" aria-label="Toggle Sound">🔊 Sound On</button>
       <button class="icon-btn" id="format-toggle-btn" onclick="toggleFormat()" aria-label="Toggle 12/24 Hour Format">24H</button>
     </div>
@@ -1502,6 +1505,20 @@
 
     // Initial renders
     renderAlarms();
+
+    // Auto-opening size (for standalone/window mode)
+    if (window.resizeTo) {
+      window.resizeTo(950, 650);
+    }
+
+    // Help Keyboard listener
+    document.addEventListener('keydown', (e) => {
+      // Avoid triggering when typing in inputs
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'h' || e.key === 'H') {
+        showModal('KClock Help', 'Use the top tabs to navigate.\nPress "h" anytime to view this help message.');
+      }
+    });
   </script>
 </body>
 </html>
