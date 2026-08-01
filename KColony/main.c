@@ -2,6 +2,24 @@
 #include <stdio.h>
 
 #define GRID_W 20
+
+DWORD WINAPI SoundThread(LPVOID lpParam) {
+    int type = (int)(LONG_PTR)lpParam;
+    if (type == 1) { // Build
+        Beep(300, 50); Beep(400, 50);
+    } else if (type == 2) { // Alarm
+        Beep(600, 150); Beep(800, 150); Beep(600, 150);
+    } else if (type == 3) { // Laser
+        for (int i = 800; i >= 200; i -= 150) Beep(i, 20);
+    } else if (type == 4) { // Rumble/Wind
+        Beep(100, 500);
+    }
+    return 0;
+}
+void PlayGameSound(int type) {
+    CreateThread(NULL, 0, SoundThread, (LPVOID)(LONG_PTR)type, 0, NULL);
+}
+
 #define GRID_H 20
 #define CELL_SIZE 20
 #define OFFSET_X 20
@@ -302,15 +320,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     strcpy(msgText, "METEOR SHOWER! Structures damaged.");
                     msgTicks = 5;
+                    PlayGameSound(2);
                 } else if (r < 66) {
                     dustStormTicks = 10;
                     strcpy(msgText, "DUST STORM! Solar power reduced.");
                     msgTicks = 10;
+                    PlayGameSound(4);
                 } else if (targetCount > 0) {
                     int idx = targets[rand() % targetCount];
                     if (grid[idx] > 0 && grid[idx] <= 11) grid[idx] += 20;
                     strcpy(msgText, "EQUIPMENT BREAKDOWN!");
                     msgTicks = 5;
+                    PlayGameSound(2);
                 }
             }
             
@@ -325,6 +346,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     for (int a = 0; a < alienCount; a++) {
                         int dist = abs(tx - aliens[a].x) + abs(ty - aliens[a].y);
                         if (dist <= range && power > 0) {
+                            PlayGameSound(3);
                             aliens[a].hp--;
                             if (aliens[a].hp <= 0) {
                                 aliens[a] = aliens[--alienCount];
@@ -352,6 +374,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                 grid[targetIdx] += 20;
                                 strcpy(msgText, "ALIEN ATTACK! Structure damaged.");
                                 msgTicks = 5;
+                                PlayGameSound(2);
                             }
                             aliens[a] = aliens[--alienCount];
                             a--;
@@ -385,6 +408,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 alienCount++;
                 strcpy(msgText, "ALIEN SPOTTED!");
                 msgTicks = 5;
+                PlayGameSound(2);
             }
             
             int pwrProd = 0, farmCount = 0, mineCount = 0, habCount = 0, batCount = 0;
@@ -546,6 +570,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (mat >= 5) {
                         mat -= 5;
                         grid[idx] -= 20;
+                        PlayGameSound(1);
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                 } else if (selectedType > 0 && grid[idx] == 0) {
@@ -568,6 +593,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         power -= costPwr;
                         advm -= costAdv;
                         grid[idx] = selectedType;
+                        PlayGameSound(1);
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                 }
