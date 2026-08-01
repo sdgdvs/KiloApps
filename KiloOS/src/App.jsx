@@ -640,7 +640,7 @@ function App() {
       const timer = setTimeout(() => {
         setScreen('os');
         playStartupAudio();
-        setTimeout(() => notify("System Ready", "Welcome to KiloOS. Click the Start button to begin."), 1000);
+        setTimeout(() => notify("System Ready", "Welcome to KiloOS. Click the Start button to begin. Press 'H' on desktop for help."), 1000);
       }, 3000);
 
       const handleKeyDown = (e) => {
@@ -706,9 +706,15 @@ function App() {
     return () => window.removeEventListener('os-launch-app', handler);
   }, [openApps]);
 
-  // Handle Window Switching Shortcut
+  // Handle Window Switching Shortcut & Help
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Desktop Help
+      if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && (document.activeElement === document.body || document.activeElement?.className?.includes('desktop'))) {
+        if (e.key === 'F1') e.preventDefault();
+        notify("KiloOS Help", "Start menu: Launch apps.\nAlt+` : Switch windows.\nDrag to edges: Snap windows.\nDouble-click title: Maximize.");
+      }
+      
       // Alt + ` to switch windows
       if (e.altKey && e.key === '`') {
         e.preventDefault();
@@ -728,7 +734,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [notify]);
 
   const openApp = useCallback((appParams) => {
     let appDef = appParams;

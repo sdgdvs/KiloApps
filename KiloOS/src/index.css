@@ -19,6 +19,9 @@ body, html {
   height: 100vh;
   overflow: clip; /* clip prevents programmatic focus scroll */
   font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   user-select: none;
   background: var(--bg-color);
   color: var(--text-main);
