@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KFreecell
 - KSudoku
 - KGo
 - KDarts
@@ -113,8 +112,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KConnect4
 - KHangman
 - KMatch3
+- KFreecell
 
 ## Completed Work Log
+
+- **KFreecell (Loop 2):** Implemented particle burst animations for Magic Wand auto-solve sparks, Frozen card ice-shatter thawing effects, and celebratory Victory Fireworks bursts for both Web Canvas/HTML (kfreecell.html) and Native C Win32 GDI (KFreecell/main.c).
 
 - **KMatch3 (Loop 2):** Implemented idle hint timer (wiggling/pulsing animation for idle swaps) in both Web Canvas/HTML (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
 - **KSimon (Loop 2):** Implemented animated center disc audio equalizer spectrum analyzer frame cycle, pulsing idle glow breathing animations on buttons, and glitch death effect for both Web Canvas (ksimon.html) and Native C Win32 GDI (KSimon/main.c).

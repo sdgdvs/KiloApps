@@ -471,7 +471,12 @@
       for(let i=0; i<8; i++) {
         let col = state.tab[i];
         if(col.length > 0) {
-          col[col.length - 1].frozen = false;
+          let c = col[col.length - 1];
+          if (c.frozen) {
+            c.frozen = false;
+            let el = cardEls[`${c.s}-${c.r}`];
+            if(el) spawnThawSparks(el.getBoundingClientRect());
+          }
         }
       }
     }
@@ -479,7 +484,12 @@
     function thawAdjacent(colIdx) {
       for(let c = colIdx - 1; c <= colIdx + 1; c++) {
         if(c >= 0 && c < 8 && state.tab[c].length > 0) {
-          state.tab[c][state.tab[c].length - 1].frozen = false;
+          let topC = state.tab[c][state.tab[c].length - 1];
+          if (topC.frozen) {
+             topC.frozen = false;
+             let el = cardEls[`${topC.s}-${topC.r}`];
+             if(el) spawnThawSparks(el.getBoundingClientRect());
+          }
         }
       }
     }
@@ -560,6 +570,8 @@
                 prevState.selected = null;
                 undoStack.push(prevState);
                 state.found[c.s] = c.r;
+                let el = cardEls[`${c.s}-${c.r}`];
+                if(el) spawnWandSparks(el.getBoundingClientRect());
                 col.pop();
                 state.moves = (state.moves || 0) + 1;
                 moved = true;
@@ -1192,6 +1204,148 @@
       renderSparks();
     }
 
+    
+    function spawnThawSparks(rect) {
+      const canvas = document.getElementById('fx-canvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      let particles = [];
+      for(let i=0; i<30; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1 + Math.random() * 6;
+        particles.push({
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0, color: ['#e0f7fa', '#80deea', '#26c6da', '#ffffff'][Math.floor(Math.random()*4)],
+          size: 2 + Math.random() * 3
+        });
+      }
+      function renderSparks() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        particles.forEach(p => {
+          if(p.life > 0) {
+            p.x += p.vx; p.y += p.vy;
+            p.life -= 0.03;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, p.life);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            alive = true;
+          }
+        });
+        if(alive) requestAnimationFrame(renderSparks);
+        else ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+      renderSparks();
+    }
+
+    function spawnWandSparks(rect) {
+      const canvas = document.getElementById('fx-canvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      let particles = [];
+      for(let i=0; i<40; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 5;
+        particles.push({
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0, color: ['#ffd700', '#ffeb3b', '#ffc107', '#ffffff'][Math.floor(Math.random()*4)],
+          size: 2 + Math.random() * 4,
+          spin: Math.random() * 10
+        });
+      }
+      function renderSparks() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        particles.forEach(p => {
+          if(p.life > 0) {
+            p.vy -= 0.1; // Float up
+            p.x += p.vx; p.y += p.vy;
+            p.life -= 0.02;
+            p.spin += 0.2;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.spin);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, p.life);
+            ctx.beginPath();
+            ctx.rect(-p.size/2, -p.size/2, p.size, p.size);
+            ctx.fill();
+            ctx.restore();
+            alive = true;
+          }
+        });
+        if(alive) requestAnimationFrame(renderSparks);
+        else ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+      renderSparks();
+    }
+
+    function spawnVictoryFireworks() {
+      const canvas = document.getElementById('fx-canvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      let particles = [];
+      
+      function explode(x, y) {
+        for(let i=0; i<60; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 2 + Math.random() * 8;
+          particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 1.0 + Math.random() * 0.5,
+            color: `hsl(${Math.random()*360}, 100%, 60%)`,
+            size: 2 + Math.random() * 4
+          });
+        }
+      }
+      
+      let bursts = 0;
+      let burstInterval = setInterval(() => {
+        explode(window.innerWidth * 0.2 + Math.random() * window.innerWidth * 0.6, window.innerHeight * 0.2 + Math.random() * window.innerHeight * 0.4);
+        bursts++;
+        if(bursts > 10) clearInterval(burstInterval);
+      }, 400);
+
+      function renderSparks() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        particles.forEach(p => {
+          if(p.life > 0) {
+            p.vy += 0.15; // Gravity
+            p.x += p.vx; p.y += p.vy;
+            p.life -= 0.015;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            alive = true;
+          }
+        });
+        if(alive || bursts <= 10) requestAnimationFrame(renderSparks);
+        else ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+      renderSparks();
+    }
+
     function handleCardClick(type, index, cardIdx, isTarget = false) {
       if(!state.selected) {
         if(!isTarget) {
@@ -1305,6 +1459,7 @@
             }
           }
           gameInProgress = false;
+          spawnVictoryFireworks();
           startVictoryCascade();
           showStats();
         }

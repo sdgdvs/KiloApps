@@ -102,6 +102,68 @@ typedef struct {
 #define MAX_CASCADE 52
 CascadeCard cascadeCards[MAX_CASCADE];
 int cascadeActive = 0;
+
+// --- Particle System ---
+typedef struct {
+    int active;
+    float x, y;
+    float vx, vy;
+    float life;
+    float decay;
+    COLORREF color;
+    int size;
+    float spin; // Used for wand
+} Particle;
+#define MAX_PARTICLES 400
+Particle particles[MAX_PARTICLES];
+int fireworksBursts = 0;
+DWORD lastBurstTime = 0;
+
+void SpawnParticle(float x, float y, float vx, float vy, float life, float decay, COLORREF color, int size) {
+    for(int i=0; i<MAX_PARTICLES; i++) {
+        if(!particles[i].active) {
+            particles[i].active = 1;
+            particles[i].x = x; particles[i].y = y;
+            particles[i].vx = vx; particles[i].vy = vy;
+            particles[i].life = life;
+            particles[i].decay = decay;
+            particles[i].color = color;
+            particles[i].size = size;
+            particles[i].spin = (float)(rand() % 360);
+            break;
+        }
+    }
+}
+
+void SpawnThawSparks(int cx, int cy) {
+    COLORREF colors[] = {RGB(224,247,250), RGB(128,222,234), RGB(38,198,218), RGB(255,255,255)};
+    for(int i=0; i<30; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 1.0f + (rand() % 60) * 0.1f;
+        SpawnParticle((float)cx, (float)cy, cosf(angle)*speed, sinf(angle)*speed, 1.0f, 0.03f, colors[rand()%4], 2 + rand()%3);
+    }
+}
+
+void SpawnWandSparks(int cx, int cy) {
+    COLORREF colors[] = {RGB(255,215,0), RGB(255,235,59), RGB(255,193,7), RGB(255,255,255)};
+    for(int i=0; i<40; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 2.0f + (rand() % 50) * 0.1f;
+        SpawnParticle((float)cx, (float)cy, cosf(angle)*speed, sinf(angle)*speed, 1.0f, 0.02f, colors[rand()%4], 3 + rand()%3);
+    }
+}
+
+void SpawnVictoryFireworksBurst(int w, int h) {
+    int cx = (w / 5) + rand() % (w * 3 / 5);
+    int cy = (h / 5) + rand() % (h * 2 / 5);
+    COLORREF color = RGB(rand()%255, rand()%255, rand()%255);
+    for(int i=0; i<60; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 2.0f + (rand() % 80) * 0.1f;
+        SpawnParticle((float)cx, (float)cy, cosf(angle)*speed, sinf(angle)*speed, 1.0f + (rand()%50)*0.01f, 0.015f, color, 2 + rand()%4);
+    }
+}
+
 DWORD cascadeFrame = 0;
 
 void StartAnim(Card c, int sx, int sy, int ex, int ey) {
@@ -226,7 +288,11 @@ void PlaySoundEffect(int type) {
 void ThawCheck() {
     for (int i = 0; i < 8; i++) {
         if (tabCount[i] > 0) {
-            tab[i][tabCount[i] - 1].frozen = 0;
+            if (tab[i][tabCount[i] - 1].frozen) {
+                tab[i][tabCount[i] - 1].frozen = 0;
+                RECT clientRect; GetClientRect(GetActiveWindow(), &clientRect);
+                SpawnThawSparks(GetCardX(1, i, tabCount[i]-1, clientRect) + CELL_W/2, GetCardY(1, i, tabCount[i]-1, clientRect) + CELL_H/2);
+            }
         }
     }
 }
@@ -234,7 +300,11 @@ void ThawCheck() {
 void ThawAdjacent(int col) {
     for (int c = col - 1; c <= col + 1; c++) {
         if (c >= 0 && c < 8 && tabCount[c] > 0) {
-            tab[c][tabCount[c] - 1].frozen = 0;
+            if (tab[c][tabCount[c] - 1].frozen) {
+                tab[c][tabCount[c] - 1].frozen = 0;
+                RECT clientRect; GetClientRect(GetActiveWindow(), &clientRect);
+                SpawnThawSparks(GetCardX(1, c, tabCount[c]-1, clientRect) + CELL_W/2, GetCardY(1, c, tabCount[c]-1, clientRect) + CELL_H/2);
+            }
         }
     }
 }
@@ -1238,6 +1308,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
+            // Draw Particles
+            for(int pidx=0; pidx<MAX_PARTICLES; pidx++) {
+                if(particles[pidx].active) {
+                    HBRUSH pbr = CreateSolidBrush(particles[pidx].color);
+                    RECT pr = { (int)particles[pidx].x - particles[pidx].size/2, (int)particles[pidx].y - particles[pidx].size/2, (int)particles[pidx].x + particles[pidx].size/2, (int)particles[pidx].y + particles[pidx].size/2 };
+                    FillRect(hdcMem, &pr, pbr);
+                    DeleteObject(pbr);
+                }
+            }
+
             if (cascadeActive) {
                 for(int i=0; i<MAX_CASCADE; i++) {
                     if (cascadeCards[i].active) {
@@ -1497,6 +1577,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
+            // Update Particles
+            for(int pidx=0; pidx<MAX_PARTICLES; pidx++) {
+                if(particles[pidx].active) {
+                    particles[pidx].x += particles[pidx].vx;
+                    particles[pidx].y += particles[pidx].vy;
+                    if(won != 0 && cascadeActive) particles[pidx].vy += 0.15f; // Gravity for fireworks
+                    else if(particles[pidx].decay == 0.02f) particles[pidx].vy -= 0.1f; // Float up for wand
+                    
+                    particles[pidx].life -= particles[pidx].decay;
+                    if(particles[pidx].life <= 0) particles[pidx].active = 0;
+                    else active = 1;
+                }
+            }
+            if (won == 1 && fireworksBursts < 10) {
+                if (now - lastBurstTime > 400) {
+                    RECT clientRect; GetClientRect(hwnd, &clientRect);
+                    SpawnVictoryFireworksBurst(clientRect.right, clientRect.bottom);
+                    fireworksBursts++;
+                    lastBurstTime = now;
+                    active = 1;
+                }
+            }
+
             if (cascadeActive) {
                 RECT clientRect; GetClientRect(hwnd, &clientRect);
                 cascadeFrame++;
