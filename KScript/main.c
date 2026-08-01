@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <stdio.h>
 
-#define W 950
-#define H 650
+#define W 1000
+#define H 700
 
 HWND hInput, hOutput, hMemory, hRegexFind, hRegexRep;
 HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp;
@@ -178,6 +178,10 @@ LRESULT CALLBACK InputEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             macroBuf[macroLen++] = (char)wp;
         }
     }
+    if (msg == WM_SYSKEYDOWN && wp == 'H') {
+        SendMessage(GetParent(hwnd), WM_COMMAND, 8, 0);
+        return 0;
+    }
     return CallWindowProc(oldEditProc, hwnd, msg, wp, lp);
 }
 
@@ -217,7 +221,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             hbrBg = CreateSolidBrush(RGB(30, 30, 30));
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
+            hFont = CreateFontA(-15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             // Toolbar
             hBtnRec  = CreateWindowEx(0, "BUTTON", "Rec Macro", WS_CHILD | WS_VISIBLE, 10, 10, 100, 24, hwnd, (HMENU)4, NULL, NULL);
@@ -236,7 +240,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for(int i=0; i<10; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
             
             // Panels
-            hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "a = 10\r\nb = 20\r\nprint a * b + 5\r\nprint a % 3\r\n// Click Help for instructions",
+            hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "// Welcome to KScript!\r\n// Press Alt+H or click Help for instructions\r\na = 10\r\nb = 20\r\nprint a * b + 5\r\nprint a % 3",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
                 10, 44, 250, H - 95, hwnd, NULL, NULL, NULL);
             SendMessage(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -332,6 +336,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             break;
+        }
+        case WM_SYSKEYDOWN: {
+            if (wParam == 'H') {
+                SendMessage(hwnd, WM_COMMAND, 8, 0);
+                return 0;
+            }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
         }
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORSTATIC: {
