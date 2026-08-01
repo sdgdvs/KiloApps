@@ -384,6 +384,26 @@
   </div>
 </div>
 
+<!-- Help Modal -->
+<div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span id="helpTitle">KZip Help</span>
+      <button style="padding: 2px 8px;" id="btnCloseHelp" aria-label="Close help window">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 6px;">- Use <strong>Add File</strong> to add files to your archive.</p>
+      <p style="margin-bottom: 6px;">- Use <strong>Pack</strong> to save it.</p>
+      <p style="margin-bottom: 6px;">- Use <strong>Open</strong> to load an existing .kza file.</p>
+      <p style="margin-bottom: 6px;">- Select files and use <strong>Extract Selected</strong> to extract them.</p>
+      <p style="margin-bottom: 6px;">- Keyboard Shortcut: <strong>H</strong> to toggle this help.</p>
+    </div>
+    <div style="display: flex; justify-content: flex-end;">
+      <button class="btn-primary" id="btnOkHelp">Got it</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let files = [];
   let selectedIndices = new Set();
@@ -977,14 +997,28 @@
     alert(\`Batch extraction complete: \${count} files extracted.\`);
   };
 
+  const helpModal = document.getElementById('helpModal');
+  const btnCloseHelp = document.getElementById('btnCloseHelp');
+  const btnOkHelp = document.getElementById('btnOkHelp');
+  
+  function toggleHelp() {
+    helpModal.classList.toggle('active');
+    if (helpModal.classList.contains('active')) btnOkHelp.focus();
+  }
+
+  btnCloseHelp.onclick = () => helpModal.classList.remove('active');
+  btnOkHelp.onclick = () => helpModal.classList.remove('active');
+
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && verifyModal.classList.contains('active')) {
-      closeModal();
+    if (e.key === 'Escape') {
+      if (verifyModal.classList.contains('active')) closeModal();
+      else if (helpModal.classList.contains('active')) helpModal.classList.remove('active');
+      else if (document.getElementById('previewModal').classList.contains('active')) document.getElementById('previewModal').classList.remove('active');
     } else if (e.key === 'Delete' && selectedIndices.size > 0 && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
       btnRemove.click();
     } else if ((e.key === 'h' || e.key === 'H') && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
-      alert("KZip Help:\n\n- Use 'Add File' to add files to your archive.\n- Use 'Pack' to save it.\n- Use 'Open' to load an existing .kza file.\n- Select files and use 'Extract Selected' to extract them.");
+      toggleHelp();
     }
   });
 
@@ -1044,7 +1078,7 @@
   });
 
   // Set appropriate auto-opening size
-  window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 680, height: 460 }, '*');
+  window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 800, height: 600 }, '*');
 
   renderTable();
 </script>

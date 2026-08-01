@@ -6,8 +6,8 @@
 #define ES_AUTOHSCRAWL 0x0080L
 #endif
 
-#define W 680
-#define H 460
+#define W 800
+#define H 600
 #define MAX_FILES 100
 #define MAX_FILE_SIZE (100 * 1024 * 1024) // 100MB limit per file
 
@@ -829,6 +829,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL (WINAPI *SetProcessDPIAwareFunc)();
+        SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpiAware) setDpiAware();
+    }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
