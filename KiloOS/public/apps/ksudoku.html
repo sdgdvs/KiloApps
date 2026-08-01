@@ -1372,26 +1372,74 @@
             checkWin();
         }
         
-        // Victory Confetti Particle Effect
-        let confettiParticles = [];
-        let confettiAnimId = null;
-        let confettiCanvas = null;
+        // Particle System
+        let fxParticles = [];
+        let fxAnimId = null;
+        let fxCanvas = null;
 
-        function triggerVictoryFX() {
-            if (!confettiCanvas) {
-                confettiCanvas = document.createElement('canvas');
-                confettiCanvas.id = 'confetti-canvas';
-                document.querySelector('.app-container').appendChild(confettiCanvas);
+        function initFxCanvas() {
+            if (!fxCanvas) {
+                fxCanvas = document.createElement('canvas');
+                fxCanvas.id = 'confetti-canvas';
+                document.querySelector('.app-container').appendChild(fxCanvas);
             }
             const containerRect = document.querySelector('.app-container').getBoundingClientRect();
-            confettiCanvas.width = containerRect.width;
-            confettiCanvas.height = containerRect.height;
-            const ctx = confettiCanvas.getContext('2d');
-            
-            confettiParticles = [];
+            fxCanvas.width = containerRect.width;
+            fxCanvas.height = containerRect.height;
+            return fxCanvas.getContext('2d');
+        }
+
+        function updateAndDrawFx() {
+            const ctx = fxCanvas.getContext('2d');
+            ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+            let alive = false;
+
+            fxParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity;
+                p.rot += p.rotSpeed;
+                p.life -= p.decay;
+
+                if (p.y < fxCanvas.height + 50 && p.life > 0) alive = true;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = p.color;
+                if (p.shape === 'rect') {
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 1.5);
+                } else if (p.shape === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size/2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (p.shape === 'star') {
+                    ctx.beginPath();
+                    for (let i = 0; i < 5; i++) {
+                        ctx.lineTo(Math.cos((18+i*72)*Math.PI/180)*p.size, -Math.sin((18+i*72)*Math.PI/180)*p.size);
+                        ctx.lineTo(Math.cos((54+i*72)*Math.PI/180)*p.size/2, -Math.sin((54+i*72)*Math.PI/180)*p.size/2);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.restore();
+            });
+
+            if (alive) {
+                fxAnimId = requestAnimationFrame(updateAndDrawFx);
+            } else {
+                ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+            }
+        }
+
+        function triggerVictoryFX() {
+            initFxCanvas();
+            const containerRect = document.querySelector('.app-container').getBoundingClientRect();
+            fxParticles = [];
             const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#ef4444', '#38bdf8', '#facc15'];
             for (let i = 0; i < 140; i++) {
-                confettiParticles.push({
+                fxParticles.push({
                     x: containerRect.width / 2 + (Math.random() - 0.5) * 100,
                     y: containerRect.height / 2 + (Math.random() - 0.5) * 100,
                     vx: (Math.random() - 0.5) * 12,
@@ -1402,47 +1450,44 @@
                     rotSpeed: (Math.random() - 0.5) * 0.2,
                     shape: Math.random() > 0.3 ? 'rect' : 'circle',
                     gravity: 0.3 + Math.random() * 0.1,
-                    life: 1.0
+                    life: 1.0,
+                    decay: 0.008
                 });
             }
+            if (fxAnimId) cancelAnimationFrame(fxAnimId);
+            updateAndDrawFx();
+        }
 
-            if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+        function triggerMagicFX(r, c) {
+            initFxCanvas();
+            let cell = cells[r * gridSize + c];
+            if (!cell) return;
+            const containerRect = document.querySelector('.app-container').getBoundingClientRect();
+            let cellRect = cell.getBoundingClientRect();
+            let cx = cellRect.left - containerRect.left + cellRect.width / 2;
+            let cy = cellRect.top - containerRect.top + cellRect.height / 2;
 
-            function updateAndDraw() {
-                ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-                let alive = false;
-
-                confettiParticles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.vy += p.gravity;
-                    p.rot += p.rotSpeed;
-                    p.life -= 0.008;
-
-                    if (p.y < confettiCanvas.height + 50 && p.life > 0) alive = true;
-
-                    ctx.save();
-                    ctx.translate(p.x, p.y);
-                    ctx.rotate(p.rot);
-                    ctx.globalAlpha = Math.max(0, p.life);
-                    ctx.fillStyle = p.color;
-                    if (p.shape === 'rect') {
-                        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 1.5);
-                    } else {
-                        ctx.beginPath();
-                        ctx.arc(0, 0, p.size/2, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                    ctx.restore();
+            const colors = ['#a855f7', '#d946ef', '#fbcfe8', '#ffffff'];
+            for (let i = 0; i < 40; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 8 + 2;
+                fxParticles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 6 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.5,
+                    shape: 'star',
+                    gravity: 0.1,
+                    life: 1.0,
+                    decay: Math.random() * 0.02 + 0.02
                 });
-
-                if (alive) {
-                    confettiAnimId = requestAnimationFrame(updateAndDraw);
-                } else {
-                    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-                }
             }
-            updateAndDraw();
+            if (fxAnimId) cancelAnimationFrame(fxAnimId);
+            updateAndDrawFx();
         }
 
         function checkWin() {
@@ -1735,6 +1780,7 @@
                     stats.totalWandsUsed++;
                     score += 50;
                     playSound('powerup');
+                    triggerMagicFX(p.r, p.c);
                     renderCell(p.r, p.c);
                     updateUIState();
                     saveStats();

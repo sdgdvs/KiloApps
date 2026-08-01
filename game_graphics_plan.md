@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KSudoku
 - KGo
 - KDarts
 - KTowers
@@ -113,8 +112,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KHangman
 - KMatch3
 - KFreecell
+- KSudoku
 
 ## Completed Work Log
+
+- **KSudoku (Loop 2):** Implemented Magic Wand multi-color star spark particle burst animations with gravitational decay in both Web Canvas/HTML (ksudoku.html) and Native C Win32 GDI (KSudoku/main.c).
 
 - **KFreecell (Loop 2):** Implemented particle burst animations for Magic Wand auto-solve sparks, Frozen card ice-shatter thawing effects, and celebratory Victory Fireworks bursts for both Web Canvas/HTML (kfreecell.html) and Native C Win32 GDI (KFreecell/main.c).
 

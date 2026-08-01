@@ -66,10 +66,11 @@ typedef struct {
     COLORREF color;
     int size;
     int life;
+    int maxLife;
     int shape;
 } WinParticle;
 
-#define MAX_WIN_PARTICLES 120
+#define MAX_WIN_PARTICLES 200
 WinParticle winParticles[MAX_WIN_PARTICLES];
 int winFxActive = 0;
 
@@ -81,16 +82,46 @@ void TriggerVictoryParticles() {
     };
     int numColors = sizeof(colors)/sizeof(colors[0]);
     for(int i = 0; i < MAX_WIN_PARTICLES; i++) {
-        winParticles[i].x = 220.0f + (rand() % 80 - 40);
-        winParticles[i].y = 255.0f + (rand() % 80 - 40);
-        float angle = (rand() % 360) * 3.14159f / 180.0f;
-        float speed = 3.0f + (rand() % 100) / 10.0f;
-        winParticles[i].vx = cosf(angle) * speed;
-        winParticles[i].vy = sinf(angle) * speed - 5.0f;
-        winParticles[i].color = colors[rand() % numColors];
-        winParticles[i].size = 4 + (rand() % 6);
-        winParticles[i].life = 40 + (rand() % 40);
-        winParticles[i].shape = rand() % 2;
+        if (i < 140) {
+            winParticles[i].x = 220.0f + (rand() % 80 - 40);
+            winParticles[i].y = 255.0f + (rand() % 80 - 40);
+            float angle = (rand() % 360) * 3.14159f / 180.0f;
+            float speed = 3.0f + (rand() % 100) / 10.0f;
+            winParticles[i].vx = cosf(angle) * speed;
+            winParticles[i].vy = sinf(angle) * speed - 5.0f;
+            winParticles[i].color = colors[rand() % numColors];
+            winParticles[i].size = 4 + (rand() % 6);
+            winParticles[i].maxLife = winParticles[i].life = 40 + (rand() % 40);
+            winParticles[i].shape = rand() % 2;
+        } else {
+            winParticles[i].life = 0;
+        }
+    }
+}
+
+void TriggerMagicParticles(int r, int c) {
+    winFxActive = 1;
+    COLORREF colors[] = { RGB(168, 85, 247), RGB(217, 70, 239), RGB(251, 207, 232), RGB(255, 255, 255) };
+    int cell_sz = (gridSize == 4) ? 80 : (gridSize == 16 ? 22 : 40);
+    int start_x = 40, start_y = 75;
+    float cx = start_x + c * cell_sz + cell_sz / 2.0f;
+    float cy = start_y + r * cell_sz + cell_sz / 2.0f;
+    
+    int count = 0;
+    for(int i = 0; i < MAX_WIN_PARTICLES && count < 50; i++) {
+        if (winParticles[i].life <= 0) {
+            float angle = (rand() % 360) * 3.14159f / 180.0f;
+            float speed = 2.0f + (rand() % 60) / 10.0f;
+            winParticles[i].x = cx;
+            winParticles[i].y = cy;
+            winParticles[i].vx = cosf(angle) * speed;
+            winParticles[i].vy = sinf(angle) * speed;
+            winParticles[i].color = colors[rand() % 4];
+            winParticles[i].size = 3 + (rand() % 4);
+            winParticles[i].maxLife = winParticles[i].life = 20 + (rand() % 30);
+            winParticles[i].shape = 2;
+            count++;
+        }
     }
 }
 
@@ -101,7 +132,11 @@ void UpdateVictoryParticles() {
         if (winParticles[i].life > 0) {
             winParticles[i].x += winParticles[i].vx;
             winParticles[i].y += winParticles[i].vy;
-            winParticles[i].vy += 0.35f;
+            if (winParticles[i].shape != 2) {
+                winParticles[i].vy += 0.35f;
+            } else {
+                winParticles[i].vy += 0.1f;
+            }
             winParticles[i].life--;
             if (winParticles[i].life > 0) anyAlive = 1;
         }
@@ -1157,6 +1192,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         totalWandsUsed++;
                                         score += 50;
                                         PlaySudokuSound(5);
+                                        TriggerMagicParticles(r, c);
                                         UpdatePowerupButtons();
                                         CheckWin(hwnd);
                                         SaveGameState();
@@ -1595,10 +1631,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int py = (int)winParticles[i].y;
                         int psz = winParticles[i].size;
 
+                        if (winParticles[i].life < winParticles[i].maxLife / 4) psz = max(1, psz - 1);
+
                         if (winParticles[i].shape == 0) {
                             Rectangle(hdc, px, py, px + psz, py + psz + 2);
-                        } else {
+                        } else if (winParticles[i].shape == 1) {
                             Ellipse(hdc, px, py, px + psz, py + psz);
+                        } else if (winParticles[i].shape == 2) {
+                            POINT pts[4] = {
+                                {px, py - psz}, {px + psz, py},
+                                {px, py + psz}, {px - psz, py}
+                            };
+                            Polygon(hdc, pts, 4);
                         }
 
                         SelectObject(hdc, oldP);
