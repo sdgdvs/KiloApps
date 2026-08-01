@@ -791,8 +791,11 @@ Ready. Select a target URL above and click Execute.
   const ctx = canvas.getContext('2d');
 
   function resizeCanvas() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
     drawPingChart();
   }
   window.addEventListener('resize', resizeCanvas);

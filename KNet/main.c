@@ -612,6 +612,7 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -629,7 +630,7 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h') && GetFocus() != hUrlEdit) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h') && GetFocus() != hUrlEdit && GetFocus() != hFilterEdit) {
             MessageBoxA(hwnd, "KNet Help:\n\n- Enter a URL or use Bookmarks.\n- Click Fetch for HTTP GET.\n- Use Ping Stats for latency test.\n- Use Port Scan to check open ports.\n- Logs can be exported to CSV.", "KNet Help", MB_OK | MB_ICONINFORMATION);
         }
         TranslateMessage(&msg);
