@@ -309,6 +309,7 @@
   </div>
 
   <script>
+    window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 500, height: 600 }, '*');
     // Crypto utilities
     async function deriveKey(password, salt) {
       const enc = new TextEncoder();

@@ -60,6 +60,7 @@ char g_masterPass[128] = {0};
 int g_locked = 1;
 
 HWND hDisplay, hStrengthDisplay, hBtnGen, hBtnCopy, hUpper, hLower, hNum, hSym, hLen;
+HWND hHelpLabel;
 HWND hLabelInput, hCatInput, hBtnSave, hVaultSearch, hFilterCat, hVaultList;
 HWND hBtnCopyVault, hBtnDelVault, hBtnExpCSV, hBtnExpJSON, hBtnImp;
 HWND hLockInput, hBtnUnlock, hLockLabel;
@@ -304,6 +305,7 @@ void GeneratePassword() {
 void LockUI(int lock) {
     g_locked = lock;
     int showMain = lock ? SW_HIDE : SW_SHOW;
+    ShowWindow(hHelpLabel, showMain);
     ShowWindow(hDisplay, showMain);
     ShowWindow(hStrengthDisplay, showMain);
     ShowWindow(hBtnGen, showMain);
@@ -386,6 +388,7 @@ void ImportFile(HWND hwnd) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            hHelpLabel = CreateWindowA("STATIC", "Press 'H' for Help", WS_CHILD | SS_CENTER, 20, 2, 420, 13, hwnd, NULL, NULL, NULL);
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Click Generate...", WS_CHILD | ES_CENTER | ES_READONLY, 20, 15, 420, 32, hwnd, NULL, NULL, NULL);
             hStrengthDisplay = CreateWindowA("STATIC", "Strength: - (0 bits)", WS_CHILD | SS_CENTER, 20, 52, 420, 20, hwnd, NULL, NULL, NULL);
 
@@ -451,6 +454,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hSmallFont = CreateFontA(13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             SendMessageA(hVaultList, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
             SendMessageA(hStrengthDisplay, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+            SendMessageA(hHelpLabel, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
 
             LockUI(1);
             SetTimer(hwnd, 1, 1000, NULL);
@@ -562,6 +566,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
+    typedef BOOL (WINAPI *SetProcessDPIAwareFunc)();
+    HMODULE hUser32 = LoadLibraryA("user32.dll");
+    if(hUser32) {
+        SetProcessDPIAwareFunc setDPI = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if(setDPI) setDPI();
+    }
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
@@ -570,7 +580,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30));
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KPassClass", "KPass Security & Vault Manager", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 480, 480, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KPassClass", "KPass Security & Vault Manager", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 500, 520, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
