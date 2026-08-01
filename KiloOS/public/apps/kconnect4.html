@@ -271,7 +271,7 @@
 </head>
 <body>
   <h1>KConnect4</h1>
-  <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">Press H for Help</div>
+  <div style="font-size: 1em; color: #ffeb3b; margin-bottom: 8px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Press H for Help (or click Help button)</div>
   <div id="status">Player 1's turn (Red)</div>
   <div id="timerContainer"><div id="timerBar"></div></div>
   <div id="boardWrapper">
@@ -1597,7 +1597,7 @@
       requestAnimationFrame(renderFx);
     }
 
-    if (window.resizeTo) window.resizeTo(600, 750);
+    if (window.resizeTo) window.resizeTo(600, 850);
     loadStats();
     updateDiffSelect();
     initGame();

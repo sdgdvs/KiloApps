@@ -157,6 +157,7 @@ int winCells[MAX_COLS * MAX_ROWS][2];
 int winCellCount = 0;
 
 HWND hModeBtn, hBombBtn, hDrillBtn, hMagnetBtn, hHintBtn, hFreezeBtn, hDiffSelect, hUndoBtn, hResetBtn, hMuteBtn, hSaveBtn, hLoadBtn, hHelpBtn;
+HFONT hMainFont = NULL;
 bool isMuted = false;
 
 void PlaySoundEffect(int type) {
@@ -1162,28 +1163,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             srand((unsigned int)time(NULL));
             LoadStats();
+            hMainFont = CreateFont(16, 0, 0, 0, FW_MEDIUM, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             // Row 1 buttons
-            hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 485, 95, 28, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hDiffSelect = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 487, 105, 200, hwnd, (HMENU)4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hHintBtn = CreateWindow("BUTTON", "Hint (H)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 220, 485, 75, 28, hwnd, (HMENU)11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hFreezeBtn = CreateWindow("BUTTON", "Freeze (1)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 485, 80, 28, hwnd, (HMENU)12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hUndoBtn = CreateWindow("BUTTON", "Undo (U)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 385, 485, 75, 28, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 520, 95, 28, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hDiffSelect = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 522, 105, 200, hwnd, (HMENU)4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHintBtn = CreateWindow("BUTTON", "Hint (H)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 220, 520, 75, 28, hwnd, (HMENU)11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hFreezeBtn = CreateWindow("BUTTON", "Freeze (1)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 520, 80, 28, hwnd, (HMENU)12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hUndoBtn = CreateWindow("BUTTON", "Undo (U)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 385, 520, 75, 28, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             // Row 2 buttons
-            hBombBtn = CreateWindow("BUTTON", "Bomb (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 518, 80, 28, hwnd, (HMENU)9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hDrillBtn = CreateWindow("BUTTON", "Drill (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 95, 518, 80, 28, hwnd, (HMENU)10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMagnetBtn = CreateWindow("BUTTON", "Mag (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 180, 518, 80, 28, hwnd, (HMENU)13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 265, 518, 65, 28, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMuteBtn = CreateWindow("BUTTON", "Mute", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 335, 518, 60, 28, hwnd, (HMENU)5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hHelpBtn = CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 400, 518, 60, 28, hwnd, (HMENU)8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hBombBtn = CreateWindow("BUTTON", "Bomb (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 555, 80, 28, hwnd, (HMENU)9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hDrillBtn = CreateWindow("BUTTON", "Drill (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 95, 555, 80, 28, hwnd, (HMENU)10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMagnetBtn = CreateWindow("BUTTON", "Mag (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 180, 555, 80, 28, hwnd, (HMENU)13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 265, 555, 65, 28, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMuteBtn = CreateWindow("BUTTON", "Mute", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 335, 555, 60, 28, hwnd, (HMENU)5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHelpBtn = CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 400, 555, 60, 28, hwnd, (HMENU)8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             // Row 3 buttons
-            hSaveBtn = CreateWindow("BUTTON", "Save (F5)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 551, 75, 28, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hLoadBtn = CreateWindow("BUTTON", "Load (F9)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 90, 551, 75, 28, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSaveBtn = CreateWindow("BUTTON", "Save (F5)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 590, 75, 28, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hLoadBtn = CreateWindow("BUTTON", "Load (F9)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 90, 590, 75, 28, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             
-            HWND hExportBtn = CreateWindow("BUTTON", "Export JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 170, 551, 95, 28, hwnd, (HMENU)14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            HWND hImportBtn = CreateWindow("BUTTON", "Import JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 270, 551, 95, 28, hwnd, (HMENU)15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            HWND hExportBtn = CreateWindow("BUTTON", "Export JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 170, 590, 95, 28, hwnd, (HMENU)14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            HWND hImportBtn = CreateWindow("BUTTON", "Import JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 270, 590, 95, 28, hwnd, (HMENU)15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             
+            SendMessage(hModeBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hDiffSelect, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hHintBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hFreezeBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hUndoBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hBombBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hDrillBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hMagnetBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hResetBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hMuteBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hHelpBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hSaveBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hLoadBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hExportBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hImportBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+
             UpdateDiffSelectUI();
             ResetGame();
             break;
@@ -1421,6 +1439,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(79, 195, 247));
+            if (hMainFont) SelectObject(hdc, hMainFont);
             
             char statusText[96];
             if (!gameActive) {
@@ -1453,13 +1472,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             SetTextColor(hdc, RGB(200, 200, 200));
-            TextOut(hdc, 10, 570, "Press 'H' for Help Menu", 23);
+            TextOut(hdc, 10, 630, "Press 'H' for Help Menu", 23);
 
             SetTextColor(hdc, RGB(170, 170, 170));
             char statsStr[128];
             wsprintf(statsStr, "Wins: Red %d, Yellow %d | Draws: %d | Streak: %d (Best: %d) | Max Stage: %d/20",
                      stats.redWins, stats.yellowWins, stats.draws, stats.streak, stats.bestStreak, stats.maxCampaignStage);
-            TextOut(hdc, 10, 595, statsStr, lstrlen(statsStr));
+            TextOut(hdc, 10, 655, statsStr, lstrlen(statsStr));
             
             // --- Board Layout Calculations ---
             int colWidth = 40;
@@ -1721,7 +1740,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     hwnd = CreateWindowEx(
         0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion (Press H for Help)",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 540, 720,
+        CW_USEDEFAULT, CW_USEDEFAULT, 560, 760,
         NULL, NULL, hInstance, NULL);
 
     if(hwnd == NULL) {
