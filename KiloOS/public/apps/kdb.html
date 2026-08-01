@@ -22,6 +22,8 @@
   body { 
     margin: 0; 
     font-family: "Inter", sans-serif; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     background-color: var(--bg-color); 
     background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08), transparent 70%);
     padding: 16px; 
@@ -387,6 +389,14 @@
 </div>
 
 <script>
+if (window.resizeTo) window.resizeTo(800, 600);
+
+window.addEventListener('keydown', function(e) {
+  if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    alert(`KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 500 records.\n- Export and import via CSV or JSON.`);
+  }
+});
+
 const MAX_RECORDS = 500;
 const STORAGE_KEY = 'kdb_employees_v1';
 
@@ -688,6 +698,15 @@ function handleSearchKey(e) {
   if (e.key === 'Escape') {
     document.getElementById('searchInput').value = '';
     filterTable();
+  }
+}
+
+function resetToDefaults() {
+  if (confirm("Reset database to default sample data? All current data will be lost.")) {
+    records = [...DEFAULT_RECORDS];
+    saveRecords();
+    filterTable();
+    updateStatus('Database reset to defaults');
   }
 }
 

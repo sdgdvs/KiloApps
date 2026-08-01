@@ -491,7 +491,7 @@ void InitListView(HWND hwnd) {
 
     // Set placeholder cue banners
     SendMessageA(hPwd, EM_SETCUEBANNER, FALSE, (LPARAM)"Key");
-    SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)"Search / Query (e.g. dept:engineering)...");
+    SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)"Search / Query (Press H for Help)...");
     SendMessageA(hAddId, EM_SETCUEBANNER, FALSE, (LPARAM)"ID");
     SendMessageA(hAddName, EM_SETCUEBANNER, FALSE, (LPARAM)"Name");
     SendMessageA(hAddDept, EM_SETCUEBANNER, FALSE, (LPARAM)"Department");
@@ -634,15 +634,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hPwd, 10, 10, 80, 25, TRUE);
             MoveWindow(hReload, 95, 10, 45, 25, TRUE);
             
-            int right_btns_w = 230;
-            int sh = nw - 20 - 140 - right_btns_w; 
+            int sh = nw - 390;
             if (sh < 50) sh = 50;
             MoveWindow(hSearch, 145, 10, sh, 25, TRUE);
             
-            MoveWindow(hExpCSV, 145 + sh + 5, 10, 50, 25, TRUE);
-            MoveWindow(hImpCSV, 145 + sh + 60, 10, 50, 25, TRUE);
-            MoveWindow(hExpJSON, 145 + sh + 115, 10, 55, 25, TRUE);
-            MoveWindow(hImpJSON, 145 + sh + 175, 10, 55, 25, TRUE);
+            int rx = 145 + sh + 10;
+            MoveWindow(hExpCSV, rx, 10, 50, 25, TRUE);
+            MoveWindow(hImpCSV, rx + 55, 10, 50, 25, TRUE);
+            MoveWindow(hExpJSON, rx + 110, 10, 55, 25, TRUE);
+            MoveWindow(hImpJSON, rx + 170, 10, 55, 25, TRUE);
 
             MoveWindow(hListView, 10, 45, nw - 20, nh - 90, TRUE);
             
@@ -691,7 +691,7 @@ void MainEntry() {
     wc.hbrBackground = hBgBrush;
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database (Press H for Help)", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
