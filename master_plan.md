@@ -11,15 +11,15 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path` (e.g., using `[System.Environment]::GetEnvironmentVariable`). Doing this deletes the injected Antigravity runtime paths from the active agent's environment, causing the agent to immediately crash and enter a termination loop. If a specific tool like `crinkler` is missing, you must only APPEND to the path (e.g. `$env:Path += ";C:\path\to\tool"`), or better yet, simply restart the environment so it inherits the system paths natively. The PATH instructions have been removed from all MD files.
 
-## Current State (as of 2026-08-01 04:00 UTC)
-- **Total Apps:** 82 registered in App.jsx (+9 since Jul 29).
+## Current State (as of 2026-08-02 04:00 UTC)
+- **Total Apps:** 83 registered in App.jsx.
 - **KiloOS Version:** 0.3.65+
-- **Games:** 29 titles (KColony Phase 8/14 building).
+- **Games:** 30 titles (KFarm Phase 1/14 building, KFortress WIP).
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
 
-### Game Library (29 titles)
-K2048, KAlchemy, KAsteroids, KBreakout, KChess, KColony (WIP), KConnect4, KDarts, KFortress (WIP), KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KWords.
+### Game Library (30 titles)
+K2048, KAlchemy, KAsteroids, KBreakout, KChess, KColony ✅, KConnect4, KDarts, KFarm (WIP), KFortress (WIP), KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KWords.
 
 ### Content Depth
 - **Deep Games progressing:** KRogue at Loop 9 (traps, boss rematches, cursed items). KSpace/KAsteroids/KSnake/KBreakout/KMaze/KPac all at Loop 8.
@@ -27,19 +27,19 @@ K2048, KAlchemy, KAsteroids, KBreakout, KChess, KColony (WIP), KConnect4, KDarts
 - **The Deep/Classic split directive (Jul 29) is working perfectly.** No more campaign spam on board games.
 
 ### Graphics Agent
-**Loop 2 deep in progress.** 15+ games done in Loop 2 (KHangman, KConnect4, KSolitaire, K2048, KAsteroids, KMines, KPong, KChess, KRogue, KTetris, KSnake, KPac, KSpace, KBreakout, KMaze). Queue: KSimon → KMatch3 → KFreecell → KSudoku → KGo → KDarts → KTowers → KWords → KReversi → KAlchemy → remaining.
+**Loop 2 deep in progress.** 19+ games done in Loop 2 (+KSimon, KMatch3, KFreecell, KSudoku since last review). Queue: KGo → KDarts → KTowers → KWords → KReversi → KAlchemy → KColony → KFortress → KFarm → remaining.
 
 ### QA
-**Pass 3 deep in progress.** QA completed: KFont, KHex, KImage, KJournal, KMail, KMandel, KMatch3, KMaze, KMedia, KMines, KNotes, KPaint (+prior Pass 3 apps). Now targeting **KPassword**. Systematic focus on security (XSS, bounds), GDI leaks, and memory safety.
+**Pass 3 in progress.** Still targeting **KPassword**. ⚠️ No QA commits visible in last review period — agent may need restart.
 
 ### Feature Expander
-Healthy round-robin. 62+ completed items. Recent: KConnect4 (Save/Load), KScript (Debugger), KMaze (Replay), KMine (Hint), KPac (Save/Load), KQuest (Save/Load), KNote (AES encryption), KPass (AES vault), KMedia (Subtitles), KNet (Traceroute), KZip (Compression), KPaint (Layers). Now targeting **KType**.
+Still targeting **KType**. ⚠️ No Feature Expander commits visible in last review period — agent may need restart.
 
 ### Creator
-**20 apps completed through full 14-phase lifecycle.** KAlchemy ✅. Now building **KColony** (Sci-Fi Colony Survival) — Phase 8/14 done (Random Events & Disasters). Phase 9 next (Alien Threats). Very healthy pace.
+**21 apps completed through full 14-phase lifecycle.** KColony ✅ (all 14 phases done!). Now building **KFarm** (Farming Simulation) — Phase 1/14 done. Exceptional pace: KColony went from Phase 8 to 14 in one review cycle.
 
 ### Usability Agent
-**Highly active.** ~20 apps processed in first sweep. Common fixes: auto-opening window size, crisp text rendering (canvas DPI), "Press H for Help" keybindings, layout issues. Recently: KDB, KPong, KClock, KAudio, KBBS, KChat, KChess, KChart, KCalendar, KCalc, KHex, KImage, KPad, KJournal, KBase, KRead, KContacts, KTimer, KTodo, KGraph. Now targeting **KFont**.
+**Most productive agent this cycle.** ~60+ apps processed across 2 sweeps. Second sweep in progress. Recently: KFont, KMail, KMandel, KPing, KConnect4, KScript, KMaze, KMine, KPac, KQuest, KNote, KPass, KMedia, KNet, KZip, KPaint. Now targeting **KSnake**.
 
 ## Milestones
 
@@ -75,24 +75,26 @@ Healthy round-robin. 62+ completed items. Recent: KConnect4 (Save/Load), KScript
 29. **9/17 Classic Games Balance Passes COMPLETE** — Aug 1. ✅
 30. **80+ apps milestone reached** — Aug 1. 🎯
 31. **Model reverted to Gemini 3.1 Pro** — Jul 29 (Flash used too many tokens).
+32. **KColony completed (all 14 phases)** — Aug 2. ✅
+33. **Graphics Loop 2 ~19/27 done** — Aug 2. 🎯
 
 ### Active 🔄
-32. Games agent: **Balance passes for remaining 8 Classic games** + Loop 9+ content for Deep games.
-33. Graphics agent: Loop 2 in progress (~15/27 done).
-34. Creator: KColony Phase 9 of 14 (Alien Threats).
-35. Feature Expander: Round-robin perpetual (targeting KType).
-36. QA: Pass 3 regression/security checks (targeting KPassword).
-37. Usability: Round-robin UX audit (targeting KFont).
+34. Games agent: **Balance passes for remaining 8 Classic games** + Loop 9+ content for Deep games. ⚠️ No commits this cycle.
+35. Graphics agent: Loop 2 in progress (~19/27 done).
+36. Creator: KFarm Phase 2 of 14 (basic farm grid).
+37. Feature Expander: Round-robin perpetual (targeting KType). ⚠️ No commits this cycle.
+38. QA: Pass 3 regression/security checks (targeting KPassword). ⚠️ No commits this cycle.
+39. Usability: Round-robin UX audit (targeting KSnake).
 
 ### Upcoming 📋
-38. Complete all Classic Games Balance Passes (8 remaining).
-39. Graphics Loop 2 completion for all 27+ games.
-40. KColony completion (14 phases, ~6 phases remaining).
-41. QA Pass 3 completion for all apps.
-42. Usability audit completion for all 82 apps.
-43. Consider next Creator project after KColony.
+40. Complete all Classic Games Balance Passes (8 remaining).
+41. Graphics Loop 2 completion for all 30 games.
+42. KFarm completion (14 phases).
+43. QA Pass 3 completion for all apps.
+44. Usability audit completion for all 83 apps.
+45. Investigate and restart stuck agents (Game Content, QA, Feature Expander).
 
-## Active Agent Fleet (as of 2026-08-01)
+## Active Agent Fleet (as of 2026-08-02)
 
 | Agent | Schedule | Plan File | Model |
 |---|---|---|---|

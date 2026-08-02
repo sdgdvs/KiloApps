@@ -99,6 +99,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze
 - KColony
 - KFortress
+- KFarm
 
 - KRogue
 - KChess

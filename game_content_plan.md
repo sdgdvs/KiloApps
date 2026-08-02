@@ -127,7 +127,9 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 |------------|--------|--------|-----------|
 | KQuest     | Tier 1 | Loop 7 done (Tavern, side quests, gear upgrades, 17 biomes) | Loop 8: Job classes, magic system overhaul, companion allies |
 | KStarship  | Tier 1 | Loop 7 done (Crew, trade routes, narrative events, tech tree) | Loop 8: Fleet battles, alien diplomacy, deep space anomalies |
-| KAlchemy   | Tier 1 | Creator building (Phase 12/14) | Wait for Creator to finish — then Loop 1 content pass |
+| KAlchemy   | Tier 1 | Creator COMPLETE (Phase 14/14) | Loop 1: Initial content audit — recipe variety, quest depth, lab upgrade balance |
+| KColony    | Tier 1 | Creator COMPLETE (Phase 14/14) | Loop 1: Initial content audit — colony balance, alien difficulty, expedition depth |
+| KFortress  | Tier 1 | Creator building (Phase TBD) | Wait for Creator to finish — then Loop 1 content pass |
 | KSpace     | Tier 1 | Loop 8 done (Formation 9, Weapons, Combos) | Loop 9: Multi-phase bosses, escort missions, branching paths |
 | KAsteroids | Tier 1 | Loop 8 done (Asteroid belt, missile weapon, cruiser shields) | Loop 9: Branching sector paths, escort missions, new hazards |
 | KMaze      | Tier 1 | Loop 8 done (Themes, puzzles, NPCs, Time Freeze) | Loop 9: Advanced trap mechanics, boss rematches, cursed items |

@@ -81,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KNet
 - KZip
 - KPaint
+- KFarm
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
