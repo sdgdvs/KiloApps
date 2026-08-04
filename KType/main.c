@@ -1,8 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 800
-#define H 600
+#define W 1000
+#define H 800
 
 // --- Word Lists ---
 const char* commonWords[] = {
@@ -240,8 +240,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             memset(fWords, 0, sizeof(fWords));
             memset(keyHits, 0, sizeof(keyHits));
             memset(keyErrors, 0, sizeof(keyErrors));
-            g_fontNav = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            g_fontMain = CreateFontA(22, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+            g_fontNav = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            g_fontMain = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
             SpawnArcadeWord();
             ResetSpeedTest();
             SetTimer(hwnd, 1, 30, NULL);
@@ -441,16 +441,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, 15, 10, "F1: Arcade", 10);
 
             SetTextColor(memDC, (currentMode == 1) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 120, 10, "F2: Speed Test", 14);
+            TextOutA(memDC, 130, 10, "F2: Speed Test", 14);
 
             SetTextColor(memDC, (currentMode == 2) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 250, 10, "F3: Code Snippets", 17);
+            TextOutA(memDC, 270, 10, "F3: Code Snippets", 17);
 
             SetTextColor(memDC, (currentMode == 3) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 410, 10, "F4: Heatmap", 11);
+            TextOutA(memDC, 440, 10, "F4: Heatmap", 11);
 
             SetTextColor(memDC, (currentMode == 4) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 520, 10, "F5/H: Help", 10);
+            TextOutA(memDC, 560, 10, "Press H for Help", 16);
 
             if (g_fontMain) SelectObject(memDC, g_fontMain);
 
@@ -712,6 +712,7 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
