@@ -1497,7 +1497,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                     SetTextColor(memDC, RGB(255, 234, 0));
-                    TextOutA(memDC, W/2 - 60, H - 30, "[H] Help / Controls", 19);
+                    TextOutA(memDC, W/2 - 68, H - 30, "PRESS [H] FOR HELP", 18);
                 } else if (gameState == STATE_MODE_SELECT) {
                     SetTextColor(memDC, RGB(255, 234, 0));
                     TextOutA(memDC, W/2 - 65, 80, "SELECT GAME MODE", 16);
