@@ -150,3 +150,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KZip: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 800x600, help modal added, DPI awareness enabled for crisp fonts).
 - KPaint: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 1100x700, added scrollbars to native, fixed save logic, and DPI awareness enabled for crisp fonts).
 - KSnake: Usability and UI issues fixed (Appropriate auto-opening size adjusted, visible controls, layout fixes, crisp text rendering for canvas, help instructions).
+- KTetris: Usability and UI issues fixed (Appropriate auto-opening size adjusted, crisp text and canvas scaling handled, visible controls & help instructions overlaid).
