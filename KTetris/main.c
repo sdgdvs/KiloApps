@@ -1607,10 +1607,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, sideX, 419, freeze_str, lstrlenA(freeze_str));
 
             // Hints
-            SetTextColor(memDC, RGB(120, 120, 140));
+            SetTextColor(memDC, RGB(170, 170, 170));
             SelectObject(memDC, hFontSmall);
-            TextOutA(memDC, sideX, 442, "[P] Pause | [V] Save", 20);
+            TextOutA(memDC, sideX, 442, "[Arrows] Move/Rot", 17);
             TextOutA(memDC, sideX, 458, "[Space] Hard Drop", 17);
+            SetTextColor(memDC, RGB(0, 255, 204));
             TextOutA(memDC, sideX, 474, "[H] Help / Controls", 19);
 
             // Overlays & Screens
@@ -1755,8 +1756,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TextOutA(memDC, 45, 295, "[V]. Resume Saved Game", 22);
                 }
 
-                SetTextColor(memDC, RGB(100, 100, 120));
-                TextOutA(memDC, total_w / 2 - 120, 480, "Press H for Help, L for Leaderboard", 35);
+                SetTextColor(memDC, RGB(255, 255, 0));
+                TextOutA(memDC, total_w / 2 - 110, 465, "Press [H] for Help / Controls", 29);
+                SetTextColor(memDC, RGB(136, 136, 170));
+                TextOutA(memDC, total_w / 2 - 100, 485, "Press [L] for Leaderboard", 25);
                 SetTextColor(memDC, RGB(0, 204, 255));
                 TextOutA(memDC, 45, 325, "[K]. Configure Keybinds", 23);
                 if (has_saved_replay) { SetTextColor(memDC, RGB(255, 85, 170)); TextOutA(memDC, 45, 355, "[W]. Watch Last Replay", 22); }
@@ -1796,6 +1799,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;

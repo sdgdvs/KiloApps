@@ -35,6 +35,7 @@
   canvas.style.width = '370px';
   canvas.style.height = '510px';
   ctx.scale(dpr, dpr);
+  ctx.imageSmoothingEnabled = false;
   const CELL = 20;
   const W = 10, H = 20;
   const BOARD_W = W * CELL; // 200px
@@ -989,10 +990,11 @@ if (showHelp) {
       ctx.fillText(freezeTimerMs > 0 ? `[F] FROZEN (${Math.ceil(freezeTimerMs / 1000)}s)` : `[F] Freeze: ${freezeCharges}`, SIDEBAR_X, 429);
 
       // Hints
-      ctx.fillStyle = '#666677';
-      ctx.font = '10px system-ui, monospace';
-      ctx.fillText('[P] Pause | [V] Save', SIDEBAR_X, 452);
+      ctx.fillStyle = '#aaaaaa';
+      ctx.font = 'bold 10px system-ui, monospace';
+      ctx.fillText('[Arrows] Move/Rot', SIDEBAR_X, 452);
       ctx.fillText('[Space] Hard Drop', SIDEBAR_X, 468);
+      ctx.fillStyle = '#00ffcc';
       ctx.fillText('[H] Help / Controls', SIDEBAR_X, 484);
 
       // Screens & Overlays
@@ -1150,10 +1152,13 @@ if (showHelp) {
               ctx.fillText('[V]. Resume Saved Game', 70, yOffset + 96);
           }
 
+          ctx.fillStyle = '#ffff00';
+          ctx.font = 'bold 12px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('Press [H] for Help / Controls', 370 / 2, 470);
           ctx.fillStyle = '#666677';
           ctx.font = '11px system-ui, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('Press H for Help, L for Leaderboard', 370 / 2, 480);
+          ctx.fillText('Press [L] for Leaderboard', 370 / 2, 490);
           ctx.textAlign = 'left';
       } else if (isPaused) {
           ctx.fillStyle = 'rgba(0,0,0,0.75)';
