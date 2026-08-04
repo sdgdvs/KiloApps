@@ -6,12 +6,70 @@
     <title>KFarm</title>
     <style>
         body { margin: 0; padding: 0; background-color: #222; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        canvas { background-color: #4CAF50; border: 2px solid #333; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="game">KFarm (Phase 1)</div>
+    <div>
+        <h2 style="text-align: center; margin-bottom: 10px;">KFarm</h2>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <p style="text-align: center; font-size: 14px;">Click grass to till. Click soil to plant wheat.</p>
+    </div>
     <script>
-        console.log("KFarm Initialized");
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const COLS = 10;
+        const ROWS = 10;
+        const CELL_SIZE = 40;
+        const grid = new Array(COLS * ROWS).fill(0); // 0=grass, 1=tilled, 2=wheat
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    const idx = y * COLS + x;
+                    const val = grid[idx];
+                    const px = x * CELL_SIZE;
+                    const py = y * CELL_SIZE;
+                    
+                    // Draw cell background
+                    if (val === 0) {
+                        ctx.fillStyle = '#4CAF50'; // Grass
+                    } else {
+                        ctx.fillStyle = '#795548'; // Tilled soil
+                    }
+                    ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
+                    
+                    // Draw grid border
+                    ctx.strokeStyle = '#388E3C';
+                    ctx.strokeRect(px, py, CELL_SIZE, CELL_SIZE);
+                    
+                    // Draw wheat
+                    if (val === 2) {
+                        ctx.fillStyle = '#FFEB3B';
+                        ctx.fillRect(px + 10, py + 10, CELL_SIZE - 20, CELL_SIZE - 20);
+                    }
+                }
+            }
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+            const y = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+            
+            if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
+                const idx = y * COLS + x;
+                if (grid[idx] === 0) {
+                    grid[idx] = 1; // Till
+                } else if (grid[idx] === 1) {
+                    grid[idx] = 2; // Plant wheat
+                }
+                draw();
+            }
+        });
+
+        draw();
     </script>
 </body>
 </html>
