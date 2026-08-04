@@ -1435,10 +1435,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, 120, 150, "C - Config Keys", 15);
                 TextOutA(hdc, 120, 180, "S - Match Stats (Last)", 22);
                 TextOutA(hdc, 120, 210, "X - Play Replay (.ksr)", 22);
-                TextOutA(hdc, 120, 240, "H - High Scores / Help", 22);
+                TextOutA(hdc, 120, 240, "Press H for Help / High Scores", 30);
                 TextOutA(hdc, 120, 270, "R - Resume Saved Game", 21);
                 TextOutA(hdc, 120, 300, "E/I - Export/Import All", 23);
-                TextOutA(hdc, 120, 340, "Skills: Ghost Freeze Magnet", 27);
+                TextOutA(hdc, 120, 340, "Move: WASD/Arrows | Skills: G,F,M", 33);
                 SetTextColor(hdc, RGB(76, 209, 55));
                 TextOutA(hdc, 130, 420, "[ Press ENTER to Play ]", 23);
             } else if (game_state == 6) {
@@ -1589,8 +1589,11 @@ void MainEntry() {
     winWidth = GRID_WIDTH * CELL_SIZE + 20;
     winHeight = GRID_HEIGHT * CELL_SIZE + 105;
 
-    hwnd = CreateWindowEx(0, "KSnakeApp", "KSnake Arcade - Loop 8", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
+    RECT rect = {0, 0, winWidth, winHeight};
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
+
+    hwnd = CreateWindowExA(0, "KSnakeApp", "KSnake Arcade - Loop 8", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

@@ -13,7 +13,7 @@
         #bossBarFill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff4757); transition: width 0.2s; }
         #bossBarText { position: absolute; width: 100%; text-align: center; font-size: 13px; font-weight: bold; color: #fff; line-height: 20px; text-shadow: 0 0 4px #000; }
         canvas { background: #0a0a12; border: 2px solid #3d3d5c; border-radius: 8px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); }
-        .overlay { position: absolute; top: 18px; left: 18px; width: 400px; height: 400px; background: rgba(15, 15, 26, 0.96); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; z-index: 10; border: 1px solid #3d3d5c; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 26, 0.96); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; z-index: 10; border: 1px solid #3d3d5c; box-sizing: border-box; }
         h2 { margin: 0 0 15px 0; color: #00d2d3; text-transform: uppercase; letter-spacing: 2px; font-size: 24px; text-shadow: 0 0 8px rgba(0,210,211,0.5); }
         p { margin: 6px 0; font-size: 15px; color: #c8d6e5; }
         .menu-opt { color: #fbc531; font-weight: bold; }
@@ -47,15 +47,10 @@
             <div id="bossBarText">HYDRA VIPER BOSS: 15 / 15 HP</div>
         </div>
 
-        <canvas id="gameCanvas" width="400" height="400" aria-label="KSnake Game" role="application" tabindex="0"></canvas>
+        <div style="position: relative; width: 400px; height: 400px;">
+            <canvas id="gameCanvas" width="400" height="400" aria-label="KSnake Game" role="application" tabindex="0"></canvas>
 
-        <div class="skills-bar">
-            <button id="skillGhost" class="skill-btn ready" onclick="activateSkill('G')">[G] Ghost</button>
-            <button id="skillFreeze" class="skill-btn ready" onclick="activateSkill('F')">[F] Freeze</button>
-            <button id="skillMagnet" class="skill-btn ready" onclick="activateSkill('M')">[M] Magnet</button>
-        </div>
-
-        <!-- MENU OVERLAY -->
+            <!-- MENU OVERLAY -->
         <div id="menuOverlay" class="overlay">
             <h2>KSNAKE ARCADE</h2>
             <p>Mode: <span id="currentModeText" class="menu-opt">Classic</span> (Press <b style="color:#00d2d3">M</b>)</p>
@@ -153,6 +148,13 @@
             </div>
             <button class="btn" onclick="hideOverlays()" style="margin-top: 6px;">Back</button>
         </div>
+        </div>
+
+        <div class="skills-bar">
+            <button id="skillGhost" class="skill-btn ready" onclick="activateSkill('G')">[G] Ghost</button>
+            <button id="skillFreeze" class="skill-btn ready" onclick="activateSkill('F')">[F] Freeze</button>
+            <button id="skillMagnet" class="skill-btn ready" onclick="activateSkill('M')">[M] Magnet</button>
+        </div>
 
         <div class="powerup-legend">
             <div class="legend-item"><span class="dot" style="background:#ff4757"></span>Apple</div>
@@ -169,6 +171,12 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = 400 * dpr;
+        canvas.height = 400 * dpr;
+        canvas.style.width = '400px';
+        canvas.style.height = '400px';
+        ctx.scale(dpr, dpr);
         const CELL = 20;
         const WIDTH = 20;
         const HEIGHT = 20;
@@ -1355,7 +1363,7 @@
         }
 
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, 400, 400);
             if (gameState !== 1) return;
 
             updateParticles();
