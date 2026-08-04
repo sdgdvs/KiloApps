@@ -136,6 +136,7 @@ int lastMoveX = -1, lastMoveY = -1;
 int hoverX = -1, hoverY = -1;
 int animX = -1, animY = -1;
 int animRadius = 13;
+int rippleRadius = 0;
 POINT capturedAnimStones[19*19];
 int capturedAnimColor[19*19];
 int capturedAnimCount = 0;
@@ -730,6 +731,7 @@ void PlaceStone(HWND hwnd, int x, int y) {
     animX = x;
     animY = y;
     animRadius = 0;
+    rippleRadius = 13;
     SetTimer(hwnd, 1, 16, NULL);
     
     if (caps > 0) {
@@ -934,6 +936,7 @@ void InitBoard() {
     captures[2] = 0;
     animX = -1;
     animY = -1;
+    rippleRadius = 0;
     capturedAnimCount = 0;
     undoCount = 0;
     redoCount = 0;
@@ -1089,9 +1092,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
         case WM_TIMER:
             if (wParam == 1) {
-                animRadius += 2;
-                if (animRadius >= 13) {
-                    animRadius = 13;
+                if (animRadius < 13) animRadius += 2;
+                if (animRadius > 13) animRadius = 13;
+                
+                if (rippleRadius > 0) {
+                    rippleRadius += 2;
+                    if (rippleRadius > 40) rippleRadius = 0;
+                }
+                
+                if (animRadius == 13 && rippleRadius == 0) {
                     KillTimer(hwnd, 1);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -1430,6 +1439,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             HPEN oldP = SelectObject(hdc, ringPen);
                             HBRUSH oldB = SelectObject(hdc, hollowB);
                             Ellipse(hdc, cx - 5, cy - 5, cx + 5, cy + 5);
+                            
+                            // Placement ripple/shockwave
+                            if (rippleRadius > 0) {
+                                HPEN ripplePen = CreatePen(PS_SOLID, max(1, 4 - (rippleRadius - 13)/7), ringColor);
+                                SelectObject(hdc, ripplePen);
+                                Ellipse(hdc, cx - rippleRadius, cy - rippleRadius, cx + rippleRadius, cy + rippleRadius);
+                                DeleteObject(ripplePen);
+                            }
+                            
                             SelectObject(hdc, oldP);
                             SelectObject(hdc, oldB);
                             DeleteObject(ringPen);

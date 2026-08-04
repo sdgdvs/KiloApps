@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KGo
 - KDarts
 - KTowers
 - KWords
@@ -114,8 +113,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMatch3
 - KFreecell
 - KSudoku
+- KGo
 
 ## Completed Work Log
+
+- **KGo (Loop 2):** Implemented expanding shockwave ring animations for stone placement (ripples outward and fades) for both Web HTML (kgo.html) and Native C Win32 GDI (KGo/main.c).
 
 - **KSudoku (Loop 2):** Implemented Magic Wand multi-color star spark particle burst animations with gravitational decay in both Web Canvas/HTML (ksudoku.html) and Native C Win32 GDI (KSudoku/main.c).
 

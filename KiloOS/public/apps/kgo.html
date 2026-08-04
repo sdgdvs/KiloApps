@@ -139,6 +139,22 @@
   .stone.captured {
     animation: captureAnim 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
   }
+  @keyframes rippleAnim {
+    0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0 0 rgba(255,255,255,0.8); }
+    100% { transform: scale(2.5); opacity: 0; box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+  }
+  .ripple {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    top: 2px;
+    left: 2px;
+    pointer-events: none;
+    animation: rippleAnim 0.6s ease-out forwards;
+    z-index: 2;
+  }
   .stone.atari {
     box-shadow: 0 0 0 3px #ffcc00, 2px 3px 6px rgba(0,0,0,0.7);
     animation: pulseAtari 1s infinite alternate;
@@ -783,6 +799,15 @@
             const lmr = document.createElement('div');
             lmr.className = 'last-move-ring';
             stone.appendChild(lmr);
+            
+            // Placement shockwave ripple
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            if (board[y][x] === 'B') ripple.style.borderColor = '#00ffc8';
+            else ripple.style.borderColor = '#ffd700';
+            stone.appendChild(ripple);
+            // Remove ripple element after animation
+            setTimeout(() => { if (ripple.parentNode) ripple.remove(); }, 600);
           }
 
           cell.appendChild(stone);
