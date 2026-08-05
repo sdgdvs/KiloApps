@@ -85,7 +85,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KAlchemy
 - KQuest
 - KSpace
 - KPac
@@ -96,6 +95,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColony
 - KFortress
 - KFarm
+- KAlchemy
 
 - KRogue
 - KChess
@@ -188,3 +188,4 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
+- **KAlchemy (Loop 1):** Implemented SVG background for crucible vessel and particle burst explosion canvas animation for Web Canvas/HTML (kalchemy.html), and added detailed Win32 GDI animated bubbling drawing for crucible/flask/anvil/retort/alembic in Native C (KAlchemy/main.c).

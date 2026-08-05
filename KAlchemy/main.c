@@ -861,6 +861,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_State.buffInvisibilityTimer > 0) { g_State.buffInvisibilityTimer--; changed = 1; }
             if (g_State.buffManaTimer > 0) { g_State.buffManaTimer--; changed = 1; }
             if (g_State.buffLifeTimer > 0) { g_State.buffLifeTimer--; changed = 1; }
+            // Animation update
+            RECT vesselRect = { 300, 110, 480, 230 };
+            InvalidateRect(hwnd, &vesselRect, FALSE);
+            changed = 1;
 
             if (g_State.gameMode == 1 && g_State.blitzActive) {
                 if (g_State.blitzTimeLeft > 0) {
@@ -2025,19 +2029,50 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, oldP);
                 }
 
-                // Draw Outer Glowing Arcane Rune Ring & Crucible Vessel
+                // Draw Custom Equipment Graphics with Animations
                 SelectObject(hdc, hGoldPen);
                 HGDIOBJ pNullB = GetStockObject(NULL_BRUSH);
                 SelectObject(hdc, pNullB);
-                Ellipse(hdc, 340, 145, 445, 193); // Outer golden rune ring
+                
+                int cx = 392;
+                int cy = 168;
+                DWORD tick = GetTickCount();
+
+                // Draw pulsing rune ring
+                int pulse = (tick / 50) % 10;
+                if (pulse > 5) pulse = 10 - pulse;
+                Ellipse(hdc, cx - 55 - pulse, cy - 25 - pulse, cx + 55 + pulse, cy + 25 + pulse);
 
                 SelectObject(hdc, hVesselBrush);
                 SelectObject(hdc, hPurplePen);
-                Ellipse(hdc, 350, 148, 435, 189); // Core vessel ellipse
+
+                if (g_State.selectedEquipment == 3) {
+                    // Anvil
+                    POINT anvil[8] = {{cx-30, cy-15}, {cx+30, cy-15}, {cx+15, cy-5}, {cx+15, cy+10}, {cx+30, cy+20}, {cx-30, cy+20}, {cx-15, cy+10}, {cx-15, cy-5}};
+                    Polygon(hdc, anvil, 8);
+                } else if (g_State.selectedEquipment == 1 || g_State.selectedEquipment == 2) {
+                    // Retort / Alembic
+                    Ellipse(hdc, cx - 25, cy - 20, cx + 25, cy + 20); // Bulb
+                    MoveToEx(hdc, cx + 20, cy - 10, NULL);
+                    LineTo(hdc, cx + 50, cy + 15); // Tube
+                } else {
+                    // Crucible / Flask
+                    POINT flaskNeck[4] = {{cx-15, cy-25}, {cx+15, cy-25}, {cx+15, cy-5}, {cx-15, cy-5}};
+                    Polygon(hdc, flaskNeck, 4);
+                    Ellipse(hdc, cx - 35, cy - 10, cx + 35, cy + 25);
+                    
+                    // Bubbling animation
+                    SelectObject(hdc, hGoldPen);
+                    for (int i=0; i<5; i++) {
+                        int bx = cx - 20 + ((i * 37) % 40);
+                        int by = cy + 20 - ((tick / 20 + i * 15) % 30);
+                        Ellipse(hdc, bx - 2, by - 2, bx + 2, by + 2);
+                    }
+                }
 
                 SelectObject(hdc, hSlotFont);
                 SetTextColor(hdc, RGB(241, 196, 15));
-                RECT vLabelRect = { 350, 150, 435, 185 };
+                RECT vLabelRect = { cx - 50, cy - 15, cx + 50, cy + 15 };
                 DrawTextA(hdc, vesselLabel, -1, &vLabelRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
                 // Status message centered below crucible buttons
