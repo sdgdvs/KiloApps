@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KTowers
 - KWords
 - KReversi
 - KAlchemy
@@ -113,8 +112,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFreecell
 - KSudoku
 - KGo
+- KTowers
 
 ## Completed Work Log
+
+- **KTowers (Loop 2):** Implemented passing cloud shadows, smog layers, and animated flying hover car traffic with engine glow and motion blur trails for both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 
 - **KDarts (Loop 2):** Implemented pub brick wall environmental background art and dart motion blur trail particles in both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
 

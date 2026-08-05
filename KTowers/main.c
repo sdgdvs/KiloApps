@@ -940,6 +940,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetPixel(memDC, sx + 1, sy, RGB(200, 220, 255));
             }
 
+            // Cloud Shadows / Smog Layers
+            HBRUSH smogBrush = CreateSolidBrush(RGB(15, 23, 42)); // Dark blue-grey smog
+            HGDIOBJ oldSBrush = SelectObject(memDC, smogBrush);
+            HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+            HGDIOBJ oldSPen = SelectObject(memDC, nullPen);
+            for(int i=0; i<3; i++) {
+                int speed = 2 + i;
+                int cloudX = (animTick * speed + i*300) % (width + 400) - 200;
+                int cloudY = height/5 + i*50;
+                Ellipse(memDC, cloudX - 100 - i*20, cloudY - 20 - i*10, cloudX + 100 + i*20, cloudY + 20 + i*10);
+            }
+            SelectObject(memDC, oldSBrush);
+            DeleteObject(smogBrush);
+            
+            // Animated Flying Traffic (Hover Cars)
+            for(int i=0; i<5; i++) {
+                int dir = (i % 2 == 0) ? 1 : -1;
+                int speed = 3 + i;
+                int trafficX;
+                if (dir == 1) {
+                    trafficX = (animTick * speed + i*250) % (width + 200) - 100;
+                } else {
+                    trafficX = width + 100 - ((animTick * speed + i*250) % (width + 200));
+                }
+                int trafficY = height - 200 - (i * 35);
+                
+                COLORREF carCol = (i%3==0) ? RGB(56, 189, 248) : ((i%3==1) ? RGB(239, 68, 68) : RGB(245, 158, 11));
+                HBRUSH carBrush = CreateSolidBrush(carCol);
+                RECT carRect = { trafficX, trafficY, trafficX + 16, trafficY + 5 };
+                FillRect(memDC, &carRect, carBrush);
+                DeleteObject(carBrush);
+                
+                HBRUSH engineBrush = CreateSolidBrush(RGB(165, 243, 252));
+                if (dir == 1) {
+                    RECT eRect = { trafficX - 4, trafficY + 1, trafficX, trafficY + 4 };
+                    FillRect(memDC, &eRect, engineBrush);
+                    RECT tRect = { trafficX - 18, trafficY + 2, trafficX - 4, trafficY + 3 };
+                    FillRect(memDC, &tRect, engineBrush);
+                } else {
+                    RECT eRect = { trafficX + 16, trafficY + 1, trafficX + 20, trafficY + 4 };
+                    FillRect(memDC, &eRect, engineBrush);
+                    RECT tRect = { trafficX + 20, trafficY + 2, trafficX + 34, trafficY + 3 };
+                    FillRect(memDC, &tRect, engineBrush);
+                }
+                DeleteObject(engineBrush);
+            }
+            SelectObject(memDC, oldSPen);
+            DeleteObject(nullPen);
+
             StageConfig cfg = GetCurrentConfig();
 
             // Status Banner Line 1
