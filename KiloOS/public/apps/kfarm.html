@@ -35,17 +35,18 @@
 </head>
 <body>
     <div class="container">
-        <h2>KFarm - Day <span id="daySpan">1</span></h2>
+        <h2>KFarm - Day <span id="daySpan">1</span> | $<span id="moneySpan">50</span></h2>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest)</p>
         <div style="text-align:center; margin-top:15px;">
             <div style="margin-bottom: 10px; font-size: 14px;">
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> Wheat (2d)</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="1"> Corn (3d)</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="2"> Tomato (4d)</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="3"> Pumpkin (5d)</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> Wheat (-$5/+$10)</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="1"> Corn (-$10/+$20)</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="2"> Tomato (-$15/+$30)</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="3"> Pumpkin (-$25/+$50)</label>
             </div>
             <button onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep (Next Day)</button>
+            <button id="upgradeBtn" onclick="buyUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-left:10px;">Fertilizer ($100)</button>
         </div>
     </div>
     <script>
@@ -56,13 +57,32 @@
         const CELL_SIZE = 40;
         const grid = Array.from({length: COLS * ROWS}, () => ({ type: 0, watered: false, growth: 0, cropType: 0 }));
         const cropData = [
-            { name: 'Wheat', emoji: '🌾', growthTime: 2, value: 10 },
-            { name: 'Corn', emoji: '🌽', growthTime: 3, value: 20 },
-            { name: 'Tomato', emoji: '🍅', growthTime: 4, value: 30 },
-            { name: 'Pumpkin', emoji: '🎃', growthTime: 5, value: 50 }
+            { name: 'Wheat', emoji: '🌾', growthTime: 2, value: 10, cost: 5 },
+            { name: 'Corn', emoji: '🌽', growthTime: 3, value: 20, cost: 10 },
+            { name: 'Tomato', emoji: '🍅', growthTime: 4, value: 30, cost: 15 },
+            { name: 'Pumpkin', emoji: '🎃', growthTime: 5, value: 50, cost: 25 }
         ];
         let day = 1;
         let timeOfDay = 'day';
+        let money = 50;
+        let fertilizerBought = false;
+
+        function updateMoney() {
+            document.getElementById('moneySpan').innerText = money;
+        }
+
+        function buyUpgrade() {
+            if (!fertilizerBought && money >= 100) {
+                money -= 100;
+                fertilizerBought = true;
+                cropData.forEach(c => { if (c.growthTime > 1) c.growthTime--; });
+                updateMoney();
+                const btn = document.getElementById('upgradeBtn');
+                btn.innerText = 'Fertilizer (Owned)';
+                btn.style.backgroundColor = '#9E9E9E';
+                btn.disabled = true;
+            }
+        }
         
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -113,13 +133,20 @@
                 if (cell.type === 0) {
                     cell.type = 1;
                 } else if (cell.type === 1) {
-                    cell.type = 2;
-                    cell.growth = 0;
                     const seedInput = document.querySelector('input[name="seed"]:checked');
-                    cell.cropType = seedInput ? parseInt(seedInput.value) : 0;
+                    const cType = seedInput ? parseInt(seedInput.value) : 0;
+                    if (money >= cropData[cType].cost) {
+                        money -= cropData[cType].cost;
+                        updateMoney();
+                        cell.type = 2;
+                        cell.growth = 0;
+                        cell.cropType = cType;
+                    }
                 } else if (cell.type === 2 && !cell.watered) {
                     cell.watered = true;
                 } else if (cell.type === 3) {
+                    money += cropData[cell.cropType].value;
+                    updateMoney();
                     cell.type = 1;
                     cell.watered = false;
                 }

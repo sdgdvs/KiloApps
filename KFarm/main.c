@@ -15,22 +15,28 @@ int current_day = 1;
 int time_of_day = 0; // 0=Day, 1=Night
 int growth_times[4] = {2, 3, 4, 5};
 int sell_values[4] = {10, 20, 30, 50};
+int seed_costs[4] = {5, 10, 15, 25};
+int money = 50;
+int fertilizer_bought = 0;
 int selected_seed = 0;
 HWND hNextDayBtn;
 HWND hSeedBtns[4];
+HWND hUpgradeBtn;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
             hNextDayBtn = CreateWindow("BUTTON", "Sleep (Next Day)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 130, 410, 140, 30, hwnd, (HMENU) 1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (2d, $10)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
+            hUpgradeBtn = CreateWindow("BUTTON", "Fertilizer ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                280, 410, 110, 30, hwnd, (HMENU) 6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (-$5/+$10)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
                 10, 450, 130, 20, hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[1] = CreateWindow("BUTTON", "Corn (3d, $20)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                150, 450, 120, 20, hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[2] = CreateWindow("BUTTON", "Tomato (4d, $30)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+            hSeedBtns[1] = CreateWindow("BUTTON", "Corn (-$10/+$20)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+                150, 450, 130, 20, hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSeedBtns[2] = CreateWindow("BUTTON", "Tomato (-$15/+$30)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
                 10, 475, 130, 20, hwnd, (HMENU) 4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[3] = CreateWindow("BUTTON", "Pumpkin (5d, $50)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+            hSeedBtns[3] = CreateWindow("BUTTON", "Pumpkin (-$25/+$50)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
                 150, 475, 140, 20, hwnd, (HMENU) 5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SendMessage(hSeedBtns[0], BM_SETCHECK, BST_CHECKED, 0);
             return 0;
@@ -39,6 +45,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 time_of_day = 1;
                 InvalidateRect(hwnd, NULL, TRUE);
                 SetTimer(hwnd, 1, 1000, NULL);
+            }
+            if (LOWORD(wParam) == 6 && time_of_day == 0 && !fertilizer_bought) {
+                if (money >= 100) {
+                    money -= 100;
+                    fertilizer_bought = 1;
+                    for(int i=0; i<4; i++) if (growth_times[i] > 1) growth_times[i]--;
+                    EnableWindow(hUpgradeBtn, FALSE);
+                    SetWindowText(hUpgradeBtn, "Fertilizer (Owned)");
+                    char title[64];
+                    wsprintf(title, "KFarm - Day %d | $%d", current_day, money);
+                    SetWindowText(hwnd, title);
+                } else {
+                    MessageBeep(MB_ICONERROR);
+                }
             }
             if (LOWORD(wParam) >= 2 && LOWORD(wParam) <= 5) {
                 selected_seed = LOWORD(wParam) - 2;
@@ -62,7 +82,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
                 char title[64];
-                wsprintf(title, "KFarm - Day %d", current_day);
+                wsprintf(title, "KFarm - Day %d | $%d", current_day, money);
                 SetWindowText(hwnd, title);
             }
             return 0;
@@ -73,9 +93,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (x >= 0 && x < GRID_COLS && y >= 0 && y < GRID_ROWS) {
                 int idx = y * GRID_COLS + x;
                 if (grid[idx].type == 0) grid[idx].type = 1;
-                else if (grid[idx].type == 1) { grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed; }
+                else if (grid[idx].type == 1) { 
+                    if (money >= seed_costs[selected_seed]) {
+                        money -= seed_costs[selected_seed];
+                        grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
+                        char title[64];
+                        wsprintf(title, "KFarm - Day %d | $%d", current_day, money);
+                        SetWindowText(hwnd, title);
+                    } else {
+                        MessageBeep(MB_ICONERROR);
+                    }
+                }
                 else if (grid[idx].type == 2 && !grid[idx].watered) grid[idx].watered = 1;
-                else if (grid[idx].type == 3) { grid[idx].type = 1; grid[idx].watered = 0; }
+                else if (grid[idx].type == 3) { 
+                    money += sell_values[grid[idx].cropType];
+                    grid[idx].type = 1; grid[idx].watered = 0; 
+                    char title[64];
+                    wsprintf(title, "KFarm - Day %d | $%d", current_day, money);
+                    SetWindowText(hwnd, title);
+                }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             return 0;
@@ -201,7 +237,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
 
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KFarm - Day 1", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        0, CLASS_NAME, "KFarm - Day 1 | $50", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, hInstance, NULL
     );
