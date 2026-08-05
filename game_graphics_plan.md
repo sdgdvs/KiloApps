@@ -85,7 +85,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KQuest
 - KSpace
 - KPac
 - KSnake
@@ -115,7 +114,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KWords
 - KReversi
 
+- KQuest
+
 ## Completed Work Log
+
+- **KQuest (Loop 2):** Implemented custom Hero class sprite idle/attack animation cycles, monster death dissolving effects, and multi-color particle burst animations for critical hits for both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).
 
 - **KReversi (Loop 2):** Implemented ghost hover piece for valid moves and a multi-color particle burst explosion animation for the bomb piece in both Web Canvas/HTML (kreversi.html) and Native C Win32 GDI (KReversi/main.c).
 
