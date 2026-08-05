@@ -778,7 +778,7 @@ void show_help() {
 
 int main() {
 #ifdef _WIN32
-    system("mode con: cols=100 lines=30");
+    system("mode con: cols=120 lines=40");
 #endif
 
     if (!verify_pin_on_startup()) {
@@ -792,6 +792,7 @@ int main() {
         printf("=========================================\n");
         printf("               KJOURNAL                  \n");
         printf("=========================================\n");
+        printf("  (Press 'H' at any time for Help)       \n\n");
         printf("1. Write new entry\n");
         printf("2. View all entries\n");
         printf("3. Calendar Entry Navigator\n");

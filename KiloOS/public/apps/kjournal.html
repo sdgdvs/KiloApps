@@ -29,6 +29,7 @@
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     height: 100vh;
     display: flex;
     overflow: hidden;
@@ -225,7 +226,7 @@
   .entry-item-snippet { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* Main Workspace */
-  .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); }
+  .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); min-height: 0; }
 
   .toolbar {
     padding: 12px 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);
@@ -254,7 +255,7 @@
   .btn-danger:hover { background: var(--accent-red); color: #fff; }
 
   /* Editor Container */
-  .editor-container { flex: 1; display: flex; flex-direction: column; padding: 20px; position: relative; }
+  .editor-container { flex: 1; display: flex; flex-direction: column; padding: 20px; position: relative; min-height: 0; }
   textarea.journal-editor {
     flex: 1; width: 100%; background: transparent; border: none; outline: none;
     color: var(--text-bright); font-size: 16px; line-height: 1.7; font-family: inherit; resize: none;
@@ -356,6 +357,7 @@
     <div class="sidebar-header">
       <div class="brand-title">
         <span>📖</span> KJournal
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; margin-left: 8px;">(Press 'h' for Help)</span>
       </div>
       <div>
         <button class="icon-btn" onclick="openModal('helpModal')" title="Help (Press h)">❓</button>
@@ -428,7 +430,7 @@
     </div>
 
     <div class="editor-container">
-      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize." oninput="updateEditorStats()"></textarea>
+      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'h' for help)" oninput="updateEditorStats()"></textarea>
       <div class="editor-footer">
         <div id="editorStats">0 words | 0 characters</div>
         <div id="saveStatus">Saved locally</div>
@@ -591,7 +593,7 @@
   // Initialize App
   function init() {
     if (window.parent && window.parent.postMessage) {
-      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 1000, height: 700 }, '*');
+      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 1100, height: 750 }, '*');
     }
 
     loadSettings();
