@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFarm (Farming Simulation)
-**Phase:** 6 (next to do)
+**Phase:** 7 (next to do)
 **Status:** Initializing new app
 
 - [x] Phase 1: Scaffold KFarm directory (`KFarm/`), create web HTML skeleton (`KiloOS/public/apps/kfarm.html`), register in App.jsx.
@@ -62,7 +62,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 3: Native C version (`KFarm/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [x] Phase 4: Farming UI styling (earthy tones, crop icons, sunny daylight colors).
 - [x] Phase 5: Day/Night cycle and Water mechanics — crops need water each day to grow.
-- [ ] Phase 6: Multiple crop types (wheat, corn, tomatoes, pumpkins) with different growth times and sell values.
+- [x] Phase 6: Multiple crop types (wheat, corn, tomatoes, pumpkins) with different growth times and sell values.
 - [ ] Phase 7: Economy System — sell harvested crops for money. Buy seeds and upgrades.
 - [ ] Phase 8: Animals & Barns — buy chickens and cows for daily eggs/milk.
 - [ ] Phase 9: Farming Tools — upgrade watering can, hoe, and scythe for area-of-effect actions.

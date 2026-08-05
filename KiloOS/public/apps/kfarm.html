@@ -39,6 +39,12 @@
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest)</p>
         <div style="text-align:center; margin-top:15px;">
+            <div style="margin-bottom: 10px; font-size: 14px;">
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> Wheat (2d)</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="1"> Corn (3d)</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="2"> Tomato (4d)</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="3"> Pumpkin (5d)</label>
+            </div>
             <button onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep (Next Day)</button>
         </div>
     </div>
@@ -48,7 +54,13 @@
         const COLS = 10;
         const ROWS = 10;
         const CELL_SIZE = 40;
-        const grid = Array.from({length: COLS * ROWS}, () => ({ type: 0, watered: false, growth: 0 }));
+        const grid = Array.from({length: COLS * ROWS}, () => ({ type: 0, watered: false, growth: 0, cropType: 0 }));
+        const cropData = [
+            { name: 'Wheat', emoji: '🌾', growthTime: 2, value: 10 },
+            { name: 'Corn', emoji: '🌽', growthTime: 3, value: 20 },
+            { name: 'Tomato', emoji: '🍅', growthTime: 4, value: 30 },
+            { name: 'Pumpkin', emoji: '🎃', growthTime: 5, value: 50 }
+        ];
         let day = 1;
         let timeOfDay = 'day';
         
@@ -80,7 +92,7 @@
                         ctx.fillText('🌱', px + CELL_SIZE / 2, py + CELL_SIZE / 2 + 2);
                     } else if (cell.type === 3) {
                         ctx.font = '28px Arial';
-                        ctx.fillText('🌾', px + CELL_SIZE / 2, py + CELL_SIZE / 2 + 2);
+                        ctx.fillText(cropData[cell.cropType].emoji, px + CELL_SIZE / 2, py + CELL_SIZE / 2 + 2);
                     }
                 }
             }
@@ -103,6 +115,8 @@
                 } else if (cell.type === 1) {
                     cell.type = 2;
                     cell.growth = 0;
+                    const seedInput = document.querySelector('input[name="seed"]:checked');
+                    cell.cropType = seedInput ? parseInt(seedInput.value) : 0;
                 } else if (cell.type === 2 && !cell.watered) {
                     cell.watered = true;
                 } else if (cell.type === 3) {
@@ -125,7 +139,7 @@
                     if (cell.type === 2) {
                         if (cell.watered) {
                             cell.growth++;
-                            if (cell.growth >= 2) cell.type = 3;
+                            if (cell.growth >= cropData[cell.cropType].growthTime) cell.type = 3;
                         } else {
                             cell.type = 1; // Dies without water
                         }
