@@ -1175,6 +1175,7 @@
     searchInput.oninput = renderList;
 
     // Initialization
+    if (window.resizeTo) window.resizeTo(850, 600);
     seedData();
     renderList();
   </script>

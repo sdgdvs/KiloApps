@@ -362,23 +362,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hComboCat, CB_SETCURSEL, 0, 0);
 
             // ListBox
-            hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 42, 330, 360, hwnd, (HMENU)1001, NULL, NULL);
+            hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 42, 330, 475, hwnd, (HMENU)1001, NULL, NULL);
 
             // Action Buttons Sidebar
-            hBtnNew = CreateWindowExA(0, "BUTTON", "+ New", WS_CHILD | WS_VISIBLE, 10, 410, 60, 28, hwnd, (HMENU)1002, NULL, NULL);
-            hBtnDel = CreateWindowExA(0, "BUTTON", "Del", WS_CHILD | WS_VISIBLE, 75, 410, 50, 28, hwnd, (HMENU)1003, NULL, NULL);
-            hBtnMerge = CreateWindowExA(0, "BUTTON", "Merge", WS_CHILD | WS_VISIBLE, 130, 410, 50, 28, hwnd, (HMENU)1005, NULL, NULL);
-            hBtnImport = CreateWindowExA(0, "BUTTON", "Imp", WS_CHILD | WS_VISIBLE, 185, 410, 50, 28, hwnd, (HMENU)1007, NULL, NULL);
-            hBtnExport = CreateWindowExA(0, "BUTTON", "Exp", WS_CHILD | WS_VISIBLE, 240, 410, 50, 28, hwnd, (HMENU)1006, NULL, NULL);
-            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE, 295, 410, 45, 28, hwnd, (HMENU)1013, NULL, NULL);
+            hBtnNew = CreateWindowExA(0, "BUTTON", "+ New", WS_CHILD | WS_VISIBLE, 10, 525, 55, 28, hwnd, (HMENU)1002, NULL, NULL);
+            hBtnDel = CreateWindowExA(0, "BUTTON", "Del", WS_CHILD | WS_VISIBLE, 70, 525, 40, 28, hwnd, (HMENU)1003, NULL, NULL);
+            hBtnMerge = CreateWindowExA(0, "BUTTON", "Merge", WS_CHILD | WS_VISIBLE, 115, 525, 50, 28, hwnd, (HMENU)1005, NULL, NULL);
+            hBtnImport = CreateWindowExA(0, "BUTTON", "Imp", WS_CHILD | WS_VISIBLE, 170, 525, 45, 28, hwnd, (HMENU)1007, NULL, NULL);
+            hBtnExport = CreateWindowExA(0, "BUTTON", "Exp", WS_CHILD | WS_VISIBLE, 220, 525, 45, 28, hwnd, (HMENU)1006, NULL, NULL);
+            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help(H)", WS_CHILD | WS_VISIBLE, 270, 525, 70, 28, hwnd, (HMENU)1013, NULL, NULL);
 
             // Details / Form View
-            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL, 350, 10, 420, 392, hwnd, NULL, NULL, NULL);
+            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL, 350, 10, 470, 507, hwnd, NULL, NULL, NULL);
             
-            hChkFav = CreateWindowExA(0, "BUTTON", "Favorite *", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 350, 410, 90, 24, hwnd, (HMENU)1010, NULL, NULL);
-            hBtnCall = CreateWindowExA(0, "BUTTON", "Call", WS_CHILD | WS_VISIBLE, 450, 410, 50, 28, hwnd, (HMENU)1008, NULL, NULL);
-            hBtnEmail = CreateWindowExA(0, "BUTTON", "Email", WS_CHILD | WS_VISIBLE, 505, 410, 55, 28, hwnd, (HMENU)1009, NULL, NULL);
-            hBtnSave = CreateWindowExA(0, "BUTTON", "Save Details", WS_CHILD | WS_VISIBLE, 565, 410, 205, 28, hwnd, (HMENU)1004, NULL, NULL);
+            hChkFav = CreateWindowExA(0, "BUTTON", "Favorite *", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 350, 525, 90, 24, hwnd, (HMENU)1010, NULL, NULL);
+            hBtnCall = CreateWindowExA(0, "BUTTON", "Call", WS_CHILD | WS_VISIBLE, 450, 525, 50, 28, hwnd, (HMENU)1008, NULL, NULL);
+            hBtnEmail = CreateWindowExA(0, "BUTTON", "Email", WS_CHILD | WS_VISIBLE, 505, 525, 55, 28, hwnd, (HMENU)1009, NULL, NULL);
+            hBtnSave = CreateWindowExA(0, "BUTTON", "Save Details", WS_CHILD | WS_VISIBLE, 565, 525, 255, 28, hwnd, (HMENU)1004, NULL, NULL);
 
             // Apply Fonts
             SendMessageA(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -518,6 +518,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
+    SetProcessDPIAware();
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
@@ -526,13 +527,20 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KContactsClass", "KContacts - Contact Manager (Help Available)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 800, 485, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KContactsClass", "KContacts - Contact Manager (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 850, 600, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            char className[256];
+            GetClassNameA(msg.hwnd, className, sizeof(className));
+            if (msg.wParam == VK_F1 || (msg.wParam == 'H' && my_stricmp(className, "EDIT") != 0)) {
+                SendMessageA(hwnd, WM_COMMAND, 1013, 0);
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
