@@ -123,6 +123,7 @@ int handicapMode = 0;
 int moveTimeLeftDeci = 0;
 int gameEnded = 0;
 int currentPlayer = BLACK;
+int hoverIdx = -1;
 
 int gameOverSoundPlayed = 0;
 int animatingFlips[100];
@@ -1120,6 +1121,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             InitGame(hwnd);
             break;
         }
+        case WM_MOUSEMOVE: {
+            int xPos = (int)(short)LOWORD(lParam);
+            int yPos = (int)(short)HIWORD(lParam);
+            int cellSize = (g_boardWidth == 6) ? 55 : ((g_boardWidth == 8) ? 45 : 38);
+            int boardStartX = 20;
+            int boardStartY = 95;
+            
+            int c = (xPos - boardStartX) / cellSize;
+            int r = (yPos - boardStartY) / cellSize;
+            
+            int newHoverIdx = -1;
+            if (xPos >= boardStartX && yPos >= boardStartY && c >= 0 && c < g_boardWidth && r >= 0 && r < g_boardHeight) {
+                newHoverIdx = r * g_boardWidth + c;
+            }
+            if (hoverIdx != newHoverIdx) {
+                hoverIdx = newHoverIdx;
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
+        }
         case WM_COMMAND: {
             int id = LOWORD(wParam);
             if (id >= IDM_STAGE_1 && id <= IDM_STAGE_20) {
@@ -1490,6 +1511,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             Ellipse(hdc, rect.left + 8, rect.top + 8, rect.right - 8, rect.bottom - 8);
                             DeleteObject(bombPen);
                         } else if (GetFlippable(idx, BLACK, dummy) > 0) {
+                            if (hoverIdx == idx) {
+                                int radius = (cellSize - (cellSize >= 45 ? 10 : 6)) / 2;
+                                int hcx = rect.left + cellSize / 2;
+                                int hcy = rect.top + cellSize / 2;
+                                HBRUSH ghostBrush = CreateHatchBrush(HS_BDIAGONAL, RGB(100, 100, 100));
+                                HPEN ghostPen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+                                SelectObject(hdc, ghostBrush);
+                                SelectObject(hdc, ghostPen);
+                                Ellipse(hdc, hcx - radius, hcy - radius, hcx + radius, hcy + radius);
+                                DeleteObject(ghostBrush);
+                                DeleteObject(ghostPen);
+                            }
                             if (showHint && idx == bestMoveIdx) {
                                 HBRUSH hintBrush = CreateSolidBrush(RGB(255, 215, 0));
                                 HPEN hintPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 180));

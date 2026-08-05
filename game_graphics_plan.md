@@ -84,7 +84,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KReversi
+
 - KAlchemy
 - KQuest
 - KSpace
@@ -113,8 +113,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KGo
 - KTowers
 - KWords
+- KReversi
 
 ## Completed Work Log
+
+- **KReversi (Loop 2):** Implemented ghost hover piece for valid moves and a multi-color particle burst explosion animation for the bomb piece in both Web Canvas/HTML (kreversi.html) and Native C Win32 GDI (KReversi/main.c).
 
 - **KWords (Loop 2):** Implemented ice shatter particle bursts when frozen tiles are thawed and magic spark particle bursts for hint, radar, and pathfinder skills in both Web Canvas/HTML (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
