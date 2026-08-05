@@ -5,15 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KFarm</title>
     <style>
-        body { margin: 0; padding: 0; background-color: #222; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        canvas { background-color: #4CAF50; border: 2px solid #333; cursor: pointer; }
+        body { 
+            margin: 0; padding: 0; 
+            background-color: #87CEEB; /* Sunny sky blue */
+            color: #4E342E; /* Earthy dark brown */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; overflow: hidden; 
+        }
+        .container {
+            background-color: #FFF3E0; /* Warm sunny white */
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            border: 4px solid #8D6E63;
+        }
+        canvas { 
+            background-color: #8BC34A; 
+            border: 4px solid #5D4037; 
+            border-radius: 8px;
+            cursor: pointer; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+            display: block;
+            margin: 0 auto;
+        }
+        h2 { margin: 0 0 10px 0; text-align: center; text-transform: uppercase; letter-spacing: 2px; text-shadow: 1px 1px 0px #FFCC80; }
+        p { margin: 15px 0 0 0; text-align: center; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
-    <div>
-        <h2 style="text-align: center; margin-bottom: 10px;">KFarm</h2>
+    <div class="container">
+        <h2>KFarm</h2>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <p style="text-align: center; font-size: 14px;">Click grass to till. Click soil to plant wheat.</p>
+        <p>Click grass to till. Click soil to plant wheat.</p>
     </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -22,6 +46,10 @@
         const ROWS = 10;
         const CELL_SIZE = 40;
         const grid = new Array(COLS * ROWS).fill(0); // 0=grass, 1=tilled, 2=wheat
+        
+        ctx.font = '28px Arial'; // For emoji
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -34,20 +62,19 @@
                     
                     // Draw cell background
                     if (val === 0) {
-                        ctx.fillStyle = '#4CAF50'; // Grass
+                        ctx.fillStyle = '#8BC34A'; // Sunny Grass
                     } else {
-                        ctx.fillStyle = '#795548'; // Tilled soil
+                        ctx.fillStyle = '#5D4037'; // Rich tilled soil
                     }
                     ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
                     
-                    // Draw grid border
-                    ctx.strokeStyle = '#388E3C';
+                    // Draw grid border (subtle)
+                    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
                     ctx.strokeRect(px, py, CELL_SIZE, CELL_SIZE);
                     
-                    // Draw wheat
+                    // Draw crop icon
                     if (val === 2) {
-                        ctx.fillStyle = '#FFEB3B';
-                        ctx.fillRect(px + 10, py + 10, CELL_SIZE - 20, CELL_SIZE - 20);
+                        ctx.fillText('🌾', px + CELL_SIZE / 2, py + CELL_SIZE / 2 + 2);
                     }
                 }
             }

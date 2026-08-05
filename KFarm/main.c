@@ -23,10 +23,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            HBRUSH hGrass = CreateSolidBrush(RGB(76, 175, 80));
-            HBRUSH hSoil = CreateSolidBrush(RGB(121, 85, 72));
-            HBRUSH hWheat = CreateSolidBrush(RGB(255, 235, 59));
-            HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(34, 139, 34));
+            HBRUSH hGrass = CreateSolidBrush(RGB(139, 195, 74));
+            HBRUSH hSoil = CreateSolidBrush(RGB(93, 64, 55));
+            HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(104, 159, 56));
+            HPEN hWheatPen = CreatePen(PS_SOLID, 3, RGB(255, 213, 79));
 
             for (int y = 0; y < GRID_ROWS; y++) {
                 for (int x = 0; x < GRID_COLS; x++) {
@@ -41,15 +41,28 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     Rectangle(hdc, r.left, r.top, r.right, r.bottom);
                     
                     if (grid[idx] == 2) {
-                        RECT wheatR = { r.left + 10, r.top + 10, r.right - 10, r.bottom - 10 };
-                        FillRect(hdc, &wheatR, hWheat);
+                        SelectObject(hdc, hWheatPen);
+                        int cx = r.left + CELL_SIZE / 2;
+                        int cy = r.top + CELL_SIZE / 2;
+                        
+                        MoveToEx(hdc, cx, r.bottom - 8, NULL);
+                        LineTo(hdc, cx, r.top + 8);
+                        
+                        MoveToEx(hdc, cx, cy, NULL);
+                        LineTo(hdc, cx - 8, cy - 8);
+                        
+                        MoveToEx(hdc, cx, cy + 6, NULL);
+                        LineTo(hdc, cx + 8, cy - 4);
+                        
+                        MoveToEx(hdc, cx, cy - 6, NULL);
+                        LineTo(hdc, cx - 6, cy - 12);
                     }
                 }
             }
             
             DeleteObject(hGrass);
             DeleteObject(hSoil);
-            DeleteObject(hWheat);
+            DeleteObject(hWheatPen);
             DeleteObject(hGridPen);
 
             EndPaint(hwnd, &ps);
@@ -69,7 +82,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     wc.hInstance     = hInstance;
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(RGB(34, 34, 34));
+    wc.hbrBackground = CreateSolidBrush(RGB(135, 206, 235));
 
     RegisterClass(&wc);
 
