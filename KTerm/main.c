@@ -180,7 +180,9 @@ void InitTabSession(TabSession* tab, const char* title) {
     lstrcpynA(tab->aliases[2].cmd, "type", 256);
     lstrcpynA(tab->aliases[3].name, "sysinfo", 64);
     lstrcpynA(tab->aliases[3].cmd, "ver", 256);
-    tab->alias_count = 4;
+    lstrcpynA(tab->aliases[4].name, "h", 64);
+    lstrcpynA(tab->aliases[4].cmd, "help", 256);
+    tab->alias_count = 5;
 
     // Default env vars
     lstrcpynA(tab->envVars[0].name, "USER", 64);
@@ -216,7 +218,7 @@ void AddNewTab(const char* title) {
 
     // Initial banner for tab
     char banner[256];
-    wsprintfA(banner, "KiloOS Terminal v1.2 [%s]\r\n[Type 'help' for commands | Ctrl+T: New Tab | Ctrl+R: Reverse Search]", nameBuf);
+    wsprintfA(banner, "KiloOS Terminal v1.2 [%s]\r\n[Press 'h' or type 'help' for commands | Ctrl+T: New Tab | Ctrl+R: Reverse Search]", nameBuf);
     
     if (g_tabCount == 1) {
         AppendOutput(banner);
@@ -865,7 +867,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SendMessageA(hOut, EM_SETLIMITTEXT, OUT_BUF_SIZE, 0);
 
-            g_hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            g_hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             SendMessageA(hTab, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
             SendMessageA(hOut, WM_SETFONT, (WPARAM)g_hFont, 0);
             SendMessageA(hIn, WM_SETFONT, (WPARAM)g_hFont, 0);
@@ -933,7 +935,7 @@ void MainEntry() {
     RegisterClassA(&wc);
 
     HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, 960, 600, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
