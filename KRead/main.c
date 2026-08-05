@@ -203,7 +203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetMenu(hwnd, hMenu);
 
-            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KRead Native E-Reader.\r\nUse File -> Open to load a document.\r\nUse View -> Help for instructions.", 
+            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KRead Native E-Reader.\r\nUse File -> Open to load a document.\r\nPress F1 or use View -> Help for instructions.", 
                 WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_WANTRETURN, 
                 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
 
@@ -310,6 +310,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
+    SetProcessDPIAware();
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
@@ -318,13 +319,17 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 900, 700, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1000, 800, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN && msg.wParam == VK_F1) {
+            SendMessageA(hwnd, WM_COMMAND, 1008, 0);
+            continue;
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
