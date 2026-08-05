@@ -319,72 +319,72 @@ void DoBitwiseOp(int op) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
+            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             CreateWindowA("STATIC", "Input Buffer / Number:", WS_CHILD | WS_VISIBLE, 10, 10, 200, 18, hwnd, NULL, NULL, NULL);
-            HWND hBtnHelp = CreateWindowA("BUTTON", "Help (?)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 410, 7, 80, 20, hwnd, (HMENU)99, NULL, NULL);
+            HWND hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 510, 7, 100, 20, hwnd, (HMENU)99, NULL, NULL);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, 0);
 
             hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "42", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN,
-                10, 30, 480, 50, hwnd, NULL, NULL, NULL);
+                10, 30, 600, 50, hwnd, NULL, NULL, NULL);
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Operands A & B for bitwise calculations
-            CreateWindowA("STATIC", "Operand A (Hex/Dec):", WS_CHILD | WS_VISIBLE, 10, 88, 140, 18, hwnd, NULL, NULL, NULL);
-            hEditA = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0x0F0F0F0F", WS_CHILD | WS_VISIBLE, 150, 85, 120, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Operand A (Hex/Dec):", WS_CHILD | WS_VISIBLE, 10, 88, 160, 18, hwnd, NULL, NULL, NULL);
+            hEditA = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0x0F0F0F0F", WS_CHILD | WS_VISIBLE, 170, 85, 120, 22, hwnd, NULL, NULL, NULL);
             SendMessageA(hEditA, WM_SETFONT, (WPARAM)hFont, 0);
 
-            CreateWindowA("STATIC", "Operand B / Shift:", WS_CHILD | WS_VISIBLE, 280, 88, 120, 18, hwnd, NULL, NULL, NULL);
-            hEditB = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0x00FF00FF", WS_CHILD | WS_VISIBLE, 400, 85, 90, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Operand B / Shift:", WS_CHILD | WS_VISIBLE, 300, 88, 140, 18, hwnd, NULL, NULL, NULL);
+            hEditB = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0x00FF00FF", WS_CHILD | WS_VISIBLE, 445, 85, 120, 22, hwnd, NULL, NULL, NULL);
             SendMessageA(hEditB, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Action Buttons - Base & Text Encoding
-            HWND hBtnConv = CreateWindowA("BUTTON", "Convert Base", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 115, 95, 24, hwnd, (HMENU)100, NULL, NULL);
+            HWND hBtnConv = CreateWindowA("BUTTON", "Convert Base", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 115, 100, 24, hwnd, (HMENU)100, NULL, NULL);
             SendMessageA(hBtnConv, WM_SETFONT, (WPARAM)hFont, 0);
 
-            hBtnEnc = CreateWindowA("BUTTON", "B64 Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 115, 70, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnEnc = CreateWindowA("BUTTON", "B64 Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 115, 115, 75, 24, hwnd, (HMENU)1, NULL, NULL);
             SendMessageA(hBtnEnc, WM_SETFONT, (WPARAM)hFont, 0);
             
-            hBtnDec = CreateWindowA("BUTTON", "B64 Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 185, 115, 70, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnDec = CreateWindowA("BUTTON", "B64 Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 195, 115, 75, 24, hwnd, (HMENU)2, NULL, NULL);
             SendMessageA(hBtnDec, WM_SETFONT, (WPARAM)hFont, 0);
             
-            HWND hBtnUrlEnc = CreateWindowA("BUTTON", "URL Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 260, 115, 70, 24, hwnd, (HMENU)4, NULL, NULL);
+            HWND hBtnUrlEnc = CreateWindowA("BUTTON", "URL Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 275, 115, 75, 24, hwnd, (HMENU)4, NULL, NULL);
             SendMessageA(hBtnUrlEnc, WM_SETFONT, (WPARAM)hFont, 0);
 
-            HWND hBtnUrlDec = CreateWindowA("BUTTON", "URL Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 335, 115, 70, 24, hwnd, (HMENU)5, NULL, NULL);
+            HWND hBtnUrlDec = CreateWindowA("BUTTON", "URL Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 355, 115, 75, 24, hwnd, (HMENU)5, NULL, NULL);
             SendMessageA(hBtnUrlDec, WM_SETFONT, (WPARAM)hFont, 0);
 
-            hBtnHash = CreateWindowA("BUTTON", "SHA-256", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 410, 115, 80, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtnHash = CreateWindowA("BUTTON", "SHA-256", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 435, 115, 80, 24, hwnd, (HMENU)3, NULL, NULL);
             SendMessageA(hBtnHash, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Bitwise Operator Buttons
-            HWND hBtnAnd = CreateWindowA("BUTTON", "AND", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 145, 55, 24, hwnd, (HMENU)10, NULL, NULL);
+            HWND hBtnAnd = CreateWindowA("BUTTON", "AND", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 145, 60, 24, hwnd, (HMENU)10, NULL, NULL);
             SendMessageA(hBtnAnd, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnOr  = CreateWindowA("BUTTON", "OR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 70, 145, 55, 24, hwnd, (HMENU)11, NULL, NULL);
+            HWND hBtnOr  = CreateWindowA("BUTTON", "OR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 75, 145, 60, 24, hwnd, (HMENU)11, NULL, NULL);
             SendMessageA(hBtnOr, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnXor = CreateWindowA("BUTTON", "XOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 130, 145, 55, 24, hwnd, (HMENU)12, NULL, NULL);
+            HWND hBtnXor = CreateWindowA("BUTTON", "XOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 140, 145, 60, 24, hwnd, (HMENU)12, NULL, NULL);
             SendMessageA(hBtnXor, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnNot = CreateWindowA("BUTTON", "NOT(A)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 145, 60, 24, hwnd, (HMENU)13, NULL, NULL);
+            HWND hBtnNot = CreateWindowA("BUTTON", "NOT(A)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 205, 145, 65, 24, hwnd, (HMENU)13, NULL, NULL);
             SendMessageA(hBtnNot, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnShl = CreateWindowA("BUTTON", "SHL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 255, 145, 55, 24, hwnd, (HMENU)14, NULL, NULL);
+            HWND hBtnShl = CreateWindowA("BUTTON", "SHL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 275, 145, 60, 24, hwnd, (HMENU)14, NULL, NULL);
             SendMessageA(hBtnShl, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnShr = CreateWindowA("BUTTON", "SHR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 315, 145, 55, 24, hwnd, (HMENU)15, NULL, NULL);
+            HWND hBtnShr = CreateWindowA("BUTTON", "SHR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 340, 145, 60, 24, hwnd, (HMENU)15, NULL, NULL);
             SendMessageA(hBtnShr, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnRol = CreateWindowA("BUTTON", "ROL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 375, 145, 55, 24, hwnd, (HMENU)16, NULL, NULL);
+            HWND hBtnRol = CreateWindowA("BUTTON", "ROL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 405, 145, 60, 24, hwnd, (HMENU)16, NULL, NULL);
             SendMessageA(hBtnRol, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnRor = CreateWindowA("BUTTON", "ROR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 435, 145, 55, 24, hwnd, (HMENU)17, NULL, NULL);
+            HWND hBtnRor = CreateWindowA("BUTTON", "ROR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 470, 145, 60, 24, hwnd, (HMENU)17, NULL, NULL);
             SendMessageA(hBtnRor, WM_SETFONT, (WPARAM)hFont, 0);
 
             // 64-Bit Binary Stream Display
             CreateWindowA("STATIC", "64-Bit Binary Stream:", WS_CHILD | WS_VISIBLE, 10, 178, 200, 18, hwnd, NULL, NULL, NULL);
             hBitDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0000000000000000000000000000000000000000000000000000000000000000",
-                WS_CHILD | WS_VISIBLE | ES_READONLY, 10, 196, 480, 24, hwnd, NULL, NULL, NULL);
+                WS_CHILD | WS_VISIBLE | ES_READONLY, 10, 196, 600, 24, hwnd, NULL, NULL, NULL);
             SendMessageA(hBitDisplay, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Output Display Area
             CreateWindowA("STATIC", "Output Result:", WS_CHILD | WS_VISIBLE, 10, 226, 200, 18, hwnd, NULL, NULL, NULL);
             hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY,
-                10, 245, 480, 110, hwnd, NULL, NULL, NULL);
+                10, 245, 600, 150, hwnd, NULL, NULL, NULL);
             SendMessageA(hOutput, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Trigger default conversion
@@ -400,7 +400,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 5) DoUrlDecode();
             else if (id == 6) DoHexEncode();
             else if (id == 7) DoHexDecode();
-            else if (id == 99) MessageBoxA(hwnd, "KBase Help:\n\n- Convert Base: Type number and click Convert.\n- Bitwise: Enter Operand A & B as Hex/Dec.\n- Strings: Encode/Decode/Hash text.", "KBase Help", MB_OK | MB_ICONINFORMATION);
+            else if (id == 99) MessageBoxA(hwnd, "KBase Help:\n\n- Convert Base: Type number and click Convert.\n- Bitwise: Enter Operand A & B as Hex/Dec.\n- Strings: Encode/Decode/Hash text.\n- F1: Show this help dialog.", "KBase Help", MB_OK | MB_ICONINFORMATION);
             else if (id == 100) DoConvertBases();
             else if (id >= 10 && id <= 17) DoBitwiseOp(id);
             break;
@@ -431,7 +431,7 @@ void __stdcall MainEntry() {
     
     RegisterClassA(&wc);
     
-    RECT rc = {0, 0, 520, 420};
+    RECT rc = {0, 0, 640, 480};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase - Universal Base & Bitwise Utility", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
@@ -442,6 +442,10 @@ void __stdcall MainEntry() {
     
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN && msg.wParam == VK_F1) {
+            SendMessageA(hwnd, WM_COMMAND, 99, 0);
+            continue;
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

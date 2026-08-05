@@ -1316,6 +1316,9 @@
 
   // Initialization
   window.addEventListener('DOMContentLoaded', () => {
+    if (window.resizeTo) {
+      window.resizeTo(900, 750);
+    }
     initBitboardGrid();
     renderBitboard();
     executeBitwiseOp('AND');
