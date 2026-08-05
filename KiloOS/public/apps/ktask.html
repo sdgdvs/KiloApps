@@ -1275,6 +1275,10 @@
     });
 
     // Initial load and start auto refresh
+    try {
+      window.resizeTo(800, 600);
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 800, height: 600 }, '*');
+    } catch(e) {}
     setTimeout(refresh, 100);
     startAutoRefresh();
   </script>

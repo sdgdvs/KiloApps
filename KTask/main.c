@@ -451,6 +451,9 @@ LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         } else if (wParam == VK_DELETE) {
             PerformEndTask(GetParent(hwnd));
             return 0;
+        } else if (wParam == 'H') {
+            MessageBoxA(GetParent(hwnd), "Shortcuts:\r\nF5: Refresh\r\nDel: End Task\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+            return 0;
         }
     }
     return CallWindowProcA(g_OldListProc, hwnd, msg, wParam, lParam);
@@ -525,6 +528,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == VK_DELETE) {
                 PerformEndTask(hwnd);
                 return 0;
+            } else if (wParam == 'H') {
+                MessageBoxA(hwnd, "Shortcuts:\r\nF5: Refresh\r\nDel: End Task\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+                return 0;
             }
             break;
 
@@ -546,10 +552,10 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    RECT rc = {0, 0, 620, 420};
+    RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F5: Refresh, Del: End Task)", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F5: Refresh, Del: End Task, H: Help)", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
