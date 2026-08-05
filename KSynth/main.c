@@ -13,6 +13,19 @@ HWND hScopeWnd;
 HWAVEOUT hWaveOut;
 WAVEHDR waveHdr;
 
+int GetDPI() {
+    HDC hdc = GetDC(NULL);
+    int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+    ReleaseDC(NULL, hdc);
+    return dpi;
+}
+int Scale(int v) {
+    return (v * GetDPI()) / 96;
+}
+HWND CreateScaledWindowEx(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam) {
+    return CreateWindowExA(dwExStyle, lpClassName, lpWindowName, dwStyle, Scale(X), Scale(Y), Scale(nWidth), Scale(nHeight), hWndParent, hMenu, hInstance, lpParam);
+}
+
 #define SAMPLE_RATE 44100
 #define MAX_DURATION 5
 short buffer[SAMPLE_RATE * MAX_DURATION];
@@ -258,15 +271,17 @@ LRESULT CALLBACK ScopeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             HPEN hGridPen = CreatePen(PS_DOT, 1, RGB(40, 48, 64));
             HPEN hOldPen = (HPEN)SelectObject(hdc, hGridPen);
-            for (int x = 0; x < w; x += 30) {
+            int stepX = Scale(30); if (stepX < 1) stepX = 1;
+            int stepY = Scale(20); if (stepY < 1) stepY = 1;
+            for (int x = 0; x < w; x += stepX) {
                 MoveToEx(hdc, x, 0, NULL); LineTo(hdc, x, h);
             }
-            for (int y = 0; y < h; y += 20) {
+            for (int y = 0; y < h; y += stepY) {
                 MoveToEx(hdc, 0, y, NULL); LineTo(hdc, w, y);
             }
             DeleteObject(SelectObject(hdc, hOldPen));
 
-            HPEN hScopePen = CreatePen(PS_SOLID, 2, RGB(0, 243, 255));
+            HPEN hScopePen = CreatePen(PS_SOLID, Scale(2), RGB(0, 243, 255));
             hOldPen = (HPEN)SelectObject(hdc, hScopePen);
 
             int midY = h / 2;
@@ -299,11 +314,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     static HFONT hFont = NULL;
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            int fontHeight = Scale(15);
+            hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             // Preset Selection
-            CreateWindowEx(0, "STATIC", "Preset:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 20, hwnd, NULL, NULL, NULL);
-            hComboPreset = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 12, 160, 150, hwnd, (HMENU)10, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Preset:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 20, hwnd, NULL, NULL, NULL);
+            hComboPreset = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 12, 160, 150, hwnd, (HMENU)10, NULL, NULL);
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"0: Neon Lead");
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"1: Sub Bass");
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"2: Warm Pad");
@@ -313,8 +329,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboPreset, CB_SETCURSEL, 0, 0);
 
             // Waveform Selection
-            CreateWindowEx(0, "STATIC", "Waveform:", WS_CHILD | WS_VISIBLE, 15, 45, 80, 20, hwnd, NULL, NULL, NULL);
-            hComboWave = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 42, 160, 150, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Waveform:", WS_CHILD | WS_VISIBLE, 15, 45, 80, 20, hwnd, NULL, NULL, NULL);
+            hComboWave = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 42, 160, 150, hwnd, NULL, NULL, NULL);
             SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"Sine");
             SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"Square");
             SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"Sawtooth");
@@ -323,25 +339,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboWave, CB_SETCURSEL, 0, 0);
             
             // Frequency
-            CreateWindowEx(0, "STATIC", "Freq (Hz):", WS_CHILD | WS_VISIBLE, 15, 75, 80, 20, hwnd, NULL, NULL, NULL);
-            hFreq = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "440", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER, 100, 72, 80, 22, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Freq (Hz):", WS_CHILD | WS_VISIBLE, 15, 75, 80, 20, hwnd, NULL, NULL, NULL);
+            hFreq = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "440", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER, 100, 72, 80, 22, hwnd, NULL, NULL, NULL);
 
             // ADSR Group
-            CreateWindowEx(0, "STATIC", "Attack (s):", WS_CHILD | WS_VISIBLE, 15, 105, 80, 20, hwnd, NULL, NULL, NULL);
-            hAttack = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.05", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 102, 80, 22, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Attack (s):", WS_CHILD | WS_VISIBLE, 15, 105, 80, 20, hwnd, NULL, NULL, NULL);
+            hAttack = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.05", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 102, 80, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Decay (s):", WS_CHILD | WS_VISIBLE, 15, 135, 80, 20, hwnd, NULL, NULL, NULL);
-            hDecay = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.20", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 132, 80, 22, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Decay (s):", WS_CHILD | WS_VISIBLE, 15, 135, 80, 20, hwnd, NULL, NULL, NULL);
+            hDecay = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.20", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 132, 80, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Sustain (0-1):", WS_CHILD | WS_VISIBLE, 15, 165, 80, 20, hwnd, NULL, NULL, NULL);
-            hSustain = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.60", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 162, 80, 22, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Sustain (0-1):", WS_CHILD | WS_VISIBLE, 15, 165, 80, 20, hwnd, NULL, NULL, NULL);
+            hSustain = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.60", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 162, 80, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Release (s):", WS_CHILD | WS_VISIBLE, 15, 195, 80, 20, hwnd, NULL, NULL, NULL);
-            hRelease = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.40", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 192, 80, 22, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Release (s):", WS_CHILD | WS_VISIBLE, 15, 195, 80, 20, hwnd, NULL, NULL, NULL);
+            hRelease = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.40", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 192, 80, 22, hwnd, NULL, NULL, NULL);
 
             // Arpeggiator Group
-            CreateWindowEx(0, "STATIC", "Arp Mode:", WS_CHILD | WS_VISIBLE, 15, 230, 80, 20, hwnd, NULL, NULL, NULL);
-            hComboArp = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 227, 160, 120, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Arp Mode:", WS_CHILD | WS_VISIBLE, 15, 230, 80, 20, hwnd, NULL, NULL, NULL);
+            hComboArp = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 227, 160, 120, hwnd, NULL, NULL, NULL);
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Off");
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Up");
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Down");
@@ -350,8 +366,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboArp, CB_SETCURSEL, 0, 0);
 
             // Play Buttons
-            hBtnPlay = CreateWindowEx(0, "BUTTON", "▶ Play Tone", WS_CHILD | WS_VISIBLE, 15, 270, 110, 32, hwnd, (HMENU)1, NULL, NULL);
-            hBtnSeq  = CreateWindowEx(0, "BUTTON", "⚡ Run Arp", WS_CHILD | WS_VISIBLE, 140, 270, 120, 32, hwnd, (HMENU)2, NULL, NULL);
+            hBtnPlay = CreateScaledWindowEx(0, "BUTTON", "▶ Play Tone", WS_CHILD | WS_VISIBLE, 15, 270, 110, 32, hwnd, (HMENU)1, NULL, NULL);
+            hBtnSeq  = CreateScaledWindowEx(0, "BUTTON", "⚡ Run Arp", WS_CHILD | WS_VISIBLE, 140, 270, 120, 32, hwnd, (HMENU)2, NULL, NULL);
 
             // Oscilloscope Box Window
             WNDCLASS sc = {0};
@@ -360,9 +376,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             sc.lpszClassName = "KSynthScope";
             RegisterClass(&sc);
 
-            hScopeWnd = CreateWindowEx(WS_EX_CLIENTEDGE, "KSynthScope", "", WS_CHILD | WS_VISIBLE, 280, 12, 330, 240, hwnd, NULL, GetModuleHandle(NULL), NULL);
+            hScopeWnd = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "KSynthScope", "", WS_CHILD | WS_VISIBLE, 280, 12, 330, 240, hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-            CreateWindowEx(0, "STATIC", "Keyboard mapping:\nKeys [A, W, S, E, D, F, T, G, Y, H, U, J, K]\nTrigger notes C4 to C5 in real-time.\nPress '?' for Help.", WS_CHILD | WS_VISIBLE, 280, 260, 330, 60, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Keyboard mapping:\nKeys [A, W, S, E, D, F, T, G, Y, H, U, J, K]\nTrigger notes C4 to C5 in real-time.\nPress 'H' or '?' for Help.", WS_CHILD | WS_VISIBLE, 280, 260, 330, 60, hwnd, NULL, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             break;
@@ -402,6 +418,7 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -412,7 +429,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KSynthApp", "KSynth Workstation Pro", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, Scale(W), Scale(H), NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -422,13 +439,18 @@ void MainEntry() {
         if (msg.message == WM_KEYDOWN && !(msg.lParam & 0x40000000)) {
             HWND hFocus = GetFocus();
             if (hFocus != hFreq && hFocus != hAttack && hFocus != hDecay && hFocus != hSustain && hFocus != hRelease) {
+                WPARAM key = msg.wParam;
+                if (key == 'H' || key == VK_OEM_2 || key == VK_F1 || key == '?') {
+                    MessageBoxA(hwnd, "Keyboard Shortcuts:\n[A-K] : Play notes C4 to C5\n[?] or [H] : Toggle Help", "KSynth Help", MB_OK | MB_ICONINFORMATION);
+                    continue;
+                }
+                
                 double noteMap[256] = {0};
                 noteMap['A'] = 261.63; noteMap['W'] = 277.18; noteMap['S'] = 293.66;
                 noteMap['E'] = 311.13; noteMap['D'] = 329.63; noteMap['F'] = 349.23;
                 noteMap['T'] = 369.99; noteMap['G'] = 392.00; noteMap['Y'] = 415.30;
                 noteMap['H'] = 440.00; noteMap['U'] = 466.16; noteMap['J'] = 493.88;
                 noteMap['K'] = 523.25;
-                WPARAM key = msg.wParam;
                 if (key < 256 && noteMap[key] > 0) {
                     char buf[32];
                     wsprintfA(buf, "%d", (int)(noteMap[key] + 0.5));
