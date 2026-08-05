@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KDarts
 - KTowers
 - KWords
 - KReversi
@@ -116,6 +115,8 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KGo
 
 ## Completed Work Log
+
+- **KDarts (Loop 2):** Implemented pub brick wall environmental background art and dart motion blur trail particles in both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
 
 - **KGo (Loop 2):** Implemented expanding shockwave ring animations for stone placement (ripples outward and fades) for both Web HTML (kgo.html) and Native C Win32 GDI (KGo/main.c).
 

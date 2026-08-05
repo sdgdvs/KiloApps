@@ -140,6 +140,19 @@ void SpawnSparks(float x, float y, COLORREF color, int count) {
     }
 }
 
+void SpawnTrailParticle(float x, float y, COLORREF color) {
+    if (particleCount >= MAX_PARTICLES) return;
+    particles[particleCount].x = x;
+    particles[particleCount].y = y;
+    particles[particleCount].vx = (((float)rand() / RAND_MAX) - 0.5f) * 1.5f;
+    particles[particleCount].vy = 1.5f + ((float)rand() / RAND_MAX) * 2.0f;
+    particles[particleCount].color = color;
+    particles[particleCount].size = 1.5f;
+    particles[particleCount].life = 0;
+    particles[particleCount].maxLife = 10;
+    particleCount++;
+}
+
 void SpawnScoreText(float x, float y, const char* txt, COLORREF color) {
     if (scoreTextCount >= MAX_SCORE_TEXTS) {
         memmove(&scoreTexts[0], &scoreTexts[1], sizeof(ScoreText) * (MAX_SCORE_TEXTS - 1));
@@ -1344,6 +1357,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     float arc = sinf(darts[i].progress * (float)PI) * 110.0f;
                     darts[i].x = CX + (darts[i].targetX - CX) * ease;
                     darts[i].y = 750.0f + (darts[i].targetY - 750.0f) * ease - arc;
+                    
+                    if ((rand() % 100) < 60) {
+                        COLORREF tCol = RGB(0, 240, 255);
+                        if (dartStyle == 1) tCol = RGB(255, 42, 42);
+                        else if (dartStyle == 2) tCol = RGB(255, 215, 0);
+                        float scale = 2.4f - darts[i].progress * 1.4f;
+                        SpawnTrailParticle(darts[i].x, darts[i].y + 30.0f * scale, tCol);
+                    }
                 } else {
                     darts[i].x = (float)darts[i].targetX;
                     darts[i].y = (float)darts[i].targetY;
@@ -1429,9 +1450,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HBITMAP hbmMem = CreateCompatibleBitmap(hdc, width, height);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbmMem);
             
-            HBRUSH bgBrush = CreateSolidBrush(RGB(18, 18, 18));
-            FillRect(memDC, &rect, bgBrush);
-            DeleteObject(bgBrush);
+            HBRUSH mortarBr = CreateSolidBrush(RGB(34, 17, 17));
+            FillRect(memDC, &rect, mortarBr);
+            HBRUSH brickBr = CreateSolidBrush(RGB(51, 26, 26));
+            for (int by = 0; by < height; by += 40) {
+                int offsetX = ((by / 40) % 2 == 0) ? 0 : -40;
+                for (int bx = offsetX; bx < width; bx += 80) {
+                    RECT bRect = {bx + 2, by + 2, bx + 78, by + 38};
+                    FillRect(memDC, &bRect, brickBr);
+                }
+            }
+            DeleteObject(brickBr);
+            DeleteObject(mortarBr);
             
             // Header UI panel
             HBRUSH uiBrush = CreateSolidBrush(RGB(28, 28, 32));

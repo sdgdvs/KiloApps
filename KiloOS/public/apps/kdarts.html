@@ -98,7 +98,7 @@
   }
   canvas {
     background: #18181c;
-    border-radius: 50%;
+    border-radius: 8px;
     box-shadow: 0 12px 35px rgba(0,0,0,0.85);
     cursor: crosshair;
   }
@@ -1423,6 +1423,22 @@ function update() {
     
     ctx.save();
     ctx.translate(shakeX, shakeY);
+    
+    // Draw Pub Brick Wall Background
+    ctx.fillStyle = '#221111';
+    ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40);
+    ctx.fillStyle = '#331a1a';
+    for (let by = -40; by < canvas.height + 40; by += 40) {
+        let offsetX = (Math.abs(by / 40) % 2 === 0) ? 0 : -40;
+        for (let bx = offsetX; bx < canvas.width + 40; bx += 80) {
+            ctx.fillRect(bx + 2, by + 2, 76, 36);
+        }
+    }
+    let grad = ctx.createRadialGradient(300, 300, 150, 300, 300, 450);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40);
     
     draw3DSisalDartboard();
     
