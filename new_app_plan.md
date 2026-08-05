@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFarm (Farming Simulation)
-**Phase:** 9 (next to do)
+**Phase:** 10 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KFarm directory (`KFarm/`), create web HTML skeleton (`KiloOS/public/apps/kfarm.html`), register in App.jsx.
@@ -65,7 +65,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 6: Multiple crop types (wheat, corn, tomatoes, pumpkins) with different growth times and sell values.
 - [x] Phase 7: Economy System — sell harvested crops for money. Buy seeds and upgrades.
 - [x] Phase 8: Animals & Barns — buy chickens and cows for daily eggs/milk.
-- [ ] Phase 9: Farming Tools — upgrade watering can, hoe, and scythe for area-of-effect actions.
+- [x] Phase 9: Farming Tools — upgrade watering can, hoe, and scythe for area-of-effect actions.
 - [ ] Phase 10: Seasons System — Spring, Summer, Fall, Winter. Crops are season-specific.
 - [ ] Phase 11: Weather Events — Rain (auto-waters), Drought (extra water needed), Crow attacks (need scarecrows).
 - [ ] Phase 12: Crafting/Processing — Turn wheat into flour, milk into cheese, eggs into mayo for higher profit.

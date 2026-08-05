@@ -50,6 +50,7 @@
             </div>
             <button onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep (Next Day)</button>
             <button id="upgradeBtn" onclick="buyUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-left:10px;">Fertilizer ($100)</button>
+            <button id="upgradeToolsBtn" onclick="buyToolsUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-left:10px;">Upgrade Tools ($200)</button>
         </div>
         <div style="text-align:center; margin-top:10px;">
             <button onclick="buyChicken()" style="padding:5px 10px; font-size:14px; background-color:#FFC107; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Chicken ($50)</button>
@@ -73,6 +74,7 @@
         let timeOfDay = 'day';
         let money = 50;
         let fertilizerBought = false;
+        let toolsUpgraded = false;
         let chickens = 0;
         let cows = 0;
 
@@ -111,6 +113,18 @@
                 updateMoney();
                 const btn = document.getElementById('upgradeBtn');
                 btn.innerText = 'Fertilizer (Owned)';
+                btn.style.backgroundColor = '#9E9E9E';
+                btn.disabled = true;
+            }
+        }
+
+        function buyToolsUpgrade() {
+            if (!toolsUpgraded && money >= 200) {
+                money -= 200;
+                toolsUpgraded = true;
+                updateMoney();
+                const btn = document.getElementById('upgradeToolsBtn');
+                btn.innerText = 'Tools Upgraded';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
             }
@@ -157,30 +171,50 @@
         canvas.addEventListener('mousedown', (e) => {
             if (timeOfDay === 'night') return;
             const rect = canvas.getBoundingClientRect();
-            const x = Math.floor((e.clientX - rect.left) / CELL_SIZE);
-            const y = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+            const cx = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+            const cy = Math.floor((e.clientY - rect.top) / CELL_SIZE);
             
-            if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
-                const cell = grid[y * COLS + x];
-                if (cell.type === 0) {
-                    cell.type = 1;
-                } else if (cell.type === 1) {
-                    const seedInput = document.querySelector('input[name="seed"]:checked');
-                    const cType = seedInput ? parseInt(seedInput.value) : 0;
-                    if (money >= cropData[cType].cost) {
-                        money -= cropData[cType].cost;
-                        updateMoney();
-                        cell.type = 2;
-                        cell.growth = 0;
-                        cell.cropType = cType;
+            if (cx >= 0 && cx < COLS && cy >= 0 && cy < ROWS) {
+                const centerCell = grid[cy * COLS + cx];
+                let action = '';
+                if (centerCell.type === 0) action = 'till';
+                else if (centerCell.type === 1) action = 'plant';
+                else if (centerCell.type === 2 && !centerCell.watered) action = 'water';
+                else if (centerCell.type === 3) action = 'harvest';
+                
+                if (!action) return;
+                
+                const isAoE = toolsUpgraded && (action === 'till' || action === 'water' || action === 'harvest');
+                
+                const minX = isAoE ? Math.max(0, cx - 1) : cx;
+                const maxX = isAoE ? Math.min(COLS - 1, cx + 1) : cx;
+                const minY = isAoE ? Math.max(0, cy - 1) : cy;
+                const maxY = isAoE ? Math.min(ROWS - 1, cy + 1) : cy;
+                
+                for (let y = minY; y <= maxY; y++) {
+                    for (let x = minX; x <= maxX; x++) {
+                        const cell = grid[y * COLS + x];
+                        if (action === 'till' && cell.type === 0) {
+                            cell.type = 1;
+                        } else if (action === 'plant' && x === cx && y === cy && cell.type === 1) {
+                            const seedInput = document.querySelector('input[name="seed"]:checked');
+                            const cType = seedInput ? parseInt(seedInput.value) : 0;
+                            if (money >= cropData[cType].cost) {
+                                money -= cropData[cType].cost;
+                                updateMoney();
+                                cell.type = 2;
+                                cell.growth = 0;
+                                cell.cropType = cType;
+                            }
+                        } else if (action === 'water' && cell.type === 2 && !cell.watered) {
+                            cell.watered = true;
+                        } else if (action === 'harvest' && cell.type === 3) {
+                            money += cropData[cell.cropType].value;
+                            updateMoney();
+                            cell.type = 1;
+                            cell.watered = false;
+                        }
                     }
-                } else if (cell.type === 2 && !cell.watered) {
-                    cell.watered = true;
-                } else if (cell.type === 3) {
-                    money += cropData[cell.cropType].value;
-                    updateMoney();
-                    cell.type = 1;
-                    cell.watered = false;
                 }
                 draw();
             }

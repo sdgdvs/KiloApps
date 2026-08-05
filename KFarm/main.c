@@ -18,12 +18,14 @@ int sell_values[4] = {10, 20, 30, 50};
 int seed_costs[4] = {5, 10, 15, 25};
 int money = 50;
 int fertilizer_bought = 0;
+int tools_upgraded = 0;
 int selected_seed = 0;
 int chickens = 0;
 int cows = 0;
 HWND hNextDayBtn;
 HWND hSeedBtns[4];
 HWND hUpgradeBtn;
+HWND hUpgradeToolsBtn;
 HWND hBuyChickenBtn;
 HWND hBuyCowBtn;
 
@@ -36,6 +38,8 @@ void UpdateTitle(HWND hwnd) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
+            hUpgradeToolsBtn = CreateWindow("BUTTON", "Tools ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                10, 410, 110, 30, hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hNextDayBtn = CreateWindow("BUTTON", "Sleep (Next Day)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 130, 410, 140, 30, hwnd, (HMENU) 1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hUpgradeBtn = CreateWindow("BUTTON", "Fertilizer ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
@@ -90,6 +94,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     MessageBeep(MB_ICONERROR);
                 }
             }
+            if (LOWORD(wParam) == 9 && time_of_day == 0 && !tools_upgraded) {
+                if (money >= 200) {
+                    money -= 200;
+                    tools_upgraded = 1;
+                    EnableWindow(hUpgradeToolsBtn, FALSE);
+                    SetWindowText(hUpgradeToolsBtn, "Tools (Owned)");
+                    UpdateTitle(hwnd);
+                } else {
+                    MessageBeep(MB_ICONERROR);
+                }
+            }
             if (LOWORD(wParam) >= 2 && LOWORD(wParam) <= 5) {
                 selected_seed = LOWORD(wParam) - 2;
             }
@@ -117,26 +132,46 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_LBUTTONDOWN: {
             if (time_of_day == 1) return 0;
-            int x = LOWORD(lParam) / CELL_SIZE;
-            int y = HIWORD(lParam) / CELL_SIZE;
-            if (x >= 0 && x < GRID_COLS && y >= 0 && y < GRID_ROWS) {
-                int idx = y * GRID_COLS + x;
-                if (grid[idx].type == 0) grid[idx].type = 1;
-                else if (grid[idx].type == 1) { 
-                    if (money >= seed_costs[selected_seed]) {
-                        money -= seed_costs[selected_seed];
-                        grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
-                        UpdateTitle(hwnd);
-                    } else {
-                        MessageBeep(MB_ICONERROR);
+            int cx = LOWORD(lParam) / CELL_SIZE;
+            int cy = HIWORD(lParam) / CELL_SIZE;
+            if (cx >= 0 && cx < GRID_COLS && cy >= 0 && cy < GRID_ROWS) {
+                int c_idx = cy * GRID_COLS + cx;
+                int action = -1; // 0=till, 1=plant, 2=water, 3=harvest
+                
+                if (grid[c_idx].type == 0) action = 0;
+                else if (grid[c_idx].type == 1) action = 1;
+                else if (grid[c_idx].type == 2 && !grid[c_idx].watered) action = 2;
+                else if (grid[c_idx].type == 3) action = 3;
+                
+                if (action == -1) return 0;
+                
+                int is_aoe = tools_upgraded && (action == 0 || action == 2 || action == 3);
+                int min_x = is_aoe ? (cx > 0 ? cx - 1 : 0) : cx;
+                int max_x = is_aoe ? (cx < GRID_COLS - 1 ? cx + 1 : GRID_COLS - 1) : cx;
+                int min_y = is_aoe ? (cy > 0 ? cy - 1 : 0) : cy;
+                int max_y = is_aoe ? (cy < GRID_ROWS - 1 ? cy + 1 : GRID_ROWS - 1) : cy;
+                
+                for (int y = min_y; y <= max_y; y++) {
+                    for (int x = min_x; x <= max_x; x++) {
+                        int idx = y * GRID_COLS + x;
+                        if (action == 0 && grid[idx].type == 0) {
+                            grid[idx].type = 1;
+                        } else if (action == 1 && x == cx && y == cy && grid[idx].type == 1) {
+                            if (money >= seed_costs[selected_seed]) {
+                                money -= seed_costs[selected_seed];
+                                grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
+                            } else {
+                                MessageBeep(MB_ICONERROR);
+                            }
+                        } else if (action == 2 && grid[idx].type == 2 && !grid[idx].watered) {
+                            grid[idx].watered = 1;
+                        } else if (action == 3 && grid[idx].type == 3) {
+                            money += sell_values[grid[idx].cropType];
+                            grid[idx].type = 1; grid[idx].watered = 0;
+                        }
                     }
                 }
-                else if (grid[idx].type == 2 && !grid[idx].watered) grid[idx].watered = 1;
-                else if (grid[idx].type == 3) { 
-                    money += sell_values[grid[idx].cropType];
-                    grid[idx].type = 1; grid[idx].watered = 0; 
-                    UpdateTitle(hwnd);
-                }
+                UpdateTitle(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             return 0;
