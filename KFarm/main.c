@@ -69,13 +69,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     wc.hInstance     = hInstance;
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    wc.hbrBackground = CreateSolidBrush(RGB(34, 34, 34));
 
     RegisterClass(&wc);
 
+    RECT rect = {0, 0, GRID_COLS * CELL_SIZE, GRID_ROWS * CELL_SIZE};
+    AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
+
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KFarm", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
+        0, CLASS_NAME, "KFarm", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, hInstance, NULL
     );
 
