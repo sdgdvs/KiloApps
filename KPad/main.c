@@ -5,8 +5,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define W 800
-#define H 600
+#define W 1000
+#define H 700
 #define MAX_TABS 10
 
 typedef struct {
@@ -511,7 +511,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hFontGlobal = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
 
             AddTab("Welcome", NULL);
-            SetWindowTextA(g_Tabs[0].hEdit, "Welcome to KPad Pro!\r\n\r\nPress F1 or use the Help menu to view keyboard shortcuts.\r\n");
+            SetWindowTextA(g_Tabs[0].hEdit, "Welcome to KPad Pro!\r\n\r\nPress F1 for Help to view keyboard shortcuts.\r\n");
             g_Tabs[0].isModified = FALSE;
             break;
         }
@@ -654,6 +654,12 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 }
 
 void MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL (WINAPI *SetProcessDPIAwareFunc)();
+        SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpiAware) setDpiAware();
+    }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -663,7 +669,7 @@ void MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(WS_EX_TOOLWINDOW, "KPadApp", "KPad Pro", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KPadApp", "KPad Pro", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
