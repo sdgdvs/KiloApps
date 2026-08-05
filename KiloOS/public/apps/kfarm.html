@@ -35,7 +35,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>KFarm - Day <span id="daySpan">1</span> | $<span id="moneySpan">50</span></h2>
+        <h2>KFarm - <span id="seasonSpan">Spring</span>, Day <span id="daySpan">1</span> | $<span id="moneySpan">50</span></h2>
         <div style="text-align: center; margin-bottom: 10px; font-weight: bold; color: #5D4037;">
             🐔 Chickens: <span id="chickensSpan">0</span> | 🐄 Cows: <span id="cowsSpan">0</span>
         </div>
@@ -43,10 +43,10 @@
         <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest)</p>
         <div style="text-align:center; margin-top:15px;">
             <div style="margin-bottom: 10px; font-size: 14px;">
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> Wheat (-$5/+$10)</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="1"> Corn (-$10/+$20)</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="2"> Tomato (-$15/+$30)</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="3"> Pumpkin (-$25/+$50)</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> Wheat (-$5) [Sp/Fa]</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="1"> Corn (-$10) [Su]</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="2"> Tomato (-$15) [Su/Fa]</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="3"> Pumpkin (-$25) [Fa]</label>
             </div>
             <button onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep (Next Day)</button>
             <button id="upgradeBtn" onclick="buyUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-left:10px;">Fertilizer ($100)</button>
@@ -64,11 +64,12 @@
         const ROWS = 10;
         const CELL_SIZE = 40;
         const grid = Array.from({length: COLS * ROWS}, () => ({ type: 0, watered: false, growth: 0, cropType: 0 }));
+        const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
         const cropData = [
-            { name: 'Wheat', emoji: '🌾', growthTime: 2, value: 10, cost: 5 },
-            { name: 'Corn', emoji: '🌽', growthTime: 3, value: 20, cost: 10 },
-            { name: 'Tomato', emoji: '🍅', growthTime: 4, value: 30, cost: 15 },
-            { name: 'Pumpkin', emoji: '🎃', growthTime: 5, value: 50, cost: 25 }
+            { name: 'Wheat', emoji: '🌾', growthTime: 2, value: 10, cost: 5, seasons: [0, 2] },
+            { name: 'Corn', emoji: '🌽', growthTime: 3, value: 20, cost: 10, seasons: [1] },
+            { name: 'Tomato', emoji: '🍅', growthTime: 4, value: 30, cost: 15, seasons: [1, 2] },
+            { name: 'Pumpkin', emoji: '🎃', growthTime: 5, value: 50, cost: 25, seasons: [2] }
         ];
         let day = 1;
         let timeOfDay = 'day';
@@ -137,6 +138,12 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             document.body.style.backgroundColor = timeOfDay === 'night' ? '#1A237E' : '#87CEEB';
             
+            const currentSeason = Math.floor((day - 1) / 7) % 4;
+            const seasonColors = ['#8BC34A', '#4CAF50', '#FFB300', '#E0F7FA']; // Spring, Summer, Fall, Winter
+            const seasonColorNight = ['#33501E', '#1E4628', '#64460A', '#647882'];
+            const grassColor = timeOfDay === 'night' ? seasonColorNight[currentSeason] : seasonColors[currentSeason];
+            canvas.style.backgroundColor = grassColor;
+            
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
                     const cell = grid[y * COLS + x];
@@ -144,7 +151,7 @@
                     const py = y * CELL_SIZE;
                     
                     if (cell.type === 0) {
-                        ctx.fillStyle = '#8BC34A'; 
+                        ctx.fillStyle = grassColor; 
                     } else {
                         ctx.fillStyle = cell.watered ? '#3E2723' : '#5D4037'; 
                     }
@@ -199,7 +206,8 @@
                         } else if (action === 'plant' && x === cx && y === cy && cell.type === 1) {
                             const seedInput = document.querySelector('input[name="seed"]:checked');
                             const cType = seedInput ? parseInt(seedInput.value) : 0;
-                            if (money >= cropData[cType].cost) {
+                            const currentSeason = Math.floor((day - 1) / 7) % 4;
+                            if (cropData[cType].seasons.includes(currentSeason) && money >= cropData[cType].cost) {
                                 money -= cropData[cType].cost;
                                 updateMoney();
                                 cell.type = 2;
@@ -226,17 +234,23 @@
             draw();
             setTimeout(() => {
                 day++;
+                const currentSeason = Math.floor((day - 1) / 7) % 4;
                 document.getElementById('daySpan').innerText = day;
+                document.getElementById('seasonSpan').innerText = seasons[currentSeason];
                 timeOfDay = 'day';
                 money += (chickens * 5) + (cows * 15);
                 updateMoney();
                 for (let cell of grid) {
-                    if (cell.type === 2) {
-                        if (cell.watered) {
-                            cell.growth++;
-                            if (cell.growth >= cropData[cell.cropType].growthTime) cell.type = 3;
-                        } else {
-                            cell.type = 1; // Dies without water
+                    if (cell.type === 2 || cell.type === 3) {
+                        if (!cropData[cell.cropType].seasons.includes(currentSeason)) {
+                            cell.type = 1; // Dies because of season change
+                        } else if (cell.type === 2) {
+                            if (cell.watered) {
+                                cell.growth++;
+                                if (cell.growth >= cropData[cell.cropType].growthTime) cell.type = 3;
+                            } else {
+                                cell.type = 1; // Dies without water
+                            }
                         }
                     }
                     cell.watered = false;

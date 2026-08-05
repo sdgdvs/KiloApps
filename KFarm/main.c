@@ -13,6 +13,9 @@ typedef struct {
 Cell grid[GRID_COLS * GRID_ROWS] = {0};
 int current_day = 1;
 int time_of_day = 0; // 0=Day, 1=Night
+int current_season = 0; // 0=Spring, 1=Summer, 2=Fall, 3=Winter
+int crop_seasons[4] = {5, 2, 6, 4}; // Bitmasks: Wheat(0,2)->5, Corn(1)->2, Tomato(1,2)->6, Pumpkin(2)->4
+const char* season_names[4] = {"Spring", "Summer", "Fall", "Winter"};
 int growth_times[4] = {2, 3, 4, 5};
 int sell_values[4] = {10, 20, 30, 50};
 int seed_costs[4] = {5, 10, 15, 25};
@@ -31,7 +34,7 @@ HWND hBuyCowBtn;
 
 void UpdateTitle(HWND hwnd) {
     char title[128];
-    wsprintf(title, "KFarm - Day %d | $%d | Ch:%d | Co:%d", current_day, money, chickens, cows);
+    wsprintf(title, "KFarm - %s, Day %d | $%d | Ch:%d | Co:%d", season_names[current_season], current_day, money, chickens, cows);
     SetWindowText(hwnd, title);
 }
 
@@ -48,13 +51,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 290, 450, 100, 20, hwnd, (HMENU) 7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hBuyCowBtn = CreateWindow("BUTTON", "Cow ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 290, 475, 100, 20, hwnd, (HMENU) 8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (-$5/+$10)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
+            hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (-$5) [Sp/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
                 10, 450, 130, 20, hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[1] = CreateWindow("BUTTON", "Corn (-$10/+$20)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+            hSeedBtns[1] = CreateWindow("BUTTON", "Corn (-$10) [Su]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
                 150, 450, 130, 20, hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[2] = CreateWindow("BUTTON", "Tomato (-$15/+$30)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+            hSeedBtns[2] = CreateWindow("BUTTON", "Tomato (-$15) [Su/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
                 10, 475, 130, 20, hwnd, (HMENU) 4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[3] = CreateWindow("BUTTON", "Pumpkin (-$25/+$50)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+            hSeedBtns[3] = CreateWindow("BUTTON", "Pumpkin (-$25) [Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
                 150, 475, 140, 20, hwnd, (HMENU) 5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SendMessage(hSeedBtns[0], BM_SETCHECK, BST_CHECKED, 0);
             return 0;
@@ -113,15 +116,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (wParam == 1) {
                 KillTimer(hwnd, 1);
                 current_day++;
+                current_season = ((current_day - 1) / 7) % 4;
                 time_of_day = 0;
                 money += (chickens * 5) + (cows * 15);
                 for (int i = 0; i < GRID_COLS * GRID_ROWS; i++) {
-                    if (grid[i].type == 2) {
-                        if (grid[i].watered) {
-                            grid[i].growth++;
-                            if (grid[i].growth >= growth_times[grid[i].cropType]) grid[i].type = 3;
-                        } else {
-                            grid[i].type = 1; // Dies
+                    if (grid[i].type == 2 || grid[i].type == 3) {
+                        if ((crop_seasons[grid[i].cropType] & (1 << current_season)) == 0) {
+                            grid[i].type = 1; // Dies from season change
+                        } else if (grid[i].type == 2) {
+                            if (grid[i].watered) {
+                                grid[i].growth++;
+                                if (grid[i].growth >= growth_times[grid[i].cropType]) grid[i].type = 3;
+                            } else {
+                                grid[i].type = 1; // Dies without water
+                            }
                         }
                     }
                     grid[i].watered = 0;
@@ -157,7 +165,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (action == 0 && grid[idx].type == 0) {
                             grid[idx].type = 1;
                         } else if (action == 1 && x == cx && y == cy && grid[idx].type == 1) {
-                            if (money >= seed_costs[selected_seed]) {
+                            if ((crop_seasons[selected_seed] & (1 << current_season)) != 0 && money >= seed_costs[selected_seed]) {
                                 money -= seed_costs[selected_seed];
                                 grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
                             } else {
@@ -188,7 +196,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             FillRect(hdc, &clientRect, hSky);
             DeleteObject(hSky);
             
-            COLORREF cGrass = time_of_day ? RGB(50, 80, 30) : RGB(139, 195, 74);
+            COLORREF grass_colors[4] = { RGB(139, 195, 74), RGB(76, 175, 80), RGB(255, 179, 0), RGB(224, 247, 250) };
+            COLORREF night_grass_colors[4] = { RGB(51, 80, 30), RGB(30, 70, 40), RGB(100, 70, 10), RGB(100, 120, 130) };
+            COLORREF cGrass = time_of_day ? night_grass_colors[current_season] : grass_colors[current_season];
             COLORREF cSoil = time_of_day ? RGB(40, 20, 15) : RGB(93, 64, 55);
             COLORREF cWetSoil = time_of_day ? RGB(20, 10, 5) : RGB(62, 39, 35);
             
@@ -297,7 +307,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
 
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KFarm - Day 1 | $50 | Ch:0 | Co:0", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        0, CLASS_NAME, "KFarm - Spring, Day 1 | $50 | Ch:0 | Co:0", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, hInstance, NULL
     );
