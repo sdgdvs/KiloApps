@@ -376,6 +376,11 @@
 </style>
 </head>
 <body>
+  <div id="help-toast" style="position: fixed; bottom: 20px; right: 20px; background: var(--bg-secondary); border: 1px solid var(--accent-blue); padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1000; animation: fadeIn 0.5s;">
+    <h3 style="margin-bottom: 5px; color: var(--accent-blue); font-size: 14px;">Welcome to KSys</h3>
+    <p style="font-size: 12px; color: var(--text-main);">Press <strong>'H'</strong> for help instructions at any time.</p>
+    <button onclick="document.getElementById('help-toast').style.display='none'" style="margin-top: 10px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">Dismiss</button>
+  </div>
 
   <header>
     <div class="brand">

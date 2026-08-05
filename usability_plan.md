@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KSys
 - KRogue
 - KConverter
 - KTodo
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTerm
 - KSynth
 - KTask
+- KSys
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -157,3 +157,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTerm: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 960x600, crisp font rendering enabled, 'h' key alias added for help menu access).
 - KSynth: Usability and UI issues fixed (Appropriate auto-opening size adjusted, DPI awareness enabled with scaled UI controls, crisp canvas rendering, and 'H' key help popup added).
 - KTask: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 800x600, layout padding increased for visible controls, and 'H' key for help mapped).
+- KSys: Usability and UI issues fixed (appropriate auto-opening size adjusted, visible controls styled, explicit help toast overlay added, crisp DPI text enabled).

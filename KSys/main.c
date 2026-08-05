@@ -339,8 +339,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     static HFONT hFont = NULL;
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
-            if (!hFont) hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+            if (!hFont) hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Courier New");
             
             InitCommonControls();
 
@@ -452,6 +452,12 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 }
 
 void MainEntry() {
+    HMODULE hUser32 = LoadLibraryA("user32.dll");
+    if (hUser32) {
+        FARPROC setDpi = GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpi) ((BOOL(WINAPI*)())setDpi)();
+        FreeLibrary(hUser32);
+    }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
