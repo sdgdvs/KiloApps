@@ -703,6 +703,7 @@
             }
         }, 1000);
 
+        activeParticles = [];
         renderGrid();
         renderWordList();
     }
@@ -847,6 +848,7 @@
         if (frozenGrid[r][c] > 0) {
             frozenGrid[r][c]--;
             playSound('tick');
+            triggerIceShatter(r, c);
             if (frozenGrid[r][c] === 0) {
                 score += 100;
                 playSound('chime');
@@ -968,6 +970,7 @@
                                 if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
                                     if (frozenGrid[nr][nc] > 0) {
                                         frozenGrid[nr][nc] = 0;
+                                        triggerIceShatter(nr, nc);
                                         score += 100;
                                     }
                                 }
@@ -1061,6 +1064,7 @@
                             if (isFogStage) unfogArea(r, c, 2);
                             found = true;
                             playSound('chime');
+                            triggerMagicSpark(r, c);
                             break;
                         }
                     }
@@ -1104,6 +1108,7 @@
                                 let fc = c + i * dir[1];
                                 pathfinderGrid[fr][fc] = true;
                                 if (isFogStage) unfogArea(fr, fc, 1);
+                                setTimeout(() => triggerMagicSpark(fr, fc), i * 50);
                             }
                             found = true;
                             playSound('chime');
@@ -1162,6 +1167,7 @@
                             if (isFogStage) unfogArea(hr, hc, 1);
                             found = true;
                             playSound('tick');
+                            triggerMagicSpark(hr, hc);
                             break;
                         }
                     }
@@ -1223,36 +1229,130 @@
         document.getElementById('stats-modal').style.display = 'block';
     }
 
-    function startConfetti() {
+    let activeParticles = [];
+    let particleLoopActive = false;
+
+    function spawnParticles(x, y, type) {
         const canvas = document.getElementById('confetti-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = canvas.parentElement.clientHeight;
+        if (canvas.width === 0 || canvas.width === 300) { // default width is 300
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
 
-        const particles = Array(60).fill(null).map(() => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height - canvas.height,
-            vx: (Math.random() - 0.5) * 4,
-            vy: Math.random() * 3 + 2,
-            color: ['#ffe066', '#68d391', '#63b3ed', '#f6ad55', '#fc8181', '#b794f4'][Math.floor(Math.random() * 6)],
-            size: Math.random() * 6 + 4
-        }));
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
-                if (p.y > canvas.height) p.y = -10;
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, p.size, p.size);
-            });
-            if (document.getElementById('win-message').style.display === 'block') {
-                requestAnimationFrame(draw);
+        if (type === 'ice') {
+            for(let i=0; i<15; i++) {
+                activeParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8 - 2,
+                    color: Math.random() > 0.5 ? '#b3f2ff' : '#ffffff',
+                    size: Math.random() * 4 + 2,
+                    life: 1.0, decay: Math.random() * 0.05 + 0.03, type: 'ice'
+                });
+            }
+        } else if (type === 'spark') {
+            for(let i=0; i<20; i++) {
+                activeParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
+                    color: ['#ffd700', '#ff8c00', '#ff00ff'][Math.floor(Math.random() * 3)],
+                    size: Math.random() * 4 + 2,
+                    life: 1.0, decay: Math.random() * 0.04 + 0.02, type: 'spark'
+                });
+            }
+        } else if (type === 'confetti') {
+            for(let i=0; i<60; i++) {
+                activeParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: Math.random() * 3 + 2,
+                    color: ['#ffe066', '#68d391', '#63b3ed', '#f6ad55', '#fc8181', '#b794f4'][Math.floor(Math.random() * 6)],
+                    size: Math.random() * 6 + 4,
+                    life: 1.0, decay: 0, type: 'confetti'
+                });
             }
         }
-        draw();
+        
+        if (!particleLoopActive) {
+            particleLoopActive = true;
+            requestAnimationFrame(particleLoop);
+        }
     }
+
+    function particleLoop() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let i = activeParticles.length - 1; i >= 0; i--) {
+            let p = activeParticles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            
+            if (p.type === 'confetti') {
+                if (p.y > canvas.height) p.y = -10;
+                ctx.globalAlpha = 1.0;
+            } else {
+                p.life -= p.decay;
+                p.vy += 0.2; // gravity
+                ctx.globalAlpha = p.life;
+            }
+            
+            ctx.fillStyle = p.color;
+            if (p.type === 'spark') {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            }
+            
+            if (p.life <= 0) {
+                activeParticles.splice(i, 1);
+            }
+        }
+        ctx.globalAlpha = 1.0;
+        
+        if (activeParticles.length > 0) {
+            requestAnimationFrame(particleLoop);
+        } else {
+            particleLoopActive = false;
+        }
+    }
+
+    function triggerIceShatter(r, c) {
+        const cells = document.querySelectorAll('.cell');
+        let cell = Array.from(cells).find(el => parseInt(el.dataset.r) === r && parseInt(el.dataset.c) === c);
+        if (cell) {
+            const rect = cell.getBoundingClientRect();
+            const canvasRect = document.getElementById('confetti-canvas').getBoundingClientRect();
+            const px = rect.left - canvasRect.left + rect.width / 2;
+            const py = rect.top - canvasRect.top + rect.height / 2;
+            spawnParticles(px, py, 'ice');
+        }
+    }
+    
+    function triggerMagicSpark(r, c) {
+        const cells = document.querySelectorAll('.cell');
+        let cell = Array.from(cells).find(el => parseInt(el.dataset.r) === r && parseInt(el.dataset.c) === c);
+        if (cell) {
+            const rect = cell.getBoundingClientRect();
+            const canvasRect = document.getElementById('confetti-canvas').getBoundingClientRect();
+            const px = rect.left - canvasRect.left + rect.width / 2;
+            const py = rect.top - canvasRect.top + rect.height / 2;
+            spawnParticles(px, py, 'spark');
+        }
+    }
+
+    function startConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        if (canvas.width === 0 || canvas.width === 300) {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        spawnParticles(0, 0, 'confetti');
+    }
+
 
     initGame();
   </script>

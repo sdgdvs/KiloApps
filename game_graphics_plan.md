@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KWords
 - KReversi
 - KAlchemy
 - KQuest
@@ -113,8 +112,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSudoku
 - KGo
 - KTowers
+- KWords
 
 ## Completed Work Log
+
+- **KWords (Loop 2):** Implemented ice shatter particle bursts when frozen tiles are thawed and magic spark particle bursts for hint, radar, and pathfinder skills in both Web Canvas/HTML (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
 - **KTowers (Loop 2):** Implemented passing cloud shadows, smog layers, and animated flying hover car traffic with engine glow and motion blur trails for both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 

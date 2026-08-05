@@ -233,66 +233,115 @@ typedef struct {
     float angle, vRot;
     COLORREF color;
     int size;
-    int shape;
-} ConfettiParticle;
+    int shape; // 0=rect, 1=star
+    float life;
+    float decay;
+    int type; // 0=confetti, 1=ice, 2=spark
+} Particle;
 
-#define MAX_CONFETTI 80
-ConfettiParticle confetti[MAX_CONFETTI];
-bool confettiInitialized = false;
+#define MAX_PARTICLES 200
+Particle particles[MAX_PARTICLES];
+bool particlesInit = false;
 
-void ResetConfetti() {
-    for(int i = 0; i < MAX_CONFETTI; i++) {
-        confetti[i].x = (float)(50 + (rand() % 750));
-        confetti[i].y = -10.0f - (float)(rand() % 300);
-        confetti[i].vx = ((rand() % 100) - 50) / 20.0f;
-        confetti[i].vy = 2.5f + (rand() % 100) / 20.0f;
-        confetti[i].angle = (float)((rand() % 360) * 0.0174533);
-        confetti[i].vRot = ((rand() % 100) - 50) / 200.0f;
-        COLORREF colors[] = {
-            RGB(255, 224, 102), RGB(104, 211, 145), RGB(99, 179, 237),
-            RGB(246, 173, 85), RGB(252, 129, 129), RGB(183, 148, 244)
-        };
-        confetti[i].color = colors[rand() % 6];
-        confetti[i].size = 6 + rand() % 7;
-        confetti[i].shape = rand() % 2;
+void SpawnParticles(int px, int py, int type) {
+    if (!particlesInit) { memset(particles, 0, sizeof(particles)); particlesInit = true; }
+    int numSpawn = (type == 1) ? 15 : 20;
+    if (type == 0) numSpawn = 80;
+    int spawned = 0;
+    for (int i = 0; i < MAX_PARTICLES && spawned < numSpawn; i++) {
+        if (type == 0 || (particles[i].type != 0 && particles[i].life <= 0)) {
+            particles[i].type = type;
+            particles[i].life = 1.0f;
+            particles[i].decay = 0.02f + (rand() % 50) / 1000.0f;
+            particles[i].angle = (float)((rand() % 360) * 0.0174533);
+            particles[i].vRot = ((rand() % 100) - 50) / 100.0f;
+            if (type == 0) {
+                particles[i].x = (float)(50 + (rand() % 750));
+                particles[i].y = -10.0f - (float)(rand() % 300);
+                particles[i].vx = ((rand() % 100) - 50) / 20.0f;
+                particles[i].vy = 2.5f + (rand() % 100) / 20.0f;
+                COLORREF colors[] = { RGB(255, 224, 102), RGB(104, 211, 145), RGB(99, 179, 237), RGB(246, 173, 85), RGB(252, 129, 129), RGB(183, 148, 244) };
+                particles[i].color = colors[rand() % 6];
+                particles[i].size = 6 + rand() % 7;
+                particles[i].shape = rand() % 2;
+                particles[i].decay = 0;
+            } else {
+                particles[i].x = (float)px;
+                particles[i].y = (float)py;
+                particles[i].vx = ((rand() % 100) - 50) / 10.0f;
+                particles[i].vy = ((rand() % 100) - 50) / 10.0f;
+                if (type == 1) {
+                    particles[i].color = rand()%2 ? RGB(255, 255, 255) : RGB(179, 242, 255);
+                    particles[i].size = 4 + rand() % 4;
+                    particles[i].shape = 0;
+                    particles[i].vy -= 2.0f;
+                } else {
+                    COLORREF sc[] = { RGB(255, 215, 0), RGB(255, 140, 0), RGB(255, 0, 255) };
+                    particles[i].color = sc[rand() % 3];
+                    particles[i].size = 3 + rand() % 4;
+                    particles[i].shape = 1;
+                }
+            }
+            spawned++;
+        }
     }
-    confettiInitialized = true;
+}
+
+void ResetConfetti() { SpawnParticles(0, 0, 0); }
+
+void TriggerIceShatter(int r, int c) {
+    int cellPx = GetCellPx();
+    int px = 20 + 6 + c * cellPx + cellPx / 2;
+    int py = 50 + 6 + r * cellPx + cellPx / 2;
+    SpawnParticles(px, py, 1);
+}
+
+void TriggerMagicSpark(int r, int c) {
+    int cellPx = GetCellPx();
+    int px = 20 + 6 + c * cellPx + cellPx / 2;
+    int py = 50 + 6 + r * cellPx + cellPx / 2;
+    SpawnParticles(px, py, 2);
 }
 
 void DrawConfettiFX(HDC hdc, int width, int height) {
-    if (!confettiInitialized) ResetConfetti();
-    for(int i = 0; i < MAX_CONFETTI; i++) {
-        confetti[i].x += confetti[i].vx;
-        confetti[i].y += confetti[i].vy;
-        confetti[i].angle += confetti[i].vRot;
-        if (confetti[i].y > height + 20) {
-            confetti[i].y = -10.0f;
-            confetti[i].x = (float)(rand() % width);
+    if (!particlesInit) return;
+    for(int i = 0; i < MAX_PARTICLES; i++) {
+        if (particles[i].type != 0 && particles[i].life <= 0) continue;
+        particles[i].x += particles[i].vx;
+        particles[i].y += particles[i].vy;
+        particles[i].angle += particles[i].vRot;
+        if (particles[i].type == 0) {
+            if (particles[i].y > height + 20) {
+                particles[i].y = -10.0f;
+                particles[i].x = (float)(rand() % width);
+            }
+        } else {
+            particles[i].vy += 0.2f;
+            particles[i].life -= particles[i].decay;
         }
-        HBRUSH cBrush = CreateSolidBrush(confetti[i].color);
-        HPEN cPen = CreatePen(PS_SOLID, 1, confetti[i].color);
+        HBRUSH cBrush = CreateSolidBrush(particles[i].color);
+        HPEN cPen = CreatePen(PS_SOLID, 1, particles[i].color);
         HBRUSH oldB = (HBRUSH)SelectObject(hdc, cBrush);
         HPEN oldP = (HPEN)SelectObject(hdc, cPen);
-
-        int px = (int)confetti[i].x;
-        int py = (int)confetti[i].y;
-        int sz = confetti[i].size;
-        int hsz = (int)(sz * cos((double)confetti[i].angle));
+        int px = (int)particles[i].x, py = (int)particles[i].y, sz = particles[i].size;
+        if (particles[i].type != 0) {
+            sz = (int)(sz * particles[i].life);
+            if (sz < 1) sz = 1;
+        }
+        int hsz = (int)(sz * cos((double)particles[i].angle));
         if (hsz == 0) hsz = 1;
-
-        if (confetti[i].shape == 0) {
+        if (particles[i].shape == 0) {
             RECT cRc = { px - sz/2, py - abs(hsz)/2, px + sz/2, py + abs(hsz)/2 };
             FillRect(hdc, &cRc, cBrush);
         } else {
             POINT pts[5];
             for (int k = 0; k < 5; k++) {
-                double a = confetti[i].angle + k * 1.25664;
+                double a = particles[i].angle + k * 1.25664;
                 pts[k].x = px + (long)(sz * cos(a));
                 pts[k].y = py + (long)(sz * sin(a));
             }
             Polygon(hdc, pts, 5);
         }
-
         SelectObject(hdc, oldB);
         SelectObject(hdc, oldP);
         DeleteObject(cBrush);
@@ -597,6 +646,7 @@ void EndSelection(HWND hwnd) {
                                     if (frozenGrid[nr][nc] > 0) {
                                         frozenGrid[nr][nc] = 0;
                                         currentScore += 100;
+                                        TriggerIceShatter(nr, nc);
                                     }
                                 }
                             }
@@ -693,6 +743,7 @@ void UseRadar(HWND hwnd) {
                         if (isFogStage) UnfogArea(r, c, 2);
                         foundInGrid = true;
                         PlaySoundEffect(1);
+                        TriggerMagicSpark(r, c);
                         break;
                     }
                 }
@@ -741,6 +792,7 @@ void UsePathfinder(HWND hwnd) {
                             int fc = c + i * dirs[d][1];
                             pathfinderGrid[fr][fc] = true;
                             if (isFogStage) UnfogArea(fr, fc, 1);
+                            TriggerMagicSpark(fr, fc);
                         }
                         foundInGrid = true;
                         PlaySoundEffect(1);
@@ -805,6 +857,7 @@ void UseHint(HWND hwnd) {
                         if (isFogStage) UnfogArea(hr, hc, 1);
                         foundInGrid = true;
                         PlaySoundEffect(0);
+                        TriggerMagicSpark(hr, hc);
                         break;
                     }
                 }
@@ -947,6 +1000,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     float target = wordsFoundStatus[w] ? 1.0f : 0.0f;
                     if(strikeAnim[w] < target) { strikeAnim[w] += 0.1f; if(strikeAnim[w]>1.0f) strikeAnim[w]=1.0f; needsRedraw = true; }
                 }
+                for(int i=0; i<MAX_PARTICLES; i++) {
+                    if (particles[i].type != 0 && particles[i].life > 0) {
+                        needsRedraw = true;
+                        break;
+                    }
+                }
+                if(gameWon && particlesInit) needsRedraw = true;
                 if(needsRedraw) InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
@@ -1002,6 +1062,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (frozenGrid[r][c] > 0) {
                     frozenGrid[r][c]--;
                     PlaySoundEffect(0);
+                    TriggerIceShatter(r, c);
                     if (frozenGrid[r][c] == 0) {
                         currentScore += 100;
                         PlaySoundEffect(1);
@@ -1350,8 +1411,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOut(hdc, listX, listY + 10, secretBannerMsg, strlen(secretBannerMsg));
             }
             
+            DrawConfettiFX(hdc, 920, 850);
+            
             if(gameWon) {
-                DrawConfettiFX(hdc, 920, 850);
                 SetTextColor(hdc, RGB(255, 215, 0));
                 TextOut(hdc, listX, listY + 30, "YOU WIN!", 8);
                 SetTextColor(hdc, RGB(200, 200, 200));
