@@ -812,6 +812,7 @@ void finalize_character() {
     
     add_msg("Welcome to KRogue!");
     add_msg("Find the stairs '>'. Defeat evil. F5 to quicksave.");
+    add_msg("Press '?' for help.");
     
     generate_map();
     

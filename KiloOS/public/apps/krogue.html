@@ -10,13 +10,13 @@
             background: #07090e; color: #e2e8f0;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; overflow: hidden; padding: 10px;
+            min-height: 100vh; overflow: hidden; padding: 4px;
         }
         #game-container {
             display: flex; flex-direction: column; align-items: center;
             background: #111520; border: 2px solid #2d3748; border-radius: 12px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 25px rgba(66, 153, 225, 0.2);
-            padding: 14px; width: 920px; max-width: 98vw; position: relative;
+            padding: 8px; width: 920px; max-width: 98vw; position: relative;
         }
         #canvas-wrapper {
             position: relative;
@@ -367,6 +367,14 @@
         
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const C_WIDTH = 880;
+        const C_HEIGHT = 440;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.style.width = C_WIDTH + 'px';
+        canvas.style.height = C_HEIGHT + 'px';
+        canvas.width = C_WIDTH * dpr;
+        canvas.height = C_HEIGHT * dpr;
+        ctx.scale(dpr, dpr);
 
         // Seeded PRNG
         let currentSeedVal = 12345;
@@ -418,7 +426,7 @@
         let monsters = [];
         let items = [];
         let traps = [];
-        let msgs = ["Welcome to KRogue!", "Choose your Hero & descend 30 levels to slay Astaroth!"];
+        let msgs = ["Welcome to KRogue!", "Press [?] for Help.", "Choose your Hero & descend 30 levels to slay Astaroth!"];
         let state = 0; // 0=main menu, 1=playing, 2=dead, 3=victory, 4=targeting, 5=char creation
         let difficulty = 0;
         let dlevel = 1;
@@ -806,42 +814,42 @@
 
         function render() {
             frameCount++;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, C_WIDTH, C_HEIGHT);
 
             let biome = getBiome(dlevel);
 
             if (state === 0) { // Main Menu
-                ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, C_WIDTH, C_HEIGHT);
                 ctx.fillStyle = '#f6ad55'; ctx.font = 'bold 38px monospace'; ctx.textAlign = 'center';
-                ctx.fillText("K R O G U E", canvas.width / 2, 120);
+                ctx.fillText("K R O G U E", C_WIDTH / 2, 120);
 
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
-                ctx.fillText("Deep Utility Roguelike - Classes, Gear, Spells & Leaderboard", canvas.width / 2, 160);
+                ctx.fillText("Deep Utility Roguelike - Classes, Gear, Spells & Leaderboard", C_WIDTH / 2, 160);
 
                 ctx.fillStyle = '#68d391'; ctx.font = 'bold 20px sans-serif';
-                ctx.fillText("Press [ENTER] to Select Hero & Start Run", canvas.width / 2, 260);
+                ctx.fillText("Press [ENTER] to Select Hero & Start Run", C_WIDTH / 2, 260);
 
                 ctx.fillStyle = '#a0aec0'; ctx.font = '14px sans-serif';
-                ctx.fillText("Press [H] for Leaderboard  |  Press [?] for Help  |  Press [L] to Resume Saved Run", canvas.width / 2, 310);
+                ctx.fillText("Press [H] for Leaderboard  |  Press [?] for Help  |  Press [L] to Resume Saved Run", C_WIDTH / 2, 310);
                 return;
             }
 
             if (state === 2 || state === 3) {
-                ctx.fillStyle = '#090a0f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#090a0f'; ctx.fillRect(0, 0, C_WIDTH, C_HEIGHT);
                 ctx.textAlign = 'center';
                 if (state === 2) {
                     ctx.fillStyle = '#e53e3e'; ctx.font = 'bold 36px monospace';
-                    ctx.fillText("Y O U   D I E D", canvas.width / 2, 180);
+                    ctx.fillText("Y O U   D I E D", C_WIDTH / 2, 180);
                     ctx.fillStyle = '#a0aec0'; ctx.font = '16px sans-serif';
-                    ctx.fillText(`Class: ${player.class.toUpperCase()}  |  Floor: ${dlevel}  |  Kills: ${total_kills}  |  Gold: ${player.gold}`, canvas.width / 2, 230);
+                    ctx.fillText(`Class: ${player.class.toUpperCase()}  |  Floor: ${dlevel}  |  Kills: ${total_kills}  |  Gold: ${player.gold}`, C_WIDTH / 2, 230);
                 } else {
                     ctx.fillStyle = '#ecc94b'; ctx.font = 'bold 36px monospace';
-                    ctx.fillText("V I C T O R Y !", canvas.width / 2, 170);
+                    ctx.fillText("V I C T O R Y !", C_WIDTH / 2, 170);
                     ctx.fillStyle = '#68d391'; ctx.font = 'bold 20px sans-serif';
-                    ctx.fillText("ASTAROTH THE FALLEN IS DEFEATED!", canvas.width / 2, 220);
+                    ctx.fillText("ASTAROTH THE FALLEN IS DEFEATED!", C_WIDTH / 2, 220);
                 }
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
-                ctx.fillText("Press [R] to Restart Run  |  Press [H] to View Leaderboard", canvas.width / 2, 310);
+                ctx.fillText("Press [R] to Restart Run  |  Press [H] to View Leaderboard", C_WIDTH / 2, 310);
                 return;
             }
 
