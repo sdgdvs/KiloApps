@@ -19,9 +19,19 @@ int seed_costs[4] = {5, 10, 15, 25};
 int money = 50;
 int fertilizer_bought = 0;
 int selected_seed = 0;
+int chickens = 0;
+int cows = 0;
 HWND hNextDayBtn;
 HWND hSeedBtns[4];
 HWND hUpgradeBtn;
+HWND hBuyChickenBtn;
+HWND hBuyCowBtn;
+
+void UpdateTitle(HWND hwnd) {
+    char title[128];
+    wsprintf(title, "KFarm - Day %d | $%d | Ch:%d | Co:%d", current_day, money, chickens, cows);
+    SetWindowText(hwnd, title);
+}
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -30,6 +40,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 130, 410, 140, 30, hwnd, (HMENU) 1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hUpgradeBtn = CreateWindow("BUTTON", "Fertilizer ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 280, 410, 110, 30, hwnd, (HMENU) 6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hBuyChickenBtn = CreateWindow("BUTTON", "Chicken ($50)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                290, 450, 100, 20, hwnd, (HMENU) 7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hBuyCowBtn = CreateWindow("BUTTON", "Cow ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                290, 475, 100, 20, hwnd, (HMENU) 8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (-$5/+$10)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
                 10, 450, 130, 20, hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[1] = CreateWindow("BUTTON", "Corn (-$10/+$20)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
@@ -53,9 +67,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     for(int i=0; i<4; i++) if (growth_times[i] > 1) growth_times[i]--;
                     EnableWindow(hUpgradeBtn, FALSE);
                     SetWindowText(hUpgradeBtn, "Fertilizer (Owned)");
-                    char title[64];
-                    wsprintf(title, "KFarm - Day %d | $%d", current_day, money);
-                    SetWindowText(hwnd, title);
+                    UpdateTitle(hwnd);
+                } else {
+                    MessageBeep(MB_ICONERROR);
+                }
+            }
+            if (LOWORD(wParam) == 7 && time_of_day == 0) {
+                if (money >= 50) {
+                    money -= 50;
+                    chickens++;
+                    UpdateTitle(hwnd);
+                } else {
+                    MessageBeep(MB_ICONERROR);
+                }
+            }
+            if (LOWORD(wParam) == 8 && time_of_day == 0) {
+                if (money >= 150) {
+                    money -= 150;
+                    cows++;
+                    UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
                 }
@@ -69,6 +99,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 KillTimer(hwnd, 1);
                 current_day++;
                 time_of_day = 0;
+                money += (chickens * 5) + (cows * 15);
                 for (int i = 0; i < GRID_COLS * GRID_ROWS; i++) {
                     if (grid[i].type == 2) {
                         if (grid[i].watered) {
@@ -81,9 +112,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     grid[i].watered = 0;
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
-                char title[64];
-                wsprintf(title, "KFarm - Day %d | $%d", current_day, money);
-                SetWindowText(hwnd, title);
+                UpdateTitle(hwnd);
             }
             return 0;
         case WM_LBUTTONDOWN: {
@@ -97,9 +126,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (money >= seed_costs[selected_seed]) {
                         money -= seed_costs[selected_seed];
                         grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
-                        char title[64];
-                        wsprintf(title, "KFarm - Day %d | $%d", current_day, money);
-                        SetWindowText(hwnd, title);
+                        UpdateTitle(hwnd);
                     } else {
                         MessageBeep(MB_ICONERROR);
                     }
@@ -108,9 +135,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if (grid[idx].type == 3) { 
                     money += sell_values[grid[idx].cropType];
                     grid[idx].type = 1; grid[idx].watered = 0; 
-                    char title[64];
-                    wsprintf(title, "KFarm - Day %d | $%d", current_day, money);
-                    SetWindowText(hwnd, title);
+                    UpdateTitle(hwnd);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -237,7 +262,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
 
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KFarm - Day 1 | $50", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        0, CLASS_NAME, "KFarm - Day 1 | $50 | Ch:0 | Co:0", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, hInstance, NULL
     );

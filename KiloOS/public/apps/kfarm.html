@@ -36,6 +36,9 @@
 <body>
     <div class="container">
         <h2>KFarm - Day <span id="daySpan">1</span> | $<span id="moneySpan">50</span></h2>
+        <div style="text-align: center; margin-bottom: 10px; font-weight: bold; color: #5D4037;">
+            🐔 Chickens: <span id="chickensSpan">0</span> | 🐄 Cows: <span id="cowsSpan">0</span>
+        </div>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest)</p>
         <div style="text-align:center; margin-top:15px;">
@@ -47,6 +50,10 @@
             </div>
             <button onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep (Next Day)</button>
             <button id="upgradeBtn" onclick="buyUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-left:10px;">Fertilizer ($100)</button>
+        </div>
+        <div style="text-align:center; margin-top:10px;">
+            <button onclick="buyChicken()" style="padding:5px 10px; font-size:14px; background-color:#FFC107; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Chicken ($50)</button>
+            <button onclick="buyCow()" style="padding:5px 10px; font-size:14px; background-color:#795548; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Buy Cow ($150)</button>
         </div>
     </div>
     <script>
@@ -66,6 +73,31 @@
         let timeOfDay = 'day';
         let money = 50;
         let fertilizerBought = false;
+        let chickens = 0;
+        let cows = 0;
+
+        function updateAnimals() {
+            document.getElementById('chickensSpan').innerText = chickens;
+            document.getElementById('cowsSpan').innerText = cows;
+        }
+
+        function buyChicken() {
+            if (money >= 50) {
+                money -= 50;
+                chickens++;
+                updateMoney();
+                updateAnimals();
+            }
+        }
+
+        function buyCow() {
+            if (money >= 150) {
+                money -= 150;
+                cows++;
+                updateMoney();
+                updateAnimals();
+            }
+        }
 
         function updateMoney() {
             document.getElementById('moneySpan').innerText = money;
@@ -162,6 +194,8 @@
                 day++;
                 document.getElementById('daySpan').innerText = day;
                 timeOfDay = 'day';
+                money += (chickens * 5) + (cows * 15);
+                updateMoney();
                 for (let cell of grid) {
                     if (cell.type === 2) {
                         if (cell.watered) {
