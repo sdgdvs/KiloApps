@@ -1,5 +1,6 @@
 int _fltused = 1;
 #include <windows.h>
+typedef BOOL(WINAPI *SetProcessDPIAwareFunc)();
 
 void* __cdecl memset(void* p, int c, size_t sz) {
     char* pb = (char*)p;
@@ -313,33 +314,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             OldEditProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             CreateWindowA("STATIC", "From:", WS_CHILD | WS_VISIBLE, 170, 72, 40, 20, hwnd, NULL, NULL, NULL);
-            hFrom = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 210, 70, 120, 150, hwnd, (HMENU)1006, NULL, NULL);
+            hFrom = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 210, 70, 140, 150, hwnd, (HMENU)1006, NULL, NULL);
 
-            CreateWindowA("BUTTON", "⇄ Swap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 340, 70, 60, 22, hwnd, (HMENU)3001, NULL, NULL);
-            CreateWindowA("BUTTON", "⭐ Pin", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 405, 70, 50, 22, hwnd, (HMENU)3002, NULL, NULL);
+            CreateWindowA("BUTTON", "⇄ Swap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 360, 70, 60, 22, hwnd, (HMENU)3001, NULL, NULL);
+            CreateWindowA("BUTTON", "⭐ Pin", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 430, 70, 50, 22, hwnd, (HMENU)3002, NULL, NULL);
 
             CreateWindowA("STATIC", "To:", WS_CHILD | WS_VISIBLE, 170, 102, 40, 20, hwnd, NULL, NULL, NULL);
-            hTo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 210, 100, 120, 150, hwnd, (HMENU)1007, NULL, NULL);
+            hTo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 210, 100, 140, 150, hwnd, (HMENU)1007, NULL, NULL);
 
             CreateWindowA("STATIC", "Result:", WS_CHILD | WS_VISIBLE, 10, 132, 50, 20, hwnd, NULL, NULL, NULL);
-            hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_READONLY | ES_AUTOHSCROLL, 60, 130, 270, 22, hwnd, NULL, NULL, NULL);
-            CreateWindowA("BUTTON", "Convert", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 340, 100, 115, 52, hwnd, (HMENU)1001, NULL, NULL);
+            hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_READONLY | ES_AUTOHSCROLL, 60, 130, 290, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowA("BUTTON", "Convert", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 360, 100, 120, 52, hwnd, (HMENU)1001, NULL, NULL);
 
-            hFormulaStatic = CreateWindowA("STATIC", "Formula: 1 Meter = 1 Meter", WS_CHILD | WS_VISIBLE, 10, 160, 460, 20, hwnd, NULL, NULL, NULL);
+            hFormulaStatic = CreateWindowA("STATIC", "Formula: 1 Meter = 1 Meter", WS_CHILD | WS_VISIBLE, 10, 160, 500, 20, hwnd, NULL, NULL, NULL);
 
             // Batch View Output
-            hBatchOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 460, 110, hwnd, NULL, NULL, NULL);
+            hBatchOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 560, 250, hwnd, NULL, NULL, NULL);
 
             // Favorites View
-            hFavCombo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | CBS_DROPDOWNLIST, 10, 70, 300, 150, hwnd, (HMENU)3003, NULL, NULL);
+            hFavCombo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | CBS_DROPDOWNLIST, 10, 70, 400, 150, hwnd, (HMENU)3003, NULL, NULL);
 
             // History Log View
-            hHistoryOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 460, 110, hwnd, NULL, NULL, NULL);
-            CreateWindowA("BUTTON", "Export History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 185, 130, 24, hwnd, (HMENU)4001, NULL, NULL);
+            hHistoryOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 560, 250, hwnd, NULL, NULL, NULL);
+            CreateWindowA("BUTTON", "Export History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 330, 130, 24, hwnd, (HMENU)4001, NULL, NULL);
 
-            HWND hHelpText = CreateWindowA("STATIC", "(Press F1 for Help)", WS_CHILD | WS_VISIBLE, 355, 42, 115, 20, hwnd, NULL, NULL, NULL);
+            HWND hHelpText = CreateWindowA("STATIC", "(Press H or F1 for Help)", WS_CHILD | WS_VISIBLE, 355, 42, 150, 20, hwnd, NULL, NULL, NULL);
             
             RegisterHotKey(hwnd, 1, 0, VK_F1);
+            RegisterHotKey(hwnd, 2, 0, 'H');
 
             // Populate Category Combo
             for (int i = 0; i < numCats; i++) {
@@ -439,7 +441,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_HOTKEY: {
-            if (wParam == 1) {
+            if (wParam == 1 || wParam == 2) {
                 MessageBoxA(hwnd, "KConverter Pro Help:\n\n- Convert units by selecting Category, From, and To.\n- Use Batch Mode to see all conversions at once.\n- Pin your favorites for quick access.\n- Export history to track your conversions.", "Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
@@ -449,6 +451,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hFontBold) { DeleteObject(hFontBold); hFontBold = NULL; }
             if (hMsvcrt) { FreeLibrary(hMsvcrt); hMsvcrt = NULL; }
             UnregisterHotKey(hwnd, 1);
+            UnregisterHotKey(hwnd, 2);
             PostQuitMessage(0);
             return 0;
     }
@@ -456,6 +459,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        SetProcessDPIAwareFunc setDpi = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpi) setDpi();
+    }
+
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
@@ -464,7 +473,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 515, 290, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 600, 420, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

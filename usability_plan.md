@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KConverter
 - KTodo
 - KGraph
 - KTimer
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTask
 - KSys
 - KRogue
+- KConverter
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -159,3 +159,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTask: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 800x600, layout padding increased for visible controls, and 'H' key for help mapped).
 - KSys: Usability and UI issues fixed (appropriate auto-opening size adjusted, visible controls styled, explicit help toast overlay added, crisp DPI text enabled).
 - KRogue: Usability and UI issues fixed (padding reduced, crisp high-DPI canvas text rendering enabled, and initial startup help instructions added).
+- KConverter: Usability and UI issues fixed (auto-opening size adjusted, crisp DPI text enabled in native, and help instruction added/updated).
