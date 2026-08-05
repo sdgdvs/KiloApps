@@ -2,8 +2,8 @@
 #include <windows.h>
 #include <commdlg.h>
 
-#define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 768
+#define WINDOW_WIDTH 1200
+#define WINDOW_HEIGHT 800
 #define TOOLBAR_HEIGHT 42
 #define SIDEBAR_WIDTH 200
 #define MAX_FILES 256
@@ -948,6 +948,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL (WINAPI *SetProcessDPIAwareFunc)();
+        SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpiAware) setDpiAware();
+    }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -956,7 +962,7 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KImageApp", "KImage Pro (Native C)", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KImageApp", "KImage Pro (Native C) - Press H for Help", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, WINDOW_WIDTH, WINDOW_HEIGHT, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
