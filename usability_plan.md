@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KSolitaire
 - KTerm
 - KSynth
 - KTask
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTetris
 - KSpace
 - KType
+- KSolitaire
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -153,3 +153,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTetris: Usability and UI issues fixed (Appropriate auto-opening size adjusted, crisp text and canvas scaling handled, visible controls & help instructions overlaid).
 - KSpace: Usability and UI issues fixed (Fixed auto-opening aspect ratio, fixed stretched canvas scaling, and made help instructions more visible).
 - KType: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 1000x800, DPI awareness enabled, and help instructions made visible in UI/header).
+- KSolitaire: Usability and UI issues fixed (auto-opening window size increased to 920x800, 'H' key for hints shortcut corrected in both web and native, window title and status bar updated).
