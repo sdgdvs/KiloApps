@@ -462,6 +462,7 @@
         📂 Load Config
         <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
       </label>
+      <button class="btn" onclick="showToast('KGraph Controls:\\n• Scroll to Zoom\\n• Click & Drag to Pan\\n• Hover to trace coordinates\\n• Use tabs for Calculus & Analysis', 6000)">❓ Help (H)</button>
       <button class="btn btn-primary" onclick="replotAll()">▶ Plot</button>
     </div>
   </div>
@@ -1048,8 +1049,8 @@
       
       for (let gx = firstGridX; gx <= maxX; gx += gridStep) {
         if (Math.abs(gx) < 1e-6) continue;
-        const px = toScreenX(gx, width);
-        const py = Math.max(10, Math.min(height - 20, axisY + 4));
+        const px = Math.round(toScreenX(gx, width));
+        const py = Math.round(Math.max(10, Math.min(height - 20, axisY + 4)));
         ctx.fillText(Number(gx.toFixed(4)).toString(), px, py);
       }
       
@@ -1057,8 +1058,8 @@
       ctx.textBaseline = 'middle';
       for (let gy = firstGridY; gy <= maxY; gy += gridStep) {
         if (Math.abs(gy) < 1e-6) continue;
-        const py = toScreenY(gy, height);
-        const px = Math.max(35, Math.min(width - 5, axisX - 6));
+        const py = Math.round(toScreenY(gy, height));
+        const px = Math.round(Math.max(35, Math.min(width - 5, axisX - 6)));
         ctx.fillText(Number(gy.toFixed(4)).toString(), px, py);
       }
 
@@ -1357,6 +1358,7 @@
     window.addEventListener('resize', resizeCanvas);
 
     // Initialization
+    window.resizeTo(1024, 768);
     buildFuncCards();
     buildPresets();
     setTimeout(resizeCanvas, 100);
