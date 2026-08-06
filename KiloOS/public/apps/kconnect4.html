@@ -271,7 +271,7 @@
 </head>
 <body>
   <h1>KConnect4</h1>
-  <div style="font-size: 1em; color: #ffeb3b; margin-bottom: 8px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Press H for Help (or click Help button)</div>
+  <div style="font-size: 1em; color: #ffeb3b; margin-bottom: 8px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Press F1 for Help (or click Help button)</div>
   <div id="status">Player 1's turn (Red)</div>
   <div id="timerContainer"><div id="timerBar"></div></div>
   <div id="boardWrapper">
@@ -884,7 +884,8 @@
     // Keybindings listener: H, U, F, B/1, D/2, M/3, F5, F9, Arrows
     window.addEventListener('keydown', (e) => {
       const k = e.key.toUpperCase();
-      if (k === 'F5') { e.preventDefault(); saveGame(); }
+      if (k === 'F1') { e.preventDefault(); toggleHelp(); }
+      else if (k === 'F5') { e.preventDefault(); saveGame(); }
       else if (k === 'F9') { e.preventDefault(); loadGame(); }
       else if (e.key === 'ArrowLeft' && !gameActive) replayStep(-1);
       else if (e.key === 'ArrowRight' && !gameActive) replayStep(1);

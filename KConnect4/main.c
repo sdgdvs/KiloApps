@@ -1209,7 +1209,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (isAnimating) break;
             int key = (int)wParam;
-            if (key == VK_F5) { // F5 Quicksave
+            if (key == VK_F1) { // F1 Help
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(8, 0), 0);
+            } else if (key == VK_F5) { // F5 Quicksave
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(6, 0), 0);
             } else if (key == VK_F9) { // F9 Quickload
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(7, 0), 0);
@@ -1737,10 +1739,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 0;
     }
 
+    RECT winRect = { 0, 0, 560, 680 };
+    AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW, FALSE);
     hwnd = CreateWindowEx(
-        0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion (Press H for Help)",
+        0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion (Press F1 for Help)",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 560, 760,
+        CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top,
         NULL, NULL, hInstance, NULL);
 
     if(hwnd == NULL) {
