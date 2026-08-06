@@ -1807,49 +1807,50 @@ LRESULT CALLBACK WndProc
                 dpiScale(276), dpiScale(4), dpiScale(60), dpiScale(22), hwnd, 0, 0, 0);
 
             hBtn = CreateWindowA("BUTTON", "Connect", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(342), dpiScale(4), dpiScale(80), dpiScale(22), hwnd, (HMENU)100, 0, 0);
+                dpiScale(342), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)100, 0, 0);
 
             hCombo = CreateWindowA("BUTTON", "Directory", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(428), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)101, 0, 0);
+                dpiScale(416), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)101, 0, 0);
 
             hBtnMacros = CreateWindowA("BUTTON", "Macros", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(502), dpiScale(4), dpiScale(60), dpiScale(22), hwnd, (HMENU)109, 0, 0);
-
-                        hBtnXmDl = CreateWindowA("BUTTON", "DL (XM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(566), dpiScale(4), dpiScale(56), dpiScale(22), hwnd, (HMENU)103, 0, 0);
-
-            hBtnXmUl = CreateWindowA("BUTTON", "UL (XM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(626), dpiScale(4), dpiScale(56), dpiScale(22), hwnd, (HMENU)104, 0, 0);
-                
-            hBtnZmDl = CreateWindowA("BUTTON", "DL (ZM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(686), dpiScale(4), dpiScale(56), dpiScale(22), hwnd, (HMENU)105, 0, 0);
-
-            hBtnZmUl = CreateWindowA("BUTTON", "UL (ZM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(746), dpiScale(4), dpiScale(56), dpiScale(22), hwnd, (HMENU)106, 0, 0);
-
-            hEcho = CreateWindowA("BUTTON", "Echo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-                dpiScale(806), dpiScale(4), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
-
-            hBtnSettings = CreateWindowA("BUTTON", "Set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(862), dpiScale(4), dpiScale(36), dpiScale(22), hwnd, (HMENU)110, 0, 0);
-
-            hBtnCapture = CreateWindowA("BUTTON", "Cap: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(902), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)111, 0, 0);
-
-            hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(976), dpiScale(4), dpiScale(40), dpiScale(22), hwnd, (HMENU)112, 0, 0);
+                dpiScale(490), dpiScale(4), dpiScale(60), dpiScale(22), hwnd, (HMENU)109, 0, 0);
 
             hBtnDoor = CreateWindowA("BUTTON", "Door", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(1020), dpiScale(4), dpiScale(45), dpiScale(22), hwnd, (HMENU)113, 0, 0);
+                dpiScale(554), dpiScale(4), dpiScale(50), dpiScale(22), hwnd, (HMENU)113, 0, 0);
 
             hBtnArt = CreateWindowA("BUTTON", "Art", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(1069), dpiScale(4), dpiScale(35), dpiScale(22), hwnd, (HMENU)114, 0, 0);
+                dpiScale(608), dpiScale(4), dpiScale(40), dpiScale(22), hwnd, (HMENU)114, 0, 0);
+
+            /* Second Row (y = 30) */
+            hBtnXmDl = CreateWindowA("BUTTON", "DL (XM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(5), dpiScale(30), dpiScale(60), dpiScale(22), hwnd, (HMENU)103, 0, 0);
+
+            hBtnXmUl = CreateWindowA("BUTTON", "UL (XM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(70), dpiScale(30), dpiScale(60), dpiScale(22), hwnd, (HMENU)104, 0, 0);
+                
+            hBtnZmDl = CreateWindowA("BUTTON", "DL (ZM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(135), dpiScale(30), dpiScale(60), dpiScale(22), hwnd, (HMENU)105, 0, 0);
+
+            hBtnZmUl = CreateWindowA("BUTTON", "UL (ZM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(200), dpiScale(30), dpiScale(60), dpiScale(22), hwnd, (HMENU)106, 0, 0);
+
+            hEcho = CreateWindowA("BUTTON", "Echo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+                dpiScale(265), dpiScale(30), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
+
+            hBtnSettings = CreateWindowA("BUTTON", "Set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(322), dpiScale(30), dpiScale(40), dpiScale(22), hwnd, (HMENU)110, 0, 0);
+
+            hBtnCapture = CreateWindowA("BUTTON", "Cap: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(367), dpiScale(30), dpiScale(75), dpiScale(22), hwnd, (HMENU)111, 0, 0);
+
+            hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(447), dpiScale(30), dpiScale(50), dpiScale(22), hwnd, (HMENU)112, 0, 0);
 
             SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
 
             /* Status bar */
             hStatus = CreateWindowA("STATIC", "Ready - Enter address or Select BBS (Press H for Help) | RX: 0 B | TX: 0 B", WS_CHILD | WS_VISIBLE | SS_LEFT,
-                dpiScale(5), dpiScale(30 + TERM_ROWS * 16 + 4), dpiScale(1100), dpiScale(18), hwnd, 0, 0, 0);
+                dpiScale(5), dpiScale(60 + TERM_ROWS * kbbsSettings.fontSize + 4), dpiScale(660), dpiScale(18), hwnd, 0, 0, 0);
 
             /* Set fonts */
             SendMessageA(hHost, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -2162,7 +2163,7 @@ LRESULT CALLBACK WndProc
             HDC memDC;
             HBITMAP memBmp, oldBmp;
             HFONT oldFont;
-            int termX = dpiScale(5), termY = dpiScale(30);
+            int termX = dpiScale(5), termY = dpiScale(60);
             int termW = TERM_COLS * dpiScale(kbbsSettings.fontSize / 2);
             int termH = TERM_ROWS * dpiScale(kbbsSettings.fontSize);
             int r, c;
@@ -2659,8 +2660,8 @@ void __stdcall MainEntry() {
     RegisterClassA(&wc);
 
     /* Terminal: plus padding and bars. */
-    winW = dpiScale(1150);
-    winH = dpiScale(550);
+    winW = dpiScale(680);
+    winH = dpiScale(540);
 
     LoadMacros();
 

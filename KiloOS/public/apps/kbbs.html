@@ -42,7 +42,7 @@
 
         /* Terminal */
         .term-wrap { flex:1; display:flex; flex-direction:column; background:#000; position: relative; }
-        #terminal { flex:1; display:block; image-rendering:pixelated; cursor:text; z-index: 1; }
+        #terminal { display:block; image-rendering:pixelated; cursor:text; z-index: 1; margin: 0 auto; }
 
         /* CRT Scanline overlay */
         .term-wrap::after {
@@ -145,8 +145,8 @@
                 <span id="scriptBannerText">Script Running...</span>
                 <button onclick="stopScriptMacro()" style="background:transparent; border:none; color:#ef4444; font-weight:bold; cursor:pointer; margin-left:8px;">✕</button>
             </div>
-            <div style="display: flex; flex: 1; width: 100%; height: 100%; position: relative;">
-                <canvas id="terminal" tabindex="0" role="img" aria-label="BBS Terminal Screen" style="flex: 1;"></canvas>
+            <div style="display: flex; flex: 1; width: 100%; height: 100%; position: relative; justify-content: center; align-items: center; overflow: auto; background: #000;">
+                <canvas id="terminal" tabindex="0" role="img" aria-label="BBS Terminal Screen"></canvas>
                 <div id="scrollContainer" style="width: 16px; height: 100%; overflow-y: scroll; background: #09090b; border-left: 1px solid #27272a; z-index: 3; display: none;" onscroll="handleScroll(event)">
                     <div id="scrollSpacer" style="height: 100px;"></div>
                 </div>
@@ -503,6 +503,7 @@ SEND:"secret\r"'></textarea>
         canvas.style.height = (ROWS * CELL_H) + 'px';
         ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
         ctx.scale(dpr, dpr);
+        ctx.imageSmoothingEnabled = false;
         render();
     }
 
@@ -1200,6 +1201,15 @@ SEND:"user\r"';
     window.addEventListener('keydown', (e) => {
         let tag = e.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        
+        if (!ws || ws.readyState !== 1) {
+            if (e.key === 'h' || e.key === 'H') {
+                showHelp();
+                e.preventDefault();
+                return;
+            }
+        }
+        
         if (ws && ws.readyState === 1) {
             if (e.key.length === 1) {
                 ws.send(e.key);
