@@ -431,7 +431,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
             SetTextColor(hdc, RGB(0, 0, 0));
-            TextOut(hdc, 11, bmpH - 29, "Press H for Help", 16);
+            TextOut(hdc, 9, bmpH - 30, "Press H for Help", 16);
+            TextOut(hdc, 11, bmpH - 30, "Press H for Help", 16);
+            TextOut(hdc, 10, bmpH - 29, "Press H for Help", 16);
+            TextOut(hdc, 10, bmpH - 31, "Press H for Help", 16);
             SetTextColor(hdc, RGB(255, 255, 255));
             TextOut(hdc, 10, bmpH - 30, "Press H for Help", 16);
             SelectObject(hdc, hOldFont);
@@ -473,12 +476,15 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
+    RECT rect = { 0, 0, W, H };
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+
     HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - Press H for Help", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     SaveState(); // Save initial state
 
-    ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd);
 
     MSG msg;
