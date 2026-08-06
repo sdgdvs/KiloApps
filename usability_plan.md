@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KPac
 - KQuest
 - KNote
 - KPass
@@ -83,6 +82,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KScript
 - KMaze
 - KMine
+- KPac
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -193,3 +193,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KScript: Usability and UI issues fixed (added window min size constraints and SetProcessDPIAware for crisp text in native, applied responsive stacking for smaller screens in web, added F1 help hotkey and explicit startup instructions in both).
 - KMaze: Usability and UI issues fixed (auto-opening size increased to 800x660 in web and 800x600 in native, removed pixelated scaling in web for crisp vector text, enabled CLEARTYPE_QUALITY in native for crisp fonts, adjusted HUD layout).
 - KMine: Usability and UI issues fixed (replaced fixed height and hidden overflow with min-height and auto overflow in web to fix layout clipping on small viewports, updated web and native opening instructions to 'Press H for Help', adjusted web controls max-width and padding, added SetProcessDPIAware and DPI scaling logic to native C to dynamically scale cells and fonts).
+- KPac: Usability and UI issues fixed (Appropriate auto-opening size validated, SetProcessDPIAware applied for crisp native text, verified 'Press H for Help' overlay).
