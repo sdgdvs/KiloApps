@@ -1,8 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 520
-#define H 560
+#define W 600
+#define H 620
 
 // Control IDs
 #define ID_HEX 1
@@ -381,7 +381,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "BUTTON", "C Array", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 322, 320, 58, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "HexDump", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 385, 320, 58, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
 
-            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Result / Export preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY, 10, 352, 432, 100, hwnd, NULL, NULL, NULL);
+            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex!\r\nPress 'h' for Help.\r\n\r\nResult / Export preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY, 10, 352, 500, 100, hwnd, NULL, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Press 'h' for Help", WS_CHILD | WS_VISIBLE, 10, 465, 150, 16, hwnd, NULL, NULL, NULL);
 
@@ -449,6 +449,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    HMODULE hUser32 = LoadLibraryA("user32.dll");
+    if (hUser32) {
+        typedef BOOL(WINAPI* SetProcessDPIAwareFunc)();
+        SetProcessDPIAwareFunc setDpi = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpi) setDpi();
+    }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
