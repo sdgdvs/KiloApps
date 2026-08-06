@@ -25,22 +25,27 @@ int tools_upgraded = 0;
 int selected_seed = 0;
 int chickens = 0;
 int cows = 0;
+int weather = 0; // 0=Clear, 1=Rain, 2=Drought, 3=Crows
+const char* weather_names[4] = {"Clear", "Rain", "Drought", "Crows"};
+int has_scarecrow = 0;
 HWND hNextDayBtn;
 HWND hSeedBtns[4];
 HWND hUpgradeBtn;
 HWND hUpgradeToolsBtn;
 HWND hBuyChickenBtn;
 HWND hBuyCowBtn;
+HWND hBuyScarecrowBtn;
 
 void UpdateTitle(HWND hwnd) {
     char title[128];
-    wsprintf(title, "KFarm - %s, Day %d | $%d | Ch:%d | Co:%d", season_names[current_season], current_day, money, chickens, cows);
+    wsprintf(title, "KFarm - %s, Day %d | %s | $%d | Ch:%d Co:%d", season_names[current_season], current_day, weather_names[weather], money, chickens, cows);
     SetWindowText(hwnd, title);
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
+            srand(GetTickCount());
             hUpgradeToolsBtn = CreateWindow("BUTTON", "Tools ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 10, 410, 110, 30, hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hNextDayBtn = CreateWindow("BUTTON", "Sleep (Next Day)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -51,6 +56,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 290, 450, 100, 20, hwnd, (HMENU) 7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hBuyCowBtn = CreateWindow("BUTTON", "Cow ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 290, 475, 100, 20, hwnd, (HMENU) 8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hBuyScarecrowBtn = CreateWindow("BUTTON", "Scarecrow ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                140, 500, 140, 20, hwnd, (HMENU) 10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (-$5) [Sp/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
                 10, 450, 130, 20, hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[1] = CreateWindow("BUTTON", "Corn (-$10) [Su]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
@@ -108,6 +115,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     MessageBeep(MB_ICONERROR);
                 }
             }
+            if (LOWORD(wParam) == 10 && time_of_day == 0 && !has_scarecrow) {
+                if (money >= 100) {
+                    money -= 100;
+                    has_scarecrow = 1;
+                    EnableWindow(hBuyScarecrowBtn, FALSE);
+                    SetWindowText(hBuyScarecrowBtn, "Scarecrow (Owned)");
+                    UpdateTitle(hwnd);
+                } else {
+                    MessageBeep(MB_ICONERROR);
+                }
+            }
             if (LOWORD(wParam) >= 2 && LOWORD(wParam) <= 5) {
                 selected_seed = LOWORD(wParam) - 2;
             }
@@ -124,7 +142,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if ((crop_seasons[grid[i].cropType] & (1 << current_season)) == 0) {
                             grid[i].type = 1; // Dies from season change
                         } else if (grid[i].type == 2) {
-                            if (grid[i].watered) {
+                            int req = (weather == 2) ? 2 : ((weather == 1) ? 0 : 1);
+                            if (grid[i].watered >= req) {
                                 grid[i].growth++;
                                 if (grid[i].growth >= growth_times[grid[i].cropType]) grid[i].type = 3;
                             } else {
@@ -134,6 +153,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     grid[i].watered = 0;
                 }
+                
+                int r = rand() % 100;
+                if (r < 20) weather = 1;
+                else if (r < 40) weather = 2;
+                else if (r < 60) weather = 3;
+                else weather = 0;
+                
+                if (weather == 3 && !has_scarecrow) {
+                    for (int i = 0; i < GRID_COLS * GRID_ROWS; i++) {
+                        if ((grid[i].type == 2 || grid[i].type == 3) && (rand() % 100) < 30) {
+                            grid[i].type = 1;
+                        }
+                    }
+                }
+                
                 InvalidateRect(hwnd, NULL, TRUE);
                 UpdateTitle(hwnd);
             }
@@ -148,7 +182,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
                 if (grid[c_idx].type == 0) action = 0;
                 else if (grid[c_idx].type == 1) action = 1;
-                else if (grid[c_idx].type == 2 && !grid[c_idx].watered) action = 2;
+                else if (grid[c_idx].type == 2) {
+                    int req = (weather == 2) ? 2 : 1;
+                    if (grid[c_idx].watered < req) action = 2;
+                }
                 else if (grid[c_idx].type == 3) action = 3;
                 
                 if (action == -1) return 0;
@@ -171,8 +208,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             } else {
                                 MessageBeep(MB_ICONERROR);
                             }
-                        } else if (action == 2 && grid[idx].type == 2 && !grid[idx].watered) {
-                            grid[idx].watered = 1;
+                        } else if (action == 2 && grid[idx].type == 2) {
+                            int req = (weather == 2) ? 2 : 1;
+                            if (grid[idx].watered < req) grid[idx].watered++;
                         } else if (action == 3 && grid[idx].type == 3) {
                             money += sell_values[grid[idx].cropType];
                             grid[idx].type = 1; grid[idx].watered = 0;
@@ -201,10 +239,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             COLORREF cGrass = time_of_day ? night_grass_colors[current_season] : grass_colors[current_season];
             COLORREF cSoil = time_of_day ? RGB(40, 20, 15) : RGB(93, 64, 55);
             COLORREF cWetSoil = time_of_day ? RGB(20, 10, 5) : RGB(62, 39, 35);
+            COLORREF cDampSoil = time_of_day ? RGB(30, 15, 10) : RGB(78, 52, 45);
             
             HBRUSH hGrass = CreateSolidBrush(cGrass);
             HBRUSH hSoil = CreateSolidBrush(cSoil);
             HBRUSH hWetSoil = CreateSolidBrush(cWetSoil);
+            HBRUSH hDampSoil = CreateSolidBrush(cDampSoil);
             
             HPEN hGridPen = CreatePen(PS_SOLID, 1, time_of_day ? RGB(40, 60, 20) : RGB(104, 159, 56));
             HPEN hSproutPen = CreatePen(PS_SOLID, 3, time_of_day ? RGB(80, 120, 40) : RGB(139, 195, 74));
@@ -217,8 +257,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     int idx = y * GRID_COLS + x;
                     RECT r = { x * CELL_SIZE, y * CELL_SIZE, (x+1) * CELL_SIZE, (y+1) * CELL_SIZE };
                     
+                    int req = (weather == 2) ? 2 : ((weather == 1) ? 0 : 1);
                     if (grid[idx].type == 0) FillRect(hdc, &r, hGrass);
-                    else if (grid[idx].watered) FillRect(hdc, &r, hWetSoil);
+                    else if (weather == 1 || grid[idx].watered >= req) FillRect(hdc, &r, hWetSoil);
+                    else if (weather == 2 && grid[idx].watered == 1) FillRect(hdc, &r, hDampSoil);
                     else FillRect(hdc, &r, hSoil);
                     
                     SelectObject(hdc, hGridPen);
@@ -276,11 +318,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(hGrass);
             DeleteObject(hSoil);
             DeleteObject(hWetSoil);
+            DeleteObject(hDampSoil);
             DeleteObject(hWheatPen);
             DeleteObject(hCornPen);
             DeleteObject(hPumpkinPen);
             DeleteObject(hSproutPen);
             DeleteObject(hGridPen);
+
+            if (weather == 1 && time_of_day == 0) {
+                HBRUSH hRain = CreateSolidBrush(RGB(180, 200, 255));
+                for (int i = 0; i < 60; i++) {
+                    int rx = rand() % (GRID_COLS * CELL_SIZE);
+                    int ry = rand() % (GRID_ROWS * CELL_SIZE);
+                    RECT rr = {rx, ry, rx + 2, ry + 10 + (rand() % 10)};
+                    FillRect(hdc, &rr, hRain);
+                }
+                DeleteObject(hRain);
+            }
 
             EndPaint(hwnd, &ps);
             return 0;
@@ -303,11 +357,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     RegisterClass(&wc);
 
-    RECT rect = {0, 0, GRID_COLS * CELL_SIZE, GRID_ROWS * CELL_SIZE + 105};
+    RECT rect = {0, 0, GRID_COLS * CELL_SIZE, GRID_ROWS * CELL_SIZE + 130};
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
 
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KFarm - Spring, Day 1 | $50 | Ch:0 | Co:0", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        0, CLASS_NAME, "KFarm - Spring, Day 1 | Clear | $50 | Ch:0 Co:0", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, hInstance, NULL
     );

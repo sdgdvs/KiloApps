@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFarm (Farming Simulation)
-**Phase:** 11 (next to do)
+**Phase:** 12 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KFarm directory (`KFarm/`), create web HTML skeleton (`KiloOS/public/apps/kfarm.html`), register in App.jsx.
@@ -67,7 +67,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 8: Animals & Barns — buy chickens and cows for daily eggs/milk.
 - [x] Phase 9: Farming Tools — upgrade watering can, hoe, and scythe for area-of-effect actions.
 - [x] Phase 10: Seasons System — Spring, Summer, Fall, Winter. Crops are season-specific.
-- [ ] Phase 11: Weather Events — Rain (auto-waters), Drought (extra water needed), Crow attacks (need scarecrows).
+- [x] Phase 11: Weather Events — Rain (auto-waters), Drought (extra water needed), Crow attacks (need scarecrows).
 - [ ] Phase 12: Crafting/Processing — Turn wheat into flour, milk into cheese, eggs into mayo for higher profit.
 - [ ] Phase 13: Sound Effects — web audio nature sounds, animal noises, tool swings. Native: Win32 Beep equivalents.
 - [ ] Phase 14: Comprehensive Help & Farmer's Almanac — How-to-play, crop growth charts, season guides.

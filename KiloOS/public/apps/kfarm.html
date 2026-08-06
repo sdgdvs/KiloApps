@@ -35,9 +35,9 @@
 </head>
 <body>
     <div class="container">
-        <h2>KFarm - <span id="seasonSpan">Spring</span>, Day <span id="daySpan">1</span> | $<span id="moneySpan">50</span></h2>
+        <h2>KFarm - <span id="seasonSpan">Spring</span>, Day <span id="daySpan">1</span> | <span id="weatherSpan">Clear</span> | $<span id="moneySpan">50</span></h2>
         <div style="text-align: center; margin-bottom: 10px; font-weight: bold; color: #5D4037;">
-            🐔 Chickens: <span id="chickensSpan">0</span> | 🐄 Cows: <span id="cowsSpan">0</span>
+            🐔 Chickens: <span id="chickensSpan">0</span> | 🐄 Cows: <span id="cowsSpan">0</span> | 🧍 Scarecrow: <span id="scarecrowSpan">No</span>
         </div>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest)</p>
@@ -54,7 +54,8 @@
         </div>
         <div style="text-align:center; margin-top:10px;">
             <button onclick="buyChicken()" style="padding:5px 10px; font-size:14px; background-color:#FFC107; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Chicken ($50)</button>
-            <button onclick="buyCow()" style="padding:5px 10px; font-size:14px; background-color:#795548; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Buy Cow ($150)</button>
+            <button onclick="buyCow()" style="padding:5px 10px; font-size:14px; background-color:#795548; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Cow ($150)</button>
+            <button id="scarecrowBtn" onclick="buyScarecrow()" style="padding:5px 10px; font-size:14px; background-color:#607D8B; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Buy Scarecrow ($100)</button>
         </div>
     </div>
     <script>
@@ -78,6 +79,8 @@
         let toolsUpgraded = false;
         let chickens = 0;
         let cows = 0;
+        let weather = 'Clear';
+        let hasScarecrow = false;
 
         function updateAnimals() {
             document.getElementById('chickensSpan').innerText = chickens;
@@ -99,6 +102,19 @@
                 cows++;
                 updateMoney();
                 updateAnimals();
+            }
+        }
+
+        function buyScarecrow() {
+            if (!hasScarecrow && money >= 100) {
+                money -= 100;
+                hasScarecrow = true;
+                updateMoney();
+                document.getElementById('scarecrowSpan').innerText = 'Yes';
+                const btn = document.getElementById('scarecrowBtn');
+                btn.innerText = 'Scarecrow (Owned)';
+                btn.style.backgroundColor = '#9E9E9E';
+                btn.disabled = true;
             }
         }
 
@@ -153,7 +169,14 @@
                     if (cell.type === 0) {
                         ctx.fillStyle = grassColor; 
                     } else {
-                        ctx.fillStyle = cell.watered ? '#3E2723' : '#5D4037'; 
+                        const req = weather === 'Drought' ? 2 : (weather === 'Rain' ? 0 : 1);
+                        if (weather === 'Rain' || cell.watered >= req) {
+                            ctx.fillStyle = '#3E2723'; // wet
+                        } else if (weather === 'Drought' && cell.watered === 1) {
+                            ctx.fillStyle = '#4E342E'; // damp
+                        } else {
+                            ctx.fillStyle = '#5D4037'; // dry
+                        }
                     }
                     ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
                     
@@ -172,6 +195,11 @@
             if (timeOfDay === 'night') {
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (weather === 'Rain') {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                for (let i = 0; i < 60; i++) {
+                    ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 10 + Math.random() * 10);
+                }
             }
         }
 
@@ -186,7 +214,10 @@
                 let action = '';
                 if (centerCell.type === 0) action = 'till';
                 else if (centerCell.type === 1) action = 'plant';
-                else if (centerCell.type === 2 && !centerCell.watered) action = 'water';
+                else if (centerCell.type === 2) {
+                    const req = weather === 'Drought' ? 2 : 1;
+                    if (centerCell.watered < req) action = 'water';
+                }
                 else if (centerCell.type === 3) action = 'harvest';
                 
                 if (!action) return;
@@ -214,13 +245,16 @@
                                 cell.growth = 0;
                                 cell.cropType = cType;
                             }
-                        } else if (action === 'water' && cell.type === 2 && !cell.watered) {
-                            cell.watered = true;
+                        } else if (action === 'water' && cell.type === 2) {
+                            const req = weather === 'Drought' ? 2 : 1;
+                            if (cell.watered < req) {
+                                cell.watered = (cell.watered || 0) + 1;
+                            }
                         } else if (action === 'harvest' && cell.type === 3) {
                             money += cropData[cell.cropType].value;
                             updateMoney();
                             cell.type = 1;
-                            cell.watered = false;
+                            cell.watered = 0;
                         }
                     }
                 }
@@ -245,7 +279,8 @@
                         if (!cropData[cell.cropType].seasons.includes(currentSeason)) {
                             cell.type = 1; // Dies because of season change
                         } else if (cell.type === 2) {
-                            if (cell.watered) {
+                            const req = weather === 'Drought' ? 2 : (weather === 'Rain' ? 0 : 1);
+                            if ((cell.watered || 0) >= req) {
                                 cell.growth++;
                                 if (cell.growth >= cropData[cell.cropType].growthTime) cell.type = 3;
                             } else {
@@ -253,8 +288,32 @@
                             }
                         }
                     }
-                    cell.watered = false;
+                    cell.watered = 0;
                 }
+                
+                // Pick new weather
+                const r = Math.random();
+                if (r < 0.2) weather = 'Rain';
+                else if (r < 0.4) weather = 'Drought';
+                else if (r < 0.6) weather = 'Crows';
+                else weather = 'Clear';
+                
+                if (weather === 'Crows' && !hasScarecrow) {
+                    for (let cell of grid) {
+                        if ((cell.type === 2 || cell.type === 3) && Math.random() < 0.3) {
+                            cell.type = 1;
+                        }
+                    }
+                }
+
+                document.getElementById('daySpan').innerText = day;
+                document.getElementById('seasonSpan').innerText = seasons[currentSeason];
+                document.getElementById('weatherSpan').innerText = weather;
+
+                timeOfDay = 'day';
+                money += (chickens * 5) + (cows * 15);
+                updateMoney();
+                
                 draw();
             }, 1000);
         }
