@@ -209,6 +209,9 @@
   }
 
   canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     display: block;
@@ -460,6 +463,8 @@
 </div>
 
 <script>
+  window.resizeTo(1024, 768);
+
   // Palettes
   const THEMES = {
     teal: ["rgb(20, 184, 166)", "rgb(245, 158, 11)", "rgb(236, 72, 153)", "rgb(139, 92, 246)", "rgb(59, 130, 246)", "rgb(16, 185, 129)", "rgb(244, 63, 94)"],
@@ -540,7 +545,8 @@
   }
 
   function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
+    const parent = canvas.parentElement;
+    const rect = parent.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     canvasW = rect.width || 600;
     canvasH = rect.height || 480;
