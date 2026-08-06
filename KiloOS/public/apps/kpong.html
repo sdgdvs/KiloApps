@@ -177,6 +177,7 @@
       <button class="btn-sm" onclick="openStatsModal()">🏆 Stats</button>
       <button class="btn-sm" onclick="saveGameState()">💾 Save</button>
       <button class="btn-sm" onclick="loadGameState()">📂 Load</button>
+      <button class="btn-sm" onclick="openHelpModal()">❓ Help (H)</button>
     </div>
   </div>
 
@@ -1033,9 +1034,14 @@
   }
 
   function draw() {
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== 900 * dpr) {
+          canvas.width = 900 * dpr;
+          canvas.height = 640 * dpr;
+      }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      ctx.scale(2, 2);
+      ctx.scale(2 * dpr, 2 * dpr);
       
       // 3D Perspective Grid Background (Loop 2)
       ctx.save();

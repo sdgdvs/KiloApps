@@ -1042,6 +1042,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     LoadStats();
