@@ -194,8 +194,14 @@
   let logEntries = [];
 
   function resizeCanvas() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
+    ctx.resetTransform();
+    ctx.scale(dpr, dpr);
     drawGraph();
   }
   window.addEventListener('resize', resizeCanvas);
@@ -304,12 +310,13 @@
   }
 
   function drawGraph() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
       if (historyData.length === 0) return;
       
       const padding = 20;
-      const w = canvas.width;
-      const h = canvas.height;
       
       let maxTime = Math.max(...historyData.filter(d => d !== null));
       if (maxTime < 50) maxTime = 50;
@@ -449,7 +456,9 @@
   };
 
   document.addEventListener('keydown', (e) => {
-      if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      const active = document.activeElement;
+      const isInput = active.tagName === 'INPUT' || (active.tagName === 'TEXTAREA' && active.id !== 'out');
+      if ((e.key === 'h' || e.key === 'H') && !isInput) {
           append("\n--- KPing Help ---\n");
           append("Ping: Send ICMP echo requests to the target host.\n");
           append("Trace: Trace the route to the target host.\n");

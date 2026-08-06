@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <stdio.h>
 
-#define W 700
-#define H 500
+#define W 800
+#define H 600
 
 HWND hInput;
 HWND hBtn;
@@ -210,7 +210,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hCheckCont = CreateWindowEx(0, "BUTTON", "Continuous", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 310, 45, 100, 22, hwnd, NULL, NULL, NULL);
             hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 420, 45, 90, 22, hwnd, NULL, NULL, NULL);
             
-            hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing. Enter a target host and click Ping or Trace to begin. Press 'h' for help.\r\n\r\n", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 120, hwnd, NULL, NULL, NULL);
+            hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing. Enter a target host and click Ping or Trace to begin. Press 'h' for help.\r\n\r\n", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 90, hwnd, NULL, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFontMono, TRUE);
@@ -268,7 +268,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnExport, nw - 205, 15, 65, 24, TRUE);
             MoveWindow(hBtn, nw - 135, 15, 60, 24, TRUE);
             MoveWindow(hBtnTrace, nw - 70, 15, 55, 24, TRUE);
-            MoveWindow(hOutput, 15, 75, nw - 30, nh - 120, TRUE);
+            MoveWindow(hOutput, 15, 75, nw - 30, nh - 90, TRUE);
             break;
         }
         case WM_GETMINMAXINFO: {
