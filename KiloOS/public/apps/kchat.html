@@ -32,7 +32,9 @@
             padding: 12px; 
             background: radial-gradient(circle at 10% 10%, #1e1b4b, var(--bg-color) 70%);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            font-size: 13px; 
+            font-size: 14px; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             color: var(--text-main);
             display: flex; 
             flex-direction: column; 
@@ -62,10 +64,10 @@
 
         input[type="text"], select { 
             border: 1px solid var(--border); 
-            padding: 6px 10px; 
+            padding: 8px 12px; 
             font-family: inherit; 
-            font-size: 13px; 
-            background: rgba(0, 0, 0, 0.3);
+            font-size: 14px; 
+            background: rgba(0, 0, 0, 0.5);
             color: var(--text-main);
             border-radius: var(--radius-sm);
             outline: none;
@@ -84,9 +86,9 @@
 
         button { 
             font-family: inherit; 
-            font-size: 12px; 
+            font-size: 13px; 
             font-weight: 600;
-            padding: 6px 12px; 
+            padding: 8px 14px; 
             background: var(--accent);
             color: white;
             border: none;
@@ -268,8 +270,9 @@
         .msg-content {
             white-space: pre-wrap;
             word-break: break-word;
-            line-height: 1.45;
+            line-height: 1.5;
             color: var(--text-main);
+            font-size: 14px;
         }
 
         .msg-footer {
@@ -370,7 +373,7 @@
         }
     </style>
 </head>
-<body>
+<body data-width="800" data-height="600">
 
     <!-- Header Controls -->
     <div class="app-header" role="region" aria-label="KChat Header Controls">
@@ -385,9 +388,9 @@
                 </button>
                 <span style="opacity: 0.3;">|</span>
                 <label for="ip">IP:</label>
-                <input type="text" id="ip" value="127.0.0.1" style="width: 85px;" aria-label="Custom server IP address">
+                <input type="text" id="ip" value="127.0.0.1" style="width: 100px;" aria-label="Custom server IP address">
                 <label for="port">Port:</label>
-                <input type="text" id="port" value="6667" style="width: 45px;" aria-label="Custom server port">
+                <input type="text" id="port" value="6667" style="width: 60px;" aria-label="Custom server port">
                 <button id="btnConnect" onclick="window.connect()" aria-label="Connect or disconnect from custom server">Connect</button>
             </div>
 
@@ -416,7 +419,7 @@
             </div>
 
             <div class="row">
-                <input type="text" id="searchInput" placeholder="🔍 Search messages..." oninput="window.renderMessages()" style="width: 140px;" aria-label="Search messages">
+                <input type="text" id="searchInput" placeholder="🔍 Search messages..." oninput="window.renderMessages()" style="width: 170px;" aria-label="Search messages">
                 <button id="btnFilterPinned" class="btn-secondary" onclick="window.toggleFilterPinned()" aria-label="Toggle pinned filter">📌 Pinned</button>
                 <span style="opacity: 0.3;">|</span>
                 <button class="btn-secondary" onclick="window.exportJSON()" title="Export JSON history">📥 JSON</button>
@@ -482,7 +485,7 @@
             {
                 id: 'sys_1',
                 user: 'System',
-                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>\nType /help for more instructions.',
+                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>\nType /help for help and detailed instructions.',
                 timestamp: Date.now(),
                 room: '#general',
                 pinned: true,
