@@ -283,9 +283,9 @@
   }
 
   // Procedural 16x16 Texture Generator
-  const textures = new Array(24);
+  const textures = new Array(25);
   function initTextures() {
-      for (let t = 0; t < 16; t++) {
+      for (let t = 0; t < 25; t++) {
           textures[t] = new Uint32Array(256);
           for (let y = 0; y < 16; y++) {
               for (let x = 0; x < 16; x++) {
@@ -379,6 +379,13 @@
                   } else if (t === 22) {
                       let noise = Math.floor(Math.random() * 20);
                       r = noise; g = noise; b = 50 + noise * 2;
+                  } else if (t === 23) {
+                      let noise = ((x * 13 + y * 37) % 30) - 15;
+                      r = 40 + noise; g = 60 + noise; b = 40 + noise;
+                      if ((x+y)%2 === 0) { r -= 10; g -= 10; b -= 10; }
+                  } else if (t === 24) {
+                      let noise = ((x * 7 + y * 23) % 20) - 10;
+                      r = 20 + noise; g = 20 + noise; b = 30 + noise;
                   } else {
                       r = 170; g = 0; b = 0;
                   }
@@ -1109,21 +1116,6 @@
 
   function draw() {
       // Software Raycasting into buf32
-      // 1. Ceiling & Floor
-      for (let y = 0; y < H / 2; y++) {
-          let ceilFog = y / (H / 2);
-          let c = Math.floor(20 + ceilFog * 30);
-          let col = (255 << 24) | (Math.floor(c * 1.2) << 16) | (c << 8) | c;
-          for (let x = 0; x < W; x++) buf32[y * W + x] = col;
-      }
-      for (let y = H / 2; y < H; y++) {
-          let floorFog = 1.0 - (y - H / 2) / (H / 2);
-          let f = Math.floor(20 + (1.0 - floorFog) * 40);
-          let col = (255 << 24) | (f << 16) | (Math.floor(f * 1.1) << 8) | f;
-          for (let x = 0; x < W; x++) buf32[y * W + x] = col;
-      }
-
-      // 2. Raycaster Walls
       let drawPX = pX, drawPY = pY, drawDX = dX, drawDY = dY, drawPlaneX = planeX, drawPlaneY = planeY;
       let drawMap = map;
       if (gameState === 3 && replayLevels.length > 0) {
@@ -1136,7 +1128,53 @@
               drawPlaneX = frame.planeX; drawPlaneY = frame.planeY;
           }
       }
-      
+
+      // 1. Ceiling & Floor Casting
+      for (let y = 0; y < H; y++) {
+          let isFloor = y >= H / 2;
+          let p = isFloor ? (y - H / 2) : (H / 2 - y);
+          if (p === 0) p = 1;
+          
+          let posZ = 0.5 * H;
+          let rowDistance = posZ / p;
+          
+          let rayDirX0 = drawDX - drawPlaneX;
+          let rayDirY0 = drawDY - drawPlaneY;
+          let rayDirX1 = drawDX + drawPlaneX;
+          let rayDirY1 = drawDY + drawPlaneY;
+          
+          let floorStepX = rowDistance * (rayDirX1 - rayDirX0) / W;
+          let floorStepY = rowDistance * (rayDirY1 - rayDirY0) / W;
+          
+          let floorX = drawPX + rowDistance * rayDirX0;
+          let floorY = drawPY + rowDistance * rayDirY0;
+          
+          let maxDist = (currentLevel >= 20) ? 4.5 : ((currentLevel >= 10) ? 7.0 : 12.0);
+          if (pathfinderTimer > 0) maxDist = 14.0;
+          let fog = 1.0 - rowDistance / maxDist;
+          fog = Math.max(0.1, Math.min(1.0, fog));
+          if (currentLevel >= 15 && rowDistance > maxDist && pathfinderTimer <= 0) fog = 0.0;
+          
+          for (let x = 0; x < W; ++x) {
+              let cellX = Math.floor(floorX);
+              let cellY = Math.floor(floorY);
+              let tx = Math.floor(16 * (floorX - cellX)) & 15;
+              let ty = Math.floor(16 * (floorY - cellY)) & 15;
+              
+              floorX += floorStepX;
+              floorY += floorStepY;
+              
+              let texIdx = isFloor ? 23 : 24;
+              let srcCol = textures[texIdx][ty * 16 + tx];
+              
+              let r = (srcCol & 0xFF) * fog;
+              let g = ((srcCol >> 8) & 0xFF) * fog;
+              let b = ((srcCol >> 16) & 0xFF) * fog;
+              buf32[y * W + x] = (255 << 24) | (Math.floor(b) << 16) | (Math.floor(g) << 8) | Math.floor(r);
+          }
+      }
+
+      // 2. Raycaster Walls
       for (let x = 0; x < W; x++) {
           let cameraX = 2 * x / W - 1;
           let rayDX = drawDX + drawPlaneX * cameraX;

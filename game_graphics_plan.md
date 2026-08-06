@@ -84,8 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-
-- KMaze
 - KColony
 - KFortress
 - KFarm
@@ -115,9 +113,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSnake
 - KTetris
 - KBreakout
+- KMaze
 
 ## Completed Work Log
 
+- **KMaze (Loop 3):** Implemented textured floor casting (Mossy Floor) and ceiling casting (Cave Ceiling) with depth fog in the 3D raycaster for both Web Canvas (kmaze.html) and Native C Win32 GDI (KMaze/main.c).
 - **KBreakout (Loop 3):** Implemented cyber-grid neon background environmental art and floating space dust atmospheric effects in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 - **KTetris (Loop 3):** Implemented cyber-grid neon background environmental art and falling matrix dust atmospheric particles in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 - **KSnake (Loop 3):** Implemented checkered terrain background grid with subtle grass/rock detail texturing for environmental art in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).

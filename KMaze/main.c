@@ -303,8 +303,8 @@ int replayLevel = 0;
 int replayMap[45][45];
 int replayCurFrame = 0;
 
-// 16x16 Textures buffer: 16 types, 256 DWORD colors (0x00RRGGBB)
-DWORD textures[24][256];
+// 16x16 Textures buffer: 25 types, 256 DWORD colors (0x00RRGGBB)
+DWORD textures[25][256];
 DWORD animFrameCount = 0;
 
 // Particles
@@ -349,7 +349,7 @@ void UpdateParticles() {
 
 // Procedural 16x16 Texture Generator
 void InitTextures() {
-    for (int t = 0; t < 16; t++) {
+    for (int t = 0; t < 25; t++) {
         for (int y = 0; y < 16; y++) {
             for (int x = 0; x < 16; x++) {
                 DWORD col = 0;
@@ -434,6 +434,19 @@ void InitTextures() {
                     col = RGB(100 + x*5, 200, 255);
                 } else if (t == 22) { // Void Wall
                     int noise = rand() % 20; col = RGB(noise, noise, 50 + noise*2);
+                } else if (t == 23) { // Mossy Floor
+                    int noise = ((x * 13 + y * 37) % 30) - 15;
+                    int r = 40 + noise; if (r < 0) r = 0; if (r > 255) r = 255;
+                    int g = 60 + noise; if (g < 0) g = 0; if (g > 255) g = 255;
+                    int b = 40 + noise; if (b < 0) b = 0; if (b > 255) b = 255;
+                    if ((x+y)%2 == 0) { r = (r>10)?r-10:0; g = (g>10)?g-10:0; b = (b>10)?b-10:0; }
+                    col = RGB(r, g, b);
+                } else if (t == 24) { // Cave Ceiling
+                    int noise = ((x * 7 + y * 23) % 20) - 10;
+                    int r = 20 + noise; if (r < 0) r = 0; if (r > 255) r = 255;
+                    int g = 20 + noise; if (g < 0) g = 0; if (g > 255) g = 255;
+                    int b = 30 + noise; if (b < 0) b = 0; if (b > 255) b = 255;
+                    col = RGB(r, g, b);
                 } else {
                     col = 0x00AA0000;
                 }
@@ -1362,19 +1375,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Software Raycasting into DIBSection pBits
             if (pBits) {
-                for (int y = 0; y < H / 2; y++) {
-                    float ceilFog = (float)y / (H / 2);
-                    BYTE c = (BYTE)(20 + ceilFog * 30);
-                    DWORD ceilCol = RGB(c, c, (BYTE)(c * 1.2f));
-                    for (int x = 0; x < W; x++) pBits[y * W + x] = ceilCol;
-                }
-                for (int y = H / 2; y < H; y++) {
-                    float floorFog = 1.0f - (float)(y - H / 2) / (H / 2);
-                    BYTE f = (BYTE)(20 + (1.0f - floorFog) * 40);
-                    DWORD floorCol = RGB(f, (BYTE)(f * 1.1f), f);
-                    for (int x = 0; x < W; x++) pBits[y * W + x] = floorCol;
-                }
-
                 float drawPX = pX, drawPY = pY, drawDX = dX, drawDY = dY, drawPlaneX = planeX, drawPlaneY = planeY;
                 if (gameState == 3 && replayFrameCount > 0) {
                     drawPX = replayFrames[replayCurFrame].px;
@@ -1383,6 +1383,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     drawDY = replayFrames[replayCurFrame].dy;
                     drawPlaneX = replayFrames[replayCurFrame].planex;
                     drawPlaneY = replayFrames[replayCurFrame].planey;
+                }
+
+                // 1. Ceiling & Floor Casting
+                for (int y = 0; y < H; y++) {
+                    int isFloor = (y >= H / 2);
+                    int p = isFloor ? (y - H / 2) : (H / 2 - y);
+                    if (p == 0) p = 1;
+
+                    float posZ = 0.5f * H;
+                    float rowDistance = posZ / p;
+
+                    float rayDirX0 = drawDX - drawPlaneX;
+                    float rayDirY0 = drawDY - drawPlaneY;
+                    float rayDirX1 = drawDX + drawPlaneX;
+                    float rayDirY1 = drawDY + drawPlaneY;
+
+                    float floorStepX = rowDistance * (rayDirX1 - rayDirX0) / W;
+                    float floorStepY = rowDistance * (rayDirY1 - rayDirY0) / W;
+
+                    float floorX = drawPX + rowDistance * rayDirX0;
+                    float floorY = drawPY + rowDistance * rayDirY0;
+
+                    float maxDist = (currentLevel >= 20) ? 4.5f : ((currentLevel >= 10) ? 7.0f : 12.0f);
+                    if (pathfinderTimer > 0) maxDist = 14.0f;
+                    float fog = 1.0f - rowDistance / maxDist;
+                    if (fog < 0.1f) fog = 0.1f; if (fog > 1.0f) fog = 1.0f;
+                    if (currentLevel >= 15 && rowDistance > maxDist && pathfinderTimer <= 0) fog = 0.0f;
+
+                    for (int x = 0; x < W; ++x) {
+                        int cellX = (int)floor(floorX);
+                        int cellY = (int)floor(floorY);
+                        int tx = (int)(16.0f * (floorX - cellX)) & 15;
+                        int ty = (int)(16.0f * (floorY - cellY)) & 15;
+
+                        floorX += floorStepX;
+                        floorY += floorStepY;
+
+                        int texIdx = isFloor ? 23 : 24;
+                        DWORD srcCol = textures[texIdx][ty * 16 + tx];
+
+                        BYTE r = (BYTE)((srcCol & 0xFF) * fog);
+                        BYTE g = (BYTE)(((srcCol >> 8) & 0xFF) * fog);
+                        BYTE b = (BYTE)(((srcCol >> 16) & 0xFF) * fog);
+
+                        pBits[y * W + x] = RGB(r, g, b);
+                    }
                 }
                 for (int x = 0; x < W; x++) {
                     float cameraX = 2 * x / (float)W - 1;
