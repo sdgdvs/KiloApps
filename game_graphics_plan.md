@@ -85,7 +85,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KTetris
 - KBreakout
 - KMaze
 - KColony
@@ -115,9 +114,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSpace
 - KPac
 - KSnake
+- KTetris
 
 ## Completed Work Log
 
+- **KTetris (Loop 3):** Implemented cyber-grid neon background environmental art and falling matrix dust atmospheric particles in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 - **KSnake (Loop 3):** Implemented checkered terrain background grid with subtle grass/rock detail texturing for environmental art in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
 - **KPac (Loop 3):** Implemented cyber-grid neon background environmental art and twinkling atmospheric star particles to enhance the maze's visual depth in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).

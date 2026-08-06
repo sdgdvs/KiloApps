@@ -755,8 +755,38 @@ if (showHelp) {
   }
 
   function draw() {
-      ctx.fillStyle = '#121218';
+      // Background base
+      ctx.fillStyle = '#0a0a14'; // Dark space background
       ctx.fillRect(0, 0, 370, 510);
+      
+      // Cyber-grid environmental art
+      const tick = Date.now();
+      const gridScroll = (tick * 0.05) % 40;
+      
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 255, 200, 0.08)';
+      ctx.lineWidth = 1;
+      for (let i = -10; i < 40; i++) { 
+          const xPos = i * 40;
+          ctx.beginPath(); ctx.moveTo(xPos, 0); ctx.lineTo(xPos, 510); ctx.stroke();
+      }
+      for (let j = -10; j < 40; j++) { 
+          const yPos = j * 40 + gridScroll;
+          ctx.beginPath(); ctx.moveTo(0, yPos); ctx.lineTo(370, yPos); ctx.stroke();
+      }
+      ctx.restore();
+
+      // Matrix star/dust atmospheric effects
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 255, 200, 0.4)';
+      for (let i = 0; i < 30; i++) {
+          const starY = (i * 27 + tick * 0.02) % 510;
+          const starX = (Math.sin(i * 1.5) * 185) + 185;
+          ctx.beginPath();
+          ctx.arc(starX, starY, (i % 3 == 0) ? 1.5 : 0.8, 0, Math.PI*2);
+          ctx.fill();
+      }
+      ctx.restore();
 
       let offX = 0, offY = 0;
       if (shakeTimer > 0) {

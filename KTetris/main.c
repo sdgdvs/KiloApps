@@ -1333,10 +1333,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbm = CreateCompatibleBitmap(hdc, total_w, total_h);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
             
-            HBRUSH bg = CreateSolidBrush(RGB(18, 18, 24));
+            HBRUSH bg = CreateSolidBrush(RGB(10, 10, 20));
             RECT fullRc = {0, 0, total_w, total_h};
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
+
+            // Cyber-grid environmental art
+            DWORD currentTick = GetTickCount();
+            int gridScroll = (currentTick / 20) % 40;
+            HPEN envPen = CreatePen(PS_SOLID, 1, RGB(0, 80, 60));
+            HPEN oldEnvPen = (HPEN)SelectObject(memDC, envPen);
+            for (int i = -10; i < 40; i++) {
+                int xPos = i * 40;
+                MoveToEx(memDC, xPos, 0, NULL);
+                LineTo(memDC, xPos, total_h);
+            }
+            for (int j = -10; j < 40; j++) {
+                int yPos = j * 40 + gridScroll;
+                MoveToEx(memDC, 0, yPos, NULL);
+                LineTo(memDC, total_w, yPos);
+            }
+            SelectObject(memDC, oldEnvPen);
+            DeleteObject(envPen);
+
+            // Matrix dust particles
+            HBRUSH starBrush = CreateSolidBrush(RGB(0, 200, 150));
+            for (int i = 0; i < 30; i++) {
+                int starY = (i * 27 + currentTick / 50) % total_h;
+                int starX = (int)(sin(i * 1.5) * (total_w / 2.0) + (total_w / 2.0));
+                int sz = (i % 3 == 0) ? 2 : 1;
+                RECT r = {starX, starY, starX + sz, starY + sz};
+                FillRect(memDC, &r, starBrush);
+            }
+            DeleteObject(starBrush);
 
             int offX = 0, offY = 0;
             if (shake_timer > 0) {
@@ -1357,7 +1386,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(gridPen);
 
             // Draw grid blocks
-            DWORD currentTick = GetTickCount();
+            currentTick = GetTickCount();
             for (int y = 0; y < H; y++) {
                 for (int x = 0; x < W; x++) {
                     if (grid[y][x]) {
