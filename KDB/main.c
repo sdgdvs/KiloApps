@@ -3,8 +3,8 @@
 #include <commctrl.h>
 #include <commdlg.h>
 
-#define W 800
-#define H 600
+#define W 1024
+#define H 768
 #define IDC_SEARCH 101
 #define IDC_ADD_ID 102
 #define IDC_ADD_NAME 103
@@ -472,7 +472,7 @@ void InitListView(HWND hwnd) {
     SendMessage(hListView, LVM_SETTEXTBKCOLOR, 0, (LPARAM)RGB(35, 40, 45));
     SendMessage(hListView, LVM_SETBKCOLOR, 0, (LPARAM)RGB(26, 32, 38));
     
-    hFont = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+    hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
     SendMessage(hListView, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hPwd, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -490,7 +490,7 @@ void InitListView(HWND hwnd) {
     SendMessage(hDelBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
     // Set placeholder cue banners
-    SendMessageA(hPwd, EM_SETCUEBANNER, FALSE, (LPARAM)"Key");
+    SendMessageA(hPwd, EM_SETCUEBANNER, FALSE, (LPARAM)"Encryption Key");
     SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)"Search / Query (Press H for Help)...");
     SendMessageA(hAddId, EM_SETCUEBANNER, FALSE, (LPARAM)"ID");
     SendMessageA(hAddName, EM_SETCUEBANNER, FALSE, (LPARAM)"Name");
@@ -631,23 +631,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nh = HIWORD(lParam);
             if (nw < 100 || nh < 100) break;
 
-            MoveWindow(hPwd, 10, 10, 80, 25, TRUE);
-            MoveWindow(hReload, 95, 10, 45, 25, TRUE);
+            MoveWindow(hPwd, 10, 10, 110, 25, TRUE);
+            MoveWindow(hReload, 125, 10, 50, 25, TRUE);
             
-            int sh = nw - 390;
+            int sh = nw - 470;
             if (sh < 50) sh = 50;
-            MoveWindow(hSearch, 145, 10, sh, 25, TRUE);
+            MoveWindow(hSearch, 185, 10, sh, 25, TRUE);
             
-            int rx = 145 + sh + 10;
-            MoveWindow(hExpCSV, rx, 10, 50, 25, TRUE);
-            MoveWindow(hImpCSV, rx + 55, 10, 50, 25, TRUE);
-            MoveWindow(hExpJSON, rx + 110, 10, 55, 25, TRUE);
-            MoveWindow(hImpJSON, rx + 170, 10, 55, 25, TRUE);
+            int rx = 185 + sh + 10;
+            MoveWindow(hExpCSV, rx, 10, 60, 25, TRUE);
+            MoveWindow(hImpCSV, rx + 65, 10, 60, 25, TRUE);
+            MoveWindow(hExpJSON, rx + 130, 10, 65, 25, TRUE);
+            MoveWindow(hImpJSON, rx + 200, 10, 65, 25, TRUE);
 
             MoveWindow(hListView, 10, 45, nw - 20, nh - 90, TRUE);
             
             int by = nh - 35;
-            int avail = nw - 120;
+            int avail = nw - 140;
             int ew = avail / 4;
             if (ew < 40) ew = 40;
 
@@ -655,8 +655,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hAddName, 10 + ew + 5, by, ew, 25, TRUE);
             MoveWindow(hAddDept, 10 + ew*2 + 10, by, ew, 25, TRUE);
             MoveWindow(hAddRole, 10 + ew*3 + 15, by, ew, 25, TRUE);
-            MoveWindow(hAddBtn, 10 + ew*4 + 20, by, 40, 25, TRUE);
-            MoveWindow(hDelBtn, 10 + ew*4 + 65, by, 40, 25, TRUE);
+            MoveWindow(hAddBtn, 10 + ew*4 + 20, by, 50, 25, TRUE);
+            MoveWindow(hDelBtn, 10 + ew*4 + 75, by, 50, 25, TRUE);
 
             AutoScaleListViewColumns(nw - 20);
             break;
