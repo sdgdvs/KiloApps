@@ -54,12 +54,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarship (Sci-fi exploration)
-**Phase:** 3 (next to do)
+**Phase:** 4 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
 - [x] Phase 2: Basic star map rendering and ship navigation controls.
-- [ ] Phase 3: Native C version (`KStarship/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [x] Phase 3: Native C version (`KStarship/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [ ] Phase 4: Sci-fi UI styling (dark space theme, neon accents, minimalist panels).
 - [ ] Phase 5: Resource management system (Fuel, Hull, Crew) and consumption mechanics during travel.
 - [ ] Phase 6: Procedural generation of star systems (different types of planets and stars).
