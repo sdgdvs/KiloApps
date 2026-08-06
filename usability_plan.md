@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KBBS
 - KAudio
 - KClock
 - KPong
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KChart
 - KChess
 - KChat
+- KBBS
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -175,3 +175,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KChart: Usability and UI issues fixed (auto-opening size adjusted, WS_CLIPCHILDREN added to prevent native button flickering, DPI awareness enabled for crisp fonts, canvas layout wrapping fixed).
 - KChess: Usability and UI issues fixed (auto-opening size adjusted, responsive constraints added to canvas, CLEARTYPE_QUALITY and DPI awareness enabled in native, help instructions updated).
 - KChat: Usability and UI issues fixed (auto-opening size adjusted, CLEARTYPE_QUALITY and antialiasing enabled for crisp fonts, improved input contrast, added explicit /help instructions).
+- KBBS: Usability and UI issues fixed (auto-opening size adjusted, canvas imageSmoothingEnabled disabled for crisp fonts, layout/centering fixed, and H hotkey added for help modal).
