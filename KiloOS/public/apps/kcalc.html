@@ -540,7 +540,6 @@
   ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 
   @media (max-width: 768px) {
-    .keypad-grid { grid-template-columns: repeat(5, 1fr); }
     .header { flex-direction: column; gap: 8px; align-items: stretch; }
     .mode-tabs { justify-content: center; }
   }
@@ -564,6 +563,7 @@
     </nav>
 
     <div class="header-controls">
+      <button class="badge-btn" onclick="alert('KCalc Pro Help:\\n- Switch modes using tabs at top.\\n- Keyboard shortcuts: 0-9, ., +, -, *, /, %, ^, (, )\\n- Enter or = to calculate.\\n- Escape to clear all.\\n- Backspace to delete last.')">Help (H)</button>
       <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()">DEG</button>
       <button id="memBadge" class="badge-btn" onclick="showMemoryModal()">M: 0</button>
     </div>
@@ -863,7 +863,10 @@
     loadHistoryFromStorage();
     setTimeout(() => {
       const toast = document.getElementById('helpToast');
-      if (toast) toast.style.opacity = '0';
+      if (toast) {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
+      }
     }, 4000);
   });
 

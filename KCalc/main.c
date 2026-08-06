@@ -558,6 +558,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL (WINAPI *SETPROCESSDPIAWARE_T)(void);
+        SETPROCESSDPIAWARE_T setDPI = (SETPROCESSDPIAWARE_T)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDPI) setDPI();
+    }
+
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
