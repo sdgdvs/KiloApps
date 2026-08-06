@@ -92,11 +92,20 @@ Debris debris[MAX_DEBRIS] = {0};
 ShieldRipple ripples[MAX_RIPPLES] = {0};
 MuzzleFlash flashes[MAX_FLASHES] = {0};
 
+typedef struct { float x, y, r, rot, vx, vy; int type; COLORREF col; } Planet;
+typedef struct { float x, y, vx, vy, life; } Comet;
+
 Nebula nebulae[3] = {
     { W * 0.25f, H * 0.3f, 90.0f, 0.12f, 0.2f, 0.0f, RGB(75, 0, 130) },
     { W * 0.75f, H * 0.7f, 110.0f, -0.09f, 0.15f, 1.5f, RGB(139, 0, 139) },
     { W * 0.45f, H * 0.1f, 80.0f, 0.07f, 0.25f, 3.0f, RGB(0, 80, 180) }
 };
+
+Planet planets[2] = {
+    { W * 0.8f, H * 0.2f, 40.0f, 0.0f, -0.02f, 0.05f, 0, RGB(0, 77, 64) },
+    { W * 0.1f, H * 0.7f, 25.0f, 0.0f, 0.01f, 0.03f, 1, RGB(183, 28, 28) }
+};
+Comet comets[5] = {0};
 
 int spreadTimer = 0;
 int laserTimer = 0;
@@ -1448,6 +1457,65 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int nr = (int)(nebulae[n].r);
                     Ellipse(memDC, (int)nebulae[n].x - nr, (int)nebulae[n].y - nr, (int)nebulae[n].x + nr, (int)nebulae[n].y + nr);
                     SelectObject(memDC, oldBr); DeleteObject(nbr);
+                }
+
+                // Planets (Loop 3)
+                for (int p = 0; p < 2; p++) {
+                    planets[p].x += planets[p].vx; planets[p].y += planets[p].vy;
+                    if (planets[p].x < -planets[p].r*2) planets[p].x = W + planets[p].r*2;
+                    if (planets[p].x > W + planets[p].r*2) planets[p].x = -planets[p].r*2;
+                    if (planets[p].y < -planets[p].r*2) planets[p].y = H + planets[p].r*2;
+                    if (planets[p].y > H + planets[p].r*2) planets[p].y = -planets[p].r*2;
+
+                    HBRUSH pbr = CreateSolidBrush(planets[p].col);
+                    HBRUSH oldBr = (HBRUSH)SelectObject(memDC, pbr);
+                    int px = (int)planets[p].x, py = (int)planets[p].y, pr = (int)planets[p].r;
+                    Ellipse(memDC, px - pr, py - pr, px + pr, py + pr);
+                    
+                    if (planets[p].type == 0) { // ringed
+                        HPEN rpen = CreatePen(PS_SOLID, 4, RGB(0, 255, 128));
+                        HPEN oldPen = (HPEN)SelectObject(memDC, rpen);
+                        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        Ellipse(memDC, px - (int)(pr * 1.8f), py - (int)(pr * 0.4f), px + (int)(pr * 1.8f), py + (int)(pr * 0.4f));
+                        SelectObject(memDC, oldPen); DeleteObject(rpen);
+                    } else { // cratered
+                        HBRUSH cbr = CreateSolidBrush(RGB(100, 10, 10)); // darker crater color
+                        SelectObject(memDC, cbr);
+                        Ellipse(memDC, px - (int)(pr*0.3f) - (int)(pr*0.15f), py - (int)(pr*0.2f) - (int)(pr*0.15f), px - (int)(pr*0.3f) + (int)(pr*0.15f), py - (int)(pr*0.2f) + (int)(pr*0.15f));
+                        Ellipse(memDC, px + (int)(pr*0.4f) - (int)(pr*0.2f), py + (int)(pr*0.3f) - (int)(pr*0.2f), px + (int)(pr*0.4f) + (int)(pr*0.2f), py + (int)(pr*0.3f) + (int)(pr*0.2f));
+                        SelectObject(memDC, oldBr); DeleteObject(cbr);
+                    }
+                    SelectObject(memDC, oldBr); DeleteObject(pbr);
+                }
+
+                // Comets (Loop 3)
+                if (rnd() % 200 == 0) {
+                    for(int i=0; i<5; i++){
+                        if (comets[i].life <= 0) {
+                            comets[i].x = (float)(rnd() % W); comets[i].y = -20.0f;
+                            comets[i].vx = ((float)(rnd() % 20) - 10.0f) * 0.2f;
+                            comets[i].vy = 5.0f + (float)(rnd() % 50) * 0.1f;
+                            comets[i].life = 1.0f;
+                            break;
+                        }
+                    }
+                }
+                for (int i = 0; i < 5; i++) {
+                    if (comets[i].life > 0) {
+                        comets[i].x += comets[i].vx; comets[i].y += comets[i].vy; comets[i].life -= 0.01f;
+                        if (comets[i].y > H + 20) comets[i].life = 0;
+                        else {
+                            HPEN cpen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+                            HPEN oldPen = (HPEN)SelectObject(memDC, cpen);
+                            MoveToEx(memDC, (int)comets[i].x, (int)comets[i].y, NULL);
+                            LineTo(memDC, (int)(comets[i].x - comets[i].vx * 10), (int)(comets[i].y - comets[i].vy * 10));
+                            SelectObject(memDC, oldPen); DeleteObject(cpen);
+                            HBRUSH cbr = CreateSolidBrush(RGB(255, 255, 255));
+                            HBRUSH oldBr = (HBRUSH)SelectObject(memDC, cbr);
+                            Ellipse(memDC, (int)comets[i].x - 1, (int)comets[i].y - 1, (int)comets[i].x + 2, (int)comets[i].y + 2);
+                            SelectObject(memDC, oldBr); DeleteObject(cbr);
+                        }
+                    }
                 }
 
                 // 3-Layer Parallax Starfield Rendering (Loop 2)
