@@ -59,7 +59,7 @@
 </head>
 <body>
   <div class="header">
-    <div style="font-weight:600;font-size:18px;letter-spacing:1px;color:#4af;">KFont Inspect</div>
+    <div style="font-weight:600;font-size:18px;letter-spacing:1px;color:#4af; display: flex; align-items: center; gap: 10px;">KFont Inspect <span style="font-size:12px;color:#aaa;font-weight:normal;">(Press H for Help)</span></div>
     <select id="fontList">
       <option value="Arial" selected>Arial</option>
       <option value="Calibri">Calibri</option>
@@ -86,7 +86,7 @@
     </select>
     <label class="checkbox-label"><input type="checkbox" id="boldCheck"> Bold</label>
     <label class="checkbox-label"><input type="checkbox" id="italicCheck"> Italic</label>
-    <button id="helpBtn" style="margin-left:auto; padding: 6px 12px; border-radius:4px; border:none; background:#0078d7; color:white; cursor:pointer; font-family:inherit; font-size:14px; outline:none;">Help</button>
+    <button id="helpBtn" style="margin-left:auto; padding: 6px 12px; border-radius:4px; border:none; background:#0078d7; color:white; cursor:pointer; font-family:inherit; font-size:14px; outline:none;">Help (H)</button>
   </div>
   
   <div class="main">
@@ -137,7 +137,7 @@
         
         <h3>Rasterization & Grid Fitting (Hinting)</h3>
         <p>Rendering at specific pixel sizes to expose pixel-snapping and hinting instructions across scale.</p>
-        <canvas id="hintingCanvas" width="800" height="200" style="border:1px solid #ddd; border-radius:4px; background:#fafafa;"></canvas>
+        <canvas id="hintingCanvas" width="800" height="200" style="border:1px solid #ddd; border-radius:4px; background:#fafafa; max-width:100%;"></canvas>
       </div>
       
       <!-- Sample -->

@@ -1,8 +1,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-#define W 900
-#define H 650
+#define W 950
+#define H 700
 
 HWND hList, hSizeList;
 HWND hCustomText, hBold, hItalic;
@@ -99,7 +100,7 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, hCurrentFont);
                     
                     x += (sz.cx > 35 ? sz.cx : 35) + 15;
-                    if (x > 500) { x = 10; y += sz.cy + 20; }
+                    if (x > W - 240) { x = 10; y += sz.cy + 20; }
                 }
                 SelectObject(hdc, hOld);
             }
@@ -133,7 +134,7 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             else if (currentTab == 3) { // Sample
                 HFONT hOld = SelectObject(hdc, hCurrentFont);
-                RECT rc = {10, 10, 540, 350};
+                RECT rc = {10, 10, W - 210, H - 110};
                 DrawTextA(hdc, currentCustomText, -1, &rc, DT_WORDBREAK | DT_LEFT);
                 SelectObject(hdc, hOld);
             }
@@ -176,16 +177,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hSizeList, CB_SETCURSEL, 2, 0);
             
             CreateWindowEx(0, "STATIC", "Custom Text:", WS_CHILD | WS_VISIBLE, 10, 240, 150, 20, hwnd, NULL, NULL, NULL);
-            hCustomText = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "The quick brown fox jumps over the lazy dog.\r\n\r\n0123456789\r\n\r\nAa Bb Cc Dd Ee Ff", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, 10, 260, 150, 60, hwnd, (HMENU)3, NULL, NULL);
+            hCustomText = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "The quick brown fox jumps over the lazy dog.\r\n\r\n0123456789\r\n\r\nAa Bb Cc Dd Ee Ff", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, 10, 260, 150, 120, hwnd, (HMENU)3, NULL, NULL);
 
-            hBold = CreateWindowEx(0, "BUTTON", "Bold", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 10, 325, 70, 20, hwnd, (HMENU)4, NULL, NULL);
-            hItalic = CreateWindowEx(0, "BUTTON", "Italic", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 80, 325, 70, 20, hwnd, (HMENU)5, NULL, NULL);
+            hBold = CreateWindowEx(0, "BUTTON", "Bold", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 10, 390, 70, 20, hwnd, (HMENU)4, NULL, NULL);
+            hItalic = CreateWindowEx(0, "BUTTON", "Italic", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 80, 390, 70, 20, hwnd, (HMENU)5, NULL, NULL);
             
-            hTabMetrics = CreateWindowEx(0, "BUTTON", "Metrics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP, 170, 10, 80, 20, hwnd, (HMENU)10, NULL, NULL);
-            hTabGlyphs = CreateWindowEx(0, "BUTTON", "Glyphs", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 260, 10, 80, 20, hwnd, (HMENU)11, NULL, NULL);
-            hTabDiag = CreateWindowEx(0, "BUTTON", "Diagnostics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 350, 10, 100, 20, hwnd, (HMENU)12, NULL, NULL);
-            hTabSample = CreateWindowEx(0, "BUTTON", "Sample", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 460, 10, 80, 20, hwnd, (HMENU)13, NULL, NULL);
-            hHelpBtn = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 550, 10, 60, 20, hwnd, (HMENU)15, NULL, NULL);
+            hTabMetrics = CreateWindowEx(0, "BUTTON", "Metrics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP, 170, 10, 100, 20, hwnd, (HMENU)10, NULL, NULL);
+            hTabGlyphs = CreateWindowEx(0, "BUTTON", "Glyphs", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 280, 10, 100, 20, hwnd, (HMENU)11, NULL, NULL);
+            hTabDiag = CreateWindowEx(0, "BUTTON", "Diagnostics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 390, 10, 120, 20, hwnd, (HMENU)12, NULL, NULL);
+            hTabSample = CreateWindowEx(0, "BUTTON", "Sample", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 520, 10, 100, 20, hwnd, (HMENU)13, NULL, NULL);
+            hHelpBtn = CreateWindowEx(0, "BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 10, 100, 20, hwnd, (HMENU)15, NULL, NULL);
             
             SendMessage(hTabMetrics, BM_SETCHECK, BST_CHECKED, 0);
 
@@ -309,6 +310,7 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
