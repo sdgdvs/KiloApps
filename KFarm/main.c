@@ -35,6 +35,12 @@ HWND hUpgradeToolsBtn;
 HWND hBuyChickenBtn;
 HWND hBuyCowBtn;
 HWND hBuyScarecrowBtn;
+int has_mill = 0;
+int has_mayo_maker = 0;
+int has_cheese_press = 0;
+HWND hMillBtn;
+HWND hMayoBtn;
+HWND hCheeseBtn;
 
 void UpdateTitle(HWND hwnd) {
     char title[128];
@@ -57,7 +63,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBuyCowBtn = CreateWindow("BUTTON", "Cow ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 290, 475, 100, 20, hwnd, (HMENU) 8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hBuyScarecrowBtn = CreateWindow("BUTTON", "Scarecrow ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                140, 500, 140, 20, hwnd, (HMENU) 10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                10, 500, 130, 20, hwnd, (HMENU) 10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMillBtn = CreateWindow("BUTTON", "Mill ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                150, 500, 100, 20, hwnd, (HMENU) 11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMayoBtn = CreateWindow("BUTTON", "Mayo ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                260, 500, 100, 20, hwnd, (HMENU) 12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hCheeseBtn = CreateWindow("BUTTON", "Cheese ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                10, 525, 130, 20, hwnd, (HMENU) 13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (-$5) [Sp/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
                 10, 450, 130, 20, hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[1] = CreateWindow("BUTTON", "Corn (-$10) [Su]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
@@ -126,6 +138,40 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     MessageBeep(MB_ICONERROR);
                 }
             }
+            if (LOWORD(wParam) == 11 && time_of_day == 0 && !has_mill) {
+                if (money >= 150) {
+                    money -= 150;
+                    has_mill = 1;
+                    sell_values[0] = 25;
+                    EnableWindow(hMillBtn, FALSE);
+                    SetWindowText(hMillBtn, "Mill (Owned)");
+                    UpdateTitle(hwnd);
+                } else {
+                    MessageBeep(MB_ICONERROR);
+                }
+            }
+            if (LOWORD(wParam) == 12 && time_of_day == 0 && !has_mayo_maker) {
+                if (money >= 100) {
+                    money -= 100;
+                    has_mayo_maker = 1;
+                    EnableWindow(hMayoBtn, FALSE);
+                    SetWindowText(hMayoBtn, "Mayo (Owned)");
+                    UpdateTitle(hwnd);
+                } else {
+                    MessageBeep(MB_ICONERROR);
+                }
+            }
+            if (LOWORD(wParam) == 13 && time_of_day == 0 && !has_cheese_press) {
+                if (money >= 200) {
+                    money -= 200;
+                    has_cheese_press = 1;
+                    EnableWindow(hCheeseBtn, FALSE);
+                    SetWindowText(hCheeseBtn, "Cheese (Owned)");
+                    UpdateTitle(hwnd);
+                } else {
+                    MessageBeep(MB_ICONERROR);
+                }
+            }
             if (LOWORD(wParam) >= 2 && LOWORD(wParam) <= 5) {
                 selected_seed = LOWORD(wParam) - 2;
             }
@@ -136,7 +182,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 current_day++;
                 current_season = ((current_day - 1) / 7) % 4;
                 time_of_day = 0;
-                money += (chickens * 5) + (cows * 15);
+                money += (chickens * (has_mayo_maker ? 15 : 5)) + (cows * (has_cheese_press ? 40 : 15));
                 for (int i = 0; i < GRID_COLS * GRID_ROWS; i++) {
                     if (grid[i].type == 2 || grid[i].type == 3) {
                         if ((crop_seasons[grid[i].cropType] & (1 << current_season)) == 0) {
@@ -357,7 +403,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     RegisterClass(&wc);
 
-    RECT rect = {0, 0, GRID_COLS * CELL_SIZE, GRID_ROWS * CELL_SIZE + 130};
+    RECT rect = {0, 0, GRID_COLS * CELL_SIZE, GRID_ROWS * CELL_SIZE + 160};
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
 
     HWND hwnd = CreateWindowEx(
