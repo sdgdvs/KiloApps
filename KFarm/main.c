@@ -41,6 +41,7 @@ int has_cheese_press = 0;
 HWND hMillBtn;
 HWND hMayoBtn;
 HWND hCheeseBtn;
+HWND hHelpBtn;
 
 void PlaySoundEffect(int type) {
     switch(type) {
@@ -83,6 +84,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 260, 500, 100, 20, hwnd, (HMENU) 12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hCheeseBtn = CreateWindow("BUTTON", "Cheese ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 10, 525, 130, 20, hwnd, (HMENU) 13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHelpBtn = CreateWindow("BUTTON", "Almanac", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                150, 525, 100, 20, hwnd, (HMENU) 14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (-$5) [Sp/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
                 10, 450, 130, 20, hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[1] = CreateWindow("BUTTON", "Corn (-$10) [Su]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
@@ -187,6 +190,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 } else {
                     MessageBeep(MB_ICONERROR);
                 }
+            }
+            if (LOWORD(wParam) == 14) {
+                MessageBox(hwnd, "How to Play:\nClick Grass to Till. Select a seed and click tilled soil to Plant.\nClick planted seed to Water (daily!). Click grown crop to Harvest.\n\nCrops:\nWheat: Grow 2d, Val $10 (Mill $25), Sp/Fa\nCorn: Grow 3d, Val $20, Su\nTomato: Grow 4d, Val $30, Su/Fa\nPumpkin: Grow 5d, Val $50, Fa\n\nAnimals:\nChicken: $5/day (Mayo $15/day)\nCow: $15/day (Cheese $40/day)\n\nWeather:\nClear: Need 1 water\nRain: Auto-waters crops\nDrought: Need 2 water\nCrows: Eats crops (Buy Scarecrow!)", "Farmer's Almanac", MB_OK | MB_ICONINFORMATION);
             }
             if (LOWORD(wParam) >= 2 && LOWORD(wParam) <= 5) {
                 selected_seed = LOWORD(wParam) - 2;

@@ -53,24 +53,24 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KFarm (Farming Simulation)
-**Phase:** 14 (next to do)
-**Status:** Deep Expansion
+**App:** KStarship (Sci-fi exploration)
+**Phase:** 1 (next to do)
+**Status:** Creation
 
-- [x] Phase 1: Scaffold KFarm directory (`KFarm/`), create web HTML skeleton (`KiloOS/public/apps/kfarm.html`), register in App.jsx.
-- [x] Phase 2: Basic farm grid with soil, tilling, and planting basic seeds (wheat).
-- [x] Phase 3: Native C version (`KFarm/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [x] Phase 4: Farming UI styling (earthy tones, crop icons, sunny daylight colors).
-- [x] Phase 5: Day/Night cycle and Water mechanics — crops need water each day to grow.
-- [x] Phase 6: Multiple crop types (wheat, corn, tomatoes, pumpkins) with different growth times and sell values.
-- [x] Phase 7: Economy System — sell harvested crops for money. Buy seeds and upgrades.
-- [x] Phase 8: Animals & Barns — buy chickens and cows for daily eggs/milk.
-- [x] Phase 9: Farming Tools — upgrade watering can, hoe, and scythe for area-of-effect actions.
-- [x] Phase 10: Seasons System — Spring, Summer, Fall, Winter. Crops are season-specific.
-- [x] Phase 11: Weather Events — Rain (auto-waters), Drought (extra water needed), Crow attacks (need scarecrows).
-- [x] Phase 12: Crafting/Processing — Turn wheat into flour, milk into cheese, eggs into mayo for higher profit.
-- [x] Phase 13: Sound Effects — web audio nature sounds, animal noises, tool swings. Native: Win32 Beep equivalents.
-- [ ] Phase 14: Comprehensive Help & Farmer's Almanac — How-to-play, crop growth charts, season guides.
+- [ ] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
+- [ ] Phase 2: Basic star map rendering and ship navigation controls.
+- [ ] Phase 3: Native C version (`KStarship/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [ ] Phase 4: Sci-fi UI styling (dark space theme, neon accents, minimalist panels).
+- [ ] Phase 5: Resource management system (Fuel, Hull, Crew) and consumption mechanics during travel.
+- [ ] Phase 6: Procedural generation of star systems (different types of planets and stars).
+- [ ] Phase 7: Random encounters system (pirates, anomalies, traders) upon entering new systems.
+- [ ] Phase 8: Trading economy and inventory system (buy/sell goods at stations).
+- [ ] Phase 9: Ship upgrades (weapons, shields, engines, cargo hold).
+- [ ] Phase 10: Basic combat system against pirates (turn-based or real-time choices).
+- [ ] Phase 11: Crew management (recruiting, assigning roles, leveling up).
+- [ ] Phase 12: Story events and branching text-based choices.
+- [ ] Phase 13: Sound Effects — space hum, laser blasts, alarm claxons (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Captain's Manual — How-to-play, strategy guide, ship operations.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KFarm (Phase 14 completed: Added Comprehensive Help & Farmer's Almanac to both versions)
 - KColony (Phase 14 completed: Added Comprehensive Help & Administrator's Manual to both versions)
 - KDarts (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KGo (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
@@ -163,7 +164,6 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KStarship** — Sci-fi exploration. Navigate a star map, discover planets, manage fuel/hull/crew. Random encounters (pirates, anomalies, traders). Ship upgrades. Crew management. Text-based with ASCII star maps. Permadeath mode.
 - **KAlchemy** — Fantasy crafting/discovery game. Combine elements to discover new ones. 100+ discoverable recipes. Procedural hints. Encyclopedia tracking. Multiple tiers of complexity (earth+fire=lava, lava+water=obsidian). Score by discoveries.
 - **KFortress** — Tower defense with fantasy theme. Place towers on a grid path. Multiple tower types (archer, mage, cannon). Enemy waves with varying resistances. Upgrade system. Gold economy. 15+ levels with different maps. Boss waves.
 - **KColony** — Sci-fi colony survival. Manage resources (food, power, materials) on an alien planet. Build structures. Research tech tree. Random events (storms, alien encounters, equipment failures). Population management. Day/night cycle.

@@ -60,10 +60,41 @@
         <div style="text-align:center; margin-top:10px;">
             <button id="millBtn" onclick="buyMill()" style="padding:5px 10px; font-size:14px; background-color:#D7CCC8; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Mill ($150)</button>
             <button id="mayoBtn" onclick="buyMayoMaker()" style="padding:5px 10px; font-size:14px; background-color:#FFF9C4; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Mayo Maker ($100)</button>
-            <button id="cheeseBtn" onclick="buyCheesePress()" style="padding:5px 10px; font-size:14px; background-color:#FFE082; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Cheese Press ($200)</button>
+            <button id="cheeseBtn" onclick="buyCheesePress()" style="padding:5px 10px; font-size:14px; background-color:#FFE082; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Cheese Press ($200)</button>
+            <button onclick="showHelp()" style="padding:5px 10px; font-size:14px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Almanac</button>
+        </div>
+    </div>
+    <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:100; justify-content:center; align-items:center;">
+        <div style="background:#FFF3E0; padding:20px; border-radius:10px; border:4px solid #8D6E63; max-width:500px; max-height:80vh; overflow-y:auto;">
+            <h2 style="color:#5D4037;">Farmer's Almanac</h2>
+            <div style="color:#4E342E; font-size:14px; line-height:1.4;">
+                <p style="text-align:left;"><strong>How to Play:</strong><br>
+                Click a grass tile to <strong>Till</strong> it.<br>
+                Select a seed and click tilled soil to <strong>Plant</strong>.<br>
+                Click a planted seed to <strong>Water</strong> it (do this daily!).<br>
+                Click a fully grown crop to <strong>Harvest</strong> and earn money.</p>
+                <p style="text-align:left;"><strong>Crops:</strong><br>
+                🌾 Wheat: Grow 2d, Base Val $10 (Mill: $25), Spring/Fall<br>
+                🌽 Corn: Grow 3d, Base Val $20, Summer<br>
+                🍅 Tomato: Grow 4d, Base Val $30, Summer/Fall<br>
+                🎃 Pumpkin: Grow 5d, Base Val $50, Fall</p>
+                <p style="text-align:left;"><strong>Animals:</strong><br>
+                🐔 Chicken: $5/day (Mayo Maker: $15/day)<br>
+                🐄 Cow: $15/day (Cheese Press: $40/day)</p>
+                <p style="text-align:left;"><strong>Weather:</strong><br>
+                ☀️ Clear: Need 1 water<br>
+                🌧️ Rain: Auto-waters crops<br>
+                🏜️ Drought: Need 2 water<br>
+                🐦 Crows: Can eat crops (Buy a Scarecrow!)</p>
+            </div>
+            <div style="text-align:center; margin-top:20px;">
+                <button onclick="hideHelp()" style="padding:10px 20px; font-weight:bold; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer;">Close</button>
+            </div>
         </div>
     </div>
     <script>
+        function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
+        function hideHelp() { document.getElementById('helpModal').style.display = 'none'; }
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
