@@ -870,10 +870,12 @@
       requestAnimationFrame(draw);
       if (!analyserNode) return;
 
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-      const width = canvas.width;
-      const height = canvas.height;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      canvasCtx.scale(dpr, dpr);
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
 
       const bufferLength = analyserNode.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
@@ -1181,6 +1183,11 @@
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  if (!localStorage.getItem('kaudio_help_seen')) {
+    toggleHelp();
+    localStorage.setItem('kaudio_help_seen', '1');
+  }
 
   // Convert AudioBuffer to WAV File Blob
   function bufferToWave(abuffer, len) {

@@ -2,8 +2,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#define W 840
-#define H 550
+#define W 1000
+#define H 800
 #define NUM_KEYS 13
 #define PI 3.14159265358979323846
 
@@ -411,7 +411,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
-            HFONT hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT oldFont = (HFONT)SelectObject(memDC, hFont);
 
             // Dark Theme Background
@@ -546,6 +546,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             SelectObject(memDC, oldFont);
+            DeleteObject(hFont);
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, oldBm);
             DeleteObject(hbm);
