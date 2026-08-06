@@ -787,6 +787,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
             
+            // Environmental Art: Cyber-grid and floating space dust
+            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(20, 40, 60));
+            HGDIOBJ oldP2 = SelectObject(memDC, gridPen);
+            for (int i = 0; i < W; i += 40) {
+                MoveToEx(memDC, i, 0, NULL);
+                LineTo(memDC, i, H);
+            }
+            for (int i = 0; i < H; i += 40) {
+                int y = (i + (frame_counter / 2)) % H;
+                MoveToEx(memDC, 0, y, NULL);
+                LineTo(memDC, W, y);
+            }
+            SelectObject(memDC, oldP2);
+            DeleteObject(gridPen);
+            
+            // Atmospheric dust
+            for(int i = 0; i < 20; i++) {
+                int dx = (i * 73 + frame_counter) % W;
+                int dy = (i * 37 + frame_counter / 3) % H;
+                SetPixel(memDC, dx, dy, RGB(100, 150, 255));
+            }
+            
             SetTextColor(memDC, RGB(255, 255, 255));
             SetBkMode(memDC, TRANSPARENT);
             
