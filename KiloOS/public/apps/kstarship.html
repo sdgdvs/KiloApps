@@ -7,7 +7,7 @@
   body {
     margin: 0;
     padding: 0;
-    background-color: #0b0b1a;
+    background-color: #05050a;
     color: #e0e0ff;
     font-family: 'Courier New', Courier, monospace;
     display: flex;
@@ -22,6 +22,8 @@
     text-transform: uppercase;
     letter-spacing: 2px;
     color: #00ffff;
+    text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+    font-weight: normal;
   }
   #game-container {
     display: flex;
@@ -29,17 +31,18 @@
     gap: 20px;
   }
   canvas {
-    border: 2px solid #00ffff;
+    border: 1px solid #00ffff;
     background-color: #000;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.2);
   }
   #ui-panel {
     display: flex;
     flex-direction: column;
     width: 200px;
-    border: 2px solid #005555;
+    border: 1px solid #00ffff;
     padding: 15px;
-    background-color: #050510;
+    background-color: rgba(5, 5, 20, 0.8);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
   }
   .info-box {
     margin-bottom: 20px;
@@ -48,12 +51,19 @@
     margin-bottom: 5px;
   }
   .label {
-    color: #8888ff;
-    font-size: 14px;
+    color: #00ffff;
+    font-size: 12px;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #005555;
+    margin-bottom: 5px;
+    padding-bottom: 2px;
+    text-shadow: 0 0 5px #00ffff;
   }
   .value {
     font-size: 16px;
     font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 0 5px #ffffff;
   }
   .controls {
     display: grid;
@@ -62,16 +72,19 @@
     margin-top: auto;
   }
   button {
-    background-color: #003333;
+    background: transparent;
     color: #00ffff;
     border: 1px solid #00ffff;
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
     padding: 10px;
     cursor: pointer;
     font-family: monospace;
     font-size: 16px;
+    transition: all 0.2s ease-in-out;
   }
   button:hover {
-    background-color: #005555;
+    background-color: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
   }
   button:active {
     background-color: #00ffff;

@@ -60,15 +60,23 @@ void Draw(HDC hdc, RECT* rect) {
     FillRect(memDC, &mapRect, bgBrush);
     DeleteObject(bgBrush);
 
-    HBRUSH uiBrush = CreateSolidBrush(RGB(5, 5, 16));
+    HBRUSH uiBrush = CreateSolidBrush(RGB(5, 5, 20));
     RECT uiRect = {mapWidth, 0, width, height};
     FillRect(memDC, &uiRect, uiBrush);
     DeleteObject(uiBrush);
 
+    // Neon borders
+    HPEN neonBorderPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+    SelectObject(memDC, neonBorderPen);
+    SelectObject(memDC, GetStockObject(NULL_BRUSH));
+    Rectangle(memDC, 0, 0, mapWidth, height);
+    Rectangle(memDC, mapWidth + 5, 5, width - 5, height - 5);
+    DeleteObject(neonBorderPen);
+
     int centerX = mapWidth / 2;
     int centerY = height / 2;
 
-    HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(0, 34, 34));
+    HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(0, 40, 40));
     SelectObject(memDC, gridPen);
     int gridSize = 100;
     int offsetX = -(ship_x % gridSize);
@@ -134,17 +142,28 @@ void Draw(HDC hdc, RECT* rect) {
 
     SetBkMode(memDC, TRANSPARENT);
     char buf[128];
+    
+    HPEN linePen = CreatePen(PS_SOLID, 1, RGB(0, 85, 85));
+    
     wsprintfA(buf, "SHIP STATUS");
-    SetTextColor(memDC, RGB(136, 136, 255));
+    SetTextColor(memDC, RGB(0, 255, 255));
     TextOutA(memDC, mapWidth + 15, 20, buf, lstrlenA(buf));
+    
+    SelectObject(memDC, linePen);
+    MoveToEx(memDC, mapWidth + 15, 38, NULL);
+    LineTo(memDC, width - 15, 38);
 
     wsprintfA(buf, "Location: %d, %d", ship_x, ship_y);
-    SetTextColor(memDC, RGB(224, 224, 255));
+    SetTextColor(memDC, RGB(255, 255, 255));
     TextOutA(memDC, mapWidth + 15, 45, buf, lstrlenA(buf));
 
     wsprintfA(buf, "SCANNER");
-    SetTextColor(memDC, RGB(136, 136, 255));
+    SetTextColor(memDC, RGB(0, 255, 255));
     TextOutA(memDC, mapWidth + 15, 80, buf, lstrlenA(buf));
+    
+    MoveToEx(memDC, mapWidth + 15, 98, NULL);
+    LineTo(memDC, width - 15, 98);
+    DeleteObject(linePen);
 
     int found_star = 0;
     for (int i = 0; i < NUM_STARS; i++) {
