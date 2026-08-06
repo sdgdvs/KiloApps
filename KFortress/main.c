@@ -14,8 +14,8 @@ float custom_sqrtf(float val) {
     return guess;
 }
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 700
 #define TIMER_ID 1
 #define TIMER_INTERVAL 33 // ~30 FPS
 
@@ -140,7 +140,7 @@ int g_techWallHp = 0;
 int g_techHeroCd = 0;
 int g_techTowerDmg = 0;
 BOOL g_showAcademy = FALSE;
-BOOL g_showHelp = FALSE;
+BOOL g_showHelp = TRUE;
 
 typedef struct {
     float x, y;
@@ -1429,6 +1429,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         break;
 
     case WM_KEYDOWN: {
+        if (wParam == 'h' || wParam == 'H') {
+            g_showHelp = !g_showHelp;
+            InvalidateRect(hwnd, NULL, FALSE);
+        }
         if (wParam == '1' && g_hero.healCd <= 0 && g_hero.respawnTimer <= 0) {
             g_hero.healCd = g_hero.maxHealCd;
             g_hero.hp += 50.0f; if(g_hero.hp > g_hero.maxHp) g_hero.hp = g_hero.maxHp;

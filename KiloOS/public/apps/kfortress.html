@@ -118,6 +118,7 @@
       width: 100%;
       height: 100%;
       cursor: crosshair;
+      image-rendering: pixelated;
     }
 
     .sidebar {
@@ -305,7 +306,7 @@
     </div>
   </div>
 
-  <div id="helpModal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200; justify-content:center; align-items:center;">
+  <div id="helpModal" style="display:flex; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200; justify-content:center; align-items:center;">
     <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:20px; border-radius:12px; width:650px; max-height:85vh; overflow-y:auto; box-shadow: 0 0 30px rgba(0,0,0,0.9); font-size:13px; color:var(--text-white);">
       <h2 style="color:var(--gold-color); text-align:center; margin-bottom:15px; font-weight:900; font-size:20px; letter-spacing:1px;">COMMANDER'S FIELD GUIDE</h2>
       
@@ -768,8 +769,10 @@
 
     function resizeCanvas() {
       const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
     }
 
     window.addEventListener('resize', resizeCanvas);
@@ -883,12 +886,17 @@
       if (e.key === '1') castHeal();
       if (e.key === '2') castShield();
       if (e.key === '3') castMeteor();
+      if (e.key.toLowerCase() === 'h') {
+        const modal = document.getElementById('helpModal');
+        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+      }
     });
 
     // Scale waypoints dynamically to canvas width/height
     function getScaledWaypoints() {
-      const scaleX = canvas.width / 800;
-      const scaleY = canvas.height / 560;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = rect.width / 800;
+      const scaleY = rect.height / 560;
       return rawWaypoints.map(p => ({
         x: p.x * scaleX,
         y: p.y * scaleY
@@ -896,8 +904,9 @@
     }
 
     function getScaledSlots() {
-      const scaleX = canvas.width / 800;
-      const scaleY = canvas.height / 560;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = rect.width / 800;
+      const scaleY = rect.height / 560;
       return slots.map(s => ({
         ...s,
         sx: s.x * scaleX,
@@ -1012,7 +1021,8 @@
       if(gold >= 100) {
         gold -= 100;
         playBeep(100, 0.5, 'sawtooth', 0.4);
-        spawnFloatingText(canvas.width/2, canvas.height/2, "FIRESTORM!", "#ef4444");
+        const rect = canvas.getBoundingClientRect();
+        spawnFloatingText(rect.width/2, rect.height/2, "FIRESTORM!", "#ef4444");
         enemies.forEach(e => { e.hp -= 150; spawnParticleEffect(e.x, e.y, "#ef4444"); });
         updateHUD();
       }
@@ -1022,7 +1032,8 @@
         gold -= 80;
         blizzTimer = 300; // 10s
         playBeep(600, 0.5, 'sine', 0.3);
-        spawnFloatingText(canvas.width/2, canvas.height/2, "BLIZZARD!", "#3b82f6");
+        const rect = canvas.getBoundingClientRect();
+        spawnFloatingText(rect.width/2, rect.height/2, "BLIZZARD!", "#3b82f6");
         updateHUD();
       }
     });
@@ -1032,7 +1043,8 @@
         let bonus = enemies.length * 15;
         gold += bonus;
         playBeep(800, 0.3, 'square', 0.2);
-        spawnFloatingText(canvas.width/2, canvas.height/2, "MAGNET: +" + bonus + "g", "#fbbf24");
+        const rect = canvas.getBoundingClientRect();
+        spawnFloatingText(rect.width/2, rect.height/2, "MAGNET: +" + bonus + "g", "#fbbf24");
         updateHUD();
       }
     });
@@ -1481,7 +1493,8 @@
         let waveBonus = 20 + wave * 5;
         if (gameMode === 'BossBlitz') waveBonus = 100 + wave * 20;
         gold += waveBonus; // End of wave bonus
-        spawnFloatingText(canvas.width / 2, canvas.height / 2, `WAVE ${wave} CLEAR! +${waveBonus}g`, "#10b981");
+        const rect = canvas.getBoundingClientRect();
+        spawnFloatingText(rect.width / 2, rect.height / 2, `WAVE ${wave} CLEAR! +${waveBonus}g`, "#10b981");
         
         if (gameMode === 'Endless') {
            if (wave > hsEndless) {
@@ -1497,8 +1510,9 @@
     }
 
     function render() {
-      const w = canvas.width;
-      const h = canvas.height;
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
       const waypoints = getScaledWaypoints();
       const scaledSlots = getScaledSlots();
 
