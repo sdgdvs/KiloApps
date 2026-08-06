@@ -1506,9 +1506,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(hdc, RGB(255, 255, 255));
                 TextOutA(hdc, 140, 300, "Press ENTER to Return", 21);
             } else { // PLAYING
-                int i, r;
+                int i, r, gx, gy;
                 char score_text[64];
                 char hud_text[64];
+                HBRUSH bg1, bg2, detail;
+
+                // Environmental art grid
+                bg1 = CreateSolidBrush(RGB(15, 17, 26));
+                bg2 = CreateSolidBrush(RGB(20, 23, 36));
+                detail = CreateSolidBrush(RGB(34, 39, 61));
+                for (gx = 0; gx < GRID_WIDTH; gx++) {
+                    for (gy = 0; gy < GRID_HEIGHT; gy++) {
+                        RECT tile = { gx * CELL_SIZE, gy * CELL_SIZE + 45, (gx + 1) * CELL_SIZE, (gy + 1) * CELL_SIZE + 45 };
+                        FillRect(hdc, &tile, (gx + gy) % 2 == 0 ? bg1 : bg2);
+                        if ((gx * 13 + gy * 7) % 17 == 0) {
+                            RECT d_rect = { gx * CELL_SIZE + 5, gy * CELL_SIZE + 45 + 5, gx * CELL_SIZE + 9, gy * CELL_SIZE + 45 + 9 };
+                            FillRect(hdc, &d_rect, detail);
+                        }
+                    }
+                }
+                DeleteObject(bg1); DeleteObject(bg2); DeleteObject(detail);
 
                 for(i = 0; i < num_obstacles; i++) DrawObstacleGDI(hdc, obstacles[i].x, obstacles[i].y);
                 

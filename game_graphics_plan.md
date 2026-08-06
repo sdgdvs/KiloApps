@@ -85,7 +85,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KSnake
 - KTetris
 - KBreakout
 - KMaze
@@ -115,8 +114,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KQuest
 - KSpace
 - KPac
+- KSnake
 
 ## Completed Work Log
+
+- **KSnake (Loop 3):** Implemented checkered terrain background grid with subtle grass/rock detail texturing for environmental art in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
 - **KPac (Loop 3):** Implemented cyber-grid neon background environmental art and twinkling atmospheric star particles to enhance the maze's visual depth in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 - **KQuest (Loop 2):** Implemented custom Hero class sprite idle/attack animation cycles, monster death dissolving effects, and multi-color particle burst animations for critical hits for both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).

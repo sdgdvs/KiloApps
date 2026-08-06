@@ -1366,6 +1366,19 @@
             ctx.clearRect(0, 0, 400, 400);
             if (gameState !== 1) return;
 
+            // Environmental art: Checkered background grid with subtle terrain texture
+            for (let x = 0; x < WIDTH; x++) {
+                for (let y = 0; y < HEIGHT; y++) {
+                    ctx.fillStyle = (x + y) % 2 === 0 ? '#0f111a' : '#141724';
+                    ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+                    // Subtle terrain detailing (small rocks/grass tufts)
+                    if ((x * 13 + y * 7) % 17 === 0) {
+                        ctx.fillStyle = '#22273d';
+                        ctx.fillRect(x * CELL + 4, y * CELL + 4, 4, 4);
+                    }
+                }
+            }
+
             updateParticles();
             drawParticles();
 
