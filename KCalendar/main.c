@@ -350,7 +350,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             icex.dwICC = ICC_DATE_CLASSES;
             InitCommonControlsEx(&icex);
 
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HDC hdc = GetDC(NULL);
+            int dpiY = GetDeviceCaps(hdc, LOGPIXELSY);
+            ReleaseDC(NULL, hdc);
+            #define SCALE(x) MulDiv((x), dpiY, 96)
+
+            hFont = CreateFontA(-SCALE(16), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             hBgBrush = CreateSolidBrush(RGB(15, 23, 42));
             hEditBrush = CreateSolidBrush(RGB(15, 23, 42));
 
@@ -363,40 +368,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             RECT rc;
             SendMessage(hMonthCal, MCM_GETMINREQRECT, 0, (LPARAM)&rc);
-            SetWindowPos(hMonthCal, NULL, 10, 10, rc.right, rc.bottom, SWP_NOZORDER);
+            SetWindowPos(hMonthCal, NULL, SCALE(10), SCALE(10), rc.right, rc.bottom, SWP_NOZORDER);
 
-            int winWidth = 750;
-            int winHeight = 500;
-            int listX = 10 + rc.right + 15;
-            int rightW = winWidth - listX - 15;
-            int listH = winHeight - 40 - 130; // Leave 130px for inputs at bottom
+            int winWidth = SCALE(900);
+            int winHeight = SCALE(700);
+            int pad = SCALE(10);
+            int btnH = SCALE(28);
+            int editH = SCALE(24);
+            int spacing = SCALE(6);
+            
+            int listX = pad + rc.right + SCALE(15);
+            int rightW = winWidth - listX - SCALE(15);
+            int listH = winHeight - SCALE(40) - SCALE(130);
 
             // Left column buttons
-            int btnY = 10 + rc.bottom + 15;
+            int btnY = pad + rc.bottom + SCALE(15);
             hBtnToday = CreateWindowEx(0, "BUTTON", "Go to Today",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                10, btnY, rc.right, 28, hwnd, (HMENU)ID_BTN_TODAY, GetModuleHandle(NULL), NULL);
+                pad, btnY, rc.right, btnH, hwnd, (HMENU)ID_BTN_TODAY, GetModuleHandle(NULL), NULL);
 
-            int exportW = (rc.right - 5) / 2;
+            int exportW = (rc.right - SCALE(5)) / 2;
             hBtnExportIcs = CreateWindowEx(0, "BUTTON", "Export .ics",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                10, btnY + 34, exportW, 28, hwnd, (HMENU)ID_BTN_EXPORT_ICS, GetModuleHandle(NULL), NULL);
+                pad, btnY + btnH + spacing, exportW, btnH, hwnd, (HMENU)ID_BTN_EXPORT_ICS, GetModuleHandle(NULL), NULL);
 
             hBtnExportCsv = CreateWindowEx(0, "BUTTON", "Export CSV",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                10 + exportW + 5, btnY + 34, exportW, 28, hwnd, (HMENU)ID_BTN_EXPORT_CSV, GetModuleHandle(NULL), NULL);
+                pad + exportW + SCALE(5), btnY + btnH + spacing, exportW, btnH, hwnd, (HMENU)ID_BTN_EXPORT_CSV, GetModuleHandle(NULL), NULL);
 
-            CreateWindowEx(0, "BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, btnY + 68, rc.right, 28, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
+            CreateWindowEx(0, "BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, pad, btnY + (btnH + spacing) * 2, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
 
             // Search & Category Filter bar
-            int searchW = rightW - 165;
+            int searchW = rightW - SCALE(165);
             hEditSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                listX, 10, searchW, 24, hwnd, (HMENU)ID_EDIT_SEARCH, GetModuleHandle(NULL), NULL);
+                listX, pad, searchW, editH, hwnd, (HMENU)ID_EDIT_SEARCH, GetModuleHandle(NULL), NULL);
 
             hComboFilter = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                listX + searchW + 5, 10, 160, 120, hwnd, (HMENU)ID_COMBO_FILTER, GetModuleHandle(NULL), NULL);
+                listX + searchW + SCALE(5), pad, SCALE(160), SCALE(120), hwnd, (HMENU)ID_COMBO_FILTER, GetModuleHandle(NULL), NULL);
             
             SendMessage(hComboFilter, CB_ADDSTRING, 0, (LPARAM)"All Categories");
             for (int i = 0; i < 5; i++) SendMessage(hComboFilter, CB_ADDSTRING, 0, (LPARAM)CATEGORIES[i]);
@@ -405,37 +415,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Event List Box
             hListEvents = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
-                listX, 40, rightW, listH, hwnd, (HMENU)ID_LIST_EVENTS, GetModuleHandle(NULL), NULL);
+                listX, pad + editH + spacing, rightW, listH, hwnd, (HMENU)ID_LIST_EVENTS, GetModuleHandle(NULL), NULL);
 
             // New event input controls
-            int btmY = 40 + listH + 10;
+            int btmY = pad + editH + spacing + listH + SCALE(10);
             hEditEvent = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                listX, btmY, rightW, 24, hwnd, (HMENU)ID_EDIT_EVENT, GetModuleHandle(NULL), NULL);
+                listX, btmY, rightW, editH, hwnd, (HMENU)ID_EDIT_EVENT, GetModuleHandle(NULL), NULL);
 
-            btmY += 34;
-            int comboW = (rightW - 5) / 2;
+            btmY += editH + SCALE(10);
+            int comboW = (rightW - SCALE(5)) / 2;
             hComboCategory = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                listX, btmY, comboW, 120, hwnd, (HMENU)ID_COMBO_CATEGORY, GetModuleHandle(NULL), NULL);
+                listX, btmY, comboW, SCALE(120), hwnd, (HMENU)ID_COMBO_CATEGORY, GetModuleHandle(NULL), NULL);
             for (int i = 0; i < 5; i++) SendMessage(hComboCategory, CB_ADDSTRING, 0, (LPARAM)CATEGORIES[i]);
             SendMessage(hComboCategory, CB_SETCURSEL, 0, 0);
 
             hComboRecur = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                listX + comboW + 5, btmY, comboW, 120, hwnd, (HMENU)ID_COMBO_RECUR, GetModuleHandle(NULL), NULL);
+                listX + comboW + SCALE(5), btmY, comboW, SCALE(120), hwnd, (HMENU)ID_COMBO_RECUR, GetModuleHandle(NULL), NULL);
             for (int i = 0; i < 5; i++) SendMessage(hComboRecur, CB_ADDSTRING, 0, (LPARAM)RECURRENCES[i]);
             SendMessage(hComboRecur, CB_SETCURSEL, 0, 0);
 
-            btmY += 34;
-            int btnW = (rightW - 5) / 2;
+            btmY += SCALE(34);
+            int btnW = (rightW - SCALE(5)) / 2;
             hBtnAdd = CreateWindowEx(0, "BUTTON", "Add Event",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                listX, btmY, btnW, 28, hwnd, (HMENU)ID_BTN_ADD, GetModuleHandle(NULL), NULL);
+                listX, btmY, btnW, btnH, hwnd, (HMENU)ID_BTN_ADD, GetModuleHandle(NULL), NULL);
 
             hBtnDel = CreateWindowEx(0, "BUTTON", "Delete",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                listX + btnW + 5, btmY, btnW, 28, hwnd, (HMENU)ID_BTN_DEL, GetModuleHandle(NULL), NULL);
+                listX + btnW + SCALE(5), btmY, btnW, btnH, hwnd, (HMENU)ID_BTN_DEL, GetModuleHandle(NULL), NULL);
 
             oldEditProc = (WNDPROC)SetWindowLongPtr(hEditEvent, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
@@ -526,6 +536,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL (WINAPI *PSETPROCESSDPIAWARE)(void);
+        PSETPROCESSDPIAWARE setDPI = (PSETPROCESSDPIAWARE)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDPI) setDPI();
+    }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -535,8 +551,8 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KCalendarApp", "KCalendar", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 620, 420, NULL, NULL, hInstance, NULL);
+    HWND hwnd = CreateWindowEx(0, "KCalendarApp", "KCalendar (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+        CW_USEDEFAULT, CW_USEDEFAULT, 900, 700, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
