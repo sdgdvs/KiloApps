@@ -467,7 +467,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return 0;
 }
 
+#pragma function(memset)
+void* memset(void* dest, int c, size_t count) {
+    char* bytes = (char*)dest;
+    while (count--) *bytes++ = (char)c;
+    return dest;
+}
+
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -477,7 +485,7 @@ void MainEntry() {
     wc.hbrBackground = NULL;
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KMailApp", "KMail", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KMailApp", "KMail - Press H for Help", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

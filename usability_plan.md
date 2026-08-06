@@ -29,8 +29,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-
-- KMail
 - KMandel
 - KPing
 - KConnect4
@@ -82,6 +80,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFortress
 - KAlchemy
 - KFont
+- KMail
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -185,3 +184,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFortress: Usability and UI issues fixed (auto-opening size increased to 1024x700 to prevent map clipping, crisp text and resolution enabled via devicePixelRatio and pixelated image-rendering, and H hotkey added to toggle Help Modal which now opens by default).
 - KAlchemy: Usability and UI issues fixed (auto-opening size adjusted to 1024x768 in web and 800x570 in native, explicit H hotkey instruction added to manual button, and CLEARTYPE_QUALITY enabled in native for crisp fonts).
 - KFont: Usability and UI issues fixed (auto-opening size increased to 950x700 in native, DPI awareness enabled for crisp fonts, visual styles applied to native controls, layout metrics improved for Unicode Glyphs and Custom Text, and explicit H hotkey instruction added to Help button/title).
+- KMail: Usability and UI issues fixed (Appropriate auto-opening size adjusted, DPI awareness enabled for crisp fonts, help hotkey text added to title and sidebar).

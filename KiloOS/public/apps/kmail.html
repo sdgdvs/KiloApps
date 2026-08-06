@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KMail</title>
+<title>KMail - Press H for Help</title>
 <style>
   :root {
     --bg-main: #0f172a;
@@ -76,7 +76,8 @@
   </div>
   
   <div style="flex:1"></div>
-  <div style="display:flex; flex-direction:column; gap:10px; padding: 0 15px;">
+  <div style="display:flex; flex-direction:column; gap:10px; padding: 0 15px; margin-bottom: 15px;">
+    <div style="text-align: center; color: var(--text-sec); font-size: 13px;">Press <kbd>H</kbd> for Help</div>
     <button class="compose-btn" style="margin:0; background:#059669;" onclick="document.getElementById('import-file').click()">Import JSON</button>
     <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json">
     <button class="compose-btn" style="margin:0; background:#0284c7;" onclick="exportJson()">Export JSON</button>
