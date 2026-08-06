@@ -176,3 +176,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KChess: Usability and UI issues fixed (auto-opening size adjusted, responsive constraints added to canvas, CLEARTYPE_QUALITY and DPI awareness enabled in native, help instructions updated).
 - KChat: Usability and UI issues fixed (auto-opening size adjusted, CLEARTYPE_QUALITY and antialiasing enabled for crisp fonts, improved input contrast, added explicit /help instructions).
 - KBBS: Usability and UI issues fixed (auto-opening size adjusted, canvas imageSmoothingEnabled disabled for crisp fonts, layout/centering fixed, and H hotkey added for help modal).
+- KAudio: Usability and UI issues fixed (auto-opening size adjusted to match web, CLEARTYPE_QUALITY and DPI scaling applied for crisp text/oscilloscope canvas, explicit startup help modal added).
