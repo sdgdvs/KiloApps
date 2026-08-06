@@ -42,6 +42,19 @@ HWND hMillBtn;
 HWND hMayoBtn;
 HWND hCheeseBtn;
 
+void PlaySoundEffect(int type) {
+    switch(type) {
+        case 0: Beep(150, 50); break; // till
+        case 1: Beep(400, 50); break; // plant
+        case 2: Beep(600, 30); Beep(650, 30); break; // water
+        case 3: Beep(300, 40); Beep(400, 40); break; // harvest
+        case 4: Beep(500, 50); Beep(600, 50); break; // chicken
+        case 5: Beep(100, 100); break; // cow
+        case 6: Beep(200, 100); Beep(150, 100); break; // night
+        case 7: Beep(400, 50); Beep(500, 50); Beep(600, 100); break; // morning
+    }
+}
+
 void UpdateTitle(HWND hwnd) {
     char title[128];
     wsprintf(title, "KFarm - %s, Day %d | %s | $%d | Ch:%d Co:%d", season_names[current_season], current_day, weather_names[weather], money, chickens, cows);
@@ -83,6 +96,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_COMMAND:
             if (LOWORD(wParam) == 1 && time_of_day == 0) {
                 time_of_day = 1;
+                PlaySoundEffect(6);
                 InvalidateRect(hwnd, NULL, TRUE);
                 SetTimer(hwnd, 1, 1000, NULL);
             }
@@ -102,6 +116,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (money >= 50) {
                     money -= 50;
                     chickens++;
+                    PlaySoundEffect(4);
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -111,6 +126,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (money >= 150) {
                     money -= 150;
                     cows++;
+                    PlaySoundEffect(5);
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -179,6 +195,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_TIMER:
             if (wParam == 1) {
                 KillTimer(hwnd, 1);
+                PlaySoundEffect(7);
                 current_day++;
                 current_season = ((current_day - 1) / 7) % 4;
                 time_of_day = 0;
@@ -235,6 +252,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if (grid[c_idx].type == 3) action = 3;
                 
                 if (action == -1) return 0;
+                
+                PlaySoundEffect(action);
                 
                 int is_aoe = tools_upgraded && (action == 0 || action == 2 || action == 3);
                 int min_x = is_aoe ? (cx > 0 ? cx - 1 : 0) : cx;

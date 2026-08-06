@@ -1236,6 +1236,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
 
+            // Cyber-grid background environmental art
+            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(10, 40, 80));
+            SelectObject(memDC, gridPen);
+            for (int i = 0; i <= W; i += 20) {
+                MoveToEx(memDC, i, 0, NULL);
+                LineTo(memDC, i, H);
+            }
+            for (int j = 0; j <= H; j += 20) {
+                MoveToEx(memDC, 0, j, NULL);
+                LineTo(memDC, W, j);
+            }
+            DeleteObject(gridPen);
+            
+            // Twinkling background stars
+            HBRUSH starBr = CreateSolidBrush(RGB(150, 150, 150));
+            for(int i = 0; i < 10; i++) {
+                int sx = (int)(frameCount * 0.5 + i * 37) % W;
+                int sy = (i * 53) % H;
+                RECT starR = {sx, sy, sx+2, sy+2};
+                FillRect(memDC, &starR, starBr);
+            }
+            DeleteObject(starBr);
+
             // Draw Maze Map with Neon Glow and Junction Caps
             COLORREF wallCol = RGB(30, 136, 229);
             COLORREF wallHi = RGB(100, 181, 246);
