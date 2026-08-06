@@ -1291,7 +1291,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldPen);
             DeleteObject(goldPen);
 
-            HFONT labelFont = CreateFontA(13, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT labelFont = CreateFontA(13, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, labelFont);
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(212, 175, 55));
@@ -1452,7 +1452,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            HFONT sFont = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT sFont = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             oldFont = SelectObject(memDC, sFont);
             SetTextColor(memDC, RGB(255, 255, 255));
 
@@ -1513,7 +1513,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Skill & Utility Buttons Row at bottom (Y: 530..560)
             struct Button { int x, y, w, h; char* text; } btns[6] = {
-                { 25, 530, 70, 28, "Hint (H)" },
+                { 25, 530, 70, 28, "Help (H)" },
                 { 105, 530, 70, 28, "Undo (U)" },
                 { 185, 530, 70, 28, "Redo (Y)" },
                 { 265, 530, 80, 28, "Freeze (F)" },
@@ -1553,7 +1553,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char turnBuf[128];
                 char* lastSAN = (g_historyIndex > 0 && g_historyStack[g_historyIndex].san[0] != '\0') ? g_historyStack[g_historyIndex].san : "";
                 if (lastSAN[0] == '\0') {
-                    wsprintfA(turnBuf, "%s %s | Press 'H' for Hint", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
+                    wsprintfA(turnBuf, "%s %s | Press 'H' for Help", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
                 } else {
                     wsprintfA(turnBuf, "%s %s | Last: %s", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "", lastSAN);
                 }
@@ -1601,14 +1601,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'P') {
                 aiPersonality = (aiPersonality % 4) + 1;
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'H') { // OPTIMAL AI HINT SKILL
+            } else if (wParam == 'H') { // OPTIMAL AI HELP SKILL
                 if (!gameOver) {
                     GetOptimalHintMove(&hintSx, &hintSy, &hintTx, &hintTy);
                     if (hintSx != -1) {
                         hintActive = 1;
                         char sanBuf[16];
                         GetSAN(hintSx, hintSy, hintTx, hintTy, board[hintSy][hintSx], board[hintTy][hintTx] != 0, sanBuf);
-                        wsprintfA(hintText, "Best Move: %s", sanBuf);
+                        wsprintfA(hintText, "Help (Best Move): %s", sanBuf);
                         MessageBeep(MB_OK);
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
@@ -1790,6 +1790,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry(void) {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;

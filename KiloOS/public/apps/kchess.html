@@ -27,6 +27,9 @@
     cursor: pointer; 
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
   }
   /* Glassmorphism Overlay Modals */
   .modal-overlay {
@@ -807,7 +810,7 @@
               if (res.sx !== -1) {
                   hintSx = res.sx; hintSy = res.sy; hintTx = res.tx; hintTy = res.ty;
                   let san = getSAN(res.sx, res.sy, res.tx, res.ty, board[res.sy][res.sx], board[res.ty][res.tx] !== 0);
-                  hintText = "Best Move: " + san;
+                  hintText = "Help (Best Move): " + san;
                   hintActive = true;
                   playSound('move');
               }
@@ -1238,7 +1241,7 @@
 
       // Bottom skill & action buttons (Y: 530..560)
       if (my >= 530 && my <= 560) {
-          if (mx >= 25 && mx <= 95) { handleHotkey('h'); return; }   // Hint
+          if (mx >= 25 && mx <= 95) { handleHotkey('h'); return; }   // Help
           if (mx >= 105 && mx <= 175) { undoMove(); return; }         // Undo
           if (mx >= 185 && mx <= 255) { redoMove(); return; }         // Redo
           if (mx >= 265 && mx <= 345) { handleHotkey('f'); return; }   // Freeze
@@ -1695,7 +1698,7 @@
 
       // Bottom Skill & Action Buttons Row (Y: 530..560)
       let buttons = [
-          { x: 25, y: 530, w: 70, h: 28, text: `Hint (H)` },
+          { x: 25, y: 530, w: 70, h: 28, text: `Help (H)` },
           { x: 105, y: 530, w: 70, h: 28, text: `Undo (U)` },
           { x: 185, y: 530, w: 70, h: 28, text: `Redo (Y)` },
           { x: 265, y: 530, w: 80, h: 28, text: `Freeze (${freezePowerups})` },
@@ -1734,7 +1737,7 @@
           ctx.fillStyle = whiteTurn ? "#f8fafc" : "#94a3b8";
           let turnStr = whiteTurn ? "White's Turn" : "Black's Turn";
           if (blackFrozen) turnStr += " (Black Frozen!)";
-          let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN}` : " | Press 'H' for Hint";
+          let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN}` : " | Press 'H' for Help";
           ctx.fillText(turnStr + lastMoveStr, W / 2, H - 35);
       }
   }
