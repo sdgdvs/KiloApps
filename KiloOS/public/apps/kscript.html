@@ -153,6 +153,25 @@
         font-size: 12px;
         width: 80px;
     }
+
+    @media (max-width: 768px) {
+        body {
+            height: auto;
+            overflow: auto;
+        }
+        .container {
+            height: auto;
+            min-height: calc(100vh - 40px);
+        }
+        .panels {
+            flex-direction: column;
+            overflow: visible;
+        }
+        .panel {
+            min-height: 300px;
+            flex: none !important;
+        }
+    }
 </style>
 </head>
 <body>
@@ -210,10 +229,10 @@ print a % 3"></textarea>
     const outputArea = document.getElementById('outputArea');
     const memoryArea = document.getElementById('memoryArea');
 
-    exprInput.value = "// Welcome to KScript!\n// Press Alt+H or click Help for instructions\na = 10\nb = 20\nprint a * b + 5\nprint a % 3";
+    exprInput.value = "// Welcome to KScript!\n// Press F1, Alt+H, or click Help for instructions\na = 10\nb = 20\nprint a * b + 5\nprint a % 3";
 
     document.addEventListener('keydown', (e) => {
-        if (e.altKey && (e.key === 'h' || e.key === 'H')) {
+        if ((e.altKey && (e.key === 'h' || e.key === 'H')) || e.key === 'F1') {
             btnHelp.click();
             e.preventDefault();
         }
