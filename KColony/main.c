@@ -72,7 +72,7 @@ void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
     
     DrawText(hdc, "KCOLONY SCENARIOS", -1, &(RECT){0, 80, rc.right, 120}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
-    const char* titles[] = { "1. ENDLESS SURVIVAL", "2. SANDBOX MODE (UNLIMITED)", "3. 100-DAY SURVIVAL", "4. RESOURCE RUSH (1000M, 100A by D50)", "5. HELP & MANUAL" };
+    const char* titles[] = { "1. ENDLESS SURVIVAL", "2. SANDBOX MODE (UNLIMITED)", "3. 100-DAY SURVIVAL", "4. RESOURCE RUSH (1000M, 100A by D50)", "5. [H] HELP & MANUAL" };
     for (int i=0; i<5; i++) {
         RECT bRc = {rc.right/2 - 200, 160 + i*60, rc.right/2 + 200, 200 + i*60};
         HBRUSH br = CreateSolidBrush(RGB(17,17,34));
@@ -299,7 +299,7 @@ void DrawUI(HDC hdc, HFONT hFont) {
     btnY2 += 30;
     buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 150, btnY2 + 25 };
     buttons[btnCount].id = 300;
-    strcpy(buttons[btnCount].label, "HELP / MANUAL");
+    strcpy(buttons[btnCount].label, "[H] HELP / MANUAL");
     buttons[btnCount].isSelected = 0;
     btnCount++;
 
@@ -341,6 +341,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             srand(GetTickCount());
             SetTimer(hwnd, 1, 2000, NULL);
             break;
+        case WM_KEYDOWN:
+            if (wParam == 'H') {
+                if (gameState == 2) {
+                    gameState = prevState;
+                } else {
+                    prevState = gameState;
+                    gameState = 2;
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
         case WM_TIMER: {
             if (gameState != 1) break;
             tick++;
@@ -713,7 +724,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KColony", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
+        CW_USEDEFAULT, CW_USEDEFAULT, 850, 650,
         NULL, NULL, hInstance, NULL
     );
     if (hwnd == NULL) return 0;

@@ -30,7 +30,7 @@
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(1)">Sandbox Mode<br><small>Unlimited Resources & Tech</small></button>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(2)">100-Day Survival<br><small>Survive 100 Days</small></button>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(3)">Resource Rush<br><small>Get 1000 Mat & 100 AdvM by Day 50</small></button>
-        <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="toggleHelp()">Help & Manual<br><small>How to Play</small></button>
+        <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="toggleHelp()">[H] Help & Manual<br><small>How to Play</small></button>
     </div>
     <div id="help-modal" style="display:none; position:fixed; top:5%; left:10%; width:80%; height:90%; background:rgba(10,20,30,0.95); z-index:200; border:2px solid #00ffff; border-radius:5px; padding:20px; overflow-y:auto; box-shadow:0 0 20px #00ffff; color:#00ffff;">
         <h2 style="text-shadow: 0 0 10px #00ffff; text-align:center; margin-top:0;">KColony Administrator's Manual</h2>
@@ -98,7 +98,7 @@
             <button class="btn research" id="btn-res-laser" onclick="research(3)">Res: Laser Def.<br><small>Cost: 150 Sci</small></button>
             <hr style="border-color:#00ffff; width:100%; margin: 5px 0;">
             <button class="btn expedition" id="btn-exped" onclick="expedition()">Launch Expedition<br><small>Req: 1 Pop | Cost: 20 Mat, 20 Pwr</small></button>
-            <button class="btn" id="btn-help" onclick="toggleHelp()">Help & Manual</button>
+            <button class="btn" id="btn-help" onclick="toggleHelp()">[H] Help & Manual</button>
         </div>
     </div>
     <script>
@@ -146,6 +146,12 @@
             const h = document.getElementById('help-modal');
             h.style.display = h.style.display === 'none' ? 'block' : 'none';
         }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'h') {
+                toggleHelp();
+            }
+        });
 
         function playTone(freq, type, duration, vol=0.1) {
             if (!audioCtx) return;
