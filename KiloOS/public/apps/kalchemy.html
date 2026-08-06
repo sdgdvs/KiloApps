@@ -1782,7 +1782,7 @@
         <span class="val" id="stat-puzzle-high">0</span>
       </div>
       <div class="stat-badge" style="cursor:pointer; background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(243, 156, 18, 0.3)); border-color: var(--accent-gold-light);" onclick="openHelpModal()" title="Open Grandmaster Manual & Help">
-        <span class="label" style="color:var(--accent-gold-light)">📘 Manual</span>
+        <span class="label" style="color:var(--accent-gold-light)">📘 Manual (Press H)</span>
       </div>
     </div>
   </header>
@@ -3841,7 +3841,10 @@
         spawnExplosion(rect.left + rect.width/2, rect.top + rect.height/2, color);
       }
     }
-    
+
+    if (window.parent && window.parent.postMessage) {
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 1024, height: 768 }, '*');
+    }
   </script>
 
   <!-- Master Alchemist Codex Inspector Modal -->
