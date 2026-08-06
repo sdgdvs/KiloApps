@@ -1043,6 +1043,9 @@ function App() {
                 <span>KiloOS User</span>
               </div>
               <div className="start-system-actions">
+                <div className="start-item" onClick={() => { setStartOpen(false); notify("KiloOS Help", "Start menu: Launch apps.\nAlt+` : Switch windows.\nDrag to edges: Snap windows.\nDouble-click title: Maximize."); }}>
+                  Help (H / F1)
+                </div>
                 <div className="start-item" onClick={() => { setStartOpen(false); setModal({ type: 'settings' }); }}>
                   Display Settings
                 </div>
@@ -1067,6 +1070,11 @@ function App() {
           <div style={{ fontSize: '48px', fontWeight: 'bold', marginTop: '10px', letterSpacing: '4px' }}>KiloOS</div>
         </div>
       )}
+
+      <div style={{ position: 'absolute', bottom: '60px', right: '30px', opacity: 0.3, pointerEvents: 'none', fontSize: '13px', zIndex: 0, textAlign: 'right' }}>
+        <div>KiloOS Version {MICROS_VERSION}</div>
+        <div>Press H or F1 for Help</div>
+      </div>
       
       <div className="taskbar">
         <div className={`start-button ${startOpen ? 'open' : ''}`} onClick={() => { playClickAudio(); setStartOpen(!startOpen); if (startOpen) setStartFolder(null); setStartSearch(''); }}>start</div>
@@ -1133,6 +1141,9 @@ function App() {
           </div>
         )}
         <div className="system-tray">
+          <div className="tray-icon" title="Help (Press H or F1)" onClick={(e) => { e.stopPropagation(); playClickAudio(); notify("KiloOS Help", "Start menu: Launch apps.\nAlt+` : Switch windows.\nDrag to edges: Snap windows.\nDouble-click title: Maximize."); }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </div>
           <div className="tray-icon" title="Network Connected" onClick={(e) => { e.stopPropagation(); playClickAudio(); }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
           </div>

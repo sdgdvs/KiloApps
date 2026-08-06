@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KiloOS Web UI (Shell & Apps)
 - KDB
 - KColony
 - KFortress
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KAudio
 - KClock
 - KPong
+- KiloOS Web UI (Shell & Apps)
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -179,3 +179,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KAudio: Usability and UI issues fixed (auto-opening size adjusted to match web, CLEARTYPE_QUALITY and DPI scaling applied for crisp text/oscilloscope canvas, explicit startup help modal added).
 - KClock: Usability and UI issues fixed (auto-opening size adjusted to 950x650, DPI awareness and CLEARTYPE_QUALITY enabled in native for crisp fonts, help hotkey title hint added).
 - KPong: Usability and UI issues fixed (auto-opening size adjusted, help button and H hotkey added, DPI awareness and devicePixelRatio canvas scaling applied for crisp graphics).
+- KiloOS Web UI (Shell & Apps): Usability and UI issues fixed (added desktop watermark, added help option in start menu and help tray icon).
