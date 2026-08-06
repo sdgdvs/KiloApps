@@ -3,11 +3,11 @@
 <head>
 <title>KMine</title>
 <style>
-  body { margin: 0; background-color: #c0c0c0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; font-family: sans-serif; }
-  canvas { background-color: #c0c0c0; border: 2px solid #808080; border-right-color: #fff; border-bottom-color: #fff; cursor: pointer; }
-  #controls { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
-  button, select { padding: 4px 8px; font-family: inherit; }
-  .stats-box { font-size: 12px; background: #eee; padding: 4px 8px; border: 1px solid #aaa; border-radius: 4px; }
+  body { margin: 0; padding: 20px; background-color: #c0c0c0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; box-sizing: border-box; user-select: none; font-family: sans-serif; }
+  canvas { background-color: #c0c0c0; border: 2px solid #808080; border-right-color: #fff; border-bottom-color: #fff; cursor: pointer; display: block; }
+  #controls { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 800px; }
+  button, select { padding: 5px 10px; font-family: inherit; font-size: 14px; cursor: pointer; }
+  .stats-box { font-size: 14px; background: #eee; padding: 5px 10px; border: 1px solid #aaa; border-radius: 4px; }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -18,7 +18,7 @@
     <option value="2">Expert</option>
   </select>
   <button onclick="initGame()">Restart</button>
-  <button onclick="giveHint()" title="Press H for Hint">Hint (H)</button>
+  <button onclick="giveHint()" title="Press H for Help">Help/Hint (H)</button>
   <span id="status" style="font-family: monospace; font-weight: bold; min-width: 140px; display: inline-block;"></span>
   <div class="stats-box">Best: <span id="bestTime">--</span>s</div>
   <button onclick="exportStats()">Export Stats</button>
@@ -26,7 +26,7 @@
   <input type="file" id="fileIn" style="display:none" accept=".json" onchange="importStats(event)">
   <button id="replayBtn" style="display:none;" onclick="startReplay()">Watch Replay</button>
 </div>
-<div style="font-size:14px; font-weight: bold; margin-bottom: 5px;">Press H for Hint | F5: Quicksave | F9: Quickload</div>
+<div style="font-size:14px; font-weight: bold; margin-bottom: 10px;">Press H for Help | F5: Quicksave | F9: Quickload</div>
 <canvas id="cvs"></canvas>
 <script>
   const cvs = document.getElementById('cvs');
@@ -413,7 +413,7 @@
           ctx.fillStyle = "black";
           ctx.font = "bold 16px Arial";
           ctx.fillText("L-Click: Reveal | R-Click: Flag", (cols*CELL)/2, (rows*CELL)/2 - 10);
-          ctx.fillText("Press 'H' for Hint", (cols*CELL)/2, (rows*CELL)/2 + 15);
+          ctx.fillText("Press 'H' for Help", (cols*CELL)/2, (rows*CELL)/2 + 15);
       }
   }
   
