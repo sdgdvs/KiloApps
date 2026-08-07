@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KSpace
 - KType
 - KSolitaire
 - KTerm
@@ -83,6 +82,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFarm
 - KSnake
 - KTetris
+- KSpace
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -204,3 +204,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFarm: Usability and UI issues fixed (updated web min-height to fix layout clipping, added explicit 'H' hotkey and Almanac instructions, expanded native window size to 420x590, applied DEFAULT_GUI_FONT for crisp button text, and improved grid offset and spacing).
 - KSnake: Usability and UI issues fixed (auto-opening size, added DPI awareness in native, layout scaling constraints in web, explicit help title in native).
 - KTetris: Usability and UI issues fixed (Appropriate auto-opening size adjusted, crisp text and canvas scaling handled via native SetWorldTransform, visible controls & help instructions overlay validated).
+- KSpace: Usability and UI issues fixed (auto-opening size adjusted to 340x520 in web, pixelated image-rendering applied to canvas, main menu buttons layout fixed, CSS overhauled for visibility within 320px width, and native C implemented custom NONANTIALIASED_QUALITY Courier New font for crisp monospaced rendering).
