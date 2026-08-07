@@ -31,7 +31,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 
 
 - KSys
-- KRogue
 - KConverter
 - KTodo
 - KGraph
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTerm
 - KSynth
 - KTask
+- KRogue
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -209,3 +209,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTerm: Usability and UI issues fixed (auto-opening size adjusted to 960x600, SetProcessDPIAware and AdjustWindowRect added to native for crisp text and layout).
 - KSynth: Usability and UI issues fixed (added startup MessageBox instructions and Help toggle, fixed clipped layout via AdjustWindowRectEx, used negative font sizes for crisp UI text).
 - KTask: Usability and UI issues fixed (added WS_CLIPCHILDREN to fix flickering, enforced WM_GETMINMAXINFO min size, clamped layout coordinates, pulled SPI_GETNONCLIENTMETRICS for crisp fonts, added EM_SETCUEBANNER for explicit opening instructions, and injected JS startup hook in web for visual instructions).
+- KRogue: Usability and UI issues fixed (disabled web canvas image smoothing for sharp pixel art, added responsive web width, expanded native layout boundary to prevent overlap, added persistent native controls hint at bottom, and enforced NONANTIALIASED_QUALITY for crisp terminal font).

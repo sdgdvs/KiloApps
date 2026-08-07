@@ -2,8 +2,8 @@
 #include <windows.h>
 #include <commctrl.h>
 
-#define W 900
-#define H 650
+#define W 1024
+#define H 768
 
 #define ID_TAB_CTRL   1001
 #define ID_TXT_MAIN   1002
@@ -14,6 +14,7 @@
 #define ID_BTN_EXP_TXT 1007
 #define ID_BTN_EXP_JSON 1008
 #define ID_BTN_EXP_HTML 1009
+#define ID_BTN_HELP     1010
 
 HWND hTabCtrl = NULL;
 HWND hOutput = NULL;
@@ -24,6 +25,7 @@ HWND hBtnAll = NULL;
 HWND hBtnExpTxt = NULL;
 HWND hBtnExpJson = NULL;
 HWND hBtnExpHtml = NULL;
+HWND hBtnHelp = NULL;
 
 char g_LogBuffer[16384] = {0};
 char g_CpuResult[128] = "Not Executed";
@@ -339,8 +341,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     static HFONT hFont = NULL;
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
-            if (!hFont) hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Courier New");
+            hFont = CreateFontA(-15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+            if (!hFont) hFont = CreateFontA(-15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Courier New");
             
             InitCommonControls();
 
@@ -371,6 +373,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnExpTxt = CreateWindow("BUTTON", "Export TXT", WS_CHILD | BS_PUSHBUTTON, 10, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_TXT, NULL, NULL);
             hBtnExpJson = CreateWindow("BUTTON", "Export JSON", WS_CHILD | BS_PUSHBUTTON, 130, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_JSON, NULL, NULL);
             hBtnExpHtml = CreateWindow("BUTTON", "Export HTML", WS_CHILD | BS_PUSHBUTTON, 250, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_HTML, NULL, NULL);
+
+            hBtnHelp = CreateWindow("BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, W - 110, H - 75, 90, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
 
@@ -409,6 +413,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportReport(1);
             } else if (id == ID_BTN_EXP_HTML) {
                 ExportReport(2);
+            } else if (id == ID_BTN_HELP) {
+                MessageBoxA(hwnd, "KSys Help Instructions:\n\n1. Hardware Inspector: View live system details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Event Logs: Check background activity.\n4. Report Export: Generate and download summaries.\n\nUse the tabs to navigate.", "KSys Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
@@ -431,6 +437,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hBtnExpTxt) MoveWindow(hBtnExpTxt, 10, nh - 38, 110, 25, TRUE);
             if (hBtnExpJson) MoveWindow(hBtnExpJson, 130, nh - 38, 110, 25, TRUE);
             if (hBtnExpHtml) MoveWindow(hBtnExpHtml, 250, nh - 38, 110, 25, TRUE);
+            if (hBtnHelp) MoveWindow(hBtnHelp, nw - 110, nh - 38, 100, 25, TRUE);
             break;
         }
         case WM_DESTROY:
