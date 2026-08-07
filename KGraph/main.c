@@ -169,7 +169,7 @@ static int root_count = 0;
 // Win32 Control Handles
 static HWND hInputs[MAX_FUNCS];
 static HWND hChecks[MAX_FUNCS];
-static HWND hPlotBtn, hZoomIn, hZoomOut, hResetBtn, hRootsBtn, hPresetBtn, hStatus;
+static HWND hPlotBtn, hZoomIn, hZoomOut, hResetBtn, hRootsBtn, hPresetBtn, hHelpBtn, hStatus;
 static HFONT hFontSmall, hFontBold;
 static int g_dpi = 96;
 static int g_canvasTop = 130;
@@ -222,8 +222,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_canvasTop = MulDiv(130, g_dpi, 96);
             int fontSize = MulDiv(16, g_dpi, 96);
 
-            hFontSmall = CreateFontA(fontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hFontBold = CreateFontA(fontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontSmall = CreateFontA(fontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontBold = CreateFontA(fontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             int topY = MulDiv(8, g_dpi, 96);
             for (int i = 0; i < MAX_FUNCS; i++) {
@@ -246,8 +246,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hResetBtn = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(540, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1004, NULL, NULL);
             hRootsBtn = CreateWindowA("BUTTON", "Roots", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(360, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(80, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1005, NULL, NULL);
             hPresetBtn= CreateWindowA("BUTTON", "Presets", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(450, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(80, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
+            hHelpBtn  = CreateWindowA("BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(540, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1007, NULL, NULL);
 
-            hStatus = CreateWindowA("STATIC", "Ready. Hover mouse to trace values. Press 'H' for help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), topY + MulDiv(5, g_dpi, 96), MulDiv(600, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, NULL, NULL, NULL);
+            hStatus = CreateWindowA("STATIC", "Ready. Hover mouse to trace values. Press 'H' for help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), topY + MulDiv(5, g_dpi, 96), MulDiv(800, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, NULL, NULL, NULL);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
             SendMessageA(hPlotBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
@@ -256,6 +257,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hResetBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hRootsBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hPresetBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hHelpBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             break;
         }
 
@@ -290,6 +292,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hChecks[1], BM_SETCHECK, BST_CHECKED, 0);
                 SendMessageA(hChecks[2], BM_SETCHECK, BST_CHECKED, 0);
                 SendMessageA(hwnd, WM_COMMAND, 1001, 0);
+            } else if (id == 1007) {
+                SendMessageA(hwnd, WM_KEYDOWN, 'H', 0);
             } else if (id >= 1100 && id < 1100 + MAX_FUNCS) {
                 int idx = id - 1100;
                 funcs[idx].enabled = (SendMessageA(hChecks[idx], BM_GETCHECK, 0, 0) == BST_CHECKED);
