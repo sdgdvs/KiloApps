@@ -182,28 +182,124 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             if (t > 0) {
                 SetBkMode(hdc, TRANSPARENT);
                 SetTextColor(hdc, textCol);
-                if (t > 20) DrawText(hdc, "X", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 1) DrawText(hdc, "S", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 2) DrawText(hdc, "F", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 3) DrawText(hdc, "M", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 4) DrawText(hdc, "H", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 5) DrawText(hdc, "B", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 6) DrawText(hdc, "L", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 7) DrawText(hdc, "N", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 8) DrawText(hdc, "Y", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 9) DrawText(hdc, "D", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 10) DrawText(hdc, "W", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 11) DrawText(hdc, "T", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else if (t == 12) DrawText(hdc, "C", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                if (t > 20) {
+                    HPEN p2 = CreatePen(PS_SOLID, 2, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    MoveToEx(hdc, rc.left+4, rc.top+4, NULL); LineTo(hdc, rc.right-4, rc.bottom-4);
+                    MoveToEx(hdc, rc.right-4, rc.top+4, NULL); LineTo(hdc, rc.left+4, rc.bottom-4);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 1) { // Solar
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    Rectangle(hdc, rc.left+2, rc.top+4, rc.right-2, rc.bottom-4);
+                    MoveToEx(hdc, rc.left+6, rc.top+4, NULL); LineTo(hdc, rc.left+6, rc.bottom-4);
+                    MoveToEx(hdc, rc.left+10, rc.top+4, NULL); LineTo(hdc, rc.left+10, rc.bottom-4);
+                    MoveToEx(hdc, rc.left+14, rc.top+4, NULL); LineTo(hdc, rc.left+14, rc.bottom-4);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 2) { // Farm
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
+                    Rectangle(hdc, rc.left+2, rc.top+10, rc.right-2, rc.bottom-2);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    MoveToEx(hdc, rc.left+4, rc.top+10, NULL); LineTo(hdc, rc.left+6, rc.top+6);
+                    MoveToEx(hdc, rc.left+10, rc.top+10, NULL); LineTo(hdc, rc.left+10, rc.top+4);
+                    MoveToEx(hdc, rc.left+16, rc.top+10, NULL); LineTo(hdc, rc.left+14, rc.top+6);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 3) { // Mine
+                    HPEN p2 = CreatePen(PS_SOLID, 2, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    MoveToEx(hdc, rc.left+4, rc.bottom-2, NULL); LineTo(hdc, rc.left+10, rc.top+4); LineTo(hdc, rc.right-4, rc.bottom-2);
+                    HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
+                    Ellipse(hdc, rc.left+8, rc.top+2, rc.left+12, rc.top+6);
+                    Rectangle(hdc, rc.left+8, rc.top+10, rc.left+12, rc.bottom-2);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 4) { // Hab
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    HBRUSH b2 = CreateSolidBrush(bgCol); HBRUSH oldB = SelectObject(hdc, b2);
+                    Chord(hdc, rc.left+2, rc.top+2, rc.right-2, rc.bottom+8, rc.right-2, rc.bottom-2, rc.left+2, rc.bottom-2);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    b2 = CreateSolidBrush(textCol); oldB = SelectObject(hdc, b2);
+                    Rectangle(hdc, rc.left+8, rc.bottom-6, rc.left+12, rc.bottom-2);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 5) { // Battery
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    Rectangle(hdc, rc.left+4, rc.top+4, rc.right-4, rc.bottom-2);
+                    HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
+                    Rectangle(hdc, rc.left+8, rc.top+2, rc.left+12, rc.top+4);
+                    Rectangle(hdc, rc.left+6, rc.top+10, rc.right-6, rc.bottom-4);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 6) { // Lab
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    POINT pts[4] = {{rc.left+8, rc.top+2}, {rc.right-8, rc.top+2}, {rc.right-2, rc.bottom-2}, {rc.left+2, rc.bottom-2}};
+                    Polygon(hdc, pts, 4);
+                    HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
+                    Ellipse(hdc, rc.left+8, rc.top+12, rc.left+12, rc.top+16);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 7) { // Nuke
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    POINT pts[4] = {{rc.left+6, rc.bottom-2}, {rc.left+8, rc.top+4}, {rc.right-8, rc.top+4}, {rc.right-6, rc.bottom-2}};
+                    Polygon(hdc, pts, 4);
+                    HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
+                    Ellipse(hdc, rc.left+7, rc.top+8, rc.right-7, rc.bottom-6);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 8) { // Hydro
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    Rectangle(hdc, rc.left+2, rc.bottom-6, rc.right-2, rc.bottom-2);
+                    Arc(hdc, rc.left+2, rc.top+2, rc.right-2, rc.bottom-2, rc.right-2, rc.bottom-6, rc.left+2, rc.bottom-6);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 9) { // Laser
+                    HPEN p2 = CreatePen(PS_SOLID, 2, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    Rectangle(hdc, rc.left+4, rc.bottom-6, rc.right-4, rc.bottom-2);
+                    HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
+                    Ellipse(hdc, rc.left+6, rc.top+6, rc.right-6, rc.bottom-6);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    MoveToEx(hdc, rc.left+10, rc.top+8, NULL); LineTo(hdc, rc.left+10, rc.top+2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 10) { // Wall
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    Rectangle(hdc, rc.left+2, rc.top+2, rc.right-2, rc.bottom-2);
+                    MoveToEx(hdc, rc.left+2, rc.top+8, NULL); LineTo(hdc, rc.right-2, rc.top+8);
+                    MoveToEx(hdc, rc.left+2, rc.top+14, NULL); LineTo(hdc, rc.right-2, rc.top+14);
+                    MoveToEx(hdc, rc.left+8, rc.top+2, NULL); LineTo(hdc, rc.left+8, rc.top+8);
+                    MoveToEx(hdc, rc.left+14, rc.top+8, NULL); LineTo(hdc, rc.left+14, rc.top+14);
+                    MoveToEx(hdc, rc.left+8, rc.top+14, NULL); LineTo(hdc, rc.left+8, rc.bottom-2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 11) { // Turret
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    POINT pts[4] = {{rc.left+2, rc.bottom-2}, {rc.right-2, rc.bottom-2}, {rc.right-6, rc.top+8}, {rc.left+6, rc.top+8}};
+                    Polygon(hdc, pts, 4);
+                    HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
+                    Rectangle(hdc, rc.left+8, rc.top+2, rc.left+12, rc.top+8);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 12) { // Factory
+                    HPEN p2 = CreatePen(PS_SOLID, 1, textCol); HPEN oldP = SelectObject(hdc, p2);
+                    POINT pts[7] = {{rc.left+2, rc.bottom-2}, {rc.right-2, rc.bottom-2}, {rc.right-2, rc.top+6}, {rc.right-6, rc.top+10}, {rc.right-6, rc.top+4}, {rc.right-10, rc.top+8}, {rc.left+2, rc.top+8}};
+                    Polygon(hdc, pts, 7);
+                    HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
+                    Rectangle(hdc, rc.right-6, rc.top+2, rc.right-4, rc.top+6);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                }
             }
         }
     }
     
     for (int i = 0; i < alienCount; i++) {
         RECT rc = { OFFSET_X + aliens[i].x * CELL_SIZE, OFFSET_Y + aliens[i].y * CELL_SIZE, OFFSET_X + (aliens[i].x + 1) * CELL_SIZE, OFFSET_Y + (aliens[i].y + 1) * CELL_SIZE };
-        SetTextColor(hdc, RGB(255, 0, 255));
-        SetBkMode(hdc, TRANSPARENT);
-        DrawText(hdc, "A", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        COLORREF alienCol = RGB(255, 0, 255);
+        HPEN p2 = CreatePen(PS_SOLID, 1, alienCol); HPEN oldP = SelectObject(hdc, p2);
+        HBRUSH b2 = CreateSolidBrush(RGB(80, 0, 80)); HBRUSH oldB = SelectObject(hdc, b2);
+        Ellipse(hdc, rc.left+2, rc.top+2, rc.right-2, rc.bottom-2);
+        SelectObject(hdc, oldB); DeleteObject(b2);
+        
+        b2 = CreateSolidBrush(RGB(0,0,0)); oldB = SelectObject(hdc, b2);
+        Ellipse(hdc, rc.left+5, rc.top+7, rc.left+9, rc.top+11);
+        Ellipse(hdc, rc.right-9, rc.top+7, rc.right-5, rc.top+11);
+        SelectObject(hdc, oldB); DeleteObject(b2);
+        SelectObject(hdc, oldP); DeleteObject(p2);
     }
 }
 

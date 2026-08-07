@@ -343,24 +343,44 @@
             document.getElementById('res-sci').innerText = sci;
         }
 
+        const SVGS = {
+            S: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="16" height="12" fill="#224" stroke="#ff0" stroke-width="1"/><line x1="6" y1="4" x2="6" y2="16" stroke="#ff0" stroke-width="1"/><line x1="10" y1="4" x2="10" y2="16" stroke="#ff0" stroke-width="1"/><line x1="14" y1="4" x2="14" y2="16" stroke="#ff0" stroke-width="1"/></svg>')}`,
+            F: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="8" width="18" height="11" fill="#030"/><path d="M4,18 Q4,10 7,6 M10,18 Q10,8 13,5 M16,18 Q16,11 19,7" stroke="#0f0" fill="none" stroke-width="1.5"/></svg>')}`,
+            M: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4,20 L10,5 L16,20" fill="none" stroke="#f0f" stroke-width="2"/><circle cx="10" cy="5" r="2" fill="#f0f"/><rect x="8" y="10" width="4" height="10" fill="#303" stroke="#f0f"/></svg>')}`,
+            H: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="#033" stroke="#0ff" stroke-width="1.5"/><rect x="8" y="12" width="4" height="6" fill="#0ff"/></svg>')}`,
+            B: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="10" height="14" fill="#310" stroke="#f80" stroke-width="1.5"/><rect x="8" y="2" width="4" height="2" fill="#f80"/><rect x="7" y="10" width="6" height="6" fill="#f80"/></svg>')}`,
+            L: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8,2 L12,2 L12,8 L18,18 L2,18 L8,8 Z" fill="#203" stroke="#a0f" stroke-width="1.5"/><circle cx="10" cy="14" r="2" fill="#a0f"/></svg>')}`,
+            N: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M5,18 L7,6 L13,6 L15,18 Z" fill="#032" stroke="#0fa" stroke-width="1.5"/><circle cx="10" cy="12" r="3" fill="#0fa"/></svg>')}`,
+            Y: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="12" width="16" height="6" fill="#230" stroke="#af0" stroke-width="1"/><path d="M4,12 C4,6 8,6 10,2 C12,6 16,6 16,12" fill="none" stroke="#af0" stroke-width="1.5"/></svg>')}`,
+            D: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="14" width="12" height="6" fill="#300" stroke="#f00"/><circle cx="10" cy="10" r="4" fill="#f00"/><line x1="10" y1="10" x2="10" y2="2" stroke="#f00" stroke-width="2"/></svg>')}`,
+            W: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="18" height="18" fill="#222" stroke="#888"/><line x1="1" y1="7" x2="19" y2="7" stroke="#888"/><line x1="1" y1="13" x2="19" y2="13" stroke="#888"/><line x1="7" y1="1" x2="7" y2="7" stroke="#888"/><line x1="14" y1="7" x2="14" y2="13" stroke="#888"/><line x1="7" y1="13" x2="7" y2="19" stroke="#888"/></svg>')}`,
+            T: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 14,10 6,10" fill="#320" stroke="#fa0"/><rect x="8" y="2" width="4" height="8" fill="#fa0"/></svg>')}`,
+            C: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 18,8 14,12 14,6 10,10 10,4 2,8" fill="#444" stroke="#ccc"/><rect x="15" y="2" width="2" height="6" fill="#ccc"/></svg>')}`,
+            X: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><line x1="2" y1="2" x2="18" y2="18" stroke="#f00" stroke-width="3"/><line x1="18" y1="2" x2="2" y2="18" stroke="#f00" stroke-width="3"/></svg>')}`,
+            A: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#505" stroke="#f0f"/><circle cx="7" cy="9" r="2" fill="#000"/><circle cx="13" cy="9" r="2" fill="#000"/><path d="M7,14 Q10,16 13,14" stroke="#000" fill="none" stroke-width="1.5"/></svg>')}`
+        };
+
         function renderCell(x, y) {
             const idx = y * GRID_W + x;
             const cell = document.getElementById(`cell-${x}-${y}`);
             const t = grid[idx];
-            if (t > 20) { cell.innerHTML = 'X'; cell.style.color = '#ff0000'; cell.style.textShadow = '0 0 5px #ff0000'; cell.style.background = '#330000'; cell.style.borderColor = '#ff0000'; }
-            else if (t === 1) { cell.innerHTML = 'S'; cell.style.color = '#ffff00'; cell.style.textShadow = '0 0 5px #ffff00'; cell.style.background = '#333300'; cell.style.borderColor = '#ffff00'; }
-            else if (t === 2) { cell.innerHTML = 'F'; cell.style.color = '#00ff00'; cell.style.textShadow = '0 0 5px #00ff00'; cell.style.background = '#003300'; cell.style.borderColor = '#00ff00'; }
-            else if (t === 3) { cell.innerHTML = 'M'; cell.style.color = '#ff00ff'; cell.style.textShadow = '0 0 5px #ff00ff'; cell.style.background = '#330033'; cell.style.borderColor = '#ff00ff'; }
-            else if (t === 4) { cell.innerHTML = 'H'; cell.style.color = '#00ffff'; cell.style.textShadow = '0 0 5px #00ffff'; cell.style.background = '#003333'; cell.style.borderColor = '#00ffff'; }
-            else if (t === 5) { cell.innerHTML = 'B'; cell.style.color = '#ff8800'; cell.style.textShadow = '0 0 5px #ff8800'; cell.style.background = '#331100'; cell.style.borderColor = '#ff8800'; }
-            else if (t === 6) { cell.innerHTML = 'L'; cell.style.color = '#aa00ff'; cell.style.textShadow = '0 0 5px #aa00ff'; cell.style.background = '#220033'; cell.style.borderColor = '#aa00ff'; }
-            else if (t === 7) { cell.innerHTML = 'N'; cell.style.color = '#00ffaa'; cell.style.textShadow = '0 0 5px #00ffaa'; cell.style.background = '#003322'; cell.style.borderColor = '#00ffaa'; }
-            else if (t === 8) { cell.innerHTML = 'Y'; cell.style.color = '#aaff00'; cell.style.textShadow = '0 0 5px #aaff00'; cell.style.background = '#223300'; cell.style.borderColor = '#aaff00'; }
-            else if (t === 9) { cell.innerHTML = 'D'; cell.style.color = '#ff0000'; cell.style.textShadow = '0 0 5px #ff0000'; cell.style.background = '#330000'; cell.style.borderColor = '#ff0000'; }
-            else if (t === 10) { cell.innerHTML = 'W'; cell.style.color = '#888888'; cell.style.textShadow = '0 0 5px #888888'; cell.style.background = '#222222'; cell.style.borderColor = '#888888'; }
-            else if (t === 11) { cell.innerHTML = 'T'; cell.style.color = '#ffaa00'; cell.style.textShadow = '0 0 5px #ffaa00'; cell.style.background = '#332200'; cell.style.borderColor = '#ffaa00'; }
-            else if (t === 12) { cell.innerHTML = 'C'; cell.style.color = '#cccccc'; cell.style.textShadow = '0 0 5px #cccccc'; cell.style.background = '#444444'; cell.style.borderColor = '#cccccc'; }
-            else { cell.innerHTML = ''; cell.style.background = '#0a111a'; cell.style.borderColor = '#003333'; }
+            cell.innerHTML = '';
+            cell.style.backgroundImage = 'none';
+            cell.style.backgroundSize = 'cover';
+            if (t > 20) { cell.style.backgroundImage = `url("${SVGS.X}")`; cell.style.backgroundColor = '#330000'; cell.style.borderColor = '#ff0000'; }
+            else if (t === 1) { cell.style.backgroundImage = `url("${SVGS.S}")`; cell.style.backgroundColor = '#333300'; cell.style.borderColor = '#ffff00'; }
+            else if (t === 2) { cell.style.backgroundImage = `url("${SVGS.F}")`; cell.style.backgroundColor = '#003300'; cell.style.borderColor = '#00ff00'; }
+            else if (t === 3) { cell.style.backgroundImage = `url("${SVGS.M}")`; cell.style.backgroundColor = '#330033'; cell.style.borderColor = '#ff00ff'; }
+            else if (t === 4) { cell.style.backgroundImage = `url("${SVGS.H}")`; cell.style.backgroundColor = '#003333'; cell.style.borderColor = '#00ffff'; }
+            else if (t === 5) { cell.style.backgroundImage = `url("${SVGS.B}")`; cell.style.backgroundColor = '#331100'; cell.style.borderColor = '#ff8800'; }
+            else if (t === 6) { cell.style.backgroundImage = `url("${SVGS.L}")`; cell.style.backgroundColor = '#220033'; cell.style.borderColor = '#aa00ff'; }
+            else if (t === 7) { cell.style.backgroundImage = `url("${SVGS.N}")`; cell.style.backgroundColor = '#003322'; cell.style.borderColor = '#00ffaa'; }
+            else if (t === 8) { cell.style.backgroundImage = `url("${SVGS.Y}")`; cell.style.backgroundColor = '#223300'; cell.style.borderColor = '#aaff00'; }
+            else if (t === 9) { cell.style.backgroundImage = `url("${SVGS.D}")`; cell.style.backgroundColor = '#330000'; cell.style.borderColor = '#ff0000'; }
+            else if (t === 10) { cell.style.backgroundImage = `url("${SVGS.W}")`; cell.style.backgroundColor = '#222222'; cell.style.borderColor = '#888888'; }
+            else if (t === 11) { cell.style.backgroundImage = `url("${SVGS.T}")`; cell.style.backgroundColor = '#332200'; cell.style.borderColor = '#ffaa00'; }
+            else if (t === 12) { cell.style.backgroundImage = `url("${SVGS.C}")`; cell.style.backgroundColor = '#444444'; cell.style.borderColor = '#cccccc'; }
+            else { cell.style.backgroundColor = '#0a111a'; cell.style.borderColor = '#003333'; }
         }
 
         function renderAll() {
@@ -370,9 +390,7 @@
             for(let a of aliens) {
                 const cell = document.getElementById(`cell-${a.x}-${a.y}`);
                 if (cell) {
-                    cell.innerHTML = 'A';
-                    cell.style.color = '#ff00ff';
-                    cell.style.textShadow = '0 0 10px #ff00ff';
+                    cell.style.backgroundImage = `url("${SVGS.A}")`;
                 }
             }
         }
