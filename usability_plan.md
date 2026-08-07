@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KPaint
 - KFarm
 - KSnake
 - KTetris
@@ -83,6 +82,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMedia
 - KNet
 - KZip
+- KPaint
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -200,3 +200,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMedia: Usability and UI issues fixed (Adjusted window size, enabled SetProcessDPIAware and CLEARTYPE_QUALITY for crisp text, added explicit Help button and F1 hotkey support).
 - KNet: Usability and UI issues fixed (increased auto-opening size to 960x720, adjusted WM_SIZE bounds, enabled CLEARTYPE_QUALITY, added min-width to web, configured flex-wrap tabs, and added explicit 'h' help instructions).
 - KZip: Usability and UI issues fixed (increased auto-opening size to 900x650, added z-index/background to sticky header, optimized text rendering, used negative font size for crisp native typography, and appended 'Press H for Help' instruction to loaded status).
+- KPaint: Usability and UI issues fixed (synchronized web auto-opening size to 1024x768, fixed native sidebar flicker via WS_CLIPCHILDREN, enabled SetProcessDPIAware, disabled pixelated canvas rendering in web for crisp fonts, and fixed flexbox clipping and export dropdown positioning).
