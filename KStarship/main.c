@@ -30,6 +30,10 @@ int res_crew = 10;
 int res_credits = 1000;
 int cargo_minerals = 0;
 int cargo_tech = 0;
+int upg_weapons = 1;
+int upg_shields = 1;
+int upg_engines = 1;
+int upg_cargo = 1;
 
 int modal_open = 0;
 int modal_enc_type = 0;
@@ -38,7 +42,9 @@ void TriggerEncounter(int type) {
     modal_open = 1;
     modal_enc_type = type;
     if (type == 1) {
-        res_hull -= 10;
+        int dmg = 15 - upg_shields * 2;
+        if (dmg < 0) dmg = 0;
+        res_hull -= dmg;
         if (res_hull < 0) res_hull = 0;
     } else if (type == 2) {
         res_fuel += 500.0f;
@@ -86,7 +92,7 @@ void Update() {
     if (modal_open) return;
 
     is_moving = 0;
-    int speed = 5;
+    int speed = 5 + (upg_engines - 1) * 2;
     int dx = 0, dy = 0;
     if (GetAsyncKeyState('W') & 0x8000) { dy -= speed; }
     if (GetAsyncKeyState('S') & 0x8000) { dy += speed; }
@@ -273,12 +279,26 @@ void Draw(HDC hdc, RECT* rect) {
     wsprintfA(buf, "Tech: %d", cargo_tech);
     TextOutA(memDC, mapWidth + 15, 230, buf, lstrlenA(buf));
 
-    wsprintfA(buf, "SCANNER");
+    wsprintfA(buf, "UPGRADES");
     SetTextColor(memDC, RGB(0, 255, 255));
     TextOutA(memDC, mapWidth + 15, 260, buf, lstrlenA(buf));
-    
+
     MoveToEx(memDC, mapWidth + 15, 278, NULL);
     LineTo(memDC, width - 15, 278);
+
+    wsprintfA(buf, "Wpn: L%d  Shd: L%d", upg_weapons, upg_shields);
+    SetTextColor(memDC, RGB(255, 255, 255));
+    TextOutA(memDC, mapWidth + 15, 285, buf, lstrlenA(buf));
+
+    wsprintfA(buf, "Eng: L%d  Car: L%d", upg_engines, upg_cargo);
+    TextOutA(memDC, mapWidth + 15, 305, buf, lstrlenA(buf));
+
+    wsprintfA(buf, "SCANNER");
+    SetTextColor(memDC, RGB(0, 255, 255));
+    TextOutA(memDC, mapWidth + 15, 335, buf, lstrlenA(buf));
+    
+    MoveToEx(memDC, mapWidth + 15, 353, NULL);
+    LineTo(memDC, width - 15, 353);
     DeleteObject(linePen);
 
     int found_sys_idx = -1;
@@ -295,7 +315,7 @@ void Draw(HDC hdc, RECT* rect) {
         StarSystem* sys = &systems[found_sys_idx];
         wsprintfA(buf, "Star: %s\nPlanets: %d", star_names[sys->type_idx], sys->num_planets);
         SetTextColor(memDC, RGB(0, 255, 255));
-        RECT textRect = {mapWidth + 15, 285, width - 10, 325};
+        RECT textRect = {mapWidth + 15, 360, width - 10, 400};
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
         
         char pbuf[256] = "";
@@ -305,12 +325,12 @@ void Draw(HDC hdc, RECT* rect) {
         }
         if (sys->num_planets == 0) lstrcatA(pbuf, "None");
         SetTextColor(memDC, RGB(136, 204, 204));
-        RECT pRect = {mapWidth + 15, 325, width - 10, 400};
+        RECT pRect = {mapWidth + 15, 400, width - 10, 475};
         DrawTextA(memDC, pbuf, -1, &pRect, DT_WORDBREAK);
     } else {
         wsprintfA(buf, "Deep space. Nothing nearby.");
         SetTextColor(memDC, RGB(136, 136, 136));
-        RECT textRect = {mapWidth + 15, 285, width - 10, 385};
+        RECT textRect = {mapWidth + 15, 360, width - 10, 460};
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
     }
 
@@ -326,10 +346,11 @@ void Draw(HDC hdc, RECT* rect) {
         
         char* title = "";
         char* desc = "";
-        if (modal_enc_type == 1) { title = "PIRATES ENCOUNTER"; desc = "Space pirates ambush you!\r\nHull takes 10% damage,\r\nbut you escape."; }
+        if (modal_enc_type == 1) { title = "PIRATES ENCOUNTER"; desc = "Space pirates ambush you!\r\nHull takes damage, but you escape."; }
         if (modal_enc_type == 2) { title = "ANOMALY ENCOUNTER"; desc = "You investigate a spatial anomaly.\r\nYour fuel tanks are\r\nreplenished by 500."; }
         if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
-        if (modal_enc_type == 4) { title = "STATION ENCOUNTER"; desc = "1: Buy Fuel (50C)\r\n2: Repair Hull (100C)\r\n3: Buy Min (100C)  4: Sell Min (80C)\r\n5: Buy Tech (300C) 6: Sell Tech (250C)\r\nSPACE: Leave"; }
+        if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard (Upgrades)\r\nSPACE: Leave"; }
+        if (modal_enc_type == 5) { title = "SHIPYARD"; desc = "1: Upg Wpn 2: Upg Shd (500C/Lvl)\r\n3: Upg Eng 4: Upg Cargo (500C/Lvl)\r\nSPACE: Back to Station"; }
         
         SetTextColor(memDC, RGB(255, 136, 0));
         RECT tRect = { modalRect.left + 10, modalRect.top + 10, modalRect.right - 10, modalRect.top + 30 };
@@ -342,7 +363,9 @@ void Draw(HDC hdc, RECT* rect) {
         SetTextColor(memDC, RGB(0, 255, 255));
         RECT bRect = { modalRect.left + 10, modalRect.bottom - 30, modalRect.right - 10, modalRect.bottom - 10 };
         if (modal_enc_type == 4) {
-            DrawTextA(memDC, "[ 1-6 TO TRADE, SPACE TO LEAVE ]", -1, &bRect, DT_CENTER);
+            DrawTextA(memDC, "[ 1-7 OR SPACE ]", -1, &bRect, DT_CENTER);
+        } else if (modal_enc_type == 5) {
+            DrawTextA(memDC, "[ 1-4 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else {
             DrawTextA(memDC, "[ PRESS SPACE TO CONTINUE ]", -1, &bRect, DT_CENTER);
         }
@@ -363,11 +386,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (modal_enc_type == 4) {
                     if (wParam == '1' && res_credits >= 50) { res_credits -= 50; res_fuel += 500.0f; }
                     if (wParam == '2' && res_credits >= 100 && res_hull < 100) { res_credits -= 100; res_hull += 20; if (res_hull > 100) res_hull = 100; }
-                    if (wParam == '3' && res_credits >= 100) { res_credits -= 100; cargo_minerals += 1; }
+                    int max_cargo = upg_cargo * 10;
+                    if (wParam == '3' && res_credits >= 100 && (cargo_minerals + cargo_tech) < max_cargo) { res_credits -= 100; cargo_minerals += 1; }
                     if (wParam == '4' && cargo_minerals > 0) { res_credits += 80; cargo_minerals -= 1; }
-                    if (wParam == '5' && res_credits >= 300) { res_credits -= 300; cargo_tech += 1; }
+                    if (wParam == '5' && res_credits >= 300 && (cargo_minerals + cargo_tech) < max_cargo) { res_credits -= 300; cargo_tech += 1; }
                     if (wParam == '6' && cargo_tech > 0) { res_credits += 250; cargo_tech -= 1; }
+                    if (wParam == '7') { modal_enc_type = 5; }
                     if (wParam == VK_SPACE) { modal_open = 0; }
+                } else if (modal_enc_type == 5) {
+                    if (wParam == '1' && res_credits >= upg_weapons*500 && upg_weapons < 5) { res_credits -= upg_weapons*500; upg_weapons++; }
+                    if (wParam == '2' && res_credits >= upg_shields*500 && upg_shields < 5) { res_credits -= upg_shields*500; upg_shields++; }
+                    if (wParam == '3' && res_credits >= upg_engines*500 && upg_engines < 5) { res_credits -= upg_engines*500; upg_engines++; }
+                    if (wParam == '4' && res_credits >= upg_cargo*500 && upg_cargo < 5) { res_credits -= upg_cargo*500; upg_cargo++; }
+                    if (wParam == VK_SPACE) { modal_enc_type = 4; }
                 } else {
                     if (wParam == VK_SPACE) {
                         modal_open = 0;

@@ -136,6 +136,11 @@
         <div>Tech: <span id="cargo-tech" class="value">0</span></div>
       </div>
       <div class="info-box">
+        <div class="label">UPGRADES</div>
+        <div style="display:flex; justify-content:space-between;"><span>Wpn: <span id="upg-wpn" class="value">1</span></span> <span>Shd: <span id="upg-shd" class="value">1</span></span></div>
+        <div style="display:flex; justify-content:space-between;"><span>Eng: <span id="upg-eng" class="value">1</span></span> <span>Cargo: <span id="upg-car" class="value">1</span></span></div>
+      </div>
+      <div class="info-box">
         <div class="label">SCANNER</div>
         <div id="scanner-info">No objects nearby.</div>
       </div>
@@ -165,6 +170,10 @@
     const resCredits = document.getElementById('res-credits');
     const cargoMinerals = document.getElementById('cargo-minerals');
     const cargoTech = document.getElementById('cargo-tech');
+    const upgWpn = document.getElementById('upg-wpn');
+    const upgShd = document.getElementById('upg-shd');
+    const upgEng = document.getElementById('upg-eng');
+    const upgCar = document.getElementById('upg-car');
     const scannerInfo = document.getElementById('scanner-info');
 
     // Game state
@@ -172,6 +181,7 @@
       ship: { x: 0, y: 0, targetX: 0, targetY: 0, moving: false },
       resources: { fuel: 10000, hull: 100, crew: 10, credits: 1000 },
       cargo: { minerals: 0, tech: 0 },
+      upgrades: { weapons: 1, shields: 1, engines: 1, cargo: 1 },
       stars: [],
       mapSize: 2000,
       modalOpen: false
@@ -278,6 +288,10 @@
       resCredits.innerText = state.resources.credits;
       cargoMinerals.innerText = state.cargo.minerals;
       cargoTech.innerText = state.cargo.tech;
+      upgWpn.innerText = state.upgrades.weapons;
+      upgShd.innerText = state.upgrades.shields;
+      upgEng.innerText = state.upgrades.engines;
+      upgCar.innerText = state.upgrades.cargo;
 
       // Check nearby stars
       const nearby = state.stars.filter(s => 
@@ -327,8 +341,9 @@
       };
 
       if (type === 'Pirates') {
-        desc.innerText = "Space pirates ambush you! Hull takes 10% damage, but you escape.";
-        state.resources.hull -= 10;
+        const dmg = Math.max(0, 15 - state.upgrades.shields * 2);
+        desc.innerText = `Space pirates ambush you! Hull takes ${dmg}% damage, but you escape.`;
+        state.resources.hull -= dmg;
         if (state.resources.hull < 0) state.resources.hull = 0;
         closeBtn();
       } else if (type === 'Anomaly') {
@@ -342,62 +357,109 @@
       } else if (type === 'Station') {
         desc.innerText = "You dock at a trading station. What would you like to do?";
         
-        const updateStationBtns = () => {
+        const updateStationBtns = (mode = 'main') => {
             actions.innerHTML = '';
-            addBtn(`Buy 500 Fuel (50C)`, () => {
-                if (state.resources.credits >= 50) {
-                    state.resources.credits -= 50;
-                    state.resources.fuel += 500;
-                    updateUI();
-                    updateStationBtns();
-                }
-            });
-            addBtn(`Repair 20% Hull (100C)`, () => {
-                if (state.resources.credits >= 100 && state.resources.hull < 100) {
-                    state.resources.credits -= 100;
-                    state.resources.hull = Math.min(100, state.resources.hull + 20);
-                    updateUI();
-                    updateStationBtns();
-                }
-            });
-            addBtn(`Buy Minerals (100C)`, () => {
-                if (state.resources.credits >= 100) {
-                    state.resources.credits -= 100;
-                    state.cargo.minerals += 1;
-                    updateUI();
-                    updateStationBtns();
-                }
-            });
-            addBtn(`Sell Minerals (80C)`, () => {
-                if (state.cargo.minerals > 0) {
-                    state.resources.credits += 80;
-                    state.cargo.minerals -= 1;
-                    updateUI();
-                    updateStationBtns();
-                }
-            });
-            addBtn(`Buy Tech (300C)`, () => {
-                if (state.resources.credits >= 300) {
-                    state.resources.credits -= 300;
-                    state.cargo.tech += 1;
-                    updateUI();
-                    updateStationBtns();
-                }
-            });
-            addBtn(`Sell Tech (250C)`, () => {
-                if (state.cargo.tech > 0) {
-                    state.resources.credits += 250;
-                    state.cargo.tech -= 1;
-                    updateUI();
-                    updateStationBtns();
-                }
-            });
-            addBtn('Leave Station', () => {
-                modal.style.display = 'none';
-                state.modalOpen = false;
-            });
+            if (mode === 'main') {
+                addBtn(`Buy 500 Fuel (50C)`, () => {
+                    if (state.resources.credits >= 50) {
+                        state.resources.credits -= 50;
+                        state.resources.fuel += 500;
+                        updateUI();
+                        updateStationBtns('main');
+                    }
+                });
+                addBtn(`Repair 20% Hull (100C)`, () => {
+                    if (state.resources.credits >= 100 && state.resources.hull < 100) {
+                        state.resources.credits -= 100;
+                        state.resources.hull = Math.min(100, state.resources.hull + 20);
+                        updateUI();
+                        updateStationBtns('main');
+                    }
+                });
+                addBtn(`Buy Minerals (100C)`, () => {
+                    const maxCargo = state.upgrades.cargo * 10;
+                    if (state.resources.credits >= 100 && (state.cargo.minerals + state.cargo.tech) < maxCargo) {
+                        state.resources.credits -= 100;
+                        state.cargo.minerals += 1;
+                        updateUI();
+                        updateStationBtns('main');
+                    }
+                });
+                addBtn(`Sell Minerals (80C)`, () => {
+                    if (state.cargo.minerals > 0) {
+                        state.resources.credits += 80;
+                        state.cargo.minerals -= 1;
+                        updateUI();
+                        updateStationBtns('main');
+                    }
+                });
+                addBtn(`Buy Tech (300C)`, () => {
+                    const maxCargo = state.upgrades.cargo * 10;
+                    if (state.resources.credits >= 300 && (state.cargo.minerals + state.cargo.tech) < maxCargo) {
+                        state.resources.credits -= 300;
+                        state.cargo.tech += 1;
+                        updateUI();
+                        updateStationBtns('main');
+                    }
+                });
+                addBtn(`Sell Tech (250C)`, () => {
+                    if (state.cargo.tech > 0) {
+                        state.resources.credits += 250;
+                        state.cargo.tech -= 1;
+                        updateUI();
+                        updateStationBtns('main');
+                    }
+                });
+                addBtn(`Shipyard (Upgrades)`, () => {
+                    updateStationBtns('shipyard');
+                });
+                addBtn('Leave Station', () => {
+                    modal.style.display = 'none';
+                    state.modalOpen = false;
+                });
+            } else if (mode === 'shipyard') {
+                const wpnCost = state.upgrades.weapons * 500;
+                addBtn(`Upgrade Weapons L${state.upgrades.weapons+1} (${wpnCost}C)`, () => {
+                    if (state.resources.credits >= wpnCost && state.upgrades.weapons < 5) {
+                        state.resources.credits -= wpnCost;
+                        state.upgrades.weapons++;
+                        updateUI();
+                        updateStationBtns('shipyard');
+                    }
+                });
+                const shdCost = state.upgrades.shields * 500;
+                addBtn(`Upgrade Shields L${state.upgrades.shields+1} (${shdCost}C)`, () => {
+                    if (state.resources.credits >= shdCost && state.upgrades.shields < 5) {
+                        state.resources.credits -= shdCost;
+                        state.upgrades.shields++;
+                        updateUI();
+                        updateStationBtns('shipyard');
+                    }
+                });
+                const engCost = state.upgrades.engines * 500;
+                addBtn(`Upgrade Engines L${state.upgrades.engines+1} (${engCost}C)`, () => {
+                    if (state.resources.credits >= engCost && state.upgrades.engines < 5) {
+                        state.resources.credits -= engCost;
+                        state.upgrades.engines++;
+                        updateUI();
+                        updateStationBtns('shipyard');
+                    }
+                });
+                const carCost = state.upgrades.cargo * 500;
+                addBtn(`Upgrade Cargo L${state.upgrades.cargo+1} (${carCost}C)`, () => {
+                    if (state.resources.credits >= carCost && state.upgrades.cargo < 5) {
+                        state.resources.credits -= carCost;
+                        state.upgrades.cargo++;
+                        updateUI();
+                        updateStationBtns('shipyard');
+                    }
+                });
+                addBtn('Back to Station', () => {
+                    updateStationBtns('main');
+                });
+            }
         };
-        updateStationBtns();
+        updateStationBtns('main');
       }
       modal.style.display = 'block';
       keys.w = keys.a = keys.s = keys.d = false;
@@ -414,12 +476,13 @@
         return;
       }
 
+      const currentMoveSpeed = 5 + (state.upgrades.engines - 1) * 2;
       state.ship.moving = false;
       let dx = 0, dy = 0;
-      if (keys.w) dy -= moveSpeed;
-      if (keys.s) dy += moveSpeed;
-      if (keys.a) dx -= moveSpeed;
-      if (keys.d) dx += moveSpeed;
+      if (keys.w) dy -= currentMoveSpeed;
+      if (keys.s) dy += currentMoveSpeed;
+      if (keys.a) dx -= currentMoveSpeed;
+      if (keys.d) dx += currentMoveSpeed;
 
       if ((dx !== 0 || dy !== 0) && state.resources.fuel > 0) {
         state.ship.x += dx;
