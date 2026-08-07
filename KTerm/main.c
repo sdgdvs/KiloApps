@@ -924,6 +924,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASSA wc;
     ZeroMemory(&wc, sizeof(wc));
@@ -934,8 +935,10 @@ void MainEntry() {
     wc.hIcon = LoadIconA(hInstance, MAKEINTRESOURCE(1));
     RegisterClassA(&wc);
 
+    RECT rect = {0, 0, 960, 600};
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
     HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 960, 600, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
