@@ -1540,6 +1540,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 SetBkMode(memDC, TRANSPARENT);
+                HFONT hFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                HFONT oldFont = (HFONT)SelectObject(memDC, hFont);
 
                 if (gameState == STATE_MENU) {
                     SetTextColor(memDC, RGB(0, 229, 255));
@@ -1780,6 +1782,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            if (oldFont) {
+                SelectObject(memDC, oldFont);
+                DeleteObject(hFont);
+            }
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, oldBm);
             DeleteObject(hbm);
