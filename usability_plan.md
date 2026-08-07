@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KNote
 - KPass
 - KMedia
 - KNet
@@ -83,6 +82,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMine
 - KPac
 - KQuest
+- KNote
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -195,3 +195,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMine: Usability and UI issues fixed (replaced fixed height and hidden overflow with min-height and auto overflow in web to fix layout clipping on small viewports, updated web and native opening instructions to 'Press H for Help', adjusted web controls max-width and padding, added SetProcessDPIAware and DPI scaling logic to native C to dynamically scale cells and fonts).
 - KPac: Usability and UI issues fixed (Appropriate auto-opening size validated, SetProcessDPIAware applied for crisp native text, verified 'Press H for Help' overlay).
 - KQuest: Usability and UI issues fixed (fixed clipped help text in native by adjusting height, adjusted control padding/margins, fixed web canvas max-width CSS to prevent stretching on devicePixelRatio, added explicit 'Press H for Help' notifications).
+- KNote: Usability and UI issues fixed (added SetProcessDPIAware, AdjustWindowRect, text-rendering optimization, and F1/H hotkeys).
