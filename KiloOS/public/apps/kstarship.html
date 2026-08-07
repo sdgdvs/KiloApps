@@ -109,8 +109,9 @@
   }
   #modal h2 { margin-top: 0; color: #ff8800; font-size: 20px; }
   #modal p { font-size: 14px; margin-bottom: 20px; line-height: 1.4; }
-  #modal-btn { background: #00ffff; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; width: 100%; }
-  #modal-btn:hover { background: #ffffff; }
+  #modal-actions { display: flex; flex-direction: column; gap: 10px; }
+  .action-btn { background: #00ffff; color: #000; border: none; padding: 10px; cursor: pointer; font-weight: bold; width: 100%; font-family: 'Courier New', Courier, monospace; }
+  .action-btn:hover { background: #ffffff; }
 </style>
 </head>
 <body>
@@ -127,6 +128,12 @@
         <div>Fuel: <span id="res-fuel" class="value">10000</span></div>
         <div>Hull: <span id="res-hull" class="value">100%</span></div>
         <div>Crew: <span id="res-crew" class="value">10</span></div>
+        <div>Credits: <span id="res-credits" class="value">1000</span></div>
+      </div>
+      <div class="info-box">
+        <div class="label">CARGO</div>
+        <div>Minerals: <span id="cargo-minerals" class="value">0</span></div>
+        <div>Tech: <span id="cargo-tech" class="value">0</span></div>
       </div>
       <div class="info-box">
         <div class="label">SCANNER</div>
@@ -144,7 +151,7 @@
   <div id="modal">
     <h2 id="modal-title">Encounter</h2>
     <p id="modal-desc">Description</p>
-    <button id="modal-btn">Continue</button>
+    <div id="modal-actions"></div>
   </div>
 
   <script>
@@ -155,12 +162,16 @@
     const resFuel = document.getElementById('res-fuel');
     const resHull = document.getElementById('res-hull');
     const resCrew = document.getElementById('res-crew');
+    const resCredits = document.getElementById('res-credits');
+    const cargoMinerals = document.getElementById('cargo-minerals');
+    const cargoTech = document.getElementById('cargo-tech');
     const scannerInfo = document.getElementById('scanner-info');
 
     // Game state
     const state = {
       ship: { x: 0, y: 0, targetX: 0, targetY: 0, moving: false },
-      resources: { fuel: 10000, hull: 100, crew: 10 },
+      resources: { fuel: 10000, hull: 100, crew: 10, credits: 1000 },
+      cargo: { minerals: 0, tech: 0 },
       stars: [],
       mapSize: 2000,
       modalOpen: false
@@ -191,7 +202,7 @@
           color: sType.color,
           name: sType.type,
           planets: planets,
-          encounter: ['Pirates', 'Anomaly', 'Trader', 'None', 'None', 'None'][Math.floor(Math.random() * 6)],
+          encounter: ['Pirates', 'Anomaly', 'Trader', 'Station', 'None', 'None'][Math.floor(Math.random() * 6)],
           visited: false
         });
       }
@@ -264,6 +275,9 @@
       resFuel.innerText = Math.floor(state.resources.fuel);
       resHull.innerText = state.resources.hull + "%";
       resCrew.innerText = state.resources.crew;
+      resCredits.innerText = state.resources.credits;
+      cargoMinerals.innerText = state.cargo.minerals;
+      cargoTech.innerText = state.cargo.tech;
 
       // Check nearby stars
       const nearby = state.stars.filter(s => 
@@ -292,28 +306,103 @@
       const modal = document.getElementById('modal');
       const title = document.getElementById('modal-title');
       const desc = document.getElementById('modal-desc');
+      const actions = document.getElementById('modal-actions');
       
       title.innerText = type.toUpperCase() + " ENCOUNTER";
+      actions.innerHTML = '';
+
+      const addBtn = (text, onClick) => {
+        const btn = document.createElement('button');
+        btn.className = 'action-btn';
+        btn.innerText = text;
+        btn.onclick = onClick;
+        actions.appendChild(btn);
+      };
+
+      const closeBtn = () => {
+        addBtn('Continue', () => {
+          modal.style.display = 'none';
+          state.modalOpen = false;
+        });
+      };
+
       if (type === 'Pirates') {
         desc.innerText = "Space pirates ambush you! Hull takes 10% damage, but you escape.";
         state.resources.hull -= 10;
         if (state.resources.hull < 0) state.resources.hull = 0;
+        closeBtn();
       } else if (type === 'Anomaly') {
         desc.innerText = "You investigate a spatial anomaly. Your fuel tanks are replenished by 500.";
         state.resources.fuel += 500;
+        closeBtn();
       } else if (type === 'Trader') {
         desc.innerText = "A wandering trader offers help. 1 crew member joins your ship.";
         state.resources.crew += 1;
+        closeBtn();
+      } else if (type === 'Station') {
+        desc.innerText = "You dock at a trading station. What would you like to do?";
+        
+        const updateStationBtns = () => {
+            actions.innerHTML = '';
+            addBtn(`Buy 500 Fuel (50C)`, () => {
+                if (state.resources.credits >= 50) {
+                    state.resources.credits -= 50;
+                    state.resources.fuel += 500;
+                    updateUI();
+                    updateStationBtns();
+                }
+            });
+            addBtn(`Repair 20% Hull (100C)`, () => {
+                if (state.resources.credits >= 100 && state.resources.hull < 100) {
+                    state.resources.credits -= 100;
+                    state.resources.hull = Math.min(100, state.resources.hull + 20);
+                    updateUI();
+                    updateStationBtns();
+                }
+            });
+            addBtn(`Buy Minerals (100C)`, () => {
+                if (state.resources.credits >= 100) {
+                    state.resources.credits -= 100;
+                    state.cargo.minerals += 1;
+                    updateUI();
+                    updateStationBtns();
+                }
+            });
+            addBtn(`Sell Minerals (80C)`, () => {
+                if (state.cargo.minerals > 0) {
+                    state.resources.credits += 80;
+                    state.cargo.minerals -= 1;
+                    updateUI();
+                    updateStationBtns();
+                }
+            });
+            addBtn(`Buy Tech (300C)`, () => {
+                if (state.resources.credits >= 300) {
+                    state.resources.credits -= 300;
+                    state.cargo.tech += 1;
+                    updateUI();
+                    updateStationBtns();
+                }
+            });
+            addBtn(`Sell Tech (250C)`, () => {
+                if (state.cargo.tech > 0) {
+                    state.resources.credits += 250;
+                    state.cargo.tech -= 1;
+                    updateUI();
+                    updateStationBtns();
+                }
+            });
+            addBtn('Leave Station', () => {
+                modal.style.display = 'none';
+                state.modalOpen = false;
+            });
+        };
+        updateStationBtns();
       }
       modal.style.display = 'block';
       keys.w = keys.a = keys.s = keys.d = false;
       updateUI(); // refresh resources instantly
     }
-    
-    document.getElementById('modal-btn').addEventListener('click', () => {
-      document.getElementById('modal').style.display = 'none';
-      state.modalOpen = false;
-    });
 
     // Navigation logic
     const moveSpeed = 5;

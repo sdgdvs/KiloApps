@@ -27,6 +27,9 @@ int is_moving = 0;
 float res_fuel = 10000.0f;
 int res_hull = 100;
 int res_crew = 10;
+int res_credits = 1000;
+int cargo_minerals = 0;
+int cargo_tech = 0;
 
 int modal_open = 0;
 int modal_enc_type = 0;
@@ -72,6 +75,7 @@ void InitStars() {
         if (enc == 0) systems[i].encounter_type = 1;
         else if (enc == 1) systems[i].encounter_type = 2;
         else if (enc == 2) systems[i].encounter_type = 3;
+        else if (enc == 3) systems[i].encounter_type = 4;
         else systems[i].encounter_type = 0;
         
         systems[i].visited = 0;
@@ -252,12 +256,29 @@ void Draw(HDC hdc, RECT* rect) {
     wsprintfA(buf, "Crew: %d", res_crew);
     TextOutA(memDC, mapWidth + 15, 140, buf, lstrlenA(buf));
 
+    wsprintfA(buf, "Credits: %d", res_credits);
+    TextOutA(memDC, mapWidth + 15, 160, buf, lstrlenA(buf));
+
+    wsprintfA(buf, "CARGO");
+    SetTextColor(memDC, RGB(0, 255, 255));
+    TextOutA(memDC, mapWidth + 15, 185, buf, lstrlenA(buf));
+
+    MoveToEx(memDC, mapWidth + 15, 203, NULL);
+    LineTo(memDC, width - 15, 203);
+
+    wsprintfA(buf, "Minerals: %d", cargo_minerals);
+    SetTextColor(memDC, RGB(255, 255, 255));
+    TextOutA(memDC, mapWidth + 15, 210, buf, lstrlenA(buf));
+
+    wsprintfA(buf, "Tech: %d", cargo_tech);
+    TextOutA(memDC, mapWidth + 15, 230, buf, lstrlenA(buf));
+
     wsprintfA(buf, "SCANNER");
     SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 175, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 260, buf, lstrlenA(buf));
     
-    MoveToEx(memDC, mapWidth + 15, 193, NULL);
-    LineTo(memDC, width - 15, 193);
+    MoveToEx(memDC, mapWidth + 15, 278, NULL);
+    LineTo(memDC, width - 15, 278);
     DeleteObject(linePen);
 
     int found_sys_idx = -1;
@@ -274,7 +295,7 @@ void Draw(HDC hdc, RECT* rect) {
         StarSystem* sys = &systems[found_sys_idx];
         wsprintfA(buf, "Star: %s\nPlanets: %d", star_names[sys->type_idx], sys->num_planets);
         SetTextColor(memDC, RGB(0, 255, 255));
-        RECT textRect = {mapWidth + 15, 200, width - 10, 240};
+        RECT textRect = {mapWidth + 15, 285, width - 10, 325};
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
         
         char pbuf[256] = "";
@@ -284,17 +305,17 @@ void Draw(HDC hdc, RECT* rect) {
         }
         if (sys->num_planets == 0) lstrcatA(pbuf, "None");
         SetTextColor(memDC, RGB(136, 204, 204));
-        RECT pRect = {mapWidth + 15, 240, width - 10, 300};
+        RECT pRect = {mapWidth + 15, 325, width - 10, 400};
         DrawTextA(memDC, pbuf, -1, &pRect, DT_WORDBREAK);
     } else {
         wsprintfA(buf, "Deep space. Nothing nearby.");
         SetTextColor(memDC, RGB(136, 136, 136));
-        RECT textRect = {mapWidth + 15, 200, width - 10, 300};
+        RECT textRect = {mapWidth + 15, 285, width - 10, 385};
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
     }
 
     if (modal_open) {
-        RECT modalRect = { mapWidth/2 - 150, height/2 - 75, mapWidth/2 + 150, height/2 + 75 };
+        RECT modalRect = { mapWidth/2 - 170, height/2 - 100, mapWidth/2 + 170, height/2 + 100 };
         HBRUSH mBrush = CreateSolidBrush(RGB(5, 5, 20));
         HPEN mPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
         SelectObject(memDC, mBrush);
@@ -308,6 +329,7 @@ void Draw(HDC hdc, RECT* rect) {
         if (modal_enc_type == 1) { title = "PIRATES ENCOUNTER"; desc = "Space pirates ambush you!\r\nHull takes 10% damage,\r\nbut you escape."; }
         if (modal_enc_type == 2) { title = "ANOMALY ENCOUNTER"; desc = "You investigate a spatial anomaly.\r\nYour fuel tanks are\r\nreplenished by 500."; }
         if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
+        if (modal_enc_type == 4) { title = "STATION ENCOUNTER"; desc = "1: Buy Fuel (50C)\r\n2: Repair Hull (100C)\r\n3: Buy Min (100C)  4: Sell Min (80C)\r\n5: Buy Tech (300C) 6: Sell Tech (250C)\r\nSPACE: Leave"; }
         
         SetTextColor(memDC, RGB(255, 136, 0));
         RECT tRect = { modalRect.left + 10, modalRect.top + 10, modalRect.right - 10, modalRect.top + 30 };
@@ -319,7 +341,11 @@ void Draw(HDC hdc, RECT* rect) {
         
         SetTextColor(memDC, RGB(0, 255, 255));
         RECT bRect = { modalRect.left + 10, modalRect.bottom - 30, modalRect.right - 10, modalRect.bottom - 10 };
-        DrawTextA(memDC, "[ PRESS SPACE TO CONTINUE ]", -1, &bRect, DT_CENTER);
+        if (modal_enc_type == 4) {
+            DrawTextA(memDC, "[ 1-6 TO TRADE, SPACE TO LEAVE ]", -1, &bRect, DT_CENTER);
+        } else {
+            DrawTextA(memDC, "[ PRESS SPACE TO CONTINUE ]", -1, &bRect, DT_CENTER);
+        }
     }
 
     BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
@@ -333,8 +359,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, 1, 16, NULL);
             return 0;
         case WM_KEYDOWN:
-            if (modal_open && wParam == VK_SPACE) {
-                modal_open = 0;
+            if (modal_open) {
+                if (modal_enc_type == 4) {
+                    if (wParam == '1' && res_credits >= 50) { res_credits -= 50; res_fuel += 500.0f; }
+                    if (wParam == '2' && res_credits >= 100 && res_hull < 100) { res_credits -= 100; res_hull += 20; if (res_hull > 100) res_hull = 100; }
+                    if (wParam == '3' && res_credits >= 100) { res_credits -= 100; cargo_minerals += 1; }
+                    if (wParam == '4' && cargo_minerals > 0) { res_credits += 80; cargo_minerals -= 1; }
+                    if (wParam == '5' && res_credits >= 300) { res_credits -= 300; cargo_tech += 1; }
+                    if (wParam == '6' && cargo_tech > 0) { res_credits += 250; cargo_tech -= 1; }
+                    if (wParam == VK_SPACE) { modal_open = 0; }
+                } else {
+                    if (wParam == VK_SPACE) {
+                        modal_open = 0;
+                    }
+                }
             }
             return 0;
         case WM_TIMER:
