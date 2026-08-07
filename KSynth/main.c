@@ -314,7 +314,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     static HFONT hFont = NULL;
     switch (msg) {
         case WM_CREATE: {
-            int fontHeight = Scale(15);
+            int fontHeight = -Scale(14);
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             // Preset Selection
@@ -428,11 +428,18 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
+    RECT rect = { 0, 0, Scale(W), Scale(H) };
+    AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE, 0);
+    int windowWidth = rect.right - rect.left;
+    int windowHeight = rect.bottom - rect.top;
+
     HWND hwnd = CreateWindowEx(0, "KSynthApp", "KSynth Workstation Pro", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, Scale(W), Scale(H), NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+    
+    MessageBoxA(hwnd, "Welcome to KSynth Workstation Pro!\n\nKeyboard mapping:\n[A-K] : Play notes C4 to C5 in real-time.\n[?] or [H] : Toggle Help.", "KSynth Instructions", MB_OK | MB_ICONINFORMATION);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
