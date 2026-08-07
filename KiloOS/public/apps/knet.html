@@ -30,7 +30,9 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow: hidden;
+    min-width: 700px;
+    overflow-x: auto;
+    overflow-y: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -157,6 +159,7 @@
   /* Mode Tabs */
   .tab-bar {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding-bottom: 2px;
@@ -618,7 +621,7 @@ Ready. Select a target URL above and click Execute.
 <footer>
   <div>
     <span class="status-indicator"></span>
-    <span id="footerStatus">Network Engine Online</span>
+    <span id="footerStatus">Network Engine Online | Press 'h' for help</span>
   </div>
   <div>
     Logs Recorded: <strong id="lblLogCount">0</strong> | Total Data: <strong id="lblTotalBytes">0 B</strong>

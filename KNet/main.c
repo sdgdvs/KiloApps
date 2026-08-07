@@ -9,8 +9,8 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winmm.lib")
 
-#define W 840
-#define H 640
+#define W 960
+#define H 720
 
 // Control Handles
 HWND hBtnBack;
@@ -468,8 +468,8 @@ void DisplayLogSummary() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Segoe UI");
-            HFONT hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Consolas");
+            HFONT hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFontMono = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
             
             // Top Nav Row
             hBtnBack = CreateWindowEx(0, "BUTTON", "<", WS_CHILD | WS_VISIBLE | WS_DISABLED, 10, 10, 30, 24, hwnd, (HMENU)2, NULL, NULL);
@@ -578,9 +578,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nh = HIWORD(lParam);
             MoveWindow(hBtnBack, 10, 10, 30, 24, TRUE);
             MoveWindow(hBtnForward, 45, 10, 30, 24, TRUE);
-            MoveWindow(hUrlEdit, 85, 10, nw - 315, 24, TRUE);
-            MoveWindow(hBookmarks, nw - 220, 10, 135, 180, TRUE);
-            MoveWindow(hGoBtn, nw - 75, 10, 65, 24, TRUE);
+            
+            int urlWidth = (nw > 325) ? (nw - 315) : 10;
+            MoveWindow(hUrlEdit, 85, 10, urlWidth, 24, TRUE);
+            
+            int bkX = (nw > 220) ? (nw - 220) : 0;
+            MoveWindow(hBookmarks, bkX, 10, 135, 180, TRUE);
+            
+            int goX = (nw > 75) ? (nw - 75) : 0;
+            MoveWindow(hGoBtn, goX, 10, 65, 24, TRUE);
             
             MoveWindow(hPingBtn, 10, 42, 85, 24, TRUE);
             MoveWindow(hScanBtn, 100, 42, 85, 24, TRUE);
@@ -590,9 +596,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hLogSummaryBtn = GetDlgItem(hwnd, 9);
             MoveWindow(hLogSummaryBtn, 345, 42, 80, 24, TRUE);
             
-            if (hFilterEdit) MoveWindow(hFilterEdit, 430, 42, nw - 440, 24, TRUE);
+            int filterWidth = (nw > 450) ? (nw - 440) : 10;
+            if (hFilterEdit) MoveWindow(hFilterEdit, 430, 42, filterWidth, 24, TRUE);
 
-            MoveWindow(hContentEdit, 10, 74, nw - 20, nh - 84, TRUE);
+            int cw = (nw > 20) ? (nw - 20) : 10;
+            int ch = (nh > 84) ? (nh - 84) : 10;
+            MoveWindow(hContentEdit, 10, 74, cw, ch, TRUE);
             break;
         }
         case WM_DESTROY:
@@ -622,7 +631,7 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KNetApp", "KNet - Network Diagnostics Suite", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KNetApp", "KNet - Network Diagnostics Suite (Press 'h' for help)", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
