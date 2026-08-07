@@ -1441,10 +1441,58 @@
       return { whiteCaptured, blackCaptured, diff };
   }
 
+  let dustMotes = null;
+  function initDustMotes() {
+      if (dustMotes) return;
+      dustMotes = [];
+      for (let i = 0; i < 40; i++) {
+          dustMotes.push({
+              x: Math.random() * W, y: Math.random() * H,
+              speed: 0.2 + Math.random() * 0.5,
+              phase: Math.random() * Math.PI * 2,
+              size: 0.5 + Math.random() * 1.5
+          });
+      }
+  }
+
   function drawBoard() {
-      // Clear background
-      ctx.fillStyle = "#0a0a0f";
+      initDustMotes();
+      
+      // Environmental Art: 3D Ornate Table
+      const tableGrad = ctx.createRadialGradient(W/2, H/2, H*0.1, W/2, H/2, H*0.9);
+      tableGrad.addColorStop(0, '#2b1d14');
+      tableGrad.addColorStop(1, '#0c0704');
+      ctx.fillStyle = tableGrad;
       ctx.fillRect(0, 0, W, H);
+      
+      // Wood grain lines
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+      ctx.lineWidth = 3;
+      for (let i = -50; i < W + 50; i += 25) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.quadraticCurveTo(i + 25 * Math.sin(i), H/2, i - 15, H);
+          ctx.stroke();
+      }
+
+      // Atmospheric lighting: flickering candle glow top right
+      const flicker = Math.sin(performance.now() * 0.005) * 0.05 + 1.0;
+      const lightGrad = ctx.createRadialGradient(W - 80, 80, 10, W - 80, 80, 300);
+      lightGrad.addColorStop(0, `rgba(251, 146, 60, ${0.15 * flicker})`);
+      lightGrad.addColorStop(1, 'rgba(251, 146, 60, 0)');
+      ctx.fillStyle = lightGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Dust motes
+      ctx.fillStyle = 'rgba(253, 230, 138, 0.4)';
+      for (let mote of dustMotes) {
+          mote.y -= mote.speed;
+          mote.x += Math.sin(mote.phase + mote.y * 0.02) * 0.5;
+          if (mote.y < 0) { mote.y = H; mote.x = Math.random() * W; }
+          ctx.beginPath();
+          ctx.arc(mote.x, mote.y, mote.size, 0, Math.PI * 2);
+          ctx.fill();
+      }
 
       // Wood frame border
       const frameGrad = ctx.createLinearGradient(0, 0, W, H);

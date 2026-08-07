@@ -1272,10 +1272,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP memBM = CreateCompatibleBitmap(hdc, W, H);
             HGDIOBJ oldBM = SelectObject(memDC, memBM);
 
-            HBRUSH bgBrush = CreateSolidBrush(RGB(15, 15, 22));
-            RECT fullRc = {0, 0, W, H};
-            FillRect(memDC, &fullRc, bgBrush);
-            DeleteObject(bgBrush);
+            // Environmental Art: Table Surface with Wood Grain
+            for (int yy = 0; yy < H; yy += 4) {
+                int r = 35 - (yy * 25 / H);
+                int g = 20 - (yy * 15 / H);
+                int b = 15 - (yy * 10 / H);
+                if (r < 0) r = 0; if (g < 0) g = 0; if (b < 0) b = 0;
+                HBRUSH rowBrush = CreateSolidBrush(RGB(r, g, b));
+                RECT rowRc = {0, yy, W, yy + 4};
+                FillRect(memDC, &rowRc, rowBrush);
+                DeleteObject(rowBrush);
+            }
+            // Draw wood grain lines
+            HPEN grainPen = CreatePen(PS_SOLID, 1, RGB(20, 10, 5));
+            HGDIOBJ oldPenG = SelectObject(memDC, grainPen);
+            for (int i = 0; i < W; i += 30) {
+                MoveToEx(memDC, i, 0, NULL);
+                for (int y = 0; y <= H; y += 40) {
+                    int offset = ((i + y) % 40) - 20;
+                    LineTo(memDC, i + offset, y);
+                }
+            }
+            SelectObject(memDC, oldPenG);
+            DeleteObject(grainPen);
+
+            // Dust motes
+            for (int i = 0; i < 40; i++) {
+                int mx = (i * 73 + (GetTickCount()/40) * ((i%3)+1)) % W;
+                int my = (i * 89 - (GetTickCount()/25) * ((i%2)+1)) % H;
+                if (my < 0) my += H;
+                SetPixel(memDC, mx, my, RGB(180, 150, 100));
+                SetPixel(memDC, mx+1, my, RGB(120, 90, 60));
+            }
 
             HBRUSH frameBrush = CreateSolidBrush(RGB(45, 24, 16));
             RECT frameRc = {12, 12, W - 12, H - 12};

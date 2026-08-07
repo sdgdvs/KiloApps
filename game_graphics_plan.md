@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KChess
 - KPong
 - KMines
 - KAsteroids
@@ -115,7 +114,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 - KAlchemy
 - KRogue
+- KChess
 ## Completed Work Log
+
+- **KChess (Loop 3):** Implemented ornate 3D table surface with procedural wood grain lines, atmospheric candle lighting glow, and animated floating dust motes for environmental art in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
 - **KRogue (Loop 3):** Implemented fog of war, torch flicker atmospheric effects, and procedural texture variations (pebbles, cracks) for environmental art in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
