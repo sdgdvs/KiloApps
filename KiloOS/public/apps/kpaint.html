@@ -259,7 +259,6 @@
     border-radius: 4px;
     background: #ffffff;
     transition: transform 0.1s ease;
-    margin: auto;
   }
 
   canvas {
@@ -267,7 +266,6 @@
     top: 0;
     left: 0;
     border-radius: 4px;
-    image-rendering: pixelated;
   }
   #canvas { z-index: 1; background: #ffffff; cursor: crosshair; }
   #preview { z-index: 2; pointer-events: none; }
@@ -356,6 +354,7 @@
   .export-dropdown-content {
     display: none;
     position: absolute;
+    top: 100%;
     background-color: var(--panel-bg);
     min-width: 100px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
@@ -1371,6 +1370,7 @@
 
     // Hash VFS Load support
     window.onload = () => {
+      if (window.resizeTo) window.resizeTo(1024, 768);
       initCanvas();
       if (window.location.hash) {
         const path = window.location.hash.substring(1);

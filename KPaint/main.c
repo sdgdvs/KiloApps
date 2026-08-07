@@ -398,7 +398,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT r = {0, 0, 2000, 2000};
             FillRect(hdcMem, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
             
-            HFONT hWelcomeFont = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
+            HFONT hWelcomeFont = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 4, DEFAULT_PITCH, "Segoe UI");
             SetTextColor(hdcMem, RGB(150, 150, 150));
             SetBkMode(hdcMem, TRANSPARENT);
             HFONT hOldF = (HFONT)SelectObject(hdcMem, hWelcomeFont);
@@ -733,6 +733,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL (WINAPI *SetDPIFunc)(void);
+        SetDPIFunc setDpi = (SetDPIFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpi) setDpi();
+    }
+
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
@@ -741,7 +748,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = NULL;
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
