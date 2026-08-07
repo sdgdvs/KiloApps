@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KTimer
 - KContacts
 - KRead
 - KBase
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTodo
 - KConverter
 - KGraph
+- KTimer
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -214,3 +214,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTodo: Usability and UI issues fixed (enlarged auto-opening size to 800x600 in both platforms, updated status bar and bound 'H'/F1 for help, optimized web text-rendering and increased native font size, improved dark theme input contrast, and ensured dynamic layout scaling).
 - KConverter: Usability and UI issues fixed (auto-opening size adjusted to 900x650 in web and 620x460 in native, explicit 'Press H for Help' controls validated, CSS font smoothing applied, and crisp text rendered using appropriate pixel size metrics).
 - KGraph: Usability and UI issues fixed (applied text-rendering optimizeLegibility and font smoothing to web for crisp fonts, enabled CLEARTYPE_QUALITY for native fonts, improved custom dark-themed styling for select options in web, added visible Help button to main native layout, and widened native status bar layout).
+- KTimer: Usability and UI issues fixed (enabled dynamic DPI scaling and S(x) macro in native C, expanded native starting RECT to 440x430 for label visibility, added visible bottom-centered Help badge in web, and optimized web window.resizeTo/moveTo for centered 460x580 rendering).
