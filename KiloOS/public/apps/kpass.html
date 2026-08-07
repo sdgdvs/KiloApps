@@ -8,6 +8,9 @@
     background: #1e1e1e;
     color: #e0e0e0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     margin: 0;
     padding: 0;
     height: 100vh;
@@ -243,7 +246,7 @@
   </div>
   
   <div class="content" id="contentGen">
-    <div style="text-align: center; font-size: 13px; color: #888; margin-bottom: 10px;">Press 'H' for Help</div>
+    <div style="text-align: center; font-size: 13px; color: #aaa; margin-bottom: 10px;">Press 'H' for Help</div>
     <div class="display" id="pwdDisplay">...</div>
     
     <!-- Password Strength Meter -->
@@ -309,7 +312,7 @@
   </div>
 
   <script>
-    window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 500, height: 600 }, '*');
+    window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 500, height: 620 }, '*');
     // Crypto utilities
     async function deriveKey(password, salt) {
       const enc = new TextEncoder();
