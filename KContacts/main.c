@@ -86,6 +86,17 @@ int filtered_count = 0;
 HWND hList, hEdit, hBtnNew, hBtnDel, hBtnSave, hBtnMerge, hBtnExport, hBtnImport, hBtnCall, hBtnEmail, hSearch, hComboCat, hChkFav, hBtnHelp;
 HFONT hFont, hBoldFont;
 
+int g_dpi = 0;
+int S(int x) {
+    if (g_dpi == 0) {
+        HDC hdc = GetDC(NULL);
+        g_dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+        ReleaseDC(NULL, hdc);
+        if (g_dpi == 0) g_dpi = 96;
+    }
+    return MulDiv(x, g_dpi, 96);
+}
+
 void LoadDemoData() {
     contact_count = 4;
     
@@ -344,14 +355,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             LoadDemoData();
 
             // Fonts
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hBoldFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFont = CreateFontA(S(-13), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hBoldFont = CreateFontA(S(-13), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             // Search bar & Filter
-            hSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 10, 180, 24, hwnd, (HMENU)1011, NULL, NULL);
+            hSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(10), S(10), S(180), S(24), hwnd, (HMENU)1011, NULL, NULL);
             SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search...");
 
-            hComboCat = CreateWindowExA(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 200, 10, 140, 150, hwnd, (HMENU)1012, NULL, NULL);
+            hComboCat = CreateWindowExA(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, S(200), S(10), S(140), S(150), hwnd, (HMENU)1012, NULL, NULL);
             SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"All");
             SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Favorites");
             SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Work");
@@ -362,23 +373,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hComboCat, CB_SETCURSEL, 0, 0);
 
             // ListBox
-            hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 42, 330, 475, hwnd, (HMENU)1001, NULL, NULL);
+            hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, S(10), S(42), S(330), S(475), hwnd, (HMENU)1001, NULL, NULL);
 
             // Action Buttons Sidebar
-            hBtnNew = CreateWindowExA(0, "BUTTON", "+ New", WS_CHILD | WS_VISIBLE, 10, 525, 55, 28, hwnd, (HMENU)1002, NULL, NULL);
-            hBtnDel = CreateWindowExA(0, "BUTTON", "Del", WS_CHILD | WS_VISIBLE, 70, 525, 40, 28, hwnd, (HMENU)1003, NULL, NULL);
-            hBtnMerge = CreateWindowExA(0, "BUTTON", "Merge", WS_CHILD | WS_VISIBLE, 115, 525, 50, 28, hwnd, (HMENU)1005, NULL, NULL);
-            hBtnImport = CreateWindowExA(0, "BUTTON", "Imp", WS_CHILD | WS_VISIBLE, 170, 525, 45, 28, hwnd, (HMENU)1007, NULL, NULL);
-            hBtnExport = CreateWindowExA(0, "BUTTON", "Exp", WS_CHILD | WS_VISIBLE, 220, 525, 45, 28, hwnd, (HMENU)1006, NULL, NULL);
-            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help(H)", WS_CHILD | WS_VISIBLE, 270, 525, 70, 28, hwnd, (HMENU)1013, NULL, NULL);
+            hBtnNew = CreateWindowExA(0, "BUTTON", "+ New", WS_CHILD | WS_VISIBLE, S(10), S(525), S(55), S(28), hwnd, (HMENU)1002, NULL, NULL);
+            hBtnDel = CreateWindowExA(0, "BUTTON", "Del", WS_CHILD | WS_VISIBLE, S(70), S(525), S(40), S(28), hwnd, (HMENU)1003, NULL, NULL);
+            hBtnMerge = CreateWindowExA(0, "BUTTON", "Merge", WS_CHILD | WS_VISIBLE, S(115), S(525), S(50), S(28), hwnd, (HMENU)1005, NULL, NULL);
+            hBtnImport = CreateWindowExA(0, "BUTTON", "Imp", WS_CHILD | WS_VISIBLE, S(170), S(525), S(45), S(28), hwnd, (HMENU)1007, NULL, NULL);
+            hBtnExport = CreateWindowExA(0, "BUTTON", "Exp", WS_CHILD | WS_VISIBLE, S(220), S(525), S(45), S(28), hwnd, (HMENU)1006, NULL, NULL);
+            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help(H)", WS_CHILD | WS_VISIBLE, S(270), S(525), S(70), S(28), hwnd, (HMENU)1013, NULL, NULL);
 
             // Details / Form View
-            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL, 350, 10, 470, 507, hwnd, NULL, NULL, NULL);
+            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL, S(350), S(10), S(470), S(507), hwnd, NULL, NULL, NULL);
             
-            hChkFav = CreateWindowExA(0, "BUTTON", "Favorite *", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 350, 525, 90, 24, hwnd, (HMENU)1010, NULL, NULL);
-            hBtnCall = CreateWindowExA(0, "BUTTON", "Call", WS_CHILD | WS_VISIBLE, 450, 525, 50, 28, hwnd, (HMENU)1008, NULL, NULL);
-            hBtnEmail = CreateWindowExA(0, "BUTTON", "Email", WS_CHILD | WS_VISIBLE, 505, 525, 55, 28, hwnd, (HMENU)1009, NULL, NULL);
-            hBtnSave = CreateWindowExA(0, "BUTTON", "Save Details", WS_CHILD | WS_VISIBLE, 565, 525, 255, 28, hwnd, (HMENU)1004, NULL, NULL);
+            hChkFav = CreateWindowExA(0, "BUTTON", "Favorite *", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, S(350), S(525), S(90), S(24), hwnd, (HMENU)1010, NULL, NULL);
+            hBtnCall = CreateWindowExA(0, "BUTTON", "Call", WS_CHILD | WS_VISIBLE, S(450), S(525), S(50), S(28), hwnd, (HMENU)1008, NULL, NULL);
+            hBtnEmail = CreateWindowExA(0, "BUTTON", "Email", WS_CHILD | WS_VISIBLE, S(505), S(525), S(55), S(28), hwnd, (HMENU)1009, NULL, NULL);
+            hBtnSave = CreateWindowExA(0, "BUTTON", "Save Details", WS_CHILD | WS_VISIBLE, S(565), S(525), S(255), S(28), hwnd, (HMENU)1004, NULL, NULL);
 
             // Apply Fonts
             SendMessageA(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -527,7 +538,11 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KContactsClass", "KContacts - Contact Manager (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 850, 600, NULL, NULL, wc.hInstance, NULL);
+    
+    RECT rect = {0, 0, S(830), S(565)};
+    AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE, 0);
+
+    HWND hwnd = CreateWindowExA(0, "KContactsClass", "KContacts - Contact Manager (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

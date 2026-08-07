@@ -203,9 +203,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetMenu(hwnd, hMenu);
 
-            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KRead Native E-Reader.\r\nUse File -> Open to load a document.\r\nPress F1 or use View -> Help for instructions.", 
-                WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_WANTRETURN, 
+            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KRead Native E-Reader.\r\nUse File -> Open to load a document.\r\nPress F1 or 'H' for Help.", 
+                WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_WANTRETURN | ES_READONLY, 
                 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+
+            SendMessageA(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(16, 16));
 
             UpdateFont(hwnd);
             SetTheme(hwnd, RGB(250, 250, 250), RGB(30, 30, 30));
@@ -294,11 +296,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             break;
         }
-        case WM_CTLCOLOREDIT: {
-            HDC hdc = (HDC)wParam;
-            SetBkColor(hdc, g_bgColor);
-            SetTextColor(hdc, g_textColor);
-            return (LRESULT)hBrush;
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORSTATIC: {
+            if ((HWND)lParam == hEdit) {
+                HDC hdc = (HDC)wParam;
+                SetBkColor(hdc, g_bgColor);
+                SetTextColor(hdc, g_textColor);
+                return (LRESULT)hBrush;
+            }
+            break;
         }
         case WM_DESTROY:
             if (hFont) DeleteObject(hFont);
@@ -326,7 +332,7 @@ void __stdcall MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && msg.wParam == VK_F1) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == VK_F1 || msg.wParam == 'H')) {
             SendMessageA(hwnd, WM_COMMAND, 1008, 0);
             continue;
         }

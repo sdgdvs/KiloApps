@@ -83,6 +83,7 @@
     transition: background-color 0.3s, color 0.3s;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Progress Bar */
@@ -446,6 +447,7 @@
       </select>
 
       <button class="btn" id="btnStats" title="Reading Statistics">📊 Stats</button>
+      <button class="btn" id="btnHelp" title="Help (Press H)">❓ Help</button>
     </div>
   </div>
 
@@ -596,6 +598,7 @@
     const btnFontUp = document.getElementById('btnFontUp');
     const selLineHeight = document.getElementById('selLineHeight');
     const btnStats = document.getElementById('btnStats');
+    const btnHelp = document.getElementById('btnHelp');
 
     const searchPanel = document.getElementById('searchPanel');
     const searchInput = document.getElementById('searchInput');
@@ -841,6 +844,7 @@
       formatTimeSpent();
       statsModal.classList.add('open');
     };
+    if (btnHelp) btnHelp.onclick = () => helpModal.classList.add('open');
     btnCloseStats.onclick = () => statsModal.classList.remove('open');
     if (btnCloseHelp) btnCloseHelp.onclick = () => helpModal.classList.remove('open');
 
