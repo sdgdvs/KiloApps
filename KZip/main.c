@@ -6,8 +6,8 @@
 #define ES_AUTOHSCRAWL 0x0080L
 #endif
 
-#define W 800
-#define H 600
+#define W 900
+#define H 650
 #define MAX_FILES 100
 #define MAX_FILE_SIZE (100 * 1024 * 1024) // 100MB limit per file
 
@@ -240,7 +240,7 @@ void RefreshList() {
     if (numFiles == 0) {
         lstrcpyA(statusBuf, "Ready. Press 'H' for Help.");
     } else {
-        wsprintfA(statusBuf, "Files: %d | Total Raw: %lu B | Compressed: %lu B | Savings: %d%%",
+        wsprintfA(statusBuf, "Files: %d | Total Raw: %lu B | Compressed: %lu B | Savings: %d%% | Press 'H' for Help",
             numFiles, totalUncomp, totalComp, overallRatio);
     }
     SetWindowTextA(hStatus, statusBuf);
@@ -648,7 +648,7 @@ BOOL CALLBACK SetFontEnumProc(HWND child, LPARAM font) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
 
             // Search Bar Label & Field
             CreateWindowEx(0, "STATIC", "Filter:", WS_CHILD | WS_VISIBLE, 10, 12, 40, 20, hwnd, NULL, NULL, NULL);

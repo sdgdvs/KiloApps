@@ -27,6 +27,7 @@
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     background-color: var(--bg-primary);
     color: var(--text-main);
     height: 100vh;
@@ -192,13 +193,14 @@
   }
 
   th {
-    background-color: rgba(15, 23, 42, 0.6);
+    background-color: var(--bg-secondary);
     color: var(--text-muted);
     font-weight: 600;
     padding: 8px 12px;
     position: sticky;
     top: 0;
     border-bottom: 1px solid var(--border-color);
+    z-index: 10;
   }
 
   td {
@@ -650,7 +652,7 @@
     if (files.length === 0) {
       statusMessage.textContent = `Ready. Press 'H' for Help.`;
     } else {
-      statusMessage.textContent = `Archive loaded. ${files.length} file(s) present.`;
+      statusMessage.textContent = `Archive loaded. ${files.length} file(s) present. (Press 'H' for Help)`;
     }
   }
 
@@ -1078,7 +1080,7 @@
   });
 
   // Set appropriate auto-opening size
-  window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 800, height: 600 }, '*');
+  window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 900, height: 650 }, '*');
 
   renderTable();
 </script>
