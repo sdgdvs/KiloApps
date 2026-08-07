@@ -31,7 +31,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 
 
 - KConverter
-- KTodo
 - KGraph
 - KTimer
 - KContacts
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTask
 - KRogue
 - KSys
+- KTodo
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -211,3 +211,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTask: Usability and UI issues fixed (added WS_CLIPCHILDREN to fix flickering, enforced WM_GETMINMAXINFO min size, clamped layout coordinates, pulled SPI_GETNONCLIENTMETRICS for crisp fonts, added EM_SETCUEBANNER for explicit opening instructions, and injected JS startup hook in web for visual instructions).
 - KRogue: Usability and UI issues fixed (disabled web canvas image smoothing for sharp pixel art, added responsive web width, expanded native layout boundary to prevent overlap, added persistent native controls hint at bottom, and enforced NONANTIALIASED_QUALITY for crisp terminal font).
 - KSys: Usability and UI issues fixed (adjusted auto-opening size to 1024x768 and centered on screen, added explicit Help buttons in both web header and native UI, and used negative font size with CLEARTYPE_QUALITY for crisp text).
+- KTodo: Usability and UI issues fixed (enlarged auto-opening size to 800x600 in both platforms, updated status bar and bound 'H'/F1 for help, optimized web text-rendering and increased native font size, improved dark theme input contrast, and ensured dynamic layout scaling).
