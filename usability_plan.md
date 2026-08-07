@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KTask
 - KSys
 - KRogue
 - KConverter
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSolitaire
 - KTerm
 - KSynth
+- KTask
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -208,3 +208,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSolitaire: Usability and UI issues fixed (auto-opening size in App.jsx and main.c, native window sizing via AdjustWindowRect, DPI awareness enabled in native, and devicePixelRatio scaling added to web canvas).
 - KTerm: Usability and UI issues fixed (auto-opening size adjusted to 960x600, SetProcessDPIAware and AdjustWindowRect added to native for crisp text and layout).
 - KSynth: Usability and UI issues fixed (added startup MessageBox instructions and Help toggle, fixed clipped layout via AdjustWindowRectEx, used negative font sizes for crisp UI text).
+- KTask: Usability and UI issues fixed (added WS_CLIPCHILDREN to fix flickering, enforced WM_GETMINMAXINFO min size, clamped layout coordinates, pulled SPI_GETNONCLIENTMETRICS for crisp fonts, added EM_SETCUEBANNER for explicit opening instructions, and injected JS startup hook in web for visual instructions).
