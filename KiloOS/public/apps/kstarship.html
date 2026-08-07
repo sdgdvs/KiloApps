@@ -94,6 +94,23 @@
   #btn-left { grid-column: 1; grid-row: 2; }
   #btn-down { grid-column: 2; grid-row: 2; }
   #btn-right { grid-column: 3; grid-row: 2; }
+  #modal {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(5, 5, 20, 0.95);
+    border: 2px solid #00ffff;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    text-align: center;
+    display: none;
+    z-index: 100;
+    width: 300px;
+  }
+  #modal h2 { margin-top: 0; color: #ff8800; font-size: 20px; }
+  #modal p { font-size: 14px; margin-bottom: 20px; line-height: 1.4; }
+  #modal-btn { background: #00ffff; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; width: 100%; }
+  #modal-btn:hover { background: #ffffff; }
 </style>
 </head>
 <body>
@@ -124,6 +141,12 @@
     </div>
   </div>
 
+  <div id="modal">
+    <h2 id="modal-title">Encounter</h2>
+    <p id="modal-desc">Description</p>
+    <button id="modal-btn">Continue</button>
+  </div>
+
   <script>
     const canvas = document.getElementById('starmap');
     const ctx = canvas.getContext('2d');
@@ -139,7 +162,8 @@
       ship: { x: 0, y: 0, targetX: 0, targetY: 0, moving: false },
       resources: { fuel: 10000, hull: 100, crew: 10 },
       stars: [],
-      mapSize: 2000
+      mapSize: 2000,
+      modalOpen: false
     };
 
     // Generate random stars and planets
@@ -166,7 +190,9 @@
           size: sType.size,
           color: sType.color,
           name: sType.type,
-          planets: planets
+          planets: planets,
+          encounter: ['Pirates', 'Anomaly', 'Trader', 'None', 'None', 'None'][Math.floor(Math.random() * 6)],
+          visited: false
         });
       }
     }
@@ -248,17 +274,57 @@
         let pText = sys.planets.length > 0 ? sys.planets.join(', ') : 'None';
         scannerInfo.innerHTML = `Star: ${sys.name}<br>Planets: ${sys.planets.length}<br><span style="font-size:11px;color:#88cccc">${pText}</span>`;
         scannerInfo.style.color = "#00ffff";
+
+        if (!sys.visited && !state.modalOpen) {
+          sys.visited = true;
+          if (sys.encounter !== 'None') {
+            triggerEncounter(sys.encounter);
+          }
+        }
       } else {
         scannerInfo.innerText = "Deep space. Nothing nearby.";
         scannerInfo.style.color = "#888888";
       }
     }
 
+    function triggerEncounter(type) {
+      state.modalOpen = true;
+      const modal = document.getElementById('modal');
+      const title = document.getElementById('modal-title');
+      const desc = document.getElementById('modal-desc');
+      
+      title.innerText = type.toUpperCase() + " ENCOUNTER";
+      if (type === 'Pirates') {
+        desc.innerText = "Space pirates ambush you! Hull takes 10% damage, but you escape.";
+        state.resources.hull -= 10;
+        if (state.resources.hull < 0) state.resources.hull = 0;
+      } else if (type === 'Anomaly') {
+        desc.innerText = "You investigate a spatial anomaly. Your fuel tanks are replenished by 500.";
+        state.resources.fuel += 500;
+      } else if (type === 'Trader') {
+        desc.innerText = "A wandering trader offers help. 1 crew member joins your ship.";
+        state.resources.crew += 1;
+      }
+      modal.style.display = 'block';
+      keys.w = keys.a = keys.s = keys.d = false;
+      updateUI(); // refresh resources instantly
+    }
+    
+    document.getElementById('modal-btn').addEventListener('click', () => {
+      document.getElementById('modal').style.display = 'none';
+      state.modalOpen = false;
+    });
+
     // Navigation logic
     const moveSpeed = 5;
     const keys = { w: false, a: false, s: false, d: false };
 
     function update() {
+      if (state.modalOpen) {
+        requestAnimationFrame(update);
+        return;
+      }
+
       state.ship.moving = false;
       let dx = 0, dy = 0;
       if (keys.w) dy -= moveSpeed;

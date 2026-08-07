@@ -1627,7 +1627,7 @@
       if (hero.respawnTimer <= 0) {
         if (hero.shieldActive > 0) {
           ctx.beginPath();
-          ctx.arc(hero.x, hero.y, 18, 0, Math.PI * 2);
+          ctx.arc(hero.x, hero.y, 22, 0, Math.PI * 2);
           ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
           ctx.fill();
           ctx.strokeStyle = '#60a5fa';
@@ -1635,18 +1635,25 @@
           ctx.stroke();
         }
         
-        ctx.fillStyle = '#f59e0b'; // Paladin Gold
-        ctx.beginPath();
-        ctx.arc(hero.x, hero.y, 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '900 12px Segoe UI';
-        ctx.textAlign = 'center';
-        ctx.fillText('P', hero.x, hero.y + 4);
+        // Hero Sprite
+        ctx.save();
+        ctx.translate(hero.x, hero.y);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 12, 10, 4, 0, 0, Math.PI*2); ctx.fill();
+        // Head/Helmet
+        ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(0, -6, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(-5, -8, 10, 3); // Visor
+        // Body armor
+        ctx.fillStyle = '#cbd5e1'; ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.lineTo(10, 12); ctx.lineTo(-10, 12); ctx.fill();
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1; ctx.stroke();
+        // Shield
+        ctx.fillStyle = '#3b82f6'; ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-14, -2); ctx.lineTo(-6, -2); ctx.lineTo(-6, 10); ctx.lineTo(-10, 14); ctx.lineTo(-14, 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+        // Sword
+        ctx.fillStyle = '#94a3b8'; ctx.fillRect(10, -12, 4, 18);
+        ctx.fillStyle = '#b45309'; ctx.fillRect(8, 4, 8, 3);
+        ctx.restore();
+
         
         // Hero HP Bar
         const hBarW = 24;
@@ -1710,21 +1717,33 @@
         ctx.stroke();
 
         if (rawSlot.occupied && rawSlot.tower) {
-          const type = rawSlot.tower.type;
-          ctx.fillStyle = type === 'Mage' ? '#7e22ce' : (type === 'Cannon' ? '#334155' : (type === 'Frost' ? '#0ea5e9' : '#64748b'));
-          ctx.beginPath();
-          ctx.arc(slot.sx, slot.sy, 16, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = type === 'Mage' ? '#d8b4fe' : (type === 'Cannon' ? '#94a3b8' : (type === 'Frost' ? '#bae6fd' : '#ffd700'));
-          ctx.lineWidth = 2;
-          ctx.stroke();
-
-          // icon
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '14px Segoe UI';
-          ctx.textAlign = 'center';
-          const icon = type === 'Mage' ? '🔮' : (type === 'Cannon' ? '💣' : (type === 'Frost' ? '❄️' : '🏹'));
-          ctx.fillText(icon, slot.sx, slot.sy + 5);
+          // Tower Sprites
+          ctx.save();
+          ctx.translate(slot.sx, slot.sy);
+          if (type === 'Archer') {
+            ctx.fillStyle = '#64748b'; ctx.fillRect(-12, -12, 24, 24); // base
+            ctx.fillStyle = '#475569'; ctx.fillRect(-14, -14, 8, 8); ctx.fillRect(6, -14, 8, 8); ctx.fillRect(-14, 6, 8, 8); ctx.fillRect(6, 6, 8, 8); // battlements
+            ctx.strokeStyle = '#ffd700'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI*2); ctx.stroke(); // bow
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(-1, -8, 2, 16); // arrow
+          } else if (type === 'Mage') {
+            ctx.fillStyle = '#7e22ce'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#d8b4fe'; ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(-8, 0); ctx.lineTo(8, 0); ctx.fill(); // roof
+            ctx.fillStyle = '#f3e8ff'; ctx.beginPath(); ctx.arc(0, -22, 5, 0, Math.PI*2); ctx.fill(); // crystal orb
+            ctx.shadowBlur = 10; ctx.shadowColor = '#d8b4fe'; ctx.fill(); ctx.shadowBlur = 0;
+          } else if (type === 'Cannon') {
+            ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(-6, -18, 12, 18); // barrel
+            ctx.fillStyle = '#94a3b8'; ctx.fillRect(-8, -4, 16, 8); // mount
+          } else if (type === 'Frost') {
+            ctx.fillStyle = '#0ea5e9'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#bae6fd'; 
+            for(let i=0; i<6; i++) {
+              ctx.rotate(Math.PI/3);
+              ctx.fillRect(-2, -16, 4, 8);
+              ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(-4, -14); ctx.lineTo(4, -14); ctx.fill();
+            }
+          }
+          ctx.restore();
           
           // Draw level indicator
           ctx.fillStyle = '#fbbf24';
@@ -1755,18 +1774,48 @@
 
       // Draw Enemies
       enemies.forEach(e => {
-        ctx.fillStyle = e.slowed ? '#3b82f6' : e.color;
-        ctx.strokeStyle = e.slowed ? '#1d4ed8' : '#0f172a';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '700 ' + Math.floor(e.radius * 1.2) + 'px Segoe UI';
-        ctx.textAlign = 'center';
-        ctx.fillText(e.icon, e.x, e.y + e.radius/3);
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, e.radius, e.radius, e.radius/3, 0, 0, Math.PI*2); ctx.fill();
+        
+        if (e.type === 'Goblin') {
+          ctx.fillStyle = '#16a34a'; ctx.beginPath(); ctx.arc(0, 0, e.radius, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#064e3b'; ctx.fillRect(-5, -6, 10, 4); // brow
+          ctx.fillStyle = '#ef4444'; ctx.fillRect(-4, -4, 2, 2); ctx.fillRect(2, -4, 2, 2); // eyes
+          ctx.fillStyle = '#064e3b'; ctx.beginPath(); ctx.moveTo(-6, 2); ctx.lineTo(6, 2); ctx.lineTo(0, 6); ctx.fill(); // mouth
+          ctx.beginPath(); ctx.moveTo(-e.radius, -2); ctx.lineTo(-e.radius-6, -8); ctx.lineTo(-e.radius, 2); ctx.fill(); // ears
+          ctx.beginPath(); ctx.moveTo(e.radius, -2); ctx.lineTo(e.radius+6, -8); ctx.lineTo(e.radius, 2); ctx.fill();
+        } else if (e.type === 'Orc') {
+          ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.arc(0, 0, e.radius, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#0f172a'; ctx.fillRect(-7, -6, 14, 5); // visor gap
+          ctx.fillStyle = '#dc2626'; ctx.fillRect(-4, -4, 2, 2); ctx.fillRect(2, -4, 2, 2);
+          ctx.fillStyle = '#94a3b8'; ctx.fillRect(-e.radius-2, -4, 4, 10); ctx.fillRect(e.radius-2, -4, 4, 10); // shoulder pads
+          ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.moveTo(-4, 6); ctx.lineTo(-2, 2); ctx.lineTo(0, 6); ctx.lineTo(2, 2); ctx.lineTo(4, 6); ctx.fill(); // teeth
+        } else if (e.type === 'Hound') {
+          ctx.fillStyle = '#1e1b4b'; ctx.beginPath(); ctx.ellipse(0, 2, e.radius+3, e.radius-2, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(e.radius-3, -2, 2, 0, Math.PI*2); ctx.fill(); // glowing eye
+          ctx.fillStyle = '#000'; ctx.beginPath(); ctx.moveTo(-e.radius, -2); ctx.lineTo(-e.radius-4, -8); ctx.lineTo(-e.radius+4, -2); ctx.fill(); // ear
+          ctx.fillStyle = '#991b1b'; ctx.fillRect(e.radius, 2, 4, 2); // tongue
+        } else if (e.type === 'Gargoyle') {
+          ctx.fillStyle = '#64748b'; ctx.beginPath(); ctx.arc(0, 0, e.radius, 0, Math.PI*2); ctx.fill();
+          let flap = (Date.now() / 150) % 2 > 1 ? 4 : -4;
+          ctx.fillStyle = '#475569';
+          ctx.beginPath(); ctx.moveTo(-e.radius, 0); ctx.lineTo(-e.radius-12, flap-12); ctx.lineTo(-e.radius-18, flap); ctx.lineTo(-e.radius-6, flap+6); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(e.radius, 0); ctx.lineTo(e.radius+12, flap-12); ctx.lineTo(e.radius+18, flap); ctx.lineTo(e.radius+6, flap+6); ctx.fill();
+          ctx.fillStyle = '#0f172a'; ctx.fillRect(-4, -4, 3, 3); ctx.fillRect(1, -4, 3, 3); // hollow eyes
+        } else if (e.type === 'Ogre') {
+          ctx.fillStyle = '#78350f'; ctx.beginPath(); ctx.arc(0, 0, e.radius, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#451a03'; ctx.fillRect(-10, -10, 20, 6); // unibrow
+          ctx.fillStyle = '#fef08a'; ctx.fillRect(-6, -6, 3, 3); ctx.fillRect(3, -6, 3, 3); // yellow eyes
+          ctx.fillStyle = '#000'; ctx.beginPath(); ctx.moveTo(-8, 6); ctx.lineTo(8, 6); ctx.lineTo(0, 14); ctx.fill(); // gaping mouth
+          ctx.fillStyle = '#451a03'; ctx.fillRect(e.radius-2, -e.radius, 8, e.radius*2+6); // club
+        }
+        
+        if (e.slowed) {
+          ctx.fillStyle = 'rgba(59, 130, 246, 0.4)'; ctx.beginPath(); ctx.arc(0, 0, e.radius+4, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
 
         if (e.type === 'Ogre') {
           const barW = 44;

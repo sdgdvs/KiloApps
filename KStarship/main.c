@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #define NUM_SYSTEMS 200
-
+#define MAP_SIZE 2000
 typedef struct {
     int x;
     int y;
@@ -12,6 +12,8 @@ typedef struct {
     int type_idx;
     int num_planets;
     int planets[6];
+    int encounter_type;
+    int visited;
 } StarSystem;
 
 StarSystem systems[NUM_SYSTEMS];
@@ -25,6 +27,22 @@ int is_moving = 0;
 float res_fuel = 10000.0f;
 int res_hull = 100;
 int res_crew = 10;
+
+int modal_open = 0;
+int modal_enc_type = 0;
+
+void TriggerEncounter(int type) {
+    modal_open = 1;
+    modal_enc_type = type;
+    if (type == 1) {
+        res_hull -= 10;
+        if (res_hull < 0) res_hull = 0;
+    } else if (type == 2) {
+        res_fuel += 500.0f;
+    } else if (type == 3) {
+        res_crew += 1;
+    }
+}
 
 void InitStars() {
     for (int i = 0; i < NUM_SYSTEMS; i++) {
@@ -49,10 +67,20 @@ void InitStars() {
         for (int p = 0; p < systems[i].num_planets; p++) {
             systems[i].planets[p] = rand() % 5;
         }
+
+        int enc = rand() % 6;
+        if (enc == 0) systems[i].encounter_type = 1;
+        else if (enc == 1) systems[i].encounter_type = 2;
+        else if (enc == 2) systems[i].encounter_type = 3;
+        else systems[i].encounter_type = 0;
+        
+        systems[i].visited = 0;
     }
 }
 
 void Update() {
+    if (modal_open) return;
+
     is_moving = 0;
     int speed = 5;
     int dx = 0, dy = 0;
@@ -73,6 +101,25 @@ void Update() {
     if (ship_x > MAP_SIZE/2) ship_x = MAP_SIZE/2;
     if (ship_y < -MAP_SIZE/2) ship_y = -MAP_SIZE/2;
     if (ship_y > MAP_SIZE/2) ship_y = MAP_SIZE/2;
+
+    int found_sys_idx = -1;
+    for (int i = 0; i < NUM_SYSTEMS; i++) {
+        int dX = systems[i].x - ship_x;
+        int dY = systems[i].y - ship_y;
+        if (dX*dX + dY*dY < 2500) {
+            found_sys_idx = i;
+            break;
+        }
+    }
+    
+    if (found_sys_idx != -1) {
+        if (!systems[found_sys_idx].visited && !modal_open) {
+            systems[found_sys_idx].visited = 1;
+            if (systems[found_sys_idx].encounter_type != 0) {
+                TriggerEncounter(systems[found_sys_idx].encounter_type);
+            }
+        }
+    }
 }
 
 void Draw(HDC hdc, RECT* rect) {
@@ -246,6 +293,35 @@ void Draw(HDC hdc, RECT* rect) {
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
     }
 
+    if (modal_open) {
+        RECT modalRect = { mapWidth/2 - 150, height/2 - 75, mapWidth/2 + 150, height/2 + 75 };
+        HBRUSH mBrush = CreateSolidBrush(RGB(5, 5, 20));
+        HPEN mPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+        SelectObject(memDC, mBrush);
+        SelectObject(memDC, mPen);
+        Rectangle(memDC, modalRect.left, modalRect.top, modalRect.right, modalRect.bottom);
+        DeleteObject(mBrush);
+        DeleteObject(mPen);
+        
+        char* title = "";
+        char* desc = "";
+        if (modal_enc_type == 1) { title = "PIRATES ENCOUNTER"; desc = "Space pirates ambush you!\r\nHull takes 10% damage,\r\nbut you escape."; }
+        if (modal_enc_type == 2) { title = "ANOMALY ENCOUNTER"; desc = "You investigate a spatial anomaly.\r\nYour fuel tanks are\r\nreplenished by 500."; }
+        if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
+        
+        SetTextColor(memDC, RGB(255, 136, 0));
+        RECT tRect = { modalRect.left + 10, modalRect.top + 10, modalRect.right - 10, modalRect.top + 30 };
+        DrawTextA(memDC, title, -1, &tRect, DT_CENTER);
+        
+        SetTextColor(memDC, RGB(255, 255, 255));
+        RECT dRect = { modalRect.left + 10, modalRect.top + 40, modalRect.right - 10, modalRect.bottom - 40 };
+        DrawTextA(memDC, desc, -1, &dRect, DT_CENTER | DT_WORDBREAK);
+        
+        SetTextColor(memDC, RGB(0, 255, 255));
+        RECT bRect = { modalRect.left + 10, modalRect.bottom - 30, modalRect.right - 10, modalRect.bottom - 10 };
+        DrawTextA(memDC, "[ PRESS SPACE TO CONTINUE ]", -1, &bRect, DT_CENTER);
+    }
+
     BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
     DeleteObject(memBitmap);
     DeleteDC(memDC);
@@ -255,6 +331,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             SetTimer(hwnd, 1, 16, NULL);
+            return 0;
+        case WM_KEYDOWN:
+            if (modal_open && wParam == VK_SPACE) {
+                modal_open = 0;
+            }
             return 0;
         case WM_TIMER:
             Update();
