@@ -398,6 +398,7 @@
       <div class="stat-badge">
         <span>⚡ Cores: <strong id="header-cores">--</strong></span>
       </div>
+      <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; height: 28px;" onclick="showHelp()">❓ Help (H)</button>
     </div>
   </header>
 
@@ -612,15 +613,20 @@
   // Attempt to resize window for better usability
   try {
     if (window.resizeTo) {
-      window.resizeTo(1000, 800);
+      window.resizeTo(1024, 768);
+      window.moveTo((screen.width - 1024) / 2, (screen.height - 768) / 2);
     }
   } catch(e) {}
 
   window.addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-      alert("KSys Help Instructions:\n\n1. Component Inspector: View live hardware details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Event History: Check logs of background tasks.\n4. System Report Export: Generate and download system summaries.\n\nUse the tabs at the top to navigate.");
+      showHelp();
     }
   });
+
+  function showHelp() {
+    alert("KSys Help Instructions:\n\n1. Component Inspector: View live hardware details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Event History: Check logs of background tasks.\n4. System Report Export: Generate and download system summaries.\n\nUse the tabs at the top to navigate.");
+  }
 
   function logEvent(level, message) {
     const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);

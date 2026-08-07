@@ -2,7 +2,7 @@
 
 #define W 80
 #define H 22
-#define UI_H 4
+#define UI_H 6
 #define TOTAL_H (H + UI_H)
 
 #define C_WALL RGB(150,150,150)
@@ -1661,9 +1661,12 @@ void draw_game(HDC hdc) {
             SetTextColor(memDC, RGB(200,200,200));
         }
         
-        for(int i=0; i<5; i++) {
+        for(int i=0; i<4; i++) {
             TextOutA(memDC, 0, (H + 1 + i) * char_h, g.msgs[MAX_MSGS - 1 - i], str_len(g.msgs[MAX_MSGS - 1 - i]));
         }
+        SetTextColor(memDC, RGB(150, 150, 150));
+        const char* hint = "[Arrows]:Move/Atk | [.]:Wait | [I]:Inv | [C]:Char | [M]:Spells | [?]:Help";
+        TextOutA(memDC, 0, (H + 5) * char_h, hint, str_len(hint));
         
         if(g.state == 3) {
             SetTextColor(memDC, RGB(255,0,0));
@@ -2116,7 +2119,7 @@ void fire_spell() {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
-            g_font = CreateFontA(char_h, char_w, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            g_font = CreateFontA(char_h, char_w, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             init_game();
             return 0;
         }
