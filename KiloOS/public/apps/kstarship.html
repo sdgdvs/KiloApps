@@ -341,11 +341,47 @@
       };
 
       if (type === 'Pirates') {
-        const dmg = Math.max(0, 15 - state.upgrades.shields * 2);
-        desc.innerText = `Space pirates ambush you! Hull takes ${dmg}% damage, but you escape.`;
-        state.resources.hull -= dmg;
-        if (state.resources.hull < 0) state.resources.hull = 0;
-        closeBtn();
+        let pirateHp = 50;
+        const updateCombatBtns = (msg) => {
+            desc.innerText = msg + `\nPirate HP: ${pirateHp} | Your Hull: ${state.resources.hull}%`;
+            actions.innerHTML = '';
+            if (pirateHp <= 0) {
+                addBtn('Claim Bounty (100C)', () => {
+                    state.resources.credits += 100;
+                    modal.style.display = 'none';
+                    state.modalOpen = false;
+                    updateUI();
+                });
+            } else if (state.resources.hull <= 0) {
+                desc.innerText = "Your ship has been destroyed. Game Over.";
+                addBtn('Restart', () => { location.reload(); });
+            } else {
+                addBtn('Fire Weapons', () => {
+                    let pDmg = 10 + state.upgrades.weapons * 5 + Math.floor(Math.random()*10);
+                    let sDmg = Math.max(0, 20 - state.upgrades.shields * 3 + Math.floor(Math.random()*5));
+                    pirateHp -= pDmg;
+                    if (pirateHp < 0) pirateHp = 0;
+                    let result = `You hit pirate for ${pDmg}!`;
+                    if (pirateHp > 0) {
+                        state.resources.hull -= sDmg;
+                        if (state.resources.hull < 0) state.resources.hull = 0;
+                        result += ` Pirate hits you for ${sDmg}!`;
+                    } else {
+                        result += ` Pirate destroyed!`;
+                    }
+                    updateCombatBtns(result);
+                });
+                addBtn('Flee', () => {
+                    let sDmg = Math.max(0, 15 - state.upgrades.shields * 2);
+                    state.resources.hull -= sDmg;
+                    if (state.resources.hull < 0) state.resources.hull = 0;
+                    desc.innerText = `You fled! Took ${sDmg} damage while escaping.\nYour Hull: ${state.resources.hull}%`;
+                    actions.innerHTML = '';
+                    closeBtn();
+                });
+            }
+        };
+        updateCombatBtns("Space pirates ambush you!");
       } else if (type === 'Anomaly') {
         desc.innerText = "You investigate a spatial anomaly. Your fuel tanks are replenished by 500.";
         state.resources.fuel += 500;

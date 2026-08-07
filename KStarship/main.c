@@ -37,15 +37,15 @@ int upg_cargo = 1;
 
 int modal_open = 0;
 int modal_enc_type = 0;
+int pirate_hp = 50;
+char combat_log[128] = "";
 
 void TriggerEncounter(int type) {
     modal_open = 1;
     modal_enc_type = type;
     if (type == 1) {
-        int dmg = 15 - upg_shields * 2;
-        if (dmg < 0) dmg = 0;
-        res_hull -= dmg;
-        if (res_hull < 0) res_hull = 0;
+        pirate_hp = 50;
+        lstrcpyA(combat_log, "Space pirates ambush you!");
     } else if (type == 2) {
         res_fuel += 500.0f;
     } else if (type == 3) {
@@ -346,11 +346,24 @@ void Draw(HDC hdc, RECT* rect) {
         
         char* title = "";
         char* desc = "";
-        if (modal_enc_type == 1) { title = "PIRATES ENCOUNTER"; desc = "Space pirates ambush you!\r\nHull takes damage, but you escape."; }
-        if (modal_enc_type == 2) { title = "ANOMALY ENCOUNTER"; desc = "You investigate a spatial anomaly.\r\nYour fuel tanks are\r\nreplenished by 500."; }
-        if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
-        if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard (Upgrades)\r\nSPACE: Leave"; }
-        if (modal_enc_type == 5) { title = "SHIPYARD"; desc = "1: Upg Wpn 2: Upg Shd (500C/Lvl)\r\n3: Upg Eng 4: Upg Cargo (500C/Lvl)\r\nSPACE: Back to Station"; }
+        char desc_buf[256] = "";
+        if (modal_enc_type == 1) { 
+            title = "PIRATES ENCOUNTER";
+            if (res_hull <= 0) {
+                desc = "Your ship has been destroyed!\r\nGame Over.\r\nSPACE: Exit";
+            } else if (pirate_hp <= 0) {
+                wsprintfA(desc_buf, "%s\r\nSPACE: Claim Bounty (100C)", combat_log);
+                desc = desc_buf;
+            } else {
+                wsprintfA(desc_buf, "%s\r\nPirate HP: %d | Hull: %d%%\r\n1: Fire Weapons  2: Flee", combat_log, pirate_hp, res_hull);
+                desc = desc_buf;
+            }
+        }
+        else if (modal_enc_type == 10) { title = "PIRATES ENCOUNTER"; wsprintfA(desc_buf, "%s\r\nHull: %d%%\r\nSPACE: Continue", combat_log, res_hull); desc = desc_buf; }
+        else if (modal_enc_type == 2) { title = "ANOMALY ENCOUNTER"; desc = "You investigate a spatial anomaly.\r\nYour fuel tanks are\r\nreplenished by 500."; }
+        else if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
+        else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard (Upgrades)\r\nSPACE: Leave"; }
+        else if (modal_enc_type == 5) { title = "SHIPYARD"; desc = "1: Upg Wpn 2: Upg Shd (500C/Lvl)\r\n3: Upg Eng 4: Upg Cargo (500C/Lvl)\r\nSPACE: Back to Station"; }
         
         SetTextColor(memDC, RGB(255, 136, 0));
         RECT tRect = { modalRect.left + 10, modalRect.top + 10, modalRect.right - 10, modalRect.top + 30 };
@@ -366,8 +379,10 @@ void Draw(HDC hdc, RECT* rect) {
             DrawTextA(memDC, "[ 1-7 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 5) {
             DrawTextA(memDC, "[ 1-4 OR SPACE ]", -1, &bRect, DT_CENTER);
+        } else if (modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) {
+            DrawTextA(memDC, "[ 1-2 ]", -1, &bRect, DT_CENTER);
         } else {
-            DrawTextA(memDC, "[ PRESS SPACE TO CONTINUE ]", -1, &bRect, DT_CENTER);
+            DrawTextA(memDC, "[ PRESS SPACE ]", -1, &bRect, DT_CENTER);
         }
     }
 
@@ -383,7 +398,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         case WM_KEYDOWN:
             if (modal_open) {
-                if (modal_enc_type == 4) {
+                if (modal_enc_type == 1) {
+                    if (res_hull <= 0) {
+                        if (wParam == VK_SPACE) { PostQuitMessage(0); }
+                    } else if (pirate_hp <= 0) {
+                        if (wParam == VK_SPACE) { res_credits += 100; modal_open = 0; }
+                    } else {
+                        if (wParam == '1') {
+                            int p_dmg = 10 + upg_weapons * 5 + (rand() % 10);
+                            int s_dmg = 20 - upg_shields * 3 + (rand() % 5);
+                            if (s_dmg < 0) s_dmg = 0;
+                            pirate_hp -= p_dmg;
+                            if (pirate_hp < 0) pirate_hp = 0;
+                            if (pirate_hp > 0) {
+                                res_hull -= s_dmg;
+                                if (res_hull < 0) res_hull = 0;
+                                wsprintfA(combat_log, "You hit for %d! Pirate hits for %d!", p_dmg, s_dmg);
+                            } else {
+                                wsprintfA(combat_log, "You hit for %d! Pirate destroyed!", p_dmg);
+                            }
+                        } else if (wParam == '2') {
+                            int s_dmg = 15 - upg_shields * 2;
+                            if (s_dmg < 0) s_dmg = 0;
+                            res_hull -= s_dmg;
+                            if (res_hull < 0) res_hull = 0;
+                            wsprintfA(combat_log, "You fled! Took %d damage.", s_dmg);
+                            modal_enc_type = 10;
+                        }
+                    }
+                } else if (modal_enc_type == 10) {
+                    if (wParam == VK_SPACE) { modal_open = 0; }
+                } else if (modal_enc_type == 4) {
                     if (wParam == '1' && res_credits >= 50) { res_credits -= 50; res_fuel += 500.0f; }
                     if (wParam == '2' && res_credits >= 100 && res_hull < 100) { res_credits -= 100; res_hull += 20; if (res_hull > 100) res_hull = 100; }
                     int max_cargo = upg_cargo * 10;

@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarship (Sci-fi exploration)
-**Phase:** 10 (next to do)
+**Phase:** 11 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
@@ -66,7 +66,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 7: Random encounters system (pirates, anomalies, traders) upon entering new systems.
 - [x] Phase 8: Trading economy and inventory system (buy/sell goods at stations).
 - [x] Phase 9: Ship upgrades (weapons, shields, engines, cargo hold).
-- [ ] Phase 10: Basic combat system against pirates (turn-based or real-time choices).
+- [x] Phase 10: Basic combat system against pirates (turn-based or real-time choices).
 - [ ] Phase 11: Crew management (recruiting, assigning roles, leveling up).
 - [ ] Phase 12: Story events and branching text-based choices.
 - [ ] Phase 13: Sound Effects — space hum, laser blasts, alarm claxons (Web Audio / Win32 Beep).
