@@ -108,7 +108,9 @@ void LayoutControls(HWND hwnd) {
     MoveWindow(hBtnPriority, 85, btnY, 85, 24, TRUE);
     MoveWindow(hBtnExportCSV, 175, btnY, 65, 24, TRUE);
     MoveWindow(hBtnExportJSON, 245, btnY, 65, 24, TRUE);
-    MoveWindow(hBtnEndTask, width - 95, btnY, 85, 24, TRUE);
+    int endTaskX = width - 95;
+    if (endTaskX < 320) endTaskX = 320;
+    MoveWindow(hBtnEndTask, endTaskX, btnY, 85, 24, TRUE);
 
     MoveWindow(hStatusText, 10, height - 28, width - 20, 20, TRUE);
 }
@@ -461,12 +463,26 @@ LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+        case WM_GETMINMAXINFO: {
+            MINMAXINFO* mmi = (MINMAXINFO*)lParam;
+            mmi->ptMinTrackSize.x = 440;
+            mmi->ptMinTrackSize.y = 300;
+            return 0;
+        }
         case WM_CREATE: {
             hSearchBox = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 10, 360, 25, hwnd, (HMENU)3, NULL, NULL);
+#ifndef EM_SETCUEBANNER
+#define EM_SETCUEBANNER 0x1501
+#endif
+            SendMessageW(hSearchBox, EM_SETCUEBANNER, 0, (LPARAM)L"Filter by Name... (Press 'H' for Help)");
             hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 45, 360, 165, hwnd, (HMENU)4, NULL, NULL);
             hStatusText = CreateWindowA("STATIC", "Processes: 0", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 215, 360, 20, hwnd, (HMENU)5, NULL, NULL);
 
-            HFONT hFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            NONCLIENTMETRICSA ncm;
+            ncm.cbSize = sizeof(NONCLIENTMETRICSA);
+            SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA), &ncm, 0);
+            HFONT hFont = CreateFontIndirectA(&ncm.lfMessageFont);
+            if (!hFont) hFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             SendMessageA(hSearchBox, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hStatusText, WM_SETFONT, (WPARAM)hFont, FALSE);
@@ -555,7 +571,7 @@ void __stdcall MainEntry() {
     RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F5: Refresh, Del: End Task, H: Help)", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F5: Refresh, Del: End Task, H: Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

@@ -55,6 +55,7 @@
 
   /* Header */
   .header {
+    flex-shrink: 0;
     padding: 10px 18px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
@@ -199,6 +200,7 @@
 
   /* Dashboard Metrics Bar */
   .dashboard {
+    flex-shrink: 0;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 10px;
@@ -1281,6 +1283,7 @@
     } catch(e) {}
     setTimeout(refresh, 100);
     startAutoRefresh();
+    setTimeout(() => showToast('Press "H" for keyboard shortcuts'), 1500);
   </script>
 </body>
 </html>
