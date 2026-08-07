@@ -24,8 +24,8 @@ const char* codeWords[] = {
 int numCodeWords = 20;
 
 // --- Modes ---
-// 0: Arcade Cascade, 1: Timed Speed Test (30s), 2: Code Snippets, 3: Error Heatmap
-int currentMode = 0;
+// 0: Arcade Cascade, 1: Timed Speed Test (30s), 2: Code Snippets, 3: Error Heatmap, 4: Help Screen
+int currentMode = 4;
 
 // --- Arcade State ---
 #define MAX_FALLING 6

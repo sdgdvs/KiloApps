@@ -374,6 +374,8 @@
     border-radius: 12px;
     border: 1px solid var(--border-color);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    width: 600px;
+    height: 450px;
   }
 
   /* Keyboard Heatmap */
@@ -1251,25 +1253,30 @@ function drawChart() {
   if (!canvas || !canvas.parentElement) return;
   const ctx = canvas.getContext('2d');
 
+  const dpr = window.devicePixelRatio || 1;
   const parentW = canvas.parentElement.clientWidth || 400;
   const parentH = canvas.parentElement.clientHeight || 200;
-  if (canvas.width !== parentW || canvas.height !== parentH) {
-    canvas.width = parentW;
-    canvas.height = parentH;
+  
+  if (canvas.width !== Math.floor(parentW * dpr) || canvas.height !== Math.floor(parentH * dpr)) {
+    canvas.width = Math.floor(parentW * dpr);
+    canvas.height = Math.floor(parentH * dpr);
   }
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, parentW, parentH);
 
   if (chartDataWPM.length < 2) {
     ctx.fillStyle = '#64748b';
     ctx.font = '13px sans-serif';
     ctx.fillText('Real-time WPM chart will plot as you type...', 20, 30);
+    ctx.restore();
     return;
   }
 
   const padding = 30;
-  const w = canvas.width - padding * 2;
-  const h = canvas.height - padding * 2;
+  const w = parentW - padding * 2;
+  const h = parentH - padding * 2;
 
   const maxVal = Math.max(100, ...chartDataWPM);
 
@@ -1280,7 +1287,7 @@ function drawChart() {
     const y = padding + (h / 4) * i;
     ctx.beginPath();
     ctx.moveTo(padding, y);
-    ctx.lineTo(canvas.width - padding, y);
+    ctx.lineTo(parentW - padding, y);
     ctx.stroke();
   }
 
@@ -1292,7 +1299,7 @@ function drawChart() {
   const step = w / (chartDataWPM.length - 1);
   chartDataWPM.forEach((val, idx) => {
     const x = padding + idx * step;
-    const y = canvas.height - padding - (val / maxVal) * h;
+    const y = parentH - padding - (val / maxVal) * h;
     if (idx === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   });
@@ -1300,15 +1307,17 @@ function drawChart() {
 
   // Gradient fill under curve
   const lastX = padding + (chartDataWPM.length - 1) * step;
-  ctx.lineTo(lastX, canvas.height - padding);
-  ctx.lineTo(padding, canvas.height - padding);
+  ctx.lineTo(lastX, parentH - padding);
+  ctx.lineTo(padding, parentH - padding);
   ctx.closePath();
 
-  const grad = ctx.createLinearGradient(0, padding, 0, canvas.height - padding);
+  const grad = ctx.createLinearGradient(0, padding, 0, parentH - padding);
   grad.addColorStop(0, 'rgba(0, 242, 254, 0.25)');
   grad.addColorStop(1, 'rgba(0, 242, 254, 0)');
   ctx.fillStyle = grad;
   ctx.fill();
+  
+  ctx.restore();
 }
 
 // --- Heatmap & Finger Analysis ---
@@ -1573,12 +1582,22 @@ function initArcadeCanvas() {
   const canvas = document.getElementById('arcade-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+  
+  const dpr = window.devicePixelRatio || 1;
+  const logicalW = 600;
+  const logicalH = 450;
+  canvas.width = logicalW * dpr;
+  canvas.height = logicalH * dpr;
+  
+  ctx.save();
+  ctx.scale(dpr, dpr);
   ctx.fillStyle = '#07090e';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, logicalW, logicalH);
   ctx.fillStyle = '#00f2fe';
   ctx.font = 'bold 20px Consolas';
   ctx.textAlign = 'center';
-  ctx.fillText('Press "New Arcade Game" to play Arcade Cascade!', canvas.width / 2, canvas.height / 2);
+  ctx.fillText('Press "New Arcade Game" to play Arcade Cascade!', logicalW / 2, logicalH / 2);
+  ctx.restore();
 }
 
 function startArcadeGame() {
@@ -1611,13 +1630,25 @@ function arcadeLoop() {
 
   const canvas = document.getElementById('arcade-canvas');
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  const dpr = window.devicePixelRatio || 1;
+  const logicalW = 600;
+  const logicalH = 450;
+  
+  if (canvas.width !== logicalW * dpr) {
+    canvas.width = logicalW * dpr;
+    canvas.height = logicalH * dpr;
+  }
+  
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, logicalW, logicalH);
 
   // Background grid
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
   ctx.lineWidth = 1;
-  for (let x = 0; x < canvas.width; x += 40) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  for (let x = 0; x < logicalW; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, logicalH); ctx.stroke();
   }
 
   // Update & Draw Words
@@ -1628,7 +1659,7 @@ function arcadeLoop() {
     const item = arcadeWords[idx];
     item.y += item.speed;
 
-    if (item.y > canvas.height - 30) {
+    if (item.y > logicalH - 30) {
       arcadeLives--;
       arcadeWords.splice(idx, 1);
       if (arcadeTarget === idx) arcadeTarget = -1;
@@ -1658,10 +1689,12 @@ function arcadeLoop() {
     ctx.fillStyle = '#ef4444';
     ctx.font = 'bold 30px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+    ctx.fillText('GAME OVER', logicalW / 2, logicalH / 2);
   } else {
     arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
   }
+  
+  ctx.restore();
 }
 
 // Window Load Init
@@ -1669,6 +1702,7 @@ window.addEventListener('load', () => {
   resetTest();
   renderHeatmap();
   renderHistoryTable();
+  toggleHelp();
 });
 </script>
 </body>
