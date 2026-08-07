@@ -1436,12 +1436,28 @@ void draw_tile_gdi(HDC memDC, int x, int y, Tile* t, int visible) {
     int px = x * char_w;
     int py = y * char_h;
     
+    // Add torch flicker if visible
+    static int flicker_cnt = 0;
+    flicker_cnt++;
+    int flicker = visible ? (rand_range(0, 20) - 10) : 0;
+    
     if (t->ch == '#') {
-        COLORREF wallColor = visible ? t->fg : C_FOG;
+        COLORREF wallColor = visible ? RGB(GetRValue(t->fg) + flicker, GetGValue(t->fg) + flicker, GetBValue(t->fg) + flicker) : C_FOG;
         HBRUSH brush = CreateSolidBrush(wallColor);
         RECT r = { px, py, px + char_w, py + char_h };
         FillRect(memDC, &r, brush);
         DeleteObject(brush);
+        
+        // procedural crack texture
+        int r1 = (x * 17 + y * 31) % 10;
+        if (visible && r1 > 7) {
+            HPEN crackPen = CreatePen(PS_SOLID, 1, RGB(30, 30, 30));
+            HPEN oldC = (HPEN)SelectObject(memDC, crackPen);
+            MoveToEx(memDC, px + 2, py + 2, NULL);
+            LineTo(memDC, px + 6, py + 6);
+            SelectObject(memDC, oldC);
+            DeleteObject(crackPen);
+        }
         
         HPEN pen = CreatePen(PS_SOLID, 1, visible ? RGB(220, 220, 220) : RGB(70, 70, 70));
         HPEN oldPen = (HPEN)SelectObject(memDC, pen);
@@ -1451,11 +1467,18 @@ void draw_tile_gdi(HDC memDC, int x, int y, Tile* t, int visible) {
         SelectObject(memDC, oldPen);
         DeleteObject(pen);
     } else if (t->ch == '.') {
-        COLORREF floorColor = visible ? t->fg : RGB(20, 20, 20);
+        COLORREF floorColor = visible ? RGB(max(0, GetRValue(t->fg) + flicker), max(0, GetGValue(t->fg) + flicker), max(0, GetBValue(t->fg) + flicker)) : RGB(20, 20, 20);
         HBRUSH brush = CreateSolidBrush(floorColor);
         RECT r = { px, py, px + char_w, py + char_h };
         FillRect(memDC, &r, brush);
         DeleteObject(brush);
+        
+        // Procedural pebbles
+        int r2 = (x * 23 + y * 19) % 5;
+        if (visible && r2 == 0) {
+            SetPixel(memDC, px + 3, py + 3, RGB(100, 100, 100));
+            SetPixel(memDC, px + 8, py + 12, RGB(100, 100, 100));
+        }
         
         HPEN pen = CreatePen(PS_SOLID, 1, RGB(15, 15, 15));
         HPEN oldPen = (HPEN)SelectObject(memDC, pen);

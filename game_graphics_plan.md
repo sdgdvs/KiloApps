@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KRogue
 - KChess
 - KPong
 - KMines
@@ -115,7 +114,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFarm
 
 - KAlchemy
+- KRogue
 ## Completed Work Log
+
+- **KRogue (Loop 3):** Implemented fog of war, torch flicker atmospheric effects, and procedural texture variations (pebbles, cracks) for environmental art in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
 - **KFarm (Loop 1):** Implemented detailed canvas and GDI drawn sprites for sprouts, wheat, corn, tomato, and pumpkin, replacing placeholder emojis and basic wireframe shapes in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
 - **KFortress (Loop 1):** Implemented custom geometric sprites for the Hero, Towers, and Enemies for both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c), replacing placeholder shapes and emojis.

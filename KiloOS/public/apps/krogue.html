@@ -726,7 +726,7 @@
             return it;
 
         // Rendering functions
-        function drawWallTile(x, y, biome) {
+                function drawWallTile(x, y, biome, distSq) {
             let px = x * TILE, py = y * TILE;
             let baseColor = '#4a5568', accentColor = '#2d3748', mortarColor = '#1a202c';
             if (biome === 'sewers') { baseColor = '#2f855a'; accentColor = '#22543d'; }
@@ -737,16 +737,35 @@
             else if (biome === 'celestial') { baseColor = '#d69e2e'; accentColor = '#b7791f'; }
             else if (biome === 'abyss') { baseColor = '#2d004b'; accentColor = '#1a0033'; mortarColor = '#0d001a'; }
 
+            // Fog / Torch flicker
+            let alpha = 1.0;
+            if (distSq > 0) {
+                let maxD = 40 + Math.sin(frameCount*0.1) * 5;
+                if (distSq > maxD) alpha = 0.2;
+                else alpha = 1.0 - (distSq / (maxD*2));
+            }
+            ctx.globalAlpha = Math.max(0.1, alpha);
+
             ctx.fillStyle = mortarColor; ctx.fillRect(px, py, TILE, TILE);
             ctx.fillStyle = baseColor;
+            
+            // Texture variation
+            let crack = (x * 17 + y * 31) % 10;
+            
             ctx.fillRect(px + 1, py + 1, TILE - 2, 9);
             ctx.fillRect(px + 1, py + 11, TILE / 2 - 2, 9);
             ctx.fillRect(px + TILE / 2 + 1, py + 11, TILE / 2 - 2, 9);
             ctx.fillStyle = accentColor;
             ctx.fillRect(px + 2, py + 8, TILE - 4, 2);
+            
+            if (crack > 7) {
+                ctx.fillStyle = mortarColor;
+                ctx.fillRect(px + 4, py + 4, 2, 4);
+            }
+            ctx.globalAlpha = 1.0;
         }
 
-        function drawFloorTile(x, y, biome) {
+                function drawFloorTile(x, y, biome, distSq) {
             let px = x * TILE, py = y * TILE;
             let bg = '#171923';
             if (biome === 'sewers') bg = '#12251a';
@@ -757,10 +776,27 @@
             else if (biome === 'celestial') bg = '#1a2733';
             else if (biome === 'abyss') bg = '#0d001a';
 
+            // Fog / Torch flicker
+            let alpha = 1.0;
+            if (distSq > 0) {
+                let maxD = 40 + Math.sin(frameCount*0.1) * 5;
+                if (distSq > maxD) alpha = 0.2;
+                else alpha = 1.0 - (distSq / (maxD*2));
+            }
+            ctx.globalAlpha = Math.max(0.1, alpha);
+
             ctx.fillStyle = bg; ctx.fillRect(px, py, TILE, TILE);
             ctx.fillStyle = 'rgba(255,255,255,0.04)';
-            ctx.fillRect(px + 4, py + 4, 3, 3);
-            ctx.fillRect(px + 14, py + 12, 2, 2);
+            
+            let pebble = (x * 23 + y * 19) % 5;
+            if (pebble === 0) {
+                ctx.fillRect(px + 4, py + 4, 3, 3);
+                ctx.fillRect(px + 14, py + 12, 2, 2);
+            } else if (pebble === 1) {
+                ctx.fillRect(px + 8, py + 8, 4, 2);
+            }
+            
+            ctx.globalAlpha = 1.0;
         }
 
         function drawPlayerSprite(px, py) {
@@ -858,8 +894,9 @@
             // Map
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
-                    if (map[y][x] === '#') drawWallTile(x, y, biome);
-                    else drawFloorTile(x, y, biome);
+                    let distSq = (player.x - x)*(player.x - x) + (player.y - y)*(player.y - y);
+                    if (map[y][x] === '#') drawWallTile(x, y, biome, distSq);
+                    else drawFloorTile(x, y, biome, distSq);
                 }
             }
 
