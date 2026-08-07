@@ -252,6 +252,34 @@ static const int g_EssenceYieldCosts[5] = { 40, 80, 160, 300, 500 };
 static const int g_AutoSorterCosts[5] = { 60, 120, 250, 450, 700 };
 static const int g_CatalystSpeedCosts[5] = { 45, 90, 180, 320, 500 };
 
+
+#define MAX_PARTICLES 100
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float life;
+    float decay;
+    COLORREF color;
+} Particle;
+static Particle g_Particles[MAX_PARTICLES];
+
+static void SpawnExplosion(int cx, int cy, COLORREF color) {
+    for (int i = 0; i < 40; i++) {
+        for (int j = 0; j < MAX_PARTICLES; j++) {
+            if (g_Particles[j].life <= 0.0f) {
+                g_Particles[j].x = (float)cx;
+                g_Particles[j].y = (float)cy;
+                g_Particles[j].vx = (float)((FastRand() % 100) - 50) * 0.1f;
+                g_Particles[j].vy = (float)((FastRand() % 100) - 50) * 0.1f - 2.0f;
+                g_Particles[j].life = 1.0f;
+                g_Particles[j].decay = 0.02f + (float)(FastRand() % 20) * 0.001f;
+                g_Particles[j].color = color;
+                break;
+            }
+        }
+    }
+}
+
 static AlchemyState g_State;
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
@@ -861,6 +889,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_State.buffInvisibilityTimer > 0) { g_State.buffInvisibilityTimer--; changed = 1; }
             if (g_State.buffManaTimer > 0) { g_State.buffManaTimer--; changed = 1; }
             if (g_State.buffLifeTimer > 0) { g_State.buffLifeTimer--; changed = 1; }
+            // Particle update
+            for (int i = 0; i < MAX_PARTICLES; i++) {
+                if (g_Particles[i].life > 0.0f) {
+                    g_Particles[i].x += g_Particles[i].vx;
+                    g_Particles[i].y += g_Particles[i].vy;
+                    g_Particles[i].life -= g_Particles[i].decay;
+                    changed = 1;
+                }
+            }
             // Animation update
             RECT vesselRect = { 300, 110, 480, 230 };
             InvalidateRect(hwnd, &vesselRect, FALSE);
@@ -1294,6 +1331,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     UpdateGrimoireGrid();
 
                                     wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
+                                    SpawnExplosion(392, 168, g_Tiers[resTier - 1].color);
 
                                     char logMsg[320];
                                     wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+%d Dust)%s",
@@ -2067,6 +2105,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int bx = cx - 20 + ((i * 37) % 40);
                         int by = cy + 20 - ((tick / 20 + i * 15) % 30);
                         Ellipse(hdc, bx - 2, by - 2, bx + 2, by + 2);
+                    }
+                }
+
+
+                // Draw particles
+                for (int i = 0; i < MAX_PARTICLES; i++) {
+                    if (g_Particles[i].life > 0.0f) {
+                        int px = (int)g_Particles[i].x;
+                        int py = (int)g_Particles[i].y;
+                        int size = (int)(g_Particles[i].life * 6.0f);
+                        if (size < 1) size = 1;
+                        HBRUSH pBrush = CreateSolidBrush(g_Particles[i].color);
+                        HGDIOBJ oldPb = SelectObject(hdc, pBrush);
+                        SelectObject(hdc, GetStockObject(NULL_PEN));
+                        Ellipse(hdc, px - size, py - size, px + size, py + size);
+                        SelectObject(hdc, oldPb);
+                        DeleteObject(pBrush);
                     }
                 }
 

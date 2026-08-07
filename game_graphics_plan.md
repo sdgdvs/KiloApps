@@ -83,7 +83,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KAlchemy
 
 - KRogue
 - KChess
@@ -115,6 +114,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFortress
 - KFarm
 
+- KAlchemy
 ## Completed Work Log
 
 - **KFarm (Loop 1):** Implemented detailed canvas and GDI drawn sprites for sprouts, wheat, corn, tomato, and pumpkin, replacing placeholder emojis and basic wireframe shapes in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
@@ -201,3 +201,4 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 - **KAlchemy (Loop 1):** Implemented SVG background for crucible vessel and particle burst explosion canvas animation for Web Canvas/HTML (kalchemy.html), and added detailed Win32 GDI animated bubbling drawing for crucible/flask/anvil/retort/alembic in Native C (KAlchemy/main.c).
+- **KAlchemy (Loop 2):** Implemented expanding particle burst explosion animations triggered upon successful transmutations for Native C Win32 GDI (KAlchemy/main.c).
