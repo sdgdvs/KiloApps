@@ -11,7 +11,7 @@
             color: #4E342E; /* Earthy dark brown */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             display: flex; justify-content: center; align-items: center; 
-            height: 100vh; overflow: hidden; 
+            min-height: 100vh; overflow-y: auto; 
         }
         .container {
             background-color: #FFF3E0; /* Warm sunny white */
@@ -40,7 +40,7 @@
             🐔 Chickens: <span id="chickensSpan">0</span> | 🐄 Cows: <span id="cowsSpan">0</span> | 🧍 Scarecrow: <span id="scarecrowSpan">No</span>
         </div>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest)</p>
+        <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest) | <span style="color:#2196F3;">Press 'H' for Almanac</span></p>
         <div style="text-align:center; margin-top:15px;">
             <div style="margin-bottom: 10px; font-size: 14px;">
                 <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> Wheat (-$5) [Sp/Fa]</label>
@@ -95,6 +95,18 @@
     <script>
         function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
         function hideHelp() { document.getElementById('helpModal').style.display = 'none'; }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'h' || e.key === 'H') {
+                const modal = document.getElementById('helpModal');
+                if (modal.style.display === 'none' || modal.style.display === '') {
+                    showHelp();
+                } else {
+                    hideHelp();
+                }
+            }
+        });
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();

@@ -3,6 +3,13 @@
 #define GRID_COLS 10
 #define GRID_ROWS 10
 #define CELL_SIZE 40
+#define OFFSET_X 10
+#define OFFSET_Y 30
+
+BOOL CALLBACK SetFontCallback(HWND child, LPARAM font) {
+    SendMessage(child, WM_SETFONT, (WPARAM)font, TRUE);
+    return TRUE;
+}
 
 typedef struct {
     int type; // 0=Grass, 1=Tilled, 2=Planted, 3=Grown
@@ -67,34 +74,46 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             srand(GetTickCount());
             hUpgradeToolsBtn = CreateWindow("BUTTON", "Tools ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                10, 410, 110, 30, hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                10, 440, 110, 30, hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hNextDayBtn = CreateWindow("BUTTON", "Sleep (Next Day)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                130, 410, 140, 30, hwnd, (HMENU) 1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                130, 440, 140, 30, hwnd, (HMENU) 1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hUpgradeBtn = CreateWindow("BUTTON", "Fertilizer ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                280, 410, 110, 30, hwnd, (HMENU) 6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hBuyChickenBtn = CreateWindow("BUTTON", "Chicken ($50)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                290, 450, 100, 20, hwnd, (HMENU) 7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hBuyCowBtn = CreateWindow("BUTTON", "Cow ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                290, 475, 100, 20, hwnd, (HMENU) 8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hBuyScarecrowBtn = CreateWindow("BUTTON", "Scarecrow ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                10, 500, 130, 20, hwnd, (HMENU) 10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMillBtn = CreateWindow("BUTTON", "Mill ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                150, 500, 100, 20, hwnd, (HMENU) 11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMayoBtn = CreateWindow("BUTTON", "Mayo ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                260, 500, 100, 20, hwnd, (HMENU) 12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hCheeseBtn = CreateWindow("BUTTON", "Cheese ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                10, 525, 130, 20, hwnd, (HMENU) 13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hHelpBtn = CreateWindow("BUTTON", "Almanac", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                150, 525, 100, 20, hwnd, (HMENU) 14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                280, 440, 120, 30, hwnd, (HMENU) 6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+
             hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (-$5) [Sp/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
-                10, 450, 130, 20, hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                10, 480, 140, 20, hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[1] = CreateWindow("BUTTON", "Corn (-$10) [Su]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                150, 450, 130, 20, hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                160, 480, 130, 20, hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[2] = CreateWindow("BUTTON", "Tomato (-$15) [Su/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                10, 475, 130, 20, hwnd, (HMENU) 4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                10, 505, 140, 20, hwnd, (HMENU) 4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[3] = CreateWindow("BUTTON", "Pumpkin (-$25) [Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                150, 475, 140, 20, hwnd, (HMENU) 5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                160, 505, 140, 20, hwnd, (HMENU) 5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                
+            hBuyChickenBtn = CreateWindow("BUTTON", "Chicken ($50)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                310, 480, 100, 20, hwnd, (HMENU) 7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hBuyCowBtn = CreateWindow("BUTTON", "Cow ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                310, 505, 100, 20, hwnd, (HMENU) 8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+
+            hBuyScarecrowBtn = CreateWindow("BUTTON", "Scarecrow ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                10, 530, 140, 20, hwnd, (HMENU) 10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMillBtn = CreateWindow("BUTTON", "Mill ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                160, 530, 100, 20, hwnd, (HMENU) 11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMayoBtn = CreateWindow("BUTTON", "Mayo ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                270, 530, 100, 20, hwnd, (HMENU) 12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+
+            hCheeseBtn = CreateWindow("BUTTON", "Cheese ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                10, 555, 140, 20, hwnd, (HMENU) 13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHelpBtn = CreateWindow("BUTTON", "Almanac (H)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                160, 555, 100, 20, hwnd, (HMENU) 14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+
             SendMessage(hSeedBtns[0], BM_SETCHECK, BST_CHECKED, 0);
+            HFONT hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+            EnumChildWindows(hwnd, SetFontCallback, (LPARAM)hFont);
+            return 0;
+        case WM_KEYDOWN:
+            if (wParam == 'H' || wParam == 'h') {
+                SendMessage(hwnd, WM_COMMAND, 14, 0);
+            }
             return 0;
         case WM_COMMAND:
             if (LOWORD(wParam) == 1 && time_of_day == 0) {
@@ -243,8 +262,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_LBUTTONDOWN: {
             if (time_of_day == 1) return 0;
-            int cx = LOWORD(lParam) / CELL_SIZE;
-            int cy = HIWORD(lParam) / CELL_SIZE;
+            if (LOWORD(lParam) < OFFSET_X || HIWORD(lParam) < OFFSET_Y) return 0;
+            int cx = (LOWORD(lParam) - OFFSET_X) / CELL_SIZE;
+            int cy = (HIWORD(lParam) - OFFSET_Y) / CELL_SIZE;
             if (cx >= 0 && cx < GRID_COLS && cy >= 0 && cy < GRID_ROWS) {
                 int c_idx = cy * GRID_COLS + cx;
                 int action = -1; // 0=till, 1=plant, 2=water, 3=harvest
@@ -323,10 +343,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HPEN hCornPen = CreatePen(PS_SOLID, 3, time_of_day ? RGB(150, 150, 0) : RGB(255, 235, 59));
             HPEN hPumpkinPen = CreatePen(PS_SOLID, 3, time_of_day ? RGB(150, 90, 0) : RGB(255, 152, 0));
 
+            HFONT hGuiFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+            SelectObject(hdc, hGuiFont);
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, time_of_day ? RGB(200,200,200) : RGB(50,50,50));
+            const char* inst = "Till->Plant->Water->Harvest | Press 'H' for Almanac";
+            TextOut(hdc, OFFSET_X, 8, inst, lstrlen(inst));
+
             for (int y = 0; y < GRID_ROWS; y++) {
                 for (int x = 0; x < GRID_COLS; x++) {
                     int idx = y * GRID_COLS + x;
-                    RECT r = { x * CELL_SIZE, y * CELL_SIZE, (x+1) * CELL_SIZE, (y+1) * CELL_SIZE };
+                    RECT r = { OFFSET_X + x * CELL_SIZE, OFFSET_Y + y * CELL_SIZE, OFFSET_X + (x+1) * CELL_SIZE, OFFSET_Y + (y+1) * CELL_SIZE };
                     
                     int req = (weather == 2) ? 2 : ((weather == 1) ? 0 : 1);
                     if (grid[idx].type == 0) FillRect(hdc, &r, hGrass);
@@ -399,8 +426,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (weather == 1 && time_of_day == 0) {
                 HBRUSH hRain = CreateSolidBrush(RGB(180, 200, 255));
                 for (int i = 0; i < 60; i++) {
-                    int rx = rand() % (GRID_COLS * CELL_SIZE);
-                    int ry = rand() % (GRID_ROWS * CELL_SIZE);
+                    int rx = OFFSET_X + rand() % (GRID_COLS * CELL_SIZE);
+                    int ry = OFFSET_Y + rand() % (GRID_ROWS * CELL_SIZE);
                     RECT rr = {rx, ry, rx + 2, ry + 10 + (rand() % 10)};
                     FillRect(hdc, &rr, hRain);
                 }
@@ -428,7 +455,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     RegisterClass(&wc);
 
-    RECT rect = {0, 0, GRID_COLS * CELL_SIZE, GRID_ROWS * CELL_SIZE + 160};
+    RECT rect = {0, 0, 420, 590};
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
 
     HWND hwnd = CreateWindowEx(
