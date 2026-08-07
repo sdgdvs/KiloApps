@@ -31,7 +31,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 
 
 - KContacts
-- KRead
 - KBase
 - KJournal
 - KPad
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KConverter
 - KGraph
 - KTimer
+- KRead
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -215,3 +215,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KConverter: Usability and UI issues fixed (auto-opening size adjusted to 900x650 in web and 620x460 in native, explicit 'Press H for Help' controls validated, CSS font smoothing applied, and crisp text rendered using appropriate pixel size metrics).
 - KGraph: Usability and UI issues fixed (applied text-rendering optimizeLegibility and font smoothing to web for crisp fonts, enabled CLEARTYPE_QUALITY for native fonts, improved custom dark-themed styling for select options in web, added visible Help button to main native layout, and widened native status bar layout).
 - KTimer: Usability and UI issues fixed (enabled dynamic DPI scaling and S(x) macro in native C, expanded native starting RECT to 440x430 for label visibility, added visible bottom-centered Help badge in web, and optimized web window.resizeTo/moveTo for centered 460x580 rendering).
+- KRead: Usability and UI issues fixed (added Help button to toolbar in web, optimized text-rendering, updated initial text to explicitly mention F1/H shortcuts, enforced Read-Only mode in native C, allowed WM_CTLCOLORSTATIC for theme styling on read-only edit, and added text margins to improve layout legibility).
