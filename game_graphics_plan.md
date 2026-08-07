@@ -83,8 +83,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-
-- KFortress
 - KFarm
 - KAlchemy
 
@@ -115,9 +113,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze
 
 - KColony
+- KFortress
 
 ## Completed Work Log
 
+- **KFortress (Loop 1):** Implemented custom geometric sprites for the Hero, Towers, and Enemies for both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c), replacing placeholder shapes and emojis.
 - **KColony (Loop 1):** Replaced text-based DOM characters and GDI FillRect cells with actual visual graphics. Implemented custom SVG inline data URI sprites in Web (kcolony.html) and custom GDI geometric shapes in Native C (KColony/main.c) for all 12 structures (Solar, Farm, Mine, Hab, Battery, Lab, Nuke, Hydro, Laser, Wall, Turret, Factory), aliens, and damaged debris states.
 - **KMaze (Loop 3):** Implemented textured floor casting (Mossy Floor) and ceiling casting (Cave Ceiling) with depth fog in the 3D raycaster for both Web Canvas (kmaze.html) and Native C Win32 GDI (KMaze/main.c).
 - **KBreakout (Loop 3):** Implemented cyber-grid neon background environmental art and floating space dust atmospheric effects in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
