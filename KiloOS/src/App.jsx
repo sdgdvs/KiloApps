@@ -34,7 +34,7 @@ const APPS = [
   { id: 'kaudio', title: 'KAudio', url: '/apps/kaudio.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kaudio.ico', w: 500, h: 350, folder: 'Media' },
   { id: 'kradio', title: 'KRadio', url: '/apps/kradio.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kradio.ico', w: 450, h: 300, folder: 'Media' },
   { id: 'kcalendar', title: 'KCalendar', url: '/apps/kcalendar.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalendar.ico', w: 450, h: 450, folder: 'Office' },
-  { id: 'ksolitaire', title: 'KSolitaire', url: '/apps/ksolitaire.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksolitaire.ico', w: 600, h: 500, folder: 'Games' },
+  { id: 'ksolitaire', title: 'KSolitaire', url: '/apps/ksolitaire.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksolitaire.ico', w: 920, h: 800, folder: 'Games' },
   { id: 'kspace', title: 'KSpace', url: '/apps/kspace.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kspace.ico', w: 420, h: 660, folder: 'Games' },
   { id: 'kpac', title: 'KPac', url: '/apps/kpac.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpac.ico', w: 500, h: 500, folder: 'Games' },
   { id: 'kmail', title: 'KMail', url: '/apps/kmail.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmail.ico', w: 650, h: 500, folder: 'Network' },

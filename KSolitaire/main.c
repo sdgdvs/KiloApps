@@ -1693,8 +1693,13 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
     RegisterClass(&wc);
 
+    SetProcessDPIAware();
+
+    RECT rc = {0, 0, 920, 800};
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, TRUE); // TRUE because we have a menu
+
     HWND hwnd = CreateWindowEx(0, "KSolitaireApp", "KSolitaire - Klondike Solitaire (Press H for Hint)", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 920, 800, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

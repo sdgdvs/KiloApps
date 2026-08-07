@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KSolitaire
 - KTerm
 - KSynth
 - KTask
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSnake
 - KTetris
 - KSpace
+- KSolitaire
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -205,3 +205,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTetris: Usability and UI issues fixed (Appropriate auto-opening size adjusted, crisp text and canvas scaling handled via native SetWorldTransform, visible controls & help instructions overlay validated).
 - KSpace: Usability and UI issues fixed (auto-opening size adjusted to 340x520 in web, pixelated image-rendering applied to canvas, main menu buttons layout fixed, CSS overhauled for visibility within 320px width, and native C implemented custom NONANTIALIASED_QUALITY Courier New font for crisp monospaced rendering).
 - KType: Usability and UI issues fixed (canvas scaling relative to devicePixelRatio applied in web for crisp text, automatic toggleHelp() on load added for first-time users, native currentMode default swapped to Help screen, SetProcessDPIAware validated).
+- KSolitaire: Usability and UI issues fixed (auto-opening size in App.jsx and main.c, native window sizing via AdjustWindowRect, DPI awareness enabled in native, and devicePixelRatio scaling added to web canvas).

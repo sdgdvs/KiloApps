@@ -1734,9 +1734,11 @@ function advanceNextStage() {
 function startWinCascade() {
   const canvas = document.getElementById('win-canvas');
   canvas.style.display = 'block';
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
   const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
 
   let cards = [];
   let delay = 0;
