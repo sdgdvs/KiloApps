@@ -1591,6 +1591,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 void MainEntry() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
+    SetProcessDPIAware();
     WNDCLASS wc = {0};
     int winWidth, winHeight;
     HWND hwnd;
@@ -1609,7 +1610,7 @@ void MainEntry() {
     RECT rect = {0, 0, winWidth, winHeight};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
 
-    hwnd = CreateWindowExA(0, "KSnakeApp", "KSnake Arcade - Loop 8", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    hwnd = CreateWindowExA(0, "KSnakeApp", "KSnake Arcade - Loop 8 [Press H for Help]", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
