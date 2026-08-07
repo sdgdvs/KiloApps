@@ -130,6 +130,7 @@ void InitStars() {
         else if (enc == 1) systems[i].encounter_type = 2;
         else if (enc == 2) systems[i].encounter_type = 3;
         else if (enc == 3) systems[i].encounter_type = 4;
+        else if (enc == 4) systems[i].encounter_type = 7 + (rand() % 3);
         else systems[i].encounter_type = 0;
         
         systems[i].visited = 0;
@@ -411,6 +412,10 @@ void Draw(HDC hdc, RECT* rect) {
             }
         }
         else if (modal_enc_type == 10) { title = "PIRATES ENCOUNTER"; wsprintfA(desc_buf, "%s\r\nHull: %d%%\r\nSPACE: Continue", combat_log, res_hull); desc = desc_buf; }
+        else if (modal_enc_type == 11) { title = "EVENT RESULT"; wsprintfA(desc_buf, "%s\r\n\r\nSPACE: Continue", combat_log); desc = desc_buf; }
+        else if (modal_enc_type == 7) { title = "DERELICT SHIP"; desc = "You find a derelict starship.\r\n1: Salvage (Risk Hull, Gain Cargo)\r\n2: Ignore"; }
+        else if (modal_enc_type == 8) { title = "DISTRESS SIGNAL"; desc = "You receive a distress signal.\r\n1: Help (Cost 50 Fuel, Risk/Reward)\r\n2: Ignore"; }
+        else if (modal_enc_type == 9) { title = "ANCIENT RUINS"; desc = "Scanners detect ancient ruins.\r\n1: Explore (Risk Crew, Gain Tech)\r\n2: Leave"; }
         else if (modal_enc_type == 2) { title = "ANOMALY ENCOUNTER"; desc = "You investigate a spatial anomaly.\r\nYour fuel tanks are\r\nreplenished by 500."; }
         else if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
         else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard 8: Tavern(Recruit 100C)\r\nSPACE: Leave"; }
@@ -443,7 +448,7 @@ void Draw(HDC hdc, RECT* rect) {
             DrawTextA(memDC, "[ 1-3 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 5) {
             DrawTextA(memDC, "[ 1-4 OR SPACE ]", -1, &bRect, DT_CENTER);
-        } else if (modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) {
+        } else if ((modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) || modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9) {
             DrawTextA(memDC, "[ 1-2 ]", -1, &bRect, DT_CENTER);
         } else {
             DrawTextA(memDC, "[ PRESS SPACE ]", -1, &bRect, DT_CENTER);
@@ -501,6 +506,53 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 } else if (modal_enc_type == 10) {
                     if (wParam == VK_SPACE) { modal_open = 0; }
+                } else if (modal_enc_type == 11) {
+                    if (wParam == VK_SPACE) { modal_open = 0; }
+                } else if (modal_enc_type == 7) {
+                    if (wParam == '1') {
+                        if (rand() % 2 == 0) {
+                            cargo_tech += 1; cargo_minerals += 1;
+                            lstrcpyA(combat_log, "You successfully salvaged tech and minerals!");
+                        } else {
+                            res_hull -= 15; if (res_hull < 0) res_hull = 0;
+                            lstrcpyA(combat_log, "A booby trap exploded! Lost 15 Hull.");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '2') {
+                        modal_open = 0;
+                    }
+                } else if (modal_enc_type == 8) {
+                    if (wParam == '1') {
+                        if (res_fuel >= 50) {
+                            res_fuel -= 50;
+                            if (rand() % 10 < 6) {
+                                res_credits += 150;
+                                lstrcpyA(combat_log, "You rescued a merchant. Earned 150 Credits.");
+                            } else {
+                                lstrcpyA(combat_log, "It was a false alarm. You wasted fuel.");
+                            }
+                            modal_enc_type = 11;
+                        }
+                    } else if (wParam == '2') {
+                        modal_open = 0;
+                    }
+                } else if (modal_enc_type == 9) {
+                    if (wParam == '1') {
+                        if (rand() % 2 == 0) {
+                            cargo_tech += 2;
+                            lstrcpyA(combat_log, "You found valuable ancient technology!");
+                        } else {
+                            if (roster_count > 0) {
+                                roster_count--;
+                                lstrcpyA(combat_log, "A cave-in occurred. You lost a crew member.");
+                            } else {
+                                lstrcpyA(combat_log, "You explored but found nothing.");
+                            }
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '2') {
+                        modal_open = 0;
+                    }
                 } else if (modal_enc_type == 4) {
                     if (wParam == '1' && res_credits >= 50) { res_credits -= 50; res_fuel += 500.0f; }
                     if (wParam == '2' && res_credits >= 100 && res_hull < 100) { res_credits -= 100; res_hull += 20; if (res_hull > 100) res_hull = 100; }

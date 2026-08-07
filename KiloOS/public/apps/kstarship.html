@@ -249,7 +249,7 @@
           color: sType.color,
           name: sType.type,
           planets: planets,
-          encounter: ['Pirates', 'Anomaly', 'Trader', 'Station', 'None', 'None'][Math.floor(Math.random() * 6)],
+          encounter: ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None'][Math.floor(Math.random() * 6)],
           visited: false
         });
       }
@@ -550,6 +550,73 @@
             }
         };
         updateStationBtns('main');
+      } else if (type === 'Story') {
+        let storyType = Math.floor(Math.random() * 3);
+        if (storyType === 0) {
+            desc.innerText = "You find a derelict starship drifting in space.";
+            addBtn('Salvage (Risk Hull, Gain Cargo)', () => {
+                if (Math.random() < 0.5) {
+                    state.cargo.tech += 1;
+                    state.cargo.minerals += 1;
+                    desc.innerText = "You successfully salvaged tech and minerals!";
+                } else {
+                    state.resources.hull -= 15;
+                    if (state.resources.hull < 0) state.resources.hull = 0;
+                    desc.innerText = "A booby trap exploded! Lost 15 Hull.";
+                }
+                actions.innerHTML = '';
+                closeBtn();
+                updateUI();
+            });
+            addBtn('Ignore', () => {
+                modal.style.display = 'none';
+                state.modalOpen = false;
+            });
+        } else if (storyType === 1) {
+            desc.innerText = "You receive a distress signal from a nearby moon.";
+            addBtn('Help (Cost 50 Fuel, Gain Reward)', () => {
+                if (state.resources.fuel >= 50) {
+                    state.resources.fuel -= 50;
+                    if (Math.random() < 0.6) {
+                        state.resources.credits += 150;
+                        desc.innerText = "You rescued a wealthy merchant. Earned 150 Credits.";
+                    } else {
+                        desc.innerText = "It was a false alarm. You wasted fuel.";
+                    }
+                    actions.innerHTML = '';
+                    closeBtn();
+                    updateUI();
+                } else {
+                    desc.innerText = "Not enough fuel to reach them.";
+                }
+            });
+            addBtn('Ignore', () => {
+                modal.style.display = 'none';
+                state.modalOpen = false;
+            });
+        } else {
+            desc.innerText = "Scanners detect ancient alien ruins on a barren planet.";
+            addBtn('Explore (Risk Crew, Gain Tech)', () => {
+                if (Math.random() < 0.5) {
+                    state.cargo.tech += 2;
+                    desc.innerText = "You found valuable ancient technology!";
+                } else {
+                    if (state.crew.length > 0) {
+                        state.crew.pop();
+                        desc.innerText = "A cave-in occurred. You lost a crew member.";
+                    } else {
+                        desc.innerText = "You explored but found nothing.";
+                    }
+                }
+                actions.innerHTML = '';
+                closeBtn();
+                updateUI();
+            });
+            addBtn('Leave', () => {
+                modal.style.display = 'none';
+                state.modalOpen = false;
+            });
+        }
       }
       modal.style.display = 'block';
       keys.w = keys.a = keys.s = keys.d = false;
