@@ -518,7 +518,7 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 14</span></h1>
+    <h1>🗡️ KQuest <span style="font-size:0.75rem; color:#a6adc8; margin-left:8px; font-weight:normal;">(Press H for Help)</span> <span class="badge">Phase 14</span></h1>
     <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Web Audio API, Save Slots, Comprehensive Help & Lore Codex)</div>
     <div style="display:flex; gap:6px; align-items:center;">
       <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" style="font-size:0.75rem; padding:4px 8px;">🔊 SFX: ON</button>
@@ -573,7 +573,7 @@
         <div class="screen-desc" id="location-desc">Welcome to Oakhaven. Create your hero or venture forth into the Obsidian Spire!</div>
         
         <!-- Graphical Viewport Canvas -->
-        <canvas id="kquest-gfx-canvas" width="680" height="220" style="width:100%; height:220px; border-radius:8px; border:1px solid #313244; background:#0f0f17; display:block; margin-top:8px; box-shadow:0 4px 12px rgba(0,0,0,0.5);"></canvas>
+        <canvas id="kquest-gfx-canvas" width="680" height="220" style="width:680px; max-width:100%; height:220px; align-self:center; border-radius:8px; border:1px solid #313244; background:#0f0f17; display:block; margin-top:8px; box-shadow:0 4px 12px rgba(0,0,0,0.5);"></canvas>
         
         <!-- Dynamic Interactive Area -->
         <div id="dynamic-content"></div>
@@ -583,7 +583,8 @@
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
         <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
-        <div class="log-entry system">Phase 14: Comprehensive Help & Lore Codex Active (Press H or click Help)!</div>
+        <div class="log-entry system">Press 'H' at any time to view the Help & Lore Codex.</div>
+        <div class="log-entry system">Phase 14: Comprehensive Help & Lore Codex Active!</div>
       </div>
 
       <!-- Action Button Panel -->

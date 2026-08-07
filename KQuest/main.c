@@ -3553,11 +3553,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hInfoText = CreateWindowA("STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
-                15, 168, 755, 55, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
+                15, 168, 755, 85, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
 
             hLogEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-                15, 228, 755, 190, hwnd, (HMENU)103, GetModuleHandle(NULL), NULL);
+                15, 260, 755, 158, hwnd, (HMENU)103, GetModuleHandle(NULL), NULL);
 
             hBtn1 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 15,  430, 118, 38, hwnd, (HMENU)201, GetModuleHandle(NULL), NULL);
             hBtn2 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 142, 430, 118, 38, hwnd, (HMENU)202, GetModuleHandle(NULL), NULL);
