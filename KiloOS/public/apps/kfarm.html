@@ -312,6 +312,60 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
+        function drawSprout(ctx, x, y) {
+            ctx.save();
+            ctx.translate(x + CELL_SIZE/2, y + CELL_SIZE/2);
+            ctx.fillStyle = '#8BC34A';
+            ctx.beginPath();
+            ctx.moveTo(0, 10);
+            ctx.quadraticCurveTo(-12, 0, -6, -8);
+            ctx.quadraticCurveTo(0, -2, 0, 10);
+            ctx.fill();
+            ctx.fillStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.moveTo(0, 10);
+            ctx.quadraticCurveTo(12, 0, 6, -10);
+            ctx.quadraticCurveTo(0, -2, 0, 10);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawCropSprite(ctx, type, x, y, night) {
+            ctx.save();
+            ctx.translate(x + CELL_SIZE/2, y + CELL_SIZE/2);
+            if (type === 0) { // Wheat
+                ctx.fillStyle = night ? '#C09000' : '#FFC107';
+                ctx.fillRect(-2, -15, 4, 30);
+                for(let i=0; i<3; i++) {
+                    ctx.beginPath(); ctx.ellipse(-5, -8 + i*8, 4, 2, Math.PI/4, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.ellipse(5, -8 + i*8, 4, 2, -Math.PI/4, 0, Math.PI*2); ctx.fill();
+                }
+            } else if (type === 1) { // Corn
+                ctx.fillStyle = night ? '#2E7D32' : '#4CAF50';
+                ctx.fillRect(-2, -15, 4, 30);
+                ctx.fillStyle = night ? '#FBC02D' : '#FFEB3B';
+                ctx.beginPath(); ctx.ellipse(0, 0, 6, 12, 0, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = night ? '#558B2F' : '#8BC34A';
+                ctx.beginPath(); ctx.ellipse(-6, 6, 4, 10, -Math.PI/6, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(6, 6, 4, 10, Math.PI/6, 0, Math.PI*2); ctx.fill();
+            } else if (type === 2) { // Tomato
+                ctx.fillStyle = night ? '#2E7D32' : '#4CAF50';
+                ctx.fillRect(-2, -15, 4, 30);
+                ctx.fillStyle = night ? '#C62828' : '#F44336';
+                ctx.beginPath(); ctx.arc(-8, 6, 6, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(8, 0, 5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(0, -8, 5, 0, Math.PI*2); ctx.fill();
+            } else if (type === 3) { // Pumpkin
+                ctx.fillStyle = night ? '#E65100' : '#FF9800';
+                ctx.beginPath(); ctx.ellipse(0, 5, 14, 10, 0, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = night ? '#BF360C' : '#F57C00';
+                ctx.beginPath(); ctx.ellipse(0, 5, 8, 10, 0, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = night ? '#1B5E20' : '#4CAF50';
+                ctx.fillRect(-2, -8, 4, 6);
+            }
+            ctx.restore();
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             document.body.style.backgroundColor = timeOfDay === 'night' ? '#1A237E' : '#87CEEB';
@@ -346,11 +400,9 @@
                     ctx.strokeRect(px, py, CELL_SIZE, CELL_SIZE);
                     
                     if (cell.type === 2) {
-                        ctx.font = '20px Arial';
-                        ctx.fillText('🌱', px + CELL_SIZE / 2, py + CELL_SIZE / 2 + 2);
+                        drawSprout(ctx, px, py);
                     } else if (cell.type === 3) {
-                        ctx.font = '28px Arial';
-                        ctx.fillText(cropData[cell.cropType].emoji, px + CELL_SIZE / 2, py + CELL_SIZE / 2 + 2);
+                        drawCropSprite(ctx, cell.cropType, px, py, timeOfDay === 'night');
                     }
                 }
             }

@@ -370,43 +370,65 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         int cy = r.top + CELL_SIZE / 2;
                         
                         if (grid[idx].type == 2) {
+                            HBRUSH hLeaf = CreateSolidBrush(time_of_day ? RGB(46, 125, 50) : RGB(76, 175, 80));
                             SelectObject(hdc, hSproutPen);
-                            MoveToEx(hdc, cx, r.bottom - 8, NULL); LineTo(hdc, cx, r.top + 16);
-                            MoveToEx(hdc, cx, cy + 6, NULL); LineTo(hdc, cx - 6, cy);
-                            MoveToEx(hdc, cx, cy + 10, NULL); LineTo(hdc, cx + 6, cy + 4);
+                            MoveToEx(hdc, cx, r.bottom - 8, NULL); LineTo(hdc, cx, r.top + 12);
+                            SelectObject(hdc, hLeaf);
+                            SelectObject(hdc, GetStockObject(NULL_PEN));
+                            Ellipse(hdc, cx - 10, cy - 4, cx, cy + 4);
+                            Ellipse(hdc, cx, cy - 10, cx + 10, cy - 2);
+                            DeleteObject(hLeaf);
                         } else {
                             if (grid[idx].cropType == 0) { // Wheat
+                                HBRUSH hWheatBrush = CreateSolidBrush(time_of_day ? RGB(180, 140, 0) : RGB(255, 193, 7));
                                 SelectObject(hdc, hWheatPen);
                                 MoveToEx(hdc, cx, r.bottom - 8, NULL); LineTo(hdc, cx, r.top + 8);
-                                MoveToEx(hdc, cx, cy, NULL); LineTo(hdc, cx - 8, cy - 8);
-                                MoveToEx(hdc, cx, cy + 6, NULL); LineTo(hdc, cx + 8, cy - 4);
-                                MoveToEx(hdc, cx, cy - 6, NULL); LineTo(hdc, cx - 6, cy - 12);
+                                SelectObject(hdc, GetStockObject(NULL_PEN));
+                                SelectObject(hdc, hWheatBrush);
+                                for (int i = 0; i < 3; i++) {
+                                    Ellipse(hdc, cx - 6, cy - 8 + (i*6), cx, cy - 4 + (i*6));
+                                    Ellipse(hdc, cx, cy - 8 + (i*6), cx + 6, cy - 4 + (i*6));
+                                }
+                                DeleteObject(hWheatBrush);
                             } else if (grid[idx].cropType == 1) { // Corn
-                                SelectObject(hdc, hCornPen);
+                                SelectObject(hdc, hSproutPen);
                                 MoveToEx(hdc, cx, r.bottom - 8, NULL); LineTo(hdc, cx, r.top + 4);
                                 HBRUSH hYellow = CreateSolidBrush(time_of_day ? RGB(150, 150, 0) : RGB(255, 235, 59));
+                                HBRUSH hLeaf = CreateSolidBrush(time_of_day ? RGB(46, 125, 50) : RGB(76, 175, 80));
                                 SelectObject(hdc, hYellow);
                                 SelectObject(hdc, GetStockObject(NULL_PEN));
-                                Ellipse(hdc, cx - 4, cy - 8, cx + 4, cy + 8);
+                                Ellipse(hdc, cx - 5, cy - 10, cx + 5, cy + 10);
+                                SelectObject(hdc, hLeaf);
+                                Ellipse(hdc, cx - 7, cy, cx - 3, cy + 12);
+                                Ellipse(hdc, cx + 3, cy, cx + 7, cy + 12);
                                 DeleteObject(hYellow);
+                                DeleteObject(hLeaf);
                             } else if (grid[idx].cropType == 2) { // Tomato
                                 SelectObject(hdc, hSproutPen);
                                 MoveToEx(hdc, cx, r.bottom - 8, NULL); LineTo(hdc, cx, r.top + 8);
                                 HBRUSH hRed = CreateSolidBrush(time_of_day ? RGB(150, 40, 40) : RGB(244, 67, 54));
+                                HBRUSH hDarkRed = CreateSolidBrush(time_of_day ? RGB(100, 20, 20) : RGB(211, 47, 47));
                                 SelectObject(hdc, hRed);
                                 SelectObject(hdc, GetStockObject(NULL_PEN));
-                                Ellipse(hdc, cx - 6, cy - 6, cx, cy);
-                                Ellipse(hdc, cx + 2, cy - 2, cx + 8, cy + 4);
-                                Ellipse(hdc, cx - 4, r.top + 8, cx + 4, r.top + 16);
+                                Ellipse(hdc, cx - 8, cy, cx + 2, cy + 10);
+                                Ellipse(hdc, cx + 2, cy - 4, cx + 12, cy + 6);
+                                SelectObject(hdc, hDarkRed);
+                                Ellipse(hdc, cx - 4, cy - 10, cx + 6, cy);
                                 DeleteObject(hRed);
+                                DeleteObject(hDarkRed);
                             } else if (grid[idx].cropType == 3) { // Pumpkin
                                 SelectObject(hdc, hSproutPen);
-                                MoveToEx(hdc, cx, r.bottom - 8, NULL); LineTo(hdc, cx - 8, r.bottom - 8);
+                                MoveToEx(hdc, cx, r.bottom - 8, NULL); LineTo(hdc, cx - 6, r.bottom - 8);
                                 HBRUSH hOrange = CreateSolidBrush(time_of_day ? RGB(150, 90, 0) : RGB(255, 152, 0));
+                                HBRUSH hDarkOrange = CreateSolidBrush(time_of_day ? RGB(120, 60, 0) : RGB(245, 124, 0));
                                 SelectObject(hdc, hOrange);
                                 SelectObject(hdc, hPumpkinPen);
-                                Ellipse(hdc, cx - 12, r.bottom - 24, cx + 12, r.bottom - 4);
+                                Ellipse(hdc, cx - 14, r.bottom - 22, cx + 14, r.bottom - 2);
+                                SelectObject(hdc, hDarkOrange);
+                                SelectObject(hdc, GetStockObject(NULL_PEN));
+                                Ellipse(hdc, cx - 8, r.bottom - 20, cx + 8, r.bottom - 4);
                                 DeleteObject(hOrange);
+                                DeleteObject(hDarkOrange);
                             }
                         }
                     }
