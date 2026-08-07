@@ -224,7 +224,7 @@ void RefreshTaskList() {
     int total = g_taskCount;
     int rate = total > 0 ? (completedCount * 100) / total : 0;
     char statusBuf[128];
-    wsprintfA(statusBuf, "Total: %d | Active: %d | Done: %d | Rate: %d%%  [Press F1 for Help]", total, activeCount, completedCount, rate);
+    wsprintfA(statusBuf, "Total: %d | Active: %d | Done: %d | Rate: %d%%  [Press 'H' or F1 for Help]", total, activeCount, completedCount, rate);
     SetWindowTextA(hStatusText, statusBuf);
 }
 
@@ -487,10 +487,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 265, 60, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
 
             // Row 5: Status Bar
-            hStatusText = CreateWindowA("STATIC", "Total: 0 | Active: 0 | Done: 0 | [Press F1 for Help]", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);
+            hStatusText = CreateWindowA("STATIC", "Total: 0 | Active: 0 | Done: 0 | [Press 'H' or F1 for Help]", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);
 
             // Setup fonts
-            hFont = CreateFontA(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFont = CreateFontA(18, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             if (!hFont) hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -627,15 +627,15 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 
     RegisterClassA(&wc);
-    // Adjusted initial auto-opening size to 600x480
-    HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 600, 480, NULL, NULL, wc.hInstance, NULL);
+    // Adjusted initial auto-opening size to 800x600
+    HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && msg.wParam == VK_F1) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == VK_F1 || msg.wParam == 'H')) {
             MessageBoxA(msg.hwnd, "KTodo Help:\n- Type a task and click '+ Add'\n- Select category, priority, and due date\n- Double-click a task to toggle completion\n- Click '+ Checklist' to add subtasks\n- Press 'Stats' for productivity summary.", "KTodo Help", MB_OK | MB_ICONINFORMATION);
         }
         TranslateMessage(&msg);

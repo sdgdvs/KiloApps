@@ -34,6 +34,9 @@
     color: var(--text-primary); 
     user-select: none;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   .app-container { 
@@ -686,6 +689,8 @@
 
     // Initialize App
     window.onload = () => {
+      if (window.resizeTo) window.resizeTo(900, 650);
+      if (window.parent) window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 900, height: 650 }, '*');
       renderCategories();
       populateDropdowns();
       renderCustomUnitsTable();
