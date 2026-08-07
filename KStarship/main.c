@@ -26,8 +26,50 @@ int ship_y = 0;
 int is_moving = 0;
 float res_fuel = 10000.0f;
 int res_hull = 100;
-int res_crew = 10;
 int res_credits = 1000;
+
+typedef struct {
+    char name[16];
+    int role; // 0=Unassigned, 1=Pilot, 2=Gunner, 3=Engineer
+    int level;
+    int xp;
+} CrewMember;
+CrewMember roster[50];
+int roster_count = 0;
+const char* first_names[] = {"Ryker", "Spok", "Chek", "Scot", "Uhura", "Sulu", "Mac", "Data", "Worf", "Geordi", "Ripley", "Dallas", "Hicks", "Hudson", "Vasquez", "Gordy"};
+
+int GetOfficer(int role) {
+    for (int i = 0; i < roster_count; i++) {
+        if (roster[i].role == role) return i;
+    }
+    return -1;
+}
+
+void CycleOfficer(int role) {
+    int current = GetOfficer(role);
+    int start = (current == -1) ? 0 : current + 1;
+    for (int i = 0; i < roster_count; i++) {
+        int idx = (start + i) % roster_count;
+        if (roster[idx].role == 0) {
+            if (current != -1) roster[current].role = 0;
+            roster[idx].role = role;
+            return;
+        }
+    }
+}
+
+void AddXP(int role, int amt) {
+    int idx = GetOfficer(role);
+    if (idx != -1) {
+        if (roster[idx].level >= 5) return;
+        roster[idx].xp += amt;
+        if (roster[idx].xp >= roster[idx].level * 100) {
+            roster[idx].xp -= roster[idx].level * 100;
+            roster[idx].level++;
+        }
+    }
+}
+
 int cargo_minerals = 0;
 int cargo_tech = 0;
 int upg_weapons = 1;
@@ -49,7 +91,13 @@ void TriggerEncounter(int type) {
     } else if (type == 2) {
         res_fuel += 500.0f;
     } else if (type == 3) {
-        res_crew += 1;
+        if (roster_count < 50) {
+            lstrcpyA(roster[roster_count].name, first_names[rand() % 16]);
+            roster[roster_count].role = 0;
+            roster[roster_count].level = 1;
+            roster[roster_count].xp = 0;
+            roster_count++;
+        }
     }
 }
 
@@ -93,6 +141,8 @@ void Update() {
 
     is_moving = 0;
     int speed = 5 + (upg_engines - 1) * 2;
+    int p_idx = GetOfficer(1);
+    if (p_idx != -1) speed += roster[p_idx].level;
     int dx = 0, dy = 0;
     if (GetAsyncKeyState('W') & 0x8000) { dy -= speed; }
     if (GetAsyncKeyState('S') & 0x8000) { dy += speed; }
@@ -105,6 +155,7 @@ void Update() {
         is_moving = 1;
         res_fuel -= 1.0f;
         if (res_fuel < 0) res_fuel = 0;
+        if (rand() % 10 == 0) AddXP(1, 1);
     }
 
     if (ship_x < -MAP_SIZE/2) ship_x = -MAP_SIZE/2;
@@ -259,7 +310,7 @@ void Draw(HDC hdc, RECT* rect) {
     wsprintfA(buf, "Hull: %d%%", res_hull);
     TextOutA(memDC, mapWidth + 15, 120, buf, lstrlenA(buf));
     
-    wsprintfA(buf, "Crew: %d", res_crew);
+    wsprintfA(buf, "Crew: %d", roster_count);
     TextOutA(memDC, mapWidth + 15, 140, buf, lstrlenA(buf));
 
     wsprintfA(buf, "Credits: %d", res_credits);
@@ -362,8 +413,19 @@ void Draw(HDC hdc, RECT* rect) {
         else if (modal_enc_type == 10) { title = "PIRATES ENCOUNTER"; wsprintfA(desc_buf, "%s\r\nHull: %d%%\r\nSPACE: Continue", combat_log, res_hull); desc = desc_buf; }
         else if (modal_enc_type == 2) { title = "ANOMALY ENCOUNTER"; desc = "You investigate a spatial anomaly.\r\nYour fuel tanks are\r\nreplenished by 500."; }
         else if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
-        else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard (Upgrades)\r\nSPACE: Leave"; }
+        else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard 8: Tavern(Recruit 100C)\r\nSPACE: Leave"; }
         else if (modal_enc_type == 5) { title = "SHIPYARD"; desc = "1: Upg Wpn 2: Upg Shd (500C/Lvl)\r\n3: Upg Eng 4: Upg Cargo (500C/Lvl)\r\nSPACE: Back to Station"; }
+        else if (modal_enc_type == 6) {
+            title = "CREW MANAGEMENT";
+            int p_i = GetOfficer(1), g_i = GetOfficer(2), e_i = GetOfficer(3);
+            char p_b[64]="Pilot: NONE", g_b[64]="Gunner: NONE", e_b[64]="Eng: NONE";
+            if(p_i!=-1) wsprintfA(p_b, "Pilot: %s L%d (%d XP)", roster[p_i].name, roster[p_i].level, roster[p_i].xp);
+            if(g_i!=-1) wsprintfA(g_b, "Gunner: %s L%d (%d XP)", roster[g_i].name, roster[g_i].level, roster[g_i].xp);
+            if(e_i!=-1) wsprintfA(e_b, "Eng: %s L%d (%d XP)", roster[e_i].name, roster[e_i].level, roster[e_i].xp);
+            int un = roster_count - (p_i!=-1) - (g_i!=-1) - (e_i!=-1);
+            wsprintfA(desc_buf, "%s\r\n%s\r\n%s\r\nUnassigned: %d\r\n\r\n1:Cycle P  2:Cycle G  3:Cycle E", p_b, g_b, e_b, un);
+            desc = desc_buf;
+        }
         
         SetTextColor(memDC, RGB(255, 136, 0));
         RECT tRect = { modalRect.left + 10, modalRect.top + 10, modalRect.right - 10, modalRect.top + 30 };
@@ -376,7 +438,9 @@ void Draw(HDC hdc, RECT* rect) {
         SetTextColor(memDC, RGB(0, 255, 255));
         RECT bRect = { modalRect.left + 10, modalRect.bottom - 30, modalRect.right - 10, modalRect.bottom - 10 };
         if (modal_enc_type == 4) {
-            DrawTextA(memDC, "[ 1-7 OR SPACE ]", -1, &bRect, DT_CENTER);
+            DrawTextA(memDC, "[ 1-8 OR SPACE ]", -1, &bRect, DT_CENTER);
+        } else if (modal_enc_type == 6) {
+            DrawTextA(memDC, "[ 1-3 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 5) {
             DrawTextA(memDC, "[ 1-4 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) {
@@ -397,6 +461,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, 1, 16, NULL);
             return 0;
         case WM_KEYDOWN:
+            if (!modal_open && (wParam == 'C' || wParam == 'c')) {
+                modal_open = 1;
+                modal_enc_type = 6;
+                return 0;
+            }
             if (modal_open) {
                 if (modal_enc_type == 1) {
                     if (res_hull <= 0) {
@@ -406,7 +475,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else {
                         if (wParam == '1') {
                             int p_dmg = 10 + upg_weapons * 5 + (rand() % 10);
+                            int g_idx = GetOfficer(2); if(g_idx != -1) p_dmg += roster[g_idx].level * 2;
                             int s_dmg = 20 - upg_shields * 3 + (rand() % 5);
+                            int e_idx = GetOfficer(3); if(e_idx != -1) s_dmg -= roster[e_idx].level * 1;
                             if (s_dmg < 0) s_dmg = 0;
                             pirate_hp -= p_dmg;
                             if (pirate_hp < 0) pirate_hp = 0;
@@ -414,8 +485,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 res_hull -= s_dmg;
                                 if (res_hull < 0) res_hull = 0;
                                 wsprintfA(combat_log, "You hit for %d! Pirate hits for %d!", p_dmg, s_dmg);
+                                AddXP(2, 10); AddXP(3, 10);
                             } else {
                                 wsprintfA(combat_log, "You hit for %d! Pirate destroyed!", p_dmg);
+                                AddXP(2, 20);
                             }
                         } else if (wParam == '2') {
                             int s_dmg = 15 - upg_shields * 2;
@@ -437,7 +510,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (wParam == '5' && res_credits >= 300 && (cargo_minerals + cargo_tech) < max_cargo) { res_credits -= 300; cargo_tech += 1; }
                     if (wParam == '6' && cargo_tech > 0) { res_credits += 250; cargo_tech -= 1; }
                     if (wParam == '7') { modal_enc_type = 5; }
+                    if (wParam == '8' && res_credits >= 100 && roster_count < 50) {
+                        res_credits -= 100;
+                        lstrcpyA(roster[roster_count].name, first_names[rand() % 16]);
+                        roster[roster_count].role = 0;
+                        roster[roster_count].level = 1;
+                        roster[roster_count].xp = 0;
+                        roster_count++;
+                    }
                     if (wParam == VK_SPACE) { modal_open = 0; }
+                } else if (modal_enc_type == 6) {
+                    if (wParam == '1') CycleOfficer(1);
+                    if (wParam == '2') CycleOfficer(2);
+                    if (wParam == '3') CycleOfficer(3);
+                    if (wParam == VK_SPACE) modal_open = 0;
                 } else if (modal_enc_type == 5) {
                     if (wParam == '1' && res_credits >= upg_weapons*500 && upg_weapons < 5) { res_credits -= upg_weapons*500; upg_weapons++; }
                     if (wParam == '2' && res_credits >= upg_shields*500 && upg_shields < 5) { res_credits -= upg_shields*500; upg_shields++; }
@@ -473,6 +559,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     InitStars();
+    for (int i = 0; i < 10; i++) {
+        lstrcpyA(roster[i].name, first_names[rand() % 16]);
+        roster[i].role = 0;
+        roster[i].level = 1;
+        roster[i].xp = 0;
+    }
+    roster_count = 10;
 
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;

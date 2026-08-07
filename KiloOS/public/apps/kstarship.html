@@ -150,6 +150,7 @@
         <button id="btn-down">S</button>
         <button id="btn-right">D</button>
       </div>
+      <button id="btn-crew" style="width:100%; margin-top:10px; font-size:14px;">MANAGE CREW (C)</button>
     </div>
   </div>
 
@@ -179,13 +180,49 @@
     // Game state
     const state = {
       ship: { x: 0, y: 0, targetX: 0, targetY: 0, moving: false },
-      resources: { fuel: 10000, hull: 100, crew: 10, credits: 1000 },
+      resources: { fuel: 10000, hull: 100, credits: 1000 },
       cargo: { minerals: 0, tech: 0 },
       upgrades: { weapons: 1, shields: 1, engines: 1, cargo: 1 },
+      crew: [],
       stars: [],
       mapSize: 2000,
       modalOpen: false
     };
+
+    const firstNames = ["Ryker", "Spok", "Chek", "Scot", "Uhura", "Sulu", "Mac", "Data", "Worf", "Geordi", "Ripley", "Dallas", "Hicks", "Hudson", "Vasquez", "Gordy"];
+    for(let i=0; i<10; i++) {
+        state.crew.push({ name: firstNames[Math.floor(Math.random() * firstNames.length)], role: 0, level: 1, xp: 0 });
+    }
+
+    function getOfficer(role) {
+        return state.crew.findIndex(c => c.role === role);
+    }
+
+    function cycleOfficer(role) {
+        let current = getOfficer(role);
+        let start = (current === -1) ? 0 : current + 1;
+        for(let i=0; i<state.crew.length; i++) {
+            let idx = (start + i) % state.crew.length;
+            if (state.crew[idx].role === 0) {
+                if (current !== -1) state.crew[current].role = 0;
+                state.crew[idx].role = role;
+                return;
+            }
+        }
+    }
+
+    function addXP(role, amt) {
+        let idx = getOfficer(role);
+        if (idx !== -1) {
+            let c = state.crew[idx];
+            if (c.level >= 5) return;
+            c.xp += amt;
+            if (c.xp >= c.level * 100) {
+                c.xp -= c.level * 100;
+                c.level++;
+            }
+        }
+    }
 
     // Generate random stars and planets
     function generateStars() {
@@ -284,7 +321,7 @@
       locY.innerText = Math.floor(state.ship.y);
       resFuel.innerText = Math.floor(state.resources.fuel);
       resHull.innerText = state.resources.hull + "%";
-      resCrew.innerText = state.resources.crew;
+      resCrew.innerText = state.crew.length;
       resCredits.innerText = state.resources.credits;
       cargoMinerals.innerText = state.cargo.minerals;
       cargoTech.innerText = state.cargo.tech;
@@ -358,7 +395,10 @@
             } else {
                 addBtn('Fire Weapons', () => {
                     let pDmg = 10 + state.upgrades.weapons * 5 + Math.floor(Math.random()*10);
+                    let gIdx = getOfficer(2); if (gIdx !== -1) pDmg += state.crew[gIdx].level * 2;
                     let sDmg = Math.max(0, 20 - state.upgrades.shields * 3 + Math.floor(Math.random()*5));
+                    let eIdx = getOfficer(3); if (eIdx !== -1) sDmg -= state.crew[eIdx].level * 1;
+                    if (sDmg < 0) sDmg = 0;
                     pirateHp -= pDmg;
                     if (pirateHp < 0) pirateHp = 0;
                     let result = `You hit pirate for ${pDmg}!`;
@@ -366,8 +406,10 @@
                         state.resources.hull -= sDmg;
                         if (state.resources.hull < 0) state.resources.hull = 0;
                         result += ` Pirate hits you for ${sDmg}!`;
+                        addXP(2, 10); addXP(3, 10);
                     } else {
                         result += ` Pirate destroyed!`;
+                        addXP(2, 20);
                     }
                     updateCombatBtns(result);
                 });
@@ -387,8 +429,12 @@
         state.resources.fuel += 500;
         closeBtn();
       } else if (type === 'Trader') {
-        desc.innerText = "A wandering trader offers help. 1 crew member joins your ship.";
-        state.resources.crew += 1;
+        if (state.crew.length < 50) {
+            state.crew.push({ name: firstNames[Math.floor(Math.random() * firstNames.length)], role: 0, level: 1, xp: 0 });
+            desc.innerText = "A wandering trader offers help. 1 crew member joins your ship.";
+        } else {
+            desc.innerText = "A wandering trader offers help, but you have no room.";
+        }
         closeBtn();
       } else if (type === 'Station') {
         desc.innerText = "You dock at a trading station. What would you like to do?";
@@ -448,6 +494,14 @@
                 });
                 addBtn(`Shipyard (Upgrades)`, () => {
                     updateStationBtns('shipyard');
+                });
+                addBtn(`Tavern (Recruit 100C)`, () => {
+                    if (state.resources.credits >= 100 && state.crew.length < 50) {
+                        state.resources.credits -= 100;
+                        state.crew.push({ name: firstNames[Math.floor(Math.random() * firstNames.length)], role: 0, level: 1, xp: 0 });
+                        updateUI();
+                        updateStationBtns('main');
+                    }
                 });
                 addBtn('Leave Station', () => {
                     modal.style.display = 'none';
@@ -512,7 +566,8 @@
         return;
       }
 
-      const currentMoveSpeed = 5 + (state.upgrades.engines - 1) * 2;
+      let pIdx = getOfficer(1);
+      const currentMoveSpeed = 5 + (state.upgrades.engines - 1) * 2 + (pIdx !== -1 ? state.crew[pIdx].level : 0);
       state.ship.moving = false;
       let dx = 0, dy = 0;
       if (keys.w) dy -= currentMoveSpeed;
@@ -526,6 +581,7 @@
         state.ship.moving = true;
         state.resources.fuel -= 1;
         if (state.resources.fuel < 0) state.resources.fuel = 0;
+        if (Math.random() < 0.1) addXP(1, 1);
       }
 
       // Boundaries
@@ -539,9 +595,53 @@
     }
 
     // Input handlers
+    function openCrewModal() {
+        if (state.modalOpen) return;
+        state.modalOpen = true;
+        const modal = document.getElementById('modal');
+        const title = document.getElementById('modal-title');
+        const desc = document.getElementById('modal-desc');
+        const actions = document.getElementById('modal-actions');
+        
+        const renderCrew = () => {
+            title.innerText = "CREW MANAGEMENT";
+            let p = getOfficer(1), g = getOfficer(2), e = getOfficer(3);
+            let un = state.crew.length - (p!==-1?1:0) - (g!==-1?1:0) - (e!==-1?1:0);
+            
+            let pStr = p !== -1 ? `${state.crew[p].name} L${state.crew[p].level} (${state.crew[p].xp}XP)` : "NONE";
+            let gStr = g !== -1 ? `${state.crew[g].name} L${state.crew[g].level} (${state.crew[g].xp}XP)` : "NONE";
+            let eStr = e !== -1 ? `${state.crew[e].name} L${state.crew[e].level} (${state.crew[e].xp}XP)` : "NONE";
+            
+            desc.innerHTML = `Pilot: ${pStr}<br>Gunner: ${gStr}<br>Eng: ${eStr}<br><br>Unassigned: ${un}`;
+            actions.innerHTML = '';
+            
+            const addBtn = (text, onClick) => {
+                const btn = document.createElement('button');
+                btn.className = 'action-btn';
+                btn.innerText = text;
+                btn.onclick = onClick;
+                actions.appendChild(btn);
+            };
+            
+            addBtn('Cycle Pilot', () => { cycleOfficer(1); renderCrew(); updateUI(); });
+            addBtn('Cycle Gunner', () => { cycleOfficer(2); renderCrew(); updateUI(); });
+            addBtn('Cycle Engineer', () => { cycleOfficer(3); renderCrew(); updateUI(); });
+            addBtn('Close', () => {
+                modal.style.display = 'none';
+                state.modalOpen = false;
+            });
+        };
+        renderCrew();
+        modal.style.display = 'block';
+        keys.w = keys.a = keys.s = keys.d = false;
+    }
+
+    document.getElementById('btn-crew').addEventListener('click', openCrewModal);
+
     window.addEventListener('keydown', e => {
       const k = e.key.toLowerCase();
       if (['w','a','s','d'].includes(k)) { keys[k] = true; }
+      if (k === 'c') { openCrewModal(); }
     });
     window.addEventListener('keyup', e => {
       const k = e.key.toLowerCase();
