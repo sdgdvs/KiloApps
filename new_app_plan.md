@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarship (Sci-fi exploration)
-**Phase:** 6 (next to do)
+**Phase:** 7 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
@@ -62,7 +62,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 3: Native C version (`KStarship/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [x] Phase 4: Sci-fi UI styling (dark space theme, neon accents, minimalist panels).
 - [x] Phase 5: Resource management system (Fuel, Hull, Crew) and consumption mechanics during travel.
-- [ ] Phase 6: Procedural generation of star systems (different types of planets and stars).
+- [x] Phase 6: Procedural generation of star systems (different types of planets and stars).
 - [ ] Phase 7: Random encounters system (pirates, anomalies, traders) upon entering new systems.
 - [ ] Phase 8: Trading economy and inventory system (buy/sell goods at stations).
 - [ ] Phase 9: Ship upgrades (weapons, shields, engines, cargo hold).

@@ -142,16 +142,31 @@
       mapSize: 2000
     };
 
-    // Generate random stars
+    // Generate random stars and planets
     function generateStars() {
-      // Create seed-based random to have consistent stars for coordinates if needed
-      // For now, simple random around the map
-      for (let i = 0; i < 500; i++) {
+      const starTypes = [
+        { type: 'Red Dwarf', color: '#ffaaaa', minP: 1, maxP: 3, size: 2 },
+        { type: 'Yellow Dwarf', color: '#ffffaa', minP: 2, maxP: 6, size: 3 },
+        { type: 'Blue Giant', color: '#aaddff', minP: 0, maxP: 2, size: 4 },
+        { type: 'White Dwarf', color: '#ffffff', minP: 0, maxP: 1, size: 1 }
+      ];
+      const planetTypes = ['Terrestrial', 'Gas Giant', 'Ice World', 'Lava', 'Barren'];
+
+      for (let i = 0; i < 200; i++) {
+        const sType = starTypes[Math.floor(Math.random() * starTypes.length)];
+        const numPlanets = sType.minP + Math.floor(Math.random() * (sType.maxP - sType.minP + 1));
+        const planets = [];
+        for (let p = 0; p < numPlanets; p++) {
+          planets.push(planetTypes[Math.floor(Math.random() * planetTypes.length)]);
+        }
+
         state.stars.push({
           x: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
           y: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
-          size: Math.random() * 2 + 1,
-          color: Math.random() > 0.8 ? '#aaddff' : (Math.random() > 0.6 ? '#ffddaa' : '#ffffff')
+          size: sType.size,
+          color: sType.color,
+          name: sType.type,
+          planets: planets
         });
       }
     }
@@ -229,7 +244,9 @@
         Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 50
       );
       if (nearby.length > 0) {
-        scannerInfo.innerText = "Star system detected in proximity.";
+        const sys = nearby[0];
+        let pText = sys.planets.length > 0 ? sys.planets.join(', ') : 'None';
+        scannerInfo.innerHTML = `Star: ${sys.name}<br>Planets: ${sys.planets.length}<br><span style="font-size:11px;color:#88cccc">${pText}</span>`;
         scannerInfo.style.color = "#00ffff";
       } else {
         scannerInfo.innerText = "Deep space. Nothing nearby.";

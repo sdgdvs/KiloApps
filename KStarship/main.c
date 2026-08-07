@@ -2,17 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAP_SIZE 2000
-#define NUM_STARS 500
+#define NUM_SYSTEMS 200
 
 typedef struct {
     int x;
     int y;
     int size;
     COLORREF color;
-} Star;
+    int type_idx;
+    int num_planets;
+    int planets[6];
+} StarSystem;
 
-Star stars[NUM_STARS];
+StarSystem systems[NUM_SYSTEMS];
+
+const char* star_names[] = {"Red Dwarf", "Yellow Dwarf", "Blue Giant", "White Dwarf"};
+const char* planet_names[] = {"Terrestrial", "Gas Giant", "Ice World", "Lava", "Barren"};
 
 int ship_x = 0;
 int ship_y = 0;
@@ -22,14 +27,28 @@ int res_hull = 100;
 int res_crew = 10;
 
 void InitStars() {
-    for (int i = 0; i < NUM_STARS; i++) {
-        stars[i].x = (rand() % MAP_SIZE) - MAP_SIZE/2;
-        stars[i].y = (rand() % MAP_SIZE) - MAP_SIZE/2;
-        stars[i].size = (rand() % 3) + 1;
-        int colorType = rand() % 10;
-        if (colorType > 8) stars[i].color = RGB(255, 221, 170);
-        else if (colorType > 6) stars[i].color = RGB(170, 221, 255);
-        else stars[i].color = RGB(255, 255, 255);
+    for (int i = 0; i < NUM_SYSTEMS; i++) {
+        systems[i].x = (rand() % MAP_SIZE) - MAP_SIZE/2;
+        systems[i].y = (rand() % MAP_SIZE) - MAP_SIZE/2;
+        
+        int r = rand() % 100;
+        if (r < 40) {
+            systems[i].type_idx = 0; systems[i].color = RGB(255, 170, 170);
+            systems[i].size = 2; systems[i].num_planets = 1 + rand() % 3;
+        } else if (r < 80) {
+            systems[i].type_idx = 1; systems[i].color = RGB(255, 255, 170);
+            systems[i].size = 3; systems[i].num_planets = 2 + rand() % 5;
+        } else if (r < 95) {
+            systems[i].type_idx = 2; systems[i].color = RGB(170, 221, 255);
+            systems[i].size = 4; systems[i].num_planets = rand() % 3;
+        } else {
+            systems[i].type_idx = 3; systems[i].color = RGB(255, 255, 255);
+            systems[i].size = 1; systems[i].num_planets = rand() % 2;
+        }
+
+        for (int p = 0; p < systems[i].num_planets; p++) {
+            systems[i].planets[p] = rand() % 5;
+        }
     }
 }
 
@@ -106,16 +125,16 @@ void Draw(HDC hdc, RECT* rect) {
     }
     DeleteObject(gridPen);
 
-    for (int i = 0; i < NUM_STARS; i++) {
-        int screenX = centerX + (stars[i].x - ship_x);
-        int screenY = centerY + (stars[i].y - ship_y);
+    for (int i = 0; i < NUM_SYSTEMS; i++) {
+        int screenX = centerX + (systems[i].x - ship_x);
+        int screenY = centerY + (systems[i].y - ship_y);
 
         if (screenX >= 0 && screenX <= mapWidth && screenY >= 0 && screenY <= height) {
-            HBRUSH starBrush = CreateSolidBrush(stars[i].color);
-            HPEN starPen = CreatePen(PS_SOLID, 1, stars[i].color);
+            HBRUSH starBrush = CreateSolidBrush(systems[i].color);
+            HPEN starPen = CreatePen(PS_SOLID, 1, systems[i].color);
             SelectObject(memDC, starBrush);
             SelectObject(memDC, starPen);
-            int s = stars[i].size;
+            int s = systems[i].size;
             Ellipse(memDC, screenX - s, screenY - s, screenX + s, screenY + s);
             DeleteObject(starBrush);
             DeleteObject(starPen);
@@ -194,25 +213,38 @@ void Draw(HDC hdc, RECT* rect) {
     LineTo(memDC, width - 15, 193);
     DeleteObject(linePen);
 
-    int found_star = 0;
-    for (int i = 0; i < NUM_STARS; i++) {
-        int dx = stars[i].x - ship_x;
-        int dy = stars[i].y - ship_y;
+    int found_sys_idx = -1;
+    for (int i = 0; i < NUM_SYSTEMS; i++) {
+        int dx = systems[i].x - ship_x;
+        int dy = systems[i].y - ship_y;
         if (dx*dx + dy*dy < 2500) {
-            found_star = 1;
+            found_sys_idx = i;
             break;
         }
     }
 
-    if (found_star) {
-        wsprintfA(buf, "Star system detected in proximity.");
+    if (found_sys_idx != -1) {
+        StarSystem* sys = &systems[found_sys_idx];
+        wsprintfA(buf, "Star: %s\nPlanets: %d", star_names[sys->type_idx], sys->num_planets);
         SetTextColor(memDC, RGB(0, 255, 255));
+        RECT textRect = {mapWidth + 15, 200, width - 10, 240};
+        DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
+        
+        char pbuf[256] = "";
+        for (int p = 0; p < sys->num_planets; p++) {
+            if (p > 0) lstrcatA(pbuf, ", ");
+            lstrcatA(pbuf, planet_names[sys->planets[p]]);
+        }
+        if (sys->num_planets == 0) lstrcatA(pbuf, "None");
+        SetTextColor(memDC, RGB(136, 204, 204));
+        RECT pRect = {mapWidth + 15, 240, width - 10, 300};
+        DrawTextA(memDC, pbuf, -1, &pRect, DT_WORDBREAK);
     } else {
         wsprintfA(buf, "Deep space. Nothing nearby.");
         SetTextColor(memDC, RGB(136, 136, 136));
+        RECT textRect = {mapWidth + 15, 200, width - 10, 300};
+        DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
     }
-    RECT textRect = {mapWidth + 15, 200, width - 10, 300};
-    DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
 
     BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
     DeleteObject(memBitmap);
