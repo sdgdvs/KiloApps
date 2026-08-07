@@ -756,9 +756,14 @@
         </div>
       </div>
     </div>
-  <div style="position:absolute; bottom:8px; right:12px; font-size:10px; color:var(--text-muted); opacity:0.7; pointer-events:none;">Press 'H' for Help</div>
+  <div id="helpOverlay" style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:bold; color:var(--text-muted); background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:12px; opacity:0.8; pointer-events:none; z-index:100; backdrop-filter:blur(2px);">Press 'H' for Help</div>
   <script>
-    if (window.resizeTo) window.resizeTo(460, 620);
+    if (window.resizeTo) {
+      window.resizeTo(460, 580);
+      if (window.moveTo && window.screen) {
+        window.moveTo((screen.availWidth - 460) / 2, (screen.availHeight - 580) / 2);
+      }
+    }
 
     const RING_CIRCUMFERENCE = 2 * Math.PI * 95; // ~596.9
 
