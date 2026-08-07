@@ -30,7 +30,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KSys
 - KConverter
 - KTodo
 - KGraph
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSynth
 - KTask
 - KRogue
+- KSys
 
 ## Progress Log
 - KMine: Usability and UI issues fixed (auto-opening size, explicit instructions overlay, cell size and crisp font adjustments).
@@ -210,3 +210,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSynth: Usability and UI issues fixed (added startup MessageBox instructions and Help toggle, fixed clipped layout via AdjustWindowRectEx, used negative font sizes for crisp UI text).
 - KTask: Usability and UI issues fixed (added WS_CLIPCHILDREN to fix flickering, enforced WM_GETMINMAXINFO min size, clamped layout coordinates, pulled SPI_GETNONCLIENTMETRICS for crisp fonts, added EM_SETCUEBANNER for explicit opening instructions, and injected JS startup hook in web for visual instructions).
 - KRogue: Usability and UI issues fixed (disabled web canvas image smoothing for sharp pixel art, added responsive web width, expanded native layout boundary to prevent overlap, added persistent native controls hint at bottom, and enforced NONANTIALIASED_QUALITY for crisp terminal font).
+- KSys: Usability and UI issues fixed (adjusted auto-opening size to 1024x768 and centered on screen, added explicit Help buttons in both web header and native UI, and used negative font size with CLEARTYPE_QUALITY for crisp text).
