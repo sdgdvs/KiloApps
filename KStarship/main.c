@@ -17,6 +17,9 @@ Star stars[NUM_STARS];
 int ship_x = 0;
 int ship_y = 0;
 int is_moving = 0;
+float res_fuel = 10000.0f;
+int res_hull = 100;
+int res_crew = 10;
 
 void InitStars() {
     for (int i = 0; i < NUM_STARS; i++) {
@@ -33,10 +36,19 @@ void InitStars() {
 void Update() {
     is_moving = 0;
     int speed = 5;
-    if (GetAsyncKeyState('W') & 0x8000) { ship_y -= speed; is_moving = 1; }
-    if (GetAsyncKeyState('S') & 0x8000) { ship_y += speed; is_moving = 1; }
-    if (GetAsyncKeyState('A') & 0x8000) { ship_x -= speed; is_moving = 1; }
-    if (GetAsyncKeyState('D') & 0x8000) { ship_x += speed; is_moving = 1; }
+    int dx = 0, dy = 0;
+    if (GetAsyncKeyState('W') & 0x8000) { dy -= speed; }
+    if (GetAsyncKeyState('S') & 0x8000) { dy += speed; }
+    if (GetAsyncKeyState('A') & 0x8000) { dx -= speed; }
+    if (GetAsyncKeyState('D') & 0x8000) { dx += speed; }
+
+    if ((dx != 0 || dy != 0) && res_fuel > 0) {
+        ship_x += dx;
+        ship_y += dy;
+        is_moving = 1;
+        res_fuel -= 1.0f;
+        if (res_fuel < 0) res_fuel = 0;
+    }
 
     if (ship_x < -MAP_SIZE/2) ship_x = -MAP_SIZE/2;
     if (ship_x > MAP_SIZE/2) ship_x = MAP_SIZE/2;
@@ -157,12 +169,29 @@ void Draw(HDC hdc, RECT* rect) {
     SetTextColor(memDC, RGB(255, 255, 255));
     TextOutA(memDC, mapWidth + 15, 45, buf, lstrlenA(buf));
 
+    wsprintfA(buf, "RESOURCES");
+    SetTextColor(memDC, RGB(0, 255, 255));
+    TextOutA(memDC, mapWidth + 15, 75, buf, lstrlenA(buf));
+    
+    MoveToEx(memDC, mapWidth + 15, 93, NULL);
+    LineTo(memDC, width - 15, 93);
+    
+    wsprintfA(buf, "Fuel: %d", (int)res_fuel);
+    SetTextColor(memDC, RGB(255, 255, 255));
+    TextOutA(memDC, mapWidth + 15, 100, buf, lstrlenA(buf));
+    
+    wsprintfA(buf, "Hull: %d%%", res_hull);
+    TextOutA(memDC, mapWidth + 15, 120, buf, lstrlenA(buf));
+    
+    wsprintfA(buf, "Crew: %d", res_crew);
+    TextOutA(memDC, mapWidth + 15, 140, buf, lstrlenA(buf));
+
     wsprintfA(buf, "SCANNER");
     SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 80, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 175, buf, lstrlenA(buf));
     
-    MoveToEx(memDC, mapWidth + 15, 98, NULL);
-    LineTo(memDC, width - 15, 98);
+    MoveToEx(memDC, mapWidth + 15, 193, NULL);
+    LineTo(memDC, width - 15, 193);
     DeleteObject(linePen);
 
     int found_star = 0;
@@ -182,7 +211,7 @@ void Draw(HDC hdc, RECT* rect) {
         wsprintfA(buf, "Deep space. Nothing nearby.");
         SetTextColor(memDC, RGB(136, 136, 136));
     }
-    RECT textRect = {mapWidth + 15, 105, width - 10, 200};
+    RECT textRect = {mapWidth + 15, 200, width - 10, 300};
     DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
 
     BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);

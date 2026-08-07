@@ -106,6 +106,12 @@
         <div>Location: <span id="loc-x" class="value">0</span>, <span id="loc-y" class="value">0</span></div>
       </div>
       <div class="info-box">
+        <div class="label">RESOURCES</div>
+        <div>Fuel: <span id="res-fuel" class="value">10000</span></div>
+        <div>Hull: <span id="res-hull" class="value">100%</span></div>
+        <div>Crew: <span id="res-crew" class="value">10</span></div>
+      </div>
+      <div class="info-box">
         <div class="label">SCANNER</div>
         <div id="scanner-info">No objects nearby.</div>
       </div>
@@ -123,11 +129,15 @@
     const ctx = canvas.getContext('2d');
     const locX = document.getElementById('loc-x');
     const locY = document.getElementById('loc-y');
+    const resFuel = document.getElementById('res-fuel');
+    const resHull = document.getElementById('res-hull');
+    const resCrew = document.getElementById('res-crew');
     const scannerInfo = document.getElementById('scanner-info');
 
     // Game state
     const state = {
       ship: { x: 0, y: 0, targetX: 0, targetY: 0, moving: false },
+      resources: { fuel: 10000, hull: 100, crew: 10 },
       stars: [],
       mapSize: 2000
     };
@@ -210,6 +220,9 @@
     function updateUI() {
       locX.innerText = Math.floor(state.ship.x);
       locY.innerText = Math.floor(state.ship.y);
+      resFuel.innerText = Math.floor(state.resources.fuel);
+      resHull.innerText = state.resources.hull + "%";
+      resCrew.innerText = state.resources.crew;
 
       // Check nearby stars
       const nearby = state.stars.filter(s => 
@@ -230,10 +243,19 @@
 
     function update() {
       state.ship.moving = false;
-      if (keys.w) { state.ship.y -= moveSpeed; state.ship.moving = true; }
-      if (keys.s) { state.ship.y += moveSpeed; state.ship.moving = true; }
-      if (keys.a) { state.ship.x -= moveSpeed; state.ship.moving = true; }
-      if (keys.d) { state.ship.x += moveSpeed; state.ship.moving = true; }
+      let dx = 0, dy = 0;
+      if (keys.w) dy -= moveSpeed;
+      if (keys.s) dy += moveSpeed;
+      if (keys.a) dx -= moveSpeed;
+      if (keys.d) dx += moveSpeed;
+
+      if ((dx !== 0 || dy !== 0) && state.resources.fuel > 0) {
+        state.ship.x += dx;
+        state.ship.y += dy;
+        state.ship.moving = true;
+        state.resources.fuel -= 1;
+        if (state.resources.fuel < 0) state.resources.fuel = 0;
+      }
 
       // Boundaries
       if (state.ship.x < -state.mapSize/2) state.ship.x = -state.mapSize/2;
