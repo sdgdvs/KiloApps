@@ -181,7 +181,7 @@ void LoadNotes() {
     }
     if (numNotes == 0) {
         numNotes = 1; pinned[0] = 0; encrypted[0] = 0;
-        const char* def = "Welcome to KNote!\r\n- #tags supported\r\n- Tabs available\r\n- AES encryption\r\n- Press F1 for Help";
+        const char* def = "Welcome to KNote!\r\n- #tags supported\r\n- Tabs available\r\n- AES encryption\r\n- Press F1 or H for Help";
         lstrcpyA(notes[0], def);
     }
 }
@@ -402,7 +402,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             bgBrush = CreateSolidBrush(RGB(255, 253, 231));
             sidebarBrush = CreateSolidBrush(RGB(255, 249, 196));
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
             
             hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 0, 0, 100, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
             hBtnDel = CreateWindow("BUTTON", "Del", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 100, 0, 100, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
@@ -559,16 +559,34 @@ char* __cdecl strstr(const char* h, const char* n) {
 
 
 void MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if(hUser32) {
+        typedef BOOL (WINAPI *SetProcessDPIAwareFunc)(void);
+        SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if(setDpiAware) setDpiAware();
+    }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0}; wc.lpfnWndProc = WndProc; wc.hInstance = hInstance; wc.lpszClassName = "KNoteApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1)); wc.hbrBackground = CreateSolidBrush(RGB(255, 253, 231));
     RegisterClass(&wc);
-    HWND hwnd = CreateWindowEx(0, "KNoteApp", "KNote", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    
+    RECT rc = {0, 0, W, H};
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+    HWND hwnd = CreateWindowEx(0, "KNoteApp", "KNote - Press F1 or H for Help", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
     ShowWindow(hwnd, SW_SHOW); UpdateWindow(hwnd);
     MSG msg; 
     while (GetMessage(&msg, NULL, 0, 0) > 0) { 
-        if (msg.message == WM_KEYDOWN && msg.wParam == VK_F1) {
-            MessageBox(hwnd, "KNote Help:\r\n- Use left sidebar to manage notes.\r\n- Type in the search box to filter by text/tags.\r\n- Use 'Lock' to encrypt a note.\r\n- 'Export' saves notes to files.", "Help", MB_OK | MB_ICONINFORMATION);
+        if (msg.message == WM_KEYDOWN) {
+            int isEdit = 0;
+            HWND hFocus = GetFocus();
+            if (hFocus) {
+                char cls[32] = {0};
+                GetClassNameA(hFocus, cls, sizeof(cls));
+                if (lstrcmpiA(cls, "EDIT") == 0) isEdit = 1;
+            }
+            if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                MessageBox(hwnd, "KNote Help:\r\n- Use left sidebar to manage notes.\r\n- Type in the search box to filter by text/tags.\r\n- Use 'Lock' to encrypt a note.\r\n- 'Export' saves notes to files.", "Help", MB_OK | MB_ICONINFORMATION);
+            }
         }
         TranslateMessage(&msg); 
         DispatchMessage(&msg); 
