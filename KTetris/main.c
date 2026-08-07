@@ -1158,8 +1158,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_LBUTTONDOWN: {
-            int mx = LOWORD(lParam);
-            int my = HIWORD(lParam);
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int winWidth = clientRect.right - clientRect.left;
+            int winHeight = clientRect.bottom - clientRect.top;
+            int total_w = W * CELL_SIZE + 170;
+            int total_h = H * CELL_SIZE + 110;
+            float scaleX = (float)winWidth / total_w;
+            float scaleY = (float)winHeight / total_h;
+            float scale = scaleX < scaleY ? scaleX : scaleY;
+            if (scale <= 0.0f) scale = 1.0f;
+            int offsetX = (winWidth - (int)(total_w * scale)) / 2;
+            int offsetY = (winHeight - (int)(total_h * scale)) / 2;
+
+            int mx = (int)((LOWORD(lParam) - offsetX) / scale);
+            int my = (int)((HIWORD(lParam) - offsetY) / scale);
             if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help && !show_keybinds) {
                 replay_tick += 20;
                 if (is_replaying) {
@@ -1326,17 +1339,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int winWidth = clientRect.right - clientRect.left;
+            int winHeight = clientRect.bottom - clientRect.top;
+            
             int total_w = W * CELL_SIZE + 170;
             int total_h = H * CELL_SIZE + 110;
+            
+            float scaleX = (float)winWidth / total_w;
+            float scaleY = (float)winHeight / total_h;
+            float scale = scaleX < scaleY ? scaleX : scaleY;
+            if (scale <= 0.0f) scale = 1.0f;
+            
+            int offsetX = (winWidth - (int)(total_w * scale)) / 2;
+            int offsetY = (winHeight - (int)(total_h * scale)) / 2;
 
             HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP hbm = CreateCompatibleBitmap(hdc, total_w, total_h);
+            HBITMAP hbm = CreateCompatibleBitmap(hdc, winWidth, winHeight);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
             
             HBRUSH bg = CreateSolidBrush(RGB(10, 10, 20));
-            RECT fullRc = {0, 0, total_w, total_h};
+            RECT fullRc = {0, 0, winWidth, winHeight};
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
+
+            SetGraphicsMode(memDC, GM_ADVANCED);
+            XFORM xForm = {scale, 0.0f, 0.0f, scale, (float)offsetX, (float)offsetY};
+            SetWorldTransform(memDC, &xForm);
 
             // Cyber-grid environmental art
             DWORD currentTick = GetTickCount();
@@ -1810,7 +1840,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, hOldPen);
             DeleteObject(hPen);
             
-            BitBlt(hdc, 0, 0, total_w, total_h, memDC, 0, 0, SRCCOPY);
+            BitBlt(hdc, 0, 0, winWidth, winHeight, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);
             DeleteObject(hbm);
             DeleteDC(memDC);
@@ -1838,12 +1868,14 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    RECT r = {0, 0, W * CELL_SIZE + 170, H * CELL_SIZE + 110};
-    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
+    int defaultW = (W * CELL_SIZE + 170) * 3 / 2;
+    int defaultH = (H * CELL_SIZE + 110) * 3 / 2;
+    RECT r = {0, 0, defaultW, defaultH};
+    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, FALSE);
     int winWidth = r.right - r.left;
     int winHeight = r.bottom - r.top;
 
-    HWND hwnd = CreateWindowEx(0, "KTetrisApp", "KTetris", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    HWND hwnd = CreateWindowEx(0, "KTetrisApp", "KTetris", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
