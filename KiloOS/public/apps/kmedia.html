@@ -58,10 +58,10 @@
   .help-box button { margin-top: 15px; width: 100%; }
 </style>
 </head>
-<body data-width="800" data-height="600">
+<body data-width="950" data-height="700">
 
 <div class="header">
-  <div class="title" id="title">No media selected (Press 'h' for help)</div>
+  <div class="title" id="title">No media selected (Press 'h' or F1 for help)</div>
   <div class="controls">
     <button id="btnAdd">Add Media/Subtitles</button>
     <button id="btnPlay" class="secondary">Play/Pause</button>
@@ -73,6 +73,7 @@
     <button id="btnMode" class="secondary">Mode: Normal</button>
     <button id="btnSpeed" class="secondary">1.0x</button>
     <button id="btnExport">Export Frame</button>
+    <button id="btnHelp" class="secondary">Help (F1)</button>
   </div>
   <div class="seek-bar-container">
     <span id="timeDisplay">0:00 / 0:00</span>
@@ -146,6 +147,7 @@
     btnMode: document.getElementById('btnMode'),
     btnSpeed: document.getElementById('btnSpeed'),
     btnExport: document.getElementById('btnExport'),
+    btnHelp: document.getElementById('btnHelp'),
     seekSlider: document.getElementById('seekSlider'),
     volumeSlider: document.getElementById('volumeSlider'),
     timeDisplay: document.getElementById('timeDisplay'),
@@ -248,7 +250,7 @@
       if (playlist.length === 0) {
         UI.mediaPlayer.pause();
         UI.mediaPlayer.removeAttribute('src');
-        UI.title.textContent = 'No media selected (Press \'h\' for help)';
+        UI.title.textContent = 'No media selected (Press \'h\' or F1 for help)';
         currentIndex = -1;
       } else {
         if (currentIndex >= playlist.length) currentIndex = playlist.length - 1;
@@ -262,7 +264,7 @@
     playlist = [];
     UI.mediaPlayer.pause();
     UI.mediaPlayer.removeAttribute('src');
-    UI.title.textContent = 'No media selected (Press \'h\' for help)';
+    UI.title.textContent = 'No media selected (Press \'h\' or F1 for help)';
     currentIndex = -1;
     renderPlaylist();
   };
@@ -521,10 +523,14 @@
     helpOverlay.style.display = 'none';
   };
 
+  UI.btnHelp.onclick = () => {
+    helpOverlay.style.display = helpOverlay.style.display === 'flex' ? 'none' : 'flex';
+  };
+
   window.addEventListener('keydown', (e) => {
     if (document.activeElement === UI.searchInput) return;
 
-    if (e.key.toLowerCase() === 'h') {
+    if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
       helpOverlay.style.display = helpOverlay.style.display === 'flex' ? 'none' : 'flex';
       e.preventDefault();
     } else if (e.code === 'Space') {

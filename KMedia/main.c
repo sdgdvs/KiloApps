@@ -28,12 +28,12 @@ char* my_strrchr(const char* str, int ch) {
     return (char*)last;
 }
 
-#define W 800
-#define H 600
+#define W 950
+#define H 700
 #define MAX_TRACKS 256
 
 HWND g_hwndMain;
-HWND hTitle, hEditSearch, hBtnOpen, hBtnPlay, hBtnStop, hBtnPrev, hBtnNext, hBtnRem, hBtnClear, hBtnMode, hBtnSpeed, hBtnExport, hListBox, hSubText;
+HWND hTitle, hEditSearch, hBtnOpen, hBtnPlay, hBtnStop, hBtnPrev, hBtnNext, hBtnRem, hBtnClear, hBtnMode, hBtnSpeed, hBtnExport, hListBox, hSubText, hBtnHelp;
 
 char g_tracks[MAX_TRACKS][MAX_PATH];
 int g_trackCount = 0;
@@ -382,9 +382,9 @@ void ExportFrameToBMP() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
-            hTitle = CreateWindowEx(0, "STATIC", "No file selected (Press 'H' for help)",
+            hTitle = CreateWindowEx(0, "STATIC", "No file selected (Press 'H' or F1 for help)",
                 WS_CHILD | WS_VISIBLE | SS_CENTER | 0x4000,
                 10, 10, W - 36, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -444,16 +444,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE,
                 176, 124, 158, 26, hwnd, (HMENU)12, NULL, NULL);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help (F1)",
+                WS_CHILD | WS_VISIBLE,
+                342, 124, 85, 26, hwnd, (HMENU)13, NULL, NULL);
+            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | WS_HSCROLL,
-                10, 155, W - 36, 280, hwnd, (HMENU)4, NULL, NULL);
+                10, 155, W - 36, H - 315, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HFONT hSubFont = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hSubFont = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             hSubText = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_CENTER,
-                10, 445, W - 36, 105, hwnd, NULL, NULL, NULL);
+                10, H - 150, W - 36, 105, hwnd, NULL, NULL, NULL);
             SendMessage(hSubText, WM_SETFONT, (WPARAM)hSubFont, TRUE);
 
             SetTimer(hwnd, 1, 200, NULL);
@@ -489,7 +494,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             StopTrack();
                             mciSendStringA("close myMedia", NULL, 0, NULL);
                             currentFile[0] = '\0';
-                            SetWindowTextA(hTitle, "No file selected (Press 'H' for help)");
+                            SetWindowTextA(hTitle, "No file selected (Press 'H' or F1 for help)");
                             g_currentIndex = -1;
                         } else if (g_currentIndex > masterIdx) {
                             g_currentIndex--;
@@ -503,7 +508,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 currentFile[0] = '\0';
                 StopTrack();
                 mciSendStringA("close myMedia", NULL, 0, NULL);
-                SetWindowTextA(hTitle, "No file selected (Press 'H' for help)");
+                SetWindowTextA(hTitle, "No file selected (Press 'H' or F1 for help)");
                 RefilterPlaylist();
             } else if (LOWORD(wParam) == 9) {
                 CycleMode();
@@ -514,6 +519,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RefilterPlaylist();
             } else if (LOWORD(wParam) == 12) {
                 ExportFrameToBMP();
+            } else if (LOWORD(wParam) == 13) {
+                MessageBoxA(g_hwndMain, "Keyboard Shortcuts:\nSpace : Play/Pause\nLeft Arrow / P : Previous Track\nRight Arrow / N : Next Track\nS : Stop\nM : Change Mode\nH / F1 : Help", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == 4 && HIWORD(wParam) == LBN_DBLCLK) {
                 PlaySelectedTrack();
             }
@@ -552,6 +559,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -587,8 +595,8 @@ void MainEntry() {
                 } else if (msg.wParam == 'M' || msg.wParam == 'm') {
                     CycleMode();
                     continue;
-                } else if (msg.wParam == 'H' || msg.wParam == 'h') {
-                    MessageBoxA(g_hwndMain, "Keyboard Shortcuts:\nSpace : Play/Pause\nLeft Arrow / P : Previous Track\nRight Arrow / N : Next Track\nS : Stop\nM : Change Mode\nH : Help", "Help", MB_OK | MB_ICONINFORMATION);
+                } else if (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) {
+                    MessageBoxA(g_hwndMain, "Keyboard Shortcuts:\nSpace : Play/Pause\nLeft Arrow / P : Previous Track\nRight Arrow / N : Next Track\nS : Stop\nM : Change Mode\nH / F1 : Help", "Help", MB_OK | MB_ICONINFORMATION);
                     continue;
                 }
             }
