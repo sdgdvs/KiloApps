@@ -112,21 +112,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
+            HFONT hFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+                                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+                                     DEFAULT_PITCH | FF_ROMAN, "Georgia");
+            HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
+
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
             int cw = clientRect.right - clientRect.left;
             int ch = clientRect.bottom - clientRect.top;
 
-            HBRUSH bgBrush = CreateSolidBrush(RGB(26, 26, 26));
+            HBRUSH bgBrush = CreateSolidBrush(RGB(26, 11, 46));
             FillRect(hdc, &clientRect, bgBrush);
             DeleteObject(bgBrush);
 
             RECT arenaRect = {20, 220, cw - 20, ch - 220};
-            HBRUSH arenaBrush = CreateSolidBrush(RGB(30, 30, 30));
+            HBRUSH arenaBrush = CreateSolidBrush(RGB(244, 235, 208));
             FillRect(hdc, &arenaRect, arenaBrush);
             DeleteObject(arenaBrush);
             
-            HPEN borderPen = CreatePen(PS_SOLID, 2, RGB(51, 51, 51));
+            HPEN borderPen = CreatePen(PS_SOLID, 3, RGB(184, 153, 71));
             HGDIOBJ oldPen = SelectObject(hdc, borderPen);
             HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
             HGDIOBJ oldBrush = SelectObject(hdc, nullBrush);
@@ -134,28 +139,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(hdc, oldBrush);
             
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(102, 102, 102));
+            SetTextColor(hdc, RGB(92, 64, 51));
+            HFONT hArenaFont = CreateFont(24, 0, 0, 0, FW_BOLD, TRUE, FALSE, FALSE, ANSI_CHARSET, 
+                                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+                                     DEFAULT_PITCH | FF_ROMAN, "Georgia");
+            SelectObject(hdc, hArenaFont);
             const char* arenaText = "Spells and effects go here";
             DrawText(hdc, arenaText, -1, &arenaRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            SelectObject(hdc, hFont);
+            DeleteObject(hArenaFont);
 
             int cardW = 100;
             int cardH = 140;
             int gap = 10;
             
-            HPEN cardBorderPen = CreatePen(PS_SOLID, 2, RGB(85, 85, 85));
+            HPEN cardBorderPen = CreatePen(PS_SOLID, 2, RGB(139, 115, 85));
             SelectObject(hdc, cardBorderPen);
 
             int oppW = opponentCount * cardW + (opponentCount > 0 ? opponentCount - 1 : 0) * gap;
             int oppX = (cw - oppW) / 2;
             int oppY = 60;
-            HBRUSH oppBrush = CreateSolidBrush(RGB(58, 26, 26));
+            HBRUSH oppBrush = CreateSolidBrush(RGB(61, 43, 31));
 
             for (int i = 0; i < opponentCount; i++) {
                 int cx = oppX + i * (cardW + gap);
                 SelectObject(hdc, oppBrush);
                 Rectangle(hdc, cx, oppY, cx + cardW, oppY + cardH);
                 
-                SetTextColor(hdc, RGB(212, 212, 212));
+                SetTextColor(hdc, RGB(139, 115, 85));
                 RECT textRect = {cx, oppY, cx + cardW, oppY + cardH};
                 DrawText(hdc, "Card", -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
@@ -164,7 +175,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int playerW = playerCount * cardW + (playerCount > 0 ? playerCount - 1 : 0) * gap;
             int playerX = (cw - playerW) / 2;
             int playerY = ch - cardH - 20;
-            HBRUSH playerBrush = CreateSolidBrush(RGB(42, 42, 42));
+            HBRUSH playerBrush = CreateSolidBrush(RGB(248, 241, 228));
 
             for (int i = 0; i < playerCount; i++) {
                 int cx = playerX + i * (cardW + gap);
@@ -173,11 +184,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
                 CardDef cd = sampleCards[playerHand[i]];
                 
-                SetTextColor(hdc, RGB(212, 212, 212));
+                SetTextColor(hdc, RGB(44, 30, 22));
                 RECT nameRect = {cx, playerY + 50, cx + cardW, playerY + 70};
                 DrawText(hdc, cd.name, -1, &nameRect, DT_CENTER | DT_SINGLELINE);
                 
-                SetTextColor(hdc, RGB(77, 166, 255));
+                SetTextColor(hdc, RGB(0, 85, 128));
                 char costStr[32];
                 wsprintf(costStr, "Mana: %d", cd.cost);
                 RECT costRect = {cx, playerY + 80, cx + cardW, playerY + 100};
@@ -189,12 +200,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(borderPen);
             DeleteObject(cardBorderPen);
 
-            SetTextColor(hdc, RGB(212, 212, 212));
+            SetTextColor(hdc, RGB(232, 216, 183));
             RECT lblOpp = {0, oppY - 20, cw, oppY};
             DrawText(hdc, "Opponent Hand", -1, &lblOpp, DT_CENTER | DT_SINGLELINE);
             
             RECT lblPlayer = {0, playerY - 20, cw, playerY};
             DrawText(hdc, "Player Hand", -1, &lblPlayer, DT_CENTER | DT_SINGLELINE);
+
+            SelectObject(hdc, oldFont);
+            DeleteObject(hFont);
 
             EndPaint(hwnd, &ps);
             return 0;
