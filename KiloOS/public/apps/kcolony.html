@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KColony</title>
     <style>
         body { margin: 0; padding: 20px; background-color: #050a0f; color: #00ffff; font-family: 'Courier New', Courier, monospace; user-select: none; }
@@ -26,6 +27,7 @@
 <body>
     <div id="start-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,10,15,0.95); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#00ffff;">
         <h1 style="text-shadow: 0 0 10px #00ffff;">KColony Scenarios</h1>
+        <p style="text-align: center; color: #00ffff; text-shadow: 0 0 5px #00ffff; margin-top: 0; margin-bottom: 20px;">Press [H] at any time for Help & Manual</p>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(0)">Endless Survival<br><small>Standard Mode</small></button>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(1)">Sandbox Mode<br><small>Unlimited Resources & Tech</small></button>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(2)">100-Day Survival<br><small>Survive 100 Days</small></button>
@@ -102,6 +104,9 @@
         </div>
     </div>
     <script>
+        if (window.parent !== window) {
+            window.parent.postMessage({cmd: 'resize', width: 850, height: 650}, '*');
+        }
         const GRID_W = 20;
         const GRID_H = 20;
         let food = 50, power = 50, maxPower = 50, mat = 50, advm = 0;
