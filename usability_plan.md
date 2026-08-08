@@ -55,7 +55,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KColony
 - KAlchemy
 - KFont
 - KMail
@@ -107,6 +106,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KDB
 - KiloOS Web UI
 - KFortress
+- KColony
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (auto-opening size to 1000x700, added visible Help status button to web, updated native window title for Help, implemented crisp fonts).
@@ -258,3 +258,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KiloOS Web UI (Shell & Apps): Usability and UI issues fixed (replaced transient help toast notification with a dedicated modal dialog for explicit instructions, adjusted modal width to 450px to accommodate instructions, improved help icon triggers).
 - KDB: Usability and UI issues fixed (increased auto-opening size to 1100x800, expanded cryptic labels to explicit buttons, added dedicated Help button to the control bar, and enabled Segoe UI CLEARTYPE_QUALITY).
 - KFortress: Usability and UI issues fixed (expanded native layout to 1024x700 with AdjustWindowRect, enabled DPI awareness and CLEARTYPE_QUALITY for crisp text, added functioning Help Modal and H hotkey).
+- KColony: Usability and UI issues fixed (adjusted auto-opening size to 850x650 in web via resize and native via WS_OVERLAPPED bounds, enforced DPI awareness and viewport meta tags for crisp text, added explicit 'Press H for Help' instructions to web/native startup UI).
