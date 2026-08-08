@@ -55,7 +55,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KImage
 - KHex
 - KCalc
 - KCalendar
@@ -107,6 +106,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KJournal
 - KBase
 - KPad
+- KImage
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (auto-opening size to 1000x700, added visible Help status button to web, updated native window title for Help, implemented crisp fonts).
@@ -244,3 +244,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KRead: Usability and UI issues fixed (added Help button to toolbar in web, optimized text-rendering, updated initial text to explicitly mention F1/H shortcuts, enforced Read-Only mode in native C, allowed WM_CTLCOLORSTATIC for theme styling on read-only edit, and added text margins to improve layout legibility).
 - KJournal: Usability and UI issues fixed (auto-opening size adjusted to 1100x750, explicit help instructions added, crisp text styles verified, native console size increased and help title added).
 - KBase: Usability and UI issues fixed (auto-opening size adjusted, DPI awareness and crisp text enabled, visible help controls and F1/H shortcuts added).
+- KImage: Usability and UI issues fixed (auto-opening size to 1200x800, visible controls wrapping and padding, explicit instructions overlay and title, crisp text filtering).
