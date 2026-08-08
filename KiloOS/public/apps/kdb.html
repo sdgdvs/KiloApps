@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KDB - Database Manager</title>
+<title>KDB - Employee Database</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -317,13 +317,14 @@
       <div class="pwd-box">
         <input type="password" id="dbPassword" aria-label="Database Encryption Password" placeholder="Encryption Key..." onchange="loadRecords()" title="Set password to encrypt/decrypt database">
       </div>
-      <button class="btn-secondary" onclick="exportCSV()" title="Export database as CSV">CSV</button>
-      <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file">↓ CSV</button>
+      <button class="btn-secondary" onclick="exportCSV()" title="Export database as CSV">Export CSV</button>
+      <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file">Import CSV</button>
       <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
-      <button class="btn-secondary" onclick="exportJSON()" title="Export database as JSON">JSON</button>
-      <button class="btn-secondary" onclick="triggerImportJSON()" title="Import JSON file">↓ JSON</button>
+      <button class="btn-secondary" onclick="exportJSON()" title="Export database as JSON">Export JSON</button>
+      <button class="btn-secondary" onclick="triggerImportJSON()" title="Import JSON file">Import JSON</button>
       <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="importJSON(event)">
       <button class="btn-secondary" onclick="resetToDefaults()" title="Reset database to default sample data">Reset</button>
+      <button class="btn-secondary" onclick="showHelp()" title="Show Help">Help [H]</button>
     </div>
   </div>
   <div class="query-hint">
@@ -389,11 +390,15 @@
 </div>
 
 <script>
-if (window.resizeTo) window.resizeTo(1024, 768);
+if (window.resizeTo) window.resizeTo(1100, 800);
+
+function showHelp() {
+  alert(`KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 500 records.\n- Export and import via CSV or JSON.`);
+}
 
 window.addEventListener('keydown', function(e) {
   if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-    alert(`KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 500 records.\n- Export and import via CSV or JSON.`);
+    showHelp();
   }
 });
 

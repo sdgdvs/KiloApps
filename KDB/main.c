@@ -3,8 +3,8 @@
 #include <commctrl.h>
 #include <commdlg.h>
 
-#define W 1024
-#define H 768
+#define W 1100
+#define H 800
 #define IDC_SEARCH 101
 #define IDC_ADD_ID 102
 #define IDC_ADD_NAME 103
@@ -18,11 +18,12 @@
 #define IDC_EXPORT_JSON 111
 #define IDC_IMPORT_JSON 112
 #define IDC_RELOAD_BTN 113
+#define IDC_HELP_BTN 114
 
 HWND hListView;
 HWND hSearch;
 HWND hAddId, hAddName, hAddDept, hAddRole, hAddBtn, hDelBtn;
-HWND hPwd, hExpCSV, hImpCSV, hExpJSON, hImpJSON, hReload;
+HWND hPwd, hExpCSV, hImpCSV, hExpJSON, hImpJSON, hReload, hHelpBtn;
 HFONT hFont;
 HBRUSH hBgBrush;
 HBRUSH hEditBgBrush;
@@ -448,10 +449,11 @@ void InitListView(HWND hwnd) {
     hReload = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE, 115, 10, 45, 25, hwnd, (HMENU)IDC_RELOAD_BTN, GetModuleHandle(NULL), NULL);
     hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 165, 10, 180, 25, hwnd, (HMENU)IDC_SEARCH, GetModuleHandle(NULL), NULL);
     
-    hExpCSV = CreateWindowEx(0, "BUTTON", "ExCSV", WS_CHILD | WS_VISIBLE, 350, 10, 50, 25, hwnd, (HMENU)IDC_EXPORT_CSV, GetModuleHandle(NULL), NULL);
-    hImpCSV = CreateWindowEx(0, "BUTTON", "ImCSV", WS_CHILD | WS_VISIBLE, 405, 10, 50, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
-    hExpJSON = CreateWindowEx(0, "BUTTON", "ExJSON", WS_CHILD | WS_VISIBLE, 460, 10, 55, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
-    hImpJSON = CreateWindowEx(0, "BUTTON", "ImJSON", WS_CHILD | WS_VISIBLE, 520, 10, 55, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
+    hExpCSV = CreateWindowEx(0, "BUTTON", "Export CSV", WS_CHILD | WS_VISIBLE, 350, 10, 90, 25, hwnd, (HMENU)IDC_EXPORT_CSV, GetModuleHandle(NULL), NULL);
+    hImpCSV = CreateWindowEx(0, "BUTTON", "Import CSV", WS_CHILD | WS_VISIBLE, 445, 10, 90, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
+    hExpJSON = CreateWindowEx(0, "BUTTON", "Export JSON", WS_CHILD | WS_VISIBLE, 540, 10, 95, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
+    hImpJSON = CreateWindowEx(0, "BUTTON", "Import JSON", WS_CHILD | WS_VISIBLE, 640, 10, 95, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
+    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [H]", WS_CHILD | WS_VISIBLE, 740, 10, 75, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
     
     LoadDataFromFile();
 
@@ -481,6 +483,7 @@ void InitListView(HWND hwnd) {
     SendMessage(hImpCSV, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hExpJSON, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hImpJSON, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hHelpBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
     
     SendMessage(hAddId, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hAddName, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -550,6 +553,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ImportJSON(hwnd);
                 char buf[128]; GetWindowTextA(hSearch, buf, sizeof(buf));
                 PopulateListView(buf);
+            } else if (LOWORD(wParam) == IDC_HELP_BTN) {
+                MessageBoxA(hwnd, "KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 200 records.\n- Export and import via CSV or JSON.", "KDB Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == IDC_ADD_BTN) {
                 if (data_count >= MAX_RECORDS) {
                     MessageBoxA(hwnd, "Database capacity limit reached (200 records).", "Database Full", MB_OK | MB_ICONWARNING);
@@ -634,15 +639,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hPwd, 10, 10, 110, 25, TRUE);
             MoveWindow(hReload, 125, 10, 50, 25, TRUE);
             
-            int sh = nw - 470;
+            int sh = nw - 670;
             if (sh < 50) sh = 50;
             MoveWindow(hSearch, 185, 10, sh, 25, TRUE);
             
             int rx = 185 + sh + 10;
-            MoveWindow(hExpCSV, rx, 10, 60, 25, TRUE);
-            MoveWindow(hImpCSV, rx + 65, 10, 60, 25, TRUE);
-            MoveWindow(hExpJSON, rx + 130, 10, 65, 25, TRUE);
-            MoveWindow(hImpJSON, rx + 200, 10, 65, 25, TRUE);
+            MoveWindow(hExpCSV, rx, 10, 90, 25, TRUE);
+            MoveWindow(hImpCSV, rx + 95, 10, 90, 25, TRUE);
+            MoveWindow(hExpJSON, rx + 190, 10, 95, 25, TRUE);
+            MoveWindow(hImpJSON, rx + 290, 10, 95, 25, TRUE);
+            MoveWindow(hHelpBtn, rx + 390, 10, 75, 25, TRUE);
 
             MoveWindow(hListView, 10, 45, nw - 20, nh - 90, TRUE);
             
