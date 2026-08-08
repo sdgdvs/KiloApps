@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KAsteroids
 - K2048
 - KStarship
 - KSolitaire
@@ -115,7 +114,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KChess
 - KPong
 - KMines
+- KAsteroids
 ## Completed Work Log
+
+- **KAsteroids (Loop 3):** Implemented nebula background, distant parallax planets (ringed gas giant, cratered red planet), and passing comets with trailing sparks for deep space environmental art in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 
 - **KChess (Loop 3):** Implemented ornate 3D table surface with procedural wood grain lines, atmospheric candle lighting glow, and animated floating dust motes for environmental art in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 

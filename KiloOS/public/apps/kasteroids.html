@@ -183,6 +183,59 @@
 
         function drawStarfield() {
             ctx.save();
+            
+            // Nebula Background
+            let nebGrad = ctx.createRadialGradient(canvas.width*0.8, canvas.height*0.2, 50, canvas.width*0.8, canvas.height*0.2, 600);
+            nebGrad.addColorStop(0, 'rgba(76, 29, 149, 0.25)');
+            nebGrad.addColorStop(0.5, 'rgba(124, 58, 237, 0.1)');
+            nebGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = nebGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            let nebGrad2 = ctx.createRadialGradient(canvas.width*0.2, canvas.height*0.8, 50, canvas.width*0.2, canvas.height*0.8, 500);
+            nebGrad2.addColorStop(0, 'rgba(30, 58, 138, 0.2)');
+            nebGrad2.addColorStop(0.5, 'rgba(29, 78, 216, 0.05)');
+            nebGrad2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = nebGrad2;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Parallax Planets
+            // Ringed Gas Giant
+            let planetX1 = canvas.width * 0.85 + (ship.x - canvas.width/2) * -0.02;
+            let planetY1 = canvas.height * 0.25 + (ship.y - canvas.height/2) * -0.02;
+            ctx.fillStyle = '#451a03';
+            ctx.beginPath();
+            ctx.arc(planetX1, planetY1, 60, 0, Math.PI*2);
+            ctx.fill();
+            let ringGrad = ctx.createLinearGradient(planetX1-80, planetY1-20, planetX1+80, planetY1+20);
+            ringGrad.addColorStop(0, 'rgba(217, 119, 6, 0.8)');
+            ringGrad.addColorStop(0.5, 'rgba(251, 191, 36, 0.4)');
+            ringGrad.addColorStop(1, 'rgba(217, 119, 6, 0.8)');
+            ctx.strokeStyle = ringGrad;
+            ctx.lineWidth = 15;
+            ctx.beginPath();
+            ctx.ellipse(planetX1, planetY1, 90, 25, 3.14/6, 0, Math.PI*2);
+            ctx.stroke();
+
+            // Cratered Red Planet
+            let planetX2 = canvas.width * 0.15 + (ship.x - canvas.width/2) * -0.03;
+            let planetY2 = canvas.height * 0.75 + (ship.y - canvas.height/2) * -0.03;
+            ctx.fillStyle = '#7f1d1d';
+            ctx.beginPath();
+            ctx.arc(planetX2, planetY2, 40, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#450a0a';
+            ctx.beginPath();
+            ctx.arc(planetX2 - 15, planetY2 - 10, 8, 0, Math.PI*2);
+            ctx.arc(planetX2 + 10, planetY2 + 15, 12, 0, Math.PI*2);
+            ctx.fill();
+
+            // Random Comets
+            if (Math.random() < 0.003 && ship.active) {
+                particles.push(new Particle(Math.random()*canvas.width, -20, -2 - Math.random()*2, 4 + Math.random()*3, '#38bdf8', 150, 'spark'));
+                particles[particles.length-1].size = 3;
+            }
+
             for (let s of stars) {
                 s.phase += s.twinkleSpeed;
                 let alpha = s.baseAlpha + Math.sin(s.phase) * 0.25;
@@ -191,8 +244,16 @@
                 else if (s.layer === 1) ctx.fillStyle = `rgba(226, 232, 240, ${alpha})`;
                 else ctx.fillStyle = `rgba(100, 116, 139, ${alpha})`;
 
+                let shiftX = (ship.x - canvas.width/2) * (s.layer === 2 ? -0.06 : (s.layer === 1 ? -0.03 : -0.01));
+                let shiftY = (ship.y - canvas.height/2) * (s.layer === 2 ? -0.06 : (s.layer === 1 ? -0.03 : -0.01));
+                
+                let dx = (s.x + shiftX) % canvas.width;
+                let dy = (s.y + shiftY) % canvas.height;
+                if (dx < 0) dx += canvas.width;
+                if (dy < 0) dy += canvas.height;
+
                 ctx.beginPath();
-                ctx.arc(s.x, s.y, s.size * (s.layer === 2 ? 1.2 : 1), 0, Math.PI * 2);
+                ctx.arc(dx, dy, s.size * (s.layer === 2 ? 1.2 : 1), 0, Math.PI * 2);
                 ctx.fill();
             }
             ctx.restore();

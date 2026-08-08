@@ -1343,6 +1343,43 @@ void Draw(HDC hdc) {
     RECT rect = {0, 0, WIDTH, HEIGHT};
     FillRect(hdc, &rect, bgBrush);
     DeleteObject(bgBrush);
+    
+    // Parallax Planets
+    int p1_x = (int)(WIDTH * 0.85f + (ship.x - WIDTH/2.0f) * -0.02f);
+    int p1_y = (int)(HEIGHT * 0.25f + (ship.y - HEIGHT/2.0f) * -0.02f);
+    HBRUSH gasB = CreateSolidBrush(RGB(69, 26, 3));
+    HPEN gasP = CreatePen(PS_SOLID, 1, RGB(69, 26, 3));
+    SelectObject(hdc, gasB); SelectObject(hdc, gasP);
+    Ellipse(hdc, p1_x - 60, p1_y - 60, p1_x + 60, p1_y + 60);
+    DeleteObject(gasB); DeleteObject(gasP);
+    
+    HPEN ringP = CreatePen(PS_SOLID, 10, RGB(217, 119, 6));
+    SelectObject(hdc, ringP); SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    // draw ring as arc approximation
+    Arc(hdc, p1_x - 90, p1_y - 25, p1_x + 90, p1_y + 25, p1_x - 90, p1_y, p1_x + 90, p1_y);
+    DeleteObject(ringP);
+
+    int p2_x = (int)(WIDTH * 0.15f + (ship.x - WIDTH/2.0f) * -0.03f);
+    int p2_y = (int)(HEIGHT * 0.75f + (ship.y - HEIGHT/2.0f) * -0.03f);
+    HBRUSH redB = CreateSolidBrush(RGB(127, 29, 29));
+    HPEN redP = CreatePen(PS_SOLID, 1, RGB(127, 29, 29));
+    SelectObject(hdc, redB); SelectObject(hdc, redP);
+    Ellipse(hdc, p2_x - 40, p2_y - 40, p2_x + 40, p2_y + 40);
+    
+    HBRUSH craterB = CreateSolidBrush(RGB(69, 10, 10));
+    SelectObject(hdc, craterB);
+    Ellipse(hdc, p2_x - 20, p2_y - 15, p2_x - 4, p2_y + 1);
+    Ellipse(hdc, p2_x - 2, p2_y + 5, p2_x + 18, p2_y + 25);
+    DeleteObject(redB); DeleteObject(redP); DeleteObject(craterB);
+
+    // Random comets
+    if (rand() % 1000 < 5 && ship.active && num_particles < 700) {
+        Particle* pt = &particles[num_particles++];
+        pt->x = (float)(rand() % WIDTH); pt->y = -20.0f;
+        pt->vx = -3.0f + (rand()%200)/100.0f; pt->vy = 4.0f + (rand()%300)/100.0f;
+        pt->life = 150; pt->max_life = 150; pt->color = RGB(56, 189, 248);
+        pt->active = true; pt->type = 0; pt->size = 3.0f;
+    }
 
     // Starfield Background Parallax & Twinkle
     for (int i = 0; i < 90; i++) {
@@ -1354,7 +1391,15 @@ void Draw(HDC hdc) {
         HPEN sp = CreatePen(PS_SOLID, 1, starColor);
         SelectObject(hdc, sb); SelectObject(hdc, sp);
         int sz = (int)stars[i].size;
-        Ellipse(hdc, (int)stars[i].x - sz, (int)stars[i].y - sz, (int)stars[i].x + sz, (int)stars[i].y + sz);
+        
+        float shiftX = (ship.x - WIDTH/2.0f) * (stars[i].layer == 2 ? -0.06f : (stars[i].layer == 1 ? -0.03f : -0.01f));
+        float shiftY = (ship.y - HEIGHT/2.0f) * (stars[i].layer == 2 ? -0.06f : (stars[i].layer == 1 ? -0.03f : -0.01f));
+        int dx = (int)(stars[i].x + shiftX) % WIDTH;
+        int dy = (int)(stars[i].y + shiftY) % HEIGHT;
+        if (dx < 0) dx += WIDTH;
+        if (dy < 0) dy += HEIGHT;
+        
+        Ellipse(hdc, dx - sz, dy - sz, dx + sz, dy + sz);
         DeleteObject(sb); DeleteObject(sp);
     }
 
