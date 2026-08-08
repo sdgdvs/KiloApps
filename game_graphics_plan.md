@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 
-- KPong
 - KMines
 - KAsteroids
 - K2048
@@ -115,6 +114,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAlchemy
 - KRogue
 - KChess
+- KPong
 ## Completed Work Log
 
 - **KChess (Loop 3):** Implemented ornate 3D table surface with procedural wood grain lines, atmospheric candle lighting glow, and animated floating dust motes for environmental art in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
@@ -157,6 +157,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 - **KAsteroids (Loop 2):** Implemented animated polygonal debris pieces for asteroid and enemy destruction and floating score text popups for both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 - **KMines (Loop 2):** Implemented animated Blast Shield aura pulsing effect, sweeping circular Sonar Radar scan effect, and a sweeping target laser beam for the Detector Bot in both Web Canvas (kmines.html) and Native C Win32 GDI (KMines/main.c).
+- **KPong (Loop 3):** Implemented animated floating digital dust atmospheric particles for both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 - **KPong (Loop 2):** Implemented moving 3D perspective synthwave grid background and parallax environmental art for both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 - **KChess (Loop 2):** Implemented piece idle breathing bobbing animation, slide motion trails, and expanding checkmate shockwave rings for both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 

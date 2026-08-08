@@ -741,6 +741,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
 
+            // Atmospheric Digital Dust (Loop 3)
+            COLORREF dustCol = (theme_index == 1) ? RGB(0, 150, 60) : ((theme_index == 3) ? RGB(0, 150, 40) : ((theme_index == 2) ? RGB(150, 60, 120) : RGB(0, 140, 160)));
+            HBRUSH dustBrush = CreateSolidBrush(dustCol);
+            HPEN dustPen = CreatePen(PS_NULL, 0, 0);
+            HPEN oldDP = (HPEN)SelectObject(memDC, dustPen);
+            HBRUSH oldDB = (HBRUSH)SelectObject(memDC, dustBrush);
+            float tNowBg = GetTickCount() * 0.001f;
+            for (int i = 0; i < 40; i++) {
+                int x = (int)((sinf(i * 12.34f + tNowBg * (0.2f + (i%3)*0.1f)) * (W/2) + (W/2) + tNowBg * 15.0f * (i%2 ? 1 : -1))) % W;
+                if (x < 0) x += W;
+                int y = (int)((cosf(i * 45.67f + tNowBg * (0.1f + (i%2)*0.1f)) * (H/2) + (H/2) - tNowBg * 20.0f)) % H;
+                if (y < 0) y += H;
+                int s = 1 + (i % 3);
+                Ellipse(memDC, x, y, x + s*2, y + s*2);
+            }
+            SelectObject(memDC, oldDP); SelectObject(memDC, oldDB);
+            DeleteObject(dustPen); DeleteObject(dustBrush);
+
             // 3D Perspective Grid Background (Loop 2)
             COLORREF gridCol = (theme_index == 2) ? RGB(100, 30, 80) : RGB(0, 70, 80);
             HPEN gridPen = CreatePen(PS_SOLID, 1, gridCol);
