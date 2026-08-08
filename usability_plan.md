@@ -55,7 +55,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KChart
 - KChess
 - KChat
 - KBBS
@@ -107,6 +106,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KCalc
 - KHex
 - KCalendar
+- KChart
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (auto-opening size to 1000x700, added visible Help status button to web, updated native window title for Help, implemented crisp fonts).
@@ -248,3 +248,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KHex: Usability and UI issues fixed (auto-opening size adjusted to 850x750, UI layout coordinates scaled, explicit 'Press h for Help' added in both platforms, and web min-width bounded).
 - KCalc: Usability and UI issues fixed (added DPI scaling, crisp text, and adjusted native window bounds).
 - KCalendar: Usability and UI issues fixed (auto-opening size to 1024x768, DPI_AWARENESS_CONTEXT applied in native C, help toast duration increased to 8s, layout wrapping fixed).
+- KChart: Usability and UI issues fixed (DPI scaling, crisp negative font heights, and keyboard focus resolution).
