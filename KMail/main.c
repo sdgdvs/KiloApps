@@ -6,8 +6,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-#define W 1024
-#define H 768
+#define W 900
+#define H 600
 
 #define ID_FOLDER_LIST 101
 #define ID_EMAIL_LIST 102
@@ -23,7 +23,7 @@
 #define ID_BTN_DECRYPT 112
 
 HWND hFolders, hEmails, hTitle, hBody, hBtnCompose, hBtnDelete, hBtnEmptyTrash, hSearchBox;
-HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt;
+HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt, hHelpLabel;
 
 typedef struct {
     int id;
@@ -253,8 +253,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hBtnImport = CreateWindowEx(0, "BUTTON", "Import", WS_CHILD | WS_VISIBLE, 115, 10, 60, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
             hBtnExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE, 180, 10, 60, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+            hHelpLabel = CreateWindowEx(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE, 250, 15, 120, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hHelpLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hFolders = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", NULL,
                 WS_CHILD | WS_VISIBLE | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT,

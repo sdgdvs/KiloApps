@@ -16,7 +16,7 @@
     --danger: #ef4444;
     --tag-bg: #475569;
   }
-  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-main); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-main); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   .sidebar { width: 200px; flex-shrink: 0; background: var(--bg-glass); border-right: 1px solid var(--border); backdrop-filter: blur(10px); display: flex; flex-direction: column; padding: 20px 0; }
   .compose-btn { margin: 0 15px 20px 15px; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
   .compose-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
@@ -54,7 +54,7 @@
   #empty-state { display: flex; flex: 1; align-items: center; justify-content: center; color: var(--text-sec); flex-direction: column; }
   .search-container { padding: 15px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
   .search-container input { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; font-family: inherit; margin-bottom: 8px; }
-  .search-container select { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 5px; border-radius: 4px; }
+  .search-container select { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 5px; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -431,7 +431,7 @@
   });
 
   if (window.opener) {
-    window.resizeTo(1024, 768);
+    window.resizeTo(900, 600);
   }
 
   renderList();
