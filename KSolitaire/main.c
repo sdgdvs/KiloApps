@@ -1560,6 +1560,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldWeave);
             DeleteObject(weavePen);
 
+            // Draw Mahogany Table Border
+            HBRUSH woodBrush = CreateSolidBrush(RGB(50, 20, 10));
+            RECT leftWood = {0, 35, 16, winH};
+            RECT rightWood = {winW - 16, 35, winW, winH};
+            RECT botWood = {0, winH - 16, winW, winH};
+            FillRect(memDC, &leftWood, woodBrush);
+            FillRect(memDC, &rightWood, woodBrush);
+            FillRect(memDC, &botWood, woodBrush);
+            DeleteObject(woodBrush);
+
+            HPEN woodHighlight = CreatePen(PS_SOLID, 2, RGB(80, 40, 20));
+            HPEN woodShadow = CreatePen(PS_SOLID, 2, RGB(20, 5, 0));
+            SelectObject(memDC, woodHighlight);
+            MoveToEx(memDC, 16, 35, NULL); LineTo(memDC, 16, winH - 16);
+            MoveToEx(memDC, 16, winH - 16, NULL); LineTo(memDC, winW - 16, winH - 16);
+            SelectObject(memDC, woodShadow);
+            MoveToEx(memDC, winW - 16, 35, NULL); LineTo(memDC, winW - 16, winH - 16);
+            DeleteObject(woodHighlight);
+            DeleteObject(woodShadow);
+
             // Draw Top Status Bar
             RECT statusRc = {0, 0, winW, 35};
             HBRUSH statusBrush = CreateSolidBrush(RGB(15, 23, 42));

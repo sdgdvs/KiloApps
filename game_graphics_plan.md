@@ -84,7 +84,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 - KStarship
-- KSolitaire
 - KConnect4
 - KHangman
 - KMatch3
@@ -114,7 +113,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMines
 - KAsteroids
 - K2048
+- KSolitaire
 ## Completed Work Log
+
+- **KSolitaire (Loop 3):** Implemented environmental art including 3D mahogany table frame borders and atmospheric floating golden dust motes in both Web (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
 - **K2048 (Loop 3):** Implemented subtly moving background parallax grid and floating math numbers for atmospheric environmental art in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 
