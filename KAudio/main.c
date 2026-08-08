@@ -47,7 +47,7 @@ int seqPattern[16] = {1, 0, 0, 1,  0, 1, 0, 0,  1, 0, 1, 0,  0, 0, 1, 0};
 int seqPlaying = 0;
 int currentStep = 0;
 DWORD lastStepTime = 0;
-int showHelp = 0;
+int showHelp = 1;
 
 // Waveform Visualizer Animation Offset
 int visOffset = 0;
@@ -411,7 +411,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT oldFont = (HFONT)SelectObject(memDC, hFont);
 
             // Dark Theme Background

@@ -465,6 +465,11 @@ SEND:"secret\r"'></textarea>
         document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
     }
     document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); loadDirectory(); loadMacros(); });
+    document.addEventListener("keydown", (e) => {
+        if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            showHelp();
+        }
+    });
 
     function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelp() { document.getElementById('helpModal').style.display = 'none'; }
