@@ -240,7 +240,7 @@
       cargo: { minerals: 0, tech: 0 },
       upgrades: { weapons: 1, shields: 1, engines: 1, cargo: 1 },
       crew: [],
-      stars: [],
+      stars: [], particles: [],
       mapSize: 2000,
       modalOpen: false
     };
@@ -357,6 +357,28 @@
       ctx.closePath();
       ctx.fill();
       
+      // Draw particles
+      state.particles.forEach(p => {
+        const screenX = centerX + (p.x - state.ship.x);
+        const screenY = centerY + (p.y - state.ship.y);
+        if (screenX >= 0 && screenX <= canvas.width && screenY >= 0 && screenY <= canvas.height) {
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.life;
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+      ctx.globalAlpha = 1.0;
+      
+      // Scanner pulse animation around ship
+      const pulseTime = Date.now() / 200;
+      ctx.strokeStyle = `rgba(0, 255, 255, ${(Math.sin(pulseTime) + 1)/4})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 20 + Math.sin(pulseTime)*5, 0, Math.PI*2);
+      ctx.stroke();
+
       // Ship thrust trail if moving
       if (state.ship.moving) {
         ctx.fillStyle = '#ff8800';
@@ -714,6 +736,30 @@
       }
 
       // Boundaries
+      // Update particles
+      for (let i = state.particles.length - 1; i >= 0; i--) {
+        let p = state.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        if (p.life <= 0) state.particles.splice(i, 1);
+      }
+      
+      if (state.ship.moving) {
+        // Spawn thruster particles
+        for (let i=0; i<3; i++) {
+          state.particles.push({
+            x: state.ship.x + (Math.random() * 6 - 3),
+            y: state.ship.y + 10 + Math.random() * 5,
+            vx: (Math.random() - 0.5) * 1,
+            vy: 2 + Math.random() * 2,
+            life: 1.0,
+            decay: 0.05 + Math.random() * 0.05,
+            color: Math.random() > 0.5 ? '#ff8800' : '#ff0000'
+          });
+        }
+      }
+      
       if (state.ship.x < -state.mapSize/2) state.ship.x = -state.mapSize/2;
       if (state.ship.x > state.mapSize/2) state.ship.x = state.mapSize/2;
       if (state.ship.y < -state.mapSize/2) state.ship.y = -state.mapSize/2;

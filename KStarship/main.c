@@ -1,6 +1,29 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+
+#define MAX_PARTICLES 300
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float life, decay;
+    COLORREF color;
+} Particle;
+Particle particles[MAX_PARTICLES];
+
+void SpawnParticle(float x, float y, float vx, float vy, float decay, COLORREF color) {
+    for (int i=0; i<MAX_PARTICLES; i++) {
+        if (particles[i].life <= 0) {
+            particles[i].x = x; particles[i].y = y;
+            particles[i].vx = vx; particles[i].vy = vy;
+            particles[i].life = 1.0f; particles[i].decay = decay;
+            particles[i].color = color;
+            break;
+        }
+    }
+}
+
 
 #define NUM_SYSTEMS 200
 #define MAP_SIZE 2000
@@ -189,6 +212,49 @@ void Update() {
         if (rand() % 10 == 0) AddXP(1, 1);
     }
 
+    for (int i=0; i<MAX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            particles[i].x += particles[i].vx;
+            particles[i].y += particles[i].vy;
+            particles[i].life -= particles[i].decay;
+        }
+    }
+    
+    // Draw particles
+    for (int i=0; i<MAX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            int screenX = centerX + (int)(particles[i].x - ship_x);
+            int screenY = centerY + (int)(particles[i].y - ship_y);
+            if (screenX >= 0 && screenX <= mapWidth && screenY >= 0 && screenY <= height) {
+                SetPixel(memDC, screenX, screenY, particles[i].color);
+                SetPixel(memDC, screenX+1, screenY, particles[i].color);
+                SetPixel(memDC, screenX, screenY+1, particles[i].color);
+                SetPixel(memDC, screenX+1, screenY+1, particles[i].color);
+            }
+        }
+    }
+
+    // Scanner pulse
+    HPEN pulsePen = CreatePen(PS_SOLID, 2, RGB(0, 150, 150));
+    SelectObject(memDC, pulsePen);
+    SelectObject(memDC, GetStockObject(NULL_BRUSH));
+    float pulse = (GetTickCount() % 2000) / 2000.0f;
+    int r = 20 + (int)(pulse * 10);
+    Ellipse(memDC, centerX - r, centerY - r, centerX + r, centerY + r);
+    DeleteObject(pulsePen);
+
+    if (is_moving) {
+        for (int i=0; i<3; i++) {
+            float px = ship_x + (rand() % 7 - 3);
+            float py = ship_y + 10 + (rand() % 6);
+            float vx = (rand() % 100 - 50) / 50.0f;
+            float vy = 2.0f + (rand() % 100) / 50.0f;
+            float decay = 0.05f + (rand() % 100) / 2000.0f;
+            COLORREF c = (rand() % 2 == 0) ? RGB(255, 136, 0) : RGB(255, 0, 0);
+            SpawnParticle(px, py, vx, vy, decay, c);
+        }
+    }
+
     if (ship_x < -MAP_SIZE/2) ship_x = -MAP_SIZE/2;
     if (ship_x > MAP_SIZE/2) ship_x = MAP_SIZE/2;
     if (ship_y < -MAP_SIZE/2) ship_y = -MAP_SIZE/2;
@@ -293,6 +359,29 @@ void Draw(HDC hdc, RECT* rect) {
     Polygon(memDC, shipPts, 4);
     DeleteObject(shipBrush);
     DeleteObject(shipPen);
+
+    // Draw particles
+    for (int i=0; i<MAX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            int screenX = centerX + (int)(particles[i].x - ship_x);
+            int screenY = centerY + (int)(particles[i].y - ship_y);
+            if (screenX >= 0 && screenX <= mapWidth && screenY >= 0 && screenY <= height) {
+                SetPixel(memDC, screenX, screenY, particles[i].color);
+                SetPixel(memDC, screenX+1, screenY, particles[i].color);
+                SetPixel(memDC, screenX, screenY+1, particles[i].color);
+                SetPixel(memDC, screenX+1, screenY+1, particles[i].color);
+            }
+        }
+    }
+
+    // Scanner pulse
+    HPEN pulsePen = CreatePen(PS_SOLID, 2, RGB(0, 150, 150));
+    SelectObject(memDC, pulsePen);
+    SelectObject(memDC, GetStockObject(NULL_BRUSH));
+    float pulse = (GetTickCount() % 2000) / 2000.0f;
+    int r = 20 + (int)(pulse * 10);
+    Ellipse(memDC, centerX - r, centerY - r, centerX + r, centerY + r);
+    DeleteObject(pulsePen);
 
     if (is_moving) {
         POINT thrustPts[4] = {
