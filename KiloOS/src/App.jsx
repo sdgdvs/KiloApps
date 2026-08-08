@@ -67,7 +67,7 @@ const APPS = [
   { id: 'ksettings', title: 'Settings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksettings.ico', w: 600, h: 500, folder: 'System' },
   { id: 'ktaskmgr', title: 'Task Manager', url: '/apps/ktaskmgr.html', exeUrl: null, icon: '/assets/icons/ktaskmgr.ico', w: 650, h: 500, folder: 'System' },
   { id: 'kvault', title: 'KVault', url: '/apps/kvault.html', exeUrl: null, icon: '/assets/icons/kvault.ico', w: 600, h: 600, folder: 'System' },
-  { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kjournal.ico', w: 600, h: 700, folder: 'Office' },
+  { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kjournal.ico', w: 1100, h: 750, folder: 'Office' },
   { id: 'kbreakout', title: 'KBreakout', url: '/apps/kbreakout.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kbreakout.ico', w: 430, h: 460, folder: 'Games' },
   { id: 'kbudget', title: 'KBudget', url: '/apps/kbudget.html', exeUrl: null, icon: '/assets/icons/kbudget.ico', w: 800, h: 600, folder: 'Office' },
   { id: 'khabit', title: 'KHabit', url: '/apps/khabit.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/khabit.ico', w: 800, h: 600, folder: 'Office' },

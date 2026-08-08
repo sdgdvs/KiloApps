@@ -319,14 +319,14 @@ void DoBitwiseOp(int op) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
+            HFONT hFont = CreateFontA(-15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             CreateWindowA("STATIC", "Input Buffer / Number:", WS_CHILD | WS_VISIBLE, 10, 10, 200, 18, hwnd, NULL, NULL, NULL);
-            HWND hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 510, 7, 100, 20, hwnd, (HMENU)99, NULL, NULL);
+            HWND hBtnHelp = CreateWindowA("BUTTON", "Help (F1 or 'h')", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 620, 7, 140, 24, hwnd, (HMENU)99, NULL, NULL);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, 0);
 
             hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "42", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN,
-                10, 30, 600, 50, hwnd, NULL, NULL, NULL);
+                10, 30, 750, 50, hwnd, NULL, NULL, NULL);
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Operands A & B for bitwise calculations
@@ -378,13 +378,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // 64-Bit Binary Stream Display
             CreateWindowA("STATIC", "64-Bit Binary Stream:", WS_CHILD | WS_VISIBLE, 10, 178, 200, 18, hwnd, NULL, NULL, NULL);
             hBitDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0000000000000000000000000000000000000000000000000000000000000000",
-                WS_CHILD | WS_VISIBLE | ES_READONLY, 10, 196, 600, 24, hwnd, NULL, NULL, NULL);
+                WS_CHILD | WS_VISIBLE | ES_READONLY, 10, 196, 750, 24, hwnd, NULL, NULL, NULL);
             SendMessageA(hBitDisplay, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Output Display Area
             CreateWindowA("STATIC", "Output Result:", WS_CHILD | WS_VISIBLE, 10, 226, 200, 18, hwnd, NULL, NULL, NULL);
             hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY,
-                10, 245, 600, 150, hwnd, NULL, NULL, NULL);
+                10, 245, 750, 200, hwnd, NULL, NULL, NULL);
             SendMessageA(hOutput, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Trigger default conversion
@@ -421,7 +421,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return 0;
 }
 
+typedef BOOL(WINAPI* SETPROCESSDPIAWARE_T)(void);
+
 void __stdcall MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        SETPROCESSDPIAWARE_T pSetProcessDPIAware = (SETPROCESSDPIAWARE_T)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (pSetProcessDPIAware) pSetProcessDPIAware();
+    }
+
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
@@ -431,7 +439,7 @@ void __stdcall MainEntry() {
     
     RegisterClassA(&wc);
     
-    RECT rc = {0, 0, 640, 480};
+    RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase - Universal Base & Bitwise Utility", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
@@ -442,7 +450,7 @@ void __stdcall MainEntry() {
     
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && msg.wParam == VK_F1) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h')) {
             SendMessageA(hwnd, WM_COMMAND, 99, 0);
             continue;
         }

@@ -88,6 +88,8 @@
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    overflow: hidden;
+    min-height: 0;
   }
 
   .sidebar-header {
@@ -357,7 +359,7 @@
     <div class="sidebar-header">
       <div class="brand-title">
         <span>📖</span> KJournal
-        <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; margin-left: 8px;">(Press 'h' for Help)</span>
+        <span style="font-size: 11px; color: var(--accent-gold); font-weight: bold; margin-left: 8px; background: rgba(229, 192, 123, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--accent-gold); cursor: pointer;" onclick="openModal('helpModal')">Press 'H' for Help</span>
       </div>
       <div>
         <button class="icon-btn" onclick="openModal('helpModal')" title="Help (Press h)">❓</button>
@@ -430,7 +432,7 @@
     </div>
 
     <div class="editor-container">
-      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'h' for help)" oninput="updateEditorStats()"></textarea>
+      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' for Help)" oninput="updateEditorStats()"></textarea>
       <div class="editor-footer">
         <div id="editorStats">0 words | 0 characters</div>
         <div id="saveStatus">Saved locally</div>

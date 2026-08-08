@@ -779,6 +779,7 @@ void show_help() {
 int main() {
 #ifdef _WIN32
     system("mode con: cols=120 lines=40");
+    system("title KJournal - Press 'H' for Help");
 #endif
 
     if (!verify_pin_on_startup()) {
