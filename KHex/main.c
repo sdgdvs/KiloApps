@@ -1,8 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 600
-#define H 620
+#define W 850
+#define H 750
 
 // Control IDs
 #define ID_HEX 1
@@ -320,70 +320,70 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hDec = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 53, 160, 22, hwnd, (HMENU)ID_DEC, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Bin:", WS_CHILD | WS_VISIBLE, 10, 78, 35, 20, hwnd, NULL, NULL, NULL);
-            hBin = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "00000000000000000000000000000000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 78, 230, 22, hwnd, (HMENU)ID_BIN, NULL, NULL);
+            hBin = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "00000000000000000000000000000000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 78, 260, 22, hwnd, (HMENU)ID_BIN, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Oct:", WS_CHILD | WS_VISIBLE, 220, 28, 35, 20, hwnd, NULL, NULL, NULL);
-            hOct = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 260, 28, 180, 22, hwnd, (HMENU)ID_OCT, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Oct:", WS_CHILD | WS_VISIBLE, 320, 28, 35, 20, hwnd, NULL, NULL, NULL);
+            hOct = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 360, 28, 180, 22, hwnd, (HMENU)ID_OCT, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Asc:", WS_CHILD | WS_VISIBLE, 220, 53, 35, 20, hwnd, NULL, NULL, NULL);
-            hAscii = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 260, 53, 180, 22, hwnd, (HMENU)ID_ASC, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Asc:", WS_CHILD | WS_VISIBLE, 320, 53, 35, 20, hwnd, NULL, NULL, NULL);
+            hAscii = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 360, 53, 180, 22, hwnd, (HMENU)ID_ASC, NULL, NULL);
 
             // Section 2: Data Inspector Panel
             CreateWindowEx(0, "STATIC", "--- MULTI-TYPE DATA INSPECTOR ---", WS_CHILD | WS_VISIBLE, 10, 110, 250, 16, hwnd, NULL, NULL, NULL);
             hEndianBtn = CreateWindowEx(0, "BUTTON", "Endian: LE", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 340, 106, 100, 22, hwnd, (HMENU)ID_BTN_ENDIAN, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Int8:", WS_CHILD | WS_VISIBLE, 10, 133, 40, 20, hwnd, NULL, NULL, NULL);
-            hInt8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 55, 133, 70, 22, hwnd, NULL, NULL, NULL);
+            hInt8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 55, 133, 90, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Uint8:", WS_CHILD | WS_VISIBLE, 135, 133, 45, 20, hwnd, NULL, NULL, NULL);
-            hUint8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 185, 133, 70, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Uint8:", WS_CHILD | WS_VISIBLE, 160, 133, 45, 20, hwnd, NULL, NULL, NULL);
+            hUint8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 210, 133, 90, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Int16:", WS_CHILD | WS_VISIBLE, 265, 133, 45, 20, hwnd, NULL, NULL, NULL);
-            hInt16 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 315, 133, 125, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Int16:", WS_CHILD | WS_VISIBLE, 315, 133, 45, 20, hwnd, NULL, NULL, NULL);
+            hInt16 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 365, 133, 90, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Uint16:", WS_CHILD | WS_VISIBLE, 10, 160, 45, 20, hwnd, NULL, NULL, NULL);
-            hUint16 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 55, 160, 70, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Uint16:", WS_CHILD | WS_VISIBLE, 470, 133, 55, 20, hwnd, NULL, NULL, NULL);
+            hUint16 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 530, 133, 90, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Int32:", WS_CHILD | WS_VISIBLE, 135, 160, 45, 20, hwnd, NULL, NULL, NULL);
-            hInt32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 185, 160, 120, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Int32:", WS_CHILD | WS_VISIBLE, 10, 160, 45, 20, hwnd, NULL, NULL, NULL);
+            hInt32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 55, 160, 120, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Uint32:", WS_CHILD | WS_VISIBLE, 310, 160, 45, 20, hwnd, NULL, NULL, NULL);
-            hUint32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 360, 160, 80, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Uint32:", WS_CHILD | WS_VISIBLE, 190, 160, 50, 20, hwnd, NULL, NULL, NULL);
+            hUint32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 245, 160, 120, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Float32:", WS_CHILD | WS_VISIBLE, 10, 187, 50, 20, hwnd, NULL, NULL, NULL);
-            hFloat = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.000", WS_CHILD | WS_VISIBLE | ES_READONLY, 65, 187, 375, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Float32:", WS_CHILD | WS_VISIBLE, 380, 160, 55, 20, hwnd, NULL, NULL, NULL);
+            hFloat = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.000", WS_CHILD | WS_VISIBLE | ES_READONLY, 440, 160, 180, 22, hwnd, NULL, NULL, NULL);
 
             // Section 3: Hashes & Checksums
             CreateWindowEx(0, "STATIC", "--- CHECKSUM & HASH SUITE ---", WS_CHILD | WS_VISIBLE, 10, 218, 250, 16, hwnd, NULL, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Sum8:", WS_CHILD | WS_VISIBLE, 10, 238, 40, 20, hwnd, NULL, NULL, NULL);
-            hSum8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00", WS_CHILD | WS_VISIBLE | ES_READONLY, 50, 238, 55, 22, hwnd, NULL, NULL, NULL);
+            hSum8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00", WS_CHILD | WS_VISIBLE | ES_READONLY, 55, 238, 70, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Sum16:", WS_CHILD | WS_VISIBLE, 115, 238, 45, 20, hwnd, NULL, NULL, NULL);
-            hSum16 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x0000", WS_CHILD | WS_VISIBLE | ES_READONLY, 165, 238, 70, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Sum16:", WS_CHILD | WS_VISIBLE, 135, 238, 45, 20, hwnd, NULL, NULL, NULL);
+            hSum16 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x0000", WS_CHILD | WS_VISIBLE | ES_READONLY, 185, 238, 90, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "XOR8:", WS_CHILD | WS_VISIBLE, 245, 238, 40, 20, hwnd, NULL, NULL, NULL);
-            hXor8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00", WS_CHILD | WS_VISIBLE | ES_READONLY, 290, 238, 55, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "XOR8:", WS_CHILD | WS_VISIBLE, 285, 238, 40, 20, hwnd, NULL, NULL, NULL);
+            hXor8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00", WS_CHILD | WS_VISIBLE | ES_READONLY, 330, 238, 70, 22, hwnd, NULL, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "CRC32:", WS_CHILD | WS_VISIBLE, 10, 265, 45, 20, hwnd, NULL, NULL, NULL);
             hCRC32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_READONLY, 60, 265, 120, 22, hwnd, NULL, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Sum32:", WS_CHILD | WS_VISIBLE, 190, 265, 45, 20, hwnd, NULL, NULL, NULL);
-            hSum32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_READONLY, 240, 265, 200, 22, hwnd, NULL, NULL, NULL);
+            hSum32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_READONLY, 240, 265, 120, 22, hwnd, NULL, NULL, NULL);
 
             // Section 4: Operations & Export
             CreateWindowEx(0, "STATIC", "--- BYTE OPERATIONS & EXPORT ---", WS_CHILD | WS_VISIBLE, 10, 298, 250, 16, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "BUTTON", "Swap16", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 320, 68, 24, hwnd, (HMENU)ID_BTN_SWAP16, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Swap32", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 83, 320, 68, 24, hwnd, (HMENU)ID_BTN_SWAP32, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Invert (~)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 156, 320, 78, 24, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "XOR 0xFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 239, 320, 78, 24, hwnd, (HMENU)ID_BTN_XORMASK, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "C Array", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 322, 320, 58, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "HexDump", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 385, 320, 58, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Swap16", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 320, 80, 24, hwnd, (HMENU)ID_BTN_SWAP16, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Swap32", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 100, 320, 80, 24, hwnd, (HMENU)ID_BTN_SWAP32, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Invert (~)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 320, 80, 24, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "XOR 0xFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 280, 320, 80, 24, hwnd, (HMENU)ID_BTN_XORMASK, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "C Array", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 370, 320, 80, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "HexDump", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 460, 320, 80, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
 
-            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex!\r\nPress 'h' for Help.\r\n\r\nResult / Export preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY, 10, 352, 500, 100, hwnd, NULL, NULL, NULL);
+            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex!\r\nPress 'h' for Help.\r\n\r\nResult / Export preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY, 10, 352, 800, 300, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Press 'h' for Help", WS_CHILD | WS_VISIBLE, 10, 465, 150, 16, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Press 'h' for Help", WS_CHILD | WS_VISIBLE, 10, 665, 150, 16, hwnd, NULL, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             UpdateFields(hHex);

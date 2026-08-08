@@ -56,7 +56,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 
 
 - KHex
-- KCalc
 - KCalendar
 - KChart
 - KChess
@@ -107,6 +106,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KBase
 - KPad
 - KImage
+- KCalc
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (auto-opening size to 1000x700, added visible Help status button to web, updated native window title for Help, implemented crisp fonts).
