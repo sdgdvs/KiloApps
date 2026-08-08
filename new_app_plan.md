@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarship (Sci-fi exploration)
-**Phase:** 13 (next to do)
+**Phase:** 14 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Basic combat system against pirates (turn-based or real-time choices).
 - [x] Phase 11: Crew management (recruiting, assigning roles, leveling up).
 - [x] Phase 12: Story events and branching text-based choices.
-- [ ] Phase 13: Sound Effects — space hum, laser blasts, alarm claxons (Web Audio / Win32 Beep).
+- [x] Phase 13: Sound Effects — space hum, laser blasts, alarm claxons (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Captain's Manual — How-to-play, strategy guide, ship operations.
 
 ### How to execute the next phase:

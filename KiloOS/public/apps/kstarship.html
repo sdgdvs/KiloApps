@@ -177,6 +177,61 @@
     const upgCar = document.getElementById('upg-car');
     const scannerInfo = document.getElementById('scanner-info');
 
+    // Audio system
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playLaser() {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.2);
+    }
+    function playAlarm() {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.25);
+      osc.frequency.setValueAtTime(400, audioCtx.currentTime + 0.5);
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.75);
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.0);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.0);
+    }
+    
+    let humOsc = null;
+    let humGain = null;
+    function setHum(active) {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      if(active && !humOsc) {
+        humOsc = audioCtx.createOscillator();
+        humGain = audioCtx.createGain();
+        humOsc.type = 'sine';
+        humOsc.frequency.value = 60;
+        humGain.gain.value = 0.1;
+        humOsc.connect(humGain);
+        humGain.connect(audioCtx.destination);
+        humOsc.start();
+      } else if(!active && humOsc) {
+        humOsc.stop();
+        humOsc.disconnect();
+        humGain.disconnect();
+        humOsc = null;
+        humGain = null;
+      }
+    }
+
     // Game state
     const state = {
       ship: { x: 0, y: 0, targetX: 0, targetY: 0, moving: false },
@@ -378,6 +433,7 @@
       };
 
       if (type === 'Pirates') {
+        playAlarm();
         let pirateHp = 50;
         const updateCombatBtns = (msg) => {
             desc.innerText = msg + `\nPirate HP: ${pirateHp} | Your Hull: ${state.resources.hull}%`;
@@ -394,6 +450,7 @@
                 addBtn('Restart', () => { location.reload(); });
             } else {
                 addBtn('Fire Weapons', () => {
+                    playLaser();
                     let pDmg = 10 + state.upgrades.weapons * 5 + Math.floor(Math.random()*10);
                     let gIdx = getOfficer(2); if (gIdx !== -1) pDmg += state.crew[gIdx].level * 2;
                     let sDmg = Math.max(0, 20 - state.upgrades.shields * 3 + Math.floor(Math.random()*5));
@@ -629,6 +686,7 @@
 
     function update() {
       if (state.modalOpen) {
+        setHum(false);
         requestAnimationFrame(update);
         return;
       }
@@ -646,9 +704,12 @@
         state.ship.x += dx;
         state.ship.y += dy;
         state.ship.moving = true;
+        setHum(true);
         state.resources.fuel -= 1;
         if (state.resources.fuel < 0) state.resources.fuel = 0;
         if (Math.random() < 0.1) addXP(1, 1);
+      } else {
+        setHum(false);
       }
 
       // Boundaries

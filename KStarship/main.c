@@ -82,10 +82,40 @@ int modal_enc_type = 0;
 int pirate_hp = 50;
 char combat_log[128] = "";
 
+DWORD WINAPI SoundThread(LPVOID lpParam) {
+    int type = (int)(intptr_t)lpParam;
+    if (type == 1) { // Laser
+        Beep(800, 50);
+        Beep(400, 50);
+    } else if (type == 2) { // Alarm
+        Beep(400, 250);
+        Beep(600, 250);
+        Beep(400, 250);
+        Beep(600, 250);
+    }
+    return 0;
+}
+
+void PlaySoundEffect(int type) {
+    CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+}
+
+DWORD WINAPI EngineHumThread(LPVOID lpParam) {
+    while (1) {
+        if (is_moving && !modal_open) {
+            Beep(60, 100);
+        } else {
+            Sleep(50);
+        }
+    }
+    return 0;
+}
+
 void TriggerEncounter(int type) {
     modal_open = 1;
     modal_enc_type = type;
     if (type == 1) {
+        PlaySoundEffect(2); // Alarm
         pirate_hp = 50;
         lstrcpyA(combat_log, "Space pirates ambush you!");
     } else if (type == 2) {
@@ -479,6 +509,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (wParam == VK_SPACE) { res_credits += 100; modal_open = 0; }
                     } else {
                         if (wParam == '1') {
+                            PlaySoundEffect(1); // Laser
                             int p_dmg = 10 + upg_weapons * 5 + (rand() % 10);
                             int g_idx = GetOfficer(2); if(g_idx != -1) p_dmg += roster[g_idx].level * 2;
                             int s_dmg = 20 - upg_shields * 3 + (rand() % 5);
@@ -610,6 +641,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    CreateThread(NULL, 0, EngineHumThread, NULL, 0, NULL);
     InitStars();
     for (int i = 0; i < 10; i++) {
         lstrcpyA(roster[i].name, first_names[rand() % 16]);
