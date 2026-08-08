@@ -955,6 +955,31 @@ void DrawBoard(HDC hdc) {
     FillRect(hdc, &bgRect, bgb);
     DeleteObject(bgb);
 
+    // Environmental Art: Subtly moving grid and floating numbers
+    HPEN envPen = CreatePen(PS_SOLID, 1, RGB(bgR > 128 ? bgR-15 : bgR+15, bgG > 128 ? bgG-15 : bgG+15, bgB > 128 ? bgB-15 : bgB+15));
+    HPEN oldPenEnv = (HPEN)SelectObject(hdc, envPen);
+    int offset = (frameAnimCount / 2) % 40;
+    for (int x = offset; x < 800; x += 40) {
+        MoveToEx(hdc, x, 0, NULL); LineTo(hdc, x, 600);
+    }
+    for (int y = offset; y < 600; y += 40) {
+        MoveToEx(hdc, 0, y, NULL); LineTo(hdc, 800, y);
+    }
+    SelectObject(hdc, oldPenEnv);
+    DeleteObject(envPen);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(bgR > 128 ? bgR-20 : bgR+20, bgG > 128 ? bgG-20 : bgG+20, bgB > 128 ? bgB-20 : bgB+20));
+    for (int i=0; i<15; i++) {
+        int py = (i*87 - frameAnimCount) % 650;
+        if (py < -50) py += 650;
+        int wave = (frameAnimCount + i*10) % 100;
+        int sinVal = (wave < 50) ? wave : (100 - wave);
+        sinVal = sinVal - 25;
+        int px = (i*137 + sinVal) % 800;
+        char buf[8]; wsprintfA(buf, "%d", 2 << (i%4));
+        TextOutA(hdc, px, py, buf, lstrlenA(buf));
+    }
+
     // Header Title
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(txtR, txtG, txtB));

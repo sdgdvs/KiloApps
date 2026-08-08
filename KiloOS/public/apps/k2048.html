@@ -481,6 +481,7 @@
     </style>
 </head>
 <body>
+    <canvas id="env-canvas" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none;"></canvas>
     <div class="container" role="main">
         <div class="header">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -1590,6 +1591,40 @@
                 }
             }
         }, {passive: true});
+
+        const envCanvas = document.getElementById('env-canvas');
+        const envCtx = envCanvas ? envCanvas.getContext('2d') : null;
+        let envTime = 0;
+        function renderEnvLoop() {
+            if (!envCtx || !envCanvas) return;
+            envCanvas.width = window.innerWidth;
+            envCanvas.height = window.innerHeight;
+            envCtx.clearRect(0, 0, envCanvas.width, envCanvas.height);
+            envTime += 0.02;
+            
+            envCtx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            envCtx.lineWidth = 1;
+            const w = envCanvas.width, h = envCanvas.height;
+            const size = 50;
+            envCtx.beginPath();
+            for(let x = (envTime*10)%size; x < w; x+=size) {
+                envCtx.moveTo(x, 0); envCtx.lineTo(x, h);
+            }
+            for(let y = (envTime*10)%size; y < h; y+=size) {
+                envCtx.moveTo(0, y); envCtx.lineTo(w, y);
+            }
+            envCtx.stroke();
+            
+            for(let i=0; i<15; i++) {
+                let px = (Math.sin(envTime*0.2 + i*2) * 0.4 + 0.5) * w;
+                let py = ((i*37 + envTime*-15) % h + h) % h;
+                envCtx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                envCtx.font = 'bold ' + (14 + (i%3)*10) + 'px Inter';
+                envCtx.fillText(['2','4','8','16','32'][i%5], px, py);
+            }
+            requestAnimationFrame(renderEnvLoop);
+        }
+        if (envCanvas) renderEnvLoop();
 
         initGame();
     </script>

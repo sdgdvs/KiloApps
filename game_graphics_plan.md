@@ -83,8 +83,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-
-- K2048
 - KStarship
 - KSolitaire
 - KConnect4
@@ -115,7 +113,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPong
 - KMines
 - KAsteroids
+- K2048
 ## Completed Work Log
+
+- **K2048 (Loop 3):** Implemented subtly moving background parallax grid and floating math numbers for atmospheric environmental art in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 
 - **KAsteroids (Loop 3):** Implemented nebula background, distant parallax planets (ringed gas giant, cratered red planet), and passing comets with trailing sparks for deep space environmental art in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 
