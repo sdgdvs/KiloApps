@@ -370,8 +370,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hMonthCal, MCM_GETMINREQRECT, 0, (LPARAM)&rc);
             SetWindowPos(hMonthCal, NULL, SCALE(10), SCALE(10), rc.right, rc.bottom, SWP_NOZORDER);
 
-            int winWidth = SCALE(900);
-            int winHeight = SCALE(700);
+            int winWidth = SCALE(1024);
+            int winHeight = SCALE(768);
             int pad = SCALE(10);
             int btnH = SCALE(28);
             int editH = SCALE(24);
@@ -538,9 +538,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 void MainEntry() {
     HMODULE hUser32 = GetModuleHandleA("user32.dll");
     if (hUser32) {
-        typedef BOOL (WINAPI *PSETPROCESSDPIAWARE)(void);
-        PSETPROCESSDPIAWARE setDPI = (PSETPROCESSDPIAWARE)GetProcAddress(hUser32, "SetProcessDPIAware");
-        if (setDPI) setDPI();
+        typedef BOOL (WINAPI *PSETPROCESSDPIAWARENESSCONTEXT)(HANDLE);
+        PSETPROCESSDPIAWARENESSCONTEXT setDPIContext = (PSETPROCESSDPIAWARENESSCONTEXT)GetProcAddress(hUser32, "SetProcessDpiAwarenessContext");
+        if (setDPIContext) {
+            setDPIContext((HANDLE)-4); // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+        } else {
+            typedef BOOL (WINAPI *PSETPROCESSDPIAWARE)(void);
+            PSETPROCESSDPIAWARE setDPI = (PSETPROCESSDPIAWARE)GetProcAddress(hUser32, "SetProcessDPIAware");
+            if (setDPI) setDPI();
+        }
     }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
@@ -552,7 +558,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KCalendarApp", "KCalendar (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 900, 700, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

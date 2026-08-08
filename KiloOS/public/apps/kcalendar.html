@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KCalendar</title>
+<title>KCalendar (Press H for Help)</title>
 <style>
   :root {
     --bg-main: #0f172a;
@@ -278,6 +278,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0;
   }
 
   .day-cell:hover, .day-cell:focus-visible {
@@ -732,7 +733,7 @@
 <script>
   // Resize window on open if running in a popup
   if (window.resizeTo) {
-    window.resizeTo(1000, 800);
+    window.resizeTo(1024, 768);
   }
 
   // Toast notification for help
@@ -756,7 +757,7 @@
     setTimeout(() => {
       toast.style.opacity = '0';
       setTimeout(() => toast.remove(), 500);
-    }, 4000);
+    }, 8000);
   });
 
   // State management
