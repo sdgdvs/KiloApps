@@ -962,7 +962,7 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 20px 50px rgba(0,0,0,0.6);
-  width: 350px;
+  width: 450px;
   display: flex;
   flex-direction: column;
   overflow: hidden;

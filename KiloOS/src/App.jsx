@@ -714,7 +714,7 @@ function App() {
       // Desktop Help
       if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && (document.activeElement === document.body || document.activeElement?.className?.includes('desktop'))) {
         if (e.key === 'F1') e.preventDefault();
-        notify("KiloOS Help", "Start menu: Launch apps.\nAlt+` : Switch windows.\nDrag to edges: Snap windows.\nDouble-click title: Maximize.");
+        setModal({ type: 'help' });
       }
       
       // Alt + ` to switch windows
@@ -1044,7 +1044,7 @@ function App() {
                 <span>KiloOS User</span>
               </div>
               <div className="start-system-actions">
-                <div className="start-item" onClick={() => { setStartOpen(false); notify("KiloOS Help", "Start menu: Launch apps.\nAlt+` : Switch windows.\nDrag to edges: Snap windows.\nDouble-click title: Maximize."); }}>
+                <div className="start-item" onClick={() => { setStartOpen(false); setModal({ type: 'help' }); }}>
                   Help (H / F1)
                 </div>
                 <div className="start-item" onClick={() => { setStartOpen(false); setModal({ type: 'settings' }); }}>
@@ -1142,7 +1142,7 @@ function App() {
           </div>
         )}
         <div className="system-tray">
-          <div className="tray-icon" title="Help (Press H or F1)" onClick={(e) => { e.stopPropagation(); playClickAudio(); notify("KiloOS Help", "Start menu: Launch apps.\nAlt+` : Switch windows.\nDrag to edges: Snap windows.\nDouble-click title: Maximize."); }}>
+          <div className="tray-icon" title="Help (Press H or F1)" onClick={(e) => { e.stopPropagation(); playClickAudio(); setModal({ type: 'help' }); }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </div>
           <div className="tray-icon" title="Network Connected" onClick={(e) => { e.stopPropagation(); playClickAudio(); }}>
@@ -1162,7 +1162,7 @@ function App() {
         <div className="os-modal-overlay">
           <div className="os-modal">
             <div className="os-modal-title">
-              {modal.type === 'shutdown' ? 'Shutdown KiloOS' : modal.type === 'vfs_open' ? 'Open Virtual File' : modal.type === 'settings' ? 'Display Settings' : modal.type === 'create_app' ? 'Create New App' : 'Save Virtual File'}
+              {modal.type === 'shutdown' ? 'Shutdown KiloOS' : modal.type === 'vfs_open' ? 'Open Virtual File' : modal.type === 'settings' ? 'Display Settings' : modal.type === 'create_app' ? 'Create New App' : modal.type === 'help' ? 'KiloOS Help' : 'Save Virtual File'}
             </div>
             <div className="os-modal-content">
               {modal.type === 'settings' && (
@@ -1211,6 +1211,19 @@ function App() {
                 <>
                   <p>App Name (without extension):</p>
                   <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="myapp" style={{width: '100%', marginBottom: '10px'}} />
+                </>
+              )}
+              {modal.type === 'help' && (
+                <>
+                  <p><b>KiloOS Desktop Environment</b></p>
+                  <p>Welcome to the web-based OS. Here are some useful shortcuts to navigate the environment:</p>
+                  <ul style={{ paddingLeft: '20px', lineHeight: '1.6', marginTop: '5px' }}>
+                    <li><b>Start Menu:</b> Click the start button to launch apps and utilities.</li>
+                    <li><b>Switch Windows:</b> Press <code>Alt + `</code> (backtick) to cycle through open windows.</li>
+                    <li><b>Snap Windows:</b> Drag a window to the left, right, or top edge to snap it.</li>
+                    <li><b>Maximize:</b> Double-click a window's title bar.</li>
+                    <li><b>Help:</b> Press <code>H</code> or <code>F1</code> on the desktop to view this help anytime.</li>
+                  </ul>
                 </>
               )}
               <div className="os-modal-buttons">

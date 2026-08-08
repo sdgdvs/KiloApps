@@ -56,7 +56,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 
 
 - KBBS
-- KiloOS Web UI (Shell & Apps)
 - KDB
 - KColony
 - KFortress
@@ -108,6 +107,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KBBS
 - KPong
 - KClock
+- KDB
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (auto-opening size to 1000x700, added visible Help status button to web, updated native window title for Help, implemented crisp fonts).
@@ -256,3 +256,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KAudio: Usability and UI issues fixed (auto-opening size explicitly scaled to 1000x800, help instructions default to open, native font crispness fixed with negative font height, web canvas interaction gestures locked, and font-smoothing applied).
 - KPong: Usability and UI issues fixed (auto-opening size adjusted to 950x750, DPI awareness and canvas scaling applied for crisp graphics, help hotkey/title added).
 - KClock: Usability and UI issues fixed (expanded native layout and fixed text overlapping, implemented Segoe UI overarching crisp font, validated visible alarm controls and help instructions, synced web auto-opening bounds to match content).
+- KDB: Usability and UI issues fixed (increased auto-opening size to 1100x800, expanded cryptic labels to explicit buttons, added dedicated Help button to the control bar, and enabled Segoe UI CLEARTYPE_QUALITY).
