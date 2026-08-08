@@ -658,6 +658,17 @@ void Draw3DTile(HDC hdc, int x, int y, int size, int isRevealed, int isPressed) 
     if (isRevealed) {
         HBRUSH hbrRev = CreateSolidBrush(RGB(24, 28, 40));
         FillRect(hdc, &rc, hbrRev); DeleteObject(hbrRev);
+        
+        // Terrain texture (dirt/rock details)
+        int seed = (x * 73 + y * 37) % 100;
+        for(int i = 0; i < 4; i++) {
+            int dx = (seed * (i + 1) * 13) % size;
+            int dy = (seed * (i + 1) * 17) % size;
+            int dotColor = ((i % 2) == 0) ? RGB(20, 22, 32) : RGB(30, 34, 48);
+            SetPixel(hdc, x + dx, y + dy, dotColor);
+            SetPixel(hdc, x + dx + 1, y + dy, dotColor);
+        }
+
         HPEN hDarkInner = CreatePen(PS_SOLID, 1, RGB(15, 18, 26));
         HGDIOBJ oldPen = SelectObject(hdc, hDarkInner);
         MoveToEx(hdc, x, y + size - 1, NULL); LineTo(hdc, x, y); LineTo(hdc, x + size - 1, y);
@@ -945,6 +956,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 2) {
+                if (my_rand() % 100 < 30) {
+                    if (particleCount < MAX_PARTICLES) {
+                        Particle* p = &particles[particleCount++];
+                        p->x = (float)(my_rand() % (cols * CELL_SIZE));
+                        p->y = (float)(HEADER_HEIGHT + my_rand() % (rows * CELL_SIZE));
+                        p->vx = (float)((my_rand() % 20) - 10) / 20.0f;
+                        p->vy = (float)((my_rand() % 10) - 15) / 10.0f;
+                        p->maxLife = 25.0f + (float)(my_rand() % 25);
+                        p->life = p->maxLife;
+                        p->size = 1.0f + (float)(my_rand() % 2);
+                        p->color = RGB(122, 162, 247);
+                    }
+                }
                 UpdateParticles();
                 InvalidateRect(hwnd, NULL, FALSE);
             }
