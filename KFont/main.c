@@ -134,7 +134,7 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             else if (currentTab == 3) { // Sample
                 HFONT hOld = SelectObject(hdc, hCurrentFont);
-                RECT rc = {10, 10, W - 210, H - 110};
+                RECT rc = {10, 10, W - 210, H - 70};
                 DrawTextA(hdc, currentCustomText, -1, &rc, DT_WORDBREAK | DT_LEFT);
                 SelectObject(hdc, hOld);
             }
@@ -198,7 +198,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             pc.hbrBackground = hPanelBrush;
             RegisterClass(&pc);
             
-            hPanel = CreateWindowEx(WS_EX_CLIENTEDGE, "KFontPanel", "", WS_CHILD | WS_VISIBLE, 170, 40, W - 190, H - 90, hwnd, NULL, NULL, NULL);
+            hPanel = CreateWindowEx(WS_EX_CLIENTEDGE, "KFontPanel", "", WS_CHILD | WS_VISIBLE, 170, 40, W - 190, H - 50, hwnd, NULL, NULL, NULL);
             
             hRangeList = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 10, 250, 200, hPanel, (HMENU)14, NULL, NULL);
             const char* blocks[] = {
@@ -321,8 +321,10 @@ void MainEntry() {
     wc.hbrBackground = hBgBrush;
     RegisterClass(&wc);
 
+    RECT rcWin = {0, 0, W, H};
+    AdjustWindowRect(&rcWin, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     HWND hwnd = CreateWindowEx(0, "KFontApp", "KFont (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, rcWin.right - rcWin.left, rcWin.bottom - rcWin.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
