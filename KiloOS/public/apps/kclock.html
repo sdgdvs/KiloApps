@@ -1510,6 +1510,9 @@
     if (window.resizeTo) {
       window.resizeTo(950, 650);
     }
+    if (window.parent) {
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 950, height: 650 }, '*');
+    }
 
     // Help Keyboard listener
     document.addEventListener('keydown', (e) => {

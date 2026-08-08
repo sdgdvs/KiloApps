@@ -307,75 +307,80 @@ void LoadConfig() {
     }
 }
 
+BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam) {
+    SendMessage(hwnd, WM_SETFONT, (WPARAM)lParam, TRUE);
+    return TRUE;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             hFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
             hFontMono = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
-            hFontSmall = CreateFontA(13, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Arial");
+            hFontSmall = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             hBkBrush = CreateSolidBrush(RGB(240, 243, 246));
 
             // Local Time
-            CreateWindowA("STATIC", "Local Time:", WS_CHILD | WS_VISIBLE, 10, 5, 240, 15, hwnd, NULL, NULL, NULL);
-            hClockDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "00:00:00", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 20, 240, 32, hwnd, NULL, NULL, NULL);
-            SendMessageA(hClockDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
+            CreateWindowA("STATIC", "Local Time:", WS_CHILD | WS_VISIBLE, 10, 5, 280, 15, hwnd, NULL, NULL, NULL);
+            hClockDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "00:00:00", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 20, 300, 32, hwnd, NULL, NULL, NULL);
 
             // World Clock
             CreateWindowA("STATIC", "World Clock:", WS_CHILD | WS_VISIBLE, 10, 56, 140, 15, hwnd, NULL, NULL, NULL);
-            hBtnWorldCity = CreateWindowA("BUTTON", "Cycle City 🌍", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 155, 54, 95, 20, hwnd, (HMENU)9, NULL, NULL);
-            hWorldDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "Loading...", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 75, 240, 26, hwnd, NULL, NULL, NULL);
-            SendMessageA(hWorldDisplay, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            hBtnWorldCity = CreateWindowA("BUTTON", "Cycle City 🌍", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 155, 54, 155, 20, hwnd, (HMENU)9, NULL, NULL);
+            hWorldDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "Loading...", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 75, 300, 26, hwnd, NULL, NULL, NULL);
 
             // Timezone Calculator
             CreateWindowA("STATIC", "TZ Calculator:", WS_CHILD | WS_VISIBLE, 10, 105, 140, 15, hwnd, NULL, NULL, NULL);
-            hBtnTzCalc = CreateWindowA("BUTTON", "Swap Cities ⇄", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 155, 103, 95, 20, hwnd, (HMENU)13, NULL, NULL);
-            hTzCalcDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "Calculating...", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 123, 240, 24, hwnd, NULL, NULL, NULL);
-            SendMessageA(hTzCalcDisplay, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            hBtnTzCalc = CreateWindowA("BUTTON", "Swap Cities ⇄", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 155, 103, 155, 20, hwnd, (HMENU)13, NULL, NULL);
+            hTzCalcDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "Calculating...", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 123, 300, 24, hwnd, NULL, NULL, NULL);
 
             // Stopwatch
-            CreateWindowA("STATIC", "Stopwatch:", WS_CHILD | WS_VISIBLE, 10, 151, 240, 15, hwnd, NULL, NULL, NULL);
-            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "00:00.00", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 166, 240, 32, hwnd, NULL, NULL, NULL);
-            SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
+            CreateWindowA("STATIC", "Stopwatch:", WS_CHILD | WS_VISIBLE, 10, 151, 280, 15, hwnd, NULL, NULL, NULL);
+            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "00:00.00", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 166, 300, 32, hwnd, NULL, NULL, NULL);
 
-            hBtnStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 202, 55, 23, hwnd, (HMENU)1, NULL, NULL);
-            hBtnStop = CreateWindowA("BUTTON", "Stop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 70, 202, 55, 23, hwnd, (HMENU)2, NULL, NULL);
-            hBtnLap = CreateWindowA("BUTTON", "Lap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 130, 202, 55, 23, hwnd, (HMENU)4, NULL, NULL);
-            hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 202, 60, 23, hwnd, (HMENU)3, NULL, NULL);
+            hBtnStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 202, 65, 23, hwnd, (HMENU)1, NULL, NULL);
+            hBtnStop = CreateWindowA("BUTTON", "Stop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 80, 202, 65, 23, hwnd, (HMENU)2, NULL, NULL);
+            hBtnLap = CreateWindowA("BUTTON", "Lap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 150, 202, 65, 23, hwnd, (HMENU)4, NULL, NULL);
+            hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 202, 70, 23, hwnd, (HMENU)3, NULL, NULL);
             
-            hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 229, 240, 55, hwnd, NULL, NULL, NULL);
-            SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFontMono, TRUE);
+            hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 229, 300, 55, hwnd, NULL, NULL, NULL);
 
             // Timer
             CreateWindowA("STATIC", "Timer:", WS_CHILD | WS_VISIBLE, 10, 288, 45, 15, hwnd, NULL, NULL, NULL);
             hEditTimerMins = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "5", WS_CHILD | WS_VISIBLE | ES_NUMBER | ES_CENTER, 55, 286, 35, 20, hwnd, (HMENU)10, NULL, NULL);
             CreateWindowA("STATIC", "min", WS_CHILD | WS_VISIBLE, 95, 288, 30, 15, hwnd, NULL, NULL, NULL);
 
-            hBtnTimerStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 130, 284, 55, 23, hwnd, (HMENU)5, NULL, NULL);
-            hBtnTimerReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 284, 60, 23, hwnd, (HMENU)6, NULL, NULL);
+            hBtnTimerStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 130, 284, 70, 23, hwnd, (HMENU)5, NULL, NULL);
+            hBtnTimerReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 205, 284, 70, 23, hwnd, (HMENU)6, NULL, NULL);
 
-            hTimerDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "00:00", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 310, 240, 32, hwnd, NULL, NULL, NULL);
-            SendMessageA(hTimerDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
+            hTimerDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "00:00", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 310, 300, 32, hwnd, NULL, NULL, NULL);
             
             // Alarms
-            CreateWindowA("STATIC", "Alarms (HH:MM):", WS_CHILD | WS_VISIBLE, 10, 346, 240, 15, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Alarms (HH:MM):", WS_CHILD | WS_VISIBLE, 10, 346, 280, 15, hwnd, NULL, NULL, NULL);
             hEditAlarmHour = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "08", WS_CHILD | WS_VISIBLE | ES_NUMBER | ES_CENTER, 10, 362, 30, 20, hwnd, (HMENU)20, NULL, NULL);
             CreateWindowA("STATIC", ":", WS_CHILD | WS_VISIBLE, 42, 364, 10, 15, hwnd, NULL, NULL, NULL);
             hEditAlarmMin = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "00", WS_CHILD | WS_VISIBLE | ES_NUMBER | ES_CENTER, 52, 362, 30, 20, hwnd, (HMENU)21, NULL, NULL);
-            hBtnAddAlarm = CreateWindowA("BUTTON", "Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 360, 45, 23, hwnd, (HMENU)7, NULL, NULL);
-            hBtnDelAlarm = CreateWindowA("BUTTON", "Del", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 140, 360, 45, 23, hwnd, (HMENU)8, NULL, NULL);
-            hBtnToggleAlarm = CreateWindowA("BUTTON", "Toggle", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 360, 60, 23, hwnd, (HMENU)12, NULL, NULL);
+            hBtnAddAlarm = CreateWindowA("BUTTON", "Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 360, 55, 23, hwnd, (HMENU)7, NULL, NULL);
+            hBtnDelAlarm = CreateWindowA("BUTTON", "Del", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 150, 360, 55, 23, hwnd, (HMENU)8, NULL, NULL);
+            hBtnToggleAlarm = CreateWindowA("BUTTON", "Toggle", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 210, 360, 70, 23, hwnd, (HMENU)12, NULL, NULL);
             
-            hAlarmList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 387, 240, 55, hwnd, NULL, NULL, NULL);
-            SendMessageA(hAlarmList, WM_SETFONT, (WPARAM)hFontMono, TRUE);
+            hAlarmList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 387, 300, 55, hwnd, NULL, NULL, NULL);
 
             // Export / Import Config & Status Bar
-            hBtnExport = CreateWindowA("BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 446, 55, 22, hwnd, (HMENU)14, NULL, NULL);
-            hBtnImport = CreateWindowA("BUTTON", "Import", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 70, 446, 55, 22, hwnd, (HMENU)15, NULL, NULL);
-            hStatusDisplay = CreateWindowA("STATIC", "Ready (H: Help)", WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE, 130, 446, 120, 22, hwnd, NULL, NULL, NULL);
-            SendMessageA(hStatusDisplay, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            hBtnExport = CreateWindowA("BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 446, 60, 23, hwnd, (HMENU)14, NULL, NULL);
+            hBtnImport = CreateWindowA("BUTTON", "Import", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 75, 446, 60, 23, hwnd, (HMENU)15, NULL, NULL);
+            hStatusDisplay = CreateWindowA("STATIC", "Ready (H: Help)", WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE, 140, 446, 170, 23, hwnd, NULL, NULL, NULL);
 
-            hBtnSilenceAlarm = CreateWindowA("BUTTON", "Dismiss 🔔", WS_CHILD | BS_PUSHBUTTON, 10, 472, 115, 24, hwnd, (HMENU)11, NULL, NULL);
-            hBtnSnoozeAlarm = CreateWindowA("BUTTON", "Snooze 5m 💤", WS_CHILD | BS_PUSHBUTTON, 135, 472, 115, 24, hwnd, (HMENU)16, NULL, NULL);
+            hBtnSilenceAlarm = CreateWindowA("BUTTON", "Dismiss 🔔", WS_CHILD | BS_PUSHBUTTON, 10, 472, 140, 25, hwnd, (HMENU)11, NULL, NULL);
+            hBtnSnoozeAlarm = CreateWindowA("BUTTON", "Snooze 5m 💤", WS_CHILD | BS_PUSHBUTTON, 160, 472, 140, 25, hwnd, (HMENU)16, NULL, NULL);
+
+            EnumChildWindows(hwnd, EnumChildProc, (LPARAM)hFontSmall);
+
+            SendMessageA(hClockDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hTimerDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFontMono, TRUE);
+            SendMessageA(hAlarmList, WM_SETFONT, (WPARAM)hFontMono, TRUE);
 
             SetTimer(hwnd, 1, 15, NULL);
             break;
@@ -555,8 +560,8 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    // Client area size: 300x530
-    RECT rc = {0, 0, 300, 530};
+    // Client area size: 320x560
+    RECT rc = {0, 0, 320, 560};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(WS_EX_COMPOSITED, "KClockClass", "KClock (Press H for Help)", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
