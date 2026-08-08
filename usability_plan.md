@@ -56,7 +56,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 
 
 - KChess
-- KChat
 - KBBS
 - KAudio
 - KClock
@@ -107,6 +106,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KHex
 - KCalendar
 - KChart
+- KChat
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (auto-opening size to 1000x700, added visible Help status button to web, updated native window title for Help, implemented crisp fonts).
@@ -249,3 +249,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KCalc: Usability and UI issues fixed (added DPI scaling, crisp text, and adjusted native window bounds).
 - KCalendar: Usability and UI issues fixed (auto-opening size to 1024x768, DPI_AWARENESS_CONTEXT applied in native C, help toast duration increased to 8s, layout wrapping fixed).
 - KChart: Usability and UI issues fixed (DPI scaling, crisp negative font heights, and keyboard focus resolution).
+- KChat: Usability and UI issues fixed (adjusted auto-opening size to 850x650, added 'H' hotkey help listener and explicit instructions in HTML, added Help button and adjusted layout/sizing in native).

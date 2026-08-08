@@ -40,6 +40,7 @@
             flex-direction: column; 
             height: 100vh; 
             overflow: hidden;
+            text-rendering: optimizeLegibility;
         }
 
         /* Top Header Control Bar */
@@ -373,7 +374,7 @@
         }
     </style>
 </head>
-<body data-width="800" data-height="600">
+<body data-width="850" data-height="650">
 
     <!-- Header Controls -->
     <div class="app-header" role="region" aria-label="KChat Header Controls">
@@ -485,7 +486,7 @@
             {
                 id: 'sys_1',
                 user: 'System',
-                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>\nType /help for help and detailed instructions.',
+                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>\nPress H for Help or type /help.',
                 timestamp: Date.now(),
                 room: '#general',
                 pinned: true,
@@ -745,6 +746,13 @@
             else btn.classList.remove('btn-active');
             window.renderMessages();
         };
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                showToast("Help: /nick <name>, /join <#room>, /ai <prompt>. Use buttons for features.");
+            }
+        });
 
         // Export & Import
         window.exportJSON = function() {

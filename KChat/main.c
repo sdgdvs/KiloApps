@@ -237,6 +237,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Cerberus");
             SendMessageA(hPersonaCombo, CB_SETCURSEL, 0, 0);
 
+            HWND hHelpBtn = CreateWindowA("BUTTON", "Help", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 595, 8, 60, 23, hwnd, (HMENU)112, 0, 0);
+
             // Row 2: Search, Pin, Reaction, Export/Import controls
             CreateWindowA("STATIC", "Search:", WS_CHILD|WS_VISIBLE, 10, 38, 45, 20, hwnd, 0, 0, 0);
             hSearchInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 58, 36, 120, 22, hwnd, (HMENU)111, 0, 0);
@@ -248,13 +250,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 425, 36, 55, 23, hwnd, (HMENU)102, 0, 0);
 
             // Row 3: Log area
-            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY, 10, 65, 760, 450, hwnd, 0, 0, 0);
+            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY, 10, 65, 810, 510, hwnd, 0, 0, 0);
             
             // Row 4: Send & Input area
-            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 10, 525, 530, 24, hwnd, 0, 0, 0);
-            hSend = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 550, 525, 55, 24, hwnd, (HMENU)101, 0, 0);
-            hAskAI = CreateWindowA("BUTTON", "Ask AI", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 610, 525, 60, 24, hwnd, (HMENU)106, 0, 0);
-            hSave = CreateWindowA("BUTTON", "Save TXT", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 675, 525, 95, 24, hwnd, (HMENU)103, 0, 0);
+            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 10, 585, 580, 24, hwnd, 0, 0, 0);
+            hSend = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 600, 585, 55, 24, hwnd, (HMENU)101, 0, 0);
+            hAskAI = CreateWindowA("BUTTON", "Ask AI", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 665, 585, 60, 24, hwnd, (HMENU)106, 0, 0);
+            hSave = CreateWindowA("BUTTON", "Save TXT", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 735, 585, 85, 24, hwnd, (HMENU)103, 0, 0);
             
             oldInputProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)InputSubclassProc);
 
@@ -274,10 +276,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hSend, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hAskAI, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hClear, WM_SETFONT, (WPARAM)hUIFont, TRUE);
-            SendMessageA(hSave, WM_SETFONT, (WPARAM)hUIFont, TRUE);            
+            SendMessageA(hSave, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hHelpBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
 
             AddMessage("System", "Welcome to KChat Native Pro! Connect to server or use offline AI Personas.", "#general", 1);
-            AddMessage("System", "Commands: /nick <name>, /join <#room>, /ai <prompt>. Type /help for help and detailed instructions.", "#general", 0);
+            AddMessage("System", "Commands: /nick <name>, /join <#room>, /ai <prompt>. Click Help or type /help.", "#general", 0);
             break;
         }
         case WM_CTLCOLORSTATIC: {
@@ -304,6 +307,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wmId == 111 && wmEvent == EN_CHANGE) { // Search Edit Box
                 GetWindowTextA(hSearchInput, searchKeyword, sizeof(searchKeyword));
                 RebuildLogView();
+            } else if (wmId == 112) { // Help
+                AddMessage("System", "Help: /nick <name>, /join <#room>, /ai <prompt>. Use UI buttons for Connect, Pin, Export.", currentRoom, 0);
             } else if (wmId == 100) { // Connect
                 if (s != INVALID_SOCKET) {
                     closesocket(s);
@@ -516,7 +521,9 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KChatClass", "KChat Native Pro", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, wc.hInstance, NULL);
+    RECT rect = { 0, 0, 850, 650 };
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
+    HWND hwnd = CreateWindowExA(0, "KChatClass", "KChat Native Pro", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
