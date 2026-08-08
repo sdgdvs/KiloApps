@@ -415,6 +415,10 @@ void Draw(HDC hdc, RECT* rect) {
         RECT textRect = {mapWidth + 15, 360, width - 10, 460};
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
     }
+    
+    wsprintfA(buf, "[C] Crew  [H] Help");
+    SetTextColor(memDC, RGB(255, 255, 0));
+    TextOutA(memDC, mapWidth + 15, height - 30, buf, lstrlenA(buf));
 
     if (modal_open) {
         RECT modalRect = { mapWidth/2 - 170, height/2 - 100, mapWidth/2 + 170, height/2 + 100 };
@@ -450,6 +454,14 @@ void Draw(HDC hdc, RECT* rect) {
         else if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
         else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard 8: Tavern(Recruit 100C)\r\nSPACE: Leave"; }
         else if (modal_enc_type == 5) { title = "SHIPYARD"; desc = "1: Upg Wpn 2: Upg Shd (500C/Lvl)\r\n3: Upg Eng 4: Upg Cargo (500C/Lvl)\r\nSPACE: Back to Station"; }
+        else if (modal_enc_type == 12) {
+            title = "CAPTAIN'S MANUAL";
+            desc = "GOAL: Explore, trade, upgrade.\r\n"
+                   "CTRLS: W/A/S/D move, C Crew, H Help.\r\n"
+                   "RES: Fuel(move), Hull(health), Credits.\r\n"
+                   "CREW: Pilot(spd), Gun(dmg), Eng(def).\r\n"
+                   "UPG: Improve ship at stations.\r\n";
+        }
         else if (modal_enc_type == 6) {
             title = "CREW MANAGEMENT";
             int p_i = GetOfficer(1), g_i = GetOfficer(2), e_i = GetOfficer(3);
@@ -499,6 +511,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (!modal_open && (wParam == 'C' || wParam == 'c')) {
                 modal_open = 1;
                 modal_enc_type = 6;
+                return 0;
+            }
+            if (!modal_open && (wParam == 'H' || wParam == 'h')) {
+                modal_open = 1;
+                modal_enc_type = 12;
                 return 0;
             }
             if (modal_open) {
@@ -613,6 +630,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (wParam == '3' && res_credits >= upg_engines*500 && upg_engines < 5) { res_credits -= upg_engines*500; upg_engines++; }
                     if (wParam == '4' && res_credits >= upg_cargo*500 && upg_cargo < 5) { res_credits -= upg_cargo*500; upg_cargo++; }
                     if (wParam == VK_SPACE) { modal_enc_type = 4; }
+                } else if (modal_enc_type == 12) {
+                    if (wParam == VK_SPACE) { modal_open = 0; }
                 } else {
                     if (wParam == VK_SPACE) {
                         modal_open = 0;

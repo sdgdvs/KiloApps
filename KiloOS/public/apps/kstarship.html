@@ -151,6 +151,7 @@
         <button id="btn-right">D</button>
       </div>
       <button id="btn-crew" style="width:100%; margin-top:10px; font-size:14px;">MANAGE CREW (C)</button>
+      <button id="btn-help" style="width:100%; margin-top:10px; font-size:14px;">CAPTAIN'S MANUAL (H)</button>
     </div>
   </div>
 
@@ -764,12 +765,51 @@
         keys.w = keys.a = keys.s = keys.d = false;
     }
 
+    function openHelpModal() {
+        if (state.modalOpen) return;
+        state.modalOpen = true;
+        const modal = document.getElementById('modal');
+        const title = document.getElementById('modal-title');
+        const desc = document.getElementById('modal-desc');
+        const actions = document.getElementById('modal-actions');
+        
+        title.innerText = "CAPTAIN'S MANUAL";
+        desc.innerHTML = `<div style="text-align:left; font-size:12px;">
+            <b>GOAL:</b> Explore space, trade, upgrade, and survive.<br>
+            <b>CONTROLS:</b> W/A/S/D to move, C for Crew, H for Help.<br>
+            <b>RESOURCES:</b><br>
+            - Fuel: Depletes as you move. Buy at stations.<br>
+            - Hull: Takes damage in combat. Repair at stations.<br>
+            - Credits: Earned via bounties, trading, and events.<br>
+            <b>CREW:</b><br>
+            - Pilot (W/A/S/D speed bonus)<br>
+            - Gunner (Weapon damage bonus)<br>
+            - Engineer (Shield defense bonus)<br>
+            <b>UPGRADES:</b> Improve weapons, shields, engines, cargo at stations.
+            </div>`;
+        actions.innerHTML = '';
+        
+        const btn = document.createElement('button');
+        btn.className = 'action-btn';
+        btn.innerText = 'Close Manual';
+        btn.onclick = () => {
+            modal.style.display = 'none';
+            state.modalOpen = false;
+        };
+        actions.appendChild(btn);
+        
+        modal.style.display = 'block';
+        keys.w = keys.a = keys.s = keys.d = false;
+    }
+
     document.getElementById('btn-crew').addEventListener('click', openCrewModal);
+    document.getElementById('btn-help').addEventListener('click', openHelpModal);
 
     window.addEventListener('keydown', e => {
       const k = e.key.toLowerCase();
       if (['w','a','s','d'].includes(k)) { keys[k] = true; }
       if (k === 'c') { openCrewModal(); }
+      if (k === 'h') { openHelpModal(); }
     });
     window.addEventListener('keyup', e => {
       const k = e.key.toLowerCase();

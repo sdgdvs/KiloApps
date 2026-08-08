@@ -53,24 +53,24 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KStarship (Sci-fi exploration)
-**Phase:** 14 (next to do)
-**Status:** Deep Expansion
+**App:** KWizard (Fantasy dueling card game)
+**Phase:** 1 (next to do)
+**Status:** Creation
 
-- [x] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
-- [x] Phase 2: Basic star map rendering and ship navigation controls.
-- [x] Phase 3: Native C version (`KStarship/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [x] Phase 4: Sci-fi UI styling (dark space theme, neon accents, minimalist panels).
-- [x] Phase 5: Resource management system (Fuel, Hull, Crew) and consumption mechanics during travel.
-- [x] Phase 6: Procedural generation of star systems (different types of planets and stars).
-- [x] Phase 7: Random encounters system (pirates, anomalies, traders) upon entering new systems.
-- [x] Phase 8: Trading economy and inventory system (buy/sell goods at stations).
-- [x] Phase 9: Ship upgrades (weapons, shields, engines, cargo hold).
-- [x] Phase 10: Basic combat system against pirates (turn-based or real-time choices).
-- [x] Phase 11: Crew management (recruiting, assigning roles, leveling up).
-- [x] Phase 12: Story events and branching text-based choices.
-- [x] Phase 13: Sound Effects — space hum, laser blasts, alarm claxons (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Captain's Manual — How-to-play, strategy guide, ship operations.
+- [ ] Phase 1: Scaffold KWizard directory (`KWizard/`), create web HTML skeleton (`KiloOS/public/apps/kwizard.html`), register in App.jsx.
+- [ ] Phase 2: Basic card drawing and UI layout for player and opponent hands.
+- [ ] Phase 3: Native C version (`KWizard/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [ ] Phase 4: Fantasy UI styling (parchment backgrounds, mystical borders, arcane fonts).
+- [ ] Phase 5: Implement mana system and spell casting logic (mana cost, spell effects).
+- [ ] Phase 6: Add 30+ unique spells across different schools (Fire, Ice, Arcane, Life) with distinct effects.
+- [ ] Phase 7: Implement AI opponent with basic strategy (play cards when mana available).
+- [ ] Phase 8: Add health points (HP) for player and opponent, and win/loss conditions.
+- [ ] Phase 9: Implement status effects (burn, freeze, shield, poison) that persist across turns.
+- [ ] Phase 10: Advanced AI opponent with difficulty levels (Easy/Medium/Hard) and smarter card synergies.
+- [ ] Phase 11: Campaign mode with 10 progressive battles against different mages (each with unique decks).
+- [ ] Phase 12: Deck builder interface allowing players to customize their 20-card deck from unlocked spells.
+- [ ] Phase 13: Sound Effects — magical chimes, fireballs, ice shatters (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Grimoire — How-to-play, spell index, status effect guide.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -167,7 +167,6 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 - **KAlchemy** — Fantasy crafting/discovery game. Combine elements to discover new ones. 100+ discoverable recipes. Procedural hints. Encyclopedia tracking. Multiple tiers of complexity (earth+fire=lava, lava+water=obsidian). Score by discoveries.
 - **KFortress** — Tower defense with fantasy theme. Place towers on a grid path. Multiple tower types (archer, mage, cannon). Enemy waves with varying resistances. Upgrade system. Gold economy. 15+ levels with different maps. Boss waves.
 - **KColony** — Sci-fi colony survival. Manage resources (food, power, materials) on an alien planet. Build structures. Research tech tree. Random events (storms, alien encounters, equipment failures). Population management. Day/night cycle.
-- **KWizard** — Fantasy dueling card game. Build a hand from a spell deck. Turn-based combat vs AI. Mana system. 30+ unique spells (fireball, shield, heal, summon). AI opponents with different strategies. Campaign with progressive difficulty.
 - **KVoid** — Sci-fi horror survival. Explore a derelict space station room by room. Limited oxygen and battery. Find keycards, solve puzzles, avoid or fight creatures. Procedural station layout. Multiple endings based on choices. Tension through resource scarcity.
 - **KDragon** — Fantasy creature-raising sim. Hatch, feed, train, and evolve a dragon. Multiple dragon types with different abilities. Arena battles vs AI dragons. Stat management (strength, speed, fire, loyalty). Aging system. Treasure hoarding mechanic.
 
