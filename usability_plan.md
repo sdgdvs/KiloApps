@@ -107,6 +107,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KChat
 - KChess
 - KAudio
+- KBBS
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (auto-opening size to 1000x700, added visible Help status button to web, updated native window title for Help, implemented crisp fonts).
@@ -251,4 +252,5 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KChart: Usability and UI issues fixed (DPI scaling, crisp negative font heights, and keyboard focus resolution).
 - KChat: Usability and UI issues fixed (adjusted auto-opening size to 850x650, added 'H' hotkey help listener and explicit instructions in HTML, added Help button and adjusted layout/sizing in native).
 - KChess: Usability and UI issues fixed (increased auto-opening size to 760x860, expanded control hitboxes, made opening instructions clearer, implemented DPI scaling and crisp text, re-calculated layout boundaries).
+- KBBS: Usability and UI issues fixed (increased auto-opening size to 800x600 in native, added H hotkey for help modal in web version).
 - KAudio: Usability and UI issues fixed (auto-opening size explicitly scaled to 1000x800, help instructions default to open, native font crispness fixed with negative font height, web canvas interaction gestures locked, and font-smoothing applied).
