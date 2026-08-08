@@ -71,6 +71,8 @@ rand_t m_rand;
 HWND hDisplay, hSubDisplay, hStatusText;
 HFONT hFontMain, hFontSub, hFontSmall;
 HBRUSH hDisplayBgBrush;
+int dpiX = 96;
+#define S(x) MulDiv((x), dpiX, 96)
 
 char displayBuffer[64] = "0";
 char subDisplayBuffer[64] = "";
@@ -317,6 +319,11 @@ void ExportHistoryToFile() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            HDC hdcScreen = GetDC(NULL);
+            if (hdcScreen) {
+                dpiX = GetDeviceCaps(hdcScreen, 88); // LOGPIXELSX
+                ReleaseDC(NULL, hdcScreen);
+            }
             HMODULE hMsvcrt = LoadLibraryA("msvcrt.dll");
             m_sprintf = (sprintf_t)GetProcAddress(hMsvcrt, "sprintf");
             m_atof = (atof_t)GetProcAddress(hMsvcrt, "atof");
@@ -334,19 +341,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hDisplayBgBrush = CreateSolidBrush(RGB(15, 23, 42));
 
             // Mode Selector Bar
-            hModeBtns[0] = CreateWindowA("BUTTON", "Scientific", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 8, 78, 26, hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
-            hModeBtns[1] = CreateWindowA("BUTTON", "Financial",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 92, 8, 78, 26, hwnd, (HMENU)ID_MODE_FIN, NULL, NULL);
-            hModeBtns[2] = CreateWindowA("BUTTON", "Constants",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 174, 8, 78, 26, hwnd, (HMENU)ID_MODE_CONST, NULL, NULL);
-            hModeBtns[3] = CreateWindowA("BUTTON", "History",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 256, 8, 78, 26, hwnd, (HMENU)ID_MODE_HIST, NULL, NULL);
+            hModeBtns[0] = CreateWindowA("BUTTON", "Scientific", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(8), S(78), S(26), hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
+            hModeBtns[1] = CreateWindowA("BUTTON", "Financial",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(92), S(8), S(78), S(26), hwnd, (HMENU)ID_MODE_FIN, NULL, NULL);
+            hModeBtns[2] = CreateWindowA("BUTTON", "Constants",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(174), S(8), S(78), S(26), hwnd, (HMENU)ID_MODE_CONST, NULL, NULL);
+            hModeBtns[3] = CreateWindowA("BUTTON", "History",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(256), S(8), S(78), S(26), hwnd, (HMENU)ID_MODE_HIST, NULL, NULL);
 
             // Displays
-            hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, 10, 38, 324, 18, hwnd, NULL, NULL, NULL);
-            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, 10, 58, 324, 34, hwnd, NULL, NULL, NULL);
-            hStatusText = CreateWindowExA(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 94, 300, 16, hwnd, NULL, NULL, NULL);
+            hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(38), S(324), S(18), hwnd, NULL, NULL, NULL);
+            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(58), S(324), S(34), hwnd, NULL, NULL, NULL);
+            hStatusText = CreateWindowExA(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, S(10), S(94), S(300), S(16), hwnd, NULL, NULL, NULL);
 
-            hFontMain = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
-            hFontSub = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hFontSmall = CreateFontA(12, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontMain = CreateFontA(S(-24), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Consolas");
+            hFontSub = CreateFontA(S(-14), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontSmall = CreateFontA(S(-12), 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFontMain, TRUE);
             SendMessageA(hSubDisplay, WM_SETFONT, (WPARAM)hFontSub, TRUE);
@@ -378,43 +385,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int col = i % 5;
                 int row = i / 5;
                 if (ids[i]) {
-                    hSciBtns[i] = CreateWindowA("BUTTON", labels[i], WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10 + col * 66, 115 + row * 38, 60, 34, hwnd, (HMENU)(INT_PTR)ids[i], NULL, NULL);
+                    hSciBtns[i] = CreateWindowA("BUTTON", labels[i], WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10 + col * 66), S(115 + row * 38), S(60), S(34), hwnd, (HMENU)(INT_PTR)ids[i], NULL, NULL);
                 }
             }
 
             // Mode 1: Financial Controls
-            CreateWindowA("STATIC", "Loan Amount ($):", WS_CHILD | SS_LEFT, 15, 115, 120, 20, hwnd, NULL, NULL, NULL);
-            hFinControls[0] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "250000", WS_CHILD | ES_NUMBER, 140, 112, 180, 24, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Loan Amount ($):", WS_CHILD | SS_LEFT, S(15), S(115), S(120), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[0] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "250000", WS_CHILD | ES_NUMBER, S(140), S(112), S(180), S(24), hwnd, NULL, NULL, NULL);
             
-            CreateWindowA("STATIC", "Interest Rate (%):", WS_CHILD | SS_LEFT, 15, 145, 120, 20, hwnd, NULL, NULL, NULL);
-            hFinControls[1] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6.5", WS_CHILD, 140, 142, 180, 24, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Interest Rate (%):", WS_CHILD | SS_LEFT, S(15), S(145), S(120), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[1] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6.5", WS_CHILD, S(140), S(142), S(180), S(24), hwnd, NULL, NULL, NULL);
 
-            CreateWindowA("STATIC", "Term (Years):", WS_CHILD | SS_LEFT, 15, 175, 120, 20, hwnd, NULL, NULL, NULL);
-            hFinControls[2] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "30", WS_CHILD | ES_NUMBER, 140, 172, 180, 24, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Term (Years):", WS_CHILD | SS_LEFT, S(15), S(175), S(120), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[2] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "30", WS_CHILD | ES_NUMBER, S(140), S(172), S(180), S(24), hwnd, NULL, NULL, NULL);
 
-            hFinControls[3] = CreateWindowA("BUTTON", "Calculate PMT", WS_CHILD | BS_PUSHBUTTON, 140, 205, 180, 30, hwnd, (HMENU)ID_FIN_CALC_PMT, NULL, NULL);
-            hFinControls[4] = CreateWindowExA(0, "STATIC", "Monthly PMT: $0.00", WS_CHILD | SS_LEFT, 15, 245, 300, 24, hwnd, NULL, NULL, NULL);
+            hFinControls[3] = CreateWindowA("BUTTON", "Calculate PMT", WS_CHILD | BS_PUSHBUTTON, S(140), S(205), S(180), S(30), hwnd, (HMENU)ID_FIN_CALC_PMT, NULL, NULL);
+            hFinControls[4] = CreateWindowExA(0, "STATIC", "Monthly PMT: $0.00", WS_CHILD | SS_LEFT, S(15), S(245), S(300), S(24), hwnd, NULL, NULL, NULL);
 
-            CreateWindowA("STATIC", "Cost ($):", WS_CHILD | SS_LEFT, 15, 285, 60, 20, hwnd, NULL, NULL, NULL);
-            hFinControls[5] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "50", WS_CHILD, 80, 282, 80, 24, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Cost ($):", WS_CHILD | SS_LEFT, S(15), S(285), S(60), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[5] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "50", WS_CHILD, S(80), S(282), S(80), S(24), hwnd, NULL, NULL, NULL);
 
-            CreateWindowA("STATIC", "Sell ($):", WS_CHILD | SS_LEFT, 170, 285, 60, 20, hwnd, NULL, NULL, NULL);
-            hFinControls[6] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "80", WS_CHILD, 235, 282, 85, 24, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Sell ($):", WS_CHILD | SS_LEFT, S(170), S(285), S(60), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[6] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "80", WS_CHILD, S(235), S(282), S(85), S(24), hwnd, NULL, NULL, NULL);
 
-            hFinControls[7] = CreateWindowA("BUTTON", "Calc Margin", WS_CHILD | BS_PUSHBUTTON, 140, 315, 180, 30, hwnd, (HMENU)ID_FIN_CALC_MARG, NULL, NULL);
-            hFinControls[8] = CreateWindowExA(0, "STATIC", "Margin: 0.00%", WS_CHILD | SS_LEFT, 15, 355, 300, 24, hwnd, NULL, NULL, NULL);
+            hFinControls[7] = CreateWindowA("BUTTON", "Calc Margin", WS_CHILD | BS_PUSHBUTTON, S(140), S(315), S(180), S(30), hwnd, (HMENU)ID_FIN_CALC_MARG, NULL, NULL);
+            hFinControls[8] = CreateWindowExA(0, "STATIC", "Margin: 0.00%", WS_CHILD | SS_LEFT, S(15), S(355), S(300), S(24), hwnd, NULL, NULL, NULL);
 
             // Mode 2: Scientific Constants
             char constLabels[7][24] = { "c (Speed of Light)", "h (Planck)", "G (Gravitational)", "N_A (Avogadro)", "R (Gas Constant)", "pi (Pi)", "e (Euler)" };
             for (int i = 0; i < 7; i++) {
-                hConstBtns[i] = CreateWindowA("BUTTON", constLabels[i], WS_CHILD | BS_PUSHBUTTON, 20, 115 + i * 38, 304, 32, hwnd, (HMENU)(INT_PTR)(6001 + i), NULL, NULL);
+                hConstBtns[i] = CreateWindowA("BUTTON", constLabels[i], WS_CHILD | BS_PUSHBUTTON, S(20), S(115 + i * 38), S(304), S(32), hwnd, (HMENU)(INT_PTR)(6001 + i), NULL, NULL);
             }
 
             // Mode 3: History Tape Controls
-            hHistControls[0] = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | LBS_NOTIFY | WS_VSCROLL, 15, 115, 314, 230, hwnd, (HMENU)ID_HIST_LIST, NULL, NULL);
-            hHistControls[1] = CreateWindowA("BUTTON", "Recall Entry", WS_CHILD | BS_PUSHBUTTON, 15, 355, 95, 30, hwnd, (HMENU)ID_HIST_RECALL, NULL, NULL);
-            hHistControls[2] = CreateWindowA("BUTTON", "Export TXT", WS_CHILD | BS_PUSHBUTTON, 125, 355, 95, 30, hwnd, (HMENU)ID_HIST_EXPORT, NULL, NULL);
-            hHistControls[3] = CreateWindowA("BUTTON", "Clear Tape", WS_CHILD | BS_PUSHBUTTON, 235, 355, 94, 30, hwnd, (HMENU)ID_HIST_CLEAR, NULL, NULL);
+            hHistControls[0] = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | LBS_NOTIFY | WS_VSCROLL, S(15), S(115), S(314), S(230), hwnd, (HMENU)ID_HIST_LIST, NULL, NULL);
+            hHistControls[1] = CreateWindowA("BUTTON", "Recall Entry", WS_CHILD | BS_PUSHBUTTON, S(15), S(355), S(95), S(30), hwnd, (HMENU)ID_HIST_RECALL, NULL, NULL);
+            hHistControls[2] = CreateWindowA("BUTTON", "Export TXT", WS_CHILD | BS_PUSHBUTTON, S(125), S(355), S(95), S(30), hwnd, (HMENU)ID_HIST_EXPORT, NULL, NULL);
+            hHistControls[3] = CreateWindowA("BUTTON", "Clear Tape", WS_CHILD | BS_PUSHBUTTON, S(235), S(355), S(94), S(30), hwnd, (HMENU)ID_HIST_CLEAR, NULL, NULL);
 
             SetViewMode(0);
             break;
@@ -573,8 +580,13 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
 
     RegisterClassA(&wc);
-    // Adjusted width and height for tab bar and controls (380x520)
-    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 380, 520, NULL, NULL, wc.hInstance, NULL);
+    // Adjust window rect based on DPI-scaled client size
+    RECT wr = {0, 0, S(350), S(420)};
+    AdjustWindowRect(&wr, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
+    int winW = wr.right - wr.left;
+    int winH = wr.bottom - wr.top;
+
+    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
