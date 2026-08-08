@@ -71,6 +71,7 @@ void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
     SelectObject(hdc, hFont);
     
     DrawText(hdc, "KCOLONY SCENARIOS", -1, &(RECT){0, 80, rc.right, 120}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, "Press 'H' at any time for Help", -1, &(RECT){0, 120, rc.right, 150}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
     const char* titles[] = { "1. ENDLESS SURVIVAL", "2. SANDBOX MODE (UNLIMITED)", "3. 100-DAY SURVIVAL", "4. RESOURCE RUSH (1000M, 100A by D50)", "5. [H] HELP & MANUAL" };
     for (int i=0; i<5; i++) {
@@ -811,6 +812,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    SetProcessDPIAware();
     const char CLASS_NAME[] = "KColonyClass";
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WindowProc;
@@ -819,7 +821,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KColony", WS_OVERLAPPEDWINDOW,
+        0, CLASS_NAME, "KColony", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, 850, 650,
         NULL, NULL, hInstance, NULL
     );
