@@ -7,14 +7,46 @@
 typedef struct {
     char name[32];
     int cost;
+    char effect[64];
 } CardDef;
 
 CardDef sampleCards[] = {
-    {"Fireball", 3},
-    {"Ice Shard", 2},
-    {"Arcane Missiles", 1},
-    {"Healing Touch", 2},
-    {"Lightning Strike", 4}
+    {"Fireball", 3, "Deals 4 Fire damage"},
+    {"Scorch", 1, "Deals 1 Fire damage"},
+    {"Flame Strike", 5, "Deals 5 AoE Fire damage"},
+    {"Ember", 1, "Burns for 1 damage"},
+    {"Pyroblast", 6, "Deals 8 Fire damage"},
+    {"Wall of Fire", 4, "Creates a fiery barrier"},
+    {"Meteor", 8, "Deals 10 Fire damage"},
+    {"Ignite", 2, "Deals 2 Fire dmg over time"},
+    {"Ice Shard", 2, "Deals 2 Ice damage"},
+    {"Frostbolt", 3, "Deals 3 Ice dmg, slows"},
+    {"Blizzard", 6, "Deals 4 AoE Ice damage"},
+    {"Frost Nova", 4, "Freezes enemies in place"},
+    {"Ice Lance", 1, "Deals 1 Ice dmg (3 if frozen)"},
+    {"Glacial Spike", 7, "Deals 9 Ice damage"},
+    {"Cold Snap", 5, "Resets cooldowns (Ice)"},
+    {"Arcane Missiles", 1, "Fires 3 arcane bolts"},
+    {"Arcane Intellect", 3, "Draw 2 cards"},
+    {"Counterspell", 3, "Interrupts a spell"},
+    {"Magic Missile", 2, "Deals 2 Arcane damage"},
+    {"Arcane Blast", 4, "Deals 5 Arcane damage"},
+    {"Time Warp", 8, "Take an extra turn"},
+    {"Polymorph", 4, "Turns target into a sheep"},
+    {"Mana Shield", 2, "Absorbs damage using mana"},
+    {"Healing Touch", 2, "Heals 3 Life points"},
+    {"Rejuvenation", 3, "Heals 4 over time"},
+    {"Regrowth", 4, "Heals 2 + 2 over time"},
+    {"Swiftmend", 1, "Instantly heals 2"},
+    {"Tranquility", 8, "Heals 10 to all allies"},
+    {"Nourish", 3, "Heals 4"},
+    {"Nature's Grasp", 2, "Roots attackers"},
+    {"Lifebloom", 2, "Heals 1, blooms for 3"},
+    {"Flash Heal", 2, "Fast heal for 3"},
+    {"Greater Heal", 5, "Heals 7"},
+    {"Renew", 1, "Heals 2 over time"},
+    {"Lightning Strike", 4, "Deals 5 Nature damage"},
+    {"Chain Lightning", 5, "Deals 4 dmg to 3 targets"}
 };
 #define NUM_SAMPLE_CARDS (sizeof(sampleCards)/sizeof(CardDef))
 
@@ -126,7 +158,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     CardDef cd = sampleCards[playerHand[i]];
                     if (playerMana >= cd.cost) {
                         playerMana -= cd.cost;
-                        wsprintf(arenaMsg, "Player cast %s!", cd.name);
+                        wsprintf(arenaMsg, "Cast %s: %s", cd.name, cd.effect);
                         for (int j = i; j < playerCount - 1; j++) {
                             playerHand[j] = playerHand[j + 1];
                         }
@@ -173,7 +205,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(92, 64, 51));
-            HFONT hArenaFont = CreateFont(24, 0, 0, 0, FW_BOLD, TRUE, FALSE, FALSE, ANSI_CHARSET, 
+            HFONT hArenaFont = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                      DEFAULT_PITCH | FF_ROMAN, "Georgia");
             SelectObject(hdc, hArenaFont);

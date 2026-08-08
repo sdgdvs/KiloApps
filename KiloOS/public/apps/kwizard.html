@@ -176,11 +176,42 @@
         }
 
         const sampleCards = [
-            { name: "Fireball", cost: 3 },
-            { name: "Ice Shard", cost: 2 },
-            { name: "Arcane Missiles", cost: 1 },
-            { name: "Healing Touch", cost: 2 },
-            { name: "Lightning Strike", cost: 4 }
+            { name: "Fireball", cost: 3, effect: "Deals 4 Fire damage" },
+            { name: "Scorch", cost: 1, effect: "Deals 1 Fire damage" },
+            { name: "Flame Strike", cost: 5, effect: "Deals 5 AoE Fire damage" },
+            { name: "Ember", cost: 1, effect: "Burns for 1 damage" },
+            { name: "Pyroblast", cost: 6, effect: "Deals 8 Fire damage" },
+            { name: "Wall of Fire", cost: 4, effect: "Creates a fiery barrier" },
+            { name: "Meteor", cost: 8, effect: "Deals 10 Fire damage" },
+            { name: "Ignite", cost: 2, effect: "Deals 2 Fire dmg over time" },
+            { name: "Ice Shard", cost: 2, effect: "Deals 2 Ice damage" },
+            { name: "Frostbolt", cost: 3, effect: "Deals 3 Ice dmg, slows" },
+            { name: "Blizzard", cost: 6, effect: "Deals 4 AoE Ice damage" },
+            { name: "Frost Nova", cost: 4, effect: "Freezes enemies in place" },
+            { name: "Ice Lance", cost: 1, effect: "Deals 1 Ice dmg (3 if frozen)" },
+            { name: "Glacial Spike", cost: 7, effect: "Deals 9 Ice damage" },
+            { name: "Cold Snap", cost: 5, effect: "Resets cooldowns (Ice)" },
+            { name: "Arcane Missiles", cost: 1, effect: "Fires 3 arcane bolts" },
+            { name: "Arcane Intellect", cost: 3, effect: "Draw 2 cards" },
+            { name: "Counterspell", cost: 3, effect: "Interrupts a spell" },
+            { name: "Magic Missile", cost: 2, effect: "Deals 2 Arcane damage" },
+            { name: "Arcane Blast", cost: 4, effect: "Deals 5 Arcane damage" },
+            { name: "Time Warp", cost: 8, effect: "Take an extra turn" },
+            { name: "Polymorph", cost: 4, effect: "Turns target into a sheep" },
+            { name: "Mana Shield", cost: 2, effect: "Absorbs damage using mana" },
+            { name: "Healing Touch", cost: 2, effect: "Heals 3 Life points" },
+            { name: "Rejuvenation", cost: 3, effect: "Heals 4 over time" },
+            { name: "Regrowth", cost: 4, effect: "Heals 2 + 2 over time" },
+            { name: "Swiftmend", cost: 1, effect: "Instantly heals 2" },
+            { name: "Tranquility", cost: 8, effect: "Heals 10 to all allies" },
+            { name: "Nourish", cost: 3, effect: "Heals 4" },
+            { name: "Nature's Grasp", cost: 2, effect: "Roots attackers" },
+            { name: "Lifebloom", cost: 2, effect: "Heals 1, blooms for 3" },
+            { name: "Flash Heal", cost: 2, effect: "Fast heal for 3" },
+            { name: "Greater Heal", cost: 5, effect: "Heals 7" },
+            { name: "Renew", cost: 1, effect: "Heals 2 over time" },
+            { name: "Lightning Strike", cost: 4, effect: "Deals 5 Nature damage" },
+            { name: "Chain Lightning", cost: 5, effect: "Deals 4 dmg to 3 targets" }
         ];
 
         function createCardElement(cardData, isOpponent) {
@@ -198,7 +229,7 @@
                     if (playerMana >= cardData.cost) {
                         playerMana -= cardData.cost;
                         updateManaDisplay();
-                        document.querySelector('.play-area p').innerHTML = `Player cast <b>${cardData.name}</b>!`;
+                        document.querySelector('.play-area p').innerHTML = `Player cast <b>${cardData.name}</b>!<br><span style="font-size: 14px; color: #8b7355; font-style: normal;">Effect: ${cardData.effect}</span>`;
                         card.style.borderColor = "#ffcc00";
                         setTimeout(() => {
                             if(card.parentElement === playerHand) {
