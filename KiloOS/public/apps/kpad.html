@@ -289,7 +289,7 @@
     border-right: 1px solid var(--border-glass);
     color: var(--gutter-text);
     font-family: 'Consolas', 'Fira Code', monospace;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.6;
     padding: 12px 0;
     text-align: right;
@@ -298,7 +298,7 @@
   }
   .gutter-line {
     padding-right: 10px;
-    height: 20.8px; /* line-height 1.6 * font-size 13px */
+    height: 22.4px; /* line-height 1.6 * font-size 14px */
   }
   .gutter-line.active {
     color: var(--gutter-active);
@@ -319,7 +319,7 @@
     margin: 0;
     padding: 12px 16px;
     font-family: 'Consolas', 'Fira Code', 'Cascadia Code', monospace;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.6;
     tab-size: 4;
     white-space: pre;
@@ -517,6 +517,9 @@
       <div class="status-item" id="file-status">Ready</div>
     </div>
     <div class="status-right">
+      <div class="status-item" style="cursor:pointer; font-weight:bold; color:var(--accent-hover);" onclick="showHelp()" title="Help (F1)">
+        [?] Help
+      </div>
       <div class="status-item">
         <label for="theme-selector" style="display:none;">Theme</label>
         <select class="theme-select" id="theme-selector" onchange="setTheme(this.value)" aria-label="Select Theme">
@@ -562,7 +565,7 @@
     let activeTabIndex = -1;
     let wordWrap = false;
     let showGutter = true;
-    let currentFontSize = 13;
+    let currentFontSize = 14;
     let ctxTabIndex = -1;
 
     let findOpts = {
@@ -1018,7 +1021,7 @@
     }
 
     function resetFontSize() {
-      currentFontSize = 13;
+      currentFontSize = 14;
       changeFontSize(0);
     }
 

@@ -535,67 +535,67 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             int x = 6, y = 6, btnH = 28;
 
-            HWND hBtn = CreateWindowEx(0, "BUTTON", "Open", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_OPEN, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
+            HWND hBtn = CreateWindowEx(0, "BUTTON", "Open", WS_CHILD | WS_VISIBLE, x, y, 54, btnH, hwnd, (HMENU)ID_BTN_OPEN, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 58;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
+            hBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, x, y, 54, btnH, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 58;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "-", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_ZOOM_OUT, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 28;
+            hBtn = CreateWindowEx(0, "BUTTON", "-", WS_CHILD | WS_VISIBLE, x, y, 28, btnH, hwnd, (HMENU)ID_BTN_ZOOM_OUT, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 32;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "+", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_ZOOM_IN, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 28;
+            hBtn = CreateWindowEx(0, "BUTTON", "+", WS_CHILD | WS_VISIBLE, x, y, 28, btnH, hwnd, (HMENU)ID_BTN_ZOOM_IN, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 32;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "1:1", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_ZOOM_RESET, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 36;
-
-            hBtn = CreateWindowEx(0, "BUTTON", "↺", WS_CHILD | WS_VISIBLE, x, y, 28, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 30;
-
-            hBtn = CreateWindowEx(0, "BUTTON", "↻", WS_CHILD | WS_VISIBLE, x, y, 28, btnH, hwnd, (HMENU)ID_BTN_ROT_CW, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 30;
-
-            hBtn = CreateWindowEx(0, "BUTTON", "FlipH", WS_CHILD | WS_VISIBLE, x, y, 44, btnH, hwnd, (HMENU)ID_BTN_FLIP_H, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 46;
-
-            hBtn = CreateWindowEx(0, "BUTTON", "FlipV", WS_CHILD | WS_VISIBLE, x, y, 44, btnH, hwnd, (HMENU)ID_BTN_FLIP_V, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 46;
-
-            hBtn = CreateWindowEx(0, "BUTTON", "Gray", WS_CHILD | WS_VISIBLE, x, y, 40, btnH, hwnd, (HMENU)ID_BTN_GRAYSCALE, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 42;
-
-            hBtn = CreateWindowEx(0, "BUTTON", "Sepia", WS_CHILD | WS_VISIBLE, x, y, 44, btnH, hwnd, (HMENU)ID_BTN_SEPIA, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 46;
-
-            hBtn = CreateWindowEx(0, "BUTTON", "Invert", WS_CHILD | WS_VISIBLE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 48;
-
-            hBtn = CreateWindowEx(0, "BUTTON", "Blur", WS_CHILD | WS_VISIBLE, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_BLUR, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "1:1", WS_CHILD | WS_VISIBLE, x, y, 36, btnH, hwnd, (HMENU)ID_BTN_ZOOM_RESET, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 40;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Br+", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_UP, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 34;
+            hBtn = CreateWindowEx(0, "BUTTON", "↺", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 36;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Br-", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_DOWN, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 34;
+            hBtn = CreateWindowEx(0, "BUTTON", "↻", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_ROT_CW, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 36;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE, x, y, 44, btnH, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Flip H", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_FLIP_H, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Flip V", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_FLIP_V, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Gray", WS_CHILD | WS_VISIBLE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_GRAYSCALE, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 50;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Sepia", WS_CHILD | WS_VISIBLE, x, y, 48, btnH, hwnd, (HMENU)ID_BTN_SEPIA, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 52;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Invert", WS_CHILD | WS_VISIBLE, x, y, 52, btnH, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 56;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Blur", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_BLUR, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 46;
 
-            g_hBtnCrop = CreateWindowEx(0, "BUTTON", "Crop", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_CROP, NULL, NULL);
-            SendMessage(g_hBtnCrop, WM_SETFONT, (WPARAM)hFont, TRUE); x += 44;
+            hBtn = CreateWindowEx(0, "BUTTON", "Br+", WS_CHILD | WS_VISIBLE, x, y, 36, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_UP, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 40;
 
-            g_hBtnDraw = CreateWindowEx(0, "BUTTON", "Draw", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_DRAW, NULL, NULL);
-            SendMessage(g_hBtnDraw, WM_SETFONT, (WPARAM)hFont, TRUE); x += 44;
+            hBtn = CreateWindowEx(0, "BUTTON", "Br-", WS_CHILD | WS_VISIBLE, x, y, 36, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_DOWN, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 40;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "◀", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 28;
+            hBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
 
-            g_hBtnPlay = CreateWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE, x, y, 54, btnH, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
-            SendMessage(g_hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE); x += 56;
+            g_hBtnCrop = CreateWindowEx(0, "BUTTON", "Crop", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_CROP, NULL, NULL);
+            SendMessage(g_hBtnCrop, WM_SETFONT, (WPARAM)hFont, TRUE); x += 50;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "▶", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
+            g_hBtnDraw = CreateWindowEx(0, "BUTTON", "Draw", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_DRAW, NULL, NULL);
+            SendMessage(g_hBtnDraw, WM_SETFONT, (WPARAM)hFont, TRUE); x += 50;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "◀", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 36;
+
+            g_hBtnPlay = CreateWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE, x, y, 64, btnH, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
+            SendMessage(g_hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE); x += 68;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "▶", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             g_hPenDraw = CreatePen(PS_SOLID, 3, RGB(59, 130, 246));

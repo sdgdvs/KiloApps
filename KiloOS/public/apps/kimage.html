@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="window-width" content="1200">
+<meta name="window-height" content="800">
+<meta name="window-size" content="width=1200,height=800">
 <title>KImage Pro (Press H for Help)</title>
 <style>
   :root {
@@ -22,6 +25,8 @@
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     background: var(--bg-dark);
     background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
     color: var(--text-main);
@@ -34,6 +39,7 @@
   /* Header Toolbar */
   .toolbar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     padding: 10px 16px;
@@ -213,6 +219,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     box-shadow: 0 20px 40px rgba(0,0,0,0.6);
     transition: transform 0.1s ease-out;
   }
@@ -222,8 +229,6 @@
     max-width: 100%;
     max-height: calc(100vh - 160px);
     object-fit: contain;
-    image-rendering: crisp-edges;
-    image-rendering: pixelated;
   }
 
   /* Crop Overlay */
@@ -617,6 +622,8 @@
   </div>
 
 <script>
+  if (window.resizeTo) window.resizeTo(1200, 800);
+
   // App State
   const state = {
     playlist: [], // Array of { file, img, name, size, type, exif }
