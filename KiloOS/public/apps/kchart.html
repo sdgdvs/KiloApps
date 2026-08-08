@@ -1245,7 +1245,8 @@
   
   // Help shortcut
   window.addEventListener('keydown', (e) => {
-    if ((e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT') {
+    const tag = e.target.tagName;
+    if ((e.key === 'h' || e.key === 'H') && tag !== 'INPUT' && tag !== 'SELECT' && tag !== 'TEXTAREA') {
       alert("KChart Studio Help:\n\n- Select chart type from the toolbar.\n- Use the table editor to modify data.\n- Export options are in the top right.\n- Drag & drop a JSON/CSV file to import.");
     }
   });

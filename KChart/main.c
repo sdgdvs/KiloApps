@@ -1,6 +1,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+int dpi = 96;
+#define SCALE(x) MulDiv(x, dpi, 96)
+
 #define MY_PI 3.14159265358979323846
 
 static double my_sin(double x) {
@@ -113,18 +116,19 @@ void LayoutButtons(HWND hwnd) {
     int clientH = rc.bottom - rc.top;
 
     if (hBtnRandomize && hBtnToggle && hBtnTheme && hBtnSort) {
-        int btnW = 90;
-        int btnH = 26;
-        int btnY = clientH - 38;
+        int btnW = SCALE(90);
+        int btnH = SCALE(26);
+        int gap = SCALE(8);
+        int btnY = clientH - SCALE(38);
         if (btnY < 10) btnY = 10;
-        int totalW = 4 * btnW + 3 * 8;
+        int totalW = 4 * btnW + 3 * gap;
         int startX = (clientW - totalW) / 2;
         if (startX < 5) startX = 5;
 
         SetWindowPos(hBtnRandomize, NULL, startX, btnY, btnW, btnH, SWP_NOZORDER);
-        SetWindowPos(hBtnToggle, NULL, startX + btnW + 8, btnY, btnW, btnH, SWP_NOZORDER);
-        SetWindowPos(hBtnTheme, NULL, startX + (btnW + 8) * 2, btnY, btnW, btnH, SWP_NOZORDER);
-        SetWindowPos(hBtnSort, NULL, startX + (btnW + 8) * 3, btnY, btnW, btnH, SWP_NOZORDER);
+        SetWindowPos(hBtnToggle, NULL, startX + btnW + gap, btnY, btnW, btnH, SWP_NOZORDER);
+        SetWindowPos(hBtnTheme, NULL, startX + (btnW + gap) * 2, btnY, btnW, btnH, SWP_NOZORDER);
+        SetWindowPos(hBtnSort, NULL, startX + (btnW + gap) * 3, btnY, btnW, btnH, SWP_NOZORDER);
     }
 }
 
@@ -145,7 +149,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, 0, 90, 26, hwnd, (HMENU)4, NULL, NULL);
             
-            hBtnFont = CreateFontA(13, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hBtnFont = CreateFontA(SCALE(-14), 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             SendMessage(hBtnRandomize, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnToggle, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnTheme, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
@@ -311,6 +315,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_COMMAND: {
+            SetFocus(hwnd); // Ensure the main window keeps focus for keyboard shortcuts like 'H'
             int cmdId = LOWORD(wParam);
             if (cmdId == 1) { // Randomize
                 for (int i = 0; i < NUM_ITEMS; i++) {
@@ -357,7 +362,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
 
-            HFONT hFont = CreateFontA(13, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFont = CreateFontA(SCALE(-14), 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
 
@@ -365,7 +370,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(244, 244, 245));
             char titleStr[128];
             wsprintfA(titleStr, "%s | Theme: %s | Press 'H' for Help", modeNames[chartMode], themeNames[currentTheme]);
-            RECT titleR = { 15, 8, W - 15, 26 };
+            RECT titleR = { SCALE(15), SCALE(8), W - SCALE(15), SCALE(26) };
             DrawTextA(memDC, titleStr, -1, &titleR, DT_LEFT | DT_SINGLELINE);
 
             // Stats Suite Summary Bar
@@ -373,7 +378,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             wsprintfA(statsStr, "Mean: %d  Med: %d  StdDev: %d  Min: %d  Max: %d  Total: %d",
                 statMean, statMedian, statStdDev, statMin, statMax, statTotal);
             SetTextColor(memDC, RGB(161, 161, 170));
-            RECT statsR = { 15, 24, W - 15, 38 };
+            RECT statsR = { SCALE(15), SCALE(24), W - SCALE(15), SCALE(38) };
             DrawTextA(memDC, statsStr, -1, &statsR, DT_LEFT | DT_SINGLELINE);
 
             COLORREF* palette = themes[currentTheme];
@@ -709,6 +714,11 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 
 void MainEntry() {
     SetProcessDPIAware();
+    HDC hdc = GetDC(NULL);
+    if (hdc) {
+        dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+        ReleaseDC(NULL, hdc);
+    }
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -719,7 +729,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KChartApp", "KChart Studio", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-        CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, SCALE(1024), SCALE(768), NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
