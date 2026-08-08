@@ -1,11 +1,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 560
-#define H 650
-#define TS 50
-#define OX 80
-#define OY 110
+#define W 760
+#define H 860
+#define TS 70
+#define OX 100
+#define OY 120
 
 // 0: empty, 1:P, 2:N, 3:B, 4:R, 5:Q, 6:K,  7:p, 8:n, 9:b, 10:r, 11:q, 12:k
 int board[8][8];
@@ -36,6 +36,7 @@ int pieceValues[] = {0, 100, 320, 330, 500, 900, 20000, 100, 320, 330, 500, 900,
 int lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
 HBRUSH hBgBrush = NULL;
 HWND g_hwndMain = NULL;
+float g_dpiScale = 1.0f;
 
 int wKingMoved = 0, wRookLMoved = 0, wRookRMoved = 0;
 int bKingMoved = 0, bRookLMoved = 0, bRookRMoved = 0;
@@ -1268,9 +1269,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
+            int sw = (int)(W * g_dpiScale);
+            int sh = (int)(H * g_dpiScale);
             HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP memBM = CreateCompatibleBitmap(hdc, W, H);
+            HBITMAP memBM = CreateCompatibleBitmap(hdc, sw, sh);
             HGDIOBJ oldBM = SelectObject(memDC, memBM);
+
+            SetGraphicsMode(memDC, GM_ADVANCED);
+            XFORM xform = { g_dpiScale, 0.0f, 0.0f, g_dpiScale, 0.0f, 0.0f };
+            SetWorldTransform(memDC, &xform);
 
             // Environmental Art: Table Surface with Wood Grain
             for (int yy = 0; yy < H; yy += 4) {
@@ -1319,7 +1326,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldPen);
             DeleteObject(goldPen);
 
-            HFONT labelFont = CreateFontA(13, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT labelFont = CreateFontA(15, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, labelFont);
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(212, 175, 55));
@@ -1328,10 +1335,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int i = 0; i < 8; i++) {
                 char fStr[2] = { files[i], 0 };
                 char rStr[2] = { '8' - i, 0 };
-                RECT fTop = { OX + i * TS, OY - 22, OX + (i + 1) * TS, OY - 4 };
-                RECT fBot = { OX + i * TS, OY + TS * 8 + 4, OX + (i + 1) * TS, OY + TS * 8 + 22 };
-                RECT rLeft = { OX - 22, OY + i * TS, OX - 4, OY + (i + 1) * TS };
-                RECT rRight = { OX + TS * 8 + 4, OY + i * TS, OX + TS * 8 + 22, OY + TS * 8 + 22 };
+                RECT fTop = { OX + i * TS, OY - 25, OX + (i + 1) * TS, OY - 4 };
+                RECT fBot = { OX + i * TS, OY + TS * 8 + 4, OX + (i + 1) * TS, OY + TS * 8 + 25 };
+                RECT rLeft = { OX - 25, OY + i * TS, OX - 4, OY + (i + 1) * TS };
+                RECT rRight = { OX + TS * 8 + 4, OY + i * TS, OX + TS * 8 + 25, OY + TS * 8 + 25 };
                 DrawTextA(memDC, fStr, 1, &fTop, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 DrawTextA(memDC, fStr, 1, &fBot, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 DrawTextA(memDC, rStr, 1, &rLeft, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -1480,11 +1487,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            HFONT sFont = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT sFont = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             oldFont = SelectObject(memDC, sFont);
             SetTextColor(memDC, RGB(255, 255, 255));
 
-            RECT modeRc = { 20, 18, W - 150, 42 };
+            RECT modeRc = { 30, 20, W - 150, 45 };
             char modeBuf[128];
             if (gameMode == 0) {
                 wsprintfA(modeBuf, "Campaign: Stage %d/20 [%s]", currentStage, diffNames[aiPersonality - 1]);
@@ -1497,7 +1504,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             DrawTextA(memDC, modeBuf, -1, &modeRc, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
-            RECT statsRc = { W - 150, 18, W - 20, 42 };
+            RECT statsRc = { W - 150, 20, W - 30, 45 };
             char statsBuf[64];
             wsprintfA(statsBuf, "W:%d L:%d D:%d", statsWins, statsLosses, statsDraws);
             DrawTextA(memDC, statsBuf, -1, &statsRc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
@@ -1508,45 +1515,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int initialCounts[] = {0, 8, 2, 2, 2, 1, 1, 8, 2, 2, 2, 1, 1};
 
             int wLossVal = 0, bLossVal = 0;
-            int capX = 25;
+            int capX = 30;
             for (int p = 1; p <= 5; p++) {
                 int lost = initialCounts[p] - pieceCounts[p];
                 if (lost > 0) {
                     wLossVal += (pieceValues[p] / 100) * lost;
                     for (int k = 0; k < lost; k++) {
-                        DrawChessPiece(memDC, p, capX, 48, 24);
-                        capX += 20;
+                        DrawChessPiece(memDC, p, capX, 58, 28);
+                        capX += 26;
                     }
                 }
             }
-            capX = 25;
+            capX = 30;
             for (int p = 7; p <= 11; p++) {
                 int lost = initialCounts[p] - pieceCounts[p];
                 if (lost > 0) {
                     bLossVal += (pieceValues[p] / 100) * lost;
                     for (int k = 0; k < lost; k++) {
-                        DrawChessPiece(memDC, p, capX, 76, 24);
-                        capX += 20;
+                        DrawChessPiece(memDC, p, capX, 90, 28);
+                        capX += 26;
                     }
                 }
             }
             int diff = bLossVal - wLossVal;
             if (diff != 0) {
-                RECT matRc = { W - 200, 62, W - 20, 82 };
+                RECT matRc = { W - 200, 70, W - 30, 90 };
                 char matBuf[32];
                 wsprintfA(matBuf, "Advantage: %+d", diff);
                 SetTextColor(memDC, diff > 0 ? RGB(94, 234, 212) : RGB(244, 63, 94));
                 DrawTextA(memDC, matBuf, -1, &matRc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
             }
 
-            // Skill & Utility Buttons Row at bottom (Y: 530..560)
+            // Skill & Utility Buttons Row at bottom
             struct Button { int x, y, w, h; char* text; } btns[6] = {
-                { 25, 530, 70, 28, "Help (H)" },
-                { 105, 530, 70, 28, "Undo (U)" },
-                { 185, 530, 70, 28, "Redo (Y)" },
-                { 265, 530, 80, 28, "Freeze (F)" },
-                { 355, 530, 90, 28, diffNames[aiPersonality - 1] },
-                { 455, 530, 80, 28, "FEN/PGN" }
+                { 30, 740, 105, 36, "Help (H)" },
+                { 145, 740, 105, 36, "Undo (U)" },
+                { 260, 740, 105, 36, "Redo (Y)" },
+                { 375, 740, 105, 36, "Freeze (F)" },
+                { 490, 740, 125, 36, diffNames[aiPersonality - 1] },
+                { 625, 740, 105, 36, "FEN/PGN" }
             };
 
             for (int i = 0; i < 6; i++) {
@@ -1567,7 +1574,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, btns[i].text, -1, &btnRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
 
-            RECT statusRc = { 20, H - 45, W - 20, H - 15 };
+            RECT statusRc = { 30, H - 50, W - 30, H - 15 };
             if (gameOver) {
                 SetTextColor(memDC, RGB(245, 158, 11));
                 if (winner == 1) DrawTextA(memDC, gameMode == 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Next Stage" : "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -1591,7 +1598,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldFont);
             DeleteObject(sFont);
 
-            BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            BitBlt(hdc, 0, 0, (int)(W * g_dpiScale), (int)(H * g_dpiScale), memDC, 0, 0, SRCCOPY);
 
             SelectObject(memDC, oldBM);
             DeleteObject(memBM);
@@ -1737,17 +1744,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_LBUTTONDOWN: {
-            int mx = LOWORD(lParam);
-            int my = HIWORD(lParam);
+            int mx = (int)(LOWORD(lParam) / g_dpiScale);
+            int my = (int)(HIWORD(lParam) / g_dpiScale);
 
-            // Check skill & action buttons (Y: 530..560)
-            if (my >= 530 && my <= 560) {
-                if (mx >= 25 && mx <= 95) { SendMessage(hwnd, WM_KEYDOWN, 'H', 0); return 0; }
-                if (mx >= 105 && mx <= 175) { SendMessage(hwnd, WM_KEYDOWN, 'U', 0); return 0; }
-                if (mx >= 185 && mx <= 255) { SendMessage(hwnd, WM_KEYDOWN, 'Y', 0); return 0; }
-                if (mx >= 265 && mx <= 345) { SendMessage(hwnd, WM_KEYDOWN, 'F', 0); return 0; }
-                if (mx >= 355 && mx <= 445) { SendMessage(hwnd, WM_KEYDOWN, 'P', 0); return 0; }
-                if (mx >= 455 && mx <= 535) { SendMessage(hwnd, WM_KEYDOWN, 'E', 0); return 0; }
+            // Check skill & action buttons (Y: 740..776)
+            if (my >= 740 && my <= 776) {
+                if (mx >= 30 && mx <= 135) { SendMessage(hwnd, WM_KEYDOWN, 'H', 0); return 0; }
+                if (mx >= 145 && mx <= 250) { SendMessage(hwnd, WM_KEYDOWN, 'U', 0); return 0; }
+                if (mx >= 260 && mx <= 365) { SendMessage(hwnd, WM_KEYDOWN, 'Y', 0); return 0; }
+                if (mx >= 375 && mx <= 480) { SendMessage(hwnd, WM_KEYDOWN, 'F', 0); return 0; }
+                if (mx >= 490 && mx <= 615) { SendMessage(hwnd, WM_KEYDOWN, 'P', 0); return 0; }
+                if (mx >= 625 && mx <= 730) { SendMessage(hwnd, WM_KEYDOWN, 'E', 0); return 0; }
             }
 
             if (gameOver) {
@@ -1819,6 +1826,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 void MainEntry(void) {
     SetProcessDPIAware();
+    HDC hdcScreen = GetDC(NULL);
+    g_dpiScale = GetDeviceCaps(hdcScreen, LOGPIXELSX) / 96.0f;
+    ReleaseDC(NULL, hdcScreen);
+
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -1833,7 +1844,7 @@ void MainEntry(void) {
     LoadStatsFreestanding();
 
     DWORD style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
-    RECT winRc = {0, 0, W, H};
+    RECT winRc = {0, 0, (int)(W * g_dpiScale), (int)(H * g_dpiScale)};
     AdjustWindowRect(&winRc, style, FALSE);
     HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess - AI & Utility Chess Engine", style,
         CW_USEDEFAULT, CW_USEDEFAULT, winRc.right - winRc.left, winRc.bottom - winRc.top, NULL, NULL, hInstance, NULL);

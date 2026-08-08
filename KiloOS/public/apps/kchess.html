@@ -65,7 +65,7 @@
 <div id="aria-status" role="status" aria-live="polite" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">White's turn</div>
 
 <div id="app-container">
-  <canvas id="cvs" width="560" height="650" tabindex="0" role="application" aria-label="Chess game"></canvas>
+  <canvas id="cvs" width="760" height="860" tabindex="0" role="application" aria-label="Chess game"></canvas>
 
   <!-- FEN Import / Export Modal -->
   <div id="fen-modal" class="modal-overlay">
@@ -98,8 +98,8 @@
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
   
-  const W = 560;
-  const H = 650;
+  const W = 760;
+  const H = 860;
   const dpr = window.devicePixelRatio || 1;
   cvs.style.width = W + 'px';
   cvs.style.height = H + 'px';
@@ -113,9 +113,9 @@
     if (Math.abs(dw) > 0 || Math.abs(dh) > 0) window.resizeBy(dw, dh);
   }, 50);
 
-  const TS = 50;
-  const OX = 80;
-  const OY = 110;
+  const TS = 70;
+  const OX = 100;
+  const OY = 120;
 
   let board = [
       [10, 8, 9, 11, 12, 9, 8, 10],
@@ -1239,14 +1239,14 @@
       const mx = (e.clientX - rect.left) * (W / rect.width);
       const my = (e.clientY - rect.top) * (H / rect.height);
 
-      // Bottom skill & action buttons (Y: 530..560)
-      if (my >= 530 && my <= 560) {
-          if (mx >= 25 && mx <= 95) { handleHotkey('h'); return; }   // Help
-          if (mx >= 105 && mx <= 175) { undoMove(); return; }         // Undo
-          if (mx >= 185 && mx <= 255) { redoMove(); return; }         // Redo
-          if (mx >= 265 && mx <= 345) { handleHotkey('f'); return; }   // Freeze
-          if (mx >= 355 && mx <= 445) { handleHotkey('p'); return; }   // Difficulty Level
-          if (mx >= 455 && mx <= 535) { openFENModal(); return; }      // FEN / PGN
+      // Bottom skill & action buttons
+      if (my >= 740 && my <= 776) {
+          if (mx >= 30 && mx <= 135) { handleHotkey('h'); return; }
+          if (mx >= 145 && mx <= 250) { undoMove(); return; }
+          if (mx >= 260 && mx <= 365) { redoMove(); return; }
+          if (mx >= 375 && mx <= 480) { handleHotkey('f'); return; }
+          if (mx >= 490 && mx <= 615) { handleHotkey('p'); return; }
+          if (mx >= 625 && mx <= 730) { openFENModal(); return; }
       }
 
       const tx = Math.floor((mx - OX) / TS);
@@ -1513,7 +1513,7 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      ctx.font = "bold 13px 'Inter', sans-serif";
+      ctx.font = "bold 15px 'Inter', sans-serif";
       ctx.fillStyle = "#d4af37";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -1522,10 +1522,10 @@
       for (let i = 0; i < 8; i++) {
           let fx = OX + i * TS + TS / 2;
           let ry = OY + i * TS + TS / 2;
-          ctx.fillText(files[i], fx, OY - 22);
-          ctx.fillText(files[i], fx, OY + TS * 8 + 22);
-          ctx.fillText(8 - i, OX - 22, ry);
-          ctx.fillText(8 - i, OX + TS * 8 + 22, ry);
+          ctx.fillText(files[i], fx, OY - 25);
+          ctx.fillText(files[i], fx, OY + TS * 8 + 25);
+          ctx.fillText(8 - i, OX - 25, ry);
+          ctx.fillText(8 - i, OX + TS * 8 + 25, ry);
       }
 
       let inCheckX = -1, inCheckY = -1;
@@ -1706,7 +1706,7 @@
       }
 
       // UI Top Bar: Mode Title & W/L/D stats
-      ctx.font = "bold 14px 'Inter', sans-serif";
+      ctx.font = "bold 16px 'Inter', sans-serif";
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "left";
 
@@ -1716,47 +1716,46 @@
       else if (gameMode === 2) modeText = `Puzzle #${(puzzleIndex % 6) + 1} [${difficultyNames[aiPersonality - 1]}]`;
       else modeText = `Blitz (W:${Math.ceil(blitzTimeWhite)}s B:${Math.ceil(blitzTimeBlack)}s)`;
 
-      ctx.fillText(modeText, 25, 30);
+      ctx.fillText(modeText, 30, 35);
       ctx.textAlign = "right";
-      ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, W - 25, 30);
+      ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, W - 30, 35);
 
       // Captured Pieces & Material Counter Display
       const { whiteCaptured, blackCaptured, diff } = getCapturedPieces();
       
       // Black's Captures (White pieces captured)
       ctx.textAlign = "left";
-      ctx.font = "16px sans-serif";
-      let startX = 25;
+      let startX = 30;
       whiteCaptured.forEach((p, idx) => {
-          drawChessPieceSprite(ctx, p, startX + idx * 22, 54, 22, 0.85);
+          drawChessPieceSprite(ctx, p, startX + idx * 26, 65, 26, 0.85);
       });
 
       // White's Captures (Black pieces captured)
       blackCaptured.forEach((p, idx) => {
-          drawChessPieceSprite(ctx, p, startX + idx * 22, 82, 22, 0.85);
+          drawChessPieceSprite(ctx, p, startX + idx * 26, 95, 26, 0.85);
       });
 
       // Net Score Advantage Indicator
       if (diff !== 0) {
-          ctx.font = "bold 13px 'Inter', sans-serif";
+          ctx.font = "bold 14px 'Inter', sans-serif";
           ctx.fillStyle = diff > 0 ? "#5eead4" : "#f43f5e";
           let diffStr = (diff > 0 ? "+" : "") + diff;
-          ctx.fillText(`Material Advantage: ${diffStr}`, W - 170, 68);
+          ctx.fillText(`Material Advantage: ${diffStr}`, W - 180, 80);
       }
 
-      // Bottom Skill & Action Buttons Row (Y: 530..560)
+      // Bottom Skill & Action Buttons Row
       let buttons = [
-          { x: 25, y: 530, w: 70, h: 28, text: `Help (H)` },
-          { x: 105, y: 530, w: 70, h: 28, text: `Undo (U)` },
-          { x: 185, y: 530, w: 70, h: 28, text: `Redo (Y)` },
-          { x: 265, y: 530, w: 80, h: 28, text: `Freeze (${freezePowerups})` },
-          { x: 355, y: 530, w: 90, h: 28, text: `AI: ${difficultyNames[aiPersonality - 1]}` },
-          { x: 455, y: 530, w: 80, h: 28, text: `FEN/PGN` }
+          { x: 30, y: 740, w: 105, h: 36, text: `Help (H)` },
+          { x: 145, y: 740, w: 105, h: 36, text: `Undo (U)` },
+          { x: 260, y: 740, w: 105, h: 36, text: `Redo (Y)` },
+          { x: 375, y: 740, w: 105, h: 36, text: `Freeze (${freezePowerups})` },
+          { x: 490, y: 740, w: 125, h: 36, text: `AI: ${difficultyNames[aiPersonality - 1]}` },
+          { x: 625, y: 740, w: 105, h: 36, text: `FEN/PGN` }
       ];
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = "bold 12px 'Inter', sans-serif";
+      ctx.font = "bold 14px 'Inter', sans-serif";
 
       for (let btn of buttons) {
           ctx.fillStyle = '#1e293b';
@@ -1772,21 +1771,21 @@
       }
 
       // Bottom Status Bar
-      ctx.font = "bold 14px 'Inter', sans-serif";
+      ctx.font = "bold 16px 'Inter', sans-serif";
       if (gameOver) {
           ctx.fillStyle = "#f59e0b";
-          if (winner === 1) ctx.fillText(gameMode === 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Next Stage" : "Checkmate! White Wins! Press 'R'", W / 2, H - 35);
-          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R' to Restart", W / 2, H - 35);
-          else ctx.fillText("Stalemate / Draw! Press 'R' to Restart", W / 2, H - 35);
+          if (winner === 1) ctx.fillText(gameMode === 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Next Stage" : "Checkmate! White Wins! Press 'R'", W / 2, H - 40);
+          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R' to Restart", W / 2, H - 40);
+          else ctx.fillText("Stalemate / Draw! Press 'R' to Restart", W / 2, H - 40);
       } else if (hintActive && hintText !== "") {
           ctx.fillStyle = "#38bdf8";
-          ctx.fillText(hintText, W / 2, H - 35);
+          ctx.fillText(hintText, W / 2, H - 40);
       } else {
           ctx.fillStyle = whiteTurn ? "#f8fafc" : "#94a3b8";
           let turnStr = whiteTurn ? "White's Turn" : "Black's Turn";
           if (blackFrozen) turnStr += " (Black Frozen!)";
           let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN}` : " | Press 'H' for Help";
-          ctx.fillText(turnStr + lastMoveStr, W / 2, H - 35);
+          ctx.fillText(turnStr + lastMoveStr, W / 2, H - 40);
       }
   }
 
