@@ -731,9 +731,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
+            
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int cw = clientRect.right;
+            int ch = clientRect.bottom;
+            if (cw == 0 || ch == 0) { EndPaint(hwnd, &ps); break; }
+
             HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
+            HBITMAP hbm = CreateCompatibleBitmap(hdc, cw, ch);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
+
+            SetGraphicsMode(memDC, GM_ADVANCED);
+            XFORM xform = {0};
+            xform.eM11 = (float)cw / W;
+            xform.eM22 = (float)ch / H;
+            SetWorldTransform(memDC, &xform);
+
+            HFONT hFont = CreateFontA(-12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Arial");
+            HFONT hOldFont = (HFONT)SelectObject(memDC, hFont);
+
 
             // Background
             HBRUSH bg = CreateSolidBrush(GetBgColor());
@@ -1040,8 +1057,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, W / 2 - 60, H / 2 + 10, restartStr, lstrlenA(restartStr));
             }
 
-            SetStretchBltMode(hdc, COLORONCOLOR);
-            StretchBlt(hdc, 0, 0, W * 2, H * 2, memDC, 0, 0, W, H, SRCCOPY);
+            SelectObject(memDC, hOldFont);
+            DeleteObject(hFont);
+            
+            ModifyWorldTransform(memDC, NULL, MWT_IDENTITY);
+            BitBlt(hdc, 0, 0, cw, ch, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);
             DeleteObject(hbm);
             DeleteDC(memDC);
@@ -1072,8 +1092,15 @@ void MainEntry() {
     RegisterClass(&wc);
 
     RECT winRect = { 0, 0, W * 2, H * 2 };
+    HDC screenDC = GetDC(NULL);
+    int dpi = GetDeviceCaps(screenDC, LOGPIXELSX);
+    ReleaseDC(NULL, screenDC);
+    float scale = dpi / 96.0f;
+    winRect.right = (int)(winRect.right * scale);
+    winRect.bottom = (int)(winRect.bottom * scale);
+    
     AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KPongApp", "KPong", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    HWND hwnd = CreateWindowEx(0, "KPongApp", "KPong - Press 'H' for Help", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
