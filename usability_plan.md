@@ -246,3 +246,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KBase: Usability and UI issues fixed (auto-opening size adjusted, DPI awareness and crisp text enabled, visible help controls and F1/H shortcuts added).
 - KImage: Usability and UI issues fixed (auto-opening size to 1200x800, visible controls wrapping and padding, explicit instructions overlay and title, crisp text filtering).
 - KHex: Usability and UI issues fixed (auto-opening size adjusted to 850x750, UI layout coordinates scaled, explicit 'Press h for Help' added in both platforms, and web min-width bounded).
+- KCalc: Usability and UI issues fixed (added DPI scaling, crisp text, and adjusted native window bounds).
