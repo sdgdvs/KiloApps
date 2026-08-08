@@ -31,7 +31,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 
 
 - KBase
-- KJournal
 - KPad
 - KImage
 - KHex
@@ -82,6 +81,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTimer
 - KContacts
 - KRead
+- KJournal
 
 ## Progress Log
 - KContacts: Usability and UI issues fixed (auto-opening size to 850x600, DPI awareness/S() scaling macro applied in native C, help toast on startup added to web, crisp font rendering applied to web body).
@@ -167,7 +167,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KContacts: Usability and UI issues fixed (auto-opening size adjusted, DPI awareness enabled in native, layout scaled properly, and "Press H for Help" shortcuts and instructions mapped in title/buttons).
 - KRead: Usability and UI issues fixed (auto-opening size adjusted to 1000x800, DPI awareness enabled in native, F1 shortcut and instructions added).
 - KBase: Usability and UI issues fixed (auto-opening size adjusted, controls expanded for 64-bit binary display, crisp font applied, and F1 help shortcuts/instructions added).
-- KJournal: Usability and UI issues fixed (auto-opening size adjusted, explicit help instructions added to menu/title, crisp text styles, and flex layout scroll fixes).
 - KPad: Usability and UI issues fixed (auto-opening size adjusted, DPI awareness enabled for crisp fonts, taskbar visibility fixed, F1 help instructions added to welcome text, floating panel layout adjusted).
 - KImage: Usability and UI issues fixed (auto-opening size adjusted, DPI awareness enabled for crisp fonts, F1/H help instructions added to toolbar/window title).
 - KHex: Usability and UI issues fixed (auto-opening size adjusted, DPI awareness enabled for crisp fonts, F1/H help instructions added to placeholders and output buffers).
@@ -217,3 +216,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KGraph: Usability and UI issues fixed (applied text-rendering optimizeLegibility and font smoothing to web for crisp fonts, enabled CLEARTYPE_QUALITY for native fonts, improved custom dark-themed styling for select options in web, added visible Help button to main native layout, and widened native status bar layout).
 - KTimer: Usability and UI issues fixed (enabled dynamic DPI scaling and S(x) macro in native C, expanded native starting RECT to 440x430 for label visibility, added visible bottom-centered Help badge in web, and optimized web window.resizeTo/moveTo for centered 460x580 rendering).
 - KRead: Usability and UI issues fixed (added Help button to toolbar in web, optimized text-rendering, updated initial text to explicitly mention F1/H shortcuts, enforced Read-Only mode in native C, allowed WM_CTLCOLORSTATIC for theme styling on read-only edit, and added text margins to improve layout legibility).
+- KJournal: Usability and UI issues fixed (auto-opening size adjusted to 1100x750, explicit help instructions added, crisp text styles verified, native console size increased and help title added).
