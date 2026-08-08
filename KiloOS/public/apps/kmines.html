@@ -16,9 +16,11 @@
     --warning: #e0af68;
     --border: #3b4261;
   }
-  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: #c0caf5; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: auto; }
+  }
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: radial-gradient(circle at 50% 50%, #1e2230 0%, #090a0f 100%); color: #c0caf5; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
   
-  .game-container { position: relative; background: var(--card-bg); padding: 18px; border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; max-width: 98vw; max-height: 98vh; }
+  #bg-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.6; }
+  .game-container { position: relative; z-index: 1; background: var(--card-bg); padding: 18px; border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; max-width: 98vw; max-height: 98vh; }
   
   .diff-bar { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
   .diff-bar button { background: #292e42; border: 1px solid var(--border); color: #a9b1d6; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; transition: all 0.2s; }
@@ -37,7 +39,7 @@
 
   .board-wrapper { position: relative; display: flex; justify-content: center; overflow: auto; }
 
-  .board { display: grid; grid-template-columns: repeat(10, 26px); grid-template-rows: repeat(10, 26px); gap: 2px; background: #12141d; padding: 4px; border-radius: 8px; border: 1px solid #2d334a; box-shadow: inset 0 2px 8px rgba(0,0,0,0.6); }
+  .board { display: grid; grid-template-columns: repeat(10, 26px); grid-template-rows: repeat(10, 26px); gap: 2px; background: repeating-linear-gradient(45deg, #12141d, #12141d 8px, #171a25 8px, #171a25 16px); padding: 4px; border-radius: 8px; border: 1px solid #2d334a; box-shadow: inset 0 2px 12px rgba(0,0,0,0.8); }
   
   .cell { width: 26px; height: 26px; box-sizing: border-box; background: var(--tile-hidden); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.15s, transform 0.08s, filter 0.15s;
     box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.35), inset -1px -1px 0px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0,0,0,0.3);
@@ -49,7 +51,7 @@
   .cell:hover:not(.revealed) { filter: brightness(1.25); }
   .cell:active:not(.revealed) { transform: scale(0.93); }
   
-  .cell.revealed { background: var(--tile-revealed); border: none; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.7), inset -1px -1px 0 rgba(255,255,255,0.04); cursor: default; }
+  .cell.revealed { background: radial-gradient(circle at center, #161824 0%, #0d0f16 100%); border: none; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.8), inset -1px -1px 0 rgba(255,255,255,0.03); cursor: default; }
   
   .cell.mine { background: radial-gradient(circle, #f7768e 0%, #7a1d2e 100%); box-shadow: 0 0 14px rgba(247, 118, 142, 0.8); }
   .cell.chest { background: radial-gradient(circle, #facc15 0%, #854d0e 100%); box-shadow: 0 0 14px rgba(250, 204, 21, 0.8); }
@@ -85,8 +87,10 @@
 
   #fx-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; }
 </style>
+</style>
 </head>
 <body>
+  <canvas id="bg-canvas"></canvas>
   <div class="game-container">
     <div class="diff-bar">
       <button id="btn-easy" class="active" onclick="setDiff('easy')">Easy (1)</button>
@@ -187,6 +191,47 @@
     const fxCtx = fxCanvas.getContext('2d');
     let particles = [];
     let fxAnimFrame = null;
+
+    // Background Dust FX
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    let bgDust = [];
+
+    function initBgDust() {
+      bgCanvas.width = window.innerWidth;
+      bgCanvas.height = window.innerHeight;
+      bgDust = [];
+      for (let i = 0; i < 60; i++) {
+        bgDust.push({
+          x: Math.random() * bgCanvas.width,
+          y: Math.random() * bgCanvas.height,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: Math.random() * -0.5 - 0.2,
+          size: Math.random() * 2 + 1,
+          alpha: Math.random() * 0.5 + 0.1
+        });
+      }
+    }
+
+    function animateBgDust() {
+      bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+      for (let p of bgDust) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y < -10) p.y = bgCanvas.height + 10;
+        if (p.x < -10) p.x = bgCanvas.width + 10;
+        if (p.x > bgCanvas.width + 10) p.x = -10;
+        
+        bgCtx.fillStyle = `rgba(122, 162, 247, ${p.alpha})`;
+        bgCtx.beginPath();
+        bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        bgCtx.fill();
+      }
+      requestAnimationFrame(animateBgDust);
+    }
+    window.addEventListener('resize', initBgDust);
+    initBgDust();
+    animateBgDust();
 
     function resizeFxCanvas() {
       const board = document.getElementById('board');

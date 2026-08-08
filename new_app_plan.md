@@ -54,10 +54,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KWizard (Fantasy dueling card game)
-**Phase:** 1 (next to do)
+**Phase:** 2 (next to do)
 **Status:** Creation
 
-- [ ] Phase 1: Scaffold KWizard directory (`KWizard/`), create web HTML skeleton (`KiloOS/public/apps/kwizard.html`), register in App.jsx.
+- [x] Phase 1: Scaffold KWizard directory (`KWizard/`), create web HTML skeleton (`KiloOS/public/apps/kwizard.html`), register in App.jsx.
 - [ ] Phase 2: Basic card drawing and UI layout for player and opponent hands.
 - [ ] Phase 3: Native C version (`KWizard/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [ ] Phase 4: Fantasy UI styling (parchment backgrounds, mystical borders, arcane fonts).
