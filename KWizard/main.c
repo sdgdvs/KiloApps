@@ -2,6 +2,7 @@
 
 #define BTN_DRAW 101
 #define BTN_RESET 102
+#define BTN_END_TURN 103
 
 typedef struct {
     char name[32];
@@ -21,6 +22,12 @@ int playerHand[7];
 int opponentHand[7];
 int playerCount = 0;
 int opponentCount = 0;
+
+int playerMana = 1;
+int playerMaxMana = 1;
+int opponentMana = 1;
+int opponentMaxMana = 1;
+char arenaMsg[128] = "Spells and effects go here";
 
 HWND hwndDraw, hwndReset;
 
@@ -45,6 +52,11 @@ void DrawCard(int isOpponent) {
 void ResetGame() {
     playerCount = 0;
     opponentCount = 0;
+    playerMaxMana = 1;
+    playerMana = 1;
+    opponentMaxMana = 1;
+    opponentMana = 1;
+    strcpy(arenaMsg, "Spells and effects go here");
     for (int i = 0; i < 3; i++) {
         DrawCard(0);
         DrawCard(1);
@@ -56,11 +68,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             hwndDraw = CreateWindow("BUTTON", "Draw Card",
                                     WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                                    300, 10, 100, 30,
+                                    240, 10, 100, 30,
                                     hwnd, (HMENU)BTN_DRAW, NULL, NULL);
+            CreateWindow("BUTTON", "End Turn",
+                         WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                         350, 10, 100, 30,
+                         hwnd, (HMENU)BTN_END_TURN, NULL, NULL);
             hwndReset = CreateWindow("BUTTON", "Reset Game",
                                      WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                                     410, 10, 100, 30,
+                                     460, 10, 100, 30,
                                      hwnd, (HMENU)BTN_RESET, NULL, NULL);
             seed = GetTickCount();
             ResetGame();
@@ -70,6 +86,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (LOWORD(wParam) == BTN_DRAW) {
                 DrawCard(0);
                 DrawCard(1);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == BTN_END_TURN) {
+                if (opponentMaxMana < 10) opponentMaxMana++;
+                opponentMana = opponentMaxMana;
+                DrawCard(1);
+                strcpy(arenaMsg, "Opponent's turn ended.");
+                
+                if (playerMaxMana < 10) playerMaxMana++;
+                playerMana = playerMaxMana;
+                DrawCard(0);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == BTN_RESET) {
                 ResetGame();
@@ -97,10 +123,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             for (int i = 0; i < playerCount; i++) {
                 int cx = playerX + i * (cardW + gap);
                 if (xPos >= cx && xPos <= cx + cardW && yPos >= playerY && yPos <= playerY + cardH) {
-                    for (int j = i; j < playerCount - 1; j++) {
-                        playerHand[j] = playerHand[j + 1];
+                    CardDef cd = sampleCards[playerHand[i]];
+                    if (playerMana >= cd.cost) {
+                        playerMana -= cd.cost;
+                        wsprintf(arenaMsg, "Player cast %s!", cd.name);
+                        for (int j = i; j < playerCount - 1; j++) {
+                            playerHand[j] = playerHand[j + 1];
+                        }
+                        playerCount--;
+                    } else {
+                        wsprintf(arenaMsg, "Not enough mana for %s!", cd.name);
                     }
-                    playerCount--;
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
@@ -144,8 +177,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                      DEFAULT_PITCH | FF_ROMAN, "Georgia");
             SelectObject(hdc, hArenaFont);
-            const char* arenaText = "Spells and effects go here";
-            DrawText(hdc, arenaText, -1, &arenaRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawText(hdc, arenaMsg, -1, &arenaRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             SelectObject(hdc, hFont);
             DeleteObject(hArenaFont);
 
@@ -201,11 +233,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(cardBorderPen);
 
             SetTextColor(hdc, RGB(232, 216, 183));
+            char oppLabel[64];
+            wsprintf(oppLabel, "Opponent Hand (Mana: %d/%d)", opponentMana, opponentMaxMana);
             RECT lblOpp = {0, oppY - 20, cw, oppY};
-            DrawText(hdc, "Opponent Hand", -1, &lblOpp, DT_CENTER | DT_SINGLELINE);
+            DrawText(hdc, oppLabel, -1, &lblOpp, DT_CENTER | DT_SINGLELINE);
             
+            char playerLabel[64];
+            wsprintf(playerLabel, "Player Hand (Mana: %d/%d)", playerMana, playerMaxMana);
             RECT lblPlayer = {0, playerY - 20, cw, playerY};
-            DrawText(hdc, "Player Hand", -1, &lblPlayer, DT_CENTER | DT_SINGLELINE);
+            DrawText(hdc, playerLabel, -1, &lblPlayer, DT_CENTER | DT_SINGLELINE);
 
             SelectObject(hdc, oldFont);
             DeleteObject(hFont);

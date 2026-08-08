@@ -136,11 +136,12 @@
     <div id="game-board">
         <div id="controls">
             <button id="draw-btn">Draw Card</button>
+            <button id="end-turn-btn">End Turn</button>
             <button id="reset-btn">Reset Game</button>
         </div>
         
         <div>
-            <div style="text-align: center; margin-bottom: 5px;">Opponent Hand</div>
+            <div style="text-align: center; margin-bottom: 5px;">Opponent Hand <span id="opp-mana-display" style="color: #8b7355; font-weight: bold;">(Mana: 1/1)</span></div>
             <div id="opponent-hand" class="hand-area">
                 <!-- Opponent cards will appear here -->
             </div>
@@ -152,7 +153,7 @@
         </div>
 
         <div>
-            <div style="text-align: center; margin-bottom: 5px;">Player Hand</div>
+            <div style="text-align: center; margin-bottom: 5px;">Player Hand <span id="player-mana-display" style="color: #e8d8b7; font-weight: bold;">(Mana: 1/1)</span></div>
             <div id="player-hand" class="hand-area">
                 <!-- Player cards will appear here -->
             </div>
@@ -160,10 +161,19 @@
     </div>
 
     <script>
+        let playerMana = 1, playerMaxMana = 1;
+        let opponentMana = 1, opponentMaxMana = 1;
+
         const playerHand = document.getElementById('player-hand');
         const opponentHand = document.getElementById('opponent-hand');
         const drawBtn = document.getElementById('draw-btn');
+        const endTurnBtn = document.getElementById('end-turn-btn');
         const resetBtn = document.getElementById('reset-btn');
+
+        function updateManaDisplay() {
+            document.getElementById('opp-mana-display').innerText = `(Mana: ${opponentMana}/${opponentMaxMana})`;
+            document.getElementById('player-mana-display').innerText = `(Mana: ${playerMana}/${playerMaxMana})`;
+        }
 
         const sampleCards = [
             { name: "Fireball", cost: 3 },
@@ -185,12 +195,19 @@
                     <div class="card-cost">Mana: ${cardData.cost}</div>
                 `;
                 card.onclick = () => {
-                    card.style.borderColor = "#ffcc00";
-                    setTimeout(() => {
-                        if(card.parentElement === playerHand) {
-                            playerHand.removeChild(card);
-                        }
-                    }, 300);
+                    if (playerMana >= cardData.cost) {
+                        playerMana -= cardData.cost;
+                        updateManaDisplay();
+                        document.querySelector('.play-area p').innerHTML = `Player cast <b>${cardData.name}</b>!`;
+                        card.style.borderColor = "#ffcc00";
+                        setTimeout(() => {
+                            if(card.parentElement === playerHand) {
+                                playerHand.removeChild(card);
+                            }
+                        }, 300);
+                    } else {
+                        document.querySelector('.play-area p').innerHTML = `Not enough mana for <b>${cardData.name}</b>!`;
+                    }
                 };
             }
             return card;
@@ -212,9 +229,27 @@
             drawCard(true);
         };
 
+        endTurnBtn.onclick = () => {
+            if (opponentMaxMana < 10) opponentMaxMana++;
+            opponentMana = opponentMaxMana;
+            drawCard(true);
+            document.querySelector('.play-area p').innerHTML = `Opponent ends turn.`;
+            
+            if (playerMaxMana < 10) playerMaxMana++;
+            playerMana = playerMaxMana;
+            drawCard(false);
+            updateManaDisplay();
+        };
+
         resetBtn.onclick = () => {
+            playerMaxMana = 1;
+            playerMana = 1;
+            opponentMaxMana = 1;
+            opponentMana = 1;
+            updateManaDisplay();
             playerHand.innerHTML = '';
             opponentHand.innerHTML = '';
+            document.querySelector('.play-area p').innerHTML = `Spells and effects go here`;
             for(let i=0; i<3; i++) {
                 drawCard(false);
                 drawCard(true);

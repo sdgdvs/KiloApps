@@ -54,14 +54,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KWizard (Fantasy dueling card game)
-**Phase:** 5 (next to do)
+**Phase:** 6 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KWizard directory (`KWizard/`), create web HTML skeleton (`KiloOS/public/apps/kwizard.html`), register in App.jsx.
 - [x] Phase 2: Basic card drawing and UI layout for player and opponent hands.
 - [x] Phase 3: Native C version (`KWizard/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [x] Phase 4: Fantasy UI styling (parchment backgrounds, mystical borders, arcane fonts).
-- [ ] Phase 5: Implement mana system and spell casting logic (mana cost, spell effects).
+- [x] Phase 5: Implement mana system and spell casting logic (mana cost, spell effects).
 - [ ] Phase 6: Add 30+ unique spells across different schools (Fire, Ice, Arcane, Life) with distinct effects.
 - [ ] Phase 7: Implement AI opponent with basic strategy (play cards when mana available).
 - [ ] Phase 8: Add health points (HP) for player and opponent, and win/loss conditions.
