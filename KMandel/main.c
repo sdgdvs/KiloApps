@@ -425,20 +425,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdcMem, hOld);
                 DeleteDC(hdcMem);
             }
+            
+            // Draw Help Background
+            RECT textBg = { 10, bmpH - 40, 160, bmpH - 10 };
+            HBRUSH hBrush = CreateSolidBrush(RGB(15, 23, 42));
+            HPEN hPen = CreatePen(PS_SOLID, 1, RGB(50, 50, 70));
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+            HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+            RoundRect(hdc, textBg.left, textBg.top, textBg.right, textBg.bottom, 8, 8);
+            SelectObject(hdc, hOldBrush);
+            SelectObject(hdc, hOldPen);
+            DeleteObject(hBrush);
+            DeleteObject(hPen);
+            
+            // Draw Help Text
             SetBkMode(hdc, TRANSPARENT);
-            HFONT hFont = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+            HFONT hFont = CreateFont(18, 0, 0, 0, FW_MEDIUM, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
                                      DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
-            SetTextColor(hdc, RGB(0, 0, 0));
-            TextOut(hdc, 9, bmpH - 30, "Press H for Help", 16);
-            TextOut(hdc, 11, bmpH - 30, "Press H for Help", 16);
-            TextOut(hdc, 10, bmpH - 29, "Press H for Help", 16);
-            TextOut(hdc, 10, bmpH - 31, "Press H for Help", 16);
-            SetTextColor(hdc, RGB(255, 255, 255));
-            TextOut(hdc, 10, bmpH - 30, "Press H for Help", 16);
+            SetTextColor(hdc, RGB(248, 250, 252));
+            TextOut(hdc, 20, bmpH - 33, "Press H for Help", 16);
             SelectObject(hdc, hOldFont);
             DeleteObject(hFont);
+            
             EndPaint(hwnd, &ps);
             break;
         }
@@ -467,6 +477,7 @@ double __cdecl floor(double x) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
