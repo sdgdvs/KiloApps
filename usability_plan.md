@@ -55,8 +55,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KMail
-- KMandel
 - KPing
 
 - KConnect4
@@ -107,6 +105,8 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KColony
 - KAlchemy
 - KFont
+- KMail
+- KMandel
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (auto-opening size to 1000x700, added visible Help status button to web, updated native window title for Help, implemented crisp fonts).
@@ -261,3 +261,5 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KColony: Usability and UI issues fixed (adjusted auto-opening size to 850x650 in web via resize and native via WS_OVERLAPPED bounds, enforced DPI awareness and viewport meta tags for crisp text, added explicit 'Press H for Help' instructions to web/native startup UI).
 - KAlchemy: Usability and UI issues fixed (adjusted auto-opening size to 1200x800 in web and exact 800x570 in native via AdjustWindowRect, enabled SetProcessDPIAware for crisp text, added explicit "Press H for Help" startup instructions).
 - KFont: Usability and UI issues fixed (adjusted native client area to 950x700 with AdjustWindowRect, fixed web flex-wrap and overlapping issues, added iframe resize postMessage support, validated crisp text and help shortcut).
+- KMail: Usability and UI issues fixed (auto-opening size standardized to 900x600 in both platforms, explicit 'Press H for Help' text added in native, web font-smoothing applied, and select box-sizing fixed).
+- KMandel: Usability and UI issues fixed (web auto-opening size meta tags added, help indicator styled as a translucent pill, controls panel widened to 240px, SetProcessDPIAware added to native, and native 'Press H for Help' rewritten to render over a solid rounded rectangle).
