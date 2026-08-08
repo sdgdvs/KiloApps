@@ -2660,8 +2660,8 @@ void __stdcall MainEntry() {
     RegisterClassA(&wc);
 
     /* Terminal: plus padding and bars. */
-    winW = dpiScale(680);
-    winH = dpiScale(540);
+    winW = dpiScale(800);
+    winH = dpiScale(600);
 
     LoadMacros();
 
