@@ -280,6 +280,21 @@
         }
     }
 
+    function spawnExplosion(x, y, count, color1, color2) {
+      for (let i=0; i<count; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let speed = Math.random() * 5;
+        state.particles.push({
+          x: x, y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0,
+          decay: 0.02 + Math.random() * 0.05,
+          color: Math.random() > 0.5 ? color1 : color2
+        });
+      }
+    }
+
     // Generate random stars and planets
     function generateStars() {
       const starTypes = [
@@ -357,6 +372,19 @@
       ctx.closePath();
       ctx.fill();
       
+      // Ship frame cycle lights
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(centerX - 5, centerY + 3, 2, 2);
+        ctx.fillStyle = '#00ff00';
+        ctx.fillRect(centerX + 3, centerY + 3, 2, 2);
+      } else {
+        ctx.fillStyle = '#880000';
+        ctx.fillRect(centerX - 5, centerY + 3, 2, 2);
+        ctx.fillStyle = '#008800';
+        ctx.fillRect(centerX + 3, centerY + 3, 2, 2);
+      }
+      
       // Draw particles
       state.particles.forEach(p => {
         const screenX = centerX + (p.x - state.ship.x);
@@ -381,11 +409,12 @@
 
       // Ship thrust trail if moving
       if (state.ship.moving) {
+        const flameLength = 16 + (Math.floor(Date.now() / 50) % 4);
         ctx.fillStyle = '#ff8800';
         ctx.beginPath();
         ctx.moveTo(centerX, centerY + 6);
         ctx.lineTo(centerX + 4, centerY + 10);
-        ctx.lineTo(centerX, centerY + 16);
+        ctx.lineTo(centerX, centerY + flameLength);
         ctx.lineTo(centerX - 4, centerY + 10);
         ctx.closePath();
         ctx.fill();
@@ -481,13 +510,19 @@
                     if (sDmg < 0) sDmg = 0;
                     pirateHp -= pDmg;
                     if (pirateHp < 0) pirateHp = 0;
+                    spawnExplosion(state.ship.x, state.ship.y - 40, 20, '#ff6600', '#ff0000'); // Weapon impact on pirate
                     let result = `You hit pirate for ${pDmg}!`;
                     if (pirateHp > 0) {
                         state.resources.hull -= sDmg;
                         if (state.resources.hull < 0) state.resources.hull = 0;
+                        spawnExplosion(state.ship.x, state.ship.y, 15, '#00ffff', '#ffffff'); // Impact on ship
+                        if (state.resources.hull <= 0) {
+                             spawnExplosion(state.ship.x, state.ship.y, 100, '#ff0000', '#ffff00'); // Death
+                        }
                         result += ` Pirate hits you for ${sDmg}!`;
                         addXP(2, 10); addXP(3, 10);
                     } else {
+                        spawnExplosion(state.ship.x, state.ship.y - 40, 50, '#ff3300', '#cccccc'); // Pirate death
                         result += ` Pirate destroyed!`;
                         addXP(2, 20);
                     }
@@ -708,8 +743,18 @@
     const keys = { w: false, a: false, s: false, d: false };
 
     function update() {
+      // Update particles
+      for (let i = state.particles.length - 1; i >= 0; i--) {
+        let p = state.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        if (p.life <= 0) state.particles.splice(i, 1);
+      }
+
       if (state.modalOpen) {
         setHum(false);
+        draw();
         requestAnimationFrame(update);
         return;
       }
@@ -736,26 +781,17 @@
       }
 
       // Boundaries
-      // Update particles
-      for (let i = state.particles.length - 1; i >= 0; i--) {
-        let p = state.particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= p.decay;
-        if (p.life <= 0) state.particles.splice(i, 1);
-      }
-      
       if (state.ship.moving) {
         // Spawn thruster particles
-        for (let i=0; i<3; i++) {
+        for (let i=0; i<5; i++) {
           state.particles.push({
             x: state.ship.x + (Math.random() * 6 - 3),
             y: state.ship.y + 10 + Math.random() * 5,
             vx: (Math.random() - 0.5) * 1,
             vy: 2 + Math.random() * 2,
             life: 1.0,
-            decay: 0.05 + Math.random() * 0.05,
-            color: Math.random() > 0.5 ? '#ff8800' : '#ff0000'
+            decay: 0.02 + Math.random() * 0.03,
+            color: Math.random() > 0.5 ? '#ff8800' : (Math.random() > 0.5 ? '#ffff00' : '#ff0000')
           });
         }
       }

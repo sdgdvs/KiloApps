@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KStarship
 - KConnect4
 - KHangman
 - KMatch3
@@ -136,7 +135,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAsteroids
 - K2048
 - KSolitaire
+- KStarship
 ## Completed Work Log
+
+- **KStarship (Loop 2):** Implemented particle system fixes, weapon impacts/death effects, ship light frame cycle animations, and enhanced thruster flame particle bursts for both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 
 - **KSolitaire (Loop 3):** Implemented environmental art including 3D mahogany table frame borders and atmospheric floating golden dust motes in both Web (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
@@ -235,4 +237,3 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 - **KAlchemy (Loop 1):** Implemented SVG background for crucible vessel and particle burst explosion canvas animation for Web Canvas/HTML (kalchemy.html), and added detailed Win32 GDI animated bubbling drawing for crucible/flask/anvil/retort/alembic in Native C (KAlchemy/main.c).
 - **KAlchemy (Loop 2):** Implemented expanding particle burst explosion animations triggered upon successful transmutations for Native C Win32 GDI (KAlchemy/main.c).
-\n- KStarship\n

@@ -24,6 +24,18 @@ void SpawnParticle(float x, float y, float vx, float vy, float decay, COLORREF c
     }
 }
 
+void SpawnExplosion(float x, float y, int count, COLORREF color1, COLORREF color2) {
+    for (int i=0; i<count; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = (rand() % 50) / 10.0f;
+        float vx = cos(angle) * speed;
+        float vy = sin(angle) * speed;
+        float decay = 0.02f + (rand() % 50) / 1000.0f;
+        COLORREF c = (rand() % 2 == 0) ? color1 : color2;
+        SpawnParticle(x, y, vx, vy, decay, c);
+    }
+}
+
 
 #define NUM_SYSTEMS 200
 #define MAP_SIZE 2000
@@ -191,6 +203,14 @@ void InitStars() {
 }
 
 void Update() {
+    for (int i=0; i<MAX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            particles[i].x += particles[i].vx;
+            particles[i].y += particles[i].vy;
+            particles[i].life -= particles[i].decay;
+        }
+    }
+
     if (modal_open) return;
 
     is_moving = 0;
@@ -212,13 +232,7 @@ void Update() {
         if (rand() % 10 == 0) AddXP(1, 1);
     }
 
-    for (int i=0; i<MAX_PARTICLES; i++) {
-        if (particles[i].life > 0) {
-            particles[i].x += particles[i].vx;
-            particles[i].y += particles[i].vy;
-            particles[i].life -= particles[i].decay;
-        }
-    }
+    // (Particle updates moved to start of Update function to run during modals)
     
     // Draw particles
     for (int i=0; i<MAX_PARTICLES; i++) {
@@ -244,13 +258,13 @@ void Update() {
     DeleteObject(pulsePen);
 
     if (is_moving) {
-        for (int i=0; i<3; i++) {
-            float px = ship_x + (rand() % 7 - 3);
-            float py = ship_y + 10 + (rand() % 6);
-            float vx = (rand() % 100 - 50) / 50.0f;
-            float vy = 2.0f + (rand() % 100) / 50.0f;
-            float decay = 0.05f + (rand() % 100) / 2000.0f;
-            COLORREF c = (rand() % 2 == 0) ? RGB(255, 136, 0) : RGB(255, 0, 0);
+        for (int i=0; i<5; i++) {
+            float px = ship_x + (rand() % 9 - 4);
+            float py = ship_y + 10 + (rand() % 8);
+            float vx = (rand() % 100 - 50) / 100.0f;
+            float vy = 3.0f + (rand() % 100) / 30.0f;
+            float decay = 0.04f + (rand() % 100) / 2000.0f;
+            COLORREF c = (rand() % 3 == 0) ? RGB(255, 255, 0) : ((rand() % 2 == 0) ? RGB(255, 136, 0) : RGB(255, 0, 0));
             SpawnParticle(px, py, vx, vy, decay, c);
         }
     }
@@ -360,6 +374,15 @@ void Draw(HDC hdc, RECT* rect) {
     DeleteObject(shipBrush);
     DeleteObject(shipPen);
 
+    // Frame cycle animation for ship lights
+    if ((GetTickCount() % 1000) < 500) {
+        SetPixel(memDC, centerX - 5, centerY + 5, RGB(255, 0, 0));
+        SetPixel(memDC, centerX + 5, centerY + 5, RGB(0, 255, 0));
+    } else {
+        SetPixel(memDC, centerX - 5, centerY + 5, RGB(100, 0, 0));
+        SetPixel(memDC, centerX + 5, centerY + 5, RGB(0, 100, 0));
+    }
+
     // Draw particles
     for (int i=0; i<MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
@@ -384,10 +407,12 @@ void Draw(HDC hdc, RECT* rect) {
     DeleteObject(pulsePen);
 
     if (is_moving) {
+        // Frame cycle for thruster flame
+        int flameLength = 16 + (GetTickCount() % 4);
         POINT thrustPts[4] = {
             {centerX, centerY + 6},
             {centerX + 4, centerY + 10},
-            {centerX, centerY + 16},
+            {centerX, centerY + flameLength},
             {centerX - 4, centerY + 10}
         };
         HBRUSH thrustBrush = CreateSolidBrush(RGB(255, 136, 0));
@@ -623,12 +648,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (s_dmg < 0) s_dmg = 0;
                             pirate_hp -= p_dmg;
                             if (pirate_hp < 0) pirate_hp = 0;
+                            // Weapon impact on pirate
+                            SpawnExplosion(ship_x, ship_y - 40, 20, RGB(255, 100, 0), RGB(255, 0, 0));
                             if (pirate_hp > 0) {
                                 res_hull -= s_dmg;
                                 if (res_hull < 0) res_hull = 0;
+                                // Weapon impact on ship
+                                SpawnExplosion(ship_x, ship_y, 15, RGB(0, 255, 255), RGB(255, 255, 255));
+                                if (res_hull <= 0) {
+                                    // Death effect
+                                    SpawnExplosion(ship_x, ship_y, 100, RGB(255, 0, 0), RGB(255, 255, 0));
+                                }
                                 wsprintfA(combat_log, "You hit for %d! Pirate hits for %d!", p_dmg, s_dmg);
                                 AddXP(2, 10); AddXP(3, 10);
                             } else {
+                                // Pirate death explosion
+                                SpawnExplosion(ship_x, ship_y - 40, 50, RGB(255, 50, 0), RGB(200, 200, 200));
                                 wsprintfA(combat_log, "You hit for %d! Pirate destroyed!", p_dmg);
                                 AddXP(2, 20);
                             }
