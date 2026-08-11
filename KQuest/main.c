@@ -33,6 +33,7 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
 #define STATE_UTILS         16
 #define STATE_REPLAYS       17
 #define STATE_CONFIG        18
+#define STATE_MAGIC_MENU    19
 
 static int g_KeyBinds[6] = {'1', '2', '3', '4', '5', '6'};
 static char g_MatchReplays[50][128];
@@ -999,13 +1000,27 @@ void InitHero(int classIdx) {
         player.str = 7; player.intStat = 18; player.def = 6; player.agi = 10;
         lstrcpyA(player.weaponName, "Apprentice Staff"); player.weaponBonusStr = 2;
         lstrcpyA(player.armorName, "Silk Robes"); player.armorBonusDef = 2;
-    } else { // Rogue
+    } else if (classIdx == 2) { // Rogue
         lstrcpyA(player.heroClass, "Rogue");
         player.maxHp = 45; player.hp = 45;
         player.maxMp = 25; player.mp = 25;
         player.str = 11; player.intStat = 8; player.def = 8; player.agi = 16;
         lstrcpyA(player.weaponName, "Twin Daggers"); player.weaponBonusStr = 5;
         lstrcpyA(player.armorName, "Leather Vest"); player.armorBonusDef = 3;
+    } else if (classIdx == 3) { // Paladin
+        lstrcpyA(player.heroClass, "Paladin");
+        player.maxHp = 75; player.hp = 75;
+        player.maxMp = 20; player.mp = 20;
+        player.str = 14; player.intStat = 10; player.def = 16; player.agi = 6;
+        lstrcpyA(player.weaponName, "Heavy Mace"); player.weaponBonusStr = 4;
+        lstrcpyA(player.armorName, "Knight Plate"); player.armorBonusDef = 6;
+    } else if (classIdx == 4) { // Ranger
+        lstrcpyA(player.heroClass, "Ranger");
+        player.maxHp = 50; player.hp = 50;
+        player.maxMp = 25; player.mp = 25;
+        player.str = 13; player.intStat = 7; player.def = 7; player.agi = 18;
+        lstrcpyA(player.weaponName, "Longbow"); player.weaponBonusStr = 5;
+        lstrcpyA(player.armorName, "Hunter Cloak"); player.armorBonusDef = 3;
     }
 }
 
@@ -1429,9 +1444,9 @@ void SetupButtons() {
             SetWindowTextA(hBtn1, "Select Warrior");
             SetWindowTextA(hBtn2, "Select Mage");
             SetWindowTextA(hBtn3, "Select Rogue");
-            SetWindowTextA(hBtn4, "Begin Quest");
-            SetWindowTextA(hBtn5, "---");
-            SetWindowTextA(hBtn6, "---");
+            SetWindowTextA(hBtn4, "Select Paladin");
+            SetWindowTextA(hBtn5, "Select Ranger");
+            SetWindowTextA(hBtn6, "Begin Quest");
             break;
 
         case STATE_TOWN: {
@@ -1533,12 +1548,21 @@ void SetupButtons() {
             break;
 
         case STATE_MERCENARY:
-            SetWindowTextA(hBtn1, "Hire Paladin (80G)");
-            SetWindowTextA(hBtn2, "Hire Archmage (100G)");
-            SetWindowTextA(hBtn3, "Hire Cleric (70G)");
-            SetWindowTextA(hBtn4, player.companion.isDown ? "Revive Comp (20G)" : "Dismiss Comp");
-            SetWindowTextA(hBtn5, "Merc Guild Info");
-            SetWindowTextA(hBtn6, "Back to Town");
+            if (player.companion.active == 0) {
+                SetWindowTextA(hBtn1, "Hire Paladin (80G)");
+                SetWindowTextA(hBtn2, "Hire Archmage (100G)");
+                SetWindowTextA(hBtn3, "Hire Cleric (70G)");
+                SetWindowTextA(hBtn4, "Hire Ranger (90G)");
+                SetWindowTextA(hBtn5, "---");
+                SetWindowTextA(hBtn6, "Back to Town");
+            } else {
+                SetWindowTextA(hBtn1, player.companion.isDown ? "Revive Comp (20G)" : "---");
+                SetWindowTextA(hBtn2, "Dismiss Comp");
+                SetWindowTextA(hBtn3, "---");
+                SetWindowTextA(hBtn4, "---");
+                SetWindowTextA(hBtn5, "---");
+                SetWindowTextA(hBtn6, "Back to Town");
+            }
             break;
 
                 case STATE_SHOP:
@@ -1577,15 +1601,23 @@ void SetupButtons() {
             SetWindowTextA(hBtn6, "---");
             break;
 
+        case STATE_MAGIC_MENU:
+            if (lstrcmpA(player.heroClass, "Mage") == 0) SetWindowTextA(hBtn1, "Fireball (10 MP)");
+            else if (lstrcmpA(player.heroClass, "Rogue") == 0) SetWindowTextA(hBtn1, "Shadow Strike (8 MP)");
+            else if (lstrcmpA(player.heroClass, "Paladin") == 0) SetWindowTextA(hBtn1, "Smite (8 MP)");
+            else if (lstrcmpA(player.heroClass, "Ranger") == 0) SetWindowTextA(hBtn1, "Aimed Shot (8 MP)");
+            else SetWindowTextA(hBtn1, "Shield Bash (5 MP)");
+
+            SetWindowTextA(hBtn2, "Lightning Storm (18 MP)");
+            SetWindowTextA(hBtn3, "Holy Shield (14 MP)");
+            SetWindowTextA(hBtn4, "Berserk Might (12 MP)");
+            SetWindowTextA(hBtn5, "---");
+            SetWindowTextA(hBtn6, "Back to Combat");
+            break;
+
         case STATE_COMBAT:
             SetWindowTextA(hBtn1, "Attack");
-            if (lstrcmpA(player.heroClass, "Mage") == 0) {
-                SetWindowTextA(hBtn2, "Fireball (10 MP)");
-            } else if (lstrcmpA(player.heroClass, "Rogue") == 0) {
-                SetWindowTextA(hBtn2, "Shadow Strike (8 MP)");
-            } else {
-                SetWindowTextA(hBtn2, "Shield Bash (5 MP)");
-            }
+            SetWindowTextA(hBtn2, "Spells / Magic");
             SetWindowTextA(hBtn3, "Use HP / Gr.HP");
             if (player.fireBombs > 0) {
                 SetWindowTextA(hBtn4, "Throw Fire Bomb");
@@ -2109,7 +2141,57 @@ void HandleButton1() {
         AcceptBounty(0);
         return;
     }
-    if (gameState == STATE_CHAR_CREATE) {
+    if (gameState == STATE_MAGIC_MENU) {
+        int cost = 5;
+        if (lstrcmpA(player.heroClass, "Mage") == 0) cost = 10;
+        else if (lstrcmpA(player.heroClass, "Rogue") == 0) cost = 8;
+        else if (lstrcmpA(player.heroClass, "Paladin") == 0) cost = 8;
+        else if (lstrcmpA(player.heroClass, "Ranger") == 0) cost = 8;
+
+        if (player.mp >= cost) {
+            player.mp -= cost;
+            SfxSpellCast();
+            int surgeMult = player.manaSurgeActive ? 150 : 100;
+            if (player.manaSurgeActive) {
+                LogMessage("⚡ Mana Surge empowers your spell power by +50%!");
+                player.manaSurgeActive = 0;
+            }
+
+            int dmg = 0;
+            if (lstrcmpA(player.heroClass, "Mage") == 0) {
+                int bonusInt = (player.companion.active == 2 && !player.companion.isDown) ? 5 : 0;
+                dmg = (int)(((player.intStat + bonusInt) * 22 * surgeMult) / 1000);
+                char msg[128]; wsprintfA(msg, "🔥 Cast Fireball! Dealt %d magic damage to %s!", dmg, currentEnemy.name); LogMessage(msg);
+            } else if (lstrcmpA(player.heroClass, "Rogue") == 0) {
+                dmg = (int)((player.agi * 18 * surgeMult) / 1000);
+                char msg[128]; wsprintfA(msg, "🗡️ Shadow Strike! Dealt %d critical damage to %s!", dmg, currentEnemy.name); LogMessage(msg);
+            } else if (lstrcmpA(player.heroClass, "Paladin") == 0) {
+                int totalStr = player.str + player.weaponBonusStr;
+                dmg = (int)(((totalStr * 10 + player.intStat * 10) * surgeMult) / 1000);
+                char msg[128]; wsprintfA(msg, "✨ Smite! Dealt %d holy damage to %s!", dmg, currentEnemy.name); LogMessage(msg);
+            } else if (lstrcmpA(player.heroClass, "Ranger") == 0) {
+                dmg = (int)((player.agi * 20 * surgeMult) / 1000);
+                char msg[128]; wsprintfA(msg, "🏹 Aimed Shot! Dealt %d precise damage to %s!", dmg, currentEnemy.name); LogMessage(msg);
+            } else {
+                int totalStr = player.str + player.weaponBonusStr;
+                dmg = (int)((totalStr * 15 * surgeMult) / 1000);
+                char msg[128]; wsprintfA(msg, "🛡️ Shield Bash! Dealt %d physical damage to %s!", dmg, currentEnemy.name); LogMessage(msg);
+            }
+            gameState = STATE_COMBAT;
+            currentEnemy.hp -= dmg;
+            if (currentEnemy.hp <= 0) {
+                currentEnemy.hp = 0; CombatVictory(); return;
+            }
+            TriggerCompanionCombatTurn();
+            if (currentEnemy.hp <= 0) {
+                currentEnemy.hp = 0; CombatVictory(); return;
+            }
+            EnemyTurn();
+            UpdateUI();
+        } else {
+            LogMessage("Not enough MP!");
+        }
+    } else if (gameState == STATE_CHAR_CREATE) {
         selectedClassIndex = 0;
         InitHero(0);
         LogMessage("Selected Class: Warrior (High HP & Defense).");
@@ -2128,7 +2210,20 @@ void HandleButton1() {
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_MERCENARY) {
-        if (player.gold >= 80) {
+        if (player.companion.active > 0) {
+            if (player.companion.isDown) {
+                if (player.gold >= 20) {
+                    player.gold -= 20;
+                    player.companion.isDown = 0;
+                    player.companion.hp = player.companion.maxHp;
+                    LogMessage("✨ Revived companion! Health fully restored!");
+                    SetupButtons();
+                    UpdateUI();
+                } else {
+                    LogMessage("Need 20 Gold to revive companion!");
+                }
+            }
+        } else if (player.gold >= 80) {
             player.gold -= 80;
             player.companion.active = 1; // Paladin
             lstrcpyA(player.companion.name, "Sir Gareth");
@@ -2392,7 +2487,11 @@ void HandleButton2() {
         AcceptBounty(1);
         return;
     }
-    if (gameState == STATE_CHAR_CREATE) {
+    if (gameState == STATE_MAGIC_MENU) {
+        gameState = STATE_COMBAT;
+        CastLightningStorm();
+        UpdateUI();
+    } else if (gameState == STATE_CHAR_CREATE) {
         selectedClassIndex = 1;
         InitHero(1);
         LogMessage("Selected Class: Mage (High Mana & Spell Power).");
@@ -2404,7 +2503,12 @@ void HandleButton2() {
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_MERCENARY) {
-        if (player.gold >= 100) {
+        if (player.companion.active > 0) {
+            LogMessage("Dismissed your party companion.");
+            player.companion.active = 0;
+            SetupButtons();
+            UpdateUI();
+        } else if (player.gold >= 100) {
             player.gold -= 100;
             player.companion.active = 2; // Archmage
             lstrcpyA(player.companion.name, "Lady Pyra");
@@ -2465,57 +2569,9 @@ void HandleButton2() {
         LogMessage(msg);
         UpdateUI();
     } else if (gameState == STATE_COMBAT) {
-        int cost = 5;
-        if (lstrcmpA(player.heroClass, "Mage") == 0) cost = 10;
-        else if (lstrcmpA(player.heroClass, "Rogue") == 0) cost = 8;
-
-        if (player.mp >= cost) {
-            player.mp -= cost;
-            SfxSpellCast();
-            int surgeMult = player.manaSurgeActive ? 150 : 100;
-            if (player.manaSurgeActive) {
-                LogMessage("⚡ Mana Surge empowers your spell power by +50%!");
-                player.manaSurgeActive = 0;
-            }
-
-            int dmg = 0;
-            if (lstrcmpA(player.heroClass, "Mage") == 0) {
-                int bonusInt = (player.companion.active == 2 && !player.companion.isDown) ? 5 : 0;
-                dmg = (int)(((player.intStat + bonusInt) * 22 * surgeMult) / 1000);
-                char msg[128];
-                wsprintfA(msg, "🔥 Cast Fireball! Dealt %d magic damage to %s!", dmg, currentEnemy.name);
-                LogMessage(msg);
-            } else if (lstrcmpA(player.heroClass, "Rogue") == 0) {
-                dmg = (int)((player.agi * 18 * surgeMult) / 1000);
-                char msg[128];
-                wsprintfA(msg, "🗡️ Shadow Strike! Dealt %d critical damage to %s!", dmg, currentEnemy.name);
-                LogMessage(msg);
-            } else {
-                int totalStr = player.str + player.weaponBonusStr;
-                dmg = (int)((totalStr * 15 * surgeMult) / 1000);
-                char msg[128];
-                wsprintfA(msg, "🛡️ Shield Bash! Dealt %d physical damage to %s!", dmg, currentEnemy.name);
-                LogMessage(msg);
-            }
-
-            currentEnemy.hp -= dmg;
-            if (currentEnemy.hp <= 0) {
-                currentEnemy.hp = 0;
-                CombatVictory();
-                return;
-            }
-
-            TriggerCompanionCombatTurn();
-            if (currentEnemy.hp <= 0) {
-                currentEnemy.hp = 0;
-                CombatVictory();
-                return;
-            }
-
-            EnemyTurn();
-        } else {
-            LogMessage("Not enough MP!");
-        }
+        gameState = STATE_MAGIC_MENU;
+        SetupButtons();
+        UpdateUI();
     }
 }
 
@@ -2588,7 +2644,11 @@ void HandleButton3() {
         AcceptBounty(2);
         return;
     }
-    if (gameState == STATE_CHAR_CREATE) {
+    if (gameState == STATE_MAGIC_MENU) {
+        gameState = STATE_COMBAT;
+        CastHolyShield();
+        UpdateUI();
+    } else if (gameState == STATE_CHAR_CREATE) {
         selectedClassIndex = 2;
         InitHero(2);
         LogMessage("Selected Class: Rogue (High Agility & Crits).");

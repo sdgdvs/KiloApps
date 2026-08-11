@@ -1762,12 +1762,16 @@
         if (player.companion.id === 'paladin') bonusDef += 4;
         if (player.companion.id === 'archmage') bonusInt += 5;
       }
+      let bonusAgi = 0;
+      if (player.companion && !player.companion.isDown) {
+        if (player.companion.id === 'ranger') bonusAgi += 5;
+      }
 
       const offBonusDmg = player.offensePoints * 2;
       document.getElementById('stat-str').textContent = player.str + (player.weapon ? player.weapon.bonusStr : 0) + offBonusDmg;
       document.getElementById('stat-int').textContent = player.int + bonusInt;
       document.getElementById('stat-def').textContent = player.def + bonusDef;
-      document.getElementById('stat-agi').textContent = player.agi + (player.offensePoints >= 2 ? player.offensePoints * 2 : 0);
+      document.getElementById('stat-agi').textContent = player.agi + bonusAgi + (player.offensePoints >= 2 ? player.offensePoints * 2 : 0);
 
       if (player.companion) {
         document.getElementById('comp-name').textContent = player.companion.name;
@@ -2382,10 +2386,15 @@
             <p>High Agility & Critical Chance. Strikes rapidly with high mobility.</p>
             <div style="font-size:0.75rem; color:#a6e3a1;">HP: 45 | MP: 25 | STR: 11 | DEF: 8</div>
           </div>
-                  <div class="craft-card" onclick="craftItem('upgrade_gear')">
-            <h3>⬆️ Upgrade Gear</h3>
-            <p class="mats-req">Req: 30 Gold, 3x Iron Scrap</p>
-            <p>Enhances current weapon (+2 STR) and armor (+2 DEF).</p>
+          <div class="class-card" id="card-Paladin" onclick="selectClass('Paladin')">
+            <h3>🛡️ Paladin</h3>
+            <p>High Defense & Holy Magic. Smites foes and commands defensive auras.</p>
+            <div style="font-size:0.75rem; color:#f9e2af;">HP: 75 | MP: 20 | STR: 14 | DEF: 16</div>
+          </div>
+          <div class="class-card" id="card-Ranger" onclick="selectClass('Ranger')">
+            <h3>🏹 Ranger</h3>
+            <p>High Agility & Precision. Attacks from afar with lethal accuracy.</p>
+            <div style="font-size:0.75rem; color:#a6e3a1;">HP: 50 | MP: 25 | STR: 13 | AGI: 18</div>
           </div>
         </div>
       `;
@@ -2425,6 +2434,18 @@
         player.str = 11; player.int = 8; player.def = 8; player.agi = 16;
         player.weapon = { name: 'Twin Daggers', bonusStr: 5, prefix: '' };
         player.armor = { name: 'Leather Vest', bonusDef: 3, prefix: '' };
+      } else if (selectedClass === 'Paladin') {
+        player.maxHp = 75; player.hp = 75;
+        player.maxMp = 20; player.mp = 20;
+        player.str = 14; player.int = 10; player.def = 16; player.agi = 6;
+        player.weapon = { name: 'Heavy Mace', bonusStr: 4, prefix: '' };
+        player.armor = { name: 'Knight Plate', bonusDef: 6, prefix: '' };
+      } else if (selectedClass === 'Ranger') {
+        player.maxHp = 50; player.hp = 50;
+        player.maxMp = 25; player.mp = 25;
+        player.str = 13; player.int = 7; player.def = 7; player.agi = 18;
+        player.weapon = { name: 'Longbow', bonusStr: 5, prefix: '' };
+        player.armor = { name: 'Hunter Cloak', bonusDef: 3, prefix: '' };
       }
 
       logMsg(`Welcome, ${player.name} the ${player.class}! Your journey begins in Oakhaven Town.`, 'system');
@@ -3006,6 +3027,17 @@
           action: 'Divine Heal (Restores 20-30 HP to hero each turn)',
           baseHp: 55,
           desc: 'Holy priest who continuously heals the hero during dangerous boss encounters.'
+        },
+        {
+          id: 'ranger',
+          name: 'Robin',
+          role: 'Ranger DPS',
+          cost: 90,
+          upkeep: 12,
+          passive: 'Swiftness Aura (+5 AGI)',
+          action: 'Piercing Arrow (Deals 20-30 phys dmg each turn)',
+          baseHp: 50,
+          desc: 'Sharpshooter who fires volleys of arrows and increases party evasion/crits.'
         }
       ];
 
@@ -3791,6 +3823,10 @@
         const heal = Math.floor(18 + player.level * 4);
         player.hp = Math.min(player.maxHp, player.hp + heal);
         logMsg(`✨ Companion ${comp.name} casts Divine Heal, restoring +${heal} HP to Hero!`, 'town');
+      } else if (comp.id === 'ranger') {
+        const dmg = Math.floor(20 + player.level * 5);
+        currentEnemy.hp -= dmg;
+        logMsg(`🏹 Companion ${comp.name} fires a Piercing Arrow dealing ${dmg} physical damage!`, 'spell');
       }
     }
 
@@ -3907,6 +3943,29 @@
         if (player.berserkTurns > 0) dmg *= 2;
         currentEnemy.hp -= dmg;
         logMsg(`🗡️ Shadow Strike! You strike from darkness for ${dmg} critical damage!`, 'spell');
+      } else if (player.class === 'Paladin') {
+        const cost = 8;
+        if (player.mp < cost) {
+          logMsg(`Not enough MP! Needs ${cost} MP.`, 'warning');
+          return;
+        }
+        player.mp -= cost;
+        const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
+        dmg = Math.floor((totalStr * 1.0 + player.int * 1.0) * surgeMult);
+        if (player.berserkTurns > 0) dmg *= 2;
+        currentEnemy.hp -= dmg;
+        logMsg(`✨ You cast Smite! Dealt ${dmg} holy damage to ${currentEnemy.name}!`, 'spell');
+      } else if (player.class === 'Ranger') {
+        const cost = 8;
+        if (player.mp < cost) {
+          logMsg(`Not enough MP! Needs ${cost} MP.`, 'warning');
+          return;
+        }
+        player.mp -= cost;
+        dmg = Math.floor(player.agi * 2.0 * surgeMult);
+        if (player.berserkTurns > 0) dmg *= 2;
+        currentEnemy.hp -= dmg;
+        logMsg(`🏹 Aimed Shot! You fire a precise arrow for ${dmg} damage!`, 'spell');
       }
 
       addFloatingText('-' + dmg, 520, 90, '#fab387', 22);
