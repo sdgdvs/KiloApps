@@ -33,16 +33,16 @@ StageConfig CAMPAIGN_STAGES[TOTAL_STAGES] = {
     { 7,  "Quad Towers",        6, 4, 0,  0,  FALSE, FALSE, 0, 0, 0, 17 },
     { 8,  "Locked Foundation",  4, 3, 0,  0,  FALSE, FALSE, 0, 4, 5, 15 },
     { 9,  "Penta Realm",        7, 5, 0,  0,  FALSE, FALSE, 0, 0, 0, 19 },
-    { 10, "Chain Migration",    4, 4, 0,  0,  TRUE,  FALSE, 0, 0, 0, 15 },
+    { 10, "Chain Migration",    4, 4, 0,  0,  TRUE,  FALSE, 0, 0, 0, 34 },
     { 11, "Clockwork Tower",    5, 3, 60, 0,  FALSE, FALSE, 0, 0, 0, 31 },
-    { 12, "Cyclic Orbit",       4, 3, 0,  0,  FALSE, TRUE,  0, 0, 0, 25 },
+    { 12, "Cyclic Orbit",       4, 3, 0,  0,  FALSE, TRUE,  0, 0, 0, 59 },
     { 13, "Reve's Master",      8, 4, 0,  0,  FALSE, FALSE, 0, 0, 0, 33 },
-    { 14, "Spectrum Filter",    4, 4, 0,  0,  FALSE, FALSE, 1, 0, 0, 17 },
+    { 14, "Spectrum Filter",    4, 4, 0,  0,  FALSE, FALSE, 1, 0, 0, 9 },
     { 15, "Precision Stack",    5, 3, 0,  38, FALSE, FALSE, 0, 0, 0, 31 },
-    { 16, "Heavy Chains",       5, 4, 0,  0,  TRUE,  FALSE, 0, 5, 8, 21 },
-    { 17, "Cyclic Cascade",     5, 4, 0,  0,  FALSE, TRUE,  0, 0, 0, 35 },
-    { 18, "Chromatic Citadel",  6, 4, 90, 0,  FALSE, FALSE, 1, 0, 0, 25 },
-    { 19, "Pentagonal Matrix",  9, 5, 0,  0,  FALSE, FALSE, 0, 0, 0, 25 },
+    { 16, "Heavy Chains",       5, 4, 0,  0,  TRUE,  FALSE, 0, 5, 8, 57 },
+    { 17, "Cyclic Cascade",     5, 4, 0,  0,  FALSE, TRUE,  0, 0, 0, 75 },
+    { 18, "Chromatic Citadel",  6, 4, 90, 0,  FALSE, FALSE, 1, 0, 0, 21 },
+    { 19, "Pentagonal Matrix",  9, 5, 0,  0,  FALSE, FALSE, 0, 0, 0, 27 },
     { 20, "Tower Grandmaster", 10, 5, 0,  0,  FALSE, FALSE, 0, 0, 0, 31 }
 };
 
@@ -836,7 +836,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (id == 104) {
                 if (currentStageIdx < TOTAL_STAGES - 1) {
-                    BOOL isUnlocked = (currentStageIdx == 0) || (stageStats[CAMPAIGN_STAGES[currentStageIdx].id].stars > 0);
+                    BOOL isUnlocked = (stageStats[CAMPAIGN_STAGES[currentStageIdx].id].stars > 0);
                     if (isUnlocked) {
                         currentStageIdx++;
                         InitGame(hwnd);
