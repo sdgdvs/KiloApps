@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>KPing</title>
+<meta charset="utf-8">
+<title>KPing (Press 'H' for Help)</title>
 <style>
   :root {
     --bg: #0f172a;
@@ -109,22 +110,22 @@
       <label for="host">Target Host / IP</label>
       <input type="text" id="host" value="127.0.0.1" placeholder="e.g. google.com">
     </div>
-    <div class="input-group" style="width: 70px;">
+    <div class="input-group" style="width: 80px;">
       <label for="count">Count</label>
       <input type="number" id="count" value="4" min="1" max="100">
     </div>
-    <div class="input-group" style="width: 80px;">
+    <div class="input-group" style="width: 90px;">
       <label for="size">Size (B)</label>
       <input type="number" id="size" value="32" min="1" max="65500">
     </div>
-    <div class="input-group" style="width: 70px;">
+    <div class="input-group" style="width: 80px;">
       <label for="ttl">TTL</label>
       <input type="number" id="ttl" value="115" min="1" max="255">
     </div>
     <div class="input-group">
       <label class="checkbox-group" for="continuous" style="padding: 0; margin-top: auto; margin-bottom: 8px;">
         <input type="checkbox" id="continuous">
-        <span style="font-size: 12px; color: var(--text-muted)">-t</span>
+        <span style="font-size: 12px; color: var(--text-muted)">Continuous</span>
       </label>
     </div>
     <div class="input-group">
@@ -145,6 +146,7 @@
         <div class="dot dot-yellow"></div>
         <div class="dot dot-green"></div>
         <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Session Log</span>
+        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted); font-family: monospace; font-weight: bold;">Press 'H' for Help</span>
       </div>
       <textarea id="out" readonly spellcheck="false">Welcome to KPing. Enter a target host and click Ping or Trace to begin. Press 'h' for help.
 
@@ -168,6 +170,10 @@
   </div>
 
 <script>
+  if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 850, height: 650 }, '*');
+  }
+
   const hostInput = document.getElementById('host');
   const countInput = document.getElementById('count');
   const sizeInput = document.getElementById('size');
