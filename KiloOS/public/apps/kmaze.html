@@ -24,7 +24,7 @@
     <button class="hudBtn" onclick="useSpeedShoes()">[S] Speed Shoes</button>
     <button class="hudBtn" onclick="useStunSpray()">[F] Stun Spray</button>
     <button class="hudBtn" onclick="useTimeFreeze()">[T] Time Freeze</button>
-    <button class="hudBtn" onclick="prevState=gameState; gameState=4;">Keys</button>
+    <button class="hudBtn" onclick="prevState=gameState; gameState=4;">[H] Help/Keys</button>
     <button class="hudBtn" onclick="exportStats()">Export</button>
     <button class="hudBtn" onclick="document.getElementById('importFile').click()">Import</button>
   </div>
@@ -35,6 +35,11 @@
   const ctx = canvas.getContext('2d');
   const uiCanvas = document.getElementById('uiCanvas');
   const uiCtx = uiCanvas.getContext('2d');
+  
+  const dpr = window.devicePixelRatio || 1;
+  uiCanvas.width = 800 * dpr;
+  uiCanvas.height = 600 * dpr;
+  uiCtx.scale(dpr, dpr);
   
   const W = 320, H = 240;
   const maps = [

@@ -1728,7 +1728,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Active Items Legend HUD
             if (gameState == 1) {
                 char itemText[128];
-                wsprintfA(itemText, "[P]Break [C]Path:%ds [S]Speed:%ds [F]Stun:%ds [T]Freeze:%ds", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000);
+                wsprintfA(itemText, "[P]Break [C]Path:%ds [S]Speed:%ds [F]Stun:%ds [T]Freeze:%ds [H]Help", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000);
                 SetTextColor(hdc, RGB(0, 0, 0));
                 TextOutA(hdc, 22, clientRect.bottom - 28, itemText, lstrlenA(itemText));
                 SetTextColor(hdc, RGB(0, 255, 255));
@@ -1782,6 +1782,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL(WINAPI *SetProcessDPIAwareFunc)(void);
+        SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpiAware) setDpiAware();
+    }
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
