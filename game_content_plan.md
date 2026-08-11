@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KTowers    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Verify optimal move counts are achievable, check locked-disk puzzles are solvable. |
 | KTetris    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check drop speed curve, verify Pentomino pieces don't make late stages impossible. |
 | KPong      | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI paddle speed per difficulty, check powerup spawn rates, verify boss is beatable. |
 | KHangman   | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check word difficulty per category, ensure strike limits are fair, verify 14-letter words aren't absurd. |
@@ -180,11 +179,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSudoku    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit puzzle generation quality. Ensure Easy puzzles have unique solutions and Hard is solvable. |
 | K2048      | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check tile spawn rates, verify move-limit stages are achievable, audit powerup balance. |
 | KMines     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check first-click safety, mine density per difficulty, ensure Sonar powerup isn't overpowered. |
+| KTowers    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Verified optimal move counts (BFS solver) and checked locked-disk puzzles. Fixed unlock bug in main.c. |
 
 
 ## Progress Log
 
 **Loop 9**
+- [x] KTowers (Balance audit complete: Validated optimal move counts, fixed stage unlock bug, verified locked-disk solvability in both EXE and HTML)
 - [x] KRogue (Loop 9: Advanced trap mechanics, boss rematches, cursed items to both EXE and HTML)
 
 **Loop 8**
