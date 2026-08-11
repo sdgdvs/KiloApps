@@ -18,6 +18,11 @@ void* __cdecl memcpy(void* d, const void* s, size_t sz) { char* pd = (char*)d; c
 int my_strlen(const char* s) { int l=0; while(s && *s++) l++; return l; }
 void my_strcpy(char* d, const char* s) { while(*s) *d++ = *s++; *d = 0; }
 void my_strcat(char* d, const char* s) { while(*d) d++; while(*s) *d++ = *s++; *d = 0; }
+void my_strncpy(char* d, const char* s, int max_len) {
+    int i = 0;
+    while(s && s[i] && i < max_len - 1) { d[i] = s[i]; i++; }
+    d[i] = 0;
+}
 int my_atoi(const char* str) {
     int res = 0;
     while(str && *str >= '0' && *str <= '9') { res = res * 10 + (*str - '0'); str++; }
@@ -122,7 +127,7 @@ int DecryptData(const char* password, char* cipherData, int cipherLen, char* pla
 void FormatVaultToCSV(char* buffer) {
     my_strcpy(buffer, "label,category,pass,strength\n");
     for(int i = 0; i < g_vaultCount; i++) {
-        char line[256];
+        char line[512];
         wsprintfA(line, "\"%s\",\"%s\",\"%s\",\"%s\"\n", g_vault[i].label, g_vault[i].category, g_vault[i].pass, g_vault[i].strength);
         my_strcat(buffer, line);
     }
@@ -157,10 +162,10 @@ void ParseCSVToVault(char* text) {
                 }
             }
             if(fIdx >= 3) {
-                my_strcpy(g_vault[g_vaultCount].label, fields[0] ? fields[0] : "");
-                my_strcpy(g_vault[g_vaultCount].category, fields[1] ? fields[1] : "");
-                my_strcpy(g_vault[g_vaultCount].pass, fields[2] ? fields[2] : "");
-                my_strcpy(g_vault[g_vaultCount].strength, (fIdx >= 4 && fields[3]) ? fields[3] : "");
+                my_strncpy(g_vault[g_vaultCount].label, fields[0] ? fields[0] : "", sizeof(g_vault[g_vaultCount].label));
+                my_strncpy(g_vault[g_vaultCount].category, fields[1] ? fields[1] : "", sizeof(g_vault[g_vaultCount].category));
+                my_strncpy(g_vault[g_vaultCount].pass, fields[2] ? fields[2] : "", sizeof(g_vault[g_vaultCount].pass));
+                my_strncpy(g_vault[g_vaultCount].strength, (fIdx >= 4 && fields[3]) ? fields[3] : "", sizeof(g_vault[g_vaultCount].strength));
                 g_vaultCount++;
             }
         }
@@ -509,9 +514,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     GetWindowTextA(hDisplay, pass, 64);
                     if(label[0] != 0 && pass[0] != 0 && !my_strstr_ic(pass, "Click Generate")) {
                         if(g_vaultCount < 200) {
-                            my_strcpy(g_vault[g_vaultCount].label, label);
-                            my_strcpy(g_vault[g_vaultCount].category, cat);
-                            my_strcpy(g_vault[g_vaultCount].pass, pass);
+                            my_strncpy(g_vault[g_vaultCount].label, label, sizeof(g_vault[g_vaultCount].label));
+                            my_strncpy(g_vault[g_vaultCount].category, cat, sizeof(g_vault[g_vaultCount].category));
+                            my_strncpy(g_vault[g_vaultCount].pass, pass, sizeof(g_vault[g_vaultCount].pass));
                             char dummy[64], strRating[20];
                             CalculateStrength(pass, dummy, strRating);
                             my_strcpy(g_vault[g_vaultCount].strength, strRating);
@@ -597,5 +602,6 @@ void __stdcall MainEntry() {
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
+    if (wc.hbrBackground) DeleteObject(wc.hbrBackground);
     ExitProcess(0);
 }

@@ -594,18 +594,23 @@
                 <div class="vault-info">
                     <div>
                         <span class="vault-label"></span>
-                        <span class="vault-category">${item.category || 'Other'}</span>
-                        <span class="vault-badge">${item.strength || 'Saved'}</span>
+                        <span class="vault-category"></span>
+                        <span class="vault-badge"></span>
                     </div>
                     <div class="vault-pass"></div>
                 </div>
                 <div class="item-btns">
-                    <button class="btn-sm" onclick="copyVaultItem('${encodeURIComponent(item.pass)}')">Copy</button>
-                    <button class="btn-sm btn-danger" onclick="deleteItem(${realIndex})">X</button>
+                    <button class="btn-sm btn-copy">Copy</button>
+                    <button class="btn-sm btn-danger btn-del">X</button>
                 </div>
             `;
             div.querySelector('.vault-label').textContent = item.label;
+            div.querySelector('.vault-category').textContent = item.category || 'Other';
+            div.querySelector('.vault-badge').textContent = item.strength || 'Saved';
             div.querySelector('.vault-pass').textContent = item.pass;
+            
+            div.querySelector('.btn-copy').addEventListener('click', () => copyVaultItem(encodeURIComponent(item.pass)));
+            div.querySelector('.btn-del').addEventListener('click', () => deleteItem(realIndex));
             vaultList.appendChild(div);
         });
     }
