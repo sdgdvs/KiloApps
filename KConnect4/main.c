@@ -58,6 +58,17 @@ int animType = 0; // 0=normal, 1=bomb, 2=drill, 3=magnet
 typedef struct {
     float x, y;
     float vx, vy;
+    int size;
+    float phase;
+} DustMote;
+
+#define MAX_DUST 40
+DustMote g_dust[MAX_DUST];
+bool g_dustInit = false;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
     float rotation, vRot;
     COLORREF color;
     int size;
@@ -140,6 +151,26 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
 }
 
 void UpdateParticles() {
+    if (!g_dustInit) {
+        for(int i=0; i<MAX_DUST; i++) {
+            g_dust[i].x = (float)(rand() % 580);
+            g_dust[i].y = (float)(rand() % 720);
+            g_dust[i].vx = ((float)(rand() % 100) - 50.0f) / 100.0f;
+            g_dust[i].vy = ((float)(rand() % 100) - 50.0f) / 100.0f;
+            g_dust[i].size = rand() % 3 + 1;
+            g_dust[i].phase = (float)(rand() % 100) / 10.0f;
+        }
+        g_dustInit = true;
+    }
+    for(int i=0; i<MAX_DUST; i++) {
+        g_dust[i].x += g_dust[i].vx;
+        g_dust[i].y += g_dust[i].vy;
+        g_dust[i].phase += 0.05f;
+        if(g_dust[i].x < 0) g_dust[i].x += 580;
+        if(g_dust[i].x > 580) g_dust[i].x -= 580;
+        if(g_dust[i].y < 0) g_dust[i].y += 720;
+        if(g_dust[i].y > 720) g_dust[i].y -= 720;
+    }
     for (int i = 0; i < g_particleCount; i++) {
         if (g_particles[i].life > 0) {
             g_particles[i].x += g_particles[i].vx;
@@ -1204,6 +1235,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             UpdateDiffSelectUI();
             ResetGame();
+            SetTimer(hwnd, 4, 30, NULL);
             break;
 
         case WM_KEYDOWN: {
@@ -1435,9 +1467,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT rect;
             GetClientRect(hwnd, &rect);
             
-            HBRUSH bg = CreateSolidBrush(RGB(16, 20, 29));
+            HBRUSH bg = CreateSolidBrush(RGB(27, 38, 59));
             FillRect(hdc, &rect, bg);
             DeleteObject(bg);
+            
+            HBRUSH dotBrush = CreateSolidBrush(RGB(45, 62, 94));
+            HPEN nullPen = GetStockObject(NULL_PEN);
+            SelectObject(hdc, dotBrush);
+            SelectObject(hdc, nullPen);
+            for (int y = 0; y < rect.bottom; y += 40) {
+                for (int x = 0; x < rect.right; x += 40) {
+                    Ellipse(hdc, x-2, y-2, x+2, y+2);
+                    Ellipse(hdc, x+20-2, y+20-2, x+20+2, y+20+2);
+                }
+            }
+            DeleteObject(dotBrush);
             
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(79, 195, 247));
@@ -1489,6 +1533,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int boardH = g_rows * 44 + 10;
             int boardLeft = (rect.right - rect.left - boardW) / 2;
             int boardTop = 50;
+
+            int tableTop = boardTop + boardH - 20;
+            RECT tableRect = {0, tableTop, rect.right, rect.bottom};
+            HBRUSH tableBg = CreateSolidBrush(RGB(139, 69, 19));
+            FillRect(hdc, &tableRect, tableBg);
+            DeleteObject(tableBg);
+            
+            HPEN tableEdge = CreatePen(PS_SOLID, 4, RGB(160, 82, 45));
+            SelectObject(hdc, tableEdge);
+            MoveToEx(hdc, 0, tableTop, NULL);
+            LineTo(hdc, rect.right, tableTop);
+            DeleteObject(tableEdge);
 
             RECT frameOuter = {boardLeft - 6, boardTop - 6, boardLeft + boardW + 6, boardTop + boardH + 6};
             HBRUSH frameBg = CreateSolidBrush(RGB(19, 45, 105));
@@ -1599,6 +1655,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SelectClipRgn(hdc, NULL);
             DeleteObject(hRgn);
+
+            // Draw Dust Motes
+            if (g_dustInit) {
+                HPEN nullP = GetStockObject(NULL_PEN);
+                SelectObject(hdc, nullP);
+                for(int i=0; i<MAX_DUST; i++) {
+                    int alpha = (int)((sinf(g_dust[i].phase) + 1.0f) * 100.0f);
+                    if (alpha < 0) alpha = 0;
+                    if (alpha > 200) alpha = 200;
+                    HBRUSH dBrush = CreateSolidBrush(RGB(200 + alpha/5, 200 + alpha/5, 255));
+                    SelectObject(hdc, dBrush);
+                    int px = (int)g_dust[i].x;
+                    int py = (int)g_dust[i].y;
+                    int sz = g_dust[i].size;
+                    Ellipse(hdc, px - sz, py - sz, px + sz, py + sz);
+                    DeleteObject(dBrush);
+                }
+            }
 
             // Draw Confetti Particles
             for (int i = 0; i < g_particleCount; i++) {

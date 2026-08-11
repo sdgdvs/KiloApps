@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KConnect4
 - KHangman
 - KMatch3
 - KFreecell
@@ -136,7 +135,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - K2048
 - KSolitaire
 - KStarship
+- KConnect4
 ## Completed Work Log
+
+- **KConnect4 (Loop 3):** Implemented playroom background with polka-dot wallpaper, 3D wood table surface beneath the board, and ambient floating dust motes with oscillating opacity for atmospheric environmental art in both Web Canvas (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 
 - **KStarship (Loop 2):** Implemented particle system fixes, weapon impacts/death effects, ship light frame cycle animations, and enhanced thruster flame particle bursts for both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 

@@ -6,7 +6,12 @@
 <title>KConnect4</title>
 <style>
   body {
-    background: #10141d;
+    background: #1b263b;
+    background-image: 
+      radial-gradient(#2d3e5e 3px, transparent 3px),
+      radial-gradient(#2d3e5e 3px, transparent 3px);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
     color: #e0e0e0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -54,6 +59,7 @@
   }
   #boardWrapper {
     position: relative;
+    z-index: 1;
     padding: 12px;
     background: linear-gradient(135deg, #183b82 0%, #0d214d 50%, #15336e 100%);
     border-radius: 16px;
@@ -97,6 +103,19 @@
     height: 100%;
     pointer-events: none;
     border-radius: 16px;
+  }
+  #tableSurface {
+    position: absolute;
+    bottom: -40px;
+    left: -15%;
+    width: 130%;
+    height: 80px;
+    background: linear-gradient(to bottom, #8b4513 0%, #5c2e0b 100%);
+    border-top: 3px solid #a0522d;
+    border-radius: 50% / 30px 30px 0 0;
+    box-shadow: inset 0 5px 15px rgba(255,255,255,0.1), 0 15px 30px rgba(0,0,0,0.9);
+    z-index: -1;
+    pointer-events: none;
   }
   .cell {
     width: 44px;
@@ -278,6 +297,7 @@
   <div id="status">Player 1's turn (Red)</div>
   <div id="timerContainer"><div id="timerBar"></div></div>
   <div id="boardWrapper">
+    <div id="tableSurface"></div>
     <div id="board"></div>
     <canvas id="fxCanvas"></canvas>
   </div>
@@ -1444,6 +1464,22 @@
     const fxCanvas = document.getElementById('fxCanvas');
     const fxCtx = fxCanvas.getContext('2d');
     let particles = [];
+    let dustMotes = [];
+
+    function initDustMotes() {
+      const w = fxCanvas.clientWidth || 400;
+      const h = fxCanvas.clientHeight || 350;
+      for (let i = 0; i < 40; i++) {
+        dustMotes.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          size: Math.random() * 1.5 + 0.5,
+          alpha: Math.random() * 0.5 + 0.1
+        });
+      }
+    }
 
     function resizeFxCanvas() {
       const wrapper = document.getElementById('boardWrapper');
@@ -1520,6 +1556,19 @@
       const h = fxCanvas.clientHeight || 350;
       const w = fxCanvas.clientWidth || 400;
       fxCtx.clearRect(0, 0, w, h);
+
+      if (dustMotes.length === 0) initDustMotes();
+      fxCtx.fillStyle = '#ffffff';
+      dustMotes.forEach(m => {
+        m.x += m.vx; m.y += m.vy;
+        if (m.x < 0) m.x = w; if (m.x > w) m.x = 0;
+        if (m.y < 0) m.y = h; if (m.y > h) m.y = 0;
+        fxCtx.globalAlpha = m.alpha * (0.6 + Math.sin(Date.now()*0.002 + m.x)*0.4);
+        fxCtx.beginPath();
+        fxCtx.arc(m.x, m.y, m.size, 0, Math.PI*2);
+        fxCtx.fill();
+      });
+      fxCtx.globalAlpha = 1.0;
 
       if (winningCells && winningCells.length >= 4) {
         const pts = winningCells.map(([r, c]) => {
