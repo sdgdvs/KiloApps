@@ -829,11 +829,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
 
-            // Slate Dark Background
-            HBRUSH bgBrush = CreateSolidBrush(RGB(18, 24, 34));
+            // Spooky Environmental Art Background
+            // Night Sky
+            HBRUSH bgBrush = CreateSolidBrush(RGB(11, 16, 33));
             RECT fullRc = {0, 0, W, H};
             FillRect(memDC, &fullRc, bgBrush);
             DeleteObject(bgBrush);
+
+            // Stars
+            for (int i = 0; i < 40; i++) {
+                int sx = (i * 997) % W;
+                int sy = (i * 541) % (H / 2);
+                SetPixel(memDC, sx, sy, RGB(255, 255, 255));
+                if (i % 3 == 0) SetPixel(memDC, sx + 1, sy, RGB(255, 255, 255));
+            }
+
+            // Moon
+            HBRUSH moonBrush = CreateSolidBrush(RGB(240, 240, 230));
+            HPEN noPen = CreatePen(PS_NULL, 0, RGB(0,0,0));
+            HPEN oldPen = (HPEN)SelectObject(memDC, noPen);
+            HBRUSH oldB = (HBRUSH)SelectObject(memDC, moonBrush);
+            Ellipse(memDC, W - 120, 40, W - 40, 120);
+
+            // Moon Craters
+            HBRUSH craterBrush = CreateSolidBrush(RGB(200, 200, 190));
+            SelectObject(memDC, craterBrush);
+            Ellipse(memDC, W - 100, 60, W - 80, 80);
+            Ellipse(memDC, W - 70, 80, W - 55, 95);
+            Ellipse(memDC, W - 85, 50, W - 75, 60);
+
+            // Terrain Hills (Back)
+            HBRUSH hill1Brush = CreateSolidBrush(RGB(17, 10, 18));
+            SelectObject(memDC, hill1Brush);
+            POINT hill1[5] = {{0, H}, {0, H - 200}, {W / 2, H - 350}, {W, H - 250}, {W, H}};
+            Polygon(memDC, hill1, 5);
+
+            // Terrain Hills (Front)
+            HBRUSH hill2Brush = CreateSolidBrush(RGB(10, 5, 11));
+            SelectObject(memDC, hill2Brush);
+            POINT hill2[5] = {{0, H}, {0, H - 150}, {W / 3, H - 220}, {W, H - 100}, {W, H}};
+            Polygon(memDC, hill2, 5);
+
+            // Dead tree silhouette
+            HPEN treePen = CreatePen(PS_SOLID, 4, RGB(5, 2, 5));
+            SelectObject(memDC, treePen);
+            MoveToEx(memDC, W - 80, H - 150, NULL); LineTo(memDC, W - 80, H - 300);
+            MoveToEx(memDC, W - 80, H - 250, NULL); LineTo(memDC, W - 130, H - 330);
+            MoveToEx(memDC, W - 80, H - 220, NULL); LineTo(memDC, W - 40, H - 280);
+
+            SelectObject(memDC, oldPen);
+            SelectObject(memDC, oldB);
+            DeleteObject(noPen);
+            DeleteObject(moonBrush);
+            DeleteObject(craterBrush);
+            DeleteObject(hill1Brush);
+            DeleteObject(hill2Brush);
+            DeleteObject(treePen);
 
             SetBkMode(memDC, TRANSPARENT);
             

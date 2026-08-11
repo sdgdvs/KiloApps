@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KHangman
 - KMatch3
 - KFreecell
 - KSudoku
@@ -136,7 +135,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSolitaire
 - KStarship
 - KConnect4
+- KHangman
 ## Completed Work Log
+
+- **KHangman (Loop 3):** Implemented spooky environmental art featuring a starry night sky, a cratered moon, undulating terrain hills, a dead tree silhouette, and animated scrolling atmospheric fog in both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 
 - **KConnect4 (Loop 3):** Implemented playroom background with polka-dot wallpaper, 3D wood table surface beneath the board, and ambient floating dust motes with oscillating opacity for atmospheric environmental art in both Web Canvas (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 

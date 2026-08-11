@@ -685,18 +685,73 @@
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Slate Background Texturing & Chalk Dust
-        const bgGrad = ctx.createRadialGradient(120, 100, 10, 120, 100, 130);
-        bgGrad.addColorStop(0, '#151c27');
-        bgGrad.addColorStop(1, '#090c12');
-        ctx.fillStyle = bgGrad;
+        // 1. Spooky Environmental Background
+        // Night Sky Gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, 200);
+        skyGrad.addColorStop(0, '#0b1021');
+        skyGrad.addColorStop(1, '#1a1025');
+        ctx.fillStyle = skyGrad;
         ctx.fillRect(0, 0, 240, 200);
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-        ctx.lineWidth = 1;
-        for (let i = 20; i < 240; i += 30) {
-            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 200); ctx.stroke();
+        // Stars
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        for (let i = 0; i < 20; i++) {
+            const sx = (i * 12345) % 240;
+            const sy = (i * 54321) % 150;
+            ctx.beginPath();
+            ctx.arc(sx, sy, (i % 2 === 0) ? 1 : 0.5, 0, Math.PI * 2);
+            ctx.fill();
         }
+
+        // Moon
+        ctx.fillStyle = '#f4f6f0';
+        ctx.beginPath();
+        ctx.arc(200, 40, 25, 0, Math.PI * 2);
+        ctx.fill();
+        // Moon craters
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.beginPath(); ctx.arc(195, 35, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(210, 45, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(190, 50, 3, 0, Math.PI * 2); ctx.fill();
+
+        // Fog Layer
+        const fogX = (animTime * 10) % 240;
+        ctx.fillStyle = 'rgba(200, 200, 220, 0.05)';
+        for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.ellipse((fogX + i * 80) % 320 - 40, 150, 60, 20, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Terrain Hills
+        ctx.fillStyle = '#110a12';
+        ctx.beginPath();
+        ctx.moveTo(0, 200);
+        ctx.lineTo(0, 160);
+        ctx.quadraticCurveTo(60, 130, 120, 165);
+        ctx.quadraticCurveTo(180, 190, 240, 150);
+        ctx.lineTo(240, 200);
+        ctx.fill();
+
+        ctx.fillStyle = '#0a050b';
+        ctx.beginPath();
+        ctx.moveTo(0, 200);
+        ctx.lineTo(0, 180);
+        ctx.quadraticCurveTo(80, 160, 150, 185);
+        ctx.quadraticCurveTo(200, 195, 240, 175);
+        ctx.lineTo(240, 200);
+        ctx.fill();
+
+        // Dead tree silhouette
+        ctx.strokeStyle = '#050205';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(210, 180);
+        ctx.lineTo(210, 130);
+        ctx.lineTo(195, 110);
+        ctx.moveTo(210, 120);
+        ctx.lineTo(225, 105);
+        ctx.stroke();
 
         // 2. 3D Wooden Gallows
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
