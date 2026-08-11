@@ -95,6 +95,35 @@ void ResetGame() {
     }
 }
 
+void PlayOpponentTurn() {
+    int i = 0;
+    char playedStr[256] = "Opponent played: ";
+    int playedAny = 0;
+    while (i < opponentCount) {
+        CardDef cd = sampleCards[opponentHand[i]];
+        if (opponentMana >= cd.cost) {
+            opponentMana -= cd.cost;
+            if (playedAny) {
+                strcat(playedStr, ", ");
+            }
+            strcat(playedStr, cd.name);
+            playedAny = 1;
+            
+            for (int j = i; j < opponentCount - 1; j++) {
+                opponentHand[j] = opponentHand[j + 1];
+            }
+            opponentCount--;
+        } else {
+            i++;
+        }
+    }
+    if (playedAny) {
+        strcpy(arenaMsg, playedStr);
+    } else {
+        strcpy(arenaMsg, "Opponent ends turn without casting.");
+    }
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
@@ -123,7 +152,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (opponentMaxMana < 10) opponentMaxMana++;
                 opponentMana = opponentMaxMana;
                 DrawCard(1);
-                strcpy(arenaMsg, "Opponent's turn ended.");
+                
+                PlayOpponentTurn();
                 
                 if (playerMaxMana < 10) playerMaxMana++;
                 playerMana = playerMaxMana;

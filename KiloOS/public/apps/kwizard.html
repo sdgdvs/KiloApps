@@ -163,6 +163,7 @@
     <script>
         let playerMana = 1, playerMaxMana = 1;
         let opponentMana = 1, opponentMaxMana = 1;
+        let opponentCards = [];
 
         const playerHand = document.getElementById('player-hand');
         const opponentHand = document.getElementById('opponent-hand');
@@ -253,6 +254,30 @@
             const randomCard = sampleCards[Math.floor(Math.random() * sampleCards.length)];
             const cardElement = createCardElement(randomCard, isOpponent);
             hand.appendChild(cardElement);
+            if (isOpponent) opponentCards.push(randomCard);
+        }
+
+        function playOpponentTurn() {
+            let playedCards = [];
+            let i = 0;
+            while (i < opponentCards.length) {
+                if (opponentMana >= opponentCards[i].cost) {
+                    opponentMana -= opponentCards[i].cost;
+                    playedCards.push(opponentCards[i]);
+                    opponentCards.splice(i, 1);
+                    opponentHand.removeChild(opponentHand.children[i]);
+                } else {
+                    i++;
+                }
+            }
+            
+            let message = "";
+            if (playedCards.length > 0) {
+                message = "Opponent played: " + playedCards.map(c => `<b>${c.name}</b>`).join(", ");
+            } else {
+                message = "Opponent ends turn without casting.";
+            }
+            document.querySelector('.play-area p').innerHTML = message;
         }
 
         drawBtn.onclick = () => {
@@ -264,7 +289,8 @@
             if (opponentMaxMana < 10) opponentMaxMana++;
             opponentMana = opponentMaxMana;
             drawCard(true);
-            document.querySelector('.play-area p').innerHTML = `Opponent ends turn.`;
+            
+            playOpponentTurn();
             
             if (playerMaxMana < 10) playerMaxMana++;
             playerMana = playerMaxMana;
@@ -277,6 +303,7 @@
             playerMana = 1;
             opponentMaxMana = 1;
             opponentMana = 1;
+            opponentCards = [];
             updateManaDisplay();
             playerHand.innerHTML = '';
             opponentHand.innerHTML = '';
