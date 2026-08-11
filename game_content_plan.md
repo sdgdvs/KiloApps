@@ -339,3 +339,5 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KPac (Added high score tracking and sound effects to both EXE and HTML)
 - [x] KChess (Added King capture check/game over screen, 'R' to restart, and sound effects to both EXE and HTML)
 - [x] Create New Game (KBreakout created for both EXE and Web, registered in App.jsx)
+-   C o m p l e t e d   L o o p   8   c o n t e n t   e x p a n s i o n   f o r   K Q u e s t   ( j o b   c l a s s e s ,   m a g i c   s y s t e m ,   c o m p a n i o n s )   i n   b o t h   m a i n . c   a n d   k q u e s t . h t m l  
+ 
