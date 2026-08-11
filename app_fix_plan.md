@@ -2,10 +2,10 @@
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
-**Multi-Agent System:** 4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **Quality & Build Verification** agent.
+**Multi-Agent System:** 6 worker agents + 2 directors operate on this repo on overlapping schedules. You are the **Quality & Build Verification** agent.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`app_fix_plan.md`).** Read but NEVER edit:
-  - `app_work_plan.md` (Feature Expander agent), `game_content_plan.md` (Games agent), `new_app_plan.md` (Creator agent), `usability_plan.md` (inactive)
+  - `app_work_plan.md` (Feature Expander agent), `game_content_plan.md` (Games agent), `new_app_plan.md` (Creator agent), `usability_plan.md`
 - **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may edit ONLY to fix bugs (not to add features or apps). Protocol: `git pull` → minimal surgical fix → commit and push IMMEDIATELY.
 - **`KiloOS/src/index.css`** — Do NOT edit.
 - **Your scope is surgical bug fixes ONLY.** Do NOT do UI polish, feature expansion, or large code rewrites — those are the Builder and Games agents' jobs.
@@ -18,6 +18,28 @@
 - **CI/CD:** Every push to `main` triggers GitHub Actions → Firebase deploy to `kiloapps.web.app`. If the build/deploy fails, investigate and fix.
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **Logging discipline:** Keep this plan file concise. A few lines per tested app. Do NOT dump file contents or create verbose logs.
+
+---
+
+## ⏱️ TURN SCOPING & TERMINATION (CRITICAL — READ EVERY TURN)
+
+**Single-Item-Per-Turn Rule:**
+- Each cron trigger = ONE turn. Process exactly ONE item from your queue, then STOP.
+- "Loop forever" means the CRON loops forever across turns, NOT that you loop within a single turn.
+- After committing and pushing your work for ONE item, STOP CALLING TOOLS immediately.
+
+**Subagent Timeout Rule:**
+- If you spawn a subagent, set a timer for 8 minutes using the `schedule` tool with `TimerCondition` set to the subagent's conversation ID.
+- If the timer fires (subagent hasn't finished in 8 min), KILL the subagent using `manage_subagents`, log a one-line failure note in your plan file, commit, push, and STOP.
+- NEVER spawn more than ONE subagent at a time.
+- NEVER spawn a second subagent if the first one failed. Stop and let the next cron turn retry.
+
+**Graceful Termination Checklist (do this EVERY turn before stopping):**
+1. Processed one item
+2. Updated plan file
+3. Committed and pushed
+4. All subagents terminated (killed or completed)
+5. STOP — call no more tools
 
 ---
 

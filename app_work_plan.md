@@ -36,10 +36,10 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
-**Multi-Agent System:** 4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **Feature Expander**.
+**Multi-Agent System:** 6 worker agents + 2 directors operate on this repo on overlapping schedules. You are the **Feature Expander**.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`app_work_plan.md`).** Read but NEVER edit:
-  - `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `new_app_plan.md` (Creator agent), `usability_plan.md` (inactive)
+  - `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `new_app_plan.md` (Creator agent), `usability_plan.md`
 - **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may ONLY add entries to the APPS array. Protocol: `git pull` → make minimal APPS-only change → commit and push IMMEDIATELY before doing other work.
 - **`KiloOS/src/index.css`** — Do NOT edit.
 - **Dual-target model:** Each app has a native C version (`K[Name]/main.c` + `build.bat`) and a web HTML5 version (`KiloOS/public/apps/k[name].html`). Both versions should offer functional parity where feasible. Web HTML files must be single self-contained files (inline CSS + JS, no imports).
@@ -49,6 +49,28 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 - **CI/CD:** Every push to `main` triggers GitHub Actions → Firebase deploy to `kiloapps.web.app`.
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **Logging discipline:** Keep this plan file concise. A few lines per completed item. Do NOT dump file contents or create verbose logs.
+
+---
+
+## ⏱️ TURN SCOPING & TERMINATION (CRITICAL — READ EVERY TURN)
+
+**Single-Item-Per-Turn Rule:**
+- Each cron trigger = ONE turn. Process exactly ONE item from your queue, then STOP.
+- "Loop forever" means the CRON loops forever across turns, NOT that you loop within a single turn.
+- After committing and pushing your work for ONE item, STOP CALLING TOOLS immediately.
+
+**Subagent Timeout Rule:**
+- If you spawn a subagent, set a timer for 8 minutes using the `schedule` tool with `TimerCondition` set to the subagent's conversation ID.
+- If the timer fires (subagent hasn't finished in 8 min), KILL the subagent using `manage_subagents`, log a one-line failure note in your plan file, commit, push, and STOP.
+- NEVER spawn more than ONE subagent at a time.
+- NEVER spawn a second subagent if the first one failed. Stop and let the next cron turn retry.
+
+**Graceful Termination Checklist (do this EVERY turn before stopping):**
+1. Processed one item
+2. Updated plan file
+3. Committed and pushed
+4. All subagents terminated (killed or completed)
+5. STOP — call no more tools
 
 ---
 

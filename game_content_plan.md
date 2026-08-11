@@ -53,6 +53,28 @@ For Classic Games: **DO NOT add more campaign stages, boss encounters, or active
 
 ---
 
+## ⏱️ TURN SCOPING & TERMINATION (CRITICAL — READ EVERY TURN)
+
+**Single-Item-Per-Turn Rule:**
+- Each cron trigger = ONE turn. Process exactly ONE item from your queue, then STOP.
+- "Loop forever" means the CRON loops forever across turns, NOT that you loop within a single turn.
+- After committing and pushing your work for ONE item, STOP CALLING TOOLS immediately.
+
+**Subagent Timeout Rule:**
+- If you spawn a subagent, set a timer for 8 minutes using the `schedule` tool with `TimerCondition` set to the subagent's conversation ID.
+- If the timer fires (subagent hasn't finished in 8 min), KILL the subagent using `manage_subagents`, log a one-line failure note in your plan file, commit, push, and STOP.
+- NEVER spawn more than ONE subagent at a time.
+- NEVER spawn a second subagent if the first one failed. Stop and let the next cron turn retry.
+
+**Graceful Termination Checklist (do this EVERY turn before stopping):**
+1. Processed one item
+2. Updated plan file
+3. Committed and pushed
+4. All subagents terminated (killed or completed)
+5. STOP — call no more tools
+
+---
+
 ## Agent Rules & Guidelines
 
 **Perpetual Loop (NEVER STOP)**
@@ -99,10 +121,10 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 **Multi-Agent Coordination**
 
-4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **Game Content Expander** agent.
+6 worker agents + 2 directors operate on this repo on overlapping schedules. You are the **Game Content Expander** agent.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`game_content_plan.md`).** Read but NEVER edit:
-  - `app_work_plan.md` (Feature Expander agent), `app_fix_plan.md` (QA agent), `new_app_plan.md` (Creator agent), `usability_plan.md` (inactive)
+  - `app_work_plan.md` (Feature Expander agent), `app_fix_plan.md` (QA agent), `new_app_plan.md` (Creator agent), `usability_plan.md`
 - **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may ONLY add entries to the APPS array (to register new games). Protocol: `git pull` → add APPS entry only → commit and push IMMEDIATELY before doing other work.
 - **`KiloOS/src/index.css`** — Do NOT edit.
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.

@@ -2,7 +2,7 @@
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
-**Multi-Agent System:** 5 worker agents + 2 directors operate on this repo on overlapping schedules. You are the **Game Graphics** agent.
+**Multi-Agent System:** 6 worker agents + 2 directors operate on this repo on overlapping schedules. You are the **Game Graphics** agent.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`game_graphics_plan.md`).** Read but NEVER edit:
   - `app_work_plan.md` (Feature Expander), `app_fix_plan.md` (QA), `game_content_plan.md` (Games), `new_app_plan.md` (Creator), `usability_plan.md` (inactive)
@@ -14,6 +14,28 @@
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **CLEANUP:** Before committing, delete any temporary scripts (patch_*.py, *.tmp) in the repo root. Do not leave scratch files behind.
 - **Logging discipline:** Keep this plan file concise. Brief notes per completed item. Do NOT dump file contents or create verbose logs.
+
+---
+
+## ⏱️ TURN SCOPING & TERMINATION (CRITICAL — READ EVERY TURN)
+
+**Single-Item-Per-Turn Rule:**
+- Each cron trigger = ONE turn. Process exactly ONE item from your queue, then STOP.
+- "Loop forever" means the CRON loops forever across turns, NOT that you loop within a single turn.
+- After committing and pushing your work for ONE item, STOP CALLING TOOLS immediately.
+
+**Subagent Timeout Rule:**
+- If you spawn a subagent, set a timer for 8 minutes using the `schedule` tool with `TimerCondition` set to the subagent's conversation ID.
+- If the timer fires (subagent hasn't finished in 8 min), KILL the subagent using `manage_subagents`, log a one-line failure note in your plan file, commit, push, and STOP.
+- NEVER spawn more than ONE subagent at a time.
+- NEVER spawn a second subagent if the first one failed. Stop and let the next cron turn retry.
+
+**Graceful Termination Checklist (do this EVERY turn before stopping):**
+1. Processed one item
+2. Updated plan file
+3. Committed and pushed
+4. All subagents terminated (killed or completed)
+5. STOP — call no more tools
 
 ---
 
