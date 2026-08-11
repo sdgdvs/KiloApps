@@ -9,6 +9,9 @@
     background: #10141d;
     color: #e0e0e0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     margin: 0;
     padding: 15px;
     display: flex;
@@ -269,9 +272,9 @@
   #helpModal button.close:hover { background: #ff7070; }
 </style>
 </head>
-<body>
+<body data-width="580" data-height="780">
   <h1>KConnect4</h1>
-  <div style="font-size: 1em; color: #ffeb3b; margin-bottom: 8px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Press F1 for Help (or click Help button)</div>
+  <div style="font-size: 1em; color: #ffeb3b; margin-bottom: 8px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Press H for Help (or click Help button)</div>
   <div id="status">Player 1's turn (Red)</div>
   <div id="timerContainer"><div id="timerBar"></div></div>
   <div id="boardWrapper">
@@ -281,7 +284,7 @@
   <div class="controls-row">
     <button id="modeBtn" onclick="toggleMode()">Mode: vs AI</button>
     <select id="diffSelect" onchange="changeDifficulty()"></select>
-    <button id="hintBtn" onclick="triggerHint()">Hint (H)</button>
+    <button id="hintBtn" onclick="triggerHint()">Hint (T)</button>
     <button id="freezeBtn" onclick="toggleFreezeSkill()">Freeze (1)</button>
     <button onclick="undoMove()">Undo (U)</button>
   </div>
@@ -326,7 +329,7 @@
     </ul>
     <p><strong>Active Skills:</strong></p>
     <ul>
-      <li><strong>AI Hint (H):</strong> Highlights best move column.</li>
+      <li><strong>AI Hint (T):</strong> Highlights best move column.</li>
       <li><strong>Undo Move (U):</strong> Reverts last turn pair.</li>
       <li><strong>Column Freeze (F):</strong> Freezes opponent column for 2 turns.</li>
     </ul>
@@ -884,12 +887,12 @@
     // Keybindings listener: H, U, F, B/1, D/2, M/3, F5, F9, Arrows
     window.addEventListener('keydown', (e) => {
       const k = e.key.toUpperCase();
-      if (k === 'F1') { e.preventDefault(); toggleHelp(); }
+      if (k === 'F1' || k === 'H') { e.preventDefault(); toggleHelp(); }
       else if (k === 'F5') { e.preventDefault(); saveGame(); }
       else if (k === 'F9') { e.preventDefault(); loadGame(); }
       else if (e.key === 'ArrowLeft' && !gameActive) replayStep(-1);
       else if (e.key === 'ArrowRight' && !gameActive) replayStep(1);
-      else if (k === 'H') triggerHint();
+      else if (k === 'T') triggerHint();
       else if (k === 'U') undoMove();
       else if (k === 'F') toggleFreezeSkill();
       else if (k === 'B' || k === '1') togglePowerup(1);

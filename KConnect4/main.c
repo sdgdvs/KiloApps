@@ -1167,7 +1167,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Row 1 buttons
             hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 520, 95, 28, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hDiffSelect = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 522, 105, 200, hwnd, (HMENU)4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hHintBtn = CreateWindow("BUTTON", "Hint (H)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 220, 520, 75, 28, hwnd, (HMENU)11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHintBtn = CreateWindow("BUTTON", "Hint (T)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 220, 520, 75, 28, hwnd, (HMENU)11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hFreezeBtn = CreateWindow("BUTTON", "Freeze (1)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 520, 80, 28, hwnd, (HMENU)12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hUndoBtn = CreateWindow("BUTTON", "Undo (U)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 385, 520, 75, 28, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
@@ -1209,7 +1209,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (isAnimating) break;
             int key = (int)wParam;
-            if (key == VK_F1) { // F1 Help
+            if (key == VK_F1 || key == 'H' || key == 'h') { // F1 or H Help
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(8, 0), 0);
             } else if (key == VK_F5) { // F5 Quicksave
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(6, 0), 0);
@@ -1227,7 +1227,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     memcpy(board, moveHistory[replayIndex].board, sizeof(board));
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
-            } else if (key == 'H' || key == 'h') { // AI Hint skill
+            } else if (key == 'T' || key == 't') { // AI Hint skill
                 if (gameActive && !(gameMode > 0 && currentPlayer == 2)) {
                     hintCol = GetBestMoveAI(currentPlayer);
                     hintTimer = 150; // show for 150 frames (~3 sec)
@@ -1335,7 +1335,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "- Drill/Anvil Disc (2/D): Crushes cell directly underneath.\n"
                     "- Magnet Disc (3/M): Pulls friendly discs from adjacent columns.\n\n"
                     "Active Skills:\n"
-                    "- AI Hint (H): Highlights optimal column.\n"
+                    "- AI Hint (T): Highlights optimal column.\n"
                     "- Undo Move (U): Reverts last turn pair.\n"
                     "- Column Freeze (F): Locks 1 opponent column for 2 turns.\n"
                     "- Replay Viewer (Left/Right Arrows): Step through match after game ends.", 
@@ -1739,10 +1739,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 0;
     }
 
-    RECT winRect = { 0, 0, 560, 680 };
+    RECT winRect = { 0, 0, 580, 720 };
     AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW, FALSE);
     hwnd = CreateWindowEx(
-        0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion (Press F1 for Help)",
+        0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion (Press H for Help)",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top,
         NULL, NULL, hInstance, NULL);
