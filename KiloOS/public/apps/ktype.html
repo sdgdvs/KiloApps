@@ -709,6 +709,7 @@
         <h3 style="font-size: 18px; font-weight: 700;">Performance History & Leaderboard</h3>
         <div style="display: flex; gap: 10px;">
           <button class="btn btn-secondary" onclick="exportHistoryCSV()">📥 Export CSV</button>
+          <button class="btn" onclick="exportCertificate()">🎓 Export Certificate</button>
           <button class="btn btn-danger" onclick="clearHistory()">Clear History</button>
         </div>
       </div>
@@ -1567,6 +1568,61 @@ function clearHistory() {
     try { localStorage.removeItem('ktype_history'); } catch(e) {}
     renderHistoryTable();
   }
+}
+
+function exportCertificate() {
+  if (testHistory.length === 0) return alert('No test history available. Complete a test first!');
+  
+  const bestTest = testHistory.reduce((best, current) => {
+    return (current.wpm > best.wpm) ? current : best;
+  }, testHistory[0]);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 800;
+  canvas.height = 600;
+  const ctx = canvas.getContext('2d');
+  
+  ctx.fillStyle = '#0b0d14';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.strokeStyle = '#00f2fe';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+  
+  ctx.strokeStyle = 'rgba(157, 78, 221, 0.5)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+
+  ctx.fillStyle = '#00f2fe';
+  ctx.font = 'bold 48px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('KType Studio Certificate', canvas.width / 2, 120);
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = '24px sans-serif';
+  ctx.fillText('Official Typing Speed Assessment', canvas.width / 2, 170);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '20px sans-serif';
+  ctx.fillText('This certifies that the user achieved a top speed of:', canvas.width / 2, 250);
+
+  ctx.fillStyle = '#10b981';
+  ctx.font = 'bold 80px monospace';
+  ctx.fillText(`${bestTest.wpm} WPM`, canvas.width / 2, 350);
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = '20px monospace';
+  ctx.fillText(`Accuracy: ${bestTest.accuracy}%  |  Mode: ${bestTest.mode}`, canvas.width / 2, 420);
+  ctx.fillText(`Errors: ${bestTest.errors}  |  Raw CPM: ${bestTest.cpm}`, canvas.width / 2, 460);
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '16px sans-serif';
+  ctx.fillText(`Date: ${bestTest.date}`, canvas.width / 2, 540);
+  
+  const link = document.createElement('a');
+  link.download = 'ktype_certificate.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 }
 
 // --- Arcade Falling Words Game Canvas ---

@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <shellapi.h>
 
 #define W 1000
 #define H 800
@@ -76,6 +77,28 @@ int StrLen(const char* s) {
     int c = 0;
     while (s && s[c]) c++;
     return c;
+}
+
+const char* my_strstr(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return NULL;
+    if (!*needle) return haystack;
+    while (*haystack) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (*h && *n && *h == *n) { h++; n++; }
+        if (!*n) return haystack;
+        haystack++;
+    }
+    return NULL;
+}
+
+const char* my_strrchr(const char* s, int c) {
+    const char* last = NULL;
+    while (*s) {
+        if (*s == (char)c) last = s;
+        s++;
+    }
+    return last;
 }
 
 void IntToStr(int val, char* buf) {
@@ -228,6 +251,115 @@ void ExportHeatmapBMP(HWND hwnd) {
     MessageBoxA(hwnd, "Heatmap exported to heatmap.bmp", "Export Success", MB_OK);
 }
 
+// --- Certificate Export ---
+void ExportCertificateBMP(HWND hwnd) {
+    HDC hdc = GetDC(hwnd);
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP hBitmap = CreateCompatibleBitmap(hdc, 800, 600);
+    HBITMAP oldBM = (HBITMAP)SelectObject(memDC, hBitmap);
+    
+    HBRUSH bg = CreateSolidBrush(RGB(11, 13, 20));
+    RECT full = {0, 0, 800, 600};
+    FillRect(memDC, &full, bg);
+    DeleteObject(bg);
+    
+    HBRUSH border1 = CreateSolidBrush(RGB(0, 242, 254));
+    RECT r1T = {20, 20, 780, 24}; FillRect(memDC, &r1T, border1);
+    RECT r1B = {20, 576, 780, 580}; FillRect(memDC, &r1B, border1);
+    RECT r1L = {20, 20, 24, 580}; FillRect(memDC, &r1L, border1);
+    RECT r1R = {776, 20, 780, 580}; FillRect(memDC, &r1R, border1);
+    DeleteObject(border1);
+    
+    HBRUSH border2 = CreateSolidBrush(RGB(157, 78, 221));
+    RECT r2T = {30, 30, 770, 32}; FillRect(memDC, &r2T, border2);
+    RECT r2B = {30, 568, 770, 570}; FillRect(memDC, &r2B, border2);
+    RECT r2L = {30, 30, 32, 570}; FillRect(memDC, &r2L, border2);
+    RECT r2R = {768, 30, 770, 570}; FillRect(memDC, &r2R, border2);
+    DeleteObject(border2);
+
+    SetBkMode(memDC, TRANSPARENT);
+    
+    HFONT fontTitle = CreateFontA(48, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT fontSub = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT fontScore = CreateFontA(80, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+    HFONT fontNormal = CreateFontA(20, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Arial");
+
+    SetTextColor(memDC, RGB(0, 242, 254));
+    SelectObject(memDC, fontTitle);
+    TextOutA(memDC, 140, 80, "KType Studio Certificate", 24);
+    
+    SetTextColor(memDC, RGB(248, 250, 252));
+    SelectObject(memDC, fontSub);
+    TextOutA(memDC, 250, 150, "Official Typing Assessment", 26);
+    
+    SetTextColor(memDC, RGB(148, 163, 184));
+    SelectObject(memDC, fontNormal);
+    TextOutA(memDC, 170, 230, "This certifies that the user achieved top scores:", 49);
+    
+    char wpmBuf[64] = {0};
+    char wpmNum[32] = {0};
+    IntToStr(bestWPM, wpmNum);
+    int p1 = 0, p2 = 0;
+    while(wpmNum[p2]) { wpmBuf[p1++] = wpmNum[p2++]; }
+    wpmBuf[p1++] = ' '; wpmBuf[p1++] = 'W'; wpmBuf[p1++] = 'P'; wpmBuf[p1++] = 'M'; wpmBuf[p1] = '\0';
+    
+    SetTextColor(memDC, RGB(16, 185, 129));
+    SelectObject(memDC, fontScore);
+    TextOutA(memDC, 280, 320, wpmBuf, StrLen(wpmBuf));
+    
+    char arcBuf[64] = "High Arcade Score: ";
+    char arcNum[32] = {0};
+    IntToStr(highArcadeScore, arcNum);
+    p1 = StrLen(arcBuf); p2 = 0;
+    while(arcNum[p2]) { arcBuf[p1++] = arcNum[p2++]; }
+    arcBuf[p1] = '\0';
+    
+    SetTextColor(memDC, RGB(248, 250, 252));
+    SelectObject(memDC, fontNormal);
+    TextOutA(memDC, 280, 440, arcBuf, StrLen(arcBuf));
+    
+    SetTextColor(memDC, RGB(100, 116, 139));
+    SelectObject(memDC, fontNormal);
+    char dateBuf[64] = "Authorized by KiloOS System";
+    TextOutA(memDC, 280, 520, dateBuf, StrLen(dateBuf));
+
+    BITMAPINFOHEADER bi = {0};
+    bi.biSize = sizeof(BITMAPINFOHEADER);
+    bi.biWidth = 800;
+    bi.biHeight = -600; 
+    bi.biPlanes = 1;
+    bi.biBitCount = 24;
+    bi.biCompression = BI_RGB;
+    
+    DWORD dataSize = ((800 * 24 + 31) / 32) * 4 * 600;
+    BYTE* pixels = (BYTE*)HeapAlloc(GetProcessHeap(), 0, dataSize);
+    GetDIBits(hdc, hBitmap, 0, 600, pixels, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+    
+    HANDLE hFile = CreateFileA("certificate.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        BITMAPFILEHEADER bmf = {0};
+        bmf.bfType = 0x4D42;
+        bmf.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + dataSize;
+        bmf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+        DWORD written;
+        WriteFile(hFile, &bmf, sizeof(bmf), &written, NULL);
+        WriteFile(hFile, &bi, sizeof(bi), &written, NULL);
+        WriteFile(hFile, pixels, dataSize, &written, NULL);
+        CloseHandle(hFile);
+    }
+    
+    HeapFree(GetProcessHeap(), 0, pixels);
+    DeleteObject(fontTitle);
+    DeleteObject(fontSub);
+    DeleteObject(fontScore);
+    DeleteObject(fontNormal);
+    SelectObject(memDC, oldBM);
+    DeleteObject(hBitmap);
+    DeleteDC(memDC);
+    ReleaseDC(hwnd, hdc);
+    MessageBoxA(hwnd, "Certificate exported to certificate.bmp", "Export Success", MB_OK);
+}
+
 // --- Persistent Font Handles ---
 HFONT g_fontNav = NULL;
 HFONT g_fontMain = NULL;
@@ -296,6 +428,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_F4) { currentMode = 3; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F5) { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F6 && currentMode == 3) { ExportHeatmapBMP(hwnd); break; }
+            if (wParam == VK_F7) { ExportCertificateBMP(hwnd); break; }
             if (wParam == 'H') { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_ESCAPE) {
                 if (currentMode == 0) {
@@ -651,8 +784,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 30, 150, "F3: Code Snippets Speed Test", 28);
                 TextOutA(memDC, 30, 180, "F4: Finger Weakness Heatmap", 27);
                 TextOutA(memDC, 30, 210, "F6: Export Heatmap to BMP", 25);
-                TextOutA(memDC, 30, 240, "F5 or H: Toggle Help", 20);
-                TextOutA(memDC, 30, 270, "ESC: Restart current mode", 25);
+                TextOutA(memDC, 30, 240, "F7: Export Certificate to BMP", 29);
+                TextOutA(memDC, 30, 270, "F5 or H: Toggle Help", 20);
+                TextOutA(memDC, 30, 300, "ESC: Restart current mode", 25);
             }
 
             SelectObject(memDC, oldFont);
@@ -673,10 +807,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDROP hDrop = (HDROP)wParam;
             char filePath[MAX_PATH];
             if (DragQueryFileA(hDrop, 0, filePath, MAX_PATH)) {
-                if (strstr(filePath, ".ttf") || strstr(filePath, ".otf") || strstr(filePath, ".TTF") || strstr(filePath, ".OTF")) {
+                if (my_strstr(filePath, ".ttf") || my_strstr(filePath, ".otf") || my_strstr(filePath, ".TTF") || my_strstr(filePath, ".OTF")) {
                     if (AddFontResourceExA(filePath, FR_PRIVATE, 0)) {
                         char fontName[64] = {0};
-                        const char* slash = strrchr(filePath, '\\');
+                        const char* slash = my_strrchr(filePath, '\\');
                         if (slash) slash++; else slash = filePath;
                         int i = 0;
                         while (slash[i] && slash[i] != '.' && i < 63) { fontName[i] = slash[i]; i++; }
