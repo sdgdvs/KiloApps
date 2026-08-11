@@ -147,7 +147,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KQuest     | Tier 1 | Loop 7 done (Tavern, side quests, gear upgrades, 17 biomes) | Loop 8: Job classes, magic system overhaul, companion allies |
 | KStarship  | Tier 1 | Loop 7 done (Crew, trade routes, narrative events, tech tree) | Loop 8: Fleet battles, alien diplomacy, deep space anomalies |
 | KAlchemy   | Tier 1 | Creator COMPLETE (Phase 14/14) | Loop 1: Initial content audit — recipe variety, quest depth, lab upgrade balance |
 | KColony    | Tier 1 | Creator COMPLETE (Phase 14/14) | Loop 1: Initial content audit — colony balance, alien difficulty, expedition depth |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KBreakout  | Tier 1 | Loop 8 done (30 stages, phantom bricks, custom levels) | Loop 9: Advanced level editor, more hazards, boss rematches |
 | KSnake     | Tier 1 | Loop 8 done (Ghost Berry, Hunter AI, Omega Boss) | Loop 9: Advanced level editor, more hazards, boss rematches |
 | KRogue     | Tier 1 | Loop 9 done (traps, boss rematches, cursed items) | Loop 10: Final sanctuary floors, true ending, ultra bosses |
+| KQuest     | Tier 1 | Loop 8 done (Job classes, magic system, companions) | Loop 9: Factions, mount system, crafting overhaul |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -188,6 +188,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KRogue (Loop 9: Advanced trap mechanics, boss rematches, cursed items to both EXE and HTML)
 
 **Loop 8**
+- [x] KQuest (Loop 8: Added Paladin and Ranger job classes, overhauled magic system with Spells menu and class skills, added Ranger DPS companion 'Robin' to the Mercenary Guild in both EXE and HTML)
 - [x] KMines (Balance audit complete: Maintained 3x3 first-click safety with 1000+ attempt safe fallback, rebalanced Easy/Rush mine density by resizing to 9x9, modified Sonar powerup to reveal safe-cells without directly flagging mines in both EXE and HTML)
 - [x] K2048 (Balance audit complete: Adjusted spawn rates to 90/10 for 2/4, mathematically rebalanced move limits for all campaign stages, fixed Stage 29 target, and updated powerup starting stocks in both EXE and HTML)
 - [x] KSnake (Expanded Campaign Mode to 25 stages ending with Omega Boss Lair, added Ghost Berry food, Hunter AI rivals that chase the player, and fixed C linking bug by replacing math.h trig functions in both EXE and HTML)
@@ -339,5 +340,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KPac (Added high score tracking and sound effects to both EXE and HTML)
 - [x] KChess (Added King capture check/game over screen, 'R' to restart, and sound effects to both EXE and HTML)
 - [x] Create New Game (KBreakout created for both EXE and Web, registered in App.jsx)
--   C o m p l e t e d   L o o p   8   c o n t e n t   e x p a n s i o n   f o r   K Q u e s t   ( j o b   c l a s s e s ,   m a g i c   s y s t e m ,   c o m p a n i o n s )   i n   b o t h   m a i n . c   a n d   k q u e s t . h t m l  
+-   C o m p l e t e d   L o o p   8   c o n t e n t   e x p a n s i o n   f o r   K Q u e s t   ( j o b   c l a s s e s ,   m a g i c   s y s t e m ,   c o m p a n i o n s )   i n   b o t h   m a i n . c   a n d   k q u e s t . h t m l 
+ 
  
