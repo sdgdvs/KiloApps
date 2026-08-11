@@ -261,3 +261,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMandel: Usability and UI issues fixed (web auto-opening size meta tags added, help indicator styled as a translucent pill, controls panel widened to 240px, SetProcessDPIAware added to native, and native 'Press H for Help' rewritten to render over a solid rounded rectangle).
 - KPing: Usability and UI issues fixed (auto-opening size adjusted to 850x650 in web, explicit 'Press H for Help' instructions added to terminal header/window title, input controls widened for clarity, and keyboard navigation (WS_TABSTOP) enabled in native).
 - KConnect4: Usability and UI issues fixed (auto-size updated to w:580 h:720 in native, explicit H help instructions added instead of F1, hint shortcut moved to T, crisp web text rendering added).
+- KScript: Usability subagent timed out after 8 minutes.
