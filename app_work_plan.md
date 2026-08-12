@@ -64,6 +64,7 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 - If the timer fires (subagent hasn't finished in 8 min), KILL the subagent using `manage_subagents`, log a one-line failure note in your plan file, commit, push, and STOP.
 - NEVER spawn more than ONE subagent at a time.
 - NEVER spawn a second subagent if the first one failed. Stop and let the next cron turn retry.
+- **Model Selection:** Always spawn worker subagents using the `flash` model (`Model: "flash"`) to prevent 503 server capacity bottlenecks.
 
 **Graceful Termination Checklist (do this EVERY turn before stopping):**
 1. Processed one item
