@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KRead
+**Target App:** KRogue
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -247,3 +247,5 @@ Pass 1 Complete.
 - **KPong**: Fixed XSS vulnerability in `kpong.html` leaderboard by adding an `escapeHTML` helper to sanitize `mode` and `date` values from localStorage. Replaced `setInterval` with `requestAnimationFrame` to prevent dropped frames and reduce background CPU usage/repaints. Verified `main.c` memory handling bounds.
 
 - **KQuarantine**: Hardened terminal log rendering in `kquarantine.html` to strictly use `textContent`, mitigating XSS risks. Added DOM child cap of 200 elements to prevent infinite memory scaling during long sessions. Fixed the hex `FF` exploit by strictly parsing byte offsets instead of a generic string search.
+
+- **KRead**: Fixed search highlight persistence bug in `kread.html` by ensuring `clearSearchHighlights()` is called when opening, dropping, or clearing documents. Fixed a native buffer overflow vulnerability in `main.c` `PerformSearch` wrap-around loop condition.
