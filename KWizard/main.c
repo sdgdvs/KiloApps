@@ -3,6 +3,7 @@
 #define BTN_DRAW 101
 #define BTN_RESET 102
 #define BTN_END_TURN 103
+#define CMB_DIFFICULTY 104
 
 typedef struct {
     char name[32];
@@ -106,7 +107,7 @@ void DealDamageToOpponent(int dmg) {
     if (opponentHp < 0) opponentHp = 0;
 }
 
-HWND hwndDraw, hwndReset;
+HWND hwndDraw, hwndReset, hwndCombo;
 
 unsigned int seed = 0;
 int my_rand() {
@@ -145,8 +146,55 @@ void ResetGame() {
     }
 }
 
+int EvaluateCard(CardDef* cd) {
+    int score = cd->cost * 2;
+    if (opponentHp < 15 && (cd->heal > 0 || cd->shield > 0 || cd->regen > 0)) {
+        score += 20 + cd->heal * 3 + cd->shield * 2 + cd->regen * 2;
+    }
+    if (strcmp(cd->name, "Ice Lance") == 0 && playerFreeze > 0) {
+        score += 30;
+    }
+    if (playerHp <= 10 && cd->damage > 0) {
+        score += cd->damage * 4;
+    }
+    if (strcmp(cd->name, "Time Warp") == 0) score += 25;
+    if (strcmp(cd->name, "Arcane Intellect") == 0 && opponentCount < 3) score += 15;
+    return score;
+}
+
 void PlayOpponentTurn() {
     if (gameState != 0) return;
+    
+    int diff = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
+    if (diff == 2) {
+        for (int x = 0; x < opponentCount - 1; x++) {
+            for (int y = x + 1; y < opponentCount; y++) {
+                if (EvaluateCard(&sampleCards[opponentHand[x]]) < EvaluateCard(&sampleCards[opponentHand[y]])) {
+                    int temp = opponentHand[x];
+                    opponentHand[x] = opponentHand[y];
+                    opponentHand[y] = temp;
+                }
+            }
+        }
+    } else if (diff == 1) {
+        for (int x = 0; x < opponentCount - 1; x++) {
+            for (int y = x + 1; y < opponentCount; y++) {
+                if (sampleCards[opponentHand[x]].cost < sampleCards[opponentHand[y]].cost) {
+                    int temp = opponentHand[x];
+                    opponentHand[x] = opponentHand[y];
+                    opponentHand[y] = temp;
+                }
+            }
+        }
+    } else {
+        for (int x = 0; x < opponentCount; x++) {
+            int y = my_rand() % opponentCount;
+            int temp = opponentHand[x];
+            opponentHand[x] = opponentHand[y];
+            opponentHand[y] = temp;
+        }
+    }
+
     int i = 0;
     char playedStr[256] = "Opponent played: ";
     int playedAny = 0;
@@ -203,6 +251,14 @@ void PlayOpponentTurn() {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
+            hwndCombo = CreateWindow("COMBOBOX", "", 
+                                     CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VISIBLE,
+                                     130, 10, 100, 100,
+                                     hwnd, (HMENU)CMB_DIFFICULTY, NULL, NULL);
+            SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)"Easy");
+            SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)"Medium");
+            SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)"Hard");
+            SendMessage(hwndCombo, CB_SETCURSEL, 1, 0); // Default to Medium
             hwndDraw = CreateWindow("BUTTON", "Draw Card",
                                     WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                                     240, 10, 100, 30,
