@@ -10,6 +10,9 @@
             background-color: #87CEEB; /* Sunny sky blue */
             color: #4E342E; /* Earthy dark brown */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
             display: flex; justify-content: center; align-items: center; 
             min-height: 100vh; overflow-y: auto; 
         }
@@ -180,7 +183,13 @@
         }
 
         const canvas = document.getElementById('gameCanvas');
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = 400 * dpr;
+        canvas.height = 400 * dpr;
+        canvas.style.width = '400px';
+        canvas.style.height = '400px';
         const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
         const COLS = 10;
         const ROWS = 10;
         const CELL_SIZE = 40;

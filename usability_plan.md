@@ -52,7 +52,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KFarm
 - KSnake
 - KTetris
 - KSpace
@@ -101,8 +100,8 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPass
 - KMedia
 - KNet
-- KZip
 - KPaint
+- KFarm
 
 ## Progress Log
 - KPaint: Usability and UI issues fixed (updated auto-opening size to 1024x768, added visible Help button in web and native, implemented negative font height for crisp native text, added optimizeLegibility to web).
@@ -273,3 +272,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPass: Usability and UI issues fixed (auto-opening size updated to 500x620, native font crispness fixed with negative font heights, precise client area sizing with AdjustWindowRect).
 - KMedia: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 950x700, added AdjustWindowRect to native client area, negative font heights implemented for crisp text).
 - KNet: Usability and UI issues fixed (auto-opening size to 960x720, added AdjustWindowRect and min-size constraints, explicit Help button added in web and native, optimizeLegibility applied to web).
+- KFarm: Usability and UI issues fixed (added SetProcessDPIAware and Coordinate mapping via SetMapMode for crisp UI in native, added devicePixelRatio canvas scaling for crisp vector shapes in web, and optimized window sizes to prevent clipping).
