@@ -589,9 +589,131 @@
     z-index: 1100;
   }
 
-  .toast.show {
-    opacity: 1;
-    transform: translateY(0);
+  /* Deep Process Inspector Modal */
+  .inspect-modal-box {
+    max-width: 680px;
+    height: 540px;
+    display: flex;
+    flex-direction: column;
+    padding: 18px;
+    gap: 12px;
+  }
+
+  .inspect-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+  }
+
+  .inspect-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .inspect-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  .inspect-tab-btn {
+    flex: 1;
+    padding: 6px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .inspect-tab-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .inspect-tab-btn.active {
+    background: var(--primary-muted);
+    color: var(--primary);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+
+  .inspect-body {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+  }
+
+  .inspect-pane {
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  .inspect-pane.active {
+    display: block;
+  }
+
+  .inspect-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    font-family: 'Consolas', monospace;
+  }
+
+  .inspect-table th {
+    text-align: left;
+    padding: 8px 10px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(30, 41, 59, 0.8);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .inspect-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--text-main);
+  }
+
+  .inspect-table tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .hex-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .hex-dump-pre {
+    margin: 0;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #38bdf8;
+    white-space: pre;
+    overflow-x: auto;
   }
 </style>
 </head>
@@ -801,6 +923,71 @@
       <div class="modal-footer">
         <button class="btn-secondary" onclick="closeKillModal()">Cancel</button>
         <button class="btn-kill" style="background: var(--danger); color: #fff;" onclick="executePendingKill()">End Process</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deep Process Inspector Modal -->
+  <div class="modal-overlay" id="inspectModal" role="dialog" aria-modal="true" aria-labelledby="inspectModalTitle">
+    <div class="modal-box inspect-modal-box">
+      <div class="inspect-header">
+        <div class="inspect-title-group">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <div>
+            <h3 id="inspectModalTitle" style="margin:0; font-size:15px; font-weight:700;">Process Deep Inspector</h3>
+            <div id="inspectSubtitle" style="font-size:11px; color:var(--text-muted); font-family:monospace;">PID: 0 | Executable: task.exe</div>
+          </div>
+        </div>
+        <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="closeInspectModal()">✕</button>
+      </div>
+
+      <div class="inspect-tabs" role="tablist">
+        <button class="inspect-tab-btn active" id="itab-threads-btn" onclick="switchInspectTab('threads')">🧵 Threads</button>
+        <button class="inspect-tab-btn" id="itab-modules-btn" onclick="switchInspectTab('modules')">📦 Loaded Modules</button>
+        <button class="inspect-tab-btn" id="itab-memory-btn" onclick="switchInspectTab('memory')">🧠 Memory Map</button>
+        <button class="inspect-tab-btn" id="itab-hex-btn" onclick="switchInspectTab('hex')">💻 Hex Peek</button>
+      </div>
+
+      <div class="inspect-body">
+        <div class="inspect-pane active" id="ipane-threads">
+          <table class="inspect-table">
+            <thead>
+              <tr><th>Thread ID</th><th>Priority</th><th>State</th><th>Kernel Time</th><th>User Time</th></tr>
+            </thead>
+            <tbody id="inspect-threads-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="inspect-pane" id="ipane-modules">
+          <table class="inspect-table">
+            <thead>
+              <tr><th>Module Name</th><th>Base Address</th><th>Size</th><th>Type / Path</th></tr>
+            </thead>
+            <tbody id="inspect-modules-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="inspect-pane" id="ipane-memory">
+          <table class="inspect-table">
+            <thead>
+              <tr><th>Base Address</th><th>Size</th><th>State</th><th>Protection Flags</th></tr>
+            </thead>
+            <tbody id="inspect-memory-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="inspect-pane" id="ipane-hex">
+          <div class="hex-toolbar">
+            <span>Segment: <strong style="color:var(--primary); font-family:monospace;">0x00400000 (PE Header)</strong></span>
+            <span class="status-badge" style="font-size:9px;">READWRITE / EXECUTE</span>
+          </div>
+          <pre class="hex-dump-pre" id="inspect-hex-dump"></pre>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button class="btn-secondary" onclick="exportInspectReport()">📋 Copy Inspection Report</button>
+        <button class="btn-primary" onclick="closeInspectModal()">Close (Esc)</button>
       </div>
     </div>
   </div>
@@ -1132,6 +1319,7 @@
             </div>
           </div>
           <div class="task-right">
+            <button class="btn-secondary btn-inspect" style="padding: 4px 9px; font-size: 11px;" aria-label="Inspect task ${taskTitle}">Inspect</button>
             <select class="priority-select" aria-label="Adjust process priority for ${taskTitle}">
               <option value="Low" ${stats.priority === 'Low' ? 'selected' : ''}>Low</option>
               <option value="Normal" ${stats.priority === 'Normal' ? 'selected' : ''}>Normal</option>
@@ -1143,6 +1331,7 @@
         `;
 
         card.querySelector('.task-title').textContent = taskTitle;
+        card.querySelector('.btn-inspect').onclick = () => openInspectModal(taskId, taskTitle);
         const priSel = card.querySelector('.priority-select');
         priSel.onchange = (e) => changePriority(taskId, e.target.value);
         card.querySelector('.btn-kill').onclick = () => promptKillTask(taskId, taskTitle);
@@ -1235,11 +1424,159 @@
       ctx.fill();
     }
 
+    // Process Inspector Modal State & Methods
+    let currentInspectPid = null;
+    let currentInspectTitle = '';
+    let activeInspectTab = 'threads';
+
+    function openInspectModal(taskId, taskTitle) {
+      currentInspectPid = taskId;
+      currentInspectTitle = taskTitle || 'Process';
+      
+      const modal = document.getElementById('inspectModal');
+      const titleEl = document.getElementById('inspectModalTitle');
+      const subEl = document.getElementById('inspectSubtitle');
+
+      if (titleEl) titleEl.textContent = `Inspector: ${currentInspectTitle}`;
+      if (subEl) subEl.textContent = `PID: ${taskId} | Executable: ${currentInspectTitle.toLowerCase()}`;
+
+      populateInspectData(taskId, currentInspectTitle);
+      switchInspectTab('threads');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeInspectModal() {
+      const modal = document.getElementById('inspectModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function switchInspectTab(tabName) {
+      activeInspectTab = tabName;
+      document.querySelectorAll('.inspect-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.inspect-pane').forEach(pane => pane.classList.remove('active'));
+
+      const targetBtn = document.getElementById(`itab-${tabName}-btn`);
+      const targetPane = document.getElementById(`ipane-${tabName}`);
+      if (targetBtn) targetBtn.classList.add('active');
+      if (targetPane) targetPane.classList.add('active');
+    }
+
+    function populateInspectData(pid, title) {
+      const pidNum = parseInt(pid, 10) || 1234;
+      
+      // 1. Threads
+      const threadTbody = document.getElementById('inspect-threads-tbody');
+      if (threadTbody) {
+        threadTbody.innerHTML = '';
+        const threadCount = (pidNum % 4) + 2;
+        for (let i = 0; i < threadCount; i++) {
+          const tid = pidNum * 8 + i + 101;
+          const pri = i === 0 ? 'Normal (8)' : (i === 1 ? 'Above Normal (9)' : 'Background (4)');
+          const state = i === 0 ? 'Running' : 'Wait: Executive';
+          const ktime = (0.015 + i * 0.012).toFixed(3) + 's';
+          const utime = (0.045 + i * 0.025).toFixed(3) + 's';
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>TID: ${tid}</td><td>${pri}</td><td><span style="color:${i===0?'var(--success)':'var(--text-muted)'}">${state}</span></td><td>${ktime}</td><td>${utime}</td>`;
+          threadTbody.appendChild(tr);
+        }
+      }
+
+      // 2. Modules
+      const modTbody = document.getElementById('inspect-modules-tbody');
+      if (modTbody) {
+        modTbody.innerHTML = '';
+        const modules = [
+          { name: title, addr: '0x00400000', size: '1,024 KB', path: `C:\\KiloApps\\${title}` },
+          { name: 'ntdll.dll', addr: '0x7FF8A100', size: '2,048 KB', path: 'C:\\Windows\\System32\\ntdll.dll' },
+          { name: 'kernel32.dll', addr: '0x7FF8A240', size: '768 KB', path: 'C:\\Windows\\System32\\kernel32.dll' },
+          { name: 'user32.dll', addr: '0x7FF8A3C0', size: '1,680 KB', path: 'C:\\Windows\\System32\\user32.dll' },
+          { name: 'gdi32.dll', addr: '0x7FF8A480', size: '512 KB', path: 'C:\\Windows\\System32\\gdi32.dll' }
+        ];
+        modules.forEach(m => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td><strong>${m.name}</strong></td><td style="color:var(--primary);">${m.addr}</td><td>${m.size}</td><td style="color:var(--text-muted);">${m.path}</td>`;
+          modTbody.appendChild(tr);
+        });
+      }
+
+      // 3. Memory Map
+      const memTbody = document.getElementById('inspect-memory-tbody');
+      if (memTbody) {
+        memTbody.innerHTML = '';
+        const memRegions = [
+          { addr: '0x00400000', size: '64 KB', state: 'COMMIT', prot: 'READONLY (PE Header)' },
+          { addr: '0x00410000', size: '512 KB', state: 'COMMIT', prot: 'EXECUTE_READ (.text)' },
+          { addr: '0x00490000', size: '128 KB', state: 'COMMIT', prot: 'READWRITE (.data)' },
+          { addr: '0x004B0000', size: '4,096 KB', state: 'COMMIT', prot: 'READWRITE (Heap)' },
+          { addr: '0x008B0000', size: '1,024 KB', state: 'RESERVE', prot: 'NOACCESS' },
+          { addr: '0x009B0000', size: '256 KB', state: 'COMMIT', prot: 'READWRITE (Stack)' }
+        ];
+        memRegions.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td style="color:var(--primary);">${r.addr}</td><td>${r.size}</td><td><span class="status-badge" style="background:${r.state==='COMMIT'?'rgba(52,211,153,0.15)':'rgba(255,255,255,0.05)'}; color:${r.state==='COMMIT'?'var(--success)':'var(--text-muted)'}">${r.state}</span></td><td>${r.prot}</td>`;
+          memTbody.appendChild(tr);
+        });
+      }
+
+      // 4. Memory Hex Dump Peek
+      const hexDumpEl = document.getElementById('inspect-hex-dump');
+      if (hexDumpEl) {
+        let dumpText = '';
+        const baseAddr = 0x00400000;
+        const sampleBytes = [
+          0x4D, 0x5A, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00,
+          0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00,
+          0x0E, 0x1F, 0xBA, 0x0E, 0x00, 0xB4, 0x09, 0xCD, 0x21, 0xB8, 0x01, 0x4C, 0xCD, 0x21, 0x54, 0x68
+        ];
+
+        for (let line = 0; line < 5; line++) {
+          const addrHex = (baseAddr + line * 16).toString(16).padStart(8, '0').toUpperCase();
+          let lineHex = '';
+          let ascii = '';
+          for (let i = 0; i < 16; i++) {
+            const byte = sampleBytes[line * 16 + i] || 0;
+            lineHex += byte.toString(16).padStart(2, '0').toUpperCase() + ' ';
+            ascii += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '.';
+          }
+          dumpText += `${addrHex} | ${lineHex.slice(0,24)} | ${lineHex.slice(24)}| ${ascii}\n`;
+        }
+        hexDumpEl.textContent = dumpText;
+      }
+    }
+
+    function exportInspectReport() {
+      if (!currentInspectPid) return;
+      const report = `===================================================================\n` +
+        `KTASK PROCESS INSPECTION REPORT: ${currentInspectTitle} (PID: ${currentInspectPid})\n` +
+        `Timestamp: ${new Date().toISOString()}\n` +
+        `===================================================================\n\n` +
+        `[THREADS]\nActive Threads: 3\nTID: ${currentInspectPid}101 | Priority: Normal | State: Running\n\n` +
+        `[MODULES]\n0x00400000 - 1,024 KB - ${currentInspectTitle}\n0x7FF8A100 - 2,048 KB - ntdll.dll\n0x7FF8A240 - 768 KB - kernel32.dll\n\n` +
+        `[VIRTUAL MEMORY REGIONS]\n0x00400000 | 64 KB   | COMMIT | READONLY (PE Header)\n0x00410000 | 512 KB  | COMMIT | EXECUTE_READ (.text)\n0x00490000 | 128 KB  | COMMIT | READWRITE (.data)\n` +
+        `===================================================================\n`;
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(report).then(() => {
+          showToast(`Copied inspection report for PID ${currentInspectPid}!`);
+        }).catch(() => showToast('Report generated.'));
+      } else {
+        showToast(`Inspection report prepared for PID ${currentInspectPid}!`);
+      }
+    }
+
     // Keyboard Shortcuts & Visibility Listener
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
       if (e.key === 'Escape') {
+        const inspectModal = document.getElementById('inspectModal');
+        if (inspectModal && inspectModal.classList.contains('active')) {
+          closeInspectModal();
+          return;
+        }
         const modal = document.getElementById('confirmModal');
         if (modal && modal.classList.contains('active')) {
           closeKillModal();
@@ -1258,9 +1595,16 @@
       } else if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
         e.preventDefault();
         refresh();
+      } else if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault();
+        if (allTasks.length > 0) {
+          openInspectModal(allTasks[0].id, allTasks[0].title);
+        } else {
+          showToast('No active tasks to inspect.');
+        }
       } else if (e.key === 'h' || e.key === 'H') {
         e.preventDefault();
-        showToast('Shortcuts: [R/F5] Refresh, [Esc] Close/Clear, [H] Help');
+        showToast('Shortcuts: [R/F5] Refresh, [I] Inspect, [Esc] Close, [H] Help');
       }
     });
 

@@ -197,6 +197,10 @@
         const skillFreeze = document.getElementById('skillFreeze');
         const skillMagnet = document.getElementById('skillMagnet');
 
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
         
         // Replay & Stats System
         let rngSeed = 12345;
@@ -206,6 +210,7 @@
         }
         
         let matchTicks = 0;
+        let matchApplesEaten = 0;
         let gridCoverage = new Set();
         let replayData = null;
         let isReplayMode = false;
@@ -554,8 +559,9 @@
                 let px = [1, 17, 1, 17], py = [1, 1, 17, 17];
                 for(let k=0; k<4; k++) obstacles.push({x: px[k], y: py[k]});
                 boss.alive = true; boss.hp = (campaignLevel === 25 ? 25 : 15); boss.maxHp = (campaignLevel === 25 ? 25 : 15); boss.dir = {x: 0, y: 1};
+                boss.len = (campaignLevel === 25 ? 10 : 8);
                 boss.body = [];
-                for(let k=0; k<8; k++) boss.body.push({x: 10, y: 2 + k});
+                for(let k=0; k<boss.len; k++) boss.body.push({x: 10, y: 2 + k});
                 bossBarContainer.style.display = 'block';
                 updateBossBar();
             }
@@ -590,7 +596,7 @@
             dir = {x: 1, y: 0}; lastDir = {x: 1, y: 0};
             gameState = 1;
             score = 0; applesEaten = 0; campaignLevel = 1;
-            matchTicks = 0; gridCoverage.clear();
+            matchTicks = 0; matchApplesEaten = 0; gridCoverage.clear();
 
             
             goldenApple = null; goldenTimer = 0;
@@ -908,6 +914,7 @@
                 let gain = scoreMult;
                 score += gain;
                 totalApples++;
+                matchApplesEaten++;
                 safeSetItem('ksnakeTotalApples', totalApples);
 
                 if (boss.alive) {
@@ -983,7 +990,7 @@
         
         function triggerGameOver() {
             if (!isReplayMode) {
-                lastMatchStats = { ticks: matchTicks, apples: applesEaten + totalApples - (parseInt(localStorage.getItem('ksnakeTotalApples'))||0), coverage: ((gridCoverage.size / (WIDTH*HEIGHT))*100).toFixed(2) };
+                lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: ((gridCoverage.size / (WIDTH*HEIGHT))*100).toFixed(2) };
                 lastReplayData = replayData;
             }
 
@@ -1001,7 +1008,7 @@
         
         function triggerVictory() {
             if (!isReplayMode) {
-                lastMatchStats = { ticks: matchTicks, apples: applesEaten + totalApples - (parseInt(localStorage.getItem('ksnakeTotalApples'))||0), coverage: ((gridCoverage.size / (WIDTH*HEIGHT))*100).toFixed(2) };
+                lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: ((gridCoverage.size / (WIDTH*HEIGHT))*100).toFixed(2) };
                 lastReplayData = replayData;
             }
 
@@ -1039,7 +1046,7 @@
             tbody.innerHTML = '';
             leaderboard.forEach((item, index) => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${index+1}</td><td>${item.name}</td><td>${item.score}</td><td>${item.mode}</td><td>${item.date}</td>`;
+                tr.innerHTML = `<td>${index+1}</td><td>${escapeHTML(item.name)}</td><td>${Number(item.score)}</td><td>${escapeHTML(item.mode)}</td><td>${escapeHTML(item.date)}</td>`;
                 tbody.appendChild(tr);
             });
             leaderboardOverlay.style.display = 'flex';
