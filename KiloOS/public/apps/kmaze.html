@@ -288,9 +288,9 @@
   }
 
   // Procedural 16x16 Texture Generator
-  const textures = new Array(25);
+  const textures = new Array(30);
   function initTextures() {
-      for (let t = 0; t < 25; t++) {
+      for (let t = 0; t < 30; t++) {
           textures[t] = new Uint32Array(256);
           for (let y = 0; y < 16; y++) {
               for (let x = 0; x < 16; x++) {
@@ -391,6 +391,13 @@
                   } else if (t === 24) {
                       let noise = ((x * 7 + y * 23) % 20) - 10;
                       r = 20 + noise; g = 20 + noise; b = 30 + noise;
+                  } else if (t === 25) { // Spike Trap
+                      if ((x+y)%4 === 0) { r = 136; g = 136; b = 136; } else { r = 34; g = 34; b = 34; }
+                  } else if (t === 26) { // Cursed Relic
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
+                      if (dist < 4.0) { r = 128; g = 0; b = 128; }
+                      else if (dist < 6.0) { r = 0; g = 0; b = 0; }
+                      else { r = 34; g = 0; b = 34; }
                   } else {
                       r = 170; g = 0; b = 0;
                   }
@@ -447,6 +454,26 @@
                   let b15 = 0;
                   textures[15][y * 16 + x] = (255 << 24) | (b15 << 16) | (g15 << 8) | r15;
               }
+              
+              // Spike Trap (t=25)
+              let spikeActive = Math.floor(frameCount / 10) % 2 === 0;
+              let r25 = 0, g25 = 0, b25 = 0;
+              if (spikeActive) {
+                  if ((x+y)%4 === 0) { r25 = 255; g25 = 255; b25 = 255; } else { r25 = 255; g25 = 0; b25 = 0; }
+              } else {
+                  if ((x+y)%4 === 0) { r25 = 136; g25 = 136; b25 = 136; } else { r25 = 34; g25 = 34; b25 = 34; }
+              }
+              textures[25][y * 16 + x] = (255 << 24) | (b25 << 16) | (g25 << 8) | r25;
+
+              // Cursed Relic (t=26)
+              let cbob = Math.floor(Math.sin(frameCount * 0.2) * 2.0);
+              let cy = y - cbob;
+              let dist3 = Math.sqrt((x - 7.5)**2 + (cy - 7.5)**2);
+              let r26 = 0, g26 = 0, b26 = 0;
+              if (dist3 < 4.0) { r26 = 255; g26 = 0; b26 = 255; }
+              else if (dist3 < 6.0) { r26 = 0; g26 = 0; b26 = 0; }
+              else { r26 = 34; g26 = 0; b26 = 34; }
+              textures[26][y * 16 + x] = (255 << 24) | (b26 << 16) | (g26 << 8) | r26;
           }
       }
   }
@@ -494,7 +521,7 @@
               let nx = cx + d[0], ny = cy + d[1];
               if (nx >= 0 && nx < map.length && ny >= 0 && ny < map[0].length && !parent[nx][ny]) {
                   let tile = map[nx][ny];
-                  if ([0,2,3,5,6,8,9,10,11,13,14,16,17,18,19].includes(tile) || (tile === 4 && keysHeld > 0)) {
+                  if ([0,2,3,5,6,8,9,10,11,13,14,16,17,18,19,25,26].includes(tile) || (tile === 4 && keysHeld > 0)) {
                       parent[nx][ny] = [cx, cy];
                       queue.push([nx, ny]);
                   }
@@ -586,6 +613,26 @@
           let rx = 1 + Math.floor(Math.random()*(w-2));
           let ry = 1 + Math.floor(Math.random()*(h-2));
           if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 14;
+      }
+      for(let i=0; i < (w*h)/25; i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2));
+          let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 25;
+      }
+      for(let i=0; i < (w*h)/60; i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2));
+          let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 26;
+      }
+      if (currentLevel >= 10 && currentLevel % 5 === 0) {
+          let placedBoss = false;
+          while (!placedBoss) {
+              let rx = 1 + Math.floor(Math.random()*(w-2));
+              let ry = 1 + Math.floor(Math.random()*(h-2));
+              if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY) && Math.abs(rx - 1) + Math.abs(ry - 1) > 8) {
+                  m[rx][ry] = 15; bossHP = 3; placedBoss = true;
+              }
+          }
       }
       let t1x=0, t1y=0, t2x=0, t2y=0;
       for(let i=0; i<100; i++) {
@@ -961,7 +1008,7 @@
       
       let tryMove = (mx, my) => {
           let val = map[Math.floor(mx)] && map[Math.floor(mx)][Math.floor(my)];
-          if ([0,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,19].includes(val)) return true;
+          if ([0,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,19,25,26].includes(val)) return true;
           if (val === 4) {
               if (keysHeld > 0) {
                   keysHeld--;
@@ -1096,6 +1143,24 @@
           timeFreezeCharges++; map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(600, 'square', 0.2); addParticles(W/2, H/2, '#0066ff', 15);
           msgText = "+1 Time Freeze!"; msgTimer = 60;
+      } else if (curVal === 25) {
+          if (Math.floor(frameCount / 10) % 2 === 0) {
+              playTone(200, 'sawtooth', 0.2);
+              score = Math.max(0, score - 75);
+              pX = 1.5; pY = 1.5;
+              addParticles(W/2, H/2, '#ff0000', 20);
+              msgText = "Impaled by Spike Trap!"; msgTimer = 60;
+          }
+      } else if (curVal === 26) {
+          score += 500;
+          hasCompass = 0;
+          pathfinderCharges = 0;
+          speedBoost = 0;
+          speedShoesCharges = 0;
+          map[Math.floor(pX)][Math.floor(pY)] = 0;
+          playTone(300, 'square', 0.5);
+          addParticles(W/2, H/2, '#800080', 30);
+          msgText = "Cursed Relic: +500 Score, Lost Speed/Nav!"; msgTimer = 60;
       }
 
       if (keys[keyBinds.right] || keys[keyBinds.right.toLowerCase()] || keys[keyBinds.right.toUpperCase()]) {
@@ -1404,6 +1469,8 @@
                       else if (v === 17) uiCtx.fillStyle = '#f00';
                       else if (v === 18) uiCtx.fillStyle = '#555';
                       else if (v === 19) uiCtx.fillStyle = '#06f';
+                      else if (v === 25) uiCtx.fillStyle = '#aaa';
+                      else if (v === 26) uiCtx.fillStyle = '#800080';
                       else uiCtx.fillStyle = '#141419';
                       uiCtx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
                   }

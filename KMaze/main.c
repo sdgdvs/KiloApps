@@ -304,7 +304,7 @@ int replayMap[45][45];
 int replayCurFrame = 0;
 
 // 16x16 Textures buffer: 25 types, 256 DWORD colors (0x00RRGGBB)
-DWORD textures[25][256];
+DWORD textures[30][256];
 DWORD animFrameCount = 0;
 
 // Particles
@@ -349,7 +349,7 @@ void UpdateParticles() {
 
 // Procedural 16x16 Texture Generator
 void InitTextures() {
-    for (int t = 0; t < 25; t++) {
+    for (int t = 0; t < 30; t++) {
         for (int y = 0; y < 16; y++) {
             for (int x = 0; x < 16; x++) {
                 DWORD col = 0;
@@ -447,6 +447,13 @@ void InitTextures() {
                     int g = 20 + noise; if (g < 0) g = 0; if (g > 255) g = 255;
                     int b = 30 + noise; if (b < 0) b = 0; if (b > 255) b = 255;
                     col = RGB(r, g, b);
+                } else if (t == 25) { // Spike Trap
+                    if ((x+y)%4 == 0) col = 0x00888888; else col = 0x00222222;
+                } else if (t == 26) { // Cursed Relic
+                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
+                    if (dist < 4.0f) col = 0x00800080;
+                    else if (dist < 6.0f) col = 0x00000000;
+                    else col = 0x00220022;
                 } else {
                     col = 0x00AA0000;
                 }
@@ -501,6 +508,21 @@ void UpdateTextures() {
                 if (m_breathe > 0) textures[15][y * 16 + x] = 0x00FF0000;
                 else textures[15][y * 16 + x] = 0x00880000;
             }
+            // Spike Trap (t=25)
+            if ((animFrameCount / 10) % 2 == 0) {
+                if ((x+y)%4 == 0) textures[25][y * 16 + x] = 0x00FFFFFF;
+                else textures[25][y * 16 + x] = 0x00FF0000;
+            } else {
+                if ((x+y)%4 == 0) textures[25][y * 16 + x] = 0x00888888;
+                else textures[25][y * 16 + x] = 0x00222222;
+            }
+            // Cursed Relic (t=26)
+            int c_bob = (int)(sin(animFrameCount * 0.2f) * 2.0f);
+            int cy = y - c_bob;
+            float dist3 = (float)sqrt((x - 7.5f) * (x - 7.5f) + (cy - 7.5f) * (cy - 7.5f));
+            if (dist3 < 4.0f) textures[26][y * 16 + x] = 0x00FF00FF;
+            else if (dist3 < 6.0f) textures[26][y * 16 + x] = 0x00000000;
+            else textures[26][y * 16 + x] = 0x00220022;
         }
     }
 }
@@ -560,7 +582,7 @@ void SetMapValue(int x, int y, int v) {
 
 int TryMove(int x, int y) {
     int val = GetMapValue(x, y);
-    if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8 || val == 9 || val == 10 || val == 11 || val == 12 || val == 13 || val == 14 || val == 15 || val == 16 || val == 17 || val == 19) return 1;
+    if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8 || val == 9 || val == 10 || val == 11 || val == 12 || val == 13 || val == 14 || val == 15 || val == 16 || val == 17 || val == 19 || val == 25 || val == 26) return 1;
     if (val == 4) {
         if (keysHeld > 0) {
             keysHeld--;
@@ -645,7 +667,7 @@ void ComputePathfinderPath() {
             int ny = cy + dirs[d][1];
             if (nx >= 0 && nx < mapW && ny >= 0 && ny < mapH && parentX[nx][ny] == -1) {
                 int tile = GetMapValue(nx, ny);
-                if (tile == 0 || tile == 2 || tile == 3 || tile == 5 || tile == 6 || tile == 8 || tile == 9 || tile == 10 || tile == 11 || tile == 13 || tile == 14 || tile == 16 || tile == 17 || tile == 18 || tile == 19 || (tile == 4 && keysHeld > 0)) {
+                if (tile == 0 || tile == 2 || tile == 3 || tile == 5 || tile == 6 || tile == 8 || tile == 9 || tile == 10 || tile == 11 || tile == 13 || tile == 14 || tile == 16 || tile == 17 || tile == 18 || tile == 19 || tile == 25 || tile == 26 || (tile == 4 && keysHeld > 0)) {
                     parentX[nx][ny] = cx;
                     parentY[nx][ny] = cy;
                     qX[qTail] = nx; qY[qTail] = ny; qTail++;
@@ -767,6 +789,32 @@ void GenerateMaze(int w, int h) {
         int ry = 1 + rand()%(h-2);
         if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY)) {
             mapRandom[rx][ry] = 14;
+        }
+    }
+    for(int i=0; i<w*h/25; i++) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY)) {
+            mapRandom[rx][ry] = 25;
+        }
+    }
+    for(int i=0; i<w*h/60; i++) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY)) {
+            mapRandom[rx][ry] = 26;
+        }
+    }
+    if (currentLevel >= 10 && currentLevel % 5 == 0) {
+        int placedBoss = 0;
+        while (!placedBoss) {
+            int rx = 1 + rand()%(w-2);
+            int ry = 1 + rand()%(h-2);
+            if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY) && abs(rx - 1) + abs(ry - 1) > 8) {
+                mapRandom[rx][ry] = 15;
+                bossHP = 3;
+                placedBoss = 1;
+            }
         }
     }
     int t1x = 0, t1y = 0, t2x = 0, t2y = 0;
@@ -1335,6 +1383,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 19) {
                 timeFreezeCharges++; SetMapValue((int)pX, (int)pY, 0); MessageBeep(MB_ICONASTERISK); AddParticles(160.0f, 120.0f, RGB(0, 100, 255), 15);
                 strcpy(msgText, "+1 Time Freeze!"); msgTimer = 60;
+            } else if (curVal == 25) {
+                if ((animFrameCount / 10) % 2 == 0) {
+                    MessageBeep(MB_ICONHAND);
+                    score = (score >= 75) ? score - 75 : 0;
+                    pX = 1.5f; pY = 1.5f;
+                    AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 20);
+                    strcpy(msgText, "Impaled by Spike Trap!"); msgTimer = 60;
+                }
+            } else if (curVal == 26) {
+                score += 500;
+                hasCompass = 0;
+                pathfinderCharges = 0;
+                speedBoost = 0;
+                speedShoesCharges = 0;
+                SetMapValue((int)pX, (int)pY, 0);
+                MessageBeep(MB_ICONHAND);
+                AddParticles(160.0f, 120.0f, RGB(128, 0, 128), 30);
+                strcpy(msgText, "Cursed Relic: +500 Score, Lost Speed/Nav!"); msgTimer = 60;
             }
 
             if (GetAsyncKeyState(keyBinds.right) & 0x8000) {
