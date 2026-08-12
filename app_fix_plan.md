@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KSolitaire
+**Target App:** KSpace
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -255,3 +255,5 @@ Pass 1 Complete.
 - **KScript**: Fixed native `main.c` buffer overflow in `SimpleRegexReplace` by adding bounds checking. Fixed native integer division exception crash when dividing `INT_MIN` by `-1`. Verified web version is safe against XSS and regex crashes.
 
 - **KSnake**: Fixed XSS vulnerability in `ksnake.html` leaderboard table rendering via HTML escaping. Fixed match apple stats calculation and boss body length initialization in Level 25. Refactored `SaveConfig`/`LoadConfig` in `main.c` for keybinding persistence. Recompiled native `.exe` and verified Vite web build cleanly.
+
+- **KSolitaire**: Fixed `ReferenceError: topCard is not defined` in `ksolitaire.html` tableau move validation. Fixed double score penalty during Undo operations in both web and native versions. Verified native `.exe` compilation and Vite web build.
