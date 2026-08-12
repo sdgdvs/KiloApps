@@ -75,7 +75,7 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 ---
 
 **Target App:** KTask
-**Status:** In Queue
+**Status:** Failed - Subagent unavailable (Capacity error). Retrying next turn.
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
