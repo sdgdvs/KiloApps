@@ -67,8 +67,8 @@ int ParseTerm(const char** p) {
         (*p)++;
         int nextVal = ParseFactor(p);
         if (op == '*') val *= nextVal;
-        else if (op == '/') { if (nextVal != 0) val /= nextVal; }
-        else if (op == '%') { if (nextVal != 0) val %= nextVal; }
+        else if (op == '/') { if (nextVal != 0) { if (val == (int)0x80000000 && nextVal == -1) val = (int)0x80000000; else val /= nextVal; } }
+        else if (op == '%') { if (nextVal != 0) { if (val == (int)0x80000000 && nextVal == -1) val = 0; else val %= nextVal; } }
     }
     return val;
 }
@@ -210,10 +210,17 @@ void SimpleRegexReplace() {
             if (src[i] == '\0' || src[i] != f[i]) { match = 0; break; }
         }
         if (match) {
-            for (int i=0; i<rLen; i++) *dst++ = r[i];
+            for (int i=0; i<rLen; i++) {
+                if (dst - outBuf < sizeof(outBuf) - 1) {
+                    *dst++ = r[i];
+                }
+            }
             src += fLen;
         } else {
-            *dst++ = *src++;
+            if (dst - outBuf < sizeof(outBuf) - 1) {
+                *dst++ = *src;
+            }
+            src++;
         }
     }
     *dst = '\0';
