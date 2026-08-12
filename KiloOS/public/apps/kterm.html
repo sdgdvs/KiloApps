@@ -384,6 +384,11 @@
   let activeSessionId = null;
   let nextSessionNum = 1;
 
+  let macros = {};
+  let isRecording = false;
+  let recordingMacroName = null;
+  let macroDepth = 0;
+
   // Reverse Search state
   let isReverseSearch = false;
   let reverseSearchQuery = '';
@@ -612,6 +617,17 @@
       let vfs = getVFS();
       let s = getActiveSession();
 
+      if (isRecording && recordingMacroName && !cmd.startsWith('macro')) {
+          if (!macros[recordingMacroName]) macros[recordingMacroName] = [];
+          if (macros[recordingMacroName].length < 20) {
+              macros[recordingMacroName].push(cmdStr);
+          } else {
+              print("Macro command limit reached. Stopping recording.", "log-warn");
+              isRecording = false;
+              recordingMacroName = null;
+          }
+      }
+
       if (cmd === 'help') {
           print("Available KTerm Commands:");
           print("  help          - Show available commands");
@@ -627,6 +643,7 @@
           print("  whoami        - Display current user");
           print("  alias         - Manage command aliases (alias [name=cmd], unalias)");
           print("  env / export  - Environment variables (export VAR=VAL, unset VAR)");
+          print("  macro         - Macro scripting (record, stop, play, list)");
           print("  export-log    - Download terminal session log");
           print("  newtab        - Open a new terminal tab session");
       } else if (cmd === 'ver') {
@@ -718,6 +735,47 @@
               } else {
                   print(`Variable '${varName}' not found.`);
               }
+          }
+      } else if (cmd === 'macro') {
+          if (args[1] === 'record' && args[2]) {
+              const name = args[2].toLowerCase();
+              if (isRecording) {
+                  print("Already recording a macro. Use 'macro stop' first.", "log-error");
+              } else {
+                  macros[name] = [];
+                  isRecording = true;
+                  recordingMacroName = name;
+                  print(`Recording macro '${name}'...`, "log-system");
+              }
+          } else if (args[1] === 'stop') {
+              if (isRecording) {
+                  isRecording = false;
+                  recordingMacroName = null;
+                  print("Macro recording stopped.", "log-system");
+              } else {
+                  print("Not currently recording.", "log-warn");
+              }
+          } else if (args[1] === 'play' && args[2]) {
+              const name = args[2].toLowerCase();
+              if (macroDepth > 5) {
+                  print("Macro recursion limit exceeded.", "log-error");
+              } else if (macros[name]) {
+                  macroDepth++;
+                  macros[name].forEach(c => execute(c));
+                  macroDepth--;
+              } else {
+                  print(`Macro '${name}' not found.`, "log-error");
+              }
+          } else if (args[1] === 'list') {
+              const keys = Object.keys(macros);
+              if (keys.length === 0) {
+                  print("No macros defined.");
+              } else {
+                  print("Current Macros:");
+                  keys.forEach(k => print(`  ${k} (${macros[k].length} cmds)`));
+              }
+          } else {
+              print("Usage: macro <record|stop|play|list> [name]");
           }
       } else if (cmd === 'cerberus') {
           if (args[1] === 'status') {
@@ -1017,7 +1075,7 @@
   function handleTabCompletion() {
       const s = getActiveSession();
       const val = input.value;
-      const builtins = ['help', 'ver', 'clear', 'dir', 'cd', 'type', 'echo', 'mkdir', 'date', 'time', 'whoami', 'cls', 'ls', 'cat', 'alias', 'unalias', 'env', 'export', 'unset', 'export-log', 'newtab'];
+      const builtins = ['help', 'ver', 'clear', 'dir', 'cd', 'type', 'echo', 'mkdir', 'date', 'time', 'whoami', 'cls', 'ls', 'cat', 'alias', 'unalias', 'env', 'export', 'unset', 'macro', 'export-log', 'newtab'];
       const aliasKeys = Object.keys(s.aliases || {});
       const allCmds = Array.from(new Set([...builtins, ...aliasKeys]));
 
