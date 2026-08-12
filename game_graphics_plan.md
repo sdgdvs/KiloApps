@@ -105,8 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KReversi
-
 - KQuest
 - KSpace
 - KPac
@@ -136,7 +134,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KGo
 - KTowers
 - KWords
+- KReversi
 ## Completed Work Log
+
+- **KReversi (Loop 3):** Implemented textured green felt playing surface and ambient dim overhead radial lighting pool in both Web Canvas (kreversi.html) and Native C Win32 GDI (KReversi/main.c).
 
 - **KWords (Loop 3):** Implemented detailed mahogany wooden study desk texture background, ambient lamp/candlelight radial glow, and animated atmospheric floating dust motes in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 

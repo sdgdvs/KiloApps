@@ -1443,12 +1443,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SetBkColor(hdc, theme->bg);
                         SetTextColor(hdc, theme->text);
                     } else {
-                        HBRUSH cFeltBrush = CreateSolidBrush(theme->boardCell);
-                        HPEN cHiPen = CreatePen(PS_SOLID, 1, RGB(40, 110, 55));
-                        HPEN cShPen = CreatePen(PS_SOLID, 1, RGB(10, 40, 18));
+                        int cX = rect.left + cellSize / 2;
+                        int cY = rect.top + cellSize / 2;
+                        int bCenterX = boardStartX + (g_boardWidth * cellSize) / 2;
+                        int bCenterY = boardStartY + (g_boardHeight * cellSize) / 2;
+                        int distSq = (cX - bCenterX) * (cX - bCenterX) + (cY - bCenterY) * (cY - bCenterY);
+                        int maxDistSq = (g_boardWidth * cellSize / 2) * (g_boardWidth * cellSize / 2) + (g_boardHeight * cellSize / 2) * (g_boardHeight * cellSize / 2);
+                        float distRatio = (float)distSq / (float)(maxDistSq + 1);
+                        if (distRatio > 1.0f) distRatio = 1.0f;
+                        
+                        COLORREF baseColor = theme->boardCell;
+                        int rC = GetRValue(baseColor);
+                        int gC = GetGValue(baseColor);
+                        int bC = GetBValue(baseColor);
+                        rC = (int)(rC * (1.0f - distRatio * 0.4f));
+                        gC = (int)(gC * (1.0f - distRatio * 0.4f));
+                        bC = (int)(bC * (1.0f - distRatio * 0.4f));
+                        
+                        HBRUSH cFeltBrush = CreateSolidBrush(RGB(rC, gC, bC));
+                        HPEN cHiPen = CreatePen(PS_SOLID, 1, RGB(rC + 20 > 255 ? 255 : rC + 20, gC + 30 > 255 ? 255 : gC + 30, bC + 20 > 255 ? 255 : bC + 20));
+                        HPEN cShPen = CreatePen(PS_SOLID, 1, RGB(rC / 2, gC / 2, bC / 2));
                         SelectObject(hdc, cFeltBrush);
                         SelectObject(hdc, cHiPen);
                         Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+                        
+                        // Felt Texture
+                        for (int ty = rect.top + 2; ty < rect.bottom - 2; ty += 4) {
+                            for (int tx = rect.left + 2; tx < rect.right - 2; tx += 4) {
+                                SetPixel(hdc, tx + (rand() % 3), ty + (rand() % 3), RGB(rC - 10 < 0 ? 0 : rC - 10, gC - 15 < 0 ? 0 : gC - 15, bC - 10 < 0 ? 0 : bC - 10));
+                            }
+                        }
                         
                         SelectObject(hdc, cShPen);
                         MoveToEx(hdc, rect.right - 1, rect.top, NULL);
