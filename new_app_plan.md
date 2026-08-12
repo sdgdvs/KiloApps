@@ -71,6 +71,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [ ] Phase 12: Multiple endings based on choices and speed of escape.
 - [ ] Phase 13: Sound Effects — heartbeat, alarm klaxons, alien screeches (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Survival Guide — How-to-play, lore index, enemy bestiary.
+Phase 1: FAILED — UNAVAILABLE (code 503): No capacity available for model
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
