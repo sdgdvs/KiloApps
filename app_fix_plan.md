@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KSnake
+**Target App:** KSolitaire
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -253,3 +253,5 @@ Pass 1 Complete.
 - **KRogue**: Fixed regression in `krogue.html` where weapons/armor bypassed cursed checks due to early returns. Fixed XSS vulnerability in the web leaderboard by escaping inputs. Added missing arrow key and Escape key handlers for targeting state. Fixed duplicate tier 5 logical check in native `main.c` drop generator.
 
 - **KScript**: Fixed native `main.c` buffer overflow in `SimpleRegexReplace` by adding bounds checking. Fixed native integer division exception crash when dividing `INT_MIN` by `-1`. Verified web version is safe against XSS and regex crashes.
+
+- **KSnake**: Fixed XSS vulnerability in `ksnake.html` leaderboard table rendering via HTML escaping. Fixed match apple stats calculation and boss body length initialization in Level 25. Refactored `SaveConfig`/`LoadConfig` in `main.c` for keybinding persistence. Recompiled native `.exe` and verified Vite web build cleanly.
