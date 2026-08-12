@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KWizard (Fantasy dueling card game)
-**Phase:** 13 (next to do)
+**Phase:** 14 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KWizard directory (`KWizard/`), create web HTML skeleton (`KiloOS/public/apps/kwizard.html`), register in App.jsx.
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Advanced AI opponent with difficulty levels (Easy/Medium/Hard) and smarter card synergies.
 - [x] Phase 11: Campaign mode with 10 progressive battles against different mages (each with unique decks).
 - [x] Phase 12: Deck builder interface allowing players to customize their 20-card deck from unlocked spells.
-- [ ] Phase 13: Sound Effects — magical chimes, fireballs, ice shatters (Web Audio / Win32 Beep).
+- [x] Phase 13: Sound Effects — magical chimes, fireballs, ice shatters (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Grimoire — How-to-play, spell index, status effect guide.
 
 ### How to execute the next phase:

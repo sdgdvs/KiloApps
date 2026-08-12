@@ -229,6 +229,82 @@
     </div>
 
     <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            
+            if (type === 'fire') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'ice') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'arcane' || type === 'heal') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.1);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.3);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.4, now + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            } else if (type === 'damage') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(20, now + 0.2);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554, now + 0.2);
+                osc.frequency.setValueAtTime(659, now + 0.4);
+                osc.frequency.setValueAtTime(880, now + 0.6);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1.0);
+                osc.start(now);
+                osc.stop(now + 1.0);
+            } else if (type === 'lose') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.8);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.8);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            }
+        }
+
+        function getSoundType(card) {
+            if (card.damage > 0 && card.effect.includes("Fire")) return 'fire';
+            if (card.damage > 0 && card.effect.includes("Ice")) return 'ice';
+            if (card.damage > 0 && card.effect.includes("Arcane")) return 'arcane';
+            if (card.heal > 0 || card.regen > 0) return 'heal';
+            if (card.name === 'Ice Lance' || card.name.includes("Frost") || card.name.includes("Cold") || card.name.includes("Blizzard")) return 'ice';
+            if (card.name.includes("Fire") || card.name.includes("Flame") || card.name.includes("Pyro") || card.name.includes("Ignite") || card.name.includes("Ember") || card.name.includes("Scorch") || card.name.includes("Meteor")) return 'fire';
+            return 'arcane';
+        }
+
         let playerMana = 1, playerMaxMana = 1;
         let opponentMana = 1, opponentMaxMana = 1;
         let playerHp = 30, opponentHp = 30;
@@ -465,12 +541,15 @@
                         playerRegen += cardData.regen || 0;
                         opponentPoison += cardData.poison || 0;
                         
+                        playSound(getSoundType(cardData));
+                        
                         if (cardData.name === "Arcane Intellect") {
                             drawCard(false); drawCard(false);
                         }
 
                         if (opponentHp <= 0) {
                             opponentHp = 0;
+                            if (gameState !== 1) playSound('win');
                             gameState = 1;
                         }
                         if (playerHp > 30) playerHp = 30;
@@ -556,12 +635,15 @@
                     opponentRegen += cardData.regen || 0;
                     playerPoison += cardData.poison || 0;
                     
+                    playSound(getSoundType(cardData));
+                    
                     if (cardData.name === "Arcane Intellect") {
                         drawCard(true); drawCard(true);
                     }
                     
                     if (playerHp <= 0) {
                         playerHp = 0;
+                        if (gameState !== 2) playSound('lose');
                         gameState = 2;
                     }
                     if (opponentHp > 30) opponentHp = 30;
@@ -608,6 +690,7 @@
                 if (opponentHp > 30) opponentHp = 30;
                 
                 if (opponentHp <= 0) {
+                    if (gameState !== 1) playSound('win');
                     gameState = 1;
                 } else {
                     if (opponentFreeze > 0) {
@@ -627,7 +710,7 @@
                     if (playerPoison > 0) { dealDamageToPlayer(playerPoison); playerPoison--; }
                     if (playerRegen > 0) { playerHp += playerRegen; playerRegen--; }
                     if (playerHp > 30) playerHp = 30;
-                    if (playerHp <= 0) { playerHp = 0; gameState = 2; }
+                    if (playerHp <= 0) { playerHp = 0; if (gameState !== 2) playSound('lose'); gameState = 2; }
                 }
                 
                 if (gameState === 1) {

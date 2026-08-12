@@ -138,6 +138,42 @@ void DealDamageToOpponent(int dmg) {
     if (opponentHp < 0) opponentHp = 0;
 }
 
+const char* GetSoundType(CardDef* cd) {
+    if (cd->damage > 0 && strstr(cd->effect, "Fire") != NULL) return "fire";
+    if (cd->damage > 0 && strstr(cd->effect, "Ice") != NULL) return "ice";
+    if (cd->damage > 0 && strstr(cd->effect, "Arcane") != NULL) return "arcane";
+    if (cd->heal > 0 || cd->regen > 0) return "heal";
+    if (strcmp(cd->name, "Ice Lance") == 0 || strstr(cd->name, "Frost") != NULL || strstr(cd->name, "Cold") != NULL || strstr(cd->name, "Blizzard") != NULL) return "ice";
+    if (strstr(cd->name, "Fire") != NULL || strstr(cd->name, "Flame") != NULL || strstr(cd->name, "Pyro") != NULL || strstr(cd->name, "Ignite") != NULL || strstr(cd->name, "Ember") != NULL || strstr(cd->name, "Scorch") != NULL || strstr(cd->name, "Meteor") != NULL) return "fire";
+    return "arcane";
+}
+
+void PlaySoundEffect(const char* type) {
+    if (strcmp(type, "fire") == 0) {
+        Beep(150, 100);
+        Beep(100, 100);
+        Beep(50, 100);
+    } else if (strcmp(type, "ice") == 0) {
+        Beep(800, 50);
+        Beep(1200, 50);
+    } else if (strcmp(type, "arcane") == 0 || strcmp(type, "heal") == 0) {
+        Beep(400, 100);
+        Beep(600, 100);
+        Beep(800, 150);
+    } else if (strcmp(type, "damage") == 0) {
+        Beep(100, 150);
+    } else if (strcmp(type, "win") == 0) {
+        Beep(440, 200);
+        Beep(554, 200);
+        Beep(659, 200);
+        Beep(880, 400);
+    } else if (strcmp(type, "lose") == 0) {
+        Beep(300, 300);
+        Beep(200, 300);
+        Beep(100, 400);
+    }
+}
+
 HWND hwndDraw, hwndReset, hwndCombo, hwndDeckBtn, hwndAvail, hwndDeck, hwndDeckClose;
 
 unsigned int seed = 0;
@@ -263,12 +299,15 @@ void PlayOpponentTurn() {
             opponentRegen += cd.regen;
             playerPoison += cd.poison;
             
+            PlaySoundEffect(GetSoundType(&cd));
+            
             if (strcmp(cd.name, "Arcane Intellect") == 0) {
                 DrawCard(1); DrawCard(1);
             }
 
             if (playerHp <= 0) {
                 playerHp = 0;
+                if (gameState != 2) PlaySoundEffect("lose");
                 gameState = 2; // opponent win
             }
             if (opponentHp > 30) opponentHp = 30;
@@ -371,6 +410,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (opponentHp > 30) opponentHp = 30;
                     
                     if (opponentHp <= 0) {
+                        if (gameState != 1) PlaySoundEffect("win");
                         gameState = 1; // player win by dots
                         if (campaignLevel > 0) {
                             if (campaignLevel < 10) {
@@ -399,7 +439,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (playerPoison > 0) { DealDamageToPlayer(playerPoison); playerPoison--; }
                         if (playerRegen > 0) { playerHp += playerRegen; playerRegen--; }
                         if (playerHp > 30) playerHp = 30;
-                        if (playerHp <= 0) { playerHp = 0; gameState = 2; }
+                        if (playerHp <= 0) { playerHp = 0; if (gameState != 2) PlaySoundEffect("lose"); gameState = 2; }
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
@@ -512,12 +552,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         playerRegen += cd.regen;
                         opponentPoison += cd.poison;
                         
+                        PlaySoundEffect(GetSoundType(&cd));
+                        
                         if (strcmp(cd.name, "Arcane Intellect") == 0) {
                             DrawCard(0); DrawCard(0);
                         }
 
                         if (opponentHp <= 0) {
                             opponentHp = 0;
+                            if (gameState != 1) PlaySoundEffect("win");
                             gameState = 1; // player win
                         }
                         if (playerHp > 30) playerHp = 30;
