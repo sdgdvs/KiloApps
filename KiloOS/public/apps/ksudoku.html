@@ -71,8 +71,22 @@
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2));
+            background: 
+                radial-gradient(circle at 50% 20%, rgba(255, 200, 100, 0.15) 0%, transparent 60%),
+                linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.85)),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.005 0.1" numOctaves="3" stitchTiles="stitch"/></filter><rect width="200" height="200" fill="%234a3b2c"/><rect width="200" height="200" filter="url(%23n)" opacity="0.4"/></svg>') repeat,
+                linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2));
             user-select: none;
+            position: relative;
+        }
+
+        #dust-motes-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.8;
         }
 
         .app-container {
@@ -446,6 +460,7 @@
     </style>
 </head>
 <body>
+    <canvas id="dust-motes-canvas"></canvas>
     <div class="app-container">
         <header>
             <h1>KSudoku</h1>
@@ -1848,6 +1863,51 @@
         } else {
             applySettings();
         }
+
+        // Dust Motes Animation
+        const dustCanvas = document.getElementById('dust-motes-canvas');
+        const dustCtx = dustCanvas.getContext('2d');
+        let dustMotes = [];
+        const numMotes = 100;
+        
+        function resizeDustCanvas() {
+            dustCanvas.width = window.innerWidth;
+            dustCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeDustCanvas);
+        resizeDustCanvas();
+
+        for (let i = 0; i < numMotes; i++) {
+            dustMotes.push({
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5 - 0.2,
+                size: Math.random() * 2 + 0.5,
+                alpha: Math.random() * 0.5 + 0.1,
+                blinkCycle: Math.random() * Math.PI * 2
+            });
+        }
+
+        function animateDust() {
+            dustCtx.clearRect(0, 0, dustCanvas.width, dustCanvas.height);
+            dustMotes.forEach(m => {
+                m.x += m.vx;
+                m.y += m.vy;
+                m.blinkCycle += 0.02;
+                if (m.y < -10) m.y = window.innerHeight + 10;
+                if (m.x < -10) m.x = window.innerWidth + 10;
+                if (m.x > window.innerWidth + 10) m.x = -10;
+                
+                dustCtx.beginPath();
+                dustCtx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+                const currentAlpha = m.alpha + Math.sin(m.blinkCycle) * 0.2;
+                dustCtx.fillStyle = `rgba(255, 230, 180, ${Math.max(0, currentAlpha)})`;
+                dustCtx.fill();
+            });
+            requestAnimationFrame(animateDust);
+        }
+        animateDust();
     </script>
 </body>
 </html>

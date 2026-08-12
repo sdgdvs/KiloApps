@@ -74,6 +74,32 @@ typedef struct {
 WinParticle winParticles[MAX_WIN_PARTICLES];
 int winFxActive = 0;
 
+#define MAX_DUST 100
+WinParticle dustParticles[MAX_DUST];
+
+void InitDustParticles() {
+    for (int i=0; i<MAX_DUST; i++) {
+        dustParticles[i].x = (float)(rand() % 800);
+        dustParticles[i].y = (float)(rand() % 600);
+        dustParticles[i].vx = (rand() % 100 - 50) / 100.0f;
+        dustParticles[i].vy = (rand() % 100 - 50) / 100.0f - 0.2f;
+        dustParticles[i].color = RGB(255, 230, 180);
+        dustParticles[i].size = 2 + rand() % 3;
+        dustParticles[i].life = rand() % 100;
+    }
+}
+
+void UpdateDustParticles() {
+    for (int i=0; i<MAX_DUST; i++) {
+        dustParticles[i].x += dustParticles[i].vx;
+        dustParticles[i].y += dustParticles[i].vy;
+        dustParticles[i].life++;
+        if (dustParticles[i].x < -10) dustParticles[i].x = 800;
+        if (dustParticles[i].x > 810) dustParticles[i].x = 0;
+        if (dustParticles[i].y < -10) dustParticles[i].y = 600;
+    }
+}
+
 void TriggerVictoryParticles() {
     winFxActive = 1;
     COLORREF colors[] = {
@@ -999,6 +1025,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontTiny = CreateFontA(10, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
 
+            InitDustParticles();
             SetTimer(hwnd, 1, 1000, NULL);
             SetTimer(hwnd, 2, 30, NULL);
             UpdatePowerupButtons();
@@ -1006,9 +1033,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_TIMER: {
             if (wParam == 2) {
+                UpdateDustParticles();
+                InvalidateRect(hwnd, NULL, FALSE);
                 if (winFxActive) {
                     UpdateVictoryParticles();
-                    InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 1 && timerActive) {
                 if (freezeTime > 0) {
@@ -1395,9 +1423,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
-            HBRUSH hbg = CreateSolidBrush(themes[prefs.theme][T_BG]);
-            FillRect(hdc, &clientRect, hbg);
-            DeleteObject(hbg);
+            
+            // Wooden desk background with candlelight gradient
+            for (int y = 0; y < clientRect.bottom; y += 4) {
+                int r = 35, g = 25, b = 18; 
+                int dy = y - clientRect.bottom / 4;
+                float dist = (float)(dy * dy) / 2500.0f;
+                int glow = dist < 20.0f ? (int)(20.0f - dist) * 2 : 0;
+                r += glow; g += (glow * 3 / 4); b += (glow / 2);
+                if (r > 255) r = 255; if (g > 255) g = 255; if (b > 255) b = 255;
+                r += rand() % 8; g += rand() % 8; b += rand() % 8;
+                
+                RECT row = {0, y, clientRect.right, y + 4};
+                HBRUSH hWood = CreateSolidBrush(RGB(r, g, b));
+                FillRect(hdc, &row, hWood);
+                DeleteObject(hWood);
+            }
+            
+            // Render Dust Motes
+            for (int i=0; i<MAX_DUST; i++) {
+                int phase = dustParticles[i].life % 40;
+                if (phase > 20) phase = 40 - phase;
+                if (phase > 5) {
+                    HBRUSH hDust = CreateSolidBrush(dustParticles[i].color);
+                    HPEN hDustPen = CreatePen(PS_SOLID, 1, dustParticles[i].color);
+                    HBRUSH oldB = (HBRUSH)SelectObject(hdc, hDust);
+                    HPEN oldP = (HPEN)SelectObject(hdc, hDustPen);
+                    Ellipse(hdc, (int)dustParticles[i].x, (int)dustParticles[i].y, 
+                                 (int)dustParticles[i].x + dustParticles[i].size, 
+                                 (int)dustParticles[i].y + dustParticles[i].size);
+                    SelectObject(hdc, oldB);
+                    SelectObject(hdc, oldP);
+                    DeleteObject(hDust);
+                    DeleteObject(hDustPen);
+                }
+            }
             
             HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
             SetBkMode(hdc, TRANSPARENT);
