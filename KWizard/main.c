@@ -10,45 +10,50 @@ typedef struct {
     char effect[64];
     int damage;
     int heal;
+    int burn;
+    int freeze;
+    int shield;
+    int regen;
+    int poison;
 } CardDef;
 
 CardDef sampleCards[] = {
-    {"Fireball", 3, "Deals 4 Fire damage", 4, 0},
-    {"Scorch", 1, "Deals 1 Fire damage", 1, 0},
-    {"Flame Strike", 5, "Deals 5 AoE Fire damage", 5, 0},
-    {"Ember", 1, "Burns for 1 damage", 1, 0},
-    {"Pyroblast", 6, "Deals 8 Fire damage", 8, 0},
-    {"Wall of Fire", 4, "Creates a fiery barrier", 0, 0},
-    {"Meteor", 8, "Deals 10 Fire damage", 10, 0},
-    {"Ignite", 2, "Deals 2 Fire dmg over time", 2, 0},
-    {"Ice Shard", 2, "Deals 2 Ice damage", 2, 0},
-    {"Frostbolt", 3, "Deals 3 Ice dmg, slows", 3, 0},
-    {"Blizzard", 6, "Deals 4 AoE Ice damage", 4, 0},
-    {"Frost Nova", 4, "Freezes enemies in place", 0, 0},
-    {"Ice Lance", 1, "Deals 1 Ice dmg (3 if frozen)", 1, 0},
-    {"Glacial Spike", 7, "Deals 9 Ice damage", 9, 0},
-    {"Cold Snap", 5, "Resets cooldowns (Ice)", 0, 0},
-    {"Arcane Missiles", 1, "Fires 3 arcane bolts", 3, 0},
-    {"Arcane Intellect", 3, "Draw 2 cards", 0, 0},
-    {"Counterspell", 3, "Interrupts a spell", 0, 0},
-    {"Magic Missile", 2, "Deals 2 Arcane damage", 2, 0},
-    {"Arcane Blast", 4, "Deals 5 Arcane damage", 5, 0},
-    {"Time Warp", 8, "Take an extra turn", 0, 0},
-    {"Polymorph", 4, "Turns target into a sheep", 0, 0},
-    {"Mana Shield", 2, "Absorbs damage using mana", 0, 0},
-    {"Healing Touch", 2, "Heals 3 Life points", 0, 3},
-    {"Rejuvenation", 3, "Heals 4 over time", 0, 4},
-    {"Regrowth", 4, "Heals 2 + 2 over time", 0, 4},
-    {"Swiftmend", 1, "Instantly heals 2", 0, 2},
-    {"Tranquility", 8, "Heals 10 to all allies", 0, 10},
-    {"Nourish", 3, "Heals 4", 0, 4},
-    {"Nature's Grasp", 2, "Roots attackers", 0, 0},
-    {"Lifebloom", 2, "Heals 1, blooms for 3", 0, 4},
-    {"Flash Heal", 2, "Fast heal for 3", 0, 3},
-    {"Greater Heal", 5, "Heals 7", 0, 7},
-    {"Renew", 1, "Heals 2 over time", 0, 2},
-    {"Lightning Strike", 4, "Deals 5 Nature damage", 5, 0},
-    {"Chain Lightning", 5, "Deals 4 dmg to 3 targets", 4, 0}
+    {"Fireball", 3, "Deals 4 Fire damage", 4, 0, 0, 0, 0, 0, 0},
+    {"Scorch", 1, "Deals 1 Fire damage", 1, 0, 0, 0, 0, 0, 0},
+    {"Flame Strike", 5, "Deals 5 AoE Fire damage", 5, 0, 0, 0, 0, 0, 0},
+    {"Ember", 1, "Burns for 1 damage", 0, 0, 2, 0, 0, 0, 0},
+    {"Pyroblast", 6, "Deals 8 Fire damage", 8, 0, 0, 0, 0, 0, 0},
+    {"Wall of Fire", 4, "Creates a fiery barrier", 0, 0, 0, 0, 5, 0, 0},
+    {"Meteor", 8, "Deals 10 Fire damage", 10, 0, 0, 0, 0, 0, 0},
+    {"Ignite", 2, "Deals 2 Fire dmg over time", 0, 0, 3, 0, 0, 0, 0},
+    {"Ice Shard", 2, "Deals 2 Ice damage", 2, 0, 0, 0, 0, 0, 0},
+    {"Frostbolt", 3, "Deals 3 Ice dmg, slows", 3, 0, 0, 1, 0, 0, 0},
+    {"Blizzard", 6, "Deals 4 AoE Ice damage", 4, 0, 0, 1, 0, 0, 0},
+    {"Frost Nova", 4, "Freezes enemies in place", 0, 0, 0, 1, 0, 0, 0},
+    {"Ice Lance", 1, "Deals 1 Ice dmg (3 if frozen)", 1, 0, 0, 0, 0, 0, 0},
+    {"Glacial Spike", 7, "Deals 9 Ice damage", 9, 0, 0, 0, 0, 0, 0},
+    {"Cold Snap", 5, "Resets cooldowns (Ice)", 0, 0, 0, 0, 0, 0, 0},
+    {"Arcane Missiles", 1, "Fires 3 arcane bolts", 3, 0, 0, 0, 0, 0, 0},
+    {"Arcane Intellect", 3, "Draw 2 cards", 0, 0, 0, 0, 0, 0, 0},
+    {"Counterspell", 3, "Interrupts a spell", 0, 0, 0, 0, 0, 0, 0},
+    {"Magic Missile", 2, "Deals 2 Arcane damage", 2, 0, 0, 0, 0, 0, 0},
+    {"Arcane Blast", 4, "Deals 5 Arcane damage", 5, 0, 0, 0, 0, 0, 0},
+    {"Time Warp", 8, "Take an extra turn", 0, 0, 0, 0, 0, 0, 0},
+    {"Polymorph", 4, "Turns target into a sheep", 0, 0, 0, 1, 0, 0, 0},
+    {"Mana Shield", 2, "Absorbs damage using mana", 0, 0, 0, 0, 4, 0, 0},
+    {"Healing Touch", 2, "Heals 3 Life points", 0, 3, 0, 0, 0, 0, 0},
+    {"Rejuvenation", 3, "Heals 4 over time", 0, 0, 0, 0, 0, 4, 0},
+    {"Regrowth", 4, "Heals 2 + 2 over time", 0, 2, 0, 0, 0, 2, 0},
+    {"Swiftmend", 1, "Instantly heals 2", 0, 2, 0, 0, 0, 0, 0},
+    {"Tranquility", 8, "Heals 10 to all allies", 0, 10, 0, 0, 0, 0, 0},
+    {"Nourish", 3, "Heals 4", 0, 4, 0, 0, 0, 0, 0},
+    {"Nature's Grasp", 2, "Roots attackers", 0, 0, 0, 1, 0, 0, 0},
+    {"Lifebloom", 2, "Heals 1, blooms for 3", 0, 1, 0, 0, 0, 3, 0},
+    {"Flash Heal", 2, "Fast heal for 3", 0, 3, 0, 0, 0, 0, 0},
+    {"Greater Heal", 5, "Heals 7", 0, 7, 0, 0, 0, 0, 0},
+    {"Renew", 1, "Heals 2 over time", 0, 0, 0, 0, 0, 3, 0},
+    {"Poison Bolt", 4, "Deals 2 dmg, poisons for 3", 2, 0, 0, 0, 0, 0, 3},
+    {"Venom Strike", 2, "Poisons for 2", 0, 0, 0, 0, 0, 0, 2}
 };
 #define NUM_SAMPLE_CARDS (sizeof(sampleCards)/sizeof(CardDef))
 
@@ -65,7 +70,41 @@ int playerMana = 1;
 int playerMaxMana = 1;
 int opponentMana = 1;
 int opponentMaxMana = 1;
+
+int playerBurn = 0, playerFreeze = 0, playerShield = 0, playerRegen = 0, playerPoison = 0;
+int opponentBurn = 0, opponentFreeze = 0, opponentShield = 0, opponentRegen = 0, opponentPoison = 0;
+
 char arenaMsg[128] = "Spells and effects go here";
+
+void DealDamageToPlayer(int dmg) {
+    if (dmg <= 0) return;
+    if (playerShield > 0) {
+        if (playerShield >= dmg) {
+            playerShield -= dmg;
+            dmg = 0;
+        } else {
+            dmg -= playerShield;
+            playerShield = 0;
+        }
+    }
+    playerHp -= dmg;
+    if (playerHp < 0) playerHp = 0;
+}
+
+void DealDamageToOpponent(int dmg) {
+    if (dmg <= 0) return;
+    if (opponentShield > 0) {
+        if (opponentShield >= dmg) {
+            opponentShield -= dmg;
+            dmg = 0;
+        } else {
+            dmg -= opponentShield;
+            opponentShield = 0;
+        }
+    }
+    opponentHp -= dmg;
+    if (opponentHp < 0) opponentHp = 0;
+}
 
 HWND hwndDraw, hwndReset;
 
@@ -97,6 +136,8 @@ void ResetGame() {
     playerMana = 1;
     opponentMaxMana = 1;
     opponentMana = 1;
+    playerBurn = 0; playerFreeze = 0; playerShield = 0; playerRegen = 0; playerPoison = 0;
+    opponentBurn = 0; opponentFreeze = 0; opponentShield = 0; opponentRegen = 0; opponentPoison = 0;
     strcpy(arenaMsg, "Spells and effects go here");
     for (int i = 0; i < 3; i++) {
         DrawCard(0);
@@ -113,8 +154,23 @@ void PlayOpponentTurn() {
         CardDef cd = sampleCards[opponentHand[i]];
         if (opponentMana >= cd.cost) {
             opponentMana -= cd.cost;
-            playerHp -= cd.damage;
+            
+            int dmg = cd.damage;
+            if (strcmp(cd.name, "Ice Lance") == 0 && playerFreeze > 0) dmg = 3;
+            
+            DealDamageToPlayer(dmg);
             opponentHp += cd.heal;
+            
+            playerBurn += cd.burn;
+            playerFreeze += cd.freeze;
+            opponentShield += cd.shield;
+            opponentRegen += cd.regen;
+            playerPoison += cd.poison;
+            
+            if (strcmp(cd.name, "Arcane Intellect") == 0) {
+                DrawCard(1); DrawCard(1);
+            }
+
             if (playerHp <= 0) {
                 playerHp = 0;
                 gameState = 2; // opponent win
@@ -172,16 +228,38 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (LOWORD(wParam) == BTN_END_TURN) {
                 if (gameState == 0) {
+                    if (playerFreeze > 0) playerFreeze--;
+
                     if (opponentMaxMana < 10) opponentMaxMana++;
                     opponentMana = opponentMaxMana;
                     DrawCard(1);
+
+                    if (opponentBurn > 0) { DealDamageToOpponent(opponentBurn); opponentBurn--; }
+                    if (opponentPoison > 0) { DealDamageToOpponent(opponentPoison); opponentPoison--; }
+                    if (opponentRegen > 0) { opponentHp += opponentRegen; opponentRegen--; }
+                    if (opponentHp > 30) opponentHp = 30;
                     
-                    PlayOpponentTurn();
-                    
+                    if (opponentHp <= 0) {
+                        gameState = 1; // player win by dots
+                    } else {
+                        if (opponentFreeze > 0) {
+                            strcpy(arenaMsg, "Opponent is frozen and skips turn!");
+                            opponentFreeze--;
+                        } else {
+                            PlayOpponentTurn();
+                        }
+                    }
+
                     if (gameState == 0) {
                         if (playerMaxMana < 10) playerMaxMana++;
                         playerMana = playerMaxMana;
                         DrawCard(0);
+                        
+                        if (playerBurn > 0) { DealDamageToPlayer(playerBurn); playerBurn--; }
+                        if (playerPoison > 0) { DealDamageToPlayer(playerPoison); playerPoison--; }
+                        if (playerRegen > 0) { playerHp += playerRegen; playerRegen--; }
+                        if (playerHp > 30) playerHp = 30;
+                        if (playerHp <= 0) { playerHp = 0; gameState = 2; }
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
@@ -210,6 +288,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int playerY = ch - cardH - 20;
 
             if (gameState != 0) return 0;
+            if (playerFreeze > 0) {
+                strcpy(arenaMsg, "You are frozen and cannot cast spells!");
+                InvalidateRect(hwnd, NULL, TRUE);
+                return 0;
+            }
             
             for (int i = 0; i < playerCount; i++) {
                 int cx = playerX + i * (cardW + gap);
@@ -217,8 +300,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     CardDef cd = sampleCards[playerHand[i]];
                     if (playerMana >= cd.cost) {
                         playerMana -= cd.cost;
-                        opponentHp -= cd.damage;
+                        
+                        int dmg = cd.damage;
+                        if (strcmp(cd.name, "Ice Lance") == 0 && opponentFreeze > 0) dmg = 3;
+                        DealDamageToOpponent(dmg);
+                        
                         playerHp += cd.heal;
+                        opponentBurn += cd.burn;
+                        opponentFreeze += cd.freeze;
+                        playerShield += cd.shield;
+                        playerRegen += cd.regen;
+                        opponentPoison += cd.poison;
+                        
+                        if (strcmp(cd.name, "Arcane Intellect") == 0) {
+                            DrawCard(0); DrawCard(0);
+                        }
+
                         if (opponentHp <= 0) {
                             opponentHp = 0;
                             gameState = 1; // player win
@@ -340,13 +437,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(cardBorderPen);
 
             SetTextColor(hdc, RGB(232, 216, 183));
-            char oppLabel[128];
-            wsprintf(oppLabel, "Opponent Hand (HP: %d | Mana: %d/%d)", opponentHp, opponentMana, opponentMaxMana);
+            char oppLabel[256];
+            int pos = wsprintf(oppLabel, "Opponent Hand (HP: %d | Mana: %d/%d)", opponentHp, opponentMana, opponentMaxMana);
+            if (opponentShield > 0) pos += wsprintf(oppLabel + pos, " [Shield %d]", opponentShield);
+            if (opponentBurn > 0) pos += wsprintf(oppLabel + pos, " [Burn %d]", opponentBurn);
+            if (opponentPoison > 0) pos += wsprintf(oppLabel + pos, " [Poison %d]", opponentPoison);
+            if (opponentFreeze > 0) pos += wsprintf(oppLabel + pos, " [Frozen %d]", opponentFreeze);
+            if (opponentRegen > 0) pos += wsprintf(oppLabel + pos, " [Regen %d]", opponentRegen);
             RECT lblOpp = {0, oppY - 20, cw, oppY};
             DrawText(hdc, oppLabel, -1, &lblOpp, DT_CENTER | DT_SINGLELINE);
             
-            char playerLabel[128];
-            wsprintf(playerLabel, "Player Hand (HP: %d | Mana: %d/%d)", playerHp, playerMana, playerMaxMana);
+            char playerLabel[256];
+            pos = wsprintf(playerLabel, "Player Hand (HP: %d | Mana: %d/%d)", playerHp, playerMana, playerMaxMana);
+            if (playerShield > 0) pos += wsprintf(playerLabel + pos, " [Shield %d]", playerShield);
+            if (playerBurn > 0) pos += wsprintf(playerLabel + pos, " [Burn %d]", playerBurn);
+            if (playerPoison > 0) pos += wsprintf(playerLabel + pos, " [Poison %d]", playerPoison);
+            if (playerFreeze > 0) pos += wsprintf(playerLabel + pos, " [Frozen %d]", playerFreeze);
+            if (playerRegen > 0) pos += wsprintf(playerLabel + pos, " [Regen %d]", playerRegen);
             RECT lblPlayer = {0, playerY - 20, cw, playerY};
             DrawText(hdc, playerLabel, -1, &lblPlayer, DT_CENTER | DT_SINGLELINE);
 
