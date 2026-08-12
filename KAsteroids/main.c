@@ -178,6 +178,14 @@ int ufo_spawn_timer = 0;
 bool is_space_storm = false;
 bool is_asteroid_belt = false;
 
+typedef struct { float x, y, vx, vy, radius; int hp, max_hp; bool active; } Freighter;
+Freighter freighter = {0};
+
+typedef struct { float x, y, radius, pull, anim_frame; bool active; } BlackHole;
+BlackHole black_hole = {0};
+
+bool branching_active = false;
+
 Stats stats = {0};
 
 int score = 0;
@@ -419,6 +427,8 @@ void SetupWave() {
     num_ufos = 0;
     num_mines = 0;
     is_space_storm = false;
+    freighter.active = false;
+    black_hole.active = false;
 
     if (game_mode == 3) { // 20-Sector Campaign
         // Sector Space Storm Check
@@ -457,6 +467,17 @@ void SetupWave() {
             int total = 3 + wave / 2;
             int armored = (wave >= 3) ? (1 + wave / 3) : 0;
             SpawnAsteroids(total, armored);
+            if (wave == 2 || wave == 12) {
+                freighter.x = -50; freighter.y = HEIGHT / 2.0f;
+                freighter.vx = 0.5f; freighter.vy = 0;
+                freighter.radius = 25; freighter.hp = 30; freighter.max_hp = 30;
+                freighter.active = true;
+            }
+            if (wave == 3 || wave == 14) {
+                black_hole.x = WIDTH / 2.0f; black_hole.y = HEIGHT / 2.0f;
+                black_hole.radius = 40; black_hole.pull = 0.05f;
+                black_hole.active = true;
+            }
             if (wave >= 3) {
                 int mine_count = (wave / 3);
                 for (int m = 0; m < mine_count && num_mines < 30; m++) {
@@ -655,6 +676,16 @@ void CheckCollisions() {
     for (int i = 0; i < num_bullets; i++) {
         if (!bullets[i].active) continue;
 
+        if (bullets[i].is_enemy && freighter.active) {
+            float dist = sqrt(pow(bullets[i].x - freighter.x, 2) + pow(bullets[i].y - freighter.y, 2));
+            if (dist < freighter.radius) {
+                freighter.hp--; bullets[i].active = false;
+                CreateExplosion(bullets[i].x, bullets[i].y, RGB(239, 68, 68), 5, 10.0f);
+                if (freighter.hp <= 0) { freighter.active = false; KillShip(); }
+            }
+        }
+        if (!bullets[i].active) continue;
+
         if (bullets[i].is_enemy && ship.active) {
             float dist = sqrt(pow(bullets[i].x - ship.x, 2) + pow(bullets[i].y - ship.y, 2));
             if (dist < ship.radius) {
@@ -833,6 +864,15 @@ void CheckCollisions() {
 
         for (int j = 0; j < num_asteroids; j++) {
             if (!asteroids[j].active) continue;
+            if (freighter.active) {
+                float fdist = sqrt(pow(asteroids[j].x - freighter.x, 2) + pow(asteroids[j].y - freighter.y, 2));
+                if (fdist < asteroids[j].radius + freighter.radius) {
+                    asteroids[j].active = false; freighter.hp -= 5;
+                    CreateExplosion(asteroids[j].x, asteroids[j].y, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(148, 163, 184), 25, 45.0f);
+                    if (freighter.hp <= 0) { freighter.active = false; KillShip(); }
+                }
+            }
+            if (!asteroids[j].active) continue;
             float dist = sqrt(pow(ship.x - asteroids[j].x, 2) + pow(ship.y - asteroids[j].y, 2));
             if (dist < asteroids[j].radius + ship.radius) {
                 if (shield_timer > 0 || ship.invincible_timer > 0) {
@@ -930,6 +970,34 @@ void Update() {
     }
 
     bool was_game_over = game_over;
+
+    if (branching_active) {
+        if (ship.x < 50) {
+            wave++; branching_active = false; SetupWave(); ship.x = WIDTH/2; ship.y = HEIGHT/2; ship.vx = 0; ship.vy = 0;
+        } else if (ship.x > WIDTH - 50) {
+            wave += 2; branching_active = false; SetupWave(); ship.x = WIDTH/2; ship.y = HEIGHT/2; ship.vx = 0; ship.vy = 0;
+        }
+    }
+    if (freighter.active) {
+        freighter.x += freighter.vx;
+        if (freighter.x > WIDTH + 50) freighter.active = false;
+    }
+    if (black_hole.active) {
+        black_hole.anim_frame += 0.1f;
+        float dx = black_hole.x - ship.x; float dy = black_hole.y - ship.y;
+        float dist = sqrt(dx*dx + dy*dy);
+        if (dist > 10.0f) {
+            ship.vx += (dx / dist) * black_hole.pull; ship.vy += (dy / dist) * black_hole.pull;
+        }
+        if (dist < black_hole.radius) KillShip();
+        for (int i=0; i<num_asteroids; i++) {
+            if (!asteroids[i].active) continue;
+            float adx = black_hole.x - asteroids[i].x; float ady = black_hole.y - asteroids[i].y;
+            float adist = sqrt(adx*adx + ady*ady);
+            if (adist > 5.0f) { asteroids[i].vx += (adx/adist)*black_hole.pull*0.5f; asteroids[i].vy += (ady/adist)*black_hole.pull*0.5f; }
+            if (adist < black_hole.radius) asteroids[i].active = false;
+        }
+    }
 
     if (game_mode == 1) { // Time Attack
         long long now = GetTimeMs();
@@ -1305,7 +1373,7 @@ void Update() {
     CompactArrays();
 
     // Check Sector / Wave clear
-    if (num_asteroids == 0 && num_ufos == 0) {
+    if (num_asteroids == 0 && num_ufos == 0 && !branching_active && !freighter.active) {
         if (game_mode == 3) {
             if (wave >= 20) {
                 campaign_victory = true;
@@ -1313,6 +1381,8 @@ void Update() {
                 stats.campaign_wins++;
                 SaveStats();
                 UpdateHighScore();
+            } else if (wave == 5 || wave == 10 || wave == 15) {
+                branching_active = true;
             } else {
                 wave++;
                 SetupWave();
@@ -1474,6 +1544,25 @@ void Draw(HDC hdc) {
             LineTo(hdc, (int)(ship.x + c * 800.0f), (int)(ship.y + s * 800.0f));
             DeleteObject(beamPen);
         }
+    }
+
+    if (branching_active) {
+        SetTextColor(hdc, RGB(255, 255, 255)); SetBkMode(hdc, TRANSPARENT);
+        TextOutA(hdc, WIDTH/2 - 100, HEIGHT/2 - 50, "PATH BRANCH DETECTED", 20);
+        TextOutA(hdc, 20, HEIGHT/2, "<-- SAFE ZONE", 13);
+        TextOutA(hdc, WIDTH - 170, HEIGHT/2, "DANGER ZONE (+2) -->", 20);
+    }
+    if (freighter.active) {
+        HBRUSH fBrush = CreateSolidBrush(RGB(15, 118, 110)); HPEN fPen = CreatePen(PS_SOLID, 2, RGB(45, 212, 191));
+        SelectObject(hdc, fBrush); SelectObject(hdc, fPen);
+        Rectangle(hdc, (int)(freighter.x - 30), (int)(freighter.y - 15), (int)(freighter.x + 30), (int)(freighter.y + 15));
+        DeleteObject(fBrush); DeleteObject(fPen);
+    }
+    if (black_hole.active) {
+        HBRUSH bhBrush = CreateSolidBrush(RGB(0, 0, 0)); HPEN bhPen = CreatePen(PS_SOLID, 3, RGB(147, 51, 234));
+        SelectObject(hdc, bhBrush); SelectObject(hdc, bhPen);
+        Ellipse(hdc, (int)(black_hole.x - black_hole.radius), (int)(black_hole.y - black_hole.radius), (int)(black_hole.x + black_hole.radius), (int)(black_hole.y + black_hole.radius));
+        DeleteObject(bhBrush); DeleteObject(bhPen);
     }
 
     // Draw Asteroids with Rotation & Texture Facets

@@ -355,6 +355,9 @@
         let currentShotsHit = 0;
         let campaignVictory = false;
         let isSpaceStorm = false;
+        let branchingActive = false;
+        let freighter = { active: false, x: 0, y: 0, vx: 0, vy: 0, radius: 25, hp: 30, maxHp: 30 };
+        let blackHole = { active: false, x: 0, y: 0, radius: 40, pull: 0.05, animFrame: 0 };
         
         function getHighScore() {
             if (gameMode === 1) return stats.highScoreTimeAttack || 0;
@@ -1499,6 +1502,8 @@
             ufos = [];
             mines = [];
             isSpaceStorm = false;
+            freighter.active = false;
+            blackHole.active = false;
             stormBanner.style.display = 'none';
             beltBanner.style.display = 'none';
 
@@ -1536,6 +1541,12 @@
                     let total = 3 + Math.floor(wave / 2);
                     let armored = (wave >= 3) ? (1 + Math.floor(wave / 3)) : 0;
                     spawnAsteroids(total, armored);
+                    if (wave === 2 || wave === 12) {
+                        freighter.active = true; freighter.x = -50; freighter.y = canvas.height/2; freighter.vx = 0.5; freighter.vy = 0; freighter.hp = 30; freighter.maxHp = 30;
+                    }
+                    if (wave === 3 || wave === 14) {
+                        blackHole.active = true; blackHole.x = canvas.width/2; blackHole.y = canvas.height/2;
+                    }
                     if (wave >= 3) {
                         let mineCount = Math.floor(wave / 3);
                         for (let m = 0; m < mineCount; m++) mines.push(new Mine());
@@ -1677,6 +1688,15 @@
             for (let b of bullets) {
                 if (!b.active) continue;
                 
+                if (b.isEnemy && freighter.active) {
+                    if (Math.hypot(b.x - freighter.x, b.y - freighter.y) < freighter.radius) {
+                        freighter.hp--; b.active = false;
+                        createExplosion(b.x, b.y, '#ef4444', 5, 10);
+                        if (freighter.hp <= 0) { freighter.active = false; killShip(); }
+                    }
+                }
+                if (!b.active) continue;
+
                 if (b.isEnemy && ship.active) {
                     let dist = Math.hypot(b.x - ship.x, b.y - ship.y);
                     if (dist < ship.radius) {
@@ -1822,6 +1842,14 @@
 
                 for (let a of asteroids) {
                     if (!a.active) continue;
+                    if (freighter.active) {
+                        if (Math.hypot(a.x - freighter.x, a.y - freighter.y) < a.radius + freighter.radius) {
+                            a.active = false; freighter.hp -= 5;
+                            createExplosion(a.x, a.y, a.isArmored ? '#f97316' : '#94a3b8', 25, 45);
+                            if (freighter.hp <= 0) { freighter.active = false; killShip(); }
+                        }
+                    }
+                    if (!a.active) continue;
                     let dist = Math.hypot(ship.x - a.x, ship.y - a.y);
                     if (dist < a.radius + ship.radius) {
                         if (shieldTimer > 0 || ship.invincibleTimer > 0) {
@@ -1879,6 +1907,32 @@
             }
 
             let wasGameOver = gameOver;
+
+            if (branchingActive) {
+                if (ship.x < 50) {
+                    wave++; branchingActive = false; ship.x = canvas.width/2; ship.y = canvas.height/2; ship.vx = 0; ship.vy = 0; waveSpan.innerText = wave + "/20"; setupWave();
+                } else if (ship.x > canvas.width - 50) {
+                    wave += 2; branchingActive = false; ship.x = canvas.width/2; ship.y = canvas.height/2; ship.vx = 0; ship.vy = 0; waveSpan.innerText = wave + "/20"; setupWave();
+                }
+            }
+            if (freighter.active) {
+                freighter.x += freighter.vx;
+                if (freighter.x > canvas.width + 50) freighter.active = false;
+            }
+            if (blackHole.active) {
+                blackHole.animFrame += 0.1;
+                let dx = blackHole.x - ship.x; let dy = blackHole.y - ship.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist > 10) { ship.vx += (dx/dist)*blackHole.pull; ship.vy += (dy/dist)*blackHole.pull; }
+                if (dist < blackHole.radius) killShip();
+                for (let a of asteroids) {
+                    if (!a.active) continue;
+                    let adx = blackHole.x - a.x; let ady = blackHole.y - a.y;
+                    let adist = Math.hypot(adx, ady);
+                    if (adist > 5) { a.vx += (adx/adist)*blackHole.pull*0.5; a.vy += (ady/adist)*blackHole.pull*0.5; }
+                    if (adist < blackHole.radius) a.active = false;
+                }
+            }
 
             if (gameMode === 1) {
                 let now = Date.now();
@@ -1988,7 +2042,7 @@
 
             checkCollisions();
 
-            if (asteroids.length === 0 && ufos.length === 0) {
+            if (asteroids.length === 0 && ufos.length === 0 && !branchingActive && !freighter.active) {
                 if (gameMode === 3) {
                     if (wave >= 20) {
                         campaignVictory = true;
@@ -1998,6 +2052,8 @@
                         stats.campaignWins = (stats.campaignWins || 0) + 1;
                         saveStats();
                         updateHighScore();
+                    } else if (wave === 5 || wave === 10 || wave === 15) {
+                        branchingActive = true;
                     } else {
                         wave++;
                         waveSpan.innerText = wave + "/20";
@@ -2029,6 +2085,23 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawStarfield();
+            if (branchingActive) {
+                ctx.fillStyle = '#fff'; ctx.font = '20px Arial';
+                ctx.fillText("PATH BRANCH DETECTED", canvas.width/2 - 120, canvas.height/2 - 50);
+                ctx.font = '14px Arial';
+                ctx.fillText("<-- SAFE ZONE", 20, canvas.height/2);
+                ctx.fillText("DANGER ZONE (+2) -->", canvas.width - 170, canvas.height/2);
+            }
+            if (freighter.active) {
+                ctx.fillStyle = '#0f766e'; ctx.strokeStyle = '#2dd4bf'; ctx.lineWidth = 2;
+                ctx.fillRect(freighter.x - 30, freighter.y - 15, 60, 30);
+                ctx.strokeRect(freighter.x - 30, freighter.y - 15, 60, 30);
+            }
+            if (blackHole.active) {
+                ctx.fillStyle = '#000'; ctx.strokeStyle = '#9333ea'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(blackHole.x, blackHole.y, blackHole.radius, 0, Math.PI*2);
+                ctx.fill(); ctx.stroke();
+            }
             ship.draw();
             powerups.forEach(p => p.draw());
             mines.forEach(m => m.draw());
