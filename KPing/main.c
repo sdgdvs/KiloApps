@@ -151,6 +151,11 @@ DWORD WINAPI PingThread(LPVOID param) {
         while (ReadFile(hRead, buf, sizeof(buf) - 1, &bytesRead, NULL) && bytesRead > 0) {
             buf[bytesRead] = 0;
             int len = GetWindowTextLengthA(hOutput);
+            if (len > 30000) {
+                SendMessageA(hOutput, EM_SETSEL, 0, 10000);
+                SendMessageA(hOutput, EM_REPLACESEL, 0, (LPARAM)"");
+                len = GetWindowTextLengthA(hOutput);
+            }
             SendMessageA(hOutput, EM_SETSEL, len, len);
             
             char formatBuf[1024];

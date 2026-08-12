@@ -218,12 +218,16 @@
 
   function append(text, type="info", rawObj=null) {
       out.value += text;
+      if (out.value.length > 30000) {
+          out.value = out.value.substring(out.value.length - 20000);
+      }
       out.scrollTop = out.scrollHeight;
       if (rawObj) {
           logEntries.push(Object.assign({ timestamp: new Date().toISOString() }, rawObj));
       } else {
           logEntries.push({ timestamp: new Date().toISOString(), type, message: text.trim() });
       }
+      if (logEntries.length > 1000) logEntries.shift();
   }
 
   function generateHexDump(size) {
@@ -284,11 +288,13 @@
               if (time > stats.max) stats.max = time;
               stats.sum += time;
               historyData.push(time);
-              append(\`Reply from \${currentHost}: bytes=\${size} time=\${time}ms TTL=\${ttl}\n\`, 'reply', { host: currentHost, bytes: size, time, ttl });
+              if (historyData.length > 200) historyData.shift();
+              append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=${ttl}\n`, 'reply', { host: currentHost, bytes: size, time, ttl });
           } else {
               stats.lost++;
               historyData.push(null);
-              append(\`Request timed out.\n\`, 'timeout', { host: currentHost, error: 'timeout' });
+              if (historyData.length > 200) historyData.shift();
+              append(`Request timed out.\n`, 'timeout', { host: currentHost, error: 'timeout' });
           }
           updateAnalytics();
           drawGraph();
