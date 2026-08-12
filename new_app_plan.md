@@ -54,10 +54,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVoid (Sci-fi horror survival)
-**Phase:** 1 (next to do)
+**Phase:** 2 (next to do)
 **Status:** Creation
 
-- [ ] Phase 1: Scaffold KVoid directory (`KVoid/`), create web HTML skeleton (`KiloOS/public/apps/kvoid.html`), register in App.jsx.
+- [x] Phase 1: Scaffold KVoid directory (`KVoid/`), create web HTML skeleton (`KiloOS/public/apps/kvoid.html`), register in App.jsx.
 - [ ] Phase 2: Basic grid movement, player rendering, and simple room layout in web HTML.
 - [ ] Phase 3: Native C version (`KVoid/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [ ] Phase 4: Sci-fi horror UI styling (dark terminals, scanlines, flickering lights).
@@ -71,7 +71,6 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [ ] Phase 12: Multiple endings based on choices and speed of escape.
 - [ ] Phase 13: Sound Effects — heartbeat, alarm klaxons, alien screeches (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Survival Guide — How-to-play, lore index, enemy bestiary.
-Phase 1: FAILED — UNAVAILABLE (code 503): No capacity available for model
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
