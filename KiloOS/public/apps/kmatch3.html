@@ -148,12 +148,12 @@
       <p><b>Obstacles & Boss:</b><br/>
       - <b>Ice Tiles:</b> Cannot be moved. Break by matching internal gem.<br/>
       - <b>Stone/Iron Tiles:</b> Shatter in 1 to 3 hits.<br/>
-      - <b>Stage 20 Boss:</b> Jewel King (100 HP, Barrier Gems, Moving Obstacles!).</p>
+      - <b>Stage 20 Boss:</b> Jewel King (75 HP, Barrier Gems, Moving Obstacles!).</p>
       <p><b>Game Modes:</b><br/>
       - <b>Campaign (20 Stages):</b> Dynamic 6x6 to 10x10 boards & objectives.<br/>
       - <b>Zen:</b> Infinite relaxing play.<br/>
       - <b>Timed Rush:</b> Speed challenge against the clock.</p>
-      <p><b>Active Skills (Cost 500 Score):</b><br/>
+      <p><b>Active Skills (Cost 300 Score):</b><br/>
       - <b>[H] Hammer:</b> Destroy any single gem, ice, stone, or iron tile.<br/>
       - <b>[E] +Moves / +15s:</b> Add extra moves or timer seconds.<br/>
       - <b>[S] Shuffle:</b> Rearrange all board gems.<br/>
@@ -188,7 +188,7 @@
       { targetScore: 10000,moves: 20, timeLimit: 0,  iceCount: 28, stoneCount: 16, ironCount: 8, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 10, cols: 10, name: "17: Obsidian Lair" },
       { targetScore: 12000,moves: 25, timeLimit: 0,  iceCount: 30, stoneCount: 18, ironCount: 10,redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 10, cols: 10, name: "18: Diamond Gauntlet" },
       { targetScore: 14000,moves: 0,  timeLimit: 45, iceCount: 32, stoneCount: 20, ironCount: 10,redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 10, cols: 10, name: "19: Master's Crucible" },
-      { targetScore: 0,    moves: 30, timeLimit: 0,  iceCount: 10, stoneCount: 10, ironCount: 6, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 100, rows: 10, cols: 10, name: "20: Jewel King Boss" }
+      { targetScore: 0,    moves: 30, timeLimit: 0,  iceCount: 10, stoneCount: 10, ironCount: 6, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 75, rows: 10, cols: 10, name: "20: Jewel King Boss" }
     ];
 
     const boardEl = document.getElementById('board');
@@ -625,6 +625,10 @@
         }
       }
 
+      if (!checkMatchPossible()) {
+        shuffleBoard();
+      }
+
       updateObstacleCounts();
       saveGame();
     }
@@ -649,7 +653,7 @@
     }
 
     function useHammer() {
-      if (score >= 500) {
+      if (score >= 300) {
         powerupMode = 1;
         playPowerupSound();
         document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
@@ -657,7 +661,7 @@
       }
     }
     function useColorNuke() {
-      if (score >= 500) {
+      if (score >= 300) {
         powerupMode = 2;
         playPowerupSound();
         document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
@@ -665,8 +669,8 @@
       }
     }
     function useExtraMoves() {
-      if (score >= 500) {
-        score -= 500;
+      if (score >= 300) {
+        score -= 300;
         scoreEl.textContent = score;
         playPowerupSound();
         let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
@@ -676,20 +680,32 @@
         }
       }
     }
-    function useShuffle() {
-      if (score >= 500) {
-        score -= 500;
-        scoreEl.textContent = score;
-        playPowerupSound();
+    function shuffleBoard() {
+      do {
         for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
             if (grid[r][c] && grid[r][c].stoneHits === 0 && !grid[r][c].ice) {
-              let color = COLORS[Math.floor(Math.random() * COLORS.length)];
+              let color;
+              do {
+                color = COLORS[Math.floor(Math.random() * COLORS.length)];
+              } while (
+                (r >= 2 && grid[r-1][c].color === color && grid[r-2][c].color === color) ||
+                (c >= 2 && grid[r][c-1].color === color && grid[r][c-2].color === color)
+              );
               grid[r][c].color = color;
               grid[r][c].el.innerHTML = getGemSVG(getColorIndex(color), grid[r][c].type, 0, false, grid[r][c].barrier);
             }
           }
         }
+      } while (!checkMatchPossible());
+    }
+
+    function useShuffle() {
+      if (score >= 300) {
+        score -= 300;
+        scoreEl.textContent = score;
+        playPowerupSound();
+        shuffleBoard();
       }
     }
 
@@ -781,7 +797,7 @@
       if (powerupMode === 1) { // Hammer
           powerupMode = 0;
           document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
-          score -= 500; scoreEl.textContent = score;
+          score -= 300; scoreEl.textContent = score;
           isProcessing = true;
           processMatches({hMatches:[], vMatches:[]}, {r: r, c: c, single: true}).then(() => {
               checkLevelProgress();
@@ -792,7 +808,7 @@
       } else if (powerupMode === 2) { // Color Nuke
           powerupMode = 0;
           document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
-          score -= 500; scoreEl.textContent = score;
+          score -= 300; scoreEl.textContent = score;
           isProcessing = true;
           let targetC = grid[r][c] && grid[r][c].color ? grid[r][c].color : COLORS[0];
           processMatches({hMatches:[], vMatches:[]}, {r: r, c: c, color: targetC}).then(() => {
@@ -1180,6 +1196,10 @@
                 saveStats();
             }
         }
+      }
+      
+      if (!checkMatchPossible()) {
+        shuffleBoard();
       }
     }
 

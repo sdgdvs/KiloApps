@@ -52,8 +52,11 @@ static const StageConfig CAMPAIGN_STAGES[20] = {
     {10000, 20,  0, 28, 16,  8,  0,  0,  0,   0,10,10, "17: Obsidian Lair" },
     {12000, 25,  0, 30, 18, 10,  0,  0,  0,   0,10,10, "18: Diamond Gauntlet" },
     {14000,  0, 45, 32, 20, 10,  0,  0,  0,   0,10,10, "19: Master's Crucible" },
-    {    0, 30,  0, 10, 10,  6,  0,  0,  0, 100,10,10, "20: Jewel King Boss" }
+    {    0, 30,  0, 10, 10,  6,  0,  0,  0,  75,10,10, "20: Jewel King Boss" }
 };
+
+int CheckMatchPossible();
+void ShuffleBoard();
 
 int rows = 8;
 int cols = 8;
@@ -449,6 +452,10 @@ void InitStage(int stageIdx) {
             iceGrid[r][c] = 1;
             iceToPlace--;
         }
+    }
+
+    if (!CheckMatchPossible()) {
+        ShuffleBoard();
     }
 }
 
@@ -1181,25 +1188,38 @@ void CheckLevelProgress(HWND hwnd) {
 }
 
 void UseExtraMoves() {
-    if (score >= 500) {
-        score -= 500;
+    if (score >= 300) {
+        score -= 300;
         PlayPowerupSound();
         int isTimed = (gameMode == 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode == 2);
         moves += isTimed ? 15 : 5;
     }
 }
 
-void UseShuffle() {
-    if (score >= 500) {
-        score -= 500;
-        PlayPowerupSound();
+void ShuffleBoard() {
+    do {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 if (stoneGrid[r][c] == 0 && iceGrid[r][c] == 0) {
-                    grid[r][c] = rand() % 6;
+                    int color;
+                    do {
+                        color = rand() % 6;
+                    } while (
+                        (r >= 2 && grid[r-1][c] == color && grid[r-2][c] == color) ||
+                        (c >= 2 && grid[r][c-1] == color && grid[r][c-2] == color)
+                    );
+                    grid[r][c] = color;
                 }
             }
         }
+    } while (!CheckMatchPossible());
+}
+
+void UseShuffle() {
+    if (score >= 300) {
+        score -= 300;
+        PlayPowerupSound();
+        ShuffleBoard();
     }
 }
 
@@ -1308,15 +1328,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'E' || wParam == 'e' || wParam == 'M' || wParam == 'm') {
                 UseExtraMoves(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'H' || wParam == 'h') {
-                if (score >= 500) {
+                if (score >= 300) {
                     powerupMode = 1; PlayPowerupSound(); InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 'L' || wParam == 'l') {
-                if (score >= 500) {
+                if (score >= 300) {
                     powerupMode = 2; PlayPowerupSound(); InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == VK_F1) {
-                MessageBox(hwnd, "How to Play KMatch3:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Blaster (clears row/col).\n- Match 5: Rainbow Gem (clears all of selected color).\n- T/L Shape: 3x3 Bomb Gem.\n- Stone/Iron Tiles: 1-3 hits to shatter!\n- Boss: Stage 20 Jewel King Boss (100 HP, Barrier Gems).\n\nActive Skills (Cost 500):\n- [H] Hammer: Smash any single tile/gem.\n- [E] +Moves/+15s: Add extra moves or timer.\n- [S] Shuffle: Rearrange all board gems.\n- [L] Color Nuke: Nuke all gems of selected color.\n\nModes:\n- [1] Campaign (20 Stages)\n- [2] Zen Mode\n- [3] Timed Rush", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "How to Play KMatch3:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Blaster (clears row/col).\n- Match 5: Rainbow Gem (clears all of selected color).\n- T/L Shape: 3x3 Bomb Gem.\n- Stone/Iron Tiles: 1-3 hits to shatter!\n- Boss: Stage 20 Jewel King Boss (75 HP, Barrier Gems).\n\nActive Skills (Cost 300):\n- [H] Hammer: Smash any single tile/gem.\n- [E] +Moves/+15s: Add extra moves or timer.\n- [S] Shuffle: Rearrange all board gems.\n- [L] Color Nuke: Nuke all gems of selected color.\n\nModes:\n- [1] Campaign (20 Stages)\n- [2] Zen Mode\n- [3] Timed Rush", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
@@ -1330,7 +1350,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int c = x / cellSize;
                 int r = y / cellSize;
                 if (powerupMode == 1) { // Hammer
-                    score -= 500;
+                    score -= 300;
                     powerupMode = 0;
                     isProcessing = 1;
                     ProcessMatches(hwnd, r, c, 777);
@@ -1340,7 +1360,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 } else if (powerupMode == 2) { // Color Nuke
-                    score -= 500;
+                    score -= 300;
                     powerupMode = 0;
                     isProcessing = 1;
                     int targetC = (grid[r][c] >= 0) ? grid[r][c] : (rand() % 6);
