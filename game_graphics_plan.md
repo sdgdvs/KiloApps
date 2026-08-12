@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSpace
 - KPac
 - KSnake
 - KTetris
@@ -135,7 +134,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KWords
 - KReversi
 - KQuest
+- KSpace
 ## Completed Work Log
+
+- **KSpace (Loop 4):** Implemented polished varying irregular polygon asteroid shapes, animated flashing damage states for enemies below 50% HP, and distinct visual variations for item powerups with pulsing scale animations in both Web Canvas (kspace.html) and Native C Win32 GDI (KSpace/main.c).
 
 - **KQuest (Loop 3):** Implemented flickering torchlight ambient glow, detailed stone brick wall textures, and atmospheric floating dust motes in both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).
 

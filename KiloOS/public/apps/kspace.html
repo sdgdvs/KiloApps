@@ -1482,6 +1482,11 @@ window.addEventListener('load', () => {
       ctx.closePath(); ctx.fill();
     }
 
+    let isDamaged = (e.hp < e.maxHp / 2) && (frame % 4 < 2);
+    if (isDamaged && e.type !== 5 && e.type !== 9) {
+      ctx.filter = 'brightness(2) drop-shadow(0 0 5px red)';
+    }
+
     if (e.type === 0) { // Red Interceptor
       ctx.fillStyle = '#ff1744';
       ctx.beginPath();
@@ -1504,7 +1509,15 @@ window.addEventListener('load', () => {
     } else if (e.type === 5 || e.type === 9) { // Asteroids
       ctx.fillStyle = '#8d6e63';
       let r = (e.type === 9) ? 15 : 9;
-      ctx.beginPath(); ctx.arc(r, r, r, 0, Math.PI * 2); ctx.fill();
+      let ptsCount = 8;
+      ctx.beginPath();
+      for (let i = 0; i < ptsCount; i++) {
+        let a = i * Math.PI * 2 / ptsCount;
+        let pR = r * (0.8 + ((Math.floor(e.x + i * 77) % 100) / 250));
+        if (i === 0) ctx.moveTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
+        else ctx.lineTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
+      }
+      ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#5d4037';
       ctx.beginPath(); ctx.arc(r - 2, r - 2, r * 0.4, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 6) { // Frigate
@@ -1598,7 +1611,16 @@ window.addEventListener('load', () => {
     const labels = ['S', 'L', 'H', 'B', 'R', 'T', 'Y', 'D', 'W'];
 
     ctx.fillStyle = colors[pu.type] || '#fff';
-    ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    let pulseAmt = (frame % 20 < 10) ? 1 : 0;
+    if (pu.type % 3 === 0) {
+      ctx.moveTo(0, -7 - pulseAmt); ctx.lineTo(7+pulseAmt, 7+pulseAmt); ctx.lineTo(-7-pulseAmt, 7+pulseAmt); ctx.closePath();
+    } else if (pu.type % 3 === 1) {
+      ctx.rect(-7 - pulseAmt, -7 - pulseAmt, 14 + pulseAmt*2, 14 + pulseAmt*2);
+    } else {
+      ctx.arc(0, 0, 8 + pulseAmt, 0, Math.PI * 2);
+    }
+    ctx.fill();
 
     ctx.fillStyle = '#000';
     ctx.font = 'bold 9px monospace';

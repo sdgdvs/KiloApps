@@ -1283,7 +1283,7 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     SelectObject(hdc, oldPen);
 }
 
-void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked) {
+void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int hp, int maxHp, int frame) {
     int x = (int)fx, y = (int)fy, type = (int)ftype;
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
@@ -1309,6 +1309,9 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked) {
     else if (type == 7) col = RGB(255, 235, 59); // Kamikaze Spike
     else if (type == 8) col = cloaked ? RGB(30, 40, 60) : RGB(103, 58, 183);
 
+    int isDamaged = (hp < maxHp / 2) && (frame % 4 < 2);
+    if (isDamaged && type != 5 && type != 9) col = RGB(255, 255, 255);
+
     HBRUSH br = CreateSolidBrush(col);
     HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
 
@@ -1328,7 +1331,9 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked) {
         Polygon(hdc, pts, 4);
     } else if (type == 5 || type == 9) {
         int sz = (type == 9) ? 30 : 18;
-        Ellipse(hdc, x + 1, y + 1, x + sz, y + sz);
+        POINT pts[8] = { {x + sz/2, y}, {x + sz, y + sz/4}, {x + sz*7/8, y + sz}, {x + sz/2, y + sz*7/8},
+                         {x + sz/8, y + sz}, {x, y + sz*3/4}, {x + sz/4, y + sz/4}, {x + sz/4, y} };
+        Polygon(hdc, pts, 8);
     } else if (type == 6) {
         POINT pts[4] = { {x + 18, y + 34}, {x + 34, y + 8}, {x + 18, y + 12}, {x + 2, y + 8} };
         Polygon(hdc, pts, 4);
@@ -1412,7 +1417,7 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
     SelectObject(hdc, oldPen);
 }
 
-void DrawPowerupGDI(HDC hdc, float fx, float fy, float ftype) {
+void DrawPowerupGDI(HDC hdc, float fx, float fy, float ftype, int frame) {
     int x = (int)fx, y = (int)fy, type = (int)ftype;
     COLORREF cols[9] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(61, 90, 255), RGB(255, 23, 68), RGB(255, 234, 0), RGB(213, 0, 249), RGB(255, 215, 0), RGB(0, 176, 255), RGB(255, 100, 200) };
     COLORREF c = (type >= 0 && type < 9) ? cols[type] : RGB(255, 255, 255);
@@ -1420,7 +1425,16 @@ void DrawPowerupGDI(HDC hdc, float fx, float fy, float ftype) {
     HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
-    Ellipse(hdc, x, y, x + 16, y + 16);
+    int pulse = (frame % 20 < 10) ? 1 : 0;
+    if (type % 3 == 0) {
+        POINT pts[3] = { {x+8, y+2-pulse}, {x+14+pulse, y+14+pulse}, {x+2-pulse, y+14+pulse} };
+        Polygon(hdc, pts, 3);
+    } else if (type % 3 == 1) {
+        RECT r = {x+2-pulse, y+2-pulse, x+14+pulse, y+14+pulse};
+        FillRect(hdc, &r, br);
+    } else {
+        Ellipse(hdc, x-pulse, y-pulse, x + 16 + pulse, y + 16 + pulse);
+    }
     SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
     DeleteObject(br); DeleteObject(pen);
 }
@@ -1740,12 +1754,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(ebbr);
 
                     for (int i = 0; i < MAX_ENEMIES; i++) {
-                        if (e[i].active) DrawEnemyShipGDI(memDC, e[i].x, e[i].y, e[i].type, e[i].cloaked);
+                        if (e[i].active) DrawEnemyShipGDI(memDC, e[i].x, e[i].y, e[i].type, e[i].cloaked, e[i].hp, e[i].maxHp, frameCount);
                     }
 
                     if (bossActive) DrawBossGDI(memDC, bossX, bossY, frameCount);
                     for (int i = 0; i < MAX_POWERUPS; i++) {
-                        if (pu[i].active) DrawPowerupGDI(memDC, pu[i].x, pu[i].y, pu[i].type);
+                        if (pu[i].active) DrawPowerupGDI(memDC, pu[i].x, pu[i].y, pu[i].type, frameCount);
                     }
 
                     DrawParticles(memDC);
