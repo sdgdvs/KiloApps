@@ -189,7 +189,12 @@ void SaveConfig() {
     HANDLE hFile = CreateFileA("ksnake_binds.cfg", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD bw;
-        WriteFile(hFile, &bind_up, sizeof(int)*8, &bw, NULL); // Writes 8 ints contiguous since they are defined in order? Actually let's be explicit
+        int binds[8];
+        binds[0] = bind_up;    binds[1] = bind_down;
+        binds[2] = bind_left;  binds[3] = bind_right;
+        binds[4] = bind_ghost; binds[5] = bind_freeze;
+        binds[6] = bind_mag;   binds[7] = bind_pause;
+        WriteFile(hFile, binds, sizeof(binds), &bw, NULL);
         CloseHandle(hFile);
     }
 }
@@ -197,7 +202,13 @@ void LoadConfig() {
     HANDLE hFile = CreateFileA("ksnake_binds.cfg", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD br;
-        ReadFile(hFile, &bind_up, sizeof(int)*8, &br, NULL);
+        int binds[8];
+        if (ReadFile(hFile, binds, sizeof(binds), &br, NULL) && br == sizeof(binds)) {
+            bind_up = binds[0];    bind_down = binds[1];
+            bind_left = binds[2];  bind_right = binds[3];
+            bind_ghost = binds[4]; bind_freeze = binds[5];
+            bind_mag = binds[6];   bind_pause = binds[7];
+        }
         CloseHandle(hFile);
     }
 }
