@@ -147,7 +147,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KStarship  | Tier 1 | Loop 7 done (Crew, trade routes, narrative events, tech tree) | Loop 8: Fleet battles, alien diplomacy, deep space anomalies |
 | KAlchemy   | Tier 1 | Creator COMPLETE (Phase 14/14) | Loop 1: Initial content audit — recipe variety, quest depth, lab upgrade balance |
 | KColony    | Tier 1 | Creator COMPLETE (Phase 14/14) | Loop 1: Initial content audit — colony balance, alien difficulty, expedition depth |
 | KFortress  | Tier 1 | Creator building (Phase TBD) | Wait for Creator to finish — then Loop 1 content pass |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSnake     | Tier 1 | Loop 8 done (Ghost Berry, Hunter AI, Omega Boss) | Loop 9: Advanced level editor, more hazards, boss rematches |
 | KRogue     | Tier 1 | Loop 9 done (traps, boss rematches, cursed items) | Loop 10: Final sanctuary floors, true ending, ultra bosses |
 | KQuest     | Tier 1 | Loop 8 done (Job classes, magic system, companions) | Loop 9: Factions, mount system, crafting overhaul |
+| KStarship  | Tier 1 | Loop 8 done (Fleet battles, alien diplomacy, deep space anomalies) | Loop 9: Interstellar factions, planetary landing, crew moral |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 9**
+- [x] KStarship (Loop 8: Added Fleet Battles, Alien Diplomacy, and interactive Deep Space Anomalies in both EXE and HTML)
 - [x] KTowers (Balance audit complete: Validated optimal move counts, fixed stage unlock bug, verified locked-disk solvability in both EXE and HTML)
 - [x] KRogue (Loop 9: Advanced trap mechanics, boss rematches, cursed items to both EXE and HTML)
 
