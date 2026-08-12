@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KWords
 - KReversi
 
 - KQuest
@@ -136,7 +135,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSudoku
 - KGo
 - KTowers
+- KWords
 ## Completed Work Log
+
+- **KWords (Loop 3):** Implemented detailed mahogany wooden study desk texture background, ambient lamp/candlelight radial glow, and animated atmospheric floating dust motes in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
 - **KTowers (Loop 3):** Implemented cyber-grid neon city background, lightning flashes, and animated rain particle effects in both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 

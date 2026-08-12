@@ -4,6 +4,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 
 #define MAX_GRID_SIZE 26
 #define MAX_WORDS 25
@@ -239,7 +240,7 @@ typedef struct {
     int type; // 0=confetti, 1=ice, 2=spark
 } Particle;
 
-#define MAX_PARTICLES 200
+#define MAX_PARTICLES 300
 Particle particles[MAX_PARTICLES];
 bool particlesInit = false;
 
@@ -247,6 +248,7 @@ void SpawnParticles(int px, int py, int type) {
     if (!particlesInit) { memset(particles, 0, sizeof(particles)); particlesInit = true; }
     int numSpawn = (type == 1) ? 15 : 20;
     if (type == 0) numSpawn = 80;
+    if (type == 3) numSpawn = 50; // Dust
     int spawned = 0;
     for (int i = 0; i < MAX_PARTICLES && spawned < numSpawn; i++) {
         if (type == 0 || (particles[i].type != 0 && particles[i].life <= 0)) {
@@ -264,6 +266,15 @@ void SpawnParticles(int px, int py, int type) {
                 particles[i].color = colors[rand() % 6];
                 particles[i].size = 6 + rand() % 7;
                 particles[i].shape = rand() % 2;
+                particles[i].decay = 0;
+            } else if (type == 3) { // Dust motes
+                particles[i].x = (float)(rand() % 1000);
+                particles[i].y = (float)(rand() % 900);
+                particles[i].vx = ((rand() % 100) - 50) / 150.0f;
+                particles[i].vy = -0.2f - (rand() % 100) / 200.0f;
+                particles[i].color = RGB(255, 230, 180);
+                particles[i].size = 1 + rand() % 3;
+                particles[i].shape = 0;
                 particles[i].decay = 0;
             } else {
                 particles[i].x = (float)px;
@@ -313,6 +324,12 @@ void DrawConfettiFX(HDC hdc, int width, int height) {
         if (particles[i].type == 0) {
             if (particles[i].y > height + 20) {
                 particles[i].y = -10.0f;
+                particles[i].x = (float)(rand() % width);
+            }
+        } else if (particles[i].type == 3) {
+            particles[i].x += (float)(sin((double)particles[i].y * 0.05) * 0.2);
+            if (particles[i].y < -10.0f || particles[i].x < -10.0f || particles[i].x > width + 10.0f) {
+                particles[i].y = height + 10.0f;
                 particles[i].x = (float)(rand() % width);
             }
         } else {
@@ -953,6 +970,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             InitGame();
+            SpawnParticles(0, 0, 3); // Initial dust
             SetTimer(hwnd, 1, 1000, NULL);
             SetTimer(hwnd, 2, 30, NULL);
             break;
@@ -1115,9 +1133,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            HBRUSH bgBrush = CreateSolidBrush(RGB(15, 17, 26));
-            FillRect(hdc, &ps.rcPaint, bgBrush);
-            DeleteObject(bgBrush);
+            // Detailed wooden study desk texture with ambient lighting
+            for (int y = ps.rcPaint.top; y <= ps.rcPaint.bottom; y++) {
+                int dy = abs(y - 425);
+                int glow = 300 - dy;
+                if (glow < 0) glow = 0;
+                glow = glow / 4; 
+                
+                int wave = (int)(sin(y * 0.03) * 15 + sin(y * 0.1) * 5);
+                int grain = ((y + wave) % 25 < 6) ? -12 : 0;
+                int microGrain = (y % 3 == 0) ? -5 : 0;
+                
+                int cr = 55 + glow + grain + microGrain;
+                int cg = 30 + (glow * 2 / 3) + grain + microGrain;
+                int cb = 15 + (glow / 3) + grain + microGrain;
+                if (cr < 0) cr = 0; if (cr > 255) cr = 255;
+                if (cg < 0) cg = 0; if (cg > 255) cg = 255;
+                if (cb < 0) cb = 0; if (cb > 255) cb = 255;
+                
+                HPEN hPen = CreatePen(PS_SOLID, 1, RGB(cr, cg, cb));
+                HPEN oldPen = (HPEN)SelectObject(hdc, hPen);
+                MoveToEx(hdc, ps.rcPaint.left, y, NULL);
+                LineTo(hdc, ps.rcPaint.right, y);
+                SelectObject(hdc, oldPen);
+                DeleteObject(hPen);
+            }
             
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(226, 232, 240));

@@ -8,7 +8,18 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 10px;
-    background: radial-gradient(circle at center, #1b1e2e 0%, #0b0d14 100%);
+    background: 
+      radial-gradient(circle at 50% 30%, rgba(255, 215, 150, 0.2) 0%, rgba(10, 5, 0, 0.9) 100%),
+      linear-gradient(to right, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.05) 50%, rgba(255,255,255,0.02) 100%),
+      repeating-linear-gradient(
+        3deg,
+        #3e2112 0px,
+        #3e2112 4px,
+        #33190c 4px,
+        #33190c 10px,
+        #2a1409 10px,
+        #2a1409 12px
+      );
     color: #e2e8f0;
     display: flex;
     flex-direction: column;
@@ -1239,7 +1250,19 @@
             canvas.height = canvas.parentElement.clientHeight;
         }
 
-        if (type === 'ice') {
+        if (type === 'dust') {
+            for(let i=0; i<40; i++) {
+                activeParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: -(Math.random() * 0.5 + 0.2),
+                    color: 'rgba(255, 230, 180, 0.6)',
+                    size: Math.random() * 2.5 + 0.5,
+                    life: 1.0, decay: 0, type: 'dust'
+                });
+            }
+        } else if (type === 'ice') {
             for(let i=0; i<15; i++) {
                 activeParticles.push({
                     x: x, y: y,
@@ -1292,6 +1315,12 @@
             if (p.type === 'confetti') {
                 if (p.y > canvas.height) p.y = -10;
                 ctx.globalAlpha = 1.0;
+            } else if (p.type === 'dust') {
+                p.x += Math.sin(p.y * 0.02) * 0.2;
+                if (p.y < -10) p.y = canvas.height + 10;
+                if (p.x < -10) p.x = canvas.width + 10;
+                if (p.x > canvas.width + 10) p.x = -10;
+                ctx.globalAlpha = 0.6;
             } else {
                 p.life -= p.decay;
                 p.vy += 0.2; // gravity
@@ -1355,6 +1384,11 @@
 
 
     initGame();
+    
+    // Spawn ambient dust motes
+    setTimeout(() => {
+        spawnParticles(0, 0, 'dust');
+    }, 500);
   </script>
 </body>
 </html>
