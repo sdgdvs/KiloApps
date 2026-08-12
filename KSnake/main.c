@@ -1487,9 +1487,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_PAINT: {
             PAINTSTRUCT ps; HDC hdc = BeginPaint(hwnd, &ps);
-            HBRUSH bg = CreateSolidBrush(RGB(15, 15, 26)); FillRect(hdc, &ps.rcPaint, bg); DeleteObject(bg);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+            float scale = dpi / 96.0f;
+            SetGraphicsMode(hdc, GM_ADVANCED);
+            XFORM xform = { scale, 0.0f, 0.0f, scale, 0.0f, 0.0f };
+            SetWorldTransform(hdc, &xform);
 
-            HFONT hFont = CreateFontA(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            RECT logicalRect = {0, 0, 520, 620};
+            HBRUSH bg = CreateSolidBrush(RGB(15, 15, 26)); FillRect(hdc, &logicalRect, bg); DeleteObject(bg);
+
+            HFONT hFont = CreateFontA(-22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
 
             SetBkMode(hdc, TRANSPARENT);
@@ -1675,8 +1682,13 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    winWidth = GRID_WIDTH * CELL_SIZE + 20;
-    winHeight = GRID_HEIGHT * CELL_SIZE + 105;
+    HDC hdcScreen = GetDC(NULL);
+    int dpi = GetDeviceCaps(hdcScreen, LOGPIXELSX);
+    ReleaseDC(NULL, hdcScreen);
+    float scale = dpi / 96.0f;
+
+    winWidth = (int)((GRID_WIDTH * CELL_SIZE + 20) * scale);
+    winHeight = (int)((GRID_HEIGHT * CELL_SIZE + 105) * scale);
 
     RECT rect = {0, 0, winWidth, winHeight};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
