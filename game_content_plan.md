@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KHangman   | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check word difficulty per category, ensure strike limits are fair, verify 14-letter words aren't absurd. |
 | KWords     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check word placement in grids, ensure Fog of War mechanic is fun not frustrating. |
 | KSimon     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check sequence speed curve, verify 8-button mode is playable, audit Chaos Reverse fairness. |
 | KMatch3    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check board generation ensures moves exist, verify Boss HP is achievable, audit powerup economy. |
@@ -180,11 +179,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KTowers    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Verified optimal move counts (BFS solver) and checked locked-disk puzzles. Fixed unlock bug in main.c. |
 | KTetris    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Adjusted Pentomino piece frequency in late stages and smoothed the drop speed curve. |
 | KPong      | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Adjusted AI paddle speed per difficulty, nerfed boss, fixed powerup spawn rates. |
+| KHangman   | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audited word difficulty, removed multi-word phrases, smoothed strike limits for late campaign. |
 
 
 ## Progress Log
 
 **Loop 9**
+- [x] KHangman (Balance audit complete: Removed multi-word phrases, smoothed strike limit difficulty curve for stages 11-20 in both EXE and HTML)
 - [x] KColony (Loop 1: Rebalanced Mine production, added dynamic scaling to alien spawns/HP, and deepened expedition risks/rewards in both EXE and HTML)
 - [x] KPong (Balance audit complete: Standardized AI speeds, nerfed Stage 20 boss speed, and fixed powerup spawn rates in both EXE and HTML)
 - [x] KAlchemy (Loop 1: Expanded recipes to 62, rebalanced quest gold/XP scaling, and reduced early lab upgrade costs in both EXE and HTML)
