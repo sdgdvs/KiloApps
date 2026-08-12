@@ -133,7 +133,7 @@ void PerformSearch(HWND hwnd) {
 
     // Wrap around if not found from cursor
     if (foundIdx == -1 && selEnd > 0) {
-        for (int i = 0; i < (int)selEnd; i++) {
+        for (int i = 0; i < (int)selEnd && i <= len - qLen; i++) {
             int match = 1;
             for (int j = 0; j < qLen; j++) {
                 char c1 = text[i + j];

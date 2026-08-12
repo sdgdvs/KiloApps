@@ -857,6 +857,7 @@
         currentText = ev.target.result;
         currentScroll = 0;
         totalSecondsSpent = 0;
+        clearSearchHighlights();
         safeSetItem('kread_text', currentText);
         safeSetItem('kread_scroll', 0);
         safeSetItem('kread_time_spent', 0);
@@ -870,6 +871,7 @@
       if (confirm('Clear loaded document and reset reading session?')) {
         currentText = '';
         currentScroll = 0;
+        clearSearchHighlights();
         try {
           localStorage.removeItem('kread_text');
           localStorage.removeItem('kread_scroll');
@@ -888,6 +890,7 @@
         reader.onload = (ev) => {
           currentText = ev.target.result;
           currentScroll = 0;
+          clearSearchHighlights();
           safeSetItem('kread_text', currentText);
           safeSetItem('kread_scroll', 0);
           renderContent();
