@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSnake
 - KTetris
 - KBreakout
 - KMaze
@@ -135,7 +134,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KQuest
 - KSpace
 - KPac
+- KSnake
 ## Completed Work Log
+
+- **KSnake (Loop 4):** Implemented distinct triangular patterned tail segment, striped snake body segments with scale highlights, distinct visual states for spiders (aggressive angular heads and fast wiggling vs smooth calm heads), and an enraged mechanical Boss Drone state (fast flashing yellow/red eye, red warning outlines, detailed gear cutouts) below 40% HP in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
 - **KPac (Loop 4):** Implemented polished ghost eye blinking and frightened wiggly eye animations, unique accessories (Blinky angry eyebrows, Pinky bow, Inky nerd glasses, Clyde baseball cap, Sue eyelashes), and visually distinct power pellets with animated pulsing glowing halos in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 

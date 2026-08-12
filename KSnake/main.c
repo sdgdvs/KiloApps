@@ -945,6 +945,29 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
 
         SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
         DeleteObject(headBrush); DeleteObject(headPen);
+    } else if (index == total - 1) {
+        // Tail segment
+        HBRUSH tailBrush = CreateSolidBrush(is_ghost ? RGB(72, 219, 251) : (speed_active_timer > 0 ? RGB(241, 196, 15) : RGB(39, 174, 96)));
+        HPEN tailPen = CreatePen(PS_SOLID, 1, RGB(25, 110, 90));
+        oldBrush = (HBRUSH)SelectObject(hdc, tailBrush);
+        oldPen = (HPEN)SelectObject(hdc, tailPen);
+        
+        int prev_x = snake[index - 1].x;
+        int prev_y = snake[index - 1].y;
+        int dx = x - prev_x;
+        int dy = y - prev_y;
+        if (dx > 1) dx = -1; else if (dx < -1) dx = 1;
+        if (dy > 1) dy = -1; else if (dy < -1) dy = 1;
+        
+        POINT pts[3];
+        if (dx == -1) { pts[0].x = cx+8; pts[0].y = cy-8; pts[1].x = cx-10; pts[1].y = cy; pts[2].x = cx+8; pts[2].y = cy+8; }
+        else if (dx == 1) { pts[0].x = cx-8; pts[0].y = cy-8; pts[1].x = cx+10; pts[1].y = cy; pts[2].x = cx-8; pts[2].y = cy+8; }
+        else if (dy == -1) { pts[0].x = cx-8; pts[0].y = cy+8; pts[1].x = cx; pts[1].y = cy-10; pts[2].x = cx+8; pts[2].y = cy+8; }
+        else { pts[0].x = cx-8; pts[0].y = cy-8; pts[1].x = cx; pts[1].y = cy+10; pts[2].x = cx+8; pts[2].y = cy-8; }
+        Polygon(hdc, pts, 3);
+        
+        SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+        DeleteObject(tailBrush); DeleteObject(tailPen);
     } else {
         HBRUSH bodyBrush = CreateSolidBrush(is_ghost ? RGB(72, 219, 251) : (speed_active_timer > 0 ? RGB(241, 196, 15) : (index % 2 == 0 ? RGB(46, 204, 113) : RGB(33, 140, 116))));
         HPEN bodyPen = CreatePen(PS_SOLID, 1, RGB(25, 110, 90));
@@ -956,10 +979,20 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
 
         Ellipse(hdc, px + inset, py + inset, px + CELL_SIZE - inset, py + CELL_SIZE - inset);
         
+        // Striped pattern
+        HPEN stripePen = CreatePen(PS_SOLID, 1, RGB(20, 90, 70));
+        HPEN oldStripe = (HPEN)SelectObject(hdc, stripePen);
+        MoveToEx(hdc, px + inset + 4, py + inset + 4, NULL);
+        LineTo(hdc, px + CELL_SIZE - inset - 4, py + CELL_SIZE - inset - 4);
+        MoveToEx(hdc, px + CELL_SIZE - inset - 4, py + inset + 4, NULL);
+        LineTo(hdc, px + inset + 4, py + CELL_SIZE - inset - 4);
+        SelectObject(hdc, oldStripe);
+        DeleteObject(stripePen);
+
         // Scale highlight
         HBRUSH hlBrush = CreateSolidBrush(RGB(100, 230, 150));
         SelectObject(hdc, hlBrush);
-        Ellipse(hdc, px + inset + 1, py + inset + 1, px + inset + 4, py + inset + 4);
+        Ellipse(hdc, px + inset + 1, py + inset + 1, px + inset + 5, py + inset + 5);
         DeleteObject(hlBrush);
 
         SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
@@ -969,25 +1002,43 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
 
 void DrawRivalGDI(HDC hdc, int x, int y, int index, int type) {
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
-    HBRUSH brush = CreateSolidBrush(type == 1 ? (index == 0 ? RGB(192, 57, 43) : RGB(231, 76, 60)) : (index == 0 ? RGB(44, 62, 80) : RGB(52, 73, 94)));
+    int is_aggro = (type == 1);
+    HBRUSH brush = CreateSolidBrush(is_aggro ? (index == 0 ? RGB(192, 57, 43) : RGB(231, 76, 60)) : (index == 0 ? RGB(44, 62, 80) : RGB(52, 73, 94)));
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(20, 30, 40));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
 
-    Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
+    if (index == 0 && is_aggro) {
+        POINT pts[3];
+        pts[0].x = px + CELL_SIZE/2; pts[0].y = py + 2;
+        pts[1].x = px + CELL_SIZE - 2; pts[1].y = py + CELL_SIZE - 2;
+        pts[2].x = px + 2; pts[2].y = py + CELL_SIZE - 2;
+        Polygon(hdc, pts, 3);
+    } else {
+        Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
+    }
     
     if (index == 0) {
         HBRUSH eyeBrush = CreateSolidBrush(RGB(231, 76, 60));
         SelectObject(hdc, eyeBrush);
-        Ellipse(hdc, px+3, py+3, px+6, py+6);
-        Ellipse(hdc, px+CELL_SIZE-6, py+3, px+CELL_SIZE-3, py+6);
+        if (is_aggro) {
+            Ellipse(hdc, px+6, py+8, px+10, py+12);
+            Ellipse(hdc, px+CELL_SIZE-10, py+8, px+CELL_SIZE-6, py+12);
+        } else {
+            Ellipse(hdc, px+4, py+4, px+8, py+8);
+            Ellipse(hdc, px+CELL_SIZE-8, py+4, px+CELL_SIZE-4, py+8);
+        }
         DeleteObject(eyeBrush);
     }
     
     // Legs
-    HPEN legPen = CreatePen(PS_SOLID, 2, RGB(44, 62, 80));
+    HPEN legPen = CreatePen(PS_SOLID, is_aggro ? 3 : 2, is_aggro ? RGB(142, 68, 173) : RGB(44, 62, 80));
     SelectObject(hdc, legPen);
-    int wiggle = (anim_tick + index) % 2 == 0 ? 2 : -2;
+    int wiggle_spd = is_aggro ? 2 : 1;
+    int wiggle = ((anim_tick * wiggle_spd) + index) % 4;
+    if (wiggle > 2) wiggle = 4 - wiggle; // 0,1,2,1,0
+    wiggle = (wiggle - 1) * (is_aggro ? 4 : 2); // -2 to 2 or -4 to 4
+
     MoveToEx(hdc, px+2, py+CELL_SIZE/2, NULL); LineTo(hdc, px-2-wiggle, py+CELL_SIZE/2+wiggle);
     MoveToEx(hdc, px+CELL_SIZE-2, py+CELL_SIZE/2, NULL); LineTo(hdc, px+CELL_SIZE+2+wiggle, py+CELL_SIZE/2-wiggle);
     DeleteObject(legPen);
@@ -998,21 +1049,30 @@ void DrawRivalGDI(HDC hdc, int x, int y, int index, int type) {
 
 void DrawBossGDI(HDC hdc, int x, int y, int index) {
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
+    int hp_ratio_low = (boss.max_hp > 0 && boss.hp * 100 / boss.max_hp < 40);
     HBRUSH brush = CreateSolidBrush(index == 0 ? RGB(45, 52, 54) : RGB(99, 110, 114));
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(178, 190, 195));
+    HPEN pen = CreatePen(PS_SOLID, hp_ratio_low ? 2 : 1, (hp_ratio_low && (anim_tick % 4 < 2)) ? RGB(255, 0, 0) : RGB(178, 190, 195));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
 
-    Rectangle(hdc, px, py, px + CELL_SIZE, py + CELL_SIZE);
+    Rectangle(hdc, px + (hp_ratio_low?1:0), py + (hp_ratio_low?1:0), px + CELL_SIZE - (hp_ratio_low?1:0), py + CELL_SIZE - (hp_ratio_low?1:0));
     
     if (index == 0) {
         // Red Pulsing Eye
-        int pulse = (anim_tick % 10) > 5 ? 1 : 0;
-        HBRUSH eyeBrush = CreateSolidBrush(pulse ? RGB(255, 118, 117) : RGB(214, 48, 49));
+        int pulse = hp_ratio_low ? ((anim_tick % 4) < 2) : ((anim_tick % 10) > 5);
+        HBRUSH eyeBrush = CreateSolidBrush(pulse ? (hp_ratio_low ? RGB(255, 255, 0) : RGB(255, 118, 117)) : RGB(214, 48, 49));
         SelectObject(hdc, eyeBrush);
-        Ellipse(hdc, px+4, py+4, px+CELL_SIZE-4, py+CELL_SIZE-4);
+        int eSize = hp_ratio_low ? 3 : 4;
+        Ellipse(hdc, px+eSize, py+eSize, px+CELL_SIZE-eSize, py+CELL_SIZE-eSize);
         DeleteObject(eyeBrush);
     } else {
+        // Inner Details (Gears/Vents)
+        HBRUSH ventBrush = CreateSolidBrush(RGB(45, 52, 54));
+        SelectObject(hdc, ventBrush);
+        Rectangle(hdc, px+4, py+8, px+8, py+CELL_SIZE-8);
+        Rectangle(hdc, px+CELL_SIZE-8, py+8, px+CELL_SIZE-4, py+CELL_SIZE-8);
+        DeleteObject(ventBrush);
+        
         // Metal rivets
         HBRUSH rivetBrush = CreateSolidBrush(RGB(45, 52, 54));
         SelectObject(hdc, rivetBrush);

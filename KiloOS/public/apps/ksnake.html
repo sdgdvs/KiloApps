@@ -1202,13 +1202,41 @@
                     ctx.lineTo(r * 1.6, 2);
                     ctx.fill();
                 }
+            } else if (index === total - 1) {
+                // Tail segment
+                let prev = snake[index - 1];
+                let dx = prev ? s.x - prev.x : 0;
+                let dy = prev ? s.y - prev.y : 0;
+                if (dx > 1) dx = -1; else if (dx < -1) dx = 1;
+                if (dy > 1) dy = -1; else if (dy < -1) dy = 1;
+                let angle = Math.atan2(dy, dx);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(-r * 0.3, -r * 0.5);
+                ctx.lineTo(r * 0.8, 0);
+                ctx.lineTo(-r * 0.3, r * 0.5);
+                ctx.fillStyle = ghost ? 'rgba(72,219,251,0.6)' : (speedActiveTimer > 0 ? '#f1c40f' : '#27ae60');
+                ctx.fill();
             } else {
-                let bodyR = (r - 1) * Math.max(0.5, 1 - (index / (total * 3)));
+                let bodyR = (r - 1) * Math.max(0.6, 1 - (index / (total * 2)));
                 ctx.beginPath(); ctx.arc(0, 0, bodyR, 0, Math.PI * 2);
                 ctx.fillStyle = ghost ? 'rgba(72,219,251,0.6)' : (speedActiveTimer > 0 ? '#f1c40f' : (index % 2 === 0 ? '#2ecc71' : '#27ae60'));
                 ctx.fill();
+                
+                // Patterned stripes instead of simple dot
+                ctx.strokeStyle = ghost ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(-bodyR * 0.5, -bodyR * 0.5);
+                ctx.lineTo(bodyR * 0.5, bodyR * 0.5);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(bodyR * 0.5, -bodyR * 0.5);
+                ctx.lineTo(-bodyR * 0.5, bodyR * 0.5);
+                ctx.stroke();
+                
                 // Scale highlight
-                ctx.beginPath(); ctx.arc(-bodyR*0.2, -bodyR*0.2, bodyR*0.3, 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(-bodyR*0.2, -bodyR*0.2, bodyR*0.2, 0, Math.PI * 2);
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.fill();
             }
@@ -1217,13 +1245,31 @@
 
         function drawRivalSegment(s, index, type) {
             let cx = s.x * CELL + CELL / 2, cy = s.y * CELL + CELL / 2;
-            let time = Date.now() / 200;
+            let speed = type === 1 ? 100 : 250;
+            let time = Date.now() / speed;
             ctx.save();
             ctx.translate(cx, cy);
             
             if (index === 0) {
+                // Determine angle based on movement direction
+                let angle = 0;
+                let rObj = rivals.find(r => r.body && r.body[0] === s);
+                if (rObj && rObj.dir) {
+                    if (rObj.dir.x === 1) angle = 0; else if (rObj.dir.x === -1) angle = Math.PI;
+                    else if (rObj.dir.y === 1) angle = Math.PI / 2; else if (rObj.dir.y === -1) angle = -Math.PI / 2;
+                }
+                ctx.rotate(angle);
+                
                 ctx.fillStyle = type === 1 ? '#c0392b' : '#2c3e50';
-                ctx.beginPath(); ctx.arc(0, 0, CELL/2 - 1, 0, Math.PI * 2); ctx.fill();
+                if (type === 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(-CELL/2+2, -CELL/2+2);
+                    ctx.lineTo(CELL/2-2, 0);
+                    ctx.lineTo(-CELL/2+2, CELL/2-2);
+                    ctx.fill();
+                } else {
+                    ctx.beginPath(); ctx.arc(0, 0, CELL/2 - 1, 0, Math.PI * 2); ctx.fill();
+                }
                 ctx.fillStyle = '#e74c3c';
                 ctx.beginPath(); ctx.arc(2, -2, 1.5, 0, Math.PI*2); ctx.arc(2, 2, 1.5, 0, Math.PI*2); ctx.fill();
             } else {
@@ -1232,8 +1278,9 @@
             }
             
             // Wiggling Legs
-            ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 1.5;
-            let wiggle = Math.sin(time + index) * 3;
+            ctx.strokeStyle = type === 1 ? '#8e44ad' : '#2c3e50'; 
+            ctx.lineWidth = type === 1 ? 2 : 1.5;
+            let wiggle = Math.sin(time + index) * (type === 1 ? 5 : 3);
             for(let i of [-1, 1]) {
                 ctx.beginPath(); ctx.moveTo(0, i*3); ctx.lineTo(4+wiggle, i*8); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(0, i*3); ctx.lineTo(-4-wiggle, i*8); ctx.stroke();
@@ -1243,6 +1290,8 @@
 
         function drawBossSegment(s, index) {
             let cx = s.x * CELL + CELL/2, cy = s.y * CELL + CELL/2;
+            let hpRatio = boss.hp / boss.maxHp;
+            let time = Date.now();
             ctx.save();
             ctx.translate(cx, cy);
             
@@ -1251,15 +1300,25 @@
                 ctx.fillStyle = '#2d3436';
                 ctx.fillRect(-CELL/2, -CELL/2, CELL, CELL);
                 // Pulsing Red Eye
-                ctx.fillStyle = '#d63031';
-                ctx.shadowColor = '#ff7675'; ctx.shadowBlur = 10 + Math.sin(Date.now()/100)*5;
-                ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill();
+                let flashSpeed = hpRatio < 0.4 ? 50 : 150;
+                let eyeColor = hpRatio < 0.4 ? (Math.floor(time / flashSpeed) % 2 === 0 ? '#ff0000' : '#ffff00') : '#d63031';
+                ctx.fillStyle = eyeColor;
+                ctx.shadowColor = hpRatio < 0.4 ? '#ff0000' : '#ff7675'; 
+                ctx.shadowBlur = 10 + Math.sin(time/flashSpeed)*5;
+                ctx.beginPath(); ctx.arc(0, 0, hpRatio < 0.4 ? 5 : 4, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0;
             } else {
                 // Drone Body
                 ctx.fillStyle = '#636e72';
                 ctx.fillRect(-CELL/2+1, -CELL/2+1, CELL-2, CELL-2);
-                ctx.strokeStyle = '#b2bec3'; ctx.lineWidth = 1;
+                ctx.strokeStyle = hpRatio < 0.4 && (Math.floor(time / 100) % 2 === 0) ? '#ff0000' : '#b2bec3'; 
+                ctx.lineWidth = hpRatio < 0.4 ? 2 : 1;
                 ctx.strokeRect(-CELL/2+2, -CELL/2+2, CELL-4, CELL-4);
+                
+                // Inner details (gears/vents)
+                ctx.fillStyle = '#2d3436';
+                ctx.fillRect(-2, -CELL/2+4, 4, CELL-8);
+                ctx.fillRect(-CELL/2+4, -2, CELL-8, 4);
             }
             ctx.restore();
         }
