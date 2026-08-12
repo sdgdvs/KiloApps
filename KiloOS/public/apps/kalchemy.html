@@ -2077,8 +2077,18 @@
       { ingredients: ['star', 'light'], result: 'starlight' },
       { ingredients: ['star', 'explosion'], result: 'supernova' },
       { ingredients: ['cosmos', 'shadow'], result: 'blackhole' },
-      { ingredients: ['cosmos', 'energy'], result: 'time' },
-      { ingredients: ['time', 'magic'], result: 'eternity' }
+      { ingredients: ['time', 'magic'], result: 'eternity' },
+      // Alternative Recipes (10)
+      { ingredients: ['stone', 'water'], result: 'sand' },
+      { ingredients: ['plant', 'water'], result: 'tree' },
+      { ingredients: ['fire', 'tree'], result: 'charcoal' },
+      { ingredients: ['air', 'steam'], result: 'cloud' },
+      { ingredients: ['magic', 'metal'], result: 'golem' },
+      { ingredients: ['magic', 'life'], result: 'spirit' },
+      { ingredients: ['mud', 'stone'], result: 'clay' },
+      { ingredients: ['fire', 'clay'], result: 'glass' },
+      { ingredients: ['electricity', 'water'], result: 'energy' },
+      { ingredients: ['light', 'glass'], result: 'starlight' }
     ];
 
 
@@ -2247,8 +2257,8 @@
       const highestTier = checkTierUnlocks(false);
       const possibleElements = ALL_ELEMENTS.filter(e => e.tier <= highestTier);
       const target = possibleElements[Math.floor(Math.random() * possibleElements.length)];
-      const goldReward = target.tier * 35 + Math.floor(Math.random() * 20);
-      const xpReward = target.tier * 50;
+      const goldReward = target.tier * 40 + Math.floor(Math.random() * 30);
+      const xpReward = target.tier * 60;
 
       return {
         id: 'q_' + Date.now() + '_' + slotIdx + '_' + Math.floor(Math.random() * 1000),
@@ -2855,7 +2865,7 @@
         name: 'Crucible Capacity',
         icon: '🫕',
         max: 5,
-        costs: [50, 100, 200, 350, 500],
+        costs: [40, 90, 180, 300, 450],
         desc: 'Increases Crucible transmutation yield & bonus essence (+15% per level).'
       },
       {
@@ -2863,7 +2873,7 @@
         name: 'Essence Extraction Yield',
         icon: '⚗️',
         max: 5,
-        costs: [40, 80, 160, 300, 500],
+        costs: [30, 70, 140, 250, 400],
         desc: 'Increases Essence & Dust harvested from Retort, Alembic & Anvil (+25% per level).'
       },
       {
@@ -2871,7 +2881,7 @@
         name: 'Auto-Sorter',
         icon: '⚡',
         max: 5,
-        costs: [60, 120, 250, 450, 700],
+        costs: [50, 100, 220, 400, 600],
         desc: 'Unlocks and upgrades Auto-Fill button to instantly load valid recipes into Crucible.'
       },
       {
@@ -2879,7 +2889,7 @@
         name: 'Catalyst Speed',
         icon: '🔥',
         max: 5,
-        costs: [45, 90, 180, 320, 500],
+        costs: [35, 80, 160, 280, 450],
         desc: 'Accelerates reactions & grants Critical Transmutation chance (+15% per level for bonus Gold & Essence).'
       }
     ];

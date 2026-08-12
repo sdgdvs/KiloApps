@@ -15,7 +15,7 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
 }
 
 #define TOTAL_ELEMENTS 56
-#define TOTAL_RECIPES 52
+#define TOTAL_RECIPES 62
 #define TOTAL_TIERS 5
 #define GRID_SIZE 10
 
@@ -175,7 +175,19 @@ static const Recipe g_Recipes[TOTAL_RECIPES] = {
     { 44, 25, 52 },// Star + Explosion -> Supernova
     { 48, 39, 53 },// Cosmos + Shadow -> Black Hole
     { 48, 6, 54 }, // Cosmos + Energy -> Time
-    { 54, 30, 55 } // Time + Magic -> Eternity
+    { 54, 30, 55 },// Time + Magic -> Eternity
+
+    // Alternative Recipes (10)
+    { 10, 1, 17 }, // Stone + Water -> Sand
+    { 11, 1, 15 }, // Plant + Water -> Tree
+    { 0, 15, 13 }, // Fire + Tree -> Charcoal
+    { 3, 4, 12 },  // Air + Steam -> Cloud
+    { 30, 16, 29 },// Magic + Metal -> Golem
+    { 30, 28, 41 },// Magic + Life -> Spirit
+    { 7, 10, 27 }, // Mud + Stone -> Clay
+    { 0, 27, 18 }, // Fire + Clay -> Glass
+    { 22, 1, 6 },  // Electricity + Water -> Energy
+    { 40, 18, 51 } // Light + Glass -> Starlight
 };
 
 #define TOTAL_PATRONS 10
@@ -247,10 +259,10 @@ typedef struct {
     char searchFilter[64];
 } AlchemyState;
 
-static const int g_CrucibleCapCosts[5] = { 50, 100, 200, 350, 500 };
-static const int g_EssenceYieldCosts[5] = { 40, 80, 160, 300, 500 };
-static const int g_AutoSorterCosts[5] = { 60, 120, 250, 450, 700 };
-static const int g_CatalystSpeedCosts[5] = { 45, 90, 180, 320, 500 };
+static const int g_CrucibleCapCosts[5] = { 40, 90, 180, 300, 450 };
+static const int g_EssenceYieldCosts[5] = { 30, 70, 140, 250, 400 };
+static const int g_AutoSorterCosts[5] = { 50, 100, 220, 400, 600 };
+static const int g_CatalystSpeedCosts[5] = { 35, 80, 160, 280, 450 };
 
 
 #define MAX_PARTICLES 100
@@ -516,8 +528,8 @@ static void GenerateQuest(int slotIdx) {
     int target = candidates[FastRand() % candCount];
 
     g_State.quests[slotIdx].targetId = target;
-    g_State.quests[slotIdx].goldReward = g_Elements[target].tier * 35 + (FastRand() % 20);
-    g_State.quests[slotIdx].xpReward = g_Elements[target].tier * 50;
+    g_State.quests[slotIdx].goldReward = g_Elements[target].tier * 40 + (FastRand() % 30);
+    g_State.quests[slotIdx].xpReward = g_Elements[target].tier * 60;
 }
 
 static void UpdateEquipmentUI(HWND hwnd) {
