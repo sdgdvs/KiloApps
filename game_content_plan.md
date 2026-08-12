@@ -148,7 +148,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
 | KFortress  | Tier 1 | Creator building (Phase TBD) | Wait for Creator to finish — then Loop 1 content pass |
-| KAsteroids | Tier 1 | Loop 8 done (Asteroid belt, missile weapon, cruiser shields) | Loop 9: Branching sector paths, escort missions, new hazards |
 | KMaze      | Tier 1 | Loop 8 done (Themes, puzzles, NPCs, Time Freeze) | Loop 9: Advanced trap mechanics, boss rematches, cursed items |
 | KPac       | Tier 1 | Loop 8 done (Hazards, teleport ghost, score multiplier) | Loop 9: Multi-phase bosses, escort missions, branching paths |
 | KBreakout  | Tier 1 | Loop 8 done (30 stages, phantom bricks, custom levels) | Loop 9: Advanced level editor, more hazards, boss rematches |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KAlchemy   | Tier 1 | Loop 1 done (Recipe variety, quest depth, lab upgrades) | Loop 2: Hidden elemental combos, daily challenges, prestige system |
 | KColony    | Tier 1 | Loop 1 done (Colony balance, alien difficulty, expedition depth) | Loop 2: Research tech tree, planetary conditions, mutator anomalies |
 | KSpace     | Tier 1 | Loop 9 done (Multi-phase bosses, escort missions, branching paths) | Loop 10: Elite enemy squads, planetary bombardment missions, weapon overcharge |
+| KAsteroids | Tier 1 | Loop 9 done (Branching paths, escort missions, black hole hazard) | Loop 10: Supermassive asteroid bosses, warp core collection, zero-G inertia anomalies |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 9**
+- [x] KAsteroids (Loop 9: Added branching sector portals, allied freighter escort defense, and Black Hole gravity hazards in both EXE and HTML)
 - [x] KWords (Balance audit complete: Guaranteed target word placement, buffed Fog of War reveal radius to 5x5, and fixed input/color UI bugs in both EXE and HTML)
 - [x] KSpace (Loop 9: Added multi-phase bosses, allied escort defense missions, and post-boss branching paths in both EXE and HTML)
 - [x] KHangman (Balance audit complete: Removed multi-word phrases, smoothed strike limit difficulty curve for stages 11-20 in both EXE and HTML)
