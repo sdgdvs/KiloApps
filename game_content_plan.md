@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KWords     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check word placement in grids, ensure Fog of War mechanic is fun not frustrating. |
 | KSimon     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check sequence speed curve, verify 8-button mode is playable, audit Chaos Reverse fairness. |
 | KMatch3    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check board generation ensures moves exist, verify Boss HP is achievable, audit powerup economy. |
 | KDarts     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check wind/wobble tuning per difficulty, verify AI opponent accuracy curve is fair. |
@@ -180,11 +179,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KTetris    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Adjusted Pentomino piece frequency in late stages and smoothed the drop speed curve. |
 | KPong      | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Adjusted AI paddle speed per difficulty, nerfed boss, fixed powerup spawn rates. |
 | KHangman   | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audited word difficulty, removed multi-word phrases, smoothed strike limits for late campaign. |
+| KWords     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Fixed word placement silent failures, buffed Fog of War radius from 3x3 to 5x5, fixed UI bugs. |
 
 
 ## Progress Log
 
 **Loop 9**
+- [x] KWords (Balance audit complete: Guaranteed target word placement, buffed Fog of War reveal radius to 5x5, and fixed input/color UI bugs in both EXE and HTML)
 - [x] KSpace (Loop 9: Added multi-phase bosses, allied escort defense missions, and post-boss branching paths in both EXE and HTML)
 - [x] KHangman (Balance audit complete: Removed multi-word phrases, smoothed strike limit difficulty curve for stages 11-20 in both EXE and HTML)
 - [x] KColony (Loop 1: Rebalanced Mine production, added dynamic scaling to alien spawns/HP, and deepened expedition risks/rewards in both EXE and HTML)
