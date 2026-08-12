@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KSimon     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check sequence speed curve, verify 8-button mode is playable, audit Chaos Reverse fairness. |
 | KMatch3    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check board generation ensures moves exist, verify Boss HP is achievable, audit powerup economy. |
 | KDarts     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check wind/wobble tuning per difficulty, verify AI opponent accuracy curve is fair. |
 | KChess     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, ensure Easy is beatable, Hard is challenging. Check opening/endgame AI quality. |
@@ -180,11 +179,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KPong      | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Adjusted AI paddle speed per difficulty, nerfed boss, fixed powerup spawn rates. |
 | KHangman   | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audited word difficulty, removed multi-word phrases, smoothed strike limits for late campaign. |
 | KWords     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Fixed word placement silent failures, buffed Fog of War radius from 3x3 to 5x5, fixed UI bugs. |
+| KSimon     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Reset timer on correct inputs, smoothed speed curves, fixed 6-button label bugs. |
 
 
 ## Progress Log
 
 **Loop 9**
+- [x] KSimon (Balance audit complete: Reset timers on correct input, smoothed sequence speed curve, fixed 6-button label map bug in both EXE and HTML)
 - [x] KAsteroids (Loop 9: Added branching sector portals, allied freighter escort defense, and Black Hole gravity hazards in both EXE and HTML)
 - [x] KWords (Balance audit complete: Guaranteed target word placement, buffed Fog of War reveal radius to 5x5, and fixed input/color UI bugs in both EXE and HTML)
 - [x] KSpace (Loop 9: Added multi-phase bosses, allied escort defense missions, and post-boss branching paths in both EXE and HTML)
