@@ -447,16 +447,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnUnlock = CreateWindowA("BUTTON", "Unlock / Setup", WS_CHILD | BS_PUSHBUTTON, 165, 220, 150, 30, hwnd, (HMENU)3001, NULL, NULL);
 
             hBgBrush = CreateSolidBrush(RGB(20, 20, 20));
-            hFont = CreateFontA(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_MODERN, "Consolas");
+            hFont = CreateFontA(-22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_MODERN, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBtnFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hBtnFont = CreateFontA(-14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             SendMessageA(hBtnGen, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hBtnCopy, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hBtnUnlock, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
 
-            hSmallFont = CreateFontA(13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hSmallFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             SendMessageA(hVaultList, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
             SendMessageA(hStrengthDisplay, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hHelpLabel, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
@@ -585,7 +585,9 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30));
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KPassClass", "KPass Security & Vault Manager", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 500, 540, NULL, NULL, wc.hInstance, NULL);
+    RECT rc = { 0, 0, 500, 540 };
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
+    HWND hwnd = CreateWindowExA(0, "KPassClass", "KPass Security & Vault Manager", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
