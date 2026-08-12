@@ -4,6 +4,8 @@
 #define BTN_RESET 102
 #define BTN_END_TURN 103
 #define CMB_DIFFICULTY 104
+#define BTN_CAMPAIGN 105
+#define IDT_CAMPAIGN_NEXT 1001
 
 typedef struct {
     char name[32];
@@ -67,6 +69,28 @@ int playerHp = 30;
 int opponentHp = 30;
 int gameState = 0; // 0 = playing, 1 = player win, 2 = opponent win
 
+int campaignLevel = 0;
+typedef struct {
+    char name[32];
+    int diff;
+    int hp;
+    int deckSize;
+    int deck[36];
+} MageDef;
+
+MageDef mages[] = {
+    {"Novice Pyromancer", 0, 20, 4, {0, 1, 3, 7}},
+    {"Apprentice Cryomancer", 0, 25, 4, {8, 9, 12, 14}},
+    {"Arcane Scholar", 1, 30, 5, {15, 16, 18, 19, 22}},
+    {"Forest Druid", 1, 35, 6, {23, 24, 25, 28, 29, 30}},
+    {"Venomancer", 1, 40, 4, {34, 35, 23, 30}},
+    {"Master Pyromancer", 2, 45, 8, {0, 1, 2, 3, 4, 5, 6, 7}},
+    {"Master Cryomancer", 2, 50, 7, {8, 9, 10, 11, 12, 13, 14}},
+    {"Arcane Archon", 2, 55, 8, {15, 16, 17, 18, 19, 20, 21, 22}},
+    {"High Priest", 2, 60, 8, {16, 22, 23, 26, 27, 28, 31, 32}},
+    {"Grand Magus", 2, 70, 36, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35}}
+};
+
 int playerMana = 1;
 int playerMaxMana = 1;
 int opponentMana = 1;
@@ -118,7 +142,12 @@ int my_rand() {
 void DrawCard(int isOpponent) {
     if (isOpponent) {
         if (opponentCount < 7) {
-            opponentHand[opponentCount++] = my_rand() % NUM_SAMPLE_CARDS;
+            if (campaignLevel > 0) {
+                MageDef m = mages[campaignLevel - 1];
+                opponentHand[opponentCount++] = m.deck[my_rand() % m.deckSize];
+            } else {
+                opponentHand[opponentCount++] = my_rand() % NUM_SAMPLE_CARDS;
+            }
         }
     } else {
         if (playerCount < 7) {
@@ -127,11 +156,11 @@ void DrawCard(int isOpponent) {
     }
 }
 
-void ResetGame() {
+void InitGame(int oppHp) {
     playerCount = 0;
     opponentCount = 0;
     playerHp = 30;
-    opponentHp = 30;
+    opponentHp = oppHp;
     gameState = 0;
     playerMaxMana = 1;
     playerMana = 1;
@@ -139,11 +168,20 @@ void ResetGame() {
     opponentMana = 1;
     playerBurn = 0; playerFreeze = 0; playerShield = 0; playerRegen = 0; playerPoison = 0;
     opponentBurn = 0; opponentFreeze = 0; opponentShield = 0; opponentRegen = 0; opponentPoison = 0;
-    strcpy(arenaMsg, "Spells and effects go here");
+    if (campaignLevel > 0) {
+        wsprintf(arenaMsg, "Battle %d: vs %s!", campaignLevel, mages[campaignLevel-1].name);
+    } else {
+        strcpy(arenaMsg, "Spells and effects go here");
+    }
     for (int i = 0; i < 3; i++) {
         DrawCard(0);
         DrawCard(1);
     }
+}
+
+void ResetGame() {
+    campaignLevel = 0;
+    InitGame(30);
 }
 
 int EvaluateCard(CardDef* cd) {
@@ -166,6 +204,9 @@ void PlayOpponentTurn() {
     if (gameState != 0) return;
     
     int diff = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
+    if (campaignLevel > 0) {
+        diff = mages[campaignLevel-1].diff;
+    }
     if (diff == 2) {
         for (int x = 0; x < opponentCount - 1; x++) {
             for (int y = x + 1; y < opponentCount; y++) {
@@ -271,6 +312,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                      WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                                      460, 10, 100, 30,
                                      hwnd, (HMENU)BTN_RESET, NULL, NULL);
+            CreateWindow("BUTTON", "Campaign",
+                         WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                         570, 10, 100, 30,
+                         hwnd, (HMENU)BTN_CAMPAIGN, NULL, NULL);
             seed = GetTickCount();
             ResetGame();
             return 0;
@@ -297,6 +342,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     
                     if (opponentHp <= 0) {
                         gameState = 1; // player win by dots
+                        if (campaignLevel > 0) {
+                            if (campaignLevel < 10) {
+                                wsprintf(arenaMsg, "VICTORY! %s defeated! Next battle in 3s...", mages[campaignLevel-1].name);
+                                SetTimer(hwnd, IDT_CAMPAIGN_NEXT, 3000, NULL);
+                            } else {
+                                strcpy(arenaMsg, "CAMPAIGN COMPLETE! You are the Grand Magus!");
+                                campaignLevel = 0;
+                            }
+                        }
                     } else {
                         if (opponentFreeze > 0) {
                             strcpy(arenaMsg, "Opponent is frozen and skips turn!");
@@ -323,6 +377,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == BTN_RESET) {
                 ResetGame();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == BTN_CAMPAIGN) {
+                campaignLevel = 1;
+                InitGame(mages[campaignLevel-1].hp);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            return 0;
+
+        case WM_TIMER:
+            if (wParam == IDT_CAMPAIGN_NEXT) {
+                KillTimer(hwnd, IDT_CAMPAIGN_NEXT);
+                if (gameState == 1 && campaignLevel > 0 && campaignLevel < 10) {
+                    campaignLevel++;
+                    InitGame(mages[campaignLevel-1].hp);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             }
             return 0;
 
@@ -378,7 +447,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         }
                         if (playerHp > 30) playerHp = 30;
 
-                        wsprintf(arenaMsg, "Cast %s: %s", cd.name, cd.effect);
+                        if (gameState == 1 && campaignLevel > 0) {
+                            if (campaignLevel < 10) {
+                                wsprintf(arenaMsg, "VICTORY! %s defeated! Next battle in 3s...", mages[campaignLevel-1].name);
+                                SetTimer(hwnd, IDT_CAMPAIGN_NEXT, 3000, NULL);
+                            } else {
+                                strcpy(arenaMsg, "CAMPAIGN COMPLETE! You are the Grand Magus!");
+                                campaignLevel = 0;
+                            }
+                        } else {
+                            wsprintf(arenaMsg, "Cast %s: %s", cd.name, cd.effect);
+                        }
+                        
                         for (int j = i; j < playerCount - 1; j++) {
                             playerHand[j] = playerHand[j + 1];
                         }
@@ -494,7 +574,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             SetTextColor(hdc, RGB(232, 216, 183));
             char oppLabel[256];
-            int pos = wsprintf(oppLabel, "Opponent Hand (HP: %d | Mana: %d/%d)", opponentHp, opponentMana, opponentMaxMana);
+            char oppName[64];
+            if (campaignLevel > 0) strcpy(oppName, mages[campaignLevel-1].name);
+            else strcpy(oppName, "Opponent");
+            int pos = wsprintf(oppLabel, "%s Hand (HP: %d | Mana: %d/%d)", oppName, opponentHp, opponentMana, opponentMaxMana);
             if (opponentShield > 0) pos += wsprintf(oppLabel + pos, " [Shield %d]", opponentShield);
             if (opponentBurn > 0) pos += wsprintf(oppLabel + pos, " [Burn %d]", opponentBurn);
             if (opponentPoison > 0) pos += wsprintf(oppLabel + pos, " [Poison %d]", opponentPoison);

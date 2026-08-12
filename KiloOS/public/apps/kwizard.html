@@ -143,10 +143,11 @@
             <button id="draw-btn">Draw Card</button>
             <button id="end-turn-btn">End Turn</button>
             <button id="reset-btn">Reset Game</button>
+            <button id="campaign-btn" style="background-color: #5c4033; border-color: #b89947;">Campaign</button>
         </div>
         
         <div>
-            <div style="text-align: center; margin-bottom: 5px;">Opponent Hand <span id="opp-mana-display" style="color: #8b7355; font-weight: bold;">(Mana: 1/1)</span></div>
+            <div style="text-align: center; margin-bottom: 5px;"><span id="opp-name-display">Opponent</span> Hand <span id="opp-mana-display" style="color: #8b7355; font-weight: bold;">(Mana: 1/1)</span></div>
             <div id="opponent-hand" class="hand-area">
                 <!-- Opponent cards will appear here -->
             </div>
@@ -171,6 +172,19 @@
         let playerHp = 30, opponentHp = 30;
         let gameState = 0; // 0 = playing, 1 = win, 2 = loss
         let opponentCards = [];
+        let campaignLevel = 0;
+        const campaignMages = [
+            { name: "Novice Pyromancer", diff: "easy", hp: 20, deck: [0, 1, 3, 7] },
+            { name: "Apprentice Cryomancer", diff: "easy", hp: 25, deck: [8, 9, 12, 14] },
+            { name: "Arcane Scholar", diff: "medium", hp: 30, deck: [15, 16, 18, 19, 22] },
+            { name: "Forest Druid", diff: "medium", hp: 35, deck: [23, 24, 25, 28, 29, 30] },
+            { name: "Venomancer", diff: "medium", hp: 40, deck: [34, 35, 23, 30] },
+            { name: "Master Pyromancer", diff: "hard", hp: 45, deck: [0, 1, 2, 3, 4, 5, 6, 7] },
+            { name: "Master Cryomancer", diff: "hard", hp: 50, deck: [8, 9, 10, 11, 12, 13, 14] },
+            { name: "Arcane Archon", diff: "hard", hp: 55, deck: [15, 16, 17, 18, 19, 20, 21, 22] },
+            { name: "High Priest", diff: "hard", hp: 60, deck: [16, 22, 23, 26, 27, 28, 31, 32] },
+            { name: "Grand Magus", diff: "hard", hp: 70, deck: Array.from({length: 36}, (_, i) => i) }
+        ];
 
         let playerBurn = 0, playerFreeze = 0, playerShield = 0, playerRegen = 0, playerPoison = 0;
         let opponentBurn = 0, opponentFreeze = 0, opponentShield = 0, opponentRegen = 0, opponentPoison = 0;
@@ -180,6 +194,7 @@
         const drawBtn = document.getElementById('draw-btn');
         const endTurnBtn = document.getElementById('end-turn-btn');
         const resetBtn = document.getElementById('reset-btn');
+        const campaignBtn = document.getElementById('campaign-btn');
 
         function updateManaDisplay() {
             let oppSt = "";
@@ -198,6 +213,7 @@
 
             document.getElementById('opp-mana-display').innerText = `(HP: ${opponentHp} | Mana: ${opponentMana}/${opponentMaxMana})${oppSt}`;
             document.getElementById('player-mana-display').innerText = `(HP: ${playerHp} | Mana: ${playerMana}/${playerMaxMana})${pSt}`;
+            document.getElementById('opp-name-display').innerText = campaignLevel > 0 ? campaignMages[campaignLevel-1].name : "Opponent";
         }
 
         function dealDamageToPlayer(dmg) {
@@ -285,6 +301,25 @@
             return score;
         }
 
+        function handleWin() {
+            if (campaignLevel > 0) {
+                if (campaignLevel < 10) {
+                    document.querySelector('.play-area p').innerHTML = `<span style="color: green; font-size: 20px; font-weight: bold;">VICTORY! ${campaignMages[campaignLevel-1].name} defeated! Next battle in 3s...</span>`;
+                    setTimeout(() => {
+                        if (gameState === 1) {
+                            campaignLevel++;
+                            startCampaignBattle();
+                        }
+                    }, 3000);
+                } else {
+                    document.querySelector('.play-area p').innerHTML = `<span style="color: gold; font-size: 24px; font-weight: bold;">CAMPAIGN COMPLETE! You are the Grand Magus!</span>`;
+                    campaignLevel = 0;
+                }
+            } else {
+                document.querySelector('.play-area p').innerHTML = `<span style="color: green; font-size: 20px; font-weight: bold;">VICTORY! You defeated the opponent!</span>`;
+            }
+        }
+
         function createCardElement(cardData, isOpponent) {
             const card = document.createElement('div');
             card.className = 'card' + (isOpponent ? ' opponent' : '');
@@ -329,7 +364,7 @@
                         updateManaDisplay();
                         
                         if (gameState === 1) {
-                            document.querySelector('.play-area p').innerHTML = `<span style="color: green; font-size: 20px; font-weight: bold;">VICTORY! You defeated the opponent!</span>`;
+                            handleWin();
                         } else {
                             document.querySelector('.play-area p').innerHTML = `Player cast <b>${cardData.name}</b>!<br><span style="font-size: 14px; color: #8b7355; font-style: normal;">Effect: ${cardData.effect}</span>`;
                         }
@@ -354,7 +389,14 @@
                 console.log("Hand is full");
                 return;
             }
-            const randomCard = sampleCards[Math.floor(Math.random() * sampleCards.length)];
+            let randomCard;
+            if (isOpponent && campaignLevel > 0) {
+                const deck = campaignMages[campaignLevel-1].deck;
+                const idx = deck[Math.floor(Math.random() * deck.length)];
+                randomCard = sampleCards[idx];
+            } else {
+                randomCard = sampleCards[Math.floor(Math.random() * sampleCards.length)];
+            }
             const cardElement = createCardElement(randomCard, isOpponent);
             hand.appendChild(cardElement);
             if (isOpponent) opponentCards.push(randomCard);
@@ -364,6 +406,9 @@
             if (gameState !== 0) return;
             
             let diff = document.getElementById('difficulty-select').value;
+            if (campaignLevel > 0) {
+                diff = campaignMages[campaignLevel-1].diff;
+            }
             if (diff === 'hard') {
                 opponentCards.sort((a, b) => evaluateCard(b) - evaluateCard(a));
             } else if (diff === 'medium') {
@@ -470,7 +515,7 @@
                 }
                 
                 if (gameState === 1) {
-                    document.querySelector('.play-area p').innerHTML = `<span style="color: green; font-size: 20px; font-weight: bold;">VICTORY! You defeated the opponent!</span>`;
+                    handleWin();
                 } else if (gameState === 2) {
                     document.querySelector('.play-area p').innerHTML = `<span style="color: red; font-size: 20px; font-weight: bold;">DEFEAT! You have been slain...</span>`;
                 }
@@ -478,25 +523,43 @@
             }
         };
 
-        resetBtn.onclick = () => {
+        function initGame(oppHp) {
             playerMaxMana = 1;
             playerMana = 1;
             opponentMaxMana = 1;
             opponentMana = 1;
             playerHp = 30;
-            opponentHp = 30;
+            opponentHp = oppHp;
             gameState = 0;
             opponentCards = [];
             playerBurn = 0; playerFreeze = 0; playerShield = 0; playerRegen = 0; playerPoison = 0;
             opponentBurn = 0; opponentFreeze = 0; opponentShield = 0; opponentRegen = 0; opponentPoison = 0;
-            updateManaDisplay();
             playerHand.innerHTML = '';
             opponentHand.innerHTML = '';
-            document.querySelector('.play-area p').innerHTML = `Spells and effects go here`;
+            if (campaignLevel > 0) {
+                document.querySelector('.play-area p').innerHTML = `<b>Battle ${campaignLevel}:</b> vs ${campaignMages[campaignLevel-1].name}!`;
+            } else {
+                document.querySelector('.play-area p').innerHTML = `Spells and effects go here`;
+            }
+            updateManaDisplay();
             for(let i=0; i<3; i++) {
                 drawCard(false);
                 drawCard(true);
             }
+        }
+
+        resetBtn.onclick = () => {
+            campaignLevel = 0;
+            initGame(30);
+        };
+
+        function startCampaignBattle() {
+            initGame(campaignMages[campaignLevel-1].hp);
+        }
+
+        campaignBtn.onclick = () => {
+            campaignLevel = 1;
+            startCampaignBattle();
         };
 
         resetBtn.click();
