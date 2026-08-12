@@ -8,45 +8,47 @@ typedef struct {
     char name[32];
     int cost;
     char effect[64];
+    int damage;
+    int heal;
 } CardDef;
 
 CardDef sampleCards[] = {
-    {"Fireball", 3, "Deals 4 Fire damage"},
-    {"Scorch", 1, "Deals 1 Fire damage"},
-    {"Flame Strike", 5, "Deals 5 AoE Fire damage"},
-    {"Ember", 1, "Burns for 1 damage"},
-    {"Pyroblast", 6, "Deals 8 Fire damage"},
-    {"Wall of Fire", 4, "Creates a fiery barrier"},
-    {"Meteor", 8, "Deals 10 Fire damage"},
-    {"Ignite", 2, "Deals 2 Fire dmg over time"},
-    {"Ice Shard", 2, "Deals 2 Ice damage"},
-    {"Frostbolt", 3, "Deals 3 Ice dmg, slows"},
-    {"Blizzard", 6, "Deals 4 AoE Ice damage"},
-    {"Frost Nova", 4, "Freezes enemies in place"},
-    {"Ice Lance", 1, "Deals 1 Ice dmg (3 if frozen)"},
-    {"Glacial Spike", 7, "Deals 9 Ice damage"},
-    {"Cold Snap", 5, "Resets cooldowns (Ice)"},
-    {"Arcane Missiles", 1, "Fires 3 arcane bolts"},
-    {"Arcane Intellect", 3, "Draw 2 cards"},
-    {"Counterspell", 3, "Interrupts a spell"},
-    {"Magic Missile", 2, "Deals 2 Arcane damage"},
-    {"Arcane Blast", 4, "Deals 5 Arcane damage"},
-    {"Time Warp", 8, "Take an extra turn"},
-    {"Polymorph", 4, "Turns target into a sheep"},
-    {"Mana Shield", 2, "Absorbs damage using mana"},
-    {"Healing Touch", 2, "Heals 3 Life points"},
-    {"Rejuvenation", 3, "Heals 4 over time"},
-    {"Regrowth", 4, "Heals 2 + 2 over time"},
-    {"Swiftmend", 1, "Instantly heals 2"},
-    {"Tranquility", 8, "Heals 10 to all allies"},
-    {"Nourish", 3, "Heals 4"},
-    {"Nature's Grasp", 2, "Roots attackers"},
-    {"Lifebloom", 2, "Heals 1, blooms for 3"},
-    {"Flash Heal", 2, "Fast heal for 3"},
-    {"Greater Heal", 5, "Heals 7"},
-    {"Renew", 1, "Heals 2 over time"},
-    {"Lightning Strike", 4, "Deals 5 Nature damage"},
-    {"Chain Lightning", 5, "Deals 4 dmg to 3 targets"}
+    {"Fireball", 3, "Deals 4 Fire damage", 4, 0},
+    {"Scorch", 1, "Deals 1 Fire damage", 1, 0},
+    {"Flame Strike", 5, "Deals 5 AoE Fire damage", 5, 0},
+    {"Ember", 1, "Burns for 1 damage", 1, 0},
+    {"Pyroblast", 6, "Deals 8 Fire damage", 8, 0},
+    {"Wall of Fire", 4, "Creates a fiery barrier", 0, 0},
+    {"Meteor", 8, "Deals 10 Fire damage", 10, 0},
+    {"Ignite", 2, "Deals 2 Fire dmg over time", 2, 0},
+    {"Ice Shard", 2, "Deals 2 Ice damage", 2, 0},
+    {"Frostbolt", 3, "Deals 3 Ice dmg, slows", 3, 0},
+    {"Blizzard", 6, "Deals 4 AoE Ice damage", 4, 0},
+    {"Frost Nova", 4, "Freezes enemies in place", 0, 0},
+    {"Ice Lance", 1, "Deals 1 Ice dmg (3 if frozen)", 1, 0},
+    {"Glacial Spike", 7, "Deals 9 Ice damage", 9, 0},
+    {"Cold Snap", 5, "Resets cooldowns (Ice)", 0, 0},
+    {"Arcane Missiles", 1, "Fires 3 arcane bolts", 3, 0},
+    {"Arcane Intellect", 3, "Draw 2 cards", 0, 0},
+    {"Counterspell", 3, "Interrupts a spell", 0, 0},
+    {"Magic Missile", 2, "Deals 2 Arcane damage", 2, 0},
+    {"Arcane Blast", 4, "Deals 5 Arcane damage", 5, 0},
+    {"Time Warp", 8, "Take an extra turn", 0, 0},
+    {"Polymorph", 4, "Turns target into a sheep", 0, 0},
+    {"Mana Shield", 2, "Absorbs damage using mana", 0, 0},
+    {"Healing Touch", 2, "Heals 3 Life points", 0, 3},
+    {"Rejuvenation", 3, "Heals 4 over time", 0, 4},
+    {"Regrowth", 4, "Heals 2 + 2 over time", 0, 4},
+    {"Swiftmend", 1, "Instantly heals 2", 0, 2},
+    {"Tranquility", 8, "Heals 10 to all allies", 0, 10},
+    {"Nourish", 3, "Heals 4", 0, 4},
+    {"Nature's Grasp", 2, "Roots attackers", 0, 0},
+    {"Lifebloom", 2, "Heals 1, blooms for 3", 0, 4},
+    {"Flash Heal", 2, "Fast heal for 3", 0, 3},
+    {"Greater Heal", 5, "Heals 7", 0, 7},
+    {"Renew", 1, "Heals 2 over time", 0, 2},
+    {"Lightning Strike", 4, "Deals 5 Nature damage", 5, 0},
+    {"Chain Lightning", 5, "Deals 4 dmg to 3 targets", 4, 0}
 };
 #define NUM_SAMPLE_CARDS (sizeof(sampleCards)/sizeof(CardDef))
 
@@ -54,6 +56,10 @@ int playerHand[7];
 int opponentHand[7];
 int playerCount = 0;
 int opponentCount = 0;
+
+int playerHp = 30;
+int opponentHp = 30;
+int gameState = 0; // 0 = playing, 1 = player win, 2 = opponent win
 
 int playerMana = 1;
 int playerMaxMana = 1;
@@ -84,6 +90,9 @@ void DrawCard(int isOpponent) {
 void ResetGame() {
     playerCount = 0;
     opponentCount = 0;
+    playerHp = 30;
+    opponentHp = 30;
+    gameState = 0;
     playerMaxMana = 1;
     playerMana = 1;
     opponentMaxMana = 1;
@@ -96,6 +105,7 @@ void ResetGame() {
 }
 
 void PlayOpponentTurn() {
+    if (gameState != 0) return;
     int i = 0;
     char playedStr[256] = "Opponent played: ";
     int playedAny = 0;
@@ -103,6 +113,14 @@ void PlayOpponentTurn() {
         CardDef cd = sampleCards[opponentHand[i]];
         if (opponentMana >= cd.cost) {
             opponentMana -= cd.cost;
+            playerHp -= cd.damage;
+            opponentHp += cd.heal;
+            if (playerHp <= 0) {
+                playerHp = 0;
+                gameState = 2; // opponent win
+            }
+            if (opponentHp > 30) opponentHp = 30;
+
             if (playedAny) {
                 strcat(playedStr, ", ");
             }
@@ -113,6 +131,8 @@ void PlayOpponentTurn() {
                 opponentHand[j] = opponentHand[j + 1];
             }
             opponentCount--;
+            
+            if (gameState != 0) break;
         } else {
             i++;
         }
@@ -145,20 +165,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
         case WM_COMMAND:
             if (LOWORD(wParam) == BTN_DRAW) {
-                DrawCard(0);
-                DrawCard(1);
-                InvalidateRect(hwnd, NULL, TRUE);
+                if (gameState == 0) {
+                    DrawCard(0);
+                    DrawCard(1);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             } else if (LOWORD(wParam) == BTN_END_TURN) {
-                if (opponentMaxMana < 10) opponentMaxMana++;
-                opponentMana = opponentMaxMana;
-                DrawCard(1);
-                
-                PlayOpponentTurn();
-                
-                if (playerMaxMana < 10) playerMaxMana++;
-                playerMana = playerMaxMana;
-                DrawCard(0);
-                InvalidateRect(hwnd, NULL, TRUE);
+                if (gameState == 0) {
+                    if (opponentMaxMana < 10) opponentMaxMana++;
+                    opponentMana = opponentMaxMana;
+                    DrawCard(1);
+                    
+                    PlayOpponentTurn();
+                    
+                    if (gameState == 0) {
+                        if (playerMaxMana < 10) playerMaxMana++;
+                        playerMana = playerMaxMana;
+                        DrawCard(0);
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+
             } else if (LOWORD(wParam) == BTN_RESET) {
                 ResetGame();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -182,12 +209,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int playerX = (cw - playerW) / 2;
             int playerY = ch - cardH - 20;
 
+            if (gameState != 0) return 0;
+            
             for (int i = 0; i < playerCount; i++) {
                 int cx = playerX + i * (cardW + gap);
                 if (xPos >= cx && xPos <= cx + cardW && yPos >= playerY && yPos <= playerY + cardH) {
                     CardDef cd = sampleCards[playerHand[i]];
                     if (playerMana >= cd.cost) {
                         playerMana -= cd.cost;
+                        opponentHp -= cd.damage;
+                        playerHp += cd.heal;
+                        if (opponentHp <= 0) {
+                            opponentHp = 0;
+                            gameState = 1; // player win
+                        }
+                        if (playerHp > 30) playerHp = 30;
+
                         wsprintf(arenaMsg, "Cast %s: %s", cd.name, cd.effect);
                         for (int j = i; j < playerCount - 1; j++) {
                             playerHand[j] = playerHand[j + 1];
@@ -239,7 +276,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                      DEFAULT_PITCH | FF_ROMAN, "Georgia");
             SelectObject(hdc, hArenaFont);
-            DrawText(hdc, arenaMsg, -1, &arenaRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            if (gameState == 1) {
+                SetTextColor(hdc, RGB(0, 128, 0));
+                DrawText(hdc, "VICTORY! You defeated the opponent!", -1, &arenaRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            } else if (gameState == 2) {
+                SetTextColor(hdc, RGB(128, 0, 0));
+                DrawText(hdc, "DEFEAT! You have been slain...", -1, &arenaRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            } else {
+                DrawText(hdc, arenaMsg, -1, &arenaRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            }
             SelectObject(hdc, hFont);
             DeleteObject(hArenaFont);
 
@@ -295,13 +340,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(cardBorderPen);
 
             SetTextColor(hdc, RGB(232, 216, 183));
-            char oppLabel[64];
-            wsprintf(oppLabel, "Opponent Hand (Mana: %d/%d)", opponentMana, opponentMaxMana);
+            char oppLabel[128];
+            wsprintf(oppLabel, "Opponent Hand (HP: %d | Mana: %d/%d)", opponentHp, opponentMana, opponentMaxMana);
             RECT lblOpp = {0, oppY - 20, cw, oppY};
             DrawText(hdc, oppLabel, -1, &lblOpp, DT_CENTER | DT_SINGLELINE);
             
-            char playerLabel[64];
-            wsprintf(playerLabel, "Player Hand (Mana: %d/%d)", playerMana, playerMaxMana);
+            char playerLabel[128];
+            wsprintf(playerLabel, "Player Hand (HP: %d | Mana: %d/%d)", playerHp, playerMana, playerMaxMana);
             RECT lblPlayer = {0, playerY - 20, cw, playerY};
             DrawText(hdc, playerLabel, -1, &lblPlayer, DT_CENTER | DT_SINGLELINE);
 

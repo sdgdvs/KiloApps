@@ -163,6 +163,8 @@
     <script>
         let playerMana = 1, playerMaxMana = 1;
         let opponentMana = 1, opponentMaxMana = 1;
+        let playerHp = 30, opponentHp = 30;
+        let gameState = 0; // 0 = playing, 1 = win, 2 = loss
         let opponentCards = [];
 
         const playerHand = document.getElementById('player-hand');
@@ -172,47 +174,47 @@
         const resetBtn = document.getElementById('reset-btn');
 
         function updateManaDisplay() {
-            document.getElementById('opp-mana-display').innerText = `(Mana: ${opponentMana}/${opponentMaxMana})`;
-            document.getElementById('player-mana-display').innerText = `(Mana: ${playerMana}/${playerMaxMana})`;
+            document.getElementById('opp-mana-display').innerText = `(HP: ${opponentHp} | Mana: ${opponentMana}/${opponentMaxMana})`;
+            document.getElementById('player-mana-display').innerText = `(HP: ${playerHp} | Mana: ${playerMana}/${playerMaxMana})`;
         }
 
         const sampleCards = [
-            { name: "Fireball", cost: 3, effect: "Deals 4 Fire damage" },
-            { name: "Scorch", cost: 1, effect: "Deals 1 Fire damage" },
-            { name: "Flame Strike", cost: 5, effect: "Deals 5 AoE Fire damage" },
-            { name: "Ember", cost: 1, effect: "Burns for 1 damage" },
-            { name: "Pyroblast", cost: 6, effect: "Deals 8 Fire damage" },
-            { name: "Wall of Fire", cost: 4, effect: "Creates a fiery barrier" },
-            { name: "Meteor", cost: 8, effect: "Deals 10 Fire damage" },
-            { name: "Ignite", cost: 2, effect: "Deals 2 Fire dmg over time" },
-            { name: "Ice Shard", cost: 2, effect: "Deals 2 Ice damage" },
-            { name: "Frostbolt", cost: 3, effect: "Deals 3 Ice dmg, slows" },
-            { name: "Blizzard", cost: 6, effect: "Deals 4 AoE Ice damage" },
-            { name: "Frost Nova", cost: 4, effect: "Freezes enemies in place" },
-            { name: "Ice Lance", cost: 1, effect: "Deals 1 Ice dmg (3 if frozen)" },
-            { name: "Glacial Spike", cost: 7, effect: "Deals 9 Ice damage" },
-            { name: "Cold Snap", cost: 5, effect: "Resets cooldowns (Ice)" },
-            { name: "Arcane Missiles", cost: 1, effect: "Fires 3 arcane bolts" },
-            { name: "Arcane Intellect", cost: 3, effect: "Draw 2 cards" },
-            { name: "Counterspell", cost: 3, effect: "Interrupts a spell" },
-            { name: "Magic Missile", cost: 2, effect: "Deals 2 Arcane damage" },
-            { name: "Arcane Blast", cost: 4, effect: "Deals 5 Arcane damage" },
-            { name: "Time Warp", cost: 8, effect: "Take an extra turn" },
-            { name: "Polymorph", cost: 4, effect: "Turns target into a sheep" },
-            { name: "Mana Shield", cost: 2, effect: "Absorbs damage using mana" },
-            { name: "Healing Touch", cost: 2, effect: "Heals 3 Life points" },
-            { name: "Rejuvenation", cost: 3, effect: "Heals 4 over time" },
-            { name: "Regrowth", cost: 4, effect: "Heals 2 + 2 over time" },
-            { name: "Swiftmend", cost: 1, effect: "Instantly heals 2" },
-            { name: "Tranquility", cost: 8, effect: "Heals 10 to all allies" },
-            { name: "Nourish", cost: 3, effect: "Heals 4" },
-            { name: "Nature's Grasp", cost: 2, effect: "Roots attackers" },
-            { name: "Lifebloom", cost: 2, effect: "Heals 1, blooms for 3" },
-            { name: "Flash Heal", cost: 2, effect: "Fast heal for 3" },
-            { name: "Greater Heal", cost: 5, effect: "Heals 7" },
-            { name: "Renew", cost: 1, effect: "Heals 2 over time" },
-            { name: "Lightning Strike", cost: 4, effect: "Deals 5 Nature damage" },
-            { name: "Chain Lightning", cost: 5, effect: "Deals 4 dmg to 3 targets" }
+            { name: "Fireball", cost: 3, effect: "Deals 4 Fire damage", damage: 4, heal: 0 },
+            { name: "Scorch", cost: 1, effect: "Deals 1 Fire damage", damage: 1, heal: 0 },
+            { name: "Flame Strike", cost: 5, effect: "Deals 5 AoE Fire damage", damage: 5, heal: 0 },
+            { name: "Ember", cost: 1, effect: "Burns for 1 damage", damage: 1, heal: 0 },
+            { name: "Pyroblast", cost: 6, effect: "Deals 8 Fire damage", damage: 8, heal: 0 },
+            { name: "Wall of Fire", cost: 4, effect: "Creates a fiery barrier", damage: 0, heal: 0 },
+            { name: "Meteor", cost: 8, effect: "Deals 10 Fire damage", damage: 10, heal: 0 },
+            { name: "Ignite", cost: 2, effect: "Deals 2 Fire dmg over time", damage: 2, heal: 0 },
+            { name: "Ice Shard", cost: 2, effect: "Deals 2 Ice damage", damage: 2, heal: 0 },
+            { name: "Frostbolt", cost: 3, effect: "Deals 3 Ice dmg, slows", damage: 3, heal: 0 },
+            { name: "Blizzard", cost: 6, effect: "Deals 4 AoE Ice damage", damage: 4, heal: 0 },
+            { name: "Frost Nova", cost: 4, effect: "Freezes enemies in place", damage: 0, heal: 0 },
+            { name: "Ice Lance", cost: 1, effect: "Deals 1 Ice dmg (3 if frozen)", damage: 1, heal: 0 },
+            { name: "Glacial Spike", cost: 7, effect: "Deals 9 Ice damage", damage: 9, heal: 0 },
+            { name: "Cold Snap", cost: 5, effect: "Resets cooldowns (Ice)", damage: 0, heal: 0 },
+            { name: "Arcane Missiles", cost: 1, effect: "Fires 3 arcane bolts", damage: 3, heal: 0 },
+            { name: "Arcane Intellect", cost: 3, effect: "Draw 2 cards", damage: 0, heal: 0 },
+            { name: "Counterspell", cost: 3, effect: "Interrupts a spell", damage: 0, heal: 0 },
+            { name: "Magic Missile", cost: 2, effect: "Deals 2 Arcane damage", damage: 2, heal: 0 },
+            { name: "Arcane Blast", cost: 4, effect: "Deals 5 Arcane damage", damage: 5, heal: 0 },
+            { name: "Time Warp", cost: 8, effect: "Take an extra turn", damage: 0, heal: 0 },
+            { name: "Polymorph", cost: 4, effect: "Turns target into a sheep", damage: 0, heal: 0 },
+            { name: "Mana Shield", cost: 2, effect: "Absorbs damage using mana", damage: 0, heal: 0 },
+            { name: "Healing Touch", cost: 2, effect: "Heals 3 Life points", damage: 0, heal: 3 },
+            { name: "Rejuvenation", cost: 3, effect: "Heals 4 over time", damage: 0, heal: 4 },
+            { name: "Regrowth", cost: 4, effect: "Heals 2 + 2 over time", damage: 0, heal: 4 },
+            { name: "Swiftmend", cost: 1, effect: "Instantly heals 2", damage: 0, heal: 2 },
+            { name: "Tranquility", cost: 8, effect: "Heals 10 to all allies", damage: 0, heal: 10 },
+            { name: "Nourish", cost: 3, effect: "Heals 4", damage: 0, heal: 4 },
+            { name: "Nature's Grasp", cost: 2, effect: "Roots attackers", damage: 0, heal: 0 },
+            { name: "Lifebloom", cost: 2, effect: "Heals 1, blooms for 3", damage: 0, heal: 4 },
+            { name: "Flash Heal", cost: 2, effect: "Fast heal for 3", damage: 0, heal: 3 },
+            { name: "Greater Heal", cost: 5, effect: "Heals 7", damage: 0, heal: 7 },
+            { name: "Renew", cost: 1, effect: "Heals 2 over time", damage: 0, heal: 2 },
+            { name: "Lightning Strike", cost: 4, effect: "Deals 5 Nature damage", damage: 5, heal: 0 },
+            { name: "Chain Lightning", cost: 5, effect: "Deals 4 dmg to 3 targets", damage: 4, heal: 0 }
         ];
 
         function createCardElement(cardData, isOpponent) {
@@ -227,10 +229,25 @@
                     <div class="card-cost">Mana: ${cardData.cost}</div>
                 `;
                 card.onclick = () => {
+                    if (gameState !== 0) return;
                     if (playerMana >= cardData.cost) {
                         playerMana -= cardData.cost;
+                        opponentHp -= cardData.damage || 0;
+                        playerHp += cardData.heal || 0;
+                        if (opponentHp <= 0) {
+                            opponentHp = 0;
+                            gameState = 1;
+                        }
+                        if (playerHp > 30) playerHp = 30;
+
                         updateManaDisplay();
-                        document.querySelector('.play-area p').innerHTML = `Player cast <b>${cardData.name}</b>!<br><span style="font-size: 14px; color: #8b7355; font-style: normal;">Effect: ${cardData.effect}</span>`;
+                        
+                        if (gameState === 1) {
+                            document.querySelector('.play-area p').innerHTML = `<span style="color: green; font-size: 20px; font-weight: bold;">VICTORY! You defeated the opponent!</span>`;
+                        } else {
+                            document.querySelector('.play-area p').innerHTML = `Player cast <b>${cardData.name}</b>!<br><span style="font-size: 14px; color: #8b7355; font-style: normal;">Effect: ${cardData.effect}</span>`;
+                        }
+                        
                         card.style.borderColor = "#ffcc00";
                         setTimeout(() => {
                             if(card.parentElement === playerHand) {
@@ -258,44 +275,64 @@
         }
 
         function playOpponentTurn() {
+            if (gameState !== 0) return;
             let playedCards = [];
             let i = 0;
             while (i < opponentCards.length) {
                 if (opponentMana >= opponentCards[i].cost) {
-                    opponentMana -= opponentCards[i].cost;
-                    playedCards.push(opponentCards[i]);
+                    let cardData = opponentCards[i];
+                    opponentMana -= cardData.cost;
+                    playerHp -= cardData.damage || 0;
+                    opponentHp += cardData.heal || 0;
+                    if (playerHp <= 0) {
+                        playerHp = 0;
+                        gameState = 2;
+                    }
+                    if (opponentHp > 30) opponentHp = 30;
+                    playedCards.push(cardData);
                     opponentCards.splice(i, 1);
                     opponentHand.removeChild(opponentHand.children[i]);
+                    if (gameState !== 0) break;
                 } else {
                     i++;
                 }
             }
             
-            let message = "";
-            if (playedCards.length > 0) {
-                message = "Opponent played: " + playedCards.map(c => `<b>${c.name}</b>`).join(", ");
+            if (gameState === 2) {
+                document.querySelector('.play-area p').innerHTML = `<span style="color: red; font-size: 20px; font-weight: bold;">DEFEAT! You have been slain...</span>`;
             } else {
-                message = "Opponent ends turn without casting.";
+                let message = "";
+                if (playedCards.length > 0) {
+                    message = "Opponent played: " + playedCards.map(c => `<b>${c.name}</b>`).join(", ");
+                } else {
+                    message = "Opponent ends turn without casting.";
+                }
+                document.querySelector('.play-area p').innerHTML = message;
             }
-            document.querySelector('.play-area p').innerHTML = message;
         }
 
         drawBtn.onclick = () => {
-            drawCard(false);
-            drawCard(true);
+            if (gameState === 0) {
+                drawCard(false);
+                drawCard(true);
+            }
         };
 
         endTurnBtn.onclick = () => {
-            if (opponentMaxMana < 10) opponentMaxMana++;
-            opponentMana = opponentMaxMana;
-            drawCard(true);
-            
-            playOpponentTurn();
-            
-            if (playerMaxMana < 10) playerMaxMana++;
-            playerMana = playerMaxMana;
-            drawCard(false);
-            updateManaDisplay();
+            if (gameState === 0) {
+                if (opponentMaxMana < 10) opponentMaxMana++;
+                opponentMana = opponentMaxMana;
+                drawCard(true);
+                
+                playOpponentTurn();
+                
+                if (gameState === 0) {
+                    if (playerMaxMana < 10) playerMaxMana++;
+                    playerMana = playerMaxMana;
+                    drawCard(false);
+                }
+                updateManaDisplay();
+            }
         };
 
         resetBtn.onclick = () => {
@@ -303,6 +340,9 @@
             playerMana = 1;
             opponentMaxMana = 1;
             opponentMana = 1;
+            playerHp = 30;
+            opponentHp = 30;
+            gameState = 0;
             opponentCards = [];
             updateManaDisplay();
             playerHand.innerHTML = '';

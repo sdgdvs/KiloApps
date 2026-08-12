@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KWizard (Fantasy dueling card game)
-**Phase:** 8 (next to do)
+**Phase:** 9 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KWizard directory (`KWizard/`), create web HTML skeleton (`KiloOS/public/apps/kwizard.html`), register in App.jsx.
@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Implement mana system and spell casting logic (mana cost, spell effects).
 - [x] Phase 6: Add 30+ unique spells across different schools (Fire, Ice, Arcane, Life) with distinct effects.
 - [x] Phase 7: Implement AI opponent with basic strategy (play cards when mana available).
-- [ ] Phase 8: Add health points (HP) for player and opponent, and win/loss conditions.
+- [x] Phase 8: Add health points (HP) for player and opponent, and win/loss conditions.
 - [ ] Phase 9: Implement status effects (burn, freeze, shield, poison) that persist across turns.
 - [ ] Phase 10: Advanced AI opponent with difficulty levels (Easy/Medium/Hard) and smarter card synergies.
 - [ ] Phase 11: Campaign mode with 10 progressive battles against different mages (each with unique decks).
