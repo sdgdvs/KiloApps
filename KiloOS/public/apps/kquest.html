@@ -990,6 +990,24 @@
         }
       }
 
+      // Draw Flickering Torchlight Ambient Glow
+      const flicker = Math.sin(GFX.frame * 0.2) * 5 + Math.random() * 5;
+      const torchGrad = ctx.createRadialGradient(w/2, 80, 20 + flicker, w/2, 80, 200 + flicker);
+      torchGrad.addColorStop(0, 'rgba(250, 179, 135, 0.15)');
+      torchGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = torchGrad;
+      ctx.fillRect(0, 0, w, 160);
+
+      // Atmospheric Dust Motes
+      ctx.fillStyle = 'rgba(205, 214, 244, 0.3)';
+      for (let i = 0; i < 20; i++) {
+        let px = (Math.sin(GFX.frame * 0.02 + i) * 100 + i * 37) % w;
+        if (px < 0) px += w;
+        let py = (Math.cos(GFX.frame * 0.015 + i) * 50 + i * 23) % 160;
+        if (py < 0) py += 160;
+        ctx.beginPath(); ctx.arc(px, py, (i%2)+1, 0, Math.PI * 2); ctx.fill();
+      }
+
       ctx.fillStyle = '#1e1e2e';
       ctx.fillRect(0, 160, w, 60);
 

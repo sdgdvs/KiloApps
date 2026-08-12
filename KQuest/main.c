@@ -3460,8 +3460,21 @@ void RenderGdiScene(HDC hdc, int w, int h) {
     HPEN hOldPen = (HPEN)SelectObject(hdc, hGridPen);
     for (int y = 10; y < 90; y += 20) {
         MoveToEx(hdc, 0, y, NULL); LineTo(hdc, w, y);
+        int offset = (y % 40 == 10) ? 0 : 25;
+        for (int x = offset; x < w; x += 50) {
+            MoveToEx(hdc, x, y, NULL); LineTo(hdc, x, y + 20);
+        }
     }
     SelectObject(hdc, hOldPen); DeleteObject(hGridPen);
+
+    HBRUSH hDustB = CreateSolidBrush(RGB(205, 214, 244));
+    HBRUSH hOldDB = (HBRUSH)SelectObject(hdc, hDustB);
+    for (int i = 0; i < 15; i++) {
+        int px = (g_GfxFrame * 2 + i * 37) % w;
+        int py = ((g_GfxFrame / 2) + i * 23) % 90;
+        Ellipse(hdc, px, py, px + 2, py + 2);
+    }
+    SelectObject(hdc, hOldDB); DeleteObject(hDustB);
 
     RECT floorRect = {0, 90, w, h};
     HBRUSH hFloorB = CreateSolidBrush(RGB(30, 30, 46));
