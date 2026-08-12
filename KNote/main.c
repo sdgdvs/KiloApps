@@ -11,7 +11,7 @@
 #define W 800
 #define H 600
 
-HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportJson, hBtnImport, hBtnLock, hTab;
+HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportJson, hBtnImport, hBtnLock, hTab, hBtnHelp;
 HBRUSH bgBrush, sidebarBrush;
 HFONT hFont;
 
@@ -27,6 +27,7 @@ HFONT hFont;
 #define ID_STATUS 9014
 #define ID_TAB 9015
 #define ID_TIMER_SAVE 9016
+#define ID_BTN_HELP 9017
 
 char notes[100][8192] = {0};
 int pinned[100] = {0};
@@ -181,7 +182,7 @@ void LoadNotes() {
     }
     if (numNotes == 0) {
         numNotes = 1; pinned[0] = 0; encrypted[0] = 0;
-        const char* def = "Welcome to KNote!\r\n- #tags supported\r\n- Tabs available\r\n- AES encryption\r\n- Press F1 or H for Help";
+        const char* def = "Welcome to KNote!\r\n- #tags supported\r\n- Tabs available\r\n- AES encryption\r\n- Click Help or press F1/H for Help";
         lstrcpyA(notes[0], def);
     }
 }
@@ -402,7 +403,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             bgBrush = CreateSolidBrush(RGB(255, 253, 231));
             sidebarBrush = CreateSolidBrush(RGB(255, 249, 196));
-            hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
             
             hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 0, 0, 100, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
             hBtnDel = CreateWindow("BUTTON", "Del", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 100, 0, 100, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
@@ -415,6 +416,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnExportMd = CreateWindow("BUTTON", "Export MD", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 320, 0, 90, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
             hBtnExportJson = CreateWindow("BUTTON", "Export JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 410, 0, 100, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
             hBtnImport = CreateWindow("BUTTON", "Import JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 510, 0, 100, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 610, 0, 60, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             hTab = CreateWindow(WC_TABCONTROL, "", WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE, 200, 26, W-200, 24, hwnd, (HMENU)ID_TAB, NULL, NULL);
 
@@ -431,6 +433,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtnExportMd, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hBtnExportJson, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hTab, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             LoadNotes();
             if(numNotes>0) OpenTab(0);
@@ -451,7 +454,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == ID_BTN_EXPORT_MD) { ExportNoteMD(); }
+            if (LOWORD(wParam) == ID_BTN_HELP) {
+                MessageBox(hwnd, "KNote Help:\r\n- Use left sidebar to manage notes.\r\n- Type in the search box to filter by text/tags.\r\n- Use 'Lock' to encrypt a note.\r\n- 'Export' saves notes to files.\r\n- Press F1 or H anytime for this menu.", "Help", MB_OK | MB_ICONINFORMATION);
+            }
+            else if (LOWORD(wParam) == ID_BTN_EXPORT_MD) { ExportNoteMD(); }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_JSON) { ExportJSON(); RefreshList(); RenderTabs(); }
             else if (LOWORD(wParam) == ID_BTN_IMPORT) { ImportJSON(); RefreshList(); RenderTabs(); }
             else if (LOWORD(wParam) == ID_BTN_NEW) {
@@ -526,6 +532,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnPin, sideW, 0, 60, topH, TRUE); MoveWindow(hBtnLock, sideW + 60, 0, 60, topH, TRUE);
             MoveWindow(hBtnExportMd, sideW + 120, 0, 90, topH, TRUE); MoveWindow(hBtnExportJson, sideW + 210, 0, 100, topH, TRUE);
             MoveWindow(hBtnImport, sideW + 310, 0, 100, topH, TRUE);
+            MoveWindow(hBtnHelp, sideW + 410, 0, 60, topH, TRUE);
             MoveWindow(hTab, sideW, topH, nw - sideW, 24, TRUE);
             MoveWindow(hEdit, sideW, topH + 24, nw - sideW, nh - topH - 44, TRUE);
             MoveWindow(hStatus, sideW, nh - 20, nw - sideW, 20, TRUE);

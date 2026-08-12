@@ -52,7 +52,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KNote
 - KPass
 - KMedia
 - KNet
@@ -103,6 +102,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMine
 - KPac
 - KQuest
+- KNote
 
 ## Progress Log
 - KPac: Usability and UI issues fixed (updated App.jsx auto-opening size to 400x570, adjusted data-width and height in web version to prevent clipping, and applied negative font height in native for crisp text rendering).
@@ -267,3 +267,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KScript: Usability and UI issues fixed (auto-opening size increased to 800x600, DPI awareness and scaling added in native C, F1 help shortcut explicitly noted, and crisp text rendering applied in web).
 - KMine: Usability and UI issues fixed (updated App.jsx to point to kmine.html and set auto-opening size of 850x750, updated native main.c font heights to negative values for crisp text rendering).
 - KQuest: Usability and UI issues fixed (adjusted auto-opening size to 1000x720 in App.jsx, enabled SetProcessDPIAware and negative font heights for crisp text in native).
+- KNote: Usability and UI issues fixed (auto-opening size to 800x600, explicit Help button added to toolbar, welcome instructions updated, crisp text via negative font size).
