@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KScript
+**Target App:** KSnake
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -251,3 +251,5 @@ Pass 1 Complete.
 - **KRead**: Fixed search highlight persistence bug in `kread.html` by ensuring `clearSearchHighlights()` is called when opening, dropping, or clearing documents. Fixed a native buffer overflow vulnerability in `main.c` `PerformSearch` wrap-around loop condition.
 
 - **KRogue**: Fixed regression in `krogue.html` where weapons/armor bypassed cursed checks due to early returns. Fixed XSS vulnerability in the web leaderboard by escaping inputs. Added missing arrow key and Escape key handlers for targeting state. Fixed duplicate tier 5 logical check in native `main.c` drop generator.
+
+- **KScript**: Fixed native `main.c` buffer overflow in `SimpleRegexReplace` by adding bounds checking. Fixed native integer division exception crash when dividing `INT_MIN` by `-1`. Verified web version is safe against XSS and regex crashes.
