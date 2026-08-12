@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KPing
+**Target App:** KPong
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -241,3 +241,5 @@ Pass 1 Complete.
 - **KPaint**: Added bounds checking for canvas coordinates in the `floodFill` algorithm and enforced iteration limits to prevent infinite recursion bounds crashes in `kpaint.html`. Hard-capped image file imports to 4096x4096 to prevent canvas memory allocation exhaustion. Fixed GDI memory leaks in `main.c` by ensuring temporary bitmap handles are selected back into their device contexts prior to DC deletion during history state pushes, image loads, and filter applications.
 
 - **KPassword**: Remedied DOM Injection XSS bounds vulnerabilities in `kpass.html` by assigning properties like `category`, `strength`, `label`, and `pass` dynamically via `textContent` rather than unfiltered template strings. Fortified memory limits within `main.c` native C bounds by replacing unconstrained `strcpy` usage with strict `strncpy` logic in CSV parsing/vault construction APIs. Increased bounds capacities in string concatenations (e.g. 512 over 256) and closed a native GDI leak affecting application exit (missed `wc.hbrBackground` deletion).
+
+- **KPing**: Fixed `historyData` and `logEntries` memory leaks by bounding arrays to 200/1000 elements and capping `textarea` to 30,000 characters in `kping.html`. Fixed Win32 `EDIT` control capacity freeze in `main.c` by dynamically pruning the oldest 10,000 characters when buffer exceeds 30,000 chars.
