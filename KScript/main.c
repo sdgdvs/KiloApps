@@ -11,6 +11,8 @@ HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp
 
 int vars[26] = {0};
 int nodeCount = 0;
+int dpi = 96;
+#define S(x) MulDiv(x, dpi, 96)
 const char* debugPtr = NULL;
 char debugInput[4096];
 char outStr[4096];
@@ -231,20 +233,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_CREATE: {
             hbrBg = CreateSolidBrush(RGB(30, 30, 30));
-            hFont = CreateFontA(-15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
+            hFont = CreateFontA(S(-15), 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             // Toolbar
-            hBtnRec  = CreateWindowEx(0, "BUTTON", "Rec Macro", WS_CHILD | WS_VISIBLE, 10, 10, 100, 24, hwnd, (HMENU)4, NULL, NULL);
-            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play Macro", WS_CHILD | WS_VISIBLE, 120, 10, 100, 24, hwnd, (HMENU)5, NULL, NULL);
-            hBtnStep = CreateWindowEx(0, "BUTTON", "Step", WS_CHILD | WS_VISIBLE, 230, 10, 80, 24, hwnd, (HMENU)6, NULL, NULL);
-            hBtnRun  = CreateWindowEx(0, "BUTTON", "Run", WS_CHILD | WS_VISIBLE, 320, 10, 80, 24, hwnd, (HMENU)1, NULL, NULL);
-            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE, 410, 10, 80, 24, hwnd, (HMENU)2, NULL, NULL);
-            hBtnSave = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, 500, 10, 80, 24, hwnd, (HMENU)3, NULL, NULL);
-            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE, 590, 10, 80, 24, hwnd, (HMENU)8, NULL, NULL);
+            hBtnRec  = CreateWindowEx(0, "BUTTON", "Rec Macro", WS_CHILD | WS_VISIBLE, S(10), S(10), S(100), S(24), hwnd, (HMENU)4, NULL, NULL);
+            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play Macro", WS_CHILD | WS_VISIBLE, S(120), S(10), S(100), S(24), hwnd, (HMENU)5, NULL, NULL);
+            hBtnStep = CreateWindowEx(0, "BUTTON", "Step", WS_CHILD | WS_VISIBLE, S(230), S(10), S(80), S(24), hwnd, (HMENU)6, NULL, NULL);
+            hBtnRun  = CreateWindowEx(0, "BUTTON", "Run", WS_CHILD | WS_VISIBLE, S(320), S(10), S(80), S(24), hwnd, (HMENU)1, NULL, NULL);
+            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE, S(410), S(10), S(80), S(24), hwnd, (HMENU)2, NULL, NULL);
+            hBtnSave = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, S(500), S(10), S(80), S(24), hwnd, (HMENU)3, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE, S(590), S(10), S(80), S(24), hwnd, (HMENU)8, NULL, NULL);
             
-            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Find...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 680, 10, 80, 24, hwnd, NULL, NULL, NULL);
-            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Rep...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 770, 10, 80, 24, hwnd, NULL, NULL, NULL);
-            hBtnRep    = CreateWindowEx(0, "BUTTON", "Replace", WS_CHILD | WS_VISIBLE, 860, 10, 70, 24, hwnd, (HMENU)7, NULL, NULL);
+            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Find...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(680), S(10), S(80), S(24), hwnd, NULL, NULL, NULL);
+            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Rep...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(770), S(10), S(80), S(24), hwnd, NULL, NULL, NULL);
+            hBtnRep    = CreateWindowEx(0, "BUTTON", "Replace", WS_CHILD | WS_VISIBLE, S(860), S(10), S(70), S(24), hwnd, (HMENU)7, NULL, NULL);
             
             HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnLoad, hBtnSave, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
             for(int i=0; i<10; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -252,18 +254,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Panels
             hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "// Welcome to KScript!\r\n// Press F1, Alt+H, or click Help for instructions\r\na = 10\r\nb = 20\r\nprint a * b + 5\r\nprint a % 3",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
-                10, 44, 250, H - 95, hwnd, NULL, NULL, NULL);
+                S(10), S(44), S(250), S(H) - S(95), hwnd, NULL, NULL, NULL);
             SendMessage(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             oldEditProc = (WNDPROC)SetWindowLongPtr(hInput, GWLP_WNDPROC, (LONG_PTR)InputEditProc);
             
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-                270, 44, 250, H - 95, hwnd, NULL, NULL, NULL);
+                S(270), S(44), S(250), S(H) - S(95), hwnd, NULL, NULL, NULL);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hMemory = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Memory Inspector",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-                530, 44, 240, H - 95, hwnd, NULL, NULL, NULL);
+                S(530), S(44), S(240), S(H) - S(95), hwnd, NULL, NULL, NULL);
             SendMessage(hMemory, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             break;
@@ -380,10 +382,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            int panelW = (nw - 40) / 3;
-            MoveWindow(hInput, 10, 44, panelW, nh - 55, TRUE);
-            MoveWindow(hOutput, 20 + panelW, 44, panelW, nh - 55, TRUE);
-            MoveWindow(hMemory, 30 + panelW * 2, 44, panelW, nh - 55, TRUE);
+            int panelW = (nw - S(40)) / 3;
+            MoveWindow(hInput, S(10), S(44), panelW, nh - S(55), TRUE);
+            MoveWindow(hOutput, S(20) + panelW, S(44), panelW, nh - S(55), TRUE);
+            MoveWindow(hMemory, S(30) + panelW * 2, S(44), panelW, nh - S(55), TRUE);
             break;
         }
         case WM_DESTROY:
@@ -414,6 +416,9 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
 
 void MainEntry() {
     SetProcessDPIAware();
+    HDC hdc = GetDC(NULL);
+    dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+    ReleaseDC(NULL, hdc);
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -423,8 +428,11 @@ void MainEntry() {
     wc.hbrBackground = NULL;
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KScriptApp", "KScript", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    DWORD style = WS_OVERLAPPEDWINDOW;
+    RECT rect = {0, 0, S(W), S(H)};
+    AdjustWindowRect(&rect, style, FALSE);
+    HWND hwnd = CreateWindowEx(0, "KScriptApp", "KScript - Press F1 for Help", style,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

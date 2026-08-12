@@ -42,7 +42,7 @@ const APPS = [
   { id: 'kimage', title: 'KImage', url: '/apps/kimage.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kimage.ico', w: 650, h: 500, folder: 'Media' },
   { id: 'knet', title: 'KNet', url: '/apps/knet.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knet.ico', w: 840, h: 640, folder: 'Network' },
   { id: 'kdb', title: 'KDB', url: '/apps/kdb.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdb.ico', w: 650, h: 500, folder: 'Dev' },
-  { id: 'kscript', title: 'KScript', url: '/apps/kscript.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kscript.ico', w: 650, h: 500, folder: 'Dev' },
+  { id: 'kscript', title: 'KScript', url: '/apps/kscript.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kscript.ico', w: 800, h: 600, folder: 'Dev' },
   { id: 'kchess', title: 'KChess', url: '/apps/kchess.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchess.ico', w: 600, h: 600, folder: 'Games' },
   { id: 'ktype', title: 'KType', url: '/apps/ktype.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktype.ico', w: 600, h: 500, folder: 'Dev' },
   { id: 'kchart', title: 'KChart', url: '/apps/kchart.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchart.ico', w: 550, h: 400, folder: 'Media' },

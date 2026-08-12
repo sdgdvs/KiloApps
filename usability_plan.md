@@ -52,7 +52,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KScript
 - KMine
 - KPac
 - KQuest
@@ -103,6 +102,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPing
 - KConnect4
 - KMaze
+- KScript
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (auto-opening size to 1000x700, added visible Help status button to web, updated native window title for Help, implemented crisp fonts).
@@ -263,3 +263,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KConnect4: Usability and UI issues fixed (auto-size updated to w:580 h:720 in native, explicit H help instructions added instead of F1, hint shortcut moved to T, crisp web text rendering added).
 - KScript: Usability subagent timed out after 8 minutes.
 - KMaze: Usability and UI issues fixed (auto-opening size to 800x660, SetProcessDPIAware applied for crisp text, Help shortcut visibly added to UI across platforms).
+- KScript: Usability and UI issues fixed (auto-opening size increased to 800x600, DPI awareness and scaling added in native C, F1 help shortcut explicitly noted, and crisp text rendering applied in web).
