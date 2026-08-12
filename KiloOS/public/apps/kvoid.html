@@ -20,35 +20,133 @@
             justify-content: center;
         }
         #game-container {
-            width: 100%;
-            height: 100%;
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            position: relative;
         }
         h1 {
-            margin: 0;
-            padding: 10px;
+            margin: 0 0 10px 0;
             font-size: 24px;
-            text-align: center;
             text-shadow: 0 0 5px #0f0;
         }
+        canvas {
+            background-color: #111;
+            border: 2px solid #0f0;
+            box-shadow: 0 0 10px #0f0;
+        }
         #message {
-            margin-top: 20px;
+            margin-top: 10px;
             font-size: 16px;
+            height: 20px;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
         <h1>KVoid</h1>
-        <div id="message">Initialization sequence complete. Standby...</div>
+        <canvas id="gameCanvas" width="640" height="480"></canvas>
+        <div id="message">Use WASD or Arrow Keys to move.</div>
     </div>
     <script>
-        // Basic skeleton script
-        console.log("KVoid initialized.");
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const TILE_SIZE = 32;
+        const COLS = Math.floor(canvas.width / TILE_SIZE);
+        const ROWS = Math.floor(canvas.height / TILE_SIZE);
+
+        // Simple room layout (1 = wall, 0 = floor)
+        const map = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,1,0,0,1,1,1,1,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,1],
+            [1,1,1,0,1,1,1,0,0,1,1,0,1,1,1,1,1,0,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,1],
+            [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1],
+            [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1],
+            [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        let player = {
+            x: 2,
+            y: 2
+        };
+
+        function drawMap() {
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (map[y][x] === 1) {
+                        ctx.fillStyle = '#0f0';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = '#050';
+                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    } else {
+                        ctx.fillStyle = '#111';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    }
+                }
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMap();
+            drawPlayer();
+        }
+
+        function movePlayer(dx, dy) {
+            let newX = player.x + dx;
+            let newY = player.y + dy;
+            
+            if (newX >= 0 && newX < COLS && newY >= 0 && newY < ROWS) {
+                if (map[newY][newX] === 0) {
+                    player.x = newX;
+                    player.y = newY;
+                    draw();
+                }
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    movePlayer(0, -1);
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    movePlayer(0, 1);
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    movePlayer(-1, 0);
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    movePlayer(1, 0);
+                    break;
+            }
+        });
+
+        draw();
     </script>
 </body>
 </html>
