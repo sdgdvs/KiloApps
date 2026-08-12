@@ -130,6 +130,55 @@
             border-color: #b89947;
             box-shadow: 0 0 10px #b89947;
         }
+        #deck-modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            z-index: 100;
+            flex-direction: row;
+            color: #e8d8b7;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+        .deck-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #b89947;
+            border-radius: 8px;
+            margin: 0 10px;
+            padding: 15px;
+            background-color: #1a0b2e;
+            overflow-y: auto;
+        }
+        .deck-column h2 { text-align: center; margin-top: 0; }
+        .deck-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .deck-card {
+            width: 90px; height: 120px;
+            background-color: #f8f1e4;
+            border: 2px solid #8b7355;
+            border-radius: 6px;
+            color: #2c1e16;
+            font-size: 12px;
+            text-align: center;
+            cursor: pointer;
+            padding: 8px;
+            box-sizing: border-box;
+            transition: transform 0.1s;
+        }
+        .deck-card:hover { border-color: #b89947; transform: scale(1.05); }
+        .deck-card-title { font-weight: bold; margin-bottom: 5px; }
+        #close-deck-btn {
+            position: absolute; top: 10px; right: 20px;
+            background-color: #2c3e50;
+            border-color: #3498db;
+        }
     </style>
 </head>
 <body>
@@ -144,6 +193,7 @@
             <button id="end-turn-btn">End Turn</button>
             <button id="reset-btn">Reset Game</button>
             <button id="campaign-btn" style="background-color: #5c4033; border-color: #b89947;">Campaign</button>
+            <button id="deck-btn" style="background-color: #2c3e50; border-color: #3498db;">Deck Builder</button>
         </div>
         
         <div>
@@ -166,6 +216,18 @@
         </div>
     </div>
 
+    <div id="deck-modal">
+        <div class="deck-column">
+            <h2>Available Spells</h2>
+            <div id="avail-cards" class="deck-grid"></div>
+        </div>
+        <div class="deck-column">
+            <h2>Your Deck (<span id="deck-count">20</span>/20)</h2>
+            <div id="curr-deck" class="deck-grid"></div>
+        </div>
+        <button id="close-deck-btn">Save & Close</button>
+    </div>
+
     <script>
         let playerMana = 1, playerMaxMana = 1;
         let opponentMana = 1, opponentMaxMana = 1;
@@ -186,6 +248,8 @@
             { name: "Grand Magus", diff: "hard", hp: 70, deck: Array.from({length: 36}, (_, i) => i) }
         ];
 
+        let playerDeck = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+
         let playerBurn = 0, playerFreeze = 0, playerShield = 0, playerRegen = 0, playerPoison = 0;
         let opponentBurn = 0, opponentFreeze = 0, opponentShield = 0, opponentRegen = 0, opponentPoison = 0;
 
@@ -195,6 +259,56 @@
         const endTurnBtn = document.getElementById('end-turn-btn');
         const resetBtn = document.getElementById('reset-btn');
         const campaignBtn = document.getElementById('campaign-btn');
+        const deckBtn = document.getElementById('deck-btn');
+        const deckModal = document.getElementById('deck-modal');
+        const availCardsDiv = document.getElementById('avail-cards');
+        const currDeckDiv = document.getElementById('curr-deck');
+        const closeDeckBtn = document.getElementById('close-deck-btn');
+        const deckCountSpan = document.getElementById('deck-count');
+
+        function renderDeckBuilder() {
+            availCardsDiv.innerHTML = '';
+            currDeckDiv.innerHTML = '';
+            deckCountSpan.innerText = playerDeck.length;
+            
+            sampleCards.forEach((c, idx) => {
+                let el = document.createElement('div');
+                el.className = 'deck-card';
+                el.innerHTML = `<div class="deck-card-title">${c.name}</div><div>Mana: ${c.cost}</div>`;
+                el.onclick = () => {
+                    if (playerDeck.length < 20) {
+                        playerDeck.push(idx);
+                        renderDeckBuilder();
+                    }
+                };
+                availCardsDiv.appendChild(el);
+            });
+            
+            playerDeck.forEach((idx, i) => {
+                let c = sampleCards[idx];
+                let el = document.createElement('div');
+                el.className = 'deck-card';
+                el.innerHTML = `<div class="deck-card-title">${c.name}</div><div>Mana: ${c.cost}</div>`;
+                el.onclick = () => {
+                    playerDeck.splice(i, 1);
+                    renderDeckBuilder();
+                };
+                currDeckDiv.appendChild(el);
+            });
+        }
+
+        deckBtn.onclick = () => {
+            renderDeckBuilder();
+            deckModal.style.display = 'flex';
+        };
+
+        closeDeckBtn.onclick = () => {
+            if (playerDeck.length !== 20) {
+                alert("You must have exactly 20 cards in your deck.");
+                return;
+            }
+            deckModal.style.display = 'none';
+        };
 
         function updateManaDisplay() {
             let oppSt = "";
@@ -394,8 +508,10 @@
                 const deck = campaignMages[campaignLevel-1].deck;
                 const idx = deck[Math.floor(Math.random() * deck.length)];
                 randomCard = sampleCards[idx];
-            } else {
+            } else if (isOpponent) {
                 randomCard = sampleCards[Math.floor(Math.random() * sampleCards.length)];
+            } else {
+                randomCard = sampleCards[playerDeck[Math.floor(Math.random() * playerDeck.length)]];
             }
             const cardElement = createCardElement(randomCard, isOpponent);
             hand.appendChild(cardElement);

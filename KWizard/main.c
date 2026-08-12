@@ -5,6 +5,10 @@
 #define BTN_END_TURN 103
 #define CMB_DIFFICULTY 104
 #define BTN_CAMPAIGN 105
+#define BTN_DECK 106
+#define LST_AVAIL 107
+#define LST_DECK 108
+#define BTN_DECK_CLOSE 109
 #define IDT_CAMPAIGN_NEXT 1001
 
 typedef struct {
@@ -64,6 +68,9 @@ int playerHand[7];
 int opponentHand[7];
 int playerCount = 0;
 int opponentCount = 0;
+
+int playerDeck[20] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+int playerDeckCount = 20;
 
 int playerHp = 30;
 int opponentHp = 30;
@@ -131,7 +138,7 @@ void DealDamageToOpponent(int dmg) {
     if (opponentHp < 0) opponentHp = 0;
 }
 
-HWND hwndDraw, hwndReset, hwndCombo;
+HWND hwndDraw, hwndReset, hwndCombo, hwndDeckBtn, hwndAvail, hwndDeck, hwndDeckClose;
 
 unsigned int seed = 0;
 int my_rand() {
@@ -151,7 +158,7 @@ void DrawCard(int isOpponent) {
         }
     } else {
         if (playerCount < 7) {
-            playerHand[playerCount++] = my_rand() % NUM_SAMPLE_CARDS;
+            playerHand[playerCount++] = playerDeck[my_rand() % playerDeckCount];
         }
     }
 }
@@ -316,6 +323,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                          570, 10, 100, 30,
                          hwnd, (HMENU)BTN_CAMPAIGN, NULL, NULL);
+            hwndDeckBtn = CreateWindow("BUTTON", "Deck",
+                                       WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                                       680, 10, 80, 30,
+                                       hwnd, (HMENU)BTN_DECK, NULL, NULL);
+
+            hwndAvail = CreateWindow("LISTBOX", "",
+                                     WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
+                                     50, 50, 300, 400,
+                                     hwnd, (HMENU)LST_AVAIL, NULL, NULL);
+            hwndDeck = CreateWindow("LISTBOX", "",
+                                    WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
+                                    450, 50, 300, 400,
+                                    hwnd, (HMENU)LST_DECK, NULL, NULL);
+            hwndDeckClose = CreateWindow("BUTTON", "Save & Close",
+                                         WS_CHILD | BS_PUSHBUTTON,
+                                         350, 470, 100, 30,
+                                         hwnd, (HMENU)BTN_DECK_CLOSE, NULL, NULL);
+
+            for (int i = 0; i < NUM_SAMPLE_CARDS; i++) {
+                char buf[64];
+                wsprintf(buf, "%s (Mana: %d)", sampleCards[i].name, sampleCards[i].cost);
+                SendMessage(hwndAvail, LB_ADDSTRING, 0, (LPARAM)buf);
+            }
             seed = GetTickCount();
             ResetGame();
             return 0;
@@ -381,6 +411,51 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 campaignLevel = 1;
                 InitGame(mages[campaignLevel-1].hp);
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == BTN_DECK) {
+                gameState = 3;
+                SendMessage(hwndDeck, LB_RESETCONTENT, 0, 0);
+                for (int i = 0; i < playerDeckCount; i++) {
+                    char buf[64];
+                    wsprintf(buf, "%s (Mana: %d)", sampleCards[playerDeck[i]].name, sampleCards[playerDeck[i]].cost);
+                    SendMessage(hwndDeck, LB_ADDSTRING, 0, (LPARAM)buf);
+                }
+                ShowWindow(hwndAvail, SW_SHOW);
+                ShowWindow(hwndDeck, SW_SHOW);
+                ShowWindow(hwndDeckClose, SW_SHOW);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == BTN_DECK_CLOSE) {
+                if (playerDeckCount != 20) {
+                    MessageBox(hwnd, "You must have exactly 20 cards in your deck.", "Deck Builder", MB_OK | MB_ICONWARNING);
+                } else {
+                    gameState = 0;
+                    ShowWindow(hwndAvail, SW_HIDE);
+                    ShowWindow(hwndDeck, SW_HIDE);
+                    ShowWindow(hwndDeckClose, SW_HIDE);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (LOWORD(wParam) == LST_AVAIL && HIWORD(wParam) == LBN_DBLCLK) {
+                if (gameState == 3 && playerDeckCount < 20) {
+                    int sel = SendMessage(hwndAvail, LB_GETCURSEL, 0, 0);
+                    if (sel != LB_ERR) {
+                        playerDeck[playerDeckCount++] = sel;
+                        char buf[64];
+                        wsprintf(buf, "%s (Mana: %d)", sampleCards[sel].name, sampleCards[sel].cost);
+                        SendMessage(hwndDeck, LB_ADDSTRING, 0, (LPARAM)buf);
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
+            } else if (LOWORD(wParam) == LST_DECK && HIWORD(wParam) == LBN_DBLCLK) {
+                if (gameState == 3) {
+                    int sel = SendMessage(hwndDeck, LB_GETCURSEL, 0, 0);
+                    if (sel != LB_ERR) {
+                        SendMessage(hwndDeck, LB_DELETESTRING, sel, 0);
+                        for (int i = sel; i < playerDeckCount - 1; i++) {
+                            playerDeck[i] = playerDeck[i + 1];
+                        }
+                        playerDeckCount--;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
             }
             return 0;
 
@@ -486,6 +561,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             GetClientRect(hwnd, &clientRect);
             int cw = clientRect.right - clientRect.left;
             int ch = clientRect.bottom - clientRect.top;
+
+            if (gameState == 3) {
+                HBRUSH bgBrush = CreateSolidBrush(RGB(10, 5, 20));
+                FillRect(hdc, &clientRect, bgBrush);
+                DeleteObject(bgBrush);
+                
+                SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(hdc, RGB(232, 216, 183));
+                RECT lblA = {50, 20, 350, 50};
+                DrawText(hdc, "Available Spells (Double-click to add)", -1, &lblA, DT_CENTER | DT_SINGLELINE);
+                
+                char lblDStr[64];
+                wsprintf(lblDStr, "Your Deck (%d/20) (Double-click to remove)", playerDeckCount);
+                RECT lblD = {450, 20, 750, 50};
+                DrawText(hdc, lblDStr, -1, &lblD, DT_CENTER | DT_SINGLELINE);
+
+                SelectObject(hdc, oldFont);
+                DeleteObject(hFont);
+                EndPaint(hwnd, &ps);
+                return 0;
+            }
 
             HBRUSH bgBrush = CreateSolidBrush(RGB(26, 11, 46));
             FillRect(hdc, &clientRect, bgBrush);
