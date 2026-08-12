@@ -1255,9 +1255,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP memBitmap = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
             HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
             
-            HBRUSH bgBrush = CreateSolidBrush(RGB(30, 30, 30));
-            FillRect(memDC, &rect, bgBrush);
-            DeleteObject(bgBrush);
+            // Glowing backdrop gradient
+            for (int i = 0; i < rect.bottom; i += 4) {
+                int r = 38 - (i * 28 / rect.bottom);
+                int g = 31 - (i * 23 / rect.bottom);
+                int b = 48 - (i * 35 / rect.bottom);
+                if (r < 0) r = 0; if (g < 0) g = 0; if (b < 0) b = 0;
+                RECT rowR = {0, i, rect.right, i + 4};
+                HBRUSH rowB = CreateSolidBrush(RGB(r, g, b));
+                FillRect(memDC, &rowR, rowB);
+                DeleteObject(rowB);
+            }
+            // Ancient ruins background
+            HBRUSH ruinsBrush = CreateSolidBrush(RGB(25, 20, 35));
+            RECT pillar1 = { 20, rect.bottom - 180, 60, rect.bottom };
+            FillRect(memDC, &pillar1, ruinsBrush);
+            RECT pillar2 = { rect.right - 60, rect.bottom - 120, rect.right - 20, rect.bottom };
+            FillRect(memDC, &pillar2, ruinsBrush);
+            RECT arch = { 20, rect.bottom - 180, 100, rect.bottom - 150 };
+            FillRect(memDC, &arch, ruinsBrush);
+            DeleteObject(ruinsBrush);
+            
+            // Atmospheric magical dust
+            for (int i = 0; i < 150; i++) {
+                int sx = (i * 137) % rect.right;
+                int sy = (i * 251) % rect.bottom;
+                int c = 100 + ((i * 73) % 155);
+                SetPixel(memDC, sx, sy, RGB(c, c, 255));
+                if (i % 3 == 0) SetPixel(memDC, sx+1, sy, RGB(c, c, 255));
+            }
             
             DrawBoard(memDC);
             

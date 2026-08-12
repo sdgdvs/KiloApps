@@ -81,9 +81,34 @@
     0% { opacity: 1; transform: scaleY(2); }
     100% { opacity: 0; transform: scaleY(0.1); }
   }
+  .ruins-bg {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -2;
+    background: 
+      linear-gradient(to top, rgba(15,10,25,0.9) 0%, transparent 50%),
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><rect x="10%" y="70%" width="8%" height="30%" fill="%231a1426"/><rect x="80%" y="60%" width="12%" height="40%" fill="%231a1426"/><rect x="8%" y="68%" width="12%" height="4%" fill="%231a1426"/><rect x="78%" y="58%" width="16%" height="4%" fill="%231a1426"/><polygon points="0,100% 20%,80% 30%,100%" fill="%23110d1a"/><polygon points="70%,100% 85%,75% 100%,100%" fill="%23110d1a"/></svg>');
+  }
+  .magic-dust {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1;
+    background-image: 
+      radial-gradient(2px 2px at 20% 30%, #aaffff, transparent),
+      radial-gradient(2px 2px at 40% 70%, #ffaaff, transparent),
+      radial-gradient(3px 3px at 60% 20%, #ffffaa, transparent),
+      radial-gradient(2px 2px at 80% 80%, #aaffff, transparent),
+      radial-gradient(2px 2px at 50% 50%, #ffaaff, transparent);
+    background-size: 150px 150px;
+    animation: dustAnim 30s linear infinite;
+    opacity: 0.5;
+  }
+  @keyframes dustAnim {
+    0% { transform: translateY(0px) translateX(0px); }
+    50% { transform: translateY(-75px) translateX(20px); }
+    100% { transform: translateY(-150px) translateX(0px); }
+  }
 </style>
 </head>
 <body>
+  <div class="ruins-bg"></div>
+  <div class="magic-dust"></div>
   <div style="width: 400px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
     <h1 style="margin: 2px 0;">KMatch3</h1>
     <button onclick="showHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:3px 10px; cursor:pointer; border-radius:4px; font-weight:bold; font-size:12px;">Help [F1]</button>
