@@ -129,7 +129,7 @@ int bombFlash = 0;
 // Boss & Mothership state
 int bossActive = 0;
 float bossX = 0, bossY = 0, bossDx = 2.0f;
-int bossHp = 0, bossMaxHp = 0, bossLevel = 1, bossAttackTimer = 0;
+int bossHp = 0, bossMaxHp = 0, bossLevel = 1, bossAttackTimer = 0, bossPhase = 1;
 int bossIsMothership = 0;
 int turretHp[4] = {0};
 int turretActive[4] = {1, 1, 1, 1};
@@ -141,6 +141,11 @@ LeaderEntry leaderboard[MAX_LEADERBOARD] = {
     { 3500, 7, MODE_BOSS_RUSH },
     { 1500, 4, MODE_CLASSIC }
 };
+
+typedef struct { float x, y, dy; int hp, maxHp, active; } EscortShip;
+EscortShip escort = {0};
+int pathGatesActive = 0;
+float pathGatesY = 0.0f;
 
 unsigned int seed = 999;
 unsigned int rnd() {
@@ -478,6 +483,7 @@ void SpawnBoss(int lvl) {
     bossLevel = lvl;
     bossDx = 2.0f;
     bossAttackTimer = 0;
+    bossPhase = 1;
 
     if (wave >= 20 || lvl >= 4) {
         bossIsMothership = 1;
@@ -529,6 +535,9 @@ void DestroyBoss() {
     wave++;
     if (modeIndex == MODE_BOSS_RUSH) {
         SpawnBoss(wave);
+    } else {
+        pathGatesActive = 1;
+        pathGatesY = -50.0f;
     }
 }
 
@@ -662,7 +671,15 @@ void UseSmartBomb() {
             bossHp -= 80;
         }
         AddExplosion(bossX + 45.0f, bossY + 30.0f, 35, RGB(255, 23, 68));
-        if (bossHp <= 0) DestroyBoss();
+        if (bossHp <= 0) {
+            if (bossPhase == 1) {
+                bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
+                bossDx = (bossDx > 0 ? bossDx + 0.5f : bossDx - 0.5f);
+                AddExplosion(bossX + 45.0f, bossY + 30.0f, 40, RGB(255, 234, 0));
+            } else {
+                DestroyBoss();
+            }
+        }
     }
 }
 
@@ -775,6 +792,9 @@ void StartNewGame(int modeIdx) {
     for (int i = 0; i < MAX_DEBRIS; i++) debris[i].life = 0.0f;
     for (int i = 0; i < MAX_RIPPLES; i++) ripples[i].life = 0;
     for (int i = 0; i < MAX_FLASHES; i++) flashes[i].life = 0;
+    
+    escort.active = 0;
+    pathGatesActive = 0;
 
     gameState = STATE_PLAYING;
     PlaySnd(3);
@@ -852,6 +872,40 @@ void Update() {
     }
 
     UpdateParticles();
+
+    if (pathGatesActive) {
+        pathGatesY += 1.0f;
+        if (pathGatesY > H + 50.0f) pathGatesActive = 0;
+        
+        if (p.x < W/4.0f + 20 && p.x + 20 > W/4.0f - 20 && p.y < pathGatesY + 20 && p.y + 20 > pathGatesY - 20) {
+            pathGatesActive = 0; wave += 1; score += 2000; PlaySnd(2);
+        } else if (p.x < 3*W/4.0f + 20 && p.x + 20 > 3*W/4.0f - 20 && p.y < pathGatesY + 20 && p.y + 20 > pathGatesY - 20) {
+            pathGatesActive = 0; p.hp = p.maxHp; PlaySnd(2);
+        }
+    }
+
+    if (frameCount % 600 == 0 && !escort.active && !bossActive && wave % 2 == 0) {
+        escort.active = 1; escort.x = W / 2.0f - 15.0f; escort.y = -30.0f; escort.dy = 0.5f;
+        escort.maxHp = 20; escort.hp = 20;
+    }
+    if (escort.active) {
+        escort.y += escort.dy;
+        for (int i = 0; i < MAX_EBULLETS; i++) {
+            if (eb[i].active && eb[i].x >= escort.x && eb[i].x <= escort.x+30 && eb[i].y >= escort.y && eb[i].y <= escort.y+30) {
+                eb[i].active = 0; escort.hp--; AddExplosion(eb[i].x, eb[i].y, 3, RGB(255,234,0));
+            }
+        }
+        for (int i = 0; i < MAX_ENEMIES; i++) {
+            if (e[i].active && e[i].x+20 >= escort.x && e[i].x <= escort.x+30 && e[i].y+20 >= escort.y && e[i].y <= escort.y+30) {
+                e[i].active = 0; escort.hp -= 5; AddExplosion(e[i].x+10, e[i].y+10, 10, RGB(255,152,0));
+            }
+        }
+        if (escort.hp <= 0) {
+            escort.active = 0; AddExplosion(escort.x+15, escort.y+15, 30, RGB(255,23,68));
+        } else if (escort.y > H) {
+            escort.active = 0; score += 5000 * comboMultiplier; PlaySnd(6);
+        }
+    }
 
     // Controls
     float speed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? 7.0f : 4.5f;
@@ -977,7 +1031,15 @@ void Update() {
                         } else {
                             shotsHit++; bossHp -= (b[i].type == 1.0f) ? 8 : 2;
                             AddExplosion(b[i].x, b[i].y, 4, RGB(255, 23, 68));
-                            if (bossHp <= 0) DestroyBoss();
+                            if (bossHp <= 0) {
+                                if (bossPhase == 1) {
+                                    bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
+                                    bossDx = (bossDx > 0 ? bossDx + 0.5f : bossDx - 0.5f);
+                                    AddExplosion(bossX + 45.0f, bossY + 30.0f, 40, RGB(255, 234, 0));
+                                } else {
+                                    DestroyBoss();
+                                }
+                            }
                         }
                     }
                 } else {
@@ -985,7 +1047,15 @@ void Update() {
                         b[i].active = 0.0f;
                         shotsHit++; bossHp -= (b[i].type == 1.0f) ? 8 : 2;
                         AddExplosion(b[i].x, b[i].y, 3, RGB(0, 229, 255));
-                        if (bossHp <= 0) DestroyBoss();
+                        if (bossHp <= 0) {
+                            if (bossPhase == 1) {
+                                bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
+                                bossDx = (bossDx > 0 ? bossDx + 0.5f : bossDx - 0.5f);
+                                AddExplosion(bossX + 30.0f, bossY + 25.0f, 40, RGB(255, 234, 0));
+                            } else {
+                                DestroyBoss();
+                            }
+                        }
                     }
                 }
             }
@@ -1428,6 +1498,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
+            HFONT hFont = NULL;
+            HFONT oldFont = NULL;
 
             if (bombFlash > 0) {
                 HBRUSH fbr = CreateSolidBrush(RGB(255, 255, 255));
@@ -1518,6 +1590,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
+                if (escort.active) {
+                    HBRUSH br = CreateSolidBrush(RGB(0, 255, 128));
+                    HGDIOBJ oldBr = SelectObject(memDC, br);
+                    RECT r = {(int)escort.x, (int)escort.y, (int)escort.x + 30, (int)escort.y + 30};
+                    FillRect(memDC, &r, br);
+                    HBRUSH hpBr = CreateSolidBrush(RGB(0, 255, 0));
+                    SelectObject(memDC, hpBr);
+                    int hpW = (int)(30 * ((float)escort.hp / escort.maxHp));
+                    RECT rHp = {(int)escort.x, (int)escort.y - 6, (int)escort.x + hpW, (int)escort.y - 2};
+                    FillRect(memDC, &rHp, hpBr);
+                    SelectObject(memDC, oldBr); DeleteObject(br); DeleteObject(hpBr);
+                }
+
+                if (pathGatesActive) {
+                    HPEN lpen = CreatePen(PS_SOLID, 3, RGB(255, 23, 68));
+                    HPEN rpen = CreatePen(PS_SOLID, 3, RGB(0, 229, 255));
+                    HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+                    HGDIOBJ oldPen = SelectObject(memDC, lpen);
+                    HGDIOBJ oldBr = SelectObject(memDC, nullBr);
+                    Ellipse(memDC, W/4 - 20, (int)pathGatesY - 20, W/4 + 20, (int)pathGatesY + 20);
+                    SelectObject(memDC, rpen);
+                    Ellipse(memDC, 3*W/4 - 20, (int)pathGatesY - 20, 3*W/4 + 20, (int)pathGatesY + 20);
+                    SelectObject(memDC, oldPen); SelectObject(memDC, oldBr);
+                    DeleteObject(lpen); DeleteObject(rpen);
+                }
+
                 // 3-Layer Parallax Starfield Rendering (Loop 2)
                 for (int i = 0; i < MAX_STARS; i++) {
                     if (stars[i].layer == 2) {
@@ -1540,8 +1638,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 SetBkMode(memDC, TRANSPARENT);
-                HFONT hFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
-                HFONT oldFont = (HFONT)SelectObject(memDC, hFont);
+                hFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                oldFont = (HFONT)SelectObject(memDC, hFont);
 
                 if (gameState == STATE_MENU) {
                     SetTextColor(memDC, RGB(0, 229, 255));

@@ -255,6 +255,10 @@ window.addEventListener('load', () => {
   let muzzleFlashes = [];
   let thrusterParticles = [];
 
+  let escort = { active: false, x: 0, y: 0, dy: 0, hp: 0, maxHp: 0 };
+  let pathGatesActive = false;
+  let pathGatesY = 0;
+
   // Deep Space Shifting Nebulae
   let nebulae = [
     { x: W * 0.25, y: H * 0.3, r: 100, col1: 'rgba(75, 0, 130, 0.28)', col2: 'rgba(0, 229, 255, 0)', vx: 0.12, vy: 0.2, phase: 0 },
@@ -805,6 +809,7 @@ window.addEventListener('load', () => {
     hyperShieldTimer = 0; hyperShieldCooldown = 0;
     bullets = []; eBullets = []; enemies = []; powerups = []; explosions = [];
     boss = null;
+    escort.active = false; pathGatesActive = false;
     gameState = STATE_PLAYING;
     playSound(3);
 
@@ -875,7 +880,8 @@ window.addEventListener('load', () => {
         { hp: 80, active: true }
       ] : [],
       dx: 2.0,
-      attackTimer: 0
+      attackTimer: 0,
+      phase: 1
     };
     playSound(4);
   }
@@ -910,6 +916,9 @@ window.addEventListener('load', () => {
 
     if (modeIndex === 2) {
       setTimeout(() => { if (gameState === STATE_PLAYING) spawnBoss(wave); }, 2500);
+    } else {
+      pathGatesActive = true;
+      pathGatesY = -50;
     }
   }
 
@@ -1022,6 +1031,42 @@ window.addEventListener('load', () => {
       }
     }
 
+    if (pathGatesActive) {
+      pathGatesY += 1.0;
+      if (pathGatesY > H + 50) pathGatesActive = false;
+      if (p.x < W/4 + 20 && p.x + 20 > W/4 - 20 && p.y < pathGatesY + 20 && p.y + 20 > pathGatesY - 20) {
+        pathGatesActive = false; wave += 1; score += 2000; playSound(2);
+      } else if (p.x < 3*W/4 + 20 && p.x + 20 > 3*W/4 - 20 && p.y < pathGatesY + 20 && p.y + 20 > pathGatesY - 20) {
+        pathGatesActive = false; p.hp = p.maxHp; playSound(2);
+      }
+    }
+
+    if (frameCount % 600 === 0 && !escort.active && !boss && wave % 2 === 0) {
+      escort.active = true; escort.x = W / 2 - 15; escort.y = -30; escort.dy = 0.5;
+      escort.maxHp = 20; escort.hp = 20;
+    }
+
+    if (escort.active) {
+      escort.y += escort.dy;
+      for (let i = eBullets.length - 1; i >= 0; i--) {
+        let eb = eBullets[i];
+        if (eb.x >= escort.x && eb.x <= escort.x + 30 && eb.y >= escort.y && eb.y <= escort.y + 30) {
+          eBullets.splice(i, 1); escort.hp--; addExplosion(eb.x, eb.y, 3, '#ffea00');
+        }
+      }
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        let e = enemies[i];
+        if (e.x + 20 >= escort.x && e.x <= escort.x + 30 && e.y + 20 >= escort.y && e.y <= escort.y + 30) {
+          enemies.splice(i, 1); escort.hp -= 5; addExplosion(e.x + 10, e.y + 10, 10, '#ff9800');
+        }
+      }
+      if (escort.hp <= 0) {
+        escort.active = false; addExplosion(escort.x + 15, escort.y + 15, 30, '#ff1744');
+      } else if (escort.y > H) {
+        escort.active = false; score += 5000 * comboMultiplier; playSound(6);
+      }
+    }
+
     updateExplosions();
 
     // Movement
@@ -1081,7 +1126,13 @@ window.addEventListener('load', () => {
           if (!isMothershipShieldActive()) {
             boss.hp -= 0.8;
             addExplosion(p.x + 10, boss.y + boss.h, 2, '#00e5ff');
-            if (boss.hp <= 0) destroyBoss();
+            if (boss.hp <= 0) {
+              if (boss.phase === 1) {
+                boss.phase = 2; boss.maxHp *= 1.5; boss.hp = boss.maxHp;
+                boss.dx = boss.dx > 0 ? boss.dx + 0.5 : boss.dx - 0.5;
+                addExplosion(boss.x + boss.w/2, boss.y + boss.h/2, 40, '#ffea00');
+              } else destroyBoss();
+            }
           }
         }
       }
@@ -1116,7 +1167,14 @@ window.addEventListener('load', () => {
             } else {
               shotsHit++; boss.hp -= (b.type === 1 ? 8 : 2);
               addExplosion(b.x, b.y, 4, '#ff1744');
-              if (boss.hp <= 0) { destroyBoss(); break; }
+              if (boss.hp <= 0) {
+                if (boss.phase === 1) {
+                  boss.phase = 2; boss.maxHp *= 1.5; boss.hp = boss.maxHp;
+                  boss.dx = boss.dx > 0 ? boss.dx + 0.5 : boss.dx - 0.5;
+                  addExplosion(boss.x + boss.w/2, boss.y + boss.h/2, 40, '#ffea00');
+                  break;
+                } else { destroyBoss(); break; }
+              }
             }
           }
         } else {
@@ -1124,7 +1182,14 @@ window.addEventListener('load', () => {
             shotsHit++; boss.hp -= (b.type === 1 ? 8 : 2);
             addExplosion(b.x, b.y, 3, '#00e5ff');
             bullets.splice(j, 1);
-            if (boss.hp <= 0) { destroyBoss(); break; }
+            if (boss.hp <= 0) {
+              if (boss.phase === 1) {
+                boss.phase = 2; boss.maxHp *= 1.5; boss.hp = boss.maxHp;
+                boss.dx = boss.dx > 0 ? boss.dx + 0.5 : boss.dx - 0.5;
+                addExplosion(boss.x + boss.w/2, boss.y + boss.h/2, 40, '#ffea00');
+                break;
+              } else { destroyBoss(); break; }
+            }
           }
         }
       }
