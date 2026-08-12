@@ -100,6 +100,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPass
 - KMedia
 - KNet
+- KZip
 - KPaint
 - KFarm
 
