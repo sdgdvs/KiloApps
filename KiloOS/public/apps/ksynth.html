@@ -511,6 +511,22 @@
           <input type="range" id="masterVol" min="0" max="1" value="0.75" step="0.01">
         </div>
       </div>
+
+      <!-- Delay Effect -->
+      <div class="panel-row" style="margin-top: 4px; border-top: 1px solid #262c3a; padding-top: 8px;">
+        <div class="control-group">
+          <label>Delay Time <span class="val" id="delayTimeVal">0.30s</span></label>
+          <input type="range" id="delayTime" min="0" max="2" value="0.3" step="0.01">
+        </div>
+        <div class="control-group">
+          <label>Delay Fdbk <span class="val" id="delayFdbkVal">0.40</span></label>
+          <input type="range" id="delayFdbk" min="0" max="0.95" value="0.4" step="0.01">
+        </div>
+        <div class="control-group">
+          <label>Delay Mix <span class="val" id="delayMixVal">0.50</span></label>
+          <input type="range" id="delayMix" min="0" max="1" value="0.5" step="0.01">
+        </div>
+      </div>
     </div>
 
     <!-- ADSR Envelope & Canvas Graph -->
@@ -620,6 +636,9 @@
   let audioCtx = null;
   let masterGain = null;
   let filterNode = null;
+  let delayNode = null;
+  let delayFeedback = null;
+  let delayMix = null;
   let analyserNode = null;
 
   function initAudio() {
@@ -637,8 +656,22 @@
 
     analyserNode = audioCtx.createAnalyser();
     analyserNode.fftSize = 1024;
+    
+    delayNode = audioCtx.createDelay(5.0);
+    delayFeedback = audioCtx.createGain();
+    delayMix = audioCtx.createGain();
+
+    delayNode.delayTime.value = parseFloat(document.getElementById('delayTime').value);
+    delayFeedback.gain.value = parseFloat(document.getElementById('delayFdbk').value);
+    delayMix.gain.value = parseFloat(document.getElementById('delayMix').value);
 
     filterNode.connect(masterGain);
+    filterNode.connect(delayNode);
+    delayNode.connect(delayFeedback);
+    delayFeedback.connect(delayNode);
+    delayNode.connect(delayMix);
+    delayMix.connect(masterGain);
+    
     masterGain.connect(analyserNode);
     analyserNode.connect(audioCtx.destination);
   }
@@ -811,6 +844,10 @@
   bindSlider('filterRes', 'resVal');
   bindSlider('masterVol', 'masterVolVal', '', v => Math.round(v * 100) + '%');
 
+  bindSlider('delayTime', 'delayTimeVal', 's');
+  bindSlider('delayFdbk', 'delayFdbkVal', '');
+  bindSlider('delayMix', 'delayMixVal', '');
+
   bindSlider('attack', 'attackVal', 's');
   bindSlider('decay', 'decayVal', 's');
   bindSlider('sustain', 'sustainVal');
@@ -821,6 +858,15 @@
 
   document.getElementById('masterVol').addEventListener('input', (e) => {
     if (masterGain) masterGain.gain.value = parseFloat(e.target.value);
+  });
+  document.getElementById('delayTime').addEventListener('input', (e) => {
+    if (delayNode) delayNode.delayTime.value = parseFloat(e.target.value);
+  });
+  document.getElementById('delayFdbk').addEventListener('input', (e) => {
+    if (delayFeedback) delayFeedback.gain.value = parseFloat(e.target.value);
+  });
+  document.getElementById('delayMix').addEventListener('input', (e) => {
+    if (delayMix) delayMix.gain.value = parseFloat(e.target.value);
   });
   document.getElementById('filterCutoff').addEventListener('input', (e) => {
     if (filterNode) filterNode.frequency.value = parseFloat(e.target.value);
@@ -1358,6 +1404,10 @@
     document.getElementById('filterCutoff').value = p.filterCutoff;
     document.getElementById('filterRes').value = p.filterRes;
     document.getElementById('masterVol').value = p.masterVol;
+    
+    if (p.delayTime !== undefined) document.getElementById('delayTime').value = p.delayTime;
+    if (p.delayFdbk !== undefined) document.getElementById('delayFdbk').value = p.delayFdbk;
+    if (p.delayMix !== undefined) document.getElementById('delayMix').value = p.delayMix;
 
     document.getElementById('attack').value = p.attack;
     document.getElementById('decay').value = p.decay;
@@ -1366,7 +1416,8 @@
 
     // Trigger input events to refresh text labels
     ['osc1Oct','osc1Detune','osc1Vol','osc2Oct','osc2Detune','osc2Vol',
-     'filterCutoff','filterRes','masterVol','attack','decay','sustain','release'].forEach(id => {
+     'filterCutoff','filterRes','masterVol','attack','decay','sustain','release',
+     'delayTime','delayFdbk','delayMix'].forEach(id => {
       document.getElementById(id).dispatchEvent(new Event('input'));
     });
 
@@ -1378,6 +1429,9 @@
     if (masterGain) {
       masterGain.gain.value = p.masterVol;
     }
+    if (delayNode && p.delayTime !== undefined) delayNode.delayTime.value = p.delayTime;
+    if (delayFeedback && p.delayFdbk !== undefined) delayFeedback.gain.value = p.delayFdbk;
+    if (delayMix && p.delayMix !== undefined) delayMix.gain.value = p.delayMix;
 
     drawADSR();
   }
@@ -1403,6 +1457,9 @@
       filterCutoff: parseFloat(document.getElementById('filterCutoff').value),
       filterRes: parseFloat(document.getElementById('filterRes').value),
       masterVol: parseFloat(document.getElementById('masterVol').value),
+      delayTime: parseFloat(document.getElementById('delayTime').value),
+      delayFdbk: parseFloat(document.getElementById('delayFdbk').value),
+      delayMix: parseFloat(document.getElementById('delayMix').value),
       attack: parseFloat(document.getElementById('attack').value),
       decay: parseFloat(document.getElementById('decay').value),
       sustain: parseFloat(document.getElementById('sustain').value),

@@ -4,9 +4,10 @@
 #include <stdlib.h>
 
 #define W 660
-#define H 400
+#define H 450
 
 HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hFreq, hAttack, hDecay, hSustain, hRelease;
+HWND hDelayTime, hDelayFdbk, hDelayMix;
 HWND hComboArp, hArpBpm, hArpOct;
 HWND hScopeWnd;
 
@@ -86,7 +87,7 @@ Preset g_presets[] = {
     { 4, 440, "0.01", "0.15", "0.10", "0.10" }  // Noise Generator
 };
 
-void GenerateWave(int type, int freq, double attack, double decay, double sustain, double release) {
+void GenerateWave(int type, int freq, double attack, double decay, double sustain, double release, double delayTime, double delayFdbk, double delayMix) {
     double phase = 0.0;
     double phaseInc = (double)freq / SAMPLE_RATE;
     
@@ -146,6 +147,31 @@ void GenerateWave(int type, int freq, double attack, double decay, double sustai
     for (int i = total_samples; i < SAMPLE_RATE * MAX_DURATION; i++) {
         buffer[i] = 0;
     }
+
+    static short delayBuffer[SAMPLE_RATE * MAX_DURATION];
+    memset(delayBuffer, 0, sizeof(delayBuffer));
+    
+    if (delayMix > 0.0 && delayTime > 0.0) {
+        int delay_samples = (int)(delayTime * SAMPLE_RATE);
+        if (delay_samples > 0) {
+            for (int i = 0; i < SAMPLE_RATE * MAX_DURATION; i++) {
+                short in_val = buffer[i];
+                short delayed_val = (i >= delay_samples) ? delayBuffer[i - delay_samples] : 0;
+                
+                int new_delay_val = in_val + (int)(delayed_val * delayFdbk);
+                if (new_delay_val > 32767) new_delay_val = 32767;
+                if (new_delay_val < -32768) new_delay_val = -32768;
+                delayBuffer[i] = (short)new_delay_val;
+                
+                int out_val = (int)(in_val * (1.0 - delayMix)) + (int)(delayed_val * delayMix);
+                if (out_val > 32767) out_val = 32767;
+                if (out_val < -32768) out_val = -32768;
+                buffer[i] = (short)out_val;
+            }
+            total_samples = SAMPLE_RATE * MAX_DURATION;
+        }
+    }
+
     waveHdr.dwBufferLength = total_samples * sizeof(short);
 
     if (hScopeWnd) InvalidateRect(hScopeWnd, NULL, TRUE);
@@ -176,7 +202,15 @@ void PlayTone() {
     if (sustain < 0) sustain = 0; if (sustain > 1) sustain = 1;
     if (release < 0) release = 0;
     
-    GenerateWave(sel, freq, attack, decay, sustain, release);
+    GetWindowTextA(hDelayTime, buf, 32); double delayTime = parse_float(buf);
+    GetWindowTextA(hDelayFdbk, buf, 32); double delayFdbk = parse_float(buf);
+    GetWindowTextA(hDelayMix, buf, 32); double delayMix = parse_float(buf);
+    
+    if (delayTime < 0) delayTime = 0; if (delayTime > 2) delayTime = 2;
+    if (delayFdbk < 0) delayFdbk = 0; if (delayFdbk > 0.99) delayFdbk = 0.99;
+    if (delayMix < 0) delayMix = 0; if (delayMix > 1) delayMix = 1;
+
+    GenerateWave(sel, freq, attack, decay, sustain, release, delayTime, delayFdbk, delayMix);
     
     WAVEFORMATEX wfx = {0};
     wfx.wFormatTag = WAVE_FORMAT_PCM;
@@ -355,9 +389,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateScaledWindowEx(0, "STATIC", "Release (s):", WS_CHILD | WS_VISIBLE, 15, 195, 80, 20, hwnd, NULL, NULL, NULL);
             hRelease = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.40", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 192, 80, 22, hwnd, NULL, NULL, NULL);
 
+            // Delay Group
+            CreateScaledWindowEx(0, "STATIC", "Delay (s):", WS_CHILD | WS_VISIBLE, 15, 225, 80, 20, hwnd, NULL, NULL, NULL);
+            hDelayTime = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.30", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 222, 80, 22, hwnd, NULL, NULL, NULL);
+
+            CreateScaledWindowEx(0, "STATIC", "Fdbk (0-1):", WS_CHILD | WS_VISIBLE, 15, 255, 80, 20, hwnd, NULL, NULL, NULL);
+            hDelayFdbk = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.40", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 252, 80, 22, hwnd, NULL, NULL, NULL);
+
+            CreateScaledWindowEx(0, "STATIC", "Mix (0-1):", WS_CHILD | WS_VISIBLE, 15, 285, 80, 20, hwnd, NULL, NULL, NULL);
+            hDelayMix = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.50", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 282, 80, 22, hwnd, NULL, NULL, NULL);
+
             // Arpeggiator Group
-            CreateScaledWindowEx(0, "STATIC", "Arp Mode:", WS_CHILD | WS_VISIBLE, 15, 230, 80, 20, hwnd, NULL, NULL, NULL);
-            hComboArp = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 227, 160, 120, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Arp Mode:", WS_CHILD | WS_VISIBLE, 15, 320, 80, 20, hwnd, NULL, NULL, NULL);
+            hComboArp = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 317, 160, 120, hwnd, NULL, NULL, NULL);
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Off");
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Up");
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Down");
@@ -366,8 +410,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboArp, CB_SETCURSEL, 0, 0);
 
             // Play Buttons
-            hBtnPlay = CreateScaledWindowEx(0, "BUTTON", "▶ Play Tone", WS_CHILD | WS_VISIBLE, 15, 270, 110, 32, hwnd, (HMENU)1, NULL, NULL);
-            hBtnSeq  = CreateScaledWindowEx(0, "BUTTON", "⚡ Run Arp", WS_CHILD | WS_VISIBLE, 140, 270, 120, 32, hwnd, (HMENU)2, NULL, NULL);
+            hBtnPlay = CreateScaledWindowEx(0, "BUTTON", "▶ Play Tone", WS_CHILD | WS_VISIBLE, 15, 360, 110, 32, hwnd, (HMENU)1, NULL, NULL);
+            hBtnSeq  = CreateScaledWindowEx(0, "BUTTON", "⚡ Run Arp", WS_CHILD | WS_VISIBLE, 140, 360, 120, 32, hwnd, (HMENU)2, NULL, NULL);
 
             // Oscilloscope Box Window
             WNDCLASS sc = {0};
