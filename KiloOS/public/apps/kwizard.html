@@ -179,6 +179,29 @@
             background-color: #2c3e50;
             border-color: #3498db;
         }
+        #help-modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            z-index: 100;
+            flex-direction: column;
+            color: #e8d8b7;
+            padding: 40px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .help-content {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #1a0b2e;
+            border: 2px solid #b89947;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .help-content h2, .help-content h3 { color: #b89947; margin-top: 10px; margin-bottom: 5px; }
+        .help-content p, .help-content ul { margin-top: 5px; margin-bottom: 10px; font-size: 14px; }
+        .help-content li { margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -193,7 +216,8 @@
             <button id="end-turn-btn">End Turn</button>
             <button id="reset-btn">Reset Game</button>
             <button id="campaign-btn" style="background-color: #5c4033; border-color: #b89947;">Campaign</button>
-            <button id="deck-btn" style="background-color: #2c3e50; border-color: #3498db;">Deck Builder</button>
+            <button id="deck-btn" style="background-color: #2c3e50; border-color: #3498db;">Deck</button>
+            <button id="help-btn" style="background-color: #8b7355; border-color: #f4ebd0;">Grimoire</button>
         </div>
         
         <div>
@@ -226,6 +250,32 @@
             <div id="curr-deck" class="deck-grid"></div>
         </div>
         <button id="close-deck-btn">Save & Close</button>
+    </div>
+
+    <div id="help-modal">
+        <div class="help-content">
+            <h2>Grimoire & How to Play</h2>
+            <h3>How to Play</h3>
+            <p>You and your opponent take turns casting spells. You start with 1 Max Mana, gaining 1 per turn (up to 10). Your mana refreshes at the start of your turn. Draw a card each turn.</p>
+            <p>Defeat the opponent by reducing their HP to 0. Build your deck to create powerful synergies!</p>
+            
+            <h3>Status Effects</h3>
+            <ul>
+                <li><b>Shield:</b> Absorbs incoming damage.</li>
+                <li><b>Burn:</b> Take damage at the start of your turn.</li>
+                <li><b>Poison:</b> Take damage at the start of your turn.</li>
+                <li><b>Frozen:</b> Skip your next turn or cannot cast spells this turn. Ice Lance does 3x damage to frozen targets!</li>
+                <li><b>Regen:</b> Heal HP at the start of your turn.</li>
+            </ul>
+
+            <h3>Spell Index</h3>
+            <div id="spell-index-list" style="display: flex; flex-wrap: wrap; gap: 10px;">
+            </div>
+            
+            <div style="text-align: center;">
+                <button id="close-help-btn" style="margin-top: 20px; background-color: #2c3e50; border-color: #3498db;">Close Grimoire</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -341,6 +391,10 @@
         const currDeckDiv = document.getElementById('curr-deck');
         const closeDeckBtn = document.getElementById('close-deck-btn');
         const deckCountSpan = document.getElementById('deck-count');
+        const helpBtn = document.getElementById('help-btn');
+        const helpModal = document.getElementById('help-modal');
+        const closeHelpBtn = document.getElementById('close-help-btn');
+        const spellIndexList = document.getElementById('spell-index-list');
 
         function renderDeckBuilder() {
             availCardsDiv.innerHTML = '';
@@ -384,6 +438,25 @@
                 return;
             }
             deckModal.style.display = 'none';
+        };
+
+        helpBtn.onclick = () => {
+            spellIndexList.innerHTML = '';
+            sampleCards.forEach(c => {
+                let el = document.createElement('div');
+                el.style.border = "1px solid #8b7355";
+                el.style.padding = "5px";
+                el.style.borderRadius = "4px";
+                el.style.width = "48%";
+                el.style.boxSizing = "border-box";
+                el.innerHTML = `<b>${c.name}</b> (Mana: ${c.cost})<br><span style="font-size:12px;">${c.effect}</span>`;
+                spellIndexList.appendChild(el);
+            });
+            helpModal.style.display = 'flex';
+        };
+
+        closeHelpBtn.onclick = () => {
+            helpModal.style.display = 'none';
         };
 
         function updateManaDisplay() {

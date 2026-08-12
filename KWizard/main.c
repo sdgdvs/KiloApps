@@ -9,6 +9,9 @@
 #define LST_AVAIL 107
 #define LST_DECK 108
 #define BTN_DECK_CLOSE 109
+#define BTN_HELP 110
+#define LST_HELP 111
+#define BTN_HELP_CLOSE 112
 #define IDT_CAMPAIGN_NEXT 1001
 
 typedef struct {
@@ -174,7 +177,7 @@ void PlaySoundEffect(const char* type) {
     }
 }
 
-HWND hwndDraw, hwndReset, hwndCombo, hwndDeckBtn, hwndAvail, hwndDeck, hwndDeckClose;
+HWND hwndDraw, hwndReset, hwndCombo, hwndDeckBtn, hwndHelpBtn, hwndAvail, hwndDeck, hwndDeckClose, hwndHelp, hwndHelpClose;
 
 unsigned int seed = 0;
 int my_rand() {
@@ -364,8 +367,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          hwnd, (HMENU)BTN_CAMPAIGN, NULL, NULL);
             hwndDeckBtn = CreateWindow("BUTTON", "Deck",
                                        WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                                       680, 10, 80, 30,
+                                       680, 10, 50, 30,
                                        hwnd, (HMENU)BTN_DECK, NULL, NULL);
+            hwndHelpBtn = CreateWindow("BUTTON", "Help",
+                                       WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                                       735, 10, 50, 30,
+                                       hwnd, (HMENU)BTN_HELP, NULL, NULL);
 
             hwndAvail = CreateWindow("LISTBOX", "",
                                      WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
@@ -379,6 +386,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                          WS_CHILD | BS_PUSHBUTTON,
                                          350, 470, 100, 30,
                                          hwnd, (HMENU)BTN_DECK_CLOSE, NULL, NULL);
+                                         
+            hwndHelp = CreateWindow("LISTBOX", "",
+                                    WS_CHILD | WS_BORDER | WS_VSCROLL,
+                                    50, 50, 700, 400,
+                                    hwnd, (HMENU)LST_HELP, NULL, NULL);
+            hwndHelpClose = CreateWindow("BUTTON", "Close Grimoire",
+                                         WS_CHILD | BS_PUSHBUTTON,
+                                         350, 470, 120, 30,
+                                         hwnd, (HMENU)BTN_HELP_CLOSE, NULL, NULL);
 
             for (int i = 0; i < NUM_SAMPLE_CARDS; i++) {
                 char buf[64];
@@ -453,6 +469,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == BTN_DECK) {
                 gameState = 3;
+                ShowWindow(hwndHelp, SW_HIDE);
+                ShowWindow(hwndHelpClose, SW_HIDE);
                 SendMessage(hwndDeck, LB_RESETCONTENT, 0, 0);
                 for (int i = 0; i < playerDeckCount; i++) {
                     char buf[64];
@@ -473,6 +491,37 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     ShowWindow(hwndDeckClose, SW_HIDE);
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
+            } else if (LOWORD(wParam) == BTN_HELP) {
+                gameState = 4;
+                ShowWindow(hwndAvail, SW_HIDE);
+                ShowWindow(hwndDeck, SW_HIDE);
+                ShowWindow(hwndDeckClose, SW_HIDE);
+                SendMessage(hwndHelp, LB_RESETCONTENT, 0, 0);
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"=== HOW TO PLAY ===");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"You and your opponent take turns casting spells.");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"You start with 1 Max Mana, gaining 1 per turn (up to 10).");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"Defeat the opponent by reducing their HP to 0.");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"=== STATUS EFFECTS ===");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"Shield: Absorbs incoming damage.");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"Burn/Poison: Take damage at the start of your turn.");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"Frozen: Skip your next turn or cannot cast spells.");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"Regen: Heal HP at the start of your turn.");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"=== SPELL INDEX ===");
+                for (int i = 0; i < NUM_SAMPLE_CARDS; i++) {
+                    char buf[128];
+                    wsprintf(buf, "%s (Cost: %d) - %s", sampleCards[i].name, sampleCards[i].cost, sampleCards[i].effect);
+                    SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)buf);
+                }
+                ShowWindow(hwndHelp, SW_SHOW);
+                ShowWindow(hwndHelpClose, SW_SHOW);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == BTN_HELP_CLOSE) {
+                gameState = 0;
+                ShowWindow(hwndHelp, SW_HIDE);
+                ShowWindow(hwndHelpClose, SW_HIDE);
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == LST_AVAIL && HIWORD(wParam) == LBN_DBLCLK) {
                 if (gameState == 3 && playerDeckCount < 20) {
                     int sel = SendMessage(hwndAvail, LB_GETCURSEL, 0, 0);
@@ -605,20 +654,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int cw = clientRect.right - clientRect.left;
             int ch = clientRect.bottom - clientRect.top;
 
-            if (gameState == 3) {
+            if (gameState == 3 || gameState == 4) {
                 HBRUSH bgBrush = CreateSolidBrush(RGB(10, 5, 20));
                 FillRect(hdc, &clientRect, bgBrush);
                 DeleteObject(bgBrush);
                 
                 SetBkMode(hdc, TRANSPARENT);
                 SetTextColor(hdc, RGB(232, 216, 183));
-                RECT lblA = {50, 20, 350, 50};
-                DrawText(hdc, "Available Spells (Double-click to add)", -1, &lblA, DT_CENTER | DT_SINGLELINE);
                 
-                char lblDStr[64];
-                wsprintf(lblDStr, "Your Deck (%d/20) (Double-click to remove)", playerDeckCount);
-                RECT lblD = {450, 20, 750, 50};
-                DrawText(hdc, lblDStr, -1, &lblD, DT_CENTER | DT_SINGLELINE);
+                if (gameState == 3) {
+                    RECT lblA = {50, 20, 350, 50};
+                    DrawText(hdc, "Available Spells (Double-click to add)", -1, &lblA, DT_CENTER | DT_SINGLELINE);
+                    
+                    char lblDStr[64];
+                    wsprintf(lblDStr, "Your Deck (%d/20) (Double-click to remove)", playerDeckCount);
+                    RECT lblD = {450, 20, 750, 50};
+                    DrawText(hdc, lblDStr, -1, &lblD, DT_CENTER | DT_SINGLELINE);
+                } else if (gameState == 4) {
+                    RECT lblH = {0, 20, cw, 50};
+                    DrawText(hdc, "Grimoire & How to Play", -1, &lblH, DT_CENTER | DT_SINGLELINE);
+                }
 
                 SelectObject(hdc, oldFont);
                 DeleteObject(hFont);
