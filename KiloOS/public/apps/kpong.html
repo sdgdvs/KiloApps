@@ -333,8 +333,8 @@
   let s1 = 0, s2 = 0;
   let rally = 0;
   let difficulty = 2; // 1: Easy, 2: Normal, 3: Hard
-  const aiSpeeds = [0, 2.5, 4.5, 6.5];
-  const startSpeeds = [0, 4, 5.5, 7.5];
+  const aiSpeeds = [0, 2, 4, 6];
+  const startSpeeds = [0, 4, 5, 7];
   let gameOver = false;
 
   let particles = [];
@@ -691,11 +691,11 @@
               let aiSpeed = aiSpeeds[difficulty];
               if (gameMode === 4) { // Campaign stages
                   if (campaignLevel <= 2) aiSpeed = 3;
-                  else if (campaignLevel <= 5) aiSpeed = 5;
-                  else if (campaignLevel <= 9) aiSpeed = 7;
-                  else if (campaignLevel <= 15) aiSpeed = 12;
-                  else if (campaignLevel <= 19) aiSpeed = 16;
-                  else aiSpeed = 22; // Boss stage
+                  else if (campaignLevel <= 5) aiSpeed = 4;
+                  else if (campaignLevel <= 9) aiSpeed = 5;
+                  else if (campaignLevel <= 15) aiSpeed = 6;
+                  else if (campaignLevel <= 19) aiSpeed = 8;
+                  else aiSpeed = 10; // Boss stage
               }
               let targetBall = balls.find(b => b.active && b.dx > 0) || balls.find(b => b.active) || { y: H/2 };
               if (targetBall.y > p2y + p2PadH/2 + 8) p2y += aiSpeed;
@@ -707,14 +707,13 @@
       p2Vy = p2y - p2PrevY;
 
       // Power-up Pickups (Modes 1, 2, 3, 4)
-      if (gameMode === 2 || (gameMode !== 0 && Math.random() < 0.007)) {
-          if (powerupActive > 0) powerupActive--;
-          if (powerupX === -1 && Math.random() < 0.015) {
-              powerupX = W/4 + Math.random()*(W/2);
-              powerupY = H/4 + Math.random()*(H/2);
-              powerupActive = 260;
-              powerupType = Math.floor(Math.random() * 6); // 0: Expand, 1: Shrink, 2: Freeze, 3: Multi-Ball, 4: Speed Boost, 5: Shield
-          }
+      if (powerupActive > 0) powerupActive--;
+      let spawnChance = (gameMode === 2) ? 0.02 : (gameMode !== 0 ? 0.005 : 0);
+      if (powerupX === -1 && Math.random() < spawnChance) {
+          powerupX = W/4 + Math.random()*(W/2);
+          powerupY = H/4 + Math.random()*(H/2);
+          powerupActive = 260;
+          powerupType = Math.floor(Math.random() * 6); // 0: Expand, 1: Shrink, 2: Freeze, 3: Multi-Ball, 4: Speed Boost, 5: Shield
       }
       if (powerupActive <= 0) { powerupX = -1; powerupY = -1; }
 

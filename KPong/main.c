@@ -480,11 +480,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (game_mode == 4) {
                         if (campaign_level == 1) ai_spd = 2;
                         else if (campaign_level == 2) ai_spd = 3;
-                        else if (campaign_level <= 5) ai_spd = 5;
-                        else if (campaign_level <= 9) ai_spd = 8;
-                        else if (campaign_level <= 15) ai_spd = 12;
-                        else if (campaign_level <= 19) ai_spd = 16;
-                        else ai_spd = 22;
+                        else if (campaign_level <= 5) ai_spd = 4;
+                        else if (campaign_level <= 9) ai_spd = 5;
+                        else if (campaign_level <= 15) ai_spd = 6;
+                        else if (campaign_level <= 19) ai_spd = 8;
+                        else ai_spd = 10;
                     }
                     int target_ball = 0;
                     float min_x = -1.0f;
@@ -505,10 +505,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Powerup Capsule Pickup Spawning
             if (powerup_active > 0) powerup_active--;
-            if (powerup_x == -1 && (game_mode == 2 || rand() % 160 == 0)) {
+            int spawn_chance = (game_mode == 2) ? 50 : (game_mode != 0 ? 200 : 0);
+            if (spawn_chance > 0 && powerup_x == -1 && (rand() % spawn_chance == 0)) {
                 powerup_x = W / 4 + rand() % (W / 2);
                 powerup_y = H / 4 + rand() % (H / 2);
-                powerup_active = 250;
+                powerup_active = 260;
                 powerup_type = rand() % 6; // 0..5
             }
             if (powerup_active == 0) { powerup_x = -1; powerup_y = -1; }
