@@ -449,10 +449,15 @@
                   let b12 = 0;
                   textures[12][y * 16 + x] = (255 << 24) | (b12 << 16) | (g12 << 8) | r12;
                   
-                  let r15 = m_breathe > 0 ? 255 : 136;
-                  let g15 = 0;
+                  let r15 = bossHP <= 1 ? 255 : (m_breathe > 0 ? 255 : 136);
+                  let g15 = bossHP <= 1 ? 255 : 0;
                   let b15 = 0;
                   textures[15][y * 16 + x] = (255 << 24) | (b15 << 16) | (g15 << 8) | r15;
+              } else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) {
+                  let rb = bossHP <= 1 ? 255 : 255;
+                  let gb = bossHP <= 1 ? 136 : 255;
+                  let bb = bossHP <= 1 ? 136 : 255;
+                  textures[15][y * 16 + x] = (255 << 24) | (bb << 16) | (gb << 8) | rb;
               }
               
               // Spike Trap (t=25)
@@ -1313,9 +1318,15 @@
               texPos += step;
               
               let srcCol = tex[texY * 16 + texX];
-              let r = (srcCol & 0xFF) * sideMult * fog;
-              let g = ((srcCol >> 8) & 0xFF) * sideMult * fog;
-              let b = ((srcCol >> 16) & 0xFF) * sideMult * fog;
+              let tintR = 1.0, tintG = 1.0, tintB = 1.0;
+              if (hit === 1 || hit === 20 || hit === 21 || hit === 22) {
+                  let varVal = (mapX * 13 + mapY * 37) % 3;
+                  if (varVal === 0) { tintR = 0.85; tintG = 0.9; tintB = 1.0; }
+                  else if (varVal === 1) { tintR = 1.0; tintG = 0.9; tintB = 0.85; }
+              }
+              let r = (srcCol & 0xFF) * sideMult * fog * tintR;
+              let g = ((srcCol >> 8) & 0xFF) * sideMult * fog * tintG;
+              let b = ((srcCol >> 16) & 0xFF) * sideMult * fog * tintB;
               
               buf32[y * W + x] = (255 << 24) | (Math.floor(b) << 16) | (Math.floor(g) << 8) | Math.floor(r);
           }
@@ -1336,21 +1347,38 @@
       if (gameState === 1) {
           // Held Compass
           if (hasCompass || pathfinderTimer > 0) {
+              let cx = 27, cy = H - 27;
               uiCtx.save();
+              
+              let rimGrad = uiCtx.createRadialGradient(cx-5, cy-5, 2, cx, cy, 18);
+              rimGrad.addColorStop(0, '#fffacd');
+              rimGrad.addColorStop(0.5, '#daa520');
+              rimGrad.addColorStop(1, '#8b6508');
+              
               uiCtx.beginPath();
-              uiCtx.arc(27, H - 27, 16, 0, Math.PI * 2);
-              uiCtx.fillStyle = '#c89632';
+              uiCtx.arc(cx, cy, 18, 0, Math.PI * 2);
+              uiCtx.fillStyle = rimGrad;
               uiCtx.fill();
-              uiCtx.lineWidth = 2;
-              uiCtx.strokeStyle = '#ffd700';
+              uiCtx.lineWidth = 1;
+              uiCtx.strokeStyle = '#332200';
               uiCtx.stroke();
               
+              let bevelGrad = uiCtx.createRadialGradient(cx, cy, 13, cx, cy, 16);
+              bevelGrad.addColorStop(0, '#554411');
+              bevelGrad.addColorStop(1, '#ffd700');
               uiCtx.beginPath();
-              uiCtx.arc(27, H - 27, 13, 0, Math.PI * 2);
-              uiCtx.fillStyle = '#0f1e2d';
+              uiCtx.arc(cx, cy, 16, 0, Math.PI * 2);
+              uiCtx.fillStyle = bevelGrad;
+              uiCtx.fill();
+
+              let faceGrad = uiCtx.createRadialGradient(cx, cy, 0, cx, cy, 14);
+              faceGrad.addColorStop(0, '#0f1e2d');
+              faceGrad.addColorStop(1, '#050a10');
+              uiCtx.beginPath();
+              uiCtx.arc(cx, cy, 14, 0, Math.PI * 2);
+              uiCtx.fillStyle = faceGrad;
               uiCtx.fill();
               
-              // Target direction needle
               let ex = 8, ey = 8;
               for (let i = 0; i < map.length; i++) {
                   for (let j = 0; j < map[0].length; j++) {
@@ -1358,14 +1386,29 @@
                   }
               }
               let targetAngle = Math.atan2(ey - pY, ex - pX) - Math.atan2(dY, dX);
-              uiCtx.translate(27, H - 27);
+              uiCtx.translate(cx, cy);
               uiCtx.rotate(targetAngle);
+              
               uiCtx.beginPath();
-              uiCtx.moveTo(0, 0);
-              uiCtx.lineTo(10, 0);
-              uiCtx.strokeStyle = '#ff3333';
-              uiCtx.lineWidth = 2;
-              uiCtx.stroke();
+              uiCtx.moveTo(0, -2); uiCtx.lineTo(10, 0); uiCtx.lineTo(0, 2); uiCtx.closePath();
+              uiCtx.fillStyle = '#ff3333'; uiCtx.fill();
+              
+              uiCtx.beginPath();
+              uiCtx.moveTo(0, -2); uiCtx.lineTo(-6, 0); uiCtx.lineTo(0, 2); uiCtx.closePath();
+              uiCtx.fillStyle = '#cccccc'; uiCtx.fill();
+              
+              uiCtx.beginPath();
+              uiCtx.arc(0, 0, 2, 0, Math.PI * 2);
+              uiCtx.fillStyle = '#ffcc00'; uiCtx.fill();
+              
+              uiCtx.rotate(-targetAngle);
+              uiCtx.translate(-cx, -cy);
+              
+              uiCtx.beginPath();
+              uiCtx.arc(cx - 4, cy - 6, 6, 0, Math.PI * 2);
+              uiCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+              uiCtx.fill();
+              
               uiCtx.restore();
           }
           

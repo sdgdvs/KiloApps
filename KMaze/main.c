@@ -502,11 +502,15 @@ void UpdateTextures() {
             int m_breathe = (int)(sin(animFrameCount * 0.15f) * 1.5f);
             if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) {
                 // Minotaur
-                if (m_breathe > 0) textures[12][y * 16 + x] = 0x00FF8800;
-                else textures[12][y * 16 + x] = 0x00FFFF00;
+                if (m_breathe > 0) textures[12][y * 16 + x] = 0x000088FF;
+                else textures[12][y * 16 + x] = 0x0000FFFF;
                 // Minotaur King Boss
-                if (m_breathe > 0) textures[15][y * 16 + x] = 0x00FF0000;
-                else textures[15][y * 16 + x] = 0x00880000;
+                if (bossHP <= 1) textures[15][y * 16 + x] = (m_breathe > 0) ? 0x0000FFFF : 0x00008888;
+                else textures[15][y * 16 + x] = (m_breathe > 0) ? 0x000000FF : 0x00000088;
+            } else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) {
+                // Boss Snout variation
+                if (bossHP <= 1) textures[15][y * 16 + x] = 0x008888FF;
+                else textures[15][y * 16 + x] = 0x00FFFFFF;
             }
             // Spike Trap (t=25)
             if ((animFrameCount / 10) % 2 == 0) {
@@ -1565,9 +1569,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         texPos += step;
                         
                         DWORD srcCol = textures[hit][texY * 16 + texX];
-                        BYTE r = (BYTE)((srcCol & 0xFF) * sideMult * fog);
-                        BYTE g = (BYTE)(((srcCol >> 8) & 0xFF) * sideMult * fog);
-                        BYTE b = (BYTE)(((srcCol >> 16) & 0xFF) * sideMult * fog);
+                        float tintR = 1.0f, tintG = 1.0f, tintB = 1.0f;
+                        if (hit == 1 || hit == 20 || hit == 21 || hit == 22) {
+                            int varVal = (mapX * 13 + mapY * 37) % 3;
+                            if (varVal == 0) { tintR = 0.85f; tintG = 0.9f; tintB = 1.0f; }
+                            else if (varVal == 1) { tintR = 1.0f; tintG = 0.9f; tintB = 0.85f; }
+                        }
+                        BYTE r = (BYTE)((srcCol & 0xFF) * sideMult * fog * tintR);
+                        BYTE g = (BYTE)(((srcCol >> 8) & 0xFF) * sideMult * fog * tintG);
+                        BYTE b = (BYTE)(((srcCol >> 16) & 0xFF) * sideMult * fog * tintB);
                         
                         pBits[y * W + x] = RGB(r, g, b);
                     }
@@ -1589,13 +1599,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Held Equipment HUD
             if (gameState == 1) {
                 if (hasCompass || pathfinderTimer > 0) {
-                    HBRUSH brassB = CreateSolidBrush(RGB(200, 150, 50));
+                    int cx = 27, cy = H - 27;
+                    for (int r = 18; r >= 14; r--) {
+                        int g = 100 + (18 - r) * 25; if (g > 255) g = 255;
+                        HBRUSH rimB = CreateSolidBrush(RGB(g, (int)(g*0.8f), (int)(g*0.3f)));
+                        HPEN rimP = CreatePen(PS_SOLID, 1, RGB(g, (int)(g*0.8f), (int)(g*0.3f)));
+                        SelectObject(hdcMem, rimB); SelectObject(hdcMem, rimP);
+                        Ellipse(hdcMem, cx - r, cy - r, cx + r, cy + r);
+                        DeleteObject(rimB); DeleteObject(rimP);
+                    }
                     HBRUSH faceB = CreateSolidBrush(RGB(15, 30, 45));
-                    HPEN goldP = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
-                    SelectObject(hdcMem, brassB); SelectObject(hdcMem, goldP);
-                    Ellipse(hdcMem, 10, H - 45, 45, H - 10);
-                    SelectObject(hdcMem, faceB);
-                    Ellipse(hdcMem, 14, H - 41, 41, H - 14);
+                    HPEN faceP = CreatePen(PS_SOLID, 1, RGB(10, 20, 30));
+                    SelectObject(hdcMem, faceB); SelectObject(hdcMem, faceP);
+                    Ellipse(hdcMem, cx - 14, cy - 14, cx + 14, cy + 14);
+                    DeleteObject(faceB); DeleteObject(faceP);
                     
                     int ex = 8, ey = 8;
                     for (int i = 0; i < 45; i++) {
@@ -1604,14 +1621,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                     float targetAngle = (float)atan2(ey - pY, ex - pX) - (float)atan2(dY, dX);
-                    int cx = 27, cy = H - 27;
-                    int nx = cx + (int)(cos(targetAngle) * 10);
-                    int ny = cy + (int)(sin(targetAngle) * 10);
+                    int nx = cx + (int)(cos(targetAngle) * 11);
+                    int ny = cy + (int)(sin(targetAngle) * 11);
+                    int nx2 = cx - (int)(cos(targetAngle) * 5);
+                    int ny2 = cy - (int)(sin(targetAngle) * 5);
                     
                     HPEN needleP = CreatePen(PS_SOLID, 2, RGB(255, 50, 50));
                     SelectObject(hdcMem, needleP);
                     MoveToEx(hdcMem, cx, cy, NULL); LineTo(hdcMem, nx, ny);
-                    DeleteObject(brassB); DeleteObject(faceB); DeleteObject(goldP); DeleteObject(needleP);
+                    DeleteObject(needleP);
+                    
+                    HPEN needleP2 = CreatePen(PS_SOLID, 2, RGB(200, 200, 200));
+                    SelectObject(hdcMem, needleP2);
+                    MoveToEx(hdcMem, cx, cy, NULL); LineTo(hdcMem, nx2, ny2);
+                    DeleteObject(needleP2);
+
+                    HBRUSH glassB = CreateSolidBrush(RGB(200, 220, 255));
+                    HPEN glassP = CreatePen(PS_SOLID, 1, RGB(200, 220, 255));
+                    SelectObject(hdcMem, glassB); SelectObject(hdcMem, glassP);
+                    Ellipse(hdcMem, cx - 8, cy - 10, cx + 4, cy - 2);
+                    DeleteObject(glassB); DeleteObject(glassP);
                 }
 
                 if (hasPickaxe > 0) {

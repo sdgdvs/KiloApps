@@ -105,8 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMaze
-
 - KColony
 - KFortress
 - KFarm
@@ -135,7 +133,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSnake
 - KTetris
 - KBreakout
+- KMaze
 ## Completed Work Log
+
+- **KMaze (Loop 4):** Implemented coordinate-based visual variety (patchy/checkerboard color tinting) for wall textures (stone, tech, ice, void) in the raycaster, added an enraged state for the Minotaur King Boss with glowing yellow eyes and a deep red snout when at critical HP, and upgraded the 3D HUD compass to a highly polished metallic design featuring a gold outer rim, inner bevel, deep blue face, dual-colored needle, and translucent glass dome reflection in both Web Canvas (kmaze.html) and Native C Win32 GDI (KMaze/main.c).
 
 - **KBreakout (Loop 4):** Implemented distinctly shaped powerup capsules based on type (pills, hexagons, diamonds, circles), progressive glowing crack textures for multi-hit armored bricks as their HP decreases, and a dynamic paddle visual state featuring animated glowing laser cannons on both ends when the laser powerup is active in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 
