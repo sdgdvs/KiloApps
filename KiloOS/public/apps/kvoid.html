@@ -10,7 +10,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #000;
+            background-color: #020202;
             color: #0f0;
             font-family: 'Courier New', Courier, monospace;
             overflow: hidden;
@@ -28,24 +28,59 @@
         h1 {
             margin: 0 0 10px 0;
             font-size: 24px;
-            text-shadow: 0 0 5px #0f0;
+            text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+            animation: flicker 4s infinite;
+        }
+        @keyframes flicker {
+            0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 1; }
+            20%, 21.999%, 63%, 63.999%, 65%, 69.999% { opacity: 0.2; }
+        }
+        #canvas-wrapper {
+            position: relative;
         }
         canvas {
-            background-color: #111;
+            background-color: #050505;
             border: 2px solid #0f0;
-            box-shadow: 0 0 10px #0f0;
+            box-shadow: 0 0 15px #0f0;
+            image-rendering: pixelated;
+        }
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.25) 50%,
+                rgba(0,0,0,0.25)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .crt-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.4) 100%);
+            pointer-events: none;
+            z-index: 11;
         }
         #message {
             margin-top: 10px;
             font-size: 16px;
             height: 20px;
+            text-shadow: 0 0 3px #0f0;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
         <h1>KVoid</h1>
-        <canvas id="gameCanvas" width="640" height="480"></canvas>
+        <div id="canvas-wrapper">
+            <canvas id="gameCanvas" width="640" height="480"></canvas>
+            <div class="scanlines"></div>
+            <div class="crt-overlay"></div>
+        </div>
         <div id="message">Use WASD or Arrow Keys to move.</div>
     </div>
     <script>
@@ -83,12 +118,12 @@
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
                     if (map[y][x] === 1) {
-                        ctx.fillStyle = '#0f0';
+                        ctx.fillStyle = '#0a0';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = '#050';
+                        ctx.fillStyle = '#030';
                         ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                     } else {
-                        ctx.fillStyle = '#111';
+                        ctx.fillStyle = '#050505';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     }
                 }
@@ -96,10 +131,13 @@
         }
 
         function drawPlayer() {
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = '#0f0';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#0f0';
             ctx.beginPath();
             ctx.arc(player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
             ctx.fill();
+            ctx.shadowBlur = 0;
         }
 
         function draw() {

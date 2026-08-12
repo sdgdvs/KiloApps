@@ -1,4 +1,6 @@
 #include <windows.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define COLS 20
 #define ROWS 15
@@ -27,9 +29,21 @@ int map[ROWS][COLS] = {
 
 int playerX = 2;
 int playerY = 2;
+int flickerState = 0;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
+        case WM_CREATE:
+            SetTimer(hwnd, 1, 50, NULL);
+            return 0;
+        case WM_TIMER:
+            if (rand() % 20 == 0) {
+                flickerState = 1;
+            } else {
+                flickerState = 0;
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -40,10 +54,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
             
             // Draw map
-            HBRUSH hWallBrush = CreateSolidBrush(RGB(0, 255, 0));
-            HBRUSH hInnerWallBrush = CreateSolidBrush(RGB(0, 85, 0));
-            HBRUSH hFloorBrush = CreateSolidBrush(RGB(17, 17, 17));
-            HBRUSH hPlayerBrush = CreateSolidBrush(RGB(255, 255, 255));
+            int wallG = flickerState ? 50 : 170;
+            int inWallG = flickerState ? 20 : 51;
+            int floorC = flickerState ? 0 : 5;
+            int pG = flickerState ? 100 : 255;
+
+            HBRUSH hWallBrush = CreateSolidBrush(RGB(0, wallG, 0));
+            HBRUSH hInnerWallBrush = CreateSolidBrush(RGB(0, inWallG, 0));
+            HBRUSH hFloorBrush = CreateSolidBrush(RGB(floorC, floorC, floorC));
+            HBRUSH hPlayerBrush = CreateSolidBrush(RGB(0, pG, 0));
             
             // Clear background with black (though floor covers it)
             RECT bgRect = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
@@ -70,6 +89,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int cy = playerY * TILE_SIZE + TILE_SIZE / 2;
             Ellipse(hdcMem, cx - r, cy - r, cx + r, cy + r);
             
+            // Draw scanlines
+            HPEN hScanlinePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+            HPEN hOldPen = (HPEN)SelectObject(hdcMem, hScanlinePen);
+            for (int y = 0; y < WINDOW_HEIGHT; y += 4) {
+                MoveToEx(hdcMem, 0, y, NULL);
+                LineTo(hdcMem, WINDOW_WIDTH, y);
+            }
+            SelectObject(hdcMem, hOldPen);
+            DeleteObject(hScanlinePen);
+
             // Copy to screen
             BitBlt(hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMem, 0, 0, SRCCOPY);
             
@@ -118,6 +147,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             PostQuitMessage(0);
             return 0;
     }
@@ -125,6 +155,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    srand((unsigned int)time(NULL));
     const char CLASS_NAME[] = "KVoid Class";
 
     WNDCLASS wc = {0};
