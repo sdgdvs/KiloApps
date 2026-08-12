@@ -996,10 +996,42 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
     };
     Polygon(hdc, ptSh, 6);
 
-    HBRUSH innerBrush = CreateSolidBrush(colors[colorIdx]);
-    RECT rInner = { px + bSize + 1, py + bSize + 1, px + size - 1 - bSize, py + size - 1 - bSize };
-    FillRect(hdc, &rInner, innerBrush);
-    DeleteObject(innerBrush);
+    COLORREF baseColor = colors[colorIdx];
+    int lr = GetRValue(baseColor) + 60; if (lr > 255) lr = 255;
+    int lg = GetGValue(baseColor) + 60; if (lg > 255) lg = 255;
+    int lb = GetBValue(baseColor) + 60; if (lb > 255) lb = 255;
+    COLORREF lighterColor = RGB(lr, lg, lb);
+    
+    HBRUSH innerBrush;
+    if (colorIdx >= 1 && colorIdx <= 3) {
+        innerBrush = CreateSolidBrush(lighterColor);
+        SelectObject(hdc, innerBrush);
+        Ellipse(hdc, px + size / 4, py + size / 4, px + size * 3 / 4, py + size * 3 / 4);
+        DeleteObject(innerBrush);
+    } else if (colorIdx >= 4 && colorIdx <= 6) {
+        innerBrush = CreateSolidBrush(lighterColor);
+        SelectObject(hdc, innerBrush);
+        POINT ptDiamond[4] = {
+            { px + size / 2, py + bSize + 2 },
+            { px + size - bSize - 2, py + size / 2 },
+            { px + size / 2, py + size - bSize - 2 },
+            { px + bSize + 2, py + size / 2 }
+        };
+        Polygon(hdc, ptDiamond, 4);
+        DeleteObject(innerBrush);
+    } else if (colorIdx >= 7 && colorIdx <= 9) {
+        innerBrush = CreateSolidBrush(lighterColor);
+        RECT rCross1 = { px + size / 2 - 2, py + bSize + 2, px + size / 2 + 2, py + size - bSize - 2 };
+        RECT rCross2 = { px + bSize + 2, py + size / 2 - 2, px + size - bSize - 2, py + size / 2 + 2 };
+        FillRect(hdc, &rCross1, innerBrush);
+        FillRect(hdc, &rCross2, innerBrush);
+        DeleteObject(innerBrush);
+    } else {
+        innerBrush = CreateSolidBrush(lighterColor);
+        RECT rInner = { px + bSize + 2, py + bSize + 2, px + size - 2 - bSize, py + size - 2 - bSize };
+        FillRect(hdc, &rInner, innerBrush);
+        DeleteObject(innerBrush);
+    }
 
     HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
     RECT rFlare = { px + bSize + 1, py + bSize + 1, px + bSize + 4, py + bSize + 4 };
@@ -1018,6 +1050,46 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
             SelectObject(hdc, yellowBrush);
             Ellipse(hdc, px + size / 2 - 2, py + size / 2 - 2, px + size / 2 + 2, py + size / 2 + 2);
             DeleteObject(yellowBrush);
+        }
+    } else if (colorIdx == 14) { // Garbage
+        HBRUSH rustBrush1 = CreateSolidBrush(RGB(139, 69, 19));
+        RECT rRust1 = { px + 4, py + 4, px + 7, py + 7 };
+        RECT rRust2 = { px + size - 7, py + size - 7, px + size - 4, py + size - 4 };
+        FillRect(hdc, &rRust1, rustBrush1);
+        FillRect(hdc, &rRust2, rustBrush1);
+        DeleteObject(rustBrush1);
+
+        HBRUSH rustBrush2 = CreateSolidBrush(RGB(160, 82, 45));
+        RECT rRust3 = { px + size - 8, py + 5, px + size - 6, py + 7 };
+        FillRect(hdc, &rRust3, rustBrush2);
+        DeleteObject(rustBrush2);
+
+        HBRUSH sheenBrush = CreateSolidBrush(RGB(150, 150, 150));
+        SelectObject(hdc, sheenBrush);
+        POINT ptSheen[4] = {
+            { px + 1, py + size / 2 },
+            { px + size - 1, py + 1 },
+            { px + size - 1, py + 4 },
+            { px + 4, py + size - 1 }
+        };
+        Polygon(hdc, ptSheen, 4);
+        DeleteObject(sheenBrush);
+    }
+    
+    // Sweeping highlight animation
+    if (drawState == 0 && colorIdx != 14 && colorIdx != 15) {
+        int sweep = (tick / 5) % 3000;
+        int diag = px + py;
+        if (sweep > diag - 30 && sweep < diag + 30) {
+            int intensity = 255 - abs(sweep - diag) * 255 / 30;
+            if (intensity > 150) {
+                HPEN sweepPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                HPEN oldSwpPen = (HPEN)SelectObject(hdc, sweepPen);
+                MoveToEx(hdc, px + 2, py + size - 2, NULL);
+                LineTo(hdc, px + size - 2, py + 2);
+                SelectObject(hdc, oldSwpPen);
+                DeleteObject(sweepPen);
+            }
         }
     }
 

@@ -730,9 +730,31 @@ if (showHelp) {
       ctx.closePath();
       ctx.fill();
 
-      // Inner Gem Texture / Center Box
+      // Inner Gem Texture / Pattern based on piece type (colorIdx)
+      ctx.save();
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.fillRect(px + bSize + 1, py + bSize + 1, size - (bSize + 1) * 2, size - (bSize + 1) * 2);
+      if (colorIdx >= 1 && colorIdx <= 3) {
+          // Inner circle
+          ctx.beginPath();
+          ctx.arc(px + size / 2, py + size / 2, size / 4, 0, Math.PI * 2);
+          ctx.fill();
+      } else if (colorIdx >= 4 && colorIdx <= 6) {
+          // Diamond pattern
+          ctx.beginPath();
+          ctx.moveTo(px + size / 2, py + bSize + 2);
+          ctx.lineTo(px + size - bSize - 2, py + size / 2);
+          ctx.lineTo(px + size / 2, py + size - bSize - 2);
+          ctx.lineTo(px + bSize + 2, py + size / 2);
+          ctx.fill();
+      } else if (colorIdx >= 7 && colorIdx <= 9) {
+          // Inner cross
+          ctx.fillRect(px + size / 2 - 2, py + bSize + 2, 4, size - (bSize + 2) * 2);
+          ctx.fillRect(px + bSize + 2, py + size / 2 - 2, size - (bSize + 2) * 2, 4);
+      } else {
+          // Default square box
+          ctx.fillRect(px + bSize + 1, py + bSize + 1, size - (bSize + 1) * 2, size - (bSize + 1) * 2);
+      }
+      ctx.restore();
 
       // Gem Corner Flare
       ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
@@ -756,9 +778,41 @@ if (showHelp) {
           ctx.arc(px + size / 2, py + size / 2, Math.max(1, (size / 4) * innerPulse), 0, Math.PI * 2);
           ctx.fill();
       } else if (colorIdx === 14) { // Garbage
-          ctx.fillStyle = '#222233';
-          ctx.fillRect(px + 3, py + 3, 2, 2);
-          ctx.fillRect(px + size - 5, py + size - 5, 2, 2);
+          // Metallic / Rusty look
+          ctx.fillStyle = '#8B4513'; // Rusty dots
+          ctx.fillRect(px + 4, py + 4, 3, 3);
+          ctx.fillRect(px + size - 7, py + size - 7, 3, 3);
+          ctx.fillStyle = '#A0522D';
+          ctx.fillRect(px + size - 8, py + 5, 2, 2);
+          
+          // Cross metallic sheen
+          ctx.fillStyle = 'rgba(200, 200, 200, 0.2)';
+          ctx.beginPath();
+          ctx.moveTo(px + 1, py + size / 2);
+          ctx.lineTo(px + size - 1, py + 1);
+          ctx.lineTo(px + size - 1, py + 4);
+          ctx.lineTo(px + 4, py + size - 1);
+          ctx.fill();
+      }
+      
+      // Glinting highlight animation for placed blocks (drawState === 0)
+      if (drawState === 0 && colorIdx !== 14 && colorIdx !== 15) {
+          // Sweeping highlight
+          let sweep = (tick * 0.15) % 3000; // 3 seconds cycle
+          let diag = px + py; 
+          // Check if the sweep line is near the block's diagonal
+          if (sweep > diag - 30 && sweep < diag + 30) {
+              let intensity = Math.max(0, 1.0 - Math.abs(sweep - diag) / 30.0);
+              ctx.save();
+              ctx.fillStyle = `rgba(255, 255, 255, ${0.4 * intensity})`;
+              ctx.beginPath();
+              ctx.moveTo(px + 1, py + size - 1);
+              ctx.lineTo(px + size - 1, py + 1);
+              ctx.lineTo(px + size - 1, py + size / 2);
+              ctx.lineTo(px + size / 2, py + size - 1);
+              ctx.fill();
+              ctx.restore();
+          }
       }
 
       ctx.restore();

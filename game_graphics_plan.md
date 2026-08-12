@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KTetris
 - KBreakout
 - KMaze
 
@@ -135,7 +134,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSpace
 - KPac
 - KSnake
+- KTetris
 ## Completed Work Log
+
+- **KTetris (Loop 4):** Implemented polished block styling with distinct inner patterns based on piece type (circles, diamonds, crosses), added a sweeping glint/shining highlight animation for placed blocks, and redesigned the garbage block sprites with a distinct metallic sheen and rusty dot clusters in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
 - **KSnake (Loop 4):** Implemented distinct triangular patterned tail segment, striped snake body segments with scale highlights, distinct visual states for spiders (aggressive angular heads and fast wiggling vs smooth calm heads), and an enraged mechanical Boss Drone state (fast flashing yellow/red eye, red warning outlines, detailed gear cutouts) below 40% HP in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
