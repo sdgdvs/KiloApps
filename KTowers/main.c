@@ -940,6 +940,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetPixel(memDC, sx + 1, sy, RGB(200, 220, 255));
             }
 
+            // Cyber-grid backdrop
+            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(20, 40, 60));
+            HGDIOBJ oldGrid = SelectObject(memDC, gridPen);
+            for (int i = 0; i < width; i += 40) {
+                MoveToEx(memDC, i, 0, NULL); LineTo(memDC, i, height);
+            }
+            for (int i = 0; i < height; i += 40) {
+                MoveToEx(memDC, 0, i, NULL); LineTo(memDC, width, i);
+            }
+            SelectObject(memDC, oldGrid);
+            DeleteObject(gridPen);
+
+            // Lightning Flash
+            if ((animTick % 180) == 0 || (animTick % 180) == 4) {
+                HBRUSH flashBrush = CreateSolidBrush(RGB(200, 200, 255));
+                FillRect(memDC, &rc, flashBrush);
+                DeleteObject(flashBrush);
+            }
+
             // Cloud Shadows / Smog Layers
             HBRUSH smogBrush = CreateSolidBrush(RGB(15, 23, 42)); // Dark blue-grey smog
             HGDIOBJ oldSBrush = SelectObject(memDC, smogBrush);
@@ -1120,6 +1139,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     Draw3DSkyscraperBlockGDI(memDC, baseX, rectY, discW, blockH, theme, discSize, isLocked, isTopDisc);
                 }
             }
+
+            // Rain Particles
+            HPEN rainPen = CreatePen(PS_SOLID, 1, RGB(100, 150, 255));
+            HGDIOBJ oldRain = SelectObject(memDC, rainPen);
+            for (int i = 0; i < 80; i++) {
+                int seed = i * 214013 + 2531011;
+                int rx = (seed % width - (animTick * 6) % width + width) % width;
+                int ry = ((seed >> 16) % height + (animTick * 18) % height) % height;
+                MoveToEx(memDC, rx, ry, NULL);
+                LineTo(memDC, rx - 3, ry + 12);
+            }
+            SelectObject(memDC, oldRain);
+            DeleteObject(rainPen);
 
             // 5. Draw Victory Celebration Fireworks
             if (won) {

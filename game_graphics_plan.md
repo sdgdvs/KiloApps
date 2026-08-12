@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KTowers
 - KWords
 - KReversi
 
@@ -136,7 +135,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFreecell
 - KSudoku
 - KGo
+- KTowers
 ## Completed Work Log
+
+- **KTowers (Loop 3):** Implemented cyber-grid neon city background, lightning flashes, and animated rain particle effects in both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 
 - **KGo (Loop 3):** Implemented traditional tatami mat texture floor, ambient lantern lighting glow, and atmospheric falling cherry blossom petals in both Web Canvas (kgo.html) and Native C Win32 GDI (KGo/main.c).
 

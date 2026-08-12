@@ -1104,6 +1104,16 @@
         const canvas = document.getElementById('ktowersCanvas');
         const ctx = canvas.getContext('2d');
 
+        let rainParticles = [];
+        for(let i=0; i<80; i++) {
+            rainParticles.push({
+                x: Math.random() * 1000,
+                y: Math.random() * 500,
+                vy: 12 + Math.random() * 8,
+                length: 10 + Math.random() * 10
+            });
+        }
+
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
@@ -1293,6 +1303,24 @@
                 const alpha = 0.3 + 0.7 * Math.sin(globalAnimTime * 0.04 + i);
                 ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
                 ctx.fillRect(sx, sy, 1.5, 1.5);
+            }
+
+            // Cyber-grid backdrop
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let i = 0; i < w; i += 40) {
+                ctx.moveTo(i, 0); ctx.lineTo(i, h);
+            }
+            for (let i = 0; i < h; i += 40) {
+                ctx.moveTo(0, i); ctx.lineTo(w, i);
+            }
+            ctx.stroke();
+
+            // Lightning Flash
+            if ((globalAnimTime % 180) === 0 || (globalAnimTime % 180) === 4) {
+                ctx.fillStyle = 'rgba(200, 200, 255, 0.3)';
+                ctx.fillRect(0, 0, w, h);
             }
 
             // Passing Cloud Shadows / Smog
@@ -1514,7 +1542,26 @@
             });
 
             // ----------------------------------------------------
-            // 5. Victory Celebration Fireworks Update
+            // 5. Environmental Rain Particles
+            // ----------------------------------------------------
+            ctx.strokeStyle = 'rgba(100, 150, 255, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let i = 0; i < rainParticles.length; i++) {
+                let p = rainParticles[i];
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x - p.length * 0.2, p.y + p.length);
+                p.y += p.vy;
+                p.x -= p.vy * 0.2;
+                if (p.y > h) {
+                    p.y = -20;
+                    p.x = Math.random() * (w + 200);
+                }
+            }
+            ctx.stroke();
+
+            // ----------------------------------------------------
+            // 6. Victory Celebration Fireworks Update
             // ----------------------------------------------------
             updateAndDrawFireworks(ctx);
 
