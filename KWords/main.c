@@ -427,7 +427,7 @@ bool PlaceSingleWord(const char* word) {
     int dirs[8][2] = {{0,1}, {1,0}, {1,1}, {-1,1}, {1,-1}, {-1,-1}, {0,-1}, {-1,0}};
     int len = strlen(word);
     int attempts = 0;
-    while(attempts < 200) {
+    while(attempts < 5000) {
         attempts++;
         int d = rand() % 8;
         int r = rand() % gridSize;
@@ -653,7 +653,7 @@ void EndSelection(HWND hwnd) {
                         int r = selR[i];
                         int c = selC[i];
                         foundGrid[r][c] = true;
-                        if (isFogStage) UnfogArea(r, c, 1);
+                        if (isFogStage) UnfogArea(r, c, 2);
                         
                         for (int dr = -1; dr <= 1; dr++) {
                             for (int dc = -1; dc <= 1; dc++) {
@@ -808,7 +808,7 @@ void UsePathfinder(HWND hwnd) {
                             int fr = r + i * dirs[d][0];
                             int fc = c + i * dirs[d][1];
                             pathfinderGrid[fr][fc] = true;
-                            if (isFogStage) UnfogArea(fr, fc, 1);
+                            if (isFogStage) UnfogArea(fr, fc, 2);
                             TriggerMagicSpark(fr, fc);
                         }
                         foundInGrid = true;
@@ -871,7 +871,7 @@ void UseHint(HWND hwnd) {
                         int hr = r + randChar * dirs[d][0];
                         int hc = c + randChar * dirs[d][1];
                         hintedGrid[hr][hc] = true;
-                        if (isFogStage) UnfogArea(hr, hc, 1);
+                        if (isFogStage) UnfogArea(hr, hc, 2);
                         foundInGrid = true;
                         PlaySoundEffect(0);
                         TriggerMagicSpark(hr, hc);
@@ -1089,8 +1089,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
                 
-                // If fog stage, unfog cell and 3x3 surrounding
-                if (isFogStage) UnfogArea(r, c, 1);
+                // If fog stage, unfog cell and 5x5 surrounding
+                if (isFogStage) UnfogArea(r, c, 2);
 
                 isSelecting = true;
                 startR = curR = r;
@@ -1119,7 +1119,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (oldSelCount != newSelCount) {
                             PlaySoundEffect(0);
                         }
-                        if (isFogStage) UnfogArea(r, c, 1);
+                        if (isFogStage) UnfogArea(r, c, 2);
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                 }
