@@ -74,14 +74,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KSolitaire
+**Target App:** KTerm
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KSolitaire (Added Draw 1/3 Rules, Unlimited Undo/Redo, Smart Hint System, Auto-Finish Solver, Win-Rate & Stats Tracker, Deck & Felt Themes, Save/Resume State)
 - KTerm (Added Multi-Tab Terminals, Reverse History Search Ctrl+R, Custom Aliases, Environment Variables, Tab Autocomplete, and Session Log Export)
 - KSynth (Added Preset Save/Load System [JSON import/export & presets menu], Programmable Arpeggiator [Up, Down, Up-Down, Random], Dual Oscillators & Waveforms, Real-Time Oscilloscope / Spectrum Visualizer, ADSR Envelope Controls, 16-Step Pattern Sequencer Export/Import)
 - KTask (Added Process Priority Adjuster, CPU/RAM Rolling Sparkline Charts, Process Snapshot Exports [CSV/JSON], Kill Confirmation Modal, and System Summary)
@@ -128,3 +127,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KTetris (Added Hold Piece, 3-Next Queue, Ghost Landing Shadow, Hard Drop, Leaderboard, Game Modes, Save States, Match Replay, Keybindings, Stats Export, High Score I/O)
 - KSpace (Added Game Modes, Weapon Upgrades, Power-ups, Smart Bomb, Boss Waves, Persistent Leaderboard, Save/Resume State, Match Replay Viewer, Custom Keybindings, Match Stats JSON/CSV Export, High Score JSON I/O)
 - KType (Added Timed Test Modes, Custom Lesson Import/Export, Real-time WPM/Accuracy Canvas Graphs, Error Heatmap Analysis, Persistent Leaderboard, and PNG/BMP Certificate Export)
+- KSolitaire (Added Draw 1/3 Rules, Unlimited Undo/Redo, Smart Hint System, Auto-Finish Solver, Win-Rate & Stats Tracker, Deck & Felt Themes, Save/Resume State, and JSON Export/Import for Stats)
