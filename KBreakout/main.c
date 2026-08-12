@@ -145,7 +145,7 @@ COLORREF GetBrickColor(int type, int r, int c) {
     return rowColors[r % 6];
 }
 
-void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by) {
+void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by, int hp) {
     COLORREF baseClr = GetBrickColor(type, r, c);
     HBRUSH br = CreateSolidBrush(baseClr);
     RECT rr = { bx + 1, by + 1, bx + BR_W - 1, by + BR_H - 1 };
@@ -197,6 +197,26 @@ void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by) {
         Ellipse(hdc, bx + 2, by + BR_H - 5, bx + 5, by + BR_H - 2);
         Ellipse(hdc, bx + BR_W - 5, by + BR_H - 5, bx + BR_W - 2, by + BR_H - 2);
         DeleteObject(boltBr);
+        
+        if (hp > 0 && hp < 4) {
+            COLORREF cClr = (hp == 3) ? RGB(255, 150, 0) : ((hp == 2) ? RGB(255, 50, 0) : RGB(255, 0, 0));
+            HPEN crackPen = CreatePen(PS_SOLID, 1, cClr);
+            HGDIOBJ oldP = SelectObject(hdc, crackPen);
+            MoveToEx(hdc, bx + (int)(BR_W*0.2f), by, NULL);
+            LineTo(hdc, bx + (int)(BR_W*0.4f), by + (int)(BR_H*0.4f));
+            LineTo(hdc, bx + (int)(BR_W*0.3f), by + (int)(BR_H*0.7f));
+            if (hp < 3) {
+                MoveToEx(hdc, bx + BR_W, by + (int)(BR_H*0.2f), NULL);
+                LineTo(hdc, bx + (int)(BR_W*0.7f), by + (int)(BR_H*0.5f));
+                LineTo(hdc, bx + (int)(BR_W*0.8f), by + BR_H);
+            }
+            if (hp < 2) {
+                MoveToEx(hdc, bx + (int)(BR_W*0.5f), by + (int)(BR_H*0.5f), NULL);
+                LineTo(hdc, bx + (int)(BR_W*0.1f), by + (int)(BR_H*0.9f));
+            }
+            SelectObject(hdc, oldP);
+            DeleteObject(crackPen);
+        }
     }
 
     SelectObject(hdc, oldPen);
@@ -838,7 +858,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int r = 0; r < ROWS; r++) {
                     for (int c = 0; c < COLS; c++) {
                         if (bricks[r][c]) {
-                            DrawGDIBrick(memDC, r, c, bricks[r][c], c * BR_W, r * BR_H + 35);
+                            DrawGDIBrick(memDC, r, c, bricks[r][c], c * BR_W, r * BR_H + 35, brick_hp[r][c]);
                         }
                     }
                 }
@@ -933,7 +953,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 // Draw Paddle
-                COLORREF padClr = dur_laser > 0 ? RGB(0, 255, 255) : sticky_timer > 0 ? RGB(50, 140, 255) : RGB(70, 100, 170);
+                COLORREF padClr = dur_laser > 0 ? RGB(0, 204, 204) : sticky_timer > 0 ? RGB(50, 140, 255) : RGB(70, 100, 170);
                 HBRUSH pBrush = CreateSolidBrush(padClr);
                 HGDIOBJ oldBrush = SelectObject(memDC, pBrush);
                 RoundRect(memDC, pad_x, H - 40, pad_x + pad_w, H - 40 + pad_h, 6, 6);
@@ -946,6 +966,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT coreRc = { pad_x + pad_w / 2 - coreWidth / 2, H - 40 + 4, pad_x + pad_w / 2 + coreWidth / 2, H - 40 + 6 };
                 FillRect(memDC, &coreRc, coreBr);
                 DeleteObject(coreBr);
+
+                if (dur_laser > 0) {
+                    int blink = (frame_counter % 6 < 3);
+                    HBRUSH canBr = CreateSolidBrush(blink ? RGB(100, 255, 255) : RGB(0, 200, 200));
+                    HGDIOBJ oB = SelectObject(memDC, canBr);
+                    HPEN canPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+                    HGDIOBJ oP = SelectObject(memDC, canPen);
+                    
+                    POINT leftCan[3] = { {pad_x - 2, H - 36}, {pad_x + 6, H - 46}, {pad_x + 14, H - 36} };
+                    Polygon(memDC, leftCan, 3);
+                    
+                    POINT rightCan[3] = { {pad_x + pad_w - 14, H - 36}, {pad_x + pad_w - 6, H - 46}, {pad_x + pad_w + 2, H - 36} };
+                    Polygon(memDC, rightCan, 3);
+                    
+                    SelectObject(memDC, oB);
+                    SelectObject(memDC, oP);
+                    DeleteObject(canBr);
+                    DeleteObject(canPen);
+                }
 
                 // Draw Lasers
                 HBRUSH lasBr = CreateSolidBrush(RGB(0, 255, 255));
@@ -968,11 +1007,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if (power_type == 5) { pClr = RGB(0, 255, 255); pBadge[0] = 'L'; }
                     else if (power_type == 6) { pClr = RGB(0, 255, 200); pBadge[0] = 'B'; }
                     else if (power_type == 7) { pClr = RGB(255, 0, 255); pBadge[0] = 'M'; }
+                    
                     HBRUSH pwBr = CreateSolidBrush(pClr);
-                    RECT pwRc = { (int)power_x - 7, (int)power_y - 7, (int)power_x + 7, (int)power_y + 7 };
-                    FillRect(memDC, &pwRc, pwBr);
+                    HGDIOBJ oldB = SelectObject(memDC, pwBr);
+                    HPEN pwPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                    HGDIOBJ oldP = SelectObject(memDC, pwPen);
+                    
+                    if (power_type == 1 || power_type == 4) {
+                        RoundRect(memDC, (int)power_x - 8, (int)power_y - 6, (int)power_x + 8, (int)power_y + 6, 6, 6);
+                    } else if (power_type == 2 || power_type == 6) {
+                        POINT pts[6] = {
+                            {(int)power_x, (int)power_y - 8}, {(int)power_x + 8, (int)power_y - 4},
+                            {(int)power_x + 8, (int)power_y + 4}, {(int)power_x, (int)power_y + 8},
+                            {(int)power_x - 8, (int)power_y + 4}, {(int)power_x - 8, (int)power_y - 4}
+                        };
+                        Polygon(memDC, pts, 6);
+                    } else if (power_type == 3 || power_type == 5) {
+                        POINT pts[4] = {
+                            {(int)power_x, (int)power_y - 8}, {(int)power_x + 8, (int)power_y},
+                            {(int)power_x, (int)power_y + 8}, {(int)power_x - 8, (int)power_y}
+                        };
+                        Polygon(memDC, pts, 4);
+                    } else {
+                        Ellipse(memDC, (int)power_x - 8, (int)power_y - 8, (int)power_x + 8, (int)power_y + 8);
+                    }
+                    
+                    SelectObject(memDC, oldB);
+                    SelectObject(memDC, oldP);
                     DeleteObject(pwBr);
-                    TextOutA(memDC, (int)power_x - 3, (int)power_y - 6, pBadge, 1);
+                    DeleteObject(pwPen);
+                    
+                    SetTextColor(memDC, RGB(0, 0, 0));
+                    SetBkMode(memDC, TRANSPARENT);
+                    TextOutA(memDC, (int)power_x - 3, (int)power_y - 7, pBadge, 1);
+                    SetTextColor(memDC, RGB(255, 255, 255));
                 }
 
                 // Render Particles

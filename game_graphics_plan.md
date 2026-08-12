@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KBreakout
 - KMaze
 
 - KColony
@@ -135,7 +134,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPac
 - KSnake
 - KTetris
+- KBreakout
 ## Completed Work Log
+
+- **KBreakout (Loop 4):** Implemented distinctly shaped powerup capsules based on type (pills, hexagons, diamonds, circles), progressive glowing crack textures for multi-hit armored bricks as their HP decreases, and a dynamic paddle visual state featuring animated glowing laser cannons on both ends when the laser powerup is active in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 
 - **KTetris (Loop 4):** Implemented polished block styling with distinct inner patterns based on piece type (circles, diamonds, crosses), added a sweeping glint/shining highlight animation for placed blocks, and redesigned the garbage block sprites with a distinct metallic sheen and rusty dot clusters in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
