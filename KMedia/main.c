@@ -382,7 +382,7 @@ void ExportFrameToBMP() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hTitle = CreateWindowEx(0, "STATIC", "No file selected (Press 'H' or F1 for help)",
                 WS_CHILD | WS_VISIBLE | SS_CENTER | 0x4000,
@@ -455,7 +455,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 10, 155, W - 36, H - 315, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HFONT hSubFont = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hSubFont = CreateFontA(-16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             hSubText = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_CENTER,
                 10, H - 150, W - 36, 105, hwnd, NULL, NULL, NULL);
@@ -569,8 +569,12 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    g_hwndMain = CreateWindowEx(0, "KMediaApp", "KMedia", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    DWORD style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
+    RECT rc = {0, 0, W, H};
+    AdjustWindowRect(&rc, style, FALSE);
+
+    g_hwndMain = CreateWindowEx(0, "KMediaApp", "KMedia", style,
+        CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(g_hwndMain, SW_SHOW);
     UpdateWindow(g_hwndMain);

@@ -52,57 +52,9 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KMedia
-- KNet
-- KZip
-- KPaint
-- KFarm
-- KSnake
-- KTetris
-- KSpace
-- KSolitaire
-- KTerm
-- KSynth
-- KTask
-- KRogue
-- KSys
-- KTodo
-- KConverter
-- KGraph
-- KTimer
-- KContacts
-- KRead
-- KJournal
-- KBase
-- KPad
-- KImage
-- KCalc
-- KHex
-- KCalendar
-- KChart
-- KChat
-- KChess
-- KAudio
-- KBBS
-- KPong
-- KClock
-- KDB
-- KiloOS Web UI
-- KFortress
-- KColony
-- KAlchemy
-- KFont
-- KMail
-- KMandel
-- KPing
-- KConnect4
-- KMaze
-- KScript
-- KMine
-- KPac
-- KQuest
 - KNote
 - KPass
+- KMedia
 
 ## Progress Log
 - KPac: Usability and UI issues fixed (updated App.jsx auto-opening size to 400x570, adjusted data-width and height in web version to prevent clipping, and applied negative font height in native for crisp text rendering).
@@ -269,3 +221,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KQuest: Usability and UI issues fixed (adjusted auto-opening size to 1000x720 in App.jsx, enabled SetProcessDPIAware and negative font heights for crisp text in native).
 - KNote: Usability and UI issues fixed (auto-opening size to 800x600, explicit Help button added to toolbar, welcome instructions updated, crisp text via negative font size).
 - KPass: Usability and UI issues fixed (auto-opening size updated to 500x620, native font crispness fixed with negative font heights, precise client area sizing with AdjustWindowRect).
+- KMedia: Usability and UI issues fixed (Appropriate auto-opening size adjusted to 950x700, added AdjustWindowRect to native client area, negative font heights implemented for crisp text).
