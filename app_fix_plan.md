@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KRogue
+**Target App:** KScript
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -249,3 +249,5 @@ Pass 1 Complete.
 - **KQuarantine**: Hardened terminal log rendering in `kquarantine.html` to strictly use `textContent`, mitigating XSS risks. Added DOM child cap of 200 elements to prevent infinite memory scaling during long sessions. Fixed the hex `FF` exploit by strictly parsing byte offsets instead of a generic string search.
 
 - **KRead**: Fixed search highlight persistence bug in `kread.html` by ensuring `clearSearchHighlights()` is called when opening, dropping, or clearing documents. Fixed a native buffer overflow vulnerability in `main.c` `PerformSearch` wrap-around loop condition.
+
+- **KRogue**: Fixed regression in `krogue.html` where weapons/armor bypassed cursed checks due to early returns. Fixed XSS vulnerability in the web leaderboard by escaping inputs. Added missing arrow key and Escape key handlers for targeting state. Fixed duplicate tier 5 logical check in native `main.c` drop generator.
