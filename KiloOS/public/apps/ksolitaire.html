@@ -1147,13 +1147,6 @@ function undoMove() {
   xrayCharges = prev.xrayCharges !== undefined ? prev.xrayCharges : 3;
   shuffleCharges = prev.shuffleCharges !== undefined ? prev.shuffleCharges : 3;
 
-  if (vegasRules) {
-    scoreCount -= 5;
-  } else {
-    scoreCount -= 15;
-    if (scoreCount < 0) scoreCount = 0;
-  }
-
   selectedSelection = null;
   clearHints();
   playSound('flip');
@@ -1225,7 +1218,7 @@ function canMoveToTableau(cardsToMove, tIdx) {
   if (!targetCard.faceUp) return false;
   let targetSuitObj = SUITS[targetCard.suit];
   let moveSuitObj = SUITS[topMoveCard.suit];
-  return (targetSuitObj.color !== moveSuitObj.color) && (targetCard.rank === topCard.rank + 1);
+  return (targetSuitObj.color !== moveSuitObj.color) && (targetCard.rank === topMoveCard.rank + 1);
 }
 
 function thawAdjacent(colA, colB) {

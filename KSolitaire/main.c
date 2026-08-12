@@ -372,14 +372,7 @@ void PerformUndo() {
     if (undoCount == 0) return;
     if (redoCount < 256) CopyState(&redoStack[redoCount++], &state);
     CopyState(&state, &undoStack[--undoCount]);
-    
-    if (state.vegasRules) {
-        state.score -= 5;
-    } else {
-        state.score -= 15;
-        if (state.score < 0) state.score = 0;
-    }
-    
+        
     selectedType = -1;
     hintSrcType = -1;
     SaveGameState();
