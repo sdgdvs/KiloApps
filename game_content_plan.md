@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KPong      | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI paddle speed per difficulty, check powerup spawn rates, verify boss is beatable. |
 | KHangman   | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check word difficulty per category, ensure strike limits are fair, verify 14-letter words aren't absurd. |
 | KWords     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check word placement in grids, ensure Fog of War mechanic is fun not frustrating. |
 | KSimon     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check sequence speed curve, verify 8-button mode is playable, audit Chaos Reverse fairness. |
@@ -180,11 +179,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KMines     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check first-click safety, mine density per difficulty, ensure Sonar powerup isn't overpowered. |
 | KTowers    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Verified optimal move counts (BFS solver) and checked locked-disk puzzles. Fixed unlock bug in main.c. |
 | KTetris    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Adjusted Pentomino piece frequency in late stages and smoothed the drop speed curve. |
+| KPong      | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Adjusted AI paddle speed per difficulty, nerfed boss, fixed powerup spawn rates. |
 
 
 ## Progress Log
 
 **Loop 9**
+- [x] KPong (Balance audit complete: Standardized AI speeds, nerfed Stage 20 boss speed, and fixed powerup spawn rates in both EXE and HTML)
 - [x] KAlchemy (Loop 1: Expanded recipes to 62, rebalanced quest gold/XP scaling, and reduced early lab upgrade costs in both EXE and HTML)
 - [x] KTetris (Balance audit complete: Adjusted Pentomino frequency for late stages and smoothed drop speed curve in both EXE and HTML)
 - [x] KStarship (Loop 8: Added Fleet Battles, Alien Diplomacy, and interactive Deep Space Anomalies in both EXE and HTML)
