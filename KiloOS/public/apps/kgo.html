@@ -8,12 +8,40 @@
   body {
     margin: 0;
     padding: 16px;
-    background-color: #121212;
+    background-color: #9e946b; /* Tatami mat base */
+    background-image: 
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px),
+      repeating-linear-gradient(-45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px),
+      radial-gradient(circle at 50% 50%, rgba(255, 215, 100, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%); /* Lantern glow */
     color: #e0e0e0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
+  }
+  
+  /* Atmospheric cherry blossom petals */
+  #cherry-blossoms {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+  }
+  .petal {
+    position: absolute;
+    background: #ffb7c5;
+    border-radius: 15px 0 15px 0;
+    opacity: 0.8;
+    animation: fall linear infinite, sway ease-in-out infinite alternate;
+  }
+  @keyframes fall {
+    0% { top: -10%; }
+    100% { top: 110%; }
+  }
+  @keyframes sway {
+    0% { transform: translateX(0) rotate(0deg); }
+    100% { transform: translateX(20px) rotate(45deg); }
   }
   h1 { 
     margin: 0 0 6px 0; 
@@ -1493,6 +1521,23 @@
       document.getElementById('btn-analyzer').click();
     }
   });
+
+  function createPetals() {
+    const container = document.createElement('div');
+    container.id = 'cherry-blossoms';
+    document.body.appendChild(container);
+    for (let i = 0; i < 30; i++) {
+      const petal = document.createElement('div');
+      petal.className = 'petal';
+      petal.style.left = Math.random() * 100 + 'vw';
+      petal.style.width = Math.random() * 8 + 8 + 'px';
+      petal.style.height = Math.random() * 12 + 12 + 'px';
+      petal.style.animationDuration = Math.random() * 5 + 5 + 's, ' + (Math.random() * 3 + 2) + 's';
+      petal.style.animationDelay = Math.random() * 5 + 's, ' + Math.random() * 5 + 's';
+      container.appendChild(petal);
+    }
+  }
+  createPetals();
 
   loadStats();
   initBoard();

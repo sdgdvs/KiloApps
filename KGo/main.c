@@ -160,6 +160,14 @@ typedef struct {
 SparkParticle sparkParticles[MAX_SPARKS];
 int sparkCount = 0;
 
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float size;
+} PetalParticle;
+#define MAX_PETALS 30
+PetalParticle petals[MAX_PETALS];
+
 void InitBoard();
 int GetLiberties(int x, int y, int color, char visited[19][19]);
 void GetGroup(int x, int y, int color, char visited[19][19], POINT group[], int *groupSize);
@@ -1041,6 +1049,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
     switch (uMsg) {
         case WM_CREATE:
+            for (int i = 0; i < MAX_PETALS; i++) {
+                petals[i].x = rand() % 800;
+                petals[i].y = rand() % 800;
+                petals[i].vx = (rand() % 20 - 10) / 10.0f;
+                petals[i].vy = (rand() % 20 + 20) / 10.0f;
+                petals[i].size = (rand() % 5) + 3;
+            }
+            SetTimer(hwnd, 4, 50, NULL);
             hBtnPass = CreateWindow("BUTTON", "Pass", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 15, 620, 45, 30, hwnd, (HMENU)ID_BTN_PASS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             hBtnResign = CreateWindow("BUTTON", "Resign", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -1122,6 +1138,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     KillTimer(hwnd, 3);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 4) {
+                for (int i = 0; i < MAX_PETALS; i++) {
+                    petals[i].x += petals[i].vx;
+                    petals[i].y += petals[i].vy;
+                    petals[i].vx += (rand() % 5 - 2) / 10.0f;
+                    if (petals[i].vx > 2.0f) petals[i].vx = 2.0f;
+                    if (petals[i].vx < -2.0f) petals[i].vx = -2.0f;
+                    if (petals[i].y > 800) {
+                        petals[i].y = -10;
+                        petals[i].x = rand() % 800;
+                    }
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 2) {
                 KillTimer(hwnd, 2);
                 MakeAIMove(hwnd);
@@ -1188,9 +1217,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            HBRUSH hBrush = CreateSolidBrush(RGB(18, 18, 18));
-            FillRect(hdc, &ps.rcPaint, hBrush);
-            DeleteObject(hBrush);
+            // Tatami mat texture background floor
+            HBRUSH tatamiBrush = CreateSolidBrush(RGB(158, 148, 107));
+            FillRect(hdc, &ps.rcPaint, tatamiBrush);
+            DeleteObject(tatamiBrush);
+            HPEN tatamiPen = CreatePen(PS_SOLID, 1, RGB(140, 130, 90));
+            HPEN oldT_Pen = SelectObject(hdc, tatamiPen);
+            for (int i = 0; i < 800; i += 20) {
+                MoveToEx(hdc, 0, i, NULL);
+                LineTo(hdc, 800, i);
+                MoveToEx(hdc, i, 0, NULL);
+                LineTo(hdc, i, 800);
+            }
+            SelectObject(hdc, oldT_Pen);
+            DeleteObject(tatamiPen);
+
+            // Ambient lantern lighting glow
+            for (int i = 0; i < 8; i++) {
+                HBRUSH glowBrush = CreateSolidBrush(RGB(158 + i * 10, 148 + i * 5, 107));
+                SelectObject(hdc, glowBrush);
+                SelectObject(hdc, GetStockObject(NULL_PEN));
+                Ellipse(hdc, 400 - (8-i)*60, 350 - (8-i)*60, 400 + (8-i)*60, 350 + (8-i)*60);
+                DeleteObject(glowBrush);
+            }
 
             int padding = 40;
             int cellSize = 30;
@@ -1553,6 +1602,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetTextColor(hdc, RGB(255, 215, 0));
                 TextOut(hdc, 20, 595, hintStr, strlen(hintStr));
             }
+
+            // Atmospheric falling cherry blossom petals
+            HBRUSH petalBrush = CreateSolidBrush(RGB(255, 183, 197));
+            SelectObject(hdc, GetStockObject(NULL_PEN));
+            SelectObject(hdc, petalBrush);
+            for (int i = 0; i < MAX_PETALS; i++) {
+                int px = (int)petals[i].x;
+                int py = (int)petals[i].y;
+                int s = (int)petals[i].size;
+                Ellipse(hdc, px, py, px + s*2, py + s);
+            }
+            DeleteObject(petalBrush);
 
             EndPaint(hwnd, &ps);
             return 0;

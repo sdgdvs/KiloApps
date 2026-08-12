@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KGo
 - KTowers
 - KWords
 - KReversi
@@ -136,7 +135,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMatch3
 - KFreecell
 - KSudoku
+- KGo
 ## Completed Work Log
+
+- **KGo (Loop 3):** Implemented traditional tatami mat texture floor, ambient lantern lighting glow, and atmospheric falling cherry blossom petals in both Web Canvas (kgo.html) and Native C Win32 GDI (KGo/main.c).
 
 - **KSudoku (Loop 3):** Implemented wooden/slate desk texture with ambient candlelight/sunlight glow and atmospheric floating dust motes in both Web Canvas (ksudoku.html) and Native C Win32 GDI (KSudoku/main.c).
 
