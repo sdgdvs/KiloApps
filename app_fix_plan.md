@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KQuarantine
+**Target App:** KRead
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -245,3 +245,5 @@ Pass 1 Complete.
 - **KPing**: Fixed `historyData` and `logEntries` memory leaks by bounding arrays to 200/1000 elements and capping `textarea` to 30,000 characters in `kping.html`. Fixed Win32 `EDIT` control capacity freeze in `main.c` by dynamically pruning the oldest 10,000 characters when buffer exceeds 30,000 chars.
 
 - **KPong**: Fixed XSS vulnerability in `kpong.html` leaderboard by adding an `escapeHTML` helper to sanitize `mode` and `date` values from localStorage. Replaced `setInterval` with `requestAnimationFrame` to prevent dropped frames and reduce background CPU usage/repaints. Verified `main.c` memory handling bounds.
+
+- **KQuarantine**: Hardened terminal log rendering in `kquarantine.html` to strictly use `textContent`, mitigating XSS risks. Added DOM child cap of 200 elements to prevent infinite memory scaling during long sessions. Fixed the hex `FF` exploit by strictly parsing byte offsets instead of a generic string search.
