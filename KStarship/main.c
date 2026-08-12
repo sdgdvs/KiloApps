@@ -153,8 +153,10 @@ void TriggerEncounter(int type) {
         PlaySoundEffect(2); // Alarm
         pirate_hp = 50;
         lstrcpyA(combat_log, "Space pirates ambush you!");
-    } else if (type == 2) {
-        res_fuel += 500.0f;
+    } else if (type == 13) {
+        PlaySoundEffect(2); // Alarm
+        pirate_hp = 150;
+        lstrcpyA(combat_log, "A hostile fleet intercepts you!");
     } else if (type == 3) {
         if (roster_count < 50) {
             lstrcpyA(roster[roster_count].name, first_names[rand() % 16]);
@@ -190,12 +192,14 @@ void InitStars() {
             systems[i].planets[p] = rand() % 5;
         }
 
-        int enc = rand() % 6;
+        int enc = rand() % 9;
         if (enc == 0) systems[i].encounter_type = 1;
         else if (enc == 1) systems[i].encounter_type = 2;
         else if (enc == 2) systems[i].encounter_type = 3;
         else if (enc == 3) systems[i].encounter_type = 4;
         else if (enc == 4) systems[i].encounter_type = 7 + (rand() % 3);
+        else if (enc == 5) systems[i].encounter_type = 13;
+        else if (enc == 6) systems[i].encounter_type = 14;
         else systems[i].encounter_type = 0;
         
         systems[i].visited = 0;
@@ -234,28 +238,6 @@ void Update() {
 
     // (Particle updates moved to start of Update function to run during modals)
     
-    // Draw particles
-    for (int i=0; i<MAX_PARTICLES; i++) {
-        if (particles[i].life > 0) {
-            int screenX = centerX + (int)(particles[i].x - ship_x);
-            int screenY = centerY + (int)(particles[i].y - ship_y);
-            if (screenX >= 0 && screenX <= mapWidth && screenY >= 0 && screenY <= height) {
-                SetPixel(memDC, screenX, screenY, particles[i].color);
-                SetPixel(memDC, screenX+1, screenY, particles[i].color);
-                SetPixel(memDC, screenX, screenY+1, particles[i].color);
-                SetPixel(memDC, screenX+1, screenY+1, particles[i].color);
-            }
-        }
-    }
-
-    // Scanner pulse
-    HPEN pulsePen = CreatePen(PS_SOLID, 2, RGB(0, 150, 150));
-    SelectObject(memDC, pulsePen);
-    SelectObject(memDC, GetStockObject(NULL_BRUSH));
-    float pulse = (GetTickCount() % 2000) / 2000.0f;
-    int r = 20 + (int)(pulse * 10);
-    Ellipse(memDC, centerX - r, centerY - r, centerX + r, centerY + r);
-    DeleteObject(pulsePen);
 
     if (is_moving) {
         for (int i=0; i<5; i++) {
@@ -559,12 +541,25 @@ void Draw(HDC hdc, RECT* rect) {
                 desc = desc_buf;
             }
         }
+        else if (modal_enc_type == 13) { 
+            title = "FLEET BATTLE";
+            if (res_hull <= 0) {
+                desc = "Your ship has been destroyed!\r\nGame Over.\r\nSPACE: Exit";
+            } else if (pirate_hp <= 0) {
+                wsprintfA(desc_buf, "%s\r\nSPACE: Claim Rewards (300C, 2 Tech)", combat_log);
+                desc = desc_buf;
+            } else {
+                wsprintfA(desc_buf, "%s\r\nFleet HP: %d | Hull: %d%%\r\n1: Fire Weapons  2: Flee", combat_log, pirate_hp, res_hull);
+                desc = desc_buf;
+            }
+        }
+        else if (modal_enc_type == 14) { title = "ALIEN DIPLOMACY"; desc = "An alien vessel hails you.\r\n1: Trade (100C for 1 Tech)\r\n2: Insult (Starts Combat)\r\nSPACE: Ignore"; }
         else if (modal_enc_type == 10) { title = "PIRATES ENCOUNTER"; wsprintfA(desc_buf, "%s\r\nHull: %d%%\r\nSPACE: Continue", combat_log, res_hull); desc = desc_buf; }
         else if (modal_enc_type == 11) { title = "EVENT RESULT"; wsprintfA(desc_buf, "%s\r\n\r\nSPACE: Continue", combat_log); desc = desc_buf; }
         else if (modal_enc_type == 7) { title = "DERELICT SHIP"; desc = "You find a derelict starship.\r\n1: Salvage (Risk Hull, Gain Cargo)\r\n2: Ignore"; }
         else if (modal_enc_type == 8) { title = "DISTRESS SIGNAL"; desc = "You receive a distress signal.\r\n1: Help (Cost 50 Fuel, Risk/Reward)\r\n2: Ignore"; }
         else if (modal_enc_type == 9) { title = "ANCIENT RUINS"; desc = "Scanners detect ancient ruins.\r\n1: Explore (Risk Crew, Gain Tech)\r\n2: Leave"; }
-        else if (modal_enc_type == 2) { title = "ANOMALY ENCOUNTER"; desc = "You investigate a spatial anomaly.\r\nYour fuel tanks are\r\nreplenished by 500."; }
+        else if (modal_enc_type == 2) { title = "DEEP SPACE ANOMALY"; desc = "A swirling rift in space.\r\n1: Scan (Risk Hull, Gain Tech)\r\n2: Harvest (Risk Crew, Gain Fuel)\r\nSPACE: Leave"; }
         else if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
         else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard 8: Tavern(Recruit 100C)\r\nSPACE: Leave"; }
         else if (modal_enc_type == 5) { title = "SHIPYARD"; desc = "1: Upg Wpn 2: Upg Shd (500C/Lvl)\r\n3: Upg Eng 4: Upg Cargo (500C/Lvl)\r\nSPACE: Back to Station"; }
@@ -604,8 +599,8 @@ void Draw(HDC hdc, RECT* rect) {
             DrawTextA(memDC, "[ 1-3 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 5) {
             DrawTextA(memDC, "[ 1-4 OR SPACE ]", -1, &bRect, DT_CENTER);
-        } else if ((modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) || modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9) {
-            DrawTextA(memDC, "[ 1-2 ]", -1, &bRect, DT_CENTER);
+        } else if ((modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) || (modal_enc_type == 13 && res_hull > 0 && pirate_hp > 0) || modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9 || modal_enc_type == 14 || modal_enc_type == 2) {
+            DrawTextA(memDC, "[ 1-2 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else {
             DrawTextA(memDC, "[ PRESS SPACE ]", -1, &bRect, DT_CENTER);
         }
@@ -675,6 +670,85 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             wsprintfA(combat_log, "You fled! Took %d damage.", s_dmg);
                             modal_enc_type = 10;
                         }
+                    }
+                } else if (modal_enc_type == 13) {
+                    if (res_hull <= 0) {
+                        if (wParam == VK_SPACE) { PostQuitMessage(0); }
+                    } else if (pirate_hp <= 0) {
+                        if (wParam == VK_SPACE) { res_credits += 300; cargo_tech += 2; modal_open = 0; }
+                    } else {
+                        if (wParam == '1') {
+                            PlaySoundEffect(1); // Laser
+                            int p_dmg = 10 + upg_weapons * 5 + (rand() % 10);
+                            int g_idx = GetOfficer(2); if(g_idx != -1) p_dmg += roster[g_idx].level * 2;
+                            int s_dmg = 30 - upg_shields * 3 + (rand() % 10);
+                            int e_idx = GetOfficer(3); if(e_idx != -1) s_dmg -= roster[e_idx].level * 1;
+                            if (s_dmg < 0) s_dmg = 0;
+                            pirate_hp -= p_dmg;
+                            if (pirate_hp < 0) pirate_hp = 0;
+                            SpawnExplosion(ship_x, ship_y - 40, 30, RGB(255, 100, 0), RGB(255, 0, 0));
+                            if (pirate_hp > 0) {
+                                res_hull -= s_dmg;
+                                if (res_hull < 0) res_hull = 0;
+                                SpawnExplosion(ship_x, ship_y, 25, RGB(0, 255, 255), RGB(255, 255, 255));
+                                if (res_hull <= 0) {
+                                    SpawnExplosion(ship_x, ship_y, 100, RGB(255, 0, 0), RGB(255, 255, 0));
+                                }
+                                wsprintfA(combat_log, "You hit for %d! Fleet hits for %d!", p_dmg, s_dmg);
+                                AddXP(2, 15); AddXP(3, 15);
+                            } else {
+                                SpawnExplosion(ship_x, ship_y - 40, 80, RGB(255, 50, 0), RGB(200, 200, 200));
+                                wsprintfA(combat_log, "You hit for %d! Fleet destroyed!", p_dmg);
+                                AddXP(2, 30);
+                            }
+                        } else if (wParam == '2') {
+                            int s_dmg = 25 - upg_shields * 2;
+                            if (s_dmg < 0) s_dmg = 0;
+                            res_hull -= s_dmg;
+                            if (res_hull < 0) res_hull = 0;
+                            wsprintfA(combat_log, "You fled! Took %d damage.", s_dmg);
+                            modal_enc_type = 10;
+                        }
+                    }
+                } else if (modal_enc_type == 14) {
+                    if (wParam == '1') {
+                        if (res_credits >= 100) {
+                            res_credits -= 100;
+                            cargo_tech += 1;
+                            lstrcpyA(combat_log, "You successfully traded with the aliens.");
+                        } else {
+                            lstrcpyA(combat_log, "You don't have enough credits!");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '2') {
+                        PlaySoundEffect(2);
+                        pirate_hp = 80;
+                        lstrcpyA(combat_log, "The aliens are offended and attack!");
+                        modal_enc_type = 1;
+                    } else if (wParam == VK_SPACE) {
+                        modal_open = 0;
+                    }
+                } else if (modal_enc_type == 2) {
+                    if (wParam == '1') {
+                        if (rand() % 2 == 0) {
+                            cargo_tech += 2;
+                            lstrcpyA(combat_log, "Scan successful! Gained 2 Tech.");
+                        } else {
+                            res_hull -= 20; if (res_hull < 0) res_hull = 0;
+                            lstrcpyA(combat_log, "The anomaly surged! Lost 20 Hull.");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '2') {
+                        if (rand() % 2 == 0) {
+                            res_fuel += 800.0f;
+                            lstrcpyA(combat_log, "Harvest successful! Gained 800 Fuel.");
+                        } else {
+                            if (roster_count > 0) roster_count--;
+                            lstrcpyA(combat_log, "Radiation leak! Lost 1 crew member.");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == VK_SPACE) {
+                        modal_open = 0;
                     }
                 } else if (modal_enc_type == 10) {
                     if (wParam == VK_SPACE) { modal_open = 0; }

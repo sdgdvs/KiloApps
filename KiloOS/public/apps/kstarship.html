@@ -320,7 +320,7 @@
           color: sType.color,
           name: sType.type,
           planets: planets,
-          encounter: ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None'][Math.floor(Math.random() * 6)],
+          encounter: ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None', 'Fleet', 'Diplomacy'][Math.floor(Math.random() * 8)],
           visited: false
         });
       }
@@ -539,10 +539,114 @@
             }
         };
         updateCombatBtns("Space pirates ambush you!");
+      } else if (type === 'Fleet') {
+        playAlarm();
+        let pirateHp = 150;
+        const updateCombatBtns = (msg) => {
+            desc.innerText = msg + `\nFleet HP: ${pirateHp} | Your Hull: ${state.resources.hull}%`;
+            actions.innerHTML = '';
+            if (pirateHp <= 0) {
+                addBtn('Claim Rewards (300C, 2 Tech)', () => {
+                    state.resources.credits += 300;
+                    state.cargo.tech += 2;
+                    modal.style.display = 'none';
+                    state.modalOpen = false;
+                    updateUI();
+                });
+            } else if (state.resources.hull <= 0) {
+                desc.innerText = "Your ship has been destroyed. Game Over.";
+                addBtn('Restart', () => { location.reload(); });
+            } else {
+                addBtn('Fire Weapons', () => {
+                    playLaser();
+                    let pDmg = 10 + state.upgrades.weapons * 5 + Math.floor(Math.random()*10);
+                    let gIdx = getOfficer(2); if (gIdx !== -1) pDmg += state.crew[gIdx].level * 2;
+                    let sDmg = Math.max(0, 30 - state.upgrades.shields * 3 + Math.floor(Math.random()*10));
+                    let eIdx = getOfficer(3); if (eIdx !== -1) sDmg -= state.crew[eIdx].level * 1;
+                    if (sDmg < 0) sDmg = 0;
+                    pirateHp -= pDmg;
+                    if (pirateHp < 0) pirateHp = 0;
+                    spawnExplosion(state.ship.x, state.ship.y - 40, 30, '#ff6600', '#ff0000');
+                    let result = `You hit fleet for ${pDmg}!`;
+                    if (pirateHp > 0) {
+                        state.resources.hull -= sDmg;
+                        if (state.resources.hull < 0) state.resources.hull = 0;
+                        spawnExplosion(state.ship.x, state.ship.y, 25, '#00ffff', '#ffffff');
+                        if (state.resources.hull <= 0) {
+                             spawnExplosion(state.ship.x, state.ship.y, 100, '#ff0000', '#ffff00');
+                        }
+                        result += ` Fleet hits you for ${sDmg}!`;
+                        addXP(2, 15); addXP(3, 15);
+                    } else {
+                        spawnExplosion(state.ship.x, state.ship.y - 40, 80, '#ff3300', '#cccccc');
+                        result += ` Fleet destroyed!`;
+                        addXP(2, 30);
+                    }
+                    updateCombatBtns(result);
+                });
+                addBtn('Flee', () => {
+                    let sDmg = Math.max(0, 25 - state.upgrades.shields * 2);
+                    state.resources.hull -= sDmg;
+                    if (state.resources.hull < 0) state.resources.hull = 0;
+                    desc.innerText = `You fled! Took ${sDmg} damage while escaping.\nYour Hull: ${state.resources.hull}%`;
+                    actions.innerHTML = '';
+                    closeBtn();
+                });
+            }
+        };
+        updateCombatBtns("A hostile fleet intercepts you!");
+      } else if (type === 'Diplomacy') {
+        desc.innerText = "An alien vessel hails you.";
+        addBtn('Trade (100C for 1 Tech)', () => {
+            if (state.resources.credits >= 100) {
+                state.resources.credits -= 100;
+                state.cargo.tech += 1;
+                desc.innerText = "You successfully traded with the aliens.";
+            } else {
+                desc.innerText = "You don't have enough credits!";
+            }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Insult (Starts Combat)', () => {
+            triggerEncounter('Pirates');
+        });
+        addBtn('Ignore', () => {
+            modal.style.display = 'none';
+            state.modalOpen = false;
+        });
       } else if (type === 'Anomaly') {
-        desc.innerText = "You investigate a spatial anomaly. Your fuel tanks are replenished by 500.";
-        state.resources.fuel += 500;
-        closeBtn();
+        desc.innerText = "You encounter a deep space anomaly. A swirling rift in space.";
+        addBtn('Scan (Risk Hull, Gain Tech)', () => {
+            if (Math.random() < 0.5) {
+                state.cargo.tech += 2;
+                desc.innerText = "Scan successful! Gained 2 Tech.";
+            } else {
+                state.resources.hull -= 20;
+                if (state.resources.hull < 0) state.resources.hull = 0;
+                desc.innerText = "The anomaly surged! Lost 20 Hull.";
+            }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Harvest (Risk Crew, Gain Fuel)', () => {
+            if (Math.random() < 0.5) {
+                state.resources.fuel += 800;
+                desc.innerText = "Harvest successful! Gained 800 Fuel.";
+            } else {
+                if (state.crew.length > 0) state.crew.pop();
+                desc.innerText = "Radiation leak! Lost 1 crew member.";
+            }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Leave', () => {
+            modal.style.display = 'none';
+            state.modalOpen = false;
+        });
       } else if (type === 'Trader') {
         if (state.crew.length < 50) {
             state.crew.push({ name: firstNames[Math.floor(Math.random() * firstNames.length)], role: 0, level: 1, xp: 0 });
