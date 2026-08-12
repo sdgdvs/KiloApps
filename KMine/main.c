@@ -629,7 +629,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &full, bg);
             DeleteObject(bg);
             
-            HFONT hFont = CreateFontA(20 * CELL / 30, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFont = CreateFontA(-(20 * CELL / 30), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
             
@@ -677,7 +677,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 SetBkMode(memDC, TRANSPARENT);
                 SetTextColor(memDC, RGB(0, 0, 0));
-                HFONT smallFont = CreateFontA(16 * CELL / 30, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+                HFONT smallFont = CreateFontA(-(16 * CELL / 30), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
                 HGDIOBJ oldSmallFont = SelectObject(memDC, smallFont);
                 
                 RECT rText1 = { rBox.left, rBox.top + 5, rBox.right, rBox.top + 25 };
