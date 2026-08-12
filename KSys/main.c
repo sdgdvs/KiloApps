@@ -5,16 +5,18 @@
 #define W 1024
 #define H 768
 
-#define ID_TAB_CTRL   1001
-#define ID_TXT_MAIN   1002
-#define ID_BTN_CPU    1003
-#define ID_BTN_RAM    1004
-#define ID_BTN_DISK   1005
-#define ID_BTN_ALL    1006
-#define ID_BTN_EXP_TXT 1007
-#define ID_BTN_EXP_JSON 1008
-#define ID_BTN_EXP_HTML 1009
-#define ID_BTN_HELP     1010
+#define ID_TAB_CTRL        1001
+#define ID_TXT_MAIN        1002
+#define ID_BTN_CPU         1003
+#define ID_BTN_RAM         1004
+#define ID_BTN_DISK        1005
+#define ID_BTN_ALL         1006
+#define ID_BTN_EXP_TXT      1007
+#define ID_BTN_EXP_JSON     1008
+#define ID_BTN_EXP_HTML     1009
+#define ID_BTN_HELP          1010
+#define ID_BTN_SVC_REFRESH  1011
+#define ID_BTN_SVC_FILTER   1012
 
 HWND hTabCtrl = NULL;
 HWND hOutput = NULL;
@@ -26,6 +28,8 @@ HWND hBtnExpTxt = NULL;
 HWND hBtnExpJson = NULL;
 HWND hBtnExpHtml = NULL;
 HWND hBtnHelp = NULL;
+HWND hBtnSvcRefresh = NULL;
+HWND hBtnSvcFilter = NULL;
 
 char g_LogBuffer[16384] = {0};
 char g_CpuResult[128] = "Not Executed";
@@ -33,6 +37,7 @@ char g_RamResult[128] = "Not Executed";
 char g_DiskResult[128] = "Not Executed";
 
 int g_CurrentTab = 0;
+int g_ServiceFilterMode = 0; // 0: All, 1: Running Only, 2: Stopped Only
 
 void LogEvent(const char* level, const char* msg) {
     SYSTEMTIME st;
@@ -43,19 +48,35 @@ void LogEvent(const char* level, const char* msg) {
     lstrcatA(g_LogBuffer, timeStr);
 }
 
-void formatInt(DWORD v, char* s) {
-    char tmp[32];
-    int i = 0;
-    if (v == 0) { s[0] = '0'; s[1] = 0; return; }
-    while (v > 0) {
-        tmp[i++] = (char)((v % 10) + '0');
-        v /= 10;
-    }
-    int j = 0;
-    while (i > 0) {
-        s[j++] = tmp[--i];
-    }
-    s[j] = 0;
+ULONGLONG ftTo64(const FILETIME* ft) {
+    return ((ULONGLONG)ft->dwHighDateTime << 32) | ft->dwLowDateTime;
+}
+
+int GetCpuUsagePercent() {
+    static ULONGLONG prevIdle = 0, prevKernel = 0, prevUser = 0;
+    FILETIME ftIdle, ftKernel, ftUser;
+    if (!GetSystemTimes(&ftIdle, &ftKernel, &ftUser)) return 0;
+    
+    ULONGLONG idle = ftTo64(&ftIdle);
+    ULONGLONG kernel = ftTo64(&ftKernel);
+    ULONGLONG user = ftTo64(&ftUser);
+    
+    ULONGLONG diffIdle = idle - prevIdle;
+    ULONGLONG diffKernel = kernel - prevKernel;
+    ULONGLONG diffUser = user - prevUser;
+    
+    prevIdle = idle;
+    prevKernel = kernel;
+    prevUser = user;
+    
+    ULONGLONG totalSys = diffKernel + diffUser;
+    if (totalSys == 0) return 0;
+    
+    ULONGLONG sysUsage = totalSys - diffIdle;
+    int pct = (int)((sysUsage * 100) / totalSys);
+    if (pct < 0) pct = 0;
+    if (pct > 100) pct = 100;
+    return pct;
 }
 
 void GetSystemAuditText(char* buf, int maxLen) {
@@ -84,6 +105,28 @@ void GetSystemAuditText(char* buf, int maxLen) {
     SYSTEM_POWER_STATUS sps;
     BOOL hasPower = GetSystemPowerStatus(&sps);
     
+    DWORD totalSvc = 0, runSvc = 0;
+    SC_HANDLE hSCM = OpenSCManagerA(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    if (hSCM) {
+        DWORD bytesNeeded = 0, servicesReturned = 0, resumeHandle = 0;
+        EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, NULL, 0, &bytesNeeded, &servicesReturned, &resumeHandle);
+        if (bytesNeeded > 0) {
+            BYTE* pBuf = (BYTE*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bytesNeeded);
+            if (pBuf) {
+                resumeHandle = 0;
+                if (EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, (LPENUM_SERVICE_STATUSA)pBuf, bytesNeeded, &bytesNeeded, &servicesReturned, &resumeHandle)) {
+                    totalSvc = servicesReturned;
+                    LPENUM_SERVICE_STATUSA pServices = (LPENUM_SERVICE_STATUSA)pBuf;
+                    for (DWORD i = 0; i < totalSvc; i++) {
+                        if (pServices[i].ServiceStatus.dwCurrentState == SERVICE_RUNNING) runSvc++;
+                    }
+                }
+                HeapFree(GetProcessHeap(), 0, pBuf);
+            }
+        }
+        CloseServiceHandle(hSCM);
+    }
+
     wsprintfA(buf,
         "=================================================================\r\n"
         "       KSYS NATIVE SYSTEM DIAGNOSTICS & HARDWARE REPORT          \r\n"
@@ -98,6 +141,9 @@ void GetSystemAuditText(char* buf, int maxLen) {
         "Total Physical RAM : %u MB\r\n"
         "Available Physical : %u MB\r\n"
         "Total Page File    : %u MB\r\n\r\n"
+        "--- SYSTEM SERVICES SUMMARY ---\r\n"
+        "Total Services     : %u Services & Drivers Monitored\r\n"
+        "Running Services   : %u Active Services\r\n\r\n"
         "--- DISK STORAGE (C:\\) ---\r\n"
         "Total Capacity     : %u MB\r\n"
         "Free Capacity      : %u MB\r\n\r\n"
@@ -120,6 +166,7 @@ void GetSystemAuditText(char* buf, int maxLen) {
         (DWORD)(mem.ullTotalPhys >> 20),
         (DWORD)(mem.ullAvailPhys >> 20),
         (DWORD)(mem.ullTotalPageFile >> 20),
+        totalSvc, runSvc,
         hasDisk ? (DWORD)(totalBytes.QuadPart >> 20) : 0,
         hasDisk ? (DWORD)(totalFree.QuadPart >> 20) : 0,
         sw, sh, bpp, hz,
@@ -127,6 +174,113 @@ void GetSystemAuditText(char* buf, int maxLen) {
         hasPower ? ((sps.BatteryLifePercent != 255) ? "Charged" : "N/A") : "N/A",
         g_CpuResult, g_RamResult, g_DiskResult
     );
+}
+
+void GetServicesAndTelemetryText(char* buf, int maxLen) {
+    int cpuPct = GetCpuUsagePercent();
+    
+    MEMORYSTATUSEX mem = {0};
+    mem.dwLength = sizeof(mem);
+    GlobalMemoryStatusEx(&mem);
+    
+    DWORD ticks = GetTickCount();
+    DWORD hours = ticks / 3600000;
+    DWORD mins = (ticks / 60000) % 60;
+    DWORD secs = (ticks / 1000) % 60;
+    
+    wsprintfA(buf,
+        "=================================================================\r\n"
+        "       REAL-TIME SYSTEM TELEMETRY & SERVICES MANAGER            \r\n"
+        "=================================================================\r\n"
+        "-> Press 'H' for Help/Instructions \r\n\r\n"
+        "--- REAL-TIME TELEMETRY ---\r\n"
+        "Live CPU Usage      : %d%%\r\n"
+        "Memory Load         : %u%%\r\n"
+        "Avail Physical RAM  : %u MB / %u MB\r\n"
+        "Page File Avail     : %u MB\r\n"
+        "System Uptime       : %u h %u m %u s\r\n\r\n"
+        "--- WINDOWS SYSTEM SERVICES & DRIVERS STATUS ---\r\n"
+        "Filter Mode         : %s\r\n",
+        cpuPct,
+        mem.dwMemoryLoad,
+        (DWORD)(mem.ullAvailPhys >> 20),
+        (DWORD)(mem.ullTotalPhys >> 20),
+        (DWORD)(mem.ullAvailPageFile >> 20),
+        hours, mins, secs,
+        (g_ServiceFilterMode == 1) ? "RUNNING ONLY" : (g_ServiceFilterMode == 2) ? "STOPPED ONLY" : "ALL SERVICES"
+    );
+
+    SC_HANDLE hSCM = OpenSCManagerA(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    if (!hSCM) {
+        lstrcatA(buf, "Error: Unable to open Windows Service Control Manager.\r\n");
+        return;
+    }
+
+    DWORD bytesNeeded = 0, servicesReturned = 0, resumeHandle = 0;
+    EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, NULL, 0, &bytesNeeded, &servicesReturned, &resumeHandle);
+
+    if (bytesNeeded > 0) {
+        BYTE* pBuf = (BYTE*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bytesNeeded);
+        if (pBuf) {
+            resumeHandle = 0;
+            if (EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, (LPENUM_SERVICE_STATUSA)pBuf, bytesNeeded, &bytesNeeded, &servicesReturned, &resumeHandle)) {
+                LPENUM_SERVICE_STATUSA pServices = (LPENUM_SERVICE_STATUSA)pBuf;
+                DWORD totalCount = servicesReturned;
+                DWORD runningCount = 0;
+                DWORD stoppedCount = 0;
+                DWORD driverCount = 0;
+
+                for (DWORD i = 0; i < totalCount; i++) {
+                    if (pServices[i].ServiceStatus.dwCurrentState == SERVICE_RUNNING) runningCount++;
+                    else if (pServices[i].ServiceStatus.dwCurrentState == SERVICE_STOPPED) stoppedCount++;
+                    if (pServices[i].ServiceStatus.dwServiceType & SERVICE_DRIVER) driverCount++;
+                }
+
+                char headerBuf[256];
+                wsprintfA(headerBuf,
+                    "Total Services      : %u | Running: %u | Stopped: %u | Drivers: %u\r\n\r\n"
+                    "%-24s %-12s %-12s %-32s\r\n"
+                    "--------------------------------------------------------------------------------\r\n",
+                    totalCount, runningCount, stoppedCount, driverCount,
+                    "SERVICE NAME", "TYPE", "STATUS", "DISPLAY NAME"
+                );
+                lstrcatA(buf, headerBuf);
+
+                DWORD shown = 0;
+                for (DWORD i = 0; i < totalCount && shown < 80; i++) {
+                    DWORD state = pServices[i].ServiceStatus.dwCurrentState;
+                    DWORD type = pServices[i].ServiceStatus.dwServiceType;
+
+                    if (g_ServiceFilterMode == 1 && state != SERVICE_RUNNING) continue;
+                    if (g_ServiceFilterMode == 2 && state != SERVICE_STOPPED) continue;
+
+                    const char* stStr = (state == SERVICE_RUNNING) ? "RUNNING" :
+                                        (state == SERVICE_STOPPED) ? "STOPPED" :
+                                        (state == SERVICE_PAUSED) ? "PAUSED" : "PENDING";
+
+                    const char* typeStr = (type & SERVICE_DRIVER) ? "DRIVER" : "WIN32";
+
+                    char svcName[25];
+                    lstrcpynA(svcName, pServices[i].lpServiceName ? pServices[i].lpServiceName : "N/A", sizeof(svcName));
+
+                    char dispName[33];
+                    lstrcpynA(dispName, pServices[i].lpDisplayName ? pServices[i].lpDisplayName : "N/A", sizeof(dispName));
+
+                    char line[256];
+                    wsprintfA(line, "%-24s %-12s %-12s %-32s\r\n", svcName, typeStr, stStr, dispName);
+                    lstrcatA(buf, line);
+                    shown++;
+                }
+                if (shown < totalCount && g_ServiceFilterMode == 0) {
+                    char tailBuf[64];
+                    wsprintfA(tailBuf, "... and %u more services.\r\n", totalCount - shown);
+                    lstrcatA(buf, tailBuf);
+                }
+            }
+            HeapFree(GetProcessHeap(), 0, pBuf);
+        }
+    }
+    CloseServiceHandle(hSCM);
 }
 
 // CPU Stress Worker
@@ -299,12 +453,16 @@ void UpdateView() {
 
     // Show/hide buttons based on tab
     BOOL isBenchTab = (g_CurrentTab == 1);
-    BOOL isExpTab = (g_CurrentTab == 3);
+    BOOL isSvcTab   = (g_CurrentTab == 2);
+    BOOL isExpTab   = (g_CurrentTab == 4);
 
     ShowWindow(hBtnCpu, isBenchTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnRam, isBenchTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnDisk, isBenchTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnAll, isBenchTab ? SW_SHOW : SW_HIDE);
+
+    ShowWindow(hBtnSvcRefresh, isSvcTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnSvcFilter, isSvcTab ? SW_SHOW : SW_HIDE);
 
     ShowWindow(hBtnExpTxt, isExpTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnExpJson, isExpTab ? SW_SHOW : SW_HIDE);
@@ -324,9 +482,12 @@ void UpdateView() {
             g_CpuResult, g_RamResult, g_DiskResult
         );
         SetWindowTextA(hOutput, contentBuf);
-    } else if (g_CurrentTab == 2) { // Event History Logs
+    } else if (g_CurrentTab == 2) { // Services & Telemetry
+        GetServicesAndTelemetryText(contentBuf, sizeof(contentBuf));
+        SetWindowTextA(hOutput, contentBuf);
+    } else if (g_CurrentTab == 3) { // Event History Logs
         SetWindowTextA(hOutput, g_LogBuffer);
-    } else if (g_CurrentTab == 3) { // Report Export
+    } else if (g_CurrentTab == 4) { // Report Export
         GetSystemAuditText(contentBuf, sizeof(contentBuf));
         SetWindowTextA(hOutput, contentBuf);
     }
@@ -355,10 +516,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TabCtrl_InsertItem(hTabCtrl, 0, &tie);
             tie.pszText = "Diagnostic Benchmarks";
             TabCtrl_InsertItem(hTabCtrl, 1, &tie);
-            tie.pszText = "Event Logs";
+            tie.pszText = "Services & Telemetry";
             TabCtrl_InsertItem(hTabCtrl, 2, &tie);
-            tie.pszText = "Report Export";
+            tie.pszText = "Event Logs";
             TabCtrl_InsertItem(hTabCtrl, 3, &tie);
+            tie.pszText = "Report Export";
+            TabCtrl_InsertItem(hTabCtrl, 4, &tie);
 
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 
                 5, 40, W - 25, H - 125, hwnd, (HMENU)ID_TXT_MAIN, NULL, NULL);
@@ -368,6 +531,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnRam = CreateWindow("BUTTON", "Test RAM", WS_CHILD | BS_PUSHBUTTON, 120, H - 75, 100, 25, hwnd, (HMENU)ID_BTN_RAM, NULL, NULL);
             hBtnDisk = CreateWindow("BUTTON", "Test Disk", WS_CHILD | BS_PUSHBUTTON, 230, H - 75, 100, 25, hwnd, (HMENU)ID_BTN_DISK, NULL, NULL);
             hBtnAll = CreateWindow("BUTTON", "Run All Tests", WS_CHILD | BS_PUSHBUTTON, 340, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_ALL, NULL, NULL);
+
+            // Service Buttons
+            hBtnSvcRefresh = CreateWindow("BUTTON", "Refresh Services", WS_CHILD | BS_PUSHBUTTON, 10, H - 75, 140, 25, hwnd, (HMENU)ID_BTN_SVC_REFRESH, NULL, NULL);
+            hBtnSvcFilter  = CreateWindow("BUTTON", "Filter: All Services", WS_CHILD | BS_PUSHBUTTON, 160, H - 75, 160, 25, hwnd, (HMENU)ID_BTN_SVC_FILTER, NULL, NULL);
 
             // Export Buttons
             hBtnExpTxt = CreateWindow("BUTTON", "Export TXT", WS_CHILD | BS_PUSHBUTTON, 10, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_TXT, NULL, NULL);
@@ -407,6 +574,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RunRamBenchmark();
                 RunDiskBenchmark();
                 UpdateView();
+            } else if (id == ID_BTN_SVC_REFRESH) {
+                LogEvent("INFO", "Refreshed Win32 Services & Telemetry status");
+                UpdateView();
+            } else if (id == ID_BTN_SVC_FILTER) {
+                g_ServiceFilterMode = (g_ServiceFilterMode + 1) % 3;
+                if (g_ServiceFilterMode == 0) SetWindowTextA(hBtnSvcFilter, "Filter: All Services");
+                else if (g_ServiceFilterMode == 1) SetWindowTextA(hBtnSvcFilter, "Filter: Running Only");
+                else if (g_ServiceFilterMode == 2) SetWindowTextA(hBtnSvcFilter, "Filter: Stopped Only");
+                LogEvent("INFO", "Toggled Service Manager filter mode");
+                UpdateView();
             } else if (id == ID_BTN_EXP_TXT) {
                 ExportReport(0);
             } else if (id == ID_BTN_EXP_JSON) {
@@ -414,12 +591,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == ID_BTN_EXP_HTML) {
                 ExportReport(2);
             } else if (id == ID_BTN_HELP) {
-                MessageBoxA(hwnd, "KSys Help Instructions:\n\n1. Hardware Inspector: View live system details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Event Logs: Check background activity.\n4. Report Export: Generate and download summaries.\n\nUse the tabs to navigate.", "KSys Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KSys Help Instructions:\n\n1. Hardware Inspector: View live system details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Services & Telemetry: Inspect real-time CPU load & Win32 Services.\n4. Event Logs: Check background activity.\n5. Report Export: Generate and download summaries.\n\nUse the tabs to navigate.", "KSys Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
         case WM_TIMER: {
-            if (wParam == 1 && g_CurrentTab == 0) {
+            if (wParam == 1 && (g_CurrentTab == 0 || g_CurrentTab == 2)) {
                 UpdateView();
             }
             break;
@@ -433,6 +610,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hBtnRam) MoveWindow(hBtnRam, 105, nh - 38, 90, 25, TRUE);
             if (hBtnDisk) MoveWindow(hBtnDisk, 200, nh - 38, 90, 25, TRUE);
             if (hBtnAll) MoveWindow(hBtnAll, 295, nh - 38, 110, 25, TRUE);
+
+            if (hBtnSvcRefresh) MoveWindow(hBtnSvcRefresh, 10, nh - 38, 140, 25, TRUE);
+            if (hBtnSvcFilter) MoveWindow(hBtnSvcFilter, 160, nh - 38, 160, 25, TRUE);
 
             if (hBtnExpTxt) MoveWindow(hBtnExpTxt, 10, nh - 38, 110, 25, TRUE);
             if (hBtnExpJson) MoveWindow(hBtnExpJson, 130, nh - 38, 110, 25, TRUE);
@@ -483,7 +663,7 @@ void MainEntry() {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN && msg.wParam == 'H') {
-            MessageBoxA(hwnd, "KSys Help Instructions:\n\n1. Hardware Inspector: View live system details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Event Logs: Check background activity.\n4. Report Export: Generate and download summaries.\n\nUse the tabs to navigate.", "KSys Help", MB_OK | MB_ICONINFORMATION);
+            MessageBoxA(hwnd, "KSys Help Instructions:\n\n1. Hardware Inspector: View live system details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Services & Telemetry: Inspect real-time CPU load & Win32 Services.\n4. Event Logs: Check background activity.\n5. Report Export: Generate and download summaries.\n\nUse the tabs to navigate.", "KSys Help", MB_OK | MB_ICONINFORMATION);
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);

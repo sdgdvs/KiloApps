@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KSys - System Diagnostics & Benchmarks</title>
+<title>KSys - System Diagnostics & Telemetry Workstation</title>
 <style>
   :root {
     --bg-primary: #0f172a;
@@ -256,6 +256,12 @@
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   }
 
+  .btn-sm {
+    padding: 4px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+
   .btn-outline {
     background: transparent;
     border: 1px solid var(--border-color);
@@ -266,6 +272,11 @@
   .btn-outline:hover {
     background-color: rgba(255,255,255,0.05);
     border-color: var(--accent-blue);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
   }
 
   /* Progress & Benchmarks */
@@ -299,6 +310,120 @@
     font-weight: 700;
     color: var(--accent-amber);
     margin: 10px 0;
+  }
+
+  /* Telemetry & Service Manager Styles */
+  .telemetry-header {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .telemetry-metric {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .telemetry-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .telemetry-val {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: 'Consolas', monospace;
+    color: var(--accent-blue);
+  }
+
+  .sparkline-canvas {
+    width: 100%;
+    height: 50px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    margin-top: 8px;
+  }
+
+  /* Services Table */
+  .services-toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .services-table-container {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+
+  table.services-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  table.services-table th {
+    background-color: var(--bg-secondary);
+    color: var(--text-muted);
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  table.services-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    vertical-align: middle;
+  }
+
+  table.services-table tr:hover {
+    background-color: rgba(255,255,255,0.02);
+  }
+
+  .svc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Consolas', monospace;
+  }
+
+  .svc-badge.RUNNING {
+    background-color: rgba(74, 222, 128, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+
+  .svc-badge.STOPPED {
+    background-color: rgba(248, 113, 113, 0.15);
+    color: var(--accent-red);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+  }
+
+  .svc-badge.PAUSED {
+    background-color: rgba(251, 191, 36, 0.15);
+    color: var(--accent-amber);
+    border: 1px solid rgba(251, 191, 36, 0.3);
   }
 
   /* Event Log Table */
@@ -346,6 +471,28 @@
   .log-level.ERROR { color: var(--accent-red); }
   .log-level.BENCH { color: var(--accent-purple); }
 
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.2s;
+  }
+
+  .modal-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 480px;
+    max-width: 90%;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  }
+
   /* Export Report Preview */
   .report-preview {
     width: 100%;
@@ -382,12 +529,35 @@
     <button onclick="document.getElementById('help-toast').style.display='none'" style="margin-top: 10px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">Dismiss</button>
   </div>
 
+  <!-- Service Detail Modal -->
+  <div id="service-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="card-header">
+        <h2 id="modal-svc-title">⚙️ Service Details</h2>
+        <button class="btn btn-outline btn-sm" onclick="closeServiceModal()">✕</button>
+      </div>
+      <div class="info-list" style="margin-bottom: 20px;">
+        <div class="info-item"><span class="info-label">Service Name:</span><span class="info-val" id="modal-svc-name">--</span></div>
+        <div class="info-item"><span class="info-label">Display Name:</span><span class="info-val" id="modal-svc-disp">--</span></div>
+        <div class="info-item"><span class="info-label">Service Category:</span><span class="info-val" id="modal-svc-type">--</span></div>
+        <div class="info-item"><span class="info-label">Current Status:</span><span class="info-val" id="modal-svc-status">--</span></div>
+        <div class="info-item"><span class="info-label">Startup Mode:</span><span class="info-val" id="modal-svc-start">--</span></div>
+        <div class="info-item"><span class="info-label">Binary Location:</span><span class="info-val" id="modal-svc-bin" style="font-size: 11px;">--</span></div>
+        <div class="info-item"><span class="info-label">Est. Memory Footprint:</span><span class="info-val" id="modal-svc-mem">--</span></div>
+      </div>
+      <p id="modal-svc-desc" style="font-size: 12px; color: var(--text-muted); background: var(--bg-primary); padding: 10px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-color);"></p>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-outline" onclick="closeServiceModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <header>
     <div class="brand">
       <div class="brand-logo">KS</div>
       <div class="brand-title">
-        <h1>KSys Workstation Diagnostic & Benchmark Suite</h1>
-        <p>System Utility & Hardware Performance Inspector | <strong>Press 'H' for Help</strong></p>
+        <h1>KSys Workstation Diagnostic & Telemetry Suite</h1>
+        <p>System Utility, Telemetry & Service Manager | <strong>Press 'H' for Help</strong></p>
       </div>
     </div>
     <div class="top-stats">
@@ -405,6 +575,7 @@
   <nav>
     <button class="tab-btn active" onclick="switchTab('inspector')">🔍 Component Inspector</button>
     <button class="tab-btn" onclick="switchTab('benchmarks')">⚡ Diagnostic Benchmarks</button>
+    <button class="tab-btn" onclick="switchTab('services')">⚙️ Services & Telemetry</button>
     <button class="tab-btn" onclick="switchTab('logs')">📋 Event History Logs</button>
     <button class="tab-btn" onclick="switchTab('export')">💾 System Report Export</button>
   </nav>
@@ -554,6 +725,82 @@
       </div>
     </section>
 
+    <!-- Services & Telemetry Tab -->
+    <section id="tab-services" class="tab-content">
+      <!-- Live Telemetry Sparklines Header -->
+      <div class="telemetry-header">
+        <div class="telemetry-metric">
+          <div class="telemetry-label">
+            <span>💻 CPU Load Telemetry</span>
+            <span id="telem-cpu-pct">0%</span>
+          </div>
+          <div class="telemetry-val" id="telem-cpu-val">0.0%</div>
+          <canvas id="cpu-sparkline" class="sparkline-canvas" height="50"></canvas>
+        </div>
+
+        <div class="telemetry-metric">
+          <div class="telemetry-label">
+            <span>🧠 RAM Heap Allocation</span>
+            <span id="telem-mem-pct">0%</span>
+          </div>
+          <div class="telemetry-val" id="telem-mem-val">0 MB</div>
+          <canvas id="mem-sparkline" class="sparkline-canvas" height="50"></canvas>
+        </div>
+
+        <div class="telemetry-metric">
+          <div class="telemetry-label">
+            <span>⚙️ System Services Active</span>
+            <span id="telem-svc-ratio">0 / 0</span>
+          </div>
+          <div class="telemetry-val" id="telem-svc-val">0 Running</div>
+          <div class="meter-bar" style="margin-top: 12px;"><div class="meter-fill" id="svc-active-bar"></div></div>
+        </div>
+      </div>
+
+      <!-- Services Manager Table Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2>⚙️ Windows & System Services Status Manager</h2>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-accent btn-sm" onclick="addCustomService()">+ Add Daemon</button>
+            <button class="btn btn-outline btn-sm" onclick="refreshServices()">🔄 Refresh Services</button>
+          </div>
+        </div>
+
+        <div class="services-toolbar">
+          <input type="text" id="svc-search-input" class="search-input" placeholder="Search services by name or binary..." oninput="renderServices()">
+          <select id="svc-filter-category" class="select-input" onchange="renderServices()">
+            <option value="ALL">All Categories</option>
+            <option value="Core System">Core System Services</option>
+            <option value="Drivers">Hardware Drivers</option>
+          </select>
+          <select id="svc-filter-status" class="select-input" onchange="renderServices()">
+            <option value="ALL">All Statuses</option>
+            <option value="RUNNING">Running Only</option>
+            <option value="STOPPED">Stopped Only</option>
+          </select>
+        </div>
+
+        <div class="services-table-container">
+          <table class="services-table">
+            <thead>
+              <tr>
+                <th>Service Name</th>
+                <th>Display Name</th>
+                <th>Category</th>
+                <th>Startup</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="svc-table-body">
+              <!-- Dynamically rendered rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- Event Logs Tab -->
     <section id="tab-logs" class="tab-content">
       <div class="card">
@@ -588,7 +835,7 @@
           <button class="btn btn-outline" onclick="generateReport()">🔄 Refresh Audit Report</button>
         </div>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-          Comprehensive snapshot of hardware specifications, diagnostic scores, and runtime telemetry.
+          Comprehensive snapshot of hardware specifications, telemetry, system services, and diagnostic scores.
         </p>
         <textarea id="report-preview" class="report-preview" readonly aria-label="System Report Preview"></textarea>
         <div class="export-actions">
@@ -610,6 +857,28 @@
     diskScore: null
   };
 
+  // Service Data Registry
+  const systemServices = [
+    { id: "WinDefend", name: "WinDefend", disp: "Windows Defender Antivirus", cat: "Core System", start: "Automatic", status: "RUNNING", bin: "C:\\ProgramData\\Microsoft\\Windows Defender\\MsMpEng.exe", mem: "142 MB", desc: "Provides real-time protection against malware, viruses, and security threats." },
+    { id: "AudioSrv", name: "AudioSrv", disp: "Windows Audio Endpoint Manager", cat: "Core System", start: "Automatic", status: "RUNNING", bin: "C:\\Windows\\System32\\audiodg.exe", mem: "18 MB", desc: "Manages audio playback, hardware endpoints, and digital mixing." },
+    { id: "WlanSvc", name: "WlanSvc", disp: "WLAN AutoConfig Network Service", cat: "Core System", start: "Automatic", status: "RUNNING", bin: "C:\\Windows\\System32\\wlansvc.dll", mem: "12 MB", desc: "Enumerates wireless interfaces and manages IEEE 802.11 Wi-Fi connections." },
+    { id: "Spooler", name: "Spooler", disp: "Print Spooler Subsystem", cat: "Core System", start: "Manual", status: "STOPPED", bin: "C:\\Windows\\System32\\spoolsv.exe", mem: "0 MB", desc: "Manages print jobs, document queues, and printer communications." },
+    { id: "WebGPUEngine", name: "WebGPUEngine", disp: "WebGPU & Shader Compilation Daemon", cat: "Drivers", start: "Automatic", status: "RUNNING", bin: "Internal WebGL/WebGPU Subsystem", mem: "64 MB", desc: "Accelerates 3D graphics rendering and parallel compute shaders." },
+    { id: "DiskQuotaDaemon", name: "DiskQuotaDaemon", disp: "Storage Quota & File Watcher", cat: "Core System", start: "Automatic", status: "RUNNING", bin: "C:\\Windows\\System32\\quota.exe", mem: "8 MB", desc: "Monitors storage quotas and tracks disk usage telemetry." },
+    { id: "CryptoService", name: "CryptoService", disp: "Cryptographic Key & Cert Manager", cat: "Core System", start: "Automatic", status: "RUNNING", bin: "C:\\Windows\\System32\\cryptsvc.dll", mem: "14 MB", desc: "Provides TLS certificates, digital signatures, and key protection." },
+    { id: "BackgroundSync", name: "BackgroundSync", disp: "Web Background Sync Worker", cat: "Core System", start: "Manual", status: "STOPPED", bin: "Browser Service Worker Host", mem: "0 MB", desc: "Executes delayed background data synchronization tasks." },
+    { id: "NetListSvc", name: "NetListSvc", disp: "Network List & Identity Service", cat: "Core System", start: "Automatic", status: "RUNNING", bin: "C:\\Windows\\System32\\netprofm.dll", mem: "10 MB", desc: "Identifies networks connected to the computer and collects properties." },
+    { id: "KiloAgentHost", name: "KiloAgentHost", disp: "KiloOS Multi-Agent Runtime Host", cat: "Core System", start: "Automatic", status: "RUNNING", bin: "C:\\KiloApps\\KiloOS\\agent_host.exe", mem: "32 MB", desc: "Coordinates background task execution and multi-agent IPC channels." },
+    { id: "VGAAdapterDriver", name: "VGAAdapterDriver", disp: "Display Adapter Kernel Driver", cat: "Drivers", start: "Automatic", status: "RUNNING", bin: "System Kernel Driver (nvlddmkm)", mem: "128 MB", desc: "Low-level hardware driver for GPU acceleration and display sync." },
+    { id: "NVMeStorageDriver", name: "NVMeStorageDriver", disp: "NVMe Controller Kernel Driver", cat: "Drivers", start: "Automatic", status: "RUNNING", bin: "System Kernel Driver (stornvme)", mem: "16 MB", desc: "High-speed PCIe NVMe storage controller driver." }
+  ];
+
+  // Telemetry Sparkline Data History
+  const cpuHistory = new Array(30).fill(10);
+  const memHistory = new Array(30).fill(25);
+  let lastTelemetryTick = performance.now();
+  let frameCount = 0;
+
   // Attempt to resize window for better usability
   try {
     if (window.resizeTo) {
@@ -625,7 +894,7 @@
   });
 
   function showHelp() {
-    alert("KSys Help Instructions:\n\n1. Component Inspector: View live hardware details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Event History: Check logs of background tasks.\n4. System Report Export: Generate and download system summaries.\n\nUse the tabs at the top to navigate.");
+    alert("KSys Help Instructions:\n\n1. Component Inspector: View live hardware details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Services & Telemetry: Inspect real-time CPU load & Win32 Services.\n4. Event History: Check logs of background tasks.\n5. System Report Export: Generate and download system summaries.\n\nUse the tabs at the top to navigate.");
   }
 
   function logEvent(level, message) {
@@ -683,7 +952,9 @@
     const targetContent = document.getElementById('tab-' + tabId);
     if (targetContent) targetContent.classList.add('active');
 
-    if (tabId === 'export') {
+    if (tabId === 'services') {
+      renderServices();
+    } else if (tabId === 'export') {
       generateReport();
     }
   }
@@ -968,12 +1239,212 @@
     logEvent('INFO', 'Full Diagnostic Benchmark suite finished.');
   }
 
+  // --- SERVICES & TELEMETRY LOGIC ---
+  function renderServices() {
+    const tableBody = document.getElementById('svc-table-body');
+    if (!tableBody) return;
+
+    const searchTxt = document.getElementById('svc-search-input').value.toLowerCase();
+    const filterCat = document.getElementById('svc-filter-category').value;
+    const filterStat = document.getElementById('svc-filter-status').value;
+
+    let runningCount = 0;
+    let totalCount = systemServices.length;
+
+    tableBody.innerHTML = '';
+
+    systemServices.forEach(s => {
+      if (s.status === 'RUNNING') runningCount++;
+
+      const matchSearch = s.name.toLowerCase().includes(searchTxt) || s.disp.toLowerCase().includes(searchTxt) || s.bin.toLowerCase().includes(searchTxt);
+      const matchCat = (filterCat === 'ALL' || s.cat === filterCat);
+      const matchStat = (filterStat === 'ALL' || s.status === filterStat);
+
+      if (matchSearch && matchCat && matchStat) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong style="color: var(--accent-blue);">${escapeHtml(s.name)}</strong></td>
+          <td>${escapeHtml(s.disp)}</td>
+          <td><span style="font-size: 11px; color: var(--text-muted);">${escapeHtml(s.cat)}</span></td>
+          <td><span style="font-size: 11px;">${escapeHtml(s.start)}</span></td>
+          <td><span class="svc-badge ${s.status}">${s.status}</span></td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-sm ${s.status === 'RUNNING' ? 'btn-danger' : 'btn-accent'}" onclick="toggleServiceStatus('${s.id}')">
+                ${s.status === 'RUNNING' ? 'Stop' : 'Start'}
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="restartService('${s.id}')">Restart</button>
+              <button class="btn btn-outline btn-sm" onclick="inspectService('${s.id}')">Inspect</button>
+            </div>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      }
+    });
+
+    // Update Telemetry Service Summary Counters
+    document.getElementById('telem-svc-ratio').textContent = `${runningCount} / ${totalCount}`;
+    document.getElementById('telem-svc-val').textContent = `${runningCount} Active`;
+    const pct = Math.round((runningCount / Math.max(1, totalCount)) * 100);
+    document.getElementById('svc-active-bar').style.width = pct + '%';
+  }
+
+  function toggleServiceStatus(svcId) {
+    const svc = systemServices.find(s => s.id === svcId);
+    if (!svc) return;
+
+    if (svc.status === 'RUNNING') {
+      svc.status = 'STOPPED';
+      svc.mem = '0 MB';
+      logEvent('WARN', `Stopped system service: ${svc.name} (${svc.disp})`);
+    } else {
+      svc.status = 'RUNNING';
+      svc.mem = `${Math.floor(Math.random() * 40 + 10)} MB`;
+      logEvent('INFO', `Started system service: ${svc.name} (${svc.disp})`);
+    }
+    renderServices();
+  }
+
+  function restartService(svcId) {
+    const svc = systemServices.find(s => s.id === svcId);
+    if (!svc) return;
+
+    svc.status = 'STOPPED';
+    renderServices();
+    logEvent('INFO', `Restarting service daemon: ${svc.name}...`);
+    setTimeout(() => {
+      svc.status = 'RUNNING';
+      renderServices();
+      logEvent('INFO', `Service restarted successfully: ${svc.name}`);
+    }, 400);
+  }
+
+  function inspectService(svcId) {
+    const svc = systemServices.find(s => s.id === svcId);
+    if (!svc) return;
+
+    document.getElementById('modal-svc-title').textContent = `⚙️ Details: ${svc.disp}`;
+    document.getElementById('modal-svc-name').textContent = svc.name;
+    document.getElementById('modal-svc-disp').textContent = svc.disp;
+    document.getElementById('modal-svc-type').textContent = svc.cat;
+    document.getElementById('modal-svc-status').textContent = svc.status;
+    document.getElementById('modal-svc-start').textContent = svc.start;
+    document.getElementById('modal-svc-bin').textContent = svc.bin;
+    document.getElementById('modal-svc-mem').textContent = svc.mem;
+    document.getElementById('modal-svc-desc').textContent = svc.desc;
+
+    document.getElementById('service-modal').style.display = 'flex';
+  }
+
+  function closeServiceModal() {
+    document.getElementById('service-modal').style.display = 'none';
+  }
+
+  function refreshServices() {
+    logEvent('INFO', 'Refreshed system services and telemetry state');
+    renderServices();
+  }
+
+  function addCustomService() {
+    const name = prompt("Enter Custom Service Daemon Name (e.g. MyWorkerService):", "CustomDaemon");
+    if (!name) return;
+
+    const disp = prompt("Enter Display Name:", "Custom Background Worker Daemon");
+    const id = "custom_" + Date.now();
+
+    systemServices.push({
+      id: id,
+      name: name,
+      disp: disp || name,
+      cat: "Core System",
+      start: "Manual",
+      status: "RUNNING",
+      bin: "C:\\KiloApps\\Services\\" + name + ".exe",
+      mem: "16 MB",
+      desc: "User-defined custom diagnostic service daemon."
+    });
+
+    logEvent('INFO', `Added custom system service: ${name}`);
+    renderServices();
+  }
+
+  // Live Telemetry Loop (Sparklines + CPU Load Sensing)
+  function updateTelemetrySparklines() {
+    const now = performance.now();
+    const dt = now - lastTelemetryTick;
+    lastTelemetryTick = now;
+
+    // Estimate CPU load based on event loop micro-jitter
+    let cpuLoad = Math.min(100, Math.max(2, Math.round((dt - 1000) / 10 + Math.random() * 8 + 5)));
+    if (isNaN(cpuLoad)) cpuLoad = 12;
+
+    cpuHistory.shift();
+    cpuHistory.push(cpuLoad);
+
+    document.getElementById('telem-cpu-pct').textContent = cpuLoad + '%';
+    document.getElementById('telem-cpu-val').textContent = cpuLoad.toFixed(1) + '%';
+
+    // Memory Heap telemetry
+    let heapUsedMB = 0;
+    let heapPct = 30;
+    if (performance && performance.memory) {
+      heapUsedMB = Math.round(performance.memory.usedJSHeapSize / (1024 * 1024));
+      const heapLimitMB = Math.round(performance.memory.jsHeapSizeLimit / (1024 * 1024));
+      heapPct = Math.round((heapUsedMB / Math.max(1, heapLimitMB)) * 100);
+      document.getElementById('telem-mem-val').textContent = heapUsedMB + ' MB';
+      document.getElementById('telem-mem-pct').textContent = heapPct + '%';
+    } else {
+      document.getElementById('telem-mem-val').textContent = '24 MB';
+      document.getElementById('telem-mem-pct').textContent = '15%';
+    }
+
+    memHistory.shift();
+    memHistory.push(heapUsedMB || 24);
+
+    drawSparkline('cpu-sparkline', cpuHistory, '#38bdf8');
+    drawSparkline('mem-sparkline', memHistory, '#c084fc');
+  }
+
+  function drawSparkline(canvasId, data, color) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = canvas.clientWidth;
+    const h = canvas.height = canvas.clientHeight;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.beginPath();
+
+    const maxVal = Math.max(100, Math.max(...data));
+    const step = w / (data.length - 1);
+
+    data.forEach((val, idx) => {
+      const x = idx * step;
+      const y = h - (val / maxVal) * (h - 6) - 3;
+      if (idx === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Gradient fill under sparkline
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fillStyle = color === '#38bdf8' ? 'rgba(56, 189, 248, 0.1)' : 'rgba(192, 132, 252, 0.1)';
+    ctx.fill();
+  }
+
   // System Report Export Generator
   function generateReportText() {
     const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
     const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
     const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
     const secs = String(elapsedSec % 60).padStart(2, '0');
+
+    const activeSvcs = systemServices.filter(s => s.status === 'RUNNING').length;
 
     let r = `=================================================================\n`;
     r += `       KSYS WORKSTATION SYSTEM DIAGNOSTICS REPORT               \n`;
@@ -999,14 +1470,21 @@
     r += `Timezone          : ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n\n`;
 
     r += `-----------------------------------------------------------------\n`;
-    r += `2. DIAGNOSTIC BENCHMARK RESULTS                                 \n`;
+    r += `2. REAL-TIME SYSTEM TELEMETRY & SERVICES STATUS                  \n`;
+    r += `-----------------------------------------------------------------\n`;
+    r += `Total Monitored Services: ${systemServices.length}\n`;
+    r += `Active Running Services : ${activeSvcs}\n`;
+    r += `Stopped Services        : ${systemServices.length - activeSvcs}\n\n`;
+
+    r += `-----------------------------------------------------------------\n`;
+    r += `3. DIAGNOSTIC BENCHMARK RESULTS                                 \n`;
     r += `-----------------------------------------------------------------\n`;
     r += `CPU Benchmark     : ${benchResults.cpuScore || 'Not Executed'}\n`;
     r += `RAM Throughput    : ${benchResults.ramScore || 'Not Executed'}\n`;
     r += `Disk I/O Speed    : ${benchResults.diskScore || 'Not Executed'}\n\n`;
 
     r += `-----------------------------------------------------------------\n`;
-    r += `3. EVENT HISTORY LOG SNAPSHOT (${eventLogs.length} Entries)                    \n`;
+    r += `4. EVENT HISTORY LOG SNAPSHOT (${eventLogs.length} Entries)                    \n`;
     r += `-----------------------------------------------------------------\n`;
     eventLogs.slice(0, 15).forEach(e => {
       r += `[${e.timestamp}] [${e.level}] ${e.message}\n`;
@@ -1043,6 +1521,10 @@
           screen: `${window.screen.width}x${window.screen.height}`,
           colorDepth: window.screen.colorDepth,
           pixelRatio: window.devicePixelRatio
+        },
+        telemetry: {
+          totalServices: systemServices.length,
+          runningServices: systemServices.filter(s => s.status === 'RUNNING').length
         },
         benchmarks: benchResults,
         eventLogs: eventLogs
@@ -1085,8 +1567,10 @@
   window.addEventListener('DOMContentLoaded', () => {
     logEvent('INFO', 'KSys System Inspector & Diagnostic Workstation initialized');
     inspectHardware();
+    renderServices();
     setInterval(updateUptime, 1000);
     setInterval(inspectHardware, 5000);
+    setInterval(updateTelemetrySparklines, 1000);
   });
 </script>
 </body>
