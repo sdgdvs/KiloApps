@@ -105,6 +105,17 @@ int cascadeActive = 0;
 
 // --- Particle System ---
 typedef struct {
+    float x, y;
+    float vx, vy;
+    float alpha;
+    float da;
+    int size;
+} DustMote;
+#define MAX_DUST 120
+DustMote dustMotes[MAX_DUST];
+int dustInit = 0;
+
+typedef struct {
     int active;
     float x, y;
     float vx, vy;
@@ -1202,14 +1213,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbmMem = CreateCompatibleBitmap(hdc, clientRect.right, clientRect.bottom);
             HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
             
-            HBRUSH hbrBg = CreateSolidBrush(RGB(16, 96, 48));
-            FillRect(hdcMem, &clientRect, hbrBg);
+            // Draw Mahogany Table Frame Border
+            int borderSize = 16;
+            HBRUSH mahog1 = CreateSolidBrush(RGB(74, 33, 17));
+            HBRUSH mahog2 = CreateSolidBrush(RGB(43, 17, 4));
+            RECT borderTop = {0, 0, clientRect.right, borderSize};
+            RECT borderBot = {0, clientRect.bottom - borderSize, clientRect.right, clientRect.bottom};
+            RECT borderL = {0, 0, borderSize, clientRect.bottom};
+            RECT borderR = {clientRect.right - borderSize, 0, clientRect.right, clientRect.bottom};
+            FillRect(hdcMem, &borderTop, mahog1);
+            FillRect(hdcMem, &borderBot, mahog2);
+            FillRect(hdcMem, &borderL, mahog1);
+            FillRect(hdcMem, &borderR, mahog2);
+            DeleteObject(mahog1);
+            DeleteObject(mahog2);
+            
+            // Draw Rich Casino Felt Background
+            RECT feltRect = {borderSize, borderSize, clientRect.right - borderSize, clientRect.bottom - borderSize};
+            HBRUSH hbrBg = CreateSolidBrush(RGB(20, 90, 45));
+            FillRect(hdcMem, &feltRect, hbrBg);
             DeleteObject(hbrBg);
             
-            HPEN feltBorder = CreatePen(PS_SOLID, 8, RGB(8, 48, 24));
+            // Felt pattern grid lines (subtle)
+            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(22, 98, 49));
+            SelectObject(hdcMem, gridPen);
+            for(int gx = borderSize; gx < clientRect.right - borderSize; gx += 40) {
+                MoveToEx(hdcMem, gx, borderSize, NULL); LineTo(hdcMem, gx, clientRect.bottom - borderSize);
+            }
+            for(int gy = borderSize; gy < clientRect.bottom - borderSize; gy += 40) {
+                MoveToEx(hdcMem, borderSize, gy, NULL); LineTo(hdcMem, clientRect.right - borderSize, gy);
+            }
+            DeleteObject(gridPen);
+            
+            HPEN feltBorder = CreatePen(PS_SOLID, 4, RGB(10, 56, 26));
             SelectObject(hdcMem, feltBorder);
             SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
-            Rectangle(hdcMem, 0, 0, clientRect.right, clientRect.bottom);
+            Rectangle(hdcMem, feltRect.left, feltRect.top, feltRect.right, feltRect.bottom);
             DeleteObject(feltBorder);
             
             SetBkMode(hdcMem, TRANSPARENT);
@@ -1315,6 +1354,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RECT pr = { (int)particles[pidx].x - particles[pidx].size/2, (int)particles[pidx].y - particles[pidx].size/2, (int)particles[pidx].x + particles[pidx].size/2, (int)particles[pidx].y + particles[pidx].size/2 };
                     FillRect(hdcMem, &pr, pbr);
                     DeleteObject(pbr);
+                }
+            }
+            
+            // Draw Atmospheric Floating Dust Motes
+            for(int i=0; i<MAX_DUST; i++) {
+                if (dustInit) {
+                    int r = 20 + (int)((255 - 20) * dustMotes[i].alpha * 0.3f);
+                    int g = 90 + (int)((240 - 90) * dustMotes[i].alpha * 0.3f);
+                    int b = 45 + (int)((200 - 45) * dustMotes[i].alpha * 0.3f);
+                    HBRUSH dbr = CreateSolidBrush(RGB(r, g, b));
+                    RECT dr = { (int)dustMotes[i].x, (int)dustMotes[i].y, (int)dustMotes[i].x + dustMotes[i].size, (int)dustMotes[i].y + dustMotes[i].size };
+                    FillRect(hdcMem, &dr, dbr);
+                    DeleteObject(dbr);
                 }
             }
 
@@ -1568,6 +1620,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER: {
             int active = 0;
             DWORD now = GetTickCount();
+            
+            // Atmospheric Dust Motes logic
+            RECT crDust; GetClientRect(hwnd, &crDust);
+            int dustW = crDust.right > 0 ? crDust.right : 800;
+            int dustH = crDust.bottom > 0 ? crDust.bottom : 600;
+            if(!dustInit && dustW > 0 && dustH > 0) {
+                dustInit = 1;
+                for(int i=0; i<MAX_DUST; i++) {
+                    dustMotes[i].x = (float)(rand() % dustW);
+                    dustMotes[i].y = (float)(rand() % dustH);
+                    dustMotes[i].vx = (float)((rand()%100)*0.005f - 0.2f);
+                    dustMotes[i].vy = (float)(-((rand()%100)*0.005f) - 0.1f);
+                    dustMotes[i].size = 1 + rand()%2;
+                    dustMotes[i].alpha = (float)(rand()%100)*0.01f;
+                    dustMotes[i].da = (float)((rand()%100)*0.0004f - 0.0002f);
+                }
+            }
+            if(dustInit) {
+                for(int i=0; i<MAX_DUST; i++) {
+                    dustMotes[i].x += dustMotes[i].vx;
+                    dustMotes[i].y += dustMotes[i].vy;
+                    dustMotes[i].alpha += dustMotes[i].da;
+                    if(dustMotes[i].alpha > 1.0f) { dustMotes[i].alpha = 1.0f; dustMotes[i].da = -dustMotes[i].da; }
+                    if(dustMotes[i].alpha < 0.1f) { dustMotes[i].alpha = 0.1f; dustMotes[i].da = -dustMotes[i].da; }
+                    if(dustMotes[i].y < 0) dustMotes[i].y = (float)dustH;
+                    if(dustMotes[i].x < 0) dustMotes[i].x = (float)dustW;
+                    if(dustMotes[i].x > dustW) dustMotes[i].x = 0;
+                }
+                active = 1;
+            }
+            
             for(int i=0; i<MAX_ANIMS; i++) {
                 if(anims[i].active) {
                     if (now >= anims[i].startTime + anims[i].duration) {
