@@ -550,6 +550,9 @@ void DrawBoard(HDC hdc, int width, int height) {
     const char* keyLabels[8] = {"Q", "W", "E", "R", "A", "S", "D", "F"};
     if (num_btns == 4) {
         keyLabels[0] = "Q"; keyLabels[1] = "W"; keyLabels[2] = "A"; keyLabels[3] = "S";
+    } else if (num_btns == 6) {
+        keyLabels[0] = "Q"; keyLabels[1] = "W"; keyLabels[2] = "E";
+        keyLabels[3] = "A"; keyLabels[4] = "S"; keyLabels[5] = "D";
     }
 
     for (int i = 0; i < num_btns; i++) {
@@ -874,6 +877,7 @@ void HandleClick(int btn_id) {
     }
 
     PlaySoundAsync(btn_freqs[btn_id], 200);
+    input_countdown = (current_mode == MODE_SPEED) ? 100 : 150; // Reset timer for fairness
 
     player_step++;
     if (player_step == sequence_length) {
@@ -1118,12 +1122,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             int speed_factor = sequence_length - 1;
                             if (speed_factor < 0) speed_factor = 0;
                             
-                            int f_dur = 400 - speed_factor * 15;
+                            int f_dur = 400 - speed_factor * 10;
                             if (current_mode == MODE_SPEED) {
-                                f_dur = 200 - speed_factor * 10;
+                                f_dur = 200 - speed_factor * 8;
                                 if (f_dur < 80) f_dur = 80;
                             } else if (current_mode == MODE_CAMPAIGN) {
-                                f_dur = campaign_stages[current_stage - 1].speed_ms - speed_factor * 5;
+                                f_dur = campaign_stages[current_stage - 1].speed_ms - speed_factor * 4;
                                 if (f_dur < 100) f_dur = 100;
                             } else if (current_mode == MODE_CHAOS || current_mode == MODE_CHAOS_REV) {
                                 f_dur = 150 + rand() % 250;
@@ -1149,12 +1153,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         int speed_factor = sequence_length - 1;
                         if (speed_factor < 0) speed_factor = 0;
                         
-                        int p_dur = 200 - speed_factor * 8;
+                        int p_dur = 200 - speed_factor * 5;
                         if (current_mode == MODE_SPEED) {
-                            p_dur = 100 - speed_factor * 5;
+                            p_dur = 100 - speed_factor * 4;
                             if (p_dur < 40) p_dur = 40;
                         } else if (current_mode == MODE_CAMPAIGN) {
-                            p_dur = (campaign_stages[current_stage - 1].speed_ms / 2) - speed_factor * 3;
+                            p_dur = (campaign_stages[current_stage - 1].speed_ms / 2) - speed_factor * 2;
                             if (p_dur < 50) p_dur = 50;
                         } else if (current_mode == MODE_CHAOS || current_mode == MODE_CHAOS_REV) {
                             p_dur = 80 + rand() % 120;
