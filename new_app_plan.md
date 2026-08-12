@@ -53,24 +53,24 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KWizard (Fantasy dueling card game)
-**Phase:** 14 (next to do)
-**Status:** Deep Expansion
+**App:** KVoid (Sci-fi horror survival)
+**Phase:** 1 (next to do)
+**Status:** Creation
 
-- [x] Phase 1: Scaffold KWizard directory (`KWizard/`), create web HTML skeleton (`KiloOS/public/apps/kwizard.html`), register in App.jsx.
-- [x] Phase 2: Basic card drawing and UI layout for player and opponent hands.
-- [x] Phase 3: Native C version (`KWizard/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [x] Phase 4: Fantasy UI styling (parchment backgrounds, mystical borders, arcane fonts).
-- [x] Phase 5: Implement mana system and spell casting logic (mana cost, spell effects).
-- [x] Phase 6: Add 30+ unique spells across different schools (Fire, Ice, Arcane, Life) with distinct effects.
-- [x] Phase 7: Implement AI opponent with basic strategy (play cards when mana available).
-- [x] Phase 8: Add health points (HP) for player and opponent, and win/loss conditions.
-- [x] Phase 9: Implement status effects (burn, freeze, shield, poison) that persist across turns.
-- [x] Phase 10: Advanced AI opponent with difficulty levels (Easy/Medium/Hard) and smarter card synergies.
-- [x] Phase 11: Campaign mode with 10 progressive battles against different mages (each with unique decks).
-- [x] Phase 12: Deck builder interface allowing players to customize their 20-card deck from unlocked spells.
-- [x] Phase 13: Sound Effects — magical chimes, fireballs, ice shatters (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Grimoire — How-to-play, spell index, status effect guide.
+- [ ] Phase 1: Scaffold KVoid directory (`KVoid/`), create web HTML skeleton (`KiloOS/public/apps/kvoid.html`), register in App.jsx.
+- [ ] Phase 2: Basic grid movement, player rendering, and simple room layout in web HTML.
+- [ ] Phase 3: Native C version (`KVoid/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [ ] Phase 4: Sci-fi horror UI styling (dark terminals, scanlines, flickering lights).
+- [ ] Phase 5: Implement oxygen and battery depletion mechanics (tension through resource scarcity).
+- [ ] Phase 6: Procedural station layout generation (interconnected rooms, locked doors).
+- [ ] Phase 7: Keycard inventory system and color-coded locked doors.
+- [ ] Phase 8: Add interactable terminals to read lore and unlock areas.
+- [ ] Phase 9: Implement alien creature AI (patrolling, chasing player when spotted).
+- [ ] Phase 10: Combat/evasion mechanics (hiding in lockers, using limited EMP charges).
+- [ ] Phase 11: Multi-level progression (find elevator to next deck, increasing difficulty).
+- [ ] Phase 12: Multiple endings based on choices and speed of escape.
+- [ ] Phase 13: Sound Effects — heartbeat, alarm klaxons, alien screeches (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Survival Guide — How-to-play, lore index, enemy bestiary.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -160,6 +160,7 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 - KStarship (Phase 14 completed: Added Comprehensive Help & Star Captain Codex to both versions)
 - KAlchemy (Phase 14 completed: Added Comprehensive Help & Grandmaster Manual to both versions)
 - KFortress (Phase 14 completed: Added Comprehensive Help & Commander's Field Guide to both versions)
+- KWizard (Phase 14 completed: Added Comprehensive Help & Grimoire to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 
