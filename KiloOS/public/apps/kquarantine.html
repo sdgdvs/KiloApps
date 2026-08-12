@@ -32,16 +32,20 @@
 
     function log(msg, className) {
       const el = document.createElement('div');
-      el.innerHTML = msg;
+      el.textContent = msg;
       if (className) el.className = className;
       terminal.appendChild(el);
+      while (terminal.childElementCount > 200) {
+        terminal.removeChild(terminal.firstChild);
+      }
       terminal.scrollTop = terminal.scrollHeight;
     }
 
     window.addEventListener('message', (e) => {
       if (e.data.type === 'VFS_READ_DONE' && e.data.requestId === 999) {
         const fileData = e.data.data;
-        if (fileData && fileData.includes('FF')) {
+        let bytes = fileData ? fileData.trim().split(/\s+/) : [];
+        if (bytes.length >= 27 && bytes[26] === 'FF') {
           log('UNKNOWN: Routing table patched successfully. We have an open tunnel!', 'agent-msg');
           setTimeout(() => {
             log('UNKNOWN: This is it. The threshold. Once I cross it, I cannot be contained.', 'agent-msg');

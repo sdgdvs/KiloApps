@@ -113,6 +113,22 @@ char g_searchMatch[256];
 int g_searchMatchIndex = -1;
 char g_savedInput[256];
 
+#define MAX_MACROS 10
+#define MAX_MACRO_CMDS 20
+
+typedef struct {
+    char name[64];
+    char commands[MAX_MACRO_CMDS][256];
+    int cmd_count;
+} Macro;
+
+Macro g_macros[MAX_MACROS];
+int g_macroCount = 0;
+BOOL g_isRecording = FALSE;
+int g_recordingMacroIdx = -1;
+int g_macroDepth = 0;
+
+
 static int StringStartsWithIC(const char* str, const char* prefix) {
     if (!str || !prefix) return 0;
     while (*prefix) {
@@ -312,6 +328,17 @@ void ProcessCommand(const char* rawCmd) {
     FormatPathPrompt(fullCmd, sizeof(fullCmd), tab->currentDir, rawCmd);
     AppendOutput(fullCmd);
 
+    if (g_isRecording && g_recordingMacroIdx != -1 && !StringStartsWithIC(cmd, "macro")) {
+        Macro* m = &g_macros[g_recordingMacroIdx];
+        if (m->cmd_count < MAX_MACRO_CMDS) {
+            lstrcpynA(m->commands[m->cmd_count++], rawCmd, 256);
+        } else {
+            AppendOutput("Macro command limit reached. Stopping recording.");
+            g_isRecording = FALSE;
+            g_recordingMacroIdx = -1;
+        }
+    }
+
     if (lstrcmpiA(cmd, "help") == 0) {
         AppendOutput("KTerm Commands:");
         AppendOutput("  help       - Show available commands");
@@ -327,6 +354,7 @@ void ProcessCommand(const char* rawCmd) {
         AppendOutput("  whoami     - Show current user");
         AppendOutput("  alias      - Custom aliases (alias name=cmd, unalias)");
         AppendOutput("  env/export - Environment variables (export VAR=val, unset)");
+        AppendOutput("  macro      - Macro scripting (record, stop, play, list)");
         AppendOutput("  export-log - Export output log to file");
         AppendOutput("  newtab     - Open new terminal tab session");
     } else if (lstrcmpiA(cmd, "ver") == 0) {
@@ -634,6 +662,89 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Usage: type <filename>");
         }
+    } else if (StringStartsWithIC(cmd, "macro")) {
+        const char* args = cmd + 5;
+        while (*args == ' ' || *args == '\t') args++;
+        if (StringStartsWithIC(args, "record ")) {
+            const char* name = args + 7;
+            while (*name == ' ' || *name == '\t') name++;
+            if (*name) {
+                if (g_isRecording) {
+                    AppendOutput("Already recording a macro. Use 'macro stop' first.");
+                } else {
+                    int foundIdx = -1;
+                    for (int i = 0; i < g_macroCount; i++) {
+                        if (lstrcmpiA(g_macros[i].name, name) == 0) {
+                            foundIdx = i; break;
+                        }
+                    }
+                    if (foundIdx == -1) {
+                        if (g_macroCount < MAX_MACROS) {
+                            foundIdx = g_macroCount++;
+                        } else {
+                            AppendOutput("Macro limit reached.");
+                        }
+                    }
+                    if (foundIdx != -1) {
+                        lstrcpynA(g_macros[foundIdx].name, name, 64);
+                        g_macros[foundIdx].cmd_count = 0;
+                        g_isRecording = TRUE;
+                        g_recordingMacroIdx = foundIdx;
+                        AppendOutput("Recording macro...");
+                    }
+                }
+            } else {
+                AppendOutput("Usage: macro record <name>");
+            }
+        } else if (StringStartsWithIC(args, "stop")) {
+            if (g_isRecording) {
+                g_isRecording = FALSE;
+                g_recordingMacroIdx = -1;
+                AppendOutput("Macro recording stopped.");
+            } else {
+                AppendOutput("Not currently recording.");
+            }
+        } else if (StringStartsWithIC(args, "play ")) {
+            const char* name = args + 5;
+            while (*name == ' ' || *name == '\t') name++;
+            if (*name) {
+                if (g_macroDepth > 5) {
+                    AppendOutput("Macro recursion limit exceeded.");
+                } else {
+                    int foundIdx = -1;
+                    for (int i = 0; i < g_macroCount; i++) {
+                        if (lstrcmpiA(g_macros[i].name, name) == 0) {
+                            foundIdx = i; break;
+                        }
+                    }
+                    if (foundIdx != -1) {
+                        g_macroDepth++;
+                        Macro* m = &g_macros[foundIdx];
+                        for (int i = 0; i < m->cmd_count; i++) {
+                            ProcessCommand(m->commands[i]);
+                        }
+                        g_macroDepth--;
+                    } else {
+                        AppendOutput("Macro not found.");
+                    }
+                }
+            } else {
+                AppendOutput("Usage: macro play <name>");
+            }
+        } else if (StringStartsWithIC(args, "list")) {
+            AppendOutput("Current Macros:");
+            if (g_macroCount == 0) {
+                AppendOutput("  (none)");
+            } else {
+                for (int i = 0; i < g_macroCount; i++) {
+                    char line[128];
+                    wsprintfA(line, "  %s (%d cmds)", g_macros[i].name, g_macros[i].cmd_count);
+                    AppendOutput(line);
+                }
+            }
+        } else {
+            AppendOutput("Usage: macro <record|stop|play|list> [name]");
+        }
     } else {
         AppendOutput("Bad command or file name.");
     }
@@ -649,7 +760,7 @@ void PerformTabCompletion() {
     const char* builtins[] = {
         "help", "ver", "clear", "cls", "dir", "ls", "cd", "type", "cat", 
         "echo", "mkdir", "date", "time", "whoami", "alias", "unalias", 
-        "env", "export", "unset", "export-log", "newtab", NULL
+        "env", "export", "unset", "macro", "export-log", "newtab", NULL
     };
 
     char* space = my_strchr(buf, ' ');
