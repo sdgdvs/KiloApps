@@ -37,7 +37,7 @@ HWND hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnEraser
 HWND hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle;
 HWND hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray;
 HWND hBtnUndo, hBtnRedo, hBtnInvert, hBtnGray, hBtnBright, hBtnFlipH, hBtnRotate90;
-HWND hBtnClear, hBtnSave, hBtnOpen;
+HWND hBtnClear, hBtnSave, hBtnOpen, hBtnHelp;
 
 HWND hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnWand;
 
@@ -398,7 +398,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT r = {0, 0, 2000, 2000};
             FillRect(hdcMem, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
             
-            HFONT hWelcomeFont = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 4, DEFAULT_PITCH, "Segoe UI");
+            HFONT hWelcomeFont = CreateFontA(-24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Segoe UI");
             SetTextColor(hdcMem, RGB(150, 150, 150));
             SetBkMode(hdcMem, TRANSPARENT);
             HFONT hOldF = (HFONT)SelectObject(hdcMem, hWelcomeFont);
@@ -410,7 +410,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             UpdatePen();
             
-            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(-12, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Segoe UI");
             
             // Colors
             hBtnBlack = CreateWindowA("BUTTON", "Black", WS_CHILD | WS_VISIBLE, 5, 5, 58, 22, hwnd, (HMENU)101, NULL, NULL);
@@ -453,6 +453,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnEdge = CreateWindowA("BUTTON", "Edge", WS_CHILD | WS_VISIBLE, 5, 435, 58, 22, hwnd, (HMENU)506, NULL, NULL);
             hBtnSharpen = CreateWindowA("BUTTON", "Sharpen", WS_CHILD | WS_VISIBLE, 68, 435, 58, 22, hwnd, (HMENU)507, NULL, NULL);
             hBtnEmboss = CreateWindowA("BUTTON", "Emboss", WS_CHILD | WS_VISIBLE, 5, 460, 58, 22, hwnd, (HMENU)508, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE, 5, 485, 121, 22, hwnd, (HMENU)701, NULL, NULL);
 
             // Set Fonts
             HWND controls[] = {
@@ -462,7 +463,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hBtnInvert, hBtnGray, hBtnBright, hBtnFlipH, hBtnRotate90,
                 hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnClear,
 
-                hBtnEdge, hBtnSharpen, hBtnEmboss,
+                hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnHelp
 
             };
             for (int i = 0; i < sizeof(controls)/sizeof(controls[0]); i++) {
@@ -555,6 +556,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (id == 601) { PerformUndo(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 602) { PerformRedo(); InvalidateRect(hwnd, NULL, FALSE); }
+            if (id == 701) { MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush, Line, Rect, Ellipse, Spray, Eraser\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- H : Help", "KPaint Help", MB_OK | MB_ICONINFORMATION); }
             break;
         }
         case WM_KEYDOWN: {
