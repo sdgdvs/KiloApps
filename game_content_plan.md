@@ -148,7 +148,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
 | KFortress  | Tier 1 | Creator building (Phase TBD) | Wait for Creator to finish — then Loop 1 content pass |
-| KSpace     | Tier 1 | Loop 8 done (Formation 9, Weapons, Combos) | Loop 9: Multi-phase bosses, escort missions, branching paths |
 | KAsteroids | Tier 1 | Loop 8 done (Asteroid belt, missile weapon, cruiser shields) | Loop 9: Branching sector paths, escort missions, new hazards |
 | KMaze      | Tier 1 | Loop 8 done (Themes, puzzles, NPCs, Time Freeze) | Loop 9: Advanced trap mechanics, boss rematches, cursed items |
 | KPac       | Tier 1 | Loop 8 done (Hazards, teleport ghost, score multiplier) | Loop 9: Multi-phase bosses, escort missions, branching paths |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KStarship  | Tier 1 | Loop 8 done (Fleet battles, alien diplomacy, deep space anomalies) | Loop 9: Interstellar factions, planetary landing, crew moral |
 | KAlchemy   | Tier 1 | Loop 1 done (Recipe variety, quest depth, lab upgrades) | Loop 2: Hidden elemental combos, daily challenges, prestige system |
 | KColony    | Tier 1 | Loop 1 done (Colony balance, alien difficulty, expedition depth) | Loop 2: Research tech tree, planetary conditions, mutator anomalies |
+| KSpace     | Tier 1 | Loop 9 done (Multi-phase bosses, escort missions, branching paths) | Loop 10: Elite enemy squads, planetary bombardment missions, weapon overcharge |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 9**
+- [x] KSpace (Loop 9: Added multi-phase bosses, allied escort defense missions, and post-boss branching paths in both EXE and HTML)
 - [x] KHangman (Balance audit complete: Removed multi-word phrases, smoothed strike limit difficulty curve for stages 11-20 in both EXE and HTML)
 - [x] KColony (Loop 1: Rebalanced Mine production, added dynamic scaling to alien spawns/HP, and deepened expedition risks/rewards in both EXE and HTML)
 - [x] KPong (Balance audit complete: Standardized AI speeds, nerfed Stage 20 boss speed, and fixed powerup spawn rates in both EXE and HTML)
