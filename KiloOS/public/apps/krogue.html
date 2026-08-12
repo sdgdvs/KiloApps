@@ -708,12 +708,13 @@
 
         function generateRandomLoot(x, y) {
             let r = rng();
+            let it;
             if (r < 0.3) {
-                return { x: x, y: y, ch: '(', type: 'weapon', name: `Mythic Sword +${dlevel}`, val: 3 + dlevel, fg: '#63b3ed' };
+                it = { x: x, y: y, ch: '(', type: 'weapon', name: `Mythic Sword +${dlevel}`, val: 3 + dlevel, fg: '#63b3ed' };
             } else if (r < 0.6) {
-                return { x: x, y: y, ch: ']', type: 'armor', name: `Plate Armor +${dlevel}`, val: 2 + dlevel, fg: '#cbd5e0' };
+                it = { x: x, y: y, ch: ']', type: 'armor', name: `Plate Armor +${dlevel}`, val: 2 + dlevel, fg: '#cbd5e0' };
             } else if (r < 0.8) {
-                return { x: x, y: y, ch: '[', type: 'shield', name: `Tower Shield +${dlevel}`, val: 2 + Math.floor(dlevel/2), fg: '#ecc94b' };
+                it = { x: x, y: y, ch: '[', type: 'shield', name: `Tower Shield +${dlevel}`, val: 2 + Math.floor(dlevel/2), fg: '#ecc94b' };
             } else {
                 it = { x: x, y: y, ch: '?', type: 'spellbook', spellKey: 'meteor', name: "Spellbook of Meteor", fg: "#b794f4" };
             }
@@ -724,9 +725,10 @@
                 it.fg = '#ff0000';
             }
             return it;
+        }
 
         // Rendering functions
-                function drawWallTile(x, y, biome, distSq) {
+        function drawWallTile(x, y, biome, distSq) {
             let px = x * TILE, py = y * TILE;
             let baseColor = '#4a5568', accentColor = '#2d3748', mortarColor = '#1a202c';
             if (biome === 'sewers') { baseColor = '#2f855a'; accentColor = '#22543d'; }
@@ -1129,6 +1131,8 @@
         }
 
         // Leaderboard UI
+        function escapeHTML(str) { return String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[match])); }
+
         function openLeaderboard() {
             let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
             let tbody = document.getElementById('lead-tbody');
@@ -1137,14 +1141,14 @@
             } else {
                 tbody.innerHTML = history.slice(0, 10).map(r => `
                     <tr>
-                        <td><b>${r.name || 'Hero'}</b></td>
-                        <td>${r.class ? r.class.toUpperCase() : 'WARRIOR'}</td>
+                        <td><b>${escapeHTML(r.name || 'Hero')}</b></td>
+                        <td>${r.class ? escapeHTML(r.class.toUpperCase()) : 'WARRIOR'}</td>
                         <td>${r.floor}</td>
                         <td>${r.kills}</td>
                         <td>${r.gold}</td>
                         <td><b style="color:#ecc94b;">${r.score}</b></td>
-                        <td><span style="font-family:monospace; font-size:10px;">${r.seed}</span></td>
-                        <td style="color: ${r.result === 'VICTORY' ? '#68d391' : '#e53e3e'}; font-weight:bold;">${r.result}</td>
+                        <td><span style="font-family:monospace; font-size:10px;">${escapeHTML(r.seed)}</span></td>
+                        <td style="color: ${r.result === 'VICTORY' ? '#68d391' : '#e53e3e'}; font-weight:bold;">${escapeHTML(r.result)}</td>
                     </tr>
                 `).join('');
             }
@@ -1229,6 +1233,7 @@
         window.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
                 closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help');
+                if (state === 4) { state = 1; addMsg("Targeting cancelled."); updateMsgBox(); }
                 return;
             }
 
@@ -1299,6 +1304,10 @@
                     }
                 }
             } else if (state === 4) {
+                if (e.key === 'ArrowUp') targetY--;
+                if (e.key === 'ArrowDown') targetY++;
+                if (e.key === 'ArrowLeft') targetX--;
+                if (e.key === 'ArrowRight') targetX++;
                 if (e.key === 'Enter') executeTargetSpell();
             } else if (state === 2 || state === 3) {
                 if (e.key === 'r' || e.key === 'R') openCharSelect();

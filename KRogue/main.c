@@ -450,7 +450,7 @@ void spawn_monster(int x, int y) {
                 else if(m5 == 3) { e->ch = 'M'; e->fg = C_MINDFLAYER; str_cpy(e->name, "Mind Flayer"); e->hp = e->max_hp = 60 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 160; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
                 else if(m5 == 4) { e->ch = 'a'; e->fg = C_ASSASSIN; str_cpy(e->name, "Shadow Assassin"); e->hp = e->max_hp = 45 + g.dlevel*4; e->atk = 35; e->def = 4; e->xp = 140; e->behavior = B_FAST; }
                 else { e->ch = 'U'; e->fg = C_BEHEMOTH; str_cpy(e->name, "Shadow Behemoth"); e->hp = e->max_hp = 140 + g.dlevel*6; e->atk = 40; e->def = 16; e->xp = 300; e->behavior = B_NORMAL; }
-            } else if(tier == 5) {
+            } else if(tier == 6) {
                 int m6 = rand_range(0, 6);
                 if(m6 == 0) { e->ch = 'A'; e->fg = C_ARCHMAGE; str_cpy(e->name, "Arch-Mage"); e->hp = e->max_hp = 70 + g.dlevel*5; e->atk = 28; e->def = 8; e->xp = 220; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
                 else if(m6 == 1) { e->ch = 'L'; e->fg = C_LICHLORD; str_cpy(e->name, "Lich Lord"); e->hp = e->max_hp = 110 + g.dlevel*6; e->atk = 32; e->def = 12; e->xp = 350; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
