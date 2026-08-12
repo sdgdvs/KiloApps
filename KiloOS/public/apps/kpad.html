@@ -409,6 +409,120 @@
   .context-menu div:hover {
     background: var(--accent);
   }
+
+  /* Reusable Modal Overlay */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.15s ease-out;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  .modal-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-glass);
+    border-radius: 10px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+    width: 90%;
+    max-width: 480px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: dropIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    color: var(--text-primary);
+  }
+  .modal-header {
+    padding: 14px 18px;
+    background: var(--bg-glass);
+    border-bottom: 1px solid var(--border-glass);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ef4444;
+  }
+  .modal-body {
+    padding: 18px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  .modal-footer {
+    padding: 12px 18px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid var(--border-glass);
+    display: flex;
+    justify-content: flex-end;
+  }
+  .modal-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 7px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .modal-btn:hover {
+    background: var(--accent-hover);
+  }
+  .shortcut-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+  }
+  @media (max-width: 440px) {
+    .shortcut-grid { grid-template-columns: 1fr; }
+  }
+  .shortcut-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .shortcut-key {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--accent-hover);
+  }
 </style>
 </head>
 <body>
@@ -553,6 +667,20 @@
     <div onclick="ctxDuplicateTab()">Duplicate Tab</div>
     <div onclick="ctxCloseTab()">Close Tab</div>
     <div onclick="ctxCloseOthers()">Close Others</div>
+  </div>
+
+  <!-- Modal Dialog -->
+  <div class="modal-overlay" id="app-modal" onclick="if(event.target===this) closeModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Header</h3>
+        <button class="modal-close" onclick="closeModal()" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -1171,16 +1299,58 @@
       return false;
     }
 
+    function openModal(titleHTML, bodyHTML) {
+      document.getElementById('modal-title').innerHTML = titleHTML;
+      document.getElementById('modal-body').innerHTML = bodyHTML;
+      document.getElementById('app-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('app-modal').classList.remove('active');
+    }
+
     function showHelp() {
-      alert("KPad Pro Keyboard Shortcuts:\n\nCtrl+N: New Document\nCtrl+O: Open Local File\nCtrl+S: Save\nCtrl+T: New Tab\nCtrl+W: Close Tab\nCtrl+F: Find\nCtrl+H: Replace\nAlt+Z: Toggle Word Wrap\nF5: Insert Time/Date\nF1: Show this help");
+      const shortcuts = [
+        { label: 'New Document', key: 'Ctrl + N' },
+        { label: 'Open Local File', key: 'Ctrl + O' },
+        { label: 'Save (VFS / Local)', key: 'Ctrl + S' },
+        { label: 'New Tab', key: 'Ctrl + T' },
+        { label: 'Close Tab', key: 'Ctrl + W' },
+        { label: 'Find', key: 'Ctrl + F' },
+        { label: 'Replace', key: 'Ctrl + H' },
+        { label: 'Toggle Word Wrap', key: 'Alt + Z' },
+        { label: 'Insert Time / Date', key: 'F5' },
+        { label: 'Show Shortcuts / Help', key: 'F1' }
+      ];
+      
+      let html = '<div class="shortcut-grid">';
+      shortcuts.forEach(s => {
+        html += `<div class="shortcut-row"><span>${s.label}</span><span class="shortcut-key">${s.key}</span></div>`;
+      });
+      html += '</div>';
+
+      openModal('⌨️ Keyboard Shortcuts', html);
     }
 
     function showAbout() {
-      alert("KPad Pro\nAdvanced Text & Code Editor for KiloOS");
+      const html = `
+        <div style="text-align:center; padding: 10px 0;">
+          <div style="font-size:24px; font-weight:800; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px;">KPad Pro</div>
+          <div style="color: var(--text-muted); font-size:12px; margin-bottom: 16px;">Version 1.2 • KiloOS Suite</div>
+          <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+            A high-performance, minimalist text and code editor built for efficiency and speed.
+          </p>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 8px; padding: 12px; text-align: left; font-size: 12px; line-height: 1.6;">
+            <div>✨ <strong>Features:</strong> Multi-tab sessions, syntax highlighting, regex find/replace, custom themes, VFS integration, and session backups.</div>
+          </div>
+        </div>
+      `;
+      openModal('ℹ️ About KPad Pro', html);
     }
 
     // Global Key Shortcuts
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeModal(); closeFind(); }
       if (e.ctrlKey && e.key === 'f') { e.preventDefault(); openFind(false); }
       if (e.ctrlKey && e.key === 'h') { e.preventDefault(); openFind(true); }
       if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveVFS(); }
