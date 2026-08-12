@@ -478,10 +478,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnForward = CreateWindowEx(0, "BUTTON", ">", WS_CHILD | WS_VISIBLE | WS_DISABLED, 45, 10, 30, 24, hwnd, (HMENU)3, NULL, NULL);
             SendMessage(hBtnForward, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hUrlEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "http://example.com", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 85, 10, W - 320, 24, hwnd, NULL, NULL, NULL);
+            hUrlEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "http://example.com", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 85, 10, W - 340, 24, hwnd, NULL, NULL, NULL);
             SendMessage(hUrlEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBookmarks = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, W - 225, 10, 140, 180, hwnd, (HMENU)4, NULL, NULL);
+            hBookmarks = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, W - 250, 10, 135, 180, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hBookmarks, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"Bookmarks...");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"http://example.com");
@@ -495,6 +495,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"ifconfig");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"sniff");
             SendMessage(hBookmarks, CB_SETCURSEL, 0, 0);
+            
+            HWND hHelpBtn = CreateWindowEx(0, "BUTTON", "?", WS_CHILD | WS_VISIBLE, W - 110, 10, 30, 24, hwnd, (HMENU)10, NULL, NULL);
+            SendMessage(hHelpBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hGoBtn = CreateWindowEx(0, "BUTTON", "Fetch", WS_CHILD | WS_VISIBLE, W - 75, 10, 65, 24, hwnd, (HMENU)1, NULL, NULL);
             SendMessage(hGoBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -515,7 +518,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hLogSummaryBtn = CreateWindowEx(0, "BUTTON", "View Logs", WS_CHILD | WS_VISIBLE, 345, 42, 80, 24, hwnd, (HMENU)9, NULL, NULL);
             SendMessage(hLogSummaryBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hFilterEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 435, 42, 120, 24, hwnd, NULL, NULL, NULL);
+            hFilterEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 435, 42, W - 445, 24, hwnd, NULL, NULL, NULL);
             SendMessage(hFilterEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             // Output Display Area
@@ -570,7 +573,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetWindowTextA(hContentEdit, "Cleared.");
             } else if (wmId == 9) { // View Logs
                 DisplayLogSummary();
+            } else if (wmId == 10) { // Help
+                MessageBoxA(hwnd, "KNet Help:\n\n- Enter a URL or use Bookmarks.\n- Click Fetch for HTTP GET.\n- Use Ping Stats for latency test.\n- Use Port Scan to check open ports.\n- Logs can be exported to CSV.", "KNet Help", MB_OK | MB_ICONINFORMATION);
             }
+            break;
+        }
+        case WM_GETMINMAXINFO: {
+            MINMAXINFO *mmi = (MINMAXINFO*)lParam;
+            mmi->ptMinTrackSize.x = 750;
+            mmi->ptMinTrackSize.y = 500;
             break;
         }
         case WM_SIZE: {
@@ -579,11 +590,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnBack, 10, 10, 30, 24, TRUE);
             MoveWindow(hBtnForward, 45, 10, 30, 24, TRUE);
             
-            int urlWidth = (nw > 325) ? (nw - 315) : 10;
+            int urlWidth = (nw > 350) ? (nw - 340) : 10;
             MoveWindow(hUrlEdit, 85, 10, urlWidth, 24, TRUE);
             
-            int bkX = (nw > 220) ? (nw - 220) : 0;
+            int bkX = (nw > 250) ? (nw - 250) : 0;
             MoveWindow(hBookmarks, bkX, 10, 135, 180, TRUE);
+            
+            int helpX = (nw > 110) ? (nw - 110) : 0;
+            HWND hHelpBtn = GetDlgItem(hwnd, 10);
+            if (hHelpBtn) MoveWindow(hHelpBtn, helpX, 10, 30, 24, TRUE);
             
             int goX = (nw > 75) ? (nw - 75) : 0;
             MoveWindow(hGoBtn, goX, 10, 65, 24, TRUE);
@@ -596,8 +611,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hLogSummaryBtn = GetDlgItem(hwnd, 9);
             MoveWindow(hLogSummaryBtn, 345, 42, 80, 24, TRUE);
             
-            int filterWidth = (nw > 450) ? (nw - 440) : 10;
-            if (hFilterEdit) MoveWindow(hFilterEdit, 430, 42, filterWidth, 24, TRUE);
+            int filterWidth = (nw > 455) ? (nw - 445) : 10;
+            if (hFilterEdit) MoveWindow(hFilterEdit, 435, 42, filterWidth, 24, TRUE);
 
             int cw = (nw > 20) ? (nw - 20) : 10;
             int ch = (nh > 84) ? (nh - 84) : 10;
@@ -631,8 +646,12 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KNetApp", "KNet - Network Diagnostics Suite (Press 'h' for help)", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    DWORD style = WS_OVERLAPPEDWINDOW;
+    RECT rect = { 0, 0, W, H };
+    AdjustWindowRect(&rect, style, FALSE);
+
+    HWND hwnd = CreateWindowEx(0, "KNetApp", "KNet - Network Diagnostics Suite (Press 'h' for help)", style,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

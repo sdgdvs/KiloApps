@@ -35,6 +35,7 @@
     overflow-y: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Header & Navigation Bar */
@@ -391,6 +392,7 @@
     <div class="logo-title">
       <div class="logo-icon">K</div> KNet
     </div>
+    <button class="btn" id="btnHelp" title="Help" style="padding: 6px 10px;">?</button>
     <button class="btn" id="btnBack" title="Back" disabled>&lt;</button>
     <button class="btn" id="btnForward" title="Forward" disabled>&gt;</button>
     <input type="text" class="input-url" id="urlInput" value="http://example.com" placeholder="Enter URL or target host (e.g. http://example.com, 8.8.8.8)..." />
@@ -646,6 +648,10 @@ Ready. Select a target URL above and click Execute.
   let trafficLogs = [];
   let logIdCounter = 1;
   let totalBytesTransferred = 0;
+
+  document.getElementById('btnHelp').onclick = () => {
+    alert("KNet Help:\n\n- Select a target URL or type one.\n- Use tabs to switch between HTTP, Ping, Scan, and Logs.\n- View latency stats and export logs.\n- Press 'h' anytime for this menu.");
+  };
 
   // Tab Navigation
   const tabBtns = document.querySelectorAll('.tab-btn');
