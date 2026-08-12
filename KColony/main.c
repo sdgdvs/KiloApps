@@ -99,7 +99,7 @@ void DrawHelp(HDC hdc, HFONT hFont, RECT rc) {
         "Manage resources (Food, Power, Mat, AdvM). Keep colonists happy and expand.\n"
         "Research tech to unlock advanced structures.\n\n"
         "STRUCTURES:\n"
-        "Solar (S): +4 Pwr (Day) | Farm (F): +5 Food, -5 Pwr | Mine (M): +2 Mat, -10 Pwr\n"
+        "Solar (S): +4 Pwr (Day) | Farm (F): +5 Food, -5 Pwr | Mine (M): +3 Mat, -10 Pwr\n"
         "Hab (H): +5 Max Pop, -5 Pwr | Battery (B): +50 Max Pwr | Lab (L): +2 Sci, -5 Pwr\n"
         "Nuke (N): +20 Pwr | Hydro (Y): +15 Food, -10 Pwr | Factory (C): 2 Mat -> 1 AdvM\n"
         "Wall (W): Defense | Turret (T): Range 3, -5 Pwr | Laser (D): Range 5, -20 Pwr\n\n"
@@ -547,7 +547,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
 
-            if (day > 2 && (rand() % 100) < 10 && alienCount < 100) {
+            int spawnChance = 10 + (day / 20);
+            if (day > 2 && (rand() % 100) < spawnChance && alienCount < 100) {
                 int spawnEdge = rand() % 4;
                 int ax = 0, ay = 0;
                 if (spawnEdge == 0) { ax = rand() % GRID_W; ay = 0; }
@@ -556,7 +557,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else { ax = GRID_W - 1; ay = rand() % GRID_H; }
                 aliens[alienCount].x = ax;
                 aliens[alienCount].y = ay;
-                aliens[alienCount].hp = 3;
+                aliens[alienCount].hp = 3 + (day / 10);
                 alienCount++;
                 strcpy(msgText, "ALIEN SPOTTED!");
                 msgTicks = 5;
@@ -591,7 +592,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             float eff = (happiness / 100.0f) * pwrEff;
             int foodProd = (int)((farmCount * 5 + hydroCount * 15) * eff);
-            int matProd = (int)(mineCount * 2 * eff);
+            int matProd = (int)(mineCount * 3 * eff);
             int sciProd = (int)(labCount * 2 * eff);
 
             food += foodProd;
@@ -696,27 +697,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         } else if (id == 104 && sci >= 75 && !unlockedFactory) {
                             sci -= 75; unlockedFactory = 1;
                         } else if (id == 200) {
-                            if (pop >= 1 && mat >= 20 && power >= 20) {
-                                mat -= 20;
-                                power -= 20;
+                            if (pop >= 2 && mat >= 30 && power >= 30) {
+                                mat -= 30;
+                                power -= 30;
                                 int r = rand() % 100;
-                                if (r < 30) {
-                                    mat += 50;
-                                    food += 50;
-                                    MessageBox(hwnd, "Rover found a resource cache!\n(+50 Mat, +50 Food)", "Expedition Report", MB_OK | MB_ICONINFORMATION);
-                                } else if (r < 60) {
-                                    sci += 100;
-                                    MessageBox(hwnd, "Expedition discovered ancient alien technology!\n(+100 Sci)", "Expedition Report", MB_OK | MB_ICONINFORMATION);
-                                } else if (r < 80) {
+                                if (r < 25) {
+                                    mat += 100;
+                                    food += 100;
+                                    MessageBox(hwnd, "Rover found a massive supply cache!\n(+100 Mat, +100 Food)", "Expedition Report", MB_OK | MB_ICONINFORMATION);
+                                } else if (r < 50) {
+                                    sci += 150;
+                                    MessageBox(hwnd, "Expedition discovered advanced alien data!\n(+150 Sci)", "Expedition Report", MB_OK | MB_ICONINFORMATION);
+                                } else if (r < 70) {
+                                    advm += 20;
+                                    MessageBox(hwnd, "Rover recovered rare components!\n(+20 AdvM)", "Expedition Report", MB_OK | MB_ICONINFORMATION);
+                                } else if (r < 85) {
                                     MessageBox(hwnd, "Rover broke down in a dust storm. Expedition returned safely but empty-handed.", "Expedition Report", MB_OK | MB_ICONWARNING);
                                 } else {
-                                    pop--;
-                                    happiness -= 10;
+                                    pop -= 2;
+                                    happiness -= 20;
                                     if (happiness < 0) happiness = 0;
-                                    MessageBox(hwnd, "Expedition was ambushed by aliens! Rover destroyed and colonist lost.\n(-1 Pop, -10% Happiness)", "Expedition Report", MB_OK | MB_ICONERROR);
+                                    MessageBox(hwnd, "Expedition was ambushed by alien mutants!\n(-2 Pop, -20% Happiness)", "Expedition Report", MB_OK | MB_ICONERROR);
                                 }
                             } else {
-                                MessageBox(hwnd, "Not enough resources! Need 1 Pop, 20 Mat, 20 Pwr.", "Expedition Report", MB_OK | MB_ICONWARNING);
+                                MessageBox(hwnd, "Not enough resources! Need 2 Pop, 30 Mat, 30 Pwr.", "Expedition Report", MB_OK | MB_ICONWARNING);
                             }
                         } else if (id == 300) {
                             prevState = 1;

@@ -43,7 +43,7 @@
         <ul style="line-height:1.6;">
             <li><b>Solar Panel (S):</b> Generates 4 Power during the day.</li>
             <li><b>Farm (F):</b> Produces 5 Food per tick. Costs 5 Power.</li>
-            <li><b>Mine (M):</b> Produces 2 Mat per tick. Costs 10 Power.</li>
+            <li><b>Mine (M):</b> Produces 3 Mat per tick. Costs 10 Power.</li>
             <li><b>Habitat (H):</b> Increases Max Pop by 5. Costs 5 Power.</li>
             <li><b>Battery (B):</b> Increases Max Power by 50. Stores power for night.</li>
             <li><b>Laboratory (L):</b> Produces 2 Science per tick. Costs 5 Power.</li>
@@ -99,7 +99,7 @@
             <button class="btn research" id="btn-res-nuke" onclick="research(2)">Res: Nuclear<br><small>Cost: 100 Sci</small></button>
             <button class="btn research" id="btn-res-laser" onclick="research(3)">Res: Laser Def.<br><small>Cost: 150 Sci</small></button>
             <hr style="border-color:#00ffff; width:100%; margin: 5px 0;">
-            <button class="btn expedition" id="btn-exped" onclick="expedition()">Launch Expedition<br><small>Req: 1 Pop | Cost: 20 Mat, 20 Pwr</small></button>
+            <button class="btn expedition" id="btn-exped" onclick="expedition()">Launch Expedition<br><small>Req: 2 Pop | Cost: 30 Mat, 30 Pwr</small></button>
             <button class="btn" id="btn-help" onclick="toggleHelp()">[H] Help & Manual</button>
         </div>
     </div>
@@ -242,27 +242,30 @@
         }
 
         function expedition() {
-            if (pop >= 1 && mat >= 20 && power >= 20) {
-                mat -= 20;
-                power -= 20;
+            if (pop >= 2 && mat >= 30 && power >= 30) {
+                mat -= 30;
+                power -= 30;
                 let r = Math.random();
-                if (r < 0.3) {
-                    mat += 50;
-                    food += 50;
-                    alert("Expedition Report:\nRover found a resource cache!\n(+50 Mat, +50 Food)");
-                } else if (r < 0.6) {
-                    sci += 100;
-                    alert("Expedition Report:\nExpedition discovered ancient alien technology!\n(+100 Sci)");
-                } else if (r < 0.8) {
+                if (r < 0.25) {
+                    mat += 100;
+                    food += 100;
+                    alert("Expedition Report:\nRover found a massive supply cache!\n(+100 Mat, +100 Food)");
+                } else if (r < 0.50) {
+                    sci += 150;
+                    alert("Expedition Report:\nExpedition discovered advanced alien data!\n(+150 Sci)");
+                } else if (r < 0.70) {
+                    advm += 20;
+                    alert("Expedition Report:\nRover recovered rare components!\n(+20 AdvM)");
+                } else if (r < 0.85) {
                     alert("Expedition Report:\nRover broke down in a dust storm. Expedition returned safely but empty-handed.");
                 } else {
-                    pop--;
-                    happiness = Math.max(0, happiness - 10);
-                    alert("Expedition Report:\nExpedition was ambushed by aliens! Rover destroyed and colonist lost.\n(-1 Pop, -10% Happiness)");
+                    pop -= 2;
+                    happiness = Math.max(0, happiness - 20);
+                    alert("Expedition Report:\nExpedition was ambushed by alien mutants!\n(-2 Pop, -20% Happiness)");
                 }
                 updateUI();
             } else {
-                alert("Not enough resources! Need 1 Pop, 20 Mat, 20 Pwr.");
+                alert("Not enough resources! Need 2 Pop, 30 Mat, 30 Pwr.");
             }
         }
 
@@ -509,14 +512,15 @@
                 }
 
                 // Spawn alien
-                if (day > 2 && Math.random() < 0.1) {
+                let spawnChance = 0.1 + (Math.floor(day / 20) * 0.01);
+                if (day > 2 && Math.random() < spawnChance && aliens.length < 100) {
                     let spawnEdge = Math.floor(Math.random() * 4);
                     let ax = 0, ay = 0;
                     if (spawnEdge === 0) { ax = Math.floor(Math.random()*GRID_W); ay = 0; }
                     if (spawnEdge === 1) { ax = Math.floor(Math.random()*GRID_W); ay = GRID_H-1; }
                     if (spawnEdge === 2) { ax = 0; ay = Math.floor(Math.random()*GRID_H); }
                     if (spawnEdge === 3) { ax = GRID_W-1; ay = Math.floor(Math.random()*GRID_H); }
-                    aliens.push({x: ax, y: ay, hp: 3});
+                    aliens.push({x: ax, y: ay, hp: 3 + Math.floor(day / 10)});
                     msgText = "ALIEN SPOTTED!";
                     msgTicks = 5;
                     playAlarm();
@@ -553,7 +557,7 @@
 
                 let eff = (happiness / 100.0) * pwrEff;
                 let foodProd = Math.floor((farmCount * 5 + hydroCount * 15) * eff);
-                let matProd = Math.floor(mineCount * 2 * eff);
+                let matProd = Math.floor(mineCount * 3 * eff);
                 let sciProd = Math.floor(labCount * 2 * eff);
 
                 food += foodProd;
