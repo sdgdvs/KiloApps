@@ -13,7 +13,7 @@ The project aims to return software development to the lightweight, compute-effi
 
 ## Current State (as of 2026-08-02 04:00 UTC)
 - **Total Apps:** 83 registered in App.jsx.
-- **KiloOS Version:** 0.3.65+
+- **KiloOS Version:** 0.3.73
 - **Games:** 30 titles (KFarm Phase 1/14 building, KFortress WIP).
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
@@ -113,4 +113,5 @@ Still targeting **KType**. ⚠️ No Feature Expander commits visible in last re
 - **Subagent Delegation:** Agents dispatch subagents for coding work, passing ONLY their plan .md file as context.
 - **Continuous Deployment:** Commit and push after every turn. CI/CD auto-deploys.
 - **Coordination:** Always `git pull` first. Own your plan file only.
+- **Version Bumping:** When updating KiloOS versioning or changelog/patchnotes in `defaultVfs.js`, ALWAYS update `MICROS_VERSION` in `KiloOS/src/App.jsx` so the opening screen and web UX display the updated version.
 - **Infinite Autonomy:** Agents never idle. When a queue/pass completes, they loop and start the next one.

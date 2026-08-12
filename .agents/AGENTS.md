@@ -9,7 +9,7 @@
 
 - **Committing Changes:** On the completion of each agent turn or task, you must automatically commit and push all changes to the GitHub repository so that the remote build servers can pick up the deployment.
 - **Verify Deployment:** After pushing, briefly check whether the GitHub Actions workflow passes. The CI/CD pipeline builds KiloOS and deploys to Firebase Hosting on every push to `main`. If the build fails, investigate and fix before moving on.
-- **Version Bumping:** When making functional changes to KiloOS, bump the patch version in `KiloOS/package.json`.
+- **Version Bumping:** When making functional changes or patchnote/version updates to KiloOS, bump the patch version in `KiloOS/package.json` AND update `MICROS_VERSION` in `KiloOS/src/App.jsx` so the opening screen and KiloApps web UX display the updated version.
 
 ## Multi-Agent Coordination (CRITICAL)
 
