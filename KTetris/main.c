@@ -362,7 +362,7 @@ int LoadGameStateFromFile() {
     is_paused = 0;
     show_leaderboard = 0;
     
-    int new_speed = 500 - (level - 1) * 23;
+    int new_speed = 500 - (level - 1) * 20;
     if (new_speed < 40) new_speed = 40;
     timer_speed = new_speed;
 
@@ -560,10 +560,11 @@ int bag_size = 7;
 int bag_index = 13;
 
 void fill_bag() {
-    int max_pieces = (game_mode == MODE_CAMPAIGN ? (campaign_level >= 15 ? 13 : 7) : (level >= 15 ? 13 : 7));
-    bag_size = max_pieces;
-    for (int i = 0; i < max_pieces; i++) bag[i] = i;
-    for (int i = max_pieces - 1; i > 0; i--) {
+    int has_pentominos = (game_mode == MODE_CAMPAIGN ? (campaign_level >= 15) : (level >= 15));
+    bag_size = has_pentominos ? 8 : 7;
+    for (int i = 0; i < 7; i++) bag[i] = i;
+    if (has_pentominos) bag[7] = 7 + random_int(6);
+    for (int i = bag_size - 1; i > 0; i--) {
         int j = random_int(i + 1);
         int temp = bag[i];
         bag[i] = bag[j];
@@ -573,8 +574,9 @@ void fill_bag() {
 }
 
 int get_random_piece() {
-    int max_pieces = (game_mode == MODE_CAMPAIGN ? (campaign_level >= 15 ? 13 : 7) : (level >= 15 ? 13 : 7));
-    if (bag_index >= bag_size || bag_size != max_pieces) fill_bag();
+    int has_pentominos = (game_mode == MODE_CAMPAIGN ? (campaign_level >= 15) : (level >= 15));
+    int expected_size = has_pentominos ? 8 : 7;
+    if (bag_index >= bag_size || bag_size != expected_size) fill_bag();
     return bag[bag_index++];
 }
 
@@ -823,7 +825,7 @@ void lock_piece() {
     } else { // MARATHON & ULTRA
         level = (lines / 10) + 1;
         score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
-        int new_speed = 500 - (level - 1) * 23;
+        int new_speed = 500 - (level - 1) * 20;
         if (new_speed < 40) new_speed = 40;
         timer_speed = new_speed;
     }
@@ -888,7 +890,7 @@ void InitGame() {
         }
         lines = 0;
         level = campaign_level;
-        timer_speed = 500 - (level - 1) * 23;
+        timer_speed = 500 - (level - 1) * 20;
         if (timer_speed < 40) timer_speed = 40;
     } else {
         lines = 0;

@@ -686,8 +686,13 @@
       <div class="stat-card"><div class="lbl">Best Time (D1)</div><div id="st-besttime1" class="val">--</div></div>
       <div class="stat-card"><div class="lbl">Best Time (D3)</div><div id="st-besttime3" class="val">--</div></div>
     </div>
-    <div style="display:flex; justify-content: space-between;">
-      <button class="btn btn-warning" onclick="resetStats()">Clear Statistics</button>
+    <div style="display:flex; justify-content: space-between; gap: 8px;">
+      <div style="display:flex; gap: 8px;">
+        <button class="btn btn-warning" onclick="resetStats()">Clear</button>
+        <button class="btn btn-primary" onclick="exportStats()">Export</button>
+        <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">Import</button>
+        <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importStats(event)">
+      </div>
       <button class="btn btn-primary" onclick="closeStatsModal()">Close</button>
     </div>
   </div>
@@ -2038,6 +2043,47 @@ function resetStats() {
     saveStats();
     openStatsModal();
   }
+}
+
+function exportStats() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(stats, null, 2));
+  const dlAnchorElem = document.createElement('a');
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "ksolitaire_stats.json");
+  dlAnchorElem.click();
+}
+
+function importStats(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (typeof imported.played !== 'undefined') {
+        stats = {
+          played: imported.played || 0,
+          wins: imported.wins || 0,
+          currentStreak: imported.currentStreak || 0,
+          bestStreak: imported.bestStreak || 0,
+          highScore: imported.highScore || 0,
+          vegasCash: imported.vegasCash || 0,
+          maxCampaignStage: imported.maxCampaignStage || 1,
+          bestTimeD1: imported.bestTimeD1 || null,
+          bestTimeD3: imported.bestTimeD3 || null
+        };
+        saveStats();
+        openStatsModal();
+        alert("Statistics imported successfully!");
+      } else {
+        alert("Invalid JSON format.");
+      }
+    } catch(err) {
+      alert("Error reading JSON file.");
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // Reset input
 }
 
 function initDustMotes() {

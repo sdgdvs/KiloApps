@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <commdlg.h>
 
 #define ID_NEW_GAME       1001
 #define ID_DRAW_1         1002
@@ -12,6 +13,8 @@
 #define ID_LOAD_GAME      1009
 #define ID_STATS          1010
 #define ID_RESET_STATS    1011
+#define ID_EXPORT_STATS   1012
+#define ID_IMPORT_STATS   1013
 
 #define ID_THEME_BLUE     1020
 #define ID_THEME_CRIMSON  1021
@@ -240,6 +243,96 @@ void SaveStats() {
         DWORD written = 0;
         WriteFile(hFile, &stats, sizeof(SolitaireStats), &written, NULL);
         CloseHandle(hFile);
+    }
+}
+
+int JSONGetInt(const char* json, const char* key, int defVal) {
+    int keyLen = lstrlenA(key);
+    for (int i = 0; json[i]; i++) {
+        int match = 1;
+        for (int j = 0; j < keyLen; j++) {
+            if (json[i+j] != key[j]) { match = 0; break; }
+        }
+        if (match) {
+            int k = i + keyLen;
+            while (json[k] == ' ' || json[k] == ':' || json[k] == '\"') k++;
+            int val = 0;
+            int sign = 1;
+            if (json[k] == '-') { sign = -1; k++; }
+            while (json[k] >= '0' && json[k] <= '9') {
+                val = val * 10 + (json[k] - '0');
+                k++;
+            }
+            return val * sign;
+        }
+    }
+    return defVal;
+}
+
+void ExportStatsJSON(HWND hwnd) {
+    OPENFILENAMEA ofn;
+    char szFile[MAX_PATH] = "ksolitaire_stats.json";
+    ZeroMem(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "JSON Files\0*.json\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = "json";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+    if (GetSaveFileNameA(&ofn)) {
+        HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            char json[1024];
+            wsprintfA(json, "{\n  \"played\": %d,\n  \"wins\": %d,\n  \"currentStreak\": %d,\n  \"bestStreak\": %d,\n  \"highScore\": %d,\n  \"bestTimeD1\": %d,\n  \"bestTimeD3\": %d,\n  \"vegasCash\": %d,\n  \"maxCampaignStage\": %d\n}",
+                stats.played, stats.wins, stats.currentStreak, stats.bestStreak, stats.highScore, stats.bestTimeD1, stats.bestTimeD3, stats.vegasCash, stats.maxCampaignStage);
+            DWORD written = 0;
+            WriteFile(hFile, json, lstrlenA(json), &written, NULL);
+            CloseHandle(hFile);
+            MessageBoxA(hwnd, "Statistics exported successfully.", "Export", MB_OK | MB_ICONINFORMATION);
+        }
+    }
+}
+
+void ImportStatsJSON(HWND hwnd) {
+    OPENFILENAMEA ofn;
+    char szFile[MAX_PATH] = "";
+    ZeroMem(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "JSON Files\0*.json\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileNameA(&ofn)) {
+        HANDLE hFile = CreateFileA(szFile, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD size = GetFileSize(hFile, NULL);
+            if (size > 0 && size < 4096) {
+                char buf[4096];
+                DWORD read = 0;
+                ReadFile(hFile, buf, size, &read, NULL);
+                buf[read] = 0;
+                
+                stats.played = JSONGetInt(buf, "\"played\"", stats.played);
+                stats.wins = JSONGetInt(buf, "\"wins\"", stats.wins);
+                stats.currentStreak = JSONGetInt(buf, "\"currentStreak\"", stats.currentStreak);
+                stats.bestStreak = JSONGetInt(buf, "\"bestStreak\"", stats.bestStreak);
+                stats.highScore = JSONGetInt(buf, "\"highScore\"", stats.highScore);
+                stats.bestTimeD1 = JSONGetInt(buf, "\"bestTimeD1\"", stats.bestTimeD1);
+                stats.bestTimeD3 = JSONGetInt(buf, "\"bestTimeD3\"", stats.bestTimeD3);
+                stats.vegasCash = JSONGetInt(buf, "\"vegasCash\"", stats.vegasCash);
+                stats.maxCampaignStage = JSONGetInt(buf, "\"maxCampaignStage\"", stats.maxCampaignStage);
+                
+                SaveStats();
+                MessageBoxA(hwnd, "Statistics imported successfully.", "Import", MB_OK | MB_ICONINFORMATION);
+            }
+            CloseHandle(hFile);
+        }
     }
 }
 
@@ -1182,6 +1275,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hGameMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hGameMenu, MF_STRING, ID_STATS, "Statistics");
             AppendMenu(hGameMenu, MF_STRING, ID_RESET_STATS, "Reset Stats");
+            AppendMenu(hGameMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenu(hGameMenu, MF_STRING, ID_EXPORT_STATS, "Export Stats (JSON)");
+            AppendMenu(hGameMenu, MF_STRING, ID_IMPORT_STATS, "Import Stats (JSON)");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hGameMenu, "Game");
 
             HMENU hModeMenu = CreatePopupMenu();
@@ -1271,6 +1367,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     stats.maxCampaignStage = 1;
                     SaveStats();
                 }
+            } else if (id == ID_EXPORT_STATS) {
+                ExportStatsJSON(hwnd);
+            } else if (id == ID_IMPORT_STATS) {
+                ImportStatsJSON(hwnd);
             } else if (id == ID_THEME_BLUE) themeId = 0;
             else if (id == ID_THEME_CRIMSON) themeId = 1;
             else if (id == ID_THEME_EMERALD) themeId = 2;

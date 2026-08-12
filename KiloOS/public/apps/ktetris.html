@@ -216,7 +216,7 @@
           
           startScreen = false; gameOver = false;
       if (!isReplaying) { currentReplay = { seed: Date.now(), inputs: [] }; randomSeed(currentReplay.seed); } else { randomSeed(currentReplay.seed); replayTick = 0; replayIndex = 0; } winScreen = false; isPaused = false; showLeaderboard = false;
-          dropInterval = Math.max(40, 500 - (level - 1) * 23);
+          dropInterval = Math.max(40, 500 - (level - 1) * 20);
           addPopup(BOARD_W / 2 - 35, H * CELL / 2, "GAME RESUMED!", "#00ff66");
           playSound(600, 'square', 0.2);
           return true;
@@ -264,10 +264,11 @@
 
   let bag = [];
   function getRandomPieceIndex() {
-      let maxPieces = (gameMode === MODE_CAMPAIGN ? (campaignLevel >= 15 ? 13 : 7) : (level >= 15 ? 13 : 7));
-      if (bag.length === 0 || bag.some(p => p >= maxPieces)) {
+      let hasPentominos = (gameMode === MODE_CAMPAIGN ? (campaignLevel >= 15) : (level >= 15));
+      if (bag.length === 0 || (!hasPentominos && bag.some(p => p >= 7))) {
           bag = [];
-          for (let i = 0; i < maxPieces; i++) bag.push(i);
+          for (let i = 0; i < 7; i++) bag.push(i);
+          if (hasPentominos) bag.push(7 + Math.floor(randomFloat() * 6));
           for (let i = bag.length - 1; i > 0; i--) {
               let j = Math.floor(randomFloat() * (i + 1));
               [bag[i], bag[j]] = [bag[j], bag[i]];
@@ -506,7 +507,7 @@
       } else { // MARATHON & ULTRA
           level = Math.floor(lines / 10) + 1;
           score += linesCleared * 100 * level * (combo > 0 ? combo : 1);
-          dropInterval = Math.max(40, 500 - (level - 1) * 23);
+          dropInterval = Math.max(40, 500 - (level - 1) * 20);
       }
   }
 
@@ -538,7 +539,7 @@
               }
           }
           level = campaignLevel;
-          dropInterval = Math.max(40, 500 - (level - 1) * 23);
+          dropInterval = Math.max(40, 500 - (level - 1) * 20);
       } else {
           level = 1;
           dropInterval = 500;
