@@ -577,6 +577,9 @@
       document.getElementById('stat-winrate').innerText = wr + "%";
       document.getElementById('stat-rally').innerText = stats.highRally;
 
+      const escapeHTML = str => String(str).replace(/[&<>'"]/g, tag => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
       const tbody = document.getElementById('leaderboard-body');
       if (leaderboard.length === 0) {
           tbody.innerHTML = `<tr><td colspan="4">No scores recorded yet.</td></tr>`;
@@ -584,9 +587,9 @@
           tbody.innerHTML = leaderboard.map((e, idx) => `
               <tr>
                 <td><strong>#${idx + 1}</strong></td>
-                <td style="color: var(--accent); font-weight: 700;">${e.rally}</td>
-                <td>${e.mode}</td>
-                <td style="color: #aaa;">${e.date}</td>
+                <td style="color: var(--accent); font-weight: 700;">${escapeHTML(e.rally)}</td>
+                <td>${escapeHTML(e.mode)}</td>
+                <td style="color: #aaa;">${escapeHTML(e.date)}</td>
               </tr>
           `).join('');
       }
@@ -1201,7 +1204,16 @@
   }
 
   resetBalls();
-  setInterval(() => { update(); draw(); }, 30);
+  let lastTime = 0;
+  function gameLoop(timestamp) {
+      if (timestamp - lastTime >= 30) {
+          update();
+          draw();
+          lastTime = timestamp;
+      }
+      requestAnimationFrame(gameLoop);
+  }
+  requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
