@@ -1303,12 +1303,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT dr = {c * TS + 8, r * TS + 8, c * TS + 12, r * TS + 12};
                         FillRect(memDC, &dr, dotBr);
                     } else if (map[r][c] == 3) {
-                        // Pulsing Power Pellet
+                        // Visually distinct power pellets with animated glowing halos
                         int pulse = (int)(MySin(frameCount * 0.3) * 2.0);
+                        int haloPulse = (frameCount % 15);
+                        
+                        // Halo Ring
+                        HPEN haloPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
+                        SelectObject(memDC, haloPen);
+                        SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
+                        Ellipse(memDC, c * TS + 6 - haloPulse, r * TS + 6 - haloPulse, c * TS + 14 + haloPulse, r * TS + 14 + haloPulse);
+                        DeleteObject(haloPen);
+                        
                         HBRUSH ppBr = CreateSolidBrush(RGB(255, 184, 82));
                         SelectObject(memDC, ppBr);
+                        SelectObject(memDC, GetStockObject(NULL_PEN));
                         Ellipse(memDC, c * TS + 4 - pulse, r * TS + 4 - pulse, c * TS + 16 + pulse, r * TS + 16 + pulse);
                         DeleteObject(ppBr);
+                        
+                        HBRUSH wBr = CreateSolidBrush(RGB(255, 255, 255));
+                        SelectObject(memDC, wBr);
+                        Ellipse(memDC, c * TS + 7 - pulse/2, r * TS + 7 - pulse/2, c * TS + 13 + pulse/2, r * TS + 13 + pulse/2);
+                        DeleteObject(wBr);
                     } else if (map[r][c] == 4) {
                         HBRUSH spBr = CreateSolidBrush(RGB(0, 255, 255));
                         RECT dr = {c * TS + 7, r * TS + 7, c * TS + 13, r * TS + 13};
@@ -1432,7 +1447,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FillRect(memDC, &gBodyR, gBr);
                 DeleteObject(gBr);
 
-                if (ghosts[i].type == 5) { // Ghost King Crown
+                if (ghosts[i].type == 0 && !isScared) { // Blinky: Angry Eyebrows
+                    HPEN browPen = CreatePen(PS_SOLID, 1, RGB(0,0,0));
+                    SelectObject(memDC, browPen);
+                    MoveToEx(memDC, gcx - 6, gcy - 6, NULL); LineTo(memDC, gcx - 2, gcy - 4);
+                    MoveToEx(memDC, gcx + 6, gcy - 6, NULL); LineTo(memDC, gcx + 2, gcy - 4);
+                    DeleteObject(browPen);
+                } else if (ghosts[i].type == 1) { // Pinky: Bow
+                    HBRUSH bow1 = CreateSolidBrush(RGB(216, 27, 96));
+                    HBRUSH bow2 = CreateSolidBrush(RGB(173, 20, 87));
+                    POINT bowPts1[3] = {{gcx, gy}, {gcx - 4, gy - 4}, {gcx - 4, gy + 2}};
+                    POINT bowPts2[3] = {{gcx, gy}, {gcx + 4, gy - 4}, {gcx + 4, gy + 2}};
+                    SelectObject(memDC, bow1);
+                    Polygon(memDC, bowPts1, 3);
+                    Polygon(memDC, bowPts2, 3);
+                    SelectObject(memDC, bow2);
+                    Ellipse(memDC, gcx - 2, gy - 2, gcx + 2, gy + 2);
+                    DeleteObject(bow1); DeleteObject(bow2);
+                } else if (ghosts[i].type == 2) { // Inky: Glasses
+                    HPEN glPen = CreatePen(PS_SOLID, 1, RGB(0,0,0));
+                    SelectObject(memDC, glPen);
+                    SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
+                    Rectangle(memDC, gcx - 6, gcy - 4, gcx - 2, gcy);
+                    Rectangle(memDC, gcx + 2, gcy - 4, gcx + 6, gcy);
+                    MoveToEx(memDC, gcx - 2, gcy - 2, NULL); LineTo(memDC, gcx + 2, gcy - 2);
+                    DeleteObject(glPen);
+                } else if (ghosts[i].type == 3) { // Clyde: Cap
+                    HBRUSH capBr = CreateSolidBrush(RGB(230, 81, 0));
+                    SelectObject(memDC, capBr);
+                    Ellipse(memDC, gcx - 5, gy - 3, gcx + 5, gy + 3);
+                    RECT rim1 = {gcx - 5, gy + 1, gcx + 5, gy + 3}; FillRect(memDC, &rim1, capBr);
+                    RECT rim2 = {gcx, gy + 1, gcx + 7, gy + 3}; FillRect(memDC, &rim2, capBr);
+                    DeleteObject(capBr);
+                } else if (ghosts[i].type == 4) { // Sue: Eyelashes
+                    // Drawn during eye logic
+                } else if (ghosts[i].type == 5) { // Ghost King Crown
                     HBRUSH crownBr = CreateSolidBrush(RGB(255, 215, 0));
                     POINT crownPts[5] = {{gcx - 5, gy - 2}, {gcx - 3, gy - 6}, {gcx, gy - 3}, {gcx + 3, gy - 6}, {gcx + 5, gy - 2}};
                     SelectObject(memDC, crownBr);
@@ -1443,23 +1492,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (!isScared) {
                     int eyeDx = (ghosts[i].dirX > 0) ? 2 : ((ghosts[i].dirX < 0) ? -2 : 0);
                     int eyeDy = (ghosts[i].dirY > 0) ? 2 : ((ghosts[i].dirY < 0) ? -2 : 0);
+                    int blink = (frameCount % 100 < 5);
+                    
                     HBRUSH wEyeBr = CreateSolidBrush(RGB(255, 255, 255));
-                    HBRUSH bPupBr = CreateSolidBrush(RGB(13, 71, 161));
                     SelectObject(memDC, wEyeBr);
-                    Ellipse(memDC, gcx - 6, gcy - 4, gcx - 1, gcy + 3);
-                    Ellipse(memDC, gcx + 1, gcy - 4, gcx + 6, gcy + 3);
-                    RECT p1 = {gcx - 5 + eyeDx, gcy - 2 + eyeDy, gcx - 2 + eyeDx, gcy + 1 + eyeDy};
-                    RECT p2 = {gcx + 2 + eyeDx, gcy - 2 + eyeDy, gcx + 5 + eyeDx, gcy + 1 + eyeDy};
+                    if (blink) {
+                        RECT b1 = {gcx - 6, gcy - 1, gcx - 1, gcy + 1};
+                        RECT b2 = {gcx + 1, gcy - 1, gcx + 6, gcy + 1};
+                        FillRect(memDC, &b1, wEyeBr); FillRect(memDC, &b2, wEyeBr);
+                    } else {
+                        Ellipse(memDC, gcx - 6, gcy - 4, gcx - 1, gcy + 3);
+                        Ellipse(memDC, gcx + 1, gcy - 4, gcx + 6, gcy + 3);
+                    }
+                    DeleteObject(wEyeBr);
+                    
+                    if (!blink) {
+                        HBRUSH bPupBr = CreateSolidBrush(RGB(13, 71, 161));
+                        RECT p1 = {gcx - 5 + eyeDx, gcy - 2 + eyeDy, gcx - 2 + eyeDx, gcy + 1 + eyeDy};
+                        RECT p2 = {gcx + 2 + eyeDx, gcy - 2 + eyeDy, gcx + 5 + eyeDx, gcy + 1 + eyeDy};
+                        FillRect(memDC, &p1, bPupBr);
+                        FillRect(memDC, &p2, bPupBr);
+                        DeleteObject(bPupBr);
+                        
+                        if (ghosts[i].type == 4) { // Sue eyelashes
+                            HPEN lashPen = CreatePen(PS_SOLID, 1, RGB(0,0,0));
+                            SelectObject(memDC, lashPen);
+                            MoveToEx(memDC, gcx - 4, gcy - 6, NULL); LineTo(memDC, gcx - 6, gcy - 8);
+                            MoveToEx(memDC, gcx - 2, gcy - 6, NULL); LineTo(memDC, gcx - 3, gcy - 8);
+                            MoveToEx(memDC, gcx + 4, gcy - 6, NULL); LineTo(memDC, gcx + 6, gcy - 8);
+                            MoveToEx(memDC, gcx + 2, gcy - 6, NULL); LineTo(memDC, gcx + 3, gcy - 8);
+                            DeleteObject(lashPen);
+                        }
+                    }
+                } else {
+                    int scaredOffset = (frameCount % 4 < 2) ? 1 : -1;
+                    HBRUSH scEyeBr = CreateSolidBrush(isFlashing ? RGB(213, 0, 0) : RGB(255, 255, 255));
+                    SelectObject(memDC, scEyeBr);
+                    Ellipse(memDC, gcx - 5, gcy - 4, gcx - 1, gcy);
+                    Ellipse(memDC, gcx + 1, gcy - 4, gcx + 5, gcy);
+                    DeleteObject(scEyeBr);
+                    
+                    HBRUSH bPupBr = CreateSolidBrush(RGB(0, 0, 0));
+                    SelectObject(memDC, bPupBr);
+                    RECT p1 = {gcx - 4 + scaredOffset, gcy - 3, gcx - 2 + scaredOffset, gcy - 1};
+                    RECT p2 = {gcx + 2 + scaredOffset, gcy - 3, gcx + 4 + scaredOffset, gcy - 1};
                     FillRect(memDC, &p1, bPupBr);
                     FillRect(memDC, &p2, bPupBr);
-                    DeleteObject(wEyeBr); DeleteObject(bPupBr);
-                } else {
-                    HBRUSH scEyeBr = CreateSolidBrush(isFlashing ? RGB(213, 0, 0) : RGB(255, 255, 255));
-                    RECT e1 = {gcx - 4, gcy - 3, gcx - 2, gcy - 1};
-                    RECT e2 = {gcx + 2, gcy - 3, gcx + 4, gcy - 1};
-                    FillRect(memDC, &e1, scEyeBr);
-                    FillRect(memDC, &e2, scEyeBr);
-                    DeleteObject(scEyeBr);
+                    DeleteObject(bPupBr);
+
+                    HPEN scMouthPen = CreatePen(PS_SOLID, 1, isFlashing ? RGB(213, 0, 0) : RGB(255, 255, 255));
+                    SelectObject(memDC, scMouthPen);
+                    MoveToEx(memDC, gcx - 5, gcy + 3, NULL);
+                    LineTo(memDC, gcx - 3, gcy + 5);
+                    LineTo(memDC, gcx - 1, gcy + 3);
+                    LineTo(memDC, gcx + 1, gcy + 5);
+                    LineTo(memDC, gcx + 3, gcy + 3);
+                    LineTo(memDC, gcx + 5, gcy + 5);
+                    DeleteObject(scMouthPen);
                 }
             }
 

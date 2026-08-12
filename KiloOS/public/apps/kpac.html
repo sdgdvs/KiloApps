@@ -1299,15 +1299,22 @@
       let cx = c * TS + TS/2, cy = r * TS + TS/2;
       let radius = 4.5 + Math.sin(frame * 0.3) * 1.5;
       
-      let radGrad = ctx.createRadialGradient(cx, cy, 1, cx, cy, radius + 5);
-      radGrad.addColorStop(0, '#ffffff');
-      radGrad.addColorStop(0.5, '#ffb852');
+      let radGrad = ctx.createRadialGradient(cx, cy, 1, cx, cy, radius + 8);
+      radGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      radGrad.addColorStop(0.3, 'rgba(255, 184, 82, 0.8)');
       radGrad.addColorStop(1, 'rgba(255, 184, 82, 0)');
       
       ctx.fillStyle = radGrad;
       ctx.beginPath();
-      ctx.arc(cx, cy, radius + 5, 0, Math.PI * 2);
+      ctx.arc(cx, cy, radius + 8, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Animated glowing halo rings
+      ctx.strokeStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(frame * 0.1) * 0.5})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius + 2 + (frame % 15) * 0.2, 0, Math.PI * 2);
+      ctx.stroke();
       
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
@@ -1476,7 +1483,37 @@
       ctx.closePath();
       ctx.fill();
 
-      if (g.type === 5) { // Ghost King Crown
+      if (g.type === 0 && !isScared) { // Blinky: Angry Eyebrows
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx - 6, cy - 6); ctx.lineTo(cx - 2, cy - 4);
+          ctx.moveTo(cx + 6, cy - 6); ctx.lineTo(cx + 2, cy - 4);
+          ctx.stroke();
+      } else if (g.type === 1) { // Pinky: Bow
+          ctx.fillStyle = '#d81b60';
+          ctx.beginPath();
+          ctx.moveTo(cx, y); ctx.lineTo(cx - 4, y - 4); ctx.lineTo(cx - 4, y + 2);
+          ctx.moveTo(cx, y); ctx.lineTo(cx + 4, y - 4); ctx.lineTo(cx + 4, y + 2);
+          ctx.fill();
+          ctx.fillStyle = '#ad1457';
+          ctx.beginPath(); ctx.arc(cx, y, 2, 0, Math.PI * 2); ctx.fill();
+      } else if (g.type === 2) { // Inky: Glasses
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.strokeRect(cx - 6, cy - 4, 4, 4);
+          ctx.strokeRect(cx + 2, cy - 4, 4, 4);
+          ctx.moveTo(cx - 2, cy - 2); ctx.lineTo(cx + 2, cy - 2);
+          ctx.stroke();
+      } else if (g.type === 3) { // Clyde: Cap
+          ctx.fillStyle = '#e65100';
+          ctx.beginPath(); ctx.arc(cx, y + 2, 5, Math.PI, 0); ctx.fill();
+          ctx.fillRect(cx - 5, y + 1, 10, 2);
+          ctx.fillRect(cx, y + 1, 7, 2);
+      } else if (g.type === 4) { // Sue: Eyelashes
+          // drawn during eye logic
+      } else if (g.type === 5) { // Ghost King Crown
           ctx.fillStyle = '#ffd700';
           ctx.beginPath();
           ctx.moveTo(cx - 5, y - 2);
@@ -1491,32 +1528,61 @@
       if (!isScared) {
           let eyeDx = (g.dirX || 0) * 2;
           let eyeDy = (g.dirY || 0) * 2;
-
+          let blink = (frame % 100 < 5); // Blink animation
+          
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.ellipse(cx - 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
-          ctx.ellipse(cx + 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
+          if (blink) {
+              ctx.ellipse(cx - 3, cy - 2, 3, 0.5, 0, 0, Math.PI * 2);
+              ctx.ellipse(cx + 3, cy - 2, 3, 0.5, 0, 0, Math.PI * 2);
+          } else {
+              ctx.ellipse(cx - 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
+              ctx.ellipse(cx + 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
+          }
           ctx.fill();
 
-          ctx.fillStyle = '#0d47a1';
-          ctx.beginPath();
-          ctx.arc(cx - 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
-          ctx.arc(cx + 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
-          ctx.fill();
+          if (!blink) {
+              ctx.fillStyle = '#0d47a1';
+              ctx.beginPath();
+              ctx.arc(cx - 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
+              ctx.arc(cx + 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
+              ctx.fill();
+              
+              if (g.type === 4) { // Sue eyelashes
+                  ctx.strokeStyle = '#000000';
+                  ctx.lineWidth = 1;
+                  ctx.beginPath();
+                  ctx.moveTo(cx - 4, cy - 6); ctx.lineTo(cx - 6, cy - 8);
+                  ctx.moveTo(cx - 2, cy - 6); ctx.lineTo(cx - 3, cy - 8);
+                  ctx.moveTo(cx + 4, cy - 6); ctx.lineTo(cx + 6, cy - 8);
+                  ctx.moveTo(cx + 2, cy - 6); ctx.lineTo(cx + 3, cy - 8);
+                  ctx.stroke();
+              }
+          }
       } else {
+          // Detailed frightened eyes based on state (wide wiggly)
+          let scaredOffset = (frame % 4 < 2) ? 1 : -1;
           ctx.fillStyle = isFlashing ? '#d50000' : '#ffffff';
-          ctx.fillRect(cx - 4, cy - 3, 2, 2);
-          ctx.fillRect(cx + 2, cy - 3, 2, 2);
+          ctx.beginPath();
+          ctx.arc(cx - 3, cy - 2, 2.5, 0, Math.PI * 2);
+          ctx.arc(cx + 3, cy - 2, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(cx - 3 + scaredOffset, cy - 2, 1, 0, Math.PI * 2);
+          ctx.arc(cx + 3 + scaredOffset, cy - 2, 1, 0, Math.PI * 2);
+          ctx.fill();
 
           ctx.strokeStyle = isFlashing ? '#d50000' : '#ffffff';
           ctx.lineWidth = 1.2;
           ctx.beginPath();
-          ctx.moveTo(cx - 5, cy + 2);
-          ctx.lineTo(cx - 3, cy + 4);
-          ctx.lineTo(cx - 1, cy + 2);
-          ctx.lineTo(cx + 1, cy + 4);
-          ctx.lineTo(cx + 3, cy + 2);
-          ctx.lineTo(cx + 5, cy + 4);
+          ctx.moveTo(cx - 5, cy + 3);
+          ctx.lineTo(cx - 3, cy + 5);
+          ctx.lineTo(cx - 1, cy + 3);
+          ctx.lineTo(cx + 1, cy + 5);
+          ctx.lineTo(cx + 3, cy + 3);
+          ctx.lineTo(cx + 5, cy + 5);
           ctx.stroke();
       }
   }

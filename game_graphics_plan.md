@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KPac
 - KSnake
 - KTetris
 - KBreakout
@@ -135,7 +134,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KReversi
 - KQuest
 - KSpace
+- KPac
 ## Completed Work Log
+
+- **KPac (Loop 4):** Implemented polished ghost eye blinking and frightened wiggly eye animations, unique accessories (Blinky angry eyebrows, Pinky bow, Inky nerd glasses, Clyde baseball cap, Sue eyelashes), and visually distinct power pellets with animated pulsing glowing halos in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 
 - **KSpace (Loop 4):** Implemented polished varying irregular polygon asteroid shapes, animated flashing damage states for enemies below 50% HP, and distinct visual variations for item powerups with pulsing scale animations in both Web Canvas (kspace.html) and Native C Win32 GDI (KSpace/main.c).
 
