@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KMatch3    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check board generation ensures moves exist, verify Boss HP is achievable, audit powerup economy. |
 | KDarts     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check wind/wobble tuning per difficulty, verify AI opponent accuracy curve is fair. |
 | KChess     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, ensure Easy is beatable, Hard is challenging. Check opening/endgame AI quality. |
 | KGo        | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty across 9x9/13x13/19x19. Ensure handicap system works. Test Tsumego puzzle quality. |
@@ -180,11 +179,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KHangman   | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audited word difficulty, removed multi-word phrases, smoothed strike limits for late campaign. |
 | KWords     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Fixed word placement silent failures, buffed Fog of War radius from 3x3 to 5x5, fixed UI bugs. |
 | KSimon     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Reset timer on correct inputs, smoothed speed curves, fixed 6-button label bugs. |
+| KMatch3    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Auto-shuffle on no moves, nerfed Boss HP, reduced powerup costs. |
 
 
 ## Progress Log
 
 **Loop 9**
+- [x] KMatch3 (Balance audit complete: Implemented auto-shuffle when no moves exist, nerfed Stage 20 Boss HP to 75, reduced all powerup costs to 300 in both EXE and HTML)
 - [x] KMaze (Loop 9: Added toggling Spike Traps, Cursed Relics [risk/reward score item], and procedural Boss Rematches every 5 levels in both EXE and HTML)
 - [x] KSimon (Balance audit complete: Reset timers on correct input, smoothed sequence speed curve, fixed 6-button label map bug in both EXE and HTML)
 - [x] KAsteroids (Loop 9: Added branching sector portals, allied freighter escort defense, and Black Hole gravity hazards in both EXE and HTML)
