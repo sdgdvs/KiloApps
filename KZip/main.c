@@ -12,7 +12,7 @@
 #define MAX_FILE_SIZE (100 * 1024 * 1024) // 100MB limit per file
 
 HWND hListBox, hEditSearch, hChkRegex, hEditPassword, hComboCompress;
-HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnBatchExtract, hBtnVerify, hBtnPreview;
+HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnBatchExtract, hBtnVerify, hBtnPreview, hBtnHelp;
 HWND hStatus;
 HFONT hFont;
 
@@ -676,6 +676,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnBatchExtract = CreateWindowEx(0, "BUTTON", "Batch Ext", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 410, H - 75, 70, 24, hwnd, (HMENU)8, NULL, NULL);
             hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 485, H - 75, 60, 24, hwnd, (HMENU)7, NULL, NULL);
             hBtnPreview = CreateWindowEx(0, "BUTTON", "Preview", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 550, H - 75, 65, 24, hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 620, H - 75, 50, 24, hwnd, (HMENU)10, NULL, NULL);
 
             // ListBox
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
@@ -793,6 +794,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     MessageBoxA(NULL, "Please select a file to preview.", "KZip", MB_OK | MB_ICONWARNING);
                 }
+            } else if (id == 10) { // Help
+                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' - This help", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (id == 105 && code == BN_CLICKED) { // Regex Checkbox
                 RefreshList();
             }
@@ -813,6 +816,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnBatchExtract, 410, btnY, 70, 24, TRUE);
             MoveWindow(hBtnVerify, 485, btnY, 60, 24, TRUE);
             MoveWindow(hBtnPreview, 550, btnY, 65, 24, TRUE);
+            MoveWindow(hBtnHelp, 620, btnY, 50, 24, TRUE);
 
             MoveWindow(hStatus, 10, nh - 35, nw - 20, 22, TRUE);
             break;
@@ -844,8 +848,11 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
+    RECT rect = { 0, 0, W, H };
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+
     HWND hwnd = CreateWindowEx(0, "KZipApp", "KZip Archiver", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

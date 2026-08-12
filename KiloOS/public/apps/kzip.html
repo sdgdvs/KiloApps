@@ -327,6 +327,7 @@
   <button id="btnBatchExtract" aria-label="Batch Extract">📑 Batch Extract</button>
   <button id="btnVerify" aria-label="Verify CRC32 integrity">🛡️ Verify CRC32</button>
   <button id="btnPreview" aria-label="Deep Preview">🔍 Preview</button>
+  <button id="btnHelpApp" aria-label="Help">❓ Help</button>
 </div>
 <input type="file" id="batchInput" multiple accept=".kza" style="display:none">
 
@@ -1002,6 +1003,7 @@
   const helpModal = document.getElementById('helpModal');
   const btnCloseHelp = document.getElementById('btnCloseHelp');
   const btnOkHelp = document.getElementById('btnOkHelp');
+  const btnHelpApp = document.getElementById('btnHelpApp');
   
   function toggleHelp() {
     helpModal.classList.toggle('active');
@@ -1010,6 +1012,7 @@
 
   btnCloseHelp.onclick = () => helpModal.classList.remove('active');
   btnOkHelp.onclick = () => helpModal.classList.remove('active');
+  if (btnHelpApp) btnHelpApp.onclick = toggleHelp;
 
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
