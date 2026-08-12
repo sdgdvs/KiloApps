@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KPong
+**Target App:** KQuarantine
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -243,3 +243,5 @@ Pass 1 Complete.
 - **KPassword**: Remedied DOM Injection XSS bounds vulnerabilities in `kpass.html` by assigning properties like `category`, `strength`, `label`, and `pass` dynamically via `textContent` rather than unfiltered template strings. Fortified memory limits within `main.c` native C bounds by replacing unconstrained `strcpy` usage with strict `strncpy` logic in CSV parsing/vault construction APIs. Increased bounds capacities in string concatenations (e.g. 512 over 256) and closed a native GDI leak affecting application exit (missed `wc.hbrBackground` deletion).
 
 - **KPing**: Fixed `historyData` and `logEntries` memory leaks by bounding arrays to 200/1000 elements and capping `textarea` to 30,000 characters in `kping.html`. Fixed Win32 `EDIT` control capacity freeze in `main.c` by dynamically pruning the oldest 10,000 characters when buffer exceeds 30,000 chars.
+
+- **KPong**: Fixed XSS vulnerability in `kpong.html` leaderboard by adding an `escapeHTML` helper to sanitize `mode` and `date` values from localStorage. Replaced `setInterval` with `requestAnimationFrame` to prevent dropped frames and reduce background CPU usage/repaints. Verified `main.c` memory handling bounds.
