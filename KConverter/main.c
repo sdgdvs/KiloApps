@@ -33,17 +33,18 @@ fclose_t m_fclose;
 HMODULE hMsvcrt = NULL;
 HWND hCategory, hInput, hOutput, hFrom, hTo, hPrecision, hFormat;
 HWND hBatchOutput, hHistoryOutput, hFavCombo, hFormulaStatic;
-HWND hBtnSingle, hBtnBatch, hBtnFavs, hBtnHistory;
+HWND hBtnSingle, hBtnBatch, hBtnFavs, hBtnHistory, hBtnExpress;
+HWND hExpressInput, hExpressOutput, hExpressPresetBtns[6];
 HFONT hFont = NULL, hFontBold = NULL;
 WNDPROC OldEditProc = NULL;
 
 char buffer[1024];
 char historyBuffer[4096];
-int currentMode = 0; // 0=Single, 1=Batch, 2=Favs, 3=History
+int currentMode = 0; // 0=Single, 1=Batch, 2=Favs, 3=History, 4=Express
 
 // Categories and Units
-const char* catNames[] = {"Length", "Weight", "Temperature", "Data Storage", "Speed", "Area", "Volume", "Time"};
-const int numCats = 8;
+const char* catNames[] = {"Length", "Weight", "Temperature", "Data Storage", "Speed", "Area", "Volume", "Time", "Pressure"};
+const int numCats = 9;
 
 const char* lenUnits[] = {"Meters", "Kilometers", "Centimeters", "Millimeters", "Miles", "Yards", "Feet", "Inches", "Nautical Miles"};
 const double lenFactors[] = {1.0, 1000.0, 0.01, 0.001, 1609.344, 0.9144, 0.3048, 0.0254, 1852.0};
@@ -76,6 +77,91 @@ const char* timeUnits[] = {"Seconds", "Minutes", "Hours", "Days", "Weeks", "Year
 const double timeFactors[] = {1.0, 60.0, 3600.0, 86400.0, 604800.0, 31536000.0};
 const int timeCount = 6;
 
+const char* pressUnits[] = {"Pascal (Pa)", "Kilopascal (kPa)", "Bar", "PSI (lb/in\xC2\xB2)", "Atmosphere (atm)", "mmHg (Torr)"};
+const double pressFactors[] = {1.0, 1000.0, 100000.0, 6894.757293, 101325.0, 133.322368};
+const int pressCount = 6;
+
+typedef struct {
+    const char* token;
+    int cat;
+    int index;
+    const char* dim;
+} UnitAlias;
+
+const UnitAlias aliasTable[] = {
+    // Length
+    {"m", 0, 0, "Length [L]"}, {"meter", 0, 0, "Length [L]"}, {"meters", 0, 0, "Length [L]"},
+    {"km", 0, 1, "Length [L]"}, {"kilometer", 0, 1, "Length [L]"}, {"kilometers", 0, 1, "Length [L]"},
+    {"cm", 0, 2, "Length [L]"}, {"centimeter", 0, 2, "Length [L]"}, {"centimeters", 0, 2, "Length [L]"},
+    {"mm", 0, 3, "Length [L]"}, {"millimeter", 0, 3, "Length [L]"}, {"millimeters", 0, 3, "Length [L]"},
+    {"mi", 0, 4, "Length [L]"}, {"mile", 0, 4, "Length [L]"}, {"miles", 0, 4, "Length [L]"},
+    {"yd", 0, 5, "Length [L]"}, {"yard", 0, 5, "Length [L]"}, {"yards", 0, 5, "Length [L]"},
+    {"ft", 0, 6, "Length [L]"}, {"feet", 0, 6, "Length [L]"}, {"foot", 0, 6, "Length [L]"},
+    {"in", 0, 7, "Length [L]"}, {"inch", 0, 7, "Length [L]"}, {"inches", 0, 7, "Length [L]"},
+    {"nmi", 0, 8, "Length [L]"},
+
+    // Weight/Mass
+    {"kg", 1, 0, "Mass [M]"}, {"kilogram", 1, 0, "Mass [M]"}, {"kilograms", 1, 0, "Mass [M]"},
+    {"g", 1, 1, "Mass [M]"}, {"gram", 1, 1, "Mass [M]"}, {"grams", 1, 1, "Mass [M]"},
+    {"mg", 1, 2, "Mass [M]"}, {"milligram", 1, 2, "Mass [M]"}, {"milligrams", 1, 2, "Mass [M]"},
+    {"t", 1, 3, "Mass [M]"}, {"ton", 1, 3, "Mass [M]"}, {"tons", 1, 3, "Mass [M]"},
+    {"lb", 1, 4, "Mass [M]"}, {"lbs", 1, 4, "Mass [M]"}, {"pound", 1, 4, "Mass [M]"}, {"pounds", 1, 4, "Mass [M]"},
+    {"oz", 1, 5, "Mass [M]"}, {"ounce", 1, 5, "Mass [M]"}, {"ounces", 1, 5, "Mass [M]"},
+    {"st", 1, 6, "Mass [M]"}, {"stone", 1, 6, "Mass [M]"},
+
+    // Temp
+    {"c", 2, 0, "Temperature [\xCE\x98]"}, {"celsius", 2, 0, "Temperature [\xCE\x98]"}, {"degc", 2, 0, "Temperature [\xCE\x98]"},
+    {"f", 2, 1, "Temperature [\xCE\x98]"}, {"fahrenheit", 2, 1, "Temperature [\xCE\x98]"}, {"degf", 2, 1, "Temperature [\xCE\x98]"},
+    {"k", 2, 2, "Temperature [\xCE\x98]"}, {"kelvin", 2, 2, "Temperature [\xCE\x98]"},
+
+    // Data
+    {"b", 3, 0, "Information [Bits]"}, {"byte", 3, 0, "Information [Bits]"}, {"bytes", 3, 0, "Information [Bits]"},
+    {"kb", 3, 1, "Information [Bits]"},
+    {"mb", 3, 2, "Information [Bits]"},
+    {"gb", 3, 3, "Information [Bits]"},
+    {"tb", 3, 4, "Information [Bits]"},
+    {"pb", 3, 5, "Information [Bits]"},
+
+    // Speed
+    {"m/s", 4, 0, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"mps", 4, 0, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"km/h", 4, 1, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"kph", 4, 1, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"kmh", 4, 1, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"mph", 4, 2, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"knot", 4, 3, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"knots", 4, 3, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"ft/s", 4, 4, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"fps", 4, 4, "Velocity [L \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+
+    // Area
+    {"m^2", 5, 0, "Area [L\xC2\xB2]"}, {"sqm", 5, 0, "Area [L\xC2\xB2]"}, {"m2", 5, 0, "Area [L\xC2\xB2]"},
+    {"km^2", 5, 1, "Area [L\xC2\xB2]"}, {"sqkm", 5, 1, "Area [L\xC2\xB2]"}, {"km2", 5, 1, "Area [L\xC2\xB2]"},
+    {"ft^2", 5, 2, "Area [L\xC2\xB2]"}, {"sqft", 5, 2, "Area [L\xC2\xB2]"}, {"ft2", 5, 2, "Area [L\xC2\xB2]"},
+    {"acre", 5, 3, "Area [L\xC2\xB2]"}, {"acres", 5, 3, "Area [L\xC2\xB2]"},
+    {"ha", 5, 4, "Area [L\xC2\xB2]"}, {"hectare", 5, 4, "Area [L\xC2\xB2]"},
+
+    // Volume
+    {"l", 6, 0, "Volume [L\xC2\xB3]"}, {"liter", 6, 0, "Volume [L\xC2\xB3]"}, {"liters", 6, 0, "Volume [L\xC2\xB3]"},
+    {"ml", 6, 1, "Volume [L\xC2\xB3]"}, {"milliliter", 6, 1, "Volume [L\xC2\xB3]"},
+    {"m^3", 6, 2, "Volume [L\xC2\xB3]"}, {"cbm", 6, 2, "Volume [L\xC2\xB3]"}, {"m3", 6, 2, "Volume [L\xC2\xB3]"},
+    {"gal", 6, 3, "Volume [L\xC2\xB3]"}, {"gallon", 6, 3, "Volume [L\xC2\xB3]"}, {"gallons", 6, 3, "Volume [L\xC2\xB3]"},
+    {"qt", 6, 4, "Volume [L\xC2\xB3]"}, {"quart", 6, 4, "Volume [L\xC2\xB3]"},
+    {"floz", 6, 5, "Volume [L\xC2\xB3]"},
+
+    // Time
+    {"s", 7, 0, "Time [T]"}, {"sec", 7, 0, "Time [T]"}, {"second", 7, 0, "Time [T]"}, {"seconds", 7, 0, "Time [T]"},
+    {"min", 7, 1, "Time [T]"}, {"minute", 7, 1, "Time [T]"}, {"minutes", 7, 1, "Time [T]"},
+    {"h", 7, 2, "Time [T]"}, {"hr", 7, 2, "Time [T]"}, {"hour", 7, 2, "Time [T]"}, {"hours", 7, 2, "Time [T]"},
+    {"d", 7, 3, "Time [T]"}, {"day", 7, 3, "Time [T]"}, {"days", 7, 3, "Time [T]"},
+    {"wk", 7, 4, "Time [T]"}, {"week", 7, 4, "Time [T]"}, {"weeks", 7, 4, "Time [T]"},
+    {"yr", 7, 5, "Time [T]"}, {"year", 7, 5, "Time [T]"}, {"years", 7, 5, "Time [T]"},
+
+    // Pressure
+    {"pa", 8, 0, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"pascal", 8, 0, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"kpa", 8, 1, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"bar", 8, 2, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"psi", 8, 3, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"atm", 8, 4, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"mmhg", 8, 5, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"torr", 8, 5, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}
+};
+const int aliasCount = sizeof(aliasTable) / sizeof(aliasTable[0]);
+
 double GetFactor(int cat, int index) {
     if (cat == 0 && index >= 0 && index < lenCount) return lenFactors[index];
     if (cat == 1 && index >= 0 && index < wtCount) return wtFactors[index];
@@ -84,6 +170,7 @@ double GetFactor(int cat, int index) {
     if (cat == 5 && index >= 0 && index < areaCount) return areaFactors[index];
     if (cat == 6 && index >= 0 && index < volCount) return volFactors[index];
     if (cat == 7 && index >= 0 && index < timeCount) return timeFactors[index];
+    if (cat == 8 && index >= 0 && index < pressCount) return pressFactors[index];
     return 1.0;
 }
 
@@ -96,6 +183,7 @@ const char* GetUnitName(int cat, int index) {
     if (cat == 5 && index >= 0 && index < areaCount) return areaUnits[index];
     if (cat == 6 && index >= 0 && index < volCount) return volUnits[index];
     if (cat == 7 && index >= 0 && index < timeCount) return timeUnits[index];
+    if (cat == 8 && index >= 0 && index < pressCount) return pressUnits[index];
     return "";
 }
 
@@ -108,6 +196,7 @@ int GetUnitCount(int cat) {
     if (cat == 5) return areaCount;
     if (cat == 6) return volCount;
     if (cat == 7) return timeCount;
+    if (cat == 8) return pressCount;
     return 0;
 }
 
@@ -158,7 +247,7 @@ void AppendHistory(const char* entry) {
     } else {
         m_sprintf(temp, "%s", entry);
     }
-    temp[3900] = '\0'; // Safe truncate to prevent buffer overflow
+    temp[3900] = '\0';
     lstrcpyA(historyBuffer, temp);
     SetWindowTextA(hHistoryOutput, historyBuffer);
 }
@@ -195,7 +284,7 @@ void DoConvert() {
     } else {
         double fromFactor = GetFactor(catIdx, fromIdx);
         double toFactor = GetFactor(catIdx, toIdx);
-        if (toFactor <= 0.0) toFactor = 1.0; // Zero-division protection
+        if (toFactor <= 0.0) toFactor = 1.0;
         double baseVal = val * fromFactor;
         result = baseVal / toFactor;
     }
@@ -252,11 +341,168 @@ void DoConvert() {
     SetWindowTextA(hBatchOutput, batchBuf);
 }
 
+int MatchAlias(const char* str, const UnitAlias** outAlias) {
+    char clean[64];
+    int len = 0;
+    for (int i = 0; str[i] && len < 63; i++) {
+        char c = str[i];
+        if (c >= 'A' && c <= 'Z') c += 32;
+        if (c != ' ' && c != '\t') {
+            clean[len++] = c;
+        }
+    }
+    clean[len] = '\0';
+
+    for (int i = 0; i < aliasCount; i++) {
+        if (lstrcmpiA(clean, aliasTable[i].token) == 0) {
+            if (outAlias) *outAlias = &aliasTable[i];
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void DoExpressParse() {
+    char expr[256];
+    GetWindowTextA(hExpressInput, expr, 255);
+    
+    char* p = expr;
+    while (*p == ' ' || *p == '\t') p++;
+    if (*p == '\0') {
+        SetWindowTextA(hExpressOutput, "Enter an expression like: 100 km/h to m/s or 50 psi to bar");
+        return;
+    }
+
+    double val = m_atof(p);
+    
+    while (*p && ((*p >= '0' && *p <= '9') || *p == '.' || *p == '-' || *p == '+' || *p == 'e' || *p == 'E' || *p == ' ')) p++;
+    
+    char uFromStr[64] = {0};
+    char uToStr[64] = {0};
+    
+    int fLen = 0;
+    while (*p) {
+        if ((p[0] == ' ' && p[1] == 't' && p[2] == 'o' && (p[3] == ' ' || p[3] == '\0')) ||
+            (p[0] == '-' && p[1] == '>') ||
+            (p[0] == '=') ||
+            (p[0] == ' ' && p[1] == 'i' && p[2] == 'n' && (p[3] == ' ' || p[3] == '\0'))) {
+            if (p[0] == '-') p += 2;
+            else if (p[0] == '=') p += 1;
+            else if (p[1] == 't') p += 3;
+            else if (p[1] == 'i') p += 3;
+            break;
+        }
+        if (fLen < 63) uFromStr[fLen++] = *p;
+        p++;
+    }
+    uFromStr[fLen] = '\0';
+    
+    while (*p == ' ' || *p == '\t') p++;
+    int tLen = 0;
+    while (*p && tLen < 63) {
+        uToStr[tLen++] = *p++;
+    }
+    uToStr[tLen] = '\0';
+    
+    const UnitAlias* fromAlias = NULL;
+    const UnitAlias* toAlias = NULL;
+    
+    int okFrom = MatchAlias(uFromStr, &fromAlias);
+    int okTo = MatchAlias(uToStr, &toAlias);
+    
+    char outBuf[1024];
+    if (!okFrom || !okTo) {
+        m_sprintf(outBuf, 
+            "=== EXPRESSION PARSE ERROR ===\r\n"
+            "Unrecognized unit tokens in expression: '%s'\r\n\r\n"
+            "From Token Recognized: %s (%s)\r\n"
+            "To Token Recognized:   %s (%s)\r\n\r\n"
+            "Supported Expression Format:\r\n"
+            "  <value> <from_unit> to <to_unit>\r\n\r\n"
+            "Supported Unit Tokens:\r\n"
+            "  Speed: km/h, kph, m/s, mps, mph, knot, ft/s, fps\r\n"
+            "  Pressure: psi, bar, kPa, Pa, atm, mmHg, torr\r\n"
+            "  Temp: c, f, k, celsius, fahrenheit, kelvin\r\n"
+            "  Length: m, km, cm, mm, mi, yd, ft, in, nmi\r\n"
+            "  Weight: kg, g, mg, t, lb, oz, st\r\n"
+            "  Data: b, kb, mb, gb, tb, pb\r\n"
+            "  Area: m^2, sqm, km^2, sqft, ft^2, acre, ha\r\n"
+            "  Volume: l, ml, m^3, cbm, gal, qt, floz\r\n"
+            "  Time: sec, min, hr, day, wk, yr",
+            expr, 
+            okFrom ? "YES" : "NO", uFromStr,
+            okTo ? "YES" : "NO", uToStr);
+        SetWindowTextA(hExpressOutput, outBuf);
+        return;
+    }
+    
+    if (fromAlias->cat != toAlias->cat) {
+        m_sprintf(outBuf,
+            "=== DIMENSION MISMATCH ERROR ===\r\n"
+            "Cannot convert between different physical dimensions!\r\n\r\n"
+            "From Unit: '%s' -> Dimension: %s (%s)\r\n"
+            "To Unit:   '%s' -> Dimension: %s (%s)\r\n\r\n"
+            "Status: CONVERSION INVALID",
+            uFromStr, fromAlias->dim, catNames[fromAlias->cat],
+            uToStr, toAlias->dim, catNames[toAlias->cat]);
+        SetWindowTextA(hExpressOutput, outBuf);
+        return;
+    }
+    
+    int cat = fromAlias->cat;
+    double result = 0.0;
+    
+    if (cat == 2) { // Temp
+        double c = 0;
+        if (fromAlias->index == 0) c = val;
+        else if (fromAlias->index == 1) c = (val - 32.0) * 5.0 / 9.0;
+        else if (fromAlias->index == 2) c = val - 273.15;
+        
+        if (toAlias->index == 0) result = c;
+        else if (toAlias->index == 1) result = (c * 9.0 / 5.0) + 32.0;
+        else if (toAlias->index == 2) result = c + 273.15;
+    } else {
+        double fFrom = GetFactor(cat, fromAlias->index);
+        double fTo = GetFactor(cat, toAlias->index);
+        if (fTo <= 0.0) fTo = 1.0;
+        result = (val * fFrom) / fTo;
+    }
+    
+    char resStr[128];
+    int precIdx = SendMessageA(hPrecision, CB_GETCURSEL, 0, 0);
+    int formatIdx = SendMessageA(hFormat, CB_GETCURSEL, 0, 0);
+    if (precIdx == CB_ERR || precIdx < 0) precIdx = 0;
+    if (formatIdx == CB_ERR || formatIdx < 0) formatIdx = 0;
+    FormatValue(result, resStr, precIdx, formatIdx);
+    
+    m_sprintf(outBuf,
+        "=== SMART EXPRESSION EVALUATION ===\r\n"
+        "Input Expression:   %s\r\n"
+        "Evaluated Value:    %s %s\r\n\r\n"
+        "Physical Dimension: %s\r\n"
+        "Unit Category:      %s\r\n"
+        "From Unit:          %s\r\n"
+        "To Unit:            %s\r\n\r\n"
+        "Formula Breakdown:  %g %s = %s %s\r\n"
+        "Status:             VALID CONVERSION",
+        expr, resStr, GetUnitName(cat, toAlias->index),
+        fromAlias->dim, catNames[cat],
+        GetUnitName(cat, fromAlias->index), GetUnitName(cat, toAlias->index),
+        val, GetUnitName(cat, fromAlias->index), resStr, GetUnitName(cat, toAlias->index));
+        
+    SetWindowTextA(hExpressOutput, outBuf);
+    
+    char logLine[256];
+    m_sprintf(logLine, "[Express:%s] %g %s -> %s %s", catNames[cat], val, GetUnitName(cat, fromAlias->index), resStr, GetUnitName(cat, toAlias->index));
+    AppendHistory(logLine);
+}
+
 void UpdateViewVisibility() {
     BOOL isSingle = (currentMode == 0);
     BOOL isBatch = (currentMode == 1);
     BOOL isFav = (currentMode == 2);
     BOOL isHistory = (currentMode == 3);
+    BOOL isExpress = (currentMode == 4);
 
     ShowWindow(hInput, isSingle ? SW_SHOW : SW_HIDE);
     ShowWindow(hFrom, isSingle ? SW_SHOW : SW_HIDE);
@@ -267,12 +513,22 @@ void UpdateViewVisibility() {
     ShowWindow(hBatchOutput, isBatch ? SW_SHOW : SW_HIDE);
     ShowWindow(hFavCombo, isFav ? SW_SHOW : SW_HIDE);
     ShowWindow(hHistoryOutput, isHistory ? SW_SHOW : SW_HIDE);
+
+    ShowWindow(hExpressInput, isExpress ? SW_SHOW : SW_HIDE);
+    ShowWindow(hExpressOutput, isExpress ? SW_SHOW : SW_HIDE);
+    for (int i = 0; i < 6; i++) {
+        if (hExpressPresetBtns[i]) ShowWindow(hExpressPresetBtns[i], isExpress ? SW_SHOW : SW_HIDE);
+    }
 }
 
 // Subclass Edit Proc to handle ENTER key in Input box
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
-        DoConvert();
+        if (hwnd == hExpressInput) {
+            DoExpressParse();
+        } else {
+            DoConvert();
+        }
         return 0;
     }
     return CallWindowProcA(OldEditProc, hwnd, msg, wParam, lParam);
@@ -303,10 +559,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFormat = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 370, 8, 100, 150, hwnd, (HMENU)1004, NULL, NULL);
 
             // Mode Tab Buttons
-            hBtnSingle = CreateWindowA("BUTTON", "Single", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 38, 70, 24, hwnd, (HMENU)2001, NULL, NULL);
-            hBtnBatch = CreateWindowA("BUTTON", "Batch Mode", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 85, 38, 85, 24, hwnd, (HMENU)2002, NULL, NULL);
-            hBtnFavs = CreateWindowA("BUTTON", "Favorites", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 175, 38, 75, 24, hwnd, (HMENU)2003, NULL, NULL);
-            hBtnHistory = CreateWindowA("BUTTON", "History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 255, 38, 85, 24, hwnd, (HMENU)2004, NULL, NULL);
+            hBtnSingle = CreateWindowA("BUTTON", "Single", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 38, 55, 24, hwnd, (HMENU)2001, NULL, NULL);
+            hBtnBatch = CreateWindowA("BUTTON", "Batch Mode", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 70, 38, 75, 24, hwnd, (HMENU)2002, NULL, NULL);
+            hBtnFavs = CreateWindowA("BUTTON", "Favorites", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 150, 38, 65, 24, hwnd, (HMENU)2003, NULL, NULL);
+            hBtnHistory = CreateWindowA("BUTTON", "History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 38, 75, 24, hwnd, (HMENU)2004, NULL, NULL);
+            hBtnExpress = CreateWindowA("BUTTON", "Smart Parser", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 300, 38, 90, 24, hwnd, (HMENU)2005, NULL, NULL);
 
             // Single View Controls
             CreateWindowA("STATIC", "Input:", WS_CHILD | WS_VISIBLE, 10, 72, 45, 20, hwnd, NULL, NULL, NULL);
@@ -338,7 +595,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hHistoryOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 560, 250, hwnd, NULL, NULL, NULL);
             CreateWindowA("BUTTON", "Export History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 330, 130, 24, hwnd, (HMENU)4001, NULL, NULL);
 
-            HWND hHelpText = CreateWindowA("STATIC", "(Press H or F1 for Help)", WS_CHILD | WS_VISIBLE, 355, 42, 150, 20, hwnd, NULL, NULL, NULL);
+            // Smart Parser View Controls
+            hExpressInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "100 km/h to m/s", WS_CHILD | ES_AUTOHSCROLL, 10, 70, 380, 22, hwnd, (HMENU)5010, NULL, NULL);
+            SetWindowLongPtrA(hExpressInput, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
+            CreateWindowA("BUTTON", "Evaluate", WS_CHILD | BS_PUSHBUTTON, 400, 70, 80, 22, hwnd, (HMENU)5000, NULL, NULL);
+
+            hExpressPresetBtns[0] = CreateWindowA("BUTTON", "100km/h->m/s", WS_CHILD | BS_PUSHBUTTON, 10, 98, 90, 22, hwnd, (HMENU)5001, NULL, NULL);
+            hExpressPresetBtns[1] = CreateWindowA("BUTTON", "50psi->bar", WS_CHILD | BS_PUSHBUTTON, 105, 98, 75, 22, hwnd, (HMENU)5002, NULL, NULL);
+            hExpressPresetBtns[2] = CreateWindowA("BUTTON", "250f->c", WS_CHILD | BS_PUSHBUTTON, 185, 98, 60, 22, hwnd, (HMENU)5003, NULL, NULL);
+            hExpressPresetBtns[3] = CreateWindowA("BUTTON", "1024mb->gb", WS_CHILD | BS_PUSHBUTTON, 250, 98, 80, 22, hwnd, (HMENU)5004, NULL, NULL);
+            hExpressPresetBtns[4] = CreateWindowA("BUTTON", "5000m2->acre", WS_CHILD | BS_PUSHBUTTON, 335, 98, 90, 22, hwnd, (HMENU)5005, NULL, NULL);
+            hExpressPresetBtns[5] = CreateWindowA("BUTTON", "5gal->l", WS_CHILD | BS_PUSHBUTTON, 430, 98, 55, 22, hwnd, (HMENU)5006, NULL, NULL);
+
+            hExpressOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 126, 560, 195, hwnd, NULL, NULL, NULL);
+
+            HWND hHelpText = CreateWindowA("STATIC", "(H / F1 Help)", WS_CHILD | WS_VISIBLE, 400, 42, 100, 20, hwnd, NULL, NULL, NULL);
             
             RegisterHotKey(hwnd, 1, 0, VK_F1);
             RegisterHotKey(hwnd, 2, 0, 'H');
@@ -378,10 +649,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBatchOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hHistoryOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hFavCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hExpressInput, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hExpressOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
+            for (int i = 0; i < 6; i++) {
+                if (hExpressPresetBtns[i]) SendMessageA(hExpressPresetBtns[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+            }
             SendMessageA(hHelpText, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             UpdateViewVisibility();
             DoConvert();
+            DoExpressParse();
             break;
         }
         case WM_COMMAND: {
@@ -407,20 +684,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hFavCombo, CB_ADDSTRING, 0, (LPARAM)favItem);
                 SendMessageA(hFavCombo, CB_SETCURSEL, 0, 0);
                 MessageBoxA(hwnd, "Pinned to Favorites list!", "KConverter", MB_OK | MB_ICONINFORMATION);
-            } else if (wmId >= 2001 && wmId <= 2004) { // Mode tabs
+            } else if (wmId >= 2001 && wmId <= 2005) { // Mode tabs
                 currentMode = wmId - 2001;
                 UpdateViewVisibility();
-                DoConvert();
+                if (currentMode == 4) DoExpressParse();
+                else DoConvert();
             } else if ((wmId == 1002 || wmId == 1003 || wmId == 1004 || wmId == 1006 || wmId == 1007) && wmEvent == CBN_SELCHANGE) {
                 if (wmId == 1002) {
                     int catIdx = SendMessageA(hCategory, CB_GETCURSEL, 0, 0);
                     PopulateUnits(catIdx);
                 }
                 DoConvert();
-            } else if (wmId == 3003 && wmEvent == CBN_SELCHANGE) { // Favorites selection change
+                if (currentMode == 4) DoExpressParse();
+            } else if (wmId == 3003 && wmEvent == CBN_SELCHANGE) {
                 int sel = SendMessageA(hFavCombo, CB_GETCURSEL, 0, 0);
                 if (sel != CB_ERR) {
-                    currentMode = 0; // Switch back to single mode to view loaded favorite
+                    currentMode = 0;
                     UpdateViewVisibility();
                     DoConvert();
                 }
@@ -437,12 +716,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
+            } else if (wmId == 5000) { // Evaluate Express
+                DoExpressParse();
+            } else if (wmId == 5010 && wmEvent == EN_CHANGE) { // Live express parse
+                if (currentMode == 4) DoExpressParse();
+            } else if (wmId >= 5001 && wmId <= 5006) { // Presets
+                const char* pText = "100 km/h to m/s";
+                if (wmId == 5002) pText = "50 psi to bar";
+                else if (wmId == 5003) pText = "250 f to c";
+                else if (wmId == 5004) pText = "1024 mb to gb";
+                else if (wmId == 5005) pText = "5000 m^2 to acre";
+                else if (wmId == 5006) pText = "5 gal to l";
+                SetWindowTextA(hExpressInput, pText);
+                DoExpressParse();
             }
             break;
         }
         case WM_HOTKEY: {
             if (wParam == 1 || wParam == 2) {
-                MessageBoxA(hwnd, "KConverter Pro Help:\n\n- Convert units by selecting Category, From, and To.\n- Use Batch Mode to see all conversions at once.\n- Pin your favorites for quick access.\n- Export history to track your conversions.", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KConverter Pro Help:\n\n- Single Convert: Convert between two units.\n- Batch Mode: See all units at once.\n- Favorites: Pin favorite pairs.\n- Smart Parser: Type natural expressions like '100 km/h to m/s' or '50 psi to bar'.", "Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
@@ -485,5 +777,3 @@ void __stdcall MainEntry() {
     }
     ExitProcess(0);
 }
-/ /   K C o n v e r t e r   U s a b i l i t y   f i x e s   a p p l i e d  
- 

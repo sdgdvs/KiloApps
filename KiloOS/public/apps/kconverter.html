@@ -420,7 +420,7 @@
       <div class="controls-bar">
         <div class="control-group">
           <label for="precisionSel">Decimals:</label>
-          <select id="precisionSel" onchange="convert(); renderBatch();" class="btn-sm" aria-label="Decimal Precision">
+          <select id="precisionSel" onchange="convert(); renderBatch(); parseExpressInput();" class="btn-sm" aria-label="Decimal Precision">
             <option value="auto">Auto</option>
             <option value="0">0</option>
             <option value="2">2</option>
@@ -431,7 +431,7 @@
         </div>
         <div class="control-group">
           <label for="notationSel">Format:</label>
-          <select id="notationSel" onchange="convert(); renderBatch();" class="btn-sm" aria-label="Notation Format">
+          <select id="notationSel" onchange="convert(); renderBatch(); parseExpressInput();" class="btn-sm" aria-label="Notation Format">
             <option value="std" selected>Standard</option>
             <option value="sci">Scientific (1e+N)</option>
           </select>
@@ -443,6 +443,7 @@
     <nav class="nav-tabs" role="tablist">
       <div class="nav-tab active" role="tab" id="tab-single" onclick="switchView('single')">Single Convert</div>
       <div class="nav-tab" role="tab" id="tab-batch" onclick="switchView('batch')">Batch Mode</div>
+      <div class="nav-tab" role="tab" id="tab-express" onclick="switchView('express')">Smart Parser ⚡</div>
       <div class="nav-tab" role="tab" id="tab-fav" onclick="switchView('fav')">Favorites ⭐</div>
       <div class="nav-tab" role="tab" id="tab-custom" onclick="switchView('custom')">Custom Units 🛠️</div>
       <div class="nav-tab" role="tab" id="tab-history" onclick="switchView('history')">History Log 📜</div>
@@ -511,6 +512,29 @@
             </thead>
             <tbody id="batchTableBody"></tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- VIEW: SMART PARSER -->
+      <section id="view-express" class="view-pane">
+        <div class="row" style="background: var(--card-bg); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+          <label for="expressInput">Natural Language & Engineering Expression Parser</label>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <input type="text" id="expressInput" placeholder="e.g. 100 km/h to m/s or 50 psi to bar" value="100 km/h to m/s" style="flex: 1; font-size: 15px; font-weight: 500;" oninput="parseExpressInput()" aria-label="Expression input" />
+            <button onclick="parseExpressInput()" style="padding: 8px 16px;">⚡ Evaluate</button>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+            <span style="font-size: 11px; color: var(--text-muted); align-self: center;">Presets:</span>
+            <button class="btn-sm" onclick="setExpressPreset('100 km/h to m/s')">100 km/h ➔ m/s</button>
+            <button class="btn-sm" onclick="setExpressPreset('50 psi to bar')">50 psi ➔ bar</button>
+            <button class="btn-sm" onclick="setExpressPreset('250 f to c')">250 °F ➔ °C</button>
+            <button class="btn-sm" onclick="setExpressPreset('1024 mb to gb')">1024 MB ➔ GB</button>
+            <button class="btn-sm" onclick="setExpressPreset('5000 m^2 to acre')">5000 m² ➔ acre</button>
+            <button class="btn-sm" onclick="setExpressPreset('5 gal to l')">5 gal ➔ L</button>
+          </div>
+        </div>
+
+        <div id="expressResultCard" style="background: var(--card-bg); border: 1px solid var(--panel-border); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
         </div>
       </section>
 
@@ -658,6 +682,14 @@
         day: { name: 'Days', factor: 86400 },
         wk: { name: 'Weeks', factor: 604800 },
         yr: { name: 'Years (365d)', factor: 31536000 }
+      },
+      pressure: {
+        pa: { name: 'Pascal (Pa)', factor: 1 },
+        kpa: { name: 'Kilopascal (kPa)', factor: 1000 },
+        bar: { name: 'Bar', factor: 100000 },
+        psi: { name: 'PSI (lb/in²)', factor: 6894.757293 },
+        atm: { name: 'Atmosphere (atm)', factor: 101325 },
+        mmhg: { name: 'mmHg (Torr)', factor: 133.322368 }
       }
     };
 
@@ -669,8 +701,139 @@
       speed: 'Speed',
       area: 'Area',
       volume: 'Volume',
-      time: 'Time'
+      time: 'Time',
+      pressure: 'Pressure'
     };
+
+    const expressAliasTable = [
+      // Length
+      { token: 'm', cat: 'length', key: 'm', dim: 'Length [L]' },
+      { token: 'meter', cat: 'length', key: 'm', dim: 'Length [L]' },
+      { token: 'meters', cat: 'length', key: 'm', dim: 'Length [L]' },
+      { token: 'km', cat: 'length', key: 'km', dim: 'Length [L]' },
+      { token: 'kilometer', cat: 'length', key: 'km', dim: 'Length [L]' },
+      { token: 'kilometers', cat: 'length', key: 'km', dim: 'Length [L]' },
+      { token: 'cm', cat: 'length', key: 'cm', dim: 'Length [L]' },
+      { token: 'mm', cat: 'length', key: 'mm', dim: 'Length [L]' },
+      { token: 'mi', cat: 'length', key: 'mi', dim: 'Length [L]' },
+      { token: 'mile', cat: 'length', key: 'mi', dim: 'Length [L]' },
+      { token: 'miles', cat: 'length', key: 'mi', dim: 'Length [L]' },
+      { token: 'yd', cat: 'length', key: 'yd', dim: 'Length [L]' },
+      { token: 'ft', cat: 'length', key: 'ft', dim: 'Length [L]' },
+      { token: 'feet', cat: 'length', key: 'ft', dim: 'Length [L]' },
+      { token: 'in', cat: 'length', key: 'in', dim: 'Length [L]' },
+      { token: 'inch', cat: 'length', key: 'in', dim: 'Length [L]' },
+      { token: 'inches', cat: 'length', key: 'in', dim: 'Length [L]' },
+      { token: 'nmi', cat: 'length', key: 'nmi', dim: 'Length [L]' },
+
+      // Weight
+      { token: 'kg', cat: 'weight', key: 'kg', dim: 'Mass [M]' },
+      { token: 'kilogram', cat: 'weight', key: 'kg', dim: 'Mass [M]' },
+      { token: 'kilograms', cat: 'weight', key: 'kg', dim: 'Mass [M]' },
+      { token: 'g', cat: 'weight', key: 'g', dim: 'Mass [M]' },
+      { token: 'gram', cat: 'weight', key: 'g', dim: 'Mass [M]' },
+      { token: 'mg', cat: 'weight', key: 'mg', dim: 'Mass [M]' },
+      { token: 't', cat: 'weight', key: 't', dim: 'Mass [M]' },
+      { token: 'lb', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
+      { token: 'lbs', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
+      { token: 'pound', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
+      { token: 'pounds', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
+      { token: 'oz', cat: 'weight', key: 'oz', dim: 'Mass [M]' },
+      { token: 'ounce', cat: 'weight', key: 'oz', dim: 'Mass [M]' },
+      { token: 'st', cat: 'weight', key: 'st', dim: 'Mass [M]' },
+
+      // Temp
+      { token: 'c', cat: 'temp', key: 'c', dim: 'Temperature [Θ]' },
+      { token: 'celsius', cat: 'temp', key: 'c', dim: 'Temperature [Θ]' },
+      { token: 'degc', cat: 'temp', key: 'c', dim: 'Temperature [Θ]' },
+      { token: 'f', cat: 'temp', key: 'f', dim: 'Temperature [Θ]' },
+      { token: 'fahrenheit', cat: 'temp', key: 'f', dim: 'Temperature [Θ]' },
+      { token: 'degf', cat: 'temp', key: 'f', dim: 'Temperature [Θ]' },
+      { token: 'k', cat: 'temp', key: 'k', dim: 'Temperature [Θ]' },
+      { token: 'kelvin', cat: 'temp', key: 'k', dim: 'Temperature [Θ]' },
+
+      // Data
+      { token: 'b', cat: 'data', key: 'b', dim: 'Information [Bits]' },
+      { token: 'byte', cat: 'data', key: 'b', dim: 'Information [Bits]' },
+      { token: 'bytes', cat: 'data', key: 'b', dim: 'Information [Bits]' },
+      { token: 'kb', cat: 'data', key: 'kb', dim: 'Information [Bits]' },
+      { token: 'mb', cat: 'data', key: 'mb', dim: 'Information [Bits]' },
+      { token: 'gb', cat: 'data', key: 'gb', dim: 'Information [Bits]' },
+      { token: 'tb', cat: 'data', key: 'tb', dim: 'Information [Bits]' },
+      { token: 'pb', cat: 'data', key: 'pb', dim: 'Information [Bits]' },
+
+      // Speed
+      { token: 'm/s', cat: 'speed', key: 'mps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'mps', cat: 'speed', key: 'mps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'km/h', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'kph', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'kmh', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'mph', cat: 'speed', key: 'mph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'knot', cat: 'speed', key: 'knot', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'knots', cat: 'speed', key: 'knot', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'ft/s', cat: 'speed', key: 'fps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'fps', cat: 'speed', key: 'fps', dim: 'Velocity [L · T⁻¹]' },
+
+      // Area
+      { token: 'm^2', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
+      { token: 'sqm', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
+      { token: 'm2', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
+      { token: 'km^2', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
+      { token: 'sqkm', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
+      { token: 'km2', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
+      { token: 'ft^2', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
+      { token: 'sqft', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
+      { token: 'ft2', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
+      { token: 'acre', cat: 'area', key: 'acre', dim: 'Area [L²]' },
+      { token: 'acres', cat: 'area', key: 'acre', dim: 'Area [L²]' },
+      { token: 'ha', cat: 'area', key: 'ha', dim: 'Area [L²]' },
+
+      // Volume
+      { token: 'l', cat: 'volume', key: 'l', dim: 'Volume [L³]' },
+      { token: 'liter', cat: 'volume', key: 'l', dim: 'Volume [L³]' },
+      { token: 'liters', cat: 'volume', key: 'l', dim: 'Volume [L³]' },
+      { token: 'ml', cat: 'volume', key: 'ml', dim: 'Volume [L³]' },
+      { token: 'm^3', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
+      { token: 'cbm', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
+      { token: 'm3', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
+      { token: 'gal', cat: 'volume', key: 'gal', dim: 'Volume [L³]' },
+      { token: 'gallon', cat: 'volume', key: 'gal', dim: 'Volume [L³]' },
+      { token: 'gallons', cat: 'volume', key: 'gal', dim: 'Volume [L³]' },
+      { token: 'qt', cat: 'volume', key: 'qt', dim: 'Volume [L³]' },
+      { token: 'floz', cat: 'volume', key: 'floz', dim: 'Volume [L³]' },
+
+      // Time
+      { token: 's', cat: 'time', key: 'sec', dim: 'Time [T]' },
+      { token: 'sec', cat: 'time', key: 'sec', dim: 'Time [T]' },
+      { token: 'second', cat: 'time', key: 'sec', dim: 'Time [T]' },
+      { token: 'seconds', cat: 'time', key: 'sec', dim: 'Time [T]' },
+      { token: 'min', cat: 'time', key: 'min', dim: 'Time [T]' },
+      { token: 'minute', cat: 'time', key: 'min', dim: 'Time [T]' },
+      { token: 'minutes', cat: 'time', key: 'min', dim: 'Time [T]' },
+      { token: 'h', cat: 'time', key: 'hr', dim: 'Time [T]' },
+      { token: 'hr', cat: 'time', key: 'hr', dim: 'Time [T]' },
+      { token: 'hour', cat: 'time', key: 'hr', dim: 'Time [T]' },
+      { token: 'hours', cat: 'time', key: 'hr', dim: 'Time [T]' },
+      { token: 'd', cat: 'time', key: 'day', dim: 'Time [T]' },
+      { token: 'day', cat: 'time', key: 'day', dim: 'Time [T]' },
+      { token: 'days', cat: 'time', key: 'day', dim: 'Time [T]' },
+      { token: 'wk', cat: 'time', key: 'wk', dim: 'Time [T]' },
+      { token: 'week', cat: 'time', key: 'wk', dim: 'Time [T]' },
+      { token: 'weeks', cat: 'time', key: 'wk', dim: 'Time [T]' },
+      { token: 'yr', cat: 'time', key: 'yr', dim: 'Time [T]' },
+      { token: 'year', cat: 'time', key: 'yr', dim: 'Time [T]' },
+      { token: 'years', cat: 'time', key: 'yr', dim: 'Time [T]' },
+
+      // Pressure
+      { token: 'pa', cat: 'pressure', key: 'pa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'pascal', cat: 'pressure', key: 'pa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'kpa', cat: 'pressure', key: 'kpa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'bar', cat: 'pressure', key: 'bar', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'psi', cat: 'pressure', key: 'psi', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'atm', cat: 'pressure', key: 'atm', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'mmhg', cat: 'pressure', key: 'mmhg', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'torr', cat: 'pressure', key: 'mmhg', dim: 'Pressure [M · L⁻¹ · T⁻²]' }
+    ];
 
     let currentCategory = 'length';
     let favorites = JSON.parse(localStorage.getItem('kconv_favs') || '[]');
@@ -697,6 +860,7 @@
       renderFavorites();
       renderHistory();
       convert();
+      parseExpressInput();
 
       // Enter key shortcut for custom units
       const nameInp = document.getElementById('customUnitName');
@@ -710,7 +874,7 @@
       // Help keyboard shortcut
       document.addEventListener('keydown', (e) => {
         if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-          alert('KConverter Pro Help:\n\n- Single Convert: Convert between two units instantly.\n- Batch Mode: See how one value converts to all other units in the category.\n- Favorites: Pin frequent conversions for quick access.\n- Custom Units: Define your own units relative to the base unit.\n- History Log: Keeps track of your conversions.\n\nTips:\n- Swap units quickly with the ⇄ button.\n- Copy results to clipboard with the copy button.');
+          alert('KConverter Pro Help:\n\n- Single Convert: Convert between two units instantly.\n- Batch Mode: See how one value converts to all other units in the category.\n- Smart Parser: Type natural expressions like "100 km/h to m/s" or "50 psi to bar".\n- Favorites: Pin frequent conversions for quick access.\n- Custom Units: Define your own units relative to the base unit.\n- History Log: Keeps track of your conversions.');
         }
       });
     };
@@ -738,6 +902,7 @@
       document.getElementById(`view-${viewName}`).classList.add('active');
 
       if (viewName === 'batch') renderBatch();
+      if (viewName === 'express') parseExpressInput();
       if (viewName === 'fav') renderFavorites();
       if (viewName === 'history') renderHistory();
     }
@@ -866,7 +1031,7 @@
       if (isBelowAbsZero) formulaStr += ' ⚠️ (Below Abs Zero)';
       document.getElementById('formulaText').innerText = formulaStr;
 
-      // Log conversion to history (throttled)
+      // Log conversion to history
       logHistory(currentCategory, val, fromName, formattedResult, toName);
     }
 
@@ -930,6 +1095,128 @@
       }
     }
 
+    /* SMART EXPRESSION PARSER MODE */
+    function matchExpressAlias(tok) {
+      if (!tok) return null;
+      const clean = tok.toLowerCase().trim().replace(/[\s\t]+/g, '');
+      return expressAliasTable.find(a => a.token === clean) || null;
+    }
+
+    function setExpressPreset(exprStr) {
+      const inp = document.getElementById('expressInput');
+      if (inp) {
+        inp.value = exprStr;
+        parseExpressInput();
+      }
+    }
+
+    function parseExpressInput() {
+      const card = document.getElementById('expressResultCard');
+      const valStr = document.getElementById('expressInput').value.trim();
+      if (!valStr || !card) return;
+
+      const numMatch = valStr.match(/^([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)\s*(.*)$/);
+      if (!numMatch) {
+        card.innerHTML = `<div style="color: #f87171; font-weight: 500;">⚠️ Invalid expression layout. Format: "&lt;number&gt; &lt;unit1&gt; to &lt;unit2&gt;"</div>`;
+        return;
+      }
+
+      const numVal = parseFloat(numMatch[1]);
+      const rest = numMatch[2].trim();
+
+      const parts = rest.split(/\s*(?:to|->|=|in)\s*/i);
+      if (parts.length < 2) {
+        card.innerHTML = `<div style="color: #f87171; font-weight: 500;">⚠️ Please include a destination unit (e.g. "100 km/h to m/s" or "50 psi to bar")</div>`;
+        return;
+      }
+
+      const fromAlias = matchExpressAlias(parts[0]);
+      const toAlias = matchExpressAlias(parts[1]);
+
+      if (!fromAlias || !toAlias) {
+        card.innerHTML = `
+          <div style="color: #f87171; font-weight: 600; font-size: 14px;">⚠️ Expression Parsing Error</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">
+            Could not match unit tokens:<br/>
+            - Source Unit "${escapeHTML(parts[0])}": ${fromAlias ? '✅ Recognized' : '❌ Unrecognized'}<br/>
+            - Target Unit "${escapeHTML(parts[1])}": ${toAlias ? '✅ Recognized' : '❌ Unrecognized'}
+          </div>
+        `;
+        return;
+      }
+
+      if (fromAlias.cat !== toAlias.cat) {
+        card.innerHTML = `
+          <div style="color: #ef4444; font-weight: 700; font-size: 14px;">🚫 Incompatible Physical Dimensions</div>
+          <div style="font-size: 13px; color: var(--text-primary); background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.3);">
+            Cannot convert <strong>${escapeHTML(fromAlias.dim)}</strong> to <strong>${escapeHTML(toAlias.dim)}</strong>.
+          </div>
+        `;
+        return;
+      }
+
+      const catKey = fromAlias.cat;
+      const modeUnits = getAllUnitsForCategory(catKey);
+      const uFrom = modeUnits[fromAlias.key];
+      const uTo = modeUnits[toAlias.key];
+
+      if (!uFrom || !uTo) return;
+
+      let result = 0;
+      if (catKey === 'temp') {
+        let celsius = 0;
+        if (fromAlias.key === 'c') celsius = numVal;
+        else if (fromAlias.key === 'f') celsius = (numVal - 32) * 5/9;
+        else if (fromAlias.key === 'k') celsius = numVal - 273.15;
+
+        if (toAlias.key === 'c') result = celsius;
+        else if (toAlias.key === 'f') result = (celsius * 9/5) + 32;
+        else if (toAlias.key === 'k') result = celsius + 273.15;
+      } else {
+        const fromFactor = uFrom.factor || 1;
+        const toFactor = uTo.factor || 1;
+        result = (numVal * fromFactor) / toFactor;
+      }
+
+      const formatted = formatNumber(result);
+
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Evaluated Result</div>
+            <div style="font-size: 26px; font-weight: 800; color: var(--accent-blue); line-height: 1.2;">
+              ${escapeHTML(formatted)} <span style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${escapeHTML(uTo.name)}</span>
+            </div>
+          </div>
+          <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); padding: 6px 12px; border-radius: 20px; font-size: 12px; color: var(--accent-blue); font-weight: 600;">
+            ${escapeHTML(fromAlias.dim)}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: var(--radius-sm);">
+          <div>
+            <span style="font-size: 11px; color: var(--text-muted);">Category:</span>
+            <div style="font-size: 13px; font-weight: 600;">${escapeHTML(categories[catKey])}</div>
+          </div>
+          <div>
+            <span style="font-size: 11px; color: var(--text-muted);">From Unit:</span>
+            <div style="font-size: 13px; font-weight: 600;">${escapeHTML(uFrom.name)}</div>
+          </div>
+          <div>
+            <span style="font-size: 11px; color: var(--text-muted);">To Unit:</span>
+            <div style="font-size: 13px; font-weight: 600;">${escapeHTML(uTo.name)}</div>
+          </div>
+        </div>
+
+        <div style="font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--panel-border);">
+          <span><strong>Formula:</strong> ${numVal} ${escapeHTML(uFrom.name)} = ${escapeHTML(formatted)} ${escapeHTML(uTo.name)}</span>
+          <button class="btn-sm" onclick="copyToClipboard('${numVal} ${escapeHTML(uFrom.name)} = ${escapeHTML(formatted)} ${escapeHTML(uTo.name)}')">📋 Copy Eq</button>
+        </div>
+      `;
+
+      logHistory(catKey, numVal, uFrom.name, formatted, uTo.name);
+    }
+
     /* FAVORITES SYSTEM */
     function pinCurrentFavorite() {
       const fromKey = document.getElementById('unitFrom').value;
@@ -946,7 +1233,6 @@
         toName: modeUnits[toKey].name
       };
 
-      // avoid duplicate
       if (!favorites.some(f => f.category === fav.category && f.fromKey === fav.fromKey && f.toKey === fav.toKey)) {
         favorites.push(fav);
         localStorage.setItem('kconv_favs', JSON.stringify(favorites));
