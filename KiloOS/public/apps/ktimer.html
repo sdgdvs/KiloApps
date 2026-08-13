@@ -560,6 +560,9 @@
     <button class="tab-btn" id="tabPomodoro" role="tab" aria-selected="false" aria-controls="panelPomodoro" tabindex="-1">
       🍅 POMODORO
     </button>
+    <button class="tab-btn" id="tabInterval" role="tab" aria-selected="false" aria-controls="panelInterval" tabindex="-1">
+      🏋️ INTERVAL / HIIT
+    </button>
   </nav>
   
   <!-- STOPWATCH PANEL -->
@@ -756,6 +759,58 @@
         </div>
       </div>
     </div>
+  </main>
+
+  <!-- INTERVAL / HIIT PANEL -->
+  <main class="view-panel" id="panelInterval" role="tabpanel" aria-labelledby="tabInterval">
+    <div class="ring-container">
+      <svg class="progress-ring" height="210" width="210" aria-hidden="true">
+        <circle fill="transparent" stroke="#1f222d" stroke-width="6" r="95" cx="105" cy="105" />
+        <circle class="progress-ring-circle" id="intRing" fill="transparent" stroke="var(--warning-color)" stroke-width="8" stroke-linecap="round" r="95" cx="105" cy="105" stroke-dasharray="596.9" stroke-dashoffset="0" />
+      </svg>
+      <div class="display-wrapper">
+        <div class="time-display" id="intDisplay" style="color:var(--warning-color);" aria-live="polite">00:05</div>
+        <div class="sub-label" id="intPhaseLabel">GET READY 🚀</div>
+        <div class="sub-label" id="intRoundLabel" style="margin-top:4px; color:var(--text-main); font-weight:bold; font-size:11px;">Set 1 of 8</div>
+      </div>
+    </div>
+
+    <div class="controls-row">
+      <button class="btn primary" id="intBtnStart" aria-label="Start Interval Workout">Start</button>
+      <button class="btn" id="intBtnSkip" aria-label="Skip Phase">Skip Phase</button>
+      <button class="btn" id="intBtnReset" aria-label="Reset Interval">Reset</button>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">
+        <span>Quick Workout Presets</span>
+      </div>
+      <div class="presets-chips">
+        <button class="chip-btn" id="btnPresetTabata">Tabata (20s/10s x8)</button>
+        <button class="chip-btn" id="btnPresetHiit">HIIT (30s/15s x10)</button>
+        <button class="chip-btn" id="btnPresetBoxing">Boxing (3m/1m x3)</button>
+      </div>
+
+      <div class="section-title" style="margin-top:10px;">Interval Setup</div>
+      <div class="pomo-settings-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="pomo-setting-item">
+          <label for="intCfgWork">Work (s)</label>
+          <input type="number" id="intCfgWork" value="20" min="1" max="3600">
+        </div>
+        <div class="pomo-setting-item">
+          <label for="intCfgRest">Rest (s)</label>
+          <input type="number" id="intCfgRest" value="10" min="0" max="3600">
+        </div>
+        <div class="pomo-setting-item">
+          <label for="intCfgSets">Sets</label>
+          <input type="number" id="intCfgSets" value="8" min="1" max="99">
+        </div>
+        <div class="pomo-setting-item">
+          <label for="intCfgPrep">Prep (s)</label>
+          <input type="number" id="intCfgPrep" value="5" min="0" max="60">
+        </div>
+      </div>
+    </div>
   <div id="helpOverlay" style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:bold; color:var(--text-muted); background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:12px; opacity:0.8; pointer-events:none; z-index:100; backdrop-filter:blur(2px);">Press 'H' for Help</div>
   <script>
     if (window.resizeTo) {
@@ -848,6 +903,32 @@
             osc.start(now);
             osc.stop(now + 0.8);
           });
+        } else if (type === 'work') {
+          [880, 1174.66].forEach((f, idx) => {
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now + idx * 0.12);
+            gain.gain.setValueAtTime(0.18, now + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.3);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.12);
+            osc.stop(now + idx * 0.12 + 0.3);
+          });
+        } else if (type === 'rest') {
+          [587.33, 440].forEach((f, idx) => {
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now + idx * 0.12);
+            gain.gain.setValueAtTime(0.18, now + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.3);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.12);
+            osc.stop(now + idx * 0.12 + 0.3);
+          });
         }
 
         setTimeout(() => {
@@ -863,7 +944,8 @@
       { btn: document.getElementById('tabStopwatch'), panel: document.getElementById('panelStopwatch'), name: 'stopwatch' },
       { btn: document.getElementById('tabTimer'), panel: document.getElementById('panelTimer'), name: 'timer' },
       { btn: document.getElementById('tabMulti'), panel: document.getElementById('panelMulti'), name: 'multi' },
-      { btn: document.getElementById('tabPomodoro'), panel: document.getElementById('panelPomodoro'), name: 'pomodoro' }
+      { btn: document.getElementById('tabPomodoro'), panel: document.getElementById('panelPomodoro'), name: 'pomodoro' },
+      { btn: document.getElementById('tabInterval'), panel: document.getElementById('panelInterval'), name: 'interval' }
     ];
 
     function switchTab(name) {
@@ -1470,10 +1552,190 @@
 
     renderPomoUI();
 
+    // ==========================================
+    // 5. INTERVAL / HIIT CIRCUIT TIMER ENGINE
+    // ==========================================
+    const INT_PHASE = { PREP: 'PREP', WORK: 'WORK', REST: 'REST', DONE: 'DONE' };
+    let intPhase = INT_PHASE.PREP;
+    let intCurrentSet = 1;
+    let intTotalSets = 8;
+    let intWorkMs = 20 * 1000;
+    let intRestMs = 10 * 1000;
+    let intPrepMs = 5 * 1000;
+    let intRemainingMs = 5 * 1000;
+    let intTotalPhaseMs = 5 * 1000;
+    let intTargetTime = 0;
+    let intInterval = null;
+
+    const intDisplay = document.getElementById('intDisplay');
+    const intPhaseLabel = document.getElementById('intPhaseLabel');
+    const intRoundLabel = document.getElementById('intRoundLabel');
+    const intRing = document.getElementById('intRing');
+    const intBtnStart = document.getElementById('intBtnStart');
+
+    function readIntervalConfig() {
+      intWorkMs = (Math.max(1, parseInt(document.getElementById('intCfgWork').value, 10) || 20)) * 1000;
+      intRestMs = (Math.max(0, parseInt(document.getElementById('intCfgRest').value, 10) || 10)) * 1000;
+      intTotalSets = Math.max(1, parseInt(document.getElementById('intCfgSets').value, 10) || 8);
+      intPrepMs = (Math.max(0, parseInt(document.getElementById('intCfgPrep').value, 10) || 5)) * 1000;
+    }
+
+    function renderIntervalUI() {
+      let sec = Math.ceil(intRemainingMs / 1000);
+      let m = Math.floor(sec / 60).toString().padStart(2, '0');
+      let s = (sec % 60).toString().padStart(2, '0');
+      intDisplay.innerText = `${m}:${s}`;
+
+      let pct = intTotalPhaseMs > 0 ? (intRemainingMs / intTotalPhaseMs) : 0;
+      intRing.style.strokeDashoffset = RING_CIRCUMFERENCE - (pct * RING_CIRCUMFERENCE);
+
+      if (intPhase === INT_PHASE.PREP) {
+        intPhaseLabel.innerText = "GET READY 🚀";
+        intDisplay.style.color = "var(--warning-color)";
+        intRing.setAttribute('stroke', "var(--warning-color)");
+        intRoundLabel.innerText = `Preparing Set 1 of ${intTotalSets}`;
+      } else if (intPhase === INT_PHASE.WORK) {
+        intPhaseLabel.innerText = "WORK! 🏋️";
+        intDisplay.style.color = "var(--pomo-work)";
+        intRing.setAttribute('stroke', "var(--pomo-work)");
+        intRoundLabel.innerText = `Set ${intCurrentSet} of ${intTotalSets}`;
+      } else if (intPhase === INT_PHASE.REST) {
+        intPhaseLabel.innerText = "REST ☕";
+        intDisplay.style.color = "var(--primary-color)";
+        intRing.setAttribute('stroke', "var(--primary-color)");
+        intRoundLabel.innerText = `Set ${intCurrentSet} of ${intTotalSets} complete`;
+      } else {
+        intPhaseLabel.innerText = "WORKOUT DONE! 🎉";
+        intDisplay.style.color = "var(--success-color)";
+        intRing.setAttribute('stroke', "var(--success-color)");
+        intRoundLabel.innerText = `Completed ${intTotalSets} Sets!`;
+      }
+    }
+
+    function advanceIntervalPhase() {
+      if (intPhase === INT_PHASE.PREP) {
+        intPhase = INT_PHASE.WORK;
+        intCurrentSet = 1;
+        intTotalPhaseMs = intWorkMs;
+        intRemainingMs = intWorkMs;
+        playAudioAlert('work');
+      } else if (intPhase === INT_PHASE.WORK) {
+        if (intCurrentSet < intTotalSets) {
+          intPhase = INT_PHASE.REST;
+          intTotalPhaseMs = intRestMs;
+          intRemainingMs = intRestMs;
+          playAudioAlert('rest');
+        } else {
+          intPhase = INT_PHASE.DONE;
+          if (intInterval) {
+            clearInterval(intInterval);
+            intInterval = null;
+          }
+          intBtnStart.innerText = "Start";
+          intBtnStart.classList.add("primary");
+          playAudioAlert('chime');
+        }
+      } else if (intPhase === INT_PHASE.REST) {
+        intCurrentSet++;
+        intPhase = INT_PHASE.WORK;
+        intTotalPhaseMs = intWorkMs;
+        intRemainingMs = intWorkMs;
+        playAudioAlert('work');
+      }
+      renderIntervalUI();
+    }
+
+    function tickInterval() {
+      intRemainingMs = intTargetTime - Date.now();
+      if (intRemainingMs <= 0) {
+        intRemainingMs = 0;
+        advanceIntervalPhase();
+        if (intPhase !== INT_PHASE.DONE && intInterval) {
+          intTargetTime = Date.now() + intRemainingMs;
+        }
+      } else {
+        renderIntervalUI();
+      }
+    }
+
+    intBtnStart.onclick = () => {
+      if (intInterval) {
+        clearInterval(intInterval);
+        intInterval = null;
+        intBtnStart.innerText = "Resume";
+        intBtnStart.classList.add("primary");
+      } else {
+        readIntervalConfig();
+        if (intPhase === INT_PHASE.DONE) {
+          intPhase = INT_PHASE.PREP;
+          intCurrentSet = 1;
+          intTotalPhaseMs = intPrepMs;
+          intRemainingMs = intPrepMs;
+        }
+        if (intRemainingMs <= 0) {
+          intTotalPhaseMs = intPrepMs;
+          intRemainingMs = intPrepMs;
+        }
+        intTargetTime = Date.now() + intRemainingMs;
+        intInterval = setInterval(tickInterval, 100);
+        intBtnStart.innerText = "Pause";
+        intBtnStart.classList.remove("primary");
+      }
+    };
+
+    document.getElementById('intBtnSkip').onclick = () => {
+      readIntervalConfig();
+      advanceIntervalPhase();
+      if (intInterval) {
+        intTargetTime = Date.now() + intRemainingMs;
+      }
+    };
+
+    document.getElementById('intBtnReset').onclick = () => {
+      if (intInterval) {
+        clearInterval(intInterval);
+        intInterval = null;
+      }
+      readIntervalConfig();
+      intPhase = INT_PHASE.PREP;
+      intCurrentSet = 1;
+      intTotalPhaseMs = intPrepMs;
+      intRemainingMs = intPrepMs;
+      intBtnStart.innerText = "Start";
+      intBtnStart.classList.add("primary");
+      renderIntervalUI();
+    };
+
+    document.getElementById('btnPresetTabata').onclick = () => {
+      document.getElementById('intCfgWork').value = 20;
+      document.getElementById('intCfgRest').value = 10;
+      document.getElementById('intCfgSets').value = 8;
+      document.getElementById('intCfgPrep').value = 5;
+      document.getElementById('intBtnReset').click();
+    };
+
+    document.getElementById('btnPresetHiit').onclick = () => {
+      document.getElementById('intCfgWork').value = 30;
+      document.getElementById('intCfgRest').value = 15;
+      document.getElementById('intCfgSets').value = 10;
+      document.getElementById('intCfgPrep').value = 5;
+      document.getElementById('intBtnReset').click();
+    };
+
+    document.getElementById('btnPresetBoxing').onclick = () => {
+      document.getElementById('intCfgWork').value = 180;
+      document.getElementById('intCfgRest').value = 60;
+      document.getElementById('intCfgSets').value = 3;
+      document.getElementById('intCfgPrep').value = 10;
+      document.getElementById('intBtnReset').click();
+    };
+
+    renderIntervalUI();
+
     // Help Shortcut
     document.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT') {
-        alert("KTimer Help:\n\n- Stopwatch: Track laps.\n- Timer: Count down.\n- Multi: Multiple timers.\n- Pomodoro: Work/Break cycles.");
+        alert("KTimer Help:\n\n- Stopwatch: Track laps.\n- Timer: Count down.\n- Multi: Multiple timers.\n- Pomodoro: Work/Break cycles.\n- Interval: HIIT Work/Rest cycles.");
       }
     });
 

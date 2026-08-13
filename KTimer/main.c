@@ -13,6 +13,7 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 #define ID_BTN_TM_TAB      1001
 #define ID_BTN_MT_TAB      1002
 #define ID_BTN_POMO_TAB    1003
+#define ID_BTN_INT_TAB     1004
 
 #define ID_BTN_START       1010
 #define ID_BTN_LAP         1011
@@ -43,15 +44,40 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 #define ID_BTN_POMO_SKIP   1041
 #define ID_BTN_POMO_RESET  1042
 
+#define ID_EDIT_INT_WORK    1050
+#define ID_EDIT_INT_REST    1051
+#define ID_EDIT_INT_SETS    1052
+#define ID_EDIT_INT_PREP    1053
+#define ID_BTN_INT_START    1054
+#define ID_BTN_INT_SKIP     1055
+#define ID_BTN_INT_RESET    1056
+#define ID_PRESET_TABATA    1057
+#define ID_PRESET_HIIT30    1058
+#define ID_PRESET_BOXING    1059
+
 // App Modes
 typedef enum {
     MODE_STOPWATCH = 0,
     MODE_TIMER = 1,
     MODE_MULTI = 2,
-    MODE_POMODORO = 3
+    MODE_POMODORO = 3,
+    MODE_INTERVAL = 4
 } AppMode;
 
 AppMode g_mode = MODE_STOPWATCH;
+
+// Interval State
+typedef enum { INT_PHASE_PREP = 0, INT_PHASE_WORK = 1, INT_PHASE_REST = 2, INT_PHASE_DONE = 3 } IntervalPhase;
+IntervalPhase g_intPhase = INT_PHASE_PREP;
+int g_intCurrentSet = 1;
+int g_intTotalSets = 8;
+DWORD g_intWorkMs = 20 * 1000;
+DWORD g_intRestMs = 10 * 1000;
+DWORD g_intPrepMs = 5 * 1000;
+DWORD g_intRemainingMs = 5 * 1000;
+DWORD g_intTotalPhaseMs = 5 * 1000;
+DWORD g_intTargetTime = 0;
+int g_intIsRunning = 0;
 
 // Lap Structure
 typedef struct {
@@ -107,8 +133,8 @@ static int g_dpiScale = 100;
 #define S(x) ((x) * g_dpiScale / 100)
 
 HWND hMainWnd = NULL;
-HWND hTabSW, hTabTM, hTabMT, hTabPOMO;
-HWND hDisplay, hTmInput, hStaticStats;
+HWND hTabSW, hTabTM, hTabMT, hTabPOMO, hTabINT;
+HWND hDisplay, hTmInput, hStaticStats, hStaticIntStats, hStaticIntLabels;
 HWND hBtnStart, hBtnLap, hBtnReset, hBtnExportCsv, hBtnExportTxt;
 HWND hListLaps;
 
@@ -120,6 +146,11 @@ HWND hEditMtName, hEditMtTime, hBtnMtAdd, hListMt, hBtnMtStartAll, hBtnMtPauseAl
 
 // Pomodoro Handles
 HWND hBtnPomoStart, hBtnPomoSkip, hBtnPomoReset;
+
+// Interval Handles
+HWND hEditIntWork, hEditIntRest, hEditIntSets, hEditIntPrep;
+HWND hBtnIntStart, hBtnIntSkip, hBtnIntReset;
+HWND hBtnPresetTabata, hBtnPresetHiit, hBtnPresetBoxing;
 
 HFONT hFontDisplay = NULL;
 HFONT hFontBtn = NULL;
@@ -204,6 +235,18 @@ static void PlayChimeSound() {
     Beep(784, 250);
 }
 
+static void PlayWorkStartSound() {
+    MessageBeep(MB_ICONASTERISK);
+    Beep(880, 150);
+    Beep(1174, 250);
+}
+
+static void PlayRestStartSound() {
+    MessageBeep(MB_OK);
+    Beep(587, 180);
+    Beep(440, 250);
+}
+
 static void UpdateStopwatchDisplay() {
     DWORD current = g_swElapsed;
     if (g_swIsRunning) {
@@ -280,6 +323,62 @@ static void UpdatePomodoroDisplay() {
         char statsBuf[128];
         wsprintfA(statsBuf, "%s (Cycle %d/4)\nDone: %d | Focus: %u mins", stateName, g_pomoCycleCount, g_pomoCompletedSessions, g_pomoTotalFocusMins);
         SetWindowTextA(hStaticStats, statsBuf);
+    }
+}
+
+static void UpdateIntervalDisplay() {
+    if (g_intIsRunning) {
+        DWORD now = GetTickCount();
+        if (now >= g_intTargetTime) {
+            g_intRemainingMs = 0;
+
+            if (g_intPhase == INT_PHASE_PREP) {
+                g_intPhase = INT_PHASE_WORK;
+                g_intCurrentSet = 1;
+                g_intTotalPhaseMs = g_intWorkMs;
+                g_intRemainingMs = g_intWorkMs;
+                g_intTargetTime = now + g_intWorkMs;
+                PlayWorkStartSound();
+            } else if (g_intPhase == INT_PHASE_WORK) {
+                if (g_intCurrentSet < g_intTotalSets) {
+                    g_intPhase = INT_PHASE_REST;
+                    g_intTotalPhaseMs = g_intRestMs;
+                    g_intRemainingMs = g_intRestMs;
+                    g_intTargetTime = now + g_intRestMs;
+                    PlayRestStartSound();
+                } else {
+                    g_intPhase = INT_PHASE_DONE;
+                    g_intIsRunning = 0;
+                    SetWindowTextA(hBtnIntStart, "Start");
+                    PlayChimeSound();
+                }
+            } else if (g_intPhase == INT_PHASE_REST) {
+                g_intCurrentSet++;
+                g_intPhase = INT_PHASE_WORK;
+                g_intTotalPhaseMs = g_intWorkMs;
+                g_intRemainingMs = g_intWorkMs;
+                g_intTargetTime = now + g_intWorkMs;
+                PlayWorkStartSound();
+            }
+        } else {
+            g_intRemainingMs = g_intTargetTime - now;
+        }
+    }
+
+    char timeBuf[32];
+    FormatMsToTimer(g_intRemainingMs, timeBuf, sizeof(timeBuf));
+
+    if (g_mode == MODE_INTERVAL) {
+        SetWindowTextA(hDisplay, timeBuf + 3); // MM:SS
+
+        const char* phaseStr = "PREPARE";
+        if (g_intPhase == INT_PHASE_WORK) phaseStr = "WORK!";
+        else if (g_intPhase == INT_PHASE_REST) phaseStr = "REST";
+        else if (g_intPhase == INT_PHASE_DONE) phaseStr = "FINISHED!";
+
+        char statsBuf[128];
+        wsprintfA(statsBuf, "%s (Set %d/%d)\nWork: %ds | Rest: %ds", phaseStr, g_intCurrentSet, g_intTotalSets, (int)(g_intWorkMs/1000), (int)(g_intRestMs/1000));
+        SetWindowTextA(hStaticIntStats, statsBuf);
     }
 }
 
@@ -375,7 +474,8 @@ static void SwitchMode(AppMode newMode) {
     SetWindowTextA(hTabSW, g_mode == MODE_STOPWATCH ? "[ Stopwatch ]" : "Stopwatch");
     SetWindowTextA(hTabTM, g_mode == MODE_TIMER ? "[ Timer ]" : "Timer");
     SetWindowTextA(hTabMT, g_mode == MODE_MULTI ? "[ Multi ]" : "Multi");
-    SetWindowTextA(hTabPOMO, g_mode == MODE_POMODORO ? "[ Pomodoro ]" : "Pomodoro");
+    SetWindowTextA(hTabPOMO, g_mode == MODE_POMODORO ? "[ Pomo ]" : "Pomo");
+    SetWindowTextA(hTabINT, g_mode == MODE_INTERVAL ? "[ HIIT ]" : "HIIT");
 
     // Hide all mode-specific controls first
     ShowWindow(hDisplay, SW_SHOW);
@@ -401,6 +501,19 @@ static void SwitchMode(AppMode newMode) {
     ShowWindow(hBtnPomoSkip, SW_HIDE);
     ShowWindow(hBtnPomoReset, SW_HIDE);
     ShowWindow(hStaticStats, SW_HIDE);
+
+    ShowWindow(hBtnIntStart, SW_HIDE);
+    ShowWindow(hBtnIntSkip, SW_HIDE);
+    ShowWindow(hBtnIntReset, SW_HIDE);
+    ShowWindow(hStaticIntStats, SW_HIDE);
+    ShowWindow(hStaticIntLabels, SW_HIDE);
+    ShowWindow(hEditIntWork, SW_HIDE);
+    ShowWindow(hEditIntRest, SW_HIDE);
+    ShowWindow(hEditIntSets, SW_HIDE);
+    ShowWindow(hEditIntPrep, SW_HIDE);
+    ShowWindow(hBtnPresetTabata, SW_HIDE);
+    ShowWindow(hBtnPresetHiit, SW_HIDE);
+    ShowWindow(hBtnPresetBoxing, SW_HIDE);
 
     if (g_mode == MODE_STOPWATCH) {
         ShowWindow(hBtnStart, SW_SHOW);
@@ -454,6 +567,22 @@ static void SwitchMode(AppMode newMode) {
 
         SetWindowTextA(hBtnPomoStart, g_pomoIsRunning ? "Pause" : "Start");
         UpdatePomodoroDisplay();
+    } else if (g_mode == MODE_INTERVAL) {
+        ShowWindow(hBtnIntStart, SW_SHOW);
+        ShowWindow(hBtnIntSkip, SW_SHOW);
+        ShowWindow(hBtnIntReset, SW_SHOW);
+        ShowWindow(hStaticIntStats, SW_SHOW);
+        ShowWindow(hStaticIntLabels, SW_SHOW);
+        ShowWindow(hEditIntWork, SW_SHOW);
+        ShowWindow(hEditIntRest, SW_SHOW);
+        ShowWindow(hEditIntSets, SW_SHOW);
+        ShowWindow(hEditIntPrep, SW_SHOW);
+        ShowWindow(hBtnPresetTabata, SW_SHOW);
+        ShowWindow(hBtnPresetHiit, SW_SHOW);
+        ShowWindow(hBtnPresetBoxing, SW_SHOW);
+
+        SetWindowTextA(hBtnIntStart, g_intIsRunning ? "Pause" : "Start");
+        UpdateIntervalDisplay();
     }
 }
 
@@ -471,11 +600,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFontSmall = CreateFontA(-S(12), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             // Top Bar Tabs
-            hTabSW = CreateWindowA("BUTTON", "[ Stopwatch ]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(10), S(100), S(30), hwnd, (HMENU)ID_BTN_SW_TAB, NULL, NULL);
-            hTabTM = CreateWindowA("BUTTON", "Timer", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(115), S(10), S(100), S(30), hwnd, (HMENU)ID_BTN_TM_TAB, NULL, NULL);
-            hTabMT = CreateWindowA("BUTTON", "Multi", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(220), S(10), S(100), S(30), hwnd, (HMENU)ID_BTN_MT_TAB, NULL, NULL);
-            hTabPOMO = CreateWindowA("BUTTON", "Pomodoro", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(325), S(10), S(105), S(30), hwnd, (HMENU)ID_BTN_POMO_TAB, NULL, NULL);
-
+            hTabSW = CreateWindowA("BUTTON", "Stopwatch", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_SW_TAB, NULL, NULL);
+            hTabTM = CreateWindowA("BUTTON", "Timer", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(94), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_TM_TAB, NULL, NULL);
+            hTabMT = CreateWindowA("BUTTON", "Multi", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(178), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_MT_TAB, NULL, NULL);
+            hTabPOMO = CreateWindowA("BUTTON", "Pomo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(262), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_POMO_TAB, NULL, NULL);
+            hTabINT = CreateWindowA("BUTTON", "HIIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(346), S(10), S(84), S(30), hwnd, (HMENU)ID_BTN_INT_TAB, NULL, NULL);
 
             // Display & Input Controls
             hDisplay = CreateWindowExA(0, "STATIC", "00:00:00.000", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(50), S(420), S(40), hwnd, NULL, NULL, NULL);
@@ -512,6 +641,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnPomoReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | BS_PUSHBUTTON, S(290), S(98), S(140), S(32), hwnd, (HMENU)ID_BTN_POMO_RESET, NULL, NULL);
             hStaticStats = CreateWindowExA(0, "STATIC", "WORK SESSION\nDone: 0 | Focus: 0 mins", WS_CHILD | SS_CENTER, S(10), S(145), S(420), S(60), hwnd, NULL, NULL, NULL);
 
+            // Interval / HIIT Controls
+            hBtnIntStart = CreateWindowA("BUTTON", "Start", WS_CHILD | BS_PUSHBUTTON, S(10), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_INT_START, NULL, NULL);
+            hBtnIntSkip = CreateWindowA("BUTTON", "Skip Phase", WS_CHILD | BS_PUSHBUTTON, S(150), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_INT_SKIP, NULL, NULL);
+            hBtnIntReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | BS_PUSHBUTTON, S(290), S(98), S(140), S(32), hwnd, (HMENU)ID_BTN_INT_RESET, NULL, NULL);
+            hStaticIntStats = CreateWindowExA(0, "STATIC", "PREPARE\nSet 1 of 8 | Work: 20s Rest: 10s", WS_CHILD | SS_CENTER, S(10), S(140), S(420), S(48), hwnd, NULL, NULL, NULL);
+
+            hStaticIntLabels = CreateWindowExA(0, "STATIC", "Work(s)       Rest(s)       Sets          Prep(s)", WS_CHILD | SS_CENTER, S(10), S(195), S(420), S(18), hwnd, NULL, NULL, NULL);
+            hEditIntWork = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "20", WS_CHILD | ES_CENTER | ES_NUMBER, S(10), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_WORK, NULL, NULL);
+            hEditIntRest = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "10", WS_CHILD | ES_CENTER | ES_NUMBER, S(115), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_REST, NULL, NULL);
+            hEditIntSets = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "8", WS_CHILD | ES_CENTER | ES_NUMBER, S(220), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_SETS, NULL, NULL);
+            hEditIntPrep = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "5", WS_CHILD | ES_CENTER | ES_NUMBER, S(325), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_PREP, NULL, NULL);
+
+            hBtnPresetTabata = CreateWindowA("BUTTON", "Tabata 20/10x8", WS_CHILD | BS_PUSHBUTTON, S(10), S(250), S(130), S(28), hwnd, (HMENU)ID_PRESET_TABATA, NULL, NULL);
+            hBtnPresetHiit   = CreateWindowA("BUTTON", "HIIT 30/15x10", WS_CHILD | BS_PUSHBUTTON, S(150), S(250), S(130), S(28), hwnd, (HMENU)ID_PRESET_HIIT30, NULL, NULL);
+            hBtnPresetBoxing = CreateWindowA("BUTTON", "Boxing 3m/1mx3", WS_CHILD | BS_PUSHBUTTON, S(290), S(250), S(140), S(28), hwnd, (HMENU)ID_PRESET_BOXING, NULL, NULL);
+
             HWND hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(400), S(420), S(20), hwnd, NULL, NULL, NULL);
 
             // Font Application
@@ -519,6 +664,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hTabTM, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hTabMT, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hTabPOMO, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hTabINT, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFontDisplay, TRUE);
             SendMessageA(hTmInput, WM_SETFONT, (WPARAM)hFontDisplay, TRUE);
             SendMessageA(hBtnStart, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
@@ -538,6 +684,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnPomoSkip, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hBtnPomoReset, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hStaticStats, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+
+            SendMessageA(hBtnIntStart, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hBtnIntSkip, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hBtnIntReset, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hStaticIntStats, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hStaticIntLabels, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hEditIntWork, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hEditIntRest, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hEditIntSets, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hEditIntPrep, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hBtnPresetTabata, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hBtnPresetHiit, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hBtnPresetBoxing, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+
             SendMessageA(hHelpLabel, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
             SetTimer(hwnd, 1, 25, NULL);
@@ -550,6 +710,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == ID_BTN_TM_TAB) SwitchMode(MODE_TIMER);
             else if (id == ID_BTN_MT_TAB) SwitchMode(MODE_MULTI);
             else if (id == ID_BTN_POMO_TAB) SwitchMode(MODE_POMODORO);
+            else if (id == ID_BTN_INT_TAB) SwitchMode(MODE_INTERVAL);
 
             // Stopwatch Handlers
             else if (id == ID_BTN_START && g_mode == MODE_STOPWATCH) {
@@ -704,12 +865,119 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UpdatePomodoroDisplay();
             }
 
+            // Interval Handlers
+            else if (id == ID_BTN_INT_START && g_mode == MODE_INTERVAL) {
+                if (g_intIsRunning) {
+                    g_intIsRunning = 0;
+                    SetWindowTextA(hBtnIntStart, "Resume");
+                } else {
+                    char bufW[16], bufR[16], bufS[16], bufP[16];
+                    GetWindowTextA(hEditIntWork, bufW, sizeof(bufW));
+                    GetWindowTextA(hEditIntRest, bufR, sizeof(bufR));
+                    GetWindowTextA(hEditIntSets, bufS, sizeof(bufS));
+                    GetWindowTextA(hEditIntPrep, bufP, sizeof(bufP));
+                    int w = SimpleStrToInt(bufW);
+                    int r = SimpleStrToInt(bufR);
+                    int s = SimpleStrToInt(bufS);
+                    int p = SimpleStrToInt(bufP);
+                    if (w <= 0) w = 20;
+                    if (r < 0) r = 10;
+                    if (s <= 0) s = 8;
+                    if (p < 0) p = 5;
+
+                    g_intWorkMs = w * 1000;
+                    g_intRestMs = r * 1000;
+                    g_intTotalSets = s;
+                    g_intPrepMs = p * 1000;
+
+                    if (g_intPhase == INT_PHASE_DONE) {
+                        g_intPhase = INT_PHASE_PREP;
+                        g_intCurrentSet = 1;
+                        g_intRemainingMs = g_intPrepMs;
+                        g_intTotalPhaseMs = g_intPrepMs;
+                    }
+
+                    if (g_intRemainingMs > 0) {
+                        g_intIsRunning = 1;
+                        g_intTargetTime = GetTickCount() + g_intRemainingMs;
+                        SetWindowTextA(hBtnIntStart, "Pause");
+                    }
+                }
+            } else if (id == ID_BTN_INT_SKIP && g_mode == MODE_INTERVAL) {
+                if (g_intPhase == INT_PHASE_PREP) {
+                    g_intPhase = INT_PHASE_WORK;
+                    g_intCurrentSet = 1;
+                    g_intTotalPhaseMs = g_intWorkMs;
+                    g_intRemainingMs = g_intWorkMs;
+                } else if (g_intPhase == INT_PHASE_WORK) {
+                    if (g_intCurrentSet < g_intTotalSets) {
+                        g_intPhase = INT_PHASE_REST;
+                        g_intTotalPhaseMs = g_intRestMs;
+                        g_intRemainingMs = g_intRestMs;
+                    } else {
+                        g_intPhase = INT_PHASE_DONE;
+                        g_intIsRunning = 0;
+                        SetWindowTextA(hBtnIntStart, "Start");
+                    }
+                } else if (g_intPhase == INT_PHASE_REST) {
+                    g_intCurrentSet++;
+                    g_intPhase = INT_PHASE_WORK;
+                    g_intTotalPhaseMs = g_intWorkMs;
+                    g_intRemainingMs = g_intWorkMs;
+                }
+                if (g_intIsRunning) {
+                    g_intTargetTime = GetTickCount() + g_intRemainingMs;
+                }
+                UpdateIntervalDisplay();
+            } else if (id == ID_BTN_INT_RESET && g_mode == MODE_INTERVAL) {
+                g_intIsRunning = 0;
+                char bufW[16], bufR[16], bufS[16], bufP[16];
+                GetWindowTextA(hEditIntWork, bufW, sizeof(bufW));
+                GetWindowTextA(hEditIntRest, bufR, sizeof(bufR));
+                GetWindowTextA(hEditIntSets, bufS, sizeof(bufS));
+                GetWindowTextA(hEditIntPrep, bufP, sizeof(bufP));
+                int w = SimpleStrToInt(bufW); if (w <= 0) w = 20;
+                int r = SimpleStrToInt(bufR); if (r < 0) r = 10;
+                int s = SimpleStrToInt(bufS); if (s <= 0) s = 8;
+                int p = SimpleStrToInt(bufP); if (p < 0) p = 5;
+                g_intWorkMs = w * 1000;
+                g_intRestMs = r * 1000;
+                g_intTotalSets = s;
+                g_intPrepMs = p * 1000;
+
+                g_intPhase = INT_PHASE_PREP;
+                g_intCurrentSet = 1;
+                g_intRemainingMs = g_intPrepMs;
+                g_intTotalPhaseMs = g_intPrepMs;
+                SetWindowTextA(hBtnIntStart, "Start");
+                UpdateIntervalDisplay();
+            } else if (id == ID_PRESET_TABATA) {
+                SetWindowTextA(hEditIntWork, "20");
+                SetWindowTextA(hEditIntRest, "10");
+                SetWindowTextA(hEditIntSets, "8");
+                SetWindowTextA(hEditIntPrep, "5");
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INT_RESET, 0), 0);
+            } else if (id == ID_PRESET_HIIT30) {
+                SetWindowTextA(hEditIntWork, "30");
+                SetWindowTextA(hEditIntRest, "15");
+                SetWindowTextA(hEditIntSets, "10");
+                SetWindowTextA(hEditIntPrep, "5");
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INT_RESET, 0), 0);
+            } else if (id == ID_PRESET_BOXING) {
+                SetWindowTextA(hEditIntWork, "180");
+                SetWindowTextA(hEditIntRest, "60");
+                SetWindowTextA(hEditIntSets, "3");
+                SetWindowTextA(hEditIntPrep, "10");
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INT_RESET, 0), 0);
+            }
+
             break;
         }
         case WM_TIMER: {
             if (g_swIsRunning) UpdateStopwatchDisplay();
             if (g_tmIsRunning) UpdateTimerDisplay();
             if (g_pomoIsRunning) UpdatePomodoroDisplay();
+            if (g_intIsRunning) UpdateIntervalDisplay();
             UpdateMultiTimers();
             break;
         }
@@ -775,7 +1043,7 @@ void __stdcall MainEntry() {
             char className[32] = {0};
             GetClassNameA(hFocus, className, sizeof(className));
             if (lstrcmpiA(className, "EDIT") != 0) {
-                MessageBoxA(hwnd, "KTimer Help:\n\n- Stopwatch: Track laps.\n- Timer: Count down.\n- Multi: Multiple timers.\n- Pomodoro: Work/Break cycles.", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KTimer Help:\n\n- Stopwatch: Track laps.\n- Timer: Count down.\n- Multi: Multiple timers.\n- Pomodoro: Work/Break cycles.\n- HIIT: Interval Work/Rest cycles.", "Help", MB_OK | MB_ICONINFORMATION);
                 continue;
             }
         }
