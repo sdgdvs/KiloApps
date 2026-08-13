@@ -52,6 +52,7 @@ int selfDestructActive = 0;
 int selfDestructTimer = 0;
 int wonGame = 0;
 char winEnding[256] = "";
+int showHelp = 0;
 
 typedef struct {
     int x, y, w, h;
@@ -258,7 +259,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTimer(hwnd, 1, 50, NULL);
             return 0;
         case WM_TIMER:
-            if (!isDead && !wonGame) {
+            if (!isDead && !wonGame && !showHelp) {
                 static int tickCount = 0;
                 tickCount++;
                 if (tickCount >= 20) {
@@ -560,6 +561,41 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 TextOut(hdcMem, WINDOW_WIDTH / 2 - 40, WINDOW_HEIGHT / 2, deadMsg, lstrlen(deadMsg));
             }
 
+            if (showHelp) {
+                HBRUSH hHelpBrush = CreateSolidBrush(RGB(10, 10, 10));
+                RECT helpRect = {40, 40, WINDOW_WIDTH - 40, WINDOW_HEIGHT - 40};
+                FillRect(hdcMem, &helpRect, hHelpBrush);
+                
+                HPEN hHelpPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
+                HPEN hOldPenHelp = (HPEN)SelectObject(hdcMem, hHelpPen);
+                HBRUSH hOldBrushHelp = (HBRUSH)SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
+                Rectangle(hdcMem, helpRect.left, helpRect.top, helpRect.right, helpRect.bottom);
+                SelectObject(hdcMem, hOldBrushHelp);
+                SelectObject(hdcMem, hOldPenHelp);
+                DeleteObject(hHelpPen);
+                DeleteObject(hHelpBrush);
+
+                SetTextColor(hdcMem, RGB(0, 255, 0));
+                SetBkMode(hdcMem, TRANSPARENT);
+                int y = 50;
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - 110, y, "SURVIVAL GUIDE (Press H to close)", 33);
+                y += 40;
+                TextOut(hdcMem, 60, y, "Controls & How to Play:", 23); y += 20;
+                TextOut(hdcMem, 70, y, "WASD / Arrows: Move", 19); y += 20;
+                TextOut(hdcMem, 70, y, "Space: Use EMP (Stuns nearby aliens)", 36); y += 20;
+                TextOut(hdcMem, 70, y, "H: Toggle Help", 14); y += 30;
+                TextOut(hdcMem, 70, y, "Survive, find elevator. Watch Oxygen & Battery.", 47); y += 40;
+                
+                TextOut(hdcMem, 60, y, "Lore Index:", 11); y += 20;
+                TextOut(hdcMem, 70, y, "Trapped on a derelict station. The crew was", 43); y += 20;
+                TextOut(hdcMem, 70, y, "experimenting on aliens... it didn't go well.", 45); y += 40;
+                
+                TextOut(hdcMem, 60, y, "Enemy Bestiary:", 15); y += 20;
+                TextOut(hdcMem, 70, y, "Entities: Sensitive to noise & movement.", 40); y += 20;
+                TextOut(hdcMem, 70, y, "They glow magenta. Hide in Lockers to avoid.", 44); y += 20;
+                TextOut(hdcMem, 70, y, "Stunned Entities: Glow blue. Safe temporarily.", 46);
+            }
+
             // Draw scanlines
             HPEN hScanlinePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
             HPEN hOldPen = (HPEN)SelectObject(hdcMem, hScanlinePen);
@@ -594,7 +630,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_KEYDOWN: {
-            if (isDead || wonGame) return 0;
+            if (wParam == 'H') {
+                showHelp = !showHelp;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (isDead || wonGame || showHelp) return 0;
             int newX = playerX;
             int newY = playerY;
             

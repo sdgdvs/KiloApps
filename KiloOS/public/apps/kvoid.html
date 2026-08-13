@@ -93,6 +93,20 @@
             height: 20px;
             text-shadow: 0 0 3px #0f0;
         }
+        #help-modal {
+            position: absolute;
+            top: 50px; left: 20px; right: 20px; bottom: 50px;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0f0;
+            box-shadow: 0 0 10px #0f0;
+            z-index: 20;
+            padding: 20px;
+            overflow-y: auto;
+            color: #0f0;
+        }
+        #help-modal h2 { margin-top: 0; text-align: center; }
+        .help-section { margin-bottom: 15px; }
+        .help-section h3 { border-bottom: 1px solid #0f0; padding-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -115,7 +129,26 @@
             <div class="scanlines"></div>
             <div class="crt-overlay"></div>
         </div>
-        <div id="message">Use WASD to move. Space to use EMP.</div>
+        <div id="message">Use WASD to move. Space to use EMP. Press H for Help.</div>
+        <div id="help-modal" style="display:none;">
+            <h2>Survival Guide (Press H to close)</h2>
+            <div class="help-section">
+                <h3>Controls & How to Play</h3>
+                <p><b>WASD / Arrows:</b> Move<br>
+                <b>Space:</b> Use EMP (Stuns nearby aliens)<br>
+                <b>H:</b> Toggle Help<br>
+                Survive, find the elevator to the next deck. Watch your Oxygen and Battery. If either hits zero, you die.</p>
+            </div>
+            <div class="help-section">
+                <h3>Lore Index</h3>
+                <p>You are trapped on a derelict station. The crew was experimenting on alien lifeforms... it didn't go well. You must escape before life support fails completely or they find you.</p>
+            </div>
+            <div class="help-section">
+                <h3>Enemy Bestiary</h3>
+                <p><b>The Entities:</b> Sensitive to noise and movement. If they catch you, it's instant death. They glow magenta. Hide in Lockers to avoid detection.<br>
+                <b>Stunned Entities:</b> Glow blue. Safe to pass temporarily.</p>
+            </div>
+        </div>
     </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -141,6 +174,7 @@
         let selfDestructTimer = 0;
         let wonGame = false;
         let winEnding = "";
+        let showHelp = false;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
@@ -384,7 +418,7 @@
         }
 
         function gameTick() {
-            if (isDead || wonGame) return;
+            if (isDead || wonGame || showHelp) return;
             totalTime++;
             oxygen -= 0.5;
             battery -= 0.2;
@@ -723,7 +757,7 @@
                         }
                     }
                     oxygen -= 0.2;
-                    if (target === 0) showMessage("Use WASD to move. Space to use EMP.");
+                    if (target === 0) showMessage("Use WASD to move. Space to use EMP. Press H for Help.");
                     if (oxygen <= 0) {
                         oxygen = 0;
                         updateStatsDisplay();
@@ -738,6 +772,12 @@
 
         window.addEventListener('keydown', (e) => {
             if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (e.key === 'h' || e.key === 'H') {
+                showHelp = !showHelp;
+                document.getElementById('help-modal').style.display = showHelp ? 'block' : 'none';
+                return;
+            }
+            if (showHelp) return;
             switch(e.key) {
                 case 'ArrowUp':
                 case 'w':
