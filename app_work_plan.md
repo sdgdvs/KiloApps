@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KTimer
+**Target App:** KContacts
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KTimer (Added Multi-Timer Engine [concurrent named timers], Pomodoro Work/Break Cycle Manager with Stats, Lap Split Analysis & CSV/TXT Export, Alarm Presets Library, and Sound Alerts & Visual Progress Ring)
 - KContacts (Added Real-time Search & Group Filters, vCard [.vcf] & CSV Import/Export, Duplicates Merger, Contact Avatar Initial/Color Generator, and Quick Action buttons for Email/Phone)
 - KRead (Added Real-Time Search & Highlight Navigation, Bookmarks Drawer & Persistence, Reading Statistics Engine [WPM & Time Remaining], Reader Themes & Font Controls, Highlights/Notes & JSON/TXT Export)
 - KBase (Added Simultaneous Multi-Base Converter [BIN/OCT/DEC/HEX/Base 2..36], 64-Bit Interactive Toggle Board & Bitwise Operator Suite [AND/OR/XOR/NOT/SHL/SHR/ROL/ROR], IEEE-754 Floating Point Breakdown, and Conversion History Log & CSV/JSON Export)
@@ -129,3 +128,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KConverter (Added Single & Batch Conversion Modes, Favorite Pairs Pinning, Custom Unit Formula Creator, Searchable Conversion History Log with CSV/JSON Export, Precision/Scientific Notation Controls, and Smart Natural Expression & Dimension Parser)
 - KTodo (Added Task Search & Multi-Filter System, Category Tagging, Due Dates & Priorities, Subtask Checklists, JSON/CSV Data Import/Export, Productivity Statistics, Markdown Task List Import/Export, and Kanban Board / Project Category Tabs)
 - KGraph (Added Multi-Function Plotting y1-y5, Derivative & Simpson Integral Calculators, Roots & Intersections Finders, Interactive Value Tracing Cursor, Preset Library, CSV/JSON/PNG Export, and Polar r(θ) & Parametric (x(t),y(t)) Plotting Engines with Polar Grids)
+- KTimer (Added Multi-Timer Engine [concurrent named timers], Pomodoro Work/Break Cycle Manager with Stats, Lap Split Analysis & CSV/TXT Export, Alarm Presets Library, Sound Alerts & Visual Progress Ring, and Interval / HIIT Circuit Timer Engine [Work/Rest/Prep cycles, Tabata/HIIT/Boxing presets])
