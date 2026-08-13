@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KSynth
+**Target App:** KSys
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -259,3 +259,5 @@ Pass 1 Complete.
 - **KSolitaire**: Fixed `ReferenceError: topCard is not defined` in `ksolitaire.html` tableau move validation. Fixed double score penalty during Undo operations in both web and native versions. Verified native `.exe` compilation and Vite web build.
 
 - **KSpace**: Fixed UI crash (`TypeError: Cannot read properties of undefined (reading 'toLowerCase')`) on pointerdown in `kspace.html`. Cleaned up corrupted keydown listener branches and guarded replay recording against uninitialized frame arrays. Cleared visual effect particle arrays on game restart. Added schema validation for leaderboard import. Verified native build.
+
+- **KSynth**: Fixed step sequencer DOM re-creation performance leak by decoupling grid initialization from step state updates in `ksynth.html`. Added strict JSON preset/sequence schema validation and value clamping. Verified native `KSynth.exe` compilation (15 KB) and Vite web build.
