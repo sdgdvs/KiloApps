@@ -168,6 +168,7 @@ typedef struct {
 } PetalParticle;
 #define MAX_PETALS 30
 PetalParticle petals[MAX_PETALS];
+float animTime = 0.0f;
 
 void InitBoard();
 int GetLiberties(int x, int y, int color, char visited[19][19]);
@@ -1159,6 +1160,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 4) {
+                animTime += 0.1f;
                 for (int i = 0; i < MAX_PETALS; i++) {
                     petals[i].x += petals[i].vx;
                     petals[i].y += petals[i].vy;
@@ -1350,27 +1352,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             // Territory estimation visualizer
             if (showEstimator) {
                 ComputeTerritoryAndAtari();
+                float pulse = (sinf(animTime) + 1.0f) * 0.5f; // 0.0 to 1.0
+                int pOff = (int)(pulse * 3.0f); // 0 to 3
                 for (int r = 0; r < boardSize; r++) {
                     for (int c = 0; c < boardSize; c++) {
                         int cx = padding + c * cellSize;
                         int cy = padding + r * cellSize;
                         if (board[r][c] == 0) {
                             if (territoryMap[r][c] == 1) { // Black territory
-                                HBRUSH tBrush = CreateSolidBrush(RGB(0, 150, 255));
+                                HBRUSH tBrush = CreateSolidBrush(RGB(0, 150 - pOff*10, 255));
                                 HBRUSH tInner = CreateSolidBrush(RGB(180, 230, 255));
                                 SelectObject(hdc, nullPen);
                                 SelectObject(hdc, tBrush);
-                                Ellipse(hdc, cx - 6, cy - 6, cx + 6, cy + 6);
+                                Ellipse(hdc, cx - (6 + pOff), cy - (6 + pOff), cx + (6 + pOff), cy + (6 + pOff));
                                 SelectObject(hdc, tInner);
                                 Ellipse(hdc, cx - 2, cy - 2, cx + 2, cy + 2);
                                 DeleteObject(tBrush);
                                 DeleteObject(tInner);
                             } else if (territoryMap[r][c] == 2) { // White territory
-                                HBRUSH tBrush = CreateSolidBrush(RGB(255, 60, 60));
+                                HBRUSH tBrush = CreateSolidBrush(RGB(255, 60 - pOff*10, 60 - pOff*10));
                                 HBRUSH tInner = CreateSolidBrush(RGB(255, 200, 200));
                                 SelectObject(hdc, nullPen);
                                 SelectObject(hdc, tBrush);
-                                Ellipse(hdc, cx - 6, cy - 6, cx + 6, cy + 6);
+                                Ellipse(hdc, cx - (6 + pOff), cy - (6 + pOff), cx + (6 + pOff), cy + (6 + pOff));
                                 SelectObject(hdc, tInner);
                                 Ellipse(hdc, cx - 2, cy - 2, cx + 2, cy + 2);
                                 DeleteObject(tBrush);
@@ -1449,15 +1453,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         int cy = padding + r * cellSize;
                         int radius = (r == animY && c == animX) ? animRadius : 13;
                         
-                        // Stone drop shadow
+                        // Dynamic 3D drop shadow based on board position
+                        int shX = (int)((c - (boardSize-1)/2.0f) * 0.4f) + 2;
+                        int shY = (int)((r - (boardSize-1)/2.0f) * 0.4f) + 3;
+
                         HBRUSH shBrush = CreateSolidBrush(RGB(40, 28, 16));
                         SelectObject(hdc, nullPen);
                         SelectObject(hdc, shBrush);
-                        Ellipse(hdc, cx - radius + 2, cy - radius + 2, cx + radius + 2, cy + radius + 2);
+                        Ellipse(hdc, cx - radius + shX, cy - radius + shY, cx + radius + shX, cy + radius + shY);
                         DeleteObject(shBrush);
 
                         if (board[r][c] == 1) { // 3D Black Slate Stone
-                            HBRUSH slateBrush = CreateSolidBrush(RGB(20, 22, 26));
+                            HBRUSH slateBrush = CreateSolidBrush(RGB(25, 28, 35));
                             HPEN slatePen = CreatePen(PS_SOLID, 1, RGB(10, 10, 12));
                             HBRUSH oldB = SelectObject(hdc, slateBrush);
                             HPEN oldP = SelectObject(hdc, slatePen);
@@ -1467,12 +1474,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             DeleteObject(slateBrush);
                             DeleteObject(slatePen);
 
-                            // Specular sheen highlight
-                            HBRUSH sheenBrush = CreateSolidBrush(RGB(85, 95, 110));
+                            // Micro-texture (slate grain)
+                            HPEN grainP = CreatePen(PS_SOLID, 1, RGB(35, 38, 45));
+                            SelectObject(hdc, grainP);
+                            for(int g=0; g<5; g++) {
+                                int gx = cx - radius + 4 + g*3;
+                                MoveToEx(hdc, gx, cy - radius + 4, NULL);
+                                LineTo(hdc, gx + 2, cy + radius - 4);
+                            }
+                            DeleteObject(grainP);
+
+                            // Specular sheen highlight (detailed)
+                            HBRUSH sheenBrush = CreateSolidBrush(RGB(100, 110, 125));
                             SelectObject(hdc, nullPen);
                             SelectObject(hdc, sheenBrush);
-                            Ellipse(hdc, cx - 6, cy - 6, cx - 1, cy - 1);
+                            Ellipse(hdc, cx - 7, cy - 7, cx - 2, cy - 2);
+                            HBRUSH sheenBrush2 = CreateSolidBrush(RGB(200, 210, 225));
+                            SelectObject(hdc, sheenBrush2);
+                            Ellipse(hdc, cx - 5, cy - 5, cx - 3, cy - 3);
                             DeleteObject(sheenBrush);
+                            DeleteObject(sheenBrush2);
                         } else { // 3D White Clam Shell Stone
                             HBRUSH clamBrush = CreateSolidBrush(RGB(246, 243, 235));
                             HPEN clamPen = CreatePen(PS_SOLID, 1, RGB(190, 180, 165));
@@ -1485,6 +1506,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             SelectObject(hdc, grainP);
                             Arc(hdc, cx - radius + 2, cy - radius + 3, cx + radius - 2, cy + radius + 3, cx - radius + 2, cy, cx + radius - 2, cy);
                             Arc(hdc, cx - radius + 3, cy - radius + 7, cx + radius - 3, cy + radius + 7, cx - radius + 3, cy + 4, cx + radius - 3, cy + 4);
+                            Arc(hdc, cx - radius + 4, cy - radius + 11, cx + radius - 4, cy + radius + 11, cx - radius + 4, cy + 8, cx + radius - 4, cy + 8);
                             
                             SelectObject(hdc, oldB);
                             SelectObject(hdc, oldP);
@@ -1492,11 +1514,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             DeleteObject(clamPen);
                             DeleteObject(grainP);
 
-                            // Specular highlight
+                            // Specular highlight (detailed)
                             HBRUSH sheenBrush = CreateSolidBrush(RGB(255, 255, 255));
                             SelectObject(hdc, nullPen);
                             SelectObject(hdc, sheenBrush);
-                            Ellipse(hdc, cx - 6, cy - 6, cx - 1, cy - 1);
+                            Ellipse(hdc, cx - 8, cy - 8, cx - 2, cy - 2);
                             DeleteObject(sheenBrush);
                         }
 

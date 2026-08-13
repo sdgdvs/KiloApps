@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KGo
 - KTowers
 - KWords
 - KReversi
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMatch3
 - KFreecell
 - KSudoku
+- KGo
 ## Completed Work Log
+
+- **KGo (Loop 4):** Implemented highly detailed procedural lighting/specular highlights and micro-textures on the stones to make them look like authentic dark slate and pearlescent clam shell, dynamic 3D drop-shadows that shift slightly based on board position/perspective, and a stylized animated territory visualizer that breathes/pulses distinctively for black vs white territory during the scoring phase in both Web Canvas (kgo.html) and Native C Win32 GDI (KGo/main.c).
 
 - **KSudoku (Loop 4):** Implemented highly detailed embossing text-shadows and shading passes for locked vs unlocked numbers to make the grid instantly readable, distinct pencil-drawn graphical cross-hatch textures for note mini-pips instead of basic font rendering, and an animated sweeping glint/pulse effect for the active row/col/block highlight in both Web Canvas (ksudoku.html) and Native C Win32 GDI (KSudoku/main.c).
 

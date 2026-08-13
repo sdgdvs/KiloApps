@@ -195,14 +195,18 @@
     box-shadow: 0 0 0 3px #00ffc8, 0 0 12px #00ffc8;
   }
   .black {
-    background: radial-gradient(circle at 35% 35%, #4c525f 0%, #262930 35%, #111215 75%, #08080a 100%);
-    box-shadow: 2px 3px 6px rgba(0,0,0,0.75), inset -2px -2px 4px rgba(0,0,0,0.85), inset 1px 1px 2px rgba(255,255,255,0.25);
+    background: 
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 15%),
+      radial-gradient(circle at 35% 35%, #3a3f4c 0%, #20232a 35%, #0f1013 70%, #050508 100%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    box-shadow: var(--sh-x, 2px) var(--sh-y, 3px) 6px rgba(0,0,0,0.75), inset -2px -4px 6px rgba(0,0,0,0.9), inset 1px 2px 4px rgba(255,255,255,0.3);
   }
   .white {
     background:
-      radial-gradient(circle at 35% 35%, rgba(255,255,255,1) 0%, rgba(250,246,238,0.95) 45%, rgba(230,222,208,0.9) 75%, rgba(205,195,178,0.9) 100%),
-      repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0px, rgba(235,225,210,0.3) 2px, rgba(255,255,255,0.4) 4px);
-    box-shadow: 2px 3px 6px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(170,155,130,0.5), inset 1px 1px 2px rgba(255,255,255,1);
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,1) 0%, transparent 20%),
+      radial-gradient(circle at 35% 35%, #ffffff 0%, #f4f0e6 40%, #e2d8c3 75%, #c8bca9 100%),
+      repeating-radial-gradient(circle at 50% 120%, rgba(200,190,170,0.1) 0%, rgba(200,190,170,0.1) 1%, transparent 1%, transparent 3%);
+    box-shadow: var(--sh-x, 2px) var(--sh-y, 3px) 6px rgba(0,0,0,0.5), inset -2px -4px 6px rgba(170,155,130,0.6), inset 1px 2px 4px rgba(255,255,255,1);
   }
   
   .stone.ghost {
@@ -293,19 +297,29 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     z-index: 2;
     pointer-events: none;
   }
   .territory-marker.B {
-    background-color: #0096ff;
-    box-shadow: 0 0 6px #0096ff;
+    background-color: rgba(0, 150, 255, 0.7);
+    box-shadow: 0 0 8px #0096ff;
+    animation: pulseTerritoryB 2s infinite ease-in-out;
   }
   .territory-marker.W {
-    background-color: #ff3c3c;
-    box-shadow: 0 0 6px #ff3c3c;
+    background-color: rgba(255, 60, 60, 0.7);
+    box-shadow: 0 0 8px #ff3c3c;
+    animation: pulseTerritoryW 2s infinite ease-in-out;
+  }
+  @keyframes pulseTerritoryB {
+    0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; box-shadow: 0 0 4px #0096ff; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; box-shadow: 0 0 12px #0096ff; }
+  }
+  @keyframes pulseTerritoryW {
+    0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; box-shadow: 0 0 4px #ff3c3c; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; box-shadow: 0 0 12px #ff3c3c; }
   }
 
   .capture-spark {
@@ -828,6 +842,11 @@
           if (showEstimator && atariStones.some(s => s.x === x && s.y === y)) classes += ' atari';
           if (showAnalyzer && analyzedGroup.some(s => s.x === x && s.y === y)) classes += ' group-highlight';
           stone.className = classes;
+
+          let shX = ((x - (size-1)/2) * 0.15) + 2;
+          let shY = ((y - (size-1)/2) * 0.15) + 3;
+          stone.style.setProperty('--sh-x', `${shX}px`);
+          stone.style.setProperty('--sh-y', `${shY}px`);
 
           if (lastMove.x === x && lastMove.y === y) {
             const lmr = document.createElement('div');
