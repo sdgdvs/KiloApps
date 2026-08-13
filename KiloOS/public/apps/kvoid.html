@@ -99,6 +99,7 @@
     <div id="game-container">
         <h1>KVoid</h1>
         <div id="stats">
+            <div>DECK: <span id="deck-val" style="color: #ff0;">1</span></div>
             <div>OXYGEN: <span id="oxy-val" style="color: #0f0;">100</span>%</div>
             <div>BATTERY: <span id="bat-val" style="color: #0f0;">100</span>%</div>
         </div>
@@ -127,6 +128,14 @@
         let player = { x: 2, y: 2 };
         let rooms = [];
         let aliens = [];
+
+        let oxygen = 100.0;
+        let battery = 100.0;
+        let deck = 1;
+        let isDead = false;
+        let keys = { r: false, g: false, b: false };
+        let emps = 0;
+        let alienInterval;
 
         function generateMap() {
             map = [];
@@ -250,8 +259,31 @@
                 }
             }
 
+            let elevatorPlaced = false;
+            let attempts = 0;
+            while (!elevatorPlaced && attempts < 1000) {
+                let rx = Math.floor(Math.random() * COLS);
+                let ry = Math.floor(Math.random() * ROWS);
+                if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 5 || Math.abs(ry - player.y) > 5)) {
+                    map[ry][rx] = 13; // Elevator
+                    elevatorPlaced = true;
+                }
+                attempts++;
+            }
+            if (!elevatorPlaced) {
+                for(let y=1; y<ROWS-1; y++) {
+                    for(let x=1; x<COLS-1; x++) {
+                        if(map[y][x] === 0 && (x!==player.x || y!==player.y)) {
+                            map[y][x] = 13; elevatorPlaced = true; break;
+                        }
+                    }
+                    if(elevatorPlaced) break;
+                }
+            }
+
             aliens = [];
-            for (let i = 0; i < 4; i++) {
+            let numAliens = Math.min(20, 3 + deck);
+            for (let i = 0; i < numAliens; i++) {
                 let placed = false;
                 while (!placed) {
                     let rx = Math.floor(Math.random() * COLS);
@@ -280,6 +312,7 @@
         }
 
         function updateStatsDisplay() {
+            document.getElementById('deck-val').innerText = deck;
             document.getElementById('oxy-val').innerText = Math.ceil(oxygen);
             document.getElementById('bat-val').innerText = Math.ceil(battery);
             
@@ -361,6 +394,14 @@
                         ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 6, 6, 4);
                         ctx.fillStyle = '#fff';
                         ctx.fillRect(x * TILE_SIZE + 7, y * TILE_SIZE + 6, 2, 4);
+                    } else if (map[y][x] === 13) {
+                        // Elevator
+                        ctx.fillStyle = '#555';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = '#ff0';
+                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(x * TILE_SIZE + 6, y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12);
                     } else {
                         ctx.fillStyle = '#050505';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -464,7 +505,13 @@
             }
             draw();
         }
-        setInterval(updateAliens, 600);
+
+        function startAlienInterval() {
+            if (alienInterval) clearInterval(alienInterval);
+            let speed = Math.max(200, 650 - deck * 50);
+            alienInterval = setInterval(updateAliens, speed);
+        }
+        startAlienInterval();
 
         function showMessage(msg, color='#0f0') {
             document.getElementById('message').innerText = msg;
@@ -514,6 +561,17 @@
                     draw();
                 } else if (target === 10) {
                     showMessage("TERMINAL ALREADY ACCESSED.", "#555");
+                } else if (target === 13) {
+                    deck++;
+                    keys = { r: false, g: false, b: false };
+                    oxygen = 100.0;
+                    battery = 100.0;
+                    generateMap();
+                    updateInventoryDisplay();
+                    updateStatsDisplay();
+                    startAlienInterval();
+                    showMessage(`ELEVATOR TO DECK ${deck}. STATS RESTORED.`, "#ff0");
+                    draw();
                 } else if (target === 0 || (target >= 6 && target <= 8) || target === 11 || target === 12) {
                     if (target >= 6 && target <= 8) {
                         if (target === 6) { keys.r = true; showMessage("PICKED UP RED KEYCARD.", "#f00"); }

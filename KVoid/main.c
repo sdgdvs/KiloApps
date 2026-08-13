@@ -21,6 +21,7 @@ int flickerState = 0;
 
 float oxygen = 100.0f;
 float battery = 100.0f;
+int deck = 1;
 int isDead = 0;
 int hasRedKey = 0;
 int hasGreenKey = 0;
@@ -165,8 +166,31 @@ void GenerateMap() {
         }
     }
 
+    int elevatorPlaced = 0;
+    for (int attempts = 0; attempts < 1000; attempts++) {
+        int rx = rand() % COLS;
+        int ry = rand() % ROWS;
+        if (map[ry][rx] == 0 && (abs(rx - playerX) > 5 || abs(ry - playerY) > 5)) {
+            map[ry][rx] = 13; // Elevator
+            elevatorPlaced = 1;
+            break;
+        }
+    }
+    if (!elevatorPlaced) {
+        for (int y = 1; y < ROWS - 1 && !elevatorPlaced; y++) {
+            for (int x = 1; x < COLS - 1 && !elevatorPlaced; x++) {
+                if (map[y][x] == 0 && (x != playerX || y != playerY)) {
+                    map[y][x] = 13;
+                    elevatorPlaced = 1;
+                }
+            }
+        }
+    }
+
     alienCount = 0;
-    for (int i = 0; i < 4; i++) {
+    int numAliens = 3 + deck;
+    if (numAliens > 15) numAliens = 15;
+    for (int i = 0; i < numAliens; i++) {
         while (1) {
             int rx = rand() % COLS;
             int ry = rand() % ROWS;
@@ -201,7 +225,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
                 static int alienTick = 0;
                 alienTick++;
-                if (alienTick >= 12) { // 600ms
+                int speedThresh = 12 - deck;
+                if (speedThresh < 4) speedThresh = 4;
+                if (alienTick >= speedThresh) {
                     alienTick = 0;
                     int hidden = (map[playerY][playerX] == 11);
                     if (hidden && sysMsg[0] == '\0') {
@@ -367,6 +393,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         FillRect(hdcMem, &erc, ecc);
                         DeleteObject(ec);
                         DeleteObject(ecc);
+                    } else if (map[y][x] == 13) {
+                        FillRect(hdcMem, &tileRect, hFloorBrush);
+                        HBRUSH elvB = CreateSolidBrush(RGB(100, 100, 100));
+                        HBRUSH elvIn = CreateSolidBrush(RGB(255, 255, 0));
+                        HBRUSH elvC = CreateSolidBrush(RGB(0, 0, 0));
+                        RECT rIn = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, (x+1) * TILE_SIZE - 2, (y+1) * TILE_SIZE - 2 + UI_HEIGHT};
+                        FillRect(hdcMem, &tileRect, elvB);
+                        FillRect(hdcMem, &rIn, elvIn);
+                        RECT rC = {x * TILE_SIZE + 6, y * TILE_SIZE + 6 + UI_HEIGHT, (x+1) * TILE_SIZE - 6, (y+1) * TILE_SIZE - 6 + UI_HEIGHT};
+                        FillRect(hdcMem, &rC, elvC);
+                        DeleteObject(elvB);
+                        DeleteObject(elvIn);
+                        DeleteObject(elvC);
                     } else {
                         FillRect(hdcMem, &tileRect, hFloorBrush);
                     }
@@ -399,7 +438,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             // Draw UI Text
             SetBkMode(hdcMem, TRANSPARENT);
             char uiText[256];
-            wsprintf(uiText, "OXYGEN: %d%%    BATTERY: %d%%", (int)oxygen, (int)battery);
+            wsprintf(uiText, "DECK: %d    OXYGEN: %d%%    BATTERY: %d%%", deck, (int)oxygen, (int)battery);
             if (oxygen <= 20 || battery <= 20) {
                 SetTextColor(hdcMem, RGB(255, 0, 0));
             } else {
@@ -544,6 +583,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 } else if (target == 10) {
                     lstrcpy(sysMsg, "TERMINAL ALREADY ACCESSED.");
                     msgTimer = 40;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else if (target == 13) {
+                    deck++;
+                    hasRedKey = 0; hasGreenKey = 0; hasBlueKey = 0;
+                    oxygen = 100.0f;
+                    battery = 100.0f;
+                    GenerateMap();
+                    wsprintf(sysMsg, "ELEVATOR TO DECK %d. STATS RESTORED.", deck);
+                    msgTimer = 60;
                     InvalidateRect(hwnd, NULL, FALSE);
                 } else if (target == 0 || (target >= 6 && target <= 8) || target == 11 || target == 12) {
                     if (target >= 6 && target <= 8) {
