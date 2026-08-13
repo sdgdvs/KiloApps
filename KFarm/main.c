@@ -1,5 +1,5 @@
 #include <windows.h>
-
+#include <math.h>
 #define GRID_COLS 10
 #define GRID_ROWS 10
 #define CELL_SIZE 40
@@ -29,6 +29,31 @@ typedef struct {
     int cropType;
 } Cell;
 Cell grid[GRID_COLS * GRID_ROWS] = {0};
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    COLORREF color;
+} Particle;
+#define MAX_PARTICLES 100
+Particle particles[MAX_PARTICLES] = {0};
+
+void SpawnParticles(float x, float y, COLORREF color, int count) {
+    int spawned = 0;
+    for (int i = 0; i < MAX_PARTICLES && spawned < count; i++) {
+        if (particles[i].life <= 0) {
+            particles[i].x = x;
+            particles[i].y = y;
+            particles[i].vx = (float)((rand() % 100) - 50) / 20.0f;
+            particles[i].vy = (float)((rand() % 100) - 100) / 20.0f - 2.0f;
+            particles[i].life = 100;
+            particles[i].color = color;
+            spawned++;
+        }
+    }
+}
+
 int current_day = 1;
 int time_of_day = 0; // 0=Day, 1=Night
 int current_season = 0; // 0=Spring, 1=Summer, 2=Fall, 3=Winter
@@ -84,6 +109,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     switch (uMsg) {
         case WM_CREATE:
             srand(GetTickCount());
+            SetTimer(hwnd, 2, 33, NULL);
             hUpgradeToolsBtn = CreateWindow("BUTTON", "Tools ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(10), S(440), S(110), S(30), hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hNextDayBtn = CreateWindow("BUTTON", "Sleep (Next Day)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -229,6 +255,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             return 0;
         case WM_TIMER:
+            if (wParam == 2) {
+                for (int i = 0; i < MAX_PARTICLES; i++) {
+                    if (particles[i].life > 0) {
+                        particles[i].x += particles[i].vx;
+                        particles[i].y += particles[i].vy;
+                        particles[i].vy += 0.5f; // gravity
+                        particles[i].life -= 5;
+                    }
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
             if (wParam == 1) {
                 KillTimer(hwnd, 1);
                 PlaySoundEffect(7);
@@ -309,26 +347,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 for (int y = min_y; y <= max_y; y++) {
                     for (int x = min_x; x <= max_x; x++) {
                         int idx = y * GRID_COLS + x;
+                        int px = OFFSET_X + x * CELL_SIZE + CELL_SIZE / 2;
+                        int py = OFFSET_Y + y * CELL_SIZE + CELL_SIZE / 2;
                         if (action == 0 && grid[idx].type == 0) {
                             grid[idx].type = 1;
+                            SpawnParticles((float)px, (float)py, RGB(93, 64, 55), 10);
                         } else if (action == 1 && x == cx && y == cy && grid[idx].type == 1) {
                             if ((crop_seasons[selected_seed] & (1 << current_season)) != 0 && money >= seed_costs[selected_seed]) {
                                 money -= seed_costs[selected_seed];
                                 grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
+                                SpawnParticles((float)px, (float)py, RGB(139, 195, 74), 10);
                             } else {
                                 MessageBeep(MB_ICONERROR);
                             }
                         } else if (action == 2 && grid[idx].type == 2) {
                             int req = (weather == 2) ? 2 : 1;
-                            if (grid[idx].watered < req) grid[idx].watered++;
+                            if (grid[idx].watered < req) {
+                                grid[idx].watered++;
+                                SpawnParticles((float)px, (float)py, RGB(33, 150, 243), 15);
+                            }
                         } else if (action == 3 && grid[idx].type == 3) {
                             money += sell_values[grid[idx].cropType];
                             grid[idx].type = 1; grid[idx].watered = 0;
+                            SpawnParticles((float)px, (float)py, RGB(255, 213, 79), 15);
                         }
                     }
                 }
                 UpdateTitle(hwnd);
-                InvalidateRect(hwnd, NULL, TRUE);
             }
             return 0;
         }
@@ -336,10 +381,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 1;
         case WM_PAINT: {
             PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
+            HDC hWindowDC = BeginPaint(hwnd, &ps);
             
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
+            
+            HDC hdc = CreateCompatibleDC(hWindowDC);
+            HBITMAP hMemBmp = CreateCompatibleBitmap(hWindowDC, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+            HBITMAP hOldBmp = (HBITMAP)SelectObject(hdc, hMemBmp);
+
             HBRUSH hSky = CreateSolidBrush(time_of_day ? RGB(26, 35, 126) : RGB(135, 206, 235));
             FillRect(hdc, &clientRect, hSky);
             DeleteObject(hSky);
@@ -392,6 +442,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         int cx = r.left + CELL_SIZE / 2;
                         int cy = r.top + CELL_SIZE / 2;
                         
+                        SetGraphicsMode(hdc, GM_ADVANCED);
+                        float angle = (float)sin(GetTickCount() * 0.003f + x + y) * 0.15f;
+                        float pivotX = (float)cx;
+                        float pivotY = (float)(r.bottom - 8);
+                        XFORM xForm;
+                        xForm.eM11 = (FLOAT)cos(angle);
+                        xForm.eM12 = (FLOAT)sin(angle);
+                        xForm.eM21 = (FLOAT)-sin(angle);
+                        xForm.eM22 = (FLOAT)cos(angle);
+                        xForm.eDx = (FLOAT)(pivotX - cos(angle)*pivotX + sin(angle)*pivotY);
+                        xForm.eDy = (FLOAT)(pivotY - sin(angle)*pivotX - cos(angle)*pivotY);
+                        SetWorldTransform(hdc, &xForm);
+
                         if (grid[idx].type == 2) {
                             HBRUSH hLeaf = CreateSolidBrush(time_of_day ? RGB(46, 125, 50) : RGB(76, 175, 80));
                             SelectObject(hdc, hSproutPen);
@@ -454,6 +517,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                 DeleteObject(hDarkOrange);
                             }
                         }
+                        ModifyWorldTransform(hdc, NULL, MWT_IDENTITY);
+                        SetGraphicsMode(hdc, GM_COMPATIBLE);
                     }
                 }
             }
@@ -479,8 +544,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 DeleteObject(hRain);
             }
 
+            for (int i = 0; i < MAX_PARTICLES; i++) {
+                if (particles[i].life > 0) {
+                    HBRUSH hPBrush = CreateSolidBrush(particles[i].color);
+                    RECT pr = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
+                    FillRect(hdc, &pr, hPBrush);
+                    DeleteObject(hPBrush);
+                }
+            }
+
             SelectObject(hdc, GetStockObject(SYSTEM_FONT));
             DeleteObject(hGuiFont);
+
+            SetMapMode(hdc, MM_TEXT);
+            SetViewportOrgEx(hdc, 0, 0, NULL);
+            SetWindowOrgEx(hdc, 0, 0, NULL);
+            BitBlt(hWindowDC, 0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, hdc, 0, 0, SRCCOPY);
+            
+            SelectObject(hdc, hOldBmp);
+            DeleteObject(hMemBmp);
+            DeleteDC(hdc);
+
             EndPaint(hwnd, &ps);
             return 0;
         }

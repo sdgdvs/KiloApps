@@ -105,8 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFarm
-
 - KAlchemy
 - KRogue
 - KChess
@@ -134,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze
 - KColony
 - KFortress
+- KFarm
 ## Completed Work Log
+
+- **KFarm (Loop 2):** Implemented continuous animation loop, sinusoidal crop swaying animations based on time, and a robust particle burst engine (brown dirt for tilling, green leaves for planting, blue water splashes for watering, and golden particles for harvesting) in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c) with double-buffering to eliminate flickering.
 
 - **KFortress (Loop 2):** Implemented multi-color particle burst animations for tower projectile impacts and enemy deaths (green bursts), and added distinct attack animation frame cycles for each tower type (Archer bow expansion/arrow hiding, Mage crystal orb pulsing, Cannon barrel recoil) in both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c).
 

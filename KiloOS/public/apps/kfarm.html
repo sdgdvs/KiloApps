@@ -214,6 +214,20 @@
         let hasMayoMaker = false;
         let hasCheesePress = false;
 
+        const particles = [];
+        function spawnParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x + CELL_SIZE / 2,
+                    y: y + CELL_SIZE / 2,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 1) * 4 - 1,
+                    life: 1.0,
+                    color: color
+                });
+            }
+        }
+
         function updateAnimals() {
             document.getElementById('chickensSpan').innerText = chickens;
             document.getElementById('cowsSpan').innerText = cows;
@@ -321,9 +335,10 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        function drawSprout(ctx, x, y) {
+        function drawSprout(ctx, x, y, time) {
             ctx.save();
             ctx.translate(x + CELL_SIZE/2, y + CELL_SIZE/2);
+            ctx.rotate(Math.sin(time * 0.003 + x + y) * 0.15);
             ctx.fillStyle = '#8BC34A';
             ctx.beginPath();
             ctx.moveTo(0, 10);
@@ -339,9 +354,10 @@
             ctx.restore();
         }
 
-        function drawCropSprite(ctx, type, x, y, night) {
+        function drawCropSprite(ctx, type, x, y, night, time) {
             ctx.save();
             ctx.translate(x + CELL_SIZE/2, y + CELL_SIZE/2);
+            ctx.rotate(Math.sin(time * 0.003 + x + y) * 0.15);
             if (type === 0) { // Wheat
                 ctx.fillStyle = night ? '#C09000' : '#FFC107';
                 ctx.fillRect(-2, -15, 4, 30);
@@ -375,7 +391,7 @@
             ctx.restore();
         }
 
-        function draw() {
+        function draw(timestamp = 0) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             document.body.style.backgroundColor = timeOfDay === 'night' ? '#1A237E' : '#87CEEB';
             
@@ -409,9 +425,9 @@
                     ctx.strokeRect(px, py, CELL_SIZE, CELL_SIZE);
                     
                     if (cell.type === 2) {
-                        drawSprout(ctx, px, py);
+                        drawSprout(ctx, px, py, timestamp);
                     } else if (cell.type === 3) {
-                        drawCropSprite(ctx, cell.cropType, px, py, timeOfDay === 'night');
+                        drawCropSprite(ctx, cell.cropType, px, py, timeOfDay === 'night', timestamp);
                     }
                 }
             }
@@ -424,6 +440,24 @@
                     ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 10 + Math.random() * 10);
                 }
             }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2; 
+                p.life -= 0.02;
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+                    ctx.globalAlpha = 1.0;
+                }
+            }
+
+            requestAnimationFrame(draw);
         }
 
         canvas.addEventListener('mousedown', (e) => {
@@ -459,6 +493,7 @@
                         const cell = grid[y * COLS + x];
                         if (action === 'till' && cell.type === 0) {
                             cell.type = 1;
+                            spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#5D4037', 10);
                         } else if (action === 'plant' && x === cx && y === cy && cell.type === 1) {
                             const seedInput = document.querySelector('input[name="seed"]:checked');
                             const cType = seedInput ? parseInt(seedInput.value) : 0;
@@ -469,21 +504,23 @@
                                 cell.type = 2;
                                 cell.growth = 0;
                                 cell.cropType = cType;
+                                spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#8BC34A', 10);
                             }
                         } else if (action === 'water' && cell.type === 2) {
                             const req = weather === 'Drought' ? 2 : 1;
                             if (cell.watered < req) {
                                 cell.watered = (cell.watered || 0) + 1;
+                                spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#2196F3', 15);
                             }
                         } else if (action === 'harvest' && cell.type === 3) {
                             money += cropData[cell.cropType].value;
                             updateMoney();
                             cell.type = 1;
                             cell.watered = 0;
+                            spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#FFC107', 15);
                         }
                     }
                 }
-                draw();
             }
         });
         
@@ -491,7 +528,6 @@
             if (timeOfDay === 'night') return;
             timeOfDay = 'night';
             playSound('night');
-            draw();
             setTimeout(() => {
                 playSound('morning');
                 day++;
@@ -540,12 +576,10 @@
                 timeOfDay = 'day';
                 money += (chickens * (hasMayoMaker ? 15 : 5)) + (cows * (hasCheesePress ? 40 : 15));
                 updateMoney();
-                
-                draw();
             }, 1000);
         }
 
-        draw();
+        requestAnimationFrame(draw);
     </script>
 </body>
 </html>
