@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KChess     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, ensure Easy is beatable, Hard is challenging. Check opening/endgame AI quality. |
 | KGo        | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty across 9x9/13x13/19x19. Ensure handicap system works. Test Tsumego puzzle quality. |
 | KReversi   | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, check Minimax depth, ensure board sizes feel right. |
 | KConnect4  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty levels. Ensure Grandmaster is genuinely hard. Check blocker cell mechanics. |
@@ -180,11 +179,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSimon     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Reset timer on correct inputs, smoothed speed curves, fixed 6-button label bugs. |
 | KMatch3    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Auto-shuffle on no moves, nerfed Boss HP, reduced powerup costs. |
 | KDarts     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Tuned wind/wobble by difficulty, fixed 301 bust bug, fixed Killer logic. |
+| KChess     | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Tuned Easy/Hard/Master Minimax depths and opening/endgame PST. |
 
 
 ## Progress Log
 
 **Loop 9**
+- [x] KChess (Balance audit complete: Adjusted Easy heuristic, increased Hard to 3-ply and Master to 4-ply Minimax, and verified opening/endgame PST logic in both EXE and HTML)
 - [x] KBreakout (Loop 9: Added interactive Level Editor mode, Meteor Shower falling hazards, and expanded campaign to 40 stages with Boss Rematches in both EXE and HTML)
 - [x] KDarts (Balance audit complete: Scaled wind/wobble by difficulty, tuned AI accuracy curve, fixed 301 bust bug, and fixed Killer mode target logic in both EXE and HTML)
 - [x] KPac (Loop 9: Added multi-phase Ghost King Boss, VIP ghost escort missions, and randomized branching level portals in both EXE and HTML)
