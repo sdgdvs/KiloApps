@@ -1329,9 +1329,21 @@
         }
         if (obs > 0) return 0;
         if (pc === 4) score += 100;
-        else if (pc === 3 && ec === 1) score += (piece === 2 && aiPersonality === 1) ? 15 : 5;
-        else if (pc === 2 && ec === 2) score += (piece === 2 && aiPersonality === 1) ? 6 : 2;
-        if (oc === 3 && ec === 1) score -= 8;
+        else if (pc === 3 && ec === 1) {
+            if (aiPersonality === 3) score += 15;
+            else score += (piece === 2 && aiPersonality === 1) ? 15 : 5;
+        }
+        else if (pc === 2 && ec === 2) {
+            if (aiPersonality === 3) score += 4;
+            else score += (piece === 2 && aiPersonality === 1) ? 6 : 2;
+        }
+        
+        if (oc === 3 && ec === 1) {
+            if (aiPersonality === 3) score -= 80;
+            else score -= 8;
+        } else if (oc === 2 && ec === 2) {
+            if (aiPersonality === 3) score -= 10;
+        }
         return score;
     }
 
