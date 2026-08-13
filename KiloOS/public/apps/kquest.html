@@ -817,7 +817,7 @@
       // 4. Draw Monster Sprite if in Combat or Boss Rush
       if ((currentState === STATE.COMBAT || currentState === STATE.BOSS_RUSH) && currentEnemy) {
         drawMonsterSprite(ctx, monsterX, monsterY, currentEnemy.name, GFX.frame, GFX.monsterAction);
-      } else if (currentState === STATE.TOWN || currentState === STATE.SHOP || currentState === STATE.CRAFTING) {
+      } else if (currentState === STATE.TOWN || currentState === STATE.SHOP || currentState === STATE.CRAFTING || currentState === STATE.FACTIONS || currentState === STATE.MOUNTS) {
         drawNPCSprite(ctx, 520, 120, GFX.frame);
       }
 
@@ -1390,7 +1390,9 @@
       GAME_OVER: 'GAME_OVER',
       SAVE_LOAD: 'SAVE_LOAD',
       ACHIEVEMENTS: 'ACHIEVEMENTS',
-      TAVERN: 'TAVERN'
+      TAVERN: 'TAVERN',
+      FACTIONS: 'FACTIONS',
+      MOUNTS: 'MOUNTS'
     };
 
     let currentState = STATE.CHAR_CREATE;
@@ -1741,7 +1743,9 @@
       ],
       bountyContracts: [],
       ngLevel: 0,
-      achievements: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      achievements: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      faction: 'None',
+      mount: 'None'
     };
 
     // Current Enemy in Combat
@@ -2512,6 +2516,8 @@
         <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MERCENARY)">🛡️ Mercenary Guild</button>
         <button class="btn" style="background:#a6e3a1; color:#11111b;" onclick="setGameState(STATE.SAVE_LOAD)">💾 Save / Load</button>
         <button class="btn" style="background:#fab387; color:#11111b;" onclick="setGameState(STATE.ACHIEVEMENTS)">🏆 Achievements</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b;" onclick="setGameState(STATE.FACTIONS)">🚩 Factions</button>
+        <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MOUNTS)">🐎 Mounts</button>
         ${(player.ngLevel || 0) > 0 ? `<button class="btn" style="background:linear-gradient(135deg, #f5c2e7, #cba6f7); color:#11111b; font-weight:700;" onclick="enterNewGamePlus()">✨ New Game+ (NG+ ${(player.ngLevel || 0) + 1})</button>` : ''}
       `;
     }
@@ -2992,6 +2998,8 @@
 
       updateUI();
       if (currentState === STATE.QUEST_BOARD) renderQuestBoard();
+      if (currentState === STATE.FACTIONS) renderFactions();
+      if (currentState === STATE.MOUNTS) renderMounts();
     }
 
     function rerollBounties() {
@@ -3279,6 +3287,57 @@
       renderShop();
     }
 
+    // --- FACTIONS & MOUNTS ---
+    function joinFaction(f) {
+      if(player.faction !== 'None') return logMsg("You already have a faction!", "warning");
+      player.faction = f;
+      if(f === 'Vanguard') { player.str += 5; logMsg("Joined Vanguard! +5 STR", "system"); }
+      if(f === 'Arcane') { player.int += 5; logMsg("Joined Arcane Order! +5 INT", "system"); }
+      if(f === 'Syndicate') { player.agi += 5; logMsg("Joined Syndicate! +5 AGI", "system"); }
+      updateUI();
+      renderFactions();
+    }
+    
+    function buyMount(m, cost) {
+      if(player.mount === m) return logMsg("You already own this mount!", "warning");
+      if(player.gold < cost) return logMsg("Not enough gold!", "warning");
+      player.gold -= cost;
+      player.mount = m;
+      if(m === 'Horse') { player.maxHp += 20; player.hp += 20; logMsg("Bought Horse! +20 HP", "system"); }
+      if(m === 'Wolf') { player.maxHp += 10; player.hp += 10; player.agi += 10; logMsg("Bought Wolf! +10 HP/AGI", "system"); }
+      if(m === 'Dragon') { player.maxHp += 30; player.hp += 30; player.str += 10; logMsg("Bought Dragon! +30 HP, +10 STR", "system"); }
+      updateUI();
+      renderMounts();
+    }
+
+    function renderFactions() {
+      document.getElementById('location-title').textContent = '🚩 Faction Encampments';
+      document.getElementById('location-desc').textContent = 'Pledge allegiance to a faction for permanent bonuses.';
+      document.getElementById('dynamic-content').innerHTML = `
+        <div class="craft-grid">
+          <div class="craft-card" onclick="joinFaction('Vanguard')"><h3>Vanguard</h3><p>+5 STR</p></div>
+          <div class="craft-card" onclick="joinFaction('Arcane')"><h3>Arcane Order</h3><p>+5 INT</p></div>
+          <div class="craft-card" onclick="joinFaction('Syndicate')"><h3>Syndicate</h3><p>+5 AGI</p></div>
+        </div>
+        <p style="margin-top:10px; color:#89b4fa;">Current: ${player.faction}</p>
+      `;
+      document.getElementById('controls-panel').innerHTML = `<button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>`;
+    }
+
+    function renderMounts() {
+      document.getElementById('location-title').textContent = '🐎 Town Stables';
+      document.getElementById('location-desc').textContent = 'Buy a mount for permanent stat bonuses.';
+      document.getElementById('dynamic-content').innerHTML = `
+        <div class="craft-grid">
+          <div class="craft-card" onclick="buyMount('Horse', 100)"><h3>Horse (100G)</h3><p>+20 HP</p></div>
+          <div class="craft-card" onclick="buyMount('Wolf', 200)"><h3>Wolf (200G)</h3><p>+10 HP, +10 AGI</p></div>
+          <div class="craft-card" onclick="buyMount('Dragon', 500)"><h3>Dragon (500G)</h3><p>+30 HP, +10 STR</p></div>
+        </div>
+        <p style="margin-top:10px; color:#89b4fa;">Current: ${player.mount}</p>
+      `;
+      document.getElementById('controls-panel').innerHTML = `<button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>`;
+    }
+
     // --- PHASE 6: CRAFTING & EQUIPMENT ENCHANTING SYSTEM ---
     function renderCrafting() {
       document.getElementById('location-title').textContent = '⚒️ Alchemy Bench & Enchanter\'s Forge';
@@ -3348,6 +3407,13 @@
               <button class="btn btn-primary" onclick="enchantWeapon('Thunderous')">Imbue Weapon</button>
             </div>
 
+            <!-- Masterwork Relics (Overhaul) -->
+            <div class="craft-card" style="border-color:#f9e2af;">
+              <h3 style="color:#f9e2af;">🌟 Masterwork Relic</h3>
+              <p>Ultimate gear. +10 to All Stats.</p>
+              <div class="mats-req">Req: 3 Iron, 3 Dust, 3 Cores</div>
+              <button class="btn btn-primary" onclick="craftMasterwork()">Craft Relic</button>
+            </div>
             <!-- Armor Enchantments -->
             <div class="craft-card">
               <h3>🛡️ Fortified Armor</h3>
@@ -3377,6 +3443,18 @@
       `;
     }
 
+    function craftMasterwork() {
+      if(player.materials.iron >= 3 && player.materials.dust >= 3 && player.materials.core >= 3) {
+        player.materials.iron -= 3; player.materials.dust -= 3; player.materials.core -= 3;
+        player.str += 10; player.int += 10; player.def += 10; player.agi += 10;
+        logMsg("🌟 Crafted Masterwork Relic! +10 All Stats.", "craft");
+        updateUI();
+        renderCrafting();
+      } else {
+        logMsg("Not enough materials for Masterwork Relic!", "warning");
+      }
+    }
+    
     function salvageLoot() {
       if (player.gold < 20) {
         logMsg(`You need 20 Gold to salvage materials!`, 'warning');

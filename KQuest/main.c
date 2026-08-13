@@ -34,6 +34,9 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
 #define STATE_REPLAYS       17
 #define STATE_CONFIG        18
 #define STATE_MAGIC_MENU    19
+#define STATE_TOWN_PAGE2    20
+#define STATE_FACTIONS      21
+#define STATE_MOUNTS        22
 
 static int g_KeyBinds[6] = {'1', '2', '3', '4', '5', '6'};
 static char g_MatchReplays[50][128];
@@ -391,6 +394,8 @@ typedef struct {
     int invSort;   // 0: Rarity, 1: Name, 2: Value
     int selectedInvIdx;
     Companion companion;
+    int faction;
+    int mount;
     int ngLevel;
 } Hero;
 
@@ -1136,6 +1141,10 @@ void UpdateUI() {
         locStr = "Inventory Hub";
     } else if (gameState == STATE_SAVE_LOAD) {
         locStr = "Save/Load Manager";
+    } else if (gameState == STATE_FACTIONS || gameState == STATE_MOUNTS) {
+        gameState = STATE_TOWN_PAGE2;
+        SetupButtons();
+        UpdateUI();
     } else if (gameState == STATE_ACHIEVEMENTS) {
         locStr = "Achievements Hub";
     } else if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
@@ -1237,6 +1246,10 @@ void UpdateUI() {
             g_SelectedSaveSlot == 1 ? ">>" : "  ", slot2,
             g_SelectedSaveSlot == 2 ? ">>" : "  ", slot3,
             g_SelectedSaveSlot == 3 ? ">>" : "  ", slot4);
+    } else if (gameState == STATE_FACTIONS || gameState == STATE_MOUNTS) {
+        gameState = STATE_TOWN_PAGE2;
+        SetupButtons();
+        UpdateUI();
     } else if (gameState == STATE_ACHIEVEMENTS) {
         int count = 0;
         for (int i = 0; i < 10; i++) if (g_Achievements[i]) count++;
@@ -1457,9 +1470,18 @@ void SetupButtons() {
             SetWindowTextA(hBtn3, invBtn);
             SetWindowTextA(hBtn4, "📜 Board / Train");
             SetWindowTextA(hBtn5, "💾 Save / Load");
-            SetWindowTextA(hBtn6, "⚙️ System Utils");
+            SetWindowTextA(hBtn6, "▶️ More Options");
             break;
         }
+
+        case STATE_TOWN_PAGE2:
+            SetWindowTextA(hBtn1, "🚩 Factions");
+            SetWindowTextA(hBtn2, "🐎 Mounts");
+            SetWindowTextA(hBtn3, "⚙️ System Utils");
+            SetWindowTextA(hBtn4, "---");
+            SetWindowTextA(hBtn5, "---");
+            SetWindowTextA(hBtn6, "◀️ Back to Town 1");
+            break;
 
         case STATE_SAVE_LOAD: {
             char selBtn[64];
@@ -1583,11 +1605,27 @@ void SetupButtons() {
             SetWindowTextA(hBtn6, "---");
             break;
 
-                case STATE_CRAFTING:
+                case STATE_FACTIONS:
+            SetWindowTextA(hBtn1, "Join Vanguard (STR)");
+            SetWindowTextA(hBtn2, "Join Arcane (INT)");
+            SetWindowTextA(hBtn3, "Join Syndicate (AGI)");
+            SetWindowTextA(hBtn4, "---");
+            SetWindowTextA(hBtn5, "---");
+            SetWindowTextA(hBtn6, "Back");
+            break;
+        case STATE_MOUNTS:
+            SetWindowTextA(hBtn1, "Buy Horse(100G)");
+            SetWindowTextA(hBtn2, "Buy Wolf(200G)");
+            SetWindowTextA(hBtn3, "Buy Dragon(500G)");
+            SetWindowTextA(hBtn4, "---");
+            SetWindowTextA(hBtn5, "---");
+            SetWindowTextA(hBtn6, "Back");
+            break;
+        case STATE_CRAFTING:
             SetWindowTextA(hBtn1, "Salvage Loot (20G)");
             SetWindowTextA(hBtn2, "Craft Fire Bomb");
             SetWindowTextA(hBtn3, "Craft Greater HP");
-            SetWindowTextA(hBtn4, "Upgrade Gear(30G,3S)");
+            SetWindowTextA(hBtn4, "Craft Masterwork Relic");
             SetWindowTextA(hBtn5, "Imbue Weapon/Armor");
             SetWindowTextA(hBtn6, "Back to Town");
             break;
@@ -3504,7 +3542,7 @@ void RenderGdiScene(HDC hdc, int w, int h) {
 
     if ((gameState == STATE_COMBAT || gameState == STATE_BOSS_RUSH) && currentEnemy.hp > 0) {
         DrawGdiMonsterSprite(hdc, monsterX, monsterY, currentEnemy.name, g_GfxFrame);
-    } else if (gameState == STATE_TOWN || gameState == STATE_SHOP || gameState == STATE_CRAFTING) {
+    } else if (gameState == STATE_TOWN || gameState == STATE_TOWN_PAGE2 || gameState == STATE_FACTIONS || gameState == STATE_MOUNTS || gameState == STATE_SHOP || gameState == STATE_CRAFTING) {
         DrawGdiNPCSprite(hdc, 560, 70, g_GfxFrame);
     }
 
