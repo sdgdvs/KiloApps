@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KTask
+**Target App:** KTaskMgr
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -263,3 +263,5 @@ Pass 1 Complete.
 - **KSynth**: Fixed step sequencer DOM re-creation performance leak by decoupling grid initialization from step state updates in `ksynth.html`. Added strict JSON preset/sequence schema validation and value clamping. Verified native `KSynth.exe` compilation (15 KB) and Vite web build.
 
 - **KSys**: Fixed input hijacking where shortcut keys fired inside input fields in `ksys.html`. Added XSS escaping for prompt input, handled IndexedDB error rejections to prevent benchmark hangs, and optimized sparkline canvas sizing repaints. Verified native build `KSys.exe` (17.5 KB) and Vite web build.
+
+- **KTask**: Fixed XSS risk in `ktask.html` aria-label string interpolation. Fixed global hotkey handling during active modal overlays. Recompiled native `KTask.exe` and verified Vite web build cleanly.
