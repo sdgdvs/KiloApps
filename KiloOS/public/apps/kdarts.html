@@ -401,7 +401,7 @@ const BOARD_R = 260;
 
 function updateWind() {
     let maxWind = isCampaign ? CAMPAIGN_STAGES[campaignStage].wind : (aiDifficulty === 'Easy' ? 2 : (aiDifficulty === 'Medium' ? 4 : (aiDifficulty === 'Hard' ? 6 : 8)));
-    currentWobbleAmp = isCampaign ? CAMPAIGN_STAGES[campaignStage].wobble : 15;
+    currentWobbleAmp = isCampaign ? CAMPAIGN_STAGES[campaignStage].wobble : (aiDifficulty === 'Easy' ? 10 : (aiDifficulty === 'Medium' ? 15 : (aiDifficulty === 'Hard' ? 20 : (aiDifficulty === 'Legend' ? 25 : 15))));
     
     if (maxWind === 0) {
         windSpeed = 0; windX = 0; windY = 0;
@@ -483,7 +483,10 @@ function activateUndoDart() {
                 blitzHits[currentPlayer] = Math.max(0, blitzHits[currentPlayer] - mult);
             }
         } else if (gameMode === 'killer') {
-            if (killerLives[1 - currentPlayer] < 5) killerLives[1 - currentPlayer]++;
+            let oppSector = currentPlayer === 0 ? 19 : 20;
+            if (isKiller[currentPlayer] && number === oppSector) {
+                killerLives[1 - currentPlayer] = Math.min(5, killerLives[1 - currentPlayer] + mult);
+            }
         }
         
         if (state === 'TURN_END') state = 'PLAYING';
@@ -808,7 +811,7 @@ function throwDart(rawX, rawY) {
         }
     } else if (gameMode === '301') {
         scores[currentPlayer] -= pts;
-        if (scores[currentPlayer] < 0 || scores[currentPlayer] === 1) {
+        if (scores[currentPlayer] < 0) {
             statusEl.innerText = `${turnName} Bust!`;
             scores[currentPlayer] = prevScores[currentPlayer];
             state = 'TURN_END';
@@ -886,7 +889,7 @@ function throwDart(rawX, rawY) {
                 statusEl.innerText = `${turnName} missed sector ${targetSector}! Darts left: ${dartsLeft}`;
             }
         } else {
-            if (hit.number === oppSector || hit.mult >= 2) {
+            if (hit.number === oppSector) {
                 let dmg = hit.mult;
                 killerLives[1 - currentPlayer] -= dmg;
                 if (killerLives[1 - currentPlayer] <= 0) {
@@ -973,9 +976,9 @@ function aiThrow() {
         errorMag = CAMPAIGN_STAGES[campaignStage].aiErr;
     } else {
         if (aiDifficulty === 'Easy') errorMag = 120;
-        else if (aiDifficulty === 'Medium') errorMag = 70;
-        else if (aiDifficulty === 'Hard') errorMag = 30;
-        else if (aiDifficulty === 'Legend') errorMag = 10;
+        else if (aiDifficulty === 'Medium') errorMag = 60;
+        else if (aiDifficulty === 'Hard') errorMag = 25;
+        else if (aiDifficulty === 'Legend') errorMag = 8;
     }
     
     let rx = (Math.random() + Math.random() + Math.random() - 1.5) * errorMag;

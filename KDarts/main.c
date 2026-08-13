@@ -357,7 +357,11 @@ void UpdateWind() {
         currentWobbleAmp = CAMPAIGN_STAGES[campaignStage].wobble;
     } else {
         maxWind = (aiDifficulty + 1) * 2;
-        currentWobbleAmp = 15;
+        if (aiDifficulty == 0) currentWobbleAmp = 10;
+        else if (aiDifficulty == 1) currentWobbleAmp = 15;
+        else if (aiDifficulty == 2) currentWobbleAmp = 20;
+        else if (aiDifficulty == 3) currentWobbleAmp = 25;
+        else currentWobbleAmp = 15;
     }
     
     if (maxWind == 0) {
@@ -523,7 +527,11 @@ void ActivateUndoDart(HWND hwnd) {
                 if (blitzHits[currentPlayer] < 0) blitzHits[currentPlayer] = 0;
             }
         } else if (gameMode == MODE_KILLER) {
-            if (killerLives[1 - currentPlayer] < 5) killerLives[1 - currentPlayer]++;
+            int oppSector = (currentPlayer == 0) ? 19 : 20;
+            if (isKiller[currentPlayer] && number == oppSector) {
+                killerLives[1 - currentPlayer] += mult;
+                if (killerLives[1 - currentPlayer] > 5) killerLives[1 - currentPlayer] = 5;
+            }
         }
         
         if (gameState == 1) gameState = 0;
@@ -731,9 +739,9 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
             errorMag = (float)CAMPAIGN_STAGES[campaignStage].aiErr;
         } else {
             if (aiDifficulty == 0) errorMag = 120.0f;
-            else if (aiDifficulty == 1) errorMag = 70.0f;
-            else if (aiDifficulty == 2) errorMag = 30.0f;
-            else if (aiDifficulty == 3) errorMag = 10.0f;
+            else if (aiDifficulty == 1) errorMag = 60.0f;
+            else if (aiDifficulty == 2) errorMag = 25.0f;
+            else if (aiDifficulty == 3) errorMag = 8.0f;
         }
         
         float rx = (((float)rand()/RAND_MAX) + ((float)rand()/RAND_MAX) + ((float)rand()/RAND_MAX) - 1.5f) * errorMag;
@@ -796,7 +804,7 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
         }
     } else if (gameMode == MODE_301) {
         scores[currentPlayer] -= pts;
-        if (scores[currentPlayer] < 0 || scores[currentPlayer] == 1) {
+        if (scores[currentPlayer] < 0) {
             sprintf(statusMsg, "%s Bust!", turnName);
             scores[currentPlayer] = prevScores[currentPlayer];
             gameState = 1;
@@ -886,7 +894,7 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
                 sprintf(statusMsg, "%s missed sector %d! Darts left: %d", turnName, targetSector, dartsLeft);
             }
         } else {
-            if (number == oppSector || mult >= 2) {
+            if (number == oppSector) {
                 int dmg = mult;
                 killerLives[1 - currentPlayer] -= dmg;
                 if (killerLives[1 - currentPlayer] <= 0) {
