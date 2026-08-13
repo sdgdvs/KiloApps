@@ -267,7 +267,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             ReleaseDC(hwnd, hdc);
             
             g_canvasTop = MulDiv(135, g_dpi, 96);
-            int fontSize = MulDiv(15, g_dpi, 96);
+            int fontSize = -MulDiv(15, g_dpi, 96);
 
             hFontSmall = CreateFontA(fontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             hFontBold = CreateFontA(fontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
@@ -667,7 +667,10 @@ void __stdcall MainEntry(void) {
     HDC screenDC = GetDC(NULL);
     int initial_dpi = GetDeviceCaps(screenDC, LOGPIXELSY);
     ReleaseDC(NULL, screenDC);
-    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, MulDiv(1024, initial_dpi, 96), MulDiv(768, initial_dpi, 96), NULL, NULL, wc.hInstance, NULL);
+    
+    RECT winRect = {0, 0, MulDiv(1024, initial_dpi, 96), MulDiv(768, initial_dpi, 96)};
+    AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW, FALSE);
+    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

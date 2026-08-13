@@ -59,7 +59,7 @@ const APPS = [
   { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfont.ico', w: 600, h: 400, folder: 'System' },
   { id: 'kconverter', title: 'KConverter', url: '/apps/kconverter.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kconverter.ico', w: 900, h: 650, folder: 'System' },
   { id: 'ktodo', title: 'KTodo', url: '/apps/ktodo.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktodo.ico', w: 800, h: 600, folder: 'System' },
-  { id: 'kgraph', title: 'KGraph', url: '/apps/kgraph.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kgraph.ico', w: 650, h: 500, folder: 'System' },
+  { id: 'kgraph', title: 'KGraph', url: '/apps/kgraph.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kgraph.ico', w: 1024, h: 768, folder: 'System' },
   { id: 'kcontacts', title: 'KContacts', url: '/apps/kcontacts.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcontacts.ico', w: 850, h: 600, folder: 'System' },
   { id: 'kread', title: 'KRead', url: '/apps/kread.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kread.ico', w: 1000, h: 800, folder: 'System' },
   { id: 'kbase', title: 'KBase', url: '/apps/kbase.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kbase.ico', w: 600, h: 450, folder: 'System' },

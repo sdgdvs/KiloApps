@@ -52,7 +52,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KGraph
 - KTimer
 - KContacts
 - KRead
@@ -103,6 +102,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSys
 - KTodo
 - KConverter
+- KGraph
 
 ## Progress Log
 - KConverter: Usability and UI issues fixed (auto-opening size updated to 900x650 in App.jsx, web help instructions made more explicit with [Press H for Help] in accent-blue, native app updated with AdjustWindowRect to fix layout clipping and Help text clarified).
@@ -285,3 +285,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSolitaire: Usability and UI issues fixed (applied negative font height in native for crisp text, added explicit Help instruction to web window title, added padding-bottom to board container in web to prevent card clipping).
 - KTerm: Usability and UI issues fixed (added tab title overflow truncation and explicit 'Type h or help' in web status bar, enabled negative font heights for crisp text in native, applied control padding via EM_SETMARGINS, added EM_SETCUEBANNER prompt cue, and updated native window title/tab banner to clarify help instructions).
 - KRogue: Usability and UI issues fixed (auto-size updated to 1000x720, resolved H shortcut conflict by mapping Help to H and Leaderboard to T across web and native versions).
+- KGraph: Usability and UI issues fixed (auto-opening size adjusted to 1024x768, added AdjustWindowRect to native, implemented negative font sizes for crisp rendering in native, and added explicit 'Press H for Help' to web startup toast).
