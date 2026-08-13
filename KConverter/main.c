@@ -609,7 +609,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hExpressOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 126, 560, 195, hwnd, NULL, NULL, NULL);
 
-            HWND hHelpText = CreateWindowA("STATIC", "(H / F1 Help)", WS_CHILD | WS_VISIBLE, 400, 42, 100, 20, hwnd, NULL, NULL, NULL);
+            HWND hHelpText = CreateWindowA("STATIC", "[H] or [F1] for Help", WS_CHILD | WS_VISIBLE, 400, 42, 140, 20, hwnd, NULL, NULL, NULL);
             
             RegisterHotKey(hwnd, 1, 0, VK_F1);
             RegisterHotKey(hwnd, 2, 0, 'H');
@@ -765,7 +765,10 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 620, 460, NULL, NULL, wc.hInstance, NULL);
+    
+    RECT rect = { 0, 0, 620, 460 };
+    AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
+    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
