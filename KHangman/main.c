@@ -933,14 +933,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ox = offsets[idx];
             }
 
+            int dark = errors * 15;
+            #define G_COLOR(r, g, b) RGB((r - dark < 0) ? 0 : r - dark, (g - dark < 0) ? 0 : g - dark, (b - dark < 0) ? 0 : b - dark)
+
             // 3D Wooden Gallows Rendering
             RECT baseRc = {180 + ox, 260, 320 + ox, 270};
-            HBRUSH baseBrush = CreateSolidBrush(RGB(110, 65, 30));
+            HBRUSH baseBrush = CreateSolidBrush(G_COLOR(110, 65, 30));
             FillRect(memDC, &baseRc, baseBrush);
             DeleteObject(baseBrush);
 
-            HPEN hHighlightPen = CreatePen(PS_SOLID, 1, RGB(170, 105, 50));
-            HPEN hShadowPen = CreatePen(PS_SOLID, 1, RGB(50, 30, 15));
+            HPEN hHighlightPen = CreatePen(PS_SOLID, 1, G_COLOR(170, 105, 50));
+            HPEN hShadowPen = CreatePen(PS_SOLID, 1, G_COLOR(50, 30, 15));
             HPEN hOldPen = (HPEN)SelectObject(memDC, hHighlightPen);
             MoveToEx(memDC, 180 + ox, 260, NULL); LineTo(memDC, 320 + ox, 260);
             SelectObject(memDC, hShadowPen);
@@ -948,7 +951,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Vertical Post
             RECT postRc = {205 + ox, 115, 217 + ox, 260};
-            HBRUSH postBrush = CreateSolidBrush(RGB(125, 75, 35));
+            HBRUSH postBrush = CreateSolidBrush(G_COLOR(125, 75, 35));
             FillRect(memDC, &postRc, postBrush);
             DeleteObject(postBrush);
 
@@ -959,7 +962,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Beam
             RECT beamRc = {205 + ox, 115, 280 + ox, 127};
-            HBRUSH beamBrush = CreateSolidBrush(RGB(135, 80, 40));
+            HBRUSH beamBrush = CreateSolidBrush(G_COLOR(135, 80, 40));
             FillRect(memDC, &beamRc, beamBrush);
             DeleteObject(beamBrush);
 
@@ -970,14 +973,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Support Brace
             POINT bracePts[4] = {{205 + ox, 150}, {240 + ox, 127}, {247 + ox, 127}, {205 + ox, 160}};
-            HBRUSH braceBrush = CreateSolidBrush(RGB(105, 60, 28));
+            HBRUSH braceBrush = CreateSolidBrush(G_COLOR(105, 60, 28));
             HBRUSH hOldBrush = (HBRUSH)SelectObject(memDC, braceBrush);
             Polygon(memDC, bracePts, 4);
             SelectObject(memDC, hOldBrush);
             DeleteObject(braceBrush);
 
+            // Splinters
+            if (errors >= 3) {
+                HPEN hSplinterPen = CreatePen(PS_SOLID, 1, G_COLOR(30, 15, 5));
+                SelectObject(memDC, hSplinterPen);
+                MoveToEx(memDC, 210 + ox, 180, NULL); LineTo(memDC, 214 + ox, 185); LineTo(memDC, 212 + ox, 192);
+                MoveToEx(memDC, 215 + ox, 220, NULL); LineTo(memDC, 208 + ox, 225); LineTo(memDC, 212 + ox, 230);
+                MoveToEx(memDC, 250 + ox, 120, NULL); LineTo(memDC, 255 + ox, 123); LineTo(memDC, 260 + ox, 118);
+                if (errors >= 5) {
+                    MoveToEx(memDC, 206 + ox, 140, NULL); LineTo(memDC, 215 + ox, 144); LineTo(memDC, 210 + ox, 150);
+                    MoveToEx(memDC, 230 + ox, 125, NULL); LineTo(memDC, 235 + ox, 120); LineTo(memDC, 240 + ox, 125);
+                }
+                DeleteObject(hSplinterPen);
+            }
+
             DeleteObject(hHighlightPen);
             DeleteObject(hShadowPen);
+            #undef G_COLOR
 
             // Rope Physics
             float nooseSwayAngle = (float)sin(anim_ticks * 0.12) * (0.04f + errors * 0.02f);
@@ -1005,7 +1023,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int headY = cy + 12 - idleBounce;
                 int headR = 12;
 
-                HBRUSH headBrush = CreateSolidBrush(RGB(255, 220, 180));
+                int faceR = 255;
+                int faceG = 220;
+                int faceB = 180;
+                float faceHealth = (float)(max_errors - errors) / (float)max_errors;
+                if (faceHealth < 0) faceHealth = 0;
+                float shadowIntensity = (1.0f - faceHealth) * 0.8f;
+                faceR = (int)(faceR * (1.0f - shadowIntensity * 0.5f));
+                faceG = (int)(faceG * (1.0f - shadowIntensity * 0.6f));
+                faceB = (int)(faceB * (1.0f - shadowIntensity * 0.6f));
+
+                HBRUSH headBrush = CreateSolidBrush(RGB(faceR, faceG, faceB));
                 HPEN charPen = CreatePen(PS_SOLID, 2, RGB(45, 55, 70));
                 SelectObject(memDC, headBrush);
                 SelectObject(memDC, charPen);
@@ -1047,6 +1075,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(memDC, &bodyRc, bodyBrush);
                     FrameRect(memDC, &bodyRc, (HBRUSH)GetStockObject(BLACK_BRUSH));
                     DeleteObject(bodyBrush);
+
+                    // Clothing Details (Folds and Buttons)
+                    HPEN foldPen = CreatePen(PS_SOLID, 1, RGB(0, 77, 64));
+                    SelectObject(memDC, foldPen);
+                    MoveToEx(memDC, cx - 4, bodyY1 + 5, NULL); LineTo(memDC, cx - 2, bodyY1 + 12);
+                    MoveToEx(memDC, cx + 5, bodyY1 + 6, NULL); LineTo(memDC, cx + 3, bodyY1 + 15);
+                    MoveToEx(memDC, cx - 3, bodyY1 + 20, NULL); LineTo(memDC, cx - 1, bodyY1 + 25);
+                    DeleteObject(foldPen);
+
+                    HBRUSH btnBrush = CreateSolidBrush(RGB(255, 235, 59));
+                    HPEN btnPen = CreatePen(PS_SOLID, 1, RGB(188, 155, 0));
+                    SelectObject(memDC, btnBrush);
+                    SelectObject(memDC, btnPen);
+                    Ellipse(memDC, cx - 2, bodyY1 + 5, cx + 2, bodyY1 + 9);
+                    Ellipse(memDC, cx - 2, bodyY1 + 13, cx + 2, bodyY1 + 17);
+                    Ellipse(memDC, cx - 2, bodyY1 + 21, cx + 2, bodyY1 + 25);
+                    DeleteObject(btnBrush);
+                    DeleteObject(btnPen);
 
                     if (errors > 2) {
                         SelectObject(memDC, charPen);

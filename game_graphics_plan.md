@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KHangman
 - KMatch3
 - KFreecell
 - KSudoku
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSolitaire
 - KStarship
 - KConnect4
+- KHangman
 ## Completed Work Log
+
+- **KHangman (Loop 4):** Implemented highly polished and distinctly shaded 3D wooden texture variations on the gallows that splinter and darken based on the number of wrong guesses, dynamic animated lighting and shadow effects on the character's facial expressions based on current health, and more intricate vector/GDI paths for clothing details (folds and gold buttons) in both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 
 - **KConnect4 (Loop 4):** Implemented highly detailed procedural lighting and specular highlights on the discs to look like glossy marble/glass, a dynamic 3D drop-shadow cast by floating/hovering discs onto the board before dropping, and glowing aura/sparkle polygonal effects surrounding the winning 4 discs to make the victory state more visually striking in both Web Canvas (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 

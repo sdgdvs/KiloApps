@@ -757,20 +757,23 @@
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fillRect(15, 185, 210, 10);
 
+        const dark = errors * 15;
+        const gColor = (r, g, b) => `rgb(${Math.max(0, r - dark)}, ${Math.max(0, g - dark)}, ${Math.max(0, b - dark)})`;
+
         let baseGrad = ctx.createLinearGradient(20, 175, 20, 185);
-        baseGrad.addColorStop(0, '#8b5a2b');
-        baseGrad.addColorStop(0.5, '#5c3a21');
-        baseGrad.addColorStop(1, '#3d2312');
+        baseGrad.addColorStop(0, gColor(139, 90, 43));
+        baseGrad.addColorStop(0.5, gColor(92, 58, 33));
+        baseGrad.addColorStop(1, gColor(61, 35, 18));
         ctx.fillStyle = baseGrad;
         ctx.fillRect(20, 175, 200, 10);
-        ctx.strokeStyle = '#aa7440';
+        ctx.strokeStyle = gColor(170, 116, 64);
         ctx.lineWidth = 1;
         ctx.strokeRect(20, 175, 200, 10);
 
         let postGrad = ctx.createLinearGradient(45, 0, 61, 0);
-        postGrad.addColorStop(0, '#aa7440');
-        postGrad.addColorStop(0.3, '#734624');
-        postGrad.addColorStop(1, '#3d2312');
+        postGrad.addColorStop(0, gColor(170, 116, 64));
+        postGrad.addColorStop(0.3, gColor(115, 70, 36));
+        postGrad.addColorStop(1, gColor(61, 35, 18));
         ctx.fillStyle = postGrad;
         ctx.fillRect(45, 18, 16, 157);
 
@@ -782,14 +785,14 @@
         ctx.stroke();
 
         let beamGrad = ctx.createLinearGradient(45, 16, 45, 30);
-        beamGrad.addColorStop(0, '#9e6732');
-        beamGrad.addColorStop(0.5, '#693e1b');
-        beamGrad.addColorStop(1, '#3d2312');
+        beamGrad.addColorStop(0, gColor(158, 103, 50));
+        beamGrad.addColorStop(0.5, gColor(105, 62, 27));
+        beamGrad.addColorStop(1, gColor(61, 35, 18));
         ctx.fillStyle = beamGrad;
         ctx.fillRect(45, 16, 130, 14);
 
         ctx.save();
-        ctx.fillStyle = '#693e1b';
+        ctx.fillStyle = gColor(105, 62, 27);
         ctx.beginPath();
         ctx.moveTo(45, 55);
         ctx.lineTo(85, 16);
@@ -797,9 +800,23 @@
         ctx.lineTo(45, 67);
         ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = '#a46f38';
+        ctx.strokeStyle = gColor(164, 111, 56);
         ctx.stroke();
         ctx.restore();
+
+        if (errors >= 3) {
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(45, 100); ctx.lineTo(52, 105); ctx.lineTo(48, 115);
+            ctx.moveTo(61, 80); ctx.lineTo(55, 88); ctx.lineTo(58, 95);
+            ctx.moveTo(100, 30); ctx.lineTo(105, 25); ctx.lineTo(110, 30);
+            if (errors >= 5) {
+                ctx.moveTo(45, 140); ctx.lineTo(55, 142); ctx.lineTo(50, 150);
+                ctx.moveTo(130, 30); ctx.lineTo(125, 22); ctx.lineTo(135, 26);
+            }
+            ctx.stroke();
+        }
 
         ctx.fillStyle = '#d4af37';
         ctx.fillRect(43, 14, 20, 18);
@@ -855,7 +872,14 @@
             const headY = cy + 16 - idleBounce;
             const headR = 15;
 
-            ctx.fillStyle = '#ffdfc4';
+            const faceHealth = Math.max(0, 1 - (errors / maxErrors));
+            const shadowIntensity = (1 - faceHealth) * 0.8;
+            const headGrad = ctx.createRadialGradient(cx - 3, headY - 3, 2, cx, headY, headR);
+            headGrad.addColorStop(0, '#ffdfc4');
+            headGrad.addColorStop(0.7, '#f5c6a1');
+            headGrad.addColorStop(1, `rgba(100, 50, 50, ${shadowIntensity})`);
+
+            ctx.fillStyle = headGrad;
             ctx.beginPath();
             ctx.arc(cx, headY, headR, 0, Math.PI * 2);
             ctx.fill();
@@ -932,15 +956,37 @@
             if (errors > 1) {
                 const bodyY1 = headY + headR;
                 const bodyY2 = bodyY1 + 35;
-                ctx.fillStyle = '#00897b';
+                
+                const torsoGrad = ctx.createLinearGradient(cx - 8, bodyY1, cx + 8, bodyY1);
+                torsoGrad.addColorStop(0, '#00695c');
+                torsoGrad.addColorStop(0.5, '#00897b');
+                torsoGrad.addColorStop(1, '#004d40');
+
+                ctx.fillStyle = torsoGrad;
                 ctx.fillRect(cx - 8, bodyY1, 16, 35);
                 ctx.strokeStyle = '#004d40';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(cx - 8, bodyY1, 16, 35);
+
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(cx - 5, bodyY1 + 5); ctx.lineTo(cx - 2, bodyY1 + 15);
+                ctx.moveTo(cx + 6, bodyY1 + 8); ctx.lineTo(cx + 3, bodyY1 + 18);
+                ctx.moveTo(cx - 4, bodyY1 + 25); ctx.lineTo(cx - 1, bodyY1 + 30);
+                ctx.stroke();
+
                 ctx.fillStyle = '#ffeb3b';
                 ctx.beginPath();
-                ctx.arc(cx, bodyY1 + 8, 2, 0, Math.PI * 2);
-                ctx.arc(cx, bodyY1 + 20, 2, 0, Math.PI * 2);
+                ctx.arc(cx, bodyY1 + 8, 2.5, 0, Math.PI * 2);
+                ctx.arc(cx, bodyY1 + 18, 2.5, 0, Math.PI * 2);
+                ctx.arc(cx, bodyY1 + 28, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#bc9b00';
+                ctx.beginPath();
+                ctx.arc(cx + 1, bodyY1 + 9, 1, 0, Math.PI * 2);
+                ctx.arc(cx + 1, bodyY1 + 19, 1, 0, Math.PI * 2);
+                ctx.arc(cx + 1, bodyY1 + 29, 1, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Left Arm (Error 3)
