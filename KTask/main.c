@@ -104,6 +104,46 @@ void my_hex8(DWORD num, char* str) {
     str[10] = '\0';
 }
 
+void my_escape_json(const char* src, char* dest, int maxLen) {
+    if (!src || !dest || maxLen <= 1) return;
+    int d = 0;
+    for (int s = 0; src[s] && d < maxLen - 2; s++) {
+        char c = src[s];
+        if (c == '"' || c == '\\') {
+            if (d < maxLen - 3) {
+                dest[d++] = '\\';
+                dest[d++] = c;
+            }
+        } else if (c == '\r') {
+            if (d < maxLen - 3) { dest[d++] = '\\'; dest[d++] = 'r'; }
+        } else if (c == '\n') {
+            if (d < maxLen - 3) { dest[d++] = '\\'; dest[d++] = 'n'; }
+        } else if (c == '\t') {
+            if (d < maxLen - 3) { dest[d++] = '\\'; dest[d++] = 't'; }
+        } else {
+            dest[d++] = c;
+        }
+    }
+    dest[d] = '\0';
+}
+
+void my_escape_csv(const char* src, char* dest, int maxLen) {
+    if (!src || !dest || maxLen <= 1) return;
+    int d = 0;
+    for (int s = 0; src[s] && d < maxLen - 2; s++) {
+        char c = src[s];
+        if (c == '"') {
+            if (d < maxLen - 3) {
+                dest[d++] = '"';
+                dest[d++] = '"';
+            }
+        } else {
+            dest[d++] = c;
+        }
+    }
+    dest[d] = '\0';
+}
+
 void LayoutControls(HWND hwnd) {
     RECT rc;
     GetClientRect(hwnd, &rc);
@@ -244,7 +284,10 @@ LRESULT CALLBACK InspectWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA), &ncm, 0);
             HFONT hFont = CreateFontA(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
                 OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
-            if (hFont) SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, FALSE);
+            if (hFont) {
+                SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, FALSE);
+                SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)hFont);
+            }
 
             CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
             if (cs && cs->lpCreateParams) {
@@ -268,6 +311,11 @@ LRESULT CALLBACK InspectWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         case WM_CLOSE:
             DestroyWindow(hwnd);
             return 0;
+        case WM_DESTROY: {
+            HFONT hFont = (HFONT)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+            if (hFont) DeleteObject(hFont);
+            break;
+        }
     }
     return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
@@ -600,14 +648,16 @@ void PerformExportCSV(HWND hwnd) {
             char pidStr[16] = {0};
             char thrStr[16] = {0};
             char priStr[16] = {0};
+            char escapedExe[256] = {0};
 
             my_utoa(pe32.th32ProcessID, pidStr);
             my_utoa(pe32.cntThreads, thrStr);
             my_itoa(pe32.pcPriClassBase, priStr);
+            my_escape_csv(pe32.szExeFile, escapedExe, sizeof(escapedExe));
 
             my_strcpy(lineBuf, pidStr);
             my_strcat(lineBuf, ",\"");
-            my_strcat(lineBuf, pe32.szExeFile);
+            my_strcat(lineBuf, escapedExe);
             my_strcat(lineBuf, "\",");
             my_strcat(lineBuf, thrStr);
             my_strcat(lineBuf, ",");
@@ -658,15 +708,17 @@ void PerformExportJSON(HWND hwnd) {
             char pidStr[16] = {0};
             char thrStr[16] = {0};
             char priStr[16] = {0};
+            char escapedExe[256] = {0};
 
             my_utoa(pe32.th32ProcessID, pidStr);
             my_utoa(pe32.cntThreads, thrStr);
             my_itoa(pe32.pcPriClassBase, priStr);
+            my_escape_json(pe32.szExeFile, escapedExe, sizeof(escapedExe));
 
             my_strcpy(lineBuf, "  {\"pid\": ");
             my_strcat(lineBuf, pidStr);
             my_strcat(lineBuf, ", \"name\": \"");
-            my_strcat(lineBuf, pe32.szExeFile);
+            my_strcat(lineBuf, escapedExe);
             my_strcat(lineBuf, "\", \"threads\": ");
             my_strcat(lineBuf, thrStr);
             my_strcat(lineBuf, ", \"basePriority\": ");
@@ -702,7 +754,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
 LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
-        if (wParam == VK_F5) {
+        if (wParam == VK_F5 || wParam == 'R' || wParam == 'r') {
             RefreshList();
             return 0;
         } else if (wParam == VK_DELETE) {
@@ -712,7 +764,7 @@ LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             PerformInspectProcess(GetParent(hwnd));
             return 0;
         } else if (wParam == 'H' || wParam == 'h') {
-            MessageBoxA(GetParent(hwnd), "Shortcuts:\r\nF5: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+            MessageBoxA(GetParent(hwnd), "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
             return 0;
         }
     }
@@ -796,7 +848,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == 9) {
                 PerformInspectProcess(hwnd);
             } else if (id == 10) {
-                MessageBoxA(hwnd, "Shortcuts:\r\nF5: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
             } else if (id == 4 && code == LBN_DBLCLK) {
                 PerformInspectProcess(hwnd);
             }
@@ -804,7 +856,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN:
-            if (wParam == VK_F5) {
+            if (wParam == VK_F5 || wParam == 'R' || wParam == 'r') {
                 RefreshList();
                 return 0;
             } else if (wParam == VK_DELETE) {
@@ -814,7 +866,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PerformInspectProcess(hwnd);
                 return 0;
             } else if (wParam == 'H' || wParam == 'h') {
-                MessageBoxA(hwnd, "Shortcuts:\r\nF5: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
                 return 0;
             }
             break;
@@ -841,17 +893,15 @@ void __stdcall MainEntry() {
     RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F5: Refresh, Del: End Task, H: Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F5/R: Refresh, Del: End Task, H: Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (!IsDialogMessage(hwnd, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessageA(&msg);
-        }
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
     }
     ExitProcess(0);
 }

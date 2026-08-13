@@ -291,6 +291,7 @@
     let tasksData = [];
     let selectedTaskId = null;
     let autoInterval = null;
+    let toastTimer = null;
 
     window.addEventListener('message', (e) => {
       const msg = e.data;
@@ -303,8 +304,30 @@
     function sendToOS(msg) {
       return new Promise((resolve) => {
         const id = ++currentReqId;
-        callbacks[id] = resolve;
-        window.parent.postMessage({ ...msg, requestId: id }, '*');
+        const timer = setTimeout(() => {
+          if (callbacks[id]) {
+            delete callbacks[id];
+            // Fallback mock tasks for standalone preview if OS parent doesn't respond
+            resolve([
+              { id: '1004', title: 'KiloOS Kernel' },
+              { id: '1842', title: 'Task Manager (ktaskmgr)' },
+              { id: '2410', title: 'KPad Editor' }
+            ]);
+          }
+        }, 3000);
+
+        callbacks[id] = (tasks) => {
+          clearTimeout(timer);
+          resolve(tasks);
+        };
+
+        try {
+          window.parent.postMessage({ ...msg, requestId: id }, '*');
+        } catch (err) {
+          clearTimeout(timer);
+          delete callbacks[id];
+          resolve([]);
+        }
       });
     }
 
@@ -313,7 +336,8 @@
       if (!t) return;
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2500);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
     }
 
     async function refresh() {
@@ -377,6 +401,7 @@
         const tdId = document.createElement('td');
         tdId.style.fontFamily = 'monospace';
         tdId.style.color = '#94a3b8';
+        tdId.title = taskId;
         tdId.textContent = taskId.length > 12 ? taskId.slice(0, 12) + '...' : taskId;
 
         const tdAction = document.createElement('td');
@@ -438,6 +463,9 @@
       if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
         e.preventDefault();
         refresh();
+      } else if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        showToast('Shortcuts: [R/F5] Refresh, [Del] End Task, [Esc] Clear filter, [H] Help');
       } else if (e.key === 'Escape') {
         const search = document.getElementById('searchInput');
         if (search && search.value) {

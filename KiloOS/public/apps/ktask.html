@@ -1085,9 +1085,27 @@
       }
     }
 
+    let toastTimer = null;
+
     function refresh() {
       const reqId = ++reqIdCounter;
-      window.parent.postMessage({ type: 'OS_LIST_TASKS', requestId: reqId }, '*');
+      try {
+        window.parent.postMessage({ type: 'OS_LIST_TASKS', requestId: reqId }, '*');
+      } catch(e) {}
+      
+      // Fallback for standalone mode outside iframe
+      setTimeout(() => {
+        if (allTasks.length === 0) {
+          allTasks = [
+            { id: '1004', title: 'KiloOS Kernel Services' },
+            { id: '1420', title: 'KExplorer File Manager' },
+            { id: '1842', title: 'KTask Process Monitor' },
+            { id: '2105', title: 'KPad Text Editor' },
+            { id: '3290', title: 'KCalc Calculator' }
+          ];
+          renderTasks();
+        }
+      }, 1000);
     }
 
     function toggleAutoRefresh() {
@@ -1118,7 +1136,8 @@
       if (!toast) return;
       toast.textContent = message;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
     function promptKillTask(taskId, taskTitle) {
