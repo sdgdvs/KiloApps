@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KTerm
+**Target App:** KTetris
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -267,3 +267,5 @@ Pass 1 Complete.
 - **KTask**: Fixed XSS risk in `ktask.html` aria-label string interpolation. Fixed global hotkey handling during active modal overlays. Recompiled native `KTask.exe` and verified Vite web build cleanly.
 
 - **KTaskMgr**: Fixed JSON/CSV string escaping in `KTask/main.c` export logic. Resolved GDI font handle memory leak in Deep Inspector window. Added 3-second `postMessage` timeout fallbacks in `ktaskmgr.html` and `ktask.html` for standalone execution. Added toast notification debouncing and tooltip PIDs. Recompiled native `KTask.exe` (18.4 KB) and verified Vite web build.
+
+- **KTerm**: Fixed parent window DOM mutation security issues in `kterm.html`. Fixed Ctrl+R reverse search query tracking and real-time input routing in both web and native versions. Fixed command prefix collisions (e.g., `category`) and flag handling (`ls -la`). Recompiled native `KTerm.exe` (19.9 KB) and verified Vite web build.
