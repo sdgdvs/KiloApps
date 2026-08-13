@@ -56,15 +56,15 @@
   .cell.mine { background: radial-gradient(circle, #f7768e 0%, #7a1d2e 100%); box-shadow: 0 0 14px rgba(247, 118, 142, 0.8); }
   .cell.chest { background: radial-gradient(circle, #facc15 0%, #854d0e 100%); box-shadow: 0 0 14px rgba(250, 204, 21, 0.8); }
   
-  /* Digit custom vivid retro colors */
-  .c1 { color: #38bdf8; text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); } 
-  .c2 { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.4); } 
-  .c3 { color: #f87171; text-shadow: 0 0 8px rgba(248, 113, 113, 0.4); } 
-  .c4 { color: #c084fc; text-shadow: 0 0 8px rgba(192, 132, 252, 0.4); } 
-  .c5 { color: #facc15; text-shadow: 0 0 8px rgba(250, 204, 21, 0.4); } 
-  .c6 { color: #2dd4bf; text-shadow: 0 0 8px rgba(45, 212, 191, 0.4); } 
-  .c7 { color: #e2e8f0; text-shadow: 0 0 8px rgba(226, 232, 240, 0.4); } 
-  .c8 { color: #94a3b8; text-shadow: 0 0 8px rgba(148, 163, 184, 0.4); }
+  /* Digit custom vivid retro colors and fonts */
+  .c1 { color: #38bdf8; text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); font-family: 'Consolas', monospace; font-size: 18px; } 
+  .c2 { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.4); font-family: 'Georgia', serif; font-size: 18px; font-weight: 900; } 
+  .c3 { color: #f87171; text-shadow: 0 0 8px rgba(248, 113, 113, 0.4); font-family: 'Impact', sans-serif; font-size: 20px; } 
+  .c4 { color: #c084fc; text-shadow: 0 0 8px rgba(192, 132, 252, 0.4); font-family: 'Comic Sans MS', cursive; font-size: 16px; } 
+  .c5 { color: #facc15; text-shadow: 0 0 8px rgba(250, 204, 21, 0.4); font-family: 'Times New Roman', serif; font-size: 18px; font-weight: 900; font-style: italic; } 
+  .c6 { color: #2dd4bf; text-shadow: 0 0 8px rgba(45, 212, 191, 0.4); font-family: 'Courier New', monospace; font-size: 16px; font-weight: bold; text-decoration: underline; } 
+  .c7 { color: #e2e8f0; text-shadow: 0 0 8px rgba(226, 232, 240, 0.4); font-family: 'Tahoma', sans-serif; font-size: 18px; } 
+  .c8 { color: #94a3b8; text-shadow: 0 0 8px rgba(148, 163, 184, 0.4); font-family: 'Arial Black', sans-serif; font-size: 18px; }
 
   /* SVG Animations */
   @keyframes spark-flicker {
@@ -84,6 +84,19 @@
     50% { box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 30px rgba(122, 162, 247, 0.8); border-color: #a9c5ff; }
   }
   .board.shield-active { animation: shield-pulse 1.5s infinite alternate; }
+
+  @keyframes hitech-pulse {
+    0% { fill: #0e7490; filter: drop-shadow(0 0 2px #0e7490); }
+    100% { fill: #38bdf8; filter: drop-shadow(0 0 8px #38bdf8); }
+  }
+  .hitech-glow { animation: hitech-pulse 1s infinite alternate; }
+
+  @keyframes flag-pop {
+    0% { transform: scale(0) translateY(10px); }
+    60% { transform: scale(1.3) translateY(-2px); }
+    100% { transform: scale(1) translateY(0); }
+  }
+  .flag-anim-container { animation: flag-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
   #fx-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; }
 </style>
@@ -393,15 +406,22 @@
       document.getElementById('face').innerHTML = renderSmileySVG(state);
     }
 
-    const MINE_SVG = `<svg class="mine-svg" viewBox="0 0 32 32" width="20" height="20">
-      <g stroke="#121520" stroke-width="2.5" stroke-linecap="round">
+    const MINE_SVG_RUSTY = `<svg class="mine-svg" viewBox="0 0 32 32" width="20" height="20">
+      <g stroke="#1a1c1a" stroke-width="2.5" stroke-linecap="round">
         <line x1="16" y1="4" x2="16" y2="28"/><line x1="4" y1="16" x2="28" y2="16"/>
         <line x1="7.5" y1="7.5" x2="24.5" y2="24.5"/><line x1="24.5" y1="7.5" x2="7.5" y2="24.5"/>
       </g>
-      <circle cx="16" cy="16" r="8" fill="#2a2e3d" stroke="#0e1017" stroke-width="1.5"/>
-      <circle cx="13.5" cy="13.5" r="2.5" fill="#a6b4c9" opacity="0.7"/>
+      <circle cx="16" cy="16" r="8" fill="#3b332b" stroke="#0e1017" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2" fill="#8c471c" opacity="0.8"/>
+      <circle cx="19" cy="18" r="2.5" fill="#8c471c" opacity="0.8"/>
       <path d="M16 8 Q 18 4 22 5" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round"/>
       <circle cx="22" cy="5" r="2.5" class="fuse-spark"/>
+    </svg>`;
+
+    const MINE_SVG_HITECH = `<svg class="mine-svg" viewBox="0 0 32 32" width="20" height="20">
+      <circle cx="16" cy="16" r="9" fill="#14181f" stroke="#0a0f14" stroke-width="1.5"/>
+      <circle cx="16" cy="16" r="5" fill="#0e7490" class="hitech-glow"/>
+      <circle cx="16" cy="16" r="2.5" fill="#38bdf8"/>
     </svg>`;
 
     const CHEST_SVG = `<svg class="chest-svg" viewBox="0 0 32 32" width="20" height="20">
@@ -927,7 +947,11 @@
             div.classList.add('revealed');
             if (grid[r][c] & 8) {
               div.classList.add('mine');
-              div.innerHTML = MINE_SVG;
+              if ((r * 13 + c * 7) % 2 === 0) {
+                div.innerHTML = MINE_SVG_RUSTY;
+              } else {
+                div.innerHTML = MINE_SVG_HITECH;
+              }
             } else {
               let m = countMines(r, c);
               if (m > 0) {
@@ -936,7 +960,7 @@
               }
             }
           } else if (grid[r][c] & 4) {
-            div.innerHTML = FLAG_SVG;
+            div.innerHTML = '<div class="flag-anim-container">' + FLAG_SVG + '</div>';
           } else if (grid[r][c] & 16) {
             div.innerHTML = QUESTION_SVG;
           } else if (grid[r][c] & 32 && gameOver) {

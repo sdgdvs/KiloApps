@@ -1,5 +1,5 @@
 #include <windows.h>
-
+#include <math.h>
 void* __cdecl memset(void* p, int c, size_t sz) {
     char* pb = (char*)p;
     while (sz--) *pb++ = (char)c;
@@ -22,6 +22,7 @@ int mines = 10;
 #define CELL_CHEST    0x10
 
 int grid[MAX_ROWS][MAX_COLS];
+DWORD flagTick[MAX_ROWS][MAX_COLS];
 int gameOver = 0;
 int initialized = 0;
 int timeElapsed = 0;
@@ -233,6 +234,7 @@ int chestsToPlace = 0;
 
 void InitGame(int firstClickX, int firstClickY) {
     memset(grid, 0, sizeof(grid));
+    memset(flagTick, 0, sizeof(flagTick));
     gameOver = 0;
     if (!rushMode && !isSpeedrun) timeElapsed = 0;
     flagsPlaced = 0;
@@ -474,6 +476,7 @@ void UseDetectorBot(HWND hwnd) {
         for (int c = 0; c < cols; c++) {
             if ((grid[r][c] & CELL_MINE) && !(grid[r][c] & CELL_FLAGGED) && !(grid[r][c] & CELL_REVEALED)) {
                 grid[r][c] |= CELL_FLAGGED;
+                flagTick[r][c] = GetTickCount();
                 flagsPlaced++;
                 detectors--;
                 detectorTick = GetTickCount();
@@ -558,8 +561,39 @@ void DrawSmiley(HDC hdc, int cx, int cy, int size, int state) {
     DeleteObject(hbrFace); DeleteObject(hPenOutline);
 }
 
+void DrawNumberSprite(HDC hdc, int x, int y, int size, int m) {
+    char szNum[2] = { m + '0', 0 };
+    RECT rcCell = { x, y, x + size, y + size };
+    HFONT hFont;
+    COLORREF c;
+    switch(m) {
+        case 1: c = RGB(56, 189, 248); hFont = CreateFontA(size-4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas"); break;
+        case 2: c = RGB(74, 222, 128); hFont = CreateFontA(size-2, 0, 0, 0, FW_HEAVY, FALSE, TRUE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Georgia"); break;
+        case 3: c = RGB(248, 113, 113); hFont = CreateFontA(size, 0, 0, 0, FW_BLACK, TRUE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Impact"); break;
+        case 4: c = RGB(192, 132, 252); hFont = CreateFontA(size-4, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Comic Sans MS"); break;
+        case 5: c = RGB(250, 204, 21); hFont = CreateFontA(size-2, 0, 0, 0, FW_BOLD, FALSE, FALSE, TRUE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Times New Roman"); break;
+        case 6: c = RGB(45, 212, 191); hFont = CreateFontA(size-4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New"); break;
+        case 7: c = RGB(226, 232, 240); hFont = CreateFontA(size-3, 0, 0, 0, FW_MEDIUM, TRUE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma"); break;
+        default: c = RGB(148, 163, 184); hFont = CreateFontA(size-4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial"); break;
+    }
+    
+    HGDIOBJ oldFont = SelectObject(hdc, hFont);
+    SetBkMode(hdc, TRANSPARENT);
+    
+    SetTextColor(hdc, RGB(20, 20, 20));
+    RECT rcShadow = { x+2, y+2, x + size+2, y + size+2 };
+    DrawTextA(hdc, szNum, 1, &rcShadow, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    
+    SetTextColor(hdc, c);
+    DrawTextA(hdc, szNum, 1, &rcCell, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    
+    SelectObject(hdc, oldFont);
+    DeleteObject(hFont);
+}
+
 void DrawMineSprite(HDC hdc, int x, int y, int size, int isDetonated, DWORD tick) {
     int cx = x + size / 2, cy = y + size / 2, r = size / 3;
+    int style = ((x * 13 + y * 7) % 2);
 
     if (isDetonated) {
         HBRUSH hbrGlow = CreateSolidBrush(RGB(240, 50, 50));
@@ -568,25 +602,48 @@ void DrawMineSprite(HDC hdc, int x, int y, int size, int isDetonated, DWORD tick
         DeleteObject(hbrGlow);
     }
 
-    HPEN hPenSpike = CreatePen(PS_SOLID, 2, RGB(30, 30, 35));
-    HGDIOBJ oldPen = SelectObject(hdc, hPenSpike);
-    MoveToEx(hdc, cx - r - 2, cy, NULL); LineTo(hdc, cx + r + 2, cy);
-    MoveToEx(hdc, cx, cy - r - 2, NULL); LineTo(hdc, cx, cy + r + 2);
-    MoveToEx(hdc, cx - r + 1, cy - r + 1, NULL); LineTo(hdc, cx + r - 1, cy + r - 1);
-    MoveToEx(hdc, cx + r - 1, cy - r + 1, NULL); LineTo(hdc, cx - r + 1, cy + r - 1);
-
-    HBRUSH hbrBody = CreateSolidBrush(RGB(40, 44, 52));
-    HPEN hPenBody = CreatePen(PS_SOLID, 1, RGB(15, 18, 22));
-    HGDIOBJ oldBr = SelectObject(hdc, hbrBody);
-    SelectObject(hdc, hPenBody);
-    DeleteObject(hPenSpike);
-    
-    Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
-
-    SelectObject(hdc, oldBr);
-    SelectObject(hdc, oldPen);
-    DeleteObject(hbrBody);
-    DeleteObject(hPenBody);
+    if (style == 0) {
+        HPEN hPenSpike = CreatePen(PS_SOLID, 2, RGB(25, 25, 30));
+        HGDIOBJ oldPen = SelectObject(hdc, hPenSpike);
+        MoveToEx(hdc, cx - r - 2, cy, NULL); LineTo(hdc, cx + r + 2, cy);
+        MoveToEx(hdc, cx, cy - r - 2, NULL); LineTo(hdc, cx, cy + r + 2);
+        MoveToEx(hdc, cx - r + 1, cy - r + 1, NULL); LineTo(hdc, cx + r - 1, cy + r - 1);
+        MoveToEx(hdc, cx + r - 1, cy - r + 1, NULL); LineTo(hdc, cx - r + 1, cy + r - 1);
+        
+        HBRUSH hbrBody = CreateSolidBrush(RGB(50, 45, 40));
+        HPEN hPenBody = CreatePen(PS_SOLID, 1, RGB(15, 12, 10));
+        HGDIOBJ oldBr = SelectObject(hdc, hbrBody);
+        SelectObject(hdc, hPenBody);
+        Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+        
+        HBRUSH hbrRust = CreateSolidBrush(RGB(150, 70, 20));
+        SelectObject(hdc, hbrRust);
+        SelectObject(hdc, GetStockObject(NULL_PEN));
+        Ellipse(hdc, cx - r/2, cy - r/2, cx - r/4, cy - r/4);
+        Ellipse(hdc, cx + r/4, cy + r/4, cx + r/2, cy + r/2);
+        
+        SelectObject(hdc, oldBr);
+        SelectObject(hdc, oldPen);
+        DeleteObject(hbrBody); DeleteObject(hPenBody); DeleteObject(hPenSpike); DeleteObject(hbrRust);
+    } else {
+        HBRUSH hbrBody = CreateSolidBrush(RGB(20, 24, 30));
+        HPEN hPenBody = CreatePen(PS_SOLID, 1, RGB(10, 15, 20));
+        HGDIOBJ oldBr = SelectObject(hdc, hbrBody);
+        HGDIOBJ oldPen = SelectObject(hdc, hPenBody);
+        
+        Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+        
+        int glowState = (tick / 200) % 2;
+        COLORREF glowColor = glowState ? RGB(56, 189, 248) : RGB(14, 116, 144);
+        HBRUSH hbrGlowInner = CreateSolidBrush(glowColor);
+        SelectObject(hdc, hbrGlowInner);
+        SelectObject(hdc, GetStockObject(NULL_PEN));
+        Ellipse(hdc, cx - r/2 + 1, cy - r/2 + 1, cx + r/2 - 1, cy + r/2 - 1);
+        
+        SelectObject(hdc, oldBr);
+        SelectObject(hdc, oldPen);
+        DeleteObject(hbrBody); DeleteObject(hPenBody); DeleteObject(hbrGlowInner);
+    }
 }
 
 void DrawChestSprite(HDC hdc, int x, int y, int size) {
@@ -615,27 +672,42 @@ void DrawChestSprite(HDC hdc, int x, int y, int size) {
     DeleteObject(hbrGold); DeleteObject(hPenDark);
 }
 
-void DrawFlagSprite(HDC hdc, int x, int y, int size, DWORD tick) {
+void DrawFlagSprite(HDC hdc, int x, int y, int size, DWORD tick, DWORD placedTick) {
     int cx = x + size / 2;
+    int elapsed = tick - placedTick;
+    
+    float scale = 1.0f;
+    if (elapsed < 300) {
+        scale = (float)elapsed / 300.0f;
+        scale += 0.2f * sin((float)elapsed * 3.14159f / 300.0f);
+    }
+    
+    int th = (int)(size * scale);
+    int by = y + size - 2;
+    
     HBRUSH hbrBase = CreateSolidBrush(RGB(60, 60, 70));
     HPEN hPenBase = CreatePen(PS_SOLID, 1, RGB(30, 30, 35));
     HGDIOBJ oldBr = SelectObject(hdc, hbrBase);
     HGDIOBJ oldPen = SelectObject(hdc, hPenBase);
-    Ellipse(hdc, cx - 6, y + size - 6, cx + 6, y + size - 2);
+    Ellipse(hdc, cx - (int)(6*scale), by - (int)(4*scale), cx + (int)(6*scale), by);
 
     HPEN hPenPole = CreatePen(PS_SOLID, 2, RGB(200, 205, 215));
     SelectObject(hdc, hPenPole);
-    DeleteObject(hPenBase); // Now safe to delete
-    MoveToEx(hdc, cx - 3, y + 4, NULL); LineTo(hdc, cx - 3, y + size - 4);
+    DeleteObject(hPenBase);
+    MoveToEx(hdc, cx - (int)(3*scale), by - th + (int)(4*scale), NULL); LineTo(hdc, cx - (int)(3*scale), by);
 
-    int waveOffset = ((tick / 150) % 2) * 2;
-    POINT pts[3] = { { cx - 2, y + 5 }, { cx + size / 2 + 3 + waveOffset, y + 9 }, { cx - 2, y + 15 } };
+    int waveOffset = (int)(((tick / 150) % 2) * 2 * scale);
+    POINT pts[3] = { 
+        { cx - (int)(2*scale), by - th + (int)(5*scale) }, 
+        { cx + (int)((size / 2 + 3)*scale) + waveOffset, by - th + (int)(9*scale) }, 
+        { cx - (int)(2*scale), by - th + (int)(15*scale) } 
+    };
     HBRUSH hbrCloth = CreateSolidBrush(RGB(240, 45, 65));
     HPEN hPenCloth = CreatePen(PS_SOLID, 1, RGB(160, 20, 35));
     SelectObject(hdc, hbrCloth); 
     SelectObject(hdc, hPenCloth);
-    DeleteObject(hbrBase); // Now safe to delete
-    DeleteObject(hPenPole); // Now safe to delete
+    DeleteObject(hbrBase);
+    DeleteObject(hPenPole);
     Polygon(hdc, pts, 3);
     
     SelectObject(hdc, oldBr); 
@@ -776,18 +848,12 @@ void DrawBoard(HWND hwnd, HDC hdc) {
                 } else {
                     int m = CountMines(r, c);
                     if (m > 0) {
-                        char szNum[2] = { m + '0', 0 };
-                        COLORREF numColors[8] = {
-                            RGB(56, 189, 248),  RGB(74, 222, 128),  RGB(248, 113, 113), RGB(192, 132, 252),
-                            RGB(250, 204, 21),  RGB(45, 212, 191),  RGB(226, 232, 240), RGB(148, 163, 184)
-                        };
-                        SetTextColor(hdc, numColors[m - 1]);
-                        DrawTextA(hdc, szNum, 1, &rcCell, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        DrawNumberSprite(hdc, x, y, CELL_SIZE, m);
                     }
                 }
             } else {
                 if (grid[r][c] & CELL_FLAGGED) {
-                    DrawFlagSprite(hdc, x, y, CELL_SIZE, tick);
+                    DrawFlagSprite(hdc, x, y, CELL_SIZE, tick, flagTick[r][c]);
                 } else if (grid[r][c] & CELL_QUESTION) {
                     DrawQuestionSprite(hdc, x, y, CELL_SIZE);
                 }
@@ -1028,6 +1094,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         grid[y][x] &= ~CELL_QUESTION;
                     } else {
                         grid[y][x] |= CELL_FLAGGED;
+                        flagTick[y][x] = GetTickCount();
                         flagsPlaced++;
                     }
                     Beep(800, 20);

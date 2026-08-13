@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMines
 - KAsteroids
 - K2048
 - KSolitaire
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KRogue
 - KChess
 - KPong
+- KMines
 ## Completed Work Log
+
+- **KMines (Loop 4):** Implemented distinctly stylized fonts and text-shadows for the 1-8 number graphics; added a kinematically animated pop-in scale effect when flags are planted; and created two distinct visual variations for hidden mines (a Rusty Iron Naval Mine with rust spots and a High-Tech Proximity Mine with a pulsing cyan glow) distributed procedurally across the grid in both Web Canvas (kmines.html) and Native C Win32 GDI (KMines/main.c).
 
 - **KPong (Loop 4):** Replaced text badges with distinct graphical vector models for powerups (Plus, Minus, Diamond, 3-Circles, Double-Arrows, Hexagon-Shield); implemented animated rectangular expanding shockwave ripples on paddles upon ball impact; and added a dynamic neon ball trail effect that smoothly shifts colors based on current ball speed and rally bounce count in both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 
