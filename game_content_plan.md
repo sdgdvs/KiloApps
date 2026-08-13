@@ -148,7 +148,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
 | KFortress  | Tier 1 | Creator building (Phase TBD) | Wait for Creator to finish — then Loop 1 content pass |
-| KPac       | Tier 1 | Loop 8 done (Hazards, teleport ghost, score multiplier) | Loop 9: Multi-phase bosses, escort missions, branching paths |
 | KBreakout  | Tier 1 | Loop 8 done (30 stages, phantom bricks, custom levels) | Loop 9: Advanced level editor, more hazards, boss rematches |
 | KSnake     | Tier 1 | Loop 8 done (Ghost Berry, Hunter AI, Omega Boss) | Loop 9: Advanced level editor, more hazards, boss rematches |
 | KRogue     | Tier 1 | Loop 9 done (traps, boss rematches, cursed items) | Loop 10: Final sanctuary floors, true ending, ultra bosses |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSpace     | Tier 1 | Loop 9 done (Multi-phase bosses, escort missions, branching paths) | Loop 10: Elite enemy squads, planetary bombardment missions, weapon overcharge |
 | KAsteroids | Tier 1 | Loop 9 done (Branching paths, escort missions, black hole hazard) | Loop 10: Supermassive asteroid bosses, warp core collection, zero-G inertia anomalies |
 | KMaze      | Tier 1 | Loop 9 done (Spike traps, boss rematches, cursed relics) | Loop 10: Multi-level dungeons, save points, dynamic lighting |
+| KPac       | Tier 1 | Loop 9 done (Multi-phase bosses, escort missions, branching paths) | Loop 10: Arcade endless mode, procedural ghost personalities, item crafting |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 9**
+- [x] KPac (Loop 9: Added multi-phase Ghost King Boss, VIP ghost escort missions, and randomized branching level portals in both EXE and HTML)
 - [x] KMatch3 (Balance audit complete: Implemented auto-shuffle when no moves exist, nerfed Stage 20 Boss HP to 75, reduced all powerup costs to 300 in both EXE and HTML)
 - [x] KMaze (Loop 9: Added toggling Spike Traps, Cursed Relics [risk/reward score item], and procedural Boss Rematches every 5 levels in both EXE and HTML)
 - [x] KSimon (Balance audit complete: Reset timers on correct input, smoothed sequence speed curve, fixed 6-button label map bug in both EXE and HTML)
