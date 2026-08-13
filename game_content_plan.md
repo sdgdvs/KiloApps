@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KReversi   | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty curve, check Minimax depth, ensure board sizes feel right. |
 | KConnect4  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty levels. Ensure Grandmaster is genuinely hard. Check blocker cell mechanics. |
 | KSolitaire | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check deal fairness, ensure Vegas mode scoring is balanced, verify undo/powerup economy. |
 | KFreecell  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Checked that all dealt hands are solvable, rebalanced campaign difficulty constraints. |
@@ -180,6 +179,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KDarts     | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Tuned wind/wobble by difficulty, fixed 301 bust bug, fixed Killer logic. |
 | KChess     | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Tuned Easy/Hard/Master Minimax depths and opening/endgame PST. |
 | KGo        | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Fixed AI turn skipping, handicap AI trigger, double-pass scoring, and tuned Grandmaster positional weights. |
+| KReversi   | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Fixed AI softlock on pass, increased Grandmaster Minimax depths, verified difficulty curve. |
 
 
 ## Progress Log
@@ -188,6 +188,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KRogue (Loop 10: Added True Sanctuary biome (floors 41-50), Tier 8 Ultra Bosses (Seraphim, Eldritch God), and relocated True Astaroth final battle to floor 50 in both EXE and HTML)
 
 **Loop 9**
+- [x] KReversi (Balance audit complete: Fixed AI softlock on double-pass, increased Grandmaster Minimax depths for 6x6/8x8/10x10 boards, verified difficulty curve in both EXE and HTML)
 - [x] KGo (Balance audit complete: Fixed AI turn blocking, fixed handicap AI triggering, added double-pass auto-score, and tuned Grandmaster AI 3rd/4th line territory evaluation in both EXE and HTML)
 - [x] KSnake (Loop 9: Added Snake vs Snake mode, dynamic growing maze walls, and rain weather effects in both EXE and HTML)
 - [x] KChess (Balance audit complete: Adjusted Easy heuristic, increased Hard to 3-ply and Master to 4-ply Minimax, and verified opening/endgame PST logic in both EXE and HTML)
