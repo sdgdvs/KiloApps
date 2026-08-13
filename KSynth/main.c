@@ -422,7 +422,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hScopeWnd = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "KSynthScope", "", WS_CHILD | WS_VISIBLE, 280, 12, 330, 240, hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-            CreateScaledWindowEx(0, "STATIC", "Keyboard mapping:\nKeys [A, W, S, E, D, F, T, G, Y, H, U, J, K]\nTrigger notes C4 to C5 in real-time.\nPress 'H' or '?' for Help.", WS_CHILD | WS_VISIBLE, 280, 260, 330, 60, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Keyboard mapping:\nKeys [A, W, S, E, D, F, T, G, Y, H, U, J, K]\nTrigger notes C4 to C5 in real-time.\nPress F1 or '?' for Help.", WS_CHILD | WS_VISIBLE, 280, 260, 330, 60, hwnd, NULL, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             break;
@@ -483,7 +483,7 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
     
-    MessageBoxA(hwnd, "Welcome to KSynth Workstation Pro!\n\nKeyboard mapping:\n[A-K] : Play notes C4 to C5 in real-time.\n[?] or [H] : Toggle Help.", "KSynth Instructions", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(hwnd, "Welcome to KSynth Workstation Pro!\n\nKeyboard mapping:\n[A-K] : Play notes C4 to C5 in real-time.\n[F1] or [?] : Toggle Help.", "KSynth Instructions", MB_OK | MB_ICONINFORMATION);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
@@ -491,8 +491,8 @@ void MainEntry() {
             HWND hFocus = GetFocus();
             if (hFocus != hFreq && hFocus != hAttack && hFocus != hDecay && hFocus != hSustain && hFocus != hRelease) {
                 WPARAM key = msg.wParam;
-                if (key == 'H' || key == VK_OEM_2 || key == VK_F1 || key == '?') {
-                    MessageBoxA(hwnd, "Keyboard Shortcuts:\n[A-K] : Play notes C4 to C5\n[?] or [H] : Toggle Help", "KSynth Help", MB_OK | MB_ICONINFORMATION);
+                if (key == VK_OEM_2 || key == VK_F1) {
+                    MessageBoxA(hwnd, "Keyboard Shortcuts:\n[A-K] : Play notes C4 to C5\n[F1] or [?] : Toggle Help", "KSynth Help", MB_OK | MB_ICONINFORMATION);
                     continue;
                 }
                 

@@ -28,6 +28,7 @@
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     min-width: 850px;
     min-height: 650px;
     display: flex;
@@ -390,7 +391,7 @@
       <ul style="list-style:none; padding:0; margin-bottom:20px; color:#aaa; font-size:14px; text-align:left;">
         <li style="margin-bottom:5px;"><b>[A-K]</b> : Play notes C4 to C5</li>
         <li style="margin-bottom:5px;"><b>[Z] / [X]</b> : Shift octave down / up</li>
-        <li style="margin-bottom:5px;"><b>[H] / [?]</b> : Toggle this help menu</li>
+        <li style="margin-bottom:5px;"><b>[F1] / [?]</b> : Toggle this help menu</li>
       </ul>
       <button class="btn btn-primary" onclick="document.getElementById('helpModal').style.display='none'">Close</button>
     </div>
@@ -422,7 +423,7 @@
       <button id="btnImportSeq" class="btn">📥 Import Seq</button>
       <input type="file" id="seqFileInput" accept=".json" style="display:none;">
       
-      <button id="btnHelp" class="btn" onclick="document.getElementById('helpModal').style.display='flex'">❓ Help [H]</button>
+      <button id="btnHelp" class="btn" onclick="document.getElementById('helpModal').style.display='flex'">❓ Help [F1]</button>
     </div>
   </header>
 
@@ -622,7 +623,7 @@
     <div class="panel keyboard-panel">
       <div class="panel-title" style="margin-bottom:4px;">
         <span>Virtual Keyboard (2 Octaves)</span>
-        <span style="font-size:10px; color:var(--text-muted);">Shortcuts: [A-K] Oct 4 | [Z/X] Shift Octave | [H] Help</span>
+        <span style="font-size:10px; color:var(--text-muted);">Shortcuts: [A-K] Oct 4 | [Z/X] Shift Octave | [F1] Help</span>
       </div>
       <div class="piano-container" id="pianoContainer"></div>
     </div>
@@ -1326,7 +1327,8 @@
     if (e.repeat) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
-    if (e.key === '?' || e.key.toLowerCase() === 'h') {
+    if (e.key === '?' || e.key === 'F1') {
+      if (e.key === 'F1') e.preventDefault();
       const hm = document.getElementById('helpModal');
       hm.style.display = hm.style.display === 'none' ? 'flex' : 'none';
       return;
