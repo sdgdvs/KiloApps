@@ -505,7 +505,7 @@ void init_default_keybinds() {
     g_keybinds.spells = 'M';
     g_keybinds.sheet = 'C';
     g_keybinds.log = 'V';
-    g_keybinds.help = VK_OEM_2;
+    g_keybinds.help = 'H';
     g_keybinds.keybinds_menu = 'K';
     g_keybinds.save = VK_F5;
     g_keybinds.load = VK_F9;
@@ -2007,7 +2007,7 @@ void draw_game(HDC hdc) {
             TextOutA(memDC, 0, (H + 1 + i) * char_h, g.msgs[MAX_MSGS - 1 - i], str_len(g.msgs[MAX_MSGS - 1 - i]));
         }
         SetTextColor(memDC, RGB(150, 150, 150));
-        const char* hint = "[Arrows]:Move/Atk | [.]:Wait | [I]:Inv | [C]:Char | [M]:Spells | [?]:Help";
+        const char* hint = "[Arrows]:Move/Atk | [.]:Wait | [I]:Inv | [C]:Char | [M]:Spells | [H]:Help";
         TextOutA(memDC, 0, (H + 5) * char_h, hint, str_len(hint));
         
         if(g.state == 3) {
@@ -2090,8 +2090,8 @@ void draw_game(HDC hdc) {
         TextOutA(memDC, 20, 120, buf, str_len(buf));
 
         SetTextColor(memDC, RGB(255, 215, 0));
-        TextOutA(memDC, 20, 150, "Press H to view Run History Leaderboard", 39);
-        TextOutA(memDC, 20, 170, "Press K for Keybinds | Press ? for Help", 39);
+        TextOutA(memDC, 20, 150, "Press T to view Run History Leaderboard", 39);
+        TextOutA(memDC, 20, 170, "Press K for Keybinds | Press H for Help", 39);
 
         SetTextColor(memDC, RGB(255, 255, 255));
         TextOutA(memDC, 20, 200, "Press ENTER to begin your journey...", 36);
@@ -2099,7 +2099,7 @@ void draw_game(HDC hdc) {
         SetTextColor(memDC, RGB(255, 215, 0));
         SetBkColor(memDC, RGB(0,0,0));
         TextOutA(memDC, 20, 20, "RUN HISTORY LEADERBOARD", 23);
-        TextOutA(memDC, 20, 40, "Press ESC/H: Return | [X] Export JSON | [I] Import JSON | [C] Clear", 67);
+        TextOutA(memDC, 20, 40, "Press ESC/T: Return | [X] Export JSON | [I] Import JSON | [C] Clear", 67);
         
         load_leaderboard();
         int y = 80;
@@ -2257,7 +2257,7 @@ void draw_game(HDC hdc) {
         TextOutA(memDC, 20, y, "V         Message log", 21); y += char_h;
         TextOutA(memDC, 20, y, "F         Fire bow (requires bow equipped)", 42); y += char_h;
         TextOutA(memDC, 20, y, "F5 / F9   Quicksave / Quickload", 31); y += char_h;
-        TextOutA(memDC, 20, y, "?         This help screen", 26); y += char_h;
+        TextOutA(memDC, 20, y, "H or ?    This help screen", 26); y += char_h;
         y += 5;
         SetTextColor(memDC, RGB(100, 200, 255));
         TextOutA(memDC, 20, y, "-- Combat Tips --", 17); y += char_h;
@@ -2283,7 +2283,7 @@ void draw_game(HDC hdc) {
         TextOutA(memDC, 20, y, "Descend the stairs '>' to reach him. Defeat him to win.", 55); y += char_h;
         y += 10;
         SetTextColor(memDC, RGB(255, 255, 0));
-        TextOutA(memDC, 20, y, "Press ESC or ? to return.", 25);
+        TextOutA(memDC, 20, y, "Press ESC, H, or ? to return.", 29);
     }
     
     BitBlt(hdc, 0, 0, W * char_w, TOTAL_H * char_h, memDC, 0, 0, SRCCOPY);
@@ -2568,12 +2568,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if(wParam == 'C') g.char_class = (g.char_class + 1) % 3;
                 else if(wParam == 'D') g.difficulty = (g.difficulty + 1) % 3;
                 else if(wParam == 'S') g.seed = (g.seed * 3 + 1234) % 90000 + 1000;
-                else if(wParam == 'H') g.state = 11;
+                else if(wParam == 'T') g.state = 11;
                 else if(wParam == 'K') g.state = 12;
-                else if(wParam == VK_OEM_2) g.state = 7;
+                else if(wParam == VK_OEM_2 || wParam == 'H') g.state = 7;
                 else if(wParam == VK_RETURN) finalize_character();
             } else if(g.state == 11) { // leaderboard
-                if(wParam == VK_ESCAPE || wParam == 'H') g.state = (g.dlevel == 0 ? 4 : 0);
+                if(wParam == VK_ESCAPE || wParam == 'T') g.state = (g.dlevel == 0 ? 4 : 0);
                 else if(wParam == 'X') { export_leaderboard_json(); }
                 else if(wParam == 'I') { import_leaderboard_json(); }
                 else if(wParam == 'C') { clear_leaderboard(); }
@@ -2723,7 +2723,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
             } else if(g.state == 7) { // help
-                if(wParam == VK_ESCAPE || wParam == VK_OEM_2) g.state = g.dlevel == 0 ? 4 : 0;
+                if(wParam == VK_ESCAPE || wParam == VK_OEM_2 || wParam == 'H') g.state = g.dlevel == 0 ? 4 : 0;
             } else if(g.state == 8) { // message log
                 if(wParam == VK_ESCAPE || wParam == 'V') g.state = 0;
             }

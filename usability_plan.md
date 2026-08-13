@@ -52,7 +52,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KRogue
 - KSys
 - KTodo
 - KConverter
@@ -103,6 +102,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTerm
 - KSynth
 - KTask
+- KRogue
 
 ## Progress Log
 - KTask: Usability and UI issues fixed (auto-opening size adjusted to 800x600 in App.jsx, SetProcessDPIAware and explicit Help button added to native UI, crisp devicePixelRatio canvas scaling applied to web).
@@ -281,3 +281,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSpace: Usability and UI issues fixed (auto-opening size updated to 340x520, removed pixelated scaling on web canvas for crisp fonts, added SetProcessDPIAware and negative font height in native for crisp rendering).
 - KSolitaire: Usability and UI issues fixed (applied negative font height in native for crisp text, added explicit Help instruction to web window title, added padding-bottom to board container in web to prevent card clipping).
 - KTerm: Usability and UI issues fixed (added tab title overflow truncation and explicit 'Type h or help' in web status bar, enabled negative font heights for crisp text in native, applied control padding via EM_SETMARGINS, added EM_SETCUEBANNER prompt cue, and updated native window title/tab banner to clarify help instructions).
+- KRogue: Usability and UI issues fixed (auto-size updated to 1000x720, resolved H shortcut conflict by mapping Help to H and Leaderboard to T across web and native versions).

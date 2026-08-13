@@ -206,15 +206,15 @@
                 <button id="btn-class-ability" class="btn-action btn-ability" onclick="useClassAbility()">[A] Berserk Slash</button>
                 <button class="btn-action btn-spell" onclick="openSpellbook()">[M] Spellbook</button>
                 <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory & Gear</button>
-                <button class="btn-action btn-lead" onclick="openLeaderboard()">[H] Leaderboard</button>
+                <button class="btn-action btn-lead" onclick="openLeaderboard()">[T] Leaderboard</button>
                 <button class="btn-action" onclick="openKeybinds()">[K] Controls & Rebind</button>
-                <button class="btn-action" onclick="openHelp()">[?] Help</button>
+                <button class="btn-action" onclick="openHelp()">[H] Help</button>
                 <button class="btn-action" onclick="saveGame()">[S] Quick Save</button>
                 <button class="btn-action" onclick="loadGame()">[L] Load Game</button>
             </div>
             <div id="msg-box"></div>
             <div class="controls-hint">
-                [Arrows/WASD] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [H] Leaderboard | [K] Keybinds | [?] Help | [S] Save | [L] Load
+                [Arrows/WASD] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [T] Leaderboard | [K] Keybinds | [H] Help | [S] Save | [L] Load
             </div>
         </div>
 
@@ -374,7 +374,7 @@
                     <p><b style="color:#63b3ed;">Combat:</b> Bump into enemies to attack. Ranged weapons require targeting [F].</p>
                     <p><b style="color:#63b3ed;">Classes & Magic:</b> Each class has a unique ability [A]. Mages start with spells [M].</p>
                     <p><b style="color:#63b3ed;">Custom Keybinds:</b> Press [K] to rebind controls to your liking.</p>
-                    <p><b style="color:#63b3ed;">Run Stats JSON:</b> Export/Import your leaderboard JSON on the [H] Leaderboard screen.</p>
+                    <p><b style="color:#63b3ed;">Run Stats JSON:</b> Export/Import your leaderboard JSON on the [T] Leaderboard screen.</p>
                     <p><b style="color:#63b3ed;">Food & Healing:</b> Eat Food to prevent starvation. Use Potions to heal [I].</p>
                 </div>
                 <div class="modal-close">
@@ -450,7 +450,7 @@
         let monsters = [];
         let items = [];
         let traps = [];
-        let msgs = ["Welcome to KRogue!", "Press [?] for Help.", "Choose your Hero & descend 50 levels to slay True Astaroth!"];
+        let msgs = ["Welcome to KRogue!", "Press [H] for Help.", "Choose your Hero & descend 50 levels to slay True Astaroth!"];
         let state = 0; // 0=main menu, 1=playing, 2=dead, 3=victory, 4=targeting, 5=char creation
         let difficulty = 0;
         let dlevel = 1;
@@ -933,7 +933,7 @@
                 ctx.fillText("Press [ENTER] to Select Hero & Start Run", C_WIDTH / 2, 260);
 
                 ctx.fillStyle = '#a0aec0'; ctx.font = '14px sans-serif';
-                ctx.fillText("Press [H] for Leaderboard  |  Press [?] for Help  |  Press [L] to Resume Saved Run", C_WIDTH / 2, 310);
+                ctx.fillText("Press [T] for Leaderboard  |  Press [H] for Help  |  Press [L] to Resume Saved Run", C_WIDTH / 2, 310);
                 return;
             }
 
@@ -952,7 +952,7 @@
                     ctx.fillText("ASTAROTH THE FALLEN IS DEFEATED!", C_WIDTH / 2, 220);
                 }
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
-                ctx.fillText("Press [R] to Restart Run  |  Press [H] to View Leaderboard", C_WIDTH / 2, 310);
+                ctx.fillText("Press [R] to Restart Run  |  Press [T] to View Leaderboard", C_WIDTH / 2, 310);
                 return;
             }
 
@@ -1229,14 +1229,14 @@
             useAbility: { label: 'Class Ability', keys: ['a', 'A'] },
             openInventory: { label: 'Inventory & Gear', keys: ['i', 'I'] },
             openSpellbook: { label: 'Magic Spellbook', keys: ['m', 'M'] },
-            openLeaderboard: { label: 'Leaderboard', keys: ['h', 'H'] },
+            openLeaderboard: { label: 'Leaderboard', keys: ['t', 'T'] },
             openKeybinds: { label: 'Keybinding Config', keys: ['k', 'K'] },
-            openHelp: { label: 'Help / Guide', keys: ['?', '/'] },
+            openHelp: { label: 'Help / Guide', keys: ['h', 'H', 'F1'] },
             saveState: { label: 'Quick Save', keys: ['F5', 's', 'S'] },
             loadState: { label: 'Quick Load', keys: ['F9', 'l', 'L'] }
         };
 
-        let keybinds = JSON.parse(localStorage.getItem('krogue_keybinds') || 'null');
+        let keybinds = JSON.parse(localStorage.getItem('krogue_keybinds_v2') || 'null');
         if (!keybinds) { keybinds = JSON.parse(JSON.stringify(defaultKeybinds)); }
 
         function isActionKey(e, actionName) {
@@ -1463,10 +1463,10 @@
 
             if (state === 0) {
                 if (e.key === 'Enter') openCharSelect();
-                if (isActionKey(e, 'openLeaderboard') || e.key === 'h' || e.key === 'H') openLeaderboard();
+                if (isActionKey(e, 'openLeaderboard') || e.key === 't' || e.key === 'T') openLeaderboard();
                 if (isActionKey(e, 'openKeybinds') || e.key === 'k' || e.key === 'K') openKeybinds();
                 if (isActionKey(e, 'loadState') || e.key === 'l' || e.key === 'L') loadGame();
-                if (isActionKey(e, 'openHelp') || e.key === '?' || e.key === '/') openHelp();
+                if (isActionKey(e, 'openHelp') || e.key === 'h' || e.key === 'H' || e.key === 'F1') openHelp();
             } else if (state === 1) {
                 let dx = 0, dy = 0, turn = false;
                 if (isActionKey(e, 'moveUp')) { dy = -1; turn = true; }
@@ -1537,7 +1537,7 @@
                 if (e.key === 'Enter') executeTargetSpell();
             } else if (state === 2 || state === 3) {
                 if (e.key === 'r' || e.key === 'R') openCharSelect();
-                if (e.key === 'h' || e.key === 'H') openLeaderboard();
+                if (e.key === 't' || e.key === 'T') openLeaderboard();
             }
         });
 
