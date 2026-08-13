@@ -984,18 +984,18 @@
                                   isEndgame = (wMat < 1500 && bMat < 1500);
 
                                   if (aiPersonality === 1) { // Easy
-                                      score = (dstP !== 0 ? pieceValues[dstP] : 0) + (Math.random() * 40 - 20);
+                                      score = (dstP !== 0 ? pieceValues[dstP] : 0) + Math.floor(getPST(pType, tx, ty, false, isEndgame) / 2) + (Math.random() * 40 - 20);
                                       if (isSquareAttacked(tx, ty, true)) score -= Math.floor(pieceValues[board[sy][sx]] / 2);
                                   } else if (aiPersonality === 2) { // Medium
                                       score = (dstP !== 0 ? pieceValues[dstP] * 1.5 : 0) + getPST(pType, tx, ty, false, isEndgame);
                                       if (isSquareAttacked(tx, ty, true)) score -= Math.floor(pieceValues[board[sy][sx]] / 2);
                                   } else if (aiPersonality === 3) { // Hard
                                       let ms = makeMoveSim(sx, sy, tx, ty);
-                                      score = minimaxAB(1, -999999, 999999, false); // 2-ply
+                                      score = minimaxAB(2, -999999, 999999, false); // 3-ply
                                       unmakeMoveSim(sx, sy, tx, ty, ms);
                                   } else { // Master Minimax
                                       let ms = makeMoveSim(sx, sy, tx, ty);
-                                      let searchDepth = (gameMode === 0 && currentStage === 20) ? 4 : 3;
+                                      let searchDepth = (gameMode === 0 && currentStage === 20) ? 5 : 4;
                                       score = minimaxAB(searchDepth - 1, -999999, 999999, false);
                                       unmakeMoveSim(sx, sy, tx, ty, ms);
                                   }

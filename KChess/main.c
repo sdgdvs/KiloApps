@@ -1216,7 +1216,7 @@ void DoBlackAIMove(void) {
                                 isEndgame = (wMat < 1500 && bMat < 1500);
 
                                 if (aiPersonality == 1) { // Easy
-                                    score = (dstP != 0 ? pieceValues[dstP] : 0) + (my_rand() % 40 - 20);
+                                    score = (dstP != 0 ? pieceValues[dstP] : 0) + GetPST(pType, tx, ty, 0, isEndgame) / 2 + (my_rand() % 40 - 20);
                                     if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 2);
                                 } else if (aiPersonality == 2) { // Medium
                                     score = (int)(dstP != 0 ? pieceValues[dstP] * 1.5f : 0) + GetPST(pType, tx, ty, 0, isEndgame);
@@ -1224,12 +1224,12 @@ void DoBlackAIMove(void) {
                                 } else if (aiPersonality == 3) { // Hard
                                     MoveState ms;
                                     MakeMoveSim(sx, sy, tx, ty, &ms);
-                                    score = MinimaxAB(1, -999999, 999999, 0); // 2-ply total
+                                    score = MinimaxAB(2, -999999, 999999, 0); // 3-ply total
                                     UnmakeMoveSim(sx, sy, tx, ty, &ms);
                                 } else { // Master Minimax
                                     MoveState ms;
                                     MakeMoveSim(sx, sy, tx, ty, &ms);
-                                    int searchDepth = (gameMode == 0 && currentStage == 20) ? 4 : 3;
+                                    int searchDepth = (gameMode == 0 && currentStage == 20) ? 5 : 4;
                                     score = MinimaxAB(searchDepth - 1, -999999, 999999, 0);
                                     UnmakeMoveSim(sx, sy, tx, ty, &ms);
                                 }
