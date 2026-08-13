@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KChess
 - KPong
 - KMines
 - KAsteroids
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFarm
 - KAlchemy
 - KRogue
+- KChess
 ## Completed Work Log
+
+- **KChess (Loop 4):** Upgraded existing 2D vector chess pieces to 3D shaded pieces with dynamic multi-stop radial gradients, specular highlights mimicking polished marble (White) and carved mahogany (Black) textures, and dimensional drop shadows; implemented rich procedural board tile textures including veined marble light squares, wood-grained mahogany dark squares, and beveled 3D inner shadows in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
 - **KRogue (Loop 4):** Implemented themed level art for biome floors (moss/slime for Sewers, skulls/bones for Crypt, lava cracks/embers for Inferno), distinct visual variations for common monsters based on HP tiers (colored circular slime sprites, weapon-wielding detailed humanoid goblins/orcs with elite color palettes), and dynamic vector shape sprites for weapons and armor tiers replacing generic symbols in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 

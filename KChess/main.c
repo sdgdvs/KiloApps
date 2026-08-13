@@ -916,9 +916,9 @@ static void DrawChessPiece(HDC hdc, int p, int x, int y, int ts) {
     int cy = y + ts / 2;
     int r = (int)(ts * 0.42f);
 
-    COLORREF fillColor = isWhite ? RGB(250, 248, 240) : RGB(30, 40, 55);
-    COLORREF outlineColor = isWhite ? RGB(15, 23, 42) : RGB(226, 232, 240);
-    COLORREF detailColor = isWhite ? RGB(71, 85, 105) : RGB(203, 213, 225);
+    COLORREF fillColor = isWhite ? RGB(245, 245, 235) : RGB(70, 30, 15); // Marble vs Mahogany
+    COLORREF outlineColor = isWhite ? RGB(100, 100, 100) : RGB(20, 10, 5);
+    COLORREF detailColor = isWhite ? RGB(180, 180, 180) : RGB(100, 50, 30);
     COLORREF goldColor = RGB(245, 158, 11);
 
     HBRUSH fillBrush = CreateSolidBrush(fillColor);
@@ -929,6 +929,14 @@ static void DrawChessPiece(HDC hdc, int p, int x, int y, int ts) {
 
     HGDIOBJ oldBrush = SelectObject(hdc, fillBrush);
     HGDIOBJ oldPen = SelectObject(hdc, mainPen);
+
+    // Drop Shadow for 3D depth
+    HBRUSH shadowBrush = CreateSolidBrush(RGB(20, 10, 5));
+    HPEN shadowPen = CreatePen(PS_SOLID, 2, RGB(20, 10, 5));
+    SelectObject(hdc, shadowBrush); SelectObject(hdc, shadowPen);
+    Ellipse(hdc, cx - (int)(r * 0.72f) + 4, cy + (int)(r * 0.50f) + 4, cx + (int)(r * 0.72f) + 4, cy + (int)(r * 0.82f) + 4);
+    SelectObject(hdc, fillBrush); SelectObject(hdc, mainPen);
+    DeleteObject(shadowBrush); DeleteObject(shadowPen);
 
     // Draw Base
     Ellipse(hdc, cx - (int)(r * 0.72f), cy + (int)(r * 0.50f), cx + (int)(r * 0.72f), cy + (int)(r * 0.82f));
@@ -1037,8 +1045,20 @@ static void DrawChessPiece(HDC hdc, int p, int x, int y, int ts) {
         Rectangle(hdc, hbar.left, hbar.top, hbar.right, hbar.bottom);
     }
 
+    // 3D Specular Highlight (Polished Marble / Mahogany)
+    HBRUSH glareBrush = CreateSolidBrush(RGB(255, 255, 255));
+    HPEN glarePen = CreatePen(PS_NULL, 0, 0);
+    SelectObject(hdc, glareBrush); SelectObject(hdc, glarePen);
+    int glareY = cy - (int)(r * 0.5f);
+    int glareX = cx - (int)(r * 0.2f);
+    if (pType == 1) { glareY = cy - (int)(r * 0.7f); glareX = cx - (int)(r * 0.1f); }
+    Ellipse(hdc, glareX, glareY, glareX + (int)(r * 0.15f), glareY + (int)(r * 0.2f));
+    Ellipse(hdc, glareX - (int)(r * 0.05f), glareY + (int)(r * 0.15f), glareX + (int)(r * 0.05f), glareY + (int)(r * 0.25f));
+    
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
+    DeleteObject(glareBrush);
+    DeleteObject(glarePen);
     DeleteObject(fillBrush);
     DeleteObject(mainPen);
     DeleteObject(detailPen);
@@ -1365,36 +1385,74 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RECT rc = { OX + x * TS, OY + y * TS, OX + (x + 1) * TS, OY + (y + 1) * TS };
                     HBRUSH brush;
                     
-                    if (x == inCheckX && y == inCheckY) {
-                        brush = CreateSolidBrush(RGB(239, 68, 68));
-                    } else if (x == selX && y == selY) {
-                        brush = CreateSolidBrush(RGB(245, 158, 11));
-                    } else if ((x == lastMoveSx && y == lastMoveSy) || (x == lastMoveTx && y == lastMoveTy)) {
-                        brush = CreateSolidBrush(RGB(253, 230, 138));
-                    } else if (hintActive && ((x == hintSx && y == hintSy) || (x == hintTx && y == hintTy))) {
-                        brush = CreateSolidBrush(RGB(56, 189, 248)); // Cyan hint
-                    } else if ((x + y) % 2 == 0) {
-                        brush = CreateSolidBrush(RGB(232, 218, 193));
+                    int isLight = ((x + y) % 2 == 0);
+                    HBRUSH baseBrush = CreateSolidBrush(isLight ? RGB(240, 230, 210) : RGB(60, 30, 15));
+                    FillRect(memDC, &rc, baseBrush);
+                    DeleteObject(baseBrush);
+
+                    if (isLight) {
+                        for (int ty = rc.top; ty < rc.bottom; ty += 2) {
+                            for (int tx = rc.left; tx < rc.right; tx += 2) {
+                                if (((tx * 37 + ty * 13) % 20) < 4) SetPixel(memDC, tx, ty, RGB(200, 185, 165));
+                            }
+                        }
                     } else {
-                        brush = CreateSolidBrush(RGB(74, 44, 27));
+                        HPEN grainPen = CreatePen(PS_SOLID, 1, RGB(45, 20, 10));
+                        oldPen = SelectObject(memDC, grainPen);
+                        for (int ty = rc.top; ty < rc.bottom; ty += 4) {
+                            MoveToEx(memDC, rc.left, ty, NULL);
+                            LineTo(memDC, rc.right, ty + ((x * 7) % 5) - 2);
+                        }
+                        SelectObject(memDC, oldPen);
+                        DeleteObject(grainPen);
                     }
 
-                    FillRect(memDC, &rc, brush);
-                    DeleteObject(brush);
+                    // Overlays
+                    if (x == inCheckX && y == inCheckY) {
+                        HBRUSH hBrush = CreateSolidBrush(RGB(239, 68, 68));
+                        FrameRect(memDC, &rc, hBrush);
+                        RECT inner = {rc.left+1, rc.top+1, rc.right-1, rc.bottom-1};
+                        FrameRect(memDC, &inner, hBrush);
+                        DeleteObject(hBrush);
+                    } else if (x == selX && y == selY) {
+                        HBRUSH hBrush = CreateSolidBrush(RGB(245, 158, 11));
+                        FrameRect(memDC, &rc, hBrush);
+                        RECT inner = {rc.left+1, rc.top+1, rc.right-1, rc.bottom-1};
+                        FrameRect(memDC, &inner, hBrush);
+                        DeleteObject(hBrush);
+                    } else if ((x == lastMoveSx && y == lastMoveSy) || (x == lastMoveTx && y == lastMoveTy)) {
+                        HBRUSH hBrush = CreateSolidBrush(RGB(253, 230, 138));
+                        FrameRect(memDC, &rc, hBrush);
+                        DeleteObject(hBrush);
+                    } else if (hintActive && ((x == hintSx && y == hintSy) || (x == hintTx && y == hintTy))) {
+                        HBRUSH hBrush = CreateSolidBrush(RGB(56, 189, 248));
+                        FrameRect(memDC, &rc, hBrush);
+                        RECT inner = {rc.left+1, rc.top+1, rc.right-1, rc.bottom-1};
+                        FrameRect(memDC, &inner, hBrush);
+                        DeleteObject(hBrush);
+                    }
 
                     if (blackFrozen) {
-                        HBRUSH freezeOverlay = CreateSolidBrush(RGB(186, 230, 253));
+                        HBRUSH freezeOverlay = CreateHatchBrush(HS_BDIAGONAL, RGB(186, 230, 253));
                         FillRect(memDC, &rc, freezeOverlay);
                         DeleteObject(freezeOverlay);
                     }
 
-                    HPEN lightPen = CreatePen(PS_SOLID, 1, (x + y) % 2 == 0 ? RGB(245, 235, 224) : RGB(92, 58, 34));
+                    HPEN lightPen = CreatePen(PS_SOLID, 2, isLight ? RGB(255, 255, 255) : RGB(90, 50, 30));
                     oldPen = SelectObject(memDC, lightPen);
-                    MoveToEx(memDC, rc.left, rc.bottom - 1, NULL);
-                    LineTo(memDC, rc.left, rc.top);
-                    LineTo(memDC, rc.right - 1, rc.top);
+                    MoveToEx(memDC, rc.left+1, rc.bottom - 1, NULL);
+                    LineTo(memDC, rc.left+1, rc.top+1);
+                    LineTo(memDC, rc.right - 1, rc.top+1);
                     SelectObject(memDC, oldPen);
                     DeleteObject(lightPen);
+                    
+                    HPEN darkPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+                    oldPen = SelectObject(memDC, darkPen);
+                    MoveToEx(memDC, rc.right - 1, rc.top + 1, NULL);
+                    LineTo(memDC, rc.right - 1, rc.bottom - 1);
+                    LineTo(memDC, rc.left + 1, rc.bottom - 1);
+                    SelectObject(memDC, oldPen);
+                    DeleteObject(darkPen);
 
                     if (selX != -1 && IsValidMove(selX, selY, x, y, 0)) {
                         if (!SimulatedMoveLeavesCheck(selX, selY, x, y, whiteTurn)) {

@@ -1267,18 +1267,20 @@
 
       const r = size * 0.42;
 
-      const whiteGrad = ctx.createRadialGradient(-r*0.3, -r*0.4, r*0.1, 0, 0, r*1.2);
-      whiteGrad.addColorStop(0, '#ffffff');
-      whiteGrad.addColorStop(0.6, '#f8fafc');
-      whiteGrad.addColorStop(1, '#cbd5e1');
+      const whiteGrad = ctx.createRadialGradient(-r*0.4, -r*0.5, r*0.05, -r*0.1, -r*0.1, r*1.5);
+      whiteGrad.addColorStop(0, '#ffffff'); // Specular highlight
+      whiteGrad.addColorStop(0.3, '#f1f5f9'); // Polished marble
+      whiteGrad.addColorStop(0.8, '#cbd5e1');
+      whiteGrad.addColorStop(1, '#64748b'); // Deep shadow
 
-      const blackGrad = ctx.createRadialGradient(-r*0.3, -r*0.4, r*0.1, 0, 0, r*1.2);
-      blackGrad.addColorStop(0, '#334155');
-      blackGrad.addColorStop(0.6, '#1e293b');
-      blackGrad.addColorStop(1, '#0f172a');
+      const blackGrad = ctx.createRadialGradient(-r*0.4, -r*0.5, r*0.05, -r*0.1, -r*0.1, r*1.5);
+      blackGrad.addColorStop(0, '#a66743'); // Mahogany specular
+      blackGrad.addColorStop(0.3, '#5c2b11'); // Carved mahogany
+      blackGrad.addColorStop(0.8, '#2a1104');
+      blackGrad.addColorStop(1, '#0a0300'); // Deep shadow
 
       ctx.fillStyle = isWhite ? whiteGrad : blackGrad;
-      ctx.strokeStyle = isWhite ? '#0f172a' : '#94a3b8';
+      ctx.strokeStyle = isWhite ? 'rgba(15, 23, 42, 0.8)' : 'rgba(0, 0, 0, 0.9)';
       ctx.lineWidth = Math.max(1.5, size * 0.04);
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
@@ -1550,18 +1552,57 @@
 
               let tileGrad = ctx.createLinearGradient(px, py, px + TS, py + TS);
               if (isLight) {
-                  tileGrad.addColorStop(0, '#e8dac1');
-                  tileGrad.addColorStop(1, '#d4c2a5');
+                  tileGrad.addColorStop(0, '#fdfbf7');
+                  tileGrad.addColorStop(0.5, '#e8dac1');
+                  tileGrad.addColorStop(1, '#c4b295');
               } else {
-                  tileGrad.addColorStop(0, '#4a2c1b');
-                  tileGrad.addColorStop(1, '#351e12');
+                  tileGrad.addColorStop(0, '#663b22');
+                  tileGrad.addColorStop(0.5, '#4a2c1b');
+                  tileGrad.addColorStop(1, '#2c180e');
               }
               ctx.fillStyle = tileGrad;
               ctx.fillRect(px, py, TS, TS);
 
-              ctx.strokeStyle = isLight ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.08)';
-              ctx.lineWidth = 1;
-              ctx.strokeRect(px + 1, py + 1, TS - 2, TS - 2);
+              ctx.save();
+              ctx.beginPath();
+              ctx.rect(px, py, TS, TS);
+              ctx.clip();
+              if (isLight) {
+                  ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+                  ctx.lineWidth = 1.5;
+                  let seed = (x * 7 + y * 13) % 100;
+                  for (let i = 0; i < 4; i++) {
+                      ctx.beginPath();
+                      ctx.moveTo(px + (seed * 1.5 + i * 20) % TS, py);
+                      ctx.bezierCurveTo(px + (seed * 2 + i * 15) % TS, py + TS/3, px + (seed * 3) % TS, py + TS*2/3, px + (seed + i * 25) % TS, py + TS);
+                      ctx.stroke();
+                  }
+              } else {
+                  ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                  ctx.lineWidth = 1;
+                  for (let i = -TS; i < TS*2; i += 5) {
+                      ctx.beginPath();
+                      ctx.moveTo(px + i, py);
+                      ctx.quadraticCurveTo(px + i + 8, py + TS/2, px + i - 4, py + TS);
+                      ctx.stroke();
+                  }
+              }
+              ctx.restore();
+
+              ctx.strokeStyle = isLight ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.15)';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(px + 1, py + TS - 1);
+              ctx.lineTo(px + 1, py + 1);
+              ctx.lineTo(px + TS - 1, py + 1);
+              ctx.stroke();
+              
+              ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+              ctx.beginPath();
+              ctx.moveTo(px + TS - 1, py + 1);
+              ctx.lineTo(px + TS - 1, py + TS - 1);
+              ctx.lineTo(px + 1, py + TS - 1);
+              ctx.stroke();
 
               if (blackFrozen) {
                   ctx.fillStyle = 'rgba(186, 230, 253, 0.15)';
