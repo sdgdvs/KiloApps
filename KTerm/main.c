@@ -234,7 +234,7 @@ void AddNewTab(const char* title) {
 
     // Initial banner for tab
     char banner[256];
-    wsprintfA(banner, "KiloOS Terminal v1.2 [%s]\r\n[Press 'h' or type 'help' for commands | Ctrl+T: New Tab | Ctrl+R: Reverse Search]", nameBuf);
+    wsprintfA(banner, "KiloOS Terminal v1.2 [%s]\r\n[Type 'h' or 'help' for commands | Ctrl+T: New Tab | Ctrl+R: Reverse Search]", nameBuf);
     
     if (g_tabCount == 1) {
         AppendOutput(banner);
@@ -978,7 +978,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SendMessageA(hOut, EM_SETLIMITTEXT, OUT_BUF_SIZE, 0);
 
-            g_hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            SendMessageA(hOut, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(8, 8));
+            SendMessageA(hIn, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(8, 8));
+#ifndef EM_SETCUEBANNER
+#define EM_SETCUEBANNER 0x1501
+#endif
+            SendMessageW(hIn, EM_SETCUEBANNER, FALSE, (LPARAM)L"Type a command... (Type 'h' for help)");
+
+            g_hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             SendMessageA(hTab, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
             SendMessageA(hOut, WM_SETFONT, (WPARAM)g_hFont, 0);
             SendMessageA(hIn, WM_SETFONT, (WPARAM)g_hFont, 0);
@@ -1048,7 +1055,7 @@ void MainEntry() {
 
     RECT rect = {0, 0, 960, 600};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm - Type 'h' or 'help' for commands", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

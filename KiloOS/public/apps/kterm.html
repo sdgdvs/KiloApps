@@ -83,6 +83,12 @@
     color: #cbd5e1;
   }
 
+  .tab span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .tab.active {
     background: var(--term-tab-active);
     color: var(--term-fg);
@@ -287,7 +293,7 @@
 
 <div id="statusbar">
   <div>
-    <span><span class="shortcut-tag">Press h or type help</span>for commands</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Type h or help</span>for commands</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+R</span>Reverse Search</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Tab</span>Autocomplete</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+T</span>New Tab</span> &nbsp;|&nbsp; 
