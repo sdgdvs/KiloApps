@@ -654,8 +654,13 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press 'H' for Help", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    RECT rect = { 0, 0, W, H };
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
+    int realW = rect.right - rect.left;
+    int realH = rect.bottom - rect.top;
+
+    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press 'H' for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+        CW_USEDEFAULT, CW_USEDEFAULT, realW, realH, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
