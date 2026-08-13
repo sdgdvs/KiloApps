@@ -874,7 +874,7 @@ int GetBestMoveForPlayer(int player) {
             memcpy(tempBoard, board, g_boardWidth * g_boardHeight * sizeof(int));
             tempBoard[m] = player;
             for (int f = 0; f < count; f++) tempBoard[flips[f]] = player;
-            int depth = (g_boardWidth == 10) ? 4 : ((g_boardWidth == 8) ? 5 : 6);
+            int depth = (g_boardWidth == 10) ? 5 : ((g_boardWidth == 8) ? 6 : 7);
             val = Minimax(tempBoard, g_boardWidth, g_boardHeight, depth, -999999, 999999, 0, player);
         }
 
@@ -993,6 +993,9 @@ void AIMove(HWND hwnd) {
     currentPlayer = BLACK;
     if (!HasValidMoves(BLACK)) {
         currentPlayer = WHITE;
+        if (HasValidMoves(WHITE)) {
+            SetTimer(hwnd, 1, 400, NULL);
+        }
     }
     ResetMoveTimer(hwnd);
     InvalidateRect(hwnd, NULL, TRUE);

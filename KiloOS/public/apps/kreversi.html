@@ -1012,7 +1012,7 @@
                 return best;
             } else { // grandmaster minimax
                 let maxVal = -Infinity, best = moves[0];
-                const depth = boardWidth === 10 ? 4 : (boardWidth === 8 ? 5 : 6);
+                const depth = boardWidth === 10 ? 5 : (boardWidth === 8 ? 6 : 7);
                 for (let m of moves) {
                     const tempBoard = [...boardState];
                     const flips = getFlippable(m, player);
@@ -1062,7 +1062,12 @@
                 }
 
                 currentPlayer = BLACK;
-                if (getValidMoves(BLACK).length === 0) currentPlayer = WHITE;
+                if (getValidMoves(BLACK).length === 0) {
+                    currentPlayer = WHITE;
+                    if (getValidMoves(WHITE).length > 0) {
+                        aiTimeoutId = setTimeout(makeAIMove, 400);
+                    }
+                }
                 renderBoard(flips);
                 resetTimer();
             }
