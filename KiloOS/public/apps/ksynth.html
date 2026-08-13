@@ -1132,11 +1132,12 @@
   let seqTimer = null;
   let isSeqPlaying = false;
 
-  function renderSeqGrid() {
+  function initSeqGridDOM() {
     seqGrid.innerHTML = '';
     seqStepsData.forEach((step, idx) => {
       const stepEl = document.createElement('div');
-      stepEl.className = `seq-step ${step.on ? 'on' : ''} ${currentSeqStep === idx && isSeqPlaying ? 'active-step' : ''}`;
+      stepEl.className = `seq-step ${step.on ? 'on' : ''}`;
+      stepEl.dataset.idx = idx;
       
       const led = document.createElement('div');
       led.className = 'step-led';
@@ -1167,6 +1168,27 @@
       seqGrid.appendChild(stepEl);
     });
   }
+
+  function updateSeqGridActive() {
+    const children = seqGrid.children;
+    for (let idx = 0; idx < children.length; idx++) {
+      const stepEl = children[idx];
+      const step = seqStepsData[idx];
+      stepEl.classList.toggle('on', !!step.on);
+      stepEl.classList.toggle('active-step', currentSeqStep === idx && isSeqPlaying);
+      const select = stepEl.querySelector('select');
+      if (select && select.value !== step.note) {
+        select.value = step.note;
+      }
+    }
+  }
+
+  function renderSeqGrid() {
+    if (seqGrid.children.length !== 16) {
+      initSeqGridDOM();
+    }
+    updateSeqGridActive();
+  }
   renderSeqGrid();
 
   const btnSeqPlay = document.getElementById('btnSeqPlay');
@@ -1187,7 +1209,7 @@
 
   document.getElementById('btnSeqClear').addEventListener('click', () => {
     seqStepsData.forEach(s => s.on = false);
-    renderSeqGrid();
+    updateSeqGridActive();
   });
 
   document.getElementById('btnSeqRandom').addEventListener('click', () => {
@@ -1195,7 +1217,7 @@
       s.on = Math.random() > 0.4;
       s.note = noteOptions[Math.floor(Math.random() * noteOptions.length)];
     });
-    renderSeqGrid();
+    updateSeqGridActive();
   });
 
   function startSequencer() {
@@ -1205,7 +1227,7 @@
 
     seqTimer = setInterval(() => {
       currentSeqStep = (currentSeqStep + 1) % 16;
-      renderSeqGrid();
+      updateSeqGridActive();
 
       const step = seqStepsData[currentSeqStep];
       if (step.on) {
@@ -1390,29 +1412,41 @@
   };
 
   function applyPreset(p) {
-    document.getElementById('osc1Wave').value = p.osc1Wave;
-    document.getElementById('osc1Oct').value = p.osc1Oct;
-    document.getElementById('osc1Detune').value = p.osc1Detune;
-    document.getElementById('osc1Vol').value = p.osc1Vol;
+    if (!p || typeof p !== 'object') return;
+    const validWaves = ['sawtooth', 'square', 'sine', 'triangle', 'noise'];
+    const validFilterTypes = ['lowpass', 'highpass', 'bandpass'];
 
-    document.getElementById('osc2Wave').value = p.osc2Wave;
-    document.getElementById('osc2Oct').value = p.osc2Oct;
-    document.getElementById('osc2Detune').value = p.osc2Detune;
-    document.getElementById('osc2Vol').value = p.osc2Vol;
+    if (validWaves.includes(p.osc1Wave)) document.getElementById('osc1Wave').value = p.osc1Wave;
+    if (validWaves.includes(p.osc2Wave)) document.getElementById('osc2Wave').value = p.osc2Wave;
+    if (validFilterTypes.includes(p.filterType)) document.getElementById('filterType').value = p.filterType;
 
-    document.getElementById('filterType').value = p.filterType;
-    document.getElementById('filterCutoff').value = p.filterCutoff;
-    document.getElementById('filterRes').value = p.filterRes;
-    document.getElementById('masterVol').value = p.masterVol;
-    
-    if (p.delayTime !== undefined) document.getElementById('delayTime').value = p.delayTime;
-    if (p.delayFdbk !== undefined) document.getElementById('delayFdbk').value = p.delayFdbk;
-    if (p.delayMix !== undefined) document.getElementById('delayMix').value = p.delayMix;
+    const setBoundedVal = (id, val, min, max, isFloat = true) => {
+      if (val === undefined || val === null || isNaN(val)) return;
+      const num = isFloat ? parseFloat(val) : parseInt(val);
+      const clamped = Math.max(min, Math.min(max, num));
+      document.getElementById(id).value = clamped;
+    };
 
-    document.getElementById('attack').value = p.attack;
-    document.getElementById('decay').value = p.decay;
-    document.getElementById('sustain').value = p.sustain;
-    document.getElementById('release').value = p.release;
+    setBoundedVal('osc1Oct', p.osc1Oct, -2, 2, false);
+    setBoundedVal('osc1Detune', p.osc1Detune, -50, 50, false);
+    setBoundedVal('osc1Vol', p.osc1Vol, 0, 1);
+
+    setBoundedVal('osc2Oct', p.osc2Oct, -2, 2, false);
+    setBoundedVal('osc2Detune', p.osc2Detune, -50, 50, false);
+    setBoundedVal('osc2Vol', p.osc2Vol, 0, 1);
+
+    setBoundedVal('filterCutoff', p.filterCutoff, 40, 12000);
+    setBoundedVal('filterRes', p.filterRes, 0.1, 15);
+    setBoundedVal('masterVol', p.masterVol, 0, 1);
+
+    setBoundedVal('delayTime', p.delayTime, 0, 2);
+    setBoundedVal('delayFdbk', p.delayFdbk, 0, 0.95);
+    setBoundedVal('delayMix', p.delayMix, 0, 1);
+
+    setBoundedVal('attack', p.attack, 0.001, 2);
+    setBoundedVal('decay', p.decay, 0.01, 2);
+    setBoundedVal('sustain', p.sustain, 0, 1);
+    setBoundedVal('release', p.release, 0.01, 4);
 
     // Trigger input events to refresh text labels
     ['osc1Oct','osc1Detune','osc1Vol','osc2Oct','osc2Detune','osc2Vol',
@@ -1422,16 +1456,16 @@
     });
 
     if (filterNode) {
-      filterNode.type = p.filterType;
-      filterNode.frequency.value = p.filterCutoff;
-      filterNode.Q.value = p.filterRes;
+      filterNode.type = document.getElementById('filterType').value;
+      filterNode.frequency.value = parseFloat(document.getElementById('filterCutoff').value);
+      filterNode.Q.value = parseFloat(document.getElementById('filterRes').value);
     }
     if (masterGain) {
-      masterGain.gain.value = p.masterVol;
+      masterGain.gain.value = parseFloat(document.getElementById('masterVol').value);
     }
-    if (delayNode && p.delayTime !== undefined) delayNode.delayTime.value = p.delayTime;
-    if (delayFeedback && p.delayFdbk !== undefined) delayFeedback.gain.value = p.delayFdbk;
-    if (delayMix && p.delayMix !== undefined) delayMix.gain.value = p.delayMix;
+    if (delayNode) delayNode.delayTime.value = parseFloat(document.getElementById('delayTime').value);
+    if (delayFeedback) delayFeedback.gain.value = parseFloat(document.getElementById('delayFdbk').value);
+    if (delayMix) delayMix.gain.value = parseFloat(document.getElementById('delayMix').value);
 
     drawADSR();
   }
@@ -1519,16 +1553,21 @@
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target.result);
-        if (data.bpm) {
-          document.getElementById('seqBpm').value = data.bpm;
-          document.getElementById('bpmVal').innerText = data.bpm;
+        if (data.bpm && !isNaN(data.bpm)) {
+          const bpmClamped = Math.max(50, Math.min(220, parseInt(data.bpm)));
+          document.getElementById('seqBpm').value = bpmClamped;
+          document.getElementById('bpmVal').innerText = bpmClamped;
         }
         if (Array.isArray(data.steps) && data.steps.length === 16) {
           data.steps.forEach((s, idx) => {
-            seqStepsData[idx].on = s.on;
-            seqStepsData[idx].note = s.note;
+            if (s && typeof s === 'object') {
+              seqStepsData[idx].on = !!s.on;
+              if (typeof s.note === 'string' && noteOptions.includes(s.note)) {
+                seqStepsData[idx].note = s.note;
+              }
+            }
           });
-          renderSeqGrid();
+          updateSeqGridActive();
           alert('Sequence loaded successfully!');
         }
       } catch (err) {
