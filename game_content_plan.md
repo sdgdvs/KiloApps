@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KConnect4  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit AI difficulty levels. Ensure Grandmaster is genuinely hard. Check blocker cell mechanics. |
 | KSolitaire | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check deal fairness, ensure Vegas mode scoring is balanced, verify undo/powerup economy. |
 | KFreecell  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Checked that all dealt hands are solvable, rebalanced campaign difficulty constraints. |
 | KSudoku    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit puzzle generation quality. Ensure Easy puzzles have unique solutions and Hard is solvable. |
@@ -180,6 +179,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KChess     | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Tuned Easy/Hard/Master Minimax depths and opening/endgame PST. |
 | KGo        | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Fixed AI turn skipping, handicap AI trigger, double-pass scoring, and tuned Grandmaster positional weights. |
 | KReversi   | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Fixed AI softlock on pass, increased Grandmaster Minimax depths, verified difficulty curve. |
+| KConnect4  | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Upgraded Grandmaster heuristic evaluation for stronger defensive and aggressive plays, verified blocker drop mechanics. |
 
 
 ## Progress Log
@@ -188,6 +188,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KRogue (Loop 10: Added True Sanctuary biome (floors 41-50), Tier 8 Ultra Bosses (Seraphim, Eldritch God), and relocated True Astaroth final battle to floor 50 in both EXE and HTML)
 
 **Loop 9**
+- [x] KConnect4 (Balance audit complete: Upgraded Grandmaster heuristic evaluation to heavily penalize opponent 3-in-a-rows and value its own traps, verified blocker cell mechanics in both EXE and HTML)
 - [x] KQuest (Loop 9: Added 3 Joinable Factions, Mounts System (Horse/Wolf/Dragon) in Town Stables, and Crafting Overhaul with Masterwork Relics in both EXE and HTML)
 - [x] KReversi (Balance audit complete: Fixed AI softlock on double-pass, increased Grandmaster Minimax depths for 6x6/8x8/10x10 boards, verified difficulty curve in both EXE and HTML)
 - [x] KGo (Balance audit complete: Fixed AI turn blocking, fixed handicap AI triggering, added double-pass auto-score, and tuned Grandmaster AI 3rd/4th line territory evaluation in both EXE and HTML)
