@@ -946,7 +946,8 @@
                 damage: Math.floor(def.damage * dmgMod),
                 cooldown: 0,
                 maxCooldown: def.cooldown,
-                splash: def.splash || 0
+                splash: def.splash || 0,
+                animTimer: 0
               };
               playBeep(600, 0.08, 'square', 0.15);
               playBeep(900, 0.1, 'triangle', 0.15);
@@ -1365,6 +1366,8 @@
         const tower = rawSlot.tower;
         if (tower.type === 'Frost') return; // Frost is an aura
         
+        if (tower.animTimer > 0) tower.animTimer--;
+        
         if (tower.cooldown > 0) {
           tower.cooldown--;
         } else {
@@ -1387,7 +1390,9 @@
 
           if (target) {
             tower.cooldown = tower.maxCooldown;
+            tower.animTimer = 5;
             projectiles.push({
+
               x: slot.sx,
               y: slot.sy,
               target: target,
@@ -1720,19 +1725,21 @@
           // Tower Sprites
           ctx.save();
           ctx.translate(slot.sx, slot.sy);
+          const type = rawSlot.tower.type;
+          const anim = rawSlot.tower.animTimer || 0;
           if (type === 'Archer') {
             ctx.fillStyle = '#64748b'; ctx.fillRect(-12, -12, 24, 24); // base
             ctx.fillStyle = '#475569'; ctx.fillRect(-14, -14, 8, 8); ctx.fillRect(6, -14, 8, 8); ctx.fillRect(-14, 6, 8, 8); ctx.fillRect(6, 6, 8, 8); // battlements
-            ctx.strokeStyle = '#ffd700'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI*2); ctx.stroke(); // bow
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(-1, -8, 2, 16); // arrow
+            ctx.strokeStyle = '#ffd700'; ctx.beginPath(); ctx.arc(0, 0, 6 + anim, 0, Math.PI*2); ctx.stroke(); // bow
+            if (anim === 0) { ctx.fillStyle = '#ffffff'; ctx.fillRect(-1, -8, 2, 16); } // arrow
           } else if (type === 'Mage') {
             ctx.fillStyle = '#7e22ce'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#d8b4fe'; ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(-8, 0); ctx.lineTo(8, 0); ctx.fill(); // roof
-            ctx.fillStyle = '#f3e8ff'; ctx.beginPath(); ctx.arc(0, -22, 5, 0, Math.PI*2); ctx.fill(); // crystal orb
+            ctx.fillStyle = '#f3e8ff'; ctx.beginPath(); ctx.arc(0, -22 - anim, 5 + anim, 0, Math.PI*2); ctx.fill(); // crystal orb
             ctx.shadowBlur = 10; ctx.shadowColor = '#d8b4fe'; ctx.fill(); ctx.shadowBlur = 0;
           } else if (type === 'Cannon') {
             ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#0f172a'; ctx.fillRect(-6, -18, 12, 18); // barrel
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(-6, -18 + anim, 12, 18); // barrel
             ctx.fillStyle = '#94a3b8'; ctx.fillRect(-8, -4, 16, 8); // mount
           } else if (type === 'Frost') {
             ctx.fillStyle = '#0ea5e9'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();

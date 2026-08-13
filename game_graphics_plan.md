@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFortress
 - KFarm
 
 - KAlchemy
@@ -134,7 +133,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KBreakout
 - KMaze
 - KColony
+- KFortress
 ## Completed Work Log
+
+- **KFortress (Loop 2):** Implemented multi-color particle burst animations for tower projectile impacts and enemy deaths (green bursts), and added distinct attack animation frame cycles for each tower type (Archer bow expansion/arrow hiding, Mage crystal orb pulsing, Cannon barrel recoil) in both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c).
 
 - **KColony (Loop 2):** Implemented pulsing energy lines for batteries/generators, spinning radar dishes for labs, destruction explosion particle bursts when a building is destroyed, and weapon firing animations/projectiles for Lasers and Turrets in both Web Canvas (kcolony.html) and Native C Win32 GDI (KColony/main.c).
 

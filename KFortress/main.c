@@ -75,7 +75,35 @@ typedef struct {
     int range;
     int damage;
     int splash;
+    int attackAnim;
 } TowerSlot;
+
+#define MAX_PARTICLES 128
+typedef struct {
+    BOOL active;
+    float x, y;
+    float vx, vy;
+    COLORREF color;
+    int life;
+} Particle;
+static Particle g_particles[MAX_PARTICLES];
+
+void SpawnParticleBurst(float x, float y, COLORREF color, int count) {
+    for (int i = 0; i < count; i++) {
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (!g_particles[p].active) {
+                g_particles[p].active = TRUE;
+                g_particles[p].x = x;
+                g_particles[p].y = y;
+                g_particles[p].vx = ((rand() % 100) - 50) / 15.0f;
+                g_particles[p].vy = ((rand() % 100) - 50) / 15.0f;
+                g_particles[p].color = color;
+                g_particles[p].life = 10 + (rand() % 15);
+                break;
+            }
+        }
+    }
+}
 
 typedef struct {
     BOOL active;
@@ -305,6 +333,7 @@ void LoadCurrentMap(int bfX, int bfY, int bfW) {
         g_slots[i].range = 130;
         g_slots[i].damage = 12;
         g_slots[i].splash = 0;
+        g_slots[i].attackAnim = 0;
     }
 }
 
@@ -372,8 +401,10 @@ void InitGameState() {
     for (int i = 0; i < MAX_ENEMIES; i++) g_enemies[i].active = FALSE;
     for (int i = 0; i < MAX_PROJECTILES; i++) g_projectiles[i].active = FALSE;
     for (int i = 0; i < MAX_FLOATING_TEXTS; i++) g_floatingTexts[i].active = FALSE;
+    for (int i = 0; i < MAX_PARTICLES; i++) g_particles[i].active = FALSE;
 
     int bfX = 10, bfY = 70, bfW = WINDOW_WIDTH - 220;
+
     InitMaps();
     LoadCurrentMap(bfX, bfY, bfW);
 }
@@ -464,8 +495,10 @@ void UpdateGameLogic() {
             if (targetIdx != -1) {
                 g_hero.attackCd = g_hero.maxAttackCd;
                 g_enemies[targetIdx].hp -= g_hero.damage;
+                SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, TEXT_GOLD, 6);
                 if (g_enemies[targetIdx].hp <= 0) {
                     g_enemies[targetIdx].active = FALSE;
+                    SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(34, 197, 94), 10);
                     int reward = 15;
                     if (g_enemies[targetIdx].type == ENEMY_OGRE) {
                         reward = 100;
@@ -529,6 +562,7 @@ void UpdateGameLogic() {
         
         if (g_enemies[i].hp <= 0) {
             g_enemies[i].active = FALSE;
+            SpawnParticleBurst(g_enemies[i].x, g_enemies[i].y, RGB(34, 197, 94), 10);
             g_gold += 15;
             continue;
         }
@@ -603,6 +637,7 @@ void UpdateGameLogic() {
         if (!g_slots[i].occupied) continue;
         if (g_slots[i].towerType == TOWER_FROST) continue;
 
+        if (g_slots[i].attackAnim > 0) g_slots[i].attackAnim--;
         if (g_slots[i].cooldown > 0) {
             g_slots[i].cooldown--;
         } else {
@@ -628,6 +663,7 @@ void UpdateGameLogic() {
 
             if (targetIdx != -1) {
                 g_slots[i].cooldown = g_slots[i].maxCooldown;
+                g_slots[i].attackAnim = 5;
 
                 // Spawn Projectile
                 for (int p = 0; p < MAX_PROJECTILES; p++) {
@@ -673,6 +709,8 @@ void UpdateGameLogic() {
 
         if (dist < g_projectiles[p].speed) {
             // Hit target
+            COLORREF hitCol = (g_projectiles[p].type == TOWER_CANNON) ? RGB(71, 85, 105) : ((g_projectiles[p].type == TOWER_MAGE) ? RGB(216, 180, 254) : TEXT_GOLD);
+            SpawnParticleBurst(g_projectiles[p].targetX, g_projectiles[p].targetY, hitCol, 8);
             if (g_projectiles[p].splash > 0) {
                 for (int e2 = 0; e2 < MAX_ENEMIES; e2++) {
                     if (!g_enemies[e2].active) continue;
@@ -686,6 +724,7 @@ void UpdateGameLogic() {
                         g_enemies[e2].hp -= dmg;
                         if (g_enemies[e2].hp <= 0) {
                             g_enemies[e2].active = FALSE;
+                            SpawnParticleBurst(g_enemies[e2].x, g_enemies[e2].y, RGB(34, 197, 94), 10);
                             int reward = 15;
                             if (g_enemies[e2].type == ENEMY_OGRE) {
                                 reward = 100;
@@ -708,6 +747,7 @@ void UpdateGameLogic() {
                     g_enemies[targetIdx].hp -= dmg;
                     if (g_enemies[targetIdx].hp <= 0) {
                         g_enemies[targetIdx].active = FALSE;
+                        SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(34, 197, 94), 10);
                         int reward = 15;
                         if (g_enemies[targetIdx].type == ENEMY_OGRE) {
                             reward = 100;
@@ -730,8 +770,18 @@ void UpdateGameLogic() {
         }
     }
 
+    // Update Particles
+    for (int p = 0; p < MAX_PARTICLES; p++) {
+        if (!g_particles[p].active) continue;
+        g_particles[p].x += g_particles[p].vx;
+        g_particles[p].y += g_particles[p].vy;
+        g_particles[p].life--;
+        if (g_particles[p].life <= 0) g_particles[p].active = FALSE;
+    }
+
     // Update Floating Texts
     for (int f = 0; f < MAX_FLOATING_TEXTS; f++) {
+
         if (!g_floatingTexts[f].active) continue;
         g_floatingTexts[f].y -= 0.8f;
         g_floatingTexts[f].life--;
@@ -918,6 +968,7 @@ void Render(HDC hdc, HWND hwnd) {
 
         if (g_slots[i].occupied) {
             // Tower Sprites
+            int anim = g_slots[i].attackAnim;
             if (g_slots[i].towerType == TOWER_ARCHER) {
                 HBRUSH bB = CreateSolidBrush(RGB(100, 116, 139)); HPEN bP = CreatePen(PS_SOLID, 1, RGB(71, 85, 105));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, bB); HPEN oP = (HPEN)SelectObject(memDC, bP);
@@ -928,11 +979,14 @@ void Render(HDC hdc, HWND hwnd) {
                 Rectangle(memDC, g_slots[i].x - 14, g_slots[i].y + 6, g_slots[i].x - 6, g_slots[i].y + 14);
                 Rectangle(memDC, g_slots[i].x + 6, g_slots[i].y + 6, g_slots[i].x + 14, g_slots[i].y + 14);
                 HPEN bowP = CreatePen(PS_SOLID, 1, TEXT_GOLD); SelectObject(memDC, bowP);
-                Ellipse(memDC, g_slots[i].x - 6, g_slots[i].y - 6, g_slots[i].x + 6, g_slots[i].y + 6);
-                HBRUSH arrB = CreateSolidBrush(RGB(255, 255, 255)); SelectObject(memDC, arrB);
-                Rectangle(memDC, g_slots[i].x - 1, g_slots[i].y - 8, g_slots[i].x + 1, g_slots[i].y + 8);
+                Ellipse(memDC, g_slots[i].x - 6 - anim, g_slots[i].y - 6 - anim, g_slots[i].x + 6 + anim, g_slots[i].y + 6 + anim);
+                if (anim == 0) {
+                    HBRUSH arrB = CreateSolidBrush(RGB(255, 255, 255)); SelectObject(memDC, arrB);
+                    Rectangle(memDC, g_slots[i].x - 1, g_slots[i].y - 8, g_slots[i].x + 1, g_slots[i].y + 8);
+                    DeleteObject(arrB);
+                }
                 SelectObject(memDC, oB); SelectObject(memDC, oP);
-                DeleteObject(bB); DeleteObject(bP); DeleteObject(b2B); DeleteObject(bowP); DeleteObject(arrB);
+                DeleteObject(bB); DeleteObject(bP); DeleteObject(b2B); DeleteObject(bowP);
             } else if (g_slots[i].towerType == TOWER_MAGE) {
                 HBRUSH mB = CreateSolidBrush(RGB(126, 34, 206)); HPEN mP = CreatePen(PS_SOLID, 1, RGB(216, 180, 254));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, mB); HPEN oP = (HPEN)SelectObject(memDC, mP);
@@ -940,7 +994,7 @@ void Render(HDC hdc, HWND hwnd) {
                 HBRUSH roofB = CreateSolidBrush(RGB(216, 180, 254)); SelectObject(memDC, roofB);
                 POINT roof[] = {{g_slots[i].x, g_slots[i].y - 18}, {g_slots[i].x - 8, g_slots[i].y}, {g_slots[i].x + 8, g_slots[i].y}}; Polygon(memDC, roof, 3);
                 HBRUSH orbB = CreateSolidBrush(RGB(243, 232, 255)); SelectObject(memDC, orbB);
-                Ellipse(memDC, g_slots[i].x - 5, g_slots[i].y - 27, g_slots[i].x + 5, g_slots[i].y - 17);
+                Ellipse(memDC, g_slots[i].x - 5 - anim, g_slots[i].y - 27 - anim, g_slots[i].x + 5 + anim, g_slots[i].y - 17 + anim);
                 SelectObject(memDC, oB); SelectObject(memDC, oP);
                 DeleteObject(mB); DeleteObject(mP); DeleteObject(roofB); DeleteObject(orbB);
             } else if (g_slots[i].towerType == TOWER_CANNON) {
@@ -948,7 +1002,7 @@ void Render(HDC hdc, HWND hwnd) {
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, cB); HPEN oP = (HPEN)SelectObject(memDC, cP);
                 Ellipse(memDC, g_slots[i].x - 16, g_slots[i].y - 16, g_slots[i].x + 16, g_slots[i].y + 16);
                 HBRUSH barB = CreateSolidBrush(RGB(15, 23, 42)); SelectObject(memDC, barB);
-                Rectangle(memDC, g_slots[i].x - 6, g_slots[i].y - 18, g_slots[i].x + 6, g_slots[i].y);
+                Rectangle(memDC, g_slots[i].x - 6, g_slots[i].y - 18 + anim, g_slots[i].x + 6, g_slots[i].y + anim);
                 HBRUSH mtB = CreateSolidBrush(RGB(148, 163, 184)); SelectObject(memDC, mtB);
                 Rectangle(memDC, g_slots[i].x - 8, g_slots[i].y - 4, g_slots[i].x + 8, g_slots[i].y + 4);
                 SelectObject(memDC, oB); SelectObject(memDC, oP);
@@ -1152,8 +1206,24 @@ void Render(HDC hdc, HWND hwnd) {
         DeleteObject(arrowPen);
     }
 
+    // Draw Particles
+    for (int p = 0; p < MAX_PARTICLES; p++) {
+        if (!g_particles[p].active) continue;
+        HBRUSH pB = CreateSolidBrush(g_particles[p].color);
+        HPEN pP = CreatePen(PS_NULL, 0, 0);
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, pB);
+        HPEN oP = (HPEN)SelectObject(memDC, pP);
+        int sz = (g_particles[p].life > 5) ? 3 : 2;
+        Rectangle(memDC, (int)g_particles[p].x - sz, (int)g_particles[p].y - sz, (int)g_particles[p].x + sz, (int)g_particles[p].y + sz);
+        SelectObject(memDC, oB);
+        SelectObject(memDC, oP);
+        DeleteObject(pB);
+        DeleteObject(pP);
+    }
+
     // Draw Floating Text
     for (int f = 0; f < MAX_FLOATING_TEXTS; f++) {
+
         if (!g_floatingTexts[f].active) continue;
         SetTextColor(memDC, g_floatingTexts[f].color);
         TextOutA(memDC, (int)g_floatingTexts[f].x, (int)g_floatingTexts[f].y, g_floatingTexts[f].text, (int)lstrlenA(g_floatingTexts[f].text));
