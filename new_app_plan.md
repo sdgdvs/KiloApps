@@ -53,24 +53,24 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KVoid (Sci-fi horror survival)
-**Phase:** 14 (next to do)
+**App:** KDragon (Fantasy creature-raising sim)
+**Phase:** 1 (next to do)
 **Status:** Creation
 
-- [x] Phase 1: Scaffold KVoid directory (`KVoid/`), create web HTML skeleton (`KiloOS/public/apps/kvoid.html`), register in App.jsx.
-- [x] Phase 2: Basic grid movement, player rendering, and simple room layout in web HTML.
-- [x] Phase 3: Native C version (`KVoid/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [x] Phase 4: Sci-fi horror UI styling (dark terminals, scanlines, flickering lights).
-- [x] Phase 5: Implement oxygen and battery depletion mechanics (tension through resource scarcity).
-- [x] Phase 6: Procedural station layout generation (interconnected rooms, locked doors).
-- [x] Phase 7: Keycard inventory system and color-coded locked doors.
-- [x] Phase 8: Add interactable terminals to read lore and unlock areas.
-- [x] Phase 9: Implement alien creature AI (patrolling, chasing player when spotted).
-- [x] Phase 10: Combat/evasion mechanics (hiding in lockers, using limited EMP charges).
-- [x] Phase 11: Multi-level progression (find elevator to next deck, increasing difficulty).
-- [x] Phase 12: Multiple endings based on choices and speed of escape.
-- [x] Phase 13: Sound Effects — heartbeat, alarm klaxons, alien screeches (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Survival Guide — How-to-play, lore index, enemy bestiary.
+- [ ] Phase 1: Scaffold KDragon directory (`KDragon/`), create web HTML skeleton (`KiloOS/public/apps/kdragon.html`), register in App.jsx.
+- [ ] Phase 2: Basic UI for hatching a dragon egg and core stat management loop (feeding, playing) in web HTML.
+- [ ] Phase 3: Native C version (`KDragon/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [ ] Phase 4: Fantasy styling (parchment backgrounds, pixel-art dragon portraits, medieval fonts).
+- [ ] Phase 5: Implement dragon aging and evolution system (egg -> baby -> adult).
+- [ ] Phase 6: Add different dragon elemental types (Fire, Water, Earth) based on early care choices.
+- [ ] Phase 7: Training mechanics (minigames for raising strength, speed, loyalty).
+- [ ] Phase 8: Treasure hoarding mechanic (send dragon on expeditions to collect gold and items).
+- [ ] Phase 9: AI Arena battles (basic combat loop vs CPU dragons).
+- [ ] Phase 10: Special abilities in combat based on elemental type.
+- [ ] Phase 11: Shop system (buy premium food or training gear with hoarded gold).
+- [ ] Phase 12: Random events (illness, wild encounters) requiring player intervention.
+- [ ] Phase 13: Sound Effects — roars, munching, battle clashes (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Dragon Master's Guide — How-to-play, stat explanations, item codex.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KVoid (Phase 14 completed: Added Comprehensive Help & Survival Guide to both versions)
 - KFarm (Phase 14 completed: Added Comprehensive Help & Farmer's Almanac to both versions)
 - KColony (Phase 14 completed: Added Comprehensive Help & Administrator's Manual to both versions)
 - KDarts (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
@@ -168,8 +169,6 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 - **KAlchemy** — Fantasy crafting/discovery game. Combine elements to discover new ones. 100+ discoverable recipes. Procedural hints. Encyclopedia tracking. Multiple tiers of complexity (earth+fire=lava, lava+water=obsidian). Score by discoveries.
 - **KFortress** — Tower defense with fantasy theme. Place towers on a grid path. Multiple tower types (archer, mage, cannon). Enemy waves with varying resistances. Upgrade system. Gold economy. 15+ levels with different maps. Boss waves.
 - **KColony** — Sci-fi colony survival. Manage resources (food, power, materials) on an alien planet. Build structures. Research tech tree. Random events (storms, alien encounters, equipment failures). Population management. Day/night cycle.
-- **KVoid** — Sci-fi horror survival. Explore a derelict space station room by room. Limited oxygen and battery. Find keycards, solve puzzles, avoid or fight creatures. Procedural station layout. Multiple endings based on choices. Tension through resource scarcity.
-- **KDragon** — Fantasy creature-raising sim. Hatch, feed, train, and evolve a dragon. Multiple dragon types with different abilities. Arena battles vs AI dragons. Stat management (strength, speed, fire, loyalty). Aging system. Treasure hoarding mechanic.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.
