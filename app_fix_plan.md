@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KTaskMgr
+**Target App:** KTerm
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -265,3 +265,5 @@ Pass 1 Complete.
 - **KSys**: Fixed input hijacking where shortcut keys fired inside input fields in `ksys.html`. Added XSS escaping for prompt input, handled IndexedDB error rejections to prevent benchmark hangs, and optimized sparkline canvas sizing repaints. Verified native build `KSys.exe` (17.5 KB) and Vite web build.
 
 - **KTask**: Fixed XSS risk in `ktask.html` aria-label string interpolation. Fixed global hotkey handling during active modal overlays. Recompiled native `KTask.exe` and verified Vite web build cleanly.
+
+- **KTaskMgr**: Fixed JSON/CSV string escaping in `KTask/main.c` export logic. Resolved GDI font handle memory leak in Deep Inspector window. Added 3-second `postMessage` timeout fallbacks in `ktaskmgr.html` and `ktask.html` for standalone execution. Added toast notification debouncing and tooltip PIDs. Recompiled native `KTask.exe` (18.4 KB) and verified Vite web build.
