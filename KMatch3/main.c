@@ -152,7 +152,7 @@ void UpdateParticles() {
 int laserRowTimer[MAX_ROWS] = {0};
 int laserColTimer[MAX_COLS] = {0};
 
-void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx, int isIce, int isBarrier) {
+void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx, int isIce, int isBarrier, int isMoving, int popAnim) {
     float scale = (float)size / 50.0f;
     int r19 = (int)(19 * scale);
     int r16 = (int)(16 * scale);
@@ -165,6 +165,16 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
     int r7  = (int)(7  * scale);
     int r5  = (int)(5  * scale);
     int r3  = (int)(3  * scale);
+
+    if (isMoving) {
+        HBRUSH shadowB = CreateSolidBrush(RGB(15, 10, 25));
+        HPEN shadowP = CreatePen(PS_NULL, 0, 0);
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, shadowB);
+        HPEN oP = (HPEN)SelectObject(hdc, shadowP);
+        Ellipse(hdc, cx - r19 + 8, cy - r19 + 12, cx + r19 + 8, cy + r19 + 12);
+        SelectObject(hdc, oB); SelectObject(hdc, oP);
+        DeleteObject(shadowB); DeleteObject(shadowP);
+    }
 
     if (typeIdx == TYPE_RAINBOW) {
         HBRUSH bgRing = CreateSolidBrush(RGB(255, 215, 0));
@@ -278,6 +288,22 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
         SelectObject(hdc, oldB); SelectObject(hdc, oldP);
         DeleteObject(mainB); DeleteObject(lightB); DeleteObject(darkB); DeleteObject(whiteB); DeleteObject(penDark);
 
+        HBRUSH sssB = CreateSolidBrush(lightC);
+        HBRUSH wB = CreateSolidBrush(RGB(255,255,255));
+        HPEN nullP = CreatePen(PS_NULL, 0, 0);
+        HPEN oP2 = (HPEN)SelectObject(hdc, nullP);
+        
+        SelectObject(hdc, sssB);
+        Ellipse(hdc, cx - r9, cy + r5, cx + r9, cy + r15);
+        
+        SelectObject(hdc, wB);
+        POINT specTop[3] = {{cx - r5, cy - r14}, {cx + r3, cy - r14}, {cx - r3, cy - r7}};
+        Polygon(hdc, specTop, 3);
+        Ellipse(hdc, cx + r5, cy - r12, cx + r9, cy - r8);
+        
+        SelectObject(hdc, oP2);
+        DeleteObject(nullP); DeleteObject(sssB); DeleteObject(wB);
+
         if (typeIdx == TYPE_HORIZ) {
             HPEN goldP = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
             HBRUSH goldB = CreateSolidBrush(RGB(255, 170, 0));
@@ -345,6 +371,23 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
         Ellipse(hdc, cx-r19-2, cy-r19-2, cx+r19+2, cy+r19+2);
         SelectObject(hdc, oP); SelectObject(hdc, oB);
         DeleteObject(shieldP);
+    }
+
+    if (popAnim > 0) {
+        HPEN crackP = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        HPEN crackP2 = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+        HPEN oPc = (HPEN)SelectObject(hdc, crackP);
+        MoveToEx(hdc, cx - r7, cy - r11, NULL);
+        LineTo(hdc, cx + r3, cy - r3);
+        LineTo(hdc, cx - r3, cy + r5);
+        LineTo(hdc, cx + r7, cy + r13);
+        SelectObject(hdc, crackP2);
+        MoveToEx(hdc, cx - r7, cy - r11, NULL);
+        LineTo(hdc, cx + r3, cy - r3);
+        LineTo(hdc, cx - r3, cy + r5);
+        LineTo(hdc, cx + r7, cy + r13);
+        SelectObject(hdc, oPc);
+        DeleteObject(crackP); DeleteObject(crackP2);
     }
 }
 
@@ -642,7 +685,9 @@ void DrawBoard(HDC hdc) {
 
             int cx = drawX + cellSize / 2;
             int cy = drawY + cellSize / 2;
-            DrawFacetedGem(hdc, cx, cy, cellSize, grid[r][c], typeGrid[r][c], iceGrid[r][c], barrierGrid[r][c]);
+            int isMoving = (r == swapR1 && c == swapC1) || (r == swapR2 && c == swapC2) || (dropAnim > 0 && dropCount[r][c] > 0);
+            int pAnim = popGrid[r][c] ? popAnim : 0;
+            DrawFacetedGem(hdc, cx, cy, cellSize, grid[r][c], typeGrid[r][c], iceGrid[r][c], barrierGrid[r][c], isMoving, pAnim);
 
             if (r == selR && c == selC) {
                 HBRUSH border = CreateSolidBrush((powerupMode > 0) ? RGB(255, 0, 0) : RGB(255, 215, 0));

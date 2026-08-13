@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMatch3
 - KFreecell
 - KSudoku
 - KGo
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarship
 - KConnect4
 - KHangman
+- KMatch3
 ## Completed Work Log
+
+- **KMatch3 (Loop 4):** Implemented highly detailed procedural lighting/specular highlights and sub-surface scattering effects on the gems making them look truly glassy/refractive, distinct visual crack fracture line states for gems before they shatter, and a dynamic 3D drop-shadow cast by moving/falling gems onto the board behind them in both Web Canvas (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
 
 - **KHangman (Loop 4):** Implemented highly polished and distinctly shaded 3D wooden texture variations on the gallows that splinter and darken based on the number of wrong guesses, dynamic animated lighting and shadow effects on the character's facial expressions based on current health, and more intricate vector/GDI paths for clothing details (folds and gold buttons) in both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 
