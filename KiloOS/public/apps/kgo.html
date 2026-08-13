@@ -453,6 +453,7 @@
   let capturedStonesForAnim = [];
   let undoStack = [];
   let redoStack = [];
+  let consecutivePasses = 0;
 
   let currentKomi = 6.5;
   let hintCell = null;
@@ -537,6 +538,10 @@
     
     let info = `${stage.name}\nBoard: ${size}x${size} | Handicap: ${stage.handicap} | Komi: ${stage.komi}\nAI Personality: ${stage.aiPersonality.toUpperCase()}\n\n${stage.isTsumego ? stage.targetDesc : 'Goal: Control more territory than White!'}`;
     alert(info);
+    
+    if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
+      setTimeout(makeAIMove, 500);
+    }
   }
 
   function loadTsumegoPuzzle(index) {
@@ -613,6 +618,7 @@
     capturedStonesForAnim = [];
     undoStack = [];
     redoStack = [];
+    consecutivePasses = 0;
     hintCell = null;
     updateStatus();
     drawBoard();
@@ -1015,6 +1021,7 @@
   }
 
   function placeStone(x, y) {
+    if (document.getElementById('ai-toggle').checked && currentPlayer === 'W') return;
     if (board[y][x] !== null) return;
     
     let boardBackup = deepCopy(board);
@@ -1055,6 +1062,7 @@
 
     history.push(boardToString());
     currentPlayer = opp;
+    consecutivePasses = 0;
     lastMove = {x, y};
     hintCell = null;
     
@@ -1270,8 +1278,16 @@
     let cx = Math.floor(size / 2);
     let cy = Math.floor(size / 2);
     let dist = Math.abs(x - cx) + Math.abs(y - cy);
-    score += (size - dist) * 2;
+    score += (size - dist) * 1;
     if (isHoshi(x, y, size)) score += 15;
+    
+    let distEdgeX = Math.min(x, size - 1 - x);
+    let distEdgeY = Math.min(y, size - 1 - y);
+    if ((distEdgeX === 2 || distEdgeX === 3) && (distEdgeY === 2 || distEdgeY === 3)) {
+      score += 40;
+    } else if (distEdgeX === 2 || distEdgeX === 3 || distEdgeY === 2 || distEdgeY === 3) {
+      score += 20;
+    }
     
     board = boardBackup;
     captures = capBackup;
@@ -1355,6 +1371,11 @@
   }
 
   document.getElementById('btn-pass').addEventListener('click', () => {
+    consecutivePasses++;
+    if (consecutivePasses >= 2) {
+      calculateScore();
+      return;
+    }
     undoStack.push({
       board: deepCopy(board),
       captures: { ...captures },
@@ -1476,6 +1497,10 @@
         updateStatus();
         drawBoard();
         alert('Game loaded.');
+        
+        if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
+          setTimeout(makeAIMove, 500);
+        }
       } catch (e) {
         alert('Failed to load game.');
       }

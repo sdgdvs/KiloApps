@@ -126,6 +126,7 @@ GameState undoStack[MAX_HISTORY];
 int undoCount = 0;
 GameState redoStack[MAX_HISTORY];
 int redoCount = 0;
+int consecutivePasses = 0;
 
 int boardSize = 9;
 char board[19][19] = {0}; // 0 = empty, 1 = black, 2 = white
@@ -598,8 +599,16 @@ int EvaluateMoveGrandmaster(int x, int y, int color) {
     int cx = boardSize / 2;
     int cy = boardSize / 2;
     int dist = abs(x - cx) + abs(y - cy);
-    score += (boardSize - dist) * 2;
+    score += (boardSize - dist) * 1;
     if (IsHoshi(x, y, boardSize)) score += 15;
+    
+    int distEdgeX = x < (boardSize - 1 - x) ? x : (boardSize - 1 - x);
+    int distEdgeY = y < (boardSize - 1 - y) ? y : (boardSize - 1 - y);
+    if ((distEdgeX == 2 || distEdgeX == 3) && (distEdgeY == 2 || distEdgeY == 3)) {
+        score += 40;
+    } else if (distEdgeX == 2 || distEdgeX == 3 || distEdgeY == 2 || distEdgeY == 3) {
+        score += 20;
+    }
     
     CopyBoard(board, boardBackup);
     captures[1] = capBackup[1];
@@ -697,6 +706,7 @@ void ComputeTerritoryAndAtari() {
 void MakeAIMove(HWND hwnd);
 
 void PlaceStone(HWND hwnd, int x, int y) {
+    if (SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED && currentPlayer == 2) return;
     if (board[y][x] != 0) return;
     
     char boardBackup[19][19];
@@ -729,6 +739,7 @@ void PlaceStone(HWND hwnd, int x, int y) {
     PushUndo(boardBackup, capBackup, currentPlayer);
     CopyBoard(prevBoard, boardBackup);
     currentPlayer = opp;
+    consecutivePasses = 0;
     hintX = -1; hintY = -1;
     lastMoveX = x;
     lastMoveY = y;
@@ -820,6 +831,10 @@ void StartCampaignStage(HWND hwnd) {
         pName[diff],
         campaign[currentCampaignStage].isTsumego ? campaign[currentCampaignStage].targetDesc : "Goal: Surround more territory than White!");
     MessageBox(hwnd, msg, "Campaign Stage", MB_OK);
+    
+    if (currentPlayer == 2 && SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
+        SetTimer(hwnd, 2, 500, NULL);
+    }
 }
 
 void LoadTsumegoPuzzle(HWND hwnd, int index) {
@@ -931,12 +946,17 @@ void LoadGame(HWND hwnd) {
         hintX = -1; hintY = -1;
         InvalidateRect(hwnd, NULL, TRUE);
         MessageBox(hwnd, "Game loaded.", "Load", MB_OK);
+        
+        if (currentPlayer == 2 && SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
+            SetTimer(hwnd, 2, 500, NULL);
+        }
     } else {
         MessageBox(hwnd, "No saved game found.", "Error", MB_OK);
     }
 }
 
 void InitBoard() {
+    consecutivePasses = 0;
     memset(board, 0, sizeof(board));
     memset(prevBoard, 0, sizeof(prevBoard));
     currentPlayer = 1;
@@ -1621,6 +1641,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
         case WM_COMMAND:
             if (LOWORD(wParam) == ID_BTN_PASS) {
+                consecutivePasses++;
+                if (consecutivePasses >= 2) {
+                    CalculateScore(hwnd);
+                    return 0;
+                }
                 int capBackup[3] = { captures[0], captures[1], captures[2] };
                 char bBackup[19][19];
                 CopyBoard(bBackup, board);
