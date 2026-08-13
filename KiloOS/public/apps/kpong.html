@@ -328,6 +328,8 @@
   let bossShieldHp = 3, bossShieldTimer = 0;
   let bossShieldY = H/2 - 50, bossShieldDy = 2, bossShieldH = 100;
 
+  let p1HitRipple = 0, p2HitRipple = 0;
+
   let p1y = H/2 - 25, p2y = H/2 - 25;
   let p1Vy = 0, p2Vy = 0;
   let s1 = 0, s2 = 0;
@@ -652,6 +654,9 @@
       if (p1ShieldTimer > 0) p1ShieldTimer--;
       if (p2ShieldTimer > 0) p2ShieldTimer--;
 
+      if (p1HitRipple > 0) p1HitRipple = Math.max(0, p1HitRipple - 0.05);
+      if (p2HitRipple > 0) p2HitRipple = Math.max(0, p2HitRipple - 0.05);
+
       // Paddle Heights Calculation
       p1PadH = 50 - (rally * 1.5); if (p1PadH < 22) p1PadH = 22;
       p2PadH = 50 - (rally * 1.5); if (p2PadH < 22) p2PadH = 22;
@@ -788,7 +793,9 @@
           }
 
           // Motion Trail
-          let ballColor = b.isFireball ? '#ff6400' : (b.lastHitter === 1 ? getPrimaryColor() : (b.lastHitter === 2 ? getSecondaryColor() : '#ffffff'));
+          let spd = Math.hypot(b.dx, b.dy);
+          let dynHue = (spd * 12 + rally * 15) % 360;
+          let ballColor = b.isFireball ? '#ff6400' : `hsl(${dynHue}, 100%, 65%)`;
           b.trail.unshift({ x: b.x + BALL_SIZE/2, y: b.y + BALL_SIZE/2, color: ballColor });
           if (b.trail.length > 10) b.trail.pop();
 
@@ -866,7 +873,7 @@
 
           // P1 Paddle Collision
           if (b.x < 20 + PAD_W && b.y + BALL_SIZE > p1y && b.y < p1y + p1PadH) {
-              b.x = 20 + PAD_W; b.dx = -b.dx; b.lastHitter = 1;
+              b.x = 20 + PAD_W; b.dx = -b.dx; b.lastHitter = 1; p1HitRipple = 1.0;
               if (skillFireballReady) { b.isFireball = true; skillFireballReady = false; createShockwave(b.x, b.y + BALL_SIZE/2, '#ff6400'); }
               let hitPos = ((b.y + BALL_SIZE/2) - (p1y + p1PadH/2)) / (p1PadH/2);
               b.dy += hitPos * 5.0;
@@ -882,7 +889,7 @@
 
           // P2 Paddle Collision
           if (b.x + BALL_SIZE > W - 20 - PAD_W && b.y + BALL_SIZE > p2y && b.y < p2y + p2PadH) {
-              b.x = W - 20 - PAD_W - BALL_SIZE; b.dx = -b.dx; b.lastHitter = 2;
+              b.x = W - 20 - PAD_W - BALL_SIZE; b.dx = -b.dx; b.lastHitter = 2; p2HitRipple = 1.0;
               b.isFireball = false;
               let hitPos = ((b.y + BALL_SIZE/2) - (p2y + p2PadH/2)) / (p2PadH/2);
               b.dy += hitPos * 5.0;
@@ -1007,6 +1014,18 @@
           ctx.beginPath(); ctx.moveTo(shX, 0); ctx.lineTo(shX, H); ctx.stroke();
           ctx.restore();
       }
+
+      // Render Paddle Hit Ripple Effect
+      let hitRipple = isP1 ? p1HitRipple : p2HitRipple;
+      if (hitRipple > 0) {
+          ctx.save();
+          let rSize = (1 - hitRipple) * 15;
+          ctx.strokeStyle = `rgba(255, 255, 255, ${hitRipple})`;
+          ctx.lineWidth = 2 + hitRipple * 3;
+          ctx.shadowBlur = 10; ctx.shadowColor = '#ffffff';
+          ctx.strokeRect(x - rSize, y - rSize, w + rSize * 2, h + rSize * 2);
+          ctx.restore();
+      }
   }
 
   function drawObstacle(x, y, w, h, isHoriz = false) {
@@ -1022,16 +1041,35 @@
   function drawPowerup(x, y, type) {
       ctx.save();
       let colors = ['#ffd700', '#ff3366', '#00e5ff', '#c832ff', '#ff9900', '#00ffaa'];
-      let icons = ['+', '!', '*', 'M', '⚡', '🛡️'];
       let color = colors[type] || getPrimaryColor();
-      let iconStr = icons[type] || '+';
 
       ctx.shadowBlur = 15; ctx.shadowColor = color;
-      ctx.fillStyle = 'rgba(20, 25, 35, 0.9)'; ctx.strokeStyle = color; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x + 9, y + 9, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
-      ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = color; ctx.fillText(iconStr, x + 9, y + 9.5);
+      ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      
+      let cx = x + 9, cy = y + 9;
+      
+      if (type === 0) { // Expand: Plus
+          ctx.moveTo(cx, cy - 6); ctx.lineTo(cx, cy + 6);
+          ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy);
+      } else if (type === 1) { // Shrink: Minus
+          ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy);
+      } else if (type === 2) { // Freeze: Diamond/Snowflake
+          ctx.moveTo(cx, cy - 7); ctx.lineTo(cx + 7, cy); ctx.lineTo(cx, cy + 7); ctx.lineTo(cx - 7, cy); ctx.closePath();
+          ctx.moveTo(cx - 4, cy - 4); ctx.lineTo(cx + 4, cy + 4); ctx.moveTo(cx + 4, cy - 4); ctx.lineTo(cx - 4, cy + 4);
+      } else if (type === 3) { // Multi-Ball: 3 circles
+          ctx.arc(cx - 4, cy + 3, 2, 0, Math.PI*2); ctx.moveTo(cx + 4 + 2, cy + 3);
+          ctx.arc(cx + 4, cy + 3, 2, 0, Math.PI*2); ctx.moveTo(cx + 2, cy - 5);
+          ctx.arc(cx, cy - 5, 2, 0, Math.PI*2);
+      } else if (type === 4) { // Speed: Double Arrows
+          ctx.moveTo(cx - 4, cy - 5); ctx.lineTo(cx + 2, cy); ctx.lineTo(cx - 4, cy + 5);
+          ctx.moveTo(cx + 1, cy - 5); ctx.lineTo(cx + 7, cy); ctx.lineTo(cx + 1, cy + 5);
+      } else if (type === 5) { // Shield: Hexagon
+          ctx.moveTo(cx - 5, cy - 6); ctx.lineTo(cx + 5, cy - 6);
+          ctx.lineTo(cx + 7, cy); ctx.lineTo(cx, cy + 7);
+          ctx.lineTo(cx - 7, cy); ctx.closePath();
+      }
+      ctx.stroke();
       ctx.restore();
   }
 

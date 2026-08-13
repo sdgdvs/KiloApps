@@ -113,6 +113,9 @@ int p2_freeze_timer = 0;
 int p1_shield_timer = 0;
 int p2_shield_timer = 0;
 
+float p1_hit_ripple = 0.0f;
+float p2_hit_ripple = 0.0f;
+
 // Active Skills
 int skill_slow_timer = 0;
 int skill_slow_cooldown = 0;
@@ -442,6 +445,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (p1_shield_timer > 0) p1_shield_timer--;
             if (p2_shield_timer > 0) p2_shield_timer--;
 
+            if (p1_hit_ripple > 0.0f) { p1_hit_ripple -= 0.05f; if (p1_hit_ripple < 0.0f) p1_hit_ripple = 0.0f; }
+            if (p2_hit_ripple > 0.0f) { p2_hit_ripple -= 0.05f; if (p2_hit_ripple < 0.0f) p2_hit_ripple = 0.0f; }
+
             // Paddle Heights
             p1_pad_h = 50 - (rally * 2); if (p1_pad_h < 20) p1_pad_h = 20;
             p2_pad_h = 50 - (rally * 2); if (p2_pad_h < 20) p2_pad_h = 20;
@@ -586,9 +592,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 // Trail
-                COLORREF bTrailColor = balls[b].is_fireball ? RGB(255, 100, 0) :
-                    ((balls[b].last_hitter == 1) ? GetPrimaryColor() :
-                    ((balls[b].last_hitter == 2) ? GetSecondaryColor() : RGB(255, 255, 255)));
+                float spd = sqrtf(balls[b].dx * balls[b].dx + balls[b].dy * balls[b].dy);
+                int r_dyn = (int)(sinf(spd * 0.5f + rally * 0.2f) * 127 + 128);
+                int g_dyn = (int)(sinf(spd * 0.5f + rally * 0.2f + 2.0f) * 127 + 128);
+                int b_dyn = (int)(sinf(spd * 0.5f + rally * 0.2f + 4.0f) * 127 + 128);
+                COLORREF dynColor = RGB(r_dyn, g_dyn, b_dyn);
+                COLORREF bTrailColor = balls[b].is_fireball ? RGB(255, 100, 0) : dynColor;
+                
                 for (int i = MAX_TRAIL - 1; i > 0; i--) balls[b].trail[i] = balls[b].trail[i - 1];
                 balls[b].trail[0].x = (int)balls[b].x + BALL_SIZE / 2;
                 balls[b].trail[0].y = (int)balls[b].y + BALL_SIZE / 2;
@@ -664,7 +674,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // P1 Paddle
                 if (balls[b].x < 20 + PAD_W && balls[b].y + BALL_SIZE > p1_y && balls[b].y < p1_y + p1_pad_h) {
-                    balls[b].x = 20 + PAD_W; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 1;
+                    balls[b].x = 20 + PAD_W; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 1; p1_hit_ripple = 1.0f;
                     if (skill_fireball_ready) { balls[b].is_fireball = 1; skill_fireball_ready = 0; AddShockwave(balls[b].x, balls[b].y + BALL_SIZE / 2, RGB(255, 100, 0)); }
                     rally++; RecordScore(rally);
                     float hit_pos = (float)((balls[b].y + BALL_SIZE / 2.0f) - (p1_y + p1_pad_h / 2.0f)) / (p1_pad_h / 2.0f);
@@ -679,7 +689,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // P2 Paddle
                 if (balls[b].x + BALL_SIZE > W - 20 - PAD_W && balls[b].y + BALL_SIZE > p2_y && balls[b].y < p2_y + p2_pad_h) {
-                    balls[b].x = W - 20 - PAD_W - BALL_SIZE; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 2; balls[b].is_fireball = 0;
+                    balls[b].x = W - 20 - PAD_W - BALL_SIZE; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 2; balls[b].is_fireball = 0; p2_hit_ripple = 1.0f;
                     rally++; RecordScore(rally);
                     float hit_pos = (float)((balls[b].y + BALL_SIZE / 2.0f) - (p2_y + p2_pad_h / 2.0f)) / (p2_pad_h / 2.0f);
                     balls[b].dy += (int)(hit_pos * 5.0f);
@@ -916,6 +926,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HPEN coreP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255)); SelectObject(memDC, coreP);
                 MoveToEx(memDC, x + w / 2, y + 4, NULL); LineTo(memDC, x + w / 2, y + h - 4);
                 SelectObject(memDC, pOld); SelectObject(memDC, bOld); DeleteObject(p1B); DeleteObject(p1P); DeleteObject(coreP);
+
+                if (p1_hit_ripple > 0.0f) {
+                    int rSize = (int)((1.0f - p1_hit_ripple) * 10.0f);
+                    HPEN rP = CreatePen(PS_SOLID, 2, RGB((BYTE)(255 * p1_hit_ripple), (BYTE)(255 * p1_hit_ripple), (BYTE)(255 * p1_hit_ripple)));
+                    pOld = (HPEN)SelectObject(memDC, rP); bOld = (HBRUSH)SelectObject(memDC, (HBRUSH)GetStockObject(NULL_BRUSH));
+                    RoundRect(memDC, x - rSize, y - rSize, x + w + rSize, y + h + rSize, 6, 6);
+                    SelectObject(memDC, pOld); SelectObject(memDC, bOld); DeleteObject(rP);
+                }
             }
             {
                 int x = W - 20 - PAD_W, y = p2_y, w = PAD_W, h = p2_pad_h;
@@ -927,15 +945,51 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HPEN coreP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255)); SelectObject(memDC, coreP);
                 MoveToEx(memDC, x + w / 2, y + 4, NULL); LineTo(memDC, x + w / 2, y + h - 4);
                 SelectObject(memDC, pOld); SelectObject(memDC, bOld); DeleteObject(p2B); DeleteObject(p2P); DeleteObject(coreP);
+
+                if (p2_hit_ripple > 0.0f) {
+                    int rSize = (int)((1.0f - p2_hit_ripple) * 10.0f);
+                    HPEN rP = CreatePen(PS_SOLID, 2, RGB((BYTE)(255 * p2_hit_ripple), (BYTE)(255 * p2_hit_ripple), (BYTE)(255 * p2_hit_ripple)));
+                    pOld = (HPEN)SelectObject(memDC, rP); bOld = (HBRUSH)SelectObject(memDC, (HBRUSH)GetStockObject(NULL_BRUSH));
+                    RoundRect(memDC, x - rSize, y - rSize, x + w + rSize, y + h + rSize, 6, 6);
+                    SelectObject(memDC, pOld); SelectObject(memDC, bOld); DeleteObject(rP);
+                }
             }
 
             // Powerup Capsule Graphic
             if (powerup_x != -1) {
-                COLORREF puColor = GetPrimaryColor();
-                HBRUSH puB = CreateSolidBrush(RGB(20, 25, 35)); HPEN puP = CreatePen(PS_SOLID, 2, puColor);
-                oldPen = (HPEN)SelectObject(memDC, puP); oldBrush = (HBRUSH)SelectObject(memDC, puB);
-                RoundRect(memDC, powerup_x, powerup_y, powerup_x + 18, powerup_y + 18, 10, 10);
-                SelectObject(memDC, oldPen); SelectObject(memDC, oldBrush); DeleteObject(puB); DeleteObject(puP);
+                COLORREF puColor = RGB(255,255,255);
+                if(powerup_type == 0) puColor = RGB(255, 215, 0);
+                else if(powerup_type == 1) puColor = RGB(255, 51, 102);
+                else if(powerup_type == 2) puColor = RGB(0, 229, 255);
+                else if(powerup_type == 3) puColor = RGB(200, 50, 255);
+                else if(powerup_type == 4) puColor = RGB(255, 153, 0);
+                else if(powerup_type == 5) puColor = RGB(0, 255, 170);
+
+                HPEN puP = CreatePen(PS_SOLID, 2, puColor);
+                oldPen = (HPEN)SelectObject(memDC, puP);
+                HBRUSH oldBrush = (HBRUSH)SelectObject(memDC, (HBRUSH)GetStockObject(NULL_BRUSH));
+
+                if (powerup_type == 0) { // Expand: Plus shape
+                    MoveToEx(memDC, powerup_x + 9, powerup_y + 3, NULL); LineTo(memDC, powerup_x + 9, powerup_y + 15);
+                    MoveToEx(memDC, powerup_x + 3, powerup_y + 9, NULL); LineTo(memDC, powerup_x + 15, powerup_y + 9);
+                } else if (powerup_type == 1) { // Shrink: Minus
+                    MoveToEx(memDC, powerup_x + 4, powerup_y + 9, NULL); LineTo(memDC, powerup_x + 14, powerup_y + 9);
+                } else if (powerup_type == 2) { // Freeze: Diamond
+                    MoveToEx(memDC, powerup_x + 9, powerup_y + 2, NULL); LineTo(memDC, powerup_x + 16, powerup_y + 9);
+                    LineTo(memDC, powerup_x + 9, powerup_y + 16); LineTo(memDC, powerup_x + 2, powerup_y + 9); LineTo(memDC, powerup_x + 9, powerup_y + 2);
+                } else if (powerup_type == 3) { // Multi: 3 small circles
+                    Ellipse(memDC, powerup_x+3, powerup_y+9, powerup_x+7, powerup_y+13);
+                    Ellipse(memDC, powerup_x+11, powerup_y+9, powerup_x+15, powerup_y+13);
+                    Ellipse(memDC, powerup_x+7, powerup_y+3, powerup_x+11, powerup_y+7);
+                } else if (powerup_type == 4) { // Speed: Double arrows
+                    MoveToEx(memDC, powerup_x+4, powerup_y+4, NULL); LineTo(memDC, powerup_x+10, powerup_y+9); LineTo(memDC, powerup_x+4, powerup_y+14);
+                    MoveToEx(memDC, powerup_x+9, powerup_y+4, NULL); LineTo(memDC, powerup_x+15, powerup_y+9); LineTo(memDC, powerup_x+9, powerup_y+14);
+                } else if (powerup_type == 5) { // Shield: Hexagon or Shield
+                    MoveToEx(memDC, powerup_x+4, powerup_y+3, NULL); LineTo(memDC, powerup_x+14, powerup_y+3);
+                    LineTo(memDC, powerup_x+14, powerup_y+10); LineTo(memDC, powerup_x+9, powerup_y+16);
+                    LineTo(memDC, powerup_x+4, powerup_y+10); LineTo(memDC, powerup_x+4, powerup_y+3);
+                }
+                SelectObject(memDC, oldPen); SelectObject(memDC, oldBrush); DeleteObject(puP);
             }
 
             // Shockwaves & Particles

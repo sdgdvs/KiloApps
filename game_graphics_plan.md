@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KPong
 - KMines
 - KAsteroids
 - K2048
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAlchemy
 - KRogue
 - KChess
+- KPong
 ## Completed Work Log
+
+- **KPong (Loop 4):** Replaced text badges with distinct graphical vector models for powerups (Plus, Minus, Diamond, 3-Circles, Double-Arrows, Hexagon-Shield); implemented animated rectangular expanding shockwave ripples on paddles upon ball impact; and added a dynamic neon ball trail effect that smoothly shifts colors based on current ball speed and rally bounce count in both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 
 - **KChess (Loop 4):** Upgraded existing 2D vector chess pieces to 3D shaded pieces with dynamic multi-stop radial gradients, specular highlights mimicking polished marble (White) and carved mahogany (Black) textures, and dimensional drop shadows; implemented rich procedural board tile textures including veined marble light squares, wood-grained mahogany dark squares, and beveled 3D inner shadows in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
