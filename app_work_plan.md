@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KConverter
+**Target App:** KTodo
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KConverter (Added Single & Batch Conversion Modes, Favorite Pairs Pinning, Custom Unit Formula Creator, Searchable Conversion History Log with CSV/JSON Export, and Precision/Scientific Notation Controls)
 - KTodo (Added Task Search & Multi-Filter System, Category Tagging, Due Dates & Priorities, Subtask Checklists, JSON/CSV Data Import/Export, and Productivity Statistics)
 - KGraph (Added Multi-Function Plotting y1-y5, Derivative & Simpson Integral Calculators, Roots & Intersections Finders, Interactive Value Tracing Cursor, Preset Library, and CSV/JSON/PNG Export)
 - KTimer (Added Multi-Timer Engine [concurrent named timers], Pomodoro Work/Break Cycle Manager with Stats, Lap Split Analysis & CSV/TXT Export, Alarm Presets Library, and Sound Alerts & Visual Progress Ring)
@@ -129,3 +128,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KTask (Added Process Priority Adjuster, CPU/RAM Rolling Sparkline Charts, Process Snapshot Exports [CSV/JSON], Kill Confirmation Modal, System Summary, and Deep Process & Memory Inspector [Threads, Modules, Memory Map, Hex Peek])
 - KSys (Added Hardware Component Inspector, Diagnostic Stress & Memory Benchmarks, Event History Log Viewer, Report Export [TXT/JSON/HTML], and Real-Time System Telemetry & Windows Services Manager)
 - KRogue (Added Character Classes & Races, Custom Dungeon Seed Generator, Equipment & Inventory Slots, Magic Spellbook, Run History Leaderboard, Save/Resume State, Custom Keybinding Config, and High Score / Run Stats JSON Export & Import)
+- KConverter (Added Single & Batch Conversion Modes, Favorite Pairs Pinning, Custom Unit Formula Creator, Searchable Conversion History Log with CSV/JSON Export, Precision/Scientific Notation Controls, and Smart Natural Expression & Dimension Parser)
