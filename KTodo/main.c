@@ -58,6 +58,21 @@ int my_stristr(const char* haystack, const char* needle) {
     return 0;
 }
 
+char* my_find_str(const char* haystack, const char* needle) {
+    if (!haystack || !needle || !*needle) return NULL;
+    for (int i = 0; haystack[i] != '\0'; i++) {
+        int match = 1;
+        for (int j = 0; needle[j] != '\0'; j++) {
+            if (haystack[i + j] == '\0' || to_lower(haystack[i + j]) != to_lower(needle[j])) {
+                match = 0;
+                break;
+            }
+        }
+        if (match) return (char*)&haystack[i];
+    }
+    return NULL;
+}
+
 #define MAX_TASKS 100
 #define MAX_SUBTASKS 10
 
@@ -81,7 +96,7 @@ int g_taskCount = 0;
 
 HWND hInput, hCategory, hPriority, hDueDate, hAddBtn;
 HWND hSearch, hFilterStatus, hFilterCategory;
-HWND hList, hToggleBtn, hSubtaskBtn, hDeleteBtn, hClearBtn, hExportBtn, hImportBtn, hStatsBtn, hStatusText;
+HWND hList, hToggleBtn, hSubtaskBtn, hDeleteBtn, hClearBtn, hExportBtn, hImportBtn, hExportMDBtn, hImportMDBtn, hStatsBtn, hStatusText;
 HFONT hFont, hFontBold;
 
 WNDPROC g_OldEditProc = NULL;
@@ -104,6 +119,8 @@ WNDPROC g_OldListProc = NULL;
 #define ID_EXPORTBTN      1013
 #define ID_IMPORTBTN      1014
 #define ID_STATSBTN       1015
+#define ID_EXPORTMDBTN    1016
+#define ID_IMPORTMDBTN    1017
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
@@ -312,9 +329,8 @@ void DoAddSubtask() {
         return;
     }
 
-    // Quick prompt using simple Input box simulation or predefined subtask title
     char promptMsg[256];
-    wsprintfA(promptMsg, "Add subtask to: '%s'\n(Subtask will be added as 'Subtask %d')", t->text, t->subtaskCount + 1);
+    wsprintfA(promptMsg, "Add subtask to: '%s'\n(Subtask will be added as 'Checklist item %d')", t->text, t->subtaskCount + 1);
     
     int res = MessageBoxA(NULL, promptMsg, "Add Subtask", MB_OKCANCEL | MB_ICONQUESTION);
     if (res == IDOK) {
@@ -393,26 +409,175 @@ void DoExportData() {
     }
 }
 
+void DoExportMarkdown() {
+    HANDLE hFile = CreateFileA("ktodo_export.md", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char header[] = "# KTodo Task List\r\n\r\n";
+        DWORD written;
+        WriteFile(hFile, header, my_strlen(header), &written, NULL);
+
+        for (int i = 0; i < g_taskCount; i++) {
+            Task* t = &g_tasks[i];
+            char line[512];
+            char dateStr[64] = "";
+            if (my_strlen(t->dueDate) > 0) {
+                wsprintfA(dateStr, " [Due:%s]", t->dueDate);
+            }
+            wsprintfA(line, "- [%s] %s [%s] [#%s]%s\r\n",
+                t->completed ? "X" : " ",
+                t->text,
+                t->priority,
+                t->category,
+                dateStr
+            );
+            WriteFile(hFile, line, my_strlen(line), &written, NULL);
+
+            for (int s = 0; s < t->subtaskCount; s++) {
+                char subLine[256];
+                wsprintfA(subLine, "  - [%s] %s\r\n",
+                    t->subtasks[s].completed ? "X" : " ",
+                    t->subtasks[s].text
+                );
+                WriteFile(hFile, subLine, my_strlen(subLine), &written, NULL);
+            }
+        }
+        CloseHandle(hFile);
+        MessageBoxA(NULL, "Tasks successfully exported to 'ktodo_export.md'!", "Markdown Export", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBoxA(NULL, "Failed to create 'ktodo_export.md'.", "Export Error", MB_OK | MB_ICONERROR);
+    }
+}
+
+void DoImportMarkdown() {
+    HANDLE hFile = CreateFileA("ktodo_export.md", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(NULL, "File 'ktodo_export.md' not found.\nExport a Markdown file first or place 'ktodo_export.md' in the application folder.", "Import Markdown", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    DWORD fileSize = GetFileSize(hFile, NULL);
+    if (fileSize == 0 || fileSize > 100000) {
+        CloseHandle(hFile);
+        MessageBoxA(NULL, "File 'ktodo_export.md' is empty or too large.", "Import Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    char* buffer = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
+    if (!buffer) {
+        CloseHandle(hFile);
+        return;
+    }
+
+    DWORD bytesRead = 0;
+    ReadFile(hFile, buffer, fileSize, &bytesRead, NULL);
+    CloseHandle(hFile);
+    buffer[bytesRead] = '\0';
+
+    int importedCount = 0;
+    char currentCategory[32] = "General";
+    Task* lastTask = NULL;
+
+    char* line = buffer;
+    while (*line) {
+        char* lineEnd = line;
+        while (*lineEnd && *lineEnd != '\r' && *lineEnd != '\n') lineEnd++;
+
+        char origChar = *lineEnd;
+        *lineEnd = '\0';
+
+        int indent = 0;
+        char* ptr = line;
+        while (*ptr == ' ' || *ptr == '\t') {
+            indent++;
+            ptr++;
+        }
+
+        if (*ptr == '#') {
+            ptr++;
+            while (*ptr == '#') ptr++;
+            while (*ptr == ' ') ptr++;
+            if (my_strlen(ptr) > 0) {
+                int k = 0;
+                while (ptr[k] && ptr[k] != ' ' && ptr[k] != '\r' && ptr[k] != '\n' && k < 31) {
+                    currentCategory[k] = ptr[k];
+                    k++;
+                }
+                currentCategory[k] = '\0';
+            }
+        } else if ((ptr[0] == '-' || ptr[0] == '*') && ptr[1] == ' ' && ptr[2] == '[' && (ptr[3] == ' ' || ptr[3] == 'x' || ptr[3] == 'X') && ptr[4] == ']') {
+            int completed = (ptr[3] == 'x' || ptr[3] == 'X') ? 1 : 0;
+            char* textStart = ptr + 5;
+            while (*textStart == ' ') textStart++;
+
+            if (indent >= 2 && lastTask && lastTask->subtaskCount < MAX_SUBTASKS) {
+                SubTask* st = &lastTask->subtasks[lastTask->subtaskCount];
+                my_strcpy(st->text, textStart);
+                st->completed = completed;
+                lastTask->subtaskCount++;
+            } else if (g_taskCount < MAX_TASKS) {
+                Task* t = &g_tasks[g_taskCount];
+                memset(t, 0, sizeof(Task));
+                my_strcpy(t->text, textStart);
+                my_strcpy(t->category, currentCategory);
+                my_strcpy(t->priority, "Med");
+                t->completed = completed;
+
+                if (my_stristr(textStart, "[High]")) {
+                    my_strcpy(t->priority, "High");
+                } else if (my_stristr(textStart, "[Low]")) {
+                    my_strcpy(t->priority, "Low");
+                }
+
+                char* duePtr = my_find_str(textStart, "[Due:");
+                if (duePtr) {
+                    duePtr += 5;
+                    int d = 0;
+                    while (duePtr[d] && duePtr[d] != ']' && d < 15) {
+                        t->dueDate[d] = duePtr[d];
+                        d++;
+                    }
+                    t->dueDate[d] = '\0';
+                }
+
+                lastTask = t;
+                g_taskCount++;
+                importedCount++;
+            }
+        }
+
+        if (origChar == '\0') break;
+        line = lineEnd + 1;
+        if (origChar == '\r' && *line == '\n') line++;
+    }
+
+    HeapFree(GetProcessHeap(), 0, buffer);
+    RefreshTaskList();
+
+    char msgBuf[128];
+    wsprintfA(msgBuf, "Successfully imported %d tasks from 'ktodo_export.md'!", importedCount);
+    MessageBoxA(NULL, msgBuf, "Markdown Import Complete", MB_OK | MB_ICONINFORMATION);
+}
+
 void LoadSampleData() {
     g_taskCount = 0;
 
     Task* t1 = &g_tasks[0];
-    my_strcpy(t1->text, "Design and code KTodo features");
+    my_strcpy(t1->text, "Design & Code KTodo Markdown features");
     my_strcpy(t1->category, "Project");
     my_strcpy(t1->priority, "High");
-    my_strcpy(t1->dueDate, "2026-07-25");
+    my_strcpy(t1->dueDate, "2026-08-15");
     t1->completed = 0;
     t1->subtaskCount = 2;
-    my_strcpy(t1->subtasks[0].text, "Search & filter");
+    my_strcpy(t1->subtasks[0].text, "Search & filter system");
     t1->subtasks[0].completed = 1;
-    my_strcpy(t1->subtasks[1].text, "Subtasks & Export");
-    t1->subtasks[1].completed = 0;
+    my_strcpy(t1->subtasks[1].text, "Markdown task list import & export");
+    t1->subtasks[1].completed = 1;
 
     Task* t2 = &g_tasks[1];
     my_strcpy(t2->text, "Team sync meeting");
     my_strcpy(t2->category, "Work");
     my_strcpy(t2->priority, "Med");
-    my_strcpy(t2->dueDate, "2026-07-26");
+    my_strcpy(t2->dueDate, "2026-08-16");
     t2->completed = 0;
     t2->subtaskCount = 0;
 
@@ -483,8 +648,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hSubtaskBtn = CreateWindowA("BUTTON", "+ Checklist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 100, 265, 80, 26, hwnd, (HMENU)ID_SUBTASKBTN, NULL, NULL);
             hDeleteBtn = CreateWindowA("BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 185, 265, 60, 26, hwnd, (HMENU)ID_DELETEBTN, NULL, NULL);
             hClearBtn = CreateWindowA("BUTTON", "Clear Done", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 250, 265, 75, 26, hwnd, (HMENU)ID_CLEARBTN, NULL, NULL);
-            hExportBtn = CreateWindowA("BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 265, 60, 26, hwnd, (HMENU)ID_EXPORTBTN, NULL, NULL);
-            hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 265, 60, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
+            hExportBtn = CreateWindowA("BUTTON", "Export JSON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 265, 80, 26, hwnd, (HMENU)ID_EXPORTBTN, NULL, NULL);
+            hExportMDBtn = CreateWindowA("BUTTON", "Export MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 415, 265, 70, 26, hwnd, (HMENU)ID_EXPORTMDBTN, NULL, NULL);
+            hImportMDBtn = CreateWindowA("BUTTON", "Import MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 490, 265, 70, 26, hwnd, (HMENU)ID_IMPORTMDBTN, NULL, NULL);
+            hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 565, 265, 50, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
 
             // Row 5: Status Bar
             hStatusText = CreateWindowA("STATIC", "Total: 0 | Active: 0 | Done: 0 | [Press 'H' or F1 for Help]", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);
@@ -508,6 +675,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hDeleteBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hClearBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hExportBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hExportMDBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hImportMDBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hImportBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hStatusText, WM_SETFONT, (WPARAM)hFont, TRUE);
 
@@ -518,7 +687,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Load sample tasks on startup
             LoadSampleData();
-            // Removed annoying startup popup to improve usability
             break;
         }
 
@@ -528,7 +696,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_GETMINMAXINFO: {
             LPMINMAXINFO mmi = (LPMINMAXINFO)lParam;
-            mmi->ptMinTrackSize.x = 480;
+            mmi->ptMinTrackSize.x = 640;
             mmi->ptMinTrackSize.y = 360;
             break;
         }
@@ -561,8 +729,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hSubtaskBtn, 100, btnY, 80, 24, TRUE);
                 MoveWindow(hDeleteBtn, 185, btnY, 60, 24, TRUE);
                 MoveWindow(hClearBtn, 250, btnY, 75, 24, TRUE);
-                MoveWindow(hExportBtn, 330, btnY, 60, 24, TRUE);
-                MoveWindow(hImportBtn, 395, btnY, 60, 24, TRUE);
+                MoveWindow(hExportBtn, 330, btnY, 80, 24, TRUE);
+                MoveWindow(hExportMDBtn, 415, btnY, 70, 24, TRUE);
+                MoveWindow(hImportMDBtn, 490, btnY, 70, 24, TRUE);
+                MoveWindow(hImportBtn, 565, btnY, 50, 24, TRUE);
 
                 MoveWindow(hStatusText, 10, cy - 25, cx - 20, 20, TRUE);
             }
@@ -587,6 +757,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DoShowStats();
             } else if (id == ID_EXPORTBTN) {
                 DoExportData();
+            } else if (id == ID_EXPORTMDBTN) {
+                DoExportMarkdown();
+            } else if (id == ID_IMPORTMDBTN) {
+                DoImportMarkdown();
             } else if (id == ID_IMPORTBTN) {
                 LoadSampleData();
             } else if (id == ID_FILTERSTATUS && code == CBN_SELCHANGE) {
@@ -611,7 +785,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
-    // Set DPI awareness for crisp text
     HMODULE hUser32 = LoadLibraryA("user32.dll");
     if (hUser32) {
         typedef BOOL (WINAPI *SETPROCESSDPIAWARE)();
@@ -627,7 +800,6 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 
     RegisterClassA(&wc);
-    // Adjusted initial auto-opening size to 800x600
     HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -636,7 +808,7 @@ void __stdcall MainEntry() {
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN && (msg.wParam == VK_F1 || msg.wParam == 'H')) {
-            MessageBoxA(msg.hwnd, "KTodo Help:\n- Type a task and click '+ Add'\n- Select category, priority, and due date\n- Double-click a task to toggle completion\n- Click '+ Checklist' to add subtasks\n- Press 'Stats' for productivity summary.", "KTodo Help", MB_OK | MB_ICONINFORMATION);
+            MessageBoxA(msg.hwnd, "KTodo Help:\n- Type a task and click '+ Add'\n- Select category, priority, and due date\n- Double-click a task to toggle completion\n- Click '+ Checklist' to add subtasks\n- Export/Import JSON or Markdown (.md) task lists\n- Press 'Stats' for productivity summary.", "KTodo Help", MB_OK | MB_ICONINFORMATION);
         }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
