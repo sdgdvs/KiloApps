@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KTetris
+**Target App:** KTimer
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -269,3 +269,5 @@ Pass 1 Complete.
 - **KTaskMgr**: Fixed JSON/CSV string escaping in `KTask/main.c` export logic. Resolved GDI font handle memory leak in Deep Inspector window. Added 3-second `postMessage` timeout fallbacks in `ktaskmgr.html` and `ktask.html` for standalone execution. Added toast notification debouncing and tooltip PIDs. Recompiled native `KTask.exe` (18.4 KB) and verified Vite web build.
 
 - **KTerm**: Fixed parent window DOM mutation security issues in `kterm.html`. Fixed Ctrl+R reverse search query tracking and real-time input routing in both web and native versions. Fixed command prefix collisions (e.g., `category`) and flag handling (`ls -la`). Recompiled native `KTerm.exe` (19.9 KB) and verified Vite web build.
+
+- **KTetris**: Fixed state corruption and fast-forwarding replays caused by state mutations in `WM_PAINT` in `main.c`. Resolved per-frame GDI font leaks and fixed keybind file corruption. Added 5-line Pentris support and array bounds safety in C and HTML. Fixed replay mode softlocks and aligned native skill click hitboxes. Recompiled `KTetris.exe` (33.8 KB) and verified Vite web build.
