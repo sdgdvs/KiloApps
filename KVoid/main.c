@@ -1,6 +1,26 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdint.h>
+
+DWORD WINAPI SoundThread(LPVOID lpParam) {
+    int type = (int)(intptr_t)lpParam;
+    if (type == 1) { // Heartbeat
+        Beep(100, 100);
+        Sleep(100);
+        Beep(100, 100);
+    } else if (type == 2) { // Alarm
+        Beep(800, 200);
+        Beep(600, 200);
+    } else if (type == 3) { // Screech
+        for (int i=2000; i>100; i-=200) Beep(i, 20);
+    }
+    return 0;
+}
+void PlaySoundEffect(int type) {
+    CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+}
+
 
 #define COLS 40
 #define ROWS 30
@@ -246,17 +266,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     totalTime++;
                     oxygen -= 0.5f;
                     battery -= 0.2f;
+                    
+                    int chasing = 0;
+                    for (int i = 0; i < alienCount; i++) {
+                        if (aliens[i].state == 1) chasing = 1;
+                    }
+
                     if (oxygen <= 0) { oxygen = 0; isDead = 1; lstrcpy(sysMsg, "OXYGEN DEPLETED. YOU SUFFOCATED."); msgTimer = 100; }
                     if (battery <= 0) { battery = 0; isDead = 1; lstrcpy(sysMsg, "BATTERY DEPLETED. CONSUMED BY THE DARK."); msgTimer = 100; }
                     if (selfDestructActive) {
                         selfDestructTimer--;
                         wsprintf(sysMsg, "SELF DESTRUCT IN %ds", selfDestructTimer);
                         msgTimer = 20;
+                        PlaySoundEffect(2);
                         if (selfDestructTimer <= 0) {
                             isDead = 1;
                             lstrcpy(sysMsg, "STATION DESTROYED. YOU WERE INCINERATED.");
                             msgTimer = 100;
                         }
+                    } else if (oxygen <= 20 || battery <= 20 || chasing) {
+                        PlaySoundEffect(1);
                     }
                 }
                 
@@ -322,6 +351,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         }
                         
                         if (aliens[i].x == playerX && aliens[i].y == playerY && !hidden) {
+                            PlaySoundEffect(3);
                             isDead = 1;
                             lstrcpy(sysMsg, "CAUGHT BY ALIEN. YOU ARE DEAD.");
                             msgTimer = 100;
@@ -700,6 +730,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     playerY = newY;
                     for (int i = 0; i < alienCount; i++) {
                         if (aliens[i].x == playerX && aliens[i].y == playerY && map[playerY][playerX] != 11) {
+                            PlaySoundEffect(3);
                             isDead = 1;
                             lstrcpy(sysMsg, "CAUGHT BY ALIEN. YOU ARE DEAD.");
                             msgTimer = 100;

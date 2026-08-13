@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVoid (Sci-fi horror survival)
-**Phase:** 13 (next to do)
+**Phase:** 14 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KVoid directory (`KVoid/`), create web HTML skeleton (`KiloOS/public/apps/kvoid.html`), register in App.jsx.
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Combat/evasion mechanics (hiding in lockers, using limited EMP charges).
 - [x] Phase 11: Multi-level progression (find elevator to next deck, increasing difficulty).
 - [x] Phase 12: Multiple endings based on choices and speed of escape.
-- [ ] Phase 13: Sound Effects — heartbeat, alarm klaxons, alien screeches (Web Audio / Win32 Beep).
+- [x] Phase 13: Sound Effects — heartbeat, alarm klaxons, alien screeches (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Survival Guide — How-to-play, lore index, enemy bestiary.
 
 ### How to execute the next phase:

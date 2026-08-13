@@ -142,6 +142,47 @@
         let wonGame = false;
         let winEnding = "";
 
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playBeep(freq, type, duration, vol=0.1) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playHeartbeat() {
+            playBeep(40, 'sine', 0.5, 0.5);
+            setTimeout(() => playBeep(40, 'sine', 0.5, 0.5), 200);
+        }
+
+        function playAlarm() {
+            playBeep(800, 'square', 0.3, 0.2);
+            setTimeout(() => playBeep(600, 'square', 0.3, 0.2), 300);
+        }
+
+        function playAlienScreech() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(2000, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
         function generateMap() {
             map = [];
             for (let y = 0; y < ROWS; y++) {
@@ -348,15 +389,20 @@
             oxygen -= 0.5;
             battery -= 0.2;
             
+            let chasing = aliens.some(a => a.state === 'chase');
+            
             if (oxygen <= 0) { oxygen = 0; die("OXYGEN DEPLETED. YOU SUFFOCATED."); }
             else if (battery <= 0) { battery = 0; die("BATTERY DEPLETED. CONSUMED BY THE DARK."); }
             
             if (selfDestructActive) {
                 selfDestructTimer--;
                 showMessage(`SELF DESTRUCT IN ${selfDestructTimer}s`, "#f00");
+                playAlarm();
                 if (selfDestructTimer <= 0) {
                     die("STATION DESTROYED. YOU WERE INCINERATED.");
                 }
+            } else if (oxygen <= 20 || battery <= 20 || chasing) {
+                playHeartbeat();
             }
             
             updateStatsDisplay();
@@ -554,6 +600,7 @@
                 }
                 
                 if (a.x === player.x && a.y === player.y && !hidden) {
+                    playAlienScreech();
                     die("CAUGHT BY ALIEN. YOU ARE DEAD.");
                     return;
                 }
@@ -670,6 +717,7 @@
                     player.y = newY;
                     for (let a of aliens) {
                         if (a.x === player.x && a.y === player.y && map[player.y][player.x] !== 11) {
+                            playAlienScreech();
                             die("CAUGHT BY ALIEN. YOU ARE DEAD.");
                             return;
                         }
@@ -689,6 +737,7 @@
         }
 
         window.addEventListener('keydown', (e) => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             switch(e.key) {
                 case 'ArrowUp':
                 case 'w':
