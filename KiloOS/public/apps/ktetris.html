@@ -102,7 +102,7 @@
   let gameOver = false, isPaused = false, startScreen = true, winScreen = false, showLeaderboard = false, showHelp = false;
   let score = 0, lines = 0, level = 1, combo = 0, piecesPlaced = 0;
   let gameMode = MODE_MARATHON, campaignLevel = 1;
-  let statLines = [0, 0, 0, 0];
+  let statLines = [0, 0, 0, 0, 0];
 
   let keybinds = JSON.parse(localStorage.getItem('ktetris_keys')) || {
       up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight',
@@ -120,9 +120,9 @@
 
   function exportStats() {
       let tr = (lines>0) ? (statLines[3]/lines*100).toFixed(1) : 0;
-      let stats = { score, lines, piecesPlaced, time: formatTime(modeTimerMs), tetrisRate: tr, singles: statLines[0], doubles: statLines[1], triples: statLines[2], tetrises: statLines[3] };
+      let stats = { score, lines, piecesPlaced, time: formatTime(modeTimerMs), tetrisRate: tr, singles: statLines[0], doubles: statLines[1], triples: statLines[2], tetrises: statLines[3], pentrises: statLines[4] };
       let jStr = JSON.stringify(stats, null, 2);
-      let cStr = `Score,Lines,Pieces,Time,TetrisRate,Single,Double,Triple,Tetris\n${score},${lines},${piecesPlaced},${formatTime(modeTimerMs)},${tr},${statLines[0]},${statLines[1]},${statLines[2]},${statLines[3]}`;
+      let cStr = `Score,Lines,Pieces,Time,TetrisRate,Single,Double,Triple,Tetris,Pentris\n${score},${lines},${piecesPlaced},${formatTime(modeTimerMs)},${tr},${statLines[0]},${statLines[1]},${statLines[2]},${statLines[3]},${statLines[4]}`;
       let a1 = document.createElement('a'); a1.href = URL.createObjectURL(new Blob([jStr])); a1.download = 'ktetris_stats.json'; a1.click();
       let a2 = document.createElement('a'); a2.href = URL.createObjectURL(new Blob([cStr])); a2.download = 'ktetris_stats.csv'; a2.click();
   }
@@ -134,8 +134,30 @@
       let input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
       input.onchange = e => {
           let f = e.target.files[0];
-          if (f) { let r = new FileReader(); r.onload = e2 => { try { leaderboard = JSON.parse(e2.target.result); localStorage.setItem('ktetris_leaderboard', JSON.stringify(leaderboard)); } catch(err) {} }; r.readAsText(f); }
-      }; input.click();
+          if (f) {
+              let r = new FileReader();
+              r.onload = e2 => {
+                  try {
+                      let parsed = JSON.parse(e2.target.result);
+                      if (Array.isArray(parsed)) {
+                          leaderboard = parsed.filter(item => typeof item === 'object' && item !== null && typeof item.score === 'number')
+                              .map(item => ({
+                                  score: Math.floor(Number(item.score) || 0),
+                                  mode: String(item.mode || 'MARATHON').substring(0, 16),
+                                  lines: Math.floor(Number(item.lines) || 0),
+                                  time: String(item.time || '--').substring(0, 16),
+                                  date: String(item.date || '').substring(0, 16)
+                              }))
+                              .sort((a, b) => b.score - a.score)
+                              .slice(0, 5);
+                          localStorage.setItem('ktetris_leaderboard', JSON.stringify(leaderboard));
+                      }
+                  } catch(err) {}
+              };
+              r.readAsText(f);
+          }
+      };
+      input.click();
   }
 
 
@@ -419,12 +441,12 @@
       }
 
       if (linesCleared > 0) {
-          if (linesCleared >= 1 && linesCleared <= 4) statLines[linesCleared - 1]++;
+          if (linesCleared >= 1 && linesCleared <= 5) statLines[linesCleared - 1]++;
           combo++;
           playSound(1000 + linesCleared * 200 + combo * 100, 'square', 0.1);
           
-          let popupText = ["", "SINGLE! +100", "DOUBLE! +300", "TRIPLE! +500", "TETRIS! +800"][linesCleared] || "CLEARED!";
-          let popupColor = ["", "#00ffff", "#00ff00", "#ffa500", "#ff00ff"][linesCleared] || "#ffffff";
+          let popupText = ["", "SINGLE! +100", "DOUBLE! +300", "TRIPLE! +500", "TETRIS! +800", "PENTRIS! +1200"][linesCleared] || "CLEARED!";
+          let popupColor = ["", "#00ffff", "#00ff00", "#ffa500", "#ff00ff", "#ffd700"][linesCleared] || "#ffffff";
           addPopup(BOARD_W / 2 - 20, (cy + 2) * CELL, popupText, popupColor);
           if (combo > 1) {
               addPopup(BOARD_W / 2 - 10, (cy + 2) * CELL + 16, "COMBO x" + combo + "!", "#ff4444");
@@ -543,7 +565,7 @@
       } else {
           level = 1;
           dropInterval = 500;
-          statLines = [0, 0, 0, 0];
+          statLines = [0, 0, 0, 0, 0];
       }
 
       gameOver = false;
@@ -1304,6 +1326,9 @@ if (showHelp) {
                   if (k === 'swap') usePieceSwap();
                   if (k === 'freeze') useGravityFreeze();
                   replayIndex++;
+              }
+              if (replayIndex >= currentReplay.inputs.length && currentReplay.inputs.length > 0) {
+                  addPopup(BOARD_W / 2 - 35, H * CELL / 2 - 20, "REPLAY FINISHED", "#ffff00");
               }
           }
           modeTimerMs += deltaTime;

@@ -45,7 +45,7 @@ typedef struct {
     int hold_piece, hold_is_bomb, hold_used;
     int score, lines, level, combo, pieces_placed;
     int game_mode, campaign_level;
-    int stat_lines[4];
+    int stat_lines[5];
     DWORD mode_timer_ms;
     int ultra_time_left_ms;
     int nuke_charges, swap_charges, freeze_charges, freeze_timer_ms;
@@ -71,7 +71,9 @@ int show_help = 0;
 int game_mode = MODE_MARATHON;
 int campaign_level = 1;
 int pieces_placed = 0;
-int stat_lines[4] = {0, 0, 0, 0};
+int stat_lines[5] = {0, 0, 0, 0, 0};
+HFONT g_hFontMain = NULL;
+HFONT g_hFontSmall = NULL;
 int score = 0;
 int lines = 0;
 int level = 1;
@@ -170,8 +172,8 @@ void SaveReplay() {
 void ExportStats() {
     char csv[512], json[512];
     float tr = (lines > 0) ? ((float)stat_lines[3] / lines * 100.0f) : 0.0f;
-    wsprintfA(csv, "Score,Lines,Pieces,Time,TetrisRate,Single,Double,Triple,Tetris\n%d,%d,%d,%d,%.1f,%d,%d,%d,%d", score, lines, pieces_placed, mode_timer_ms, tr, stat_lines[0], stat_lines[1], stat_lines[2], stat_lines[3]);
-    wsprintfA(json, "{\n  \"score\": %d,\n  \"lines\": %d,\n  \"pieces\": %d,\n  \"time\": %d,\n  \"tetrisRate\": %.1f,\n  \"singles\": %d,\n  \"doubles\": %d,\n  \"triples\": %d,\n  \"tetrises\": %d\n}", score, lines, pieces_placed, mode_timer_ms, tr, stat_lines[0], stat_lines[1], stat_lines[2], stat_lines[3]);
+    wsprintfA(csv, "Score,Lines,Pieces,Time,TetrisRate,Single,Double,Triple,Tetris,Pentris\n%d,%d,%d,%d,%.1f,%d,%d,%d,%d,%d", score, lines, pieces_placed, mode_timer_ms, tr, stat_lines[0], stat_lines[1], stat_lines[2], stat_lines[3], stat_lines[4]);
+    wsprintfA(json, "{\n  \"score\": %d,\n  \"lines\": %d,\n  \"pieces\": %d,\n  \"time\": %d,\n  \"tetrisRate\": %.1f,\n  \"singles\": %d,\n  \"doubles\": %d,\n  \"triples\": %d,\n  \"tetrises\": %d,\n  \"pentrises\": %d\n}", score, lines, pieces_placed, mode_timer_ms, tr, stat_lines[0], stat_lines[1], stat_lines[2], stat_lines[3], stat_lines[4]);
     
     HANDLE hc = CreateFileA("ktetris_stats.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hc != INVALID_HANDLE_VALUE) { DWORD bw; WriteFile(hc, csv, lstrlenA(csv), &bw, NULL); CloseHandle(hc); }
@@ -300,7 +302,7 @@ void SaveGameStateToFile() {
     state.pieces_placed = pieces_placed;
     state.game_mode = game_mode;
     state.campaign_level = campaign_level;
-    for (int i = 0; i < 4; i++) state.stat_lines[i] = stat_lines[i];
+    for (int i = 0; i < 5; i++) state.stat_lines[i] = stat_lines[i];
     state.mode_timer_ms = mode_timer_ms;
     state.ultra_time_left_ms = ultra_time_left_ms;
     state.nuke_charges = nuke_charges;
@@ -348,7 +350,7 @@ int LoadGameStateFromFile() {
     pieces_placed = state.pieces_placed;
     game_mode = state.game_mode;
     campaign_level = state.campaign_level;
-    for (int i = 0; i < 4; i++) stat_lines[i] = state.stat_lines[i];
+    for (int i = 0; i < 5; i++) stat_lines[i] = state.stat_lines[i];
     mode_timer_ms = state.mode_timer_ms;
     ultra_time_left_ms = state.ultra_time_left_ms;
     nuke_charges = state.nuke_charges;
@@ -731,13 +733,13 @@ void lock_piece() {
     }
 
     if (lines_cleared > 0) {
-        if (lines_cleared >= 1 && lines_cleared <= 4) stat_lines[lines_cleared - 1]++;
+        if (lines_cleared >= 1 && lines_cleared <= 5) stat_lines[lines_cleared - 1]++;
         combo++;
         Beep(1000 + lines_cleared * 200 + combo * 100, 100);
 
-        const char* popText[5] = {"", "SINGLE! +100", "DOUBLE! +300", "TRIPLE! +500", "TETRIS! +800"};
-        COLORREF popCol[5] = {RGB(0,0,0), RGB(0,255,255), RGB(0,255,0), RGB(255,165,0), RGB(255,0,255)};
-        if (lines_cleared <= 4) {
+        const char* popText[6] = {"", "SINGLE! +100", "DOUBLE! +300", "TRIPLE! +500", "TETRIS! +800", "PENTRIS! +1200"};
+        COLORREF popCol[6] = {RGB(0,0,0), RGB(0,255,255), RGB(0,255,0), RGB(255,165,0), RGB(255,0,255), RGB(255,215,0)};
+        if (lines_cleared <= 5) {
             AddPopup((float)(W * CELL_SIZE / 2 - 25), (float)((current_y + 2) * CELL_SIZE), popText[lines_cleared], popCol[lines_cleared]);
         }
         if (combo > 1) {
@@ -896,7 +898,7 @@ void InitGame() {
         lines = 0;
         level = 1;
         timer_speed = 500;
-        for (int i=0; i<4; i++) stat_lines[i] = 0;
+        for (int i=0; i<5; i++) stat_lines[i] = 0;
     }
 
     combo = 0;
@@ -1112,6 +1114,8 @@ void FormatTimeString(DWORD ms, char* buf, int bufSize) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
+            g_hFontMain = CreateFontA(-16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            g_hFontSmall = CreateFontA(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             LoadKeys();
             LoadReplay();
             LoadLeaderboard();
@@ -1150,6 +1154,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (k == 'S') UsePieceSwap();
                         if (k == 'F') UseGravityFreeze();
                         replay_index++;
+                    }
+                    if (replay_index >= saved_replay.count && saved_replay.count > 0) {
+                        AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2 - 20), "REPLAY FINISHED", RGB(255, 255, 0));
                     }
                 }
                 mode_timer_ms += 20;
@@ -1248,43 +1255,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             int mx = (int)((LOWORD(lParam) - offsetX) / scale);
             int my = (int)((HIWORD(lParam) - offsetY) / scale);
-            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help && !show_keybinds) {
-                replay_tick += 20;
-                if (is_replaying) {
-                    while (replay_index < saved_replay.count && saved_replay.events[replay_index].tick <= replay_tick) {
-                        char k = saved_replay.events[replay_index].key;
-                        if (k == 'L' && !check_collision(current_piece, current_rot, current_x - 1, current_y)) current_x--;
-                        if (k == 'R' && !check_collision(current_piece, current_rot, current_x + 1, current_y)) current_x++;
-                        if (k == 'D' && !check_collision(current_piece, current_rot, current_x, current_y + 1)) current_y++;
-                        if (k == 'U') {
-                            int next_r = (current_rot + 1) % 4;
-                            if (!check_collision(current_piece, next_r, current_x, current_y)) { current_rot = next_r; }
-                            else if (!check_collision(current_piece, next_r, current_x - 1, current_y)) { current_x--; current_rot = next_r; }
-                            else if (!check_collision(current_piece, next_r, current_x + 1, current_y)) { current_x++; current_rot = next_r; }
-                        }
-                        if (k == 'C' && !hold_used) {
-                            if (hold_piece == -1) { hold_piece = current_piece; hold_is_bomb = current_is_bomb; SpawnPiece(); }
-                            else { int temp = current_piece; int tb = current_is_bomb; current_piece = hold_piece; current_is_bomb = hold_is_bomb; hold_piece = temp; hold_is_bomb = tb; current_rot = 0; current_x = W / 2 - 2; current_y = -2; }
-                            hold_used = 1; Beep(700, 30);
-                        }
-                        if (k == ' ') {
-                            int start_y = current_y; int drop_dist = 0;
-                            while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) { current_y++; drop_dist++; }
-                            score += drop_dist * 2; SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 15 : (current_piece + 1));
-                            int old_level = campaign_level; lock_piece();
-                            if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) { SpawnPiece(); }
-                        }
-                        if (k == 'B') UseRowNuke();
-                        if (k == 'S') UsePieceSwap();
-                        if (k == 'F') UseGravityFreeze();
-                        replay_index++;
-                    }
-                }
+            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help && !show_keybinds && !is_replaying) {
                 int sideX = W * CELL_SIZE + 15;
                 if (mx >= sideX && mx <= sideX + 140) {
-                    if (my >= 350 && my <= 372) { UseRowNuke(); InvalidateRect(hwnd, NULL, FALSE); }
-                    else if (my >= 375 && my <= 397) { UsePieceSwap(); InvalidateRect(hwnd, NULL, FALSE); }
-                    else if (my >= 400 && my <= 422) { UseGravityFreeze(); InvalidateRect(hwnd, NULL, FALSE); }
+                    if (my >= 378 && my <= 398) { UseRowNuke(); InvalidateRect(hwnd, NULL, FALSE); }
+                    else if (my >= 398 && my <= 415) { UsePieceSwap(); InvalidateRect(hwnd, NULL, FALSE); }
+                    else if (my >= 415 && my <= 435) { UseGravityFreeze(); InvalidateRect(hwnd, NULL, FALSE); }
                 }
             }
             break;
@@ -1502,37 +1478,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Draw active & Ghost piece
             if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help && !show_keybinds) {
-                replay_tick += 20;
-                if (is_replaying) {
-                    while (replay_index < saved_replay.count && saved_replay.events[replay_index].tick <= replay_tick) {
-                        char k = saved_replay.events[replay_index].key;
-                        if (k == 'L' && !check_collision(current_piece, current_rot, current_x - 1, current_y)) current_x--;
-                        if (k == 'R' && !check_collision(current_piece, current_rot, current_x + 1, current_y)) current_x++;
-                        if (k == 'D' && !check_collision(current_piece, current_rot, current_x, current_y + 1)) current_y++;
-                        if (k == 'U') {
-                            int next_r = (current_rot + 1) % 4;
-                            if (!check_collision(current_piece, next_r, current_x, current_y)) { current_rot = next_r; }
-                            else if (!check_collision(current_piece, next_r, current_x - 1, current_y)) { current_x--; current_rot = next_r; }
-                            else if (!check_collision(current_piece, next_r, current_x + 1, current_y)) { current_x++; current_rot = next_r; }
-                        }
-                        if (k == 'C' && !hold_used) {
-                            if (hold_piece == -1) { hold_piece = current_piece; hold_is_bomb = current_is_bomb; SpawnPiece(); }
-                            else { int temp = current_piece; int tb = current_is_bomb; current_piece = hold_piece; current_is_bomb = hold_is_bomb; hold_piece = temp; hold_is_bomb = tb; current_rot = 0; current_x = W / 2 - 2; current_y = -2; }
-                            hold_used = 1; Beep(700, 30);
-                        }
-                        if (k == ' ') {
-                            int start_y = current_y; int drop_dist = 0;
-                            while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) { current_y++; drop_dist++; }
-                            score += drop_dist * 2; SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 15 : (current_piece + 1));
-                            int old_level = campaign_level; lock_piece();
-                            if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) { SpawnPiece(); }
-                        }
-                        if (k == 'B') UseRowNuke();
-                        if (k == 'S') UsePieceSwap();
-                        if (k == 'F') UseGravityFreeze();
-                        replay_index++;
-                    }
-                }
                 unsigned int shape = tetrominos[current_piece][current_rot];
                 int draw_val = current_is_bomb ? 15 : (current_piece + 1);
                 
@@ -1597,9 +1542,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Draw Text Popups
             SetBkMode(memDC, TRANSPARENT);
-            HFONT hFontMain = CreateFontA(-16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            HFONT hFontSmall = CreateFontA(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            HFONT hOldFont = (HFONT)SelectObject(memDC, hFontMain);
+            HFONT hOldFont = (HFONT)SelectObject(memDC, g_hFontMain);
             for (int i = 0; i < num_popups; i++) {
                 SetTextColor(memDC, text_popups[i].color);
                 TextOutA(memDC, offX + (int)text_popups[i].x, offY + (int)text_popups[i].y, text_popups[i].text, lstrlenA(text_popups[i].text));
@@ -1742,26 +1685,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Hints
             SetTextColor(memDC, RGB(170, 170, 170));
-            SelectObject(memDC, hFontSmall);
+            SelectObject(memDC, g_hFontSmall);
             TextOutA(memDC, sideX, 442, "[Arrows] Move/Rot", 17);
             TextOutA(memDC, sideX, 458, "[Space] Hard Drop", 17);
             SetTextColor(memDC, RGB(0, 255, 204));
             TextOutA(memDC, sideX, 474, "[H] Help / Controls", 19);
 
             // Overlays & Screens
-            SelectObject(memDC, hFontMain);
-            
-            if (show_keybinds) {
-                if (wParam == VK_ESCAPE) { show_keybinds = 0; start_screen = 1; InvalidateRect(hwnd, NULL, FALSE); return 0; }
-                int* bp[10];
-                bp[0] = &keys.up; bp[1] = &keys.down; bp[2] = &keys.left; bp[3] = &keys.right; bp[4] = &keys.drop; bp[5] = &keys.hold; bp[6] = &keys.pause; bp[7] = &keys.nuke; bp[8] = &keys.swap; bp[9] = &keys.freeze;
-                *(bp[bind_index]) = (int)wParam;
-                bind_index++;
-                SaveKeys();
-                if (bind_index >= 10) { show_keybinds = 0; start_screen = 1; }
-                InvalidateRect(hwnd, NULL, FALSE);
-                return 0;
-            }
+            SelectObject(memDC, g_hFontMain);
 
             if (show_help) {
                 HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16));
@@ -1904,8 +1835,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             SelectObject(memDC, hOldFont);
-            DeleteObject(hFontMain);
-            DeleteObject(hFontSmall);
 
             // Divider bar
             HPEN hPen = CreatePen(PS_SOLID, 2, RGB(40, 42, 54));
@@ -1924,6 +1853,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (g_hFontMain) DeleteObject(g_hFontMain);
+            if (g_hFontSmall) DeleteObject(g_hFontSmall);
             PostQuitMessage(0);
             break;
         default:
