@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- K2048
 - KSolitaire
 - KStarship
 - KConnect4
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPong
 - KMines
 - KAsteroids
+- K2048
 ## Completed Work Log
+
+- **K2048 (Loop 4):** Implemented distinct visual texture tiers across both versions (wood grain for 2-64, speckled stone/marble for 128-1024, and glowing faceted gem for 2048+); added a dramatic screen shake and flash/inversion effect when a 2048+ tile is formed; and enhanced physical weight by injecting dynamic drop-shadows into the merge pop animations in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 
 - **KAsteroids (Loop 4):** Implemented distinct structural details for varying asteroid sizes (large asteroids have craters/facets, medium have single craters, small have no inner detail); created visually distinct enemy UFO models based on type (swept-back sharp diamond wing design for nimble scout UFOs, and a blocky angular hexagonal armor plating design for heavy cruisers); and added a dynamic engine exhaust trail to the player ship that calculates velocity to physically extend and shift color from fiery orange to bright cyan plasma at high speeds in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 

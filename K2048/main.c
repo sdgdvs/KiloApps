@@ -45,6 +45,9 @@ HWND mainHwnd = NULL;
 static unsigned int seed = 0;
 int theme = 1; // 0=Dark, 1=Classic, 2=Pastel
 
+int screenShakeTime = 0;
+int mergePop[MAX_GRID][MAX_GRID];
+
 int timeAttackEnabled = 0;
 int timeRemaining = 60;
 int gameStarted = 0;
@@ -402,7 +405,7 @@ void DrawBadgeIcon(HDC hdc, int x, int y, int size, int val) {
     }
 }
 
-void DrawCell(HDC hdc, int x, int y, int val, int cell_size, int isFrozen) {
+void DrawCell(HDC hdc, int x, int y, int val, int cell_size, int isFrozen, int popVal) {
     COLORREF baseColor = GetTileColor(val);
     int rCol = GetRValue(baseColor);
     int gCol = GetGValue(baseColor);
@@ -444,6 +447,8 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size, int isFrozen) {
     }
 
     int tileMargin = 4;
+    if (popVal > 0) tileMargin = 1;
+
     int rx1 = x + tileMargin;
     int ry1 = y + tileMargin;
     int rx2 = x + cell_size - tileMargin;
@@ -465,11 +470,20 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size, int isFrozen) {
         return;
     }
 
+    // Dynamic Drop Shadow (Pop Animation)
+    if (val > 0) {
+        int shOff = 2 + popVal * 3;
+        RECT sr = { rx1 + shOff, ry1 + shOff, rx2 + shOff, ry2 + shOff };
+        HBRUSH shb = CreateSolidBrush(RGB(20, 20, 20));
+        FillRect(hdc, &sr, shb);
+        DeleteObject(shb);
+    }
+
     // Glowing Aura for Milestone Tiles
     if (normalized >= 2048) {
         int pulse = (frameAnimCount % 12) - 6;
         if (pulse < 0) pulse = -pulse;
-        int auraSpread = 3 + pulse;
+        int auraSpread = 3 + pulse + popVal * 2;
         RECT auraRect = { rx1 - auraSpread, ry1 - auraSpread, rx2 + auraSpread, ry2 + auraSpread };
         HBRUSH auraB = CreateSolidBrush(RGB(255, 215, 0));
         FillRect(hdc, &auraRect, auraB);
@@ -485,6 +499,41 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size, int isFrozen) {
     HBRUSH bg = CreateSolidBrush(baseColor);
     FillRect(hdc, &r, bg);
     DeleteObject(bg);
+
+    // Textures
+    if (val > 0) {
+        if (normalized <= 64) {
+            // Wood Texture
+            HPEN woodPen = CreatePen(PS_SOLID, 1, RGB(max(0, rCol-30), max(0, gCol-30), max(0, bCol-30)));
+            HPEN oldPW = (HPEN)SelectObject(hdc, woodPen);
+            for (int wy = ry1 + 6; wy < ry2; wy += 8) {
+                MoveToEx(hdc, rx1 + 2, wy, NULL);
+                LineTo(hdc, rx2 - 2, wy);
+            }
+            SelectObject(hdc, oldPW);
+            DeleteObject(woodPen);
+        } else if (normalized <= 1024) {
+            // Stone / Marble Texture
+            for (int k = 0; k < 20; k++) {
+                int px = rx1 + (my_rand() % (rx2 - rx1));
+                int py = ry1 + (my_rand() % (ry2 - ry1));
+                SetPixel(hdc, px, py, RGB(max(0, rCol-50), max(0, gCol-50), max(0, bCol-50)));
+                SetPixel(hdc, px+1, py, RGB(min(255, rCol+50), min(255, gCol+50), min(255, bCol+50)));
+            }
+        } else {
+            // Gem / Neon Texture
+            HPEN gemPen = CreatePen(PS_SOLID, 2, RGB(min(255, rCol+80), min(255, gCol+80), min(255, bCol+80)));
+            HPEN oldPG = (HPEN)SelectObject(hdc, gemPen);
+            int cx = (rx1 + rx2) / 2;
+            int cy = (ry1 + ry2) / 2;
+            MoveToEx(hdc, rx1, ry1, NULL); LineTo(hdc, cx, cy);
+            MoveToEx(hdc, rx2, ry1, NULL); LineTo(hdc, cx, cy);
+            MoveToEx(hdc, rx1, ry2, NULL); LineTo(hdc, cx, cy);
+            MoveToEx(hdc, rx2, ry2, NULL); LineTo(hdc, cx, cy);
+            SelectObject(hdc, oldPG);
+            DeleteObject(gemPen);
+        }
+    }
 
     // 3D Top/Left Light Highlight Bevel
     int hlR = min(255, rCol + 70);
@@ -729,6 +778,7 @@ void AddRandomTile() {
 void InitGame() {
     memset(grid, 0, sizeof(grid));
     memset(frozen, 0, sizeof(frozen));
+    memset(mergePop, 0, sizeof(mergePop));
     score = 0;
     gameOver = 0;
     timeOut = 0;
@@ -1044,7 +1094,7 @@ void DrawBoard(HDC hdc) {
     // Draw Cells
     for (int i = 0; i < grid_size; i++) {
         for (int j = 0; j < grid_size; j++) {
-            DrawCell(hdc, MARGIN + 8 + j*cell_size, HEADER_HEIGHT + 8 + i*cell_size, grid[i][j], cell_size, frozen[i][j]);
+            DrawCell(hdc, MARGIN + 8 + j*cell_size, HEADER_HEIGHT + 8 + i*cell_size, grid[i][j], cell_size, frozen[i][j], mergePop[i][j]);
         }
     }
 
@@ -1143,6 +1193,10 @@ int Move(int dx, int dy) {
                                 win = 1;
                                 hasWon = 1;
                             }
+                            if (mergeRes >= 2048) {
+                                screenShakeTime = 15;
+                            }
+                            mergePop[ni][nj] = 5;
                         }
 
                         int cell_size = 320 / grid_size;
@@ -1255,10 +1309,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int hasMilestone = 0;
                 for (int i=0; i<grid_size; i++) {
                     for (int j=0; j<grid_size; j++) {
-                        if (grid[i][j] >= 1024 || grid[i][j] == -2 || frozen[i][j]) { hasMilestone = 1; break; }
+                        if (grid[i][j] >= 1024 || grid[i][j] == -2 || frozen[i][j]) { hasMilestone = 1; }
+                        if (mergePop[i][j] > 0) {
+                            mergePop[i][j]--;
+                            if (mergePop[i][j] > 0) hasMilestone = 1;
+                        }
                     }
-                    if (hasMilestone) break;
                 }
+                if (screenShakeTime > 0) hasMilestone = 1;
+
                 if (particleCount > 0 || hasMilestone) {
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -1397,7 +1456,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HBITMAP memBitmap = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
             HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
 
+            int dx = 0, dy = 0;
+            if (screenShakeTime > 0) {
+                dx = (my_rand() % 15) - 7;
+                dy = (my_rand() % 15) - 7;
+                screenShakeTime--;
+            }
+
+            SetViewportOrgEx(memDC, dx, dy, NULL);
+
             DrawBoard(memDC);
+
+            SetViewportOrgEx(memDC, 0, 0, NULL);
+
+            if (screenShakeTime > 12) {
+                PatBlt(memDC, 0, 0, rc.right, rc.bottom, DSTINVERT);
+            }
 
             BitBlt(hdc, 0, 0, rc.right, rc.bottom, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, oldBitmap);
