@@ -22,6 +22,9 @@ int flickerState = 0;
 float oxygen = 100.0f;
 float battery = 100.0f;
 int isDead = 0;
+int hasRedKey = 0;
+int hasGreenKey = 0;
+int hasBlueKey = 0;
 
 typedef struct {
     int x, y, w, h;
@@ -92,7 +95,12 @@ void GenerateMap() {
                 int wallsHoriz = (map[y][x-1] == 1 && map[y][x+1] == 1 && map[y-1][x] == 0 && map[y+1][x] == 0);
                 if (wallsVert || wallsHoriz) {
                     if (rand() % 5 == 0) {
-                        map[y][x] = (rand() % 3 == 0) ? 3 : 2;
+                        if (rand() % 3 == 0) {
+                            int r = rand() % 3;
+                            map[y][x] = 3 + r;
+                        } else {
+                            map[y][x] = 2;
+                        }
                     }
                 }
             }
@@ -102,6 +110,17 @@ void GenerateMap() {
     if (roomCount > 0) {
         playerX = rooms[0].x + rooms[0].w / 2;
         playerY = rooms[0].y + rooms[0].h / 2;
+    }
+
+    for (int i = 0; i < 3; i++) {
+        while (1) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
+                map[ry][rx] = 6 + i;
+                break;
+            }
+        }
     }
 }
 
@@ -154,8 +173,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HBRUSH hDoorBrush = CreateSolidBrush(RGB(wallG, wallG, 0));
             HBRUSH hInnerDoorBrush = CreateSolidBrush(RGB(inWallG, inWallG, 0));
             
-            HBRUSH hLockedBrush = CreateSolidBrush(RGB(wallG, 0, 0));
-            HBRUSH hInnerLockedBrush = CreateSolidBrush(RGB(inWallG, 0, 0));
+            HBRUSH hRedDoorBrush = CreateSolidBrush(RGB(wallG, 0, 0));
+            HBRUSH hInnerRedDoorBrush = CreateSolidBrush(RGB(inWallG, 0, 0));
+
+            HBRUSH hGreenDoorBrush = CreateSolidBrush(RGB(0, wallG, 0));
+            HBRUSH hInnerGreenDoorBrush = CreateSolidBrush(RGB(0, inWallG, 0));
+            
+            HBRUSH hBlueDoorBrush = CreateSolidBrush(RGB(0, 0, wallG));
+            HBRUSH hInnerBlueDoorBrush = CreateSolidBrush(RGB(0, 0, inWallG));
 
             HBRUSH hFloorBrush = CreateSolidBrush(RGB(floorC, floorC, floorC));
             HBRUSH hPlayerBrush = CreateSolidBrush(RGB(0, pG, 0));
@@ -175,10 +200,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         FillRect(hdcMem, &tileRect, hDoorBrush);
                         RECT innerRect = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, (x + 1) * TILE_SIZE - 2, (y + 1) * TILE_SIZE - 2 + UI_HEIGHT};
                         FillRect(hdcMem, &innerRect, hInnerDoorBrush);
-                    } else if (map[y][x] == 3) {
-                        FillRect(hdcMem, &tileRect, hLockedBrush);
+                    } else if (map[y][x] >= 3 && map[y][x] <= 5) {
+                        HBRUSH b1 = map[y][x] == 3 ? hRedDoorBrush : map[y][x] == 4 ? hGreenDoorBrush : hBlueDoorBrush;
+                        HBRUSH b2 = map[y][x] == 3 ? hInnerRedDoorBrush : map[y][x] == 4 ? hInnerGreenDoorBrush : hInnerBlueDoorBrush;
+                        FillRect(hdcMem, &tileRect, b1);
                         RECT innerRect = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, (x + 1) * TILE_SIZE - 2, (y + 1) * TILE_SIZE - 2 + UI_HEIGHT};
-                        FillRect(hdcMem, &innerRect, hInnerLockedBrush);
+                        FillRect(hdcMem, &innerRect, b2);
+                    } else if (map[y][x] >= 6 && map[y][x] <= 8) {
+                        FillRect(hdcMem, &tileRect, hFloorBrush);
+                        HBRUSH kc = map[y][x] == 6 ? CreateSolidBrush(RGB(255, 0, 0)) : map[y][x] == 7 ? CreateSolidBrush(RGB(0, 255, 0)) : CreateSolidBrush(RGB(50, 50, 255));
+                        RECT kr = {x * TILE_SIZE + 4, y * TILE_SIZE + 6 + UI_HEIGHT, x * TILE_SIZE + 12, y * TILE_SIZE + 11 + UI_HEIGHT};
+                        FillRect(hdcMem, &kr, kc);
+                        DeleteObject(kc);
                     } else {
                         FillRect(hdcMem, &tileRect, hFloorBrush);
                     }
@@ -202,7 +235,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else {
                 SetTextColor(hdcMem, RGB(0, 255, 0));
             }
-            TextOut(hdcMem, 10, 10, uiText, lstrlen(uiText));
+            TextOut(hdcMem, 10, 5, uiText, lstrlen(uiText));
+            
+            char keyText[256] = "KEYS: ";
+            if (hasRedKey) lstrcat(keyText, "[RED] ");
+            if (hasGreenKey) lstrcat(keyText, "[GREEN] ");
+            if (hasBlueKey) lstrcat(keyText, "[BLUE] ");
+            SetTextColor(hdcMem, RGB(170, 170, 170));
+            TextOut(hdcMem, 350, 5, keyText, lstrlen(keyText));
 
             if (sysMsg[0] != '\0') {
                 SetTextColor(hdcMem, RGB(0, 255, 0));
@@ -236,8 +276,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(hInnerWallBrush);
             DeleteObject(hDoorBrush);
             DeleteObject(hInnerDoorBrush);
-            DeleteObject(hLockedBrush);
-            DeleteObject(hInnerLockedBrush);
+            DeleteObject(hRedDoorBrush);
+            DeleteObject(hInnerRedDoorBrush);
+            DeleteObject(hGreenDoorBrush);
+            DeleteObject(hInnerGreenDoorBrush);
+            DeleteObject(hBlueDoorBrush);
+            DeleteObject(hInnerBlueDoorBrush);
             DeleteObject(hFloorBrush);
             DeleteObject(hPlayerBrush);
             
@@ -269,20 +313,40 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
             if (newX >= 0 && newX < COLS && newY >= 0 && newY < ROWS) {
-                if (map[newY][newX] == 2) {
+                int target = map[newY][newX];
+                if (target == 2) {
                     map[newY][newX] = 0;
                     lstrcpy(sysMsg, "Door opened.");
                     msgTimer = 40;
                     InvalidateRect(hwnd, NULL, FALSE);
-                } else if (map[newY][newX] == 3) {
-                    lstrcpy(sysMsg, "DOOR LOCKED. KEYCARD REQUIRED.");
-                    msgTimer = 40;
-                    InvalidateRect(hwnd, NULL, FALSE);
-                } else if (map[newY][newX] == 0) {
+                } else if (target >= 3 && target <= 5) {
+                    int hasKey = (target == 3 && hasRedKey) || (target == 4 && hasGreenKey) || (target == 5 && hasBlueKey);
+                    if (hasKey) {
+                        map[newY][newX] = 0;
+                        lstrcpy(sysMsg, "LOCKED DOOR OPENED.");
+                        msgTimer = 40;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    } else {
+                        if (target == 3) lstrcpy(sysMsg, "LOCKED. RED KEYCARD REQUIRED.");
+                        else if (target == 4) lstrcpy(sysMsg, "LOCKED. GREEN KEYCARD REQUIRED.");
+                        else if (target == 5) lstrcpy(sysMsg, "LOCKED. BLUE KEYCARD REQUIRED.");
+                        msgTimer = 40;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                } else if (target == 0 || (target >= 6 && target <= 8)) {
+                    if (target >= 6 && target <= 8) {
+                        if (target == 6) { hasRedKey = 1; lstrcpy(sysMsg, "PICKED UP RED KEYCARD."); }
+                        if (target == 7) { hasGreenKey = 1; lstrcpy(sysMsg, "PICKED UP GREEN KEYCARD."); }
+                        if (target == 8) { hasBlueKey = 1; lstrcpy(sysMsg, "PICKED UP BLUE KEYCARD."); }
+                        map[newY][newX] = 0;
+                        msgTimer = 40;
+                    }
                     playerX = newX;
                     playerY = newY;
-                    sysMsg[0] = '\0';
-                    msgTimer = 0;
+                    if (target == 0) {
+                        sysMsg[0] = '\0';
+                        msgTimer = 0;
+                    }
                     oxygen -= 0.2f;
                     if (oxygen <= 0) {
                         oxygen = 0;

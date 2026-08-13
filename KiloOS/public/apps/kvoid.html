@@ -69,10 +69,23 @@
             display: flex;
             justify-content: space-between;
             width: 640px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-size: 18px;
             font-weight: bold;
         }
+        #inventory {
+            display: flex;
+            justify-content: center;
+            width: 640px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
+        }
+        .has-key { color: #fff; text-shadow: 0 0 5px #fff; }
+        .key-red.has-key { color: #f55; text-shadow: 0 0 5px #f00; }
+        .key-green.has-key { color: #5f5; text-shadow: 0 0 5px #0f0; }
+        .key-blue.has-key { color: #77f; text-shadow: 0 0 5px #00f; }
         #message {
             margin-top: 10px;
             font-size: 16px;
@@ -87,6 +100,12 @@
         <div id="stats">
             <div>OXYGEN: <span id="oxy-val" style="color: #0f0;">100</span>%</div>
             <div>BATTERY: <span id="bat-val" style="color: #0f0;">100</span>%</div>
+        </div>
+        <div id="inventory">
+            KEYS: 
+            <span id="key-r" class="key-red" style="margin-left:10px;">[RED]</span>
+            <span id="key-g" class="key-green" style="margin-left:10px;">[GREEN]</span>
+            <span id="key-b" class="key-blue" style="margin-left:10px;">[BLUE]</span>
         </div>
         <div id="canvas-wrapper">
             <canvas id="gameCanvas" width="640" height="480"></canvas>
@@ -164,7 +183,11 @@
                         let wallsHoriz = (map[y][x-1] === 1 && map[y][x+1] === 1 && map[y-1][x] === 0 && map[y+1][x] === 0);
                         if (wallsVert || wallsHoriz) {
                             if (Math.random() < 0.2) {
-                                map[y][x] = (Math.random() < 0.33) ? 3 : 2;
+                                let r = Math.random();
+                                if (r < 0.2) map[y][x] = 3;
+                                else if (r < 0.3) map[y][x] = 4;
+                                else if (r < 0.4) map[y][x] = 5;
+                                else map[y][x] = 2;
                             }
                         }
                     }
@@ -175,12 +198,31 @@
                 player.x = Math.floor(rooms[0].x + rooms[0].w / 2);
                 player.y = Math.floor(rooms[0].y + rooms[0].h / 2);
             }
+
+            for (let i = 0; i < 3; i++) {
+                let placed = false;
+                while (!placed) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
+                        map[ry][rx] = 6 + i;
+                        placed = true;
+                    }
+                }
+            }
         }
         generateMap();
 
         let oxygen = 100.0;
         let battery = 100.0;
         let isDead = false;
+        let keys = { r: false, g: false, b: false };
+
+        function updateInventoryDisplay() {
+            document.getElementById('key-r').classList.toggle('has-key', keys.r);
+            document.getElementById('key-g').classList.toggle('has-key', keys.g);
+            document.getElementById('key-b').classList.toggle('has-key', keys.b);
+        }
 
         function updateStatsDisplay() {
             document.getElementById('oxy-val').innerText = Math.ceil(oxygen);
@@ -228,11 +270,19 @@
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                         ctx.fillStyle = '#550';
                         ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                    } else if (map[y][x] === 3) {
-                        ctx.fillStyle = '#a00';
+                    } else if (map[y][x] >= 3 && map[y][x] <= 5) {
+                        let c1 = map[y][x] === 3 ? '#c00' : map[y][x] === 4 ? '#0c0' : '#00c';
+                        let c2 = map[y][x] === 3 ? '#600' : map[y][x] === 4 ? '#060' : '#006';
+                        ctx.fillStyle = c1;
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = '#500';
+                        ctx.fillStyle = c2;
                         ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    } else if (map[y][x] >= 6 && map[y][x] <= 8) {
+                        ctx.fillStyle = '#050505';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        let kc = map[y][x] === 6 ? '#f00' : map[y][x] === 7 ? '#0f0' : '#55f';
+                        ctx.fillStyle = kc;
+                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 6, 8, 5);
                     } else {
                         ctx.fillStyle = '#050505';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -273,13 +323,29 @@
                     map[newY][newX] = 0; // open door
                     showMessage("Door opened.");
                     draw();
-                } else if (target === 3) {
-                    showMessage("DOOR LOCKED. KEYCARD REQUIRED.", "#f00");
-                } else if (target === 0) {
+                } else if (target >= 3 && target <= 5) {
+                    let hasKey = (target === 3 && keys.r) || (target === 4 && keys.g) || (target === 5 && keys.b);
+                    if (hasKey) {
+                        map[newY][newX] = 0;
+                        showMessage("LOCKED DOOR OPENED.");
+                        draw();
+                    } else {
+                        let colorName = target === 3 ? "RED" : target === 4 ? "GREEN" : "BLUE";
+                        let colorHex = target === 3 ? "#f00" : target === 4 ? "#0f0" : "#55f";
+                        showMessage(`LOCKED. ${colorName} KEYCARD REQUIRED.`, colorHex);
+                    }
+                } else if (target === 0 || (target >= 6 && target <= 8)) {
+                    if (target >= 6 && target <= 8) {
+                        if (target === 6) { keys.r = true; showMessage("PICKED UP RED KEYCARD.", "#f00"); }
+                        if (target === 7) { keys.g = true; showMessage("PICKED UP GREEN KEYCARD.", "#0f0"); }
+                        if (target === 8) { keys.b = true; showMessage("PICKED UP BLUE KEYCARD.", "#55f"); }
+                        map[newY][newX] = 0;
+                        updateInventoryDisplay();
+                    }
                     player.x = newX;
                     player.y = newY;
                     oxygen -= 0.2;
-                    showMessage("Use WASD or Arrow Keys to move.");
+                    if (target === 0) showMessage("Use WASD or Arrow Keys to move.");
                     if (oxygen <= 0) {
                         oxygen = 0;
                         updateStatsDisplay();
