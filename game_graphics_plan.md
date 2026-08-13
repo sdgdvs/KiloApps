@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KStarship
 - KConnect4
 - KHangman
 - KMatch3
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAsteroids
 - K2048
 - KSolitaire
+- KStarship
 ## Completed Work Log
+
+- **KStarship (Loop 3):** Implemented environmental art including distant deep space nebula clouds with slow parallax scrolling, dense floating asteroid/debris fields in the background layer with medium parallax scrolling and rotational offsets, and an atmospheric starry solar glow effect from a distant sun in both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 
 - **KSolitaire (Loop 4):** Polished face cards with intricate heraldry (distinct facial structures, Jack wields a broadsword, Queen holds a heraldic rose, King sports a detailed crown/scepter/shield); added a dynamic pulsating glowing golden aura outline around selected/dragged cards; and improved the win cascade animation with fading motion blur trails behind the bouncing cards in both Web Canvas (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 

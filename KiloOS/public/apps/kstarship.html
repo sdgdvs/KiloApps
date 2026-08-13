@@ -240,7 +240,7 @@
       cargo: { minerals: 0, tech: 0 },
       upgrades: { weapons: 1, shields: 1, engines: 1, cargo: 1 },
       crew: [],
-      stars: [], particles: [],
+      stars: [], particles: [], asteroids: [], nebulas: [],
       mapSize: 2000,
       modalOpen: false
     };
@@ -326,16 +326,77 @@
       }
     }
 
+    function generateEnvironment() {
+      for(let i=0; i<150; i++) {
+        state.asteroids.push({
+          x: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
+          y: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
+          size: 1 + Math.random() * 4,
+          rot: Math.random() * Math.PI * 2
+        });
+      }
+      for(let i=0; i<15; i++) {
+        state.nebulas.push({
+          x: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
+          y: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
+          radius: 300 + Math.random() * 400,
+          color: ['rgba(255, 0, 100, 0.05)', 'rgba(0, 100, 255, 0.05)', 'rgba(100, 0, 255, 0.05)'][Math.floor(Math.random()*3)]
+        });
+      }
+    }
+
     // Map drawing logic
     function draw() {
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = '#05050a'; // deeper space background
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
+      
+      // Solar glow / lens flare
+      let sunGrad = ctx.createRadialGradient(canvas.width*0.8, canvas.height*0.2, 0, canvas.width*0.8, canvas.height*0.2, 500);
+      sunGrad.addColorStop(0, 'rgba(255, 200, 150, 0.15)');
+      sunGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = sunGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Nebulas with slow parallax
+      state.nebulas.forEach(neb => {
+        const screenX = centerX + (neb.x - state.ship.x * 0.2);
+        const screenY = centerY + (neb.y - state.ship.y * 0.2);
+        if (screenX > -neb.radius && screenX < canvas.width + neb.radius && screenY > -neb.radius && screenY < canvas.height + neb.radius) {
+          let grad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, neb.radius);
+          grad.addColorStop(0, neb.color);
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, neb.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+      
+      // Asteroids with medium parallax
+      ctx.fillStyle = '#555555';
+      state.asteroids.forEach(ast => {
+        const screenX = centerX + (ast.x - state.ship.x * 0.5);
+        const screenY = centerY + (ast.y - state.ship.y * 0.5);
+        if (screenX >= -ast.size && screenX <= canvas.width + ast.size && screenY >= -ast.size && screenY <= canvas.height + ast.size) {
+          ctx.save();
+          ctx.translate(screenX, screenY);
+          ctx.rotate(ast.rot);
+          ctx.beginPath();
+          ctx.moveTo(-ast.size, -ast.size);
+          ctx.lineTo(ast.size, -ast.size*0.5);
+          ctx.lineTo(ast.size*0.8, ast.size);
+          ctx.lineTo(-ast.size*0.5, ast.size*0.8);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+      });
 
       // Draw grid
-      ctx.strokeStyle = '#002222';
+      ctx.strokeStyle = 'rgba(0, 34, 34, 0.5)';
       ctx.lineWidth = 1;
       const gridSize = 100;
       const offsetX = -(state.ship.x % gridSize);
@@ -1018,6 +1079,7 @@
 
     // Init
     generateStars();
+    generateEnvironment();
     update();
   </script>
 </body>

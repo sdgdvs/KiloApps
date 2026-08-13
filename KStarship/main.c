@@ -168,6 +168,43 @@ void TriggerEncounter(int type) {
     }
 }
 
+#define NUM_ASTEROIDS 150
+typedef struct {
+    int x, y;
+    int size;
+    POINT pts[4];
+} Asteroid;
+Asteroid asteroids[NUM_ASTEROIDS];
+
+#define NUM_NEBULAS 15
+typedef struct {
+    int x, y;
+    int radius;
+    COLORREF color;
+} Nebula;
+Nebula nebulas[NUM_NEBULAS];
+
+void InitEnvironment() {
+    for (int i = 0; i < NUM_ASTEROIDS; i++) {
+        asteroids[i].x = (rand() % MAP_SIZE) - MAP_SIZE/2;
+        asteroids[i].y = (rand() % MAP_SIZE) - MAP_SIZE/2;
+        asteroids[i].size = 2 + rand() % 4;
+        asteroids[i].pts[0].x = -asteroids[i].size; asteroids[i].pts[0].y = -asteroids[i].size;
+        asteroids[i].pts[1].x = asteroids[i].size; asteroids[i].pts[1].y = -asteroids[i].size / 2;
+        asteroids[i].pts[2].x = (int)(asteroids[i].size * 0.8f); asteroids[i].pts[2].y = asteroids[i].size;
+        asteroids[i].pts[3].x = -asteroids[i].size / 2; asteroids[i].pts[3].y = (int)(asteroids[i].size * 0.8f);
+    }
+    for (int i = 0; i < NUM_NEBULAS; i++) {
+        nebulas[i].x = (rand() % MAP_SIZE) - MAP_SIZE/2;
+        nebulas[i].y = (rand() % MAP_SIZE) - MAP_SIZE/2;
+        nebulas[i].radius = 200 + rand() % 300;
+        int c = rand() % 3;
+        if (c == 0) nebulas[i].color = RGB(15, 5, 20);
+        else if (c == 1) nebulas[i].color = RGB(5, 15, 30);
+        else nebulas[i].color = RGB(20, 5, 30);
+    }
+}
+
 void InitStars() {
     for (int i = 0; i < NUM_SYSTEMS; i++) {
         systems[i].x = (rand() % MAP_SIZE) - MAP_SIZE/2;
@@ -287,10 +324,48 @@ void Draw(HDC hdc, RECT* rect) {
     HBITMAP memBitmap = CreateCompatibleBitmap(hdc, width, height);
     SelectObject(memDC, memBitmap);
 
-    HBRUSH bgBrush = CreateSolidBrush(RGB(0, 0, 0));
+    HBRUSH bgBrush = CreateSolidBrush(RGB(5, 5, 10));
     RECT mapRect = {0, 0, mapWidth, height};
     FillRect(memDC, &mapRect, bgBrush);
     DeleteObject(bgBrush);
+
+    int centerX = mapWidth / 2;
+    int centerY = height / 2;
+
+    HBRUSH sunBrush = CreateSolidBrush(RGB(15, 10, 5));
+    SelectObject(memDC, sunBrush);
+    SelectObject(memDC, GetStockObject(NULL_PEN));
+    Ellipse(memDC, (int)(mapWidth*0.8) - 200, (int)(height*0.2) - 200, (int)(mapWidth*0.8) + 200, (int)(height*0.2) + 200);
+    DeleteObject(sunBrush);
+
+    SelectObject(memDC, GetStockObject(NULL_PEN));
+    for (int i = 0; i < NUM_NEBULAS; i++) {
+        int screenX = centerX + (int)((nebulas[i].x - ship_x) * 0.2f);
+        int screenY = centerY + (int)((nebulas[i].y - ship_y) * 0.2f);
+        int r = nebulas[i].radius;
+        if (screenX >= -r && screenX <= mapWidth + r && screenY >= -r && screenY <= height + r) {
+            HBRUSH nBrush = CreateSolidBrush(nebulas[i].color);
+            SelectObject(memDC, nBrush);
+            Ellipse(memDC, screenX - r, screenY - r, screenX + r, screenY + r);
+            DeleteObject(nBrush);
+        }
+    }
+
+    HBRUSH astBrush = CreateSolidBrush(RGB(80, 80, 80));
+    SelectObject(memDC, astBrush);
+    for (int i = 0; i < NUM_ASTEROIDS; i++) {
+        int screenX = centerX + (int)((asteroids[i].x - ship_x) * 0.5f);
+        int screenY = centerY + (int)((asteroids[i].y - ship_y) * 0.5f);
+        if (screenX >= 0 && screenX <= mapWidth && screenY >= 0 && screenY <= height) {
+            POINT pts[4];
+            for (int p = 0; p < 4; p++) {
+                pts[p].x = screenX + asteroids[i].pts[p].x;
+                pts[p].y = screenY + asteroids[i].pts[p].y;
+            }
+            Polygon(memDC, pts, 4);
+        }
+    }
+    DeleteObject(astBrush);
 
     HBRUSH uiBrush = CreateSolidBrush(RGB(5, 5, 20));
     RECT uiRect = {mapWidth, 0, width, height};
@@ -304,9 +379,6 @@ void Draw(HDC hdc, RECT* rect) {
     Rectangle(memDC, 0, 0, mapWidth, height);
     Rectangle(memDC, mapWidth + 5, 5, width - 5, height - 5);
     DeleteObject(neonBorderPen);
-
-    int centerX = mapWidth / 2;
-    int centerY = height / 2;
 
     HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(0, 40, 40));
     SelectObject(memDC, gridPen);
@@ -859,6 +931,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     CreateThread(NULL, 0, EngineHumThread, NULL, 0, NULL);
+    InitEnvironment();
     InitStars();
     for (int i = 0; i < 10; i++) {
         lstrcpyA(roster[i].name, first_names[rand() % 16]);
