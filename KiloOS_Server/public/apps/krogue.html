@@ -10,21 +10,24 @@
             background: #07090e; color: #e2e8f0;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; overflow: hidden; padding: 10px;
+            min-height: 100vh; overflow: hidden; padding: 4px;
         }
         #game-container {
             display: flex; flex-direction: column; align-items: center;
             background: #111520; border: 2px solid #2d3748; border-radius: 12px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 25px rgba(66, 153, 225, 0.2);
-            padding: 14px; width: 920px; max-width: 98vw; position: relative;
+            padding: 8px; width: 920px; max-width: 98vw; position: relative;
         }
         #canvas-wrapper {
             position: relative;
             border: 2px solid #3a4a60; border-radius: 8px; overflow: hidden;
             background: #040508;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.95);
+            width: 100%;
+            display: flex;
+            justify-content: center;
         }
-        canvas { display: block; image-rendering: pixelated; cursor: crosshair; }
+        canvas { display: block; width: 100%; max-width: 880px; height: auto; image-rendering: pixelated; cursor: crosshair; }
         
         #ui-panel {
             width: 100%; margin-top: 10px;
@@ -204,12 +207,14 @@
                 <button class="btn-action btn-spell" onclick="openSpellbook()">[M] Spellbook</button>
                 <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory & Gear</button>
                 <button class="btn-action btn-lead" onclick="openLeaderboard()">[H] Leaderboard</button>
+                <button class="btn-action" onclick="openKeybinds()">[K] Controls & Rebind</button>
+                <button class="btn-action" onclick="openHelp()">[?] Help</button>
                 <button class="btn-action" onclick="saveGame()">[S] Quick Save</button>
                 <button class="btn-action" onclick="loadGame()">[L] Load Game</button>
             </div>
             <div id="msg-box"></div>
             <div class="controls-hint">
-                [Arrows] Move/Attack | [.] Wait | [A] Class Ability | [M] Spells | [I] Inventory | [H] Leaderboard | [S] Save | [L] Load
+                [Arrows/WASD] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [H] Leaderboard | [K] Keybinds | [?] Help | [S] Save | [L] Load
             </div>
         </div>
 
@@ -333,8 +338,47 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="modal-close">
+                <div class="modal-close" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn-modal-close" onclick="exportLeaderboardJSON()">📤 Export JSON</button>
+                    <button class="btn-modal-close" onclick="importLeaderboardJSON()">📥 Import JSON</button>
+                    <button class="btn-modal-close" style="border-color: #e53e3e; background: #742a2a;" onclick="clearLeaderboard()">🗑️ Clear History</button>
                     <button class="btn-modal-close" onclick="closeModal('modal-leaderboard')">Close [ESC]</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="file" id="import-json-file" accept=".json" style="display: none;" onchange="handleImportJSONFile(event)">
+
+        <!-- Keybindings Modal -->
+        <div id="modal-keybinds" class="modal-overlay" style="display: none;">
+            <div class="modal-card" style="width: 480px; max-width: 95%;">
+                <div class="modal-header">⌨️ KEYBINDINGS & CONTROLS</div>
+                <div id="keybinds-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; padding: 4px;">
+                    <!-- Populated dynamically -->
+                </div>
+                <div id="keybinds-notice" style="font-size: 11px; color: #ecc94b; text-align: center; height: 18px; margin-top: 4px;"></div>
+                <div class="modal-close" style="display: flex; gap: 8px; justify-content: center; margin-top: 6px;">
+                    <button class="btn-modal-close" onclick="resetKeybinds()">Reset Defaults</button>
+                    <button class="btn-modal-close" onclick="closeModal('modal-keybinds')">Close [ESC]</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="modal-help" class="modal-overlay" style="display: none;">
+            <div class="modal-card">
+                <div class="modal-header">📖 HOW TO PLAY KROGUE</div>
+                <div style="font-size: 13px; color: #a0aec0; line-height: 1.5;">
+                    <p><b style="color:#63b3ed;">Goal:</b> Descend through 40 floors to slay Astaroth!</p>
+                    <p><b style="color:#63b3ed;">Movement:</b> Use Arrow Keys / WASD / Custom Keybinds to move/attack. Press [.] or Numpad 5 to wait a turn.</p>
+                    <p><b style="color:#63b3ed;">Combat:</b> Bump into enemies to attack. Ranged weapons require targeting [F].</p>
+                    <p><b style="color:#63b3ed;">Classes & Magic:</b> Each class has a unique ability [A]. Mages start with spells [M].</p>
+                    <p><b style="color:#63b3ed;">Custom Keybinds:</b> Press [K] to rebind controls to your liking.</p>
+                    <p><b style="color:#63b3ed;">Run Stats JSON:</b> Export/Import your leaderboard JSON on the [H] Leaderboard screen.</p>
+                    <p><b style="color:#63b3ed;">Food & Healing:</b> Eat Food to prevent starvation. Use Potions to heal [I].</p>
+                </div>
+                <div class="modal-close">
+                    <button class="btn-modal-close" onclick="closeModal('modal-help')">Close [ESC]</button>
                 </div>
             </div>
         </div>
@@ -348,6 +392,13 @@
         
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const C_WIDTH = 880;
+        const C_HEIGHT = 440;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = C_WIDTH * dpr;
+        canvas.height = C_HEIGHT * dpr;
+        ctx.scale(dpr, dpr);
+        ctx.imageSmoothingEnabled = false;
 
         // Seeded PRNG
         let currentSeedVal = 12345;
@@ -399,7 +450,7 @@
         let monsters = [];
         let items = [];
         let traps = [];
-        let msgs = ["Welcome to KRogue!", "Choose your Hero & descend 30 levels to slay Astaroth!"];
+        let msgs = ["Welcome to KRogue!", "Press [?] for Help.", "Choose your Hero & descend 30 levels to slay Astaroth!"];
         let state = 0; // 0=main menu, 1=playing, 2=dead, 3=victory, 4=targeting, 5=char creation
         let difficulty = 0;
         let dlevel = 1;
@@ -477,6 +528,8 @@
             if (lvl <= 15) return 'crypt';
             if (lvl <= 20) return 'inferno';
             if (lvl <= 25) return 'void';
+            if (lvl <= 30) return 'celestial';
+            return 'abyss';
             return 'celestial';
         }
 
@@ -486,6 +539,8 @@
             if (lvl <= 15) return 'Crypt';
             if (lvl <= 20) return 'Inferno';
             if (lvl <= 25) return 'Void';
+            if (lvl <= 30) return 'Celestial Sanctuary';
+            return 'The Abyss';
             return 'Celestial Sanctuary';
         }
 
@@ -562,7 +617,7 @@
 
             state = 1;
             addMsg(`Journey Begun! Class: ${cls.toUpperCase()} | Seed: ${seedStr}`, 'good');
-            addMsg("Descend 30 floors & conquer Astaroth the Fallen!");
+            addMsg("Descend 40 floors & conquer Astaroth the Fallen!");
             initMap();
         }
 
@@ -580,7 +635,13 @@
             map[2][2] = '.';
             
             // Stairs
-            if (dlevel < 30) {
+            if (dlevel % 10 === 0 && dlevel !== 40) {
+                let hp = Math.floor(100 + dlevel * 5);
+                monsters.push({
+                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: 'B', name: 'Resurrected Boss', boss: false, turn: 0
+                });
+            }
+            if (dlevel < 40) {
                 items.push({ x: COLS - 3, y: ROWS - 3, ch: '>', type: 'stairs' });
                 map[ROWS - 3][COLS - 3] = '.';
             } else {
@@ -606,9 +667,17 @@
             }
 
             // Traps
+            if (rng() < 0.05) { // Anvil
+                let cx = rngRange(2, COLS - 3), cy = rngRange(2, ROWS - 3);
+                items.push({ x: cx, y: cy, ch: 'T', type: 'anvil', name: 'Crafting Anvil' });
+            }
+            if (rng() < 0.1) { // NPC
+                let nx = rngRange(2, COLS - 3), ny = rngRange(2, ROWS - 3);
+                monsters.push({ x: nx, y: ny, hp: 100, max_hp: 100, ch: 'N', name: 'Quest NPC', npc: true, reward_ready: true, turn: 0 });
+            }
             for (let t = 0; t < 4 + Math.floor(dlevel / 4); t++) {
                 let tx = rngRange(2, COLS - 3), ty = rngRange(2, ROWS - 3);
-                let trapType = rng() < 0.4 ? 'poison' : (rng() < 0.7 ? 'teleport' : 'root');
+                let trapType = rng() < 0.25 ? 'poison' : (rng() < 0.5 ? 'teleport' : (rng() < 0.75 ? 'root' : (rng() < 0.9 ? 'fire' : 'summon')));
                 traps.push({ x: tx, y: ty, type: trapType, revealed: false });
             }
 
@@ -642,11 +711,16 @@
                     else if (r < 0.50) { type = 'V'; hp = 50; name = 'Vampire'; }
                     else if (r < 0.75) { type = 'L'; hp = 45; name = 'Lich'; }
                     else { type = 'd'; hp = 60; name = 'Demon'; }
-                } else {
+                } else if (dlevel <= 25) {
                     if (r < 0.25) { type = 'B'; hp = 110; name = 'Balrog'; }
                     else if (r < 0.50) { type = 't'; hp = 130; name = 'Titan'; }
                     else if (r < 0.75) { type = 'E'; hp = 80; name = 'Beholder'; }
                     else { type = 'U'; hp = 150; name = 'Shadow Behemoth'; }
+                } else {
+                    if (r < 0.25) { type = 'v'; hp = 180; name = 'Void Walker'; }
+                    else if (r < 0.50) { type = 'f'; hp = 250; name = 'Abyss Fiend'; }
+                    else if (r < 0.75) { type = 'w'; hp = 300; name = 'Deep Worm'; }
+                    else { type = 'O'; hp = 400; name = 'Abyssal Overlord'; }
                 }
 
                 hp = Math.floor(hp * (1 + difficulty * 0.4 + dlevel * 0.05));
@@ -656,19 +730,27 @@
 
         function generateRandomLoot(x, y) {
             let r = rng();
+            let it;
             if (r < 0.3) {
-                return { x: x, y: y, ch: '(', type: 'weapon', name: `Mythic Sword +${dlevel}`, val: 3 + dlevel, fg: '#63b3ed' };
+                it = { x: x, y: y, ch: '(', type: 'weapon', name: `Mythic Sword +${dlevel}`, val: 3 + dlevel, fg: '#63b3ed' };
             } else if (r < 0.6) {
-                return { x: x, y: y, ch: ']', type: 'armor', name: `Plate Armor +${dlevel}`, val: 2 + dlevel, fg: '#cbd5e0' };
+                it = { x: x, y: y, ch: ']', type: 'armor', name: `Plate Armor +${dlevel}`, val: 2 + dlevel, fg: '#cbd5e0' };
             } else if (r < 0.8) {
-                return { x: x, y: y, ch: '[', type: 'shield', name: `Tower Shield +${dlevel}`, val: 2 + Math.floor(dlevel/2), fg: '#ecc94b' };
+                it = { x: x, y: y, ch: '[', type: 'shield', name: `Tower Shield +${dlevel}`, val: 2 + Math.floor(dlevel/2), fg: '#ecc94b' };
             } else {
-                return { x: x, y: y, ch: '?', type: 'spellbook', spellKey: 'meteor', name: "Spellbook of Meteor", fg: "#b794f4" };
+                it = { x: x, y: y, ch: '?', type: 'spellbook', spellKey: 'meteor', name: "Spellbook of Meteor", fg: "#b794f4" };
             }
+            if(it.type !== 'spellbook' && it.type !== 'food' && it.type !== 'heal' && it.type !== 'shrine' && rng() < 0.15) {
+                it.cursed = true;
+                it.val = -(1 + rngRange(0, 2));
+                it.name = "Cursed " + it.name;
+                it.fg = '#ff0000';
+            }
+            return it;
         }
 
         // Rendering functions
-        function drawWallTile(x, y, biome) {
+        function drawWallTile(x, y, biome, distSq) {
             let px = x * TILE, py = y * TILE;
             let baseColor = '#4a5568', accentColor = '#2d3748', mortarColor = '#1a202c';
             if (biome === 'sewers') { baseColor = '#2f855a'; accentColor = '#22543d'; }
@@ -677,17 +759,37 @@
             else if (biome === 'inferno') { baseColor = '#9b2c2c'; accentColor = '#c53030'; }
             else if (biome === 'void') { baseColor = '#553c9a'; accentColor = '#44337a'; }
             else if (biome === 'celestial') { baseColor = '#d69e2e'; accentColor = '#b7791f'; }
+            else if (biome === 'abyss') { baseColor = '#2d004b'; accentColor = '#1a0033'; mortarColor = '#0d001a'; }
+
+            // Fog / Torch flicker
+            let alpha = 1.0;
+            if (distSq > 0) {
+                let maxD = 40 + Math.sin(frameCount*0.1) * 5;
+                if (distSq > maxD) alpha = 0.2;
+                else alpha = 1.0 - (distSq / (maxD*2));
+            }
+            ctx.globalAlpha = Math.max(0.1, alpha);
 
             ctx.fillStyle = mortarColor; ctx.fillRect(px, py, TILE, TILE);
             ctx.fillStyle = baseColor;
+            
+            // Texture variation
+            let crack = (x * 17 + y * 31) % 10;
+            
             ctx.fillRect(px + 1, py + 1, TILE - 2, 9);
             ctx.fillRect(px + 1, py + 11, TILE / 2 - 2, 9);
             ctx.fillRect(px + TILE / 2 + 1, py + 11, TILE / 2 - 2, 9);
             ctx.fillStyle = accentColor;
             ctx.fillRect(px + 2, py + 8, TILE - 4, 2);
+            
+            if (crack > 7) {
+                ctx.fillStyle = mortarColor;
+                ctx.fillRect(px + 4, py + 4, 2, 4);
+            }
+            ctx.globalAlpha = 1.0;
         }
 
-        function drawFloorTile(x, y, biome) {
+                function drawFloorTile(x, y, biome, distSq) {
             let px = x * TILE, py = y * TILE;
             let bg = '#171923';
             if (biome === 'sewers') bg = '#12251a';
@@ -696,11 +798,29 @@
             else if (biome === 'inferno') bg = '#2a1414';
             else if (biome === 'void') bg = '#1e1427';
             else if (biome === 'celestial') bg = '#1a2733';
+            else if (biome === 'abyss') bg = '#0d001a';
+
+            // Fog / Torch flicker
+            let alpha = 1.0;
+            if (distSq > 0) {
+                let maxD = 40 + Math.sin(frameCount*0.1) * 5;
+                if (distSq > maxD) alpha = 0.2;
+                else alpha = 1.0 - (distSq / (maxD*2));
+            }
+            ctx.globalAlpha = Math.max(0.1, alpha);
 
             ctx.fillStyle = bg; ctx.fillRect(px, py, TILE, TILE);
             ctx.fillStyle = 'rgba(255,255,255,0.04)';
-            ctx.fillRect(px + 4, py + 4, 3, 3);
-            ctx.fillRect(px + 14, py + 12, 2, 2);
+            
+            let pebble = (x * 23 + y * 19) % 5;
+            if (pebble === 0) {
+                ctx.fillRect(px + 4, py + 4, 3, 3);
+                ctx.fillRect(px + 14, py + 12, 2, 2);
+            } else if (pebble === 1) {
+                ctx.fillRect(px + 8, py + 8, 4, 2);
+            }
+            
+            ctx.globalAlpha = 1.0;
         }
 
         function drawPlayerSprite(px, py) {
@@ -730,7 +850,17 @@
             let cx = px + TILE / 2, cy = py + TILE / 2;
             let bob = Math.sin(frameCount * 0.12 + px) * 1.2;
 
-            if (type === 'r') {
+            if (type === 'N') {
+                ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fill();
+            } else if (type === 'v') {
+                ctx.fillStyle = '#800080'; ctx.fillRect(cx - 5, cy - 8 + bob, 10, 16);
+            } else if (type === 'f') {
+                ctx.fillStyle = '#ff0000'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 14);
+            } else if (type === 'w') {
+                ctx.fillStyle = '#0000ff'; ctx.fillRect(cx - 8, cy - 4, 16, 8);
+            } else if (type === 'O') {
+                ctx.fillStyle = '#555555'; ctx.fillRect(cx - 10, cy - 10 + bob, 20, 20);
+            } else if (type === 'r') {
                 ctx.fillStyle = '#d69e2e'; ctx.beginPath(); ctx.ellipse(cx, cy + 2 + bob, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
             } else if (type === 'b') {
                 ctx.fillStyle = '#805ad5'; ctx.beginPath(); ctx.arc(cx, cy + bob, 6, 0, Math.PI * 2); ctx.fill();
@@ -746,50 +876,51 @@
 
         function render() {
             frameCount++;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, C_WIDTH, C_HEIGHT);
 
             let biome = getBiome(dlevel);
 
             if (state === 0) { // Main Menu
-                ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, C_WIDTH, C_HEIGHT);
                 ctx.fillStyle = '#f6ad55'; ctx.font = 'bold 38px monospace'; ctx.textAlign = 'center';
-                ctx.fillText("K R O G U E", canvas.width / 2, 120);
+                ctx.fillText("K R O G U E", C_WIDTH / 2, 120);
 
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
-                ctx.fillText("Deep Utility Roguelike - Classes, Gear, Spells & Leaderboard", canvas.width / 2, 160);
+                ctx.fillText("Deep Utility Roguelike - Classes, Gear, Spells & Leaderboard", C_WIDTH / 2, 160);
 
                 ctx.fillStyle = '#68d391'; ctx.font = 'bold 20px sans-serif';
-                ctx.fillText("Press [ENTER] to Select Hero & Start Run", canvas.width / 2, 260);
+                ctx.fillText("Press [ENTER] to Select Hero & Start Run", C_WIDTH / 2, 260);
 
                 ctx.fillStyle = '#a0aec0'; ctx.font = '14px sans-serif';
-                ctx.fillText("Press [H] for Leaderboard  |  Press [L] to Resume Saved Run", canvas.width / 2, 310);
+                ctx.fillText("Press [H] for Leaderboard  |  Press [?] for Help  |  Press [L] to Resume Saved Run", C_WIDTH / 2, 310);
                 return;
             }
 
             if (state === 2 || state === 3) {
-                ctx.fillStyle = '#090a0f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#090a0f'; ctx.fillRect(0, 0, C_WIDTH, C_HEIGHT);
                 ctx.textAlign = 'center';
                 if (state === 2) {
                     ctx.fillStyle = '#e53e3e'; ctx.font = 'bold 36px monospace';
-                    ctx.fillText("Y O U   D I E D", canvas.width / 2, 180);
+                    ctx.fillText("Y O U   D I E D", C_WIDTH / 2, 180);
                     ctx.fillStyle = '#a0aec0'; ctx.font = '16px sans-serif';
-                    ctx.fillText(`Class: ${player.class.toUpperCase()}  |  Floor: ${dlevel}  |  Kills: ${total_kills}  |  Gold: ${player.gold}`, canvas.width / 2, 230);
+                    ctx.fillText(`Class: ${player.class.toUpperCase()}  |  Floor: ${dlevel}  |  Kills: ${total_kills}  |  Gold: ${player.gold}`, C_WIDTH / 2, 230);
                 } else {
                     ctx.fillStyle = '#ecc94b'; ctx.font = 'bold 36px monospace';
-                    ctx.fillText("V I C T O R Y !", canvas.width / 2, 170);
+                    ctx.fillText("V I C T O R Y !", C_WIDTH / 2, 170);
                     ctx.fillStyle = '#68d391'; ctx.font = 'bold 20px sans-serif';
-                    ctx.fillText("ASTAROTH THE FALLEN IS DEFEATED!", canvas.width / 2, 220);
+                    ctx.fillText("ASTAROTH THE FALLEN IS DEFEATED!", C_WIDTH / 2, 220);
                 }
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
-                ctx.fillText("Press [R] to Restart Run  |  Press [H] to View Leaderboard", canvas.width / 2, 310);
+                ctx.fillText("Press [R] to Restart Run  |  Press [H] to View Leaderboard", C_WIDTH / 2, 310);
                 return;
             }
 
             // Map
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
-                    if (map[y][x] === '#') drawWallTile(x, y, biome);
-                    else drawFloorTile(x, y, biome);
+                    let distSq = (player.x - x)*(player.x - x) + (player.y - y)*(player.y - y);
+                    if (map[y][x] === '#') drawWallTile(x, y, biome, distSq);
+                    else drawFloorTile(x, y, biome, distSq);
                 }
             }
 
@@ -934,6 +1065,10 @@
                 inventory.splice(idx, 1);
             } else if (it.type === 'weapon' || it.type === 'armor' || it.type === 'shield' || it.type === 'ring') {
                 let slot = it.type;
+                if (equipment[slot] && equipment[slot].cursed) {
+                    addMsg(`Your equipped ${slot} is cursed and cannot be removed!`);
+                    return;
+                }
                 if (equipment[slot]) inventory.push(equipment[slot]);
                 equipment[slot] = it;
                 inventory.splice(idx, 1);
@@ -944,6 +1079,10 @@
 
         function unequipSlot(slot) {
             if (equipment[slot]) {
+                if(equipment[slot].cursed) {
+                    addMsg(`Your equipped ${slot} is cursed and cannot be removed!`);
+                    return;
+                }
                 inventory.push(equipment[slot]);
                 addMsg(`Unequipped ${equipment[slot].name}.`, 'good');
                 equipment[slot] = null;
@@ -1014,6 +1153,132 @@
         }
 
         // Leaderboard UI
+        function escapeHTML(str) { return String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[match])); }
+
+        // Default Keybindings Definition
+        const defaultKeybinds = {
+            moveUp: { label: 'Move Up (North)', keys: ['ArrowUp', 'w', 'W', 'k', 'Numpad8'] },
+            moveDown: { label: 'Move Down (South)', keys: ['ArrowDown', 's', 'S', 'j', 'Numpad2'] },
+            moveLeft: { label: 'Move Left (West)', keys: ['ArrowLeft', 'a', 'A', 'h', 'Numpad4'] },
+            moveRight: { label: 'Move Right (East)', keys: ['ArrowRight', 'd', 'D', 'l', 'Numpad6'] },
+            waitTurn: { label: 'Wait / Skip Turn', keys: ['.', 'z', 'Z', ' ', 'Numpad5'] },
+            useAbility: { label: 'Class Ability', keys: ['a', 'A'] },
+            openInventory: { label: 'Inventory & Gear', keys: ['i', 'I'] },
+            openSpellbook: { label: 'Magic Spellbook', keys: ['m', 'M'] },
+            openLeaderboard: { label: 'Leaderboard', keys: ['h', 'H'] },
+            openKeybinds: { label: 'Keybinding Config', keys: ['k', 'K'] },
+            openHelp: { label: 'Help / Guide', keys: ['?', '/'] },
+            saveState: { label: 'Quick Save', keys: ['F5', 's', 'S'] },
+            loadState: { label: 'Quick Load', keys: ['F9', 'l', 'L'] }
+        };
+
+        let keybinds = JSON.parse(localStorage.getItem('krogue_keybinds') || 'null');
+        if (!keybinds) { keybinds = JSON.parse(JSON.stringify(defaultKeybinds)); }
+
+        function isActionKey(e, actionName) {
+            if (!keybinds[actionName]) return false;
+            return keybinds[actionName].keys.includes(e.key);
+        }
+
+        let rebindingAction = null;
+
+        function openKeybinds() {
+            renderKeybindsList();
+            document.getElementById('keybinds-notice').innerText = '';
+            document.getElementById('modal-keybinds').style.display = 'flex';
+        }
+
+        function renderKeybindsList() {
+            let container = document.getElementById('keybinds-list');
+            if (!container) return;
+            container.innerHTML = Object.keys(keybinds).map(actionKey => {
+                let act = keybinds[actionKey];
+                let keysDisplay = act.keys.join(' / ');
+                let isRebindingThis = rebindingAction === actionKey;
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #1a202c; padding: 6px 10px; border-radius: 6px; border: 1px solid #2d3748; font-size: 12px;">
+                        <span style="font-weight: 600; color: #e2e8f0;">${escapeHTML(act.label)}</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-family: monospace; background: #0d1117; padding: 2px 8px; border-radius: 4px; border: 1px solid #4a5568; color: ${isRebindingThis ? '#f6ad55' : '#63b3ed'};">
+                                ${isRebindingThis ? 'Press any key...' : escapeHTML(keysDisplay)}
+                            </span>
+                            <button class="btn-action" style="padding: 2px 8px; font-size: 11px;" onclick="startRebind('${actionKey}')">Rebind</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function startRebind(actionKey) {
+            rebindingAction = actionKey;
+            document.getElementById('keybinds-notice').innerText = `Press new key to bind to ${keybinds[actionKey].label}... (Press ESC to cancel)`;
+            renderKeybindsList();
+        }
+
+        function resetKeybinds() {
+            keybinds = JSON.parse(JSON.stringify(defaultKeybinds));
+            localStorage.setItem('krogue_keybinds', JSON.stringify(keybinds));
+            rebindingAction = null;
+            document.getElementById('keybinds-notice').innerText = 'Controls reset to default.';
+            renderKeybindsList();
+        }
+
+        // High Score / Run History JSON Export & Import
+        function exportLeaderboardJSON() {
+            let history = localStorage.getItem('krogue_leaderboard') || '[]';
+            let blob = new Blob([history], { type: 'application/json' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'krogue_leaderboard.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            addMsg("Exported run leaderboard to krogue_leaderboard.json!", 'good');
+        }
+
+        function importLeaderboardJSON() {
+            document.getElementById('import-json-file').click();
+        }
+
+        function handleImportJSONFile(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let importedData = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedData)) throw new Error("Invalid JSON array format.");
+                    let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
+                    let addedCount = 0;
+                    importedData.forEach(entry => {
+                        if (entry && typeof entry === 'object' && (entry.score !== undefined || entry.floor !== undefined)) {
+                            let exists = history.some(h => h.seed === entry.seed && h.score === entry.score && h.floor === entry.floor);
+                            if (!exists) {
+                                history.push(entry);
+                                addedCount++;
+                            }
+                        }
+                    });
+                    history.sort((a, b) => (b.score || 0) - (a.score || 0));
+                    localStorage.setItem('krogue_leaderboard', JSON.stringify(history));
+                    openLeaderboard();
+                    addMsg(`Imported ${addedCount} run history entries!`, 'good');
+                } catch(err) {
+                    alert("Failed to parse JSON file: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function clearLeaderboard() {
+            if (confirm("Are you sure you want to clear all run history and leaderboard records?")) {
+                localStorage.removeItem('krogue_leaderboard');
+                openLeaderboard();
+                addMsg("Leaderboard history cleared.", 'good');
+            }
+        }
+
         function openLeaderboard() {
             let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
             let tbody = document.getElementById('lead-tbody');
@@ -1022,14 +1287,14 @@
             } else {
                 tbody.innerHTML = history.slice(0, 10).map(r => `
                     <tr>
-                        <td><b>${r.name || 'Hero'}</b></td>
-                        <td>${r.class ? r.class.toUpperCase() : 'WARRIOR'}</td>
+                        <td><b>${escapeHTML(r.name || 'Hero')}</b></td>
+                        <td>${r.class ? escapeHTML(r.class.toUpperCase()) : 'WARRIOR'}</td>
                         <td>${r.floor}</td>
                         <td>${r.kills}</td>
                         <td>${r.gold}</td>
                         <td><b style="color:#ecc94b;">${r.score}</b></td>
-                        <td><span style="font-family:monospace; font-size:10px;">${r.seed}</span></td>
-                        <td style="color: ${r.result === 'VICTORY' ? '#68d391' : '#e53e3e'}; font-weight:bold;">${r.result}</td>
+                        <td><span style="font-family:monospace; font-size:10px;">${escapeHTML(r.seed)}</span></td>
+                        <td style="color: ${r.result === 'VICTORY' ? '#68d391' : '#e53e3e'}; font-weight:bold;">${escapeHTML(r.result)}</td>
                     </tr>
                 `).join('');
             }
@@ -1049,17 +1314,30 @@
 
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
+        function openHelp() {
+            document.getElementById('modal-help').style.display = 'flex';
+        }
+
         function endTurn() {
             if (player.invisible_turns > 0) player.invisible_turns--;
             if (player.berserk_turns > 0) player.berserk_turns--;
             if (player.poisoned_turns > 0) { player.hp--; player.poisoned_turns--; if (player.hp <= 0) { triggerGameOver(); return; } }
+            if (player.rooted_turns > 0) player.rooted_turns--;
 
             if (player.hunger > 0) player.hunger--;
             else { player.hp--; if (player.hp <= 0) { triggerGameOver(); return; } }
 
-            monsters.forEach(m => {
+            for (let i = monsters.length - 1; i >= 0; i--) {
+                let m = monsters[i];
+                if (m.hp <= 0) {
+                    addParticles(m.x, m.y, '#fc8181', 15);
+                    addMsg(`${m.name} dies!`, 'good');
+                    player.xp += 8; total_kills++;
+                    if (m.boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }
+                    monsters.splice(i, 1);
+                    continue;
+                }
                 m.turn++;
-                if (m.hp <= 0) return;
                 let mdx = Math.sign(player.x - m.x), mdy = Math.sign(player.y - m.y);
                 if (m.x + mdx === player.x && m.y + mdy === player.y) {
                     let calcDef = player.def + (equipment.armor ? equipment.armor.val : 0) + (equipment.shield ? equipment.shield.val : 0);
@@ -1071,7 +1349,7 @@
                 } else if (map[m.y + mdy][m.x + mdx] !== '#') {
                     m.x += mdx; m.y += mdy;
                 }
-            });
+            }
         }
 
         function triggerGameOver() {
@@ -1099,32 +1377,55 @@
 
         // Key Listeners
         window.addEventListener('keydown', e => {
+            if (rebindingAction) {
+                if (e.key !== 'Escape') {
+                    keybinds[rebindingAction].keys = [e.key];
+                    localStorage.setItem('krogue_keybinds', JSON.stringify(keybinds));
+                    document.getElementById('keybinds-notice').innerText = `Bound ${keybinds[rebindingAction].label} to [${e.key}]!`;
+                } else {
+                    document.getElementById('keybinds-notice').innerText = 'Rebinding cancelled.';
+                }
+                rebindingAction = null;
+                renderKeybindsList();
+                e.preventDefault();
+                return;
+            }
+
             if (e.key === 'Escape') {
-                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select');
+                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help'); closeModal('modal-keybinds');
+                if (state === 4) { state = 1; addMsg("Targeting cancelled."); updateMsgBox(); }
                 return;
             }
 
             if (state === 0) {
                 if (e.key === 'Enter') openCharSelect();
-                if (e.key === 'h' || e.key === 'H') openLeaderboard();
-                if (e.key === 'l' || e.key === 'L') loadGame();
+                if (isActionKey(e, 'openLeaderboard') || e.key === 'h' || e.key === 'H') openLeaderboard();
+                if (isActionKey(e, 'openKeybinds') || e.key === 'k' || e.key === 'K') openKeybinds();
+                if (isActionKey(e, 'loadState') || e.key === 'l' || e.key === 'L') loadGame();
+                if (isActionKey(e, 'openHelp') || e.key === '?' || e.key === '/') openHelp();
             } else if (state === 1) {
                 let dx = 0, dy = 0, turn = false;
-                if (e.key === 'ArrowUp') { dy = -1; turn = true; }
-                if (e.key === 'ArrowDown') { dy = 1; turn = true; }
-                if (e.key === 'ArrowLeft') { dx = -1; turn = true; }
-                if (e.key === 'ArrowRight') { dx = 1; turn = true; }
-                if (e.key === '.') endTurn();
-                if (e.key === 'a' || e.key === 'A') useClassAbility();
-                if (e.key === 'i' || e.key === 'I') openInventory();
-                if (e.key === 'm' || e.key === 'M') openSpellbook();
-                if (e.key === 'h' || e.key === 'H') openLeaderboard();
-                if (e.key === 's' || e.key === 'S') saveGame();
-                if (e.key === 'l' || e.key === 'L') loadGame();
+                if (isActionKey(e, 'moveUp')) { dy = -1; turn = true; }
+                else if (isActionKey(e, 'moveDown')) { dy = 1; turn = true; }
+                else if (isActionKey(e, 'moveLeft')) { dx = -1; turn = true; }
+                else if (isActionKey(e, 'moveRight')) { dx = 1; turn = true; }
+                else if (isActionKey(e, 'waitTurn')) endTurn();
+                else if (isActionKey(e, 'useAbility')) useClassAbility();
+                else if (isActionKey(e, 'openInventory')) openInventory();
+                else if (isActionKey(e, 'openSpellbook')) openSpellbook();
+                else if (isActionKey(e, 'openLeaderboard')) openLeaderboard();
+                else if (isActionKey(e, 'openKeybinds')) openKeybinds();
+                else if (isActionKey(e, 'openHelp')) openHelp();
+                else if (isActionKey(e, 'saveState')) saveGame();
+                else if (isActionKey(e, 'loadState')) loadGame();
 
                 if (turn && (dx !== 0 || dy !== 0)) {
-                    let nx = player.x + dx, ny = player.y + dy;
-                    if (map[ny][nx] !== '#') {
+                    if (player.rooted_turns > 0) {
+                        addMsg("You are rooted to the ground and cannot move!");
+                        endTurn();
+                    } else {
+                        let nx = player.x + dx, ny = player.y + dy;
+                        if (map[ny][nx] !== '#') {
                         let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
                         if (mIdx >= 0) {
                             let calcAtk = player.atk + (equipment.weapon ? equipment.weapon.val : 0);
@@ -1133,6 +1434,7 @@
                             addMsg(`You strike ${monsters[mIdx].name} for ${calcAtk} dmg!`);
                             addFloatText(nx, ny, `-${calcAtk}`, '#e53e3e');
                             if (monsters[mIdx].hp <= 0) {
+                                addParticles(monsters[mIdx].x, monsters[mIdx].y, '#fc8181', 15);
                                 addMsg(`${monsters[mIdx].name} dies!`, 'good');
                                 player.xp += 8; total_kills++;
                                 if (monsters[mIdx].boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }
@@ -1146,11 +1448,28 @@
                                 if (it.type === 'stairs') { dlevel++; initMap(); return; }
                                 else { inventory.push(it); items.splice(itIdx, 1); addMsg(`Picked up ${it.name}`, 'good'); }
                             }
+                            let trapIdx = traps.findIndex(t => t.x === nx && t.y === ny);
+                            if (trapIdx >= 0 && !traps[trapIdx].revealed) {
+                                traps[trapIdx].revealed = true;
+                                let ty = traps[trapIdx].type;
+                                if(ty === 'poison') { player.poisoned_turns = 10; addMsg("Triggered a poison trap!", 'msg-combat'); }
+                                else if(ty === 'root') { player.rooted_turns = 5; addMsg("Triggered a root trap!", 'msg-combat'); }
+                                else if(ty === 'teleport') { player.x = rngRange(2, COLS-3); player.y = rngRange(2, ROWS-3); addMsg("Triggered a teleport trap!", 'msg-magic'); }
+                                else if(ty === 'fire') { player.hp -= (10 + dlevel); addFloatText(player.x, player.y, `-${10+dlevel}`, '#e53e3e'); addMsg("Triggered a fire trap!", 'msg-combat'); if(player.hp <= 0) { triggerGameOver(); return; } }
+                                else if(ty === 'summon') { 
+                                    monsters.push({ x: player.x+1, y: player.y, hp: 10, max_hp: 10, ch: 'g', name: 'Summoned Goblin', turn: 0 });
+                                    addMsg("Triggered a summon trap!", 'msg-combat');
+                                }
+                            }
                         }
                         endTurn();
                     }
                 }
             } else if (state === 4) {
+                if (e.key === 'ArrowUp') targetY--;
+                if (e.key === 'ArrowDown') targetY++;
+                if (e.key === 'ArrowLeft') targetX--;
+                if (e.key === 'ArrowRight') targetX++;
                 if (e.key === 'Enter') executeTargetSpell();
             } else if (state === 2 || state === 3) {
                 if (e.key === 'r' || e.key === 'R') openCharSelect();

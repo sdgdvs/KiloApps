@@ -207,13 +207,14 @@
                 <button class="btn-action btn-spell" onclick="openSpellbook()">[M] Spellbook</button>
                 <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory & Gear</button>
                 <button class="btn-action btn-lead" onclick="openLeaderboard()">[H] Leaderboard</button>
+                <button class="btn-action" onclick="openKeybinds()">[K] Controls & Rebind</button>
                 <button class="btn-action" onclick="openHelp()">[?] Help</button>
                 <button class="btn-action" onclick="saveGame()">[S] Quick Save</button>
                 <button class="btn-action" onclick="loadGame()">[L] Load Game</button>
             </div>
             <div id="msg-box"></div>
             <div class="controls-hint">
-                [Arrows] Move/Attack | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [H] Leaderboard | [?] Help | [S] Save | [L] Load
+                [Arrows/WASD] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [H] Leaderboard | [K] Keybinds | [?] Help | [S] Save | [L] Load
             </div>
         </div>
 
@@ -337,8 +338,28 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="modal-close">
+                <div class="modal-close" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn-modal-close" onclick="exportLeaderboardJSON()">📤 Export JSON</button>
+                    <button class="btn-modal-close" onclick="importLeaderboardJSON()">📥 Import JSON</button>
+                    <button class="btn-modal-close" style="border-color: #e53e3e; background: #742a2a;" onclick="clearLeaderboard()">🗑️ Clear History</button>
                     <button class="btn-modal-close" onclick="closeModal('modal-leaderboard')">Close [ESC]</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="file" id="import-json-file" accept=".json" style="display: none;" onchange="handleImportJSONFile(event)">
+
+        <!-- Keybindings Modal -->
+        <div id="modal-keybinds" class="modal-overlay" style="display: none;">
+            <div class="modal-card" style="width: 480px; max-width: 95%;">
+                <div class="modal-header">⌨️ KEYBINDINGS & CONTROLS</div>
+                <div id="keybinds-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; padding: 4px;">
+                    <!-- Populated dynamically -->
+                </div>
+                <div id="keybinds-notice" style="font-size: 11px; color: #ecc94b; text-align: center; height: 18px; margin-top: 4px;"></div>
+                <div class="modal-close" style="display: flex; gap: 8px; justify-content: center; margin-top: 6px;">
+                    <button class="btn-modal-close" onclick="resetKeybinds()">Reset Defaults</button>
+                    <button class="btn-modal-close" onclick="closeModal('modal-keybinds')">Close [ESC]</button>
                 </div>
             </div>
         </div>
@@ -349,11 +370,12 @@
                 <div class="modal-header">📖 HOW TO PLAY KROGUE</div>
                 <div style="font-size: 13px; color: #a0aec0; line-height: 1.5;">
                     <p><b style="color:#63b3ed;">Goal:</b> Descend through 40 floors to slay Astaroth!</p>
-                    <p><b style="color:#63b3ed;">Movement:</b> Use Arrow Keys to move/attack. Press [.] or Numpad 5 to wait a turn.</p>
+                    <p><b style="color:#63b3ed;">Movement:</b> Use Arrow Keys / WASD / Custom Keybinds to move/attack. Press [.] or Numpad 5 to wait a turn.</p>
                     <p><b style="color:#63b3ed;">Combat:</b> Bump into enemies to attack. Ranged weapons require targeting [F].</p>
                     <p><b style="color:#63b3ed;">Classes & Magic:</b> Each class has a unique ability [A]. Mages start with spells [M].</p>
-                    <p><b style="color:#63b3ed;">Food & Healing:</b> Eat Food to prevent starvation (HP drain). Use Potions to heal [I].</p>
-                    <p><b style="color:#63b3ed;">Shrines & Anvils:</b> Step on Shrines [^] for buffs. Anvils [T] upgrade equipment.</p>
+                    <p><b style="color:#63b3ed;">Custom Keybinds:</b> Press [K] to rebind controls to your liking.</p>
+                    <p><b style="color:#63b3ed;">Run Stats JSON:</b> Export/Import your leaderboard JSON on the [H] Leaderboard screen.</p>
+                    <p><b style="color:#63b3ed;">Food & Healing:</b> Eat Food to prevent starvation. Use Potions to heal [I].</p>
                 </div>
                 <div class="modal-close">
                     <button class="btn-modal-close" onclick="closeModal('modal-help')">Close [ESC]</button>
@@ -1133,6 +1155,130 @@
         // Leaderboard UI
         function escapeHTML(str) { return String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[match])); }
 
+        // Default Keybindings Definition
+        const defaultKeybinds = {
+            moveUp: { label: 'Move Up (North)', keys: ['ArrowUp', 'w', 'W', 'k', 'Numpad8'] },
+            moveDown: { label: 'Move Down (South)', keys: ['ArrowDown', 's', 'S', 'j', 'Numpad2'] },
+            moveLeft: { label: 'Move Left (West)', keys: ['ArrowLeft', 'a', 'A', 'h', 'Numpad4'] },
+            moveRight: { label: 'Move Right (East)', keys: ['ArrowRight', 'd', 'D', 'l', 'Numpad6'] },
+            waitTurn: { label: 'Wait / Skip Turn', keys: ['.', 'z', 'Z', ' ', 'Numpad5'] },
+            useAbility: { label: 'Class Ability', keys: ['a', 'A'] },
+            openInventory: { label: 'Inventory & Gear', keys: ['i', 'I'] },
+            openSpellbook: { label: 'Magic Spellbook', keys: ['m', 'M'] },
+            openLeaderboard: { label: 'Leaderboard', keys: ['h', 'H'] },
+            openKeybinds: { label: 'Keybinding Config', keys: ['k', 'K'] },
+            openHelp: { label: 'Help / Guide', keys: ['?', '/'] },
+            saveState: { label: 'Quick Save', keys: ['F5', 's', 'S'] },
+            loadState: { label: 'Quick Load', keys: ['F9', 'l', 'L'] }
+        };
+
+        let keybinds = JSON.parse(localStorage.getItem('krogue_keybinds') || 'null');
+        if (!keybinds) { keybinds = JSON.parse(JSON.stringify(defaultKeybinds)); }
+
+        function isActionKey(e, actionName) {
+            if (!keybinds[actionName]) return false;
+            return keybinds[actionName].keys.includes(e.key);
+        }
+
+        let rebindingAction = null;
+
+        function openKeybinds() {
+            renderKeybindsList();
+            document.getElementById('keybinds-notice').innerText = '';
+            document.getElementById('modal-keybinds').style.display = 'flex';
+        }
+
+        function renderKeybindsList() {
+            let container = document.getElementById('keybinds-list');
+            if (!container) return;
+            container.innerHTML = Object.keys(keybinds).map(actionKey => {
+                let act = keybinds[actionKey];
+                let keysDisplay = act.keys.join(' / ');
+                let isRebindingThis = rebindingAction === actionKey;
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #1a202c; padding: 6px 10px; border-radius: 6px; border: 1px solid #2d3748; font-size: 12px;">
+                        <span style="font-weight: 600; color: #e2e8f0;">${escapeHTML(act.label)}</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-family: monospace; background: #0d1117; padding: 2px 8px; border-radius: 4px; border: 1px solid #4a5568; color: ${isRebindingThis ? '#f6ad55' : '#63b3ed'};">
+                                ${isRebindingThis ? 'Press any key...' : escapeHTML(keysDisplay)}
+                            </span>
+                            <button class="btn-action" style="padding: 2px 8px; font-size: 11px;" onclick="startRebind('${actionKey}')">Rebind</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function startRebind(actionKey) {
+            rebindingAction = actionKey;
+            document.getElementById('keybinds-notice').innerText = `Press new key to bind to ${keybinds[actionKey].label}... (Press ESC to cancel)`;
+            renderKeybindsList();
+        }
+
+        function resetKeybinds() {
+            keybinds = JSON.parse(JSON.stringify(defaultKeybinds));
+            localStorage.setItem('krogue_keybinds', JSON.stringify(keybinds));
+            rebindingAction = null;
+            document.getElementById('keybinds-notice').innerText = 'Controls reset to default.';
+            renderKeybindsList();
+        }
+
+        // High Score / Run History JSON Export & Import
+        function exportLeaderboardJSON() {
+            let history = localStorage.getItem('krogue_leaderboard') || '[]';
+            let blob = new Blob([history], { type: 'application/json' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'krogue_leaderboard.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            addMsg("Exported run leaderboard to krogue_leaderboard.json!", 'good');
+        }
+
+        function importLeaderboardJSON() {
+            document.getElementById('import-json-file').click();
+        }
+
+        function handleImportJSONFile(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let importedData = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedData)) throw new Error("Invalid JSON array format.");
+                    let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
+                    let addedCount = 0;
+                    importedData.forEach(entry => {
+                        if (entry && typeof entry === 'object' && (entry.score !== undefined || entry.floor !== undefined)) {
+                            let exists = history.some(h => h.seed === entry.seed && h.score === entry.score && h.floor === entry.floor);
+                            if (!exists) {
+                                history.push(entry);
+                                addedCount++;
+                            }
+                        }
+                    });
+                    history.sort((a, b) => (b.score || 0) - (a.score || 0));
+                    localStorage.setItem('krogue_leaderboard', JSON.stringify(history));
+                    openLeaderboard();
+                    addMsg(`Imported ${addedCount} run history entries!`, 'good');
+                } catch(err) {
+                    alert("Failed to parse JSON file: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function clearLeaderboard() {
+            if (confirm("Are you sure you want to clear all run history and leaderboard records?")) {
+                localStorage.removeItem('krogue_leaderboard');
+                openLeaderboard();
+                addMsg("Leaderboard history cleared.", 'good');
+            }
+        }
+
         function openLeaderboard() {
             let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
             let tbody = document.getElementById('lead-tbody');
@@ -1231,31 +1377,47 @@
 
         // Key Listeners
         window.addEventListener('keydown', e => {
+            if (rebindingAction) {
+                if (e.key !== 'Escape') {
+                    keybinds[rebindingAction].keys = [e.key];
+                    localStorage.setItem('krogue_keybinds', JSON.stringify(keybinds));
+                    document.getElementById('keybinds-notice').innerText = `Bound ${keybinds[rebindingAction].label} to [${e.key}]!`;
+                } else {
+                    document.getElementById('keybinds-notice').innerText = 'Rebinding cancelled.';
+                }
+                rebindingAction = null;
+                renderKeybindsList();
+                e.preventDefault();
+                return;
+            }
+
             if (e.key === 'Escape') {
-                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help');
+                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help'); closeModal('modal-keybinds');
                 if (state === 4) { state = 1; addMsg("Targeting cancelled."); updateMsgBox(); }
                 return;
             }
 
             if (state === 0) {
                 if (e.key === 'Enter') openCharSelect();
-                if (e.key === 'h' || e.key === 'H') openLeaderboard();
-                if (e.key === 'l' || e.key === 'L') loadGame();
-                if (e.key === '?' || e.key === '/') openHelp();
+                if (isActionKey(e, 'openLeaderboard') || e.key === 'h' || e.key === 'H') openLeaderboard();
+                if (isActionKey(e, 'openKeybinds') || e.key === 'k' || e.key === 'K') openKeybinds();
+                if (isActionKey(e, 'loadState') || e.key === 'l' || e.key === 'L') loadGame();
+                if (isActionKey(e, 'openHelp') || e.key === '?' || e.key === '/') openHelp();
             } else if (state === 1) {
                 let dx = 0, dy = 0, turn = false;
-                if (e.key === 'ArrowUp') { dy = -1; turn = true; }
-                if (e.key === 'ArrowDown') { dy = 1; turn = true; }
-                if (e.key === 'ArrowLeft') { dx = -1; turn = true; }
-                if (e.key === 'ArrowRight') { dx = 1; turn = true; }
-                if (e.key === '.') endTurn();
-                if (e.key === 'a' || e.key === 'A') useClassAbility();
-                if (e.key === 'i' || e.key === 'I') openInventory();
-                if (e.key === 'm' || e.key === 'M') openSpellbook();
-                if (e.key === 'h' || e.key === 'H') openLeaderboard();
-                if (e.key === '?' || e.key === '/') openHelp();
-                if (e.key === 's' || e.key === 'S') saveGame();
-                if (e.key === 'l' || e.key === 'L') loadGame();
+                if (isActionKey(e, 'moveUp')) { dy = -1; turn = true; }
+                else if (isActionKey(e, 'moveDown')) { dy = 1; turn = true; }
+                else if (isActionKey(e, 'moveLeft')) { dx = -1; turn = true; }
+                else if (isActionKey(e, 'moveRight')) { dx = 1; turn = true; }
+                else if (isActionKey(e, 'waitTurn')) endTurn();
+                else if (isActionKey(e, 'useAbility')) useClassAbility();
+                else if (isActionKey(e, 'openInventory')) openInventory();
+                else if (isActionKey(e, 'openSpellbook')) openSpellbook();
+                else if (isActionKey(e, 'openLeaderboard')) openLeaderboard();
+                else if (isActionKey(e, 'openKeybinds')) openKeybinds();
+                else if (isActionKey(e, 'openHelp')) openHelp();
+                else if (isActionKey(e, 'saveState')) saveGame();
+                else if (isActionKey(e, 'loadState')) loadGame();
 
                 if (turn && (dx !== 0 || dy !== 0)) {
                     if (player.rooted_turns > 0) {

@@ -216,7 +216,7 @@ typedef struct {
     int dlevel;
     char msgs[MAX_MSGS][100];
     int stair_x, stair_y;
-    int state; // 0=play, 1=dead, 2=inventory, 3=targeting, 4=create_char, 5=char_sheet, 6=spells, 7=help, 8=msg_log
+    int state; // 0=play, 1=dead, 2=inventory, 3=targeting, 4=create_char, 5=char_sheet, 6=spells, 7=help, 8=msg_log, 9=shop, 10=victory, 11=leaderboard, 12=keybinds
     int targeting_mode; // 0=bow, 1=spell
     int char_race;
     int char_class;
@@ -227,6 +227,25 @@ typedef struct {
     int difficulty; // 0=Normal, 1=Hard, 2=Nightmare
     int total_kills;
 } GameState;
+
+typedef struct {
+    int up;
+    int down;
+    int left;
+    int right;
+    int wait;
+    int inv;
+    int spells;
+    int sheet;
+    int log;
+    int help;
+    int keybinds_menu;
+    int save;
+    int load;
+} Keybinds;
+
+Keybinds g_keybinds;
+int g_rebinding_idx = -1;
 
 GameState g;
 HWND g_hwnd;
@@ -262,6 +281,49 @@ void str_cat(char* d, const char* s) { while(*d) d++; while(*s) *d++ = *s++; *d 
 int str_cmp(const char* a, const char* b) {
     while(*a && *a == *b) { a++; b++; }
     return *a - *b;
+}
+
+#pragma function(memcpy)
+void* memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
+void str_memcpy(void* d, const void* s, int n) {
+    memcpy(d, s, n);
+}
+
+char* str_chr(const char* s, char c) {
+    while(*s) {
+        if(*s == c) return (char*)s;
+        s++;
+    }
+    return NULL;
+}
+
+char* str_str(const char* haystack, const char* needle) {
+    if(!*needle) return (char*)haystack;
+    for(; *haystack; haystack++) {
+        const char* h = haystack;
+        const char* n = needle;
+        while(*h && *n && (*h == *n)) { h++; n++; }
+        if(!*n) return (char*)haystack;
+    }
+    return NULL;
+}
+
+int str_atoi(const char* s) {
+    int res = 0, sign = 1;
+    while(*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n') s++;
+    if(*s == '-') { sign = -1; s++; }
+    else if(*s == '+') s++;
+    while(*s >= '0' && *s <= '9') {
+        res = res * 10 + (*s - '0');
+        s++;
+    }
+    return res * sign;
 }
 
 void add_msg(const char* msg) {
@@ -312,6 +374,173 @@ void save_leaderboard() {
         WriteFile(hFile, g_leaderboard, sizeof(LeaderboardEntry) * g_leaderboard_count, &written, NULL);
         CloseHandle(hFile);
     }
+}
+
+void clear_leaderboard() {
+    g_leaderboard_count = 0;
+    save_leaderboard();
+    add_msg("Leaderboard history cleared.");
+}
+
+void export_leaderboard_json() {
+    load_leaderboard();
+    HANDLE hFile = CreateFileA("scores_export.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile == INVALID_HANDLE_VALUE) {
+        add_msg("Failed to export JSON file!");
+        return;
+    }
+    DWORD written;
+    char header[] = "[\n";
+    WriteFile(hFile, header, (DWORD)str_len(header), &written, NULL);
+    for (int i = 0; i < g_leaderboard_count; i++) {
+        LeaderboardEntry* e = &g_leaderboard[i];
+        char line[256];
+        wsprintfA(line, "  {\n    \"name\": \"%s\",\n    \"class_id\": %d,\n    \"race\": %d,\n    \"level\": %d,\n    \"dlevel\": %d,\n    \"kills\": %d,\n    \"gold\": %d,\n    \"score\": %d,\n    \"victory\": %d,\n    \"seed\": %u\n  }%s\n",
+            e->name, e->class_id, e->race, e->level, e->dlevel, e->kills, e->gold, e->score, e->victory, e->seed,
+            (i < g_leaderboard_count - 1) ? "," : "");
+        WriteFile(hFile, line, (DWORD)str_len(line), &written, NULL);
+    }
+    char footer[] = "]\n";
+    WriteFile(hFile, footer, (DWORD)str_len(footer), &written, NULL);
+    CloseHandle(hFile);
+    add_msg("Leaderboard exported to scores_export.json!");
+}
+
+void import_leaderboard_json() {
+    HANDLE hFile = CreateFileA("scores_import.json", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        hFile = CreateFileA("scores_export.json", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
+    if (hFile == INVALID_HANDLE_VALUE) {
+        add_msg("scores_import.json not found!");
+        return;
+    }
+    DWORD size = GetFileSize(hFile, NULL);
+    if (size == 0 || size > 65536) {
+        CloseHandle(hFile);
+        add_msg("Invalid JSON file size.");
+        return;
+    }
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + 1);
+    DWORD read;
+    ReadFile(hFile, buf, size, &read, NULL);
+    CloseHandle(hFile);
+    buf[read] = 0;
+
+    int imported = 0;
+    char* ptr = buf;
+    while ((ptr = str_str(ptr, "{")) != NULL) {
+        char* end = str_str(ptr, "}");
+        if (!end) break;
+
+        LeaderboardEntry e;
+        RtlZeroMemory(&e, sizeof(LeaderboardEntry));
+        str_cpy(e.name, "Hero");
+
+        char* n = str_str(ptr, "\"name\":");
+        if (n && n < end) {
+            char* q1 = str_chr(n + 7, '"');
+            if (q1 && q1 < end) {
+                char* q2 = str_chr(q1 + 1, '"');
+                if (q2 && q2 < end) {
+                    int len = (int)(q2 - (q1 + 1));
+                    if (len > 31) len = 31;
+                    str_memcpy(e.name, q1 + 1, len);
+                    e.name[len] = 0;
+                }
+            }
+        }
+        char* s = str_str(ptr, "\"score\":");
+        if (s && s < end) e.score = str_atoi(s + 8);
+        char* c = str_str(ptr, "\"class_id\":");
+        if (c && c < end) e.class_id = str_atoi(c + 11);
+        char* r = str_str(ptr, "\"race\":");
+        if (r && r < end) e.race = str_atoi(r + 7);
+        char* l = str_str(ptr, "\"level\":");
+        if (l && l < end) e.level = str_atoi(l + 8);
+        char* d = str_str(ptr, "\"dlevel\":");
+        if (d && d < end) e.dlevel = str_atoi(d + 9);
+        char* k = str_str(ptr, "\"kills\":");
+        if (k && k < end) e.kills = str_atoi(k + 8);
+        char* g_ptr = str_str(ptr, "\"gold\":");
+        if (g_ptr && g_ptr < end) e.gold = str_atoi(g_ptr + 7);
+        char* v = str_str(ptr, "\"victory\":");
+        if (v && v < end) e.victory = str_atoi(v + 10);
+        char* sd = str_str(ptr, "\"seed\":");
+        if (sd && sd < end) e.seed = (unsigned int)str_atoi(sd + 7);
+
+        if (e.score > 0 || e.dlevel > 0) {
+            int pos = g_leaderboard_count;
+            for (int i = 0; i < g_leaderboard_count; i++) {
+                if (e.score > g_leaderboard[i].score) {
+                    pos = i;
+                    break;
+                }
+            }
+            if (pos < 10) {
+                for (int i = (g_leaderboard_count > 9 ? 9 : g_leaderboard_count); i > pos; i--) {
+                    g_leaderboard[i] = g_leaderboard[i - 1];
+                }
+                g_leaderboard[pos] = e;
+                if (g_leaderboard_count < 10) g_leaderboard_count++;
+                imported++;
+            }
+        }
+        ptr = end + 1;
+    }
+    HeapFree(GetProcessHeap(), 0, buf);
+    save_leaderboard();
+    char msg[64];
+    wsprintfA(msg, "Imported %d score records!", imported);
+    add_msg(msg);
+}
+
+void init_default_keybinds() {
+    g_keybinds.up = VK_UP;
+    g_keybinds.down = VK_DOWN;
+    g_keybinds.left = VK_LEFT;
+    g_keybinds.right = VK_RIGHT;
+    g_keybinds.wait = 'Z';
+    g_keybinds.inv = 'I';
+    g_keybinds.spells = 'M';
+    g_keybinds.sheet = 'C';
+    g_keybinds.log = 'V';
+    g_keybinds.help = VK_OEM_2;
+    g_keybinds.keybinds_menu = 'K';
+    g_keybinds.save = VK_F5;
+    g_keybinds.load = VK_F9;
+}
+
+void load_keybinds() {
+    init_default_keybinds();
+    HANDLE hFile = CreateFileA("keybinds.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile != INVALID_HANDLE_VALUE) {
+        DWORD read;
+        ReadFile(hFile, &g_keybinds, sizeof(Keybinds), &read, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void save_keybinds() {
+    HANDLE hFile = CreateFileA("keybinds.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(hFile, &g_keybinds, sizeof(Keybinds), &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void get_key_name_str(int vk, char* out) {
+    if(vk == VK_UP) str_cpy(out, "UP");
+    else if(vk == VK_DOWN) str_cpy(out, "DOWN");
+    else if(vk == VK_LEFT) str_cpy(out, "LEFT");
+    else if(vk == VK_RIGHT) str_cpy(out, "RIGHT");
+    else if(vk == VK_SPACE) str_cpy(out, "SPACE");
+    else if(vk == VK_RETURN) str_cpy(out, "ENTER");
+    else if(vk == VK_OEM_2) str_cpy(out, "?");
+    else if(vk >= 'A' && vk <= 'Z') { out[0] = (char)vk; out[1] = 0; }
+    else if(vk >= '0' && vk <= '9') { out[0] = (char)vk; out[1] = 0; }
+    else { wsprintfA(out, "0x%X", vk); }
 }
 
 void record_run(int victory) {
@@ -1772,7 +2001,7 @@ void draw_game(HDC hdc) {
 
         SetTextColor(memDC, RGB(255, 215, 0));
         TextOutA(memDC, 20, 150, "Press H to view Run History Leaderboard", 39);
-        TextOutA(memDC, 20, 170, "Press ? for Help", 16);
+        TextOutA(memDC, 20, 170, "Press K for Keybinds | Press ? for Help", 39);
 
         SetTextColor(memDC, RGB(255, 255, 255));
         TextOutA(memDC, 20, 200, "Press ENTER to begin your journey...", 36);
@@ -1780,7 +2009,7 @@ void draw_game(HDC hdc) {
         SetTextColor(memDC, RGB(255, 215, 0));
         SetBkColor(memDC, RGB(0,0,0));
         TextOutA(memDC, 20, 20, "RUN HISTORY LEADERBOARD", 23);
-        TextOutA(memDC, 20, 40, "Press ESC or H to return.", 25);
+        TextOutA(memDC, 20, 40, "Press ESC/H: Return | [X] Export JSON | [I] Import JSON | [C] Clear", 67);
         
         load_leaderboard();
         int y = 80;
@@ -1802,6 +2031,36 @@ void draw_game(HDC hdc) {
                 TextOutA(memDC, 20, y, buf, str_len(buf));
                 y += char_h;
             }
+        }
+    } else if(g.state == 12) { // Keybindings screen
+        SetTextColor(memDC, RGB(255, 215, 0));
+        SetBkColor(memDC, RGB(0,0,0));
+        TextOutA(memDC, 20, 20, "KEYBINDING CONFIGURATION", 24);
+        TextOutA(memDC, 20, 40, "Press 1-9 to rebind, R to reset defaults, ESC or K to return.", 61);
+
+        int y = 80;
+        const char* actions[] = {
+            "1. Move Up", "2. Move Down", "3. Move Left", "4. Move Right",
+            "5. Wait Turn", "6. Inventory", "7. Spellbook", "8. Char Sheet", "9. Message Log"
+        };
+        int keys[] = {
+            g_keybinds.up, g_keybinds.down, g_keybinds.left, g_keybinds.right,
+            g_keybinds.wait, g_keybinds.inv, g_keybinds.spells, g_keybinds.sheet, g_keybinds.log
+        };
+
+        for(int i = 0; i < 9; i++) {
+            char buf[64];
+            char kstr[16];
+            get_key_name_str(keys[i], kstr);
+            wsprintfA(buf, "%-18s : [%s]", actions[i], kstr);
+            SetTextColor(memDC, g_rebinding_idx == i ? RGB(255, 255, 0) : RGB(200, 200, 200));
+            TextOutA(memDC, 20, y, buf, str_len(buf));
+            y += char_h * 5 / 4;
+        }
+
+        if(g_rebinding_idx != -1) {
+            SetTextColor(memDC, RGB(255, 100, 100));
+            TextOutA(memDC, 20, y + 10, ">>> PRESS ANY KEY TO BIND TO SELECTED ACTION <<<", 48);
         }
     } else if(g.state == 5) { // char sheet
         SetTextColor(memDC, RGB(255,255,255));
@@ -2143,6 +2402,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     switch (uMsg) {
         case WM_CREATE: {
             g_font = CreateFontA(char_h, char_w, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            load_keybinds();
             init_game();
             return 0;
         }
@@ -2156,35 +2416,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if(wParam == 'R') init_game();
                 if(wParam == VK_F9) load_game();
             } else if(g.state == 0) { // play
-                switch(wParam) {
-                    case VK_UP: case VK_NUMPAD8: case 'K': move_player(0, -1); break;
-                    case VK_DOWN: case VK_NUMPAD2: case 'J': move_player(0, 1); break;
-                    case VK_LEFT: case VK_NUMPAD4: case 'H': move_player(-1, 0); break;
-                    case VK_RIGHT: case VK_NUMPAD6: case 'L': move_player(1, 0); break;
-                    case VK_NUMPAD7: case 'Y': move_player(-1, -1); break;
-                    case VK_NUMPAD9: case 'U': move_player(1, -1); break;
-                    case VK_NUMPAD1: case 'B': move_player(-1, 1); break;
-                    case VK_NUMPAD3: case 'N': move_player(1, 1); break;
-                    case VK_NUMPAD5: case '.': monsters_turn(); break; // wait
-                    case 'G': case ',': pickup_item(); break;
-                    case 'I': g.state = 2; break; // open inventory
-                    case 'C': g.state = 5; break; // open char sheet
-                    case 'M': g.state = 6; break; // open spells menu
-                    case 'V': g.state = 8; break; // open message log
-                    case VK_OEM_2: g.state = 7; break; // ? key - open help
-                    case 'F': 
-                        if(g.equip_weapon.active && g.equip_weapon.subtype == W_BOW) {
-                            g.state = 3; 
-                            g.targeting_mode = 0;
-                            Entity* p = get_player();
-                            g.target_x = p->x; g.target_y = p->y;
-                            add_msg("Targeting... (Arrows to aim, Enter/F to fire, ESC to cancel)");
-                        } else {
-                            add_msg("You must equip a Bow to fire.");
-                        }
-                        break;
-                    case VK_F5: save_game(); break;
-                    case VK_F9: load_game(); break;
+                if(wParam == g_keybinds.up || wParam == VK_UP || wParam == VK_NUMPAD8) move_player(0, -1);
+                else if(wParam == g_keybinds.down || wParam == VK_DOWN || wParam == VK_NUMPAD2) move_player(0, 1);
+                else if(wParam == g_keybinds.left || wParam == VK_LEFT || wParam == VK_NUMPAD4) move_player(-1, 0);
+                else if(wParam == g_keybinds.right || wParam == VK_RIGHT || wParam == VK_NUMPAD6) move_player(1, 0);
+                else if(wParam == VK_NUMPAD7 || wParam == 'Y') move_player(-1, -1);
+                else if(wParam == VK_NUMPAD9 || wParam == 'U') move_player(1, -1);
+                else if(wParam == VK_NUMPAD1 || wParam == 'B') move_player(-1, 1);
+                else if(wParam == VK_NUMPAD3 || wParam == 'N') move_player(1, 1);
+                else if(wParam == g_keybinds.wait || wParam == VK_NUMPAD5 || wParam == '.') monsters_turn();
+                else if(wParam == 'G' || wParam == ',') pickup_item();
+                else if(wParam == g_keybinds.inv || wParam == 'I') g.state = 2;
+                else if(wParam == g_keybinds.sheet || wParam == 'C') g.state = 5;
+                else if(wParam == g_keybinds.spells || wParam == 'M') g.state = 6;
+                else if(wParam == g_keybinds.log || wParam == 'V') g.state = 8;
+                else if(wParam == g_keybinds.help || wParam == VK_OEM_2) g.state = 7;
+                else if(wParam == g_keybinds.keybinds_menu || wParam == 'K') g.state = 12;
+                else if(wParam == g_keybinds.save || wParam == VK_F5) save_game();
+                else if(wParam == g_keybinds.load || wParam == VK_F9) load_game();
+                else if(wParam == 'F') {
+                    if(g.equip_weapon.active && g.equip_weapon.subtype == W_BOW) {
+                        g.state = 3; 
+                        g.targeting_mode = 0;
+                        Entity* p = get_player();
+                        g.target_x = p->x; g.target_y = p->y;
+                        add_msg("Targeting... (Arrows to aim, Enter/F to fire, ESC to cancel)");
+                    } else {
+                        add_msg("You must equip a Bow to fire.");
+                    }
                 }
             } else if(g.state == 2) { // inventory
                 if(wParam == VK_ESCAPE) {
@@ -2220,10 +2479,37 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if(wParam == 'D') g.difficulty = (g.difficulty + 1) % 3;
                 else if(wParam == 'S') g.seed = (g.seed * 3 + 1234) % 90000 + 1000;
                 else if(wParam == 'H') g.state = 11;
+                else if(wParam == 'K') g.state = 12;
                 else if(wParam == VK_OEM_2) g.state = 7;
                 else if(wParam == VK_RETURN) finalize_character();
             } else if(g.state == 11) { // leaderboard
-                if(wParam == VK_ESCAPE || wParam == 'H') g.state = 4;
+                if(wParam == VK_ESCAPE || wParam == 'H') g.state = (g.dlevel == 0 ? 4 : 0);
+                else if(wParam == 'X') { export_leaderboard_json(); }
+                else if(wParam == 'I') { import_leaderboard_json(); }
+                else if(wParam == 'C') { clear_leaderboard(); }
+            } else if(g.state == 12) { // keybindings screen
+                if(g_rebinding_idx != -1) {
+                    if(wParam != VK_ESCAPE) {
+                        int* target_keys[] = {
+                            &g_keybinds.up, &g_keybinds.down, &g_keybinds.left, &g_keybinds.right,
+                            &g_keybinds.wait, &g_keybinds.inv, &g_keybinds.spells, &g_keybinds.sheet, &g_keybinds.log
+                        };
+                        *target_keys[g_rebinding_idx] = (int)wParam;
+                        save_keybinds();
+                        add_msg("Keybinding updated successfully!");
+                    }
+                    g_rebinding_idx = -1;
+                } else {
+                    if(wParam == VK_ESCAPE || wParam == 'K') {
+                        g.state = (g.dlevel == 0 ? 4 : 0);
+                    } else if(wParam >= '1' && wParam <= '9') {
+                        g_rebinding_idx = (int)(wParam - '1');
+                    } else if(wParam == 'R') {
+                        init_default_keybinds();
+                        save_keybinds();
+                        add_msg("Keybindings reset to default.");
+                    }
+                }
             } else if(g.state == 5) { // char sheet
                 if(wParam == VK_ESCAPE || wParam == 'C') g.state = 0;
             } else if(g.state == 6) { // spells
