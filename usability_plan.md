@@ -52,7 +52,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KTodo
 - KConverter
 - KGraph
 - KTimer
@@ -103,8 +102,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTask
 - KRogue
 - KSys
+- KTodo
 
 ## Progress Log
+- KTodo: Usability and UI issues fixed (added explicit Help button to header and native action bar, updated keyboard listener for 'H' and 'F1', applied AdjustWindowRect to fix native layout clipping, changed native font rendering size for crispness).
 - KSys: Usability and UI issues fixed (adjusted auto-opening size to 1024x768 in App.jsx, implemented crisp sparkline scaling with devicePixelRatio in web, added AdjustWindowRect to fix native layout clipping).
 - KTask: Usability and UI issues fixed (auto-opening size adjusted to 800x600 in App.jsx, SetProcessDPIAware and explicit Help button added to native UI, crisp devicePixelRatio canvas scaling applied to web).
 - KSynth: Usability and UI issues fixed (updated App.jsx auto-opening size to 900x700 to prevent clipping, applied optimizeLegibility for web crisp text rendering, and re-mapped Help shortcuts from H to F1/? to avoid conflicting with the virtual piano's A note).

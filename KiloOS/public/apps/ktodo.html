@@ -776,6 +776,9 @@
       <h1>KTodo</h1>
     </div>
     <div class="header-actions">
+      <button class="btn" onclick="alert('KTodo Help:\n- Use the top bar to switch between List and Kanban views.\n- Click Category tabs to filter by project.\n- Click Import/Export to save or parse Markdown task lists.\n- Press \'h\' or F1 for help.')" title="Help">
+        ❓ Help
+      </button>
       <button class="btn" onclick="toggleStats()" title="Toggle Productivity Statistics">
         📊 <span id="statsToggleLabel">Stats</span>
       </button>
@@ -1673,11 +1676,12 @@
     renderAppView();
     
     document.addEventListener('keydown', (e) => {
-      if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
-        alert("KTodo Help:\n- Use the top bar to switch between List and Kanban views.\n- Click Category tabs to filter by project.\n- Click Import/Export to save or parse Markdown task lists.\n- Press 'h' for help.");
+      if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
+        if (e.key === 'F1') e.preventDefault();
+        alert("KTodo Help:\n- Use the top bar to switch between List and Kanban views.\n- Click Category tabs to filter by project.\n- Click Import/Export to save or parse Markdown task lists.\n- Press 'h' or F1 for help.");
       }
     });
-    setTimeout(() => showToast("Welcome to KTodo! Press 'h' for help."), 500);
+    setTimeout(() => showToast("Welcome to KTodo! Press 'h' or F1 for help."), 500);
   </script>
 </body>
 </html>

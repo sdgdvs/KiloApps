@@ -96,7 +96,7 @@ int g_taskCount = 0;
 
 HWND hInput, hCategory, hPriority, hDueDate, hAddBtn;
 HWND hSearch, hFilterStatus, hFilterCategory;
-HWND hList, hToggleBtn, hSubtaskBtn, hDeleteBtn, hClearBtn, hExportBtn, hImportBtn, hExportMDBtn, hImportMDBtn, hStatsBtn, hStatusText;
+HWND hList, hToggleBtn, hSubtaskBtn, hDeleteBtn, hClearBtn, hExportBtn, hImportBtn, hExportMDBtn, hImportMDBtn, hStatsBtn, hStatusText, hHelpBtn;
 HFONT hFont, hFontBold;
 
 WNDPROC g_OldEditProc = NULL;
@@ -121,6 +121,7 @@ WNDPROC g_OldListProc = NULL;
 #define ID_STATSBTN       1015
 #define ID_EXPORTMDBTN    1016
 #define ID_IMPORTMDBTN    1017
+#define ID_HELPBTN        1018
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
@@ -652,12 +653,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hExportMDBtn = CreateWindowA("BUTTON", "Export MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 415, 265, 70, 26, hwnd, (HMENU)ID_EXPORTMDBTN, NULL, NULL);
             hImportMDBtn = CreateWindowA("BUTTON", "Import MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 490, 265, 70, 26, hwnd, (HMENU)ID_IMPORTMDBTN, NULL, NULL);
             hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 565, 265, 50, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
+            hHelpBtn = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 620, 265, 50, 26, hwnd, (HMENU)ID_HELPBTN, NULL, NULL);
 
             // Row 5: Status Bar
             hStatusText = CreateWindowA("STATIC", "Total: 0 | Active: 0 | Done: 0 | [Press 'H' or F1 for Help]", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);
 
             // Setup fonts
-            hFont = CreateFontA(18, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             if (!hFont) hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -678,6 +680,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hExportMDBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hImportMDBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hImportBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hHelpBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hStatusText, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             // Subclass controls
@@ -733,6 +736,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hExportMDBtn, 415, btnY, 70, 24, TRUE);
                 MoveWindow(hImportMDBtn, 490, btnY, 70, 24, TRUE);
                 MoveWindow(hImportBtn, 565, btnY, 50, 24, TRUE);
+                MoveWindow(hHelpBtn, 620, btnY, 50, 24, TRUE);
 
                 MoveWindow(hStatusText, 10, cy - 25, cx - 20, 20, TRUE);
             }
@@ -763,6 +767,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DoImportMarkdown();
             } else if (id == ID_IMPORTBTN) {
                 LoadSampleData();
+            } else if (id == ID_HELPBTN) {
+                MessageBoxA(hwnd, "KTodo Help:\n- Type a task and click '+ Add'\n- Select category, priority, and due date\n- Double-click a task to toggle completion\n- Click '+ Checklist' to add subtasks\n- Export/Import JSON or Markdown (.md) task lists\n- Press 'Stats' for productivity summary.", "KTodo Help", MB_OK | MB_ICONINFORMATION);
             } else if (id == ID_FILTERSTATUS && code == CBN_SELCHANGE) {
                 RefreshTaskList();
             } else if (id == ID_FILTERCATEGORY && code == CBN_SELCHANGE) {
@@ -800,7 +806,10 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, wc.hInstance, NULL);
+    
+    RECT r = {0, 0, 800, 600};
+    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, FALSE);
+    HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
