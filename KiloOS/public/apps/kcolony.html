@@ -9,7 +9,7 @@
         #header { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 15px; background: linear-gradient(145deg, #112, #223); border: 2px solid #00ffff; border-radius: 5px; box-shadow: 0 0 10px #00ffff, inset 0 0 10px #00ffff; max-width: 700px; }
         .res { font-size: 16px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 5px #00ffff; }
         #main { display: flex; gap: 20px; }
-        #grid { display: grid; grid-template-columns: repeat(20, 20px); grid-template-rows: repeat(20, 20px); gap: 1px; background: #002; border: 2px solid #00ffff; box-shadow: 0 0 15px #00ffff; padding: 2px; }
+        #grid { display: grid; grid-template-columns: repeat(20, 20px); grid-template-rows: repeat(20, 20px); gap: 1px; background: #002; border: 2px solid #00ffff; box-shadow: 0 0 15px #00ffff; padding: 2px; position: relative; }
         .cell { width: 20px; height: 20px; background: #0a111a; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 1px solid #003333; transition: all 0.2s; }
         .cell:hover { background: #005555; box-shadow: 0 0 10px #00ffff; }
         #panel { display: flex; flex-direction: column; gap: 10px; width: 220px; }
@@ -22,6 +22,8 @@
         .btn.expedition { border-color: #ffaa00; color: #ffaa00; box-shadow: 0 0 5px rgba(255,170,0,0.2); }
         .btn.expedition:hover { box-shadow: 0 0 10px #ffaa00; }
         small { display: block; margin-top: 3px; color: #0aa; text-shadow: none; font-size: 9px; }
+        .particle { position: absolute; pointer-events: none; border-radius: 50%; opacity: 1; z-index: 5; }
+        .projectile { position: absolute; pointer-events: none; background: #fff; box-shadow: 0 0 5px #fff; z-index: 10; transform: translate(-50%, -50%); }
     </style>
 </head>
 <body>
@@ -356,9 +358,9 @@
             F: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="8" width="18" height="11" fill="#030"/><path d="M4,18 Q4,10 7,6 M10,18 Q10,8 13,5 M16,18 Q16,11 19,7" stroke="#0f0" fill="none" stroke-width="1.5"/></svg>')}`,
             M: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4,20 L10,5 L16,20" fill="none" stroke="#f0f" stroke-width="2"/><circle cx="10" cy="5" r="2" fill="#f0f"/><rect x="8" y="10" width="4" height="10" fill="#303" stroke="#f0f"/></svg>')}`,
             H: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="#033" stroke="#0ff" stroke-width="1.5"/><rect x="8" y="12" width="4" height="6" fill="#0ff"/></svg>')}`,
-            B: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="10" height="14" fill="#310" stroke="#f80" stroke-width="1.5"/><rect x="8" y="2" width="4" height="2" fill="#f80"/><rect x="7" y="10" width="6" height="6" fill="#f80"/></svg>')}`,
-            L: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8,2 L12,2 L12,8 L18,18 L2,18 L8,8 Z" fill="#203" stroke="#a0f" stroke-width="1.5"/><circle cx="10" cy="14" r="2" fill="#a0f"/></svg>')}`,
-            N: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M5,18 L7,6 L13,6 L15,18 Z" fill="#032" stroke="#0fa" stroke-width="1.5"/><circle cx="10" cy="12" r="3" fill="#0fa"/></svg>')}`,
+            B: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="10" height="14" fill="#310" stroke="#f80" stroke-width="1.5"/><rect x="8" y="2" width="4" height="2" fill="#f80"/><rect x="7" y="10" width="6" height="6" fill="#f80"><animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite"/></rect></svg>')}`,
+            L: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8,2 L12,2 L12,8 L18,18 L2,18 L8,8 Z" fill="#203" stroke="#a0f" stroke-width="1.5"/><ellipse cx="10" cy="14" rx="2" ry="2" fill="#a0f"><animate attributeName="rx" values="2;6;2" dur="1s" repeatCount="indefinite"/></ellipse></svg>')}`,
+            N: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M5,18 L7,6 L13,6 L15,18 Z" fill="#032" stroke="#0fa" stroke-width="1.5"/><circle cx="10" cy="12" r="3" fill="#0fa"><animate attributeName="r" values="3;4.5;3" dur="0.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.5;1" dur="0.8s" repeatCount="indefinite"/></circle></svg>')}`,
             Y: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="12" width="16" height="6" fill="#230" stroke="#af0" stroke-width="1"/><path d="M4,12 C4,6 8,6 10,2 C12,6 16,6 16,12" fill="none" stroke="#af0" stroke-width="1.5"/></svg>')}`,
             D: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="14" width="12" height="6" fill="#300" stroke="#f00"/><circle cx="10" cy="10" r="4" fill="#f00"/><line x1="10" y1="10" x2="10" y2="2" stroke="#f00" stroke-width="2"/></svg>')}`,
             W: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="18" height="18" fill="#222" stroke="#888"/><line x1="1" y1="7" x2="19" y2="7" stroke="#888"/><line x1="1" y1="13" x2="19" y2="13" stroke="#888"/><line x1="7" y1="1" x2="7" y2="7" stroke="#888"/><line x1="14" y1="7" x2="14" y2="13" stroke="#888"/><line x1="7" y1="13" x2="7" y2="19" stroke="#888"/></svg>')}`,
@@ -403,6 +405,69 @@
             }
         }
 
+        function spawnParticles(gx, gy, color) {
+            const gridEl = document.getElementById('grid');
+            const num = 15;
+            for(let i=0; i<num; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.backgroundColor = color;
+                p.style.width = (Math.random()*4+2)+'px';
+                p.style.height = p.style.width;
+                p.style.left = (2 + gx * 21 + 10) + 'px';
+                p.style.top = (2 + gy * 21 + 10) + 'px';
+                p.style.transform = 'translate(-50%, -50%)';
+                
+                const vx = (Math.random() - 0.5) * 60;
+                const vy = (Math.random() - 0.5) * 60;
+                
+                gridEl.appendChild(p);
+                
+                let start = performance.now();
+                function anim(t) {
+                    let progress = (t - start) / 600;
+                    if (progress > 1) { p.remove(); return; }
+                    p.style.transform = `translate(calc(-50% + ${vx * progress}px), calc(-50% + ${vy * progress}px))`;
+                    p.style.opacity = 1 - progress;
+                    requestAnimationFrame(anim);
+                }
+                requestAnimationFrame(anim);
+            }
+        }
+
+        function fireProjectile(x1, y1, x2, y2, color) {
+            const gridEl = document.getElementById('grid');
+            const p = document.createElement('div');
+            p.className = 'projectile';
+            p.style.backgroundColor = color;
+            p.style.boxShadow = `0 0 8px ${color}`;
+            p.style.width = '4px';
+            p.style.height = '4px';
+            p.style.borderRadius = '50%';
+            
+            const startX = 2 + x1 * 21 + 10;
+            const startY = 2 + y1 * 21 + 10;
+            const endX = 2 + x2 * 21 + 10;
+            const endY = 2 + y2 * 21 + 10;
+            
+            p.style.left = startX + 'px';
+            p.style.top = startY + 'px';
+            gridEl.appendChild(p);
+            
+            let start = performance.now();
+            function anim(t) {
+                let progress = (t - start) / 150; 
+                if (progress > 1) { 
+                    p.remove(); 
+                    return; 
+                }
+                p.style.left = (startX + (endX - startX) * progress) + 'px';
+                p.style.top = (startY + (endY - startY) * progress) + 'px';
+                requestAnimationFrame(anim);
+            }
+            requestAnimationFrame(anim);
+        }
+
         function init() {
             const gridEl = document.getElementById('grid');
             for (let y = 0; y < GRID_H; y++) {
@@ -430,7 +495,11 @@
                         let hits = Math.min(3, targets.length);
                         for(let i=0; i<hits; i++) {
                             let idx = targets[Math.floor(Math.random() * targets.length)];
-                            if (grid[idx] > 0 && grid[idx] <= 11) grid[idx] += 20;
+                            if (grid[idx] > 0 && grid[idx] <= 11) {
+                                grid[idx] += 20;
+                                let tx = idx % GRID_W, ty = Math.floor(idx / GRID_W);
+                                spawnParticles(tx, ty, '#ff0000');
+                            }
                         }
                         msgText = "METEOR SHOWER! Structures damaged.";
                         msgTicks = 5;
@@ -442,7 +511,11 @@
                         playTone(100, 'sine', 1.0, 0.2); // dust storm rumble
                     } else if (targets.length > 0) {
                         let idx = targets[Math.floor(Math.random() * targets.length)];
-                        if (grid[idx] > 0 && grid[idx] <= 11) grid[idx] += 20;
+                        if (grid[idx] > 0 && grid[idx] <= 11) {
+                            grid[idx] += 20;
+                            let tx = idx % GRID_W, ty = Math.floor(idx / GRID_W);
+                            spawnParticles(tx, ty, '#ff8800');
+                        }
                         msgText = "EQUIPMENT BREAKDOWN!";
                         msgTicks = 5;
                         playAlarm();
@@ -466,8 +539,13 @@
                             let dist = Math.abs(tx - a.x) + Math.abs(ty - a.y);
                             if (dist <= range && power > 0) {
                                 playLaser();
+                                let color = (type === 9) ? '#ff0000' : '#ffaa00';
+                                fireProjectile(tx, ty, a.x, a.y, color);
                                 a.hp--;
-                                if (a.hp <= 0) aliens.splice(i, 1);
+                                if (a.hp <= 0) {
+                                    setTimeout(() => spawnParticles(a.x, a.y, '#ff00ff'), 150);
+                                    aliens.splice(i, 1);
+                                }
                                 break;
                             }
                         }
@@ -495,6 +573,7 @@
                                     msgTicks = 5;
                                     playAlarm();
                                     document.getElementById('msg').innerText = msgText;
+                                    spawnParticles(target.x, target.y, '#ff8800');
                                 }
                                 aliens.splice(i, 1);
                             } else {

@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KColony
 - KFortress
 - KFarm
 
@@ -134,7 +133,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTetris
 - KBreakout
 - KMaze
+- KColony
 ## Completed Work Log
+
+- **KColony (Loop 2):** Implemented pulsing energy lines for batteries/generators, spinning radar dishes for labs, destruction explosion particle bursts when a building is destroyed, and weapon firing animations/projectiles for Lasers and Turrets in both Web Canvas (kcolony.html) and Native C Win32 GDI (KColony/main.c).
 
 - **KMaze (Loop 4):** Implemented coordinate-based visual variety (patchy/checkerboard color tinting) for wall textures (stone, tech, ice, void) in the raycaster, added an enraged state for the Minotaur King Boss with glowing yellow eyes and a deep red snout when at critical HP, and upgraded the 3D HUD compass to a highly polished metallic design featuring a gold outer rim, inner bevel, deep blue face, dual-colored needle, and translucent glass dome reflection in both Web Canvas (kmaze.html) and Native C Win32 GDI (KMaze/main.c).
 

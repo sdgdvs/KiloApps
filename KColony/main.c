@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
+#include <math.h>
 
 #define GRID_W 20
 
@@ -24,6 +25,59 @@ void PlayGameSound(int type) {
 #define CELL_SIZE 20
 #define OFFSET_X 20
 #define OFFSET_Y 80
+
+int animFrame = 0;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    COLORREF color;
+} Particle;
+Particle particles[500];
+int particleCount = 0;
+
+void SpawnParticles(float x, float y, COLORREF color, int count) {
+    for (int i = 0; i < count && particleCount < 500; i++) {
+        particles[particleCount].x = x;
+        particles[particleCount].y = y;
+        particles[particleCount].vx = ((rand() % 100) - 50) / 10.0f;
+        particles[particleCount].vy = ((rand() % 100) - 50) / 10.0f;
+        particles[particleCount].life = 10 + (rand() % 10);
+        particles[particleCount].color = color;
+        particleCount++;
+    }
+}
+
+typedef struct {
+    float x, y;
+    float tx, ty;
+    float vx, vy;
+    COLORREF color;
+} Projectile;
+Projectile projectiles[100];
+int projCount = 0;
+
+void FireProjectile(float x1, float y1, float x2, float y2, COLORREF color) {
+    if (projCount < 100) {
+        projectiles[projCount].x = x1;
+        projectiles[projCount].y = y1;
+        projectiles[projCount].tx = x2;
+        projectiles[projCount].ty = y2;
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float len = sqrt(dx*dx + dy*dy);
+        if (len > 0.001f) {
+            projectiles[projCount].vx = (dx / len) * 15.0f;
+            projectiles[projCount].vy = (dy / len) * 15.0f;
+        } else {
+            projectiles[projCount].vx = 0;
+            projectiles[projCount].vy = 0;
+        }
+        projectiles[projCount].color = color;
+        projCount++;
+    }
+}
 
 int dustStormTicks = 0;
 int msgTicks = 0;
@@ -226,7 +280,11 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                     Rectangle(hdc, rc.left+4, rc.top+4, rc.right-4, rc.bottom-2);
                     HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
                     Rectangle(hdc, rc.left+8, rc.top+2, rc.left+12, rc.top+4);
-                    Rectangle(hdc, rc.left+6, rc.top+10, rc.right-6, rc.bottom-4);
+                    
+                    int pulse = (animFrame % 20) < 10 ? 1 : 0;
+                    if (pulse) {
+                        Rectangle(hdc, rc.left+6, rc.top+10, rc.right-6, rc.bottom-4);
+                    }
                     SelectObject(hdc, oldB); DeleteObject(b2);
                     SelectObject(hdc, oldP); DeleteObject(p2);
                 } else if (t == 6) { // Lab
@@ -234,7 +292,10 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                     POINT pts[4] = {{rc.left+8, rc.top+2}, {rc.right-8, rc.top+2}, {rc.right-2, rc.bottom-2}, {rc.left+2, rc.bottom-2}};
                     Polygon(hdc, pts, 4);
                     HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
-                    Ellipse(hdc, rc.left+8, rc.top+12, rc.left+12, rc.top+16);
+                    
+                    int spin = (animFrame % 10) / 2;
+                    int w = 2 + spin;
+                    Ellipse(hdc, rc.left+10-w, rc.top+12, rc.left+10+w, rc.top+16);
                     SelectObject(hdc, oldB); DeleteObject(b2);
                     SelectObject(hdc, oldP); DeleteObject(p2);
                 } else if (t == 7) { // Nuke
@@ -242,7 +303,11 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                     POINT pts[4] = {{rc.left+6, rc.bottom-2}, {rc.left+8, rc.top+4}, {rc.right-8, rc.top+4}, {rc.right-6, rc.bottom-2}};
                     Polygon(hdc, pts, 4);
                     HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
-                    Ellipse(hdc, rc.left+7, rc.top+8, rc.right-7, rc.bottom-6);
+                    
+                    int pulse = (animFrame % 16) < 8 ? 1 : 0;
+                    int r = pulse ? 7 : 5;
+                    Ellipse(hdc, rc.left+10-r, rc.top+11-r, rc.left+10+r, rc.top+11+r);
+                    
                     SelectObject(hdc, oldB); DeleteObject(b2);
                     SelectObject(hdc, oldP); DeleteObject(p2);
                 } else if (t == 8) { // Hydro
@@ -301,6 +366,29 @@ void DrawGrid(HDC hdc, HFONT hFont) {
         Ellipse(hdc, rc.right-9, rc.top+7, rc.right-5, rc.top+11);
         SelectObject(hdc, oldB); DeleteObject(b2);
         SelectObject(hdc, oldP); DeleteObject(p2);
+    }
+    
+    for (int i = 0; i < particleCount; i++) {
+        HBRUSH b = CreateSolidBrush(particles[i].color);
+        HPEN p = CreatePen(PS_SOLID, 1, particles[i].color);
+        HBRUSH oldB = SelectObject(hdc, b);
+        HPEN oldP = SelectObject(hdc, p);
+        int px = (int)particles[i].x;
+        int py = (int)particles[i].y;
+        Ellipse(hdc, px - 2, py - 2, px + 2, py + 2);
+        SelectObject(hdc, oldP); SelectObject(hdc, oldB);
+        DeleteObject(p); DeleteObject(b);
+    }
+    for (int i = 0; i < projCount; i++) {
+        HBRUSH b = CreateSolidBrush(projectiles[i].color);
+        HPEN p = CreatePen(PS_SOLID, 1, projectiles[i].color);
+        HBRUSH oldB = SelectObject(hdc, b);
+        HPEN oldP = SelectObject(hdc, p);
+        int px = (int)projectiles[i].x;
+        int py = (int)projectiles[i].y;
+        Ellipse(hdc, px - 3, py - 3, px + 3, py + 3);
+        SelectObject(hdc, oldP); SelectObject(hdc, oldB);
+        DeleteObject(p); DeleteObject(b);
     }
 }
 
@@ -437,6 +525,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             srand(GetTickCount());
             SetTimer(hwnd, 1, 2000, NULL);
+            SetTimer(hwnd, 2, 50, NULL);
             break;
         case WM_KEYDOWN:
             if (wParam == 'H') {
@@ -450,6 +539,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             return 0;
         case WM_TIMER: {
+            if (wParam == 2) {
+                animFrame++;
+                for (int i = 0; i < particleCount; i++) {
+                    particles[i].x += particles[i].vx;
+                    particles[i].y += particles[i].vy;
+                    particles[i].life--;
+                    if (particles[i].life <= 0) {
+                        particles[i] = particles[--particleCount];
+                        i--;
+                    }
+                }
+                for (int i = 0; i < projCount; i++) {
+                    projectiles[i].x += projectiles[i].vx;
+                    projectiles[i].y += projectiles[i].vy;
+                    float dx = projectiles[i].tx - projectiles[i].x;
+                    float dy = projectiles[i].ty - projectiles[i].y;
+                    if (dx*dx + dy*dy < 200.0f) {
+                        SpawnParticles(projectiles[i].tx, projectiles[i].ty, projectiles[i].color, 5);
+                        projectiles[i] = projectiles[--projCount];
+                        i--;
+                    }
+                }
+                if (gameState == 1) InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
             if (gameState != 1) break;
             tick++;
             if (tick % 10 == 0) { day++; isDay = 1; }
@@ -468,7 +582,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     int hits = targetCount < 3 ? targetCount : 3;
                     for (int i = 0; i < hits; i++) {
                         int idx = targets[rand() % targetCount];
-                        if (grid[idx] > 0 && grid[idx] <= 11) grid[idx] += 20;
+                        if (grid[idx] > 0 && grid[idx] <= 11) {
+                            grid[idx] += 20;
+                            int tx = idx % GRID_W, ty = idx / GRID_W;
+                            SpawnParticles(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2, RGB(255,0,0), 15);
+                        }
                     }
                     strcpy(msgText, "METEOR SHOWER! Structures damaged.");
                     msgTicks = 5;
@@ -480,7 +598,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     PlayGameSound(4);
                 } else if (targetCount > 0) {
                     int idx = targets[rand() % targetCount];
-                    if (grid[idx] > 0 && grid[idx] <= 11) grid[idx] += 20;
+                    if (grid[idx] > 0 && grid[idx] <= 11) {
+                        grid[idx] += 20;
+                        int tx = idx % GRID_W, ty = idx / GRID_W;
+                        SpawnParticles(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2, RGB(255,136,0), 15);
+                    }
                     strcpy(msgText, "EQUIPMENT BREAKDOWN!");
                     msgTicks = 5;
                     PlayGameSound(2);
@@ -499,8 +621,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         int dist = abs(tx - aliens[a].x) + abs(ty - aliens[a].y);
                         if (dist <= range && power > 0) {
                             PlayGameSound(3);
+                            COLORREF col = (type == 9) ? RGB(255, 0, 0) : RGB(255, 170, 0);
+                            FireProjectile(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2,
+                                           OFFSET_X + aliens[a].x * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + aliens[a].y * CELL_SIZE + CELL_SIZE/2, col);
+                            
                             aliens[a].hp--;
                             if (aliens[a].hp <= 0) {
+                                SpawnParticles(OFFSET_X + aliens[a].x * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + aliens[a].y * CELL_SIZE + CELL_SIZE/2, RGB(255,0,255), 15);
                                 aliens[a] = aliens[--alienCount];
                                 a--;
                             }
@@ -527,6 +654,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                 strcpy(msgText, "ALIEN ATTACK! Structure damaged.");
                                 msgTicks = 5;
                                 PlayGameSound(2);
+                                int tx = targetIdx % GRID_W, ty = targetIdx / GRID_W;
+                                SpawnParticles(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2, RGB(255,136,0), 15);
                             }
                             aliens[a] = aliens[--alienCount];
                             a--;
