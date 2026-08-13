@@ -136,6 +136,8 @@ typedef struct {
     int delay;
     int active;
     int finished;
+    float hx[10];
+    float hy[10];
 } CascadeCard;
 
 typedef struct {
@@ -596,6 +598,7 @@ void StartWinCascade(HWND hwnd) {
             cascadeCards[idx].delay = idx * 5;
             cascadeCards[idx].active = 0;
             cascadeCards[idx].finished = 0;
+            for (int h = 0; h < 10; h++) { cascadeCards[idx].hx[h] = -1000; cascadeCards[idx].hy[h] = -1000; }
             idx++;
         }
     }
@@ -1036,11 +1039,25 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
     Ellipse(hdc, cx - 11, cy - 15, cx + 11, cy + 7);
     DeleteObject(skinBrush);
 
+    HPEN facePen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
+    SelectObject(hdc, facePen);
+    MoveToEx(hdc, cx - 5, cy - 6, NULL); LineTo(hdc, cx - 3, cy - 6);
+    MoveToEx(hdc, cx + 3, cy - 6, NULL); LineTo(hdc, cx + 5, cy - 6);
+    MoveToEx(hdc, cx - 3, cy + 1, NULL); LineTo(hdc, cx + 3, cy + 1);
+    DeleteObject(facePen);
+
     if (rank == 13) { // King
+        HBRUSH beardBrush = CreateSolidBrush(RGB(90, 45, 15));
+        SelectObject(hdc, beardBrush);
+        POINT beardPts[3] = { {cx - 10, cy + 1}, {cx + 10, cy + 1}, {cx, cy + 12} };
+        Polygon(hdc, beardPts, 3);
+        DeleteObject(beardBrush);
+
         HBRUSH crownBrush = CreateSolidBrush(RGB(255, 215, 0));
         SelectObject(hdc, crownBrush);
         POINT crownPts[5] = { {cx - 12, cy - 12}, {cx - 8, cy - 22}, {cx, cy - 16}, {cx + 8, cy - 22}, {cx + 12, cy - 12} };
         Polygon(hdc, crownPts, 5);
+        Ellipse(hdc, cx - 2, cy - 18, cx + 2, cy - 14);
         DeleteObject(crownBrush);
 
         HBRUSH robeBrush = CreateSolidBrush(RGB(185, 28, 28));
@@ -1053,8 +1070,21 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
         SelectObject(hdc, scPen);
         MoveToEx(hdc, cx + 14, fy + 8, NULL);
         LineTo(hdc, cx + 14, fy + fh - 4);
+        Ellipse(hdc, cx + 11, fy + 4, cx + 17, fy + 10);
         DeleteObject(scPen);
+
+        HBRUSH shieldBrush = CreateSolidBrush(RGB(30, 100, 200));
+        SelectObject(hdc, shieldBrush);
+        POINT shieldPts[4] = { {cx - 16, fy + 16}, {cx - 8, fy + 16}, {cx - 8, fy + 24}, {cx - 12, fy + 28} };
+        Polygon(hdc, shieldPts, 4);
+        DeleteObject(shieldBrush);
     } else if (rank == 12) { // Queen
+        HBRUSH hairBrush = CreateSolidBrush(RGB(180, 130, 50));
+        SelectObject(hdc, hairBrush);
+        Ellipse(hdc, cx - 14, cy - 10, cx - 6, cy + 8);
+        Ellipse(hdc, cx + 6, cy - 10, cx + 14, cy + 8);
+        DeleteObject(hairBrush);
+
         HBRUSH tiaraBrush = CreateSolidBrush(RGB(255, 215, 0));
         SelectObject(hdc, tiaraBrush);
         POINT tiaraPts[5] = { {cx - 10, cy - 12}, {cx - 6, cy - 20}, {cx, cy - 15}, {cx + 6, cy - 20}, {cx + 10, cy - 12} };
@@ -1070,7 +1100,13 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
         HBRUSH roseBrush = CreateSolidBrush(RGB(244, 63, 94));
         SelectObject(hdc, roseBrush);
         Ellipse(hdc, cx + 8, cy + 10, cx + 16, cy + 18);
+        Ellipse(hdc, cx + 10, cy + 12, cx + 14, cy + 16);
         DeleteObject(roseBrush);
+
+        HPEN stemPen = CreatePen(PS_SOLID, 2, RGB(34, 197, 94));
+        SelectObject(hdc, stemPen);
+        MoveToEx(hdc, cx + 12, cy + 18, NULL); LineTo(hdc, cx + 12, cy + 28);
+        DeleteObject(stemPen);
     } else if (rank == 11) { // Jack
         HBRUSH capBrush = CreateSolidBrush(RGB(220, 38, 38));
         SelectObject(hdc, capBrush);
@@ -1089,11 +1125,17 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
         Polygon(hdc, tabPts, 4);
         DeleteObject(tabBrush);
 
-        HPEN spPen = CreatePen(PS_SOLID, 2, RGB(148, 163, 184));
+        HPEN spPen = CreatePen(PS_SOLID, 3, RGB(148, 163, 184));
         SelectObject(hdc, spPen);
         MoveToEx(hdc, cx - 14, fy + 4, NULL);
         LineTo(hdc, cx - 14, fy + fh - 4);
         DeleteObject(spPen);
+
+        HPEN hiltPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+        SelectObject(hdc, hiltPen);
+        MoveToEx(hdc, cx - 18, fy + fh - 10, NULL);
+        LineTo(hdc, cx - 10, fy + fh - 10);
+        DeleteObject(hiltPen);
     }
 
     SelectObject(hdc, oldPen);
@@ -1169,6 +1211,18 @@ void DrawCardGDI(HDC hdc, Card card, int x, int y, int isSelected, int isHintSrc
     COLORREF borderCol = card.isFrozen ? RGB(0, 229, 255) : 
         (isSelected ? RGB(255, 215, 0) : (isHintSrc ? RGB(0, 230, 118) : (isHintDst ? RGB(255, 145, 0) : RGB(100, 100, 100))));
     int penWidth = (card.isFrozen || isSelected || isHintSrc || isHintDst) ? 3 : 1;
+
+    if (isSelected) {
+        for (int glow = 4; glow >= 1; glow--) {
+            HPEN glowPen = CreatePen(PS_SOLID, glow * 2, RGB(255, 215, 0));
+            HPEN oldGP = (HPEN)SelectObject(hdc, glowPen);
+            HBRUSH oldGB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            RoundRect(hdc, x - glow, y - glow, x + CARD_W + glow, y + CARD_H + glow, 12, 12);
+            SelectObject(hdc, oldGP);
+            SelectObject(hdc, oldGB);
+            DeleteObject(glowPen);
+        }
+    }
 
     HPEN cardPen = CreatePen(PS_SOLID, penWidth, borderCol);
     HPEN oldPen = (HPEN)SelectObject(hdc, cardPen);
@@ -1574,14 +1628,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int winW = clientRc.right;
                     int winH = clientRc.bottom;
 
-                    HDC hdc = GetDC(hwnd);
                     for (int i = 0; i < 52; i++) {
                         CascadeCard *c = &cascadeCards[i];
                         if (cascadeFrame >= c->delay && !c->active && !c->finished) {
                             c->active = 1;
                         }
                         if (c->active) {
-                            DrawCardGDI(hdc, c->card, (int)c->x, (int)c->y, 0, 0, 0);
+                            for (int h = 9; h > 0; h--) {
+                                c->hx[h] = c->hx[h - 1];
+                                c->hy[h] = c->hy[h - 1];
+                            }
+                            c->hx[0] = c->x;
+                            c->hy[0] = c->y;
 
                             c->x += c->vx;
                             c->y += c->vy;
@@ -1600,7 +1658,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                     }
-                    ReleaseDC(hwnd, hdc);
+                    InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 4) { // Particles
                 int anyActive = 0;
@@ -1771,6 +1829,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT pr = { (int)particles[i].x - size, (int)particles[i].y - size, (int)particles[i].x + size, (int)particles[i].y + size };
                         FillRect(memDC, &pr, pb);
                         DeleteObject(pb);
+                    }
+                }
+            }
+
+            if (cascadeActive) {
+                for (int i = 0; i < 52; i++) {
+                    CascadeCard *c = &cascadeCards[i];
+                    if (c->active) {
+                        for (int h = 9; h >= 0; h--) {
+                            if (c->hx[h] > -100) {
+                                int intensity = 255 - (h * 15);
+                                HBRUSH tb = CreateSolidBrush(RGB(intensity, intensity, intensity));
+                                RECT tr = { (int)c->hx[h], (int)c->hy[h], (int)c->hx[h] + CARD_W, (int)c->hy[h] + CARD_H };
+                                FillRect(memDC, &tr, tb);
+                                DeleteObject(tb);
+                                
+                                COLORREF borderCol = IsRedSuit(c->card.suit) ? RGB(211 + h*4, 47 + h*15, 47 + h*15) : RGB(26 + h*15, 26 + h*15, 26 + h*15);
+                                HPEN tp = CreatePen(PS_SOLID, 1, borderCol);
+                                HPEN oldtp = (HPEN)SelectObject(memDC, tp);
+                                HBRUSH oldtb = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                                RoundRect(memDC, (int)c->hx[h], (int)c->hy[h], (int)c->hx[h] + CARD_W, (int)c->hy[h] + CARD_H, 8, 8);
+                                SelectObject(memDC, oldtp);
+                                SelectObject(memDC, oldtb);
+                                DeleteObject(tp);
+                            }
+                        }
+                        DrawCardGDI(memDC, c->card, (int)c->x, (int)c->y, 0, 0, 0);
                     }
                 }
             }
