@@ -617,7 +617,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnExportCsv = CreateWindowA("BUTTON", "CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(265), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_EXPORT_CSV, NULL, NULL);
             hBtnExportTxt = CreateWindowA("BUTTON", "TXT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(350), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_EXPORT_TXT, NULL, NULL);
 
-            hListLaps = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOINTEGRALHEIGHT, S(10), S(136), S(420), S(240), hwnd, (HMENU)ID_LIST_LAPS, NULL, NULL);
+            hListLaps = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOINTEGRALHEIGHT, S(10), S(136), S(420), S(380), hwnd, (HMENU)ID_LIST_LAPS, NULL, NULL);
 
             // Timer Presets Buttons
             const char* presetLabels[8] = {"1m", "3m", "5m", "10m", "15m", "25m", "30m", "60m"};
@@ -630,10 +630,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hEditMtName = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Tea", WS_CHILD | ES_AUTOHSCROLL, S(10), S(50), S(200), S(28), hwnd, (HMENU)ID_EDIT_MT_NAME, NULL, NULL);
             hEditMtTime = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "03:00", WS_CHILD | ES_CENTER | ES_AUTOHSCROLL, S(215), S(50), S(110), S(28), hwnd, (HMENU)ID_EDIT_MT_TIME, NULL, NULL);
             hBtnMtAdd = CreateWindowA("BUTTON", "+ Add", WS_CHILD | BS_PUSHBUTTON, S(330), S(50), S(100), S(28), hwnd, (HMENU)ID_BTN_MT_ADD, NULL, NULL);
-            hListMt = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VSCROLL | LBS_NOINTEGRALHEIGHT, S(10), S(86), S(420), S(240), hwnd, (HMENU)ID_LIST_MT, NULL, NULL);
-            hBtnMtStartAll = CreateWindowA("BUTTON", "Start All", WS_CHILD | BS_PUSHBUTTON, S(10), S(334), S(130), S(30), hwnd, (HMENU)ID_BTN_MT_STARTALL, NULL, NULL);
-            hBtnMtPauseAll = CreateWindowA("BUTTON", "Pause All", WS_CHILD | BS_PUSHBUTTON, S(150), S(334), S(130), S(30), hwnd, (HMENU)ID_BTN_MT_PAUSEALL, NULL, NULL);
-            hBtnMtDel = CreateWindowA("BUTTON", "Delete", WS_CHILD | BS_PUSHBUTTON, S(290), S(334), S(140), S(30), hwnd, (HMENU)ID_BTN_MT_DEL, NULL, NULL);
+            hListMt = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VSCROLL | LBS_NOINTEGRALHEIGHT, S(10), S(86), S(420), S(380), hwnd, (HMENU)ID_LIST_MT, NULL, NULL);
+            hBtnMtStartAll = CreateWindowA("BUTTON", "Start All", WS_CHILD | BS_PUSHBUTTON, S(10), S(480), S(130), S(30), hwnd, (HMENU)ID_BTN_MT_STARTALL, NULL, NULL);
+            hBtnMtPauseAll = CreateWindowA("BUTTON", "Pause All", WS_CHILD | BS_PUSHBUTTON, S(150), S(480), S(130), S(30), hwnd, (HMENU)ID_BTN_MT_PAUSEALL, NULL, NULL);
+            hBtnMtDel = CreateWindowA("BUTTON", "Delete", WS_CHILD | BS_PUSHBUTTON, S(290), S(480), S(140), S(30), hwnd, (HMENU)ID_BTN_MT_DEL, NULL, NULL);
 
             // Pomodoro Controls
             hBtnPomoStart = CreateWindowA("BUTTON", "Start", WS_CHILD | BS_PUSHBUTTON, S(10), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_POMO_START, NULL, NULL);
@@ -657,7 +657,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnPresetHiit   = CreateWindowA("BUTTON", "HIIT 30/15x10", WS_CHILD | BS_PUSHBUTTON, S(150), S(250), S(130), S(28), hwnd, (HMENU)ID_PRESET_HIIT30, NULL, NULL);
             hBtnPresetBoxing = CreateWindowA("BUTTON", "Boxing 3m/1mx3", WS_CHILD | BS_PUSHBUTTON, S(290), S(250), S(140), S(28), hwnd, (HMENU)ID_PRESET_BOXING, NULL, NULL);
 
-            HWND hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(400), S(420), S(20), hwnd, NULL, NULL, NULL);
+            HWND hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(540), S(440), S(20), hwnd, NULL, NULL, NULL);
 
             // Font Application
             SendMessageA(hTabSW, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
@@ -1028,7 +1028,7 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    RECT rc = {0, 0, S(440), S(430)};
+    RECT rc = {0, 0, S(460), S(580)};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(0, "KTimerClass", "KTimer", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
