@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KRogue
 - KChess
 - KPong
 - KMines
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFortress
 - KFarm
 - KAlchemy
+- KRogue
 ## Completed Work Log
+
+- **KRogue (Loop 4):** Implemented themed level art for biome floors (moss/slime for Sewers, skulls/bones for Crypt, lava cracks/embers for Inferno), distinct visual variations for common monsters based on HP tiers (colored circular slime sprites, weapon-wielding detailed humanoid goblins/orcs with elite color palettes), and dynamic vector shape sprites for weapons and armor tiers replacing generic symbols in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
 - **KAlchemy (Loop 3):** Implemented esoteric geometric background patterns for Native C Win32 GDI (KAlchemy/main.c) using dark intersecting grid lines, and implemented atmospheric floating magical dust motes utilizing a dedicated background canvas and dynamically pulsing opacity sine wave animation in Web Canvas (kalchemy.html).
 

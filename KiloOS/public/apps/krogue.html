@@ -783,9 +783,23 @@
             ctx.fillRect(px + 2, py + 8, TILE - 4, 2);
             
             if (crack > 7) {
-                ctx.fillStyle = mortarColor;
+                ctx.fillStyle = (biome === 'inferno') ? '#dd6b20' : mortarColor; // Lava cracks
                 ctx.fillRect(px + 4, py + 4, 2, 4);
+                if (biome === 'inferno') ctx.fillRect(px + 5, py + 2, 2, 2);
             }
+            
+            if (biome === 'sewers' && (x * 7 + y * 13) % 4 === 0) {
+                ctx.fillStyle = '#22543d'; // Vines
+                ctx.fillRect(px + 2, py, 2, 8);
+                ctx.fillRect(px + 4, py + 2, 2, 4);
+            } else if (biome === 'crypt' && (x * 11 + y * 5) % 6 === 0) {
+                ctx.fillStyle = '#cbd5e0'; // Skulls on walls
+                ctx.fillRect(px + 14, py + 3, 4, 4);
+                ctx.fillStyle = '#1a202c';
+                ctx.fillRect(px + 14, py + 4, 1, 1);
+                ctx.fillRect(px + 16, py + 4, 1, 1);
+            }
+            
             ctx.globalAlpha = 1.0;
         }
 
@@ -810,14 +824,21 @@
             ctx.globalAlpha = Math.max(0.1, alpha);
 
             ctx.fillStyle = bg; ctx.fillRect(px, py, TILE, TILE);
-            ctx.fillStyle = 'rgba(255,255,255,0.04)';
             
             let pebble = (x * 23 + y * 19) % 5;
             if (pebble === 0) {
+                ctx.fillStyle = (biome === 'inferno') ? '#c53030' : (biome === 'crypt' ? '#a0aec0' : 'rgba(255,255,255,0.04)');
                 ctx.fillRect(px + 4, py + 4, 3, 3);
+                ctx.fillStyle = (biome === 'inferno') ? '#dd6b20' : 'rgba(255,255,255,0.04)';
                 ctx.fillRect(px + 14, py + 12, 2, 2);
             } else if (pebble === 1) {
-                ctx.fillRect(px + 8, py + 8, 4, 2);
+                if (biome === 'sewers') {
+                    ctx.fillStyle = '#22543d'; // slime puddle
+                    ctx.fillRect(px + 6, py + 6, 8, 6);
+                } else {
+                    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+                    ctx.fillRect(px + 8, py + 8, 4, 2);
+                }
             }
             
             ctx.globalAlpha = 1.0;
@@ -846,7 +867,7 @@
             ctx.beginPath(); ctx.moveTo(cx + 6, cy + 2); ctx.lineTo(cx + 10, cy - 6); ctx.stroke();
         }
 
-        function drawMonsterSprite(px, py, type) {
+        function drawMonsterSprite(px, py, type, hp = 10) {
             let cx = px + TILE / 2, cy = py + TILE / 2;
             let bob = Math.sin(frameCount * 0.12 + px) * 1.2;
 
@@ -862,10 +883,23 @@
                 ctx.fillStyle = '#555555'; ctx.fillRect(cx - 10, cy - 10 + bob, 20, 20);
             } else if (type === 'r') {
                 ctx.fillStyle = '#d69e2e'; ctx.beginPath(); ctx.ellipse(cx, cy + 2 + bob, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+            } else if (type === 's') { // Slime
+                ctx.fillStyle = hp > 40 ? '#e53e3e' : (hp > 15 ? '#3182ce' : '#38a169');
+                ctx.beginPath(); ctx.arc(cx, cy + 2 + bob, 7, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#000'; ctx.fillRect(cx - 3, cy + bob, 2, 2); ctx.fillRect(cx + 1, cy + bob, 2, 2); // eyes
             } else if (type === 'b') {
                 ctx.fillStyle = '#805ad5'; ctx.beginPath(); ctx.arc(cx, cy + bob, 6, 0, Math.PI * 2); ctx.fill();
-            } else if (type === 'o') {
-                ctx.fillStyle = '#38a169'; ctx.fillRect(cx - 5, cy - 6 + bob, 10, 12);
+            } else if (type === 'g' || type === 'o') {
+                ctx.fillStyle = (type === 'o' || hp > 20) ? '#2f855a' : '#48bb78'; 
+                ctx.fillRect(cx - 5, cy - 6 + bob, 10, 12);
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 2, cy - 3 + bob, 2, 2); ctx.fillRect(cx + 2, cy - 3 + bob, 2, 2); // eyes
+                
+                ctx.strokeStyle = '#a0aec0'; ctx.lineWidth = 2;
+                if ((px + py) % 3 === 0) { // Sword
+                    ctx.beginPath(); ctx.moveTo(cx + 6, cy + 2 + bob); ctx.lineTo(cx + 10, cy - 6 + bob); ctx.stroke();
+                } else { // Spear
+                    ctx.beginPath(); ctx.moveTo(cx + 6, cy + 6 + bob); ctx.lineTo(cx + 6, cy - 8 + bob); ctx.stroke();
+                }
             } else if (type === '&') {
                 ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
                 ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
@@ -933,11 +967,34 @@
             });
 
             items.forEach(it => {
-                ctx.fillStyle = it.fg || '#ecc94b'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
-                ctx.fillText(it.ch || '*', (it.x + 0.5) * TILE, (it.y + 0.75) * TILE);
+                let ix = it.x * TILE + TILE / 2;
+                let iy = it.y * TILE + TILE / 2;
+                
+                if (it.type === 'weapon') {
+                    ctx.strokeStyle = it.fg || '#63b3ed'; ctx.lineWidth = 2;
+                    if (it.name.includes('Sword') || it.name.includes('Dagger')) {
+                        ctx.beginPath(); ctx.moveTo(ix - 4, iy + 4); ctx.lineTo(ix + 6, iy - 6); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ix - 6, iy + 2); ctx.lineTo(ix - 2, iy + 6); ctx.stroke(); // crossguard
+                    } else if (it.name.includes('Bow')) {
+                        ctx.beginPath(); ctx.arc(ix, iy, 6, -Math.PI/2, Math.PI/2); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ix, iy-6); ctx.lineTo(ix, iy+6); ctx.stroke(); // string
+                    } else { // Spear / Hammer
+                        ctx.beginPath(); ctx.moveTo(ix - 4, iy + 6); ctx.lineTo(ix + 4, iy - 6); ctx.stroke();
+                        ctx.fillStyle = it.fg || '#63b3ed'; ctx.fillRect(ix + 2, iy - 8, 4, 4); // tip
+                    }
+                } else if (it.type === 'armor') {
+                    ctx.fillStyle = it.fg || '#cbd5e0';
+                    ctx.fillRect(ix - 5, iy - 4, 10, 8);
+                } else if (it.type === 'shield') {
+                    ctx.fillStyle = it.fg || '#ecc94b';
+                    ctx.beginPath(); ctx.moveTo(ix - 5, iy - 5); ctx.lineTo(ix + 5, iy - 5); ctx.lineTo(ix, iy + 6); ctx.fill();
+                } else {
+                    ctx.fillStyle = it.fg || '#ecc94b'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
+                    ctx.fillText(it.ch || '*', (it.x + 0.5) * TILE, (it.y + 0.75) * TILE);
+                }
             });
 
-            monsters.forEach(m => drawMonsterSprite(m.x * TILE, m.y * TILE, m.ch));
+            monsters.forEach(m => drawMonsterSprite(m.x * TILE, m.y * TILE, m.ch, m.max_hp));
             drawPlayerSprite(player.x * TILE, player.y * TILE);
 
             // Targeting Reticle

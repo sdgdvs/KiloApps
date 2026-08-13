@@ -1680,12 +1680,22 @@ void draw_tile_gdi(HDC memDC, int x, int y, Tile* t, int visible) {
         // procedural crack texture
         int r1 = (x * 17 + y * 31) % 10;
         if (visible && r1 > 7) {
-            HPEN crackPen = CreatePen(PS_SOLID, 1, RGB(30, 30, 30));
+            COLORREF crackCol = RGB(30, 30, 30);
+            if (g.dlevel >= 16 && g.dlevel <= 20) crackCol = RGB(255, 69, 0); // Lava cracks in Inferno
+            HPEN crackPen = CreatePen(PS_SOLID, 1, crackCol);
             HPEN oldC = (HPEN)SelectObject(memDC, crackPen);
             MoveToEx(memDC, px + 2, py + 2, NULL);
             LineTo(memDC, px + 6, py + 6);
+            if (g.dlevel >= 16 && g.dlevel <= 20) { MoveToEx(memDC, px + 6, py + 6, NULL); LineTo(memDC, px + 8, py + 10); }
             SelectObject(memDC, oldC);
             DeleteObject(crackPen);
+        }
+        
+        if (visible && g.dlevel >= 1 && g.dlevel <= 5 && r1 < 3) {
+            HBRUSH moss = CreateSolidBrush(RGB(34, 139, 34));
+            RECT mr = { px + 1, py + 1, px + 4, py + 8 };
+            FillRect(memDC, &mr, moss);
+            DeleteObject(moss);
         }
         
         HPEN pen = CreatePen(PS_SOLID, 1, visible ? RGB(220, 220, 220) : RGB(70, 70, 70));
@@ -1705,8 +1715,23 @@ void draw_tile_gdi(HDC memDC, int x, int y, Tile* t, int visible) {
         // Procedural pebbles
         int r2 = (x * 23 + y * 19) % 5;
         if (visible && r2 == 0) {
-            SetPixel(memDC, px + 3, py + 3, RGB(100, 100, 100));
-            SetPixel(memDC, px + 8, py + 12, RGB(100, 100, 100));
+            if (g.dlevel >= 11 && g.dlevel <= 15) {
+                HPEN bone = CreatePen(PS_SOLID, 1, RGB(200, 200, 200));
+                HPEN oldB = (HPEN)SelectObject(memDC, bone);
+                MoveToEx(memDC, px + 3, py + 3, NULL); LineTo(memDC, px + 6, py + 6);
+                SelectObject(memDC, oldB); DeleteObject(bone);
+            } else if (g.dlevel >= 16 && g.dlevel <= 20) {
+                SetPixel(memDC, px + 3, py + 3, RGB(255, 140, 0));
+                SetPixel(memDC, px + 8, py + 12, RGB(255, 69, 0));
+            } else {
+                SetPixel(memDC, px + 3, py + 3, RGB(100, 100, 100));
+                SetPixel(memDC, px + 8, py + 12, RGB(100, 100, 100));
+            }
+        } else if (visible && r2 == 1 && g.dlevel >= 1 && g.dlevel <= 5) {
+            HBRUSH puddle = CreateSolidBrush(RGB(0, 100, 0));
+            RECT pr = { px + 4, py + 4, px + 8, py + 8 };
+            FillRect(memDC, &pr, puddle);
+            DeleteObject(puddle);
         }
         
         HPEN pen = CreatePen(PS_SOLID, 1, RGB(15, 15, 15));
@@ -1769,6 +1794,40 @@ void draw_item_gdi(HDC memDC, int x, int y, Item* it) {
         FillRect(memDC, &r2, b);
         FillRect(memDC, &r3, b);
         DeleteObject(b);
+    } else if (it->type == TYPE_WEAPON || it->ch == '(') {
+        HPEN pen = CreatePen(PS_SOLID, 2, it->fg);
+        HPEN oldP = (HPEN)SelectObject(memDC, pen);
+        if (it->subtype == W_SWORD) {
+            MoveToEx(memDC, cx - 2, cy + 4, NULL); LineTo(memDC, cx + 4, cy - 4);
+            MoveToEx(memDC, cx - 4, cy + 2, NULL); LineTo(memDC, cx, cy + 6);
+        } else if (it->subtype == W_HAMMER) {
+            MoveToEx(memDC, cx, cy + 5, NULL); LineTo(memDC, cx, cy - 2);
+            MoveToEx(memDC, cx - 3, cy - 2, NULL); LineTo(memDC, cx + 4, cy - 2);
+            MoveToEx(memDC, cx - 3, cy - 4, NULL); LineTo(memDC, cx + 4, cy - 4);
+        } else if (it->subtype == W_SPEAR) {
+            MoveToEx(memDC, cx - 4, cy + 5, NULL); LineTo(memDC, cx + 4, cy - 5);
+            MoveToEx(memDC, cx + 4, cy - 5, NULL); LineTo(memDC, cx + 1, cy - 5);
+            MoveToEx(memDC, cx + 4, cy - 5, NULL); LineTo(memDC, cx + 4, cy - 2);
+        } else if (it->subtype == W_BOW) {
+            Arc(memDC, cx - 4, cy - 5, cx + 4, cy + 5, cx, cy - 5, cx, cy + 5);
+            MoveToEx(memDC, cx, cy - 5, NULL); LineTo(memDC, cx, cy + 5);
+        } else {
+            MoveToEx(memDC, cx - 2, cy + 4, NULL); LineTo(memDC, cx + 4, cy - 4);
+        }
+        SelectObject(memDC, oldP);
+        DeleteObject(pen);
+    } else if (it->type == TYPE_ARMOR || it->ch == ']') {
+        HBRUSH b = CreateSolidBrush(it->fg);
+        RECT r = { cx - 4, cy - 3, cx + 5, cy + 4 };
+        FillRect(memDC, &r, b);
+        DeleteObject(b);
+    } else if (it->type == TYPE_SHIELD || it->ch == '[') {
+        HBRUSH b = CreateSolidBrush(it->fg);
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+        POINT pts[3] = { {cx - 4, cy - 4}, {cx + 4, cy - 4}, {cx, cy + 5} };
+        Polygon(memDC, pts, 3);
+        SelectObject(memDC, oldB);
+        DeleteObject(b);
     } else {
         SetTextColor(memDC, it->fg);
         SetBkMode(memDC, TRANSPARENT);
@@ -1820,13 +1879,36 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
         LineTo(memDC, cx + 5, cy - 3);
         SelectObject(memDC, oldP);
         DeleteObject(pen);
+    } else if (e->ch == 's') { // Slime variations
+        COLORREF slimeCol = e->fg;
+        if (e->max_hp > 30) slimeCol = RGB(255, 50, 50); // Red giant slime
+        else if (e->max_hp > 15) slimeCol = RGB(50, 100, 255); // Blue slime
+        HBRUSH b = CreateSolidBrush(slimeCol);
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+        Ellipse(memDC, cx - 5, cy - 2, cx + 6, cy + 6);
+        SelectObject(memDC, oldB);
+        DeleteObject(b);
+        SetPixel(memDC, cx - 2, cy + 1, RGB(0, 0, 0)); // eyes
+        SetPixel(memDC, cx + 2, cy + 1, RGB(0, 0, 0));
     } else if (e->ch == 'o' || e->ch == 'g') {
-        HBRUSH b = CreateSolidBrush(e->fg);
+        COLORREF col = e->fg;
+        if (e->max_hp > 20) col = RGB(150, 50, 50); // Elite variant
+        HBRUSH b = CreateSolidBrush(col);
         RECT r = { cx - 4, cy - 6, cx + 5, cy + 6 };
         FillRect(memDC, &r, b);
         DeleteObject(b);
         SetPixel(memDC, cx - 1, cy - 3, RGB(255, 0, 0));
         SetPixel(memDC, cx + 2, cy - 3, RGB(255, 0, 0));
+        
+        HPEN wPen = CreatePen(PS_SOLID, 2, RGB(180, 180, 180));
+        HPEN oldP = (HPEN)SelectObject(memDC, wPen);
+        if ((e->x + e->y) % 2 == 0) {
+            MoveToEx(memDC, cx + 5, cy + 2, NULL); LineTo(memDC, cx + 9, cy - 4); // Sword
+        } else {
+            MoveToEx(memDC, cx + 5, cy + 5, NULL); LineTo(memDC, cx + 5, cy - 5); // Spear
+        }
+        SelectObject(memDC, oldP);
+        DeleteObject(wPen);
     } else if (e->ch == 'x' || e->ch == 'z') {
         HBRUSH b = CreateSolidBrush(e->fg);
         HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
