@@ -38,6 +38,11 @@ typedef struct {
 } Particle;
 Particle particles[MAX_PARTICLES];
 
+#define MAX_METEORS 4
+typedef struct { float x, y; int active; } Meteor;
+Meteor meteors[MAX_METEORS];
+int meteor_active = 0;
+
 // Game State
 int pad_x = W / 2 - 30;
 int pad_w = 60;
@@ -319,14 +324,20 @@ void InitLevel() {
     for (int i = 0; i < MAX_LASERS; i++) lasers[i].active = 0;
     for (int i = 0; i < MAX_PARTICLES; i++) particles[i].life = 0;
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) boss_bullets[i].active = 0;
+    for (int i = 0; i < MAX_METEORS; i++) meteors[i].active = 0;
 
     ufo_active = 0;
     ufo_timer = 200;
+    meteor_active = (level >= 12 && level % 4 == 0);
 
-    boss_active = (level % 10 == 0 && level > 0);
+    boss_active = (level % 10 == 0 && level > 0) || (level == 33) || (level == 36) || (level == 39);
     if (level == 10) { boss_hp = 25; boss_max_hp = 25; boss_type = 1; boss_dx = 2; boss_x = W / 2 - 50; }
     else if (level == 20) { boss_hp = 50; boss_max_hp = 50; boss_type = 2; boss_dx = 0; boss_x = W / 2 - 50; }
     else if (level == 30) { boss_hp = 75; boss_max_hp = 75; boss_type = 3; boss_dx = 3; boss_x = W / 2 - 50; }
+    else if (level == 33) { boss_hp = 80; boss_max_hp = 80; boss_type = 1; boss_dx = 4; boss_x = W / 2 - 50; }
+    else if (level == 36) { boss_hp = 100; boss_max_hp = 100; boss_type = 2; boss_dx = 0; boss_x = W / 2 - 50; }
+    else if (level == 39) { boss_hp = 125; boss_max_hp = 125; boss_type = 3; boss_dx = 4; boss_x = W / 2 - 50; }
+    else if (level == 40) { boss_hp = 150; boss_max_hp = 150; boss_type = 3; boss_dx = 5; boss_x = W / 2 - 50; }
 
     shield_active = (level >= 14);
     shield_x = 50; shield_dx = (float)(2 + (level >= 16 ? 1 : 0));
@@ -345,8 +356,9 @@ void InitLevel() {
     pad_x = W / 2 - pad_w / 2;
 
     // Generate Stage Bricks Architecture
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
+    if (level != 99) {
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
             int v = 0;
             if (level == 1) {
                 if (r == 0) v = 2; else if (r <= 3) v = 1;
@@ -396,6 +408,7 @@ void InitLevel() {
             bricks[r][c] = v;
             brick_hp[r][c] = (v == 8) ? 4 : 0;
             if (v != 0 && v != 9) bricks_left++;
+            }
         }
     }
     
@@ -426,6 +439,33 @@ void InitLevel() {
         }
     }
 
+    if (level >= 31 && level <= 40 && !boss_active && level != 99) {
+        bricks_left = 0;
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                int v = 0;
+                if (level == 31) v = (r % 2 == 0) ? 8 : 4;
+                else if (level == 32) v = (c % 2 == 0) ? 7 : 5;
+                else if (level == 34) v = (r == c || r == COLS - 1 - c) ? 9 : 6;
+                else if (level == 35) v = (r < 3) ? 8 : 2;
+                else if (level == 37) v = ((r + c) % 3 == 0) ? 4 : 8;
+                else if (level == 38) v = 7;
+                bricks[r][c] = v;
+                brick_hp[r][c] = (v == 8) ? 4 : 0;
+                if (v != 0 && v != 9) bricks_left++;
+            }
+        }
+    }
+
+    if (level == 99) {
+        bricks_left = 0;
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                if (bricks[r][c] != 0 && bricks[r][c] != 9) bricks_left++;
+            }
+        }
+    }
+
     if (bricks_left == 0 && !boss_active) { bricks[0][0] = 1; bricks_left = 1; }
 }
 
@@ -434,6 +474,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             LoadHighScore();
             SetTimer(hwnd, TIMER_ID, 16, NULL);
+            break;
+        case WM_LBUTTONDOWN:
+            if (state == 4) {
+                int x = LOWORD(lParam);
+                int y = HIWORD(lParam);
+                if (y >= 35 && y < 35 + ROWS * BR_H && x >= 0 && x < W) {
+                    int r = (y - 35) / BR_H;
+                    int c = x / BR_W;
+                    bricks[r][c] = (bricks[r][c] + 1) % 10;
+                    brick_hp[r][c] = (bricks[r][c] == 8) ? 4 : 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            }
             break;
         case WM_KEYDOWN:
             if (state == 1) {
@@ -502,7 +555,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     SpawnParticles((float)(boss_x + boss_w/2), (float)(boss_y + boss_h/2), RGB(255, 0, 85), 40);
                                     boss_active = 0;
                                     level++;
-                                    if (level > 30) { state = 3; SaveHighScore(); } else InitLevel();
+                                    if (level > 40) { state = 3; SaveHighScore(); } else InitLevel();
                                 }
                                 continue;
                             }
@@ -611,6 +664,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (power_y > H) power_active = 0;
                 }
 
+                // Meteor Hazard
+                if (meteor_active) {
+                    if (MyRand() % 100 < 2) {
+                        for (int i = 0; i < MAX_METEORS; i++) {
+                            if (!meteors[i].active) {
+                                meteors[i].active = 1;
+                                meteors[i].x = (float)(MyRand() % (W - 12) + 6);
+                                meteors[i].y = 0;
+                                break;
+                            }
+                        }
+                    }
+                    for (int i = 0; i < MAX_METEORS; i++) {
+                        if (meteors[i].active) {
+                            meteors[i].y += 3.5f;
+                            if (meteors[i].y > H - 40 && meteors[i].y < H - 30 && meteors[i].x > pad_x && meteors[i].x < pad_x + pad_w) {
+                                meteors[i].active = 0;
+                                sticky_timer = 0;
+                                pad_w = (diff == 1) ? 30 : 45;
+                                paddle_timer = 200;
+                                SpawnParticles(meteors[i].x, meteors[i].y, RGB(255, 100, 0), 15);
+                                MessageBeep(MB_ICONHAND);
+                            } else if (meteors[i].y > H) meteors[i].active = 0;
+                        }
+                    }
+                }
+
                 // Update Active Balls
                 int active_balls_count = 0;
                 for (int i = 0; i < MAX_BALLS; i++) {
@@ -673,7 +753,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             SpawnParticles((float)(boss_x + boss_w/2), (float)(boss_y + boss_h/2), RGB(255, 0, 85), 50);
                             boss_active = 0;
                             level++;
-                            if (level > 30) { state = 3; SaveHighScore(); } else InitLevel();
+                            if (level > 40) { state = 3; SaveHighScore(); } else InitLevel();
                             break;
                         }
                     }
@@ -760,7 +840,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                             if (bricks_left <= 0 && !boss_active) {
                                 level++;
-                                if (level > 30) { state = 3; SaveHighScore(); } else InitLevel();
+                                if (level > 40) { state = 3; SaveHighScore(); } else InitLevel();
                                 break;
                             }
                         }
@@ -791,6 +871,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
                     diff = 1; speed = 5.0f; score = 0; lives = 3; level = 1; InitLevel(); state = 1; pad_w = 45;
+                }
+                if (GetAsyncKeyState('E') & 0x8000) {
+                    state = 4;
+                    for (int r=0; r<ROWS; r++) for(int c=0; c<COLS; c++) bricks[r][c]=0;
+                }
+            } else if (state == 4) {
+                if (GetAsyncKeyState('P') & 0x8000) {
+                    diff = 1; speed = 4.0f; score = 0; lives = 3; level = 99; InitLevel(); state = 1; pad_w = 65;
+                }
+                if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) {
+                    state = 0;
                 }
             }
             InvalidateRect(hwnd, NULL, FALSE);
@@ -833,14 +924,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             
             if (state == 0) {
-                char* t1 = "KBREAKOUT - LOOP 8";
-                char* t2 = "30 Stages - Level Editor Core";
+                char* t1 = "KBREAKOUT - LOOP 9";
+                char* t2 = "40 Stages - Advanced Editor";
                 char* t3 = "Press ENTER for Easy";
                 char* t4 = "Press SPACE for Hard";
-                TextOutA(memDC, W/2 - 70, H/2 - 40, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 80, H/2 - 15, t2, lstrlenA(t2));
-                TextOutA(memDC, W/2 - 70, H/2 + 15, t3, lstrlenA(t3));
-                TextOutA(memDC, W/2 - 70, H/2 + 35, t4, lstrlenA(t4));
+                char* t5 = "Press E for Level Editor";
+                TextOutA(memDC, W/2 - 70, H/2 - 45, t1, lstrlenA(t1));
+                TextOutA(memDC, W/2 - 80, H/2 - 20, t2, lstrlenA(t2));
+                TextOutA(memDC, W/2 - 70, H/2 + 10, t3, lstrlenA(t3));
+                TextOutA(memDC, W/2 - 70, H/2 + 30, t4, lstrlenA(t4));
+                TextOutA(memDC, W/2 - 75, H/2 + 50, t5, lstrlenA(t5));
+            } else if (state == 4) {
+                char* t1 = "EDITOR MODE";
+                char* t2 = "Click grid to change blocks";
+                char* t3 = "Press P to Play Custom Level";
+                char* t4 = "Press ESC to return";
+                TextOutA(memDC, W/2 - 45, H/2 - 20, t1, lstrlenA(t1));
+                TextOutA(memDC, W/2 - 85, H/2 + 10, t2, lstrlenA(t2));
+                TextOutA(memDC, W/2 - 85, H/2 + 30, t3, lstrlenA(t3));
+                TextOutA(memDC, W/2 - 60, H/2 + 50, t4, lstrlenA(t4));
+
+                for (int r = 0; r < ROWS; r++) {
+                    for (int c = 0; c < COLS; c++) {
+                        if (bricks[r][c]) {
+                            DrawGDIBrick(memDC, r, c, bricks[r][c], c * BR_W, r * BR_H + 35, brick_hp[r][c]);
+                        } else {
+                            HPEN dotPen = CreatePen(PS_DOT, 1, RGB(50, 50, 50));
+                            HGDIOBJ oP = SelectObject(memDC, dotPen);
+                            HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+                            HGDIOBJ oB = SelectObject(memDC, nullBr);
+                            Rectangle(memDC, c * BR_W, r * BR_H + 35, c * BR_W + BR_W, r * BR_H + 35 + BR_H);
+                            SelectObject(memDC, oP);
+                            SelectObject(memDC, oB);
+                            DeleteObject(dotPen);
+                        }
+                    }
+                }
             } else if (state == 2) {
                 char* t1 = "GAME OVER";
                 char* t2 = "Press ENTER for Easy";
@@ -939,6 +1058,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT bbRc = { (int)boss_bullets[i].x - 3, (int)boss_bullets[i].y - 3, (int)boss_bullets[i].x + 3, (int)boss_bullets[i].y + 3 };
                         FillRect(memDC, &bbRc, bbBr);
                         DeleteObject(bbBr);
+                    }
+                }
+                for (int i = 0; i < MAX_METEORS; i++) {
+                    if (meteors[i].active) {
+                        HBRUSH mBr = CreateSolidBrush(RGB(255, 100, 0));
+                        RECT mRc = { (int)meteors[i].x - 5, (int)meteors[i].y - 5, (int)meteors[i].x + 5, (int)meteors[i].y + 5 };
+                        FillRect(memDC, &mRc, mBr);
+                        DeleteObject(mBr);
                     }
                 }
 
@@ -1092,7 +1219,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // HUD Top Bar
             char sStr[64];
-            wsprintfA(sStr, "Stg:%d/30 Sc:%d Hi:%d Lv:%d Brks:%d", level, score, high_score, lives, lifetime_bricks);
+            if (level == 99) {
+                wsprintfA(sStr, "Stg:CUSTOM Sc:%d Hi:%d Lv:%d Brks:%d", score, high_score, lives, lifetime_bricks);
+            } else {
+                wsprintfA(sStr, "Stg:%d/40 Sc:%d Hi:%d Lv:%d Brks:%d", level, score, high_score, lives, lifetime_bricks);
+            }
             TextOutA(memDC, 10, 10, sStr, lstrlenA(sStr));
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);

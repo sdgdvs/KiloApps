@@ -87,11 +87,14 @@ let ufo_bullet = { active: 0, x: 0, y: 0 };
 // Hazard Shields
 let shield_active = 0, shield_x = 100, shield_y = 120, shield_w = 70, shield_dx = 2;
 
-// Boss Fortress (Stage 10, 20, 30)
+// Boss Fortress (Stage 10, 20, 30...)
 let boss_active = 0, boss_type = 1, boss_dx = 0, boss_hp = 50, boss_max_hp = 50;
 let boss_x = w/2 - 50, boss_y = 35, boss_w = 100, boss_h = 40;
 let boss_shield_angle = 0;
 let boss_bullets = [];
+
+let meteors = [];
+let meteor_active = 0;
 
 // Bricks Grid
 const ROWS = 6, COLS = 10, BR_W = w/COLS, BR_H = 16;
@@ -111,7 +114,10 @@ const STAGE_NAMES = [
     "17. Dreadnought", "18. Warp Core", "19. Citadel Gate", "20. BOSS FORTRESS",
     "21. Editor Demo 1", "22. The Eye", "23. Checker Phantom", "24. Caged Core",
     "25. Fortified Box", "26. X Marks", "27. Mystery Walls", "28. Phantom Blocks",
-    "29. Armored Blocks", "30. FINAL CORE"
+    "29. Armored Blocks", "30. Sub-Boss Core",
+    "31. Remnant 1", "32. Remnant 2", "33. BOSS REMATCH 1", "34. Remnant 3",
+    "35. Remnant 4", "36. BOSS REMATCH 2", "37. Remnant 5", "38. Remnant 6",
+    "39. BOSS REMATCH 3", "40. FINAL ASCENSION"
 ];
 
 // Web Audio API
@@ -266,11 +272,18 @@ function initLevel() {
         trail: []
     }];
 
+    meteors = [];
+    meteor_active = (level >= 12 && level % 4 === 0);
+
     // Boss & Shield setup
-    boss_active = (level % 10 === 0 && level > 0);
+    boss_active = (level % 10 === 0 && level > 0) || level === 33 || level === 36 || level === 39;
     if (level === 10) { boss_hp = 25; boss_max_hp = 25; boss_type = 1; boss_dx = 2; boss_x = w/2 - 50; }
     else if (level === 20) { boss_hp = 50; boss_max_hp = 50; boss_type = 2; boss_dx = 0; boss_x = w/2 - 50; }
     else if (level === 30) { boss_hp = 75; boss_max_hp = 75; boss_type = 3; boss_dx = 3; boss_x = w/2 - 50; }
+    else if (level === 33) { boss_hp = 80; boss_max_hp = 80; boss_type = 1; boss_dx = 4; boss_x = w/2 - 50; }
+    else if (level === 36) { boss_hp = 100; boss_max_hp = 100; boss_type = 2; boss_dx = 0; boss_x = w/2 - 50; }
+    else if (level === 39) { boss_hp = 125; boss_max_hp = 125; boss_type = 3; boss_dx = 4; boss_x = w/2 - 50; }
+    else if (level === 40) { boss_hp = 150; boss_max_hp = 150; boss_type = 3; boss_dx = 5; boss_x = w/2 - 50; }
 
     shield_active = (level >= 14);
     shield_x = 50; shield_dx = 2 + (level >= 16 ? 1 : 0);
@@ -280,10 +293,11 @@ function initLevel() {
 
     // Generate Stage Bricks Architecture
     brick_hp = [];
-    for (let r = 0; r < ROWS; r++) {
-        let row = [];
-        let hpRow = [];
-        for (let c = 0; c < COLS; c++) {
+    if (level !== 99) {
+        for (let r = 0; r < ROWS; r++) {
+            let row = [];
+            let hpRow = [];
+            for (let c = 0; c < COLS; c++) {
             let v = 0;
             if (level === 1) {
                 if (r === 0) v = 2; else if (r <= 3) v = 1;
@@ -336,6 +350,7 @@ function initLevel() {
         }
         bricks.push(row);
         brick_hp.push(hpRow);
+        }
     }
 
     // Level Editor Concepts (String Arrays for Stages 21-30)
@@ -365,13 +380,40 @@ function initLevel() {
         }
     }
 
+    if (level >= 31 && level <= 40 && !boss_active && level !== 99) {
+        bricks_left = 0;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                let v = 0;
+                if (level === 31) v = (r % 2 === 0) ? 8 : 4;
+                else if (level === 32) v = (c % 2 === 0) ? 7 : 5;
+                else if (level === 34) v = (r === c || r === COLS - 1 - c) ? 9 : 6;
+                else if (level === 35) v = (r < 3) ? 8 : 2;
+                else if (level === 37) v = ((r + c) % 3 === 0) ? 4 : 8;
+                else if (level === 38) v = 7;
+                bricks[r][c] = v;
+                brick_hp[r][c] = (v === 8) ? 4 : 0;
+                if (v !== 0 && v !== 9) bricks_left++;
+            }
+        }
+    }
+
+    if (level === 99) {
+        bricks_left = 0;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (bricks[r][c] !== 0 && bricks[r][c] !== 9) bricks_left++;
+            }
+        }
+    }
+
     if (bricks_left === 0 && !boss_active) { bricks[0][0] = 1; bricks_left = 1; }
 
     updateUI();
 }
 
 function updateUI() {
-    document.getElementById('stg').innerText = `${level}/30`;
+    document.getElementById('stg').innerText = level === 99 ? 'CSTM' : `${level}/40`;
     document.getElementById('sc').innerText = score;
     document.getElementById('hi').innerText = high_score;
     document.getElementById('lv').innerText = lives;
@@ -459,9 +501,23 @@ window.onkeydown = e => {
     if (e.key === 'm' || e.key === 'M') useSkill('multi');
     if (e.key === 'f' || e.key === 'F') useSkill('fire');
     if (e.key === 'b' || e.key === 'B') useSkill('barrier');
-    if (state !== 1) {
+    if (state !== 1 && state !== 4) {
         if (e.key === 'Enter') { diff = 0; speed = 3.5; score = 0; lives = 3; level = 1; initLevel(); state = 1; }
         if (e.key === ' ') { diff = 1; speed = 5.0; score = 0; lives = 3; level = 1; initLevel(); state = 1; }
+        if (e.key === 'e' || e.key === 'E') {
+            state = 4;
+            for (let r=0; r<ROWS; r++) {
+                bricks[r] = []; brick_hp[r] = [];
+                for (let c=0; c<COLS; c++) { bricks[r][c] = 0; brick_hp[r][c] = 0; }
+            }
+        }
+    } else if (state === 4) {
+        if (e.key === 'p' || e.key === 'P') {
+            diff = 1; speed = 4.0; score = 0; lives = 3; level = 99; initLevel(); state = 1;
+        }
+        if (e.key === 'Escape') {
+            state = 0;
+        }
     }
 };
 window.onkeyup = e => keys[e.key] = 0;
@@ -475,9 +531,19 @@ cvs.onmousemove = e => {
     }
 };
 
-cvs.onclick = () => {
+cvs.onclick = (e) => {
     initAudio();
-    if (state === 1) {
+    if (state === 4) {
+        let rect = cvs.getBoundingClientRect();
+        let mx = e.clientX - rect.left;
+        let my = e.clientY - rect.top;
+        if (my >= 35 && my < 35 + ROWS * BR_H && mx >= 0 && mx < w) {
+            let r = Math.floor((my - 35) / BR_H);
+            let c = Math.floor(mx / BR_W);
+            bricks[r][c] = (bricks[r][c] + 1) % 10;
+            brick_hp[r][c] = (bricks[r][c] === 8) ? 4 : 0;
+        }
+    } else if (state === 1) {
         for (let b of balls) {
             if (b.stuck) { b.stuck = 0; b.dy = -speed; }
         }
@@ -532,7 +598,7 @@ function loop() {
                     spawnParticles(boss_x + boss_w/2, boss_y + boss_h/2, '#ff0055', 40);
                     boss_active = 0;
                     level++;
-                    if (level > 30) { state = 3; SaveHighScore(); } else initLevel();
+                    if (level > 40) { state = 3; SaveHighScore(); } else initLevel();
                 }
                 continue;
             }
@@ -611,6 +677,26 @@ function loop() {
                 playTone(120, 'sawtooth', 0.25);
                 spawnParticles(bb.x, bb.y, '#ff0055', 8);
             } else if (bb.y > h) boss_bullets.splice(i, 1);
+        }
+
+        // Meteor Hazard Update
+        if (meteor_active) {
+            if (Math.random() < 0.02 && meteors.length < 4) {
+                meteors.push({ x: 6 + Math.random() * (w - 12), y: 0 });
+            }
+            for (let i = meteors.length - 1; i >= 0; i--) {
+                let m = meteors[i];
+                m.y += 3.5;
+                if (m.y > h - 30 && m.y < h - 20 && m.x > pad_x && m.x < pad_x + pad_w) {
+                    meteors.splice(i, 1);
+                    sticky_timer = 0;
+                    pad_w = diff === 1 ? 30 : 45; paddle_timer = 200;
+                    spawnParticles(m.x, m.y, '#ff6600', 15);
+                    playTone(150, 'sawtooth', 0.2);
+                } else if (m.y > h) {
+                    meteors.splice(i, 1);
+                }
+            }
         }
 
         // Update Powerup Falling
@@ -693,7 +779,7 @@ function loop() {
                     spawnParticles(boss_x + boss_w/2, boss_y + boss_h/2, '#ff0055', 50);
                     boss_active = 0;
                     level++;
-                    if (level > 30) { state = 3; SaveHighScore(); } else initLevel();
+                    if (level > 40) { state = 3; SaveHighScore(); } else initLevel();
                     break;
                 }
             }
@@ -781,7 +867,7 @@ function loop() {
 
                     if (bricks_left <= 0 && !boss_active) {
                         level++;
-                        if (level > 30) { state = 3; SaveHighScore(); } else initLevel();
+                        if (level > 40) { state = 3; SaveHighScore(); } else initLevel();
                         break;
                     }
                 }
@@ -844,6 +930,11 @@ function render() {
         for (let c = 0; c < COLS; c++) {
             if (bricks[r][c]) {
                 drawBrick(r, c, bricks[r][c], c * BR_W, r * BR_H + 35, brick_hp[r][c]);
+            } else if (state === 4) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                ctx.setLineDash([2, 2]);
+                ctx.strokeRect(c * BR_W + 1, r * BR_H + 35 + 1, BR_W - 2, BR_H - 2);
+                ctx.setLineDash([]);
             }
         }
     }
@@ -907,6 +998,12 @@ function render() {
     for (let bb of boss_bullets) {
         ctx.fillStyle = '#ff3377';
         ctx.beginPath(); ctx.arc(bb.x, bb.y, 4, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Render Meteors
+    ctx.fillStyle = '#ff6600';
+    for (let m of meteors) {
+        ctx.fillRect(m.x - 5, m.y - 5, 10, 10);
     }
 
     // Render Safety Barrier Floor
@@ -1023,13 +1120,21 @@ function render() {
     ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
     if (state === 0) {
         ctx.font = 'bold 22px monospace';
-        ctx.fillText('KBREAKOUT LOOP 8', w/2, h/2 - 40);
+        ctx.fillText('KBREAKOUT LOOP 9', w/2, h/2 - 40);
         ctx.font = '13px monospace';
         ctx.fillStyle = '#00ffff';
-        ctx.fillText('30 Stages - Level Editor Core - Active Skills', w/2, h/2 - 10);
+        ctx.fillText('40 Stages - Advanced Editor - Active Skills', w/2, h/2 - 10);
         ctx.fillStyle = '#fff';
         ctx.fillText('Press ENTER for Easy Mode', w/2, h/2 + 25);
         ctx.fillText('Press SPACE for Hard Mode', w/2, h/2 + 45);
+        ctx.fillText('Press E for Level Editor', w/2, h/2 + 65);
+    } else if (state === 4) {
+        ctx.font = 'bold 24px monospace'; ctx.fillStyle = '#ffcc00';
+        ctx.fillText('EDITOR MODE', w/2, h/2 - 20);
+        ctx.font = '13px monospace'; ctx.fillStyle = '#fff';
+        ctx.fillText('Click grid to change blocks', w/2, h/2 + 10);
+        ctx.fillText('Press P to Play Custom Level', w/2, h/2 + 30);
+        ctx.fillText('Press ESC to return', w/2, h/2 + 50);
     } else if (state === 2) {
         ctx.font = 'bold 24px monospace'; ctx.fillStyle = '#ff3355';
         ctx.fillText('GAME OVER', w/2, h/2 - 20);
