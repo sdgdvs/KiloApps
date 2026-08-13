@@ -54,14 +54,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVoid (Sci-fi horror survival)
-**Phase:** 5 (next to do)
+**Phase:** 6 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KVoid directory (`KVoid/`), create web HTML skeleton (`KiloOS/public/apps/kvoid.html`), register in App.jsx.
 - [x] Phase 2: Basic grid movement, player rendering, and simple room layout in web HTML.
 - [x] Phase 3: Native C version (`KVoid/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [x] Phase 4: Sci-fi horror UI styling (dark terminals, scanlines, flickering lights).
-- [ ] Phase 5: Implement oxygen and battery depletion mechanics (tension through resource scarcity).
+- [x] Phase 5: Implement oxygen and battery depletion mechanics (tension through resource scarcity).
 - [ ] Phase 6: Procedural station layout generation (interconnected rooms, locked doors).
 - [ ] Phase 7: Keycard inventory system and color-coded locked doors.
 - [ ] Phase 8: Add interactable terminals to read lore and unlock areas.
