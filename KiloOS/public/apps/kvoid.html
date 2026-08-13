@@ -65,6 +65,14 @@
             pointer-events: none;
             z-index: 11;
         }
+        #stats {
+            display: flex;
+            justify-content: space-between;
+            width: 640px;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
         #message {
             margin-top: 10px;
             font-size: 16px;
@@ -76,6 +84,10 @@
 <body>
     <div id="game-container">
         <h1>KVoid</h1>
+        <div id="stats">
+            <div>OXYGEN: <span id="oxy-val" style="color: #0f0;">100</span>%</div>
+            <div>BATTERY: <span id="bat-val" style="color: #0f0;">100</span>%</div>
+        </div>
         <div id="canvas-wrapper">
             <canvas id="gameCanvas" width="640" height="480"></canvas>
             <div class="scanlines"></div>
@@ -114,6 +126,43 @@
             y: 2
         };
 
+        let oxygen = 100.0;
+        let battery = 100.0;
+        let isDead = false;
+
+        function updateStatsDisplay() {
+            document.getElementById('oxy-val').innerText = Math.ceil(oxygen);
+            document.getElementById('bat-val').innerText = Math.ceil(battery);
+            
+            document.getElementById('oxy-val').style.color = (oxygen <= 20) ? '#f00' : '#0f0';
+            document.getElementById('bat-val').style.color = (battery <= 20) ? '#f00' : '#0f0';
+        }
+
+        function gameTick() {
+            if (isDead) return;
+            oxygen -= 0.5;
+            battery -= 0.2;
+            
+            if (oxygen <= 0) { oxygen = 0; die("OXYGEN DEPLETED. YOU SUFFOCATED."); }
+            else if (battery <= 0) { battery = 0; die("BATTERY DEPLETED. CONSUMED BY THE DARK."); }
+            
+            updateStatsDisplay();
+        }
+        
+        setInterval(gameTick, 1000);
+
+        function die(msg) {
+            isDead = true;
+            document.getElementById('message').innerText = msg;
+            document.getElementById('message').style.color = '#f00';
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = '#f00';
+            ctx.font = '30px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText("SIGNAL LOST", canvas.width/2, canvas.height/2);
+        }
+
         function drawMap() {
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
@@ -147,6 +196,7 @@
         }
 
         function movePlayer(dx, dy) {
+            if (isDead) return;
             let newX = player.x + dx;
             let newY = player.y + dy;
             
@@ -154,6 +204,14 @@
                 if (map[newY][newX] === 0) {
                     player.x = newX;
                     player.y = newY;
+                    oxygen -= 0.2;
+                    if (oxygen <= 0) {
+                        oxygen = 0;
+                        updateStatsDisplay();
+                        die("OXYGEN DEPLETED. YOU SUFFOCATED.");
+                        return;
+                    }
+                    updateStatsDisplay();
                     draw();
                 }
             }
