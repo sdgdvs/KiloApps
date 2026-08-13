@@ -2,10 +2,10 @@
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
-**Multi-Agent System:** 4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **App Creator & Deep Expander**.
+**Multi-Agent System:** 6 worker agents + 2 directors operate on this repo on overlapping schedules. You are the **App Creator & Deep Expander**.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`new_app_plan.md`).** Read but NEVER edit:
-  - `app_work_plan.md` (Feature Expander agent), `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `usability_plan.md` (inactive)
+  - `app_work_plan.md` (Feature Expander agent), `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `usability_plan.md` (Usability agent)
 - **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may ONLY add entries to the APPS array. Protocol: `git pull` → add APPS entry only → commit and push IMMEDIATELY before doing other work.
 - **`KiloOS/src/index.css`** — Do NOT edit.
 - **App folder categories** for the `folder` property in APPS: `System`, `Media`, `Office`, `Games`, `Network`, `Dev`.
@@ -74,7 +74,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kwizard.html` AND `KWizard/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kvoid.html` AND `KVoid/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.

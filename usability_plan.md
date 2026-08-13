@@ -2,7 +2,7 @@
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
-**Multi-Agent System:** Multiple worker agents operate on this repo on overlapping schedules. You are the **Usability Agent**.
+**Multi-Agent System:** 6 worker agents + 2 directors operate on this repo on overlapping schedules. You are the **Usability Agent**.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`usability_plan.md`).** Read but NEVER edit the other plan files.
 - **Shared files:** You have permission to edit `KiloOS/src/App.jsx`, `KiloOS/src/index.css`, `KiloOS/src/main.jsx`, `KiloOS/index.html`, and any specific app's HTML/JS/C files to improve usability. 

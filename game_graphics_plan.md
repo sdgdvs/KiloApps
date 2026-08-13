@@ -5,7 +5,7 @@
 **Multi-Agent System:** 6 worker agents + 2 directors operate on this repo on overlapping schedules. You are the **Game Graphics** agent.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`game_graphics_plan.md`).** Read but NEVER edit:
-  - `app_work_plan.md` (Feature Expander), `app_fix_plan.md` (QA), `game_content_plan.md` (Games), `new_app_plan.md` (Creator), `usability_plan.md` (inactive)
+  - `app_work_plan.md` (Feature Expander), `app_fix_plan.md` (QA), `game_content_plan.md` (Games), `new_app_plan.md` (Creator), `usability_plan.md` (Usability)
 - **Shared file `KiloOS/src/App.jsx`** — You may ONLY edit icon paths in the APPS array. Protocol: `git pull` → minimal icon-only change → commit and push IMMEDIATELY before doing other work.
 - **`KiloOS/src/index.css`** — Do NOT edit.
 - **Size limit:** No individual KiloApp may exceed 999 kilobytes (web or native).
