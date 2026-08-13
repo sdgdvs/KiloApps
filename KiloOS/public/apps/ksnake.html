@@ -226,8 +226,8 @@
         // State Variables
         let snake = [], food = null, dir = {x: 1, y: 0}, lastDir = {x: 1, y: 0};
         let gameState = 0; // 0=Menu, 1=Playing, 2=GameOver, 3=Paused, 4=Victory
-        let gameMode = 'classic'; // 'classic', 'maze', 'ramp', 'wrap', 'campaign'
-        const modesList = ['classic', 'maze', 'ramp', 'wrap', 'campaign'];
+        let gameMode = 'classic'; // 'classic', 'maze', 'ramp', 'wrap', 'campaign', 'vs'
+        const modesList = ['classic', 'maze', 'ramp', 'wrap', 'campaign', 'vs'];
         let wrapMode = false;
         let difficulty = 1; // 0=Easy, 1=Medium, 2=Hard
         let score = 0, scoreMult = 10;
@@ -627,8 +627,11 @@
                 }
             } else if (gameMode === 'campaign') {
                 initCampaignStage(campaignLevel);
+            } else if (gameMode === 'vs') {
+                obstacles = []; portalActive = false; numRivals = 2; initRivals(); boss.alive = false;
+                bossBarContainer.style.display = 'none';
             } else {
-                obstacles = []; portalActive = false; rivals = []; boss.alive = false;
+                obstacles = []; portalActive = false; rivals = []; numRivals = 0; boss.alive = false;
                 bossBarContainer.style.display = 'none';
             }
 
@@ -865,6 +868,19 @@
             updateRivals();
             updateBoss();
             updateSkillsUI();
+            
+            // Dynamic growing maze walls
+            if (gameMode === 'maze' && matchTicks % 100 === 0 && obstacles.length < 99) {
+                let ok = false, ox, oy;
+                while(!ok) {
+                    ox = Math.floor(seededRandom() * WIDTH); oy = Math.floor(seededRandom() * HEIGHT);
+                    ok = true;
+                    if (oy === 5 && (ox >= 2 && ox <= 6)) ok = false;
+                    if (snake.some(s => s.x === ox && s.y === oy)) ok = false;
+                    if (food.x === ox && food.y === oy) ok = false;
+                }
+                if(ok) obstacles.push({x: ox, y: oy});
+            }
 
             if (portalActive) {
                 portalShiftTimer++;
@@ -1473,6 +1489,19 @@
             for (let i = snake.length - 1; i >= 0; i--) {
                 drawSnakeSegment(snake[i], i, snake.length, ghostActive > 0);
             }
+
+            // Weather Effects: Rain
+            ctx.strokeStyle = 'rgba(100, 150, 200, 0.4)';
+            ctx.lineWidth = 1;
+            let time = Date.now() / 40;
+            ctx.beginPath();
+            for (let i = 0; i < 40; i++) {
+                let rx = (i * 37 + time * 3) % 400;
+                let ry = (i * 53 + time * 12) % 400;
+                ctx.moveTo(rx, ry);
+                ctx.lineTo(rx - 2, ry + 6);
+            }
+            ctx.stroke();
         }
 
         window.addEventListener('keydown', e => {

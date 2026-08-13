@@ -75,8 +75,8 @@ int config_step = 0; // for state 6
 
 // Game State Enum: 0=Menu, 1=Playing, 2=GameOver, 3=Paused, 4=Victory, 5=Leaderboard, 6=Config, 7=Stats/Export
 int game_state = 0; 
-int game_mode = 0; // 0=Classic, 1=Maze, 2=Speed Ramp, 3=Wrap, 4=Campaign
-const char* mode_names[] = { "Classic", "Maze", "Ramp", "Wrap", "Campaign" };
+int game_mode = 0; // 0=Classic, 1=Maze, 2=Speed Ramp, 3=Wrap, 4=Campaign, 5=VS
+const char* mode_names[] = { "Classic", "Maze", "Ramp", "Wrap", "Campaign", "VS Mode" };
 
 struct Point snake[400];
 int snake_len = 3;
@@ -742,6 +742,11 @@ void InitGame() {
         }
     } else if (game_mode == 4) { // Campaign Mode
         InitCampaignStage(campaign_level);
+    } else if (game_mode == 5) { // VS Mode
+        num_rivals = 2;
+        InitCPURivals();
+    } else {
+        num_rivals = 0;
     }
 
     PlaceFood();
@@ -1238,6 +1243,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Update CPUSnakes & Boss
             UpdateCPURivals();
             UpdateBoss();
+            
+            // Dynamic growing maze walls
+            if (game_mode == 1 && match_ticks % 100 == 0 && num_obstacles < 99) {
+                int ox, oy, ok = 0;
+                while(!ok) {
+                    ox = random_int(GRID_WIDTH); oy = random_int(GRID_HEIGHT);
+                    ok = 1;
+                    if (oy == 5 && (ox >= 2 && ox <= 6)) ok = 0;
+                    if (snake[0].x == ox && snake[0].y == oy) ok = 0;
+                    if (food.x == ox && food.y == oy) ok = 0;
+                }
+                obstacles[num_obstacles].x = ox;
+                obstacles[num_obstacles].y = oy;
+                num_obstacles++;
+            }
 
             // Portals Shift Timer
             if (portal_active) {
@@ -1419,7 +1439,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN: {
             if (game_state == 0) { // Menu
-                if (wParam == 'M') { game_mode = (game_mode + 1) % 5; }
+                if (wParam == 'M') { game_mode = (game_mode + 1) % 6; }
                 else if (wParam == '1') difficulty = 0;
                 else if (wParam == '2') difficulty = 1;
                 else if (wParam == '3') difficulty = 2;
@@ -1628,8 +1648,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for(i = boss.len - 1; i >= 0; i--) DrawBossGDI(hdc, boss.body[i].x, boss.body[i].y, i);
                 }
 
-                for(i = snake_len - 1; i >= 0; i--) {
-                    DrawSnakeSegmentGDI(hdc, snake[i].x, snake[i].y, i, snake_len, ghost_active > 0, dir_x, dir_y);
+                for (i = snake_len - 1; i >= 0; i--) {
+                    DrawSnakeSegmentGDI(hdc, snake[i].x, snake[i].y, i, snake_len, ghost_active > 0, (i==0?dir_x:0), (i==0?dir_y:0));
+                }
+
+                // Weather Effects: Rain
+                {
+                    HPEN rainPen = CreatePen(PS_SOLID, 1, RGB(100, 150, 200));
+                    HPEN oldPen2 = (HPEN)SelectObject(hdc, rainPen);
+                    for(i=0; i<40; i++) {
+                        int rx = (i * 37 + (anim_tick * 4)) % 520;
+                        int ry = (i * 53 + (anim_tick * 16)) % 620;
+                        MoveToEx(hdc, rx, ry, NULL);
+                        LineTo(hdc, rx - 2, ry + 6);
+                    }
+                    SelectObject(hdc, oldPen2);
+                    DeleteObject(rainPen);
                 }
 
                 if (game_mode == 4) {
