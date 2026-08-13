@@ -1518,7 +1518,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if(r == sel_r && c == sel_c) {
                         cellBg = CreateSolidBrush(RGB(37, 99, 235));
                     } else if(sel_r >= 0 && (r == sel_r || c == sel_c || (r/boxH == sel_r/boxH && c/boxW == sel_c/boxW))) {
-                        cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
+                        DWORD tc = GetTickCount();
+                        float wave = (sinf((tc % 2500) / 2500.0f * 3.14159f * 2.0f - (r + c) * 0.3f) + 1.0f) * 0.5f;
+                        COLORREF baseHl = themes[prefs.theme][T_HL];
+                        int r_c = GetRValue(baseHl) + (int)(45 * wave);
+                        int g_c = GetGValue(baseHl) + (int)(55 * wave);
+                        int b_c = GetBValue(baseHl) + (int)(70 * wave);
+                        if(r_c>255) r_c=255; if(g_c>255) g_c=255; if(b_c>255) b_c=255;
+                        cellBg = CreateSolidBrush(RGB(r_c, g_c, b_c));
                     } else if(prefs.highlightSame && highlight_val && board[r][c] == highlight_val) {
                         cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
                     } else if(cage_id[r][c] > 0) {
@@ -1609,12 +1616,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         else sprintf(buf, "%d", val);
                         
                         if(fixed[r][c] && !error_cells[r][c]) {
-                            SetTextColor(hdc, RGB(0, 0, 0));
-                            RECT shadowRc = rc; shadowRc.left += 1; shadowRc.top += 2;
                             HFONT curF = (HFONT)SelectObject(hdc, gridSize == 16 ? hFontSmall : hFont);
+                            
+                            // Outer drop shadow
+                            SetTextColor(hdc, RGB(0, 0, 0));
+                            RECT shadowRc = rc; shadowRc.left += 2; shadowRc.top += 2;
                             DrawTextA(hdc, buf, -1, &shadowRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                            
+                            // Top-left highlight (emboss effect)
+                            SetTextColor(hdc, RGB(180, 200, 220));
+                            RECT hlRc = rc; hlRc.left -= 1; hlRc.top -= 1;
+                            DrawTextA(hdc, buf, -1, &hlRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                            
+                            // Inner dark rim
+                            SetTextColor(hdc, RGB(20, 30, 45));
+                            RECT inRc = rc; inRc.top += 1;
+                            DrawTextA(hdc, buf, -1, &inRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                            
                             SelectObject(hdc, curF);
-                            SetTextColor(hdc, RGB(248, 250, 252));
+                            SetTextColor(hdc, RGB(248, 250, 252)); // main color
                         } else if(error_cells[r][c]) {
                             SetTextColor(hdc, RGB(248, 113, 113));
                         } else {
@@ -1641,14 +1661,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     noteRc.top += sub_r * (cell_sz / boxH) + 1;
                                     noteRc.bottom = noteRc.top + (cell_sz / boxH) - 1;
                                     
-                                    HBRUSH hPipBrush = CreateSolidBrush(RGB(30, 58, 100));
-                                    FillRect(hdc, &noteRc, hPipBrush);
-                                    DeleteObject(hPipBrush);
-
-                                    SetTextColor(hdc, RGB(147, 197, 253));
-                                    char buf[2];
-                                    sprintf(buf, "%d", i);
-                                    DrawTextA(hdc, buf, -1, &noteRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                                    HPEN hPencil = CreatePen(PS_SOLID, 1, RGB(147, 197, 253));
+                                    HPEN oldP = (HPEN)SelectObject(hdc, hPencil);
+                                    
+                                    int mx = noteRc.left + (noteRc.right - noteRc.left) / 2;
+                                    int my = noteRc.top + (noteRc.bottom - noteRc.top) / 2;
+                                    int d = 3;
+                                    
+                                    // Pencil-drawn cross-hatch pip instead of font
+                                    MoveToEx(hdc, mx - d, my - d, NULL); LineTo(hdc, mx + d, my + d);
+                                    MoveToEx(hdc, mx - d + 1, my + d, NULL); LineTo(hdc, mx + d, my - d + 1);
+                                    MoveToEx(hdc, mx - d, my, NULL); LineTo(hdc, mx + d, my);
+                                    
+                                    SelectObject(hdc, oldP);
+                                    DeleteObject(hPencil);
                                 }
                             }
                             SelectObject(hdc, oldFnt);

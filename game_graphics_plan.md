@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSudoku
 - KGo
 - KTowers
 - KWords
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KHangman
 - KMatch3
 - KFreecell
+- KSudoku
 ## Completed Work Log
+
+- **KSudoku (Loop 4):** Implemented highly detailed embossing text-shadows and shading passes for locked vs unlocked numbers to make the grid instantly readable, distinct pencil-drawn graphical cross-hatch textures for note mini-pips instead of basic font rendering, and an animated sweeping glint/pulse effect for the active row/col/block highlight in both Web Canvas (ksudoku.html) and Native C Win32 GDI (KSudoku/main.c).
 
 - **KFreecell (Loop 4):** Implemented highly detailed specular highlights on playing cards to give a premium thicker embossed look, dynamic 3D drop-shadows that shift and expand when a card is dragged or lifted, and glowing golden aura/sparkle effects surrounding cards eligible for auto-foundation movement to enhance game state readability in both Web Canvas (kfreecell.html) and Native C Win32 GDI (KFreecell/main.c).
 
