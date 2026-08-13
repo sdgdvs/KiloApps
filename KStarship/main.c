@@ -49,7 +49,10 @@ typedef struct {
     int planets[6];
     int encounter_type;
     int visited;
+    int faction;
 } StarSystem;
+
+const char* faction_names[] = {"Independent", "Federation", "Syndicate", "Xenon"};
 
 StarSystem systems[NUM_SYSTEMS];
 
@@ -62,6 +65,7 @@ int is_moving = 0;
 float res_fuel = 10000.0f;
 int res_hull = 100;
 int res_credits = 1000;
+int res_morale = 100;
 
 typedef struct {
     char name[16];
@@ -240,6 +244,7 @@ void InitStars() {
         else systems[i].encounter_type = 0;
         
         systems[i].visited = 0;
+        systems[i].faction = rand() % 4;
     }
 }
 
@@ -509,46 +514,49 @@ void Draw(HDC hdc, RECT* rect) {
     wsprintfA(buf, "Hull: %d%%", res_hull);
     TextOutA(memDC, mapWidth + 15, 120, buf, lstrlenA(buf));
     
-    wsprintfA(buf, "Crew: %d", roster_count);
+    wsprintfA(buf, "Morale: %d%%", res_morale);
     TextOutA(memDC, mapWidth + 15, 140, buf, lstrlenA(buf));
+    
+    wsprintfA(buf, "Crew: %d", roster_count);
+    TextOutA(memDC, mapWidth + 15, 160, buf, lstrlenA(buf));
 
     wsprintfA(buf, "Credits: %d", res_credits);
-    TextOutA(memDC, mapWidth + 15, 160, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 180, buf, lstrlenA(buf));
 
     wsprintfA(buf, "CARGO");
     SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 185, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 205, buf, lstrlenA(buf));
 
-    MoveToEx(memDC, mapWidth + 15, 203, NULL);
-    LineTo(memDC, width - 15, 203);
+    MoveToEx(memDC, mapWidth + 15, 223, NULL);
+    LineTo(memDC, width - 15, 223);
 
     wsprintfA(buf, "Minerals: %d", cargo_minerals);
     SetTextColor(memDC, RGB(255, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 210, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 230, buf, lstrlenA(buf));
 
     wsprintfA(buf, "Tech: %d", cargo_tech);
-    TextOutA(memDC, mapWidth + 15, 230, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 250, buf, lstrlenA(buf));
 
     wsprintfA(buf, "UPGRADES");
     SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 260, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 280, buf, lstrlenA(buf));
 
-    MoveToEx(memDC, mapWidth + 15, 278, NULL);
-    LineTo(memDC, width - 15, 278);
+    MoveToEx(memDC, mapWidth + 15, 298, NULL);
+    LineTo(memDC, width - 15, 298);
 
     wsprintfA(buf, "Wpn: L%d  Shd: L%d", upg_weapons, upg_shields);
     SetTextColor(memDC, RGB(255, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 285, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 305, buf, lstrlenA(buf));
 
     wsprintfA(buf, "Eng: L%d  Car: L%d", upg_engines, upg_cargo);
-    TextOutA(memDC, mapWidth + 15, 305, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 325, buf, lstrlenA(buf));
 
     wsprintfA(buf, "SCANNER");
     SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 335, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, 355, buf, lstrlenA(buf));
     
-    MoveToEx(memDC, mapWidth + 15, 353, NULL);
-    LineTo(memDC, width - 15, 353);
+    MoveToEx(memDC, mapWidth + 15, 373, NULL);
+    LineTo(memDC, width - 15, 373);
     DeleteObject(linePen);
 
     int found_sys_idx = -1;
@@ -563,9 +571,9 @@ void Draw(HDC hdc, RECT* rect) {
 
     if (found_sys_idx != -1) {
         StarSystem* sys = &systems[found_sys_idx];
-        wsprintfA(buf, "Star: %s\nPlanets: %d", star_names[sys->type_idx], sys->num_planets);
+        wsprintfA(buf, "Star: %s\nFaction: %s\nPlanets: %d", star_names[sys->type_idx], faction_names[sys->faction], sys->num_planets);
         SetTextColor(memDC, RGB(0, 255, 255));
-        RECT textRect = {mapWidth + 15, 360, width - 10, 400};
+        RECT textRect = {mapWidth + 15, 380, width - 10, 440};
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
         
         char pbuf[256] = "";
@@ -575,18 +583,22 @@ void Draw(HDC hdc, RECT* rect) {
         }
         if (sys->num_planets == 0) lstrcatA(pbuf, "None");
         SetTextColor(memDC, RGB(136, 204, 204));
-        RECT pRect = {mapWidth + 15, 400, width - 10, 475};
+        RECT pRect = {mapWidth + 15, 440, width - 10, 500};
         DrawTextA(memDC, pbuf, -1, &pRect, DT_WORDBREAK);
     } else {
         wsprintfA(buf, "Deep space. Nothing nearby.");
         SetTextColor(memDC, RGB(136, 136, 136));
-        RECT textRect = {mapWidth + 15, 360, width - 10, 460};
+        RECT textRect = {mapWidth + 15, 380, width - 10, 460};
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
     }
     
     wsprintfA(buf, "[C] Crew  [H] Help");
     SetTextColor(memDC, RGB(255, 255, 0));
-    TextOutA(memDC, mapWidth + 15, height - 30, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 15, height - 50, buf, lstrlenA(buf));
+    if (found_sys_idx != -1 && systems[found_sys_idx].num_planets > 0) {
+        wsprintfA(buf, "[L] Land on Planet");
+        TextOutA(memDC, mapWidth + 15, height - 30, buf, lstrlenA(buf));
+    }
 
     if (modal_open) {
         RECT modalRect = { mapWidth/2 - 170, height/2 - 100, mapWidth/2 + 170, height/2 + 100 };
@@ -635,13 +647,16 @@ void Draw(HDC hdc, RECT* rect) {
         else if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
         else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard 8: Tavern(Recruit 100C)\r\nSPACE: Leave"; }
         else if (modal_enc_type == 5) { title = "SHIPYARD"; desc = "1: Upg Wpn 2: Upg Shd (500C/Lvl)\r\n3: Upg Eng 4: Upg Cargo (500C/Lvl)\r\nSPACE: Back to Station"; }
+        else if (modal_enc_type == 15) { title = "PLANETARY LANDING"; desc = "You landed on a planet.\r\n1: Explore (Risk Morale, Gain Min)\r\n2: Rest (Gain Morale)\r\nSPACE: Leave"; }
         else if (modal_enc_type == 12) {
             title = "CAPTAIN'S MANUAL";
             desc = "GOAL: Explore, trade, upgrade.\r\n"
                    "CTRLS: W/A/S/D move, C Crew, H Help.\r\n"
                    "RES: Fuel(move), Hull(health), Credits.\r\n"
                    "CREW: Pilot(spd), Gun(dmg), Eng(def).\r\n"
-                   "UPG: Improve ship at stations.\r\n";
+                   "UPG: Improve ship at stations.\r\n"
+                   "LAND: Press L to land on planets.\r\n"
+                   "MORALE: Drops in combat, rises at rest.\r\n";
         }
         else if (modal_enc_type == 6) {
             title = "CREW MANAGEMENT";
@@ -671,7 +686,7 @@ void Draw(HDC hdc, RECT* rect) {
             DrawTextA(memDC, "[ 1-3 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 5) {
             DrawTextA(memDC, "[ 1-4 OR SPACE ]", -1, &bRect, DT_CENTER);
-        } else if ((modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) || (modal_enc_type == 13 && res_hull > 0 && pirate_hp > 0) || modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9 || modal_enc_type == 14 || modal_enc_type == 2) {
+        } else if ((modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) || (modal_enc_type == 13 && res_hull > 0 && pirate_hp > 0) || modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9 || modal_enc_type == 14 || modal_enc_type == 2 || modal_enc_type == 15) {
             DrawTextA(memDC, "[ 1-2 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else {
             DrawTextA(memDC, "[ PRESS SPACE ]", -1, &bRect, DT_CENTER);
@@ -699,6 +714,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 modal_enc_type = 12;
                 return 0;
             }
+            if (!modal_open && (wParam == 'L' || wParam == 'l')) {
+                int found_sys_idx = -1;
+                for (int i = 0; i < NUM_SYSTEMS; i++) {
+                    int dx = systems[i].x - ship_x;
+                    int dy = systems[i].y - ship_y;
+                    if (dx*dx + dy*dy < 2500) {
+                        found_sys_idx = i;
+                        break;
+                    }
+                }
+                if (found_sys_idx != -1 && systems[found_sys_idx].num_planets > 0) {
+                    modal_open = 1;
+                    modal_enc_type = 15;
+                }
+                return 0;
+            }
             if (modal_open) {
                 if (modal_enc_type == 1) {
                     if (res_hull <= 0) {
@@ -719,6 +750,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             SpawnExplosion(ship_x, ship_y - 40, 20, RGB(255, 100, 0), RGB(255, 0, 0));
                             if (pirate_hp > 0) {
                                 res_hull -= s_dmg;
+                                res_morale -= s_dmg / 2;
+                                if (res_morale < 0) res_morale = 0;
                                 if (res_hull < 0) res_hull = 0;
                                 // Weapon impact on ship
                                 SpawnExplosion(ship_x, ship_y, 15, RGB(0, 255, 255), RGB(255, 255, 255));
@@ -738,6 +771,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int s_dmg = 15 - upg_shields * 2;
                             if (s_dmg < 0) s_dmg = 0;
                             res_hull -= s_dmg;
+                            res_morale -= s_dmg / 2;
+                            if (res_morale < 0) res_morale = 0;
                             if (res_hull < 0) res_hull = 0;
                             wsprintfA(combat_log, "You fled! Took %d damage.", s_dmg);
                             modal_enc_type = 10;
@@ -761,6 +796,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             SpawnExplosion(ship_x, ship_y - 40, 30, RGB(255, 100, 0), RGB(255, 0, 0));
                             if (pirate_hp > 0) {
                                 res_hull -= s_dmg;
+                                res_morale -= s_dmg / 2;
+                                if (res_morale < 0) res_morale = 0;
                                 if (res_hull < 0) res_hull = 0;
                                 SpawnExplosion(ship_x, ship_y, 25, RGB(0, 255, 255), RGB(255, 255, 255));
                                 if (res_hull <= 0) {
@@ -797,6 +834,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         pirate_hp = 80;
                         lstrcpyA(combat_log, "The aliens are offended and attack!");
                         modal_enc_type = 1;
+                    } else if (wParam == VK_SPACE) {
+                        modal_open = 0;
+                    }
+                } else if (modal_enc_type == 15) {
+                    if (wParam == '1') {
+                        if (rand() % 2 == 0) {
+                            cargo_minerals += 2;
+                            lstrcpyA(combat_log, "Found resources! (+2 Minerals)");
+                        } else {
+                            res_morale -= 20;
+                            if (res_morale < 0) res_morale = 0;
+                            lstrcpyA(combat_log, "Hostile environment! (-20 Morale)");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '2') {
+                        res_morale += 20;
+                        if (res_morale > 100) res_morale = 100;
+                        lstrcpyA(combat_log, "Crew is rested. (+20 Morale)");
+                        modal_enc_type = 11;
                     } else if (wParam == VK_SPACE) {
                         modal_open = 0;
                     }

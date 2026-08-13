@@ -127,6 +127,7 @@
         <div class="label">RESOURCES</div>
         <div>Fuel: <span id="res-fuel" class="value">10000</span></div>
         <div>Hull: <span id="res-hull" class="value">100%</span></div>
+        <div>Morale: <span id="res-morale" class="value">100%</span></div>
         <div>Crew: <span id="res-crew" class="value">10</span></div>
         <div>Credits: <span id="res-credits" class="value">1000</span></div>
       </div>
@@ -152,6 +153,7 @@
       </div>
       <button id="btn-crew" style="width:100%; margin-top:10px; font-size:14px;">MANAGE CREW (C)</button>
       <button id="btn-help" style="width:100%; margin-top:10px; font-size:14px;">CAPTAIN'S MANUAL (H)</button>
+      <button id="btn-land" style="width:100%; margin-top:10px; font-size:14px; display:none; color: #00ff00; border-color: #00ff00;">LAND ON PLANET (L)</button>
     </div>
   </div>
 
@@ -168,6 +170,7 @@
     const locY = document.getElementById('loc-y');
     const resFuel = document.getElementById('res-fuel');
     const resHull = document.getElementById('res-hull');
+    const resMorale = document.getElementById('res-morale');
     const resCrew = document.getElementById('res-crew');
     const resCredits = document.getElementById('res-credits');
     const cargoMinerals = document.getElementById('cargo-minerals');
@@ -177,6 +180,7 @@
     const upgEng = document.getElementById('upg-eng');
     const upgCar = document.getElementById('upg-car');
     const scannerInfo = document.getElementById('scanner-info');
+    const btnLand = document.getElementById('btn-land');
 
     // Audio system
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -236,7 +240,7 @@
     // Game state
     const state = {
       ship: { x: 0, y: 0, targetX: 0, targetY: 0, moving: false },
-      resources: { fuel: 10000, hull: 100, credits: 1000 },
+      resources: { fuel: 10000, hull: 100, morale: 100, credits: 1000 },
       cargo: { minerals: 0, tech: 0 },
       upgrades: { weapons: 1, shields: 1, engines: 1, cargo: 1 },
       crew: [],
@@ -320,6 +324,7 @@
           color: sType.color,
           name: sType.type,
           planets: planets,
+          faction: ['Independent', 'Federation', 'Syndicate', 'Xenon'][Math.floor(Math.random() * 4)],
           encounter: ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None', 'Fleet', 'Diplomacy'][Math.floor(Math.random() * 8)],
           visited: false
         });
@@ -489,6 +494,7 @@
       locY.innerText = Math.floor(state.ship.y);
       resFuel.innerText = Math.floor(state.resources.fuel);
       resHull.innerText = state.resources.hull + "%";
+      resMorale.innerText = state.resources.morale + "%";
       resCrew.innerText = state.crew.length;
       resCredits.innerText = state.resources.credits;
       cargoMinerals.innerText = state.cargo.minerals;
@@ -505,8 +511,10 @@
       if (nearby.length > 0) {
         const sys = nearby[0];
         let pText = sys.planets.length > 0 ? sys.planets.join(', ') : 'None';
-        scannerInfo.innerHTML = `Star: ${sys.name}<br>Planets: ${sys.planets.length}<br><span style="font-size:11px;color:#88cccc">${pText}</span>`;
+        scannerInfo.innerHTML = `Star: ${sys.name}<br>Faction: ${sys.faction}<br>Planets: ${sys.planets.length}<br><span style="font-size:11px;color:#88cccc">${pText}</span>`;
         scannerInfo.style.color = "#00ffff";
+        if (sys.planets.length > 0) btnLand.style.display = 'block';
+        else btnLand.style.display = 'none';
 
         if (!sys.visited && !state.modalOpen) {
           sys.visited = true;
@@ -517,6 +525,7 @@
       } else {
         scannerInfo.innerText = "Deep space. Nothing nearby.";
         scannerInfo.style.color = "#888888";
+        btnLand.style.display = 'none';
       }
     }
 
@@ -575,6 +584,7 @@
                     let result = `You hit pirate for ${pDmg}!`;
                     if (pirateHp > 0) {
                         state.resources.hull -= sDmg;
+                        state.resources.morale = Math.max(0, state.resources.morale - Math.floor(sDmg/2));
                         if (state.resources.hull < 0) state.resources.hull = 0;
                         spawnExplosion(state.ship.x, state.ship.y, 15, '#00ffff', '#ffffff'); // Impact on ship
                         if (state.resources.hull <= 0) {
@@ -592,6 +602,7 @@
                 addBtn('Flee', () => {
                     let sDmg = Math.max(0, 15 - state.upgrades.shields * 2);
                     state.resources.hull -= sDmg;
+                    state.resources.morale = Math.max(0, state.resources.morale - Math.floor(sDmg/2));
                     if (state.resources.hull < 0) state.resources.hull = 0;
                     desc.innerText = `You fled! Took ${sDmg} damage while escaping.\nYour Hull: ${state.resources.hull}%`;
                     actions.innerHTML = '';
@@ -631,6 +642,7 @@
                     let result = `You hit fleet for ${pDmg}!`;
                     if (pirateHp > 0) {
                         state.resources.hull -= sDmg;
+                        state.resources.morale = Math.max(0, state.resources.morale - Math.floor(sDmg/2));
                         if (state.resources.hull < 0) state.resources.hull = 0;
                         spawnExplosion(state.ship.x, state.ship.y, 25, '#00ffff', '#ffffff');
                         if (state.resources.hull <= 0) {
@@ -648,6 +660,7 @@
                 addBtn('Flee', () => {
                     let sDmg = Math.max(0, 25 - state.upgrades.shields * 2);
                     state.resources.hull -= sDmg;
+                    state.resources.morale = Math.max(0, state.resources.morale - Math.floor(sDmg/2));
                     if (state.resources.hull < 0) state.resources.hull = 0;
                     desc.innerText = `You fled! Took ${sDmg} damage while escaping.\nYour Hull: ${state.resources.hull}%`;
                     actions.innerHTML = '';
@@ -685,6 +698,7 @@
                 desc.innerText = "Scan successful! Gained 2 Tech.";
             } else {
                 state.resources.hull -= 20;
+                state.resources.morale = Math.max(0, state.resources.morale - 10);
                 if (state.resources.hull < 0) state.resources.hull = 0;
                 desc.innerText = "The anomaly surged! Lost 20 Hull.";
             }
@@ -895,9 +909,36 @@
             addBtn('Leave', () => {
                 modal.style.display = 'none';
                 state.modalOpen = false;
+                closeStory();
             });
         }
+      } else if (type === 'Land') {
+        desc.innerText = "You descended to the planetary surface.";
+        addBtn('Explore (Risk Morale, Gain Min)', () => {
+            if (Math.random() < 0.5) {
+                state.cargo.minerals += 2;
+                desc.innerText = "Found resources! (+2 Minerals)";
+            } else {
+                state.resources.morale = Math.max(0, state.resources.morale - 20);
+                desc.innerText = "Hostile environment! (-20 Morale)";
+            }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Rest (Gain Morale)', () => {
+            state.resources.morale = Math.min(100, state.resources.morale + 20);
+            desc.innerText = "Crew is rested. (+20 Morale)";
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Leave', () => {
+            modal.style.display = 'none';
+            state.modalOpen = false;
+        });
       }
+      
       modal.style.display = 'block';
       keys.w = keys.a = keys.s = keys.d = false;
       updateUI(); // refresh resources instantly
@@ -1051,12 +1092,24 @@
 
     document.getElementById('btn-crew').addEventListener('click', openCrewModal);
     document.getElementById('btn-help').addEventListener('click', openHelpModal);
+    document.getElementById('btn-land').addEventListener('click', () => {
+      const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 50);
+      if (nearby.length > 0 && nearby[0].planets.length > 0 && !state.modalOpen) {
+          triggerEncounter('Land');
+      }
+    });
 
     window.addEventListener('keydown', e => {
       const k = e.key.toLowerCase();
       if (['w','a','s','d'].includes(k)) { keys[k] = true; }
       if (k === 'c') { openCrewModal(); }
       if (k === 'h') { openHelpModal(); }
+      if (k === 'l') {
+        const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 50);
+        if (nearby.length > 0 && nearby[0].planets.length > 0 && !state.modalOpen) {
+            triggerEncounter('Land');
+        }
+      }
     });
     window.addEventListener('keyup', e => {
       const k = e.key.toLowerCase();
