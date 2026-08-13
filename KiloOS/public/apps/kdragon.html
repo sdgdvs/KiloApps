@@ -4,18 +4,130 @@
     <meta charset="UTF-8">
     <title>KDragon</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: #1a1a1a; color: #fff; }
+        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: #1a1a1a; color: #fff; user-select: none; }
         h1 { color: #f0f0f0; text-align: center; }
-        .container { max-width: 600px; margin: 0 auto; text-align: center; }
+        .container { max-width: 600px; margin: 0 auto; text-align: center; background: #2a2a2a; padding: 20px; border-radius: 10px; }
+        .stats { display: flex; justify-content: space-around; margin-top: 20px; padding: 10px; background: #333; border-radius: 5px; }
+        .stat { font-size: 18px; }
+        .controls { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #444; color: #fff; border: 1px solid #666; border-radius: 5px; }
+        button:hover { background: #555; }
+        button:disabled { background: #333; color: #777; cursor: not-allowed; }
+        .entity-display { font-size: 80px; margin: 30px 0; min-height: 100px; }
+        .message-log { margin-top: 20px; height: 100px; overflow-y: auto; background: #111; padding: 10px; text-align: left; font-family: monospace; border: 1px solid #444; }
+        .message { margin: 5px 0; color: #ccc; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>KDragon</h1>
-        <p>Welcome to KDragon - Fantasy creature-raising sim</p>
+        <div id="game-screen" style="display: none;">
+            <div class="stats">
+                <div class="stat">Hunger: <span id="stat-hunger">0</span>/100</div>
+                <div class="stat">Happiness: <span id="stat-happiness">0</span>/100</div>
+                <div class="stat">Energy: <span id="stat-energy">0</span>/100</div>
+            </div>
+            <div class="entity-display" id="entity-art">🥚</div>
+            <div class="controls" id="controls">
+                <button id="btn-feed">Feed (🍎)</button>
+                <button id="btn-play">Play (🎾)</button>
+                <button id="btn-sleep">Sleep (💤)</button>
+            </div>
+            <div class="message-log" id="message-log"></div>
+        </div>
+        
+        <div id="start-screen">
+            <div class="entity-display">🥚</div>
+            <p>A mysterious egg awaits...</p>
+            <button id="btn-hatch">Incubate Egg</button>
+        </div>
     </div>
+
     <script>
-        console.log("KDragon initialized");
+        const Game = {
+            state: 'egg',
+            stats: { hunger: 50, happiness: 50, energy: 100 },
+            tickInterval: null,
+            
+            init() {
+                document.getElementById('btn-hatch').addEventListener('click', () => this.hatch());
+                document.getElementById('btn-feed').addEventListener('click', () => this.action('feed'));
+                document.getElementById('btn-play').addEventListener('click', () => this.action('play'));
+                document.getElementById('btn-sleep').addEventListener('click', () => this.action('sleep'));
+            },
+            
+            log(msg) {
+                const logEl = document.getElementById('message-log');
+                const p = document.createElement('div');
+                p.className = 'message';
+                p.innerText = `> ${msg}`;
+                logEl.insertBefore(p, logEl.firstChild);
+            },
+            
+            updateUI() {
+                document.getElementById('stat-hunger').innerText = this.stats.hunger;
+                document.getElementById('stat-happiness').innerText = this.stats.happiness;
+                document.getElementById('stat-energy').innerText = this.stats.energy;
+                
+                if (this.state === 'egg') {
+                    document.getElementById('entity-art').innerText = '🥚';
+                    document.getElementById('controls').style.display = 'none';
+                } else {
+                    document.getElementById('entity-art').innerText = '🐉';
+                    document.getElementById('controls').style.display = 'flex';
+                }
+            },
+            
+            hatch() {
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('game-screen').style.display = 'block';
+                this.state = 'dragon';
+                this.log("The egg hatched! A baby dragon emerged.");
+                this.updateUI();
+                
+                this.tickInterval = setInterval(() => this.tick(), 3000);
+            },
+            
+            action(type) {
+                if (type === 'feed') {
+                    if (this.stats.hunger >= 100) {
+                        this.log("Dragon is full and refuses to eat.");
+                        return;
+                    }
+                    this.stats.hunger = Math.min(100, this.stats.hunger + 20);
+                    this.stats.energy = Math.max(0, this.stats.energy - 5);
+                    this.log("You fed the dragon. It looks satisfied.");
+                } else if (type === 'play') {
+                    if (this.stats.energy < 20) {
+                        this.log("Dragon is too tired to play.");
+                        return;
+                    }
+                    this.stats.happiness = Math.min(100, this.stats.happiness + 20);
+                    this.stats.energy = Math.max(0, this.stats.energy - 20);
+                    this.stats.hunger = Math.max(0, this.stats.hunger - 10);
+                    this.log("You played with the dragon! It's happy.");
+                } else if (type === 'sleep') {
+                    this.stats.energy = Math.min(100, this.stats.energy + 40);
+                    this.stats.hunger = Math.max(0, this.stats.hunger - 10);
+                    this.log("Dragon took a nap and regained energy.");
+                }
+                this.updateUI();
+            },
+            
+            tick() {
+                if (this.state !== 'dragon') return;
+                
+                this.stats.hunger = Math.max(0, this.stats.hunger - 2);
+                this.stats.happiness = Math.max(0, this.stats.happiness - 1);
+                
+                if (this.stats.hunger < 20) this.log("Dragon is getting hungry...");
+                if (this.stats.happiness < 20) this.log("Dragon is feeling sad...");
+                
+                this.updateUI();
+            }
+        };
+        
+        Game.init();
     </script>
 </body>
 </html>
