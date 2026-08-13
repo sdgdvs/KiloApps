@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVoid (Sci-fi horror survival)
-**Phase:** 8 (next to do)
+**Phase:** 9 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KVoid directory (`KVoid/`), create web HTML skeleton (`KiloOS/public/apps/kvoid.html`), register in App.jsx.
@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Implement oxygen and battery depletion mechanics (tension through resource scarcity).
 - [x] Phase 6: Procedural station layout generation (interconnected rooms, locked doors).
 - [x] Phase 7: Keycard inventory system and color-coded locked doors.
-- [ ] Phase 8: Add interactable terminals to read lore and unlock areas.
+- [x] Phase 8: Add interactable terminals to read lore and unlock areas.
 - [ ] Phase 9: Implement alien creature AI (patrolling, chasing player when spotted).
 - [ ] Phase 10: Combat/evasion mechanics (hiding in lockers, using limited EMP charges).
 - [ ] Phase 11: Multi-level progression (find elevator to next deck, increasing difficulty).

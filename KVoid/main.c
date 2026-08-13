@@ -122,6 +122,17 @@ void GenerateMap() {
             }
         }
     }
+
+    for (int i = 0; i < 3; i++) {
+        while (1) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
+                map[ry][rx] = 9;
+                break;
+            }
+        }
+    }
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -212,6 +223,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         RECT kr = {x * TILE_SIZE + 4, y * TILE_SIZE + 6 + UI_HEIGHT, x * TILE_SIZE + 12, y * TILE_SIZE + 11 + UI_HEIGHT};
                         FillRect(hdcMem, &kr, kc);
                         DeleteObject(kc);
+                    } else if (map[y][x] == 9 || map[y][x] == 10) {
+                        FillRect(hdcMem, &tileRect, hFloorBrush);
+                        HBRUSH tc = (map[y][x] == 9) ? CreateSolidBrush(RGB(255, 255, 255)) : CreateSolidBrush(RGB(80, 80, 80));
+                        HBRUSH tcInner = (map[y][x] == 9) ? CreateSolidBrush(RGB(0, 255, 0)) : CreateSolidBrush(RGB(30, 30, 30));
+                        RECT tr = {x * TILE_SIZE + 4, y * TILE_SIZE + 4 + UI_HEIGHT, x * TILE_SIZE + 12, y * TILE_SIZE + 12 + UI_HEIGHT};
+                        FillRect(hdcMem, &tr, tc);
+                        RECT trIn = {x * TILE_SIZE + 5, y * TILE_SIZE + 5 + UI_HEIGHT, x * TILE_SIZE + 11, y * TILE_SIZE + 11 + UI_HEIGHT};
+                        FillRect(hdcMem, &trIn, tcInner);
+                        DeleteObject(tc);
+                        DeleteObject(tcInner);
                     } else {
                         FillRect(hdcMem, &tileRect, hFloorBrush);
                     }
@@ -333,6 +354,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         msgTimer = 40;
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
+                } else if (target == 9) {
+                    const char* lores[] = {
+                        "LOG: EXPERIMENT FAILED.",
+                        "LOG: THEY ARE IN THE VENTS.",
+                        "LOG: OXYGEN LEAK DETECTED.",
+                        "LOG: DIRECTOR IS DEAD."
+                    };
+                    int l_idx = rand() % 4;
+                    int unlockColor = 3 + (rand() % 3);
+                    const char* colorName = (unlockColor == 3) ? "RED" : (unlockColor == 4) ? "GREEN" : "BLUE";
+                    wsprintf(sysMsg, "%s %s DOORS OPENED.", lores[l_idx], colorName);
+                    
+                    for (int y = 1; y < ROWS - 1; y++) {
+                        for (int x = 1; x < COLS - 1; x++) {
+                            if (map[y][x] == unlockColor) map[y][x] = 0;
+                        }
+                    }
+                    map[newY][newX] = 10;
+                    msgTimer = 60;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else if (target == 10) {
+                    lstrcpy(sysMsg, "TERMINAL ALREADY ACCESSED.");
+                    msgTimer = 40;
+                    InvalidateRect(hwnd, NULL, FALSE);
                 } else if (target == 0 || (target >= 6 && target <= 8)) {
                     if (target >= 6 && target <= 8) {
                         if (target == 6) { hasRedKey = 1; lstrcpy(sysMsg, "PICKED UP RED KEYCARD."); }

@@ -210,6 +210,18 @@
                     }
                 }
             }
+
+            for (let i = 0; i < 3; i++) {
+                let placed = false;
+                while (!placed) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
+                        map[ry][rx] = 9; // Terminal
+                        placed = true;
+                    }
+                }
+            }
         }
         generateMap();
 
@@ -283,6 +295,13 @@
                         let kc = map[y][x] === 6 ? '#f00' : map[y][x] === 7 ? '#0f0' : '#55f';
                         ctx.fillStyle = kc;
                         ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 6, 8, 5);
+                    } else if (map[y][x] === 9 || map[y][x] === 10) {
+                        ctx.fillStyle = '#050505';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = map[y][x] === 9 ? '#fff' : '#555';
+                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 4, 8, 8);
+                        ctx.fillStyle = map[y][x] === 9 ? '#0f0' : '#222';
+                        ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 5, 6, 6);
                     } else {
                         ctx.fillStyle = '#050505';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -334,6 +353,27 @@
                         let colorHex = target === 3 ? "#f00" : target === 4 ? "#0f0" : "#55f";
                         showMessage(`LOCKED. ${colorName} KEYCARD REQUIRED.`, colorHex);
                     }
+                } else if (target === 9) {
+                    const lores = [
+                        "LOG: EXPERIMENT FAILED.",
+                        "LOG: THEY ARE IN THE VENTS.",
+                        "LOG: OXYGEN LEAK DETECTED.",
+                        "LOG: DIRECTOR IS DEAD."
+                    ];
+                    let colors = [3, 4, 5];
+                    let colorNames = {3: "RED", 4: "GREEN", 5: "BLUE"};
+                    let unlockColor = colors[Math.floor(Math.random() * colors.length)];
+                    let msg = lores[Math.floor(Math.random() * lores.length)] + ` ${colorNames[unlockColor]} DOORS OPENED.`;
+                    for (let y = 1; y < ROWS - 1; y++) {
+                        for (let x = 1; x < COLS - 1; x++) {
+                            if (map[y][x] === unlockColor) map[y][x] = 0;
+                        }
+                    }
+                    map[newY][newX] = 10;
+                    showMessage(msg, "#0ff");
+                    draw();
+                } else if (target === 10) {
+                    showMessage("TERMINAL ALREADY ACCESSED.", "#555");
                 } else if (target === 0 || (target >= 6 && target <= 8)) {
                     if (target >= 6 && target <= 8) {
                         if (target === 6) { keys.r = true; showMessage("PICKED UP RED KEYCARD.", "#f00"); }
