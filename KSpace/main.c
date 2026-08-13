@@ -1465,7 +1465,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == VK_DOWN || wParam == 'S') menuIndex = (menuIndex + 1) % opts;
                 else if (wParam == VK_RETURN || wParam == VK_SPACE) {
                     int saved = HasSavedGame();
-                    if (menuIndex == 0) gameState = STATE_MODE_SELECT;
+                    if (menuIndex == 0) StartNewGame(MODE_CLASSIC);
                     else if (saved && menuIndex == 1) LoadGameState();
                     else if ((!saved && menuIndex == 1) || (saved && menuIndex == 2)) gameState = STATE_LEADERBOARD;
                     else if ((!saved && menuIndex == 2) || (saved && menuIndex == 3)) gameState = STATE_MODE_SELECT;

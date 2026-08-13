@@ -157,7 +157,21 @@ window.addEventListener('load', () => {
       if (!file) return;
       let reader = new FileReader();
       reader.onload = ev => {
-        try { let data = JSON.parse(ev.target.result); if(Array.isArray(data)) { leaderboard = data; saveLeaderboard(); alert('Imported!'); } } catch(err) { alert('Invalid JSON'); }
+        try {
+          let data = JSON.parse(ev.target.result);
+          if (Array.isArray(data)) {
+            let valid = data.filter(item => item && typeof item.score === 'number' && typeof item.wave === 'number');
+            if (valid.length > 0) {
+              leaderboard = valid.map(item => ({
+                score: Math.floor(item.score),
+                wave: Math.floor(item.wave),
+                mode: String(item.mode || 'Classic 20-Wave Campaign')
+              })).sort((a, b) => b.score - a.score).slice(0, 5);
+              saveLeaderboard();
+              alert('Imported!');
+            } else { alert('No valid high scores found'); }
+          } else { alert('Invalid JSON format'); }
+        } catch(err) { alert('Invalid JSON'); }
       };
       reader.readAsText(file);
     };
@@ -537,8 +551,15 @@ window.addEventListener('load', () => {
   }
 
   // --- ACTIVE SKILLS FUNCTIONS ---
-  function useTimeStop() { if(!isReplaying && currentReplay && currentReplay.frames.length) currentReplay.frames[currentReplay.frames.length-1].t = 1;
+  function recordSkillInReplay(key) {
+    if (!isReplaying && currentReplay && currentReplay.frames && currentReplay.frames.length > 0) {
+      currentReplay.frames[currentReplay.frames.length - 1][key] = 1;
+    }
+  }
+
+  function useTimeStop() {
     if (gameState !== STATE_PLAYING) return;
+    recordSkillInReplay('t');
     if (timeStopCooldown <= 0 || timeStopTimer > 0) {
       timeStopTimer = 375; // 6 seconds
       timeStopCooldown = 600; // 10 seconds CD
@@ -547,8 +568,9 @@ window.addEventListener('load', () => {
     }
   }
 
-  function useTacticalDash() { if(!isReplaying && currentReplay && currentReplay.frames.length) currentReplay.frames[currentReplay.frames.length-1].d = 1;
+  function useTacticalDash() {
     if (gameState !== STATE_PLAYING) return;
+    recordSkillInReplay('d');
     if (dashCooldown <= 0) {
       addExplosion(p.x + 10, p.y + 10, 25, '#00b0ff');
       p.x = W / 2 - 10;
@@ -560,8 +582,9 @@ window.addEventListener('load', () => {
     }
   }
 
-  function useSmartBomb() { if(!isReplaying && currentReplay && currentReplay.frames.length) currentReplay.frames[currentReplay.frames.length-1].b = 1;
-    if (p.bombs <= 0 || gameState !== STATE_PLAYING) return;
+  function useSmartBomb() {
+    if (gameState !== STATE_PLAYING || p.bombs <= 0) return;
+    recordSkillInReplay('b');
     p.bombs--;
     bombFlash = 15;
     playSound(4);
@@ -600,8 +623,9 @@ window.addEventListener('load', () => {
     try { localStorage.setItem('kspace_totalkills', totalKills); } catch (e) {}
   }
 
-  function useHyperShield() { if(!isReplaying && currentReplay && currentReplay.frames.length) currentReplay.frames[currentReplay.frames.length-1].s = 1;
+  function useHyperShield() {
     if (gameState !== STATE_PLAYING) return;
+    recordSkillInReplay('s');
     if (hyperShieldCooldown <= 0 || hyperShieldTimer === 0) {
       hyperShieldTimer = 500; // 8 seconds energy barrier
       hyperShieldCooldown = 750; // 12.5 seconds CD
@@ -627,13 +651,14 @@ window.addEventListener('load', () => {
     keys[e.key.toLowerCase()] = true;
     keys[e.code] = true;
 
+    const keyLower = e.key ? e.key.toLowerCase() : '';
 
     if (gameState === STATE_MENU) {
-      if (e.key === 'h' || e.key === 'H') {
+      if (keyLower === 'h') {
         gameState = STATE_HELP;
-      } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      } else if (e.key === 'ArrowUp' || keyLower === 'w') {
         menuIndex = (menuIndex - 1 + (hasSavedGame() ? 6 : 5)) % (hasSavedGame() ? 6 : 5);
-      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+      } else if (e.key === 'ArrowDown' || keyLower === 's') {
         menuIndex = (menuIndex + 1) % (hasSavedGame() ? 6 : 5);
       } else if (e.key === 'Enter' || e.key === ' ') {
         handleMenuSelect();
@@ -644,13 +669,13 @@ window.addEventListener('load', () => {
       else if (e.key === 'ArrowDown') menuIndex = (menuIndex + 1) % 10;
       else if (e.key === 'Enter') waitForKeybind = Object.keys(keybinds)[menuIndex];
     } else if (gameState === STATE_HELP) {
-      if (e.key === 'h' || e.key === 'H' || e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+      if (keyLower === 'h' || e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
         gameState = STATE_MENU;
       }
     } else if (gameState === STATE_MODE_SELECT) {
-      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      if (e.key === 'ArrowUp' || keyLower === 'w') {
         modeIndex = (modeIndex - 1 + MODES.length) % MODES.length;
-      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+      } else if (e.key === 'ArrowDown' || keyLower === 's') {
         modeIndex = (modeIndex + 1) % MODES.length;
       } else if (e.key === 'Enter' || e.key === ' ') {
         startNewGame(modeIndex);
@@ -658,53 +683,43 @@ window.addEventListener('load', () => {
         gameState = STATE_MENU;
       }
     } else if (gameState === STATE_PLAYING) {
-      if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+      if (keyLower === 'p' || e.key === 'Escape') {
         gameState = STATE_PAUSED;
         menuIndex = 0;
-      } else if (e.key.toLowerCase() === keybinds.timeStop) {
+      } else if (keyLower === keybinds.timeStop) {
         useTimeStop();
-      } else if (e.key.toLowerCase() === keybinds.dash) {
+      } else if (keyLower === keybinds.dash) {
         useTacticalDash();
-      } else if (e.key.toLowerCase() === keybinds.bomb || e.key.toLowerCase() === 'x') {
+      } else if (keyLower === keybinds.bomb || keyLower === 'x') {
         useSmartBomb();
-      } else if (e.key.toLowerCase() === keybinds.shield) {
+      } else if (keyLower === keybinds.shield) {
         useHyperShield();
       }
     } else if (gameState === STATE_PAUSED) {
-      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      if (e.key === 'ArrowUp' || keyLower === 'w') {
         menuIndex = (menuIndex - 1 + 4) % 4;
-      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+      } else if (e.key === 'ArrowDown' || keyLower === 's') {
         menuIndex = (menuIndex + 1) % 4;
       } else if (e.key === 'Enter' || e.key === ' ') {
         handlePauseSelect();
-      } else if (e.key.toLowerCase() === keybinds.pause || e.key === 'Escape') {
+      } else if (keyLower === keybinds.pause || e.key === 'Escape') {
         gameState = STATE_PLAYING;
       }
-    
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'e') { exportCSV(); 
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'j') { exportStats();
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'r') { exportReplay();
-
-      } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
-      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
-        gameState = STATE_MENU;
-      
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'e') { exportCSV(); 
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'j') { exportStats();
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'r') { exportReplay();
-
-      } else if (gameState === STATE_LEADERBOARD && e.key.toLowerCase() === 'e') { exportHighScores(); 
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'e') { exportCSV(); 
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'j') { exportStats();
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'r') { exportReplay();
-
-      } else if (gameState === STATE_LEADERBOARD && e.key.toLowerCase() === 'i') { importHighScores(); }
+    } else if (gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
+      if (keyLower === 'e') exportCSV();
+      else if (keyLower === 'j') exportStats();
+      else if (keyLower === 'r') exportReplay();
+      else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') gameState = STATE_MENU;
+    } else if (gameState === STATE_LEADERBOARD) {
+      if (keyLower === 'e') exportHighScores();
+      else if (keyLower === 'i') importHighScores();
+      else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') gameState = STATE_MENU;
     }
   });
 
   document.addEventListener('keyup', e => {
-    keys[e.key.toLowerCase()] = false;
-    keys[e.code] = false;
+    if (e.key) keys[e.key.toLowerCase()] = false;
+    if (e.code) keys[e.code] = false;
   });
 
   // Touch / Pointer controls
@@ -743,12 +758,7 @@ window.addEventListener('load', () => {
           break;
         }
       }
-    
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'e') { exportCSV(); 
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'j') { exportStats();
-      } else if ((gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) && e.key.toLowerCase() === 'r') { exportReplay();
-
-      } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY || gameState === STATE_HELP) {
+    } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY || gameState === STATE_HELP) {
       gameState = STATE_MENU;
     } else if (gameState === STATE_PLAYING) {
       if (mx > W - 40 && my < 40) {
@@ -770,13 +780,14 @@ window.addEventListener('load', () => {
 
   function handleMenuSelect() {
     let saved = hasSavedGame();
-    let opts = ['MODE_SELECT'];
+    let opts = ['NEW_GAME'];
     if (saved) opts.push('RESUME');
     opts.push('LEADERBOARD', 'MODE_SELECT', 'KEYBINDS', 'LOAD_REPLAY');
     let sel = opts[menuIndex];
-    if (sel === 'MODE_SELECT') gameState = STATE_MODE_SELECT;
+    if (sel === 'NEW_GAME') startNewGame(0);
     else if (sel === 'RESUME') loadGameState();
     else if (sel === 'LEADERBOARD') gameState = STATE_LEADERBOARD;
+    else if (sel === 'MODE_SELECT') gameState = STATE_MODE_SELECT;
     else if (sel === 'KEYBINDS') gameState = STATE_KEYBINDS;
     else if (sel === 'LOAD_REPLAY') loadReplay();
   }
@@ -808,6 +819,7 @@ window.addEventListener('load', () => {
     dashCooldown = 0; invincibleTimer = 0;
     hyperShieldTimer = 0; hyperShieldCooldown = 0;
     bullets = []; eBullets = []; enemies = []; powerups = []; explosions = [];
+    shockwaves = []; debris = []; shieldRipples = []; muzzleFlashes = []; comets = [];
     boss = null;
     escort.active = false; pathGatesActive = false;
     gameState = STATE_PLAYING;
