@@ -136,6 +136,11 @@
         let keys = { r: false, g: false, b: false };
         let emps = 0;
         let alienInterval;
+        let totalTime = 0;
+        let selfDestructActive = false;
+        let selfDestructTimer = 0;
+        let wonGame = false;
+        let winEnding = "";
 
         function generateMap() {
             map = [];
@@ -259,25 +264,46 @@
                 }
             }
 
-            let elevatorPlaced = false;
-            let attempts = 0;
-            while (!elevatorPlaced && attempts < 1000) {
-                let rx = Math.floor(Math.random() * COLS);
-                let ry = Math.floor(Math.random() * ROWS);
-                if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 5 || Math.abs(ry - player.y) > 5)) {
-                    map[ry][rx] = 13; // Elevator
-                    elevatorPlaced = true;
-                }
-                attempts++;
-            }
-            if (!elevatorPlaced) {
-                for(let y=1; y<ROWS-1; y++) {
-                    for(let x=1; x<COLS-1; x++) {
-                        if(map[y][x] === 0 && (x!==player.x || y!==player.y)) {
-                            map[y][x] = 13; elevatorPlaced = true; break;
-                        }
+            if (deck === 5) {
+                let placed = false;
+                while (!placed) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 10 || Math.abs(ry - player.y) > 10)) {
+                        map[ry][rx] = 14; // Escape Pod
+                        placed = true;
                     }
-                    if(elevatorPlaced) break;
+                }
+                placed = false;
+                while (!placed) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 10 || Math.abs(ry - player.y) > 10)) {
+                        map[ry][rx] = 15; // Self Destruct
+                        placed = true;
+                    }
+                }
+            } else {
+                let elevatorPlaced = false;
+                let attempts = 0;
+                while (!elevatorPlaced && attempts < 1000) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 5 || Math.abs(ry - player.y) > 5)) {
+                        map[ry][rx] = 13; // Elevator
+                        elevatorPlaced = true;
+                    }
+                    attempts++;
+                }
+                if (!elevatorPlaced) {
+                    for(let y=1; y<ROWS-1; y++) {
+                        for(let x=1; x<COLS-1; x++) {
+                            if(map[y][x] === 0 && (x!==player.x || y!==player.y)) {
+                                map[y][x] = 13; elevatorPlaced = true; break;
+                            }
+                        }
+                        if(elevatorPlaced) break;
+                    }
                 }
             }
 
@@ -297,11 +323,7 @@
         }
         generateMap();
 
-        let oxygen = 100.0;
-        let battery = 100.0;
-        let isDead = false;
-        let keys = { r: false, g: false, b: false };
-        let emps = 0;
+        // Duplicate var declarations removed
 
         function updateInventoryDisplay() {
             document.getElementById('key-r').classList.toggle('has-key', keys.r);
@@ -321,12 +343,21 @@
         }
 
         function gameTick() {
-            if (isDead) return;
+            if (isDead || wonGame) return;
+            totalTime++;
             oxygen -= 0.5;
             battery -= 0.2;
             
             if (oxygen <= 0) { oxygen = 0; die("OXYGEN DEPLETED. YOU SUFFOCATED."); }
             else if (battery <= 0) { battery = 0; die("BATTERY DEPLETED. CONSUMED BY THE DARK."); }
+            
+            if (selfDestructActive) {
+                selfDestructTimer--;
+                showMessage(`SELF DESTRUCT IN ${selfDestructTimer}s`, "#f00");
+                if (selfDestructTimer <= 0) {
+                    die("STATION DESTROYED. YOU WERE INCINERATED.");
+                }
+            }
             
             updateStatsDisplay();
         }
@@ -402,6 +433,22 @@
                         ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                         ctx.fillStyle = '#000';
                         ctx.fillRect(x * TILE_SIZE + 6, y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12);
+                    } else if (map[y][x] === 14) {
+                        // Escape Pod
+                        ctx.fillStyle = '#555';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = '#0ff';
+                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(x * TILE_SIZE + 6, y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12);
+                    } else if (map[y][x] === 15) {
+                        // Self Destruct Terminal
+                        ctx.fillStyle = '#050505';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = '#f55';
+                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 4, 8, 8);
+                        ctx.fillStyle = '#f00';
+                        ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 5, 6, 6);
                     } else {
                         ctx.fillStyle = '#050505';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -444,10 +491,18 @@
             drawMap();
             drawAliens();
             drawPlayer();
+            if (wonGame) {
+                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = '#0f0';
+                ctx.font = '16px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText(winEnding, canvas.width/2, canvas.height/2);
+            }
         }
 
         function updateAliens() {
-            if (isDead) return;
+            if (isDead || wonGame) return;
             let hidden = (map[player.y][player.x] === 11);
             if (hidden) {
                 showMessage("HIDDEN IN LOCKER.", "#888");
@@ -519,7 +574,7 @@
         }
 
         function movePlayer(dx, dy) {
-            if (isDead) return;
+            if (isDead || wonGame) return;
             let newX = player.x + dx;
             let newY = player.y + dy;
             
@@ -572,6 +627,31 @@
                     startAlienInterval();
                     showMessage(`ELEVATOR TO DECK ${deck}. STATS RESTORED.`, "#ff0");
                     draw();
+                } else if (target === 14) {
+                    wonGame = true;
+                    if (selfDestructActive) {
+                        if (totalTime < 300) {
+                            winEnding = "S-RANK: STATION DESTROYED, SPEEDRUN ESCAPE!";
+                        } else {
+                            winEnding = "HERO: STATION DESTROYED, YOU ESCAPED.";
+                        }
+                    } else {
+                        if (totalTime < 300) {
+                            winEnding = "COWARD (FAST): YOU ESCAPED, BUT THE THREAT REMAINS.";
+                        } else {
+                            winEnding = "COWARD: YOU ESCAPED, BUT THE THREAT REMAINS.";
+                        }
+                    }
+                    showMessage("YOU ESCAPED.", "#0f0");
+                    draw();
+                } else if (target === 15) {
+                    if (!selfDestructActive) {
+                        selfDestructActive = true;
+                        selfDestructTimer = 45;
+                        map[newY][newX] = 10;
+                        showMessage("SELF DESTRUCT ACTIVATED. 45 SECONDS TO ESCAPE!", "#f00");
+                        draw();
+                    }
                 } else if (target === 0 || (target >= 6 && target <= 8) || target === 11 || target === 12) {
                     if (target >= 6 && target <= 8) {
                         if (target === 6) { keys.r = true; showMessage("PICKED UP RED KEYCARD.", "#f00"); }

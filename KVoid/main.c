@@ -27,6 +27,11 @@ int hasRedKey = 0;
 int hasGreenKey = 0;
 int hasBlueKey = 0;
 int emps = 0;
+int totalTime = 0;
+int selfDestructActive = 0;
+int selfDestructTimer = 0;
+int wonGame = 0;
+char winEnding[256] = "";
 
 typedef struct {
     int x, y, w, h;
@@ -166,22 +171,43 @@ void GenerateMap() {
         }
     }
 
-    int elevatorPlaced = 0;
-    for (int attempts = 0; attempts < 1000; attempts++) {
-        int rx = rand() % COLS;
-        int ry = rand() % ROWS;
-        if (map[ry][rx] == 0 && (abs(rx - playerX) > 5 || abs(ry - playerY) > 5)) {
-            map[ry][rx] = 13; // Elevator
-            elevatorPlaced = 1;
-            break;
+    if (deck == 5) {
+        int placed = 0;
+        while (!placed) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (abs(rx - playerX) > 10 || abs(ry - playerY) > 10)) {
+                map[ry][rx] = 14;
+                placed = 1;
+            }
         }
-    }
-    if (!elevatorPlaced) {
-        for (int y = 1; y < ROWS - 1 && !elevatorPlaced; y++) {
-            for (int x = 1; x < COLS - 1 && !elevatorPlaced; x++) {
-                if (map[y][x] == 0 && (x != playerX || y != playerY)) {
-                    map[y][x] = 13;
-                    elevatorPlaced = 1;
+        placed = 0;
+        while (!placed) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (abs(rx - playerX) > 10 || abs(ry - playerY) > 10)) {
+                map[ry][rx] = 15;
+                placed = 1;
+            }
+        }
+    } else {
+        int elevatorPlaced = 0;
+        for (int attempts = 0; attempts < 1000; attempts++) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (abs(rx - playerX) > 5 || abs(ry - playerY) > 5)) {
+                map[ry][rx] = 13; // Elevator
+                elevatorPlaced = 1;
+                break;
+            }
+        }
+        if (!elevatorPlaced) {
+            for (int y = 1; y < ROWS - 1 && !elevatorPlaced; y++) {
+                for (int x = 1; x < COLS - 1 && !elevatorPlaced; x++) {
+                    if (map[y][x] == 0 && (x != playerX || y != playerY)) {
+                        map[y][x] = 13;
+                        elevatorPlaced = 1;
+                    }
                 }
             }
         }
@@ -212,15 +238,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTimer(hwnd, 1, 50, NULL);
             return 0;
         case WM_TIMER:
-            if (!isDead) {
+            if (!isDead && !wonGame) {
                 static int tickCount = 0;
                 tickCount++;
                 if (tickCount >= 20) {
                     tickCount = 0;
+                    totalTime++;
                     oxygen -= 0.5f;
                     battery -= 0.2f;
-                    if (oxygen <= 0) { oxygen = 0; isDead = 1; }
-                    if (battery <= 0) { battery = 0; isDead = 1; }
+                    if (oxygen <= 0) { oxygen = 0; isDead = 1; lstrcpy(sysMsg, "OXYGEN DEPLETED. YOU SUFFOCATED."); msgTimer = 100; }
+                    if (battery <= 0) { battery = 0; isDead = 1; lstrcpy(sysMsg, "BATTERY DEPLETED. CONSUMED BY THE DARK."); msgTimer = 100; }
+                    if (selfDestructActive) {
+                        selfDestructTimer--;
+                        wsprintf(sysMsg, "SELF DESTRUCT IN %ds", selfDestructTimer);
+                        msgTimer = 20;
+                        if (selfDestructTimer <= 0) {
+                            isDead = 1;
+                            lstrcpy(sysMsg, "STATION DESTROYED. YOU WERE INCINERATED.");
+                            msgTimer = 100;
+                        }
+                    }
                 }
                 
                 static int alienTick = 0;
@@ -406,6 +443,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         DeleteObject(elvB);
                         DeleteObject(elvIn);
                         DeleteObject(elvC);
+                    } else if (map[y][x] == 14) {
+                        FillRect(hdcMem, &tileRect, hFloorBrush);
+                        HBRUSH epB = CreateSolidBrush(RGB(100, 100, 100));
+                        HBRUSH epIn = CreateSolidBrush(RGB(0, 255, 255));
+                        HBRUSH epC = CreateSolidBrush(RGB(255, 255, 255));
+                        RECT rIn = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, (x+1) * TILE_SIZE - 2, (y+1) * TILE_SIZE - 2 + UI_HEIGHT};
+                        FillRect(hdcMem, &tileRect, epB);
+                        FillRect(hdcMem, &rIn, epIn);
+                        RECT rC = {x * TILE_SIZE + 6, y * TILE_SIZE + 6 + UI_HEIGHT, (x+1) * TILE_SIZE - 6, (y+1) * TILE_SIZE - 6 + UI_HEIGHT};
+                        FillRect(hdcMem, &rC, epC);
+                        DeleteObject(epB);
+                        DeleteObject(epIn);
+                        DeleteObject(epC);
+                    } else if (map[y][x] == 15) {
+                        FillRect(hdcMem, &tileRect, hFloorBrush);
+                        HBRUSH tc = CreateSolidBrush(RGB(255, 80, 80));
+                        HBRUSH tcInner = CreateSolidBrush(RGB(255, 0, 0));
+                        RECT tr = {x * TILE_SIZE + 4, y * TILE_SIZE + 4 + UI_HEIGHT, x * TILE_SIZE + 12, y * TILE_SIZE + 12 + UI_HEIGHT};
+                        FillRect(hdcMem, &tr, tc);
+                        RECT trIn = {x * TILE_SIZE + 5, y * TILE_SIZE + 5 + UI_HEIGHT, x * TILE_SIZE + 11, y * TILE_SIZE + 11 + UI_HEIGHT};
+                        FillRect(hdcMem, &trIn, tcInner);
+                        DeleteObject(tc);
+                        DeleteObject(tcInner);
                     } else {
                         FillRect(hdcMem, &tileRect, hFloorBrush);
                     }
@@ -461,7 +521,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 TextOut(hdcMem, 10, 25, sysMsg, lstrlen(sysMsg));
             }
 
-            if (isDead) {
+            if (wonGame) {
+                SetTextColor(hdcMem, RGB(0, 255, 0));
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(winEnding) * 4, WINDOW_HEIGHT / 2, winEnding, lstrlen(winEnding));
+            } else if (isDead) {
                 SetTextColor(hdcMem, RGB(255, 0, 0));
                 char* deadMsg = "SIGNAL LOST";
                 TextOut(hdcMem, WINDOW_WIDTH / 2 - 40, WINDOW_HEIGHT / 2, deadMsg, lstrlen(deadMsg));
@@ -501,7 +564,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_KEYDOWN: {
-            if (isDead) return 0;
+            if (isDead || wonGame) return 0;
             int newX = playerX;
             int newY = playerY;
             
@@ -593,6 +656,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     wsprintf(sysMsg, "ELEVATOR TO DECK %d. STATS RESTORED.", deck);
                     msgTimer = 60;
                     InvalidateRect(hwnd, NULL, FALSE);
+                } else if (target == 14) {
+                    wonGame = 1;
+                    if (selfDestructActive) {
+                        if (totalTime < 300) {
+                            lstrcpy(winEnding, "S-RANK: STATION DESTROYED, SPEEDRUN ESCAPE!");
+                        } else {
+                            lstrcpy(winEnding, "HERO: STATION DESTROYED, YOU ESCAPED.");
+                        }
+                    } else {
+                        if (totalTime < 300) {
+                            lstrcpy(winEnding, "COWARD (FAST): YOU ESCAPED, BUT THE THREAT REMAINS.");
+                        } else {
+                            lstrcpy(winEnding, "COWARD: YOU ESCAPED, BUT THE THREAT REMAINS.");
+                        }
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                } else if (target == 15) {
+                    if (!selfDestructActive) {
+                        selfDestructActive = 1;
+                        selfDestructTimer = 45;
+                        map[newY][newX] = 10;
+                        lstrcpy(sysMsg, "SELF DESTRUCT ACTIVATED. 45 SECONDS TO ESCAPE!");
+                        msgTimer = 60;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
                 } else if (target == 0 || (target >= 6 && target <= 8) || target == 11 || target == 12) {
                     if (target >= 6 && target <= 8) {
                         if (target == 6) { hasRedKey = 1; lstrcpy(sysMsg, "PICKED UP RED KEYCARD."); }
