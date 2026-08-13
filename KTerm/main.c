@@ -317,6 +317,7 @@ void ProcessCommand(const char* rawCmd) {
     if (*rawCmd == '\0') return;
 
     TabSession* tab = &g_tabs[g_activeTab];
+    SetCurrentDirectoryA(tab->currentDir);
 
     char cmdWithAlias[512];
     ExpandAlias(rawCmd, cmdWithAlias, sizeof(cmdWithAlias));
@@ -328,7 +329,7 @@ void ProcessCommand(const char* rawCmd) {
     FormatPathPrompt(fullCmd, sizeof(fullCmd), tab->currentDir, rawCmd);
     AppendOutput(fullCmd);
 
-    if (g_isRecording && g_recordingMacroIdx != -1 && !StringStartsWithIC(cmd, "macro")) {
+    if (g_isRecording && g_recordingMacroIdx != -1 && !MatchCommand(cmd, "macro")) {
         Macro* m = &g_macros[g_recordingMacroIdx];
         if (m->cmd_count < MAX_MACRO_CMDS) {
             lstrcpynA(m->commands[m->cmd_count++], rawCmd, 256);
@@ -339,7 +340,7 @@ void ProcessCommand(const char* rawCmd) {
         }
     }
 
-    if (lstrcmpiA(cmd, "help") == 0) {
+    if (MatchCommand(cmd, "help")) {
         AppendOutput("KTerm Commands:");
         AppendOutput("  help       - Show available commands");
         AppendOutput("  ver        - Show OS version");
@@ -357,21 +358,22 @@ void ProcessCommand(const char* rawCmd) {
         AppendOutput("  macro      - Macro scripting (record, stop, play, list)");
         AppendOutput("  export-log - Export output log to file");
         AppendOutput("  newtab     - Open new terminal tab session");
-    } else if (lstrcmpiA(cmd, "ver") == 0) {
+        AppendOutput("  exit       - Exit application or close active tab");
+    } else if (MatchCommand(cmd, "ver")) {
         AppendOutput("KiloOS Native v1.2 (Multi-Tab & Deep Utilities)");
-    } else if (lstrcmpiA(cmd, "date") == 0) {
+    } else if (MatchCommand(cmd, "date")) {
         SYSTEMTIME st;
         GetLocalTime(&st);
         char buf[64];
         wsprintfA(buf, "%04d-%02d-%02d", st.wYear, st.wMonth, st.wDay);
         AppendOutput(buf);
-    } else if (lstrcmpiA(cmd, "time") == 0) {
+    } else if (MatchCommand(cmd, "time")) {
         SYSTEMTIME st;
         GetLocalTime(&st);
         char buf[64];
         wsprintfA(buf, "%02d:%02d:%02d", st.wHour, st.wMinute, st.wSecond);
         AppendOutput(buf);
-    } else if (lstrcmpiA(cmd, "whoami") == 0) {
+    } else if (MatchCommand(cmd, "whoami")) {
         for (int i = 0; i < tab->env_count; i++) {
             if (lstrcmpiA(tab->envVars[i].name, "USER") == 0) {
                 AppendOutput(tab->envVars[i].value);
@@ -379,13 +381,30 @@ void ProcessCommand(const char* rawCmd) {
             }
         }
         AppendOutput("kilo_user");
-    } else if (lstrcmpiA(cmd, "clear") == 0 || lstrcmpiA(cmd, "cls") == 0) {
+    } else if (MatchCommand(cmd, "clear") || MatchCommand(cmd, "cls")) {
         SetWindowTextA(hOut, "");
-    } else if (StringStartsWithIC(cmd, "newtab")) {
+    } else if (MatchCommand(cmd, "newtab")) {
         const char* title = cmd + 6;
         while (*title == ' ' || *title == '\t') title++;
         AddNewTab(title);
-    } else if (StringStartsWithIC(cmd, "export-log")) {
+    } else if (MatchCommand(cmd, "exit") || MatchCommand(cmd, "closetab")) {
+        if (g_tabCount > 1) {
+            TabCtrl_DeleteItem(hTab, g_activeTab);
+            if (g_tabs[g_activeTab].outputBuffer) {
+                HeapFree(GetProcessHeap(), 0, g_tabs[g_activeTab].outputBuffer);
+                g_tabs[g_activeTab].outputBuffer = NULL;
+            }
+            for (int i = g_activeTab; i < g_tabCount - 1; i++) {
+                g_tabs[i] = g_tabs[i + 1];
+            }
+            g_tabCount--;
+            int newActive = g_activeTab >= g_tabCount ? g_tabCount - 1 : g_activeTab;
+            g_activeTab = -1;
+            SwitchTab(newActive);
+        } else {
+            PostQuitMessage(0);
+        }
+    } else if (MatchCommand(cmd, "export-log")) {
         const char* fileName = cmd + 10;
         while (*fileName == ' ' || *fileName == '\t') fileName++;
         if (*fileName == '\0') fileName = "kterm_log.txt";
@@ -422,8 +441,8 @@ void ProcessCommand(const char* rawCmd) {
                 AppendOutput(line);
             }
         }
-    } else if (StringStartsWithIC(cmd, "alias ")) {
-        const char* expr = cmd + 6;
+    } else if (MatchCommand(cmd, "alias")) {
+        const char* expr = cmd + 5;
         while (*expr == ' ' || *expr == '\t') expr++;
         const char* eq = my_strchr(expr, '=');
         char aName[64], aCmd[256];
@@ -466,8 +485,8 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Usage: alias name=\"command\"");
         }
-    } else if (StringStartsWithIC(cmd, "unalias ")) {
-        const char* target = cmd + 8;
+    } else if (MatchCommand(cmd, "unalias")) {
+        const char* target = cmd + 7;
         while (*target == ' ' || *target == '\t') target++;
         int found = 0;
         for (int i = 0; i < tab->alias_count; i++) {
@@ -492,8 +511,8 @@ void ProcessCommand(const char* rawCmd) {
             wsprintfA(line, "  %s=%s", tab->envVars[i].name, tab->envVars[i].value);
             AppendOutput(line);
         }
-    } else if (StringStartsWithIC(cmd, "export ")) {
-        const char* expr = cmd + 7;
+    } else if (MatchCommand(cmd, "export")) {
+        const char* expr = cmd + 6;
         while (*expr == ' ' || *expr == '\t') expr++;
         const char* eq = my_strchr(expr, '=');
         char eName[64], eVal[256];
@@ -537,8 +556,8 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Usage: export VAR=VALUE");
         }
-    } else if (StringStartsWithIC(cmd, "unset ")) {
-        const char* target = cmd + 6;
+    } else if (MatchCommand(cmd, "unset")) {
+        const char* target = cmd + 5;
         while (*target == ' ' || *target == '\t') target++;
         int found = 0;
         for (int i = 0; i < tab->env_count; i++) {
@@ -557,11 +576,22 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Variable not found.");
         }
-    } else if (lstrcmpiA(cmd, "dir") == 0 || lstrcmpiA(cmd, "ls") == 0) {
+    } else if (MatchCommand(cmd, "dir") || MatchCommand(cmd, "ls")) {
+        const char* targetDir = tab->currentDir;
+        char customDir[MAX_PATH];
+        const char* space = my_strchr(cmd, ' ');
+        if (space) {
+            const char* arg = space;
+            while (*arg == ' ' || *arg == '\t') arg++;
+            if (*arg != '\0' && *arg != '-' && *arg != '/') {
+                lstrcpynA(customDir, arg, sizeof(customDir));
+                targetDir = customDir;
+            }
+        }
         WIN32_FIND_DATAA fd;
         char search[MAX_PATH + 16];
         char tmpSearch[1024];
-        wsprintfA(tmpSearch, "%s\\*", tab->currentDir);
+        wsprintfA(tmpSearch, "%s\\*", targetDir);
         lstrcpynA(search, tmpSearch, sizeof(search));
 
         HANDLE hFind = FindFirstFileA(search, &fd);
@@ -581,7 +611,7 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Failed to list directory contents.");
         }
-    } else if (StringStartsWithIC(cmd, "cd")) {
+    } else if (MatchCommand(cmd, "cd")) {
         const char* target = cmd + 2;
         if (*target == ' ' || *target == '\t' || *target == '\0') {
             while (*target == ' ' || *target == '\t') target++;
@@ -608,7 +638,7 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Bad command or file name.");
         }
-    } else if (StringStartsWithIC(cmd, "echo")) {
+    } else if (MatchCommand(cmd, "echo")) {
         const char* text = cmd + 4;
         if (*text == ' ' || *text == '\t' || *text == '\0') {
             while (*text == ' ' || *text == '\t') text++;
@@ -616,7 +646,7 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Bad command or file name.");
         }
-    } else if (StringStartsWithIC(cmd, "mkdir")) {
+    } else if (MatchCommand(cmd, "mkdir")) {
         const char* dirName = cmd + 5;
         if (*dirName == ' ' || *dirName == '\t' || *dirName == '\0') {
             while (*dirName == ' ' || *dirName == '\t') dirName++;
@@ -630,7 +660,7 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Bad command or file name.");
         }
-    } else if (StringStartsWithIC(cmd, "type") || StringStartsWithIC(cmd, "cat")) {
+    } else if (MatchCommand(cmd, "type") || MatchCommand(cmd, "cat")) {
         const char* fileName = my_strchr(cmd, ' ');
         if (fileName) {
             while (*fileName == ' ' || *fileName == '\t') fileName++;
@@ -662,7 +692,6 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Usage: type <filename>");
         }
-    } else if (StringStartsWithIC(cmd, "macro")) {
         const char* args = cmd + 5;
         while (*args == ' ' || *args == '\t') args++;
         if (StringStartsWithIC(args, "record ")) {

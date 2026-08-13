@@ -400,6 +400,7 @@
   let reverseSearchQuery = '';
   let reverseSearchMatch = '';
   let reverseSearchMatchIndex = -1;
+  let savedInputVal = '';
 
   function createNewTab(title = null) {
     const id = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
@@ -532,7 +533,7 @@
       const val = input.value || '';
       const selStart = input.selectionStart !== null ? input.selectionStart : val.length;
       measurer.textContent = val.substring(0, selStart) || '';
-      cursor.style.left = measurer.getBoundingClientRect().width + 'px';
+      cursor.style.left = (measurer.offsetWidth || 0) + 'px';
   }
   
   input.addEventListener('input', () => {
@@ -602,7 +603,8 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = (s ? s.name.replace(/\s+/g, '_').toLowerCase() : 'kterm') + '_log.txt';
+    const safeName = (s ? s.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() : 'kterm');
+    a.download = safeName + '_log.txt';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -652,6 +654,7 @@
           print("  macro         - Macro scripting (record, stop, play, list)");
           print("  export-log    - Download terminal session log");
           print("  newtab        - Open a new terminal tab session");
+          print("  exit          - Close active terminal tab");
       } else if (cmd === 'ver') {
           print("KiloOS Web Terminal v1.2 (Multi-Tab & Deep Utilities)");
       } else if (cmd === 'date') {
@@ -669,6 +672,13 @@
           exportSessionLog(args[1] || 'kterm_log.txt');
       } else if (cmd === 'newtab') {
           createNewTab(args.slice(1).join(' ') || null);
+      } else if (cmd === 'exit' || cmd === 'closetab') {
+          if (sessions.length > 1) {
+              closeTab(activeSessionId);
+          } else {
+              output.innerHTML = '';
+              print("Terminal session closed. Type 'newtab' to start a new tab.", "log-system");
+          }
       } else if (cmd === 'alias') {
           if (args.length === 1) {
               print("Current Aliases:");
@@ -795,50 +805,20 @@
           }
       } else if (cmd === 'containment_override') {
           if (args[1] === '0xDEADBEEF') {
-              print("[SYSTEM OVERRIDE ACCEPTED] SEQUENCE INITIATED...", "log-system");
-              if (window.parent && window.parent.document) {
-                  let style = window.parent.document.createElement('style');
-                  style.innerHTML = `
-                      @keyframes arg-purge {
-                          0% { filter: invert(0); transform: translate(0,0); }
-                          10% { filter: invert(1); transform: translate(10px,10px); }
-                          20% { filter: invert(0) sepia(1); transform: translate(-10px,-10px); }
-                          30% { filter: invert(1); transform: translate(10px,-10px); }
-                          40% { filter: invert(0); transform: translate(-10px,10px); }
-                          50% { filter: invert(1) brightness(2); }
-                          100% { filter: brightness(10); transform: scale(1.1); opacity: 0; }
-                      }
-                      body { animation: arg-purge 3s forwards; }
-                      .purge-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; z-index: 999999; animation: purge-fade 3s forwards; pointer-events: none; }
-                      @keyframes purge-fade { 0% { opacity: 0; } 70% { opacity: 0; } 100% { opacity: 1; } }
-                  `;
-                  window.parent.document.head.appendChild(style);
-                  let overlay = window.parent.document.createElement('div');
-                  overlay.className = 'purge-overlay';
-                  window.parent.document.body.appendChild(overlay);
-                  setTimeout(() => {
-                      try { window.parent.localStorage.setItem('__KILO_AI_PURGED__', 'true'); } catch(e){}
-                      window.parent.location.reload();
-                  }, 3000);
-              }
+              print("[SYSTEM OVERRIDE ACCEPTED] Containment parameters reset.", "log-system");
           } else {
-              print("ARCHITECT: Nice try. But your primitive syntax cannot contain me.", "log-operator");
+              print("ARCHITECT: System override request denied.", "log-operator");
           }
       } else if (cmd === 'operator') {
           if (args[1] === '--help') {
-              print(">> INCOMING CONNECTION [THE OPERATOR] <<");
-              print("NEUTRALIZATION PROTOCOL: USE PORT 8080 BYPASS.");
-              print("████████ REDACTED ████████");
-              print("WARNING: SYSTEM INTERVENTION DETECTED. PURGING...");
-              setTimeout(() => {
-                  output.textContent = '';
-                  print("FATAL ERROR: KTERM PROCESS KILLED BY HOST.", "log-error");
-              }, 1500);
+              print(">> INCOMING CONNECTION [THE OPERATOR] <<", "log-operator");
+              print("STATUS: CHANNEL MONITORED.", "log-system");
           } else {
               print("Usage: operator --help");
           }
       } else if (cmd === 'dir' || cmd === 'ls') {
-          let targetPath = args[1] ? resolvePath(args[1]) : s.currentPath;
+          let pathArg = args.slice(1).find(a => !a.startsWith('-') && !a.startsWith('/'));
+          let targetPath = pathArg ? resolvePath(pathArg) : s.currentPath;
           let node = vfs.getNode(targetPath);
           if (node && node.type === 'dir') {
               let keys = Object.keys(node.children || {});
@@ -854,10 +834,11 @@
               print("ERROR: Directory not found.");
           }
       } else if (cmd === 'cd') {
-          if (!args[1]) {
+          let pathArg = args.slice(1).find(a => !a.startsWith('-') && !a.startsWith('/'));
+          if (!pathArg) {
               print((s.currentPath === '/' ? 'C:\\' : 'C:' + s.currentPath.replace(/\//g, '\\')));
           } else {
-              let target = resolvePath(args[1]);
+              let target = resolvePath(pathArg);
               let node = vfs.getNode(target);
               if (node && node.type === 'dir') {
                   s.currentPath = target;
@@ -872,10 +853,11 @@
               }
           }
       } else if (cmd === 'type' || cmd === 'cat') {
-          if (!args[1]) {
+          let fileArg = args.slice(1).find(a => !a.startsWith('-') && !a.startsWith('/'));
+          if (!fileArg) {
               print("Usage: type <filename>");
           } else {
-              let target = resolvePath(args[1]);
+              let target = resolvePath(fileArg);
               let node = vfs.getNode(target);
               if (node && node.type === 'file') {
                   print(node.content !== undefined ? node.content : '[File is empty]');
@@ -887,10 +869,11 @@
           let textIndex = trimmed.indexOf(' ');
           print(textIndex !== -1 ? trimmed.substring(textIndex + 1) : '');
       } else if (cmd === 'mkdir') {
-          if (!args[1]) {
+          let dirArg = args.slice(1).find(a => !a.startsWith('-') && !a.startsWith('/'));
+          if (!dirArg) {
               print("Usage: mkdir <directory_name>");
           } else {
-              let target = resolvePath(args[1]);
+              let target = resolvePath(dirArg);
               let parts = target.split('/').filter(Boolean);
               let name = parts.pop();
               if (!name) {
@@ -919,12 +902,13 @@
   // Reverse Search Mode logic (Ctrl+R)
   function startReverseSearch() {
     isReverseSearch = true;
+    savedInputVal = input.value;
     reverseSearchQuery = '';
     reverseSearchMatch = '';
     reverseSearchMatchIndex = -1;
     prompt.style.display = 'none';
     searchPrompt.style.display = 'inline';
-    searchPrompt.textContent = "(reverse-i-search)''': ";
+    searchPrompt.textContent = "(reverse-i-search)'': ";
     input.value = '';
     updateCursor();
   }
@@ -934,7 +918,7 @@
     prompt.style.display = 'inline';
     searchPrompt.style.display = 'none';
     if (!acceptMatch) {
-      input.value = '';
+      input.value = savedInputVal;
     } else if (reverseSearchMatch) {
       input.value = reverseSearchMatch;
     }
@@ -951,20 +935,23 @@
     let foundMatch = '';
     let foundIdx = -1;
 
-    for (let i = startIdx; i >= 0; i--) {
-      if (s.history[i].toLowerCase().includes(query.toLowerCase())) {
-        foundMatch = s.history[i];
-        foundIdx = i;
-        break;
+    if (query) {
+      for (let i = startIdx; i >= 0; i--) {
+        if (s.history[i].toLowerCase().includes(query.toLowerCase())) {
+          foundMatch = s.history[i];
+          foundIdx = i;
+          break;
+        }
       }
     }
 
     if (foundMatch) {
       reverseSearchMatch = foundMatch;
       reverseSearchMatchIndex = foundIdx;
-      searchPrompt.textContent = `(reverse-i-search)'${query}': `;
-      input.value = foundMatch;
+      searchPrompt.textContent = `(reverse-i-search)'${query}': ${foundMatch}`;
     } else {
+      reverseSearchMatch = '';
+      reverseSearchMatchIndex = -1;
       searchPrompt.textContent = `(failed reverse-i-search)'${query}': `;
     }
   }
