@@ -15,6 +15,7 @@ HWND hBtnPriority = NULL;
 HWND hBtnInspect = NULL;
 HWND hBtnExportCSV = NULL;
 HWND hBtnExportJSON = NULL;
+HWND hBtnHelp = NULL;
 HWND hStatusText = NULL;
 WNDPROC g_OldEditProc = NULL;
 WNDPROC g_OldListProc = NULL;
@@ -120,8 +121,9 @@ void LayoutControls(HWND hwnd) {
     MoveWindow(hBtnInspect, 160, btnY, 70, 24, TRUE);
     MoveWindow(hBtnExportCSV, 235, btnY, 45, 24, TRUE);
     MoveWindow(hBtnExportJSON, 285, btnY, 45, 24, TRUE);
+    MoveWindow(hBtnHelp, 335, btnY, 50, 24, TRUE);
     int endTaskX = width - 90;
-    if (endTaskX < 340) endTaskX = 340;
+    if (endTaskX < 395) endTaskX = 395;
     MoveWindow(hBtnEndTask, endTaskX, btnY, 80, 24, TRUE);
 
     MoveWindow(hStatusText, 10, height - 28, width - 20, 20, TRUE);
@@ -748,13 +750,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnInspect = CreateWindowA("BUTTON", "Inspect", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 160, 240, 70, 25, hwnd, (HMENU)9, NULL, NULL);
             hBtnExportCSV = CreateWindowA("BUTTON", "CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 235, 240, 45, 25, hwnd, (HMENU)7, NULL, NULL);
             hBtnExportJSON = CreateWindowA("BUTTON", "JSON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 285, 240, 45, 25, hwnd, (HMENU)8, NULL, NULL);
-            hBtnEndTask = CreateWindowA("BUTTON", "End Task", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 335, 240, 85, 25, hwnd, (HMENU)2, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 335, 240, 50, 25, hwnd, (HMENU)10, NULL, NULL);
+            hBtnEndTask = CreateWindowA("BUTTON", "End Task", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 240, 85, 25, hwnd, (HMENU)2, NULL, NULL);
             
             SendMessageA(hBtnRefresh, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hBtnPriority, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hBtnInspect, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hBtnExportCSV, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hBtnExportJSON, WM_SETFONT, (WPARAM)hFont, FALSE);
+            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hBtnEndTask, WM_SETFONT, (WPARAM)hFont, FALSE);
 
             g_OldEditProc = (WNDPROC)SetWindowLongPtrA(hSearchBox, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
@@ -791,6 +795,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PerformExportJSON(hwnd);
             } else if (id == 9) {
                 PerformInspectProcess(hwnd);
+            } else if (id == 10) {
+                MessageBoxA(hwnd, "Shortcuts:\r\nF5: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
             } else if (id == 4 && code == LBN_DBLCLK) {
                 PerformInspectProcess(hwnd);
             }
@@ -822,6 +828,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
+    SetProcessDPIAware();
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
