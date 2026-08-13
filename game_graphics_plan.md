@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KAlchemy
 - KRogue
 - KChess
 - KPong
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColony
 - KFortress
 - KFarm
+- KAlchemy
 ## Completed Work Log
+
+- **KAlchemy (Loop 3):** Implemented esoteric geometric background patterns for Native C Win32 GDI (KAlchemy/main.c) using dark intersecting grid lines, and implemented atmospheric floating magical dust motes utilizing a dedicated background canvas and dynamically pulsing opacity sine wave animation in Web Canvas (kalchemy.html).
 
 - **KFarm (Loop 2):** Implemented continuous animation loop, sinusoidal crop swaying animations based on time, and a robust particle burst engine (brown dirt for tilling, green leaves for planting, blue water splashes for watering, and golden particles for harvesting) in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c) with double-buffering to eliminate flickering.
 

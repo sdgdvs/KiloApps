@@ -1731,6 +1731,7 @@
   </style>
 </head>
 <body>
+  <canvas id="envCanvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:-1;"></canvas>
   <canvas id="fxCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999;"></canvas>
   <header>
     <div class="brand">
@@ -3804,10 +3805,28 @@
     // --- Particle System ---
     const fxCanvas = document.getElementById('fxCanvas');
     const fctx = fxCanvas.getContext('2d');
+    const envCanvas = document.getElementById('envCanvas');
+    const ectx = envCanvas.getContext('2d');
     let particles = [];
+    let dustMotes = [];
     function resizeCanvas() {
       fxCanvas.width = window.innerWidth;
       fxCanvas.height = window.innerHeight;
+      envCanvas.width = window.innerWidth;
+      envCanvas.height = window.innerHeight;
+      
+      dustMotes = [];
+      for(let i=0; i<80; i++) {
+        dustMotes.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          r: Math.random() * 1.5 + 0.5,
+          vx: (Math.random() - 0.5) * 0.2,
+          vy: (Math.random() - 0.5) * 0.2 - 0.1,
+          alpha: Math.random() * 0.6 + 0.1,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
@@ -3841,6 +3860,27 @@
         fctx.fill();
       }
       fctx.globalAlpha = 1.0;
+
+      // Update Environmental Dust Motes
+      ectx.clearRect(0,0,envCanvas.width, envCanvas.height);
+      ectx.fillStyle = "rgba(243, 156, 18, 1)"; // Gold color
+      for(let i=0; i<dustMotes.length; i++) {
+        let m = dustMotes[i];
+        m.x += m.vx;
+        m.y += m.vy;
+        m.phase += 0.02;
+        if(m.x < 0) m.x = envCanvas.width;
+        if(m.x > envCanvas.width) m.x = 0;
+        if(m.y < 0) m.y = envCanvas.height;
+        if(m.y > envCanvas.height) m.y = 0;
+        
+        ectx.globalAlpha = m.alpha * (0.5 + Math.sin(m.phase)*0.5);
+        ectx.beginPath();
+        ectx.arc(m.x, m.y, m.r, 0, Math.PI*2);
+        ectx.fill();
+      }
+      ectx.globalAlpha = 1.0;
+
       requestAnimationFrame(updateParticles);
     }
     requestAnimationFrame(updateParticles);

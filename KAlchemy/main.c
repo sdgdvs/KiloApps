@@ -1672,6 +1672,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             SetBkMode(hdc, TRANSPARENT);
 
+            // Environmental Art Background: Esoteric geometric patterns
+            RECT clRect;
+            GetClientRect(hwnd, &clRect);
+            FillRect(hdc, &clRect, hBgBrush);
+            
+            HGDIOBJ oldPenBg = SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(25, 25, 45)));
+            HGDIOBJ oldBrushBg = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            for(int i = -100; i < clRect.right + 100; i += 150) {
+                for(int j = -100; j < clRect.bottom + 100; j += 150) {
+                    Ellipse(hdc, i, j, i+200, j+200);
+                    Rectangle(hdc, i+50, j+50, i+150, j+150);
+                    MoveToEx(hdc, i, j, NULL); LineTo(hdc, i+200, j+200);
+                    MoveToEx(hdc, i+200, j, NULL); LineTo(hdc, i, j+200);
+                }
+            }
+            DeleteObject(SelectObject(hdc, oldPenBg));
+            SelectObject(hdc, oldBrushBg);
+
             // Helper macro for drawing glowing panel borders
             #define DRAW_RUNE_PANEL(r, brush) { \
                 FillRect(hdc, &(r), (brush)); \
