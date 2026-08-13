@@ -2,31 +2,18 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define COLS 20
-#define ROWS 15
-#define TILE_SIZE 32
+#define COLS 40
+#define ROWS 30
+#define TILE_SIZE 16
 #define UI_HEIGHT 40
 #define WINDOW_WIDTH (COLS * TILE_SIZE)
 #define WINDOW_HEIGHT (ROWS * TILE_SIZE + UI_HEIGHT)
 
-// Map (1 = wall, 0 = floor)
-int map[ROWS][COLS] = {
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-    {1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1},
-    {1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1},
-    {1,0,0,0,0,0,1,0,0,1,1,1,1,0,0,0,0,0,0,1},
-    {1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1},
-    {1,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,1},
-    {1,1,1,0,1,1,1,0,0,1,1,0,1,1,1,1,1,0,1,1},
-    {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-    {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-    {1,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,1},
-    {1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1},
-    {1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1},
-    {1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1},
-    {1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
-};
+// Map (1 = wall, 0 = floor, 2 = door, 3 = locked door)
+int map[ROWS][COLS];
+
+char sysMsg[256] = "";
+int msgTimer = 0;
 
 int playerX = 2;
 int playerY = 2;
@@ -35,6 +22,88 @@ int flickerState = 0;
 float oxygen = 100.0f;
 float battery = 100.0f;
 int isDead = 0;
+
+typedef struct {
+    int x, y, w, h;
+} Room;
+
+Room rooms[30];
+int roomCount = 0;
+
+void GenerateMap() {
+    for (int y = 0; y < ROWS; y++) {
+        for (int x = 0; x < COLS; x++) {
+            map[y][x] = 1;
+        }
+    }
+    roomCount = 0;
+    
+    for (int i = 0; i < 15; i++) {
+        int w = (rand() % 5) + 4;
+        int h = (rand() % 5) + 4;
+        int x = (rand() % (COLS - w - 2)) + 1;
+        int y = (rand() % (ROWS - h - 2)) + 1;
+        
+        int failed = 0;
+        for (int j = 0; j < roomCount; j++) {
+            if (x < rooms[j].x + rooms[j].w + 1 && x + w + 1 > rooms[j].x &&
+                y < rooms[j].y + rooms[j].h + 1 && y + h + 1 > rooms[j].y) {
+                failed = 1;
+                break;
+            }
+        }
+        
+        if (!failed) {
+            rooms[roomCount].x = x;
+            rooms[roomCount].y = y;
+            rooms[roomCount].w = w;
+            rooms[roomCount].h = h;
+            for (int ry = y; ry < y + h; ry++) {
+                for (int rx = x; rx < x + w; rx++) {
+                    map[ry][rx] = 0;
+                }
+            }
+            roomCount++;
+        }
+    }
+    
+    for (int i = 1; i < roomCount; i++) {
+        int cx1 = rooms[i-1].x + rooms[i-1].w / 2;
+        int cy1 = rooms[i-1].y + rooms[i-1].h / 2;
+        int cx2 = rooms[i].x + rooms[i].w / 2;
+        int cy2 = rooms[i].y + rooms[i].h / 2;
+        
+        int x = cx1;
+        int y = cy1;
+        while (x != cx2) {
+            map[y][x] = 0;
+            x += (cx2 > cx1) ? 1 : -1;
+        }
+        while (y != cy2) {
+            map[y][x] = 0;
+            y += (cy2 > cy1) ? 1 : -1;
+        }
+    }
+    
+    for (int y = 1; y < ROWS - 1; y++) {
+        for (int x = 1; x < COLS - 1; x++) {
+            if (map[y][x] == 0) {
+                int wallsVert = (map[y-1][x] == 1 && map[y+1][x] == 1 && map[y][x-1] == 0 && map[y][x+1] == 0);
+                int wallsHoriz = (map[y][x-1] == 1 && map[y][x+1] == 1 && map[y-1][x] == 0 && map[y+1][x] == 0);
+                if (wallsVert || wallsHoriz) {
+                    if (rand() % 5 == 0) {
+                        map[y][x] = (rand() % 3 == 0) ? 3 : 2;
+                    }
+                }
+            }
+        }
+    }
+    
+    if (roomCount > 0) {
+        playerX = rooms[0].x + rooms[0].w / 2;
+        playerY = rooms[0].y + rooms[0].h / 2;
+    }
+}
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -52,6 +121,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (oxygen <= 0) { oxygen = 0; isDead = 1; }
                     if (battery <= 0) { battery = 0; isDead = 1; }
                 }
+            }
+            if (msgTimer > 0) {
+                msgTimer--;
+                if (msgTimer == 0) sysMsg[0] = '\0';
             }
             if (rand() % 20 == 0) {
                 flickerState = 1;
@@ -77,6 +150,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             HBRUSH hWallBrush = CreateSolidBrush(RGB(0, wallG, 0));
             HBRUSH hInnerWallBrush = CreateSolidBrush(RGB(0, inWallG, 0));
+            
+            HBRUSH hDoorBrush = CreateSolidBrush(RGB(wallG, wallG, 0));
+            HBRUSH hInnerDoorBrush = CreateSolidBrush(RGB(inWallG, inWallG, 0));
+            
+            HBRUSH hLockedBrush = CreateSolidBrush(RGB(wallG, 0, 0));
+            HBRUSH hInnerLockedBrush = CreateSolidBrush(RGB(inWallG, 0, 0));
+
             HBRUSH hFloorBrush = CreateSolidBrush(RGB(floorC, floorC, floorC));
             HBRUSH hPlayerBrush = CreateSolidBrush(RGB(0, pG, 0));
             
@@ -91,6 +171,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         FillRect(hdcMem, &tileRect, hWallBrush);
                         RECT innerRect = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, (x + 1) * TILE_SIZE - 2, (y + 1) * TILE_SIZE - 2 + UI_HEIGHT};
                         FillRect(hdcMem, &innerRect, hInnerWallBrush);
+                    } else if (map[y][x] == 2) {
+                        FillRect(hdcMem, &tileRect, hDoorBrush);
+                        RECT innerRect = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, (x + 1) * TILE_SIZE - 2, (y + 1) * TILE_SIZE - 2 + UI_HEIGHT};
+                        FillRect(hdcMem, &innerRect, hInnerDoorBrush);
+                    } else if (map[y][x] == 3) {
+                        FillRect(hdcMem, &tileRect, hLockedBrush);
+                        RECT innerRect = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, (x + 1) * TILE_SIZE - 2, (y + 1) * TILE_SIZE - 2 + UI_HEIGHT};
+                        FillRect(hdcMem, &innerRect, hInnerLockedBrush);
                     } else {
                         FillRect(hdcMem, &tileRect, hFloorBrush);
                     }
@@ -115,6 +203,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetTextColor(hdcMem, RGB(0, 255, 0));
             }
             TextOut(hdcMem, 10, 10, uiText, lstrlen(uiText));
+
+            if (sysMsg[0] != '\0') {
+                SetTextColor(hdcMem, RGB(0, 255, 0));
+                TextOut(hdcMem, 10, 25, sysMsg, lstrlen(sysMsg));
+            }
 
             if (isDead) {
                 SetTextColor(hdcMem, RGB(255, 0, 0));
@@ -141,6 +234,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteDC(hdcMem);
             DeleteObject(hWallBrush);
             DeleteObject(hInnerWallBrush);
+            DeleteObject(hDoorBrush);
+            DeleteObject(hInnerDoorBrush);
+            DeleteObject(hLockedBrush);
+            DeleteObject(hInnerLockedBrush);
             DeleteObject(hFloorBrush);
             DeleteObject(hPlayerBrush);
             
@@ -172,9 +269,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
             if (newX >= 0 && newX < COLS && newY >= 0 && newY < ROWS) {
-                if (map[newY][newX] == 0) {
+                if (map[newY][newX] == 2) {
+                    map[newY][newX] = 0;
+                    lstrcpy(sysMsg, "Door opened.");
+                    msgTimer = 40;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else if (map[newY][newX] == 3) {
+                    lstrcpy(sysMsg, "DOOR LOCKED. KEYCARD REQUIRED.");
+                    msgTimer = 40;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else if (map[newY][newX] == 0) {
                     playerX = newX;
                     playerY = newY;
+                    sysMsg[0] = '\0';
+                    msgTimer = 0;
                     oxygen -= 0.2f;
                     if (oxygen <= 0) {
                         oxygen = 0;
@@ -195,6 +303,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     srand((unsigned int)time(NULL));
+    GenerateMap();
     const char CLASS_NAME[] = "KVoid Class";
 
     WNDCLASS wc = {0};

@@ -98,33 +98,85 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const TILE_SIZE = 32;
+        const TILE_SIZE = 16;
         const COLS = Math.floor(canvas.width / TILE_SIZE);
         const ROWS = Math.floor(canvas.height / TILE_SIZE);
 
-        // Simple room layout (1 = wall, 0 = floor)
-        const map = [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,1,0,0,1,1,1,1,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,1],
-            [1,1,1,0,1,1,1,0,0,1,1,0,1,1,1,1,1,0,1,1],
-            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,1],
-            [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1],
-            [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1],
-            [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1],
-            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-        ];
+        let map = [];
+        let player = { x: 2, y: 2 };
+        let rooms = [];
 
-        let player = {
-            x: 2,
-            y: 2
-        };
+        function generateMap() {
+            map = [];
+            for (let y = 0; y < ROWS; y++) {
+                map[y] = [];
+                for (let x = 0; x < COLS; x++) {
+                    map[y][x] = 1;
+                }
+            }
+            rooms = [];
+            for (let i = 0; i < 15; i++) {
+                let w = Math.floor(Math.random() * 5) + 4;
+                let h = Math.floor(Math.random() * 5) + 4;
+                let x = Math.floor(Math.random() * (COLS - w - 2)) + 1;
+                let y = Math.floor(Math.random() * (ROWS - h - 2)) + 1;
+                let failed = false;
+                for (let r of rooms) {
+                    if (x < r.x + r.w + 1 && x + w + 1 > r.x && y < r.y + r.h + 1 && y + h + 1 > r.y) {
+                        failed = true;
+                        break;
+                    }
+                }
+                if (!failed) {
+                    rooms.push({x, y, w, h});
+                    for (let ry = y; ry < y + h; ry++) {
+                        for (let rx = x; rx < x + w; rx++) {
+                            map[ry][rx] = 0;
+                        }
+                    }
+                }
+            }
+
+            for (let i = 1; i < rooms.length; i++) {
+                let r1 = rooms[i-1];
+                let r2 = rooms[i];
+                let cx1 = Math.floor(r1.x + r1.w/2);
+                let cy1 = Math.floor(r1.y + r1.h/2);
+                let cx2 = Math.floor(r2.x + r2.w/2);
+                let cy2 = Math.floor(r2.y + r2.h/2);
+                
+                let x = cx1;
+                let y = cy1;
+                while (x !== cx2) {
+                    map[y][x] = 0;
+                    x += Math.sign(cx2 - cx1);
+                }
+                while (y !== cy2) {
+                    map[y][x] = 0;
+                    y += Math.sign(cy2 - cy1);
+                }
+            }
+
+            for (let y = 1; y < ROWS - 1; y++) {
+                for (let x = 1; x < COLS - 1; x++) {
+                    if (map[y][x] === 0) {
+                        let wallsVert = (map[y-1][x] === 1 && map[y+1][x] === 1 && map[y][x-1] === 0 && map[y][x+1] === 0);
+                        let wallsHoriz = (map[y][x-1] === 1 && map[y][x+1] === 1 && map[y-1][x] === 0 && map[y+1][x] === 0);
+                        if (wallsVert || wallsHoriz) {
+                            if (Math.random() < 0.2) {
+                                map[y][x] = (Math.random() < 0.33) ? 3 : 2;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (rooms.length > 0) {
+                player.x = Math.floor(rooms[0].x + rooms[0].w / 2);
+                player.y = Math.floor(rooms[0].y + rooms[0].h / 2);
+            }
+        }
+        generateMap();
 
         let oxygen = 100.0;
         let battery = 100.0;
@@ -171,6 +223,16 @@
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                         ctx.fillStyle = '#030';
                         ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    } else if (map[y][x] === 2) {
+                        ctx.fillStyle = '#aa0';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = '#550';
+                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    } else if (map[y][x] === 3) {
+                        ctx.fillStyle = '#a00';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = '#500';
+                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                     } else {
                         ctx.fillStyle = '#050505';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -195,16 +257,29 @@
             drawPlayer();
         }
 
+        function showMessage(msg, color='#0f0') {
+            document.getElementById('message').innerText = msg;
+            document.getElementById('message').style.color = color;
+        }
+
         function movePlayer(dx, dy) {
             if (isDead) return;
             let newX = player.x + dx;
             let newY = player.y + dy;
             
             if (newX >= 0 && newX < COLS && newY >= 0 && newY < ROWS) {
-                if (map[newY][newX] === 0) {
+                let target = map[newY][newX];
+                if (target === 2) {
+                    map[newY][newX] = 0; // open door
+                    showMessage("Door opened.");
+                    draw();
+                } else if (target === 3) {
+                    showMessage("DOOR LOCKED. KEYCARD REQUIRED.", "#f00");
+                } else if (target === 0) {
                     player.x = newX;
                     player.y = newY;
                     oxygen -= 0.2;
+                    showMessage("Use WASD or Arrow Keys to move.");
                     if (oxygen <= 0) {
                         oxygen = 0;
                         updateStatsDisplay();
