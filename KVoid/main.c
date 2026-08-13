@@ -33,6 +33,13 @@ typedef struct {
 Room rooms[30];
 int roomCount = 0;
 
+typedef struct {
+    int x, y, state;
+} Alien;
+
+Alien aliens[5];
+int alienCount = 0;
+
 void GenerateMap() {
     for (int y = 0; y < ROWS; y++) {
         for (int x = 0; x < COLS; x++) {
@@ -133,6 +140,21 @@ void GenerateMap() {
             }
         }
     }
+
+    alienCount = 0;
+    for (int i = 0; i < 4; i++) {
+        while (1) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (abs(rx - playerX) > 5 || abs(ry - playerY) > 5)) {
+                aliens[alienCount].x = rx;
+                aliens[alienCount].y = ry;
+                aliens[alienCount].state = 0;
+                alienCount++;
+                break;
+            }
+        }
+    }
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -150,6 +172,62 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     battery -= 0.2f;
                     if (oxygen <= 0) { oxygen = 0; isDead = 1; }
                     if (battery <= 0) { battery = 0; isDead = 1; }
+                }
+                
+                static int alienTick = 0;
+                alienTick++;
+                if (alienTick >= 12) { // 600ms
+                    alienTick = 0;
+                    for (int i = 0; i < alienCount; i++) {
+                        int dist = abs(aliens[i].x - playerX) + abs(aliens[i].y - playerY);
+                        if (dist <= 6) aliens[i].state = 1;
+                        else aliens[i].state = 0;
+                        
+                        int dx = 0, dy = 0;
+                        if (aliens[i].state == 1) {
+                            if (abs(playerX - aliens[i].x) > abs(playerY - aliens[i].y)) {
+                                dx = (playerX > aliens[i].x) ? 1 : -1;
+                                int target = map[aliens[i].y][aliens[i].x + dx];
+                                if (target != 0 && (target < 6 || target > 8)) {
+                                    dx = 0; 
+                                    dy = (playerY > aliens[i].y) ? 1 : (playerY < aliens[i].y ? -1 : 0);
+                                }
+                            } else {
+                                dy = (playerY > aliens[i].y) ? 1 : -1;
+                                int target = map[aliens[i].y + dy][aliens[i].x];
+                                if (target != 0 && (target < 6 || target > 8)) {
+                                    dy = 0; 
+                                    dx = (playerX > aliens[i].x) ? 1 : (playerX < aliens[i].x ? -1 : 0);
+                                }
+                            }
+                        } else {
+                            if (rand() % 10 < 4) {
+                                int r = rand() % 4;
+                                if (r == 0) dx = 1;
+                                else if (r == 1) dx = -1;
+                                else if (r == 2) dy = 1;
+                                else dy = -1;
+                            }
+                        }
+                        
+                        if (dx != 0 || dy != 0) {
+                            int nx = aliens[i].x + dx;
+                            int ny = aliens[i].y + dy;
+                            if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+                                int target = map[ny][nx];
+                                if (target == 0 || (target >= 6 && target <= 8)) {
+                                    aliens[i].x = nx;
+                                    aliens[i].y = ny;
+                                }
+                            }
+                        }
+                        
+                        if (aliens[i].x == playerX && aliens[i].y == playerY) {
+                            isDead = 1;
+                            lstrcpy(sysMsg, "CAUGHT BY ALIEN. YOU ARE DEAD.");
+                            msgTimer = 100;
+                        }
+                    }
                 }
             }
             if (msgTimer > 0) {
@@ -239,10 +317,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
             
-            // Draw player
-            SelectObject(hdcMem, hPlayerBrush);
+            // Draw aliens
+            HBRUSH hAlienBrush = CreateSolidBrush(RGB(255, 0, 255));
+            SelectObject(hdcMem, hAlienBrush);
             SelectObject(hdcMem, GetStockObject(NULL_PEN));
             int r = TILE_SIZE / 3;
+            for (int i = 0; i < alienCount; i++) {
+                int acx = aliens[i].x * TILE_SIZE + TILE_SIZE / 2;
+                int acy = aliens[i].y * TILE_SIZE + TILE_SIZE / 2 + UI_HEIGHT;
+                Ellipse(hdcMem, acx - r, acy - r, acx + r, acy + r);
+            }
+            DeleteObject(hAlienBrush);
+
+            // Draw player
+            SelectObject(hdcMem, hPlayerBrush);
             int cx = playerX * TILE_SIZE + TILE_SIZE / 2;
             int cy = playerY * TILE_SIZE + TILE_SIZE / 2 + UI_HEIGHT;
             Ellipse(hdcMem, cx - r, cy - r, cx + r, cy + r);
@@ -388,6 +476,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     playerX = newX;
                     playerY = newY;
+                    for (int i = 0; i < alienCount; i++) {
+                        if (aliens[i].x == playerX && aliens[i].y == playerY) {
+                            isDead = 1;
+                            lstrcpy(sysMsg, "CAUGHT BY ALIEN. YOU ARE DEAD.");
+                            msgTimer = 100;
+                            InvalidateRect(hwnd, NULL, FALSE);
+                            return 0;
+                        }
+                    }
                     if (target == 0) {
                         sysMsg[0] = '\0';
                         msgTimer = 0;

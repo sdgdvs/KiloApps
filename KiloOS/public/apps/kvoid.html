@@ -124,6 +124,7 @@
         let map = [];
         let player = { x: 2, y: 2 };
         let rooms = [];
+        let aliens = [];
 
         function generateMap() {
             map = [];
@@ -218,6 +219,19 @@
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
                         map[ry][rx] = 9; // Terminal
+                        placed = true;
+                    }
+                }
+            }
+
+            aliens = [];
+            for (let i = 0; i < 4; i++) {
+                let placed = false;
+                while (!placed) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 5 || Math.abs(ry - player.y) > 5)) {
+                        aliens.push({x: rx, y: ry, state: 'patrol'});
                         placed = true;
                     }
                 }
@@ -320,11 +334,75 @@
             ctx.shadowBlur = 0;
         }
 
+        function drawAliens() {
+            ctx.fillStyle = '#f0f';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#f0f';
+            for (let a of aliens) {
+                ctx.beginPath();
+                ctx.arc(a.x * TILE_SIZE + TILE_SIZE / 2, a.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawMap();
+            drawAliens();
             drawPlayer();
         }
+
+        function updateAliens() {
+            if (isDead) return;
+            for (let a of aliens) {
+                let dist = Math.abs(a.x - player.x) + Math.abs(a.y - player.y);
+                let canSee = dist <= 6;
+                a.state = canSee ? 'chase' : 'patrol';
+
+                let dx = 0, dy = 0;
+                if (a.state === 'chase') {
+                    if (Math.abs(player.x - a.x) > Math.abs(player.y - a.y)) {
+                        dx = Math.sign(player.x - a.x);
+                        let nextTarget = map[a.y][a.x + dx];
+                        if (nextTarget !== 0 && (nextTarget < 6 || nextTarget > 8)) {
+                            dx = 0; dy = Math.sign(player.y - a.y);
+                        }
+                    } else {
+                        dy = Math.sign(player.y - a.y);
+                        let nextTarget = map[a.y + dy][a.x];
+                        if (nextTarget !== 0 && (nextTarget < 6 || nextTarget > 8)) {
+                            dy = 0; dx = Math.sign(player.x - a.x);
+                        }
+                    }
+                } else {
+                    if (Math.random() < 0.4) {
+                        let dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+                        let d = dirs[Math.floor(Math.random()*4)];
+                        dx = d[0]; dy = d[1];
+                    }
+                }
+                
+                if (dx !== 0 || dy !== 0) {
+                    let nx = a.x + dx;
+                    let ny = a.y + dy;
+                    if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+                        let target = map[ny][nx];
+                        if (target === 0 || (target >= 6 && target <= 8)) {
+                            a.x = nx;
+                            a.y = ny;
+                        }
+                    }
+                }
+                
+                if (a.x === player.x && a.y === player.y) {
+                    die("CAUGHT BY ALIEN. YOU ARE DEAD.");
+                    return;
+                }
+            }
+            draw();
+        }
+        setInterval(updateAliens, 600);
 
         function showMessage(msg, color='#0f0') {
             document.getElementById('message').innerText = msg;
@@ -384,6 +462,12 @@
                     }
                     player.x = newX;
                     player.y = newY;
+                    for (let a of aliens) {
+                        if (a.x === player.x && a.y === player.y) {
+                            die("CAUGHT BY ALIEN. YOU ARE DEAD.");
+                            return;
+                        }
+                    }
                     oxygen -= 0.2;
                     if (target === 0) showMessage("Use WASD or Arrow Keys to move.");
                     if (oxygen <= 0) {
