@@ -888,6 +888,7 @@
   } catch(e) {}
 
   window.addEventListener('keydown', (e) => {
+    if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
     if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.altKey && !e.metaKey) {
       showHelp();
     }
@@ -947,7 +948,7 @@
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-    const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+    const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId));
     if (activeBtn) activeBtn.classList.add('active');
     const targetContent = document.getElementById('tab-' + tabId);
     if (targetContent) targetContent.classList.add('active');
@@ -1346,16 +1347,19 @@
   }
 
   function addCustomService() {
-    const name = prompt("Enter Custom Service Daemon Name (e.g. MyWorkerService):", "CustomDaemon");
-    if (!name) return;
+    const rawName = prompt("Enter Custom Service Daemon Name (e.g. MyWorkerService):", "CustomDaemon");
+    if (!rawName) return;
 
-    const disp = prompt("Enter Display Name:", "Custom Background Worker Daemon");
+    const rawDisp = prompt("Enter Display Name:", "Custom Background Worker Daemon");
     const id = "custom_" + Date.now();
+
+    const name = escapeHtml(rawName.trim());
+    const disp = escapeHtml(rawDisp ? rawDisp.trim() : rawName.trim());
 
     systemServices.push({
       id: id,
       name: name,
-      disp: disp || name,
+      disp: disp,
       cat: "Core System",
       start: "Manual",
       status: "RUNNING",
