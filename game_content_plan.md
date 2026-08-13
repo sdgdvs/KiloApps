@@ -148,7 +148,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
 | KFortress  | Tier 1 | Creator building (Phase TBD) | Wait for Creator to finish — then Loop 1 content pass |
-| KRogue     | Tier 1 | Loop 9 done (traps, boss rematches, cursed items) | Loop 10: Final sanctuary floors, true ending, ultra bosses |
 | KQuest     | Tier 1 | Loop 8 done (Job classes, magic system, companions) | Loop 9: Factions, mount system, crafting overhaul |
 | KStarship  | Tier 1 | Loop 8 done (Fleet battles, alien diplomacy, deep space anomalies) | Loop 9: Interstellar factions, planetary landing, crew moral |
 | KAlchemy   | Tier 1 | Loop 1 done (Recipe variety, quest depth, lab upgrades) | Loop 2: Hidden elemental combos, daily challenges, prestige system |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KPac       | Tier 1 | Loop 9 done (Multi-phase bosses, escort missions, branching paths) | Loop 10: Arcade endless mode, procedural ghost personalities, item crafting |
 | KBreakout  | Tier 1 | Loop 9 done (Advanced level editor, meteor hazards, boss rematches) | Loop 10: Multi-ball chaos mode, gravity wells, custom powerup forging |
 | KSnake     | Tier 1 | Loop 9 done (Snake vs Snake mode, growing walls, weather effects) | Loop 10: Map editor, boss gauntlet, branching campaigns |
+| KRogue     | Tier 1 | Loop 10 done (Final sanctuary floors, true ending, ultra bosses) | Loop 11: Classes/Loadouts (Warrior, Mage, Rogue) |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -183,6 +183,9 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 
 ## Progress Log
+
+**Loop 10**
+- [x] KRogue (Loop 10: Added True Sanctuary biome (floors 41-50), Tier 8 Ultra Bosses (Seraphim, Eldritch God), and relocated True Astaroth final battle to floor 50 in both EXE and HTML)
 
 **Loop 9**
 - [x] KGo (Balance audit complete: Fixed AI turn blocking, fixed handicap AI triggering, added double-pass auto-score, and tuned Grandmaster AI 3rd/4th line territory evaluation in both EXE and HTML)
