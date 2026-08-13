@@ -1319,22 +1319,30 @@
             </div>
           </div>
           <div class="task-right">
-            <button class="btn-secondary btn-inspect" style="padding: 4px 9px; font-size: 11px;" aria-label="Inspect task ${taskTitle}">Inspect</button>
-            <select class="priority-select" aria-label="Adjust process priority for ${taskTitle}">
+            <button class="btn-secondary btn-inspect" style="padding: 4px 9px; font-size: 11px;">Inspect</button>
+            <select class="priority-select">
               <option value="Low" ${stats.priority === 'Low' ? 'selected' : ''}>Low</option>
               <option value="Normal" ${stats.priority === 'Normal' ? 'selected' : ''}>Normal</option>
               <option value="High" ${stats.priority === 'High' ? 'selected' : ''}>High</option>
               <option value="Realtime" ${stats.priority === 'Realtime' ? 'selected' : ''}>Realtime</option>
             </select>
-            <button class="btn-kill" aria-label="End task ${taskTitle} with PID ${taskId}">End Task</button>
+            <button class="btn-kill">End Task</button>
           </div>
         `;
 
         card.querySelector('.task-title').textContent = taskTitle;
-        card.querySelector('.btn-inspect').onclick = () => openInspectModal(taskId, taskTitle);
+        const btnInspect = card.querySelector('.btn-inspect');
+        btnInspect.setAttribute('aria-label', `Inspect task ${taskTitle}`);
+        btnInspect.onclick = () => openInspectModal(taskId, taskTitle);
+
         const priSel = card.querySelector('.priority-select');
+        priSel.setAttribute('aria-label', `Adjust process priority for ${taskTitle}`);
         priSel.onchange = (e) => changePriority(taskId, e.target.value);
-        card.querySelector('.btn-kill').onclick = () => promptKillTask(taskId, taskTitle);
+
+        const btnKill = card.querySelector('.btn-kill');
+        btnKill.setAttribute('aria-label', `End task ${taskTitle} with PID ${taskId}`);
+        btnKill.onclick = () => promptKillTask(taskId, taskTitle);
+
         list.appendChild(card);
       });
     }
@@ -1571,14 +1579,15 @@
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
+      const inspectActive = document.getElementById('inspectModal')?.classList.contains('active');
+      const confirmActive = document.getElementById('confirmModal')?.classList.contains('active');
+
       if (e.key === 'Escape') {
-        const inspectModal = document.getElementById('inspectModal');
-        if (inspectModal && inspectModal.classList.contains('active')) {
+        if (inspectActive) {
           closeInspectModal();
           return;
         }
-        const modal = document.getElementById('confirmModal');
-        if (modal && modal.classList.contains('active')) {
+        if (confirmActive) {
           closeKillModal();
           return;
         }
@@ -1587,12 +1596,17 @@
           search.value = '';
           renderTasks();
         }
-      } else if (e.key === 'Enter') {
-        const modal = document.getElementById('confirmModal');
-        if (modal && modal.classList.contains('active')) {
+        return;
+      }
+
+      if (inspectActive || confirmActive) {
+        if (e.key === 'Enter' && confirmActive) {
           executePendingKill();
         }
-      } else if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
+        return;
+      }
+
+      if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
         e.preventDefault();
         refresh();
       } else if (e.key === 'i' || e.key === 'I') {
