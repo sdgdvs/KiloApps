@@ -1484,9 +1484,14 @@ void Draw(HDC hdc) {
     if (ship.active) {
         // Thruster flame animation
         if (keys[VK_UP]) {
-            float flameLen = 15.0f + sin(ship.anim_frame * 0.5f) * 5.0f + (rand() % 6);
-            HPEN flamePen = CreatePen(PS_SOLID, 2, RGB(249, 115, 22));
-            HBRUSH flameBrush = CreateSolidBrush(RGB(239, 68, 68));
+            float speed = sqrt(ship.vx * ship.vx + ship.vy * ship.vy);
+            float flameLen = 15.0f + sin(ship.anim_frame * 0.5f) * 5.0f + speed * 3.0f + (rand() % 6);
+            
+            COLORREF fPenCol = (speed > 4.0f) ? RGB(56, 189, 248) : RGB(249, 115, 22);
+            COLORREF fBrCol = (speed > 4.0f) ? RGB(59, 130, 246) : RGB(239, 68, 68);
+            
+            HPEN flamePen = CreatePen(PS_SOLID, 2, fPenCol);
+            HBRUSH flameBrush = CreateSolidBrush(fBrCol);
             SelectObject(hdc, flamePen); SelectObject(hdc, flameBrush);
 
             POINT fpts[3];
@@ -1593,12 +1598,26 @@ void Draw(HDC hdc) {
         Polygon(hdc, pts, 10);
 
         // Inner crater line facet detail
-        HPEN facetPen = CreatePen(PS_SOLID, 1, strokeC);
-        SelectObject(hdc, facetPen);
-        MoveToEx(hdc, pts[0].x, pts[0].y, NULL);
-        LineTo(hdc, (LONG)asteroids[i].x, (LONG)asteroids[i].y);
-        LineTo(hdc, pts[4].x, pts[4].y);
-        DeleteObject(facetPen);
+        if (asteroids[i].level == 3) {
+            HPEN facetPen = CreatePen(PS_SOLID, 1, strokeC);
+            SelectObject(hdc, facetPen);
+            Ellipse(hdc, (int)(asteroids[i].x - asteroids[i].radius * 0.4f), (int)(asteroids[i].y - asteroids[i].radius * 0.3f), (int)(asteroids[i].x), (int)(asteroids[i].y + asteroids[i].radius * 0.1f));
+            Ellipse(hdc, (int)(asteroids[i].x + asteroids[i].radius * 0.1f), (int)(asteroids[i].y + asteroids[i].radius * 0.2f), (int)(asteroids[i].x + asteroids[i].radius * 0.4f), (int)(asteroids[i].y + asteroids[i].radius * 0.5f));
+            MoveToEx(hdc, pts[0].x, pts[0].y, NULL);
+            LineTo(hdc, (LONG)asteroids[i].x, (LONG)asteroids[i].y);
+            LineTo(hdc, pts[4].x, pts[4].y);
+            MoveToEx(hdc, pts[7].x, pts[7].y, NULL);
+            LineTo(hdc, (LONG)asteroids[i].x, (LONG)asteroids[i].y);
+            DeleteObject(facetPen);
+        } else if (asteroids[i].level == 2) {
+            HPEN facetPen = CreatePen(PS_SOLID, 1, strokeC);
+            SelectObject(hdc, facetPen);
+            Ellipse(hdc, (int)(asteroids[i].x - asteroids[i].radius * 0.2f), (int)(asteroids[i].y - asteroids[i].radius * 0.1f), (int)(asteroids[i].x + asteroids[i].radius * 0.1f), (int)(asteroids[i].y + asteroids[i].radius * 0.2f));
+            MoveToEx(hdc, pts[0].x, pts[0].y, NULL);
+            LineTo(hdc, (LONG)asteroids[i].x, (LONG)asteroids[i].y);
+            LineTo(hdc, pts[4].x, pts[4].y);
+            DeleteObject(facetPen);
+        }
 
         DeleteObject(aPen); DeleteObject(aBrush);
     }
@@ -1657,7 +1676,14 @@ void Draw(HDC hdc) {
             HPEN bossPen = CreatePen(PS_SOLID, 3, RGB(168, 85, 247));
             HBRUSH bossBrush = CreateSolidBrush(RGB(88, 28, 135));
             SelectObject(hdc, bossPen); SelectObject(hdc, bossBrush);
-            Ellipse(hdc, (int)(ufos[i].x - r), (int)(ufos[i].y - r * 0.4f), (int)(ufos[i].x + r), (int)(ufos[i].y + r * 0.4f));
+            POINT apts[6];
+            apts[0].x = (LONG)(ufos[i].x - r);      apts[0].y = (LONG)(ufos[i].y);
+            apts[1].x = (LONG)(ufos[i].x - r * 0.7f); apts[1].y = (LONG)(ufos[i].y - r * 0.5f);
+            apts[2].x = (LONG)(ufos[i].x + r * 0.7f); apts[2].y = (LONG)(ufos[i].y - r * 0.5f);
+            apts[3].x = (LONG)(ufos[i].x + r);      apts[3].y = (LONG)(ufos[i].y);
+            apts[4].x = (LONG)(ufos[i].x + r * 0.7f); apts[4].y = (LONG)(ufos[i].y + r * 0.5f);
+            apts[5].x = (LONG)(ufos[i].x - r * 0.7f); apts[5].y = (LONG)(ufos[i].y + r * 0.5f);
+            Polygon(hdc, apts, 6);
 
             // Purple Plasma Dome
             HBRUSH domeB = CreateSolidBrush((ufos[i].freeze_timer > 0) ? RGB(56, 189, 248) : RGB(192, 132, 252));
@@ -1685,12 +1711,18 @@ void Draw(HDC hdc) {
             HPEN ufoPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
             HBRUSH ufoBrush = CreateSolidBrush(RGB(30, 27, 75));
             SelectObject(hdc, ufoPen); SelectObject(hdc, ufoBrush);
-            Ellipse(hdc, (int)(ufos[i].x - r), (int)(ufos[i].y - r * 0.4f), (int)(ufos[i].x + r), (int)(ufos[i].y + r * 0.4f));
+            
+            POINT wpts[4];
+            wpts[0].x = (LONG)(ufos[i].x - r); wpts[0].y = (LONG)(ufos[i].y);
+            wpts[1].x = (LONG)(ufos[i].x);     wpts[1].y = (LONG)(ufos[i].y - r * 0.6f);
+            wpts[2].x = (LONG)(ufos[i].x + r); wpts[2].y = (LONG)(ufos[i].y);
+            wpts[3].x = (LONG)(ufos[i].x);     wpts[3].y = (LONG)(ufos[i].y + r * 0.4f);
+            Polygon(hdc, wpts, 4);
 
             // Green Dome (Cyan if frozen)
             HBRUSH domeB = CreateSolidBrush((ufos[i].freeze_timer > 0) ? RGB(56, 189, 248) : RGB(74, 222, 128));
             SelectObject(hdc, domeB);
-            Pie(hdc, (int)(ufos[i].x - r * 0.5f), (int)(ufos[i].y - r * 0.7f), (int)(ufos[i].x + r * 0.5f), (int)(ufos[i].y + r * 0.1f), (int)(ufos[i].x + r * 0.5f), (int)ufos[i].y, (int)(ufos[i].x - r * 0.5f), (int)ufos[i].y);
+            Pie(hdc, (int)(ufos[i].x - r * 0.4f), (int)(ufos[i].y - r * 0.7f), (int)(ufos[i].x + r * 0.4f), (int)(ufos[i].y + r * 0.2f), (int)(ufos[i].x + r * 0.4f), (int)ufos[i].y, (int)(ufos[i].x - r * 0.4f), (int)ufos[i].y);
             DeleteObject(ufoPen); DeleteObject(ufoBrush); DeleteObject(domeB);
         }
     }

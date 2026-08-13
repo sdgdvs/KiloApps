@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KAsteroids
 - K2048
 - KSolitaire
 - KStarship
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KChess
 - KPong
 - KMines
+- KAsteroids
 ## Completed Work Log
+
+- **KAsteroids (Loop 4):** Implemented distinct structural details for varying asteroid sizes (large asteroids have craters/facets, medium have single craters, small have no inner detail); created visually distinct enemy UFO models based on type (swept-back sharp diamond wing design for nimble scout UFOs, and a blocky angular hexagonal armor plating design for heavy cruisers); and added a dynamic engine exhaust trail to the player ship that calculates velocity to physically extend and shift color from fiery orange to bright cyan plasma at high speeds in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 
 - **KMines (Loop 4):** Implemented distinctly stylized fonts and text-shadows for the 1-8 number graphics; added a kinematically animated pop-in scale effect when flags are planted; and created two distinct visual variations for hidden mines (a Rusty Iron Naval Mine with rust spots and a High-Tech Proximity Mine with a pulsing cyan glow) distributed procedurally across the grid in both Web Canvas (kmines.html) and Native C Win32 GDI (KMines/main.c).
 
