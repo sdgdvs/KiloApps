@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KSpace
+**Target App:** KSynth
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -257,3 +257,5 @@ Pass 1 Complete.
 - **KSnake**: Fixed XSS vulnerability in `ksnake.html` leaderboard table rendering via HTML escaping. Fixed match apple stats calculation and boss body length initialization in Level 25. Refactored `SaveConfig`/`LoadConfig` in `main.c` for keybinding persistence. Recompiled native `.exe` and verified Vite web build cleanly.
 
 - **KSolitaire**: Fixed `ReferenceError: topCard is not defined` in `ksolitaire.html` tableau move validation. Fixed double score penalty during Undo operations in both web and native versions. Verified native `.exe` compilation and Vite web build.
+
+- **KSpace**: Fixed UI crash (`TypeError: Cannot read properties of undefined (reading 'toLowerCase')`) on pointerdown in `kspace.html`. Cleaned up corrupted keydown listener branches and guarded replay recording against uninitialized frame arrays. Cleared visual effect particle arrays on game restart. Added schema validation for leaderboard import. Verified native build.
