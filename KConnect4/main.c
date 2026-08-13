@@ -205,6 +205,15 @@ void PlaySoundEffect(int type) {
 }
 
 void DrawDisc3D(HDC hdc, int x, int y, int cellType, bool isWinCell) {
+    if (cellType >= 100 && cellType <= 700) {
+        HBRUSH shadowBrush = CreateSolidBrush(RGB(10, 15, 25));
+        HPEN nullPen = GetStockObject(NULL_PEN);
+        SelectObject(hdc, nullPen); SelectObject(hdc, shadowBrush);
+        Ellipse(hdc, x + 4, y + 15, x + 32, y + 42);
+        DeleteObject(shadowBrush);
+        y -= 6;
+    }
+
     int cx = x + 18;
     int cy = y + 18;
 
@@ -225,12 +234,32 @@ void DrawDisc3D(HDC hdc, int x, int y, int cellType, bool isWinCell) {
     }
 
     if (isWinCell) {
-        HPEN glowPen = CreatePen(PS_SOLID, 4, RGB(0, 255, 255));
         HBRUSH nullBrush = GetStockObject(NULL_BRUSH);
-        SelectObject(hdc, glowPen);
         SelectObject(hdc, nullBrush);
-        Ellipse(hdc, x - 2, y - 2, x + 38, y + 38);
-        DeleteObject(glowPen);
+        
+        HPEN glow1 = CreatePen(PS_SOLID, 6, RGB(0, 100, 100));
+        SelectObject(hdc, glow1);
+        Ellipse(hdc, x - 5, y - 5, x + 41, y + 41);
+        DeleteObject(glow1);
+
+        HPEN glow2 = CreatePen(PS_SOLID, 4, RGB(0, 200, 200));
+        SelectObject(hdc, glow2);
+        Ellipse(hdc, x - 3, y - 3, x + 39, y + 39);
+        DeleteObject(glow2);
+
+        HPEN glow3 = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+        SelectObject(hdc, glow3);
+        Ellipse(hdc, x - 1, y - 1, x + 37, y + 37);
+        DeleteObject(glow3);
+        
+        HPEN sparkPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        SelectObject(hdc, sparkPen);
+        MoveToEx(hdc, x - 4, cy, NULL); LineTo(hdc, x - 10, cy);
+        MoveToEx(hdc, x - 7, cy - 3, NULL); LineTo(hdc, x - 7, cy + 3);
+        
+        MoveToEx(hdc, x + 40, cy - 10, NULL); LineTo(hdc, x + 46, cy - 10);
+        MoveToEx(hdc, x + 43, cy - 13, NULL); LineTo(hdc, x + 43, cy - 7);
+        DeleteObject(sparkPen);
     }
 
     if (cellType == 1 || cellType == 100) { // Red Disc
@@ -250,15 +279,22 @@ void DrawDisc3D(HDC hdc, int x, int y, int cellType, bool isWinCell) {
         Ellipse(hdc, x + 3, y + 3, x + 33, y + 33);
         DeleteObject(rPen);
 
-        HBRUSH hlBrush = CreateSolidBrush((cellType == 100) ? RGB(255, 200, 200) : RGB(255, 170, 170));
         HPEN nPen = GetStockObject(NULL_PEN);
-        SelectObject(hdc, nPen); SelectObject(hdc, hlBrush);
-        Ellipse(hdc, x + 6, y + 4, x + 22, y + 15);
-        DeleteObject(hlBrush);
+        SelectObject(hdc, nPen);
+        
+        HBRUSH hl1 = CreateSolidBrush((cellType == 100) ? RGB(240, 120, 120) : RGB(240, 90, 90));
+        SelectObject(hdc, hl1);
+        Ellipse(hdc, x + 5, y + 3, x + 31, y + 18);
+        DeleteObject(hl1);
+
+        HBRUSH hl2 = CreateSolidBrush((cellType == 100) ? RGB(255, 180, 180) : RGB(255, 140, 140));
+        SelectObject(hdc, hl2);
+        Ellipse(hdc, x + 7, y + 4, x + 28, y + 14);
+        DeleteObject(hl2);
 
         HBRUSH wBrush = CreateSolidBrush(RGB(255, 255, 255));
         SelectObject(hdc, wBrush);
-        Ellipse(hdc, x + 9, y + 6, x + 16, y + 11);
+        Ellipse(hdc, x + 10, y + 5, x + 20, y + 9);
         DeleteObject(wBrush);
 
         POINT starPts[10];
@@ -292,15 +328,22 @@ void DrawDisc3D(HDC hdc, int x, int y, int cellType, bool isWinCell) {
         Ellipse(hdc, x + 3, y + 3, x + 33, y + 33);
         DeleteObject(rPen);
 
-        HBRUSH hlBrush = CreateSolidBrush(RGB(255, 255, 200));
         HPEN nPen = GetStockObject(NULL_PEN);
-        SelectObject(hdc, nPen); SelectObject(hdc, hlBrush);
-        Ellipse(hdc, x + 6, y + 4, x + 22, y + 15);
-        DeleteObject(hlBrush);
+        SelectObject(hdc, nPen);
+        
+        HBRUSH hl1 = CreateSolidBrush((cellType == 200) ? RGB(240, 230, 120) : RGB(255, 230, 90));
+        SelectObject(hdc, hl1);
+        Ellipse(hdc, x + 5, y + 3, x + 31, y + 18);
+        DeleteObject(hl1);
+
+        HBRUSH hl2 = CreateSolidBrush((cellType == 200) ? RGB(255, 255, 180) : RGB(255, 250, 140));
+        SelectObject(hdc, hl2);
+        Ellipse(hdc, x + 7, y + 4, x + 28, y + 14);
+        DeleteObject(hl2);
 
         HBRUSH wBrush = CreateSolidBrush(RGB(255, 255, 255));
         SelectObject(hdc, wBrush);
-        Ellipse(hdc, x + 9, y + 6, x + 16, y + 11);
+        Ellipse(hdc, x + 10, y + 5, x + 20, y + 9);
         DeleteObject(wBrush);
 
         POINT crownPts[7] = {
