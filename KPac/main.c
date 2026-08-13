@@ -430,6 +430,8 @@ int bossHp = 8;
 int bossMaxHp = 8;
 int phantomSpawnTimer = 0;
 
+int vipX = 7, vipY = 7, vipActive = 0;
+
 // Game Loop State
 int score = 0;
 int highScore = 0;
@@ -494,6 +496,7 @@ typedef struct {
     int freezeCooldown, speedCooldown, magnetCooldown, shieldCooldown;
     int bossHp;
     int dotCount, frameCount, fruitActive, fruitTimer, gameOver;
+    int vipX, vipY, vipActive;
 } SaveState;
 
 void SaveGame() {
@@ -513,6 +516,7 @@ void SaveGame() {
     st.bossHp = bossHp;
     st.dotCount = dotCount; st.frameCount = frameCount;
     st.fruitActive = fruitActive; st.fruitTimer = fruitTimer; st.gameOver = gameOver;
+    st.vipX = vipX; st.vipY = vipY; st.vipActive = vipActive;
 
     HANDLE hFile = CreateFileA("kpac_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -551,6 +555,7 @@ void LoadGame() {
         bossHp = st.bossHp;
         dotCount = st.dotCount; frameCount = st.frameCount;
         fruitActive = st.fruitActive; fruitTimer = st.fruitTimer; gameOver = st.gameOver;
+        vipX = st.vipX; vipY = st.vipY; vipActive = st.vipActive;
         paused = 0;
         lstrcpyA(saveMsgText, "GAME LOADED");
         saveMsgTimer = 20;
@@ -644,6 +649,12 @@ void Init(int keepScore) {
         numGhosts = 3;
     } else {
         numGhosts = 2;
+    }
+
+    vipActive = (level % 5 == 0 && level != 20) ? 1 : 0;
+    vipX = 7; vipY = 7;
+    if (level % 3 == 0 && level < 18 && map[ROWS/2][COLS/2] != 1) {
+        map[ROWS/2][COLS/2] = 8; // Branch Warp
     }
 
     frightTimer = 0;
@@ -743,7 +754,7 @@ void Update() {
 
     // Stage 20 Ghost King Phantom Clones Spawner
     if (level == 20 && bossHp > 0) {
-        phantomSpawnTimer++;
+        phantomSpawnTimer += (bossHp <= bossMaxHp / 2) ? 2 : 1;
         if (phantomSpawnTimer >= 50) {
             phantomSpawnTimer = 0;
             for (int k = 6; k <= 7; k++) {
@@ -781,6 +792,27 @@ void Update() {
     if (ghostSpeed < 1) ghostSpeed = 1;
     if (frightTimer > 0) ghostSpeed *= 2;
 
+    // VIP Escort
+    if (vipActive && freezeSkillTimer == 0) {
+        if (frameCount % 3 == 0) {
+            int dirs[4][2] = {{1,0}, {-1,0}, {0,1}, {0,-1}};
+            int d = MyRand() % 4;
+            int nx = vipX + dirs[d][0];
+            int ny = vipY + dirs[d][1];
+            if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
+                vipX = nx; vipY = ny;
+            }
+        }
+        for (int i = 0; i < numGhosts; i++) {
+            if (!ghosts[i].isDead && ghosts[i].type != 6 && ghosts[i].x == vipX && ghosts[i].y == vipY && frightTimer == 0) {
+                lives--;
+                MessageBeep(MB_ICONHAND);
+                vipX = 7; vipY = 7; px = 7; py = 12;
+                if (lives <= 0) { gameOver = 1; SaveHighScore(); }
+            }
+        }
+    }
+
     // Ghost Movement AI
     if (freezeSkillTimer == 0 && frameCount % ghostSpeed == 0) {
         int dirs[4][2] = {{1,0}, {-1,0}, {0,1}, {0,-1}};
@@ -807,8 +839,13 @@ void Update() {
                     tx = px - pdx * 3;
                     ty = py - pdy * 3;
                 } else if (ghosts[i].type == 5) { // Ghost King Boss: Direct Aggressive Chase
-                    tx = px;
-                    ty = py;
+                    if (bossHp <= bossMaxHp / 2) {
+                        tx = px + pdx * 2;
+                        ty = py + pdy * 2;
+                    } else {
+                        tx = px;
+                        ty = py;
+                    }
                 } else if (ghosts[i].type == 6) { // Phantom Clone: Random Pursuit
                     tx = px + (MyRand() % 5 - 2);
                     ty = py + (MyRand() % 5 - 2);
@@ -950,6 +987,12 @@ void Update() {
                     victoryTimer = 30;
                     MessageBeep(MB_ICONASTERISK);
                 }
+            } else if (map[py][px] == 8) {
+                level += (MyRand() % 3) + 1;
+                score += 1000;
+                MessageBeep(MB_ICONASTERISK);
+                Init(1);
+                return;
             }
         }
     }
@@ -1340,6 +1383,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT dr = {c * TS + 6 - pulse, r * TS + 6 - pulse, c * TS + 14 + pulse, r * TS + 14 + pulse};
                         FillRect(memDC, &dr, hazBr);
                         DeleteObject(hazBr);
+                    } else if (map[r][c] == 8) {
+                        HBRUSH brBr = CreateSolidBrush(RGB(200, 50, 255));
+                        RECT dr = {c * TS + 4, r * TS + 4, c * TS + 16, r * TS + 16};
+                        FillRect(memDC, &dr, brBr);
+                        DeleteObject(brBr);
                     }
                 }
             }
@@ -1393,6 +1441,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             Pie(memDC, cx - radius, cy - radius, cx + radius + 1, cy + radius + 1, xStart, yStart, xEnd, yEnd);
             DeleteObject(pacBr);
+            
+            if (vipActive) {
+                HBRUSH vipBr = CreateSolidBrush(RGB(76, 175, 80));
+                SelectObject(memDC, vipBr);
+                Ellipse(memDC, vipX * TS + 2, vipY * TS + 2, vipX * TS + TS - 2, vipY * TS + TS - 2);
+                DeleteObject(vipBr);
+            }
 
             // Pac-Man Eye
             double eyeAng = baseAngle - 3.14159 / 3.0;

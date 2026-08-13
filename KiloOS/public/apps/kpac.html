@@ -491,6 +491,8 @@
   let bossHp = 8;
   let bossMaxHp = 8;
   let phantomSpawnTimer = 0;
+  
+  let vipX = 7, vipY = 7, vipActive = 0;
 
   let score = 0, gameOver = 0, dotCount = 0, frameCount = 0;
   let level = 1;
@@ -694,7 +696,7 @@
           ghosts, map, score, level, lives, diffMode,
           frightTimer, freezeSkillTimer, speedSkillTimer, magnetSkillTimer, shieldActive,
           freezeCooldown, speedCooldown, magnetCooldown, shieldCooldown,
-          bossHp, dotCount, frameCount, fruitActive, fruitTimer, gameOver
+          bossHp, dotCount, frameCount, fruitActive, fruitTimer, gameOver, vipX, vipY, vipActive
       };
       localStorage.setItem('kpac_save_state', JSON.stringify(data));
       saveMsgText = 'GAME SAVED';
@@ -730,6 +732,7 @@
           dotCount = data.dotCount;
           frameCount = data.frameCount; fruitActive = data.fruitActive;
           fruitTimer = data.fruitTimer; gameOver = data.gameOver;
+          vipX = data.vipX || 7; vipY = data.vipY || 7; vipActive = data.vipActive || 0;
           paused = false;
           saveMsgText = 'GAME LOADED';
           saveMsgTimer = 25;
@@ -801,6 +804,12 @@
           numGhosts = 3;
       } else {
           numGhosts = 2;
+      }
+
+      vipActive = (level % 5 === 0 && level !== 20) ? 1 : 0;
+      vipX = 7; vipY = 7;
+      if (level % 3 === 0 && level < 18 && map[Math.floor(ROWS/2)][Math.floor(COLS/2)] !== 1) {
+          map[Math.floor(ROWS/2)][Math.floor(COLS/2)] = 8; // Branch Warp
       }
 
       frightTimer = 0;
@@ -894,7 +903,7 @@
 
       // Stage 20 Phantom Clone Spawner
       if (level === 20 && bossHp > 0) {
-          phantomSpawnTimer++;
+          phantomSpawnTimer += (bossHp <= bossMaxHp / 2) ? 2 : 1;
           if (phantomSpawnTimer >= 50) {
               phantomSpawnTimer = 0;
               for (let k = 6; k <= 7; k++) {
@@ -926,6 +935,26 @@
           }
       }
       
+      // VIP Escort Logic
+      if (vipActive && freezeSkillTimer === 0) {
+          if (frameCount % 3 === 0) {
+              let dirs = [[1,0], [-1,0], [0,1], [0,-1]];
+              let d = Math.floor(Math.random() * 4);
+              let nx = vipX + dirs[d][0], ny = vipY + dirs[d][1];
+              if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+                  vipX = nx; vipY = ny;
+              }
+          }
+          for (let i = 0; i < numGhosts; i++) {
+              if (!ghosts[i].isDead && ghosts[i].type !== 6 && ghosts[i].x === vipX && ghosts[i].y === vipY && frightTimer === 0) {
+                  lives--;
+                  playSound(200, 0.5, 'sawtooth');
+                  vipX = 7; vipY = 7; px = 7; py = 12;
+                  if (lives <= 0) { gameOver = 1; localStorage.setItem('kpac_games', ++statsGamesPlayed); }
+              }
+          }
+      }
+
       let baseGhostSpeed = Math.max(1, 4 - Math.floor(level/4));
       if (diffMode === 0) baseGhostSpeed += 1;
       if (diffMode === 2) baseGhostSpeed = Math.max(1, baseGhostSpeed - 1);
@@ -953,7 +982,11 @@
                   } else if (g.type === 4) { // Sue
                       tx = px - pdx * 3; ty = py - pdy * 3;
                   } else if (g.type === 5) { // Ghost King Boss
-                      tx = px; ty = py;
+                      if (bossHp <= bossMaxHp / 2) {
+                          tx = px + pdx * 2; ty = py + pdy * 2;
+                      } else {
+                          tx = px; ty = py;
+                      }
                   } else if (g.type === 6) { // Phantom Clone
                       tx = px + Math.floor(Math.random() * 5 - 2);
                       ty = py + Math.floor(Math.random() * 5 - 2);
@@ -1089,6 +1122,12 @@
                       victoryTimer = 30;
                       playSound(1200, 0.5, 'sine');
                   }
+              } else if (map[py][px] === 8) {
+                  level += Math.floor(Math.random() * 3) + 1;
+                  score += 1000;
+                  playSound(1000, 0.3, 'sine');
+                  init(true);
+                  return;
               }
           }
       }
@@ -1628,6 +1667,10 @@
                   ctx.fillStyle = '#ff4500';
                   let pulse = (frameCount % 4 === 0) ? 1 : 0;
                   ctx.fillRect(px + 4 - pulse, py + 4 - pulse, TS - 8 + pulse * 2, TS - 8 + pulse * 2);
+              } else if (map[r][c] === 8) {
+                  let cx = c * TS + TS/2, cy = r * TS + TS/2;
+                  ctx.fillStyle = '#c832ff';
+                  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI*2); ctx.fill();
               }
           }
       }
@@ -1638,6 +1681,13 @@
       
       drawPacman(ctx, px, py, pdx, pdy, frameCount, speedSkillTimer);
       
+      if (vipActive) {
+          ctx.fillStyle = '#4caf50';
+          ctx.beginPath();
+          ctx.arc(vipX * TS + TS/2, vipY * TS + TS/2, TS/2 - 2, 0, Math.PI * 2);
+          ctx.fill();
+      }
+
       for (let i = 0; i < numGhosts; i++) {
           drawGhost(ctx, ghosts[i], frameCount, frightTimer);
       }
