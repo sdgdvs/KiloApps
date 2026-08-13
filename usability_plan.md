@@ -52,7 +52,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KTetris
 - KSpace
 - KSolitaire
 - KTerm
@@ -103,6 +102,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPaint
 - KFarm
 - KSnake
+- KTetris
 
 ## Progress Log
 - KPaint: Usability and UI issues fixed (updated auto-opening size to 1024x768, added visible Help button in web and native, implemented negative font height for crisp native text, added optimizeLegibility to web).
@@ -275,3 +275,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KNet: Usability and UI issues fixed (auto-opening size to 960x720, added AdjustWindowRect and min-size constraints, explicit Help button added in web and native, optimizeLegibility applied to web).
 - KFarm: Usability and UI issues fixed (added SetProcessDPIAware and Coordinate mapping via SetMapMode for crisp UI in native, added devicePixelRatio canvas scaling for crisp vector shapes in web, and optimized window sizes to prevent clipping).
 - KSnake: Usability and UI issues fixed (removed pixelated rendering from web for crisp canvas shapes, added optimizeLegibility, applied negative font height in native for crisp text, added SetWorldTransform DPI scaling and dynamic window resizing to native).
+- KTetris: Usability and UI issues fixed (added optimizeLegibility and pixelated canvas rendering to web, fixed web click coordinates, used negative font heights for crisp native text, and fixed a native compilation issue).

@@ -1081,7 +1081,8 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
         int sweep = (tick / 5) % 3000;
         int diag = px + py;
         if (sweep > diag - 30 && sweep < diag + 30) {
-            int intensity = 255 - abs(sweep - diag) * 255 / 30;
+            int diff = sweep - diag;
+            int intensity = 255 - (diff < 0 ? -diff : diff) * 255 / 30;
             if (intensity > 150) {
                 HPEN sweepPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
                 HPEN oldSwpPen = (HPEN)SelectObject(hdc, sweepPen);
@@ -1596,8 +1597,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Draw Text Popups
             SetBkMode(memDC, TRANSPARENT);
-            HFONT hFontMain = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            HFONT hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT hFontMain = CreateFontA(-16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT hFontSmall = CreateFontA(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(memDC, hFontMain);
             for (int i = 0; i < num_popups; i++) {
                 SetTextColor(memDC, text_popups[i].color);

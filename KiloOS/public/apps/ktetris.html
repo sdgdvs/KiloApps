@@ -4,8 +4,8 @@
 <title>KTetris</title>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; background-color: #0c0d12; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: #ffffff; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; user-select: none; }
-  canvas { background-color: #121218; border: 2px solid #282a36; box-shadow: 0 0 30px rgba(0, 240, 240, 0.18); border-radius: 8px; cursor: pointer; max-width: 100%; max-height: 100%; object-fit: contain; }
+  body { margin: 0; background-color: #0c0d12; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: #ffffff; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; user-select: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+  canvas { background-color: #121218; border: 2px solid #282a36; box-shadow: 0 0 30px rgba(0, 240, 240, 0.18); border-radius: 8px; cursor: pointer; max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; }
 </style>
 </head>
 <body>
@@ -570,8 +570,11 @@
   // Interactive Skill Button Clicks
   canvas.addEventListener('click', e => {
       const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+      const winW = window.innerWidth;
+      const winH = window.innerHeight;
+      const scale = Math.min(winW / 370, winH / 510) * 0.98;
+      const mx = (e.clientX - rect.left) / scale;
+      const my = (e.clientY - rect.top) / scale;
       if (!gameOver && !isPaused && !startScreen && !winScreen && !showLeaderboard && !showHelp) {
           if (mx >= SIDEBAR_X && mx <= SIDEBAR_X + 140) {
               if (my >= 380 && my <= 400) useRowNuke();
