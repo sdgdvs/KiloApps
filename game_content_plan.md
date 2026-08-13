@@ -148,7 +148,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
 | KFortress  | Tier 1 | Creator building (Phase TBD) | Wait for Creator to finish — then Loop 1 content pass |
-| KSnake     | Tier 1 | Loop 8 done (Ghost Berry, Hunter AI, Omega Boss) | Loop 9: Snake vs Snake mode, dynamic growing maze walls, weather effects |
 | KRogue     | Tier 1 | Loop 9 done (traps, boss rematches, cursed items) | Loop 10: Final sanctuary floors, true ending, ultra bosses |
 | KQuest     | Tier 1 | Loop 8 done (Job classes, magic system, companions) | Loop 9: Factions, mount system, crafting overhaul |
 | KStarship  | Tier 1 | Loop 8 done (Fleet battles, alien diplomacy, deep space anomalies) | Loop 9: Interstellar factions, planetary landing, crew moral |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KMaze      | Tier 1 | Loop 9 done (Spike traps, boss rematches, cursed relics) | Loop 10: Multi-level dungeons, save points, dynamic lighting |
 | KPac       | Tier 1 | Loop 9 done (Multi-phase bosses, escort missions, branching paths) | Loop 10: Arcade endless mode, procedural ghost personalities, item crafting |
 | KBreakout  | Tier 1 | Loop 9 done (Advanced level editor, meteor hazards, boss rematches) | Loop 10: Multi-ball chaos mode, gravity wells, custom powerup forging |
+| KSnake     | Tier 1 | Loop 9 done (Snake vs Snake mode, growing walls, weather effects) | Loop 10: Map editor, boss gauntlet, branching campaigns |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 9**
+- [x] KSnake (Loop 9: Added Snake vs Snake mode, dynamic growing maze walls, and rain weather effects in both EXE and HTML)
 - [x] KChess (Balance audit complete: Adjusted Easy heuristic, increased Hard to 3-ply and Master to 4-ply Minimax, and verified opening/endgame PST logic in both EXE and HTML)
 - [x] KBreakout (Loop 9: Added interactive Level Editor mode, Meteor Shower falling hazards, and expanded campaign to 40 stages with Boss Rematches in both EXE and HTML)
 - [x] KDarts (Balance audit complete: Scaled wind/wobble by difficulty, tuned AI accuracy curve, fixed 301 bust bug, and fixed Killer mode target logic in both EXE and HTML)
