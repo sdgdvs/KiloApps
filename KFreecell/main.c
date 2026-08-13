@@ -1031,15 +1031,57 @@ void DrawSuitGDI(HDC hdc, int cx, int cy, int size, int suitIdx) {
     DeleteObject(nullPen);
 }
 
-void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
-    HBRUSH bg = CreateSolidBrush(c.frozen ? RGB(224, 247, 250) : RGB(252, 252, 252));
-    HPEN pen = CreatePen(PS_SOLID, selected ? 3 : (c.frozen ? 2 : 1), selected ? RGB(255, 215, 0) : (c.frozen ? RGB(0, 188, 212) : RGB(180, 180, 180)));
+void DrawCard(HDC hdc, int x, int y, Card c, int selected, int glowing) {
+    if (selected) {
+        y -= 5;
+        HBRUSH shadowBrush = CreateSolidBrush(RGB(10, 30, 15));
+        HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+        SelectObject(hdc, shadowBrush);
+        SelectObject(hdc, nullPen);
+        RoundRect(hdc, x + 8, y + 12, x + CELL_W + 8, y + CELL_H + 12, 10, 10);
+        DeleteObject(shadowBrush);
+        DeleteObject(nullPen);
+    } else {
+        HBRUSH shadowBrush = CreateSolidBrush(RGB(20, 50, 25));
+        HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+        SelectObject(hdc, shadowBrush);
+        SelectObject(hdc, nullPen);
+        RoundRect(hdc, x + 2, y + 4, x + CELL_W + 2, y + CELL_H + 4, 10, 10);
+        DeleteObject(shadowBrush);
+        DeleteObject(nullPen);
+    }
+    
+    if (glowing) {
+        HPEN glowPen = CreatePen(PS_SOLID, 3, RGB(255, 215, 0));
+        HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+        SelectObject(hdc, glowPen);
+        SelectObject(hdc, nullBrush);
+        RoundRect(hdc, x - 4, y - 4, x + CELL_W + 4, y + CELL_H + 4, 14, 14);
+        DeleteObject(glowPen);
+    }
+
+    HBRUSH bg = CreateSolidBrush(c.frozen ? RGB(224, 247, 250) : RGB(250, 250, 250));
+    HPEN pen = CreatePen(PS_SOLID, selected ? 2 : (c.frozen ? 2 : 1), selected ? RGB(255, 215, 0) : (c.frozen ? RGB(0, 188, 212) : RGB(160, 160, 160)));
     
     SelectObject(hdc, bg);
     SelectObject(hdc, pen);
     RoundRect(hdc, x, y, x + CELL_W, y + CELL_H, 10, 10);
     DeleteObject(bg);
     DeleteObject(pen);
+
+    HPEN hiPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+    SelectObject(hdc, hiPen);
+    MoveToEx(hdc, x + 3, y + CELL_H - 6, NULL);
+    LineTo(hdc, x + 3, y + 3);
+    LineTo(hdc, x + CELL_W - 6, y + 3);
+    DeleteObject(hiPen);
+    
+    HPEN shPen = CreatePen(PS_SOLID, 2, RGB(225, 225, 225));
+    SelectObject(hdc, shPen);
+    MoveToEx(hdc, x + 4, y + CELL_H - 3, NULL);
+    LineTo(hdc, x + CELL_W - 3, y + CELL_H - 3);
+    LineTo(hdc, x + CELL_W - 3, y + 4);
+    DeleteObject(shPen);
     
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, c.frozen ? RGB(0, 131, 143) : (c.color ? RGB(211, 47, 47) : RGB(30, 30, 30)));
@@ -1288,7 +1330,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if(freeCellsOccupied[i]) {
                     int ax, ay;
                     if(!IsAnimating(freeCells[i], &ax, &ay)) {
-                        DrawCard(hdcMem, x, TOP_Y, freeCells[i], (selType==0 && selIdx==i));
+                        int glowing = (!freeCells[i].frozen && freeCells[i].r == found[freeCells[i].s] + 1 && IsSafeToAutoMove(freeCells[i]));
+                        DrawCard(hdcMem, x, TOP_Y, freeCells[i], (selType==0 && selIdx==i), glowing);
                     }
                 } else {
                     DrawEmptyCell(hdcMem, x, TOP_Y, 0, 0);
@@ -1307,10 +1350,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     Card c = {i, found[i], (i==1||i==3)?1:0, 0};
                     int ax, ay;
                     if(!IsAnimating(c, &ax, &ay)) {
-                        DrawCard(hdcMem, x, TOP_Y, c, 0);
+                        DrawCard(hdcMem, x, TOP_Y, c, 0, 0);
                     } else if(found[i] > 1) {
                         Card cPrev = {i, found[i]-1, (i==1||i==3)?1:0, 0};
-                        DrawCard(hdcMem, x, TOP_Y, cPrev, 0);
+                        DrawCard(hdcMem, x, TOP_Y, cPrev, 0, 0);
                     } else {
                         DrawEmptyCell(hdcMem, x, TOP_Y, 1, i);
                     }
@@ -1332,7 +1375,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int selected = (selType==1 && selIdx==i && j>=selCardIdx);
                         int ax, ay;
                         if(!IsAnimating(tab[i][j], &ax, &ay)) {
-                            DrawCard(hdcMem, x, y, tab[i][j], selected);
+                            int glowing = (j == tabCount[i]-1 && !tab[i][j].frozen && tab[i][j].r == found[tab[i][j].s] + 1 && IsSafeToAutoMove(tab[i][j]));
+                            DrawCard(hdcMem, x, y, tab[i][j], selected, glowing);
                         }
                     }
                 }
@@ -1342,7 +1386,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if(anims[i].active) {
                     int cx, cy;
                     if(IsAnimating(anims[i].c, &cx, &cy)) {
-                        DrawCard(hdcMem, cx, cy, anims[i].c, 0);
+                        DrawCard(hdcMem, cx, cy, anims[i].c, 0, 0);
                     }
                 }
             }
@@ -1373,7 +1417,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (cascadeActive) {
                 for(int i=0; i<MAX_CASCADE; i++) {
                     if (cascadeCards[i].active) {
-                        DrawCard(hdcMem, (int)cascadeCards[i].x, (int)cascadeCards[i].y, cascadeCards[i].c, 0);
+                        DrawCard(hdcMem, (int)cascadeCards[i].x, (int)cascadeCards[i].y, cascadeCards[i].c, 0, 0);
                     }
                 }
             }

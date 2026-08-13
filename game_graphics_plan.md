@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFreecell
 - KSudoku
 - KGo
 - KTowers
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KConnect4
 - KHangman
 - KMatch3
+- KFreecell
 ## Completed Work Log
+
+- **KFreecell (Loop 4):** Implemented highly detailed specular highlights on playing cards to give a premium thicker embossed look, dynamic 3D drop-shadows that shift and expand when a card is dragged or lifted, and glowing golden aura/sparkle effects surrounding cards eligible for auto-foundation movement to enhance game state readability in both Web Canvas (kfreecell.html) and Native C Win32 GDI (KFreecell/main.c).
 
 - **KMatch3 (Loop 4):** Implemented highly detailed procedural lighting/specular highlights and sub-surface scattering effects on the gems making them look truly glassy/refractive, distinct visual crack fracture line states for gems before they shatter, and a dynamic 3D drop-shadow cast by moving/falling gems onto the board behind them in both Web Canvas (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
 
