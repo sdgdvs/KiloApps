@@ -369,7 +369,7 @@
             <div class="modal-card">
                 <div class="modal-header">📖 HOW TO PLAY KROGUE</div>
                 <div style="font-size: 13px; color: #a0aec0; line-height: 1.5;">
-                    <p><b style="color:#63b3ed;">Goal:</b> Descend through 40 floors to slay Astaroth!</p>
+                    <p><b style="color:#63b3ed;">Goal:</b> Descend through 50 floors to slay True Astaroth!</p>
                     <p><b style="color:#63b3ed;">Movement:</b> Use Arrow Keys / WASD / Custom Keybinds to move/attack. Press [.] or Numpad 5 to wait a turn.</p>
                     <p><b style="color:#63b3ed;">Combat:</b> Bump into enemies to attack. Ranged weapons require targeting [F].</p>
                     <p><b style="color:#63b3ed;">Classes & Magic:</b> Each class has a unique ability [A]. Mages start with spells [M].</p>
@@ -450,7 +450,7 @@
         let monsters = [];
         let items = [];
         let traps = [];
-        let msgs = ["Welcome to KRogue!", "Press [?] for Help.", "Choose your Hero & descend 30 levels to slay Astaroth!"];
+        let msgs = ["Welcome to KRogue!", "Press [?] for Help.", "Choose your Hero & descend 50 levels to slay True Astaroth!"];
         let state = 0; // 0=main menu, 1=playing, 2=dead, 3=victory, 4=targeting, 5=char creation
         let difficulty = 0;
         let dlevel = 1;
@@ -529,8 +529,8 @@
             if (lvl <= 20) return 'inferno';
             if (lvl <= 25) return 'void';
             if (lvl <= 30) return 'celestial';
-            return 'abyss';
-            return 'celestial';
+            if (lvl <= 40) return 'abyss';
+            return 'true_sanctuary';
         }
 
         function getBiomeName(lvl) {
@@ -540,8 +540,8 @@
             if (lvl <= 20) return 'Inferno';
             if (lvl <= 25) return 'Void';
             if (lvl <= 30) return 'Celestial Sanctuary';
-            return 'The Abyss';
-            return 'Celestial Sanctuary';
+            if (lvl <= 40) return 'The Abyss';
+            return 'True Celestial Sanctuary';
         }
 
         // Setup Character Select Modal
@@ -617,7 +617,7 @@
 
             state = 1;
             addMsg(`Journey Begun! Class: ${cls.toUpperCase()} | Seed: ${seedStr}`, 'good');
-            addMsg("Descend 40 floors & conquer Astaroth the Fallen!");
+            addMsg("Descend 50 floors & conquer True Astaroth!");
             initMap();
         }
 
@@ -635,21 +635,21 @@
             map[2][2] = '.';
             
             // Stairs
-            if (dlevel % 10 === 0 && dlevel !== 40) {
+            if (dlevel % 10 === 0 && dlevel !== 50) {
                 let hp = Math.floor(100 + dlevel * 5);
                 monsters.push({
                     x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: 'B', name: 'Resurrected Boss', boss: false, turn: 0
                 });
             }
-            if (dlevel < 40) {
+            if (dlevel < 50) {
                 items.push({ x: COLS - 3, y: ROWS - 3, ch: '>', type: 'stairs' });
                 map[ROWS - 3][COLS - 3] = '.';
             } else {
-                let hp = Math.floor(800 * (1 + difficulty * 0.5));
+                let hp = Math.floor(1500 * (1 + difficulty * 0.5));
                 monsters.push({
-                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: '&', name: 'Astaroth the Fallen', boss: true, turn: 0
+                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: '&', name: 'True Astaroth', boss: true, turn: 0
                 });
-                addMsg("ASTAROTH THE FALLEN AWAITS AT THE CENTER OF THE SANCTUARY!", 'msg-combat');
+                addMsg("TRUE ASTAROTH AWAITS AT THE CENTER OF THE SANCTUARY!", 'msg-combat');
             }
 
             // Shrines, Food & Equipment Drops
@@ -716,11 +716,16 @@
                     else if (r < 0.50) { type = 't'; hp = 130; name = 'Titan'; }
                     else if (r < 0.75) { type = 'E'; hp = 80; name = 'Beholder'; }
                     else { type = 'U'; hp = 150; name = 'Shadow Behemoth'; }
-                } else {
+                } else if (dlevel <= 40) {
                     if (r < 0.25) { type = 'v'; hp = 180; name = 'Void Walker'; }
                     else if (r < 0.50) { type = 'f'; hp = 250; name = 'Abyss Fiend'; }
                     else if (r < 0.75) { type = 'w'; hp = 300; name = 'Deep Worm'; }
                     else { type = 'O'; hp = 400; name = 'Abyssal Overlord'; }
+                } else {
+                    if (r < 0.25) { type = 'S'; hp = 300; name = 'Seraphim'; }
+                    else if (r < 0.50) { type = 'N'; hp = 400; name = 'Nephilim'; }
+                    else if (r < 0.75) { type = 'J'; hp = 600; name = 'Juggernaut'; }
+                    else { type = 'E'; hp = 500; name = 'Eldritch God'; }
                 }
 
                 hp = Math.floor(hp * (1 + difficulty * 0.4 + dlevel * 0.05));
@@ -760,6 +765,7 @@
             else if (biome === 'void') { baseColor = '#553c9a'; accentColor = '#44337a'; }
             else if (biome === 'celestial') { baseColor = '#d69e2e'; accentColor = '#b7791f'; }
             else if (biome === 'abyss') { baseColor = '#2d004b'; accentColor = '#1a0033'; mortarColor = '#0d001a'; }
+            else if (biome === 'true_sanctuary') { baseColor = '#e2e8f0'; accentColor = '#cbd5e0'; mortarColor = '#ffffff'; }
 
             // Fog / Torch flicker
             let alpha = 1.0;
@@ -813,6 +819,7 @@
             else if (biome === 'void') bg = '#1e1427';
             else if (biome === 'celestial') bg = '#1a2733';
             else if (biome === 'abyss') bg = '#0d001a';
+            else if (biome === 'true_sanctuary') bg = '#a0aec0';
 
             // Fog / Torch flicker
             let alpha = 1.0;

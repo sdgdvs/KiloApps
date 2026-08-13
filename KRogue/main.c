@@ -629,6 +629,7 @@ void spawn_monster(int x, int y) {
             if(g.dlevel >= 18) max_tier = 5;
             if(g.dlevel >= 24) max_tier = 6;
             if(g.dlevel >= 31) max_tier = 7;
+            if(g.dlevel >= 41) max_tier = 8;
             
             if(rand_range(0, 100) < 5) {
                 e->ch = '$'; e->fg = C_SHOPKEEPER; str_cpy(e->name, "Shopkeeper");
@@ -694,6 +695,12 @@ void spawn_monster(int x, int y) {
                 else if(m7 == 1) { e->ch = 'f'; e->fg = RGB(255,0,0); str_cpy(e->name, "Abyss Fiend"); e->hp = e->max_hp = 250 + g.dlevel*6; e->atk = 60; e->def = 25; e->xp = 500; e->behavior = B_SMART; e->special_ability = ABILITY_BREATHE_FIRE; }
                 else if(m7 == 2) { e->ch = 'w'; e->fg = RGB(0,0,255); str_cpy(e->name, "Deep Worm"); e->hp = e->max_hp = 300 + g.dlevel*8; e->atk = 70; e->def = 10; e->xp = 600; e->behavior = B_SLUGGISH; }
                 else { e->ch = 'O'; e->fg = RGB(50,50,50); str_cpy(e->name, "Abyssal Overlord"); e->hp = e->max_hp = 400 + g.dlevel*8; e->atk = 80; e->def = 30; e->xp = 1000; e->behavior = B_NORMAL; e->special_ability = ABILITY_SUMMON; }
+            } else if (tier == 8) {
+                int m8 = rand_range(0, 3);
+                if(m8 == 0) { e->ch = 'S'; e->fg = RGB(255,255,255); str_cpy(e->name, "Seraphim"); e->hp = e->max_hp = 300 + g.dlevel*10; e->atk = 90; e->def = 40; e->xp = 800; e->behavior = B_FAST; }
+                else if(m8 == 1) { e->ch = 'N'; e->fg = RGB(0,0,0); str_cpy(e->name, "Nephilim"); e->hp = e->max_hp = 400 + g.dlevel*10; e->atk = 100; e->def = 50; e->xp = 900; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
+                else if(m8 == 2) { e->ch = 'J'; e->fg = RGB(200,200,50); str_cpy(e->name, "Juggernaut"); e->hp = e->max_hp = 600 + g.dlevel*12; e->atk = 120; e->def = 60; e->xp = 1200; e->behavior = B_SLUGGISH; }
+                else { e->ch = 'E'; e->fg = RGB(255,100,255); str_cpy(e->name, "Eldritch God"); e->hp = e->max_hp = 500 + g.dlevel*12; e->atk = 110; e->def = 45; e->xp = 1500; e->behavior = B_NORMAL; e->special_ability = ABILITY_BREATHE_FIRE; }
             }
             
             if(e->behavior != B_SHOPKEEPER) {
@@ -875,7 +882,7 @@ void generate_map() {
     get_player()->x = cx;
     get_player()->y = cy;
     
-    if(g.dlevel % 10 == 0 && g.dlevel != 40) {
+    if(g.dlevel % 10 == 0 && g.dlevel != 50) {
         g.stair_x = lcx;
         g.stair_y = lcy;
         g.map[lcy][lcx].ch = '>';
@@ -890,18 +897,18 @@ void generate_map() {
                 break;
             }
         }
-    } else if(g.dlevel == 40) {
+    } else if(g.dlevel == 50) {
         g.stair_x = -1;
         g.stair_y = -1;
         for(int i=1; i<MAX_ENTITIES; i++) {
             if(!g.entities[i].active) {
                 Entity* e = &g.entities[i];
                 e->active = 1; e->x = lcx; e->y = lcy;
-                e->ch = '&'; e->fg = C_ASTAROTH; str_cpy(e->name, "Astaroth the Fallen");
-                e->hp = e->max_hp = 800; e->atk = 50; e->def = 30; e->xp = 10000;
+                e->ch = '&'; e->fg = C_ASTAROTH; str_cpy(e->name, "True Astaroth");
+                e->hp = e->max_hp = 1500; e->atk = 100; e->def = 60; e->xp = 25000;
                 e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON;
-                if(g.difficulty == 1) { e->max_hp = 1200; e->atk = 70; }
-                else if(g.difficulty == 2) { e->max_hp = 1600; e->atk = 90; e->def = 45; }
+                if(g.difficulty == 1) { e->max_hp = 2200; e->atk = 140; }
+                else if(g.difficulty == 2) { e->max_hp = 3000; e->atk = 180; e->def = 80; }
                 e->hp = e->max_hp;
                 break;
             }
@@ -981,7 +988,8 @@ void generate_map() {
     else if(g.dlevel >= 16 && g.dlevel <= 20) { cur_wall = RGB(180, 40, 20); cur_floor = RGB(80, 20, 10); } // Inferno
     else if(g.dlevel >= 21 && g.dlevel <= 25) { cur_wall = RGB(70, 20, 120); cur_floor = RGB(30, 10, 50); } // Void
     else if(g.dlevel >= 26 && g.dlevel <= 30) { cur_wall = RGB(220, 180, 60); cur_floor = RGB(40, 80, 100); } // Celestial Sanctuary
-    else if(g.dlevel >= 31) { cur_wall = RGB(20, 0, 40); cur_floor = RGB(10, 0, 20); } // Abyss
+    else if(g.dlevel >= 31 && g.dlevel <= 40) { cur_wall = RGB(20, 0, 40); cur_floor = RGB(10, 0, 20); } // Abyss
+    else if(g.dlevel >= 41) { cur_wall = RGB(255, 255, 255); cur_floor = RGB(200, 230, 255); } // True Sanctuary
     for(int y=0; y<H; y++) {
         for(int x=0; x<W; x++) {
             if(g.map[y][x].ch == '#') g.map[y][x].fg = cur_wall;
@@ -2270,8 +2278,8 @@ void draw_game(HDC hdc) {
         SetTextColor(memDC, RGB(100, 200, 255));
         TextOutA(memDC, 20, y, "-- Lore --", 10); y += char_h;
         SetTextColor(memDC, RGB(180, 180, 180));
-        TextOutA(memDC, 20, y, "The Caverns of Chaos stretch ten levels deep.", 46); y += char_h;
-        TextOutA(memDC, 20, y, "At their heart lurks the Chaos God Andor Drakon.", 49); y += char_h;
+        TextOutA(memDC, 20, y, "The Caverns of Chaos stretch fifty levels deep.", 47); y += char_h;
+        TextOutA(memDC, 20, y, "At their heart lurks the True Astaroth.", 39); y += char_h;
         TextOutA(memDC, 20, y, "Descend the stairs '>' to reach him. Defeat him to win.", 55); y += char_h;
         y += 10;
         SetTextColor(memDC, RGB(255, 255, 0));
