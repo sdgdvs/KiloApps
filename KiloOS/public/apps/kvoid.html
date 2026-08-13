@@ -82,6 +82,7 @@
             font-weight: bold;
             color: #555;
         }
+        .inv-item { color: #fff; margin-left: 15px; }
         .has-key { color: #fff; text-shadow: 0 0 5px #fff; }
         .key-red.has-key { color: #f55; text-shadow: 0 0 5px #f00; }
         .key-green.has-key { color: #5f5; text-shadow: 0 0 5px #0f0; }
@@ -106,13 +107,14 @@
             <span id="key-r" class="key-red" style="margin-left:10px;">[RED]</span>
             <span id="key-g" class="key-green" style="margin-left:10px;">[GREEN]</span>
             <span id="key-b" class="key-blue" style="margin-left:10px;">[BLUE]</span>
+            <span class="inv-item">EMP: <span id="emp-val">0</span></span>
         </div>
         <div id="canvas-wrapper">
             <canvas id="gameCanvas" width="640" height="480"></canvas>
             <div class="scanlines"></div>
             <div class="crt-overlay"></div>
         </div>
-        <div id="message">Use WASD or Arrow Keys to move.</div>
+        <div id="message">Use WASD to move. Space to use EMP.</div>
     </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -224,6 +226,30 @@
                 }
             }
 
+            for (let i = 0; i < 5; i++) {
+                let placed = false;
+                while (!placed) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
+                        map[ry][rx] = 11; // Locker
+                        placed = true;
+                    }
+                }
+            }
+
+            for (let i = 0; i < 3; i++) {
+                let placed = false;
+                while (!placed) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
+                        map[ry][rx] = 12; // EMP
+                        placed = true;
+                    }
+                }
+            }
+
             aliens = [];
             for (let i = 0; i < 4; i++) {
                 let placed = false;
@@ -231,7 +257,7 @@
                     let rx = Math.floor(Math.random() * COLS);
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 5 || Math.abs(ry - player.y) > 5)) {
-                        aliens.push({x: rx, y: ry, state: 'patrol'});
+                        aliens.push({x: rx, y: ry, state: 'patrol', stunTimer: 0});
                         placed = true;
                     }
                 }
@@ -243,11 +269,14 @@
         let battery = 100.0;
         let isDead = false;
         let keys = { r: false, g: false, b: false };
+        let emps = 0;
 
         function updateInventoryDisplay() {
             document.getElementById('key-r').classList.toggle('has-key', keys.r);
             document.getElementById('key-g').classList.toggle('has-key', keys.g);
             document.getElementById('key-b').classList.toggle('has-key', keys.b);
+            document.getElementById('emp-val').innerText = emps;
+            document.getElementById('emp-val').style.color = emps > 0 ? '#0ff' : '#555';
         }
 
         function updateStatsDisplay() {
@@ -316,6 +345,22 @@
                         ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 4, 8, 8);
                         ctx.fillStyle = map[y][x] === 9 ? '#0f0' : '#222';
                         ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 5, 6, 6);
+                    } else if (map[y][x] === 11) {
+                        // Locker
+                        ctx.fillStyle = '#050505';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = '#666';
+                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        ctx.fillStyle = '#222';
+                        ctx.fillRect(x * TILE_SIZE + TILE_SIZE/2 - 1, y * TILE_SIZE + 2, 2, TILE_SIZE - 4);
+                    } else if (map[y][x] === 12) {
+                        // EMP
+                        ctx.fillStyle = '#050505';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = '#0ff';
+                        ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 6, 6, 4);
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(x * TILE_SIZE + 7, y * TILE_SIZE + 6, 2, 4);
                     } else {
                         ctx.fillStyle = '#050505';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -339,6 +384,13 @@
             ctx.shadowBlur = 10;
             ctx.shadowColor = '#f0f';
             for (let a of aliens) {
+                if (a.state === 'stunned') {
+                    ctx.fillStyle = '#55f';
+                    ctx.shadowColor = '#55f';
+                } else {
+                    ctx.fillStyle = '#f0f';
+                    ctx.shadowColor = '#f0f';
+                }
                 ctx.beginPath();
                 ctx.arc(a.x * TILE_SIZE + TILE_SIZE / 2, a.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
                 ctx.fill();
@@ -355,9 +407,19 @@
 
         function updateAliens() {
             if (isDead) return;
+            let hidden = (map[player.y][player.x] === 11);
+            if (hidden) {
+                showMessage("HIDDEN IN LOCKER.", "#888");
+            }
             for (let a of aliens) {
+                if (a.state === 'stunned') {
+                    a.stunTimer--;
+                    if (a.stunTimer <= 0) a.state = 'patrol';
+                    continue;
+                }
+
                 let dist = Math.abs(a.x - player.x) + Math.abs(a.y - player.y);
-                let canSee = dist <= 6;
+                let canSee = dist <= 6 && !hidden;
                 a.state = canSee ? 'chase' : 'patrol';
 
                 let dx = 0, dy = 0;
@@ -388,14 +450,14 @@
                     let ny = a.y + dy;
                     if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
                         let target = map[ny][nx];
-                        if (target === 0 || (target >= 6 && target <= 8)) {
+                        if (target === 0 || (target >= 6 && target <= 8) || target === 11 || target === 12) {
                             a.x = nx;
                             a.y = ny;
                         }
                     }
                 }
                 
-                if (a.x === player.x && a.y === player.y) {
+                if (a.x === player.x && a.y === player.y && !hidden) {
                     die("CAUGHT BY ALIEN. YOU ARE DEAD.");
                     return;
                 }
@@ -452,7 +514,7 @@
                     draw();
                 } else if (target === 10) {
                     showMessage("TERMINAL ALREADY ACCESSED.", "#555");
-                } else if (target === 0 || (target >= 6 && target <= 8)) {
+                } else if (target === 0 || (target >= 6 && target <= 8) || target === 11 || target === 12) {
                     if (target >= 6 && target <= 8) {
                         if (target === 6) { keys.r = true; showMessage("PICKED UP RED KEYCARD.", "#f00"); }
                         if (target === 7) { keys.g = true; showMessage("PICKED UP GREEN KEYCARD.", "#0f0"); }
@@ -460,16 +522,22 @@
                         map[newY][newX] = 0;
                         updateInventoryDisplay();
                     }
+                    if (target === 12) {
+                        emps++;
+                        showMessage("PICKED UP EMP CHARGE.", "#0ff");
+                        map[newY][newX] = 0;
+                        updateInventoryDisplay();
+                    }
                     player.x = newX;
                     player.y = newY;
                     for (let a of aliens) {
-                        if (a.x === player.x && a.y === player.y) {
+                        if (a.x === player.x && a.y === player.y && map[player.y][player.x] !== 11) {
                             die("CAUGHT BY ALIEN. YOU ARE DEAD.");
                             return;
                         }
                     }
                     oxygen -= 0.2;
-                    if (target === 0) showMessage("Use WASD or Arrow Keys to move.");
+                    if (target === 0) showMessage("Use WASD to move. Space to use EMP.");
                     if (oxygen <= 0) {
                         oxygen = 0;
                         updateStatsDisplay();
@@ -503,6 +571,20 @@
                 case 'd':
                 case 'D':
                     movePlayer(1, 0);
+                    break;
+                case ' ':
+                    if (emps > 0) {
+                        emps--;
+                        showMessage("EMP DEPLOYED. ALIENS STUNNED.", "#0ff");
+                        for (let a of aliens) {
+                            if (Math.abs(a.x - player.x) + Math.abs(a.y - player.y) <= 8) {
+                                a.state = 'stunned';
+                                a.stunTimer = 10;
+                            }
+                        }
+                        updateInventoryDisplay();
+                        draw();
+                    }
                     break;
             }
         });

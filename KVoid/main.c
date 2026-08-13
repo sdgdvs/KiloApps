@@ -25,6 +25,7 @@ int isDead = 0;
 int hasRedKey = 0;
 int hasGreenKey = 0;
 int hasBlueKey = 0;
+int emps = 0;
 
 typedef struct {
     int x, y, w, h;
@@ -35,6 +36,7 @@ int roomCount = 0;
 
 typedef struct {
     int x, y, state;
+    int stunTimer;
 } Alien;
 
 Alien aliens[5];
@@ -141,6 +143,28 @@ void GenerateMap() {
         }
     }
 
+    for (int i = 0; i < 5; i++) {
+        while (1) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
+                map[ry][rx] = 11; // Locker
+                break;
+            }
+        }
+    }
+
+    for (int i = 0; i < 3; i++) {
+        while (1) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
+                map[ry][rx] = 12; // EMP
+                break;
+            }
+        }
+    }
+
     alienCount = 0;
     for (int i = 0; i < 4; i++) {
         while (1) {
@@ -150,6 +174,7 @@ void GenerateMap() {
                 aliens[alienCount].x = rx;
                 aliens[alienCount].y = ry;
                 aliens[alienCount].state = 0;
+                aliens[alienCount].stunTimer = 0;
                 alienCount++;
                 break;
             }
@@ -178,9 +203,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 alienTick++;
                 if (alienTick >= 12) { // 600ms
                     alienTick = 0;
+                    int hidden = (map[playerY][playerX] == 11);
+                    if (hidden && sysMsg[0] == '\0') {
+                        lstrcpy(sysMsg, "HIDDEN IN LOCKER.");
+                        msgTimer = 20;
+                    }
                     for (int i = 0; i < alienCount; i++) {
+                        if (aliens[i].state == 2) {
+                            aliens[i].stunTimer--;
+                            if (aliens[i].stunTimer <= 0) aliens[i].state = 0;
+                            continue;
+                        }
+
                         int dist = abs(aliens[i].x - playerX) + abs(aliens[i].y - playerY);
-                        if (dist <= 6) aliens[i].state = 1;
+                        if (dist <= 6 && !hidden) aliens[i].state = 1;
                         else aliens[i].state = 0;
                         
                         int dx = 0, dy = 0;
@@ -215,14 +251,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             int ny = aliens[i].y + dy;
                             if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
                                 int target = map[ny][nx];
-                                if (target == 0 || (target >= 6 && target <= 8)) {
+                                if (target == 0 || (target >= 6 && target <= 8) || target == 11 || target == 12) {
                                     aliens[i].x = nx;
                                     aliens[i].y = ny;
                                 }
                             }
                         }
                         
-                        if (aliens[i].x == playerX && aliens[i].y == playerY) {
+                        if (aliens[i].x == playerX && aliens[i].y == playerY && !hidden) {
                             isDead = 1;
                             lstrcpy(sysMsg, "CAUGHT BY ALIEN. YOU ARE DEAD.");
                             msgTimer = 100;
@@ -311,6 +347,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         FillRect(hdcMem, &trIn, tcInner);
                         DeleteObject(tc);
                         DeleteObject(tcInner);
+                    } else if (map[y][x] == 11) {
+                        FillRect(hdcMem, &tileRect, hFloorBrush);
+                        HBRUSH lc = CreateSolidBrush(RGB(100, 100, 100));
+                        HBRUSH lcc = CreateSolidBrush(RGB(30, 30, 30));
+                        RECT lr = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, x * TILE_SIZE + 14, y * TILE_SIZE + 14 + UI_HEIGHT};
+                        FillRect(hdcMem, &lr, lc);
+                        RECT lrc = {x * TILE_SIZE + 7, y * TILE_SIZE + 2 + UI_HEIGHT, x * TILE_SIZE + 9, y * TILE_SIZE + 14 + UI_HEIGHT};
+                        FillRect(hdcMem, &lrc, lcc);
+                        DeleteObject(lc);
+                        DeleteObject(lcc);
+                    } else if (map[y][x] == 12) {
+                        FillRect(hdcMem, &tileRect, hFloorBrush);
+                        HBRUSH ec = CreateSolidBrush(RGB(0, 255, 255));
+                        HBRUSH ecc = CreateSolidBrush(RGB(255, 255, 255));
+                        RECT er = {x * TILE_SIZE + 5, y * TILE_SIZE + 6 + UI_HEIGHT, x * TILE_SIZE + 11, y * TILE_SIZE + 10 + UI_HEIGHT};
+                        FillRect(hdcMem, &er, ec);
+                        RECT erc = {x * TILE_SIZE + 7, y * TILE_SIZE + 6 + UI_HEIGHT, x * TILE_SIZE + 9, y * TILE_SIZE + 10 + UI_HEIGHT};
+                        FillRect(hdcMem, &erc, ecc);
+                        DeleteObject(ec);
+                        DeleteObject(ecc);
                     } else {
                         FillRect(hdcMem, &tileRect, hFloorBrush);
                     }
@@ -318,16 +374,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
             // Draw aliens
-            HBRUSH hAlienBrush = CreateSolidBrush(RGB(255, 0, 255));
-            SelectObject(hdcMem, hAlienBrush);
             SelectObject(hdcMem, GetStockObject(NULL_PEN));
             int r = TILE_SIZE / 3;
             for (int i = 0; i < alienCount; i++) {
+                HBRUSH hAlienBrush;
+                if (aliens[i].state == 2) {
+                    hAlienBrush = CreateSolidBrush(RGB(85, 85, 255));
+                } else {
+                    hAlienBrush = CreateSolidBrush(RGB(255, 0, 255));
+                }
+                SelectObject(hdcMem, hAlienBrush);
                 int acx = aliens[i].x * TILE_SIZE + TILE_SIZE / 2;
                 int acy = aliens[i].y * TILE_SIZE + TILE_SIZE / 2 + UI_HEIGHT;
                 Ellipse(hdcMem, acx - r, acy - r, acx + r, acy + r);
+                DeleteObject(hAlienBrush);
             }
-            DeleteObject(hAlienBrush);
 
             // Draw player
             SelectObject(hdcMem, hPlayerBrush);
@@ -350,6 +411,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (hasRedKey) lstrcat(keyText, "[RED] ");
             if (hasGreenKey) lstrcat(keyText, "[GREEN] ");
             if (hasBlueKey) lstrcat(keyText, "[BLUE] ");
+            char empText[32];
+            wsprintf(empText, "  EMP: %d", emps);
+            lstrcat(keyText, empText);
             SetTextColor(hdcMem, RGB(170, 170, 170));
             TextOut(hdcMem, 350, 5, keyText, lstrlen(keyText));
 
@@ -419,6 +483,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 case 'D':
                     newX++;
                     break;
+                case VK_SPACE:
+                    if (emps > 0) {
+                        emps--;
+                        lstrcpy(sysMsg, "EMP DEPLOYED. ALIENS STUNNED.");
+                        msgTimer = 60;
+                        for (int i = 0; i < alienCount; i++) {
+                            int dist = abs(aliens[i].x - playerX) + abs(aliens[i].y - playerY);
+                            if (dist <= 8) {
+                                aliens[i].state = 2; // stunned
+                                aliens[i].stunTimer = 10;
+                            }
+                        }
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                    break;
             }
             
             if (newX >= 0 && newX < COLS && newY >= 0 && newY < ROWS) {
@@ -466,7 +545,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     lstrcpy(sysMsg, "TERMINAL ALREADY ACCESSED.");
                     msgTimer = 40;
                     InvalidateRect(hwnd, NULL, FALSE);
-                } else if (target == 0 || (target >= 6 && target <= 8)) {
+                } else if (target == 0 || (target >= 6 && target <= 8) || target == 11 || target == 12) {
                     if (target >= 6 && target <= 8) {
                         if (target == 6) { hasRedKey = 1; lstrcpy(sysMsg, "PICKED UP RED KEYCARD."); }
                         if (target == 7) { hasGreenKey = 1; lstrcpy(sysMsg, "PICKED UP GREEN KEYCARD."); }
@@ -474,10 +553,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         map[newY][newX] = 0;
                         msgTimer = 40;
                     }
+                    if (target == 12) {
+                        emps++;
+                        lstrcpy(sysMsg, "PICKED UP EMP CHARGE.");
+                        map[newY][newX] = 0;
+                        msgTimer = 40;
+                    }
                     playerX = newX;
                     playerY = newY;
                     for (int i = 0; i < alienCount; i++) {
-                        if (aliens[i].x == playerX && aliens[i].y == playerY) {
+                        if (aliens[i].x == playerX && aliens[i].y == playerY && map[playerY][playerX] != 11) {
                             isDead = 1;
                             lstrcpy(sysMsg, "CAUGHT BY ALIEN. YOU ARE DEAD.");
                             msgTimer = 100;
