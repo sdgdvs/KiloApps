@@ -262,6 +262,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (LOWORD(wParam) == BTN_INCUBATE) {
                 state = 1;
                 add_log("The egg hatched! A baby dragon emerged.");
+                Beep(150, 100); Beep(100, 200); Beep(80, 200);
                 ShowWindow(btn_incubate, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW);
                 ShowWindow(btn_play, SW_SHOW);
@@ -283,6 +284,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     energy = energy - 5;
                     if (energy < 0) energy = 0;
                     add_log("You fed the dragon. It looks satisfied.");
+                    Beep(400, 50); Beep(600, 50);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -459,6 +461,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char msg[128];
                     sprintf(msg, "A wild enemy dragon appears! (HP: %d)", bat_enemy_hp);
                     add_log(msg);
+                    Beep(150, 100); Beep(100, 200); Beep(80, 200);
                     
                     ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
                     ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
@@ -497,6 +500,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (e_def) dmg /= 2;
                             bat_enemy_hp -= dmg;
                             char m[128]; sprintf(m, "You hit the enemy for %d damage!", dmg); add_log(m);
+                            Beep(800, 50); Beep(100, 50);
                         } else {
                             add_log("You missed!");
                         }
@@ -538,6 +542,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 if (p_def) dmg /= 2;
                                 bat_player_hp -= dmg;
                                 char m[128]; sprintf(m, "Enemy hit you for %d damage! (HP: %d/%d)", dmg, bat_player_hp, bat_player_max); add_log(m);
+                                Beep(800, 50); Beep(100, 50);
                             } else {
                                 add_log("Enemy missed!");
                             }
@@ -612,6 +617,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     hunger += 50; if (hunger > 100) hunger = 100;
                     energy += 20; if (energy > 100) energy = 100;
                     add_log("Bought Premium Meat! Hunger +50, Energy +20.");
+                    Beep(400, 50); Beep(600, 50);
                 } else { add_log("Not enough gold."); }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -661,6 +667,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (strength > 10) {
                             happiness += 10; if (happiness>100) happiness=100;
                             add_log("Your dragon roared and scared it away!");
+                            Beep(150, 100); Beep(100, 200); Beep(80, 200);
                         } else {
                             energy -= 20; if (energy<0) energy=0;
                             happiness -= 10; if (happiness<0) happiness=0;

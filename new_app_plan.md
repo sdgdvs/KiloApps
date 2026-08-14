@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KDragon (Fantasy creature-raising sim)
-**Phase:** 13 (next to do)
+**Phase:** 14 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KDragon directory (`KDragon/`), create web HTML skeleton (`KiloOS/public/apps/kdragon.html`), register in App.jsx.
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Special abilities in combat based on elemental type.
 - [x] Phase 11: Shop system (buy premium food or training gear with hoarded gold).
 - [x] Phase 12: Random events (illness, wild encounters) requiring player intervention.
-- [ ] Phase 13: Sound Effects — roars, munching, battle clashes (Web Audio / Win32 Beep).
+- [x] Phase 13: Sound Effects — roars, munching, battle clashes (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Dragon Master's Guide — How-to-play, stat explanations, item codex.
 
 ### How to execute the next phase:
