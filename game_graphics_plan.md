@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KQuest
 - KSpace
 - KPac
 - KSnake
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTowers
 - KWords
 - KReversi
+- KQuest
 ## Completed Work Log
+
+- **KQuest (Loop 4):** Implemented highly detailed visual variations for armor and weapons based on equipment tier (wood/leather/gold/diamond hue palettes), distinct visual overlays for status effects (frozen/poisoned/burning shapes and particles), and a dynamic kinematically animated combat swing arc with a motion blur trail for melee attacks in both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).
 
 - **KReversi (Loop 4):** FAILED (Subagent timed out after 8 minutes).
 
