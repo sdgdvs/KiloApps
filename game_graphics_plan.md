@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KChess
 - KPong
 - KMines
 - KAsteroids
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFarm
 - KAlchemy
 - KRogue
+- KChess
 ## Completed Work Log
+
+- **KChess (Loop 5):** Implemented highly polished visual effects including 3D beveled borders for the move history/captured pieces area, a dynamic animated trailing path overlay that visualizes the last move taken with a fading golden hue, and a procedural particle burst of dust/wood splinters when a piece is placed down heavily or captures another piece in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
 - **KRogue (Loop 5):** Implemented highly polished visual effects including a textured parchment/leather inventory background and embossed health/mana bars, procedural blood splatter decals on floor tiles that slowly fade over time, and a dynamic 3D drop-shadow cast by characters to emphasize physical presence in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
