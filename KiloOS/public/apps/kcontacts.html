@@ -44,6 +44,7 @@
   .sidebar {
     width: 380px;
     min-width: 300px;
+    flex-shrink: 0;
     background-color: #111827;
     border-right: 1px solid var(--border-color);
     display: flex;
@@ -396,7 +397,7 @@
 
   .form-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
   }
 
