@@ -33,6 +33,8 @@
     height: 100vh;
     display: flex;
     overflow: hidden;
+    min-width: 600px;
+    min-height: 400px;
   }
 
   /* PIN Lock Overlay */
@@ -359,10 +361,10 @@
     <div class="sidebar-header">
       <div class="brand-title">
         <span>📖</span> KJournal
-        <span style="font-size: 11px; color: var(--accent-gold); font-weight: bold; margin-left: 8px; background: rgba(229, 192, 123, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--accent-gold); cursor: pointer;" onclick="openModal('helpModal')">Press 'H' for Help</span>
+        <span style="font-size: 11px; color: var(--accent-gold); font-weight: bold; margin-left: 8px; background: rgba(229, 192, 123, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--accent-gold); cursor: pointer;" onclick="openModal('helpModal')">Press 'H' or F1 for Help</span>
       </div>
       <div>
-        <button class="icon-btn" onclick="openModal('helpModal')" title="Help (Press h)">❓</button>
+        <button class="icon-btn" onclick="openModal('helpModal')" title="Help (Press H or F1)">❓</button>
         <button class="icon-btn" onclick="openAnalyticsModal()" title="Analytics & Streaks">📊</button>
         <button class="icon-btn" onclick="openSettingsModal()" title="Settings & Security">⚙️</button>
         <button class="icon-btn" onclick="lockApp()" id="lockAppBtn" title="Lock Journal" style="display:none;">🔒</button>
@@ -432,7 +434,7 @@
     </div>
 
     <div class="editor-container">
-      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' for Help)" oninput="updateEditorStats()"></textarea>
+      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' or F1 for Help)" oninput="updateEditorStats()"></textarea>
       <div class="editor-footer">
         <div id="editorStats">0 words | 0 characters</div>
         <div id="saveStatus">Saved locally</div>
@@ -561,7 +563,7 @@
     <div class="modal-body" style="font-size: 14px; line-height: 1.6;">
       <p><strong>Keyboard Shortcuts:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
-        <li><strong>Press 'h'</strong> to open this help menu.</li>
+        <li><strong>Press 'H' or F1</strong> to open this help menu.</li>
         <li><strong>Press 'Esc'</strong> to close any open modal.</li>
       </ul>
       <p><strong>Features:</strong></p>
@@ -1247,6 +1249,10 @@
   window.onload = init;
 
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'F1') {
+      e.preventDefault();
+      openModal('helpModal');
+    }
     if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
       if (e.key.toLowerCase() === 'h') {
         e.preventDefault();

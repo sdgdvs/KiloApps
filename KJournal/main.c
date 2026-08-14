@@ -22,6 +22,8 @@ static const char *MOOD_LIST[] = {
 };
 #define NUM_MOODS 6
 
+void show_help();
+
 void clear_screen() {
 #ifdef _WIN32
     system("cls");
@@ -113,10 +115,12 @@ void security_settings_menu() {
             printf("1. Change PIN\n");
             printf("2. Disable PIN Lock\n");
             printf("3. Return to Main Menu\n");
+            printf("H. Help / Instructions\n");
         } else {
             printf("Status: PIN Lock is DISABLED\n\n");
             printf("1. Enable / Set PIN Lock\n");
             printf("2. Return to Main Menu\n");
+            printf("H. Help / Instructions\n");
         }
         printf("=========================================\n");
         printf("Choice: ");
@@ -162,6 +166,8 @@ void security_settings_menu() {
                 }
                 printf("Press Enter to continue...");
                 getchar();
+            } else if (choice[0] == 'h' || choice[0] == 'H') {
+                show_help();
             } else if (choice[0] == '3') {
                 break;
             }
@@ -182,6 +188,8 @@ void security_settings_menu() {
                 }
                 printf("Press Enter to continue...");
                 getchar();
+            } else if (choice[0] == 'h' || choice[0] == 'H') {
+                show_help();
             } else if (choice[0] == '2') {
                 break;
             }
@@ -414,7 +422,7 @@ void calendar_view() {
         printf("\n-----------------------------------------\n");
         printf("(* indicates date has entry)\n\n");
         printf("Options:\n");
-        printf(" [P] Prev Month   [N] Next Month   [V] View Date Entry   [B] Back\n");
+        printf(" [P] Prev Month   [N] Next Month   [V] View Date Entry   [H] Help   [B] Back\n");
         printf("Choice: ");
 
         char opt[32];
@@ -452,6 +460,8 @@ void calendar_view() {
                     getchar();
                 }
             }
+        } else if (opt[0] == 'h' || opt[0] == 'H') {
+            show_help();
         } else if (opt[0] == 'b' || opt[0] == 'B') {
             break;
         }
@@ -475,6 +485,7 @@ void search_and_tags_menu() {
         printf("2. Search by #Hashtag\n");
         printf("3. Filter by Mood\n");
         printf("4. Return to Main Menu\n");
+        printf("H. Help / Instructions\n");
         printf("=========================================\n");
         printf("Choice: ");
 
@@ -604,6 +615,8 @@ void search_and_tags_menu() {
                     getchar();
                 }
             }
+        } else if (choice[0] == 'h' || choice[0] == 'H') {
+            show_help();
         } else if (choice[0] == '4') {
             break;
         }
@@ -702,6 +715,7 @@ void export_import_menu() {
         printf("1. Export to Markdown (kjournal_export.md)\n");
         printf("2. Export to JSON (kjournal_export.json)\n");
         printf("3. Return to Main Menu\n");
+        printf("H. Help / Instructions\n");
         printf("=========================================\n");
         printf("Choice: ");
 
@@ -753,6 +767,8 @@ void export_import_menu() {
             free(entries);
             printf("Press Enter to continue...");
             getchar();
+        } else if (choice[0] == 'h' || choice[0] == 'H') {
+            show_help();
         } else if (choice[0] == '3') {
             break;
         }

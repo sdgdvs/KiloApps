@@ -1,3 +1,4 @@
+#include <math.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -46,11 +47,11 @@ unsigned int initialSeed = 999;
 
 typedef struct { float x, y, active, dx, dy, type; int hp, maxHp, timer, cloaked; } Ent;
 typedef struct { float x, y, speed; int size, layer; } Star;
-typedef struct { float x, y, vx, vy; int life, maxLife; COLORREF color; } Particle;
+typedef struct { float x, y, vx, vy; int life, maxLife; COLORREF color; int wType; } Particle;
 typedef struct { int score, wave, mode; } LeaderEntry;
 
 typedef struct { float x, y, r, maxR, speed, alpha; COLORREF color; int life; } Shockwave;
-typedef struct { float x, y, vx, vy, size, rot, vrot, life, decay; COLORREF color; } Debris;
+typedef struct { float x, y, vx, vy, size, rot, vrot, life, decay; COLORREF color; int shape; } Debris;
 typedef struct { float x, y, r, maxR, alpha; COLORREF color; int life; } ShieldRipple;
 typedef struct { float x, y, size; int life, maxLife; COLORREF color; } MuzzleFlash;
 typedef struct { float x, y, r, vx, vy, phase; COLORREF col1; } Nebula;
@@ -1027,10 +1028,10 @@ void Update() {
                     if (!hitTurret && b[i].x >= bossX && b[i].x <= bossX + 90.0f && b[i].y >= bossY && b[i].y <= bossY + 60.0f) {
                         b[i].active = 0.0f;
                         if (IsMothershipShieldActive()) {
-                            AddExplosion(b[i].x, b[i].y, 3, RGB(0, 229, 255)); // Deflector absorbed!
+                            AddWeaponHitParticles(b[i].x, b[i].y, weaponType, RGB(0, 229, 255)); // Deflector absorbed!
                         } else {
                             shotsHit++; bossHp -= (b[i].type == 1.0f) ? 8 : 2;
-                            AddExplosion(b[i].x, b[i].y, 4, RGB(255, 23, 68));
+                            AddWeaponHitParticles(b[i].x, b[i].y, weaponType, RGB(255, 23, 68));
                             if (bossHp <= 0) {
                                 if (bossPhase == 1) {
                                     bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
@@ -1046,7 +1047,7 @@ void Update() {
                     if (b[i].x >= bossX && b[i].x <= bossX + 60.0f && b[i].y >= bossY && b[i].y <= bossY + 50.0f) {
                         b[i].active = 0.0f;
                         shotsHit++; bossHp -= (b[i].type == 1.0f) ? 8 : 2;
-                        AddExplosion(b[i].x, b[i].y, 3, RGB(0, 229, 255));
+                        AddWeaponHitParticles(b[i].x, b[i].y, weaponType, RGB(0, 229, 255));
                         if (bossHp <= 0) {
                             if (bossPhase == 1) {
                                 bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
@@ -1122,7 +1123,7 @@ void Update() {
             if (laserTimer > 0) {
                 if (p.x + 10.0f >= e[i].x && p.x + 10.0f <= e[i].x + ew && p.y > e[i].y) {
                     if (!e[i].cloaked) e[i].hp -= 1;
-                    AddExplosion(p.x + 10.0f, e[i].y + eh/2.0f, 2, RGB(0, 229, 255));
+                    AddWeaponHitParticles(p.x + 10.0f, e[i].y + eh/2.0f, 2, RGB(0, 229, 255));
                 }
             }
 
@@ -1141,7 +1142,7 @@ void Update() {
                     } else {
                         b[j].active = 0.0f;
                         shotsHit++; e[i].hp -= (b[j].type == 1.0f) ? 6 : 1;
-                        AddExplosion(b[j].x, b[j].y, 3, RGB(0, 229, 255));
+                        AddWeaponHitParticles(b[j].x, b[j].y, weaponType, RGB(0, 229, 255));
                     }
                     break;
                 }
