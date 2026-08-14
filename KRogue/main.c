@@ -164,6 +164,14 @@ typedef struct {
 } Particle;
 Particle particles[MAX_PARTICLES];
 
+typedef struct {
+    int active;
+    int x, y;
+    COLORREF color;
+    int life;
+} Decal;
+Decal decals[200];
+
 void spawn_particles(int x, int y, COLORREF color, int count) {
     for(int j=0; j<count; j++) {
         for(int i=0; i<MAX_PARTICLES; i++) {
@@ -1125,6 +1133,16 @@ void gain_xp(Entity* p, int amount) {
 
 void handle_death(Entity* e, Entity* killer) {
     spawn_particles(e->x, e->y, RGB(255,50,50), 15);
+    for(int i=0; i<200; i++) {
+        if(!decals[i].active) {
+            decals[i].active = 1;
+            decals[i].x = e->x;
+            decals[i].y = e->y;
+            decals[i].color = (e->ch == 's') ? RGB(50,150,255) : RGB(150, 10, 10);
+            decals[i].life = 100;
+            break;
+        }
+    }
     e->active = 0;
     char buf[100];
     wsprintfA(buf, "%s dies!", e->name);
@@ -1850,6 +1868,12 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
     int cx = px + char_w / 2;
     int cy = py + char_h / 2;
     
+    HBRUSH shadowB = CreateSolidBrush(RGB(15, 15, 15));
+    HBRUSH oldB = (HBRUSH)SelectObject(memDC, shadowB);
+    Ellipse(memDC, cx - 6, cy + 4, cx + 6, cy + 8);
+    SelectObject(memDC, oldB);
+    DeleteObject(shadowB);
+    
     if (e == get_player() || e->ch == '@') {
         HBRUSH capeB = CreateSolidBrush(RGB(0, 120, 255));
         RECT capeR = { cx - 4, cy - 2, cx + 5, cy + 7 };
@@ -1968,6 +1992,30 @@ void draw_game(HDC hdc) {
                 if(t->visible || t->explored) {
                     draw_tile_gdi(memDC, x, y, t, t->visible);
                     
+                    for(int d=0; d<200; d++) {
+                        if(decals[d].active && decals[d].x == x && decals[d].y == y) {
+                            if(t->visible) decals[d].life--;
+                            if(decals[d].life <= 0) {
+                                decals[d].active = 0;
+                            } else {
+                                int dpx = x * char_w, dpy = y * char_h;
+                                int c_r = GetRValue(decals[d].color);
+                                int c_g = GetGValue(decals[d].color);
+                                int c_b = GetBValue(decals[d].color);
+                                int alpha = decals[d].life;
+                                c_r = (c_r * alpha + 30 * (100 - alpha)) / 100;
+                                c_g = (c_g * alpha + 30 * (100 - alpha)) / 100;
+                                c_b = (c_b * alpha + 30 * (100 - alpha)) / 100;
+                                HBRUSH db = CreateSolidBrush(RGB(c_r, c_g, c_b));
+                                RECT dr = {dpx + 3, dpy + 8, dpx + 7, dpy + 12};
+                                FillRect(memDC, &dr, db);
+                                RECT dr2 = {dpx + 8, dpy + 5, dpx + 10, dpy + 7};
+                                FillRect(memDC, &dr2, db);
+                                DeleteObject(db);
+                            }
+                        }
+                    }
+                    
                     if(t->visible) {
                         Item* it = get_item_at(x, y);
                         if(it) draw_item_gdi(memDC, x, y, it);
@@ -1992,6 +2040,38 @@ void draw_game(HDC hdc) {
         
         wsprintfA(buf, "HP:%d/%d MP:%d/%d ATK:%d DEF:%d LVL:%d XP:%d DLVL:%d GOLD:%d FD:%d", p->hp, p->max_hp, p->mp, p->max_mp, eff_atk, eff_def, p->level, p->xp, g.dlevel, p->gold, p->hunger);
         TextOutA(memDC, 0, H * char_h, buf, str_len(buf));
+        
+        int bar_w = 100, bar_h = 10;
+        int hp_px = 5, py = H * char_h + 20;
+        HBRUSH bg = CreateSolidBrush(RGB(30, 30, 30));
+        RECT bg_r = {hp_px, py, hp_px + bar_w, py + bar_h};
+        FillRect(memDC, &bg_r, bg);
+        int fill_w = (p->max_hp > 0) ? (p->hp * bar_w / p->max_hp) : 0;
+        HBRUSH fg = CreateSolidBrush(RGB(200, 50, 50));
+        RECT fg_r = {hp_px, py, hp_px + fill_w, py + bar_h};
+        FillRect(memDC, &fg_r, fg); DeleteObject(fg);
+        HPEN hl = CreatePen(PS_SOLID, 1, RGB(255,100,100));
+        HPEN sh = CreatePen(PS_SOLID, 1, RGB(100,0,0));
+        HPEN oldP = (HPEN)SelectObject(memDC, hl);
+        MoveToEx(memDC, hp_px, py + bar_h, NULL); LineTo(memDC, hp_px, py); LineTo(memDC, hp_px + fill_w, py);
+        SelectObject(memDC, sh);
+        MoveToEx(memDC, hp_px + fill_w, py, NULL); LineTo(memDC, hp_px + fill_w, py + bar_h); LineTo(memDC, hp_px, py + bar_h);
+        SelectObject(memDC, oldP); DeleteObject(hl); DeleteObject(sh);
+        
+        int mp_px = 120;
+        RECT mbg_r = {mp_px, py, mp_px + bar_w, py + bar_h};
+        FillRect(memDC, &mbg_r, bg); DeleteObject(bg);
+        int mfill_w = (p->max_mp > 0) ? (p->mp * bar_w / p->max_mp) : 0;
+        HBRUSH mfg = CreateSolidBrush(RGB(50, 100, 200));
+        RECT mfg_r = {mp_px, py, mp_px + mfill_w, py + bar_h};
+        FillRect(memDC, &mfg_r, mfg); DeleteObject(mfg);
+        hl = CreatePen(PS_SOLID, 1, RGB(100,150,255));
+        sh = CreatePen(PS_SOLID, 1, RGB(0,0,100));
+        oldP = (HPEN)SelectObject(memDC, hl);
+        MoveToEx(memDC, mp_px, py + bar_h, NULL); LineTo(memDC, mp_px, py); LineTo(memDC, mp_px + mfill_w, py);
+        SelectObject(memDC, sh);
+        MoveToEx(memDC, mp_px + mfill_w, py, NULL); LineTo(memDC, mp_px + mfill_w, py + bar_h); LineTo(memDC, mp_px, py + bar_h);
+        SelectObject(memDC, oldP); DeleteObject(hl); DeleteObject(sh);
         
         char status_str[50] = "";
         if(p->status_effect == STATUS_POISON) str_cpy(status_str, "[POISONED]");
@@ -2050,8 +2130,17 @@ void draw_game(HDC hdc) {
             y += char_h * 2;
         }
     } else if(g.state == 2) { // inventory
-        SetTextColor(memDC, RGB(255,255,255));
-        SetBkColor(memDC, RGB(0,0,0));
+        HBRUSH bg = CreateSolidBrush(RGB(62, 39, 35));
+        RECT bgr = {0, 0, W * char_w, TOTAL_H * char_h};
+        FillRect(memDC, &bgr, bg);
+        DeleteObject(bg);
+        for(int i=0; i<3000; i++) {
+            int rx = rand_range(0, W * char_w);
+            int ry = rand_range(0, TOTAL_H * char_h);
+            SetPixel(memDC, rx, ry, RGB(78, 52, 46));
+        }
+        SetTextColor(memDC, RGB(255,240,200));
+        SetBkMode(memDC, TRANSPARENT);
         TextOutA(memDC, 20, 20, "INVENTORY", 9);
         TextOutA(memDC, 20, 40, "Press 1-4 to unequip, a-z to use/equip. ESC to return.", 54);
         

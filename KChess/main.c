@@ -75,7 +75,7 @@ typedef struct {
     COLORREF color;
     int life;
 } Particle;
-Particle g_particles[64];
+Particle g_particles[128];
 int g_particleCount = 0;
 
 typedef struct {
@@ -84,6 +84,7 @@ typedef struct {
     int active;
     DWORD startTime;
     DWORD duration;
+    int isCapture;
 } SlideAnim;
 SlideAnim g_slide = {0};
 
@@ -176,18 +177,20 @@ static void SaveStatsFreestanding(void) {
     }
 }
 
-static void SpawnCaptureSparks(int px, int py) {
-    COLORREF colors[] = { RGB(245, 158, 11), RGB(239, 68, 68), RGB(254, 240, 138), RGB(255, 255, 255), RGB(56, 189, 248) };
-    for (int i = 0; i < 20; i++) {
-        if (g_particleCount >= 64) break;
+static void SpawnParticles(int px, int py, int isCapture) {
+    COLORREF capColors[] = { RGB(245, 158, 11), RGB(239, 68, 68), RGB(254, 240, 138), RGB(255, 255, 255), RGB(56, 189, 248) };
+    COLORREF dustColors[] = { RGB(210, 180, 140), RGB(180, 150, 100), RGB(139, 69, 19) };
+    int count = isCapture ? 30 : 15;
+    for (int i = 0; i < count; i++) {
+        if (g_particleCount >= 128) break;
         float rx = (float)((my_rand() % 100) - 50) / 10.0f;
         float ry = (float)((my_rand() % 100) - 50) / 10.0f;
         g_particles[g_particleCount].x = (float)px;
         g_particles[g_particleCount].y = (float)py;
         g_particles[g_particleCount].vx = rx;
-        g_particles[g_particleCount].vy = ry - 0.5f;
-        g_particles[g_particleCount].color = colors[my_rand() % 5];
-        g_particles[g_particleCount].life = 20 + my_rand() % 15;
+        g_particles[g_particleCount].vy = ry - (isCapture ? 1.0f : 0.2f);
+        g_particles[g_particleCount].color = isCapture ? capColors[my_rand() % 5] : dustColors[my_rand() % 3];
+        g_particles[g_particleCount].life = (isCapture ? 20 : 10) + my_rand() % 15;
         g_particleCount++;
     }
 }
@@ -1125,6 +1128,7 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     g_slide.curY = g_slide.startY;
     g_slide.startTime = GetTickCount();
     g_slide.duration = 150;
+    g_slide.isCapture = isCaptured;
     g_slide.active = 1;
 
     board[ty][tx] = p;
@@ -1154,7 +1158,6 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     lastMoveSx = sx; lastMoveSy = sy; lastMoveTx = tx; lastMoveTy = ty;
 
     if (isCaptured) {
-        SpawnCaptureSparks(OX + tx * TS + TS / 2, OY + ty * TS + TS / 2);
         MessageBeep(MB_OK);
     } else {
         MessageBeep(MB_OK);
@@ -1283,7 +1286,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             g_hwndMain = hwnd;
             ResetGame();
-            SetTimer(hwnd, 3, 100, NULL); // Blitz timer tick
+            SetTimer(hwnd, 3, 30, NULL); // Blitz timer tick
             break;
         case WM_PAINT: {
             PAINTSTRUCT ps;
@@ -1493,6 +1496,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            if (lastMoveSx != -1 && lastMoveTx != -1) {
+                int fromX = OX + lastMoveSx * TS + TS / 2;
+                int fromY = OY + lastMoveSy * TS + TS / 2;
+                int toX = OX + lastMoveTx * TS + TS / 2;
+                int toY = OY + lastMoveTy * TS + TS / 2;
+                float t = (float)(GetTickCount() % 1500) / 1500.0f;
+                int orbX = (int)(fromX + (toX - fromX) * t);
+                int orbY = (int)(fromY + (toY - fromY) * t);
+
+                HPEN pathPen = CreatePen(PS_DOT, 1, RGB(212, 175, 55));
+                HGDIOBJ oldPenP = SelectObject(memDC, pathPen);
+                MoveToEx(memDC, fromX, fromY, NULL);
+                LineTo(memDC, toX, toY);
+                SelectObject(memDC, oldPenP);
+                DeleteObject(pathPen);
+
+                HBRUSH orbBrush = CreateSolidBrush(RGB(253, 230, 138));
+                HGDIOBJ oldBrushO = SelectObject(memDC, orbBrush);
+                HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+                oldPenP = SelectObject(memDC, nullPen);
+                Ellipse(memDC, orbX - 4, orbY - 4, orbX + 4, orbY + 4);
+                SelectObject(memDC, oldPenP);
+                SelectObject(memDC, oldBrushO);
+                DeleteObject(orbBrush);
+                DeleteObject(nullPen);
+            }
+
             if (hintActive && hintSx != -1 && hintTx != -1) {
                 DrawHintArrow(memDC, hintSx, hintSy, hintTx, hintTy);
             }
@@ -1571,6 +1601,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int pieceCounts[13] = {0};
             for (int r = 0; r < 8; r++) for (int c = 0; c < 8; c++) if (board[r][c] > 0) pieceCounts[board[r][c]]++;
             int initialCounts[] = {0, 8, 2, 2, 2, 1, 1, 8, 2, 2, 2, 1, 1};
+
+            RECT capRc = { 20, 52, W - 20, 127 };
+            HBRUSH capBg = CreateSolidBrush(RGB(30, 20, 15));
+            FillRect(memDC, &capRc, capBg);
+            DeleteObject(capBg);
+            HPEN hlPen = CreatePen(PS_SOLID, 2, RGB(100, 80, 70));
+            HPEN shPen = CreatePen(PS_SOLID, 2, RGB(10, 5, 0));
+            HGDIOBJ oPen = SelectObject(memDC, hlPen);
+            MoveToEx(memDC, capRc.left, capRc.bottom, NULL);
+            LineTo(memDC, capRc.left, capRc.top);
+            LineTo(memDC, capRc.right, capRc.top);
+            SelectObject(memDC, shPen);
+            LineTo(memDC, capRc.right, capRc.bottom);
+            LineTo(memDC, capRc.left, capRc.bottom);
+            SelectObject(memDC, oPen);
+            DeleteObject(hlPen);
+            DeleteObject(shPen);
 
             int wLossVal = 0, bLossVal = 0;
             int capX = 30;
@@ -1772,12 +1819,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DWORD now = GetTickCount();
                     DWORD elapsed = now - g_slide.startTime;
                     if (elapsed >= g_slide.duration) {
+                        SpawnParticles((int)g_slide.targetX, (int)g_slide.targetY, g_slide.isCapture);
                         g_slide.active = 0;
                     } else {
                         float t = (float)elapsed / (float)g_slide.duration;
                         float easeT = 1.0f - (1.0f - t) * (1.0f - t);
                         g_slide.curX = g_slide.startX + (g_slide.targetX - g_slide.startX) * easeT;
-                        g_slide.curY = g_slide.startY + (g_slide.targetY - g_slide.startX) * easeT;
+                        g_slide.curY = g_slide.startY + (g_slide.targetY - g_slide.startY) * easeT;
                     }
                 }
 
@@ -1790,14 +1838,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 3) { // Blitz Clock Tick
                 if (gameMode == 3 && !gameOver) {
                     if (whiteTurn) {
-                        blitzTimeWhite -= 0.1f;
+                        blitzTimeWhite -= 0.03f;
                         if (blitzTimeWhite <= 0.0f) { blitzTimeWhite = 0; gameOver = 1; winner = 2; statsLosses++; SaveStatsFreestanding(); }
                     } else {
-                        blitzTimeBlack -= 0.1f;
+                        blitzTimeBlack -= 0.03f;
                         if (blitzTimeBlack <= 0.0f) { blitzTimeBlack = 0; gameOver = 1; winner = 1; statsWins++; SaveStatsFreestanding(); }
                     }
-                    InvalidateRect(hwnd, NULL, FALSE);
                 }
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         }

@@ -42,10 +42,11 @@
         .bar-container {
             width: 95px; height: 14px; background: #2d3748; border-radius: 7px; overflow: hidden;
             display: inline-block; position: relative; vertical-align: middle; border: 1px solid #4a5568;
+            box-shadow: inset 1px 2px 4px rgba(0,0,0,0.8), inset -1px -1px 2px rgba(255,255,255,0.1);
         }
-        .bar-fill-hp { height: 100%; background: linear-gradient(90deg, #e53e3e, #f56565); transition: width 0.2s; }
-        .bar-fill-mp { height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.2s; }
-        .bar-fill-food { height: 100%; background: linear-gradient(90deg, #dd6b20, #ed8936); transition: width 0.2s; }
+        .bar-fill-hp { height: 100%; background: linear-gradient(90deg, #e53e3e, #f56565); transition: width 0.2s; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3); }
+        .bar-fill-mp { height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.2s; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3); }
+        .bar-fill-food { height: 100%; background: linear-gradient(90deg, #dd6b20, #ed8936); transition: width 0.2s; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3); }
         .bar-text {
             position: absolute; width: 100%; height: 100%; top: 0; left: 0;
             text-align: center; font-size: 10px; line-height: 14px; color: #fff; text-shadow: 1px 1px 2px #000;
@@ -102,6 +103,16 @@
             background: #161b22; border: 2px solid #30363d; border-radius: 12px;
             padding: 20px; width: 620px; max-width: 95%; max-height: 90%; overflow-y: auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        #modal-inventory .modal-card {
+            background: linear-gradient(135deg, #4e342e 0%, #3e2723 100%);
+            border: 2px solid #5d4037;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.8);
+            background-image: repeating-radial-gradient(circle at 0 0, transparent 0, #1a0f0c 10px), repeating-linear-gradient(#3e2723, #3e2723);
+            background-blend-mode: overlay;
+        }
+        #modal-inventory .equip-slot, #modal-inventory .inv-item {
+            background: rgba(0, 0, 0, 0.4); border: 1px solid #5d4037;
         }
         .modal-header {
             font-size: 22px; font-weight: bold; color: #f6ad55; text-align: center; margin-bottom: 14px;
@@ -467,6 +478,7 @@
         let particles = [];
         let floatTexts = [];
         let attackAnims = [];
+        let decals = [];
 
         function addMsg(m, type = 'normal') {
             msgs.push({ text: m, type: type });
@@ -855,6 +867,9 @@
             let bob = Math.sin(frameCount * 0.15) * 1.5;
             let cx = px + TILE / 2, cy = py + TILE / 2 + bob;
 
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+
             if (player.invisible_turns > 0) {
                 ctx.fillStyle = 'rgba(183, 148, 244, 0.4)';
                 ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.fill();
@@ -877,6 +892,14 @@
         function drawMonsterSprite(px, py, type, hp = 10) {
             let cx = px + TILE / 2, cy = py + TILE / 2;
             let bob = Math.sin(frameCount * 0.12 + px) * 1.2;
+
+            if (type !== '&' && type !== 'O' && type !== 'w') {
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+            }
 
             if (type === 'N') {
                 ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fill();
@@ -1008,6 +1031,28 @@
             if (state === 4) {
                 ctx.strokeStyle = '#fc8181'; ctx.lineWidth = 2;
                 ctx.strokeRect(targetX * TILE, targetY * TILE, TILE, TILE);
+            }
+
+            // Decal FX
+            for (let i = decals.length - 1; i >= 0; i--) {
+                let d = decals[i];
+                let distSq = (player.x - d.x)*(player.x - d.x) + (player.y - d.y)*(player.y - d.y);
+                if (map[d.y][d.x] !== '#' && distSq <= 80) {
+                    let alpha = 1.0 - (distSq / 160);
+                    if (alpha > 0) {
+                        ctx.globalAlpha = Math.max(0, (d.life / 100) * alpha);
+                        ctx.fillStyle = d.color;
+                        let px = d.x * TILE, py = d.y * TILE;
+                        ctx.beginPath();
+                        ctx.arc(px + 8, py + 14, 4, 0, Math.PI*2);
+                        ctx.arc(px + 14, py + 10, 2, 0, Math.PI*2);
+                        ctx.arc(px + 6, py + 8, 2, 0, Math.PI*2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+                if (state === 1) d.life -= 0.2;
+                if (d.life <= 0) decals.splice(i, 1);
             }
 
             // Particle FX
@@ -1396,6 +1441,7 @@
                 if (m.hp <= 0) {
                     addParticles(m.x, m.y, '#fc8181', 15);
                     addMsg(`${m.name} dies!`, 'good');
+                    decals.push({x: m.x, y: m.y, color: (m.ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
                     player.xp += 8; total_kills++;
                     if (m.boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }
                     monsters.splice(i, 1);
@@ -1500,6 +1546,7 @@
                             if (monsters[mIdx].hp <= 0) {
                                 addParticles(monsters[mIdx].x, monsters[mIdx].y, '#fc8181', 15);
                                 addMsg(`${monsters[mIdx].name} dies!`, 'good');
+                                decals.push({x: monsters[mIdx].x, y: monsters[mIdx].y, color: (monsters[mIdx].ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
                                 player.xp += 8; total_kills++;
                                 if (monsters[mIdx].boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }
                                 monsters.splice(mIdx, 1);

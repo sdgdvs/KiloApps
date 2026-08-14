@@ -238,19 +238,20 @@
       }
   }
 
-  function spawnCaptureSparks(px, py) {
-      for (let i = 0; i < 22; i++) {
+  function spawnCaptureSparks(px, py, isCapture) {
+      let count = isCapture ? 30 : 15;
+      for (let i = 0; i < count; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const speed = 1.5 + Math.random() * 4.5;
-          const colors = ['#f59e0b', '#ef4444', '#fef08a', '#ffffff', '#38bdf8'];
+          const speed = isCapture ? (1.5 + Math.random() * 4.5) : (0.5 + Math.random() * 2.5);
+          const colors = isCapture ? ['#f59e0b', '#ef4444', '#fef08a', '#ffffff', '#38bdf8'] : ['#d2b48c', '#a0522d', '#cd853f'];
           particles.push({
               x: px, y: py,
               vx: Math.cos(angle) * speed,
-              vy: Math.sin(angle) * speed - 0.5,
+              vy: Math.sin(angle) * speed - (isCapture ? 0.5 : 0.2),
               color: colors[Math.floor(Math.random() * colors.length)],
-              size: 2.5 + Math.random() * 3.5,
+              size: (isCapture ? 2.5 : 1.5) + Math.random() * 3.5,
               life: 1.0,
-              decay: 0.03 + Math.random() * 0.04
+              decay: (isCapture ? 0.03 : 0.05) + Math.random() * 0.04
           });
       }
   }
@@ -874,7 +875,8 @@
           toX: OX + tx * TS + TS / 2,
           toY: OY + ty * TS + TS / 2,
           startTime: performance.now(),
-          duration: 150
+          duration: 150,
+          isCapture: isCaptured
       };
 
       board[ty][tx] = p;
@@ -904,7 +906,6 @@
       lastMoveSx = sx; lastMoveSy = sy; lastMoveTx = tx; lastMoveTy = ty;
 
       if (isCaptured) {
-          spawnCaptureSparks(OX + tx * TS + TS / 2, OY + ty * TS + TS / 2);
           playSound('capture');
       } else {
           playSound('move');
@@ -1668,6 +1669,32 @@
           }
       }
 
+      if (lastMoveSx !== -1 && lastMoveTx !== -1) {
+          let fromX = OX + lastMoveSx * TS + TS / 2;
+          let fromY = OY + lastMoveSy * TS + TS / 2;
+          let toX = OX + lastMoveTx * TS + TS / 2;
+          let toY = OY + lastMoveTy * TS + TS / 2;
+          let timeT = (performance.now() % 1500) / 1500;
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(fromX, fromY);
+          ctx.lineTo(toX, toY);
+          ctx.strokeStyle = `rgba(212, 175, 55, ${0.2 + 0.3 * Math.sin(timeT * Math.PI * 2)})`;
+          ctx.lineWidth = 4;
+          ctx.setLineDash([10, 15]);
+          ctx.lineDashOffset = -timeT * 50;
+          ctx.stroke();
+          let orbX = fromX + (toX - fromX) * timeT;
+          let orbY = fromY + (toY - fromY) * timeT;
+          ctx.beginPath();
+          ctx.arc(orbX, orbY, 4, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(253, 230, 138, 0.8)";
+          ctx.shadowColor = "#f59e0b";
+          ctx.shadowBlur = 10;
+          ctx.fill();
+          ctx.restore();
+      }
+
       // Draw Hint Arrow if Active
       if (hintActive && hintSx !== -1 && hintTx !== -1) {
           let fromX = OX + hintSx * TS + TS / 2;
@@ -1717,7 +1744,10 @@
 
           drawChessPieceSprite(ctx, moveAnimation.p, curX, curY, TS, 1.0, 1.1);
 
-          if (t >= 1.0) moveAnimation = null;
+          if (t >= 1.0) {
+              spawnCaptureSparks(moveAnimation.toX, moveAnimation.toY, moveAnimation.isCapture);
+              moveAnimation = null;
+          }
       }
 
       for (let i = particles.length - 1; i >= 0; i--) {
@@ -1764,6 +1794,25 @@
       // Captured Pieces & Material Counter Display
       const { whiteCaptured, blackCaptured, diff } = getCapturedPieces();
       
+      ctx.save();
+      let capBoxX = 20, capBoxY = 52, capBoxW = W - 40, capBoxH = 75;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.6)";
+      ctx.fillRect(capBoxX, capBoxY, capBoxW, capBoxH);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(capBoxX, capBoxY + capBoxH);
+      ctx.lineTo(capBoxX, capBoxY);
+      ctx.lineTo(capBoxX + capBoxW, capBoxY);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.beginPath();
+      ctx.moveTo(capBoxX + capBoxW, capBoxY);
+      ctx.lineTo(capBoxX + capBoxW, capBoxY + capBoxH);
+      ctx.lineTo(capBoxX, capBoxY + capBoxH);
+      ctx.stroke();
+      ctx.restore();
+
       // Black's Captures (White pieces captured)
       ctx.textAlign = "left";
       let startX = 30;
