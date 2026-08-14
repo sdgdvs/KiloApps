@@ -21,6 +21,7 @@ int age = 0;
 int strength = 0;
 int speed = 0;
 int loyalty = 0;
+int gold = 0;
 int prev_state = 1;
 int minigame_val = 0;
 int minigame_dir = 1;
@@ -41,8 +42,9 @@ int log_count = 0;
 #define BTN_LOY_1     12
 #define BTN_LOY_2     13
 #define BTN_LOY_3     14
+#define BTN_HOARD     15
 
-HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train;
+HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard;
 HWND btn_tr_str, btn_tr_spd, btn_tr_loy, btn_tr_back;
 HWND btn_str_hit, btn_spd_react, btn_loy_1, btn_loy_2, btn_loy_3;
 HFONT hFontNormal, hFontLarge;
@@ -148,13 +150,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             btn_incubate = CreateWindow("BUTTON", "Incubate Egg", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                                         230, 260, 120, 40, hwnd, (HMENU)BTN_INCUBATE, NULL, NULL);
             btn_feed = CreateWindow("BUTTON", "Feed", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                    80, 260, 100, 40, hwnd, (HMENU)BTN_FEED, NULL, NULL);
+                                    30, 260, 100, 40, hwnd, (HMENU)BTN_FEED, NULL, NULL);
             btn_play = CreateWindow("BUTTON", "Play", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                    190, 260, 100, 40, hwnd, (HMENU)BTN_PLAY, NULL, NULL);
+                                    140, 260, 100, 40, hwnd, (HMENU)BTN_PLAY, NULL, NULL);
             btn_sleep = CreateWindow("BUTTON", "Sleep", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     300, 260, 100, 40, hwnd, (HMENU)BTN_SLEEP, NULL, NULL);
+                                     250, 260, 100, 40, hwnd, (HMENU)BTN_SLEEP, NULL, NULL);
             btn_train = CreateWindow("BUTTON", "Train", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     410, 260, 100, 40, hwnd, (HMENU)BTN_TRAIN, NULL, NULL);
+                                     360, 260, 100, 40, hwnd, (HMENU)BTN_TRAIN, NULL, NULL);
+            btn_hoard = CreateWindow("BUTTON", "Hoard", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     470, 260, 100, 40, hwnd, (HMENU)BTN_HOARD, NULL, NULL);
 
             btn_tr_str = CreateWindow("BUTTON", "Strength", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                      80, 260, 100, 40, hwnd, (HMENU)BTN_TR_STR, NULL, NULL);
@@ -181,6 +185,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_play, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_sleep, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_train, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_hoard, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_str, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_spd, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_loy, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
@@ -201,6 +206,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW);
                 ShowWindow(btn_train, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW);
                 SetTimer(hwnd, TIMER_ID, 3000, NULL);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -249,6 +255,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_play, SW_HIDE);
                     ShowWindow(btn_sleep, SW_HIDE);
                     ShowWindow(btn_train, SW_HIDE);
+                    ShowWindow(btn_hoard, SW_HIDE);
                     ShowWindow(btn_tr_str, SW_SHOW);
                     ShowWindow(btn_tr_spd, SW_SHOW);
                     ShowWindow(btn_tr_loy, SW_SHOW);
@@ -263,6 +270,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_tr_loy, SW_HIDE); ShowWindow(btn_tr_back, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -311,6 +319,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_str_hit, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -329,6 +338,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_spd_react, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -344,7 +354,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_loy_1, SW_HIDE); ShowWindow(btn_loy_2, SW_HIDE); ShowWindow(btn_loy_3, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW);
                 state = prev_state;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) == BTN_HOARD) {
+                if (energy < 30) {
+                    add_log("Dragon is too tired for an expedition.");
+                } else {
+                    energy -= 30;
+                    hunger -= 15; if (hunger < 0) hunger = 0;
+                    add_log("Dragon departed on an expedition...");
+                    ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
+                    ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
+                    ShowWindow(btn_hoard, SW_HIDE);
+                    prev_state = state;
+                    state = 7;
+                    SetTimer(hwnd, 4, 5000, NULL);
+                }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
@@ -399,6 +426,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             }
+            else if (wParam == 4) { // expedition timer
+                KillTimer(hwnd, 4);
+                int found_gold = 10 + (GetTickCount() % 20);
+                gold += found_gold;
+                happiness += 5; if (happiness > 100) happiness = 100;
+                char logMsg[128];
+                sprintf(logMsg, "Dragon returned with %d gold!", found_gold);
+                add_log(logMsg);
+                
+                if (GetTickCount() % 100 < 30) {
+                    const char* items[] = {"Shiny Scale", "Gemstone", "Old Bone", "Mystery Eggshell"};
+                    const char* item = items[GetTickCount() % 4];
+                    sprintf(logMsg, "Dragon also found a rare item: %s!", item);
+                    add_log(logMsg);
+                }
+                
+                state = prev_state;
+                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
+                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             break;
 
         case WM_PAINT: {
@@ -422,8 +471,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (element == 2) type_str = "Fire";
                 else if (element == 3) type_str = "Earth";
                 else if (element == 4) type_str = "Water";
-                sprintf(buf, "Hunger: %d  Happiness: %d  Energy: %d  Age: %d\nType: %s  Str: %d  Spd: %d  Loy: %d", 
-                        hunger, happiness, energy, age, type_str, strength, speed, loyalty);
+                sprintf(buf, "Hunger: %d  Happiness: %d  Energy: %d  Age: %d\nType: %s  Str: %d  Spd: %d  Loy: %d  Gold: %d", 
+                        hunger, happiness, energy, age, type_str, strength, speed, loyalty, gold);
                 
                 RECT r = {0, 10, 600, 60};
                 DrawText(hdc, buf, strlen(buf), &r, DT_CENTER | DT_TOP);

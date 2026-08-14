@@ -32,6 +32,7 @@
                 <div class="stat">Str: <span id="stat-strength">0</span></div>
                 <div class="stat">Spd: <span id="stat-speed">0</span></div>
                 <div class="stat">Loy: <span id="stat-loyalty">0</span></div>
+                <div class="stat">Gold: <span id="stat-gold">0</span></div>
             </div>
             <div class="entity-display" id="entity-art"><svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
@@ -67,6 +68,7 @@
                 <button id="btn-play">Play (🎾)</button>
                 <button id="btn-sleep">Sleep (💤)</button>
                 <button id="btn-train">Train (⚔️)</button>
+                <button id="btn-hoard">Hoard (🗺️)</button>
             </div>
             <div class="controls" id="train-controls" style="display: none;">
                 <button id="btn-train-str">Strength</button>
@@ -135,7 +137,8 @@
             feedCount: 0,
             playCount: 0,
             sleepCount: 0,
-            stats: { hunger: 50, happiness: 50, energy: 100, age: 0, strength: 0, speed: 0, loyalty: 0 },
+            isBusy: false,
+            stats: { hunger: 50, happiness: 50, energy: 100, age: 0, strength: 0, speed: 0, loyalty: 0, gold: 0 },
             tickInterval: null,
             minigameState: null,
             minigameInterval: null,
@@ -147,16 +150,19 @@
                 document.getElementById('btn-feed').addEventListener('click', () => this.action('feed'));
                 document.getElementById('btn-play').addEventListener('click', () => this.action('play'));
                 document.getElementById('btn-sleep').addEventListener('click', () => this.action('sleep'));
+                document.getElementById('btn-hoard').addEventListener('click', () => this.action('hoard'));
                 
                 document.getElementById('btn-train').addEventListener('click', () => {
                     if (this.stats.energy < 15) {
                         this.log("Dragon is too tired to train.");
                         return;
                     }
+                    this.isBusy = true;
                     document.getElementById('controls').style.display = 'none';
                     document.getElementById('train-controls').style.display = 'flex';
                 });
                 document.getElementById('btn-train-back').addEventListener('click', () => {
+                    this.isBusy = false;
                     document.getElementById('train-controls').style.display = 'none';
                     document.getElementById('controls').style.display = 'flex';
                 });
@@ -182,6 +188,7 @@
                 document.getElementById('stat-strength').innerText = this.stats.strength;
                 document.getElementById('stat-speed').innerText = this.stats.speed;
                 document.getElementById('stat-loyalty').innerText = this.stats.loyalty;
+                document.getElementById('stat-gold').innerText = this.stats.gold;
                 
                 if (this.state === 'egg') {
                     document.getElementById('entity-art').innerHTML = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -264,7 +271,7 @@
   <rect x="3" y="12" width="2" height="1" fill="rgb(30,100,30)" />
   <rect x="9" y="12" width="2" height="1" fill="rgb(30,100,30)" />
 </svg>`;
-                    document.getElementById('controls').style.display = 'flex';
+                    if (!this.isBusy) document.getElementById('controls').style.display = 'flex';
                 } else if (this.state === 'adult') {
                     let svgStr = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="5" y="1" width="2" height="1" fill="rgb(180,30,30)" />
@@ -318,7 +325,7 @@
                         svgStr = svgStr.replace(/rgb\(180,30,30\)/g, "rgb(100,60,30)").replace(/rgb\(220,60,60\)/g, "rgb(150,100,60)");
                     }
                     document.getElementById('entity-art').innerHTML = svgStr;
-                    document.getElementById('controls').style.display = 'flex';
+                    if (!this.isBusy) document.getElementById('controls').style.display = 'flex';
                 }
             },
             
@@ -357,6 +364,33 @@
                     this.stats.energy = Math.min(100, this.stats.energy + 40);
                     this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                     this.log("Dragon took a nap and regained energy.");
+                } else if (type === 'hoard') {
+                    if (this.stats.energy < 30) {
+                        this.log("Dragon is too tired for an expedition.");
+                        return;
+                    }
+                    this.stats.energy -= 30;
+                    this.stats.hunger = Math.max(0, this.stats.hunger - 15);
+                    this.log("Dragon departed on an expedition...");
+                    this.isBusy = true;
+                    document.getElementById('controls').style.display = 'none';
+                    
+                    setTimeout(() => {
+                        let foundGold = Math.floor(Math.random() * 20) + 10;
+                        this.stats.gold += foundGold;
+                        this.stats.happiness = Math.min(100, this.stats.happiness + 5);
+                        this.log(`Dragon returned with ${foundGold} gold!`);
+                        
+                        if (Math.random() < 0.3) {
+                            const items = ["Shiny Scale", "Gemstone", "Old Bone", "Mystery Eggshell"];
+                            const item = items[Math.floor(Math.random() * items.length)];
+                            this.log(`Dragon also found a rare item: ${item}!`);
+                        }
+                        
+                        this.isBusy = false;
+                        document.getElementById('controls').style.display = 'flex';
+                        this.updateUI();
+                    }, 5000);
                 }
                 this.updateUI();
             },
@@ -436,6 +470,7 @@
             },
             
             endMinigame(type) {
+                this.isBusy = false;
                 document.getElementById(`minigame-${type}`).style.display = 'none';
                 document.getElementById('controls').style.display = 'flex';
                 this.updateUI();
