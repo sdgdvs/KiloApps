@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KDragon (Fantasy creature-raising sim)
-**Phase:** 8 (next to do)
+**Phase:** 10 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KDragon directory (`KDragon/`), create web HTML skeleton (`KiloOS/public/apps/kdragon.html`), register in App.jsx.
@@ -64,8 +64,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Implement dragon aging and evolution system (egg -> baby -> adult).
 - [x] Phase 6: Add different dragon elemental types (Fire, Water, Earth) based on early care choices.
 - [x] Phase 7: Training mechanics (minigames for raising strength, speed, loyalty).
-- [ ] Phase 8: Treasure hoarding mechanic (send dragon on expeditions to collect gold and items).
-- [ ] Phase 9: AI Arena battles (basic combat loop vs CPU dragons).
+- [x] Phase 8: Treasure hoarding mechanic (send dragon on expeditions to collect gold and items).
+- [x] Phase 9: AI Arena battles (basic combat loop vs CPU dragons).
 - [ ] Phase 10: Special abilities in combat based on elemental type.
 - [ ] Phase 11: Shop system (buy premium food or training gear with hoarded gold).
 - [ ] Phase 12: Random events (illness, wild encounters) requiring player intervention.
