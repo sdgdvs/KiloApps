@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KPong
 - KMines
 - KAsteroids
 - K2048
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAlchemy
 - KRogue
 - KChess
+- KPong
 ## Completed Work Log
+
+- **KPong (Loop 5):** Implemented highly polished visual effects including procedural metallic reflections on paddles, animated energy conduits that pulse based on current vertical velocity, procedural glass-like specular reflections on the ball that realistically shift position and intensity based on its velocity vector, and a distinctly stylized kinematically animated paddle stretching/squashing effect during high-speed impacts or rapid movement in both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 
 - **KChess (Loop 5):** Implemented highly polished visual effects including 3D beveled borders for the move history/captured pieces area, a dynamic animated trailing path overlay that visualizes the last move taken with a fading golden hue, and a procedural particle burst of dust/wood splinters when a piece is placed down heavily or captures another piece in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
