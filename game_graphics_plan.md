@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KTowers
 - KWords
 - KReversi
 - KQuest
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFreecell
 - KSudoku
 - KGo
+- KTowers
 ## Completed Work Log
+
+- **KTowers (Loop 4):** Implemented highly detailed visual variations for building textures (reflective glass windows vs matte concrete based on disc size), a dynamic 3D drop-shadow cast by the active falling/hovering tower block that scales and shifts to emphasize depth, and animated flashing red/yellow warning lights for unstable or misaligned block placements in both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 
 - **KGo (Loop 4):** Implemented highly detailed procedural lighting/specular highlights and micro-textures on the stones to make them look like authentic dark slate and pearlescent clam shell, dynamic 3D drop-shadows that shift slightly based on board position/perspective, and a stylized animated territory visualizer that breathes/pulses distinctively for black vs white territory during the scoring phase in both Web Canvas (kgo.html) and Native C Win32 GDI (KGo/main.c).
 

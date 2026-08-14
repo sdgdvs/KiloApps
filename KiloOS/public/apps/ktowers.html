@@ -1139,14 +1139,19 @@
             document.getElementById('swapBtn').disabled = won || gameOver || swapCharges <= 0;
         }
 
-        function draw3DSkyscraperBlock(ctx, x, y, width, height, theme, discSize, isLocked, isTopDisc) {
+        function draw3DSkyscraperBlock(ctx, x, y, width, height, theme, discSize, isLocked, isTopDisc, targetY, isWarning) {
             const depth = 12; // 3D depth extrusion
             const slant = 10; // isometric slant
+            const isGlass = discSize % 2 === 0;
 
-            // 3D Shadow underneath
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            // Dynamic 3D Shadow underneath
+            const dropDist = targetY ? Math.max(0, targetY - y) : 0;
+            const shadowScale = 1 + dropDist / 100;
+            const shadowAlpha = Math.max(0.1, 0.4 - dropDist / 400);
+            ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
             ctx.beginPath();
-            ctx.ellipse(x, y + height + 2, width/2 + 4, 6, 0, 0, Math.PI * 2);
+            const sy = targetY ? targetY + height + 2 : y + height + 2;
+            ctx.ellipse(x, sy, (width/2 + 4) * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
             ctx.fill();
 
             // 1. Side Facade (Right 3D Wall)
@@ -1208,21 +1213,48 @@
             }
 
             // 3. Front Facade Main Wall
-            const grad = ctx.createLinearGradient(x - width/2, y, x + width/2, y + height);
-            grad.addColorStop(0, theme.main);
-            grad.addColorStop(1, theme.side);
-            ctx.fillStyle = grad;
+            if (isGlass) {
+                const grad = ctx.createLinearGradient(x - width/2, y, x + width/2, y + height);
+                grad.addColorStop(0, theme.main);
+                grad.addColorStop(1, theme.side);
+                ctx.fillStyle = grad;
+            } else {
+                ctx.fillStyle = theme.side;
+            }
             ctx.fillRect(x - width/2, y, width, height);
 
             ctx.strokeStyle = 'rgba(0,0,0,0.6)';
             ctx.lineWidth = 1;
             ctx.strokeRect(x - width/2, y, width, height);
 
+            if (isGlass) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(x - width/2, y, width, height);
+                ctx.clip();
+                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                ctx.beginPath();
+                ctx.moveTo(x - width/2, y - height);
+                ctx.lineTo(x + width/2, y + height);
+                ctx.lineTo(x + width/2, y + height * 2);
+                ctx.lineTo(x - width/2, y);
+                ctx.fill();
+                ctx.restore();
+            } else {
+                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                ctx.beginPath();
+                for (let ty = y + 4; ty < y + height; ty += 4) {
+                    ctx.moveTo(x - width/2, ty);
+                    ctx.lineTo(x + width/2, ty);
+                }
+                ctx.stroke();
+            }
+
             // 4. Window Lighting Animation Grid
             const cols = Math.max(3, Math.floor(width / 16));
             const rows = 2;
-            const wWidth = 4;
-            const wHeight = 5;
+            const wWidth = isGlass ? 4 : 3;
+            const wHeight = isGlass ? 5 : 4;
             const padX = (width - cols * wWidth) / (cols + 1);
             const padY = (height - rows * wHeight) / (rows + 1);
 
@@ -1234,10 +1266,14 @@
                     // Dynamic flickering window light
                     const winSeed = Math.sin(discSize * 17 + r * 5 + c * 3 + globalAnimTime * 0.05);
                     const isLit = winSeed > -0.2;
-                    ctx.fillStyle = isLit ? (winSeed > 0.6 ? '#a5f3fc' : '#fef08a') : '#1e293b';
+                    if (isGlass) {
+                        ctx.fillStyle = isLit ? (winSeed > 0.6 ? '#a5f3fc' : '#fef08a') : '#1e293b';
+                    } else {
+                        ctx.fillStyle = isLit ? '#fef08a' : '#0f172a';
+                    }
                     if (isLit) {
                         ctx.shadowColor = ctx.fillStyle;
-                        ctx.shadowBlur = 4;
+                        ctx.shadowBlur = isGlass ? 4 : 2;
                     }
                     ctx.fillRect(wx, wy, wWidth, wHeight);
                     ctx.shadowBlur = 0;
@@ -1271,6 +1307,16 @@
                 ctx.shadowColor = 'rgba(0,0,0,0.8)';
                 ctx.shadowBlur = 4;
                 ctx.fillText(discSize, x, y + height/2 + 1);
+                ctx.shadowBlur = 0;
+            }
+            
+            if (isWarning) {
+                const blinkWarn = Math.floor(globalAnimTime / 10) % 2 === 0;
+                ctx.fillStyle = blinkWarn ? '#ef4444' : '#facc15';
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.shadowBlur = 10;
+                ctx.fillRect(x - width/2 - 2, y + height/2 - 2, 4, 4);
+                ctx.fillRect(x + width/2 - 2, y + height/2 - 2, 4, 4);
                 ctx.shadowBlur = 0;
             }
         }
@@ -1537,7 +1583,19 @@
                     const widthPct = 0.35 + (discSize / numDiscs) * 0.55;
                     const blockWidth = pegAreaWidth * widthPct;
 
-                    draw3DSkyscraperBlock(ctx, baseX, renderY, blockWidth, blockHeight, theme, discSize, isLocked, isTopDisc);
+                    let isWarning = false;
+                    if (selectedPeg === pIdx && isTopDisc && hoverPeg !== -1 && hoverPeg !== selectedPeg) {
+                        let valid = isValidMove(config, selectedPeg, hoverPeg, discSize, moves);
+                        if (valid) {
+                            const destPeg = pegs[hoverPeg];
+                            if (destPeg.length > 0 && destPeg[destPeg.length - 1] < discSize) {
+                                valid = false;
+                            }
+                        }
+                        isWarning = !valid;
+                    }
+
+                    draw3DSkyscraperBlock(ctx, baseX, renderY, blockWidth, blockHeight, theme, discSize, isLocked, isTopDisc, targetY, isWarning);
                 });
             });
 

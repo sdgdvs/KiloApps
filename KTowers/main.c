@@ -100,6 +100,7 @@ int numPegs = 3;
 int pegs[MAX_PEGS][MAX_DISCS];
 int pegCounts[MAX_PEGS] = {0};
 int selectedPeg = -1;
+int hoverPeg = -1;
 int moves = 0;
 BOOL won = FALSE;
 BOOL gameOver = FALSE;
@@ -651,9 +652,23 @@ void UseDiskSwap(HWND hwnd) {
 // ----------------------------------------------------
 // GDI 3D Skyscraper Block Renderer
 // ----------------------------------------------------
-void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, DiscTheme theme, int discSize, BOOL isLocked, BOOL isTopDisc) {
+void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, DiscTheme theme, int discSize, BOOL isLocked, BOOL isTopDisc, int targetY, BOOL isWarning) {
     int slant = 8;
     int depth = 10;
+
+    int dropDist = targetY > y ? (targetY - y) : 0;
+    int shadowW = width + 8 + (dropDist / 10);
+    int shadowH = 12 + (dropDist / 20);
+    int sy = targetY + height + 2;
+
+    HBRUSH shadowBrush = CreateSolidBrush(RGB(15, 20, 30));
+    HGDIOBJ oldBrush = SelectObject(hdc, shadowBrush);
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HGDIOBJ oldPen = SelectObject(hdc, nullPen);
+    Ellipse(hdc, x - shadowW/2, sy - shadowH/2, x + shadowW/2, sy + shadowH/2);
+    DeleteObject(shadowBrush);
+
+    BOOL isGlass = (discSize % 2 == 0);
 
     // 1. Right Side Facade (3D Wall Polygon)
     POINT sidePts[4] = {
@@ -699,7 +714,7 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
 
     // 3. Front Facade Main Rect
     RECT fRect = { x - width/2, y, x + width/2, y + height };
-    HBRUSH mainBrush = CreateSolidBrush(theme.main);
+    HBRUSH mainBrush = CreateSolidBrush(isGlass ? theme.main : theme.side);
     FillRect(hdc, &fRect, mainBrush);
     DeleteObject(mainBrush);
 
@@ -708,6 +723,16 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
     Rectangle(hdc, fRect.left, fRect.top, fRect.right, fRect.bottom);
     DeleteObject(borderPen);
+
+    if (!isGlass) {
+        HPEN concPen = CreatePen(PS_SOLID, 1, theme.main);
+        SelectObject(hdc, concPen);
+        for (int ty = y + 4; ty < y + height; ty += 4) {
+            MoveToEx(hdc, x - width/2, ty, NULL);
+            LineTo(hdc, x + width/2, ty);
+        }
+        DeleteObject(concPen);
+    }
 
     // 4. Window Grid Animation
     int cols = (width / 14);
@@ -720,7 +745,9 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
         int wy2 = y + 13;
 
         int seed1 = (discSize * 13 + c * 7 + animTick / 4) % 10;
-        COLORREF wColor1 = (seed1 > 2) ? (seed1 > 6 ? RGB(165, 243, 252) : RGB(254, 240, 138)) : RGB(30, 41, 59);
+        COLORREF litCol = isGlass ? (seed1 > 6 ? RGB(165, 243, 252) : RGB(254, 240, 138)) : RGB(254, 240, 138);
+        COLORREF offCol = isGlass ? RGB(30, 41, 59) : RGB(15, 23, 42);
+        COLORREF wColor1 = (seed1 > 2) ? litCol : offCol;
         HBRUSH wBrush1 = CreateSolidBrush(wColor1);
         RECT wR1 = { wx, wy1, wx + 4, wy1 + 5 };
         FillRect(hdc, &wR1, wBrush1);
@@ -745,6 +772,16 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
         sprintf(buf, "%d", discSize);
         SetTextColor(hdc, RGB(255, 255, 255));
         TextOut(hdc, x - 4, y + 3, buf, strlen(buf));
+    }
+
+    if (isWarning) {
+        BOOL blinkWarn = ((animTick / 5) % 2 == 0);
+        HBRUSH wBrush = CreateSolidBrush(blinkWarn ? RGB(239, 68, 68) : RGB(250, 204, 21));
+        RECT wlR1 = { x - width/2 - 4, y + height/2 - 4, x - width/2, y + height/2 + 4 };
+        FillRect(hdc, &wlR1, wBrush);
+        RECT wlR2 = { x + width/2, y + height/2 - 4, x + width/2 + 4, y + height/2 + 4 };
+        FillRect(hdc, &wlR2, wBrush);
+        DeleteObject(wBrush);
     }
 
     SelectObject(hdc, oldPen);
@@ -895,6 +932,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (wParam == 'R' || wParam == 'r') InitGame(hwnd);
             else if (wParam == 'A' || wParam == 'a') {
                 SendMessage(hwnd, WM_COMMAND, 4, 0);
+            }
+            break;
+        }
+        case WM_MOUSEMOVE: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
+            if (y > 140 && numPegs > 0) {
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                int w = rc.right - rc.left;
+                hoverPeg = x / (w / numPegs);
+            } else {
+                hoverPeg = -1;
             }
             break;
         }
@@ -1136,7 +1186,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     DiscTheme theme = DISC_THEMES[(discSize - 1) % 10];
 
-                    Draw3DSkyscraperBlockGDI(memDC, baseX, rectY, discW, blockH, theme, discSize, isLocked, isTopDisc);
+                    BOOL isWarning = FALSE;
+                    if (selectedPeg == p && isTopDisc && hoverPeg != -1 && hoverPeg != selectedPeg) {
+                        BOOL valid = IsValidMove(cfg, selectedPeg, hoverPeg, discSize, moves);
+                        if (valid) {
+                            if (pegCounts[hoverPeg] > 0 && pegs[hoverPeg][pegCounts[hoverPeg] - 1] < discSize) {
+                                valid = FALSE;
+                            }
+                        }
+                        isWarning = !valid;
+                    }
+
+                    Draw3DSkyscraperBlockGDI(memDC, baseX, rectY, discW, blockH, theme, discSize, isLocked, isTopDisc, targetY, isWarning);
                 }
             }
 
