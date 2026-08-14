@@ -396,6 +396,9 @@ typedef struct {
     Companion companion;
     int faction;
     int mount;
+    int poisonedTurns;
+    int burningTurns;
+    int frozenTurns;
     int ngLevel;
 } Hero;
 
@@ -406,6 +409,9 @@ typedef struct {
     int xp, gold;
     int phase;
     int maxPhases;
+    int poisonedTurns;
+    int burningTurns;
+    int frozenTurns;
 } Enemy;
 
 static Hero player;
@@ -473,7 +479,10 @@ static void my_memset(void* dest, int val, size_t n) {
 // Phase 13: Native Win32 Sound Effects Engine
 static int g_SoundEnabled = 1;
 
+static int g_HeroActionTimer = 0;
+
 void SfxCombatHit() {
+    g_HeroActionTimer = 15;
     if (!g_SoundEnabled) return;
     Beep(160, 60);
     Beep(100, 70);
@@ -3279,8 +3288,21 @@ void TriggerGdiVictoryBanner(const char* title) {
     lstrcpyA(g_GdiBannerTitle, title);
 }
 
-void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame) {
+void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame, const char* wpnName, const char* armName) {
     int bob = (frame % 8 < 4) ? 0 : 2;
+    int sy = y + bob;
+    
+    COLORREF bladeC = RGB(205, 214, 244);
+    COLORREF hiltC = RGB(249, 226, 175);
+    if (ContainsSubstr(wpnName, "Wood")) { bladeC = RGB(210, 105, 30); hiltC = RGB(140, 74, 23); }
+    else if (ContainsSubstr(wpnName, "Gold")) { bladeC = RGB(249, 226, 175); hiltC = RGB(243, 139, 168); }
+    else if (ContainsSubstr(wpnName, "Diamond")) { bladeC = RGB(137, 220, 235); hiltC = RGB(249, 226, 175); }
+
+    COLORREF armC = RGB(137, 180, 250);
+    COLORREF trimC = RGB(249, 226, 175);
+    if (ContainsSubstr(armName, "Leather") || ContainsSubstr(armName, "Wood")) { armC = RGB(166, 124, 82); trimC = RGB(230, 195, 135); }
+    else if (ContainsSubstr(armName, "Gold")) { armC = RGB(249, 226, 175); trimC = RGB(243, 139, 168); }
+    else if (ContainsSubstr(armName, "Diamond")) { armC = RGB(137, 220, 235); trimC = RGB(205, 214, 244); }
     int sy = y + bob;
 
     HBRUSH hShB = CreateSolidBrush(RGB(15, 15, 20));
@@ -3347,7 +3369,7 @@ void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame) 
         Polygon(hdc, cpts, 3);
         DeleteObject(hCapeB);
 
-        HBRUSH hArmB = CreateSolidBrush(RGB(137, 180, 250));
+        HBRUSH hArmB = CreateSolidBrush(armC);
         SelectObject(hdc, hArmB);
         RECT aR = {x - 12, sy - 10, x + 12, sy + 22};
         FillRect(hdc, &aR, hArmB);
@@ -3365,20 +3387,51 @@ void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame) 
         FillRect(hdc, &visR, hVisB);
         DeleteObject(hVisB);
 
-        HBRUSH hShldB = CreateSolidBrush(RGB(249, 226, 175));
+        HBRUSH hShldB = CreateSolidBrush(trimC);
         SelectObject(hdc, hShldB);
         POINT spts[3] = {{x - 22, sy - 8}, {x - 8, sy - 8}, {x - 15, sy + 18}};
         Polygon(hdc, spts, 3);
         DeleteObject(hShldB);
 
-        HPEN hSwP = CreatePen(PS_SOLID, 3, RGB(205, 214, 244));
+        if (g_HeroActionTimer > 0) {
+            HPEN hArcP = CreatePen(PS_SOLID, 8, RGB(255, 255, 255));
+            HPEN hOldArc = (HPEN)SelectObject(hdc, hArcP);
+            Arc(hdc, x + 5, sy - 30, x + 45, sy + 10, x + 25, sy - 30, x + 45, sy);
+            SelectObject(hdc, hOldArc); DeleteObject(hArcP);
+        }
+
+        HPEN hSwP = CreatePen(PS_SOLID, 3, bladeC);
         HPEN hOldP = (HPEN)SelectObject(hdc, hSwP);
-        MoveToEx(hdc, x + 14, sy + 15, NULL); LineTo(hdc, x + 14, sy - 20);
+        if (g_HeroActionTimer > 0) {
+            MoveToEx(hdc, x + 14, sy + 15, NULL); LineTo(hdc, x + 35, sy + 5);
+        } else {
+            MoveToEx(hdc, x + 14, sy + 15, NULL); LineTo(hdc, x + 14, sy - 20);
+        }
         SelectObject(hdc, hOldP); DeleteObject(hSwP);
+    }
+
+    if (player.poisonedTurns > 0) {
+        HBRUSH hP = CreateSolidBrush(RGB(166, 227, 161));
+        HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
+        Ellipse(hdc, x - 5, sy + 25, x + 5, sy + 35);
+        SelectObject(hdc, hOP); DeleteObject(hP);
+    }
+    if (player.burningTurns > 0) {
+        HBRUSH hP = CreateSolidBrush(RGB(243, 139, 168));
+        HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
+        Ellipse(hdc, x - 5, sy + 25, x + 5, sy + 35);
+        SelectObject(hdc, hOP); DeleteObject(hP);
+    }
+    if (player.frozenTurns > 0) {
+        HBRUSH hP = CreateSolidBrush(RGB(137, 220, 235));
+        HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
+        RECT fR = {x - 25, sy - 10, x + 25, sy + 40};
+        FrameRect(hdc, &fR, hP);
+        SelectObject(hdc, hOP); DeleteObject(hP);
     }
 }
 
-void DrawGdiMonsterSprite(HDC hdc, int x, int y, const char* name, int frame) {
+void DrawGdiMonsterSprite(HDC hdc, int x, int y, const char* name, int frame, int poisonedTurns, int burningTurns, int frozenTurns) {
     int bob = (frame % 6 < 3) ? 0 : 3;
     int my = y + bob;
 
@@ -3461,6 +3514,26 @@ void DrawGdiMonsterSprite(HDC hdc, int x, int y, const char* name, int frame) {
         Ellipse(hdc, x - 32, my - 26, x + 32, my + 32);
         SelectObject(hdc, hOldP); DeleteObject(hPurpP);
     }
+
+    if (poisonedTurns > 0) {
+        HBRUSH hP = CreateSolidBrush(RGB(166, 227, 161));
+        HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
+        Ellipse(hdc, x - 8, my - 35, x + 8, my - 25);
+        SelectObject(hdc, hOP); DeleteObject(hP);
+    }
+    if (burningTurns > 0) {
+        HBRUSH hP = CreateSolidBrush(RGB(243, 139, 168));
+        HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
+        Ellipse(hdc, x - 8, my - 35, x + 8, my - 25);
+        SelectObject(hdc, hOP); DeleteObject(hP);
+    }
+    if (frozenTurns > 0) {
+        HBRUSH hP = CreateSolidBrush(RGB(137, 220, 235));
+        HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
+        RECT fR = {x - 30, my - 30, x + 30, my + 40};
+        FrameRect(hdc, &fR, hP);
+        SelectObject(hdc, hOP); DeleteObject(hP);
+    }
 }
 
 void DrawGdiNPCSprite(HDC hdc, int x, int y, int frame) {
@@ -3538,10 +3611,15 @@ void RenderGdiScene(HDC hdc, int w, int h) {
     int monsterX = 560;
     int monsterY = 65;
 
-    DrawGdiHeroSprite(hdc, heroX, heroY, player.heroClass, g_GfxFrame);
+    if (g_HeroActionTimer > 0) {
+        g_HeroActionTimer--;
+        heroX += (int)(sin((1.0 - g_HeroActionTimer / 15.0) * 3.14159) * 30);
+    }
+
+    DrawGdiHeroSprite(hdc, heroX, heroY, player.heroClass, g_GfxFrame, player.weaponName, player.armorName);
 
     if ((gameState == STATE_COMBAT || gameState == STATE_BOSS_RUSH) && currentEnemy.hp > 0) {
-        DrawGdiMonsterSprite(hdc, monsterX, monsterY, currentEnemy.name, g_GfxFrame);
+        DrawGdiMonsterSprite(hdc, monsterX, monsterY, currentEnemy.name, g_GfxFrame, currentEnemy.poisonedTurns, currentEnemy.burningTurns, currentEnemy.frozenTurns);
     } else if (gameState == STATE_TOWN || gameState == STATE_TOWN_PAGE2 || gameState == STATE_FACTIONS || gameState == STATE_MOUNTS || gameState == STATE_SHOP || gameState == STATE_CRAFTING) {
         DrawGdiNPCSprite(hdc, 560, 70, g_GfxFrame);
     }

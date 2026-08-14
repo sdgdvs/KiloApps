@@ -9,6 +9,10 @@
 #define TIMER_ID     1
 
 int state = 0; // 0 = egg, 1 = dragon
+int element = 0; // 0=none, 2=fire, 3=earth, 4=water
+int feed_count = 0;
+int play_count = 0;
+int sleep_count = 0;
 int hunger = 50;
 int happiness = 50;
 int energy = 100;
@@ -87,11 +91,19 @@ COLORREF adult_dragon_pixels[16][16] = {
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 };
 
-void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16]) {
+void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16], int element_type) {
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             if (pixels[i][j] != -1) {
-                HBRUSH b = CreateSolidBrush(pixels[i][j]);
+                COLORREF c = pixels[i][j];
+                if (element_type == 4) { // Water
+                    if (c == RGB(180,30,30)) c = RGB(30,60,180);
+                    else if (c == RGB(220,60,60)) c = RGB(60,120,220);
+                } else if (element_type == 3) { // Earth
+                    if (c == RGB(180,30,30)) c = RGB(100,60,30);
+                    else if (c == RGB(220,60,60)) c = RGB(150,100,60);
+                }
+                HBRUSH b = CreateSolidBrush(c);
                 RECT r = {x + j*scale, y + i*scale, x + (j+1)*scale, y + (i+1)*scale};
                 FillRect(hdc, &r, b);
                 DeleteObject(b);
@@ -141,6 +153,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (hunger >= 100) {
                     add_log("Dragon is full and refuses to eat.");
                 } else {
+                    feed_count++;
                     hunger = hunger + 20;
                     if (hunger > 100) hunger = 100;
                     energy = energy - 5;
@@ -153,6 +166,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (energy < 20) {
                     add_log("Dragon is too tired to play.");
                 } else {
+                    play_count++;
                     happiness = happiness + 20;
                     if (happiness > 100) happiness = 100;
                     energy = energy - 20;
@@ -164,6 +178,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             else if (LOWORD(wParam) == BTN_SLEEP) {
+                sleep_count++;
                 energy = energy + 40;
                 if (energy > 100) energy = 100;
                 hunger = hunger - 10;
@@ -186,7 +201,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 if (state == 1 && age >= 10) {
                     state = 2;
-                    add_log("Your baby dragon evolved into an ADULT DRAGON!");
+                    int max_c = feed_count;
+                    if (play_count > max_c) max_c = play_count;
+                    if (sleep_count > max_c) max_c = sleep_count;
+                    
+                    char msg[128];
+                    if (max_c == feed_count) {
+                        element = 3;
+                        strcpy(msg, "Your baby dragon evolved into an ADULT EARTH DRAGON!");
+                    } else if (max_c == play_count) {
+                        element = 2;
+                        strcpy(msg, "Your baby dragon evolved into an ADULT FIRE DRAGON!");
+                    } else {
+                        element = 4;
+                        strcpy(msg, "Your baby dragon evolved into an ADULT WATER DRAGON!");
+                    }
+                    add_log(msg);
                 }
                 
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -207,18 +237,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 const char* msg = "A mysterious egg awaits...";
                 TextOut(hdc, 190, 80, msg, strlen(msg));
                 
-                DrawPixelArt(hdc, 236, 110, 8, egg_pixels);
+                DrawPixelArt(hdc, 236, 110, 8, egg_pixels, 0);
             } else {
                 char buf[128];
-                sprintf(buf, "Hunger: %d/100   Happiness: %d/100   Energy: %d/100   Age: %d", hunger, happiness, energy, age);
+                const char* type_str = "None";
+                if (element == 2) type_str = "Fire";
+                else if (element == 3) type_str = "Earth";
+                else if (element == 4) type_str = "Water";
+                sprintf(buf, "Hunger: %d/100   Happiness: %d/100   Energy: %d/100   Age: %d   Type: %s", hunger, happiness, energy, age, type_str);
                 
                 RECT r = {0, 30, 600, 60};
                 DrawText(hdc, buf, strlen(buf), &r, DT_CENTER | DT_TOP);
                 
                 if (state == 1) {
-                    DrawPixelArt(hdc, 236, 90, 8, dragon_pixels);
+                    DrawPixelArt(hdc, 236, 90, 8, dragon_pixels, 0);
                 } else if (state == 2) {
-                    DrawPixelArt(hdc, 236, 90, 8, adult_dragon_pixels);
+                    DrawPixelArt(hdc, 236, 90, 8, adult_dragon_pixels, element);
                 }
                 
                 SelectObject(hdc, hFontNormal);

@@ -812,11 +812,11 @@
       } else { GFX.monsterAction = 'idle'; }
 
       // 3. Draw Hero Sprite
-      drawHeroSprite(ctx, heroX, heroY, player.class, GFX.frame, GFX.heroAction);
+      drawHeroSprite(ctx, heroX, heroY, player.class, GFX.frame, GFX.heroAction, player.weapon.name, player.armor.name);
 
       // 4. Draw Monster Sprite if in Combat or Boss Rush
       if ((currentState === STATE.COMBAT || currentState === STATE.BOSS_RUSH) && currentEnemy) {
-        drawMonsterSprite(ctx, monsterX, monsterY, currentEnemy.name, GFX.frame, GFX.monsterAction);
+        drawMonsterSprite(ctx, monsterX, monsterY, currentEnemy.name, GFX.frame, GFX.monsterAction, currentEnemy.poisonedTurns, currentEnemy.burningTurns, currentEnemy.frozenTurns);
       } else if (currentState === STATE.TOWN || currentState === STATE.SHOP || currentState === STATE.CRAFTING || currentState === STATE.FACTIONS || currentState === STATE.MOUNTS) {
         drawNPCSprite(ctx, 520, 120, GFX.frame);
       }
@@ -1024,10 +1024,22 @@
       }
     }
 
-    function drawHeroSprite(ctx, x, y, className, frame, action) {
+    function drawHeroSprite(ctx, x, y, className, frame, action, wpnName, armName) {
+      wpnName = wpnName || '';
+      armName = armName || '';
       ctx.save();
       const bob = Math.sin(frame * 0.15) * 3;
       const sy = y + bob;
+
+      let bladeC = '#cdd6f4', hiltC = '#f9e2af';
+      if (wpnName.includes('Wood')) { bladeC = '#d2691e'; hiltC = '#8c4a17'; }
+      else if (wpnName.includes('Gold')) { bladeC = '#f9e2af'; hiltC = '#f38ba8'; }
+      else if (wpnName.includes('Diamond')) { bladeC = '#89dceb'; hiltC = '#f9e2af'; }
+      
+      let armC = '#89b4fa', trimC = '#f9e2af';
+      if (armName.includes('Leather') || armName.includes('Wood')) { armC = '#a67c52'; trimC = '#e6c387'; }
+      else if (armName.includes('Gold')) { armC = '#f9e2af'; trimC = '#f38ba8'; }
+      else if (armName.includes('Diamond')) { armC = '#89dceb'; trimC = '#cdd6f4'; }
 
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.beginPath();
@@ -1042,9 +1054,9 @@
         ctx.lineTo(x - 4, sy + 35);
         ctx.fill();
 
-        ctx.fillStyle = '#89b4fa';
+        ctx.fillStyle = armC;
         ctx.fillRect(x - 14, sy - 15, 28, 35);
-        ctx.fillStyle = '#f9e2af';
+        ctx.fillStyle = trimC;
         ctx.fillRect(x - 14, sy - 15, 28, 4);
         ctx.fillRect(x - 14, sy + 16, 28, 4);
 
@@ -1060,7 +1072,7 @@
         ctx.fillRect(x - 4, sy - 25, 4, 2);
         ctx.fillRect(x + 4, sy - 25, 4, 2);
 
-        ctx.fillStyle = '#f9e2af';
+        ctx.fillStyle = trimC;
         ctx.beginPath();
         ctx.moveTo(x - 24, sy - 10);
         ctx.lineTo(x - 8, sy - 10);
@@ -1071,10 +1083,17 @@
 
         ctx.save();
         ctx.translate(x + 14, sy + 5);
-        if (action === 'attack') ctx.rotate(Math.PI / 4);
-        ctx.fillStyle = '#cdd6f4';
+        if (action === 'attack') {
+          ctx.rotate(Math.PI / 4);
+          ctx.beginPath();
+          ctx.arc(0, 0, 35, -Math.PI / 1.5, 0);
+          ctx.lineWidth = 10;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.stroke();
+        }
+        ctx.fillStyle = bladeC;
         ctx.fillRect(0, -30, 6, 35);
-        ctx.fillStyle = '#f9e2af';
+        ctx.fillStyle = hiltC;
         ctx.fillRect(-6, 2, 18, 4);
         ctx.restore();
 
@@ -1088,7 +1107,7 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = '#f9e2af';
+        ctx.fillStyle = trimC;
         ctx.fillRect(x - 2, sy - 15, 4, 55);
 
         ctx.fillStyle = '#f5e0dc';
@@ -1096,7 +1115,7 @@
         ctx.fillStyle = '#cdd6f4';
         ctx.beginPath(); ctx.arc(x, sy - 18, 8, 0, Math.PI); ctx.fill();
 
-        ctx.fillStyle = '#b4befe';
+        ctx.fillStyle = armC;
         ctx.beginPath();
         ctx.moveTo(x - 18, sy - 28);
         ctx.lineTo(x + 18, sy - 28);
@@ -1104,34 +1123,68 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = '#fab387';
+        ctx.fillStyle = hiltC;
         ctx.fillRect(x + 16, sy - 35, 5, 75);
-        ctx.fillStyle = '#89dceb';
+        ctx.fillStyle = bladeC;
         ctx.beginPath(); ctx.arc(x + 18, sy - 40, 10, 0, Math.PI * 2); ctx.fill();
-        if (Math.random() < 0.4) addParticles(x + 18, sy - 40, '#89dceb', 1);
+        if (Math.random() < 0.4) addParticles(x + 18, sy - 40, bladeC, 1);
 
       } else if (className === 'Rogue') {
         ctx.fillStyle = '#313244';
         ctx.fillRect(x - 14, sy - 15, 28, 38);
 
-        ctx.fillStyle = '#a6e3a1';
+        ctx.fillStyle = armC;
         ctx.fillRect(x - 10, sy - 12, 20, 25);
 
         ctx.fillStyle = '#1e1e2e';
         ctx.beginPath(); ctx.arc(x, sy - 24, 12, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#a6e3a1';
+        ctx.fillStyle = armC;
         ctx.fillRect(x - 6, sy - 25, 4, 3);
         ctx.fillRect(x + 2, sy - 25, 4, 3);
 
-        ctx.fillStyle = '#94e2d5';
-        ctx.fillRect(x - 20, sy - 5, 4, 25);
-        ctx.fillRect(x + 16, sy - 5, 4, 25);
+        ctx.fillStyle = bladeC;
+        
+        ctx.save();
+        ctx.translate(x + 16, sy - 5);
+        if (action === 'attack') {
+          ctx.rotate(Math.PI / 4);
+          ctx.beginPath(); ctx.arc(0, 0, 20, -Math.PI / 1.5, 0);
+          ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.stroke();
+        }
+        ctx.fillRect(0, 0, 4, 25);
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(x - 20, sy - 5);
+        if (action === 'attack') {
+          ctx.rotate(-Math.PI / 4);
+          ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI / 1.5);
+          ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.stroke();
+        }
+        ctx.fillRect(0, 0, 4, 25);
+        ctx.restore();
+      }
+
+      if (player.poisonedTurns > 0) {
+        ctx.fillStyle = 'rgba(166, 227, 161, 0.4)';
+        ctx.beginPath(); ctx.arc(x, sy + 15, 25, 0, Math.PI * 2); ctx.fill();
+        if (Math.random() < 0.1) addParticles(x, sy + 15, '#a6e3a1', 1);
+      }
+      if (player.burningTurns > 0) {
+        ctx.fillStyle = 'rgba(243, 139, 168, 0.4)';
+        ctx.beginPath(); ctx.arc(x, sy + 15, 25, 0, Math.PI * 2); ctx.fill();
+        if (Math.random() < 0.2) addParticles(x, sy + 15, '#fab387', 1);
+      }
+      if (player.frozenTurns > 0) {
+        ctx.fillStyle = 'rgba(137, 220, 235, 0.5)';
+        ctx.fillRect(x - 25, sy - 10, 50, 50);
       }
 
       ctx.restore();
     }
 
-    function drawMonsterSprite(ctx, x, y, name, frame, action) {
+
+    function drawMonsterSprite(ctx, x, y, name, frame, action, poisonedTurns, burningTurns, frozenTurns) {
       ctx.save();
       const bob = Math.sin(frame * 0.12) * 4;
       const my = y + bob;
@@ -1212,6 +1265,21 @@
         ctx.fillStyle = '#f38ba8';
         ctx.beginPath(); ctx.arc(x - 14, my - 10, 8, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(x + 14, my - 10, 8, 0, Math.PI * 2); ctx.fill();
+      }
+
+      if (poisonedTurns > 0) {
+        ctx.fillStyle = 'rgba(166, 227, 161, 0.4)';
+        ctx.beginPath(); ctx.arc(x, my, 40, 0, Math.PI * 2); ctx.fill();
+        if (Math.random() < 0.1) addParticles(x, my, '#a6e3a1', 1);
+      }
+      if (burningTurns > 0) {
+        ctx.fillStyle = 'rgba(243, 139, 168, 0.4)';
+        ctx.beginPath(); ctx.arc(x, my, 40, 0, Math.PI * 2); ctx.fill();
+        if (Math.random() < 0.2) addParticles(x, my, '#fab387', 1);
+      }
+      if (frozenTurns > 0) {
+        ctx.fillStyle = 'rgba(137, 220, 235, 0.5)';
+        ctx.fillRect(x - 30, my - 30, 60, 60);
       }
 
       ctx.restore();

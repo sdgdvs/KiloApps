@@ -39,6 +39,7 @@
                 <div class="stat">Happiness: <span id="stat-happiness">0</span>/100</div>
                 <div class="stat">Energy: <span id="stat-energy">0</span>/100</div>
                 <div class="stat">Age: <span id="stat-age">0</span></div>
+                <div class="stat">Type: <span id="stat-element">None</span></div>
             </div>
             <div class="entity-display" id="entity-art"><svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
@@ -115,6 +116,10 @@
     <script>
         const Game = {
             state: 'egg',
+            element: 'None',
+            feedCount: 0,
+            playCount: 0,
+            sleepCount: 0,
             stats: { hunger: 50, happiness: 50, energy: 100, age: 0 },
             tickInterval: null,
             
@@ -138,6 +143,7 @@
                 document.getElementById('stat-happiness').innerText = this.stats.happiness;
                 document.getElementById('stat-energy').innerText = this.stats.energy;
                 document.getElementById('stat-age').innerText = this.stats.age;
+                document.getElementById('stat-element').innerText = this.element;
                 
                 if (this.state === 'egg') {
                     document.getElementById('entity-art').innerHTML = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -222,7 +228,7 @@
 </svg>`;
                     document.getElementById('controls').style.display = 'flex';
                 } else if (this.state === 'adult') {
-                    document.getElementById('entity-art').innerHTML = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    let svgStr = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="5" y="1" width="2" height="1" fill="rgb(180,30,30)" />
   <rect x="4" y="2" width="1" height="1" fill="rgb(180,30,30)" />
   <rect x="5" y="2" width="2" height="1" fill="rgb(220,60,60)" />
@@ -268,6 +274,12 @@
   <rect x="3" y="13" width="4" height="1" fill="rgb(180,30,30)" />
   <rect x="9" y="13" width="4" height="1" fill="rgb(180,30,30)" />
 </svg>`;
+                    if (this.element === 'Water') {
+                        svgStr = svgStr.replace(/rgb\(180,30,30\)/g, "rgb(30,60,180)").replace(/rgb\(220,60,60\)/g, "rgb(60,120,220)");
+                    } else if (this.element === 'Earth') {
+                        svgStr = svgStr.replace(/rgb\(180,30,30\)/g, "rgb(100,60,30)").replace(/rgb\(220,60,60\)/g, "rgb(150,100,60)");
+                    }
+                    document.getElementById('entity-art').innerHTML = svgStr;
                     document.getElementById('controls').style.display = 'flex';
                 }
             },
@@ -288,6 +300,7 @@
                         this.log("Dragon is full and refuses to eat.");
                         return;
                     }
+                    this.feedCount++;
                     this.stats.hunger = Math.min(100, this.stats.hunger + 20);
                     this.stats.energy = Math.max(0, this.stats.energy - 5);
                     this.log("You fed the dragon. It looks satisfied.");
@@ -296,11 +309,13 @@
                         this.log("Dragon is too tired to play.");
                         return;
                     }
+                    this.playCount++;
                     this.stats.happiness = Math.min(100, this.stats.happiness + 20);
                     this.stats.energy = Math.max(0, this.stats.energy - 20);
                     this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                     this.log("You played with the dragon! It's happy.");
                 } else if (type === 'sleep') {
+                    this.sleepCount++;
                     this.stats.energy = Math.min(100, this.stats.energy + 40);
                     this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                     this.log("Dragon took a nap and regained energy.");
@@ -320,7 +335,11 @@
                 
                 if (this.state === 'dragon' && this.stats.age >= 10) {
                     this.state = 'adult';
-                    this.log("Your baby dragon evolved into an ADULT DRAGON!");
+                    let max = Math.max(this.feedCount, this.playCount, this.sleepCount);
+                    if (max === this.feedCount) this.element = 'Earth';
+                    else if (max === this.playCount) this.element = 'Fire';
+                    else this.element = 'Water';
+                    this.log(`Your baby dragon evolved into an ADULT ${this.element.toUpperCase()} DRAGON!`);
                 }
                 
                 this.updateUI();
