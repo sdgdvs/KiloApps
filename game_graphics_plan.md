@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KReversi
 - KQuest
 - KSpace
 - KPac
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KGo
 - KTowers
 - KWords
+- KReversi
 ## Completed Work Log
+
+- **KReversi (Loop 4):** FAILED (Subagent timed out after 8 minutes).
 
 - **KWords (Loop 4):** Implemented highly detailed visual variations for premium multiplier tiles (Double/Triple Word/Letter) featuring glowing metallic filigree borders, a dynamic 3D drop-shadow that scales/shifts when tiles are hovered or dragged, and an animated pulsing shimmering dictionary scan effect across the selected tiles during word validation in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
