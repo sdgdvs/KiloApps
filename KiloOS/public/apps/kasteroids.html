@@ -597,16 +597,46 @@
                 // Shield / Invincibility Aura
                 if (shieldTimer > 0 || this.invincibleTimer > 0) {
                     let pulse = Math.sin(this.animFrame * 0.2) * 2;
-                    let shieldGrad = ctx.createRadialGradient(0, 0, 18 + pulse, 0, 0, 26 + pulse);
-                    shieldGrad.addColorStop(0, 'rgba(56, 189, 248, 0.1)');
-                    shieldGrad.addColorStop(0.7, (shieldTimer > 0 ? 'rgba(59, 130, 246, 0.4)' : 'rgba(234, 179, 8, 0.4)'));
+                    let shieldRad = 25 + pulse;
+                    
+                    ctx.save();
+                    let shieldGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, shieldRad);
+                    shieldGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+                    shieldGrad.addColorStop(0.8, (shieldTimer > 0 ? 'rgba(59, 130, 246, 0.4)' : 'rgba(234, 179, 8, 0.4)'));
                     shieldGrad.addColorStop(1, (shieldTimer > 0 ? 'rgba(147, 197, 253, 0.8)' : 'rgba(253, 224, 71, 0.8)'));
                     
-                    ctx.strokeStyle = shieldGrad;
-                    ctx.lineWidth = 2.5;
+                    ctx.fillStyle = shieldGrad;
                     ctx.beginPath();
-                    ctx.arc(0, 0, 25 + pulse, 0, Math.PI * 2);
+                    ctx.arc(0, 0, shieldRad, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Hexagonal Energy Grid
+                    ctx.strokeStyle = shieldTimer > 0 ? 'rgba(147, 197, 253, 0.7)' : 'rgba(253, 224, 71, 0.7)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    let hexSize = 8;
+                    let timeOffset = this.animFrame * 0.5;
+                    for (let hx = -shieldRad; hx <= shieldRad; hx += hexSize * 1.5) {
+                        for (let hy = -shieldRad; hy <= shieldRad; hy += hexSize * Math.sqrt(3)) {
+                            let ox = hx;
+                            let oy = hy + (Math.abs(Math.round(hx / (hexSize * 1.5))) % 2 === 1 ? hexSize * Math.sqrt(3) / 2 : 0);
+                            if (ox * ox + oy * oy < (shieldRad-2) * (shieldRad-2)) {
+                                let scale = Math.max(0, Math.sin(timeOffset - Math.sqrt(ox*ox + oy*oy)*0.1));
+                                if (scale > 0) {
+                                    for (let i = 0; i < 6; i++) {
+                                        let a = i * Math.PI / 3;
+                                        let x = ox + Math.cos(a) * hexSize * 0.9 * scale;
+                                        let y = oy + Math.sin(a) * hexSize * 0.9 * scale;
+                                        if (i === 0) ctx.moveTo(x, y);
+                                        else ctx.lineTo(x, y);
+                                    }
+                                    ctx.closePath();
+                                }
+                            }
+                        }
+                    }
                     ctx.stroke();
+                    ctx.restore();
                 }
 
                 // Piercing Laser Cannon Beam Graphic
@@ -738,6 +768,30 @@
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
+
+                // Procedural bump shading
+                ctx.save();
+                ctx.clip(); // clip to the asteroid path
+                let bumpGrad = ctx.createLinearGradient(-this.radius, -this.radius, this.radius, this.radius);
+                bumpGrad.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+                bumpGrad.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
+                bumpGrad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+                ctx.fillStyle = bumpGrad;
+                ctx.fill();
+                ctx.restore();
+
+                // Glowing molten/frozen inner cores for split asteroids
+                if (this.level < 3) {
+                    let coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 0.6);
+                    let coreColor = (this.type === 2) ? 'rgba(56, 189, 248, 0.6)' : ((this.type === 1) ? 'rgba(249, 115, 22, 0.6)' : 'rgba(239, 68, 68, 0.6)');
+                    if (this.isArmored) coreColor = 'rgba(251, 146, 60, 0.7)';
+                    coreGrad.addColorStop(0, coreColor);
+                    coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    ctx.fillStyle = coreGrad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
 
                 if (this.level === 3) {
                     ctx.strokeStyle = crackStyle;
@@ -1248,6 +1302,16 @@
                     ctx.lineWidth = 1.5;
                     ctx.stroke();
 
+                    // Procedural glass-like specular reflection shifting based on velocity
+                    let shiftX = this.vx * 3;
+                    let specGrad = ctx.createLinearGradient(shiftX - r * 0.3, -6 - r * 0.3, shiftX + r * 0.3, -6 + r * 0.3);
+                    specGrad.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+                    specGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+                    ctx.fillStyle = specGrad;
+                    ctx.beginPath();
+                    ctx.ellipse(shiftX, -8, r * 0.25, r * 0.15, 0, Math.PI, 0);
+                    ctx.fill();
+
                     ctx.fillStyle = '#18181b';
                     ctx.fillRect(-32, -r - 14, 64, 7);
                     ctx.strokeStyle = '#52525b';
@@ -1281,6 +1345,16 @@
                     ctx.strokeStyle = '#86efac';
                     ctx.lineWidth = 1;
                     ctx.stroke();
+
+                    // Procedural glass-like specular reflection shifting based on velocity
+                    let shiftX = this.vx * 3;
+                    let specGrad = ctx.createLinearGradient(shiftX - r * 0.2, -5 - r * 0.2, shiftX + r * 0.2, -5 + r * 0.2);
+                    specGrad.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+                    specGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+                    ctx.fillStyle = specGrad;
+                    ctx.beginPath();
+                    ctx.ellipse(shiftX, -6, r * 0.15, r * 0.1, 0, Math.PI, 0);
+                    ctx.fill();
                 }
 
                 ctx.restore();

@@ -28,6 +28,7 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #09090b 70%);
     color: var(--text-main);
+    text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
@@ -382,6 +383,7 @@
       <option value="slate">Dark Slate</option>
     </select>
 
+    <button id="btnHelp" aria-label="Help">❔ Help</button>
     <button id="btnExportPng">📷 PNG</button>
     <button id="btnExportCsv">📄 CSV</button>
     <button id="btnExportJson">📦 JSON</button>
@@ -394,7 +396,7 @@
   <!-- Left Side: Main Chart & Controls -->
   <div class="panel-card">
     <div class="panel-title">
-      <span>Visualization Canvas <span style="font-size: 12px; color: var(--text-muted); font-weight: normal; margin-left: 10px;">(Press 'H' for Help)</span></span>
+      <span>Visualization Canvas <span style="font-size: 12px; color: var(--accent); font-weight: 600; margin-left: 10px; background: rgba(59,130,246,0.1); padding: 2px 6px; border-radius: 4px;">[Press 'H' for Help]</span></span>
       <div class="toolbar">
         <div class="btn-group" id="chartTypeGroup">
           <button data-type="bar" class="active">Bar</button>
@@ -1098,6 +1100,10 @@
   }
 
   // Button Listeners
+  document.getElementById('btnHelp').onclick = () => {
+    alert("KChart Studio Help:\n\n- Select chart type from the toolbar.\n- Use the table editor to modify data.\n- Export options are in the top right.\n- Drag & drop a JSON/CSV file to import.");
+  };
+
   document.getElementById('chartTypeGroup').onclick = (e) => {
     if (e.target.tagName === 'BUTTON') {
       document.querySelectorAll('#chartTypeGroup button').forEach(b => b.classList.remove('active'));

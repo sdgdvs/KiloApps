@@ -60,6 +60,7 @@ HWND hBtnRandomize;
 HWND hBtnToggle;
 HWND hBtnTheme;
 HWND hBtnSort;
+HWND hBtnHelp;
 HFONT hBtnFont = NULL;
 
 // Chart modes: 0 = Bar, 1 = Line, 2 = Area, 3 = Pie, 4 = Donut, 5 = Radar
@@ -115,13 +116,13 @@ void LayoutButtons(HWND hwnd) {
     int clientW = rc.right - rc.left;
     int clientH = rc.bottom - rc.top;
 
-    if (hBtnRandomize && hBtnToggle && hBtnTheme && hBtnSort) {
+    if (hBtnRandomize && hBtnToggle && hBtnTheme && hBtnSort && hBtnHelp) {
         int btnW = SCALE(90);
         int btnH = SCALE(26);
         int gap = SCALE(8);
         int btnY = clientH - SCALE(38);
         if (btnY < 10) btnY = 10;
-        int totalW = 4 * btnW + 3 * gap;
+        int totalW = 5 * btnW + 4 * gap;
         int startX = (clientW - totalW) / 2;
         if (startX < 5) startX = 5;
 
@@ -129,6 +130,7 @@ void LayoutButtons(HWND hwnd) {
         SetWindowPos(hBtnToggle, NULL, startX + btnW + gap, btnY, btnW, btnH, SWP_NOZORDER);
         SetWindowPos(hBtnTheme, NULL, startX + (btnW + gap) * 2, btnY, btnW, btnH, SWP_NOZORDER);
         SetWindowPos(hBtnSort, NULL, startX + (btnW + gap) * 3, btnY, btnW, btnH, SWP_NOZORDER);
+        SetWindowPos(hBtnHelp, NULL, startX + (btnW + gap) * 4, btnY, btnW, btnH, SWP_NOZORDER);
     }
 }
 
@@ -148,12 +150,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnSort = CreateWindowEx(0, "BUTTON", "Sort",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, 0, 90, 26, hwnd, (HMENU)4, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                0, 0, 90, 26, hwnd, (HMENU)5, NULL, NULL);
             
             hBtnFont = CreateFontA(SCALE(-14), 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             SendMessage(hBtnRandomize, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnToggle, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnTheme, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnSort, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             
             LayoutButtons(hwnd);
             CalculateStats();
@@ -335,6 +341,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
+            } else if (cmdId == 5) { // Help
+                MessageBox(hwnd, "KChart Studio Help:\n\n- Use Mode button to switch charts\n- Use Theme to change colors\n- Sort button sorts data\n- Randomize generates new data", "Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
@@ -728,8 +736,12 @@ void MainEntry() {
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KChartApp", "KChart Studio", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-        CW_USEDEFAULT, CW_USEDEFAULT, SCALE(1024), SCALE(768), NULL, NULL, hInstance, NULL);
+    DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
+    RECT rect = { 0, 0, SCALE(1024), SCALE(768) };
+    AdjustWindowRect(&rect, style, FALSE);
+
+    HWND hwnd = CreateWindowEx(0, "KChartApp", "KChart Studio", style,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

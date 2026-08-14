@@ -1533,11 +1533,36 @@ void Draw(HDC hdc) {
 
         // Shield / Invincibility Aura
         if (shield_timer > 0 || ship.invincible_timer > 0) {
-            HPEN shieldPen = CreatePen(PS_SOLID, 2, (shield_timer > 0 ? RGB(59, 130, 246) : RGB(234, 179, 8)));
+            COLORREF sCol = (shield_timer > 0 ? RGB(147, 197, 253) : RGB(253, 224, 71));
+            HPEN shieldPen = CreatePen(PS_SOLID, 1, sCol);
             SelectObject(hdc, shieldPen);
             SelectObject(hdc, GetStockObject(NULL_BRUSH));
             int pulse = (int)(sin(ship.anim_frame * 0.3f) * 2);
-            Ellipse(hdc, (int)(ship.x - (25 + pulse)), (int)(ship.y - (25 + pulse)), (int)(ship.x + (25 + pulse)), (int)(ship.y + (25 + pulse)));
+            int shieldRad = 25 + pulse;
+            
+            // Hexagonal Energy Grid
+            int hexSize = 8;
+            float timeOffset = ship.anim_frame * 0.5f;
+            for (int hx = -shieldRad; hx <= shieldRad; hx += (int)(hexSize * 1.5f)) {
+                for (int hy = -shieldRad; hy <= shieldRad; hy += (int)(hexSize * 1.732f)) {
+                    int ox = hx;
+                    int oy = hy + ((abs(hx / (int)(hexSize * 1.5f)) % 2 == 1) ? (int)(hexSize * 1.732f / 2) : 0);
+                    if (ox * ox + oy * oy < (shieldRad-2) * (shieldRad-2)) {
+                        float dist = sqrt((float)(ox*ox + oy*oy));
+                        float scale = sin(timeOffset - dist * 0.1f);
+                        if (scale < 0) scale = 0;
+                        if (scale > 0) {
+                            POINT hexPts[6];
+                            for (int i = 0; i < 6; i++) {
+                                float a = i * 3.14159f / 3.0f;
+                                hexPts[i].x = (LONG)(ship.x + ox + cos(a) * hexSize * 0.9f * scale);
+                                hexPts[i].y = (LONG)(ship.y + oy + sin(a) * hexSize * 0.9f * scale);
+                            }
+                            Polygon(hdc, hexPts, 6);
+                        }
+                    }
+                }
+            }
             DeleteObject(shieldPen);
         }
 
@@ -1596,6 +1621,30 @@ void Draw(HDC hdc) {
             pts[j].y = (LONG)(asteroids[i].y + sin(a) * asteroids[i].points[j]);
         }
         Polygon(hdc, pts, 10);
+
+        // Procedural bump shading (simulate with a darker inner offset polygon)
+        POINT shadePts[10];
+        for (int j = 0; j < 10; j++) {
+            float a = (j / 10.0f) * 3.14159f * 2.0f + asteroids[i].rot;
+            shadePts[j].x = (LONG)(asteroids[i].x + cos(a) * asteroids[i].points[j] * 0.7f);
+            shadePts[j].y = (LONG)(asteroids[i].y + sin(a) * asteroids[i].points[j] * 0.7f);
+        }
+        HPEN shadePen = CreatePen(PS_SOLID, 2, RGB(15, 15, 15));
+        SelectObject(hdc, shadePen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Polygon(hdc, shadePts, 10);
+        DeleteObject(shadePen);
+
+        // Glowing molten/frozen inner cores
+        if (asteroids[i].level < 3) {
+            COLORREF coreC = (asteroids[i].type == 2) ? RGB(56, 189, 248) : ((asteroids[i].type == 1) ? RGB(249, 115, 22) : RGB(239, 68, 68));
+            if (asteroids[i].is_armored) coreC = RGB(251, 146, 60);
+            HBRUSH coreB = CreateSolidBrush(coreC);
+            SelectObject(hdc, coreB); SelectObject(hdc, GetStockObject(NULL_PEN));
+            int cr = (int)(asteroids[i].radius * 0.5f);
+            Ellipse(hdc, (int)(asteroids[i].x) - cr, (int)(asteroids[i].y) - cr, (int)(asteroids[i].x) + cr, (int)(asteroids[i].y) + cr);
+            DeleteObject(coreB);
+        }
 
         // Inner crater line facet detail
         if (asteroids[i].level == 3) {
@@ -1690,6 +1739,13 @@ void Draw(HDC hdc) {
             SelectObject(hdc, domeB);
             Pie(hdc, (int)(ufos[i].x - r * 0.6f), (int)(ufos[i].y - r * 0.8f), (int)(ufos[i].x + r * 0.6f), (int)(ufos[i].y + r * 0.2f), (int)(ufos[i].x + r * 0.6f), (int)ufos[i].y, (int)(ufos[i].x - r * 0.6f), (int)ufos[i].y);
             DeleteObject(bossPen); DeleteObject(bossBrush); DeleteObject(domeB);
+
+            // Procedural specular reflection shifting based on velocity
+            HBRUSH specB = CreateSolidBrush(RGB(255, 255, 255));
+            SelectObject(hdc, specB); SelectObject(hdc, GetStockObject(NULL_PEN));
+            int shiftX = (int)(ufos[i].vx * 3.0f);
+            Ellipse(hdc, (int)(ufos[i].x) + shiftX - (int)(r*0.15f), (int)(ufos[i].y) - (int)(r*0.6f), (int)(ufos[i].x) + shiftX + (int)(r*0.15f), (int)(ufos[i].y) - (int)(r*0.4f));
+            DeleteObject(specB);
             if (ufos[i].shield_hp > 0) {
                 HPEN csPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
                 SelectObject(hdc, csPen);
@@ -1724,6 +1780,13 @@ void Draw(HDC hdc) {
             SelectObject(hdc, domeB);
             Pie(hdc, (int)(ufos[i].x - r * 0.4f), (int)(ufos[i].y - r * 0.7f), (int)(ufos[i].x + r * 0.4f), (int)(ufos[i].y + r * 0.2f), (int)(ufos[i].x + r * 0.4f), (int)ufos[i].y, (int)(ufos[i].x - r * 0.4f), (int)ufos[i].y);
             DeleteObject(ufoPen); DeleteObject(ufoBrush); DeleteObject(domeB);
+
+            // Procedural specular reflection shifting based on velocity
+            HBRUSH specB = CreateSolidBrush(RGB(255, 255, 255));
+            SelectObject(hdc, specB); SelectObject(hdc, GetStockObject(NULL_PEN));
+            int shiftX = (int)(ufos[i].vx * 3.0f);
+            Ellipse(hdc, (int)(ufos[i].x) + shiftX - (int)(r*0.1f), (int)(ufos[i].y) - (int)(r*0.5f), (int)(ufos[i].x) + shiftX + (int)(r*0.1f), (int)(ufos[i].y) - (int)(r*0.35f));
+            DeleteObject(specB);
         }
     }
 

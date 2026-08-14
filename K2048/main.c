@@ -47,6 +47,8 @@ int theme = 1; // 0=Dark, 1=Classic, 2=Pastel
 
 int screenShakeTime = 0;
 int mergePop[MAX_GRID][MAX_GRID];
+int squashTimer[MAX_GRID][MAX_GRID];
+int squashDir[MAX_GRID][MAX_GRID];
 
 int timeAttackEnabled = 0;
 int timeRemaining = 60;
@@ -405,7 +407,7 @@ void DrawBadgeIcon(HDC hdc, int x, int y, int size, int val) {
     }
 }
 
-void DrawCell(HDC hdc, int x, int y, int val, int cell_size, int isFrozen, int popVal) {
+void DrawCell(HDC hdc, int x, int y, int val, int cell_size, int isFrozen, int popVal, int sqTimer, int sqDir) {
     COLORREF baseColor = GetTileColor(val);
     int rCol = GetRValue(baseColor);
     int gCol = GetGValue(baseColor);
@@ -453,6 +455,22 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size, int isFrozen, int p
     int ry1 = y + tileMargin;
     int rx2 = x + cell_size - tileMargin;
     int ry2 = y + cell_size - tileMargin;
+
+    if (sqTimer > 0) {
+        int squashAmt = (sqTimer <= 3) ? sqTimer * 2 : (6 - sqTimer) * 2;
+        if (sqDir == 1) {
+            rx1 += squashAmt;
+            rx2 -= squashAmt;
+            ry1 -= squashAmt / 2;
+            ry2 += squashAmt / 2;
+        } else if (sqDir == 2) {
+            rx1 -= squashAmt / 2;
+            rx2 += squashAmt / 2;
+            ry1 += squashAmt;
+            ry2 -= squashAmt;
+        }
+    }
+
     RECT r = { rx1, ry1, rx2, ry2 };
 
     if (val == 0) {
@@ -565,6 +583,26 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size, int isFrozen, int p
     DeleteObject(lightPen);
     DeleteObject(darkPen);
     DeleteObject(sheenPen);
+
+    if (popVal > 0) {
+        HRGN hRgn = CreateRectRgn(rx1, ry1, rx2, ry2);
+        SelectClipRgn(hdc, hRgn);
+        int sweepOffset = (10 - popVal) * ((rx2 - rx1 + 60) / 10);
+        int sx = rx1 - 30 + sweepOffset;
+        HPEN sweepPen2 = CreatePen(PS_SOLID, 6, RGB(min(255, rCol + 150), min(255, gCol + 150), min(255, bCol + 150)));
+        HPEN sweepPen1 = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        HPEN oldSweep = (HPEN)SelectObject(hdc, sweepPen2);
+        MoveToEx(hdc, sx + 10, ry1 - 5, NULL);
+        LineTo(hdc, sx - 20, ry2 + 5);
+        SelectObject(hdc, sweepPen1);
+        MoveToEx(hdc, sx + 25, ry1 - 5, NULL);
+        LineTo(hdc, sx - 5, ry2 + 5);
+        SelectObject(hdc, oldSweep);
+        DeleteObject(sweepPen1);
+        DeleteObject(sweepPen2);
+        SelectClipRgn(hdc, NULL);
+        DeleteObject(hRgn);
+    }
 
     // Draw Frozen Ice Border Overlay
     if (isFrozen && val > 0) {
@@ -779,6 +817,8 @@ void InitGame() {
     memset(grid, 0, sizeof(grid));
     memset(frozen, 0, sizeof(frozen));
     memset(mergePop, 0, sizeof(mergePop));
+    memset(squashTimer, 0, sizeof(squashTimer));
+    memset(squashDir, 0, sizeof(squashDir));
     score = 0;
     gameOver = 0;
     timeOut = 0;
@@ -1078,6 +1118,19 @@ void DrawBoard(HDC hdc) {
     FillRect(hdc, &boardBg, boardBrush);
     DeleteObject(boardBrush);
 
+    for (int s = 0; s < 12; s++) {
+        int alpha = 12 - s;
+        int shadowR = max(0, boardR - alpha * 4);
+        int shadowG = max(0, boardG - alpha * 4);
+        int shadowB = max(0, boardB - alpha * 4);
+        HPEN sPen = CreatePen(PS_SOLID, 1, RGB(shadowR, shadowG, shadowB));
+        HPEN oldP2 = (HPEN)SelectObject(hdc, sPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, boardBg.left + s, boardBg.top + s, boardBg.right - s, boardBg.bottom - s);
+        SelectObject(hdc, oldP2);
+        DeleteObject(sPen);
+    }
+
     HPEN fLight = CreatePen(PS_SOLID, 3, RGB(min(255, boardR + 50), min(255, boardG + 50), min(255, boardB + 50)));
     HPEN fDark = CreatePen(PS_SOLID, 3, RGB(max(0, boardR - 50), max(0, boardG - 50), max(0, boardB - 50)));
     HPEN oldP = (HPEN)SelectObject(hdc, fLight);
@@ -1094,7 +1147,7 @@ void DrawBoard(HDC hdc) {
     // Draw Cells
     for (int i = 0; i < grid_size; i++) {
         for (int j = 0; j < grid_size; j++) {
-            DrawCell(hdc, MARGIN + 8 + j*cell_size, HEADER_HEIGHT + 8 + i*cell_size, grid[i][j], cell_size, frozen[i][j], mergePop[i][j]);
+            DrawCell(hdc, MARGIN + 8 + j*cell_size, HEADER_HEIGHT + 8 + i*cell_size, grid[i][j], cell_size, frozen[i][j], mergePop[i][j], squashTimer[i][j], squashDir[i][j]);
         }
     }
 
@@ -1148,7 +1201,13 @@ int Move(int dx, int dy) {
                 while (1) {
                     int ni = ci + dy;
                     int nj = cj + dx;
-                    if (ni < 0 || ni >= grid_size || nj < 0 || nj >= grid_size) break;
+                    if (ni < 0 || ni >= grid_size || nj < 0 || nj >= grid_size) {
+                        if (ci != i || cj != j) {
+                            squashTimer[ci][cj] = 6;
+                            squashDir[ci][cj] = (dx != 0) ? 1 : 2;
+                        }
+                        break;
+                    }
                     if (grid[ni][nj] == 0) {
                         grid[ni][nj] = grid[ci][cj];
                         frozen[ni][nj] = frozen[ci][cj];
@@ -1196,7 +1255,8 @@ int Move(int dx, int dy) {
                             if (mergeRes >= 2048) {
                                 screenShakeTime = 15;
                             }
-                            mergePop[ni][nj] = 5;
+                            mergePop[ni][nj] = 10;
+                            squashTimer[ni][nj] = 0;
                         }
 
                         int cell_size = 320 / grid_size;
@@ -1229,6 +1289,10 @@ int Move(int dx, int dy) {
                         }
                         break;
                     } else {
+                        if (ci != i || cj != j) {
+                            squashTimer[ci][cj] = 6;
+                            squashDir[ci][cj] = (dx != 0) ? 1 : 2;
+                        }
                         break;
                     }
                 }
@@ -1313,6 +1377,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (mergePop[i][j] > 0) {
                             mergePop[i][j]--;
                             if (mergePop[i][j] > 0) hasMilestone = 1;
+                        }
+                        if (squashTimer[i][j] > 0) {
+                            squashTimer[i][j]--;
+                            if (squashTimer[i][j] > 0) hasMilestone = 1;
                         }
                     }
                 }
