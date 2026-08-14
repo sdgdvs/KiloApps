@@ -70,6 +70,14 @@
                 <button id="btn-train">Train (⚔️)</button>
                 <button id="btn-hoard">Hoard (🗺️)</button>
                 <button id="btn-battle">Battle (⚔️)</button>
+                <button id="btn-shop">Shop (🛒)</button>
+            </div>
+            <div class="controls" id="shop-controls" style="display: none; flex-wrap: wrap;">
+                <button id="btn-shop-food">Meat (20g)</button>
+                <button id="btn-shop-toy">Toy (30g)</button>
+                <button id="btn-shop-str">Bracer (50g)</button>
+                <button id="btn-shop-spd">Boots (50g)</button>
+                <button id="btn-shop-back">Back</button>
             </div>
             <div class="controls" id="train-controls" style="display: none;">
                 <button id="btn-train-str">Strength</button>
@@ -160,6 +168,22 @@
                 document.getElementById('btn-sleep').addEventListener('click', () => this.action('sleep'));
                 document.getElementById('btn-hoard').addEventListener('click', () => this.action('hoard'));
                 document.getElementById('btn-battle').addEventListener('click', () => this.startBattle());
+                document.getElementById('btn-shop').addEventListener('click', () => {
+                    if (this.state === 'egg') return;
+                    this.isBusy = true;
+                    document.getElementById('controls').style.display = 'none';
+                    document.getElementById('shop-controls').style.display = 'flex';
+                });
+                
+                document.getElementById('btn-shop-back').addEventListener('click', () => {
+                    this.isBusy = false;
+                    document.getElementById('shop-controls').style.display = 'none';
+                    document.getElementById('controls').style.display = 'flex';
+                });
+                document.getElementById('btn-shop-food').addEventListener('click', () => this.buyItem('food'));
+                document.getElementById('btn-shop-toy').addEventListener('click', () => this.buyItem('toy'));
+                document.getElementById('btn-shop-str').addEventListener('click', () => this.buyItem('str'));
+                document.getElementById('btn-shop-spd').addEventListener('click', () => this.buyItem('spd'));
                 
                 document.getElementById('btn-battle-attack').addEventListener('click', () => this.battleTurn('attack'));
                 document.getElementById('btn-battle-defend').addEventListener('click', () => this.battleTurn('defend'));
@@ -481,6 +505,37 @@
                         };
                     });
                 }
+            },
+            
+            buyItem(type) {
+                if (type === 'food') {
+                    if (this.stats.gold >= 20) {
+                        this.stats.gold -= 20;
+                        this.stats.hunger = Math.min(100, this.stats.hunger + 50);
+                        this.stats.energy = Math.min(100, this.stats.energy + 20);
+                        this.log("Bought Premium Meat! Hunger +50, Energy +20.");
+                    } else { this.log("Not enough gold."); }
+                } else if (type === 'toy') {
+                    if (this.stats.gold >= 30) {
+                        this.stats.gold -= 30;
+                        this.stats.happiness = Math.min(100, this.stats.happiness + 50);
+                        this.stats.energy = Math.min(100, this.stats.energy + 10);
+                        this.log("Bought Mystery Toy! Happiness +50, Energy +10.");
+                    } else { this.log("Not enough gold."); }
+                } else if (type === 'str') {
+                    if (this.stats.gold >= 50) {
+                        this.stats.gold -= 50;
+                        this.stats.strength += 5;
+                        this.log("Bought Power Bracer! Strength +5.");
+                    } else { this.log("Not enough gold."); }
+                } else if (type === 'spd') {
+                    if (this.stats.gold >= 50) {
+                        this.stats.gold -= 50;
+                        this.stats.speed += 5;
+                        this.log("Bought Swift Boots! Speed +5.");
+                    } else { this.log("Not enough gold."); }
+                }
+                this.updateUI();
             },
             
             startBattle() {

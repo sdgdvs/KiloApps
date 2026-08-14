@@ -55,11 +55,18 @@ int log_count = 0;
 #define BTN_BAT_DEF   18
 #define BTN_BAT_SPEC  19
 #define BTN_BAT_FLEE  20
+#define BTN_SHOP      21
+#define BTN_SHP_FOOD  22
+#define BTN_SHP_TOY   23
+#define BTN_SHP_STR   24
+#define BTN_SHP_SPD   25
+#define BTN_SHP_BACK  26
 
-HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard, btn_battle;
+HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard, btn_battle, btn_shop;
 HWND btn_tr_str, btn_tr_spd, btn_tr_loy, btn_tr_back;
 HWND btn_str_hit, btn_spd_react, btn_loy_1, btn_loy_2, btn_loy_3;
 HWND btn_bat_atk, btn_bat_def, btn_bat_spec, btn_bat_flee;
+HWND btn_shp_food, btn_shp_toy, btn_shp_str, btn_shp_spd, btn_shp_back;
 HFONT hFontNormal, hFontLarge;
 HBRUSH bgBrush;
 
@@ -175,6 +182,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      395, 260, 80, 40, hwnd, (HMENU)BTN_HOARD, NULL, NULL);
             btn_battle = CreateWindow("BUTTON", "Battle", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                       485, 260, 80, 40, hwnd, (HMENU)BTN_BATTLE, NULL, NULL);
+            btn_shop = CreateWindow("BUTTON", "Shop", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                      485, 215, 80, 40, hwnd, (HMENU)BTN_SHOP, NULL, NULL);
 
             btn_bat_atk = CreateWindow("BUTTON", "Attack", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                        90, 270, 90, 40, hwnd, (HMENU)BTN_BAT_ATK, NULL, NULL);
@@ -184,6 +193,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                        290, 270, 90, 40, hwnd, (HMENU)BTN_BAT_SPEC, NULL, NULL);
             btn_bat_flee = CreateWindow("BUTTON", "Flee", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                         390, 270, 90, 40, hwnd, (HMENU)BTN_BAT_FLEE, NULL, NULL);
+
+            btn_shp_food = CreateWindow("BUTTON", "Meat 20g", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 35, 260, 80, 40, hwnd, (HMENU)BTN_SHP_FOOD, NULL, NULL);
+            btn_shp_toy = CreateWindow("BUTTON", "Toy 30g", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 125, 260, 80, 40, hwnd, (HMENU)BTN_SHP_TOY, NULL, NULL);
+            btn_shp_str = CreateWindow("BUTTON", "Str 50g", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 215, 260, 80, 40, hwnd, (HMENU)BTN_SHP_STR, NULL, NULL);
+            btn_shp_spd = CreateWindow("BUTTON", "Spd 50g", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 305, 260, 80, 40, hwnd, (HMENU)BTN_SHP_SPD, NULL, NULL);
+            btn_shp_back = CreateWindow("BUTTON", "Back", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 395, 260, 80, 40, hwnd, (HMENU)BTN_SHP_BACK, NULL, NULL);
 
             btn_tr_str = CreateWindow("BUTTON", "Strength", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                      80, 260, 100, 40, hwnd, (HMENU)BTN_TR_STR, NULL, NULL);
@@ -212,6 +227,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_train, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_hoard, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_battle, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_shop, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_str, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_spd, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_loy, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
@@ -225,6 +241,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_bat_def, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_bat_spec, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_bat_flee, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_shp_food, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_shp_toy, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_shp_str, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_shp_spd, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_shp_back, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             break;
             
         case WM_COMMAND:
@@ -238,6 +259,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW);
                 ShowWindow(btn_battle, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW);
                 SetTimer(hwnd, TIMER_ID, 3000, NULL);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -288,6 +310,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_train, SW_HIDE);
                     ShowWindow(btn_hoard, SW_HIDE);
                     ShowWindow(btn_battle, SW_HIDE);
+                    ShowWindow(btn_shop, SW_HIDE);
                     ShowWindow(btn_tr_str, SW_SHOW);
                     ShowWindow(btn_tr_spd, SW_SHOW);
                     ShowWindow(btn_tr_loy, SW_SHOW);
@@ -352,6 +375,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -371,6 +395,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -387,6 +412,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -400,6 +426,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
                     ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
                     ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
+                    ShowWindow(btn_shop, SW_HIDE);
                     prev_state = state;
                     state = 7;
                     SetTimer(hwnd, 4, 5000, NULL);
@@ -426,6 +453,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
                     ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
                     ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
+                    ShowWindow(btn_shop, SW_HIDE);
                     
                     ShowWindow(btn_bat_atk, SW_SHOW);
                     ShowWindow(btn_bat_def, SW_SHOW);
@@ -532,9 +560,74 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                     ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                     ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
+                    ShowWindow(btn_shop, SW_SHOW);
                     
                     state = prev_state;
                 }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) == BTN_SHOP) {
+                if (state == 0) return 0;
+                ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
+                ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
+                ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
+                ShowWindow(btn_shop, SW_HIDE);
+                
+                ShowWindow(btn_shp_food, SW_SHOW);
+                ShowWindow(btn_shp_toy, SW_SHOW);
+                ShowWindow(btn_shp_str, SW_SHOW);
+                ShowWindow(btn_shp_spd, SW_SHOW);
+                ShowWindow(btn_shp_back, SW_SHOW);
+                
+                prev_state = state;
+                state = 9;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) == BTN_SHP_BACK) {
+                ShowWindow(btn_shp_food, SW_HIDE); ShowWindow(btn_shp_toy, SW_HIDE);
+                ShowWindow(btn_shp_str, SW_HIDE); ShowWindow(btn_shp_spd, SW_HIDE);
+                ShowWindow(btn_shp_back, SW_HIDE);
+                
+                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
+                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW);
+                
+                state = prev_state;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) == BTN_SHP_FOOD) {
+                if (gold >= 20) {
+                    gold -= 20;
+                    hunger += 50; if (hunger > 100) hunger = 100;
+                    energy += 20; if (energy > 100) energy = 100;
+                    add_log("Bought Premium Meat! Hunger +50, Energy +20.");
+                } else { add_log("Not enough gold."); }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) == BTN_SHP_TOY) {
+                if (gold >= 30) {
+                    gold -= 30;
+                    happiness += 50; if (happiness > 100) happiness = 100;
+                    energy += 10; if (energy > 100) energy = 100;
+                    add_log("Bought Mystery Toy! Happiness +50, Energy +10.");
+                } else { add_log("Not enough gold."); }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) == BTN_SHP_STR) {
+                if (gold >= 50) {
+                    gold -= 50;
+                    strength += 5;
+                    add_log("Bought Power Bracer! Strength +5.");
+                } else { add_log("Not enough gold."); }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) == BTN_SHP_SPD) {
+                if (gold >= 50) {
+                    gold -= 50;
+                    speed += 5;
+                    add_log("Bought Swift Boots! Speed +5.");
+                } else { add_log("Not enough gold."); }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
@@ -609,6 +702,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
