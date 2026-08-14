@@ -107,6 +107,11 @@
                     <button class="btn-loy-box" data-box="2">Box 3</button>
                 </div>
             </div>
+            <div class="controls" id="event-controls" style="display: none; flex-wrap: wrap;">
+                <p id="event-text" style="width: 100%; margin: 0 0 10px 0; font-weight: bold;"></p>
+                <button id="btn-event-opt1">Option 1</button>
+                <button id="btn-event-opt2">Option 2</button>
+            </div>
             <div class="message-log" id="message-log"></div>
         </div>
         
@@ -160,6 +165,7 @@
             minigameTimeout: null,
             minigameValue: 0,
             battleState: null,
+            eventTimeout: null,
             
             init() {
                 document.getElementById('btn-hatch').addEventListener('click', () => this.hatch());
@@ -655,12 +661,101 @@
                 this.updateUI();
             },
             
+            triggerEvent() {
+                if (this.isBusy || this.state === 'egg') return;
+                const events = [
+                    {
+                        text: "Your dragon looks sick and feverish.",
+                        opt1: "Give Medicine (20g)",
+                        opt2: "Let it rest",
+                        act1: () => {
+                            if (this.stats.gold >= 20) {
+                                this.stats.gold -= 20;
+                                this.stats.happiness = Math.min(100, this.stats.happiness + 10);
+                                this.log("Medicine worked! Dragon is feeling better.");
+                            } else {
+                                this.stats.happiness = Math.max(0, this.stats.happiness - 20);
+                                this.log("Not enough gold for medicine... Dragon suffered.");
+                            }
+                        },
+                        act2: () => {
+                            this.stats.happiness = Math.max(0, this.stats.happiness - 10);
+                            this.stats.strength = Math.max(0, this.stats.strength - 1);
+                            this.log("Dragon rested but lost some strength.");
+                        }
+                    },
+                    {
+                        text: "A wild beast is approaching the lair!",
+                        opt1: "Scare it away",
+                        opt2: "Hide",
+                        act1: () => {
+                            if (this.stats.strength > 10) {
+                                this.stats.happiness = Math.min(100, this.stats.happiness + 10);
+                                this.log("Your dragon roared and scared it away!");
+                            } else {
+                                this.stats.energy = Math.max(0, this.stats.energy - 20);
+                                this.stats.happiness = Math.max(0, this.stats.happiness - 10);
+                                this.log("The beast attacked! Dragon lost energy.");
+                            }
+                        },
+                        act2: () => {
+                            this.stats.happiness = Math.max(0, this.stats.happiness - 5);
+                            this.stats.loyalty = Math.max(0, this.stats.loyalty - 2);
+                            this.log("You both hid. The beast left, but your dragon looks disappointed.");
+                        }
+                    },
+                    {
+                        text: "A wandering merchant offers a mystery eggshell.",
+                        opt1: "Buy (10g)",
+                        opt2: "Ignore",
+                        act1: () => {
+                            if (this.stats.gold >= 10) {
+                                this.stats.gold -= 10;
+                                this.stats.happiness = Math.min(100, this.stats.happiness + 5);
+                                this.log("You bought the eggshell. It's... shiny.");
+                            } else {
+                                this.log("Not enough gold.");
+                            }
+                        },
+                        act2: () => {
+                            this.log("You ignored the merchant.");
+                        }
+                    }
+                ];
+                
+                const ev = events[Math.floor(Math.random() * events.length)];
+                this.isBusy = true;
+                document.getElementById('controls').style.display = 'none';
+                document.getElementById('event-controls').style.display = 'flex';
+                document.getElementById('event-text').innerText = ev.text;
+                
+                let btn1 = document.getElementById('btn-event-opt1');
+                let btn2 = document.getElementById('btn-event-opt2');
+                btn1.innerText = ev.opt1;
+                btn2.innerText = ev.opt2;
+                
+                btn1.onclick = () => { ev.act1(); this.endEvent(); };
+                btn2.onclick = () => { ev.act2(); this.endEvent(); };
+            },
+            
+            endEvent() {
+                this.isBusy = false;
+                document.getElementById('event-controls').style.display = 'none';
+                document.getElementById('controls').style.display = 'flex';
+                this.updateUI();
+            },
+            
             tick() {
                 if (this.state === 'egg') return;
                 
                 this.stats.hunger = Math.max(0, this.stats.hunger - 2);
                 this.stats.happiness = Math.max(0, this.stats.happiness - 1);
                 this.stats.age += 1;
+                
+                if (!this.isBusy && Math.random() < 0.1) {
+                    this.triggerEvent();
+                    return;
+                }
                 
                 if (this.stats.hunger < 20) this.log("Dragon is getting hungry...");
                 if (this.stats.happiness < 20) this.log("Dragon is feeling sad...");

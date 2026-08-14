@@ -61,14 +61,19 @@ int log_count = 0;
 #define BTN_SHP_STR   24
 #define BTN_SHP_SPD   25
 #define BTN_SHP_BACK  26
+#define BTN_EVT_OPT1  27
+#define BTN_EVT_OPT2  28
 
 HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard, btn_battle, btn_shop;
 HWND btn_tr_str, btn_tr_spd, btn_tr_loy, btn_tr_back;
 HWND btn_str_hit, btn_spd_react, btn_loy_1, btn_loy_2, btn_loy_3;
 HWND btn_bat_atk, btn_bat_def, btn_bat_spec, btn_bat_flee;
 HWND btn_shp_food, btn_shp_toy, btn_shp_str, btn_shp_spd, btn_shp_back;
+HWND btn_evt_opt1, btn_evt_opt2;
 HFONT hFontNormal, hFontLarge;
 HBRUSH bgBrush;
+
+int current_event_id = 0;
 
 void add_log(const char* msg) {
     for (int i = MAX_LOG_LINES - 1; i > 0; --i) {
@@ -200,6 +205,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             btn_shp_spd = CreateWindow("BUTTON", "Spd 50g", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 305, 260, 80, 40, hwnd, (HMENU)BTN_SHP_SPD, NULL, NULL);
             btn_shp_back = CreateWindow("BUTTON", "Back", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 395, 260, 80, 40, hwnd, (HMENU)BTN_SHP_BACK, NULL, NULL);
 
+            btn_evt_opt1 = CreateWindow("BUTTON", "Opt 1", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 150, 270, 130, 40, hwnd, (HMENU)BTN_EVT_OPT1, NULL, NULL);
+            btn_evt_opt2 = CreateWindow("BUTTON", "Opt 2", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 300, 270, 130, 40, hwnd, (HMENU)BTN_EVT_OPT2, NULL, NULL);
+
             btn_tr_str = CreateWindow("BUTTON", "Strength", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                      80, 260, 100, 40, hwnd, (HMENU)BTN_TR_STR, NULL, NULL);
             btn_tr_spd = CreateWindow("BUTTON", "Speed", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -246,6 +254,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_shp_str, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_shp_spd, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_shp_back, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_evt_opt1, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_evt_opt2, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             break;
             
         case WM_COMMAND:
@@ -630,6 +640,59 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else { add_log("Not enough gold."); }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
+            else if (LOWORD(wParam) == BTN_EVT_OPT1 || LOWORD(wParam) == BTN_EVT_OPT2) {
+                int opt = LOWORD(wParam) == BTN_EVT_OPT1 ? 1 : 2;
+                if (current_event_id == 0) {
+                    if (opt == 1) {
+                        if (gold >= 20) {
+                            gold -= 20; happiness += 10; if (happiness>100) happiness=100;
+                            add_log("Medicine worked! Dragon is feeling better.");
+                        } else {
+                            happiness -= 20; if (happiness<0) happiness=0;
+                            add_log("Not enough gold for medicine... Dragon suffered.");
+                        }
+                    } else {
+                        happiness -= 10; if (happiness<0) happiness=0;
+                        strength--; if (strength<0) strength=0;
+                        add_log("Dragon rested but lost some strength.");
+                    }
+                } else if (current_event_id == 1) {
+                    if (opt == 1) {
+                        if (strength > 10) {
+                            happiness += 10; if (happiness>100) happiness=100;
+                            add_log("Your dragon roared and scared it away!");
+                        } else {
+                            energy -= 20; if (energy<0) energy=0;
+                            happiness -= 10; if (happiness<0) happiness=0;
+                            add_log("The beast attacked! Dragon lost energy.");
+                        }
+                    } else {
+                        happiness -= 5; if (happiness<0) happiness=0;
+                        loyalty -= 2; if (loyalty<0) loyalty=0;
+                        add_log("You both hid. The beast left, but your dragon looks disappointed.");
+                    }
+                } else if (current_event_id == 2) {
+                    if (opt == 1) {
+                        if (gold >= 10) {
+                            gold -= 10; happiness += 5; if (happiness>100) happiness=100;
+                            add_log("You bought the eggshell. It's... shiny.");
+                        } else {
+                            add_log("Not enough gold.");
+                        }
+                    } else {
+                        add_log("You ignored the merchant.");
+                    }
+                }
+                
+                ShowWindow(btn_evt_opt1, SW_HIDE);
+                ShowWindow(btn_evt_opt2, SW_HIDE);
+                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
+                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW);
+                state = prev_state;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             break;
 
         case WM_TIMER:
@@ -642,6 +705,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 if (hunger < 20) add_log("Dragon is getting hungry...");
                 if (happiness < 20) add_log("Dragon is feeling sad...");
+                
+                if (state == 1 || state == 2) {
+                    if ((rand() % 100) < 10) {
+                        current_event_id = rand() % 3;
+                        ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
+                        ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
+                        ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
+                        ShowWindow(btn_shop, SW_HIDE);
+                        ShowWindow(btn_evt_opt1, SW_SHOW);
+                        ShowWindow(btn_evt_opt2, SW_SHOW);
+                        
+                        if (current_event_id == 0) {
+                            SetWindowText(btn_evt_opt1, "Medicine 20g");
+                            SetWindowText(btn_evt_opt2, "Rest");
+                        } else if (current_event_id == 1) {
+                            SetWindowText(btn_evt_opt1, "Scare Beast");
+                            SetWindowText(btn_evt_opt2, "Hide");
+                        } else if (current_event_id == 2) {
+                            SetWindowText(btn_evt_opt1, "Buy Shell 10g");
+                            SetWindowText(btn_evt_opt2, "Ignore");
+                        }
+                        
+                        prev_state = state;
+                        state = 10;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                        return 0;
+                    }
+                }
                 
                 if (state == 1 && age >= 10) {
                     state = 2;
@@ -763,6 +854,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     const char* text = "BATTLE!";
                     SetTextColor(hdc, RGB(200, 0, 0));
                     TextOut(hdc, 260, 235, text, strlen(text));
+                    SetTextColor(hdc, RGB(42, 23, 4));
+                } else if (state == 10) {
+                    const char* text = "";
+                    if (current_event_id == 0) text = "Your dragon looks sick and feverish.";
+                    else if (current_event_id == 1) text = "A wild beast is approaching the lair!";
+                    else if (current_event_id == 2) text = "A wandering merchant offers a mystery eggshell.";
+                    SetTextColor(hdc, RGB(200, 0, 0));
+                    TextOut(hdc, 150, 235, text, strlen(text));
                     SetTextColor(hdc, RGB(42, 23, 4));
                 }
                 
