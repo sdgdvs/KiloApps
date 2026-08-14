@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KWords
 - KReversi
 - KQuest
 - KSpace
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSudoku
 - KGo
 - KTowers
+- KWords
 ## Completed Work Log
+
+- **KWords (Loop 4):** Implemented highly detailed visual variations for premium multiplier tiles (Double/Triple Word/Letter) featuring glowing metallic filigree borders, a dynamic 3D drop-shadow that scales/shifts when tiles are hovered or dragged, and an animated pulsing shimmering dictionary scan effect across the selected tiles during word validation in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
 - **KTowers (Loop 4):** Implemented highly detailed visual variations for building textures (reflective glass windows vs matte concrete based on disc size), a dynamic 3D drop-shadow cast by the active falling/hovering tower block that scales and shifts to emphasize depth, and animated flashing red/yellow warning lights for unstable or misaligned block placements in both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 

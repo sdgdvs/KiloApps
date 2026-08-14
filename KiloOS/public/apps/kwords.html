@@ -89,6 +89,21 @@
   }
   .cell:hover {
     transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 10px 15px rgba(0,0,0,0.6), inset 1px 1px 2px rgba(255,255,255,0.9), 0 5px 0 #1a365d;
+  }
+  .cell.premium-dl { background: linear-gradient(135deg, #b0d4ff, #78a8ff); box-shadow: inset 0 0 0 1px #fff, inset 0 0 6px #68a0ff, 0 3px 0 #4272c4; }
+  .cell.premium-tl { background: linear-gradient(135deg, #68a8ff, #2b6cb0); box-shadow: inset 0 0 0 1px #fff, inset 0 0 6px #2b6cb0, 0 3px 0 #1a365d; }
+  .cell.premium-dw { background: linear-gradient(135deg, #ffc0b0, #ff8c78); box-shadow: inset 0 0 0 1px #fff, inset 0 0 6px #ff8c68, 0 3px 0 #c45942; }
+  .cell.premium-tw { background: linear-gradient(135deg, #ff8c68, #c53030); box-shadow: inset 0 0 0 1px #fff, inset 0 0 6px #c53030, 0 3px 0 #741b1b; }
+  .cell.premium-dl::after { content: 'DL'; position: absolute; font-size: 8px; top: 2px; left: 2px; color: #2c5282; font-weight: bold; }
+  .cell.premium-tl::after { content: 'TL'; position: absolute; font-size: 8px; top: 2px; left: 2px; color: #ebf8ff; font-weight: bold; }
+  .cell.premium-dw::after { content: 'DW'; position: absolute; font-size: 8px; top: 2px; left: 2px; color: #742a2a; font-weight: bold; }
+  .cell.premium-tw::after { content: 'TW'; position: absolute; font-size: 8px; top: 2px; left: 2px; color: #fff5f5; font-weight: bold; }
+  .cell.scanning { animation: scanEffect 0.5s ease-in-out; }
+  @keyframes scanEffect {
+    0% { filter: brightness(1) drop-shadow(0 0 0px #fff); }
+    50% { filter: brightness(1.5) drop-shadow(0 0 10px #4fd1c5); transform: translateY(-3px) scale(1.05); }
+    100% { filter: brightness(1) drop-shadow(0 0 0px #fff); }
   }
   .tile-char {
     font-family: 'Georgia', 'Times New Roman', serif;
@@ -494,6 +509,7 @@
     let radarGrid = [];
     let pathfinderGrid = [];
     let secretGrid = [];
+    let premiumGrid = [];
     let isFogStage = false;
 
     let wordsToFind = [];
@@ -631,6 +647,7 @@
         radarGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
         pathfinderGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
         secretGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+        premiumGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
 
         for (let word of wordsToFind) {
             placeWord(word);
@@ -669,6 +686,13 @@
                 frozenGrid[fr][fc] = 2; // 2 layers of ice
                 fCount++;
             }
+        }
+
+        // Place premium tiles
+        for (let i = 0; i < Math.floor(gridSize * gridSize * 0.05); i++) {
+            let pr = Math.floor(Math.random() * gridSize);
+            let pc = Math.floor(Math.random() * gridSize);
+            if (premiumGrid[pr][pc] === 0) premiumGrid[pr][pc] = Math.floor(Math.random() * 4) + 1;
         }
 
         // Initial unfog for fog stages
@@ -806,6 +830,10 @@
                     if (pathfinderGrid[r][c]) cell.classList.add('pathfinder');
                     if (hintedWords.some(h => h.r === r && h.c === c)) cell.classList.add('hint');
                     if (secretGrid[r][c]) cell.classList.add('secret');
+                    if (premiumGrid[r][c] === 1) cell.classList.add('premium-dl');
+                    if (premiumGrid[r][c] === 2) cell.classList.add('premium-tl');
+                    if (premiumGrid[r][c] === 3) cell.classList.add('premium-dw');
+                    if (premiumGrid[r][c] === 4) cell.classList.add('premium-tw');
                     if (foundWords.some(fw => fw.cells.some(cell => cell.r === r && cell.c === c))) {
                         cell.classList.add('found');
                     }
@@ -952,6 +980,13 @@
 
     function checkSelection() {
         if (currentSelection.length === 0) return;
+        
+        // Add scanning animation to selected cells
+        document.querySelectorAll('.cell.selected').forEach(c => {
+            c.classList.add('scanning');
+            setTimeout(() => c.classList.remove('scanning'), 500);
+        });
+
         const selectedWord = currentSelection.map(cell => grid[cell.r][cell.c]).join('');
         const reversedWord = selectedWord.split('').reverse().join('');
         
@@ -966,8 +1001,19 @@
                     foundMatch = true;
 
                     if (gameMode !== "zen") {
+                        let wordMultiplier = 1;
+                        let baseWordScore = 0;
+                        currentSelection.forEach(c => {
+                            let ltrScore = getLetterScore(grid[c.r][c.c]);
+                            if (premiumGrid[c.r][c.c] === 1) ltrScore *= 2;
+                            if (premiumGrid[c.r][c.c] === 2) ltrScore *= 3;
+                            if (premiumGrid[c.r][c.c] === 3) wordMultiplier *= 2;
+                            if (premiumGrid[c.r][c.c] === 4) wordMultiplier *= 3;
+                            baseWordScore += ltrScore;
+                        });
                         let pts = 1000 - (seconds * 2);
                         if (gameMode === "time_attack" || gameMode === "campaign") pts = 500;
+                        pts += baseWordScore * wordMultiplier * 10;
                         if (pts < 100) pts = 100;
                         if (timeSinceLastFind < 15) comboMultiplier++;
                         else comboMultiplier = 1;

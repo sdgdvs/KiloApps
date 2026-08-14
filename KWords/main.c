@@ -163,6 +163,8 @@ bool unfoggedGrid[MAX_GRID_SIZE][MAX_GRID_SIZE]; // Fog of War
 bool radarGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
 bool pathfinderGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
 bool secretGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+int premiumGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+float scanAnim[MAX_GRID_SIZE][MAX_GRID_SIZE];
 
 int gridSize = 15;
 int numWordsToFind = 8;
@@ -461,9 +463,11 @@ void InitGame() {
     memset(radarGrid, 0, sizeof(radarGrid));
     memset(pathfinderGrid, 0, sizeof(pathfinderGrid));
     memset(secretGrid, 0, sizeof(secretGrid));
+    memset(premiumGrid, 0, sizeof(premiumGrid));
     memset(wordsFoundStatus, 0, sizeof(wordsFoundStatus));
     memset(wordsHintedStatus, 0, sizeof(wordsHintedStatus));
     memset(cellAnim, 0, sizeof(cellAnim));
+    memset(scanAnim, 0, sizeof(scanAnim));
     memset(strikeAnim, 0, sizeof(strikeAnim));
     memset(secretFoundStatus, 0, sizeof(secretFoundStatus));
     
@@ -581,6 +585,14 @@ void InitGame() {
         }
     }
 
+    // Place premium tiles
+    int numPremium = (gridSize * gridSize) / 20;
+    for (int i = 0; i < numPremium; i++) {
+        int pr = rand() % gridSize;
+        int pc = rand() % gridSize;
+        if (premiumGrid[pr][pc] == 0) premiumGrid[pr][pc] = (rand() % 4) + 1;
+    }
+
     // Initialize Fog of War
     if (!isFogStage) {
         for(int r=0; r<gridSize; r++) {
@@ -622,6 +634,8 @@ void EndSelection(HWND hwnd) {
     GetLineCells(startR, startC, curR, curC, selR, selC, &count);
     
     if (count > 0) {
+        for (int i=0; i<count; i++) scanAnim[selR[i]][selC[i]] = 1.0f;
+
         char selWord[32] = {0};
         char revWord[32] = {0};
         for(int i=0; i<count; i++) {
@@ -639,8 +653,21 @@ void EndSelection(HWND hwnd) {
                     found = true;
                     
                     if (currentGameMode != 1) {
+                        int wordMult = 1;
+                        int wordScore = 0;
+                        for (int k = 0; k < count; k++) {
+                            int r = selR[k];
+                            int c = selC[k];
+                            int ls = GetLetterScore(grid[r][c]);
+                            if (premiumGrid[r][c] == 1) ls *= 2;
+                            else if (premiumGrid[r][c] == 2) ls *= 3;
+                            else if (premiumGrid[r][c] == 3) wordMult *= 2;
+                            else if (premiumGrid[r][c] == 4) wordMult *= 3;
+                            wordScore += ls;
+                        }
                         int points = 1000 - (timerSeconds * 2);
                         if (currentGameMode == 2 || currentGameMode == 3) points = 500;
+                        points += wordScore * wordMult * 10;
                         if (points < 100) points = 100;
                         if (timeSinceLastFind < 15) comboMultiplier++;
                         else comboMultiplier = 1;
@@ -1012,6 +1039,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         float target = (isSel || isFound) ? 1.0f : 0.0f;
                         if(cellAnim[r][c] < target) { cellAnim[r][c] += 0.2f; if(cellAnim[r][c]>1.0f) cellAnim[r][c]=1.0f; needsRedraw = true; }
                         else if(cellAnim[r][c] > target) { cellAnim[r][c] -= 0.2f; if(cellAnim[r][c]<0.0f) cellAnim[r][c]=0.0f; needsRedraw = true; }
+                        if (scanAnim[r][c] > 0.0f) {
+                            scanAnim[r][c] -= 0.1f;
+                            if (scanAnim[r][c] < 0.0f) scanAnim[r][c] = 0.0f;
+                            needsRedraw = true;
+                        }
                     }
                 }
                 for(int w=0; w<wordCount; w++) {
@@ -1348,10 +1380,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             borderHi = RGB(240, 255, 255); borderLo = RGB(30, 120, 140);
                         }
                         textColor = RGB(13, 56, 56);
+                    } else if (premiumGrid[r][c] > 0) {
+                        if (premiumGrid[r][c] == 1) { // DL
+                            bgTop = RGB(176, 212, 255); bgBot = RGB(120, 168, 255);
+                            borderHi = RGB(255, 255, 255); borderLo = RGB(66, 114, 196);
+                        } else if (premiumGrid[r][c] == 2) { // TL
+                            bgTop = RGB(104, 168, 255); bgBot = RGB(43, 108, 176);
+                            borderHi = RGB(255, 255, 255); borderLo = RGB(26, 54, 93);
+                        } else if (premiumGrid[r][c] == 3) { // DW
+                            bgTop = RGB(255, 192, 176); bgBot = RGB(255, 140, 120);
+                            borderHi = RGB(255, 255, 255); borderLo = RGB(196, 89, 66);
+                        } else { // TW
+                            bgTop = RGB(255, 140, 104); bgBot = RGB(197, 48, 48);
+                            borderHi = RGB(255, 255, 255); borderLo = RGB(116, 27, 27);
+                        }
+                        textColor = RGB(255, 255, 255);
                     } else { // Ivory / Oak Scrabble Keycap
                         bgTop = RGB(247, 241, 227); bgBot = RGB(212, 196, 168);
                         borderHi = RGB(255, 255, 255); borderLo = RGB(158, 122, 74);
                         textColor = RGB(58, 35, 18);
+                    }
+
+                    if (scanAnim[r][c] > 0.0f) {
+                        int val = (int)(scanAnim[r][c] * 100);
+                        bgBot = RGB(min(255, GetRValue(bgBot) + val), min(255, GetGValue(bgBot) + val), min(255, GetBValue(bgBot) + val));
+                        bgTop = RGB(min(255, GetRValue(bgTop) + val), min(255, GetGValue(bgTop) + val), min(255, GetBValue(bgTop) + val));
                     }
 
                     int pad = 2;
@@ -1365,10 +1418,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     int offsetX = pad + (tW - curW) / 2;
                     int offsetY = pad + (tH - curH) / 2;
+                    if (isSelected) {
+                        offsetY -= 3;
+                    }
                     RECT tileRc = { tileX + offsetX, tileY + offsetY, tileX + offsetX + curW, tileY + offsetY + curH };
 
                     HBRUSH shadowBrush = CreateSolidBrush(borderLo);
-                    RECT shadowRc = { tileRc.left, tileRc.top + 3, tileRc.right, tileRc.bottom + 3 };
+                    RECT shadowRc = { tileRc.left, tileRc.top + (isSelected ? 6 : 3), tileRc.right, tileRc.bottom + (isSelected ? 6 : 3) };
                     FillRect(hdc, &shadowRc, shadowBrush);
                     DeleteObject(shadowBrush);
 
@@ -1396,6 +1452,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(letterFont);
 
                     if (!isFogged) {
+                        if (!foundGrid[r][c] && premiumGrid[r][c] > 0) {
+                            const char* pLbl = (premiumGrid[r][c]==1)?"DL":((premiumGrid[r][c]==2)?"TL":((premiumGrid[r][c]==3)?"DW":"TW"));
+                            HFONT pFont = CreateFont(curH / 4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                                OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
+                            HFONT oldPF = (HFONT)SelectObject(hdc, pFont);
+                            SetTextColor(hdc, textColor);
+                            RECT pRc = { tileRc.left + 2, tileRc.top + 1, tileRc.right, tileRc.bottom };
+                            DrawText(hdc, pLbl, 2, &pRc, DT_LEFT | DT_TOP | DT_SINGLELINE);
+                            SelectObject(hdc, oldPF);
+                            DeleteObject(pFont);
+                        }
+
                         int pts = GetLetterScore(grid[r][c]);
                         char ptsStr[8];
                         sprintf(ptsStr, "%d", pts);
