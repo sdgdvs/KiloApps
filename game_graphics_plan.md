@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KRogue
 - KChess
 - KPong
 - KMines
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFortress
 - KFarm
 - KAlchemy
+- KRogue
 ## Completed Work Log
+
+- **KRogue (Loop 5):** Implemented highly polished visual effects including a textured parchment/leather inventory background and embossed health/mana bars, procedural blood splatter decals on floor tiles that slowly fade over time, and a dynamic 3D drop-shadow cast by characters to emphasize physical presence in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
 - **KAlchemy (Loop 4):** Implemented highly detailed procedural lighting and specular highlights on the alchemy vessels to look like glossy glass/brass, dynamic 3D drop-shadows that shift/expand during dragging and combination pulses, and a stylized animated magical aura/sparkle effect surrounding successful transmuted items in both Web Canvas (kalchemy.html) and Native C Win32 GDI (KAlchemy/main.c).
 
