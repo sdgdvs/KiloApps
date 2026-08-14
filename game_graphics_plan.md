@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMaze
 - KColony
 - KFortress
 - KFarm
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSnake
 - KTetris
 - KBreakout
+- KMaze
 ## Completed Work Log
+
+- **KMaze (Loop 5):** Implemented highly detailed visual variations for enemy sprites (8-directional sprites for Minotaurs based on relative player angle), procedural head-bob and weapon-sway view models for the player's held equipment while moving/turning, and a stylized kinematically animated damage flinch effect that temporarily skews the raycasting projection plane to simulate a heavy blow in both Web Canvas (kmaze.html) and Native C Win32 GDI (KMaze/main.c).
 
 - **KBreakout (Loop 5):** Implemented highly detailed visual variations for the paddle (procedural metallic reflections and animated energy conduits that pulse based on current horizontal velocity), procedural glass-like specular reflections on the bricks that realistically shift position and intensity based on the ball's proximity to simulate dynamic lighting, and a distinctly stylized kinematically animated paddle stretching/squashing effect during high-speed impacts or powerup activations in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 
