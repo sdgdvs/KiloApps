@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMines
 - KAsteroids
 - K2048
 - KSolitaire
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KRogue
 - KChess
 - KPong
+- KMines
 ## Completed Work Log
+
+- **KMines (Loop 5):** Implemented highly polished visual effects including 3D beveled metallic framing around the main grid and counters, an animated sweeping scanner effect when the Detector Bot is active, and a dynamic multi-stage particle explosion sequence where mines shatter into distinct glowing debris chunks that physically bounce off the board edges in both Web Canvas (kmines.html) and Native C Win32 GDI (KMines/main.c).
 
 - **KPong (Loop 5):** Implemented highly polished visual effects including procedural metallic reflections on paddles, animated energy conduits that pulse based on current vertical velocity, procedural glass-like specular reflections on the ball that realistically shift position and intensity based on its velocity vector, and a distinctly stylized kinematically animated paddle stretching/squashing effect during high-speed impacts or rapid movement in both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 
