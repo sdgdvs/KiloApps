@@ -54,13 +54,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KDragon (Fantasy creature-raising sim)
-**Phase:** 4 (next to do)
+**Phase:** 5 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KDragon directory (`KDragon/`), create web HTML skeleton (`KiloOS/public/apps/kdragon.html`), register in App.jsx.
 - [x] Phase 2: Basic UI for hatching a dragon egg and core stat management loop (feeding, playing) in web HTML.
 - [x] Phase 3: Native C version (`KDragon/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [ ] Phase 4: Fantasy styling (parchment backgrounds, pixel-art dragon portraits, medieval fonts).
+- [x] Phase 4: Fantasy styling (parchment backgrounds, pixel-art dragon portraits, medieval fonts).
 - [ ] Phase 5: Implement dragon aging and evolution system (egg -> baby -> adult).
 - [ ] Phase 6: Add different dragon elemental types (Fire, Water, Earth) based on early care choices.
 - [ ] Phase 7: Training mechanics (minigames for raising strength, speed, loyalty).
