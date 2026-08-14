@@ -46,6 +46,10 @@ struct Boss {
 };
 
 
+struct Particle { int x, y, vx, vy, life; COLORREF color; };
+struct Particle particles[100];
+int particle_count = 0;
+
 // Replay System
 struct ReplayEvent {
     int tick;
@@ -908,6 +912,40 @@ void ApplyFoodMagnet() {
     }
 }
 
+void DrawSnakeShadowGDI(HDC hdc, int x, int y, int index, int total, int d_x, int d_y) {
+    int px = x * CELL_SIZE + 4, py = y * CELL_SIZE + 45 + 4;
+    int cx = px + CELL_SIZE / 2, cy = py + CELL_SIZE / 2;
+
+    HBRUSH shadowBrush = CreateSolidBrush(RGB(10, 15, 20));
+    HPEN shadowPen = (HPEN)GetStockObject(NULL_PEN);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, shadowBrush);
+    HPEN oldPen = (HPEN)SelectObject(hdc, shadowPen);
+
+    if (index == 0) {
+        Ellipse(hdc, px - 2, py - 2, px + CELL_SIZE + 2, py + CELL_SIZE + 2);
+    } else if (index == total - 1) {
+        int prev_x = snake[index - 1].x;
+        int prev_y = snake[index - 1].y;
+        int dx = x - prev_x;
+        int dy = y - prev_y;
+        if (dx > 1) dx = -1; else if (dx < -1) dx = 1;
+        if (dy > 1) dy = -1; else if (dy < -1) dy = 1;
+        POINT pts[3];
+        if (dx == -1) { pts[0].x = cx+8; pts[0].y = cy-8; pts[1].x = cx-10; pts[1].y = cy; pts[2].x = cx+8; pts[2].y = cy+8; }
+        else if (dx == 1) { pts[0].x = cx-8; pts[0].y = cy-8; pts[1].x = cx+10; pts[1].y = cy; pts[2].x = cx-8; pts[2].y = cy+8; }
+        else if (dy == -1) { pts[0].x = cx-8; pts[0].y = cy+8; pts[1].x = cx; pts[1].y = cy-10; pts[2].x = cx+8; pts[2].y = cy+8; }
+        else { pts[0].x = cx-8; pts[0].y = cy-8; pts[1].x = cx; pts[1].y = cy+10; pts[2].x = cx+8; pts[2].y = cy-8; }
+        Polygon(hdc, pts, 3);
+    } else {
+        int inset = 1 + index / 12;
+        if (inset > 4) inset = 4;
+        Ellipse(hdc, px + inset, py + inset, px + CELL_SIZE - inset, py + CELL_SIZE - inset);
+    }
+
+    SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+    DeleteObject(shadowBrush);
+}
+
 void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_ghost, int d_x, int d_y) {
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
     int cx = px + CELL_SIZE / 2, cy = py + CELL_SIZE / 2;
@@ -941,6 +979,13 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
         SelectObject(hdc, pupilBrush);
         Ellipse(hdc, eye1_x + d_x - 1, eye1_y + d_y - 1, eye1_x + d_x + 2, eye1_y + d_y + 2);
         Ellipse(hdc, eye2_x + d_x - 1, eye2_y + d_y - 1, eye2_x + d_x + 2, eye2_y + d_y + 2);
+
+        // Head Specular Highlight
+        int headSpec = 150 + (ABS((anim_tick * 2) % 20 - 10) * 10);
+        HBRUSH headHlBrush = CreateSolidBrush(RGB(headSpec, 255, headSpec + 50));
+        SelectObject(hdc, headHlBrush);
+        Ellipse(hdc, px + 4, py + 4, px + 8, py + 8);
+        DeleteObject(headHlBrush);
 
         // Tongue (flickering based on anim_tick)
         if ((anim_tick % 4) < 2) {
@@ -1005,11 +1050,16 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
         SelectObject(hdc, oldStripe);
         DeleteObject(stripePen);
 
-        // Scale highlight
-        HBRUSH hlBrush = CreateSolidBrush(RGB(100, 230, 150));
+        // Procedural Scale highlight
+        int specIntensity = 100 + (ABS((anim_tick + index * 5) % 20 - 10) * 10);
+        HBRUSH hlBrush = CreateSolidBrush(RGB(specIntensity, 255, specIntensity + 50));
         SelectObject(hdc, hlBrush);
-        Ellipse(hdc, px + inset + 1, py + inset + 1, px + inset + 5, py + inset + 5);
+        Ellipse(hdc, px + inset + 2, py + inset + 2, px + inset + 6, py + inset + 6);
         DeleteObject(hlBrush);
+        HBRUSH hlBrush2 = CreateSolidBrush(RGB(specIntensity/2, 200, specIntensity/2 + 50));
+        SelectObject(hdc, hlBrush2);
+        Ellipse(hdc, px + inset + 6, py + inset + 6, px + inset + 8, py + inset + 8);
+        DeleteObject(hlBrush2);
 
         SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
         DeleteObject(bodyBrush); DeleteObject(bodyPen);
@@ -1243,6 +1293,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Update CPUSnakes & Boss
             UpdateCPURivals();
             UpdateBoss();
+
+            if (golden_apple.x != -1 && match_ticks % 2 == 0) {
+                if (particle_count < 100) {
+                    particles[particle_count].x = golden_apple.x * CELL_SIZE + CELL_SIZE/2 + (random_int(20)-10);
+                    particles[particle_count].y = golden_apple.y * CELL_SIZE + 45 + CELL_SIZE/2 + (random_int(20)-10);
+                    particles[particle_count].vx = (random_int(5) - 2);
+                    particles[particle_count].vy = (random_int(5) - 2);
+                    particles[particle_count].life = 15;
+                    int c_rnd = random_int(4);
+                    if (c_rnd == 0) particles[particle_count].color = RGB(255, 215, 0);
+                    else if (c_rnd == 1) particles[particle_count].color = RGB(255, 235, 59);
+                    else if (c_rnd == 2) particles[particle_count].color = RGB(255, 255, 255);
+                    else particles[particle_count].color = RGB(255, 152, 0);
+                    particle_count++;
+                }
+            }
+            {
+                int pc = 0;
+                for(i=0; i<particle_count; i++) {
+                    particles[i].x += particles[i].vx;
+                    particles[i].y += particles[i].vy;
+                    particles[i].life--;
+                    if(particles[i].life > 0) particles[pc++] = particles[i];
+                }
+                particle_count = pc;
+            }
             
             // Dynamic growing maze walls
             if (game_mode == 1 && match_ticks % 100 == 0 && num_obstacles < 99) {
@@ -1649,7 +1725,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 for (i = snake_len - 1; i >= 0; i--) {
+                    DrawSnakeShadowGDI(hdc, snake[i].x, snake[i].y, i, snake_len, (i==0?dir_x:0), (i==0?dir_y:0));
+                }
+
+                for (i = snake_len - 1; i >= 0; i--) {
                     DrawSnakeSegmentGDI(hdc, snake[i].x, snake[i].y, i, snake_len, ghost_active > 0, (i==0?dir_x:0), (i==0?dir_y:0));
+                }
+
+                // Draw Particles
+                for(i = 0; i < particle_count; i++) {
+                    HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                    HPEN pPen = (HPEN)GetStockObject(NULL_PEN);
+                    HBRUSH oldB = (HBRUSH)SelectObject(hdc, pBrush);
+                    HPEN oldP = (HPEN)SelectObject(hdc, pPen);
+                    Ellipse(hdc, particles[i].x - 2, particles[i].y - 2, particles[i].x + 3, particles[i].y + 3);
+                    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+                    DeleteObject(pBrush);
                 }
 
                 // Weather Effects: Rain

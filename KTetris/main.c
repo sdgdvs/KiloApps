@@ -131,6 +131,9 @@ double sin(double x) {
 }
 
 int shake_timer = 0;
+int distortion_timer = 0;
+double distort_x = 0;
+double distort_y = 0;
 
 typedef struct { DWORD tick; char key; } ReplayEvent;
 typedef struct { DWORD seed; int count; ReplayEvent events[5000]; } ReplayData;
@@ -557,6 +560,32 @@ void SpawnDropParticles(int gridX, int startY, int endY, int colorIdx) {
     }
 }
 
+void SpawnHardDropImpact(int x, int y) {
+    if (num_shockwaves < MAX_SHOCKWAVES) {
+        shockwaves[num_shockwaves].x = (float)((x + 2.5) * CELL_SIZE);
+        shockwaves[num_shockwaves].y = (float)((y + 2.5) * CELL_SIZE);
+        shockwaves[num_shockwaves].radius = 5.0f;
+        shockwaves[num_shockwaves].max_radius = 100.0f;
+        shockwaves[num_shockwaves].life = 20;
+        shockwaves[num_shockwaves].max_life = 20;
+        shockwaves[num_shockwaves].color = RGB(255, 255, 255);
+        num_shockwaves++;
+    }
+    if (num_shockwaves < MAX_SHOCKWAVES) {
+        shockwaves[num_shockwaves].x = (float)((x + 2.5) * CELL_SIZE);
+        shockwaves[num_shockwaves].y = (float)((y + 2.5) * CELL_SIZE);
+        shockwaves[num_shockwaves].radius = 10.0f;
+        shockwaves[num_shockwaves].max_radius = 130.0f;
+        shockwaves[num_shockwaves].life = 25;
+        shockwaves[num_shockwaves].max_life = 25;
+        shockwaves[num_shockwaves].color = RGB(0, 255, 200);
+        num_shockwaves++;
+    }
+    distortion_timer = 15;
+    distort_x = (double)((x + 2.5) * CELL_SIZE);
+    distort_y = (double)((y + 2.5) * CELL_SIZE);
+}
+
 int bag[13];
 int bag_size = 7;
 int bag_index = 13;
@@ -880,6 +909,7 @@ void InitGame() {
     freeze_charges = 2;
     freeze_timer_ms = 0;
     shake_timer = 0;
+    distortion_timer = 0;
 
     if (game_mode == MODE_CAMPAIGN) {
         int garbage = campaign_level * 2;
@@ -1096,6 +1126,24 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
         }
     }
 
+    if (drawState == 2 && colorIdx != 14 && colorIdx != 15) {
+        int refOffset = (int)(px * 0.5 + py * 0.5 + tick * 0.05) % (size * 3);
+        HRGN rgn1 = CreateRectRgn(px + 1, py + 1, px + size - 1, py + size - 1);
+        SelectClipRgn(hdc, rgn1);
+
+        HPEN specPen = CreatePen(PS_SOLID, 2, RGB(220, 255, 255));
+        HPEN oldSPen = (HPEN)SelectObject(hdc, specPen);
+        MoveToEx(hdc, px - size + refOffset + 5, py - size, NULL);
+        LineTo(hdc, px - size + refOffset + size * 2 + 5, py + size * 2);
+        MoveToEx(hdc, px - size + refOffset + 10, py - size, NULL);
+        LineTo(hdc, px - size + refOffset + size * 2 + 10, py + size * 2);
+        SelectObject(hdc, oldSPen);
+        DeleteObject(specPen);
+
+        SelectClipRgn(hdc, NULL);
+        DeleteObject(rgn1);
+    }
+
     SelectObject(hdc, oldPen);
     SelectObject(hdc, oldBrush);
     DeleteObject(hiBrush);
@@ -1147,6 +1195,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int start_y = current_y; int drop_dist = 0;
                             while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) { current_y++; drop_dist++; }
                             score += drop_dist * 2; SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 15 : (current_piece + 1));
+                            SpawnHardDropImpact(current_x, current_y);
                             int old_level = campaign_level; lock_piece();
                             if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) { SpawnPiece(); }
                         }
@@ -1167,6 +1216,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 if (shake_timer > 0) shake_timer--;
+                if (distortion_timer > 0) distortion_timer--;
 
                 if (game_mode == MODE_ULTRA) {
                     ultra_time_left_ms -= 20;
@@ -1374,6 +1424,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     score += drop_dist * 2;
                     SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 15 : (current_piece + 1));
+                    SpawnHardDropImpact(current_x, current_y);
                     int old_level = campaign_level;
                     lock_piece();
                     if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) {
@@ -1455,16 +1506,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             // Draw grid lines
+            double dForce = distortion_timer > 0 ? (distortion_timer / 15.0) * 12.0 : 0.0;
             HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(35, 35, 45));
             HPEN oldPen = (HPEN)SelectObject(memDC, gridPen);
             for (int x = 0; x <= W; x++) {
-                MoveToEx(memDC, offX + x * CELL_SIZE, offY, NULL); LineTo(memDC, offX + x * CELL_SIZE, offY + H * CELL_SIZE);
+                for (int y = 0; y <= H; y++) {
+                    double lx = offX + x * CELL_SIZE;
+                    double ly = offY + y * CELL_SIZE;
+                    if (dForce > 0) {
+                        double dx = lx - distort_x;
+                        double dy = ly - distort_y;
+                        double dist = sqrt(dx*dx + dy*dy);
+                        if (dist < 100.0 && dist > 0.0) {
+                            lx += (dx / dist) * dForce * (1.0 - dist/100.0);
+                            ly += (dy / dist) * dForce * (1.0 - dist/100.0);
+                        }
+                    }
+                    if (y == 0) MoveToEx(memDC, (int)lx, (int)ly, NULL);
+                    else LineTo(memDC, (int)lx, (int)ly);
+                }
             }
             for (int y = 0; y <= H; y++) {
-                MoveToEx(memDC, offX, offY + y * CELL_SIZE, NULL); LineTo(memDC, offX + W * CELL_SIZE, offY + y * CELL_SIZE);
+                for (int x = 0; x <= W; x++) {
+                    double lx = offX + x * CELL_SIZE;
+                    double ly = offY + y * CELL_SIZE;
+                    if (dForce > 0) {
+                        double dx = lx - distort_x;
+                        double dy = ly - distort_y;
+                        double dist = sqrt(dx*dx + dy*dy);
+                        if (dist < 100.0 && dist > 0.0) {
+                            lx += (dx / dist) * dForce * (1.0 - dist/100.0);
+                            ly += (dy / dist) * dForce * (1.0 - dist/100.0);
+                        }
+                    }
+                    if (x == 0) MoveToEx(memDC, (int)lx, (int)ly, NULL);
+                    else LineTo(memDC, (int)lx, (int)ly);
+                }
             }
             SelectObject(memDC, oldPen);
             DeleteObject(gridPen);
+
+            // Matrix bounds glowing neon edge
+            double neonPulse = 0.5 + 0.5 * sin((currentTick % 10000) * 0.005);
+            int neonWidth = (int)(2.0 + 2.0 * neonPulse);
+            HPEN boundPen = CreatePen(PS_SOLID, neonWidth, RGB(0, (int)(255 * (0.4 + 0.4 * neonPulse)), (int)(200 * (0.4 + 0.4 * neonPulse))));
+            oldPen = (HPEN)SelectObject(memDC, boundPen);
+            HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH oldBrush = (HBRUSH)SelectObject(memDC, nullBrush);
+            Rectangle(memDC, offX, offY, offX + W * CELL_SIZE, offY + H * CELL_SIZE);
+            SelectObject(memDC, oldPen);
+            SelectObject(memDC, oldBrush);
+            DeleteObject(boundPen);
 
             // Draw grid blocks
             currentTick = GetTickCount();

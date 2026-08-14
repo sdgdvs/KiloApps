@@ -167,6 +167,8 @@
   let freezeCharges = 2;
   let freezeTimerMs = 0;
   let shakeTimer = 0;
+  let distortionTimer = 0;
+  let distortX = 0, distortY = 0;
 
   // Timers
   let modeTimerMs = 0;
@@ -270,6 +272,14 @@
           let pColors = ['#ffffff', '#ffff55', '#00ffff', '#ff9900', '#ff33ff'];
           addParticle(px, py, vx, vy, pColors[Math.floor(randomFloat() * pColors.length)], randomFloat() * 3 + 2, 25);
       }
+  }
+
+  function spawnHardDropImpact(x, y) {
+      shockwaves.push({x: (x + 2.5) * CELL, y: (y + 2.5) * CELL, radius: 5, maxRadius: 100, life: 20, maxLife: 20, color: 'rgba(255,255,255,0.8)'});
+      shockwaves.push({x: (x + 2.5) * CELL, y: (y + 2.5) * CELL, radius: 10, maxRadius: 130, life: 25, maxLife: 25, color: 'rgba(0,255,200,0.6)'});
+      distortionTimer = 15;
+      distortX = (x + 2.5) * CELL;
+      distortY = (y + 2.5) * CELL;
   }
 
   function spawnDropParticles(gridX, startY, endY, colorVal) {
@@ -551,6 +561,7 @@
       freezeCharges = 2;
       freezeTimerMs = 0;
       shakeTimer = 0;
+      distortionTimer = 0;
 
       if (gameMode === MODE_CAMPAIGN) {
           let garbage = Math.min(12, campaignLevel * 2);
@@ -683,6 +694,7 @@ if (showHelp) {
           let startY = cy; let dropDist = 0;
           while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
           score += dropDist * 2; spawnDropParticles(cx, startY, cy, isBomb ? 15 : (pc + 1));
+          spawnHardDropImpact(cx, cy);
           let oldLevel = campaignLevel; lock();
           if (!winScreen && !gameOver && (gameMode !== MODE_CAMPAIGN || campaignLevel === oldLevel)) spawn();
           if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'drop'});
@@ -820,6 +832,24 @@ if (showHelp) {
           ctx.fill();
       }
       
+      if (drawState === 2 && colorIdx !== 14 && colorIdx !== 15) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(px + 1, py + 1, size - 2, size - 2);
+          ctx.clip();
+          
+          let reflectionOffset = (px * 0.5 + py * 0.5 + tick * 0.05) % (size * 3);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+          ctx.beginPath();
+          ctx.moveTo(px - size + reflectionOffset, py - size);
+          ctx.lineTo(px + reflectionOffset, py - size);
+          ctx.lineTo(px - size + reflectionOffset + size * 2, py + size * 2);
+          ctx.lineTo(px - size * 2 + reflectionOffset + size * 2, py + size * 2);
+          ctx.fill();
+          
+          ctx.restore();
+      }
+
       // Glinting highlight animation for placed blocks (drawState === 0)
       if (drawState === 0 && colorIdx !== 14 && colorIdx !== 15) {
           // Sweeping highlight
@@ -883,15 +913,58 @@ if (showHelp) {
           offY = Math.floor(randomFloat() * 7) - 3;
       }
       
-      // Grid background lines
+      // Grid background lines with localized distortion
       ctx.strokeStyle = 'rgba(255,255,255,0.035)';
       ctx.lineWidth = 1;
+      let dForce = distortionTimer > 0 ? (distortionTimer / 15.0) * 12.0 : 0;
       for (let x = 0; x <= W; x++) {
-          ctx.beginPath(); ctx.moveTo(offX + x * CELL, offY); ctx.lineTo(offX + x * CELL, offY + H * CELL); ctx.stroke();
+          ctx.beginPath();
+          for (let y = 0; y <= H; y++) {
+              let lx = offX + x * CELL;
+              let ly = offY + y * CELL;
+              if (dForce > 0) {
+                  let dx = lx - distortX;
+                  let dy = ly - distortY;
+                  let dist = Math.sqrt(dx*dx + dy*dy);
+                  if (dist < 100 && dist > 0) {
+                      lx += (dx / dist) * dForce * (1 - dist/100);
+                      ly += (dy / dist) * dForce * (1 - dist/100);
+                  }
+              }
+              if (y === 0) ctx.moveTo(lx, ly);
+              else ctx.lineTo(lx, ly);
+          }
+          ctx.stroke();
       }
       for (let y = 0; y <= H; y++) {
-          ctx.beginPath(); ctx.moveTo(offX, offY + y * CELL); ctx.lineTo(offX + BOARD_W, offY + y * CELL); ctx.stroke();
+          ctx.beginPath();
+          for (let x = 0; x <= W; x++) {
+              let lx = offX + x * CELL;
+              let ly = offY + y * CELL;
+              if (dForce > 0) {
+                  let dx = lx - distortX;
+                  let dy = ly - distortY;
+                  let dist = Math.sqrt(dx*dx + dy*dy);
+                  if (dist < 100 && dist > 0) {
+                      lx += (dx / dist) * dForce * (1 - dist/100);
+                      ly += (dy / dist) * dForce * (1 - dist/100);
+                  }
+              }
+              if (x === 0) ctx.moveTo(lx, ly);
+              else ctx.lineTo(lx, ly);
+          }
+          ctx.stroke();
       }
+
+      // Matrix bounds glowing neon edge
+      let neonPulse = 0.5 + 0.5 * Math.sin(tick * 0.005);
+      ctx.save();
+      ctx.strokeStyle = `rgba(0, 255, 200, ${0.4 + 0.4 * neonPulse})`;
+      ctx.lineWidth = 2 + 2 * neonPulse;
+      ctx.shadowColor = '#00ffcc';
+      ctx.shadowBlur = 8 + 8 * neonPulse;
+      ctx.strokeRect(offX, offY, BOARD_W, H * CELL);
+      ctx.restore();
 
       // Board blocks
       for (let y = 0; y < H; y++) {
@@ -1319,6 +1392,7 @@ if (showHelp) {
                       let startY = cy; let dropDist = 0;
                       while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
                       score += dropDist * 2; spawnDropParticles(cx, startY, cy, isBomb ? 15 : (pc + 1));
+                      spawnHardDropImpact(cx, cy);
                       let oldLevel = campaignLevel; lock();
                       if (!winScreen && !gameOver && (gameMode !== MODE_CAMPAIGN || campaignLevel === oldLevel)) spawn();
                   }
@@ -1339,6 +1413,7 @@ if (showHelp) {
           }
 
           if (shakeTimer > 0) shakeTimer--;
+          if (distortionTimer > 0) distortionTimer--;
 
           if (gameMode === MODE_ULTRA) {
               ultraTimeLeftMs -= deltaTime;

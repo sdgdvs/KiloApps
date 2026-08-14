@@ -52,7 +52,6 @@
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 
-- KBase
 - KPad
 - KImage
 - KCalc
@@ -103,8 +102,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KContacts
 - KRead
 - KJournal
+- KBase
 
 ## Progress Log
+- KBase: Usability and UI issues fixed (synchronized App.jsx auto-opening bounds to match the 900x750 web UI size, expanded native main.c window bounds to 900x600 via AdjustWindowRect, expanded native edit boxes width to 850 and output box height to 300 to fix clipping, increased native font size, updated web and native Help text to clarify F1 support, added F1 keyboard shortcut support to web app).
 - KTimer: Usability and UI issues fixed (synchronized App.jsx auto-opening bounds to match the 460x580 web UI size, expanded native main.c window bounds to 460x580 via AdjustWindowRect, increased native listbox heights to utilize the extra vertical space, and repositioned native Help label).
 - KConverter: Usability and UI issues fixed (auto-opening size updated to 900x650 in App.jsx, web help instructions made more explicit with [Press H for Help] in accent-blue, native app updated with AdjustWindowRect to fix layout clipping and Help text clarified).
 - KTodo: Usability and UI issues fixed (added explicit Help button to header and native action bar, updated keyboard listener for 'H' and 'F1', applied AdjustWindowRect to fix native layout clipping, changed native font rendering size for crispness).
