@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFarm
 - KAlchemy
 - KRogue
 - KChess
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze
 - KColony
 - KFortress
+- KFarm
 ## Completed Work Log
+
+- **KFarm (Loop 3):** Implemented procedurally generated 3D dirt furrow patterns for tilled soil, dynamic atmospheric effects (slow scrolling translucent clouds), and a stylized day/night cycle color overlay that slowly shifts based on internal time in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
 
 - **KFortress (Loop 3):** Implemented highly detailed visual variations for the terrain (procedurally generated 3D rock formations and grassy mounds outlining the enemy paths), a dynamic weather system with scrolling animated rain or snow depending on the map, and a dark atmospheric vignette/fog-of-war edge fading effect to frame the play area using alpha blending in both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c).
 
