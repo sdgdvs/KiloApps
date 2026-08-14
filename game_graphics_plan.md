@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KPac
 - KSnake
 - KTetris
 - KBreakout
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KReversi
 - KQuest
 - KSpace
+- KPac
 ## Completed Work Log
+
+- **KPac (Loop 5):** Implemented highly detailed visual variations for the maze walls (inner glow tracing on the neon borders that pulses dynamically), distinct high-resolution 3D pellet sprites that cast ambient light/glow onto nearby walls, and a kinematically animated death sequence where the player character folds inward with a multi-colored digital dissolution particle effect in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 
 - **KSpace (Loop 5):** Implemented highly detailed procedural background starfield elements including multi-layered colored nebulas with dynamic pulsing and varied star twinkle patterns based on elapsed frames, dynamic particle effects that vary based on weapon type (e.g. yellow spread sparks vs heavy purple plasma blobs), and stylized debris chunks that accurately mirror the shape and hue of the specific destroyed enemy craft in both Web Canvas (kspace.html) and Native C Win32 GDI (KSpace/main.c).
 
