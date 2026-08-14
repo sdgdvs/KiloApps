@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- K2048
 - KSolitaire
 - KStarship
 - KConnect4
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPong
 - KMines
 - KAsteroids
+- K2048
 ## Completed Work Log
+
+- **K2048 (Loop 5):** Implemented highly polished visual effects including a deep 3D beveled container with procedural inner shadow that darkens toward the corners, dynamic glass-like specular highlights that sweep across newly merged tiles based on elapsed time, and a distinctly stylized kinematically animated tile settling effect where tiles slightly squash upon impact with the grid edge before returning to normal size in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 
 - **KAsteroids (Loop 5):** Implemented highly polished visual effects including procedural bump mapping/shading on craters and glowing molten/frozen inner cores that get exposed when larger asteroids split, procedural glass-like specular reflections on the enemy UFO saucers that shift based on their velocity, and a distinctly stylized kinematically animated shield generation effect that surrounds the player ship with an expanding hexagonal energy grid upon respawn or powerup in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 
