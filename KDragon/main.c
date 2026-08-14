@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define BTN_INCUBATE 1
 #define BTN_FEED     2
@@ -23,6 +24,12 @@ int speed = 0;
 int loyalty = 0;
 int gold = 0;
 int prev_state = 1;
+int bat_player_hp = 100;
+int bat_player_max = 100;
+int bat_enemy_hp = 100;
+int bat_enemy_max = 100;
+int bat_enemy_str = 10;
+int bat_enemy_spd = 10;
 int minigame_val = 0;
 int minigame_dir = 1;
 int minigame_state = 0;
@@ -43,10 +50,15 @@ int log_count = 0;
 #define BTN_LOY_2     13
 #define BTN_LOY_3     14
 #define BTN_HOARD     15
+#define BTN_BATTLE    16
+#define BTN_BAT_ATK   17
+#define BTN_BAT_DEF   18
+#define BTN_BAT_FLEE  19
 
-HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard;
+HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard, btn_battle;
 HWND btn_tr_str, btn_tr_spd, btn_tr_loy, btn_tr_back;
 HWND btn_str_hit, btn_spd_react, btn_loy_1, btn_loy_2, btn_loy_3;
+HWND btn_bat_atk, btn_bat_def, btn_bat_flee;
 HFONT hFontNormal, hFontLarge;
 HBRUSH bgBrush;
 
@@ -139,6 +151,7 @@ void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16], int
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
+            srand(GetTickCount());
             hFontNormal = CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                      DEFAULT_PITCH | FF_DONTCARE, "Times New Roman");
@@ -150,15 +163,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             btn_incubate = CreateWindow("BUTTON", "Incubate Egg", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                                         230, 260, 120, 40, hwnd, (HMENU)BTN_INCUBATE, NULL, NULL);
             btn_feed = CreateWindow("BUTTON", "Feed", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                    30, 260, 100, 40, hwnd, (HMENU)BTN_FEED, NULL, NULL);
+                                    35, 260, 80, 40, hwnd, (HMENU)BTN_FEED, NULL, NULL);
             btn_play = CreateWindow("BUTTON", "Play", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                    140, 260, 100, 40, hwnd, (HMENU)BTN_PLAY, NULL, NULL);
+                                    125, 260, 80, 40, hwnd, (HMENU)BTN_PLAY, NULL, NULL);
             btn_sleep = CreateWindow("BUTTON", "Sleep", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     250, 260, 100, 40, hwnd, (HMENU)BTN_SLEEP, NULL, NULL);
+                                     215, 260, 80, 40, hwnd, (HMENU)BTN_SLEEP, NULL, NULL);
             btn_train = CreateWindow("BUTTON", "Train", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     360, 260, 100, 40, hwnd, (HMENU)BTN_TRAIN, NULL, NULL);
+                                     305, 260, 80, 40, hwnd, (HMENU)BTN_TRAIN, NULL, NULL);
             btn_hoard = CreateWindow("BUTTON", "Hoard", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     470, 260, 100, 40, hwnd, (HMENU)BTN_HOARD, NULL, NULL);
+                                     395, 260, 80, 40, hwnd, (HMENU)BTN_HOARD, NULL, NULL);
+            btn_battle = CreateWindow("BUTTON", "Battle", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                      485, 260, 80, 40, hwnd, (HMENU)BTN_BATTLE, NULL, NULL);
+
+            btn_bat_atk = CreateWindow("BUTTON", "Attack", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                       140, 270, 100, 40, hwnd, (HMENU)BTN_BAT_ATK, NULL, NULL);
+            btn_bat_def = CreateWindow("BUTTON", "Defend", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                       250, 270, 100, 40, hwnd, (HMENU)BTN_BAT_DEF, NULL, NULL);
+            btn_bat_flee = CreateWindow("BUTTON", "Flee", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                        360, 270, 100, 40, hwnd, (HMENU)BTN_BAT_FLEE, NULL, NULL);
 
             btn_tr_str = CreateWindow("BUTTON", "Strength", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                      80, 260, 100, 40, hwnd, (HMENU)BTN_TR_STR, NULL, NULL);
@@ -186,6 +208,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_sleep, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_train, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_hoard, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_battle, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_str, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_spd, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_loy, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
@@ -195,6 +218,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_loy_1, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_loy_2, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_loy_3, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_bat_atk, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_bat_def, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_bat_flee, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             break;
             
         case WM_COMMAND:
@@ -207,6 +233,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_sleep, SW_SHOW);
                 ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW);
+                ShowWindow(btn_battle, SW_SHOW);
                 SetTimer(hwnd, TIMER_ID, 3000, NULL);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -256,6 +283,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_sleep, SW_HIDE);
                     ShowWindow(btn_train, SW_HIDE);
                     ShowWindow(btn_hoard, SW_HIDE);
+                    ShowWindow(btn_battle, SW_HIDE);
                     ShowWindow(btn_tr_str, SW_SHOW);
                     ShowWindow(btn_tr_spd, SW_SHOW);
                     ShowWindow(btn_tr_loy, SW_SHOW);
@@ -270,7 +298,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_tr_loy, SW_HIDE); ShowWindow(btn_tr_back, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -319,7 +347,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_str_hit, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -338,7 +366,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_spd_react, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -354,7 +382,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_loy_1, SW_HIDE); ShowWindow(btn_loy_2, SW_HIDE); ShowWindow(btn_loy_3, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -367,10 +395,119 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     add_log("Dragon departed on an expedition...");
                     ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
                     ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
-                    ShowWindow(btn_hoard, SW_HIDE);
+                    ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
                     prev_state = state;
                     state = 7;
                     SetTimer(hwnd, 4, 5000, NULL);
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) == BTN_BATTLE) {
+                if (energy < 20) {
+                    add_log("Dragon is too tired to battle.");
+                } else {
+                    energy -= 20;
+                    hunger -= 10; if (hunger < 0) hunger = 0;
+                    bat_player_max = 100 + strength * 5;
+                    bat_player_hp = bat_player_max;
+                    bat_enemy_str = strength - 2 + (rand() % 5); if (bat_enemy_str < 5) bat_enemy_str = 5;
+                    bat_enemy_spd = speed - 2 + (rand() % 5); if (bat_enemy_spd < 5) bat_enemy_spd = 5;
+                    bat_enemy_max = 100 + bat_enemy_str * 5;
+                    bat_enemy_hp = bat_enemy_max;
+                    
+                    char msg[128];
+                    sprintf(msg, "A wild enemy dragon appears! (HP: %d)", bat_enemy_hp);
+                    add_log(msg);
+                    
+                    ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
+                    ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
+                    ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
+                    
+                    ShowWindow(btn_bat_atk, SW_SHOW);
+                    ShowWindow(btn_bat_def, SW_SHOW);
+                    ShowWindow(btn_bat_flee, SW_SHOW);
+                    
+                    prev_state = state;
+                    state = 8;
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) >= BTN_BAT_ATK && LOWORD(wParam) <= BTN_BAT_FLEE) {
+                int action = LOWORD(wParam) - BTN_BAT_ATK; // 0=atk, 1=def, 2=flee
+                int battle_ended = 0;
+                int won = 0;
+                
+                if (action == 2) {
+                    add_log("You fled the battle!");
+                    battle_ended = 1;
+                    won = 0;
+                } else {
+                    int p_def = (action == 1);
+                    int e_def = ((rand() % 100) < 30);
+                    
+                    // Player
+                    if (!p_def) {
+                        int hitChance = 80 + (speed - bat_enemy_spd) * 5;
+                        if ((rand() % 100) < hitChance) {
+                            int dmg = strength * 2 + (rand() % 5);
+                            if (dmg < 1) dmg = 1;
+                            if (e_def) dmg /= 2;
+                            bat_enemy_hp -= dmg;
+                            char m[128]; sprintf(m, "You hit the enemy for %d damage!", dmg); add_log(m);
+                        } else {
+                            add_log("You missed!");
+                        }
+                    } else {
+                        add_log("You are defending.");
+                    }
+                    
+                    if (bat_enemy_hp <= 0) {
+                        add_log("Enemy dragon defeated!");
+                        battle_ended = 1;
+                        won = 1;
+                    } else {
+                        // Enemy
+                        if (!e_def) {
+                            int hitChance = 80 + (bat_enemy_spd - speed) * 5;
+                            if ((rand() % 100) < hitChance) {
+                                int dmg = bat_enemy_str * 2 + (rand() % 5);
+                                if (dmg < 1) dmg = 1;
+                                if (p_def) dmg /= 2;
+                                bat_player_hp -= dmg;
+                                char m[128]; sprintf(m, "Enemy hit you for %d damage! (HP: %d/%d)", dmg, bat_player_hp, bat_player_max); add_log(m);
+                            } else {
+                                add_log("Enemy missed!");
+                            }
+                        } else {
+                            add_log("Enemy is defending.");
+                        }
+                        
+                        if (bat_player_hp <= 0) {
+                            add_log("Your dragon was defeated and fled!");
+                            battle_ended = 1;
+                            won = 0;
+                        }
+                    }
+                }
+                
+                if (battle_ended) {
+                    if (won) {
+                        int g = 20 + (rand() % 20);
+                        gold += g;
+                        happiness += 10; if (happiness > 100) happiness = 100;
+                        char m[128]; sprintf(m, "You won the battle and earned %d gold!", g); add_log(m);
+                    } else {
+                        happiness -= 15; if (happiness < 0) happiness = 0;
+                    }
+                    ShowWindow(btn_bat_atk, SW_HIDE);
+                    ShowWindow(btn_bat_def, SW_HIDE);
+                    ShowWindow(btn_bat_flee, SW_HIDE);
+                    
+                    ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
+                    ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
+                    ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
+                    
+                    state = prev_state;
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -445,7 +582,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 state = prev_state;
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW);
+                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
@@ -502,6 +639,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (state == 6) {
                     const char* text = "Find the treat!";
                     TextOut(hdc, 240, 235, text, strlen(text));
+                } else if (state == 8) {
+                    const char* text = "BATTLE!";
+                    SetTextColor(hdc, RGB(200, 0, 0));
+                    TextOut(hdc, 260, 235, text, strlen(text));
+                    SetTextColor(hdc, RGB(42, 23, 4));
                 }
                 
                 SelectObject(hdc, hFontNormal);

@@ -69,12 +69,18 @@
                 <button id="btn-sleep">Sleep (💤)</button>
                 <button id="btn-train">Train (⚔️)</button>
                 <button id="btn-hoard">Hoard (🗺️)</button>
+                <button id="btn-battle">Battle (⚔️)</button>
             </div>
             <div class="controls" id="train-controls" style="display: none;">
                 <button id="btn-train-str">Strength</button>
                 <button id="btn-train-spd">Speed</button>
                 <button id="btn-train-loy">Loyalty</button>
                 <button id="btn-train-back">Back</button>
+            </div>
+            <div class="controls" id="battle-controls" style="display: none;">
+                <button id="btn-battle-attack">Attack</button>
+                <button id="btn-battle-defend">Defend</button>
+                <button id="btn-battle-flee">Flee</button>
             </div>
             <div class="controls" id="minigame-str" style="display: none; flex-direction: column; align-items: center; gap: 10px;">
                 <div style="font-family: monospace; font-size: 20px; background: rgba(255,255,255,0.3); padding: 5px; border: 2px solid #5a3814; font-weight: bold; color: #2a1704;">Power: <span id="str-power">[                    ]</span></div>
@@ -144,6 +150,7 @@
             minigameInterval: null,
             minigameTimeout: null,
             minigameValue: 0,
+            battleState: null,
             
             init() {
                 document.getElementById('btn-hatch').addEventListener('click', () => this.hatch());
@@ -151,6 +158,11 @@
                 document.getElementById('btn-play').addEventListener('click', () => this.action('play'));
                 document.getElementById('btn-sleep').addEventListener('click', () => this.action('sleep'));
                 document.getElementById('btn-hoard').addEventListener('click', () => this.action('hoard'));
+                document.getElementById('btn-battle').addEventListener('click', () => this.startBattle());
+                
+                document.getElementById('btn-battle-attack').addEventListener('click', () => this.battleTurn('attack'));
+                document.getElementById('btn-battle-defend').addEventListener('click', () => this.battleTurn('defend'));
+                document.getElementById('btn-battle-flee').addEventListener('click', () => this.battleTurn('flee'));
                 
                 document.getElementById('btn-train').addEventListener('click', () => {
                     if (this.stats.energy < 15) {
@@ -467,6 +479,98 @@
                         };
                     });
                 }
+            },
+            
+            startBattle() {
+                if (this.state === 'egg') return;
+                if (this.stats.energy < 20) {
+                    this.log("Dragon is too tired to battle.");
+                    return;
+                }
+                this.stats.energy -= 20;
+                this.stats.hunger = Math.max(0, this.stats.hunger - 10);
+                
+                this.battleState = {
+                    playerMaxHp: 100 + this.stats.strength * 5,
+                    enemyStr: Math.max(5, this.stats.strength - 2 + Math.floor(Math.random() * 5)),
+                    enemySpd: Math.max(5, this.stats.speed - 2 + Math.floor(Math.random() * 5))
+                };
+                this.battleState.playerHp = this.battleState.playerMaxHp;
+                this.battleState.enemyMaxHp = 100 + this.battleState.enemyStr * 5;
+                this.battleState.enemyHp = this.battleState.enemyMaxHp;
+                
+                this.log(`A wild enemy dragon appears! (HP: ${this.battleState.enemyHp})`);
+                
+                this.isBusy = true;
+                document.getElementById('controls').style.display = 'none';
+                document.getElementById('battle-controls').style.display = 'flex';
+                this.updateUI();
+            },
+            
+            battleTurn(action) {
+                if (action === 'flee') {
+                    this.log("You fled the battle!");
+                    this.endBattle(false);
+                    return;
+                }
+                
+                let playerDefending = (action === 'defend');
+                let enemyDefending = (Math.random() < 0.3);
+                
+                if (!playerDefending) {
+                    let hitChance = 0.8 + (this.stats.speed - this.battleState.enemySpd) * 0.05;
+                    if (Math.random() < hitChance) {
+                        let dmg = Math.max(1, this.stats.strength * 2 + Math.floor(Math.random() * 5));
+                        if (enemyDefending) dmg = Math.floor(dmg / 2);
+                        this.battleState.enemyHp -= dmg;
+                        this.log(`You hit the enemy for ${dmg} damage!`);
+                    } else {
+                        this.log("You missed!");
+                    }
+                } else {
+                    this.log("You are defending.");
+                }
+                
+                if (this.battleState.enemyHp <= 0) {
+                    this.log("Enemy dragon defeated!");
+                    this.endBattle(true);
+                    return;
+                }
+                
+                if (!enemyDefending) {
+                    let hitChance = 0.8 + (this.battleState.enemySpd - this.stats.speed) * 0.05;
+                    if (Math.random() < hitChance) {
+                        let dmg = Math.max(1, this.battleState.enemyStr * 2 + Math.floor(Math.random() * 5));
+                        if (playerDefending) dmg = Math.floor(dmg / 2);
+                        this.battleState.playerHp -= dmg;
+                        this.log(`Enemy hit you for ${dmg} damage! (HP: ${this.battleState.playerHp}/${this.battleState.playerMaxHp})`);
+                    } else {
+                        this.log("Enemy missed!");
+                    }
+                } else {
+                    this.log("Enemy is defending.");
+                }
+                
+                if (this.battleState.playerHp <= 0) {
+                    this.log("Your dragon was defeated and fled!");
+                    this.endBattle(false);
+                }
+            },
+            
+            endBattle(won) {
+                if (won) {
+                    let goldGain = 20 + Math.floor(Math.random() * 20);
+                    this.stats.gold += goldGain;
+                    this.stats.happiness = Math.min(100, this.stats.happiness + 10);
+                    this.log(`You won the battle and earned ${goldGain} gold!`);
+                } else {
+                    this.stats.happiness = Math.max(0, this.stats.happiness - 15);
+                }
+                this.battleState = null;
+                this.isBusy = false;
+                document.getElementById('battle-controls').style.display = 'none';
+                document.getElementById('controls').style.display = 'flex';
+                this.updateUI();
             },
             
             endMinigame(type) {
