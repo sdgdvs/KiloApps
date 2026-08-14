@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KDragon (Fantasy creature-raising sim)
-**Phase:** 10 (next to do)
+**Phase:** 11 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KDragon directory (`KDragon/`), create web HTML skeleton (`KiloOS/public/apps/kdragon.html`), register in App.jsx.
@@ -66,7 +66,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 7: Training mechanics (minigames for raising strength, speed, loyalty).
 - [x] Phase 8: Treasure hoarding mechanic (send dragon on expeditions to collect gold and items).
 - [x] Phase 9: AI Arena battles (basic combat loop vs CPU dragons).
-- [ ] Phase 10: Special abilities in combat based on elemental type.
+- [x] Phase 10: Special abilities in combat based on elemental type.
 - [ ] Phase 11: Shop system (buy premium food or training gear with hoarded gold).
 - [ ] Phase 12: Random events (illness, wild encounters) requiring player intervention.
 - [ ] Phase 13: Sound Effects — roars, munching, battle clashes (Web Audio / Win32 Beep).

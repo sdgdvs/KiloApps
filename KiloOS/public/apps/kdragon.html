@@ -80,6 +80,7 @@
             <div class="controls" id="battle-controls" style="display: none;">
                 <button id="btn-battle-attack">Attack</button>
                 <button id="btn-battle-defend">Defend</button>
+                <button id="btn-battle-special">Special</button>
                 <button id="btn-battle-flee">Flee</button>
             </div>
             <div class="controls" id="minigame-str" style="display: none; flex-direction: column; align-items: center; gap: 10px;">
@@ -162,6 +163,7 @@
                 
                 document.getElementById('btn-battle-attack').addEventListener('click', () => this.battleTurn('attack'));
                 document.getElementById('btn-battle-defend').addEventListener('click', () => this.battleTurn('defend'));
+                document.getElementById('btn-battle-special').addEventListener('click', () => this.battleTurn('special'));
                 document.getElementById('btn-battle-flee').addEventListener('click', () => this.battleTurn('flee'));
                 
                 document.getElementById('btn-train').addEventListener('click', () => {
@@ -504,6 +506,7 @@
                 this.isBusy = true;
                 document.getElementById('controls').style.display = 'none';
                 document.getElementById('battle-controls').style.display = 'flex';
+                document.getElementById('btn-battle-special').style.display = (this.element === 'None') ? 'none' : 'inline-block';
                 this.updateUI();
             },
             
@@ -517,7 +520,7 @@
                 let playerDefending = (action === 'defend');
                 let enemyDefending = (Math.random() < 0.3);
                 
-                if (!playerDefending) {
+                if (action === 'attack') {
                     let hitChance = 0.8 + (this.stats.speed - this.battleState.enemySpd) * 0.05;
                     if (Math.random() < hitChance) {
                         let dmg = Math.max(1, this.stats.strength * 2 + Math.floor(Math.random() * 5));
@@ -527,7 +530,24 @@
                     } else {
                         this.log("You missed!");
                     }
-                } else {
+                } else if (action === 'special') {
+                    if (this.element === 'Fire') {
+                        let dmg = Math.max(1, this.stats.strength * 3 + 10);
+                        if (enemyDefending) dmg = Math.floor(dmg / 2);
+                        this.battleState.enemyHp -= dmg;
+                        this.log(`You used Fireball! Dealt ${dmg} damage.`);
+                    } else if (this.element === 'Water') {
+                        let heal = 30 + this.stats.loyalty;
+                        this.battleState.playerHp = Math.min(this.battleState.playerMaxHp, this.battleState.playerHp + heal);
+                        this.log(`You used Healing Stream! Restored ${heal} HP.`);
+                    } else if (this.element === 'Earth') {
+                        let dmg = Math.max(1, this.stats.strength * 2);
+                        if (enemyDefending) dmg = Math.floor(dmg / 2);
+                        this.battleState.enemyHp -= dmg;
+                        this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - 5);
+                        this.log(`You used Earthquake! Dealt ${dmg} damage and slowed enemy.`);
+                    }
+                } else if (action === 'defend') {
                     this.log("You are defending.");
                 }
                 

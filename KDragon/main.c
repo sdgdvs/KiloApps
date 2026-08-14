@@ -53,12 +53,13 @@ int log_count = 0;
 #define BTN_BATTLE    16
 #define BTN_BAT_ATK   17
 #define BTN_BAT_DEF   18
-#define BTN_BAT_FLEE  19
+#define BTN_BAT_SPEC  19
+#define BTN_BAT_FLEE  20
 
 HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard, btn_battle;
 HWND btn_tr_str, btn_tr_spd, btn_tr_loy, btn_tr_back;
 HWND btn_str_hit, btn_spd_react, btn_loy_1, btn_loy_2, btn_loy_3;
-HWND btn_bat_atk, btn_bat_def, btn_bat_flee;
+HWND btn_bat_atk, btn_bat_def, btn_bat_spec, btn_bat_flee;
 HFONT hFontNormal, hFontLarge;
 HBRUSH bgBrush;
 
@@ -176,11 +177,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                       485, 260, 80, 40, hwnd, (HMENU)BTN_BATTLE, NULL, NULL);
 
             btn_bat_atk = CreateWindow("BUTTON", "Attack", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                       140, 270, 100, 40, hwnd, (HMENU)BTN_BAT_ATK, NULL, NULL);
+                                       90, 270, 90, 40, hwnd, (HMENU)BTN_BAT_ATK, NULL, NULL);
             btn_bat_def = CreateWindow("BUTTON", "Defend", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                       250, 270, 100, 40, hwnd, (HMENU)BTN_BAT_DEF, NULL, NULL);
+                                       190, 270, 90, 40, hwnd, (HMENU)BTN_BAT_DEF, NULL, NULL);
+            btn_bat_spec = CreateWindow("BUTTON", "Special", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                       290, 270, 90, 40, hwnd, (HMENU)BTN_BAT_SPEC, NULL, NULL);
             btn_bat_flee = CreateWindow("BUTTON", "Flee", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                        360, 270, 100, 40, hwnd, (HMENU)BTN_BAT_FLEE, NULL, NULL);
+                                        390, 270, 90, 40, hwnd, (HMENU)BTN_BAT_FLEE, NULL, NULL);
 
             btn_tr_str = CreateWindow("BUTTON", "Strength", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                      80, 260, 100, 40, hwnd, (HMENU)BTN_TR_STR, NULL, NULL);
@@ -220,6 +223,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_loy_3, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_bat_atk, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_bat_def, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_bat_spec, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_bat_flee, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             break;
             
@@ -425,6 +429,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     ShowWindow(btn_bat_atk, SW_SHOW);
                     ShowWindow(btn_bat_def, SW_SHOW);
+                    if (element != 0) ShowWindow(btn_bat_spec, SW_SHOW);
                     ShowWindow(btn_bat_flee, SW_SHOW);
                     
                     prev_state = state;
@@ -433,11 +438,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             else if (LOWORD(wParam) >= BTN_BAT_ATK && LOWORD(wParam) <= BTN_BAT_FLEE) {
-                int action = LOWORD(wParam) - BTN_BAT_ATK; // 0=atk, 1=def, 2=flee
+                int action = LOWORD(wParam) - BTN_BAT_ATK; // 0=atk, 1=def, 2=spec, 3=flee
                 int battle_ended = 0;
                 int won = 0;
                 
-                if (action == 2) {
+                if (action == 3) {
                     add_log("You fled the battle!");
                     battle_ended = 1;
                     won = 0;
@@ -446,7 +451,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int e_def = ((rand() % 100) < 30);
                     
                     // Player
-                    if (!p_def) {
+                    if (action == 0) {
                         int hitChance = 80 + (speed - bat_enemy_spd) * 5;
                         if ((rand() % 100) < hitChance) {
                             int dmg = strength * 2 + (rand() % 5);
@@ -457,7 +462,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         } else {
                             add_log("You missed!");
                         }
-                    } else {
+                    } else if (action == 2) {
+                        if (element == 2) { // Fire
+                            int dmg = strength * 3 + 10;
+                            if (e_def) dmg /= 2;
+                            bat_enemy_hp -= dmg;
+                            char m[128]; sprintf(m, "You used Fireball! Dealt %d damage.", dmg); add_log(m);
+                        } else if (element == 4) { // Water
+                            int heal = 30 + loyalty;
+                            bat_player_hp += heal;
+                            if (bat_player_hp > bat_player_max) bat_player_hp = bat_player_max;
+                            char m[128]; sprintf(m, "You used Healing Stream! Restored %d HP.", heal); add_log(m);
+                        } else if (element == 3) { // Earth
+                            int dmg = strength * 2;
+                            if (dmg < 1) dmg = 1;
+                            if (e_def) dmg /= 2;
+                            bat_enemy_hp -= dmg;
+                            bat_enemy_spd -= 5;
+                            if (bat_enemy_spd < 1) bat_enemy_spd = 1;
+                            char m[128]; sprintf(m, "You used Earthquake! Dealt %d damage and slowed enemy.", dmg); add_log(m);
+                        }
+                    } else if (action == 1) {
                         add_log("You are defending.");
                     }
                     
@@ -501,6 +526,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     ShowWindow(btn_bat_atk, SW_HIDE);
                     ShowWindow(btn_bat_def, SW_HIDE);
+                    ShowWindow(btn_bat_spec, SW_HIDE);
                     ShowWindow(btn_bat_flee, SW_HIDE);
                     
                     ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
