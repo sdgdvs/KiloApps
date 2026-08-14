@@ -129,6 +129,7 @@ int gameOverSoundPlayed = 0;
 int animatingFlips[100];
 int numAnimatingFlips = 0;
 int flipProgress = 0;
+int newlyPlacedDisc = -1;
 
 int dirs[8][2] = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};
 
@@ -295,11 +296,16 @@ void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWi
     int drawCy = cy + yOffset;
 
     // Drop Shadow
-    HBRUSH shadowBrush = CreateSolidBrush(RGB(10, 10, 10));
-    HPEN shadowPen = CreatePen(PS_SOLID, 1, RGB(10, 10, 10));
+    int shadowDropX = 3 - yOffset / 2;
+    int shadowDropY = 4 - yOffset;
+    int shadowSpread = -yOffset / 3;
+    int shadowCol = 10 - yOffset;
+    if (shadowCol > 50) shadowCol = 50;
+    HBRUSH shadowBrush = CreateSolidBrush(RGB(shadowCol, shadowCol, shadowCol));
+    HPEN shadowPen = CreatePen(PS_SOLID, 1, RGB(shadowCol, shadowCol, shadowCol));
     SelectObject(hdc, shadowBrush);
     SelectObject(hdc, shadowPen);
-    Ellipse(hdc, cx - rX + 3, drawCy - rY + 4, cx + rX + 3, drawCy + rY + 4);
+    Ellipse(hdc, cx - rX + shadowDropX - shadowSpread, drawCy - rY + shadowDropY - shadowSpread, cx + rX + shadowDropX + shadowSpread, drawCy + rY + shadowDropY + shadowSpread);
     DeleteObject(shadowBrush);
     DeleteObject(shadowPen);
 
@@ -313,13 +319,13 @@ void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWi
         DeleteObject(rimBrush);
         DeleteObject(rimPen);
 
-        for (int step = 0; step < 3; step++) {
-            int stepRX = rX - (step * rX / 4) - 2;
-            int stepRY = rY - (step * rY / 4) - 2;
+        for (int step = 0; step < 5; step++) {
+            int stepRX = rX - (step * rX / 6) - 2;
+            int stepRY = rY - (step * rY / 6) - 2;
             if (stepRX < 1 || stepRY < 1) break;
-            int offsetShiftX = cx - (step * rX / 8);
-            int offsetShiftY = drawCy - (step * rY / 8);
-            COLORREF col = RGB(20 + step * 25, 20 + step * 25, 20 + step * 25);
+            int offsetShiftX = cx - (step * rX / 10);
+            int offsetShiftY = drawCy - (step * rY / 10);
+            COLORREF col = RGB(10 + step * 20, 10 + step * 20, 10 + step * 20);
             HBRUSH cBrush = CreateSolidBrush(col);
             HPEN cPen = CreatePen(PS_SOLID, 1, col);
             SelectObject(hdc, cBrush);
@@ -329,10 +335,15 @@ void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWi
             DeleteObject(cPen);
         }
 
-        HPEN specPen = CreatePen(PS_SOLID, 2, RGB(180, 180, 180));
+        HPEN specPen = CreatePen(PS_SOLID, 2, RGB(200, 200, 200));
         SelectObject(hdc, specPen);
         Arc(hdc, cx - rX + 4, drawCy - rY + 4, cx + rX - 4, drawCy + rY - 4, cx, drawCy - rY, cx - rX, drawCy);
         DeleteObject(specPen);
+
+        HPEN specPen2 = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+        SelectObject(hdc, specPen2);
+        Arc(hdc, cx - rX + 8, drawCy - rY + 8, cx + rX - 8, drawCy + rY - 8, cx + rX, drawCy, cx, drawCy + rY);
+        DeleteObject(specPen2);
 
         if (rX >= 10) {
             POINT crownPts[7];
@@ -362,13 +373,13 @@ void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWi
         DeleteObject(rimBrush);
         DeleteObject(rimPen);
 
-        for (int step = 0; step < 3; step++) {
-            int stepRX = rX - (step * rX / 4) - 2;
-            int stepRY = rY - (step * rY / 4) - 2;
+        for (int step = 0; step < 5; step++) {
+            int stepRX = rX - (step * rX / 6) - 2;
+            int stepRY = rY - (step * rY / 6) - 2;
             if (stepRX < 1 || stepRY < 1) break;
-            int offsetShiftX = cx - (step * rX / 8);
-            int offsetShiftY = drawCy - (step * rY / 8);
-            COLORREF col = RGB(220 + step * 12, 225 + step * 10, 230 + step * 8);
+            int offsetShiftX = cx - (step * rX / 10);
+            int offsetShiftY = drawCy - (step * rY / 10);
+            COLORREF col = RGB(210 + step * 8, 215 + step * 7, 225 + step * 5);
             HBRUSH cBrush = CreateSolidBrush(col);
             HPEN cPen = CreatePen(PS_SOLID, 1, col);
             SelectObject(hdc, cBrush);
@@ -382,6 +393,11 @@ void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWi
         SelectObject(hdc, specPen);
         Arc(hdc, cx - rX + 4, drawCy - rY + 4, cx + rX - 4, drawCy + rY - 4, cx, drawCy - rY, cx - rX, drawCy);
         DeleteObject(specPen);
+
+        HPEN specPen2 = CreatePen(PS_SOLID, 1, RGB(240, 240, 240));
+        SelectObject(hdc, specPen2);
+        Arc(hdc, cx - rX + 8, drawCy - rY + 8, cx + rX - 8, drawCy + rY - 8, cx + rX, drawCy, cx, drawCy + rY);
+        DeleteObject(specPen2);
 
         if (rX >= 10) {
             POINT starPts[10];
@@ -651,6 +667,7 @@ void InitGame(HWND hwnd) {
     gameEnded = 0;
     isBombActive = 0;
     numAnimatingFlips = 0;
+    newlyPlacedDisc = -1;
     if (hwnd) {
         KillTimer(hwnd, 1);
         KillTimer(hwnd, 2);
@@ -693,6 +710,7 @@ void UndoMove(HWND hwnd) {
     freezeCount = lastState.freezeCount;
     gameEnded = 0;
     gameOverSoundPlayed = 0;
+    newlyPlacedDisc = -1;
     
     ResetMoveTimer(hwnd);
     InvalidateRect(hwnd, NULL, TRUE);
@@ -899,6 +917,7 @@ void DoMove(int index, int player, HWND hwnd) {
         board[index] = player;
         numAnimatingFlips = count;
         flipProgress = 0;
+        newlyPlacedDisc = index;
         SetTimer(hwnd, 2, 30, NULL);
         
         int cellSize = (g_boardWidth == 6) ? 55 : ((g_boardWidth == 8) ? 45 : 38);
@@ -944,6 +963,7 @@ void DoBombMove(int index, int player, HWND hwnd) {
     board[index] = player;
     bombCount--;
     isBombActive = 0;
+    newlyPlacedDisc = index;
     
     int r = index / g_boardWidth;
     int c = index % g_boardWidth;
@@ -1526,6 +1546,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                             int yOff = (flipProgress < 5) ? -flipProgress * 2 : -(10 - flipProgress) * 2;
                             DrawDisc3D(hdc, cx, cy, radius, displayColor, currentW, yOff);
+                        } else if (idx == newlyPlacedDisc && numAnimatingFlips > 0 && flipProgress < 10) {
+                            int bounceY = 0;
+                            if (flipProgress < 3) bounceY = -8 + flipProgress * 2;
+                            else if (flipProgress < 6) bounceY = (flipProgress - 3) * 2;
+                            else if (flipProgress < 8) bounceY = -3 + (flipProgress - 6);
+                            DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, bounceY);
                         } else {
                             DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, 0);
                         }

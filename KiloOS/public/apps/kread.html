@@ -447,7 +447,7 @@
       </select>
 
       <button class="btn" id="btnStats" title="Reading Statistics">📊 Stats</button>
-      <button class="btn" id="btnHelp" title="Help (Press H)">❓ Help</button>
+      <button class="btn" id="btnHelp" title="Help (Press F1 / H)">❓ Help</button>
     </div>
   </div>
 
@@ -467,7 +467,7 @@
       <div class="empty-icon">📖</div>
       <h2>No Document Loaded</h2>
       <p>Click <strong>Open</strong> or drag & drop a text file here to begin reading.</p>
-      <p style="font-size: 14px; opacity: 0.8; margin-top: 8px;">(Press <strong>H</strong> for Help)</p>
+      <p style="font-size: 14px; opacity: 0.8; margin-top: 8px;">(Press <strong>F1</strong> or <strong>H</strong> for Help)</p>
     </div>
     <div class="content" id="textContent" style="display:none;"></div>
 
@@ -515,7 +515,7 @@
       <div style="font-size: 14px; line-height: 1.6; font-family: system-ui, sans-serif; opacity: 0.9;">
         <p><strong>Shortcuts:</strong></p>
         <ul style="margin-left: 20px; margin-bottom: 16px;">
-          <li><kbd>H</kbd> - Show this Help</li>
+          <li><kbd>F1</kbd> or <kbd>H</kbd> - Show this Help</li>
           <li><kbd>Ctrl</kbd> + <kbd>F</kbd> - Find text</li>
           <li><kbd>Enter</kbd> / <kbd>Shift</kbd>+<kbd>Enter</kbd> - Next / Previous search match</li>
           <li><kbd>Esc</kbd> - Close panels/modals</li>
@@ -1216,7 +1216,8 @@
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
         toggleSearchPanel();
-      } else if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      } else if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === 'F1') e.preventDefault();
         if (helpModal) helpModal.classList.add('open');
       } else if (e.key === 'Escape') {
         if (searchPanel.classList.contains('open')) toggleSearchPanel();

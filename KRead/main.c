@@ -24,7 +24,7 @@ char g_lastSearchQuery[128] = {0};
 
 void UpdateFont(HWND hwnd) {
     if (hFont) DeleteObject(hFont);
-    hFont = CreateFontA(currentFontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_ROMAN, currentFontFace);
+    hFont = CreateFontA(-currentFontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_ROMAN, currentFontFace);
     if (hEdit) {
         SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
@@ -325,7 +325,9 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1000, 800, NULL, NULL, wc.hInstance, NULL);
+    RECT rc = { 0, 0, 1000, 800 };
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, TRUE);
+    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader - Press F1 or H for Help", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
