@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KTetris
 - KBreakout
 - KMaze
 - KColony
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSpace
 - KPac
 - KSnake
+- KTetris
 ## Completed Work Log
+
+- **KTetris (Loop 5):** Implemented highly detailed visual variations for the matrix bounds/grid with glowing neon edge tracing that pulses dynamically via a sine wave timer, procedural glass-like specular reflections on the falling tetrominos that realistically shift position as they rotate, and a distinctly stylized kinematically animated hard drop impact that causes a multi-layered shockwave and brief localized kinetic grid distortion in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
 - **KSnake (Loop 5):** Implemented highly detailed visual variations for the snake segments (individual procedural specular highlights on each rounded scale that pulse based on time/index), a dynamic 3D drop-shadow that accurately follows the winding path of the snake body across the terrain to give physical elevation, and distinctly animated multi-colored shimmering particle trails left behind by the special golden star food in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
