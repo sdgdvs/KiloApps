@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSnake
 - KTetris
 - KBreakout
 - KMaze
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KQuest
 - KSpace
 - KPac
+- KSnake
 ## Completed Work Log
+
+- **KSnake (Loop 5):** Implemented highly detailed visual variations for the snake segments (individual procedural specular highlights on each rounded scale that pulse based on time/index), a dynamic 3D drop-shadow that accurately follows the winding path of the snake body across the terrain to give physical elevation, and distinctly animated multi-colored shimmering particle trails left behind by the special golden star food in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
 - **KPac (Loop 5):** Implemented highly detailed visual variations for the maze walls (inner glow tracing on the neon borders that pulses dynamically), distinct high-resolution 3D pellet sprites that cast ambient light/glow onto nearby walls, and a kinematically animated death sequence where the player character folds inward with a multi-colored digital dissolution particle effect in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 
