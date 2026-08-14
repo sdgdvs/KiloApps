@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KAlchemy
 - KRogue
 - KChess
 - KPong
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColony
 - KFortress
 - KFarm
+- KAlchemy
 ## Completed Work Log
+
+- **KAlchemy (Loop 4):** Implemented highly detailed procedural lighting and specular highlights on the alchemy vessels to look like glossy glass/brass, dynamic 3D drop-shadows that shift/expand during dragging and combination pulses, and a stylized animated magical aura/sparkle effect surrounding successful transmuted items in both Web Canvas (kalchemy.html) and Native C Win32 GDI (KAlchemy/main.c).
 
 - **KFarm (Loop 3):** Implemented procedurally generated 3D dirt furrow patterns for tilled soil, dynamic atmospheric effects (slow scrolling translucent clouds), and a stylized day/night cycle color overlay that slowly shifts based on internal time in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
 
