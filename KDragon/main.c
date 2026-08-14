@@ -12,6 +12,7 @@ int state = 0; // 0 = egg, 1 = dragon
 int hunger = 50;
 int happiness = 50;
 int energy = 100;
+int age = 0;
 
 #define MAX_LOG_LINES 4
 char log_messages[MAX_LOG_LINES][128] = {0};
@@ -63,6 +64,25 @@ COLORREF dragon_pixels[16][16] = {
     {-1, -1, -1, RGB(30,100,30), RGB(60,180,60), RGB(30,100,30), -1, -1, RGB(30,100,30), RGB(60,180,60), RGB(30,100,30), -1, -1, -1, -1, -1},
     {-1, -1, -1, RGB(30,100,30), RGB(30,100,30), -1, -1, -1, -1, RGB(30,100,30), RGB(30,100,30), -1, -1, -1, -1, -1},
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+};
+
+COLORREF adult_dragon_pixels[16][16] = {
+    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+    {-1, -1, -1, -1, -1, RGB(180,30,30), RGB(180,30,30), -1, -1, -1, -1, -1, -1, -1, -1, -1},
+    {-1, -1, -1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1, -1, -1, -1, -1, -1},
+    {-1, -1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1, -1, RGB(180,30,30), -1, -1, -1},
+    {-1, -1, -1, RGB(180,30,30), RGB(220,60,60), RGB(255,255,255), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, RGB(180,30,30), RGB(180,30,30), -1, -1, -1},
+    {-1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), -1, -1, -1, -1},
+    {-1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), -1, -1, -1, -1, -1},
+    {-1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1, -1, -1, -1},
+    {-1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1, -1, -1, -1},
+    {-1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), -1, -1, -1, -1},
+    {-1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1},
+    {-1, -1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), -1, -1},
+    {-1, -1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1},
+    {-1, -1, -1, RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), -1, -1, RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), -1, -1, -1},
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 };
@@ -154,14 +174,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_TIMER:
-            if (state == 1) {
+            if (state == 1 || state == 2) {
                 hunger = hunger - 2;
                 if (hunger < 0) hunger = 0;
                 happiness = happiness - 1;
                 if (happiness < 0) happiness = 0;
+                age++;
                 
                 if (hunger < 20) add_log("Dragon is getting hungry...");
                 if (happiness < 20) add_log("Dragon is feeling sad...");
+                
+                if (state == 1 && age >= 10) {
+                    state = 2;
+                    add_log("Your baby dragon evolved into an ADULT DRAGON!");
+                }
                 
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -184,12 +210,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawPixelArt(hdc, 236, 110, 8, egg_pixels);
             } else {
                 char buf[128];
-                sprintf(buf, "Hunger: %d/100      Happiness: %d/100      Energy: %d/100", hunger, happiness, energy);
+                sprintf(buf, "Hunger: %d/100   Happiness: %d/100   Energy: %d/100   Age: %d", hunger, happiness, energy, age);
                 
                 RECT r = {0, 30, 600, 60};
                 DrawText(hdc, buf, strlen(buf), &r, DT_CENTER | DT_TOP);
                 
-                DrawPixelArt(hdc, 236, 90, 8, dragon_pixels);
+                if (state == 1) {
+                    DrawPixelArt(hdc, 236, 90, 8, dragon_pixels);
+                } else if (state == 2) {
+                    DrawPixelArt(hdc, 236, 90, 8, adult_dragon_pixels);
+                }
                 
                 SelectObject(hdc, hFontNormal);
                 // Draw log box

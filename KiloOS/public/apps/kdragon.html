@@ -38,6 +38,7 @@
                 <div class="stat">Hunger: <span id="stat-hunger">0</span>/100</div>
                 <div class="stat">Happiness: <span id="stat-happiness">0</span>/100</div>
                 <div class="stat">Energy: <span id="stat-energy">0</span>/100</div>
+                <div class="stat">Age: <span id="stat-age">0</span></div>
             </div>
             <div class="entity-display" id="entity-art"><svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
@@ -114,7 +115,7 @@
     <script>
         const Game = {
             state: 'egg',
-            stats: { hunger: 50, happiness: 50, energy: 100 },
+            stats: { hunger: 50, happiness: 50, energy: 100, age: 0 },
             tickInterval: null,
             
             init() {
@@ -136,6 +137,7 @@
                 document.getElementById('stat-hunger').innerText = this.stats.hunger;
                 document.getElementById('stat-happiness').innerText = this.stats.happiness;
                 document.getElementById('stat-energy').innerText = this.stats.energy;
+                document.getElementById('stat-age').innerText = this.stats.age;
                 
                 if (this.state === 'egg') {
                     document.getElementById('entity-art').innerHTML = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -168,7 +170,7 @@
   <rect x="5" y="12" width="6" height="1" fill="rgb(180,150,100)" />
 </svg>`;
                     document.getElementById('controls').style.display = 'none';
-                } else {
+                } else if (this.state === 'dragon') {
                     document.getElementById('entity-art').innerHTML = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="8" y="1" width="2" height="1" fill="rgb(30,100,30)" />
   <rect x="7" y="2" width="1" height="1" fill="rgb(30,100,30)" />
@@ -219,6 +221,54 @@
   <rect x="9" y="12" width="2" height="1" fill="rgb(30,100,30)" />
 </svg>`;
                     document.getElementById('controls').style.display = 'flex';
+                } else if (this.state === 'adult') {
+                    document.getElementById('entity-art').innerHTML = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <rect x="5" y="1" width="2" height="1" fill="rgb(180,30,30)" />
+  <rect x="4" y="2" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="5" y="2" width="2" height="1" fill="rgb(220,60,60)" />
+  <rect x="7" y="2" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="3" y="3" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="4" y="3" width="3" height="1" fill="rgb(220,60,60)" />
+  <rect x="7" y="3" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="12" y="3" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="3" y="4" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="4" y="4" width="1" height="1" fill="rgb(220,60,60)" />
+  <rect x="5" y="4" width="1" height="1" fill="rgb(255,255,255)" />
+  <rect x="6" y="4" width="2" height="1" fill="rgb(220,60,60)" />
+  <rect x="8" y="4" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="11" y="4" width="2" height="1" fill="rgb(180,30,30)" />
+  <rect x="2" y="5" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="3" y="5" width="6" height="1" fill="rgb(220,60,60)" />
+  <rect x="9" y="5" width="3" height="1" fill="rgb(180,30,30)" />
+  <rect x="2" y="6" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="3" y="6" width="6" height="1" fill="rgb(220,60,60)" />
+  <rect x="9" y="6" width="2" height="1" fill="rgb(180,30,30)" />
+  <rect x="1" y="7" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="2" y="7" width="7" height="1" fill="rgb(220,60,60)" />
+  <rect x="9" y="7" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="1" y="8" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="2" y="8" width="7" height="1" fill="rgb(220,60,60)" />
+  <rect x="9" y="8" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="1" y="9" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="2" y="9" width="2" height="1" fill="rgb(220,60,60)" />
+  <rect x="4" y="9" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="5" y="9" width="4" height="1" fill="rgb(220,60,60)" />
+  <rect x="9" y="9" width="3" height="1" fill="rgb(180,30,30)" />
+  <rect x="2" y="10" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="3" y="10" width="9" height="1" fill="rgb(220,60,60)" />
+  <rect x="12" y="10" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="3" y="11" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="4" y="11" width="8" height="1" fill="rgb(220,60,60)" />
+  <rect x="12" y="11" width="2" height="1" fill="rgb(180,30,30)" />
+  <rect x="3" y="12" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="4" y="12" width="3" height="1" fill="rgb(220,60,60)" />
+  <rect x="7" y="12" width="2" height="1" fill="rgb(180,30,30)" />
+  <rect x="9" y="12" width="4" height="1" fill="rgb(220,60,60)" />
+  <rect x="13" y="12" width="1" height="1" fill="rgb(180,30,30)" />
+  <rect x="3" y="13" width="4" height="1" fill="rgb(180,30,30)" />
+  <rect x="9" y="13" width="4" height="1" fill="rgb(180,30,30)" />
+</svg>`;
+                    document.getElementById('controls').style.display = 'flex';
                 }
             },
             
@@ -259,13 +309,19 @@
             },
             
             tick() {
-                if (this.state !== 'dragon') return;
+                if (this.state === 'egg') return;
                 
                 this.stats.hunger = Math.max(0, this.stats.hunger - 2);
                 this.stats.happiness = Math.max(0, this.stats.happiness - 1);
+                this.stats.age += 1;
                 
                 if (this.stats.hunger < 20) this.log("Dragon is getting hungry...");
                 if (this.stats.happiness < 20) this.log("Dragon is feeling sad...");
+                
+                if (this.state === 'dragon' && this.stats.age >= 10) {
+                    this.state = 'adult';
+                    this.log("Your baby dragon evolved into an ADULT DRAGON!");
+                }
                 
                 this.updateUI();
             }
