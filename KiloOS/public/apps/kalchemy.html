@@ -447,14 +447,14 @@
       width: 150px;
       height: 150px;
       border-radius: 50%;
-      background: url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><path d="M30,30 L30,50 Q30,85 50,85 Q70,85 70,50 L70,30 Z" fill="%2337265f" stroke="%23f39c12" stroke-width="2"/><path d="M25,30 L75,30 L70,35 L30,35 Z" fill="%23d4ac0d"/></svg>\'), radial-gradient(circle, rgba(155, 89, 182, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%); background-repeat: no-repeat; background-position: center;
+      background: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 20%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><path d="M30,30 L30,50 Q30,85 50,85 Q70,85 70,50 L70,30 Z" fill="%2337265f" stroke="%23f39c12" stroke-width="2"/><path d="M25,30 L75,30 L70,35 L30,35 Z" fill="%23d4ac0d"/></svg>'), radial-gradient(circle, rgba(155, 89, 182, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%); background-repeat: no-repeat; background-position: center;
       border: 2px dashed var(--accent-gold);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
-      box-shadow: 0 0 35px var(--glow-purple), inset 0 0 20px rgba(155, 89, 182, 0.4);
+      box-shadow: 15px 25px 30px rgba(0, 0, 0, 0.8), 0 0 35px var(--glow-purple), inset 0 0 20px rgba(155, 89, 182, 0.4);
       transition: all 0.3s ease;
       z-index: 2;
     }
@@ -462,12 +462,12 @@
     .crucible-vessel.reacting {
       animation: pulseCrucible 0.6s infinite alternate;
       border-color: var(--accent-gold-light);
-      box-shadow: 0 0 60px var(--glow-gold), inset 0 0 30px var(--glow-gold);
+      box-shadow: 25px 35px 45px rgba(0, 0, 0, 0.9), 0 0 60px var(--glow-gold), inset 0 0 30px var(--glow-gold);
     }
 
     @keyframes pulseCrucible {
-      from { transform: scale(1); box-shadow: 0 0 30px var(--glow-purple); }
-      to { transform: scale(1.08); box-shadow: 0 0 60px var(--glow-gold); }
+      from { transform: scale(1); box-shadow: 15px 25px 30px rgba(0, 0, 0, 0.8), 0 0 30px var(--glow-purple); }
+      to { transform: scale(1.08); box-shadow: 30px 40px 50px rgba(0, 0, 0, 0.95), 0 0 60px var(--glow-gold); }
     }
 
     .crucible-orb {
@@ -495,19 +495,19 @@
       gap: 6px;
       cursor: pointer;
       transition: all 0.25s ease;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+      box-shadow: 5px 10px 15px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,0,0,0.5);
     }
 
     .crucible-slot:hover {
       border-color: var(--accent-purple);
-      box-shadow: 0 0 15px var(--glow-purple);
+      box-shadow: 8px 14px 20px rgba(0, 0, 0, 0.7), 0 0 15px var(--glow-purple);
     }
 
     .crucible-slot.active {
       border-style: solid;
       border-color: var(--accent-gold);
       background: linear-gradient(135deg, rgba(243, 156, 18, 0.15), rgba(155, 89, 182, 0.15));
-      box-shadow: 0 0 20px var(--glow-gold), inset 0 0 10px rgba(243, 156, 18, 0.2);
+      box-shadow: 12px 18px 25px rgba(0, 0, 0, 0.8), 0 0 20px var(--glow-gold), inset 0 0 10px rgba(243, 156, 18, 0.2);
     }
 
     /* Golden Transmutation Button */
@@ -587,6 +587,13 @@
     .discovery-toast.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
+      animation: magicalAura 2s linear infinite;
+    }
+
+    @keyframes magicalAura {
+      0% { box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 25px var(--glow-gold), 0 0 50px rgba(241, 196, 15, 0.4); }
+      50% { box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 45px rgba(243, 156, 18, 0.8), 0 0 80px rgba(155, 89, 182, 0.6); }
+      100% { box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 25px var(--glow-gold), 0 0 50px rgba(241, 196, 15, 0.4); }
     }
 
     .discovery-toast .toast-icon { font-size: 2.2rem; }

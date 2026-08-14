@@ -39,6 +39,10 @@ typedef struct {
 #define MAX_PARTICLES 100
 Particle particles[MAX_PARTICLES] = {0};
 
+typedef struct { float x, y, speed; int size; } Cloud;
+#define MAX_CLOUDS 5
+Cloud clouds[MAX_CLOUDS] = {0};
+
 void SpawnParticles(float x, float y, COLORREF color, int count) {
     int spawned = 0;
     for (int i = 0; i < MAX_PARTICLES && spawned < count; i++) {
@@ -110,6 +114,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             srand(GetTickCount());
             SetTimer(hwnd, 2, 33, NULL);
+            for (int i = 0; i < MAX_CLOUDS; i++) {
+                clouds[i].x = (float)(rand() % 400);
+                clouds[i].y = (float)(rand() % 200);
+                clouds[i].speed = 0.5f + (float)(rand() % 20) / 10.0f;
+                clouds[i].size = 20 + rand() % 30;
+            }
             hUpgradeToolsBtn = CreateWindow("BUTTON", "Tools ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(10), S(440), S(110), S(30), hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hNextDayBtn = CreateWindow("BUTTON", "Sleep (Next Day)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -256,6 +266,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_TIMER:
             if (wParam == 2) {
+                for (int i = 0; i < MAX_CLOUDS; i++) {
+                    clouds[i].x += clouds[i].speed;
+                    if (clouds[i].x > 500) clouds[i].x = (float)(-clouds[i].size * 2);
+                }
                 for (int i = 0; i < MAX_PARTICLES; i++) {
                     if (particles[i].life > 0) {
                         particles[i].x += particles[i].vx;
@@ -429,10 +443,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     RECT r = { OFFSET_X + x * CELL_SIZE, OFFSET_Y + y * CELL_SIZE, OFFSET_X + (x+1) * CELL_SIZE, OFFSET_Y + (y+1) * CELL_SIZE };
                     
                     int req = (weather == 2) ? 2 : ((weather == 1) ? 0 : 1);
-                    if (grid[idx].type == 0) FillRect(hdc, &r, hGrass);
-                    else if (weather == 1 || grid[idx].watered >= req) FillRect(hdc, &r, hWetSoil);
-                    else if (weather == 2 && grid[idx].watered == 1) FillRect(hdc, &r, hDampSoil);
-                    else FillRect(hdc, &r, hSoil);
+                    if (grid[idx].type == 0) {
+                        FillRect(hdc, &r, hGrass);
+                    } else {
+                        if (weather == 1 || grid[idx].watered >= req) FillRect(hdc, &r, hWetSoil);
+                        else if (weather == 2 && grid[idx].watered == 1) FillRect(hdc, &r, hDampSoil);
+                        else FillRect(hdc, &r, hSoil);
+                        
+                        // Procedurally generated 3D dirt furrow patterns
+                        HPEN hShadow = CreatePen(PS_SOLID, 1, time_of_day ? RGB(20, 10, 5) : RGB(60, 40, 30));
+                        HPEN hHighlight = CreatePen(PS_SOLID, 1, time_of_day ? RGB(60, 30, 20) : RGB(120, 90, 70));
+                        for (int f = 0; f < 4; f++) {
+                            int fy = r.top + 8 + f * 8;
+                            SelectObject(hdc, hShadow);
+                            MoveToEx(hdc, r.left, fy, NULL); LineTo(hdc, r.right, fy);
+                            SelectObject(hdc, hHighlight);
+                            MoveToEx(hdc, r.left, fy + 1, NULL); LineTo(hdc, r.right, fy + 1);
+                        }
+                        DeleteObject(hShadow);
+                        DeleteObject(hHighlight);
+                    }
                     
                     SelectObject(hdc, hGridPen);
                     SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -533,6 +563,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(hSproutPen);
             DeleteObject(hGridPen);
 
+            // Slow scrolling translucent clouds (hatch brush for stylized look)
+            HBRUSH hCloudBrush = CreateHatchBrush(HS_BDIAGONAL, time_of_day ? RGB(80, 80, 100) : RGB(255, 255, 255));
+            HPEN hCloudPen = CreatePen(PS_NULL, 0, 0);
+            SelectObject(hdc, hCloudBrush);
+            SelectObject(hdc, hCloudPen);
+            SetBkMode(hdc, TRANSPARENT);
+            for (int i = 0; i < MAX_CLOUDS; i++) {
+                int cx = (int)clouds[i].x;
+                int cy = (int)clouds[i].y;
+                int s = clouds[i].size;
+                Ellipse(hdc, cx - s, cy - s, cx + s, cy + s);
+                Ellipse(hdc, cx - (s*1)/10, cy - s, cx + (s*13)/10, cy + (s*4)/10);
+                Ellipse(hdc, cx + (s*4)/10, cy - (s*8)/10, cx + s*2, cy + (s*8)/10);
+            }
+            DeleteObject(hCloudBrush);
+            DeleteObject(hCloudPen);
+
             if (weather == 1 && time_of_day == 0) {
                 HBRUSH hRain = CreateSolidBrush(RGB(180, 200, 255));
                 for (int i = 0; i < 60; i++) {
@@ -551,6 +598,41 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     FillRect(hdc, &pr, hPBrush);
                     DeleteObject(hPBrush);
                 }
+            }
+
+            // Stylized day/night cycle color overlay that slowly shifts based on internal time
+            DWORD tick = GetTickCount();
+            float cycle = (float)(tick % 60000) / 60000.0f;
+            int rOverlay = (int)(sin(cycle * 3.14159f * 2) * 30 + 30);
+            int gOverlay = (int)(cos(cycle * 3.14159f * 2) * 20 + 20);
+            int bOverlay = (int)(sin(cycle * 3.14159f * 2 + 3.14159f) * 40 + 40);
+            
+            static HMODULE hMsimg32 = NULL;
+            static BOOL msimg32Loaded = FALSE;
+            typedef BOOL(WINAPI *AlphaBlend_t)(HDC,int,int,int,int,HDC,int,int,int,int,BLENDFUNCTION);
+            static AlphaBlend_t pAlphaBlend = NULL;
+            if (!msimg32Loaded) {
+                hMsimg32 = LoadLibrary("msimg32.dll");
+                if (hMsimg32) pAlphaBlend = (AlphaBlend_t)GetProcAddress(hMsimg32, "AlphaBlend");
+                msimg32Loaded = TRUE;
+            }
+            
+            if (pAlphaBlend) {
+                HDC hOverlayDC = CreateCompatibleDC(hdc);
+                HBITMAP hOverlayBmp = CreateCompatibleBitmap(hWindowDC, 1, 1);
+                SelectObject(hOverlayDC, hOverlayBmp);
+                SetPixel(hOverlayDC, 0, 0, RGB(rOverlay, gOverlay, bOverlay));
+                BLENDFUNCTION bf = { AC_SRC_OVER, 0, 40, 0 }; // 40 alpha
+                pAlphaBlend(hdc, 0, 0, clientRect.right, clientRect.bottom, hOverlayDC, 0, 0, 1, 1, bf);
+                DeleteObject(hOverlayBmp);
+                DeleteDC(hOverlayDC);
+            } else {
+                HBRUSH hOverlay = CreateHatchBrush(HS_DIAGCROSS, RGB(rOverlay, gOverlay, bOverlay));
+                HBRUSH hOld = (HBRUSH)SelectObject(hdc, hOverlay);
+                SetBkMode(hdc, TRANSPARENT);
+                FillRect(hdc, &clientRect, hOverlay);
+                SelectObject(hdc, hOld);
+                DeleteObject(hOverlay);
             }
 
             SelectObject(hdc, GetStockObject(SYSTEM_FONT));

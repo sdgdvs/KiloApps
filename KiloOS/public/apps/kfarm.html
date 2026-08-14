@@ -215,6 +215,13 @@
         let hasCheesePress = false;
 
         const particles = [];
+        const clouds = Array.from({length: 5}, () => ({ 
+            x: Math.random() * 400, 
+            y: Math.random() * 200, 
+            speed: 0.1 + Math.random() * 0.2, 
+            size: 20 + Math.random() * 30 
+        }));
+
         function spawnParticles(x, y, color, count) {
             for (let i = 0; i < count; i++) {
                 particles.push({
@@ -409,6 +416,7 @@
                     
                     if (cell.type === 0) {
                         ctx.fillStyle = grassColor; 
+                        ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
                     } else {
                         const req = weather === 'Drought' ? 2 : (weather === 'Rain' ? 0 : 1);
                         if (weather === 'Rain' || cell.watered >= req) {
@@ -418,8 +426,21 @@
                         } else {
                             ctx.fillStyle = '#5D4037'; // dry
                         }
+                        ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
+                        
+                        // Procedurally generated 3D dirt furrow patterns
+                        ctx.lineWidth = 2;
+                        for(let f=0; f<4; f++) {
+                            const fy = py + 8 + f * 8;
+                            // shadow
+                            ctx.strokeStyle = timeOfDay === 'night' ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.3)';
+                            ctx.beginPath(); ctx.moveTo(px, fy); ctx.lineTo(px + CELL_SIZE, fy); ctx.stroke();
+                            // highlight
+                            ctx.strokeStyle = timeOfDay === 'night' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)';
+                            ctx.beginPath(); ctx.moveTo(px, fy + 2); ctx.lineTo(px + CELL_SIZE, fy + 2); ctx.stroke();
+                        }
+                        ctx.lineWidth = 1;
                     }
-                    ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
                     
                     ctx.strokeStyle = 'rgba(0,0,0,0.1)';
                     ctx.strokeRect(px, py, CELL_SIZE, CELL_SIZE);
@@ -431,15 +452,35 @@
                     }
                 }
             }
+            // Slow scrolling translucent clouds
+            ctx.fillStyle = timeOfDay === 'night' ? 'rgba(200,200,220,0.1)' : 'rgba(255,255,255,0.3)';
+            clouds.forEach(c => {
+                c.x += c.speed;
+                if (c.x > 400 + c.size) c.x = -c.size * 2;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.size, 0, Math.PI*2);
+                ctx.arc(c.x + c.size*0.6, c.y - c.size*0.3, c.size*0.7, 0, Math.PI*2);
+                ctx.arc(c.x + c.size*1.2, c.y, c.size*0.8, 0, Math.PI*2);
+                ctx.fill();
+            });
+
             if (timeOfDay === 'night') {
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(0,0,10,0.5)';
+                ctx.fillRect(0, 0, 400, 400);
             } else if (weather === 'Rain') {
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 for (let i = 0; i < 60; i++) {
-                    ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 10 + Math.random() * 10);
+                    ctx.fillRect(Math.random() * 400, Math.random() * 400, 2, 10 + Math.random() * 10);
                 }
             }
+
+            // Stylized day/night cycle color overlay that slowly shifts based on internal time
+            const cycle = (timestamp % 60000) / 60000;
+            const r = Math.sin(cycle * Math.PI * 2) * 30 + 30;
+            const g = Math.cos(cycle * Math.PI * 2) * 20 + 20;
+            const b = Math.sin(cycle * Math.PI * 2 + Math.PI) * 40 + 40;
+            ctx.fillStyle = `rgba(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)}, 0.15)`;
+            ctx.fillRect(0, 0, 400, 400);
 
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];

@@ -2111,6 +2111,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (pulse > 5) pulse = 10 - pulse;
                 Ellipse(hdc, cx - 55 - pulse, cy - 25 - pulse, cx + 55 + pulse, cy + 25 + pulse);
 
+                // Dynamic 3D drop-shadow
+                int shadowOffset = 8 + (pulse / 2);
+                HBRUSH hShadowBrush = CreateSolidBrush(RGB(10, 10, 15));
+                HGDIOBJ oldShadow = SelectObject(hdc, hShadowBrush);
+                SelectObject(hdc, GetStockObject(NULL_PEN));
+                if (g_State.selectedEquipment == 3) {
+                    POINT sAnvil[8] = {{cx-30+shadowOffset, cy-15+shadowOffset}, {cx+30+shadowOffset, cy-15+shadowOffset}, {cx+15+shadowOffset, cy-5+shadowOffset}, {cx+15+shadowOffset, cy+10+shadowOffset}, {cx+30+shadowOffset, cy+20+shadowOffset}, {cx-30+shadowOffset, cy+20+shadowOffset}, {cx-15+shadowOffset, cy+10+shadowOffset}, {cx-15+shadowOffset, cy-5+shadowOffset}};
+                    Polygon(hdc, sAnvil, 8);
+                } else if (g_State.selectedEquipment == 1 || g_State.selectedEquipment == 2) {
+                    Ellipse(hdc, cx - 25 + shadowOffset, cy - 20 + shadowOffset, cx + 25 + shadowOffset, cy + 20 + shadowOffset);
+                } else {
+                    POINT sFlaskNeck[4] = {{cx-15+shadowOffset, cy-25+shadowOffset}, {cx+15+shadowOffset, cy-25+shadowOffset}, {cx+15+shadowOffset, cy-5+shadowOffset}, {cx-15+shadowOffset, cy-5+shadowOffset}};
+                    Polygon(hdc, sFlaskNeck, 4);
+                    Ellipse(hdc, cx - 35 + shadowOffset, cy - 10 + shadowOffset, cx + 35 + shadowOffset, cy + 25 + shadowOffset);
+                }
+                SelectObject(hdc, oldShadow);
+                DeleteObject(hShadowBrush);
+
                 SelectObject(hdc, hVesselBrush);
                 SelectObject(hdc, hPurplePen);
 
@@ -2137,21 +2155,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         Ellipse(hdc, bx - 2, by - 2, bx + 2, by + 2);
                     }
                 }
+                
+                // Procedural specular highlights for glass/brass
+                SelectObject(hdc, GetStockObject(NULL_PEN));
+                HBRUSH hHighlight = CreateSolidBrush(RGB(200, 200, 255));
+                HGDIOBJ oldHi = SelectObject(hdc, hHighlight);
+                if (g_State.selectedEquipment == 3) {
+                    POINT hi[3] = {{cx-20, cy-12}, {cx-10, cy-12}, {cx-15, cy-8}};
+                    Polygon(hdc, hi, 3);
+                } else if (g_State.selectedEquipment == 1 || g_State.selectedEquipment == 2) {
+                    Ellipse(hdc, cx - 18, cy - 15, cx - 8, cy - 5);
+                } else {
+                    Ellipse(hdc, cx - 25, cy - 5, cx - 15, cy + 10);
+                }
+                SelectObject(hdc, oldHi);
+                DeleteObject(hHighlight);
 
 
-                // Draw particles
+                // Draw particles as magical sparkles
                 for (int i = 0; i < MAX_PARTICLES; i++) {
                     if (g_Particles[i].life > 0.0f) {
                         int px = (int)g_Particles[i].x;
                         int py = (int)g_Particles[i].y;
                         int size = (int)(g_Particles[i].life * 6.0f);
                         if (size < 1) size = 1;
-                        HBRUSH pBrush = CreateSolidBrush(g_Particles[i].color);
-                        HGDIOBJ oldPb = SelectObject(hdc, pBrush);
-                        SelectObject(hdc, GetStockObject(NULL_PEN));
-                        Ellipse(hdc, px - size, py - size, px + size, py + size);
-                        SelectObject(hdc, oldPb);
-                        DeleteObject(pBrush);
+                        HPEN pPen = CreatePen(PS_SOLID, 1, g_Particles[i].color);
+                        HGDIOBJ oldPp = SelectObject(hdc, pPen);
+                        MoveToEx(hdc, px - size, py, NULL); LineTo(hdc, px + size + 1, py);
+                        MoveToEx(hdc, px, py - size, NULL); LineTo(hdc, px, py + size + 1);
+                        MoveToEx(hdc, px - size/2, py - size/2, NULL); LineTo(hdc, px + size/2 + 1, py + size/2 + 1);
+                        MoveToEx(hdc, px - size/2, py + size/2, NULL); LineTo(hdc, px + size/2 + 1, py - size/2 - 1);
+                        SelectObject(hdc, oldPp);
+                        DeleteObject(pPen);
                     }
                 }
 

@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KCalc
 - KHex
 - KCalendar
 - KChart
@@ -102,6 +101,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KBase
 - KPad
 - KImage
+- KCalc
 
 ## Progress Log
 - KPad: Usability and UI issues fixed (added EM_SETMARGINS to native edit control for better text padding, implemented AdjustWindowRect in native to prevent layout clipping, increased native default font size for legibility, added explicit 'Press F1 for Help' instructions to web status bar, and increased web text container bottom padding to fix scrolling clipping).
@@ -292,3 +292,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KRead: Usability and UI issues fixed (added F1 help shortcut to web, explicitly instructed F1/H usage on web/native startup UI, enabled crisp native text rendering via negative font heights, and adjusted native layout clipping via AdjustWindowRect).
 - KJournal: Usability and UI issues fixed (added min-width/min-height layout constraints to web version, explicitly updated web instructions to state 'H' or F1, and mapped F1 to help; added explicit 'H' help instructions to all native terminal sub-menus and resolved sub-menu help routing in main.c).
 - KImage: Usability and UI issues fixed (auto-opening bounds set to 1200x800, explicit Help button added, AdjustWindowRect used in native for proper client area, negative font heights implemented for crisp text, text-rendering optimized in web).
+- KCalc: Usability and UI issues fixed (implemented EnumChildWindows to apply crisp font rendering to all native controls natively, handled WM_CTLCOLORSTATIC for readable labels against dark background, increased native layout padding with AdjustWindowRect, applied text-rendering optimizeLegibility to web version).

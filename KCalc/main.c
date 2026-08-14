@@ -316,6 +316,11 @@ void ExportHistoryToFile() {
     }
 }
 
+BOOL CALLBACK SetFontCallback(HWND hwnd, LPARAM lParam) {
+    SendMessageA(hwnd, WM_SETFONT, (WPARAM)lParam, TRUE);
+    return TRUE;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -424,20 +429,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hHistControls[3] = CreateWindowA("BUTTON", "Clear Tape", WS_CHILD | BS_PUSHBUTTON, S(235), S(355), S(94), S(30), hwnd, (HMENU)ID_HIST_CLEAR, NULL, NULL);
 
             SetViewMode(0);
+
+            EnumChildWindows(hwnd, SetFontCallback, (LPARAM)hFontSmall);
+            SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFontMain, TRUE);
+            SendMessageA(hSubDisplay, WM_SETFONT, (WPARAM)hFontSub, TRUE);
+            
             break;
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdcStatic = (HDC)wParam;
             if ((HWND)lParam == hDisplay) {
                 SetTextColor(hdcStatic, RGB(255, 255, 255));
-                SetBkColor(hdcStatic, RGB(15, 23, 42));
-                return (INT_PTR)hDisplayBgBrush;
-            } else if ((HWND)lParam == hSubDisplay || (HWND)lParam == hStatusText) {
+            } else {
                 SetTextColor(hdcStatic, RGB(148, 163, 184));
-                SetBkColor(hdcStatic, RGB(15, 23, 42));
-                return (INT_PTR)hDisplayBgBrush;
             }
-            break;
+            SetBkColor(hdcStatic, RGB(15, 23, 42));
+            return (INT_PTR)hDisplayBgBrush;
         }
         case WM_COMMAND: {
             int id = LOWORD(wParam);
@@ -581,7 +588,7 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     // Adjust window rect based on DPI-scaled client size
-    RECT wr = {0, 0, S(350), S(420)};
+    RECT wr = {0, 0, S(350), S(430)};
     AdjustWindowRect(&wr, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
     int winW = wr.right - wr.left;
     int winH = wr.bottom - wr.top;
