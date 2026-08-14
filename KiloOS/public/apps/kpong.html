@@ -975,55 +975,82 @@
   function drawPaddle(x, y, w, h, isP1, freezeTimer, buffTimer, shieldTimer) {
       let baseColor = isP1 ? (skillMegaTimer > 0 ? '#ffd700' : getPrimaryColor()) : getSecondaryColor();
       let darkColor = isP1 ? (skillMegaTimer > 0 ? '#665000' : '#004466') : '#660044';
+      let vy = isP1 ? p1Vy : p2Vy;
+      let hitRipple = isP1 ? p1HitRipple : p2HitRipple;
+
+      let stretch = Math.min(0.3, Math.abs(vy) * 0.02);
+      let squash = hitRipple * 0.4;
+      let scaleY = 1.0 + stretch - squash;
+      let scaleX = 1.0 - stretch*0.5 + squash * 1.5;
+
+      ctx.save();
+      ctx.translate(x + w/2, y + h/2);
+      ctx.scale(scaleX, scaleY);
+      
+      let drawX = -w/2;
+      let drawY = -h/2;
 
       if (buffTimer > 0 || (isP1 && skillMegaTimer > 0)) {
           ctx.save();
           ctx.shadowBlur = 18; ctx.shadowColor = '#ffd700';
           ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)'; ctx.lineWidth = 2;
-          ctx.strokeRect(x - 3, y - 3, w + 6, h + 6);
+          ctx.strokeRect(drawX - 3, drawY - 3, w + 6, h + 6);
           ctx.restore();
       }
 
       ctx.save();
-      let grad = ctx.createLinearGradient(x, y, x + w, y);
-      grad.addColorStop(0, darkColor); grad.addColorStop(0.3, '#ffffff');
-      grad.addColorStop(0.7, baseColor); grad.addColorStop(1, darkColor);
+      let tOffset = Date.now() * 0.002;
+      let metalGrad = ctx.createLinearGradient(drawX, drawY, drawX + w, drawY);
+      let mPos = 0.5 + Math.sin(tOffset) * 0.3;
+      metalGrad.addColorStop(0, darkColor); 
+      metalGrad.addColorStop(Math.max(0.01, mPos - 0.2), darkColor);
+      metalGrad.addColorStop(mPos, '#ffffff');
+      metalGrad.addColorStop(Math.min(0.99, mPos + 0.2), baseColor);
+      metalGrad.addColorStop(1, darkColor);
       
       ctx.shadowBlur = 16; ctx.shadowColor = baseColor;
-      ctx.fillStyle = grad;
+      ctx.fillStyle = metalGrad;
 
       let r = 4;
       ctx.beginPath();
-      ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.moveTo(drawX + r, drawY); ctx.lineTo(drawX + w - r, drawY);
+      ctx.quadraticCurveTo(drawX + w, drawY, drawX + w, drawY + r); ctx.lineTo(drawX + w, drawY + h - r);
+      ctx.quadraticCurveTo(drawX + w, drawY + h, drawX + w - r, drawY + h); ctx.lineTo(drawX + r, drawY + h);
+      ctx.quadraticCurveTo(drawX, drawY + h, drawX, drawY + h - r); ctx.lineTo(drawX, drawY + r);
+      ctx.quadraticCurveTo(drawX, drawY, drawX + r, drawY);
       ctx.closePath(); ctx.fill();
 
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.shadowBlur = 8; ctx.shadowColor = '#ffffff';
-      ctx.beginPath(); ctx.moveTo(x + w / 2, y + 4); ctx.lineTo(x + w / 2, y + h - 4); ctx.stroke();
+      ctx.strokeStyle = '#ffffff'; 
+      ctx.lineWidth = 1.5 + Math.min(2.0, Math.abs(vy)*0.15); 
+      ctx.shadowBlur = 8 + Math.abs(vy)*2; 
+      ctx.shadowColor = '#ffffff';
+      
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.lineDashOffset = -Date.now() * 0.02 * (vy < 0 ? -1 : (vy > 0 ? 1 : 0)) * Math.max(1, Math.abs(vy));
+      ctx.beginPath(); ctx.moveTo(drawX + w / 2, drawY + 4); ctx.lineTo(drawX + w / 2, drawY + h - 4); ctx.stroke();
+      ctx.restore();
+      
       ctx.restore();
 
-      // Render Protective Energy Shield (Power-up)
-      if (shieldTimer > 0) {
-          ctx.save();
-          let shX = isP1 ? 4 : W - 8;
-          ctx.shadowBlur = 15; ctx.shadowColor = baseColor;
-          ctx.strokeStyle = baseColor; ctx.lineWidth = 3;
-          ctx.beginPath(); ctx.moveTo(shX, 0); ctx.lineTo(shX, H); ctx.stroke();
-          ctx.restore();
-      }
-
-      // Render Paddle Hit Ripple Effect
-      let hitRipple = isP1 ? p1HitRipple : p2HitRipple;
       if (hitRipple > 0) {
           ctx.save();
           let rSize = (1 - hitRipple) * 15;
           ctx.strokeStyle = `rgba(255, 255, 255, ${hitRipple})`;
           ctx.lineWidth = 2 + hitRipple * 3;
           ctx.shadowBlur = 10; ctx.shadowColor = '#ffffff';
-          ctx.strokeRect(x - rSize, y - rSize, w + rSize * 2, h + rSize * 2);
+          ctx.strokeRect(drawX - rSize, drawY - rSize, w + rSize * 2, h + rSize * 2);
+          ctx.restore();
+      }
+
+      ctx.restore(); // end paddle transform
+
+      if (shieldTimer > 0) {
+          ctx.save();
+          let shX = isP1 ? 4 : W - 8;
+          ctx.shadowBlur = 15; ctx.shadowColor = baseColor;
+          ctx.strokeStyle = baseColor; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(shX, 0); ctx.lineTo(shX, H); ctx.stroke();
           ctx.restore();
       }
   }
@@ -1181,8 +1208,27 @@
           ctx.save();
           let ballGlow = b.isFireball ? '#ff6400' : (b.lastHitter === 1 ? getPrimaryColor() : (b.lastHitter === 2 ? getSecondaryColor() : '#ffffff'));
           ctx.shadowBlur = b.isFireball ? 22 : 16; ctx.shadowColor = ballGlow;
-          ctx.fillStyle = b.isFireball ? '#ffc832' : '#ffffff';
-          ctx.beginPath(); ctx.arc(b.x + BALL_SIZE/2, b.y + BALL_SIZE/2, BALL_SIZE/2, 0, Math.PI * 2); ctx.fill();
+          
+          let speed = Math.hypot(b.dx, b.dy);
+          let normDx = speed > 0 ? b.dx / speed : 0;
+          let normDy = speed > 0 ? b.dy / speed : 0;
+          
+          let cx = b.x + BALL_SIZE/2;
+          let cy = b.y + BALL_SIZE/2;
+          
+          let specX = cx - normDx * (BALL_SIZE/4);
+          let specY = cy - normDy * (BALL_SIZE/4);
+          
+          let ballGrad = ctx.createRadialGradient(specX, specY, 0, cx, cy, BALL_SIZE/2);
+          let coreColor = b.isFireball ? '#ffc832' : '#ffffff';
+          let edgeColor = b.isFireball ? '#cc3300' : ballGlow;
+          
+          ballGrad.addColorStop(0, '#ffffff');
+          ballGrad.addColorStop(0.3, coreColor);
+          ballGrad.addColorStop(1, edgeColor);
+
+          ctx.fillStyle = ballGrad;
+          ctx.beginPath(); ctx.arc(cx, cy, BALL_SIZE/2, 0, Math.PI * 2); ctx.fill();
           ctx.restore();
       }
 

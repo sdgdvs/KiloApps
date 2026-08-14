@@ -396,7 +396,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 pad + exportW + SCALE(5), btnY + btnH + spacing, exportW, btnH, hwnd, (HMENU)ID_BTN_EXPORT_CSV, GetModuleHandle(NULL), NULL);
 
-            CreateWindowEx(0, "BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, pad, btnY + (btnH + spacing) * 2, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
+            CreateWindowEx(0, "BUTTON", "Help (F1/H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, pad, btnY + (btnH + spacing) * 2, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
 
             // Search & Category Filter bar
             int searchW = rightW - SCALE(165);
@@ -511,7 +511,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == ID_BTN_EXPORT_CSV) {
                 ExportToCsv();
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
-                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date/export\n- Search or filter on top right\n- Double-click to delete\n- Add events at bottom right\n- Press H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date/export\n- Search or filter on top right\n- Double-click to delete\n- Add events at bottom right\n- Press F1 or H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_LIST_EVENTS && HIWORD(wParam) == LBN_DBLCLK) {
                 DeleteSelectedEvent();
             }
@@ -565,11 +565,11 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
             char cls[32] = {0};
             GetClassNameA(msg.hwnd, cls, 32);
             if (lstrcmpiA(cls, "EDIT") != 0) {
-                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date/export\n- Search or filter on top right\n- Double-click to delete\n- Add events at bottom right\n- Press H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date/export\n- Search or filter on top right\n- Double-click to delete\n- Add events at bottom right\n- Press F1 or H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
             }
         }
         TranslateMessage(&msg);

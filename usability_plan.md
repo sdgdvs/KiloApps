@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KCalendar
 - KChart
 - KChat
 - KChess
@@ -102,8 +101,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KImage
 - KCalc
 - KHex
+- KCalendar
 
 ## Progress Log
+- KCalendar: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1024x768, added F1 key support and updated UI labels for help menu in both web and native, applied text-rendering optimizeLegibility to web app body for crisp text).
 - KPad: Usability and UI issues fixed (added EM_SETMARGINS to native edit control for better text padding, implemented AdjustWindowRect in native to prevent layout clipping, increased native default font size for legibility, added explicit 'Press F1 for Help' instructions to web status bar, and increased web text container bottom padding to fix scrolling clipping).
 - KBase: Usability and UI issues fixed (synchronized App.jsx auto-opening bounds to match the 900x750 web UI size, expanded native main.c window bounds to 900x600 via AdjustWindowRect, expanded native edit boxes width to 850 and output box height to 300 to fix clipping, increased native font size, updated web and native Help text to clarify F1 support, added F1 keyboard shortcut support to web app).
 - KTimer: Usability and UI issues fixed (synchronized App.jsx auto-opening bounds to match the 460x580 web UI size, expanded native main.c window bounds to 460x580 via AdjustWindowRect, increased native listbox heights to utilize the extra vertical space, and repositioned native Help label).

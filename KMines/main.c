@@ -74,7 +74,7 @@ typedef struct {
     COLORREF color;
 } Particle;
 
-#define MAX_PARTICLES 200
+#define MAX_PARTICLES 400
 Particle particles[MAX_PARTICLES];
 int particleCount = 0;
 
@@ -104,15 +104,15 @@ void SpawnExplosion(float cx, float cy) {
         RGB(80, 80, 90),    // Dark Smoke
         RGB(240, 240, 240)  // Debris
     };
-    for (int i = 0; i < 35; i++) {
+    for (int i = 0; i < 45; i++) {
         if (particleCount < MAX_PARTICLES) {
             Particle* p = &particles[particleCount++];
             p->x = cx; p->y = cy;
-            p->vx = (float)((my_rand() % 100) - 50) / 10.0f;
-            p->vy = (float)((my_rand() % 100) - 50) / 10.0f - 1.2f;
-            p->maxLife = 15.0f + (float)(my_rand() % 25);
+            p->vx = (float)((my_rand() % 100) - 50) / 6.0f;
+            p->vy = (float)((my_rand() % 100) - 50) / 6.0f - 2.0f;
+            p->maxLife = 20.0f + (float)(my_rand() % 30);
             p->life = p->maxLife;
-            p->size = 2.0f + (float)(my_rand() % 4);
+            p->size = (my_rand() % 5 == 0) ? (4.0f + (float)(my_rand() % 4)) : (2.0f + (float)(my_rand() % 3));
             p->color = colors[my_rand() % 5];
         }
     }
@@ -148,6 +148,12 @@ void UpdateParticles() {
             p->y += p->vy;
             p->vy += 0.15f; // gravity
             p->vx *= 0.96f; // drag
+            
+            // Bounce off edges
+            if (p->x - p->size < 0) { p->x = p->size; p->vx *= -0.7f; }
+            if (p->x + p->size > cols * CELL_SIZE) { p->x = (float)(cols * CELL_SIZE) - p->size; p->vx *= -0.7f; }
+            if (p->y + p->size > rows * CELL_SIZE + HEADER_HEIGHT) { p->y = (float)(rows * CELL_SIZE + HEADER_HEIGHT) - p->size; p->vy *= -0.7f; }
+
             p->life -= 1.0f;
             particles[active++] = *p;
         }
@@ -766,8 +772,18 @@ void DrawBoard(HWND hwnd, HDC hdc) {
     HBRUSH hbrBg = CreateSolidBrush(RGB(18, 20, 29));
     FillRect(hdc, &rcFull, hbrBg); DeleteObject(hbrBg);
 
+    // Metallic frame around the entire window
+    HPEN hFrameHi = CreatePen(PS_SOLID, 4, RGB(180, 190, 210));
+    HPEN hFrameLo = CreatePen(PS_SOLID, 4, RGB(40, 50, 70));
+    HGDIOBJ oldPenF = SelectObject(hdc, hFrameHi);
+    MoveToEx(hdc, 0, rcFull.bottom, NULL); LineTo(hdc, 0, 0); LineTo(hdc, rcFull.right, 0);
+    SelectObject(hdc, hFrameLo);
+    LineTo(hdc, rcFull.right, rcFull.bottom); LineTo(hdc, 0, rcFull.bottom);
+    SelectObject(hdc, oldPenF);
+    DeleteObject(hFrameHi); DeleteObject(hFrameLo);
+
     RECT rcHeader = { 0, 0, cols * CELL_SIZE, HEADER_HEIGHT };
-    HBRUSH hbrHeader = CreateSolidBrush(RGB(30, 35, 50));
+    HBRUSH hbrHeader = CreateSolidBrush(RGB(40, 45, 60)); // slightly lighter metallic header
     FillRect(hdc, &rcHeader, hbrHeader); DeleteObject(hbrHeader);
 
     HPEN hHeaderBorder = CreatePen(PS_SOLID, 2, RGB(60, 70, 95));
@@ -784,6 +800,15 @@ void DrawBoard(HWND hwnd, HDC hdc) {
     RECT rcMineBox = { 10, 10, 60, 38 };
     HBRUSH hbrLcd = CreateSolidBrush(RGB(10, 10, 15));
     FillRect(hdc, &rcMineBox, hbrLcd);
+    
+    // Bevel around Mine Box
+    HPEN hBoxLo = CreatePen(PS_SOLID, 2, RGB(20, 25, 35));
+    HPEN hBoxHi = CreatePen(PS_SOLID, 2, RGB(80, 90, 110));
+    SelectObject(hdc, hBoxLo);
+    MoveToEx(hdc, 10, 38, NULL); LineTo(hdc, 10, 10); LineTo(hdc, 60, 10);
+    SelectObject(hdc, hBoxHi);
+    LineTo(hdc, 60, 38); LineTo(hdc, 10, 38);
+
     SetTextColor(hdc, RGB(247, 118, 142));
     DrawTextA(hdc, szMines, -1, &rcMineBox, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
@@ -792,9 +817,17 @@ void DrawBoard(HWND hwnd, HDC hdc) {
     wsprintfA(szTime, "%03d", displayTime);
     RECT rcTimeBox = { cols * CELL_SIZE - 60, 10, cols * CELL_SIZE - 10, 38 };
     FillRect(hdc, &rcTimeBox, hbrLcd);
+    
+    // Bevel around Time Box
+    SelectObject(hdc, hBoxLo);
+    MoveToEx(hdc, rcTimeBox.left, 38, NULL); LineTo(hdc, rcTimeBox.left, 10); LineTo(hdc, rcTimeBox.right, 10);
+    SelectObject(hdc, hBoxHi);
+    LineTo(hdc, rcTimeBox.right, 38); LineTo(hdc, rcTimeBox.left, 38);
+
     SetTextColor(hdc, isSpeedrun ? RGB(250, 204, 21) : RGB(122, 162, 247));
     DrawTextA(hdc, szTime, -1, &rcTimeBox, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     DeleteObject(hbrLcd);
+    DeleteObject(hBoxLo); DeleteObject(hBoxHi);
 
     int faceCx = cols * CELL_SIZE / 2;
     int faceCy = 24;
@@ -889,13 +922,22 @@ void DrawBoard(HWND hwnd, HDC hdc) {
         DeleteObject(hRadarPen);
     }
 
-    if (tick - detectorTick < 500 && detectorR != -1 && detectorC != -1) {
+    if (tick - detectorTick < 1500 && detectorR != -1 && detectorC != -1) {
         HPEN hLaserPen = CreatePen(PS_SOLID, 2, RGB(74, 222, 128));
         HGDIOBJ oldPenL = SelectObject(hdc, hLaserPen);
         MoveToEx(hdc, cols * CELL_SIZE / 2, 0, NULL);
         LineTo(hdc, detectorC * CELL_SIZE + CELL_SIZE / 2, detectorR * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE / 2);
         SelectObject(hdc, oldPenL);
         DeleteObject(hLaserPen);
+
+        // Sweeping scanner line
+        int scanY = HEADER_HEIGHT + ((tick - detectorTick) * (rows * CELL_SIZE) / 1500);
+        HPEN hScanPen = CreatePen(PS_SOLID, 3, RGB(74, 222, 128));
+        oldPenL = SelectObject(hdc, hScanPen);
+        MoveToEx(hdc, 0, scanY, NULL);
+        LineTo(hdc, cols * CELL_SIZE, scanY);
+        SelectObject(hdc, oldPenL);
+        DeleteObject(hScanPen);
     }
 }
 

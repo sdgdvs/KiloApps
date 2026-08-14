@@ -904,53 +904,134 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ((balls[b].last_hitter == 1) ? GetPrimaryColor() :
                     ((balls[b].last_hitter == 2) ? GetSecondaryColor() : RGB(255, 255, 255)));
 
-                HBRUSH ballB = CreateSolidBrush(balls[b].is_fireball ? RGB(255, 200, 50) : RGB(255, 255, 255));
+                HBRUSH ballB = CreateSolidBrush(balls[b].is_fireball ? RGB(255, 200, 50) : RGB(200, 200, 200));
                 HPEN ballP = CreatePen(PS_SOLID, 2, ballGlowColor);
                 oldPen = (HPEN)SelectObject(memDC, ballP); oldBrush = (HBRUSH)SelectObject(memDC, ballB);
                 Ellipse(memDC, (int)balls[b].x - 1, (int)balls[b].y - 1, (int)balls[b].x + BALL_SIZE + 1, (int)balls[b].y + BALL_SIZE + 1);
                 SelectObject(memDC, oldPen); SelectObject(memDC, oldBrush); DeleteObject(ballB); DeleteObject(ballP);
+                
+                // Glass-like specular reflection shifted based on velocity
+                float spd = sqrtf(balls[b].dx * balls[b].dx + balls[b].dy * balls[b].dy);
+                float normDx = spd > 0.0f ? balls[b].dx / spd : 0.0f;
+                float normDy = spd > 0.0f ? balls[b].dy / spd : 0.0f;
+                
+                int specX = (int)(balls[b].x + BALL_SIZE / 2 - normDx * (BALL_SIZE / 4.0f));
+                int specY = (int)(balls[b].y + BALL_SIZE / 2 - normDy * (BALL_SIZE / 4.0f));
+                
+                HBRUSH specB = CreateSolidBrush(RGB(255, 255, 255));
+                HPEN specP = CreatePen(PS_NULL, 0, 0);
+                oldPen = (HPEN)SelectObject(memDC, specP); oldBrush = (HBRUSH)SelectObject(memDC, specB);
+                Ellipse(memDC, specX - 2, specY - 2, specX + 2, specY + 2);
+                SelectObject(memDC, oldPen); SelectObject(memDC, oldBrush); DeleteObject(specB); DeleteObject(specP);
             }
 
             // Draw Paddles
             {
                 int x = 20, y = p1_y, w = PAD_W, h = p1_pad_h;
+                
+                float stretch = p1_vy > 0 ? p1_vy * 0.02f : -p1_vy * 0.02f;
+                if (stretch > 0.4f) stretch = 0.4f;
+                float squash = p1_hit_ripple * 0.4f;
+                float scaleY = 1.0f + stretch - squash;
+                float scaleX = 1.0f - stretch*0.5f + squash * 1.5f;
+                int cX = x + w / 2, cY = y + h / 2;
+                int drawW = (int)(w * scaleX), drawH = (int)(h * scaleY);
+                int drawX = cX - drawW / 2, drawY = cY - drawH / 2;
+
                 COLORREF mainColor = (skill_mega_timer > 0) ? RGB(255, 215, 0) : GetPrimaryColor();
                 COLORREF darkColor = (skill_mega_timer > 0) ? RGB(100, 80, 0) : RGB(0, 50, 80);
+                
                 if (p1_buff_timer > 0 || skill_mega_timer > 0) {
-                    HBRUSH goldB = CreateSolidBrush(RGB(255, 215, 0)); RECT rG = { x - 2, y - 2, x + w + 2, y + h + 2 };
+                    HBRUSH goldB = CreateSolidBrush(RGB(255, 215, 0)); RECT rG = { drawX - 2, drawY - 2, drawX + drawW + 2, drawY + drawH + 2 };
                     FrameRect(memDC, &rG, goldB); DeleteObject(goldB);
                 }
+                
                 HBRUSH p1B = CreateSolidBrush(darkColor); HPEN p1P = CreatePen(PS_SOLID, 1, mainColor);
                 HPEN pOld = (HPEN)SelectObject(memDC, p1P); HBRUSH bOld = (HBRUSH)SelectObject(memDC, p1B);
-                RoundRect(memDC, x, y, x + w, y + h, 6, 6);
-                HPEN coreP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255)); SelectObject(memDC, coreP);
-                MoveToEx(memDC, x + w / 2, y + 4, NULL); LineTo(memDC, x + w / 2, y + h - 4);
+                RoundRect(memDC, drawX, drawY, drawX + drawW, drawY + drawH, 6, 6);
+                
+                // Procedural metallic reflection
+                float tOffset = GetTickCount() * 0.002f;
+                int mPosOffset = (int)(sinf(tOffset) * (drawH / 3.0f));
+                int hlY = drawY + drawH / 2 + mPosOffset - 4;
+                if (hlY < drawY + 2) hlY = drawY + 2;
+                if (hlY + 8 > drawY + drawH - 2) hlY = drawY + drawH - 10;
+                if (hlY < drawY + 2) hlY = drawY + 2; // bound again
+                RECT hlRect = { drawX + 2, hlY, drawX + drawW - 2, hlY + 8 };
+                HBRUSH hlB = CreateSolidBrush(RGB(150, 200, 255));
+                FillRect(memDC, &hlRect, hlB);
+                DeleteObject(hlB);
+                
+                // Animated energy conduits
+                int conduitThickness = 1 + (int)((p1_vy > 0 ? p1_vy : -p1_vy) * 0.15f);
+                if (conduitThickness > 3) conduitThickness = 3;
+                HPEN coreP = CreatePen(PS_SOLID, conduitThickness, RGB(255, 255, 255)); SelectObject(memDC, coreP);
+                int dashOffset = (GetTickCount() / 20 * (p1_vy < 0 ? -1 : 1)) % 8;
+                if (dashOffset < 0) dashOffset += 8;
+                for (int cy = drawY + 4 + dashOffset; cy < drawY + drawH - 4; cy += 8) {
+                    if (cy + 4 <= drawY + drawH - 4) {
+                        MoveToEx(memDC, drawX + drawW / 2, cy, NULL); LineTo(memDC, drawX + drawW / 2, cy + 4);
+                    }
+                }
+                
                 SelectObject(memDC, pOld); SelectObject(memDC, bOld); DeleteObject(p1B); DeleteObject(p1P); DeleteObject(coreP);
 
                 if (p1_hit_ripple > 0.0f) {
                     int rSize = (int)((1.0f - p1_hit_ripple) * 10.0f);
                     HPEN rP = CreatePen(PS_SOLID, 2, RGB((BYTE)(255 * p1_hit_ripple), (BYTE)(255 * p1_hit_ripple), (BYTE)(255 * p1_hit_ripple)));
                     pOld = (HPEN)SelectObject(memDC, rP); bOld = (HBRUSH)SelectObject(memDC, (HBRUSH)GetStockObject(NULL_BRUSH));
-                    RoundRect(memDC, x - rSize, y - rSize, x + w + rSize, y + h + rSize, 6, 6);
+                    RoundRect(memDC, drawX - rSize, drawY - rSize, drawX + drawW + rSize, drawY + drawH + rSize, 6, 6);
                     SelectObject(memDC, pOld); SelectObject(memDC, bOld); DeleteObject(rP);
                 }
             }
             {
                 int x = W - 20 - PAD_W, y = p2_y, w = PAD_W, h = p2_pad_h;
+                
+                float stretch = p2_vy > 0 ? p2_vy * 0.02f : -p2_vy * 0.02f;
+                if (stretch > 0.4f) stretch = 0.4f;
+                float squash = p2_hit_ripple * 0.4f;
+                float scaleY = 1.0f + stretch - squash;
+                float scaleX = 1.0f - stretch*0.5f + squash * 1.5f;
+                int cX = x + w / 2, cY = y + h / 2;
+                int drawW = (int)(w * scaleX), drawH = (int)(h * scaleY);
+                int drawX = cX - drawW / 2, drawY = cY - drawH / 2;
+
                 COLORREF mainColor = (game_mode == 4 && campaign_level == 20) ? RGB(255, 50, 0) : GetSecondaryColor();
                 COLORREF darkColor = (game_mode == 4 && campaign_level == 20) ? RGB(100, 10, 0) : RGB(80, 0, 50);
                 HBRUSH p2B = CreateSolidBrush(darkColor); HPEN p2P = CreatePen(PS_SOLID, 1, mainColor);
                 HPEN pOld = (HPEN)SelectObject(memDC, p2P); HBRUSH bOld = (HBRUSH)SelectObject(memDC, p2B);
-                RoundRect(memDC, x, y, x + w, y + h, 6, 6);
-                HPEN coreP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255)); SelectObject(memDC, coreP);
-                MoveToEx(memDC, x + w / 2, y + 4, NULL); LineTo(memDC, x + w / 2, y + h - 4);
+                RoundRect(memDC, drawX, drawY, drawX + drawW, drawY + drawH, 6, 6);
+                
+                // Procedural metallic reflection
+                float tOffset = GetTickCount() * 0.002f;
+                int mPosOffset = (int)(sinf(tOffset + 3.14f) * (drawH / 3.0f));
+                int hlY = drawY + drawH / 2 + mPosOffset - 4;
+                if (hlY < drawY + 2) hlY = drawY + 2;
+                if (hlY + 8 > drawY + drawH - 2) hlY = drawY + drawH - 10;
+                if (hlY < drawY + 2) hlY = drawY + 2;
+                RECT hlRect = { drawX + 2, hlY, drawX + drawW - 2, hlY + 8 };
+                HBRUSH hlB = CreateSolidBrush(RGB(150, 200, 255));
+                FillRect(memDC, &hlRect, hlB);
+                DeleteObject(hlB);
+                
+                int conduitThickness = 1 + (int)((p2_vy > 0 ? p2_vy : -p2_vy) * 0.15f);
+                if (conduitThickness > 3) conduitThickness = 3;
+                HPEN coreP = CreatePen(PS_SOLID, conduitThickness, RGB(255, 255, 255)); SelectObject(memDC, coreP);
+                int dashOffset = (GetTickCount() / 20 * (p2_vy < 0 ? -1 : 1)) % 8;
+                if (dashOffset < 0) dashOffset += 8;
+                for (int cy = drawY + 4 + dashOffset; cy < drawY + drawH - 4; cy += 8) {
+                    if (cy + 4 <= drawY + drawH - 4) {
+                        MoveToEx(memDC, drawX + drawW / 2, cy, NULL); LineTo(memDC, drawX + drawW / 2, cy + 4);
+                    }
+                }
+                
                 SelectObject(memDC, pOld); SelectObject(memDC, bOld); DeleteObject(p2B); DeleteObject(p2P); DeleteObject(coreP);
 
                 if (p2_hit_ripple > 0.0f) {
                     int rSize = (int)((1.0f - p2_hit_ripple) * 10.0f);
                     HPEN rP = CreatePen(PS_SOLID, 2, RGB((BYTE)(255 * p2_hit_ripple), (BYTE)(255 * p2_hit_ripple), (BYTE)(255 * p2_hit_ripple)));
                     pOld = (HPEN)SelectObject(memDC, rP); bOld = (HBRUSH)SelectObject(memDC, (HBRUSH)GetStockObject(NULL_BRUSH));
-                    RoundRect(memDC, x - rSize, y - rSize, x + w + rSize, y + h + rSize, 6, 6);
+                    RoundRect(memDC, drawX - rSize, drawY - rSize, drawX + drawW + rSize, drawY + drawH + rSize, 6, 6);
                     SelectObject(memDC, pOld); SelectObject(memDC, bOld); DeleteObject(rP);
                 }
             }

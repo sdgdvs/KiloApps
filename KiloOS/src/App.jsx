@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.98';
+const MICROS_VERSION = '0.3.99';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 
@@ -33,7 +33,7 @@ const APPS = [
   { id: 'kmaze', title: 'KMaze', url: '/apps/kmaze.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmaze.ico', w: 800, h: 660, folder: 'Games' },
   { id: 'kaudio', title: 'KAudio', url: '/apps/kaudio.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kaudio.ico', w: 500, h: 350, folder: 'Media' },
   { id: 'kradio', title: 'KRadio', url: '/apps/kradio.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kradio.ico', w: 450, h: 300, folder: 'Media' },
-  { id: 'kcalendar', title: 'KCalendar', url: '/apps/kcalendar.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalendar.ico', w: 450, h: 450, folder: 'Office' },
+  { id: 'kcalendar', title: 'KCalendar', url: '/apps/kcalendar.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalendar.ico', w: 1024, h: 768, folder: 'Office' },
   { id: 'ksolitaire', title: 'KSolitaire', url: '/apps/ksolitaire.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksolitaire.ico', w: 920, h: 800, folder: 'Games' },
   { id: 'kspace', title: 'KSpace', url: '/apps/kspace.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kspace.ico', w: 340, h: 520, folder: 'Games' },
   { id: 'kpac', title: 'KPac', url: '/apps/kpac.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpac.ico', w: 400, h: 570, folder: 'Games' },
