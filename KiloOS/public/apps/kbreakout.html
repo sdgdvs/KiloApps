@@ -63,6 +63,7 @@ let frame = 0;
 
 // Paddle
 let pad_w = 60, pad_h = 10, pad_x = w/2 - pad_w/2;
+let last_pad_x = pad_x, pad_vx = 0, pad_squash_timer = 0;
 
 // Multi-Ball system
 let balls = [];
@@ -184,6 +185,26 @@ function drawBrick(r, c, type, bx, by, hp) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.fillRect(bx + 1, by + BR_H - 3, BR_W - 2, 2);
     ctx.fillRect(bx + BR_W - 3, by + 1, 2, BR_H - 2);
+
+    let min_dist = 9999;
+    let b_xc = bx + BR_W/2, b_yc = by + BR_H/2;
+    let closest_ball = null;
+    for (let b of balls) {
+        if (!b) continue;
+        let dx = b.x - b_xc, dy = b.y - b_yc;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < min_dist) { min_dist = dist; closest_ball = b; }
+    }
+    if (closest_ball && min_dist < 120) {
+        let intensity = Math.max(0, 1.0 - min_dist / 120);
+        let spec_x = b_xc + ((closest_ball.x - b_xc) / min_dist) * (BR_W/2.5);
+        let spec_y = b_yc + ((closest_ball.y - b_yc) / min_dist) * (BR_H/2.5);
+        let grad = ctx.createRadialGradient(spec_x, spec_y, 0, spec_x, spec_y, BR_W);
+        grad.addColorStop(0, `rgba(255, 255, 255, ${0.7 * intensity})`);
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+    }
 
     // Special Brick Textures
     if (type === 9) { // Steel X
@@ -574,6 +595,10 @@ function loop() {
         if (pad_x < 0) pad_x = 0;
         if (pad_x > w - pad_w) pad_x = w - pad_w;
 
+        pad_vx = pad_x - last_pad_x;
+        last_pad_x = pad_x;
+        if (pad_squash_timer > 0) pad_squash_timer--;
+
         // Laser Paddle Auto-fire
         if (dur_laser > 0 && dur_laser % 15 === 0) {
             lasers.push({ x: pad_x + 5, y: h - 30 });
@@ -704,6 +729,7 @@ function loop() {
             power_y += 2.5;
             if (power_y + 10 > h - 30 && power_y < h - 30 + pad_h && power_x + 10 > pad_x && power_x < pad_x + pad_w) {
                 power_active = 0;
+                pad_squash_timer = 15;
                 spawnParticles(power_x, power_y, '#ffffff', 10);
                 playTone(700, 'sine', 0.2);
                 if (power_type === 1) { paddle_timer = 350; pad_w = diff === 1 ? 75 : 95; }
@@ -788,6 +814,7 @@ function loop() {
             if (b.y + 8 > h - 30 && b.y < h - 30 + pad_h && b.x + 8 > pad_x && b.x < pad_x + pad_w) {
                 b.y = h - 30 - 8;
                 b.dy = -Math.abs(b.dy);
+                pad_squash_timer = 12;
                 let hitPos = (b.x + 4) - (pad_x + pad_w / 2);
                 b.dx = hitPos * 0.22;
                 if (Math.abs(b.dx) < 1) b.dx = b.dx > 0 ? 1.5 : -1.5;
@@ -1017,29 +1044,47 @@ function render() {
     // Render Paddle
     if (state === 1) {
         let py = h - 30;
-        ctx.fillStyle = dur_laser > 0 ? '#00cccc' : sticky_timer > 0 ? '#3388ff' : '#4466aa';
-        ctx.fillRect(pad_x, py, pad_w, pad_h);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(pad_x + 4, py + 1, pad_w - 8, 2);
+        let p_squash = 1.0 + (pad_squash_timer > 0 ? Math.sin(pad_squash_timer * 0.5) * 0.4 * (pad_squash_timer / 15) : 0);
+        let dp_w = pad_w * p_squash;
+        let dp_h = pad_h * (2.0 - p_squash);
+        let dp_x = pad_x + (pad_w - dp_w) / 2;
+        let dp_y = py + (pad_h - dp_h);
+
+        let pGrad = ctx.createLinearGradient(dp_x, dp_y, dp_x, dp_y + dp_h);
+        pGrad.addColorStop(0, dur_laser > 0 ? '#66ffff' : sticky_timer > 0 ? '#66b8ff' : '#88aadd');
+        pGrad.addColorStop(0.3, dur_laser > 0 ? '#00cccc' : sticky_timer > 0 ? '#3388ff' : '#4466aa');
+        pGrad.addColorStop(0.7, dur_laser > 0 ? '#007777' : sticky_timer > 0 ? '#1155aa' : '#223366');
+        pGrad.addColorStop(1, dur_laser > 0 ? '#00cccc' : sticky_timer > 0 ? '#3388ff' : '#4466aa');
+
+        ctx.fillStyle = pGrad;
+        ctx.fillRect(dp_x, dp_y, dp_w, dp_h);
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillRect(dp_x + 2, dp_y + 1, dp_w - 4, 1.5);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(dp_x + 2, dp_y + dp_h - 2, dp_w - 4, 1);
 
         // Animated Energy Core on Paddle
-        let coreWidth = 10 + Math.sin(frame * 0.2) * 5;
+        let v_pulse = Math.abs(pad_vx) * 0.15;
+        let coreWidth = 10 + Math.sin(frame * (0.2 + v_pulse)) * (5 + v_pulse * 10);
         ctx.fillStyle = '#00ffff';
-        ctx.fillRect(pad_x + pad_w / 2 - coreWidth / 2, py + 4, coreWidth, 2);
+        ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 5 + v_pulse * 10;
+        ctx.fillRect(dp_x + dp_w / 2 - coreWidth / 2, dp_y + dp_h / 2 - 1, coreWidth, 2);
+        ctx.shadowBlur = 0;
 
         if (dur_laser > 0) {
             let pulse = Math.abs(Math.sin(frame * 0.3));
             ctx.fillStyle = `rgba(0, 255, 255, ${0.5 + pulse * 0.5})`;
             ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 10;
             ctx.beginPath();
-            ctx.moveTo(pad_x - 2, py + 4);
-            ctx.lineTo(pad_x + 6, py - 6);
-            ctx.lineTo(pad_x + 14, py + 4);
+            ctx.moveTo(dp_x - 2, dp_y + 4);
+            ctx.lineTo(dp_x + 6, dp_y - 6);
+            ctx.lineTo(dp_x + 14, dp_y + 4);
             ctx.fill();
             ctx.beginPath();
-            ctx.moveTo(pad_x + pad_w - 14, py + 4);
-            ctx.lineTo(pad_x + pad_w - 6, py - 6);
-            ctx.lineTo(pad_x + pad_w + 2, py + 4);
+            ctx.moveTo(dp_x + dp_w - 14, dp_y + 4);
+            ctx.lineTo(dp_x + dp_w - 6, dp_y - 6);
+            ctx.lineTo(dp_x + dp_w + 2, dp_y + 4);
             ctx.fill();
             ctx.shadowBlur = 0;
         }

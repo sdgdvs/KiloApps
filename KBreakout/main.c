@@ -47,6 +47,9 @@ int meteor_active = 0;
 int pad_x = W / 2 - 30;
 int pad_w = 60;
 int pad_h = 10;
+int last_pad_x = W / 2 - 30;
+int pad_vx = 0;
+int pad_squash_timer = 0;
 
 int score = 0;
 int high_score = 0;
@@ -108,6 +111,17 @@ static int MyRand() {
 
 static int MyAbs(int x) { return x < 0 ? -x : x; }
 
+static float MySin(float x) {
+    const float PI2 = 6.283185f;
+    while (x < 0) x += PI2;
+    while (x >= PI2) x -= PI2;
+    float t = x * 4.0f / PI2;
+    if (t < 1.0f) return t;
+    if (t < 3.0f) return 2.0f - t;
+    return t - 4.0f;
+}
+static float MyCos(float x) { return MySin(x + 1.570796f); }
+
 void SpawnParticles(float x, float y, COLORREF color, int count) {
     for (int i = 0; i < count; i++) {
         for (int p = 0; p < MAX_PARTICLES; p++) {
@@ -167,6 +181,38 @@ void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by, int hp) {
     SelectObject(hdc, darkPen);
     LineTo(hdc, bx + BR_W - 2, by + BR_H - 2);
     LineTo(hdc, bx + 1, by + BR_H - 2);
+
+    int min_dist = 999999;
+    Ball* closest_ball = NULL;
+    for (int i = 0; i < MAX_BALLS; i++) {
+        if (balls[i].active) {
+            float dx = balls[i].x - (bx + BR_W / 2);
+            float dy = balls[i].y - (by + BR_H / 2);
+            int dist = (int)(dx*dx + dy*dy);
+            if (dist < min_dist) { min_dist = dist; closest_ball = &balls[i]; }
+        }
+    }
+    if (closest_ball && min_dist < 15000) {
+        float dist_f = 1.0f - ((float)min_dist / 15000.0f);
+        if (dist_f > 0) {
+            float dx = closest_ball->x - (bx + BR_W / 2);
+            float dy = closest_ball->y - (by + BR_H / 2);
+            int spec_x = bx + BR_W / 2 + (int)(dx * 0.15f);
+            int spec_y = by + BR_H / 2 + (int)(dy * 0.3f);
+            int size = (int)(4.0f * dist_f);
+            if (size > 0) {
+                HPEN sPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                HBRUSH sBr = CreateSolidBrush(RGB(255, 255, 255));
+                HGDIOBJ oldP2 = SelectObject(hdc, sPen);
+                HGDIOBJ oldB2 = SelectObject(hdc, sBr);
+                Ellipse(hdc, spec_x - size, spec_y - size, spec_x + size, spec_y + size);
+                SelectObject(hdc, oldP2);
+                SelectObject(hdc, oldB2);
+                DeleteObject(sPen);
+                DeleteObject(sBr);
+            }
+        }
+    }
 
     if (type == 9) { // Steel X
         HPEN steelPen = CreatePen(PS_SOLID, 1, RGB(210, 220, 230));
@@ -515,6 +561,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (pad_x < 0) pad_x = 0;
                 if (pad_x > W - pad_w) pad_x = W - pad_w;
 
+                pad_vx = pad_x - last_pad_x;
+                last_pad_x = pad_x;
+                if (pad_squash_timer > 0) pad_squash_timer--;
+
                 UpdateParticles();
 
                 // Laser Auto-fire
@@ -651,6 +701,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     power_y += 2.5f;
                     if (power_y + 10 > H - 40 && power_y < H - 40 + pad_h && power_x + 10 > pad_x && power_x < pad_x + pad_w) {
                         power_active = 0;
+                        pad_squash_timer = 15;
                         MessageBeep(MB_OK);
                         SpawnParticles(power_x, power_y, RGB(255, 255, 255), 10);
                         if (power_type == 1) { paddle_timer = 350; pad_w = (diff == 1) ? 75 : 95; }
@@ -763,6 +814,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         balls[i].x + 8 > pad_x && balls[i].x < pad_x + pad_w) {
                         balls[i].y = (float)(H - 40 - 8);
                         balls[i].dy = -MyAbs((int)balls[i].dy);
+                        pad_squash_timer = 12;
                         float hit_pos = (balls[i].x + 4) - (pad_x + pad_w / 2);
                         balls[i].dx = hit_pos * 0.22f;
                         if (MyAbs((int)balls[i].dx) == 0) balls[i].dx = (balls[i].dx > 0) ? 1.5f : -1.5f;
@@ -1080,17 +1132,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 // Draw Paddle
-                COLORREF padClr = dur_laser > 0 ? RGB(0, 204, 204) : sticky_timer > 0 ? RGB(50, 140, 255) : RGB(70, 100, 170);
-                HBRUSH pBrush = CreateSolidBrush(padClr);
-                HGDIOBJ oldBrush = SelectObject(memDC, pBrush);
-                RoundRect(memDC, pad_x, H - 40, pad_x + pad_w, H - 40 + pad_h, 6, 6);
-                SelectObject(memDC, oldBrush);
-                DeleteObject(pBrush);
-                
+                float p_squash = 1.0f + (pad_squash_timer > 0 ? MySin(pad_squash_timer * 0.5f) * 0.4f * ((float)pad_squash_timer / 15.0f) : 0.0f);
+                int dp_w = (int)(pad_w * p_squash);
+                int dp_h = (int)(pad_h * (2.0f - p_squash));
+                int dp_x = pad_x + (pad_w - dp_w) / 2;
+                int dp_y = (H - 40) + (pad_h - dp_h);
+
+                int r_base = dur_laser > 0 ? 0 : sticky_timer > 0 ? 50 : 70;
+                int g_base = dur_laser > 0 ? 204 : sticky_timer > 0 ? 140 : 100;
+                int b_base = dur_laser > 0 ? 204 : sticky_timer > 0 ? 255 : 170;
+
+                for (int h_idx = 0; h_idx < dp_h; h_idx++) {
+                    float t = (float)h_idx / (float)dp_h;
+                    float intensity = 0.6f + 0.4f * MyCos(t * 3.14159f * 2.0f);
+                    int br = (int)(r_base * intensity); if (br > 255) br = 255;
+                    int bg = (int)(g_base * intensity); if (bg > 255) bg = 255;
+                    int bb = (int)(b_base * intensity); if (bb > 255) bb = 255;
+                    HPEN pPen = CreatePen(PS_SOLID, 1, RGB(br, bg, bb));
+                    HGDIOBJ oldP = SelectObject(memDC, pPen);
+                    MoveToEx(memDC, dp_x, dp_y + h_idx, NULL);
+                    LineTo(memDC, dp_x + dp_w, dp_y + h_idx);
+                    SelectObject(memDC, oldP);
+                    DeleteObject(pPen);
+                }
+
+                HPEN hPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                HGDIOBJ oldH = SelectObject(memDC, hPen);
+                MoveToEx(memDC, dp_x + 2, dp_y + 1, NULL);
+                LineTo(memDC, dp_x + dp_w - 2, dp_y + 1);
+                MoveToEx(memDC, dp_x + 2, dp_y + dp_h - 2, NULL);
+                LineTo(memDC, dp_x + dp_w - 2, dp_y + dp_h - 2);
+                SelectObject(memDC, oldH);
+                DeleteObject(hPen);
+
                 // Animated Energy Core on Paddle
-                int coreWidth = 10 + ((frame_counter % 10 < 5) ? 4 : -4);
-                HBRUSH coreBr = CreateSolidBrush(RGB(0, 255, 255));
-                RECT coreRc = { pad_x + pad_w / 2 - coreWidth / 2, H - 40 + 4, pad_x + pad_w / 2 + coreWidth / 2, H - 40 + 6 };
+                int v_pulse = MyAbs(pad_vx) * 2;
+                int pulse_anim = (int)(MySin((float)frame_counter * (0.2f + (float)v_pulse * 0.01f)) * (5 + v_pulse));
+                int coreWidth = 10 + pulse_anim;
+                if (coreWidth < 2) coreWidth = 2;
+                if (coreWidth > dp_w) coreWidth = dp_w;
+                int cb = 100 + v_pulse * 5; if (cb > 255) cb = 255;
+                HBRUSH coreBr = CreateSolidBrush(RGB(cb, 255, 255));
+                RECT coreRc = { dp_x + dp_w / 2 - coreWidth / 2, dp_y + dp_h / 2 - 1, dp_x + dp_w / 2 + coreWidth / 2, dp_y + dp_h / 2 + 1 };
                 FillRect(memDC, &coreRc, coreBr);
                 DeleteObject(coreBr);
 

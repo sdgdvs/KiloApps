@@ -174,6 +174,7 @@ void AddTab(const char* name, const char* path) {
     if (g_hFontGlobal) {
         SendMessage(g_Tabs[idx].hEdit, WM_SETFONT, (WPARAM)g_hFontGlobal, TRUE);
     }
+    SendMessage(g_Tabs[idx].hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(8, 8));
 
     g_NumTabs++;
     SwitchTab(idx);
@@ -508,7 +509,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hTabCtrl = CreateWindowExA(0, WC_TABCONTROLA, "", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE,
                                        0, 0, W, H, hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-            g_hFontGlobal = CreateFontA(-16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+            g_hFontGlobal = CreateFontA(-18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
 
             AddTab("Welcome", NULL);
             SetWindowTextA(g_Tabs[0].hEdit, "Welcome to KPad Pro!\r\n\r\nPress F1 for Help to view keyboard shortcuts.\r\n");
@@ -669,8 +670,11 @@ void MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
     RegisterClass(&wc);
 
+    RECT rc = { 0, 0, W, H };
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, TRUE);
+
     HWND hwnd = CreateWindowEx(0, "KPadApp", "KPad Pro - Press F1 for Help", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
