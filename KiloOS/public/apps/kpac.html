@@ -495,6 +495,7 @@
   let vipX = 7, vipY = 7, vipActive = 0;
 
   let score = 0, gameOver = 0, dotCount = 0, frameCount = 0;
+  let deathTimer = 0;
   let level = 1;
   let frightTimer = 0;
   let victoryTimer = 0;
@@ -814,6 +815,7 @@
 
       frightTimer = 0;
       victoryTimer = 0;
+      deathTimer = 0;
       freezeSkillTimer = 0; freezeCooldown = 0;
       speedSkillTimer = 0; speedCooldown = 0;
       magnetSkillTimer = 0; magnetCooldown = 0;
@@ -852,6 +854,34 @@
           return;
       }
       if (showHelp || paused) return;
+
+      if (deathTimer > 0) {
+          deathTimer--;
+          if (deathTimer % 2 === 0) {
+              const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
+              addSparks(px * TS + TS/2, py * TS + TS/2, colors[Math.floor(Math.random() * colors.length)], 3);
+          }
+          if (deathTimer === 0) {
+              lives--;
+              if (lives <= 0) {
+                  gameOver = 1;
+                  statsGamesPlayed++;
+                  localStorage.setItem('kpac_games', statsGamesPlayed);
+              } else {
+                  px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+                  ghosts[0] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                  ghosts[1] = {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                  ghosts[2] = {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                  ghosts[3] = {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                  ghosts[4] = {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0};
+                  if (level % 20 === 0) ghosts[5] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0};
+              }
+          }
+          for (let i = particles.length - 1; i >= 0; i--) {
+              let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) particles.splice(i, 1);
+          }
+          return;
+      }
 
       if (victoryTimer > 0) {
           victoryTimer--;
@@ -1072,21 +1102,7 @@
                       playSound(1000, 0.3, 'sine');
                   } else {
                       playSound(200, 0.5, 'sawtooth');
-                      addSparks(cx, cy, '#ffeb3b', 16);
-                      lives--;
-                      if (lives <= 0) {
-                          gameOver = 1;
-                          statsGamesPlayed++;
-                          localStorage.setItem('kpac_games', statsGamesPlayed);
-                      } else {
-                          px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
-                          ghosts[0] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                          ghosts[1] = {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                          ghosts[2] = {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                          ghosts[3] = {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                          ghosts[4] = {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                          if (level % 20 === 0) ghosts[5] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                      }
+                      deathTimer = 40;
                   }
               } else if (map[py][px] >= 2 && map[py][px] <= 5) {
                   let cx = px * TS + TS/2, cy = py * TS + TS/2;
@@ -1206,22 +1222,7 @@
                   playSound(1000, 0.3, 'sine');
               } else {
                   playSound(200, 0.5, 'sawtooth');
-                  addSparks(cx, cy, '#ffeb3b', 16);
-                  lives--;
-                  if (lives <= 0) {
-                      gameOver = 1;
-                      statsGamesPlayed++;
-                      localStorage.setItem('kpac_games', statsGamesPlayed);
-                  } else {
-                      px = 7; py = 12;
-                      pdx = 0; pdy = 0; ndx = 0; ndy = 0;
-                      ghosts[0] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                      ghosts[1] = {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                      ghosts[2] = {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                      ghosts[3] = {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                      ghosts[4] = {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                      if (level === 20) ghosts[5] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                  }
+                  deathTimer = 40;
                   break;
               }
           }
@@ -1300,10 +1301,15 @@
 
       ctx.save();
       ctx.shadowColor = wallColor;
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = 6 + Math.sin(frameCount * 0.2) * 2;
       ctx.strokeStyle = wallColor;
       ctx.lineWidth = 2;
       ctx.strokeRect(x + 2, y + 2, TS - 4, TS - 4);
+
+      // Inner glow tracing that pulses dynamically
+      ctx.strokeStyle = 'rgba(255, 255, 255, ' + (0.3 + 0.3 * Math.sin(frameCount * 0.4 + r + c)) + ')';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 3, y + 3, TS - 6, TS - 6);
 
       ctx.strokeStyle = wallHighlight;
       ctx.lineWidth = 1;
@@ -1325,13 +1331,23 @@
 
   function drawDot(ctx, c, r) {
       let cx = c * TS + TS/2, cy = r * TS + TS/2;
-      ctx.fillStyle = 'rgba(255, 200, 150, 0.25)';
+      
+      let radGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 10 + Math.sin(frameCount * 0.1) * 2);
+      radGrad.addColorStop(0, 'rgba(255, 220, 150, 0.4)');
+      radGrad.addColorStop(1, 'rgba(255, 220, 150, 0)');
+      ctx.fillStyle = radGrad;
       ctx.beginPath();
-      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 12, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#ffc896';
-      ctx.fillRect(cx - 2, cy - 2, 4, 4);
+      let pelletGrad = ctx.createRadialGradient(cx - 1, cy - 1, 0, cx, cy, 3);
+      pelletGrad.addColorStop(0, '#ffffff');
+      pelletGrad.addColorStop(0.3, '#ffc896');
+      pelletGrad.addColorStop(1, '#d8863b');
+      ctx.fillStyle = pelletGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fill();
   }
 
   function drawPowerPellet(ctx, c, r, frame) {
@@ -1433,6 +1449,20 @@
       else if (pdx === -1) angle = Math.PI;
       else if (pdy === 1) angle = Math.PI / 2;
       else if (pdy === -1) angle = 3 * Math.PI / 2;
+
+      if (deathTimer > 0) {
+          let foldProgress = (40 - deathTimer) / 40.0;
+          let foldRadius = (TS/2 - 1) * (1.0 - foldProgress);
+          let foldMouth = Math.PI * foldProgress;
+          
+          ctx.fillStyle = shieldActive ? '#00e5ff' : '#ffeb3b';
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, Math.max(0, foldRadius), angle + foldMouth, angle + Math.PI * 2 - foldMouth);
+          ctx.closePath();
+          ctx.fill();
+          return;
+      }
 
       // 4-frame smooth chomp animation frame sequence
       const chompFrames = [0.45 * Math.PI, 0.28 * Math.PI, 0.05 * Math.PI, 0.28 * Math.PI];

@@ -438,6 +438,7 @@ int highScore = 0;
 int gameOver = 0;
 int dotCount = 0;
 int frameCount = 0;
+int deathTimer = 0;
 int level = 1;
 int frightTimer = 0;
 int victoryTimer = 0;
@@ -609,6 +610,7 @@ void Init(int keepScore) {
     gameOver = 0;
     paused = 0;
     dotCount = 0;
+    deathTimer = 0;
     int mapIndex = (level - 1) % 20;
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
@@ -712,6 +714,36 @@ void TriggerShieldSkill() {
 void Update() {
     if (saveMsgTimer > 0) saveMsgTimer--;
     if (showHelp || gameOver || paused) return;
+
+    if (deathTimer > 0) {
+        deathTimer--;
+        if (deathTimer % 2 == 0) {
+            COLORREF colors[] = {RGB(255,0,0), RGB(0,255,0), RGB(0,0,255), RGB(255,255,0), RGB(0,255,255), RGB(255,0,255)};
+            AddShockwave(px * TS + TS/2, py * TS + TS/2, colors[MyRand() % 6]);
+        }
+        if (deathTimer == 0) {
+            lives--;
+            MessageBeep(MB_ICONHAND);
+            if (lives <= 0) {
+                gameOver = 1;
+                statsGamesPlayed++;
+                if (score > statsMaxScore) statsMaxScore = score;
+                SaveHighScore();
+            } else {
+                px = 7; py = 12;
+                pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+                ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1};
+                ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0};
+                ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0};
+                ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1};
+                ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1};
+                if (level == 20) {
+                    ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1};
+                }
+            }
+        }
+        return;
+    }
 
     if (replayMode == 2) {
         while (replayPlaybackIndex < replayCount && replays[replayPlaybackIndex].frame == frameCount) {
@@ -1069,26 +1101,8 @@ void Update() {
                 saveMsgTimer = 20;
                 MessageBeep(MB_OK);
             } else {
-                lives--;
+                deathTimer = 40;
                 MessageBeep(MB_ICONHAND);
-                if (lives <= 0) {
-                    gameOver = 1;
-                    statsGamesPlayed++;
-                    if (score > statsMaxScore) statsMaxScore = score;
-                    SaveHighScore();
-                } else {
-                    px = 7; py = 12;
-                    pdx = 0; pdy = 0;
-                    ndx = 0; ndy = 0;
-                    ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1};
-                    ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0};
-                    ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0};
-                    ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1};
-                    ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1};
-                    if (level == 20) {
-                        ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1};
-                    }
-                }
                 break;
             }
         }
@@ -1326,6 +1340,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT innerWr = {c * TS + 2, r * TS + 2, c * TS + TS - 2, r * TS + TS - 2};
                         FrameRect(memDC, &innerWr, wallBr);
 
+                        // Inner glow tracing that pulses dynamically
+                        int pulseInt = (int)(128 + 127 * MySin(frameCount * 0.4 + r + c));
+                        HPEN pulsePen = CreatePen(PS_SOLID, 1, RGB(pulseInt, pulseInt, pulseInt));
+                        SelectObject(memDC, pulsePen);
+                        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        RECT pulseWr = {c * TS + 3, r * TS + 3, c * TS + TS - 3, r * TS + TS - 3};
+                        Rectangle(memDC, pulseWr.left, pulseWr.top, pulseWr.right, pulseWr.bottom);
+                        DeleteObject(pulsePen);
+
                         SelectObject(memDC, hiPen);
                         int nU = r > 0 && map[r-1][c] == 1;
                         int nD = r < ROWS-1 && map[r+1][c] == 1;
@@ -1343,8 +1366,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (nD && nR) { RECT cr = {c*TS+TS-3, r*TS+TS-3, c*TS+TS, r*TS+TS}; FillRect(memDC, &cr, capBr); }
                         if (nD && nL) { RECT cr = {c*TS, r*TS+TS-3, c*TS+3, r*TS+TS}; FillRect(memDC, &cr, capBr); }
                     } else if (map[r][c] == 2) {
-                        RECT dr = {c * TS + 8, r * TS + 8, c * TS + 12, r * TS + 12};
-                        FillRect(memDC, &dr, dotBr);
+                        int cx = c * TS + TS/2;
+                        int cy = r * TS + TS/2;
+                        
+                        // Ambient glow on nearby walls
+                        int glowRadius = 8 + (int)(MySin(frameCount * 0.1) * 2);
+                        HPEN glowPen = CreatePen(PS_SOLID, 1, RGB(100, 80, 40));
+                        SelectObject(memDC, glowPen);
+                        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        Ellipse(memDC, cx - glowRadius, cy - glowRadius, cx + glowRadius, cy + glowRadius);
+                        DeleteObject(glowPen);
+
+                        // High-resolution 3D pellet sprite
+                        HBRUSH baseBr = CreateSolidBrush(RGB(216, 134, 59));
+                        HBRUSH midBr = CreateSolidBrush(RGB(255, 200, 150));
+                        HBRUSH hiBr = CreateSolidBrush(RGB(255, 255, 255));
+                        
+                        SelectObject(memDC, GetStockObject(NULL_PEN));
+                        SelectObject(memDC, baseBr);
+                        Ellipse(memDC, cx - 3, cy - 3, cx + 4, cy + 4);
+                        SelectObject(memDC, midBr);
+                        Ellipse(memDC, cx - 2, cy - 2, cx + 2, cy + 2);
+                        SelectObject(memDC, hiBr);
+                        Ellipse(memDC, cx - 1, cy - 1, cx + 1, cy + 1);
+                        
+                        DeleteObject(baseBr); DeleteObject(midBr); DeleteObject(hiBr);
                     } else if (map[r][c] == 3) {
                         // Visually distinct power pellets with animated glowing halos
                         int pulse = (int)(MySin(frameCount * 0.3) * 2.0);
@@ -1431,16 +1477,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (pdy == 1) baseAngle = 3.14159 / 2.0;
             else if (pdy == -1) baseAngle = 3.14159 * 1.5;
 
-            double chompAngles[] = { 0.45 * 3.14159, 0.28 * 3.14159, 0.05 * 3.14159, 0.28 * 3.14159 };
-            double mouth = chompAngles[frameCount % 4];
+            if (deathTimer > 0) {
+                double foldProgress = (40.0 - deathTimer) / 40.0;
+                radius = (int)((TS/2 - 1) * (1.0 - foldProgress));
+                if (radius < 0) radius = 0;
+                double foldMouth = 3.14159 * foldProgress;
+                
+                int xStart = cx + (int)(MyCos(baseAngle + foldMouth) * radius * 2);
+                int yStart = cy + (int)(MySin(baseAngle + foldMouth) * radius * 2);
+                int xEnd   = cx + (int)(MyCos(baseAngle - foldMouth) * radius * 2);
+                int yEnd   = cy + (int)(MySin(baseAngle - foldMouth) * radius * 2);
+                
+                Pie(memDC, cx - radius, cy - radius, cx + radius + 1, cy + radius + 1, xStart, yStart, xEnd, yEnd);
+                DeleteObject(pacBr);
+            } else {
+                double chompAngles[] = { 0.45 * 3.14159, 0.28 * 3.14159, 0.05 * 3.14159, 0.28 * 3.14159 };
+                double mouth = chompAngles[frameCount % 4];
 
-            int xStart = cx + (int)(MyCos(baseAngle + mouth) * radius * 2);
-            int yStart = cy + (int)(MySin(baseAngle + mouth) * radius * 2);
-            int xEnd   = cx + (int)(MyCos(baseAngle - mouth) * radius * 2);
-            int yEnd   = cy + (int)(MySin(baseAngle - mouth) * radius * 2);
+                int xStart = cx + (int)(MyCos(baseAngle + mouth) * radius * 2);
+                int yStart = cy + (int)(MySin(baseAngle + mouth) * radius * 2);
+                int xEnd   = cx + (int)(MyCos(baseAngle - mouth) * radius * 2);
+                int yEnd   = cy + (int)(MySin(baseAngle - mouth) * radius * 2);
 
-            Pie(memDC, cx - radius, cy - radius, cx + radius + 1, cy + radius + 1, xStart, yStart, xEnd, yEnd);
-            DeleteObject(pacBr);
+                Pie(memDC, cx - radius, cy - radius, cx + radius + 1, cy + radius + 1, xStart, yStart, xEnd, yEnd);
+                DeleteObject(pacBr);
+            }
             
             if (vipActive) {
                 HBRUSH vipBr = CreateSolidBrush(RGB(76, 175, 80));
@@ -1449,14 +1510,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(vipBr);
             }
 
-            // Pac-Man Eye
-            double eyeAng = baseAngle - 3.14159 / 3.0;
-            int ex = cx + (int)(MyCos(eyeAng) * 4);
-            int ey = cy + (int)(MySin(eyeAng) * 4);
-            HBRUSH eyeBr = CreateSolidBrush(RGB(0, 0, 0));
-            RECT eyeR = {ex - 1, ey - 1, ex + 2, ey + 2};
-            FillRect(memDC, &eyeR, eyeBr);
-            DeleteObject(eyeBr);
+            if (deathTimer == 0) {
+                // Pac-Man Eye
+                double eyeAng = baseAngle - 3.14159 / 3.0;
+                int ex = cx + (int)(MyCos(eyeAng) * 4);
+                int ey = cy + (int)(MySin(eyeAng) * 4);
+                HBRUSH eyeBr = CreateSolidBrush(RGB(0, 0, 0));
+                RECT eyeR = {ex - 1, ey - 1, ex + 2, ey + 2};
+                FillRect(memDC, &eyeR, eyeBr);
+                DeleteObject(eyeBr);
+            }
 
             // Draw Ghosts (Normal, Scared Warning Flash, Floating Return Eyes)
             for (int i = 0; i < numGhosts; i++) {
