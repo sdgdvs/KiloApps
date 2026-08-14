@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 11: Shop system (buy premium food or training gear with hoarded gold).
 - [x] Phase 12: Random events (illness, wild encounters) requiring player intervention.
 - [x] Phase 13: Sound Effects — roars, munching, battle clashes (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Dragon Master's Guide — How-to-play, stat explanations, item codex.
+- [ ] Phase 14: Comprehensive Help & Dragon Master's Guide — How-to-play, stat explanations, item codex. (FAILED — RESOURCE_EXHAUSTED)
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
