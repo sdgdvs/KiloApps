@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFortress
 - KFarm
 - KAlchemy
 - KRogue
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KBreakout
 - KMaze
 - KColony
+- KFortress
 ## Completed Work Log
+
+- **KFortress (Loop 3):** Implemented highly detailed visual variations for the terrain (procedurally generated 3D rock formations and grassy mounds outlining the enemy paths), a dynamic weather system with scrolling animated rain or snow depending on the map, and a dark atmospheric vignette/fog-of-war edge fading effect to frame the play area using alpha blending in both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c).
 
 - **KColony (Loop 3):** Implemented highly detailed visual variations for the planetary surface terrain (procedurally generated crater impacts with dual-layered shading for depth, and deep sprawling Martian-style rock fissures using randomized path walks) as a background layer, along with dynamic atmospheric effects featuring a slow scrolling translucent dust storm layer overlay that dramatically intensifies during disaster events in both Web Canvas (kcolony.html) and Native C Win32 GDI (KColony/main.c).
 
