@@ -690,12 +690,40 @@
     let particles = [];
     let traps = [];
     let blizzTimer = 0;
+    let envArt = [];
+    let weatherParticles = [];
 
     function loadMap(idx) {
       currentMapIndex = idx;
       const map = campaignMaps[idx];
       rawWaypoints = map.waypoints;
       slots = map.slots.map(s => ({x: s.x, y: s.y, occupied: false, tower: null}));
+      
+      envArt = [];
+      weatherParticles = [];
+      for (let i = 0; i < rawWaypoints.length - 1; i++) {
+         let p1 = rawWaypoints[i];
+         let p2 = rawWaypoints[i+1];
+         let dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+         let steps = Math.floor(dist / 20);
+         for(let j = 0; j < steps; j++) {
+            let t = j / steps;
+            let cx = p1.x + (p2.x - p1.x) * t;
+            let cy = p1.y + (p2.y - p1.y) * t;
+            let nx = -(p2.y - p1.y) / dist;
+            let ny = (p2.x - p1.x) / dist;
+            let side = (Math.random() > 0.5 ? 1 : -1);
+            let offset = 35 + Math.random() * 20;
+            if(Math.random() > 0.3) {
+               envArt.push({
+                  x: cx + nx * side * offset,
+                  y: cy + ny * side * offset,
+                  type: Math.random() > 0.5 ? 'rock' : 'grass',
+                  size: 6 + Math.random() * 10
+               });
+            }
+         }
+      }
     }
     loadMap(0);
 
@@ -1485,6 +1513,22 @@
         if (part.life <= 0) particles.splice(i, 1);
       }
 
+      let weatherType = (currentMapIndex === 2 || currentMapIndex === 5) ? 'snow' : 'rain';
+      for(let k=0; k<3; k++) {
+         weatherParticles.push({
+            x: Math.random() * 800,
+            y: -20,
+            vy: weatherType === 'snow' ? 1 + Math.random() : 5 + Math.random() * 2,
+            vx: weatherType === 'snow' ? -1 + Math.random() * 2 : 1
+         });
+      }
+      for (let i = weatherParticles.length - 1; i >= 0; i--) {
+         let wp = weatherParticles[i];
+         wp.x += wp.vx;
+         wp.y += wp.vy;
+         if (wp.y > 600) weatherParticles.splice(i, 1);
+      }
+
       for (let i = floatingTexts.length - 1; i >= 0; i--) {
         const ft = floatingTexts[i];
         ft.y -= 0.6;
@@ -1537,6 +1581,24 @@
       for (let y = 0; y < h; y += gridSize) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
       }
+
+      // Draw Environmental Art
+      envArt.forEach(art => {
+         const sx = art.x * (w / 800);
+         const sy = art.y * (h / 560);
+         const sz = art.size * (w / 800);
+         if (art.type === 'rock') {
+            ctx.fillStyle = '#475569';
+            ctx.beginPath(); ctx.moveTo(sx - sz, sy + sz/2); ctx.lineTo(sx + sz, sy + sz/2); ctx.lineTo(sx, sy - sz); ctx.fill();
+            ctx.fillStyle = '#334155';
+            ctx.beginPath(); ctx.moveTo(sx, sy + sz/2); ctx.lineTo(sx + sz, sy + sz/2); ctx.lineTo(sx, sy - sz); ctx.fill();
+         } else {
+            ctx.fillStyle = '#166534';
+            ctx.beginPath(); ctx.arc(sx, sy, sz, 0, Math.PI, true); ctx.fill();
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath(); ctx.arc(sx - sz/3, sy, sz/1.5, 0, Math.PI, true); ctx.fill();
+         }
+      });
 
       // Draw Obstacles
       ctx.font = '24px Segoe UI';
@@ -1912,6 +1974,26 @@
         ctx.textAlign = 'center';
         ctx.fillText(ft.text, ft.x, ft.y);
       });
+
+      // Draw Weather
+      let weatherType = (currentMapIndex === 2 || currentMapIndex === 5) ? 'snow' : 'rain';
+      ctx.fillStyle = weatherType === 'snow' ? '#ffffff' : 'rgba(100, 150, 255, 0.4)';
+      weatherParticles.forEach(wp => {
+         const sx = wp.x * (w / 800);
+         const sy = wp.y * (h / 560);
+         if (weatherType === 'snow') {
+            ctx.beginPath(); ctx.arc(sx, sy, 2 * (w/800), 0, Math.PI*2); ctx.fill();
+         } else {
+            ctx.fillRect(sx, sy, 1.5 * (w/800), 8 * (h/560));
+         }
+      });
+
+      // Draw Vignette
+      const grad = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)/2.5, w/2, h/2, Math.max(w,h)/1.1);
+      grad.addColorStop(0, 'rgba(0,0,0,0)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.8)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
 
       // Game Over Overlay
       if (gameOver) {

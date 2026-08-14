@@ -216,6 +216,9 @@
   let score = 0;
   
   let msgText = "";
+  let damageFlinchTimer = 0;
+  let minotaurFacingDir = Array.from({length: 45}, () => Array(45).fill(0));
+  let bobTime = 0, lastPX = 1.5, lastPY = 1.5, swayX = 0, lastDX = 1.0, lastDY = 0.0;
   let msgTimer = 0;
   let frameCount = 0;
 
@@ -288,7 +291,7 @@
   }
 
   // Procedural 16x16 Texture Generator
-  const textures = new Array(30);
+  const textures = new Array(40);
   function initTextures() {
       for (let t = 0; t < 30; t++) {
           textures[t] = new Uint32Array(256);
@@ -405,6 +408,48 @@
               }
           }
       }
+      for (let dir = 0; dir < 8; dir++) {
+          textures[30 + dir] = new Uint32Array(256);
+          for (let y = 0; y < 16; y++) {
+              for (let x = 0; x < 16; x++) {
+                  let r = 0, g = 0, b = 0;
+                  let isHorn = false, isEye = false, isSnout = false, isTail = false;
+                  if (dir === 0) {
+                      if ((x>=2 && x<=5 && y<=4) || (x>=10 && x<=13 && y<=4)) isHorn = true;
+                      if ((x>=4 && x<=6 && y>=6 && y<=7) || (x>=9 && x<=11 && y>=6 && y<=7)) isEye = true;
+                      if (y>=10 && y<=12 && x>=5 && x<=10) isSnout = true;
+                  } else if (dir === 1 || dir === 7) {
+                      let shift = (dir === 1) ? -2 : 2;
+                      if ((x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4)) isHorn = true;
+                      if ((x>=4+shift && x<=6+shift && y>=6 && y<=7) || (x>=9+shift && x<=11+shift && y>=6 && y<=7)) isEye = true;
+                      if (y>=10 && y<=12 && x>=5+shift && x<=10+shift) isSnout = true;
+                  } else if (dir === 2) {
+                      if (x>=8 && x<=12 && y<=4) isHorn = true;
+                      if (x>=10 && x<=12 && y>=6 && y<=7) isEye = true;
+                      if (y>=10 && y<=12 && x>=10 && x<=15) isSnout = true;
+                      if (y>=12 && y<=14 && x>=0 && x<=3) isTail = true;
+                  } else if (dir === 6) {
+                      if (x>=3 && x<=7 && y<=4) isHorn = true;
+                      if (x>=3 && x<=5 && y>=6 && y<=7) isEye = true;
+                      if (y>=10 && y<=12 && x>=0 && x<=5) isSnout = true;
+                      if (y>=12 && y<=14 && x>=12 && x<=15) isTail = true;
+                  } else if (dir === 3 || dir === 5) {
+                      let shift = (dir === 3) ? -2 : 2;
+                      if ((x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4)) isHorn = true;
+                      if (y>=12 && y<=14 && x>=6-shift && x<=9-shift) isTail = true;
+                  } else if (dir === 4) {
+                      if ((x>=2 && x<=5 && y<=4) || (x>=10 && x<=13 && y<=4)) isHorn = true;
+                      if (y>=11 && y<=14 && x>=6 && x<=9) isTail = true;
+                  }
+                  if (isHorn) { r=50; g=50; b=50; }
+                  else if (isEye) { r=255; g=255; b=0; }
+                  else if (isSnout) { r=255; g=255; b=255; }
+                  else if (isTail) { r=80; g=0; b=0; }
+                  else { r=153; g=0; b=0; }
+                  textures[30 + dir][y * 16 + x] = (255 << 24) | (b << 16) | (g << 8) | r;
+              }
+          }
+      }
   }
   initTextures();
 
@@ -458,6 +503,13 @@
                   let gb = bossHP <= 1 ? 136 : 255;
                   let bb = bossHP <= 1 ? 136 : 255;
                   textures[15][y * 16 + x] = (255 << 24) | (bb << 16) | (gb << 8) | rb;
+              }
+              for (let dir = 0; dir < 8; dir++) {
+                  let c = textures[30 + dir][y * 16 + x];
+                  let r = c & 0xFF, g = (c >> 8) & 0xFF, b = (c >> 16) & 0xFF;
+                  if ((r === 255 && g === 255 && b === 0) || (r === 255 && g === 136 && b === 0)) {
+                      textures[30 + dir][y * 16 + x] = (255 << 24) | (0 << 16) | ((m_breathe > 0 ? 136 : 255) << 8) | 255;
+                  }
               }
               
               // Spike Trap (t=25)
@@ -946,6 +998,7 @@
       if (speedShoesTimer > 0) speedShoesTimer -= 30;
       if (stunSprayTimer > 0) stunSprayTimer -= 30;
       if (timeFreezeTimer > 0) timeFreezeTimer -= 30;
+      if (damageFlinchTimer > 0) damageFlinchTimer--;
 
       // Update particles
       particles = particles.filter(p => {
@@ -977,15 +1030,20 @@
                   if (dx !== 0 && map[m.x + dx] && map[m.x + dx][m.y] === 0) {
                       map[m.x][m.y] = 0;
                       map[m.x + dx][m.y] = m.type;
+                      if (!minotaurFacingDir[m.x + dx]) minotaurFacingDir[m.x + dx] = [];
+                      minotaurFacingDir[m.x + dx][m.y] = (dx > 0) ? 0 : 4;
                       m.x += dx;
                   } else if (dy !== 0 && map[m.x] && map[m.x][m.y + dy] === 0) {
                       map[m.x][m.y] = 0;
                       map[m.x][m.y + dy] = m.type;
+                      if (!minotaurFacingDir[m.x]) minotaurFacingDir[m.x] = [];
+                      minotaurFacingDir[m.x][m.y + dy] = (dy > 0) ? 2 : 6;
                       m.y += dy;
                   }
                   
                   if (m.x === Math.floor(pX) && m.y === Math.floor(pY)) {
                       playTone(200, 'sawtooth', 0.5);
+                      damageFlinchTimer = 10;
                       score = Math.max(0, score - 100);
                       if (m.type === 15) {
                           pX = 1.5; pY = 1.5;
@@ -1061,6 +1119,7 @@
           addParticles(W/2, H/2, '#ffcc00', 15);
       } else if (curVal === 6) {
           playTone(200, 'sawtooth', 0.2);
+          damageFlinchTimer = 10;
           score = Math.max(0, score - 50);
           pX = 1.5; pY = 1.5;
           addParticles(W/2, H/2, '#ff3300', 20);
@@ -1112,6 +1171,7 @@
           }
       } else if (curVal === 12) {
           playTone(200, 'sawtooth', 0.5);
+          damageFlinchTimer = 10;
           score = Math.max(0, score - 100);
           currentLevel--;
           nextLevel();
@@ -1129,6 +1189,7 @@
           msgText = "+1 Stun Spray!"; msgTimer = 60;
       } else if (curVal === 15) {
           playTone(200, 'sawtooth', 0.5);
+          damageFlinchTimer = 10;
           score = Math.max(0, score - 150);
           pX = 1.5; pY = 1.5;
           msgText = "Attacked by Minotaur King!"; msgTimer = 60;
@@ -1151,6 +1212,7 @@
       } else if (curVal === 25) {
           if (Math.floor(frameCount / 10) % 2 === 0) {
               playTone(200, 'sawtooth', 0.2);
+              damageFlinchTimer = 10;
               score = Math.max(0, score - 75);
               pX = 1.5; pY = 1.5;
               addParticles(W/2, H/2, '#ff0000', 20);
@@ -1190,6 +1252,16 @@
   const buf32 = new Uint32Array(imgData.data.buffer);
 
   function draw() {
+      let mDist = Math.sqrt((pX - lastPX)**2 + (pY - lastPY)**2);
+      bobTime += mDist * 15.0;
+      let bobY = Math.sin(bobTime) * 5.0;
+      let bobX = Math.cos(bobTime * 0.5) * 3.0;
+      let turnAmount = Math.atan2(dY, dX) - Math.atan2(lastDY, lastDX);
+      while(turnAmount < -Math.PI) turnAmount += 2*Math.PI;
+      while(turnAmount > Math.PI) turnAmount -= 2*Math.PI;
+      swayX = swayX * 0.8 + turnAmount * 200.0;
+      lastPX = pX; lastPY = pY; lastDX = dX; lastDY = dY;
+
       // Software Raycasting into buf32
       let drawPX = pX, drawPY = pY, drawDX = dX, drawDY = dY, drawPlaneX = planeX, drawPlaneY = planeY;
       let drawMap = map;
@@ -1202,6 +1274,11 @@
               drawDX = frame.dX; drawDY = frame.dY;
               drawPlaneX = frame.planeX; drawPlaneY = frame.planeY;
           }
+      }
+      if (damageFlinchTimer > 0) {
+          let skew = Math.sin(damageFlinchTimer * 0.5) * 0.2;
+          drawPlaneX += skew * drawDY;
+          drawPlaneY -= skew * drawDX;
       }
 
       // 1. Ceiling & Floor Casting
@@ -1283,6 +1360,19 @@
               if (drawMap[mapX] && drawMap[mapX][mapY] > 0) hit = drawMap[mapX][mapY];
           }
           
+          if (hit === 12 || hit === 15) {
+              let dx_m = pX - (mapX + 0.5);
+              let dy_m = pY - (mapY + 0.5);
+              let pAngle = Math.atan2(dy_m, dx_m);
+              let mAngle = (minotaurFacingDir[mapX] && minotaurFacingDir[mapX][mapY] ? minotaurFacingDir[mapX][mapY] : 0) * (Math.PI / 4.0);
+              let diff = pAngle - mAngle;
+              while (diff < -Math.PI) diff += 2 * Math.PI;
+              while (diff > Math.PI) diff -= 2 * Math.PI;
+              let dir = Math.floor(diff / (Math.PI / 4.0) + 0.5) % 8;
+              if (dir < 0) dir += 8;
+              if (hit === 12) hit = 30 + dir;
+          }
+
           if (side === 0) perpWallDist = (sideDistX - deltaDistX);
           else            perpWallDist = (sideDistY - deltaDistY);
           
@@ -1347,7 +1437,7 @@
       if (gameState === 1) {
           // Held Compass
           if (hasCompass || pathfinderTimer > 0) {
-              let cx = 27, cy = H - 27;
+              let cx = 27 + bobX - swayX, cy = H - 27 + bobY;
               uiCtx.save();
               
               let rimGrad = uiCtx.createRadialGradient(cx-5, cy-5, 2, cx, cy, 18);
@@ -1415,7 +1505,7 @@
           // Held Pickaxe
           if (hasPickaxe > 0) {
               let swing = Math.sin(frameCount * 0.3) * 4;
-              let bx = W - 45 + swing, by = H - 40 - swing;
+              let bx = W - 45 + swing + bobX - swayX, by = H - 40 - swing + bobY;
               
               uiCtx.strokeStyle = '#8b4513';
               uiCtx.lineWidth = 4;

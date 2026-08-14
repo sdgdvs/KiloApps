@@ -278,6 +278,8 @@ int totalEscapes = 0;
 int totalScore = 0;
 
 int gameState = 0; // 0=start, 1=play, 2=win
+int minotaurFacingDir[45][45] = {0};
+int damageFlinchTimer = 0;
 DWORD startTime = 0;
 DWORD endTime = 0;
 float bestTime = 9999.9f;
@@ -304,7 +306,7 @@ int replayMap[45][45];
 int replayCurFrame = 0;
 
 // 16x16 Textures buffer: 25 types, 256 DWORD colors (0x00RRGGBB)
-DWORD textures[30][256];
+DWORD textures[40][256];
 DWORD animFrameCount = 0;
 
 // Particles
@@ -461,6 +463,47 @@ void InitTextures() {
             }
         }
     }
+    for (int dir = 0; dir < 8; dir++) {
+        for (int y = 0; y < 16; y++) {
+            for (int x = 0; x < 16; x++) {
+                DWORD col = 0;
+                int isHorn = 0, isEye = 0, isSnout = 0, isTail = 0;
+                if (dir == 0) {
+                    if ((x>=2 && x<=5 && y<=4) || (x>=10 && x<=13 && y<=4)) isHorn = 1;
+                    if ((x>=4 && x<=6 && y>=6 && y<=7) || (x>=9 && x<=11 && y>=6 && y<=7)) isEye = 1;
+                    if (y>=10 && y<=12 && x>=5 && x<=10) isSnout = 1;
+                } else if (dir == 1 || dir == 7) {
+                    int shift = (dir == 1) ? -2 : 2;
+                    if ((x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4)) isHorn = 1;
+                    if ((x>=4+shift && x<=6+shift && y>=6 && y<=7) || (x>=9+shift && x<=11+shift && y>=6 && y<=7)) isEye = 1;
+                    if (y>=10 && y<=12 && x>=5+shift && x<=10+shift) isSnout = 1;
+                } else if (dir == 2) {
+                    if (x>=8 && x<=12 && y<=4) isHorn = 1;
+                    if (x>=10 && x<=12 && y>=6 && y<=7) isEye = 1;
+                    if (y>=10 && y<=12 && x>=10 && x<=15) isSnout = 1;
+                    if (y>=12 && y<=14 && x>=0 && x<=3) isTail = 1;
+                } else if (dir == 6) {
+                    if (x>=3 && x<=7 && y<=4) isHorn = 1;
+                    if (x>=3 && x<=5 && y>=6 && y<=7) isEye = 1;
+                    if (y>=10 && y<=12 && x>=0 && x<=5) isSnout = 1;
+                    if (y>=12 && y<=14 && x>=12 && x<=15) isTail = 1;
+                } else if (dir == 3 || dir == 5) {
+                    int shift = (dir == 3) ? -2 : 2;
+                    if ((x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4)) isHorn = 1;
+                    if (y>=12 && y<=14 && x>=6-shift && x<=9-shift) isTail = 1;
+                } else if (dir == 4) {
+                    if ((x>=2 && x<=5 && y<=4) || (x>=10 && x<=13 && y<=4)) isHorn = 1;
+                    if (y>=11 && y<=14 && x>=6 && x<=9) isTail = 1;
+                }
+                if (isHorn) col = RGB(50, 50, 50);
+                else if (isEye) col = RGB(255, 255, 0);
+                else if (isSnout) col = RGB(255, 255, 255);
+                else if (isTail) col = RGB(80, 0, 0);
+                else col = RGB(153, 0, 0);
+                textures[30 + dir][y * 16 + x] = col;
+            }
+        }
+    }
 }
 
 void UpdateTextures() {
@@ -511,6 +554,12 @@ void UpdateTextures() {
                 // Boss Snout variation
                 if (bossHP <= 1) textures[15][y * 16 + x] = 0x008888FF;
                 else textures[15][y * 16 + x] = 0x00FFFFFF;
+            }
+            for (int dir = 0; dir < 8; dir++) {
+                DWORD c = textures[30 + dir][y * 16 + x];
+                if ((c & 0xFFFFFF) == RGB(255, 255, 0) || (c & 0xFFFFFF) == RGB(255, 136, 0)) {
+                    textures[30 + dir][y * 16 + x] = (m_breathe > 0) ? RGB(255, 136, 0) : RGB(255, 255, 0);
+                }
             }
             // Spike Trap (t=25)
             if ((animFrameCount / 10) % 2 == 0) {
@@ -1021,6 +1070,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (speedShoesTimer > 0) speedShoesTimer -= 30;
             if (stunSprayTimer > 0) stunSprayTimer -= 30;
             if (timeFreezeTimer > 0) timeFreezeTimer -= 30;
+            if (damageFlinchTimer > 0) damageFlinchTimer--;
 
             float moveSpeed = 0.1f;
             float rotSpeed = 0.05f;
@@ -1062,15 +1112,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (mdx != 0 && GetMapValue(mx + mdx, my) == 0) {
                                 SetMapValue(mx, my, 0);
                                 SetMapValue(mx + mdx, my, mtype);
+                                minotaurFacingDir[mx + mdx][my] = (mdx > 0) ? 0 : 4;
                                 mx += mdx;
                             } else if (mdy != 0 && GetMapValue(mx, my + mdy) == 0) {
                                 SetMapValue(mx, my, 0);
                                 SetMapValue(mx, my + mdy, mtype);
+                                minotaurFacingDir[mx][my + mdy] = (mdy > 0) ? 2 : 6;
                                 my += mdy;
                             }
                             
                             if (mx == (int)pX && my == (int)pY) {
                                 MessageBeep(MB_ICONHAND);
+                                damageFlinchTimer = 10;
                                 score = (score >= 100) ? score - 100 : 0;
                                 if (mtype == 15) {
                                     pX = 1.5f; pY = 1.5f;
@@ -1307,6 +1360,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddParticles(160.0f, 120.0f, RGB(255, 200, 0), 15);
             } else if (curVal == 6) {
                 MessageBeep(MB_ICONHAND);
+                damageFlinchTimer = 10;
                 score = (score >= 50) ? score - 50 : 0;
                 pX = 1.5f; pY = 1.5f;
                 AddParticles(160.0f, 120.0f, RGB(255, 50, 0), 20);
@@ -1354,6 +1408,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (curVal == 12) {
                 MessageBeep(MB_ICONHAND);
+                damageFlinchTimer = 10;
                 score = (score >= 100) ? score - 100 : 0;
                 currentLevel--;
                 NextLevel();
@@ -1371,6 +1426,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 strcpy(msgText, "+1 Stun Spray!"); msgTimer = 60;
             } else if (curVal == 15) {
                 MessageBeep(MB_ICONHAND);
+                damageFlinchTimer = 10;
                 score = (score >= 150) ? score - 150 : 0;
                 pX = 1.5f; pY = 1.5f;
                 strcpy(msgText, "Attacked by Minotaur King!"); msgTimer = 60;
@@ -1390,6 +1446,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 25) {
                 if ((animFrameCount / 10) % 2 == 0) {
                     MessageBeep(MB_ICONHAND);
+                    damageFlinchTimer = 10;
                     score = (score >= 75) ? score - 75 : 0;
                     pX = 1.5f; pY = 1.5f;
                     AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 20);
@@ -1453,6 +1510,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     drawDY = replayFrames[replayCurFrame].dy;
                     drawPlaneX = replayFrames[replayCurFrame].planex;
                     drawPlaneY = replayFrames[replayCurFrame].planey;
+                }
+                if (damageFlinchTimer > 0) {
+                    float skew = sin(damageFlinchTimer * 0.5f) * 0.2f;
+                    drawPlaneX += skew * drawDY;
+                    drawPlaneY -= skew * drawDX;
                 }
 
                 // 1. Ceiling & Floor Casting
@@ -1534,6 +1596,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (mval > 0) hit = mval;
                     }
                     
+                    if (hit == 12 || hit == 15) {
+                        float dx_m = pX - (mapX + 0.5f);
+                        float dy_m = pY - (mapY + 0.5f);
+                        float pAngle = atan2(dy_m, dx_m);
+                        float mAngle = minotaurFacingDir[mapX][mapY] * (PI / 4.0f);
+                        float diff = pAngle - mAngle;
+                        while (diff < -PI) diff += 2 * PI;
+                        while (diff > PI) diff -= 2 * PI;
+                        int dir = (int)(floor(diff / (PI / 4.0f) + 0.5f)) % 8;
+                        if (dir < 0) dir += 8;
+                        if (hit == 12) hit = 30 + dir;
+                    }
+
                     if (side == 0) perpWallDist = (sideDistX - deltaDistX);
                     else           perpWallDist = (sideDistY - deltaDistY);
                     
@@ -1596,10 +1671,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            static float bobTime = 0.0f;
+            static float lastPX = 1.5f, lastPY = 1.5f;
+            static float swayX = 0.0f;
+            static float lastDX = 1.0f, lastDY = 0.0f;
+            float mDist = sqrt((pX - lastPX)*(pX - lastPX) + (pY - lastPY)*(pY - lastPY));
+            bobTime += mDist * 15.0f;
+            float bobY = sin(bobTime) * 5.0f;
+            float bobX = cos(bobTime * 0.5f) * 3.0f;
+            float turnAmount = atan2(dY, dX) - atan2(lastDY, lastDX);
+            while(turnAmount < -PI) turnAmount += 2*PI;
+            while(turnAmount > PI) turnAmount -= 2*PI;
+            swayX = swayX * 0.8f + turnAmount * 200.0f;
+            lastPX = pX; lastPY = pY; lastDX = dX; lastDY = dY;
+
             // Held Equipment HUD
             if (gameState == 1) {
                 if (hasCompass || pathfinderTimer > 0) {
-                    int cx = 27, cy = H - 27;
+                    int cx = 27 + (int)(bobX - swayX), cy = H - 27 + (int)bobY;
                     for (int r = 18; r >= 14; r--) {
                         int g = 100 + (18 - r) * 25; if (g > 255) g = 255;
                         HBRUSH rimB = CreateSolidBrush(RGB(g, (int)(g*0.8f), (int)(g*0.3f)));
@@ -1645,7 +1734,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 if (hasPickaxe > 0) {
                     int swing = (int)(sin(animFrameCount * 0.3f) * 4);
-                    int bx = W - 45 + swing, by = H - 40 - swing;
+                    int bx = W - 45 + swing + (int)(bobX - swayX), by = H - 40 - swing + (int)bobY;
                     
                     HPEN handleP = CreatePen(PS_SOLID, 3, RGB(139, 69, 19));
                     SelectObject(hdcMem, handleP);

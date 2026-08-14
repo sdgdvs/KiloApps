@@ -27,6 +27,7 @@
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     background: var(--bg-dark);
     background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
     color: var(--text-main);
@@ -371,6 +372,10 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Export / Save
       </button>
+      <button id="btnHelp" aria-label="Help">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Help
+      </button>
     </div>
 
     <!-- Zoom & Quick Actions -->
@@ -652,6 +657,7 @@
     bottomBar: document.getElementById('bottomBar'),
     viewTools: document.getElementById('viewTools'),
     btnSaveModal: document.getElementById('btnSaveModal'),
+    btnHelp: document.getElementById('btnHelp'),
     zoomLevel: document.getElementById('zoomLevel'),
     histCanvas: document.getElementById('histCanvas'),
     histCtx: document.getElementById('histCanvas').getContext('2d'),
@@ -665,6 +671,9 @@
   // Setup Event Listeners
   ui.btnOpen.onclick = () => ui.fileInput.click();
   ui.fileInput.onchange = (e) => loadFiles(e.target.files);
+  if (ui.btnHelp) {
+    ui.btnHelp.onclick = () => alert("KImage Pro Help\n\nShortcuts:\n- Left/Right Arrow: Navigate images\n- Space: Play/Pause Slideshow\n- F: Toggle Fullscreen\n- O: Open Images\n- H: Help");
+  }
 
   // Drag & Drop
   ui.workspace.ondragover = (e) => { e.preventDefault(); };

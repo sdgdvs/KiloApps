@@ -219,6 +219,21 @@ static int g_blizzTimer = 0;
 static Point g_waypoints[MAX_WAYPOINTS];
 static int g_nextEnemyId = 1;
 
+typedef struct {
+    float x, y;
+    int type; // 0 = rock, 1 = grass
+    float size;
+} EnvArt;
+static EnvArt g_envArt[150];
+static int g_envArtCount = 0;
+
+typedef struct {
+    BOOL active;
+    float x, y;
+    float vx, vy;
+} WeatherParticle;
+static WeatherParticle g_weatherParticles[200];
+
 void AddFloatingText(float x, float y, const char* txt, COLORREF color) {
     for (int i = 0; i < MAX_FLOATING_TEXTS; i++) {
         if (!g_floatingTexts[i].active) {
@@ -335,6 +350,35 @@ void LoadCurrentMap(int bfX, int bfY, int bfW) {
         g_slots[i].splash = 0;
         g_slots[i].attackAnim = 0;
     }
+
+    g_envArtCount = 0;
+    for (int i = 0; i < 5; i++) {
+        int x1 = g_waypoints[i].x;
+        int y1 = g_waypoints[i].y;
+        int x2 = g_waypoints[i+1].x;
+        int y2 = g_waypoints[i+1].y;
+        float dx = (float)(x2 - x1);
+        float dy = (float)(y2 - y1);
+        float dist = custom_sqrtf(dx*dx + dy*dy);
+        int steps = (int)(dist / 20.0f);
+        for(int j = 0; j < steps && g_envArtCount < 150; j++) {
+            float t = (float)j / steps;
+            float cx = x1 + dx * t;
+            float cy = y1 + dy * t;
+            float nx = -dy / dist;
+            float ny = dx / dist;
+            float side = (rand() % 2 == 0) ? 1.0f : -1.0f;
+            float offset = 35.0f + (rand() % 20);
+            if(rand() % 100 > 30) {
+                g_envArt[g_envArtCount].x = cx + nx * side * offset;
+                g_envArt[g_envArtCount].y = cy + ny * side * offset;
+                g_envArt[g_envArtCount].type = (rand() % 2);
+                g_envArt[g_envArtCount].size = 6.0f + (rand() % 10);
+                g_envArtCount++;
+            }
+        }
+    }
+    for (int i = 0; i < 200; i++) g_weatherParticles[i].active = FALSE;
 }
 
 void LoadGame() {
@@ -779,6 +823,27 @@ void UpdateGameLogic() {
         if (g_particles[p].life <= 0) g_particles[p].active = FALSE;
     }
 
+    int weatherType = (g_currentMap == 2 || g_currentMap == 5) ? 1 : 0;
+    for (int k = 0; k < 3; k++) {
+        for (int p = 0; p < 200; p++) {
+            if (!g_weatherParticles[p].active) {
+                g_weatherParticles[p].active = TRUE;
+                g_weatherParticles[p].x = 10.0f + (rand() % (WINDOW_WIDTH - 220));
+                g_weatherParticles[p].y = 50.0f;
+                g_weatherParticles[p].vx = weatherType ? (-1.0f + (rand() % 3)) : 1.0f;
+                g_weatherParticles[p].vy = weatherType ? (1.0f + (rand() % 2)) : (5.0f + (rand() % 3));
+                break;
+            }
+        }
+    }
+    for (int p = 0; p < 200; p++) {
+        if (g_weatherParticles[p].active) {
+            g_weatherParticles[p].x += g_weatherParticles[p].vx;
+            g_weatherParticles[p].y += g_weatherParticles[p].vy;
+            if (g_weatherParticles[p].y > WINDOW_HEIGHT - 10) g_weatherParticles[p].active = FALSE;
+        }
+    }
+
     // Update Floating Texts
     for (int f = 0; f < MAX_FLOATING_TEXTS; f++) {
 
@@ -896,6 +961,34 @@ void Render(HDC hdc, HWND hwnd) {
     // Battlefield Area
     int bfX = 10, bfY = 70, bfW = w - 220, bfH = h - 80;
     DrawRoundedRect(memDC, bfX, bfY, bfX + bfW, bfY + bfH, g_maps[g_currentMap].bg, BORDER_COLOR, 8);
+
+    // Draw Environmental Art
+    for (int i = 0; i < g_envArtCount; i++) {
+        int ex = (int)g_envArt[i].x;
+        int ey = (int)g_envArt[i].y;
+        int sz = (int)g_envArt[i].size;
+        
+        if (ex - sz < bfX || ex + sz > bfX + bfW || ey - sz < bfY || ey + sz > bfY + bfH) continue;
+
+        if (g_envArt[i].type == 0) { // Rock
+            POINT rPts[] = {{ex - sz, ey + sz/2}, {ex + sz, ey + sz/2}, {ex, ey - sz}};
+            HBRUSH rB = CreateSolidBrush(RGB(71, 85, 105)); HPEN rP = CreatePen(PS_NULL, 0, 0);
+            HBRUSH oB = (HBRUSH)SelectObject(memDC, rB); HPEN oP = (HPEN)SelectObject(memDC, rP);
+            Polygon(memDC, rPts, 3);
+            SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(rB); DeleteObject(rP);
+            
+            POINT r2Pts[] = {{ex, ey + sz/2}, {ex + sz, ey + sz/2}, {ex, ey - sz}};
+            HBRUSH r2B = CreateSolidBrush(RGB(51, 65, 85)); HPEN r2P = CreatePen(PS_NULL, 0, 0);
+            oB = (HBRUSH)SelectObject(memDC, r2B); oP = (HPEN)SelectObject(memDC, r2P);
+            Polygon(memDC, r2Pts, 3);
+            SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(r2B); DeleteObject(r2P);
+        } else { // Grass
+            HBRUSH gB = CreateSolidBrush(RGB(22, 101, 52)); HPEN gP = CreatePen(PS_NULL, 0, 0);
+            HBRUSH oB = (HBRUSH)SelectObject(memDC, gB); HPEN oP = (HPEN)SelectObject(memDC, gP);
+            Pie(memDC, ex - sz, ey - sz, ex + sz, ey + sz, ex + sz, ey, ex - sz, ey);
+            SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(gB); DeleteObject(gP);
+        }
+    }
 
     // Draw Map Obstacles
     HFONT hObsFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
@@ -1227,6 +1320,49 @@ void Render(HDC hdc, HWND hwnd) {
         if (!g_floatingTexts[f].active) continue;
         SetTextColor(memDC, g_floatingTexts[f].color);
         TextOutA(memDC, (int)g_floatingTexts[f].x, (int)g_floatingTexts[f].y, g_floatingTexts[f].text, (int)lstrlenA(g_floatingTexts[f].text));
+    }
+
+    // Draw Weather
+    int weatherType = (g_currentMap == 2 || g_currentMap == 5) ? 1 : 0;
+    COLORREF wColor = weatherType ? RGB(255, 255, 255) : RGB(100, 150, 255);
+    HBRUSH wB = CreateSolidBrush(wColor); HPEN wP = CreatePen(PS_NULL, 0, 0);
+    HBRUSH owB = (HBRUSH)SelectObject(memDC, wB); HPEN owP = (HPEN)SelectObject(memDC, wP);
+    for (int p = 0; p < 200; p++) {
+        if (!g_weatherParticles[p].active) continue;
+        int wx = (int)g_weatherParticles[p].x;
+        int wy = (int)g_weatherParticles[p].y;
+        if (wx < bfX || wx > bfX + bfW || wy < bfY || wy > bfY + bfH) continue;
+        if (weatherType) {
+            Ellipse(memDC, wx - 2, wy - 2, wx + 2, wy + 2);
+        } else {
+            Rectangle(memDC, wx, wy, wx + 2, wy + 8);
+        }
+    }
+    SelectObject(memDC, owB); SelectObject(memDC, owP); DeleteObject(wB); DeleteObject(wP);
+
+    // Draw Vignette / Fog of war
+    typedef BOOL (WINAPI *AlphaBlendFunc)(HDC, int, int, int, int, HDC, int, int, int, int, BLENDFUNCTION);
+    HMODULE hMsimg32 = LoadLibraryA("msimg32.dll");
+    if (hMsimg32) {
+        AlphaBlendFunc pAlphaBlend = (AlphaBlendFunc)GetProcAddress(hMsimg32, "AlphaBlend");
+        if (pAlphaBlend) {
+            BLENDFUNCTION bf = { AC_SRC_OVER, 0, 0, 0 };
+            HDC tempDC = CreateCompatibleDC(hdc);
+            HBITMAP tempBmp = CreateCompatibleBitmap(hdc, 1, 1);
+            HBITMAP oTemp = (HBITMAP)SelectObject(tempDC, tempBmp);
+            SetPixel(tempDC, 0, 0, RGB(0,0,0));
+            for (int i = 0; i < 60; i+=6) {
+                bf.SourceConstantAlpha = 12;
+                pAlphaBlend(memDC, bfX, bfY, bfW, i, tempDC, 0, 0, 1, 1, bf);
+                pAlphaBlend(memDC, bfX, bfY + bfH - i, bfW, i, tempDC, 0, 0, 1, 1, bf);
+                pAlphaBlend(memDC, bfX, bfY, i, bfH, tempDC, 0, 0, 1, 1, bf);
+                pAlphaBlend(memDC, bfX + bfW - i, bfY, i, bfH, tempDC, 0, 0, 1, 1, bf);
+            }
+            SelectObject(tempDC, oTemp);
+            DeleteObject(tempBmp);
+            DeleteDC(tempDC);
+        }
+        FreeLibrary(hMsimg32);
     }
 
     // Draw Hero

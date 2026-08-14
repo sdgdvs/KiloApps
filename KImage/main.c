@@ -33,6 +33,7 @@
 #define ID_BTN_PREV        121
 #define ID_BTN_PLAY        122
 #define ID_BTN_NEXT        123
+#define ID_BTN_HELP        124
 
 // Global State
 HBITMAP g_hBmpWork = NULL;
@@ -531,7 +532,7 @@ void DrawRGBHistogram(HDC hdc, RECT rc) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             int x = 6, y = 6, btnH = 28;
 
@@ -540,6 +541,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, x, y, 54, btnH, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 58;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
 
             hBtn = CreateWindowEx(0, "BUTTON", "-", WS_CHILD | WS_VISIBLE, x, y, 28, btnH, hwnd, (HMENU)ID_BTN_ZOOM_OUT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 32;
@@ -610,6 +614,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_BTN_SAVE:
                     SaveFileDlg(hwnd);
+                    break;
+                case ID_BTN_HELP:
+                    MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- H: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
                     break;
                 case ID_BTN_ZOOM_IN:
                     g_zoom *= 1.2f;
@@ -857,7 +864,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else {
                 SetBkMode(hdc, TRANSPARENT);
                 SetTextColor(hdc, RGB(148, 163, 184));
-                HFONT hFontBig = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+                HFONT hFontBig = CreateFontA(-24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
                 HGDIOBJ oldFont2 = SelectObject(hdc, hFontBig);
                 RECT rcMsg;
                 rcMsg.left = 0; rcMsg.top = TOOLBAR_HEIGHT + canvasH/2 - 40;
@@ -962,8 +969,10 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
+    RECT rc = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     HWND hwnd = CreateWindowEx(0, "KImageApp", "KImage Pro (Native C) - Press H for Help", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, WINDOW_WIDTH, WINDOW_HEIGHT, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

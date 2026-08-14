@@ -100,6 +100,59 @@ int unlockedHydro = 0, unlockedNuke = 0, unlockedLaser = 0, unlockedFactory = 0;
 int selectedType = 0;
 int grid[GRID_W * GRID_H] = {0};
 
+HBITMAP hbmTerrain = NULL;
+void GenerateTerrain(HDC hdc) {
+    if (hbmTerrain) DeleteObject(hbmTerrain);
+    HDC hdcMem = CreateCompatibleDC(hdc);
+    hbmTerrain = CreateCompatibleBitmap(hdc, GRID_W * CELL_SIZE, GRID_H * CELL_SIZE);
+    HBITMAP hbmOld = SelectObject(hdcMem, hbmTerrain);
+    
+    HBRUSH bg = CreateSolidBrush(RGB(10, 17, 26));
+    RECT rc = {0, 0, GRID_W * CELL_SIZE, GRID_H * CELL_SIZE};
+    FillRect(hdcMem, &rc, bg);
+    DeleteObject(bg);
+    
+    for(int i=0; i<30; i++) {
+        int cx = rand() % (GRID_W * CELL_SIZE);
+        int cy = rand() % (GRID_H * CELL_SIZE);
+        int r = (rand() % 15) + 5;
+        
+        HBRUSH br = CreateSolidBrush(RGB(5, 8, 13));
+        HPEN pen = CreatePen(PS_SOLID, 1, RGB(15, 25, 35));
+        HBRUSH oldB = SelectObject(hdcMem, br);
+        HPEN oldP = SelectObject(hdcMem, pen);
+        Ellipse(hdcMem, cx - r, cy - r, cx + r, cy + r);
+        
+        SelectObject(hdcMem, oldB); DeleteObject(br);
+        br = CreateSolidBrush(RGB(2, 4, 8));
+        oldB = SelectObject(hdcMem, br);
+        int r2 = r * 0.6;
+        Ellipse(hdcMem, cx - (int)(r*0.2) - r2, cy - (int)(r*0.2) - r2, cx - (int)(r*0.2) + r2, cy - (int)(r*0.2) + r2);
+        
+        SelectObject(hdcMem, oldB); DeleteObject(br);
+        SelectObject(hdcMem, oldP); DeleteObject(pen);
+    }
+    
+    HPEN pen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+    HPEN oldP = SelectObject(hdcMem, pen);
+    for(int i=0; i<10; i++) {
+        int x = rand() % (GRID_W * CELL_SIZE);
+        int y = rand() % (GRID_H * CELL_SIZE);
+        MoveToEx(hdcMem, x, y, NULL);
+        int len = (rand() % 50) + 50;
+        for(int j=0; j<len; j+=10) {
+            x += (rand() % 40) - 20;
+            y += (rand() % 40) - 20;
+            LineTo(hdcMem, x, y);
+        }
+    }
+    SelectObject(hdcMem, oldP); DeleteObject(pen);
+    
+    SelectObject(hdcMem, hbmOld);
+    DeleteDC(hdcMem);
+}
+
+
 int gameState = 0; // 0 = menu, 1 = playing, 2 = help
 int prevState = 0;
 int gameMode = 0; // 0=endless, 1=sandbox, 2=100-day, 3=resource rush
@@ -196,6 +249,15 @@ void StartGame(HWND hwnd, int mode) {
 
 void DrawGrid(HDC hdc, HFONT hFont) {
     SelectObject(hdc, hFont);
+    
+    if (hbmTerrain) {
+        HDC hdcTerrain = CreateCompatibleDC(hdc);
+        HBITMAP hbmOld = SelectObject(hdcTerrain, hbmTerrain);
+        BitBlt(hdc, OFFSET_X, OFFSET_Y, GRID_W * CELL_SIZE, GRID_H * CELL_SIZE, hdcTerrain, 0, 0, SRCCOPY);
+        SelectObject(hdcTerrain, hbmOld);
+        DeleteDC(hdcTerrain);
+    }
+    
     for (int y = 0; y < GRID_H; y++) {
         for (int x = 0; x < GRID_W; x++) {
             RECT rc = { OFFSET_X + x * CELL_SIZE, OFFSET_Y + y * CELL_SIZE, OFFSET_X + (x + 1) * CELL_SIZE, OFFSET_Y + (y + 1) * CELL_SIZE };
@@ -220,11 +282,13 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             else if (t == 11) { bgCol = RGB(51, 34, 0); borderCol = RGB(255, 170, 0); textCol = RGB(255, 170, 0); }
             else if (t == 12) { bgCol = RGB(68, 68, 68); borderCol = RGB(204, 204, 204); textCol = RGB(204, 204, 204); }
             
-            HBRUSH brush = CreateSolidBrush(bgCol);
-            FillRect(hdc, &rc, brush);
-            DeleteObject(brush);
+            if (t > 0) {
+                HBRUSH brush = CreateSolidBrush(bgCol);
+                FillRect(hdc, &rc, brush);
+                DeleteObject(brush);
+            }
             
-            HPEN pen = CreatePen(PS_SOLID, 1, borderCol);
+            HPEN pen = CreatePen(PS_SOLID, 1, t > 0 ? borderCol : RGB(0, 51, 51));
             HPEN oldPen = SelectObject(hdc, pen);
             MoveToEx(hdc, rc.left, rc.top, NULL);
             LineTo(hdc, rc.right, rc.top);
@@ -350,6 +414,28 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                     SelectObject(hdc, oldP); DeleteObject(p2);
                 }
             }
+        }
+    }
+    
+    if (dustStormTicks > 0) {
+        for (int i = 0; i < 150; i++) {
+            int x = (animFrame * 15 + i * 17) % (GRID_W * CELL_SIZE);
+            int y = (i * 29) % (GRID_H * CELL_SIZE);
+            HPEN p = CreatePen(PS_SOLID, (i % 3) + 1, RGB(200, 120, 0));
+            HPEN oldP = SelectObject(hdc, p);
+            MoveToEx(hdc, OFFSET_X + x, OFFSET_Y + y, NULL);
+            LineTo(hdc, OFFSET_X + x + 20 + (i % 10), OFFSET_Y + y);
+            SelectObject(hdc, oldP); DeleteObject(p);
+        }
+    } else {
+        for (int i = 0; i < 40; i++) {
+            int x = (animFrame * 5 + i * 31) % (GRID_W * CELL_SIZE);
+            int y = (i * 47) % (GRID_H * CELL_SIZE);
+            HPEN p = CreatePen(PS_SOLID, 1, RGB(30, 50, 70));
+            HPEN oldP = SelectObject(hdc, p);
+            MoveToEx(hdc, OFFSET_X + x, OFFSET_Y + y, NULL);
+            LineTo(hdc, OFFSET_X + x + 10, OFFSET_Y + y);
+            SelectObject(hdc, oldP); DeleteObject(p);
         }
     }
     
@@ -522,11 +608,15 @@ void DrawUI(HDC hdc, HFONT hFont) {
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
-        case WM_CREATE:
+        case WM_CREATE: {
             srand(GetTickCount());
+            HDC hdc = GetDC(hwnd);
+            GenerateTerrain(hdc);
+            ReleaseDC(hwnd, hdc);
             SetTimer(hwnd, 1, 2000, NULL);
             SetTimer(hwnd, 2, 50, NULL);
             break;
+        }
         case WM_KEYDOWN:
             if (wParam == 'H') {
                 if (gameState == 2) {
