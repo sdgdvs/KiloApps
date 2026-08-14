@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KBreakout
 - KMaze
 - KColony
 - KFortress
@@ -133,7 +132,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPac
 - KSnake
 - KTetris
+- KBreakout
 ## Completed Work Log
+
+- **KBreakout (Loop 5):** Implemented highly detailed visual variations for the paddle (procedural metallic reflections and animated energy conduits that pulse based on current horizontal velocity), procedural glass-like specular reflections on the bricks that realistically shift position and intensity based on the ball's proximity to simulate dynamic lighting, and a distinctly stylized kinematically animated paddle stretching/squashing effect during high-speed impacts or powerup activations in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 
 - **KTetris (Loop 5):** Implemented highly detailed visual variations for the matrix bounds/grid with glowing neon edge tracing that pulses dynamically via a sine wave timer, procedural glass-like specular reflections on the falling tetrominos that realistically shift position as they rotate, and a distinctly stylized kinematically animated hard drop impact that causes a multi-layered shockwave and brief localized kinetic grid distortion in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
