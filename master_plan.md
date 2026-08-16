@@ -11,36 +11,36 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path` (e.g., using `[System.Environment]::GetEnvironmentVariable`). Doing this deletes the injected Antigravity runtime paths from the active agent's environment, causing the agent to immediately crash and enter a termination loop. If a specific tool like `crinkler` is missing, you must only APPEND to the path (e.g. `$env:Path += ";C:\path\to\tool"`), or better yet, simply restart the environment so it inherits the system paths natively. The PATH instructions have been removed from all MD files.
 
-## Current State (as of 2026-08-13 07:00 UTC)
-- **Total Apps:** 84 registered in App.jsx.
-- **KiloOS Version:** 0.3.88
-- **Games:** 32 titles.
+## Current State (as of 2026-08-16 07:00 UTC)
+- **Total Apps:** 85 registered in App.jsx.
+- **KiloOS Version:** 0.3.99
+- **Games:** 33 titles.
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
-- **Build Health:** ✅ Clean build — 240.42 KB JS (73.83 KB gzip), 21.50 KB CSS (5.04 KB gzip).
+- **Build Health:** ✅ Clean build — 240.56 KB JS (73.86 KB gzip), 21.50 KB CSS (5.04 KB gzip).
 
-### Game Library (32 titles)
-K2048, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KConnect4, KDarts, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KVoid, KWizard, KWords.
+### Game Library (33 titles)
+K2048, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KConnect4, KDarts, KDragon, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KVoid, KWizard, KWords.
 
 ### Content Depth
-- **Deep Games:** KRogue, KQuest, KStarship at Loop 8. KSpace, KAsteroids, KMaze, KPac, KBreakout at Loop 9. KSnake at Loop 8. KAlchemy, KColony at Loop 1.
-- **Classic Games: ALL 17 Balance Passes COMPLETE** (Chess, Go, Reversi, Connect4, Solitaire, Freecell, Sudoku, K2048, KMines, Towers, Tetris, Pong, Hangman, Words, Simon, Match3, Darts). ✅
-- **The Deep/Classic split directive (Jul 29) continues to work perfectly.**
+- **Deep Games:** KQuest at Loop 9 (factions, mounts, crafting). KStarship at Loop 9 (factions, planetary landing). KRogue Loop 9. KSpace, KAsteroids, KMaze, KPac, KBreakout at Loop 9. KSnake Loop 8+.
+- **Classic Games: ALL 17 Balance Passes COMPLETE** ✅ (plus KConnect4 additional balance work Aug 13).
+- **The Deep/Classic split directive continues to work perfectly.**
 
 ### Graphics Agent
-**Loop 4 in progress.** Completed Loop 3 for all games, now doing Loop 4 polish. Recently: KMaze, KBreakout, KTetris, KSnake, KPac, KSpace polish. Queue: KAlchemy → KRogue → KChess → ... (26 games in queue).
+**Loop 5 in progress.** Completed Loops 1-4 for all games. Loop 5 polish done for: K2048, KAsteroids, KMines, KPong, KChess, KRogue, KMaze, KBreakout, KTetris, KSnake, KPac, KSpace. Queue: KSolitaire → KStarship → KConnect4 → ... (26 games in queue). Missing from queue: KDragon, KVoid, KWizard (new games — agent should auto-add).
 
 ### QA
-**Pass 3 in progress.** Targeting **KSys** next. Recently completed: KSynth, KSpace, KSolitaire, KSnake, KScript, KRogue, KRead, KQuarantine. Pass 3 active and productive.
+**Pass 3 in progress — ~30 apps completed.** Targeting **KTimer** next. Recently: KChart, KChess, KClock, KContacts, KConverter, KDB, KExplorer, KFont, KHex, KImage, KJournal, KTerm, KTetris, KSynth, KSys. Very productive cycle.
 
 ### Feature Expander
-Targeting **KConverter** next. Recently completed: KRogue (custom keybindings, high score export), KSys (real-time telemetry, services manager), KTask (deep process inspector), KTerm (macro scripting), KSynth (delay/echo), KType (certificate export). Active and productive.
+Targeting **KContacts** next. Recently completed: KTimer (HIIT timer), KConverter (pressure + expression parser), KRogue (custom keybindings + high score export), KSys (telemetry + services), KTask (process inspector), KSynth (delay/echo), KType (certificate export). Active and productive.
 
 ### Creator
-**24 apps completed through full 14-phase lifecycle.** Now building **KVoid** (Sci-fi horror survival) — Phase 7/14 done. Recently completed KWizard (all 14 phases).
+**25 apps completed through full 14-phase lifecycle.** Now building **KDragon** (Fantasy creature-raising sim) — Phase 14/14 (failed with RESOURCE_EXHAUSTED, will retry). Recently completed KVoid (all 14 phases). KDragon at Phase 13 complete.
 
 ### Usability Agent
-All 84 apps processed through at least 2 full sweeps. Targeting **KTerm** next. Recently: KSolitaire, KSpace, KTetris, KSnake, KFarm, KPaint.
+All 85 apps processed through 3+ full sweeps. Targeting **KChat** next (start of 4th sweep). Recently: KChart, KCalendar, KHex, KCalc, KImage, KPad, KBase, KTimer, KConverter, KTodo, KSys, KTask, KSynth, KTerm, KRogue, KGraph, KContacts, KRead, KJournal. Missing from queue: KDragon, KVoid, KWizard (new games — agent should auto-add).
 
 ## Milestones
 
@@ -81,26 +81,30 @@ All 84 apps processed through at least 2 full sweeps. Targeting **KTerm** next. 
 34. **KWizard completed (all 14 phases)** — Aug 12. ✅
 35. **24 apps created through full 14-phase lifecycle** — Aug 12. ✅
 36. **Games Loop 8 complete for ALL games** — Aug 11. ✅
-37. **Games Loop 9 deep games in progress** — Aug 12. 🔄
-38. **QA Pass 3 in progress (~20 apps done)** — Aug 12. 🔄
-39. **Graphics Loop 4 in progress** — Aug 12. 🔄
+37. **KVoid completed (all 14 phases)** — Aug 13. ✅
+38. **KDragon created (Phases 1-13 complete)** — Aug 14. ✅
+39. **85 apps milestone reached** — Aug 13. 🎯
+40. **Graphics Loop 4 complete** — Aug 14. 🎯
+41. **Graphics Loop 5 in progress** (~12/33 done) — Aug 14. 🔄
+42. **QA Pass 3 in progress** (~30/85 apps) — Aug 14. 🔄
+43. **Games Loop 9 deep games in progress** — Aug 13. 🔄
 
 ### Active 🔄
-40. Games agent: **Loop 9+ content for Deep games** — all Classic balance passes done.
-41. Graphics agent: Loop 4 polish in progress.
-42. Creator: KVoid Phase 8 of 14.
-43. Feature Expander: Round-robin perpetual (targeting KConverter).
-44. QA: Pass 3 regression/security checks (targeting KSys).
-45. Usability: Round-robin UX audit (targeting KTerm).
+44. Games agent: **Loop 9+ content for Deep games** — all Classic balance passes done.
+45. Graphics agent: Loop 5 polish in progress.
+46. Creator: KDragon Phase 14 retry (RESOURCE_EXHAUSTED on first attempt).
+47. Feature Expander: Round-robin perpetual (targeting KContacts).
+48. QA: Pass 3 regression/security checks (targeting KTimer).
+49. Usability: Round-robin UX audit (targeting KChat, 4th sweep).
 
 ### Upcoming 📋
-46. Graphics Loop 4 completion for all 32 games.
-47. KVoid completion (7 phases remaining).
-48. QA Pass 3 completion for all apps.
-49. Games Loop 10 for deep games.
-50. 85+ apps via Creator (KDragon next after KVoid).
+50. Graphics Loop 5 completion for all 33 games.
+51. KDragon Phase 14 completion (Help & Guide).
+52. QA Pass 3 completion for all apps.
+53. Games Loop 10 for deep games.
+54. 86+ apps via Creator (next app after KDragon).
 
-## Active Agent Fleet (as of 2026-08-13)
+## Active Agent Fleet (as of 2026-08-16)
 
 | Agent | Schedule | Plan File | Model |
 |---|---|---|---|

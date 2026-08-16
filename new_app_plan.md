@@ -74,7 +74,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kvoid.html` AND `KVoid/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kdragon.html` AND `KDragon/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
