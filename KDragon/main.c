@@ -63,8 +63,9 @@ int log_count = 0;
 #define BTN_SHP_BACK  26
 #define BTN_EVT_OPT1  27
 #define BTN_EVT_OPT2  28
+#define BTN_HELP      29
 
-HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard, btn_battle, btn_shop;
+HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard, btn_battle, btn_shop, btn_help;
 HWND btn_tr_str, btn_tr_spd, btn_tr_loy, btn_tr_back;
 HWND btn_str_hit, btn_spd_react, btn_loy_1, btn_loy_2, btn_loy_3;
 HWND btn_bat_atk, btn_bat_def, btn_bat_spec, btn_bat_flee;
@@ -189,6 +190,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                       485, 260, 80, 40, hwnd, (HMENU)BTN_BATTLE, NULL, NULL);
             btn_shop = CreateWindow("BUTTON", "Shop", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                       485, 215, 80, 40, hwnd, (HMENU)BTN_SHOP, NULL, NULL);
+            btn_help = CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                      395, 215, 80, 40, hwnd, (HMENU)BTN_HELP, NULL, NULL);
 
             btn_bat_atk = CreateWindow("BUTTON", "Attack", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                        90, 270, 90, 40, hwnd, (HMENU)BTN_BAT_ATK, NULL, NULL);
@@ -236,6 +239,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_hoard, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_battle, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_shop, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_help, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_str, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_spd, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_loy, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
@@ -271,6 +275,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_hoard, SW_SHOW);
                 ShowWindow(btn_battle, SW_SHOW);
                 ShowWindow(btn_shop, SW_SHOW);
+                ShowWindow(btn_help, SW_SHOW);
                 SetTimer(hwnd, TIMER_ID, 3000, NULL);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -323,6 +328,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_hoard, SW_HIDE);
                     ShowWindow(btn_battle, SW_HIDE);
                     ShowWindow(btn_shop, SW_HIDE);
+                    ShowWindow(btn_help, SW_HIDE);
                     ShowWindow(btn_tr_str, SW_SHOW);
                     ShowWindow(btn_tr_spd, SW_SHOW);
                     ShowWindow(btn_tr_loy, SW_SHOW);
@@ -338,6 +344,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -387,7 +394,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -407,7 +414,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -424,7 +431,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -438,7 +445,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
                     ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
                     ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
-                    ShowWindow(btn_shop, SW_HIDE);
+                    ShowWindow(btn_shop, SW_HIDE); ShowWindow(btn_help, SW_HIDE);
                     prev_state = state;
                     state = 7;
                     SetTimer(hwnd, 4, 5000, NULL);
@@ -466,7 +473,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
                     ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
                     ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
-                    ShowWindow(btn_shop, SW_HIDE);
+                    ShowWindow(btn_shop, SW_HIDE); ShowWindow(btn_help, SW_HIDE);
                     
                     ShowWindow(btn_bat_atk, SW_SHOW);
                     ShowWindow(btn_bat_def, SW_SHOW);
@@ -575,7 +582,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                     ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                     ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                    ShowWindow(btn_shop, SW_SHOW);
+                    ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
                     
                     state = prev_state;
                 }
@@ -586,7 +593,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
                 ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
                 ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
-                ShowWindow(btn_shop, SW_HIDE);
+                ShowWindow(btn_shop, SW_HIDE); ShowWindow(btn_help, SW_HIDE);
                 
                 ShowWindow(btn_shp_food, SW_SHOW);
                 ShowWindow(btn_shp_toy, SW_SHOW);
@@ -606,7 +613,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
                 
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -696,9 +703,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (LOWORD(wParam) == BTN_HELP) {
+                MessageBox(hwnd, 
+                    "Dragon Master's Guide\n\n"
+                    "How to Play:\n"
+                    "Raise your dragon from an egg. Keep it fed, happy, and well-rested.\n"
+                    "As it grows, it will evolve into a mighty adult with a specific\n"
+                    "elemental affinity based on how you raised it.\n\n"
+                    "Stats Explanation:\n"
+                    "- Hunger/Energy/Happiness: Core needs. Don't let them reach 0!\n"
+                    "- Strength (Str): Increases attack power in battles and minigames.\n"
+                    "- Speed (Spd): Increases hit chance and dodge rate.\n"
+                    "- Loyalty (Loy): Affects special abilities like Healing Stream.\n"
+                    "- Age: At age 10, baby dragons evolve.\n\n"
+                    "Evolution:\n"
+                    "- Mostly Fed: Earth Dragon\n"
+                    "- Mostly Played: Fire Dragon\n"
+                    "- Mostly Slept: Water Dragon\n\n"
+                    "Item Codex:\n"
+                    "- Meat: Restores 50 Hunger, 20 Energy.\n"
+                    "- Toy: Restores 50 Happiness, 10 Energy.\n"
+                    "- Bracer: Permanently grants +5 Strength.\n"
+                    "- Boots: Permanently grants +5 Speed.", 
+                    "Dragon Master's Guide", MB_OK | MB_ICONINFORMATION);
             }
             break;
 
@@ -719,7 +750,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
                         ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
                         ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
-                        ShowWindow(btn_shop, SW_HIDE);
+                        ShowWindow(btn_shop, SW_HIDE); ShowWindow(btn_help, SW_HIDE);
                         ShowWindow(btn_evt_opt1, SW_SHOW);
                         ShowWindow(btn_evt_opt2, SW_SHOW);
                         
@@ -800,7 +831,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
                 ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
                 ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW);
+                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
