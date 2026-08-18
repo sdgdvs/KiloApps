@@ -16,16 +16,242 @@
             align-items: center;
             height: 100vh;
         }
+        #game-container {
+            width: 600px;
+            height: 400px;
+            border: 2px solid #0f0;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .screen {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+        }
+        .screen.active {
+            display: flex;
+        }
+        h1, h2 {
+            margin-top: 0;
+            text-align: center;
+            text-transform: uppercase;
+            border-bottom: 1px solid #0f0;
+            padding-bottom: 10px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            border: 1px solid #0a0;
+            padding: 10px;
+            text-align: center;
+            flex: 1;
+            margin: 0 5px;
+        }
+        .btn {
+            background-color: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-family: monospace;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0f0;
+            color: #000;
+        }
+        .actions {
+            display: flex;
+            justify-content: center;
+            margin-top: auto;
+        }
+        #log {
+            flex: 1;
+            border: 1px solid #030;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            background-color: #000;
+            color: #0a0;
+        }
+        .mech-display {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .mech-side {
+            width: 45%;
+            border: 1px dashed #0a0;
+            padding: 10px;
+        }
+        .mech-name {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .bar-container {
+            width: 100%;
+            background-color: #030;
+            height: 10px;
+            margin-top: 5px;
+        }
+        .bar {
+            height: 100%;
+            background-color: #0f0;
+        }
+        .enemy-bar { background-color: #f00; }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <h1>KMech</h1>
-        <p>Loading mech systems...</p>
+        <!-- Garage Screen -->
+        <div id="screen-garage" class="screen active">
+            <h1>KMech - Garage</h1>
+            <div class="stats">
+                <div class="stat-box">
+                    <div>HP</div>
+                    <div id="garage-hp">100/100</div>
+                </div>
+                <div class="stat-box">
+                    <div>ATK</div>
+                    <div id="garage-atk">15</div>
+                </div>
+                <div class="stat-box">
+                    <div>DEF</div>
+                    <div id="garage-def">5</div>
+                </div>
+            </div>
+            <p style="text-align: center;">Welcome, Pilot. Your mech is ready for deployment.</p>
+            <div class="actions">
+                <button class="btn" onclick="startBattle()">Deploy to Battle</button>
+            </div>
+        </div>
+
+        <!-- Battle Screen -->
+        <div id="screen-battle" class="screen">
+            <h2>Combat Zone</h2>
+            <div class="mech-display">
+                <div class="mech-side">
+                    <div class="mech-name">Player Mech</div>
+                    <div>HP: <span id="battle-player-hp">100</span></div>
+                    <div class="bar-container"><div id="player-hp-bar" class="bar"></div></div>
+                </div>
+                <div class="mech-side">
+                    <div class="mech-name">Enemy Mech</div>
+                    <div>HP: <span id="battle-enemy-hp">100</span></div>
+                    <div class="bar-container"><div id="enemy-hp-bar" class="bar enemy-bar"></div></div>
+                </div>
+            </div>
+            <div id="log"></div>
+            <div class="actions" id="battle-actions">
+                <button class="btn" onclick="actionAttack()">Attack</button>
+                <button class="btn" onclick="actionDefend()">Defend</button>
+            </div>
+            <div class="actions" id="post-battle-actions" style="display: none;">
+                <button class="btn" onclick="returnToGarage()">Return to Garage</button>
+            </div>
+        </div>
     </div>
+
     <script>
-        // KMech Game Logic will go here
-        console.log("KMech loaded.");
+        const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5 };
+        let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3 };
+        let isDefending = false;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + id).classList.add('active');
+        }
+
+        function updateGarage() {
+            document.getElementById('garage-hp').innerText = `${playerStats.hp}/${playerStats.maxHp}`;
+            document.getElementById('garage-atk').innerText = playerStats.atk;
+            document.getElementById('garage-def').innerText = playerStats.def;
+        }
+
+        function updateBattle() {
+            document.getElementById('battle-player-hp').innerText = playerStats.hp;
+            document.getElementById('battle-enemy-hp').innerText = enemyStats.hp;
+            document.getElementById('player-hp-bar').style.width = `${Math.max(0, (playerStats.hp / playerStats.maxHp) * 100)}%`;
+            document.getElementById('enemy-hp-bar').style.width = `${Math.max(0, (enemyStats.hp / enemyStats.maxHp) * 100)}%`;
+        }
+
+        function logMsg(msg) {
+            const logEl = document.getElementById('log');
+            logEl.innerHTML += `<div>> ${msg}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function startBattle() {
+            enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3 };
+            isDefending = false;
+            document.getElementById('log').innerHTML = '';
+            document.getElementById('battle-actions').style.display = 'flex';
+            document.getElementById('post-battle-actions').style.display = 'none';
+            logMsg("Enemy mech detected! Engaging...");
+            updateBattle();
+            showScreen('battle');
+        }
+
+        function returnToGarage() {
+            playerStats.hp = playerStats.maxHp; // Auto repair for now
+            updateGarage();
+            showScreen('garage');
+        }
+
+        function endBattle(victory) {
+            document.getElementById('battle-actions').style.display = 'none';
+            document.getElementById('post-battle-actions').style.display = 'flex';
+            if (victory) {
+                logMsg("ENEMY DESTROYED. VICTORY.");
+            } else {
+                logMsg("CRITICAL DAMAGE. MECH DESTROYED. DEFEAT.");
+            }
+        }
+
+        function actionAttack() {
+            let dmg = Math.max(1, playerStats.atk - enemyStats.def + Math.floor(Math.random() * 5));
+            enemyStats.hp -= dmg;
+            logMsg(`You attack! Dealt ${dmg} damage.`);
+            updateBattle();
+
+            if (enemyStats.hp <= 0) {
+                enemyStats.hp = 0;
+                updateBattle();
+                endBattle(true);
+                return;
+            }
+
+            enemyTurn();
+        }
+
+        function actionDefend() {
+            isDefending = true;
+            logMsg("You brace for impact (Defending).");
+            enemyTurn();
+            isDefending = false;
+        }
+
+        function enemyTurn() {
+            let dmg = Math.max(1, enemyStats.atk - (isDefending ? playerStats.def * 2 : playerStats.def) + Math.floor(Math.random() * 4));
+            playerStats.hp -= dmg;
+            logMsg(`Enemy attacks! Took ${dmg} damage.`);
+            updateBattle();
+
+            if (playerStats.hp <= 0) {
+                playerStats.hp = 0;
+                updateBattle();
+                endBattle(false);
+            }
+        }
+
+        updateGarage();
     </script>
 </body>
 </html>
