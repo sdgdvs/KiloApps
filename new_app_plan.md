@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KDragon (Fantasy creature-raising sim)
-**Phase:** 14 (next to do)
-**Status:** Deep Expansion
+**App:** KMech (Sci-fi turn-based mech combat)
+**Phase:** 1 (next to do)
+**Status:** Creation
 
-- [x] Phase 1: Scaffold KDragon directory (`KDragon/`), create web HTML skeleton (`KiloOS/public/apps/kdragon.html`), register in App.jsx.
-- [x] Phase 2: Basic UI for hatching a dragon egg and core stat management loop (feeding, playing) in web HTML.
-- [x] Phase 3: Native C version (`KDragon/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [x] Phase 4: Fantasy styling (parchment backgrounds, pixel-art dragon portraits, medieval fonts).
-- [x] Phase 5: Implement dragon aging and evolution system (egg -> baby -> adult).
-- [x] Phase 6: Add different dragon elemental types (Fire, Water, Earth) based on early care choices.
-- [x] Phase 7: Training mechanics (minigames for raising strength, speed, loyalty).
-- [x] Phase 8: Treasure hoarding mechanic (send dragon on expeditions to collect gold and items).
-- [x] Phase 9: AI Arena battles (basic combat loop vs CPU dragons).
-- [x] Phase 10: Special abilities in combat based on elemental type.
-- [x] Phase 11: Shop system (buy premium food or training gear with hoarded gold).
-- [x] Phase 12: Random events (illness, wild encounters) requiring player intervention.
-- [x] Phase 13: Sound Effects — roars, munching, battle clashes (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Dragon Master's Guide — How-to-play, stat explanations, item codex. (FAILED — RESOURCE_EXHAUSTED)
+- [ ] Phase 1: Scaffold KMech directory (`KMech/`), create web HTML skeleton (`KiloOS/public/apps/kmech.html`), register in App.jsx.
+- [ ] Phase 2: Basic UI for mech garage (view stats) and core battle loop (attack, defend) in web HTML.
+- [ ] Phase 3: Native C version (`KMech/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [ ] Phase 4: Sci-fi styling (grid backgrounds, terminal text, wireframe mech portraits).
+- [ ] Phase 5: Implement targeted limb combat (Head, Torso, Left Arm, Right Arm, Legs) with different hit chances and damage effects.
+- [ ] Phase 6: Heat management system (weapons generate heat, overheating causes damage or shutdown).
+- [ ] Phase 7: Mech customization in the garage (swap weapons, armor, heat sinks).
+- [ ] Phase 8: Campaign mode (series of battles with increasing difficulty and repair costs between fights).
+- [ ] Phase 9: Enemy AI improvements (AI targets damaged limbs, manages its own heat).
+- [ ] Phase 10: Special equipment (jump jets to evade, energy shields to absorb damage).
+- [ ] Phase 11: Salvage system (collect parts from defeated mechs to use or sell).
+- [ ] Phase 12: Pilot progression (gain XP to improve accuracy and evasion).
+- [ ] Phase 13: Sound Effects — laser blasts, metal impacts, warning alarms (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Pilot's Manual — How-to-play, stat explanations, parts codex.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kdragon.html` AND `KDragon/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kmech.html` AND `KMech/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KDragon (Phase 14 completed: Added Comprehensive Help & Dragon Master's Guide to both versions)
 - KVoid (Phase 14 completed: Added Comprehensive Help & Survival Guide to both versions)
 - KFarm (Phase 14 completed: Added Comprehensive Help & Farmer's Almanac to both versions)
 - KColony (Phase 14 completed: Added Comprehensive Help & Administrator's Manual to both versions)
@@ -166,9 +167,8 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KAlchemy** — Fantasy crafting/discovery game. Combine elements to discover new ones. 100+ discoverable recipes. Procedural hints. Encyclopedia tracking. Multiple tiers of complexity (earth+fire=lava, lava+water=obsidian). Score by discoveries.
-- **KFortress** — Tower defense with fantasy theme. Place towers on a grid path. Multiple tower types (archer, mage, cannon). Enemy waves with varying resistances. Upgrade system. Gold economy. 15+ levels with different maps. Boss waves.
-- **KColony** — Sci-fi colony survival. Manage resources (food, power, materials) on an alien planet. Build structures. Research tech tree. Random events (storms, alien encounters, equipment failures). Population management. Day/night cycle.
+- **KCyber** — Cyberpunk hacking simulator. Navigate nodes, crack passwords, avoid ICE (intrusion countermeasures), steal data, upgrade deck. 
+- **KTrader** — Space trading sim. Travel between planets, buy low, sell high, upgrade ship, fight pirates.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.
