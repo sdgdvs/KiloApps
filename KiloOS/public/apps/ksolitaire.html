@@ -19,15 +19,16 @@
   body {
     background-color: var(--bg-color);
     background-image: 
-      radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.45) 100%),
-      repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.03) 0px, rgba(0, 0, 0, 0.03) 2px, transparent 2px, transparent 4px);
+      radial-gradient(circle at 50% 40%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.7) 100%),
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 2px, transparent 2px, transparent 6px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 6px);
     color: #fff;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     overflow-x: auto;
-    box-shadow: inset 0 0 100px rgba(0,0,0,0.6);
+    box-shadow: inset 0 0 120px rgba(0,0,0,0.8);
   }
 
   /* Header & Toolbar */
@@ -259,9 +260,18 @@
     backface-visibility: hidden;
   }
 
+  .anim-deal {
+    animation: dealSlide 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  @keyframes dealSlide {
+    0% { transform: translate(-50px, -60px) rotate(-15deg) scale(1.1); filter: blur(4px) drop-shadow(10px 20px 15px rgba(0,0,0,0.6)); opacity: 0; box-shadow: 0 15px 25px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.3); }
+    100% { transform: translate(0, 0) rotate(0deg) scale(1); filter: blur(0px) drop-shadow(0px 0px 0px rgba(0,0,0,0)); opacity: 1; box-shadow: 0 3px 8px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.6); }
+  }
+
   .card:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.45), 0 4px 8px rgba(0,0,0,0.3);
     z-index: 60 !important;
   }
 
@@ -358,7 +368,23 @@
     background: var(--card-back-bg);
     border: 2px solid #ffffff;
     cursor: pointer;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,0,0,0.3);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 0 12px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  .card.face-down::after {
+    content: '';
+    position: absolute;
+    top: -150%; left: -150%;
+    width: 300%; height: 300%;
+    background: linear-gradient(45deg, rgba(255,255,255,0) 35%, rgba(255,215,0,0.6) 50%, rgba(255,255,255,0) 65%);
+    animation: metallicShine 3s infinite linear;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  @keyframes metallicShine {
+    0% { transform: translateY(-30%) translateX(-30%) rotate(45deg); }
+    100% { transform: translateY(30%) translateX(30%) rotate(45deg); }
   }
   .card.face-down * { display: none; }
 
@@ -830,6 +856,7 @@ let soundEnabled = true;
 let undoStack = [];
 let redoStack = [];
 let selectedSelection = null;
+let isDealing = false;
 
 // Statistics
 let stats = {
@@ -1031,7 +1058,9 @@ function newGame() {
 
   stock = deck;
   clearHints();
+  isDealing = true;
   render();
+  isDealing = false;
   saveState();
 }
 
@@ -1340,7 +1369,9 @@ function useShuffleStock() {
   stock = shuffle(pool);
   movesCount++;
   playSound('skill');
+  isDealing = true;
   render();
+  isDealing = false;
 }
 
 // --- Player Actions ---
@@ -1376,7 +1407,9 @@ function handleStockClick() {
 
   movesCount++;
   selectedSelection = null;
+  isDealing = true;
   render();
+  isDealing = false;
   checkWin();
 }
 
@@ -1938,6 +1971,9 @@ function createCardEl(card) {
   
   if (card.isFrozen) {
     el.classList.add('frozen');
+  }
+  if (window.isDealing) {
+    el.classList.add('anim-deal');
   }
 
   if (!card.faceUp) {

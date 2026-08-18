@@ -839,12 +839,41 @@ int UseShuffleStock(HWND hwnd) {
         temp[i] = temp[j];
         temp[j] = t;
     }
-    state.stock_cnt = 0;
     state.waste_cnt = 0;
     for (int i = 0; i < total; i++) {
         state.stock[state.stock_cnt++] = temp[i];
     }
     state.moves++;
+
+    int startX = GAP_X + CARD_W + GAP_X; int startY = GAP_Y + 35;
+    int endX = GAP_X; int endY = startY;
+    HDC hdc = GetDC(hwnd);
+    for (int step = 0; step <= 8; step++) {
+        float t = step / 8.0f;
+        int curX = (int)(startX * (1 - t) + endX * t);
+        int curY = (int)(startY * (1 - t) + endY * t) - (int)(sin(t * 3.14159f) * 40.0f);
+        
+        RECT shadow1 = {curX + 12, curY + 12, curX + 12 + CARD_W, curY + 12 + CARD_H};
+        RECT shadow2 = {curX + 6, curY + 6, curX + 6 + CARD_W, curY + 6 + CARD_H};
+        HBRUSH s1 = CreateSolidBrush(RGB(15, 25, 15));
+        HBRUSH s2 = CreateSolidBrush(RGB(25, 45, 25));
+        FillRect(hdc, &shadow1, s1); FillRect(hdc, &shadow2, s2);
+        DeleteObject(s1); DeleteObject(s2);
+
+        if (step > 0) {
+            int prevX = (int)(startX * (1 - (t - 0.125f)) + endX * (t - 0.125f));
+            int prevY = (int)(startY * (1 - (t - 0.125f)) + endY * (t - 0.125f)) - (int)(sin((t - 0.125f) * 3.14159f) * 40.0f);
+            RECT trail = {prevX, prevY, prevX + CARD_W, prevY + CARD_H};
+            HBRUSH tb = CreateSolidBrush(RGB(120, 160, 200));
+            FillRect(hdc, &trail, tb); DeleteObject(tb);
+        }
+
+        Card dummy = {0, 0, 0, 0};
+        DrawCardGDI(hdc, dummy, curX, curY, 0, 0, 0);
+        Sleep(15);
+    }
+    ReleaseDC(hwnd, hdc);
+
     MessageBeep(MB_OK);
     InvalidateRect(hwnd, NULL, FALSE);
     return 1;
@@ -1155,11 +1184,19 @@ void DrawCardBackGDI(HDC hdc, int x, int y, int isXRay) {
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
     RoundRect(hdc, x + 3, y + 3, x + CARD_W - 3, y + CARD_H - 3, 6, 6);
 
-    HPEN latPen = CreatePen(PS_SOLID, 1, isXRay ? RGB(0, 200, 255) : RGB(255, 215, 0));
+    int lightOffset = (x + y) % 30;
+    int shine = 180 + (lightOffset * 2);
+    if (shine > 255) shine = 255;
+    HPEN latPen = CreatePen(PS_SOLID, 1, isXRay ? RGB(0, 200, 255) : RGB(shine, (int)(shine*0.84), 0));
+    HPEN darkPen = CreatePen(PS_SOLID, 1, isXRay ? RGB(0, 100, 150) : RGB((int)(shine*0.4), (int)(shine*0.3), 0));
+    
     SelectObject(hdc, latPen);
     for (int offset = -CARD_H; offset < CARD_W + CARD_H; offset += 18) {
         MoveToEx(hdc, x + offset, y, NULL);
         LineTo(hdc, x + offset + CARD_H, y + CARD_H);
+    }
+    SelectObject(hdc, darkPen);
+    for (int offset = -CARD_H; offset < CARD_W + CARD_H; offset += 18) {
         MoveToEx(hdc, x + offset, y + CARD_H, NULL);
         LineTo(hdc, x + offset + CARD_H, y);
     }
@@ -1481,6 +1518,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     PushUndoState();
                     int count = (state.drawMode < state.stock_cnt) ? state.drawMode : state.stock_cnt;
+                    
+                    HDC hdc = GetDC(hwnd);
+                    int stockX = GAP_X; int stockY = 35 + GAP_Y;
+                    int wasteX = stockX + CARD_W + GAP_X;
+                    for (int step = 0; step <= 8; step++) {
+                        float t = step / 8.0f;
+                        int curX = (int)(stockX * (1 - t) + wasteX * t);
+                        int curY = stockY - (int)(sin(t * 3.14159f) * 30.0f);
+                        RECT shadow1 = {curX + 12, curY + 12, curX + 12 + CARD_W, curY + 12 + CARD_H};
+                        RECT shadow2 = {curX + 6, curY + 6, curX + 6 + CARD_W, curY + 6 + CARD_H};
+                        HBRUSH s1 = CreateSolidBrush(RGB(15, 25, 15));
+                        HBRUSH s2 = CreateSolidBrush(RGB(25, 45, 25));
+                        FillRect(hdc, &shadow1, s1); FillRect(hdc, &shadow2, s2);
+                        DeleteObject(s1); DeleteObject(s2);
+                        if (step > 0) {
+                            int prevX = (int)(stockX * (1 - (t - 0.125f)) + wasteX * (t - 0.125f));
+                            int prevY = stockY - (int)(sin((t - 0.125f) * 3.14159f) * 30.0f);
+                            RECT trail = {prevX, prevY, prevX + CARD_W, prevY + CARD_H};
+                            HBRUSH tb = CreateSolidBrush(RGB(180, 220, 250));
+                            FillRect(hdc, &trail, tb); DeleteObject(tb);
+                        }
+                        Card dummy = {0, 0, 1, 0};
+                        DrawCardGDI(hdc, dummy, curX, curY, 0, 0, 0);
+                        Sleep(15);
+                    }
+                    ReleaseDC(hwnd, hdc);
+
                     for (int i = 0; i < count; i++) {
                         Card c = state.stock[--state.stock_cnt];
                         c.faceUp = 1;
@@ -1700,16 +1764,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &clientRc, bgBrush);
             DeleteObject(bgBrush);
 
-            // Felt weave grid pattern
-            HPEN weavePen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-            HPEN oldWeave = (HPEN)SelectObject(memDC, weavePen);
-            for (int y = 35; y < winH; y += 6) {
-                for (int x = (y % 12); x < winW; x += 12) {
-                    SetPixel(memDC, x, y, RGB(18, 105, 53));
-                }
+            COLORREF fColor = GetFeltColor();
+            int fr = GetRValue(fColor), fg = GetGValue(fColor), fb = GetBValue(fColor);
+            int cx = winW / 2;
+            int cy = winH / 2;
+            
+            for (int i = 0; i < 5; i++) {
+                int radius = winH - (i * winH / 5);
+                int a = 8 + i * 4; 
+                HPEN lightPen = CreatePen(PS_SOLID, 10, RGB(min(255, fr + a), min(255, fg + a), min(255, fb + a)));
+                HBRUSH lightBrush = CreateSolidBrush(RGB(min(255, fr + a), min(255, fg + a), min(255, fb + a)));
+                HPEN oldLP = (HPEN)SelectObject(memDC, lightPen);
+                HBRUSH oldLB = (HBRUSH)SelectObject(memDC, lightBrush);
+                Ellipse(memDC, cx - radius, cy - radius, cx + radius, cy + radius);
+                SelectObject(memDC, oldLP);
+                SelectObject(memDC, oldLB);
+                DeleteObject(lightPen);
+                DeleteObject(lightBrush);
+            }
+            
+            int lightR = min(255, fr + 30);
+            int lightG = min(255, fg + 30);
+            int lightB = min(255, fb + 30);
+            HPEN weavePen1 = CreatePen(PS_SOLID, 1, RGB(lightR, lightG, lightB));
+            HPEN weavePen2 = CreatePen(PS_SOLID, 1, RGB(max(0, fr - 15), max(0, fg - 15), max(0, fb - 15)));
+            
+            HPEN oldWeave = (HPEN)SelectObject(memDC, weavePen1);
+            for (int y = 35; y < winH; y += 4) {
+                MoveToEx(memDC, 0, y, NULL);
+                LineTo(memDC, winW, y);
+            }
+            SelectObject(memDC, weavePen2);
+            for (int x = 0; x < winW; x += 4) {
+                MoveToEx(memDC, x, 35, NULL);
+                LineTo(memDC, x, winH);
             }
             SelectObject(memDC, oldWeave);
-            DeleteObject(weavePen);
+            DeleteObject(weavePen1);
+            DeleteObject(weavePen2);
 
             // Draw Mahogany Table Border
             HBRUSH woodBrush = CreateSolidBrush(RGB(50, 20, 10));

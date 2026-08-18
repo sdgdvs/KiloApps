@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSolitaire
 - KStarship
 - KConnect4
 - KHangman
@@ -133,7 +132,13 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMines
 - KAsteroids
 - K2048
+- KDarts
+- KSimon
+- KDragon
+- KSolitaire
 ## Completed Work Log
+
+- **KSolitaire (Loop 5):** Implemented highly detailed visual variations for card backs (glowing metallic embossing that catches light dynamically), procedural fabric texture on the casino felt background that reacts to the lighting pool, and distinctly stylized kinematically animated shuffle and deal sequences with motion blur and multi-layered drop shadows in both Web Canvas (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
 - **K2048 (Loop 5):** Implemented highly polished visual effects including a deep 3D beveled container with procedural inner shadow that darkens toward the corners, dynamic glass-like specular highlights that sweep across newly merged tiles based on elapsed time, and a distinctly stylized kinematically animated tile settling effect where tiles slightly squash upon impact with the grid edge before returning to normal size in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 
