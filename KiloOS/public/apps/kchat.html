@@ -428,6 +428,7 @@
                 <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import history">📤 Import</button>
                 <input type="file" id="importFileInput" style="display:none;" accept=".json,.txt" onchange="window.importFile(event)">
                 <button id="btnClear" class="btn-secondary" onclick="window.clearLog()" aria-label="Clear chat log">Clear</button>
+                <button id="btnHelp" class="btn-secondary" onclick="window.showHelp()" aria-label="Help">Help</button>
             </div>
         </div>
     </div>
@@ -747,10 +748,14 @@
             window.renderMessages();
         };
 
+        window.showHelp = function() {
+            showToast("Help: /nick <name>, /join <#room>, /ai <prompt>. Use buttons for features.");
+        };
+
         document.addEventListener('keydown', function(e) {
             if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                showToast("Help: /nick <name>, /join <#room>, /ai <prompt>. Use buttons for features.");
+                window.showHelp();
             }
         });
 
