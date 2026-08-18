@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KChess
 - KAudio
 - KBBS
 - KPong
@@ -102,6 +101,9 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KCalendar
 - KChart
 - KChat
+- KChess
+- KDragon
+- KMech
 
 ## Progress Log
 - KCalendar: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1024x768, added F1 key support and updated UI labels for help menu in both web and native, applied text-rendering optimizeLegibility to web app body for crisp text).
@@ -297,3 +299,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KHex: Usability and UI issues fixed (auto-opening size adjusted to 850x750 in App.jsx, added explicit Help button to web app header, added AdjustWindowRect to fix native layout clipping, applied negative font height for crisp native text rendering, and added Help button to native interface).
 - KChart: Usability and UI issues fixed (synchronized App.jsx auto-opening bounds to match 1024x768, added explicit Help button and 'H' instructions in web, added explicit Help button to native layout, used AdjustWindowRect for accurate native client dimensions, applied text-rendering optimizeLegibility for crisp text).
 - KChat: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 850x650, implemented native negative font height for crisp text rendering, and added a visible 'Help' button to web control bar).
+- KChess: Usability and UI issues fixed (adjusted auto-opening size to 760x860 in App.jsx, implemented negative font height in native C for crisp text rendering, verified devicePixelRatio and AdjustWindowRect usage).
