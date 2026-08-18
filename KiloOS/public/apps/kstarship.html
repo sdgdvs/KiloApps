@@ -428,15 +428,41 @@
         }
       });
 
+      // Dynamic 3D drop-shadow based on position
+      const shadowOffsetX = -state.ship.x * 0.01;
+      const shadowOffsetY = -state.ship.y * 0.01;
+      
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetX = shadowOffsetX;
+      ctx.shadowOffsetY = shadowOffsetY;
+
       // Draw ship at center
-      ctx.fillStyle = '#00ffff';
       ctx.beginPath();
       ctx.moveTo(centerX, centerY - 10);
       ctx.lineTo(centerX + 8, centerY + 8);
       ctx.lineTo(centerX, centerY + 4);
       ctx.lineTo(centerX - 8, centerY + 8);
       ctx.closePath();
+      
+      // Highly detailed procedural lighting/specular highlights on the ship hull
+      const shipGrad = ctx.createLinearGradient(centerX - 8, centerY - 10, centerX + 8, centerY + 8);
+      shipGrad.addColorStop(0, '#ffffff'); // Specular highlight
+      shipGrad.addColorStop(0.3, '#00ffff'); // Base color
+      shipGrad.addColorStop(1, '#005555'); // Shaded edge
+      ctx.fillStyle = shipGrad;
       ctx.fill();
+      
+      // Inner detail lines
+      ctx.strokeStyle = '#aaffff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY - 8);
+      ctx.lineTo(centerX, centerY + 2);
+      ctx.stroke();
+
+      ctx.restore();
       
       // Ship frame cycle lights
       if (Math.floor(Date.now() / 500) % 2 === 0) {
@@ -451,18 +477,29 @@
         ctx.fillRect(centerX + 3, centerY + 3, 2, 2);
       }
       
-      // Draw particles
+      // Draw particles with motion blur
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
       state.particles.forEach(p => {
         const screenX = centerX + (p.x - state.ship.x);
         const screenY = centerY + (p.y - state.ship.y);
         if (screenX >= 0 && screenX <= canvas.width && screenY >= 0 && screenY <= canvas.height) {
-          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          // Draw a line based on velocity for motion blur effect
+          ctx.moveTo(screenX - p.vx * 2, screenY - p.vy * 2);
+          ctx.lineTo(screenX, screenY);
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = 2;
           ctx.globalAlpha = p.life;
+          ctx.stroke();
+          
+          ctx.fillStyle = p.color;
           ctx.beginPath();
           ctx.arc(screenX, screenY, 1.5, 0, Math.PI * 2);
           ctx.fill();
         }
       });
+      ctx.restore();
       ctx.globalAlpha = 1.0;
       
       // Scanner pulse animation around ship
@@ -473,17 +510,28 @@
       ctx.arc(centerX, centerY, 20 + Math.sin(pulseTime)*5, 0, Math.PI*2);
       ctx.stroke();
 
-      // Ship thrust trail if moving
+      // Ship thrust trail if moving (with stylized kinematically animated effects & motion blur)
       if (state.ship.moving) {
-        const flameLength = 16 + (Math.floor(Date.now() / 50) % 4);
-        ctx.fillStyle = '#ff8800';
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY + 6);
-        ctx.lineTo(centerX + 4, centerY + 10);
-        ctx.lineTo(centerX, centerY + flameLength);
-        ctx.lineTo(centerX - 4, centerY + 10);
-        ctx.closePath();
-        ctx.fill();
+        ctx.save();
+        // Motion blur via shadow
+        ctx.shadowColor = '#ff4400';
+        ctx.shadowBlur = 15;
+        ctx.globalCompositeOperation = 'lighter';
+        
+        const numFlames = 3; // for motion blur trails
+        for (let i = 0; i < numFlames; i++) {
+          const flameLength = 16 + (Math.floor(Date.now() / 50) % 4) + i * 4;
+          const alpha = 1 - (i * 0.3);
+          ctx.fillStyle = `rgba(255, 136, 0, ${alpha})`;
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY + 6 + i * 2);
+          ctx.lineTo(centerX + 4 - i, centerY + 10 + i * 2);
+          ctx.lineTo(centerX, centerY + flameLength);
+          ctx.lineTo(centerX - 4 + i, centerY + 10 + i * 2);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
       }
 
       updateUI();

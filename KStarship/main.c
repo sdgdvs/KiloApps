@@ -419,19 +419,51 @@ void Draw(HDC hdc, RECT* rect) {
         }
     }
 
+    // Dynamic 3D drop-shadow based on position relative to map center
+    int shadowOffX = -ship_x / 100;
+    int shadowOffY = -ship_y / 100;
+    POINT shadowPts[4] = {
+        {centerX + shadowOffX, centerY - 10 + shadowOffY},
+        {centerX + 8 + shadowOffX, centerY + 8 + shadowOffY},
+        {centerX + shadowOffX, centerY + 4 + shadowOffY},
+        {centerX - 8 + shadowOffX, centerY + 8 + shadowOffY}
+    };
+    HBRUSH shadowBrush = CreateSolidBrush(RGB(2, 2, 8));
+    HPEN shadowPen = CreatePen(PS_SOLID, 1, RGB(2, 2, 8));
+    SelectObject(memDC, shadowBrush);
+    SelectObject(memDC, shadowPen);
+    Polygon(memDC, shadowPts, 4);
+    DeleteObject(shadowBrush);
+    DeleteObject(shadowPen);
+
+    // Highly detailed procedural lighting/specular highlights on the ship hull (layered polygons)
     POINT shipPts[4] = {
         {centerX, centerY - 10},
         {centerX + 8, centerY + 8},
         {centerX, centerY + 4},
         {centerX - 8, centerY + 8}
     };
-    HBRUSH shipBrush = CreateSolidBrush(RGB(0, 255, 255));
-    HPEN shipPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+    HBRUSH shipBrush = CreateSolidBrush(RGB(0, 150, 150)); // Darker base
+    HPEN shipPen = CreatePen(PS_SOLID, 1, RGB(0, 200, 200));
     SelectObject(memDC, shipBrush);
     SelectObject(memDC, shipPen);
     Polygon(memDC, shipPts, 4);
     DeleteObject(shipBrush);
     DeleteObject(shipPen);
+    
+    // Specular highlight polygon (left side light reflection)
+    POINT specPts[3] = {
+        {centerX, centerY - 8},
+        {centerX - 5, centerY + 6},
+        {centerX, centerY + 2}
+    };
+    HBRUSH specBrush = CreateSolidBrush(RGB(200, 255, 255));
+    HPEN specPen = CreatePen(PS_SOLID, 1, RGB(200, 255, 255));
+    SelectObject(memDC, specBrush);
+    SelectObject(memDC, specPen);
+    Polygon(memDC, specPts, 3);
+    DeleteObject(specBrush);
+    DeleteObject(specPen);
 
     // Frame cycle animation for ship lights
     if ((GetTickCount() % 1000) < 500) {
@@ -442,16 +474,20 @@ void Draw(HDC hdc, RECT* rect) {
         SetPixel(memDC, centerX + 5, centerY + 5, RGB(0, 100, 0));
     }
 
-    // Draw particles
+    // Draw particles with kinematically animated motion blur
     for (int i=0; i<MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
             int screenX = centerX + (int)(particles[i].x - ship_x);
             int screenY = centerY + (int)(particles[i].y - ship_y);
             if (screenX >= 0 && screenX <= mapWidth && screenY >= 0 && screenY <= height) {
-                SetPixel(memDC, screenX, screenY, particles[i].color);
-                SetPixel(memDC, screenX+1, screenY, particles[i].color);
-                SetPixel(memDC, screenX, screenY+1, particles[i].color);
-                SetPixel(memDC, screenX+1, screenY+1, particles[i].color);
+                HPEN partPen = CreatePen(PS_SOLID, 2, particles[i].color);
+                HPEN oldPen = SelectObject(memDC, partPen);
+                MoveToEx(memDC, screenX - (int)(particles[i].vx * 2), screenY - (int)(particles[i].vy * 2), NULL);
+                LineTo(memDC, screenX, screenY);
+                SelectObject(memDC, oldPen);
+                DeleteObject(partPen);
+                
+                SetPixel(memDC, screenX, screenY, RGB(255, 255, 255)); // Hot core
             }
         }
     }
@@ -466,21 +502,25 @@ void Draw(HDC hdc, RECT* rect) {
     DeleteObject(pulsePen);
 
     if (is_moving) {
-        // Frame cycle for thruster flame
-        int flameLength = 16 + (GetTickCount() % 4);
-        POINT thrustPts[4] = {
-            {centerX, centerY + 6},
-            {centerX + 4, centerY + 10},
-            {centerX, centerY + flameLength},
-            {centerX - 4, centerY + 10}
-        };
-        HBRUSH thrustBrush = CreateSolidBrush(RGB(255, 136, 0));
-        HPEN thrustPen = CreatePen(PS_SOLID, 1, RGB(255, 136, 0));
-        SelectObject(memDC, thrustBrush);
-        SelectObject(memDC, thrustPen);
-        Polygon(memDC, thrustPts, 4);
-        DeleteObject(thrustBrush);
-        DeleteObject(thrustPen);
+        // Stylized kinematically animated effects for thrusters with motion blur trails
+        int baseLength = 16 + (GetTickCount() % 4);
+        for (int i = 0; i < 3; i++) {
+            int flameLength = baseLength + i * 5;
+            POINT thrustPts[4] = {
+                {centerX, centerY + 6 + i*2},
+                {centerX + 4 - i, centerY + 10 + i*2},
+                {centerX, centerY + flameLength},
+                {centerX - 4 + i, centerY + 10 + i*2}
+            };
+            COLORREF fColor = (i == 0) ? RGB(255, 255, 150) : ((i == 1) ? RGB(255, 136, 0) : RGB(200, 50, 0));
+            HBRUSH thrustBrush = CreateSolidBrush(fColor);
+            HPEN thrustPen = CreatePen(PS_SOLID, 1, fColor);
+            SelectObject(memDC, thrustBrush);
+            SelectObject(memDC, thrustPen);
+            Polygon(memDC, thrustPts, 4);
+            DeleteObject(thrustBrush);
+            DeleteObject(thrustPen);
+        }
     }
 
     SetBkMode(memDC, TRANSPARENT);

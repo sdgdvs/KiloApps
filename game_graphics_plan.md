@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KStarship
 - KConnect4
 - KHangman
 - KMatch3
@@ -136,7 +135,14 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSimon
 - KDragon
 - KSolitaire
+- KHex
+- KMine
+- KMandel
+- KVoid
+- KStarship
 ## Completed Work Log
+
+- **KStarship (Loop 4):** Implemented highly detailed procedural lighting and specular highlights on the ship hull, dynamic 3D drop-shadows that shift dynamically based on global coordinates, stylized kinematically animated effects for thrusters with motion blur trails, and motion blur on particles/weapon effects in both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 
 - **KSolitaire (Loop 5):** Implemented highly detailed visual variations for card backs (glowing metallic embossing that catches light dynamically), procedural fabric texture on the casino felt background that reacts to the lighting pool, and distinctly stylized kinematically animated shuffle and deal sequences with motion blur and multi-layered drop shadows in both Web Canvas (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
