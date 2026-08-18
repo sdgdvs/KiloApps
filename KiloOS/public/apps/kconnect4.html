@@ -94,6 +94,31 @@
     border-radius: 10px;
     cursor: pointer;
     box-shadow: inset 0 3px 6px rgba(0,0,0,0.7), 0 2px 4px rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  #board::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -50%; width: 200%; height: 200%;
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,0.06) 0px,
+      rgba(255,255,255,0.06) 12px,
+      rgba(255,255,255,0) 12px,
+      rgba(255,255,255,0) 36px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+  #board::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 100%);
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 10px;
   }
   #fxCanvas {
     position: absolute;
@@ -431,6 +456,7 @@
     
     let turnTimeLeftMs = 7000;
     let speedTimer = null;
+    let winBeamProgress = 0;
     
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let isMuted = false;
@@ -805,6 +831,7 @@
       currentPlayer = 1;
       gameActive = true;
       winningCells = [];
+      winBeamProgress = 0;
       moveHistory = [];
       p1Bombs = 2; p2Bombs = 2;
       p1Drills = 2; p2Drills = 2;
@@ -1098,6 +1125,7 @@
                 const color = winner === 1 ? 'Red' : 'Yellow';
                 statusEl.textContent = `Player ${winner} (${color}) Wins!`;
                 gameActive = false;
+                winBeamProgress = 0;
                 if (winner === 1) stats.red++; else stats.yellow++;
                 if (stats.lastWinner === winner) stats.streak++; else stats.streak = 1;
                 stats.lastWinner = winner;
@@ -1111,6 +1139,7 @@
               const color = currentPlayer === 1 ? 'Red' : 'Yellow';
               statusEl.textContent = `Player ${currentPlayer} (${color}) Wins!`;
               gameActive = false;
+              winBeamProgress = 0;
               if (currentPlayer === 1) stats.red++; else stats.yellow++;
               if (stats.lastWinner === currentPlayer) stats.streak++; else stats.streak = 1;
               stats.lastWinner = currentPlayer;
@@ -1243,6 +1272,7 @@
       saveStats();
       gameActive = true;
       winningCells = [];
+      winBeamProgress = 0;
       turnTimeLeftMs = 7000;
       isFreezeMode = false;
       hintCol = -1;
@@ -1656,6 +1686,12 @@
         const time = Date.now() * 0.005;
         const auraWidth = 14 + Math.sin(time * 3) * 4;
 
+        let curX = pStart.x + (pEnd.x - pStart.x) * winBeamProgress;
+        let curY = pStart.y + (pEnd.y - pStart.y) * winBeamProgress;
+        if (winBeamProgress < 1.0) {
+            winBeamProgress += 0.05;
+        }
+
         fxCtx.shadowColor = '#00ffff';
         fxCtx.shadowBlur = 15;
         fxCtx.strokeStyle = 'rgba(0, 255, 255, 0.7)';
@@ -1663,7 +1699,7 @@
         fxCtx.lineCap = 'round';
         fxCtx.beginPath();
         fxCtx.moveTo(pStart.x, pStart.y);
-        fxCtx.lineTo(pEnd.x, pEnd.y);
+        fxCtx.lineTo(curX, curY);
         fxCtx.stroke();
 
         fxCtx.shadowColor = '#ffffff';
@@ -1672,7 +1708,7 @@
         fxCtx.lineWidth = 4;
         fxCtx.beginPath();
         fxCtx.moveTo(pStart.x, pStart.y);
-        fxCtx.lineTo(pEnd.x, pEnd.y);
+        fxCtx.lineTo(curX, curY);
         fxCtx.stroke();
 
         fxCtx.shadowBlur = 0;

@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KConnect4
 - KHangman
 - KMatch3
 - KFreecell
@@ -140,7 +139,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMandel
 - KVoid
 - KStarship
+- KConnect4
 ## Completed Work Log
+
+- **KConnect4 (Loop 5):** Implemented highly detailed visual variations for the board itself (plastic specular reflections on the grid structure), an animated settling bounce effect when a disc hits the bottom of its column, and distinctly stylized kinematically animated win-line connections that draw a glowing beam through the winning 4 discs in both Web Canvas (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 
 - **KStarship (Loop 4):** Implemented highly detailed procedural lighting and specular highlights on the ship hull, dynamic 3D drop-shadows that shift dynamically based on global coordinates, stylized kinematically animated effects for thrusters with motion blur trails, and motion blur on particles/weapon effects in both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 

@@ -17,6 +17,7 @@ int board[MAX_ROWS][MAX_COLS];
 int currentPlayer = 1;
 bool gameActive = true;
 bool isDraw = false;
+float winBeamProgress = 0.0f;
 
 // Game modes: 0 = 2 Player, 1 = vs AI, 2 = Campaign, 3 = Speed
 int gameMode = 1;
@@ -673,6 +674,7 @@ void ResetGame() {
     gameActive = true;
     isDraw = false;
     isAnimating = false;
+    winBeamProgress = 0.0f;
     winCellCount = 0;
     historyCount = 0;
     replayIndex = -1;
@@ -1180,6 +1182,7 @@ void FinishTurnEffects(HWND hwnd) {
             if (gameMode > 0 && winner == 2) PlaySoundEffect(3);
             else { PlaySoundEffect(2); SpawnConfetti(); SetTimer(hwnd, 4, 25, NULL); }
             gameActive = false;
+            winBeamProgress = 0.0f;
             if(winner == 1) stats.redWins++;
             else stats.yellowWins++;
             
@@ -1203,6 +1206,7 @@ void FinishTurnEffects(HWND hwnd) {
         if (gameMode > 0 && animPlayer == 2) PlaySoundEffect(3);
         else { PlaySoundEffect(2); SpawnConfetti(); SetTimer(hwnd, 4, 25, NULL); }
         gameActive = false;
+        winBeamProgress = 0.0f;
         if(animPlayer == 1) stats.redWins++;
         else stats.yellowWins++;
         
@@ -1478,8 +1482,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 animY_float += animVY;
                 if (animY_float >= animTargetY) {
                     animY_float = (float)animTargetY;
-                    if (animVY > 5.0f && animBounceCount < 2) {
-                        animVY = -animVY * 0.38f;
+                    if (animVY > 5.0f && animBounceCount < 3) {
+                        animVY = -animVY * 0.45f;
                         animBounceCount++;
                     } else {
                         animY = animTargetY;
@@ -1511,6 +1515,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (hintTimer > 0) {
                     hintTimer--;
                     if (hintTimer == 0) hintCol = -1;
+                }
+                if (!gameActive && winCellCount >= 4 && winBeamProgress < 1.0f) {
+                    winBeamProgress += 0.05f;
+                    if (winBeamProgress > 1.0f) winBeamProgress = 1.0f;
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -1618,6 +1626,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH boardBg = CreateSolidBrush(RGB(24, 60, 138));
             FillRect(hdc, &boardRect, boardBg);
             DeleteObject(boardBg);
+
+            HRGN clipRgn = CreateRectRgn(boardLeft, boardTop, boardLeft + boardW, boardTop + boardH);
+            SelectClipRgn(hdc, clipRgn);
+            HPEN sheenPen = CreatePen(PS_SOLID, 10, RGB(45, 85, 175));
+            SelectObject(hdc, sheenPen);
+            for(int sh=boardLeft-boardH; sh<boardLeft+boardW; sh+=60) {
+                MoveToEx(hdc, sh, boardTop, NULL);
+                LineTo(hdc, sh+boardH, boardTop+boardH);
+            }
+            DeleteObject(sheenPen);
+            SelectClipRgn(hdc, NULL);
+            DeleteObject(clipRgn);
             
             HRGN hRgn = CreateRectRgn(boardLeft, boardTop, boardLeft + boardW, boardTop + boardH);
             SelectClipRgn(hdc, hRgn);
@@ -1692,19 +1712,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int x2 = boardLeft + 5 + winCells[winCellCount - 1][1] * 44 + 18;
                 int y2 = boardTop + 5 + winCells[winCellCount - 1][0] * 44 + 18;
 
+                int curX2 = x1 + (int)((x2 - x1) * winBeamProgress);
+                int curY2 = y1 + (int)((y2 - y1) * winBeamProgress);
+
                 HPEN auraPen = CreatePen(PS_SOLID, 12, RGB(0, 220, 255));
                 SelectObject(hdc, auraPen);
-                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);
+                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, curX2, curY2);
                 DeleteObject(auraPen);
 
                 HPEN midPen = CreatePen(PS_SOLID, 6, RGB(160, 245, 255));
                 SelectObject(hdc, midPen);
-                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);
+                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, curX2, curY2);
                 DeleteObject(midPen);
 
                 HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
                 SelectObject(hdc, corePen);
-                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);
+                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, curX2, curY2);
                 DeleteObject(corePen);
             }
             
