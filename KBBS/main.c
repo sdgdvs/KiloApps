@@ -1789,11 +1789,11 @@ LRESULT CALLBACK WndProc
 
             SetTimer(hwnd, 1, kbbsSettings.blinkRateMs, NULL);
             SetTimer(hwnd, 2, 16, NULL);
-            hUIFont = CreateFontA(dpiScale(14), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+            hUIFont = CreateFontA(-dpiScale(14), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                 DEFAULT_PITCH | FF_SWISS, "Tahoma");
 
-            hTermFont = CreateFontA(dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+            hTermFont = CreateFontA(-dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                 FIXED_PITCH | FF_MODERN, "Consolas");
 
@@ -2048,7 +2048,7 @@ LRESULT CALLBACK WndProc
                     SetTimer(hwnd, 1, kbbsSettings.blinkRateMs, NULL);
                     SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
                     if (hTermFont) DeleteObject(hTermFont);
-                    hTermFont = CreateFontA(dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+                    hTermFont = CreateFontA(-dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                         FIXED_PITCH | FF_MODERN, "Consolas");
                     InvalidateRect(hwnd, NULL, TRUE);
@@ -2417,7 +2417,7 @@ LRESULT CALLBACK WndProc
             int viewTop = activeTop - scrollOffset;
             int mouseX = (short)LOWORD(lParam);
             int mouseY = (short)HIWORD(lParam);
-            int termX = dpiScale(5), termY = dpiScale(30);
+            int termX = dpiScale(5), termY = dpiScale(60);
             int cellW = dpiScale(kbbsSettings.fontSize / 2);
             int cellH = dpiScale(kbbsSettings.fontSize);
             int c = (mouseX - termX) / cellW;
@@ -2441,7 +2441,7 @@ LRESULT CALLBACK WndProc
                 int viewTop = activeTop - scrollOffset;
                 int mouseX = (short)LOWORD(lParam);
                 int mouseY = (short)HIWORD(lParam);
-                int termX = dpiScale(5), termY = dpiScale(30);
+                int termX = dpiScale(5), termY = dpiScale(60);
                 int cellW = dpiScale(kbbsSettings.fontSize / 2);
                 int cellH = dpiScale(kbbsSettings.fontSize);
                 int c = (mouseX - termX) / cellW;
@@ -2663,9 +2663,14 @@ void __stdcall MainEntry() {
     winW = dpiScale(800);
     winH = dpiScale(600);
 
+    RECT r = {0, 0, winW, winH};
+    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW | WS_VSCROLL, FALSE);
+    winW = r.right - r.left;
+    winH = r.bottom - r.top;
+
     LoadMacros();
 
-    hMain = CreateWindowExA(0, "KBBSClass", "KBBS",
+    hMain = CreateWindowExA(0, "KBBSClass", "KBBS - Press H for Help",
         WS_OVERLAPPEDWINDOW | WS_VSCROLL,
         CW_USEDEFAULT, CW_USEDEFAULT, winW, winH,
         NULL, NULL, wc.hInstance, NULL);
