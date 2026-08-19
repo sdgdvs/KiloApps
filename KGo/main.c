@@ -1271,9 +1271,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             // Outer shadow
             HBRUSH shadowBrush = CreateSolidBrush(RGB(10, 10, 10));
-            RECT shadowRect = { padding - 15 + 6, padding - 15 + 6, padding + boardW + 15 + 6, padding + boardW + 15 + 6 };
+            RECT shadowRect = { padding - 15 + 16, padding - 15 + 24, padding + boardW + 15 + 24, padding + boardW + 15 + 32 };
             FillRect(hdc, &shadowRect, shadowBrush);
             DeleteObject(shadowBrush);
+
+            // 3D Procedural wood grain ring layers visible on the edges of the 3D Kaya wood board
+            for (int edge = 14; edge >= 1; edge--) {
+                int cR = 92 - edge * 3; if (cR < 0) cR = 0;
+                int cG = 58 - edge * 3; if (cG < 0) cG = 0;
+                int cB = 33 - edge * 2; if (cB < 0) cB = 0;
+                if (edge % 3 == 0) { cR = max(0, cR - 15); cG = max(0, cG - 15); cB = max(0, cB - 10); } // procedural grain rings
+                HBRUSH edgeBrush = CreateSolidBrush(RGB(cR, cG, cB));
+                RECT edgeRect = { padding - 15 + edge, padding - 15 + edge, padding + boardW + 15 + edge, padding + boardW + 15 + edge };
+                FillRect(hdc, &edgeRect, edgeBrush);
+                DeleteObject(edgeBrush);
+            }
 
             // Outer frame mahogany
             HBRUSH frameBrush = CreateSolidBrush(RGB(74, 46, 20));
@@ -1524,11 +1536,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                         // Last Move Marker Ring
                         if (c == lastMoveX && r == lastMoveY) {
-                            COLORREF ringColor = (board[r][c] == 1) ? RGB(0, 240, 255) : RGB(210, 0, 255);
-                            HPEN ringPen = CreatePen(PS_SOLID, 2, ringColor);
+                            COLORREF ringColor = (board[r][c] == 1) ? RGB(0, 240, 255) : RGB(255, 215, 0);
                             HBRUSH hollowB = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-                            HPEN oldP = SelectObject(hdc, ringPen);
                             HBRUSH oldB = SelectObject(hdc, hollowB);
+
+                            // Animated glowing particle aura
+                            float auraPhase = (sinf(animTime * 3.0f) + 1.0f) * 0.5f;
+                            int auraSize = 16 + (int)(auraPhase * 6.0f);
+                            HPEN auraPen1 = CreatePen(PS_SOLID, 2, ringColor);
+                            HPEN oldP = SelectObject(hdc, auraPen1);
+                            Ellipse(hdc, cx - auraSize, cy - auraSize, cx + auraSize, cy + auraSize);
+                            DeleteObject(auraPen1);
+
+                            HPEN ringPen = CreatePen(PS_SOLID, 2, ringColor);
+                            SelectObject(hdc, ringPen);
                             Ellipse(hdc, cx - 5, cy - 5, cx + 5, cy + 5);
                             
                             // Placement ripple/shockwave
@@ -1559,16 +1580,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
 
-            // Captured stone animation
+            // Captured stone animation - stylized kinematically animated capture effects where surrounded stones shrink rapidly before popping with a multi-colored flash
             for (int i = 0; i < capturedAnimCount; i++) {
                 int cx = padding + capturedAnimStones[i].x * cellSize;
                 int cy = padding + capturedAnimStones[i].y * cellSize;
                 HBRUSH stoneBrush = CreateSolidBrush(capturedAnimColor[i] == 1 ? RGB(20, 22, 26) : RGB(246, 243, 235));
-                HPEN stonePen = CreatePen(PS_SOLID, 2, RGB(255, 68, 68));
+                
+                // Multi-colored flash
+                int rCol = rand() % 255;
+                int gCol = rand() % 255;
+                int bCol = rand() % 255;
+                HPEN stonePen = CreatePen(PS_SOLID, 3, RGB(rCol, gCol, bCol));
                 HBRUSH oldBrush = SelectObject(hdc, stoneBrush);
                 HPEN oldPen = SelectObject(hdc, stonePen);
                 
-                Ellipse(hdc, cx - captureAnimRadius, cy - captureAnimRadius, cx + captureAnimRadius, cy + captureAnimRadius);
+                int animRad = captureAnimRadius;
+                // Add pop effect towards the end
+                if (captureAnimRadius < 6) {
+                    animRad = 15 - captureAnimRadius;
+                }
+                Ellipse(hdc, cx - animRad, cy - animRad, cx + animRad, cy + animRad);
                 
                 SelectObject(hdc, oldBrush);
                 SelectObject(hdc, oldPen);
@@ -1580,11 +1611,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             for (int i = 0; i < sparkCount; i++) {
                 int px = (int)sparkParticles[i].x;
                 int py = (int)sparkParticles[i].y;
-                COLORREF sparkColor = (sparkParticles[i].color == 1) ? RGB(110, 200, 255) : RGB(255, 170, 50);
+                // Multi-colored sparks for variety
+                COLORREF sparkColor = (sparkParticles[i].color == 1) ? RGB(110, 200 + rand()%55, 255) : RGB(255, 150 + rand()%100, 50 + rand()%50);
+                if (rand() % 4 == 0) sparkColor = RGB(255, 0, 255);
                 HBRUSH sBrush = CreateSolidBrush(sparkColor);
                 SelectObject(hdc, nullPen);
                 SelectObject(hdc, sBrush);
-                Ellipse(hdc, px - 2, py - 2, px + 2, py + 2);
+                int spSize = (sparkParticles[i].life > 8) ? 3 : 2;
+                Ellipse(hdc, px - spSize, py - spSize, px + spSize, py + spSize);
                 DeleteObject(sBrush);
             }
 

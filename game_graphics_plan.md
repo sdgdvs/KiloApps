@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KGo
 - KTowers
 - KWords
 - KReversi
@@ -141,7 +140,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMatch3
 - KFreecell
 - KSudoku
+- KGo
 ## Completed Work Log
+
+- **KGo (Loop 5):** Implemented highly detailed visual variations for the board itself (procedural wood grain ring layers visible on the edges of the 3D Kaya wood board), an animated glowing particle aura around the last played stone to highlight its importance, and distinctly stylized kinematically animated capture effects where surrounded stones shrink rapidly before popping with a multi-colored flash in both Web Canvas (kgo.html) and Native C Win32 GDI (KGo/main.c).
 
 - **KSudoku (Loop 5):** Implemented highly detailed visual variations for UI elements (3D beveled buttons with procedural wood-grain textures), a dynamic drop-shadow cast by the active/selected grid cell that pulses to draw focus, and a distinctly stylized kinematically animated ink-splatter/confetti burst effect when the final correct number is placed in both Web Canvas (ksudoku.html) and Native C Win32 GDI (KSudoku/main.c).
 
