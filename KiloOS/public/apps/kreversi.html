@@ -31,9 +31,9 @@
         .cell.double-flip::after { content: '2x'; color: #ffd700; font-size: 14px; font-weight: bold; text-shadow: 0 0 6px #ffaa00; }
         .cell.hoshi::before { content: ''; position: absolute; width: 6px; height: 6px; background: #d4af37; border-radius: 50%; box-shadow: 0 0 3px rgba(0,0,0,0.8); opacity: 0.7; pointer-events: none; }
         
-        .disc { width: calc(var(--cell-size, 45px) * 0.84); height: calc(var(--cell-size, 45px) * 0.84); border-radius: 50%; display: none; transition: transform 0.2s; background-size: contain; background-repeat: no-repeat; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.75)); z-index: 2; }
-        .disc.black { display: block; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><radialGradient id="bg" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="%23666666"/><stop offset="30%" stop-color="%23222222"/><stop offset="70%" stop-color="%230a0a0a"/><stop offset="100%" stop-color="%23000000"/></radialGradient><radialGradient id="spec" cx="40%" cy="40%" r="50%"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.3"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient><linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23ffe680"/><stop offset="25%" stop-color="%23d4af37"/><stop offset="75%" stop-color="%238a7322"/><stop offset="100%" stop-color="%23ffeb99"/></linearGradient><linearGradient id="crown" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%23ffffff"/><stop offset="50%" stop-color="%23ffe680"/><stop offset="100%" stop-color="%23cc9900"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(%23rim)"/><circle cx="32" cy="32" r="27" fill="url(%23bg)"/><circle cx="32" cy="32" r="27" fill="url(%23spec)"/><circle cx="32" cy="32" r="25" fill="none" stroke="%23ffe680" stroke-width="0.8" opacity="0.7"/><path d="M 12,28 A 22,22 0 0,1 36,8" fill="none" stroke="%23ffffff" stroke-width="3" stroke-linecap="round" opacity="0.6"/><path d="M 46,52 A 24,24 0 0,0 56,36" fill="none" stroke="%23ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.2"/><path d="M 22,38 L 20,26 L 26,30 L 32,24 L 38,30 L 44,26 L 42,38 Z" fill="url(%23crown)" stroke="%238a7322" stroke-width="1" filter="drop-shadow(1px 1px 2px rgba(0,0,0,0.8))"/><circle cx="20" cy="25" r="1.5" fill="%23ffffff"/><circle cx="32" cy="23" r="1.8" fill="%23ffffff"/><circle cx="44" cy="25" r="1.5" fill="%23ffffff"/></svg>'); }
-        .disc.white { display: block; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><radialGradient id="wbg" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="%23ffffff"/><stop offset="40%" stop-color="%23e2e8f0"/><stop offset="80%" stop-color="%23cbd5e1"/><stop offset="100%" stop-color="%2394a3b8"/></radialGradient><radialGradient id="wspec" cx="40%" cy="40%" r="50%"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.8"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient><linearGradient id="wrim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23ffffff"/><stop offset="50%" stop-color="%2394a3b8"/><stop offset="100%" stop-color="%23e2e8f0"/></linearGradient><linearGradient id="star" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%2394a3b8"/><stop offset="100%" stop-color="%23334155"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(%23wrim)"/><circle cx="32" cy="32" r="27" fill="url(%23wbg)"/><circle cx="32" cy="32" r="27" fill="url(%23wspec)"/><circle cx="32" cy="32" r="25" fill="none" stroke="%23ffffff" stroke-width="1.2" opacity="0.9"/><path d="M 12,28 A 22,22 0 0,1 36,8" fill="none" stroke="%23ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.9"/><path d="M 46,52 A 24,24 0 0,0 56,36" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" opacity="0.4"/><path d="M 32,22 L 35,28 L 41,29 L 36.5,33 L 38,39 L 32,35.5 L 26,39 L 27.5,33 L 23,29 L 29,28 Z" fill="url(%23star)" stroke="%231e293b" stroke-width="0.8" filter="drop-shadow(1px 1px 2px rgba(255,255,255,0.8))"/></svg>'); }
+        .disc { width: calc(var(--cell-size, 45px) * 0.84); height: calc(var(--cell-size, 45px) * 0.84); border-radius: 50%; display: none; transition: transform 0.2s; background-size: contain; background-repeat: no-repeat; filter: drop-shadow(var(--shadow-x, 2px) var(--shadow-y, 4px) 6px rgba(0,0,0,0.75)); z-index: 2; }
+        .disc.black { display: block; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><filter id="marble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise"/><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.4 0" result="marbleNoise"/><feBlend mode="overlay" in="SourceGraphic" in2="marbleNoise"/></filter><radialGradient id="bg" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="%23666666"/><stop offset="30%" stop-color="%23222222"/><stop offset="70%" stop-color="%230a0a0a"/><stop offset="100%" stop-color="%23000000"/></radialGradient><radialGradient id="spec" cx="40%" cy="40%" r="50%"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.5"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient><linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23ffe680"/><stop offset="25%" stop-color="%23d4af37"/><stop offset="75%" stop-color="%238a7322"/><stop offset="100%" stop-color="%23ffeb99"/></linearGradient><linearGradient id="crown" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%23ffffff"/><stop offset="50%" stop-color="%23ffe680"/><stop offset="100%" stop-color="%23cc9900"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(%23rim)"/><g filter="url(%23marble)"><circle cx="32" cy="32" r="27" fill="url(%23bg)"/></g><circle cx="32" cy="32" r="27" fill="url(%23spec)"/><circle cx="32" cy="32" r="25" fill="none" stroke="%23ffe680" stroke-width="0.8" opacity="0.7"/><path d="M 12,28 A 22,22 0 0,1 36,8" fill="none" stroke="%23ffffff" stroke-width="3" stroke-linecap="round" opacity="0.6"/><path d="M 46,52 A 24,24 0 0,0 56,36" fill="none" stroke="%23ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.2"/><path d="M 22,38 L 20,26 L 26,30 L 32,24 L 38,30 L 44,26 L 42,38 Z" fill="url(%23crown)" stroke="%238a7322" stroke-width="1" filter="drop-shadow(1px 1px 2px rgba(0,0,0,0.8))"/><circle cx="20" cy="25" r="1.5" fill="%23ffffff"/><circle cx="32" cy="23" r="1.8" fill="%23ffffff"/><circle cx="44" cy="25" r="1.5" fill="%23ffffff"/></svg>'); }
+        .disc.white { display: block; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><filter id="ivory"><feTurbulence type="fractalNoise" baseFrequency="0.05 0.02" numOctaves="3" result="noise"/><feColorMatrix type="matrix" values="1 0 0 0 0  0 0.95 0 0 0  0 0.85 0 0 0  0 0 0 0.25 0" result="ivoryNoise"/><feBlend mode="multiply" in="SourceGraphic" in2="ivoryNoise"/></filter><radialGradient id="wbg" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="%23ffffff"/><stop offset="40%" stop-color="%23faf8f0"/><stop offset="80%" stop-color="%23e8e2d2"/><stop offset="100%" stop-color="%23c2b8a3"/></radialGradient><radialGradient id="wspec" cx="40%" cy="40%" r="50%"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.9"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient><linearGradient id="wrim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23ffffff"/><stop offset="50%" stop-color="%23d2c8b3"/><stop offset="100%" stop-color="%23fffefa"/></linearGradient><linearGradient id="star" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%2394a3b8"/><stop offset="100%" stop-color="%23334155"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(%23wrim)"/><g filter="url(%23ivory)"><circle cx="32" cy="32" r="27" fill="url(%23wbg)"/></g><circle cx="32" cy="32" r="27" fill="url(%23wspec)"/><circle cx="32" cy="32" r="25" fill="none" stroke="%23ffffff" stroke-width="1.2" opacity="0.9"/><path d="M 12,28 A 22,22 0 0,1 36,8" fill="none" stroke="%23ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.9"/><path d="M 46,52 A 24,24 0 0,0 56,36" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" opacity="0.4"/><path d="M 32,22 L 35,28 L 41,29 L 36.5,33 L 38,39 L 32,35.5 L 26,39 L 27.5,33 L 23,29 L 29,28 Z" fill="url(%23star)" stroke="%231e293b" stroke-width="0.8" filter="drop-shadow(1px 1px 2px rgba(255,255,255,0.8))"/></svg>'); }
         
         .valid-move::after { content: ''; position: absolute; width: 12px; height: 12px; background: radial-gradient(circle, #ffffaa 0%, #ffd700 70%, #ffaa00 100%); border-radius: 50%; box-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255, 215, 0, 0.7); animation: pulseDot 1.2s infinite alternate ease-in-out; z-index: 3; }
         @keyframes pulseDot { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.2); opacity: 1; } }
@@ -52,17 +52,32 @@
             100% { transform: perspective(350px) rotateY(180deg) translateY(0); filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.75)); }
         }
         @keyframes wobbleSettle {
-            0% { transform: translateY(-20px) scale(1.1); filter: drop-shadow(5px 10px 8px rgba(0,0,0,0.5)); opacity: 0; }
+            0% { transform: translateY(-20px) scale(1.1); filter: drop-shadow(var(--shadow-x, 5px) calc(var(--shadow-y, 10px) + 5px) 8px rgba(0,0,0,0.5)); opacity: 0; }
             20% { opacity: 1; }
-            40% { transform: translateY(0px) scale(1.0); filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.75)); }
-            60% { transform: translateY(-6px) scale(1.02); filter: drop-shadow(3px 6px 7px rgba(0,0,0,0.6)); }
-            80% { transform: translateY(0px) scale(1.0); filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.75)); }
-            90% { transform: translateY(-2px) scale(1.01); filter: drop-shadow(2px 5px 6px rgba(0,0,0,0.7)); }
-            100% { transform: translateY(0px) scale(1.0); filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.75)); }
+            40% { transform: translateY(0px) scale(1.0); filter: drop-shadow(var(--shadow-x, 2px) var(--shadow-y, 4px) 6px rgba(0,0,0,0.75)); }
+            60% { transform: translateY(-6px) scale(1.02); filter: drop-shadow(calc(var(--shadow-x, 2px) * 1.5) calc(var(--shadow-y, 4px) * 1.5) 7px rgba(0,0,0,0.6)); }
+            80% { transform: translateY(0px) scale(1.0); filter: drop-shadow(var(--shadow-x, 2px) var(--shadow-y, 4px) 6px rgba(0,0,0,0.75)); }
+            90% { transform: translateY(-2px) scale(1.01); filter: drop-shadow(calc(var(--shadow-x, 2px) * 1.2) calc(var(--shadow-y, 4px) * 1.2) 6px rgba(0,0,0,0.7)); }
+            100% { transform: translateY(0px) scale(1.0); filter: drop-shadow(var(--shadow-x, 2px) var(--shadow-y, 4px) 6px rgba(0,0,0,0.75)); }
         }
         .disc.flip-to-white { animation: flip3DToWhite 0.35s ease-in-out forwards; }
         .disc.flip-to-black { animation: flip3DToBlack 0.35s ease-in-out forwards; }
         .disc.wobble-settle { animation: wobbleSettle 0.4s ease-out forwards; }
+        
+        .score-pulse-black { animation: scorePulseBlack 1.5s infinite ease-in-out; }
+        .score-pulse-white { animation: scorePulseWhite 1.5s infinite ease-in-out; }
+        
+        @keyframes scorePulseBlack {
+            0% { transform: scale(1); color: var(--text-color, #e0e0e0); text-shadow: 0 0 0px rgba(255, 215, 0, 0); }
+            50% { transform: scale(1.1); color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); }
+            100% { transform: scale(1); color: var(--text-color, #e0e0e0); text-shadow: 0 0 0px rgba(255, 215, 0, 0); }
+        }
+        
+        @keyframes scorePulseWhite {
+            0% { transform: scale(1); color: var(--text-color, #e0e0e0); text-shadow: 0 0 0px rgba(255, 255, 255, 0); }
+            50% { transform: scale(1.1); color: #ffffff; text-shadow: 0 0 10px rgba(255, 255, 255, 0.8); }
+            100% { transform: scale(1); color: var(--text-color, #e0e0e0); text-shadow: 0 0 0px rgba(255, 255, 255, 0); }
+        }
         
         .recommended-hint { outline: 3px solid var(--hint-outline, #ffd700); box-shadow: 0 0 14px var(--hint-outline, #ffd700) inset; background: var(--hint-bg, #2a7a42) !important; }
         .recommended-hint::after { background: radial-gradient(circle, #ffffff, #ffd700) !important; width: 14px !important; height: 14px !important; box-shadow: 0 0 10px #ffd700; }
@@ -683,6 +698,14 @@
                 disc.className = 'disc';
                 disc.id = 'disc-' + i;
                 
+                // Dynamic drop-shadow based on perspective from center
+                const midR = (boardHeight - 1) / 2;
+                const midC = (boardWidth - 1) / 2;
+                const shadowX = (c - midC) * 1.5;
+                const shadowY = (r - midR) * 1.5 + 4;
+                disc.style.setProperty('--shadow-x', `${shadowX}px`);
+                disc.style.setProperty('--shadow-y', `${shadowY}px`);
+                
                 cell.appendChild(disc);
                 cell.onclick = () => { if (currentPlayer === BLACK && !gameEnded) handleCellClick(i); };
                 boardEl.appendChild(cell);
@@ -797,6 +820,21 @@
             const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
             scoreBlackEl.textContent = `${themeInfo.p1}: ${b}`;
             scoreWhiteEl.textContent = `${themeInfo.p2}: ${w}`;
+            
+            // Manage pulsing animations
+            if (!gameEnded) {
+                if (currentPlayer === BLACK) {
+                    scoreBlackEl.classList.add('score-pulse-black');
+                    scoreWhiteEl.classList.remove('score-pulse-white');
+                } else {
+                    scoreWhiteEl.classList.add('score-pulse-white');
+                    scoreBlackEl.classList.remove('score-pulse-black');
+                }
+            } else {
+                scoreBlackEl.classList.remove('score-pulse-black');
+                scoreWhiteEl.classList.remove('score-pulse-white');
+            }
+            
             return {b, w};
         }
 

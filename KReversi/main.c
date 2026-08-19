@@ -130,6 +130,7 @@ int animatingFlips[100];
 int numAnimatingFlips = 0;
 int flipProgress = 0;
 int newlyPlacedDisc = -1;
+int globalFrameCounter = 0;
 
 int dirs[8][2] = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};
 
@@ -288,16 +289,18 @@ void UpdateAndDrawParticlesGDI(HDC hdc) {
     }
 }
 
-void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWidth, int yOffset) {
+void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWidth, int yOffset, int boardCenterX, int boardCenterY) {
     int w = scaleXWidth;
     if (w < 2) w = 2;
     int rX = w / 2;
     int rY = radius;
     int drawCy = cy + yOffset;
 
-    // Drop Shadow
-    int shadowDropX = 3 - yOffset / 2;
-    int shadowDropY = 4 - yOffset;
+    // Drop Shadow with dynamic perspective
+    float dx = (float)(cx - boardCenterX);
+    float dy = (float)(drawCy - boardCenterY);
+    int shadowDropX = (int)(dx * 0.08f) + 3 - yOffset / 2;
+    int shadowDropY = (int)(dy * 0.08f) + 5 - yOffset;
     int shadowSpread = -yOffset / 3;
     int shadowCol = 10 - yOffset;
     if (shadowCol > 50) shadowCol = 50;
@@ -363,6 +366,15 @@ void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWi
             DeleteObject(goldBrush);
             DeleteObject(goldPen);
         }
+
+        // Marble micro-texture
+        srand(cx * cy);
+        for(int m=0; m<8; m++) {
+            int mx = cx - rX / 2 + rand() % rX;
+            int my = drawCy - rY / 2 + rand() % rY;
+            SetPixel(hdc, mx, my, RGB(40, 40, 40));
+            SetPixel(hdc, mx+1, my, RGB(60, 60, 60));
+        }
     } else {
         // Pearl White Disc
         HBRUSH rimBrush = CreateSolidBrush(RGB(240, 245, 250));
@@ -419,6 +431,15 @@ void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWi
             Polygon(hdc, starPts, 10);
             DeleteObject(starBrush);
             DeleteObject(starPen);
+        }
+
+        // Ivory micro-texture
+        srand(cx * cy + 1);
+        for(int m=0; m<10; m++) {
+            int mx = cx - rX / 2 + rand() % rX;
+            int my = drawCy - rY / 2 + rand() % rY;
+            SetPixel(hdc, mx, my, RGB(220, 225, 230));
+            SetPixel(hdc, mx+1, my+1, RGB(255, 255, 255));
         }
     }
 }
@@ -1142,6 +1163,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetMenu(hwnd, hMenu);
             InitGame(hwnd);
+            SetTimer(hwnd, 5, 50, NULL); // Animation timer for score pulsing
             break;
         }
         case WM_MOUSEMOVE: {
@@ -1328,6 +1350,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     KillTimer(hwnd, 4);
                 }
+            } else if (wParam == 5) {
+                globalFrameCounter++;
+                RECT scoreRect = { 0, 20, 480, 50 };
+                InvalidateRect(hwnd, &scoreRect, FALSE);
             }
             break;
         }
@@ -1370,7 +1396,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             char scoreStr[128];
             sprintf(scoreStr, "%s: %d   %s: %d   Turn: %s", theme->p1Name, bCount, theme->p2Name, wCount, currentPlayer == BLACK ? theme->p1Name : theme->p2Name);
+            
+            // Stylized animated score visualizer
+            int pulse = (int)(sinf(globalFrameCounter * 0.15f) * 127.0f + 128.0f);
+            COLORREF scoreColor = theme->text;
+            if (currentPlayer == BLACK) {
+                scoreColor = RGB(pulse, (pulse * 215) / 255, 0); // Pulse Gold for Black
+            } else {
+                scoreColor = RGB(pulse, pulse, 255); // Pulse Light Blue/White for White
+            }
+            SetTextColor(hdc, scoreColor);
+            
             TextOut(hdc, 10, 26, scoreStr, strlen(scoreStr));
+            SetTextColor(hdc, theme->text);
             
             if (gameEnded) {
                 char winMsg[128];
@@ -1533,6 +1571,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int cx = rect.left + cellSize / 2;
                         int cy = rect.top + cellSize / 2;
 
+                        int bCenterX = boardStartX + (g_boardWidth * cellSize) / 2;
+                        int bCenterY = boardStartY + (g_boardHeight * cellSize) / 2;
                         if (isAnimating) {
                             int oldColor = (board[idx] == BLACK) ? WHITE : BLACK;
                             int newColor = board[idx];
@@ -1545,15 +1585,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (currentW < 2) currentW = 2;
 
                             int yOff = (flipProgress < 5) ? -flipProgress * 2 : -(10 - flipProgress) * 2;
-                            DrawDisc3D(hdc, cx, cy, radius, displayColor, currentW, yOff);
+                            DrawDisc3D(hdc, cx, cy, radius, displayColor, currentW, yOff, bCenterX, bCenterY);
                         } else if (idx == newlyPlacedDisc && numAnimatingFlips > 0 && flipProgress < 10) {
                             int bounceY = 0;
                             if (flipProgress < 3) bounceY = -8 + flipProgress * 2;
                             else if (flipProgress < 6) bounceY = (flipProgress - 3) * 2;
                             else if (flipProgress < 8) bounceY = -3 + (flipProgress - 6);
-                            DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, bounceY);
+                            DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, bounceY, bCenterX, bCenterY);
                         } else {
-                            DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, 0);
+                            DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, 0, bCenterX, bCenterY);
                         }
                     } else if (currentPlayer == BLACK && !gameEnded && (board[idx] == EMPTY || board[idx] == DOUBLE_FLIP)) {
                         int dummy[100];
