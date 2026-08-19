@@ -70,6 +70,8 @@ MechStats playerStats = { 100, 100, 15, 5, 100, 0 };
 MechStats enemyStats = { 80, 80, 12, 3, 100, 0 };
 
 bool isDefending = false;
+bool enemyIsDefending = false;
+int playerLimbDamage[5] = {0, 0, 0, 0, 0};
 
 int currentTargetLimb = 1; // 0=Head, 1=Torso, 2=LArm, 3=RArm, 4=Legs
 const char* limbNames[] = { "Head", "Torso", "L.Arm", "R.Arm", "Legs" };
@@ -97,25 +99,26 @@ void clearLogs() {
 }
 
 void EnemyTurn() {
+    if (enemyStats.heat + 30 > enemyStats.maxHeat) {
+        enemyIsDefending = true;
+        addLog("Enemy vents heat! (Defending)");
+        return;
+    }
+
+    enemyIsDefending = false;
     enemyStats.heat += 30;
-    if (enemyStats.heat > enemyStats.maxHeat) {
-        enemyStats.hp -= 15;
-        addLog("Enemy overheats! Takes 15 system dmg.");
-        if (enemyStats.hp <= 0) {
-            enemyStats.hp = 0;
-            int reward = 50 + (battleCount * 10);
-            credits += reward;
-            char buf[128];
-            wsprintfA(buf, "ENEMY DESTROYED. VICTORY. Earned %d Credits.", reward);
-            addLog(buf);
-            battleCount++;
-            gameState = STATE_POST_BATTLE;
-            playerVictory = true;
-            return;
+
+    int target = my_rand() % 5;
+    if ((my_rand() % 100) < 50) {
+        int maxDmg = 0;
+        for (int i = 0; i < 5; i++) {
+            if (playerLimbDamage[i] > maxDmg) {
+                maxDmg = playerLimbDamage[i];
+                target = i;
+            }
         }
     }
 
-    int target = my_rand() % 5;
     int hitRoll = my_rand() % 100;
     
     if (hitRoll > (int)(limbHitChance[target] * 100.0f)) {
@@ -128,6 +131,7 @@ void EnemyTurn() {
         if (dmg < 1) dmg = 1;
         dmg = (int)(dmg * limbDmgMult[target]);
         playerStats.hp -= dmg;
+        playerLimbDamage[target] += dmg;
         
         char buf[128];
         wsprintfA(buf, "Enemy hits %s! Took %d dmg.", limbNames[target], dmg);
@@ -175,7 +179,8 @@ void ActionAttack() {
         wsprintfA(buf, "You target %s... Missed!", limbNames[target]);
         addLog(buf);
     } else {
-        int dmg = (playerStats.atk - enemyStats.def) + (my_rand() % 5);
+        int effectiveDef = enemyIsDefending ? (enemyStats.def * 2) : enemyStats.def;
+        int dmg = (playerStats.atk - effectiveDef) + (my_rand() % 5);
         if (dmg < 1) dmg = 1;
         dmg = (int)(dmg * limbDmgMult[target]);
         enemyStats.hp -= dmg;
@@ -223,6 +228,8 @@ void StartBattle() {
     enemyStats.heat = 0;
     playerStats.heat = 0;
     isDefending = false;
+    enemyIsDefending = false;
+    for (int i=0; i<5; i++) playerLimbDamage[i] = 0;
     clearLogs();
     addLog("Enemy mech detected! Engaging...");
     gameState = STATE_BATTLE;

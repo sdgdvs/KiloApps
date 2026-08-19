@@ -265,6 +265,8 @@
         const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
         let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
         let isDefending = false;
+        let enemyIsDefending = false;
+        let playerLimbDamage = [0, 0, 0, 0, 0];
 
         let currentTargetLimb = 1;
         const limbs = [
@@ -364,6 +366,8 @@
             };
             playerStats.heat = 0;
             isDefending = false;
+            enemyIsDefending = false;
+            playerLimbDamage = [0, 0, 0, 0, 0];
             document.getElementById('log').innerHTML = '';
             document.getElementById('battle-actions').style.display = 'flex';
             document.getElementById('post-battle-actions').style.display = 'none';
@@ -421,7 +425,7 @@
             if (Math.random() > targetLimb.chance) {
                 logMsg(`You target ${targetLimb.name}... Missed!`);
             } else {
-                let dmg = Math.max(1, playerStats.atk - enemyStats.def + Math.floor(Math.random() * 5));
+                let dmg = Math.max(1, playerStats.atk - (enemyIsDefending ? enemyStats.def * 2 : enemyStats.def) + Math.floor(Math.random() * 5));
                 dmg = Math.floor(dmg * targetLimb.mult);
                 enemyStats.hp -= dmg;
                 logMsg(`You hit ${targetLimb.name}! Dealt ${dmg} damage.`);
@@ -454,19 +458,26 @@
         }
 
         function enemyTurn() {
-            enemyStats.heat += 30;
-            if (enemyStats.heat > enemyStats.maxHeat) {
-                enemyStats.hp -= 15;
-                logMsg("Enemy overheats! Takes 15 system dmg.");
-                if (enemyStats.hp <= 0) {
-                    enemyStats.hp = 0;
-                    updateBattle();
-                    endBattle(true);
-                    return;
-                }
+            if (enemyStats.heat + 30 > enemyStats.maxHeat) {
+                enemyIsDefending = true;
+                logMsg("Enemy vents heat! (Defending)");
+                return;
             }
 
-            let targetLimb = limbs[Math.floor(Math.random() * limbs.length)];
+            enemyIsDefending = false;
+            enemyStats.heat += 30;
+
+            let targetIdx = Math.floor(Math.random() * limbs.length);
+            if (Math.random() < 0.5) {
+                let maxDmg = 0;
+                for (let i = 0; i < limbs.length; i++) {
+                    if (playerLimbDamage[i] > maxDmg) {
+                        maxDmg = playerLimbDamage[i];
+                        targetIdx = i;
+                    }
+                }
+            }
+            let targetLimb = limbs[targetIdx];
             
             if (Math.random() > targetLimb.chance) {
                 logMsg(`Enemy targets ${targetLimb.name}... Missed!`);
@@ -474,6 +485,7 @@
                 let dmg = Math.max(1, enemyStats.atk - (isDefending ? playerStats.def * 2 : playerStats.def) + Math.floor(Math.random() * 4));
                 dmg = Math.floor(dmg * targetLimb.mult);
                 playerStats.hp -= dmg;
+                playerLimbDamage[targetIdx] += dmg;
                 logMsg(`Enemy hits ${targetLimb.name}! Took ${dmg} damage.`);
             }
             updateBattle();
