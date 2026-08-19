@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KWords
 - KReversi
 - KQuest
 - KSpace
@@ -141,7 +140,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSudoku
 - KGo
 - KTowers
+- KWords
 ## Completed Work Log
+
+- **KWords (Loop 5):** Implemented highly detailed visual variations for the UI (3D beveled leather-bound dictionary texture for the score/history panel), a dynamic animated page-flip transition effect when new words are logged, and distinctly stylized kinematically animated floating score numbers that bounce and fade up from successfully placed tiles in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
 - **KTowers (Loop 5):** Implemented highly detailed visual variations for the background (procedurally generated neon advertising holograms on the backdrop that flicker), a dynamic pulsing spotlight/aura that tracks the active dropping block, and distinctly stylized kinematically animated screen-shake and structural dust burst particle effects when a block lands heavily in both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 

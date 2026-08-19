@@ -246,6 +246,28 @@ typedef struct {
 Particle particles[MAX_PARTICLES];
 bool particlesInit = false;
 
+typedef struct {
+    float x, y;
+    float vy;
+    int score;
+    float life;
+} FloatingScore;
+#define MAX_FLOAT_SCORES 20
+FloatingScore fScores[MAX_FLOAT_SCORES];
+
+void SpawnFloatingScore(int pts, int x, int y) {
+    for (int i=0; i<MAX_FLOAT_SCORES; i++) {
+        if (fScores[i].life <= 0) {
+            fScores[i].score = pts;
+            fScores[i].x = (float)x;
+            fScores[i].y = (float)y;
+            fScores[i].vy = -3.0f;
+            fScores[i].life = 1.0f;
+            break;
+        }
+    }
+}
+
 void SpawnParticles(int px, int py, int type) {
     if (!particlesInit) { memset(particles, 0, sizeof(particles)); particlesInit = true; }
     int numSpawn = (type == 1) ? 15 : 20;
@@ -470,6 +492,7 @@ void InitGame() {
     memset(scanAnim, 0, sizeof(scanAnim));
     memset(strikeAnim, 0, sizeof(strikeAnim));
     memset(secretFoundStatus, 0, sizeof(secretFoundStatus));
+    memset(fScores, 0, sizeof(fScores));
     
     foundCount = 0;
     if (!(currentGameMode == 3 && campaignStage > 1)) {
@@ -671,8 +694,16 @@ void EndSelection(HWND hwnd) {
                         if (points < 100) points = 100;
                         if (timeSinceLastFind < 15) comboMultiplier++;
                         else comboMultiplier = 1;
-                        currentScore += points * comboMultiplier;
+                        int totalPoints = points * comboMultiplier;
+                        currentScore += totalPoints;
                         timeSinceLastFind = 0;
+                        
+                        int cellPx = GetCellPx();
+                        int cR = selR[count/2];
+                        int cC = selC[count/2];
+                        int px = 20 + 6 + cC * cellPx + cellPx / 2 - 20;
+                        int py = 50 + 6 + cR * cellPx;
+                        SpawnFloatingScore(totalPoints, px, py);
                     }
                     
                     // Mark cells as found & thaw adjacent frozen tiles & clear fog
@@ -711,6 +742,14 @@ void EndSelection(HWND hwnd) {
                         secretBannerTimer = 4;
                         sprintf(secretBannerMsg, "SECRET WORD FOUND: %s! (+500 PTS)", secretWords[s]);
                         PlaySoundEffect(2);
+                        
+                        int cellPx = GetCellPx();
+                        int cR = selR[count/2];
+                        int cC = selC[count/2];
+                        int px = 20 + 6 + cC * cellPx + cellPx / 2 - 20;
+                        int py = 50 + 6 + cR * cellPx;
+                        SpawnFloatingScore(500, px, py);
+                        
                         for(int i=0; i<count; i++) {
                             int r = selR[i];
                             int c = selC[i];
@@ -1054,6 +1093,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (particles[i].type != 0 && particles[i].life > 0) {
                         needsRedraw = true;
                         break;
+                    }
+                }
+                for(int i=0; i<MAX_FLOAT_SCORES; i++) {
+                    if (fScores[i].life > 0) {
+                        fScores[i].y += fScores[i].vy;
+                        if (fScores[i].life > 0.8f) fScores[i].vy += 0.3f;
+                        else if (fScores[i].life > 0.6f && fScores[i].vy > 0) fScores[i].vy = -2.0f;
+                        else if (fScores[i].life <= 0.6f) fScores[i].vy -= 0.1f;
+                        fScores[i].life -= 0.02f;
+                        needsRedraw = true;
                     }
                 }
                 if(gameWon && particlesInit) needsRedraw = true;
@@ -1480,8 +1529,51 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             DeleteObject(socketBg);
             
-            int listX = boardRight + 20;
+            int listX = boardRight + 30;
             int listY = 50;
+            
+            int panelL = listX - 15;
+            int panelT = boardTop;
+            int panelR = panelL + 220;
+            int panelB = boardBottom;
+            
+            for (int y = panelT; y <= panelB; y++) {
+                int grad = (y - panelT) * 30 / (panelB - panelT);
+                int rCol = 82 - grad;
+                int gCol = 45 - grad;
+                int bCol = 25 - grad;
+                int noise = ((y * 13) % 11) - 5;
+                rCol += noise; gCol += noise; bCol += noise;
+                if(rCol < 0) rCol=0; if(rCol > 255) rCol=255;
+                if(gCol < 0) gCol=0; if(gCol > 255) gCol=255;
+                if(bCol < 0) bCol=0; if(bCol > 255) bCol=255;
+                HPEN hPenL = CreatePen(PS_SOLID, 1, RGB(rCol, gCol, bCol));
+                HPEN oldPenL = (HPEN)SelectObject(hdc, hPenL);
+                MoveToEx(hdc, panelL, y, NULL);
+                LineTo(hdc, panelR, y);
+                SelectObject(hdc, oldPenL);
+                DeleteObject(hPenL);
+            }
+            
+            HBRUSH spineBrush = CreateSolidBrush(RGB(40, 20, 10));
+            RECT spineRc = {panelL, panelT, panelL + 12, panelB};
+            FillRect(hdc, &spineRc, spineBrush);
+            DeleteObject(spineBrush);
+            
+            HPEN outerPenHi = CreatePen(PS_SOLID, 2, RGB(120, 70, 40));
+            HPEN outerPenLo = CreatePen(PS_SOLID, 2, RGB(30, 15, 5));
+            HPEN oldPL = (HPEN)SelectObject(hdc, outerPenHi);
+            MoveToEx(hdc, panelL, panelB, NULL);
+            LineTo(hdc, panelL, panelT);
+            LineTo(hdc, panelR, panelT);
+            SelectObject(hdc, outerPenLo);
+            LineTo(hdc, panelR, panelB);
+            LineTo(hdc, panelL, panelB);
+            SelectObject(hdc, oldPL);
+            DeleteObject(outerPenHi);
+            DeleteObject(outerPenLo);
+            
+            SetBkMode(hdc, TRANSPARENT);
 
             if (currentGameMode == 3) {
                 SetTextColor(hdc, RGB(236, 201, 75));
@@ -1489,24 +1581,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 listY += 22;
             }
 
-            SetTextColor(hdc, RGB(226, 232, 240));
+            SetTextColor(hdc, RGB(240, 200, 150));
             TextOut(hdc, listX, listY, "Words to Find:", 14);
             listY += 25;
             
             for(int w=0; w<wordCount; w++) {
-                if(wordsFoundStatus[w]) {
-                    SetTextColor(hdc, RGB(100, 100, 100));
-                } else {
-                    SetTextColor(hdc, RGB(255, 255, 255));
+                int yOffset = 0;
+                if (strikeAnim[w] > 0.0f && strikeAnim[w] < 1.0f) {
+                    yOffset = (int)(sin((double)strikeAnim[w] * 3.14159) * -8.0);
                 }
-                TextOut(hdc, listX, listY, wordsToFind[w], strlen(wordsToFind[w]));
+                
+                if(wordsFoundStatus[w]) {
+                    SetTextColor(hdc, RGB(140, 110, 90));
+                } else {
+                    SetTextColor(hdc, RGB(240, 230, 210));
+                }
+                TextOut(hdc, listX, listY + yOffset, wordsToFind[w], strlen(wordsToFind[w]));
                 
                 if(strikeAnim[w] > 0.0f) {
-                    HPEN strikePen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
+                    HPEN strikePen = CreatePen(PS_SOLID, 2, RGB(140, 110, 90));
                     HPEN oldP = (HPEN)SelectObject(hdc, strikePen);
-                    MoveToEx(hdc, listX, listY + 10, NULL);
+                    MoveToEx(hdc, listX, listY + yOffset + 10, NULL);
                     int strikeLen = (int)(strlen(wordsToFind[w]) * 9 * strikeAnim[w]);
-                    LineTo(hdc, listX + strikeLen, listY + 10);
+                    LineTo(hdc, listX + strikeLen, listY + yOffset + 10);
                     SelectObject(hdc, oldP);
                     DeleteObject(strikePen);
                 }
@@ -1520,6 +1617,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             DrawConfettiFX(hdc, 920, 850);
+            
+            HFONT scoreFont = CreateFont(28, 0, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
+            HFONT oldSF = (HFONT)SelectObject(hdc, scoreFont);
+            for (int i=0; i<MAX_FLOAT_SCORES; i++) {
+                if (fScores[i].life > 0) {
+                    char sfStr[16];
+                    sprintf(sfStr, "+%d", fScores[i].score);
+                    SetTextColor(hdc, RGB(0, 0, 0));
+                    TextOut(hdc, (int)fScores[i].x + 2, (int)fScores[i].y + 2, sfStr, strlen(sfStr));
+                    SetTextColor(hdc, RGB(100, 255, 100));
+                    TextOut(hdc, (int)fScores[i].x, (int)fScores[i].y, sfStr, strlen(sfStr));
+                }
+            }
+            SelectObject(hdc, oldSF);
+            DeleteObject(scoreFont);
             
             if(gameWon) {
                 SetTextColor(hdc, RGB(255, 215, 0));
