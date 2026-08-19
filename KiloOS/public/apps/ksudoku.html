@@ -141,6 +141,13 @@
 
         button {
             background: var(--glass-bg);
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.05) 0px,
+                rgba(0, 0, 0, 0.05) 2px,
+                rgba(255, 255, 255, 0.05) 2px,
+                rgba(255, 255, 255, 0.05) 4px
+            ), linear-gradient(145deg, rgba(255,255,255,0.1), rgba(0,0,0,0.2));
             border: 1px solid var(--glass-border);
             color: var(--text-main);
             padding: 5px 10px;
@@ -150,14 +157,25 @@
             font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.4), inset -1px -1px 2px rgba(0,0,0,0.6), 0 4px 6px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.8);
         }
 
         button:hover {
-            background: var(--glass-hover);
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.05) 0px,
+                rgba(0, 0, 0, 0.05) 2px,
+                rgba(255, 255, 255, 0.05) 2px,
+                rgba(255, 255, 255, 0.05) 4px
+            ), linear-gradient(145deg, rgba(255,255,255,0.2), rgba(0,0,0,0.1));
+            transform: translateY(-1px);
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.5), inset -1px -1px 2px rgba(0,0,0,0.5), 0 5px 8px rgba(0,0,0,0.4);
         }
         
         button:active {
-            background: var(--glass-active);
+            transform: translateY(2px);
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.6), inset -1px -1px 2px rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.4);
         }
 
         select {
@@ -276,11 +294,16 @@
                 0 0 10px rgba(100, 150, 255, 0.4);
         }
 
+        @keyframes selectPulse {
+            0% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.9), inset 0 1px 2px rgba(255,255,255,0.4), 0 10px 20px -5px rgba(0,0,0,0.8); transform: scale(1.05); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 1), inset 0 1px 2px rgba(255,255,255,0.6), 0 15px 30px -5px rgba(0,0,0,0.9); transform: scale(1.08); }
+            100% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.9), inset 0 1px 2px rgba(255,255,255,0.4), 0 10px 20px -5px rgba(0,0,0,0.8); transform: scale(1.05); }
+        }
+
         .cell.selected {
             background: linear-gradient(145deg, #2563eb, #1d4ed8) !important;
             color: #ffffff !important;
-            box-shadow: 0 0 16px rgba(59, 130, 246, 0.9), inset 0 1px 2px rgba(255,255,255,0.4);
-            transform: scale(1.05);
+            animation: selectPulse 1.5s infinite ease-in-out;
             z-index: 10;
             border: 1px solid #93c5fd;
         }
@@ -1433,6 +1456,8 @@
             fxParticles.forEach(p => {
                 p.x += p.vx;
                 p.y += p.vy;
+                p.vx *= (p.drag || 1);
+                p.vy *= (p.drag || 1);
                 p.vy += p.gravity;
                 p.rot += p.rotSpeed;
                 p.life -= p.decay;
@@ -1473,21 +1498,28 @@
             initFxCanvas();
             const containerRect = document.querySelector('.app-container').getBoundingClientRect();
             fxParticles = [];
-            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#ef4444', '#38bdf8', '#facc15'];
-            for (let i = 0; i < 140; i++) {
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#ef4444', '#38bdf8', '#facc15', '#ffffff'];
+            let boardRect = boardEl.getBoundingClientRect();
+            let bx = boardRect.left - containerRect.left + boardRect.width / 2;
+            let by = boardRect.top - containerRect.top + boardRect.height / 2;
+
+            for (let i = 0; i < 300; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 25 + 5;
                 fxParticles.push({
-                    x: containerRect.width / 2 + (Math.random() - 0.5) * 100,
-                    y: containerRect.height / 2 + (Math.random() - 0.5) * 100,
-                    vx: (Math.random() - 0.5) * 12,
-                    vy: -(Math.random() * 14 + 6),
-                    size: Math.random() * 8 + 4,
+                    x: bx,
+                    y: by,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 5,
+                    size: Math.random() * 12 + 4,
                     color: colors[Math.floor(Math.random() * colors.length)],
                     rot: Math.random() * Math.PI * 2,
-                    rotSpeed: (Math.random() - 0.5) * 0.2,
-                    shape: Math.random() > 0.3 ? 'rect' : 'circle',
-                    gravity: 0.3 + Math.random() * 0.1,
-                    life: 1.0,
-                    decay: 0.008
+                    rotSpeed: (Math.random() - 0.5) * 0.4,
+                    shape: Math.random() > 0.5 ? 'star' : (Math.random() > 0.5 ? 'circle' : 'rect'),
+                    gravity: 0.4 + Math.random() * 0.2,
+                    drag: 0.94,
+                    life: 1.5,
+                    decay: 0.005 + Math.random() * 0.01
                 });
             }
             if (fxAnimId) cancelAnimationFrame(fxAnimId);

@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSudoku
 - KGo
 - KTowers
 - KWords
@@ -141,7 +140,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMech
 - KMatch3
 - KFreecell
+- KSudoku
 ## Completed Work Log
+
+- **KSudoku (Loop 5):** Implemented highly detailed visual variations for UI elements (3D beveled buttons with procedural wood-grain textures), a dynamic drop-shadow cast by the active/selected grid cell that pulses to draw focus, and a distinctly stylized kinematically animated ink-splatter/confetti burst effect when the final correct number is placed in both Web Canvas (ksudoku.html) and Native C Win32 GDI (KSudoku/main.c).
 
 - **KFreecell (Loop 5):** Implemented highly detailed visual variations for the card suits (faceted ruby texture for red suits, dark brushed steel texture for black suits), an animated procedural fabric glint effect on the casino felt background, and distinctly stylized kinematically animated folding card cascade effects when cards snap into the foundation in both Web Canvas (kfreecell.html) and Native C Win32 GDI (KFreecell/main.c).
 

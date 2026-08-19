@@ -104,24 +104,20 @@ void TriggerVictoryParticles() {
     winFxActive = 1;
     COLORREF colors[] = {
         RGB(245, 158, 11), RGB(16, 185, 129), RGB(59, 130, 246),
-        RGB(236, 72, 153), RGB(139, 92, 246), RGB(239, 68, 68), RGB(56, 189, 248)
+        RGB(236, 72, 153), RGB(139, 92, 246), RGB(239, 68, 68), RGB(56, 189, 248), RGB(255, 255, 255)
     };
     int numColors = sizeof(colors)/sizeof(colors[0]);
     for(int i = 0; i < MAX_WIN_PARTICLES; i++) {
-        if (i < 140) {
-            winParticles[i].x = 220.0f + (rand() % 80 - 40);
-            winParticles[i].y = 255.0f + (rand() % 80 - 40);
-            float angle = (rand() % 360) * 3.14159f / 180.0f;
-            float speed = 3.0f + (rand() % 100) / 10.0f;
-            winParticles[i].vx = cosf(angle) * speed;
-            winParticles[i].vy = sinf(angle) * speed - 5.0f;
-            winParticles[i].color = colors[rand() % numColors];
-            winParticles[i].size = 4 + (rand() % 6);
-            winParticles[i].maxLife = winParticles[i].life = 40 + (rand() % 40);
-            winParticles[i].shape = rand() % 2;
-        } else {
-            winParticles[i].life = 0;
-        }
+        winParticles[i].x = 220.0f;
+        winParticles[i].y = 255.0f;
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 8.0f + (rand() % 150) / 10.0f;
+        winParticles[i].vx = cosf(angle) * speed;
+        winParticles[i].vy = sinf(angle) * speed - 5.0f;
+        winParticles[i].color = colors[rand() % numColors];
+        winParticles[i].size = 4 + (rand() % 10);
+        winParticles[i].maxLife = winParticles[i].life = 60 + (rand() % 40);
+        winParticles[i].shape = rand() % 3; // 0: rect, 1: circle, 2: star/ink
     }
 }
 
@@ -158,10 +154,15 @@ void UpdateVictoryParticles() {
         if (winParticles[i].life > 0) {
             winParticles[i].x += winParticles[i].vx;
             winParticles[i].y += winParticles[i].vy;
+            
+            // drag for kinematic burst
+            winParticles[i].vx *= 0.94f;
+            winParticles[i].vy *= 0.94f;
+            
             if (winParticles[i].shape != 2) {
                 winParticles[i].vy += 0.35f;
             } else {
-                winParticles[i].vy += 0.1f;
+                winParticles[i].vy += 0.15f;
             }
             winParticles[i].life--;
             if (winParticles[i].life > 0) anyAlive = 1;
@@ -1004,22 +1005,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Hard");
             SendMessageA(hComboDifficulty, CB_SETCURSEL, currentDiffIdx < 3 ? currentDiffIdx : 1, 0);
             
-            hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 80, 8, 40, 28, hwnd, (HMENU)1, NULL, NULL);
-            hBtnCampaign = CreateWindowA("BUTTON", "Campaign", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 125, 8, 65, 28, hwnd, (HMENU)13, NULL, NULL);
-            hBtnRush = CreateWindowA("BUTTON", "Rush", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 195, 8, 45, 28, hwnd, (HMENU)14, NULL, NULL);
-            HWND hBtnDaily = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 8, 40, 28, hwnd, (HMENU)10, NULL, NULL);
-            HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 290, 8, 45, 28, hwnd, (HMENU)6, NULL, NULL);
-            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 340, 8, 55, 28, hwnd, (HMENU)9, NULL, NULL);
+            hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 80, 8, 40, 28, hwnd, (HMENU)1, NULL, NULL);
+            hBtnCampaign = CreateWindowA("BUTTON", "Campaign", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 125, 8, 65, 28, hwnd, (HMENU)13, NULL, NULL);
+            hBtnRush = CreateWindowA("BUTTON", "Rush", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 195, 8, 45, 28, hwnd, (HMENU)14, NULL, NULL);
+            HWND hBtnDaily = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 245, 8, 40, 28, hwnd, (HMENU)10, NULL, NULL);
+            HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 290, 8, 45, 28, hwnd, (HMENU)6, NULL, NULL);
+            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 340, 8, 55, 28, hwnd, (HMENU)9, NULL, NULL);
             
-            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 40, 65, 28, hwnd, (HMENU)3, NULL, NULL);
-            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 80, 40, 50, 28, hwnd, (HMENU)2, NULL, NULL);
-            hBtnHint = CreateWindowA("BUTTON", "Hint (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 135, 40, 50, 28, hwnd, (HMENU)5, NULL, NULL);
-            hBtnMagic = CreateWindowA("BUTTON", "Wand (3)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 40, 50, 28, hwnd, (HMENU)12, NULL, NULL);
-            hBtnShield = CreateWindowA("BUTTON", "Shield (1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 40, 55, 28, hwnd, (HMENU)15, NULL, NULL);
-            hBtnAutoFill = CreateWindowA("BUTTON", "Auto (P)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 305, 40, 45, 28, hwnd, (HMENU)11, NULL, NULL);
-            hBtnFreeze = CreateWindowA("BUTTON", "Freeze (F)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 355, 40, 55, 28, hwnd, (HMENU)16, NULL, NULL);
-            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 415, 40, 40, 28, hwnd, (HMENU)7, NULL, NULL);
-            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 460, 40, 40, 28, hwnd, (HMENU)8, NULL, NULL);
+            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 10, 40, 65, 28, hwnd, (HMENU)3, NULL, NULL);
+            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 80, 40, 50, 28, hwnd, (HMENU)2, NULL, NULL);
+            hBtnHint = CreateWindowA("BUTTON", "Hint (H)", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 135, 40, 50, 28, hwnd, (HMENU)5, NULL, NULL);
+            hBtnMagic = CreateWindowA("BUTTON", "Wand (3)", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 190, 40, 50, 28, hwnd, (HMENU)12, NULL, NULL);
+            hBtnShield = CreateWindowA("BUTTON", "Shield (1)", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 245, 40, 55, 28, hwnd, (HMENU)15, NULL, NULL);
+            hBtnAutoFill = CreateWindowA("BUTTON", "Auto (P)", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 305, 40, 45, 28, hwnd, (HMENU)11, NULL, NULL);
+            hBtnFreeze = CreateWindowA("BUTTON", "Freeze (F)", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 355, 40, 55, 28, hwnd, (HMENU)16, NULL, NULL);
+            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 415, 40, 40, 28, hwnd, (HMENU)7, NULL, NULL);
+            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 460, 40, 40, 28, hwnd, (HMENU)8, NULL, NULL);
 
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
@@ -1030,6 +1031,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, 2, 30, NULL);
             UpdatePowerupButtons();
             break;
+        }
+        case WM_DRAWITEM: {
+            LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
+            if (pdis->CtlType == ODT_BUTTON) {
+                HDC hdc = pdis->hDC;
+                RECT rc = pdis->rcItem;
+                int isPressed = (pdis->itemState & ODS_SELECTED);
+                
+                for (int y = rc.top; y < rc.bottom; y++) {
+                    for (int x = rc.left; x < rc.right; x++) {
+                        int noise = (rand() % 15);
+                        int wave = (int)(sinf(x * 0.2f + y * 0.1f) * 5.0f);
+                        int r = 120 + noise + wave;
+                        int g = 80 + noise + wave;
+                        int b = 45 + noise + wave;
+                        if(r>255) r=255; if(g>255) g=255; if(b>255) b=255;
+                        if(r<0) r=0; if(g<0) g=0; if(b<0) b=0;
+                        SetPixel(hdc, x, y, RGB(r, g, b));
+                    }
+                }
+                
+                if (isPressed) {
+                    DrawEdge(hdc, &rc, EDGE_SUNKEN, BF_RECT);
+                } else {
+                    DrawEdge(hdc, &rc, EDGE_RAISED, BF_RECT);
+                }
+                
+                char text[64];
+                GetWindowTextA(pdis->hwndItem, text, 64);
+                SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(hdc, RGB(255, 255, 255));
+                if (isPressed) {
+                    rc.left += 1; rc.top += 1;
+                }
+                HFONT oldFont = (HFONT)SelectObject(hdc, hFontSmall);
+                DrawTextA(hdc, text, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                SelectObject(hdc, oldFont);
+            }
+            return TRUE;
         }
         case WM_TIMER: {
             if (wParam == 2) {
@@ -1582,10 +1622,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     // Selected Aura
                     if(r == sel_r && c == sel_c) {
-                        HPEN hSelPen = CreatePen(PS_SOLID, 2, RGB(147, 197, 253));
+                        DWORD tc = GetTickCount();
+                        float pulse = (sinf((tc % 1500) / 1500.0f * 3.14159f * 2.0f) + 1.0f) * 0.5f;
+                        int ext = 2 + (int)(4.0f * pulse);
+                        HPEN hSelPen = CreatePen(PS_SOLID, 2, RGB((int)(147 + 50*pulse), (int)(197 + 50*pulse), 253));
                         oldPen = (HPEN)SelectObject(hdc, hSelPen);
                         HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
                         HBRUSH oldB = (HBRUSH)SelectObject(hdc, hNullB);
+                        // Dynamic drop-shadow
+                        for (int i=1; i<=ext; i++) {
+                            int rCol = (int)(59 * (1.0f - i/(float)ext));
+                            int gCol = (int)(130 * (1.0f - i/(float)ext));
+                            int bCol = (int)(246 * (1.0f - i/(float)ext));
+                            HPEN hShad = CreatePen(PS_SOLID, 1, RGB(rCol, gCol, bCol));
+                            HPEN o = (HPEN)SelectObject(hdc, hShad);
+                            Rectangle(hdc, rc.left - i, rc.top - i, rc.right + i, rc.bottom + i);
+                            SelectObject(hdc, o);
+                            DeleteObject(hShad);
+                        }
+                        
                         Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
                         SelectObject(hdc, oldB);
                         SelectObject(hdc, oldPen);
