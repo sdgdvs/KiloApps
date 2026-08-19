@@ -352,6 +352,11 @@
     let isBlinking = false;
     let lossAnimTimer = 0;
 
+    let ropeAngle = 0;
+    let ropeAngularVelocity = 0;
+    let ropeAngularAcceleration = 0;
+    let windForce = 0;
+
     function showHelp() {
         document.getElementById('help-modal').style.display = 'flex';
     }
@@ -607,6 +612,24 @@
         }
     }
 
+    function spawnSparkParticles() {
+        const colors = ['#00ffff', '#ff00ff', '#ffff00', '#00ff00', '#ff8800'];
+        for (let i = 0; i < 30; i++) {
+            particles.push({
+                x: 120 + (Math.random() * 80 - 40),
+                y: 100 + (Math.random() * 40 - 20),
+                vx: (Math.random() - 0.5) * 8,
+                vy: (Math.random() - 0.5) * 8,
+                size: Math.random() * 3 + 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rotation: 0, vRot: 0,
+                type: 'spark',
+                life: 0,
+                maxLife: 25 + Math.random() * 15
+            });
+        }
+    }
+
     function updateAndDrawParticles(ctx) {
         if (gameEnded && isWin() && Math.random() < 0.3) {
             const colors = ['#ff4081', '#00e676', '#ffeb3b', '#00b0ff', '#ffd700'];
@@ -659,6 +682,24 @@
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(p.x + p.vx * 2, p.y + p.size * 4);
                 ctx.stroke();
+            } else if (p.type === 'spark') {
+                p.vy += 0.1;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 8;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            } else if (p.type === 'shooting_star') {
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = p.size;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x - p.vx * 3, p.y - p.vy * 3);
+                ctx.stroke();
             }
 
             if (p.life >= p.maxLife || p.y > 210) {
@@ -701,6 +742,39 @@
             ctx.beginPath();
             ctx.arc(sx, sy, (i % 2 === 0) ? 1 : 0.5, 0, Math.PI * 2);
             ctx.fill();
+        }
+
+        // Aurora
+        const auroraPhase = animTime * 0.5;
+        const auroraGrad = ctx.createLinearGradient(0, 0, 0, 150);
+        const aColor1 = `rgba(0, 255, 128, ${0.05 + Math.sin(auroraPhase)*0.03})`;
+        const aColor2 = `rgba(128, 0, 255, ${0.03 + Math.cos(auroraPhase)*0.02})`;
+        auroraGrad.addColorStop(0, aColor1);
+        auroraGrad.addColorStop(0.5, aColor2);
+        auroraGrad.addColorStop(1, 'transparent');
+        
+        ctx.fillStyle = auroraGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, 50 + Math.sin(auroraPhase)*20);
+        ctx.bezierCurveTo(80, 20 + Math.cos(auroraPhase)*30, 160, 80 + Math.sin(auroraPhase)*20, 240, 40 + Math.cos(auroraPhase)*30);
+        ctx.lineTo(240, 0);
+        ctx.lineTo(0, 0);
+        ctx.fill();
+
+        // Shooting Stars Generation
+        if (Math.random() < 0.02) {
+            particles.push({
+                x: Math.random() * 240,
+                y: Math.random() * 80,
+                vx: -5 - Math.random() * 5,
+                vy: 2 + Math.random() * 3,
+                size: Math.random() * 1.5 + 0.5,
+                color: '#ffffff',
+                rotation: 0, vRot: 0,
+                type: 'shooting_star',
+                life: 0,
+                maxLife: 20
+            });
         }
 
         // Moon
@@ -839,7 +913,15 @@
         ctx.fill();
 
         // 3. Rope & Noose Physics
-        let nooseSway = Math.sin(animTime * 2) * (0.04 + errors * 0.025);
+        if (Math.random() < 0.02) {
+            windForce = (Math.random() - 0.5) * 0.02; // random wind gusts
+        }
+        ropeAngularAcceleration = -0.05 * Math.sin(ropeAngle) + windForce;
+        ropeAngularVelocity += ropeAngularAcceleration;
+        ropeAngularVelocity *= 0.95; // damping
+        ropeAngle += ropeAngularVelocity;
+
+        let nooseSway = ropeAngle;
         if (gameEnded && isWin()) nooseSway = Math.sin(animTime * 6) * 0.08;
         
         const ropeStartX = 165;
@@ -1369,6 +1451,7 @@
                 playSound('shield');
             } else {
                 errors++;
+                ropeAngularVelocity += (Math.random() > 0.5 ? 0.15 : -0.15); // Add sudden sway on error
                 if (errors < maxErrors) playSound('invalid');
                 const canvas = document.getElementById('hangman-canvas');
                 canvas.classList.remove('shake-animation');
@@ -1377,7 +1460,10 @@
             }
         } else {
             if (gameMode === 2) blitzTime += 2; // +2s per correct letter in Blitz
-            if (!isWin()) playSound('valid');
+            if (!isWin()) {
+                playSound('valid');
+                spawnSparkParticles();
+            }
         }
         
         updateDisplay();

@@ -74,7 +74,7 @@ const CampaignStage CAMPAIGN_STAGES[20] = {
 };
 
 // Particle Struct
-#define MAX_PARTICLES 60
+#define MAX_PARTICLES 150
 typedef struct {
     float x, y;
     float vx, vy;
@@ -118,6 +118,26 @@ int shake_frames = 0;
 int win_pulse_phase = 0;
 int blitz_timer_counter = 0;
 int loss_anim_timer = 0;
+
+float ropeAngle = 0.0f;
+float ropeAngularVelocity = 0.0f;
+float windForce = 0.0f;
+
+void SpawnSparkParticles() {
+    COLORREF colors[] = {RGB(0, 255, 255), RGB(255, 0, 255), RGB(255, 255, 0), RGB(0, 255, 0), RGB(255, 128, 0)};
+    for (int i = 0; i < 30 && particle_count < MAX_PARTICLES; i++) {
+        particles[particle_count].x = (float)(W / 2 + (CustomRand() % 160 - 80));
+        particles[particle_count].y = (float)(H / 2 - 100 + (CustomRand() % 80 - 40));
+        particles[particle_count].vx = (float)((CustomRand() % 100 - 50) / 5.0f);
+        particles[particle_count].vy = (float)((CustomRand() % 100 - 50) / 5.0f);
+        particles[particle_count].size = CustomRand() % 4 + 2;
+        particles[particle_count].color = colors[CustomRand() % 5];
+        particles[particle_count].life = 0;
+        particles[particle_count].maxLife = 20 + CustomRand() % 20;
+        particles[particle_count].type = 2; // spark
+        particle_count++;
+    }
+}
 
 void PlaySoundEffect(int type) {
     if (is_muted) return;
@@ -302,6 +322,7 @@ void UpdateParticles() {
         particles[i].x += particles[i].vx;
         particles[i].y += particles[i].vy;
         if (particles[i].type == 0) particles[i].vy += 0.15f; // gravity
+        else if (particles[i].type == 2) particles[i].vy += 0.2f; // spark gravity
         
         if (particles[i].life >= particles[i].maxLife || particles[i].y > H) {
             particles[i] = particles[particle_count - 1];
@@ -456,6 +477,7 @@ void Guess(char c) {
             PlaySoundEffect(5); // Shield absorbed
         } else {
             errors++;
+            ropeAngularVelocity += ((CustomRand() % 2 == 0) ? 0.15f : -0.15f);
             shake_frames = 15;
             if (errors >= max_errors) {
                 game_over = 1;
@@ -510,6 +532,7 @@ void Guess(char c) {
             }
         } else {
             PlaySoundEffect(1); // valid
+            SpawnSparkParticles();
         }
     }
 }
@@ -598,6 +621,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 1) {
                 anim_ticks++;
                 UpdateParticles();
+
+                if (CustomRand() % 100 < 2) {
+                    windForce = (float)(CustomRand() % 100 - 50) / 10000.0f; // -0.005 to 0.005
+                }
+                float ropeAngularAcceleration = -0.05f * (float)sin(ropeAngle) + windForce;
+                ropeAngularVelocity += ropeAngularAcceleration;
+                ropeAngularVelocity *= 0.95f; // damping
+                ropeAngle += ropeAngularVelocity;
+
+                if (CustomRand() % 100 < 2) {
+                    particles[particle_count].x = (float)(CustomRand() % W);
+                    particles[particle_count].y = (float)(CustomRand() % (H / 3));
+                    particles[particle_count].vx = (float)(-(CustomRand() % 100) / 10.0f - 5.0f);
+                    particles[particle_count].vy = (float)((CustomRand() % 50) / 10.0f + 2.0f);
+                    particles[particle_count].size = CustomRand() % 2 + 1;
+                    particles[particle_count].color = RGB(255, 255, 255);
+                    particles[particle_count].life = 0;
+                    particles[particle_count].maxLife = 20;
+                    particles[particle_count].type = 3; // shooting star
+                    if (particle_count < MAX_PARTICLES) particle_count++;
+                }
 
                 if (game_over && won && (anim_ticks % 3 == 0)) {
                     SpawnWinParticles();
@@ -844,6 +888,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (i % 3 == 0) SetPixel(memDC, sx + 1, sy, RGB(255, 255, 255));
             }
 
+            // Aurora
+            float auroraPhase = anim_ticks * 0.05f;
+            HPEN auroraPen = CreatePen(PS_SOLID, 16, RGB(0, 100 + (int)(50*sin(auroraPhase)), 50 + (int)(30*cos(auroraPhase))));
+            SelectObject(memDC, auroraPen);
+            POINT pts[4];
+            pts[0].x = 0; pts[0].y = 50 + (int)(20*sin(auroraPhase));
+            pts[1].x = W/3; pts[1].y = 20 + (int)(30*cos(auroraPhase));
+            pts[2].x = 2*W/3; pts[2].y = 80 + (int)(20*sin(auroraPhase));
+            pts[3].x = W; pts[3].y = 40 + (int)(30*cos(auroraPhase));
+            PolyBezier(memDC, pts, 4);
+            DeleteObject(auroraPen);
+
+            HPEN auroraPen2 = CreatePen(PS_SOLID, 12, RGB(50 + (int)(30*cos(auroraPhase)), 0, 100 + (int)(50*sin(auroraPhase))));
+            SelectObject(memDC, auroraPen2);
+            pts[0].y -= 20; pts[1].y += 10; pts[2].y -= 10; pts[3].y += 20;
+            PolyBezier(memDC, pts, 4);
+            DeleteObject(auroraPen2);
+
             // Moon
             HBRUSH moonBrush = CreateSolidBrush(RGB(240, 240, 230));
             HPEN noPen = CreatePen(PS_NULL, 0, RGB(0,0,0));
@@ -998,7 +1060,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             #undef G_COLOR
 
             // Rope Physics
-            float nooseSwayAngle = (float)sin(anim_ticks * 0.12) * (0.04f + errors * 0.02f);
+            float nooseSwayAngle = ropeAngle;
             if (game_over && won) nooseSwayAngle = (float)sin(anim_ticks * 0.3) * 0.08f;
 
             int ropeX1 = 270 + ox;
@@ -1376,10 +1438,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Render particles
             for (int i = 0; i < particle_count; i++) {
-                HBRUSH pBrush = CreateSolidBrush(particles[i].color);
-                RECT pRc = {(int)particles[i].x, (int)particles[i].y, (int)particles[i].x + particles[i].size, (int)particles[i].y + particles[i].size};
-                FillRect(memDC, &pRc, pBrush);
-                DeleteObject(pBrush);
+                if (particles[i].type == 2) { // spark
+                    HBRUSH pBrush2 = CreateSolidBrush(particles[i].color);
+                    RECT pRc2 = {(int)particles[i].x - 1, (int)particles[i].y - 1, (int)particles[i].x + particles[i].size + 1, (int)particles[i].y + particles[i].size + 1};
+                    FillRect(memDC, &pRc2, pBrush2);
+                    DeleteObject(pBrush2);
+                    HBRUSH pBrush = CreateSolidBrush(RGB(255, 255, 255));
+                    RECT pRc = {(int)particles[i].x, (int)particles[i].y, (int)particles[i].x + particles[i].size, (int)particles[i].y + particles[i].size};
+                    FillRect(memDC, &pRc, pBrush);
+                    DeleteObject(pBrush);
+                } else if (particles[i].type == 3) { // shooting star
+                    HPEN ssPen = CreatePen(PS_SOLID, particles[i].size, particles[i].color);
+                    HPEN oldPen = (HPEN)SelectObject(memDC, ssPen);
+                    MoveToEx(memDC, (int)particles[i].x, (int)particles[i].y, NULL);
+                    LineTo(memDC, (int)(particles[i].x - particles[i].vx * 3), (int)(particles[i].y - particles[i].vy * 3));
+                    SelectObject(memDC, oldPen);
+                    DeleteObject(ssPen);
+                } else {
+                    HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                    RECT pRc = {(int)particles[i].x, (int)particles[i].y, (int)particles[i].x + particles[i].size, (int)particles[i].y + particles[i].size};
+                    FillRect(memDC, &pRc, pBrush);
+                    DeleteObject(pBrush);
+                }
             }
 
             DeleteObject(hFontMain);

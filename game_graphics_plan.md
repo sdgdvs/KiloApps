@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KHangman
 - KMatch3
 - KFreecell
 - KSudoku
@@ -140,7 +139,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KVoid
 - KStarship
 - KConnect4
+- KHangman
 ## Completed Work Log
+
+- **KHangman (Loop 5):** Implemented highly detailed visual variations for the background sky (procedurally generated shifting aurora and shooting stars), a dynamic kinematically animated swinging rope effect that realistically sways the character based on wind and incorrect guess impacts, and distinct multi-colored glowing particle spark bursts for correct letter reveals in both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 
 - **KConnect4 (Loop 5):** Implemented highly detailed visual variations for the board itself (plastic specular reflections on the grid structure), an animated settling bounce effect when a disc hits the bottom of its column, and distinctly stylized kinematically animated win-line connections that draw a glowing beam through the winning 4 discs in both Web Canvas (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 
