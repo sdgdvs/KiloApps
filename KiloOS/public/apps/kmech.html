@@ -127,6 +127,10 @@
             background-color: #f00; 
             box-shadow: 0 0 5px #f00;
         }
+        .heat-bar {
+            background-color: #f80;
+            box-shadow: 0 0 5px #f80;
+        }
         .wireframe {
             font-family: monospace;
             white-space: pre;
@@ -152,6 +156,14 @@
                 <div class="stat-box">
                     <div>HP</div>
                     <div id="garage-hp">100/100</div>
+                </div>
+                <div class="stat-box">
+                    <div>HP</div>
+                    <div id="garage-hp">100/100</div>
+                </div>
+                <div class="stat-box">
+                    <div>HEAT</div>
+                    <div id="garage-heat">0/100</div>
                 </div>
                 <div class="stat-box">
                     <div>ATK</div>
@@ -183,6 +195,8 @@
 /      \</div>
                     <div>HP: <span id="battle-player-hp">100</span></div>
                     <div class="bar-container"><div id="player-hp-bar" class="bar"></div></div>
+                    <div>HEAT: <span id="battle-player-heat">0</span></div>
+                    <div class="bar-container"><div id="player-heat-bar" class="bar heat-bar"></div></div>
                 </div>
                 <div class="mech-side">
                     <div class="mech-name">Enemy Mech</div>
@@ -195,6 +209,8 @@
 /      \</div>
                     <div>HP: <span id="battle-enemy-hp">100</span></div>
                     <div class="bar-container"><div id="enemy-hp-bar" class="bar enemy-bar"></div></div>
+                    <div>HEAT: <span id="battle-enemy-heat">0</span></div>
+                    <div class="bar-container"><div id="enemy-heat-bar" class="bar heat-bar"></div></div>
                 </div>
             </div>
             <div id="log"></div>
@@ -210,8 +226,8 @@
     </div>
 
     <script>
-        const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5 };
-        let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3 };
+        const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
+        let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
         let isDefending = false;
 
         let currentTargetLimb = 1;
@@ -235,6 +251,7 @@
 
         function updateGarage() {
             document.getElementById('garage-hp').innerText = `${playerStats.hp}/${playerStats.maxHp}`;
+            document.getElementById('garage-heat').innerText = `${playerStats.heat}/${playerStats.maxHeat}`;
             document.getElementById('garage-atk').innerText = playerStats.atk;
             document.getElementById('garage-def').innerText = playerStats.def;
         }
@@ -242,8 +259,12 @@
         function updateBattle() {
             document.getElementById('battle-player-hp').innerText = playerStats.hp;
             document.getElementById('battle-enemy-hp').innerText = enemyStats.hp;
+            document.getElementById('battle-player-heat').innerText = playerStats.heat;
+            document.getElementById('battle-enemy-heat').innerText = enemyStats.heat;
             document.getElementById('player-hp-bar').style.width = `${Math.max(0, (playerStats.hp / playerStats.maxHp) * 100)}%`;
             document.getElementById('enemy-hp-bar').style.width = `${Math.max(0, (enemyStats.hp / enemyStats.maxHp) * 100)}%`;
+            document.getElementById('player-heat-bar').style.width = `${Math.min(100, (playerStats.heat / playerStats.maxHeat) * 100)}%`;
+            document.getElementById('enemy-heat-bar').style.width = `${Math.min(100, (enemyStats.heat / enemyStats.maxHeat) * 100)}%`;
         }
 
         function logMsg(msg) {
@@ -253,7 +274,8 @@
         }
 
         function startBattle() {
-            enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3 };
+            enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
+            playerStats.heat = 0;
             isDefending = false;
             document.getElementById('log').innerHTML = '';
             document.getElementById('battle-actions').style.display = 'flex';
@@ -279,7 +301,24 @@
             }
         }
 
+        function applyCooling() {
+            playerStats.heat = Math.max(0, playerStats.heat - 20);
+            enemyStats.heat = Math.max(0, enemyStats.heat - 20);
+        }
+
         function actionAttack() {
+            playerStats.heat += 30;
+            if (playerStats.heat > playerStats.maxHeat) {
+                playerStats.hp -= 15;
+                logMsg("WARNING: OVERHEAT! Took 15 system dmg.");
+                if (playerStats.hp <= 0) {
+                    playerStats.hp = 0;
+                    updateBattle();
+                    endBattle(false);
+                    return;
+                }
+            }
+
             let targetLimb = limbs[currentTargetLimb];
             
             if (Math.random() > targetLimb.chance) {
@@ -300,6 +339,10 @@
             }
 
             enemyTurn();
+            if (document.getElementById('battle-actions').style.display !== 'none') {
+                applyCooling();
+                updateBattle();
+            }
         }
 
         function actionDefend() {
@@ -307,9 +350,25 @@
             logMsg("You brace for impact (Defending).");
             enemyTurn();
             isDefending = false;
+            if (document.getElementById('battle-actions').style.display !== 'none') {
+                applyCooling();
+                updateBattle();
+            }
         }
 
         function enemyTurn() {
+            enemyStats.heat += 30;
+            if (enemyStats.heat > enemyStats.maxHeat) {
+                enemyStats.hp -= 15;
+                logMsg("Enemy overheats! Takes 15 system dmg.");
+                if (enemyStats.hp <= 0) {
+                    enemyStats.hp = 0;
+                    updateBattle();
+                    endBattle(true);
+                    return;
+                }
+            }
+
             let targetLimb = limbs[Math.floor(Math.random() * limbs.length)];
             
             if (Math.random() > targetLimb.chance) {

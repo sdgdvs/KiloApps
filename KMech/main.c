@@ -17,10 +17,12 @@ typedef struct {
     int hp;
     int atk;
     int def;
+    int maxHeat;
+    int heat;
 } MechStats;
 
-MechStats playerStats = { 100, 100, 15, 5 };
-MechStats enemyStats = { 80, 80, 12, 3 };
+MechStats playerStats = { 100, 100, 15, 5, 100, 0 };
+MechStats enemyStats = { 80, 80, 12, 3, 100, 0 };
 
 bool isDefending = false;
 
@@ -49,6 +51,19 @@ void clearLogs() {
 }
 
 void EnemyTurn() {
+    enemyStats.heat += 30;
+    if (enemyStats.heat > enemyStats.maxHeat) {
+        enemyStats.hp -= 15;
+        addLog("Enemy overheats! Takes 15 system dmg.");
+        if (enemyStats.hp <= 0) {
+            enemyStats.hp = 0;
+            addLog("ENEMY DESTROYED. VICTORY.");
+            gameState = STATE_POST_BATTLE;
+            playerVictory = true;
+            return;
+        }
+    }
+
     int target = my_rand() % 5;
     int hitRoll = my_rand() % 100;
     
@@ -76,7 +91,27 @@ void EnemyTurn() {
     }
 }
 
+void ApplyCooling() {
+    playerStats.heat -= 20;
+    if (playerStats.heat < 0) playerStats.heat = 0;
+    enemyStats.heat -= 20;
+    if (enemyStats.heat < 0) enemyStats.heat = 0;
+}
+
 void ActionAttack() {
+    playerStats.heat += 30;
+    if (playerStats.heat > playerStats.maxHeat) {
+        playerStats.hp -= 15;
+        addLog("WARNING: OVERHEAT! Took 15 system dmg.");
+        if (playerStats.hp <= 0) {
+            playerStats.hp = 0;
+            addLog("CRITICAL DAMAGE. MECH DESTROYED. DEFEAT.");
+            gameState = STATE_POST_BATTLE;
+            playerVictory = false;
+            return;
+        }
+    }
+
     int target = currentTargetLimb;
     int hitRoll = my_rand() % 100;
     
@@ -104,6 +139,9 @@ void ActionAttack() {
     }
 
     EnemyTurn();
+    if (gameState == STATE_BATTLE) {
+        ApplyCooling();
+    }
 }
 
 void ActionDefend() {
@@ -111,6 +149,9 @@ void ActionDefend() {
     addLog("You brace for impact (Defending).");
     EnemyTurn();
     isDefending = false;
+    if (gameState == STATE_BATTLE) {
+        ApplyCooling();
+    }
 }
 
 void StartBattle() {
@@ -118,6 +159,9 @@ void StartBattle() {
     enemyStats.hp = 80;
     enemyStats.atk = 12;
     enemyStats.def = 3;
+    enemyStats.maxHeat = 100;
+    enemyStats.heat = 0;
+    playerStats.heat = 0;
     isDefending = false;
     clearLogs();
     addLog("Enemy mech detected! Engaging...");
@@ -229,7 +273,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, "KMECH - GARAGE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
                 
                 char buf[128];
-                wsprintfA(buf, "HP: %d/%d   ATK: %d   DEF: %d", playerStats.hp, playerStats.maxHp, playerStats.atk, playerStats.def);
+                wsprintfA(buf, "HP: %d/%d  HEAT: %d/%d  ATK: %d  DEF: %d", playerStats.hp, playerStats.maxHp, playerStats.heat, playerStats.maxHeat, playerStats.atk, playerStats.def);
                 RECT statsRect = {0, 100, 600, 140};
                 DrawTextA(memDC, buf, -1, &statsRect, DT_CENTER | DT_SINGLELINE);
                 
@@ -243,7 +287,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 // Player Mech Stats
                 char bufP[64];
-                wsprintfA(bufP, "Player Mech HP: %d", playerStats.hp);
+                wsprintfA(bufP, "Player Mech HP: %d | HEAT: %d", playerStats.hp, playerStats.heat);
                 TextOutA(memDC, 30, 70, bufP, lstrlenA(bufP));
                 
                 HBRUSH hpBg = CreateSolidBrush(RGB(0, 50, 0));
@@ -255,6 +299,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RECT pBar = {30, 95, 30 + pWidth, 105};
                     FillRect(memDC, &pBar, hpP);
                 }
+
+                HBRUSH heatBg = CreateSolidBrush(RGB(50, 0, 0));
+                HBRUSH heatP = CreateSolidBrush(RGB(255, 165, 0));
+                RECT pHeatBg = {30, 108, 230, 113};
+                FillRect(memDC, &pHeatBg, heatBg);
+                int pHeatW = (playerStats.heat * 200) / playerStats.maxHeat;
+                if (pHeatW > 200) pHeatW = 200;
+                if (pHeatW > 0) {
+                    RECT pHeatBar = {30, 108, 30 + pHeatW, 113};
+                    FillRect(memDC, &pHeatBar, heatP);
+                }
                 
                 const char* pw[] = {
                     "  [==]  ",
@@ -265,12 +320,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "/      \\"
                 };
                 for (int i=0; i<6; i++) {
-                    TextOutA(memDC, 80, 115 + i*14, pw[i], lstrlenA(pw[i]));
+                    TextOutA(memDC, 80, 120 + i*14, pw[i], lstrlenA(pw[i]));
                 }
                 
                 // Enemy Mech Stats
                 char bufE[64];
-                wsprintfA(bufE, "Enemy Mech HP: %d", enemyStats.hp);
+                wsprintfA(bufE, "Enemy Mech HP: %d | HEAT: %d", enemyStats.hp, enemyStats.heat);
                 SetTextColor(memDC, RGB(255, 0, 0));
                 TextOutA(memDC, 350, 70, bufE, lstrlenA(bufE));
                 
@@ -282,6 +337,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RECT eBar = {350, 95, 350 + eWidth, 105};
                     FillRect(memDC, &eBar, hpE);
                 }
+
+                RECT eHeatBg = {350, 108, 550, 113};
+                FillRect(memDC, &eHeatBg, heatBg);
+                int eHeatW = (enemyStats.heat * 200) / enemyStats.maxHeat;
+                if (eHeatW > 200) eHeatW = 200;
+                if (eHeatW > 0) {
+                    RECT eHeatBar = {350, 108, 350 + eHeatW, 113};
+                    FillRect(memDC, &eHeatBar, heatP);
+                }
                 
                 const char* ew[] = {
                     "  (oo)  ",
@@ -292,13 +356,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "/      \\"
                 };
                 for (int i=0; i<6; i++) {
-                    TextOutA(memDC, 400, 115 + i*14, ew[i], lstrlenA(ew[i]));
+                    TextOutA(memDC, 400, 120 + i*14, ew[i], lstrlenA(ew[i]));
                 }
                 SetTextColor(memDC, RGB(0, 255, 0)); // Restore color
                 
                 DeleteObject(hpBg);
                 DeleteObject(hpP);
                 DeleteObject(hpE);
+                DeleteObject(heatBg);
+                DeleteObject(heatP);
                 
                 // Draw Logs
                 RECT logBg = {30, 210, 550, 390};
