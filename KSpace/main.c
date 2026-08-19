@@ -126,6 +126,7 @@ int weaponLevel = 0;
 int wave = 1;
 int frameCount = 0;
 int bombFlash = 0;
+int bossDeathFlash = 0;
 
 // Boss & Mothership state
 int bossActive = 0;
@@ -510,6 +511,7 @@ void DestroyBoss() {
     enemiesKilled += 10;
     totalKills += 10;
     AddExplosion(bossX + 45.0f, bossY + 30.0f, 60, RGB(255, 23, 68));
+    bossDeathFlash = 150;
     bossActive = 0;
     PlaySnd(3);
 
@@ -837,10 +839,10 @@ void ApplyPowerup(int type) {
 }
 
 void Update() {
+    if (bombFlash > 0) bombFlash--;
+    if (bossDeathFlash > 0) bossDeathFlash -= 5;
     if (gameState != STATE_PLAYING) return;
     timeSurvivedFrames++;
-
-    if (bombFlash > 0) bombFlash--;
     if (comboTimer > 0) {
         comboTimer--;
         if (comboTimer == 0) comboMultiplier = 1;
@@ -1350,13 +1352,47 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
 
     int isEnraged = (bossHp < bossMaxHp / 2);
+    int isCritical = (bossHp < bossMaxHp / 4);
 
     if (bossIsMothership) {
-        // Stage 20 Alien Mothership Hull
-        HBRUSH br = CreateSolidBrush(isEnraged ? RGB(183, 28, 28) : RGB(136, 14, 79));
-        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
-        POINT pts[8] = { {x + 45, y + 58}, {x + 85, y + 35}, {x + 90, y + 10}, {x + 65, y + 2}, {x + 45, y + 12}, {x + 25, y + 2}, {x + 0, y + 10}, {x + 5, y + 35} };
-        Polygon(hdc, pts, 8);
+        if (isCritical) {
+            // Armor plates sheared off exposing glowing inner machinery
+            HBRUSH ib = CreateSolidBrush(RGB(40, 40, 40));
+            HBRUSH oldBr = (HBRUSH)SelectObject(hdc, ib);
+            POINT ipts[8] = { {x + 45, y + 58}, {x + 85, y + 35}, {x + 90, y + 10}, {x + 65, y + 2}, {x + 45, y + 12}, {x + 25, y + 2}, {x + 0, y + 10}, {x + 5, y + 35} };
+            Polygon(hdc, ipts, 8);
+            
+            HPEN glowPen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+            SelectObject(hdc, glowPen);
+            MoveToEx(hdc, x + 20, y + 20, NULL); LineTo(hdc, x + 30, y + 30); LineTo(hdc, x + 40, y + 20);
+            MoveToEx(hdc, x + 70, y + 20, NULL); LineTo(hdc, x + 60, y + 30); LineTo(hdc, x + 50, y + 20);
+            SelectObject(hdc, oldBr); DeleteObject(ib); DeleteObject(glowPen);
+
+            HBRUSH br = CreateSolidBrush(RGB(100, 14, 30));
+            oldBr = (HBRUSH)SelectObject(hdc, br);
+            POINT pts1[3] = { {x + 45, y + 58}, {x + 65, y + 35}, {x + 25, y + 35} };
+            Polygon(hdc, pts1, 3);
+            SelectObject(hdc, oldBr); DeleteObject(br);
+        } else {
+            // Stage 20 Alien Mothership Hull
+            HBRUSH br = CreateSolidBrush(isEnraged ? RGB(183, 28, 28) : RGB(136, 14, 79));
+            HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+            POINT pts[8] = { {x + 45, y + 58}, {x + 85, y + 35}, {x + 90, y + 10}, {x + 65, y + 2}, {x + 45, y + 12}, {x + 25, y + 2}, {x + 0, y + 10}, {x + 5, y + 35} };
+            Polygon(hdc, pts, 8);
+            SelectObject(hdc, oldBr); DeleteObject(br);
+        }
+
+        // Distinct telegraphing charging animation building up intensity before firing
+        int charge = bossAttackTimer % 35;
+        if (charge > 15 && !IsMothershipShieldActive()) {
+            int r = charge - 15;
+            HPEN cPen = CreatePen(PS_SOLID, 2 + r / 4, RGB(0, 229, 255));
+            HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH oldBr = (HBRUSH)SelectObject(hdc, nullBr);
+            HPEN oPen = (HPEN)SelectObject(hdc, cPen);
+            Ellipse(hdc, x + 45 - r, y + 45 - r, x + 45 + r, y + 45 + r);
+            SelectObject(hdc, oldBr); SelectObject(hdc, oPen); DeleteObject(cPen);
+        }
 
         // Enraged Phase Electric Lightning Arcs
         if (isEnraged && frame % 2 == 0) {
@@ -1364,24 +1400,24 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             SelectObject(hdc, lpen);
             MoveToEx(hdc, x + 45, y + 30, NULL);
             LineTo(hdc, x + 45 + (rnd() % 60) - 30, y + 30 + (rnd() % 40) - 20);
-            SelectObject(hdc, oldBr); DeleteObject(lpen);
+            SelectObject(hdc, oldPen); DeleteObject(lpen);
         }
 
         // Core Eye Overload
         COLORREF coreCol = isEnraged ? ((frame % 4 < 2) ? RGB(255, 234, 0) : RGB(255, 23, 68)) : ((frame % 8 < 4) ? RGB(0, 229, 255) : RGB(255, 23, 68));
         HBRUSH cbr = CreateSolidBrush(coreCol);
-        SelectObject(hdc, cbr);
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, cbr);
         Ellipse(hdc, x + 35, y + 20, x + 55, y + 40);
-        SelectObject(hdc, oldBr); DeleteObject(cbr); DeleteObject(br);
+        SelectObject(hdc, oldBr); DeleteObject(cbr);
 
         // Turrets Rendering
         float tOffsetsX[] = {5, 25, 65, 85};
         for (int i = 0; i < 4; i++) {
             if (turretActive[i]) {
                 HBRUSH tbr = CreateSolidBrush(RGB(255, 145, 0));
-                SelectObject(hdc, tbr);
+                HBRUSH oldTBr = (HBRUSH)SelectObject(hdc, tbr);
                 Ellipse(hdc, (int)(x + tOffsetsX[i] - 4), (int)(y + 25), (int)(x + tOffsetsX[i] + 12), (int)(y + 41));
-                SelectObject(hdc, oldBr); DeleteObject(tbr);
+                SelectObject(hdc, oldTBr); DeleteObject(tbr);
             }
         }
 
@@ -1390,30 +1426,62 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             HPEN spen = CreatePen(PS_SOLID, 3, RGB(0, 229, 255));
             SelectObject(hdc, spen);
             HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
-            SelectObject(hdc, nullBr);
+            HBRUSH oldSBr = (HBRUSH)SelectObject(hdc, nullBr);
             Ellipse(hdc, x - 10, y - 10, x + 100, y + 68);
-            SelectObject(hdc, oldBr); DeleteObject(spen);
+            SelectObject(hdc, oldSBr); DeleteObject(spen);
         }
     } else { // Dreadnought Boss
-        HBRUSH br = CreateSolidBrush(isEnraged ? RGB(213, 0, 249) : RGB(183, 28, 28));
-        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
-        POINT pts[6] = { {x + 30, y + 48}, {x + 58, y + 12}, {x + 45, y + 2}, {x + 30, y + 14}, {x + 15, y + 2}, {x + 2, y + 12} };
-        Polygon(hdc, pts, 6);
+        if (isCritical) {
+            // Armor plates sheared off exposing glowing inner machinery
+            HBRUSH ib = CreateSolidBrush(RGB(40, 40, 40));
+            HBRUSH oldBr = (HBRUSH)SelectObject(hdc, ib);
+            POINT ipts[6] = { {x + 30, y + 48}, {x + 58, y + 12}, {x + 45, y + 2}, {x + 30, y + 14}, {x + 15, y + 2}, {x + 2, y + 12} };
+            Polygon(hdc, ipts, 6);
+
+            HPEN glowPen = CreatePen(PS_SOLID, 2, RGB(213, 0, 249));
+            SelectObject(hdc, glowPen);
+            MoveToEx(hdc, x + 15, y + 20, NULL); LineTo(hdc, x + 45, y + 20);
+            SelectObject(hdc, oldBr); DeleteObject(ib); DeleteObject(glowPen);
+
+            HBRUSH br = CreateSolidBrush(RGB(100, 14, 30));
+            oldBr = (HBRUSH)SelectObject(hdc, br);
+            POINT pts1[3] = { {x + 30, y + 48}, {x + 45, y + 24}, {x + 15, y + 24} };
+            Polygon(hdc, pts1, 3);
+            SelectObject(hdc, oldBr); DeleteObject(br);
+        } else {
+            HBRUSH br = CreateSolidBrush(isEnraged ? RGB(213, 0, 249) : RGB(183, 28, 28));
+            HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+            POINT pts[6] = { {x + 30, y + 48}, {x + 58, y + 12}, {x + 45, y + 2}, {x + 30, y + 14}, {x + 15, y + 2}, {x + 2, y + 12} };
+            Polygon(hdc, pts, 6);
+            SelectObject(hdc, oldBr); DeleteObject(br);
+        }
+
+        // Distinct telegraphing charging animation building up intensity before firing
+        int charge = bossAttackTimer % 45;
+        if (charge > 20) {
+            int r = charge - 20;
+            HPEN cPen = CreatePen(PS_SOLID, 2 + r / 4, RGB(255, 234, 0));
+            HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH oldBr = (HBRUSH)SelectObject(hdc, nullBr);
+            HPEN oPen = (HPEN)SelectObject(hdc, cPen);
+            Ellipse(hdc, x + 30 - r, y + 48 - r, x + 30 + r, y + 48 + r);
+            SelectObject(hdc, oldBr); SelectObject(hdc, oPen); DeleteObject(cPen);
+        }
 
         if (isEnraged && frame % 2 == 0) {
             HPEN lpen = CreatePen(PS_SOLID, 2, RGB(255, 234, 0));
             SelectObject(hdc, lpen);
             MoveToEx(hdc, x + 30, y + 24, NULL);
             LineTo(hdc, x + 30 + (rnd() % 40) - 20, y + 24 + (rnd() % 30) - 15);
-            SelectObject(hdc, oldBr); DeleteObject(lpen);
+            SelectObject(hdc, oldPen); DeleteObject(lpen);
         }
 
         COLORREF coreCol = isEnraged ? ((frame % 4 < 2) ? RGB(255, 255, 255) : RGB(255, 23, 68)) : ((frame % 10 < 5) ? RGB(255, 234, 0) : RGB(255, 23, 68));
         HBRUSH cbr = CreateSolidBrush(coreCol);
-        SelectObject(hdc, cbr);
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, cbr);
         Ellipse(hdc, x + 20, y + 14, x + 40, y + 34);
 
-        SelectObject(hdc, oldBr); DeleteObject(br); DeleteObject(cbr);
+        SelectObject(hdc, oldBr); DeleteObject(cbr);
     }
     SelectObject(hdc, oldPen);
 }
@@ -1516,8 +1584,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hFont = NULL;
             HFONT oldFont = NULL;
 
-            if (bombFlash > 0) {
-                HBRUSH fbr = CreateSolidBrush(RGB(255, 255, 255));
+            if (bombFlash > 0 || bossDeathFlash > 0) {
+                HBRUSH fbr;
+                if (bossDeathFlash > 0) {
+                    // Massive full-screen chromatic aberration/distortion flash
+                    int r = 255, g = 255, b = 255;
+                    if (bossDeathFlash < 100) {
+                        int f = bossDeathFlash % 15;
+                        if (f < 5) { r = 255; g = 0; b = 100; }
+                        else if (f < 10) { r = 0; g = 255; b = 100; }
+                        else { r = 100; g = 0; b = 255; }
+                    }
+                    fbr = CreateSolidBrush(RGB(r, g, b));
+                } else {
+                    fbr = CreateSolidBrush(RGB(255, 255, 255));
+                }
                 RECT rc = {0, 0, W, H};
                 FillRect(memDC, &rc, fbr);
                 DeleteObject(fbr);

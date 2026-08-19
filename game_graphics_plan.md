@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSpace
 - KPac
 - KSnake
 - KTetris
@@ -141,7 +140,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KWords
 - KReversi
 - KQuest
+- KSpace
 ## Completed Work Log
+
+- **KSpace (Loop 6):** Implemented highly detailed visual variations for the boss encounters (multi-phase visual damage states where armor plates shear off to expose glowing inner machinery below 25% HP), distinct telegraphing charging indicator rings that build up intensity before the boss fires its weapons, and a massive full-screen chromatic aberration/distortion flash effect shifting into a whiteout when the boss is finally defeated in both Web Canvas (kspace.html) and Native C Win32 GDI (KSpace/main.c).
 
 - **KQuest (Loop 5):** Implemented highly detailed visual variations for the UI (ornate metallic HUD frame with glowing gem sockets for health/mana in Web Canvas), dynamic animated damage numbers that pop out and arc downward with gravity physics based on hit severity, and a procedural screen-shake and red vignette flash effect when the hero takes massive damage in both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).
 
