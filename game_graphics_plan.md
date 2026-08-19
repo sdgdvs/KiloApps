@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KReversi
 - KQuest
 - KSpace
 - KPac
@@ -141,7 +140,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KGo
 - KTowers
 - KWords
+- KReversi
 ## Completed Work Log
+
+- **KReversi (Loop 4):** FAILED (Subagent timed out after 8 minutes on 2nd attempt).
 
 - **KWords (Loop 5):** Implemented highly detailed visual variations for the UI (3D beveled leather-bound dictionary texture for the score/history panel), a dynamic animated page-flip transition effect when new words are logged, and distinctly stylized kinematically animated floating score numbers that bounce and fade up from successfully placed tiles in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
