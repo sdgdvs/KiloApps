@@ -4,6 +4,7 @@
 #define STATE_GARAGE 0
 #define STATE_BATTLE 1
 #define STATE_POST_BATTLE 2
+#define STATE_HELP 3
 
 static unsigned int g_seed = 0;
 void my_srand(unsigned int seed) { g_seed = seed; }
@@ -324,6 +325,9 @@ RECT rectAttack = { 210, 400, 350, 440 };
 RECT rectDefend = { 370, 400, 510, 440 };
 RECT rectReturn = { 200, 400, 400, 440 };
 
+RECT rectHelp = { 200, 360, 400, 400 };
+RECT rectReturnHelp = { 200, 430, 400, 470 };
+
 RECT rectWpn = { 20, 200, 150, 240 };
 RECT rectArm = { 160, 200, 290, 240 };
 RECT rectSink = { 300, 200, 430, 240 };
@@ -418,6 +422,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (PtInRectLocal(&rectSpec, x, y)) {
                     equipSpec = (equipSpec + 1) % 3;
                     InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectHelp, x, y)) {
+                    gameState = STATE_HELP;
+                    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (gameState == STATE_BATTLE) {
                 if (PtInRectLocal(&rectTarget, x, y)) {
@@ -433,6 +440,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (gameState == STATE_POST_BATTLE) {
                 if (PtInRectLocal(&rectReturn, x, y)) {
                     ReturnToGarage();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (gameState == STATE_HELP) {
+                if (PtInRectLocal(&rectReturnHelp, x, y)) {
+                    gameState = STATE_GARAGE;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             }
@@ -516,7 +528,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawButton(memDC, &rectDeploy, "Deploy to Battle");
                 DrawButton(memDC, &rectUseSal, "Use Salvage (+50 HP)");
                 DrawButton(memDC, &rectSellSal, "Sell Salvage (+50 CR)");
-            } else {
+                DrawButton(memDC, &rectHelp, "Pilot's Manual");
+            } else if (gameState == STATE_BATTLE || gameState == STATE_POST_BATTLE) {
                 RECT titleRect = {0, 20, 600, 60};
                 DrawTextA(memDC, "COMBAT ZONE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
                 
@@ -622,6 +635,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (gameState == STATE_POST_BATTLE) {
                     DrawButton(memDC, &rectReturn, "Return to Garage");
                 }
+            } else if (gameState == STATE_HELP) {
+                RECT titleRect = {0, 20, 600, 60};
+                DrawTextA(memDC, "PILOT'S MANUAL", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
+
+                const char* helpText = 
+                    "HOW TO PLAY: Survive battles to earn CR/Salvage.\n"
+                    "Upgrade your mech. If destroyed, you lose progress.\n\n"
+                    "COMBAT:\n"
+                    "- Attack: Generates heat. Overheat damages system (-15 HP).\n"
+                    "- Defend: 2x DEF, 0 heat gen, cools down.\n"
+                    "- Target: Head (3.0x dmg, low hit%), Torso (1.0x, high hit%).\n\n"
+                    "STATS & PROG:\n"
+                    "- XP: Leveling up adds +5% base accuracy & evasion.\n"
+                    "- Salvage: Use for +50 HP or Sell for +50 CR.\n\n"
+                    "PARTS:\n"
+                    "- Jump Jets: +20% Evasion.\n"
+                    "- Energy Shield: Absorbs up to 5 dmg/hit.";
+                
+                RECT textRect = {40, 70, 560, 420};
+                DrawTextA(memDC, helpText, -1, &textRect, DT_LEFT | DT_WORDBREAK);
+
+                DrawButton(memDC, &rectReturnHelp, "Back to Garage");
             }
             
             // Blit and clean up

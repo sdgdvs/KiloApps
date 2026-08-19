@@ -198,6 +198,7 @@
                 <button class="btn" onclick="startBattle()">Deploy to Battle</button>
                 <button class="btn" onclick="useSalvage()">Use Salvage (+50 HP)</button>
                 <button class="btn" onclick="sellSalvage()">Sell Salvage (+50 CR)</button>
+                <button class="btn" onclick="showScreen('help')">Pilot's Manual</button>
             </div>
         </div>
 
@@ -242,6 +243,32 @@
             </div>
             <div class="actions" id="post-battle-actions" style="display: none;">
                 <button class="btn" onclick="returnToGarage()">Return to Garage</button>
+            </div>
+        </div>
+
+        <!-- Help Screen -->
+        <div id="screen-help" class="screen">
+            <h2>Pilot's Manual</h2>
+            <div id="help-content" style="flex: 1; overflow-y: auto; padding: 10px; font-size: 14px; background-color: rgba(0, 20, 0, 0.8); border: 1px solid #030; margin-bottom: 10px;">
+                <p><strong>HOW TO PLAY:</strong><br>
+                Survive consecutive battles to earn credits and salvage. Upgrade your mech in the garage between fights. If your mech is destroyed, you lose all progress.</p>
+                <p><strong>COMBAT:</strong><br>
+                - <em>Attack:</em> Generates Heat. Heat exceeding Max Heat damages your system (15 HP) per turn.<br>
+                - <em>Defend:</em> Doubles your DEF and prevents heat generation (cools down instead). Enemy attacks do less damage.<br>
+                - <em>Targeting:</em> Aim for specific limbs. Head has highest damage multiplier (3.0x) but lowest hit chance. Torso has highest hit chance but base damage (1.0x). Limbs affect hit rate and damage multipliers.</p>
+                <p><strong>STATS:</strong><br>
+                - <em>HP:</em> Structural integrity. Reaches 0 = Game Over.<br>
+                - <em>HEAT:</em> Weapon usage generates heat. Cools down each turn. Exceeding max heat causes damage.<br>
+                - <em>ATK / DEF:</em> Damage dealt / reduced.<br>
+                - <em>XP:</em> Earn XP to level up, increasing base accuracy and evasion by 5% per level.</p>
+                <p><strong>PARTS CODEX:</strong><br>
+                - <em>Weapons:</em> Vary in ATK and Heat generated.<br>
+                - <em>Armor:</em> Affects DEF and Max HP.<br>
+                - <em>Heat Sinks:</em> Affects cooling rate and Max Heat.<br>
+                - <em>Specials:</em> Jump Jets (+20% Evasion), Energy Shield (absorbs up to 5 damage per hit).</p>
+            </div>
+            <div class="actions">
+                <button class="btn" onclick="showScreen('garage')">Back to Garage</button>
             </div>
         </div>
     </div>
