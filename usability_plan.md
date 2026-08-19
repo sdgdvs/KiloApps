@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KFont
 - KMail
 - KMandel
 - KPing
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFortress
 - KColony
 - KAlchemy
+- KFont
 
 ## Progress Log
 - KCalendar: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1024x768, added F1 key support and updated UI labels for help menu in both web and native, applied text-rendering optimizeLegibility to web app body for crisp text).
@@ -310,3 +310,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFortress: Usability and UI issues fixed (implemented negative font heights in native C for crisp DPI scaling, added optimizeLegibility to web CSS, and updated web UI Help button to explicitly display the 'H' hotkey).
 - KColony: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 850x650, implemented negative font heights and AdjustWindowRect in native C, and applied optimizeLegibility CSS to the web interface).
 - KAlchemy: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1200x800, added negative font heights for crisp text in native C, applied devicePixelRatio canvas scaling for crisp visuals in web canvas, and added optimizeLegibility).
+- KFont: Usability and UI issues fixed (updated App.jsx bounds to 950x700, modified native C CreateFontA parameters to negative heights for proper DPI grid-fitting and crisp rendering, bumped OS version to 0.3.100).
