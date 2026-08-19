@@ -146,6 +146,7 @@ void EnemyTurn() {
             wsprintfA(buf, "Enemy targets %s... Missed!", limbNames[target]);
         }
         addLog(buf);
+        Beep(300, 100);
     } else {
         int effectiveDef = isDefending ? (playerStats.def * 2) : playerStats.def;
         int dmg = (enemyStats.atk - effectiveDef) + (my_rand() % 4);
@@ -168,11 +169,14 @@ void EnemyTurn() {
         char buf[128];
         wsprintfA(buf, "Enemy hits %s! Took %d dmg.", limbNames[target], dmg);
         addLog(buf);
+        Beep(900, 50); Beep(700, 50); Beep(500, 100); // Enemy laser
+        Beep(150, 100); Beep(100, 150); // Impact
     }
 
     if (playerStats.hp <= 0) {
         playerStats.hp = 0;
         addLog("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
+        Beep(300, 300); Beep(200, 300); Beep(100, 500);
         battleCount = 1;
         credits = 100;
         salvage = 0;
@@ -195,9 +199,11 @@ void ActionAttack() {
     if (playerStats.heat > playerStats.maxHeat) {
         playerStats.hp -= 15;
         addLog("WARNING: OVERHEAT! Took 15 system dmg.");
+        Beep(2000, 100); Beep(2000, 100); Beep(2000, 300);
         if (playerStats.hp <= 0) {
             playerStats.hp = 0;
             addLog("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
+            Beep(300, 300); Beep(200, 300); Beep(100, 500);
             battleCount = 1;
             credits = 100;
             salvage = 0;
@@ -219,6 +225,7 @@ void ActionAttack() {
         char buf[128];
         wsprintfA(buf, "You target %s... Missed!", limbNames[target]);
         addLog(buf);
+        Beep(300, 100);
     } else {
         int effectiveDef = enemyIsDefending ? (enemyStats.def * 2) : enemyStats.def;
         int dmg = (playerStats.atk - effectiveDef) + (my_rand() % 5);
@@ -229,6 +236,8 @@ void ActionAttack() {
         char buf[128];
         wsprintfA(buf, "You hit %s! Dealt %d dmg.", limbNames[target], dmg);
         addLog(buf);
+        Beep(1000, 50); Beep(800, 50); Beep(600, 100); // Player laser
+        Beep(150, 100); Beep(100, 150); // Impact
     }
 
     if (enemyStats.hp <= 0) {
@@ -240,6 +249,7 @@ void ActionAttack() {
         char buf[128];
         wsprintfA(buf, "VICTORY! Earned %d CR & %d Parts.", reward, parts);
         addLog(buf);
+        Beep(400, 100); Beep(500, 100); Beep(600, 100); Beep(800, 300);
 
         int xpGain = 40 + (battleCount * 20);
         playerXp += xpGain;
@@ -251,6 +261,7 @@ void ActionAttack() {
             playerLevel++;
             wsprintfA(buf, "LEVEL UP! Pilot is now Level %d.", playerLevel);
             addLog(buf);
+            Beep(500, 100); Beep(600, 100); Beep(700, 100); Beep(800, 300);
         }
 
         battleCount++;
@@ -288,6 +299,7 @@ void StartBattle() {
     for (int i=0; i<5; i++) playerLimbDamage[i] = 0;
     clearLogs();
     addLog("Enemy mech detected! Engaging...");
+    Beep(400, 100); Beep(600, 100); Beep(800, 200);
     gameState = STATE_BATTLE;
 }
 
