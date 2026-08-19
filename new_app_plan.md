@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KMech (Sci-fi turn-based mech combat)
-**Phase:** 13 (next to do)
+**Phase:** 14 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KMech directory (`KMech/`), create web HTML skeleton (`KiloOS/public/apps/kmech.html`), register in App.jsx.
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Special equipment (jump jets to evade, energy shields to absorb damage).
 - [x] Phase 11: Salvage system (collect parts from defeated mechs to use or sell).
 - [x] Phase 12: Pilot progression (gain XP to improve accuracy and evasion).
-- [ ] Phase 13: Sound Effects — laser blasts, metal impacts, warning alarms (Web Audio / Win32 Beep).
+- [x] Phase 13: Sound Effects — laser blasts, metal impacts, warning alarms (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Pilot's Manual — How-to-play, stat explanations, parts codex.
 
 ### How to execute the next phase:
