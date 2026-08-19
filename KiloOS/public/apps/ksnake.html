@@ -213,6 +213,10 @@
         let matchApplesEaten = 0;
         let gridCoverage = new Set();
         let replayData = null;
+        let screenShakeTimer = 0;
+        let shockwaveTimer = 0;
+        let shockwave = {x: 0, y: 0};
+        let oilSlicks = [];
         let isReplayMode = false;
         let replayTick = 0;
         let replayEvents = {};
@@ -432,6 +436,7 @@
             rivals = []; numRivals = 0;
             boss.alive = false;
             bossBarContainer.style.display = 'none';
+            oilSlicks = [];
 
             if (lvl === 1) {
                 portalActive = true; portalA = {x: 2, y: 10}; portalB = {x: 17, y: 10};
@@ -597,6 +602,7 @@
             gameState = 1;
             score = 0; applesEaten = 0; campaignLevel = 1;
             matchTicks = 0; matchApplesEaten = 0; gridCoverage.clear();
+            screenShakeTimer = 0; shockwaveTimer = 0; oilSlicks = [];
 
             
             goldenApple = null; goldenTimer = 0;
@@ -822,6 +828,17 @@
             boss.dir = bestDir;
             for(let b=boss.len-1; b>0; b--) boss.body[b] = boss.body[b-1];
             boss.body[0] = { x: boss.body[0].x + boss.dir.x, y: boss.body[0].y + boss.dir.y };
+
+            if (boss.maxHp > 0 && boss.hp / boss.maxHp < 0.25) {
+                if (matchTicks % 2 === 0) {
+                    let px = boss.body[0].x * CELL + CELL / 2 + (seededRandom()-0.5)*10;
+                    let py = boss.body[0].y * CELL + CELL / 2 + (seededRandom()-0.5)*10;
+                    particles.push({ x: px, y: py, vx: (seededRandom()-0.5)*3, vy: (seededRandom()-0.5)*3, size: seededRandom()*2.5+1, color: '#ffff00', life: 1.5 });
+                }
+                if (matchTicks % 30 === 0 && oilSlicks.length < 50) {
+                    oilSlicks.push({x: boss.body[boss.len-1].x, y: boss.body[boss.len-1].y});
+                }
+            }
         }
 
         function applyFoodMagnet() {
@@ -854,6 +871,9 @@
                 if (e === 'm') activateSkill('M');
             }
 
+
+            if (screenShakeTimer > 0) screenShakeTimer--;
+            if (shockwaveTimer > 0) shockwaveTimer--;
 
             if (ghostActive > 0) ghostActive--;
             if (ghostCd > 0) ghostCd--;
@@ -926,6 +946,17 @@
                     (boss.alive && boss.body.some(b => b.x === head.x && b.y === head.y))) {
                     triggerGameOver(); return;
                 }
+                for (let i = oilSlicks.length - 1; i >= 0; i--) {
+                    if (head.x === oilSlicks[i].x && head.y === oilSlicks[i].y) {
+                        playSound('die');
+                        score = Math.max(0, score - 50);
+                        poisonActiveTimer = 50;
+                        screenShakeTimer = 15;
+                        shockwaveTimer = 30;
+                        shockwave.x = head.x; shockwave.y = head.y;
+                        oilSlicks.splice(i, 1);
+                    }
+                }
             }
 
             snake.unshift(head);
@@ -990,6 +1021,9 @@
                 addEatParticles(poisonBerry.x, poisonBerry.y, '#8e44ad');
                 score = Math.max(0, score - 200);
                 poisonActiveTimer = 50;
+                screenShakeTimer = 15;
+                shockwaveTimer = 30;
+                shockwave.x = head.x; shockwave.y = head.y;
                 poisonBerry = null;
             }
 
@@ -1017,6 +1051,11 @@
                 lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: ((gridCoverage.size / (WIDTH*HEIGHT))*100).toFixed(2) };
                 lastReplayData = replayData;
             }
+
+            screenShakeTimer = 15;
+            shockwaveTimer = 30;
+            shockwave.x = snake[0] ? snake[0].x : 0;
+            shockwave.y = snake[0] ? snake[0].y : 0;
 
             playSound('die');
             gameState = 2;
@@ -1450,22 +1489,43 @@
 
         function drawPortal(px, py, color) {
             let cx = px * CELL + CELL / 2, cy = py * CELL + CELL / 2;
-            let time = Date.now() / 100;
+            let time = Date.now() / 150;
             ctx.save();
             ctx.translate(cx, cy);
-            ctx.rotate(time);
-            ctx.fillStyle = color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+            ctx.rotate(time * 0.2); // Slow rotate for the whole rift
+            
             ctx.shadowColor = color; ctx.shadowBlur = 15;
             
-            // Swirling portal
-            for(let i=0; i<3; i++) {
-                ctx.rotate((Math.PI*2)/3);
-                ctx.beginPath();
-                ctx.ellipse(3, 0, CELL/2, CELL/4, 0, 0, Math.PI*2);
-                ctx.fill();
+            // Jagged rift
+            ctx.fillStyle = '#1a0033'; // Deep purple/black void
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < 16; i++) {
+                let angle = i * (Math.PI * 2 / 16);
+                let jitter = (Math.sin(time * 5 + i * 43) * 3);
+                let r = (CELL/2 - 2) + jitter;
+                if (i % 2 === 0) r -= 4; // star-like
+                ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
             }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Inner void
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            for (let i = 0; i < 16; i++) {
+                let angle = i * (Math.PI * 2 / 16);
+                let jitter = (Math.sin(time * 7 + i * 17) * 2);
+                let r = (CELL/4) + jitter;
+                if (i % 2 === 0) r -= 2;
+                if (i===0) ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+                else ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+            }
+            ctx.closePath();
+            ctx.fill();
             
-            ctx.beginPath(); ctx.arc(0, 0, 2, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
             ctx.restore();
         }
 
@@ -1485,7 +1545,11 @@
         }
 
         function animLoop() {
-            if (gameState === 1) {
+            if (gameState === 1 || gameState === 2) {
+                if (gameState === 2) {
+                    if (screenShakeTimer > 0) screenShakeTimer--;
+                    if (shockwaveTimer > 0) shockwaveTimer--;
+                }
                 draw();
                 requestAnimationFrame(animLoop);
             }
@@ -1493,7 +1557,14 @@
 
         function draw() {
             ctx.clearRect(0, 0, 400, 400);
-            if (gameState !== 1) return;
+            if (gameState !== 1 && gameState !== 2 && gameState !== 4) return;
+            
+            ctx.save();
+            if (screenShakeTimer > 0) {
+                let dx = (Math.random() - 0.5) * 10 * (screenShakeTimer / 15);
+                let dy = (Math.random() - 0.5) * 10 * (screenShakeTimer / 15);
+                ctx.translate(dx, dy);
+            }
 
             // Environmental art: Checkered background grid with subtle terrain texture
             for (let x = 0; x < WIDTH; x++) {
@@ -1512,6 +1583,14 @@
             drawParticles();
 
             for (let o of obstacles) drawObstacle(o.x, o.y);
+            
+            for (let slick of oilSlicks) {
+                ctx.fillStyle = 'rgba(20, 20, 20, 0.8)';
+                ctx.beginPath();
+                ctx.ellipse(slick.x * CELL + CELL/2, slick.y * CELL + CELL/2 + 2, CELL/2 - 2, CELL/2 - 4, 0, 0, Math.PI*2);
+                ctx.fill();
+            }
+
             if (portalActive && portalA && portalB) {
                 drawPortal(portalA.x, portalA.y, '#00d2d3');
                 drawPortal(portalB.x, portalB.y, '#9b59b6');
@@ -1554,6 +1633,22 @@
                 ctx.lineTo(rx - 2, ry + 6);
             }
             ctx.stroke();
+
+            if (shockwaveTimer > 0) {
+                let maxR = 150;
+                let r = maxR - (shockwaveTimer / 30) * maxR;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${shockwaveTimer / 30})`;
+                ctx.lineWidth = 4 * (shockwaveTimer / 30);
+                ctx.beginPath();
+                ctx.arc(shockwave.x * CELL + CELL/2, shockwave.y * CELL + CELL/2, r, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(shockwave.x * CELL + CELL/2, shockwave.y * CELL + CELL/2, r * 0.7, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            ctx.restore();
         }
 
         window.addEventListener('keydown', e => {

@@ -50,6 +50,12 @@ struct Particle { int x, y, vx, vy, life; COLORREF color; };
 struct Particle particles[100];
 int particle_count = 0;
 
+int screen_shake_timer = 0;
+int shockwave_timer = 0;
+int shockwave_x = 0, shockwave_y = 0;
+struct Point oil_slicks[50];
+int num_oil_slicks = 0;
+
 // Replay System
 struct ReplayEvent {
     int tick;
@@ -453,6 +459,7 @@ void InitCampaignStage(int level) {
     portal_a.x = -1; portal_b.x = -1;
     num_rivals = 0;
     boss.alive = 0;
+    num_oil_slicks = 0;
 
     if (level == 1) {
         portal_active = 1;
@@ -704,6 +711,9 @@ void InitGame() {
     match_ticks = 0;
     match_apples_gained = 0;
     grid_coverage_count = 0;
+    num_oil_slicks = 0;
+    screen_shake_timer = 0;
+    shockwave_timer = 0;
     for(x=0; x<GRID_WIDTH; x++) for(y=0; y<GRID_HEIGHT; y++) grid_coverage[x][y] = 0;
     
     apples_eaten = 0;
@@ -883,6 +893,24 @@ void UpdateBoss() {
     for(b=boss.len-1; b>0; b--) boss.body[b] = boss.body[b-1];
     boss.body[0].x += boss.dir_x;
     boss.body[0].y += boss.dir_y;
+
+    if (boss.max_hp > 0 && boss.hp * 100 / boss.max_hp < 25) {
+        if (match_ticks % 2 == 0 && particle_count < 100) {
+            particles[particle_count].x = boss.body[0].x * CELL_SIZE + CELL_SIZE/2 + (random_int(20)-10);
+            particles[particle_count].y = boss.body[0].y * CELL_SIZE + 45 + CELL_SIZE/2 + (random_int(20)-10);
+            particles[particle_count].vx = (random_int(7) - 3);
+            particles[particle_count].vy = (random_int(7) - 3);
+            particles[particle_count].life = 20;
+            int c_rnd = random_int(3);
+            particles[particle_count].color = (c_rnd==0)?RGB(255,255,0):(c_rnd==1?RGB(255,100,0):RGB(255,255,255));
+            particle_count++;
+        }
+        if (match_ticks % 30 == 0 && num_oil_slicks < 50) {
+            oil_slicks[num_oil_slicks].x = boss.body[boss.len-1].x;
+            oil_slicks[num_oil_slicks].y = boss.body[boss.len-1].y;
+            num_oil_slicks++;
+        }
+    }
 }
 
 void ApplyFoodMagnet() {
@@ -1195,17 +1223,37 @@ void DrawGemGDI(HDC hdc, int x, int y, COLORREF color) {
 
 void DrawPortalGDI(HDC hdc, int x, int y, COLORREF color) {
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
-    HBRUSH brush = CreateSolidBrush(color);
-    HPEN pen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+    int cx = px + CELL_SIZE/2, cy = py + CELL_SIZE/2;
+    HBRUSH brush = CreateSolidBrush(RGB(20, 0, 30));
+    HPEN pen = CreatePen(PS_SOLID, 2, color);
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
 
-    // Inner swirl effect using concentric circles based on time
-    int offset = anim_tick % 4;
-    Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
-    
-    SelectObject(hdc, GetStockObject(HOLLOW_BRUSH));
-    Ellipse(hdc, px + 3 + offset, py + 3, px + CELL_SIZE - 3 - offset, py + CELL_SIZE - 3);
+    POINT pts[16];
+    int i;
+    for (i = 0; i < 16; i++) {
+        float angle = i * (3.14159f * 2.0f / 16.0f);
+        int jitter = ((anim_tick * 3 + i * 7) % 11) - 5; 
+        int r = (CELL_SIZE/2 - 2) + jitter;
+        if (i % 2 == 0) r -= 4;
+        pts[i].x = cx + (int)(cos(angle) * r);
+        pts[i].y = cy + (int)(sin(angle) * r);
+    }
+    Polygon(hdc, pts, 16);
+
+    HBRUSH voidBrush = CreateSolidBrush(RGB(0, 0, 0));
+    SelectObject(hdc, voidBrush);
+    POINT pts_inner[16];
+    for (i = 0; i < 16; i++) {
+        float angle = i * (3.14159f * 2.0f / 16.0f);
+        int jitter = ((anim_tick * 5 + i * 13) % 7) - 3; 
+        int r = (CELL_SIZE/4) + jitter;
+        if (i % 2 == 0) r -= 2;
+        pts_inner[i].x = cx + (int)(cos(angle) * r);
+        pts_inner[i].y = cy + (int)(sin(angle) * r);
+    }
+    Polygon(hdc, pts_inner, 16);
+    DeleteObject(voidBrush);
 
     SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
     DeleteObject(brush); DeleteObject(pen);
@@ -1253,6 +1301,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_TIMER: {
             int i, r, effective_wrap, gain, spd;
+            if (game_state == 1 || game_state == 2) {
+                if (screen_shake_timer > 0) { screen_shake_timer--; InvalidateRect(hwnd, NULL, TRUE); }
+                if (shockwave_timer > 0) { shockwave_timer--; InvalidateRect(hwnd, NULL, TRUE); }
+            }
             if (game_state != 1) break;
             anim_tick++;
             match_ticks++;
@@ -1371,6 +1423,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            int was_playing = (game_state == 1);
             if (ghost_active == 0) {
                 for(i = 1; i < snake_len; i++) {
                     if (snake[0].x == snake[i].x && snake[0].y == snake[i].y) game_state = 2;
@@ -1389,6 +1442,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (snake[0].x == boss.body[i].x && snake[0].y == boss.body[i].y) game_state = 2;
                     }
                 }
+                for(i = 0; i < num_oil_slicks; i++) {
+                    if (snake[0].x == oil_slicks[i].x && snake[0].y == oil_slicks[i].y) {
+                        MessageBeep(MB_ICONHAND);
+                        score -= 50; if (score < 0) score = 0;
+                        poison_active_timer = 50;
+                        screen_shake_timer = 15;
+                        shockwave_timer = 30;
+                        shockwave_x = snake[0].x; shockwave_y = snake[0].y;
+                        oil_slicks[i] = oil_slicks[num_oil_slicks-1];
+                        num_oil_slicks--;
+                        i--;
+                    }
+                }
+            }
+
+            if (game_state == 2 && was_playing) {
+                screen_shake_timer = 15;
+                shockwave_timer = 30;
+                shockwave_x = snake[0].x;
+                shockwave_y = snake[0].y;
             }
 
             if (game_state == 2) {
@@ -1454,6 +1527,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MessageBeep(MB_ICONHAND);
                 score -= 200; if (score < 0) score = 0;
                 poison_active_timer = 50;
+                screen_shake_timer = 15;
+                shockwave_timer = 30;
+                shockwave_x = snake[0].x; shockwave_y = snake[0].y;
                 poison_berry.x = -1;
             }
 
@@ -1586,7 +1662,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
             float scale = dpi / 96.0f;
             SetGraphicsMode(hdc, GM_ADVANCED);
-            XFORM xform = { scale, 0.0f, 0.0f, scale, 0.0f, 0.0f };
+            
+            float dx = 0.0f, dy = 0.0f;
+            if (screen_shake_timer > 0) {
+                dx = (random_int(10) - 5) * (screen_shake_timer / 15.0f);
+                dy = (random_int(10) - 5) * (screen_shake_timer / 15.0f);
+            }
+            XFORM xform = { scale, 0.0f, 0.0f, scale, dx * scale, dy * scale };
             SetWorldTransform(hdc, &xform);
 
             RECT logicalRect = {0, 0, 520, 620};
@@ -1703,6 +1785,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 for(i = 0; i < num_obstacles; i++) DrawObstacleGDI(hdc, obstacles[i].x, obstacles[i].y);
                 
+                for(i = 0; i < num_oil_slicks; i++) {
+                    int px = oil_slicks[i].x * CELL_SIZE, py = oil_slicks[i].y * CELL_SIZE + 45;
+                    HBRUSH oilBrush = CreateSolidBrush(RGB(20, 20, 20));
+                    HBRUSH oldB = (HBRUSH)SelectObject(hdc, oilBrush);
+                    HPEN oldP = (HPEN)SelectObject(hdc, (HPEN)GetStockObject(NULL_PEN));
+                    Ellipse(hdc, px + 2, py + 4, px + CELL_SIZE - 2, py + CELL_SIZE - 2);
+                    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+                    DeleteObject(oilBrush);
+                }
+
                 if (portal_active) {
                     DrawPortalGDI(hdc, portal_a.x, portal_a.y, RGB(0, 210, 211));
                     DrawPortalGDI(hdc, portal_b.x, portal_b.y, RGB(155, 89, 182));
@@ -1775,6 +1867,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     magnet_active > 0 ? "MAG!" : (magnet_cd == 0 ? "READY" : "CD"));
                 SetTextColor(hdc, RGB(72, 219, 251));
                 TextOutA(hdc, 10, 560, hud_text, lstrlenA(hud_text));
+
+                if (shockwave_timer > 0) {
+                    int max_r = 150;
+                    int r = max_r - (shockwave_timer * max_r / 30);
+                    int cx = shockwave_x * CELL_SIZE + CELL_SIZE/2;
+                    int cy = shockwave_y * CELL_SIZE + 45 + CELL_SIZE/2;
+                    HPEN swPen = CreatePen(PS_SOLID, 1 + (shockwave_timer / 10), RGB(255, 255, 255));
+                    HPEN oldP = (HPEN)SelectObject(hdc, swPen);
+                    HBRUSH oldB = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));
+                    Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+                    Ellipse(hdc, cx - r*3/4, cy - r*3/4, cx + r*3/4, cy + r*3/4);
+                    SelectObject(hdc, oldP); SelectObject(hdc, oldB);
+                    DeleteObject(swPen);
+                }
             }
 
             SelectObject(hdc, oldFont);

@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSnake
 - KTetris
 - KBreakout
 - KMaze
@@ -141,7 +140,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KQuest
 - KSpace
 - KPac
+- KSnake
 ## Completed Work Log
+
+- **KSnake (Loop 6):** Implemented highly detailed visual variations for the boss encounters (multi-phase enraged state where the mechanical Boss Drone starts sparking and dropping hazardous oil slicks when below 25% HP), distinct spawn-in animations for portals where they tear open with a jagged purple/black dimensional rift effect rather than just rotating smoothly, and a dynamic screen-shake with an expanding 3D ring shockwave effect when the snake crashes or takes damage in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
 - **KPac (Loop 6):** Implemented highly detailed visual variations for the ghost house (glowing forcefield door that physically ripples/bends dynamically when a ghost exits), distinct spawn-in animations for bonus fruit where they materialize from a wireframe grid rather than just popping in, and a dynamic screen-shake with an expanding 3D ring shockwave effect when the player eats a power pellet in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 
