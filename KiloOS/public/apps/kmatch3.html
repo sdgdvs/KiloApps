@@ -27,8 +27,8 @@
   #board {
     width: 400px; height: 400px;
     background: radial-gradient(circle at center, #231b2e 0%, #0c0813 100%);
-    border: 8px solid #b8860b; border-radius: 12px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.95), 0 0 20px rgba(255,215,0,0.25);
+    border: 10px ridge #ffd700; border-radius: 12px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.95), 0 0 30px rgba(255,215,0,0.4), inset 0 0 25px rgba(255,215,0,0.3);
     position: relative; touch-action: none; user-select: none; overflow: hidden;
   }
 
@@ -57,7 +57,7 @@
     100% { filter: drop-shadow(0 0 12px #ffffff); }
   }
   .particle {
-    position: absolute; pointer-events: none; z-index: 100; border-radius: 50%;
+    position: absolute; pointer-events: none; z-index: 100;
   }
   .cell.moving {
     z-index: 50;
@@ -83,9 +83,12 @@
     100% { transform: translate(1px, -1px) rotate(0deg); filter: brightness(1.5); }
   }
   .hint-anim {
-    animation: hintWiggle 1.5s infinite ease-in-out;
+    animation: hintWiggle 1.5s infinite ease-in-out, hintAura 2s infinite ease-in-out;
     z-index: 15;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  @keyframes hintAura {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.3); }
+    50% { box-shadow: 0 0 35px rgba(255, 255, 255, 1), inset 0 0 25px rgba(255, 255, 255, 0.8); }
   }
   @keyframes hintWiggle {
     0%, 100% { transform: scale(1) rotate(0deg); }
@@ -341,23 +344,26 @@
       for (let i = 0; i < 16; i++) {
         let p = document.createElement('div');
         p.className = 'particle';
-        let size = Math.floor(Math.random() * 5) + 3;
+        let size = Math.floor(Math.random() * 8) + 4;
         p.style.width = size + 'px';
         p.style.height = size + 'px';
         p.style.backgroundColor = color;
         p.style.boxShadow = `0 0 ${size}px ${color}`;
         p.style.left = x + 'px';
         p.style.top = y + 'px';
+        p.style.clipPath = 'polygon(50% 0%, 100% 25%, 80% 100%, 20% 100%, 0% 25%)';
         boardEl.appendChild(p);
         
         let angle = Math.random() * Math.PI * 2;
-        let speed = Math.random() * 5 + 2;
+        let speed = Math.random() * 8 + 3;
         particles.push({
           el: p, x: x, y: y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
+          rot: Math.random() * 360,
+          vrot: (Math.random() - 0.5) * 40,
           life: 1.0,
-          decay: Math.random() * 0.05 + 0.02
+          decay: Math.random() * 0.04 + 0.01
         });
       }
     }
@@ -367,7 +373,8 @@
         let p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.15;
+        p.vy += 0.25; // gravity
+        p.rot += p.vrot;
         p.life -= p.decay;
         if (p.life <= 0) {
           if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
@@ -376,6 +383,7 @@
           p.el.style.left = p.x + 'px';
           p.el.style.top = p.y + 'px';
           p.el.style.opacity = p.life;
+          p.el.style.transform = `rotate(${p.rot}deg)`;
         }
       }
       requestAnimationFrame(updateParticles);

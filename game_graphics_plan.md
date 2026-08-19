@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMatch3
 - KFreecell
 - KSudoku
 - KGo
@@ -140,7 +139,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarship
 - KConnect4
 - KHangman
+- KMech
+- KMatch3
 ## Completed Work Log
+
+- **KMatch3 (Loop 5):** Implemented highly detailed visual variations for the background grid/board (ornate 3D gold borders with deep shadows), a procedural animated glowing aura effect that subtly breathes around gems for match hints, and a distinctly stylized kinematically animated shattering explosion sending glassy gem shards flying and rotating off the board in both Web Canvas (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
 
 - **KHangman (Loop 5):** Implemented highly detailed visual variations for the background sky (procedurally generated shifting aurora and shooting stars), a dynamic kinematically animated swinging rope effect that realistically sways the character based on wind and incorrect guess impacts, and distinct multi-colored glowing particle spark bursts for correct letter reveals in both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 

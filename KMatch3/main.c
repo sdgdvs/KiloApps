@@ -113,6 +113,8 @@ COLORREF colors[] = {
 typedef struct {
     float x, y;
     float vx, vy;
+    float rot, vrot;
+    float size;
     float life, decay;
     COLORREF color;
 } Particle;
@@ -126,11 +128,14 @@ void CreateParticles(int cx, int cy, COLORREF color) {
                 particles[p].x = (float)cx;
                 particles[p].y = (float)cy;
                 float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
-                float speed = (float)((rand() % 50) + 20) / 10.0f;
+                float speed = (float)((rand() % 50) + 30) / 10.0f;
                 particles[p].vx = cosf(angle) * speed;
                 particles[p].vy = sinf(angle) * speed;
+                particles[p].rot = (float)(rand() % 360);
+                particles[p].vrot = (float)((rand() % 40) - 20);
+                particles[p].size = (float)((rand() % 4) + 4);
                 particles[p].life = 1.0f;
-                particles[p].decay = (float)((rand() % 5) + 2) / 100.0f;
+                particles[p].decay = (float)((rand() % 4) + 1) / 100.0f;
                 particles[p].color = color;
                 break;
             }
@@ -143,7 +148,8 @@ void UpdateParticles() {
         if (particles[i].life > 0) {
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
-            particles[i].vy += 0.2f;
+            particles[i].vy += 0.25f;
+            particles[i].rot += particles[i].vrot;
             particles[i].life -= particles[i].decay;
         }
     }
@@ -585,31 +591,48 @@ void DrawBoard(HDC hdc) {
     }
 
     // 3D Outer Frame
-    RECT outerFrame = { BOARD_X - 8, BOARD_Y - 8, BOARD_X + cols * cellSize + 8, BOARD_Y + rows * cellSize + 8 };
-    HBRUSH frameBrush = CreateSolidBrush(RGB(160, 115, 15));
+    RECT outerFrame = { BOARD_X - 10, BOARD_Y - 10, BOARD_X + cols * cellSize + 10, BOARD_Y + rows * cellSize + 10 };
+    HBRUSH frameBrush = CreateSolidBrush(RGB(180, 130, 20));
     FillRect(hdc, &outerFrame, frameBrush);
     DeleteObject(frameBrush);
 
-    HPEN framePenHigh = CreatePen(PS_SOLID, 2, RGB(240, 190, 40));
-    HPEN framePenLow = CreatePen(PS_SOLID, 2, RGB(70, 50, 5));
+    HPEN framePenHigh = CreatePen(PS_SOLID, 3, RGB(255, 215, 0));
+    HPEN framePenLow = CreatePen(PS_SOLID, 3, RGB(90, 60, 10));
+    HPEN framePenMid = CreatePen(PS_SOLID, 1, RGB(255, 255, 100));
     HPEN oldPen = (HPEN)SelectObject(hdc, framePenHigh);
 
+    // Bevel Outer
     MoveToEx(hdc, outerFrame.left, outerFrame.bottom, NULL);
     LineTo(hdc, outerFrame.left, outerFrame.top);
     LineTo(hdc, outerFrame.right, outerFrame.top);
     SelectObject(hdc, framePenLow);
     LineTo(hdc, outerFrame.right, outerFrame.bottom);
     LineTo(hdc, outerFrame.left, outerFrame.bottom);
+    
+    // Inner bevel
+    RECT innerF = { outerFrame.left + 4, outerFrame.top + 4, outerFrame.right - 4, outerFrame.bottom - 4 };
+    SelectObject(hdc, framePenLow);
+    MoveToEx(hdc, innerF.left, innerF.bottom, NULL);
+    LineTo(hdc, innerF.left, innerF.top);
+    LineTo(hdc, innerF.right, innerF.top);
+    SelectObject(hdc, framePenHigh);
+    LineTo(hdc, innerF.right, innerF.bottom);
+    LineTo(hdc, innerF.left, innerF.bottom);
 
-    HBRUSH studB = CreateSolidBrush(RGB(255, 215, 0));
+    // Highlights
+    SelectObject(hdc, framePenMid);
+    MoveToEx(hdc, outerFrame.left+1, outerFrame.top+1, NULL);
+    LineTo(hdc, outerFrame.right-1, outerFrame.top+1);
+    
+    HBRUSH studB = CreateSolidBrush(RGB(255, 240, 100));
     HBRUSH oldB2 = (HBRUSH)SelectObject(hdc, studB);
-    Ellipse(hdc, outerFrame.left+2, outerFrame.top+2, outerFrame.left+7, outerFrame.top+7);
-    Ellipse(hdc, outerFrame.right-7, outerFrame.top+2, outerFrame.right-2, outerFrame.top+7);
-    Ellipse(hdc, outerFrame.left+2, outerFrame.bottom-7, outerFrame.left+7, outerFrame.bottom-2);
-    Ellipse(hdc, outerFrame.right-7, outerFrame.bottom-7, outerFrame.right-2, outerFrame.bottom-2);
+    Ellipse(hdc, outerFrame.left+2, outerFrame.top+2, outerFrame.left+9, outerFrame.top+9);
+    Ellipse(hdc, outerFrame.right-9, outerFrame.top+2, outerFrame.right-2, outerFrame.top+9);
+    Ellipse(hdc, outerFrame.left+2, outerFrame.bottom-9, outerFrame.left+9, outerFrame.bottom-2);
+    Ellipse(hdc, outerFrame.right-9, outerFrame.bottom-9, outerFrame.right-2, outerFrame.bottom-2);
     SelectObject(hdc, oldB2);
     SelectObject(hdc, oldPen);
-    DeleteObject(studB); DeleteObject(framePenHigh); DeleteObject(framePenLow);
+    DeleteObject(studB); DeleteObject(framePenHigh); DeleteObject(framePenLow); DeleteObject(framePenMid);
 
     // Grid Cells
     for (int r = 0; r < rows; r++) {
@@ -699,13 +722,19 @@ void DrawBoard(HDC hdc) {
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
             } else if ((r == hintR1 && c == hintC1) || (r == hintR2 && c == hintC2)) {
-                HBRUSH border = CreateSolidBrush(RGB(255, 255, 255));
-                FrameRect(hdc, &rect, border);
-                DeleteObject(border);
-                rect.left += 1; rect.top += 1; rect.right -= 1; rect.bottom -= 1;
-                border = CreateSolidBrush(RGB(255, 255, 255));
-                FrameRect(hdc, &rect, border);
-                DeleteObject(border);
+                int glow = (int)((sin((float)hintTimer * 0.5f) + 1.0f) * 127.0f);
+                COLORREF glowC = RGB(128 + glow/2, 128 + glow/2, 255);
+                HPEN glowPen = CreatePen(PS_SOLID, 3, glowC);
+                HPEN oldGlow = (HPEN)SelectObject(hdc, glowPen);
+                HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+                HBRUSH oldB = (HBRUSH)SelectObject(hdc, nullB);
+                
+                int bz = 2 + (int)((sin((float)hintTimer * 0.5f) + 1.0f) * 2.0f);
+                RoundRect(hdc, rect.left - bz, rect.top - bz, rect.right + bz, rect.bottom + bz, 8, 8);
+                
+                SelectObject(hdc, oldGlow);
+                SelectObject(hdc, oldB);
+                DeleteObject(glowPen);
             }
         }
     }
@@ -735,10 +764,30 @@ void DrawBoard(HDC hdc) {
 
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
-            RECT pr = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
+            float r = particles[i].rot * 3.14159f / 180.0f;
+            float c_rot = cosf(r);
+            float s_rot = sinf(r);
+            float sz = particles[i].size;
+            float px = particles[i].x;
+            float py = particles[i].y;
+            
+            POINT pts[3];
+            pts[0].x = (int)(px + c_rot * sz - s_rot * 0);
+            pts[0].y = (int)(py + s_rot * sz + c_rot * 0);
+            pts[1].x = (int)(px + c_rot * (-sz) - s_rot * sz);
+            pts[1].y = (int)(py + s_rot * (-sz) + c_rot * sz);
+            pts[2].x = (int)(px + c_rot * (-sz) - s_rot * (-sz));
+            pts[2].y = (int)(py + s_rot * (-sz) + c_rot * (-sz));
+
             HBRUSH pb = CreateSolidBrush(particles[i].color);
-            FillRect(hdc, &pr, pb);
+            HPEN pp = CreatePen(PS_SOLID, 1, RGB(255,255,255));
+            HBRUSH ob = (HBRUSH)SelectObject(hdc, pb);
+            HPEN op = (HPEN)SelectObject(hdc, pp);
+            Polygon(hdc, pts, 3);
+            SelectObject(hdc, ob);
+            SelectObject(hdc, op);
             DeleteObject(pb);
+            DeleteObject(pp);
         }
     }
 }
