@@ -55,15 +55,33 @@
 
     /* Top Stats Bar */
     .stats-bar {
-      background-color: #181825;
-      padding: 8px 16px;
+      background: linear-gradient(180deg, #2b2b36 0%, #1e1e2e 50%, #11111b 100%);
+      border: 2px solid #585b70;
+      border-radius: 8px;
+      margin: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
+      padding: 10px 18px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 16px;
-      border-bottom: 1px solid #313244;
-      font-size: 0.85rem;
+      border-bottom: 2px solid #313244;
+      font-size: 0.9rem;
+      position: relative;
     }
+    .stats-bar::before, .stats-bar::after {
+      content: '';
+      position: absolute;
+      top: -4px;
+      width: 12px;
+      height: 12px;
+      background: #f9e2af;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #f9e2af, inset 0 -2px 4px rgba(0,0,0,0.5);
+    }
+    .stats-bar::before { left: -4px; }
+    .stats-bar::after { right: -4px; }
+    
     .stat-group {
       display: flex;
       align-items: center;
@@ -71,31 +89,61 @@
     }
     .stat-label {
       color: #a6adc8;
+      text-shadow: 1px 1px 2px #000;
     }
     .stat-val {
       font-weight: 600;
       color: #f9e2af;
+      text-shadow: 1px 1px 2px #000;
     }
     .bar-container {
-      width: 90px;
-      height: 10px;
-      background: #313244;
-      border-radius: 5px;
-      overflow: hidden;
+      width: 100px;
+      height: 14px;
+      background: #11111b;
+      border: 2px solid #45475a;
+      border-radius: 8px;
+      overflow: visible;
       display: inline-block;
       vertical-align: middle;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 1px 2px rgba(255,255,255,0.1);
+      position: relative;
     }
+    /* Sockets for Gems */
+    .bar-container::before {
+      content: '';
+      position: absolute;
+      left: -8px; top: -4px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      z-index: 2;
+    }
+    
     .bar-fill-hp {
       height: 100%;
-      background: #f38ba8;
+      background: linear-gradient(90deg, #f38ba8 0%, #ffb3c6 100%);
+      box-shadow: 0 0 10px #f38ba8;
+      border-radius: 4px;
       width: 100%;
       transition: width 0.3s ease;
     }
+    .hp-bar::before {
+      background: radial-gradient(circle, #ffb3c6 10%, #f38ba8 50%, #800020 90%);
+      box-shadow: 0 0 10px #f38ba8, inset 0 0 4px rgba(255,255,255,0.8);
+      border: 2px solid #45475a;
+    }
+    
     .bar-fill-mp {
       height: 100%;
-      background: #89b4fa;
+      background: linear-gradient(90deg, #89b4fa 0%, #b4befe 100%);
+      box-shadow: 0 0 10px #89b4fa;
+      border-radius: 4px;
       width: 100%;
       transition: width 0.3s ease;
+    }
+    .mp-bar::before {
+      background: radial-gradient(circle, #b4befe 10%, #89b4fa 50%, #000080 90%);
+      box-shadow: 0 0 10px #89b4fa, inset 0 0 4px rgba(255,255,255,0.8);
+      border: 2px solid #45475a;
     }
 
     /* Main Content Area */
@@ -539,14 +587,14 @@
     </div>
     <div class="stat-group">
       <span class="stat-label">HP:</span>
-      <div class="bar-container">
+      <div class="bar-container hp-bar">
         <div class="bar-fill-hp" id="hp-bar"></div>
       </div>
       <span class="stat-val" id="hp-text">50/50</span>
     </div>
     <div class="stat-group">
       <span class="stat-label">MP:</span>
-      <div class="bar-container">
+      <div class="bar-container mp-bar">
         <div class="bar-fill-mp" id="mp-bar"></div>
       </div>
       <span class="stat-val" id="mp-text">20/20</span>
@@ -693,7 +741,10 @@
       monsterAction: 'idle',
       monsterActionTimer: 0,
       victoryBanner: { active: false, timer: 0, title: '' },
-      confetti: []
+      confetti: [],
+      screenShakeTimer: 0,
+      screenShakeIntensity: 0,
+      redFlashTimer: 0
     };
 
     function initGFX() {
@@ -712,14 +763,17 @@
       requestAnimationFrame(gfxLoop);
     }
 
-    function addFloatingText(text, x, y, color = '#f9e2af', fontSize = 16) {
+    function addFloatingText(text, x, y, color = '#f9e2af', fontSize = 16, isCrit = false) {
+      const vx = (Math.random() - 0.5) * (isCrit ? 5 : 2);
+      const vy = isCrit ? -8 : -5;
       GFX.floatingTexts.push({
         text: text,
         x: x,
         y: y,
-        startY: y,
+        vx: vx,
+        vy: vy,
         color: color,
-        fontSize: fontSize,
+        fontSize: isCrit ? fontSize * 1.5 : fontSize,
         life: 0,
         maxLife: 45
       });
@@ -789,6 +843,15 @@
       const w = GFX.canvas.width;
       const h = GFX.canvas.height;
       ctx.clearRect(0, 0, w, h);
+
+      ctx.save();
+      // Screen shake
+      if (GFX.screenShakeTimer > 0) {
+        GFX.screenShakeTimer--;
+        const shakeX = (Math.random() - 0.5) * GFX.screenShakeIntensity;
+        const shakeY = (Math.random() - 0.5) * GFX.screenShakeIntensity;
+        ctx.translate(shakeX, shakeY);
+      }
 
       // 1. Draw Environment Background
       drawEnvironmentBG(ctx, player.biome, currentState);
@@ -882,7 +945,9 @@
       for (let i = GFX.floatingTexts.length - 1; i >= 0; i--) {
         const ft = GFX.floatingTexts[i];
         ft.life++;
-        ft.y = ft.startY - (ft.life * 1.2);
+        ft.x += ft.vx;
+        ft.y += ft.vy;
+        ft.vy += 0.4; // gravity
         const alpha = 1 - (ft.life / ft.maxLife);
         ctx.save();
         ctx.globalAlpha = Math.max(0, alpha);
@@ -894,6 +959,19 @@
         ctx.fillText(ft.text, ft.x, ft.y);
         ctx.restore();
         if (ft.life >= ft.maxLife) GFX.floatingTexts.splice(i, 1);
+      }
+
+      ctx.restore(); // Restore from shake translation
+
+      // Render Red Flash
+      if (GFX.redFlashTimer > 0) {
+        GFX.redFlashTimer--;
+        const alpha = (GFX.redFlashTimer / 20) * 0.6;
+        const grad = ctx.createRadialGradient(w/2, h/2, h/4, w/2, h/2, h);
+        grad.addColorStop(0, 'rgba(243, 139, 168, 0)');
+        grad.addColorStop(1, `rgba(243, 139, 168, ${alpha})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
       }
 
       // 8. Render Victory Banner & Confetti
@@ -4208,7 +4286,14 @@
 
         player.hp -= enemyDmg;
         logMsg(`💥 ${currentEnemy.name} hits you for ${enemyDmg} damage!`, 'combat');
-        addFloatingText('-' + enemyDmg, 140, 90, '#f38ba8', 20);
+        const massiveDmg = player.maxHp * 0.2;
+        const isMassive = enemyDmg >= massiveDmg;
+        addFloatingText('-' + enemyDmg, 140, 90, '#f38ba8', 20, isMassive);
+        if (isMassive) {
+          GFX.screenShakeTimer = 15;
+          GFX.screenShakeIntensity = 10;
+          GFX.redFlashTimer = 20;
+        }
         addParticles(140, 130, '#f38ba8', 12);
 
 

@@ -1874,6 +1874,17 @@ void EnemyTurn() {
     char msg[128];
     wsprintfA(msg, "💥 %s attacks you for %d damage!", currentEnemy.name, dmg);
     LogMessage(msg);
+    
+    int massiveDmg = player.maxHp / 5;
+    int isMassive = (dmg >= massiveDmg);
+    char ftxt[16];
+    wsprintfA(ftxt, "-%d", dmg);
+    AddGdiFloatText(ftxt, 140, 70, RGB(243, 139, 168), isMassive);
+    if (isMassive) {
+        g_GdiScreenShakeTimer = 15;
+        g_GdiScreenShakeIntensity = 10;
+        g_GdiRedFlashTimer = 20;
+    }
 
     // Spiked Armor Reflection
     if (lstrcmpA(player.armorPrefix, "Spiked") == 0) {
@@ -2377,6 +2388,10 @@ void HandleButton1() {
             wsprintfA(msg, "⚔️ You attack %s dealing %d damage.", currentEnemy.name, dmg);
             LogMessage(msg);
         }
+        
+        char ftxt[16];
+        wsprintfA(ftxt, "-%d", dmg);
+        AddGdiFloatText(ftxt, 560, 65, RGB(249, 226, 175), isCrit);
 
         // Weapon Enchantment Effects
         if (lstrcmpA(player.weaponPrefix, "Flaming") == 0) {
@@ -3223,23 +3238,26 @@ static WNDPROC g_OldCanvasProc = NULL;
 
 typedef struct {
     char text[32];
-    int x, y, startY;
+    float x, y, vx, vy;
     COLORREF color;
     int life, maxLife;
+    int isCrit;
 } GdiFloatText;
 
 static GdiFloatText g_GdiFloatTexts[16];
 static int g_GdiFloatCount = 0;
 
-void AddGdiFloatText(const char* text, int x, int y, COLORREF color) {
+void AddGdiFloatText(const char* text, int x, int y, COLORREF color, int isCrit) {
     if (g_GdiFloatCount < 16) {
         lstrcpyA(g_GdiFloatTexts[g_GdiFloatCount].text, text);
-        g_GdiFloatTexts[g_GdiFloatCount].x = x;
-        g_GdiFloatTexts[g_GdiFloatCount].y = y;
-        g_GdiFloatTexts[g_GdiFloatCount].startY = y;
+        g_GdiFloatTexts[g_GdiFloatCount].x = (float)x;
+        g_GdiFloatTexts[g_GdiFloatCount].y = (float)y;
+        g_GdiFloatTexts[g_GdiFloatCount].vx = (float)((xrand() % 9) - 4) * (isCrit ? 1.5f : 0.5f);
+        g_GdiFloatTexts[g_GdiFloatCount].vy = isCrit ? -8.0f : -5.0f;
         g_GdiFloatTexts[g_GdiFloatCount].color = color;
         g_GdiFloatTexts[g_GdiFloatCount].life = 0;
         g_GdiFloatTexts[g_GdiFloatCount].maxLife = 40;
+        g_GdiFloatTexts[g_GdiFloatCount].isCrit = isCrit;
         g_GdiFloatCount++;
     }
 }
@@ -3281,6 +3299,10 @@ void TriggerGdiSpellFX(int type) {
 static int g_GdiBannerActive = 0;
 static int g_GdiBannerTimer = 0;
 static char g_GdiBannerTitle[32] = "VICTORY!";
+
+static int g_GdiScreenShakeTimer = 0;
+static int g_GdiScreenShakeIntensity = 0;
+static int g_GdiRedFlashTimer = 0;
 
 void TriggerGdiVictoryBanner(const char* title) {
     g_GdiBannerActive = 1;
@@ -3552,6 +3574,14 @@ void DrawGdiNPCSprite(HDC hdc, int x, int y, int frame) {
 void RenderGdiScene(HDC hdc, int w, int h) {
     g_GfxFrame++;
 
+    int shakeX = 0, shakeY = 0;
+    if (g_GdiScreenShakeTimer > 0) {
+        g_GdiScreenShakeTimer--;
+        shakeX = (xrand() % (g_GdiScreenShakeIntensity * 2 + 1)) - g_GdiScreenShakeIntensity;
+        shakeY = (xrand() % (g_GdiScreenShakeIntensity * 2 + 1)) - g_GdiScreenShakeIntensity;
+    }
+    SetViewportOrgEx(hdc, shakeX, shakeY, NULL);
+
     COLORREF bgTop = RGB(17, 17, 27);
     COLORREF bgBot = RGB(24, 24, 37);
 
@@ -3669,15 +3699,35 @@ void RenderGdiScene(HDC hdc, int w, int h) {
     for (int i = g_GdiFloatCount - 1; i >= 0; i--) {
         GdiFloatText* ft = &g_GdiFloatTexts[i];
         ft->life++;
-        ft->y = ft->startY - (ft->life * 1);
+        ft->x += ft->vx;
+        ft->y += ft->vy;
+        ft->vy += 0.4f; // gravity
+        
+        // Shadow
+        SetTextColor(hdc, RGB(17, 17, 27));
+        TextOutA(hdc, (int)ft->x + 2, (int)ft->y + 2, ft->text, lstrlenA(ft->text));
+        
         SetTextColor(hdc, ft->color);
-        TextOutA(hdc, ft->x, ft->y, ft->text, lstrlenA(ft->text));
+        TextOutA(hdc, (int)ft->x, (int)ft->y, ft->text, lstrlenA(ft->text));
         if (ft->life >= ft->maxLife) {
             g_GdiFloatTexts[i] = g_GdiFloatTexts[g_GdiFloatCount - 1];
             g_GdiFloatCount--;
         }
     }
     SelectObject(hdc, hOldFont); DeleteObject(hFont);
+
+    SetViewportOrgEx(hdc, 0, 0, NULL); // Reset shake
+
+    if (g_GdiRedFlashTimer > 0) {
+        g_GdiRedFlashTimer--;
+        HPEN hFlashPen = CreatePen(PS_INSIDEFRAME, g_GdiRedFlashTimer * 2, RGB(243, 139, 168));
+        HBRUSH hNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hFlashPen);
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hNull);
+        Rectangle(hdc, 0, 0, w, h);
+        SelectObject(hdc, hOldP); SelectObject(hdc, hOldB);
+        DeleteObject(hFlashPen);
+    }
 
     if (g_GdiBannerActive) {
         g_GdiBannerTimer++;

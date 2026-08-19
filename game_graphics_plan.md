@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KQuest
 - KSpace
 - KPac
 - KSnake
@@ -141,7 +140,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTowers
 - KWords
 - KReversi
+- KQuest
 ## Completed Work Log
+
+- **KQuest (Loop 5):** Implemented highly detailed visual variations for the UI (ornate metallic HUD frame with glowing gem sockets for health/mana in Web Canvas), dynamic animated damage numbers that pop out and arc downward with gravity physics based on hit severity, and a procedural screen-shake and red vignette flash effect when the hero takes massive damage in both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).
 
 - **KReversi (Loop 4):** FAILED (Subagent timed out after 8 minutes on 2nd attempt).
 
