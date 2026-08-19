@@ -158,10 +158,6 @@
                     <div id="garage-hp">100/100</div>
                 </div>
                 <div class="stat-box">
-                    <div>HP</div>
-                    <div id="garage-hp">100/100</div>
-                </div>
-                <div class="stat-box">
                     <div>HEAT</div>
                     <div id="garage-heat">0/100</div>
                 </div>
@@ -172,6 +168,20 @@
                 <div class="stat-box">
                     <div>DEF</div>
                     <div id="garage-def">5</div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 12px;">WEAPON</div>
+                    <button class="btn" id="btn-wpn" onclick="cycleWpn()" style="font-size:12px; padding:5px 10px;">Basic Laser</button>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 12px;">ARMOR</div>
+                    <button class="btn" id="btn-arm" onclick="cycleArm()" style="font-size:12px; padding:5px 10px;">Standard</button>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 12px;">HEAT SINK</div>
+                    <button class="btn" id="btn-sink" onclick="cycleSink()" style="font-size:12px; padding:5px 10px;">Basic</button>
                 </div>
             </div>
             <p style="text-align: center;">Welcome, Pilot. Your mech is ready for deployment.</p>
@@ -226,6 +236,26 @@
     </div>
 
     <script>
+        const weapons = [
+            { name: "Basic Laser", atk: 15, heatGen: 30 },
+            { name: "Heavy Cannon", atk: 25, heatGen: 50 },
+            { name: "Twin Blasters", atk: 20, heatGen: 40 }
+        ];
+        const armors = [
+            { name: "Standard", def: 5, maxHp: 100 },
+            { name: "Heavy", def: 10, maxHp: 120 },
+            { name: "Light Scout", def: 2, maxHp: 80 }
+        ];
+        const heatSinks = [
+            { name: "Basic", cooling: 20, maxHeat: 100 },
+            { name: "Advanced", cooling: 30, maxHeat: 150 },
+            { name: "Burst", cooling: 40, maxHeat: 80 }
+        ];
+
+        let equipWpn = 0, equipArm = 0, equipSink = 0;
+        let playerHeatGen = 30;
+        let playerCooling = 20;
+
         const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
         let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
         let isDefending = false;
@@ -254,6 +284,31 @@
             document.getElementById('garage-heat').innerText = `${playerStats.heat}/${playerStats.maxHeat}`;
             document.getElementById('garage-atk').innerText = playerStats.atk;
             document.getElementById('garage-def').innerText = playerStats.def;
+            
+            document.getElementById('btn-wpn').innerText = weapons[equipWpn].name;
+            document.getElementById('btn-arm').innerText = armors[equipArm].name;
+            document.getElementById('btn-sink').innerText = heatSinks[equipSink].name;
+        }
+
+        function cycleWpn() {
+            equipWpn = (equipWpn + 1) % weapons.length;
+            playerStats.atk = weapons[equipWpn].atk;
+            playerHeatGen = weapons[equipWpn].heatGen;
+            updateGarage();
+        }
+        function cycleArm() {
+            equipArm = (equipArm + 1) % armors.length;
+            playerStats.def = armors[equipArm].def;
+            playerStats.maxHp = armors[equipArm].maxHp;
+            playerStats.hp = playerStats.maxHp;
+            updateGarage();
+        }
+        function cycleSink() {
+            equipSink = (equipSink + 1) % heatSinks.length;
+            playerStats.maxHeat = heatSinks[equipSink].maxHeat;
+            playerCooling = heatSinks[equipSink].cooling;
+            if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+            updateGarage();
         }
 
         function updateBattle() {
@@ -302,12 +357,12 @@
         }
 
         function applyCooling() {
-            playerStats.heat = Math.max(0, playerStats.heat - 20);
+            playerStats.heat = Math.max(0, playerStats.heat - playerCooling);
             enemyStats.heat = Math.max(0, enemyStats.heat - 20);
         }
 
         function actionAttack() {
-            playerStats.heat += 30;
+            playerStats.heat += playerHeatGen;
             if (playerStats.heat > playerStats.maxHeat) {
                 playerStats.hp -= 15;
                 logMsg("WARNING: OVERHEAT! Took 15 system dmg.");

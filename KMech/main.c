@@ -21,6 +21,48 @@ typedef struct {
     int heat;
 } MechStats;
 
+typedef struct {
+    const char* name;
+    int atk;
+    int heatGen;
+} Weapon;
+
+typedef struct {
+    const char* name;
+    int def;
+    int maxHp;
+} Armor;
+
+typedef struct {
+    const char* name;
+    int cooling;
+    int maxHeat;
+} HeatSink;
+
+Weapon weapons[3] = {
+    {"Basic Laser", 15, 30},
+    {"Heavy Cannon", 25, 50},
+    {"Twin Blasters", 20, 40}
+};
+
+Armor armors[3] = {
+    {"Standard", 5, 100},
+    {"Heavy", 10, 120},
+    {"Light Scout", 2, 80}
+};
+
+HeatSink sinks[3] = {
+    {"Basic", 20, 100},
+    {"Advanced", 30, 150},
+    {"Burst", 40, 80}
+};
+
+int equipWpn = 0;
+int equipArm = 0;
+int equipSink = 0;
+int playerHeatGen = 30;
+int playerCooling = 20;
+
 MechStats playerStats = { 100, 100, 15, 5, 100, 0 };
 MechStats enemyStats = { 80, 80, 12, 3, 100, 0 };
 
@@ -92,14 +134,14 @@ void EnemyTurn() {
 }
 
 void ApplyCooling() {
-    playerStats.heat -= 20;
+    playerStats.heat -= playerCooling;
     if (playerStats.heat < 0) playerStats.heat = 0;
     enemyStats.heat -= 20;
     if (enemyStats.heat < 0) enemyStats.heat = 0;
 }
 
 void ActionAttack() {
-    playerStats.heat += 30;
+    playerStats.heat += playerHeatGen;
     if (playerStats.heat > playerStats.maxHeat) {
         playerStats.hp -= 15;
         addLog("WARNING: OVERHEAT! Took 15 system dmg.");
@@ -174,11 +216,15 @@ void ReturnToGarage() {
 }
 
 // Button areas
-RECT rectDeploy = { 200, 360, 400, 400 };
+RECT rectDeploy = { 200, 320, 400, 360 };
 RECT rectTarget = { 50, 400, 190, 440 };
 RECT rectAttack = { 210, 400, 350, 440 };
 RECT rectDefend = { 370, 400, 510, 440 };
 RECT rectReturn = { 200, 400, 400, 440 };
+
+RECT rectWpn = { 50, 200, 190, 240 };
+RECT rectArm = { 230, 200, 370, 240 };
+RECT rectSink = { 410, 200, 550, 240 };
 
 bool PtInRectLocal(const RECT* r, int x, int y) {
     return (x >= r->left && x <= r->right && y >= r->top && y <= r->bottom);
@@ -211,6 +257,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameState == STATE_GARAGE) {
                 if (PtInRectLocal(&rectDeploy, x, y)) {
                     StartBattle();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectWpn, x, y)) {
+                    equipWpn = (equipWpn + 1) % 3;
+                    playerStats.atk = weapons[equipWpn].atk;
+                    playerHeatGen = weapons[equipWpn].heatGen;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectArm, x, y)) {
+                    equipArm = (equipArm + 1) % 3;
+                    playerStats.def = armors[equipArm].def;
+                    playerStats.maxHp = armors[equipArm].maxHp;
+                    playerStats.hp = playerStats.maxHp;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectSink, x, y)) {
+                    equipSink = (equipSink + 1) % 3;
+                    playerStats.maxHeat = sinks[equipSink].maxHeat;
+                    playerCooling = sinks[equipSink].cooling;
+                    if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (gameState == STATE_BATTLE) {
@@ -278,8 +341,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, buf, -1, &statsRect, DT_CENTER | DT_SINGLELINE);
                 
                 RECT msgRect = {0, 150, 600, 190};
-                DrawTextA(memDC, "Welcome, Pilot. Your mech is ready for deployment.", -1, &msgRect, DT_CENTER | DT_SINGLELINE);
+                DrawTextA(memDC, "Welcome, Pilot. Customize and deploy.", -1, &msgRect, DT_CENTER | DT_SINGLELINE);
                 
+                RECT lw = {50, 180, 190, 200};
+                DrawTextA(memDC, "WEAPON", -1, &lw, DT_CENTER | DT_SINGLELINE);
+                DrawButton(memDC, &rectWpn, weapons[equipWpn].name);
+
+                RECT la = {230, 180, 370, 200};
+                DrawTextA(memDC, "ARMOR", -1, &la, DT_CENTER | DT_SINGLELINE);
+                DrawButton(memDC, &rectArm, armors[equipArm].name);
+
+                RECT ls = {410, 180, 550, 200};
+                DrawTextA(memDC, "HEAT SINK", -1, &ls, DT_CENTER | DT_SINGLELINE);
+                DrawButton(memDC, &rectSink, sinks[equipSink].name);
+
                 DrawButton(memDC, &rectDeploy, "Deploy to Battle");
             } else {
                 RECT titleRect = {0, 20, 600, 60};
