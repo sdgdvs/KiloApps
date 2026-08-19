@@ -79,6 +79,8 @@ int playerCooling = 20;
 int credits = 100;
 int salvage = 0;
 int battleCount = 1;
+int playerLevel = 1;
+int playerXp = 0;
 
 MechStats playerStats = { 100, 100, 15, 5, 100, 0 };
 MechStats enemyStats = { 80, 80, 12, 3, 100, 0 };
@@ -135,10 +137,10 @@ void EnemyTurn() {
 
     int hitRoll = my_rand() % 100;
     
-    float effectiveChance = limbHitChance[target] - specials[equipSpec].evadeBonus;
+    float effectiveChance = limbHitChance[target] - specials[equipSpec].evadeBonus - ((playerLevel - 1) * 0.05f);
     if (hitRoll > (int)(effectiveChance * 100.0f)) {
         char buf[128];
-        if (specials[equipSpec].evadeBonus > 0) {
+        if (specials[equipSpec].evadeBonus > 0 || playerLevel > 1) {
             wsprintfA(buf, "Enemy targets %s... Evaded!", limbNames[target]);
         } else {
             wsprintfA(buf, "Enemy targets %s... Missed!", limbNames[target]);
@@ -174,6 +176,8 @@ void EnemyTurn() {
         battleCount = 1;
         credits = 100;
         salvage = 0;
+        playerLevel = 1;
+        playerXp = 0;
         gameState = STATE_POST_BATTLE;
         playerVictory = false;
     }
@@ -197,6 +201,8 @@ void ActionAttack() {
             battleCount = 1;
             credits = 100;
             salvage = 0;
+            playerLevel = 1;
+            playerXp = 0;
             gameState = STATE_POST_BATTLE;
             playerVictory = false;
             return;
@@ -206,7 +212,10 @@ void ActionAttack() {
     int target = currentTargetLimb;
     int hitRoll = my_rand() % 100;
     
-    if (hitRoll > (int)(limbHitChance[target] * 100.0f)) {
+    float hitChance = limbHitChance[target] + ((playerLevel - 1) * 0.05f);
+    if (hitChance > 1.0f) hitChance = 1.0f;
+
+    if (hitRoll > (int)(hitChance * 100.0f)) {
         char buf[128];
         wsprintfA(buf, "You target %s... Missed!", limbNames[target]);
         addLog(buf);
@@ -231,6 +240,19 @@ void ActionAttack() {
         char buf[128];
         wsprintfA(buf, "VICTORY! Earned %d CR & %d Parts.", reward, parts);
         addLog(buf);
+
+        int xpGain = 40 + (battleCount * 20);
+        playerXp += xpGain;
+        wsprintfA(buf, "Gained %d XP.", xpGain);
+        addLog(buf);
+        
+        if (playerXp >= playerLevel * 100) {
+            playerXp -= playerLevel * 100;
+            playerLevel++;
+            wsprintfA(buf, "LEVEL UP! Pilot is now Level %d.", playerLevel);
+            addLog(buf);
+        }
+
         battleCount++;
         gameState = STATE_POST_BATTLE;
         playerVictory = true;
@@ -446,12 +468,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 char camBuf[128];
                 wsprintfA(camBuf, "BATTLE %d | CR: %d | SALVAGE: %d", battleCount, credits, salvage);
-                RECT camRect = {0, 70, 600, 90};
+                RECT camRect = {0, 60, 600, 80};
                 DrawTextA(memDC, camBuf, -1, &camRect, DT_CENTER | DT_SINGLELINE);
+
+                char lvlBuf[128];
+                wsprintfA(lvlBuf, "PILOT LVL: %d | XP: %d/%d", playerLevel, playerXp, playerLevel * 100);
+                RECT lvlRect = {0, 80, 600, 100};
+                DrawTextA(memDC, lvlBuf, -1, &lvlRect, DT_CENTER | DT_SINGLELINE);
 
                 char buf[128];
                 wsprintfA(buf, "HP: %d/%d  HEAT: %d/%d  ATK: %d  DEF: %d", playerStats.hp, playerStats.maxHp, playerStats.heat, playerStats.maxHeat, playerStats.atk, playerStats.def);
-                RECT statsRect = {0, 100, 600, 140};
+                RECT statsRect = {0, 105, 600, 140};
                 DrawTextA(memDC, buf, -1, &statsRect, DT_CENTER | DT_SINGLELINE);
                 
                 RECT msgRect = {0, 150, 600, 190};

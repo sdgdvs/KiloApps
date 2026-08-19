@@ -153,7 +153,8 @@
         <div id="screen-garage" class="screen active">
             <h1>KMech - Garage</h1>
             <div style="text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px;">
-                BATTLE: <span id="garage-battle-count">1</span> | CREDITS: <span id="garage-credits">100</span> | SALVAGE: <span id="garage-salvage">0</span>
+                BATTLE: <span id="garage-battle-count">1</span> | CREDITS: <span id="garage-credits">100</span> | SALVAGE: <span id="garage-salvage">0</span><br>
+                PILOT LVL: <span id="garage-level">1</span> | XP: <span id="garage-xp">0</span>/<span id="garage-next-xp">100</span>
             </div>
             <div class="stats">
                 <div class="stat-box">
@@ -274,6 +275,8 @@
         let credits = 100;
         let salvage = 0;
         let battleCount = 1;
+        let playerLevel = 1;
+        let playerXp = 0;
 
         const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
         let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
@@ -304,6 +307,9 @@
             document.getElementById('garage-battle-count').innerText = battleCount;
             document.getElementById('garage-credits').innerText = credits;
             document.getElementById('garage-salvage').innerText = salvage;
+            document.getElementById('garage-level').innerText = playerLevel;
+            document.getElementById('garage-xp').innerText = playerXp;
+            document.getElementById('garage-next-xp').innerText = playerLevel * 100;
             document.getElementById('garage-hp').innerText = `${playerStats.hp}/${playerStats.maxHp}`;
             document.getElementById('garage-heat').innerText = `${playerStats.heat}/${playerStats.maxHeat}`;
             document.getElementById('garage-atk').innerText = playerStats.atk;
@@ -444,12 +450,22 @@
                 credits += reward;
                 salvage += parts;
                 logMsg(`VICTORY! Earned ${reward} CR and ${parts} Salvage Parts.`);
+                let xpGain = 40 + (battleCount * 20);
+                playerXp += xpGain;
+                logMsg(`Gained ${xpGain} XP.`);
+                if (playerXp >= playerLevel * 100) {
+                    playerXp -= playerLevel * 100;
+                    playerLevel++;
+                    logMsg(`LEVEL UP! Pilot is now Level ${playerLevel}. Accuracy and Evasion increased!`);
+                }
                 battleCount++;
             } else {
                 logMsg("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
                 battleCount = 1;
                 credits = 100;
                 salvage = 0;
+                playerLevel = 1;
+                playerXp = 0;
             }
         }
 
@@ -473,7 +489,10 @@
 
             let targetLimb = limbs[currentTargetLimb];
             
-            if (Math.random() > targetLimb.chance) {
+            let hitChance = targetLimb.chance + ((playerLevel - 1) * 0.05);
+            if (hitChance > 1.0) hitChance = 1.0;
+
+            if (Math.random() > hitChance) {
                 logMsg(`You target ${targetLimb.name}... Missed!`);
             } else {
                 let dmg = Math.max(1, playerStats.atk - (enemyIsDefending ? enemyStats.def * 2 : enemyStats.def) + Math.floor(Math.random() * 5));
@@ -530,9 +549,9 @@
             }
             let targetLimb = limbs[targetIdx];
             
-            let effectiveChance = targetLimb.chance - specials[equipSpec].evadeBonus;
+            let effectiveChance = targetLimb.chance - specials[equipSpec].evadeBonus - ((playerLevel - 1) * 0.05);
             if (Math.random() > effectiveChance) {
-                if (specials[equipSpec].evadeBonus > 0) {
+                if (specials[equipSpec].evadeBonus > 0 || playerLevel > 1) {
                     logMsg(`Enemy targets ${targetLimb.name}... Evaded!`);
                 } else {
                     logMsg(`Enemy targets ${targetLimb.name}... Missed!`);
