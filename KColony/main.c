@@ -1006,7 +1006,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             FillRect(hdcMem, &rc, bg);
             DeleteObject(bg);
             
-            HFONT hFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH, "Courier New");
+            HFONT hFont = CreateFont(-16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH, "Courier New");
             
             if (gameState == 0) {
                 DrawMenu(hdcMem, hFont, rc);
@@ -1043,9 +1043,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.lpszClassName = CLASS_NAME;
     RegisterClass(&wc);
 
+    RECT rcW = {0, 0, 850, 650};
+    AdjustWindowRect(&rcW, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KColony", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 850, 650,
+        CW_USEDEFAULT, CW_USEDEFAULT, rcW.right - rcW.left, rcW.bottom - rcW.top,
         NULL, NULL, hInstance, NULL
     );
     if (hwnd == NULL) return 0;
