@@ -474,7 +474,7 @@ void InitListView(HWND hwnd) {
     SendMessage(hListView, LVM_SETTEXTBKCOLOR, 0, (LPARAM)RGB(35, 40, 45));
     SendMessage(hListView, LVM_SETBKCOLOR, 0, (LPARAM)RGB(26, 32, 38));
     
-    hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+    hFont = CreateFontA(-18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
     SendMessage(hListView, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hPwd, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -688,6 +688,14 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 
 void MainEntry() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
+    
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL(WINAPI *SetProcessDPIAwareFunc)(void);
+        SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpiAware) setDpiAware();
+    }
+
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
@@ -697,8 +705,11 @@ void MainEntry() {
     wc.hbrBackground = hBgBrush;
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database (Press H for Help)", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    RECT rect = {0, 0, W, H};
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+
+    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database (Press H for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
