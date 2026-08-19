@@ -77,6 +77,7 @@ int playerHeatGen = 30;
 int playerCooling = 20;
 
 int credits = 100;
+int salvage = 0;
 int battleCount = 1;
 
 MechStats playerStats = { 100, 100, 15, 5, 100, 0 };
@@ -172,6 +173,7 @@ void EnemyTurn() {
         addLog("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
         battleCount = 1;
         credits = 100;
+        salvage = 0;
         gameState = STATE_POST_BATTLE;
         playerVictory = false;
     }
@@ -194,6 +196,7 @@ void ActionAttack() {
             addLog("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
             battleCount = 1;
             credits = 100;
+            salvage = 0;
             gameState = STATE_POST_BATTLE;
             playerVictory = false;
             return;
@@ -222,9 +225,11 @@ void ActionAttack() {
     if (enemyStats.hp <= 0) {
         enemyStats.hp = 0;
         int reward = 50 + (battleCount * 10);
+        int parts = (my_rand() % 3) + 1;
         credits += reward;
+        salvage += parts;
         char buf[128];
-        wsprintfA(buf, "ENEMY DESTROYED. VICTORY. Earned %d Credits.", reward);
+        wsprintfA(buf, "VICTORY! Earned %d CR & %d Parts.", reward, parts);
         addLog(buf);
         battleCount++;
         gameState = STATE_POST_BATTLE;
@@ -275,8 +280,11 @@ void ReturnToGarage() {
 }
 
 // Button areas
-RECT rectDeploy = { 200, 320, 400, 360 };
-RECT rectRepair = { 200, 270, 400, 310 };
+RECT rectRepair  = {  80, 260, 280, 300 };
+RECT rectDeploy  = { 320, 260, 520, 300 };
+RECT rectUseSal  = {  80, 310, 280, 350 };
+RECT rectSellSal = { 320, 310, 520, 350 };
+
 RECT rectTarget = { 50, 400, 190, 440 };
 RECT rectAttack = { 210, 400, 350, 440 };
 RECT rectDefend = { 370, 400, 510, 440 };
@@ -330,6 +338,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         playerStats.hp += cost;
                         credits -= cost;
                         wsprintfA(garageInfo, "Repaired %d HP for %d Credits.", cost, cost);
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectUseSal, x, y)) {
+                    if (salvage > 0) {
+                        int missingHp = playerStats.maxHp - playerStats.hp;
+                        if (missingHp <= 0) {
+                            lstrcpyA(garageInfo, "Mech is already at max HP.");
+                        } else {
+                            int heal = missingHp < 50 ? missingHp : 50;
+                            playerStats.hp += heal;
+                            salvage--;
+                            wsprintfA(garageInfo, "Used 1 Salvage Part to repair %d HP.", heal);
+                        }
+                    } else {
+                        lstrcpyA(garageInfo, "No salvage parts available.");
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectSellSal, x, y)) {
+                    if (salvage > 0) {
+                        salvage--;
+                        credits += 50;
+                        lstrcpyA(garageInfo, "Sold 1 Salvage Part for 50 CR.");
+                    } else {
+                        lstrcpyA(garageInfo, "No salvage parts available.");
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectWpn, x, y)) {
@@ -413,7 +445,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, "KMECH - GARAGE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
                 
                 char camBuf[128];
-                wsprintfA(camBuf, "CAMPAIGN: BATTLE %d | CREDITS: %d", battleCount, credits);
+                wsprintfA(camBuf, "BATTLE %d | CR: %d | SALVAGE: %d", battleCount, credits, salvage);
                 RECT camRect = {0, 70, 600, 90};
                 DrawTextA(memDC, camBuf, -1, &camRect, DT_CENTER | DT_SINGLELINE);
 
@@ -441,8 +473,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, "SPECIAL", -1, &lsp, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectSpec, specials[equipSpec].name);
 
-                DrawButton(memDC, &rectRepair, "Repair (1 CR = 1 HP)");
+                DrawButton(memDC, &rectRepair, "Repair (1 CR=1 HP)");
                 DrawButton(memDC, &rectDeploy, "Deploy to Battle");
+                DrawButton(memDC, &rectUseSal, "Use Salvage (+50 HP)");
+                DrawButton(memDC, &rectSellSal, "Sell Salvage (+50 CR)");
             } else {
                 RECT titleRect = {0, 20, 600, 60};
                 DrawTextA(memDC, "COMBAT ZONE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);

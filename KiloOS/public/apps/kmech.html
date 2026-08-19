@@ -152,8 +152,8 @@
         <!-- Garage Screen -->
         <div id="screen-garage" class="screen active">
             <h1>KMech - Garage</h1>
-            <div style="text-align: center; margin-bottom: 10px; font-weight: bold;">
-                CAMPAIGN: BATTLE <span id="garage-battle-count">1</span> | CREDITS: <span id="garage-credits">100</span>
+            <div style="text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px;">
+                BATTLE: <span id="garage-battle-count">1</span> | CREDITS: <span id="garage-credits">100</span> | SALVAGE: <span id="garage-salvage">0</span>
             </div>
             <div class="stats">
                 <div class="stat-box">
@@ -192,9 +192,11 @@
                 </div>
             </div>
             <p id="garage-info" style="text-align: center;">Welcome, Pilot. Your mech is ready for deployment.</p>
-            <div class="actions">
-                <button class="btn" onclick="repairMech()" id="btn-repair">Repair</button>
+            <div class="actions" style="flex-wrap: wrap;">
+                <button class="btn" onclick="repairMech()" id="btn-repair">Repair (1 CR=1 HP)</button>
                 <button class="btn" onclick="startBattle()">Deploy to Battle</button>
+                <button class="btn" onclick="useSalvage()">Use Salvage (+50 HP)</button>
+                <button class="btn" onclick="sellSalvage()">Sell Salvage (+50 CR)</button>
             </div>
         </div>
 
@@ -270,6 +272,7 @@
         let playerHeatGen = 30;
         let playerCooling = 20;
         let credits = 100;
+        let salvage = 0;
         let battleCount = 1;
 
         const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
@@ -300,6 +303,7 @@
         function updateGarage() {
             document.getElementById('garage-battle-count').innerText = battleCount;
             document.getElementById('garage-credits').innerText = credits;
+            document.getElementById('garage-salvage').innerText = salvage;
             document.getElementById('garage-hp').innerText = `${playerStats.hp}/${playerStats.maxHp}`;
             document.getElementById('garage-heat').innerText = `${playerStats.heat}/${playerStats.maxHeat}`;
             document.getElementById('garage-atk').innerText = playerStats.atk;
@@ -352,6 +356,34 @@
             credits -= cost;
             document.getElementById('garage-info').innerText = `Repaired ${cost} HP for ${cost} Credits.`;
             updateGarage();
+        }
+
+        function useSalvage() {
+            if (salvage > 0) {
+                let missingHp = playerStats.maxHp - playerStats.hp;
+                if (missingHp <= 0) {
+                    document.getElementById('garage-info').innerText = "Mech is already at maximum structural integrity.";
+                    return;
+                }
+                let heal = Math.min(missingHp, 50);
+                playerStats.hp += heal;
+                salvage--;
+                document.getElementById('garage-info').innerText = `Used 1 Salvage Part to repair ${heal} HP.`;
+                updateGarage();
+            } else {
+                document.getElementById('garage-info').innerText = "No salvage parts available.";
+            }
+        }
+
+        function sellSalvage() {
+            if (salvage > 0) {
+                salvage--;
+                credits += 50;
+                document.getElementById('garage-info').innerText = "Sold 1 Salvage Part for 50 Credits.";
+                updateGarage();
+            } else {
+                document.getElementById('garage-info').innerText = "No salvage parts available.";
+            }
         }
 
         function updateBattle() {
@@ -408,13 +440,16 @@
             document.getElementById('post-battle-actions').style.display = 'flex';
             if (victory) {
                 let reward = 50 + (battleCount * 10);
+                let parts = Math.floor(Math.random() * 3) + 1;
                 credits += reward;
-                logMsg(`ENEMY DESTROYED. VICTORY. Earned ${reward} Credits.`);
+                salvage += parts;
+                logMsg(`VICTORY! Earned ${reward} CR and ${parts} Salvage Parts.`);
                 battleCount++;
             } else {
                 logMsg("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
                 battleCount = 1;
                 credits = 100;
+                salvage = 0;
             }
         }
 
