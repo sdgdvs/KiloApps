@@ -1227,7 +1227,7 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    RECT winRect = { 0, 0, W * 2, H * 2 };
+    RECT winRect = { 0, 0, 950, 750 };
     HDC screenDC = GetDC(NULL);
     int dpi = GetDeviceCaps(screenDC, LOGPIXELSX);
     ReleaseDC(NULL, screenDC);
