@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KPac
 - KSnake
 - KTetris
 - KBreakout
@@ -141,7 +140,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KReversi
 - KQuest
 - KSpace
+- KPac
 ## Completed Work Log
+
+- **KPac (Loop 6):** Implemented highly detailed visual variations for the ghost house (glowing forcefield door that physically ripples/bends dynamically when a ghost exits), distinct spawn-in animations for bonus fruit where they materialize from a wireframe grid rather than just popping in, and a dynamic screen-shake with an expanding 3D ring shockwave effect when the player eats a power pellet in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 
 - **KSpace (Loop 6):** Implemented highly detailed visual variations for the boss encounters (multi-phase visual damage states where armor plates shear off to expose glowing inner machinery below 25% HP), distinct telegraphing charging indicator rings that build up intensity before the boss fires its weapons, and a massive full-screen chromatic aberration/distortion flash effect shifting into a whiteout when the boss is finally defeated in both Web Canvas (kspace.html) and Native C Win32 GDI (KSpace/main.c).
 

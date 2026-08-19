@@ -439,6 +439,7 @@ int gameOver = 0;
 int dotCount = 0;
 int frameCount = 0;
 int deathTimer = 0;
+int screenShake = 0;
 int level = 1;
 int frightTimer = 0;
 int victoryTimer = 0;
@@ -453,6 +454,7 @@ typedef struct {
     int r;
     int maxR;
     COLORREF color;
+    int is3D;
 } ShockwaveRing;
 
 ShockwaveRing shockwaves[16];
@@ -460,7 +462,13 @@ int numShockwaves = 0;
 
 void AddShockwave(int x, int y, COLORREF color) {
     if (numShockwaves < 16) {
-        shockwaves[numShockwaves++] = (ShockwaveRing){x, y, 2, 28, color};
+        shockwaves[numShockwaves++] = (ShockwaveRing){x, y, 2, 28, color, 0};
+    }
+}
+
+void AddShockwave3D(int x, int y, COLORREF color) {
+    if (numShockwaves < 16) {
+        shockwaves[numShockwaves++] = (ShockwaveRing){x, y, 2, 28, color, 1};
     }
 }
 
@@ -712,6 +720,7 @@ void TriggerShieldSkill() {
 }
 
 void Update() {
+    if (screenShake > 0) screenShake--;
     if (saveMsgTimer > 0) saveMsgTimer--;
     if (showHelp || gameOver || paused) return;
 
@@ -992,8 +1001,9 @@ void Update() {
                 if (map[py][px] == 3) {
                     score += 40 * mult;
                     frightTimer = (loopNum >= 7) ? 0 : ((diffMode == 0) ? 75 : ((diffMode == 2) ? 35 : 50));
-                    AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(255, 184, 82));
-                    AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(255, 255, 255));
+                    screenShake = 12;
+                    AddShockwave3D(px * TS + TS/2, py * TS + TS/2, RGB(255, 184, 82));
+                    AddShockwave3D(px * TS + TS/2, py * TS + TS/2, RGB(255, 255, 255));
                     MessageBeep(MB_OK);
                 } else if (map[py][px] == 4) {
                     score += 20 * mult;
@@ -1038,7 +1048,7 @@ void Update() {
                     if (map[r][c] >= 2 && map[r][c] <= 5) {
                         int loopNum = (level - 1) / 20;
                         int mult = (loopNum >= 7) ? 8 : 1;
-                        if (map[r][c] == 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; AddShockwave(c * TS + TS/2, r * TS + TS/2, RGB(255, 184, 82)); }
+                        if (map[r][c] == 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; screenShake = 8; AddShockwave3D(c * TS + TS/2, r * TS + TS/2, RGB(255, 184, 82)); }
                         else if (map[r][c] == 4) { score += 20 * mult; speedSkillTimer = 80; }
                         else if (map[r][c] == 5) { score += 30 * mult; freezeSkillTimer = 60; }
                         else { score += 10 * mult; }
@@ -1293,6 +1303,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
 
+            if (screenShake > 0) {
+                int sx = (MyRand() % screenShake) - (screenShake / 2);
+                int sy = (MyRand() % screenShake) - (screenShake / 2);
+                SetWindowOrgEx(memDC, sx, sy, NULL);
+            }
+
             // Cyber-grid background environmental art
             HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(10, 40, 80));
             SelectObject(memDC, gridPen);
@@ -1333,6 +1349,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int r = 0; r < ROWS; r++) {
                 for (int c = 0; c < COLS; c++) {
                     if (map[r][c] == 1) {
+                        if (r == 6 && c == 7) {
+                            int dist = 999;
+                            for (int i = 0; i < numGhosts; i++) {
+                                if (!ghosts[i].isDead && !(ghosts[i].isPhantom && ghosts[i].phantomTimer <= 0)) {
+                                    int d = Abs(ghosts[i].x - c) + Abs(ghosts[i].y - r);
+                                    if (d < dist) dist = d;
+                                }
+                            }
+                            int ripple = dist < 3 ? (int)(MySin(frameCount * 0.5) * 4) : (int)(MySin(frameCount * 0.1) * 1);
+                            HPEN doorPen = CreatePen(PS_SOLID, 2 + Abs(ripple), RGB(0, 255, 255));
+                            SelectObject(memDC, doorPen);
+                            MoveToEx(memDC, c * TS, r * TS + TS/2 + ripple, NULL);
+                            LineTo(memDC, c * TS + TS, r * TS + TS/2 - ripple);
+                            DeleteObject(doorPen);
+                            continue;
+                        }
+
                         RECT wr = {c * TS, r * TS, c * TS + TS, r * TS + TS};
                         FillRect(memDC, &wr, wallBr);
                         
@@ -1444,8 +1477,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HPEN sPen = CreatePen(PS_SOLID, 2, shockwaves[i].color);
                 SelectObject(memDC, sPen);
                 SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
-                Ellipse(memDC, shockwaves[i].x - shockwaves[i].r, shockwaves[i].y - shockwaves[i].r,
-                               shockwaves[i].x + shockwaves[i].r, shockwaves[i].y + shockwaves[i].r);
+                if (shockwaves[i].is3D) {
+                    Ellipse(memDC, shockwaves[i].x - shockwaves[i].r, shockwaves[i].y - shockwaves[i].r / 2, shockwaves[i].x + shockwaves[i].r, shockwaves[i].y + shockwaves[i].r / 2);
+                    HPEN sPen2 = CreatePen(PS_SOLID, 1, shockwaves[i].color);
+                    SelectObject(memDC, sPen2);
+                    int r2 = shockwaves[i].r * 9 / 10;
+                    Ellipse(memDC, shockwaves[i].x - r2, shockwaves[i].y + shockwaves[i].r / 5 - r2 * 45 / 100, shockwaves[i].x + r2, shockwaves[i].y + shockwaves[i].r / 5 + r2 * 45 / 100);
+                    DeleteObject(sPen2);
+                    SelectObject(memDC, sPen);
+                } else {
+                    Ellipse(memDC, shockwaves[i].x - shockwaves[i].r, shockwaves[i].y - shockwaves[i].r,
+                                   shockwaves[i].x + shockwaves[i].r, shockwaves[i].y + shockwaves[i].r);
+                }
                 DeleteObject(sPen);
             }
 
@@ -1671,7 +1714,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Draw Fruit with Float Bounce & Level Variety
-            if (fruitActive) {
+            if (fruitTimer > 80) {
+                int prog = (100 - fruitTimer) * TS / 20;
+                HPEN gridP = CreatePen(PS_SOLID, 1, RGB(0, 255, 100));
+                SelectObject(memDC, gridP);
+                int fcx = 7 * TS, fcy = 12 * TS;
+                for (int i = 4; i < TS; i += 4) {
+                    MoveToEx(memDC, fcx + i, fcy + TS - prog, NULL); LineTo(memDC, fcx + i, fcy + TS);
+                    MoveToEx(memDC, fcx, fcy + TS - i, NULL); LineTo(memDC, fcx + prog, fcy + TS - i);
+                }
+                DeleteObject(gridP);
+            } else if (fruitActive) {
                 int bounceY = (int)(MySin(frameCount * 0.3) * 3.0);
                 int fcx = 7 * TS + TS/2, fcy = 12 * TS + TS/2 + bounceY;
                 int fruitType = ((level - 1) / 2) % 5; // 0=Cherry, 1=Strawberry, 2=Peach, 3=Apple, 4=Melon
@@ -1708,6 +1761,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(memDC, rBr); Chord(memDC, fcx - 4, fcy - 4, fcx + 4, fcy + 4, fcx + 4, fcy, fcx - 4, fcy); DeleteObject(rBr);
                 }
             }
+
+            SetWindowOrgEx(memDC, 0, 0, NULL);
 
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));

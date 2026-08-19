@@ -496,6 +496,7 @@
 
   let score = 0, gameOver = 0, dotCount = 0, frameCount = 0;
   let deathTimer = 0;
+  let screenShake = 0;
   let level = 1;
   let frightTimer = 0;
   let victoryTimer = 0;
@@ -763,8 +764,8 @@
       popups.push({ x: cx, y: cy, text: text, color: color, life: 20 });
   }
 
-  function addShockwave(cx, cy, color='#ffb852') {
-      shockwaves.push({ x: cx, y: cy, r: 2, maxR: 28, alpha: 1.0, color: color });
+  function addShockwave(cx, cy, color='#ffb852', is3D=false) {
+      shockwaves.push({ x: cx, y: cy, r: 2, maxR: 28, alpha: 1.0, color: color, is3D: is3D });
   }
 
   function init(keepScore) {
@@ -824,6 +825,7 @@
       paused = false;
       fruitActive = 0;
       fruitTimer = 0;
+      screenShake = 0;
       popups = [];
       particles = [];
       shockwaves = [];
@@ -928,6 +930,7 @@
 
       if (freezeSkillTimer > 0) freezeSkillTimer--;
       if (frightTimer > 0) frightTimer--;
+      if (screenShake > 0) screenShake--;
 
       updateSkillButtons();
 
@@ -1112,8 +1115,9 @@
                       score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; playSound(300, 0.3, 'sawtooth');
                       addPopup(cx, cy, '+' + (40 * mult), '#ffb852');
                       addSparks(cx, cy, '#ffb852', 10);
-                      addShockwave(cx, cy, '#ffb852');
-                      addShockwave(cx, cy, '#ffffff');
+                      screenShake = 12;
+                      addShockwave(cx, cy, '#ffb852', true);
+                      addShockwave(cx, cy, '#ffffff', true);
                   }
                   else if (map[py][px] === 4) {
                       score += 20 * mult; speedSkillTimer = 80; playSound(900, 0.1, 'triangle');
@@ -1158,7 +1162,7 @@
                           let cx = c * TS + TS/2, cy = r * TS + TS/2;
                           let loopNum = Math.floor((level - 1) / 20);
                           let mult = (loopNum >= 7) ? 8 : 1;
-                          if (map[r][c] === 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; addPopup(cx, cy, '+' + (40 * mult), '#ffb852'); addShockwave(cx, cy, '#ffb852'); }
+                          if (map[r][c] === 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; addPopup(cx, cy, '+' + (40 * mult), '#ffb852'); addShockwave(cx, cy, '#ffb852', true); screenShake = 8; }
                           else if (map[r][c] === 4) { score += 20 * mult; speedSkillTimer = 80; addPopup(cx, cy, 'SPEED!', '#00ffff'); }
                           else if (map[r][c] === 5) { score += 30 * mult; freezeSkillTimer = 60; addPopup(cx, cy, 'FREEZE!', '#ffffff'); }
                           else { score += 10 * mult; }
@@ -1283,6 +1287,30 @@
 
   function drawWallTile(ctx, r, c) {
       let x = c * TS, y = r * TS;
+
+      if (r === 6 && c === 7) {
+          // Forcefield door!
+          let dist = 99;
+          for (let g of ghosts) {
+              if (!g.isDead && !(g.isPhantom && g.phantomTimer <= 0)) {
+                  let d = Math.abs(g.x - c) + Math.abs(g.y - r);
+                  if (d < dist) dist = d;
+              }
+          }
+          let ripple = dist < 3 ? Math.sin(frameCount * 0.5) * 4 : Math.sin(frameCount * 0.1) * 1;
+          
+          ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + Math.sin(frameCount*0.2)*0.3})`;
+          ctx.lineWidth = 2 + ripple;
+          ctx.beginPath();
+          ctx.moveTo(x, y + TS/2 + ripple);
+          ctx.bezierCurveTo(x + TS/3, y + TS/2 - ripple, x + 2*TS/3, y + TS/2 + ripple, x + TS, y + TS/2 - ripple);
+          ctx.stroke();
+          
+          ctx.fillStyle = `rgba(0, 200, 255, 0.15)`;
+          ctx.fillRect(x, y, TS, TS);
+          return;
+      }
+
       ctx.fillStyle = '#060a17';
       ctx.fillRect(x, y, TS, TS);
 
@@ -1410,6 +1438,20 @@
       let bounceY = Math.sin(frameCount * 0.25) * 3;
       let cx = c * TS + TS/2, cy = r * TS + TS/2 + bounceY;
       let fruitType = Math.floor((level - 1) / 2) % 5; // 0=Cherry, 1=Strawberry, 2=Peach, 3=Apple, 4=Watermelon
+
+      if (fruitTimer > 80) {
+          // Wireframe materialization
+          let prog = (100 - fruitTimer) / 20;
+          ctx.strokeStyle = `rgba(0, 255, 100, ${prog})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for(let i=4; i<TS; i+=4) {
+              ctx.moveTo(c*TS + i, r*TS + TS - prog*TS); ctx.lineTo(c*TS + i, r*TS + TS);
+              ctx.moveTo(c*TS, r*TS + TS - i); ctx.lineTo(c*TS + prog*TS, r*TS + TS - i);
+          }
+          ctx.stroke();
+          return;
+      }
 
       if (fruitType === 0) { // Cherry
           ctx.strokeStyle = '#4caf50'; ctx.lineWidth = 1.5;
@@ -1660,6 +1702,13 @@
       ctx.fillStyle = '#030611';
       ctx.fillRect(0, 0, 300, 340);
 
+      ctx.save();
+      if (screenShake > 0) {
+          let sx = (Math.random() - 0.5) * screenShake;
+          let sy = (Math.random() - 0.5) * screenShake;
+          ctx.translate(sx, sy);
+      }
+
       // Cyber-grid background environmental art
       ctx.strokeStyle = 'rgba(30, 136, 229, 0.15)';
       ctx.lineWidth = 1;
@@ -1728,8 +1777,17 @@
           ctx.strokeStyle = s.color;
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-          ctx.stroke();
+          if (s.is3D) {
+              ctx.ellipse(s.x, s.y, s.r, s.r * 0.5, 0, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.ellipse(s.x, s.y + s.r * 0.2, s.r * 0.9, s.r * 0.45, 0, 0, Math.PI * 2);
+              ctx.stroke();
+          } else {
+              ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+              ctx.stroke();
+          }
           ctx.restore();
       }
 
@@ -1744,6 +1802,8 @@
           ctx.fillText(pop.text, pop.x - 10, pop.y);
       }
       
+      ctx.restore();
+
       ctx.fillStyle = '#fff';
       ctx.font = '11px monospace';
       ctx.textBaseline = 'top';
