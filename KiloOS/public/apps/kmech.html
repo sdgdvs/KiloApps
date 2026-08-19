@@ -186,6 +186,10 @@
                     <div style="font-size: 12px;">HEAT SINK</div>
                     <button class="btn" id="btn-sink" onclick="cycleSink()" style="font-size:12px; padding:5px 10px;">Basic</button>
                 </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 12px;">SPECIAL</div>
+                    <button class="btn" id="btn-spec" onclick="cycleSpec()" style="font-size:12px; padding:5px 10px;">None</button>
+                </div>
             </div>
             <p id="garage-info" style="text-align: center;">Welcome, Pilot. Your mech is ready for deployment.</p>
             <div class="actions">
@@ -256,7 +260,13 @@
             { name: "Burst", cooling: 40, maxHeat: 80 }
         ];
 
-        let equipWpn = 0, equipArm = 0, equipSink = 0;
+        const specials = [
+            { name: "None", evadeBonus: 0, shieldDmgReduction: 0 },
+            { name: "Jump Jets", evadeBonus: 0.2, shieldDmgReduction: 0 },
+            { name: "Energy Shield", evadeBonus: 0, shieldDmgReduction: 5 }
+        ];
+
+        let equipWpn = 0, equipArm = 0, equipSink = 0, equipSpec = 0;
         let playerHeatGen = 30;
         let playerCooling = 20;
         let credits = 100;
@@ -298,6 +308,7 @@
             document.getElementById('btn-wpn').innerText = weapons[equipWpn].name;
             document.getElementById('btn-arm').innerText = armors[equipArm].name;
             document.getElementById('btn-sink').innerText = heatSinks[equipSink].name;
+            document.getElementById('btn-spec').innerText = specials[equipSpec].name;
         }
 
         function cycleWpn() {
@@ -318,6 +329,11 @@
             playerStats.maxHeat = heatSinks[equipSink].maxHeat;
             playerCooling = heatSinks[equipSink].cooling;
             if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+            updateGarage();
+        }
+
+        function cycleSpec() {
+            equipSpec = (equipSpec + 1) % specials.length;
             updateGarage();
         }
 
@@ -479,11 +495,23 @@
             }
             let targetLimb = limbs[targetIdx];
             
-            if (Math.random() > targetLimb.chance) {
-                logMsg(`Enemy targets ${targetLimb.name}... Missed!`);
+            let effectiveChance = targetLimb.chance - specials[equipSpec].evadeBonus;
+            if (Math.random() > effectiveChance) {
+                if (specials[equipSpec].evadeBonus > 0) {
+                    logMsg(`Enemy targets ${targetLimb.name}... Evaded!`);
+                } else {
+                    logMsg(`Enemy targets ${targetLimb.name}... Missed!`);
+                }
             } else {
                 let dmg = Math.max(1, enemyStats.atk - (isDefending ? playerStats.def * 2 : playerStats.def) + Math.floor(Math.random() * 4));
                 dmg = Math.floor(dmg * targetLimb.mult);
+                
+                if (specials[equipSpec].shieldDmgReduction > 0) {
+                    let absorbed = Math.min(dmg, specials[equipSpec].shieldDmgReduction);
+                    dmg -= absorbed;
+                    if (absorbed > 0) logMsg(`Shield absorbed ${absorbed} damage!`);
+                }
+
                 playerStats.hp -= dmg;
                 playerLimbDamage[targetIdx] += dmg;
                 logMsg(`Enemy hits ${targetLimb.name}! Took ${dmg} damage.`);

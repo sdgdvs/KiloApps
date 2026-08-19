@@ -57,9 +57,22 @@ HeatSink sinks[3] = {
     {"Burst", 40, 80}
 };
 
+typedef struct {
+    const char* name;
+    float evadeBonus;
+    int shieldDmgReduction;
+} Special;
+
+Special specials[3] = {
+    {"None", 0.0f, 0},
+    {"Jump Jets", 0.2f, 0},
+    {"Energy Shield", 0.0f, 5}
+};
+
 int equipWpn = 0;
 int equipArm = 0;
 int equipSink = 0;
+int equipSpec = 0;
 int playerHeatGen = 30;
 int playerCooling = 20;
 
@@ -121,15 +134,31 @@ void EnemyTurn() {
 
     int hitRoll = my_rand() % 100;
     
-    if (hitRoll > (int)(limbHitChance[target] * 100.0f)) {
+    float effectiveChance = limbHitChance[target] - specials[equipSpec].evadeBonus;
+    if (hitRoll > (int)(effectiveChance * 100.0f)) {
         char buf[128];
-        wsprintfA(buf, "Enemy targets %s... Missed!", limbNames[target]);
+        if (specials[equipSpec].evadeBonus > 0) {
+            wsprintfA(buf, "Enemy targets %s... Evaded!", limbNames[target]);
+        } else {
+            wsprintfA(buf, "Enemy targets %s... Missed!", limbNames[target]);
+        }
         addLog(buf);
     } else {
         int effectiveDef = isDefending ? (playerStats.def * 2) : playerStats.def;
         int dmg = (enemyStats.atk - effectiveDef) + (my_rand() % 4);
         if (dmg < 1) dmg = 1;
         dmg = (int)(dmg * limbDmgMult[target]);
+        
+        if (specials[equipSpec].shieldDmgReduction > 0) {
+            int absorbed = dmg < specials[equipSpec].shieldDmgReduction ? dmg : specials[equipSpec].shieldDmgReduction;
+            dmg -= absorbed;
+            if (absorbed > 0) {
+                char abuf[128];
+                wsprintfA(abuf, "Shield absorbed %d damage!", absorbed);
+                addLog(abuf);
+            }
+        }
+
         playerStats.hp -= dmg;
         playerLimbDamage[target] += dmg;
         
@@ -253,9 +282,10 @@ RECT rectAttack = { 210, 400, 350, 440 };
 RECT rectDefend = { 370, 400, 510, 440 };
 RECT rectReturn = { 200, 400, 400, 440 };
 
-RECT rectWpn = { 50, 200, 190, 240 };
-RECT rectArm = { 230, 200, 370, 240 };
-RECT rectSink = { 410, 200, 550, 240 };
+RECT rectWpn = { 20, 200, 150, 240 };
+RECT rectArm = { 160, 200, 290, 240 };
+RECT rectSink = { 300, 200, 430, 240 };
+RECT rectSpec = { 440, 200, 570, 240 };
 
 bool PtInRectLocal(const RECT* r, int x, int y) {
     return (x >= r->left && x <= r->right && y >= r->top && y <= r->bottom);
@@ -318,6 +348,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     playerStats.maxHeat = sinks[equipSink].maxHeat;
                     playerCooling = sinks[equipSink].cooling;
                     if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectSpec, x, y)) {
+                    equipSpec = (equipSpec + 1) % 3;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (gameState == STATE_BATTLE) {
@@ -392,17 +425,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT msgRect = {0, 150, 600, 190};
                 DrawTextA(memDC, garageInfo, -1, &msgRect, DT_CENTER | DT_SINGLELINE);
                 
-                RECT lw = {50, 180, 190, 200};
+                RECT lw = {20, 180, 150, 200};
                 DrawTextA(memDC, "WEAPON", -1, &lw, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectWpn, weapons[equipWpn].name);
 
-                RECT la = {230, 180, 370, 200};
+                RECT la = {160, 180, 290, 200};
                 DrawTextA(memDC, "ARMOR", -1, &la, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectArm, armors[equipArm].name);
 
-                RECT ls = {410, 180, 550, 200};
+                RECT ls = {300, 180, 430, 200};
                 DrawTextA(memDC, "HEAT SINK", -1, &ls, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectSink, sinks[equipSink].name);
+
+                RECT lsp = {440, 180, 570, 200};
+                DrawTextA(memDC, "SPECIAL", -1, &lsp, DT_CENTER | DT_SINGLELINE);
+                DrawButton(memDC, &rectSpec, specials[equipSpec].name);
 
                 DrawButton(memDC, &rectRepair, "Repair (1 CR = 1 HP)");
                 DrawButton(memDC, &rectDeploy, "Deploy to Battle");
