@@ -645,7 +645,7 @@ function App() {
       const timer = setTimeout(() => {
         setScreen('os');
         playStartupAudio();
-        setTimeout(() => notify("System Ready", "Welcome to KiloOS. Click the Start button to begin. Press 'H' on desktop for help."), 1000);
+        setTimeout(() => setModal({ type: 'help' }), 1000);
       }, 3000);
 
       const handleKeyDown = (e) => {
