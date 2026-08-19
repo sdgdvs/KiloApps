@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KClock
 - KDB
 - KiloOS Web UI
 - KFortress
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KRadio
 - KBBS
 - KPong
+- KClock
 
 ## Progress Log
 - KCalendar: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1024x768, added F1 key support and updated UI labels for help menu in both web and native, applied text-rendering optimizeLegibility to web app body for crisp text).
@@ -304,3 +304,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KAudio: Usability and UI issues fixed (auto-opening size explicitly scaled to 1000x800, help instructions default to open, native font crispness fixed with negative font height, web canvas interaction gestures locked, and font-smoothing applied).
 - KBBS: Usability and UI issues fixed (implemented negative font height in native C for crisp text, added AdjustWindowRect to fix UI clipping, fixed native mouse selection offsets, updated native title with Help instruction, and optimized web text rendering).
 - KPong: Usability and UI issues fixed (synchronized native window bounds to 950x750 matching App.jsx, added optimizeLegibility to web version for crisp font rendering, verified native font heights and web devicePixelRatio scaling, confirmed clear help instructions).
+- KClock: Usability and UI issues fixed (updated native CreateFontA parameters to negative heights for crisp DPI scaling, added text-rendering: optimizeLegibility to web layout for crisp typography, and verified App.jsx bounds 950x650 match content size).
