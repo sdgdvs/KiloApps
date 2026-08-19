@@ -63,6 +63,9 @@ int equipSink = 0;
 int playerHeatGen = 30;
 int playerCooling = 20;
 
+int credits = 100;
+int battleCount = 1;
+
 MechStats playerStats = { 100, 100, 15, 5, 100, 0 };
 MechStats enemyStats = { 80, 80, 12, 3, 100, 0 };
 
@@ -75,6 +78,7 @@ float limbDmgMult[] = { 3.0f, 1.0f, 1.5f, 1.5f, 1.2f };
 
 char battleLogs[15][128];
 int logCount = 0;
+char garageInfo[128] = "Welcome, Pilot. Customize and deploy.";
 
 void addLog(const char* msg) {
     if (logCount < 10) {
@@ -99,7 +103,12 @@ void EnemyTurn() {
         addLog("Enemy overheats! Takes 15 system dmg.");
         if (enemyStats.hp <= 0) {
             enemyStats.hp = 0;
-            addLog("ENEMY DESTROYED. VICTORY.");
+            int reward = 50 + (battleCount * 10);
+            credits += reward;
+            char buf[128];
+            wsprintfA(buf, "ENEMY DESTROYED. VICTORY. Earned %d Credits.", reward);
+            addLog(buf);
+            battleCount++;
             gameState = STATE_POST_BATTLE;
             playerVictory = true;
             return;
@@ -127,7 +136,9 @@ void EnemyTurn() {
 
     if (playerStats.hp <= 0) {
         playerStats.hp = 0;
-        addLog("CRITICAL DAMAGE. MECH DESTROYED. DEFEAT.");
+        addLog("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
+        battleCount = 1;
+        credits = 100;
         gameState = STATE_POST_BATTLE;
         playerVictory = false;
     }
@@ -147,7 +158,9 @@ void ActionAttack() {
         addLog("WARNING: OVERHEAT! Took 15 system dmg.");
         if (playerStats.hp <= 0) {
             playerStats.hp = 0;
-            addLog("CRITICAL DAMAGE. MECH DESTROYED. DEFEAT.");
+            addLog("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
+            battleCount = 1;
+            credits = 100;
             gameState = STATE_POST_BATTLE;
             playerVictory = false;
             return;
@@ -174,7 +187,12 @@ void ActionAttack() {
 
     if (enemyStats.hp <= 0) {
         enemyStats.hp = 0;
-        addLog("ENEMY DESTROYED. VICTORY.");
+        int reward = 50 + (battleCount * 10);
+        credits += reward;
+        char buf[128];
+        wsprintfA(buf, "ENEMY DESTROYED. VICTORY. Earned %d Credits.", reward);
+        addLog(buf);
+        battleCount++;
         gameState = STATE_POST_BATTLE;
         playerVictory = true;
         return;
@@ -197,11 +215,11 @@ void ActionDefend() {
 }
 
 void StartBattle() {
-    enemyStats.maxHp = 80;
-    enemyStats.hp = 80;
-    enemyStats.atk = 12;
-    enemyStats.def = 3;
-    enemyStats.maxHeat = 100;
+    enemyStats.maxHp = 80 + (battleCount * 10);
+    enemyStats.hp = enemyStats.maxHp;
+    enemyStats.atk = 12 + (battleCount * 2);
+    enemyStats.def = 3 + battleCount;
+    enemyStats.maxHeat = 100 + (battleCount * 5);
     enemyStats.heat = 0;
     playerStats.heat = 0;
     isDefending = false;
@@ -211,12 +229,18 @@ void StartBattle() {
 }
 
 void ReturnToGarage() {
-    playerStats.hp = playerStats.maxHp;
+    if (playerStats.hp <= 0) {
+        playerStats.hp = playerStats.maxHp;
+        lstrcpyA(garageInfo, "Mech rebuilt. Campaign restarted.");
+    } else {
+        lstrcpyA(garageInfo, "Returned to garage. Repairs needed.");
+    }
     gameState = STATE_GARAGE;
 }
 
 // Button areas
 RECT rectDeploy = { 200, 320, 400, 360 };
+RECT rectRepair = { 200, 270, 400, 310 };
 RECT rectTarget = { 50, 400, 190, 440 };
 RECT rectAttack = { 210, 400, 350, 440 };
 RECT rectDefend = { 370, 400, 510, 440 };
@@ -257,6 +281,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameState == STATE_GARAGE) {
                 if (PtInRectLocal(&rectDeploy, x, y)) {
                     StartBattle();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectRepair, x, y)) {
+                    int missingHp = playerStats.maxHp - playerStats.hp;
+                    if (missingHp <= 0) {
+                        lstrcpyA(garageInfo, "Mech is already at maximum structural integrity.");
+                    } else if (credits < 1) {
+                        lstrcpyA(garageInfo, "Insufficient credits for repair.");
+                    } else {
+                        int cost = missingHp < credits ? missingHp : credits;
+                        playerStats.hp += cost;
+                        credits -= cost;
+                        wsprintfA(garageInfo, "Repaired %d HP for %d Credits.", cost, cost);
+                    }
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectWpn, x, y)) {
                     equipWpn = (equipWpn + 1) % 3;
@@ -335,13 +372,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT titleRect = {0, 20, 600, 60};
                 DrawTextA(memDC, "KMECH - GARAGE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
                 
+                char camBuf[128];
+                wsprintfA(camBuf, "CAMPAIGN: BATTLE %d | CREDITS: %d", battleCount, credits);
+                RECT camRect = {0, 70, 600, 90};
+                DrawTextA(memDC, camBuf, -1, &camRect, DT_CENTER | DT_SINGLELINE);
+
                 char buf[128];
                 wsprintfA(buf, "HP: %d/%d  HEAT: %d/%d  ATK: %d  DEF: %d", playerStats.hp, playerStats.maxHp, playerStats.heat, playerStats.maxHeat, playerStats.atk, playerStats.def);
                 RECT statsRect = {0, 100, 600, 140};
                 DrawTextA(memDC, buf, -1, &statsRect, DT_CENTER | DT_SINGLELINE);
                 
                 RECT msgRect = {0, 150, 600, 190};
-                DrawTextA(memDC, "Welcome, Pilot. Customize and deploy.", -1, &msgRect, DT_CENTER | DT_SINGLELINE);
+                DrawTextA(memDC, garageInfo, -1, &msgRect, DT_CENTER | DT_SINGLELINE);
                 
                 RECT lw = {50, 180, 190, 200};
                 DrawTextA(memDC, "WEAPON", -1, &lw, DT_CENTER | DT_SINGLELINE);
@@ -355,6 +397,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, "HEAT SINK", -1, &ls, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectSink, sinks[equipSink].name);
 
+                DrawButton(memDC, &rectRepair, "Repair (1 CR = 1 HP)");
                 DrawButton(memDC, &rectDeploy, "Deploy to Battle");
             } else {
                 RECT titleRect = {0, 20, 600, 60};

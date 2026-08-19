@@ -152,6 +152,9 @@
         <!-- Garage Screen -->
         <div id="screen-garage" class="screen active">
             <h1>KMech - Garage</h1>
+            <div style="text-align: center; margin-bottom: 10px; font-weight: bold;">
+                CAMPAIGN: BATTLE <span id="garage-battle-count">1</span> | CREDITS: <span id="garage-credits">100</span>
+            </div>
             <div class="stats">
                 <div class="stat-box">
                     <div>HP</div>
@@ -184,8 +187,9 @@
                     <button class="btn" id="btn-sink" onclick="cycleSink()" style="font-size:12px; padding:5px 10px;">Basic</button>
                 </div>
             </div>
-            <p style="text-align: center;">Welcome, Pilot. Your mech is ready for deployment.</p>
+            <p id="garage-info" style="text-align: center;">Welcome, Pilot. Your mech is ready for deployment.</p>
             <div class="actions">
+                <button class="btn" onclick="repairMech()" id="btn-repair">Repair</button>
                 <button class="btn" onclick="startBattle()">Deploy to Battle</button>
             </div>
         </div>
@@ -255,6 +259,8 @@
         let equipWpn = 0, equipArm = 0, equipSink = 0;
         let playerHeatGen = 30;
         let playerCooling = 20;
+        let credits = 100;
+        let battleCount = 1;
 
         const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
         let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
@@ -280,6 +286,8 @@
         }
 
         function updateGarage() {
+            document.getElementById('garage-battle-count').innerText = battleCount;
+            document.getElementById('garage-credits').innerText = credits;
             document.getElementById('garage-hp').innerText = `${playerStats.hp}/${playerStats.maxHp}`;
             document.getElementById('garage-heat').innerText = `${playerStats.heat}/${playerStats.maxHeat}`;
             document.getElementById('garage-atk').innerText = playerStats.atk;
@@ -311,6 +319,23 @@
             updateGarage();
         }
 
+        function repairMech() {
+            let missingHp = playerStats.maxHp - playerStats.hp;
+            if (missingHp <= 0) {
+                document.getElementById('garage-info').innerText = "Mech is already at maximum structural integrity.";
+                return;
+            }
+            if (credits < 1) {
+                document.getElementById('garage-info').innerText = "Insufficient credits for repair.";
+                return;
+            }
+            let cost = Math.min(missingHp, credits);
+            playerStats.hp += cost;
+            credits -= cost;
+            document.getElementById('garage-info').innerText = `Repaired ${cost} HP for ${cost} Credits.`;
+            updateGarage();
+        }
+
         function updateBattle() {
             document.getElementById('battle-player-hp').innerText = playerStats.hp;
             document.getElementById('battle-enemy-hp').innerText = enemyStats.hp;
@@ -329,7 +354,14 @@
         }
 
         function startBattle() {
-            enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
+            enemyStats = { 
+                maxHp: 80 + (battleCount * 10), 
+                hp: 80 + (battleCount * 10), 
+                atk: 12 + (battleCount * 2), 
+                def: 3 + battleCount, 
+                maxHeat: 100 + (battleCount * 5), 
+                heat: 0 
+            };
             playerStats.heat = 0;
             isDefending = false;
             document.getElementById('log').innerHTML = '';
@@ -341,7 +373,12 @@
         }
 
         function returnToGarage() {
-            playerStats.hp = playerStats.maxHp; // Auto repair for now
+            if (playerStats.hp <= 0) {
+                playerStats.hp = playerStats.maxHp;
+                document.getElementById('garage-info').innerText = "Mech rebuilt. Campaign restarted.";
+            } else {
+                document.getElementById('garage-info').innerText = "Returned to garage. Repairs needed.";
+            }
             updateGarage();
             showScreen('garage');
         }
@@ -350,9 +387,14 @@
             document.getElementById('battle-actions').style.display = 'none';
             document.getElementById('post-battle-actions').style.display = 'flex';
             if (victory) {
-                logMsg("ENEMY DESTROYED. VICTORY.");
+                let reward = 50 + (battleCount * 10);
+                credits += reward;
+                logMsg(`ENEMY DESTROYED. VICTORY. Earned ${reward} Credits.`);
+                battleCount++;
             } else {
-                logMsg("CRITICAL DAMAGE. MECH DESTROYED. DEFEAT.");
+                logMsg("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
+                battleCount = 1;
+                credits = 100;
             }
         }
 

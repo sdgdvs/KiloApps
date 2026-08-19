@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KMech (Sci-fi turn-based mech combat)
-**Phase:** 8 (next to do)
+**Phase:** 9 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KMech directory (`KMech/`), create web HTML skeleton (`KiloOS/public/apps/kmech.html`), register in App.jsx.
@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Implement targeted limb combat (Head, Torso, Left Arm, Right Arm, Legs) with different hit chances and damage effects.
 - [x] Phase 6: Heat management system (weapons generate heat, overheating causes damage or shutdown).
 - [x] Phase 7: Mech customization in the garage (swap weapons, armor, heat sinks).
-- [ ] Phase 8: Campaign mode (series of battles with increasing difficulty and repair costs between fights).
+- [x] Phase 8: Campaign mode (series of battles with increasing difficulty and repair costs between fights).
 - [ ] Phase 9: Enemy AI improvements (AI targets damaged limbs, manages its own heat).
 - [ ] Phase 10: Special equipment (jump jets to evade, energy shields to absorb damage).
 - [ ] Phase 11: Salvage system (collect parts from defeated mechs to use or sell).
