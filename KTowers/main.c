@@ -135,6 +135,11 @@ typedef struct {
 Particle particles[MAX_PARTICLES];
 int particleCount = 0;
 
+int screenShake = 0;
+typedef struct { float x, y, vx, vy; int life; } DustParticle;
+#define MAX_DUST 100
+DustParticle dusts[MAX_DUST];
+
 // Controls
 HWND hModeBtn, hStageMinusBtn, hStagePlusBtn, hStageLabel;
 HWND hPegMinusBtn, hPegPlusBtn, hDiscMinusBtn, hDiscPlusBtn;
@@ -385,6 +390,8 @@ void InitGame(HWND hwnd) {
     hintFrom = -1;
     hintTo = -1;
     particleCount = 0;
+    screenShake = 0;
+    for(int i=0; i<MAX_DUST; i++) dusts[i].life = 0;
     strcpy(statusMessage, "");
 
     if (timerRunning) {
@@ -1058,6 +1065,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldSPen);
             DeleteObject(nullPen);
 
+            // Neon Advertising Holograms
+            if ((animTick / 60) % 4 != 0) {
+                SetTextColor(memDC, RGB(236, 72, 153)); // Neon Pink
+                TextOut(memDC, width - 200, 150, ">> KILO_CORP <<", 15);
+            }
+            if ((animTick / 40) % 3 != 0) {
+                SetTextColor(memDC, RGB(56, 189, 248)); // Neon Cyan
+                TextOut(memDC, 80, 120, "SYS.ONLINE", 10);
+            }
+            if ((animTick / 50) % 5 != 0) {
+                SetTextColor(memDC, RGB(250, 204, 21)); // Neon Yellow
+                TextOut(memDC, width/2 - 40, 90, "O R B I T A L", 13);
+            }
+
             StageConfig cfg = GetCurrentConfig();
 
             // Status Banner Line 1
@@ -1181,8 +1202,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     // Lerp position
                     if (discAnimY[p][j] < 0) discAnimY[p][j] = (float)targetY - 30;
+                    float distBefore = fabs(discAnimY[p][j] - targetY);
                     discAnimY[p][j] += ((float)targetY - discAnimY[p][j]) * 0.35f;
+                    float distAfter = fabs(discAnimY[p][j] - targetY);
                     int rectY = (int)discAnimY[p][j];
+
+                    if (distBefore > 5.0f && distAfter <= 5.0f && selectedPeg != p) {
+                        screenShake = 12;
+                        for(int d=0; d<15; d++) {
+                            int idx = -1;
+                            for(int i=0; i<MAX_DUST; i++) if(dusts[i].life <= 0) { idx = i; break; }
+                            if (idx != -1) {
+                                dusts[idx].x = baseX + (rand() % (discW+1)) - discW/2.0f;
+                                dusts[idx].y = targetY + blockH;
+                                dusts[idx].vx = ((rand()%100)/50.0f - 1.0f) * 3.0f;
+                                dusts[idx].vy = -((rand()%100)/100.0f) * 2.0f;
+                                dusts[idx].life = 15 + rand()%15;
+                            }
+                        }
+                    }
+
+                    if (distAfter > 2.0f && selectedPeg != p) {
+                        int pulseRadius = discW/2 + 15 + (int)(5 * sin(animTick * 0.5));
+                        HPEN auraPen = CreatePen(PS_SOLID, 2, RGB(250, 204, 21));
+                        HGDIOBJ oldAura = SelectObject(memDC, auraPen);
+                        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        Ellipse(memDC, baseX - pulseRadius, rectY + blockH/2 - pulseRadius/2, baseX + pulseRadius, rectY + blockH/2 + pulseRadius/2);
+                        SelectObject(memDC, oldAura);
+                        DeleteObject(auraPen);
+                    }
+
+                    if (selectedPeg == p && isTopDisc) {
+                        int pulseRadius = discW/2 + 10 + (int)(5 * sin(animTick * 0.3));
+                        HPEN auraPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+                        HGDIOBJ oldAura = SelectObject(memDC, auraPen);
+                        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        Ellipse(memDC, baseX - pulseRadius, rectY + blockH/2 - pulseRadius/2, baseX + pulseRadius, rectY + blockH/2 + pulseRadius/2);
+                        SelectObject(memDC, oldAura);
+                        DeleteObject(auraPen);
+                    }
 
                     DiscTheme theme = DISC_THEMES[(discSize - 1) % 10];
 
@@ -1226,8 +1284,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            // Draw Dust Particles
+            for(int d=0; d<MAX_DUST; d++) {
+                if(dusts[d].life > 0) {
+                    dusts[d].x += dusts[d].vx;
+                    dusts[d].y += dusts[d].vy;
+                    dusts[d].life--;
+                    HBRUSH dBrush = CreateSolidBrush(RGB(148, 163, 184));
+                    RECT dRect = { (int)dusts[d].x - 2, (int)dusts[d].y - 2, (int)dusts[d].x + 3, (int)dusts[d].y + 3 };
+                    FillRect(memDC, &dRect, dBrush);
+                    DeleteObject(dBrush);
+                }
+            }
+
             // Copy double buffer to screen
-            BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
+            int shakeOffsetX = 0, shakeOffsetY = 0;
+            if (screenShake > 0) {
+                shakeOffsetX = (rand() % (screenShake * 2)) - screenShake;
+                shakeOffsetY = (rand() % (screenShake * 2)) - screenShake;
+                screenShake--;
+            }
+            BitBlt(hdc, shakeOffsetX, shakeOffsetY, width, height, memDC, 0, 0, SRCCOPY);
 
             SelectObject(memDC, oldBM);
             DeleteObject(memBM);

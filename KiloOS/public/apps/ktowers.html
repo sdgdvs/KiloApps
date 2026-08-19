@@ -472,6 +472,8 @@
         // Visual / Physics Animation State
         let discAnimPos = {}; // pegIdx_discVal -> currentY
         let fireworks = [];
+        let dustParticles = [];
+        let screenShake = 0;
         let globalAnimTime = 0;
         let hoverPeg = -1;
 
@@ -615,6 +617,8 @@
             swapCharges = 3;
             hintHighlight = null;
             fireworks = [];
+            dustParticles = [];
+            screenShake = 0;
             discAnimPos = {};
 
             if (timerInterval) clearInterval(timerInterval);
@@ -1326,6 +1330,16 @@
             globalAnimTime++;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            let shakeX = 0, shakeY = 0;
+            if (screenShake > 0) {
+                shakeX = (Math.random() - 0.5) * screenShake * 2;
+                shakeY = (Math.random() - 0.5) * screenShake * 2;
+                screenShake *= 0.9;
+                if (screenShake < 0.5) screenShake = 0;
+            }
+            ctx.save();
+            ctx.translate(shakeX, shakeY);
+
             const config = getCurrentStageConfig();
             const w = canvas.width;
             const h = canvas.height;
@@ -1393,6 +1407,29 @@
                     ctx.fillStyle = '#0f172a';
                 }
             }
+
+            // Neon Advertising Holograms
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 24px monospace';
+            if (Math.floor(globalAnimTime / 60) % 4 !== 0) {
+                ctx.fillStyle = 'rgba(236, 72, 153, 0.8)';
+                ctx.shadowColor = '#ec4899';
+                ctx.shadowBlur = 10;
+                ctx.fillText('>> KILO_CORP <<', w - 150, h * 0.3);
+            }
+            if (Math.floor(globalAnimTime / 40) % 3 !== 0) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 10;
+                ctx.fillText('SYS.ONLINE', 120, h * 0.25);
+            }
+            if (Math.floor(globalAnimTime / 50) % 5 !== 0) {
+                ctx.fillStyle = 'rgba(250, 204, 21, 0.8)';
+                ctx.shadowColor = '#facc15';
+                ctx.shadowBlur = 10;
+                ctx.fillText('O R B I T A L', w / 2, h * 0.2);
+            }
+            ctx.shadowBlur = 0;
 
             // Animated Flying Traffic (Hover Cars)
             for (let i = 0; i < 5; i++) {
@@ -1576,12 +1613,49 @@
                         discAnimPos[key] = targetY - 40;
                     }
                     // Smooth lerp physics towards target Y
+                    const distBefore = Math.abs(discAnimPos[key] - targetY);
                     discAnimPos[key] += (targetY - discAnimPos[key]) * 0.3;
                     const renderY = discAnimPos[key];
+                    const distAfter = Math.abs(renderY - targetY);
 
                     // Proportional Skyscraper Block Width
                     const widthPct = 0.35 + (discSize / numDiscs) * 0.55;
                     const blockWidth = pegAreaWidth * widthPct;
+
+                    // Landing check
+                    if (distBefore > 5.0 && distAfter <= 5.0 && selectedPeg !== pIdx) {
+                        screenShake = 12;
+                        for (let d = 0; d < 15; d++) {
+                            dustParticles.push({
+                                x: baseX + (Math.random() - 0.5) * blockWidth,
+                                y: targetY + blockHeight,
+                                vx: (Math.random() - 0.5) * 6,
+                                vy: -Math.random() * 3,
+                                life: 1.0,
+                                decay: 0.03 + Math.random() * 0.05
+                            });
+                        }
+                    }
+
+                    // Aura for dropping block
+                    if (distAfter > 2.0 && selectedPeg !== pIdx) {
+                        const pulseRadius = blockWidth / 2 + 15 + 5 * Math.sin(globalAnimTime * 0.5);
+                        ctx.strokeStyle = 'rgba(250, 204, 21, 0.6)';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.ellipse(baseX, renderY + blockHeight / 2, pulseRadius, pulseRadius * 0.5, 0, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+
+                    // Aura for selected top block
+                    if (selectedPeg === pIdx && isTopDisc) {
+                        const pulseRadius = blockWidth / 2 + 10 + 5 * Math.sin(globalAnimTime * 0.3);
+                        ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.ellipse(baseX, renderY + blockHeight / 2, pulseRadius, pulseRadius * 0.5, 0, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
 
                     let isWarning = false;
                     if (selectedPeg === pIdx && isTopDisc && hoverPeg !== -1 && hoverPeg !== selectedPeg) {
@@ -1598,6 +1672,22 @@
                     draw3DSkyscraperBlock(ctx, baseX, renderY, blockWidth, blockHeight, theme, discSize, isLocked, isTopDisc, targetY, isWarning);
                 });
             });
+
+            // Structural Dust Particles
+            for (let i = dustParticles.length - 1; i >= 0; i--) {
+                const p = dustParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+                if (p.life <= 0) {
+                    dustParticles.splice(i, 1);
+                    continue;
+                }
+                ctx.fillStyle = `rgba(148, 163, 184, ${p.life})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2 + p.life * 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
 
             // ----------------------------------------------------
             // 5. Environmental Rain Particles
@@ -1622,6 +1712,8 @@
             // 6. Victory Celebration Fireworks Update
             // ----------------------------------------------------
             updateAndDrawFireworks(ctx);
+
+            ctx.restore();
 
             requestAnimationFrame(animateLoop);
         }
