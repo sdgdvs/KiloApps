@@ -245,8 +245,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hbgMain = CreateSolidBrush(bgMainCol);
             hbgList = CreateSolidBrush(bgListCol);
 
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            hBold = CreateFontA(18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hBold = CreateFontA(-18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hBtnCompose = CreateWindowEx(0, "BUTTON", "Compose", WS_CHILD | WS_VISIBLE, 10, 10, 100, 30, hwnd, (HMENU)ID_BTN_COMPOSE, NULL, NULL);
             SendMessage(hBtnCompose, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -487,8 +487,11 @@ void MainEntry() {
     wc.hbrBackground = NULL;
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KMailApp", "KMail - Press H for Help", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
+    RECT rect = {0, 0, W, H};
+    AdjustWindowRect(&rect, style, FALSE);
+    HWND hwnd = CreateWindowEx(0, "KMailApp", "KMail - Press H for Help", style,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
