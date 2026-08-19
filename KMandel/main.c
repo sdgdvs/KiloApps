@@ -440,7 +440,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Draw Help Text
             SetBkMode(hdc, TRANSPARENT);
-            HFONT hFont = CreateFont(18, 0, 0, 0, FW_MEDIUM, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+            HFONT hFont = CreateFont(-18, 0, 0, 0, FW_MEDIUM, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
                                      DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
