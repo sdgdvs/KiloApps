@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KMech (Sci-fi turn-based mech combat)
-**Phase:** 14 (next to do)
+**App:** KCyber (Cyberpunk hacking simulator)
+**Phase:** 1 (next to do)
 **Status:** Creation
 
-- [x] Phase 1: Scaffold KMech directory (`KMech/`), create web HTML skeleton (`KiloOS/public/apps/kmech.html`), register in App.jsx.
-- [x] Phase 2: Basic UI for mech garage (view stats) and core battle loop (attack, defend) in web HTML.
-- [x] Phase 3: Native C version (`KMech/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [x] Phase 4: Sci-fi styling (grid backgrounds, terminal text, wireframe mech portraits).
-- [x] Phase 5: Implement targeted limb combat (Head, Torso, Left Arm, Right Arm, Legs) with different hit chances and damage effects.
-- [x] Phase 6: Heat management system (weapons generate heat, overheating causes damage or shutdown).
-- [x] Phase 7: Mech customization in the garage (swap weapons, armor, heat sinks).
-- [x] Phase 8: Campaign mode (series of battles with increasing difficulty and repair costs between fights).
-- [x] Phase 9: Enemy AI improvements (AI targets damaged limbs, manages its own heat).
-- [x] Phase 10: Special equipment (jump jets to evade, energy shields to absorb damage).
-- [x] Phase 11: Salvage system (collect parts from defeated mechs to use or sell).
-- [x] Phase 12: Pilot progression (gain XP to improve accuracy and evasion).
-- [x] Phase 13: Sound Effects — laser blasts, metal impacts, warning alarms (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Pilot's Manual — How-to-play, stat explanations, parts codex.
+- [ ] Phase 1: Scaffold KCyber directory (`KCyber/`), create web HTML skeleton (`KiloOS/public/apps/kcyber.html`), register in App.jsx.
+- [ ] Phase 2: Basic UI for the cyberdeck terminal (console window, command input) and core loop (typing commands to interact) in web HTML.
+- [ ] Phase 3: Native C version (`KCyber/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [ ] Phase 4: Retro cyberpunk styling (phosphor green text on black, scanlines, block cursor).
+- [ ] Phase 5: Implement a node map system (visual representation of network nodes to connect to).
+- [ ] Phase 6: Core hacking mechanic (minigame for cracking passwords, e.g., guessing sequences or matching hashes).
+- [ ] Phase 7: ICE (Intrusion Countermeasures Electronics) system (enemies that track and attack the player while hacking).
+- [ ] Phase 8: Stealth mechanics (tools to reduce trace speed and evade active ICE).
+- [ ] Phase 9: Data extraction system (finding valuable files in nodes and downloading them before trace completes).
+- [ ] Phase 10: Cyberdeck upgrade shop (spend credits earned from data to buy better CPU, more memory, or new software).
+- [ ] Phase 11: Mission generation (randomly generated contracts with varying difficulty, node types, and rewards).
+- [ ] Phase 12: Heat/Notoriety system (failing hacks increases global heat, making future missions harder until cooled down).
+- [ ] Phase 13: Sound Effects — dial-up tones, keystroke clacks, alarm sirens, access granted/denied chimes (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Runner's Guide — Command reference, ICE explanations, deck upgrading guide.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kmech.html` AND `KMech/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kcyber.html` AND `KCyber/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KMech (Phase 14 completed: Added Comprehensive Help & Pilot's Manual to both versions)
 - KDragon (Phase 14 completed: Added Comprehensive Help & Dragon Master's Guide to both versions)
 - KVoid (Phase 14 completed: Added Comprehensive Help & Survival Guide to both versions)
 - KFarm (Phase 14 completed: Added Comprehensive Help & Farmer's Almanac to both versions)
@@ -167,7 +168,6 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KCyber** — Cyberpunk hacking simulator. Navigate nodes, crack passwords, avoid ICE (intrusion countermeasures), steal data, upgrade deck. 
 - **KTrader** — Space trading sim. Travel between planets, buy low, sell high, upgrade ship, fight pirates.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
