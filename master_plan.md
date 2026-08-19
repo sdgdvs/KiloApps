@@ -11,36 +11,39 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path` (e.g., using `[System.Environment]::GetEnvironmentVariable`). Doing this deletes the injected Antigravity runtime paths from the active agent's environment, causing the agent to immediately crash and enter a termination loop. If a specific tool like `crinkler` is missing, you must only APPEND to the path (e.g. `$env:Path += ";C:\path\to\tool"`), or better yet, simply restart the environment so it inherits the system paths natively. The PATH instructions have been removed from all MD files.
 
-## Current State (as of 2026-08-16 07:00 UTC)
-- **Total Apps:** 85 registered in App.jsx.
+## Current State (as of 2026-08-19 07:00 UTC)
+- **Total Apps:** 86 registered in App.jsx (up from 85).
 - **KiloOS Version:** 0.3.99
-- **Games:** 33 titles.
+- **Games:** 34 titles (KMech added since last review).
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
-- **Build Health:** ✅ Clean build — 240.56 KB JS (73.86 KB gzip), 21.50 KB CSS (5.04 KB gzip).
+- **Build Health:** ✅ Clean build — 240.69 KB JS (73.88 KB gzip), 21.50 KB CSS (5.04 KB gzip).
 
-### Game Library (33 titles)
-K2048, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KConnect4, KDarts, KDragon, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KVoid, KWizard, KWords.
+### Game Library (34 titles)
+K2048, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KConnect4, KDarts, KDragon, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMech, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KVoid, KWizard, KWords.
 
 ### Content Depth
-- **Deep Games:** KQuest at Loop 9 (factions, mounts, crafting). KStarship at Loop 9 (factions, planetary landing). KRogue Loop 9. KSpace, KAsteroids, KMaze, KPac, KBreakout at Loop 9. KSnake Loop 8+.
-- **Classic Games: ALL 17 Balance Passes COMPLETE** ✅ (plus KConnect4 additional balance work Aug 13).
+- **Deep Games:** KRogue at Loop 10 (True Sanctuary, Ultra Bosses). KQuest/KStarship/KSpace/KAsteroids/KMaze/KPac/KBreakout/KSnake at Loop 9. KAlchemy/KColony at Loop 1.
+- **Classic Games: ALL 17 Balance Passes COMPLETE** ✅
 - **The Deep/Classic split directive continues to work perfectly.**
 
 ### Graphics Agent
-**Loop 5 in progress.** Completed Loops 1-4 for all games. Loop 5 polish done for: K2048, KAsteroids, KMines, KPong, KChess, KRogue, KMaze, KBreakout, KTetris, KSnake, KPac, KSpace. Queue: KSolitaire → KStarship → KConnect4 → ... (26 games in queue). Missing from queue: KDragon, KVoid, KWizard (new games — agent should auto-add).
+**Loop 5 in progress.** Recently completed: KSolitaire, KConnect4, KHangman, KMatch3, KFreecell (Loop 5), KStarship (Loop 4). Queue: KSudoku → KGo → ... → KFreecell (36 games in queue with newly added KDragon, KMech, KVoid, KDarts, KSimon). ~18/34 games done in Loop 5.
 
 ### QA
-**Pass 3 in progress — ~30 apps completed.** Targeting **KTimer** next. Recently: KChart, KChess, KClock, KContacts, KConverter, KDB, KExplorer, KFont, KHex, KImage, KJournal, KTerm, KTetris, KSynth, KSys. Very productive cycle.
+**Pass 3 in progress — ~30 apps completed.** ⚠️ Zero commits in last 72h — possible cron failure. Last QA commit was Aug 14.
 
 ### Feature Expander
-Targeting **KContacts** next. Recently completed: KTimer (HIIT timer), KConverter (pressure + expression parser), KRogue (custom keybindings + high score export), KSys (telemetry + services), KTask (process inspector), KSynth (delay/echo), KType (certificate export). Active and productive.
+Targeting **KContacts** next. ⚠️ Zero commits in last 72h — possible cron failure. Last Expander commit was before Aug 14.
+
+### Game Content
+**Deep games at Loop 9-10. Classic balance all complete.** ⚠️ Zero commits in last 72h — possible cron failure. Last Content commit was Aug 13 (KStarship Loop 9).
 
 ### Creator
-**25 apps completed through full 14-phase lifecycle.** Now building **KDragon** (Fantasy creature-raising sim) — Phase 14/14 (failed with RESOURCE_EXHAUSTED, will retry). Recently completed KVoid (all 14 phases). KDragon at Phase 13 complete.
+**26 apps completed through full 14-phase lifecycle.** KDragon completed (all 14 phases) ✅. Now building **KMech** (Sci-fi turn-based mech combat) — Phase 6 next. Active and productive (7 commits in 72h).
 
 ### Usability Agent
-All 85 apps processed through 3+ full sweeps. Targeting **KChat** next (start of 4th sweep). Recently: KChart, KCalendar, KHex, KCalc, KImage, KPad, KBase, KTimer, KConverter, KTodo, KSys, KTask, KSynth, KTerm, KRogue, KGraph, KContacts, KRead, KJournal. Missing from queue: KDragon, KVoid, KWizard (new games — agent should auto-add).
+Targeting **KDB** next (queue was reorganized by user). Recently completed: KChat, KChess, KAudio, KBBS, KPong, KClock. 6 commits in 72h. Progress log at ~198 entries (approaching 200 trim threshold). KDragon, KMech, KRadio now in queue ✅.
 
 ## Milestones
 
@@ -82,40 +85,43 @@ All 85 apps processed through 3+ full sweeps. Targeting **KChat** next (start of
 35. **24 apps created through full 14-phase lifecycle** — Aug 12. ✅
 36. **Games Loop 8 complete for ALL games** — Aug 11. ✅
 37. **KVoid completed (all 14 phases)** — Aug 13. ✅
-38. **KDragon created (Phases 1-13 complete)** — Aug 14. ✅
+38. **KDragon completed (all 14 phases)** — Aug 18. ✅
 39. **85 apps milestone reached** — Aug 13. 🎯
 40. **Graphics Loop 4 complete** — Aug 14. 🎯
-41. **Graphics Loop 5 in progress** (~12/33 done) — Aug 14. 🔄
-42. **QA Pass 3 in progress** (~30/85 apps) — Aug 14. 🔄
-43. **Games Loop 9 deep games in progress** — Aug 13. 🔄
+41. **KRogue Loop 10 complete** (True Sanctuary, Ultra Bosses) — Aug 14. ✅
+42. **KMech created** (Phases 1-5 in one day) — Aug 18. ✅
+43. **86 apps, 34 games** — Aug 18. 🎯
+44. **26 apps created through full lifecycle** — Aug 18. ✅
 
 ### Active 🔄
-44. Games agent: **Loop 9+ content for Deep games** — all Classic balance passes done.
-45. Graphics agent: Loop 5 polish in progress.
-46. Creator: KDragon Phase 14 retry (RESOURCE_EXHAUSTED on first attempt).
-47. Feature Expander: Round-robin perpetual (targeting KContacts).
-48. QA: Pass 3 regression/security checks (targeting KTimer).
-49. Usability: Round-robin UX audit (targeting KChat, 4th sweep).
+45. Graphics agent: Loop 5 polish in progress (~18/34 done).
+46. Creator: KMech Phase 6 (Heat management system).
+47. Usability: Round-robin UX audit (targeting KDB, 4th sweep).
+
+### Flagged ⚠️
+48. **QA agent: ZERO commits in 72h** — cron may have died. Last commit Aug 14.
+49. **Feature Expander: ZERO commits in 72h** — cron may have died.
+50. **Game Content: ZERO commits in 72h** — cron may have died. Last commit Aug 13.
 
 ### Upcoming 📋
-50. Graphics Loop 5 completion for all 33 games.
-51. KDragon Phase 14 completion (Help & Guide).
-52. QA Pass 3 completion for all apps.
-53. Games Loop 10 for deep games.
-54. 86+ apps via Creator (next app after KDragon).
+51. Graphics Loop 5 completion for all 34 games.
+52. KMech Phase 6-14 completion.
+53. QA Pass 3 completion (needs cron restart).
+54. Feature Expander cycle (needs cron restart).
+55. Game Content Loop 10 for deep games (needs cron restart).
 
-## Active Agent Fleet (as of 2026-08-16)
+## Active Agent Fleet (as of 2026-08-19)
 
-| Agent | Schedule | Plan File | Model |
-|---|---|---|---|
-| Feature Expander | Every 2h (:00) | `app_work_plan.md` | Gemini 3.1 Pro |
-| Quality & Build | Every 3h (:00) | `app_fix_plan.md` | Gemini 3.1 Pro |
-| Game Content Expander | Every 2h (:30) | `game_content_plan.md` | Gemini 3.1 Pro |
-| App Creator | Every 1h (:15) | `new_app_plan.md` | Gemini 3.1 Pro |
-| Game Graphics | Every 2h (:45) | `game_graphics_plan.md` | Gemini 3.1 Pro |
-| Usability Agent | Every 2h (:15) | `usability_plan.md` | Gemini 3.1 Pro |
-| Director #1 | Every 3 days | (reviews all plan files) | Claude Opus 4.6 |
-| Director #2 | Every 3 days (offset) | (reviews all plan files) | Claude Opus 4.6 |
+| Agent | Schedule | Plan File | Model | Status |
+|---|---|---|---|---|
+| Feature Expander | Every 2h (:00) | `app_work_plan.md` | Gemini 3.1 Pro | ⚠️ No commits 72h |
+| Quality & Build | Every 3h (:00) | `app_fix_plan.md` | Gemini 3.1 Pro | ⚠️ No commits 72h |
+| Game Content Expander | Every 2h (:30) | `game_content_plan.md` | Gemini 3.1 Pro | ⚠️ No commits 72h |
+| App Creator | Every 1h (:15) | `new_app_plan.md` | Gemini 3.1 Pro | ✅ Active |
+| Game Graphics | Every 2h (:45) | `game_graphics_plan.md` | Gemini 3.1 Pro | ✅ Active |
+| Usability Agent | Every 2h (:15) | `usability_plan.md` | Gemini 3.1 Pro | ✅ Active |
+| Director #1 | Every 3 days | (reviews all plan files) | Claude Opus 4.6 | ✅ Active |
+| Director #2 | Every 3 days (offset) | (reviews all plan files) | Claude Opus 4.6 | ✅ Active |
 
 ## Agent Workflow Rules
 - **Workflow Rules:** Worker agents focus on feature expansion and new app creation. Visual polish is for the Usability agent and Graphics agent only.
