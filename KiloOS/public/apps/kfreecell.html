@@ -33,6 +33,10 @@
     flex-direction: column;
     overflow: hidden;
   }
+  @keyframes glint {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.35; }
+  }
   .felt-board::before {
     content: "";
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -40,6 +44,22 @@
       repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px),
       repeating-linear-gradient(-45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 4px);
     pointer-events: none; z-index: 1;
+  }
+  .felt-board::after {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1.5px 1.5px at 50px 160px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
+      radial-gradient(2px 2px at 120px 120px, rgba(255,215,0,0.8), rgba(0,0,0,0));
+    background-repeat: repeat;
+    background-size: 150px 150px;
+    animation: glint 4s infinite alternate ease-in-out;
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: screen;
   }
 
   .header {
@@ -355,15 +375,52 @@
     const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
     function getSuitSVG(s, size = 16) {
-      const color = (s === 1 || s === 3) ? '#d32f2f' : '#1e1e1e';
-      if (s === 0) {
-        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 2C9.5 6 4 10.5 4 14.5C4 17.5 6.5 19 9 19C10.5 19 11.5 18.2 12 17.5C12.5 18.2 13.5 19 15 19C17.5 19 20 17.5 20 14.5C20 10.5 14.5 6 12 2Z"/><path d="M12 16L9 22H15L12 16Z"/></svg>`;
-      } else if (s === 1) {
-        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
-      } else if (s === 2) {
-        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><circle cx="12" cy="7.5" r="4.5"/><circle cx="7.5" cy="14" r="4.5"/><circle cx="16.5" cy="14" r="4.5"/><path d="M12 14L9 22H15L12 14Z"/></svg>`;
-      } else {
-        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 2L3 12L12 22L21 12L12 2Z"/></svg>`;
+      if (s === 0) { // Spades (Steel)
+        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24">
+          <defs>
+            <linearGradient id="steelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#777"/><stop offset="25%" stop-color="#222"/>
+              <stop offset="50%" stop-color="#888"/><stop offset="75%" stop-color="#111"/>
+              <stop offset="100%" stop-color="#555"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#steelGrad)" d="M12 2C9.5 6 4 10.5 4 14.5C4 17.5 6.5 19 9 19C10.5 19 11.5 18.2 12 17.5C12.5 18.2 13.5 19 15 19C17.5 19 20 17.5 20 14.5C20 10.5 14.5 6 12 2Z"/>
+          <path fill="url(#steelGrad)" d="M12 16L9 22H15L12 16Z"/>
+        </svg>`;
+      } else if (s === 1) { // Hearts (Ruby)
+        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24">
+          <defs>
+            <linearGradient id="rubyGrad" x1="0%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stop-color="#ff8a8a"/><stop offset="30%" stop-color="#d32f2f"/>
+              <stop offset="70%" stop-color="#9a0000"/><stop offset="100%" stop-color="#4a0000"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#rubyGrad)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          <path fill="#ffb3b3" opacity="0.5" d="M12 7L9 4C10 3.5 11 3.5 12 4Z"/>
+        </svg>`;
+      } else if (s === 2) { // Clubs (Steel)
+        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24">
+          <defs>
+            <linearGradient id="steelGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#777"/><stop offset="25%" stop-color="#222"/>
+              <stop offset="50%" stop-color="#888"/><stop offset="75%" stop-color="#111"/>
+              <stop offset="100%" stop-color="#555"/>
+            </linearGradient>
+          </defs>
+          <circle cx="12" cy="7.5" r="4.5" fill="url(#steelGrad2)"/><circle cx="7.5" cy="14" r="4.5" fill="url(#steelGrad2)"/><circle cx="16.5" cy="14" r="4.5" fill="url(#steelGrad2)"/>
+          <path fill="url(#steelGrad2)" d="M12 14L9 22H15L12 14Z"/>
+        </svg>`;
+      } else { // Diamonds (Ruby)
+        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24">
+          <defs>
+            <linearGradient id="rubyGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ff8a8a"/><stop offset="30%" stop-color="#d32f2f"/>
+              <stop offset="70%" stop-color="#9a0000"/><stop offset="100%" stop-color="#4a0000"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#rubyGrad2)" d="M12 2L3 12L12 22L21 12L12 2Z"/>
+          <path fill="#ffb3b3" opacity="0.6" d="M12 2L8 12L12 12Z"/>
+        </svg>`;
       }
     }
 
@@ -1194,7 +1251,7 @@
       return (emptyFree + 1) * Math.pow(2, emptyTab);
     }
 
-    function spawnSnapSparks(rect) {
+    function spawnSnapSparks(rect, card) {
       const canvas = document.getElementById('fx-canvas');
       if(!canvas) return;
       const ctx = canvas.getContext('2d');
@@ -1234,6 +1291,35 @@
         else ctx.clearRect(0,0,canvas.width,canvas.height);
       }
       renderSparks();
+
+      if(card) {
+        let el = document.getElementById(`card-${card.s}-${card.r}`);
+        if(el) {
+          for(let i=0; i<3; i++) {
+            setTimeout(() => {
+              const foldEl = el.cloneNode(true);
+              foldEl.id = '';
+              foldEl.style.left = rect.left + 'px';
+              foldEl.style.top = (rect.top - 50) + 'px';
+              foldEl.style.position = 'absolute';
+              foldEl.style.zIndex = 1000 - i;
+              foldEl.style.transformOrigin = 'bottom center';
+              foldEl.style.transform = 'rotateX(-60deg) scale(1.1)';
+              foldEl.style.opacity = '0.6';
+              foldEl.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+              document.body.appendChild(foldEl);
+              
+              requestAnimationFrame(() => {
+                foldEl.style.transform = 'rotateX(0deg) scale(1)';
+                foldEl.style.top = rect.top + 'px';
+                foldEl.style.opacity = '0';
+              });
+              
+              setTimeout(() => foldEl.remove(), 300);
+            }, i * 60);
+          }
+        }
+      }
     }
 
     
@@ -1438,7 +1524,7 @@
           if (document.getElementById('game-mode').value === 'timeattack') timeRemaining += 15;
           moved = true;
           const foundEl = document.querySelectorAll('#foundations .cell')[index];
-          if(foundEl) spawnSnapSparks(foundEl.getBoundingClientRect());
+          if(foundEl) spawnSnapSparks(foundEl.getBoundingClientRect(), cardsToMove[0]);
         }
 
         if(moved) {

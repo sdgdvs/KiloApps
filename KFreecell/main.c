@@ -997,13 +997,19 @@ void UseAutoSolvePowerup(HWND hwnd) {
 }
 
 void DrawSuitGDI(HDC hdc, int cx, int cy, int size, int suitIdx) {
-    COLORREF color = (suitIdx == 1 || suitIdx == 3) ? RGB(211, 47, 47) : RGB(30, 30, 30);
-    HBRUSH fillBrush = CreateSolidBrush(color);
+    COLORREF darkColor = (suitIdx == 1 || suitIdx == 3) ? RGB(160, 0, 0) : RGB(20, 20, 20);
+    COLORREF midColor = (suitIdx == 1 || suitIdx == 3) ? RGB(211, 47, 47) : RGB(60, 60, 60);
+    COLORREF lightColor = (suitIdx == 1 || suitIdx == 3) ? RGB(255, 120, 120) : RGB(120, 120, 120);
+    
+    HBRUSH darkBrush = CreateSolidBrush(darkColor);
+    HBRUSH midBrush = CreateSolidBrush(midColor);
+    HBRUSH lightBrush = CreateSolidBrush(lightColor);
     HPEN nullPen = CreatePen(PS_NULL, 0, 0);
-    SelectObject(hdc, fillBrush);
     SelectObject(hdc, nullPen);
     
     int r = size / 2;
+    // Draw base shadow
+    SelectObject(hdc, darkBrush);
     if (suitIdx == 0) {
         POINT topPt[3] = {{cx, cy - r}, {cx - r + 1, cy + r/3}, {cx + r - 1, cy + r/3}};
         Polygon(hdc, topPt, 3);
@@ -1027,7 +1033,56 @@ void DrawSuitGDI(HDC hdc, int cx, int cy, int size, int suitIdx) {
         Polygon(hdc, diaPt, 4);
     }
     
-    DeleteObject(fillBrush);
+    // Draw mid layer for facets
+    SelectObject(hdc, midBrush);
+    int o1 = r > 8 ? 2 : 1;
+    int r1 = r - o1;
+    if (r1 > 0) {
+        if (suitIdx == 0) {
+            POINT topPt[3] = {{cx, cy - r1}, {cx - r1 + 1, cy + r1/3}, {cx + r1 - 1, cy + r1/3}};
+            Polygon(hdc, topPt, 3);
+            Ellipse(hdc, cx - r1, cy - r1/4, cx, cy + r1/2);
+            Ellipse(hdc, cx, cy - r1/4, cx + r1, cy + r1/2);
+            POINT stemPt[3] = {{cx, cy}, {cx - r1/2, cy + r1}, {cx + r1/2, cy + r1}};
+            Polygon(hdc, stemPt, 3);
+        } else if (suitIdx == 1) {
+            Ellipse(hdc, cx - r1, cy - r1, cx + 1, cy + r1/4);
+            Ellipse(hdc, cx - 1, cy - r1, cx + r1, cy + r1/4);
+            POINT botPt[3] = {{cx - r1 + 1, cy - r1/4}, {cx + r1 - 1, cy - r1/4}, {cx, cy + r1}};
+            Polygon(hdc, botPt, 3);
+        } else if (suitIdx == 2) {
+            Ellipse(hdc, cx - r1/2 - 1, cy - r1, cx + r1/2 + 1, cy);
+            Ellipse(hdc, cx - r1, cy - r1/2, cx, cy + r1/2);
+            Ellipse(hdc, cx, cy - r1/2, cx + r1, cy + r1/2);
+            POINT stemPt[3] = {{cx, cy}, {cx - r1/2, cy + r1}, {cx + r1/2, cy + r1}};
+            Polygon(hdc, stemPt, 3);
+        } else {
+            POINT diaPt[4] = {{cx, cy - r1}, {cx + r1, cy}, {cx, cy + r1}, {cx - r1, cy}};
+            Polygon(hdc, diaPt, 4);
+        }
+    }
+    
+    // Draw light layer highlight
+    SelectObject(hdc, lightBrush);
+    int o2 = r > 8 ? 4 : 2;
+    int r2 = r - o2;
+    if (r2 > 0) {
+        if (suitIdx == 0) {
+            POINT topPt[3] = {{cx - o2/2, cy - r2}, {cx - r2 + 1 - o2/2, cy + r2/3}, {cx + r2 - 1 - o2/2, cy + r2/3}};
+            Polygon(hdc, topPt, 3);
+        } else if (suitIdx == 1) {
+            Ellipse(hdc, cx - r2 - o2/2, cy - r2 - o2/2, cx + 1 - o2/2, cy + r2/4 - o2/2);
+        } else if (suitIdx == 2) {
+            Ellipse(hdc, cx - r2 - o2/2, cy - r2/2 - o2/2, cx - o2/2, cy + r2/2 - o2/2);
+        } else {
+            POINT diaPt[4] = {{cx, cy - r2 - o2/2}, {cx + r2, cy - o2/2}, {cx, cy + r2 - o2/2}, {cx - r2, cy - o2/2}};
+            Polygon(hdc, diaPt, 4);
+        }
+    }
+    
+    DeleteObject(darkBrush);
+    DeleteObject(midBrush);
+    DeleteObject(lightBrush);
     DeleteObject(nullPen);
 }
 
@@ -1386,6 +1441,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if(anims[i].active) {
                     int cx, cy;
                     if(IsAnimating(anims[i].c, &cx, &cy)) {
+                        DWORD now = GetTickCount();
+                        float t = (float)(now - anims[i].startTime) / anims[i].duration;
+                        if (anims[i].endY == TOP_Y && anims[i].endX >= clientRect.right - PAD - 4*(CELL_W + TAB_PAD_X) - 10) {
+                            for(int fold=1; fold<=3; fold++) {
+                                float ft = t - (0.08f * fold);
+                                if(ft > 0) {
+                                    int fcx = anims[i].startX + (int)(ft * (anims[i].endX - anims[i].startX));
+                                    int fcy = anims[i].startY + (int)(ft * (anims[i].endY - anims[i].startY)) - (fold * 8);
+                                    DrawCard(hdcMem, fcx, fcy, anims[i].c, 0, 0);
+                                }
+                            }
+                        }
                         DrawCard(hdcMem, cx, cy, anims[i].c, 0, 0);
                     }
                 }
@@ -1401,14 +1468,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // Draw Atmospheric Floating Dust Motes
+            // Draw Animated Procedural Fabric Glint Effect
             for(int i=0; i<MAX_DUST; i++) {
                 if (dustInit) {
-                    int r = 20 + (int)((255 - 20) * dustMotes[i].alpha * 0.3f);
-                    int g = 90 + (int)((240 - 90) * dustMotes[i].alpha * 0.3f);
-                    int b = 45 + (int)((200 - 45) * dustMotes[i].alpha * 0.3f);
+                    float glintAlpha = dustMotes[i].alpha * 1.5f;
+                    if (glintAlpha > 1.0f) glintAlpha = 1.0f;
+                    int r = (int)(255 * glintAlpha);
+                    int g = (int)(215 * glintAlpha);
+                    int b = (int)(100 * glintAlpha);
                     HBRUSH dbr = CreateSolidBrush(RGB(r, g, b));
-                    RECT dr = { (int)dustMotes[i].x, (int)dustMotes[i].y, (int)dustMotes[i].x + dustMotes[i].size, (int)dustMotes[i].y + dustMotes[i].size };
+                    int gcx = (int)dustMotes[i].x;
+                    int gcy = (int)dustMotes[i].y;
+                    RECT dr = { gcx, gcy, gcx + dustMotes[i].size, gcy + dustMotes[i].size };
                     FillRect(hdcMem, &dr, dbr);
                     DeleteObject(dbr);
                 }

@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFreecell
 - KSudoku
 - KGo
 - KTowers
@@ -141,7 +140,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KHangman
 - KMech
 - KMatch3
+- KFreecell
 ## Completed Work Log
+
+- **KFreecell (Loop 5):** Implemented highly detailed visual variations for the card suits (faceted ruby texture for red suits, dark brushed steel texture for black suits), an animated procedural fabric glint effect on the casino felt background, and distinctly stylized kinematically animated folding card cascade effects when cards snap into the foundation in both Web Canvas (kfreecell.html) and Native C Win32 GDI (KFreecell/main.c).
 
 - **KMatch3 (Loop 5):** Implemented highly detailed visual variations for the background grid/board (ornate 3D gold borders with deep shadows), a procedural animated glowing aura effect that subtly breathes around gems for match hints, and a distinctly stylized kinematically animated shattering explosion sending glassy gem shards flying and rotating off the board in both Web Canvas (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
 
