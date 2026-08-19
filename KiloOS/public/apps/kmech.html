@@ -199,6 +199,7 @@
             </div>
             <div id="log"></div>
             <div class="actions" id="battle-actions">
+                <button class="btn" id="btn-target" onclick="toggleTarget()">TGT: Torso</button>
                 <button class="btn" onclick="actionAttack()">Attack</button>
                 <button class="btn" onclick="actionDefend()">Defend</button>
             </div>
@@ -212,6 +213,20 @@
         const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5 };
         let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3 };
         let isDefending = false;
+
+        let currentTargetLimb = 1;
+        const limbs = [
+            {name: 'Head', chance: 0.2, mult: 3.0},
+            {name: 'Torso', chance: 0.8, mult: 1.0},
+            {name: 'L.Arm', chance: 0.6, mult: 1.5},
+            {name: 'R.Arm', chance: 0.6, mult: 1.5},
+            {name: 'Legs', chance: 0.5, mult: 1.2}
+        ];
+
+        function toggleTarget() {
+            currentTargetLimb = (currentTargetLimb + 1) % limbs.length;
+            document.getElementById('btn-target').innerText = "TGT: " + limbs[currentTargetLimb].name;
+        }
 
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -265,9 +280,16 @@
         }
 
         function actionAttack() {
-            let dmg = Math.max(1, playerStats.atk - enemyStats.def + Math.floor(Math.random() * 5));
-            enemyStats.hp -= dmg;
-            logMsg(`You attack! Dealt ${dmg} damage.`);
+            let targetLimb = limbs[currentTargetLimb];
+            
+            if (Math.random() > targetLimb.chance) {
+                logMsg(`You target ${targetLimb.name}... Missed!`);
+            } else {
+                let dmg = Math.max(1, playerStats.atk - enemyStats.def + Math.floor(Math.random() * 5));
+                dmg = Math.floor(dmg * targetLimb.mult);
+                enemyStats.hp -= dmg;
+                logMsg(`You hit ${targetLimb.name}! Dealt ${dmg} damage.`);
+            }
             updateBattle();
 
             if (enemyStats.hp <= 0) {
@@ -288,9 +310,16 @@
         }
 
         function enemyTurn() {
-            let dmg = Math.max(1, enemyStats.atk - (isDefending ? playerStats.def * 2 : playerStats.def) + Math.floor(Math.random() * 4));
-            playerStats.hp -= dmg;
-            logMsg(`Enemy attacks! Took ${dmg} damage.`);
+            let targetLimb = limbs[Math.floor(Math.random() * limbs.length)];
+            
+            if (Math.random() > targetLimb.chance) {
+                logMsg(`Enemy targets ${targetLimb.name}... Missed!`);
+            } else {
+                let dmg = Math.max(1, enemyStats.atk - (isDefending ? playerStats.def * 2 : playerStats.def) + Math.floor(Math.random() * 4));
+                dmg = Math.floor(dmg * targetLimb.mult);
+                playerStats.hp -= dmg;
+                logMsg(`Enemy hits ${targetLimb.name}! Took ${dmg} damage.`);
+            }
             updateBattle();
 
             if (playerStats.hp <= 0) {

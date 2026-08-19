@@ -24,6 +24,11 @@ MechStats enemyStats = { 80, 80, 12, 3 };
 
 bool isDefending = false;
 
+int currentTargetLimb = 1; // 0=Head, 1=Torso, 2=LArm, 3=RArm, 4=Legs
+const char* limbNames[] = { "Head", "Torso", "L.Arm", "R.Arm", "Legs" };
+float limbHitChance[] = { 0.2f, 0.8f, 0.6f, 0.6f, 0.5f };
+float limbDmgMult[] = { 3.0f, 1.0f, 1.5f, 1.5f, 1.2f };
+
 char battleLogs[15][128];
 int logCount = 0;
 
@@ -44,14 +49,24 @@ void clearLogs() {
 }
 
 void EnemyTurn() {
-    int effectiveDef = isDefending ? (playerStats.def * 2) : playerStats.def;
-    int dmg = (enemyStats.atk - effectiveDef) + (my_rand() % 4);
-    if (dmg < 1) dmg = 1;
-    playerStats.hp -= dmg;
+    int target = my_rand() % 5;
+    int hitRoll = my_rand() % 100;
     
-    char buf[128];
-    wsprintfA(buf, "Enemy attacks! Took %d damage.", dmg);
-    addLog(buf);
+    if (hitRoll > (int)(limbHitChance[target] * 100.0f)) {
+        char buf[128];
+        wsprintfA(buf, "Enemy targets %s... Missed!", limbNames[target]);
+        addLog(buf);
+    } else {
+        int effectiveDef = isDefending ? (playerStats.def * 2) : playerStats.def;
+        int dmg = (enemyStats.atk - effectiveDef) + (my_rand() % 4);
+        if (dmg < 1) dmg = 1;
+        dmg = (int)(dmg * limbDmgMult[target]);
+        playerStats.hp -= dmg;
+        
+        char buf[128];
+        wsprintfA(buf, "Enemy hits %s! Took %d dmg.", limbNames[target], dmg);
+        addLog(buf);
+    }
 
     if (playerStats.hp <= 0) {
         playerStats.hp = 0;
@@ -62,13 +77,23 @@ void EnemyTurn() {
 }
 
 void ActionAttack() {
-    int dmg = (playerStats.atk - enemyStats.def) + (my_rand() % 5);
-    if (dmg < 1) dmg = 1;
-    enemyStats.hp -= dmg;
+    int target = currentTargetLimb;
+    int hitRoll = my_rand() % 100;
+    
+    if (hitRoll > (int)(limbHitChance[target] * 100.0f)) {
+        char buf[128];
+        wsprintfA(buf, "You target %s... Missed!", limbNames[target]);
+        addLog(buf);
+    } else {
+        int dmg = (playerStats.atk - enemyStats.def) + (my_rand() % 5);
+        if (dmg < 1) dmg = 1;
+        dmg = (int)(dmg * limbDmgMult[target]);
+        enemyStats.hp -= dmg;
 
-    char buf[128];
-    wsprintfA(buf, "You attack! Dealt %d damage.", dmg);
-    addLog(buf);
+        char buf[128];
+        wsprintfA(buf, "You hit %s! Dealt %d dmg.", limbNames[target], dmg);
+        addLog(buf);
+    }
 
     if (enemyStats.hp <= 0) {
         enemyStats.hp = 0;
@@ -106,8 +131,9 @@ void ReturnToGarage() {
 
 // Button areas
 RECT rectDeploy = { 200, 360, 400, 400 };
-RECT rectAttack = { 100, 400, 250, 440 };
-RECT rectDefend = { 350, 400, 500, 440 };
+RECT rectTarget = { 50, 400, 190, 440 };
+RECT rectAttack = { 210, 400, 350, 440 };
+RECT rectDefend = { 370, 400, 510, 440 };
 RECT rectReturn = { 200, 400, 400, 440 };
 
 bool PtInRectLocal(const RECT* r, int x, int y) {
@@ -144,7 +170,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (gameState == STATE_BATTLE) {
-                if (PtInRectLocal(&rectAttack, x, y)) {
+                if (PtInRectLocal(&rectTarget, x, y)) {
+                    currentTargetLimb = (currentTargetLimb + 1) % 5;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectAttack, x, y)) {
                     ActionAttack();
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectDefend, x, y)) {
@@ -284,6 +313,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 
                 if (gameState == STATE_BATTLE) {
+                    char targetText[64];
+                    wsprintfA(targetText, "TGT: %s", limbNames[currentTargetLimb]);
+                    DrawButton(memDC, &rectTarget, targetText);
                     DrawButton(memDC, &rectAttack, "Attack");
                     DrawButton(memDC, &rectDefend, "Defend");
                 } else if (gameState == STATE_POST_BATTLE) {
