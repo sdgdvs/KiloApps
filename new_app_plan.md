@@ -54,13 +54,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KMech (Sci-fi turn-based mech combat)
-**Phase:** 4 (next to do)
+**Phase:** 5 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KMech directory (`KMech/`), create web HTML skeleton (`KiloOS/public/apps/kmech.html`), register in App.jsx.
 - [x] Phase 2: Basic UI for mech garage (view stats) and core battle loop (attack, defend) in web HTML.
 - [x] Phase 3: Native C version (`KMech/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [ ] Phase 4: Sci-fi styling (grid backgrounds, terminal text, wireframe mech portraits).
+- [x] Phase 4: Sci-fi styling (grid backgrounds, terminal text, wireframe mech portraits).
 - [ ] Phase 5: Implement targeted limb combat (Head, Torso, Left Arm, Right Arm, Legs) with different hit chances and damage effects.
 - [ ] Phase 6: Heat management system (weapons generate heat, overheating causes damage or shutdown).
 - [ ] Phase 7: Mech customization in the garage (swap weapons, armor, heat sinks).

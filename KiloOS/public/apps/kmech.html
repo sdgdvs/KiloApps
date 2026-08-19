@@ -8,9 +8,14 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #111;
+            background-color: #050505;
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
             color: #0f0;
-            font-family: monospace;
+            font-family: 'Courier New', Courier, monospace;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20,9 +25,11 @@
             width: 600px;
             height: 400px;
             border: 2px solid #0f0;
+            box-shadow: 0 0 10px #0f0, inset 0 0 10px #0f0;
             padding: 20px;
             box-sizing: border-box;
             position: relative;
+            background-color: rgba(0, 0, 0, 0.8);
         }
         .screen {
             display: none;
@@ -38,6 +45,7 @@
             text-transform: uppercase;
             border-bottom: 1px solid #0f0;
             padding-bottom: 10px;
+            letter-spacing: 2px;
         }
         .stats {
             display: flex;
@@ -50,6 +58,7 @@
             text-align: center;
             flex: 1;
             margin: 0 5px;
+            background-color: rgba(0, 50, 0, 0.3);
         }
         .btn {
             background-color: #000;
@@ -58,13 +67,17 @@
             padding: 10px 20px;
             cursor: pointer;
             text-transform: uppercase;
-            font-family: monospace;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 16px;
+            font-weight: bold;
             margin: 5px;
+            box-shadow: 0 0 5px #0f0;
+            transition: all 0.2s;
         }
         .btn:hover {
             background-color: #0f0;
             color: #000;
+            box-shadow: 0 0 15px #0f0;
         }
         .actions {
             display: flex;
@@ -77,8 +90,9 @@
             padding: 10px;
             overflow-y: auto;
             margin-bottom: 10px;
-            background-color: #000;
+            background-color: rgba(0, 20, 0, 0.8);
             color: #0a0;
+            text-shadow: none;
         }
         .mech-display {
             display: flex;
@@ -89,23 +103,44 @@
             width: 45%;
             border: 1px dashed #0a0;
             padding: 10px;
+            background-color: rgba(0, 10, 0, 0.6);
         }
         .mech-name {
             font-weight: bold;
             text-align: center;
             margin-bottom: 5px;
+            letter-spacing: 1px;
         }
         .bar-container {
             width: 100%;
             background-color: #030;
             height: 10px;
             margin-top: 5px;
+            border: 1px solid #050;
         }
         .bar {
             height: 100%;
             background-color: #0f0;
+            box-shadow: 0 0 5px #0f0;
         }
-        .enemy-bar { background-color: #f00; }
+        .enemy-bar { 
+            background-color: #f00; 
+            box-shadow: 0 0 5px #f00;
+        }
+        .wireframe {
+            font-family: monospace;
+            white-space: pre;
+            text-align: center;
+            color: #0f0;
+            font-size: 12px;
+            line-height: 12px;
+            margin: 5px 0;
+            text-shadow: 0 0 2px #0f0;
+        }
+        .enemy-wireframe {
+            color: #f00;
+            text-shadow: 0 0 2px #f00;
+        }
     </style>
 </head>
 <body>
@@ -139,11 +174,25 @@
             <div class="mech-display">
                 <div class="mech-side">
                     <div class="mech-name">Player Mech</div>
+                    <div class="wireframe">
+  [==]  
+ /|  |\ 
+/ |__| \
+  |  |  
+ /    \ 
+/      \</div>
                     <div>HP: <span id="battle-player-hp">100</span></div>
                     <div class="bar-container"><div id="player-hp-bar" class="bar"></div></div>
                 </div>
                 <div class="mech-side">
                     <div class="mech-name">Enemy Mech</div>
+                    <div class="wireframe enemy-wireframe">
+  (oo)  
+ /|  |\ 
+/ |__| \
+  |  |  
+ /    \ 
+/      \</div>
                     <div>HP: <span id="battle-enemy-hp">100</span></div>
                     <div class="bar-container"><div id="enemy-hp-bar" class="bar enemy-bar"></div></div>
                 </div>

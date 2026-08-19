@@ -105,10 +105,10 @@ void ReturnToGarage() {
 }
 
 // Button areas
-RECT rectDeploy = { 200, 300, 400, 340 };
-RECT rectAttack = { 100, 320, 250, 360 };
-RECT rectDefend = { 350, 320, 500, 360 };
-RECT rectReturn = { 200, 320, 400, 360 };
+RECT rectDeploy = { 200, 360, 400, 400 };
+RECT rectAttack = { 100, 400, 250, 440 };
+RECT rectDefend = { 350, 400, 500, 440 };
+RECT rectReturn = { 200, 400, 400, 440 };
 
 bool PtInRectLocal(const RECT* r, int x, int y) {
     return (x >= r->left && x <= r->right && y >= r->top && y <= r->bottom);
@@ -172,9 +172,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, memBitmap);
             
             // Draw background
-            HBRUSH bgBrush = CreateSolidBrush(RGB(17, 17, 17));
+            HBRUSH bgBrush = CreateSolidBrush(RGB(5, 5, 5));
             FillRect(memDC, &clientRect, bgBrush);
             DeleteObject(bgBrush);
+            
+            // Draw grid
+            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(0, 40, 0));
+            HGDIOBJ oldPen = SelectObject(memDC, gridPen);
+            for (int i = 0; i < clientRect.right; i += 20) {
+                MoveToEx(memDC, i, 0, NULL);
+                LineTo(memDC, i, clientRect.bottom);
+            }
+            for (int i = 0; i < clientRect.bottom; i += 20) {
+                MoveToEx(memDC, 0, i, NULL);
+                LineTo(memDC, clientRect.right, i);
+            }
+            SelectObject(memDC, oldPen);
+            DeleteObject(gridPen);
             
             HFONT hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_DONTCARE, "Consolas");
             SelectObject(memDC, hFont);
@@ -213,9 +227,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(memDC, &pBar, hpP);
                 }
                 
+                const char* pw[] = {
+                    "  [==]  ",
+                    " /|  |\\ ",
+                    "/ |__| \\",
+                    "  |  |  ",
+                    " /    \\ ",
+                    "/      \\"
+                };
+                for (int i=0; i<6; i++) {
+                    TextOutA(memDC, 80, 115 + i*14, pw[i], lstrlenA(pw[i]));
+                }
+                
                 // Enemy Mech Stats
                 char bufE[64];
                 wsprintfA(bufE, "Enemy Mech HP: %d", enemyStats.hp);
+                SetTextColor(memDC, RGB(255, 0, 0));
                 TextOutA(memDC, 350, 70, bufE, lstrlenA(bufE));
                 
                 HBRUSH hpE = CreateSolidBrush(RGB(255, 0, 0));
@@ -227,20 +254,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(memDC, &eBar, hpE);
                 }
                 
+                const char* ew[] = {
+                    "  (oo)  ",
+                    " /|  |\\ ",
+                    "/ |__| \\",
+                    "  |  |  ",
+                    " /    \\ ",
+                    "/      \\"
+                };
+                for (int i=0; i<6; i++) {
+                    TextOutA(memDC, 400, 115 + i*14, ew[i], lstrlenA(ew[i]));
+                }
+                SetTextColor(memDC, RGB(0, 255, 0)); // Restore color
+                
                 DeleteObject(hpBg);
                 DeleteObject(hpP);
                 DeleteObject(hpE);
                 
                 // Draw Logs
-                RECT logBg = {30, 120, 550, 300};
-                HBRUSH logBrush = CreateSolidBrush(RGB(0, 0, 0));
+                RECT logBg = {30, 210, 550, 390};
+                HBRUSH logBrush = CreateSolidBrush(RGB(0, 20, 0));
                 FillRect(memDC, &logBg, logBrush);
                 DeleteObject(logBrush);
                 
                 for (int i = 0; i < logCount; i++) {
                     char logOut[130];
                     wsprintfA(logOut, "> %s", battleLogs[i]);
-                    TextOutA(memDC, 40, 130 + (i * 16), logOut, lstrlenA(logOut));
+                    TextOutA(memDC, 40, 215 + (i * 16), logOut, lstrlenA(logOut));
                 }
                 
                 if (gameState == STATE_BATTLE) {
@@ -283,7 +323,7 @@ void MainEntry() {
     RegisterClassA(&wc);
 
     int width = 616; // Adjust for borders
-    int height = 439; 
+    int height = 500; 
     
     HWND hwnd = CreateWindowA("KMechWindowClass", "KMech", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, width, height,
