@@ -8,6 +8,7 @@ int history_count = 0;
 char current_input[MAX_LINE_LENGTH];
 int current_input_len = 0;
 HFONT hFont;
+int cursor_visible = 1;
 
 void PrintLine(HWND hwnd, const char* text) {
     if (history_count < MAX_LINES) {
@@ -59,18 +60,25 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+            hFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                 OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                 FIXED_PITCH | FF_MODERN, "Courier New");
             PrintLine(hwnd, "KCyber OS booting...");
             PrintLine(hwnd, "Loading modules... OK");
             PrintLine(hwnd, "Initializing memory... OK");
             PrintLine(hwnd, "Type 'help' for a list of commands.");
+            SetTimer(hwnd, 1, 530, NULL);
             break;
 
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             DeleteObject(hFont);
             PostQuitMessage(0);
+            return 0;
+
+        case WM_TIMER:
+            cursor_visible = !cursor_visible;
+            InvalidateRect(hwnd, NULL, FALSE);
             return 0;
 
         case WM_PAINT: {
@@ -105,9 +113,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             char prompt[MAX_LINE_LENGTH + 32];
             lstrcpyA(prompt, "root@cyberdeck:~# ");
             lstrcatA(prompt, current_input);
-            lstrcatA(prompt, "_");
             
             TextOutA(hdc, 10, y, prompt, lstrlenA(prompt));
+
+            if (cursor_visible) {
+                SIZE size;
+                GetTextExtentPoint32A(hdc, prompt, lstrlenA(prompt), &size);
+                GetTextExtentPoint32A(hdc, "A", 1, &size); // Get width of one character
+                int charWidth = size.cx;
+                GetTextExtentPoint32A(hdc, prompt, lstrlenA(prompt), &size);
+                
+                RECT cursorRect = { 10 + size.cx, y + 2, 10 + size.cx + charWidth, y + lineHeight - 2 };
+                HBRUSH cursorBrush = CreateSolidBrush(RGB(0, 255, 0));
+                FillRect(hdc, &cursorRect, cursorBrush);
+                DeleteObject(cursorBrush);
+            }
+
+            // Draw scanlines
+            HPEN scanPen = CreatePen(PS_SOLID, 1, RGB(0, 30, 0));
+            HPEN oldPen = SelectObject(hdc, scanPen);
+            for (int sy = 0; sy < clientRect.bottom; sy += 2) {
+                MoveToEx(hdc, 0, sy, NULL);
+                LineTo(hdc, clientRect.right, sy);
+            }
+            SelectObject(hdc, oldPen);
+            DeleteObject(scanPen);
 
             EndPaint(hwnd, &ps);
             return 0;
@@ -118,16 +148,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (current_input_len < MAX_LINE_LENGTH - 1) {
                     current_input[current_input_len++] = (char)wParam;
                     current_input[current_input_len] = '\0';
-                    InvalidateRect(hwnd, NULL, TRUE);
+                    cursor_visible = 1;
+                    InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == '\b' && current_input_len > 0) {
                 current_input[--current_input_len] = '\0';
-                InvalidateRect(hwnd, NULL, TRUE);
+                cursor_visible = 1;
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == '\r') {
                 ProcessCommand(hwnd, current_input);
                 current_input[0] = '\0';
                 current_input_len = 0;
-                InvalidateRect(hwnd, NULL, TRUE);
+                cursor_visible = 1;
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             return 0;
 
