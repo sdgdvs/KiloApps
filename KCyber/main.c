@@ -15,6 +15,10 @@ int hacking_node = 0;
 char hacking_target[5] = {0};
 int hacking_attempts = 0;
 
+int player_mem = 100;
+int ice_damage = 0;
+char ice_name[32] = "";
+
 static unsigned long int my_next = 1;
 int my_rand(void) {
     my_next = my_next * 1103515245 + 12345;
@@ -139,16 +143,23 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "  help    - Show this message");
         PrintLine(hwnd, "  clear   - Clear terminal output");
         PrintLine(hwnd, "  status  - Show deck status");
+        PrintLine(hwnd, "  reboot  - Restart deck to restore MEM");
         PrintLine(hwnd, "  map     - Display network topology");
         PrintLine(hwnd, "  connect - Attempt connection to network node");
     } else if (lstrcmpiA(command, "clear") == 0) {
         history_count = 0;
         InvalidateRect(hwnd, NULL, TRUE);
     } else if (lstrcmpiA(command, "status") == 0) {
+        char memBuf[64];
+        wsprintfA(memBuf, "  MEM: %d%%", player_mem);
         PrintLine(hwnd, "DECK STATUS:");
         PrintLine(hwnd, "  CPU: 100%");
-        PrintLine(hwnd, "  MEM: OK");
+        PrintLine(hwnd, memBuf);
         PrintLine(hwnd, "  NET: DISCONNECTED");
+    } else if (lstrcmpiA(command, "reboot") == 0) {
+        player_mem = 100;
+        PrintLine(hwnd, "System rebooting...");
+        PrintLine(hwnd, "Memory restored to 100%.");
     } else if (lstrcmpiA(command, "map") == 0) {
         PrintLine(hwnd, "NETWORK TOPOLOGY:");
         PrintLine(hwnd, " [01] GATEWAY (LOCAL)");
@@ -180,12 +191,20 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 }
                 hacking_target[4] = '\0';
                 
+                if (node == 2) { lstrcpyA(ice_name, "Basic ICE"); ice_damage = 5; }
+                else if (node == 3) { lstrcpyA(ice_name, "Tracer ICE"); ice_damage = 10; }
+                else if (node == 4) { lstrcpyA(ice_name, "Hunter ICE"); ice_damage = 15; }
+                else if (node == 5) { lstrcpyA(ice_name, "Black ICE"); ice_damage = 25; }
+
                 char msg[MAX_LINE_LENGTH + 32];
                 lstrcpyA(msg, "Attempting connection to node [");
                 lstrcatA(msg, args);
                 lstrcatA(msg, "]...");
                 PrintLine(hwnd, msg);
                 PrintLine(hwnd, "Establishing handshake...");
+                char warnBuf[128];
+                wsprintfA(warnBuf, "WARNING: %s detected on this node.", ice_name);
+                PrintLine(hwnd, warnBuf);
                 PrintLine(hwnd, "PASSWORD REQUIRED. INITIATING BRUTEFORCE MODULE...");
                 PrintLine(hwnd, "Crack the 4-digit access code (0-9).");
                 char buf[64];
@@ -220,17 +239,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PrintLine(hwnd, "Initializing memory... OK");
             PrintLine(hwnd, "Type 'help' for a list of commands.");
             SetTimer(hwnd, 1, 530, NULL);
+            SetTimer(hwnd, 2, 3000, NULL);
             break;
 
         case WM_DESTROY:
             KillTimer(hwnd, 1);
+            KillTimer(hwnd, 2);
             DeleteObject(hFont);
             PostQuitMessage(0);
             return 0;
 
         case WM_TIMER:
-            cursor_visible = !cursor_visible;
-            InvalidateRect(hwnd, NULL, FALSE);
+            if (wParam == 1) {
+                cursor_visible = !cursor_visible;
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 2) {
+                if (hacking_node && ice_damage > 0) {
+                    player_mem -= ice_damage;
+                    char buf[128];
+                    if (player_mem <= 0) {
+                        player_mem = 0;
+                        wsprintfA(buf, "[%s] FATAL: Memory depleted. Connection forcefully terminated.", ice_name);
+                        PrintLine(hwnd, buf);
+                        hacking_node = 0;
+                    } else {
+                        wsprintfA(buf, "[%s] attacks! System MEM reduced to %d%%", ice_name, player_mem);
+                        PrintLine(hwnd, buf);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            }
             return 0;
 
         case WM_PAINT: {
