@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdlib.h>
 
 #define MAX_LINES 100
 #define MAX_LINE_LENGTH 128
@@ -9,6 +10,19 @@ char current_input[MAX_LINE_LENGTH];
 int current_input_len = 0;
 HFONT hFont;
 int cursor_visible = 1;
+
+int hacking_node = 0;
+char hacking_target[5] = {0};
+int hacking_attempts = 0;
+
+static unsigned long int my_next = 1;
+int my_rand(void) {
+    my_next = my_next * 1103515245 + 12345;
+    return (unsigned int)(my_next / 65536) % 32768;
+}
+void my_srand(unsigned int seed) {
+    my_next = seed;
+}
 
 void PrintLine(HWND hwnd, const char* text) {
     if (history_count < MAX_LINES) {
@@ -29,6 +43,69 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
     // Trim leading spaces
     while(*cmd == ' ') cmd++;
     if (*cmd == '\0') return;
+
+    if (hacking_node) {
+        wsprintfA(buffer, "[NODE 0%d] hack> %s", hacking_node, cmd);
+        PrintLine(hwnd, buffer);
+        
+        char guess[MAX_LINE_LENGTH];
+        lstrcpynA(guess, cmd, MAX_LINE_LENGTH);
+        if (lstrcmpiA(guess, "abort") == 0) {
+            hacking_node = 0;
+            PrintLine(hwnd, "Hacking aborted.");
+            return;
+        }
+        
+        int valid = 1;
+        if (lstrlenA(guess) != 4) valid = 0;
+        for(int i=0; i<4; i++) {
+            if(guess[i] < '0' || guess[i] > '9') valid = 0;
+        }
+        if (!valid) {
+            PrintLine(hwnd, "Invalid input. Enter 4 digits (e.g., 1234) or 'abort' to cancel.");
+            return;
+        }
+        
+        int exact = 0, partial = 0;
+        int targetUsed[4] = {0,0,0,0};
+        int guessUsed[4] = {0,0,0,0};
+        for(int i=0; i<4; i++){
+            if(guess[i] == hacking_target[i]){
+                exact++;
+                targetUsed[i] = 1;
+                guessUsed[i] = 1;
+            }
+        }
+        for(int i=0; i<4; i++){
+            if(!guessUsed[i]){
+                for(int j=0; j<4; j++){
+                    if(!targetUsed[j] && guess[i] == hacking_target[j]){
+                        partial++;
+                        targetUsed[j] = 1;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (exact == 4) {
+            wsprintfA(buffer, "ACCESS GRANTED. Connected to node [0%d].", hacking_node);
+            PrintLine(hwnd, buffer);
+            hacking_node = 0;
+        } else {
+            hacking_attempts--;
+            wsprintfA(buffer, "Result: %d EXACT, %d PARTIAL", exact, partial);
+            PrintLine(hwnd, buffer);
+            if (hacking_attempts > 0) {
+                wsprintfA(buffer, "Attempts remaining: %d", hacking_attempts);
+                PrintLine(hwnd, buffer);
+            } else {
+                PrintLine(hwnd, "ACCESS DENIED. TRACE DETECTED. CONNECTION TERMINATED.");
+                hacking_node = 0;
+            }
+        }
+        return;
+    }
 
     lstrcpyA(buffer, "root@cyberdeck:~# ");
     lstrcatA(buffer, cmd);
@@ -89,13 +166,40 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         if (args[0] == '\0') {
             PrintLine(hwnd, "Error: No target node specified. Usage: connect <node_id>");
         } else {
-            char msg[MAX_LINE_LENGTH + 32];
-            lstrcpyA(msg, "Attempting connection to node [");
-            lstrcatA(msg, args);
-            lstrcatA(msg, "]...");
-            PrintLine(hwnd, msg);
-            PrintLine(hwnd, "Establishing handshake...");
-            PrintLine(hwnd, "Error: Connection refused. Invalid credentials or ICE active.");
+            int node = 0;
+            if (lstrcmpiA(args, "02") == 0) node = 2;
+            else if (lstrcmpiA(args, "03") == 0) node = 3;
+            else if (lstrcmpiA(args, "04") == 0) node = 4;
+            else if (lstrcmpiA(args, "05") == 0) node = 5;
+            
+            if (node > 0) {
+                hacking_node = node;
+                hacking_attempts = 5;
+                for(int i=0; i<4; i++) {
+                    hacking_target[i] = '0' + (my_rand() % 10);
+                }
+                hacking_target[4] = '\0';
+                
+                char msg[MAX_LINE_LENGTH + 32];
+                lstrcpyA(msg, "Attempting connection to node [");
+                lstrcatA(msg, args);
+                lstrcatA(msg, "]...");
+                PrintLine(hwnd, msg);
+                PrintLine(hwnd, "Establishing handshake...");
+                PrintLine(hwnd, "PASSWORD REQUIRED. INITIATING BRUTEFORCE MODULE...");
+                PrintLine(hwnd, "Crack the 4-digit access code (0-9).");
+                char buf[64];
+                wsprintfA(buf, "Attempts remaining: %d", hacking_attempts);
+                PrintLine(hwnd, buf);
+            } else {
+                char msg[MAX_LINE_LENGTH + 32];
+                lstrcpyA(msg, "Attempting connection to node [");
+                lstrcatA(msg, args);
+                lstrcatA(msg, "]...");
+                PrintLine(hwnd, msg);
+                PrintLine(hwnd, "Establishing handshake...");
+                PrintLine(hwnd, "Error: Connection refused. Invalid node or ICE active.");
+            }
         }
     } else {
         lstrcpyA(buffer, "Command not found: ");
@@ -107,6 +211,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
+            my_srand(GetTickCount());
             hFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                 OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                 FIXED_PITCH | FF_MODERN, "Courier New");
@@ -158,8 +263,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
 
             char prompt[MAX_LINE_LENGTH + 32];
-            lstrcpyA(prompt, "root@cyberdeck:~# ");
-            lstrcatA(prompt, current_input);
+            if (hacking_node) {
+                wsprintfA(prompt, "[NODE 0%d] hack> %s", hacking_node, current_input);
+            } else {
+                lstrcpyA(prompt, "root@cyberdeck:~# ");
+                lstrcatA(prompt, current_input);
+            }
             
             TextOutA(hdc, 10, y, prompt, lstrlenA(prompt));
 

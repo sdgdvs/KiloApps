@@ -97,6 +97,19 @@
     const outputDiv = document.getElementById('output');
     const cmdInput = document.getElementById('cmd-input');
     const terminalDiv = document.getElementById('terminal');
+    const promptSpan = document.querySelector('.prompt');
+
+    let hacking_node = null;
+    let hacking_target = "";
+    let hacking_attempts = 0;
+
+    function updatePrompt() {
+      if (hacking_node) {
+        promptSpan.textContent = `[NODE ${hacking_node}] hack> `;
+      } else {
+        promptSpan.textContent = `root@cyberdeck:~# `;
+      }
+    }
 
     function printLine(text) {
       const line = document.createElement('div');
@@ -109,6 +122,65 @@
     function processCommand(cmd) {
       const trimmed = cmd.trim();
       if (!trimmed) return;
+      
+      if (hacking_node) {
+        printLine(`[NODE ${hacking_node}] hack> ${trimmed}`);
+        
+        let guess = trimmed.toLowerCase();
+        if (guess === 'abort') {
+          hacking_node = null;
+          printLine("Hacking aborted.");
+          updatePrompt();
+          return;
+        }
+        
+        if (!/^\d{4}$/.test(guess)) {
+          printLine("Invalid input. Enter 4 digits (e.g., 1234) or 'abort' to cancel.");
+          return;
+        }
+        
+        let exact = 0;
+        let partial = 0;
+        let targetArr = hacking_target.split('');
+        let guessArr = guess.split('');
+        let targetUsed = [false, false, false, false];
+        let guessUsed = [false, false, false, false];
+        
+        for(let i=0; i<4; i++){
+          if(guessArr[i] === targetArr[i]){
+            exact++;
+            targetUsed[i] = true;
+            guessUsed[i] = true;
+          }
+        }
+        for(let i=0; i<4; i++){
+          if(!guessUsed[i]){
+            for(let j=0; j<4; j++){
+              if(!targetUsed[j] && guessArr[i] === targetArr[j]){
+                partial++;
+                targetUsed[j] = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (exact === 4) {
+          printLine(`ACCESS GRANTED. Connected to node [${hacking_node}].`);
+          hacking_node = null;
+        } else {
+          hacking_attempts--;
+          printLine(`Result: ${exact} EXACT, ${partial} PARTIAL`);
+          if (hacking_attempts > 0) {
+            printLine(`Attempts remaining: ${hacking_attempts}`);
+          } else {
+            printLine("ACCESS DENIED. TRACE DETECTED. CONNECTION TERMINATED.");
+            hacking_node = null;
+          }
+        }
+        updatePrompt();
+        return;
+      }
       
       printLine(`root@cyberdeck:~# ${trimmed}`);
       
@@ -151,9 +223,22 @@
           if (args.length < 2) {
             printLine("Error: No target node specified. Usage: connect <node_id>");
           } else {
-            printLine(`Attempting connection to node [${args[1]}]...`);
-            printLine("Establishing handshake...");
-            printLine("Error: Connection refused. Invalid credentials or ICE active.");
+            const validNodes = ['02', '03', '04', '05'];
+            if (validNodes.includes(args[1])) {
+              hacking_node = args[1];
+              hacking_target = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+              hacking_attempts = 5;
+              printLine(`Attempting connection to node [${args[1]}]...`);
+              printLine("Establishing handshake...");
+              printLine("PASSWORD REQUIRED. INITIATING BRUTEFORCE MODULE...");
+              printLine("Crack the 4-digit access code (0-9).");
+              printLine(`Attempts remaining: ${hacking_attempts}`);
+              updatePrompt();
+            } else {
+              printLine(`Attempting connection to node [${args[1]}]...`);
+              printLine("Establishing handshake...");
+              printLine("Error: Connection refused. Invalid node or ICE active.");
+            }
           }
           break;
         default:

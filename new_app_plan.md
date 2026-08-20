@@ -62,7 +62,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 3: Native C version (`KCyber/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [x] Phase 4: Retro cyberpunk styling (phosphor green text on black, scanlines, block cursor).
 - [x] Phase 5: Implement a node map system (visual representation of network nodes to connect to).
-- [ ] Phase 6: Core hacking mechanic (minigame for cracking passwords, e.g., guessing sequences or matching hashes).
+- [x] Phase 6: Core hacking mechanic (minigame for cracking passwords, e.g., guessing sequences or matching hashes).
 - [ ] Phase 7: ICE (Intrusion Countermeasures Electronics) system (enemies that track and attack the player while hacking).
 - [ ] Phase 8: Stealth mechanics (tools to reduce trace speed and evade active ICE).
 - [ ] Phase 9: Data extraction system (finding valuable files in nodes and downloading them before trace completes).
