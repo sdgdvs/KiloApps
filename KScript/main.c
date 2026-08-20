@@ -435,7 +435,7 @@ void MainEntry() {
     wc.hbrBackground = NULL;
     RegisterClass(&wc);
 
-    DWORD style = WS_OVERLAPPEDWINDOW;
+    DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     RECT rect = {0, 0, S(W), S(H)};
     AdjustWindowRect(&rect, style, FALSE);
     HWND hwnd = CreateWindowEx(0, "KScriptApp", "KScript - Press F1 for Help", style,
