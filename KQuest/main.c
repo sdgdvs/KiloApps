@@ -46,6 +46,11 @@ static int g_BindingAction = -1;
 static int g_HelpTab = 0; // 0: How to Play, 1: Controls, 2: Bestiary, 3: Crafting
 void RenderHelpTabLog();
 
+extern int g_GdiScreenShakeTimer;
+extern int g_GdiScreenShakeIntensity;
+extern int g_GdiRedFlashTimer;
+void AddGdiFloatText(const char* text, int x, int y, COLORREF color, int isCrit);
+
 #define MAX_INV_SLOTS 30
 
 typedef struct {
@@ -3325,7 +3330,6 @@ void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame, 
     if (ContainsSubstr(armName, "Leather") || ContainsSubstr(armName, "Wood")) { armC = RGB(166, 124, 82); trimC = RGB(230, 195, 135); }
     else if (ContainsSubstr(armName, "Gold")) { armC = RGB(249, 226, 175); trimC = RGB(243, 139, 168); }
     else if (ContainsSubstr(armName, "Diamond")) { armC = RGB(137, 220, 235); trimC = RGB(205, 214, 244); }
-    int sy = y + bob;
 
     HBRUSH hShB = CreateSolidBrush(RGB(15, 15, 20));
     HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hShB);
@@ -3964,7 +3968,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     RegisterClassA(&wc);
 
-    RECT wr = {0, 0, 785, 520};
+    RECT wr = {0, 0, 1000, 720};
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     HWND hwnd = CreateWindowA("KQuestClass", "KQuest - Fantasy Dungeon RPG (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
                               CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top,

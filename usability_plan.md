@@ -319,3 +319,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KScript: Usability and UI issues fixed (updated App.jsx bounds to 1000x700, added WS_CLIPCHILDREN to native C window styles, applied optimizeLegibility globally to web HTML body).
 - KMine: Usability and UI issues fixed (updated App.jsx bounds to 1000x750 to accommodate Expert mode width, and added text-rendering: optimizeLegibility to web HTML).
 - KPac: Usability and UI issues fixed (verified native C negative font heights and scaling, verified App.jsx bounds, applied optimizeLegibility to web CSS, and bumped OS version to 0.3.102).
+- KQuest: FAILED (Subagent timed out or encountered 503 error).
