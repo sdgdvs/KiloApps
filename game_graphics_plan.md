@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KRogue
 - KChess
 - KPong
 - KMines
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFortress
 - KFarm
 - KAlchemy
+- KRogue
 ## Completed Work Log
+
+- **KRogue (Loop 6):** Implemented highly detailed visual variations for boss encounters (multi-phase enraged state changing core sprite color/texture below 50% HP), a dynamic kinematically animated screen-shake with expanding 3D ring shockwave effect for critical hits or high-tier spells, and distinctly stylized multi-layered particle explosions showering debris downward with gravity physics when major enemies are defeated in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
 - **KAlchemy (Loop 5):** Implemented highly detailed visual variations for elemental components (procedurally generated inner flame patterns for Fire and swirling wave distortions for Water), a dynamic kinematically animated bubbling/boiling effect within alchemy vessels that reacts when valid combinations are hovered, and a distinctly stylized multi-layered magical sigil that briefly burns onto the background during a successful high-tier transmutation in both Web Canvas (kalchemy.html) and Native C Win32 GDI (KAlchemy/main.c).
 
