@@ -299,6 +299,7 @@ static HWND g_hEquipButtons[8];
 static HWND g_hModeButtons[3];
 static HWND g_hBlitzStartButton = NULL;
 static HWND g_hPuzzleSkipButton = NULL;
+DWORD g_SigilEndTick = 0;
 static HWND g_hCodexFilterBtns[3];
 static HWND g_hPotionDrinkButtons[4];
 static HWND g_hQuestTurnInButtons[3];
@@ -1344,6 +1345,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                                     wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
                                     SpawnExplosion(392, 168, g_Tiers[resTier - 1].color);
+                                    
+                                    extern DWORD g_SigilEndTick;
+                                    if (resTier >= 3) {
+                                        g_SigilEndTick = GetTickCount() + 1500;
+                                    }
 
                                     char logMsg[320];
                                     wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+%d Dust)%s",
@@ -2148,10 +2154,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     Ellipse(hdc, cx - 35, cy - 10, cx + 35, cy + 25);
                     
                     // Bubbling animation
+                    int isValidCombo = 0;
+                    if (g_State.slot1 >= 0 && g_State.slot2 >= 0) {
+                        for (int r = 0; r < TOTAL_RECIPES; r++) {
+                            if ((g_Recipes[r].ingredient1 == g_State.slot1 && g_Recipes[r].ingredient2 == g_State.slot2) ||
+                                (g_Recipes[r].ingredient1 == g_State.slot2 && g_Recipes[r].ingredient2 == g_State.slot1)) {
+                                isValidCombo = 1;
+                                break;
+                            }
+                        }
+                    }
+
                     SelectObject(hdc, hGoldPen);
-                    for (int i=0; i<5; i++) {
+                    int bubbleCount = isValidCombo ? 18 : 5;
+                    for (int i=0; i<bubbleCount; i++) {
                         int bx = cx - 20 + ((i * 37) % 40);
-                        int by = cy + 20 - ((tick / 20 + i * 15) % 30);
+                        int speed = isValidCombo ? 10 : 20;
+                        int by = cy + 20 - ((tick / speed + i * 15) % 30);
                         Ellipse(hdc, bx - 2, by - 2, bx + 2, by + 2);
                     }
                 }
@@ -2172,6 +2191,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(hHighlight);
 
 
+                // Draw elemental component variations around the slots
+                if (g_State.slot1 == 0 || g_State.slot1 == 1) {
+                    HPEN varPen = CreatePen(PS_SOLID, 2, g_State.slot1 == 0 ? RGB(255, 100, 0) : RGB(0, 150, 255));
+                    HGDIOBJ oldVar = SelectObject(hdc, varPen);
+                    int sx = 295 + 45; int sy = 200 + 25;
+                    for (int w = 0; w < 8; w++) {
+                        int r = 30 + ((tick / 30 + w * 10) % 15);
+                        if (g_State.slot1 == 0) { // Fire flame patterns
+                            MoveToEx(hdc, sx - 20 + w*5, sy + 25, NULL);
+                            LineTo(hdc, sx - 20 + w*5 + (FastRand()%10 - 5), sy + 25 - r);
+                        } else { // Water wave distortions
+                            int offY = (int)(sin((tick + w*200) * 0.01) * 10.0);
+                            MoveToEx(hdc, sx - 30 + w*8, sy + 25, NULL);
+                            LineTo(hdc, sx - 30 + w*8, sy + 25 + offY);
+                        }
+                    }
+                    SelectObject(hdc, oldVar); DeleteObject(varPen);
+                }
+                if (g_State.slot2 == 0 || g_State.slot2 == 1) {
+                    HPEN varPen = CreatePen(PS_SOLID, 2, g_State.slot2 == 0 ? RGB(255, 100, 0) : RGB(0, 150, 255));
+                    HGDIOBJ oldVar = SelectObject(hdc, varPen);
+                    int sx = 405 + 45; int sy = 200 + 25; // Slot 2 position
+                    for (int w = 0; w < 8; w++) {
+                        int r = 30 + ((tick / 30 + w * 10) % 15);
+                        if (g_State.slot2 == 0) {
+                            MoveToEx(hdc, sx - 20 + w*5, sy + 25, NULL);
+                            LineTo(hdc, sx - 20 + w*5 + (FastRand()%10 - 5), sy + 25 - r);
+                        } else {
+                            int offY = (int)(sin((tick + w*200) * 0.01) * 10.0);
+                            MoveToEx(hdc, sx - 30 + w*8, sy + 25, NULL);
+                            LineTo(hdc, sx - 30 + w*8, sy + 25 + offY);
+                        }
+                    }
+                    SelectObject(hdc, oldVar); DeleteObject(varPen);
+                }
+
                 // Draw particles as magical sparkles
                 for (int i = 0; i < MAX_PARTICLES; i++) {
                     if (g_Particles[i].life > 0.0f) {
@@ -2188,6 +2243,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SelectObject(hdc, oldPp);
                         DeleteObject(pPen);
                     }
+                }
+
+                // Distinctly stylized multi-layered magical sigil
+                extern DWORD g_SigilEndTick;
+                if (tick < g_SigilEndTick) {
+                    int scx = 392, scy = 168;
+                    HPEN sigilPen = CreatePen(PS_SOLID, 3, RGB(241, 196, 15));
+                    HGDIOBJ oldSigil = SelectObject(hdc, sigilPen);
+                    HBRUSH oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    
+                    int radius = 90 + (tick % 15);
+                    Ellipse(hdc, scx - radius, scy - radius, scx + radius, scy + radius);
+                    POINT star[6] = {
+                        {scx, scy - radius}, {scx + radius*86/100, scy + radius/2}, 
+                        {scx - radius*86/100, scy + radius/2}, {scx, scy + radius},
+                        {scx - radius*86/100, scy - radius/2}, {scx + radius*86/100, scy - radius/2}
+                    };
+                    Polygon(hdc, star, 3);
+                    Polygon(hdc, &star[3], 3);
+
+                    SelectObject(hdc, oldBrush);
+                    SelectObject(hdc, oldSigil);
+                    DeleteObject(sigilPen);
                 }
 
                 SelectObject(hdc, hSlotFont);

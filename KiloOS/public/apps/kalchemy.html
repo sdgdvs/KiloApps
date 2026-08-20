@@ -1737,6 +1737,51 @@
       font-weight: bold;
       font-size: 0.8rem;
     }
+    .anim-fire {
+      background: radial-gradient(circle at 50% 100%, rgba(255,87,34,0.3) 0%, rgba(255,152,0,0.1) 50%, transparent 100%);
+      animation: flicker 1s infinite alternate;
+      border: 2px solid #ff9800 !important;
+      box-shadow: 0 0 15px #ff5722 !important;
+    }
+    .anim-water {
+      background: radial-gradient(circle at 50% 50%, rgba(3,169,244,0.3) 0%, rgba(0,188,212,0.1) 50%, transparent 100%);
+      animation: wave 2s infinite linear;
+      border: 2px solid #00bcd4 !important;
+      box-shadow: 0 0 15px #03a9f4 !important;
+    }
+    @keyframes flicker {
+      0% { opacity: 0.8; transform: scale(1); filter: hue-rotate(0deg); }
+      100% { opacity: 1; transform: scale(1.05); filter: hue-rotate(-10deg); }
+    }
+    @keyframes wave {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+    .boiling-active {
+      animation: boil 0.3s infinite alternate !important;
+    }
+    @keyframes boil {
+      0% { transform: translateY(0px) scale(1); filter: drop-shadow(0 0 5px #2ecc71); }
+      100% { transform: translateY(-3px) scale(1.02); filter: drop-shadow(0 0 15px #2ecc71); }
+    }
+    .sigil-overlay {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 400px; height: 400px;
+      margin-left: -200px; margin-top: -200px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="%23f1c40f" stroke-width="2"/><polygon points="50,10 90,90 10,90" fill="none" stroke="%23f1c40f" stroke-width="2"/><polygon points="50,90 90,10 10,10" fill="none" stroke="%23f1c40f" stroke-width="2"/></svg>') no-repeat center center;
+      background-size: contain;
+      z-index: 1000;
+      pointer-events: none;
+      animation: burnSigil 1.5s ease-out forwards;
+      opacity: 0;
+      mix-blend-mode: screen;
+    }
+    @keyframes burnSigil {
+      0% { transform: scale(0.5) rotate(0deg); opacity: 0; filter: brightness(1) blur(10px); }
+      20% { opacity: 1; filter: brightness(2) blur(0px); }
+      100% { transform: scale(1.5) rotate(90deg); opacity: 0; filter: brightness(1) blur(5px); }
+    }
   </style>
 </head>
 <body>
@@ -1912,7 +1957,7 @@
         </div>
       </div>
 
-      <button class="btn-transmute" id="btn-main-action" onclick="handleMainAction()">✨ Transmute Elements</button>
+      <button class="btn-transmute" id="btn-main-action" onclick="handleMainAction()" onmouseenter="hoverTransmute()" onmouseleave="unhoverTransmute()">✨ Transmute Elements</button>
 
       <div class="crucible-actions">
         <button class="btn-secondary" id="btn-auto-fill" style="display:none;" onclick="autoFillCrucible()">⚡ Auto-Fill</button>
@@ -2843,17 +2888,21 @@
       if (selectedSlots[0]) {
         slot1.innerHTML = `<span style="font-size:2rem">${selectedSlots[0].icon}</span><span style="font-size:0.8rem; font-weight:600">${selectedSlots[0].name}</span>`;
         slot1.classList.add('active');
+        if (selectedSlots[0].name === 'Fire') slot1.classList.add('anim-fire');
+        if (selectedSlots[0].name === 'Water') slot1.classList.add('anim-water');
       } else {
         slot1.innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted)">Slot 1</span><span style="font-size:0.85rem; font-weight:600">Click Element</span>`;
-        slot1.classList.remove('active');
+        slot1.classList.remove('active', 'anim-fire', 'anim-water');
       }
 
       if (selectedSlots[1]) {
         slot2.innerHTML = `<span style="font-size:2rem">${selectedSlots[1].icon}</span><span style="font-size:0.8rem; font-weight:600">${selectedSlots[1].name}</span>`;
         slot2.classList.add('active');
+        if (selectedSlots[1].name === 'Fire') slot2.classList.add('anim-fire');
+        if (selectedSlots[1].name === 'Water') slot2.classList.add('anim-water');
       } else {
         slot2.innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted)">Slot 2</span><span style="font-size:0.85rem; font-weight:600">Click Element</span>`;
-        slot2.classList.remove('active');
+        slot2.classList.remove('active', 'anim-fire', 'anim-water');
       }
     }
 
@@ -3030,6 +3079,23 @@
       }
     }
 
+    function hoverTransmute() {
+      if (activeEquipment !== 'crucible' || !selectedSlots[0] || !selectedSlots[1]) return;
+      const id1 = selectedSlots[0].id;
+      const id2 = selectedSlots[1].id;
+      const match = RECIPES.find(r => 
+        (r.ingredients[0] === id1 && r.ingredients[1] === id2) ||
+        (r.ingredients[0] === id2 && r.ingredients[1] === id1)
+      );
+      if (match) {
+        document.getElementById('crucible-vessel').classList.add('boiling-active');
+      }
+    }
+
+    function unhoverTransmute() {
+      document.getElementById('crucible-vessel').classList.remove('boiling-active');
+    }
+
     function transmute() {
       if (!selectedSlots[0] || !selectedSlots[1]) {
         addLog("Place two elements into the Crucible before transmuting.", false, false, false);
@@ -3071,6 +3137,13 @@
           const isNew = !discoveredIds.has(resElement.id);
           recordElementUsage(resElement.id, id1, id2);
           triggerTransmuteFX(isNew ? '#f1c40f' : '#9b59b6');
+
+          if (resElement.tier >= 3) {
+            const sigil = document.createElement('div');
+            sigil.className = 'sigil-overlay';
+            document.body.appendChild(sigil);
+            setTimeout(() => sigil.remove(), 1500);
+          }
 
           // Phase 12 Mode Checks
           if (gameMode === 1 && blitzActive) {

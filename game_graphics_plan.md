@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KAlchemy
 - KRogue
 - KChess
 - KPong
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColony
 - KFortress
 - KFarm
+- KAlchemy
 ## Completed Work Log
+
+- **KAlchemy (Loop 5):** Implemented highly detailed visual variations for elemental components (procedurally generated inner flame patterns for Fire and swirling wave distortions for Water), a dynamic kinematically animated bubbling/boiling effect within alchemy vessels that reacts when valid combinations are hovered, and a distinctly stylized multi-layered magical sigil that briefly burns onto the background during a successful high-tier transmutation in both Web Canvas (kalchemy.html) and Native C Win32 GDI (KAlchemy/main.c).
 
 - **KFarm (Loop 4):** Implemented highly detailed visual variations for crops based on growth stage (distinct budding/flowering frames before harvest), dynamic drop-shadows that shift with the day/night cycle to simulate a moving sun, and distinct kinematically animated watering effects where water droplets physically arc out and splash onto the soil in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
 
