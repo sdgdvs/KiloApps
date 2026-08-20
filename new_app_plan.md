@@ -54,10 +54,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KCyber (Cyberpunk hacking simulator)
-**Phase:** 1 (next to do)
+**Phase:** 2 (next to do)
 **Status:** Creation
 
-- [ ] Phase 1: Scaffold KCyber directory (`KCyber/`), create web HTML skeleton (`KiloOS/public/apps/kcyber.html`), register in App.jsx.
+- [x] Phase 1: Scaffold KCyber directory (`KCyber/`), create web HTML skeleton (`KiloOS/public/apps/kcyber.html`), register in App.jsx.
 - [ ] Phase 2: Basic UI for the cyberdeck terminal (console window, command input) and core loop (typing commands to interact) in web HTML.
 - [ ] Phase 3: Native C version (`KCyber/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [ ] Phase 4: Retro cyberpunk styling (phosphor green text on black, scanlines, block cursor).
