@@ -9,7 +9,7 @@
       padding: 0;
       background-color: #000;
       color: #0f0;
-      font-family: monospace;
+      font-family: 'Courier New', Courier, monospace;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -18,24 +18,117 @@
     #header {
       padding: 10px;
       border-bottom: 1px solid #0f0;
+      background-color: #001100;
     }
-    #content {
+    #terminal {
       flex: 1;
       padding: 10px;
       display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    #output {
+      flex: 1;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin-bottom: 10px;
+    }
+    .line {
+      margin-bottom: 2px;
+    }
+    .prompt-line {
+      display: flex;
       align-items: center;
-      justify-content: center;
+    }
+    .prompt {
+      margin-right: 8px;
+    }
+    #input-container {
+      display: flex;
+    }
+    #cmd-input {
+      background: transparent;
+      border: none;
+      color: #0f0;
+      font-family: inherit;
+      font-size: 16px;
+      flex: 1;
+      outline: none;
+    }
+    #cmd-input:focus {
+      outline: none;
     }
   </style>
 </head>
 <body>
-  <div id="header">KCyber v1.0 - Cyberpunk Hacking Simulator</div>
-  <div id="content">
-    <p>System initializing...</p>
+  <div id="header">KCyber v1.0 - Cyberdeck Interface</div>
+  <div id="terminal" onclick="document.getElementById('cmd-input').focus()">
+    <div id="output"></div>
+    <div id="input-container">
+      <span class="prompt">root@cyberdeck:~#</span>
+      <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus />
+    </div>
   </div>
   <script>
-    // KCyber core logic
-    console.log("KCyber loaded");
+    const outputDiv = document.getElementById('output');
+    const cmdInput = document.getElementById('cmd-input');
+    const terminalDiv = document.getElementById('terminal');
+
+    function printLine(text) {
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.textContent = text;
+      outputDiv.appendChild(line);
+      terminalDiv.scrollTop = terminalDiv.scrollHeight;
+    }
+
+    function processCommand(cmd) {
+      const trimmed = cmd.trim();
+      if (!trimmed) return;
+      
+      printLine(`root@cyberdeck:~# ${trimmed}`);
+      
+      const args = trimmed.split(' ').filter(Boolean);
+      const command = args[0].toLowerCase();
+      
+      switch (command) {
+        case 'help':
+          printLine("Available commands:");
+          printLine("  help    - Show this message");
+          printLine("  clear   - Clear terminal output");
+          printLine("  status  - Show deck status");
+          printLine("  connect - Attempt connection to network");
+          break;
+        case 'clear':
+          outputDiv.innerHTML = '';
+          break;
+        case 'status':
+          printLine("DECK STATUS:");
+          printLine("  CPU: 100%");
+          printLine("  MEM: OK");
+          printLine("  NET: DISCONNECTED");
+          break;
+        case 'connect':
+          printLine("Error: No target node specified.");
+          break;
+        default:
+          printLine(`Command not found: ${command}`);
+      }
+    }
+
+    cmdInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        processCommand(cmdInput.value);
+        cmdInput.value = '';
+      }
+    });
+
+    // Boot sequence
+    printLine("KCyber OS booting...");
+    printLine("Loading modules... OK");
+    printLine("Initializing memory... OK");
+    printLine("Type 'help' for a list of commands.");
   </script>
 </body>
 </html>
