@@ -103,6 +103,16 @@
     let hacking_target = "";
     let hacking_attempts = 0;
     
+    let connected_node = null;
+    let player_credits = 0;
+    
+    let node_files = {
+      '02': { name: 'sys_logs.dat', size: 12, value: 100 },
+      '03': { name: 'customer_db.sql', size: 45, value: 250 },
+      '04': { name: 'r_and_d_schematics.zip', size: 105, value: 600 },
+      '05': { name: 'zero_day_exploit.exe', size: 15, value: 1500 }
+    };
+    
     let player_mem = 100;
     let tool_cloak = 3;
     let tool_slow = 3;
@@ -112,7 +122,7 @@
     let ice_frozen_ticks = 0;
 
     function iceAttack() {
-      if (hacking_node) {
+      if (hacking_node || connected_node) {
         if (ice_frozen_ticks > 0) {
           ice_frozen_ticks--;
           printLine(`[${ice_name}] ICE is blinded...`);
@@ -122,6 +132,7 @@
             player_mem = 0;
             printLine(`[${ice_name}] FATAL: Memory depleted. Connection forcefully terminated.`);
             hacking_node = null;
+            connected_node = null;
             updatePrompt();
             if (ice_interval) clearInterval(ice_interval);
           } else {
@@ -134,6 +145,8 @@
     function updatePrompt() {
       if (hacking_node) {
         promptSpan.textContent = `[NODE ${hacking_node}] hack> `;
+      } else if (connected_node) {
+        promptSpan.textContent = `[NODE ${connected_node}] root> `;
       } else {
         promptSpan.textContent = `root@cyberdeck:~# `;
       }
@@ -219,8 +232,9 @@
         
         if (exact === 4) {
           printLine(`ACCESS GRANTED. Connected to node [${hacking_node}].`);
+          connected_node = hacking_node;
           hacking_node = null;
-          if (ice_interval) clearInterval(ice_interval);
+          printLine("Type 'ls' to list files, 'download <file>' to extract, 'disconnect' to exit.");
         } else {
           hacking_attempts--;
           printLine(`Result: ${exact} EXACT, ${partial} PARTIAL`);
@@ -232,6 +246,55 @@
             if (ice_interval) clearInterval(ice_interval);
           }
         }
+        updatePrompt();
+        return;
+      }
+      
+      if (connected_node) {
+        printLine(`[NODE ${connected_node}] root> ${trimmed}`);
+        const args = trimmed.split(' ').filter(Boolean);
+        const cmd = args[0].toLowerCase();
+        
+        if (cmd === 'disconnect' || cmd === 'abort') {
+           connected_node = null;
+           printLine("Disconnected from node.");
+           if (ice_interval) clearInterval(ice_interval);
+           updatePrompt();
+           return;
+        }
+        
+        if (cmd === 'ls') {
+           const file = node_files[connected_node];
+           if (file.name === "empty") {
+             printLine("No files found. Directory is empty.");
+           } else {
+             printLine("Files:");
+             printLine(`  ${file.name} (${file.size}MB)`);
+           }
+           updatePrompt();
+           return;
+        }
+        
+        if (cmd === 'download') {
+           if (args.length < 2) {
+             printLine("Usage: download <filename>");
+           } else {
+             const fname = args[1];
+             const file = node_files[connected_node];
+             if (file.name !== "empty" && fname === file.name) {
+               printLine(`Downloading ${fname}...`);
+               player_credits += file.value;
+               printLine(`Download complete. Data value: ${file.value} credits.`);
+               file.name = "empty";
+             } else {
+               printLine("File not found.");
+             }
+           }
+           updatePrompt();
+           return;
+        }
+        
+        printLine("Command not found. Available: ls, download, disconnect");
         updatePrompt();
         return;
       }
@@ -264,14 +327,21 @@
           printLine(`  MEM: ${player_mem}%`);
           printLine(`  CLOAK: ${tool_cloak} charges`);
           printLine(`  SLOW: ${tool_slow} charges`);
+          printLine(`  CREDITS: ${player_credits} cr`);
           printLine("  NET: DISCONNECTED");
           break;
         case 'reboot':
           player_mem = 100;
           tool_cloak = 3;
           tool_slow = 3;
+          node_files = {
+            '02': { name: 'sys_logs.dat', size: 12, value: 100 },
+            '03': { name: 'customer_db.sql', size: 45, value: 250 },
+            '04': { name: 'r_and_d_schematics.zip', size: 105, value: 600 },
+            '05': { name: 'zero_day_exploit.exe', size: 15, value: 1500 }
+          };
           printLine("System rebooting...");
-          printLine("Memory and software restored to 100%.");
+          printLine("Memory and software restored to 100%. Nodes reset.");
           break;
         case 'map':
           printLine("NETWORK TOPOLOGY:");

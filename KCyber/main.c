@@ -15,6 +15,24 @@ int hacking_node = 0;
 char hacking_target[5] = {0};
 int hacking_attempts = 0;
 
+int connected_node = 0;
+int player_credits = 0;
+
+typedef struct {
+    char name[32];
+    int size;
+    int value;
+} NodeFile;
+
+NodeFile node_files[6] = {
+    {"", 0, 0},
+    {"", 0, 0},
+    {"sys_logs.dat", 12, 100},
+    {"customer_db.sql", 45, 250},
+    {"r_and_d_schematics.zip", 105, 600},
+    {"zero_day_exploit.exe", 15, 1500}
+};
+
 int player_mem = 100;
 int tool_cloak = 3;
 int tool_slow = 3;
@@ -120,6 +138,8 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         if (exact == 4) {
             wsprintfA(buffer, "ACCESS GRANTED. Connected to node [0%d].", hacking_node);
             PrintLine(hwnd, buffer);
+            PrintLine(hwnd, "Type 'ls' to list files, 'download <file>' to extract, 'disconnect' to exit.");
+            connected_node = hacking_node;
             hacking_node = 0;
         } else {
             hacking_attempts--;
@@ -133,6 +153,75 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 hacking_node = 0;
             }
         }
+        return;
+    }
+
+    if (connected_node) {
+        wsprintfA(buffer, "[NODE 0%d] root> %s", connected_node, cmd);
+        PrintLine(hwnd, buffer);
+        
+        char command[MAX_LINE_LENGTH];
+        char args[MAX_LINE_LENGTH];
+        command[0] = '\0';
+        args[0] = '\0';
+        
+        int i = 0;
+        while(cmd[i] != ' ' && cmd[i] != '\0' && i < MAX_LINE_LENGTH - 1) {
+            command[i] = cmd[i];
+            i++;
+        }
+        command[i] = '\0';
+        
+        if (cmd[i] == ' ') {
+            i++;
+            while(cmd[i] == ' ') i++;
+            int j = 0;
+            while(cmd[i] != '\0' && j < MAX_LINE_LENGTH - 1) {
+                args[j] = cmd[i];
+                i++; j++;
+            }
+            args[j] = '\0';
+        }
+
+        if (lstrcmpiA(command, "disconnect") == 0 || lstrcmpiA(command, "abort") == 0) {
+            connected_node = 0;
+            PrintLine(hwnd, "Disconnected from node.");
+            KillTimer(hwnd, 2);
+            return;
+        }
+        
+        if (lstrcmpiA(command, "ls") == 0) {
+            if (lstrcmpiA(node_files[connected_node].name, "empty") == 0) {
+                PrintLine(hwnd, "No files found. Directory is empty.");
+            } else {
+                PrintLine(hwnd, "Files:");
+                char buf[128];
+                wsprintfA(buf, "  %s (%dMB)", node_files[connected_node].name, node_files[connected_node].size);
+                PrintLine(hwnd, buf);
+            }
+            return;
+        }
+        
+        if (lstrcmpiA(command, "download") == 0) {
+            if (args[0] == '\0') {
+                PrintLine(hwnd, "Usage: download <filename>");
+            } else {
+                if (lstrcmpiA(node_files[connected_node].name, "empty") != 0 && lstrcmpiA(args, node_files[connected_node].name) == 0) {
+                    char buf[128];
+                    wsprintfA(buf, "Downloading %s...", args);
+                    PrintLine(hwnd, buf);
+                    player_credits += node_files[connected_node].value;
+                    wsprintfA(buf, "Download complete. Data value: %d credits.", node_files[connected_node].value);
+                    PrintLine(hwnd, buf);
+                    lstrcpyA(node_files[connected_node].name, "empty");
+                } else {
+                    PrintLine(hwnd, "File not found.");
+                }
+            }
+            return;
+        }
+        
+        PrintLine(hwnd, "Command not found. Available: ls, download, disconnect");
         return;
     }
 
@@ -188,13 +277,19 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, memBuf);
         wsprintfA(memBuf, "  SLOW: %d charges", tool_slow);
         PrintLine(hwnd, memBuf);
+        wsprintfA(memBuf, "  CREDITS: %d cr", player_credits);
+        PrintLine(hwnd, memBuf);
         PrintLine(hwnd, "  NET: DISCONNECTED");
     } else if (lstrcmpiA(command, "reboot") == 0) {
         player_mem = 100;
         tool_cloak = 3;
         tool_slow = 3;
+        lstrcpyA(node_files[2].name, "sys_logs.dat"); node_files[2].size = 12; node_files[2].value = 100;
+        lstrcpyA(node_files[3].name, "customer_db.sql"); node_files[3].size = 45; node_files[3].value = 250;
+        lstrcpyA(node_files[4].name, "r_and_d_schematics.zip"); node_files[4].size = 105; node_files[4].value = 600;
+        lstrcpyA(node_files[5].name, "zero_day_exploit.exe"); node_files[5].size = 15; node_files[5].value = 1500;
         PrintLine(hwnd, "System rebooting...");
-        PrintLine(hwnd, "Memory and software restored to 100%.");
+        PrintLine(hwnd, "Memory and software restored to 100%. Nodes reset.");
     } else if (lstrcmpiA(command, "map") == 0) {
         PrintLine(hwnd, "NETWORK TOPOLOGY:");
         PrintLine(hwnd, " [01] GATEWAY (LOCAL)");
@@ -291,7 +386,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 cursor_visible = !cursor_visible;
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 2) {
-                if (hacking_node && ice_damage > 0) {
+                if ((hacking_node || connected_node) && ice_damage > 0) {
                     if (ice_frozen_ticks > 0) {
                         ice_frozen_ticks--;
                         char buf[128];
@@ -306,6 +401,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             wsprintfA(buf, "[%s] FATAL: Memory depleted. Connection forcefully terminated.", ice_name);
                             PrintLine(hwnd, buf);
                             hacking_node = 0;
+                            connected_node = 0;
                         } else {
                             wsprintfA(buf, "[%s] attacks! System MEM reduced to %d%%", ice_name, player_mem);
                             PrintLine(hwnd, buf);
@@ -348,6 +444,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             char prompt[MAX_LINE_LENGTH + 32];
             if (hacking_node) {
                 wsprintfA(prompt, "[NODE 0%d] hack> %s", hacking_node, current_input);
+            } else if (connected_node) {
+                wsprintfA(prompt, "[NODE 0%d] root> %s", connected_node, current_input);
             } else {
                 lstrcpyA(prompt, "root@cyberdeck:~# ");
                 lstrcatA(prompt, current_input);
