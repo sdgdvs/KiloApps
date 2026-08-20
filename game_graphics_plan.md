@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KColony
 - KFortress
 - KFarm
 - KAlchemy
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KCyber
 - KBreakout
 - KMaze
+- KColony
 ## Completed Work Log
+
+- **KColony (Loop 4):** Implemented highly detailed visual variations for structures based on health/operational status (flickering warning lights for low power, smoking debris textures for damaged states), a dynamic drop-shadow cast by tall structures (Laser, Turret, Nuke) that stretches based on a simulated sun position, and distinct visually striking multi-stage explosion effects when an alien attacks a building in both Web Canvas (kcolony.html) and Native C Win32 GDI (KColony/main.c).
 
 - **KMaze (Loop 6):** Implemented highly polished visual effects and deeper variety, including a 3D metallic beveled compass housing for the minimap, dynamic weapon recoil animations with distinct muzzle flashes casting temporary radial light pools, and procedural screen-shake and expanding 3D ring shockwaves when explosive projectiles detonate or the player takes damage in both Web Canvas (kmaze.html) and Native C Win32 GDI (KMaze/main.c).
 

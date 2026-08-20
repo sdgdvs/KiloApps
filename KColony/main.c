@@ -49,6 +49,12 @@ void SpawnParticles(float x, float y, COLORREF color, int count) {
     }
 }
 
+void SpawnExplosion(float x, float y) {
+    SpawnParticles(x, y, RGB(255, 255, 255), 15);
+    SpawnParticles(x, y, RGB(255, 136, 0), 20);
+    SpawnParticles(x, y, RGB(100, 100, 100), 20);
+}
+
 typedef struct {
     float x, y;
     float tx, ty;
@@ -283,6 +289,25 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             else if (t == 12) { bgCol = RGB(68, 68, 68); borderCol = RGB(204, 204, 204); textCol = RGB(204, 204, 204); }
             
             if (t > 0) {
+                if (t == 9 || t == 11 || t == 7) {
+                    int tod = tick % 10;
+                    if (tod < 5) {
+                        int sx = 0, sy = 0;
+                        if (tod == 0) { sx = 12; sy = 2; }
+                        else if (tod == 1) { sx = 6; sy = 4; }
+                        else if (tod == 2) { sx = 0; sy = 6; }
+                        else if (tod == 3) { sx = -6; sy = 4; }
+                        else if (tod == 4) { sx = -12; sy = 2; }
+                        HBRUSH sb = CreateSolidBrush(RGB(5, 8, 13));
+                        HBRUSH oldSb = SelectObject(hdc, sb);
+                        HPEN sp = CreatePen(PS_NULL, 0, 0);
+                        HPEN oldSp = SelectObject(hdc, sp);
+                        POINT shadowPts[4] = {{rc.left+4, rc.bottom-4}, {rc.right-4, rc.bottom-4}, {rc.right-4+sx, rc.top+sy}, {rc.left+4+sx, rc.top+sy}};
+                        Polygon(hdc, shadowPts, 4);
+                        SelectObject(hdc, oldSp); DeleteObject(sp);
+                        SelectObject(hdc, oldSb); DeleteObject(sb);
+                    }
+                }
                 HBRUSH brush = CreateSolidBrush(bgCol);
                 FillRect(hdc, &rc, brush);
                 DeleteObject(brush);
@@ -412,6 +437,16 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                     Rectangle(hdc, rc.right-6, rc.top+2, rc.right-4, rc.top+6);
                     SelectObject(hdc, oldB); DeleteObject(b2);
                     SelectObject(hdc, oldP); DeleteObject(p2);
+                }
+                
+                if (power < 15 && t <= 20) {
+                    if ((animFrame % 10) < 5) {
+                        HBRUSH wb = CreateSolidBrush(RGB(255, 0, 0));
+                        HBRUSH oldWb = SelectObject(hdc, wb);
+                        Ellipse(hdc, rc.left+2, rc.top+2, rc.left+6, rc.top+6);
+                        SelectObject(hdc, oldWb);
+                        DeleteObject(wb);
+                    }
                 }
             }
         }
@@ -640,6 +675,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         i--;
                     }
                 }
+                for (int i = 0; i < GRID_W * GRID_H; i++) {
+                    if (grid[i] > 20 && (rand() % 100) < 15) {
+                        int tx = i % GRID_W, ty = i / GRID_W;
+                        SpawnParticles(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2, RGB(100, 100, 100), 1);
+                    }
+                }
                 for (int i = 0; i < projCount; i++) {
                     projectiles[i].x += projectiles[i].vx;
                     projectiles[i].y += projectiles[i].vy;
@@ -745,7 +786,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                 msgTicks = 5;
                                 PlayGameSound(2);
                                 int tx = targetIdx % GRID_W, ty = targetIdx / GRID_W;
-                                SpawnParticles(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2, RGB(255,136,0), 15);
+                                SpawnExplosion(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2);
                             }
                             aliens[a] = aliens[--alienCount];
                             a--;
