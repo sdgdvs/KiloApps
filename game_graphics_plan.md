@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFortress
 - KFarm
 - KAlchemy
 - KRogue
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KBreakout
 - KMaze
 - KColony
+- KFortress
 ## Completed Work Log
+
+- **KFortress (Loop 4):** Implemented highly detailed visual variations for enemies (armor plating for higher HP waves that visually chips away dynamically), dynamic kinematically animated drawing/nocking animations for the Archer towers with a visible bowstring, and distinctly stylized multi-layered explosion and scorch mark decals that remain permanently on the path when the Cannon tower hits in both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c).
 
 - **KColony (Loop 4):** Implemented highly detailed visual variations for structures based on health/operational status (flickering warning lights for low power, smoking debris textures for damaged states), a dynamic drop-shadow cast by tall structures (Laser, Turret, Nuke) that stretches based on a simulated sun position, and distinct visually striking multi-stage explosion effects when an alien attacks a building in both Web Canvas (kcolony.html) and Native C Win32 GDI (KColony/main.c).
 

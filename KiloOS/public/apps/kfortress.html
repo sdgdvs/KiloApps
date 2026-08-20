@@ -694,6 +694,7 @@
     let blizzTimer = 0;
     let envArt = [];
     let weatherParticles = [];
+    let scorchMarks = [];
 
     function loadMap(idx) {
       currentMapIndex = idx;
@@ -1143,6 +1144,7 @@
       floatingTexts = [];
       particles = [];
       slots.forEach(s => { s.occupied = false; s.tower = null; }); traps = []; blizzTimer = 0;
+      scorchMarks = [];
       playBeep(300, 0.1, 'sawtooth', 0.2);
       updateHUD();
     }
@@ -1452,6 +1454,9 @@
 
         if (dist < p.speed) {
           // Impact
+          if (p.type === 'Cannon') {
+            scorchMarks.push({ x: p.target.x, y: p.target.y, radius: p.splash > 0 ? p.splash : 30 });
+          }
           if (p.splash > 0) {
             enemies.forEach(e2 => {
               const edx = e2.x - p.target.x;
@@ -1663,6 +1668,16 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
+      // Draw Scorch Marks
+      scorchMarks.forEach(sm => {
+        ctx.fillStyle = 'rgba(20, 10, 10, 0.5)';
+        ctx.beginPath(); ctx.arc(sm.x, sm.y, sm.radius, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.beginPath(); ctx.arc(sm.x, sm.y, sm.radius * 0.6, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'rgba(40, 20, 10, 0.4)';
+        ctx.beginPath(); ctx.arc(sm.x + 5, sm.y - 3, sm.radius * 0.8, 0, Math.PI*2); ctx.fill();
+      });
+
       // Draw Path Direction Dots
       ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       for (let i = 0; i < waypoints.length - 1; i++) {
@@ -1794,8 +1809,33 @@
           if (type === 'Archer') {
             ctx.fillStyle = '#64748b'; ctx.fillRect(-12, -12, 24, 24); // base
             ctx.fillStyle = '#475569'; ctx.fillRect(-14, -14, 8, 8); ctx.fillRect(6, -14, 8, 8); ctx.fillRect(-14, 6, 8, 8); ctx.fillRect(6, 6, 8, 8); // battlements
-            ctx.strokeStyle = '#ffd700'; ctx.beginPath(); ctx.arc(0, 0, 6 + anim, 0, Math.PI*2); ctx.stroke(); // bow
-            if (anim === 0) { ctx.fillStyle = '#ffffff'; ctx.fillRect(-1, -8, 2, 16); } // arrow
+            
+            let cd = rawSlot.tower.cooldown;
+            let pullBack = 0;
+            if (cd > 0) pullBack = (cd < 20) ? ((20 - cd) / 20) * 8 : 0;
+            else pullBack = 8;
+            if (anim > 0) pullBack = -anim;
+
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, Math.PI, 0, false);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-10, 0);
+            ctx.lineTo(0, pullBack);
+            ctx.lineTo(10, 0);
+            ctx.stroke();
+
+            if (anim === 0 || pullBack > 0) { 
+                ctx.fillStyle = '#e2e8f0'; 
+                ctx.fillRect(-1, pullBack - 12, 2, 12); 
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath(); ctx.moveTo(0, pullBack - 15); ctx.lineTo(-3, pullBack - 12); ctx.lineTo(3, pullBack - 12); ctx.fill();
+            }
           } else if (type === 'Mage') {
             ctx.fillStyle = '#7e22ce'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#d8b4fe'; ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(-8, 0); ctx.lineTo(8, 0); ctx.fill(); // roof
@@ -1883,6 +1923,25 @@
           ctx.fillStyle = '#451a03'; ctx.fillRect(e.radius-2, -e.radius, 8, e.radius*2+6); // club
         }
         
+        if (wave > 2 || e.maxHp > 50) {
+           const hpRatio = Math.max(0, e.hp / e.maxHp);
+           ctx.fillStyle = '#94a3b8';
+           ctx.strokeStyle = '#475569';
+           ctx.lineWidth = 1;
+           if (hpRatio > 0.2) {
+              ctx.fillRect(-e.radius*0.8, -e.radius*0.2, e.radius*1.6, e.radius*0.4);
+              ctx.strokeRect(-e.radius*0.8, -e.radius*0.2, e.radius*1.6, e.radius*0.4);
+           }
+           if (hpRatio > 0.5) {
+              ctx.fillRect(-e.radius*0.4, -e.radius*0.8, e.radius*0.8, e.radius*0.4);
+              ctx.strokeRect(-e.radius*0.4, -e.radius*0.8, e.radius*0.8, e.radius*0.4);
+           }
+           if (hpRatio > 0.8) {
+              ctx.fillRect(-e.radius*0.4, e.radius*0.4, e.radius*0.8, e.radius*0.4);
+              ctx.strokeRect(-e.radius*0.4, e.radius*0.4, e.radius*0.8, e.radius*0.4);
+           }
+        }
+
         if (e.slowed) {
           ctx.fillStyle = 'rgba(59, 130, 246, 0.4)'; ctx.beginPath(); ctx.arc(0, 0, e.radius+4, 0, Math.PI*2); ctx.fill();
         }

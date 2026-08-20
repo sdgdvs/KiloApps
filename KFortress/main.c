@@ -88,6 +88,15 @@ typedef struct {
 } Particle;
 static Particle g_particles[MAX_PARTICLES];
 
+#define MAX_SCORCH_MARKS 64
+typedef struct {
+    float x, y;
+    float radius;
+    BOOL active;
+} ScorchMark;
+static ScorchMark g_scorchMarks[MAX_SCORCH_MARKS];
+static int g_scorchIndex = 0;
+
 void SpawnParticleBurst(float x, float y, COLORREF color, int count) {
     for (int i = 0; i < count; i++) {
         for (int p = 0; p < MAX_PARTICLES; p++) {
@@ -446,6 +455,8 @@ void InitGameState() {
     for (int i = 0; i < MAX_PROJECTILES; i++) g_projectiles[i].active = FALSE;
     for (int i = 0; i < MAX_FLOATING_TEXTS; i++) g_floatingTexts[i].active = FALSE;
     for (int i = 0; i < MAX_PARTICLES; i++) g_particles[i].active = FALSE;
+    for (int i = 0; i < MAX_SCORCH_MARKS; i++) g_scorchMarks[i].active = FALSE;
+    g_scorchIndex = 0;
 
     int bfX = 10, bfY = 70, bfW = WINDOW_WIDTH - 220;
 
@@ -755,6 +766,13 @@ void UpdateGameLogic() {
             // Hit target
             COLORREF hitCol = (g_projectiles[p].type == TOWER_CANNON) ? RGB(71, 85, 105) : ((g_projectiles[p].type == TOWER_MAGE) ? RGB(216, 180, 254) : TEXT_GOLD);
             SpawnParticleBurst(g_projectiles[p].targetX, g_projectiles[p].targetY, hitCol, 8);
+            if (g_projectiles[p].type == TOWER_CANNON) {
+                g_scorchMarks[g_scorchIndex].x = g_projectiles[p].targetX;
+                g_scorchMarks[g_scorchIndex].y = g_projectiles[p].targetY;
+                g_scorchMarks[g_scorchIndex].radius = (float)(g_projectiles[p].splash > 0 ? g_projectiles[p].splash : 30);
+                g_scorchMarks[g_scorchIndex].active = TRUE;
+                g_scorchIndex = (g_scorchIndex + 1) % MAX_SCORCH_MARKS;
+            }
             if (g_projectiles[p].splash > 0) {
                 for (int e2 = 0; e2 < MAX_ENEMIES; e2++) {
                     if (!g_enemies[e2].active) continue;
@@ -1019,6 +1037,34 @@ void Render(HDC hdc, HWND hwnd) {
     DeleteObject(pathPen);
     DeleteObject(pathBorderPen);
 
+    // Draw Scorch Marks
+    for (int i = 0; i < MAX_SCORCH_MARKS; i++) {
+        if (g_scorchMarks[i].active) {
+            float sx = g_scorchMarks[i].x;
+            float sy = g_scorchMarks[i].y;
+            float sr = g_scorchMarks[i].radius;
+            
+            HBRUSH sm1 = CreateSolidBrush(RGB(20, 10, 10));
+            HPEN np = CreatePen(PS_NULL, 0, 0);
+            HBRUSH ob = (HBRUSH)SelectObject(memDC, sm1);
+            HPEN op = (HPEN)SelectObject(memDC, np);
+            Ellipse(memDC, (int)(sx - sr), (int)(sy - sr), (int)(sx + sr), (int)(sy + sr));
+            SelectObject(memDC, ob); DeleteObject(sm1);
+            
+            HBRUSH sm2 = CreateSolidBrush(RGB(10, 5, 5));
+            ob = (HBRUSH)SelectObject(memDC, sm2);
+            Ellipse(memDC, (int)(sx - sr*0.6f), (int)(sy - sr*0.6f), (int)(sx + sr*0.6f), (int)(sy + sr*0.6f));
+            SelectObject(memDC, ob); DeleteObject(sm2);
+            
+            HBRUSH sm3 = CreateSolidBrush(RGB(40, 20, 10));
+            ob = (HBRUSH)SelectObject(memDC, sm3);
+            Ellipse(memDC, (int)(sx + 5 - sr*0.8f), (int)(sy - 3 - sr*0.8f), (int)(sx + 5 + sr*0.8f), (int)(sy - 3 + sr*0.8f));
+            SelectObject(memDC, ob); DeleteObject(sm3);
+            
+            SelectObject(memDC, op); DeleteObject(np);
+        }
+    }
+
     // Draw Range Circle for selected slot
     if (g_selectedSlot != -1) {
         HPEN glowPen1 = CreatePen(PS_SOLID, 4, RGB(120, 90, 20));
@@ -1071,15 +1117,33 @@ void Render(HDC hdc, HWND hwnd) {
                 Rectangle(memDC, g_slots[i].x + 6, g_slots[i].y - 14, g_slots[i].x + 14, g_slots[i].y - 6);
                 Rectangle(memDC, g_slots[i].x - 14, g_slots[i].y + 6, g_slots[i].x - 6, g_slots[i].y + 14);
                 Rectangle(memDC, g_slots[i].x + 6, g_slots[i].y + 6, g_slots[i].x + 14, g_slots[i].y + 14);
-                HPEN bowP = CreatePen(PS_SOLID, 1, TEXT_GOLD); SelectObject(memDC, bowP);
-                Ellipse(memDC, g_slots[i].x - 6 - anim, g_slots[i].y - 6 - anim, g_slots[i].x + 6 + anim, g_slots[i].y + 6 + anim);
-                if (anim == 0) {
-                    HBRUSH arrB = CreateSolidBrush(RGB(255, 255, 255)); SelectObject(memDC, arrB);
-                    Rectangle(memDC, g_slots[i].x - 1, g_slots[i].y - 8, g_slots[i].x + 1, g_slots[i].y + 8);
-                    DeleteObject(arrB);
+                
+                int cd = g_slots[i].cooldown;
+                int pullBack = 0;
+                if (cd > 0) pullBack = (cd < 20) ? (int)(((20.0f - cd) / 20.0f) * 8.0f) : 0;
+                else pullBack = 8;
+                if (anim > 0) pullBack = -anim;
+
+                HPEN bowP = CreatePen(PS_SOLID, 2, TEXT_GOLD); SelectObject(memDC, bowP);
+                Arc(memDC, g_slots[i].x - 10, g_slots[i].y - 10, g_slots[i].x + 10, g_slots[i].y + 10, 
+                    g_slots[i].x + 10, g_slots[i].y, g_slots[i].x - 10, g_slots[i].y);
+                
+                HPEN strP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255)); SelectObject(memDC, strP);
+                MoveToEx(memDC, g_slots[i].x - 10, g_slots[i].y, NULL);
+                LineTo(memDC, g_slots[i].x, g_slots[i].y + pullBack);
+                LineTo(memDC, g_slots[i].x + 10, g_slots[i].y);
+                
+                if (anim == 0 || pullBack > 0) {
+                    HBRUSH arrB = CreateSolidBrush(RGB(226, 232, 240)); SelectObject(memDC, arrB);
+                    Rectangle(memDC, g_slots[i].x - 1, g_slots[i].y + pullBack - 12, g_slots[i].x + 1, g_slots[i].y + pullBack);
+                    HBRUSH arrHB = CreateSolidBrush(RGB(239, 68, 68)); SelectObject(memDC, arrHB);
+                    POINT ah[] = {{g_slots[i].x, g_slots[i].y + pullBack - 15}, {g_slots[i].x - 3, g_slots[i].y + pullBack - 12}, {g_slots[i].x + 3, g_slots[i].y + pullBack - 12}};
+                    Polygon(memDC, ah, 3);
+                    DeleteObject(arrB); DeleteObject(arrHB);
                 }
+                
                 SelectObject(memDC, oB); SelectObject(memDC, oP);
-                DeleteObject(bB); DeleteObject(bP); DeleteObject(b2B); DeleteObject(bowP);
+                DeleteObject(bB); DeleteObject(bP); DeleteObject(b2B); DeleteObject(bowP); DeleteObject(strP);
             } else if (g_slots[i].towerType == TOWER_MAGE) {
                 HBRUSH mB = CreateSolidBrush(RGB(126, 34, 206)); HPEN mP = CreatePen(PS_SOLID, 1, RGB(216, 180, 254));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, mB); HPEN oP = (HPEN)SelectObject(memDC, mP);
@@ -1247,6 +1311,27 @@ void Render(HDC hdc, HWND hwnd) {
             SetROP2(memDC, R2_COPYPEN);
             SelectObject(memDC, oldB2); SelectObject(memDC, oldP2);
             DeleteObject(sB); DeleteObject(sP);
+        }
+
+        // Armor plating
+        if (g_wave > 2 || g_enemies[e].maxHp > 50) {
+            float hpRatio = (float)g_enemies[e].hp / (float)g_enemies[e].maxHp;
+            HBRUSH arB = CreateSolidBrush(RGB(148, 163, 184));
+            HPEN arP = CreatePen(PS_SOLID, 1, RGB(71, 85, 105));
+            HBRUSH ob = (HBRUSH)SelectObject(memDC, arB);
+            HPEN op = (HPEN)SelectObject(memDC, arP);
+            
+            if (hpRatio > 0.2f) {
+                Rectangle(memDC, ex - (int)(r*0.8f), ey - (int)(r*0.2f), ex + (int)(r*0.8f), ey + (int)(r*0.2f));
+            }
+            if (hpRatio > 0.5f) {
+                Rectangle(memDC, ex - (int)(r*0.4f), ey - (int)(r*0.8f), ex + (int)(r*0.4f), ey - (int)(r*0.4f));
+            }
+            if (hpRatio > 0.8f) {
+                Rectangle(memDC, ex - (int)(r*0.4f), ey + (int)(r*0.4f), ex + (int)(r*0.4f), ey + (int)(r*0.8f));
+            }
+            SelectObject(memDC, ob); SelectObject(memDC, op);
+            DeleteObject(arB); DeleteObject(arP);
         }
 
         // HP Bar overhead
