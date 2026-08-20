@@ -101,6 +101,7 @@
   let pc, rot, cx, cy, isBomb = false;
   let gameOver = false, isPaused = false, startScreen = true, winScreen = false, showLeaderboard = false, showHelp = false;
   let score = 0, lines = 0, level = 1, combo = 0, piecesPlaced = 0;
+  let lastLevel = 1, levelUpTimer = 0;
   let gameMode = MODE_MARATHON, campaignLevel = 1;
   let statLines = [0, 0, 0, 0, 0];
 
@@ -241,6 +242,7 @@
           startScreen = false; gameOver = false;
       if (!isReplaying) { currentReplay = { seed: Date.now(), inputs: [] }; randomSeed(currentReplay.seed); } else { randomSeed(currentReplay.seed); replayTick = 0; replayIndex = 0; } winScreen = false; isPaused = false; showLeaderboard = false;
           dropInterval = Math.max(40, 500 - (level - 1) * 20);
+          lastLevel = level; levelUpTimer = 0;
           addPopup(BOARD_W / 2 - 35, H * CELL / 2, "GAME RESUMED!", "#00ff66");
           playSound(600, 'square', 0.2);
           return true;
@@ -452,6 +454,10 @@
 
       if (linesCleared > 0) {
           if (linesCleared >= 1 && linesCleared <= 5) statLines[linesCleared - 1]++;
+          if (linesCleared > 1) {
+              shakeTimer = linesCleared * 8;
+              shockwaves.push({x: BOARD_W / 2, y: (cy + 2) * CELL, radius: 10, maxRadius: 250 + linesCleared * 50, life: 40, maxLife: 40, color: '#ffffff', is3D: true, lines: linesCleared});
+          }
           combo++;
           playSound(1000 + linesCleared * 200 + combo * 100, 'square', 0.1);
           
@@ -579,6 +585,9 @@
           statLines = [0, 0, 0, 0, 0];
       }
 
+      lastLevel = level;
+      levelUpTimer = 0;
+
       gameOver = false;
       if (!isReplaying) { currentReplay = { seed: Date.now(), inputs: [] }; randomSeed(currentReplay.seed); } else { randomSeed(currentReplay.seed); replayTick = 0; replayIndex = 0; }
       isPaused = false;
@@ -702,6 +711,31 @@ if (showHelp) {
   });
 
   // Sprite / 3D Beveled Gem Block Renderer
+  function draw3DPanel(ctx, x, y, w, h) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetX = 3;
+      ctx.shadowOffsetY = 3;
+      
+      ctx.fillStyle = '#1a1a24';
+      ctx.fillRect(x, y, w, h);
+      ctx.shadowColor = 'transparent';
+      
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.beginPath();
+      ctx.moveTo(x, y + h); ctx.lineTo(x, y); ctx.lineTo(x + w, y);
+      ctx.lineTo(x + w - 3, y + 3); ctx.lineTo(x + 3, y + 3); ctx.lineTo(x + 3, y + h - 3);
+      ctx.fill();
+      
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.beginPath();
+      ctx.moveTo(x, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y);
+      ctx.lineTo(x + w - 3, y + 3); ctx.lineTo(x + w - 3, y + h - 3); ctx.lineTo(x + 3, y + h - 3);
+      ctx.fill();
+      ctx.restore();
+  }
+
   function drawBlock(ctx, px, py, colorIdx, size = CELL, drawState = 0) { // drawState: 0=normal, 1=ghost, 2=active
       if (!colorIdx || colorIdx <= 0) return;
       const baseColor = colors[colorIdx] || '#888899';
@@ -958,12 +992,22 @@ if (showHelp) {
 
       // Matrix bounds glowing neon edge
       let neonPulse = 0.5 + 0.5 * Math.sin(tick * 0.005);
+      let flashInt = levelUpTimer > 0 ? (levelUpTimer / 1000) : 0;
+      let currentHue = (level * 45) % 360;
       ctx.save();
-      ctx.strokeStyle = `rgba(0, 255, 200, ${0.4 + 0.4 * neonPulse})`;
-      ctx.lineWidth = 2 + 2 * neonPulse;
-      ctx.shadowColor = '#00ffcc';
-      ctx.shadowBlur = 8 + 8 * neonPulse;
+      if (flashInt > 0) {
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + 0.4 * neonPulse + flashInt})`;
+      } else {
+          ctx.strokeStyle = `hsla(${currentHue}, 100%, 50%, ${0.4 + 0.4 * neonPulse})`;
+      }
+      ctx.lineWidth = 2 + 2 * neonPulse + flashInt * 3;
+      ctx.shadowColor = flashInt > 0 ? '#ffffff' : `hsl(${currentHue}, 100%, 50%)`;
+      ctx.shadowBlur = 8 + 8 * neonPulse + flashInt * 20;
       ctx.strokeRect(offX, offY, BOARD_W, H * CELL);
+      if (flashInt > 0) {
+          ctx.fillStyle = `rgba(255,255,255,${flashInt * 0.4})`;
+          ctx.fillRect(offX, offY, BOARD_W, H * CELL);
+      }
       ctx.restore();
 
       // Board blocks
@@ -1020,9 +1064,24 @@ if (showHelp) {
           ctx.globalAlpha = alpha;
           ctx.strokeStyle = sw.color;
           ctx.lineWidth = 2 + 2 * alpha;
-          ctx.beginPath();
-          ctx.arc(offX + sw.x, offY + sw.y, r, 0, Math.PI * 2);
-          ctx.stroke();
+          if (sw.is3D) {
+              ctx.lineWidth = 3 + 4 * alpha;
+              ctx.shadowColor = sw.color;
+              ctx.shadowBlur = 10;
+              let numRings = sw.lines || 2;
+              for(let j=0; j<numRings; j++) {
+                  let rOff = r - j * 15 * (1 - alpha);
+                  if (rOff > 0) {
+                      ctx.beginPath();
+                      ctx.ellipse(offX + sw.x, offY + sw.y, rOff, rOff * 0.5, 0, 0, Math.PI * 2);
+                      ctx.stroke();
+                  }
+              }
+          } else {
+              ctx.beginPath();
+              ctx.arc(offX + sw.x, offY + sw.y, r, 0, Math.PI * 2);
+              ctx.stroke();
+          }
           ctx.restore();
           sw.life--;
           if (sw.life <= 0) shockwaves.splice(i, 1);
@@ -1069,19 +1128,21 @@ if (showHelp) {
       ctx.fillStyle = '#00f0f0';
       ctx.fillText(modeNames[gameMode] + (isReplaying ? ' [REPLAY]' : ''), SIDEBAR_X, 22);
 
-      ctx.fillStyle = '#aaaaaa';
-      ctx.font = '11px system-ui, sans-serif';
-      ctx.fillText('SCORE:', SIDEBAR_X, 42);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 13px system-ui, sans-serif';
-      ctx.fillText(score.toString(), SIDEBAR_X, 58);
+      draw3DPanel(ctx, SIDEBAR_X - 5, 30, 145, 68);
 
       ctx.fillStyle = '#aaaaaa';
       ctx.font = '11px system-ui, sans-serif';
+      ctx.fillText('SCORE:', SIDEBAR_X, 45);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 15px system-ui, sans-serif';
+      ctx.fillText(score.toString(), SIDEBAR_X, 62);
+
+      ctx.fillStyle = '#aaaaaa';
+      ctx.font = '10px system-ui, sans-serif';
       ctx.fillText('HIGH SCORE:', SIDEBAR_X, 78);
       ctx.fillStyle = '#ffff55';
       ctx.font = 'bold 12px system-ui, sans-serif';
-      ctx.fillText(highScore.toString(), SIDEBAR_X, 93);
+      ctx.fillText(highScore.toString(), SIDEBAR_X, 92);
 
       // Timers / Progress
       ctx.fillStyle = '#aaaaaa';
@@ -1107,6 +1168,7 @@ if (showHelp) {
       }
 
       // Next 3 Preview Slot
+      draw3DPanel(ctx, SIDEBAR_X - 5, 158, 145, 130);
       ctx.fillStyle = '#00f0f0';
       ctx.font = 'bold 11px system-ui, sans-serif';
       ctx.fillText('NEXT (3):', SIDEBAR_X, 172);
@@ -1150,6 +1212,7 @@ if (showHelp) {
       }
 
       // Hold Piece Slot
+      draw3DPanel(ctx, SIDEBAR_X - 5, 292, 145, 75);
       ctx.fillStyle = '#00f0f0';
       ctx.font = 'bold 11px system-ui, sans-serif';
       ctx.fillText(holdUsed ? 'HOLD (LOCKED):' : 'HOLD [C]:', SIDEBAR_X, 305);
@@ -1370,6 +1433,16 @@ if (showHelp) {
       lastTime = time;
 
       if (!isPaused && !gameOver && !startScreen && !winScreen && !showLeaderboard && !showHelp && !showKeybinds) {
+          if (level > lastLevel) {
+              levelUpTimer = 1000;
+              lastLevel = level;
+              playSound(1500, 'sine', 0.1);
+          }
+          if (levelUpTimer > 0) {
+              levelUpTimer -= deltaTime;
+              if (levelUpTimer < 0) levelUpTimer = 0;
+          }
+          
           replayTick += deltaTime;
           if (isReplaying) {
               while (replayIndex < currentReplay.inputs.length && currentReplay.inputs[replayIndex].t <= replayTick) {

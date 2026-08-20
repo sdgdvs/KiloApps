@@ -57,6 +57,8 @@ int grid[H][W];
 int current_piece, current_rot, current_x, current_y, current_is_bomb;
 PieceQueueItem next_queue[3];
 int hold_piece = -1;
+int last_level = 1;
+int level_up_timer_ms = 0;
 int hold_used = 0;
 int hold_is_bomb = 0;
 int high_score = 0;
@@ -370,6 +372,9 @@ int LoadGameStateFromFile() {
     int new_speed = 500 - (level - 1) * 20;
     if (new_speed < 40) new_speed = 40;
     timer_speed = new_speed;
+    
+    last_level = level;
+    level_up_timer_ms = 0;
 
     return 1;
 }
@@ -477,6 +482,8 @@ typedef struct {
     float radius, max_radius;
     int life, max_life;
     COLORREF color;
+    int is_3d;
+    int lines;
 } Shockwave;
 #define MAX_SHOCKWAVES 5
 Shockwave shockwaves[MAX_SHOCKWAVES];
@@ -763,6 +770,21 @@ void lock_piece() {
 
     if (lines_cleared > 0) {
         if (lines_cleared >= 1 && lines_cleared <= 5) stat_lines[lines_cleared - 1]++;
+        if (lines_cleared > 1) {
+            shake_timer = lines_cleared * 8;
+            if (num_shockwaves < MAX_SHOCKWAVES) {
+                shockwaves[num_shockwaves].x = (float)((W * CELL_SIZE) / 2);
+                shockwaves[num_shockwaves].y = (float)((current_y + 2) * CELL_SIZE);
+                shockwaves[num_shockwaves].radius = 10.0f;
+                shockwaves[num_shockwaves].max_radius = 250.0f + lines_cleared * 50.0f;
+                shockwaves[num_shockwaves].life = 40;
+                shockwaves[num_shockwaves].max_life = 40;
+                shockwaves[num_shockwaves].color = RGB(255, 255, 255);
+                shockwaves[num_shockwaves].is_3d = 1;
+                shockwaves[num_shockwaves].lines = lines_cleared;
+                num_shockwaves++;
+            }
+        }
         combo++;
         Beep(1000 + lines_cleared * 200 + combo * 100, 100);
 
@@ -898,6 +920,7 @@ void InitGame() {
             
     pieces_placed = 0;
     num_particles = 0;
+    memset(shockwaves, 0, sizeof(shockwaves));
     num_flashes = 0;
     num_popups = 0;
     num_shockwaves = 0;
@@ -930,6 +953,9 @@ void InitGame() {
         timer_speed = 500;
         for (int i=0; i<5; i++) stat_lines[i] = 0;
     }
+
+    last_level = level;
+    level_up_timer_ms = 0;
 
     combo = 0;
     bag_index = 13;
@@ -1159,6 +1185,37 @@ void FormatTimeString(DWORD ms, char* buf, int bufSize) {
     wsprintfA(buf, "%02d:%02d.%d", mins, secs, tenths);
 }
 
+void Draw3DPanel(HDC hdc, int x, int y, int w, int h) {
+    HBRUSH bg = CreateSolidBrush(RGB(26, 26, 36));
+    RECT r = {x, y, x + w, y + h};
+    FillRect(hdc, &r, bg);
+    DeleteObject(bg);
+
+    POINT ptHi[6] = {
+        {x, y + h}, {x, y}, {x + w, y},
+        {x + w - 3, y + 3}, {x + 3, y + 3}, {x + 3, y + h - 3}
+    };
+    HBRUSH hi = CreateSolidBrush(RGB(50, 50, 65));
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, hi);
+    Polygon(hdc, ptHi, 6);
+
+    POINT ptSh[6] = {
+        {x, y + h}, {x + w, y + h}, {x + w, y},
+        {x + w - 3, y + 3}, {x + w - 3, y + h - 3}, {x + 3, y + h - 3}
+    };
+    HBRUSH sh = CreateSolidBrush(RGB(10, 10, 15));
+    SelectObject(hdc, sh);
+    Polygon(hdc, ptSh, 6);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(hi);
+    DeleteObject(sh);
+    DeleteObject(nullPen);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
@@ -1217,6 +1274,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 if (shake_timer > 0) shake_timer--;
                 if (distortion_timer > 0) distortion_timer--;
+
+                if (level > last_level) {
+                    level_up_timer_ms = 1000;
+                    last_level = level;
+                }
+                if (level_up_timer_ms > 0) {
+                    level_up_timer_ms -= 20;
+                    if (level_up_timer_ms < 0) level_up_timer_ms = 0;
+                }
 
                 if (game_mode == MODE_ULTRA) {
                     ultra_time_left_ms -= 20;
@@ -1548,12 +1614,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Matrix bounds glowing neon edge
             double neonPulse = 0.5 + 0.5 * sin((currentTick % 10000) * 0.005);
-            int neonWidth = (int)(2.0 + 2.0 * neonPulse);
-            HPEN boundPen = CreatePen(PS_SOLID, neonWidth, RGB(0, (int)(255 * (0.4 + 0.4 * neonPulse)), (int)(200 * (0.4 + 0.4 * neonPulse))));
+            double flashInt = level_up_timer_ms > 0 ? (level_up_timer_ms / 1000.0) : 0.0;
+            int hue_stage = (level * 45) % 360;
+            int rR = 0, rG = 255, rB = 200;
+            if (hue_stage < 60) { rR = 255; rG = hue_stage * 4; rB = 0; }
+            else if (hue_stage < 120) { rR = 255 - (hue_stage-60)*4; rG = 255; rB = 0; }
+            else if (hue_stage < 180) { rR = 0; rG = 255; rB = (hue_stage-120)*4; }
+            else if (hue_stage < 240) { rR = 0; rG = 255 - (hue_stage-180)*4; rB = 255; }
+            else if (hue_stage < 300) { rR = (hue_stage-240)*4; rG = 0; rB = 255; }
+            else { rR = 255; rG = 0; rB = 255 - (hue_stage-300)*4; }
+            if (rR < 0) rR = 0; if (rR > 255) rR = 255;
+            if (rG < 0) rG = 0; if (rG > 255) rG = 255;
+            if (rB < 0) rB = 0; if (rB > 255) rB = 255;
+            int crR = (int)(rR * (0.4 + 0.4 * neonPulse));
+            int crG = (int)(rG * (0.4 + 0.4 * neonPulse));
+            int crB = (int)(rB * (0.4 + 0.4 * neonPulse));
+            if (flashInt > 0) {
+                crR += (int)((255 - crR) * flashInt);
+                crG += (int)((255 - crG) * flashInt);
+                crB += (int)((255 - crB) * flashInt);
+            }
+            int neonWidth = (int)(2.0 + 2.0 * neonPulse + flashInt * 3.0);
+            HPEN boundPen = CreatePen(PS_SOLID, neonWidth, RGB(crR, crG, crB));
             oldPen = (HPEN)SelectObject(memDC, boundPen);
             HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
             HBRUSH oldBrush = (HBRUSH)SelectObject(memDC, nullBrush);
             Rectangle(memDC, offX, offY, offX + W * CELL_SIZE, offY + H * CELL_SIZE);
+            if (flashInt > 0) {
+                HBRUSH flashBg = CreateSolidBrush(RGB((int)(255 * flashInt * 0.4), (int)(255 * flashInt * 0.4), (int)(255 * flashInt * 0.4)));
+                RECT boardRc = {offX, offY, offX + W * CELL_SIZE, offY + H * CELL_SIZE};
+                FillRect(memDC, &boardRc, flashBg);
+                DeleteObject(flashBg);
+            }
             SelectObject(memDC, oldPen);
             SelectObject(memDC, oldBrush);
             DeleteObject(boundPen);
@@ -1616,9 +1708,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 float alpha = (float)shockwaves[i].life / shockwaves[i].max_life;
                 float r = shockwaves[i].radius + (shockwaves[i].max_radius - shockwaves[i].radius) * (1.0f - alpha);
                 int lw = (int)(2.0f + 3.0f * alpha);
+                if (shockwaves[i].is_3d) lw = (int)(3.0f + 4.0f * alpha);
                 HPEN sPen = CreatePen(PS_SOLID, lw, shockwaves[i].color);
                 HPEN oldP = (HPEN)SelectObject(memDC, sPen);
-                Ellipse(memDC, offX + (int)(shockwaves[i].x - r), offY + (int)(shockwaves[i].y - r), offX + (int)(shockwaves[i].x + r), offY + (int)(shockwaves[i].y + r));
+                if (shockwaves[i].is_3d) {
+                    int numRings = shockwaves[i].lines;
+                    if (numRings < 2) numRings = 2;
+                    for (int j = 0; j < numRings; j++) {
+                        float rOff = r - j * 15.0f * (1.0f - alpha);
+                        if (rOff > 0) {
+                            Ellipse(memDC, offX + (int)(shockwaves[i].x - rOff), offY + (int)(shockwaves[i].y - rOff * 0.5f), offX + (int)(shockwaves[i].x + rOff), offY + (int)(shockwaves[i].y + rOff * 0.5f));
+                        }
+                    }
+                } else {
+                    Ellipse(memDC, offX + (int)(shockwaves[i].x - r), offY + (int)(shockwaves[i].y - r), offX + (int)(shockwaves[i].x + r), offY + (int)(shockwaves[i].y + r));
+                }
                 SelectObject(memDC, oldP);
                 DeleteObject(sPen);
             }
@@ -1645,6 +1749,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetTextColor(memDC, RGB(0, 240, 240));
             if(is_replaying){ char mStr[64]; wsprintfA(mStr, "%s [REPLAY]", mode_names[game_mode]); TextOutA(memDC, sideX, 15, mStr, lstrlenA(mStr)); } else { TextOutA(memDC, sideX, 15, mode_names[game_mode], lstrlenA(mode_names[game_mode])); }
+
+            Draw3DPanel(memDC, sideX - 5, 30, 145, 75);
 
             SetTextColor(memDC, RGB(170, 170, 170));
             TextOutA(memDC, sideX, 35, "SCORE:", 6);
@@ -1699,6 +1805,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Next 3 Queue Preview
+            Draw3DPanel(memDC, sideX - 5, 155, 145, 130);
             SetTextColor(memDC, RGB(0, 240, 240));
             TextOutA(memDC, sideX, 160, "NEXT (3):", 9);
 
@@ -1738,6 +1845,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Hold Piece
+            Draw3DPanel(memDC, sideX - 5, 292, 145, 75);
             SetTextColor(memDC, RGB(0, 240, 240));
             TextOutA(memDC, sideX, 298, hold_used ? "HOLD (LOCKED):" : "HOLD [C]:", hold_used ? 14 : 9);
 

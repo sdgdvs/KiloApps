@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KTetris
 - KBreakout
 - KMaze
 - KColony
@@ -141,7 +140,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSpace
 - KPac
 - KSnake
+- KTetris
+- KCyber
 ## Completed Work Log
+
+- **KTetris (Loop 6):** Implemented highly polished visual effects and deeper variety, including a 3D beveled display for the Next Piece preview and Score counter, distinctly animated level-up transitions where the background grid flashes and changes its procedural neon color palette, and a dynamic screen-shake with an expanding 3D ring shockwave effect when multiple lines are cleared simultaneously in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
 - **KSnake (Loop 6):** Implemented highly detailed visual variations for the boss encounters (multi-phase enraged state where the mechanical Boss Drone starts sparking and dropping hazardous oil slicks when below 25% HP), distinct spawn-in animations for portals where they tear open with a jagged purple/black dimensional rift effect rather than just rotating smoothly, and a dynamic screen-shake with an expanding 3D ring shockwave effect when the snake crashes or takes damage in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
