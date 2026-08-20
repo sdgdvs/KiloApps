@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFarm
 - KAlchemy
 - KRogue
 - KChess
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze
 - KColony
 - KFortress
+- KFarm
 ## Completed Work Log
+
+- **KFarm (Loop 4):** Implemented highly detailed visual variations for crops based on growth stage (distinct budding/flowering frames before harvest), dynamic drop-shadows that shift with the day/night cycle to simulate a moving sun, and distinct kinematically animated watering effects where water droplets physically arc out and splash onto the soil in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
 
 - **KFortress (Loop 4):** Implemented highly detailed visual variations for enemies (armor plating for higher HP waves that visually chips away dynamically), dynamic kinematically animated drawing/nocking animations for the Archer towers with a visible bowstring, and distinctly stylized multi-layered explosion and scorch mark decals that remain permanently on the path when the Cannon tower hits in both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c).
 

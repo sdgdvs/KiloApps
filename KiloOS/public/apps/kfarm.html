@@ -235,6 +235,21 @@
             }
         }
 
+        function spawnWaterParticles(targetX, targetY) {
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: targetX + (Math.random() - 0.5) * 10,
+                    y: targetY + 40 + (Math.random() - 0.5) * 10,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: -4 - Math.random() * 2,
+                    life: 1.5,
+                    color: '#2196F3',
+                    type: 'water',
+                    targetY: targetY + (Math.random() - 0.5) * 10
+                });
+            }
+        }
+
         function updateAnimals() {
             document.getElementById('chickensSpan').innerText = chickens;
             document.getElementById('cowsSpan').innerText = cows;
@@ -342,7 +357,7 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        function drawSprout(ctx, x, y, time) {
+        function drawSprout(ctx, x, y, time, isBudding) {
             ctx.save();
             ctx.translate(x + CELL_SIZE/2, y + CELL_SIZE/2);
             ctx.rotate(Math.sin(time * 0.003 + x + y) * 0.15);
@@ -358,6 +373,20 @@
             ctx.quadraticCurveTo(12, 0, 6, -10);
             ctx.quadraticCurveTo(0, -2, 0, 10);
             ctx.fill();
+            
+            if (isBudding) {
+                ctx.fillStyle = '#FF4081';
+                ctx.beginPath();
+                ctx.arc(0, -10, 4, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#FCE4EC';
+                ctx.beginPath();
+                ctx.arc(-3, -13, 3, 0, Math.PI*2);
+                ctx.arc(3, -13, 3, 0, Math.PI*2);
+                ctx.arc(-3, -7, 3, 0, Math.PI*2);
+                ctx.arc(3, -7, 3, 0, Math.PI*2);
+                ctx.fill();
+            }
             ctx.restore();
         }
 
@@ -445,10 +474,22 @@
                     ctx.strokeStyle = 'rgba(0,0,0,0.1)';
                     ctx.strokeRect(px, py, CELL_SIZE, CELL_SIZE);
                     
-                    if (cell.type === 2) {
-                        drawSprout(ctx, px, py, timestamp);
-                    } else if (cell.type === 3) {
-                        drawCropSprite(ctx, cell.cropType, px, py, timeOfDay === 'night', timestamp);
+                    if (cell.type === 2 || cell.type === 3) {
+                        if (timeOfDay === 'day') {
+                            const cycle = (timestamp % 60000) / 60000;
+                            const shadowDx = Math.sin(cycle * Math.PI * 2) * 15;
+                            const shadowDy = Math.cos(cycle * Math.PI * 2) * 5;
+                            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                            const shadowSize = (cell.type === 3) ? 12 : (cell.growth > 0 ? 8 : 5);
+                            ctx.beginPath();
+                            ctx.ellipse(px + CELL_SIZE/2 + shadowDx, py + CELL_SIZE - 10 + shadowDy, shadowSize, shadowSize/2, 0, 0, Math.PI*2);
+                            ctx.fill();
+                        }
+                        if (cell.type === 2) {
+                            drawSprout(ctx, px, py, timestamp, cell.growth > 0);
+                        } else if (cell.type === 3) {
+                            drawCropSprite(ctx, cell.cropType, px, py, timeOfDay === 'night', timestamp);
+                        }
                     }
                 }
             }
@@ -487,12 +528,17 @@
                 p.x += p.vx;
                 p.y += p.vy;
                 p.vy += 0.2; 
+                if (p.type === 'water' && p.vy > 0 && p.y > p.targetY) {
+                    p.type = 'splash';
+                    p.vy = -1 - Math.random();
+                    p.vx = (Math.random() - 0.5) * 3;
+                }
                 p.life -= 0.02;
                 if (p.life <= 0) {
                     particles.splice(i, 1);
                 } else {
                     ctx.fillStyle = p.color;
-                    ctx.globalAlpha = p.life;
+                    ctx.globalAlpha = Math.max(0, p.life);
                     ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
                     ctx.globalAlpha = 1.0;
                 }
@@ -551,7 +597,7 @@
                             const req = weather === 'Drought' ? 2 : 1;
                             if (cell.watered < req) {
                                 cell.watered = (cell.watered || 0) + 1;
-                                spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#2196F3', 15);
+                                spawnWaterParticles(x * CELL_SIZE + CELL_SIZE/2, y * CELL_SIZE + CELL_SIZE/2);
                             }
                         } else if (action === 'harvest' && cell.type === 3) {
                             money += cropData[cell.cropType].value;

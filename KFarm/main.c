@@ -35,6 +35,8 @@ typedef struct {
     float vx, vy;
     int life;
     COLORREF color;
+    int type;
+    float targetY;
 } Particle;
 #define MAX_PARTICLES 100
 Particle particles[MAX_PARTICLES] = {0};
@@ -53,6 +55,24 @@ void SpawnParticles(float x, float y, COLORREF color, int count) {
             particles[i].vy = (float)((rand() % 100) - 100) / 20.0f - 2.0f;
             particles[i].life = 100;
             particles[i].color = color;
+            particles[i].type = 0;
+            spawned++;
+        }
+    }
+}
+
+void SpawnWaterParticles(float targetX, float targetY, int count) {
+    int spawned = 0;
+    for (int i = 0; i < MAX_PARTICLES && spawned < count; i++) {
+        if (particles[i].life <= 0) {
+            particles[i].x = targetX + (float)((rand() % 100) - 50) / 5.0f;
+            particles[i].y = targetY + 40.0f + (float)((rand() % 100) - 50) / 10.0f;
+            particles[i].vx = (float)((rand() % 100) - 50) / 25.0f;
+            particles[i].vy = -4.0f - (float)(rand() % 100) / 50.0f;
+            particles[i].life = 150;
+            particles[i].color = RGB(33, 150, 243);
+            particles[i].type = 1;
+            particles[i].targetY = targetY + (float)((rand() % 100) - 50) / 10.0f;
             spawned++;
         }
     }
@@ -275,6 +295,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         particles[i].x += particles[i].vx;
                         particles[i].y += particles[i].vy;
                         particles[i].vy += 0.5f; // gravity
+                        if (particles[i].type == 1 && particles[i].vy > 0 && particles[i].y > particles[i].targetY) {
+                            particles[i].type = 0;
+                            particles[i].vy = -1.0f - (float)(rand()%10)/10.0f;
+                            particles[i].vx = (float)((rand()%100)-50)/20.0f;
+                        }
                         particles[i].life -= 5;
                     }
                 }
@@ -378,7 +403,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             int req = (weather == 2) ? 2 : 1;
                             if (grid[idx].watered < req) {
                                 grid[idx].watered++;
-                                SpawnParticles((float)px, (float)py, RGB(33, 150, 243), 15);
+                                SpawnWaterParticles((float)px, (float)py, 20);
                             }
                         } else if (action == 3 && grid[idx].type == 3) {
                             money += sell_values[grid[idx].cropType];
@@ -472,8 +497,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         int cx = r.left + CELL_SIZE / 2;
                         int cy = r.top + CELL_SIZE / 2;
                         
+                        DWORD tick = GetTickCount();
+                        if (!time_of_day) {
+                            float cycle = (float)(tick % 60000) / 60000.0f;
+                            int shadow_dx = (int)(sin(cycle * 3.14159f * 2) * 15.0f);
+                            int shadow_dy = (int)(cos(cycle * 3.14159f * 2) * 5.0f);
+                            HBRUSH hShadow = CreateSolidBrush(RGB(60, 40, 20));
+                            SelectObject(hdc, hShadow);
+                            SelectObject(hdc, GetStockObject(NULL_PEN));
+                            int shadowSize = (grid[idx].type == 3) ? 12 : (grid[idx].growth > 0 ? 8 : 5);
+                            Ellipse(hdc, cx + shadow_dx - shadowSize, r.bottom - 10 + shadow_dy - shadowSize/2, 
+                                         cx + shadow_dx + shadowSize, r.bottom - 10 + shadow_dy + shadowSize/2);
+                            DeleteObject(hShadow);
+                        }
+
                         SetGraphicsMode(hdc, GM_ADVANCED);
-                        float angle = (float)sin(GetTickCount() * 0.003f + x + y) * 0.15f;
+                        float angle = (float)sin(tick * 0.003f + x + y) * 0.15f;
                         float pivotX = (float)cx;
                         float pivotY = (float)(r.bottom - 8);
                         XFORM xForm;
@@ -491,8 +530,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             MoveToEx(hdc, cx, r.bottom - 8, NULL); LineTo(hdc, cx, r.top + 12);
                             SelectObject(hdc, hLeaf);
                             SelectObject(hdc, GetStockObject(NULL_PEN));
-                            Ellipse(hdc, cx - 10, cy - 4, cx, cy + 4);
-                            Ellipse(hdc, cx, cy - 10, cx + 10, cy - 2);
+                            
+                            if (grid[idx].growth > 0) {
+                                Ellipse(hdc, cx - 14, cy - 6, cx + 2, cy + 6);
+                                Ellipse(hdc, cx - 2, cy - 14, cx + 14, cy - 2);
+                                HBRUSH hBud = CreateSolidBrush(time_of_day ? RGB(200, 64, 129) : RGB(255, 64, 129));
+                                SelectObject(hdc, hBud);
+                                Ellipse(hdc, cx - 4, cy - 10, cx + 4, cy - 2);
+                                HBRUSH hBudLight = CreateSolidBrush(time_of_day ? RGB(248, 187, 208) : RGB(252, 228, 236));
+                                SelectObject(hdc, hBudLight);
+                                Ellipse(hdc, cx - 7, cy - 13, cx - 1, cy - 7);
+                                Ellipse(hdc, cx + 1, cy - 13, cx + 7, cy - 7);
+                                Ellipse(hdc, cx - 7, cy - 7, cx - 1, cy - 1);
+                                Ellipse(hdc, cx + 1, cy - 7, cx + 7, cy - 1);
+                                DeleteObject(hBud);
+                                DeleteObject(hBudLight);
+                            } else {
+                                Ellipse(hdc, cx - 10, cy - 4, cx, cy + 4);
+                                Ellipse(hdc, cx, cy - 10, cx + 10, cy - 2);
+                            }
                             DeleteObject(hLeaf);
                         } else {
                             if (grid[idx].cropType == 0) { // Wheat
