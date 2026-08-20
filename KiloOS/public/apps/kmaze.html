@@ -222,6 +222,11 @@
   let msgTimer = 0;
   let frameCount = 0;
 
+  // New visual effect variables
+  let muzzleFlashTimer = 0;
+  let recoilOffset = 0;
+  let shockwaves = [];
+
   // New variables
   let keyBinds = {
       up: 'ArrowUp',
@@ -823,6 +828,9 @@
           playTone(400, 'square', 0.1);
           addParticles(W/2, H/2, '#a06030', 25);
           msgText = "Wall Broken!"; msgTimer = 60;
+          recoilOffset = 15;
+          muzzleFlashTimer = 5;
+          shockwaves.push({x: tx + 0.5, y: ty + 0.5, radius: 0, life: 15});
       } else if (tVal === 12) {
           hasPickaxe--;
           map[tx][ty] = 0;
@@ -830,11 +838,17 @@
           playTone(600, 'square', 0.2);
           addParticles(W/2, H/2, '#ff0000', 25);
           msgText = "Minotaur Slain!"; msgTimer = 60;
+          recoilOffset = 15;
+          muzzleFlashTimer = 5;
+          shockwaves.push({x: tx + 0.5, y: ty + 0.5, radius: 0, life: 15});
       } else if (tVal === 15) {
           hasPickaxe--;
           bossHP--;
           playTone(700, 'square', 0.3);
           addParticles(W/2, H/2, '#ffd700', 30);
+          recoilOffset = 15;
+          muzzleFlashTimer = 5;
+          shockwaves.push({x: tx + 0.5, y: ty + 0.5, radius: 0, life: 15});
           if (bossHP <= 0) {
               map[tx][ty] = 3;
               score += 1000;
@@ -876,6 +890,8 @@
       playTone(500, 'square', 0.3);
       addParticles(W/2, H/2, '#00ccff', 30);
       msgText = "Minotaur Stun Spray Active (10s)!"; msgTimer = 60;
+      recoilOffset = 10;
+      muzzleFlashTimer = 8;
   }
   function useTimeFreeze() {
       if (gameState !== 1 || timeFreezeCharges <= 0) return;
@@ -1000,6 +1016,14 @@
       if (timeFreezeTimer > 0) timeFreezeTimer -= 30;
       if (damageFlinchTimer > 0) damageFlinchTimer--;
 
+      if (muzzleFlashTimer > 0) muzzleFlashTimer--;
+      if (recoilOffset > 0) recoilOffset -= 1.5;
+      shockwaves = shockwaves.filter(sw => {
+          sw.radius += 0.3;
+          sw.life--;
+          return sw.life > 0;
+      });
+
       // Update particles
       particles = particles.filter(p => {
           p.x += p.vx; p.y += p.vy;
@@ -1043,7 +1067,8 @@
                   
                   if (m.x === Math.floor(pX) && m.y === Math.floor(pY)) {
                       playTone(200, 'sawtooth', 0.5);
-                      damageFlinchTimer = 10;
+                      damageFlinchTimer = 20;
+                      shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
                       score = Math.max(0, score - 100);
                       if (m.type === 15) {
                           pX = 1.5; pY = 1.5;
@@ -1119,7 +1144,8 @@
           addParticles(W/2, H/2, '#ffcc00', 15);
       } else if (curVal === 6) {
           playTone(200, 'sawtooth', 0.2);
-          damageFlinchTimer = 10;
+          damageFlinchTimer = 20;
+          shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
           score = Math.max(0, score - 50);
           pX = 1.5; pY = 1.5;
           addParticles(W/2, H/2, '#ff3300', 20);
@@ -1171,7 +1197,8 @@
           }
       } else if (curVal === 12) {
           playTone(200, 'sawtooth', 0.5);
-          damageFlinchTimer = 10;
+          damageFlinchTimer = 20;
+          shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
           score = Math.max(0, score - 100);
           currentLevel--;
           nextLevel();
@@ -1189,7 +1216,8 @@
           msgText = "+1 Stun Spray!"; msgTimer = 60;
       } else if (curVal === 15) {
           playTone(200, 'sawtooth', 0.5);
-          damageFlinchTimer = 10;
+          damageFlinchTimer = 20;
+          shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
           score = Math.max(0, score - 150);
           pX = 1.5; pY = 1.5;
           msgText = "Attacked by Minotaur King!"; msgTimer = 60;
@@ -1212,7 +1240,8 @@
       } else if (curVal === 25) {
           if (Math.floor(frameCount / 10) % 2 === 0) {
               playTone(200, 'sawtooth', 0.2);
-              damageFlinchTimer = 10;
+              damageFlinchTimer = 20;
+              shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
               score = Math.max(0, score - 75);
               pX = 1.5; pY = 1.5;
               addParticles(W/2, H/2, '#ff0000', 20);
@@ -1276,9 +1305,11 @@
           }
       }
       if (damageFlinchTimer > 0) {
-          let skew = Math.sin(damageFlinchTimer * 0.5) * 0.2;
+          let skew = Math.sin(damageFlinchTimer * 1.5) * 0.1 * damageFlinchTimer;
+          let pitch = (Math.random() - 0.5) * 0.05 * damageFlinchTimer;
           drawPlaneX += skew * drawDY;
           drawPlaneY -= skew * drawDX;
+          drawDX += pitch;
       }
 
       // 1. Ceiling & Floor Casting
@@ -1313,16 +1344,30 @@
               let tx = Math.floor(16 * (floorX - cellX)) & 15;
               let ty = Math.floor(16 * (floorY - cellY)) & 15;
               
+              let lightR = 1.0, lightG = 1.0, lightB = 1.0;
+              if (muzzleFlashTimer > 0) {
+                  let dist = Math.sqrt((floorX - drawPX)**2 + (floorY - drawPY)**2);
+                  if (dist < 4.0) {
+                      let intensity = (4.0 - dist) / 4.0 * (muzzleFlashTimer / 5.0);
+                      lightR += intensity * 1.5; lightG += intensity * 1.2; lightB += intensity * 0.5;
+                  }
+              }
+              let swDist = 0;
+              for (let sw of shockwaves) {
+                  let d = Math.abs(Math.sqrt((floorX - sw.x)**2 + (floorY - sw.y)**2) - sw.radius);
+                  if (d < 0.5) swDist += (0.5 - d) * (sw.life / 20.0);
+              }
+              
               floorX += floorStepX;
               floorY += floorStepY;
               
               let texIdx = isFloor ? 23 : 24;
               let srcCol = textures[texIdx][ty * 16 + tx];
               
-              let r = (srcCol & 0xFF) * fog;
-              let g = ((srcCol >> 8) & 0xFF) * fog;
-              let b = ((srcCol >> 16) & 0xFF) * fog;
-              buf32[y * W + x] = (255 << 24) | (Math.floor(b) << 16) | (Math.floor(g) << 8) | Math.floor(r);
+              let r = (srcCol & 0xFF) * fog * lightR + swDist * 255;
+              let g = ((srcCol >> 8) & 0xFF) * fog * lightG + swDist * 100;
+              let b = ((srcCol >> 16) & 0xFF) * fog * lightB + swDist * 100;
+              buf32[y * W + x] = (255 << 24) | (Math.min(255, Math.max(0, b)) << 16) | (Math.min(255, Math.max(0, g)) << 8) | Math.min(255, Math.max(0, r));
           }
       }
 
@@ -1403,6 +1448,23 @@
           if (currentLevel >= 15 && perpWallDist > maxDist && pathfinderTimer <= 0) fog = 0.0;
           let sideMult = (side === 1) ? 0.75 : 1.0;
           
+          let actualWX = side === 0 ? mapX : drawPX + perpWallDist * rayDX;
+          let actualWY = side === 0 ? drawPY + perpWallDist * rayDY : mapY;
+          
+          let lightR = 1.0, lightG = 1.0, lightB = 1.0;
+          if (muzzleFlashTimer > 0) {
+              let distw = Math.sqrt((actualWX - drawPX)**2 + (actualWY - drawPY)**2);
+              if (distw < 4.0) {
+                  let intensity = (4.0 - distw) / 4.0 * (muzzleFlashTimer / 5.0);
+                  lightR += intensity * 1.5; lightG += intensity * 1.2; lightB += intensity * 0.5;
+              }
+          }
+          let swDist = 0;
+          for (let sw of shockwaves) {
+              let d = Math.abs(Math.sqrt((actualWX - sw.x)**2 + (actualWY - sw.y)**2) - sw.radius);
+              if (d < 0.5) swDist += (0.5 - d) * (sw.life / 20.0);
+          }
+          
           for (let y = actualStart; y <= actualEnd; y++) {
               let texY = Math.floor(texPos) & 15;
               texPos += step;
@@ -1414,11 +1476,11 @@
                   if (varVal === 0) { tintR = 0.85; tintG = 0.9; tintB = 1.0; }
                   else if (varVal === 1) { tintR = 1.0; tintG = 0.9; tintB = 0.85; }
               }
-              let r = (srcCol & 0xFF) * sideMult * fog * tintR;
-              let g = ((srcCol >> 8) & 0xFF) * sideMult * fog * tintG;
-              let b = ((srcCol >> 16) & 0xFF) * sideMult * fog * tintB;
+              let r = (srcCol & 0xFF) * sideMult * fog * tintR * lightR + swDist * 255;
+              let g = ((srcCol >> 8) & 0xFF) * sideMult * fog * tintG * lightG + swDist * 100;
+              let b = ((srcCol >> 16) & 0xFF) * sideMult * fog * tintB * lightB + swDist * 100;
               
-              buf32[y * W + x] = (255 << 24) | (Math.floor(b) << 16) | (Math.floor(g) << 8) | Math.floor(r);
+              buf32[y * W + x] = (255 << 24) | (Math.min(255, Math.max(0, b)) << 16) | (Math.min(255, Math.max(0, g)) << 8) | Math.min(255, Math.max(0, r));
           }
       }
       
@@ -1440,26 +1502,29 @@
               let cx = 27 + bobX - swayX, cy = H - 27 + bobY;
               uiCtx.save();
               
-              let rimGrad = uiCtx.createRadialGradient(cx-5, cy-5, 2, cx, cy, 18);
-              rimGrad.addColorStop(0, '#fffacd');
-              rimGrad.addColorStop(0.5, '#daa520');
-              rimGrad.addColorStop(1, '#8b6508');
+              // Outer dark rim
+              uiCtx.beginPath(); uiCtx.arc(cx, cy, 22, 0, Math.PI * 2);
+              uiCtx.fillStyle = '#111'; uiCtx.fill();
               
-              uiCtx.beginPath();
-              uiCtx.arc(cx, cy, 18, 0, Math.PI * 2);
-              uiCtx.fillStyle = rimGrad;
-              uiCtx.fill();
-              uiCtx.lineWidth = 1;
-              uiCtx.strokeStyle = '#332200';
-              uiCtx.stroke();
+              // Beveled metallic edge
+              let bevelOuter = uiCtx.createRadialGradient(cx-6, cy-6, 5, cx, cy, 21);
+              bevelOuter.addColorStop(0, '#e0e0e0');
+              bevelOuter.addColorStop(0.3, '#707070');
+              bevelOuter.addColorStop(0.7, '#303030');
+              bevelOuter.addColorStop(1, '#101010');
+              uiCtx.beginPath(); uiCtx.arc(cx, cy, 21, 0, Math.PI * 2);
+              uiCtx.fillStyle = bevelOuter; uiCtx.fill();
+
+              let bevelInner = uiCtx.createRadialGradient(cx+6, cy+6, 5, cx, cy, 18);
+              bevelInner.addColorStop(0, '#f5d76e');
+              bevelInner.addColorStop(0.4, '#b8860b');
+              bevelInner.addColorStop(1, '#5c4305');
+              uiCtx.beginPath(); uiCtx.arc(cx, cy, 18, 0, Math.PI * 2);
+              uiCtx.fillStyle = bevelInner; uiCtx.fill();
               
-              let bevelGrad = uiCtx.createRadialGradient(cx, cy, 13, cx, cy, 16);
-              bevelGrad.addColorStop(0, '#554411');
-              bevelGrad.addColorStop(1, '#ffd700');
-              uiCtx.beginPath();
-              uiCtx.arc(cx, cy, 16, 0, Math.PI * 2);
-              uiCtx.fillStyle = bevelGrad;
-              uiCtx.fill();
+              // Depth shadow
+              uiCtx.beginPath(); uiCtx.arc(cx, cy, 15, 0, Math.PI * 2);
+              uiCtx.fillStyle = 'rgba(0,0,0,0.6)'; uiCtx.fill();
 
               let faceGrad = uiCtx.createRadialGradient(cx, cy, 0, cx, cy, 14);
               faceGrad.addColorStop(0, '#0f1e2d');
@@ -1494,9 +1559,13 @@
               uiCtx.rotate(-targetAngle);
               uiCtx.translate(-cx, -cy);
               
+              // Glass flare
               uiCtx.beginPath();
-              uiCtx.arc(cx - 4, cy - 6, 6, 0, Math.PI * 2);
-              uiCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+              uiCtx.arc(cx - 5, cy - 8, 8, 0, Math.PI * 2);
+              let glassGrad = uiCtx.createRadialGradient(cx-8, cy-11, 0, cx-5, cy-8, 8);
+              glassGrad.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+              glassGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+              uiCtx.fillStyle = glassGrad;
               uiCtx.fill();
               
               uiCtx.restore();
@@ -1505,7 +1574,7 @@
           // Held Pickaxe
           if (hasPickaxe > 0) {
               let swing = Math.sin(frameCount * 0.3) * 4;
-              let bx = W - 45 + swing + bobX - swayX, by = H - 40 - swing + bobY;
+              let bx = W - 45 + swing + bobX - swayX + recoilOffset, by = H - 40 - swing + bobY + recoilOffset * 1.5;
               
               uiCtx.strokeStyle = '#8b4513';
               uiCtx.lineWidth = 4;

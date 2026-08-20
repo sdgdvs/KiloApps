@@ -288,6 +288,33 @@ int score = 0;
 char msgText[64] = "";
 int msgTimer = 0;
 
+int muzzleFlashTimer = 0;
+int recoilOffset = 0;
+typedef struct { float x, y, radius; int life; } Shockwave;
+Shockwave shockwaves[10];
+int shockwaveCount = 0;
+
+void AddShockwave(float x, float y) {
+    if (shockwaveCount < 10) {
+        shockwaves[shockwaveCount].x = x;
+        shockwaves[shockwaveCount].y = y;
+        shockwaves[shockwaveCount].radius = 0;
+        shockwaves[shockwaveCount].life = 20;
+        shockwaveCount++;
+    }
+}
+void UpdateShockwaves() {
+    int write = 0;
+    for (int i = 0; i < shockwaveCount; i++) {
+        shockwaves[i].radius += 0.3f;
+        shockwaves[i].life--;
+        if (shockwaves[i].life > 0) {
+            shockwaves[write++] = shockwaves[i];
+        }
+    }
+    shockwaveCount = write;
+}
+
 float pX = 1.5f, pY = 1.5f;
 float dX = 1.0f, dY = 0.0f;
 float planeX = 0.0f, planeY = 0.66f;
@@ -1071,6 +1098,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (stunSprayTimer > 0) stunSprayTimer -= 30;
             if (timeFreezeTimer > 0) timeFreezeTimer -= 30;
             if (damageFlinchTimer > 0) damageFlinchTimer--;
+            if (msgTimer > 0) msgTimer--;
+            
+            if (muzzleFlashTimer > 0) muzzleFlashTimer--;
+            if (recoilOffset > 0) recoilOffset -= 2;
+            UpdateShockwaves();
 
             float moveSpeed = 0.1f;
             float rotSpeed = 0.05f;
@@ -1123,7 +1155,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             
                             if (mx == (int)pX && my == (int)pY) {
                                 MessageBeep(MB_ICONHAND);
-                                damageFlinchTimer = 10;
+                                damageFlinchTimer = 20;
+                                AddShockwave(pX, pY);
                                 score = (score >= 100) ? score - 100 : 0;
                                 if (mtype == 15) {
                                     pX = 1.5f; pY = 1.5f;
@@ -1172,6 +1205,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             strcpy(msgText, "Wall Broken!");
                             msgTimer = 60;
                             activeKeyCooldown = 300;
+                            recoilOffset = 15;
+                            muzzleFlashTimer = 5;
+                            AddShockwave(tx + 0.5f, ty + 0.5f);
                         } else if (tVal == 12) {
                             hasPickaxe--;
                             SetMapValue(tx, ty, 0);
@@ -1181,10 +1217,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             strcpy(msgText, "Minotaur Slain!");
                             msgTimer = 60;
                             activeKeyCooldown = 300;
+                            recoilOffset = 15;
+                            muzzleFlashTimer = 5;
+                            AddShockwave(tx + 0.5f, ty + 0.5f);
                         } else if (tVal == 15) {
                             hasPickaxe--;
                             bossHP--;
                             AddParticles(160.0f, 120.0f, RGB(255, 215, 0), 30);
+                            recoilOffset = 15;
+                            muzzleFlashTimer = 5;
+                            AddShockwave(tx + 0.5f, ty + 0.5f);
                             if (bossHP <= 0) {
                                 SetMapValue(tx, ty, 3);
                                 score += 1000;
@@ -1229,6 +1271,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         strcpy(msgText, "Minotaur Stun Spray Active (10s)!");
                         msgTimer = 60;
                         activeKeyCooldown = 300;
+                        recoilOffset = 10;
+                        muzzleFlashTimer = 8;
                     }
                 }
                 if (GetAsyncKeyState(keyBinds.freeze) & 0x8000) {
@@ -1360,7 +1404,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddParticles(160.0f, 120.0f, RGB(255, 200, 0), 15);
             } else if (curVal == 6) {
                 MessageBeep(MB_ICONHAND);
-                damageFlinchTimer = 10;
+                damageFlinchTimer = 20;
+                AddShockwave(pX, pY);
                 score = (score >= 50) ? score - 50 : 0;
                 pX = 1.5f; pY = 1.5f;
                 AddParticles(160.0f, 120.0f, RGB(255, 50, 0), 20);
@@ -1408,7 +1453,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (curVal == 12) {
                 MessageBeep(MB_ICONHAND);
-                damageFlinchTimer = 10;
+                damageFlinchTimer = 20;
+                AddShockwave(pX, pY);
                 score = (score >= 100) ? score - 100 : 0;
                 currentLevel--;
                 NextLevel();
@@ -1426,7 +1472,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 strcpy(msgText, "+1 Stun Spray!"); msgTimer = 60;
             } else if (curVal == 15) {
                 MessageBeep(MB_ICONHAND);
-                damageFlinchTimer = 10;
+                damageFlinchTimer = 20;
+                AddShockwave(pX, pY);
                 score = (score >= 150) ? score - 150 : 0;
                 pX = 1.5f; pY = 1.5f;
                 strcpy(msgText, "Attacked by Minotaur King!"); msgTimer = 60;
@@ -1446,7 +1493,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 25) {
                 if ((animFrameCount / 10) % 2 == 0) {
                     MessageBeep(MB_ICONHAND);
-                    damageFlinchTimer = 10;
+                    damageFlinchTimer = 20;
+                    AddShockwave(pX, pY);
                     score = (score >= 75) ? score - 75 : 0;
                     pX = 1.5f; pY = 1.5f;
                     AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 20);
@@ -1549,17 +1597,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int tx = (int)(16.0f * (floorX - cellX)) & 15;
                         int ty = (int)(16.0f * (floorY - cellY)) & 15;
 
+                        float lightR = 1.0f, lightG = 1.0f, lightB = 1.0f;
+                        if (muzzleFlashTimer > 0) {
+                            float dist = (float)sqrt((floorX - drawPX)*(floorX - drawPX) + (floorY - drawPY)*(floorY - drawPY));
+                            if (dist < 4.0f) {
+                                float intensity = (4.0f - dist) / 4.0f * (muzzleFlashTimer / 5.0f);
+                                lightR += intensity * 1.5f; lightG += intensity * 1.2f; lightB += intensity * 0.5f;
+                            }
+                        }
+                        float swDist = 0.0f;
+                        for (int i = 0; i < shockwaveCount; i++) {
+                            float d = (float)fabs(sqrt((floorX - shockwaves[i].x)*(floorX - shockwaves[i].x) + (floorY - shockwaves[i].y)*(floorY - shockwaves[i].y)) - shockwaves[i].radius);
+                            if (d < 0.5f) { swDist += (0.5f - d) * (shockwaves[i].life / 20.0f); }
+                        }
+
                         floorX += floorStepX;
                         floorY += floorStepY;
 
                         int texIdx = isFloor ? 23 : 24;
                         DWORD srcCol = textures[texIdx][ty * 16 + tx];
 
-                        BYTE r = (BYTE)((srcCol & 0xFF) * fog);
-                        BYTE g = (BYTE)(((srcCol >> 8) & 0xFF) * fog);
-                        BYTE b = (BYTE)(((srcCol >> 16) & 0xFF) * fog);
+                        float fR = (srcCol & 0xFF) * fog * lightR + swDist * 255.0f;
+                        float fG = ((srcCol >> 8) & 0xFF) * fog * lightG + swDist * 100.0f;
+                        float fB = ((srcCol >> 16) & 0xFF) * fog * lightB + swDist * 100.0f;
+                        if (fR > 255.0f) fR = 255.0f; if (fR < 0.0f) fR = 0.0f;
+                        if (fG > 255.0f) fG = 255.0f; if (fG < 0.0f) fG = 0.0f;
+                        if (fB > 255.0f) fB = 255.0f; if (fB < 0.0f) fB = 0.0f;
 
-                        pBits[y * W + x] = RGB(r, g, b);
+                        pBits[y * W + x] = RGB((BYTE)fR, (BYTE)fG, (BYTE)fB);
                     }
                 }
                 for (int x = 0; x < W; x++) {
@@ -1639,6 +1704,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     float sideMult = (side == 1) ? 0.7f : 1.0f;
                     
+                    float actualWX = (side == 0) ? mapX : drawPX + perpWallDist * rayDX;
+                    float actualWY = (side == 0) ? drawPY + perpWallDist * rayDY : mapY;
+
+                    float lightR = 1.0f, lightG = 1.0f, lightB = 1.0f;
+                    if (muzzleFlashTimer > 0) {
+                        float distw = (float)sqrt((actualWX - drawPX)*(actualWX - drawPX) + (actualWY - drawPY)*(actualWY - drawPY));
+                        if (distw < 4.0f) {
+                            float intensity = (4.0f - distw) / 4.0f * (muzzleFlashTimer / 5.0f);
+                            lightR += intensity * 1.5f; lightG += intensity * 1.2f; lightB += intensity * 0.5f;
+                        }
+                    }
+                    float swDist = 0.0f;
+                    for (int i = 0; i < shockwaveCount; i++) {
+                        float d = (float)fabs(sqrt((actualWX - shockwaves[i].x)*(actualWX - shockwaves[i].x) + (actualWY - shockwaves[i].y)*(actualWY - shockwaves[i].y)) - shockwaves[i].radius);
+                        if (d < 0.5f) { swDist += (0.5f - d) * (shockwaves[i].life / 20.0f); }
+                    }
+                    
                     for (int y = actualStart; y <= actualEnd; y++) {
                         int texY = (int)texPos & 15;
                         texPos += step;
@@ -1650,11 +1732,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (varVal == 0) { tintR = 0.85f; tintG = 0.9f; tintB = 1.0f; }
                             else if (varVal == 1) { tintR = 1.0f; tintG = 0.9f; tintB = 0.85f; }
                         }
-                        BYTE r = (BYTE)((srcCol & 0xFF) * sideMult * fog * tintR);
-                        BYTE g = (BYTE)(((srcCol >> 8) & 0xFF) * sideMult * fog * tintG);
-                        BYTE b = (BYTE)(((srcCol >> 16) & 0xFF) * sideMult * fog * tintB);
                         
-                        pBits[y * W + x] = RGB(r, g, b);
+                        float fR = (srcCol & 0xFF) * sideMult * fog * tintR * lightR + swDist * 255.0f;
+                        float fG = ((srcCol >> 8) & 0xFF) * sideMult * fog * tintG * lightG + swDist * 100.0f;
+                        float fB = ((srcCol >> 16) & 0xFF) * sideMult * fog * tintB * lightB + swDist * 100.0f;
+                        if (fR > 255.0f) fR = 255.0f; if (fR < 0.0f) fR = 0.0f;
+                        if (fG > 255.0f) fG = 255.0f; if (fG < 0.0f) fG = 0.0f;
+                        if (fB > 255.0f) fB = 255.0f; if (fB < 0.0f) fB = 0.0f;
+                        
+                        pBits[y * W + x] = RGB((BYTE)fR, (BYTE)fG, (BYTE)fB);
                     }
                 }
             }
@@ -1689,6 +1775,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameState == 1) {
                 if (hasCompass || pathfinderTimer > 0) {
                     int cx = 27 + (int)(bobX - swayX), cy = H - 27 + (int)bobY;
+                    HBRUSH darkRimB = CreateSolidBrush(RGB(17, 17, 17));
+                    HPEN darkRimP = CreatePen(PS_SOLID, 1, RGB(17, 17, 17));
+                    SelectObject(hdcMem, darkRimB); SelectObject(hdcMem, darkRimP);
+                    Ellipse(hdcMem, cx - 22, cy - 22, cx + 22, cy + 22);
+                    DeleteObject(darkRimB); DeleteObject(darkRimP);
+
+                    for (int r = 21; r >= 18; r--) {
+                        int c = 112 + (21 - r) * 32; if (c > 255) c = 255;
+                        HBRUSH rimB = CreateSolidBrush(RGB(c, c, c));
+                        HPEN rimP = CreatePen(PS_SOLID, 1, RGB(c, c, c));
+                        SelectObject(hdcMem, rimB); SelectObject(hdcMem, rimP);
+                        Ellipse(hdcMem, cx - r, cy - r, cx + r, cy + r);
+                        DeleteObject(rimB); DeleteObject(rimP);
+                    }
                     for (int r = 18; r >= 14; r--) {
                         int g = 100 + (18 - r) * 25; if (g > 255) g = 255;
                         HBRUSH rimB = CreateSolidBrush(RGB(g, (int)(g*0.8f), (int)(g*0.3f)));
@@ -1734,7 +1834,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 if (hasPickaxe > 0) {
                     int swing = (int)(sin(animFrameCount * 0.3f) * 4);
-                    int bx = W - 45 + swing + (int)(bobX - swayX), by = H - 40 - swing + (int)bobY;
+                    int bx = W - 45 + swing + (int)(bobX - swayX) + recoilOffset, by = H - 40 - swing + (int)bobY + (int)(recoilOffset * 1.5f);
                     
                     HPEN handleP = CreatePen(PS_SOLID, 3, RGB(139, 69, 19));
                     SelectObject(hdcMem, handleP);

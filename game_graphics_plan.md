@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMaze
 - KColony
 - KFortress
 - KFarm
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTetris
 - KCyber
 - KBreakout
+- KMaze
 ## Completed Work Log
+
+- **KMaze (Loop 6):** Implemented highly polished visual effects and deeper variety, including a 3D metallic beveled compass housing for the minimap, dynamic weapon recoil animations with distinct muzzle flashes casting temporary radial light pools, and procedural screen-shake and expanding 3D ring shockwaves when explosive projectiles detonate or the player takes damage in both Web Canvas (kmaze.html) and Native C Win32 GDI (KMaze/main.c).
 
 - **KBreakout (Loop 6):** Implemented highly polished visual effects and deeper variety, including a 3D beveled display for the Score and Lives UI, a dynamic kinematically animated screen-shake with an expanding 3D ring shockwave effect when the ball hits the paddle or destroys a brick, and distinctly stylized multi-layered particle explosions that shower debris downward with gravity physics when a brick shatters in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 
