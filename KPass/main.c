@@ -393,7 +393,7 @@ void ImportFile(HWND hwnd) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hHelpLabel = CreateWindowA("STATIC", "Press 'H' for Help", WS_CHILD | SS_CENTER, 20, 5, 420, 15, hwnd, NULL, NULL, NULL);
+            hHelpLabel = CreateWindowA("STATIC", "Press 'H' or F1 for Help", WS_CHILD | SS_CENTER, 20, 5, 420, 15, hwnd, NULL, NULL, NULL);
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Click Generate...", WS_CHILD | ES_CENTER | ES_READONLY | ES_AUTOHSCROLL, 20, 25, 420, 32, hwnd, NULL, NULL, NULL);
             hStrengthDisplay = CreateWindowA("STATIC", "Strength: - (0 bits)", WS_CHILD | SS_CENTER, 20, 62, 420, 20, hwnd, NULL, NULL, NULL);
 
@@ -585,16 +585,16 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30));
 
     RegisterClassA(&wc);
-    RECT rc = { 0, 0, 500, 540 };
+    RECT rc = { 0, 0, 500, 620 };
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KPassClass", "KPass Security & Vault Manager", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KPassClass", "KPass Security & Vault Manager [Press H or F1 for Help]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
             char cls[64] = {0};
             GetClassNameA(GetFocus(), cls, 64);
             if (my_strstr_ic(cls, "EDIT") == 0) {

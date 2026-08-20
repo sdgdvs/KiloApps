@@ -237,7 +237,7 @@
     <p style="max-width: 400px; margin-bottom: 10px;"><strong>Generator:</strong> Customize your password complexity and length, then click Generate. You can save generated passwords to your Vault.</p>
     <p style="max-width: 400px;"><strong>Vault:</strong> View, copy, search, and manage your saved passwords. Import/export is also available.</p>
     <p style="max-width: 400px;"><strong>Auto-Lock:</strong> The vault auto-locks after 1 minute of inactivity.</p>
-    <p style="color: #aaa; margin-top: 20px;">Press 'H' or Click to close</p>
+    <p style="color: #aaa; margin-top: 20px;">Press 'H' / F1 or Click to close</p>
   </div>
   
   <div class="tabs">
@@ -246,7 +246,7 @@
   </div>
   
   <div class="content" id="contentGen">
-    <div style="text-align: center; font-size: 13px; color: #aaa; margin-bottom: 10px;">Press 'H' for Help</div>
+    <div style="text-align: center; font-size: 13px; color: #aaa; margin-bottom: 10px;">Press 'H' or F1 for Help</div>
     <div class="display" id="pwdDisplay">...</div>
     
     <!-- Password Strength Meter -->
@@ -469,7 +469,8 @@
     tabVault.addEventListener('click', () => switchTab(false));
 
     document.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && lockScreen.style.display === 'none') {
+        if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && lockScreen.style.display === 'none') {
+            if (e.key === 'F1') e.preventDefault();
             helpOverlay.style.display = helpOverlay.style.display === 'flex' ? 'none' : 'flex';
         }
     });
