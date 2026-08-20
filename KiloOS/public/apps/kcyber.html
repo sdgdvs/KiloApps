@@ -125,6 +125,26 @@
     let ice_name = "";
     let ice_damage = 0;
     let ice_frozen_ticks = 0;
+    
+    let missions = [];
+    let active_mission = null;
+
+    function generateMissions() {
+      missions = [];
+      const fileNames = ["paydata.zip", "prototype.exe", "blackmail.txt", "employee_db.sql", "admin_creds.dat", "source_code.c", "financials.xls", "auth_keys.rsa"];
+      for (let i = 0; i < 3; i++) {
+        let node = Math.floor(Math.random() * 4) + 2; // 2 to 5
+        let file = fileNames[Math.floor(Math.random() * fileNames.length)];
+        let reward = 0;
+        let diff = "";
+        if (node === 2) { reward = 150 + Math.floor(Math.random()*100); diff = "Easy"; }
+        else if (node === 3) { reward = 300 + Math.floor(Math.random()*200); diff = "Medium"; }
+        else if (node === 4) { reward = 600 + Math.floor(Math.random()*300); diff = "Hard"; }
+        else if (node === 5) { reward = 1200 + Math.floor(Math.random()*800); diff = "Extreme"; }
+        
+        missions.push({ id: i+1, node: '0'+node, file: file, reward: reward, diff: diff });
+      }
+    }
 
     function iceAttack() {
       if (hacking_node || connected_node) {
@@ -359,7 +379,7 @@
            return;
         }
         
-        if (cmd === 'download') {
+         if (cmd === 'download') {
            if (args.length < 2) {
              printLine("Usage: download <filename>");
            } else {
@@ -369,6 +389,10 @@
                printLine(`Downloading ${fname}...`);
                player_credits += file.value;
                printLine(`Download complete. Data value: ${file.value} credits.`);
+               if (active_mission && active_mission.file === file.name && active_mission.node === connected_node) {
+                 printLine(`CONTRACT COMPLETE! Reward transferred.`);
+                 active_mission = null;
+               }
                file.name = "empty";
              } else {
                printLine("File not found.");
@@ -391,17 +415,19 @@
       switch (command) {
         case 'help':
           printLine("Available commands:");
-          printLine("  help    - Show this message");
-          printLine("  clear   - Clear terminal output");
-          printLine("  status  - Show deck status");
-          printLine("  reboot  - Restart deck to restore MEM and software");
-          printLine("  map     - Display network topology");
-          printLine("  shop    - Enter upgrade shop");
-          printLine("  connect - Attempt connection to network node");
+          printLine("  help      - Show this message");
+          printLine("  clear     - Clear terminal output");
+          printLine("  status    - Show deck status");
+          printLine("  reboot    - Restart deck to restore MEM and software");
+          printLine("  map       - Display network topology");
+          printLine("  shop      - Enter upgrade shop");
+          printLine("  connect   - Attempt connection to network node");
+          printLine("  contracts - View available hacking contracts");
+          printLine("  accept    - Accept a contract (e.g. 'accept 1')");
           printLine("During hack:");
-          printLine("  abort   - Disconnect immediately");
-          printLine("  cloak   - Blind ICE for 2 cycles");
-          printLine("  slow    - Halve ICE attack speed");
+          printLine("  abort     - Disconnect immediately");
+          printLine("  cloak     - Blind ICE for 2 cycles");
+          printLine("  slow      - Halve ICE attack speed");
           break;
         case 'clear':
           outputDiv.innerHTML = '';
@@ -424,6 +450,8 @@
           player_mem = player_max_mem;
           tool_cloak = player_max_cloak;
           tool_slow = player_max_slow;
+          active_mission = null;
+          generateMissions();
           node_files = {
             '02': { name: 'sys_logs.dat', size: 12, value: 100 },
             '03': { name: 'customer_db.sql', size: 45, value: 250 },
@@ -431,7 +459,33 @@
             '05': { name: 'zero_day_exploit.exe', size: 15, value: 1500 }
           };
           printLine("System rebooting...");
-          printLine("Memory and software restored to 100%. Nodes reset.");
+          printLine("Memory and software restored to 100%. Nodes and contracts reset.");
+          break;
+        case 'contracts':
+          if (missions.length === 0) generateMissions();
+          printLine("AVAILABLE CONTRACTS:");
+          missions.forEach(m => {
+             printLine(` [${m.id}] Target Node: ${m.node} | File: ${m.file} | Diff: ${m.diff} | Reward: ${m.reward} cr`);
+          });
+          printLine("Use 'accept <id>' to take a contract.");
+          break;
+        case 'accept':
+          if (args.length < 2) {
+            printLine("Usage: accept <id>");
+          } else {
+            let id = parseInt(args[1]);
+            let m = missions.find(x => x.id === id);
+            if (m) {
+              active_mission = m;
+              node_files[m.node] = { name: m.file, size: Math.floor(Math.random()*100)+10, value: m.reward };
+              printLine(`Contract [${m.id}] accepted.`);
+              printLine(`Objective: Download ${m.file} from NODE ${m.node}.`);
+              missions = missions.filter(x => x.id !== id);
+              if (missions.length === 0) generateMissions();
+            } else {
+              printLine("Invalid contract ID.");
+            }
+          }
           break;
         case 'map':
           printLine("NETWORK TOPOLOGY:");

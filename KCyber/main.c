@@ -45,6 +45,18 @@ int ice_damage = 0;
 char ice_name[32] = "";
 int ice_frozen_ticks = 0;
 
+typedef struct {
+    int id;
+    int node;
+    char file[32];
+    int reward;
+    char diff[16];
+} Mission;
+
+Mission missions[3];
+int active_mission_node = 0;
+char active_mission_file[32] = "";
+
 static unsigned long int my_next = 1;
 int my_rand(void) {
     my_next = my_next * 1103515245 + 12345;
@@ -52,6 +64,20 @@ int my_rand(void) {
 }
 void my_srand(unsigned int seed) {
     my_next = seed;
+}
+
+void GenerateMissions() {
+    const char* fileNames[] = {"paydata.zip", "prototype.exe", "blackmail.txt", "employee_db.sql", "admin_creds.dat", "source_code.c", "financials.xls", "auth_keys.rsa"};
+    for (int i = 0; i < 3; i++) {
+        missions[i].id = i + 1;
+        missions[i].node = (my_rand() % 4) + 2;
+        int fidx = my_rand() % 8;
+        lstrcpyA(missions[i].file, fileNames[fidx]);
+        if (missions[i].node == 2) { missions[i].reward = 150 + (my_rand()%100); lstrcpyA(missions[i].diff, "Easy"); }
+        else if (missions[i].node == 3) { missions[i].reward = 300 + (my_rand()%200); lstrcpyA(missions[i].diff, "Medium"); }
+        else if (missions[i].node == 4) { missions[i].reward = 600 + (my_rand()%300); lstrcpyA(missions[i].diff, "Hard"); }
+        else if (missions[i].node == 5) { missions[i].reward = 1200 + (my_rand()%800); lstrcpyA(missions[i].diff, "Extreme"); }
+    }
 }
 
 void PrintLine(HWND hwnd, const char* text) {
@@ -317,6 +343,13 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                     player_credits += node_files[connected_node].value;
                     wsprintfA(buf, "Download complete. Data value: %d credits.", node_files[connected_node].value);
                     PrintLine(hwnd, buf);
+                    
+                    if (active_mission_node == connected_node && lstrcmpiA(active_mission_file, args) == 0) {
+                        PrintLine(hwnd, "CONTRACT COMPLETE! Reward transferred.");
+                        active_mission_node = 0;
+                        active_mission_file[0] = '\0';
+                    }
+                    
                     lstrcpyA(node_files[connected_node].name, "empty");
                 } else {
                     PrintLine(hwnd, "File not found.");
@@ -358,17 +391,19 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
 
     if (lstrcmpiA(command, "help") == 0) {
         PrintLine(hwnd, "Available commands:");
-        PrintLine(hwnd, "  help    - Show this message");
-        PrintLine(hwnd, "  clear   - Clear terminal output");
-        PrintLine(hwnd, "  status  - Show deck status");
-        PrintLine(hwnd, "  reboot  - Restart deck to restore MEM and software");
-        PrintLine(hwnd, "  map     - Display network topology");
-        PrintLine(hwnd, "  shop    - Enter upgrade shop");
-        PrintLine(hwnd, "  connect - Attempt connection to network node");
+        PrintLine(hwnd, "  help      - Show this message");
+        PrintLine(hwnd, "  clear     - Clear terminal output");
+        PrintLine(hwnd, "  status    - Show deck status");
+        PrintLine(hwnd, "  reboot    - Restart deck to restore MEM and software");
+        PrintLine(hwnd, "  map       - Display network topology");
+        PrintLine(hwnd, "  shop      - Enter upgrade shop");
+        PrintLine(hwnd, "  connect   - Attempt connection to network node");
+        PrintLine(hwnd, "  contracts - View available hacking contracts");
+        PrintLine(hwnd, "  accept    - Accept a contract (e.g. 'accept 1')");
         PrintLine(hwnd, "During hack:");
-        PrintLine(hwnd, "  abort   - Disconnect immediately");
-        PrintLine(hwnd, "  cloak   - Blind ICE for 2 cycles");
-        PrintLine(hwnd, "  slow    - Halve ICE attack speed");
+        PrintLine(hwnd, "  abort     - Disconnect immediately");
+        PrintLine(hwnd, "  cloak     - Blind ICE for 2 cycles");
+        PrintLine(hwnd, "  slow      - Halve ICE attack speed");
     } else if (lstrcmpiA(command, "clear") == 0) {
         history_count = 0;
         InvalidateRect(hwnd, NULL, TRUE);
@@ -393,12 +428,61 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         player_mem = player_max_mem;
         tool_cloak = player_max_cloak;
         tool_slow = player_max_slow;
+        active_mission_node = 0;
+        active_mission_file[0] = '\0';
+        GenerateMissions();
         lstrcpyA(node_files[2].name, "sys_logs.dat"); node_files[2].size = 12; node_files[2].value = 100;
         lstrcpyA(node_files[3].name, "customer_db.sql"); node_files[3].size = 45; node_files[3].value = 250;
         lstrcpyA(node_files[4].name, "r_and_d_schematics.zip"); node_files[4].size = 105; node_files[4].value = 600;
         lstrcpyA(node_files[5].name, "zero_day_exploit.exe"); node_files[5].size = 15; node_files[5].value = 1500;
         PrintLine(hwnd, "System rebooting...");
-        PrintLine(hwnd, "Memory and software restored to 100%. Nodes reset.");
+        PrintLine(hwnd, "Memory and software restored to 100%. Nodes and contracts reset.");
+    } else if (lstrcmpiA(command, "contracts") == 0) {
+        if (missions[0].id == 0 && missions[1].id == 0 && missions[2].id == 0) GenerateMissions();
+        PrintLine(hwnd, "AVAILABLE CONTRACTS:");
+        for(int k=0; k<3; k++) {
+            if (missions[k].id != 0) {
+                char b[128];
+                wsprintfA(b, " [%d] Target Node: 0%d | File: %s | Diff: %s | Reward: %d cr", missions[k].id, missions[k].node, missions[k].file, missions[k].diff, missions[k].reward);
+                PrintLine(hwnd, b);
+            }
+        }
+        PrintLine(hwnd, "Use 'accept <id>' to take a contract.");
+    } else if (lstrcmpiA(command, "accept") == 0) {
+        if (args[0] == '\0') {
+            PrintLine(hwnd, "Usage: accept <id>");
+        } else {
+            int id = args[0] - '0';
+            int found = 0;
+            for(int k=0; k<3; k++) {
+                if (missions[k].id == id) {
+                    active_mission_node = missions[k].node;
+                    lstrcpyA(active_mission_file, missions[k].file);
+                    
+                    lstrcpyA(node_files[missions[k].node].name, missions[k].file);
+                    node_files[missions[k].node].size = 10 + (my_rand() % 90);
+                    node_files[missions[k].node].value = missions[k].reward;
+                    
+                    char b[128];
+                    wsprintfA(b, "Contract [%d] accepted.", missions[k].id);
+                    PrintLine(hwnd, b);
+                    wsprintfA(b, "Objective: Download %s from NODE 0%d.", missions[k].file, missions[k].node);
+                    PrintLine(hwnd, b);
+                    
+                    missions[k].id = 0;
+                    found = 1;
+                    
+                    int all_taken = 1;
+                    for(int j=0; j<3; j++) { if(missions[j].id != 0) all_taken = 0; }
+                    if(all_taken) GenerateMissions();
+                    
+                    break;
+                }
+            }
+            if (!found) {
+                PrintLine(hwnd, "Invalid contract ID.");
+            }
+        }
     } else if (lstrcmpiA(command, "map") == 0) {
         PrintLine(hwnd, "NETWORK TOPOLOGY:");
         PrintLine(hwnd, " [01] GATEWAY (LOCAL)");
