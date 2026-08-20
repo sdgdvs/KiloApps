@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMines
 - KAsteroids
 - K2048
 - KDarts
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KRogue
 - KChess
 - KPong
+- KMines
 ## Completed Work Log
+
+- **KMines (Loop 6):** Implemented highly detailed visual variations for revealed cells (procedural scorch marks/cracks appearing near dense mine clusters), a distinctly stylized kinematically animated flag placement effect (physically dropping and staking into the ground with a small dust puff), and a dramatic animated screen-shake with an expanding 3D red shockwave effect when a mine is triggered in both Web Canvas (kmines.html) and Native C Win32 GDI (KMines/main.c).
 
 - **KPong (Loop 6):** Implemented highly detailed visual variations for the arena (glowing neon bounds that pulse dynamically upon wall/paddle collisions), a dynamic animated trailing path overlay visualizing the ball's last trajectory with a fading multi-colored hue based on speed, and a procedural particle burst of digital sparks alongside a shockwave for extreme angle paddle hits in both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 

@@ -41,7 +41,7 @@
 
   .board { display: grid; grid-template-columns: repeat(10, 26px); grid-template-rows: repeat(10, 26px); gap: 2px; background: repeating-linear-gradient(45deg, #12141d, #12141d 8px, #171a25 8px, #171a25 16px); padding: 4px; }
   
-  .cell { width: 26px; height: 26px; box-sizing: border-box; background: var(--tile-hidden); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.15s, transform 0.08s, filter 0.15s;
+  .cell { position: relative; width: 26px; height: 26px; box-sizing: border-box; background: var(--tile-hidden); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.15s, transform 0.08s, filter 0.15s;
     box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.35), inset -1px -1px 0px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0,0,0,0.3);
     border-top: 1px solid rgba(255, 255, 255, 0.3);
     border-left: 1px solid rgba(255, 255, 255, 0.3);
@@ -91,12 +91,20 @@
   }
   .hitech-glow { animation: hitech-pulse 1s infinite alternate; }
 
-  @keyframes flag-pop {
-    0% { transform: scale(0) translateY(10px); }
-    60% { transform: scale(1.3) translateY(-2px); }
-    100% { transform: scale(1) translateY(0); }
+  @keyframes flag-drop {
+    0% { transform: translateY(-30px) rotate(15deg); opacity: 0; }
+    60% { transform: translateY(0) rotate(-5deg); opacity: 1; }
+    80% { transform: translateY(-3px) rotate(2deg); }
+    100% { transform: translateY(0) rotate(0deg); }
   }
-  .flag-anim-container { animation: flag-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+  .flag-anim-container { animation: flag-drop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform-origin: bottom center; }
+
+  @keyframes screen-shake {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    15%, 45%, 75% { transform: translate(-6px, 6px) rotate(-1deg); }
+    30%, 60%, 90% { transform: translate(6px, -6px) rotate(1deg); }
+  }
+  .screen-shake { animation: screen-shake 0.4s ease-out; }
 
   #fx-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; }
 </style>
@@ -252,7 +260,17 @@
       fxCanvas.height = board.offsetHeight;
     }
 
-    function spawnExplosionFX(cx, cy) {
+    function spawnExplosionFX(cx, cy, isTrigger = false) {
+      if (isTrigger) {
+          particles.push({
+              isShockwave: true, x: cx, y: cy, radius: 0,
+              life: 1.0, decay: 0.015
+          });
+          const gc = document.querySelector('.game-container');
+          gc.classList.remove('screen-shake');
+          void gc.offsetWidth;
+          gc.classList.add('screen-shake');
+      }
       const colors = ['#f7768e', '#fbbf24', '#ff9e64', '#ffffff'];
       // Multi-stage debris chunks
       for (let i = 0; i < 45; i++) {
@@ -269,6 +287,34 @@
         });
       }
       if (!fxAnimFrame) updateFX();
+    }
+
+    function spawnDustFX(cx, cy) {
+      for (let i = 0; i < 10; i++) {
+        particles.push({
+          x: cx, y: cy,
+          vx: (Math.random() - 0.5) * 2,
+          vy: -Math.random() * 1.5,
+          size: 1 + Math.random() * 2,
+          color: 'rgba(200, 200, 200, 0.6)',
+          life: 1.0, decay: 0.03 + Math.random() * 0.02
+        });
+      }
+      if (!fxAnimFrame) updateFX();
+    }
+
+    function getCrackSVG(m, seed) {
+      if (m < 3) return '';
+      let lines = '';
+      for(let i=0; i<m; i++) {
+          let angle = ((seed + i) * 137.5) % 360;
+          let len = 5 + ((seed * i) % 10);
+          let rad = angle * Math.PI / 180;
+          let x2 = 13 + Math.cos(rad) * len;
+          let y2 = 13 + Math.sin(rad) * len;
+          lines += `<line x1="13" y1="13" x2="${x2}" y2="${y2}" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" stroke-linecap="round"/>`;
+      }
+      return `<svg style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;" viewBox="0 0 26 26">${lines}</svg>`;
     }
 
     function spawnTreasureFX(cx, cy) {
@@ -308,6 +354,17 @@
       fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
+        if (p.isShockwave) {
+            p.radius += 12;
+            p.life -= p.decay;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            fxCtx.strokeStyle = `rgba(247, 118, 142, ${p.life})`;
+            fxCtx.lineWidth = 10 * p.life;
+            fxCtx.beginPath();
+            fxCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            fxCtx.stroke();
+            continue;
+        }
         p.x += p.vx; p.y += p.vy;
         p.vy += 0.12; p.vx *= 0.97;
         p.life -= p.decay;
@@ -780,7 +837,7 @@
         if (grid[r][c] & 8) {
           const px = c * (COLS > 18 ? 22 : 26) + 12;
           const py = r * (COLS > 18 ? 22 : 26) + 12;
-          spawnExplosionFX(px, py);
+          spawnExplosionFX(px, py, true);
 
           if (shields > 0) {
             shields--;
@@ -918,6 +975,9 @@
         } else {
           grid[r][c] |= 4; flags++;
           playSound(800, 0.1, 'triangle');
+          const px = c * (COLS > 18 ? 22 : 26) + 13;
+          const py = r * (COLS > 18 ? 22 : 26) + 20;
+          spawnDustFX(px, py);
         }
         document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
         render();
@@ -973,8 +1033,10 @@
             } else {
               let m = countMines(r, c);
               if (m > 0) {
-                div.innerText = m;
+                div.innerHTML = getCrackSVG(m, r*COLS+c) + `<span style="position:relative;z-index:2;">${m}</span>`;
                 div.classList.add('c' + m);
+              } else {
+                div.innerHTML = getCrackSVG(0, r*COLS+c);
               }
             }
           } else if (grid[r][c] & 4) {

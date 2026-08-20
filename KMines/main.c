@@ -63,6 +63,8 @@ DWORD sonarTick = 0;
 DWORD detectorTick = 0;
 int detectorR = -1;
 int detectorC = -1;
+DWORD shockwaveTick = 0;
+float shockwaveX = 0, shockwaveY = 0;
 
 // Particle System (Explosions & Treasure Bursts)
 typedef struct {
@@ -114,6 +116,21 @@ void SpawnExplosion(float cx, float cy) {
             p->life = p->maxLife;
             p->size = (my_rand() % 5 == 0) ? (4.0f + (float)(my_rand() % 4)) : (2.0f + (float)(my_rand() % 3));
             p->color = colors[my_rand() % 5];
+        }
+    }
+}
+
+void SpawnDustFX(float cx, float cy) {
+    for (int i = 0; i < 15; i++) {
+        if (particleCount < MAX_PARTICLES) {
+            Particle* p = &particles[particleCount++];
+            p->x = cx; p->y = cy;
+            p->vx = (float)((my_rand() % 100) - 50) / 15.0f;
+            p->vy = -(float)(my_rand() % 50) / 20.0f;
+            p->maxLife = 10.0f + (float)(my_rand() % 15);
+            p->life = p->maxLife;
+            p->size = 1.5f + (float)(my_rand() % 2);
+            p->color = RGB(150, 150, 140);
         }
     }
 }
@@ -399,6 +416,9 @@ void Reveal(int startR, int startC) {
             int px = c * CELL_SIZE + CELL_SIZE / 2;
             int py = r * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE / 2;
             SpawnExplosion((float)px, (float)py);
+            shockwaveTick = GetTickCount();
+            shockwaveX = (float)px;
+            shockwaveY = (float)py;
 
             if (shields > 0) {
                 shields--;
@@ -484,6 +504,7 @@ void UseDetectorBot(HWND hwnd) {
                 grid[r][c] |= CELL_FLAGGED;
                 flagTick[r][c] = GetTickCount();
                 flagsPlaced++;
+                SpawnDustFX((float)(c * CELL_SIZE + CELL_SIZE/2), (float)(r * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE - 2));
                 detectors--;
                 detectorTick = GetTickCount();
                 detectorR = r;
@@ -682,14 +703,18 @@ void DrawFlagSprite(HDC hdc, int x, int y, int size, DWORD tick, DWORD placedTic
     int cx = x + size / 2;
     int elapsed = tick - placedTick;
     
-    float scale = 1.0f;
+    int dropY = 0;
     if (elapsed < 300) {
-        scale = (float)elapsed / 300.0f;
-        scale += 0.2f * sin((float)elapsed * 3.14159f / 300.0f);
+        float t = (float)elapsed / 300.0f;
+        dropY = (int)(-40.0f * (1.0f - t) * (1.0f - t));
+    } else if (elapsed < 400) {
+        float t = (float)(elapsed - 300) / 100.0f;
+        dropY = (int)(-5.0f * (1.0f - t) * t * 4.0f);
     }
     
+    float scale = 1.0f;
     int th = (int)(size * scale);
-    int by = y + size - 2;
+    int by = y + size - 2 + dropY;
     
     HBRUSH hbrBase = CreateSolidBrush(RGB(60, 60, 70));
     HPEN hPenBase = CreatePen(PS_SOLID, 1, RGB(30, 30, 35));
@@ -731,6 +756,24 @@ void DrawQuestionSprite(HDC hdc, int x, int y, int size) {
     SelectObject(hdc, oldFont); DeleteObject(hFont);
 }
 
+void DrawScorchMarks(HDC hdc, int x, int y, int size, int m) {
+    if (m < 3) return;
+    int seed = (x * 73 + y * 37) % 100;
+    HPEN hPen = CreatePen(PS_SOLID, 1, RGB(10, 12, 16));
+    HGDIOBJ oldPen = SelectObject(hdc, hPen);
+    int cx = x + size / 2, cy = y + size / 2;
+    for(int i = 0; i < m; i++) {
+        float angle = (float)((seed + i) * 137) * 3.14159f / 180.0f;
+        int len = 4 + ((seed * i) % (size/2 - 2));
+        int dx = (int)(cos(angle) * len);
+        int dy = (int)(sin(angle) * len);
+        MoveToEx(hdc, cx, cy, NULL);
+        LineTo(hdc, cx + dx, cy + dy);
+    }
+    SelectObject(hdc, oldPen);
+    DeleteObject(hPen);
+}
+
 void Draw3DTile(HDC hdc, int x, int y, int size, int isRevealed, int isPressed) {
     RECT rc = { x, y, x + size, y + size };
     if (isRevealed) {
@@ -767,6 +810,13 @@ void Draw3DTile(HDC hdc, int x, int y, int size, int isRevealed, int isPressed) 
 
 void DrawBoard(HWND hwnd, HDC hdc) {
     DWORD tick = GetTickCount();
+    
+    POINT oldOrg;
+    if (tick - shockwaveTick < 400) {
+        int sx = (my_rand() % 10) - 5;
+        int sy = (my_rand() % 10) - 5;
+        SetViewportOrgEx(hdc, sx, sy, &oldOrg);
+    }
 
     RECT rcFull = { 0, 0, cols * CELL_SIZE, rows * CELL_SIZE + HEADER_HEIGHT };
     HBRUSH hbrBg = CreateSolidBrush(RGB(18, 20, 29));
@@ -880,6 +930,7 @@ void DrawBoard(HWND hwnd, HDC hdc) {
                     DrawMineSprite(hdc, x, y, CELL_SIZE, 1, tick);
                 } else {
                     int m = CountMines(r, c);
+                    DrawScorchMarks(hdc, x, y, CELL_SIZE, m);
                     if (m > 0) {
                         DrawNumberSprite(hdc, x, y, CELL_SIZE, m);
                     }
@@ -938,6 +989,21 @@ void DrawBoard(HWND hwnd, HDC hdc) {
         LineTo(hdc, cols * CELL_SIZE, scanY);
         SelectObject(hdc, oldPenL);
         DeleteObject(hScanPen);
+    }
+
+    if (tick - shockwaveTick < 500) {
+        float t = (float)(tick - shockwaveTick) / 500.0f;
+        int radius = (int)(t * 300.0f);
+        HPEN hWave = CreatePen(PS_SOLID, (int)((1.0f - t) * 12.0f) + 1, RGB(255, 60, 80));
+        HGDIOBJ oldPen = SelectObject(hdc, hWave);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, (int)shockwaveX - radius, (int)shockwaveY - radius, (int)shockwaveX + radius, (int)shockwaveY + radius);
+        SelectObject(hdc, oldPen);
+        DeleteObject(hWave);
+    }
+
+    if (tick - shockwaveTick < 400) {
+        SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, NULL);
     }
 }
 
@@ -1138,6 +1204,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         grid[y][x] |= CELL_FLAGGED;
                         flagTick[y][x] = GetTickCount();
                         flagsPlaced++;
+                        SpawnDustFX((float)(x * CELL_SIZE + CELL_SIZE/2), (float)(y * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE - 2));
                     }
                     Beep(800, 20);
                     InvalidateRect(hwnd, NULL, FALSE);
