@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KPong
 - KMines
 - KAsteroids
 - K2048
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAlchemy
 - KRogue
 - KChess
+- KPong
 ## Completed Work Log
+
+- **KPong (Loop 6):** Implemented highly detailed visual variations for the arena (glowing neon bounds that pulse dynamically upon wall/paddle collisions), a dynamic animated trailing path overlay visualizing the ball's last trajectory with a fading multi-colored hue based on speed, and a procedural particle burst of digital sparks alongside a shockwave for extreme angle paddle hits in both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 
 - **KChess (Loop 6):** Implemented highly detailed visual variations for pieces (dynamic animated glowing crowns that gently pulse with a gold aura for King/Queen), a distinctly stylized kinematically animated check/checkmate indicator overlaying a glowing red crosshair on the threatened King, and an animated 3D screen-shake effect when high-value pieces are captured in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 

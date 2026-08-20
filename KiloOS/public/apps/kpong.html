@@ -299,6 +299,7 @@
   let campaignLevel = 1;
   let winScreen = false;
   let isPaused = false;
+  let arenaPulse = 0;
 
   let powerupX = -1, powerupY = -1;
   let powerupActive = 0, powerupType = 0; // 0: Expand, 1: Shrink, 2: Freeze, 3: Multi-Ball, 4: Speed Boost, 5: Shield
@@ -659,6 +660,7 @@
 
       if (p1HitRipple > 0) p1HitRipple = Math.max(0, p1HitRipple - 0.05);
       if (p2HitRipple > 0) p2HitRipple = Math.max(0, p2HitRipple - 0.05);
+      if (arenaPulse > 0) arenaPulse = Math.max(0, arenaPulse - 0.05);
 
       // Paddle Heights Calculation
       p1PadH = 50 - (rally * 1.5); if (p1PadH < 22) p1PadH = 22;
@@ -797,10 +799,10 @@
 
           // Motion Trail
           let spd = Math.hypot(b.dx, b.dy);
-          let dynHue = (spd * 12 + rally * 15) % 360;
-          let ballColor = b.isFireball ? '#ff6400' : `hsl(${dynHue}, 100%, 65%)`;
+          let dynHue = (spd * 15 + rally * 10) % 360;
+          let ballColor = b.isFireball ? '#ff6400' : `hsl(${dynHue}, 100%, ${Math.min(80, 40 + spd * 3)}%)`;
           b.trail.unshift({ x: b.x + BALL_SIZE/2, y: b.y + BALL_SIZE/2, color: ballColor });
-          if (b.trail.length > 10) b.trail.pop();
+          if (b.trail.length > 15) b.trail.pop();
 
           // Powerup Capsule Pickup
           if (powerupX !== -1 && b.x < powerupX+18 && b.x+BALL_SIZE > powerupX && b.y < powerupY+18 && b.y+BALL_SIZE > powerupY) {
@@ -827,13 +829,13 @@
 
           // Top/Bottom Wall Collisions
           if (b.y < 0) {
-              b.y = 0; b.dy = -b.dy;
+              b.y = 0; b.dy = -b.dy; arenaPulse = 1.0;
               createParticles(b.x + BALL_SIZE/2, 0, '#ffffff', 8, 4);
               createShockwave(b.x + BALL_SIZE/2, 0, getPrimaryColor());
               playSound(800, 'hit');
           }
           if (b.y > H - BALL_SIZE) {
-              b.y = H - BALL_SIZE; b.dy = -b.dy;
+              b.y = H - BALL_SIZE; b.dy = -b.dy; arenaPulse = 1.0;
               createParticles(b.x + BALL_SIZE/2, H, '#ffffff', 8, 4);
               createShockwave(b.x + BALL_SIZE/2, H, getSecondaryColor());
               playSound(800, 'hit');
@@ -876,7 +878,7 @@
 
           // P1 Paddle Collision
           if (b.x < 20 + PAD_W && b.y + BALL_SIZE > p1y && b.y < p1y + p1PadH) {
-              b.x = 20 + PAD_W; b.dx = -b.dx; b.lastHitter = 1; p1HitRipple = 1.0;
+              b.x = 20 + PAD_W; b.dx = -b.dx; b.lastHitter = 1; p1HitRipple = 1.0; arenaPulse = 1.0;
               if (skillFireballReady) { b.isFireball = true; skillFireballReady = false; createShockwave(b.x, b.y + BALL_SIZE/2, '#ff6400'); }
               let hitPos = ((b.y + BALL_SIZE/2) - (p1y + p1PadH/2)) / (p1PadH/2);
               b.dy += hitPos * 5.0;
@@ -887,12 +889,16 @@
               let pColor = b.isFireball ? '#ff6400' : getPrimaryColor();
               createParticles(b.x, b.y + BALL_SIZE/2, pColor, 16, 8);
               createShockwave(b.x, b.y + BALL_SIZE/2, pColor);
+              if (Math.abs(hitPos) > 0.8) {
+                  createParticles(b.x, b.y + BALL_SIZE/2, '#ffffff', 30, 14);
+                  createShockwave(b.x, b.y + BALL_SIZE/2, '#ffff00');
+              }
               playSound(600, 'hit');
           }
 
           // P2 Paddle Collision
           if (b.x + BALL_SIZE > W - 20 - PAD_W && b.y + BALL_SIZE > p2y && b.y < p2y + p2PadH) {
-              b.x = W - 20 - PAD_W - BALL_SIZE; b.dx = -b.dx; b.lastHitter = 2; p2HitRipple = 1.0;
+              b.x = W - 20 - PAD_W - BALL_SIZE; b.dx = -b.dx; b.lastHitter = 2; p2HitRipple = 1.0; arenaPulse = 1.0;
               b.isFireball = false;
               let hitPos = ((b.y + BALL_SIZE/2) - (p2y + p2PadH/2)) / (p2PadH/2);
               b.dy += hitPos * 5.0;
@@ -903,6 +909,10 @@
               recordScore(rally);
               createParticles(b.x + BALL_SIZE, b.y + BALL_SIZE/2, getSecondaryColor(), 16, 8);
               createShockwave(b.x + BALL_SIZE, b.y + BALL_SIZE/2, getSecondaryColor());
+              if (Math.abs(hitPos) > 0.8) {
+                  createParticles(b.x + BALL_SIZE, b.y + BALL_SIZE/2, '#ffffff', 30, 14);
+                  createShockwave(b.x + BALL_SIZE, b.y + BALL_SIZE/2, '#ffff00');
+              }
               playSound(600, 'hit');
           }
 
@@ -1150,8 +1160,18 @@
       for (let i = 0; i < H; i += 4) ctx.fillRect(0, i, W, 1.5);
 
       // Border Neon Lines
-      ctx.strokeStyle = skillSlowTimer > 0 ? getPrimaryColor() : 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 2; ctx.strokeRect(2, 2, W - 4, H - 4);
+      ctx.save();
+      if (arenaPulse > 0) {
+          ctx.shadowBlur = 15 * arenaPulse;
+          ctx.shadowColor = getPrimaryColor();
+          ctx.strokeStyle = getPrimaryColor();
+          ctx.lineWidth = 2 + arenaPulse * 3;
+      } else {
+          ctx.strokeStyle = skillSlowTimer > 0 ? getPrimaryColor() : 'rgba(255, 255, 255, 0.15)';
+          ctx.lineWidth = 2;
+      }
+      ctx.strokeRect(2, 2, W - 4, H - 4);
+      ctx.restore();
 
       // Center Line
       ctx.setLineDash([8, 12]); ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H);
@@ -1199,13 +1219,26 @@
       // Motion Trails & Balls
       for (let b of balls) {
           if (!b.active) continue;
-          for (let i = b.trail.length - 1; i >= 0; i--) {
-              let pt = b.trail[i];
-              let alpha = (1 - (i / b.trail.length)) * 0.45;
-              let radius = (BALL_SIZE / 2) * (1 - (i / b.trail.length) * 0.5);
-              ctx.save(); ctx.fillStyle = pt.color; ctx.globalAlpha = alpha;
-              ctx.shadowBlur = 8; ctx.shadowColor = pt.color;
-              ctx.beginPath(); ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+          if (b.trail.length > 1) {
+              ctx.save();
+              ctx.lineCap = 'round';
+              ctx.lineJoin = 'round';
+              for (let i = 0; i < b.trail.length - 1; i++) {
+                  let pt1 = b.trail[i];
+                  let pt2 = b.trail[i+1];
+                  let alpha = (1 - (i / b.trail.length)) * 0.7;
+                  let radius = (BALL_SIZE / 2) * (1 - (i / b.trail.length) * 0.6);
+                  ctx.beginPath();
+                  ctx.moveTo(pt1.x, pt1.y);
+                  ctx.lineTo(pt2.x, pt2.y);
+                  ctx.strokeStyle = pt1.color;
+                  ctx.lineWidth = radius * 2;
+                  ctx.globalAlpha = alpha;
+                  ctx.shadowBlur = 12 * alpha;
+                  ctx.shadowColor = pt1.color;
+                  ctx.stroke();
+              }
+              ctx.restore();
           }
 
           ctx.save();
