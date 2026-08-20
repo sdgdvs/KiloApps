@@ -29,14 +29,26 @@ typedef struct {
 } Laser;
 Laser lasers[MAX_LASERS];
 
-#define MAX_PARTICLES 64
+#define MAX_PARTICLES 128
 typedef struct {
     float x, y;
     float vx, vy;
     int life;
     COLORREF color;
+    int type;
 } Particle;
 Particle particles[MAX_PARTICLES];
+
+#define MAX_SHOCKWAVES 8
+typedef struct {
+    float x, y;
+    float r;
+    float max_r;
+    float life;
+    COLORREF color;
+} Shockwave;
+Shockwave shockwaves[MAX_SHOCKWAVES];
+int screen_shake = 0;
 
 #define MAX_METEORS 4
 typedef struct { float x, y; int active; } Meteor;
@@ -128,12 +140,24 @@ void SpawnParticles(float x, float y, COLORREF color, int count) {
             if (particles[p].life <= 0) {
                 particles[p].x = x;
                 particles[p].y = y;
-                particles[p].vx = ((float)(MyRand() % 61 - 30)) / 10.0f;
-                particles[p].vy = ((float)(MyRand() % 61 - 30)) / 10.0f;
-                particles[p].life = 10 + (MyRand() % 12);
+                particles[p].vx = ((float)(MyRand() % 101 - 50)) / 10.0f;
+                particles[p].vy = ((float)(MyRand() % 101 - 50)) / 10.0f - 2.0f;
+                particles[p].life = 15 + (MyRand() % 15);
                 particles[p].color = color;
+                particles[p].type = (MyRand() % 2);
                 break;
             }
+        }
+    }
+}
+
+void SpawnShockwave(float x, float y, COLORREF color) {
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (shockwaves[i].life <= 0) {
+            shockwaves[i].x = x; shockwaves[i].y = y;
+            shockwaves[i].r = 0; shockwaves[i].max_r = 30.0f + (MyRand() % 20);
+            shockwaves[i].life = 1.0f; shockwaves[i].color = color;
+            break;
         }
     }
 }
@@ -141,11 +165,31 @@ void SpawnParticles(float x, float y, COLORREF color, int count) {
 void UpdateParticles() {
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
+            particles[i].vy += 0.25f; // gravity
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
             particles[i].life--;
         }
     }
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (shockwaves[i].life > 0) {
+            shockwaves[i].r += (shockwaves[i].max_r - shockwaves[i].r) * 0.15f + 1.0f;
+            shockwaves[i].life -= 0.05f;
+        }
+    }
+}
+
+void DrawBevelBox(HDC hdc, int bx, int by, int bw, int bh, const char* txt, HPEN lPen, HPEN dPen) {
+    HBRUSH bBr = CreateSolidBrush(RGB(15, 15, 25));
+    RECT bRc = { bx, by, bx + bw, by + bh };
+    FillRect(hdc, &bRc, bBr);
+    DeleteObject(bBr);
+    SelectObject(hdc, dPen);
+    MoveToEx(hdc, bx, by + bh, NULL); LineTo(hdc, bx, by); LineTo(hdc, bx + bw, by);
+    SelectObject(hdc, lPen);
+    LineTo(hdc, bx + bw, by + bh); LineTo(hdc, bx, by + bh);
+    SetTextColor(hdc, RGB(0, 255, 255));
+    TextOutA(hdc, bx + 5, by + 3, txt, lstrlenA(txt));
 }
 
 COLORREF GetBrickColor(int type, int r, int c) {
@@ -284,6 +328,8 @@ void TriggerExplosion(int r, int c) {
                     int bx = nc * BR_W + BR_W / 2;
                     int by = nr * BR_H + 35 + BR_H / 2;
                     SpawnParticles((float)bx, (float)by, RGB(255, 100, 0), 8);
+                    SpawnShockwave((float)bx, (float)by, RGB(255, 100, 0));
+                    if (screen_shake < 10) screen_shake = 10;
                     int isExp = (bricks[nr][nc] == 4);
                     bricks[nr][nc] = 0;
                     bricks_left--;
@@ -369,6 +415,7 @@ void InitLevel() {
 
     for (int i = 0; i < MAX_LASERS; i++) lasers[i].active = 0;
     for (int i = 0; i < MAX_PARTICLES; i++) particles[i].life = 0;
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) shockwaves[i].life = 0;
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) boss_bullets[i].active = 0;
     for (int i = 0; i < MAX_METEORS; i++) meteors[i].active = 0;
 
@@ -820,6 +867,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (MyAbs((int)balls[i].dx) == 0) balls[i].dx = (balls[i].dx > 0) ? 1.5f : -1.5f;
                         MessageBeep(0xFFFFFFFF);
                         SpawnParticles(balls[i].x + 4, (float)(H - 40), RGB(0, 255, 255), 4);
+                        SpawnShockwave(balls[i].x + 4, (float)(H - 40), RGB(0, 255, 255));
+                        if (screen_shake < 8) screen_shake = 8;
                         if (sticky_timer > 0) {
                             balls[i].stuck = 1;
                             balls[i].stuck_offset = (int)(balls[i].x - pad_x);
@@ -838,6 +887,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (type == 9) { // Steel Unbreakable
                                 if (dur_fire <= 0) balls[i].dy = -balls[i].dy;
                                 SpawnParticles(balls[i].x, balls[i].y, RGB(200, 210, 220), 4);
+                                SpawnShockwave(balls[i].x, balls[i].y, RGB(200, 210, 220));
+                                if (screen_shake < 4) screen_shake = 4;
                                 MessageBeep(0xFFFFFFFF);
                             } else if (type == 4) { // Explosive
                                 bricks[r][c] = 0; bricks_left--;
@@ -873,6 +924,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 MessageBeep(0xFFFFFFFF);
                             } else { // Normal / Reinforced
                                 SpawnParticles((float)bx, (float)by, GetBrickColor(type, r, c), 8);
+                                SpawnShockwave((float)bx, (float)by, GetBrickColor(type, r, c));
+                                if (screen_shake < 5) screen_shake = 5;
                                 if (dur_fire > 0) {
                                     bricks[r][c] = 0; bricks_left--; score += 15; lifetime_bricks++;
                                 } else {
@@ -944,6 +997,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HGDIOBJ hOld = SelectObject(memDC, hbm);
+            
+            int sx = 0, sy = 0;
+            if (screen_shake > 0) {
+                sx = (MyRand() % screen_shake) - (screen_shake / 2);
+                sy = (MyRand() % screen_shake) - (screen_shake / 2);
+                screen_shake -= 2;
+                if (screen_shake < 0) screen_shake = 0;
+            }
+            SetViewportOrgEx(memDC, sx, sy, NULL);
             
             HBRUSH bg = CreateSolidBrush(RGB(16, 16, 26));
             RECT fullRc = {0, 0, W, H};
@@ -1256,10 +1318,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 // Render Particles
                 for (int i = 0; i < MAX_PARTICLES; i++) {
                     if (particles[i].life > 0) {
-                        HBRUSH pBr = CreateSolidBrush(particles[i].color);
-                        RECT prc = { (int)particles[i].x, (int)particles[i].y, (int)particles[i].x + 3, (int)particles[i].y + 3 };
+                        COLORREF c = particles[i].type == 1 ? RGB(255, 255, 255) : particles[i].color;
+                        HBRUSH pBr = CreateSolidBrush(c);
+                        int s = particles[i].type == 1 ? 2 : 4;
+                        RECT prc = { (int)particles[i].x, (int)particles[i].y, (int)particles[i].x + s, (int)particles[i].y + s };
                         FillRect(memDC, &prc, pBr);
                         DeleteObject(pBr);
+                    }
+                }
+
+                // Render Shockwaves
+                for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+                    if (shockwaves[i].life > 0) {
+                        HPEN swPen = CreatePen(PS_SOLID, 2 + (int)(shockwaves[i].life * 4.0f), shockwaves[i].color);
+                        HGDIOBJ oldP = SelectObject(memDC, swPen);
+                        HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+                        HGDIOBJ oldB = SelectObject(memDC, nullBr);
+                        
+                        int rx = (int)shockwaves[i].r;
+                        int ry = (int)(shockwaves[i].r * 0.6f); // 3D Perspective Squish
+                        Ellipse(memDC, (int)shockwaves[i].x - rx, (int)shockwaves[i].y - ry,
+                                       (int)shockwaves[i].x + rx, (int)shockwaves[i].y + ry);
+                        
+                        SelectObject(memDC, oldP);
+                        SelectObject(memDC, oldB);
+                        DeleteObject(swPen);
                     }
                 }
 
@@ -1300,14 +1383,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 10, H - 16, skStr, lstrlenA(skStr));
             }
             
-            // HUD Top Bar
-            char sStr[64];
-            if (level == 99) {
-                wsprintfA(sStr, "Stg:CUSTOM Sc:%d Hi:%d Lv:%d Brks:%d", score, high_score, lives, lifetime_bricks);
-            } else {
-                wsprintfA(sStr, "Stg:%d/40 Sc:%d Hi:%d Lv:%d Brks:%d", level, score, high_score, lives, lifetime_bricks);
-            }
-            TextOutA(memDC, 10, 10, sStr, lstrlenA(sStr));
+            // HUD Top Bar 3D Beveled Display
+            SetViewportOrgEx(memDC, 0, 0, NULL); // Reset shake for UI
+
+            HBRUSH uiBg = CreateSolidBrush(RGB(30, 30, 45));
+            RECT uiRc = { 5, 2, W - 5, 28 };
+            FillRect(memDC, &uiRc, uiBg);
+            DeleteObject(uiBg);
+
+            HPEN lPen = CreatePen(PS_SOLID, 1, RGB(90, 90, 120));
+            HPEN dPen = CreatePen(PS_SOLID, 1, RGB(10, 10, 20));
+            SelectObject(memDC, lPen);
+            MoveToEx(memDC, 5, 28, NULL); LineTo(memDC, 5, 2); LineTo(memDC, W - 5, 2);
+            SelectObject(memDC, dPen);
+            LineTo(memDC, W - 5, 28); LineTo(memDC, 5, 28);
+            
+            char scStr[32], lvStr[32], infoStr[64];
+            wsprintfA(scStr, "SCORE: %d", score);
+            wsprintfA(lvStr, "LIVES: %d", lives);
+            if (level == 99) wsprintfA(infoStr, "STG: CSTM  HI: %d", high_score);
+            else wsprintfA(infoStr, "STG: %d  HI: %d", level, high_score);
+            
+            SetBkMode(memDC, TRANSPARENT);
+            DrawBevelBox(memDC, 10, 5, 100, 20, scStr, lPen, dPen);
+            DrawBevelBox(memDC, 115, 5, 75, 20, lvStr, lPen, dPen);
+            SetTextColor(memDC, RGB(200, 200, 200));
+            TextOutA(memDC, 200, 8, infoStr, lstrlenA(infoStr));
+            
+            DeleteObject(lPen);
+            DeleteObject(dPen);
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);

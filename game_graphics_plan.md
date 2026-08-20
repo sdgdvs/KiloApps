@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KBreakout
 - KMaze
 - KColony
 - KFortress
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSnake
 - KTetris
 - KCyber
+- KBreakout
 ## Completed Work Log
+
+- **KBreakout (Loop 6):** Implemented highly polished visual effects and deeper variety, including a 3D beveled display for the Score and Lives UI, a dynamic kinematically animated screen-shake with an expanding 3D ring shockwave effect when the ball hits the paddle or destroys a brick, and distinctly stylized multi-layered particle explosions that shower debris downward with gravity physics when a brick shatters in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 
 - **KTetris (Loop 6):** Implemented highly polished visual effects and deeper variety, including a 3D beveled display for the Next Piece preview and Score counter, distinctly animated level-up transitions where the background grid flashes and changes its procedural neon color palette, and a dynamic screen-shake with an expanding 3D ring shockwave effect when multiple lines are cleared simultaneously in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
