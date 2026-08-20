@@ -174,6 +174,8 @@
 
   let particles = [];
   let moveAnimation = null;
+  let screenShakeUntil = 0;
+  let screenShakeMag = 0;
 
   function saveStats() {
       try {
@@ -857,11 +859,13 @@
 
   function performMove(sx, sy, tx, ty) {
       let isCaptured = board[ty][tx] !== 0;
+      let capturedType = board[ty][tx] > 6 ? board[ty][tx] - 6 : board[ty][tx];
       let p = board[sy][sx];
       let pType = p > 6 ? p - 6 : p;
       let isWhiteMove = p <= 6;
 
       if (pType === 1 && tx === epX && ty === (isWhiteMove ? epY - 1 : epY + 1)) {
+          capturedType = 1;
           board[epY][epX] = 0;
           isCaptured = true;
       }
@@ -907,6 +911,10 @@
 
       if (isCaptured) {
           playSound('capture');
+          if (capturedType >= 2) {
+              screenShakeUntil = performance.now() + 400;
+              screenShakeMag = (capturedType >= 4) ? 12 : 6;
+          }
       } else {
           playSound('move');
       }
@@ -1385,12 +1393,17 @@
           ctx.lineTo(r * 0.5, -r * 0.25);
           ctx.closePath();
           ctx.fill(); ctx.stroke();
+          ctx.save();
+          let pulse = (Math.sin(performance.now() * 0.005) + 1) * 0.5;
+          ctx.shadowColor = `rgba(245, 158, 11, ${0.4 + pulse * 0.6})`;
+          ctx.shadowBlur = 15;
           const jewels = [[-r * 0.52, -r * 0.65], [0, -r * 0.82], [r * 0.52, -r * 0.65]];
           for (let j of jewels) {
               ctx.beginPath(); ctx.fillStyle = '#f59e0b';
               ctx.arc(j[0], j[1], r * 0.09, 0, Math.PI * 2);
               ctx.fill(); ctx.stroke();
           }
+          ctx.restore();
       } else if (pType === 6) { // KING
           drawBase();
           ctx.beginPath();
@@ -1403,10 +1416,15 @@
           ctx.beginPath();
           ctx.rect(-r * 0.45, -r * 0.55, r * 0.9, r * 0.3);
           ctx.fill(); ctx.stroke();
+          ctx.save();
+          let pulse = (Math.sin(performance.now() * 0.005) + 1) * 0.5;
+          ctx.shadowColor = `rgba(245, 158, 11, ${0.4 + pulse * 0.6})`;
+          ctx.shadowBlur = 15;
           ctx.beginPath(); ctx.fillStyle = '#f59e0b';
           ctx.rect(-r * 0.1, -r * 0.96, r * 0.2, r * 0.42);
           ctx.rect(-r * 0.24, -r * 0.84, r * 0.48, r * 0.16);
           ctx.fill(); ctx.stroke();
+          ctx.restore();
       }
 
       ctx.restore();
@@ -1461,6 +1479,12 @@
   function drawBoard() {
       initDustMotes();
       
+      ctx.save();
+      if (performance.now() < screenShakeUntil) {
+          let mag = screenShakeMag * ((screenShakeUntil - performance.now()) / 400);
+          ctx.translate((Math.random() - 0.5) * mag, (Math.random() - 0.5) * mag);
+      }
+
       // Environmental Art: 3D Ornate Table
       const tableGrad = ctx.createRadialGradient(W/2, H/2, H*0.1, W/2, H/2, H*0.9);
       tableGrad.addColorStop(0, '#2b1d14');
@@ -1611,12 +1635,28 @@
               }
 
               if (x === inCheckX && y === inCheckY) {
-                  const pulse = (Math.sin(performance.now() * 0.01) + 1) * 0.5;
-                  ctx.fillStyle = `rgba(239, 68, 68, ${0.5 + pulse * 0.3})`;
+                  const time = performance.now() * 0.003;
+                  const pulse = (Math.sin(time) + 1) * 0.5;
+                  ctx.fillStyle = `rgba(239, 68, 68, ${0.2 + pulse * 0.3})`;
                   ctx.fillRect(px, py, TS, TS);
-                  ctx.strokeStyle = '#ef4444';
+                  ctx.save();
+                  ctx.translate(px + TS/2, py + TS/2);
+                  ctx.rotate(time * 0.5);
+                  ctx.strokeStyle = `rgba(239, 68, 68, ${0.6 + pulse * 0.4})`;
                   ctx.lineWidth = 3;
-                  ctx.strokeRect(px + 2, py + 2, TS - 4, TS - 4);
+                  ctx.shadowColor = '#ef4444';
+                  ctx.shadowBlur = 15;
+                  ctx.beginPath();
+                  let len = TS * 0.4 + Math.sin(time * 2) * 4;
+                  ctx.moveTo(-len, 0); ctx.lineTo(-len * 0.3, 0);
+                  ctx.moveTo(len, 0); ctx.lineTo(len * 0.3, 0);
+                  ctx.moveTo(0, -len); ctx.lineTo(0, -len * 0.3);
+                  ctx.moveTo(0, len); ctx.lineTo(0, len * 0.3);
+                  ctx.stroke();
+                  ctx.beginPath();
+                  ctx.arc(0, 0, len * 0.7, 0, Math.PI * 2);
+                  ctx.stroke();
+                  ctx.restore();
               } else if (x === selX && y === selY) {
                   ctx.fillStyle = "rgba(245, 158, 11, 0.45)";
                   ctx.fillRect(px, py, TS, TS);
@@ -1877,6 +1917,7 @@
           let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN}` : " | Press 'H' for Help";
           ctx.fillText(turnStr + lastMoveStr, W / 2, H - 40);
       }
+      ctx.restore();
   }
 
   let lastTick = performance.now();

@@ -87,6 +87,8 @@ typedef struct {
     int isCapture;
 } SlideAnim;
 SlideAnim g_slide = {0};
+DWORD g_shakeUntil = 0;
+int g_shakeMag = 0;
 
 // Freestanding CRT replacements
 static unsigned int g_seed = 12345;
@@ -1028,9 +1030,12 @@ static void DrawChessPiece(HDC hdc, int p, int x, int y, int ts) {
         };
         Polygon(hdc, crown, 7);
         SelectObject(hdc, goldBrush); SelectObject(hdc, goldPen);
-        Ellipse(hdc, cx - (int)(r * 0.54f), cy - (int)(r * 0.68f), cx - (int)(r * 0.42f), cy - (int)(r * 0.52f));
-        Ellipse(hdc, cx - (int)(r * 0.08f), cy - (int)(r * 0.86f), cx + (int)(r * 0.08f), cy - (int)(r * 0.70f));
-        Ellipse(hdc, cx + (int)(r * 0.42f), cy - (int)(r * 0.68f), cx + (int)(r * 0.54f), cy - (int)(r * 0.52f));
+        int pulse = (GetTickCount() % 1000) / 100;
+        int sizeExtra = (pulse < 5) ? pulse : 10 - pulse; 
+        int pz = sizeExtra / 2;
+        Ellipse(hdc, cx - (int)(r * 0.54f) - pz, cy - (int)(r * 0.68f) - pz, cx - (int)(r * 0.42f) + pz, cy - (int)(r * 0.52f) + pz);
+        Ellipse(hdc, cx - (int)(r * 0.08f) - pz, cy - (int)(r * 0.86f) - pz, cx + (int)(r * 0.08f) + pz, cy - (int)(r * 0.70f) + pz);
+        Ellipse(hdc, cx + (int)(r * 0.42f) - pz, cy - (int)(r * 0.68f) - pz, cx + (int)(r * 0.54f) + pz, cy - (int)(r * 0.52f) + pz);
     } else if (pType == 6) { // KING
         POINT stem[4] = {
             { cx - (int)(r * 0.45f), cy + (int)(r * 0.48f) },
@@ -1042,8 +1047,10 @@ static void DrawChessPiece(HDC hdc, int p, int x, int y, int ts) {
         RECT rim = { cx - (int)(r * 0.42f), cy - (int)(r * 0.50f), cx + (int)(r * 0.42f), cy - (int)(r * 0.20f) };
         Rectangle(hdc, rim.left, rim.top, rim.right, rim.bottom);
         SelectObject(hdc, goldBrush); SelectObject(hdc, goldPen);
-        RECT vbar = { cx - (int)(r * 0.08f), cy - (int)(r * 0.92f), cx + (int)(r * 0.08f), cy - (int)(r * 0.50f) };
-        RECT hbar = { cx - (int)(r * 0.22f), cy - (int)(r * 0.80f), cx + (int)(r * 0.22f), cy - (int)(r * 0.66f) };
+        int pulse = (GetTickCount() % 1000) / 100;
+        int pz = (pulse < 5) ? pulse : 10 - pulse;
+        RECT vbar = { cx - (int)(r * 0.08f) - pz, cy - (int)(r * 0.92f) - pz, cx + (int)(r * 0.08f) + pz, cy - (int)(r * 0.50f) + pz };
+        RECT hbar = { cx - (int)(r * 0.22f) - pz, cy - (int)(r * 0.80f) - pz, cx + (int)(r * 0.22f) + pz, cy - (int)(r * 0.66f) + pz };
         Rectangle(hdc, vbar.left, vbar.top, vbar.right, vbar.bottom);
         Rectangle(hdc, hbar.left, hbar.top, hbar.right, hbar.bottom);
     }
@@ -1106,11 +1113,13 @@ static void DrawHintArrow(HDC hdc, int sx, int sy, int tx, int ty) {
 
 static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     int isCaptured = (board[ty][tx] != 0);
+    int capturedType = board[ty][tx] > 6 ? board[ty][tx] - 6 : board[ty][tx];
     int p = board[sy][sx];
     int pType = p > 6 ? p - 6 : p;
     int isWhiteMove = p <= 6;
 
     if (pType == 1 && tx == epX && ty == (isWhiteMove ? epY - 1 : epY + 1)) {
+        capturedType = 1;
         board[epY][epX] = 0;
         isCaptured = 1;
     }
@@ -1159,6 +1168,10 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
 
     if (isCaptured) {
         MessageBeep(MB_OK);
+        if (capturedType >= 2) {
+            g_shakeUntil = GetTickCount() + 400;
+            g_shakeMag = (capturedType >= 4) ? 12 : 6;
+        }
     } else {
         MessageBeep(MB_OK);
     }
@@ -1299,7 +1312,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldBM = SelectObject(memDC, memBM);
 
             SetGraphicsMode(memDC, GM_ADVANCED);
-            XFORM xform = { g_dpiScale, 0.0f, 0.0f, g_dpiScale, 0.0f, 0.0f };
+            float shakeDx = 0.0f, shakeDy = 0.0f;
+            if (GetTickCount() < g_shakeUntil) {
+                float mag = g_shakeMag * (float)(g_shakeUntil - GetTickCount()) / 400.0f;
+                shakeDx = ((float)(my_rand() % 100) / 50.0f - 1.0f) * mag;
+                shakeDy = ((float)(my_rand() % 100) / 50.0f - 1.0f) * mag;
+            }
+            XFORM xform = { g_dpiScale, 0.0f, 0.0f, g_dpiScale, shakeDx, shakeDy };
             SetWorldTransform(memDC, &xform);
 
             // Environmental Art: Table Surface with Wood Grain
@@ -1412,11 +1431,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     // Overlays
                     if (x == inCheckX && y == inCheckY) {
-                        HBRUSH hBrush = CreateSolidBrush(RGB(239, 68, 68));
-                        FrameRect(memDC, &rc, hBrush);
-                        RECT inner = {rc.left+1, rc.top+1, rc.right-1, rc.bottom-1};
-                        FrameRect(memDC, &inner, hBrush);
-                        DeleteObject(hBrush);
+                        int time = GetTickCount();
+                        int pulse = (time % 1000) / 5;
+                        if (pulse > 100) pulse = 200 - pulse; // 0 to 100
+                        HPEN rPen = CreatePen(PS_SOLID, 3, RGB(239 + (pulse/10), 68 + (pulse/2), 68 + (pulse/2)));
+                        HGDIOBJ oldPen3 = SelectObject(memDC, rPen);
+                        int cx = rc.left + TS/2;
+                        int cy = rc.top + TS/2;
+                        int len = (int)(TS * 0.4f) + (pulse / 20);
+                        MoveToEx(memDC, cx - len, cy, NULL); LineTo(memDC, cx - len/3, cy);
+                        MoveToEx(memDC, cx + len, cy, NULL); LineTo(memDC, cx + len/3, cy);
+                        MoveToEx(memDC, cx, cy - len, NULL); LineTo(memDC, cx, cy - len/3);
+                        MoveToEx(memDC, cx, cy + len, NULL); LineTo(memDC, cx, cy + len/3);
+                        HBRUSH oldNull = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        Ellipse(memDC, cx - (int)(len * 0.7f), cy - (int)(len * 0.7f), cx + (int)(len * 0.7f), cy + (int)(len * 0.7f));
+                        SelectObject(memDC, oldNull);
+                        SelectObject(memDC, oldPen3);
+                        DeleteObject(rPen);
                     } else if (x == selX && y == selY) {
                         HBRUSH hBrush = CreateSolidBrush(RGB(245, 158, 11));
                         FrameRect(memDC, &rc, hBrush);

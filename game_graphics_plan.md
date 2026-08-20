@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KChess
 - KPong
 - KMines
 - KAsteroids
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFarm
 - KAlchemy
 - KRogue
+- KChess
 ## Completed Work Log
+
+- **KChess (Loop 6):** Implemented highly detailed visual variations for pieces (dynamic animated glowing crowns that gently pulse with a gold aura for King/Queen), a distinctly stylized kinematically animated check/checkmate indicator overlaying a glowing red crosshair on the threatened King, and an animated 3D screen-shake effect when high-value pieces are captured in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
 - **KRogue (Loop 6):** Implemented highly detailed visual variations for boss encounters (multi-phase enraged state changing core sprite color/texture below 50% HP), a dynamic kinematically animated screen-shake with expanding 3D ring shockwave effect for critical hits or high-tier spells, and distinctly stylized multi-layered particle explosions showering debris downward with gravity physics when major enemies are defeated in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
