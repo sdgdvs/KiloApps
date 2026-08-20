@@ -33,9 +33,14 @@ NodeFile node_files[6] = {
     {"zero_day_exploit.exe", 15, 1500}
 };
 
+int player_max_mem = 100;
 int player_mem = 100;
+int player_max_cpu = 5;
+int player_max_cloak = 3;
+int player_max_slow = 3;
 int tool_cloak = 3;
 int tool_slow = 3;
+int in_shop = 0;
 int ice_damage = 0;
 char ice_name[32] = "";
 int ice_frozen_ticks = 0;
@@ -68,6 +73,105 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
     // Trim leading spaces
     while(*cmd == ' ') cmd++;
     if (*cmd == '\0') return;
+
+    if (in_shop) {
+        wsprintfA(buffer, "shop> %s", cmd);
+        PrintLine(hwnd, buffer);
+        
+        char command[MAX_LINE_LENGTH];
+        char args[MAX_LINE_LENGTH];
+        command[0] = '\0';
+        args[0] = '\0';
+        
+        int i = 0;
+        while(cmd[i] != ' ' && cmd[i] != '\0' && i < MAX_LINE_LENGTH - 1) {
+            command[i] = cmd[i];
+            i++;
+        }
+        command[i] = '\0';
+        
+        if (cmd[i] == ' ') {
+            i++;
+            while(cmd[i] == ' ') i++;
+            int j = 0;
+            while(cmd[i] != '\0' && j < MAX_LINE_LENGTH - 1) {
+                args[j] = cmd[i];
+                i++; j++;
+            }
+            args[j] = '\0';
+        }
+
+        if (lstrcmpiA(command, "exit") == 0 || lstrcmpiA(command, "abort") == 0) {
+            in_shop = 0;
+            PrintLine(hwnd, "Exiting shop.");
+            return;
+        }
+
+        if (lstrcmpiA(command, "ls") == 0 || lstrcmpiA(command, "list") == 0) {
+            PrintLine(hwnd, "--- UPGRADE SHOP ---");
+            wsprintfA(buffer, "Credits: %d cr", player_credits);
+            PrintLine(hwnd, buffer);
+            PrintLine(hwnd, "Available upgrades:");
+            PrintLine(hwnd, "  buy mem   - +50 Max Memory (Cost: 500 cr)");
+            PrintLine(hwnd, "  buy cpu   - +1 Hacking Attempt (Cost: 1000 cr)");
+            PrintLine(hwnd, "  buy cloak - +1 Cloak Charge (Cost: 200 cr)");
+            PrintLine(hwnd, "  buy slow  - +1 Slow Charge (Cost: 300 cr)");
+            return;
+        }
+
+        if (lstrcmpiA(command, "buy") == 0) {
+            if (args[0] == '\0') {
+                PrintLine(hwnd, "Usage: buy <item>");
+            } else {
+                if (lstrcmpiA(args, "mem") == 0) {
+                    if (player_credits >= 500) {
+                        player_credits -= 500;
+                        player_max_mem += 50;
+                        player_mem += 50;
+                        wsprintfA(buffer, "Purchase successful. Max memory increased to %d.", player_max_mem);
+                        PrintLine(hwnd, buffer);
+                    } else {
+                        PrintLine(hwnd, "Insufficient credits.");
+                    }
+                } else if (lstrcmpiA(args, "cpu") == 0) {
+                    if (player_credits >= 1000) {
+                        player_credits -= 1000;
+                        player_max_cpu += 1;
+                        wsprintfA(buffer, "Purchase successful. Hacking attempts increased to %d.", player_max_cpu);
+                        PrintLine(hwnd, buffer);
+                    } else {
+                        PrintLine(hwnd, "Insufficient credits.");
+                    }
+                } else if (lstrcmpiA(args, "cloak") == 0) {
+                    if (player_credits >= 200) {
+                        player_credits -= 200;
+                        player_max_cloak += 1;
+                        tool_cloak += 1;
+                        wsprintfA(buffer, "Purchase successful. Max Cloak charges: %d.", player_max_cloak);
+                        PrintLine(hwnd, buffer);
+                    } else {
+                        PrintLine(hwnd, "Insufficient credits.");
+                    }
+                } else if (lstrcmpiA(args, "slow") == 0) {
+                    if (player_credits >= 300) {
+                        player_credits -= 300;
+                        player_max_slow += 1;
+                        tool_slow += 1;
+                        wsprintfA(buffer, "Purchase successful. Max Slow charges: %d.", player_max_slow);
+                        PrintLine(hwnd, buffer);
+                    } else {
+                        PrintLine(hwnd, "Insufficient credits.");
+                    }
+                } else {
+                    PrintLine(hwnd, "Unknown item. Use 'ls' to see available items.");
+                }
+            }
+            return;
+        }
+
+        PrintLine(hwnd, "Command not found. Available: ls, buy <item>, exit");
+        return;
+    }
 
     if (hacking_node) {
         wsprintfA(buffer, "[NODE 0%d] hack> %s", hacking_node, cmd);
@@ -259,6 +363,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "  status  - Show deck status");
         PrintLine(hwnd, "  reboot  - Restart deck to restore MEM and software");
         PrintLine(hwnd, "  map     - Display network topology");
+        PrintLine(hwnd, "  shop    - Enter upgrade shop");
         PrintLine(hwnd, "  connect - Attempt connection to network node");
         PrintLine(hwnd, "During hack:");
         PrintLine(hwnd, "  abort   - Disconnect immediately");
@@ -266,6 +371,10 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "  slow    - Halve ICE attack speed");
     } else if (lstrcmpiA(command, "clear") == 0) {
         history_count = 0;
+        InvalidateRect(hwnd, NULL, TRUE);
+    } else if (lstrcmpiA(command, "shop") == 0) {
+        in_shop = 1;
+        PrintLine(hwnd, "Entering upgrade shop... Type 'ls' to view items, 'exit' to leave.");
         InvalidateRect(hwnd, NULL, TRUE);
     } else if (lstrcmpiA(command, "status") == 0) {
         char memBuf[64];
@@ -281,9 +390,9 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, memBuf);
         PrintLine(hwnd, "  NET: DISCONNECTED");
     } else if (lstrcmpiA(command, "reboot") == 0) {
-        player_mem = 100;
-        tool_cloak = 3;
-        tool_slow = 3;
+        player_mem = player_max_mem;
+        tool_cloak = player_max_cloak;
+        tool_slow = player_max_slow;
         lstrcpyA(node_files[2].name, "sys_logs.dat"); node_files[2].size = 12; node_files[2].value = 100;
         lstrcpyA(node_files[3].name, "customer_db.sql"); node_files[3].size = 45; node_files[3].value = 250;
         lstrcpyA(node_files[4].name, "r_and_d_schematics.zip"); node_files[4].size = 105; node_files[4].value = 600;
@@ -315,7 +424,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             
             if (node > 0) {
                 hacking_node = node;
-                hacking_attempts = 5;
+                hacking_attempts = player_max_cpu;
                 ice_frozen_ticks = 0;
                 SetTimer(hwnd, 2, 3000, NULL);
                 for(int i=0; i<4; i++) {
@@ -446,6 +555,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 wsprintfA(prompt, "[NODE 0%d] hack> %s", hacking_node, current_input);
             } else if (connected_node) {
                 wsprintfA(prompt, "[NODE 0%d] root> %s", connected_node, current_input);
+            } else if (in_shop) {
+                wsprintfA(prompt, "shop> %s", current_input);
             } else {
                 lstrcpyA(prompt, "root@cyberdeck:~# ");
                 lstrcatA(prompt, current_input);

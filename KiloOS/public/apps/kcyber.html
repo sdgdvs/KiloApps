@@ -113,9 +113,14 @@
       '05': { name: 'zero_day_exploit.exe', size: 15, value: 1500 }
     };
     
-    let player_mem = 100;
-    let tool_cloak = 3;
-    let tool_slow = 3;
+    let player_max_mem = 100;
+    let player_mem = player_max_mem;
+    let player_max_cpu = 5;
+    let player_max_cloak = 3;
+    let player_max_slow = 3;
+    let tool_cloak = player_max_cloak;
+    let tool_slow = player_max_slow;
+    let in_shop = false;
     let ice_interval = null;
     let ice_name = "";
     let ice_damage = 0;
@@ -147,6 +152,8 @@
         promptSpan.textContent = `[NODE ${hacking_node}] hack> `;
       } else if (connected_node) {
         promptSpan.textContent = `[NODE ${connected_node}] root> `;
+      } else if (in_shop) {
+        promptSpan.textContent = `shop> `;
       } else {
         promptSpan.textContent = `root@cyberdeck:~# `;
       }
@@ -163,6 +170,83 @@
     function processCommand(cmd) {
       const trimmed = cmd.trim();
       if (!trimmed) return;
+      
+      if (in_shop) {
+        printLine(`shop> ${trimmed}`);
+        const args = trimmed.split(' ').filter(Boolean);
+        const cmdName = args[0].toLowerCase();
+        
+        if (cmdName === 'exit' || cmdName === 'abort') {
+          in_shop = false;
+          printLine("Exiting shop.");
+          updatePrompt();
+          return;
+        }
+        
+        if (cmdName === 'ls' || cmdName === 'list') {
+          printLine("--- UPGRADE SHOP ---");
+          printLine(`Credits: ${player_credits} cr`);
+          printLine("Available upgrades:");
+          printLine("  buy mem   - +50 Max Memory (Cost: 500 cr)");
+          printLine("  buy cpu   - +1 Hacking Attempt (Cost: 1000 cr)");
+          printLine("  buy cloak - +1 Cloak Charge (Cost: 200 cr)");
+          printLine("  buy slow  - +1 Slow Charge (Cost: 300 cr)");
+          updatePrompt();
+          return;
+        }
+        
+        if (cmdName === 'buy') {
+          if (args.length < 2) {
+            printLine("Usage: buy <item>");
+          } else {
+            const item = args[1].toLowerCase();
+            if (item === 'mem') {
+              if (player_credits >= 500) {
+                player_credits -= 500;
+                player_max_mem += 50;
+                player_mem += 50;
+                printLine(`Purchase successful. Max memory increased to ${player_max_mem}.`);
+              } else {
+                printLine("Insufficient credits.");
+              }
+            } else if (item === 'cpu') {
+              if (player_credits >= 1000) {
+                player_credits -= 1000;
+                player_max_cpu += 1;
+                printLine(`Purchase successful. Hacking attempts increased to ${player_max_cpu}.`);
+              } else {
+                printLine("Insufficient credits.");
+              }
+            } else if (item === 'cloak') {
+              if (player_credits >= 200) {
+                player_credits -= 200;
+                player_max_cloak += 1;
+                tool_cloak += 1;
+                printLine(`Purchase successful. Max Cloak charges: ${player_max_cloak}.`);
+              } else {
+                printLine("Insufficient credits.");
+              }
+            } else if (item === 'slow') {
+              if (player_credits >= 300) {
+                player_credits -= 300;
+                player_max_slow += 1;
+                tool_slow += 1;
+                printLine(`Purchase successful. Max Slow charges: ${player_max_slow}.`);
+              } else {
+                printLine("Insufficient credits.");
+              }
+            } else {
+              printLine("Unknown item. Use 'ls' to see available items.");
+            }
+          }
+          updatePrompt();
+          return;
+        }
+        
+        printLine("Command not found. Available: ls, buy <item>, exit");
+        updatePrompt();
+        return;
+      }
       
       if (hacking_node) {
         printLine(`[NODE ${hacking_node}] hack> ${trimmed}`);
@@ -312,6 +396,7 @@
           printLine("  status  - Show deck status");
           printLine("  reboot  - Restart deck to restore MEM and software");
           printLine("  map     - Display network topology");
+          printLine("  shop    - Enter upgrade shop");
           printLine("  connect - Attempt connection to network node");
           printLine("During hack:");
           printLine("  abort   - Disconnect immediately");
@@ -320,6 +405,11 @@
           break;
         case 'clear':
           outputDiv.innerHTML = '';
+          break;
+        case 'shop':
+          in_shop = true;
+          printLine("Entering upgrade shop... Type 'ls' to view items, 'exit' to leave.");
+          updatePrompt();
           break;
         case 'status':
           printLine("DECK STATUS:");
@@ -331,9 +421,9 @@
           printLine("  NET: DISCONNECTED");
           break;
         case 'reboot':
-          player_mem = 100;
-          tool_cloak = 3;
-          tool_slow = 3;
+          player_mem = player_max_mem;
+          tool_cloak = player_max_cloak;
+          tool_slow = player_max_slow;
           node_files = {
             '02': { name: 'sys_logs.dat', size: 12, value: 100 },
             '03': { name: 'customer_db.sql', size: 45, value: 250 },
@@ -365,7 +455,7 @@
             if (validNodes.includes(args[1])) {
               hacking_node = args[1];
               hacking_target = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-              hacking_attempts = 5;
+              hacking_attempts = player_max_cpu;
               if (args[1] === '02') { ice_name = "Basic ICE"; ice_damage = 5; }
               else if (args[1] === '03') { ice_name = "Tracer ICE"; ice_damage = 10; }
               else if (args[1] === '04') { ice_name = "Hunter ICE"; ice_damage = 15; }
