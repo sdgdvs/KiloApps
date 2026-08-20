@@ -350,7 +350,7 @@
 </div>
 
 <footer class="status-footer">
-  <span id="statusMessage" aria-live="polite">Ready. Press 'H' for Help.</span>
+  <span id="statusMessage" aria-live="polite">Ready. Press 'H' or F1 for Help.</span>
   <span id="overallSavings" aria-live="polite">Total Savings: 0%</span>
 </footer>
 
@@ -399,7 +399,7 @@
       <p style="margin-bottom: 6px;">- Use <strong>Pack</strong> to save it.</p>
       <p style="margin-bottom: 6px;">- Use <strong>Open</strong> to load an existing .kza file.</p>
       <p style="margin-bottom: 6px;">- Select files and use <strong>Extract Selected</strong> to extract them.</p>
-      <p style="margin-bottom: 6px;">- Keyboard Shortcut: <strong>H</strong> to toggle this help.</p>
+      <p style="margin-bottom: 6px;">- Keyboard Shortcut: <strong>H</strong> or <strong>F1</strong> to toggle this help.</p>
     </div>
     <div style="display: flex; justify-content: flex-end;">
       <button class="btn-primary" id="btnOkHelp">Got it</button>
@@ -651,9 +651,9 @@
     overallSavings.textContent = `Total Savings: ${overallRatio}%`;
     
     if (files.length === 0) {
-      statusMessage.textContent = `Ready. Press 'H' for Help.`;
+      statusMessage.textContent = `Ready. Press 'H' or F1 for Help.`;
     } else {
-      statusMessage.textContent = `Archive loaded. ${files.length} file(s) present. (Press 'H' for Help)`;
+      statusMessage.textContent = `Archive loaded. ${files.length} file(s) present. (Press 'H' or F1 for Help)`;
     }
   }
 
@@ -1022,7 +1022,8 @@
       else if (document.getElementById('previewModal').classList.contains('active')) document.getElementById('previewModal').classList.remove('active');
     } else if (e.key === 'Delete' && selectedIndices.size > 0 && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
       btnRemove.click();
-    } else if ((e.key === 'h' || e.key === 'H') && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
+    } else if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
+      if (e.key === 'F1') e.preventDefault();
       toggleHelp();
     }
   });

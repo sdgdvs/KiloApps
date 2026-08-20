@@ -238,9 +238,9 @@ void RefreshList() {
 
     char statusBuf[256];
     if (numFiles == 0) {
-        lstrcpyA(statusBuf, "Ready. Press 'H' for Help.");
+        lstrcpyA(statusBuf, "Ready. Press 'H' or F1 for Help.");
     } else {
-        wsprintfA(statusBuf, "Files: %d | Total Raw: %lu B | Compressed: %lu B | Savings: %d%% | Press 'H' for Help",
+        wsprintfA(statusBuf, "Files: %d | Total Raw: %lu B | Compressed: %lu B | Savings: %d%% | Press 'H' or F1 for Help",
             numFiles, totalUncomp, totalComp, overallRatio);
     }
     SetWindowTextA(hStatus, statusBuf);
@@ -684,7 +684,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 10, 40, W - 35, H - 125, hwnd, (HMENU)100, NULL, NULL);
 
             // Status Bar Label
-            hStatus = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "Ready. Press 'H' for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, H - 45, W - 35, 20, hwnd, NULL, NULL, NULL);
+            hStatus = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "Ready. Press 'H' or F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, H - 45, W - 35, 20, hwnd, NULL, NULL, NULL);
 
             // Set Fonts
             EnumChildWindows(hwnd, SetFontEnumProc, (LPARAM)hFont);
@@ -795,7 +795,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MessageBoxA(NULL, "Please select a file to preview.", "KZip", MB_OK | MB_ICONWARNING);
                 }
             } else if (id == 10) { // Help
-                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' - This help", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' or F1 - This help", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (id == 105 && code == BN_CLICKED) { // Regex Checkbox
                 RefreshList();
             }
@@ -851,7 +851,7 @@ void MainEntry() {
     RECT rect = { 0, 0, W, H };
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KZipApp", "KZip Archiver", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KZipApp", "KZip Archiver", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -859,10 +859,10 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
             HWND hFocus = GetFocus();
             if (hFocus != hEditSearch && hFocus != hEditPassword) {
-                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' - This help", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' or F1 - This help", "Help", MB_OK | MB_ICONINFORMATION);
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {
