@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KCyber (Cyberpunk hacking simulator)
-**Phase:** 8 (next to do)
+**Phase:** 9 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KCyber directory (`KCyber/`), create web HTML skeleton (`KiloOS/public/apps/kcyber.html`), register in App.jsx.
@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Implement a node map system (visual representation of network nodes to connect to).
 - [x] Phase 6: Core hacking mechanic (minigame for cracking passwords, e.g., guessing sequences or matching hashes).
 - [x] Phase 7: ICE (Intrusion Countermeasures Electronics) system (enemies that track and attack the player while hacking).
-- [ ] Phase 8: Stealth mechanics (tools to reduce trace speed and evade active ICE).
+- [x] Phase 8: Stealth mechanics (tools to reduce trace speed and evade active ICE).
 - [ ] Phase 9: Data extraction system (finding valuable files in nodes and downloading them before trace completes).
 - [ ] Phase 10: Cyberdeck upgrade shop (spend credits earned from data to buy better CPU, more memory, or new software).
 - [ ] Phase 11: Mission generation (randomly generated contracts with varying difficulty, node types, and rewards).

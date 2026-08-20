@@ -104,9 +104,32 @@
     let hacking_attempts = 0;
     
     let player_mem = 100;
+    let tool_cloak = 3;
+    let tool_slow = 3;
     let ice_interval = null;
     let ice_name = "";
     let ice_damage = 0;
+    let ice_frozen_ticks = 0;
+
+    function iceAttack() {
+      if (hacking_node) {
+        if (ice_frozen_ticks > 0) {
+          ice_frozen_ticks--;
+          printLine(`[${ice_name}] ICE is blinded...`);
+        } else {
+          player_mem -= ice_damage;
+          if (player_mem <= 0) {
+            player_mem = 0;
+            printLine(`[${ice_name}] FATAL: Memory depleted. Connection forcefully terminated.`);
+            hacking_node = null;
+            updatePrompt();
+            if (ice_interval) clearInterval(ice_interval);
+          } else {
+            printLine(`[${ice_name}] attacks! System MEM reduced to ${player_mem}%`);
+          }
+        }
+      }
+    }
 
     function updatePrompt() {
       if (hacking_node) {
@@ -136,6 +159,29 @@
           hacking_node = null;
           printLine("Hacking aborted.");
           if (ice_interval) clearInterval(ice_interval);
+          updatePrompt();
+          return;
+        }
+        if (guess === 'cloak') {
+          if (tool_cloak > 0) {
+            tool_cloak--;
+            ice_frozen_ticks += 2;
+            printLine(`[CLOAK] Activated. ${tool_cloak} remaining. ICE blinded for 2 cycles.`);
+          } else {
+            printLine(`[CLOAK] Out of charges.`);
+          }
+          updatePrompt();
+          return;
+        }
+        if (guess === 'slow') {
+          if (tool_slow > 0) {
+            tool_slow--;
+            printLine(`[SLOW] Activated. ${tool_slow} remaining. Trace speed halved.`);
+            if (ice_interval) clearInterval(ice_interval);
+            ice_interval = setInterval(iceAttack, 6000);
+          } else {
+            printLine(`[SLOW] Out of charges.`);
+          }
           updatePrompt();
           return;
         }
@@ -201,9 +247,13 @@
           printLine("  help    - Show this message");
           printLine("  clear   - Clear terminal output");
           printLine("  status  - Show deck status");
-          printLine("  reboot  - Restart deck to restore MEM");
+          printLine("  reboot  - Restart deck to restore MEM and software");
           printLine("  map     - Display network topology");
           printLine("  connect - Attempt connection to network node");
+          printLine("During hack:");
+          printLine("  abort   - Disconnect immediately");
+          printLine("  cloak   - Blind ICE for 2 cycles");
+          printLine("  slow    - Halve ICE attack speed");
           break;
         case 'clear':
           outputDiv.innerHTML = '';
@@ -212,12 +262,16 @@
           printLine("DECK STATUS:");
           printLine("  CPU: 100%");
           printLine(`  MEM: ${player_mem}%`);
+          printLine(`  CLOAK: ${tool_cloak} charges`);
+          printLine(`  SLOW: ${tool_slow} charges`);
           printLine("  NET: DISCONNECTED");
           break;
         case 'reboot':
           player_mem = 100;
+          tool_cloak = 3;
+          tool_slow = 3;
           printLine("System rebooting...");
-          printLine("Memory restored to 100%.");
+          printLine("Memory and software restored to 100%.");
           break;
         case 'map':
           printLine("NETWORK TOPOLOGY:");
@@ -256,20 +310,8 @@
               updatePrompt();
               
               if (ice_interval) clearInterval(ice_interval);
-              ice_interval = setInterval(() => {
-                if (hacking_node) {
-                  player_mem -= ice_damage;
-                  if (player_mem <= 0) {
-                    player_mem = 0;
-                    printLine(`[${ice_name}] FATAL: Memory depleted. Connection forcefully terminated.`);
-                    hacking_node = null;
-                    updatePrompt();
-                    clearInterval(ice_interval);
-                  } else {
-                    printLine(`[${ice_name}] attacks! System MEM reduced to ${player_mem}%`);
-                  }
-                }
-              }, 3000);
+              ice_frozen_ticks = 0;
+              ice_interval = setInterval(iceAttack, 3000);
             } else {
               printLine(`Attempting connection to node [${args[1]}]...`);
               printLine("Establishing handshake...");

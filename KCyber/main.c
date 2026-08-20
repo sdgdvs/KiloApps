@@ -16,8 +16,11 @@ char hacking_target[5] = {0};
 int hacking_attempts = 0;
 
 int player_mem = 100;
+int tool_cloak = 3;
+int tool_slow = 3;
 int ice_damage = 0;
 char ice_name[32] = "";
+int ice_frozen_ticks = 0;
 
 static unsigned long int my_next = 1;
 int my_rand(void) {
@@ -57,6 +60,28 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         if (lstrcmpiA(guess, "abort") == 0) {
             hacking_node = 0;
             PrintLine(hwnd, "Hacking aborted.");
+            return;
+        }
+        if (lstrcmpiA(guess, "cloak") == 0) {
+            if (tool_cloak > 0) {
+                tool_cloak--;
+                ice_frozen_ticks += 2;
+                wsprintfA(buffer, "[CLOAK] Activated. %d remaining. ICE blinded for 2 cycles.", tool_cloak);
+                PrintLine(hwnd, buffer);
+            } else {
+                PrintLine(hwnd, "[CLOAK] Out of charges.");
+            }
+            return;
+        }
+        if (lstrcmpiA(guess, "slow") == 0) {
+            if (tool_slow > 0) {
+                tool_slow--;
+                wsprintfA(buffer, "[SLOW] Activated. %d remaining. Trace speed halved.", tool_slow);
+                PrintLine(hwnd, buffer);
+                SetTimer(hwnd, 2, 6000, NULL);
+            } else {
+                PrintLine(hwnd, "[SLOW] Out of charges.");
+            }
             return;
         }
         
@@ -143,9 +168,13 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "  help    - Show this message");
         PrintLine(hwnd, "  clear   - Clear terminal output");
         PrintLine(hwnd, "  status  - Show deck status");
-        PrintLine(hwnd, "  reboot  - Restart deck to restore MEM");
+        PrintLine(hwnd, "  reboot  - Restart deck to restore MEM and software");
         PrintLine(hwnd, "  map     - Display network topology");
         PrintLine(hwnd, "  connect - Attempt connection to network node");
+        PrintLine(hwnd, "During hack:");
+        PrintLine(hwnd, "  abort   - Disconnect immediately");
+        PrintLine(hwnd, "  cloak   - Blind ICE for 2 cycles");
+        PrintLine(hwnd, "  slow    - Halve ICE attack speed");
     } else if (lstrcmpiA(command, "clear") == 0) {
         history_count = 0;
         InvalidateRect(hwnd, NULL, TRUE);
@@ -155,11 +184,17 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "DECK STATUS:");
         PrintLine(hwnd, "  CPU: 100%");
         PrintLine(hwnd, memBuf);
+        wsprintfA(memBuf, "  CLOAK: %d charges", tool_cloak);
+        PrintLine(hwnd, memBuf);
+        wsprintfA(memBuf, "  SLOW: %d charges", tool_slow);
+        PrintLine(hwnd, memBuf);
         PrintLine(hwnd, "  NET: DISCONNECTED");
     } else if (lstrcmpiA(command, "reboot") == 0) {
         player_mem = 100;
+        tool_cloak = 3;
+        tool_slow = 3;
         PrintLine(hwnd, "System rebooting...");
-        PrintLine(hwnd, "Memory restored to 100%.");
+        PrintLine(hwnd, "Memory and software restored to 100%.");
     } else if (lstrcmpiA(command, "map") == 0) {
         PrintLine(hwnd, "NETWORK TOPOLOGY:");
         PrintLine(hwnd, " [01] GATEWAY (LOCAL)");
@@ -186,6 +221,8 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             if (node > 0) {
                 hacking_node = node;
                 hacking_attempts = 5;
+                ice_frozen_ticks = 0;
+                SetTimer(hwnd, 2, 3000, NULL);
                 for(int i=0; i<4; i++) {
                     hacking_target[i] = '0' + (my_rand() % 10);
                 }
@@ -255,18 +292,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 2) {
                 if (hacking_node && ice_damage > 0) {
-                    player_mem -= ice_damage;
-                    char buf[128];
-                    if (player_mem <= 0) {
-                        player_mem = 0;
-                        wsprintfA(buf, "[%s] FATAL: Memory depleted. Connection forcefully terminated.", ice_name);
+                    if (ice_frozen_ticks > 0) {
+                        ice_frozen_ticks--;
+                        char buf[128];
+                        wsprintfA(buf, "[%s] ICE is blinded...", ice_name);
                         PrintLine(hwnd, buf);
-                        hacking_node = 0;
+                        InvalidateRect(hwnd, NULL, FALSE);
                     } else {
-                        wsprintfA(buf, "[%s] attacks! System MEM reduced to %d%%", ice_name, player_mem);
-                        PrintLine(hwnd, buf);
+                        player_mem -= ice_damage;
+                        char buf[128];
+                        if (player_mem <= 0) {
+                            player_mem = 0;
+                            wsprintfA(buf, "[%s] FATAL: Memory depleted. Connection forcefully terminated.", ice_name);
+                            PrintLine(hwnd, buf);
+                            hacking_node = 0;
+                        } else {
+                            wsprintfA(buf, "[%s] attacks! System MEM reduced to %d%%", ice_name, player_mem);
+                            PrintLine(hwnd, buf);
+                        }
+                        InvalidateRect(hwnd, NULL, FALSE);
                     }
-                    InvalidateRect(hwnd, NULL, FALSE);
                 }
             }
             return 0;
