@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KConnect4
 - KMaze
 - KScript
 - KMine
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMail
 - KMandel
 - KPing
+- KConnect4
 
 ## Progress Log
 - KCalendar: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1024x768, added F1 key support and updated UI labels for help menu in both web and native, applied text-rendering optimizeLegibility to web app body for crisp text).
@@ -314,3 +314,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMail: FAILED - Subagent timed out after 8 minutes. Some changes were pushed but task didn't complete successfully.
 - KMandel: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1280x720, modified native CreateFont parameter to a negative height for crisp DPI rendering, and added text-rendering: optimizeLegibility to web HTML).
 - KPing: Usability and UI issues fixed (updated App.jsx bounds to 850x650, implemented native C negative font heights/SetProcessDPIAware/AdjustWindowRect for crisp DPI-aware UI, applied optimizeLegibility to web CSS).
+- KConnect4: Usability and UI issues fixed (updated App.jsx bounds to 580x780, modified native C CreateFont parameters to negative heights for crisp DPI grid-fitting, and validated help visibility).
