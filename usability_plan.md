@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KNet
 - KZip
 - KPaint
 - KFarm
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KNote
 - KPass
 - KMedia
+- KNet
 
 ## Progress Log
 - KCalendar: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1024x768, added F1 key support and updated UI labels for help menu in both web and native, applied text-rendering optimizeLegibility to web app body for crisp text).
@@ -323,3 +323,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KNote: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles, updated native and web Help buttons to show F1 shortcut, repositioned web status bar below textarea).
 - KPass: Usability and UI issues fixed (enforced 500x620 bounds with AdjustWindowRect, added WS_CLIPCHILDREN for native, added explicit F1 hotkey support and "Press 'H' or F1 for Help" labels in both versions).
 - KMedia: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles to prevent flickering, and applied text-rendering: optimizeLegibility to web CSS).
+- KNet: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles, added explicit F1 hotkey support and help labels to both versions, verified App.jsx bounds 960x720).

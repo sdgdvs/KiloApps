@@ -434,7 +434,7 @@
     </div>
     <div class="content-box" id="httpContentArea">Welcome to KNet 2.0 Web Interface.
 Ready. Select a target URL above and click Execute.
-(Press 'h' for help)</div>
+(Press 'h' or F1 for help)</div>
   </div>
 
   <!-- TAB 2: Ping & Latency Statistics -->
@@ -623,7 +623,7 @@ Ready. Select a target URL above and click Execute.
 <footer>
   <div>
     <span class="status-indicator"></span>
-    <span id="footerStatus">Network Engine Online | Press 'h' for help</span>
+    <span id="footerStatus">Network Engine Online | Press 'h' or F1 for help</span>
   </div>
   <div>
     Logs Recorded: <strong id="lblLogCount">0</strong> | Total Data: <strong id="lblTotalBytes">0 B</strong>
@@ -650,7 +650,7 @@ Ready. Select a target URL above and click Execute.
   let totalBytesTransferred = 0;
 
   document.getElementById('btnHelp').onclick = () => {
-    alert("KNet Help:\n\n- Select a target URL or type one.\n- Use tabs to switch between HTTP, Ping, Scan, and Logs.\n- View latency stats and export logs.\n- Press 'h' anytime for this menu.");
+    alert("KNet Help:\n\n- Select a target URL or type one.\n- Use tabs to switch between HTTP, Ping, Scan, and Logs.\n- View latency stats and export logs.\n- Press 'h' or F1 anytime for this menu.");
   };
 
   // Tab Navigation
@@ -673,8 +673,9 @@ Ready. Select a target URL above and click Execute.
 
   // Add global keydown listener for help
   window.addEventListener('keydown', (e) => {
-    if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-      alert("KNet Help:\n\n- Select a target URL or type one.\n- Use tabs to switch between HTTP, Ping, Scan, and Logs.\n- View latency stats and export logs.");
+    if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      if (e.key === 'F1') e.preventDefault();
+      alert("KNet Help:\n\n- Select a target URL or type one.\n- Use tabs to switch between HTTP, Ping, Scan, and Logs.\n- View latency stats and export logs.\n- Press 'h' or F1 anytime for this menu.");
     }
   });
 

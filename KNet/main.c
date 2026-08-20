@@ -522,7 +522,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hFilterEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             // Output Display Area
-            hContentEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "KNet 2.0 Diagnostic Suite initialized.\r\nEnter target URL/IP above and click Fetch, Ping Stats, or Port Scan.\r\n(Press 'h' for help)",
+            hContentEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "KNet 2.0 Diagnostic Suite initialized.\r\nEnter target URL/IP above and click Fetch, Ping Stats, or Port Scan.\r\n(Press 'h' or F1 for help)",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
                 10, 74, W - 35, H - 125, hwnd, NULL, NULL, NULL);
             SendMessage(hContentEdit, WM_SETFONT, (WPARAM)hFontMono, TRUE);
@@ -646,11 +646,11 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    DWORD style = WS_OVERLAPPEDWINDOW;
+    DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     RECT rect = { 0, 0, W, H };
     AdjustWindowRect(&rect, style, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KNetApp", "KNet - Network Diagnostics Suite (Press 'h' for help)", style,
+    HWND hwnd = CreateWindowEx(0, "KNetApp", "KNet - Network Diagnostics Suite (Press 'h' or F1 for help)", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -658,8 +658,8 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h') && GetFocus() != hUrlEdit && GetFocus() != hFilterEdit) {
-            MessageBoxA(hwnd, "KNet Help:\n\n- Enter a URL or use Bookmarks.\n- Click Fetch for HTTP GET.\n- Use Ping Stats for latency test.\n- Use Port Scan to check open ports.\n- Logs can be exported to CSV.", "KNet Help", MB_OK | MB_ICONINFORMATION);
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) && GetFocus() != hUrlEdit && GetFocus() != hFilterEdit) {
+            MessageBoxA(hwnd, "KNet Help:\n\n- Enter a URL or use Bookmarks.\n- Click Fetch for HTTP GET.\n- Use Ping Stats for latency test.\n- Use Port Scan to check open ports.\n- Logs can be exported to CSV.\n- Press 'h' or F1 anytime for this menu.", "KNet Help", MB_OK | MB_ICONINFORMATION);
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
