@@ -34,25 +34,72 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
     lstrcatA(buffer, cmd);
     PrintLine(hwnd, buffer);
 
-    if (lstrcmpiA(cmd, "help") == 0) {
+    char command[MAX_LINE_LENGTH];
+    char args[MAX_LINE_LENGTH];
+    command[0] = '\0';
+    args[0] = '\0';
+    
+    int i = 0;
+    while(cmd[i] != ' ' && cmd[i] != '\0' && i < MAX_LINE_LENGTH - 1) {
+        command[i] = cmd[i];
+        i++;
+    }
+    command[i] = '\0';
+    
+    if (cmd[i] == ' ') {
+        i++;
+        while(cmd[i] == ' ') i++; // skip extra spaces
+        int j = 0;
+        while(cmd[i] != '\0' && j < MAX_LINE_LENGTH - 1) {
+            args[j] = cmd[i];
+            i++; j++;
+        }
+        args[j] = '\0';
+    }
+
+    if (lstrcmpiA(command, "help") == 0) {
         PrintLine(hwnd, "Available commands:");
         PrintLine(hwnd, "  help    - Show this message");
         PrintLine(hwnd, "  clear   - Clear terminal output");
         PrintLine(hwnd, "  status  - Show deck status");
-        PrintLine(hwnd, "  connect - Attempt connection to network");
-    } else if (lstrcmpiA(cmd, "clear") == 0) {
+        PrintLine(hwnd, "  map     - Display network topology");
+        PrintLine(hwnd, "  connect - Attempt connection to network node");
+    } else if (lstrcmpiA(command, "clear") == 0) {
         history_count = 0;
         InvalidateRect(hwnd, NULL, TRUE);
-    } else if (lstrcmpiA(cmd, "status") == 0) {
+    } else if (lstrcmpiA(command, "status") == 0) {
         PrintLine(hwnd, "DECK STATUS:");
         PrintLine(hwnd, "  CPU: 100%");
         PrintLine(hwnd, "  MEM: OK");
         PrintLine(hwnd, "  NET: DISCONNECTED");
-    } else if (lstrcmpiA(cmd, "connect") == 0) {
-        PrintLine(hwnd, "Error: No target node specified.");
+    } else if (lstrcmpiA(command, "map") == 0) {
+        PrintLine(hwnd, "NETWORK TOPOLOGY:");
+        PrintLine(hwnd, " [01] GATEWAY (LOCAL)");
+        PrintLine(hwnd, "   |");
+        PrintLine(hwnd, "   +-- [02] PUB_ROUTER");
+        PrintLine(hwnd, "   |     |");
+        PrintLine(hwnd, "   |     +-- [03] DATA_VAULT");
+        PrintLine(hwnd, "   |");
+        PrintLine(hwnd, "   +-- [04] SEC_SERVER");
+        PrintLine(hwnd, "   |");
+        PrintLine(hwnd, "   +-- [05] BLACK_ICE_NODE");
+        PrintLine(hwnd, "");
+        PrintLine(hwnd, "Use 'connect <node_id>' to access a node.");
+    } else if (lstrcmpiA(command, "connect") == 0) {
+        if (args[0] == '\0') {
+            PrintLine(hwnd, "Error: No target node specified. Usage: connect <node_id>");
+        } else {
+            char msg[MAX_LINE_LENGTH + 32];
+            lstrcpyA(msg, "Attempting connection to node [");
+            lstrcatA(msg, args);
+            lstrcatA(msg, "]...");
+            PrintLine(hwnd, msg);
+            PrintLine(hwnd, "Establishing handshake...");
+            PrintLine(hwnd, "Error: Connection refused. Invalid credentials or ICE active.");
+        }
     } else {
         lstrcpyA(buffer, "Command not found: ");
-        lstrcatA(buffer, cmd);
+        lstrcatA(buffer, command);
         PrintLine(hwnd, buffer);
     }
 }

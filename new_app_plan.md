@@ -54,14 +54,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KCyber (Cyberpunk hacking simulator)
-**Phase:** 5 (next to do)
+**Phase:** 6 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KCyber directory (`KCyber/`), create web HTML skeleton (`KiloOS/public/apps/kcyber.html`), register in App.jsx.
 - [x] Phase 2: Basic UI for the cyberdeck terminal (console window, command input) and core loop (typing commands to interact) in web HTML.
 - [x] Phase 3: Native C version (`KCyber/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [x] Phase 4: Retro cyberpunk styling (phosphor green text on black, scanlines, block cursor).
-- [ ] Phase 5: Implement a node map system (visual representation of network nodes to connect to).
+- [x] Phase 5: Implement a node map system (visual representation of network nodes to connect to).
 - [ ] Phase 6: Core hacking mechanic (minigame for cracking passwords, e.g., guessing sequences or matching hashes).
 - [ ] Phase 7: ICE (Intrusion Countermeasures Electronics) system (enemies that track and attack the player while hacking).
 - [ ] Phase 8: Stealth mechanics (tools to reduce trace speed and evade active ICE).

@@ -121,7 +121,8 @@
           printLine("  help    - Show this message");
           printLine("  clear   - Clear terminal output");
           printLine("  status  - Show deck status");
-          printLine("  connect - Attempt connection to network");
+          printLine("  map     - Display network topology");
+          printLine("  connect - Attempt connection to network node");
           break;
         case 'clear':
           outputDiv.innerHTML = '';
@@ -132,8 +133,28 @@
           printLine("  MEM: OK");
           printLine("  NET: DISCONNECTED");
           break;
+        case 'map':
+          printLine("NETWORK TOPOLOGY:");
+          printLine(" [01] GATEWAY (LOCAL)");
+          printLine("   |");
+          printLine("   +-- [02] PUB_ROUTER");
+          printLine("   |     |");
+          printLine("   |     +-- [03] DATA_VAULT");
+          printLine("   |");
+          printLine("   +-- [04] SEC_SERVER");
+          printLine("   |");
+          printLine("   +-- [05] BLACK_ICE_NODE");
+          printLine("");
+          printLine("Use 'connect <node_id>' to access a node.");
+          break;
         case 'connect':
-          printLine("Error: No target node specified.");
+          if (args.length < 2) {
+            printLine("Error: No target node specified. Usage: connect <node_id>");
+          } else {
+            printLine(`Attempting connection to node [${args[1]}]...`);
+            printLine("Establishing handshake...");
+            printLine("Error: Connection refused. Invalid credentials or ICE active.");
+          }
           break;
         default:
           printLine(`Command not found: ${command}`);
