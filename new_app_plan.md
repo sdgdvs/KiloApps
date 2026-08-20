@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KCyber (Cyberpunk hacking simulator)
-**Phase:** 6 (next to do)
+**Phase:** 7 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KCyber directory (`KCyber/`), create web HTML skeleton (`KiloOS/public/apps/kcyber.html`), register in App.jsx.
