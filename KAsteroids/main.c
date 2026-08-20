@@ -169,7 +169,8 @@ Particle particles[700];
 int num_particles = 0;
 Shockwave shockwaves[30];
 int num_shockwaves = 0;
-Star stars[90];
+Star stars[300];
+int hyperspace_jump_timer = 0;
 
 int shield_timer = 0;
 int spread_timer = 0;
@@ -230,13 +231,17 @@ void PlaySoundEffect(int type) {
 }
 
 void InitStarfield() {
-    for (int i = 0; i < 90; i++) {
+    for (int i = 0; i < 300; i++) {
         stars[i].x = (float)(rand() % WIDTH);
         stars[i].y = (float)(rand() % HEIGHT);
         stars[i].size = 1.0f + (rand() % 15) / 10.0f;
         stars[i].phase = ((rand() % 360) * 3.14159f) / 180.0f;
         stars[i].speed = 0.02f + (rand() % 50) / 1000.0f;
-        stars[i].layer = rand() % 3;
+        stars[i].layer = rand() % 4;
+        if (stars[i].layer == 3) {
+            stars[i].size = 3.0f + (rand() % 20) / 10.0f;
+            stars[i].speed *= 0.5f;
+        }
     }
 }
 
@@ -670,6 +675,23 @@ void KillShip() {
     game_over = true;
     PlaySoundEffect(2);
     CreateExplosion(ship.x, ship.y, RGB(239, 68, 68), 50, 70.0f);
+
+    for (int i = 0; i < 40; i++) {
+        if (num_particles >= 700) break;
+        Particle* p = &particles[num_particles++];
+        p->x = ship.x;
+        p->y = ship.y;
+        float ang = (rand() % 360) * 3.14159f / 180.0f;
+        float spd = 2.0f + (rand() % 800) / 100.0f;
+        p->vx = cos(ang) * spd;
+        p->vy = sin(ang) * spd;
+        p->life = 40 + (rand() % 40);
+        p->max_life = p->life;
+        p->color = (rand() % 2 == 0) ? RGB(148, 163, 184) : RGB(226, 232, 240);
+        p->active = true;
+        p->type = 0;
+        p->size = 2.5f;
+    }
 }
 
 void CheckCollisions() {
@@ -1383,11 +1405,19 @@ void Update() {
                 UpdateHighScore();
             } else if (wave == 5 || wave == 10 || wave == 15) {
                 branching_active = true;
-            } else {
-                wave++;
-                SetupWave();
+            } else if (hyperspace_jump_timer == 0) {
+                hyperspace_jump_timer = 120;
+                PlaySoundEffect(6);
             }
-        } else {
+        } else if (hyperspace_jump_timer == 0) {
+            hyperspace_jump_timer = 120;
+            PlaySoundEffect(6);
+        }
+    }
+
+    if (hyperspace_jump_timer > 0) {
+        hyperspace_jump_timer--;
+        if (hyperspace_jump_timer == 0) {
             wave++;
             SetupWave();
         }
@@ -1451,26 +1481,84 @@ void Draw(HDC hdc) {
         pt->active = true; pt->type = 0; pt->size = 3.0f;
     }
 
-    // Starfield Background Parallax & Twinkle
-    for (int i = 0; i < 90; i++) {
-        stars[i].phase += stars[i].speed;
-        int alpha = (int)(150 + sin(stars[i].phase) * 90);
-        if (alpha < 40) alpha = 40; if (alpha > 255) alpha = 255;
-        COLORREF starColor = (stars[i].layer == 2) ? RGB(186, 230, 253) : ((stars[i].layer == 1) ? RGB(226, 232, 240) : RGB(100, 116, 139));
-        HBRUSH sb = CreateSolidBrush(starColor);
-        HPEN sp = CreatePen(PS_SOLID, 1, starColor);
-        SelectObject(hdc, sb); SelectObject(hdc, sp);
-        int sz = (int)stars[i].size;
+    if (hyperspace_jump_timer > 0) {
+        float progress = 1.0f - (hyperspace_jump_timer / 120.0f);
+        float stretch = 1.0f + pow(progress, 3) * 50.0f;
+        int burstAlpha = (int)(sin(progress * 3.14159f) * 255);
+        if (burstAlpha > 255) burstAlpha = 255;
+        if (burstAlpha < 0) burstAlpha = 0;
+
+        HPEN stretchPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        SelectObject(hdc, stretchPen);
+
+        for (int i = 0; i < 300; i++) {
+            float cx = WIDTH / 2.0f;
+            float cy = HEIGHT / 2.0f;
+            float angle = atan2(stars[i].y - cy, stars[i].x - cx);
+            float dist = sqrt(pow(stars[i].x - cx, 2) + pow(stars[i].y - cy, 2));
+            
+            float newDist = dist * (1.0f + pow(progress, 2) * 5.0f);
+            float newX = cx + cos(angle) * newDist;
+            float newY = cy + sin(angle) * newDist;
+            
+            float endX = newX + cos(angle) * stretch;
+            float endY = newY + sin(angle) * stretch;
+
+            MoveToEx(hdc, (int)newX, (int)newY, NULL);
+            LineTo(hdc, (int)endX, (int)endY);
+        }
+        DeleteObject(stretchPen);
         
-        float shiftX = (ship.x - WIDTH/2.0f) * (stars[i].layer == 2 ? -0.06f : (stars[i].layer == 1 ? -0.03f : -0.01f));
-        float shiftY = (ship.y - HEIGHT/2.0f) * (stars[i].layer == 2 ? -0.06f : (stars[i].layer == 1 ? -0.03f : -0.01f));
-        int dx = (int)(stars[i].x + shiftX) % WIDTH;
-        int dy = (int)(stars[i].y + shiftY) % HEIGHT;
-        if (dx < 0) dx += WIDTH;
-        if (dy < 0) dy += HEIGHT;
+        if (burstAlpha > 10) {
+            HBRUSH bBrush1 = CreateSolidBrush(RGB(burstAlpha, burstAlpha, burstAlpha));
+            HBRUSH bBrush2 = CreateSolidBrush(RGB(burstAlpha/2, burstAlpha, burstAlpha));
+            HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+            SelectObject(hdc, nullPen);
+            
+            SelectObject(hdc, bBrush2);
+            int r2 = (int)((WIDTH/2) * progress * 2);
+            Ellipse(hdc, (int)WIDTH/2 - r2, (int)HEIGHT/2 - r2, (int)WIDTH/2 + r2, (int)HEIGHT/2 + r2);
+
+            SelectObject(hdc, bBrush1);
+            int r1 = (int)((WIDTH/4) * progress * 2);
+            Ellipse(hdc, (int)WIDTH/2 - r1, (int)HEIGHT/2 - r1, (int)WIDTH/2 + r1, (int)HEIGHT/2 + r1);
+
+            DeleteObject(bBrush1);
+            DeleteObject(bBrush2);
+            DeleteObject(nullPen);
+        }
+    } else {
+        // Starfield Background Parallax & Twinkle
+        long long t = GetTimeMs();
+        int r1 = (int)(128 + sin(t * 0.0005) * 127);
+        int b1 = (int)(128 + cos(t * 0.0005) * 127);
         
-        Ellipse(hdc, dx - sz, dy - sz, dx + sz, dy + sz);
-        DeleteObject(sb); DeleteObject(sp);
+        for (int i = 0; i < 300; i++) {
+            stars[i].phase += stars[i].speed;
+            int alpha = (int)(150 + sin(stars[i].phase) * 90);
+            if (alpha < 40) alpha = 40; if (alpha > 255) alpha = 255;
+            COLORREF starColor;
+            if (stars[i].layer == 3) {
+                starColor = RGB(r1/2 + alpha/4, 50 + alpha/4, b1/2 + alpha/4);
+            } else {
+                starColor = (stars[i].layer == 2) ? RGB(186, 230, 253) : ((stars[i].layer == 1) ? RGB(226, 232, 240) : RGB(100, 116, 139));
+            }
+            HBRUSH sb = CreateSolidBrush(starColor);
+            HPEN sp = CreatePen(PS_SOLID, 1, starColor);
+            SelectObject(hdc, sb); SelectObject(hdc, sp);
+            int sz = (int)stars[i].size;
+            
+            float shiftMult = stars[i].layer == 3 ? -0.005f : (stars[i].layer == 2 ? -0.06f : (stars[i].layer == 1 ? -0.03f : -0.01f));
+            float shiftX = (ship.x - WIDTH/2.0f) * shiftMult;
+            float shiftY = (ship.y - HEIGHT/2.0f) * shiftMult;
+            int dx = (int)(stars[i].x + shiftX) % WIDTH;
+            int dy = (int)(stars[i].y + shiftY) % HEIGHT;
+            if (dx < 0) dx += WIDTH;
+            if (dy < 0) dy += HEIGHT;
+            
+            Ellipse(hdc, dx - sz, dy - sz, dx + sz, dy + sz);
+            DeleteObject(sb); DeleteObject(sp);
+        }
     }
 
     // Draw Space Storm Banner / Atmospheric Sparks

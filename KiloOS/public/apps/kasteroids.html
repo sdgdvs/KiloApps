@@ -169,32 +169,39 @@
 
         // Starfield background
         const stars = [];
-        for (let i = 0; i < 90; i++) {
+        for (let i = 0; i < 300; i++) {
+            let layer = Math.floor(Math.random() * 4);
             stars.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                size: Math.random() * 1.5 + 0.5,
-                baseAlpha: Math.random() * 0.6 + 0.2,
-                twinkleSpeed: Math.random() * 0.05 + 0.01,
+                size: layer === 3 ? (Math.random() * 2 + 1.5) : (Math.random() * 1.5 + 0.5),
+                baseAlpha: layer === 3 ? (Math.random() * 0.3 + 0.1) : (Math.random() * 0.6 + 0.2),
+                twinkleSpeed: layer === 3 ? (Math.random() * 0.02 + 0.005) : (Math.random() * 0.05 + 0.01),
                 phase: Math.random() * Math.PI * 2,
-                layer: Math.floor(Math.random() * 3)
+                layer: layer
             });
         }
+        
+        let hyperspaceJumpTimer = 0;
 
         function drawStarfield() {
             ctx.save();
             
             // Nebula Background
+            let t = Date.now() * 0.0005;
+            let hue1 = (260 + Math.sin(t) * 30) % 360;
+            let hue2 = (220 + Math.cos(t * 0.8) * 30) % 360;
+            
             let nebGrad = ctx.createRadialGradient(canvas.width*0.8, canvas.height*0.2, 50, canvas.width*0.8, canvas.height*0.2, 600);
-            nebGrad.addColorStop(0, 'rgba(76, 29, 149, 0.25)');
-            nebGrad.addColorStop(0.5, 'rgba(124, 58, 237, 0.1)');
+            nebGrad.addColorStop(0, `hsla(${hue1}, 70%, 30%, 0.25)`);
+            nebGrad.addColorStop(0.5, `hsla(${hue1}, 80%, 40%, 0.1)`);
             nebGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = nebGrad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             let nebGrad2 = ctx.createRadialGradient(canvas.width*0.2, canvas.height*0.8, 50, canvas.width*0.2, canvas.height*0.8, 500);
-            nebGrad2.addColorStop(0, 'rgba(30, 58, 138, 0.2)');
-            nebGrad2.addColorStop(0.5, 'rgba(29, 78, 216, 0.05)');
+            nebGrad2.addColorStop(0, `hsla(${hue2}, 70%, 30%, 0.2)`);
+            nebGrad2.addColorStop(0.5, `hsla(${hue2}, 80%, 40%, 0.05)`);
             nebGrad2.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = nebGrad2;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -236,16 +243,59 @@
                 particles[particles.length-1].size = 3;
             }
 
+            if (hyperspaceJumpTimer > 0) {
+                let progress = 1.0 - (hyperspaceJumpTimer / 120.0);
+                
+                let stretch = 1.0 + Math.pow(progress, 3) * 50.0;
+                let burstAlpha = Math.sin(progress * Math.PI);
+                
+                for (let s of stars) {
+                    let cx = canvas.width / 2;
+                    let cy = canvas.height / 2;
+                    let angle = Math.atan2(s.y - cy, s.x - cx);
+                    let dist = Math.hypot(s.x - cx, s.y - cy);
+                    
+                    let newDist = dist * (1.0 + Math.pow(progress, 2) * 5.0);
+                    let newX = cx + Math.cos(angle) * newDist;
+                    let newY = cy + Math.sin(angle) * newDist;
+                    
+                    ctx.save();
+                    ctx.translate(newX, newY);
+                    ctx.rotate(angle);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, 1 - progress * 2)})`;
+                    ctx.fillRect(0, -1, stretch * 2, 2);
+                    ctx.restore();
+                }
+                
+                let burstGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width/2);
+                burstGrad.addColorStop(0, `rgba(255, 255, 255, ${burstAlpha})`);
+                burstGrad.addColorStop(0.2, `rgba(56, 189, 248, ${burstAlpha * 0.8})`);
+                burstGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = burstGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.restore();
+                return;
+            }
+
             for (let s of stars) {
                 s.phase += s.twinkleSpeed;
                 let alpha = s.baseAlpha + Math.sin(s.phase) * 0.25;
                 alpha = Math.max(0.1, Math.min(1, alpha));
-                if (s.layer === 2) ctx.fillStyle = `rgba(186, 230, 253, ${alpha})`;
-                else if (s.layer === 1) ctx.fillStyle = `rgba(226, 232, 240, ${alpha})`;
-                else ctx.fillStyle = `rgba(100, 116, 139, ${alpha})`;
+                if (s.layer === 3) {
+                    let hue = (200 + Math.sin(t + s.x * 0.01) * 60) % 360;
+                    ctx.fillStyle = `hsla(${hue}, 80%, 60%, ${alpha})`;
+                } else if (s.layer === 2) {
+                    ctx.fillStyle = `rgba(186, 230, 253, ${alpha})`;
+                } else if (s.layer === 1) {
+                    ctx.fillStyle = `rgba(226, 232, 240, ${alpha})`;
+                } else {
+                    ctx.fillStyle = `rgba(100, 116, 139, ${alpha})`;
+                }
 
-                let shiftX = (ship.x - canvas.width/2) * (s.layer === 2 ? -0.06 : (s.layer === 1 ? -0.03 : -0.01));
-                let shiftY = (ship.y - canvas.height/2) * (s.layer === 2 ? -0.06 : (s.layer === 1 ? -0.03 : -0.01));
+                let shiftMult = s.layer === 3 ? -0.005 : (s.layer === 2 ? -0.06 : (s.layer === 1 ? -0.03 : -0.01));
+                let shiftX = (ship.x - canvas.width/2) * shiftMult;
+                let shiftY = (ship.y - canvas.height/2) * shiftMult;
                 
                 let dx = (s.x + shiftX) % canvas.width;
                 let dy = (s.y + shiftY) % canvas.height;
@@ -1759,6 +1809,18 @@
             gameOverDiv.style.display = 'block';
             playSound('explosion');
             createExplosion(ship.x, ship.y, '#ef4444', 50, 70);
+
+            for (let i = 0; i < 40; i++) {
+                let ang = Math.random() * Math.PI * 2;
+                let spd = Math.random() * 8 + 2;
+                particles.push(new Particle(
+                    ship.x, ship.y,
+                    Math.cos(ang) * spd, Math.sin(ang) * spd,
+                    (Math.random() > 0.5 ? '#94a3b8' : '#e2e8f0'),
+                    40 + Math.random() * 40,
+                    'spark'
+                ));
+            }
         }
 
         function initGame(mode) {
@@ -2163,14 +2225,21 @@
                         updateHighScore();
                     } else if (wave === 5 || wave === 10 || wave === 15) {
                         branchingActive = true;
-                    } else {
-                        wave++;
-                        waveSpan.innerText = wave + "/20";
-                        setupWave();
+                    } else if (hyperspaceJumpTimer === 0) {
+                        hyperspaceJumpTimer = 120;
+                        playSound('warp');
                     }
-                } else {
+                } else if (hyperspaceJumpTimer === 0) {
+                    hyperspaceJumpTimer = 120;
+                    playSound('warp');
+                }
+            }
+
+            if (hyperspaceJumpTimer > 0) {
+                hyperspaceJumpTimer--;
+                if (hyperspaceJumpTimer === 0) {
                     wave++;
-                    waveSpan.innerText = wave;
+                    waveSpan.innerText = (gameMode === 3) ? wave + "/20" : wave;
                     setupWave();
                 }
             }

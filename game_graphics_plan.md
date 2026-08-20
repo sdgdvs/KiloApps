@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KAsteroids
 - K2048
 - KDarts
 - KSimon
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KChess
 - KPong
 - KMines
+- KAsteroids
 ## Completed Work Log
+
+- **KAsteroids (Loop 6):** Implemented highly detailed visual variations for the background starfield (dense procedural multi-layered parallax nebula that shifts hue slowly over time), a distinctly stylized kinematically animated hyperspace jump effect when a level is cleared (stretching stars and a massive central light burst), and a procedural particle burst of tiny metallic shrapnel when the player's ship is destroyed in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 
 - **KMines (Loop 6):** Implemented highly detailed visual variations for revealed cells (procedural scorch marks/cracks appearing near dense mine clusters), a distinctly stylized kinematically animated flag placement effect (physically dropping and staking into the ground with a small dust puff), and a dramatic animated screen-shake with an expanding 3D red shockwave effect when a mine is triggered in both Web Canvas (kmines.html) and Native C Win32 GDI (KMines/main.c).
 
