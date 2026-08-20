@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KCyber (Cyberpunk hacking simulator)
-**Phase:** 12 (next to do)
+**Phase:** 13 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KCyber directory (`KCyber/`), create web HTML skeleton (`KiloOS/public/apps/kcyber.html`), register in App.jsx.
@@ -68,7 +68,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 9: Data extraction system (finding valuable files in nodes and downloading them before trace completes).
 - [x] Phase 10: Cyberdeck upgrade shop (spend credits earned from data to buy better CPU, more memory, or new software).
 - [x] Phase 11: Mission generation (randomly generated contracts with varying difficulty, node types, and rewards).
-- [ ] Phase 12: Heat/Notoriety system (failing hacks increases global heat, making future missions harder until cooled down).
+- [x] Phase 12: Heat/Notoriety system (failing hacks increases global heat, making future missions harder until cooled down).
 - [ ] Phase 13: Sound Effects — dial-up tones, keystroke clacks, alarm sirens, access granted/denied chimes (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Runner's Guide — Command reference, ICE explanations, deck upgrading guide.
 

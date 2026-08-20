@@ -44,6 +44,7 @@ int in_shop = 0;
 int ice_damage = 0;
 char ice_name[32] = "";
 int ice_frozen_ticks = 0;
+int player_heat = 0;
 
 typedef struct {
     int id;
@@ -142,6 +143,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             PrintLine(hwnd, "  buy cpu   - +1 Hacking Attempt (Cost: 1000 cr)");
             PrintLine(hwnd, "  buy cloak - +1 Cloak Charge (Cost: 200 cr)");
             PrintLine(hwnd, "  buy slow  - +1 Slow Charge (Cost: 300 cr)");
+            PrintLine(hwnd, "  buy proxy - -20% Heat (Cost: 150 cr)");
             return;
         }
 
@@ -188,6 +190,16 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                     } else {
                         PrintLine(hwnd, "Insufficient credits.");
                     }
+                } else if (lstrcmpiA(args, "proxy") == 0) {
+                    if (player_credits >= 150) {
+                        player_credits -= 150;
+                        player_heat -= 20;
+                        if (player_heat < 0) player_heat = 0;
+                        wsprintfA(buffer, "Purchase successful. Heat reduced to %d%%.", player_heat);
+                        PrintLine(hwnd, buffer);
+                    } else {
+                        PrintLine(hwnd, "Insufficient credits.");
+                    }
                 } else {
                     PrintLine(hwnd, "Unknown item. Use 'ls' to see available items.");
                 }
@@ -208,6 +220,10 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         if (lstrcmpiA(guess, "abort") == 0) {
             hacking_node = 0;
             PrintLine(hwnd, "Hacking aborted.");
+            player_heat += 5;
+            if (player_heat > 100) player_heat = 100;
+            wsprintfA(buffer, "[WARNING] Heat increased to %d%%", player_heat);
+            PrintLine(hwnd, buffer);
             return;
         }
         if (lstrcmpiA(guess, "cloak") == 0) {
@@ -226,7 +242,9 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 tool_slow--;
                 wsprintfA(buffer, "[SLOW] Activated. %d remaining. Trace speed halved.", tool_slow);
                 PrintLine(hwnd, buffer);
-                SetTimer(hwnd, 2, 6000, NULL);
+                int current_interval = 3000 - (player_heat * 15);
+                if (current_interval < 500) current_interval = 500;
+                SetTimer(hwnd, 2, current_interval * 2, NULL);
             } else {
                 PrintLine(hwnd, "[SLOW] Out of charges.");
             }
@@ -280,6 +298,10 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 PrintLine(hwnd, buffer);
             } else {
                 PrintLine(hwnd, "ACCESS DENIED. TRACE DETECTED. CONNECTION TERMINATED.");
+                player_heat += 20;
+                if (player_heat > 100) player_heat = 100;
+                wsprintfA(buffer, "[WARNING] Global heat increased to %d%%", player_heat);
+                PrintLine(hwnd, buffer);
                 hacking_node = 0;
             }
         }
@@ -423,11 +445,17 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, memBuf);
         wsprintfA(memBuf, "  CREDITS: %d cr", player_credits);
         PrintLine(hwnd, memBuf);
+        wsprintfA(memBuf, "  HEAT: %d%%", player_heat);
+        PrintLine(hwnd, memBuf);
         PrintLine(hwnd, "  NET: DISCONNECTED");
     } else if (lstrcmpiA(command, "reboot") == 0) {
         player_mem = player_max_mem;
         tool_cloak = player_max_cloak;
         tool_slow = player_max_slow;
+        if (player_heat > 0) {
+            player_heat -= 10;
+            if (player_heat < 0) player_heat = 0;
+        }
         active_mission_node = 0;
         active_mission_file[0] = '\0';
         GenerateMissions();
@@ -437,6 +465,9 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         lstrcpyA(node_files[5].name, "zero_day_exploit.exe"); node_files[5].size = 15; node_files[5].value = 1500;
         PrintLine(hwnd, "System rebooting...");
         PrintLine(hwnd, "Memory and software restored to 100%. Nodes and contracts reset.");
+        char buf[64];
+        wsprintfA(buf, "Heat cooled down to %d%%.", player_heat);
+        PrintLine(hwnd, buf);
     } else if (lstrcmpiA(command, "contracts") == 0) {
         if (missions[0].id == 0 && missions[1].id == 0 && missions[2].id == 0) GenerateMissions();
         PrintLine(hwnd, "AVAILABLE CONTRACTS:");
@@ -510,7 +541,9 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 hacking_node = node;
                 hacking_attempts = player_max_cpu;
                 ice_frozen_ticks = 0;
-                SetTimer(hwnd, 2, 3000, NULL);
+                int current_interval = 3000 - (player_heat * 15);
+                if (current_interval < 500) current_interval = 500;
+                SetTimer(hwnd, 2, current_interval, NULL);
                 for(int i=0; i<4; i++) {
                     hacking_target[i] = '0' + (my_rand() % 10);
                 }
@@ -520,6 +553,8 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 else if (node == 3) { lstrcpyA(ice_name, "Tracer ICE"); ice_damage = 10; }
                 else if (node == 4) { lstrcpyA(ice_name, "Hunter ICE"); ice_damage = 15; }
                 else if (node == 5) { lstrcpyA(ice_name, "Black ICE"); ice_damage = 25; }
+                
+                ice_damage += player_heat / 5;
 
                 char msg[MAX_LINE_LENGTH + 32];
                 lstrcpyA(msg, "Attempting connection to node [");

@@ -125,6 +125,7 @@
     let ice_name = "";
     let ice_damage = 0;
     let ice_frozen_ticks = 0;
+    let player_heat = 0;
     
     let missions = [];
     let active_mission = null;
@@ -211,6 +212,7 @@
           printLine("  buy cpu   - +1 Hacking Attempt (Cost: 1000 cr)");
           printLine("  buy cloak - +1 Cloak Charge (Cost: 200 cr)");
           printLine("  buy slow  - +1 Slow Charge (Cost: 300 cr)");
+          printLine("  buy proxy - -20% Heat (Cost: 150 cr)");
           updatePrompt();
           return;
         }
@@ -255,6 +257,15 @@
               } else {
                 printLine("Insufficient credits.");
               }
+            } else if (item === 'proxy') {
+              if (player_credits >= 150) {
+                player_credits -= 150;
+                player_heat -= 20;
+                if (player_heat < 0) player_heat = 0;
+                printLine(`Purchase successful. Heat reduced to ${player_heat}%.`);
+              } else {
+                printLine("Insufficient credits.");
+              }
             } else {
               printLine("Unknown item. Use 'ls' to see available items.");
             }
@@ -275,6 +286,9 @@
         if (guess === 'abort') {
           hacking_node = null;
           printLine("Hacking aborted.");
+          player_heat += 5;
+          if (player_heat > 100) player_heat = 100;
+          printLine(`[WARNING] Heat increased to ${player_heat}%`);
           if (ice_interval) clearInterval(ice_interval);
           updatePrompt();
           return;
@@ -295,7 +309,9 @@
             tool_slow--;
             printLine(`[SLOW] Activated. ${tool_slow} remaining. Trace speed halved.`);
             if (ice_interval) clearInterval(ice_interval);
-            ice_interval = setInterval(iceAttack, 6000);
+            let current_interval = 3000 - (player_heat * 15);
+            if (current_interval < 500) current_interval = 500;
+            ice_interval = setInterval(iceAttack, current_interval * 2);
           } else {
             printLine(`[SLOW] Out of charges.`);
           }
@@ -346,6 +362,9 @@
             printLine(`Attempts remaining: ${hacking_attempts}`);
           } else {
             printLine("ACCESS DENIED. TRACE DETECTED. CONNECTION TERMINATED.");
+            player_heat += 20;
+            if (player_heat > 100) player_heat = 100;
+            printLine(`[WARNING] Global heat increased to ${player_heat}%`);
             hacking_node = null;
             if (ice_interval) clearInterval(ice_interval);
           }
@@ -444,12 +463,17 @@
           printLine(`  CLOAK: ${tool_cloak} charges`);
           printLine(`  SLOW: ${tool_slow} charges`);
           printLine(`  CREDITS: ${player_credits} cr`);
+          printLine(`  HEAT: ${player_heat}%`);
           printLine("  NET: DISCONNECTED");
           break;
         case 'reboot':
           player_mem = player_max_mem;
           tool_cloak = player_max_cloak;
           tool_slow = player_max_slow;
+          if (player_heat > 0) {
+              player_heat -= 10;
+              if (player_heat < 0) player_heat = 0;
+          }
           active_mission = null;
           generateMissions();
           node_files = {
@@ -460,6 +484,7 @@
           };
           printLine("System rebooting...");
           printLine("Memory and software restored to 100%. Nodes and contracts reset.");
+          printLine(`Heat cooled down to ${player_heat}%.`);
           break;
         case 'contracts':
           if (missions.length === 0) generateMissions();
@@ -514,6 +539,8 @@
               else if (args[1] === '03') { ice_name = "Tracer ICE"; ice_damage = 10; }
               else if (args[1] === '04') { ice_name = "Hunter ICE"; ice_damage = 15; }
               else if (args[1] === '05') { ice_name = "Black ICE"; ice_damage = 25; }
+              
+              ice_damage += Math.floor(player_heat / 5);
 
               printLine(`Attempting connection to node [${args[1]}]...`);
               printLine("Establishing handshake...");
@@ -525,7 +552,9 @@
               
               if (ice_interval) clearInterval(ice_interval);
               ice_frozen_ticks = 0;
-              ice_interval = setInterval(iceAttack, 3000);
+              let current_interval = 3000 - (player_heat * 15);
+              if (current_interval < 500) current_interval = 500;
+              ice_interval = setInterval(iceAttack, current_interval);
             } else {
               printLine(`Attempting connection to node [${args[1]}]...`);
               printLine("Establishing handshake...");
