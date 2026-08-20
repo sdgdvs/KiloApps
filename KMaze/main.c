@@ -1827,7 +1827,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             GetClientRect(hwnd, &clientRect);
             StretchBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcMem, 0, 0, W, H, SRCCOPY);
             
-            HFONT hFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
+            HFONT hFont = CreateFontA(-20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
             HGDIOBJ oldFont = SelectObject(hdc, hFont);
             
             SetBkMode(hdc, TRANSPARENT);
