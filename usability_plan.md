@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KQuest
 - KNote
 - KPass
 - KMedia
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KScript
 - KMine
 - KPac
+- KQuest
 
 ## Progress Log
 - KCalendar: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1024x768, added F1 key support and updated UI labels for help menu in both web and native, applied text-rendering optimizeLegibility to web app body for crisp text).
@@ -319,4 +319,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KScript: Usability and UI issues fixed (updated App.jsx bounds to 1000x700, added WS_CLIPCHILDREN to native C window styles, applied optimizeLegibility globally to web HTML body).
 - KMine: Usability and UI issues fixed (updated App.jsx bounds to 1000x750 to accommodate Expert mode width, and added text-rendering: optimizeLegibility to web HTML).
 - KPac: Usability and UI issues fixed (verified native C negative font heights and scaling, verified App.jsx bounds, applied optimizeLegibility to web CSS, and bumped OS version to 0.3.102).
-- KQuest: FAILED (Subagent timed out or encountered 503 error).
+- KQuest: Usability and UI issues fixed (fixed math linker error, verified native C negative font heights and scaling, verified App.jsx bounds 1000x720, and verified optimizeLegibility web CSS).

@@ -3647,7 +3647,8 @@ void RenderGdiScene(HDC hdc, int w, int h) {
 
     if (g_HeroActionTimer > 0) {
         g_HeroActionTimer--;
-        heroX += (int)(sin((1.0 - g_HeroActionTimer / 15.0) * 3.14159) * 30);
+        double t = 1.0 - (double)g_HeroActionTimer / 15.0;
+        heroX += (int)(4.0 * t * (1.0 - t) * 30.0);
     }
 
     DrawGdiHeroSprite(hdc, heroX, heroY, player.heroClass, g_GfxFrame, player.weaponName, player.armorName);
