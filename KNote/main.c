@@ -216,6 +216,7 @@ void ExportNoteMD() {
     ofn.hwndOwner = hEdit; ofn.lpstrFile = szFile; ofn.nMaxFile = sizeof(szFile);
     ofn.lpstrFilter = "Markdown (*.md)\0*.md\0All Files (*.*)\0*.*\0"; ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+    ofn.lpstrDefExt = "md";
     if (GetSaveFileNameA(&ofn)) {
         HANDLE hFile = CreateFileA(ofn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
@@ -234,6 +235,7 @@ void ExportJSON() {
     ofn.hwndOwner = hEdit; ofn.lpstrFile = szFile; ofn.nMaxFile = sizeof(szFile);
     ofn.lpstrFilter = "JSON (*.json)\0*.json\0All Files (*.*)\0*.*\0"; ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+    ofn.lpstrDefExt = "json";
     if (GetSaveFileNameA(&ofn)) {
         HANDLE hFile = CreateFileA(ofn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
@@ -416,7 +418,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnExportMd = CreateWindow("BUTTON", "Export MD", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 320, 0, 90, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
             hBtnExportJson = CreateWindow("BUTTON", "Export JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 410, 0, 100, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
             hBtnImport = CreateWindow("BUTTON", "Import JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 510, 0, 100, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
-            hBtnHelp = CreateWindow("BUTTON", "Help", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 610, 0, 60, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help (F1)", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 610, 0, 80, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             hTab = CreateWindow(WC_TABCONTROL, "", WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE, 200, 26, W-200, 24, hwnd, (HMENU)ID_TAB, NULL, NULL);
 
@@ -532,7 +534,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnPin, sideW, 0, 60, topH, TRUE); MoveWindow(hBtnLock, sideW + 60, 0, 60, topH, TRUE);
             MoveWindow(hBtnExportMd, sideW + 120, 0, 90, topH, TRUE); MoveWindow(hBtnExportJson, sideW + 210, 0, 100, topH, TRUE);
             MoveWindow(hBtnImport, sideW + 310, 0, 100, topH, TRUE);
-            MoveWindow(hBtnHelp, sideW + 410, 0, 60, topH, TRUE);
+            MoveWindow(hBtnHelp, sideW + 410, 0, 80, topH, TRUE);
             MoveWindow(hTab, sideW, topH, nw - sideW, 24, TRUE);
             MoveWindow(hEdit, sideW, topH + 24, nw - sideW, nh - topH - 44, TRUE);
             MoveWindow(hStatus, sideW, nh - 20, nw - sideW, 20, TRUE);
@@ -579,7 +581,7 @@ void MainEntry() {
     
     RECT rc = {0, 0, W, H};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KNoteApp", "KNote - Press F1 or H for Help", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
+    HWND hwnd = CreateWindowEx(0, "KNoteApp", "KNote - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
     ShowWindow(hwnd, SW_SHOW); UpdateWindow(hwnd);
     MSG msg; 
     while (GetMessage(&msg, NULL, 0, 0) > 0) { 

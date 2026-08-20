@@ -154,15 +154,27 @@ typedef struct {
 #define S_BLESSING 7
 
 
-#define MAX_PARTICLES 100
+#define MAX_PARTICLES 300
 typedef struct {
     int active;
     float x, y;
     float vx, vy;
     COLORREF color;
     int life;
+    int has_gravity;
 } Particle;
 Particle particles[MAX_PARTICLES];
+
+#define MAX_SHOCKWAVES 10
+typedef struct {
+    int active;
+    float x, y;
+    float radius;
+    int life;
+} Shockwave;
+Shockwave shockwaves[MAX_SHOCKWAVES];
+
+int screen_shake = 0;
 
 typedef struct {
     int active;
@@ -183,19 +195,49 @@ void spawn_particles(int x, int y, COLORREF color, int count) {
                 particles[i].vy = (float)(rand_range(0, 200) - 100) / 30.0f;
                 particles[i].color = color;
                 particles[i].life = rand_range(10, 30);
+                particles[i].has_gravity = 0;
                 break;
             }
         }
     }
 }
 
-void update_particles() {
+void spawn_debris_particles(int x, int y, COLORREF color, int count) {
+    for(int j=0; j<count; j++) {
+        for(int i=0; i<MAX_PARTICLES; i++) {
+            if(!particles[i].active) {
+                particles[i].active = 1;
+                particles[i].x = (float)(x * 12 + 6);
+                particles[i].y = (float)(y * 20 + 10);
+                particles[i].vx = (float)(rand_range(0, 200) - 100) / 15.0f;
+                particles[i].vy = -(float)(rand_range(50, 150)) / 15.0f;
+                particles[i].color = color;
+                particles[i].life = rand_range(15, 40);
+                particles[i].has_gravity = 1;
+                break;
+            }
+        }
+    }
+}
+
+void update_effects() {
+    if (screen_shake > 0) screen_shake--;
     for(int i=0; i<MAX_PARTICLES; i++) {
         if(particles[i].active) {
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
+            if(particles[i].has_gravity) {
+                particles[i].vy += 0.4f;
+            }
             particles[i].life--;
             if(particles[i].life <= 0) particles[i].active = 0;
+        }
+    }
+    for(int i=0; i<MAX_SHOCKWAVES; i++) {
+        if(shockwaves[i].active) {
+            shockwaves[i].radius += 2.0f;
+            shockwaves[i].life--;
+            if(shockwaves[i].life <= 0) shockwaves[i].active = 0;
         }
     }
 }
@@ -207,6 +249,18 @@ void draw_particles(HDC memDC) {
             RECT r = { (int)particles[i].x - 1, (int)particles[i].y - 1, (int)particles[i].x + 2, (int)particles[i].y + 2 };
             FillRect(memDC, &r, b);
             DeleteObject(b);
+        }
+    }
+    for(int i=0; i<MAX_SHOCKWAVES; i++) {
+        if(shockwaves[i].active) {
+            HPEN p = CreatePen(PS_SOLID, 2 + shockwaves[i].life / 5, RGB(255, 255, 255));
+            HPEN oldP = (HPEN)SelectObject(memDC, p);
+            HBRUSH oldB = (HBRUSH)SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
+            Ellipse(memDC, (int)(shockwaves[i].x - shockwaves[i].radius), (int)(shockwaves[i].y - shockwaves[i].radius * 0.7f),
+                           (int)(shockwaves[i].x + shockwaves[i].radius), (int)(shockwaves[i].y + shockwaves[i].radius * 0.7f));
+            SelectObject(memDC, oldB);
+            SelectObject(memDC, oldP);
+            DeleteObject(p);
         }
     }
 }
@@ -1132,7 +1186,23 @@ void gain_xp(Entity* p, int amount) {
 }
 
 void handle_death(Entity* e, Entity* killer) {
-    spawn_particles(e->x, e->y, RGB(255,50,50), 15);
+    if(e->ch == '&') {
+        spawn_debris_particles(e->x, e->y, RGB(255, 215, 0), 100);
+        spawn_debris_particles(e->x, e->y, RGB(255, 50, 50), 50);
+        screen_shake = 30;
+        for(int i=0; i<MAX_SHOCKWAVES; i++) {
+            if(!shockwaves[i].active) {
+                shockwaves[i].active = 1;
+                shockwaves[i].x = e->x * char_w + char_w / 2;
+                shockwaves[i].y = e->y * char_h + char_h / 2;
+                shockwaves[i].radius = 0;
+                shockwaves[i].life = 30;
+                break;
+            }
+        }
+    } else {
+        spawn_particles(e->x, e->y, RGB(255,50,50), 15);
+    }
     for(int i=0; i<200; i++) {
         if(!decals[i].active) {
             decals[i].active = 1;
@@ -1226,10 +1296,27 @@ void combat(Entity* attacker, Entity* defender) {
 
     int dmg = rand_range(1, atk) - rand_range(0, def / 2);
     if(dmg < 1) dmg = 1;
+    
+    int is_crit = (attacker == get_player() && rand_range(0, 100) < 15);
+    if (is_crit) {
+        dmg = dmg * 3 / 2;
+        screen_shake = 10;
+        for(int i=0; i<MAX_SHOCKWAVES; i++) {
+            if(!shockwaves[i].active) {
+                shockwaves[i].active = 1;
+                shockwaves[i].x = defender->x * char_w + char_w / 2;
+                shockwaves[i].y = defender->y * char_h + char_h / 2;
+                shockwaves[i].radius = 0;
+                shockwaves[i].life = 15;
+                break;
+            }
+        }
+    }
     defender->hp -= dmg;
     
     char buf[100];
-    wsprintfA(buf, "%s hits %s for %d dmg.", attacker->name, defender->name, dmg);
+    if (is_crit) wsprintfA(buf, "CRITICAL HIT! %s hits %s for %d dmg.", attacker->name, defender->name, dmg);
+    else wsprintfA(buf, "%s hits %s for %d dmg.", attacker->name, defender->name, dmg);
     add_msg(buf);
     
     if(defender->hp <= 0) {
@@ -1964,6 +2051,33 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
         DeleteObject(b);
         SetPixel(memDC, cx - 2, cy - 2, RGB(255, 255, 0));
         SetPixel(memDC, cx + 2, cy - 2, RGB(255, 255, 0));
+    } else if (e->ch == '&') {
+        int is_enraged = (e->hp < e->max_hp / 2);
+        if (is_enraged) {
+            HBRUSH b = CreateSolidBrush(RGB(255, 0, 255));
+            HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+            RECT r = { cx - 9, cy - 10, cx + 9, cy + 9 };
+            FillRect(memDC, &r, b);
+            DeleteObject(b);
+            HBRUSH b2 = CreateSolidBrush(RGB(255, 0, 0));
+            RECT r2 = { cx - 7, cy - 7, cx + 7, cy + 1 };
+            FillRect(memDC, &r2, b2);
+            DeleteObject(b2);
+            SetPixel(memDC, cx - 4, cy - 4, RGB(255, 255, 255));
+            SetPixel(memDC, cx + 4, cy - 4, RGB(255, 255, 255));
+            SelectObject(memDC, oldB);
+        } else {
+            HBRUSH b = CreateSolidBrush(RGB(200, 50, 50));
+            HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+            RECT r = { cx - 9, cy - 10, cx + 9, cy + 9 };
+            FillRect(memDC, &r, b);
+            DeleteObject(b);
+            HBRUSH b2 = CreateSolidBrush(RGB(200, 200, 50));
+            RECT r2 = { cx - 7, cy - 7, cx + 7, cy + 1 };
+            FillRect(memDC, &r2, b2);
+            DeleteObject(b2);
+            SelectObject(memDC, oldB);
+        }
     } else {
         SetTextColor(memDC, e->fg);
         SetBkMode(memDC, TRANSPARENT);
@@ -2375,7 +2489,16 @@ void draw_game(HDC hdc) {
         TextOutA(memDC, 20, y, "Press ESC, H, or ? to return.", 29);
     }
     
-    BitBlt(hdc, 0, 0, W * char_w, TOTAL_H * char_h, memDC, 0, 0, SRCCOPY);
+    int dx = 0, dy = 0;
+    if (screen_shake > 0) {
+        dx = rand_range(0, screen_shake * 2) - screen_shake;
+        dy = rand_range(0, screen_shake * 2) - screen_shake;
+        RECT clr = {0, 0, W * char_w, TOTAL_H * char_h};
+        HBRUSH hb = CreateSolidBrush(RGB(0,0,0));
+        FillRect(hdc, &clr, hb);
+        DeleteObject(hb);
+    }
+    BitBlt(hdc, dx, dy, W * char_w, TOTAL_H * char_h, memDC, 0, 0, SRCCOPY);
     
     SelectObject(memDC, hOldFont);
     SelectObject(memDC, hOldBM);
@@ -2543,6 +2666,18 @@ void fire_spell() {
     } else if (g.active_spell == S_METEOR) {
         p->mp -= 12;
         add_msg("METEOR STRIKE! Flaming meteors rain down!");
+        screen_shake = 20;
+        for(int i=0; i<MAX_SHOCKWAVES; i++) {
+            if(!shockwaves[i].active) {
+                shockwaves[i].active = 1;
+                shockwaves[i].x = g.target_x * char_w + char_w / 2;
+                shockwaves[i].y = g.target_y * char_h + char_h / 2;
+                shockwaves[i].radius = 0;
+                shockwaves[i].life = 20;
+                break;
+            }
+        }
+        spawn_particles(g.target_x, g.target_y, RGB(255, 100, 255), 50);
         for(int dy=-2; dy<=2; dy++) {
             for(int dx=-2; dx<=2; dx++) {
                 int tx = g.target_x + dx;
@@ -2583,6 +2718,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             g_font = CreateFontA(char_h, char_w, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             load_keybinds();
             init_game();
+            SetTimer(hwnd, 1, 33, NULL);
+            return 0;
+        }
+        case WM_TIMER: {
+            update_effects();
+            InvalidateRect(hwnd, NULL, FALSE);
             return 0;
         }
         case WM_DESTROY: {

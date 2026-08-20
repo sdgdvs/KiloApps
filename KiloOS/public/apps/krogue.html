@@ -479,6 +479,8 @@
         let floatTexts = [];
         let attackAnims = [];
         let decals = [];
+        let screenShake = 0;
+        let shockwaves = [];
 
         function addMsg(m, type = 'normal') {
             msgs.push({ text: m, type: type });
@@ -518,7 +520,25 @@
                     vy: Math.sin(angle) * speed,
                     color: color,
                     size: 2 + Math.random() * 4,
-                    life: 1.0
+                    life: 1.0,
+                    gravity: 0
+                });
+            }
+        }
+
+        function addDebrisParticles(x, y, color, count = 20) {
+            for (let i = 0; i < count; i++) {
+                let angle = Math.random() * Math.PI + Math.PI; // Upwards mostly
+                let speed = 2 + Math.random() * 6;
+                particles.push({
+                    x: (x + 0.5) * TILE,
+                    y: (y + 0.5) * TILE,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: color,
+                    size: 2 + Math.random() * 5,
+                    life: 1.5,
+                    gravity: 0.4
                 });
             }
         }
@@ -889,11 +909,14 @@
             ctx.beginPath(); ctx.moveTo(cx + 6, cy + 2); ctx.lineTo(cx + 10, cy - 6); ctx.stroke();
         }
 
-        function drawMonsterSprite(px, py, type, hp = 10) {
+        function drawMonsterSprite(m) {
+            let px = m.x * TILE, py = m.y * TILE;
+            let type = m.ch, hp = m.max_hp, current_hp = m.hp;
             let cx = px + TILE / 2, cy = py + TILE / 2;
             let bob = Math.sin(frameCount * 0.12 + px) * 1.2;
+            let isEnraged = (m.boss && current_hp < hp / 2);
 
-            if (type !== '&' && type !== 'O' && type !== 'w') {
+            if (type !== '&' && type !== 'O' && type !== 'w' && type !== 'B') {
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
                 ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
             } else {
@@ -925,14 +948,20 @@
                 ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 2, cy - 3 + bob, 2, 2); ctx.fillRect(cx + 2, cy - 3 + bob, 2, 2); // eyes
                 
                 ctx.strokeStyle = '#a0aec0'; ctx.lineWidth = 2;
-                if ((px + py) % 3 === 0) { // Sword
+                if ((m.x + m.y) % 3 === 0) { // Sword
                     ctx.beginPath(); ctx.moveTo(cx + 6, cy + 2 + bob); ctx.lineTo(cx + 10, cy - 6 + bob); ctx.stroke();
                 } else { // Spear
                     ctx.beginPath(); ctx.moveTo(cx + 6, cy + 6 + bob); ctx.lineTo(cx + 6, cy - 8 + bob); ctx.stroke();
                 }
-            } else if (type === '&') {
-                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
-                ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
+            } else if (type === '&' || m.boss) {
+                if (isEnraged) {
+                    ctx.fillStyle = '#ff00ff'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
+                    ctx.fillStyle = '#ff0000'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 4, cy - 4 + bob, 3, 3); ctx.fillRect(cx + 1, cy - 4 + bob, 3, 3); // enraged eyes
+                } else {
+                    ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
+                    ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
+                }
             } else {
                 ctx.fillStyle = '#fc8181'; ctx.fillRect(cx - 5, cy - 5, 10, 10);
             }
@@ -940,7 +969,14 @@
 
         function render() {
             frameCount++;
+            if (screenShake > 0) screenShake--;
             ctx.clearRect(0, 0, C_WIDTH, C_HEIGHT);
+            ctx.save();
+            if (screenShake > 0) {
+                let dx = (Math.random() - 0.5) * screenShake;
+                let dy = (Math.random() - 0.5) * screenShake;
+                ctx.translate(dx, dy);
+            }
 
             let biome = getBiome(dlevel);
 
@@ -1024,7 +1060,7 @@
                 }
             });
 
-            monsters.forEach(m => drawMonsterSprite(m.x * TILE, m.y * TILE, m.ch, m.max_hp));
+            monsters.forEach(m => drawMonsterSprite(m));
             drawPlayerSprite(player.x * TILE, player.y * TILE);
 
             // Targeting Reticle
@@ -1058,9 +1094,28 @@
             // Particle FX
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-                ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life);
+                if (p.gravity) p.vy += p.gravity;
+                ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
                 ctx.globalAlpha = 1.0; if (p.life <= 0) particles.splice(i, 1);
+            }
+            
+            // Shockwave FX
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                let sw = shockwaves[i];
+                sw.radius += 1.5;
+                sw.life -= 0.05;
+                if (sw.life <= 0) {
+                    shockwaves.splice(i, 1);
+                    continue;
+                }
+                ctx.globalAlpha = sw.life;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2 + sw.life * 3;
+                ctx.beginPath();
+                ctx.ellipse((sw.x + 0.5) * TILE, (sw.y + 0.5) * TILE, sw.radius * TILE, sw.radius * TILE * 0.7, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
             }
 
             // Floating Text
@@ -1093,6 +1148,7 @@
             if (player.poisoned_turns > 0) statusHTML += `<span class="status-pill status-poison">POISON (${player.poisoned_turns})</span>`;
             if (player.berserk_turns > 0) statusHTML += `<span class="status-pill status-berserk">BERSERK (${player.berserk_turns})</span>`;
             document.getElementById('status-indicators').innerHTML = statusHTML;
+            ctx.restore();
         }
 
         function gameLoop() { render(); requestAnimationFrame(gameLoop); }
@@ -1257,6 +1313,22 @@
                     }
                 }
                 addParticles(targetX, targetY, '#e53e3e', 30); addMsg("FIREBALL EXPLOSION!", 'msg-magic');
+            } else if (activeTargetSpell === 'meteor') {
+                player.mp -= 12;
+                for (let dy = -2; dy <= 2; dy++) {
+                    for (let dx = -2; dx <= 2; dx++) {
+                        let mIdx = monsters.findIndex(m => m.x === targetX + dx && m.y === targetY + dy);
+                        if (mIdx >= 0) monsters[mIdx].hp -= 60;
+                    }
+                }
+                addParticles(targetX, targetY, '#b794f4', 50); addMsg("METEOR STRIKE ANNIHILATION!", 'msg-magic');
+                screenShake = 20;
+                shockwaves.push({x: targetX, y: targetY, radius: 0, life: 1.0});
+            } else if (activeTargetSpell === 'missile') {
+                player.mp -= 3;
+                let mIdx = monsters.findIndex(m => m.x === targetX && m.y === targetY);
+                if (mIdx >= 0) monsters[mIdx].hp -= 15;
+                addParticles(targetX, targetY, '#63b3ed', 15); addMsg("MAGIC MISSILE!", 'msg-magic');
             }
             state = 1; endTurn();
         }
@@ -1439,11 +1511,18 @@
             for (let i = monsters.length - 1; i >= 0; i--) {
                 let m = monsters[i];
                 if (m.hp <= 0) {
-                    addParticles(m.x, m.y, '#fc8181', 15);
+                    if (m.boss) {
+                        addDebrisParticles(m.x, m.y, '#ecc94b', 100);
+                        addDebrisParticles(m.x, m.y, '#e53e3e', 50);
+                        screenShake = 30;
+                        shockwaves.push({x: m.x, y: m.y, radius: 0, life: 1.5});
+                        setTimeout(() => { state = 3; saveRunToLeaderboard('VICTORY'); }, 2000);
+                    } else {
+                        addParticles(m.x, m.y, '#fc8181', 15);
+                    }
                     addMsg(`${m.name} dies!`, 'good');
                     decals.push({x: m.x, y: m.y, color: (m.ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
                     player.xp += 8; total_kills++;
-                    if (m.boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }
                     monsters.splice(i, 1);
                     continue;
                 }
@@ -1540,15 +1619,30 @@
                         if (mIdx >= 0) {
                             let calcAtk = player.atk + (equipment.weapon ? equipment.weapon.val : 0);
                             if (player.berserk_turns > 0) calcAtk *= 2;
-                            monsters[mIdx].hp -= calcAtk;
-                            addMsg(`You strike ${monsters[mIdx].name} for ${calcAtk} dmg!`);
+                            let isCrit = Math.random() < 0.15;
+                            if (isCrit) {
+                                calcAtk = Math.floor(calcAtk * 1.5);
+                                screenShake = 10;
+                                shockwaves.push({x: nx, y: ny, radius: 0, life: 1.0});
+                                addMsg(`CRITICAL HIT on ${monsters[mIdx].name} for ${calcAtk} dmg!`, 'msg-magic');
+                            } else {
+                                addMsg(`You strike ${monsters[mIdx].name} for ${calcAtk} dmg!`);
+                            }
                             addFloatText(nx, ny, `-${calcAtk}`, '#e53e3e');
+                            monsters[mIdx].hp -= calcAtk;
                             if (monsters[mIdx].hp <= 0) {
-                                addParticles(monsters[mIdx].x, monsters[mIdx].y, '#fc8181', 15);
+                                if (monsters[mIdx].boss) {
+                                    addDebrisParticles(monsters[mIdx].x, monsters[mIdx].y, '#ecc94b', 80);
+                                    addDebrisParticles(monsters[mIdx].x, monsters[mIdx].y, '#e53e3e', 40);
+                                    screenShake = 30;
+                                    shockwaves.push({x: monsters[mIdx].x, y: monsters[mIdx].y, radius: 0, life: 1.5});
+                                    setTimeout(() => { state = 3; saveRunToLeaderboard('VICTORY'); }, 2000);
+                                } else {
+                                    addParticles(monsters[mIdx].x, monsters[mIdx].y, '#fc8181', 15);
+                                }
                                 addMsg(`${monsters[mIdx].name} dies!`, 'good');
                                 decals.push({x: monsters[mIdx].x, y: monsters[mIdx].y, color: (monsters[mIdx].ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
                                 player.xp += 8; total_kills++;
-                                if (monsters[mIdx].boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }
                                 monsters.splice(mIdx, 1);
                             }
                         } else {
