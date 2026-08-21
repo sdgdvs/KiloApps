@@ -87,6 +87,11 @@
       <span id="ui-cargo">Cargo: 0 / 20</span>
       <span id="ui-weapons">Weapons: Lv 0</span>
     </div>
+    <div class="dashboard-stats" style="color: #aaa; font-size: 1em; margin-bottom: 0;">
+      <span id="ui-rep-traders">Traders Rep: 0</span>
+      <span id="ui-rep-pirates">Pirates Rep: 0</span>
+      <span id="ui-rep-navy">Navy Rep: 0</span>
+    </div>
   </div>
 
   <div class="panel" id="ui-main-panel" style="display: flex; gap: 20px;">
@@ -134,6 +139,7 @@
     <div style="margin-top: 15px;">
       <button onclick="combatFire()" style="border-color: #f00; color: #f00;">Fire Weapons</button>
       <button onclick="combatFlee()">Attempt Flee</button>
+      <button id="ui-combat-bribe" onclick="combatBribe()" style="color: #ff0;">Pay Toll (100 cr)</button>
     </div>
   </div>
 
@@ -142,7 +148,7 @@
   </div>
 
   <script>
-    const goods = ["Food", "Water", "Ore", "Tech", "Meds"];
+    const goods = ["Food", "Water", "Ore", "Tech", "Meds", "Luxury", "Contraband", "Military"];
     const state = {
       credits: 1000,
       fuel: 100,
@@ -150,14 +156,17 @@
       cargo: 0,
       maxCargo: 20,
       location: "Earth",
-      inventory: { Food: 0, Water: 0, Ore: 0, Tech: 0, Meds: 0 },
+      inventory: { Food: 0, Water: 0, Ore: 0, Tech: 0, Meds: 0, Luxury: 0, Contraband: 0, Military: 0 },
       engineLevel: 0,
       cargoLevel: 0,
       weaponLevel: 0,
       inCombat: false,
       playerShields: 50,
       enemyShields: 30,
-      enemyMaxShields: 30
+      enemyMaxShields: 30,
+      repTraders: 0,
+      repPirates: 0,
+      repNavy: 0
     };
 
     const namePool = ["Terra", "Ares", "Aphrodite", "Zion", "Helios", "Nova", "Eden", "Hades", "Atlantis", "Olympus", "Kronos", "Tarsus", "Vulkan", "Ryloth", "Dune"];
@@ -211,6 +220,9 @@
       
       base.Tech += (5 - planet.techLevel) * 10;
       base.Meds += (5 - planet.techLevel) * 10;
+      base.Luxury = 100;
+      base.Contraband = 150;
+      base.Military = 200;
       return base;
     }
 
@@ -250,6 +262,13 @@
       document.getElementById('ui-cargo').textContent = `Cargo: ${state.cargo} / ${state.maxCargo}`;
       document.getElementById('ui-weapons').textContent = `Weapons: Lv ${state.weaponLevel}`;
       document.getElementById('ui-location').textContent = `${state.location} (${planets[state.location].ecoType} Economy, Tech Lv ${planets[state.location].techLevel})`;
+      
+      document.getElementById('ui-rep-traders').textContent = `Traders Rep: ${state.repTraders}`;
+      document.getElementById('ui-rep-pirates').textContent = `Pirates Rep: ${state.repPirates}`;
+      document.getElementById('ui-rep-navy').textContent = `Navy Rep: ${state.repNavy}`;
+
+      const bribeBtn = document.getElementById('ui-combat-bribe');
+      if (bribeBtn) bribeBtn.disabled = state.credits < 100;
 
       const destContainer = document.getElementById('destinations');
       destContainer.innerHTML = '';
@@ -271,6 +290,10 @@
       const marketBody = document.getElementById('market-body');
       marketBody.innerHTML = '';
       for (const good of goods) {
+        if (good === "Luxury" && state.repTraders < 50 && state.inventory[good] === 0) continue;
+        if (good === "Contraband" && state.repPirates < 50 && state.inventory[good] === 0) continue;
+        if (good === "Military" && state.repNavy < 50 && state.inventory[good] === 0) continue;
+
         const price = currentPrices[good];
         const owned = state.inventory[good];
         
@@ -341,6 +364,7 @@
         state.credits -= price;
         state.inventory[good]++;
         state.cargo++;
+        state.repTraders++;
         log(`Bought 1 ${good} for ${price} cr.`);
         updateUI();
       }
@@ -351,6 +375,7 @@
         state.credits += price;
         state.inventory[good]--;
         state.cargo--;
+        state.repTraders++;
         log(`Sold 1 ${good} for ${price} cr.`);
         updateUI();
       }
@@ -390,7 +415,8 @@
           } else if (enc < 0.66) {
             const creditsGained = Math.floor(Math.random() * 101) + 50;
             state.credits += creditsGained;
-            log(`Distress signal! Helped a stranded ship and received ${creditsGained} credits.`);
+            state.repTraders += 5;
+            log(`Distress signal! Helped a stranded ship. +${creditsGained} cr, Traders Rep +5.`);
           } else {
             startCombat();
           }
@@ -420,7 +446,9 @@
         log("Pirate ship destroyed!");
         const bounty = 50 + Math.floor(Math.random() * 100);
         state.credits += bounty;
-        log(`Recovered ${bounty} credits from the wreckage.`);
+        state.repNavy += 5;
+        state.repPirates -= 5;
+        log(`Recovered ${bounty} cr. Navy Rep +5, Pirates Rep -5.`);
         state.inCombat = false;
       } else {
         enemyTurn();
@@ -437,6 +465,16 @@
         enemyTurn();
       }
       updateUI();
+    }
+
+    function combatBribe() {
+      if (state.credits >= 100) {
+        state.credits -= 100;
+        state.repPirates += 5;
+        state.inCombat = false;
+        log("Paid 100 cr toll to pirates. Pirates Rep +5.");
+        updateUI();
+      }
     }
 
     function enemyTurn() {

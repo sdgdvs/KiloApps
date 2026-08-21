@@ -16,7 +16,7 @@ typedef struct {
     int cargo;
     int maxCargo;
     int location; // Index in planets array
-    int inventory[5]; // Food, Water, Ore, Tech, Meds
+    int inventory[8]; // Food, Water, Ore, Tech, Meds, Luxury, Contraband, Military
     int engineLevel;
     int cargoLevel;
     int weaponLevel;
@@ -24,12 +24,15 @@ typedef struct {
     int playerShields;
     int enemyShields;
     int enemyMaxShields;
+    int repTraders;
+    int repPirates;
+    int repNavy;
 } GameState;
 
-GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0}, 0, 0, 0, 0, 50, 30, 30 };
+GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0,0,0,0}, 0, 0, 0, 0, 50, 30, 30, 0, 0, 0 };
 
-const char* goodNames[5] = { "Food", "Water", "Ore", "Tech", "Meds" };
-int currentPrices[5];
+const char* goodNames[8] = { "Food", "Water", "Ore", "Tech", "Meds", "Luxury", "Contra", "Military" };
+int currentPrices[8];
 
 unsigned int rngState = 0x1234;
 unsigned int SimpleRand() {
@@ -87,9 +90,9 @@ void GenerateGalaxy() {
     }
 }
 
-void GetMarketBase(int pIdx, int basePrices[5]) {
+void GetMarketBase(int pIdx, int basePrices[8]) {
     Planet p = planets[pIdx];
-    int base[5] = {50, 50, 50, 50, 50};
+    int base[8] = {50, 50, 50, 50, 50, 100, 150, 200};
     if (p.ecoType == 0) { base[0] = 20; base[1] = 25; base[3] = 90; }
     if (p.ecoType == 1) { base[2] = 20; base[0] = 80; }
     if (p.ecoType == 2) { base[3] = 30; base[4] = 40; base[2] = 80; }
@@ -97,7 +100,7 @@ void GetMarketBase(int pIdx, int basePrices[5]) {
     if (p.ecoType == 4) { base[0]=40; base[1]=40; base[2]=40; base[3]=40; base[4]=40; }
     base[3] += (5 - p.techLevel) * 10;
     base[4] += (5 - p.techLevel) * 10;
-    for(int i=0; i<5; i++) basePrices[i] = base[i];
+    for(int i=0; i<8; i++) basePrices[i] = base[i];
 }
 
 HWND hStatCredits, hStatFuel, hStatCargo, hStatWeapons;
@@ -118,19 +121,23 @@ HWND hStatCombatEnemy;
 HWND hBtnFire;
 HWND hBtnFlee;
 
-HWND hStatGoodName[5];
-HWND hStatGoodPrice[5];
-HWND hStatGoodOwned[5];
-HWND hBtnGoodBuy[5];
-HWND hBtnGoodSell[5];
+#define ID_BTN_BRIBE 403
+HWND hBtnBribe;
+HWND hStatReps;
+
+HWND hStatGoodName[8];
+HWND hStatGoodPrice[8];
+HWND hStatGoodOwned[8];
+HWND hBtnGoodBuy[8];
+HWND hBtnGoodSell[8];
 
 int destTarget[3];
 int destCost[3];
 
 void GeneratePrices() {
-    int bases[5];
+    int bases[8];
     GetMarketBase(state.location, bases);
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 8; i++) {
         int base = bases[i];
         int variance = base / 5;
         int rand_var = 0;
@@ -159,6 +166,9 @@ void UpdateUI(HWND hwnd) {
     wsprintf(buf, "%s (%s, Lv %d)", planets[state.location].name, ecoNames[planets[state.location].ecoType], planets[state.location].techLevel);
     SetWindowText(hStatLoc, buf);
 
+    wsprintf(buf, "Traders Rep: %d | Pirates Rep: %d | Navy Rep: %d", state.repTraders, state.repPirates, state.repNavy);
+    SetWindowText(hStatReps, buf);
+
     // Update buttons
     for (int i = 0; i < 3; i++) {
         int target = planetLinks[state.location][i];
@@ -182,6 +192,8 @@ void UpdateUI(HWND hwnd) {
         ShowWindow(hStatCombatEnemy, SW_SHOW);
         ShowWindow(hBtnFire, SW_SHOW);
         ShowWindow(hBtnFlee, SW_SHOW);
+        ShowWindow(hBtnBribe, SW_SHOW);
+        EnableWindow(hBtnBribe, state.credits >= 100);
         
         wsprintf(buf, "Shields: %d", state.playerShields);
         SetWindowText(hStatCombatPlayer, buf);
@@ -197,6 +209,7 @@ void UpdateUI(HWND hwnd) {
         ShowWindow(hStatCombatEnemy, SW_HIDE);
         ShowWindow(hBtnFire, SW_HIDE);
         ShowWindow(hBtnFlee, SW_HIDE);
+        ShowWindow(hBtnBribe, SW_HIDE);
     }
 
     int cargoCost = 500 * (state.cargoLevel + 1);
@@ -216,14 +229,33 @@ void UpdateUI(HWND hwnd) {
     EnableWindow(hBtnUpgWeapon, !state.inCombat && state.credits >= weaponCost);
 
     // Update Market
-    for (int i = 0; i < 5; i++) {
-        wsprintf(buf, "%d cr", currentPrices[i]);
-        SetWindowText(hStatGoodPrice[i], buf);
-        wsprintf(buf, "Own: %d", state.inventory[i]);
-        SetWindowText(hStatGoodOwned[i], buf);
+    for (int i = 0; i < 8; i++) {
+        int visible = 1;
+        if (i == 5 && state.repTraders < 50 && state.inventory[i] == 0) visible = 0;
+        if (i == 6 && state.repPirates < 50 && state.inventory[i] == 0) visible = 0;
+        if (i == 7 && state.repNavy < 50 && state.inventory[i] == 0) visible = 0;
         
-        EnableWindow(hBtnGoodBuy[i], !state.inCombat && state.credits >= currentPrices[i] && state.cargo < state.maxCargo);
-        EnableWindow(hBtnGoodSell[i], !state.inCombat && state.inventory[i] > 0);
+        if (visible) {
+            ShowWindow(hStatGoodName[i], SW_SHOW);
+            ShowWindow(hStatGoodPrice[i], SW_SHOW);
+            ShowWindow(hStatGoodOwned[i], SW_SHOW);
+            ShowWindow(hBtnGoodBuy[i], SW_SHOW);
+            ShowWindow(hBtnGoodSell[i], SW_SHOW);
+            
+            wsprintf(buf, "%d cr", currentPrices[i]);
+            SetWindowText(hStatGoodPrice[i], buf);
+            wsprintf(buf, "Own: %d", state.inventory[i]);
+            SetWindowText(hStatGoodOwned[i], buf);
+            
+            EnableWindow(hBtnGoodBuy[i], !state.inCombat && state.credits >= currentPrices[i] && state.cargo < state.maxCargo);
+            EnableWindow(hBtnGoodSell[i], !state.inCombat && state.inventory[i] > 0);
+        } else {
+            ShowWindow(hStatGoodName[i], SW_HIDE);
+            ShowWindow(hStatGoodPrice[i], SW_HIDE);
+            ShowWindow(hStatGoodOwned[i], SW_HIDE);
+            ShowWindow(hBtnGoodBuy[i], SW_HIDE);
+            ShowWindow(hBtnGoodSell[i], SW_HIDE);
+        }
     }
 }
 
@@ -250,8 +282,9 @@ void Travel(int btnIdx, HWND hwnd) {
             } else if (enc == 1) {
                 int creditsGained = 50 + (SimpleRand() % 101);
                 state.credits += creditsGained;
+                state.repTraders += 5;
                 char encBuf[256];
-                wsprintf(encBuf, "> Distress signal! Helped stranded ship, received %d credits.", creditsGained);
+                wsprintf(encBuf, "> Distress signal! Helped stranded ship. +%d cr, Traders Rep +5.", creditsGained);
                 LogMessage(encBuf);
             } else {
                 int available[5];
@@ -311,6 +344,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hStatCargo = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 310, 60, 140, 20, hwnd, NULL, NULL, NULL);
             hStatWeapons = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 460, 60, 140, 20, hwnd, NULL, NULL, NULL);
 
+            hStatReps = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 10, 80, 600, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hStatReps, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             CreateWindow("STATIC", "Navigation", WS_CHILD | WS_VISIBLE, 20, 100, 100, 20, hwnd, NULL, NULL, NULL);
             hStatLoc = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 20, 130, 260, 20, hwnd, NULL, NULL, NULL);
 
@@ -323,12 +359,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hStatCombatEnemy = CreateWindow("STATIC", "Enemy: 30 / 30", WS_CHILD, 20, 160, 200, 20, hwnd, NULL, NULL, NULL);
             hBtnFire = CreateWindow("BUTTON", "Fire Weapons", WS_CHILD | BS_PUSHBUTTON, 20, 190, 120, 30, hwnd, (HMENU)ID_BTN_FIRE, NULL, NULL);
             hBtnFlee = CreateWindow("BUTTON", "Attempt Flee", WS_CHILD | BS_PUSHBUTTON, 150, 190, 120, 30, hwnd, (HMENU)ID_BTN_FLEE, NULL, NULL);
+            hBtnBribe = CreateWindow("BUTTON", "Pay Toll(100cr)", WS_CHILD | BS_PUSHBUTTON, 280, 190, 150, 30, hwnd, (HMENU)ID_BTN_BRIBE, NULL, NULL);
             
             SendMessage(hStatCombatTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hStatCombatPlayer, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hStatCombatEnemy, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnFire, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnFlee, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnBribe, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 280, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatShipyard, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -346,9 +384,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HWND hStatMarket = CreateWindow("STATIC", "Market", WS_CHILD | WS_VISIBLE, 300, 100, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatMarket, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 8; i++) {
                 int y = 130 + i * 22;
-                hStatGoodName[i] = CreateWindow("STATIC", goodNames[i], WS_CHILD | WS_VISIBLE, 300, y, 50, 20, hwnd, NULL, NULL, NULL);
+                hStatGoodName[i] = CreateWindow("STATIC", goodNames[i], WS_CHILD | WS_VISIBLE, 300, y, 60, 20, hwnd, NULL, NULL, NULL);
                 hStatGoodPrice[i] = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 360, y, 60, 20, hwnd, NULL, NULL, NULL);
                 hStatGoodOwned[i] = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 430, y, 60, 20, hwnd, NULL, NULL, NULL);
                 hBtnGoodBuy[i] = CreateWindow("BUTTON", "Buy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, y, 40, 20, hwnd, (HMENU)(ID_BTN_BUY_START + i), NULL, NULL);
@@ -378,25 +416,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 Travel(1, hwnd);
             } else if (LOWORD(wParam) == ID_BTN_DEST3) {
                 Travel(2, hwnd);
-            } else if (LOWORD(wParam) >= ID_BTN_BUY_START && LOWORD(wParam) < ID_BTN_BUY_START + 5) {
+            } else if (LOWORD(wParam) >= ID_BTN_BUY_START && LOWORD(wParam) < ID_BTN_BUY_START + 8) {
                 int good = LOWORD(wParam) - ID_BTN_BUY_START;
                 int price = currentPrices[good];
                 if (state.credits >= price && state.cargo < state.maxCargo) {
                     state.credits -= price;
                     state.inventory[good]++;
                     state.cargo++;
+                    state.repTraders++;
                     char buf[128];
                     wsprintf(buf, "> Bought 1 %s for %d cr.", goodNames[good], price);
                     LogMessage(buf);
                     UpdateUI(hwnd);
                 }
-            } else if (LOWORD(wParam) >= ID_BTN_SELL_START && LOWORD(wParam) < ID_BTN_SELL_START + 5) {
+            } else if (LOWORD(wParam) >= ID_BTN_SELL_START && LOWORD(wParam) < ID_BTN_SELL_START + 8) {
                 int good = LOWORD(wParam) - ID_BTN_SELL_START;
                 int price = currentPrices[good];
                 if (state.inventory[good] > 0) {
                     state.credits += price;
                     state.inventory[good]--;
                     state.cargo--;
+                    state.repTraders++;
                     char buf[128];
                     wsprintf(buf, "> Sold 1 %s for %d cr.", goodNames[good], price);
                     LogMessage(buf);
@@ -443,7 +483,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     LogMessage("> Pirate ship destroyed!");
                     int bounty = 50 + (SimpleRand() % 100);
                     state.credits += bounty;
-                    wsprintf(buf, "> Recovered %d credits from the wreckage.", bounty);
+                    state.repNavy += 5;
+                    state.repPirates -= 5;
+                    wsprintf(buf, "> Recovered %d cr. Navy Rep +5, Pirates Rep -5.", bounty);
                     LogMessage(buf);
                     state.inCombat = 0;
                 } else {
@@ -459,6 +501,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     EnemyTurn(hwnd);
                 }
                 UpdateUI(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_BRIBE) {
+                if (state.credits >= 100) {
+                    state.credits -= 100;
+                    state.repPirates += 5;
+                    state.inCombat = 0;
+                    LogMessage("> Paid 100 cr toll to pirates. Pirates Rep +5.");
+                    UpdateUI(hwnd);
+                }
             }
             return 0;
         }
