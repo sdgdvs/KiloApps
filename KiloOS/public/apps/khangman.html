@@ -352,6 +352,10 @@
     let isBlinking = false;
     let lossAnimTimer = 0;
 
+    let screenShake = 0;
+    let shakeAngle = 0;
+    let lightningFlash = 0;
+
     let ropeAngle = 0;
     let ropeAngularVelocity = 0;
     let ropeAngularAcceleration = 0;
@@ -578,20 +582,38 @@
 
     // --- High-Quality 3D Wooden Gallows, Animated Character & FX Canvas ---
     function spawnWinParticles() {
-        const colors = ['#ff4081', '#00e676', '#ffeb3b', '#00b0ff', '#e040fb', '#ffd700'];
-        for (let i = 0; i < 60; i++) {
+        const colors = ['#ff4081', '#00e676', '#ffeb3b', '#00b0ff', '#e040fb', '#ffffff'];
+        const burstX = 120 + (Math.random() * 60 - 30);
+        const burstY = 80 + (Math.random() * 40 - 20);
+        // Multi-layered Firework Explosion
+        for (let i = 0; i < 80; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 8 + 2;
             particles.push({
-                x: 120 + (Math.random() * 80 - 40),
-                y: 100 + (Math.random() * 40 - 20),
-                vx: (Math.random() - 0.5) * 8,
-                vy: -Math.random() * 7 - 2,
-                size: Math.random() * 6 + 4,
+                x: burstX, y: burstY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: Math.random() * 3 + 1.5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                type: 'firework',
+                life: 0,
+                maxLife: 40 + Math.random() * 30
+            });
+        }
+        // Confetti shower
+        for (let i = 0; i < 40; i++) {
+            particles.push({
+                x: Math.random() * 240,
+                y: -10,
+                vx: (Math.random() - 0.5) * 4,
+                vy: Math.random() * 3 + 2,
+                size: Math.random() * 5 + 3,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 rotation: Math.random() * Math.PI * 2,
                 vRot: (Math.random() - 0.5) * 0.3,
                 type: 'confetti',
                 life: 0,
-                maxLife: 100 + Math.random() * 50
+                maxLife: 120 + Math.random() * 50
             });
         }
     }
@@ -666,7 +688,20 @@
             p.x += p.vx;
             p.y += p.vy;
             
-            if (p.type === 'confetti') {
+            if (p.type === 'firework') {
+                p.vx *= 0.92;
+                p.vy *= 0.92;
+                p.vy += 0.08;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
+                ctx.fillStyle = p.color;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            } else if (p.type === 'confetti') {
                 p.rotation += p.vRot;
                 p.vy += 0.08; // gravity
                 ctx.save();
@@ -726,13 +761,44 @@
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        ctx.save();
+        if (screenShake > 0) {
+            ctx.translate(Math.cos(shakeAngle) * screenShake, Math.sin(shakeAngle * 1.2) * screenShake);
+            screenShake *= 0.85;
+            shakeAngle += 1.5;
+            if (screenShake < 0.5) screenShake = 0;
+        }
+
         // 1. Spooky Environmental Background
         // Night Sky Gradient
         const skyGrad = ctx.createLinearGradient(0, 0, 0, 200);
-        skyGrad.addColorStop(0, '#0b1021');
-        skyGrad.addColorStop(1, '#1a1025');
+        if (lightningFlash > 0.5) {
+            skyGrad.addColorStop(0, '#2a3550');
+            skyGrad.addColorStop(1, '#1a1025');
+        } else {
+            skyGrad.addColorStop(0, '#0b1021');
+            skyGrad.addColorStop(1, '#1a1025');
+        }
         ctx.fillStyle = skyGrad;
-        ctx.fillRect(0, 0, 240, 200);
+        ctx.fillRect(-20, -20, 280, 240); // slightly larger to cover shake bounds
+
+        if (lightningFlash > 0) {
+            lightningFlash -= 0.1;
+        }
+        if (lightningFlash > 0.5) {
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(100, -20);
+            ctx.lineTo(120, 50);
+            ctx.lineTo(105, 60);
+            ctx.lineTo(140, 130);
+            ctx.lineTo(120, 140);
+            ctx.lineTo(150, 200);
+            ctx.stroke();
+            ctx.fillStyle = `rgba(255, 255, 255, ${lightningFlash * 0.2})`;
+            ctx.fillRect(-20, -20, 280, 240);
+        }
 
         // Stars
         ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -1076,7 +1142,7 @@
                     ctx.strokeStyle = '#004d40';
                     ctx.lineWidth = 3.5;
                     ctx.beginPath();
-                    const lArmAngle = (gameEnded && isWin()) ? -Math.PI * 0.75 : Math.sin(animTime * 3) * 0.2 + 0.3;
+                    const lArmAngle = (gameEnded && isWin()) ? -Math.PI * 0.75 : (screenShake > 0 ? Math.sin(animTime * 20) * 0.8 + 0.3 : Math.sin(animTime * 3) * 0.2 + 0.3);
                     ctx.moveTo(cx - 8, bodyY1 + 6);
                     ctx.lineTo(cx - 8 - Math.cos(lArmAngle) * 20, bodyY1 + 6 + Math.sin(lArmAngle) * 20);
                     ctx.stroke();
@@ -1087,7 +1153,7 @@
                     ctx.strokeStyle = '#004d40';
                     ctx.lineWidth = 3.5;
                     ctx.beginPath();
-                    const rArmAngle = (gameEnded && isWin()) ? -Math.PI * 0.25 : -Math.sin(animTime * 3) * 0.2 - 0.3;
+                    const rArmAngle = (gameEnded && isWin()) ? -Math.PI * 0.25 : (screenShake > 0 ? -Math.sin(animTime * 22) * 0.8 - 0.3 : -Math.sin(animTime * 3) * 0.2 - 0.3);
                     ctx.moveTo(cx + 8, bodyY1 + 6);
                     ctx.lineTo(cx + 8 + Math.cos(rArmAngle) * 20, bodyY1 + 6 + Math.sin(rArmAngle) * 20);
                     ctx.stroke();
@@ -1098,7 +1164,7 @@
                     ctx.strokeStyle = '#37474f';
                     ctx.lineWidth = 4;
                     ctx.beginPath();
-                    const lLegX = (gameEnded && isWin()) ? cx - 12 : cx - 10 + Math.sin(animTime * 4) * 2;
+                    const lLegX = (gameEnded && isWin()) ? cx - 12 : (screenShake > 0 ? cx - 10 + Math.sin(animTime * 15) * 6 : cx - 10 + Math.sin(animTime * 4) * 2);
                     ctx.moveTo(cx - 5, bodyY2);
                     ctx.lineTo(lLegX, bodyY2 + 25);
                     ctx.stroke();
@@ -1111,7 +1177,7 @@
                     ctx.strokeStyle = '#37474f';
                     ctx.lineWidth = 4;
                     ctx.beginPath();
-                    const rLegX = (gameEnded && isWin()) ? cx + 12 : cx + 10 - Math.sin(animTime * 4) * 2;
+                    const rLegX = (gameEnded && isWin()) ? cx + 12 : (screenShake > 0 ? cx + 10 - Math.sin(animTime * 17) * 6 : cx + 10 - Math.sin(animTime * 4) * 2);
                     ctx.moveTo(cx + 5, bodyY2);
                     ctx.lineTo(rLegX, bodyY2 + 25);
                     ctx.stroke();
@@ -1160,6 +1226,8 @@
 
         // 5. Update and Draw Particles
         updateAndDrawParticles(ctx);
+
+        ctx.restore();
 
         requestAnimationFrame(renderHangmanCanvas);
     }
@@ -1451,12 +1519,10 @@
                 playSound('shield');
             } else {
                 errors++;
-                ropeAngularVelocity += (Math.random() > 0.5 ? 0.15 : -0.15); // Add sudden sway on error
+                ropeAngularVelocity += (Math.random() > 0.5 ? 0.25 : -0.25); // Add sudden sway on error
+                screenShake = 15;
+                lightningFlash = 1.0;
                 if (errors < maxErrors) playSound('invalid');
-                const canvas = document.getElementById('hangman-canvas');
-                canvas.classList.remove('shake-animation');
-                void canvas.offsetWidth;
-                canvas.classList.add('shake-animation');
             }
         } else {
             if (gameMode === 2) blitzTime += 2; // +2s per correct letter in Blitz

@@ -74,7 +74,7 @@ const CampaignStage CAMPAIGN_STAGES[20] = {
 };
 
 // Particle Struct
-#define MAX_PARTICLES 150
+#define MAX_PARTICLES 400
 typedef struct {
     float x, y;
     float vx, vy;
@@ -82,7 +82,7 @@ typedef struct {
     COLORREF color;
     int life;
     int maxLife;
-    int type; // 0: confetti, 1: rain
+    int type; // 0: confetti, 1: rain, 2: spark, 3: shooting star, 4: firework
 } Particle;
 
 Particle particles[MAX_PARTICLES];
@@ -114,7 +114,9 @@ int game_over = 0;
 int won = 0;
 int initialized = 0;
 int is_muted = 0;
-int shake_frames = 0;
+float shake_mag = 0.0f;
+float shake_angle = 0.0f;
+float lightning_flash = 0.0f;
 int win_pulse_phase = 0;
 int blitz_timer_counter = 0;
 int loss_anim_timer = 0;
@@ -286,16 +288,32 @@ void CustomSrand(unsigned int s) {
 }
 
 void SpawnWinParticles() {
-    COLORREF colors[] = {RGB(255, 64, 129), RGB(0, 230, 118), RGB(255, 235, 59), RGB(0, 176, 255), RGB(220, 64, 251)};
-    for (int i = 0; i < 35 && particle_count < MAX_PARTICLES; i++) {
-        particles[particle_count].x = (float)(200 + (CustomRand() % 100 - 50));
-        particles[particle_count].y = (float)(180 + (CustomRand() % 40 - 20));
-        particles[particle_count].vx = (float)((CustomRand() % 100 - 50) / 10.0f);
-        particles[particle_count].vy = (float)(-(CustomRand() % 60 + 20) / 10.0f);
+    COLORREF colors[] = {RGB(255, 64, 129), RGB(0, 230, 118), RGB(255, 235, 59), RGB(0, 176, 255), RGB(220, 64, 251), RGB(255, 255, 255)};
+    int basex = W / 2 + (CustomRand() % 100 - 50);
+    int basey = 150 + (CustomRand() % 100 - 50);
+    for (int i = 0; i < 60 && particle_count < MAX_PARTICLES; i++) {
+        particles[particle_count].x = (float)basex;
+        particles[particle_count].y = (float)basey;
+        float angle = (float)(CustomRand() % 360) * 3.14159f / 180.0f;
+        float speed = (float)(CustomRand() % 100) / 10.0f;
+        particles[particle_count].vx = cosf(angle) * speed;
+        particles[particle_count].vy = sinf(angle) * speed;
+        particles[particle_count].size = CustomRand() % 4 + 2;
+        particles[particle_count].color = colors[CustomRand() % 6];
+        particles[particle_count].life = 0;
+        particles[particle_count].maxLife = 50 + CustomRand() % 40;
+        particles[particle_count].type = 4; // firework
+        particle_count++;
+    }
+    for (int i = 0; i < 30 && particle_count < MAX_PARTICLES; i++) {
+        particles[particle_count].x = (float)(CustomRand() % W);
+        particles[particle_count].y = -10.0f;
+        particles[particle_count].vx = (float)((CustomRand() % 100 - 50) / 15.0f);
+        particles[particle_count].vy = (float)((CustomRand() % 50 + 20) / 10.0f);
         particles[particle_count].size = CustomRand() % 5 + 4;
         particles[particle_count].color = colors[CustomRand() % 5];
         particles[particle_count].life = 0;
-        particles[particle_count].maxLife = 60 + CustomRand() % 30;
+        particles[particle_count].maxLife = 100 + CustomRand() % 50;
         particles[particle_count].type = 0; // confetti
         particle_count++;
     }
@@ -323,6 +341,11 @@ void UpdateParticles() {
         particles[i].y += particles[i].vy;
         if (particles[i].type == 0) particles[i].vy += 0.15f; // gravity
         else if (particles[i].type == 2) particles[i].vy += 0.2f; // spark gravity
+        else if (particles[i].type == 4) {
+            particles[i].vx *= 0.92f;
+            particles[i].vy *= 0.92f;
+            particles[i].vy += 0.08f;
+        }
         
         if (particles[i].life >= particles[i].maxLife || particles[i].y > H) {
             particles[i] = particles[particle_count - 1];
@@ -448,7 +471,8 @@ void InitGame() {
     SelectNewWord();
     game_over = 0;
     won = 0;
-    shake_frames = 0;
+    shake_mag = 0.0f;
+    lightning_flash = 0.0f;
     win_pulse_phase = 0;
     blitz_timer_counter = 0;
     loss_anim_timer = 0;
@@ -477,8 +501,9 @@ void Guess(char c) {
             PlaySoundEffect(5); // Shield absorbed
         } else {
             errors++;
-            ropeAngularVelocity += ((CustomRand() % 2 == 0) ? 0.15f : -0.15f);
-            shake_frames = 15;
+            ropeAngularVelocity += ((CustomRand() % 2 == 0) ? 0.25f : -0.25f);
+            shake_mag = 12.0f;
+            lightning_flash = 1.0f;
             if (errors >= max_errors) {
                 game_over = 1;
                 won = 0;
@@ -650,7 +675,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     loss_anim_timer++;
                 }
 
-                if (shake_frames > 0) shake_frames--;
+                if (shake_mag > 0.0f) {
+                    shake_mag *= 0.85f;
+                    shake_angle += 1.5f;
+                    if (shake_mag < 0.5f) shake_mag = 0.0f;
+                }
+                if (lightning_flash > 0.0f) {
+                    lightning_flash -= 0.1f;
+                }
                 if (game_over && won) {
                     win_pulse_phase += 10;
                     if (win_pulse_phase > 360) win_pulse_phase -= 360;
@@ -873,10 +905,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
 
+            int vpX = (int)(cosf(shake_angle) * shake_mag);
+            int vpY = (int)(sinf(shake_angle * 1.2f) * shake_mag);
+            SetViewportOrgEx(memDC, vpX, vpY, NULL);
+
             // Spooky Environmental Art Background
             // Night Sky
-            HBRUSH bgBrush = CreateSolidBrush(RGB(11, 16, 33));
-            RECT fullRc = {0, 0, W, H};
+            HBRUSH bgBrush = CreateSolidBrush(lightning_flash > 0.0f ? RGB(40, 50, 70) : RGB(11, 16, 33));
+            RECT fullRc = {-50, -50, W + 50, H + 50};
             FillRect(memDC, &fullRc, bgBrush);
             DeleteObject(bgBrush);
 
@@ -985,15 +1021,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 catY += 20;
             }
 
-            // Screen shake offset calculation
-            int ox = 0;
-            if (shake_frames > 0) {
-                int offsets[] = {-10, 10, -8, 8, -6, 6, -4, 4, -2, 2, 0, 0, 0, 0, 0, 0};
-                int idx = 15 - shake_frames;
-                if (idx < 0) idx = 0;
-                if (idx > 15) idx = 15;
-                ox = offsets[idx];
+            // Dramatic Lightning Bolt
+            if (lightning_flash > 0.5f) {
+                HPEN lightPen = CreatePen(PS_SOLID, 4, RGB(255, 255, 255));
+                HPEN oldLP = (HPEN)SelectObject(memDC, lightPen);
+                POINT bolt[6] = {{W/2 - 20, 0}, {W/2 + 10, 80}, {W/2 - 10, 90}, {W/2 + 30, 180}, {W/2, 190}, {W/2 + 20, 280}};
+                Polyline(memDC, bolt, 6);
+                SelectObject(memDC, oldLP);
+                DeleteObject(lightPen);
             }
+
+            int ox = 0; // Handled by SetViewportOrgEx
 
             int dark = errors * 15;
             #define G_COLOR(r, g, b) RGB((r - dark < 0) ? 0 : r - dark, (g - dark < 0) ? 0 : g - dark, (b - dark < 0) ? 0 : b - dark)
@@ -1438,7 +1476,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Render particles
             for (int i = 0; i < particle_count; i++) {
-                if (particles[i].type == 2) { // spark
+                if (particles[i].type == 4) { // firework
+                    HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                    int s = particles[i].size;
+                    RECT pRc = {(int)particles[i].x - s, (int)particles[i].y - s, (int)particles[i].x + s, (int)particles[i].y + s};
+                    FillRect(memDC, &pRc, pBrush);
+                    DeleteObject(pBrush);
+                } else if (particles[i].type == 2) { // spark
                     HBRUSH pBrush2 = CreateSolidBrush(particles[i].color);
                     RECT pRc2 = {(int)particles[i].x - 1, (int)particles[i].y - 1, (int)particles[i].x + particles[i].size + 1, (int)particles[i].y + particles[i].size + 1};
                     FillRect(memDC, &pRc2, pBrush2);
