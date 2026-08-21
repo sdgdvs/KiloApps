@@ -644,13 +644,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DrawEdge(memDC, &r, EDGE_RAISED, BF_RECT | BF_MIDDLE);
                     } else if (state[y][x] == 2) {
                         DrawEdge(memDC, &r, EDGE_RAISED, BF_RECT | BF_MIDDLE);
-                        SetTextColor(memDC, RGB(255, 0, 0));
-                        DrawTextA(memDC, "F", -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        int pw = CELL * 3 / 30;
+                        if (pw < 1) pw = 1;
+                        int pleft = r.left + CELL/2 - pw/2;
+                        int ptop = r.top + CELL * 6 / 30;
+                        int pbottom = r.bottom - CELL * 6 / 30;
+                        HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
+                        RECT poleRect = { pleft, ptop, pleft + pw, pbottom };
+                        FillRect(memDC, &poleRect, blackBrush);
+                        DeleteObject(blackBrush);
+                        
+                        HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
+                        POINT pts[3] = { {r.left + CELL/2, ptop}, {r.left + CELL/2 + CELL*12/30, ptop + CELL*5/30}, {r.left + CELL/2, ptop + CELL*10/30} };
+                        HGDIOBJ oldBrush = SelectObject(memDC, redBrush);
+                        HGDIOBJ oldPen = SelectObject(memDC, GetStockObject(NULL_PEN));
+                        Polygon(memDC, pts, 3);
+                        SelectObject(memDC, oldPen);
+                        SelectObject(memDC, oldBrush);
+                        DeleteObject(redBrush);
                     } else if (state[y][x] == 1) {
                         DrawEdge(memDC, &r, EDGE_SUNKEN, BF_RECT | BF_MIDDLE);
                         if (grid[y][x] == 9) {
-                            SetTextColor(memDC, RGB(0, 0, 0));
-                            DrawTextA(memDC, "*", -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                            int cx = r.left + CELL/2;
+                            int cy = r.top + CELL/2;
+                            int r1 = CELL * 11 / 30;
+                            int r2 = CELL * 8 / 30;
+                            HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
+                            int pw = CELL * 2 / 30;
+                            if (pw < 1) pw = 1;
+                            HPEN blackPen = CreatePen(PS_SOLID, pw, RGB(0, 0, 0));
+                            HGDIOBJ oldBrush = SelectObject(memDC, blackBrush);
+                            HGDIOBJ oldPen = SelectObject(memDC, blackPen);
+                            MoveToEx(memDC, cx, cy - r1, NULL); LineTo(memDC, cx, cy + r1);
+                            MoveToEx(memDC, cx - r1, cy, NULL); LineTo(memDC, cx + r1, cy);
+                            MoveToEx(memDC, cx - r2, cy - r2, NULL); LineTo(memDC, cx + r2, cy + r2);
+                            MoveToEx(memDC, cx - r2, cy + r2, NULL); LineTo(memDC, cx + r2, cy - r2);
+                            Ellipse(memDC, cx - r2, cy - r2, cx + r2, cy + r2);
+                            SelectObject(memDC, oldBrush);
+                            SelectObject(memDC, oldPen);
+                            DeleteObject(blackBrush);
+                            DeleteObject(blackPen);
+                            
+                            HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
+                            oldBrush = SelectObject(memDC, whiteBrush);
+                            oldPen = SelectObject(memDC, GetStockObject(NULL_PEN));
+                            Ellipse(memDC, cx - CELL*4/30, cy - CELL*4/30, cx - CELL/30, cy - CELL/30);
+                            SelectObject(memDC, oldBrush);
+                            SelectObject(memDC, oldPen);
+                            DeleteObject(whiteBrush);
                         } else if (grid[y][x] > 0) {
                             char buf[2];
                             buf[0] = '0' + grid[y][x];

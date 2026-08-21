@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMine
 - KMandel
 - KVoid
 - KStarship
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KDragon
 - KSolitaire
 - KHex
+- KMine
 ## Completed Work Log
+
+- **KMine (Loop 1):** Replaced plain text placeholders for Flag ("F") and Mine ("*") with custom drawn graphical vector models. Flag drawn with pole and triangular pennant; Mine constructed with a central core, 8-directional spikes, and specular highlight. Implemented using Canvas primitives (kmine.html) and GDI primitives via Polygon/Ellipse/LineTo in Native C Win32 GDI (KMine/main.c).
 
 - **KHex (Loop 1):** Replaced plain text '0x' logo icons with custom drawn graphical vector hexagons, using an inline SVG hexagon sprite with linear gradient in Web Canvas (khex.html) and a GDI composed hexagon using CreatePen/CreateSolidBrush/Polygon in Native C Win32 GDI (KHex/main.c).
 
