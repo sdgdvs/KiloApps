@@ -328,3 +328,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPaint: Usability and UI issues fixed (updated App.jsx and native bounds to 1100x750 for proper canvas fit, enforced AdjustWindowRect, verified crisp text and existing help visibility).
 - KFarm: Usability and UI issues fixed (added WS_CLIPCHILDREN to native, explicitly mapped F1 for Help in both versions, wrapped web bottom controls in flex containers, updated App.jsx width to 600).
 - KSnake: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles to prevent flickering, mapped F1 to help overlay in both versions, updated visual instructions to mention F1, and verified 540x680 bounds in App.jsx).
+- KTetris: FAILED (Subagent timed out after 8 minutes).
