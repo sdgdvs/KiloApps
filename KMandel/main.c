@@ -426,26 +426,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteDC(hdcMem);
             }
             
-            // Draw Help Background
-            RECT textBg = { 10, bmpH - 40, 160, bmpH - 10 };
-            HBRUSH hBrush = CreateSolidBrush(RGB(15, 23, 42));
-            HPEN hPen = CreatePen(PS_SOLID, 1, RGB(50, 50, 70));
+            // Draw Help Background with a stylized outline
+            RECT textBg = { 10, bmpH - 46, 180, bmpH - 10 };
+            HBRUSH hBrush = CreateSolidBrush(RGB(20, 30, 50));
+            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 150, 255));
             HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
             HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
-            RoundRect(hdc, textBg.left, textBg.top, textBg.right, textBg.bottom, 8, 8);
+            RoundRect(hdc, textBg.left, textBg.top, textBg.right, textBg.bottom, 12, 12);
+            
+            // Draw a GDI composed vector icon (Stylized 'i' in a circle)
+            HPEN iconPen = CreatePen(PS_SOLID, 2, RGB(100, 200, 255));
+            SelectObject(hdc, iconPen);
+            Arc(hdc, 20, bmpH - 38, 36, bmpH - 22, 0, 0, 0, 0); // Circle
+            MoveToEx(hdc, 28, bmpH - 34, NULL); // 'i' dot
+            LineTo(hdc, 28, bmpH - 33);
+            MoveToEx(hdc, 28, bmpH - 30, NULL); // 'i' body
+            LineTo(hdc, 28, bmpH - 25);
+            
             SelectObject(hdc, hOldBrush);
             SelectObject(hdc, hOldPen);
             DeleteObject(hBrush);
             DeleteObject(hPen);
+            DeleteObject(iconPen);
             
             // Draw Help Text
             SetBkMode(hdc, TRANSPARENT);
-            HFONT hFont = CreateFont(-18, 0, 0, 0, FW_MEDIUM, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+            HFONT hFont = CreateFont(-16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
                                      DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
-            SetTextColor(hdc, RGB(248, 250, 252));
-            TextOut(hdc, 20, bmpH - 33, "Press H for Help", 16);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            TextOut(hdc, 44, bmpH - 36, "Press H for Help", 16);
             SelectObject(hdc, hOldFont);
             DeleteObject(hFont);
             

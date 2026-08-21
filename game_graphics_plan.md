@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMandel
 - KVoid
 - KStarship
 - KConnect4
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSolitaire
 - KHex
 - KMine
+- KMandel
 ## Completed Work Log
+
+- **KMandel (Loop 1):** Replaced plain text control panel buttons with modern stylized inline SVG vector graphics paired with text labels in Web Canvas (kmandel.html), and enhanced the GDI Help Banner by drawing a stylized composed vector info icon (Arc/MoveToEx/LineTo) alongside improved text formatting and border rendering in Native C Win32 GDI (KMandel/main.c).
 
 - **KMine (Loop 1):** Replaced plain text placeholders for Flag ("F") and Mine ("*") with custom drawn graphical vector models. Flag drawn with pole and triangular pennant; Mine constructed with a central core, 8-directional spikes, and specular highlight. Implemented using Canvas primitives (kmine.html) and GDI primitives via Polygon/Ellipse/LineTo in Native C Win32 GDI (KMine/main.c).
 
