@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSimon
 - KDragon
 - KSolitaire
 - KHex
@@ -142,7 +141,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAsteroids
 - K2048
 - KDarts
+- KSimon
+- KTrader
 ## Completed Work Log
+
+- **KSimon (Loop 1):** Replaced basic circle/rectangle placeholder shapes with custom dynamic geometric vector models that change based on game mode (Diamond for 4-button, Hexagon for 6-button, Octagon for 8-button), including full dynamic 3D bevels and glow outlines in both Web Canvas (ksimon.html) and Native C Win32 GDI (KSimon/main.c).
 
 - **KDarts (Loop 3):** Implemented highly detailed visual variations for the pub background (procedurally generated wood grain on the dartboard cabinet), an animated flickering neon sign overhead casting a colored radial glow on the brick wall, and atmospheric floating smoke/dust motes illuminated by the light in both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
 

@@ -665,20 +665,35 @@
       ctx.translate(btn.x, btn.y);
       ctx.scale(btn.scale, btn.scale);
 
+      let sides = 4;
+      let angleOffset = Math.PI / 4;
+      if (activeCount === 6) { sides = 6; angleOffset = Math.PI / 6; }
+      if (activeCount === 8) { sides = 8; angleOffset = Math.PI / 8; }
+
+      function tracePolygon(ctx, rad, offsetY = 0) {
+        ctx.beginPath();
+        for (let j = 0; j < sides; j++) {
+          const a = j * (Math.PI * 2 / sides) + angleOffset;
+          const px = Math.cos(a) * rad;
+          const py = Math.sin(a) * rad + offsetY;
+          if (j === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+      }
+
       if (btn.glowIntensity > 0 && currentMode !== 'pitch_audio') {
         const haloGrad = ctx.createRadialGradient(0, 0, btn.radius * 0.8, 0, 0, btn.radius * 1.7);
         haloGrad.addColorStop(0, btn.glowColor);
         haloGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = haloGrad;
         ctx.globalAlpha = btn.glowIntensity * 0.8;
-        ctx.beginPath();
-        ctx.arc(0, 0, btn.radius * 1.7, 0, Math.PI * 2);
+        tracePolygon(ctx, btn.radius * 1.7);
         ctx.fill();
         ctx.globalAlpha = 1.0;
       }
 
-      ctx.beginPath();
-      ctx.arc(0, 3, btn.radius + 3, 0, Math.PI * 2);
+      tracePolygon(ctx, btn.radius + 3, 3);
       ctx.fillStyle = '#0a0a0f';
       ctx.fill();
 
@@ -699,25 +714,29 @@
         btnGrad.addColorStop(1, '#000000');
       }
 
-      ctx.beginPath();
-      ctx.arc(0, 0, btn.radius, 0, Math.PI * 2);
+      tracePolygon(ctx, btn.radius);
       ctx.fillStyle = btnGrad;
       ctx.fill();
 
       ctx.beginPath();
-      ctx.arc(0, -btn.radius * 0.2, btn.radius * 0.75, Math.PI * 0.85, Math.PI * 2.15);
+      for (let j = Math.floor(sides/2); j <= sides; j++) {
+         const a = j * (Math.PI * 2 / sides) + angleOffset;
+         const px = Math.cos(a) * (btn.radius - 2);
+         const py = Math.sin(a) * (btn.radius - 2);
+         if (j === Math.floor(sides/2)) ctx.moveTo(px, py);
+         else ctx.lineTo(px, py);
+      }
       ctx.strokeStyle = btn.active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)';
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      ctx.beginPath();
-      ctx.arc(0, 0, btn.radius, 0, Math.PI * 2);
+      tracePolygon(ctx, btn.radius);
       ctx.strokeStyle = btn.active ? '#ffffff' : 'rgba(255,255,255,0.2)';
       ctx.lineWidth = 2;
       ctx.stroke();
 
       const iconColor = btn.active ? '#ffffff' : '#e0e0e0';
-      drawIcon(ctx, btn.icon, 0, -2, btn.radius * 0.8, iconColor);
+      drawIcon(ctx, btn.icon, 0, -2, btn.radius * 0.65, iconColor);
 
       ctx.font = 'bold 11px sans-serif';
       ctx.fillStyle = btn.active ? '#ffffff' : 'rgba(255,255,255,0.6)';

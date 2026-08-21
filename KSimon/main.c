@@ -562,61 +562,96 @@ void DrawBoard(HDC hdc, int width, int height) {
             InflateRect(&r, 3, 3);
         }
 
-        // Bezel
-        HBRUSH bezelBrush = CreateSolidBrush(RGB(10, 10, 15));
-        RECT rBezel = r;
-        InflateRect(&rBezel, 2, 2);
-        FillRect(hdc, &rBezel, bezelBrush);
-        DeleteObject(bezelBrush);
+        int bCx = (r.left + r.right) / 2;
+        int bCy = (r.top + r.bottom) / 2;
+        int radius = (r.right - r.left) / 2;
+
+        int num_sides = 4;
+        float angleOffset = 0.785398f; // 45 degrees
+        if (num_btns == 6) { num_sides = 6; angleOffset = 0.523599f; /* 30 deg */ }
+        if (num_btns == 8) { num_sides = 8; angleOffset = 0.392699f; /* 22.5 deg */ }
+        
+        COLORREF cFill = btn_colors[i];
+        if (isFlash) {
+            cFill = (current_mode == MODE_PITCH_AUDIO && is_playing_sequence) ? RGB(70, 70, 80) : flash_colors[i];
+        }
+
+        // Define Points
+        POINT ptsOuter[8];
+        POINT ptsInner[8];
+        for (int j = 0; j < num_sides; j++) {
+            float angle = j * 6.283185f / num_sides + angleOffset;
+            float rOut = radius + 2;
+            float rInn = radius;
+            if (num_sides == 4) { rOut *= 1.414f; rInn *= 1.414f; }
+            
+            ptsOuter[j].x = bCx + (int)(cosf(angle) * rOut);
+            ptsOuter[j].y = bCy + (int)(sinf(angle) * rOut);
+            ptsInner[j].x = bCx + (int)(cosf(angle) * rInn);
+            ptsInner[j].y = bCy + (int)(sinf(angle) * rInn);
+        }
 
         // Glow
         if (isFlash && current_mode != MODE_PITCH_AUDIO) {
             COLORREF gCol = flash_colors[i];
             for (int g = 8; g >= 1; g -= 2) {
-                RECT rGlow = r;
-                InflateRect(&rGlow, g, g);
+                POINT ptsGlow[8];
+                for(int j=0; j<num_sides; j++) {
+                    float angle = j * 6.283185f / num_sides + angleOffset;
+                    float rGlow = radius + g;
+                    if (num_sides == 4) rGlow *= 1.414f;
+                    ptsGlow[j].x = bCx + (int)(cosf(angle) * rGlow);
+                    ptsGlow[j].y = bCy + (int)(sinf(angle) * rGlow);
+                }
                 HPEN glowPen = CreatePen(PS_SOLID, 2, gCol);
                 HGDIOBJ oldP = SelectObject(hdc, glowPen);
                 HGDIOBJ oldB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                RoundRect(hdc, rGlow.left, rGlow.top, rGlow.right, rGlow.bottom, 16, 16);
+                Polygon(hdc, ptsGlow, num_sides);
                 SelectObject(hdc, oldP);
                 SelectObject(hdc, oldB);
                 DeleteObject(glowPen);
             }
         }
 
-        // Body Fill (Pitch Audio mode hides colors during sequence flash)
-        COLORREF cFill = btn_colors[i];
-        if (isFlash) {
-            cFill = (current_mode == MODE_PITCH_AUDIO && is_playing_sequence) ? RGB(70, 70, 80) : flash_colors[i];
-        }
+        // Bezel
+        HBRUSH bezelBrush = CreateSolidBrush(RGB(10, 10, 15));
+        HGDIOBJ oldB = SelectObject(hdc, bezelBrush);
+        HPEN bezPen = CreatePen(PS_SOLID, 1, RGB(10,10,15));
+        HGDIOBJ oldP = SelectObject(hdc, bezPen);
+        Polygon(hdc, ptsOuter, num_sides);
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+        DeleteObject(bezelBrush);
+        DeleteObject(bezPen);
+
+        // Body
         HBRUSH btnBrush = CreateSolidBrush(cFill);
-        FillRect(hdc, &r, btnBrush);
+        oldB = SelectObject(hdc, btnBrush);
+        HPEN borderPen = CreatePen(PS_SOLID, 2, isFlash ? RGB(255,255,255) : RGB(80,80,80));
+        oldP = SelectObject(hdc, borderPen);
+        Polygon(hdc, ptsInner, num_sides);
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
         DeleteObject(btnBrush);
+        DeleteObject(borderPen);
 
-        // 3D Bevel
+        // 3D Bevel (Top half highlight)
         HPEN hiPen = CreatePen(PS_SOLID, 2, isFlash ? RGB(255, 255, 255) : RGB(220, 220, 220));
-        HGDIOBJ oldP = SelectObject(hdc, hiPen);
-        MoveToEx(hdc, r.left, r.bottom - 2, NULL);
-        LineTo(hdc, r.left, r.top);
-        LineTo(hdc, r.right - 2, r.top);
-
-        HPEN shPen = CreatePen(PS_SOLID, 2, RGB(20, 20, 30));
-        SelectObject(hdc, shPen);
-        LineTo(hdc, r.right - 2, r.bottom - 2);
-        LineTo(hdc, r.left, r.bottom - 2);
+        oldP = SelectObject(hdc, hiPen);
+        MoveToEx(hdc, ptsInner[num_sides/2].x, ptsInner[num_sides/2].y, NULL);
+        for(int j=num_sides/2; j<=num_sides; j++) {
+            LineTo(hdc, ptsInner[j%num_sides].x, ptsInner[j%num_sides].y);
+        }
         SelectObject(hdc, oldP);
         DeleteObject(hiPen);
-        DeleteObject(shPen);
 
         // Icon & Label
-        int bCx = (r.left + r.right) / 2;
-        int bCy = (r.top + r.bottom) / 2 - 4;
-        DrawButtonIcon(hdc, i, bCx, bCy, isFlash ? RGB(255, 255, 255) : RGB(230, 230, 230));
+        int iconCy = bCy - 4;
+        DrawButtonIcon(hdc, i, bCx, iconCy, isFlash ? RGB(255, 255, 255) : RGB(230, 230, 230));
 
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, isFlash ? RGB(255, 255, 255) : RGB(180, 180, 180));
-        TextOutA(hdc, r.left + 6, r.bottom - 18, keyLabels[i], strlen(keyLabels[i]));
+        TextOutA(hdc, bCx - 4, iconCy + 14, keyLabels[i], strlen(keyLabels[i]));
     }
 
     // Center Disc
