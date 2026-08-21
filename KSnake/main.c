@@ -1596,7 +1596,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == '2') difficulty = 1;
                 else if (wParam == '3') difficulty = 2;
                 else if (wParam == 'W') wrap_mode = !wrap_mode;
-                else if (wParam == 'H') game_state = 5;
+                else if (wParam == 'H' || wParam == VK_F1) game_state = 5;
                 else if (wParam == 'R') {
                     if (RestoreGameState()) {
                         game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL);
@@ -1691,7 +1691,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, 120, 150, "C - Config Keys", 15);
                 TextOutA(hdc, 120, 180, "S - Match Stats (Last)", 22);
                 TextOutA(hdc, 120, 210, "X - Play Replay (.ksr)", 22);
-                TextOutA(hdc, 120, 240, "Press H for Help / High Scores", 30);
+                TextOutA(hdc, 120, 240, "Press H or F1 for Help / Scores", 31);
                 TextOutA(hdc, 120, 270, "R - Resume Saved Game", 21);
                 TextOutA(hdc, 120, 300, "E/I - Export/Import All", 23);
                 TextOutA(hdc, 120, 340, "Move: WASD/Arrows | Skills: G,F,M", 33);
@@ -1924,7 +1924,7 @@ void MainEntry() {
     RECT rect = {0, 0, winWidth, winHeight};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
 
-    hwnd = CreateWindowExA(0, "KSnakeApp", "KSnake Arcade - Loop 8 [Press H for Help]", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    hwnd = CreateWindowExA(0, "KSnakeApp", "KSnake Arcade - Loop 8 [Press H or F1 for Help]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
