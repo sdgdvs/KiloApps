@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSolitaire
 - KHex
 - KMine
 - KMandel
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSimon
 - KTrader
 - KDragon
+- KSolitaire
 ## Completed Work Log
+
+- **KSolitaire (Loop 6):** Implemented highly detailed visual variations for the victory sequence (dynamic 3D screen-shake and multi-layered procedural gravity-respecting confetti burst), a procedural animated pulsing glowing aura effect around full foundation piles, and distinctly stylized kinematically animated card flipping/turning sequences with a slight 3D scaling pop effect when a hidden card is revealed in both Web Canvas (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
 - **KDragon (Loop 1):** Replaced text-based placeholder shapes for enemies and key items with custom drawn graphical vector models/sprites (purple recolored adult dragon for enemies, custom shapes/SVG icons for shop items Meat, Toy, Bracer, Boots) in both Web Canvas (kdragon.html) and Native C Win32 GDI (KDragon/main.c).
 

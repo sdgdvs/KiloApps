@@ -200,6 +200,22 @@ int cascadeActive = 0;
 Particle particles[128];
 int particleActive = 0;
 
+int flipAnimActive = 0;
+int flipAnimFrame = 0;
+int flipCardCol = -1;
+int flipCardRow = -1;
+
+int shakeActive = 0;
+int shakeFrame = 0;
+int winMsgPending = 0;
+
+typedef struct {
+    float x, y, vx, vy, rot, rotSpeed;
+    COLORREF color;
+    int active, size;
+} Confetti;
+Confetti confetti[200];
+
 // Random Seed generator
 unsigned int seed = 1337;
 unsigned int rnd() {
@@ -445,7 +461,12 @@ void NewGame(HWND hwnd) {
     gameWon = 0;
     autoFinishActive = 0;
     cascadeActive = 0;
+    flipAnimActive = 0;
+    shakeActive = 0;
+    winMsgPending = 0;
+    for (int i = 0; i < 200; i++) confetti[i].active = 0;
     KillTimer(hwnd, 3);
+    KillTimer(hwnd, 6);
     ClearSelectionAndHints();
 
     Card deck[52];
@@ -587,6 +608,24 @@ void StartWinCascade(HWND hwnd) {
     int foundationStartX = GAP_X + 3 * (CARD_W + GAP_X);
     int stockY = 35 + GAP_Y;
 
+    for (int i = 0; i < 200; i++) {
+        confetti[i].x = (float)(rnd() % 1000);
+        confetti[i].y = (float)(-(rnd() % 500));
+        confetti[i].vx = (float)((rnd() % 10) - 5) / 2.0f;
+        confetti[i].vy = (float)(rnd() % 10 + 5) / 2.0f;
+        confetti[i].active = 1;
+        confetti[i].size = 4 + (rnd() % 6);
+        confetti[i].rot = 0.0f;
+        confetti[i].rotSpeed = (float)((rnd() % 20) - 10) / 10.0f;
+        int r = rnd() % 6;
+        if (r == 0) confetti[i].color = RGB(255, 215, 0);
+        else if (r == 1) confetti[i].color = RGB(255, 0, 0);
+        else if (r == 2) confetti[i].color = RGB(0, 255, 0);
+        else if (r == 3) confetti[i].color = RGB(0, 150, 255);
+        else if (r == 4) confetti[i].color = RGB(255, 0, 255);
+        else confetti[i].color = RGB(0, 255, 255);
+    }
+
     for (int f = 0; f < 4; f++) {
         int fx = foundationStartX + f * (CARD_W + GAP_X);
         for (int c = state.foundation_cnt[f] - 1; c >= 0; c--) {
@@ -635,26 +674,10 @@ void CheckWin(HWND hwnd) {
         SaveStats();
         StartWinCascade(hwnd);
 
-        char msg[384];
-        if (state.gameMode == 1) {
-            if (state.campaignStage < 20) {
-                wsprintfA(msg, "STAGE CLEARED!\n\nStage %d: %s Completed!\nScore: %d\nTime: %d s\nMoves: %d\n\nStage %d Unlocked!",
-                    state.campaignStage, CAMPAIGN_STAGES[state.campaignStage - 1].name, state.score, state.timerSeconds, state.moves, state.campaignStage + 1);
-            } else {
-                wsprintfA(msg, "GRANDMASTER CHALLENGE VICTORIOUS!\n\nYou have mastered all 20 Solitaire Campaign Stages!\n\nFinal Score: %d\nTime: %d s", state.score, state.timerSeconds);
-            }
-        } else if (state.gameMode == 2) {
-            wsprintfA(msg, "VEGAS SOLITAIRE WIN!\n\nEarnings this match: $%d\nTotal Vegas Cash: $%d\nTime: %d s", state.score, stats.vegasCash, state.timerSeconds);
-        } else {
-            wsprintfA(msg, "Congratulations! Solitaire Victory!\n\nFinal Score: %d\nTime: %d s\nMoves: %d", state.score, state.timerSeconds, state.moves);
-        }
-
-        if (MessageBoxA(hwnd, msg, "KSolitaire Victory!", MB_OK | MB_ICONINFORMATION) == IDOK) {
-            if (state.gameMode == 1 && state.campaignStage < 20) {
-                state.campaignStage++;
-                NewGame(hwnd);
-            }
-        }
+        shakeActive = 1;
+        shakeFrame = 0;
+        winMsgPending = 1;
+        SetTimer(hwnd, 6, 4000, NULL); // Defer victory message box 4 seconds
     }
 }
 
@@ -724,6 +747,10 @@ int AttemptMove(int srcType, int srcPile, int srcIdx, int dstType, int dstPile, 
         Card *top = &state.tableau[srcPile][state.tableau_cnt[srcPile] - 1];
         if (!top->faceUp) {
             top->faceUp = 1;
+            flipAnimActive = 1;
+            flipAnimFrame = 0;
+            flipCardCol = srcPile;
+            flipCardRow = state.tableau_cnt[srcPile] - 1;
             if (!state.vegasRules) state.score += 5;
         }
     }
@@ -1411,6 +1438,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 NewGame(hwnd);
             }
             SetTimer(hwnd, 1, 1000, NULL);
+            SetTimer(hwnd, 5, 40, NULL); // Animation loop timer
             break;
         }
         case WM_COMMAND: {
@@ -1611,6 +1639,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (!card.faceUp && c == tCount - 1) {
                                 PushUndoState();
                                 state.tableau[t][c].faceUp = 1;
+                                flipAnimActive = 1;
+                                flipAnimFrame = 0;
+                                flipCardCol = t;
+                                flipCardRow = c;
                                 if (!state.vegasRules) state.score += 5;
                                 state.moves++;
                                 InvalidateRect(hwnd, NULL, FALSE);
@@ -1722,7 +1754,56 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                     }
+                    for (int i = 0; i < 200; i++) {
+                        if (confetti[i].active) {
+                            confetti[i].x += confetti[i].vx;
+                            confetti[i].y += confetti[i].vy;
+                            confetti[i].rot += confetti[i].rotSpeed;
+                            confetti[i].vy += 0.15f; // gravity
+                            if (confetti[i].y > winH + 50) confetti[i].active = 0;
+                        }
+                    }
                     InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (wParam == 5) { // Animations
+                int needUpdate = 0;
+                if (flipAnimActive) {
+                    flipAnimFrame++;
+                    if (flipAnimFrame > 10) flipAnimActive = 0;
+                    needUpdate = 1;
+                }
+                if (shakeActive) {
+                    shakeFrame++;
+                    if (shakeFrame > 15) shakeActive = 0;
+                    needUpdate = 1;
+                }
+                for (int f = 0; f < 4; f++) {
+                    if (state.foundation_cnt[f] == 13) needUpdate = 1;
+                }
+                if (needUpdate) InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 6) { // Deferred Win Message
+                KillTimer(hwnd, 6);
+                if (winMsgPending) {
+                    winMsgPending = 0;
+                    char msg[384];
+                    if (state.gameMode == 1) {
+                        if (state.campaignStage < 20) {
+                            wsprintfA(msg, "STAGE CLEARED!\n\nStage %d: %s Completed!\nScore: %d\nTime: %d s\nMoves: %d\n\nStage %d Unlocked!",
+                                state.campaignStage, CAMPAIGN_STAGES[state.campaignStage - 1].name, state.score, state.timerSeconds, state.moves, state.campaignStage + 1);
+                        } else {
+                            wsprintfA(msg, "GRANDMASTER CHALLENGE VICTORIOUS!\n\nYou have mastered all 20 Solitaire Campaign Stages!\n\nFinal Score: %d\nTime: %d s", state.score, state.timerSeconds);
+                        }
+                    } else if (state.gameMode == 2) {
+                        wsprintfA(msg, "VEGAS SOLITAIRE WIN!\n\nEarnings this match: $%d\nTotal Vegas Cash: $%d\nTime: %d s", state.score, stats.vegasCash, state.timerSeconds);
+                    } else {
+                        wsprintfA(msg, "Congratulations! Solitaire Victory!\n\nFinal Score: %d\nTime: %d s\nMoves: %d", state.score, state.timerSeconds, state.moves);
+                    }
+                    if (MessageBoxA(hwnd, msg, "KSolitaire Victory!", MB_OK | MB_ICONINFORMATION) == IDOK) {
+                        if (state.gameMode == 1 && state.campaignStage < 20) {
+                            state.campaignStage++;
+                            NewGame(hwnd);
+                        }
+                    }
                 }
             } else if (wParam == 4) { // Particles
                 int anyActive = 0;
@@ -1880,6 +1961,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int f = 0; f < 4; f++) {
                 int fx = foundationStartX + f * (CARD_W + GAP_X);
                 int fy = stockY;
+                if (state.foundation_cnt[f] == 13) {
+                    int glow = 6 + (int)(sin(GetTickCount() / 150.0) * 4);
+                    HPEN glowPen = CreatePen(PS_SOLID, glow, RGB(255, 215, 0));
+                    HPEN oldGP = (HPEN)SelectObject(memDC, glowPen);
+                    HBRUSH oldGB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                    RoundRect(memDC, fx - glow/2, fy - glow/2, fx + CARD_W + glow/2, fy + CARD_H + glow/2, 12, 12);
+                    SelectObject(memDC, oldGP);
+                    SelectObject(memDC, oldGB);
+                    DeleteObject(glowPen);
+                }
                 if (state.foundation_cnt[f] > 0) {
                     Card topF = state.foundations[f][state.foundation_cnt[f] - 1];
                     int isSel = (selectedType == 2 && selectedPile == f);
@@ -1908,7 +1999,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int isSel = (selectedType == 1 && selectedPile == t && c >= selectedCardIdx);
                         int isHS = (hintSrcType == 1 && hintSrcPile == t && c == hintSrcIdx);
                         int isHD = (hintDstType == 1 && hintDstPile == t && c == tCount - 1);
-                        DrawCardGDI(memDC, card, tx, cy, isSel, isHS, isHD);
+                        
+                        if (flipAnimActive && t == flipCardCol && c == flipCardRow) {
+                            float prog = flipAnimFrame / 10.0f;
+                            int yOff = (int)(sin(prog * 3.1415f) * 20.0f);
+                            DrawCardGDI(memDC, card, tx, cy - yOff, isSel, isHS, isHD);
+                            
+                            HPEN glowPen = CreatePen(PS_SOLID, 4, RGB(255, 255, 255));
+                            HPEN oldGP = (HPEN)SelectObject(memDC, glowPen);
+                            HBRUSH oldGB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                            RoundRect(memDC, tx - 2, cy - yOff - 2, tx + CARD_W + 2, cy - yOff + CARD_H + 2, 8, 8);
+                            SelectObject(memDC, oldGP);
+                            SelectObject(memDC, oldGB);
+                            DeleteObject(glowPen);
+                        } else {
+                            DrawCardGDI(memDC, card, tx, cy, isSel, isHS, isHD);
+                        }
                     }
                 }
             }
@@ -1950,9 +2056,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DrawCardGDI(memDC, c->card, (int)c->x, (int)c->y, 0, 0, 0);
                     }
                 }
+                for (int i = 0; i < 200; i++) {
+                    if (confetti[i].active) {
+                        HBRUSH cb = CreateSolidBrush(confetti[i].color);
+                        int h = (int)(confetti[i].size * cos(confetti[i].rot));
+                        if (h < 2 && h > -2) h = 2;
+                        RECT cr = { (int)confetti[i].x, (int)confetti[i].y, (int)confetti[i].x + confetti[i].size, (int)confetti[i].y + abs(h) };
+                        FillRect(memDC, &cr, cb);
+                        DeleteObject(cb);
+                    }
+                }
             }
 
-            BitBlt(hdc, 0, 0, winW, winH, memDC, 0, 0, SRCCOPY);
+            if (shakeActive) {
+                int dx = (rnd() % 20) - 10;
+                int dy = (rnd() % 20) - 10;
+                BitBlt(hdc, dx, dy, winW, winH, memDC, 0, 0, SRCCOPY);
+            } else {
+                BitBlt(hdc, 0, 0, winW, winH, memDC, 0, 0, SRCCOPY);
+            }
             SelectObject(memDC, oldFont);
             DeleteObject(hFont);
             SelectObject(memDC, oldBm);
