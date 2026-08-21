@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KDarts
 - KSimon
 - KDragon
 - KSolitaire
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMines
 - KAsteroids
 - K2048
+- KDarts
 ## Completed Work Log
+
+- **KDarts (Loop 3):** Implemented highly detailed visual variations for the pub background (procedurally generated wood grain on the dartboard cabinet), an animated flickering neon sign overhead casting a colored radial glow on the brick wall, and atmospheric floating smoke/dust motes illuminated by the light in both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
 
 - **K2048 (Loop 6):** Implemented highly detailed visual variations for the background board (procedural textured wood/stone grain with dynamic ambient occlusion shading based on grid occupancy), a distinctly stylized kinematically animated cascading tile destruction effect when the board is reset, and an expanding multi-layered 3D shockwave with chromatic aberration when a 2048 or higher tile is formed in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 

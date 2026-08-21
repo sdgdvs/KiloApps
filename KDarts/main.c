@@ -115,6 +115,11 @@ static int particleCount = 0;
 static ScoreText scoreTexts[MAX_SCORE_TEXTS];
 static int scoreTextCount = 0;
 
+typedef struct { float x, y, vy, phase; } DustMote;
+#define MAX_DUST 40
+static DustMote dustMotes[MAX_DUST];
+static int dustInit = 0;
+
 static int shakeTime = 0;
 static float shakeMag = 0.0f;
 
@@ -956,6 +961,21 @@ void DrawCircleGDI(HDC hdc, int cx, int cy, int r, COLORREF color, COLORREF bord
 void Draw3DSisalDartboardGDI(HDC hdc, int cx, int cy) {
     // 1. Mahogany Cabinet Frame
     DrawCircleGDI(hdc, cx, cy, (int)(BOARD_R * 1.35f), RGB(26, 12, 5), RGB(9, 4, 2));
+    
+    // Procedural Wood Grain
+    HPEN grainPen = CreatePen(PS_SOLID, 1, RGB(38, 18, 8));
+    HPEN oldPenGrain = (HPEN)SelectObject(hdc, grainPen);
+    HBRUSH nullBrGr = (HBRUSH)GetStockObject(NULL_BRUSH);
+    HBRUSH oldBrGr = (HBRUSH)SelectObject(hdc, nullBrGr);
+    for (int r = (int)(BOARD_R * 1.05f); r < (int)(BOARD_R * 1.32f); r += 4) {
+        int cxOffset = (rand() % 15) - 7;
+        int cyOffset = (rand() % 15) - 7;
+        Ellipse(hdc, cx - r + cxOffset, cy - r + cyOffset, cx + r + cxOffset, cy + r + cyOffset);
+    }
+    SelectObject(hdc, oldBrGr);
+    SelectObject(hdc, oldPenGrain);
+    DeleteObject(grainPen);
+
     DrawCircleGDI(hdc, cx, cy, (int)(BOARD_R * 1.02f), RGB(10, 10, 12), RGB(20, 20, 24));
 
     // Brass corner bolts
@@ -1401,6 +1421,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
             
+            // Update dust motes
+            for (int i = 0; i < MAX_DUST; i++) {
+                dustMotes[i].y -= dustMotes[i].vy;
+                dustMotes[i].x += sinf(t * 0.5f + dustMotes[i].phase) * 0.3f;
+                if (dustMotes[i].y < -20.0f) {
+                    dustMotes[i].y = 800.0f;
+                    dustMotes[i].x = (float)(rand() % 800);
+                }
+            }
+
             int isP2AI = (isCampaign || aiDifficulty != 4);
             if (currentPlayer == 1 && gameState == 0 && isP2AI) {
                 int allAnimated = 1;
@@ -1471,6 +1501,66 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(brickBr);
             DeleteObject(mortarBr);
             
+            // Neon Sign & Glow
+            float flicker = ((float)rand()/RAND_MAX > 0.95f) ? 0.3f : (sinf(t * 5.0f) * 0.1f + 0.9f);
+            if (flicker > 0.4f) {
+                // Radial glow using concentric circles
+                for (int r = 300; r > 50; r -= 40) {
+                    int alpha = (int)((300 - r) * 0.12f * flicker); 
+                    int rCol = 51 + (255 - 51) * alpha / 255;
+                    int gCol = 26 + (50 - 26) * alpha / 255;
+                    int bCol = 26 + (150 - 26) * alpha / 255;
+                    HBRUSH glowBr = CreateSolidBrush(RGB(rCol, gCol, bCol));
+                    HPEN glowPen = CreatePen(PS_NULL, 0, 0);
+                    HBRUSH oldGB = (HBRUSH)SelectObject(memDC, glowBr);
+                    HPEN oldGP = (HPEN)SelectObject(memDC, glowPen);
+                    Ellipse(memDC, CX - r, 30 - r, CX + r, 30 + r);
+                    SelectObject(memDC, oldGB);
+                    SelectObject(memDC, oldGP);
+                    DeleteObject(glowBr);
+                    DeleteObject(glowPen);
+                }
+            }
+
+            // Neon Sign Text
+            SetBkMode(memDC, TRANSPARENT);
+            HFONT neonFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+                                    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+                                    DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            HFONT oldFontNeon = (HFONT)SelectObject(memDC, neonFont);
+            SIZE szNeon;
+            char* neonText = "K-DARTS PUB";
+            GetTextExtentPoint32(memDC, neonText, strlen(neonText), &szNeon);
+            SetTextColor(memDC, RGB((int)(255 * flicker), (int)(150 * flicker), (int)(200 * flicker)));
+            TextOut(memDC, CX - szNeon.cx/2, 10, neonText, strlen(neonText));
+            SelectObject(memDC, oldFontNeon);
+            DeleteObject(neonFont);
+
+            // Draw Dust Motes
+            if (!dustInit) {
+                for (int i = 0; i < MAX_DUST; i++) {
+                    dustMotes[i].x = (float)(rand() % 800);
+                    dustMotes[i].y = (float)(rand() % 800);
+                    dustMotes[i].vy = 0.5f + ((float)rand()/RAND_MAX) * 1.0f;
+                    dustMotes[i].phase = ((float)rand()/RAND_MAX) * 2.0f * 3.1415f;
+                }
+                dustInit = 1;
+            }
+            HBRUSH dustBr = CreateSolidBrush(RGB(200, 180, 120));
+            HPEN dustPen = CreatePen(PS_NULL, 0, 0);
+            HBRUSH oldDB = (HBRUSH)SelectObject(memDC, dustBr);
+            HPEN oldDP = (HPEN)SelectObject(memDC, dustPen);
+            for (int i = 0; i < MAX_DUST; i++) {
+                int r = 1 + (rand() % 2);
+                int dx = (int)dustMotes[i].x;
+                int dy = (int)dustMotes[i].y;
+                Ellipse(memDC, dx - r, dy - r, dx + r, dy + r);
+            }
+            SelectObject(memDC, oldDB);
+            SelectObject(memDC, oldDP);
+            DeleteObject(dustBr);
+            DeleteObject(dustPen);
+
             // Header UI panel
             HBRUSH uiBrush = CreateSolidBrush(RGB(28, 28, 32));
             HPEN uiPen = CreatePen(PS_SOLID, 1, RGB(55, 55, 65));
