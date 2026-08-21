@@ -19,9 +19,13 @@ typedef struct {
     int engineLevel;
     int cargoLevel;
     int weaponLevel;
+    int inCombat;
+    int playerShields;
+    int enemyShields;
+    int enemyMaxShields;
 } GameState;
 
-GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0}, 0, 0, 0 };
+GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0}, 0, 0, 0, 0, 50, 30, 30 };
 
 const char* goodNames[5] = { "Food", "Water", "Ore", "Tech", "Meds" };
 int marketBases[3][5] = {
@@ -52,6 +56,15 @@ HWND hListLog;
 #define ID_BTN_UPG_ENGINE 302
 #define ID_BTN_UPG_WEAPON 303
 HWND hBtnUpgCargo, hBtnUpgEngine, hBtnUpgWeapon;
+
+#define ID_BTN_FIRE 401
+#define ID_BTN_FLEE 402
+
+HWND hStatCombatTitle;
+HWND hStatCombatPlayer;
+HWND hStatCombatEnemy;
+HWND hBtnFire;
+HWND hBtnFlee;
 
 HWND hStatGoodName[5];
 HWND hStatGoodPrice[5];
@@ -102,9 +115,34 @@ void UpdateUI(HWND hwnd) {
         
         wsprintf(buf, "Travel to %s (%d fuel)", planetNames[i], destCost[btnIdx]);
         SetWindowText(btnIdx == 0 ? hBtnDest1 : hBtnDest2, buf);
-        EnableWindow(btnIdx == 0 ? hBtnDest1 : hBtnDest2, state.fuel >= destCost[btnIdx]);
+        EnableWindow(btnIdx == 0 ? hBtnDest1 : hBtnDest2, !state.inCombat && state.fuel >= destCost[btnIdx]);
         
         btnIdx++;
+    }
+
+    if (state.inCombat) {
+        ShowWindow(hStatLoc, SW_HIDE);
+        ShowWindow(hBtnDest1, SW_HIDE);
+        ShowWindow(hBtnDest2, SW_HIDE);
+        ShowWindow(hStatCombatTitle, SW_SHOW);
+        ShowWindow(hStatCombatPlayer, SW_SHOW);
+        ShowWindow(hStatCombatEnemy, SW_SHOW);
+        ShowWindow(hBtnFire, SW_SHOW);
+        ShowWindow(hBtnFlee, SW_SHOW);
+        
+        wsprintf(buf, "Shields: %d", state.playerShields);
+        SetWindowText(hStatCombatPlayer, buf);
+        wsprintf(buf, "Enemy: %d / %d", state.enemyShields, state.enemyMaxShields);
+        SetWindowText(hStatCombatEnemy, buf);
+    } else {
+        ShowWindow(hStatLoc, SW_SHOW);
+        ShowWindow(hBtnDest1, SW_SHOW);
+        ShowWindow(hBtnDest2, SW_SHOW);
+        ShowWindow(hStatCombatTitle, SW_HIDE);
+        ShowWindow(hStatCombatPlayer, SW_HIDE);
+        ShowWindow(hStatCombatEnemy, SW_HIDE);
+        ShowWindow(hBtnFire, SW_HIDE);
+        ShowWindow(hBtnFlee, SW_HIDE);
     }
 
     int cargoCost = 500 * (state.cargoLevel + 1);
@@ -113,15 +151,15 @@ void UpdateUI(HWND hwnd) {
 
     wsprintf(buf, "Upg Cargo (%d cr)", cargoCost);
     SetWindowText(hBtnUpgCargo, buf);
-    EnableWindow(hBtnUpgCargo, state.credits >= cargoCost);
+    EnableWindow(hBtnUpgCargo, !state.inCombat && state.credits >= cargoCost);
 
     wsprintf(buf, "Upg Engine (%d cr)", engineCost);
     SetWindowText(hBtnUpgEngine, buf);
-    EnableWindow(hBtnUpgEngine, state.credits >= engineCost);
+    EnableWindow(hBtnUpgEngine, !state.inCombat && state.credits >= engineCost);
 
     wsprintf(buf, "Upg Weapons (%d cr)", weaponCost);
     SetWindowText(hBtnUpgWeapon, buf);
-    EnableWindow(hBtnUpgWeapon, state.credits >= weaponCost);
+    EnableWindow(hBtnUpgWeapon, !state.inCombat && state.credits >= weaponCost);
 
     // Update Market
     for (int i = 0; i < 5; i++) {
@@ -130,8 +168,8 @@ void UpdateUI(HWND hwnd) {
         wsprintf(buf, "Own: %d", state.inventory[i]);
         SetWindowText(hStatGoodOwned[i], buf);
         
-        EnableWindow(hBtnGoodBuy[i], state.credits >= currentPrices[i] && state.cargo < state.maxCargo);
-        EnableWindow(hBtnGoodSell[i], state.inventory[i] > 0);
+        EnableWindow(hBtnGoodBuy[i], !state.inCombat && state.credits >= currentPrices[i] && state.cargo < state.maxCargo);
+        EnableWindow(hBtnGoodSell[i], !state.inCombat && state.inventory[i] > 0);
     }
 }
 
@@ -167,24 +205,11 @@ void Travel(int btnIdx, HWND hwnd) {
                 for (int i = 0; i < 5; i++) {
                     if (state.inventory[i] > 0) available[availCount++] = i;
                 }
-                if (availCount > 0) {
-                    int stolenIdx = available[SimpleRand() % availCount];
-                    state.inventory[stolenIdx]--;
-                    state.cargo--;
-                    char encBuf[256];
-                    wsprintf(encBuf, "> WARNING: Space pirates ambushed you! Stole 1 %s.", goodNames[stolenIdx]);
-                    LogMessage(encBuf);
-                } else {
-                    int creditsLost = state.credits > 100 ? 100 : state.credits;
-                    if (creditsLost > 0) {
-                        state.credits -= creditsLost;
-                        char encBuf[256];
-                        wsprintf(encBuf, "> WARNING: Space pirates hacked you! Stole %d credits.", creditsLost);
-                        LogMessage(encBuf);
-                    } else {
-                        LogMessage("> WARNING: Space pirates attacked, found nothing of value.");
-                    }
-                }
+                state.inCombat = 1;
+                state.playerShields = 50 + state.cargoLevel * 10;
+                state.enemyMaxShields = 20 + (SimpleRand() % 40);
+                state.enemyShields = state.enemyMaxShields;
+                LogMessage("> 🚨 RED ALERT: PIRATE VESSEL INTERCEPTED YOU! 🚨");
             }
         }
 
@@ -192,6 +217,24 @@ void Travel(int btnIdx, HWND hwnd) {
         UpdateUI(hwnd);
     } else {
         LogMessage("> Insufficient fuel!");
+    }
+}
+
+void EnemyTurn(HWND hwnd) {
+    int dmg = 5 + (SimpleRand() % 15);
+    state.playerShields -= dmg;
+    char buf[128];
+    wsprintf(buf, "> Pirates fired! Your shields took %d damage.", dmg);
+    LogMessage(buf);
+
+    if (state.playerShields <= 0) {
+        LogMessage("> Your shields failed!");
+        int lost = (int)(state.credits * 0.2) + 50;
+        if (lost > state.credits) lost = state.credits;
+        state.credits -= lost;
+        wsprintf(buf, "> Pirates looted %d credits and left you drifting.", lost);
+        LogMessage(buf);
+        state.inCombat = 0;
     }
 }
 
@@ -218,6 +261,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             hBtnDest1 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 160, 250, 30, hwnd, (HMENU)ID_BTN_DEST1, NULL, NULL);
             hBtnDest2 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 200, 250, 30, hwnd, (HMENU)ID_BTN_DEST2, NULL, NULL);
+
+            hStatCombatTitle = CreateWindow("STATIC", "🚨 COMBAT ENGAGED 🚨", WS_CHILD, 20, 100, 200, 20, hwnd, NULL, NULL, NULL);
+            hStatCombatPlayer = CreateWindow("STATIC", "Shields: 50", WS_CHILD, 20, 130, 200, 20, hwnd, NULL, NULL, NULL);
+            hStatCombatEnemy = CreateWindow("STATIC", "Enemy: 30 / 30", WS_CHILD, 20, 160, 200, 20, hwnd, NULL, NULL, NULL);
+            hBtnFire = CreateWindow("BUTTON", "Fire Weapons", WS_CHILD | BS_PUSHBUTTON, 20, 190, 120, 30, hwnd, (HMENU)ID_BTN_FIRE, NULL, NULL);
+            hBtnFlee = CreateWindow("BUTTON", "Attempt Flee", WS_CHILD | BS_PUSHBUTTON, 150, 190, 120, 30, hwnd, (HMENU)ID_BTN_FLEE, NULL, NULL);
+            
+            SendMessage(hStatCombatTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hStatCombatPlayer, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hStatCombatEnemy, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnFire, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnFlee, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 240, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatShipyard, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -318,6 +373,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     LogMessage(buf);
                     UpdateUI(hwnd);
                 }
+            } else if (LOWORD(wParam) == ID_BTN_FIRE) {
+                int dmg = 10 + state.weaponLevel * 15 + (SimpleRand() % 10);
+                state.enemyShields -= dmg;
+                char buf[128];
+                wsprintf(buf, "> You fired! Pirate shields took %d damage.", dmg);
+                LogMessage(buf);
+
+                if (state.enemyShields <= 0) {
+                    LogMessage("> Pirate ship destroyed!");
+                    int bounty = 50 + (SimpleRand() % 100);
+                    state.credits += bounty;
+                    wsprintf(buf, "> Recovered %d credits from the wreckage.", bounty);
+                    LogMessage(buf);
+                    state.inCombat = 0;
+                } else {
+                    EnemyTurn(hwnd);
+                }
+                UpdateUI(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_FLEE) {
+                if ((SimpleRand() % 100) < 50) {
+                    LogMessage("> Successfully fled from the pirates!");
+                    state.inCombat = 0;
+                } else {
+                    LogMessage("> Failed to escape!");
+                    EnemyTurn(hwnd);
+                }
+                UpdateUI(hwnd);
             }
             return 0;
         }

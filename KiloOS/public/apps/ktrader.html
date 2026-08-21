@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <div class="panel" style="display: flex; gap: 20px;">
+  <div class="panel" id="ui-main-panel" style="display: flex; gap: 20px;">
     <div style="flex: 1;">
       <h2 style="margin-top: 0;">Navigation</h2>
       <p>Current Location: <strong id="ui-location">Earth</strong></p>
@@ -113,9 +113,27 @@
     </div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="ui-shipyard-panel">
     <h2 style="margin-top: 0;">Shipyard</h2>
     <div id="ui-shipyard" style="display: flex; gap: 10px;">
+    </div>
+  </div>
+
+  <div class="panel" id="ui-combat-panel" style="display: none; border-color: #f00;">
+    <h2 style="color: #f00; margin-top: 0;">🚨 COMBAT ENGAGED 🚨</h2>
+    <div style="display: flex; gap: 20px;">
+      <div style="flex: 1;">
+        <h3>Your Ship</h3>
+        <p id="ui-combat-pshields">Shields: 50</p>
+      </div>
+      <div style="flex: 1;">
+        <h3>Pirate Ship</h3>
+        <p id="ui-combat-eshields">Shields: 30</p>
+      </div>
+    </div>
+    <div style="margin-top: 15px;">
+      <button onclick="combatFire()" style="border-color: #f00; color: #f00;">Fire Weapons</button>
+      <button onclick="combatFlee()">Attempt Flee</button>
     </div>
   </div>
 
@@ -135,7 +153,11 @@
       inventory: { Food: 0, Water: 0, Ore: 0, Tech: 0, Meds: 0 },
       engineLevel: 0,
       cargoLevel: 0,
-      weaponLevel: 0
+      weaponLevel: 0,
+      inCombat: false,
+      playerShields: 50,
+      enemyShields: 30,
+      enemyMaxShields: 30
     };
 
     const planets = {
@@ -171,6 +193,17 @@
     }
 
     function updateUI() {
+      if (state.inCombat) {
+        document.getElementById('ui-main-panel').style.display = 'none';
+        document.getElementById('ui-shipyard-panel').style.display = 'none';
+        document.getElementById('ui-combat-panel').style.display = 'block';
+        document.getElementById('ui-combat-pshields').textContent = `Shields: ${state.playerShields}`;
+        document.getElementById('ui-combat-eshields').textContent = `Shields: ${state.enemyShields} / ${state.enemyMaxShields}`;
+      } else {
+        document.getElementById('ui-main-panel').style.display = 'flex';
+        document.getElementById('ui-shipyard-panel').style.display = 'block';
+        document.getElementById('ui-combat-panel').style.display = 'none';
+      }
       document.getElementById('ui-credits').textContent = `Credits: ${state.credits}`;
       document.getElementById('ui-fuel').textContent = `Fuel: ${state.fuel} / ${state.maxFuel}`;
       document.getElementById('ui-cargo').textContent = `Cargo: ${state.cargo} / ${state.maxCargo}`;
@@ -318,21 +351,7 @@
             state.credits += creditsGained;
             log(`Distress signal! Helped a stranded ship and received ${creditsGained} credits.`);
           } else {
-            const availableGoods = goods.filter(g => state.inventory[g] > 0);
-            if (availableGoods.length > 0) {
-              const stolen = availableGoods[Math.floor(Math.random() * availableGoods.length)];
-              state.inventory[stolen]--;
-              state.cargo--;
-              log(`WARNING: Space pirates ambushed you! They stole 1 ${stolen}.`, true);
-            } else {
-              const creditsLost = Math.min(state.credits, 100);
-              if (creditsLost > 0) {
-                state.credits -= creditsLost;
-                log(`WARNING: Space pirates hacked your accounts! Stole ${creditsLost} credits.`, true);
-              } else {
-                log(`WARNING: Space pirates attacked, but found nothing of value.`, true);
-              }
-            }
+            startCombat();
           }
         }
 
@@ -340,6 +359,56 @@
         updateUI();
       } else {
         log(`Insufficient fuel to reach ${target}!`, true);
+      }
+    }
+
+    function startCombat() {
+      state.inCombat = true;
+      state.playerShields = 50 + state.cargoLevel * 10;
+      state.enemyMaxShields = 20 + Math.floor(Math.random() * 40);
+      state.enemyShields = state.enemyMaxShields;
+      log("🚨 RED ALERT: PIRATE VESSEL INTERCEPTED YOU! 🚨", true);
+    }
+
+    function combatFire() {
+      const dmg = 10 + state.weaponLevel * 15 + Math.floor(Math.random() * 10);
+      state.enemyShields -= dmg;
+      log(`You fired! Pirate shields took ${dmg} damage.`);
+      
+      if (state.enemyShields <= 0) {
+        log("Pirate ship destroyed!");
+        const bounty = 50 + Math.floor(Math.random() * 100);
+        state.credits += bounty;
+        log(`Recovered ${bounty} credits from the wreckage.`);
+        state.inCombat = false;
+      } else {
+        enemyTurn();
+      }
+      updateUI();
+    }
+
+    function combatFlee() {
+      if (Math.random() < 0.5) {
+        log("Successfully fled from the pirates!");
+        state.inCombat = false;
+      } else {
+        log("Failed to escape!", true);
+        enemyTurn();
+      }
+      updateUI();
+    }
+
+    function enemyTurn() {
+      const dmg = 5 + Math.floor(Math.random() * 15);
+      state.playerShields -= dmg;
+      log(`Pirates fired! Your shields took ${dmg} damage.`, true);
+      
+      if (state.playerShields <= 0) {
+        log("Your shields failed!", true);
+        const creditsLost = Math.min(state.credits, Math.floor(state.credits * 0.2) + 50);
+        state.credits -= creditsLost;
+        log(`Pirates looted ${creditsLost} credits and left you drifting.`, true);
+        state.inCombat = false;
       }
     }
 

@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KTrader (Space trading sim)
-**Phase:** 8 (next to do)
+**Phase:** 9 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KTrader directory (`KTrader/`), create web HTML skeleton (`KiloOS/public/apps/ktrader.html`), register in App.jsx.
@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Implement dynamic market system (prices of 5 trade goods fluctuate based on planet supply/demand).
 - [x] Phase 6: Ship upgrade system (spend credits to buy larger cargo bays, better engines for less fuel use, or weapons).
 - [x] Phase 7: Random encounters during travel (space pirates demanding cargo, distress signals, asteroid fields).
-- [ ] Phase 8: Combat mechanics (turn-based tactical combat against pirate ships using ship weapons and shields).
+- [x] Phase 8: Combat mechanics (turn-based tactical combat against pirate ships using ship weapons and shields).
 - [ ] Phase 9: Planet variety and procedural generation (generate 10-15 unique planets with different economies and tech levels).
 - [ ] Phase 10: Faction system (gain reputation with Traders, Pirates, or the Galactic Navy to unlock special goods).
 - [ ] Phase 11: Mission boards at spaceports (accept delivery contracts, bounty hunting, or smuggling runs).
