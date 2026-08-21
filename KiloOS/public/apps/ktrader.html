@@ -8,19 +8,32 @@
       margin: 0;
       padding: 20px;
       background-color: #000;
+      background-image: 
+        radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0,0,0,0));
+      background-repeat: repeat;
+      background-size: 200px 200px;
       color: #0ff;
       font-family: 'Courier New', Courier, monospace;
-      text-shadow: 0 0 5px rgba(0, 255, 255, 0.7);
+      text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
     }
     h1 {
       border-bottom: 1px solid #0ff;
       padding-bottom: 10px;
+      text-shadow: 0 0 10px #0ff;
+      box-shadow: 0 10px 10px -10px #0ff;
     }
     .panel {
       border: 1px solid #0ff;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2), inset 0 0 15px rgba(0, 255, 255, 0.1);
       padding: 15px;
       margin-top: 15px;
-      background-color: rgba(0, 255, 255, 0.05);
+      background-color: rgba(0, 15, 20, 0.85);
+      border-radius: 4px;
     }
     .dashboard-stats {
       display: flex;
@@ -29,9 +42,10 @@
       font-size: 1.2em;
     }
     button {
-      background-color: #000;
+      background-color: rgba(0, 30, 40, 0.8);
       color: #0ff;
       border: 1px solid #0ff;
+      box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
       padding: 10px 20px;
       margin: 5px;
       cursor: pointer;
@@ -42,12 +56,14 @@
     button:hover {
       background-color: #0ff;
       color: #000;
+      box-shadow: 0 0 15px #0ff;
     }
     button:disabled {
       border-color: #555;
       color: #555;
       cursor: not-allowed;
-      background-color: #000;
+      background-color: rgba(0, 0, 0, 0.8);
+      box-shadow: none;
     }
     .log-panel {
       height: 150px;

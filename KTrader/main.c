@@ -120,6 +120,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             return 0;
         }
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wParam;
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            HBRUSH hBrush = CreateSolidBrush(RGB(0, 0, 0));
+            FillRect(hdc, &rc, hBrush);
+            DeleteObject(hBrush);
+            
+            unsigned int lfsr = 0xACE1u;
+            for (int i = 0; i < 200; i++) {
+                lfsr = (lfsr >> 1) ^ (-(int)(lfsr & 1u) & 0xB400u);
+                int x = (lfsr * 73) % (rc.right > 0 ? rc.right : 1);
+                lfsr = (lfsr >> 1) ^ (-(int)(lfsr & 1u) & 0xB400u);
+                int y = (lfsr * 97) % (rc.bottom > 0 ? rc.bottom : 1);
+                lfsr = (lfsr >> 1) ^ (-(int)(lfsr & 1u) & 0xB400u);
+                int starIntensity = 100 + ((lfsr * 13) % 156);
+                SetPixel(hdc, x, y, RGB(starIntensity, starIntensity, starIntensity));
+            }
+            return 1;
+        }
+        case WM_CTLCOLORSTATIC:
+        case WM_CTLCOLORLISTBOX: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, RGB(0, 255, 255));
+            SetBkColor(hdc, RGB(0, 0, 0));
+            return (LRESULT)GetStockObject(BLACK_BRUSH);
+        }
         case WM_DESTROY: {
             PostQuitMessage(0);
             return 0;
@@ -137,7 +164,7 @@ void __stdcall MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 
     RegisterClass(&wc);
 
