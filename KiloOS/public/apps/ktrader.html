@@ -18,19 +18,128 @@
     }
     .panel {
       border: 1px solid #0ff;
-      padding: 10px;
-      margin-top: 10px;
+      padding: 15px;
+      margin-top: 15px;
+      background-color: rgba(0, 255, 255, 0.05);
     }
+    .dashboard-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+    button {
+      background-color: #000;
+      color: #0ff;
+      border: 1px solid #0ff;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background-color: #0ff;
+      color: #000;
+    }
+    button:disabled {
+      border-color: #555;
+      color: #555;
+      cursor: not-allowed;
+      background-color: #000;
+    }
+    .log-panel {
+      height: 150px;
+      overflow-y: auto;
+      font-size: 0.9em;
+      border-top: 1px dashed #0ff;
+      padding-top: 10px;
+      margin-top: 15px;
+    }
+    .log-entry { margin: 2px 0; }
+    .warning { color: #f00; text-shadow: 0 0 5px #f00; }
   </style>
 </head>
 <body>
   <h1>KTrader Space Trading Sim</h1>
+  
   <div class="panel">
-    <h2>Initialization</h2>
-    <p>Phase 1 complete. Ready for Phase 2: Core Loop & Dashboard.</p>
+    <div class="dashboard-stats">
+      <span id="ui-credits">Credits: 1000</span>
+      <span id="ui-fuel">Fuel: 100 / 100</span>
+      <span id="ui-cargo">Cargo: 0 / 20</span>
+    </div>
   </div>
+
+  <div class="panel">
+    <h2 style="margin-top: 0;">Navigation</h2>
+    <p>Current Location: <strong id="ui-location">Earth</strong></p>
+    <div id="destinations"></div>
+  </div>
+
+  <div class="panel log-panel" id="ui-log">
+    <div class="log-entry">Welcome to KTrader, Captain.</div>
+  </div>
+
   <script>
-    console.log("KTrader Initialized.");
+    const state = {
+      credits: 1000,
+      fuel: 100,
+      maxFuel: 100,
+      cargo: 0,
+      maxCargo: 20,
+      location: "Earth"
+    };
+
+    const planets = {
+      "Earth": { distance: { "Mars": 20, "Venus": 15 } },
+      "Mars": { distance: { "Earth": 20, "Venus": 25 } },
+      "Venus": { distance: { "Earth": 15, "Mars": 25 } }
+    };
+
+    function log(msg, isWarning=false) {
+      const el = document.getElementById('ui-log');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry' + (isWarning ? ' warning' : '');
+      entry.textContent = '> ' + msg;
+      el.appendChild(entry);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function updateUI() {
+      document.getElementById('ui-credits').textContent = `Credits: ${state.credits}`;
+      document.getElementById('ui-fuel').textContent = `Fuel: ${state.fuel} / ${state.maxFuel}`;
+      document.getElementById('ui-cargo').textContent = `Cargo: ${state.cargo} / ${state.maxCargo}`;
+      document.getElementById('ui-location').textContent = state.location;
+
+      const destContainer = document.getElementById('destinations');
+      destContainer.innerHTML = '';
+      
+      const currentPlanet = planets[state.location];
+      for (const [target, cost] of Object.entries(currentPlanet.distance)) {
+        const btn = document.createElement('button');
+        btn.textContent = `Travel to ${target} (${cost} fuel)`;
+        if (state.fuel < cost) {
+          btn.disabled = true;
+        }
+        btn.onclick = () => travel(target, cost);
+        destContainer.appendChild(btn);
+      }
+    }
+
+    function travel(target, cost) {
+      if (state.fuel >= cost) {
+        state.fuel -= cost;
+        state.location = target;
+        log(`Hyperspace jump complete. Arrived at ${target}. Used ${cost} fuel.`);
+        updateUI();
+      } else {
+        log(`Insufficient fuel to reach ${target}!`, true);
+      }
+    }
+
+    updateUI();
   </script>
 </body>
 </html>
