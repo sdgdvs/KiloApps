@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KVoid
 - KStarship
 - KConnect4
 - KHangman
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KHex
 - KMine
 - KMandel
+- KVoid
 ## Completed Work Log
+
+- **KVoid (Loop 1):** Replaced plain circle placeholders with stylized geometric polygons for the Player (spaceship/arrow shape) and Aliens (10-point jagged star/bio-shape). Enhanced map tiles for Keycards with inner "chip" details, upgraded Terminals with defined screen/base structures, and modified Lockers to feature vertical door slots. Implemented consistently using Canvas paths (kvoid.html) and GDI polygons/shapes in Native C Win32 GDI (KVoid/main.c).
 
 - **KMandel (Loop 1):** Replaced plain text control panel buttons with modern stylized inline SVG vector graphics paired with text labels in Web Canvas (kmandel.html), and enhanced the GDI Help Banner by drawing a stylized composed vector info icon (Arc/MoveToEx/LineTo) alongside improved text formatting and border rendering in Native C Win32 GDI (KMandel/main.c).
 

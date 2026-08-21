@@ -428,27 +428,37 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     } else if (map[y][x] >= 6 && map[y][x] <= 8) {
                         FillRect(hdcMem, &tileRect, hFloorBrush);
                         HBRUSH kc = map[y][x] == 6 ? CreateSolidBrush(RGB(255, 0, 0)) : map[y][x] == 7 ? CreateSolidBrush(RGB(0, 255, 0)) : CreateSolidBrush(RGB(50, 50, 255));
-                        RECT kr = {x * TILE_SIZE + 4, y * TILE_SIZE + 6 + UI_HEIGHT, x * TILE_SIZE + 12, y * TILE_SIZE + 11 + UI_HEIGHT};
+                        HBRUSH chipBrush = CreateSolidBrush(RGB(255, 255, 255));
+                        RECT kr = {x * TILE_SIZE + 3, y * TILE_SIZE + 4 + UI_HEIGHT, x * TILE_SIZE + 13, y * TILE_SIZE + 12 + UI_HEIGHT};
                         FillRect(hdcMem, &kr, kc);
+                        RECT chip = {x * TILE_SIZE + 4, y * TILE_SIZE + 5 + UI_HEIGHT, x * TILE_SIZE + 7, y * TILE_SIZE + 7 + UI_HEIGHT};
+                        FillRect(hdcMem, &chip, chipBrush);
                         DeleteObject(kc);
+                        DeleteObject(chipBrush);
                     } else if (map[y][x] == 9 || map[y][x] == 10) {
                         FillRect(hdcMem, &tileRect, hFloorBrush);
                         HBRUSH tc = (map[y][x] == 9) ? CreateSolidBrush(RGB(255, 255, 255)) : CreateSolidBrush(RGB(80, 80, 80));
                         HBRUSH tcInner = (map[y][x] == 9) ? CreateSolidBrush(RGB(0, 255, 0)) : CreateSolidBrush(RGB(30, 30, 30));
-                        RECT tr = {x * TILE_SIZE + 4, y * TILE_SIZE + 4 + UI_HEIGHT, x * TILE_SIZE + 12, y * TILE_SIZE + 12 + UI_HEIGHT};
+                        HBRUSH baseBrush = (map[y][x] == 9) ? CreateSolidBrush(RGB(200, 200, 200)) : CreateSolidBrush(RGB(68, 68, 68));
+                        RECT tr = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, x * TILE_SIZE + 14, y * TILE_SIZE + 14 + UI_HEIGHT};
                         FillRect(hdcMem, &tr, tc);
-                        RECT trIn = {x * TILE_SIZE + 5, y * TILE_SIZE + 5 + UI_HEIGHT, x * TILE_SIZE + 11, y * TILE_SIZE + 11 + UI_HEIGHT};
+                        RECT trIn = {x * TILE_SIZE + 4, y * TILE_SIZE + 4 + UI_HEIGHT, x * TILE_SIZE + 12, y * TILE_SIZE + 10 + UI_HEIGHT};
                         FillRect(hdcMem, &trIn, tcInner);
+                        RECT trBase = {x * TILE_SIZE + 5, y * TILE_SIZE + 10 + UI_HEIGHT, x * TILE_SIZE + 11, y * TILE_SIZE + 14 + UI_HEIGHT};
+                        FillRect(hdcMem, &trBase, baseBrush);
                         DeleteObject(tc);
                         DeleteObject(tcInner);
+                        DeleteObject(baseBrush);
                     } else if (map[y][x] == 11) {
                         FillRect(hdcMem, &tileRect, hFloorBrush);
                         HBRUSH lc = CreateSolidBrush(RGB(100, 100, 100));
-                        HBRUSH lcc = CreateSolidBrush(RGB(30, 30, 30));
-                        RECT lr = {x * TILE_SIZE + 2, y * TILE_SIZE + 2 + UI_HEIGHT, x * TILE_SIZE + 14, y * TILE_SIZE + 14 + UI_HEIGHT};
+                        HBRUSH lcc = CreateSolidBrush(RGB(50, 50, 50));
+                        RECT lr = {x * TILE_SIZE + 2, y * TILE_SIZE + 1 + UI_HEIGHT, x * TILE_SIZE + 14, y * TILE_SIZE + 15 + UI_HEIGHT};
                         FillRect(hdcMem, &lr, lc);
-                        RECT lrc = {x * TILE_SIZE + 7, y * TILE_SIZE + 2 + UI_HEIGHT, x * TILE_SIZE + 9, y * TILE_SIZE + 14 + UI_HEIGHT};
-                        FillRect(hdcMem, &lrc, lcc);
+                        RECT slot1 = {x * TILE_SIZE + 4, y * TILE_SIZE + 3 + UI_HEIGHT, x * TILE_SIZE + 7, y * TILE_SIZE + 13 + UI_HEIGHT};
+                        FillRect(hdcMem, &slot1, lcc);
+                        RECT slot2 = {x * TILE_SIZE + 9, y * TILE_SIZE + 3 + UI_HEIGHT, x * TILE_SIZE + 12, y * TILE_SIZE + 13 + UI_HEIGHT};
+                        FillRect(hdcMem, &slot2, lcc);
                         DeleteObject(lc);
                         DeleteObject(lcc);
                     } else if (map[y][x] == 12) {
@@ -505,7 +515,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             // Draw aliens
             SelectObject(hdcMem, GetStockObject(NULL_PEN));
-            int r = TILE_SIZE / 3;
             for (int i = 0; i < alienCount; i++) {
                 HBRUSH hAlienBrush;
                 if (aliens[i].state == 2) {
@@ -516,7 +525,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(hdcMem, hAlienBrush);
                 int acx = aliens[i].x * TILE_SIZE + TILE_SIZE / 2;
                 int acy = aliens[i].y * TILE_SIZE + TILE_SIZE / 2 + UI_HEIGHT;
-                Ellipse(hdcMem, acx - r, acy - r, acx + r, acy + r);
+                POINT pts[10] = {
+                    {acx, acy - 6}, {acx + 3, acy - 2}, {acx + 7, acy},
+                    {acx + 3, acy + 2}, {acx + 4, acy + 6}, {acx, acy + 3},
+                    {acx - 4, acy + 6}, {acx - 3, acy + 2}, {acx - 7, acy},
+                    {acx - 3, acy - 2}
+                };
+                Polygon(hdcMem, pts, 10);
                 DeleteObject(hAlienBrush);
             }
 
@@ -524,7 +539,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(hdcMem, hPlayerBrush);
             int cx = playerX * TILE_SIZE + TILE_SIZE / 2;
             int cy = playerY * TILE_SIZE + TILE_SIZE / 2 + UI_HEIGHT;
-            Ellipse(hdcMem, cx - r, cy - r, cx + r, cy + r);
+            POINT p_pts[4] = {
+                {cx, cy - 6}, {cx + 5, cy + 5}, {cx, cy + 2}, {cx - 5, cy + 5}
+            };
+            Polygon(hdcMem, p_pts, 4);
             
             // Draw UI Text
             SetBkMode(hdcMem, TRANSPARENT);

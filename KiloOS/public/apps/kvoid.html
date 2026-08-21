@@ -481,22 +481,27 @@
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                         let kc = map[y][x] === 6 ? '#f00' : map[y][x] === 7 ? '#0f0' : '#55f';
                         ctx.fillStyle = kc;
-                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 6, 8, 5);
+                        ctx.fillRect(x * TILE_SIZE + 3, y * TILE_SIZE + 4, 10, 8);
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 5, 3, 2);
                     } else if (map[y][x] === 9 || map[y][x] === 10) {
                         ctx.fillStyle = '#050505';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                         ctx.fillStyle = map[y][x] === 9 ? '#fff' : '#555';
-                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 4, 8, 8);
+                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, 12, 12);
                         ctx.fillStyle = map[y][x] === 9 ? '#0f0' : '#222';
-                        ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 5, 6, 6);
+                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 4, 8, 6);
+                        ctx.fillStyle = map[y][x] === 9 ? '#ccc' : '#444';
+                        ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 10, 6, 4);
                     } else if (map[y][x] === 11) {
                         // Locker
                         ctx.fillStyle = '#050505';
                         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                         ctx.fillStyle = '#666';
-                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                        ctx.fillStyle = '#222';
-                        ctx.fillRect(x * TILE_SIZE + TILE_SIZE/2 - 1, y * TILE_SIZE + 2, 2, TILE_SIZE - 4);
+                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 1, 12, 14);
+                        ctx.fillStyle = '#333';
+                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 3, 3, 10);
+                        ctx.fillRect(x * TILE_SIZE + 9, y * TILE_SIZE + 3, 3, 10);
                     } else if (map[y][x] === 12) {
                         // EMP
                         ctx.fillStyle = '#050505';
@@ -538,19 +543,22 @@
         }
 
         function drawPlayer() {
+            let px = player.x * TILE_SIZE + TILE_SIZE / 2;
+            let py = player.y * TILE_SIZE + TILE_SIZE / 2;
             ctx.fillStyle = '#0f0';
             ctx.shadowBlur = 10;
             ctx.shadowColor = '#0f0';
             ctx.beginPath();
-            ctx.arc(player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
+            ctx.moveTo(px, py - 6);
+            ctx.lineTo(px + 5, py + 5);
+            ctx.lineTo(px, py + 2);
+            ctx.lineTo(px - 5, py + 5);
+            ctx.closePath();
             ctx.fill();
             ctx.shadowBlur = 0;
         }
 
         function drawAliens() {
-            ctx.fillStyle = '#f0f';
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#f0f';
             for (let a of aliens) {
                 if (a.state === 'stunned') {
                     ctx.fillStyle = '#55f';
@@ -559,8 +567,21 @@
                     ctx.fillStyle = '#f0f';
                     ctx.shadowColor = '#f0f';
                 }
+                ctx.shadowBlur = 10;
+                let ax = a.x * TILE_SIZE + TILE_SIZE / 2;
+                let ay = a.y * TILE_SIZE + TILE_SIZE / 2;
                 ctx.beginPath();
-                ctx.arc(a.x * TILE_SIZE + TILE_SIZE / 2, a.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
+                ctx.moveTo(ax, ay - 6);
+                ctx.lineTo(ax + 3, ay - 2);
+                ctx.lineTo(ax + 7, ay);
+                ctx.lineTo(ax + 3, ay + 2);
+                ctx.lineTo(ax + 4, ay + 6);
+                ctx.lineTo(ax, ay + 3);
+                ctx.lineTo(ax - 4, ay + 6);
+                ctx.lineTo(ax - 3, ay + 2);
+                ctx.lineTo(ax - 7, ay);
+                ctx.lineTo(ax - 3, ay - 2);
+                ctx.closePath();
                 ctx.fill();
             }
             ctx.shadowBlur = 0;
