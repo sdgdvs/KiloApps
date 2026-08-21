@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KHex
 - KMine
 - KMandel
 - KVoid
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTrader
 - KDragon
 - KSolitaire
+- KHex
 ## Completed Work Log
+
+- **KHex (Loop 1):** Replaced plain text '0x' logo icons with custom drawn graphical vector hexagons, using an inline SVG hexagon sprite with linear gradient in Web Canvas (khex.html) and a GDI composed hexagon using CreatePen/CreateSolidBrush/Polygon in Native C Win32 GDI (KHex/main.c).
 
 - **KSolitaire (Loop 6):** Implemented highly detailed visual variations for the victory sequence (dynamic 3D screen-shake and multi-layered procedural gravity-respecting confetti burst), a procedural animated pulsing glowing aura effect around full foundation piles, and distinctly stylized kinematically animated card flipping/turning sequences with a slight 3D scaling pop effect when a hidden card is revealed in both Web Canvas (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 

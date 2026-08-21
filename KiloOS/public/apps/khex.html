@@ -474,7 +474,18 @@
   <!-- Header -->
   <div class="header">
     <div class="brand">
-      <div class="brand-icon">0x</div>
+      <div class="brand-icon" style="background: none; box-shadow: none;">
+        <svg width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" fill="url(#hexGrad)" stroke="#06b6d4" stroke-width="4"/>
+          <defs>
+            <linearGradient id="hexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06b6d4" />
+              <stop offset="100%" stop-color="#3b82f6" />
+            </linearGradient>
+          </defs>
+          <text x="50" y="58" font-family="monospace" font-size="28" font-weight="bold" fill="white" text-anchor="middle">0x</text>
+        </svg>
+      </div>
       <div>
         <div class="brand-title">KHex Suite</div>
         <div class="brand-sub">Hex & Binary Data Inspector & Manipulation Tool</div>

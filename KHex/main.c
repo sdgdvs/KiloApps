@@ -439,6 +439,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (!hEditBrush) hEditBrush = CreateSolidBrush(RGB(30, 41, 59));
             return (LRESULT)hEditBrush;
         }
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            
+            // Draw a custom GDI Hexagon as a logo
+            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(6, 182, 212));
+            HBRUSH hBrush = CreateSolidBrush(RGB(59, 130, 246));
+            HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+            
+            POINT hexPts[6] = {
+                { 710, 10 },
+                { 725, 18 },
+                { 725, 34 },
+                { 710, 42 },
+                { 695, 34 },
+                { 695, 18 }
+            };
+            Polygon(hdc, hexPts, 6);
+            
+            SetTextColor(hdc, RGB(255, 255, 255));
+            SetBkMode(hdc, TRANSPARENT);
+            TextOutA(hdc, 703, 18, "0x", 2);
+
+            SelectObject(hdc, hOldPen);
+            SelectObject(hdc, hOldBrush);
+            DeleteObject(hPen);
+            DeleteObject(hBrush);
+            
+            EndPaint(hwnd, &ps);
+            break;
+        }
         case WM_DESTROY:
             if (hFont) DeleteObject(hFont);
             if (hEditBrush) DeleteObject(hEditBrush);
