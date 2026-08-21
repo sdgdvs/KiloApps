@@ -817,7 +817,12 @@ void __stdcall MainEntry() {
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN && (msg.wParam == VK_F1 || msg.wParam == 'H')) {
-            MessageBoxA(msg.hwnd, "KTodo Help:\n- Type a task and click '+ Add'\n- Select category, priority, and due date\n- Double-click a task to toggle completion\n- Click '+ Checklist' to add subtasks\n- Export/Import JSON or Markdown (.md) task lists\n- Press 'Stats' for productivity summary.", "KTodo Help", MB_OK | MB_ICONINFORMATION);
+            char className[256] = {0};
+            HWND hFocus = GetFocus();
+            if (hFocus) GetClassNameA(hFocus, className, sizeof(className));
+            if (msg.wParam == VK_F1 || (msg.wParam == 'H' && my_stristr(className, "EDIT") == 0)) {
+                MessageBoxA(msg.hwnd, "KTodo Help:\n- Type a task and click '+ Add'\n- Select category, priority, and due date\n- Double-click a task to toggle completion\n- Click '+ Checklist' to add subtasks\n- Export/Import JSON or Markdown (.md) task lists\n- Press 'Stats' for productivity summary.", "KTodo Help", MB_OK | MB_ICONINFORMATION);
+            }
         }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
