@@ -747,6 +747,9 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             SetWindowTextA(hwnd, "");
             RefreshList();
             return 0;
+        } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+            MessageBoxA(GetParent(hwnd), "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH / F1: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+            return 0;
         }
     }
     return CallWindowProcA(g_OldEditProc, hwnd, msg, wParam, lParam);
@@ -763,8 +766,8 @@ LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         } else if (wParam == 'I' || wParam == 'i') {
             PerformInspectProcess(GetParent(hwnd));
             return 0;
-        } else if (wParam == 'H' || wParam == 'h') {
-            MessageBoxA(GetParent(hwnd), "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+        } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+            MessageBoxA(GetParent(hwnd), "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH / F1: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
             return 0;
         }
     }
@@ -784,7 +787,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
 #endif
-            SendMessageW(hSearchBox, EM_SETCUEBANNER, 0, (LPARAM)L"Filter by Name... (Press 'H' for Help)");
+            SendMessageW(hSearchBox, EM_SETCUEBANNER, 0, (LPARAM)L"Filter by Name... (Press 'H' or F1 for Help)");
             hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 45, 360, 165, hwnd, (HMENU)4, NULL, NULL);
             hStatusText = CreateWindowA("STATIC", "Processes: 0", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 215, 360, 20, hwnd, (HMENU)5, NULL, NULL);
 
@@ -848,7 +851,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == 9) {
                 PerformInspectProcess(hwnd);
             } else if (id == 10) {
-                MessageBoxA(hwnd, "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH / F1: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
             } else if (id == 4 && code == LBN_DBLCLK) {
                 PerformInspectProcess(hwnd);
             }
@@ -865,8 +868,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'I' || wParam == 'i') {
                 PerformInspectProcess(hwnd);
                 return 0;
-            } else if (wParam == 'H' || wParam == 'h') {
-                MessageBoxA(hwnd, "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+            } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+                MessageBoxA(hwnd, "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH / F1: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
                 return 0;
             }
             break;
@@ -893,7 +896,7 @@ void __stdcall MainEntry() {
     RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F5/R: Refresh, Del: End Task, H: Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F5/R: Refresh, Del: End Task, H/F1: Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

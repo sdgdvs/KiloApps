@@ -727,7 +727,7 @@
           <line x1="8" y1="21" x2="16" y2="21"></line>
           <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>
-        KTask Monitor <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px; font-weight: normal;">(Press 'H' for help)</span>
+        KTask Monitor <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px; font-weight: normal;">(Press 'H' or F1 for help)</span>
       </h1>
 
       <div class="nav-tabs" role="tablist">
@@ -1638,9 +1638,10 @@
         } else {
           showToast('No active tasks to inspect.');
         }
-      } else if (e.key === 'h' || e.key === 'H') {
+      } else if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
+        if (e.key === 'F1') e.preventDefault();
         e.preventDefault();
-        showToast('Shortcuts: [R/F5] Refresh, [I] Inspect, [Esc] Close, [H] Help');
+        showToast('Shortcuts: [R/F5] Refresh, [I] Inspect, [Esc] Close, [H/F1] Help');
       }
     });
 
@@ -1663,7 +1664,7 @@
     } catch(e) {}
     setTimeout(refresh, 100);
     startAutoRefresh();
-    setTimeout(() => showToast('Press "H" for keyboard shortcuts'), 1500);
+    setTimeout(() => showToast('Press "H" or F1 for keyboard shortcuts'), 1500);
   </script>
 </body>
 </html>
