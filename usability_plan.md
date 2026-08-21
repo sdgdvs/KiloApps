@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KTerm
 - KSynth
 - KTask
 - KRogue
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTetris
 - KSpace
 - KSolitaire
+- KTerm
 
 ## Progress Log
 - KCalendar: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1024x768, added F1 key support and updated UI labels for help menu in both web and native, applied text-rendering optimizeLegibility to web app body for crisp text).
@@ -331,3 +331,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTetris: FAILED (Subagent timed out after 8 minutes).
 - KSpace: Usability and UI issues fixed (added WS_CLIPCHILDREN and F1 hotkey support to native, implemented F1 support in web, updated instructions to state 'PRESS [H] OR [F1] FOR HELP', verified bounds).
 - KSolitaire: Usability and UI issues fixed (added F1 hotkey to native and web, added WS_CLIPCHILDREN to native, fixed native compilation errors, updated explicit instructions for F1/H help, verified 920x800 bounds).
+- KTerm: Usability and UI issues fixed (added WS_CLIPCHILDREN to native, explicitly mapped F1 for Help in both versions, added missing native linkers, updated UI text, verified 960x600 bounds).

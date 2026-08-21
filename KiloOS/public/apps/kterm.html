@@ -293,7 +293,7 @@
 
 <div id="statusbar">
   <div>
-    <span><span class="shortcut-tag">Type h or help</span>for commands</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Press h or F1</span>for Help</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+R</span>Reverse Search</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Tab</span>Autocomplete</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+T</span>New Tab</span> &nbsp;|&nbsp; 
@@ -418,7 +418,7 @@
     };
     p("KiloOS Web Terminal v1.2 - " + sessionName, "log-system");
     p("Features: Multi-Tab | Reverse Search (Ctrl+R) | Aliases | Env Vars | Log Export");
-    p("Press 'h' or type 'help' for a list of available commands.\n");
+    p("Press 'h' or F1 for a list of available commands.\n");
     session.outputHTML = tempDiv.innerHTML;
 
     switchTab(id);
@@ -984,6 +984,13 @@
           performReverseSearch(input.value, true);
           return;
         }
+      }
+
+      // F1 for help
+      if (e.key === 'F1') {
+          e.preventDefault();
+          execute('help');
+          return;
       }
 
       // Ctrl+R trigger reverse search

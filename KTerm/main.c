@@ -21,6 +21,14 @@ void* memset(void* dest, int c, size_t count) {
     return dest;
 }
 
+#pragma function(memcpy)
+void* memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
 static char* my_strchr(const char* s, int c) {
     if (!s) return NULL;
     while (*s) {
@@ -141,6 +149,12 @@ static int StringStartsWithIC(const char* str, const char* prefix) {
     return 1;
 }
 
+static int MatchCommand(const char* input, const char* cmd) {
+    int len = lstrlenA(cmd);
+    if (!StringStartsWithIC(input, cmd)) return 0;
+    return (input[len] == ' ' || input[len] == '\t' || input[len] == '\0');
+}
+
 static void FormatPathPrompt(char* dst, size_t dstSize, const char* dir, const char* cmd) {
     char tmp[1024];
     wsprintfA(tmp, "%s> %s", dir ? dir : "", cmd ? cmd : "");
@@ -234,7 +248,7 @@ void AddNewTab(const char* title) {
 
     // Initial banner for tab
     char banner[256];
-    wsprintfA(banner, "KiloOS Terminal v1.2 [%s]\r\n[Type 'h' or 'help' for commands | Ctrl+T: New Tab | Ctrl+R: Reverse Search]", nameBuf);
+    wsprintfA(banner, "KiloOS Terminal v1.2 [%s]\r\n[Press 'h' or F1 for Help | Ctrl+T: New Tab | Ctrl+R: Reverse Search]", nameBuf);
     
     if (g_tabCount == 1) {
         AppendOutput(banner);
@@ -900,6 +914,11 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     TabSession* tab = &g_tabs[g_activeTab];
 
     if (msg == WM_KEYDOWN) {
+        if (wParam == VK_F1) {
+            ProcessCommand("help");
+            return 0;
+        }
+
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'R') {
             if (!g_isSearchMode) {
                 g_isSearchMode = TRUE;
@@ -1012,7 +1031,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
 #endif
-            SendMessageW(hIn, EM_SETCUEBANNER, FALSE, (LPARAM)L"Type a command... (Type 'h' for help)");
+            SendMessageW(hIn, EM_SETCUEBANNER, FALSE, (LPARAM)L"Type a command... (Press 'h' or F1 for Help)");
 
             g_hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             SendMessageA(hTab, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
@@ -1084,7 +1103,7 @@ void MainEntry() {
 
     RECT rect = {0, 0, 960, 600};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm - Type 'h' or 'help' for commands", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm - Press 'h' or F1 for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
