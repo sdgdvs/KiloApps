@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KSolitaire - Klondike Solitaire (Press H for Hint)</title>
+<title>KSolitaire - Klondike Solitaire (Press [H] or [F1] for Hint)</title>
 <style>
   :root {
     --bg-color: #0d5c2e;
@@ -710,7 +710,7 @@
   </div>
 
   <div id="mode-info" class="mode-banner">
-    <span id="mode-desc">Classic Klondike Solitaire - Standard Rules (Press H for Hint)</span>
+    <span id="mode-desc">Classic Klondike Solitaire - Standard Rules (Press [H] or [F1] for Hint)</span>
     <span id="sub-info"></span>
   </div>
 </header>
@@ -974,6 +974,7 @@ function init() {
     else if (k === 's' && !e.ctrlKey) { useShuffleStock(); }
     else if (k === 'u' && !e.ctrlKey) { undoMove(); }
     else if (k === 'h' && !e.ctrlKey) { giveHint(); }
+    else if (e.key === 'F1') { e.preventDefault(); giveHint(); }
   });
 }
 
@@ -1055,7 +1056,7 @@ function newGame() {
     frozenCount = cfg.frozenCards;
     scoreCount = vegasRules ? -52 : 0;
     maxStockPasses = vegasRules ? (drawMode === 1 ? 1 : 3) : (cfg.stage === 2 ? 2 : 0);
-    document.getElementById('mode-desc').textContent = `Campaign Stage ${campaignStage}/20: ${cfg.name} (Press H for Hint)`;
+    document.getElementById('mode-desc').textContent = `Campaign Stage ${campaignStage}/20: ${cfg.name} (Press [H] or [F1] for Hint)`;
     document.getElementById('sub-info').textContent = cfg.desc;
   } else if (gameMode === 'vegas') {
     vegasRules = true;
@@ -1064,7 +1065,7 @@ function newGame() {
     scoreCount = -52;
     maxStockPasses = (drawMode === 1 ? 1 : 3);
     frozenCount = 0;
-    document.getElementById('mode-desc').textContent = "Vegas Money Mode - Buy-in -$52 ($5/foundation card) (Press H for Hint)";
+    document.getElementById('mode-desc').textContent = "Vegas Money Mode - Buy-in -$52 ($5/foundation card) (Press [H] or [F1] for Hint)";
     document.getElementById('sub-info').textContent = `Total Vegas Cash: $${stats.vegasCash}`;
   } else {
     vegasRules = false;
@@ -1073,7 +1074,7 @@ function newGame() {
     scoreCount = 0;
     maxStockPasses = 0;
     frozenCount = 0;
-    document.getElementById('mode-desc').textContent = "Classic Solitaire - Standard Klondike Rules (Press H for Hint)";
+    document.getElementById('mode-desc').textContent = "Classic Solitaire - Standard Klondike Rules (Press [H] or [F1] for Hint)";
     document.getElementById('sub-info').textContent = "";
   }
 

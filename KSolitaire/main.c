@@ -173,6 +173,25 @@ void ZeroMem(void *ptr, size_t size) {
     memset(ptr, 0, size);
 }
 
+#pragma function(abs)
+int abs(int x) { return x < 0 ? -x : x; }
+
+double sin(double x) {
+    while (x > 3.1415926535) x -= 6.283185307;
+    while (x < -3.1415926535) x += 6.283185307;
+    double x2 = x * x;
+    return x * (1.0 - x2/6.0 + (x2*x2)/120.0 - (x2*x2*x2)/5040.0);
+}
+
+double cos(double x) {
+    while (x > 3.1415926535) x -= 6.283185307;
+    while (x < -3.1415926535) x += 6.283185307;
+    double x2 = x * x;
+    return 1.0 - x2/2.0 + (x2*x2)/24.0 - (x2*x2*x2)/720.0;
+}
+
+void DrawCardGDI(HDC hdc, Card card, int x, int y, int isSelected, int isHintSrc, int isHintDst);
+
 // --- Global Variables ---
 SolitaireState state;
 SolitaireState undoStack[256];
@@ -1498,6 +1517,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             if (wParam == VK_F2) NewGame(hwnd);
+            else if (wParam == VK_F1) GiveHint(hwnd);
             else if (wParam == 'W' || wParam == 'w') UseMagicWand(hwnd);
             else if (wParam == 'X' || wParam == 'x') UseXRayVision(hwnd);
             else if (wParam == 'S' || wParam == 's') UseShuffleStock(hwnd);
@@ -2110,7 +2130,7 @@ void MainEntry() {
     RECT rc = {0, 0, 920, 800};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, TRUE); // TRUE because we have a menu
 
-    HWND hwnd = CreateWindowEx(0, "KSolitaireApp", "KSolitaire - Klondike Solitaire (Press H for Hint)", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KSolitaireApp", "KSolitaire - Klondike Solitaire (Press [H] or [F1] for Hint)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
