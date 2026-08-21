@@ -247,6 +247,11 @@ void AddExplosion(float x, float y, int count, COLORREF col) {
     }
 }
 
+void AddWeaponHitParticles(float x, float y, int weaponType, COLORREF col) {
+    int count = (weaponType == 1) ? 6 : ((weaponType == 2) ? 2 : 3);
+    AddExplosion(x, y, count, col);
+}
+
 void UpdateParticles() {
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
@@ -1526,7 +1531,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN:
             if (gameState == STATE_MENU) {
-                if (wParam == 'H') {
+                if (wParam == 'H' || wParam == VK_F1) {
                     gameState = STATE_HELP;
                 } else {
                     int opts = HasSavedGame() ? 5 : 4;
@@ -1542,7 +1547,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 }
             } else if (gameState == STATE_HELP) {
-                if (wParam == 'H' || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) gameState = STATE_MENU;
+                if (wParam == 'H' || wParam == VK_F1 || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) gameState = STATE_MENU;
             } else if (gameState == STATE_MODE_SELECT) {
                 if (wParam == VK_UP || wParam == 'W') modeIndex = (modeIndex - 1 + 3) % 3;
                 else if (wParam == VK_DOWN || wParam == 'S') modeIndex = (modeIndex + 1) % 3;
@@ -1761,7 +1766,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                     SetTextColor(memDC, RGB(255, 234, 0));
-                    TextOutA(memDC, W/2 - 68, H - 30, "PRESS [H] FOR HELP", 18);
+                    TextOutA(memDC, W/2 - 80, H - 30, "PRESS [H] OR [F1] FOR HELP", 26);
                 } else if (gameState == STATE_MODE_SELECT) {
                     SetTextColor(memDC, RGB(255, 234, 0));
                     TextOutA(memDC, W/2 - 65, 80, "SELECT GAME MODE", 16);
@@ -2010,8 +2015,8 @@ void MainEntry() {
     RegisterClass(&wc);
 
     RECT wr = {0, 0, W, H};
-    AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KSpaceApp", "KSpace", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    AdjustWindowRect(&wr, (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, FALSE);
+    HWND hwnd = CreateWindowEx(0, "KSpaceApp", "KSpace", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

@@ -638,7 +638,7 @@ window.addEventListener('load', () => {
   // --- KEYBOARD & INPUT ---
   const keys = {};
   document.addEventListener('keydown', e => {
-    if (!waitForKeybind && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar', 'KeyB', 'KeyP', 'Escape', 'KeyH'].includes(e.code) || [' ', 'b', 'B', 'p', 'P', 't', 'T', 'd', 'D', 's', 'S', 'h', 'H'].includes(e.key)) {
+    if (!waitForKeybind && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar', 'KeyB', 'KeyP', 'Escape', 'KeyH', 'F1'].includes(e.code) || [' ', 'b', 'B', 'p', 'P', 't', 'T', 'd', 'D', 's', 'S', 'h', 'H'].includes(e.key)) {
       e.preventDefault();
     }
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -655,7 +655,7 @@ window.addEventListener('load', () => {
     const keyLower = e.key ? e.key.toLowerCase() : '';
 
     if (gameState === STATE_MENU) {
-      if (keyLower === 'h') {
+      if (keyLower === 'h' || e.key === 'F1') {
         gameState = STATE_HELP;
       } else if (e.key === 'ArrowUp' || keyLower === 'w') {
         menuIndex = (menuIndex - 1 + (hasSavedGame() ? 6 : 5)) % (hasSavedGame() ? 6 : 5);
@@ -670,7 +670,7 @@ window.addEventListener('load', () => {
       else if (e.key === 'ArrowDown') menuIndex = (menuIndex + 1) % 10;
       else if (e.key === 'Enter') waitForKeybind = Object.keys(keybinds)[menuIndex];
     } else if (gameState === STATE_HELP) {
-      if (keyLower === 'h' || e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+      if (keyLower === 'h' || e.key === 'F1' || e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
         gameState = STATE_MENU;
       }
     } else if (gameState === STATE_MODE_SELECT) {
@@ -1983,7 +1983,7 @@ window.addEventListener('load', () => {
 
     ctx.fillStyle = '#ffea00';
     ctx.font = 'bold 14px monospace';
-    ctx.fillText('PRESS [H] FOR HELP', W / 2, H - 30);
+    ctx.fillText('PRESS [H] OR [F1] FOR HELP', W / 2, H - 30);
 
     ctx.textAlign = 'left';
   }
