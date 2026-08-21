@@ -750,7 +750,9 @@ void __stdcall MainEntry() {
     wc.hbrBackground = NULL;
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wc.hInstance, NULL);
+    RECT wr = {0, 0, 1100, 750};
+    AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, FALSE);
+    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
