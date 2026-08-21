@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KDragon
 - KSolitaire
 - KHex
 - KMine
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KDarts
 - KSimon
 - KTrader
+- KDragon
 ## Completed Work Log
+
+- **KDragon (Loop 1):** Replaced text-based placeholder shapes for enemies and key items with custom drawn graphical vector models/sprites (purple recolored adult dragon for enemies, custom shapes/SVG icons for shop items Meat, Toy, Bracer, Boots) in both Web Canvas (kdragon.html) and Native C Win32 GDI (KDragon/main.c).
 
 - **KSimon (Loop 1):** Replaced basic circle/rectangle placeholder shapes with custom dynamic geometric vector models that change based on game mode (Diamond for 4-button, Hexagon for 6-button, Octagon for 8-button), including full dynamic 3D bevels and glow outlines in both Web Canvas (ksimon.html) and Native C Win32 GDI (KSimon/main.c).
 

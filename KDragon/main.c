@@ -152,6 +152,9 @@ void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16], int
                 } else if (element_type == 3) { // Earth
                     if (c == RGB(180,30,30)) c = RGB(100,60,30);
                     else if (c == RGB(220,60,60)) c = RGB(150,100,60);
+                } else if (element_type == 5) { // Enemy
+                    if (c == RGB(180,30,30)) c = RGB(128,0,128);
+                    else if (c == RGB(220,60,60)) c = RGB(180,50,180);
                 }
                 HBRUSH b = CreateSolidBrush(c);
                 RECT r = {x + j*scale, y + i*scale, x + (j+1)*scale, y + (i+1)*scale};
@@ -863,10 +866,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT r = {0, 10, 600, 60};
                 DrawText(hdc, buf, strlen(buf), &r, DT_CENTER | DT_TOP);
                 
+                int player_x = (state == 8) ? 120 : 236;
                 if (state == 1 || (state > 2 && prev_state == 1)) {
-                    DrawPixelArt(hdc, 236, 90, 8, dragon_pixels, 0);
+                    DrawPixelArt(hdc, player_x, 90, 8, dragon_pixels, 0);
                 } else if (state == 2 || (state > 2 && prev_state == 2)) {
-                    DrawPixelArt(hdc, 236, 90, 8, adult_dragon_pixels, element);
+                    DrawPixelArt(hdc, player_x, 90, 8, adult_dragon_pixels, element);
                 }
                 
                 if (state == 4) {
@@ -889,10 +893,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     const char* text = "Find the treat!";
                     TextOut(hdc, 240, 235, text, strlen(text));
                 } else if (state == 8) {
-                    const char* text = "BATTLE!";
+                    const char* text = "VS";
                     SetTextColor(hdc, RGB(200, 0, 0));
-                    TextOut(hdc, 260, 235, text, strlen(text));
+                    TextOut(hdc, 280, 140, text, strlen(text));
                     SetTextColor(hdc, RGB(42, 23, 4));
+                    DrawPixelArt(hdc, 350, 90, 8, adult_dragon_pixels, 5);
+                } else if (state == 9) {
+                    HBRUSH brown = CreateSolidBrush(RGB(150, 75, 0));
+                    HBRUSH red = CreateSolidBrush(RGB(200, 50, 50));
+                    HBRUSH gray = CreateSolidBrush(RGB(128, 128, 128));
+                    HBRUSH blue = CreateSolidBrush(RGB(50, 50, 200));
+
+                    RECT bone1 = {45, 230, 75, 235}; FillRect(hdc, &bone1, gray);
+                    RECT meat1 = {50, 225, 70, 240}; FillRect(hdc, &meat1, red);
+
+                    SelectObject(hdc, red);
+                    Ellipse(hdc, 140, 225, 160, 245);
+                    
+                    SelectObject(hdc, gray);
+                    Rectangle(hdc, 230, 230, 250, 240);
+                    
+                    RECT boot1 = {320, 225, 330, 245}; FillRect(hdc, &boot1, brown);
+                    RECT boot2 = {330, 235, 340, 245}; FillRect(hdc, &boot2, brown);
+
+                    SelectObject(hdc, GetStockObject(NULL_BRUSH)); // reset
+                    DeleteObject(brown); DeleteObject(red); DeleteObject(gray); DeleteObject(blue);
                 } else if (state == 10) {
                     const char* text = "";
                     if (current_event_id == 0) text = "Your dragon looks sick and feverish.";
