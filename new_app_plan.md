@@ -54,10 +54,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KTrader (Space trading sim)
-**Phase:** 1 (next to do)
+**Phase:** 2 (next to do)
 **Status:** Creation
 
-- [ ] Phase 1: Scaffold KTrader directory (`KTrader/`), create web HTML skeleton (`KiloOS/public/apps/ktrader.html`), register in App.jsx.
+- [x] Phase 1: Scaffold KTrader directory (`KTrader/`), create web HTML skeleton (`KiloOS/public/apps/ktrader.html`), register in App.jsx.
 - [ ] Phase 2: Basic UI for ship dashboard (credits, cargo space, fuel) and core loop of travelling between 3 basic planets.
 - [ ] Phase 3: Native C version (`KTrader/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [ ] Phase 4: Sci-fi styling (starfield backgrounds, neon HUD, clean terminal fonts).
