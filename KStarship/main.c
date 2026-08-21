@@ -25,14 +25,26 @@ void SpawnParticle(float x, float y, float vx, float vy, float decay, COLORREF c
 }
 
 void SpawnExplosion(float x, float y, int count, COLORREF color1, COLORREF color2) {
+    int intensity = count / 5;
+    if (intensity > screen_shake) screen_shake = intensity;
+
     for (int i=0; i<count; i++) {
         float angle = (rand() % 360) * 3.14159f / 180.0f;
-        float speed = (rand() % 50) / 10.0f;
+        float speed = (rand() % 50) / 10.0f + (count > 40 ? 2.0f : 0.0f);
         float vx = cos(angle) * speed;
         float vy = sin(angle) * speed;
-        float decay = 0.02f + (rand() % 50) / 1000.0f;
+        float decay = 0.01f + (rand() % 40) / 1000.0f;
         COLORREF c = (rand() % 2 == 0) ? color1 : color2;
         SpawnParticle(x, y, vx, vy, decay, c);
+    }
+    // Core layer
+    for (int i=0; i<count/3; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = (rand() % 20) / 10.0f;
+        float vx = cos(angle) * speed;
+        float vy = sin(angle) * speed;
+        float decay = 0.03f + (rand() % 50) / 1000.0f;
+        SpawnParticle(x, y, vx, vy, decay, RGB(255, 255, 255));
     }
 }
 
@@ -120,6 +132,7 @@ int modal_open = 0;
 int modal_enc_type = 0;
 int pirate_hp = 50;
 char combat_log[128] = "";
+int screen_shake = 0;
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(intptr_t)lpParam;
@@ -188,7 +201,21 @@ typedef struct {
 } Nebula;
 Nebula nebulas[NUM_NEBULAS];
 
+#define NUM_BGSTARS 200
+typedef struct {
+    float x, y;
+    int size;
+    COLORREF color;
+} BgStar;
+BgStar bgstars[NUM_BGSTARS];
+
 void InitEnvironment() {
+    for (int i = 0; i < NUM_BGSTARS; i++) {
+        bgstars[i].x = (float)(rand() % 1600 - 800);
+        bgstars[i].y = (float)(rand() % 1200 - 600);
+        bgstars[i].size = 1 + rand() % 2;
+        bgstars[i].color = (rand() % 10 > 8) ? RGB(170, 255, 255) : RGB(200, 200, 200);
+    }
     for (int i = 0; i < NUM_ASTEROIDS; i++) {
         asteroids[i].x = (rand() % MAP_SIZE) - MAP_SIZE/2;
         asteroids[i].y = (rand() % MAP_SIZE) - MAP_SIZE/2;
@@ -249,6 +276,11 @@ void InitStars() {
 }
 
 void Update() {
+    if (screen_shake > 0) {
+        screen_shake -= 2;
+        if (screen_shake < 0) screen_shake = 0;
+    }
+
     for (int i=0; i<MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
             particles[i].x += particles[i].vx;
@@ -336,6 +368,35 @@ void Draw(HDC hdc, RECT* rect) {
 
     int centerX = mapWidth / 2;
     int centerY = height / 2;
+
+    // Distant background stars (parallax)
+    for (int i = 0; i < NUM_BGSTARS; i++) {
+        float sx = bgstars[i].x - (ship_x * 0.05f);
+        float sy = bgstars[i].y - (ship_y * 0.05f);
+        
+        // Wrap around logic for infinite background
+        while (sx < -mapWidth) sx += mapWidth * 2;
+        while (sx > mapWidth) sx -= mapWidth * 2;
+        while (sy < -height) sy += height * 2;
+        while (sy > height) sy -= height * 2;
+
+        int drawX = centerX + (int)sx;
+        int drawY = centerY + (int)sy;
+
+        if (drawX >= 0 && drawX < mapWidth && drawY >= 0 && drawY < height) {
+            if ((GetTickCount() + i * 100) % 2000 > 1000) {
+                SetPixel(memDC, drawX, drawY, bgstars[i].color);
+                if (bgstars[i].size > 1) {
+                    SetPixel(memDC, drawX+1, drawY, bgstars[i].color);
+                    SetPixel(memDC, drawX, drawY+1, bgstars[i].color);
+                    SetPixel(memDC, drawX+1, drawY+1, bgstars[i].color);
+                }
+            } else {
+                // Dimmer when twinkling out
+                SetPixel(memDC, drawX, drawY, RGB(100, 100, 100));
+            }
+        }
+    }
 
     HBRUSH sunBrush = CreateSolidBrush(RGB(15, 10, 5));
     SelectObject(memDC, sunBrush);
@@ -733,7 +794,19 @@ void Draw(HDC hdc, RECT* rect) {
         }
     }
 
-    BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
+    int shake_x = 0;
+    int shake_y = 0;
+    if (screen_shake > 0) {
+        shake_x = (rand() % (screen_shake * 2 + 1)) - screen_shake;
+        shake_y = (rand() % (screen_shake * 2 + 1)) - screen_shake;
+        // Fill black border if shaking
+        HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
+        RECT r = {0, 0, width, height};
+        FillRect(hdc, &r, blackBrush);
+        DeleteObject(blackBrush);
+    }
+
+    BitBlt(hdc, shake_x, shake_y, width, height, memDC, 0, 0, SRCCOPY);
     DeleteObject(memBitmap);
     DeleteDC(memDC);
 }

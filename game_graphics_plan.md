@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KStarship
 - KConnect4
 - KHangman
 - KMech
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMine
 - KMandel
 - KVoid
+- KStarship
 ## Completed Work Log
+
+- **KStarship (Loop 5):** Implemented highly polished visual effects including procedural screen-shake on damage/explosion impacts, multi-layered particle explosions featuring a fast dense white core and slower colorful outer decay, dynamic visual thruster trails with motion blur/thickness variations, and a procedural "Stardust" parallax background layer of hundreds of twinkling distant stars to enhance deep space depth in both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 
 - **KVoid (Loop 1):** Replaced plain circle placeholders with stylized geometric polygons for the Player (spaceship/arrow shape) and Aliens (10-point jagged star/bio-shape). Enhanced map tiles for Keycards with inner "chip" details, upgraded Terminals with defined screen/base structures, and modified Lockers to feature vertical door slots. Implemented consistently using Canvas paths (kvoid.html) and GDI polygons/shapes in Native C Win32 GDI (KVoid/main.c).
 

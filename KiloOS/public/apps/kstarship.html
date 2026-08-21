@@ -244,9 +244,10 @@
       cargo: { minerals: 0, tech: 0 },
       upgrades: { weapons: 1, shields: 1, engines: 1, cargo: 1 },
       crew: [],
-      stars: [], particles: [], asteroids: [], nebulas: [],
+      stars: [], particles: [], asteroids: [], nebulas: [], bgStars: [],
       mapSize: 2000,
-      modalOpen: false
+      modalOpen: false,
+      screenShake: 0
     };
 
     const firstNames = ["Ryker", "Spok", "Chek", "Scot", "Uhura", "Sulu", "Mac", "Data", "Worf", "Geordi", "Ripley", "Dallas", "Hicks", "Hudson", "Vasquez", "Gordy"];
@@ -285,16 +286,31 @@
     }
 
     function spawnExplosion(x, y, count, color1, color2) {
+      state.screenShake = Math.max(state.screenShake || 0, count / 5);
       for (let i=0; i<count; i++) {
         let angle = Math.random() * Math.PI * 2;
-        let speed = Math.random() * 5;
+        let speed = Math.random() * (count > 40 ? 8 : 4);
         state.particles.push({
           x: x, y: y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
           life: 1.0,
-          decay: 0.02 + Math.random() * 0.05,
-          color: Math.random() > 0.5 ? color1 : color2
+          decay: 0.01 + Math.random() * 0.04,
+          color: Math.random() > 0.5 ? color1 : color2,
+          size: Math.random() * 3 + 1
+        });
+      }
+      for (let i=0; i<count/3; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let speed = Math.random() * 2;
+        state.particles.push({
+          x: x, y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0,
+          decay: 0.03 + Math.random() * 0.05,
+          color: '#ffffff',
+          size: Math.random() * 2 + 2
         });
       }
     }
@@ -332,6 +348,15 @@
     }
 
     function generateEnvironment() {
+      for(let i=0; i<500; i++) {
+        state.bgStars.push({
+          x: Math.random() * canvas.width * 2 - canvas.width,
+          y: Math.random() * canvas.height * 2 - canvas.height,
+          size: Math.random() * 1.5,
+          color: Math.random() > 0.8 ? '#aaffff' : '#ffffff',
+          alpha: Math.random() * 0.5 + 0.1
+        });
+      }
       for(let i=0; i<150; i++) {
         state.asteroids.push({
           x: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
@@ -352,8 +377,22 @@
 
     // Map drawing logic
     function draw() {
+      ctx.save();
+      if (state.screenShake > 0) {
+        let sx = (Math.random() - 0.5) * state.screenShake * 2;
+        let sy = (Math.random() - 0.5) * state.screenShake * 2;
+        ctx.translate(sx, sy);
+        // Also shake UI
+        document.getElementById('game-container').style.transform = `translate(${sx}px, ${sy}px)`;
+        state.screenShake *= 0.9;
+        if (state.screenShake < 0.5) {
+          state.screenShake = 0;
+          document.getElementById('game-container').style.transform = 'translate(0px, 0px)';
+        }
+      }
+
       ctx.fillStyle = '#05050a'; // deeper space background
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
 
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
@@ -364,6 +403,18 @@
       sunGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = sunGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // BG Stars with deep parallax
+      state.bgStars.forEach(s => {
+        const screenX = ((s.x - state.ship.x * 0.05) % (canvas.width * 2) + canvas.width * 2) % (canvas.width * 2) - canvas.width * 0.5;
+        const screenY = ((s.y - state.ship.y * 0.05) % (canvas.height * 2) + canvas.height * 2) % (canvas.height * 2) - canvas.height * 0.5;
+        ctx.fillStyle = s.color;
+        ctx.globalAlpha = s.alpha * (0.5 + 0.5 * Math.sin(Date.now() / 500 + s.x));
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, s.size, 0, Math.PI*2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1.0;
 
       // Nebulas with slow parallax
       state.nebulas.forEach(neb => {
@@ -489,13 +540,13 @@
           ctx.moveTo(screenX - p.vx * 2, screenY - p.vy * 2);
           ctx.lineTo(screenX, screenY);
           ctx.strokeStyle = p.color;
-          ctx.lineWidth = 2;
+          ctx.lineWidth = p.size || 2;
           ctx.globalAlpha = p.life;
           ctx.stroke();
           
           ctx.fillStyle = p.color;
           ctx.beginPath();
-          ctx.arc(screenX, screenY, 1.5, 0, Math.PI * 2);
+          ctx.arc(screenX, screenY, (p.size || 1.5), 0, Math.PI * 2);
           ctx.fill();
         }
       });
@@ -535,6 +586,7 @@
       }
 
       updateUI();
+      ctx.restore();
     }
 
     function updateUI() {
