@@ -170,7 +170,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             hCheeseBtn = CreateWindow("BUTTON", "Cheese ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(10), S(555), S(140), S(20), hwnd, (HMENU) 13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hHelpBtn = CreateWindow("BUTTON", "Almanac (H)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+            hHelpBtn = CreateWindow("BUTTON", "Almanac (H/F1)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(160), S(555), S(100), S(20), hwnd, (HMENU) 14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             SendMessage(hSeedBtns[0], BM_SETCHECK, BST_CHECKED, 0);
@@ -178,7 +178,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             EnumChildWindows(hwnd, SetFontCallback, (LPARAM)hFont);
             return 0;
         case WM_KEYDOWN:
-            if (wParam == 'H' || wParam == 'h') {
+            if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 SendMessage(hwnd, WM_COMMAND, 14, 0);
             }
             return 0;
@@ -459,7 +459,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(hdc, hGuiFont);
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, time_of_day ? RGB(200,200,200) : RGB(50,50,50));
-            const char* inst = "Till->Plant->Water->Harvest | Press 'H' for Almanac";
+            const char* inst = "Till->Plant->Water->Harvest | Press H or F1 for Almanac";
             TextOut(hdc, OFFSET_X, 8, inst, lstrlen(inst));
 
             for (int y = 0; y < GRID_ROWS; y++) {
@@ -732,10 +732,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     }
 
     RECT rect = {0, 0, S(420), S(590)};
-    AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
+    AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, FALSE);
 
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KFarm - Spring, Day 1 | Clear | $50 | Ch:0 Co:0", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        0, CLASS_NAME, "KFarm - Spring, Day 1 | Clear | $50 | Ch:0 Co:0", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, hInstance, NULL
     );

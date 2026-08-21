@@ -43,28 +43,28 @@
             🐔 Chickens: <span id="chickensSpan">0</span> | 🐄 Cows: <span id="cowsSpan">0</span> | 🧍 Scarecrow: <span id="scarecrowSpan">No</span>
         </div>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest) | <span style="color:#2196F3;">Press 'H' for Almanac</span></p>
-        <div style="text-align:center; margin-top:15px;">
-            <div style="margin-bottom: 10px; font-size: 14px;">
+        <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest) | <span style="color:#2196F3;">Press H or F1 for Almanac</span></p>
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:15px;">
+            <div style="width:100%; margin-bottom: 5px; font-size: 14px;">
                 <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> Wheat (-$5) [Sp/Fa]</label>
                 <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="1"> Corn (-$10) [Su]</label>
                 <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="2"> Tomato (-$15) [Su/Fa]</label>
                 <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="3"> Pumpkin (-$25) [Fa]</label>
             </div>
             <button onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep (Next Day)</button>
-            <button id="upgradeBtn" onclick="buyUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-left:10px;">Fertilizer ($100)</button>
-            <button id="upgradeToolsBtn" onclick="buyToolsUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-left:10px;">Upgrade Tools ($200)</button>
+            <button id="upgradeBtn" onclick="buyUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Fertilizer ($100)</button>
+            <button id="upgradeToolsBtn" onclick="buyToolsUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Upgrade Tools ($200)</button>
         </div>
-        <div style="text-align:center; margin-top:10px;">
-            <button onclick="buyChicken()" style="padding:5px 10px; font-size:14px; background-color:#FFC107; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Chicken ($50)</button>
-            <button onclick="buyCow()" style="padding:5px 10px; font-size:14px; background-color:#795548; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Cow ($150)</button>
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:10px;">
+            <button onclick="buyChicken()" style="padding:5px 10px; font-size:14px; background-color:#FFC107; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Chicken ($50)</button>
+            <button onclick="buyCow()" style="padding:5px 10px; font-size:14px; background-color:#795548; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Buy Cow ($150)</button>
             <button id="scarecrowBtn" onclick="buyScarecrow()" style="padding:5px 10px; font-size:14px; background-color:#607D8B; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Buy Scarecrow ($100)</button>
         </div>
-        <div style="text-align:center; margin-top:10px;">
-            <button id="millBtn" onclick="buyMill()" style="padding:5px 10px; font-size:14px; background-color:#D7CCC8; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Mill ($150)</button>
-            <button id="mayoBtn" onclick="buyMayoMaker()" style="padding:5px 10px; font-size:14px; background-color:#FFF9C4; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Mayo Maker ($100)</button>
-            <button id="cheeseBtn" onclick="buyCheesePress()" style="padding:5px 10px; font-size:14px; background-color:#FFE082; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">Buy Cheese Press ($200)</button>
-            <button onclick="showHelp()" style="padding:5px 10px; font-size:14px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Almanac</button>
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:10px;">
+            <button id="millBtn" onclick="buyMill()" style="padding:5px 10px; font-size:14px; background-color:#D7CCC8; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mill ($150)</button>
+            <button id="mayoBtn" onclick="buyMayoMaker()" style="padding:5px 10px; font-size:14px; background-color:#FFF9C4; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mayo Maker ($100)</button>
+            <button id="cheeseBtn" onclick="buyCheesePress()" style="padding:5px 10px; font-size:14px; background-color:#FFE082; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Cheese Press ($200)</button>
+            <button onclick="showHelp()" style="padding:5px 10px; font-size:14px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Almanac (H/F1)</button>
         </div>
     </div>
     <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:100; justify-content:center; align-items:center;">
@@ -100,7 +100,8 @@
         function hideHelp() { document.getElementById('helpModal').style.display = 'none'; }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'h' || e.key === 'H') {
+            if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+                if (e.key === 'F1') e.preventDefault();
                 const modal = document.getElementById('helpModal');
                 if (modal.style.display === 'none' || modal.style.display === '') {
                     showHelp();
