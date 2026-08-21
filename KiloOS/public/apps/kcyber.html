@@ -99,6 +99,44 @@
     const terminalDiv = document.getElementById('terminal');
     const promptSpan = document.querySelector('.prompt');
 
+    // Web Audio Setup
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    function playTone(freq, type, duration, vol=0.1) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playKeyClack() { playTone(800, 'square', 0.05, 0.02); }
+    function playAccessGranted() {
+      playTone(400, 'sine', 0.1, 0.1);
+      setTimeout(() => playTone(600, 'sine', 0.1, 0.1), 100);
+      setTimeout(() => playTone(800, 'sine', 0.2, 0.1), 200);
+    }
+    function playAccessDenied() {
+      playTone(150, 'sawtooth', 0.3, 0.2);
+      setTimeout(() => playTone(150, 'sawtooth', 0.3, 0.2), 400);
+    }
+    function playAlarm() {
+      playTone(600, 'square', 0.2, 0.1);
+      setTimeout(() => playTone(400, 'square', 0.2, 0.1), 200);
+    }
+    function playDialup() {
+      for(let i=0; i<10; i++) {
+        setTimeout(() => playTone(Math.random()*1000 + 500, 'square', 0.1, 0.05), i*100);
+      }
+    }
+
     let hacking_node = null;
     let hacking_target = "";
     let hacking_attempts = 0;
@@ -153,10 +191,12 @@
           ice_frozen_ticks--;
           printLine(`[${ice_name}] ICE is blinded...`);
         } else {
+          playAlarm();
           player_mem -= ice_damage;
           if (player_mem <= 0) {
             player_mem = 0;
             printLine(`[${ice_name}] FATAL: Memory depleted. Connection forcefully terminated.`);
+            playAccessDenied();
             hacking_node = null;
             connected_node = null;
             updatePrompt();
@@ -351,16 +391,19 @@
         }
         
         if (exact === 4) {
+          playAccessGranted();
           printLine(`ACCESS GRANTED. Connected to node [${hacking_node}].`);
           connected_node = hacking_node;
           hacking_node = null;
           printLine("Type 'ls' to list files, 'download <file>' to extract, 'disconnect' to exit.");
         } else {
           hacking_attempts--;
+          playTone(300, 'square', 0.1, 0.1);
           printLine(`Result: ${exact} EXACT, ${partial} PARTIAL`);
           if (hacking_attempts > 0) {
             printLine(`Attempts remaining: ${hacking_attempts}`);
           } else {
+            playAccessDenied();
             printLine("ACCESS DENIED. TRACE DETECTED. CONNECTION TERMINATED.");
             player_heat += 20;
             if (player_heat > 100) player_heat = 100;
@@ -543,6 +586,7 @@
               ice_damage += Math.floor(player_heat / 5);
 
               printLine(`Attempting connection to node [${args[1]}]...`);
+              playDialup();
               printLine("Establishing handshake...");
               printLine(`WARNING: ${ice_name} detected on this node.`);
               printLine("PASSWORD REQUIRED. INITIATING BRUTEFORCE MODULE...");
@@ -568,7 +612,10 @@
     }
 
     cmdInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (e.key !== 'Enter') {
+        playKeyClack();
+      } else {
         processCommand(cmdInput.value);
         cmdInput.value = '';
       }

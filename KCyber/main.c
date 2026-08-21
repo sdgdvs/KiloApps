@@ -81,6 +81,24 @@ void GenerateMissions() {
     }
 }
 
+void PlayKeyClack() { Beep(800, 10); }
+void PlayAccessGranted() {
+    Beep(400, 100); Beep(600, 100); Beep(800, 200);
+}
+void PlayAccessDenied() {
+    Beep(150, 300); Beep(150, 400);
+}
+void PlayAlarm() {
+    Beep(600, 200); Beep(400, 200);
+}
+void PlayDialup() {
+    for(int i=0; i<10; i++) {
+        Beep(500 + (my_rand() % 1000), 100);
+    }
+}
+void PlayFailTone() { Beep(300, 100); }
+
+
 void PrintLine(HWND hwnd, const char* text) {
     if (history_count < MAX_LINES) {
         lstrcpynA(history[history_count], text, MAX_LINE_LENGTH);
@@ -284,6 +302,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         }
         
         if (exact == 4) {
+            PlayAccessGranted();
             wsprintfA(buffer, "ACCESS GRANTED. Connected to node [0%d].", hacking_node);
             PrintLine(hwnd, buffer);
             PrintLine(hwnd, "Type 'ls' to list files, 'download <file>' to extract, 'disconnect' to exit.");
@@ -291,12 +310,14 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             hacking_node = 0;
         } else {
             hacking_attempts--;
+            PlayFailTone();
             wsprintfA(buffer, "Result: %d EXACT, %d PARTIAL", exact, partial);
             PrintLine(hwnd, buffer);
             if (hacking_attempts > 0) {
                 wsprintfA(buffer, "Attempts remaining: %d", hacking_attempts);
                 PrintLine(hwnd, buffer);
             } else {
+                PlayAccessDenied();
                 PrintLine(hwnd, "ACCESS DENIED. TRACE DETECTED. CONNECTION TERMINATED.");
                 player_heat += 20;
                 if (player_heat > 100) player_heat = 100;
@@ -561,6 +582,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 lstrcatA(msg, args);
                 lstrcatA(msg, "]...");
                 PrintLine(hwnd, msg);
+                PlayDialup();
                 PrintLine(hwnd, "Establishing handshake...");
                 char warnBuf[128];
                 wsprintfA(warnBuf, "WARNING: %s detected on this node.", ice_name);
@@ -622,12 +644,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         PrintLine(hwnd, buf);
                         InvalidateRect(hwnd, NULL, FALSE);
                     } else {
+                        PlayAlarm();
                         player_mem -= ice_damage;
                         char buf[128];
                         if (player_mem <= 0) {
                             player_mem = 0;
                             wsprintfA(buf, "[%s] FATAL: Memory depleted. Connection forcefully terminated.", ice_name);
                             PrintLine(hwnd, buf);
+                            PlayAccessDenied();
                             hacking_node = 0;
                             connected_node = 0;
                         } else {
@@ -712,6 +736,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
         case WM_CHAR:
             if (wParam >= 32 && wParam <= 126) {
+                PlayKeyClack();
                 if (current_input_len < MAX_LINE_LENGTH - 1) {
                     current_input[current_input_len++] = (char)wParam;
                     current_input[current_input_len] = '\0';
@@ -719,6 +744,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == '\b' && current_input_len > 0) {
+                PlayKeyClack();
                 current_input[--current_input_len] = '\0';
                 cursor_visible = 1;
                 InvalidateRect(hwnd, NULL, FALSE);
