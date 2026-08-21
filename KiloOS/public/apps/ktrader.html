@@ -85,6 +85,7 @@
       <span id="ui-credits">Credits: 1000</span>
       <span id="ui-fuel">Fuel: 100 / 100</span>
       <span id="ui-cargo">Cargo: 0 / 20</span>
+      <span id="ui-weapons">Weapons: Lv 0</span>
     </div>
   </div>
 
@@ -112,6 +113,12 @@
     </div>
   </div>
 
+  <div class="panel">
+    <h2 style="margin-top: 0;">Shipyard</h2>
+    <div id="ui-shipyard" style="display: flex; gap: 10px;">
+    </div>
+  </div>
+
   <div class="panel log-panel" id="ui-log">
     <div class="log-entry">Welcome to KTrader, Captain.</div>
   </div>
@@ -125,7 +132,10 @@
       cargo: 0,
       maxCargo: 20,
       location: "Earth",
-      inventory: { Food: 0, Water: 0, Ore: 0, Tech: 0, Meds: 0 }
+      inventory: { Food: 0, Water: 0, Ore: 0, Tech: 0, Meds: 0 },
+      engineLevel: 0,
+      cargoLevel: 0,
+      weaponLevel: 0
     };
 
     const planets = {
@@ -164,6 +174,7 @@
       document.getElementById('ui-credits').textContent = `Credits: ${state.credits}`;
       document.getElementById('ui-fuel').textContent = `Fuel: ${state.fuel} / ${state.maxFuel}`;
       document.getElementById('ui-cargo').textContent = `Cargo: ${state.cargo} / ${state.maxCargo}`;
+      document.getElementById('ui-weapons').textContent = `Weapons: Lv ${state.weaponLevel}`;
       document.getElementById('ui-location').textContent = state.location;
 
       const destContainer = document.getElementById('destinations');
@@ -171,12 +182,15 @@
       
       const currentPlanet = planets[state.location];
       for (const [target, cost] of Object.entries(currentPlanet.distance)) {
+        let actualCost = cost - state.engineLevel * 2;
+        if (actualCost < 1) actualCost = 1;
+
         const btn = document.createElement('button');
-        btn.textContent = `Travel to ${target} (${cost} fuel)`;
-        if (state.fuel < cost) {
+        btn.textContent = `Travel to ${target} (${actualCost} fuel)`;
+        if (state.fuel < actualCost) {
           btn.disabled = true;
         }
-        btn.onclick = () => travel(target, cost);
+        btn.onclick = () => travel(target, actualCost);
         destContainer.appendChild(btn);
       }
 
@@ -221,6 +235,31 @@
 
         marketBody.appendChild(tr);
       }
+
+      const shipyard = document.getElementById('ui-shipyard');
+      shipyard.innerHTML = '';
+      
+      const cargoCost = 500 * (state.cargoLevel + 1);
+      const engineCost = 1000 * (state.engineLevel + 1);
+      const weaponCost = 1500 * (state.weaponLevel + 1);
+
+      const btnCargo = document.createElement('button');
+      btnCargo.textContent = `Upgrade Cargo (${cargoCost} cr)`;
+      btnCargo.disabled = state.credits < cargoCost;
+      btnCargo.onclick = () => buyUpgrade('cargo', cargoCost);
+      shipyard.appendChild(btnCargo);
+
+      const btnEngine = document.createElement('button');
+      btnEngine.textContent = `Upgrade Engine (${engineCost} cr)`;
+      btnEngine.disabled = state.credits < engineCost;
+      btnEngine.onclick = () => buyUpgrade('engine', engineCost);
+      shipyard.appendChild(btnEngine);
+
+      const btnWeapon = document.createElement('button');
+      btnWeapon.textContent = `Upgrade Weapons (${weaponCost} cr)`;
+      btnWeapon.disabled = state.credits < weaponCost;
+      btnWeapon.onclick = () => buyUpgrade('weapons', weaponCost);
+      shipyard.appendChild(btnWeapon);
     }
 
     function buyGood(good, price) {
@@ -243,11 +282,30 @@
       }
     }
 
-    function travel(target, cost) {
-      if (state.fuel >= cost) {
-        state.fuel -= cost;
+    function buyUpgrade(type, cost) {
+      if (state.credits >= cost) {
+        state.credits -= cost;
+        if (type === 'cargo') {
+          state.cargoLevel++;
+          state.maxCargo += 20;
+          log(`Cargo Bay upgraded to level ${state.cargoLevel}! Max cargo now ${state.maxCargo}.`);
+        } else if (type === 'engine') {
+          state.engineLevel++;
+          state.maxFuel += 50;
+          log(`Engine upgraded to level ${state.engineLevel}! Less fuel used for travel.`);
+        } else if (type === 'weapons') {
+          state.weaponLevel++;
+          log(`Weapons upgraded to level ${state.weaponLevel}!`);
+        }
+        updateUI();
+      }
+    }
+
+    function travel(target, actualCost) {
+      if (state.fuel >= actualCost) {
+        state.fuel -= actualCost;
         state.location = target;
-        log(`Hyperspace jump complete. Arrived at ${target}. Used ${cost} fuel.`);
+        log(`Hyperspace jump complete. Arrived at ${target}. Used ${actualCost} fuel.`);
         generatePrices();
         updateUI();
       } else {

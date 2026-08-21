@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KTrader (Space trading sim)
-**Phase:** 6 (next to do)
+**Phase:** 7 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KTrader directory (`KTrader/`), create web HTML skeleton (`KiloOS/public/apps/ktrader.html`), register in App.jsx.
@@ -62,7 +62,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 3: Native C version (`KTrader/main.c`, `build.bat`) using Win32 GDI with functional parity.
 - [x] Phase 4: Sci-fi styling (starfield backgrounds, neon HUD, clean terminal fonts).
 - [x] Phase 5: Implement dynamic market system (prices of 5 trade goods fluctuate based on planet supply/demand).
-- [ ] Phase 6: Ship upgrade system (spend credits to buy larger cargo bays, better engines for less fuel use, or weapons).
+- [x] Phase 6: Ship upgrade system (spend credits to buy larger cargo bays, better engines for less fuel use, or weapons).
 - [ ] Phase 7: Random encounters during travel (space pirates demanding cargo, distress signals, asteroid fields).
 - [ ] Phase 8: Combat mechanics (turn-based tactical combat against pirate ships using ship weapons and shields).
 - [ ] Phase 9: Planet variety and procedural generation (generate 10-15 unique planets with different economies and tech levels).

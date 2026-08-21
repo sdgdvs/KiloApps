@@ -16,9 +16,12 @@ typedef struct {
     int maxCargo;
     int location; // 0 = Earth, 1 = Mars, 2 = Venus
     int inventory[5]; // Food, Water, Ore, Tech, Meds
+    int engineLevel;
+    int cargoLevel;
+    int weaponLevel;
 } GameState;
 
-GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0} };
+GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0}, 0, 0, 0 };
 
 const char* goodNames[5] = { "Food", "Water", "Ore", "Tech", "Meds" };
 int marketBases[3][5] = {
@@ -41,10 +44,14 @@ int distances[3][3] = {
     {15, 25, 0}  // Venus
 };
 
-HWND hStatCredits, hStatFuel, hStatCargo;
+HWND hStatCredits, hStatFuel, hStatCargo, hStatWeapons;
 HWND hStatLoc;
 HWND hBtnDest1, hBtnDest2;
 HWND hListLog;
+#define ID_BTN_UPG_CARGO 301
+#define ID_BTN_UPG_ENGINE 302
+#define ID_BTN_UPG_WEAPON 303
+HWND hBtnUpgCargo, hBtnUpgEngine, hBtnUpgWeapon;
 
 HWND hStatGoodName[5];
 HWND hStatGoodPrice[5];
@@ -79,6 +86,8 @@ void UpdateUI(HWND hwnd) {
     SetWindowText(hStatFuel, buf);
     wsprintf(buf, "Cargo: %d / %d", state.cargo, state.maxCargo);
     SetWindowText(hStatCargo, buf);
+    wsprintf(buf, "Weapons: Lv %d", state.weaponLevel);
+    SetWindowText(hStatWeapons, buf);
 
     wsprintf(buf, "Current Location: %s", planetNames[state.location]);
     SetWindowText(hStatLoc, buf);
@@ -88,7 +97,8 @@ void UpdateUI(HWND hwnd) {
     for (int i = 0; i < 3; i++) {
         if (i == state.location) continue;
         destTarget[btnIdx] = i;
-        destCost[btnIdx] = distances[state.location][i];
+        destCost[btnIdx] = distances[state.location][i] - state.engineLevel * 2;
+        if (destCost[btnIdx] < 1) destCost[btnIdx] = 1;
         
         wsprintf(buf, "Travel to %s (%d fuel)", planetNames[i], destCost[btnIdx]);
         SetWindowText(btnIdx == 0 ? hBtnDest1 : hBtnDest2, buf);
@@ -96,6 +106,22 @@ void UpdateUI(HWND hwnd) {
         
         btnIdx++;
     }
+
+    int cargoCost = 500 * (state.cargoLevel + 1);
+    int engineCost = 1000 * (state.engineLevel + 1);
+    int weaponCost = 1500 * (state.weaponLevel + 1);
+
+    wsprintf(buf, "Upg Cargo (%d cr)", cargoCost);
+    SetWindowText(hBtnUpgCargo, buf);
+    EnableWindow(hBtnUpgCargo, state.credits >= cargoCost);
+
+    wsprintf(buf, "Upg Engine (%d cr)", engineCost);
+    SetWindowText(hBtnUpgEngine, buf);
+    EnableWindow(hBtnUpgEngine, state.credits >= engineCost);
+
+    wsprintf(buf, "Upg Weapons (%d cr)", weaponCost);
+    SetWindowText(hBtnUpgWeapon, buf);
+    EnableWindow(hBtnUpgWeapon, state.credits >= weaponCost);
 
     // Update Market
     for (int i = 0; i < 5; i++) {
@@ -139,9 +165,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             CreateWindow("STATIC", "KTrader Space Trading Sim", WS_CHILD | WS_VISIBLE,
                 20, 20, 300, 20, hwnd, NULL, NULL, NULL);
 
-            hStatCredits = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 20, 60, 150, 20, hwnd, NULL, NULL, NULL);
-            hStatFuel = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 180, 60, 150, 20, hwnd, NULL, NULL, NULL);
-            hStatCargo = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 340, 60, 150, 20, hwnd, NULL, NULL, NULL);
+            hStatCredits = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 10, 60, 140, 20, hwnd, NULL, NULL, NULL);
+            hStatFuel = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 160, 60, 140, 20, hwnd, NULL, NULL, NULL);
+            hStatCargo = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 310, 60, 140, 20, hwnd, NULL, NULL, NULL);
+            hStatWeapons = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 460, 60, 140, 20, hwnd, NULL, NULL, NULL);
 
             CreateWindow("STATIC", "Navigation", WS_CHILD | WS_VISIBLE, 20, 100, 100, 20, hwnd, NULL, NULL, NULL);
             hStatLoc = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 20, 130, 200, 20, hwnd, NULL, NULL, NULL);
@@ -149,8 +176,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnDest1 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 160, 250, 30, hwnd, (HMENU)ID_BTN_DEST1, NULL, NULL);
             hBtnDest2 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 200, 250, 30, hwnd, (HMENU)ID_BTN_DEST2, NULL, NULL);
 
+            HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 240, 100, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hStatShipyard, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnUpgCargo = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 270, 180, 30, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
+            hBtnUpgEngine = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 210, 270, 180, 30, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
+            hBtnUpgWeapon = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 400, 270, 180, 30, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
+            SendMessage(hBtnUpgCargo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnUpgEngine, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnUpgWeapon, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hListLog = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOINTEGRALHEIGHT,
-                20, 250, 600, 100, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
+                20, 320, 600, 100, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
 
             HWND hStatMarket = CreateWindow("STATIC", "Market", WS_CHILD | WS_VISIBLE, 300, 100, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatMarket, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -205,6 +242,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.cargo--;
                     char buf[128];
                     wsprintf(buf, "> Sold 1 %s for %d cr.", goodNames[good], price);
+                    LogMessage(buf);
+                    UpdateUI(hwnd);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_UPG_CARGO) {
+                int cost = 500 * (state.cargoLevel + 1);
+                if (state.credits >= cost) {
+                    state.credits -= cost;
+                    state.cargoLevel++;
+                    state.maxCargo += 20;
+                    char buf[128];
+                    wsprintf(buf, "> Cargo Bay upgraded! Max cargo now %d.", state.maxCargo);
+                    LogMessage(buf);
+                    UpdateUI(hwnd);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_UPG_ENGINE) {
+                int cost = 1000 * (state.engineLevel + 1);
+                if (state.credits >= cost) {
+                    state.credits -= cost;
+                    state.engineLevel++;
+                    state.maxFuel += 50;
+                    LogMessage("> Engine upgraded! Less fuel used for travel.");
+                    UpdateUI(hwnd);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_UPG_WEAPON) {
+                int cost = 1500 * (state.weaponLevel + 1);
+                if (state.credits >= cost) {
+                    state.credits -= cost;
+                    state.weaponLevel++;
+                    char buf[128];
+                    wsprintf(buf, "> Weapons upgraded to level %d!", state.weaponLevel);
                     LogMessage(buf);
                     UpdateUI(hwnd);
                 }
@@ -264,7 +331,7 @@ void __stdcall MainEntry() {
         CLASS_NAME,
         "KTrader",
         WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 650, 420,
+        CW_USEDEFAULT, CW_USEDEFAULT, 650, 500,
         NULL, NULL, hInstance, NULL
     );
 
