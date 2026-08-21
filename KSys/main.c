@@ -131,7 +131,7 @@ void GetSystemAuditText(char* buf, int maxLen) {
         "=================================================================\r\n"
         "       KSYS NATIVE SYSTEM DIAGNOSTICS & HARDWARE REPORT          \r\n"
         "=================================================================\r\n"
-        "-> Press 'H' for Help/Instructions \r\n\r\n"
+        "-> Press 'H' or F1 for Help/Instructions \r\n\r\n"
         "System Uptime      : %u h %u m %u s\r\n"
         "Architecture       : %s\r\n"
         "Logical Processors : %u Cores\r\n"
@@ -192,7 +192,7 @@ void GetServicesAndTelemetryText(char* buf, int maxLen) {
         "=================================================================\r\n"
         "       REAL-TIME SYSTEM TELEMETRY & SERVICES MANAGER            \r\n"
         "=================================================================\r\n"
-        "-> Press 'H' for Help/Instructions \r\n\r\n"
+        "-> Press 'H' or F1 for Help/Instructions \r\n\r\n"
         "--- REAL-TIME TELEMETRY ---\r\n"
         "Live CPU Usage      : %d%%\r\n"
         "Memory Load         : %u%%\r\n"
@@ -474,7 +474,7 @@ void UpdateView() {
     } else if (g_CurrentTab == 1) { // Benchmarks
         wsprintfA(contentBuf,
             "--- DIAGNOSTIC BENCHMARK SUITE ---\r\n\r\n"
-            "-> Press 'H' for Help/Instructions \r\n\r\n"
+            "-> Press 'H' or F1 for Help/Instructions \r\n\r\n"
             "CPU Benchmark Test  : %s\r\n"
             "RAM Throughput Test : %s\r\n"
             "Disk I/O Speed Test : %s\r\n\r\n"
@@ -541,7 +541,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnExpJson = CreateWindow("BUTTON", "Export JSON", WS_CHILD | BS_PUSHBUTTON, 130, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_JSON, NULL, NULL);
             hBtnExpHtml = CreateWindow("BUTTON", "Export HTML", WS_CHILD | BS_PUSHBUTTON, 250, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_HTML, NULL, NULL);
 
-            hBtnHelp = CreateWindow("BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, W - 110, H - 75, 90, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help (F1/H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, W - 110, H - 75, 90, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
 
@@ -659,7 +659,7 @@ void MainEntry() {
     int realW = rect.right - rect.left;
     int realH = rect.bottom - rect.top;
 
-    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press 'H' for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press 'H' or F1 for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, realW, realH, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -667,7 +667,7 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && msg.wParam == 'H') {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == VK_F1)) {
             MessageBoxA(hwnd, "KSys Help Instructions:\n\n1. Hardware Inspector: View live system details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Services & Telemetry: Inspect real-time CPU load & Win32 Services.\n4. Event Logs: Check background activity.\n5. Report Export: Generate and download summaries.\n\nUse the tabs to navigate.", "KSys Help", MB_OK | MB_ICONINFORMATION);
         }
         TranslateMessage(&msg);

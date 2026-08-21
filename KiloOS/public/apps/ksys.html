@@ -525,7 +525,7 @@
 <body>
   <div id="help-toast" style="position: fixed; bottom: 20px; right: 20px; background: var(--bg-secondary); border: 1px solid var(--accent-blue); padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1000; animation: fadeIn 0.5s;">
     <h3 style="margin-bottom: 5px; color: var(--accent-blue); font-size: 14px;">Welcome to KSys</h3>
-    <p style="font-size: 12px; color: var(--text-main);">Press <strong>'H'</strong> for help instructions at any time.</p>
+    <p style="font-size: 12px; color: var(--text-main);">Press <strong>'H'</strong> or <strong>F1</strong> for help instructions at any time.</p>
     <button onclick="document.getElementById('help-toast').style.display='none'" style="margin-top: 10px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">Dismiss</button>
   </div>
 
@@ -557,7 +557,7 @@
       <div class="brand-logo">KS</div>
       <div class="brand-title">
         <h1>KSys Workstation Diagnostic & Telemetry Suite</h1>
-        <p>System Utility, Telemetry & Service Manager | <strong>Press 'H' for Help</strong></p>
+        <p>System Utility, Telemetry & Service Manager | <strong>Press 'H' or F1 for Help</strong></p>
       </div>
     </div>
     <div class="top-stats">
@@ -568,7 +568,7 @@
       <div class="stat-badge">
         <span>⚡ Cores: <strong id="header-cores">--</strong></span>
       </div>
-      <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; height: 28px;" onclick="showHelp()">❓ Help (H)</button>
+      <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; height: 28px;" onclick="showHelp()">❓ Help (F1/H)</button>
     </div>
   </header>
 
@@ -889,7 +889,8 @@
 
   window.addEventListener('keydown', (e) => {
     if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
-    if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      if (e.key === 'F1') e.preventDefault();
       showHelp();
     }
   });
