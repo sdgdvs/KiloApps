@@ -5,6 +5,8 @@
 #define ID_BTN_DEST1 101
 #define ID_BTN_DEST2 102
 #define ID_LIST_LOG  103
+#define ID_BTN_BUY_START 200
+#define ID_BTN_SELL_START 210
 
 typedef struct {
     int credits;
@@ -13,9 +15,24 @@ typedef struct {
     int cargo;
     int maxCargo;
     int location; // 0 = Earth, 1 = Mars, 2 = Venus
+    int inventory[5]; // Food, Water, Ore, Tech, Meds
 } GameState;
 
-GameState state = { 1000, 100, 100, 0, 20, 0 };
+GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0} };
+
+const char* goodNames[5] = { "Food", "Water", "Ore", "Tech", "Meds" };
+int marketBases[3][5] = {
+    { 10, 15, 60, 100, 40 }, // Earth
+    { 40, 50, 20, 120, 50 }, // Mars
+    { 50, 40, 70,  30, 90 }  // Venus
+};
+int currentPrices[5];
+
+unsigned int rngState = 0x1234;
+unsigned int SimpleRand() {
+    rngState = (rngState >> 1) ^ (-(int)(rngState & 1u) & 0xB400u);
+    return rngState;
+}
 
 const char* planetNames[] = { "Earth", "Mars", "Venus" };
 int distances[3][3] = {
@@ -29,8 +46,24 @@ HWND hStatLoc;
 HWND hBtnDest1, hBtnDest2;
 HWND hListLog;
 
+HWND hStatGoodName[5];
+HWND hStatGoodPrice[5];
+HWND hStatGoodOwned[5];
+HWND hBtnGoodBuy[5];
+HWND hBtnGoodSell[5];
+
 int destTarget[2];
 int destCost[2];
+
+void GeneratePrices() {
+    for (int i = 0; i < 5; i++) {
+        int base = marketBases[state.location][i];
+        int variance = base / 5;
+        int rand_var = 0;
+        if (variance > 0) rand_var = SimpleRand() % (variance * 2 + 1);
+        currentPrices[i] = base - variance + rand_var;
+    }
+}
 
 void LogMessage(const char* msg) {
     SendMessage(hListLog, LB_ADDSTRING, 0, (LPARAM)msg);
@@ -63,6 +96,17 @@ void UpdateUI(HWND hwnd) {
         
         btnIdx++;
     }
+
+    // Update Market
+    for (int i = 0; i < 5; i++) {
+        wsprintf(buf, "%d cr", currentPrices[i]);
+        SetWindowText(hStatGoodPrice[i], buf);
+        wsprintf(buf, "Own: %d", state.inventory[i]);
+        SetWindowText(hStatGoodOwned[i], buf);
+        
+        EnableWindow(hBtnGoodBuy[i], state.credits >= currentPrices[i] && state.cargo < state.maxCargo);
+        EnableWindow(hBtnGoodSell[i], state.inventory[i] > 0);
+    }
 }
 
 void Travel(int btnIdx, HWND hwnd) {
@@ -75,6 +119,7 @@ void Travel(int btnIdx, HWND hwnd) {
         char buf[256];
         wsprintf(buf, "> Hyperspace jump complete. Arrived at %s. Used %d fuel.", planetNames[target], cost);
         LogMessage(buf);
+        GeneratePrices();
         UpdateUI(hwnd);
     } else {
         LogMessage("> Insufficient fuel!");
@@ -84,6 +129,10 @@ void Travel(int btnIdx, HWND hwnd) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
+            rngState = GetTickCount();
+            if (rngState == 0) rngState = 0x1234;
+            GeneratePrices();
+
             HFONT hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                 OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
             
@@ -101,7 +150,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnDest2 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 200, 250, 30, hwnd, (HMENU)ID_BTN_DEST2, NULL, NULL);
 
             hListLog = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOINTEGRALHEIGHT,
-                20, 250, 440, 100, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
+                20, 250, 600, 100, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
+
+            HWND hStatMarket = CreateWindow("STATIC", "Market", WS_CHILD | WS_VISIBLE, 300, 100, 100, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hStatMarket, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            for (int i = 0; i < 5; i++) {
+                int y = 130 + i * 22;
+                hStatGoodName[i] = CreateWindow("STATIC", goodNames[i], WS_CHILD | WS_VISIBLE, 300, y, 50, 20, hwnd, NULL, NULL, NULL);
+                hStatGoodPrice[i] = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 360, y, 60, 20, hwnd, NULL, NULL, NULL);
+                hStatGoodOwned[i] = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 430, y, 60, 20, hwnd, NULL, NULL, NULL);
+                hBtnGoodBuy[i] = CreateWindow("BUTTON", "Buy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, y, 40, 20, hwnd, (HMENU)(ID_BTN_BUY_START + i), NULL, NULL);
+                hBtnGoodSell[i] = CreateWindow("BUTTON", "Sell", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 550, y, 40, 20, hwnd, (HMENU)(ID_BTN_SELL_START + i), NULL, NULL);
+
+                SendMessage(hStatGoodName[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+                SendMessage(hStatGoodPrice[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+                SendMessage(hStatGoodOwned[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+                SendMessage(hBtnGoodBuy[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+                SendMessage(hBtnGoodSell[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+            }
 
             // Set fonts
             SendDlgItemMessage(hwnd, ID_BTN_DEST1, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -117,6 +184,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 Travel(0, hwnd);
             } else if (LOWORD(wParam) == ID_BTN_DEST2) {
                 Travel(1, hwnd);
+            } else if (LOWORD(wParam) >= ID_BTN_BUY_START && LOWORD(wParam) < ID_BTN_BUY_START + 5) {
+                int good = LOWORD(wParam) - ID_BTN_BUY_START;
+                int price = currentPrices[good];
+                if (state.credits >= price && state.cargo < state.maxCargo) {
+                    state.credits -= price;
+                    state.inventory[good]++;
+                    state.cargo++;
+                    char buf[128];
+                    wsprintf(buf, "> Bought 1 %s for %d cr.", goodNames[good], price);
+                    LogMessage(buf);
+                    UpdateUI(hwnd);
+                }
+            } else if (LOWORD(wParam) >= ID_BTN_SELL_START && LOWORD(wParam) < ID_BTN_SELL_START + 5) {
+                int good = LOWORD(wParam) - ID_BTN_SELL_START;
+                int price = currentPrices[good];
+                if (state.inventory[good] > 0) {
+                    state.credits += price;
+                    state.inventory[good]--;
+                    state.cargo--;
+                    char buf[128];
+                    wsprintf(buf, "> Sold 1 %s for %d cr.", goodNames[good], price);
+                    LogMessage(buf);
+                    UpdateUI(hwnd);
+                }
             }
             return 0;
         }
@@ -173,7 +264,7 @@ void __stdcall MainEntry() {
         CLASS_NAME,
         "KTrader",
         WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 500, 420,
+        CW_USEDEFAULT, CW_USEDEFAULT, 650, 420,
         NULL, NULL, hInstance, NULL
     );
 

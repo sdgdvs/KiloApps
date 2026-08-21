@@ -88,10 +88,28 @@
     </div>
   </div>
 
-  <div class="panel">
-    <h2 style="margin-top: 0;">Navigation</h2>
-    <p>Current Location: <strong id="ui-location">Earth</strong></p>
-    <div id="destinations"></div>
+  <div class="panel" style="display: flex; gap: 20px;">
+    <div style="flex: 1;">
+      <h2 style="margin-top: 0;">Navigation</h2>
+      <p>Current Location: <strong id="ui-location">Earth</strong></p>
+      <div id="destinations"></div>
+    </div>
+    
+    <div style="flex: 1;">
+      <h2 style="margin-top: 0;">Market</h2>
+      <table style="width:100%; text-align:left; border-collapse:collapse;" id="market-table">
+        <thead>
+          <tr style="border-bottom:1px solid #0ff;">
+            <th>Good</th>
+            <th>Price</th>
+            <th>Owned</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="market-body">
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div class="panel log-panel" id="ui-log">
@@ -99,13 +117,15 @@
   </div>
 
   <script>
+    const goods = ["Food", "Water", "Ore", "Tech", "Meds"];
     const state = {
       credits: 1000,
       fuel: 100,
       maxFuel: 100,
       cargo: 0,
       maxCargo: 20,
-      location: "Earth"
+      location: "Earth",
+      inventory: { Food: 0, Water: 0, Ore: 0, Tech: 0, Meds: 0 }
     };
 
     const planets = {
@@ -113,6 +133,23 @@
       "Mars": { distance: { "Earth": 20, "Venus": 25 } },
       "Venus": { distance: { "Earth": 15, "Mars": 25 } }
     };
+
+    const marketBases = {
+      "Earth": { Food: 10, Water: 15, Ore: 60, Tech: 100, Meds: 40 },
+      "Mars":  { Food: 40, Water: 50, Ore: 20, Tech: 120, Meds: 50 },
+      "Venus": { Food: 50, Water: 40, Ore: 70, Tech: 30, Meds: 90 }
+    };
+
+    let currentPrices = {};
+
+    function generatePrices() {
+      const bases = marketBases[state.location];
+      for (const good of goods) {
+        const base = bases[good];
+        const variance = Math.floor(base * 0.2);
+        currentPrices[good] = base - variance + Math.floor(Math.random() * (variance * 2 + 1));
+      }
+    }
 
     function log(msg, isWarning=false) {
       const el = document.getElementById('ui-log');
@@ -142,6 +179,68 @@
         btn.onclick = () => travel(target, cost);
         destContainer.appendChild(btn);
       }
+
+      const marketBody = document.getElementById('market-body');
+      marketBody.innerHTML = '';
+      for (const good of goods) {
+        const price = currentPrices[good];
+        const owned = state.inventory[good];
+        
+        const tr = document.createElement('tr');
+        
+        const tdName = document.createElement('td');
+        tdName.textContent = good;
+        tr.appendChild(tdName);
+
+        const tdPrice = document.createElement('td');
+        tdPrice.textContent = `${price} cr`;
+        tr.appendChild(tdPrice);
+
+        const tdOwned = document.createElement('td');
+        tdOwned.textContent = owned;
+        tr.appendChild(tdOwned);
+
+        const tdAction = document.createElement('td');
+        const buyBtn = document.createElement('button');
+        buyBtn.textContent = 'Buy';
+        buyBtn.style.padding = '2px 5px';
+        buyBtn.style.margin = '2px';
+        buyBtn.disabled = state.credits < price || state.cargo >= state.maxCargo;
+        buyBtn.onclick = () => buyGood(good, price);
+        
+        const sellBtn = document.createElement('button');
+        sellBtn.textContent = 'Sell';
+        sellBtn.style.padding = '2px 5px';
+        sellBtn.style.margin = '2px';
+        sellBtn.disabled = owned <= 0;
+        sellBtn.onclick = () => sellGood(good, price);
+
+        tdAction.appendChild(buyBtn);
+        tdAction.appendChild(sellBtn);
+        tr.appendChild(tdAction);
+
+        marketBody.appendChild(tr);
+      }
+    }
+
+    function buyGood(good, price) {
+      if (state.credits >= price && state.cargo < state.maxCargo) {
+        state.credits -= price;
+        state.inventory[good]++;
+        state.cargo++;
+        log(`Bought 1 ${good} for ${price} cr.`);
+        updateUI();
+      }
+    }
+
+    function sellGood(good, price) {
+      if (state.inventory[good] > 0) {
+        state.credits += price;
+        state.inventory[good]--;
+        state.cargo--;
+        log(`Sold 1 ${good} for ${price} cr.`);
+        updateUI();
+      }
     }
 
     function travel(target, cost) {
@@ -149,12 +248,14 @@
         state.fuel -= cost;
         state.location = target;
         log(`Hyperspace jump complete. Arrived at ${target}. Used ${cost} fuel.`);
+        generatePrices();
         updateUI();
       } else {
         log(`Insufficient fuel to reach ${target}!`, true);
       }
     }
 
+    generatePrices();
     updateUI();
   </script>
 </body>
