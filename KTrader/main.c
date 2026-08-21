@@ -145,6 +145,49 @@ void Travel(int btnIdx, HWND hwnd) {
         char buf[256];
         wsprintf(buf, "> Hyperspace jump complete. Arrived at %s. Used %d fuel.", planetNames[target], cost);
         LogMessage(buf);
+
+        if (SimpleRand() % 100 < 30) {
+            int enc = SimpleRand() % 3;
+            if (enc == 0) {
+                int fuelLoss = 5 + (SimpleRand() % 11);
+                state.fuel -= fuelLoss;
+                if (state.fuel < 0) state.fuel = 0;
+                char encBuf[256];
+                wsprintf(encBuf, "> WARNING: Asteroid field! Evasive maneuvers cost %d fuel.", fuelLoss);
+                LogMessage(encBuf);
+            } else if (enc == 1) {
+                int creditsGained = 50 + (SimpleRand() % 101);
+                state.credits += creditsGained;
+                char encBuf[256];
+                wsprintf(encBuf, "> Distress signal! Helped stranded ship, received %d credits.", creditsGained);
+                LogMessage(encBuf);
+            } else {
+                int available[5];
+                int availCount = 0;
+                for (int i = 0; i < 5; i++) {
+                    if (state.inventory[i] > 0) available[availCount++] = i;
+                }
+                if (availCount > 0) {
+                    int stolenIdx = available[SimpleRand() % availCount];
+                    state.inventory[stolenIdx]--;
+                    state.cargo--;
+                    char encBuf[256];
+                    wsprintf(encBuf, "> WARNING: Space pirates ambushed you! Stole 1 %s.", goodNames[stolenIdx]);
+                    LogMessage(encBuf);
+                } else {
+                    int creditsLost = state.credits > 100 ? 100 : state.credits;
+                    if (creditsLost > 0) {
+                        state.credits -= creditsLost;
+                        char encBuf[256];
+                        wsprintf(encBuf, "> WARNING: Space pirates hacked you! Stole %d credits.", creditsLost);
+                        LogMessage(encBuf);
+                    } else {
+                        LogMessage("> WARNING: Space pirates attacked, found nothing of value.");
+                    }
+                }
+            }
+        }
+
         GeneratePrices();
         UpdateUI(hwnd);
     } else {

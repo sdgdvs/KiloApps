@@ -306,6 +306,36 @@
         state.fuel -= actualCost;
         state.location = target;
         log(`Hyperspace jump complete. Arrived at ${target}. Used ${actualCost} fuel.`);
+        
+        if (Math.random() < 0.3) {
+          const enc = Math.random();
+          if (enc < 0.33) {
+            const fuelLoss = Math.floor(Math.random() * 11) + 5;
+            state.fuel = Math.max(0, state.fuel - fuelLoss);
+            log(`WARNING: Asteroid field encountered! Evasive maneuvers cost ${fuelLoss} fuel.`, true);
+          } else if (enc < 0.66) {
+            const creditsGained = Math.floor(Math.random() * 101) + 50;
+            state.credits += creditsGained;
+            log(`Distress signal! Helped a stranded ship and received ${creditsGained} credits.`);
+          } else {
+            const availableGoods = goods.filter(g => state.inventory[g] > 0);
+            if (availableGoods.length > 0) {
+              const stolen = availableGoods[Math.floor(Math.random() * availableGoods.length)];
+              state.inventory[stolen]--;
+              state.cargo--;
+              log(`WARNING: Space pirates ambushed you! They stole 1 ${stolen}.`, true);
+            } else {
+              const creditsLost = Math.min(state.credits, 100);
+              if (creditsLost > 0) {
+                state.credits -= creditsLost;
+                log(`WARNING: Space pirates hacked your accounts! Stole ${creditsLost} credits.`, true);
+              } else {
+                log(`WARNING: Space pirates attacked, but found nothing of value.`, true);
+              }
+            }
+          }
+        }
+
         generatePrices();
         updateUI();
       } else {
