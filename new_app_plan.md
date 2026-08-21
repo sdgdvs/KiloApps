@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KCyber (Cyberpunk hacking simulator)
-**Phase:** 14 (next to do)
+**App:** KTrader (Space trading sim)
+**Phase:** 1 (next to do)
 **Status:** Creation
 
-- [x] Phase 1: Scaffold KCyber directory (`KCyber/`), create web HTML skeleton (`KiloOS/public/apps/kcyber.html`), register in App.jsx.
-- [x] Phase 2: Basic UI for the cyberdeck terminal (console window, command input) and core loop (typing commands to interact) in web HTML.
-- [x] Phase 3: Native C version (`KCyber/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [x] Phase 4: Retro cyberpunk styling (phosphor green text on black, scanlines, block cursor).
-- [x] Phase 5: Implement a node map system (visual representation of network nodes to connect to).
-- [x] Phase 6: Core hacking mechanic (minigame for cracking passwords, e.g., guessing sequences or matching hashes).
-- [x] Phase 7: ICE (Intrusion Countermeasures Electronics) system (enemies that track and attack the player while hacking).
-- [x] Phase 8: Stealth mechanics (tools to reduce trace speed and evade active ICE).
-- [x] Phase 9: Data extraction system (finding valuable files in nodes and downloading them before trace completes).
-- [x] Phase 10: Cyberdeck upgrade shop (spend credits earned from data to buy better CPU, more memory, or new software).
-- [x] Phase 11: Mission generation (randomly generated contracts with varying difficulty, node types, and rewards).
-- [x] Phase 12: Heat/Notoriety system (failing hacks increases global heat, making future missions harder until cooled down).
-- [x] Phase 13: Sound Effects — dial-up tones, keystroke clacks, alarm sirens, access granted/denied chimes (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Runner's Guide — Command reference, ICE explanations, deck upgrading guide.
+- [ ] Phase 1: Scaffold KTrader directory (`KTrader/`), create web HTML skeleton (`KiloOS/public/apps/ktrader.html`), register in App.jsx.
+- [ ] Phase 2: Basic UI for ship dashboard (credits, cargo space, fuel) and core loop of travelling between 3 basic planets.
+- [ ] Phase 3: Native C version (`KTrader/main.c`, `build.bat`) using Win32 GDI with functional parity.
+- [ ] Phase 4: Sci-fi styling (starfield backgrounds, neon HUD, clean terminal fonts).
+- [ ] Phase 5: Implement dynamic market system (prices of 5 trade goods fluctuate based on planet supply/demand).
+- [ ] Phase 6: Ship upgrade system (spend credits to buy larger cargo bays, better engines for less fuel use, or weapons).
+- [ ] Phase 7: Random encounters during travel (space pirates demanding cargo, distress signals, asteroid fields).
+- [ ] Phase 8: Combat mechanics (turn-based tactical combat against pirate ships using ship weapons and shields).
+- [ ] Phase 9: Planet variety and procedural generation (generate 10-15 unique planets with different economies and tech levels).
+- [ ] Phase 10: Faction system (gain reputation with Traders, Pirates, or the Galactic Navy to unlock special goods).
+- [ ] Phase 11: Mission boards at spaceports (accept delivery contracts, bounty hunting, or smuggling runs).
+- [ ] Phase 12: End-game goal (save up to purchase a massive Dreadnought or discover a legendary lost planet).
+- [ ] Phase 13: Sound Effects — hyperspace jumps, laser blasts, market chimes, alert sirens (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Captain's Log — How-to-play, trade good reference, ship upgrade guide.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kcyber.html` AND `KCyber/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/ktrader.html` AND `KTrader/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KCyber (Phase 14 completed: Added Comprehensive Help & Runner's Guide to both versions)
 - KMech (Phase 14 completed: Added Comprehensive Help & Pilot's Manual to both versions)
 - KDragon (Phase 14 completed: Added Comprehensive Help & Dragon Master's Guide to both versions)
 - KVoid (Phase 14 completed: Added Comprehensive Help & Survival Guide to both versions)
@@ -168,7 +169,7 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KTrader** — Space trading sim. Travel between planets, buy low, sell high, upgrade ship, fight pirates.
+- **KMystery** — Murder mystery deduction game. Interview suspects, collect clues, find the killer.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.
