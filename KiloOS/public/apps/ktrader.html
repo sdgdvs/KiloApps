@@ -160,22 +160,63 @@
       enemyMaxShields: 30
     };
 
-    const planets = {
-      "Earth": { distance: { "Mars": 20, "Venus": 15 } },
-      "Mars": { distance: { "Earth": 20, "Venus": 25 } },
-      "Venus": { distance: { "Earth": 15, "Mars": 25 } }
-    };
+    const namePool = ["Terra", "Ares", "Aphrodite", "Zion", "Helios", "Nova", "Eden", "Hades", "Atlantis", "Olympus", "Kronos", "Tarsus", "Vulkan", "Ryloth", "Dune"];
+    const ecoTypes = ["Agri", "Mining", "Tech", "Industrial", "Balanced"];
+    const NUM_PLANETS = 12;
+    let planets = {};
 
-    const marketBases = {
-      "Earth": { Food: 10, Water: 15, Ore: 60, Tech: 100, Meds: 40 },
-      "Mars":  { Food: 40, Water: 50, Ore: 20, Tech: 120, Meds: 50 },
-      "Venus": { Food: 50, Water: 40, Ore: 70, Tech: 30, Meds: 90 }
-    };
+    function generateGalaxy() {
+      let shuffledNames = [...namePool].sort(() => 0.5 - Math.random());
+      let selectedNames = shuffledNames.slice(0, NUM_PLANETS);
+      
+      for (let i = 0; i < NUM_PLANETS; i++) {
+        let name = selectedNames[i];
+        planets[name] = {
+          x: Math.floor(Math.random() * 100),
+          y: Math.floor(Math.random() * 100),
+          ecoType: ecoTypes[Math.floor(Math.random() * ecoTypes.length)],
+          techLevel: 1 + Math.floor(Math.random() * 5),
+          distance: {}
+        };
+      }
+      
+      for (let p1 of selectedNames) {
+        let dists = [];
+        for (let p2 of selectedNames) {
+          if (p1 !== p2) {
+            let dx = planets[p1].x - planets[p2].x;
+            let dy = planets[p1].y - planets[p2].y;
+            let dist = Math.floor(Math.sqrt(dx*dx + dy*dy));
+            dists.push({name: p2, d: dist});
+          }
+        }
+        dists.sort((a,b) => a.d - b.d);
+        for (let i = 0; i < 3; i++) {
+          planets[p1].distance[dists[i].name] = dists[i].d;
+        }
+      }
+      
+      state.location = selectedNames[0];
+    }
 
     let currentPrices = {};
 
+    function getMarketBase(planet) {
+      let base = { Food: 50, Water: 50, Ore: 50, Tech: 50, Meds: 50 };
+      if (planet.ecoType === "Agri") { base.Food = 20; base.Water = 25; base.Tech = 90; }
+      if (planet.ecoType === "Mining") { base.Ore = 20; base.Food = 80; }
+      if (planet.ecoType === "Tech") { base.Tech = 30; base.Meds = 40; base.Ore = 80; }
+      if (planet.ecoType === "Industrial") { base.Ore = 30; base.Tech = 40; base.Food = 80; }
+      if (planet.ecoType === "Balanced") { base.Food = 40; base.Water = 40; base.Ore = 40; base.Tech = 40; base.Meds = 40; }
+      
+      base.Tech += (5 - planet.techLevel) * 10;
+      base.Meds += (5 - planet.techLevel) * 10;
+      return base;
+    }
+
     function generatePrices() {
-      const bases = marketBases[state.location];
+      const p = planets[state.location];
+      const bases = getMarketBase(p);
       for (const good of goods) {
         const base = bases[good];
         const variance = Math.floor(base * 0.2);
@@ -208,7 +249,7 @@
       document.getElementById('ui-fuel').textContent = `Fuel: ${state.fuel} / ${state.maxFuel}`;
       document.getElementById('ui-cargo').textContent = `Cargo: ${state.cargo} / ${state.maxCargo}`;
       document.getElementById('ui-weapons').textContent = `Weapons: Lv ${state.weaponLevel}`;
-      document.getElementById('ui-location').textContent = state.location;
+      document.getElementById('ui-location').textContent = `${state.location} (${planets[state.location].ecoType} Economy, Tech Lv ${planets[state.location].techLevel})`;
 
       const destContainer = document.getElementById('destinations');
       destContainer.innerHTML = '';
@@ -412,6 +453,7 @@
       }
     }
 
+    generateGalaxy();
     generatePrices();
     updateUI();
   </script>

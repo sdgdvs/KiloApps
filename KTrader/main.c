@@ -4,6 +4,7 @@
 
 #define ID_BTN_DEST1 101
 #define ID_BTN_DEST2 102
+#define ID_BTN_DEST3 104
 #define ID_LIST_LOG  103
 #define ID_BTN_BUY_START 200
 #define ID_BTN_SELL_START 210
@@ -14,7 +15,7 @@ typedef struct {
     int maxFuel;
     int cargo;
     int maxCargo;
-    int location; // 0 = Earth, 1 = Mars, 2 = Venus
+    int location; // Index in planets array
     int inventory[5]; // Food, Water, Ore, Tech, Meds
     int engineLevel;
     int cargoLevel;
@@ -28,11 +29,6 @@ typedef struct {
 GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0}, 0, 0, 0, 0, 50, 30, 30 };
 
 const char* goodNames[5] = { "Food", "Water", "Ore", "Tech", "Meds" };
-int marketBases[3][5] = {
-    { 10, 15, 60, 100, 40 }, // Earth
-    { 40, 50, 20, 120, 50 }, // Mars
-    { 50, 40, 70,  30, 90 }  // Venus
-};
 int currentPrices[5];
 
 unsigned int rngState = 0x1234;
@@ -41,16 +37,72 @@ unsigned int SimpleRand() {
     return rngState;
 }
 
-const char* planetNames[] = { "Earth", "Mars", "Venus" };
-int distances[3][3] = {
-    {0, 20, 15}, // Earth
-    {20, 0, 25}, // Mars
-    {15, 25, 0}  // Venus
+#define NUM_PLANETS 12
+typedef struct {
+    char name[32];
+    int x, y;
+    int ecoType; // 0=Agri, 1=Mining, 2=Tech, 3=Industrial, 4=Balanced
+    int techLevel;
+} Planet;
+Planet planets[NUM_PLANETS];
+
+const char* namePool[15] = {
+    "Terra", "Ares", "Aphrodite", "Zion", "Helios",
+    "Nova", "Eden", "Hades", "Atlantis", "Olympus",
+    "Kronos", "Tarsus", "Vulkan", "Ryloth", "Dune"
 };
+const char* ecoNames[5] = { "Agri", "Mining", "Tech", "Industrial", "Balanced" };
+
+int planetLinks[NUM_PLANETS][3];
+int planetDistances[NUM_PLANETS][3];
+
+void GenerateGalaxy() {
+    for (int i = 0; i < NUM_PLANETS; i++) {
+        lstrcpy(planets[i].name, namePool[i]);
+        planets[i].x = SimpleRand() % 100;
+        planets[i].y = SimpleRand() % 100;
+        planets[i].ecoType = SimpleRand() % 5;
+        planets[i].techLevel = 1 + (SimpleRand() % 5);
+    }
+    for (int i = 0; i < NUM_PLANETS; i++) {
+        int dists[NUM_PLANETS];
+        for(int j=0; j<NUM_PLANETS; j++) {
+            if (i == j) { dists[j] = 999999; continue; }
+            int dx = planets[i].x - planets[j].x;
+            int dy = planets[i].y - planets[j].y;
+            dists[j] = dx*dx + dy*dy;
+        }
+        for(int k=0; k<3; k++) {
+            int minDist = 9999999;
+            int bestJ = -1;
+            for(int j=0; j<NUM_PLANETS; j++) {
+                if(dists[j] < minDist) { minDist = dists[j]; bestJ = j; }
+            }
+            planetLinks[i][k] = bestJ;
+            int r = 0;
+            while(r*r <= minDist) r++;
+            planetDistances[i][k] = r;
+            dists[bestJ] = 999999;
+        }
+    }
+}
+
+void GetMarketBase(int pIdx, int basePrices[5]) {
+    Planet p = planets[pIdx];
+    int base[5] = {50, 50, 50, 50, 50};
+    if (p.ecoType == 0) { base[0] = 20; base[1] = 25; base[3] = 90; }
+    if (p.ecoType == 1) { base[2] = 20; base[0] = 80; }
+    if (p.ecoType == 2) { base[3] = 30; base[4] = 40; base[2] = 80; }
+    if (p.ecoType == 3) { base[2] = 30; base[3] = 40; base[0] = 80; }
+    if (p.ecoType == 4) { base[0]=40; base[1]=40; base[2]=40; base[3]=40; base[4]=40; }
+    base[3] += (5 - p.techLevel) * 10;
+    base[4] += (5 - p.techLevel) * 10;
+    for(int i=0; i<5; i++) basePrices[i] = base[i];
+}
 
 HWND hStatCredits, hStatFuel, hStatCargo, hStatWeapons;
 HWND hStatLoc;
-HWND hBtnDest1, hBtnDest2;
+HWND hBtnDest1, hBtnDest2, hBtnDest3;
 HWND hListLog;
 #define ID_BTN_UPG_CARGO 301
 #define ID_BTN_UPG_ENGINE 302
@@ -72,12 +124,14 @@ HWND hStatGoodOwned[5];
 HWND hBtnGoodBuy[5];
 HWND hBtnGoodSell[5];
 
-int destTarget[2];
-int destCost[2];
+int destTarget[3];
+int destCost[3];
 
 void GeneratePrices() {
+    int bases[5];
+    GetMarketBase(state.location, bases);
     for (int i = 0; i < 5; i++) {
-        int base = marketBases[state.location][i];
+        int base = bases[i];
         int variance = base / 5;
         int rand_var = 0;
         if (variance > 0) rand_var = SimpleRand() % (variance * 2 + 1);
@@ -102,28 +156,27 @@ void UpdateUI(HWND hwnd) {
     wsprintf(buf, "Weapons: Lv %d", state.weaponLevel);
     SetWindowText(hStatWeapons, buf);
 
-    wsprintf(buf, "Current Location: %s", planetNames[state.location]);
+    wsprintf(buf, "%s (%s, Lv %d)", planets[state.location].name, ecoNames[planets[state.location].ecoType], planets[state.location].techLevel);
     SetWindowText(hStatLoc, buf);
 
     // Update buttons
-    int btnIdx = 0;
     for (int i = 0; i < 3; i++) {
-        if (i == state.location) continue;
-        destTarget[btnIdx] = i;
-        destCost[btnIdx] = distances[state.location][i] - state.engineLevel * 2;
-        if (destCost[btnIdx] < 1) destCost[btnIdx] = 1;
+        int target = planetLinks[state.location][i];
+        destTarget[i] = target;
+        destCost[i] = planetDistances[state.location][i] - state.engineLevel * 2;
+        if (destCost[i] < 1) destCost[i] = 1;
         
-        wsprintf(buf, "Travel to %s (%d fuel)", planetNames[i], destCost[btnIdx]);
-        SetWindowText(btnIdx == 0 ? hBtnDest1 : hBtnDest2, buf);
-        EnableWindow(btnIdx == 0 ? hBtnDest1 : hBtnDest2, !state.inCombat && state.fuel >= destCost[btnIdx]);
-        
-        btnIdx++;
+        wsprintf(buf, "To %s (%d fuel)", planets[target].name, destCost[i]);
+        HWND btn = (i == 0) ? hBtnDest1 : ((i == 1) ? hBtnDest2 : hBtnDest3);
+        SetWindowText(btn, buf);
+        EnableWindow(btn, !state.inCombat && state.fuel >= destCost[i]);
     }
 
     if (state.inCombat) {
         ShowWindow(hStatLoc, SW_HIDE);
         ShowWindow(hBtnDest1, SW_HIDE);
         ShowWindow(hBtnDest2, SW_HIDE);
+        ShowWindow(hBtnDest3, SW_HIDE);
         ShowWindow(hStatCombatTitle, SW_SHOW);
         ShowWindow(hStatCombatPlayer, SW_SHOW);
         ShowWindow(hStatCombatEnemy, SW_SHOW);
@@ -138,6 +191,7 @@ void UpdateUI(HWND hwnd) {
         ShowWindow(hStatLoc, SW_SHOW);
         ShowWindow(hBtnDest1, SW_SHOW);
         ShowWindow(hBtnDest2, SW_SHOW);
+        ShowWindow(hBtnDest3, SW_SHOW);
         ShowWindow(hStatCombatTitle, SW_HIDE);
         ShowWindow(hStatCombatPlayer, SW_HIDE);
         ShowWindow(hStatCombatEnemy, SW_HIDE);
@@ -181,7 +235,7 @@ void Travel(int btnIdx, HWND hwnd) {
         state.fuel -= cost;
         state.location = target;
         char buf[256];
-        wsprintf(buf, "> Hyperspace jump complete. Arrived at %s. Used %d fuel.", planetNames[target], cost);
+        wsprintf(buf, "> Hyperspace jump complete. Arrived at %s. Used %d fuel.", planets[target].name, cost);
         LogMessage(buf);
 
         if (SimpleRand() % 100 < 30) {
@@ -243,6 +297,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE: {
             rngState = GetTickCount();
             if (rngState == 0) rngState = 0x1234;
+            GenerateGalaxy();
             GeneratePrices();
 
             HFONT hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
@@ -257,10 +312,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hStatWeapons = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 460, 60, 140, 20, hwnd, NULL, NULL, NULL);
 
             CreateWindow("STATIC", "Navigation", WS_CHILD | WS_VISIBLE, 20, 100, 100, 20, hwnd, NULL, NULL, NULL);
-            hStatLoc = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 20, 130, 200, 20, hwnd, NULL, NULL, NULL);
+            hStatLoc = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 20, 130, 260, 20, hwnd, NULL, NULL, NULL);
 
             hBtnDest1 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 160, 250, 30, hwnd, (HMENU)ID_BTN_DEST1, NULL, NULL);
             hBtnDest2 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 200, 250, 30, hwnd, (HMENU)ID_BTN_DEST2, NULL, NULL);
+            hBtnDest3 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 240, 250, 30, hwnd, (HMENU)ID_BTN_DEST3, NULL, NULL);
 
             hStatCombatTitle = CreateWindow("STATIC", "🚨 COMBAT ENGAGED 🚨", WS_CHILD, 20, 100, 200, 20, hwnd, NULL, NULL, NULL);
             hStatCombatPlayer = CreateWindow("STATIC", "Shields: 50", WS_CHILD, 20, 130, 200, 20, hwnd, NULL, NULL, NULL);
@@ -274,18 +330,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnFire, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnFlee, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 240, 100, 20, hwnd, NULL, NULL, NULL);
+            HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 280, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatShipyard, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnUpgCargo = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 270, 180, 30, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
-            hBtnUpgEngine = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 210, 270, 180, 30, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
-            hBtnUpgWeapon = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 400, 270, 180, 30, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
+            hBtnUpgCargo = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 310, 180, 30, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
+            hBtnUpgEngine = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 210, 310, 180, 30, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
+            hBtnUpgWeapon = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 400, 310, 180, 30, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
             SendMessage(hBtnUpgCargo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnUpgEngine, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnUpgWeapon, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hListLog = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOINTEGRALHEIGHT,
-                20, 320, 600, 100, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
+                20, 360, 600, 100, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
 
             HWND hStatMarket = CreateWindow("STATIC", "Market", WS_CHILD | WS_VISIBLE, 300, 100, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatMarket, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -308,6 +364,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             // Set fonts
             SendDlgItemMessage(hwnd, ID_BTN_DEST1, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendDlgItemMessage(hwnd, ID_BTN_DEST2, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendDlgItemMessage(hwnd, ID_BTN_DEST3, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hListLog, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             LogMessage("> Welcome to KTrader, Captain.");
@@ -319,6 +376,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 Travel(0, hwnd);
             } else if (LOWORD(wParam) == ID_BTN_DEST2) {
                 Travel(1, hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_DEST3) {
+                Travel(2, hwnd);
             } else if (LOWORD(wParam) >= ID_BTN_BUY_START && LOWORD(wParam) < ID_BTN_BUY_START + 5) {
                 int good = LOWORD(wParam) - ID_BTN_BUY_START;
                 int price = currentPrices[good];
@@ -456,7 +515,7 @@ void __stdcall MainEntry() {
         CLASS_NAME,
         "KTrader",
         WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 650, 500,
+        CW_USEDEFAULT, CW_USEDEFAULT, 650, 550,
         NULL, NULL, hInstance, NULL
     );
 
