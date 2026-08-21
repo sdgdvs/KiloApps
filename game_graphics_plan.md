@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KConnect4
 - KHangman
 - KMech
 - KMatch3
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMandel
 - KVoid
 - KStarship
+- KConnect4
 ## Completed Work Log
+
+- **KConnect4 (Loop 6):** Implemented highly polished visual effects including procedural screen-shake that triggers on heavy drop actions (Bomb, Drill, Magnet) and scales intensity mathematically by impact velocity in Native C, and multi-layered particle explosions featuring distinct particle types (spark, fire, smoke) with cinematic HDR-like glow blending via `lighter` composite operation in HTML Canvas, in both Web Canvas (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 
 - **KStarship (Loop 5):** Implemented highly polished visual effects including procedural screen-shake on damage/explosion impacts, multi-layered particle explosions featuring a fast dense white core and slower colorful outer decay, dynamic visual thruster trails with motion blur/thickness variations, and a procedural "Stardust" parallax background layer of hundreds of twinkling distant stars to enhance deep space depth in both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 

@@ -76,9 +76,10 @@ typedef struct {
     int life;
 } Particle;
 
-#define MAX_PARTICLES 70
+#define MAX_PARTICLES 200
 Particle g_particles[MAX_PARTICLES];
 int g_particleCount = 0;
+int g_screenShakeTimer = 0;
 
 void SpawnConfetti() {
     COLORREF palette[] = {
@@ -100,6 +101,7 @@ void SpawnConfetti() {
 }
 
 void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
+    g_screenShakeTimer = 20; // Trigger procedural screen shake
     RECT rect; GetClientRect(hwnd, &rect);
     int boardW = g_cols * 44 + 10;
     int boardLeft = (rect.right - rect.left - boardW) / 2;
@@ -109,7 +111,8 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
 
     g_particleCount = MAX_PARTICLES;
     if (type == 1) { // Bomb
-        COLORREF pal[] = {RGB(255, 68, 0), RGB(255, 136, 0), RGB(255, 204, 0), RGB(85, 85, 85)};
+        COLORREF firePal[] = {RGB(255, 68, 0), RGB(255, 136, 0), RGB(255, 204, 0)};
+        COLORREF smokePal[] = {RGB(85, 85, 85), RGB(50, 50, 50), RGB(30, 30, 30)};
         for (int i = 0; i < MAX_PARTICLES; i++) {
             float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
             float speed = ((float)(rand() % 100)) / 10.0f + 2.0f;
@@ -118,35 +121,42 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
             g_particles[i].vy = sinf(angle) * speed;
             g_particles[i].rotation = angle;
             g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 100.0f;
-            g_particles[i].color = pal[rand() % 4];
-            g_particles[i].size = rand() % 10 + 4;
-            g_particles[i].life = rand() % 40 + 30;
+            if (i < MAX_PARTICLES * 0.6) {
+                g_particles[i].color = firePal[rand() % 3];
+                g_particles[i].size = rand() % 12 + 6;
+                g_particles[i].life = rand() % 30 + 20;
+            } else {
+                g_particles[i].color = smokePal[rand() % 3];
+                g_particles[i].size = rand() % 20 + 10;
+                g_particles[i].life = rand() % 40 + 40;
+                g_particles[i].vy -= 2.0f; // Smoke rises
+            }
         }
     } else if (type == 2) { // Drill
         py += 44.0f;
-        COLORREF pal[] = {RGB(0, 255, 255), RGB(128, 222, 234), RGB(255, 255, 255)};
+        COLORREF pal[] = {RGB(0, 255, 255), RGB(128, 222, 234), RGB(255, 255, 255), RGB(0, 100, 100)};
         for (int i = 0; i < MAX_PARTICLES; i++) {
-            g_particles[i].x = px + (float)(rand() % 40 - 20); g_particles[i].y = py;
-            g_particles[i].vx = ((float)(rand() % 100) - 50.0f) / 10.0f;
-            g_particles[i].vy = -(((float)(rand() % 100)) / 15.0f + 3.0f);
+            g_particles[i].x = px + (float)(rand() % 40 - 20); g_particles[i].y = py + (float)(rand() % 20 - 10);
+            g_particles[i].vx = ((float)(rand() % 100) - 50.0f) / 5.0f;
+            g_particles[i].vy = -(((float)(rand() % 100)) / 10.0f + 4.0f);
             g_particles[i].rotation = ((float)(rand() % 360)) * 3.14159f / 180.0f;
-            g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 100.0f;
-            g_particles[i].color = pal[rand() % 3];
-            g_particles[i].size = rand() % 6 + 2;
-            g_particles[i].life = rand() % 30 + 20;
+            g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 50.0f;
+            g_particles[i].color = pal[rand() % 4];
+            g_particles[i].size = rand() % 8 + 3;
+            g_particles[i].life = rand() % 35 + 25;
         }
     } else if (type == 3) { // Magnet
-        COLORREF pal[] = {RGB(224, 64, 251), RGB(234, 128, 252), RGB(255, 255, 255)};
+        COLORREF pal[] = {RGB(224, 64, 251), RGB(234, 128, 252), RGB(255, 255, 255), RGB(74, 20, 140)};
         for (int i = 0; i < MAX_PARTICLES; i++) {
-            float dist = (float)(rand() % 80 + 20);
+            float dist = (float)(rand() % 120 + 30);
             float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
             g_particles[i].x = px + cosf(angle) * dist; g_particles[i].y = py + sinf(angle) * dist;
-            g_particles[i].vx = -cosf(angle) * (dist / 20.0f);
-            g_particles[i].vy = -sinf(angle) * (dist / 20.0f);
+            g_particles[i].vx = -cosf(angle) * (dist / 15.0f);
+            g_particles[i].vy = -sinf(angle) * (dist / 15.0f);
             g_particles[i].rotation = 0; g_particles[i].vRot = 0;
-            g_particles[i].color = pal[rand() % 3];
-            g_particles[i].size = rand() % 4 + 2;
-            g_particles[i].life = 20; // Fixed lifetime to fly in
+            g_particles[i].color = pal[rand() % 4];
+            g_particles[i].size = rand() % 5 + 2;
+            g_particles[i].life = 25; // Fixed lifetime to fly in
         }
     }
 }
@@ -1483,6 +1493,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (animY_float >= animTargetY) {
                     animY_float = (float)animTargetY;
                     if (animVY > 5.0f && animBounceCount < 3) {
+                        g_screenShakeTimer = (int)(animVY / 2.5f);
                         animVY = -animVY * 0.45f;
                         animBounceCount++;
                     } else {
@@ -1511,6 +1522,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             } else if (wParam == 4) {
+                if (g_screenShakeTimer > 0) g_screenShakeTimer--;
                 UpdateParticles();
                 if (hintTimer > 0) {
                     hintTimer--;
@@ -1596,6 +1608,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int boardH = g_rows * 44 + 10;
             int boardLeft = (rect.right - rect.left - boardW) / 2;
             int boardTop = 50;
+
+            if (g_screenShakeTimer > 0) {
+                int shakeAmp = g_screenShakeTimer / 2;
+                boardLeft += (rand() % (shakeAmp * 2 + 1)) - shakeAmp;
+                boardTop += (rand() % (shakeAmp * 2 + 1)) - shakeAmp;
+            }
 
             int tableTop = boardTop + boardH - 20;
             RECT tableRect = {0, tableTop, rect.right, rect.bottom};
