@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- K2048
 - KDarts
 - KSimon
 - KDragon
@@ -142,7 +141,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPong
 - KMines
 - KAsteroids
+- K2048
 ## Completed Work Log
+
+- **K2048 (Loop 6):** Implemented highly detailed visual variations for the background board (procedural textured wood/stone grain with dynamic ambient occlusion shading based on grid occupancy), a distinctly stylized kinematically animated cascading tile destruction effect when the board is reset, and an expanding multi-layered 3D shockwave with chromatic aberration when a 2048 or higher tile is formed in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 
 - **KAsteroids (Loop 6):** Implemented highly detailed visual variations for the background starfield (dense procedural multi-layered parallax nebula that shifts hue slowly over time), a distinctly stylized kinematically animated hyperspace jump effect when a level is cleared (stretching stars and a massive central light burst), and a procedural particle burst of tiny metallic shrapnel when the player's ship is destroyed in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 

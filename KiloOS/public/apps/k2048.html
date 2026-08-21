@@ -604,6 +604,7 @@
         </div>
 
         <div class="board-container" aria-label="Game Board">
+            <canvas id="board-bg-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; border-radius: 16px;"></canvas>
             <div class="grid" id="grid-bg"></div>
             <div class="tiles" id="tiles-container"></div>
             <canvas id="fx-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;"></canvas>
@@ -951,8 +952,8 @@
         }
 
         function initGame() {
+            triggerCascadeDestruction();
             grid = Array(gridSize * gridSize).fill(null);
-            tiles.forEach(t => { if (t.el) t.el.remove(); });
             tiles = [];
             score = 0;
             isGameOverState = false;
@@ -977,11 +978,48 @@
             gameOverEl.classList.remove('active');
             addRandomTile();
             addRandomTile();
+            updateBoardBackground();
+        }
+
+        function triggerCascadeDestruction() {
+            const containerRect = tilesContainer.getBoundingClientRect();
+            tiles.forEach(t => {
+                if (!t.el) return;
+                const rect = t.el.getBoundingClientRect();
+                const startX = rect.left - containerRect.left;
+                const startY = rect.top - containerRect.top;
+                t.el.style.transition = 'none';
+                t.el.style.transform = `translate(${startX}px, ${startY}px)`;
+                t.el.style.zIndex = 10;
+                let vx = (Math.random() - 0.5) * 15;
+                let vy = -5 - Math.random() * 10;
+                let rot = 0;
+                let rotV = (Math.random() - 0.5) * 30;
+                let cx = startX, cy = startY;
+                function cascadeAnim() {
+                    vy += 1.2;
+                    cx += vx;
+                    cy += vy;
+                    rot += rotV;
+                    if (t.el) {
+                        t.el.style.transform = `translate(${cx}px, ${cy}px) rotate(${rot}deg)`;
+                        if (cy < containerRect.height + 200) {
+                            requestAnimationFrame(cascadeAnim);
+                        } else {
+                            t.el.remove();
+                        }
+                    }
+                }
+                requestAnimationFrame(cascadeAnim);
+            });
         }
 
         const fxCanvas = document.getElementById('fx-canvas');
         const fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
+        const boardBgCanvas = document.getElementById('board-bg-canvas');
+        const boardBgCtx = boardBgCanvas ? boardBgCanvas.getContext('2d') : null;
         let webParticles = [];
+        let shockwaves = [];
         let fxAnimId = null;
 
         function resizeFxCanvas() {
@@ -989,9 +1027,59 @@
             const rect = tilesContainer.getBoundingClientRect();
             fxCanvas.width = rect.width;
             fxCanvas.height = rect.height;
+            if (boardBgCanvas) {
+                boardBgCanvas.width = rect.width;
+                boardBgCanvas.height = rect.height;
+                updateBoardBackground();
+            }
         }
         window.addEventListener('resize', resizeFxCanvas);
         setTimeout(resizeFxCanvas, 100);
+
+        function updateBoardBackground() {
+            if (!boardBgCtx || !boardBgCanvas) return;
+            const w = boardBgCanvas.width;
+            const h = boardBgCanvas.height;
+            boardBgCtx.clearRect(0, 0, w, h);
+            
+            // Procedural wood/stone grain
+            const imageData = boardBgCtx.createImageData(w, h);
+            const data = imageData.data;
+            const isClassic = document.body.classList.contains('theme-classic');
+            const isPastel = document.body.classList.contains('theme-pastel');
+            
+            let baseR = isClassic ? 187 : (isPastel ? 248 : 20);
+            let baseG = isClassic ? 173 : (isPastel ? 187 : 20);
+            let baseB = isClassic ? 160 : (isPastel ? 208 : 20);
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    let noise = Math.sin(x * 0.1 + Math.sin(y * 0.05) * 5) * 10 + (Math.random() * 10 - 5);
+                    if (isPastel) noise = Math.sin(x*0.05)*5; // softer
+                    let idx = (y * w + x) * 4;
+                    data[idx] = Math.max(0, Math.min(255, baseR + noise));
+                    data[idx+1] = Math.max(0, Math.min(255, baseG + noise));
+                    data[idx+2] = Math.max(0, Math.min(255, baseB + noise));
+                    data[idx+3] = 255;
+                }
+            }
+            boardBgCtx.putImageData(imageData, 0, 0);
+
+            // Dynamic Ambient Occlusion based on grid occupancy
+            if (!grid || grid.length === 0) return;
+            const step = w / gridSize;
+            boardBgCtx.fillStyle = 'rgba(0,0,0,0.3)';
+            for (let i = 0; i < grid.length; i++) {
+                if (grid[i]) {
+                    const gx = i % gridSize;
+                    const gy = Math.floor(i / gridSize);
+                    boardBgCtx.beginPath();
+                    // draw shadow blob
+                    boardBgCtx.arc((gx + 0.5) * step, (gy + 0.5) * step + 5, step * 0.45, 0, Math.PI * 2);
+                    boardBgCtx.fill();
+                }
+            }
+        }
 
         function getTileHexColor(val) {
             if (val >= 8192) return '#00e5ff';
@@ -1037,10 +1125,24 @@
                 fxAnimId = requestAnimationFrame(renderFxLoop);
             }
         }
+        
+        function spawnShockwave(gx, gy) {
+            if (!fxCanvas) return;
+            const w = fxCanvas.width;
+            const step = w / gridSize;
+            shockwaves.push({
+                x: (gx + 0.5) * step,
+                y: (gy + 0.5) * step,
+                radius: 0,
+                maxRadius: w * 1.2
+            });
+            if (!fxAnimId) fxAnimId = requestAnimationFrame(renderFxLoop);
+        }
 
         function renderFxLoop() {
             if (fxCtx && fxCanvas) {
                 fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
                 for (let i = 0; i < webParticles.length; i++) {
                     const p = webParticles[i];
                     p.x += p.vx;
@@ -1060,9 +1162,35 @@
                     fxCtx.fill();
                     fxCtx.restore();
                 }
+
+                for (let i = 0; i < shockwaves.length; i++) {
+                    const s = shockwaves[i];
+                    s.radius += 20;
+                    if (s.radius > s.maxRadius) {
+                        shockwaves.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+                    const progress = s.radius / s.maxRadius;
+                    fxCtx.save();
+                    fxCtx.globalCompositeOperation = 'screen';
+                    fxCtx.lineWidth = Math.max(1, 15 * (1 - progress));
+                    
+                    // Chromatic aberration (Red, Green, Blue layers)
+                    fxCtx.strokeStyle = `rgba(255, 50, 50, ${1 - progress})`;
+                    fxCtx.beginPath(); fxCtx.arc(s.x, s.y, s.radius, 0, Math.PI * 2); fxCtx.stroke();
+                    
+                    fxCtx.strokeStyle = `rgba(50, 255, 50, ${1 - progress})`;
+                    fxCtx.beginPath(); fxCtx.arc(s.x, s.y, s.radius * 0.95, 0, Math.PI * 2); fxCtx.stroke();
+                    
+                    fxCtx.strokeStyle = `rgba(50, 50, 255, ${1 - progress})`;
+                    fxCtx.beginPath(); fxCtx.arc(s.x, s.y, s.radius * 0.9, 0, Math.PI * 2); fxCtx.stroke();
+                    
+                    fxCtx.restore();
+                }
             }
 
-            if (webParticles.length > 0) {
+            if (webParticles.length > 0 || shockwaves.length > 0) {
                 fxAnimId = requestAnimationFrame(renderFxLoop);
             } else {
                 fxAnimId = null;
@@ -1168,6 +1296,7 @@
                 grid[randomIdx] = tile;
                 tiles.push(tile);
                 createTileEl(tile, true);
+                updateBoardBackground();
             }
         }
 
@@ -1328,6 +1457,7 @@
                             spawnWebParticles(tile.x, tile.y, tile.val);
 
                             if (tile.val >= 2048) {
+                                spawnShockwave(tile.x, tile.y);
                                 let b = document.querySelector('.board-container');
                                 if (b) {
                                     b.classList.remove('shake');
@@ -1352,6 +1482,7 @@
                         if (t.el) t.el.remove();
                         tiles = tiles.filter(ti => ti.id !== t.id);
                     });
+                    updateBoardBackground();
                 }, 150);
             }
             
@@ -1484,6 +1615,7 @@
                 grid[targetPos] = null;
                 if (targetTile.el) targetTile.el.remove();
                 tiles = tiles.filter(t => t.id !== targetTile.id);
+                updateBoardBackground();
                 playBeep(200);
             }
         }
@@ -1510,6 +1642,7 @@
                     createTileEl(t, false);
                 }
             }
+            updateBoardBackground();
             updateScore();
             playBeep(500);
         }

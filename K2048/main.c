@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <math.h>
 
 void* __cdecl memset(void* p, int c, size_t sz) {
     char* pb = (char*)p;
@@ -154,6 +155,20 @@ typedef struct {
 Particle particles[MAX_PARTICLES];
 int particleCount = 0;
 
+#define MAX_DEBRIS 64
+typedef struct {
+    float x, y, vx, vy, rot, rotV;
+    int val, active;
+} Debris;
+Debris debris[MAX_DEBRIS];
+
+#define MAX_SHOCKWAVES 5
+typedef struct {
+    float x, y, radius;
+    int active;
+} Shockwave;
+Shockwave shockwaves[MAX_SHOCKWAVES];
+
 int my_rand() {
     seed = seed * 214013 + 2531011;
     return (seed >> 16) & 0x7FFF;
@@ -192,6 +207,80 @@ void UpdateAndDrawParticles(HDC hdc) {
         RECT r = { (int)p->x - p->size/2, (int)p->y - p->size/2, (int)p->x + p->size/2 + 1, (int)p->y + p->size/2 + 1 };
         FillRect(hdc, &r, b);
         DeleteObject(b);
+    }
+    
+    // Draw Debris
+    for (int k = 0; k < MAX_DEBRIS; k++) {
+        if (debris[k].active) {
+            debris[k].vy += 1.5f; // gravity
+            debris[k].x += debris[k].vx;
+            debris[k].y += debris[k].vy;
+            debris[k].rot += debris[k].rotV;
+            if (debris[k].y > 800) debris[k].active = 0;
+            else {
+                int s = (320 / grid_size) / 2 - 2;
+                float angle = debris[k].rot * 3.14159f / 180.0f;
+                float cosA = cosf(angle);
+                float sinA = sinf(angle);
+                POINT pts[4];
+                pts[0].x = (int)(debris[k].x + (-s)*cosA - (-s)*sinA);
+                pts[0].y = (int)(debris[k].y + (-s)*sinA + (-s)*cosA);
+                pts[1].x = (int)(debris[k].x + (s)*cosA - (-s)*sinA);
+                pts[1].y = (int)(debris[k].y + (s)*sinA + (-s)*cosA);
+                pts[2].x = (int)(debris[k].x + (s)*cosA - (s)*sinA);
+                pts[2].y = (int)(debris[k].y + (s)*sinA + (s)*cosA);
+                pts[3].x = (int)(debris[k].x + (-s)*cosA - (s)*sinA);
+                pts[3].y = (int)(debris[k].y + (-s)*sinA + (s)*cosA);
+
+                COLORREF c = GetTileColor(debris[k].val);
+                HBRUSH b = CreateSolidBrush(c);
+                HPEN p = CreatePen(PS_SOLID, 1, RGB(0,0,0));
+                HBRUSH oldB = (HBRUSH)SelectObject(hdc, b);
+                HPEN oldP = (HPEN)SelectObject(hdc, p);
+                Polygon(hdc, pts, 4);
+                SelectObject(hdc, oldB);
+                SelectObject(hdc, oldP);
+                DeleteObject(b);
+                DeleteObject(p);
+            }
+        }
+    }
+    
+    // Draw Shockwaves
+    for (int k = 0; k < MAX_SHOCKWAVES; k++) {
+        if (shockwaves[k].active) {
+            shockwaves[k].radius += 20.0f;
+            if (shockwaves[k].radius > 600.0f) shockwaves[k].active = 0;
+            else {
+                float progress = shockwaves[k].radius / 600.0f;
+                int thickness = (int)(15.0f * (1.0f - progress));
+                if (thickness < 1) thickness = 1;
+
+                int cx = (int)shockwaves[k].x;
+                int cy = (int)shockwaves[k].y;
+                int r = (int)shockwaves[k].radius;
+                
+                HPEN penR = CreatePen(PS_SOLID, thickness, RGB(255, 50, 50));
+                HPEN oldP = (HPEN)SelectObject(hdc, penR);
+                SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+                
+                HPEN penG = CreatePen(PS_SOLID, thickness, RGB(50, 255, 50));
+                SelectObject(hdc, penG);
+                int rG = (int)(shockwaves[k].radius * 0.95f);
+                Ellipse(hdc, cx - rG, cy - rG, cx + rG, cy + rG);
+                
+                HPEN penB = CreatePen(PS_SOLID, thickness, RGB(50, 50, 255));
+                SelectObject(hdc, penB);
+                int rB = (int)(shockwaves[k].radius * 0.9f);
+                Ellipse(hdc, cx - rB, cy - rB, cx + rB, cy + rB);
+                
+                SelectObject(hdc, oldP);
+                DeleteObject(penR);
+                DeleteObject(penG);
+                DeleteObject(penB);
+            }
+        }
     }
 }
 
@@ -814,6 +903,27 @@ void AddRandomTile() {
 }
 
 void InitGame() {
+    // Generate cascading debris
+    for (int i = 0; i < grid_size; i++) {
+        for (int j = 0; j < grid_size; j++) {
+            if (grid[i][j] != 0) {
+                for (int k = 0; k < MAX_DEBRIS; k++) {
+                    if (!debris[k].active) {
+                        debris[k].active = 1;
+                        debris[k].val = grid[i][j];
+                        debris[k].x = MARGIN + 8 + j * (320 / grid_size) + (320 / grid_size) / 2.0f;
+                        debris[k].y = HEADER_HEIGHT + 8 + i * (320 / grid_size) + (320 / grid_size) / 2.0f;
+                        debris[k].vx = (float)((my_rand() % 31) - 15);
+                        debris[k].vy = (float)((my_rand() % 15) - 15);
+                        debris[k].rot = 0;
+                        debris[k].rotV = (float)((my_rand() % 31) - 15);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     memset(grid, 0, sizeof(grid));
     memset(frozen, 0, sizeof(frozen));
     memset(mergePop, 0, sizeof(mergePop));
@@ -1118,6 +1228,38 @@ void DrawBoard(HDC hdc) {
     FillRect(hdc, &boardBg, boardBrush);
     DeleteObject(boardBrush);
 
+    // Procedural Wood/Stone Grain
+    for (int k = 0; k < 1500; k++) {
+        int gx = boardBg.left + (my_rand() % (boardBg.right - boardBg.left));
+        int gy = boardBg.top + (my_rand() % (boardBg.bottom - boardBg.top));
+        int nR = boardR, nG = boardG, nB = boardB;
+        if (my_rand() % 2 == 0) {
+            nR = max(0, nR - 15); nG = max(0, nG - 15); nB = max(0, nB - 15);
+        } else {
+            nR = min(255, nR + 15); nG = min(255, nG + 15); nB = min(255, nB + 15);
+        }
+        SetPixel(hdc, gx, gy, RGB(nR, nG, nB));
+    }
+
+    // Dynamic Ambient Occlusion based on grid occupancy
+    for (int i = 0; i < grid_size; i++) {
+        for (int j = 0; j < grid_size; j++) {
+            if (grid[i][j] != 0) {
+                int cx = MARGIN + 8 + j * cell_size + cell_size / 2;
+                int cy = HEADER_HEIGHT + 8 + i * cell_size + cell_size / 2;
+                int r = cell_size / 2 + 3;
+                for (int d = 1; d <= 4; d++) {
+                    HPEN aoPen = CreatePen(PS_SOLID, 2, RGB(max(0, boardR - 25/d), max(0, boardG - 25/d), max(0, boardB - 25/d)));
+                    HPEN oldP = (HPEN)SelectObject(hdc, aoPen);
+                    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    Ellipse(hdc, cx - r + d*2, cy - r + d*2, cx + r - d*2, cy + r - d*2);
+                    SelectObject(hdc, oldP);
+                    DeleteObject(aoPen);
+                }
+            }
+        }
+    }
+
     for (int s = 0; s < 12; s++) {
         int alpha = 12 - s;
         int shadowR = max(0, boardR - alpha * 4);
@@ -1254,6 +1396,15 @@ int Move(int dx, int dy) {
                             }
                             if (mergeRes >= 2048) {
                                 screenShakeTime = 15;
+                                for (int k=0; k<MAX_SHOCKWAVES; k++) {
+                                    if (!shockwaves[k].active) {
+                                        shockwaves[k].active = 1;
+                                        shockwaves[k].x = MARGIN + 8 + nj * cell_size + cell_size / 2.0f;
+                                        shockwaves[k].y = HEADER_HEIGHT + 8 + ni * cell_size + cell_size / 2.0f;
+                                        shockwaves[k].radius = 10.0f;
+                                        break;
+                                    }
+                                }
                             }
                             mergePop[ni][nj] = 10;
                             squashTimer[ni][nj] = 0;
@@ -1385,6 +1536,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
                 if (screenShakeTime > 0) hasMilestone = 1;
+                for (int k = 0; k < MAX_DEBRIS; k++) if (debris[k].active) hasMilestone = 1;
+                for (int k = 0; k < MAX_SHOCKWAVES; k++) if (shockwaves[k].active) hasMilestone = 1;
 
                 if (particleCount > 0 || hasMilestone) {
                     InvalidateRect(hwnd, NULL, FALSE);
