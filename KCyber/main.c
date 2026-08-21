@@ -443,10 +443,51 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "  connect   - Attempt connection to network node");
         PrintLine(hwnd, "  contracts - View available hacking contracts");
         PrintLine(hwnd, "  accept    - Accept a contract (e.g. 'accept 1')");
+        PrintLine(hwnd, "  guide     - Open Runner's Guide (e.g. 'guide ice')");
         PrintLine(hwnd, "During hack:");
         PrintLine(hwnd, "  abort     - Disconnect immediately");
         PrintLine(hwnd, "  cloak     - Blind ICE for 2 cycles");
         PrintLine(hwnd, "  slow      - Halve ICE attack speed");
+    } else if (lstrcmpiA(command, "guide") == 0) {
+        if (args[0] == '\0') {
+            PrintLine(hwnd, "--- RUNNER'S GUIDE ---");
+            PrintLine(hwnd, "Usage: guide <topic>");
+            PrintLine(hwnd, "Topics: commands, ice, upgrade, hacking");
+        } else {
+            if (lstrcmpiA(args, "commands") == 0) {
+                PrintLine(hwnd, "--- GUIDE: COMMANDS ---");
+                PrintLine(hwnd, "connect <node>: Initiates a hack against a target node.");
+                PrintLine(hwnd, "shop: Access the black market to upgrade your cyberdeck.");
+                PrintLine(hwnd, "contracts: List available data theft jobs.");
+                PrintLine(hwnd, "accept <id>: Take a contract, then connect to the node to download.");
+            } else if (lstrcmpiA(args, "ice") == 0) {
+                PrintLine(hwnd, "--- GUIDE: ICE (Intrusion Countermeasures Electronics) ---");
+                PrintLine(hwnd, "ICE defends network nodes by attacking your deck's Memory (MEM).");
+                PrintLine(hwnd, "Basic ICE: Weak damage. Found on low-sec nodes.");
+                PrintLine(hwnd, "Tracer ICE: Moderate damage.");
+                PrintLine(hwnd, "Hunter ICE: High damage. Will rapidly deplete your MEM.");
+                PrintLine(hwnd, "Black ICE: Lethal damage. Reserved for extreme-sec nodes.");
+                PrintLine(hwnd, "If MEM reaches 0, you are forcibly disconnected.");
+            } else if (lstrcmpiA(args, "upgrade") == 0) {
+                PrintLine(hwnd, "--- GUIDE: DECK UPGRADING ---");
+                PrintLine(hwnd, "Spend credits earned from data theft in the 'shop'.");
+                PrintLine(hwnd, "MEM: Increases maximum memory, letting you survive more ICE attacks.");
+                PrintLine(hwnd, "CPU: Gives you more attempts to crack node passwords.");
+                PrintLine(hwnd, "CLOAK: Buy charges to temporarily blind ICE during a hack.");
+                PrintLine(hwnd, "SLOW: Buy charges to permanently slow down ICE attack speed for one hack.");
+                PrintLine(hwnd, "PROXY: Reduces your global HEAT, which makes ICE attack slower.");
+            } else if (lstrcmpiA(args, "hacking") == 0) {
+                PrintLine(hwnd, "--- GUIDE: HACKING ---");
+                PrintLine(hwnd, "1. Connect to a node. You must crack a 4-digit PIN.");
+                PrintLine(hwnd, "2. Enter 4 digits. The system returns EXACT (right number, right place)");
+                PrintLine(hwnd, "   and PARTIAL (right number, wrong place).");
+                PrintLine(hwnd, "3. Use this feedback to deduce the PIN before you run out of attempts.");
+                PrintLine(hwnd, "4. Once in, use 'ls' to find files and 'download <file>' to steal them.");
+                PrintLine(hwnd, "5. Higher HEAT speeds up ICE. Aborting or failing hacks increases HEAT.");
+            } else {
+                PrintLine(hwnd, "Unknown topic. Topics: commands, ice, upgrade, hacking");
+            }
+        }
     } else if (lstrcmpiA(command, "clear") == 0) {
         history_count = 0;
         InvalidateRect(hwnd, NULL, TRUE);
