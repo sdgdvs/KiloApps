@@ -1111,7 +1111,7 @@ void finalize_character() {
     
     add_msg("Welcome to KRogue!");
     add_msg("Find the stairs '>'. Defeat evil. F5 to quicksave.");
-    add_msg("Press '?' for help.");
+    add_msg("Press 'H' or '?' for help.");
     
     generate_map();
     
@@ -2715,7 +2715,7 @@ void fire_spell() {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
-            g_font = CreateFontA(char_h, char_w, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            g_font = CreateFontA(-char_h, char_w, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             load_keybinds();
             init_game();
             SetTimer(hwnd, 1, 33, NULL);
@@ -2972,6 +2972,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 void __stdcall MainEntry() {
+    SetProcessDPIAware();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     
     WNDCLASSA wc = {0};
