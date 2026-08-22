@@ -193,7 +193,7 @@ static void UpdateModeUI(void) {
         SetWindowTextA(hInputs[0], "sin(x)");
         SetWindowTextA(hInputs[1], "cos(x)");
         SetWindowTextA(hInputs[2], "x^2/4 - 2");
-        SetWindowTextA(hStatus, "Cartesian Mode y(x). Hover mouse to trace values. Press 'H' for help.");
+        SetWindowTextA(hStatus, "Cartesian Mode y(x). Hover mouse to trace values. Press 'H' or F1 for help.");
     } else if (g_mode == MODE_POLAR) {
         SetWindowTextA(hModeBtn, "Mode: Polar [r(th)]");
         SetWindowTextA(hLabels[0], "r1 =");
@@ -296,9 +296,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hRootsBtn = CreateWindowA("BUTTON", "Roots", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(340, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(75, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1005, NULL, NULL);
             hPresetBtn= CreateWindowA("BUTTON", "Presets", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(425, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(75, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
-            hHelpBtn  = CreateWindowA("BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(510, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1007, NULL, NULL);
+            hHelpBtn  = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(510, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1007, NULL, NULL);
 
-            hStatus = CreateWindowA("STATIC", "Ready. Hover mouse to trace values. Press 'H' for help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), topY + MulDiv(2, g_dpi, 96), MulDiv(800, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, NULL, NULL, NULL);
+            hStatus = CreateWindowA("STATIC", "Ready. Hover mouse to trace values. Press 'H' or F1 for help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), topY + MulDiv(2, g_dpi, 96), MulDiv(800, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, NULL, NULL, NULL);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
             SendMessageA(hModeBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
@@ -372,7 +372,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN: {
-            if (wParam == 'H' || wParam == 'h') {
+            if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 MessageBoxA(hwnd, "KGraph Studio Help:\n\n"
                                   "- Click 'Mode' to switch between Cartesian y(x), Polar r(th), and Parametric (x(t), y(t)).\n"
                                   "- Type mathematical expressions in input fields.\n"
@@ -669,8 +669,8 @@ void __stdcall MainEntry(void) {
     ReleaseDC(NULL, screenDC);
     
     RECT winRect = {0, 0, MulDiv(1024, initial_dpi, 96), MulDiv(768, initial_dpi, 96)};
-    AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, wc.hInstance, NULL);
+    AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
+    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

@@ -515,7 +515,7 @@
         📂 Load Config
         <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
       </label>
-      <button class="btn" onclick="showToast('KGraph Controls:\\n• Mode Buttons: Cartesian / Polar / Parametric\\n• Scroll to Zoom\\n• Click & Drag to Pan\\n• Hover to trace coordinates\\n• Use tabs for Calculus & Analysis', 6000)">❓ Help (H)</button>
+      <button class="btn" onclick="showToast('KGraph Controls:\\n• Mode Buttons: Cartesian / Polar / Parametric\\n• Scroll to Zoom\\n• Click & Drag to Pan\\n• Hover to trace coordinates\\n• Use tabs for Calculus & Analysis', 6000)">❓ Help (F1)</button>
       <button class="btn btn-primary" onclick="replotAll()">▶ Plot</button>
     </div>
   </div>
@@ -1800,12 +1800,13 @@
     buildModeControls();
     buildPresets();
     setTimeout(resizeCanvas, 100);
-    setTimeout(() => showToast("Welcome to KGraph Studio!\nPlot Cartesian, Polar r(θ), and Parametric (x,y)(t) curves.\nPress H for Help.", 5000), 500);
+    setTimeout(() => showToast("Welcome to KGraph Studio!\nPlot Cartesian, Polar r(θ), and Parametric (x,y)(t) curves.\nPress H or F1 for Help.", 5000), 500);
 
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.key.toLowerCase() === 'h') {
+      if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+        if (e.key === 'F1') e.preventDefault();
         showToast("KGraph Controls:\n• Mode Buttons: Cartesian / Polar / Parametric\n• Scroll to Zoom\n• Click & Drag to Pan\n• Hover to trace coordinates\n• Use tabs for Calculus & Analysis", 6000);
       }
     });
