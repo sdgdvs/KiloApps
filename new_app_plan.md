@@ -53,24 +53,24 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KTrader (Space trading sim)
-**Phase:** 14 (next to do)
+**App:** KMystery (Murder mystery deduction game)
+**Phase:** 1 (next to do)
 **Status:** Creation
 
-- [x] Phase 1: Scaffold KTrader directory (`KTrader/`), create web HTML skeleton (`KiloOS/public/apps/ktrader.html`), register in App.jsx.
-- [x] Phase 2: Basic UI for ship dashboard (credits, cargo space, fuel) and core loop of travelling between 3 basic planets.
-- [x] Phase 3: Native C version (`KTrader/main.c`, `build.bat`) using Win32 GDI with functional parity.
-- [x] Phase 4: Sci-fi styling (starfield backgrounds, neon HUD, clean terminal fonts).
-- [x] Phase 5: Implement dynamic market system (prices of 5 trade goods fluctuate based on planet supply/demand).
-- [x] Phase 6: Ship upgrade system (spend credits to buy larger cargo bays, better engines for less fuel use, or weapons).
-- [x] Phase 7: Random encounters during travel (space pirates demanding cargo, distress signals, asteroid fields).
-- [x] Phase 8: Combat mechanics (turn-based tactical combat against pirate ships using ship weapons and shields).
-- [x] Phase 9: Planet variety and procedural generation (generate 10-15 unique planets with different economies and tech levels).
-- [x] Phase 10: Faction system (gain reputation with Traders, Pirates, or the Galactic Navy to unlock special goods).
-- [x] Phase 11: Mission boards at spaceports (accept delivery contracts, bounty hunting, or smuggling runs).
-- [x] Phase 12: End-game goal (save up to purchase a massive Dreadnought or discover a legendary lost planet).
-- [x] Phase 13: Sound Effects — hyperspace jumps, laser blasts, market chimes, alert sirens (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Captain's Log — How-to-play, trade good reference, ship upgrade guide.
+- [ ] Phase 1: Scaffold KMystery directory (`KMystery/`), create web HTML skeleton (`KiloOS/public/apps/kmystery.html`), register in App.jsx.
+- [ ] Phase 2: Basic UI for detective notebook (suspect list, clues, locations) and core loop of travelling between 3 locations to find clues.
+- [ ] Phase 3: Native C version (`KMystery/main.c`, `build.bat`) using Win32 API with functional parity.
+- [ ] Phase 4: Noir aesthetic styling (black and white, typewriter fonts, shadowy borders).
+- [ ] Phase 5: Implement procedural mystery generation (randomly assign killer, motive, and weapon among suspects).
+- [ ] Phase 6: Interrogation system (choose dialogue options to question suspects and catch them in lies based on clues).
+- [ ] Phase 7: Evidence lab mini-game (analyze found objects to extract usable clues like fingerprints or chemical traces).
+- [ ] Phase 8: Time limit mechanics (actions take time; solve the case before the killer strikes again or escapes).
+- [ ] Phase 9: Advanced Suspect AI (suspects have alibis that must be cross-referenced, and may refuse to talk if intimidated).
+- [ ] Phase 10: Accusation system (present the correct suspect, motive, and weapon in a final showdown; failure means game over).
+- [ ] Phase 11: Multiple difficulty levels (Easy/Medium/Hard) increasing the number of suspects, locations, and reducing time limit.
+- [ ] Phase 12: High score tracking (fastest solves, highest accuracy, zero-penalty solves) and detective ranks.
+- [ ] Phase 13: Sound Effects — rain ambiance, typewriter clacks, dramatic chords for revelations (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Detective's Manual — How-to-play, interrogation tips, evidence guide.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KTrader (Phase 14 completed: Added Comprehensive Help & Captain's Log to both versions)
 - KCyber (Phase 14 completed: Added Comprehensive Help & Runner's Guide to both versions)
 - KMech (Phase 14 completed: Added Comprehensive Help & Pilot's Manual to both versions)
 - KDragon (Phase 14 completed: Added Comprehensive Help & Dragon Master's Guide to both versions)
@@ -169,7 +170,7 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KMystery** — Murder mystery deduction game. Interview suspects, collect clues, find the killer.
+- **KColosseum** — Gladiator management RPG. Buy, train, equip gladiators, fight in tactical arena battles to earn glory.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.
