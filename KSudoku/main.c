@@ -49,6 +49,8 @@ int elapsedTime = 0;
 int score = 0;
 int timerActive = 0;
 int freezeTime = 0;
+int shakeFrames = 0;
+RECT origWinRect;
 
 HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill, hBtnCampaign, hBtnMagic, hBtnShield, hBtnFreeze, hBtnRush;
 HFONT hFont, hFontSmall, hFontTiny;
@@ -111,13 +113,25 @@ void TriggerVictoryParticles() {
         winParticles[i].x = 220.0f;
         winParticles[i].y = 255.0f;
         float angle = (rand() % 360) * 3.14159f / 180.0f;
-        float speed = 8.0f + (rand() % 150) / 10.0f;
+        int layer = rand() % 3;
+        float speed = 0;
+        if (layer == 0) { // Fast sparks
+            speed = 15.0f + (rand() % 100) / 10.0f;
+            winParticles[i].size = 2 + (rand() % 3);
+            winParticles[i].shape = 1; // circle
+        } else if (layer == 1) { // Medium stars
+            speed = 8.0f + (rand() % 80) / 10.0f;
+            winParticles[i].size = 4 + (rand() % 6);
+            winParticles[i].shape = 2; // star
+        } else { // Slow confetti
+            speed = 3.0f + (rand() % 60) / 10.0f;
+            winParticles[i].size = 5 + (rand() % 8);
+            winParticles[i].shape = 0; // rect
+        }
         winParticles[i].vx = cosf(angle) * speed;
         winParticles[i].vy = sinf(angle) * speed - 5.0f;
         winParticles[i].color = colors[rand() % numColors];
-        winParticles[i].size = 4 + (rand() % 10);
-        winParticles[i].maxLife = winParticles[i].life = 60 + (rand() % 40);
-        winParticles[i].shape = rand() % 3; // 0: rect, 1: circle, 2: star/ink
+        winParticles[i].maxLife = winParticles[i].life = 40 + (rand() % 60);
     }
 }
 
@@ -1078,6 +1092,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (winFxActive) {
                     UpdateVictoryParticles();
                 }
+                if (shakeFrames > 0) {
+                    int dx = (rand() % 11) - 5;
+                    int dy = (rand() % 11) - 5;
+                    SetWindowPos(hwnd, NULL, origWinRect.left + dx, origWinRect.top + dy, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+                    shakeFrames--;
+                    if (shakeFrames == 0) {
+                        SetWindowPos(hwnd, NULL, origWinRect.left, origWinRect.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+                    }
+                }
             } else if (wParam == 1 && timerActive) {
                 if (freezeTime > 0) {
                     freezeTime--;
@@ -1383,6 +1406,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     UpdatePowerupButtons();
                                     PlaySudokuSound(5);
                                 } else {
+                                    if (shakeFrames == 0) GetWindowRect(hwnd, &origWinRect);
+                                    shakeFrames = 15;
                                     PlaySudokuSound(4);
                                     score = max(0, score - 50);
                                     if (isRushMode) {

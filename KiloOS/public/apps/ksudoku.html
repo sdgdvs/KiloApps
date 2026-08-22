@@ -463,6 +463,24 @@
             animation: flashRed 0.6s ease-out;
         }
 
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .board-shake {
+            animation: shake 0.4s;
+            animation-iteration-count: 1;
+        }
+
         @keyframes winPulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
             70% { transform: scale(1.02); box-shadow: 0 0 30px 15px rgba(59, 130, 246, 0.8); }
@@ -1389,6 +1407,11 @@
                             cell.classList.remove('flash-error');
                             void cell.offsetWidth;
                             cell.classList.add('flash-error');
+                            
+                            boardEl.classList.remove('board-shake');
+                            void boardEl.offsetWidth;
+                            boardEl.classList.add('board-shake');
+                            
                             score = Math.max(0, score - 50);
                             playSound('error');
 
@@ -1503,23 +1526,42 @@
             let bx = boardRect.left - containerRect.left + boardRect.width / 2;
             let by = boardRect.top - containerRect.top + boardRect.height / 2;
 
-            for (let i = 0; i < 300; i++) {
+            for (let i = 0; i < 400; i++) {
                 let angle = Math.random() * Math.PI * 2;
-                let speed = Math.random() * 25 + 5;
+                let layer = Math.floor(Math.random() * 3);
+                let speed = 0, size = 0, shape = '', decay = 0;
+                
+                if (layer === 0) { // Fast sparks
+                    speed = Math.random() * 30 + 10;
+                    size = Math.random() * 4 + 2;
+                    shape = 'circle';
+                    decay = 0.015 + Math.random() * 0.01;
+                } else if (layer === 1) { // Medium stars
+                    speed = Math.random() * 15 + 5;
+                    size = Math.random() * 8 + 4;
+                    shape = 'star';
+                    decay = 0.008 + Math.random() * 0.01;
+                } else { // Slow confetti
+                    speed = Math.random() * 8 + 2;
+                    size = Math.random() * 12 + 6;
+                    shape = 'rect';
+                    decay = 0.004 + Math.random() * 0.005;
+                }
+
                 fxParticles.push({
                     x: bx,
                     y: by,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed - 5,
-                    size: Math.random() * 12 + 4,
+                    size: size,
                     color: colors[Math.floor(Math.random() * colors.length)],
                     rot: Math.random() * Math.PI * 2,
                     rotSpeed: (Math.random() - 0.5) * 0.4,
-                    shape: Math.random() > 0.5 ? 'star' : (Math.random() > 0.5 ? 'circle' : 'rect'),
-                    gravity: 0.4 + Math.random() * 0.2,
-                    drag: 0.94,
+                    shape: shape,
+                    gravity: 0.3 + Math.random() * 0.2,
+                    drag: 0.92,
                     life: 1.5,
-                    decay: 0.005 + Math.random() * 0.01
+                    decay: decay
                 });
             }
             if (fxAnimId) cancelAnimationFrame(fxAnimId);
