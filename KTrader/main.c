@@ -31,9 +31,10 @@ typedef struct {
     int activeMissionTarget;
     int activeMissionReward;
     int bountyTarget;
+    int hasDreadnought;
 } GameState;
 
-GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0,0,0,0}, 0, 0, 0, 0, 50, 30, 30, 0, 0, 0, 0, 0, 0, 0 };
+GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0,0,0,0}, 0, 0, 0, 0, 50, 30, 30, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 int availMissionType[3];
 int availMissionTarget[3];
@@ -133,7 +134,8 @@ HWND hListLog;
 #define ID_BTN_UPG_CARGO 301
 #define ID_BTN_UPG_ENGINE 302
 #define ID_BTN_UPG_WEAPON 303
-HWND hBtnUpgCargo, hBtnUpgEngine, hBtnUpgWeapon;
+#define ID_BTN_UPG_DREAD 304
+HWND hBtnUpgCargo, hBtnUpgEngine, hBtnUpgWeapon, hBtnUpgDread;
 
 #define ID_BTN_FIRE 401
 #define ID_BTN_FLEE 402
@@ -285,6 +287,14 @@ void UpdateUI(HWND hwnd) {
     wsprintf(buf, "Upg Weapons (%d cr)", weaponCost);
     SetWindowText(hBtnUpgWeapon, buf);
     EnableWindow(hBtnUpgWeapon, !state.inCombat && state.credits >= weaponCost);
+
+    if (!state.hasDreadnought) {
+        SetWindowText(hBtnUpgDread, "Dreadnought (100k)");
+        EnableWindow(hBtnUpgDread, !state.inCombat && state.credits >= 100000);
+    } else {
+        SetWindowText(hBtnUpgDread, "Dreadnought Acquired");
+        EnableWindow(hBtnUpgDread, FALSE);
+    }
 
     // Update Market
     for (int i = 0; i < 8; i++) {
@@ -465,12 +475,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 280, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatShipyard, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnUpgCargo = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 310, 180, 30, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
-            hBtnUpgEngine = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 210, 310, 180, 30, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
-            hBtnUpgWeapon = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 400, 310, 180, 30, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
+            hBtnUpgCargo = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 310, 140, 30, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
+            hBtnUpgEngine = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 310, 140, 30, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
+            hBtnUpgWeapon = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 320, 310, 140, 30, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
+            hBtnUpgDread = CreateWindow("BUTTON", "Dreadnought", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 470, 310, 140, 30, hwnd, (HMENU)ID_BTN_UPG_DREAD, NULL, NULL);
             SendMessage(hBtnUpgCargo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnUpgEngine, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnUpgWeapon, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnUpgDread, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hStatMissions = CreateWindow("STATIC", "Mission Board", WS_CHILD | WS_VISIBLE, 20, 350, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatMissions, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -578,6 +590,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     char buf[128];
                     wsprintf(buf, "> Weapons upgraded to level %d!", state.weaponLevel);
                     LogMessage(buf);
+                    UpdateUI(hwnd);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_UPG_DREAD) {
+                if (state.credits >= 100000 && !state.hasDreadnought) {
+                    state.credits -= 100000;
+                    state.hasDreadnought = 1;
+                    LogMessage("> YOU WIN! You purchased the legendary Dreadnought! The galaxy is yours!");
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) >= ID_BTN_MISSION1 && LOWORD(wParam) <= ID_BTN_MISSION3) {

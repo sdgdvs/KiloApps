@@ -174,7 +174,8 @@
       repNavy: 0,
       availableMissions: [],
       activeMission: null,
-      bountyTarget: false
+      bountyTarget: false,
+      hasDreadnought: false
     };
 
     const namePool = ["Terra", "Ares", "Aphrodite", "Zion", "Helios", "Nova", "Eden", "Hades", "Atlantis", "Olympus", "Kronos", "Tarsus", "Vulkan", "Ryloth", "Dune"];
@@ -393,6 +394,23 @@
       btnWeapon.onclick = () => buyUpgrade('weapons', weaponCost);
       shipyard.appendChild(btnWeapon);
 
+      if (!state.hasDreadnought) {
+        const btnDread = document.createElement('button');
+        btnDread.textContent = `Buy Dreadnought (100,000 cr)`;
+        btnDread.style.borderColor = '#f0f';
+        btnDread.style.color = '#f0f';
+        btnDread.disabled = state.credits < 100000;
+        btnDread.onclick = () => buyUpgrade('dreadnought', 100000);
+        shipyard.appendChild(btnDread);
+      } else {
+        const btnDread = document.createElement('button');
+        btnDread.textContent = `Dreadnought Acquired 🏆`;
+        btnDread.style.borderColor = '#f0f';
+        btnDread.style.color = '#f0f';
+        btnDread.disabled = true;
+        shipyard.appendChild(btnDread);
+      }
+
       if (state.activeMission) {
         document.getElementById('ui-active-mission').innerHTML = `<strong>Active Mission:</strong> ${state.activeMission.desc} | Reward: ${state.activeMission.reward} cr <button onclick="abandonMission()" style="padding: 2px 5px; margin-left: 10px;">Abandon</button>`;
         document.getElementById('ui-missions').style.display = 'none';
@@ -464,6 +482,10 @@
         } else if (type === 'weapons') {
           state.weaponLevel++;
           log(`Weapons upgraded to level ${state.weaponLevel}!`);
+        } else if (type === 'dreadnought') {
+          state.hasDreadnought = true;
+          log(`🏆 YOU WIN! You purchased the legendary Dreadnought! The galaxy is yours! 🏆`, true);
+          document.getElementById('ui-log').style.borderColor = '#f0f';
         }
         updateUI();
       }
