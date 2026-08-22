@@ -327,11 +327,28 @@ void UpdateUI(HWND hwnd) {
     }
 }
 
+void PlaySoundEffect(int type) {
+    if (type == 1) { // jump
+        for(int i=100; i<800; i+=100) Beep(i, 50);
+    } else if (type == 2) { // laser
+        for(int i=800; i>200; i-=100) Beep(i, 20);
+    } else if (type == 3) { // chime
+        Beep(600, 100);
+        Beep(800, 150);
+    } else if (type == 4) { // alert
+        Beep(400, 200);
+        Beep(600, 200);
+    } else if (type == 5) { // fail
+        Beep(200, 300);
+    }
+}
+
 void Travel(int btnIdx, HWND hwnd) {
     int cost = destCost[btnIdx];
     int target = destTarget[btnIdx];
     
     if (state.fuel >= cost) {
+        PlaySoundEffect(1); // jump
         state.fuel -= cost;
         state.location = target;
         char buf[256];
@@ -349,6 +366,7 @@ void Travel(int btnIdx, HWND hwnd) {
         }
 
         if (navyIntercept) {
+            PlaySoundEffect(4); // alert
             LogMessage("> 🚨 INTERCEPTED BY GALACTIC NAVY! Contraband found! 🚨");
             int fine = (int)(state.credits * 0.3) + 200;
             state.credits -= fine;
@@ -358,6 +376,7 @@ void Travel(int btnIdx, HWND hwnd) {
             LogMessage(buf);
             state.activeMissionType = 0;
         } else if (forcedPirate) {
+            PlaySoundEffect(4); // alert
             state.inCombat = 1;
             state.bountyTarget = 1;
             state.playerShields = 50 + state.cargoLevel * 10;
@@ -367,6 +386,7 @@ void Travel(int btnIdx, HWND hwnd) {
         } else if (SimpleRand() % 100 < 30) {
             int enc = SimpleRand() % 3;
             if (enc == 0) {
+                PlaySoundEffect(4); // alert
                 int fuelLoss = 5 + (SimpleRand() % 11);
                 state.fuel -= fuelLoss;
                 if (state.fuel < 0) state.fuel = 0;
@@ -374,6 +394,7 @@ void Travel(int btnIdx, HWND hwnd) {
                 wsprintf(encBuf, "> WARNING: Asteroid field! Evasive maneuvers cost %d fuel.", fuelLoss);
                 LogMessage(encBuf);
             } else if (enc == 1) {
+                PlaySoundEffect(3); // chime
                 int creditsGained = 50 + (SimpleRand() % 101);
                 state.credits += creditsGained;
                 state.repTraders += 5;
@@ -381,6 +402,7 @@ void Travel(int btnIdx, HWND hwnd) {
                 wsprintf(encBuf, "> Distress signal! Helped stranded ship. +%d cr, Traders Rep +5.", creditsGained);
                 LogMessage(encBuf);
             } else {
+                PlaySoundEffect(4); // alert
                 state.inCombat = 1;
                 state.bountyTarget = 0;
                 state.playerShields = 50 + state.cargoLevel * 10;
@@ -395,6 +417,7 @@ void Travel(int btnIdx, HWND hwnd) {
         
         if (state.activeMissionType == 1 || state.activeMissionType == 3) {
             if (target == state.activeMissionTarget) {
+                PlaySoundEffect(3); // chime
                 state.credits += state.activeMissionReward;
                 if (state.activeMissionType == 3) state.repPirates += 5;
                 else state.repTraders += 5;
@@ -406,11 +429,13 @@ void Travel(int btnIdx, HWND hwnd) {
 
         UpdateUI(hwnd);
     } else {
+        PlaySoundEffect(5); // fail
         LogMessage("> Insufficient fuel!");
     }
 }
 
 void EnemyTurn(HWND hwnd) {
+    PlaySoundEffect(2); // laser
     int dmg = 5 + (SimpleRand() % 15);
     state.playerShields -= dmg;
     char buf[128];
@@ -540,6 +565,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int good = LOWORD(wParam) - ID_BTN_BUY_START;
                 int price = currentPrices[good];
                 if (state.credits >= price && state.cargo < state.maxCargo) {
+                    PlaySoundEffect(3); // chime
                     state.credits -= price;
                     state.inventory[good]++;
                     state.cargo++;
@@ -553,6 +579,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int good = LOWORD(wParam) - ID_BTN_SELL_START;
                 int price = currentPrices[good];
                 if (state.inventory[good] > 0) {
+                    PlaySoundEffect(3); // chime
                     state.credits += price;
                     state.inventory[good]--;
                     state.cargo--;
@@ -565,6 +592,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_BTN_UPG_CARGO) {
                 int cost = 500 * (state.cargoLevel + 1);
                 if (state.credits >= cost) {
+                    PlaySoundEffect(3); // chime
                     state.credits -= cost;
                     state.cargoLevel++;
                     state.maxCargo += 20;
@@ -576,6 +604,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_BTN_UPG_ENGINE) {
                 int cost = 1000 * (state.engineLevel + 1);
                 if (state.credits >= cost) {
+                    PlaySoundEffect(3); // chime
                     state.credits -= cost;
                     state.engineLevel++;
                     state.maxFuel += 50;
@@ -585,6 +614,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_BTN_UPG_WEAPON) {
                 int cost = 1500 * (state.weaponLevel + 1);
                 if (state.credits >= cost) {
+                    PlaySoundEffect(3); // chime
                     state.credits -= cost;
                     state.weaponLevel++;
                     char buf[128];
@@ -594,6 +624,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (LOWORD(wParam) == ID_BTN_UPG_DREAD) {
                 if (state.credits >= 100000 && !state.hasDreadnought) {
+                    PlaySoundEffect(3); // chime
                     state.credits -= 100000;
                     state.hasDreadnought = 1;
                     LogMessage("> YOU WIN! You purchased the legendary Dreadnought! The galaxy is yours!");
@@ -610,11 +641,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (LOWORD(wParam) == ID_BTN_ABANDON) {
                 if (state.activeMissionType != 0) {
+                    PlaySoundEffect(5); // fail
                     state.activeMissionType = 0;
                     LogMessage("> Mission abandoned.");
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) == ID_BTN_FIRE) {
+                PlaySoundEffect(2); // laser
                 int dmg = 10 + state.weaponLevel * 15 + (SimpleRand() % 10);
                 state.enemyShields -= dmg;
                 char buf[128];

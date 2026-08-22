@@ -154,6 +154,62 @@
   </div>
 
   <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        
+        if (type === 'jump') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(100, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 1.0);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.5, now + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+            osc.start(now);
+            osc.stop(now + 1.0);
+        } else if (type === 'laser') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else if (type === 'chime') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(600, now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else if (type === 'alert') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.linearRampToValueAtTime(600, now + 0.2);
+            osc.frequency.linearRampToValueAtTime(400, now + 0.4);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0.1, now + 0.3);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        } else if (type === 'fail') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.5);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        }
+    }
+
     const goods = ["Food", "Water", "Ore", "Tech", "Meds", "Luxury", "Contraband", "Military"];
     const state = {
       credits: 1000,
@@ -442,6 +498,7 @@
         if (state.activeMission) {
             state.activeMission = null;
             log(`Mission abandoned.`);
+            playSound('fail');
             updateUI();
         }
     }
@@ -453,6 +510,7 @@
         state.cargo++;
         state.repTraders++;
         log(`Bought 1 ${good} for ${price} cr.`);
+        playSound('chime');
         updateUI();
       }
     }
@@ -464,6 +522,7 @@
         state.cargo--;
         state.repTraders++;
         log(`Sold 1 ${good} for ${price} cr.`);
+        playSound('chime');
         updateUI();
       }
     }
@@ -487,12 +546,14 @@
           log(`🏆 YOU WIN! You purchased the legendary Dreadnought! The galaxy is yours! 🏆`, true);
           document.getElementById('ui-log').style.borderColor = '#f0f';
         }
+        playSound('chime');
         updateUI();
       }
     }
 
     function travel(target, actualCost) {
       if (state.fuel >= actualCost) {
+        playSound('jump');
         state.fuel -= actualCost;
         state.location = target;
         log(`Hyperspace jump complete. Arrived at ${target}. Used ${actualCost} fuel.`);
@@ -508,6 +569,7 @@
         }
 
         if (navyIntercept) {
+            setTimeout(() => playSound('alert'), 500);
             log(`🚨 INTERCEPTED BY GALACTIC NAVY! Contraband found! 🚨`, true);
             const fine = Math.floor(state.credits * 0.3) + 200;
             state.credits = Math.max(0, state.credits - fine);
@@ -515,21 +577,23 @@
             log(`Navy fined you ${fine} cr and confiscated the goods. Mission Failed!`, true);
             state.activeMission = null;
         } else if (forcedPirate) {
-            startCombat();
+            setTimeout(() => startCombat(), 500);
             state.bountyTarget = true;
         } else if (Math.random() < 0.3) {
           const enc = Math.random();
           if (enc < 0.33) {
+            setTimeout(() => playSound('alert'), 500);
             const fuelLoss = Math.floor(Math.random() * 11) + 5;
             state.fuel = Math.max(0, state.fuel - fuelLoss);
             log(`WARNING: Asteroid field encountered! Evasive maneuvers cost ${fuelLoss} fuel.`, true);
           } else if (enc < 0.66) {
+            setTimeout(() => playSound('chime'), 500);
             const creditsGained = Math.floor(Math.random() * 101) + 50;
             state.credits += creditsGained;
             state.repTraders += 5;
             log(`Distress signal! Helped a stranded ship. +${creditsGained} cr, Traders Rep +5.`);
           } else {
-            startCombat();
+            setTimeout(() => startCombat(), 500);
             state.bountyTarget = false;
           }
         }
@@ -538,6 +602,7 @@
         generateMissions();
         
         if (state.activeMission && (state.activeMission.type === 'delivery' || state.activeMission.type === 'smuggling') && target === state.activeMission.target) {
+            setTimeout(() => playSound('chime'), 500);
             log(`Mission Complete: ${state.activeMission.desc}! Earned ${state.activeMission.reward} cr.`);
             state.credits += state.activeMission.reward;
             if (state.activeMission.type === 'smuggling') state.repPirates += 5;
@@ -547,11 +612,13 @@
 
         updateUI();
       } else {
+        playSound('fail');
         log(`Insufficient fuel to reach ${target}!`, true);
       }
     }
 
     function startCombat() {
+      playSound('alert');
       state.inCombat = true;
       state.playerShields = 50 + state.cargoLevel * 10;
       state.enemyMaxShields = 20 + Math.floor(Math.random() * 40);
@@ -560,6 +627,7 @@
     }
 
     function combatFire() {
+      playSound('laser');
       const dmg = 10 + state.weaponLevel * 15 + Math.floor(Math.random() * 10);
       state.enemyShields -= dmg;
       log(`You fired! Pirate shields took ${dmg} damage.`);
@@ -609,6 +677,7 @@
     }
 
     function enemyTurn() {
+      setTimeout(() => playSound('laser'), 300);
       const dmg = 5 + Math.floor(Math.random() * 15);
       state.playerShields -= dmg;
       log(`Pirates fired! Your shields took ${dmg} damage.`, true);
