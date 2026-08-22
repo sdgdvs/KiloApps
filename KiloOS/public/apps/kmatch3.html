@@ -34,10 +34,17 @@
 
   .cell {
     border-radius: 6px; display: flex; justify-content: center; align-items: center;
-    cursor: pointer; transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.22s ease-out, left 0.22s ease-out, opacity 0.2s;
+    cursor: pointer; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), top 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
     position: absolute; box-sizing: border-box;
     background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.4) 100%);
     box-shadow: inset 0 0 6px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.5);
+  }
+  .cell svg {
+    transition: transform 0.2s ease-out, filter 0.2s;
+  }
+  .cell:hover svg {
+    transform: scale(1.15) rotate(5deg);
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
   }
   .powerup-btn {
     background: linear-gradient(180deg, #444 0%, #222 100%); color: #ffd700; border: 1px solid #777; padding: 4px 8px; cursor: pointer; border-radius: 6px; font-size: 11px; font-weight: bold;
@@ -107,6 +114,16 @@
     0% { opacity: 1; transform: scaleY(2); }
     100% { opacity: 0; transform: scaleY(0.1); }
   }
+  @keyframes boardShake {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    20% { transform: translate(-4px, 3px) rotate(-1deg); }
+    40% { transform: translate(4px, -3px) rotate(1deg); }
+    60% { transform: translate(-4px, -3px) rotate(0deg); }
+    80% { transform: translate(4px, 3px) rotate(-1deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+  }
+  .shake { animation: boardShake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+  .shake-hard { animation: boardShake 0.6s cubic-bezier(.36,.07,.19,.97) both; }
   .ruins-bg {
     position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -2;
     background: 
@@ -341,21 +358,23 @@
     }
 
     function createParticles(x, y, color) {
-      for (let i = 0; i < 16; i++) {
+      for (let i = 0; i < 24; i++) {
         let p = document.createElement('div');
         p.className = 'particle';
-        let size = Math.floor(Math.random() * 8) + 4;
+        let isCore = i % 3 === 0;
+        let size = isCore ? Math.floor(Math.random() * 4) + 2 : Math.floor(Math.random() * 8) + 4;
+        let pColor = isCore ? '#ffffff' : color;
         p.style.width = size + 'px';
         p.style.height = size + 'px';
-        p.style.backgroundColor = color;
-        p.style.boxShadow = `0 0 ${size}px ${color}`;
+        p.style.backgroundColor = pColor;
+        p.style.boxShadow = `0 0 ${size}px ${pColor}`;
         p.style.left = x + 'px';
         p.style.top = y + 'px';
-        p.style.clipPath = 'polygon(50% 0%, 100% 25%, 80% 100%, 20% 100%, 0% 25%)';
+        p.style.clipPath = isCore ? 'circle(50% at 50% 50%)' : 'polygon(50% 0%, 100% 25%, 80% 100%, 20% 100%, 0% 25%)';
         boardEl.appendChild(p);
         
         let angle = Math.random() * Math.PI * 2;
-        let speed = Math.random() * 8 + 3;
+        let speed = isCore ? (Math.random() * 12 + 6) : (Math.random() * 6 + 2);
         particles.push({
           el: p, x: x, y: y,
           vx: Math.cos(angle) * speed,
@@ -363,7 +382,7 @@
           rot: Math.random() * 360,
           vrot: (Math.random() - 0.5) * 40,
           life: 1.0,
-          decay: Math.random() * 0.04 + 0.01
+          decay: isCore ? (Math.random() * 0.06 + 0.04) : (Math.random() * 0.03 + 0.01)
         });
       }
     }
@@ -918,7 +937,7 @@
       
       swap(r1, c1, r2, c2);
       playSwapSound();
-      await sleep(180);
+      await sleep(250);
       
       el1.classList.remove('moving');
       el2.classList.remove('moving');
@@ -956,7 +975,7 @@
         el1.classList.add('moving');
         el2.classList.add('moving');
         swap(r1, c1, r2, c2);
-        await sleep(180);
+        await sleep(250);
         el1.classList.remove('moving');
         el2.classList.remove('moving');
       }
@@ -1143,8 +1162,15 @@
             return {r, c};
         });
 
+        let didShake = false;
         destroyArr.forEach(m => {
           if (grid[m.r][m.c]) {
+            if (!didShake) {
+              boardEl.classList.remove('shake', 'shake-hard');
+              void boardEl.offsetWidth; // trigger reflow
+              boardEl.classList.add(grid[m.r][m.c].type > 0 ? 'shake-hard' : 'shake');
+              didShake = true;
+            }
             grid[m.r][m.c].el.classList.add('cracking');
             if (grid[m.r][m.c].color === '#ff4040') collectedRed++;
             else if (grid[m.r][m.c].color === '#40ff40') collectedGreen++;
@@ -1195,7 +1221,7 @@
           }
         });
 
-        await sleep(180);
+        await sleep(250);
 
         destroyArr.forEach(m => {
           if (grid[m.r][m.c]) {

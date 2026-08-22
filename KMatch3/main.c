@@ -94,6 +94,7 @@ int popAnim = 0;
 int popGrid[MAX_ROWS][MAX_COLS] = {0};
 int dropAnim = 0;
 int dropCount[MAX_ROWS][MAX_COLS] = {0};
+int screenShake = 0;
 
 int statsGamesPlayed = 0;
 int statsBestScore = 0;
@@ -122,21 +123,21 @@ typedef struct {
 Particle particles[MAX_PARTICLES] = {0};
 
 void CreateParticles(int cx, int cy, COLORREF color) {
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 25; i++) {
         for (int p = 0; p < MAX_PARTICLES; p++) {
             if (particles[p].life <= 0) {
                 particles[p].x = (float)cx;
                 particles[p].y = (float)cy;
                 float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
-                float speed = (float)((rand() % 50) + 30) / 10.0f;
+                float speed = (i % 2 == 0) ? (float)((rand() % 80) + 50) / 10.0f : (float)((rand() % 40) + 10) / 10.0f;
                 particles[p].vx = cosf(angle) * speed;
                 particles[p].vy = sinf(angle) * speed;
                 particles[p].rot = (float)(rand() % 360);
                 particles[p].vrot = (float)((rand() % 40) - 20);
-                particles[p].size = (float)((rand() % 4) + 4);
+                particles[p].size = (i % 2 == 0) ? (float)((rand() % 3) + 2) : (float)((rand() % 6) + 4);
                 particles[p].life = 1.0f;
-                particles[p].decay = (float)((rand() % 4) + 1) / 100.0f;
-                particles[p].color = color;
+                particles[p].decay = (i % 2 == 0) ? (float)((rand() % 5) + 3) / 100.0f : (float)((rand() % 3) + 1) / 100.0f;
+                particles[p].color = (i % 3 == 0) ? RGB(255,255,255) : color;
                 break;
             }
         }
@@ -885,12 +886,13 @@ int CheckMatchPossible() {
 
 void AnimateSwap(HWND hwnd, int r1, int c1, int r2, int c2) {
     swapR1 = r1; swapC1 = c1; swapR2 = r2; swapC2 = c2;
-    for (int i = 1; i <= 10; i++) {
-        swapAnim = i;
+    float easeVals[10] = {0.2f, 0.5f, 0.8f, 1.0f, 1.1f, 1.05f, 0.95f, 1.0f, 1.0f, 1.0f};
+    for (int i = 0; i < 10; i++) {
+        swapAnim = (int)(easeVals[i] * 10.0f);
         UpdateParticles();
         InvalidateRect(hwnd, NULL, FALSE);
         UpdateWindow(hwnd);
-        Sleep(15);
+        Sleep(20);
     }
     swapR1 = -1;
 }
@@ -1061,6 +1063,8 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
 
                     COLORREF pc = (typeGrid[r][c] == TYPE_RAINBOW) ? RGB(255,255,255) : colors[grid[r][c]];
                     CreateParticles(BOARD_X + c * cellSize + cellSize / 2, BOARD_Y + r * cellSize + cellSize / 2, pc);
+                    if (typeGrid[r][c] != TYPE_NONE) screenShake = 15;
+                    else if (screenShake < 5) screenShake = 5;
                 } else if (stoneToBreak[r][c]) {
                     popGrid[r][c] = 1;
                     score += 20;
@@ -1347,6 +1351,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
             int needsUpdate = 0;
+            if (screenShake > 0) {
+                screenShake--;
+                needsUpdate = 1;
+            }
             for (int i = 0; i < MAX_PARTICLES; i++) {
                 if (particles[i].life > 0) {
                     needsUpdate = 1;
@@ -1401,7 +1409,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             DrawBoard(memDC);
             
-            BitBlt(hdc, 0, 0, rect.right, rect.bottom, memDC, 0, 0, SRCCOPY);
+            int shakeX = (screenShake > 0) ? ((rand() % (screenShake*2 + 1)) - screenShake) : 0;
+            int shakeY = (screenShake > 0) ? ((rand() % (screenShake*2 + 1)) - screenShake) : 0;
+            BitBlt(hdc, shakeX, shakeY, rect.right, rect.bottom, memDC, 0, 0, SRCCOPY);
             
             SelectObject(memDC, oldBitmap);
             DeleteObject(memBitmap);

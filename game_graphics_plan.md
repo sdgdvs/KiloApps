@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMatch3
 - KFreecell
 - KSudoku
 - KGo
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KConnect4
 - KHangman
 - KMech
+- KMatch3
 ## Completed Work Log
+
+- **KMatch3 (Loop 6):** Implemented highly polished visual effects including procedural screen shake on gem pops, dramatic kinematic animations with elastic easing for gem swaps, multi-layered particle explosions with fast outer chunks and slow white inner cores, and detailed visual variations with a subtle scale/rotation/drop-shadow hover effect in both Web Canvas (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
 
 - **KMech (Loop 1):** Replaced text-art wireframes with custom-drawn graphical sprites for the Player Mech and Enemy Mech, using custom inline SVG models for the Web Canvas version (kmech.html) and custom GDI drawing routines (Polygon/LineTo/Ellipse) in the Native C Win32 GDI version (KMech/main.c).
 
