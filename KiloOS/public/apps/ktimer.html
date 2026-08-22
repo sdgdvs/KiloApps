@@ -811,7 +811,7 @@
         </div>
       </div>
     </div>
-  <div id="helpOverlay" style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:bold; color:var(--text-muted); background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:12px; opacity:0.8; pointer-events:none; z-index:100; backdrop-filter:blur(2px);">Press 'H' for Help</div>
+  <div id="helpOverlay" style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:bold; color:var(--text-muted); background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:12px; opacity:0.8; pointer-events:none; z-index:100; backdrop-filter:blur(2px);">Press 'H' or F1 for Help</div>
   <script>
     if (window.resizeTo) {
       window.resizeTo(460, 580);
@@ -1734,7 +1734,8 @@
 
     // Help Shortcut
     document.addEventListener('keydown', (e) => {
-      if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT') {
+      if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT') {
+        if (e.key === 'F1') e.preventDefault();
         alert("KTimer Help:\n\n- Stopwatch: Track laps.\n- Timer: Count down.\n- Multi: Multiple timers.\n- Pomodoro: Work/Break cycles.\n- Interval: HIIT Work/Rest cycles.");
       }
     });

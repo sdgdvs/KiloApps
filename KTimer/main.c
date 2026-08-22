@@ -657,7 +657,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnPresetHiit   = CreateWindowA("BUTTON", "HIIT 30/15x10", WS_CHILD | BS_PUSHBUTTON, S(150), S(250), S(130), S(28), hwnd, (HMENU)ID_PRESET_HIIT30, NULL, NULL);
             hBtnPresetBoxing = CreateWindowA("BUTTON", "Boxing 3m/1mx3", WS_CHILD | BS_PUSHBUTTON, S(290), S(250), S(140), S(28), hwnd, (HMENU)ID_PRESET_BOXING, NULL, NULL);
 
-            HWND hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(540), S(440), S(20), hwnd, NULL, NULL, NULL);
+            HWND hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' or F1 for Help", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(540), S(440), S(20), hwnd, NULL, NULL, NULL);
 
             // Font Application
             SendMessageA(hTabSW, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
@@ -1031,14 +1031,14 @@ void __stdcall MainEntry() {
     RECT rc = {0, 0, S(460), S(580)};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KTimerClass", "KTimer", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTimerClass", "KTimer", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
             HWND hFocus = GetFocus();
             char className[32] = {0};
             GetClassNameA(hFocus, className, sizeof(className));
