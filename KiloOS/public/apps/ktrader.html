@@ -124,6 +124,12 @@
     </div>
   </div>
 
+  <div class="panel" id="ui-mission-panel">
+    <h2 style="margin-top: 0;">Mission Board</h2>
+    <div id="ui-active-mission" style="margin-bottom: 10px; color: #ff0;"></div>
+    <div id="ui-missions" style="display: flex; flex-direction: column; gap: 5px;"></div>
+  </div>
+
   <div class="panel" id="ui-combat-panel" style="display: none; border-color: #f00;">
     <h2 style="color: #f00; margin-top: 0;">🚨 COMBAT ENGAGED 🚨</h2>
     <div style="display: flex; gap: 20px;">
@@ -165,8 +171,10 @@
       enemyShields: 30,
       enemyMaxShields: 30,
       repTraders: 0,
-      repPirates: 0,
-      repNavy: 0
+      repNavy: 0,
+      availableMissions: [],
+      activeMission: null,
+      bountyTarget: false
     };
 
     const namePool = ["Terra", "Ares", "Aphrodite", "Zion", "Helios", "Nova", "Eden", "Hades", "Atlantis", "Olympus", "Kronos", "Tarsus", "Vulkan", "Ryloth", "Dune"];
@@ -206,6 +214,31 @@
       }
       
       state.location = selectedNames[0];
+    }
+
+    function generateMissions() {
+      state.availableMissions = [];
+      const types = ['delivery', 'bounty', 'smuggling'];
+      const currentPlanet = state.location;
+      const otherPlanets = Object.keys(planets).filter(p => p !== currentPlanet);
+      
+      for(let i=0; i<3; i++) {
+        const type = types[Math.floor(Math.random() * types.length)];
+        const target = otherPlanets[Math.floor(Math.random() * otherPlanets.length)];
+        let reward = 0;
+        let desc = "";
+        if (type === 'delivery') {
+          reward = 100 + Math.floor(Math.random() * 200);
+          desc = `Deliver supplies to ${target}`;
+        } else if (type === 'bounty') {
+          reward = 300 + Math.floor(Math.random() * 400);
+          desc = `Eliminate pirate at ${target}`;
+        } else if (type === 'smuggling') {
+          reward = 400 + Math.floor(Math.random() * 500);
+          desc = `Smuggle contraband to ${target}`;
+        }
+        state.availableMissions.push({ type, target, reward, desc });
+      }
     }
 
     let currentPrices = {};
@@ -249,12 +282,14 @@
       if (state.inCombat) {
         document.getElementById('ui-main-panel').style.display = 'none';
         document.getElementById('ui-shipyard-panel').style.display = 'none';
+        document.getElementById('ui-mission-panel').style.display = 'none';
         document.getElementById('ui-combat-panel').style.display = 'block';
         document.getElementById('ui-combat-pshields').textContent = `Shields: ${state.playerShields}`;
         document.getElementById('ui-combat-eshields').textContent = `Shields: ${state.enemyShields} / ${state.enemyMaxShields}`;
       } else {
         document.getElementById('ui-main-panel').style.display = 'flex';
         document.getElementById('ui-shipyard-panel').style.display = 'block';
+        document.getElementById('ui-mission-panel').style.display = 'block';
         document.getElementById('ui-combat-panel').style.display = 'none';
       }
       document.getElementById('ui-credits').textContent = `Credits: ${state.credits}`;
@@ -357,6 +392,40 @@
       btnWeapon.disabled = state.credits < weaponCost;
       btnWeapon.onclick = () => buyUpgrade('weapons', weaponCost);
       shipyard.appendChild(btnWeapon);
+
+      if (state.activeMission) {
+        document.getElementById('ui-active-mission').innerHTML = `<strong>Active Mission:</strong> ${state.activeMission.desc} | Reward: ${state.activeMission.reward} cr <button onclick="abandonMission()" style="padding: 2px 5px; margin-left: 10px;">Abandon</button>`;
+        document.getElementById('ui-missions').style.display = 'none';
+      } else {
+        document.getElementById('ui-active-mission').innerHTML = 'No active mission.';
+        document.getElementById('ui-missions').style.display = 'flex';
+        
+        const missionsContainer = document.getElementById('ui-missions');
+        missionsContainer.innerHTML = '';
+        state.availableMissions.forEach((m, idx) => {
+          const btn = document.createElement('button');
+          btn.textContent = `${m.desc} (${m.reward} cr)`;
+          btn.style.textAlign = 'left';
+          btn.onclick = () => acceptMission(idx);
+          missionsContainer.appendChild(btn);
+        });
+      }
+    }
+
+    function acceptMission(idx) {
+        if (!state.activeMission) {
+            state.activeMission = state.availableMissions[idx];
+            log(`Mission accepted: ${state.activeMission.desc}`);
+            updateUI();
+        }
+    }
+    
+    function abandonMission() {
+        if (state.activeMission) {
+            state.activeMission = null;
+            log(`Mission abandoned.`);
+            updateUI();
+        }
     }
 
     function buyGood(good, price) {
@@ -406,7 +475,27 @@
         state.location = target;
         log(`Hyperspace jump complete. Arrived at ${target}. Used ${actualCost} fuel.`);
         
-        if (Math.random() < 0.3) {
+        let navyIntercept = false;
+        let forcedPirate = false;
+
+        if (state.activeMission && state.activeMission.type === 'smuggling') {
+            if (Math.random() < 0.25) navyIntercept = true;
+        }
+        if (state.activeMission && state.activeMission.type === 'bounty' && target === state.activeMission.target) {
+            forcedPirate = true;
+        }
+
+        if (navyIntercept) {
+            log(`🚨 INTERCEPTED BY GALACTIC NAVY! Contraband found! 🚨`, true);
+            const fine = Math.floor(state.credits * 0.3) + 200;
+            state.credits = Math.max(0, state.credits - fine);
+            state.repNavy -= 10;
+            log(`Navy fined you ${fine} cr and confiscated the goods. Mission Failed!`, true);
+            state.activeMission = null;
+        } else if (forcedPirate) {
+            startCombat();
+            state.bountyTarget = true;
+        } else if (Math.random() < 0.3) {
           const enc = Math.random();
           if (enc < 0.33) {
             const fuelLoss = Math.floor(Math.random() * 11) + 5;
@@ -419,10 +508,21 @@
             log(`Distress signal! Helped a stranded ship. +${creditsGained} cr, Traders Rep +5.`);
           } else {
             startCombat();
+            state.bountyTarget = false;
           }
         }
 
         generatePrices();
+        generateMissions();
+        
+        if (state.activeMission && (state.activeMission.type === 'delivery' || state.activeMission.type === 'smuggling') && target === state.activeMission.target) {
+            log(`Mission Complete: ${state.activeMission.desc}! Earned ${state.activeMission.reward} cr.`);
+            state.credits += state.activeMission.reward;
+            if (state.activeMission.type === 'smuggling') state.repPirates += 5;
+            else state.repTraders += 5;
+            state.activeMission = null;
+        }
+
         updateUI();
       } else {
         log(`Insufficient fuel to reach ${target}!`, true);
@@ -449,6 +549,15 @@
         state.repNavy += 5;
         state.repPirates -= 5;
         log(`Recovered ${bounty} cr. Navy Rep +5, Pirates Rep -5.`);
+        
+        if (state.bountyTarget) {
+            state.credits += state.activeMission.reward;
+            state.repNavy += 5;
+            log(`Bounty Complete! Earned ${state.activeMission.reward} cr bonus.`);
+            state.activeMission = null;
+            state.bountyTarget = false;
+        }
+        
         state.inCombat = false;
       } else {
         enemyTurn();
@@ -493,6 +602,7 @@
 
     generateGalaxy();
     generatePrices();
+    generateMissions();
     updateUI();
   </script>
 </body>

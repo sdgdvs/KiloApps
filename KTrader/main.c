@@ -27,9 +27,18 @@ typedef struct {
     int repTraders;
     int repPirates;
     int repNavy;
+    int activeMissionType; // 0=None, 1=Delivery, 2=Bounty, 3=Smuggling
+    int activeMissionTarget;
+    int activeMissionReward;
+    int bountyTarget;
 } GameState;
 
-GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0,0,0,0}, 0, 0, 0, 0, 50, 30, 30, 0, 0, 0 };
+GameState state = { 1000, 100, 100, 0, 20, 0, {0,0,0,0,0,0,0,0}, 0, 0, 0, 0, 50, 30, 30, 0, 0, 0, 0, 0, 0, 0 };
+
+int availMissionType[3];
+int availMissionTarget[3];
+int availMissionReward[3];
+
 
 const char* goodNames[8] = { "Food", "Water", "Ore", "Tech", "Meds", "Luxury", "Contra", "Military" };
 int currentPrices[8];
@@ -90,6 +99,20 @@ void GenerateGalaxy() {
     }
 }
 
+void GenerateMissions() {
+    for (int i=0; i<3; i++) {
+        int type = 1 + (SimpleRand() % 3);
+        int target = SimpleRand() % NUM_PLANETS;
+        while(target == state.location) target = SimpleRand() % NUM_PLANETS;
+        
+        availMissionType[i] = type;
+        availMissionTarget[i] = target;
+        if (type == 1) availMissionReward[i] = 100 + (SimpleRand() % 200);
+        else if (type == 2) availMissionReward[i] = 300 + (SimpleRand() % 400);
+        else availMissionReward[i] = 400 + (SimpleRand() % 500);
+    }
+}
+
 void GetMarketBase(int pIdx, int basePrices[8]) {
     Planet p = planets[pIdx];
     int base[8] = {50, 50, 50, 50, 50, 100, 150, 200};
@@ -130,6 +153,15 @@ HWND hStatGoodPrice[8];
 HWND hStatGoodOwned[8];
 HWND hBtnGoodBuy[8];
 HWND hBtnGoodSell[8];
+
+HWND hStatMissions;
+HWND hStatActiveMission;
+HWND hBtnAbandonMission;
+HWND hBtnMission[3];
+#define ID_BTN_MISSION1 501
+#define ID_BTN_MISSION2 502
+#define ID_BTN_MISSION3 503
+#define ID_BTN_ABANDON 504
 
 int destTarget[3];
 int destCost[3];
@@ -199,6 +231,11 @@ void UpdateUI(HWND hwnd) {
         SetWindowText(hStatCombatPlayer, buf);
         wsprintf(buf, "Enemy: %d / %d", state.enemyShields, state.enemyMaxShields);
         SetWindowText(hStatCombatEnemy, buf);
+        
+        ShowWindow(hBtnAbandonMission, SW_HIDE);
+        for(int i=0; i<3; i++) ShowWindow(hBtnMission[i], SW_HIDE);
+        ShowWindow(hStatMissions, SW_HIDE);
+        ShowWindow(hStatActiveMission, SW_HIDE);
     } else {
         ShowWindow(hStatLoc, SW_SHOW);
         ShowWindow(hBtnDest1, SW_SHOW);
@@ -210,6 +247,27 @@ void UpdateUI(HWND hwnd) {
         ShowWindow(hBtnFire, SW_HIDE);
         ShowWindow(hBtnFlee, SW_HIDE);
         ShowWindow(hBtnBribe, SW_HIDE);
+        
+        ShowWindow(hStatMissions, SW_SHOW);
+        ShowWindow(hStatActiveMission, SW_SHOW);
+    }
+    
+    if (state.activeMissionType != 0) {
+        const char* mType = (state.activeMissionType == 1) ? "Deliver to" : ((state.activeMissionType == 2) ? "Bounty at" : "Smuggle to");
+        wsprintf(buf, "Active: %s %s (%d cr)", mType, planets[state.activeMissionTarget].name, state.activeMissionReward);
+        SetWindowText(hStatActiveMission, buf);
+        if (!state.inCombat) ShowWindow(hBtnAbandonMission, SW_SHOW);
+        for (int i=0; i<3; i++) ShowWindow(hBtnMission[i], SW_HIDE);
+    } else {
+        SetWindowText(hStatActiveMission, "No active mission.");
+        ShowWindow(hBtnAbandonMission, SW_HIDE);
+
+        for (int i=0; i<3; i++) {
+            const char* mType = (availMissionType[i] == 1) ? "Deliver to" : ((availMissionType[i] == 2) ? "Bounty at" : "Smuggle to");
+            wsprintf(buf, "%s %s (%d cr)", mType, planets[availMissionTarget[i]].name, availMissionReward[i]);
+            SetWindowText(hBtnMission[i], buf);
+            if (!state.inCombat) ShowWindow(hBtnMission[i], SW_SHOW);
+        }
     }
 
     int cargoCost = 500 * (state.cargoLevel + 1);
@@ -270,7 +328,33 @@ void Travel(int btnIdx, HWND hwnd) {
         wsprintf(buf, "> Hyperspace jump complete. Arrived at %s. Used %d fuel.", planets[target].name, cost);
         LogMessage(buf);
 
-        if (SimpleRand() % 100 < 30) {
+        int navyIntercept = 0;
+        int forcedPirate = 0;
+
+        if (state.activeMissionType == 3) {
+            if ((SimpleRand() % 100) < 25) navyIntercept = 1;
+        }
+        if (state.activeMissionType == 2 && target == state.activeMissionTarget) {
+            forcedPirate = 1;
+        }
+
+        if (navyIntercept) {
+            LogMessage("> 🚨 INTERCEPTED BY GALACTIC NAVY! Contraband found! 🚨");
+            int fine = (int)(state.credits * 0.3) + 200;
+            state.credits -= fine;
+            if (state.credits < 0) state.credits = 0;
+            state.repNavy -= 10;
+            wsprintf(buf, "> Navy fined you %d cr and confiscated the goods. Mission Failed!", fine);
+            LogMessage(buf);
+            state.activeMissionType = 0;
+        } else if (forcedPirate) {
+            state.inCombat = 1;
+            state.bountyTarget = 1;
+            state.playerShields = 50 + state.cargoLevel * 10;
+            state.enemyMaxShields = 20 + (SimpleRand() % 40);
+            state.enemyShields = state.enemyMaxShields;
+            LogMessage("> 🚨 BOUNTY TARGET INTERCEPTED! RED ALERT! 🚨");
+        } else if (SimpleRand() % 100 < 30) {
             int enc = SimpleRand() % 3;
             if (enc == 0) {
                 int fuelLoss = 5 + (SimpleRand() % 11);
@@ -287,12 +371,8 @@ void Travel(int btnIdx, HWND hwnd) {
                 wsprintf(encBuf, "> Distress signal! Helped stranded ship. +%d cr, Traders Rep +5.", creditsGained);
                 LogMessage(encBuf);
             } else {
-                int available[5];
-                int availCount = 0;
-                for (int i = 0; i < 5; i++) {
-                    if (state.inventory[i] > 0) available[availCount++] = i;
-                }
                 state.inCombat = 1;
+                state.bountyTarget = 0;
                 state.playerShields = 50 + state.cargoLevel * 10;
                 state.enemyMaxShields = 20 + (SimpleRand() % 40);
                 state.enemyShields = state.enemyMaxShields;
@@ -301,6 +381,19 @@ void Travel(int btnIdx, HWND hwnd) {
         }
 
         GeneratePrices();
+        GenerateMissions();
+        
+        if (state.activeMissionType == 1 || state.activeMissionType == 3) {
+            if (target == state.activeMissionTarget) {
+                state.credits += state.activeMissionReward;
+                if (state.activeMissionType == 3) state.repPirates += 5;
+                else state.repTraders += 5;
+                wsprintf(buf, "> Mission Complete! Earned %d cr.", state.activeMissionReward);
+                LogMessage(buf);
+                state.activeMissionType = 0;
+            }
+        }
+
         UpdateUI(hwnd);
     } else {
         LogMessage("> Insufficient fuel!");
@@ -332,6 +425,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (rngState == 0) rngState = 0x1234;
             GenerateGalaxy();
             GeneratePrices();
+            GenerateMissions();
 
             HFONT hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                 OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
@@ -378,8 +472,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnUpgEngine, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnUpgWeapon, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            hStatMissions = CreateWindow("STATIC", "Mission Board", WS_CHILD | WS_VISIBLE, 20, 350, 150, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hStatMissions, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hStatActiveMission = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 180, 350, 350, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hStatActiveMission, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnAbandonMission = CreateWindow("BUTTON", "Abandon", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 540, 350, 80, 20, hwnd, (HMENU)ID_BTN_ABANDON, NULL, NULL);
+            SendMessage(hBtnAbandonMission, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            for(int i=0; i<3; i++) {
+                hBtnMission[i] = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 370 + i*22, 560, 20, hwnd, (HMENU)(ID_BTN_MISSION1 + i), NULL, NULL);
+                SendMessage(hBtnMission[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+            }
+
             hListLog = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOINTEGRALHEIGHT,
-                20, 360, 600, 100, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
+                20, 440, 600, 70, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
 
             HWND hStatMarket = CreateWindow("STATIC", "Market", WS_CHILD | WS_VISIBLE, 300, 100, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatMarket, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -472,6 +580,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     LogMessage(buf);
                     UpdateUI(hwnd);
                 }
+            } else if (LOWORD(wParam) >= ID_BTN_MISSION1 && LOWORD(wParam) <= ID_BTN_MISSION3) {
+                int idx = LOWORD(wParam) - ID_BTN_MISSION1;
+                if (state.activeMissionType == 0) {
+                    state.activeMissionType = availMissionType[idx];
+                    state.activeMissionTarget = availMissionTarget[idx];
+                    state.activeMissionReward = availMissionReward[idx];
+                    LogMessage("> Mission accepted.");
+                    UpdateUI(hwnd);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_ABANDON) {
+                if (state.activeMissionType != 0) {
+                    state.activeMissionType = 0;
+                    LogMessage("> Mission abandoned.");
+                    UpdateUI(hwnd);
+                }
             } else if (LOWORD(wParam) == ID_BTN_FIRE) {
                 int dmg = 10 + state.weaponLevel * 15 + (SimpleRand() % 10);
                 state.enemyShields -= dmg;
@@ -487,6 +610,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.repPirates -= 5;
                     wsprintf(buf, "> Recovered %d cr. Navy Rep +5, Pirates Rep -5.", bounty);
                     LogMessage(buf);
+                    
+                    if (state.bountyTarget) {
+                        state.credits += state.activeMissionReward;
+                        state.repNavy += 5;
+                        wsprintf(buf, "> Bounty Complete! Earned %d cr bonus.", state.activeMissionReward);
+                        LogMessage(buf);
+                        state.activeMissionType = 0;
+                        state.bountyTarget = 0;
+                    }
                     state.inCombat = 0;
                 } else {
                     EnemyTurn(hwnd);

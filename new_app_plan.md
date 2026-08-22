@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KTrader (Space trading sim)
-**Phase:** 11 (next to do)
+**Phase:** 12 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KTrader directory (`KTrader/`), create web HTML skeleton (`KiloOS/public/apps/ktrader.html`), register in App.jsx.
@@ -67,7 +67,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 8: Combat mechanics (turn-based tactical combat against pirate ships using ship weapons and shields).
 - [x] Phase 9: Planet variety and procedural generation (generate 10-15 unique planets with different economies and tech levels).
 - [x] Phase 10: Faction system (gain reputation with Traders, Pirates, or the Galactic Navy to unlock special goods).
-- [ ] Phase 11: Mission boards at spaceports (accept delivery contracts, bounty hunting, or smuggling runs).
+- [x] Phase 11: Mission boards at spaceports (accept delivery contracts, bounty hunting, or smuggling runs).
 - [ ] Phase 12: End-game goal (save up to purchase a massive Dreadnought or discover a legendary lost planet).
 - [ ] Phase 13: Sound Effects — hyperspace jumps, laser blasts, market chimes, alert sirens (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Captain's Log — How-to-play, trade good reference, ship upgrade guide.
