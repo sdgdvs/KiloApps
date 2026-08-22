@@ -58,6 +58,9 @@ int settingsCardBack = 0;
 int extraCellActive = 0;
 int extraCellTimer = 0;
 
+int screenShake = 0;
+void TriggerScreenShake(int intensity) { screenShake = intensity; }
+
 int moves = 0;
 int timeElapsed = 0;
 int timeRemaining = 180;
@@ -168,10 +171,22 @@ void SpawnVictoryFireworksBurst(int w, int h) {
     int cx = (w / 5) + rand() % (w * 3 / 5);
     int cy = (h / 5) + rand() % (h * 2 / 5);
     COLORREF color = RGB(rand()%255, rand()%255, rand()%255);
-    for(int i=0; i<60; i++) {
+    for(int i=0; i<80; i++) {
         float angle = (rand() % 360) * 3.14159f / 180.0f;
-        float speed = 2.0f + (rand() % 80) * 0.1f;
-        SpawnParticle((float)cx, (float)cy, cosf(angle)*speed, sinf(angle)*speed, 1.0f + (rand()%50)*0.01f, 0.015f, color, 2 + rand()%4);
+        float speed = 2.0f + (rand() % 100) * 0.1f;
+        // Inner core
+        SpawnParticle((float)cx, (float)cy, cosf(angle)*speed, sinf(angle)*speed, 1.0f + (rand()%50)*0.01f, 0.015f, color, 3 + rand()%4);
+        // Outer glow
+        SpawnParticle((float)cx, (float)cy, cosf(angle)*speed*0.5f, sinf(angle)*speed*0.5f, 0.8f + (rand()%30)*0.01f, 0.02f, RGB(255,255,255), 1 + rand()%2);
+    }
+}
+
+void SpawnSnapSparks(int cx, int cy) {
+    COLORREF colors[] = {RGB(255,215,0), RGB(255,255,255), RGB(100,181,246)};
+    for(int i=0; i<20; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 2.0f + (rand() % 40) * 0.1f;
+        SpawnParticle((float)cx, (float)cy, cosf(angle)*speed, sinf(angle)*speed, 1.0f, 0.04f, colors[rand()%3], 2 + rand()%3);
     }
 }
 
@@ -841,6 +856,7 @@ void CheckWin(HWND hwnd) {
     if(found[0]==13 && found[1]==13 && found[2]==13 && found[3]==13) {
         if(gameInProgress && won == 0) {
             PlaySoundEffect(2);
+            TriggerScreenShake(20);
             won = 1;
             statsWins++;
             statsStreak++;
@@ -890,6 +906,7 @@ int AutoComplete(HWND hwnd) {
                 if (!c.frozen && c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
                     RECT clientRect; GetClientRect(hwnd, &clientRect);
                     StartAnim(c, GetCardX(0, i, 0, clientRect), GetCardY(0, i, 0, clientRect), GetCardX(2, c.s, 0, clientRect), GetCardY(2, c.s, 0, clientRect));
+                    SpawnSnapSparks(GetCardX(2, c.s, 0, clientRect) + CELL_W/2, GetCardY(2, c.s, 0, clientRect) + CELL_H/2);
                     PushUndo();
                     found[c.s] = c.r;
                     freeCellsOccupied[i] = 0;
@@ -897,6 +914,7 @@ int AutoComplete(HWND hwnd) {
                     if (gameMode == 3) timeRemaining += 15;
                     didMove = 1;
                     anyMoved = 1;
+                    TriggerScreenShake(4);
                     break;
                 }
             }
@@ -909,6 +927,7 @@ int AutoComplete(HWND hwnd) {
                 if (!c.frozen && c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
                     RECT clientRect; GetClientRect(hwnd, &clientRect);
                     StartAnim(c, GetCardX(1, i, tabCount[i]-1, clientRect), GetCardY(1, i, tabCount[i]-1, clientRect), GetCardX(2, c.s, 0, clientRect), GetCardY(2, c.s, 0, clientRect));
+                    SpawnSnapSparks(GetCardX(2, c.s, 0, clientRect) + CELL_W/2, GetCardY(2, c.s, 0, clientRect) + CELL_H/2);
                     PushUndo();
                     found[c.s] = c.r;
                     tabCount[i]--;
@@ -916,6 +935,7 @@ int AutoComplete(HWND hwnd) {
                     if (gameMode == 3) timeRemaining += 15;
                     didMove = 1;
                     anyMoved = 1;
+                    TriggerScreenShake(4);
                     break;
                 }
             }
@@ -1121,6 +1141,14 @@ void DrawCard(HDC hdc, int x, int y, Card c, int selected, int glowing) {
     SelectObject(hdc, bg);
     SelectObject(hdc, pen);
     RoundRect(hdc, x, y, x + CELL_W, y + CELL_H, 10, 10);
+    
+    // Subtle visual variation (noise texture dots)
+    for(int i=0; i<30; i++) {
+        int nx = x + 4 + rand() % (CELL_W - 8);
+        int ny = y + 4 + rand() % (CELL_H - 8);
+        SetPixel(hdc, nx, ny, c.frozen ? RGB(200, 230, 240) : RGB(230, 230, 230));
+    }
+
     DeleteObject(bg);
     DeleteObject(pen);
 
@@ -1493,7 +1521,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcMem, 0, 0, SRCCOPY);
+            int shakeX = 0;
+            int shakeY = 0;
+            if (screenShake > 0) {
+                shakeX = (rand() % (screenShake * 2 + 1)) - screenShake;
+                shakeY = (rand() % (screenShake * 2 + 1)) - screenShake;
+            }
+            BitBlt(hdc, shakeX, shakeY, clientRect.right, clientRect.bottom, hdcMem, 0, 0, SRCCOPY);
             
             SelectObject(hdcMem, hbmOld);
             DeleteObject(hbmMem);
@@ -1631,6 +1665,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if(clickedType == 2 && nToMove == 1 && cardsToMove[0].s == clickedIdx) {
                     if(cardsToMove[0].r == found[clickedIdx] + 1) {
                         StartAnim(cardsToMove[0], GetCardX(selType, selIdx, selCardIdx, clientRect), GetCardY(selType, selIdx, selCardIdx, clientRect), GetCardX(clickedType, clickedIdx, 0, clientRect), GetCardY(clickedType, clickedIdx, 0, clientRect));
+                        SpawnSnapSparks(GetCardX(clickedType, clickedIdx, 0, clientRect) + CELL_W/2, GetCardY(clickedType, clickedIdx, 0, clientRect) + CELL_H/2);
                         PushUndo();
                         found[clickedIdx] = cardsToMove[0].r;
                         if (gameMode == 3) timeRemaining += 15;
@@ -1651,6 +1686,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                     if (clickedType == 1) ThawAdjacent(clickedIdx);
+                    TriggerScreenShake(5);
                     PlaySoundEffect(1);
                     AutoComplete(hwnd);
                     CheckWin(hwnd);
@@ -1773,6 +1809,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     active = 1;
                 }
+            }
+            
+            if (screenShake > 0) {
+                screenShake--;
+                active = 1;
             }
             
             // Update Particles

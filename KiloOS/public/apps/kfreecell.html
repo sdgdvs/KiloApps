@@ -61,6 +61,26 @@
     z-index: 1;
     mix-blend-mode: screen;
   }
+  @keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+  }
+  .shake-anim {
+    animation: shake 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+  .shake-heavy {
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+
 
   .header {
     background: rgba(15, 23, 42, 0.88);
@@ -148,6 +168,16 @@
     border-radius: 6px;
     pointer-events: none;
     z-index: 2;
+  }
+  .card::after {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    opacity: 0.15;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
+    pointer-events: none;
+    border-radius: 6px;
+    z-index: 1;
+    mix-blend-mode: overlay;
   }
   .card:hover {
     transform: translateY(-3px);
@@ -345,6 +375,12 @@
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
         osc.start(now); osc.stop(now + 0.1);
       } else if (type === 'place') {
+        const board = document.querySelector('.felt-board');
+        if (board) {
+          board.classList.remove('shake-anim');
+          void board.offsetWidth;
+          board.classList.add('shake-anim');
+        }
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(400, now);
         osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
@@ -352,6 +388,12 @@
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
         osc.start(now); osc.stop(now + 0.15);
       } else if (type === 'win') {
+        const board = document.querySelector('.felt-board');
+        if (board) {
+          board.classList.remove('shake-heavy');
+          void board.offsetWidth;
+          board.classList.add('shake-heavy');
+        }
         osc.type = 'square';
         osc.frequency.setValueAtTime(440, now);
         osc.frequency.setValueAtTime(554, now + 0.2);
@@ -1304,18 +1346,18 @@
               foldEl.style.position = 'absolute';
               foldEl.style.zIndex = 1000 - i;
               foldEl.style.transformOrigin = 'bottom center';
-              foldEl.style.transform = 'rotateX(-60deg) scale(1.1)';
-              foldEl.style.opacity = '0.6';
-              foldEl.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+              foldEl.style.transform = `rotateX(${(Math.random()-0.5)*360}deg) rotateY(${(Math.random()-0.5)*360}deg) rotateZ(${(Math.random()-0.5)*90}deg) scale(1.4) translateZ(${Math.random()*150}px)`;
+              foldEl.style.opacity = '0.8';
+              foldEl.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
               document.body.appendChild(foldEl);
               
               requestAnimationFrame(() => {
-                foldEl.style.transform = 'rotateX(0deg) scale(1)';
+                foldEl.style.transform = 'rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1)';
                 foldEl.style.top = rect.top + 'px';
                 foldEl.style.opacity = '0';
               });
               
-              setTimeout(() => foldEl.remove(), 300);
+              setTimeout(() => foldEl.remove(), 400);
             }, i * 60);
           }
         }
@@ -1421,16 +1463,31 @@
       let particles = [];
       
       function explode(x, y) {
-        for(let i=0; i<60; i++) {
+        let flash = document.createElement('div');
+        flash.style.position = 'absolute';
+        flash.style.left = x + 'px';
+        flash.style.top = y + 'px';
+        flash.style.width = '200px';
+        flash.style.height = '200px';
+        flash.style.transform = 'translate(-50%, -50%)';
+        flash.style.background = 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.5) 40%, rgba(255,255,255,0) 70%)';
+        flash.style.pointerEvents = 'none';
+        flash.style.zIndex = '2000';
+        document.body.appendChild(flash);
+        let op = 1;
+        let fi = setInterval(() => { op -= 0.1; flash.style.opacity = op; if(op<=0) { clearInterval(fi); flash.remove(); } }, 20);
+
+        for(let i=0; i<80; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const speed = 2 + Math.random() * 8;
+          const speed = 2 + Math.random() * 12;
           particles.push({
             x, y,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            life: 1.0 + Math.random() * 0.5,
-            color: `hsl(${Math.random()*360}, 100%, 60%)`,
-            size: 2 + Math.random() * 4
+            life: 1.0 + Math.random() * 0.8,
+            color: `hsl(${Math.random()*360}, 100%, 70%)`,
+            size: 2 + Math.random() * 5,
+            trail: []
           });
         }
       }
@@ -1447,14 +1504,30 @@
         let alive = false;
         particles.forEach(p => {
           if(p.life > 0) {
+            p.trail.push({x: p.x, y: p.y});
+            if(p.trail.length > 8) p.trail.shift();
+            
             p.vy += 0.15; // Gravity
             p.x += p.vx; p.y += p.vy;
             p.life -= 0.015;
-            ctx.fillStyle = p.color;
+            
+            if (p.trail.length > 1) {
+              ctx.beginPath();
+              ctx.moveTo(p.trail[0].x, p.trail[0].y);
+              for(let i=1; i<p.trail.length; i++) ctx.lineTo(p.trail[i].x, p.trail[i].y);
+              ctx.strokeStyle = p.color;
+              ctx.lineWidth = p.size * 0.6;
+              ctx.lineCap = 'round';
+              ctx.globalAlpha = Math.max(0, p.life * 0.4);
+              ctx.stroke();
+            }
+
+            ctx.fillStyle = '#ffffff';
             ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
             ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
             ctx.fill();
+            
             alive = true;
           }
         });

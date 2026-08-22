@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFreecell
 - KSudoku
 - KGo
 - KTowers
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KHangman
 - KMech
 - KMatch3
+- KFreecell
 ## Completed Work Log
+
+- **KFreecell (Loop 6):** Implemented highly polished visual effects including procedural screen-shake on card placement, multi-layered particle explosions for victory fireworks with distinct inner/outer glow passes and dynamic trails, a detailed procedural paper-grain noise texture overlay on card faces, and dramatic kinematically animated 3D rotation/scale snap sparks when cards hit the foundation in both Web Canvas (kfreecell.html) and Native C Win32 GDI (KFreecell/main.c).
 
 - **KMatch3 (Loop 6):** Implemented highly polished visual effects including procedural screen shake on gem pops, dramatic kinematic animations with elastic easing for gem swaps, multi-layered particle explosions with fast outer chunks and slow white inner cores, and detailed visual variations with a subtle scale/rotation/drop-shadow hover effect in both Web Canvas (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
 
