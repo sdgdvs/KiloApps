@@ -8,6 +8,7 @@
 #define ID_LIST_LOG  103
 #define ID_BTN_BUY_START 200
 #define ID_BTN_SELL_START 210
+#define ID_BTN_HELP 600
 
 typedef struct {
     int credits;
@@ -160,6 +161,7 @@ HWND hStatMissions;
 HWND hStatActiveMission;
 HWND hBtnAbandonMission;
 HWND hBtnMission[3];
+HWND hBtnHelp;
 #define ID_BTN_MISSION1 501
 #define ID_BTN_MISSION2 502
 #define ID_BTN_MISSION3 503
@@ -468,6 +470,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             CreateWindow("STATIC", "KTrader Space Trading Sim", WS_CHILD | WS_VISIBLE,
                 20, 20, 300, 20, hwnd, NULL, NULL, NULL);
 
+            hBtnHelp = CreateWindow("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 530, 15, 80, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hStatCredits = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 10, 60, 140, 20, hwnd, NULL, NULL, NULL);
             hStatFuel = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 160, 60, 140, 20, hwnd, NULL, NULL, NULL);
             hStatCargo = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 310, 60, 140, 20, hwnd, NULL, NULL, NULL);
@@ -555,7 +560,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == ID_BTN_DEST1) {
+            if (LOWORD(wParam) == ID_BTN_HELP) {
+                MessageBox(hwnd, "Captain's Log - Help Guide\n\n"
+                    "How to Play:\nTravel between planets to buy low and sell high. Watch your fuel and be prepared for space pirates, asteroid fields, and Navy patrols.\n\n"
+                    "Trade Goods:\n"
+                    "- Food & Water: Cheap at Agri planets.\n"
+                    "- Ore: Cheap at Mining planets.\n"
+                    "- Tech & Meds: Produced at Tech planets.\n"
+                    "- Luxury/Contraband/Military: Requires high reputation with Traders/Pirates/Navy. Navy may confiscate contraband.\n\n"
+                    "Ship Upgrades:\n"
+                    "- Cargo: Increases max cargo and shields.\n"
+                    "- Engine: Reduces fuel cost.\n"
+                    "- Weapons: Increases combat damage.\n"
+                    "- Dreadnought: Ultimate end-game goal!", 
+                    "Help", MB_OK | MB_ICONINFORMATION);
+            } else if (LOWORD(wParam) == ID_BTN_DEST1) {
                 Travel(0, hwnd);
             } else if (LOWORD(wParam) == ID_BTN_DEST2) {
                 Travel(1, hwnd);

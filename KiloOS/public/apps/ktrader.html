@@ -78,8 +78,29 @@
   </style>
 </head>
 <body>
+  <button onclick="showHelp()" style="position: absolute; top: 20px; right: 20px; font-size: 1.2em; z-index: 50;">Help</button>
   <h1>KTrader Space Trading Sim</h1>
   
+  <div id="help-modal" style="display:none; position:fixed; top:10%; left:10%; width:80%; height:80%; background:rgba(0,15,20,0.95); border:2px solid #0ff; z-index:100; overflow-y:auto; padding:20px; box-shadow:0 0 20px #0ff; color:#0ff; box-sizing:border-box;">
+    <h2 style="margin-top:0;">Captain's Log - Help Guide</h2>
+    <h3 style="color:#ff0;">How to Play</h3>
+    <p>Travel between planets to buy low and sell high. Watch your fuel and be prepared for random encounters like space pirates, asteroid fields, and Navy patrols. Complete missions from the Mission Board to earn extra credits.</p>
+    <h3 style="color:#ff0;">Trade Goods Reference</h3>
+    <ul>
+      <li><strong>Food & Water:</strong> Cheap at Agri planets, expensive elsewhere.</li>
+      <li><strong>Ore:</strong> Cheap at Mining planets, needed by Industrial/Tech.</li>
+      <li><strong>Tech & Meds:</strong> Produced at Tech planets, needed by others.</li>
+      <li><strong>Luxury/Contraband/Military:</strong> High profit, but requires high reputation with Traders/Pirates/Navy to purchase. Contraband may be confiscated by Navy.</li>
+    </ul>
+    <h3 style="color:#ff0;">Ship Upgrades</h3>
+    <ul>
+      <li><strong>Cargo:</strong> Increases max cargo capacity, also increases your shields (+10 per level).</li>
+      <li><strong>Engine:</strong> Reduces fuel consumption for jumps.</li>
+      <li><strong>Weapons:</strong> Increases damage output against pirates.</li>
+    </ul>
+    <button onclick="hideHelp()" style="margin-top: 20px; font-size: 1.1em;">Close Help</button>
+  </div>
+
   <div class="panel">
     <div class="dashboard-stats">
       <span id="ui-credits">Credits: 1000</span>
@@ -154,6 +175,9 @@
   </div>
 
   <script>
+    function showHelp() { document.getElementById('help-modal').style.display = 'block'; }
+    function hideHelp() { document.getElementById('help-modal').style.display = 'none'; }
+
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playSound(type) {
