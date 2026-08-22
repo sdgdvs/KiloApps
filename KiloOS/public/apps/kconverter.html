@@ -414,7 +414,7 @@
     <header class="header">
       <div class="title-group">
         <div class="app-logo">K</div>
-        <div class="header-title">KConverter Pro <span style="font-size: 12px; color: var(--accent-blue); font-weight: 600; margin-left: 8px;">[Press H for Help]</span></div>
+        <div class="header-title">KConverter Pro <span style="font-size: 12px; color: var(--accent-blue); font-weight: 600; margin-left: 8px;">[Press H or F1 for Help]</span></div>
       </div>
       
       <div class="controls-bar">
@@ -873,7 +873,8 @@
 
       // Help keyboard shortcut
       document.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+        if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+          if (e.key === 'F1') e.preventDefault();
           alert('KConverter Pro Help:\n\n- Single Convert: Convert between two units instantly.\n- Batch Mode: See how one value converts to all other units in the category.\n- Smart Parser: Type natural expressions like "100 km/h to m/s" or "50 psi to bar".\n- Favorites: Pin frequent conversions for quick access.\n- Custom Units: Define your own units relative to the base unit.\n- History Log: Keeps track of your conversions.');
         }
       });

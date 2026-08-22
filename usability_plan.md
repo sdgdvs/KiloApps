@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KConverter
 - KGraph
 - KTimer
 - KContacts
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KRogue
 - KSys
 - KTodo
+- KConverter
 
 ## Progress Log
 - KCalendar: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1024x768, added F1 key support and updated UI labels for help menu in both web and native, applied text-rendering optimizeLegibility to web app body for crisp text).
@@ -337,3 +337,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KRogue: Usability and UI issues fixed (implemented negative font height and SetProcessDPIAware for crisp native text, added optimizeLegibility to web, verified 1000x720 bounds, updated help instructions).
 - KSys: Usability and UI issues fixed (mapped F1 for help natively and on web, explicitly stated F1 support in UI labels/buttons, verified 1024x768 bounds, compiled successfully).
 - KTodo: Usability and UI issues fixed (fixed native bug where typing 'H' in EDIT controls incorrectly triggered help, verified 800x600 bounds and existing web hotkey logic).
+- KConverter: Usability and UI issues fixed (mapped F1 for help on web, added WS_CLIPCHILDREN to native, explicitly stated F1 support in web title hint, verified native text and window logic).
