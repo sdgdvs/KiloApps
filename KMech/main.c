@@ -559,17 +559,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(memDC, &pHeatBar, heatP);
                 }
                 
-                const char* pw[] = {
-                    "  [==]  ",
-                    " /|  |\\ ",
-                    "/ |__| \\",
-                    "  |  |  ",
-                    " /    \\ ",
-                    "/      \\"
-                };
-                for (int i=0; i<6; i++) {
-                    TextOutA(memDC, 80, 120 + i*14, pw[i], lstrlenA(pw[i]));
-                }
+                HPEN pPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
+                HBRUSH pBrush = CreateSolidBrush(RGB(0, 50, 0));
+                HGDIOBJ pOldPen = SelectObject(memDC, pPen);
+                HGDIOBJ pOldBrush = SelectObject(memDC, pBrush);
+                Rectangle(memDC, 100, 110, 120, 125);
+                MoveToEx(memDC, 105, 115, NULL); LineTo(memDC, 115, 115);
+                POINT torsoP[4] = { {90, 125}, {130, 125}, {120, 160}, {100, 160} };
+                Polygon(memDC, torsoP, 4);
+                Rectangle(memDC, 100, 130, 120, 150);
+                MoveToEx(memDC, 90, 130, NULL); LineTo(memDC, 70, 150); LineTo(memDC, 70, 170);
+                Ellipse(memDC, 66, 170, 74, 178);
+                MoveToEx(memDC, 130, 130, NULL); LineTo(memDC, 150, 150); LineTo(memDC, 150, 170);
+                Rectangle(memDC, 145, 170, 155, 185);
+                MoveToEx(memDC, 100, 160, NULL); LineTo(memDC, 90, 190); LineTo(memDC, 80, 190);
+                MoveToEx(memDC, 120, 160, NULL); LineTo(memDC, 130, 190); LineTo(memDC, 140, 190);
+                SelectObject(memDC, pOldPen);
+                SelectObject(memDC, pOldBrush);
+                DeleteObject(pPen);
+                DeleteObject(pBrush);
                 
                 // Enemy Mech Stats
                 char bufE[64];
@@ -595,17 +603,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(memDC, &eHeatBar, heatP);
                 }
                 
-                const char* ew[] = {
-                    "  (oo)  ",
-                    " /|  |\\ ",
-                    "/ |__| \\",
-                    "  |  |  ",
-                    " /    \\ ",
-                    "/      \\"
-                };
-                for (int i=0; i<6; i++) {
-                    TextOutA(memDC, 400, 120 + i*14, ew[i], lstrlenA(ew[i]));
-                }
+                HPEN ePen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
+                HBRUSH eBrush = CreateSolidBrush(RGB(50, 0, 0));
+                HBRUSH eRedBrush = CreateSolidBrush(RGB(255, 0, 0));
+                HGDIOBJ eOldPen = SelectObject(memDC, ePen);
+                HGDIOBJ eOldBrush = SelectObject(memDC, eBrush);
+                Ellipse(memDC, 410, 110, 430, 130);
+                SelectObject(memDC, eRedBrush);
+                Ellipse(memDC, 414, 116, 418, 120);
+                Ellipse(memDC, 422, 116, 426, 120);
+                SelectObject(memDC, eBrush);
+                POINT torsoE[4] = { {390, 130}, {450, 130}, {440, 160}, {400, 160} };
+                Polygon(memDC, torsoE, 4);
+                MoveToEx(memDC, 390, 135, NULL); LineTo(memDC, 370, 150); LineTo(memDC, 380, 170);
+                MoveToEx(memDC, 450, 135, NULL); LineTo(memDC, 470, 150); LineTo(memDC, 460, 170);
+                MoveToEx(memDC, 400, 160, NULL); LineTo(memDC, 390, 190); LineTo(memDC, 380, 190);
+                MoveToEx(memDC, 440, 160, NULL); LineTo(memDC, 450, 190); LineTo(memDC, 460, 190);
+                SelectObject(memDC, eOldPen);
+                SelectObject(memDC, eOldBrush);
+                DeleteObject(ePen);
+                DeleteObject(eBrush);
+                DeleteObject(eRedBrush);
                 SetTextColor(memDC, RGB(0, 255, 0)); // Restore color
                 
                 DeleteObject(hpBg);

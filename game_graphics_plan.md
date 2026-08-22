@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMech
 - KMatch3
 - KFreecell
 - KSudoku
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarship
 - KConnect4
 - KHangman
+- KMech
 ## Completed Work Log
+
+- **KMech (Loop 1):** Replaced text-art wireframes with custom-drawn graphical sprites for the Player Mech and Enemy Mech, using custom inline SVG models for the Web Canvas version (kmech.html) and custom GDI drawing routines (Polygon/LineTo/Ellipse) in the Native C Win32 GDI version (KMech/main.c).
 
 - **KHangman (Loop 6):** Implemented highly polished visual effects including a procedural dampened sine-wave screen-shake, dramatic lightning flashes that illuminate the sky gradient on incorrect guesses, a multi-layered particle explosion (fireworks) for the win state with gravity and friction, and kinematically animated flailing arms/legs for the character sprite during impacts in both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 
