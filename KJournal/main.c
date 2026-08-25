@@ -4,6 +4,10 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 
 #define MAX_LINE 2048
 #define JOURNAL_FILE "journal.txt"
@@ -794,8 +798,37 @@ void show_help() {
 
 int main() {
 #ifdef _WIN32
+    SetProcessDPIAware();
     system("mode con: cols=120 lines=40");
     system("title KJournal - Press 'H' for Help");
+    
+    HWND hwnd = GetConsoleWindow();
+    if (hwnd) {
+        // Prevent flickering
+        LONG style = GetWindowLong(hwnd, GWL_STYLE);
+        SetWindowLong(hwnd, GWL_STYLE, style | WS_CLIPCHILDREN);
+        
+        // Crisp text using negative font heights
+        HDC hdc = GetDC(hwnd);
+        int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+        ReleaseDC(hwnd, hdc);
+        int fontHeight = -MulDiv(12, dpi, 72);
+        
+        CONSOLE_FONT_INFOEX cfi;
+        cfi.cbSize = sizeof(cfi);
+        cfi.nFont = 0;
+        cfi.dwFontSize.X = 0;
+        cfi.dwFontSize.Y = fontHeight < 0 ? -fontHeight : fontHeight; 
+        cfi.FontFamily = FF_DONTCARE;
+        cfi.FontWeight = FW_NORMAL;
+        wcscpy(cfi.FaceName, L"Consolas");
+        SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), FALSE, &cfi);
+        
+        // Ensure client area size matches App.jsx window dimensions (1100x750)
+        RECT rect = {0, 0, 1100, 750};
+        AdjustWindowRect(&rect, GetWindowLong(hwnd, GWL_STYLE), FALSE);
+        SetWindowPos(hwnd, NULL, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE | SWP_NOZORDER);
+    }
 #endif
 
     if (!verify_pin_on_startup()) {
