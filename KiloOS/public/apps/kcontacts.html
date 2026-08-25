@@ -602,7 +602,10 @@
 
     // Help Modal Keydown
     document.addEventListener('keydown', (e) => {
-      if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      if (e.key === 'F1') {
+        e.preventDefault();
+        document.getElementById('helpModal').style.display = 'flex';
+      } else if ((e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
         e.preventDefault();
         document.getElementById('helpModal').style.display = 'flex';
       }
@@ -1178,10 +1181,10 @@
     searchInput.oninput = renderList;
 
     // Initialization
-    if (window.resizeTo) window.resizeTo(850, 600);
+    if (window.resizeTo) window.resizeTo(830, 565);
     seedData();
     renderList();
-    setTimeout(() => showToast("Welcome to KContacts! Press H for Help."), 500);
+    setTimeout(() => showToast("Welcome to KContacts! Press H or F1 for Help."), 500);
   </script>
 </body>
 </html>
