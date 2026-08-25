@@ -96,7 +96,8 @@ const APPS = [
   { id: 'kdragon', title: 'KDragon', url: '/apps/kdragon.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdragon.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kmech', title: 'KMech', url: '/apps/kmech.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmech.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kcyber', title: 'KCyber', url: '/apps/kcyber.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcyber.ico', w: 800, h: 600, folder: 'Games' },
-  { id: 'ktrader', title: 'KTrader', url: '/apps/ktrader.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktrader.ico', w: 800, h: 600, folder: 'Games' }
+  { id: 'ktrader', title: 'KTrader', url: '/apps/ktrader.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktrader.ico', w: 800, h: 600, folder: 'Games' },
+  { id: 'kmystery', title: 'KMystery', url: '/apps/kmystery.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmystery.ico', w: 900, h: 650, folder: 'Games' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {

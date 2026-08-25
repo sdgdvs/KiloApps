@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KMystery</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #d0d0d0;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #header {
+            background-color: #000;
+            padding: 10px 20px;
+            border-bottom: 2px solid #333;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 2px;
+            color: #fff;
+        }
+        #content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            text-align: center;
+        }
+        button {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>KMystery</h1>
+    </div>
+    <div id="content">
+        <div class="container">
+            <p>Detective, a murder has occurred.</p>
+            <button onclick="startGame()">Start Investigation</button>
+        </div>
+    </div>
+    <script>
+        function startGame() {
+            document.querySelector('.container').innerHTML = '<p>Loading case files...</p>';
+            // Core logic to be added in Phase 2
+        }
+    </script>
+</body>
+</html>
