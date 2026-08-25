@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KWords
 - KReversi
 - KQuest
 - KSpace
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSudoku
 - KGo
 - KTowers
+- KWords
 ## Completed Work Log
+
+- **KWords (Loop 6):** Implemented highly polished visual effects including procedural screen-shake upon breaking ice or finding words, multi-layered particle explosions featuring fast core sparks and slower expanding smoke rings, and detailed visual variations for ice shatters with extra lingering ice dust using upgraded kinematics and particle caps in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
 - **KTowers (Loop 6):** Implemented highly polished visual effects including procedural kinematic screen-shake upon landing impacts, a squash-and-stretch bounce effect for falling blocks, multi-layered particle explosions for victory fireworks featuring shockwaves and distinct spark layers, and highly detailed procedural architectural window patterns for skyscraper blocks in both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 

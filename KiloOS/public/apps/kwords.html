@@ -118,6 +118,22 @@
     50% { filter: brightness(1.5) drop-shadow(0 0 10px #4fd1c5); transform: translateY(-3px) scale(1.05); }
     100% { filter: brightness(1) drop-shadow(0 0 0px #fff); }
   }
+  @keyframes screenShake {
+    0% { transform: translate(2px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(0px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(2px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(2px, 2px) rotate(0deg); }
+    100% { transform: translate(0px, 0px) rotate(0deg); }
+  }
+  .shake {
+    animation: screenShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
   .tile-char {
     font-family: 'Georgia', 'Times New Roman', serif;
     font-weight: 900;
@@ -1074,7 +1090,11 @@
                         const cellEl = document.querySelector(`.cell[data-r="${centerCell.r}"][data-c="${centerCell.c}"]`);
                         if (cellEl) {
                             const rect = cellEl.getBoundingClientRect();
+                            const canvasRect = document.getElementById('confetti-canvas').getBoundingClientRect();
+                            const px = rect.left - canvasRect.left + rect.width / 2;
+                            const py = rect.top - canvasRect.top + rect.height / 2;
                             spawnFloatingScore(totalPts, rect.left + rect.width / 2 - 20, rect.top);
+                            spawnParticles(px, py, 'explosion');
                         }
                     }
 
@@ -1120,7 +1140,11 @@
                         const cellEl = document.querySelector(`.cell[data-r="${centerCell.r}"][data-c="${centerCell.c}"]`);
                         if (cellEl) {
                             const rect = cellEl.getBoundingClientRect();
+                            const canvasRect = document.getElementById('confetti-canvas').getBoundingClientRect();
+                            const px = rect.left - canvasRect.left + rect.width / 2;
+                            const py = rect.top - canvasRect.top + rect.height / 2;
                             spawnFloatingScore(500, rect.left + rect.width / 2 - 20, rect.top);
+                            spawnParticles(px, py, 'explosion');
                         }
                         
                         foundMatch = true;
@@ -1359,6 +1383,13 @@
     let activeParticles = [];
     let particleLoopActive = false;
 
+    function triggerScreenShake() {
+        const container = document.querySelector('.grid-container');
+        container.classList.remove('shake');
+        void container.offsetWidth; // trigger reflow
+        container.classList.add('shake');
+    }
+
     function spawnParticles(x, y, type) {
         const canvas = document.getElementById('confetti-canvas');
         if (canvas.width === 0 || canvas.width === 300) { // default width is 300
@@ -1379,23 +1410,53 @@
                 });
             }
         } else if (type === 'ice') {
+            triggerScreenShake();
+            for(let i=0; i<30; i++) {
+                activeParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12 - 4,
+                    color: Math.random() > 0.5 ? '#b3f2ff' : '#ffffff',
+                    size: Math.random() * 6 + 2,
+                    life: 1.0, decay: Math.random() * 0.03 + 0.02, type: 'ice'
+                });
+            }
             for(let i=0; i<15; i++) {
                 activeParticles.push({
                     x: x, y: y,
-                    vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8 - 2,
-                    color: Math.random() > 0.5 ? '#b3f2ff' : '#ffffff',
-                    size: Math.random() * 4 + 2,
-                    life: 1.0, decay: Math.random() * 0.05 + 0.03, type: 'ice'
+                    vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5 - 1,
+                    color: 'rgba(200, 255, 255, 0.7)',
+                    size: Math.random() * 8 + 4,
+                    life: 1.0, decay: Math.random() * 0.05 + 0.04, type: 'dust'
                 });
             }
         } else if (type === 'spark') {
+            for(let i=0; i<40; i++) {
+                activeParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15,
+                    color: ['#ffd700', '#ff8c00', '#ff00ff', '#ffffff'][Math.floor(Math.random() * 4)],
+                    size: Math.random() * 5 + 2,
+                    life: 1.0, decay: Math.random() * 0.03 + 0.02, type: 'spark'
+                });
+            }
+        } else if (type === 'explosion') {
+            triggerScreenShake();
+            for(let i=0; i<50; i++) {
+                activeParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20,
+                    color: ['#ff5500', '#ffaa00', '#ffff00', '#ffffff'][Math.floor(Math.random() * 4)],
+                    size: Math.random() * 6 + 2,
+                    life: 1.0, decay: Math.random() * 0.04 + 0.02, type: 'spark'
+                });
+            }
             for(let i=0; i<20; i++) {
                 activeParticles.push({
                     x: x, y: y,
-                    vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
-                    color: ['#ffd700', '#ff8c00', '#ff00ff'][Math.floor(Math.random() * 3)],
-                    size: Math.random() * 4 + 2,
-                    life: 1.0, decay: Math.random() * 0.04 + 0.02, type: 'spark'
+                    vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+                    color: 'rgba(150, 150, 150, 0.5)',
+                    size: Math.random() * 12 + 6,
+                    life: 1.0, decay: Math.random() * 0.02 + 0.01, type: 'dust'
                 });
             }
         } else if (type === 'confetti') {

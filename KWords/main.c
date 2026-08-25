@@ -242,9 +242,17 @@ typedef struct {
     int type; // 0=confetti, 1=ice, 2=spark
 } Particle;
 
-#define MAX_PARTICLES 300
+#define MAX_PARTICLES 600
 Particle particles[MAX_PARTICLES];
 bool particlesInit = false;
+
+int screenShakeTimer = 0;
+float screenShakeMag = 0.0f;
+void TriggerScreenShake(float mag, int duration) {
+    screenShakeMag = mag;
+    screenShakeTimer = duration;
+}
+
 
 typedef struct {
     float x, y;
@@ -270,9 +278,11 @@ void SpawnFloatingScore(int pts, int x, int y) {
 
 void SpawnParticles(int px, int py, int type) {
     if (!particlesInit) { memset(particles, 0, sizeof(particles)); particlesInit = true; }
-    int numSpawn = (type == 1) ? 15 : 20;
+    int numSpawn = (type == 1) ? 30 : 20;
     if (type == 0) numSpawn = 80;
     if (type == 3) numSpawn = 50; // Dust
+    if (type == 4) numSpawn = 60; // Explosion sparks
+    if (type == 5) numSpawn = 30; // Explosion smoke
     int spawned = 0;
     for (int i = 0; i < MAX_PARTICLES && spawned < numSpawn; i++) {
         if (type == 0 || (particles[i].type != 0 && particles[i].life <= 0)) {
@@ -307,9 +317,25 @@ void SpawnParticles(int px, int py, int type) {
                 particles[i].vy = ((rand() % 100) - 50) / 10.0f;
                 if (type == 1) {
                     particles[i].color = rand()%2 ? RGB(255, 255, 255) : RGB(179, 242, 255);
-                    particles[i].size = 4 + rand() % 4;
+                    particles[i].size = 4 + rand() % 6;
                     particles[i].shape = 0;
-                    particles[i].vy -= 2.0f;
+                    particles[i].vx = ((rand() % 100) - 50) / 4.0f;
+                    particles[i].vy = ((rand() % 100) - 50) / 4.0f - 2.0f;
+                } else if (type == 4) {
+                    COLORREF sc[] = { RGB(255, 100, 0), RGB(255, 200, 0), RGB(255, 255, 0), RGB(255, 255, 255) };
+                    particles[i].color = sc[rand() % 4];
+                    particles[i].size = 4 + rand() % 6;
+                    particles[i].shape = 1;
+                    particles[i].vx = ((rand() % 100) - 50) / 3.0f;
+                    particles[i].vy = ((rand() % 100) - 50) / 3.0f;
+                    particles[i].decay = 0.02f + (rand() % 50) / 1000.0f;
+                } else if (type == 5) {
+                    particles[i].color = RGB(150, 150, 150);
+                    particles[i].size = 12 + rand() % 8;
+                    particles[i].shape = 0;
+                    particles[i].vx = ((rand() % 100) - 50) / 10.0f;
+                    particles[i].vy = ((rand() % 100) - 50) / 10.0f;
+                    particles[i].decay = 0.01f + (rand() % 30) / 1000.0f;
                 } else {
                     COLORREF sc[] = { RGB(255, 215, 0), RGB(255, 140, 0), RGB(255, 0, 255) };
                     particles[i].color = sc[rand() % 3];
@@ -329,6 +355,7 @@ void TriggerIceShatter(int r, int c) {
     int px = 20 + 6 + c * cellPx + cellPx / 2;
     int py = 50 + 6 + r * cellPx + cellPx / 2;
     SpawnParticles(px, py, 1);
+    TriggerScreenShake(6.0f, 10);
 }
 
 void TriggerMagicSpark(int r, int c) {
@@ -704,6 +731,9 @@ void EndSelection(HWND hwnd) {
                         int px = 20 + 6 + cC * cellPx + cellPx / 2 - 20;
                         int py = 50 + 6 + cR * cellPx;
                         SpawnFloatingScore(totalPoints, px, py);
+                        SpawnParticles(px + 20, py, 4); // Explosion sparks
+                        SpawnParticles(px + 20, py, 5); // Explosion smoke
+                        TriggerScreenShake(12.0f, 15);
                     }
                     
                     // Mark cells as found & thaw adjacent frozen tiles & clear fog
@@ -749,6 +779,9 @@ void EndSelection(HWND hwnd) {
                         int px = 20 + 6 + cC * cellPx + cellPx / 2 - 20;
                         int py = 50 + 6 + cR * cellPx;
                         SpawnFloatingScore(500, px, py);
+                        SpawnParticles(px + 20, py, 4); // Explosion sparks
+                        SpawnParticles(px + 20, py, 5); // Explosion smoke
+                        TriggerScreenShake(15.0f, 20);
                         
                         for(int i=0; i<count; i++) {
                             int r = selR[i];
@@ -1105,6 +1138,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         needsRedraw = true;
                     }
                 }
+                if (screenShakeTimer > 0) {
+                    screenShakeTimer--;
+                    if (screenShakeTimer == 0) screenShakeMag = 0.0f;
+                    needsRedraw = true;
+                }
                 if(gameWon && particlesInit) needsRedraw = true;
                 if(needsRedraw) InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -1213,6 +1251,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
+            
+            if (screenShakeTimer > 0) {
+                int ox = (int)(((rand() % 100) / 100.0f - 0.5f) * screenShakeMag);
+                int oy = (int)(((rand() % 100) / 100.0f - 0.5f) * screenShakeMag);
+                SetWindowOrgEx(hdc, ox, oy, NULL);
+            }
+
             
             // Detailed wooden study desk texture with ambient lighting
             for (int y = ps.rcPaint.top; y <= ps.rcPaint.bottom; y++) {
