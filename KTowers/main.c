@@ -337,18 +337,34 @@ void UpdateControlsVisibility() {
 void SpawnFireworks() {
     particleCount = 0;
     COLORREF colors[] = { RGB(244, 63, 94), RGB(56, 189, 248), RGB(245, 158, 11), RGB(16, 185, 129), RGB(168, 85, 247) };
-    for (int i = 0; i < 200; i++) {
-        particles[i].x = 150 + rand() % 550;
-        particles[i].y = 100 + rand() % 150;
+    int cx = 150 + rand() % 550;
+    int cy = 100 + rand() % 150;
+    COLORREF c = colors[rand() % 5];
+
+    particles[particleCount].x = cx; particles[particleCount].y = cy;
+    particles[particleCount].vx = 0; particles[particleCount].vy = 0;
+    particles[particleCount].color = RGB(255, 255, 255);
+    particles[particleCount].life = 20; particles[particleCount].maxLife = 20;
+    particleCount++;
+
+    for (int i = 0; i < 150; i++) {
+        particles[particleCount].x = cx; particles[particleCount].y = cy;
         float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
-        float speed = 2.0f + (float)(rand() % 60) / 10.0f;
-        particles[i].vx = cosf(angle) * speed;
-        particles[i].vy = sinf(angle) * speed;
-        particles[i].color = colors[rand() % 5];
-        particles[i].life = 40 + rand() % 40;
-        particles[i].maxLife = particles[i].life;
+        float speed = 3.0f + (float)(rand() % 80) / 10.0f;
+        particles[particleCount].vx = cosf(angle) * speed; particles[particleCount].vy = sinf(angle) * speed;
+        particles[particleCount].color = c;
+        particles[particleCount].life = 30 + rand() % 30; particles[particleCount].maxLife = particles[particleCount].life;
+        particleCount++;
     }
-    particleCount = 200;
+    for (int i = 0; i < 50; i++) {
+        particles[particleCount].x = cx; particles[particleCount].y = cy;
+        float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
+        float speed = 1.0f + (float)(rand() % 30) / 10.0f;
+        particles[particleCount].vx = cosf(angle) * speed; particles[particleCount].vy = sinf(angle) * speed;
+        particles[particleCount].color = RGB(255, 255, 255);
+        particles[particleCount].life = 40 + rand() % 40; particles[particleCount].maxLife = particles[particleCount].life;
+        particleCount++;
+    }
 }
 
 void UpdateParticles() {
@@ -356,7 +372,9 @@ void UpdateParticles() {
         if (particles[i].life > 0) {
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
-            particles[i].vy += 0.15f; // gravity
+            if (particles[i].maxLife != 20) {
+                particles[i].vy += 0.15f; // gravity
+            }
             particles[i].life--;
         }
     }
@@ -466,8 +484,10 @@ void PerformPegClick(HWND hwnd, int clickedPeg) {
             hintFrom = -1; hintTo = -1;
             strcpy(statusMessage, "");
             PlaySoundEffect(1);
+            screenShake = 6;
         } else {
             PlaySoundEffect(3);
+            screenShake = 4;
         }
     } else if (selectedPeg == clickedPeg) {
         selectedPeg = -1;
@@ -532,6 +552,7 @@ void PerformPegClick(HWND hwnd, int clickedPeg) {
             strcpy(statusMessage, "Cannot place larger disk on smaller disk!");
             selectedPeg = -1;
             PlaySoundEffect(3);
+            screenShake = 4;
         }
     }
     InvalidateRect(hwnd, NULL, FALSE);
@@ -640,6 +661,7 @@ void UseDiskSwap(HWND hwnd) {
         hintFrom = -1; hintTo = -1;
         strcpy(statusMessage, "DISK TELEPORTED!");
         PlaySoundEffect(4);
+        screenShake = 15;
 
         if (!timerRunning) {
             timerRunning = TRUE;
@@ -745,8 +767,11 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
     int cols = (width / 14);
     if (cols < 2) cols = 2;
     int padX = (width - cols * 4) / (cols + 1);
+    int pattern = discSize % 3;
 
     for (int c = 0; c < cols; c++) {
+        if (pattern == 2 && c % 2 == 0) continue; // Checkered window pattern
+
         int wx = (x - width/2) + padX + c * (4 + padX);
         int wy1 = y + 4;
         int wy2 = y + 13;
@@ -756,12 +781,17 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
         COLORREF offCol = isGlass ? RGB(30, 41, 59) : RGB(15, 23, 42);
         COLORREF wColor1 = (seed1 > 2) ? litCol : offCol;
         HBRUSH wBrush1 = CreateSolidBrush(wColor1);
-        RECT wR1 = { wx, wy1, wx + 4, wy1 + 5 };
-        FillRect(hdc, &wR1, wBrush1);
+        
+        if (pattern == 1) {
+            RECT wR1 = { wx, wy1, wx + 4, wy2 + 5 };
+            FillRect(hdc, &wR1, wBrush1);
+        } else {
+            RECT wR1 = { wx, wy1, wx + 4, wy1 + 5 };
+            FillRect(hdc, &wR1, wBrush1);
+            RECT wR2 = { wx, wy2, wx + 4, wy2 + 5 };
+            FillRect(hdc, &wR2, wBrush1);
+        }
         DeleteObject(wBrush1);
-
-        RECT wR2 = { wx, wy2, wx + 4, wy2 + 5 };
-        FillRect(hdc, &wR2, wBrush1);
     }
 
     // 5. Text Label / Locked Overlay
@@ -1209,6 +1239,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     if (distBefore > 5.0f && distAfter <= 5.0f && selectedPeg != p) {
                         screenShake = 12;
+                        discAnimY[p][j] = (float)targetY + 4.0f; // bounce squash
                         for(int d=0; d<15; d++) {
                             int idx = -1;
                             for(int i=0; i<MAX_DUST; i++) if(dusts[i].life <= 0) { idx = i; break; }
@@ -1276,12 +1307,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (won) {
                 for (int i = 0; i < particleCount; i++) {
                     if (particles[i].life > 0) {
-                        HBRUSH pBrush = CreateSolidBrush(particles[i].color);
-                        RECT pRect = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
-                        FillRect(memDC, &pRect, pBrush);
-                        DeleteObject(pBrush);
+                        if (particles[i].maxLife == 20) {
+                            int radius = (20 - particles[i].life) * 4;
+                            HPEN swPen = CreatePen(PS_SOLID, particles[i].life / 4 + 1, particles[i].color);
+                            HGDIOBJ oldSW = SelectObject(memDC, swPen);
+                            SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                            Ellipse(memDC, (int)particles[i].x - radius, (int)particles[i].y - radius, (int)particles[i].x + radius, (int)particles[i].y + radius);
+                            SelectObject(memDC, oldSW);
+                            DeleteObject(swPen);
+                        } else {
+                            HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                            RECT pRect = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
+                            FillRect(memDC, &pRect, pBrush);
+                            DeleteObject(pBrush);
+                        }
                     }
                 }
+                if (rand() % 30 == 0) SpawnFireworks();
             }
 
             // Draw Dust Particles
@@ -1300,8 +1342,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Copy double buffer to screen
             int shakeOffsetX = 0, shakeOffsetY = 0;
             if (screenShake > 0) {
-                shakeOffsetX = (rand() % (screenShake * 2)) - screenShake;
-                shakeOffsetY = (rand() % (screenShake * 2)) - screenShake;
+                shakeOffsetX = (int)(sin(animTick * 1.5f) * screenShake);
+                shakeOffsetY = (int)(cos(animTick * 1.8f) * screenShake);
                 screenShake--;
             }
             BitBlt(hdc, shakeOffsetX, shakeOffsetY, width, height, memDC, 0, 0, SRCCOPY);

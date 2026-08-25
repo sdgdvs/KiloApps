@@ -757,6 +757,7 @@
                 document.getElementById('swapChargesDisplay').innerText = swapCharges;
                 document.getElementById('messageToast').innerText = "⚡ Disk Teleported!";
                 playSound('freeze');
+                screenShake = 15;
 
                 if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
 
@@ -804,9 +805,11 @@
                     selectedPeg = pegIdx;
                     hintHighlight = null;
                     playSound('pickup');
+                    screenShake = 6;
                     render();
                 } else {
                     playSound('error');
+                    screenShake = 4;
                 }
             } else if (selectedPeg === pegIdx) {
                 // Deselect
@@ -1061,30 +1064,61 @@
 
         function spawnExplosion(x, y) {
             const colors = ['#f43f5e', '#38bdf8', '#f59e0b', '#10b981', '#a855f7', '#f472b6', '#fef08a'];
-            for (let i = 0; i < 45; i++) {
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Core flash shockwave
+            fireworks.push({
+                x: x, y: y,
+                vx: 0, vy: 0,
+                color: '#ffffff',
+                life: 1.0, decay: 0.05,
+                size: 10,
+                isShockwave: true,
+                maxSize: 60 + Math.random() * 40
+            });
+
+            // Fast outer sparks
+            for (let i = 0; i < 40; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = 2 + Math.random() * 6;
+                const speed = 4 + Math.random() * 8;
                 fireworks.push({
                     x: x, y: y,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    life: 1.0,
-                    decay: 0.015 + Math.random() * 0.02,
-                    size: 2.5 + Math.random() * 3
+                    color: color,
+                    life: 1.0, decay: 0.015 + Math.random() * 0.02,
+                    size: 1.5 + Math.random() * 2
+                });
+            }
+            
+            // Slower glowing core particles
+            for (let i = 0; i < 20; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 3;
+                fireworks.push({
+                    x: x, y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: '#ffffff',
+                    life: 1.0, decay: 0.02 + Math.random() * 0.03,
+                    size: 3 + Math.random() * 3
                 });
             }
         }
 
         function updateAndDrawFireworks(ctx) {
-            if (won && Math.random() < 0.12 && fireworks.length < 150) {
+            if (won && Math.random() < 0.12 && fireworks.length < 250) {
                 spawnExplosion(100 + Math.random() * 660, 50 + Math.random() * 140);
             }
             for (let i = fireworks.length - 1; i >= 0; i--) {
                 const p = fireworks[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += 0.08; // gravity
+                if (!p.isShockwave) {
+                    p.vy += 0.08; // gravity
+                } else {
+                    p.size += (p.maxSize - p.size) * 0.2;
+                }
                 p.life -= p.decay;
                 if (p.life <= 0) {
                     fireworks.splice(i, 1);
@@ -1092,12 +1126,20 @@
                 }
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, p.life);
-                ctx.fillStyle = p.color;
-                ctx.shadowColor = p.color;
-                ctx.shadowBlur = 8;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
+                if (p.isShockwave) {
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = 4 * p.life;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 ctx.restore();
             }
         }
@@ -1257,13 +1299,16 @@
             // 4. Window Lighting Animation Grid
             const cols = Math.max(3, Math.floor(width / 16));
             const rows = 2;
-            const wWidth = isGlass ? 4 : 3;
-            const wHeight = isGlass ? 5 : 4;
+            const pattern = discSize % 3;
+            const wWidth = isGlass ? (pattern === 0 ? 6 : 4) : 3;
+            const wHeight = isGlass ? 5 : (pattern === 1 ? 6 : 4);
             const padX = (width - cols * wWidth) / (cols + 1);
             const padY = (height - rows * wHeight) / (rows + 1);
 
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
+                    if (pattern === 2 && (c + r) % 2 === 0) continue; // Checkered window pattern
+                    
                     const wx = (x - width/2) + padX + c * (wWidth + padX);
                     const wy = y + padY + r * (wHeight + padY);
 
@@ -1332,9 +1377,9 @@
 
             let shakeX = 0, shakeY = 0;
             if (screenShake > 0) {
-                shakeX = (Math.random() - 0.5) * screenShake * 2;
-                shakeY = (Math.random() - 0.5) * screenShake * 2;
-                screenShake *= 0.9;
+                shakeX = Math.sin(globalAnimTime * 2.3) * screenShake;
+                shakeY = Math.cos(globalAnimTime * 2.7) * screenShake;
+                screenShake *= 0.85;
                 if (screenShake < 0.5) screenShake = 0;
             }
             ctx.save();
@@ -1622,9 +1667,10 @@
                     const widthPct = 0.35 + (discSize / numDiscs) * 0.55;
                     const blockWidth = pegAreaWidth * widthPct;
 
-                    // Landing check
+                    // Landing check (Bounce effect + Screen Shake + Dust)
                     if (distBefore > 5.0 && distAfter <= 5.0 && selectedPeg !== pIdx) {
                         screenShake = 12;
+                        discAnimPos[key] = targetY + 4; // slight squash/bounce on land
                         for (let d = 0; d < 15; d++) {
                             dustParticles.push({
                                 x: baseX + (Math.random() - 0.5) * blockWidth,
