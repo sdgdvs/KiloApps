@@ -54,11 +54,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KMystery (Murder mystery deduction game)
-**Phase:** 2 (next to do)
+**Phase:** 3 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KMystery directory (`KMystery/`), create web HTML skeleton (`KiloOS/public/apps/kmystery.html`), register in App.jsx.
-- [ ] Phase 2: Basic UI for detective notebook (suspect list, clues, locations) and core loop of travelling between 3 locations to find clues.
+- [x] Phase 2: Basic UI for detective notebook (suspect list, clues, locations) and core loop of travelling between 3 locations to find clues.
 - [ ] Phase 3: Native C version (`KMystery/main.c`, `build.bat`) using Win32 API with functional parity.
 - [ ] Phase 4: Noir aesthetic styling (black and white, typewriter fonts, shadowy borders).
 - [ ] Phase 5: Implement procedural mystery generation (randomly assign killer, motive, and weapon among suspects).
