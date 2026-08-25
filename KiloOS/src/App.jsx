@@ -61,7 +61,7 @@ const APPS = [
   { id: 'ktodo', title: 'KTodo', url: '/apps/ktodo.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktodo.ico', w: 800, h: 600, folder: 'System' },
   { id: 'kgraph', title: 'KGraph', url: '/apps/kgraph.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kgraph.ico', w: 1024, h: 768, folder: 'System' },
   { id: 'kcontacts', title: 'KContacts', url: '/apps/kcontacts.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcontacts.ico', w: 830, h: 565, folder: 'System' },
-  { id: 'kread', title: 'KRead', url: '/apps/kread.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kread.ico', w: 1000, h: 800, folder: 'System' },
+  { id: 'kread', title: 'KRead', url: '/apps/kread.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kread.ico', w: 800, h: 600, folder: 'System' },
   { id: 'kbase', title: 'KBase', url: '/apps/kbase.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kbase.ico', w: 900, h: 750, folder: 'System' },
   { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/kquarantine.ico', w: 300, h: 200, folder: 'Hidden' },
   { id: 'ksettings', title: 'Settings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksettings.ico', w: 600, h: 500, folder: 'System' },

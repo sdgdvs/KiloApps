@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP â€” loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top â€” the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KRead
 - KJournal
 - KBase
 - KPad
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KGraph
 - KTimer
 - KContacts
+- KRead
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KRead: Usability and UI issues fixed (adjusted App.jsx bounds to 800x600, ensured explicit F1/H Help instructions, enabled crisp native text via negative font heights and WS_CLIPCHILDREN).
 - KContacts: Usability and UI issues fixed (updated App.jsx bounds to 830x565, applied negative font heights and SetProcessDPIAware for crisp native rendering, and ensured explicit Help shortcuts).
 - KCalendar: Usability and UI issues fixed (auto-opening size to 1024x768, DPI_AWARENESS_CONTEXT applied in native C, help toast duration increased to 8s, layout wrapping fixed).
 - KPad: Usability and UI issues fixed (auto-opening size adjusted, DPI awareness enabled for crisp fonts, taskbar visibility fixed, F1 help instructions added to welcome text, floating panel layout adjusted).
