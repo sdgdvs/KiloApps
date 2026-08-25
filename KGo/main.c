@@ -156,8 +156,9 @@ typedef struct {
     float vx, vy;
     int color; // 1 = Black, 2 = White
     int life;
+    int size;
 } SparkParticle;
-#define MAX_SPARKS 64
+#define MAX_SPARKS 256
 SparkParticle sparkParticles[MAX_SPARKS];
 int sparkCount = 0;
 
@@ -759,15 +760,28 @@ void PlaceStone(HWND hwnd, int x, int y) {
         for (int i = 0; i < capturedAnimCount; i++) {
             int cx = 40 + capturedAnimStones[i].x * 30;
             int cy = 40 + capturedAnimStones[i].y * 30;
+            for (int p = 0; p < 16 && sparkCount < MAX_SPARKS; p++) {
+                sparkParticles[sparkCount].x = (float)cx;
+                sparkParticles[sparkCount].y = (float)cy;
+                float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
+                float speed = 2.0f + (float)(rand() % 40) / 10.0f;
+                sparkParticles[sparkCount].vx = cosf(angle) * speed;
+                sparkParticles[sparkCount].vy = sinf(angle) * speed;
+                sparkParticles[sparkCount].color = capturedAnimColor[i];
+                sparkParticles[sparkCount].life = 12 + rand() % 10;
+                sparkParticles[sparkCount].size = 2 + rand() % 3;
+                sparkCount++;
+            }
             for (int p = 0; p < 8 && sparkCount < MAX_SPARKS; p++) {
                 sparkParticles[sparkCount].x = (float)cx;
                 sparkParticles[sparkCount].y = (float)cy;
                 float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
-                float speed = 2.0f + (float)(rand() % 25) / 10.0f;
+                float speed = 0.5f + (float)(rand() % 15) / 10.0f;
                 sparkParticles[sparkCount].vx = cosf(angle) * speed;
                 sparkParticles[sparkCount].vy = sinf(angle) * speed;
-                sparkParticles[sparkCount].color = capturedAnimColor[i];
-                sparkParticles[sparkCount].life = 16;
+                sparkParticles[sparkCount].color = 3; // 3 = white core glow
+                sparkParticles[sparkCount].life = 20 + rand() % 10;
+                sparkParticles[sparkCount].size = 1;
                 sparkCount++;
             }
         }
@@ -1239,6 +1253,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
+            if (captureAnimRadius > 0) {
+                int shakeIntensity = captureAnimRadius / 2;
+                if (shakeIntensity > 0) {
+                    int sx = (rand() % (shakeIntensity * 2 + 1)) - shakeIntensity;
+                    int sy = (rand() % (shakeIntensity * 2 + 1)) - shakeIntensity;
+                    SetViewportOrgEx(hdc, sx, sy, NULL);
+                }
+            }
+
             // Tatami mat texture background floor
             HBRUSH tatamiBrush = CreateSolidBrush(RGB(158, 148, 107));
             FillRect(hdc, &ps.rcPaint, tatamiBrush);
@@ -1487,12 +1510,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             DeleteObject(slatePen);
 
                             // Micro-texture (slate grain)
+                            int pseudoRand = (r * 13 + c * 17) % 360;
+                            float radT = pseudoRand * 3.14159f / 180.0f;
+                            float cosR = cosf(radT);
+                            float sinR = sinf(radT);
                             HPEN grainP = CreatePen(PS_SOLID, 1, RGB(35, 38, 45));
                             SelectObject(hdc, grainP);
                             for(int g=0; g<5; g++) {
-                                int gx = cx - radius + 4 + g*3;
-                                MoveToEx(hdc, gx, cy - radius + 4, NULL);
-                                LineTo(hdc, gx + 2, cy + radius - 4);
+                                float sx = -radius + 4 + g*3;
+                                float sy = -radius + 4;
+                                float ex = sx + 2;
+                                float ey = radius - 4;
+                                MoveToEx(hdc, cx + (int)(sx*cosR - sy*sinR), cy + (int)(sx*sinR + sy*cosR), NULL);
+                                LineTo(hdc, cx + (int)(ex*cosR - ey*sinR), cy + (int)(ex*sinR + ey*cosR));
                             }
                             DeleteObject(grainP);
 
@@ -1514,11 +1544,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             Ellipse(hdc, cx - radius, cy - radius, cx + radius, cy + radius);
                             
                             // Fine clam shell grain lines
+                            int varO = ((r * 13 + c * 17) % 5) - 2;
+                            int varOy = ((r * 11 + c * 19) % 3) - 1;
                             HPEN grainP = CreatePen(PS_SOLID, 1, RGB(220, 210, 195));
                             SelectObject(hdc, grainP);
-                            Arc(hdc, cx - radius + 2, cy - radius + 3, cx + radius - 2, cy + radius + 3, cx - radius + 2, cy, cx + radius - 2, cy);
-                            Arc(hdc, cx - radius + 3, cy - radius + 7, cx + radius - 3, cy + radius + 7, cx - radius + 3, cy + 4, cx + radius - 3, cy + 4);
-                            Arc(hdc, cx - radius + 4, cy - radius + 11, cx + radius - 4, cy + radius + 11, cx - radius + 4, cy + 8, cx + radius - 4, cy + 8);
+                            Arc(hdc, cx - radius + 2 + varO, cy - radius + 3 + varOy, cx + radius - 2 - varO, cy + radius + 3 + varOy, cx - radius + 2 + varO, cy + varOy, cx + radius - 2 - varO, cy + varOy);
+                            Arc(hdc, cx - radius + 3 + varO, cy - radius + 7 + varOy, cx + radius - 3 - varO, cy + radius + 7 + varOy, cx - radius + 3 + varO, cy + 4 + varOy, cx + radius - 3 - varO, cy + 4 + varOy);
+                            Arc(hdc, cx - radius + 4 + varO, cy - radius + 11 + varOy, cx + radius - 4 - varO, cy + radius + 11 + varOy, cx - radius + 4 + varO, cy + 8 + varOy, cx + radius - 4 - varO, cy + 8 + varOy);
                             
                             SelectObject(hdc, oldB);
                             SelectObject(hdc, oldP);
@@ -1613,11 +1645,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int py = (int)sparkParticles[i].y;
                 // Multi-colored sparks for variety
                 COLORREF sparkColor = (sparkParticles[i].color == 1) ? RGB(110, 200 + rand()%55, 255) : RGB(255, 150 + rand()%100, 50 + rand()%50);
-                if (rand() % 4 == 0) sparkColor = RGB(255, 0, 255);
+                if (sparkParticles[i].color == 3) sparkColor = RGB(255, 255, 255);
+                else if (rand() % 4 == 0) sparkColor = RGB(255, 0, 255);
                 HBRUSH sBrush = CreateSolidBrush(sparkColor);
                 SelectObject(hdc, nullPen);
                 SelectObject(hdc, sBrush);
-                int spSize = (sparkParticles[i].life > 8) ? 3 : 2;
+                int spSize = sparkParticles[i].size;
+                if (sparkParticles[i].life < 5) spSize = 1;
                 Ellipse(hdc, px - spSize, py - spSize, px + spSize, py + spSize);
                 DeleteObject(sBrush);
             }

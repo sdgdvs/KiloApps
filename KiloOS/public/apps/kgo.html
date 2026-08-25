@@ -162,12 +162,23 @@
     animation: placeAnim 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
   @keyframes placeAnim {
-    0% { transform: scale(0.3); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% { transform: scale(0.3) rotate(var(--rot, 0deg)); opacity: 0; }
+    100% { transform: scale(1) rotate(var(--rot, 0deg)); opacity: 1; }
   }
   @keyframes captureAnim {
-    0% { transform: scale(1); opacity: 1; filter: brightness(2); }
-    100% { transform: scale(0); opacity: 0; filter: brightness(2); }
+    0% { transform: scale(1) rotate(var(--rot, 0deg)); opacity: 1; filter: brightness(2); }
+    100% { transform: scale(0) rotate(var(--rot, 0deg)); opacity: 0; filter: brightness(2); }
+  }
+  @keyframes screenShake {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-4px, 3px); }
+    40% { transform: translate(3px, -2px); }
+    60% { transform: translate(-2px, 2px); }
+    80% { transform: translate(2px, -1px); }
+    100% { transform: translate(0, 0); }
+  }
+  .shake-anim {
+    animation: screenShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
   }
   .stone.captured {
     animation: captureAnim 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
@@ -764,6 +775,11 @@
 
   function spawnCaptureSparks(stones) {
     if (!stones || !stones.length) return;
+    
+    boardEl.classList.remove('shake-anim');
+    void boardEl.offsetWidth; // trigger reflow
+    boardEl.classList.add('shake-anim');
+
     stones.forEach(s => {
       const cellX = (s.x + 0.5) * 30 + 14;
       const cellY = (s.y + 0.5) * 30 + 14;
@@ -794,6 +810,30 @@
 
         boardEl.appendChild(spark);
         setTimeout(() => spark.remove(), 450);
+      }
+      
+      const dustCount = 8;
+      for (let i = 0; i < dustCount; i++) {
+        const dust = document.createElement('div');
+        dust.className = 'capture-spark';
+        dust.style.width = '3px';
+        dust.style.height = '3px';
+        dust.style.animationDuration = '0.65s';
+        const color = s.color === 'B' ? '#ffffff' : '#ffea00';
+        dust.style.backgroundColor = color;
+        dust.style.boxShadow = `0 0 8px ${color}`;
+        dust.style.left = `${cellX}px`;
+        dust.style.top = `${cellY}px`;
+
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 8 + Math.random() * 15;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
+        dust.style.setProperty('--dx', `${dx}px`);
+        dust.style.setProperty('--dy', `${dy}px`);
+
+        boardEl.appendChild(dust);
+        setTimeout(() => dust.remove(), 650);
       }
     });
   }
@@ -894,6 +934,9 @@
           let shY = ((y - (size-1)/2) * 0.15) + 3;
           stone.style.setProperty('--sh-x', `${shX}px`);
           stone.style.setProperty('--sh-y', `${shY}px`);
+          let pseudoRand = (x * 13 + y * 17) % 360;
+          stone.style.setProperty('--rot', `${pseudoRand}deg`);
+          stone.style.transform = `rotate(${pseudoRand}deg)`;
 
           if (lastMove.x === x && lastMove.y === y) {
             const aura = document.createElement('div');

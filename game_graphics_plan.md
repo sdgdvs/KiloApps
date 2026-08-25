@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KGo
 - KTowers
 - KWords
 - KReversi
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMatch3
 - KFreecell
 - KSudoku
+- KGo
 ## Completed Work Log
+
+- **KGo (Loop 6):** Implemented highly polished visual effects including deterministic pseudo-random stone rotations for distinct micro-textures, procedural screen-shake upon stone captures, and multi-layered particle explosions featuring distinct outer colored sparks and inner glowing dust layers in both Web Canvas (kgo.html) and Native C Win32 GDI (KGo/main.c).
 
 - **KSudoku (Loop 6):** Implemented highly polished visual effects including a kinematic CSS screen-shake animation on error and a deeply varied multi-layered victory particle explosion (Fast Sparks, Medium Stars, Slow Confetti) in Web Canvas (ksudoku.html); and a literal window-position screen-shake on error alongside an upgraded 3-layer GDI particle explosion (with distinct sizes, shapes, and decay) in Native C Win32 GDI (KSudoku/main.c).
 
