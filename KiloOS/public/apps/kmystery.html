@@ -28,7 +28,10 @@
             letter-spacing: 2px;
             color: #fff;
         }
-        #content {
+        .hidden {
+            display: none !important;
+        }
+        #start-screen {
             flex: 1;
             display: flex;
             justify-content: center;
@@ -36,6 +39,40 @@
         }
         .container {
             text-align: center;
+        }
+        #game-screen {
+            flex: 1;
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            box-sizing: border-box;
+        }
+        .panel {
+            background-color: #222;
+            border: 1px solid #444;
+            padding: 20px;
+            border-radius: 4px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        h2, h3 {
+            margin-top: 0;
+            color: #fff;
+        }
+        h2 {
+            border-bottom: 1px dashed #555;
+            padding-bottom: 5px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+        }
+        li {
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
         }
         button {
             background-color: #333;
@@ -46,9 +83,29 @@
             cursor: pointer;
             font-family: inherit;
             transition: background 0.2s;
+            margin: 5px 0;
         }
-        button:hover {
+        button:hover:not(:disabled) {
             background-color: #555;
+        }
+        button:disabled {
+            color: #777;
+            cursor: not-allowed;
+            background-color: #222;
+        }
+        #travel-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #location-description {
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        #action-area {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #555;
         }
     </style>
 </head>
@@ -56,16 +113,152 @@
     <div id="header">
         <h1>KMystery</h1>
     </div>
-    <div id="content">
+    
+    <div id="start-screen">
         <div class="container">
             <p>Detective, a murder has occurred.</p>
             <button onclick="startGame()">Start Investigation</button>
         </div>
     </div>
+    
+    <div id="game-screen" class="hidden">
+        <div class="panel" id="main-panel">
+            <h2>Location: <span id="current-location">Office</span></h2>
+            <div id="location-description">
+                You are in your office. The phone just rang about a murder.
+            </div>
+            <div id="action-area">
+                <button id="search-btn" onclick="searchLocation()">Search for Clues</button>
+            </div>
+            <h3>Travel</h3>
+            <div id="travel-buttons">
+                <!-- Travel buttons generated here -->
+            </div>
+        </div>
+        
+        <div class="panel" id="notebook-panel">
+            <h2>Notebook</h2>
+            <h3>Suspects</h3>
+            <ul id="suspect-list">
+                <li>No suspects yet.</li>
+            </ul>
+            <h3>Clues</h3>
+            <ul id="clue-list">
+                <li>No clues found.</li>
+            </ul>
+        </div>
+    </div>
+
     <script>
+        const state = {
+            currentLocation: 'Office',
+            locations: {
+                'Office': {
+                    desc: 'Your dingy office. Dust motes dance in the light filtering through the blinds.',
+                    searched: false,
+                    clue: 'A note slipped under the door: "Check The Manor."',
+                    clueFound: false
+                },
+                'The Manor': {
+                    desc: 'The sprawling estate where the victim was found. Yellow police tape blocks the study.',
+                    searched: false,
+                    clue: 'A muddy footprint near the window matching a size 10 boot.',
+                    clueFound: false
+                },
+                'The Docks': {
+                    desc: 'Smells like salt and secrets. The fog here is thick enough to cut with a knife.',
+                    searched: false,
+                    clue: 'A torn shipping manifest listing illegal cargo.',
+                    clueFound: false
+                }
+            },
+            suspects: [
+                'Mr. Black',
+                'Miss Scarlet',
+                'Colonel Mustard'
+            ],
+            foundClues: [],
+            knownSuspects: []
+        };
+
         function startGame() {
-            document.querySelector('.container').innerHTML = '<p>Loading case files...</p>';
-            // Core logic to be added in Phase 2
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            // Add suspects to notebook
+            state.knownSuspects = [...state.suspects];
+            
+            updateNotebook();
+            updateLocation();
+        }
+
+        function updateLocation() {
+            const loc = state.locations[state.currentLocation];
+            document.getElementById('current-location').textContent = state.currentLocation;
+            document.getElementById('location-description').textContent = loc.desc;
+            
+            const searchBtn = document.getElementById('search-btn');
+            if (loc.searched) {
+                searchBtn.disabled = true;
+                searchBtn.textContent = "Already searched";
+            } else {
+                searchBtn.disabled = false;
+                searchBtn.textContent = "Search for Clues";
+            }
+
+            renderTravelButtons();
+        }
+
+        function searchLocation() {
+            const loc = state.locations[state.currentLocation];
+            if (!loc.searched) {
+                loc.searched = true;
+                if (loc.clue) {
+                    loc.clueFound = true;
+                    state.foundClues.push(`[${state.currentLocation}] ${loc.clue}`);
+                    alert(`You found a clue: ${loc.clue}`);
+                } else {
+                    alert("You didn't find anything useful here.");
+                }
+                updateLocation();
+                updateNotebook();
+            }
+        }
+
+        function travel(locationName) {
+            if (state.locations[locationName]) {
+                state.currentLocation = locationName;
+                updateLocation();
+            }
+        }
+
+        function renderTravelButtons() {
+            const container = document.getElementById('travel-buttons');
+            container.innerHTML = '';
+            for (const loc in state.locations) {
+                if (loc !== state.currentLocation) {
+                    const btn = document.createElement('button');
+                    btn.textContent = `Travel to ${loc}`;
+                    btn.onclick = () => travel(loc);
+                    container.appendChild(btn);
+                }
+            }
+        }
+
+        function updateNotebook() {
+            const suspectList = document.getElementById('suspect-list');
+            if (state.knownSuspects.length > 0) {
+                suspectList.innerHTML = state.knownSuspects.map(s => `<li>${s}</li>`).join('');
+            } else {
+                suspectList.innerHTML = '<li>No suspects yet.</li>';
+            }
+
+            const clueList = document.getElementById('clue-list');
+            if (state.foundClues.length > 0) {
+                clueList.innerHTML = state.foundClues.map(c => `<li>${c}</li>`).join('');
+            } else {
+                clueList.innerHTML = '<li>No clues found.</li>';
+            }
         }
     </script>
 </body>
