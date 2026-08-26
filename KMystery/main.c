@@ -56,9 +56,9 @@ void my_strcpy(char* dest, const char* src) {
 #define ID_CMB_MOTIVE 1023
 #define ID_CMB_WEAPON 1024
 
-HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, hBtnTravelDocks;
+HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, hBtnTravelDocks, hBtnTravelCasino, hBtnTravelStation;
 HWND hSuspectTitle, hListSuspects, hClueTitle, hListClues, hUnanalyzedTitle, hListUnanalyzed;
-HWND hStartPanel, hBtnStart, hStartDesc;
+HWND hStartPanel, hBtnStart, hBtnStartMed, hBtnStartHard, hStartDesc;
 HWND hBtnInterrogate, hIntDesc, hBtnAskAlibi, hBtnPresentClue, hBtnEndInt;
 HWND hBtnLab, hLabTitle, hBtnAnalyze, hBtnLeaveLab;
 HWND hScanDesc, hBtnScan11, hBtnScan7, hBtnScanM3;
@@ -67,9 +67,10 @@ HWND hTimeLeft;
 HFONT hFont, hFontBold, hFontTitle;
 
 int timeLeft = 12;
+int activeItems = 3;
 
 int currentState = 0; // 0 = start, 1 = playing
-int currentLocation = 0; // 0 = Office, 1 = Manor, 2 = Docks
+int currentLocation = 0;
 
 typedef struct {
     char name[32];
@@ -80,16 +81,20 @@ typedef struct {
     int suspectIdx;
 } Location;
 
-Location locations[3] = {
+Location locations[5] = {
     {"Office", "Your dingy office. Dust motes dance in the light filtering through the blinds.", "", 0, 0, -1},
     {"The Manor", "The sprawling estate where the victim was found. Yellow police tape blocks the study.", "", 0, 0, -1},
-    {"The Docks", "Smells like salt and secrets. The fog here is thick enough to cut with a knife.", "", 0, 0, -1}
+    {"The Docks", "Smells like salt and secrets. The fog here is thick enough to cut with a knife.", "", 0, 0, -1},
+    {"The Casino", "Flashy lights and the smell of cheap gin. Money changes hands quickly here.", "", 0, 0, -1},
+    {"Train Station", "Bustling with travelers, but a secluded corner holds dark secrets.", "", 0, 0, -1}
 };
 
-char* suspects[] = {
+char* suspects[5] = {
     "Mr. Black",
     "Miss Scarlet",
-    "Colonel Mustard"
+    "Colonel Mustard",
+    "Mrs. White",
+    "Professor Plum"
 };
 
 typedef struct {
@@ -100,14 +105,14 @@ typedef struct {
 
 Solution currentSolution;
 
-int suspectPatience[3];
-char suspectAlibis[3][128];
+int suspectPatience[5];
+char suspectAlibis[5][128];
 
 typedef struct {
     int locIdx;
     char clue[128];
 } Unanalyzed;
-Unanalyzed unanalyzed[3];
+Unanalyzed unanalyzed[5];
 int numUnanalyzed = 0;
 
 int scanTarget = 0;
@@ -121,10 +126,12 @@ int my_rand() {
     return (unsigned int)(my_seed / 65536) % 32768;
 }
 
-char* killerClues[] = {
+char* killerClues[5] = {
     "A cufflink with an onyx stone.",
     "A faint scent of expensive rose perfume.",
-    "A polished brass military button."
+    "A polished brass military button.",
+    "A pristine white glove.",
+    "A broken pair of spectacles."
 };
 
 char* motiveClues[] = {
@@ -141,17 +148,19 @@ char* weaponClues[] = {
 
 void GenerateMystery() {
     my_seed = GetTickCount();
-    currentSolution.killerIdx = my_rand() % 3;
+    currentSolution.killerIdx = my_rand() % activeItems;
     currentSolution.motiveIdx = my_rand() % 3;
     currentSolution.weaponIdx = my_rand() % 3;
     
-    char* clues[3];
+    char* clues[5] = {"", "", "", "", ""};
     clues[0] = killerClues[currentSolution.killerIdx];
     clues[1] = motiveClues[currentSolution.motiveIdx];
     clues[2] = weaponClues[currentSolution.weaponIdx];
     
-    int sus[3] = {0, 1, 2};
-    for (int i = 2; i > 0; i--) {
+    int sus[5];
+    for (int i=0; i<activeItems; i++) sus[i] = i;
+    
+    for (int i = activeItems - 1; i > 0; i--) {
         int j = my_rand() % (i + 1);
         char* temp = clues[i];
         clues[i] = clues[j];
@@ -162,24 +171,28 @@ void GenerateMystery() {
         sus[j] = ts;
     }
     
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < activeItems; i++) {
         my_strcpy(locations[i].clue, clues[i]);
         locations[i].searched = 0;
         locations[i].clueFound = 0;
         locations[i].suspectIdx = sus[i];
     }
     
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < activeItems; i++) {
         suspectPatience[i] = 3;
     }
 
     int killerIdx = currentSolution.killerIdx;
-    int innocent1 = (killerIdx + 1) % 3;
-    int innocent2 = (killerIdx + 2) % 3;
+    int innocent[4];
+    int numInnocent = 0;
+    for (int i=0; i<activeItems; i++) {
+        if (i != killerIdx) innocent[numInnocent++] = i;
+    }
 
-    wsprintfA(suspectAlibis[innocent1], "\"I was with %s the whole time.\"", suspects[innocent2]);
-    wsprintfA(suspectAlibis[innocent2], "\"I was with %s the whole time.\"", suspects[innocent1]);
-    wsprintfA(suspectAlibis[killerIdx], "\"I was with %s.\"", suspects[innocent1]);
+    for (int i=0; i<numInnocent; i++) {
+        wsprintfA(suspectAlibis[innocent[i]], "\"I was with %s the whole time.\"", suspects[innocent[(i+1)%numInnocent]]);
+    }
+    wsprintfA(suspectAlibis[killerIdx], "\"I was with %s.\"", suspects[innocent[0]]);
 }
 
 void UpdateUI() {
@@ -187,6 +200,8 @@ void UpdateUI() {
         ShowWindow(hStartPanel, SW_SHOW);
         ShowWindow(hStartDesc, SW_SHOW);
         ShowWindow(hBtnStart, SW_SHOW);
+        ShowWindow(hBtnStartMed, SW_SHOW);
+        ShowWindow(hBtnStartHard, SW_SHOW);
         
         ShowWindow(hTimeLeft, SW_HIDE);
         ShowWindow(hTitle, SW_HIDE);
@@ -197,6 +212,8 @@ void UpdateUI() {
         ShowWindow(hBtnTravelOffice, SW_HIDE);
         ShowWindow(hBtnTravelManor, SW_HIDE);
         ShowWindow(hBtnTravelDocks, SW_HIDE);
+        ShowWindow(hBtnTravelCasino, SW_HIDE);
+        ShowWindow(hBtnTravelStation, SW_HIDE);
         ShowWindow(hSuspectTitle, SW_HIDE);
         ShowWindow(hListSuspects, SW_HIDE);
         ShowWindow(hClueTitle, SW_HIDE);
@@ -231,6 +248,8 @@ void UpdateUI() {
         ShowWindow(hStartPanel, SW_HIDE);
         ShowWindow(hStartDesc, SW_HIDE);
         ShowWindow(hBtnStart, SW_HIDE);
+        ShowWindow(hBtnStartMed, SW_HIDE);
+        ShowWindow(hBtnStartHard, SW_HIDE);
         
         ShowWindow(hTimeLeft, SW_SHOW);
         ShowWindow(hTitle, SW_SHOW);
@@ -241,6 +260,8 @@ void UpdateUI() {
         ShowWindow(hBtnTravelOffice, SW_SHOW);
         ShowWindow(hBtnTravelManor, SW_SHOW);
         ShowWindow(hBtnTravelDocks, SW_SHOW);
+        ShowWindow(hBtnTravelCasino, activeItems > 3 ? SW_SHOW : SW_HIDE);
+        ShowWindow(hBtnTravelStation, activeItems > 4 ? SW_SHOW : SW_HIDE);
         ShowWindow(hSuspectTitle, SW_SHOW);
         ShowWindow(hListSuspects, SW_SHOW);
         ShowWindow(hClueTitle, SW_SHOW);
@@ -292,12 +313,16 @@ void UpdateUI() {
         EnableWindow(hBtnTravelOffice, currentLocation != 0);
         EnableWindow(hBtnTravelManor, currentLocation != 1);
         EnableWindow(hBtnTravelDocks, currentLocation != 2);
-    } else if (currentState == 2) {
+        EnableWindow(hBtnTravelCasino, currentLocation != 3);
+        EnableWindow(hBtnTravelStation, currentLocation != 4);
+    } else if (currentState >= 2) {
         ShowWindow(hBtnSearch, SW_HIDE);
         ShowWindow(hBtnInterrogate, SW_HIDE);
         ShowWindow(hBtnTravelOffice, SW_HIDE);
         ShowWindow(hBtnTravelManor, SW_HIDE);
         ShowWindow(hBtnTravelDocks, SW_HIDE);
+        ShowWindow(hBtnTravelCasino, SW_HIDE);
+        ShowWindow(hBtnTravelStation, SW_HIDE);
         ShowWindow(hBtnLab, SW_HIDE);
         ShowWindow(hBtnAccuse, SW_HIDE);
         
@@ -386,20 +411,28 @@ void UpdateUI() {
     }
 }
 
-void StartGame() {
+void StartGame(int items, int time) {
+    activeItems = items;
     GenerateMystery();
     currentState = 1;
-    timeLeft = 12;
+    timeLeft = time;
     char timeBuf[64];
     wsprintfA(timeBuf, "Time Left: %dh", timeLeft);
     SetWindowTextA(hTimeLeft, timeBuf);
     numUnanalyzed = 0;
+    currentLocation = 0;
     SendMessageA(hListSuspects, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListClues, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListUnanalyzed, LB_RESETCONTENT, 0, 0);
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < activeItems; i++) {
         SendMessageA(hListSuspects, LB_ADDSTRING, 0, (LPARAM)suspects[i]);
     }
+    SendMessageA(hCmbSuspect, CB_RESETCONTENT, 0, 0);
+    for (int i = 0; i < activeItems; i++) {
+        SendMessageA(hCmbSuspect, CB_ADDSTRING, 0, (LPARAM)suspects[i]);
+    }
+    SendMessageA(hCmbSuspect, CB_SETCURSEL, 0, 0);
+
     UpdateUI();
 }
 
@@ -448,6 +481,11 @@ void Travel(int loc) {
     UpdateUI();
 }
 
+#define ID_BTN_START_MED 1025
+#define ID_BTN_START_HARD 1026
+#define ID_BTN_TRAVEL_CASINO 1027
+#define ID_BTN_TRAVEL_STATION 1028
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -458,7 +496,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Start Screen
             hStartPanel = CreateWindowA("STATIC", "", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hStartDesc = CreateWindowA("STATIC", "Detective, a murder has occurred.", WS_CHILD | WS_VISIBLE | SS_CENTER, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hBtnStart = CreateWindowA("BUTTON", "Start Investigation", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START, NULL, NULL);
+            hBtnStart = CreateWindowA("BUTTON", "Start Easy (3 Suspects)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START, NULL, NULL);
+            hBtnStartMed = CreateWindowA("BUTTON", "Start Medium (4 Suspects)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START_MED, NULL, NULL);
+            hBtnStartHard = CreateWindowA("BUTTON", "Start Hard (5 Suspects)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START_HARD, NULL, NULL);
 
             // Game Screen
             hTimeLeft = CreateWindowA("STATIC", "Time Left: 12h", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
@@ -471,6 +511,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnTravelOffice = CreateWindowA("BUTTON", "Travel to Office", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_OFFICE, NULL, NULL);
             hBtnTravelManor = CreateWindowA("BUTTON", "Travel to The Manor", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_MANOR, NULL, NULL);
             hBtnTravelDocks = CreateWindowA("BUTTON", "Travel to The Docks", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_DOCKS, NULL, NULL);
+            hBtnTravelCasino = CreateWindowA("BUTTON", "Travel to The Casino", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_CASINO, NULL, NULL);
+            hBtnTravelStation = CreateWindowA("BUTTON", "Travel to Train Station", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_STATION, NULL, NULL);
             
             hBtnLab = CreateWindowA("BUTTON", "Evidence Lab", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LAB, NULL, NULL);
             hLabTitle = CreateWindowA("STATIC", "Evidence Lab", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
@@ -537,6 +579,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hStartPanel, 0, 0, cx, cy, TRUE);
                 MoveWindow(hStartDesc, cx/2 - 150, cy/2 - 50, 300, 30, TRUE);
                 MoveWindow(hBtnStart, cx/2 - 100, cy/2 - 10, 200, 40, TRUE);
+                MoveWindow(hBtnStartMed, cx/2 - 100, cy/2 + 40, 200, 40, TRUE);
+                MoveWindow(hBtnStartHard, cx/2 - 100, cy/2 + 90, 200, 40, TRUE);
             } else {
                 int headerH = 40;
                 int pad = 20;
@@ -558,6 +602,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hBtnTravelOffice, pad, travelY, 200, 30, TRUE);
                 MoveWindow(hBtnTravelManor, pad, travelY + 40, 200, 30, TRUE);
                 MoveWindow(hBtnTravelDocks, pad, travelY + 80, 200, 30, TRUE);
+                MoveWindow(hBtnTravelCasino, pad, travelY + 120, 200, 30, TRUE);
+                MoveWindow(hBtnTravelStation, pad, travelY + 160, 200, 30, TRUE);
                 
                 MoveWindow(hIntDesc, pad, travelY, leftW - pad, 60, TRUE);
                 MoveWindow(hBtnAskAlibi, pad, travelY + 70, 150, 30, TRUE);
@@ -602,7 +648,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_COMMAND: {
             WORD id = LOWORD(wParam);
             if (id == ID_BTN_START) {
-                StartGame();
+                StartGame(3, 16);
+                RECT r;
+                GetClientRect(hwnd, &r);
+                SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
+            } else if (id == ID_BTN_START_MED) {
+                StartGame(4, 12);
+                RECT r;
+                GetClientRect(hwnd, &r);
+                SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
+            } else if (id == ID_BTN_START_HARD) {
+                StartGame(5, 8);
                 RECT r;
                 GetClientRect(hwnd, &r);
                 SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
@@ -617,6 +673,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == ID_BTN_TRAVEL_DOCKS) {
                 if (currentLocation != 2 && AdvanceTime(hwnd, 1)) break;
                 Travel(2);
+            } else if (id == ID_BTN_TRAVEL_CASINO) {
+                if (currentLocation != 3 && AdvanceTime(hwnd, 1)) break;
+                Travel(3);
+            } else if (id == ID_BTN_TRAVEL_STATION) {
+                if (currentLocation != 4 && AdvanceTime(hwnd, 1)) break;
+                Travel(4);
             } else if (id == ID_BTN_INTERROGATE) {
                 if (AdvanceTime(hwnd, 1)) break;
                 currentState = 2;

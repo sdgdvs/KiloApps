@@ -150,6 +150,14 @@
     <div id="start-screen">
         <div class="container">
             <p>Detective, a murder has occurred.</p>
+            <div style="margin: 15px 0;">
+                <label for="difficulty">Difficulty:</label>
+                <select id="difficulty" style="background:#222; color:#fff; border:1px solid #444; padding:5px;">
+                    <option value="Easy">Easy (3 suspects, 16h)</option>
+                    <option value="Medium">Medium (4 suspects, 12h)</option>
+                    <option value="Hard">Hard (5 suspects, 8h)</option>
+                </select>
+            </div>
             <button onclick="startGame()">Start Investigation</button>
         </div>
     </div>
@@ -225,32 +233,8 @@
         const state = {
             currentLocation: 'Office',
             timeLeft: 12,
-            locations: {
-                'Office': {
-                    desc: 'Your dingy office. Dust motes dance in the light filtering through the blinds.',
-                    searched: false,
-                    clue: '',
-                    clueFound: false
-                },
-                'The Manor': {
-                    desc: 'The sprawling estate where the victim was found. Yellow police tape blocks the study.',
-                    searched: false,
-                    clue: '',
-                    clueFound: false
-                },
-                'The Docks': {
-                    desc: 'Smells like salt and secrets. The fog here is thick enough to cut with a knife.',
-                    searched: false,
-                    clue: '',
-                    clueFound: false,
-                    suspect: null
-                }
-            },
-            suspects: [
-                'Mr. Black',
-                'Miss Scarlet',
-                'Colonel Mustard'
-            ],
+            locations: {},
+            suspects: [],
             foundClues: [],
             unanalyzedClues: [],
             knownSuspects: [],
@@ -259,13 +243,25 @@
             patience: {}
         };
 
+        const allLocations = [
+            { name: 'Office', desc: 'Your dingy office. Dust motes dance in the light filtering through the blinds.' },
+            { name: 'The Manor', desc: 'The sprawling estate where the victim was found. Yellow police tape blocks the study.' },
+            { name: 'The Docks', desc: 'Smells like salt and secrets. The fog here is thick enough to cut with a knife.' },
+            { name: 'The Casino', desc: 'Flashy lights and the smell of cheap gin. Money changes hands quickly here.' },
+            { name: 'Train Station', desc: 'Bustling with travelers, but a secluded corner holds dark secrets.' }
+        ];
+
+        const allSuspects = ['Mr. Black', 'Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Professor Plum'];
+
         const motives = ['Revenge', 'Greed', 'Jealousy'];
         const weapons = ['Revolver', 'Poison', 'Lead Pipe'];
         
         const killerClueMap = {
             'Mr. Black': 'A cufflink with an onyx stone.',
             'Miss Scarlet': 'A faint scent of expensive rose perfume.',
-            'Colonel Mustard': 'A polished brass military button.'
+            'Colonel Mustard': 'A polished brass military button.',
+            'Mrs. White': 'A pristine white glove.',
+            'Professor Plum': 'A broken pair of spectacles.'
         };
         const motiveClueMap = {
             'Revenge': 'A crumpled letter swearing vengeance.',
@@ -279,6 +275,20 @@
         };
 
         function generateMystery() {
+            const diff = document.getElementById('difficulty').value;
+            let numItems = 3;
+            let time = 16;
+            if (diff === 'Medium') { numItems = 4; time = 12; }
+            else if (diff === 'Hard') { numItems = 5; time = 8; }
+            
+            state.suspects = allSuspects.slice(0, numItems);
+            state.locations = {};
+            for (let i = 0; i < numItems; i++) {
+                state.locations[allLocations[i].name] = { desc: allLocations[i].desc, searched: false, clue: '', clueFound: false, suspect: null };
+            }
+            state.currentLocation = 'Office';
+            state.timeLeft = time;
+
             const killer = state.suspects[Math.floor(Math.random() * state.suspects.length)];
             const motive = motives[Math.floor(Math.random() * motives.length)];
             const weapon = weapons[Math.floor(Math.random() * weapons.length)];
@@ -290,6 +300,7 @@
                 motiveClueMap[motive],
                 weaponClueMap[weapon]
             ];
+            while (clues.length < numItems) clues.push('');
             
             // Shuffle clues
             for (let i = clues.length - 1; i > 0; i--) {
@@ -300,10 +311,8 @@
             const shuffledSuspects = [...state.suspects].sort(() => Math.random() - 0.5);
             
             const locKeys = Object.keys(state.locations);
-            for(let i = 0; i < 3; i++) {
+            for(let i = 0; i < numItems; i++) {
                 state.locations[locKeys[i]].clue = clues[i];
-                state.locations[locKeys[i]].searched = false;
-                state.locations[locKeys[i]].clueFound = false;
                 state.locations[locKeys[i]].suspect = shuffledSuspects[i];
             }
             state.foundClues = [];
@@ -314,8 +323,9 @@
             state.alibis = {};
             state.patience = {};
             
-            state.alibis[innocent[0]] = `"I was with ${innocent[1]} the whole time."`;
-            state.alibis[innocent[1]] = `"I was with ${innocent[0]} the whole time."`;
+            for (let i = 0; i < innocent.length; i++) {
+                state.alibis[innocent[i]] = `"I was with ${innocent[(i + 1) % innocent.length]} the whole time."`;
+            }
             state.alibis[killer] = `"I was with ${innocent[0]}."`;
             
             state.suspects.forEach(s => state.patience[s] = 3);
@@ -327,7 +337,6 @@
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
             
-            state.timeLeft = 12;
             document.getElementById('time-left').textContent = state.timeLeft;
             
             // Add suspects to notebook
