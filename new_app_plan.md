@@ -53,24 +53,24 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KMystery (Murder mystery deduction game)
-**Phase:** 14 (next to do)
+**App:** KColosseum (Gladiator management RPG)
+**Phase:** 1 (next to do)
 **Status:** Creation
 
-- [x] Phase 1: Scaffold KMystery directory (`KMystery/`), create web HTML skeleton (`KiloOS/public/apps/kmystery.html`), register in App.jsx.
-- [x] Phase 2: Basic UI for detective notebook (suspect list, clues, locations) and core loop of travelling between 3 locations to find clues.
-- [x] Phase 3: Native C version (`KMystery/main.c`, `build.bat`) using Win32 API with functional parity.
-- [x] Phase 4: Noir aesthetic styling (black and white, typewriter fonts, shadowy borders).
-- [x] Phase 5: Implement procedural mystery generation (randomly assign killer, motive, and weapon among suspects).
-- [x] Phase 6: Interrogation system (choose dialogue options to question suspects and catch them in lies based on clues).
-- [x] Phase 7: Evidence lab mini-game (analyze found objects to extract usable clues like fingerprints or chemical traces).
-- [x] Phase 8: Time limit mechanics (actions take time; solve the case before the killer strikes again or escapes).
-- [x] Phase 9: Advanced Suspect AI (suspects have alibis that must be cross-referenced, and may refuse to talk if intimidated).
-- [x] Phase 10: Accusation system (present the correct suspect, motive, and weapon in a final showdown; failure means game over).
-- [x] Phase 11: Multiple difficulty levels (Easy/Medium/Hard) increasing the number of suspects, locations, and reducing time limit.
-- [x] Phase 12: High score tracking (fastest solves, highest accuracy, zero-penalty solves) and detective ranks.
-- [x] Phase 13: Sound Effects — rain ambiance, typewriter clacks, dramatic chords for revelations (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Detective's Manual — How-to-play, interrogation tips, evidence guide.
+- [ ] Phase 1: Scaffold KColosseum directory (`KColosseum/`), create web HTML skeleton (`KiloOS/public/apps/kcolosseum.html`), register in App.jsx.
+- [ ] Phase 2: Basic UI for gladiator ludus (stable) management, showing funds, and a list of available gladiators to buy.
+- [ ] Phase 3: Native C version (`KColosseum/main.c`, `build.bat`) using Win32 API with functional parity.
+- [ ] Phase 4: Roman/Gladiator aesthetic styling (marble textures, serif fonts, gold/crimson accents).
+- [ ] Phase 5: Implement gladiator stats (Strength, Agility, Vitality) and basic procedural generation of recruits.
+- [ ] Phase 6: Implement training system (spend funds and time to increase gladiator stats).
+- [ ] Phase 7: Arena combat system (turn-based tactical battles against AI opponents).
+- [ ] Phase 8: Equipment system (buy and equip weapons like gladius/trident, armor, and shields to alter stats).
+- [ ] Phase 9: Injury and healing system (gladiators take damage, require time and funds to heal, or die permanently).
+- [ ] Phase 10: Arena league progression (climb through local pits to the grand Colosseum, facing tougher opponents).
+- [ ] Phase 11: Special battle events (fight multiple enemies, wild beasts like lions, or chariot battles).
+- [ ] Phase 12: Crowd favor mechanic (perform spectacular moves to win crowd favor, unlocking special rewards).
+- [ ] Phase 13: Sound Effects — cheering crowds, sword clashes, and victory fanfares (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Lanista's Guide — How-to-play, combat tactics, equipment reference.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KMystery (Phase 14 completed: Added Comprehensive Help & Detective's Manual to both versions)
 - KTrader (Phase 14 completed: Added Comprehensive Help & Captain's Log to both versions)
 - KCyber (Phase 14 completed: Added Comprehensive Help & Runner's Guide to both versions)
 - KMech (Phase 14 completed: Added Comprehensive Help & Pilot's Manual to both versions)
@@ -170,7 +171,8 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KColosseum** — Gladiator management RPG. Buy, train, equip gladiators, fight in tactical arena battles to earn glory.
+- **KStellar** — Space exploration and trading RPG. Pilot a ship, trade goods, upgrade modules, and discover new star systems.
+- **KSanctuary** — Base-building survival game in a post-apocalyptic wasteland. Manage resources, defend against raids, and research tech.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.
