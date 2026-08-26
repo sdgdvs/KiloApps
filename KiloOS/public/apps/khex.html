@@ -494,7 +494,7 @@
     <div class="header-actions">
       <div class="badge" id="endianBadge">LE (Little Endian)</div>
       <button class="btn btn-sm" id="toggleEndianBtn">Swap Endianness</button>
-      <button class="btn btn-sm btn-cyan" onclick="toggleHelp()">Help [H]</button>
+      <button class="btn btn-sm btn-cyan" onclick="toggleHelp()">Help [F1/H]</button>
     </div>
   </div>
 
@@ -707,7 +707,7 @@
     <span id="statusOffset">Offset: 0x00000000 (0)</span>
     <span id="statusSelected">Selection: None</span>
     <span id="statusLength">Total Length: 0 Bytes</span>
-    <span style="color: var(--accent-cyan);">Press 'h' for Help</span>
+    <span style="color: var(--accent-cyan);">Press F1 or 'h' for Help</span>
   </div>
 
   <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
@@ -720,7 +720,7 @@
         <li><b>Search & Replace:</b> Find patterns in ASCII or Hex.</li>
         <li><b>Operations:</b> Manipulate bytes (endian swap, invert, etc).</li>
       </ul>
-      <p style="color: var(--text-secondary); font-size: 0.85rem;">Press 'h' or 'Escape' to close this help.</p>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Press F1, 'h', or 'Escape' to close this help.</p>
       <button class="btn btn-primary" onclick="toggleHelp()">Close</button>
     </div>
   </div>
@@ -737,7 +737,7 @@
   // Initialize UI
   document.addEventListener('DOMContentLoaded', () => {
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 850, height: 750 }, '*');
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 860, height: 780 }, '*');
     }
     initBitGrid();
     updateFromHex(document.getElementById('hexInput').value);
@@ -747,11 +747,9 @@
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'h' || e.key === 'H') {
-      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-        toggleHelp();
-        e.preventDefault();
-      }
+    if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
+      toggleHelp();
+      e.preventDefault();
     }
     if (e.key === 'Escape') {
       document.getElementById('helpModal').style.display = 'none';
