@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KTetris
 - KCyber
 - KBreakout
 - KMaze
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSpace
 - KPac
 - KSnake
+- KTetris
 ## Completed Work Log
+
+- **KTetris (Loop 7):** Implemented highly polished visual effects including multi-layered particle explosions (sparks, smoke, and flying fragments) for bombs and active skills, and enhanced kinematically animated visual effects for hard drops featuring vertical streaks and dense smoke/fragment bursts upon impact in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
 - **KSnake (Loop 7):** Implemented highly polished visual effects including multi-layered kinematically animated particle explosions for special berries and boss defeats, dramatically increased procedural screen-shake intensity for crashes and poison, and expanded particle system capacities in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 

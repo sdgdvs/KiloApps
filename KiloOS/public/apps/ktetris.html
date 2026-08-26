@@ -255,8 +255,8 @@
       return !!localStorage.getItem('ktetris_saved_game');
   }
 
-  function addParticle(x, y, vx, vy, color, size = 3, life = 20) {
-      particles.push({x, y, vx, vy, color, size, life, maxLife: life});
+  function addParticle(x, y, vx, vy, color, size = 3, life = 20, type = 0) {
+      particles.push({x, y, vx, vy, color, size, life, maxLife: life, type});
   }
 
   function addPopup(x, y, text, color = '#ffffff') {
@@ -272,7 +272,7 @@
           let vx = (randomFloat() - 0.5) * 7;
           let vy = (randomFloat() - 0.5) * 7;
           let pColors = ['#ffffff', '#ffff55', '#00ffff', '#ff9900', '#ff33ff'];
-          addParticle(px, py, vx, vy, pColors[Math.floor(randomFloat() * pColors.length)], randomFloat() * 3 + 2, 25);
+          addParticle(px, py, vx, vy, pColors[Math.floor(randomFloat() * pColors.length)], randomFloat() * 3 + 2, 25, 0);
       }
   }
 
@@ -287,12 +287,16 @@
   function spawnDropParticles(gridX, startY, endY, colorVal) {
       const pColor = colors[colorVal] || '#ffffff';
       for (let y = Math.max(0, startY); y <= endY; y++) {
-          for (let i = 0; i < 2; i++) {
-              addParticle((gridX + randomFloat()) * CELL, y * CELL + randomFloat() * CELL, (randomFloat() - 0.5) * 2, -randomFloat() * 2 - 1, pColor, 2, 14);
+          for (let i = 0; i < 3; i++) {
+              addParticle((gridX + randomFloat()) * CELL, y * CELL + randomFloat() * CELL, 0, -randomFloat() * 8 - 4, pColor, 1.5, 10, 0); // vertical streak fast sparks
           }
       }
       for (let i = 0; i < 16; i++) {
-          addParticle((gridX + 0.5) * CELL + (randomFloat() - 0.5) * CELL * 2, endY * CELL + CELL, (randomFloat() - 0.5) * 6, (randomFloat() - 0.5) * 4 - 2, pColor, 3, 20);
+          addParticle((gridX + 0.5) * CELL + (randomFloat() - 0.5) * CELL * 2, endY * CELL + CELL, (randomFloat() - 0.5) * 6, (randomFloat() - 0.5) * 4 - 2, pColor, 3, 20, 2);
+      }
+      // Add a smoke cloud at bottom
+      for (let i = 0; i < 8; i++) {
+          addParticle((gridX + 0.5) * CELL + (randomFloat() - 0.5) * CELL * 3, endY * CELL + CELL, (randomFloat() - 0.5) * 8, -randomFloat() * 2, 'rgba(255,255,255,0.3)', 6, 25, 1);
       }
   }
 
@@ -342,7 +346,9 @@
           for (let x = 0; x < W; x++) {
               if (grid[rY][x] > 0) {
                   let pCol = colors[grid[rY][x]];
-                  for (let p = 0; p < 3; p++) addParticle((x + 0.5) * CELL, (rY + 0.5) * CELL, (randomFloat() - 0.5) * 8, -randomFloat() * 6 - 2, pCol, 3, 20);
+                  for (let p = 0; p < 4; p++) addParticle((x + 0.5) * CELL, (rY + 0.5) * CELL, (randomFloat() - 0.5) * 10, -randomFloat() * 8 - 2, pCol, 2, 20, 0);
+                  for (let p = 0; p < 2; p++) addParticle((x + 0.5) * CELL, (rY + 0.5) * CELL, (randomFloat() - 0.5) * 4, -randomFloat() * 4, 'rgba(255,100,0,0.5)', 5, 30, 1);
+                  for (let p = 0; p < 2; p++) addParticle((x + 0.5) * CELL, (rY + 0.5) * CELL, (randomFloat() - 0.5) * 8, -randomFloat() * 6 - 2, pCol, 3, 25, 2);
               }
           }
       }
@@ -437,7 +443,9 @@
                               if (ny >= 0 && ny < H && nx >= 0 && nx < W) {
                                   if (grid[ny][nx] > 0) {
                                       let pCol = colors[grid[ny][nx]];
-                                      for(let k=0; k<4; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (randomFloat()-0.5)*8, (randomFloat()-0.5)*8, pCol, 3, 20);
+                                      for(let k=0; k<6; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (randomFloat()-0.5)*12, (randomFloat()-0.5)*12, pCol, 2+randomFloat()*2, 20+randomFloat()*10, 0);
+                                      for(let k=0; k<4; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (randomFloat()-0.5)*6, (randomFloat()-0.5)*6, pCol, 4+randomFloat()*3, 30+randomFloat()*10, 1);
+                                      for(let k=0; k<3; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (randomFloat()-0.5)*10, -3-randomFloat()*5, pCol, 3+randomFloat()*2, 25+randomFloat()*10, 2);
                                   }
                                   grid[ny][nx] = 0;
                               }
@@ -1092,10 +1100,24 @@ if (showHelp) {
           let alpha = p.life / p.maxLife;
           ctx.save();
           ctx.globalAlpha = alpha;
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(offX + p.x, offY + p.y, p.size, 0, Math.PI * 2);
-          ctx.fill();
+          if (p.type === 1) { // Smoke
+              ctx.fillStyle = p.color;
+              ctx.beginPath();
+              ctx.arc(offX + p.x, offY + p.y, p.size + (1-alpha)*10, 0, Math.PI * 2);
+              ctx.fill();
+          } else if (p.type === 2) { // Fragment
+              ctx.fillStyle = p.color;
+              ctx.translate(offX + p.x, offY + p.y);
+              ctx.rotate(p.life * 0.2);
+              ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+          } else { // Spark
+              ctx.fillStyle = p.color;
+              ctx.shadowColor = p.color;
+              ctx.shadowBlur = 4;
+              ctx.beginPath();
+              ctx.arc(offX + p.x, offY + p.y, p.size, 0, Math.PI * 2);
+              ctx.fill();
+          }
           ctx.restore();
       }
 

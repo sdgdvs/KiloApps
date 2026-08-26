@@ -451,7 +451,7 @@ typedef struct {
     COLORREF color;
     int size;
     int life;
-    int max_life;
+    int type;
 } Particle;
 #define MAX_PARTICLES 128
 Particle particles[MAX_PARTICLES];
@@ -496,7 +496,7 @@ int random_int(int max) {
     return ((rng_state >> 16) & 0x7FFF) % max;
 }
 
-void AddParticle(float x, float y, float vx, float vy, COLORREF color, int size, int life) {
+void AddParticle(float x, float y, float vx, float vy, COLORREF color, int size, int life, int type) {
     if (num_particles < MAX_PARTICLES) {
         particles[num_particles].x = x;
         particles[num_particles].y = y;
@@ -506,6 +506,7 @@ void AddParticle(float x, float y, float vx, float vy, COLORREF color, int size,
         particles[num_particles].size = size;
         particles[num_particles].life = life;
         particles[num_particles].max_life = life;
+        particles[num_particles].type = type;
         num_particles++;
     }
 }
@@ -545,17 +546,17 @@ void AddLineFlash(int yRow) {
         float vx = (float)((random_int(100) - 50) / 7.0f);
         float vy = (float)((random_int(100) - 50) / 7.0f);
         COLORREF pColors[4] = { RGB(255,255,255), RGB(255,255,0), RGB(0,255,255), RGB(255,100,255) };
-        AddParticle(px, py, vx, vy, pColors[random_int(4)], random_int(3) + 2, 20);
+        AddParticle(px, py, vx, vy, pColors[random_int(4)], random_int(3) + 2, 20, 0);
     }
 }
 
 void SpawnDropParticles(int gridX, int startY, int endY, int colorIdx) {
     COLORREF pColor = colors[colorIdx];
     for (int y = (startY < 0 ? 0 : startY); y <= endY; y++) {
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 3; i++) {
             float px = (float)(gridX * CELL_SIZE + random_int(CELL_SIZE));
             float py = (float)(y * CELL_SIZE + random_int(CELL_SIZE));
-            AddParticle(px, py, (float)((random_int(20) - 10) / 10.0f), (float)(-random_int(20) / 10.0f - 1.0f), pColor, 2, 12);
+            AddParticle(px, py, 0.0f, (float)(-random_int(40) / 10.0f - 4.0f), pColor, 1, 10, 0);
         }
     }
     for (int i = 0; i < 16; i++) {
@@ -563,7 +564,14 @@ void SpawnDropParticles(int gridX, int startY, int endY, int colorIdx) {
         float py = (float)(endY * CELL_SIZE + CELL_SIZE);
         float vx = (float)((random_int(60) - 30) / 10.0f);
         float vy = (float)((random_int(40) - 20) / 10.0f - 2.0f);
-        AddParticle(px, py, vx, vy, pColor, 3, 18);
+        AddParticle(px, py, vx, vy, pColor, 3, 20, 2);
+    }
+    for (int i = 0; i < 8; i++) {
+        float px = (float)(gridX * CELL_SIZE + CELL_SIZE / 2 + random_int(CELL_SIZE * 3) - CELL_SIZE * 1.5f);
+        float py = (float)(endY * CELL_SIZE + CELL_SIZE);
+        float vx = (float)((random_int(80) - 40) / 10.0f);
+        float vy = (float)(-random_int(20) / 10.0f);
+        AddParticle(px, py, vx, vy, RGB(180, 180, 180), 5, 25, 1);
     }
 }
 
@@ -652,7 +660,9 @@ void UseRowNuke() {
         for (int x = 0; x < W; x++) {
             if (grid[rY][x] > 0) {
                 COLORREF pCol = colors[grid[rY][x]];
-                for (int p = 0; p < 3; p++) AddParticle((float)((x + 0.5)*CELL_SIZE), (float)((rY + 0.5)*CELL_SIZE), (float)(random_int(10) - 5), (float)(-random_int(8) - 2), pCol, 3, 20);
+                for (int p = 0; p < 4; p++) AddParticle((float)((x + 0.5)*CELL_SIZE), (float)((rY + 0.5)*CELL_SIZE), (float)(random_int(20) - 10), (float)(-random_int(10) - 2), pCol, 2, 20, 0);
+                for (int p = 0; p < 2; p++) AddParticle((float)((x + 0.5)*CELL_SIZE), (float)((rY + 0.5)*CELL_SIZE), (float)(random_int(8) - 4), (float)(-random_int(6)), RGB(255, 150, 0), 4, 30, 1);
+                for (int p = 0; p < 2; p++) AddParticle((float)((x + 0.5)*CELL_SIZE), (float)((rY + 0.5)*CELL_SIZE), (float)(random_int(16) - 8), (float)(-random_int(8) - 2), pCol, 3, 25, 2);
             }
         }
     }
@@ -744,7 +754,9 @@ void lock_piece() {
                             if (ny >= 0 && ny < H && nx >= 0 && nx < W) {
                                 if (grid[ny][nx] > 0) {
                                     COLORREF pCol = colors[grid[ny][nx]];
-                                    for (int k = 0; k < 4; k++) AddParticle((float)((nx + 0.5)*CELL_SIZE), (float)((ny + 0.5)*CELL_SIZE), (float)(random_int(8) - 4), (float)(random_int(8) - 4), pCol, 3, 20);
+                                    for (int k = 0; k < 6; k++) AddParticle((float)((nx + 0.5)*CELL_SIZE), (float)((ny + 0.5)*CELL_SIZE), (float)(random_int(24) - 12), (float)(random_int(24) - 12), pCol, 2 + random_int(2), 20 + random_int(10), 0);
+                                    for (int k = 0; k < 4; k++) AddParticle((float)((nx + 0.5)*CELL_SIZE), (float)((ny + 0.5)*CELL_SIZE), (float)(random_int(12) - 6), (float)(random_int(12) - 6), pCol, 4 + random_int(3), 30 + random_int(10), 1);
+                                    for (int k = 0; k < 3; k++) AddParticle((float)((nx + 0.5)*CELL_SIZE), (float)((ny + 0.5)*CELL_SIZE), (float)(random_int(20) - 10), (float)(-3 - random_int(5)), pCol, 3 + random_int(2), 25 + random_int(10), 2);
                                 }
                                 grid[ny][nx] = 0;
                             }
@@ -1730,10 +1742,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Draw Particles
             for (int i = 0; i < num_particles; i++) {
-                HBRUSH pBrush = CreateSolidBrush(particles[i].color);
-                RECT rP = { offX + (int)particles[i].x, offY + (int)particles[i].y, offX + (int)particles[i].x + particles[i].size, offY + (int)particles[i].y + particles[i].size };
-                FillRect(memDC, &rP, pBrush);
-                DeleteObject(pBrush);
+                float alpha = (float)particles[i].life / particles[i].max_life;
+                if (particles[i].type == 1) { // Smoke
+                    int currentSize = particles[i].size + (int)((1.0f - alpha) * 10.0f);
+                    HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                    HBRUSH oBrush = (HBRUSH)SelectObject(memDC, pBrush);
+                    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+                    HPEN oPen = (HPEN)SelectObject(memDC, nullPen);
+                    Ellipse(memDC, offX + (int)particles[i].x - currentSize, offY + (int)particles[i].y - currentSize, offX + (int)particles[i].x + currentSize, offY + (int)particles[i].y + currentSize);
+                    SelectObject(memDC, oPen);
+                    SelectObject(memDC, oBrush);
+                    DeleteObject(nullPen);
+                    DeleteObject(pBrush);
+                } else if (particles[i].type == 2) { // Fragment
+                    HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                    HBRUSH oBrush = (HBRUSH)SelectObject(memDC, pBrush);
+                    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+                    HPEN oPen = (HPEN)SelectObject(memDC, nullPen);
+                    float rot = particles[i].life * 0.2f;
+                    float s = sin(rot), c = cos(rot);
+                    float half = particles[i].size * 0.5f;
+                    POINT pts[4] = {
+                        { offX + (int)(particles[i].x + (-half * c - -half * s)), offY + (int)(particles[i].y + (-half * s + -half * c)) },
+                        { offX + (int)(particles[i].x + ( half * c - -half * s)), offY + (int)(particles[i].y + ( half * s + -half * c)) },
+                        { offX + (int)(particles[i].x + ( half * c -  half * s)), offY + (int)(particles[i].y + ( half * s +  half * c)) },
+                        { offX + (int)(particles[i].x + (-half * c -  half * s)), offY + (int)(particles[i].y + (-half * s +  half * c)) }
+                    };
+                    Polygon(memDC, pts, 4);
+                    SelectObject(memDC, oPen);
+                    SelectObject(memDC, oBrush);
+                    DeleteObject(nullPen);
+                    DeleteObject(pBrush);
+                } else { // Spark
+                    HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                    RECT rP = { offX + (int)particles[i].x, offY + (int)particles[i].y, offX + (int)particles[i].x + particles[i].size, offY + (int)particles[i].y + particles[i].size };
+                    FillRect(memDC, &rP, pBrush);
+                    DeleteObject(pBrush);
+                }
             }
 
             // Draw Text Popups
