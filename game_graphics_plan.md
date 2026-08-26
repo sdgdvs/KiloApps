@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KReversi
 - KQuest
 - KSpace
 - KPac
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KGo
 - KTowers
 - KWords
+- KReversi
 ## Completed Work Log
+
+- **KReversi (Loop 4):** FAILED (Subagent timed out after 8 minutes on 3rd attempt).
 
 - **KWords (Loop 6):** Implemented highly polished visual effects including procedural screen-shake upon breaking ice or finding words, multi-layered particle explosions featuring fast core sparks and slower expanding smoke rings, and detailed visual variations for ice shatters with extra lingering ice dust using upgraded kinematics and particle caps in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
