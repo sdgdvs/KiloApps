@@ -159,6 +159,12 @@
                 </select>
             </div>
             <button onclick="startGame()">Start Investigation</button>
+            <div id="stats-area" style="margin-top: 30px; font-size: 14px; color: #aaa; text-align: left; background: rgba(0,0,0,0.5); padding: 10px; border: 1px dashed #444;">
+                <h3 style="margin-top: 0;">Detective Record</h3>
+                <p>Rank: <strong id="rank-display" style="color: #fff;">Rookie</strong> (Cases Solved: <span id="cases-solved">0</span>)</p>
+                <p>Fastest Solve: <span id="fastest-solve" style="color: #fff;">N/A</span> hours</p>
+                <p>Zero-Penalty Solves: <span id="perfect-solves" style="color: #fff;">0</span></p>
+            </div>
         </div>
     </div>
     
@@ -240,7 +246,10 @@
             knownSuspects: [],
             solution: {},
             alibis: {},
-            patience: {}
+            patience: {},
+            initialTime: 12,
+            failedCalibrations: 0,
+            angrySuspects: 0
         };
 
         const allLocations = [
@@ -337,6 +346,11 @@
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
             
+            
+            state.initialTime = state.timeLeft;
+            state.failedCalibrations = 0;
+            state.angrySuspects = 0;
+            
             document.getElementById('time-left').textContent = state.timeLeft;
             
             // Add suspects to notebook
@@ -345,6 +359,25 @@
             updateNotebook();
             updateLocation();
         }
+
+        function updateStatsUI() {
+            let casesSolved = parseInt(localStorage.getItem('casesSolved') || '0');
+            let fastestSolve = parseInt(localStorage.getItem('fastestSolve') || '999');
+            let perfectSolves = parseInt(localStorage.getItem('perfectSolves') || '0');
+            
+            let rank = "Rookie";
+            if (casesSolved >= 1) rank = "Gumshoe";
+            if (casesSolved >= 3) rank = "Detective";
+            if (casesSolved >= 5) rank = "Master Sleuth";
+            if (casesSolved >= 10) rank = "Sherlock";
+            
+            document.getElementById('cases-solved').textContent = casesSolved;
+            document.getElementById('rank-display').textContent = rank;
+            document.getElementById('fastest-solve').textContent = fastestSolve === 999 ? 'N/A' : fastestSolve;
+            document.getElementById('perfect-solves').textContent = perfectSolves;
+        }
+
+        updateStatsUI();
 
         function updateLocation() {
             const loc = state.locations[state.currentLocation];
@@ -511,6 +544,7 @@
                 state.patience[suspect]--;
                 if (state.patience[suspect] <= 0) {
                     response += ' "That\'s it! You\'re just guessing. I want my lawyer!" (They refuse to talk anymore)';
+                    state.angrySuspects++;
                 } else {
                     response += ` (They look annoyed. Patience: ${state.patience[suspect]}/3)`;
                 }
@@ -591,6 +625,7 @@
                 renderLabList();
             } else if (analysisState.moves <= 0) {
                 alert("Calibration failed. Try again.");
+                state.failedCalibrations++;
                 renderLabList();
             } else {
                 updateScannerUI();
@@ -655,7 +690,27 @@
             const weapon = document.getElementById('accuse-weapon').value;
 
             if (suspect === state.solution.killer && motive === state.solution.motive && weapon === state.solution.weapon) {
-                alert(`You did it, Detective! ${suspect} is the killer! They confessed everything. GAME OVER - YOU WIN! (Refresh to restart)`);
+                const hoursTaken = state.initialTime - state.timeLeft;
+                const penaltyFree = (state.failedCalibrations === 0 && state.angrySuspects === 0);
+                
+                let casesSolved = parseInt(localStorage.getItem('casesSolved') || '0') + 1;
+                let fastestSolve = parseInt(localStorage.getItem('fastestSolve') || '999');
+                let perfectSolves = parseInt(localStorage.getItem('perfectSolves') || '0');
+                
+                if (hoursTaken < fastestSolve) fastestSolve = hoursTaken;
+                if (penaltyFree) perfectSolves++;
+                
+                localStorage.setItem('casesSolved', casesSolved);
+                localStorage.setItem('fastestSolve', fastestSolve);
+                localStorage.setItem('perfectSolves', perfectSolves);
+                
+                updateStatsUI();
+                
+                let msg = `You did it, Detective! ${suspect} is the killer! They confessed everything.\n\nTime taken: ${hoursTaken}h\n`;
+                if (penaltyFree) msg += "Perfect Investigation! (No failed labs, no angry suspects)\n";
+                msg += "GAME OVER - YOU WIN! (Refresh to restart)";
+                
+                alert(msg);
             } else {
                 alert(`You were wrong! The real killer was ${state.solution.killer} (Motive: ${state.solution.motive}, Weapon: ${state.solution.weapon}). The commissioner is furious. You're fired. GAME OVER.`);
             }

@@ -58,7 +58,36 @@ void my_strcpy(char* dest, const char* src) {
 
 HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, hBtnTravelDocks, hBtnTravelCasino, hBtnTravelStation;
 HWND hSuspectTitle, hListSuspects, hClueTitle, hListClues, hUnanalyzedTitle, hListUnanalyzed;
-HWND hStartPanel, hBtnStart, hBtnStartMed, hBtnStartHard, hStartDesc;
+HWND hStartPanel, hBtnStart, hBtnStartMed, hBtnStartHard, hStartDesc, hStatsDesc;
+
+int statsCasesSolved = 0;
+int statsFastestSolve = 999;
+int statsPerfectSolves = 0;
+int initialTime = 0;
+int failedCalibrations = 0;
+int angrySuspects = 0;
+
+void LoadStats() {
+    HANDLE hFile = CreateFileA("kmystery_stats.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD read;
+        ReadFile(hFile, &statsCasesSolved, sizeof(int), &read, NULL);
+        ReadFile(hFile, &statsFastestSolve, sizeof(int), &read, NULL);
+        ReadFile(hFile, &statsPerfectSolves, sizeof(int), &read, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void SaveStats() {
+    HANDLE hFile = CreateFileA("kmystery_stats.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(hFile, &statsCasesSolved, sizeof(int), &written, NULL);
+        WriteFile(hFile, &statsFastestSolve, sizeof(int), &written, NULL);
+        WriteFile(hFile, &statsPerfectSolves, sizeof(int), &written, NULL);
+        CloseHandle(hFile);
+    }
+}
 HWND hBtnInterrogate, hIntDesc, hBtnAskAlibi, hBtnPresentClue, hBtnEndInt;
 HWND hBtnLab, hLabTitle, hBtnAnalyze, hBtnLeaveLab;
 HWND hScanDesc, hBtnScan11, hBtnScan7, hBtnScanM3;
@@ -203,6 +232,21 @@ void UpdateUI() {
         ShowWindow(hBtnStartMed, SW_SHOW);
         ShowWindow(hBtnStartHard, SW_SHOW);
         
+        char* rank = "Rookie";
+        if (statsCasesSolved >= 1) rank = "Gumshoe";
+        if (statsCasesSolved >= 3) rank = "Detective";
+        if (statsCasesSolved >= 5) rank = "Master Sleuth";
+        if (statsCasesSolved >= 10) rank = "Sherlock";
+        
+        char statsBuf[256];
+        if (statsFastestSolve == 999) {
+            wsprintfA(statsBuf, "Rank: %s (Cases: %d)\nFastest Solve: N/A\nZero-Penalty Solves: %d", rank, statsCasesSolved, statsPerfectSolves);
+        } else {
+            wsprintfA(statsBuf, "Rank: %s (Cases: %d)\nFastest Solve: %dh\nZero-Penalty Solves: %d", rank, statsCasesSolved, statsFastestSolve, statsPerfectSolves);
+        }
+        SetWindowTextA(hStatsDesc, statsBuf);
+        ShowWindow(hStatsDesc, SW_SHOW);
+        
         ShowWindow(hTimeLeft, SW_HIDE);
         ShowWindow(hTitle, SW_HIDE);
         ShowWindow(hLocName, SW_HIDE);
@@ -250,6 +294,7 @@ void UpdateUI() {
         ShowWindow(hBtnStart, SW_HIDE);
         ShowWindow(hBtnStartMed, SW_HIDE);
         ShowWindow(hBtnStartHard, SW_HIDE);
+        ShowWindow(hStatsDesc, SW_HIDE);
         
         ShowWindow(hTimeLeft, SW_SHOW);
         ShowWindow(hTitle, SW_SHOW);
@@ -416,6 +461,9 @@ void StartGame(int items, int time) {
     GenerateMystery();
     currentState = 1;
     timeLeft = time;
+    initialTime = time;
+    failedCalibrations = 0;
+    angrySuspects = 0;
     char timeBuf[64];
     wsprintfA(timeBuf, "Time Left: %dh", timeLeft);
     SetWindowTextA(hTimeLeft, timeBuf);
@@ -499,6 +547,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnStart = CreateWindowA("BUTTON", "Start Easy (3 Suspects)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START, NULL, NULL);
             hBtnStartMed = CreateWindowA("BUTTON", "Start Medium (4 Suspects)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START_MED, NULL, NULL);
             hBtnStartHard = CreateWindowA("BUTTON", "Start Hard (5 Suspects)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START_HARD, NULL, NULL);
+            hStatsDesc = CreateWindowA("STATIC", "", WS_CHILD | WS_VISIBLE | SS_CENTER, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            SendMessageA(hStatsDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
+            LoadStats();
 
             // Game Screen
             hTimeLeft = CreateWindowA("STATIC", "Time Left: 12h", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
@@ -581,6 +632,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hBtnStart, cx/2 - 100, cy/2 - 10, 200, 40, TRUE);
                 MoveWindow(hBtnStartMed, cx/2 - 100, cy/2 + 40, 200, 40, TRUE);
                 MoveWindow(hBtnStartHard, cx/2 - 100, cy/2 + 90, 200, 40, TRUE);
+                MoveWindow(hStatsDesc, cx/2 - 150, cy/2 + 140, 300, 100, TRUE);
             } else {
                 int headerH = 40;
                 int pad = 20;
@@ -749,6 +801,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             suspectPatience[sIdx]--;
                             if (suspectPatience[sIdx] <= 0) {
                                 my_strcpy(response, "\"That's it! You're just guessing. I want my lawyer!\" (They refuse to talk anymore)");
+                                angrySuspects++;
                             } else {
                                 char temp[256];
                                 wsprintfA(temp, "%s (Patience: %d/3)", response, suspectPatience[sIdx]);
@@ -803,6 +856,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     UpdateUI();
                 } else if (scanMoves <= 0) {
                     MessageBoxA(hwnd, "Calibration failed. Try again.", "Failed", MB_OK | MB_ICONERROR);
+                    failedCalibrations++;
                     currentState = 3;
                     UpdateUI();
                 } else {
@@ -822,7 +876,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int wIdx = SendMessageA(hCmbWeapon, CB_GETCURSEL, 0, 0);
                 
                 if (sIdx == currentSolution.killerIdx && mIdx == currentSolution.motiveIdx && wIdx == currentSolution.weaponIdx) {
-                    MessageBoxA(hwnd, "You did it, Detective! You caught the killer! They confessed everything. GAME OVER - YOU WIN! (Restart to play again)", "You Win!", MB_OK | MB_ICONINFORMATION);
+                    int hoursTaken = initialTime - timeLeft;
+                    int penaltyFree = (failedCalibrations == 0 && angrySuspects == 0);
+                    
+                    statsCasesSolved++;
+                    if (hoursTaken < statsFastestSolve) statsFastestSolve = hoursTaken;
+                    if (penaltyFree) statsPerfectSolves++;
+                    SaveStats();
+                    
+                    char msgBuf[512];
+                    if (penaltyFree) {
+                        wsprintfA(msgBuf, "You did it, Detective! You caught the killer! They confessed everything.\n\nTime taken: %dh\nPerfect Investigation! (No failed labs, no angry suspects)\nGAME OVER - YOU WIN! (Restart to play again)", hoursTaken);
+                    } else {
+                        wsprintfA(msgBuf, "You did it, Detective! You caught the killer! They confessed everything.\n\nTime taken: %dh\nGAME OVER - YOU WIN! (Restart to play again)", hoursTaken);
+                    }
+                    MessageBoxA(hwnd, msgBuf, "You Win!", MB_OK | MB_ICONINFORMATION);
                 } else {
                     char msgBuf[256];
                     wsprintfA(msgBuf, "You were wrong! The real killer was %s. The commissioner is furious. You're fired. GAME OVER.", suspects[currentSolution.killerIdx]);
