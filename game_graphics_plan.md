@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KQuest
 - KSpace
 - KPac
 - KSnake
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTowers
 - KWords
 - KReversi
+- KQuest
 ## Completed Work Log
+
+- **KQuest (Loop 6):** Implemented highly polished visual effects including procedural screen-shake and red screen flashes upon projectile impacts, multi-layered particle explosions featuring bright core sparks and varied velocities, and detailed kinematic animations for explosion debris with gravity simulation in both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).
 
 - **KReversi (Loop 4):** FAILED (Subagent timed out after 8 minutes on 3rd attempt).
 

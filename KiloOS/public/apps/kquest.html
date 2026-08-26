@@ -780,19 +780,21 @@
       });
     }
 
-    function addParticles(x, y, color, count = 15) {
+    function addParticles(x, y, color, count = 15, multilayer = false) {
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 4 + 1;
+        const speed = Math.random() * (multilayer ? 6 : 4) + 1;
+        const pColor = multilayer && Math.random() > 0.5 ? '#ffffff' : color;
         GFX.particles.push({
           x: x,
           y: y,
           vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 1,
-          color: color,
-          radius: Math.random() * 3 + 2,
+          vy: Math.sin(angle) * speed - (multilayer ? 2 : 1),
+          color: pColor,
+          radius: Math.random() * (multilayer ? 4 : 3) + 2,
           life: 0,
-          maxLife: 30 + Math.random() * 20
+          maxLife: (multilayer ? 40 : 30) + Math.random() * 20,
+          multilayer: multilayer
         });
       }
     }
@@ -902,7 +904,10 @@
           ctx.restore();
           addParticles(fx, fy, '#f38ba8', 2);
           if (p >= 1) {
-            addParticles(monsterX, monsterY, '#fab387', 30);
+            addParticles(monsterX, monsterY, '#fab387', 40, true);
+            GFX.screenShakeTimer = 15;
+            GFX.screenShakeIntensity = 10;
+            GFX.redFlashTimer = 10;
             GFX.spellAnim = null;
           }
         } else if (GFX.spellAnim.type === 'lightning') {
@@ -930,6 +935,7 @@
         const pt = GFX.particles[i];
         pt.x += pt.vx;
         pt.y += pt.vy;
+        if (pt.multilayer) { pt.vy += 0.15; pt.radius *= 0.96; } // gravity and shrink
         pt.life++;
         const alpha = 1 - (pt.life / pt.maxLife);
         ctx.save();

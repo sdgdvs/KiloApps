@@ -3268,16 +3268,18 @@ void AddGdiFloatText(const char* text, int x, int y, COLORREF color, int isCrit)
 }
 
 typedef struct {
-    int x, y, vx, vy;
+    int x, y;
+    int vx, vy;
     COLORREF color;
     int life, maxLife;
+    int multilayer;
 } GdiParticle;
 
-static GdiParticle g_GdiParticles[32];
+static GdiParticle g_GdiParticles[128];
 static int g_GdiParticleCount = 0;
 
-void AddGdiParticles(int x, int y, COLORREF color, int count) {
-    for (int i = 0; i < count && g_GdiParticleCount < 32; i++) {
+void AddGdiParticles(int x, int y, COLORREF color, int count, int multilayer) {
+    for (int i = 0; i < count && g_GdiParticleCount < 128; i++) {
         g_GdiParticles[g_GdiParticleCount].x = x;
         g_GdiParticles[g_GdiParticleCount].y = y;
         g_GdiParticles[g_GdiParticleCount].vx = (xrand() % 9) - 4;
@@ -3669,7 +3671,7 @@ void RenderGdiScene(HDC hdc, int w, int h) {
             HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hFbB);
             Ellipse(hdc, fx - 12, fy - 12, fx + 12, fy + 12);
             SelectObject(hdc, hOldB); DeleteObject(hFbB);
-            AddGdiParticles(fx, fy, RGB(243, 139, 168), 2);
+            AddGdiParticles(fx, fy, RGB(243, 139, 168), 2, 0);
         } else if (g_GdiSpellFxType == 2) {
             HPEN hLtP = CreatePen(PS_SOLID, 3, RGB(137, 220, 235));
             HPEN hOldP = (HPEN)SelectObject(hdc, hLtP);
@@ -3679,17 +3681,26 @@ void RenderGdiScene(HDC hdc, int w, int h) {
             LineTo(hdc, monsterX, monsterY + 10);
             SelectObject(hdc, hOldP); DeleteObject(hLtP);
         }
-        if (g_GdiSpellFxProgress >= g_GdiSpellFxMax) g_GdiSpellFxType = 0;
+        if (g_GdiSpellFxProgress >= g_GdiSpellFxMax) {
+            if (g_GdiSpellFxType == 1) {
+                AddGdiParticles(monsterX, monsterY + 10, RGB(250, 179, 135), 40, 1);
+            }
+            g_GdiSpellFxType = 0;
+        }
     }
 
     for (int i = g_GdiParticleCount - 1; i >= 0; i--) {
         GdiParticle* pt = &g_GdiParticles[i];
         pt->x += pt->vx;
         pt->y += pt->vy;
+        if (pt->multilayer) {
+            pt->vy += 1; // gravity
+        }
         pt->life++;
         HBRUSH hPtB = CreateSolidBrush(pt->color);
         HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hPtB);
-        Ellipse(hdc, pt->x - 2, pt->y - 2, pt->x + 3, pt->y + 3);
+        int radius = pt->multilayer ? 4 : 2;
+        Ellipse(hdc, pt->x - radius, pt->y - radius, pt->x + radius + 1, pt->y + radius + 1);
         SelectObject(hdc, hOldB); DeleteObject(hPtB);
         if (pt->life >= pt->maxLife) {
             g_GdiParticles[i] = g_GdiParticles[g_GdiParticleCount - 1];
