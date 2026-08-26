@@ -154,7 +154,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, 0, 90, 26, hwnd, (HMENU)5, NULL, NULL);
             
-            hBtnFont = CreateFontA(SCALE(-14), 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            int fontHeight = -MulDiv(12, dpi, 72);
+            hBtnFont = CreateFontA(fontHeight, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             SendMessage(hBtnRandomize, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnToggle, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnTheme, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
@@ -296,7 +297,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
-            if (wParam == 'H' || wParam == 'h') {
+            if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 MessageBox(hwnd, "KChart Studio Help:\n\n- Use Mode button to switch charts\n- Use Theme to change colors\n- Sort button sorts data\n- Randomize generates new data", "Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
@@ -370,7 +371,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
 
-            HFONT hFont = CreateFontA(SCALE(-14), 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
 
