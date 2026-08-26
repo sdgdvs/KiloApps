@@ -236,6 +236,71 @@
     </div>
 
     <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let rainPlaying = false;
+
+        function playTypewriter() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(150 + Math.random() * 100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function playDramaticChord() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const freqs = [220, 261.63, 329.63]; // A minor
+            freqs.forEach(f => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.value = f;
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.0);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 2.0);
+            });
+        }
+
+        function startRain() {
+            if (rainPlaying) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const bufferSize = audioCtx.sampleRate * 2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            noise.loop = true;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 400;
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0.05;
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+            noise.start();
+            rainPlaying = true;
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                playTypewriter();
+            }
+        });
+
         const state = {
             currentLocation: 'Office',
             timeLeft: 12,
@@ -341,6 +406,7 @@
         }
 
         function startGame() {
+            startRain();
             generateMystery();
             
             document.getElementById('start-screen').classList.add('hidden');
@@ -428,6 +494,7 @@
                 if (loc.clue) {
                     loc.clueFound = true;
                     state.unanalyzedClues.push({ locName: state.currentLocation, realClue: loc.clue });
+                    playDramaticChord();
                     alert("You found a mysterious object! Take it to the Evidence Lab to analyze.");
                 } else {
                     alert("You didn't find anything useful here.");
@@ -520,6 +587,7 @@
             let intimidated = false;
             
             if (actualClue === killerClueMap[suspect]) {
+                playDramaticChord();
                 response = '"Wait, where did you find that?! I... I lost it weeks ago! You can\'t prove anything!" (Caught in a lie!)';
             } else if (Object.values(killerClueMap).includes(actualClue)) {
                 response = '"That doesn\'t belong to me."';
@@ -710,8 +778,10 @@
                 if (penaltyFree) msg += "Perfect Investigation! (No failed labs, no angry suspects)\n";
                 msg += "GAME OVER - YOU WIN! (Refresh to restart)";
                 
+                playDramaticChord();
                 alert(msg);
             } else {
+                playDramaticChord();
                 alert(`You were wrong! The real killer was ${state.solution.killer} (Motive: ${state.solution.motive}, Weapon: ${state.solution.weapon}). The commissioner is furious. You're fired. GAME OVER.`);
             }
             

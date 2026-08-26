@@ -60,6 +60,16 @@ HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, 
 HWND hSuspectTitle, hListSuspects, hClueTitle, hListClues, hUnanalyzedTitle, hListUnanalyzed;
 HWND hStartPanel, hBtnStart, hBtnStartMed, hBtnStartHard, hStartDesc, hStatsDesc;
 
+void PlayTypewriter() {
+    Beep(150 + (GetTickCount() % 100), 20);
+}
+
+void PlayDramaticChord() {
+    Beep(220, 100);
+    Beep(261, 100);
+    Beep(329, 300);
+}
+
 int statsCasesSolved = 0;
 int statsFastestSolve = 999;
 int statsPerfectSolves = 0;
@@ -516,6 +526,7 @@ void SearchLocation(HWND hwnd) {
             wsprintfA(itemBuf, "Object from %s", locations[currentLocation].name);
             SendMessageA(hListUnanalyzed, LB_ADDSTRING, 0, (LPARAM)itemBuf);
             
+            PlayDramaticChord();
             MessageBoxA(hwnd, "You found a mysterious object! Take it to the Evidence Lab to analyze.", "Object Found", MB_OK | MB_ICONINFORMATION);
         } else {
             MessageBoxA(hwnd, "You didn't find anything useful here.", "Nothing Found", MB_OK | MB_ICONINFORMATION);
@@ -699,6 +710,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_COMMAND: {
             WORD id = LOWORD(wParam);
+            WORD code = HIWORD(wParam);
+            if (code == 0) PlayTypewriter(); // BN_CLICKED is 0
+
             if (id == ID_BTN_START) {
                 StartGame(3, 16);
                 RECT r;
@@ -767,6 +781,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         char response[256];
                         int intimidated = 0;
                         if (my_strcmp(actualClue, killerClues[sIdx]) == 0) {
+                            PlayDramaticChord();
                             my_strcpy(response, "\"Wait, where did you find that?! I... I lost it weeks ago! You can't prove anything!\" (Caught in a lie!)");
                         } else {
                             int isMotive = 0, isWeapon = 0;
@@ -890,10 +905,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else {
                         wsprintfA(msgBuf, "You did it, Detective! You caught the killer! They confessed everything.\n\nTime taken: %dh\nGAME OVER - YOU WIN! (Restart to play again)", hoursTaken);
                     }
+                    PlayDramaticChord();
                     MessageBoxA(hwnd, msgBuf, "You Win!", MB_OK | MB_ICONINFORMATION);
                 } else {
                     char msgBuf[256];
                     wsprintfA(msgBuf, "You were wrong! The real killer was %s. The commissioner is furious. You're fired. GAME OVER.", suspects[currentSolution.killerIdx]);
+                    PlayDramaticChord();
                     MessageBoxA(hwnd, msgBuf, "Game Over", MB_OK | MB_ICONERROR);
                 }
                 currentState = 0;
