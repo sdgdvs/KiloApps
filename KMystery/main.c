@@ -251,18 +251,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
-            SetBkColor(hdc, RGB(26, 26, 26));
-            SetTextColor(hdc, RGB(208, 208, 208));
+            SetBkColor(hdc, RGB(0, 0, 0));
+            SetTextColor(hdc, RGB(220, 220, 220));
             return (LRESULT)GetStockObject(BLACK_BRUSH);
         }
         
+        case WM_CTLCOLORLISTBOX: {
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(0, 0, 0));
+            SetTextColor(hdc, RGB(220, 220, 220));
+            return (LRESULT)GetStockObject(BLACK_BRUSH);
+        }
+
         case WM_ERASEBKGND: {
             HDC hdc = (HDC)wParam;
             RECT rc;
             GetClientRect(hwnd, &rc);
-            HBRUSH hBrush = CreateSolidBrush(RGB(26, 26, 26));
-            FillRect(hdc, &rc, hBrush);
-            DeleteObject(hBrush);
+            FillRect(hdc, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
+            
+            HPEN hPen1 = CreatePen(PS_SOLID, 2, RGB(80, 80, 80));
+            HPEN hPen2 = CreatePen(PS_SOLID, 1, RGB(40, 40, 40));
+            
+            HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HGDIOBJ oldBrush = SelectObject(hdc, hNullBrush);
+            
+            HGDIOBJ oldPen = SelectObject(hdc, hPen1);
+            Rectangle(hdc, 10, 10, rc.right - 10, rc.bottom - 10);
+            
+            SelectObject(hdc, hPen2);
+            Rectangle(hdc, 14, 14, rc.right - 14, rc.bottom - 14);
+            
+            SelectObject(hdc, oldBrush);
+            SelectObject(hdc, oldPen);
+            DeleteObject(hPen1);
+            DeleteObject(hPen2);
+            
             return 1;
         }
 
