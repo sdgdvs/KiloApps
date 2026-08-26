@@ -175,19 +175,19 @@
                 'Office': {
                     desc: 'Your dingy office. Dust motes dance in the light filtering through the blinds.',
                     searched: false,
-                    clue: 'A note slipped under the door: "Check The Manor."',
+                    clue: '',
                     clueFound: false
                 },
                 'The Manor': {
                     desc: 'The sprawling estate where the victim was found. Yellow police tape blocks the study.',
                     searched: false,
-                    clue: 'A muddy footprint near the window matching a size 10 boot.',
+                    clue: '',
                     clueFound: false
                 },
                 'The Docks': {
                     desc: 'Smells like salt and secrets. The fog here is thick enough to cut with a knife.',
                     searched: false,
-                    clue: 'A torn shipping manifest listing illegal cargo.',
+                    clue: '',
                     clueFound: false
                 }
             },
@@ -197,10 +197,60 @@
                 'Colonel Mustard'
             ],
             foundClues: [],
-            knownSuspects: []
+            knownSuspects: [],
+            solution: {}
         };
 
+        const motives = ['Revenge', 'Greed', 'Jealousy'];
+        const weapons = ['Revolver', 'Poison', 'Lead Pipe'];
+        
+        const killerClueMap = {
+            'Mr. Black': 'A cufflink with an onyx stone.',
+            'Miss Scarlet': 'A faint scent of expensive rose perfume.',
+            'Colonel Mustard': 'A polished brass military button.'
+        };
+        const motiveClueMap = {
+            'Revenge': 'A crumpled letter swearing vengeance.',
+            'Greed': 'An altered will leaving everything to the killer.',
+            'Jealousy': 'A torn photograph of a happy couple, with one face scratched out.'
+        };
+        const weaponClueMap = {
+            'Revolver': 'A spent .38 caliber shell casing.',
+            'Poison': 'A discarded vial smelling of bitter almonds.',
+            'Lead Pipe': 'A heavy, blood-stained lead pipe hidden in the corner.'
+        };
+
+        function generateMystery() {
+            const killer = state.suspects[Math.floor(Math.random() * state.suspects.length)];
+            const motive = motives[Math.floor(Math.random() * motives.length)];
+            const weapon = weapons[Math.floor(Math.random() * weapons.length)];
+            
+            state.solution = { killer, motive, weapon };
+            
+            const clues = [
+                killerClueMap[killer],
+                motiveClueMap[motive],
+                weaponClueMap[weapon]
+            ];
+            
+            // Shuffle clues
+            for (let i = clues.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [clues[i], clues[j]] = [clues[j], clues[i]];
+            }
+            
+            const locKeys = Object.keys(state.locations);
+            for(let i = 0; i < 3; i++) {
+                state.locations[locKeys[i]].clue = clues[i];
+                state.locations[locKeys[i]].searched = false;
+                state.locations[locKeys[i]].clueFound = false;
+            }
+            state.foundClues = [];
+        }
+
         function startGame() {
+            generateMystery();
+            
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
             

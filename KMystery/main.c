@@ -47,9 +47,9 @@ typedef struct {
 } Location;
 
 Location locations[3] = {
-    {"Office", "Your dingy office. Dust motes dance in the light filtering through the blinds.", "A note slipped under the door: \"Check The Manor.\"", 0, 0},
-    {"The Manor", "The sprawling estate where the victim was found. Yellow police tape blocks the study.", "A muddy footprint near the window matching a size 10 boot.", 0, 0},
-    {"The Docks", "Smells like salt and secrets. The fog here is thick enough to cut with a knife.", "A torn shipping manifest listing illegal cargo.", 0, 0}
+    {"Office", "Your dingy office. Dust motes dance in the light filtering through the blinds.", "", 0, 0},
+    {"The Manor", "The sprawling estate where the victim was found. Yellow police tape blocks the study.", "", 0, 0},
+    {"The Docks", "Smells like salt and secrets. The fog here is thick enough to cut with a knife.", "", 0, 0}
 };
 
 char* suspects[] = {
@@ -57,6 +57,63 @@ char* suspects[] = {
     "Miss Scarlet",
     "Colonel Mustard"
 };
+
+typedef struct {
+    int killerIdx;
+    int motiveIdx;
+    int weaponIdx;
+} Solution;
+
+Solution currentSolution;
+
+unsigned int my_seed = 0;
+int my_rand() {
+    my_seed = my_seed * 1103515245 + 12345;
+    return (unsigned int)(my_seed / 65536) % 32768;
+}
+
+char* killerClues[] = {
+    "A cufflink with an onyx stone.",
+    "A faint scent of expensive rose perfume.",
+    "A polished brass military button."
+};
+
+char* motiveClues[] = {
+    "A crumpled letter swearing vengeance.",
+    "An altered will leaving everything to the killer.",
+    "A torn photograph of a happy couple, with one face scratched out."
+};
+
+char* weaponClues[] = {
+    "A spent .38 caliber shell casing.",
+    "A discarded vial smelling of bitter almonds.",
+    "A heavy, blood-stained lead pipe hidden in the corner."
+};
+
+void GenerateMystery() {
+    my_seed = GetTickCount();
+    currentSolution.killerIdx = my_rand() % 3;
+    currentSolution.motiveIdx = my_rand() % 3;
+    currentSolution.weaponIdx = my_rand() % 3;
+    
+    char* clues[3];
+    clues[0] = killerClues[currentSolution.killerIdx];
+    clues[1] = motiveClues[currentSolution.motiveIdx];
+    clues[2] = weaponClues[currentSolution.weaponIdx];
+    
+    for (int i = 2; i > 0; i--) {
+        int j = my_rand() % (i + 1);
+        char* temp = clues[i];
+        clues[i] = clues[j];
+        clues[j] = temp;
+    }
+    
+    for (int i = 0; i < 3; i++) {
+        my_strcpy(locations[i].clue, clues[i]);
+        locations[i].searched = 0;
+        locations[i].clueFound = 0;
+    }
+}
 
 void UpdateUI() {
     if (currentState == 0) {
@@ -112,6 +169,7 @@ void UpdateUI() {
 }
 
 void StartGame() {
+    GenerateMystery();
     currentState = 1;
     SendMessageA(hListSuspects, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListClues, LB_RESETCONTENT, 0, 0);
