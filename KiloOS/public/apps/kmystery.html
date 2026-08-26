@@ -239,7 +239,9 @@
             foundClues: [],
             unanalyzedClues: [],
             knownSuspects: [],
-            solution: {}
+            solution: {},
+            alibis: {},
+            patience: {}
         };
 
         const motives = ['Revenge', 'Greed', 'Jealousy'];
@@ -291,6 +293,17 @@
             }
             state.foundClues = [];
             state.unanalyzedClues = [];
+            
+            // Generate Alibis and reset patience
+            const innocent = state.suspects.filter(s => s !== killer);
+            state.alibis = {};
+            state.patience = {};
+            
+            state.alibis[innocent[0]] = `"I was with ${innocent[1]} the whole time."`;
+            state.alibis[innocent[1]] = `"I was with ${innocent[0]} the whole time."`;
+            state.alibis[killer] = `"I was with ${innocent[0]}."`;
+            
+            state.suspects.forEach(s => state.patience[s] = 3);
         }
 
         function startGame() {
@@ -408,13 +421,11 @@
         
         function askAlibi() {
             const suspect = state.locations[state.currentLocation].suspect;
-            let response = "";
-            if (suspect === state.solution.killer) {
-                response = '"I was nowhere near the victim! I was at home reading."';
-            } else {
-                response = '"I was out for a walk. I didn\'t see anything."';
+            if (state.patience[suspect] <= 0) {
+                document.getElementById('dialogue-text').textContent = '"I told you, I want my lawyer! No more questions!"';
+                return;
             }
-            document.getElementById('dialogue-text').textContent = response;
+            document.getElementById('dialogue-text').textContent = state.alibis[suspect];
         }
         
         function presentClue() {
@@ -436,27 +447,47 @@
         function submitClue(idx) {
             const clueStr = state.foundClues[idx];
             const suspect = state.locations[state.currentLocation].suspect;
-            let response = '"I have no idea what that is or what it means."';
+            
+            if (state.patience[suspect] <= 0) {
+                document.getElementById('dialogue-text').textContent = '"I told you, I want my lawyer! No more questions!"';
+                return;
+            }
+            
+            let response = '';
             
             // Extract the actual clue text
             const parts = clueStr.split('] ');
             const actualClue = parts.length > 1 ? parts[1] : clueStr;
             
+            let intimidated = false;
+            
             if (actualClue === killerClueMap[suspect]) {
                 response = '"Wait, where did you find that?! I... I lost it weeks ago! You can\'t prove anything!" (Caught in a lie!)';
             } else if (Object.values(killerClueMap).includes(actualClue)) {
                 response = '"That doesn\'t belong to me."';
+                intimidated = true;
             } else if (Object.values(motiveClueMap).includes(actualClue)) {
                 if (suspect === state.solution.killer) {
                     response = '"That proves nothing! Anyone could have that motive!" (They look nervous)';
                 } else {
                     response = '"Shocking, but not my problem."';
+                    intimidated = true;
                 }
             } else if (Object.values(weaponClueMap).includes(actualClue)) {
                 if (suspect === state.solution.killer) {
                     response = '"I\'ve never seen that weapon in my life!" (They are sweating)';
                 } else {
                     response = '"A gruesome weapon, but I didn\'t use it."';
+                    intimidated = true;
+                }
+            }
+            
+            if (intimidated) {
+                state.patience[suspect]--;
+                if (state.patience[suspect] <= 0) {
+                    response += ' "That\'s it! You\'re just guessing. I want my lawyer!" (They refuse to talk anymore)';
+                } else {
+                    response += ` (They look annoyed. Patience: ${state.patience[suspect]}/3)`;
                 }
             }
             

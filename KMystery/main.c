@@ -92,6 +92,9 @@ typedef struct {
 
 Solution currentSolution;
 
+int suspectPatience[3];
+char suspectAlibis[3][128];
+
 typedef struct {
     int locIdx;
     char clue[128];
@@ -157,6 +160,18 @@ void GenerateMystery() {
         locations[i].clueFound = 0;
         locations[i].suspectIdx = sus[i];
     }
+    
+    for (int i = 0; i < 3; i++) {
+        suspectPatience[i] = 3;
+    }
+
+    int killerIdx = currentSolution.killerIdx;
+    int innocent1 = (killerIdx + 1) % 3;
+    int innocent2 = (killerIdx + 2) % 3;
+
+    wsprintfA(suspectAlibis[innocent1], "\"I was with %s the whole time.\"", suspects[innocent2]);
+    wsprintfA(suspectAlibis[innocent2], "\"I was with %s the whole time.\"", suspects[innocent1]);
+    wsprintfA(suspectAlibis[killerIdx], "\"I was with %s.\"", suspects[innocent1]);
 }
 
 void UpdateUI() {
@@ -545,10 +560,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UpdateUI();
             } else if (id == ID_BTN_ASK_ALIBI) {
                 int sIdx = locations[currentLocation].suspectIdx;
-                if (sIdx == currentSolution.killerIdx) {
-                    SetWindowTextA(hIntDesc, "\"I was nowhere near the victim! I was at home reading.\"");
+                if (suspectPatience[sIdx] <= 0) {
+                    SetWindowTextA(hIntDesc, "\"I told you, I want my lawyer! No more questions!\"");
                 } else {
-                    SetWindowTextA(hIntDesc, "\"I was out for a walk. I didn't see anything.\"");
+                    SetWindowTextA(hIntDesc, suspectAlibis[sIdx]);
                 }
             } else if (id == ID_BTN_END_INT) {
                 currentState = 1;
@@ -558,6 +573,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int sel = SendMessageA(hListClues, LB_GETCURSEL, 0, 0);
                 if (sel == LB_ERR) {
                     SetWindowTextA(hIntDesc, "\"You need to select a clue from your notebook first!\"");
+                } else if (suspectPatience[sIdx] <= 0) {
+                    SetWindowTextA(hIntDesc, "\"I told you, I want my lawyer! No more questions!\"");
                 } else {
                     char clueText[256];
                     SendMessageA(hListClues, LB_GETTEXT, sel, (LPARAM)clueText);
@@ -568,32 +585,51 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     if (my_strlen(actualClue) == 0) {
                         SetWindowTextA(hIntDesc, "\"That's not a valid clue.\"");
-                    } else if (my_strcmp(actualClue, killerClues[sIdx]) == 0) {
-                        SetWindowTextA(hIntDesc, "\"Wait, where did you find that?! I... I lost it weeks ago! You can't prove anything!\" (Caught in a lie!)");
                     } else {
-                        int isMotive = 0, isWeapon = 0;
-                        for (int m=0; m<3; m++) {
-                            if (my_strcmp(actualClue, motiveClues[m]) == 0) isMotive = 1;
-                        }
-                        for (int w=0; w<3; w++) {
-                            if (my_strcmp(actualClue, weaponClues[w]) == 0) isWeapon = 1;
+                        char response[256];
+                        int intimidated = 0;
+                        if (my_strcmp(actualClue, killerClues[sIdx]) == 0) {
+                            my_strcpy(response, "\"Wait, where did you find that?! I... I lost it weeks ago! You can't prove anything!\" (Caught in a lie!)");
+                        } else {
+                            int isMotive = 0, isWeapon = 0;
+                            for (int m=0; m<3; m++) {
+                                if (my_strcmp(actualClue, motiveClues[m]) == 0) isMotive = 1;
+                            }
+                            for (int w=0; w<3; w++) {
+                                if (my_strcmp(actualClue, weaponClues[w]) == 0) isWeapon = 1;
+                            }
+                            
+                            if (isMotive) {
+                                if (sIdx == currentSolution.killerIdx) {
+                                    my_strcpy(response, "\"That proves nothing! Anyone could have that motive!\" (They look nervous)");
+                                } else {
+                                    my_strcpy(response, "\"Shocking, but not my problem.\"");
+                                    intimidated = 1;
+                                }
+                            } else if (isWeapon) {
+                                if (sIdx == currentSolution.killerIdx) {
+                                    my_strcpy(response, "\"I've never seen that weapon in my life!\" (They are sweating)");
+                                } else {
+                                    my_strcpy(response, "\"A gruesome weapon, but I didn't use it.\"");
+                                    intimidated = 1;
+                                }
+                            } else {
+                                my_strcpy(response, "\"That doesn't belong to me.\"");
+                                intimidated = 1;
+                            }
                         }
                         
-                        if (isMotive) {
-                            if (sIdx == currentSolution.killerIdx) {
-                                SetWindowTextA(hIntDesc, "\"That proves nothing! Anyone could have that motive!\" (They look nervous)");
+                        if (intimidated) {
+                            suspectPatience[sIdx]--;
+                            if (suspectPatience[sIdx] <= 0) {
+                                my_strcpy(response, "\"That's it! You're just guessing. I want my lawyer!\" (They refuse to talk anymore)");
                             } else {
-                                SetWindowTextA(hIntDesc, "\"Shocking, but not my problem.\"");
+                                char temp[256];
+                                wsprintfA(temp, "%s (Patience: %d/3)", response, suspectPatience[sIdx]);
+                                my_strcpy(response, temp);
                             }
-                        } else if (isWeapon) {
-                            if (sIdx == currentSolution.killerIdx) {
-                                SetWindowTextA(hIntDesc, "\"I've never seen that weapon in my life!\" (They are sweating)");
-                            } else {
-                                SetWindowTextA(hIntDesc, "\"A gruesome weapon, but I didn't use it.\"");
-                            }
-                        } else {
-                            SetWindowTextA(hIntDesc, "\"That doesn't belong to me.\"");
                         }
+                        SetWindowTextA(hIntDesc, response);
                     }
                 }
             } else if (id == ID_BTN_LAB) {
