@@ -126,7 +126,7 @@
             padding-bottom: 20px;
             border-bottom: 1px dashed #444;
         }
-        #interrogation-area {
+        #interrogation-area, #lab-area {
             margin-bottom: 20px;
         }
         .dialogue-options {
@@ -162,10 +162,24 @@
             </div>
             <div id="action-area">
                 <button id="search-btn" onclick="searchLocation()">Search for Clues</button>
+                <button id="lab-btn" onclick="openLab()">Evidence Lab</button>
                 <button id="interrogate-btn" onclick="startInterrogation()" class="hidden">Interrogate</button>
             </div>
             
             <div id="interrogation-area" class="hidden"></div>
+            
+            <div id="lab-area" class="hidden">
+                <h3>Evidence Lab</h3>
+                <div id="lab-list"></div>
+                <div id="scanner-game" class="hidden">
+                    <p>Calibrate Scanner to reveal clue.</p>
+                    <p>Target: <span id="scanner-target">73</span> | Current: <span id="scanner-current">0</span> | Moves left: <span id="scanner-moves">10</span></p>
+                    <button onclick="adjScanner(11)">+11</button>
+                    <button onclick="adjScanner(7)">+7</button>
+                    <button onclick="adjScanner(-3)">-3</button>
+                </div>
+                <button onclick="closeLab()" style="margin-top:20px;">Leave Lab</button>
+            </div>
             
             <div id="travel-container">
                 <h3>Travel</h3>
@@ -181,9 +195,13 @@
             <ul id="suspect-list">
                 <li>No suspects yet.</li>
             </ul>
-            <h3>Clues</h3>
+            <h3>Unanalyzed Evidence</h3>
+            <ul id="unanalyzed-list">
+                <li>No evidence found.</li>
+            </ul>
+            <h3>Usable Clues</h3>
             <ul id="clue-list">
-                <li>No clues found.</li>
+                <li>No usable clues.</li>
             </ul>
         </div>
     </div>
@@ -218,6 +236,7 @@
                 'Colonel Mustard'
             ],
             foundClues: [],
+            unanalyzedClues: [],
             knownSuspects: [],
             solution: {}
         };
@@ -270,6 +289,7 @@
                 state.locations[locKeys[i]].suspect = shuffledSuspects[i];
             }
             state.foundClues = [];
+            state.unanalyzedClues = [];
         }
 
         function startGame() {
@@ -316,8 +336,8 @@
                 loc.searched = true;
                 if (loc.clue) {
                     loc.clueFound = true;
-                    state.foundClues.push(`[${state.currentLocation}] ${loc.clue}`);
-                    alert(`You found a clue: ${loc.clue}`);
+                    state.unanalyzedClues.push({ locName: state.currentLocation, realClue: loc.clue });
+                    alert("You found a mysterious object! Take it to the Evidence Lab to analyze.");
                 } else {
                     alert("You didn't find anything useful here.");
                 }
@@ -435,6 +455,76 @@
             updateLocation();
         }
 
+        function openLab() {
+            document.getElementById('action-area').classList.add('hidden');
+            document.getElementById('travel-container').classList.add('hidden');
+            document.getElementById('interrogation-area').classList.add('hidden');
+            document.getElementById('lab-area').classList.remove('hidden');
+            renderLabList();
+        }
+
+        function renderLabList() {
+            const listDiv = document.getElementById('lab-list');
+            document.getElementById('scanner-game').classList.add('hidden');
+            
+            if (state.unanalyzedClues.length === 0) {
+                listDiv.innerHTML = '<p>No unanalyzed evidence.</p>';
+                return;
+            }
+            
+            let html = '<p>Select evidence to analyze:</p><div class="dialogue-options">';
+            state.unanalyzedClues.forEach((c, idx) => {
+                html += `<button onclick="startAnalysis(${idx})">Object from ${c.locName}</button>`;
+            });
+            html += '</div>';
+            listDiv.innerHTML = html;
+        }
+
+        let analysisState = null;
+        function startAnalysis(idx) {
+            analysisState = {
+                idx: idx,
+                target: Math.floor(Math.random() * 30) + 50,
+                current: 0,
+                moves: 12
+            };
+            updateScannerUI();
+            document.getElementById('lab-list').innerHTML = '';
+            document.getElementById('scanner-game').classList.remove('hidden');
+        }
+
+        function updateScannerUI() {
+            document.getElementById('scanner-target').textContent = analysisState.target;
+            document.getElementById('scanner-current').textContent = analysisState.current;
+            document.getElementById('scanner-moves').textContent = analysisState.moves;
+        }
+
+        function adjScanner(val) {
+            analysisState.current += val;
+            analysisState.moves--;
+            
+            if (analysisState.current === analysisState.target) {
+                const item = state.unanalyzedClues[analysisState.idx];
+                state.unanalyzedClues.splice(analysisState.idx, 1);
+                state.foundClues.push(`[${item.locName}] ${item.realClue}`);
+                alert(`Analysis complete! Revealed: ${item.realClue}`);
+                updateNotebook();
+                renderLabList();
+            } else if (analysisState.moves <= 0) {
+                alert("Calibration failed. Try again.");
+                renderLabList();
+            } else {
+                updateScannerUI();
+            }
+        }
+
+        function closeLab() {
+            document.getElementById('lab-area').classList.add('hidden');
+            document.getElementById('action-area').classList.remove('hidden');
+            document.getElementById('travel-container').classList.remove('hidden');
+            updateLocation();
+        }
+
         function updateNotebook() {
             const suspectList = document.getElementById('suspect-list');
             if (state.knownSuspects.length > 0) {
@@ -443,11 +533,18 @@
                 suspectList.innerHTML = '<li>No suspects yet.</li>';
             }
 
+            const unanalyzedList = document.getElementById('unanalyzed-list');
+            if (state.unanalyzedClues.length > 0) {
+                unanalyzedList.innerHTML = state.unanalyzedClues.map(c => `<li>Object from ${c.locName}</li>`).join('');
+            } else {
+                unanalyzedList.innerHTML = '<li>No evidence found.</li>';
+            }
+
             const clueList = document.getElementById('clue-list');
             if (state.foundClues.length > 0) {
                 clueList.innerHTML = state.foundClues.map(c => `<li>${c}</li>`).join('');
             } else {
-                clueList.innerHTML = '<li>No clues found.</li>';
+                clueList.innerHTML = '<li>No usable clues.</li>';
             }
         }
     </script>

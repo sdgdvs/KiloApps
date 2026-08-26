@@ -41,11 +41,20 @@ void my_strcpy(char* dest, const char* src) {
 #define ID_BTN_ASK_ALIBI 1009
 #define ID_BTN_PRESENT_CLUE 1010
 #define ID_BTN_END_INT 1011
+#define ID_BTN_LAB 1012
+#define ID_BTN_LEAVE_LAB 1013
+#define ID_BTN_ANALYZE 1014
+#define ID_BTN_SCAN_11 1015
+#define ID_BTN_SCAN_7 1016
+#define ID_BTN_SCAN_M3 1017
+#define ID_LIST_UNANALYZED 1018
 
 HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, hBtnTravelDocks;
-HWND hSuspectTitle, hListSuspects, hClueTitle, hListClues;
+HWND hSuspectTitle, hListSuspects, hClueTitle, hListClues, hUnanalyzedTitle, hListUnanalyzed;
 HWND hStartPanel, hBtnStart, hStartDesc;
 HWND hBtnInterrogate, hIntDesc, hBtnAskAlibi, hBtnPresentClue, hBtnEndInt;
+HWND hBtnLab, hLabTitle, hBtnAnalyze, hBtnLeaveLab;
+HWND hScanDesc, hBtnScan11, hBtnScan7, hBtnScanM3;
 HFONT hFont, hFontBold, hFontTitle;
 
 int currentState = 0; // 0 = start, 1 = playing
@@ -79,6 +88,18 @@ typedef struct {
 } Solution;
 
 Solution currentSolution;
+
+typedef struct {
+    int locIdx;
+    char clue[128];
+} Unanalyzed;
+Unanalyzed unanalyzed[3];
+int numUnanalyzed = 0;
+
+int scanTarget = 0;
+int scanCurrent = 0;
+int scanMoves = 0;
+int scanItemIdx = 0;
 
 unsigned int my_seed = 0;
 int my_rand() {
@@ -153,11 +174,23 @@ void UpdateUI() {
         ShowWindow(hListSuspects, SW_HIDE);
         ShowWindow(hClueTitle, SW_HIDE);
         ShowWindow(hListClues, SW_HIDE);
+        ShowWindow(hUnanalyzedTitle, SW_HIDE);
+        ShowWindow(hListUnanalyzed, SW_HIDE);
         
         ShowWindow(hIntDesc, SW_HIDE);
         ShowWindow(hBtnAskAlibi, SW_HIDE);
         ShowWindow(hBtnPresentClue, SW_HIDE);
         ShowWindow(hBtnEndInt, SW_HIDE);
+
+        ShowWindow(hBtnLab, SW_HIDE);
+        ShowWindow(hLabTitle, SW_HIDE);
+        ShowWindow(hBtnAnalyze, SW_HIDE);
+        ShowWindow(hBtnLeaveLab, SW_HIDE);
+        
+        ShowWindow(hScanDesc, SW_HIDE);
+        ShowWindow(hBtnScan11, SW_HIDE);
+        ShowWindow(hBtnScan7, SW_HIDE);
+        ShowWindow(hBtnScanM3, SW_HIDE);
     } else if (currentState == 1) {
         ShowWindow(hStartPanel, SW_HIDE);
         ShowWindow(hStartDesc, SW_HIDE);
@@ -175,11 +208,23 @@ void UpdateUI() {
         ShowWindow(hListSuspects, SW_SHOW);
         ShowWindow(hClueTitle, SW_SHOW);
         ShowWindow(hListClues, SW_SHOW);
+        ShowWindow(hUnanalyzedTitle, SW_SHOW);
+        ShowWindow(hListUnanalyzed, SW_SHOW);
         
         ShowWindow(hIntDesc, SW_HIDE);
         ShowWindow(hBtnAskAlibi, SW_HIDE);
         ShowWindow(hBtnPresentClue, SW_HIDE);
         ShowWindow(hBtnEndInt, SW_HIDE);
+        
+        ShowWindow(hBtnLab, SW_SHOW);
+        ShowWindow(hLabTitle, SW_HIDE);
+        ShowWindow(hBtnAnalyze, SW_HIDE);
+        ShowWindow(hBtnLeaveLab, SW_HIDE);
+        
+        ShowWindow(hScanDesc, SW_HIDE);
+        ShowWindow(hBtnScan11, SW_HIDE);
+        ShowWindow(hBtnScan7, SW_HIDE);
+        ShowWindow(hBtnScanM3, SW_HIDE);
         
         char locNameBuf[64];
         wsprintfA(locNameBuf, "Location: %s", locations[currentLocation].name);
@@ -207,19 +252,68 @@ void UpdateUI() {
         ShowWindow(hBtnTravelOffice, SW_HIDE);
         ShowWindow(hBtnTravelManor, SW_HIDE);
         ShowWindow(hBtnTravelDocks, SW_HIDE);
+        ShowWindow(hBtnLab, SW_HIDE);
         
         ShowWindow(hIntDesc, SW_SHOW);
         ShowWindow(hBtnAskAlibi, SW_SHOW);
         ShowWindow(hBtnPresentClue, SW_SHOW);
         ShowWindow(hBtnEndInt, SW_SHOW);
+    } else if (currentState == 3) {
+        ShowWindow(hBtnSearch, SW_HIDE);
+        ShowWindow(hBtnInterrogate, SW_HIDE);
+        ShowWindow(hBtnTravelOffice, SW_HIDE);
+        ShowWindow(hBtnTravelManor, SW_HIDE);
+        ShowWindow(hBtnTravelDocks, SW_HIDE);
+        ShowWindow(hBtnLab, SW_HIDE);
+        
+        ShowWindow(hIntDesc, SW_HIDE);
+        ShowWindow(hBtnAskAlibi, SW_HIDE);
+        ShowWindow(hBtnPresentClue, SW_HIDE);
+        ShowWindow(hBtnEndInt, SW_HIDE);
+        
+        ShowWindow(hLabTitle, SW_SHOW);
+        ShowWindow(hBtnAnalyze, SW_SHOW);
+        ShowWindow(hBtnLeaveLab, SW_SHOW);
+        
+        ShowWindow(hScanDesc, SW_HIDE);
+        ShowWindow(hBtnScan11, SW_HIDE);
+        ShowWindow(hBtnScan7, SW_HIDE);
+        ShowWindow(hBtnScanM3, SW_HIDE);
+    } else if (currentState == 4) {
+        ShowWindow(hBtnSearch, SW_HIDE);
+        ShowWindow(hBtnInterrogate, SW_HIDE);
+        ShowWindow(hBtnTravelOffice, SW_HIDE);
+        ShowWindow(hBtnTravelManor, SW_HIDE);
+        ShowWindow(hBtnTravelDocks, SW_HIDE);
+        ShowWindow(hBtnLab, SW_HIDE);
+        
+        ShowWindow(hIntDesc, SW_HIDE);
+        ShowWindow(hBtnAskAlibi, SW_HIDE);
+        ShowWindow(hBtnPresentClue, SW_HIDE);
+        ShowWindow(hBtnEndInt, SW_HIDE);
+        
+        ShowWindow(hLabTitle, SW_HIDE);
+        ShowWindow(hBtnAnalyze, SW_HIDE);
+        ShowWindow(hBtnLeaveLab, SW_SHOW);
+        
+        ShowWindow(hScanDesc, SW_SHOW);
+        ShowWindow(hBtnScan11, SW_SHOW);
+        ShowWindow(hBtnScan7, SW_SHOW);
+        ShowWindow(hBtnScanM3, SW_SHOW);
+        
+        char scanBuf[256];
+        wsprintfA(scanBuf, "Calibrate Scanner to reveal clue.\nTarget: %d | Current: %d | Moves: %d", scanTarget, scanCurrent, scanMoves);
+        SetWindowTextA(hScanDesc, scanBuf);
     }
 }
 
 void StartGame() {
     GenerateMystery();
     currentState = 1;
+    numUnanalyzed = 0;
     SendMessageA(hListSuspects, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListClues, LB_RESETCONTENT, 0, 0);
+    SendMessageA(hListUnanalyzed, LB_RESETCONTENT, 0, 0);
     for (int i = 0; i < 3; i++) {
         SendMessageA(hListSuspects, LB_ADDSTRING, 0, (LPARAM)suspects[i]);
     }
@@ -231,13 +325,16 @@ void SearchLocation(HWND hwnd) {
         locations[currentLocation].searched = 1;
         if (my_strlen(locations[currentLocation].clue) > 0) {
             locations[currentLocation].clueFound = 1;
-            char clueEntry[256];
-            wsprintfA(clueEntry, "[%s] %s", locations[currentLocation].name, locations[currentLocation].clue);
-            SendMessageA(hListClues, LB_ADDSTRING, 0, (LPARAM)clueEntry);
             
-            char msgBuf[256];
-            wsprintfA(msgBuf, "You found a clue: %s", locations[currentLocation].clue);
-            MessageBoxA(hwnd, msgBuf, "Clue Found", MB_OK | MB_ICONINFORMATION);
+            unanalyzed[numUnanalyzed].locIdx = currentLocation;
+            my_strcpy(unanalyzed[numUnanalyzed].clue, locations[currentLocation].clue);
+            numUnanalyzed++;
+            
+            char itemBuf[256];
+            wsprintfA(itemBuf, "Object from %s", locations[currentLocation].name);
+            SendMessageA(hListUnanalyzed, LB_ADDSTRING, 0, (LPARAM)itemBuf);
+            
+            MessageBoxA(hwnd, "You found a mysterious object! Take it to the Evidence Lab to analyze.", "Object Found", MB_OK | MB_ICONINFORMATION);
         } else {
             MessageBoxA(hwnd, "You didn't find anything useful here.", "Nothing Found", MB_OK | MB_ICONINFORMATION);
         }
@@ -273,6 +370,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnTravelManor = CreateWindowA("BUTTON", "Travel to The Manor", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_MANOR, NULL, NULL);
             hBtnTravelDocks = CreateWindowA("BUTTON", "Travel to The Docks", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_DOCKS, NULL, NULL);
             
+            hBtnLab = CreateWindowA("BUTTON", "Evidence Lab", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LAB, NULL, NULL);
+            hLabTitle = CreateWindowA("STATIC", "Evidence Lab", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hBtnAnalyze = CreateWindowA("BUTTON", "Analyze Selected Object", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_ANALYZE, NULL, NULL);
+            hBtnLeaveLab = CreateWindowA("BUTTON", "Leave Lab", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LEAVE_LAB, NULL, NULL);
+            
+            hScanDesc = CreateWindowA("STATIC", "", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hBtnScan11 = CreateWindowA("BUTTON", "+11", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_11, NULL, NULL);
+            hBtnScan7 = CreateWindowA("BUTTON", "+7", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_7, NULL, NULL);
+            hBtnScanM3 = CreateWindowA("BUTTON", "-3", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_M3, NULL, NULL);
+            
             hIntDesc = CreateWindowA("STATIC", "", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hBtnAskAlibi = CreateWindowA("BUTTON", "Ask for Alibi", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_ASK_ALIBI, NULL, NULL);
             hBtnPresentClue = CreateWindowA("BUTTON", "Present Selected Clue", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_PRESENT_CLUE, NULL, NULL);
@@ -281,7 +388,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hSuspectTitle = CreateWindowA("STATIC", "Notebook - Suspects", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hListSuspects = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_HASSTRINGS, 0, 0, 0, 0, hwnd, (HMENU)ID_LIST_SUSPECTS, NULL, NULL);
             
-            hClueTitle = CreateWindowA("STATIC", "Notebook - Clues", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hUnanalyzedTitle = CreateWindowA("STATIC", "Notebook - Unanalyzed", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hListUnanalyzed = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_HASSTRINGS, 0, 0, 0, 0, hwnd, (HMENU)ID_LIST_UNANALYZED, NULL, NULL);
+            
+            hClueTitle = CreateWindowA("STATIC", "Notebook - Usable Clues", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hListClues = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_HASSTRINGS | WS_HSCROLL, 0, 0, 0, 0, hwnd, (HMENU)ID_LIST_CLUES, NULL, NULL);
 
             SendMessageA(hStartDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -296,6 +406,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnTravelDocks, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hSuspectTitle, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hListSuspects, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hUnanalyzedTitle, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hListUnanalyzed, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hClueTitle, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hListClues, WM_SETFONT, (WPARAM)hFont, TRUE);
             
@@ -303,6 +415,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnAskAlibi, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnPresentClue, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnEndInt, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            SendMessageA(hBtnLab, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hLabTitle, WM_SETFONT, (WPARAM)hFontTitle, TRUE);
+            SendMessageA(hBtnAnalyze, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnLeaveLab, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hScanDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnScan11, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnScan7, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnScanM3, WM_SETFONT, (WPARAM)hFontBold, TRUE);
 
             UpdateUI();
             break;
@@ -328,9 +449,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hLocName, pad, top, leftW, 24, TRUE);
                 MoveWindow(hLocDesc, pad, top + 30, leftW, 60, TRUE);
                 MoveWindow(hBtnSearch, pad, top + 100, 160, 30, TRUE);
-                MoveWindow(hBtnInterrogate, pad + 170, top + 100, 200, 30, TRUE);
+                MoveWindow(hBtnInterrogate, pad + 170, top + 100, 160, 30, TRUE);
+                MoveWindow(hBtnLab, pad, top + 140, 160, 30, TRUE);
                 
-                int travelY = top + 150;
+                int travelY = top + 180;
                 MoveWindow(hBtnTravelOffice, pad, travelY, 200, 30, TRUE);
                 MoveWindow(hBtnTravelManor, pad, travelY + 40, 200, 30, TRUE);
                 MoveWindow(hBtnTravelDocks, pad, travelY + 80, 200, 30, TRUE);
@@ -340,13 +462,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hBtnPresentClue, pad + 160, travelY + 70, 200, 30, TRUE);
                 MoveWindow(hBtnEndInt, pad, travelY + 110, 150, 30, TRUE);
                 
+                MoveWindow(hLabTitle, pad, travelY, leftW - pad, 30, TRUE);
+                MoveWindow(hBtnAnalyze, pad, travelY + 40, 250, 30, TRUE);
+                MoveWindow(hBtnLeaveLab, pad, travelY + 80, 150, 30, TRUE);
+                
+                MoveWindow(hScanDesc, pad, travelY, leftW - pad, 60, TRUE);
+                MoveWindow(hBtnScan11, pad, travelY + 70, 80, 30, TRUE);
+                MoveWindow(hBtnScan7, pad + 90, travelY + 70, 80, 30, TRUE);
+                MoveWindow(hBtnScanM3, pad + 180, travelY + 70, 80, 30, TRUE);
+                MoveWindow(hBtnLeaveLab, pad, travelY + 110, 150, 30, TRUE);
+                
                 int rightX = pad*2 + leftW;
-                int listH = (cy - top - pad*2 - 60) / 2;
+                int listH = (cy - top - pad*2 - 90) / 3;
+                if (listH < 50) listH = 50; // min height
                 
                 MoveWindow(hSuspectTitle, rightX, top, rightW, 24, TRUE);
                 MoveWindow(hListSuspects, rightX, top + 30, rightW, listH, TRUE);
                 
-                int clueY = top + 30 + listH + 20;
+                int unY = top + 30 + listH + 10;
+                MoveWindow(hUnanalyzedTitle, rightX, unY, rightW, 24, TRUE);
+                MoveWindow(hListUnanalyzed, rightX, unY + 30, rightW, listH, TRUE);
+                
+                int clueY = unY + 30 + listH + 10;
                 MoveWindow(hClueTitle, rightX, clueY, rightW, 24, TRUE);
                 MoveWindow(hListClues, rightX, clueY + 30, rightW, cy - (clueY + 30) - pad, TRUE);
             }
@@ -424,6 +561,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             SetWindowTextA(hIntDesc, "\"That doesn't belong to me.\"");
                         }
                     }
+                }
+            } else if (id == ID_BTN_LAB) {
+                currentState = 3;
+                UpdateUI();
+            } else if (id == ID_BTN_LEAVE_LAB) {
+                currentState = 1;
+                UpdateUI();
+            } else if (id == ID_BTN_ANALYZE) {
+                int sel = SendMessageA(hListUnanalyzed, LB_GETCURSEL, 0, 0);
+                if (sel == LB_ERR) {
+                    MessageBoxA(hwnd, "Select an object from the Unanalyzed Evidence list first.", "No Selection", MB_OK);
+                } else {
+                    scanItemIdx = sel;
+                    scanTarget = (my_rand() % 30) + 50;
+                    scanCurrent = 0;
+                    scanMoves = 12;
+                    currentState = 4;
+                    UpdateUI();
+                }
+            } else if (id >= ID_BTN_SCAN_11 && id <= ID_BTN_SCAN_M3) {
+                if (id == ID_BTN_SCAN_11) scanCurrent += 11;
+                else if (id == ID_BTN_SCAN_7) scanCurrent += 7;
+                else if (id == ID_BTN_SCAN_M3) scanCurrent -= 3;
+                
+                scanMoves--;
+                
+                if (scanCurrent == scanTarget) {
+                    char foundText[256];
+                    wsprintfA(foundText, "[%s] %s", locations[unanalyzed[scanItemIdx].locIdx].name, unanalyzed[scanItemIdx].clue);
+                    SendMessageA(hListClues, LB_ADDSTRING, 0, (LPARAM)foundText);
+                    
+                    char msgBuf[256];
+                    wsprintfA(msgBuf, "Analysis complete! Revealed:\n%s", unanalyzed[scanItemIdx].clue);
+                    MessageBoxA(hwnd, msgBuf, "Success", MB_OK | MB_ICONINFORMATION);
+                    
+                    SendMessageA(hListUnanalyzed, LB_DELETESTRING, scanItemIdx, 0);
+                    for (int i = scanItemIdx; i < numUnanalyzed - 1; i++) {
+                        unanalyzed[i] = unanalyzed[i+1];
+                    }
+                    numUnanalyzed--;
+                    
+                    currentState = 3;
+                    UpdateUI();
+                } else if (scanMoves <= 0) {
+                    MessageBoxA(hwnd, "Calibration failed. Try again.", "Failed", MB_OK | MB_ICONERROR);
+                    currentState = 3;
+                    UpdateUI();
+                } else {
+                    char scanBuf[256];
+                    wsprintfA(scanBuf, "Calibrate Scanner to reveal clue.\nTarget: %d | Current: %d | Moves: %d", scanTarget, scanCurrent, scanMoves);
+                    SetWindowTextA(hScanDesc, scanBuf);
                 }
             }
             break;
