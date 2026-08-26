@@ -761,6 +761,62 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 DeleteObject(cursorBrush);
             }
 
+            // --- NEW: Draw Visuals (Player, Enemy, Key Item) ---
+            int vx = clientRect.right - 120;
+            int vy = 40;
+            if (vx > 200) { // ensure we have space
+                if (hacking_node) {
+                    // Draw Main Enemy (ICE)
+                    HPEN redPen = CreatePen(PS_SOLID, 2, RGB(255, 50, 50));
+                    HBRUSH redBrush = CreateSolidBrush(RGB(100, 0, 0));
+                    HPEN oldPenVis = (HPEN)SelectObject(hdc, redPen);
+                    HBRUSH oldBrushVis = (HBRUSH)SelectObject(hdc, redBrush);
+                    
+                    POINT icePts[6] = {{vx+40, vy}, {vx+80, vy+30}, {vx+80, vy+80}, {vx+40, vy+110}, {vx, vy+80}, {vx, vy+30}};
+                    Polygon(hdc, icePts, 6);
+                    
+                    MoveToEx(hdc, vx+20, vy+40, NULL); LineTo(hdc, vx+35, vy+55);
+                    MoveToEx(hdc, vx+60, vy+40, NULL); LineTo(hdc, vx+45, vy+55);
+                    
+                    SelectObject(hdc, oldPenVis);
+                    SelectObject(hdc, oldBrushVis);
+                    DeleteObject(redPen);
+                    DeleteObject(redBrush);
+                } else if (connected_node) {
+                    // Draw Key Item (Data File)
+                    HPEN cyanPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+                    HBRUSH cyanBrush = CreateSolidBrush(RGB(0, 50, 50));
+                    HPEN oldPenVis = (HPEN)SelectObject(hdc, cyanPen);
+                    HBRUSH oldBrushVis = (HBRUSH)SelectObject(hdc, cyanBrush);
+                    
+                    Rectangle(hdc, vx+10, vy, vx+70, vy+90);
+                    MoveToEx(hdc, vx+20, vy+15, NULL); LineTo(hdc, vx+60, vy+15);
+                    MoveToEx(hdc, vx+20, vy+30, NULL); LineTo(hdc, vx+60, vy+30);
+                    MoveToEx(hdc, vx+20, vy+45, NULL); LineTo(hdc, vx+40, vy+45);
+                    
+                    SelectObject(hdc, oldPenVis);
+                    SelectObject(hdc, oldBrushVis);
+                    DeleteObject(cyanPen);
+                    DeleteObject(cyanBrush);
+                } else {
+                    // Draw Player (Cyberdeck)
+                    HPEN greenPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
+                    HBRUSH greenBrush = CreateSolidBrush(RGB(0, 50, 0));
+                    HPEN oldPenVis = (HPEN)SelectObject(hdc, greenPen);
+                    HBRUSH oldBrushVis = (HBRUSH)SelectObject(hdc, greenBrush);
+                    
+                    Rectangle(hdc, vx+10, vy, vx+70, vy+50);
+                    POINT deckPts[4] = {{vx+10, vy+50}, {vx+70, vy+50}, {vx+90, vy+80}, {vx-10, vy+80}};
+                    Polygon(hdc, deckPts, 4);
+                    
+                    SelectObject(hdc, oldPenVis);
+                    SelectObject(hdc, oldBrushVis);
+                    DeleteObject(greenPen);
+                    DeleteObject(greenBrush);
+                }
+            }
+            // ----------------------------------------------------
+
             // Draw scanlines
             HPEN scanPen = CreatePen(PS_SOLID, 1, RGB(0, 30, 0));
             HPEN oldPen = SelectObject(hdc, scanPen);

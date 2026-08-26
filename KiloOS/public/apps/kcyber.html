@@ -93,6 +93,9 @@
       <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus />
     </div>
   </div>
+  <div id="visuals" style="position: absolute; right: 30px; top: 30px; width: 120px; height: 120px; pointer-events: none; z-index: 50;">
+    <canvas id="gfxCanvas" width="120" height="120"></canvas>
+  </div>
   <script>
     const outputDiv = document.getElementById('output');
     const cmdInput = document.getElementById('cmd-input');
@@ -208,6 +211,66 @@
       }
     }
 
+    const canvas = document.getElementById('gfxCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function drawVisuals() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (hacking_node) {
+        // Main Enemy (ICE)
+        ctx.strokeStyle = '#ff3232';
+        ctx.fillStyle = '#640000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(60, 5);
+        ctx.lineTo(110, 35);
+        ctx.lineTo(110, 85);
+        ctx.lineTo(60, 115);
+        ctx.lineTo(10, 85);
+        ctx.lineTo(10, 35);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(30, 45); ctx.lineTo(45, 60);
+        ctx.moveTo(90, 45); ctx.lineTo(75, 60);
+        ctx.stroke();
+      } else if (connected_node) {
+        // Key Item (Data File)
+        ctx.strokeStyle = '#00ffff';
+        ctx.fillStyle = '#003232';
+        ctx.lineWidth = 2;
+        ctx.fillRect(30, 5, 60, 90);
+        ctx.strokeRect(30, 5, 60, 90);
+        
+        ctx.beginPath();
+        ctx.moveTo(40, 20); ctx.lineTo(80, 20);
+        ctx.moveTo(40, 35); ctx.lineTo(80, 35);
+        ctx.moveTo(40, 50); ctx.lineTo(60, 50);
+        ctx.stroke();
+      } else {
+        // Player (Cyberdeck)
+        ctx.strokeStyle = '#00ff00';
+        ctx.fillStyle = '#003200';
+        ctx.lineWidth = 2;
+        
+        // Screen
+        ctx.fillRect(30, 15, 60, 50);
+        ctx.strokeRect(30, 15, 60, 50);
+        
+        // Base
+        ctx.beginPath();
+        ctx.moveTo(30, 65);
+        ctx.lineTo(90, 65);
+        ctx.lineTo(110, 95);
+        ctx.lineTo(10, 95);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
     function updatePrompt() {
       if (hacking_node) {
         promptSpan.textContent = `[NODE ${hacking_node}] hack> `;
@@ -218,6 +281,7 @@
       } else {
         promptSpan.textContent = `root@cyberdeck:~# `;
       }
+      drawVisuals();
     }
 
     function printLine(text) {
@@ -669,6 +733,7 @@
     printLine("Loading modules... OK");
     printLine("Initializing memory... OK");
     printLine("Type 'help' for a list of commands.");
+    drawVisuals();
   </script>
 </body>
 </html>

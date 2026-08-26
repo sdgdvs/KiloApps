@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KCyber
 - KBreakout
 - KMaze
 - KColony
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPac
 - KSnake
 - KTetris
+- KCyber
 ## Completed Work Log
+
+- **KCyber (Loop 1):** Introduced a state-based graphical visualization overlay to the text-based terminal interface. Replaced abstract state logic with actual graphical sprites: a stylized green Cyberdeck/laptop for the player when idle, a red spiked geometric ICE shape for the main enemy during hacks, and a cyan floppy disk for key items when connected to root nodes in both Web Canvas (kcyber.html) and Native C Win32 GDI (KCyber/main.c).
 
 - **KTetris (Loop 7):** Implemented highly polished visual effects including multi-layered particle explosions (sparks, smoke, and flying fragments) for bombs and active skills, and enhanced kinematically animated visual effects for hard drops featuring vertical streaks and dense smoke/fragment bursts upon impact in both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 
