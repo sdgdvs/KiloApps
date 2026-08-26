@@ -156,7 +156,7 @@
     
     <div id="game-screen" class="hidden">
         <div class="panel" id="main-panel">
-            <h2>Location: <span id="current-location">Office</span></h2>
+            <h2>Location: <span id="current-location">Office</span> <span style="float:right; color:#ff5555;">Time Left: <span id="time-left">12</span>h</span></h2>
             <div id="location-description">
                 You are in your office. The phone just rang about a murder.
             </div>
@@ -209,6 +209,7 @@
     <script>
         const state = {
             currentLocation: 'Office',
+            timeLeft: 12,
             locations: {
                 'Office': {
                     desc: 'Your dingy office. Dust motes dance in the light filtering through the blinds.',
@@ -298,6 +299,9 @@
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
             
+            state.timeLeft = 12;
+            document.getElementById('time-left').textContent = state.timeLeft;
+            
             // Add suspects to notebook
             state.knownSuspects = [...state.suspects];
             
@@ -330,9 +334,25 @@
             renderTravelButtons();
         }
 
+        function advanceTime(hours) {
+            state.timeLeft -= hours;
+            if (state.timeLeft < 0) state.timeLeft = 0;
+            document.getElementById('time-left').textContent = state.timeLeft;
+            if (state.timeLeft <= 0) {
+                alert("Time's up! The killer has escaped. GAME OVER. (Refresh to restart)");
+                document.getElementById('action-area').classList.add('hidden');
+                document.getElementById('travel-container').classList.add('hidden');
+                document.getElementById('interrogation-area').classList.add('hidden');
+                document.getElementById('lab-area').classList.add('hidden');
+                return true;
+            }
+            return false;
+        }
+
         function searchLocation() {
             const loc = state.locations[state.currentLocation];
             if (!loc.searched) {
+                if (advanceTime(2)) return;
                 loc.searched = true;
                 if (loc.clue) {
                     loc.clueFound = true;
@@ -348,6 +368,7 @@
 
         function travel(locationName) {
             if (state.locations[locationName]) {
+                if (advanceTime(1)) return;
                 state.currentLocation = locationName;
                 updateLocation();
             }
@@ -367,6 +388,7 @@
         }
         
         function startInterrogation() {
+            if (advanceTime(1)) return;
             document.getElementById('action-area').classList.add('hidden');
             document.getElementById('travel-container').classList.add('hidden');
             
@@ -482,6 +504,7 @@
 
         let analysisState = null;
         function startAnalysis(idx) {
+            if (advanceTime(1)) return;
             analysisState = {
                 idx: idx,
                 target: Math.floor(Math.random() * 30) + 50,

@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KMystery (Murder mystery deduction game)
-**Phase:** 8 (next to do)
+**Phase:** 9 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KMystery directory (`KMystery/`), create web HTML skeleton (`KiloOS/public/apps/kmystery.html`), register in App.jsx.
@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Implement procedural mystery generation (randomly assign killer, motive, and weapon among suspects).
 - [x] Phase 6: Interrogation system (choose dialogue options to question suspects and catch them in lies based on clues).
 - [x] Phase 7: Evidence lab mini-game (analyze found objects to extract usable clues like fingerprints or chemical traces).
-- [ ] Phase 8: Time limit mechanics (actions take time; solve the case before the killer strikes again or escapes).
+- [x] Phase 8: Time limit mechanics (actions take time; solve the case before the killer strikes again or escapes).
 - [ ] Phase 9: Advanced Suspect AI (suspects have alibis that must be cross-referenced, and may refuse to talk if intimidated).
 - [ ] Phase 10: Accusation system (present the correct suspect, motive, and weapon in a final showdown; failure means game over).
 - [ ] Phase 11: Multiple difficulty levels (Easy/Medium/Hard) increasing the number of suspects, locations, and reducing time limit.

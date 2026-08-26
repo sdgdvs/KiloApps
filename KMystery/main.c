@@ -55,7 +55,10 @@ HWND hStartPanel, hBtnStart, hStartDesc;
 HWND hBtnInterrogate, hIntDesc, hBtnAskAlibi, hBtnPresentClue, hBtnEndInt;
 HWND hBtnLab, hLabTitle, hBtnAnalyze, hBtnLeaveLab;
 HWND hScanDesc, hBtnScan11, hBtnScan7, hBtnScanM3;
+HWND hTimeLeft;
 HFONT hFont, hFontBold, hFontTitle;
+
+int timeLeft = 12;
 
 int currentState = 0; // 0 = start, 1 = playing
 int currentLocation = 0; // 0 = Office, 1 = Manor, 2 = Docks
@@ -162,6 +165,7 @@ void UpdateUI() {
         ShowWindow(hStartDesc, SW_SHOW);
         ShowWindow(hBtnStart, SW_SHOW);
         
+        ShowWindow(hTimeLeft, SW_HIDE);
         ShowWindow(hTitle, SW_HIDE);
         ShowWindow(hLocName, SW_HIDE);
         ShowWindow(hLocDesc, SW_HIDE);
@@ -196,6 +200,7 @@ void UpdateUI() {
         ShowWindow(hStartDesc, SW_HIDE);
         ShowWindow(hBtnStart, SW_HIDE);
         
+        ShowWindow(hTimeLeft, SW_SHOW);
         ShowWindow(hTitle, SW_SHOW);
         ShowWindow(hLocName, SW_SHOW);
         ShowWindow(hLocDesc, SW_SHOW);
@@ -310,6 +315,10 @@ void UpdateUI() {
 void StartGame() {
     GenerateMystery();
     currentState = 1;
+    timeLeft = 12;
+    char timeBuf[64];
+    wsprintfA(timeBuf, "Time Left: %dh", timeLeft);
+    SetWindowTextA(hTimeLeft, timeBuf);
     numUnanalyzed = 0;
     SendMessageA(hListSuspects, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListClues, LB_RESETCONTENT, 0, 0);
@@ -320,8 +329,26 @@ void StartGame() {
     UpdateUI();
 }
 
+int AdvanceTime(HWND hwnd, int hours) {
+    timeLeft -= hours;
+    if (timeLeft < 0) timeLeft = 0;
+    
+    char timeBuf[64];
+    wsprintfA(timeBuf, "Time Left: %dh", timeLeft);
+    SetWindowTextA(hTimeLeft, timeBuf);
+    
+    if (timeLeft <= 0) {
+        MessageBoxA(hwnd, "Time's up! The killer has escaped. GAME OVER. (Restart to play again)", "Game Over", MB_OK | MB_ICONERROR);
+        currentState = 0;
+        UpdateUI();
+        return 1;
+    }
+    return 0;
+}
+
 void SearchLocation(HWND hwnd) {
     if (!locations[currentLocation].searched) {
+        if (AdvanceTime(hwnd, 2)) return;
         locations[currentLocation].searched = 1;
         if (my_strlen(locations[currentLocation].clue) > 0) {
             locations[currentLocation].clueFound = 1;
@@ -360,6 +387,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnStart = CreateWindowA("BUTTON", "Start Investigation", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START, NULL, NULL);
 
             // Game Screen
+            hTimeLeft = CreateWindowA("STATIC", "Time Left: 12h", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hTitle = CreateWindowA("STATIC", "KMystery", WS_CHILD | SS_CENTER, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hLocName = CreateWindowA("STATIC", "Location:", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hLocDesc = CreateWindowA("STATIC", "", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
@@ -396,6 +424,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SendMessageA(hStartDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnStart, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hTimeLeft, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hTitle, WM_SETFONT, (WPARAM)hFontTitle, TRUE);
             SendMessageA(hLocName, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hLocDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -444,6 +473,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int rightW = leftW;
                 
                 MoveWindow(hTitle, 0, 0, cx, headerH, TRUE);
+                MoveWindow(hTimeLeft, cx - 170, pad, 150, 24, TRUE);
                 
                 int top = headerH + pad;
                 MoveWindow(hLocName, pad, top, leftW, 24, TRUE);
@@ -500,12 +530,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == ID_BTN_SEARCH) {
                 SearchLocation(hwnd);
             } else if (id == ID_BTN_TRAVEL_OFFICE) {
+                if (currentLocation != 0 && AdvanceTime(hwnd, 1)) break;
                 Travel(0);
             } else if (id == ID_BTN_TRAVEL_MANOR) {
+                if (currentLocation != 1 && AdvanceTime(hwnd, 1)) break;
                 Travel(1);
             } else if (id == ID_BTN_TRAVEL_DOCKS) {
+                if (currentLocation != 2 && AdvanceTime(hwnd, 1)) break;
                 Travel(2);
             } else if (id == ID_BTN_INTERROGATE) {
+                if (AdvanceTime(hwnd, 1)) break;
                 currentState = 2;
                 SetWindowTextA(hIntDesc, "\"What do you want, Detective?\"");
                 UpdateUI();
@@ -573,6 +607,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (sel == LB_ERR) {
                     MessageBoxA(hwnd, "Select an object from the Unanalyzed Evidence list first.", "No Selection", MB_OK);
                 } else {
+                    if (AdvanceTime(hwnd, 1)) break;
                     scanItemIdx = sel;
                     scanTarget = (my_rand() % 30) + 50;
                     scanCurrent = 0;
