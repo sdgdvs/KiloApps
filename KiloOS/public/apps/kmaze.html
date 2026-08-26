@@ -217,6 +217,8 @@
   
   let msgText = "";
   let damageFlinchTimer = 0;
+  let screenShakeTimer = 0;
+  let screenShakeIntensity = 0.0;
   let minotaurFacingDir = Array.from({length: 45}, () => Array(45).fill(0));
   let bobTime = 0, lastPX = 1.5, lastPY = 1.5, swayX = 0, lastDX = 1.0, lastDY = 0.0;
   let msgTimer = 0;
@@ -226,6 +228,11 @@
   let muzzleFlashTimer = 0;
   let recoilOffset = 0;
   let shockwaves = [];
+
+  function addScreenShake(duration, intensity) {
+      if (screenShakeTimer < duration) screenShakeTimer = duration;
+      if (screenShakeIntensity < intensity) screenShakeIntensity = intensity;
+  }
 
   // New variables
   let keyBinds = {
@@ -279,17 +286,17 @@
 
   // Particle System
   let particles = [];
-  function addParticles(x, y, color, count = 15) {
+  function addParticles(x, y, color, count = 25) {
       for (let i = 0; i < count; i++) {
           let angle = Math.random() * Math.PI * 2;
-          let speed = 0.5 + Math.random() * 2.5;
+          let speed = 1.0 + Math.random() * 4.0;
           particles.push({
               x: x + (Math.random() - 0.5) * 20,
               y: y + (Math.random() - 0.5) * 20,
               vx: Math.cos(angle) * speed,
               vy: Math.sin(angle) * speed,
-              life: 15 + Math.random() * 15,
-              maxLife: 30,
+              life: 20 + Math.random() * 20,
+              maxLife: 40,
               color: color
           });
       }
@@ -536,6 +543,13 @@
               else if (dist3 < 6.0) { r26 = 0; g26 = 0; b26 = 0; }
               else { r26 = 34; g26 = 0; b26 = 34; }
               textures[26][y * 16 + x] = (255 << 24) | (b26 << 16) | (g26 << 8) | r26;
+
+              // Animated Void Wall (t=22)
+              let noise = Math.floor(Math.random() * 40 - 20);
+              let v_old = textures[22][y * 16 + x];
+              let rv = Math.min(255, Math.max(0, (v_old & 0xFF) + noise));
+              let bv = Math.min(255, Math.max(0, ((v_old >> 16) & 0xFF) + noise));
+              textures[22][y * 16 + x] = (255 << 24) | (bv << 16) | (rv << 8) | rv;
           }
       }
   }
@@ -826,28 +840,31 @@
           hasPickaxe--;
           map[tx][ty] = 0;
           playTone(400, 'square', 0.1);
-          addParticles(W/2, H/2, '#a06030', 25);
+          addParticles(W/2, H/2, '#a06030', 40);
           msgText = "Wall Broken!"; msgTimer = 60;
           recoilOffset = 15;
           muzzleFlashTimer = 5;
+          addScreenShake(15, 0.2);
           shockwaves.push({x: tx + 0.5, y: ty + 0.5, radius: 0, life: 15});
       } else if (tVal === 12) {
           hasPickaxe--;
           map[tx][ty] = 0;
           score += 200;
           playTone(600, 'square', 0.2);
-          addParticles(W/2, H/2, '#ff0000', 25);
+          addParticles(W/2, H/2, '#ff0000', 40);
           msgText = "Minotaur Slain!"; msgTimer = 60;
           recoilOffset = 15;
           muzzleFlashTimer = 5;
+          addScreenShake(20, 0.3);
           shockwaves.push({x: tx + 0.5, y: ty + 0.5, radius: 0, life: 15});
       } else if (tVal === 15) {
           hasPickaxe--;
           bossHP--;
           playTone(700, 'square', 0.3);
-          addParticles(W/2, H/2, '#ffd700', 30);
+          addParticles(W/2, H/2, '#ffd700', 50);
           recoilOffset = 15;
           muzzleFlashTimer = 5;
+          addScreenShake(25, 0.4);
           shockwaves.push({x: tx + 0.5, y: ty + 0.5, radius: 0, life: 15});
           if (bossHP <= 0) {
               map[tx][ty] = 3;
@@ -1015,6 +1032,10 @@
       if (stunSprayTimer > 0) stunSprayTimer -= 30;
       if (timeFreezeTimer > 0) timeFreezeTimer -= 30;
       if (damageFlinchTimer > 0) damageFlinchTimer--;
+      if (screenShakeTimer > 0) {
+          screenShakeTimer--;
+          if (screenShakeTimer <= 0) screenShakeIntensity = 0.0;
+      }
 
       if (muzzleFlashTimer > 0) muzzleFlashTimer--;
       if (recoilOffset > 0) recoilOffset -= 1.5;
@@ -1068,6 +1089,7 @@
                   if (m.x === Math.floor(pX) && m.y === Math.floor(pY)) {
                       playTone(200, 'sawtooth', 0.5);
                       damageFlinchTimer = 20;
+                      addScreenShake(30, 0.5);
                       shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
                       score = Math.max(0, score - 100);
                       if (m.type === 15) {
@@ -1145,10 +1167,11 @@
       } else if (curVal === 6) {
           playTone(200, 'sawtooth', 0.2);
           damageFlinchTimer = 20;
+          addScreenShake(20, 0.3);
           shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
           score = Math.max(0, score - 50);
           pX = 1.5; pY = 1.5;
-          addParticles(W/2, H/2, '#ff3300', 20);
+          addParticles(W/2, H/2, '#ff3300', 40);
           msgText = "Burnt by Lava Trap!"; msgTimer = 60;
       } else if (curVal === 7) {
           map[Math.floor(pX)][Math.floor(pY)] = 0;
@@ -1198,6 +1221,7 @@
       } else if (curVal === 12) {
           playTone(200, 'sawtooth', 0.5);
           damageFlinchTimer = 20;
+          addScreenShake(30, 0.5);
           shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
           score = Math.max(0, score - 100);
           currentLevel--;
@@ -1217,6 +1241,7 @@
       } else if (curVal === 15) {
           playTone(200, 'sawtooth', 0.5);
           damageFlinchTimer = 20;
+          addScreenShake(35, 0.6);
           shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
           score = Math.max(0, score - 150);
           pX = 1.5; pY = 1.5;
@@ -1241,10 +1266,11 @@
           if (Math.floor(frameCount / 10) % 2 === 0) {
               playTone(200, 'sawtooth', 0.2);
               damageFlinchTimer = 20;
+              addScreenShake(20, 0.4);
               shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
               score = Math.max(0, score - 75);
               pX = 1.5; pY = 1.5;
-              addParticles(W/2, H/2, '#ff0000', 20);
+              addParticles(W/2, H/2, '#ff0000', 40);
               msgText = "Impaled by Spike Trap!"; msgTimer = 60;
           }
       } else if (curVal === 26) {
@@ -1310,6 +1336,13 @@
           drawPlaneX += skew * drawDY;
           drawPlaneY -= skew * drawDX;
           drawDX += pitch;
+      }
+      if (screenShakeTimer > 0) {
+          let shakeX = (Math.random() - 0.5) * screenShakeIntensity;
+          let shakeY = (Math.random() - 0.5) * screenShakeIntensity;
+          drawPlaneX += shakeX;
+          drawPlaneY += shakeY;
+          drawDX += shakeX * 0.5;
       }
 
       // 1. Ceiling & Floor Casting
@@ -1486,14 +1519,23 @@
       
       ctx.putImageData(imgData, 0, 0);
       
-      // 3. Draw Particles
+      // 3. Draw Particles (Multi-Layered)
       uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
       uiCtx.save();
       uiCtx.scale(2.5, 2.5);
+      uiCtx.globalCompositeOperation = 'lighter';
       for (let p of particles) {
+          let size = (p.life / p.maxLife) * 6;
+          // Outer Glow
           uiCtx.fillStyle = p.color;
-          uiCtx.fillRect(p.x, p.y, 2, 2);
+          uiCtx.globalAlpha = 0.5;
+          uiCtx.fillRect(p.x - size/2, p.y - size/2, size, size);
+          // Inner Core
+          uiCtx.fillStyle = '#ffffff';
+          uiCtx.globalAlpha = 1.0;
+          uiCtx.fillRect(p.x - size/4, p.y - size/4, size/2, size/2);
       }
+      uiCtx.globalCompositeOperation = 'source-over';
       
       // 4. Equipment HUD & Overlay
       if (gameState === 1) {

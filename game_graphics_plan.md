@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMaze
 - KColony
 - KFortress
 - KFarm
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTetris
 - KCyber
 - KBreakout
+- KMaze
 ## Completed Work Log
+
+- **KMaze (Loop 7):** Implemented highly polished visual effects including procedural screen-shake integrated directly into the 3D raycasting renderer for a kinematic wobble effect during explosions, upgraded multi-layered particle explosions with expanding outer glows and bright inner cores, and highly detailed visual variations for existing graphics via an animated pulsing procedural noise texture on the Void Wall in both Web Canvas (kmaze.html) and Native C Win32 GDI (KMaze/main.c).
 
 - **KBreakout (Loop 7):** Implemented highly polished visual effects including multi-layered particle explosions featuring a third glow type and stacked spawns, dramatic kinematically animated visual effects for ball trails utilizing dynamic scale/fade scaling and crisp outlines, and smoother procedural screen-shake decay for heavier impacts in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 

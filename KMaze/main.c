@@ -315,6 +315,13 @@ void UpdateShockwaves() {
     shockwaveCount = write;
 }
 
+int screenShakeTimer = 0;
+float screenShakeIntensity = 0.0f;
+void AddScreenShake(int duration, float intensity) {
+    if (screenShakeTimer < duration) screenShakeTimer = duration;
+    if (screenShakeIntensity < intensity) screenShakeIntensity = intensity;
+}
+
 float pX = 1.5f, pY = 1.5f;
 float dX = 1.0f, dY = 0.0f;
 float planeX = 0.0f, planeY = 0.66f;
@@ -337,26 +344,27 @@ DWORD textures[40][256];
 DWORD animFrameCount = 0;
 
 // Particles
+#define MAX_PARTICLES 256
 typedef struct {
     float x, y;
     float vx, vy;
     int life, maxLife;
     COLORREF color;
 } Particle;
-Particle particles[64];
+Particle particles[MAX_PARTICLES];
 int particleCount = 0;
 
 void AddParticles(float x, float y, COLORREF color, int count) {
     for (int i = 0; i < count; i++) {
-        if (particleCount < 64) {
+        if (particleCount < MAX_PARTICLES) {
             float angle = (float)(rand() % 628) / 100.0f;
-            float spd = 0.5f + (float)(rand() % 150) / 100.0f;
+            float spd = 1.0f + (float)(rand() % 400) / 100.0f;
             particles[particleCount].x = x + ((rand() % 20) - 10);
             particles[particleCount].y = y + ((rand() % 20) - 10);
             particles[particleCount].vx = (float)cos(angle) * spd;
             particles[particleCount].vy = (float)sin(angle) * spd;
-            particles[particleCount].life = 15 + rand() % 15;
-            particles[particleCount].maxLife = 30;
+            particles[particleCount].life = 20 + rand() % 20;
+            particles[particleCount].maxLife = particles[particleCount].life;
             particles[particleCount].color = color;
             particleCount++;
         }
@@ -603,6 +611,13 @@ void UpdateTextures() {
             if (dist3 < 4.0f) textures[26][y * 16 + x] = 0x00FF00FF;
             else if (dist3 < 6.0f) textures[26][y * 16 + x] = 0x00000000;
             else textures[26][y * 16 + x] = 0x00220022;
+
+            // Animated Void Wall (t=22)
+            int noise = (rand() % 40) - 20;
+            DWORD v_old = textures[22][y * 16 + x];
+            int rv = (v_old & 0xFF) + noise; if (rv < 0) rv = 0; if (rv > 255) rv = 255;
+            int bv = ((v_old >> 16) & 0xFF) + noise; if (bv < 0) bv = 0; if (bv > 255) bv = 255;
+            textures[22][y * 16 + x] = RGB(rv, rv, bv);
         }
     }
 }
@@ -1098,6 +1113,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (stunSprayTimer > 0) stunSprayTimer -= 30;
             if (timeFreezeTimer > 0) timeFreezeTimer -= 30;
             if (damageFlinchTimer > 0) damageFlinchTimer--;
+            if (screenShakeTimer > 0) {
+                screenShakeTimer--;
+                if (screenShakeTimer == 0) screenShakeIntensity = 0.0f;
+            }
             if (msgTimer > 0) msgTimer--;
             
             if (muzzleFlashTimer > 0) muzzleFlashTimer--;
@@ -1156,6 +1175,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (mx == (int)pX && my == (int)pY) {
                                 MessageBeep(MB_ICONHAND);
                                 damageFlinchTimer = 20;
+                                AddScreenShake(30, 0.5f);
                                 AddShockwave(pX, pY);
                                 score = (score >= 100) ? score - 100 : 0;
                                 if (mtype == 15) {
@@ -1201,31 +1221,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             hasPickaxe--;
                             SetMapValue(tx, ty, 0);
                             MessageBeep(MB_OK);
-                            AddParticles(160.0f, 120.0f, RGB(180, 100, 50), 25);
+                            AddParticles(160.0f, 120.0f, RGB(180, 100, 50), 40);
                             strcpy(msgText, "Wall Broken!");
                             msgTimer = 60;
                             activeKeyCooldown = 300;
                             recoilOffset = 15;
                             muzzleFlashTimer = 5;
+                            AddScreenShake(15, 0.2f);
                             AddShockwave(tx + 0.5f, ty + 0.5f);
                         } else if (tVal == 12) {
                             hasPickaxe--;
                             SetMapValue(tx, ty, 0);
                             score += 200;
                             MessageBeep(MB_OK);
-                            AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 25);
+                            AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 40);
                             strcpy(msgText, "Minotaur Slain!");
                             msgTimer = 60;
                             activeKeyCooldown = 300;
                             recoilOffset = 15;
                             muzzleFlashTimer = 5;
+                            AddScreenShake(20, 0.3f);
                             AddShockwave(tx + 0.5f, ty + 0.5f);
                         } else if (tVal == 15) {
                             hasPickaxe--;
                             bossHP--;
-                            AddParticles(160.0f, 120.0f, RGB(255, 215, 0), 30);
+                            AddParticles(160.0f, 120.0f, RGB(255, 215, 0), 50);
                             recoilOffset = 15;
                             muzzleFlashTimer = 5;
+                            AddScreenShake(25, 0.4f);
                             AddShockwave(tx + 0.5f, ty + 0.5f);
                             if (bossHP <= 0) {
                                 SetMapValue(tx, ty, 3);
@@ -1405,10 +1428,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 6) {
                 MessageBeep(MB_ICONHAND);
                 damageFlinchTimer = 20;
+                AddScreenShake(20, 0.3f);
                 AddShockwave(pX, pY);
                 score = (score >= 50) ? score - 50 : 0;
                 pX = 1.5f; pY = 1.5f;
-                AddParticles(160.0f, 120.0f, RGB(255, 50, 0), 20);
+                AddParticles(160.0f, 120.0f, RGB(255, 50, 0), 40);
                 strcpy(msgText, "Burnt by Lava Trap!"); msgTimer = 60;
             } else if (curVal == 7) {
                 SetMapValue((int)pX, (int)pY, 0);
@@ -1454,6 +1478,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 12) {
                 MessageBeep(MB_ICONHAND);
                 damageFlinchTimer = 20;
+                AddScreenShake(30, 0.5f);
                 AddShockwave(pX, pY);
                 score = (score >= 100) ? score - 100 : 0;
                 currentLevel--;
@@ -1473,6 +1498,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 15) {
                 MessageBeep(MB_ICONHAND);
                 damageFlinchTimer = 20;
+                AddScreenShake(35, 0.6f);
                 AddShockwave(pX, pY);
                 score = (score >= 150) ? score - 150 : 0;
                 pX = 1.5f; pY = 1.5f;
@@ -1494,10 +1520,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if ((animFrameCount / 10) % 2 == 0) {
                     MessageBeep(MB_ICONHAND);
                     damageFlinchTimer = 20;
+                    AddScreenShake(20, 0.4f);
                     AddShockwave(pX, pY);
                     score = (score >= 75) ? score - 75 : 0;
                     pX = 1.5f; pY = 1.5f;
-                    AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 20);
+                    AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 40);
                     strcpy(msgText, "Impaled by Spike Trap!"); msgTimer = 60;
                 }
             } else if (curVal == 26) {
@@ -1563,6 +1590,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     float skew = sin(damageFlinchTimer * 0.5f) * 0.2f;
                     drawPlaneX += skew * drawDY;
                     drawPlaneY -= skew * drawDX;
+                }
+                if (screenShakeTimer > 0) {
+                    float shakeX = ((rand() % 100) / 100.0f - 0.5f) * screenShakeIntensity;
+                    float shakeY = ((rand() % 100) / 100.0f - 0.5f) * screenShakeIntensity;
+                    drawPlaneX += shakeX;
+                    drawPlaneY += shakeY;
+                    drawDX += shakeX * 0.5f;
                 }
 
                 // 1. Ceiling & Floor Casting
@@ -1745,15 +1779,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            // Draw HUD equipment & GDI overlay elements on hdcMem
+            // Draw HUD equipment & GDI overlay elements on hdcMem (Multi-Layered Particles)
             for (int i = 0; i < particleCount; i++) {
                 int px = (int)particles[i].x;
                 int py = (int)particles[i].y;
                 if (px >= 0 && px < W && py >= 0 && py < H) {
+                    float ratio = (float)particles[i].life / particles[i].maxLife;
+                    int size = (int)(ratio * 6.0f) + 1;
+                    
+                    // Outer glow
                     HBRUSH pb = CreateSolidBrush(particles[i].color);
-                    RECT pr = {px, py, px + 2, py + 2};
+                    RECT pr = {px - size/2, py - size/2, px + size/2 + 1, py + size/2 + 1};
                     FillRect(hdcMem, &pr, pb);
                     DeleteObject(pb);
+                    
+                    // Inner core
+                    if (size > 2) {
+                        HBRUSH pb2 = CreateSolidBrush(RGB(255, 255, 255));
+                        RECT pr2 = {px - size/4, py - size/4, px + size/4 + 1, py + size/4 + 1};
+                        FillRect(hdcMem, &pr2, pb2);
+                        DeleteObject(pb2);
+                    }
                 }
             }
 
