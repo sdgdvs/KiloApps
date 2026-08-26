@@ -164,6 +164,7 @@
                 <button id="search-btn" onclick="searchLocation()">Search for Clues</button>
                 <button id="lab-btn" onclick="openLab()">Evidence Lab</button>
                 <button id="interrogate-btn" onclick="startInterrogation()" class="hidden">Interrogate</button>
+                <button id="accuse-btn" onclick="startAccusation()" style="margin-top:10px; background-color: #311;">Accuse Someone</button>
             </div>
             
             <div id="interrogation-area" class="hidden"></div>
@@ -179,6 +180,20 @@
                     <button onclick="adjScanner(-3)">-3</button>
                 </div>
                 <button onclick="closeLab()" style="margin-top:20px;">Leave Lab</button>
+            </div>
+            
+            <div id="accusation-area" class="hidden">
+                <h3>Final Accusation</h3>
+                <p>Present your findings. If you are wrong, the killer escapes!</p>
+                <div style="margin: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <div>Suspect: <select id="accuse-suspect" style="background:#222; color:#fff; border:1px solid #444; padding:5px;"></select></div>
+                    <div>Motive: <select id="accuse-motive" style="background:#222; color:#fff; border:1px solid #444; padding:5px;"></select></div>
+                    <div>Weapon: <select id="accuse-weapon" style="background:#222; color:#fff; border:1px solid #444; padding:5px;"></select></div>
+                </div>
+                <div class="dialogue-options">
+                    <button onclick="submitAccusation()" style="background-color: #422;">Submit Accusation</button>
+                    <button onclick="cancelAccusation()">Cancel</button>
+                </div>
             </div>
             
             <div id="travel-container">
@@ -357,6 +372,7 @@
                 document.getElementById('travel-container').classList.add('hidden');
                 document.getElementById('interrogation-area').classList.add('hidden');
                 document.getElementById('lab-area').classList.add('hidden');
+                document.getElementById('accusation-area').classList.add('hidden');
                 return true;
             }
             return false;
@@ -600,6 +616,46 @@
             } else {
                 clueList.innerHTML = '<li>No usable clues.</li>';
             }
+        }
+
+        function startAccusation() {
+            document.getElementById('action-area').classList.add('hidden');
+            document.getElementById('travel-container').classList.add('hidden');
+            document.getElementById('interrogation-area').classList.add('hidden');
+            document.getElementById('lab-area').classList.add('hidden');
+            document.getElementById('accusation-area').classList.remove('hidden');
+
+            const suspectSelect = document.getElementById('accuse-suspect');
+            const motiveSelect = document.getElementById('accuse-motive');
+            const weaponSelect = document.getElementById('accuse-weapon');
+
+            suspectSelect.innerHTML = state.suspects.map(s => `<option value="${s}">${s}</option>`).join('');
+            motiveSelect.innerHTML = motives.map(m => `<option value="${m}">${m}</option>`).join('');
+            weaponSelect.innerHTML = weapons.map(w => `<option value="${w}">${w}</option>`).join('');
+        }
+
+        function cancelAccusation() {
+            document.getElementById('accusation-area').classList.add('hidden');
+            document.getElementById('action-area').classList.remove('hidden');
+            document.getElementById('travel-container').classList.remove('hidden');
+        }
+
+        function submitAccusation() {
+            const suspect = document.getElementById('accuse-suspect').value;
+            const motive = document.getElementById('accuse-motive').value;
+            const weapon = document.getElementById('accuse-weapon').value;
+
+            if (suspect === state.solution.killer && motive === state.solution.motive && weapon === state.solution.weapon) {
+                alert(`You did it, Detective! ${suspect} is the killer! They confessed everything. GAME OVER - YOU WIN! (Refresh to restart)`);
+            } else {
+                alert(`You were wrong! The real killer was ${state.solution.killer} (Motive: ${state.solution.motive}, Weapon: ${state.solution.weapon}). The commissioner is furious. You're fired. GAME OVER.`);
+            }
+            
+            document.getElementById('accusation-area').classList.add('hidden');
+            document.getElementById('action-area').classList.add('hidden');
+            document.getElementById('travel-container').classList.add('hidden');
+            document.getElementById('interrogation-area').classList.add('hidden');
+            document.getElementById('lab-area').classList.add('hidden');
         }
     </script>
 </body>

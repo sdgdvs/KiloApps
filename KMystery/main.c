@@ -49,12 +49,20 @@ void my_strcpy(char* dest, const char* src) {
 #define ID_BTN_SCAN_M3 1017
 #define ID_LIST_UNANALYZED 1018
 
+#define ID_BTN_ACCUSE 1019
+#define ID_BTN_SUBMIT_ACCUSE 1020
+#define ID_BTN_CANCEL_ACCUSE 1021
+#define ID_CMB_SUSPECT 1022
+#define ID_CMB_MOTIVE 1023
+#define ID_CMB_WEAPON 1024
+
 HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, hBtnTravelDocks;
 HWND hSuspectTitle, hListSuspects, hClueTitle, hListClues, hUnanalyzedTitle, hListUnanalyzed;
 HWND hStartPanel, hBtnStart, hStartDesc;
 HWND hBtnInterrogate, hIntDesc, hBtnAskAlibi, hBtnPresentClue, hBtnEndInt;
 HWND hBtnLab, hLabTitle, hBtnAnalyze, hBtnLeaveLab;
 HWND hScanDesc, hBtnScan11, hBtnScan7, hBtnScanM3;
+HWND hBtnAccuse, hAccuseTitle, hAccuseDesc, hBtnSubmitAccuse, hBtnCancelAccuse, hCmbSuspect, hCmbMotive, hCmbWeapon;
 HWND hTimeLeft;
 HFONT hFont, hFontBold, hFontTitle;
 
@@ -210,6 +218,15 @@ void UpdateUI() {
         ShowWindow(hBtnScan11, SW_HIDE);
         ShowWindow(hBtnScan7, SW_HIDE);
         ShowWindow(hBtnScanM3, SW_HIDE);
+        
+        ShowWindow(hBtnAccuse, SW_HIDE);
+        ShowWindow(hAccuseTitle, SW_HIDE);
+        ShowWindow(hAccuseDesc, SW_HIDE);
+        ShowWindow(hBtnSubmitAccuse, SW_HIDE);
+        ShowWindow(hBtnCancelAccuse, SW_HIDE);
+        ShowWindow(hCmbSuspect, SW_HIDE);
+        ShowWindow(hCmbMotive, SW_HIDE);
+        ShowWindow(hCmbWeapon, SW_HIDE);
     } else if (currentState == 1) {
         ShowWindow(hStartPanel, SW_HIDE);
         ShowWindow(hStartDesc, SW_HIDE);
@@ -245,6 +262,15 @@ void UpdateUI() {
         ShowWindow(hBtnScan11, SW_HIDE);
         ShowWindow(hBtnScan7, SW_HIDE);
         ShowWindow(hBtnScanM3, SW_HIDE);
+
+        ShowWindow(hBtnAccuse, SW_SHOW);
+        ShowWindow(hAccuseTitle, SW_HIDE);
+        ShowWindow(hAccuseDesc, SW_HIDE);
+        ShowWindow(hBtnSubmitAccuse, SW_HIDE);
+        ShowWindow(hBtnCancelAccuse, SW_HIDE);
+        ShowWindow(hCmbSuspect, SW_HIDE);
+        ShowWindow(hCmbMotive, SW_HIDE);
+        ShowWindow(hCmbWeapon, SW_HIDE);
         
         char locNameBuf[64];
         wsprintfA(locNameBuf, "Location: %s", locations[currentLocation].name);
@@ -273,6 +299,7 @@ void UpdateUI() {
         ShowWindow(hBtnTravelManor, SW_HIDE);
         ShowWindow(hBtnTravelDocks, SW_HIDE);
         ShowWindow(hBtnLab, SW_HIDE);
+        ShowWindow(hBtnAccuse, SW_HIDE);
         
         ShowWindow(hIntDesc, SW_SHOW);
         ShowWindow(hBtnAskAlibi, SW_SHOW);
@@ -285,6 +312,7 @@ void UpdateUI() {
         ShowWindow(hBtnTravelManor, SW_HIDE);
         ShowWindow(hBtnTravelDocks, SW_HIDE);
         ShowWindow(hBtnLab, SW_HIDE);
+        ShowWindow(hBtnAccuse, SW_HIDE);
         
         ShowWindow(hIntDesc, SW_HIDE);
         ShowWindow(hBtnAskAlibi, SW_HIDE);
@@ -306,6 +334,7 @@ void UpdateUI() {
         ShowWindow(hBtnTravelManor, SW_HIDE);
         ShowWindow(hBtnTravelDocks, SW_HIDE);
         ShowWindow(hBtnLab, SW_HIDE);
+        ShowWindow(hBtnAccuse, SW_HIDE);
         
         ShowWindow(hIntDesc, SW_HIDE);
         ShowWindow(hBtnAskAlibi, SW_HIDE);
@@ -324,6 +353,36 @@ void UpdateUI() {
         char scanBuf[256];
         wsprintfA(scanBuf, "Calibrate Scanner to reveal clue.\nTarget: %d | Current: %d | Moves: %d", scanTarget, scanCurrent, scanMoves);
         SetWindowTextA(hScanDesc, scanBuf);
+    } else if (currentState == 5) {
+        ShowWindow(hBtnSearch, SW_HIDE);
+        ShowWindow(hBtnInterrogate, SW_HIDE);
+        ShowWindow(hBtnTravelOffice, SW_HIDE);
+        ShowWindow(hBtnTravelManor, SW_HIDE);
+        ShowWindow(hBtnTravelDocks, SW_HIDE);
+        ShowWindow(hBtnLab, SW_HIDE);
+        ShowWindow(hBtnAccuse, SW_HIDE);
+        
+        ShowWindow(hIntDesc, SW_HIDE);
+        ShowWindow(hBtnAskAlibi, SW_HIDE);
+        ShowWindow(hBtnPresentClue, SW_HIDE);
+        ShowWindow(hBtnEndInt, SW_HIDE);
+        
+        ShowWindow(hLabTitle, SW_HIDE);
+        ShowWindow(hBtnAnalyze, SW_HIDE);
+        ShowWindow(hBtnLeaveLab, SW_HIDE);
+        
+        ShowWindow(hScanDesc, SW_HIDE);
+        ShowWindow(hBtnScan11, SW_HIDE);
+        ShowWindow(hBtnScan7, SW_HIDE);
+        ShowWindow(hBtnScanM3, SW_HIDE);
+        
+        ShowWindow(hAccuseTitle, SW_SHOW);
+        ShowWindow(hAccuseDesc, SW_SHOW);
+        ShowWindow(hBtnSubmitAccuse, SW_SHOW);
+        ShowWindow(hBtnCancelAccuse, SW_SHOW);
+        ShowWindow(hCmbSuspect, SW_SHOW);
+        ShowWindow(hCmbMotive, SW_SHOW);
+        ShowWindow(hCmbWeapon, SW_SHOW);
     }
 }
 
@@ -422,38 +481,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnScan11 = CreateWindowA("BUTTON", "+11", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_11, NULL, NULL);
             hBtnScan7 = CreateWindowA("BUTTON", "+7", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_7, NULL, NULL);
             hBtnScanM3 = CreateWindowA("BUTTON", "-3", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_M3, NULL, NULL);
-            
-            hIntDesc = CreateWindowA("STATIC", "", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hBtnAskAlibi = CreateWindowA("BUTTON", "Ask for Alibi", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_ASK_ALIBI, NULL, NULL);
-            hBtnPresentClue = CreateWindowA("BUTTON", "Present Selected Clue", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_PRESENT_CLUE, NULL, NULL);
-            hBtnEndInt = CreateWindowA("BUTTON", "End Interrogation", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_END_INT, NULL, NULL);
 
-            hSuspectTitle = CreateWindowA("STATIC", "Notebook - Suspects", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hListSuspects = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_HASSTRINGS, 0, 0, 0, 0, hwnd, (HMENU)ID_LIST_SUSPECTS, NULL, NULL);
+            hBtnAccuse = CreateWindowA("BUTTON", "Accuse Someone", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_ACCUSE, NULL, NULL);
+            hAccuseTitle = CreateWindowA("STATIC", "Final Accusation", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hAccuseDesc = CreateWindowA("STATIC", "Present your findings. If you are wrong, you will be fired.", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hBtnSubmitAccuse = CreateWindowA("BUTTON", "Submit Accusation", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SUBMIT_ACCUSE, NULL, NULL);
+            hBtnCancelAccuse = CreateWindowA("BUTTON", "Cancel", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_CANCEL_ACCUSE, NULL, NULL);
+            hCmbSuspect = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", NULL, WS_CHILD | CBS_DROPDOWNLIST, 0, 0, 0, 0, hwnd, (HMENU)ID_CMB_SUSPECT, NULL, NULL);
+            hCmbMotive = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", NULL, WS_CHILD | CBS_DROPDOWNLIST, 0, 0, 0, 0, hwnd, (HMENU)ID_CMB_MOTIVE, NULL, NULL);
+            hCmbWeapon = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", NULL, WS_CHILD | CBS_DROPDOWNLIST, 0, 0, 0, 0, hwnd, (HMENU)ID_CMB_WEAPON, NULL, NULL);
             
-            hUnanalyzedTitle = CreateWindowA("STATIC", "Notebook - Unanalyzed", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hListUnanalyzed = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_HASSTRINGS, 0, 0, 0, 0, hwnd, (HMENU)ID_LIST_UNANALYZED, NULL, NULL);
-            
-            hClueTitle = CreateWindowA("STATIC", "Notebook - Usable Clues", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hListClues = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_HASSTRINGS | WS_HSCROLL, 0, 0, 0, 0, hwnd, (HMENU)ID_LIST_CLUES, NULL, NULL);
-
-            SendMessageA(hStartDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnStart, WM_SETFONT, (WPARAM)hFontBold, TRUE);
-            SendMessageA(hTimeLeft, WM_SETFONT, (WPARAM)hFontBold, TRUE);
-            SendMessageA(hTitle, WM_SETFONT, (WPARAM)hFontTitle, TRUE);
-            SendMessageA(hLocName, WM_SETFONT, (WPARAM)hFontBold, TRUE);
-            SendMessageA(hLocDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnSearch, WM_SETFONT, (WPARAM)hFontBold, TRUE);
-            SendMessageA(hBtnInterrogate, WM_SETFONT, (WPARAM)hFontBold, TRUE);
-            SendMessageA(hBtnTravelOffice, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnTravelManor, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnTravelDocks, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hSuspectTitle, WM_SETFONT, (WPARAM)hFontBold, TRUE);
-            SendMessageA(hListSuspects, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hUnanalyzedTitle, WM_SETFONT, (WPARAM)hFontBold, TRUE);
-            SendMessageA(hListUnanalyzed, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hClueTitle, WM_SETFONT, (WPARAM)hFontBold, TRUE);
-            SendMessageA(hListClues, WM_SETFONT, (WPARAM)hFont, TRUE);
+            char* m[3] = {"Revenge", "Greed", "Jealousy"};
+            char* w[3] = {"Revolver", "Poison", "Lead Pipe"};
+            for (int i = 0; i < 3; i++) {
+                SendMessageA(hCmbSuspect, CB_ADDSTRING, 0, (LPARAM)suspects[i]);
+                SendMessageA(hCmbMotive, CB_ADDSTRING, 0, (LPARAM)m[i]);
+                SendMessageA(hCmbWeapon, CB_ADDSTRING, 0, (LPARAM)w[i]);
+            }
+            SendMessageA(hCmbSuspect, CB_SETCURSEL, 0, 0);
+            SendMessageA(hCmbMotive, CB_SETCURSEL, 0, 0);
+            SendMessageA(hCmbWeapon, CB_SETCURSEL, 0, 0);
             
             SendMessageA(hIntDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnAskAlibi, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -468,6 +515,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnScan11, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hBtnScan7, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hBtnScanM3, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+
+            SendMessageA(hBtnAccuse, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hAccuseTitle, WM_SETFONT, (WPARAM)hFontTitle, TRUE);
+            SendMessageA(hAccuseDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnSubmitAccuse, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnCancelAccuse, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hCmbSuspect, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hCmbMotive, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hCmbWeapon, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             UpdateUI();
             break;
@@ -496,6 +552,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hBtnSearch, pad, top + 100, 160, 30, TRUE);
                 MoveWindow(hBtnInterrogate, pad + 170, top + 100, 160, 30, TRUE);
                 MoveWindow(hBtnLab, pad, top + 140, 160, 30, TRUE);
+                MoveWindow(hBtnAccuse, pad + 170, top + 140, 160, 30, TRUE);
                 
                 int travelY = top + 180;
                 MoveWindow(hBtnTravelOffice, pad, travelY, 200, 30, TRUE);
@@ -515,7 +572,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hBtnScan11, pad, travelY + 70, 80, 30, TRUE);
                 MoveWindow(hBtnScan7, pad + 90, travelY + 70, 80, 30, TRUE);
                 MoveWindow(hBtnScanM3, pad + 180, travelY + 70, 80, 30, TRUE);
-                MoveWindow(hBtnLeaveLab, pad, travelY + 110, 150, 30, TRUE);
+
+                MoveWindow(hAccuseTitle, pad, travelY, leftW - pad, 30, TRUE);
+                MoveWindow(hAccuseDesc, pad, travelY + 30, leftW - pad, 30, TRUE);
+                MoveWindow(hCmbSuspect, pad, travelY + 70, 150, 200, TRUE);
+                MoveWindow(hCmbMotive, pad + 160, travelY + 70, 150, 200, TRUE);
+                MoveWindow(hCmbWeapon, pad + 320, travelY + 70, 150, 200, TRUE);
+                MoveWindow(hBtnSubmitAccuse, pad, travelY + 110, 200, 30, TRUE);
+                MoveWindow(hBtnCancelAccuse, pad + 210, travelY + 110, 150, 30, TRUE);
                 
                 int rightX = pad*2 + leftW;
                 int listH = (cy - top - pad*2 - 90) / 3;
@@ -684,6 +748,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(scanBuf, "Calibrate Scanner to reveal clue.\nTarget: %d | Current: %d | Moves: %d", scanTarget, scanCurrent, scanMoves);
                     SetWindowTextA(hScanDesc, scanBuf);
                 }
+            } else if (id == ID_BTN_ACCUSE) {
+                currentState = 5;
+                UpdateUI();
+            } else if (id == ID_BTN_CANCEL_ACCUSE) {
+                currentState = 1;
+                UpdateUI();
+            } else if (id == ID_BTN_SUBMIT_ACCUSE) {
+                int sIdx = SendMessageA(hCmbSuspect, CB_GETCURSEL, 0, 0);
+                int mIdx = SendMessageA(hCmbMotive, CB_GETCURSEL, 0, 0);
+                int wIdx = SendMessageA(hCmbWeapon, CB_GETCURSEL, 0, 0);
+                
+                if (sIdx == currentSolution.killerIdx && mIdx == currentSolution.motiveIdx && wIdx == currentSolution.weaponIdx) {
+                    MessageBoxA(hwnd, "You did it, Detective! You caught the killer! They confessed everything. GAME OVER - YOU WIN! (Restart to play again)", "You Win!", MB_OK | MB_ICONINFORMATION);
+                } else {
+                    char msgBuf[256];
+                    wsprintfA(msgBuf, "You were wrong! The real killer was %s. The commissioner is furious. You're fired. GAME OVER.", suspects[currentSolution.killerIdx]);
+                    MessageBoxA(hwnd, msgBuf, "Game Over", MB_OK | MB_ICONERROR);
+                }
+                currentState = 0;
+                UpdateUI();
             }
             break;
         }
