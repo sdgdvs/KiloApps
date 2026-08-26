@@ -167,9 +167,13 @@ void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16], int
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
-        case WM_CREATE:
+        case WM_CREATE: {
+            HDC hdcScreen = GetDC(NULL);
+            int dpi = GetDeviceCaps(hdcScreen, LOGPIXELSY);
+            ReleaseDC(NULL, hdcScreen);
+            int fontHeight = -MulDiv(12, dpi, 72);
             srand(GetTickCount());
-            hFontNormal = CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+            hFontNormal = CreateFont(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                      DEFAULT_PITCH | FF_DONTCARE, "Times New Roman");
             hFontLarge = CreateFont(80, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, 
@@ -263,6 +267,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_shp_back, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_evt_opt1, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_evt_opt2, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            }
             break;
             
         case WM_COMMAND:
@@ -736,6 +741,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
 
+        case WM_KEYDOWN:
+            if (wParam == VK_F1 || wParam == 'H') {
+                SendMessage(hwnd, WM_COMMAND, BTN_HELP, 0);
+            }
+            break;
+
         case WM_TIMER:
             if (wParam == TIMER_ID && state != 0) {
                 hunger = hunger - 2;
@@ -855,6 +866,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 DrawPixelArt(hdc, 236, 110, 8, egg_pixels, 0);
             } else {
+                const char* helpMsg = "Press F1 for Help";
+                TextOut(hdc, 10, 10, helpMsg, strlen(helpMsg));
+                
                 char buf[256];
                 const char* type_str = "None";
                 if (element == 2) type_str = "Fire";
@@ -969,6 +983,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    SetProcessDPIAware();
     const char CLASS_NAME[]  = "KDragonClass";
     
     WNDCLASS wc = {0};
@@ -979,10 +994,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     
     RegisterClass(&wc);
     
+    DWORD style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX | WS_CLIPCHILDREN;
+    RECT rect = {0, 0, 600, 500};
+    AdjustWindowRect(&rect, style, FALSE);
+    
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KDragon",
-        WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 600, 500,
+        style,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, hInstance, NULL
     );
     
