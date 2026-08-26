@@ -379,6 +379,7 @@
             const idx = y * GRID_W + x;
             const cell = document.getElementById(`cell-${x}-${y}`);
             const t = grid[idx];
+            let seed = (y * GRID_W + x);
             cell.innerHTML = '';
             cell.style.backgroundImage = 'none';
             cell.style.backgroundSize = 'cover';
@@ -418,6 +419,20 @@
             else if (t === 11) { cell.style.backgroundImage = `url("${SVGS.T}")`; cell.style.backgroundColor = '#332200'; cell.style.borderColor = '#ffaa00'; }
             else if (t === 12) { cell.style.backgroundImage = `url("${SVGS.C}")`; cell.style.backgroundColor = '#444444'; cell.style.borderColor = '#cccccc'; }
             else { cell.style.backgroundColor = 'transparent'; cell.style.borderColor = 'rgba(0,51,51,0.5)'; }
+
+            if (t > 0 && t <= 20) {
+                if (t === 2) { // Farm
+                    cell.style.transform = `scale(${1 + (seed % 3) * 0.05})`;
+                } else if (t === 3) { // Mine
+                    cell.style.transform = `rotate(${(seed % 4) * 90}deg)`;
+                } else if (t === 4) { // Hab
+                    cell.style.transform = (seed % 2 === 0) ? 'scaleX(-1)' : 'none';
+                } else {
+                    cell.style.transform = 'none';
+                }
+            } else {
+                cell.style.transform = 'none';
+            }
         }
 
         function renderAll() {
@@ -432,34 +447,57 @@
             }
         }
 
+        let isShaking = false;
+        function shakeScreen() {
+            if (isShaking) return;
+            isShaking = true;
+            let count = 15;
+            const gridEl = document.getElementById('grid');
+            function animShake() {
+                if (count <= 0) {
+                    gridEl.style.transform = 'translate(0, 0)';
+                    isShaking = false;
+                    return;
+                }
+                count--;
+                const sx = (Math.random() - 0.5) * 15;
+                const sy = (Math.random() - 0.5) * 15;
+                gridEl.style.transform = `translate(${sx}px, ${sy}px)`;
+                requestAnimationFrame(animShake);
+            }
+            requestAnimationFrame(animShake);
+        }
+
         function spawnExplosion(gx, gy) {
             const gridEl = document.getElementById('grid');
             const flash = document.createElement('div');
             flash.style.position = 'absolute';
             flash.style.left = (2 + gx * 21 + 10) + 'px';
             flash.style.top = (2 + gy * 21 + 10) + 'px';
-            flash.style.width = '30px';
-            flash.style.height = '30px';
+            flash.style.width = '40px';
+            flash.style.height = '40px';
             flash.style.background = 'white';
             flash.style.borderRadius = '50%';
             flash.style.transform = 'translate(-50%, -50%)';
-            flash.style.boxShadow = '0 0 20px 10px #ffaa00';
+            flash.style.boxShadow = '0 0 30px 15px #ffaa00';
             flash.style.zIndex = '10';
             gridEl.appendChild(flash);
             
             let start = performance.now();
             function animFlash(t) {
-                let progress = (t - start) / 200;
+                let progress = (t - start) / 300;
                 if (progress > 1) { flash.remove(); return; }
-                flash.style.opacity = 1 - progress;
-                flash.style.transform = `translate(-50%, -50%) scale(${1 + progress * 2})`;
+                flash.style.opacity = 1 - Math.pow(progress, 2);
+                flash.style.transform = `translate(-50%, -50%) scale(${1 + progress * 3})`;
                 requestAnimationFrame(animFlash);
             }
             requestAnimationFrame(animFlash);
             
-            spawnParticles(gx, gy, '#ffffff', 15);
-            setTimeout(() => spawnParticles(gx, gy, '#ff8800', 20), 100);
-            setTimeout(() => spawnParticles(gx, gy, '#555555', 20), 200);
+            spawnParticles(gx, gy, '#ffffff', 25);
+            setTimeout(() => spawnParticles(gx, gy, '#ffaa00', 35), 50);
+            setTimeout(() => spawnParticles(gx, gy, '#ff3300', 35), 100);
+            setTimeout(() => spawnParticles(gx, gy, '#555555', 45), 150);
+            shakeScreen();
         }
 
         function spawnParticles(gx, gy, color, count=15) {
@@ -474,8 +512,10 @@
                 p.style.top = (2 + gy * 21 + 10) + 'px';
                 p.style.transform = 'translate(-50%, -50%)';
                 
-                const vx = (Math.random() - 0.5) * 60;
-                const vy = (Math.random() - 0.5) * 60;
+                const speed = Math.random() * 80 + 20;
+                const angle = Math.random() * Math.PI * 2;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
                 
                 gridEl.appendChild(p);
                 
@@ -632,7 +672,7 @@
                             if (grid[idx] > 0 && grid[idx] <= 11) {
                                 grid[idx] += 20;
                                 let tx = idx % GRID_W, ty = Math.floor(idx / GRID_W);
-                                spawnParticles(tx, ty, '#ff0000');
+                                spawnExplosion(tx, ty);
                             }
                         }
                         msgText = "METEOR SHOWER! Structures damaged.";

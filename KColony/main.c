@@ -49,10 +49,14 @@ void SpawnParticles(float x, float y, COLORREF color, int count) {
     }
 }
 
+extern int shakeTicks;
+
 void SpawnExplosion(float x, float y) {
-    SpawnParticles(x, y, RGB(255, 255, 255), 15);
-    SpawnParticles(x, y, RGB(255, 136, 0), 20);
-    SpawnParticles(x, y, RGB(100, 100, 100), 20);
+    SpawnParticles(x, y, RGB(255, 255, 255), 30);
+    SpawnParticles(x, y, RGB(255, 136, 0), 40);
+    SpawnParticles(x, y, RGB(255, 50, 0), 30);
+    SpawnParticles(x, y, RGB(100, 100, 100), 40);
+    shakeTicks = 15;
 }
 
 typedef struct {
@@ -88,6 +92,7 @@ void FireProjectile(float x1, float y1, float x2, float y2, COLORREF color) {
 int dustStormTicks = 0;
 int msgTicks = 0;
 char msgText[128] = "";
+int shakeTicks = 0;
 
 int food = 50;
 int power = 50;
@@ -256,19 +261,27 @@ void StartGame(HWND hwnd, int mode) {
 void DrawGrid(HDC hdc, HFONT hFont) {
     SelectObject(hdc, hFont);
     
+    int effOffsetX = OFFSET_X;
+    int effOffsetY = OFFSET_Y;
+    if (shakeTicks > 0) {
+        effOffsetX += (rand() % 11) - 5;
+        effOffsetY += (rand() % 11) - 5;
+    }
+    
     if (hbmTerrain) {
         HDC hdcTerrain = CreateCompatibleDC(hdc);
         HBITMAP hbmOld = SelectObject(hdcTerrain, hbmTerrain);
-        BitBlt(hdc, OFFSET_X, OFFSET_Y, GRID_W * CELL_SIZE, GRID_H * CELL_SIZE, hdcTerrain, 0, 0, SRCCOPY);
+        BitBlt(hdc, effOffsetX, effOffsetY, GRID_W * CELL_SIZE, GRID_H * CELL_SIZE, hdcTerrain, 0, 0, SRCCOPY);
         SelectObject(hdcTerrain, hbmOld);
         DeleteDC(hdcTerrain);
     }
     
     for (int y = 0; y < GRID_H; y++) {
         for (int x = 0; x < GRID_W; x++) {
-            RECT rc = { OFFSET_X + x * CELL_SIZE, OFFSET_Y + y * CELL_SIZE, OFFSET_X + (x + 1) * CELL_SIZE, OFFSET_Y + (y + 1) * CELL_SIZE };
+            RECT rc = { effOffsetX + x * CELL_SIZE, effOffsetY + y * CELL_SIZE, effOffsetX + (x + 1) * CELL_SIZE, effOffsetY + (y + 1) * CELL_SIZE };
             
             int t = grid[y * GRID_W + x];
+            int seed = y * GRID_W + x;
             
             COLORREF bgCol = RGB(10, 17, 26);
             COLORREF borderCol = RGB(0, 51, 51);
@@ -343,9 +356,10 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                     HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
                     Rectangle(hdc, rc.left+2, rc.top+10, rc.right-2, rc.bottom-2);
                     SelectObject(hdc, oldB); DeleteObject(b2);
-                    MoveToEx(hdc, rc.left+4, rc.top+10, NULL); LineTo(hdc, rc.left+6, rc.top+6);
-                    MoveToEx(hdc, rc.left+10, rc.top+10, NULL); LineTo(hdc, rc.left+10, rc.top+4);
-                    MoveToEx(hdc, rc.left+16, rc.top+10, NULL); LineTo(hdc, rc.left+14, rc.top+6);
+                    int h = (seed % 3) * 2;
+                    MoveToEx(hdc, rc.left+4, rc.top+10, NULL); LineTo(hdc, rc.left+6, rc.top+6 - h);
+                    MoveToEx(hdc, rc.left+10, rc.top+10, NULL); LineTo(hdc, rc.left+10, rc.top+4 - h);
+                    MoveToEx(hdc, rc.left+16, rc.top+10, NULL); LineTo(hdc, rc.left+14, rc.top+6 - h);
                     SelectObject(hdc, oldP); DeleteObject(p2);
                 } else if (t == 3) { // Mine
                     HPEN p2 = CreatePen(PS_SOLID, 2, textCol); HPEN oldP = SelectObject(hdc, p2);
@@ -353,6 +367,8 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                     HBRUSH b2 = CreateSolidBrush(textCol); HBRUSH oldB = SelectObject(hdc, b2);
                     Ellipse(hdc, rc.left+8, rc.top+2, rc.left+12, rc.top+6);
                     Rectangle(hdc, rc.left+8, rc.top+10, rc.left+12, rc.bottom-2);
+                    if (seed % 2 == 0) Ellipse(hdc, rc.left+2, rc.bottom-6, rc.left+6, rc.bottom-2);
+                    if (seed % 3 == 0) Ellipse(hdc, rc.right-6, rc.bottom-5, rc.right-2, rc.bottom-1);
                     SelectObject(hdc, oldB); DeleteObject(b2);
                     SelectObject(hdc, oldP); DeleteObject(p2);
                 } else if (t == 4) { // Hab
@@ -458,8 +474,8 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             int y = (i * 29) % (GRID_H * CELL_SIZE);
             HPEN p = CreatePen(PS_SOLID, (i % 3) + 1, RGB(200, 120, 0));
             HPEN oldP = SelectObject(hdc, p);
-            MoveToEx(hdc, OFFSET_X + x, OFFSET_Y + y, NULL);
-            LineTo(hdc, OFFSET_X + x + 20 + (i % 10), OFFSET_Y + y);
+            MoveToEx(hdc, effOffsetX + x, effOffsetY + y, NULL);
+            LineTo(hdc, effOffsetX + x + 20 + (i % 10), effOffsetY + y);
             SelectObject(hdc, oldP); DeleteObject(p);
         }
     } else {
@@ -468,14 +484,14 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             int y = (i * 47) % (GRID_H * CELL_SIZE);
             HPEN p = CreatePen(PS_SOLID, 1, RGB(30, 50, 70));
             HPEN oldP = SelectObject(hdc, p);
-            MoveToEx(hdc, OFFSET_X + x, OFFSET_Y + y, NULL);
-            LineTo(hdc, OFFSET_X + x + 10, OFFSET_Y + y);
+            MoveToEx(hdc, effOffsetX + x, effOffsetY + y, NULL);
+            LineTo(hdc, effOffsetX + x + 10, effOffsetY + y);
             SelectObject(hdc, oldP); DeleteObject(p);
         }
     }
     
     for (int i = 0; i < alienCount; i++) {
-        RECT rc = { OFFSET_X + aliens[i].x * CELL_SIZE, OFFSET_Y + aliens[i].y * CELL_SIZE, OFFSET_X + (aliens[i].x + 1) * CELL_SIZE, OFFSET_Y + (aliens[i].y + 1) * CELL_SIZE };
+        RECT rc = { effOffsetX + aliens[i].x * CELL_SIZE, effOffsetY + aliens[i].y * CELL_SIZE, effOffsetX + (aliens[i].x + 1) * CELL_SIZE, effOffsetY + (aliens[i].y + 1) * CELL_SIZE };
         COLORREF alienCol = RGB(255, 0, 255);
         HPEN p2 = CreatePen(PS_SOLID, 1, alienCol); HPEN oldP = SelectObject(hdc, p2);
         HBRUSH b2 = CreateSolidBrush(RGB(80, 0, 80)); HBRUSH oldB = SelectObject(hdc, b2);
@@ -494,8 +510,8 @@ void DrawGrid(HDC hdc, HFONT hFont) {
         HPEN p = CreatePen(PS_SOLID, 1, particles[i].color);
         HBRUSH oldB = SelectObject(hdc, b);
         HPEN oldP = SelectObject(hdc, p);
-        int px = (int)particles[i].x;
-        int py = (int)particles[i].y;
+        int px = (int)particles[i].x + (effOffsetX - OFFSET_X);
+        int py = (int)particles[i].y + (effOffsetY - OFFSET_Y);
         Ellipse(hdc, px - 2, py - 2, px + 2, py + 2);
         SelectObject(hdc, oldP); SelectObject(hdc, oldB);
         DeleteObject(p); DeleteObject(b);
@@ -505,8 +521,8 @@ void DrawGrid(HDC hdc, HFONT hFont) {
         HPEN p = CreatePen(PS_SOLID, 1, projectiles[i].color);
         HBRUSH oldB = SelectObject(hdc, b);
         HPEN oldP = SelectObject(hdc, p);
-        int px = (int)projectiles[i].x;
-        int py = (int)projectiles[i].y;
+        int px = (int)projectiles[i].x + (effOffsetX - OFFSET_X);
+        int py = (int)projectiles[i].y + (effOffsetY - OFFSET_Y);
         Ellipse(hdc, px - 3, py - 3, px + 3, py + 3);
         SelectObject(hdc, oldP); SelectObject(hdc, oldB);
         DeleteObject(p); DeleteObject(b);
@@ -666,6 +682,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_TIMER: {
             if (wParam == 2) {
                 animFrame++;
+                if (shakeTicks > 0) shakeTicks--;
                 for (int i = 0; i < particleCount; i++) {
                     particles[i].x += particles[i].vx;
                     particles[i].y += particles[i].vy;
@@ -716,7 +733,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (grid[idx] > 0 && grid[idx] <= 11) {
                             grid[idx] += 20;
                             int tx = idx % GRID_W, ty = idx / GRID_W;
-                            SpawnParticles(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2, RGB(255,0,0), 15);
+                            SpawnExplosion(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2);
                         }
                     }
                     strcpy(msgText, "METEOR SHOWER! Structures damaged.");
