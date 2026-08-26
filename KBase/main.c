@@ -319,7 +319,11 @@ void DoBitwiseOp(int op) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
+            HDC hdcScreen = GetDC(NULL);
+            int dpi = GetDeviceCaps(hdcScreen, LOGPIXELSY);
+            ReleaseDC(NULL, hdcScreen);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             CreateWindowA("STATIC", "Input Buffer / Number:", WS_CHILD | WS_VISIBLE, 10, 10, 200, 18, hwnd, NULL, NULL, NULL);
             HWND hBtnHelp = CreateWindowA("BUTTON", "Help (F1 or 'H')", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 720, 7, 140, 24, hwnd, (HMENU)99, NULL, NULL);
@@ -439,10 +443,11 @@ void __stdcall MainEntry() {
     
     RegisterClassA(&wc);
     
+    DWORD style = (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
     RECT rc = {0, 0, 900, 600};
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
+    AdjustWindowRect(&rc, style, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase - Universal Base & Bitwise Utility", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
+    HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase - Universal Base & Bitwise Utility", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
         
     ShowWindow(hwnd, SW_SHOW);

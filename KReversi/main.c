@@ -304,143 +304,262 @@ void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWi
     int shadowSpread = -yOffset / 3;
     int shadowCol = 10 - yOffset;
     if (shadowCol > 50) shadowCol = 50;
-    HBRUSH shadowBrush = CreateSolidBrush(RGB(shadowCol, shadowCol, shadowCol));
-    HPEN shadowPen = CreatePen(PS_SOLID, 1, RGB(shadowCol, shadowCol, shadowCol));
+    
+    // Theme-specific shadow colors
+    if (currentTheme == 1) { // Cyber
+        shadowCol = (colorType == BLACK) ? 40 : 20;
+    } else if (currentTheme == 2) { // Crimson
+        shadowCol = 15;
+    } else if (currentTheme == 3) { // Terminal
+        shadowCol = 10;
+    }
+    
+    COLORREF shadowRGB;
+    if (currentTheme == 1) shadowRGB = (colorType == BLACK) ? RGB(0, shadowCol, shadowCol) : RGB(shadowCol, 0, shadowCol/2);
+    else if (currentTheme == 2) shadowRGB = RGB(shadowCol*2, 0, 0);
+    else if (currentTheme == 3) shadowRGB = RGB(0, shadowCol, 0);
+    else shadowRGB = RGB(shadowCol, shadowCol, shadowCol);
+
+    HBRUSH shadowBrush = CreateSolidBrush(shadowRGB);
+    HPEN shadowPen = CreatePen(PS_SOLID, 1, shadowRGB);
     SelectObject(hdc, shadowBrush);
     SelectObject(hdc, shadowPen);
     Ellipse(hdc, cx - rX + shadowDropX - shadowSpread, drawCy - rY + shadowDropY - shadowSpread, cx + rX + shadowDropX + shadowSpread, drawCy + rY + shadowDropY + shadowSpread);
     DeleteObject(shadowBrush);
     DeleteObject(shadowPen);
 
-    if (colorType == BLACK) {
-        // Obsidian Black Disc
-        HBRUSH rimBrush = CreateSolidBrush(RGB(25, 25, 25));
-        HPEN rimPen = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
-        SelectObject(hdc, rimBrush);
-        SelectObject(hdc, rimPen);
+    COLORREF primaryCol = (colorType == BLACK) ? g_themes[currentTheme].disc1 : g_themes[currentTheme].disc2;
+    int pulse = (int)(sinf(globalFrameCounter * 0.2f + (cx + cy) * 0.01f) * 20.0f);
+
+    if (currentTheme == 0) {
+        // --- CLASSIC (Emerald) ---
+        if (colorType == BLACK) {
+            // Obsidian Black Disc
+            HBRUSH rimBrush = CreateSolidBrush(RGB(25, 25, 25));
+            HPEN rimPen = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
+            SelectObject(hdc, rimBrush);
+            SelectObject(hdc, rimPen);
+            Ellipse(hdc, cx - rX, drawCy - rY, cx + rX, drawCy + rY);
+            DeleteObject(rimBrush);
+            DeleteObject(rimPen);
+
+            for (int step = 0; step < 5; step++) {
+                int stepRX = rX - (step * rX / 6) - 2;
+                int stepRY = rY - (step * rY / 6) - 2;
+                if (stepRX < 1 || stepRY < 1) break;
+                int offsetShiftX = cx - (step * rX / 10);
+                int offsetShiftY = drawCy - (step * rY / 10);
+                COLORREF col = RGB(10 + step * 20, 10 + step * 20, 10 + step * 20);
+                HBRUSH cBrush = CreateSolidBrush(col);
+                HPEN cPen = CreatePen(PS_SOLID, 1, col);
+                SelectObject(hdc, cBrush);
+                SelectObject(hdc, cPen);
+                Ellipse(hdc, offsetShiftX - stepRX, offsetShiftY - stepRY, offsetShiftX + stepRX, offsetShiftY + stepRY);
+                DeleteObject(cBrush);
+                DeleteObject(cPen);
+            }
+
+            HPEN specPen = CreatePen(PS_SOLID, 2, RGB(200, 200, 200));
+            SelectObject(hdc, specPen);
+            Arc(hdc, cx - rX + 4, drawCy - rY + 4, cx + rX - 4, drawCy + rY - 4, cx, drawCy - rY, cx - rX, drawCy);
+            DeleteObject(specPen);
+
+            HPEN specPen2 = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+            SelectObject(hdc, specPen2);
+            Arc(hdc, cx - rX + 8, drawCy - rY + 8, cx + rX - 8, drawCy + rY - 8, cx + rX, drawCy, cx, drawCy + rY);
+            DeleteObject(specPen2);
+
+            if (rX >= 10) {
+                POINT crownPts[7];
+                crownPts[0].x = cx - rX / 3;     crownPts[0].y = drawCy + rY / 3;
+                crownPts[1].x = cx - rX * 4 / 10; crownPts[1].y = drawCy - rY / 5;
+                crownPts[2].x = cx - rX / 6;     crownPts[2].y = drawCy;
+                crownPts[3].x = cx;           crownPts[3].y = drawCy - rY / 3;
+                crownPts[4].x = cx + rX / 6;     crownPts[4].y = drawCy;
+                crownPts[5].x = cx + rX * 4 / 10; crownPts[5].y = drawCy - rY / 5;
+                crownPts[6].x = cx + rX / 3;     crownPts[6].y = drawCy + rY / 3;
+
+                HBRUSH goldBrush = CreateSolidBrush(RGB(255, 215, 0));
+                HPEN goldPen = CreatePen(PS_SOLID, 1, RGB(180, 140, 20));
+                SelectObject(hdc, goldBrush);
+                SelectObject(hdc, goldPen);
+                Polygon(hdc, crownPts, 7);
+                DeleteObject(goldBrush);
+                DeleteObject(goldPen);
+            }
+
+            // Marble micro-texture
+            srand(cx * cy);
+            for(int m=0; m<8; m++) {
+                int mx = cx - rX / 2 + rand() % rX;
+                int my = drawCy - rY / 2 + rand() % rY;
+                SetPixel(hdc, mx, my, RGB(40, 40, 40));
+                SetPixel(hdc, mx+1, my, RGB(60, 60, 60));
+            }
+        } else {
+            // Pearl White Disc
+            HBRUSH rimBrush = CreateSolidBrush(RGB(240, 245, 250));
+            HPEN rimPen = CreatePen(PS_SOLID, 2, RGB(180, 190, 200));
+            SelectObject(hdc, rimBrush);
+            SelectObject(hdc, rimPen);
+            Ellipse(hdc, cx - rX, drawCy - rY, cx + rX, drawCy + rY);
+            DeleteObject(rimBrush);
+            DeleteObject(rimPen);
+
+            for (int step = 0; step < 5; step++) {
+                int stepRX = rX - (step * rX / 6) - 2;
+                int stepRY = rY - (step * rY / 6) - 2;
+                if (stepRX < 1 || stepRY < 1) break;
+                int offsetShiftX = cx - (step * rX / 10);
+                int offsetShiftY = drawCy - (step * rY / 10);
+                COLORREF col = RGB(210 + step * 8, 215 + step * 7, 225 + step * 5);
+                HBRUSH cBrush = CreateSolidBrush(col);
+                HPEN cPen = CreatePen(PS_SOLID, 1, col);
+                SelectObject(hdc, cBrush);
+                SelectObject(hdc, cPen);
+                Ellipse(hdc, offsetShiftX - stepRX, offsetShiftY - stepRY, offsetShiftX + stepRX, offsetShiftY + stepRY);
+                DeleteObject(cBrush);
+                DeleteObject(cPen);
+            }
+
+            HPEN specPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+            SelectObject(hdc, specPen);
+            Arc(hdc, cx - rX + 4, drawCy - rY + 4, cx + rX - 4, drawCy + rY - 4, cx, drawCy - rY, cx - rX, drawCy);
+            DeleteObject(specPen);
+
+            HPEN specPen2 = CreatePen(PS_SOLID, 1, RGB(240, 240, 240));
+            SelectObject(hdc, specPen2);
+            Arc(hdc, cx - rX + 8, drawCy - rY + 8, cx + rX - 8, drawCy + rY - 8, cx + rX, drawCy, cx, drawCy + rY);
+            DeleteObject(specPen2);
+
+            if (rX >= 10) {
+                POINT starPts[10];
+                starPts[0].x = cx;             starPts[0].y = drawCy - rY / 3;
+                starPts[1].x = cx + rX / 10;     starPts[1].y = drawCy - rY / 10;
+                starPts[2].x = cx + rX / 3;      starPts[2].y = drawCy - rY / 12;
+                starPts[3].x = cx + rX / 7;      starPts[3].y = drawCy + rY / 12;
+                starPts[4].x = cx + rX / 4;      starPts[4].y = drawCy + rY / 3;
+                starPts[5].x = cx;             starPts[5].y = drawCy + rY / 5;
+                starPts[6].x = cx - rX / 4;      starPts[6].y = drawCy + rY / 3;
+                starPts[7].x = cx - rX / 7;      starPts[7].y = drawCy + rY / 12;
+                starPts[8].x = cx - rX / 3;      starPts[8].y = drawCy - rY / 12;
+                starPts[9].x = cx - rX / 10;     starPts[9].y = drawCy - rY / 10;
+
+                HBRUSH starBrush = CreateSolidBrush(RGB(80, 95, 115));
+                HPEN starPen = CreatePen(PS_SOLID, 1, RGB(50, 65, 85));
+                SelectObject(hdc, starBrush);
+                SelectObject(hdc, starPen);
+                Polygon(hdc, starPts, 10);
+                DeleteObject(starBrush);
+                DeleteObject(starPen);
+            }
+
+            // Ivory micro-texture
+            srand(cx * cy + 1);
+            for(int m=0; m<10; m++) {
+                int mx = cx - rX / 2 + rand() % rX;
+                int my = drawCy - rY / 2 + rand() % rY;
+                SetPixel(hdc, mx, my, RGB(220, 225, 230));
+                SetPixel(hdc, mx+1, my+1, RGB(255, 255, 255));
+            }
+        }
+    }
+    else if (currentTheme == 1) {
+        // --- CYBER (Neon Rings) ---
+        int pr = GetRValue(primaryCol) + pulse;
+        int pg = GetGValue(primaryCol) + pulse;
+        int pb = GetBValue(primaryCol) + pulse;
+        if (pr > 255) pr = 255; if (pr < 0) pr = 0;
+        if (pg > 255) pg = 255; if (pg < 0) pg = 0;
+        if (pb > 255) pb = 255; if (pb < 0) pb = 0;
+        COLORREF glowCol = RGB(pr, pg, pb);
+
+        HBRUSH darkBrush = CreateSolidBrush(RGB(10, 15, 30));
+        HPEN glowPen = CreatePen(PS_SOLID, 2, glowCol);
+        SelectObject(hdc, darkBrush);
+        SelectObject(hdc, glowPen);
         Ellipse(hdc, cx - rX, drawCy - rY, cx + rX, drawCy + rY);
-        DeleteObject(rimBrush);
-        DeleteObject(rimPen);
-
-        for (int step = 0; step < 5; step++) {
-            int stepRX = rX - (step * rX / 6) - 2;
-            int stepRY = rY - (step * rY / 6) - 2;
-            if (stepRX < 1 || stepRY < 1) break;
-            int offsetShiftX = cx - (step * rX / 10);
-            int offsetShiftY = drawCy - (step * rY / 10);
-            COLORREF col = RGB(10 + step * 20, 10 + step * 20, 10 + step * 20);
-            HBRUSH cBrush = CreateSolidBrush(col);
-            HPEN cPen = CreatePen(PS_SOLID, 1, col);
-            SelectObject(hdc, cBrush);
-            SelectObject(hdc, cPen);
-            Ellipse(hdc, offsetShiftX - stepRX, offsetShiftY - stepRY, offsetShiftX + stepRX, offsetShiftY + stepRY);
-            DeleteObject(cBrush);
-            DeleteObject(cPen);
+        
+        HPEN innerGlowPen = CreatePen(PS_SOLID, 1, glowCol);
+        SelectObject(hdc, innerGlowPen);
+        Ellipse(hdc, cx - rX/2, drawCy - rY/2, cx + rX/2, drawCy + rY/2);
+        
+        // Multi-frame animation: spinning inner line
+        float angle = (globalFrameCounter * 0.1f);
+        int lx1 = cx + (int)(cosf(angle) * (rX/2));
+        int ly1 = drawCy + (int)(sinf(angle) * (rY/2));
+        int lx2 = cx - (int)(cosf(angle) * (rX/2));
+        int ly2 = drawCy - (int)(sinf(angle) * (rY/2));
+        MoveToEx(hdc, lx1, ly1, NULL);
+        LineTo(hdc, lx2, ly2);
+        
+        DeleteObject(darkBrush);
+        DeleteObject(glowPen);
+        DeleteObject(innerGlowPen);
+    }
+    else if (currentTheme == 2) {
+        // --- CRIMSON (Gold / Ruby Metallic) ---
+        COLORREF centerCol = (colorType == BLACK) ? RGB(255, 215, 0) : RGB(217, 4, 41);
+        COLORREF edgeCol = (colorType == BLACK) ? RGB(100, 80, 0) : RGB(100, 0, 15);
+        
+        // Pseudo radial gradient using multiple ellipses
+        for (int i = 0; i < 6; i++) {
+            int curRX = rX - (i * rX / 6);
+            int curRY = rY - (i * rY / 6);
+            if (curRX < 1 || curRY < 1) break;
+            
+            int r = GetRValue(edgeCol) + (GetRValue(centerCol) - GetRValue(edgeCol)) * i / 5;
+            int g = GetGValue(edgeCol) + (GetGValue(centerCol) - GetGValue(edgeCol)) * i / 5;
+            int b = GetBValue(edgeCol) + (GetBValue(centerCol) - GetBValue(edgeCol)) * i / 5;
+            
+            HBRUSH brush = CreateSolidBrush(RGB(r, g, b));
+            HPEN pen = CreatePen(PS_SOLID, 1, RGB(r, g, b));
+            SelectObject(hdc, brush);
+            SelectObject(hdc, pen);
+            Ellipse(hdc, cx - curRX, drawCy - curRY, cx + curRX, drawCy + curRY);
+            DeleteObject(brush);
+            DeleteObject(pen);
         }
-
-        HPEN specPen = CreatePen(PS_SOLID, 2, RGB(200, 200, 200));
-        SelectObject(hdc, specPen);
-        Arc(hdc, cx - rX + 4, drawCy - rY + 4, cx + rX - 4, drawCy + rY - 4, cx, drawCy - rY, cx - rX, drawCy);
-        DeleteObject(specPen);
-
-        HPEN specPen2 = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
-        SelectObject(hdc, specPen2);
-        Arc(hdc, cx - rX + 8, drawCy - rY + 8, cx + rX - 8, drawCy + rY - 8, cx + rX, drawCy, cx, drawCy + rY);
-        DeleteObject(specPen2);
-
-        if (rX >= 10) {
-            POINT crownPts[7];
-            crownPts[0].x = cx - rX / 3;     crownPts[0].y = drawCy + rY / 3;
-            crownPts[1].x = cx - rX * 4 / 10; crownPts[1].y = drawCy - rY / 5;
-            crownPts[2].x = cx - rX / 6;     crownPts[2].y = drawCy;
-            crownPts[3].x = cx;           crownPts[3].y = drawCy - rY / 3;
-            crownPts[4].x = cx + rX / 6;     crownPts[4].y = drawCy;
-            crownPts[5].x = cx + rX * 4 / 10; crownPts[5].y = drawCy - rY / 5;
-            crownPts[6].x = cx + rX / 3;     crownPts[6].y = drawCy + rY / 3;
-
-            HBRUSH goldBrush = CreateSolidBrush(RGB(255, 215, 0));
-            HPEN goldPen = CreatePen(PS_SOLID, 1, RGB(180, 140, 20));
-            SelectObject(hdc, goldBrush);
-            SelectObject(hdc, goldPen);
-            Polygon(hdc, crownPts, 7);
-            DeleteObject(goldBrush);
-            DeleteObject(goldPen);
+        
+        // Etched spiral
+        HPEN etchPen = CreatePen(PS_SOLID, 1, edgeCol);
+        SelectObject(hdc, etchPen);
+        for(float a = 0; a < 6.28f * 2; a += 0.2f) {
+            int radX = (int)((rX * 0.8f) * a / (6.28f * 2));
+            int radY = (int)((rY * 0.8f) * a / (6.28f * 2));
+            int px = cx + (int)(cosf(a + globalFrameCounter * 0.05f) * radX);
+            int py = drawCy + (int)(sinf(a + globalFrameCounter * 0.05f) * radY);
+            if (a == 0) MoveToEx(hdc, px, py, NULL);
+            else LineTo(hdc, px, py);
         }
-
-        // Marble micro-texture
-        srand(cx * cy);
-        for(int m=0; m<8; m++) {
-            int mx = cx - rX / 2 + rand() % rX;
-            int my = drawCy - rY / 2 + rand() % rY;
-            SetPixel(hdc, mx, my, RGB(40, 40, 40));
-            SetPixel(hdc, mx+1, my, RGB(60, 60, 60));
+        DeleteObject(etchPen);
+    }
+    else if (currentTheme == 3) {
+        // --- TERMINAL (Retro Pixel) ---
+        HBRUSH bgBrush = CreateSolidBrush(RGB(0, 20, 0));
+        HPEN borderPen = CreatePen(PS_SOLID, 2, primaryCol);
+        SelectObject(hdc, bgBrush);
+        SelectObject(hdc, borderPen);
+        
+        // Draw a blocky circle
+        Rectangle(hdc, cx - rX + 2, drawCy - rY, cx + rX - 2, drawCy + rY);
+        Rectangle(hdc, cx - rX, drawCy - rY + 2, cx + rX, drawCy + rY - 2);
+        
+        // Scanlines
+        for (int yy = drawCy - rY + 2; yy < drawCy + rY - 2; yy += 4) {
+            MoveToEx(hdc, cx - rX + 4, yy + (globalFrameCounter % 4), NULL);
+            LineTo(hdc, cx + rX - 4, yy + (globalFrameCounter % 4));
         }
-    } else {
-        // Pearl White Disc
-        HBRUSH rimBrush = CreateSolidBrush(RGB(240, 245, 250));
-        HPEN rimPen = CreatePen(PS_SOLID, 2, RGB(180, 190, 200));
-        SelectObject(hdc, rimBrush);
-        SelectObject(hdc, rimPen);
-        Ellipse(hdc, cx - rX, drawCy - rY, cx + rX, drawCy + rY);
-        DeleteObject(rimBrush);
-        DeleteObject(rimPen);
-
-        for (int step = 0; step < 5; step++) {
-            int stepRX = rX - (step * rX / 6) - 2;
-            int stepRY = rY - (step * rY / 6) - 2;
-            if (stepRX < 1 || stepRY < 1) break;
-            int offsetShiftX = cx - (step * rX / 10);
-            int offsetShiftY = drawCy - (step * rY / 10);
-            COLORREF col = RGB(210 + step * 8, 215 + step * 7, 225 + step * 5);
-            HBRUSH cBrush = CreateSolidBrush(col);
-            HPEN cPen = CreatePen(PS_SOLID, 1, col);
-            SelectObject(hdc, cBrush);
-            SelectObject(hdc, cPen);
-            Ellipse(hdc, offsetShiftX - stepRX, offsetShiftY - stepRY, offsetShiftX + stepRX, offsetShiftY + stepRY);
-            DeleteObject(cBrush);
-            DeleteObject(cPen);
-        }
-
-        HPEN specPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-        SelectObject(hdc, specPen);
-        Arc(hdc, cx - rX + 4, drawCy - rY + 4, cx + rX - 4, drawCy + rY - 4, cx, drawCy - rY, cx - rX, drawCy);
-        DeleteObject(specPen);
-
-        HPEN specPen2 = CreatePen(PS_SOLID, 1, RGB(240, 240, 240));
-        SelectObject(hdc, specPen2);
-        Arc(hdc, cx - rX + 8, drawCy - rY + 8, cx + rX - 8, drawCy + rY - 8, cx + rX, drawCy, cx, drawCy + rY);
-        DeleteObject(specPen2);
-
-        if (rX >= 10) {
-            POINT starPts[10];
-            starPts[0].x = cx;             starPts[0].y = drawCy - rY / 3;
-            starPts[1].x = cx + rX / 10;     starPts[1].y = drawCy - rY / 10;
-            starPts[2].x = cx + rX / 3;      starPts[2].y = drawCy - rY / 12;
-            starPts[3].x = cx + rX / 7;      starPts[3].y = drawCy + rY / 12;
-            starPts[4].x = cx + rX / 4;      starPts[4].y = drawCy + rY / 3;
-            starPts[5].x = cx;             starPts[5].y = drawCy + rY / 5;
-            starPts[6].x = cx - rX / 4;      starPts[6].y = drawCy + rY / 3;
-            starPts[7].x = cx - rX / 7;      starPts[7].y = drawCy + rY / 12;
-            starPts[8].x = cx - rX / 3;      starPts[8].y = drawCy - rY / 12;
-            starPts[9].x = cx - rX / 10;     starPts[9].y = drawCy - rY / 10;
-
-            HBRUSH starBrush = CreateSolidBrush(RGB(80, 95, 115));
-            HPEN starPen = CreatePen(PS_SOLID, 1, RGB(50, 65, 85));
-            SelectObject(hdc, starBrush);
-            SelectObject(hdc, starPen);
-            Polygon(hdc, starPts, 10);
-            DeleteObject(starBrush);
-            DeleteObject(starPen);
-        }
-
-        // Ivory micro-texture
-        srand(cx * cy + 1);
-        for(int m=0; m<10; m++) {
-            int mx = cx - rX / 2 + rand() % rX;
-            int my = drawCy - rY / 2 + rand() % rY;
-            SetPixel(hdc, mx, my, RGB(220, 225, 230));
-            SetPixel(hdc, mx+1, my+1, RGB(255, 255, 255));
-        }
+        
+        // Central core
+        int corePulse = (globalFrameCounter % 20 < 10) ? 2 : 4;
+        HBRUSH coreBrush = CreateSolidBrush(primaryCol);
+        SelectObject(hdc, coreBrush);
+        Rectangle(hdc, cx - corePulse, drawCy - corePulse, cx + corePulse, drawCy + corePulse);
+        DeleteObject(coreBrush);
+        
+        DeleteObject(bgBrush);
+        DeleteObject(borderPen);
     }
 }
 
