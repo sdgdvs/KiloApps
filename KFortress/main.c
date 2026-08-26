@@ -78,15 +78,20 @@ typedef struct {
     int attackAnim;
 } TowerSlot;
 
-#define MAX_PARTICLES 128
+#define MAX_PARTICLES 400
 typedef struct {
     BOOL active;
     float x, y;
     float vx, vy;
     COLORREF color;
     int life;
+    int initialLife;
+    int type;
+    float size;
 } Particle;
 static Particle g_particles[MAX_PARTICLES];
+
+static int g_screenShake = 0;
 
 #define MAX_SCORCH_MARKS 64
 typedef struct {
@@ -97,20 +102,38 @@ typedef struct {
 static ScorchMark g_scorchMarks[MAX_SCORCH_MARKS];
 static int g_scorchIndex = 0;
 
+void SpawnAdvancedParticle(float x, float y, float vx, float vy, COLORREF color, int life, int type, float size) {
+    for (int p = 0; p < MAX_PARTICLES; p++) {
+        if (!g_particles[p].active) {
+            g_particles[p].active = TRUE;
+            g_particles[p].x = x; g_particles[p].y = y;
+            g_particles[p].vx = vx; g_particles[p].vy = vy;
+            g_particles[p].color = color;
+            g_particles[p].life = life;
+            g_particles[p].initialLife = life;
+            g_particles[p].type = type;
+            g_particles[p].size = size;
+            break;
+        }
+    }
+}
+
 void SpawnParticleBurst(float x, float y, COLORREF color, int count) {
     for (int i = 0; i < count; i++) {
-        for (int p = 0; p < MAX_PARTICLES; p++) {
-            if (!g_particles[p].active) {
-                g_particles[p].active = TRUE;
-                g_particles[p].x = x;
-                g_particles[p].y = y;
-                g_particles[p].vx = ((rand() % 100) - 50) / 15.0f;
-                g_particles[p].vy = ((rand() % 100) - 50) / 15.0f;
-                g_particles[p].color = color;
-                g_particles[p].life = 10 + (rand() % 15);
-                break;
-            }
-        }
+        SpawnAdvancedParticle(x, y, ((rand() % 100) - 50) / 15.0f, ((rand() % 100) - 50) / 15.0f, color, 10 + (rand() % 15), 0, 2.0f);
+    }
+}
+
+void SpawnExplosion(float x, float y, COLORREF color) {
+    g_screenShake = 15;
+    SpawnAdvancedParticle(x, y, 0, 0, color, 20, 3, 5.0f);
+    SpawnParticleBurst(x, y, color, 12);
+    for (int i = 0; i < 15; i++) {
+        SpawnAdvancedParticle(x, y, ((rand() % 100) - 50) / 5.0f, ((rand() % 100) - 50) / 5.0f, RGB(255, 200, 50), 20 + rand()%15, 1, 2.0f);
+    }
+    for (int i = 0; i < 8; i++) {
+        COLORREF smokeCol = RGB(100 + rand()%50, 100 + rand()%50, 100 + rand()%50);
+        SpawnAdvancedParticle(x, y, ((rand() % 100) - 50) / 20.0f, ((rand() % 100) - 50) / 20.0f, smokeCol, 30 + rand()%20, 2, 4.0f + (rand()%3));
     }
 }
 
@@ -467,6 +490,8 @@ void InitGameState() {
 void UpdateGameLogic() {
     if (g_gameOver) return;
 
+    if (g_screenShake > 0) g_screenShake--;
+
     // Spawning Logic
     if (g_waveActive && g_spawnQueueHead < g_spawnQueueCount) {
         g_spawnTimer++;
@@ -665,6 +690,8 @@ void UpdateGameLogic() {
                 if (g_hero.shieldActive > 0) dmgToBase = 0;
                 g_baseHp -= dmgToBase;
                 if (dmgToBase > 0) {
+                    if (g_enemies[i].type == ENEMY_OGRE) g_screenShake = 15;
+                    else g_screenShake = 5;
                     Beep(100, 100); Beep(80, 100); Beep(180, 60);
                     char dmgBuf[16]; wsprintfA(dmgBuf, "-%d HP", dmgToBase);
                     AddFloatingText(g_enemies[i].x - 15, g_enemies[i].y - 20, dmgBuf, RGB(239, 68, 68));
@@ -765,7 +792,9 @@ void UpdateGameLogic() {
         if (dist < g_projectiles[p].speed) {
             // Hit target
             COLORREF hitCol = (g_projectiles[p].type == TOWER_CANNON) ? RGB(71, 85, 105) : ((g_projectiles[p].type == TOWER_MAGE) ? RGB(216, 180, 254) : TEXT_GOLD);
-            SpawnParticleBurst(g_projectiles[p].targetX, g_projectiles[p].targetY, hitCol, 8);
+            if (g_projectiles[p].type == TOWER_CANNON) SpawnExplosion(g_projectiles[p].targetX, g_projectiles[p].targetY, hitCol);
+            else SpawnParticleBurst(g_projectiles[p].targetX, g_projectiles[p].targetY, hitCol, 8);
+            
             if (g_projectiles[p].type == TOWER_CANNON) {
                 g_scorchMarks[g_scorchIndex].x = g_projectiles[p].targetX;
                 g_scorchMarks[g_scorchIndex].y = g_projectiles[p].targetY;
@@ -786,7 +815,9 @@ void UpdateGameLogic() {
                         g_enemies[e2].hp -= dmg;
                         if (g_enemies[e2].hp <= 0) {
                             g_enemies[e2].active = FALSE;
-                            SpawnParticleBurst(g_enemies[e2].x, g_enemies[e2].y, RGB(34, 197, 94), 10);
+                            if (g_enemies[e2].type == ENEMY_OGRE) SpawnExplosion(g_enemies[e2].x, g_enemies[e2].y, RGB(120, 53, 15));
+                            else SpawnParticleBurst(g_enemies[e2].x, g_enemies[e2].y, RGB(34, 197, 94), 10);
+                            
                             int reward = 15;
                             if (g_enemies[e2].type == ENEMY_OGRE) {
                                 reward = 100;
@@ -809,7 +840,9 @@ void UpdateGameLogic() {
                     g_enemies[targetIdx].hp -= dmg;
                     if (g_enemies[targetIdx].hp <= 0) {
                         g_enemies[targetIdx].active = FALSE;
-                        SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(34, 197, 94), 10);
+                        if (g_enemies[targetIdx].type == ENEMY_OGRE) SpawnExplosion(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(120, 53, 15));
+                        else SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(34, 197, 94), 10);
+                        
                         int reward = 15;
                         if (g_enemies[targetIdx].type == ENEMY_OGRE) {
                             reward = 100;
@@ -837,6 +870,20 @@ void UpdateGameLogic() {
         if (!g_particles[p].active) continue;
         g_particles[p].x += g_particles[p].vx;
         g_particles[p].y += g_particles[p].vy;
+        
+        if (g_particles[p].type == 1) { // Spark
+            g_particles[p].vy += 0.2f;
+            g_particles[p].vx *= 0.95f;
+        } else if (g_particles[p].type == 2) { // Smoke
+            g_particles[p].vx *= 0.9f;
+            g_particles[p].vy *= 0.9f;
+            g_particles[p].vy -= 0.1f;
+            g_particles[p].size += 0.2f;
+        } else if (g_particles[p].type == 3) { // Ring
+            g_particles[p].size += 2.0f;
+            g_particles[p].vx = 0; g_particles[p].vy = 0;
+        }
+
         g_particles[p].life--;
         if (g_particles[p].life <= 0) g_particles[p].active = FALSE;
     }
@@ -978,6 +1025,18 @@ void Render(HDC hdc, HWND hwnd) {
 
     // Battlefield Area
     int bfX = 10, bfY = 70, bfW = w - 220, bfH = h - 80;
+    
+    // Fill the underlying background to prevent artifacts when shaking
+    if (g_screenShake > 0) {
+        HBRUSH blackB = CreateSolidBrush(RGB(0,0,0));
+        RECT fillR = { bfX, bfY, bfX + bfW, bfY + bfH };
+        FillRect(memDC, &fillR, blackB);
+        DeleteObject(blackB);
+        
+        bfX += (rand() % 11) - 5;
+        bfY += (rand() % 11) - 5;
+    }
+    
     DrawRoundedRect(memDC, bfX, bfY, bfX + bfW, bfY + bfH, g_maps[g_currentMap].bg, BORDER_COLOR, 8);
 
     // Draw Environmental Art
@@ -1387,12 +1446,33 @@ void Render(HDC hdc, HWND hwnd) {
     // Draw Particles
     for (int p = 0; p < MAX_PARTICLES; p++) {
         if (!g_particles[p].active) continue;
+        
+        int px = (int)g_particles[p].x;
+        int py = (int)g_particles[p].y;
+        float sz = g_particles[p].size;
+
+        HPEN pP = CreatePen(PS_SOLID, 1, g_particles[p].color);
         HBRUSH pB = CreateSolidBrush(g_particles[p].color);
-        HPEN pP = CreatePen(PS_NULL, 0, 0);
-        HBRUSH oB = (HBRUSH)SelectObject(memDC, pB);
         HPEN oP = (HPEN)SelectObject(memDC, pP);
-        int sz = (g_particles[p].life > 5) ? 3 : 2;
-        Rectangle(memDC, (int)g_particles[p].x - sz, (int)g_particles[p].y - sz, (int)g_particles[p].x + sz, (int)g_particles[p].y + sz);
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, pB);
+
+        if (g_particles[p].type == 1) { // Spark
+            MoveToEx(memDC, px, py, NULL);
+            LineTo(memDC, px - (int)(g_particles[p].vx * 2), py - (int)(g_particles[p].vy * 2));
+        } else if (g_particles[p].type == 2) { // Smoke
+            Ellipse(memDC, px - (int)sz, py - (int)sz, px + (int)sz, py + (int)sz);
+        } else if (g_particles[p].type == 3) { // Ring
+            SelectObject(memDC, GetStockObject(NULL_BRUSH)); // Hollow
+            HPEN ringPen = CreatePen(PS_SOLID, 2, g_particles[p].color);
+            SelectObject(memDC, ringPen);
+            Ellipse(memDC, px - (int)sz, py - (int)sz, px + (int)sz, py + (int)sz);
+            SelectObject(memDC, pP); DeleteObject(ringPen);
+        } else {
+            int isz = (int)sz;
+            if (g_particles[p].life < 5) isz--;
+            Rectangle(memDC, px - isz, py - isz, px + isz, py + isz);
+        }
+
         SelectObject(memDC, oB);
         SelectObject(memDC, oP);
         DeleteObject(pB);
@@ -1818,6 +1898,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hero.meteorCd = g_hero.maxMeteorCd;
             AddFloatingText(g_hero.x, g_hero.y - 40, "METEOR STRIKE!", TEXT_RED);
             Beep(150, 100);
+            SpawnExplosion(g_hero.x, g_hero.y, RGB(239, 68, 68));
             for (int e = 0; e < MAX_ENEMIES; e++) {
                 if (g_enemies[e].active) {
                     float dx = g_enemies[e].x - g_hero.x;
@@ -1826,6 +1907,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         g_enemies[e].hp -= 100;
                         if (g_enemies[e].hp <= 0) {
                             g_enemies[e].active = FALSE;
+                            if (g_enemies[e].type == ENEMY_OGRE) SpawnExplosion(g_enemies[e].x, g_enemies[e].y, RGB(120, 53, 15));
+                            else SpawnParticleBurst(g_enemies[e].x, g_enemies[e].y, RGB(34, 197, 94), 10);
+                            
                             int reward = 15;
                             if (g_enemies[e].type == ENEMY_OGRE) {
                                 reward = 100;

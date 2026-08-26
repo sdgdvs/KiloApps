@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFortress
 - KFarm
 - KAlchemy
 - KRogue
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KBreakout
 - KMaze
 - KColony
+- KFortress
 ## Completed Work Log
+
+- **KFortress (Loop 5):** Implemented highly polished visual effects including procedural screen-shake tied to major events (Meteor Strike, Cannon Tower hit, Ogre death/breach) via CSS transforms in Web and random offset rendering in GDI, and upgraded multi-layered particle explosions featuring distinct architectures for shockwaves (fast-expanding hollow rings), core bursts (rapid solid color scatter), sparks (friction-based kinetic lines with gravity), and smoke (slow-moving expanding spherical clouds) in both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c).
 
 - **KColony (Loop 5):** Implemented highly polished visual effects including procedural screen-shake tied to explosions utilizing CSS transforms in Web and random offset rendering in GDI, upgraded multi-layered particle explosions featuring staggered multi-colored burst layers (white, yellow, red, dark gray) and randomized 360-degree vectors, and highly detailed visual variations for base structures applying procedural scale/rotation adjustments based on grid coordinates to break up visual uniformity in both Web Canvas (kcolony.html) and Native C Win32 GDI (KColony/main.c).
 

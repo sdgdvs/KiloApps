@@ -691,6 +691,7 @@
     let floatingTexts = [];
     let particles = [];
     let traps = [];
+    let screenShake = 0;
     let blizzTimer = 0;
     let envArt = [];
     let weatherParticles = [];
@@ -905,7 +906,8 @@
         }
       });
       // spawn a bunch of particles for meteor
-      for(let i=0; i<20; i++) spawnParticleEffect(hero.x + (Math.random()-0.5)*100, hero.y + (Math.random()-0.5)*100, "#ef4444");
+      spawnExplosion(hero.x, hero.y, "#ef4444");
+      for(let i=0; i<10; i++) spawnParticleEffect(hero.x + (Math.random()-0.5)*100, hero.y + (Math.random()-0.5)*100, "#ef4444");
       updateHUD();
     }
     
@@ -1171,18 +1173,29 @@
       floatingTexts.push({ x, y, text, color, life: 40 });
     }
 
+    function spawnAdvancedParticle(x, y, vx, vy, color, life, type, size) {
+      particles.push({x, y, vx, vy, color, life, initialLife: life, type, size});
+    }
+
     function spawnParticleEffect(x, y, color) {
       for (let i = 0; i < 6; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = 1 + Math.random() * 3;
-        particles.push({
-          x, y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          color,
-          life: 15 + Math.random() * 10
-        });
+        spawnAdvancedParticle(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, color, 15 + Math.random() * 10, 0, 2 + Math.random() * 2);
       }
+    }
+    
+    function spawnExplosion(x, y, color) {
+        screenShake = 15;
+        spawnAdvancedParticle(x, y, 0, 0, color, 20, 3, 5);
+        spawnParticleEffect(x, y, color);
+        for(let i=0; i<15; i++){
+            spawnAdvancedParticle(x, y, (Math.random()-0.5)*15, (Math.random()-0.5)*15, '#fbbf24', 20+Math.random()*15, 1, 2);
+        }
+        for(let i=0; i<8; i++){
+            let gray = 100 + Math.random()*50;
+            spawnAdvancedParticle(x, y, (Math.random()-0.5)*3, (Math.random()-0.5)*3, `rgb(${gray},${gray},${gray})`, 30+Math.random()*20, 2, 4+Math.random()*3);
+        }
     }
 
     // Main Game Loop
@@ -1359,6 +1372,8 @@
           if (hero.shieldActive > 0) dmgToBase = 0; // Shield Wall protects base!
           baseHp -= dmgToBase;
           if (dmgToBase > 0) {
+            if (e.type === 'Ogre') screenShake = 15;
+            else screenShake = 5;
             playGrowl();
             playBeep(180, 0.15, 'sawtooth', 0.25);
             spawnFloatingText(waypoints[waypoints.length - 1].x - 20, waypoints[waypoints.length - 1].y - 30, "-" + dmgToBase + " HP", "#ef4444");
@@ -1472,7 +1487,8 @@
             let dmg = p.damage;
             if (p.target.type === 'Orc' && p.type !== 'Mage' && p.type !== 'Cannon') dmg = Math.max(1, Math.floor(dmg * 0.5));
             p.target.hp -= dmg;
-            spawnParticleEffect(p.target.x, p.target.y, p.type === 'Cannon' ? "#475569" : "#ffd700");
+            if (p.type === 'Cannon') spawnExplosion(p.target.x, p.target.y, "#475569");
+            else spawnParticleEffect(p.target.x, p.target.y, "#ffd700");
           }
           playBeep(p.type === 'Cannon' ? 200 : (p.type === 'Mage' ? 400 : 450), 0.04, 'triangle', 0.08);
 
@@ -1495,7 +1511,8 @@
               else if (enemies[j].type === 'Hound') reward = 10;
               gold += reward;
               spawnFloatingText(enemies[j].x, enemies[j].y - 15, "+" + reward + "g", "#ffd700");
-              spawnParticleEffect(enemies[j].x, enemies[j].y, "#10b981");
+              if (enemies[j].type === 'Ogre') spawnExplosion(enemies[j].x, enemies[j].y, "#78350f");
+              else spawnParticleEffect(enemies[j].x, enemies[j].y, "#10b981");
               enemies.splice(j, 1);
               deadFound = true;
             }
@@ -1512,10 +1529,25 @@
       }
 
       // Update Particles & Floating Text
+      if (screenShake > 0) screenShake--;
+
       for (let i = particles.length - 1; i >= 0; i--) {
         const part = particles[i];
         part.x += part.vx;
         part.y += part.vy;
+        
+        if (part.type === 1) { // Spark
+            part.vy += 0.2;
+            part.vx *= 0.95;
+        } else if (part.type === 2) { // Smoke
+            part.vx *= 0.9;
+            part.vy *= 0.9;
+            part.vy -= 0.1;
+            part.size += 0.2;
+        } else if (part.type === 3) { // Ring
+            part.size += 2.0;
+        }
+        
         part.life--;
         if (part.life <= 0) particles.splice(i, 1);
       }
@@ -1574,7 +1606,15 @@
 
       const map = campaignMaps[currentMapIndex];
 
+      ctx.save();
+      if (screenShake > 0) {
+        ctx.translate((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10);
+      }
+
       // Clear & Draw Background
+      ctx.fillStyle = '#000000'; // To prevent borders when shaking
+      ctx.fillRect(0, 0, w, h);
+      
       ctx.fillStyle = map.bg;
       ctx.fillRect(0, 0, w, h);
 
@@ -2023,9 +2063,26 @@
       // Draw Particles
       particles.forEach(part => {
         ctx.fillStyle = part.color;
+        ctx.strokeStyle = part.color;
         ctx.beginPath();
-        ctx.arc(part.x, part.y, 2.5, 0, Math.PI * 2);
-        ctx.fill();
+        
+        if (part.type === 1) { // Spark
+            ctx.lineWidth = 2;
+            ctx.moveTo(part.x, part.y);
+            ctx.lineTo(part.x - part.vx * 2, part.y - part.vy * 2);
+            ctx.stroke();
+        } else if (part.type === 2) { // Smoke
+            ctx.arc(part.x, part.y, part.size, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (part.type === 3) { // Ring
+            ctx.lineWidth = 2;
+            ctx.arc(part.x, part.y, part.size, 0, Math.PI * 2);
+            ctx.stroke();
+        } else {
+            let sz = part.size || 2.5;
+            if (part.life < 5) sz -= 0.5;
+            ctx.fillRect(part.x - sz, part.y - sz, sz * 2, sz * 2);
+        }
       });
 
       // Draw Floating Text
@@ -2055,6 +2112,8 @@
       grad.addColorStop(1, 'rgba(0,0,0,0.8)');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
+
+      ctx.restore();
 
       // Game Over Overlay
       if (gameOver) {
