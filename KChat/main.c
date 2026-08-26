@@ -202,6 +202,11 @@ LRESULT CALLBACK InputSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
         SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(101, BN_CLICKED), (LPARAM)GetDlgItem(hParent, 101));
         return 0;
     }
+    if (msg == WM_KEYDOWN && wParam == VK_F1) {
+        HWND hParent = GetParent(hwnd);
+        SendMessageA(hParent, WM_COMMAND, 112, 0);
+        return 0;
+    }
     return CallWindowProcA(oldInputProc, hwnd, msg, wParam, lParam);
 }
 
@@ -260,7 +265,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             oldInputProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)InputSubclassProc);
 
-            hUIFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            int dpi = 96;
+            HDC hdc = GetDC(NULL);
+            if (hdc) {
+                dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+                ReleaseDC(NULL, hdc);
+            }
+            int fontHeight = -MulDiv(12, dpi, 72);
+            hUIFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             SendMessageA(hIp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -280,7 +292,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hHelpBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
 
             AddMessage("System", "Welcome to KChat Native Pro! Connect to server or use offline AI Personas.", "#general", 1);
-            AddMessage("System", "Commands: /nick <name>, /join <#room>, /ai <prompt>. Click Help or type /help.", "#general", 0);
+            AddMessage("System", "Commands: /nick <name>, /join <#room>, /ai <prompt>. Press F1 for Help.", "#general", 0);
             break;
         }
         case WM_CTLCOLORSTATIC: {
@@ -308,7 +320,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 GetWindowTextA(hSearchInput, searchKeyword, sizeof(searchKeyword));
                 RebuildLogView();
             } else if (wmId == 112) { // Help
-                AddMessage("System", "Help: /nick <name>, /join <#room>, /ai <prompt>. Use UI buttons for Connect, Pin, Export.", currentRoom, 0);
+                AddMessage("System", "Help: /nick <name>, /join <#room>, /ai <prompt>. Use UI buttons for Connect, Pin, Export. Press F1 for Help.", currentRoom, 0);
             } else if (wmId == 100) { // Connect
                 if (s != INVALID_SOCKET) {
                     closesocket(s);
@@ -367,7 +379,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
 
                     if (buf[0] == '/' && buf[1] == 'h' && buf[2] == 'e' && buf[3] == 'l' && buf[4] == 'p') {
-                        AddMessage("System", "Help: /nick <name>, /join <#room>, /ai <prompt>. Use UI buttons for Connect, Pin, Export.", currentRoom, 0);
+                        AddMessage("System", "Help: /nick <name>, /join <#room>, /ai <prompt>. Use UI buttons for Connect, Pin, Export. Press F1 for Help.", currentRoom, 0);
                         SetWindowTextA(hInput, "");
                         break;
                     }
@@ -495,6 +507,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_KEYDOWN:
+            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+                SendMessageA(hwnd, WM_COMMAND, 112, 0);
+            }
+            break;
         case WM_DESTROY:
             if (s != INVALID_SOCKET) closesocket(s);
             if (hUIFont) DeleteObject(hUIFont);
@@ -522,8 +539,8 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     RECT rect = { 0, 0, 850, 650 };
-    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KChatClass", "KChat Native Pro", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
+    AdjustWindowRect(&rect, (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
+    HWND hwnd = CreateWindowExA(0, "KChatClass", "KChat Native Pro", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

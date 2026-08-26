@@ -487,7 +487,7 @@
             {
                 id: 'sys_1',
                 user: 'System',
-                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>\nPress H for Help or type /help.',
+                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>\nPress F1 for Help or type /help.',
                 timestamp: Date.now(),
                 room: '#general',
                 pinned: true,
@@ -749,11 +749,11 @@
         };
 
         window.showHelp = function() {
-            showToast("Help: /nick <name>, /join <#room>, /ai <prompt>. Use buttons for features.");
+            showToast("Help: /nick <name>, /join <#room>, /ai <prompt>. Use buttons for features. Press F1 for Help.");
         };
 
         document.addEventListener('keydown', function(e) {
-            if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
                 e.preventDefault();
                 window.showHelp();
             }

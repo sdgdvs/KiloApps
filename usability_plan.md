@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP â€” loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top â€” the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KChat
 - KChess
 - KDragon
 - KMech
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KHex
 - KCalendar
 - KChart
+- KChat
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KChat: Usability and UI issues fixed (adjusted bounds to 850x650 in App.jsx and native, ensured explicit F1 help instructions, added WS_CLIPCHILDREN and crisp text via DPI).
 - KChart: TIMEOUT (Subagent failed to complete usability fixes within 8 minutes).
 - KCalendar: Usability and UI issues fixed (standardized dimensions to 800x600, integrated AdjustWindowRect and WS_CLIPCHILDREN for flawless native rendering, applied crisp DPI scaling, explicit F1/H help hotkey mapped across platforms).
 - KHex: Usability and UI issues fixed (increased App.jsx dimensions to 860x780 to match native layout, added AdjustWindowRect and WS_CLIPCHILDREN for flawless native rendering, configured crisp text via DPI, explicit F1/H keys shown for Help).
