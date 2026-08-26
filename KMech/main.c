@@ -481,7 +481,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldPen);
             DeleteObject(gridPen);
             
-            HFONT hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_DONTCARE, "Consolas");
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_DONTCARE, "Consolas");
             SelectObject(memDC, hFont);
             SetTextColor(memDC, RGB(0, 255, 0));
             SetBkMode(memDC, TRANSPARENT);
@@ -505,6 +507,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT statsRect = {0, 105, 600, 140};
                 DrawTextA(memDC, buf, -1, &statsRect, DT_CENTER | DT_SINGLELINE);
                 
+                RECT instRect = {0, 130, 600, 150};
+                SetTextColor(memDC, RGB(170, 170, 170));
+                DrawTextA(memDC, "Press F1 or H for Help", -1, &instRect, DT_CENTER | DT_SINGLELINE);
+                SetTextColor(memDC, RGB(0, 255, 0));
+
                 RECT msgRect = {0, 150, 600, 190};
                 DrawTextA(memDC, garageInfo, -1, &msgRect, DT_CENTER | DT_SINGLELINE);
                 
@@ -686,6 +693,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             EndPaint(hwnd, &ps);
             break;
         }
+        case WM_KEYDOWN: {
+            if (wParam == VK_F1 || wParam == 'H') {
+                if (gameState != STATE_HELP) {
+                    gameState = STATE_HELP;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            }
+            break;
+        }
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
@@ -696,6 +712,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    SetProcessDPIAware();
     my_srand(GetTickCount());
     
     HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -708,10 +725,13 @@ void MainEntry() {
 
     RegisterClassA(&wc);
 
-    int width = 616; // Adjust for borders
-    int height = 500; 
+    DWORD style = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
+    RECT rect = { 0, 0, 600, 500 };
+    AdjustWindowRect(&rect, style, FALSE);
+    int width = rect.right - rect.left;
+    int height = rect.bottom - rect.top;
     
-    HWND hwnd = CreateWindowA("KMechWindowClass", "KMech", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    HWND hwnd = CreateWindowA("KMechWindowClass", "KMech", style,
         CW_USEDEFAULT, CW_USEDEFAULT, width, height,
         NULL, NULL, hInstance, NULL);
 

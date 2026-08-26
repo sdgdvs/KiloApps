@@ -15,6 +15,7 @@
             background-size: 20px 20px;
             color: #0f0;
             font-family: 'Courier New', Courier, monospace;
+            text-rendering: optimizeLegibility;
             text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
             display: flex;
             justify-content: center;
@@ -152,6 +153,9 @@
         <!-- Garage Screen -->
         <div id="screen-garage" class="screen active">
             <h1>KMech - Garage</h1>
+            <div style="text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; color: #aaa;">
+                Press F1 or H for Help
+            </div>
             <div style="text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px;">
                 BATTLE: <span id="garage-battle-count">1</span> | CREDITS: <span id="garage-credits">100</span> | SALVAGE: <span id="garage-salvage">0</span><br>
                 PILOT LVL: <span id="garage-level">1</span> | XP: <span id="garage-xp">0</span>/<span id="garage-next-xp">100</span>
@@ -706,6 +710,13 @@
         }
 
         updateGarage();
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
+                e.preventDefault();
+                showScreen('help');
+            }
+        });
     </script>
 </body>
 </html>
