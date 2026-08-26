@@ -127,6 +127,7 @@ int wave = 1;
 int frameCount = 0;
 int bombFlash = 0;
 int bossDeathFlash = 0;
+int screenShake = 0;
 
 // Boss & Mothership state
 int bossActive = 0;
@@ -197,6 +198,7 @@ void AddDebrisChunk(float x, float y, int count, COLORREF col) {
             debris[i].vrot = (float)((int)(rnd() % 10) - 5) * 0.05f;
             debris[i].size = 3.0f + (rnd() % 4);
             debris[i].color = col;
+            debris[i].shape = rnd() % 3;
             debris[i].life = 1.0f;
             debris[i].decay = 0.02f + (float)(rnd() % 20) / 1000.0f;
             added++;
@@ -228,16 +230,20 @@ void AddMuzzleFlash(float x, float y, COLORREF col, float size) {
 
 // Particle Explosions (Loop 2 Enhanced)
 void AddExplosion(float x, float y, int count, COLORREF col) {
+    screenShake += count / 4;
+    if (screenShake > 20) screenShake = 20;
+    
     int added = 0;
     for (int i = 0; i < MAX_PARTICLES && added < count; i++) {
         if (particles[i].life <= 0) {
             particles[i].x = x;
             particles[i].y = y;
-            particles[i].vx = (float)((int)(rnd() % 11) - 5) * 0.8f;
-            particles[i].vy = (float)((int)(rnd() % 11) - 5) * 0.8f;
+            float speedMult = (added % 3 == 0) ? 1.5f : 0.8f;
+            particles[i].vx = (float)((int)(rnd() % 11) - 5) * speedMult;
+            particles[i].vy = (float)((int)(rnd() % 11) - 5) * speedMult;
             particles[i].life = 14 + (rnd() % 16);
             particles[i].maxLife = particles[i].life;
-            particles[i].color = col;
+            particles[i].color = (added % 3 == 0) ? RGB(255,255,255) : col;
             added++;
         }
     }
@@ -846,6 +852,7 @@ void ApplyPowerup(int type) {
 void Update() {
     if (bombFlash > 0) bombFlash--;
     if (bossDeathFlash > 0) bossDeathFlash -= 5;
+    if (screenShake > 0) screenShake--;
     if (gameState != STATE_PLAYING) return;
     timeSurvivedFrames++;
     if (comboTimer > 0) {
@@ -1586,6 +1593,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
+            
+            if (screenShake > 0) {
+                int dx = (rnd() % (screenShake + 1)) - (screenShake / 2);
+                int dy = (rnd() % (screenShake + 1)) - (screenShake / 2);
+                SetWindowOrgEx(memDC, dx, dy, NULL);
+            }
+            
             HFONT hFont = NULL;
             HFONT oldFont = NULL;
 
@@ -1860,7 +1874,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             HBRUSH dbr = CreateSolidBrush(debris[i].color);
                             int sz = (int)debris[i].size;
                             RECT dr = {(int)debris[i].x - sz/2, (int)debris[i].y - sz/2, (int)debris[i].x + sz/2, (int)debris[i].y + sz/2};
-                            FillRect(memDC, &dr, dbr);
+                            
+                            if (debris[i].shape == 1) {
+                                HGDIOBJ oldBr = SelectObject(memDC, dbr);
+                                HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+                                HGDIOBJ oldP = SelectObject(memDC, nullPen);
+                                POINT pts[3] = { {dr.left, dr.top}, {dr.right, dr.top}, {dr.left + sz/2, dr.bottom} };
+                                Polygon(memDC, pts, 3);
+                                SelectObject(memDC, oldP);
+                                SelectObject(memDC, oldBr);
+                            } else if (debris[i].shape == 2) {
+                                HGDIOBJ oldBr = SelectObject(memDC, dbr);
+                                HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+                                HGDIOBJ oldP = SelectObject(memDC, nullPen);
+                                Ellipse(memDC, dr.left, dr.top, dr.right, dr.bottom);
+                                SelectObject(memDC, oldP);
+                                SelectObject(memDC, oldBr);
+                            } else {
+                                FillRect(memDC, &dr, dbr);
+                            }
+                            
                             DeleteObject(dbr);
                         }
                     }

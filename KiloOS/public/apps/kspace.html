@@ -254,6 +254,7 @@ window.addEventListener('load', () => {
   let frameCount = 0;
   let bombFlash = 0;
   let bossDeathFlash = 0;
+  let screenShake = 0;
 
   // Collections
   let bullets = [];
@@ -495,6 +496,7 @@ window.addEventListener('load', () => {
         vrot: (randomFloat() - 0.5) * 0.3,
         size: 3 + randomFloat() * 5,
         color: color,
+        shape: Math.floor(randomFloat() * 3),
         life: 1.0,
         decay: 0.02 + randomFloat() * 0.03
       });
@@ -510,9 +512,13 @@ window.addEventListener('load', () => {
   }
 
   function addExplosion(x, y, count = 14, color = null) {
+    screenShake += Math.floor(count / 4);
+    if (screenShake > 20) screenShake = 20;
+
     for (let i = 0; i < count; i++) {
       let angle = randomFloat() * Math.PI * 2;
-      let speed = 0.8 + randomFloat() * 4.0;
+      let speedMult = (i % 3 === 0) ? 1.5 : 0.8;
+      let speed = (0.8 + randomFloat() * 4.0) * speedMult;
       explosions.push({
         x: x, y: y,
         vx: Math.cos(angle) * speed,
@@ -520,7 +526,7 @@ window.addEventListener('load', () => {
         life: 1.0,
         decay: 0.025 + randomFloat() * 0.04,
         size: 2 + randomFloat() * 3.5,
-        color: color || (randomFloat() < 0.5 ? '#ff4500' : (randomFloat() < 0.5 ? '#ffa500' : '#ffff00'))
+        color: (i % 3 === 0) ? '#ffffff' : (color || (randomFloat() < 0.5 ? '#ff4500' : (randomFloat() < 0.5 ? '#ffa500' : '#ffff00')))
       });
     }
     if (count >= 10) {
@@ -976,6 +982,7 @@ window.addEventListener('load', () => {
   function update() {
     if (bombFlash > 0) bombFlash--;
     if (bossDeathFlash > 0) bossDeathFlash -= 5;
+    if (screenShake > 0) screenShake--;
 
     if (gameState !== STATE_PLAYING) {
       skillBar.style.display = 'none';
@@ -1723,6 +1730,13 @@ window.addEventListener('load', () => {
       return;
     }
 
+    ctx.save();
+    if (screenShake > 0) {
+      let dx = (Math.random() - 0.5) * screenShake;
+      let dy = (Math.random() - 0.5) * screenShake;
+      ctx.translate(dx, dy);
+    }
+
     // Dynamic Deep Space Background
     let bgR = 5 + (wave * 4) % 25;
     let bgG = 5 + (wave * 6) % 25;
@@ -1871,7 +1885,15 @@ window.addEventListener('load', () => {
         ctx.translate(d.x, d.y); ctx.rotate(d.rot);
         ctx.globalAlpha = Math.max(0, d.life);
         ctx.fillStyle = d.color;
-        ctx.fillRect(-d.size / 2, -d.size / 2, d.size, d.size * 0.6);
+        
+        if (d.shape === 1) {
+          ctx.beginPath(); ctx.moveTo(-d.size/2, -d.size/2); ctx.lineTo(d.size/2, -d.size/2); ctx.lineTo(0, d.size/2); ctx.closePath(); ctx.fill();
+        } else if (d.shape === 2) {
+          ctx.beginPath(); ctx.arc(0, 0, d.size/2, 0, Math.PI*2); ctx.fill();
+        } else {
+          ctx.fillRect(-d.size / 2, -d.size / 2, d.size, d.size * 0.6);
+        }
+        
         ctx.restore();
       }
 
@@ -1917,6 +1939,8 @@ window.addEventListener('load', () => {
       if (gameState === STATE_GAMEOVER) drawGameOverScreen();
       if (gameState === STATE_VICTORY) drawVictoryScreen();
     }
+    
+    ctx.restore();
   }
 
   function drawHUD() {
