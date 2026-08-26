@@ -566,14 +566,14 @@
     </nav>
 
     <div class="header-controls">
-      <button class="badge-btn" onclick="alert('KCalc Pro Help:\\n- Switch modes using tabs at top.\\n- Keyboard shortcuts: 0-9, ., +, -, *, /, %, ^, (, )\\n- Enter or = to calculate.\\n- Escape to clear all.\\n- Backspace to delete last.')">Help (H)</button>
+      <button class="badge-btn" onclick="alert('KCalc Pro Help:\\n- Switch modes using tabs at top.\\n- Keyboard shortcuts: 0-9, ., +, -, *, /, %, ^, (, )\\n- Enter or = to calculate.\\n- Escape to clear all.\\n- Backspace to delete last.')">Help (H / F1)</button>
       <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()">DEG</button>
       <button id="memBadge" class="badge-btn" onclick="showMemoryModal()">M: 0</button>
     </div>
   </header>
 
   <!-- Workspace -->
-  <div id="helpToast" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(99, 102, 241, 0.9); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; z-index: 1000; pointer-events: none; transition: opacity 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">Press 'h' for help</div>
+  <div id="helpToast" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(99, 102, 241, 0.9); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; z-index: 1000; pointer-events: none; transition: opacity 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">Press 'H' or F1 for help</div>
   <main class="workspace">
     <div class="calc-pane">
       <!-- Screen Display -->
@@ -1299,7 +1299,8 @@
   document.addEventListener('keydown', (e) => {
     if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
 
-    if (e.key === 'h' || e.key === 'H') {
+    if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+      if (e.key === 'F1') e.preventDefault();
       alert("KCalc Pro Help:\n- Switch modes using tabs at top.\n- Keyboard shortcuts: 0-9, ., +, -, *, /, %, ^, (, )\n- Enter or = to calculate.\n- Escape to clear all.\n- Backspace to delete last.");
       return;
     }

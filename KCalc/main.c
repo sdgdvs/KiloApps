@@ -125,9 +125,9 @@ void FormatDisplay(double val) {
 }
 
 void UpdateStatusText() {
-    char statusBuf[64] = "Press 'H' for Help";
+    char statusBuf[64] = "Press 'H' or F1 for Help";
     if (memoryStore != 0.0) {
-        m_sprintf(statusBuf, "[M: %.6g] | Press 'H' for Help", memoryStore);
+        m_sprintf(statusBuf, "[M: %.6g] | Press 'H' or F1 for Help", memoryStore);
     }
     SetWindowTextA(hStatusText, statusBuf);
 }
@@ -354,11 +354,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Displays
             hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(38), S(324), S(18), hwnd, NULL, NULL, NULL);
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(58), S(324), S(34), hwnd, NULL, NULL, NULL);
-            hStatusText = CreateWindowExA(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, S(10), S(94), S(300), S(16), hwnd, NULL, NULL, NULL);
+            hStatusText = CreateWindowExA(0, "STATIC", "Press 'H' or F1 for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, S(10), S(94), S(300), S(16), hwnd, NULL, NULL, NULL);
 
-            hFontMain = CreateFontA(S(-24), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Consolas");
-            hFontSub = CreateFontA(S(-14), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hFontSmall = CreateFontA(S(-12), 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontMain = CreateFontA(-MulDiv(24, dpiX, 72), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Consolas");
+            hFontSub = CreateFontA(-MulDiv(14, dpiX, 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontSmall = CreateFontA(-MulDiv(12, dpiX, 72), 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFontMain, TRUE);
             SendMessageA(hSubDisplay, WM_SETFONT, (WPARAM)hFontSub, TRUE);
@@ -593,7 +593,7 @@ void __stdcall MainEntry() {
     int winW = wr.right - wr.left;
     int winH = wr.bottom - wr.top;
 
-    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -603,7 +603,7 @@ void __stdcall MainEntry() {
         if (msg.message == WM_KEYDOWN) {
             int key = msg.wParam;
             int cmd = 0;
-            if (key == 'H') {
+            if (key == 'H' || key == VK_F1) {
                 MessageBoxA(hwnd, "KCalc Pro Help:\n- Switch modes using the buttons above.\n- Keyboard shortcuts: Numpad/numbers, +, -, *, /, %, ^, Enter, Backspace, Esc.\n- History exports to kcalc_history.txt.", "Help", MB_OK | MB_ICONINFORMATION);
                 continue;
             }
