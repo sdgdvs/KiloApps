@@ -126,6 +126,20 @@
             padding-bottom: 20px;
             border-bottom: 1px dashed #444;
         }
+        #interrogation-area {
+            margin-bottom: 20px;
+        }
+        .dialogue-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        #dialogue-text {
+            font-style: italic;
+            color: #ffeb3b;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -148,10 +162,16 @@
             </div>
             <div id="action-area">
                 <button id="search-btn" onclick="searchLocation()">Search for Clues</button>
+                <button id="interrogate-btn" onclick="startInterrogation()" class="hidden">Interrogate</button>
             </div>
-            <h3>Travel</h3>
-            <div id="travel-buttons">
-                <!-- Travel buttons generated here -->
+            
+            <div id="interrogation-area" class="hidden"></div>
+            
+            <div id="travel-container">
+                <h3>Travel</h3>
+                <div id="travel-buttons">
+                    <!-- Travel buttons generated here -->
+                </div>
             </div>
         </div>
         
@@ -188,7 +208,8 @@
                     desc: 'Smells like salt and secrets. The fog here is thick enough to cut with a knife.',
                     searched: false,
                     clue: '',
-                    clueFound: false
+                    clueFound: false,
+                    suspect: null
                 }
             },
             suspects: [
@@ -239,11 +260,14 @@
                 [clues[i], clues[j]] = [clues[j], clues[i]];
             }
             
+            const shuffledSuspects = [...state.suspects].sort(() => Math.random() - 0.5);
+            
             const locKeys = Object.keys(state.locations);
             for(let i = 0; i < 3; i++) {
                 state.locations[locKeys[i]].clue = clues[i];
                 state.locations[locKeys[i]].searched = false;
                 state.locations[locKeys[i]].clueFound = false;
+                state.locations[locKeys[i]].suspect = shuffledSuspects[i];
             }
             state.foundClues = [];
         }
@@ -273,6 +297,14 @@
             } else {
                 searchBtn.disabled = false;
                 searchBtn.textContent = "Search for Clues";
+            }
+            
+            const interrogateBtn = document.getElementById('interrogate-btn');
+            if (loc.suspect) {
+                interrogateBtn.textContent = `Interrogate ${loc.suspect}`;
+                interrogateBtn.classList.remove('hidden');
+            } else {
+                interrogateBtn.classList.add('hidden');
             }
 
             renderTravelButtons();
@@ -312,6 +344,95 @@
                     container.appendChild(btn);
                 }
             }
+        }
+        
+        function startInterrogation() {
+            document.getElementById('action-area').classList.add('hidden');
+            document.getElementById('travel-container').classList.add('hidden');
+            
+            const loc = state.locations[state.currentLocation];
+            const suspect = loc.suspect;
+            
+            const intArea = document.getElementById('interrogation-area');
+            intArea.innerHTML = `<h3>Interrogating ${suspect}</h3>
+            <div id="dialogue-text">"What do you want, Detective?"</div>
+            <div class="dialogue-options">
+                <button onclick="askAlibi()">Ask for Alibi</button>
+                <button onclick="presentClue()">Present Clue</button>
+                <button onclick="endInterrogation()">End Interrogation</button>
+            </div>`;
+            intArea.classList.remove('hidden');
+        }
+        
+        function askAlibi() {
+            const suspect = state.locations[state.currentLocation].suspect;
+            let response = "";
+            if (suspect === state.solution.killer) {
+                response = '"I was nowhere near the victim! I was at home reading."';
+            } else {
+                response = '"I was out for a walk. I didn\'t see anything."';
+            }
+            document.getElementById('dialogue-text').textContent = response;
+        }
+        
+        function presentClue() {
+            if (state.foundClues.length === 0) {
+                document.getElementById('dialogue-text').textContent = '"You don\'t even have any clues, Detective!"';
+                return;
+            }
+            
+            let html = `<h3>Select a clue to present:</h3><div class="dialogue-options">`;
+            state.foundClues.forEach((c, idx) => {
+                html += `<button onclick="submitClue(${idx})">${c}</button>`;
+            });
+            html += `<button onclick="startInterrogation()">Back</button></div>`;
+            
+            const intArea = document.getElementById('interrogation-area');
+            intArea.innerHTML = html;
+        }
+        
+        function submitClue(idx) {
+            const clueStr = state.foundClues[idx];
+            const suspect = state.locations[state.currentLocation].suspect;
+            let response = '"I have no idea what that is or what it means."';
+            
+            // Extract the actual clue text
+            const parts = clueStr.split('] ');
+            const actualClue = parts.length > 1 ? parts[1] : clueStr;
+            
+            if (actualClue === killerClueMap[suspect]) {
+                response = '"Wait, where did you find that?! I... I lost it weeks ago! You can\'t prove anything!" (Caught in a lie!)';
+            } else if (Object.values(killerClueMap).includes(actualClue)) {
+                response = '"That doesn\'t belong to me."';
+            } else if (Object.values(motiveClueMap).includes(actualClue)) {
+                if (suspect === state.solution.killer) {
+                    response = '"That proves nothing! Anyone could have that motive!" (They look nervous)';
+                } else {
+                    response = '"Shocking, but not my problem."';
+                }
+            } else if (Object.values(weaponClueMap).includes(actualClue)) {
+                if (suspect === state.solution.killer) {
+                    response = '"I\'ve never seen that weapon in my life!" (They are sweating)';
+                } else {
+                    response = '"A gruesome weapon, but I didn\'t use it."';
+                }
+            }
+            
+            const intArea = document.getElementById('interrogation-area');
+            intArea.innerHTML = `<h3>Interrogating ${suspect}</h3>
+            <div id="dialogue-text">${response}</div>
+            <div class="dialogue-options">
+                <button onclick="askAlibi()">Ask for Alibi</button>
+                <button onclick="presentClue()">Present Clue</button>
+                <button onclick="endInterrogation()">End Interrogation</button>
+            </div>`;
+        }
+        
+        function endInterrogation() {
+            document.getElementById('interrogation-area').classList.add('hidden');
+            document.getElementById('action-area').classList.remove('hidden');
+            document.getElementById('travel-container').classList.remove('hidden');
+            updateLocation();
         }
 
         function updateNotebook() {

@@ -14,6 +14,14 @@ int my_strlen(const char* s) {
     return len;
 }
 
+int my_strcmp(const char* s1, const char* s2) {
+    if (!s1 || !s2) return -1;
+    while (*s1 && (*s1 == *s2)) {
+        s1++; s2++;
+    }
+    return *(unsigned char*)s1 - *(unsigned char*)s2;
+}
+
 void my_strcpy(char* dest, const char* src) {
     if (!dest || !src) return;
     while (*src) {
@@ -29,10 +37,15 @@ void my_strcpy(char* dest, const char* src) {
 #define ID_BTN_START 1005
 #define ID_LIST_SUSPECTS 1006
 #define ID_LIST_CLUES 1007
+#define ID_BTN_INTERROGATE 1008
+#define ID_BTN_ASK_ALIBI 1009
+#define ID_BTN_PRESENT_CLUE 1010
+#define ID_BTN_END_INT 1011
 
 HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, hBtnTravelDocks;
 HWND hSuspectTitle, hListSuspects, hClueTitle, hListClues;
 HWND hStartPanel, hBtnStart, hStartDesc;
+HWND hBtnInterrogate, hIntDesc, hBtnAskAlibi, hBtnPresentClue, hBtnEndInt;
 HFONT hFont, hFontBold, hFontTitle;
 
 int currentState = 0; // 0 = start, 1 = playing
@@ -44,12 +57,13 @@ typedef struct {
     char clue[128];
     int searched;
     int clueFound;
+    int suspectIdx;
 } Location;
 
 Location locations[3] = {
-    {"Office", "Your dingy office. Dust motes dance in the light filtering through the blinds.", "", 0, 0},
-    {"The Manor", "The sprawling estate where the victim was found. Yellow police tape blocks the study.", "", 0, 0},
-    {"The Docks", "Smells like salt and secrets. The fog here is thick enough to cut with a knife.", "", 0, 0}
+    {"Office", "Your dingy office. Dust motes dance in the light filtering through the blinds.", "", 0, 0, -1},
+    {"The Manor", "The sprawling estate where the victim was found. Yellow police tape blocks the study.", "", 0, 0, -1},
+    {"The Docks", "Smells like salt and secrets. The fog here is thick enough to cut with a knife.", "", 0, 0, -1}
 };
 
 char* suspects[] = {
@@ -101,17 +115,23 @@ void GenerateMystery() {
     clues[1] = motiveClues[currentSolution.motiveIdx];
     clues[2] = weaponClues[currentSolution.weaponIdx];
     
+    int sus[3] = {0, 1, 2};
     for (int i = 2; i > 0; i--) {
         int j = my_rand() % (i + 1);
         char* temp = clues[i];
         clues[i] = clues[j];
         clues[j] = temp;
+        
+        int ts = sus[i];
+        sus[i] = sus[j];
+        sus[j] = ts;
     }
     
     for (int i = 0; i < 3; i++) {
         my_strcpy(locations[i].clue, clues[i]);
         locations[i].searched = 0;
         locations[i].clueFound = 0;
+        locations[i].suspectIdx = sus[i];
     }
 }
 
@@ -125,6 +145,7 @@ void UpdateUI() {
         ShowWindow(hLocName, SW_HIDE);
         ShowWindow(hLocDesc, SW_HIDE);
         ShowWindow(hBtnSearch, SW_HIDE);
+        ShowWindow(hBtnInterrogate, SW_HIDE);
         ShowWindow(hBtnTravelOffice, SW_HIDE);
         ShowWindow(hBtnTravelManor, SW_HIDE);
         ShowWindow(hBtnTravelDocks, SW_HIDE);
@@ -132,7 +153,12 @@ void UpdateUI() {
         ShowWindow(hListSuspects, SW_HIDE);
         ShowWindow(hClueTitle, SW_HIDE);
         ShowWindow(hListClues, SW_HIDE);
-    } else {
+        
+        ShowWindow(hIntDesc, SW_HIDE);
+        ShowWindow(hBtnAskAlibi, SW_HIDE);
+        ShowWindow(hBtnPresentClue, SW_HIDE);
+        ShowWindow(hBtnEndInt, SW_HIDE);
+    } else if (currentState == 1) {
         ShowWindow(hStartPanel, SW_HIDE);
         ShowWindow(hStartDesc, SW_HIDE);
         ShowWindow(hBtnStart, SW_HIDE);
@@ -141,6 +167,7 @@ void UpdateUI() {
         ShowWindow(hLocName, SW_SHOW);
         ShowWindow(hLocDesc, SW_SHOW);
         ShowWindow(hBtnSearch, SW_SHOW);
+        ShowWindow(hBtnInterrogate, SW_SHOW);
         ShowWindow(hBtnTravelOffice, SW_SHOW);
         ShowWindow(hBtnTravelManor, SW_SHOW);
         ShowWindow(hBtnTravelDocks, SW_SHOW);
@@ -148,6 +175,11 @@ void UpdateUI() {
         ShowWindow(hListSuspects, SW_SHOW);
         ShowWindow(hClueTitle, SW_SHOW);
         ShowWindow(hListClues, SW_SHOW);
+        
+        ShowWindow(hIntDesc, SW_HIDE);
+        ShowWindow(hBtnAskAlibi, SW_HIDE);
+        ShowWindow(hBtnPresentClue, SW_HIDE);
+        ShowWindow(hBtnEndInt, SW_HIDE);
         
         char locNameBuf[64];
         wsprintfA(locNameBuf, "Location: %s", locations[currentLocation].name);
@@ -162,9 +194,24 @@ void UpdateUI() {
             SetWindowTextA(hBtnSearch, "Search for Clues");
         }
         
+        char intBuf[64];
+        wsprintfA(intBuf, "Interrogate %s", suspects[locations[currentLocation].suspectIdx]);
+        SetWindowTextA(hBtnInterrogate, intBuf);
+        
         EnableWindow(hBtnTravelOffice, currentLocation != 0);
         EnableWindow(hBtnTravelManor, currentLocation != 1);
         EnableWindow(hBtnTravelDocks, currentLocation != 2);
+    } else if (currentState == 2) {
+        ShowWindow(hBtnSearch, SW_HIDE);
+        ShowWindow(hBtnInterrogate, SW_HIDE);
+        ShowWindow(hBtnTravelOffice, SW_HIDE);
+        ShowWindow(hBtnTravelManor, SW_HIDE);
+        ShowWindow(hBtnTravelDocks, SW_HIDE);
+        
+        ShowWindow(hIntDesc, SW_SHOW);
+        ShowWindow(hBtnAskAlibi, SW_SHOW);
+        ShowWindow(hBtnPresentClue, SW_SHOW);
+        ShowWindow(hBtnEndInt, SW_SHOW);
     }
 }
 
@@ -220,11 +267,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hLocName = CreateWindowA("STATIC", "Location:", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hLocDesc = CreateWindowA("STATIC", "", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hBtnSearch = CreateWindowA("BUTTON", "Search for Clues", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SEARCH, NULL, NULL);
+            hBtnInterrogate = CreateWindowA("BUTTON", "Interrogate", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_INTERROGATE, NULL, NULL);
             
             hBtnTravelOffice = CreateWindowA("BUTTON", "Travel to Office", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_OFFICE, NULL, NULL);
             hBtnTravelManor = CreateWindowA("BUTTON", "Travel to The Manor", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_MANOR, NULL, NULL);
             hBtnTravelDocks = CreateWindowA("BUTTON", "Travel to The Docks", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_DOCKS, NULL, NULL);
             
+            hIntDesc = CreateWindowA("STATIC", "", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hBtnAskAlibi = CreateWindowA("BUTTON", "Ask for Alibi", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_ASK_ALIBI, NULL, NULL);
+            hBtnPresentClue = CreateWindowA("BUTTON", "Present Selected Clue", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_PRESENT_CLUE, NULL, NULL);
+            hBtnEndInt = CreateWindowA("BUTTON", "End Interrogation", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_END_INT, NULL, NULL);
+
             hSuspectTitle = CreateWindowA("STATIC", "Notebook - Suspects", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hListSuspects = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_HASSTRINGS, 0, 0, 0, 0, hwnd, (HMENU)ID_LIST_SUSPECTS, NULL, NULL);
             
@@ -237,6 +290,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hLocName, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hLocDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnSearch, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnInterrogate, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hBtnTravelOffice, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnTravelManor, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnTravelDocks, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -244,6 +298,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hListSuspects, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hClueTitle, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hListClues, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            SendMessageA(hIntDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnAskAlibi, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnPresentClue, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnEndInt, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             UpdateUI();
             break;
@@ -268,12 +327,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int top = headerH + pad;
                 MoveWindow(hLocName, pad, top, leftW, 24, TRUE);
                 MoveWindow(hLocDesc, pad, top + 30, leftW, 60, TRUE);
-                MoveWindow(hBtnSearch, pad, top + 100, 150, 30, TRUE);
+                MoveWindow(hBtnSearch, pad, top + 100, 160, 30, TRUE);
+                MoveWindow(hBtnInterrogate, pad + 170, top + 100, 200, 30, TRUE);
                 
                 int travelY = top + 150;
                 MoveWindow(hBtnTravelOffice, pad, travelY, 200, 30, TRUE);
                 MoveWindow(hBtnTravelManor, pad, travelY + 40, 200, 30, TRUE);
                 MoveWindow(hBtnTravelDocks, pad, travelY + 80, 200, 30, TRUE);
+                
+                MoveWindow(hIntDesc, pad, travelY, leftW - pad, 60, TRUE);
+                MoveWindow(hBtnAskAlibi, pad, travelY + 70, 150, 30, TRUE);
+                MoveWindow(hBtnPresentClue, pad + 160, travelY + 70, 200, 30, TRUE);
+                MoveWindow(hBtnEndInt, pad, travelY + 110, 150, 30, TRUE);
                 
                 int rightX = pad*2 + leftW;
                 int listH = (cy - top - pad*2 - 60) / 2;
@@ -303,6 +368,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Travel(1);
             } else if (id == ID_BTN_TRAVEL_DOCKS) {
                 Travel(2);
+            } else if (id == ID_BTN_INTERROGATE) {
+                currentState = 2;
+                SetWindowTextA(hIntDesc, "\"What do you want, Detective?\"");
+                UpdateUI();
+            } else if (id == ID_BTN_ASK_ALIBI) {
+                int sIdx = locations[currentLocation].suspectIdx;
+                if (sIdx == currentSolution.killerIdx) {
+                    SetWindowTextA(hIntDesc, "\"I was nowhere near the victim! I was at home reading.\"");
+                } else {
+                    SetWindowTextA(hIntDesc, "\"I was out for a walk. I didn't see anything.\"");
+                }
+            } else if (id == ID_BTN_END_INT) {
+                currentState = 1;
+                UpdateUI();
+            } else if (id == ID_BTN_PRESENT_CLUE) {
+                int sIdx = locations[currentLocation].suspectIdx;
+                int sel = SendMessageA(hListClues, LB_GETCURSEL, 0, 0);
+                if (sel == LB_ERR) {
+                    SetWindowTextA(hIntDesc, "\"You need to select a clue from your notebook first!\"");
+                } else {
+                    char clueText[256];
+                    SendMessageA(hListClues, LB_GETTEXT, sel, (LPARAM)clueText);
+                    
+                    char* actualClue = clueText;
+                    while (*actualClue && *actualClue != ']') actualClue++;
+                    if (*actualClue == ']') actualClue += 2;
+                    
+                    if (my_strlen(actualClue) == 0) {
+                        SetWindowTextA(hIntDesc, "\"That's not a valid clue.\"");
+                    } else if (my_strcmp(actualClue, killerClues[sIdx]) == 0) {
+                        SetWindowTextA(hIntDesc, "\"Wait, where did you find that?! I... I lost it weeks ago! You can't prove anything!\" (Caught in a lie!)");
+                    } else {
+                        int isMotive = 0, isWeapon = 0;
+                        for (int m=0; m<3; m++) {
+                            if (my_strcmp(actualClue, motiveClues[m]) == 0) isMotive = 1;
+                        }
+                        for (int w=0; w<3; w++) {
+                            if (my_strcmp(actualClue, weaponClues[w]) == 0) isWeapon = 1;
+                        }
+                        
+                        if (isMotive) {
+                            if (sIdx == currentSolution.killerIdx) {
+                                SetWindowTextA(hIntDesc, "\"That proves nothing! Anyone could have that motive!\" (They look nervous)");
+                            } else {
+                                SetWindowTextA(hIntDesc, "\"Shocking, but not my problem.\"");
+                            }
+                        } else if (isWeapon) {
+                            if (sIdx == currentSolution.killerIdx) {
+                                SetWindowTextA(hIntDesc, "\"I've never seen that weapon in my life!\" (They are sweating)");
+                            } else {
+                                SetWindowTextA(hIntDesc, "\"A gruesome weapon, but I didn't use it.\"");
+                            }
+                        } else {
+                            SetWindowTextA(hIntDesc, "\"That doesn't belong to me.\"");
+                        }
+                    }
+                }
             }
             break;
         }
