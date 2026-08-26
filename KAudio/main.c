@@ -331,7 +331,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportWavFile();
                 break;
             }
-            if (wParam == 'H' && !isRepeat) {
+            if ((wParam == 'H' || wParam == VK_F1) && !isRepeat) {
                 showHelp = !showHelp;
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -411,7 +411,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
-            HFONT hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT oldFont = (HFONT)SelectObject(memDC, hFont);
 
             // Dark Theme Background
@@ -428,7 +430,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                       instrument, octaveShift, seqPlaying ? "PLAYING" : "STOPPED");
             TextOutA(memDC, 10, 8, title, lstrlenA(title));
             SetTextColor(memDC, RGB(251, 191, 36));
-            TextOutA(memDC, W - 140, 8, "Press 'H' for Help", 18);
+            TextOutA(memDC, W - 160, 8, "Press F1 or 'H' for Help", 24);
 
             // Draw Sound FX Preset Buttons (y: 35-65)
             HBRUSH btnBrush = CreateSolidBrush(RGB(30, 41, 59));
@@ -581,7 +583,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     RECT rc = {0, 0, W, H};
-    DWORD style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
+    DWORD style = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
     AdjustWindowRect(&rc, style, FALSE);
 
     HWND hwnd = CreateWindowEx(0, "KAudioApp", "KAudio Pro Workstation", style,

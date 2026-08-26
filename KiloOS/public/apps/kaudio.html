@@ -409,7 +409,7 @@
   <!-- Header -->
   <div class="header">
     <div class="brand">KAudio <span>Pro</span></div>
-    <div style="font-size: 13px; color: #fbbf24; font-weight: 600; cursor: help;" onclick="toggleHelp()">Press 'H' for Help</div>
+    <div style="font-size: 13px; color: #fbbf24; font-weight: 600; cursor: help;" onclick="toggleHelp()">Press F1 or 'H' for Help</div>
     <div class="header-actions">
       <div class="control-row" style="margin-right: 10px;">
         <span class="control-label" style="width: auto;">Vol:</span>
@@ -575,7 +575,7 @@
       <strong style="text-align: right; color: #fbbf24;">Z / X:</strong> <span>Record / Play</span>
       <strong style="text-align: right; color: #fbbf24;">P:</strong> <span>Play/Stop Sequencer</span>
     </div>
-    <div style="text-align: center; color: #f43f5e; font-weight: 600; cursor: pointer; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px;" onclick="toggleHelp()">Press 'H' or Click to Close</div>
+    <div style="text-align: center; color: #f43f5e; font-weight: 600; cursor: pointer; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px;" onclick="toggleHelp()">Press F1, 'H', or Click to Close</div>
   </div>
 </div>
 
@@ -936,7 +936,8 @@
       else startPlayback();
     }
 
-    if (e.key.toUpperCase() === 'H' && !e.repeat) {
+    if ((e.key.toUpperCase() === 'H' || e.key === 'F1') && !e.repeat) {
+      if (e.key === 'F1') e.preventDefault();
       toggleHelp();
     }
     if (e.key.toUpperCase() === 'P' && !e.repeat) {
