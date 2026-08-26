@@ -1368,7 +1368,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldPen);
             DeleteObject(goldPen);
 
-            HFONT labelFont = CreateFontA(-15, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            int fontHeightLabel = -MulDiv(15, (int)(g_dpiScale * 96), 72);
+            HFONT labelFont = CreateFontA(fontHeightLabel, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, labelFont);
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(212, 175, 55));
@@ -1606,7 +1607,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            HFONT sFont = CreateFontA(-16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            int fontHeightStatus = -MulDiv(16, (int)(g_dpiScale * 96), 72);
+            HFONT sFont = CreateFontA(fontHeightStatus, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             oldFont = SelectObject(memDC, sFont);
             SetTextColor(memDC, RGB(255, 255, 255));
 
@@ -1684,7 +1686,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Skill & Utility Buttons Row at bottom
             struct Button { int x, y, w, h; char* text; } btns[6] = {
-                { 30, 740, 105, 36, "Help (H)" },
+                { 30, 740, 105, 36, "Help (F1/H)" },
                 { 145, 740, 105, 36, "Undo (U)" },
                 { 260, 740, 105, 36, "Redo (Y)" },
                 { 375, 740, 105, 36, "Freeze (F)" },
@@ -1724,7 +1726,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char turnBuf[128];
                 char* lastSAN = (g_historyIndex > 0 && g_historyStack[g_historyIndex].san[0] != '\0') ? g_historyStack[g_historyIndex].san : "";
                 if (lastSAN[0] == '\0') {
-                    wsprintfA(turnBuf, "%s %s | Press 'H' for Help", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
+                    wsprintfA(turnBuf, "%s %s | Press F1 or H for Help", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
                 } else {
                     wsprintfA(turnBuf, "%s %s | Last: %s", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "", lastSAN);
                 }
@@ -1772,7 +1774,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'P') {
                 aiPersonality = (aiPersonality % 4) + 1;
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'H') { // OPTIMAL AI HELP SKILL
+            } else if (wParam == 'H' || wParam == VK_F1) { // OPTIMAL AI HELP SKILL
                 if (!gameOver) {
                     GetOptimalHintMove(&hintSx, &hintSy, &hintTx, &hintTy);
                     if (hintSx != -1) {
@@ -1980,7 +1982,7 @@ void MainEntry(void) {
     my_srand(GetTickCount());
     LoadStatsFreestanding();
 
-    DWORD style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
+    DWORD style = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
     RECT winRc = {0, 0, (int)(W * g_dpiScale), (int)(H * g_dpiScale)};
     AdjustWindowRect(&winRc, style, FALSE);
     HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess - AI & Utility Chess Engine", style,
