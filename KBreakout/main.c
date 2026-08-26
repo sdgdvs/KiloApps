@@ -12,6 +12,9 @@ int _fltused = 1;
 #define BR_W (W / COLS)
 #define BR_H 16
 
+#define MAX_TRAIL 6
+typedef struct { float x, y; } TrailPoint;
+
 #define MAX_BALLS 16
 typedef struct {
     float x, y;
@@ -19,6 +22,8 @@ typedef struct {
     int active;
     int stuck;
     int stuck_offset;
+    TrailPoint trail[MAX_TRAIL];
+    int trail_head;
 } Ball;
 Ball balls[MAX_BALLS];
 
@@ -144,7 +149,7 @@ void SpawnParticles(float x, float y, COLORREF color, int count) {
                 particles[p].vy = ((float)(MyRand() % 101 - 50)) / 10.0f - 2.0f;
                 particles[p].life = 15 + (MyRand() % 15);
                 particles[p].color = color;
-                particles[p].type = (MyRand() % 2);
+                particles[p].type = (MyRand() % 3); // 0=debris, 1=spark, 2=glow
                 break;
             }
         }
@@ -327,9 +332,10 @@ void TriggerExplosion(int r, int c) {
                 if (bricks[nr][nc] != 0 && bricks[nr][nc] != 9) {
                     int bx = nc * BR_W + BR_W / 2;
                     int by = nr * BR_H + 35 + BR_H / 2;
-                    SpawnParticles((float)bx, (float)by, RGB(255, 100, 0), 8);
+                    SpawnParticles((float)bx, (float)by, RGB(255, 100, 0), 16);
+                    SpawnParticles((float)bx, (float)by, RGB(255, 255, 0), 8);
                     SpawnShockwave((float)bx, (float)by, RGB(255, 100, 0));
-                    if (screen_shake < 10) screen_shake = 10;
+                    if (screen_shake < 14) screen_shake = 14;
                     int isExp = (bricks[nr][nc] == 4);
                     bricks[nr][nc] = 0;
                     bricks_left--;
@@ -389,6 +395,8 @@ void UseSkill(char skill) {
                             balls[k].dx = balls[i].dx + (n == 0 ? 2.0f : -2.0f);
                             balls[k].dy = balls[i].dy;
                             balls[k].stuck = 0;
+                            balls[k].trail_head = 0;
+                            for (int t = 0; t < MAX_TRAIL; t++) { balls[k].trail[t].x = 0; balls[k].trail[t].y = 0; }
                             break;
                         }
                     }
@@ -444,6 +452,8 @@ void InitLevel() {
     balls[0].dy = -speed;
     balls[0].stuck = 1;
     balls[0].stuck_offset = pad_w / 2;
+    balls[0].trail_head = 0;
+    for (int t = 0; t < MAX_TRAIL; t++) { balls[0].trail[t].x = 0; balls[0].trail[t].y = 0; }
 
     pad_w = (diff == 1) ? 45 : 65;
     pad_x = W / 2 - pad_w / 2;
@@ -808,6 +818,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     balls[i].x += balls[i].dx;
                     balls[i].y += balls[i].dy;
+                    
+                    // Update Trail
+                    balls[i].trail[balls[i].trail_head].x = balls[i].x;
+                    balls[i].trail[balls[i].trail_head].y = balls[i].y;
+                    balls[i].trail_head = (balls[i].trail_head + 1) % MAX_TRAIL;
 
                     // Wall collision
                     if (balls[i].x < 0) { balls[i].x = 0; balls[i].dx = -balls[i].dx; }
@@ -1002,7 +1017,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (screen_shake > 0) {
                 sx = (MyRand() % screen_shake) - (screen_shake / 2);
                 sy = (MyRand() % screen_shake) - (screen_shake / 2);
-                screen_shake -= 2;
+                screen_shake -= (screen_shake > 6 ? 2 : 1);
                 if (screen_shake < 0) screen_shake = 0;
             }
             SetViewportOrgEx(memDC, sx, sy, NULL);
@@ -1319,10 +1334,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int i = 0; i < MAX_PARTICLES; i++) {
                     if (particles[i].life > 0) {
                         COLORREF c = particles[i].type == 1 ? RGB(255, 255, 255) : particles[i].color;
+                        if (particles[i].type == 2) c = RGB(255, 255, 0); // extra glow/flash
                         HBRUSH pBr = CreateSolidBrush(c);
-                        int s = particles[i].type == 1 ? 2 : 4;
-                        RECT prc = { (int)particles[i].x, (int)particles[i].y, (int)particles[i].x + s, (int)particles[i].y + s };
-                        FillRect(memDC, &prc, pBr);
+                        int s = particles[i].type == 1 ? 2 : (particles[i].type == 2 ? 6 : 4);
+                        if (particles[i].type == 2) {
+                            HPEN nonePen = CreatePen(PS_NULL, 0, 0);
+                            HGDIOBJ oP = SelectObject(memDC, nonePen);
+                            HGDIOBJ oB = SelectObject(memDC, pBr);
+                            Ellipse(memDC, (int)particles[i].x - s/2, (int)particles[i].y - s/2, (int)particles[i].x + s/2, (int)particles[i].y + s/2);
+                            SelectObject(memDC, oP);
+                            SelectObject(memDC, oB);
+                            DeleteObject(nonePen);
+                        } else {
+                            RECT prc = { (int)particles[i].x, (int)particles[i].y, (int)particles[i].x + s, (int)particles[i].y + s };
+                            FillRect(memDC, &prc, pBr);
+                        }
                         DeleteObject(pBr);
                     }
                 }
@@ -1346,15 +1372,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                // Render Balls
+                // Render Balls & Trails
                 for (int i = 0; i < MAX_BALLS; i++) {
                     if (balls[i].active) {
+                        COLORREF tBaseClr = dur_fire > 0 ? RGB(255, 100, 0) : RGB(0, 200, 255);
+                        for (int t = 0; t < MAX_TRAIL; t++) {
+                            int idx = (balls[i].trail_head + t) % MAX_TRAIL;
+                            float tx = balls[i].trail[idx].x;
+                            float ty = balls[i].trail[idx].y;
+                            if (tx != 0 || ty != 0) {
+                                int intens = (t * 255) / MAX_TRAIL;
+                                int r = (GetRValue(tBaseClr) * intens) / 255;
+                                int g = (GetGValue(tBaseClr) * intens) / 255;
+                                int b = (GetBValue(tBaseClr) * intens) / 255;
+                                HBRUSH tBr = CreateSolidBrush(RGB(r, g, b));
+                                HPEN nonePen = CreatePen(PS_NULL, 0, 0);
+                                HGDIOBJ oP = SelectObject(memDC, nonePen);
+                                HGDIOBJ oB = SelectObject(memDC, tBr);
+                                int ts = 2 + (t * 6) / MAX_TRAIL;
+                                Ellipse(memDC, (int)tx + 4 - ts/2, (int)ty + 4 - ts/2, (int)tx + 4 + ts/2, (int)ty + 4 + ts/2);
+                                SelectObject(memDC, oP);
+                                SelectObject(memDC, oB);
+                                DeleteObject(nonePen);
+                                DeleteObject(tBr);
+                            }
+                        }
+                    
                         COLORREF bClr = dur_fire > 0 ? RGB(255, 50, 0) : RGB(0, 255, 255);
                         HBRUSH bBr = CreateSolidBrush(bClr);
                         HGDIOBJ oB = SelectObject(memDC, bBr);
+                        HPEN bPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                        HGDIOBJ oP = SelectObject(memDC, bPen);
                         Ellipse(memDC, (int)balls[i].x, (int)balls[i].y, (int)balls[i].x + 8, (int)balls[i].y + 8);
                         SelectObject(memDC, oB);
+                        SelectObject(memDC, oP);
                         DeleteObject(bBr);
+                        DeleteObject(bPen);
                         
                         // Animated spin core
                         HPEN wPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
