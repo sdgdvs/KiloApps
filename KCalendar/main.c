@@ -355,7 +355,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             ReleaseDC(NULL, hdc);
             #define SCALE(x) MulDiv((x), dpiY, 96)
 
-            hFont = CreateFontA(-SCALE(16), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            int fontHeight = -MulDiv(12, dpiY, 72);
+            hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             hBgBrush = CreateSolidBrush(RGB(15, 23, 42));
             hEditBrush = CreateSolidBrush(RGB(15, 23, 42));
 
@@ -370,8 +371,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hMonthCal, MCM_GETMINREQRECT, 0, (LPARAM)&rc);
             SetWindowPos(hMonthCal, NULL, SCALE(10), SCALE(10), rc.right, rc.bottom, SWP_NOZORDER);
 
-            int winWidth = SCALE(1024);
-            int winHeight = SCALE(768);
+            int winWidth = SCALE(800);
+            int winHeight = SCALE(600);
             int pad = SCALE(10);
             int btnH = SCALE(28);
             int editH = SCALE(24);
@@ -451,8 +452,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             EnumChildWindows(hwnd, SetFontCallback, (LPARAM)hFont);
 
+            DWORD style = GetWindowLong(hwnd, GWL_STYLE) | WS_CLIPCHILDREN;
+            SetWindowLong(hwnd, GWL_STYLE, style);
             RECT winRc = {0, 0, winWidth, winHeight};
-            AdjustWindowRect(&winRc, GetWindowLong(hwnd, GWL_STYLE), FALSE);
+            AdjustWindowRect(&winRc, style, FALSE);
             SetWindowPos(hwnd, NULL, 0, 0, winRc.right - winRc.left, winRc.bottom - winRc.top, SWP_NOMOVE | SWP_NOZORDER);
 
             SendMessage(hMonthCal, MCM_SETCOLOR, MCSC_BACKGROUND, RGB(15, 23, 42));
@@ -557,8 +560,12 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KCalendarApp", "KCalendar (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, hInstance, NULL);
+    DWORD style = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
+    RECT rc = {0, 0, 800, 600};
+    AdjustWindowRect(&rc, style, FALSE);
+
+    HWND hwnd = CreateWindowEx(0, "KCalendarApp", "KCalendar (Press H for Help)", style,
+        CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
