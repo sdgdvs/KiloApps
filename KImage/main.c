@@ -2,8 +2,8 @@
 #include <windows.h>
 #include <commdlg.h>
 
-#define WINDOW_WIDTH 1200
-#define WINDOW_HEIGHT 800
+#define WINDOW_WIDTH 1000
+#define WINDOW_HEIGHT 700
 #define TOOLBAR_HEIGHT 42
 #define SIDEBAR_WIDTH 200
 #define MAX_FILES 256
@@ -532,7 +532,11 @@ void DrawRGBHistogram(HDC hdc, RECT rc) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HDC hdc = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            ReleaseDC(hwnd, hdc);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             int x = 6, y = 6, btnH = 28;
 
@@ -616,7 +620,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SaveFileDlg(hwnd);
                     break;
                 case ID_BTN_HELP:
-                    MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- H: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- H/F1: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
                     break;
                 case ID_BTN_ZOOM_IN:
                     g_zoom *= 1.2f;
@@ -726,8 +730,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (wParam == 'O') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_OPEN, 0);
-            } else if (wParam == 'H') {
-                MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- H: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
+            } else if (wParam == 'H' || wParam == VK_F1) {
+                MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- H/F1: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (wParam == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_PLAY, 0);
             } else if (wParam == VK_LEFT) {
@@ -869,7 +873,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT rcMsg;
                 rcMsg.left = 0; rcMsg.top = TOOLBAR_HEIGHT + canvasH/2 - 40;
                 rcMsg.right = canvasW; rcMsg.bottom = rcMsg.top + 80;
-                DrawTextA(hdc, "No Image Loaded\nPress 'O' to Open, or 'H' for Help", -1, &rcMsg, DT_CENTER | DT_TOP);
+                DrawTextA(hdc, "No Image Loaded\nPress 'O' to Open, or 'H'/'F1' for Help", -1, &rcMsg, DT_CENTER | DT_TOP);
                 SelectObject(hdc, oldFont2);
                 DeleteObject(hFontBig);
             }
@@ -970,8 +974,8 @@ void MainEntry() {
     RegisterClass(&wc);
 
     RECT rc = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KImageApp", "KImage Pro (Native C) - Press H for Help", WS_OVERLAPPEDWINDOW,
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
+    HWND hwnd = CreateWindowEx(0, "KImageApp", "KImage Pro (Native C) - Press H/F1 for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

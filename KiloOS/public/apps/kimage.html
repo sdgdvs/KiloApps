@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="window-width" content="1200">
-<meta name="window-height" content="800">
-<meta name="window-size" content="width=1200,height=800">
-<title>KImage Pro (Press H for Help)</title>
+<meta name="window-width" content="1000">
+<meta name="window-height" content="700">
+<meta name="window-size" content="width=1000,height=700">
+<title>KImage Pro (Press H/F1 for Help)</title>
 <style>
   :root {
     --bg-dark: #0f172a;
@@ -361,7 +361,7 @@
     <div class="toolbar-section">
       <div class="app-title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        KImage Pro <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:8px;">(Press H for Help)</span>
+        KImage Pro <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:8px;">(Press H/F1 for Help)</span>
       </div>
       <button class="primary" id="btnOpen" aria-label="Open Images">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
@@ -538,7 +538,7 @@
       <div class="empty-state" id="emptyState">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <div class="drop-zone-text">Drag & drop image files here</div>
-        <div class="drop-subtext">or click "Open Image(s)" above to browse (Supports PNG, JPG, WEBP, BMP, GIF)<br><br>Press <b>H</b> for Help</div>
+        <div class="drop-subtext">or click "Open Image(s)" above to browse (Supports PNG, JPG, WEBP, BMP, GIF)<br><br>Press <b>H</b> or <b>F1</b> for Help</div>
       </div>
 
       <!-- Canvas Wrapper -->
@@ -627,7 +627,7 @@
   </div>
 
 <script>
-  if (window.resizeTo) window.resizeTo(1200, 800);
+  if (window.resizeTo) window.resizeTo(1000, 700);
 
   // App State
   const state = {
@@ -672,7 +672,7 @@
   ui.btnOpen.onclick = () => ui.fileInput.click();
   ui.fileInput.onchange = (e) => loadFiles(e.target.files);
   if (ui.btnHelp) {
-    ui.btnHelp.onclick = () => alert("KImage Pro Help\n\nShortcuts:\n- Left/Right Arrow: Navigate images\n- Space: Play/Pause Slideshow\n- F: Toggle Fullscreen\n- O: Open Images\n- H: Help");
+    ui.btnHelp.onclick = () => alert("KImage Pro Help\n\nShortcuts:\n- Left/Right Arrow: Navigate images\n- Space: Play/Pause Slideshow\n- F: Toggle Fullscreen\n- O: Open Images\n- H/F1: Help");
   }
 
   // Drag & Drop
@@ -685,8 +685,9 @@
   // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-    if (e.key === 'h' || e.key === 'H') {
-      alert("KImage Pro Help\n\nShortcuts:\n- Left/Right Arrow: Navigate images\n- Space: Play/Pause Slideshow\n- F: Toggle Fullscreen\n- O: Open Images");
+    if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+      if (e.key === 'F1') e.preventDefault();
+      alert("KImage Pro Help\n\nShortcuts:\n- Left/Right Arrow: Navigate images\n- Space: Play/Pause Slideshow\n- F: Toggle Fullscreen\n- O: Open Images\n- H/F1: Help");
     } else if (e.key === 'o' || e.key === 'O') {
       ui.fileInput.click();
     } else if (e.key === 'ArrowLeft') {

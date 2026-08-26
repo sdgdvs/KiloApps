@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP â€” loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top â€” the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KImage
 - KCalc
 - KHex
 - KCalendar
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KJournal
 - KBase
 - KPad
+- KImage
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KImage: Usability and UI issues fixed (adjusted bounds to 1000x700 in App.jsx and native, ensured explicit H/F1 help instructions, and applied crisp native text via DPI awareness and negative font heights).
 - KPad: Usability and UI issues fixed (synchronized App.jsx and native client bounds to 800x600, implemented SetProcessDPIAware and WS_CLIPCHILDREN natively, and verified explicit Help hotkeys).
 - KBase: Usability and UI issues fixed (synchronized App.jsx and native client bounds to 900x600, applied negative font heights and SetProcessDPIAware for crisp text, added WS_CLIPCHILDREN, and ensured explicit Help shortcuts).
 - KJournal: Usability and UI issues fixed (added SetProcessDPIAware and WS_CLIPCHILDREN to native, crisp console font, adjusted native bounds to 1100x750; verified web help hotkeys and explicitly visible instructions).
