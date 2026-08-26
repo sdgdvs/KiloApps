@@ -750,15 +750,24 @@
   function addSparks(cx, cy, color, count=8) {
       for (let i = 0; i < count; i++) {
           let ang = Math.random() * Math.PI * 2;
-          let spd = 1 + Math.random() * 3;
+          let spd = 1 + Math.random() * 4;
           particles.push({
               x: cx, y: cy,
               vx: Math.cos(ang) * spd,
               vy: Math.sin(ang) * spd,
-              life: 12 + Math.random() * 8,
+              life: 20 + Math.random() * 10,
+              maxLife: 30,
               color: color
           });
       }
+  }
+
+  function addExplosion(cx, cy, color) {
+      addShockwave(cx, cy, color, true);
+      addShockwave(cx, cy, '#ffffff', false);
+      addSparks(cx, cy, color, 15);
+      addSparks(cx, cy, '#ffffff', 10);
+      screenShake = 15;
   }
 
   function addPopup(cx, cy, text, color='#fff') {
@@ -881,7 +890,7 @@
               }
           }
           for (let i = particles.length - 1; i >= 0; i--) {
-              let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) particles.splice(i, 1);
+              let p = particles[i]; p.x += p.vx; p.y += p.vy; p.vx *= 0.95; p.vy += 0.15; p.life--; if (p.life <= 0) particles.splice(i, 1);
           }
           return;
       }
@@ -1101,8 +1110,7 @@
                       shieldActive = 0;
                       map[py][px] = 0;
                       addPopup(cx, cy, 'ABSORBED!', '#ff4500');
-                      addSparks(cx, cy, '#ff4500', 16);
-                      addShockwave(cx, cy, '#ff4500');
+                      addExplosion(cx, cy, '#ff4500');
                       playSound(1000, 0.3, 'sine');
                   } else {
                       playSound(200, 0.5, 'sawtooth');
@@ -1115,22 +1123,17 @@
                   if (map[py][px] === 3) {
                       score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; playSound(300, 0.3, 'sawtooth');
                       addPopup(cx, cy, '+' + (40 * mult), '#ffb852');
-                      addSparks(cx, cy, '#ffb852', 10);
-                      screenShake = 12;
-                      addShockwave(cx, cy, '#ffb852', true);
-                      addShockwave(cx, cy, '#ffffff', true);
+                      addExplosion(cx, cy, '#ffb852');
                   }
                   else if (map[py][px] === 4) {
                       score += 20 * mult; speedSkillTimer = 80; playSound(900, 0.1, 'triangle');
                       addPopup(cx, cy, 'SPEED!', '#00ffff');
-                      addSparks(cx, cy, '#00ffff', 8);
-                      addShockwave(cx, cy, '#00ffff');
+                      addExplosion(cx, cy, '#00ffff');
                   }
                   else if (map[py][px] === 5) {
                       score += 30 * mult; freezeSkillTimer = 60; playSound(700, 0.2, 'sine');
                       addPopup(cx, cy, 'FREEZE!', '#ffffff');
-                      addSparks(cx, cy, '#ffffff', 8);
-                      addShockwave(cx, cy, '#80deea');
+                      addExplosion(cx, cy, '#80deea');
                   }
                   else {
                       score += 10 * mult; playSound(600, 0.05, 'square');
@@ -1163,7 +1166,7 @@
                           let cx = c * TS + TS/2, cy = r * TS + TS/2;
                           let loopNum = Math.floor((level - 1) / 20);
                           let mult = (loopNum >= 7) ? 8 : 1;
-                          if (map[r][c] === 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; addPopup(cx, cy, '+' + (40 * mult), '#ffb852'); addShockwave(cx, cy, '#ffb852', true); screenShake = 8; }
+                          if (map[r][c] === 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; addPopup(cx, cy, '+' + (40 * mult), '#ffb852'); addExplosion(cx, cy, '#ffb852'); }
                           else if (map[r][c] === 4) { score += 20 * mult; speedSkillTimer = 80; addPopup(cx, cy, 'SPEED!', '#00ffff'); }
                           else if (map[r][c] === 5) { score += 30 * mult; freezeSkillTimer = 60; addPopup(cx, cy, 'FREEZE!', '#ffffff'); }
                           else { score += 10 * mult; }
@@ -1190,8 +1193,7 @@
                       bossHp--;
                       score += 500 * mult;
                       addPopup(cx, cy, 'BOSS HIT! -1HP', '#ffd700');
-                      addSparks(cx, cy, '#ffd700', 16);
-                      addShockwave(cx, cy, '#ffd700');
+                      addExplosion(cx, cy, '#ffd700');
                       g.x = 7; g.y = 6;
                       playSound(900, 0.3, 'square');
                       if (bossHp <= 0) {
@@ -1204,7 +1206,7 @@
                       score += 100 * mult;
                       g.phantomTimer = 0;
                       addPopup(cx, cy, '+' + (100 * mult), '#ce93d8');
-                      addShockwave(cx, cy, '#ce93d8');
+                      addExplosion(cx, cy, '#ce93d8');
                   } else {
                       score += 200 * mult;
                       statsGhostsEaten++;
@@ -1213,8 +1215,7 @@
                       if (score > statsMaxScore) { statsMaxScore = score; localStorage.setItem('kpac_maxscore', statsMaxScore); }
                       playSound(800, 0.1, 'triangle');
                       addPopup(cx, cy, '+' + (200 * mult), '#ffeb3b');
-                      addSparks(cx, cy, '#ff1744', 12);
-                      addShockwave(cx, cy, '#00ffff');
+                      addExplosion(cx, cy, '#00ffff');
                       g.isDead = 1; // Float eyes return to ghost house!
                   }
               } else if (shieldActive) {
@@ -1222,8 +1223,7 @@
                   shieldActive = 0;
                   g.x = 7; g.y = 6;
                   addPopup(cx, cy, 'SHIELD ABSORBED!', '#00e5ff');
-                  addSparks(cx, cy, '#00e5ff', 16);
-                  addShockwave(cx, cy, '#00e5ff');
+                  addExplosion(cx, cy, '#00e5ff');
                   playSound(1000, 0.3, 'sine');
               } else {
                   playSound(200, 0.5, 'sawtooth');
@@ -1258,6 +1258,7 @@
       for (let i = particles.length - 1; i >= 0; i--) {
           let p = particles[i];
           p.x += p.vx; p.y += p.vy;
+          p.vx *= 0.95; p.vy += 0.15;
           p.life--;
           if (p.life <= 0) particles.splice(i, 1);
       }
@@ -1320,8 +1321,11 @@
       let nL = c > 0 && map[r][c-1] === 1;
       let nR = c < COLS-1 && map[r][c+1] === 1;
 
-      let wallColor = '#1e88e5';
-      let wallHighlight = '#64b5f6';
+      let themeCols = ['#1e88e5', '#4caf50', '#9c27b0', '#f44336', '#ff9800', '#009688'];
+      let themeHis = ['#64b5f6', '#81c784', '#ba68c8', '#e57373', '#ffb74d', '#4dd0e1'];
+      let themeIdx = (level - 1) % 6;
+      let wallColor = themeCols[themeIdx];
+      let wallHighlight = themeHis[themeIdx];
       if (victoryTimer > 0) {
           const colors = ['#ffffff', '#00ffff', '#ffd700', '#1e88e5'];
           wallColor = colors[(victoryTimer + r + c) % colors.length];
@@ -1793,9 +1797,13 @@
       }
 
       for (let p of particles) {
+          ctx.globalAlpha = Math.max(0, p.life / (p.maxLife || 30));
           ctx.fillStyle = p.color;
-          ctx.fillRect(p.x, p.y, 2, 2);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+          ctx.fill();
       }
+      ctx.globalAlpha = 1.0;
 
       for (let pop of popups) {
           ctx.fillStyle = pop.color;

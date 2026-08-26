@@ -472,6 +472,37 @@ void AddShockwave3D(int x, int y, COLORREF color) {
     }
 }
 
+typedef struct {
+    double x, y, vx, vy;
+    int life, maxLife;
+    COLORREF color;
+} Particle;
+Particle particles[256];
+int numParticles = 0;
+
+void AddSparks(int cx, int cy, COLORREF color, int count) {
+    for (int i = 0; i < count && numParticles < 256; i++) {
+        double ang = (MyRand() % 360) * 3.14159 / 180.0;
+        double spd = 1.0 + (MyRand() % 40) / 10.0;
+        particles[numParticles].x = cx;
+        particles[numParticles].y = cy;
+        particles[numParticles].vx = MyCos(ang) * spd;
+        particles[numParticles].vy = MySin(ang) * spd;
+        particles[numParticles].life = 20 + (MyRand() % 10);
+        particles[numParticles].maxLife = particles[numParticles].life;
+        particles[numParticles].color = color;
+        numParticles++;
+    }
+}
+
+void AddExplosion(int cx, int cy, COLORREF color) {
+    AddShockwave3D(cx, cy, color);
+    AddShockwave(cx, cy, RGB(255, 255, 255));
+    AddSparks(cx, cy, color, 15);
+    AddSparks(cx, cy, RGB(255, 255, 255), 10);
+    screenShake = 15;
+}
+
 int diffMode = 1; // 0 = Easy, 1 = Normal, 2 = Hard
 char saveMsgText[64] = "";
 int saveMsgTimer = 0;
@@ -676,6 +707,7 @@ void Init(int keepScore) {
     fruitActive = 0;
     fruitTimer = 0;
     numShockwaves = 0;
+    numParticles = 0;
 }
 
 // Active Skill Trigger Functions
@@ -685,6 +717,7 @@ void TriggerFreezeSkill() {
         freezeCooldown = 150;  // 15s cooldown
         lstrcpyA(saveMsgText, "FREEZE SKILL!");
         saveMsgTimer = 20;
+        AddSparks(px * TS + TS/2, py * TS + TS/2, RGB(255, 255, 255), 15);
         MessageBeep(MB_ICONINFORMATION);
     }
 }
@@ -695,6 +728,7 @@ void TriggerSpeedSkill() {
         speedCooldown = 150;  // 15s cooldown
         lstrcpyA(saveMsgText, "SPEED SPRINT!");
         saveMsgTimer = 20;
+        AddSparks(px * TS + TS/2, py * TS + TS/2, RGB(0, 255, 255), 15);
         MessageBeep(MB_ICONEXCLAMATION);
     }
 }
@@ -705,6 +739,7 @@ void TriggerMagnetSkill() {
         magnetCooldown = 150;  // 15s cooldown
         lstrcpyA(saveMsgText, "DOT MAGNET!");
         saveMsgTimer = 20;
+        AddSparks(px * TS + TS/2, py * TS + TS/2, RGB(255, 235, 59), 15);
         MessageBeep(MB_OK);
     }
 }
@@ -715,6 +750,7 @@ void TriggerShieldSkill() {
         shieldCooldown = 200; // 20s cooldown
         lstrcpyA(saveMsgText, "GHOST SHIELD!");
         saveMsgTimer = 20;
+        AddSparks(px * TS + TS/2, py * TS + TS/2, RGB(0, 229, 255), 15);
         MessageBeep(MB_OK);
     }
 }
@@ -728,7 +764,9 @@ void Update() {
         deathTimer--;
         if (deathTimer % 2 == 0) {
             COLORREF colors[] = {RGB(255,0,0), RGB(0,255,0), RGB(0,0,255), RGB(255,255,0), RGB(0,255,255), RGB(255,0,255)};
-            AddShockwave(px * TS + TS/2, py * TS + TS/2, colors[MyRand() % 6]);
+            COLORREF rc = colors[MyRand() % 6];
+            AddShockwave(px * TS + TS/2, py * TS + TS/2, rc);
+            AddSparks(px * TS + TS/2, py * TS + TS/2, rc, 5);
         }
         if (deathTimer == 0) {
             lives--;
@@ -1001,9 +1039,7 @@ void Update() {
                 if (map[py][px] == 3) {
                     score += 40 * mult;
                     frightTimer = (loopNum >= 7) ? 0 : ((diffMode == 0) ? 75 : ((diffMode == 2) ? 35 : 50));
-                    screenShake = 12;
-                    AddShockwave3D(px * TS + TS/2, py * TS + TS/2, RGB(255, 184, 82));
-                    AddShockwave3D(px * TS + TS/2, py * TS + TS/2, RGB(255, 255, 255));
+                    AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(255, 184, 82));
                     MessageBeep(MB_OK);
                 } else if (map[py][px] == 4) {
                     score += 20 * mult;
@@ -1048,7 +1084,7 @@ void Update() {
                     if (map[r][c] >= 2 && map[r][c] <= 5) {
                         int loopNum = (level - 1) / 20;
                         int mult = (loopNum >= 7) ? 8 : 1;
-                        if (map[r][c] == 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; screenShake = 8; AddShockwave3D(c * TS + TS/2, r * TS + TS/2, RGB(255, 184, 82)); }
+                        if (map[r][c] == 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; AddExplosion(c * TS + TS/2, r * TS + TS/2, RGB(255, 184, 82)); }
                         else if (map[r][c] == 4) { score += 20 * mult; speedSkillTimer = 80; }
                         else if (map[r][c] == 5) { score += 30 * mult; freezeSkillTimer = 60; }
                         else { score += 10 * mult; }
@@ -1081,7 +1117,7 @@ void Update() {
                     bossHp--;
                     score += 500 * mult;
                     ghosts[i].x = 7; ghosts[i].y = 6;
-                    AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(255, 215, 0));
+                    AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(255, 215, 0));
                     MessageBeep(MB_ICONASTERISK);
                     if (bossHp <= 0) {
                         score += 2000 * mult;
@@ -1092,13 +1128,13 @@ void Update() {
                 } else if (ghosts[i].type == 6) { // Phantom Clone
                     score += 100 * mult;
                     ghosts[i].phantomTimer = 0;
-                    AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(206, 147, 216));
+                    AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(206, 147, 216));
                 } else {
                     score += 200 * mult;
                     statsGhostsEaten++;
                     if (score > highScore) highScore = score;
                     if (score > statsMaxScore) statsMaxScore = score;
-                    AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(0, 255, 255));
+                    AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(0, 255, 255));
                     MessageBeep(MB_ICONASTERISK);
                     ghosts[i].isDead = 1; // Float eyes return to house!
                 }
@@ -1143,6 +1179,18 @@ void Update() {
         shockwaves[i].r += 2;
         if (shockwaves[i].r >= shockwaves[i].maxR) {
             shockwaves[i] = shockwaves[--numShockwaves];
+            i--;
+        }
+    }
+
+    for (int i = 0; i < numParticles; i++) {
+        particles[i].x += particles[i].vx;
+        particles[i].y += particles[i].vy;
+        particles[i].vx *= 0.95;
+        particles[i].vy += 0.15;
+        particles[i].life--;
+        if (particles[i].life <= 0) {
+            particles[i] = particles[--numParticles];
             i--;
         }
     }
@@ -1333,8 +1381,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(starBr);
 
             // Draw Maze Map with Neon Glow and Junction Caps
-            COLORREF wallCol = RGB(30, 136, 229);
-            COLORREF wallHi = RGB(100, 181, 246);
+            COLORREF themeCols[] = {
+                RGB(30, 136, 229),   // Blue
+                RGB(76, 175, 80),    // Green
+                RGB(156, 39, 176),   // Purple
+                RGB(244, 67, 54),    // Red
+                RGB(255, 152, 0),    // Orange
+                RGB(0, 150, 136)     // Teal
+            };
+            COLORREF themeHis[] = {
+                RGB(100, 181, 246),
+                RGB(129, 199, 132),
+                RGB(186, 104, 200),
+                RGB(229, 115, 115),
+                RGB(255, 183, 77),
+                RGB(77, 208, 225)
+            };
+            int themeIdx = ((level - 1) % 6);
+            COLORREF wallCol = themeCols[themeIdx];
+            COLORREF wallHi = themeHis[themeIdx];
             if (victoryTimer > 0) {
                 COLORREF flashCols[] = { RGB(255,255,255), RGB(0,255,255), RGB(255,215,0), RGB(30,136,229) };
                 wallCol = flashCols[victoryTimer % 4];
@@ -1490,6 +1555,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                    shockwaves[i].x + shockwaves[i].r, shockwaves[i].y + shockwaves[i].r);
                 }
                 DeleteObject(sPen);
+            }
+
+            for (int i = 0; i < numParticles; i++) {
+                HBRUSH pBr = CreateSolidBrush(particles[i].color);
+                RECT pR = {(int)particles[i].x - 1, (int)particles[i].y - 1, (int)particles[i].x + 2, (int)particles[i].y + 2};
+                FillRect(memDC, &pR, pBr);
+                DeleteObject(pBr);
             }
 
             // Draw Pac-Man with 4-Frame Chomp & Direction Mouth Angle
