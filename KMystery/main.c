@@ -59,6 +59,7 @@ void my_strcpy(char* dest, const char* src) {
 HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, hBtnTravelDocks, hBtnTravelCasino, hBtnTravelStation;
 HWND hSuspectTitle, hListSuspects, hClueTitle, hListClues, hUnanalyzedTitle, hListUnanalyzed;
 HWND hStartPanel, hBtnStart, hBtnStartMed, hBtnStartHard, hStartDesc, hStatsDesc;
+HWND hBtnHelp, hHelpTitle, hHelpDesc, hBtnCloseHelp;
 
 void PlayTypewriter() {
     Beep(150 + (GetTickCount() % 100), 20);
@@ -108,7 +109,8 @@ HFONT hFont, hFontBold, hFontTitle;
 int timeLeft = 12;
 int activeItems = 3;
 
-int currentState = 0; // 0 = start, 1 = playing
+int currentState = 0; // 0 = start, 1 = playing, 6 = help
+int prevState = 0;
 int currentLocation = 0;
 
 typedef struct {
@@ -257,6 +259,11 @@ void UpdateUI() {
         SetWindowTextA(hStatsDesc, statsBuf);
         ShowWindow(hStatsDesc, SW_SHOW);
         
+        ShowWindow(hBtnHelp, SW_SHOW);
+        ShowWindow(hHelpTitle, SW_HIDE);
+        ShowWindow(hHelpDesc, SW_HIDE);
+        ShowWindow(hBtnCloseHelp, SW_HIDE);
+        
         ShowWindow(hTimeLeft, SW_HIDE);
         ShowWindow(hTitle, SW_HIDE);
         ShowWindow(hLocName, SW_HIDE);
@@ -303,8 +310,14 @@ void UpdateUI() {
         ShowWindow(hStartDesc, SW_HIDE);
         ShowWindow(hBtnStart, SW_HIDE);
         ShowWindow(hBtnStartMed, SW_HIDE);
+        ShowWindow(hBtnStartMed, SW_HIDE);
         ShowWindow(hBtnStartHard, SW_HIDE);
         ShowWindow(hStatsDesc, SW_HIDE);
+        
+        ShowWindow(hBtnHelp, SW_SHOW);
+        ShowWindow(hHelpTitle, SW_HIDE);
+        ShowWindow(hHelpDesc, SW_HIDE);
+        ShowWindow(hBtnCloseHelp, SW_HIDE);
         
         ShowWindow(hTimeLeft, SW_SHOW);
         ShowWindow(hTitle, SW_SHOW);
@@ -463,6 +476,60 @@ void UpdateUI() {
         ShowWindow(hCmbSuspect, SW_SHOW);
         ShowWindow(hCmbMotive, SW_SHOW);
         ShowWindow(hCmbWeapon, SW_SHOW);
+        
+        ShowWindow(hBtnHelp, SW_SHOW);
+        ShowWindow(hHelpTitle, SW_HIDE);
+        ShowWindow(hHelpDesc, SW_HIDE);
+        ShowWindow(hBtnCloseHelp, SW_HIDE);
+    } else if (currentState == 6) {
+        ShowWindow(hStartPanel, SW_HIDE);
+        ShowWindow(hStartDesc, SW_HIDE);
+        ShowWindow(hBtnStart, SW_HIDE);
+        ShowWindow(hBtnStartMed, SW_HIDE);
+        ShowWindow(hBtnStartHard, SW_HIDE);
+        ShowWindow(hStatsDesc, SW_HIDE);
+        ShowWindow(hTimeLeft, SW_HIDE);
+        ShowWindow(hTitle, SW_HIDE);
+        ShowWindow(hLocName, SW_HIDE);
+        ShowWindow(hLocDesc, SW_HIDE);
+        ShowWindow(hBtnSearch, SW_HIDE);
+        ShowWindow(hBtnInterrogate, SW_HIDE);
+        ShowWindow(hBtnTravelOffice, SW_HIDE);
+        ShowWindow(hBtnTravelManor, SW_HIDE);
+        ShowWindow(hBtnTravelDocks, SW_HIDE);
+        ShowWindow(hBtnTravelCasino, SW_HIDE);
+        ShowWindow(hBtnTravelStation, SW_HIDE);
+        ShowWindow(hSuspectTitle, SW_HIDE);
+        ShowWindow(hListSuspects, SW_HIDE);
+        ShowWindow(hClueTitle, SW_HIDE);
+        ShowWindow(hListClues, SW_HIDE);
+        ShowWindow(hUnanalyzedTitle, SW_HIDE);
+        ShowWindow(hListUnanalyzed, SW_HIDE);
+        ShowWindow(hIntDesc, SW_HIDE);
+        ShowWindow(hBtnAskAlibi, SW_HIDE);
+        ShowWindow(hBtnPresentClue, SW_HIDE);
+        ShowWindow(hBtnEndInt, SW_HIDE);
+        ShowWindow(hBtnLab, SW_HIDE);
+        ShowWindow(hLabTitle, SW_HIDE);
+        ShowWindow(hBtnAnalyze, SW_HIDE);
+        ShowWindow(hBtnLeaveLab, SW_HIDE);
+        ShowWindow(hScanDesc, SW_HIDE);
+        ShowWindow(hBtnScan11, SW_HIDE);
+        ShowWindow(hBtnScan7, SW_HIDE);
+        ShowWindow(hBtnScanM3, SW_HIDE);
+        ShowWindow(hBtnAccuse, SW_HIDE);
+        ShowWindow(hAccuseTitle, SW_HIDE);
+        ShowWindow(hAccuseDesc, SW_HIDE);
+        ShowWindow(hBtnSubmitAccuse, SW_HIDE);
+        ShowWindow(hBtnCancelAccuse, SW_HIDE);
+        ShowWindow(hCmbSuspect, SW_HIDE);
+        ShowWindow(hCmbMotive, SW_HIDE);
+        ShowWindow(hCmbWeapon, SW_HIDE);
+        
+        ShowWindow(hBtnHelp, SW_HIDE);
+        ShowWindow(hHelpTitle, SW_SHOW);
+        ShowWindow(hHelpDesc, SW_SHOW);
+        ShowWindow(hBtnCloseHelp, SW_SHOW);
     }
 }
 
@@ -629,6 +696,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hCmbMotive, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hCmbWeapon, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)1029, NULL, NULL);
+            hHelpTitle = CreateWindowA("STATIC", "Detective's Manual", WS_CHILD | SS_CENTER, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hHelpDesc = CreateWindowA("STATIC", "HOW TO PLAY:\n1. Search locations for clues (2h).\n2. Analyze objects in the lab (1h).\n3. Interrogate suspects to catch them in lies (1h).\n4. Accuse the killer with correct motive & weapon!\n\nTIPS:\n- Suspects have patience. Unrelated clues make them angry.\n- The killer's specific clue will catch them immediately!\n- Cross-reference alibis to spot liars.\n- In the lab, calibrate scanner to exactly match the target.", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hBtnCloseHelp = CreateWindowA("BUTTON", "Close Manual", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)1030, NULL, NULL);
+            
+            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hHelpTitle, WM_SETFONT, (WPARAM)hFontTitle, TRUE);
+            SendMessageA(hHelpDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnCloseHelp, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+
             UpdateUI();
             break;
         }
@@ -704,6 +781,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int clueY = unY + 30 + listH + 10;
                 MoveWindow(hClueTitle, rightX, clueY, rightW, 24, TRUE);
                 MoveWindow(hListClues, rightX, clueY + 30, rightW, cy - (clueY + 30) - pad, TRUE);
+                
+                MoveWindow(hBtnHelp, cx - 100, 10, 80, 30, TRUE);
+            }
+            if (currentState == 6) {
+                MoveWindow(hHelpTitle, 0, 20, cx, 40, TRUE);
+                MoveWindow(hHelpDesc, cx/2 - 300, 80, 600, 250, TRUE);
+                MoveWindow(hBtnCloseHelp, cx/2 - 100, 350, 200, 40, TRUE);
+            }
+            if (currentState == 0) {
+                MoveWindow(hBtnHelp, cx - 100, 10, 80, 30, TRUE);
             }
             break;
         }
@@ -915,6 +1002,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 currentState = 0;
                 UpdateUI();
+            } else if (id == 1029) {
+                prevState = currentState;
+                currentState = 6;
+                UpdateUI();
+                RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
+            } else if (id == 1030) {
+                currentState = prevState;
+                UpdateUI();
+                RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             }
             break;
         }

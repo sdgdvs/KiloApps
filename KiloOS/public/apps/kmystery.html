@@ -145,6 +145,28 @@
 <body>
     <div id="header">
         <h1>KMystery</h1>
+        <button onclick="showHelp()" style="position: absolute; right: 20px; top: 10px;">Help</button>
+    </div>
+    
+    <div id="help-modal" class="hidden" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; display:flex; justify-content:center; align-items:center; flex-direction:column; color:#ccc;">
+        <div style="background:#111; border:2px solid #555; padding:30px; max-width:600px; max-height:80vh; overflow-y:auto; box-shadow: 0 0 20px #000; text-align:left;">
+            <h2>Detective's Manual</h2>
+            <h3>How to Play</h3>
+            <p>1. Move between locations and <b>Search for Clues</b> (Costs 2h).</p>
+            <p>2. Analyze objects in the <b>Evidence Lab</b> to reveal usable clues (Costs 1h).</p>
+            <p>3. <b>Interrogate</b> suspects by presenting clues to catch them in lies (Costs 1h).</p>
+            <p>4. <b>Accuse</b> the killer with the correct motive and weapon before time runs out!</p>
+            <h3>Interrogation Tips</h3>
+            <p>- Every suspect has a breaking point (Patience). Presenting unrelated clues reduces patience.</p>
+            <p>- Presenting the killer's specific item will catch them in a lie immediately!</p>
+            <p>- Cross-reference alibis! If someone's alibi contradicts another's, they might be lying.</p>
+            <h3>Evidence Guide</h3>
+            <p>- In the lab, you must calibrate the scanner to exactly match the Target.</p>
+            <p>- Use the +11, +7, and -3 adjustments strategically.</p>
+            <div style="text-align:center;">
+                <button onclick="hideHelp()" style="margin-top:20px;">Close Manual</button>
+            </div>
+        </div>
     </div>
     
     <div id="start-screen">
@@ -238,6 +260,15 @@
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let rainPlaying = false;
+
+        function showHelp() {
+            document.getElementById('help-modal').classList.remove('hidden');
+            document.getElementById('help-modal').style.display = 'flex'; // override hidden if needed
+        }
+        function hideHelp() {
+            document.getElementById('help-modal').classList.add('hidden');
+            document.getElementById('help-modal').style.display = '';
+        }
 
         function playTypewriter() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
