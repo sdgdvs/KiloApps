@@ -38,12 +38,42 @@ typedef struct {
     int type;
     float targetY;
 } Particle;
-#define MAX_PARTICLES 100
+#define MAX_PARTICLES 400
 Particle particles[MAX_PARTICLES] = {0};
+
+float shake_amount = 0.0f;
 
 typedef struct { float x, y, speed; int size; } Cloud;
 #define MAX_CLOUDS 5
 Cloud clouds[MAX_CLOUDS] = {0};
+
+void SpawnExplosionParticles(float x, float y) {
+    int spawned_sparks = 0;
+    int spawned_stars = 0;
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        if (particles[i].life <= 0) {
+            if (spawned_sparks < 20) {
+                particles[i].x = x; particles[i].y = y;
+                particles[i].vx = (float)((rand() % 100) - 50) / 10.0f;
+                particles[i].vy = (float)((rand() % 100) - 100) / 10.0f - 2.0f;
+                particles[i].life = 150;
+                particles[i].color = RGB(255, 215, 0); // Gold
+                particles[i].type = 2; // spark
+                spawned_sparks++;
+            } else if (spawned_stars < 10) {
+                particles[i].x = x; particles[i].y = y;
+                particles[i].vx = (float)((rand() % 100) - 50) / 15.0f;
+                particles[i].vy = (float)((rand() % 100) - 100) / 10.0f - 4.0f;
+                particles[i].life = 200;
+                particles[i].color = RGB(255, 255, 255);
+                particles[i].type = 3; // star
+                spawned_stars++;
+            } else {
+                break;
+            }
+        }
+    }
+}
 
 void SpawnParticles(float x, float y, COLORREF color, int count) {
     int spawned = 0;
@@ -286,6 +316,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_TIMER:
             if (wParam == 2) {
+                if (shake_amount > 0.1f) {
+                    shake_amount *= 0.9f;
+                } else {
+                    shake_amount = 0.0f;
+                }
                 for (int i = 0; i < MAX_CLOUDS; i++) {
                     clouds[i].x += clouds[i].speed;
                     if (clouds[i].x > 500) clouds[i].x = (float)(-clouds[i].size * 2);
@@ -294,13 +329,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (particles[i].life > 0) {
                         particles[i].x += particles[i].vx;
                         particles[i].y += particles[i].vy;
-                        particles[i].vy += 0.5f; // gravity
-                        if (particles[i].type == 1 && particles[i].vy > 0 && particles[i].y > particles[i].targetY) {
-                            particles[i].type = 0;
-                            particles[i].vy = -1.0f - (float)(rand()%10)/10.0f;
-                            particles[i].vx = (float)((rand()%100)-50)/20.0f;
+                        if (particles[i].type == 2 || particles[i].type == 3) {
+                            particles[i].vy += 0.1f; // less gravity
+                            particles[i].life -= 2;
+                        } else {
+                            particles[i].vy += 0.5f; // gravity
+                            if (particles[i].type == 1 && particles[i].vy > 0 && particles[i].y > particles[i].targetY) {
+                                particles[i].type = 0;
+                                particles[i].vy = -1.0f - (float)(rand()%10)/10.0f;
+                                particles[i].vx = (float)((rand()%100)-50)/20.0f;
+                            }
+                            particles[i].life -= 5;
                         }
-                        particles[i].life -= 5;
                     }
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -391,6 +431,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (action == 0 && grid[idx].type == 0) {
                             grid[idx].type = 1;
                             SpawnParticles((float)px, (float)py, RGB(93, 64, 55), 10);
+                            shake_amount += 5.0f;
                         } else if (action == 1 && x == cx && y == cy && grid[idx].type == 1) {
                             if ((crop_seasons[selected_seed] & (1 << current_season)) != 0 && money >= seed_costs[selected_seed]) {
                                 money -= seed_costs[selected_seed];
@@ -408,7 +449,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         } else if (action == 3 && grid[idx].type == 3) {
                             money += sell_values[grid[idx].cropType];
                             grid[idx].type = 1; grid[idx].watered = 0;
-                            SpawnParticles((float)px, (float)py, RGB(255, 213, 79), 15);
+                            SpawnExplosionParticles((float)px, (float)py);
+                            shake_amount += 15.0f;
                         }
                     }
                 }
@@ -436,6 +478,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetMapMode(hdc, MM_ISOTROPIC);
             SetWindowExtEx(hdc, 420, 590, NULL);
             SetViewportExtEx(hdc, S(420), S(590), NULL);
+            
+            int shake_dx = 0, shake_dy = 0;
+            if (shake_amount > 0.1f) {
+                shake_dx = (int)(((float)(rand() % 100) / 100.0f - 0.5f) * shake_amount);
+                shake_dy = (int)(((float)(rand() % 100) / 100.0f - 0.5f) * shake_amount);
+            }
+            SetWindowOrgEx(hdc, -shake_dx, -shake_dy, NULL);
             
             COLORREF grass_colors[4] = { RGB(139, 195, 74), RGB(76, 175, 80), RGB(255, 179, 0), RGB(224, 247, 250) };
             COLORREF night_grass_colors[4] = { RGB(51, 80, 30), RGB(30, 70, 40), RGB(100, 70, 10), RGB(100, 120, 130) };
@@ -470,6 +519,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     int req = (weather == 2) ? 2 : ((weather == 1) ? 0 : 1);
                     if (grid[idx].type == 0) {
                         FillRect(hdc, &r, hGrass);
+                        
+                        int prng = (x * 37 + y * 13) % 100;
+                        if (prng < 20) {
+                            HBRUSH hFlower = CreateSolidBrush(time_of_day ? RGB(200, 200, 200) : RGB(255, 255, 255));
+                            HBRUSH hOld = (HBRUSH)SelectObject(hdc, hFlower);
+                            SelectObject(hdc, GetStockObject(NULL_PEN));
+                            Ellipse(hdc, r.left + 10, r.top + 15, r.left + 14, r.top + 19);
+                            Ellipse(hdc, r.left + 16, r.top + 12, r.left + 20, r.top + 16);
+                            SelectObject(hdc, hOld);
+                            DeleteObject(hFlower);
+                        } else if (prng > 80) {
+                            HBRUSH hFlower = CreateSolidBrush(time_of_day ? RGB(100, 150, 255) : RGB(150, 200, 255));
+                            HBRUSH hOld = (HBRUSH)SelectObject(hdc, hFlower);
+                            SelectObject(hdc, GetStockObject(NULL_PEN));
+                            Ellipse(hdc, r.left + 28, r.top + 25, r.left + 32, r.top + 29);
+                            SelectObject(hdc, hOld);
+                            DeleteObject(hFlower);
+                        }
+                        
+                        HBRUSH hBlade = CreateSolidBrush(time_of_day ? RGB(30, 50, 20) : RGB(100, 150, 50));
+                        RECT br1 = { r.left + 5, r.top + 5, r.left + 7, r.top + 10 };
+                        RECT br2 = { r.left + 25, r.top + 30, r.left + 27, r.top + 36 };
+                        FillRect(hdc, &br1, hBlade);
+                        FillRect(hdc, &br2, hBlade);
+                        DeleteObject(hBlade);
                     } else {
                         if (weather == 1 || grid[idx].watered >= req) FillRect(hdc, &r, hWetSoil);
                         else if (weather == 2 && grid[idx].watered == 1) FillRect(hdc, &r, hDampSoil);
@@ -649,10 +723,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             for (int i = 0; i < MAX_PARTICLES; i++) {
                 if (particles[i].life > 0) {
-                    HBRUSH hPBrush = CreateSolidBrush(particles[i].color);
-                    RECT pr = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
-                    FillRect(hdc, &pr, hPBrush);
-                    DeleteObject(hPBrush);
+                    if (particles[i].type == 3) {
+                        HBRUSH hPBrush = CreateSolidBrush(particles[i].color);
+                        HBRUSH hOld = (HBRUSH)SelectObject(hdc, hPBrush);
+                        SelectObject(hdc, GetStockObject(NULL_PEN));
+                        Ellipse(hdc, (int)particles[i].x - 3, (int)particles[i].y - 3, (int)particles[i].x + 4, (int)particles[i].y + 4);
+                        SelectObject(hdc, hOld);
+                        DeleteObject(hPBrush);
+                    } else if (particles[i].type == 2) {
+                        HBRUSH hPBrush = CreateSolidBrush(particles[i].color);
+                        RECT pr = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
+                        FillRect(hdc, &pr, hPBrush);
+                        DeleteObject(hPBrush);
+                        HBRUSH hGlow = CreateSolidBrush(RGB(255, 140, 0));
+                        HBRUSH hOld = (HBRUSH)SelectObject(hdc, hGlow);
+                        FrameRect(hdc, &pr, hGlow);
+                        SelectObject(hdc, hOld);
+                        DeleteObject(hGlow);
+                    } else {
+                        HBRUSH hPBrush = CreateSolidBrush(particles[i].color);
+                        RECT pr = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
+                        FillRect(hdc, &pr, hPBrush);
+                        DeleteObject(hPBrush);
+                    }
                 }
             }
 

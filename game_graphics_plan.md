@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFarm
 - KAlchemy
 - KRogue
 - KChess
@@ -143,7 +142,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze
 - KColony
 - KFortress
+- KColosseum
+- KFarm
 ## Completed Work Log
+
+- **KFarm (Loop 5):** Implemented highly polished visual effects including procedural screen-shake tied to tilling and harvesting with a natural decay curve, upgraded multi-layered particle explosions featuring distinct new types (golden Sparks and hovering white Stars) on crop harvest, and highly detailed visual variations for existing graphics via procedural generation of blades of grass and varied flowers tied to grid coordinates in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
 
 - **KFortress (Loop 5):** Implemented highly polished visual effects including procedural screen-shake tied to major events (Meteor Strike, Cannon Tower hit, Ogre death/breach) via CSS transforms in Web and random offset rendering in GDI, and upgraded multi-layered particle explosions featuring distinct architectures for shockwaves (fast-expanding hollow rings), core bursts (rapid solid color scatter), sparks (friction-based kinetic lines with gravity), and smoke (slow-moving expanding spherical clouds) in both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c).
 

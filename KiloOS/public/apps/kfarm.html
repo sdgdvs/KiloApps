@@ -215,6 +215,9 @@
         let hasMayoMaker = false;
         let hasCheesePress = false;
 
+        let shakeAmount = 0;
+        let shakeDecay = 0.9;
+
         const particles = [];
         const clouds = Array.from({length: 5}, () => ({ 
             x: Math.random() * 400, 
@@ -222,6 +225,25 @@
             speed: 0.1 + Math.random() * 0.2, 
             size: 20 + Math.random() * 30 
         }));
+
+        function spawnExplosion(x, y) {
+            const cx = x + CELL_SIZE / 2;
+            const cy = y + CELL_SIZE / 2;
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: cx, y: cy,
+                    vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 1) * 8 - 2,
+                    life: 1.5 + Math.random(), color: '#FFD700', type: 'spark'
+                });
+            }
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: cx, y: cy,
+                    vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 1) * 4 - 4,
+                    life: 2.0 + Math.random(), color: '#FFF', type: 'star'
+                });
+            }
+        }
 
         function spawnParticles(x, y, color, count) {
             for (let i = 0; i < count; i++) {
@@ -430,6 +452,16 @@
 
         function draw(timestamp = 0) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            if (shakeAmount > 0.1) {
+                const dx = (Math.random() - 0.5) * shakeAmount;
+                const dy = (Math.random() - 0.5) * shakeAmount;
+                ctx.translate(dx, dy);
+                shakeAmount *= shakeDecay;
+            } else {
+                shakeAmount = 0;
+            }
+
             document.body.style.backgroundColor = timeOfDay === 'night' ? '#1A237E' : '#87CEEB';
             
             const currentSeason = Math.floor((day - 1) / 7) % 4;
@@ -447,6 +479,19 @@
                     if (cell.type === 0) {
                         ctx.fillStyle = grassColor; 
                         ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
+                        
+                        const prng = (x * 37 + y * 13) % 100;
+                        if (prng < 20) {
+                            ctx.fillStyle = timeOfDay === 'night' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)';
+                            ctx.beginPath(); ctx.arc(px + 10, py + 15, 2, 0, Math.PI*2); ctx.fill();
+                            ctx.beginPath(); ctx.arc(px + 14, py + 13, 2, 0, Math.PI*2); ctx.fill();
+                        } else if (prng > 80) {
+                            ctx.fillStyle = timeOfDay === 'night' ? 'rgba(100,150,255,0.3)' : 'rgba(100,150,255,0.8)';
+                            ctx.beginPath(); ctx.arc(px + 30, py + 25, 2, 0, Math.PI*2); ctx.fill();
+                        }
+                        ctx.fillStyle = timeOfDay === 'night' ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.15)';
+                        ctx.fillRect(px + 5, py + 5, 2, 4);
+                        ctx.fillRect(px + 25, py + 30, 2, 5);
                     } else {
                         const req = weather === 'Drought' ? 2 : (weather === 'Rain' ? 0 : 1);
                         if (weather === 'Rain' || cell.watered >= req) {
@@ -528,7 +573,7 @@
                 let p = particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += 0.2; 
+                p.vy += (p.type === 'star' || p.type === 'spark') ? 0.05 : 0.2; 
                 if (p.type === 'water' && p.vy > 0 && p.y > p.targetY) {
                     p.type = 'splash';
                     p.vy = -1 - Math.random();
@@ -538,13 +583,24 @@
                 if (p.life <= 0) {
                     particles.splice(i, 1);
                 } else {
-                    ctx.fillStyle = p.color;
-                    ctx.globalAlpha = Math.max(0, p.life);
-                    ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+                    ctx.globalAlpha = Math.max(0, p.life > 1 ? 1 : p.life);
+                    if (p.type === 'star') {
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath(); ctx.arc(p.x, p.y, 2 + p.life, 0, Math.PI*2); ctx.fill();
+                    } else if (p.type === 'spark') {
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+                        ctx.fillStyle = 'rgba(255,140,0,0.5)';
+                        ctx.fillRect(p.x - 4, p.y - 4, 8, 8);
+                    } else {
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+                    }
                     ctx.globalAlpha = 1.0;
                 }
             }
 
+            ctx.restore();
             requestAnimationFrame(draw);
         }
 
@@ -582,6 +638,7 @@
                         if (action === 'till' && cell.type === 0) {
                             cell.type = 1;
                             spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#5D4037', 10);
+                            shakeAmount += 5;
                         } else if (action === 'plant' && x === cx && y === cy && cell.type === 1) {
                             const seedInput = document.querySelector('input[name="seed"]:checked');
                             const cType = seedInput ? parseInt(seedInput.value) : 0;
@@ -605,7 +662,8 @@
                             updateMoney();
                             cell.type = 1;
                             cell.watered = 0;
-                            spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#FFC107', 15);
+                            spawnExplosion(x * CELL_SIZE, y * CELL_SIZE);
+                            shakeAmount += 15;
                         }
                     }
                 }
