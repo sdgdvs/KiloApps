@@ -47,7 +47,7 @@ struct Boss {
 
 
 struct Particle { int x, y, vx, vy, life; COLORREF color; };
-struct Particle particles[100];
+struct Particle particles[500];
 int particle_count = 0;
 
 int screen_shake_timer = 0;
@@ -169,6 +169,27 @@ int random_int(int max) {
     rng_state = rng_state * 1103515245 + 12345;
     return ((rng_state >> 16) & 0x7FFF) % max;
 }
+
+void SpawnExplosion(int x, int y, COLORREF base_color, int is_big) {
+    int i;
+    int count = is_big ? 45 : 12;
+    for (i = 0; i < count; i++) {
+        if (particle_count < 500) {
+            particles[particle_count].x = x;
+            particles[particle_count].y = y;
+            particles[particle_count].vx = (random_int(is_big ? 13 : 7) - (is_big ? 6 : 3));
+            particles[particle_count].vy = (random_int(is_big ? 13 : 7) - (is_big ? 6 : 3));
+            particles[particle_count].life = (is_big ? 15 : 10) + random_int(10);
+            
+            if (is_big && i % 3 == 0) particles[particle_count].color = RGB(255,255,255);
+            else if (is_big && i % 3 == 1) particles[particle_count].color = RGB(255,221,85);
+            else particles[particle_count].color = base_color;
+            
+            particle_count++;
+        }
+    }
+}
+
 
 // Helper String & Conversion functions
 char* my_strstr(const char* haystack, const char* needle) {
@@ -1347,7 +1368,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             UpdateBoss();
 
             if (golden_apple.x != -1 && match_ticks % 2 == 0) {
-                if (particle_count < 100) {
+                if (particle_count < 500) {
                     particles[particle_count].x = golden_apple.x * CELL_SIZE + CELL_SIZE/2 + (random_int(20)-10);
                     particles[particle_count].y = golden_apple.y * CELL_SIZE + 45 + CELL_SIZE/2 + (random_int(20)-10);
                     particles[particle_count].vx = (random_int(5) - 2);
@@ -1458,10 +1479,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (game_state == 2 && was_playing) {
-                screen_shake_timer = 15;
+                screen_shake_timer = 30; // dramatically increased screen shake
                 shockwave_timer = 30;
                 shockwave_x = snake[0].x;
                 shockwave_y = snake[0].y;
+                SpawnExplosion(shockwave_x * CELL_SIZE + CELL_SIZE/2, shockwave_y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(255, 71, 87), 1);
             }
 
             if (game_state == 2) {
@@ -1478,6 +1500,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Eat regular food
             if (snake[0].x == food.x && snake[0].y == food.y) {
                 MessageBeep(MB_OK);
+                SpawnExplosion(food.x * CELL_SIZE + CELL_SIZE/2, food.y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(255, 71, 87), 0);
                 if (snake_len < 400) { snake[snake_len] = snake[snake_len-1]; snake_len++; }
 
                 gain = score_mult;
@@ -1492,6 +1515,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     boss.hp -= 1;
                     if (boss.hp <= 0) {
                         boss.alive = 0;
+                        SpawnExplosion(boss.body[0].x * CELL_SIZE + CELL_SIZE/2, boss.body[0].y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(255, 215, 0), 1);
                         game_state = 4; // VICTORY!
                     }
                 }
@@ -1515,19 +1539,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (golden_apple.x != -1 && snake[0].x == golden_apple.x && snake[0].y == golden_apple.y) {
                 MessageBeep(MB_ICONASTERISK);
+                SpawnExplosion(golden_apple.x * CELL_SIZE + CELL_SIZE/2, golden_apple.y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(255, 215, 0), 1);
                 score += 500; snake_len -= 2; if (snake_len < 3) snake_len = 3;
                 if (boss.alive) {
                     boss.hp -= 3;
-                    if (boss.hp <= 0) { boss.alive = 0; game_state = 4; }
+                    if (boss.hp <= 0) {
+                        boss.alive = 0;
+                        SpawnExplosion(boss.body[0].x * CELL_SIZE + CELL_SIZE/2, boss.body[0].y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(255, 215, 0), 1);
+                        game_state = 4;
+                    }
                 }
                 golden_apple.x = -1;
             }
 
             if (poison_berry.x != -1 && snake[0].x == poison_berry.x && snake[0].y == poison_berry.y) {
                 MessageBeep(MB_ICONHAND);
+                SpawnExplosion(poison_berry.x * CELL_SIZE + CELL_SIZE/2, poison_berry.y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(142, 68, 173), 1);
                 score -= 200; if (score < 0) score = 0;
                 poison_active_timer = 50;
-                screen_shake_timer = 15;
+                screen_shake_timer = 30; // dramatically increased screen shake
                 shockwave_timer = 30;
                 shockwave_x = snake[0].x; shockwave_y = snake[0].y;
                 poison_berry.x = -1;
@@ -1535,12 +1565,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (speed_berry.x != -1 && snake[0].x == speed_berry.x && snake[0].y == speed_berry.y) {
                 MessageBeep(MB_ICONASTERISK);
+                SpawnExplosion(speed_berry.x * CELL_SIZE + CELL_SIZE/2, speed_berry.y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(230, 126, 34), 1);
                 score += 300;
                 speed_active_timer = 50;
                 speed_berry.x = -1;
             }
             if (ghost_berry.x != -1 && snake[0].x == ghost_berry.x && snake[0].y == ghost_berry.y) {
                 MessageBeep(MB_ICONASTERISK);
+                SpawnExplosion(ghost_berry.x * CELL_SIZE + CELL_SIZE/2, ghost_berry.y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(0, 210, 211), 1);
                 score += 300;
                 ghost_active = 150;
                 ghost_berry.x = -1;

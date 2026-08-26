@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSnake
 - KTetris
 - KCyber
 - KBreakout
@@ -143,7 +142,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KQuest
 - KSpace
 - KPac
+- KSnake
 ## Completed Work Log
+
+- **KSnake (Loop 7):** Implemented highly polished visual effects including multi-layered kinematically animated particle explosions for special berries and boss defeats, dramatically increased procedural screen-shake intensity for crashes and poison, and expanded particle system capacities in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
 - **KPac (Loop 7):** Implemented highly polished visual effects including thematic level color palettes that dynamically rotate every stage, multi-layered particle explosions featuring inner/outer shockwave rings and bright core sparks, procedural screen-shake tied to major events, and detailed kinematic animations for explosion debris with gravity and friction simulation in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 
