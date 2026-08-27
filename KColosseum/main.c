@@ -1,10 +1,10 @@
 #include <windows.h>
 #include <stdio.h>
-#include <string.h>
 
-#define ID_MARKET_LIST 101
-#define ID_OWNED_LIST 102
-#define ID_BUY_BUTTON 103
+#define ID_BUY_BUTTON 101
+#define ID_MARKET_LIST 102
+#define ID_OWNED_LIST 103
+#define ID_FUNDS_LABEL 104
 
 typedef struct {
     int id;
@@ -13,7 +13,7 @@ typedef struct {
     char desc[64];
 } Gladiator;
 
-Gladiator market[3] = {
+Gladiator market[] = {
     {1, "Titus", 300, "A strong but slow fighter."},
     {2, "Flamma", 500, "Fierce veteran with many scars."},
     {3, "Spiculus", 700, "Highly agile, crowd favorite."}
@@ -25,103 +25,117 @@ int owned_count = 0;
 
 int funds = 1000;
 
-HWND hFundsLabel, hMarketList, hOwnedList, hBuyButton;
+HWND hMarketList, hOwnedList, hFundsLabel, hBuyButton;
 
 void UpdateUI() {
-    char buf[128];
-    sprintf(buf, "Treasury: %d Denarii", funds);
-    SetWindowText(hFundsLabel, buf);
+    char buf[256];
+    wsprintfA(buf, "Treasury: %d Denarii", funds);
+    SetWindowTextA(hFundsLabel, buf);
 
-    SendMessage(hMarketList, LB_RESETCONTENT, 0, 0);
+    SendMessageA(hMarketList, LB_RESETCONTENT, 0, 0);
     for (int i = 0; i < market_count; i++) {
-        sprintf(buf, "%s - %dD (%s)", market[i].name, market[i].cost, market[i].desc);
-        SendMessage(hMarketList, LB_ADDSTRING, 0, (LPARAM)buf);
+        wsprintfA(buf, "%s - %s (%dD)", market[i].name, market[i].desc, market[i].cost);
+        SendMessageA(hMarketList, LB_ADDSTRING, 0, (LPARAM)buf);
     }
 
-    SendMessage(hOwnedList, LB_RESETCONTENT, 0, 0);
-    for (int i = 0; i < owned_count; i++) {
-        sprintf(buf, "%s - %s", owned[i].name, owned[i].desc);
-        SendMessage(hOwnedList, LB_ADDSTRING, 0, (LPARAM)buf);
+    SendMessageA(hOwnedList, LB_RESETCONTENT, 0, 0);
+    if (owned_count == 0) {
+        SendMessageA(hOwnedList, LB_ADDSTRING, 0, (LPARAM)"No gladiators owned.");
+    } else {
+        for (int i = 0; i < owned_count; i++) {
+            wsprintfA(buf, "%s - %s", owned[i].name, owned[i].desc);
+            SendMessageA(hOwnedList, LB_ADDSTRING, 0, (LPARAM)buf);
+        }
+    }
+}
+
+void BuyGladiator(int index) {
+    if (index >= 0 && index < market_count && funds >= market[index].cost) {
+        funds -= market[index].cost;
+        owned[owned_count++] = market[index];
+        for (int i = index; i < market_count - 1; i++) {
+            market[i] = market[i + 1];
+        }
+        market_count--;
+        UpdateUI();
+    } else if (index >= 0 && index < market_count) {
+        MessageBoxA(NULL, "Not enough funds!", "Error", MB_OK | MB_ICONWARNING);
     }
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
-            HFONT hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-            
-            HWND hLbl1 = CreateWindow("STATIC", "Available Recruits", WS_VISIBLE | WS_CHILD, 20, 50, 300, 20, hwnd, NULL, NULL, NULL);
-            hMarketList = CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY, 20, 70, 350, 150, hwnd, (HMENU)ID_MARKET_LIST, NULL, NULL);
-            
-            HWND hLbl2 = CreateWindow("STATIC", "Your Gladiators", WS_VISIBLE | WS_CHILD, 400, 50, 300, 20, hwnd, NULL, NULL, NULL);
-            hOwnedList = CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER, 400, 70, 350, 150, hwnd, (HMENU)ID_OWNED_LIST, NULL, NULL);
+            CreateWindowA("STATIC", "KColosseum - Ludus Management", WS_VISIBLE | WS_CHILD | SS_CENTER,
+                          10, 10, 560, 20, hwnd, NULL, NULL, NULL);
 
-            hFundsLabel = CreateWindow("STATIC", "Treasury: 1000 Denarii", WS_VISIBLE | WS_CHILD, 20, 20, 300, 20, hwnd, NULL, NULL, NULL);
-            hBuyButton = CreateWindow("BUTTON", "Buy Selected", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 20, 230, 150, 30, hwnd, (HMENU)ID_BUY_BUTTON, NULL, NULL);
-            
-            SendMessage(hLbl1, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessage(hMarketList, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessage(hLbl2, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessage(hOwnedList, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessage(hFundsLabel, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessage(hBuyButton, WM_SETFONT, (WPARAM)hFont, FALSE);
+            hFundsLabel = CreateWindowA("STATIC", "Treasury: 1000 Denarii", WS_VISIBLE | WS_CHILD | SS_CENTER,
+                          10, 40, 560, 20, hwnd, (HMENU)ID_FUNDS_LABEL, NULL, NULL);
+
+            CreateWindowA("STATIC", "Available Recruits", WS_VISIBLE | WS_CHILD,
+                          10, 70, 270, 20, hwnd, NULL, NULL, NULL);
+
+            hMarketList = CreateWindowA("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
+                          10, 90, 270, 200, hwnd, (HMENU)ID_MARKET_LIST, NULL, NULL);
+
+            hBuyButton = CreateWindowA("BUTTON", "Buy Selected", WS_VISIBLE | WS_CHILD,
+                          10, 300, 270, 30, hwnd, (HMENU)ID_BUY_BUTTON, NULL, NULL);
+
+            CreateWindowA("STATIC", "Your Gladiators", WS_VISIBLE | WS_CHILD,
+                          290, 70, 270, 20, hwnd, NULL, NULL, NULL);
+
+            hOwnedList = CreateWindowA("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER,
+                          290, 90, 270, 200, hwnd, (HMENU)ID_OWNED_LIST, NULL, NULL);
 
             UpdateUI();
-            break;
+            return 0;
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == ID_BUY_BUTTON) {
-                int sel = SendMessage(hMarketList, LB_GETCURSEL, 0, 0);
-                if (sel != LB_ERR && sel >= 0 && sel < market_count) {
-                    if (funds >= market[sel].cost) {
-                        funds -= market[sel].cost;
-                        owned[owned_count++] = market[sel];
-                        
-                        for (int i = sel; i < market_count - 1; i++) {
-                            market[i] = market[i + 1];
-                        }
-                        market_count--;
-                        UpdateUI();
-                    } else {
-                        MessageBox(hwnd, "Not enough funds!", "Error", MB_OK | MB_ICONERROR);
-                    }
+                int sel = SendMessageA(hMarketList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) {
+                    BuyGladiator(sel);
+                } else {
+                    MessageBoxA(hwnd, "Select a gladiator to buy.", "Info", MB_OK | MB_ICONINFORMATION);
                 }
             }
-            break;
+            return 0;
         }
-        case WM_DESTROY:
+        case WM_DESTROY: {
             PostQuitMessage(0);
             return 0;
+        }
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return DefWindowProcA(hwnd, uMsg, wParam, lParam);
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+void MainEntry() {
+    HINSTANCE hInstance = GetModuleHandleA(NULL);
     const char CLASS_NAME[] = "KColosseumClass";
-    
-    WNDCLASS wc = {0};
+
+    WNDCLASSA wc = {0};
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-    
-    RegisterClass(&wc);
-    
-    HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KColosseum - Ludus Management",
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 350,
+    wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+
+    RegisterClassA(&wc);
+
+    HWND hwnd = CreateWindowExA(
+        0, CLASS_NAME, "KColosseum", WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, 600, 400,
         NULL, NULL, hInstance, NULL
     );
-    
-    if (hwnd == NULL) return 0;
-    
-    ShowWindow(hwnd, nCmdShow);
-    
-    MSG msg = {0};
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+
+    if (hwnd) {
+        ShowWindow(hwnd, SW_SHOW);
+        MSG msg = {0};
+        while (GetMessageA(&msg, NULL, 0, 0)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
-    
-    return 0;
+
+    ExitProcess(0);
 }
