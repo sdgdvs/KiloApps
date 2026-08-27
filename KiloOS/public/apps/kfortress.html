@@ -919,7 +919,8 @@
       if (e.key === '1') castHeal();
       if (e.key === '2') castShield();
       if (e.key === '3') castMeteor();
-      if (e.key.toLowerCase() === 'h') {
+      if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+        if(e.key === 'F1') e.preventDefault();
         const modal = document.getElementById('helpModal');
         modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
       }
