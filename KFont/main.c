@@ -163,7 +163,11 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM font) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HDC hdcDpi = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdcDpi, LOGPIXELSY);
+            ReleaseDC(hwnd, hdcDpi);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             CreateWindowEx(0, "STATIC", "System Fonts:", WS_CHILD | WS_VISIBLE, 10, 10, 150, 20, hwnd, NULL, NULL, NULL);
             hList = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_SORT, 10, 30, 150, 160, hwnd, (HMENU)1, NULL, NULL);
@@ -321,9 +325,10 @@ void MainEntry() {
     wc.hbrBackground = hBgBrush;
     RegisterClass(&wc);
 
+    DWORD style = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
     RECT rcWin = {0, 0, W, H};
-    AdjustWindowRect(&rcWin, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KFontApp", "KFont (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    AdjustWindowRect(&rcWin, style, FALSE);
+    HWND hwnd = CreateWindowEx(0, "KFontApp", "KFont (Press H or F1 for Help)", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rcWin.right - rcWin.left, rcWin.bottom - rcWin.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -331,7 +336,7 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
             if (GetFocus() != hCustomText) {
                 MessageBox(hwnd, "Metrics & OS/2: Inspect font measurements and bounds.\nUnicode Ranges: View glyphs organized by unicode block.\nDiagnostics: Check visual kerning and hinting at various sizes.\nSample: Test how the font looks with custom text.", "KFont Help", MB_OK | MB_ICONINFORMATION);
                 continue;
