@@ -133,7 +133,7 @@
         <button id="btnZmUl" onclick="startTransfer(4)" title="ZMODEM Upload" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">UL (ZM)</button>
         <button id="btnSettings" onclick="showSettings()">Settings</button>
         <button id="btnCapture" onclick="showCaptureManager()" style="background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF</button>
-        <button id="btnHelp" onclick="showHelp()" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help</button>
+        <button id="btnHelp" onclick="showHelp()" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help (F1)</button>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
         <input type="file" id="ansFileUpload" accept=".ans,.txt,.ice" style="display:none" onchange="loadAnsFile(event)">
         <input type="file" id="dirImportUpload" accept=".json" style="display:none" onchange="importDirectoryJSON(event)">
@@ -426,7 +426,7 @@ SEND:"secret\r"'></textarea>
     </div>
 
     <div class="status-bar">
-        <span id="statusInfo">Ready — Select a BBS or enter an address (Press 'h' for Help)</span>
+        <span id="statusInfo">Ready — Select a BBS or enter an address (Press F1 or 'H' for Help)</span>
         <span id="bytesInfo">0 B | Cap: OFF</span>
     </div>
 
@@ -466,8 +466,9 @@ SEND:"secret\r"'></textarea>
     }
     document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); loadDirectory(); loadMacros(); });
     document.addEventListener("keydown", (e) => {
-        if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-            showHelp();
+        if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            if (e.key === 'F1') e.preventDefault();
+            if (!ws || e.key === 'F1') showHelp();
         }
     });
 

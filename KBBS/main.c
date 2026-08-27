@@ -1789,11 +1789,17 @@ LRESULT CALLBACK WndProc
 
             SetTimer(hwnd, 1, kbbsSettings.blinkRateMs, NULL);
             SetTimer(hwnd, 2, 16, NULL);
-            hUIFont = CreateFontA(-dpiScale(14), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+            HDC hdc = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            ReleaseDC(hwnd, hdc);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            int termFontHeight = -MulDiv(kbbsSettings.fontSize, dpi, 72);
+
+            hUIFont = CreateFontA(fontHeight, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                 DEFAULT_PITCH | FF_SWISS, "Tahoma");
 
-            hTermFont = CreateFontA(-dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+            hTermFont = CreateFontA(termFontHeight, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                 FIXED_PITCH | FF_MODERN, "Consolas");
 
@@ -2048,7 +2054,11 @@ LRESULT CALLBACK WndProc
                     SetTimer(hwnd, 1, kbbsSettings.blinkRateMs, NULL);
                     SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
                     if (hTermFont) DeleteObject(hTermFont);
-                    hTermFont = CreateFontA(-dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+                    HDC hdc = GetDC(hwnd);
+                    int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+                    ReleaseDC(hwnd, hdc);
+                    int termFontHeight = -MulDiv(kbbsSettings.fontSize, dpi, 72);
+                    hTermFont = CreateFontA(termFontHeight, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                         FIXED_PITCH | FF_MODERN, "Consolas");
                     InvalidateRect(hwnd, NULL, TRUE);
@@ -2523,12 +2533,19 @@ LRESULT CALLBACK WndProc
             int seqLen = 0;
             char fkey[6];
 
-            if (wParam == 'H' && sock == INVALID_SOCKET) {
+            if ((wParam == 'H' || wParam == VK_F1) && sock == INVALID_SOCKET) {
                 SendMessageA(hwnd, WM_COMMAND, 112, 0);
+                if (wParam == VK_F1) return 0;
                 break;
             }
 
-            if (sock == INVALID_SOCKET) break;
+            if (sock == INVALID_SOCKET) {
+                if (wParam == VK_F1) {
+                    SendMessageA(hwnd, WM_COMMAND, 112, 0);
+                    return 0;
+                }
+                break;
+            }
 
             switch (wParam) {
                 case VK_UP:     seq = "\x1B[A"; seqLen = 3; break;
@@ -2644,9 +2661,7 @@ void __stdcall MainEntry() {
     WNDCLASSA wc;
     MSG msg;
     int winW, winH;
-    typedef BOOL (WINAPI *SetProcessDPIAwareFunc)(void);
-    SetProcessDPIAwareFunc setDpi = (SetProcessDPIAwareFunc)GetProcAddress(GetModuleHandleA("user32.dll"), "SetProcessDPIAware");
-    if (setDpi) setDpi();
+    SetProcessDPIAware();
 
     my_memset(&wc, 0, sizeof(wc));
     wc.lpfnWndProc = WndProc;
@@ -2660,18 +2675,18 @@ void __stdcall MainEntry() {
     RegisterClassA(&wc);
 
     /* Terminal: plus padding and bars. */
-    winW = dpiScale(800);
-    winH = dpiScale(600);
+    winW = dpiScale(850);
+    winH = dpiScale(650);
 
     RECT r = {0, 0, winW, winH};
-    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW | WS_VSCROLL, FALSE);
+    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_CLIPCHILDREN, FALSE);
     winW = r.right - r.left;
     winH = r.bottom - r.top;
 
     LoadMacros();
 
     hMain = CreateWindowExA(0, "KBBSClass", "KBBS - Press H for Help",
-        WS_OVERLAPPEDWINDOW | WS_VSCROLL,
+        WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, winW, winH,
         NULL, NULL, wc.hInstance, NULL);
 

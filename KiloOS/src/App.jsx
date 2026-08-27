@@ -24,7 +24,7 @@ const APPS = [
   { id: 'kmine', title: 'KMine', url: '/apps/kmine.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmines.ico', w: 1000, h: 750, folder: 'Games' },
   { id: 'kclock', title: 'KClock', url: '/apps/kclock.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kclock.ico', w: 950, h: 650, folder: 'System' },
   { id: 'ktask', title: 'KTask', url: '/apps/ktask.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktask.ico', w: 800, h: 600, folder: 'System' },
-  { id: 'kbbs', title: 'KBBS', url: '/apps/kbbs.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kbbs.ico', w: 800, h: 600, folder: 'Network' },
+  { id: 'kbbs', title: 'KBBS', url: '/apps/kbbs.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kbbs.ico', w: 850, h: 650, folder: 'Network' },
   { id: 'krogue', title: 'KRogue', url: '/apps/krogue.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/krogue.ico', w: 1000, h: 720, folder: 'Games' },
   { id: 'ksnake', title: 'KSnake', url: '/apps/ksnake.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksnake.ico', w: 540, h: 680, folder: 'Games' },
   { id: 'ktetris', title: 'KTetris', url: '/apps/ktetris.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktetris.ico', w: 585, h: 825, folder: 'Games' },
