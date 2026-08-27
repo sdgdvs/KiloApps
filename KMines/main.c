@@ -65,6 +65,8 @@ int detectorR = -1;
 int detectorC = -1;
 DWORD shockwaveTick = 0;
 float shockwaveX = 0, shockwaveY = 0;
+int shakeIntensity = 0;
+DWORD shakeTick = 0;
 
 // Particle System (Explosions & Treasure Bursts)
 typedef struct {
@@ -99,23 +101,26 @@ static int parse_int(const char** p) {
 }
 
 void SpawnExplosion(float cx, float cy) {
-    COLORREF colors[5] = {
+    COLORREF colors[6] = {
         RGB(255, 60, 20),   // Fire Red
         RGB(255, 200, 40),  // Gold Spark
         RGB(255, 120, 0),   // Flame Ember
         RGB(80, 80, 90),    // Dark Smoke
-        RGB(240, 240, 240)  // Debris
+        RGB(200, 200, 200), // Debris
+        RGB(255, 255, 255)  // Flash
     };
-    for (int i = 0; i < 45; i++) {
+    for (int i = 0; i < 70; i++) {
         if (particleCount < MAX_PARTICLES) {
             Particle* p = &particles[particleCount++];
             p->x = cx; p->y = cy;
-            p->vx = (float)((my_rand() % 100) - 50) / 6.0f;
-            p->vy = (float)((my_rand() % 100) - 50) / 6.0f - 2.0f;
-            p->maxLife = 20.0f + (float)(my_rand() % 30);
+            float angle = (float)(my_rand() % 360) * 3.14159f / 180.0f;
+            float speed = (float)(my_rand() % 120) / 10.0f;
+            p->vx = cos(angle) * speed;
+            p->vy = sin(angle) * speed - 2.0f;
+            p->maxLife = 20.0f + (float)(my_rand() % 40);
             p->life = p->maxLife;
-            p->size = (my_rand() % 5 == 0) ? (4.0f + (float)(my_rand() % 4)) : (2.0f + (float)(my_rand() % 3));
-            p->color = colors[my_rand() % 5];
+            p->size = (my_rand() % 4 == 0) ? (4.0f + (float)(my_rand() % 5)) : (2.0f + (float)(my_rand() % 3));
+            p->color = colors[my_rand() % 6];
         }
     }
 }
@@ -182,7 +187,9 @@ void DrawParticles(HDC hdc) {
     for (int i = 0; i < particleCount; i++) {
         Particle* p = &particles[i];
         if (p->life > 0) {
-            int r = (int)p->size;
+            float ratio = p->life / p->maxLife;
+            int r = (int)(p->size * (0.3f + 0.7f * ratio)); 
+            if (r < 1) r = 1;
             HBRUSH hbr = CreateSolidBrush(p->color);
             HPEN hPen = CreatePen(PS_SOLID, 1, p->color);
             HGDIOBJ oldBr = SelectObject(hdc, hbr);
@@ -419,6 +426,8 @@ void Reveal(int startR, int startC) {
             shockwaveTick = GetTickCount();
             shockwaveX = (float)px;
             shockwaveY = (float)py;
+            shakeTick = shockwaveTick;
+            shakeIntensity = 15;
 
             if (shields > 0) {
                 shields--;
@@ -620,7 +629,7 @@ void DrawNumberSprite(HDC hdc, int x, int y, int size, int m) {
 
 void DrawMineSprite(HDC hdc, int x, int y, int size, int isDetonated, DWORD tick) {
     int cx = x + size / 2, cy = y + size / 2, r = size / 3;
-    int style = ((x * 13 + y * 7) % 2);
+    int style = ((x * 13 + y * 7) % 3);
 
     if (isDetonated) {
         HBRUSH hbrGlow = CreateSolidBrush(RGB(240, 50, 50));
@@ -630,6 +639,7 @@ void DrawMineSprite(HDC hdc, int x, int y, int size, int isDetonated, DWORD tick
     }
 
     if (style == 0) {
+        // Spiked rusty mine
         HPEN hPenSpike = CreatePen(PS_SOLID, 2, RGB(25, 25, 30));
         HGDIOBJ oldPen = SelectObject(hdc, hPenSpike);
         MoveToEx(hdc, cx - r - 2, cy, NULL); LineTo(hdc, cx + r + 2, cy);
@@ -652,7 +662,8 @@ void DrawMineSprite(HDC hdc, int x, int y, int size, int isDetonated, DWORD tick
         SelectObject(hdc, oldBr);
         SelectObject(hdc, oldPen);
         DeleteObject(hbrBody); DeleteObject(hPenBody); DeleteObject(hPenSpike); DeleteObject(hbrRust);
-    } else {
+    } else if (style == 1) {
+        // Hi-tech glowing mine
         HBRUSH hbrBody = CreateSolidBrush(RGB(20, 24, 30));
         HPEN hPenBody = CreatePen(PS_SOLID, 1, RGB(10, 15, 20));
         HGDIOBJ oldBr = SelectObject(hdc, hbrBody);
@@ -670,6 +681,25 @@ void DrawMineSprite(HDC hdc, int x, int y, int size, int isDetonated, DWORD tick
         SelectObject(hdc, oldBr);
         SelectObject(hdc, oldPen);
         DeleteObject(hbrBody); DeleteObject(hPenBody); DeleteObject(hbrGlowInner);
+    } else {
+        // Biohazard slime mine
+        HBRUSH hbrBody = CreateSolidBrush(RGB(30, 45, 20));
+        HPEN hPenBody = CreatePen(PS_SOLID, 2, RGB(10, 20, 10));
+        HGDIOBJ oldBr = SelectObject(hdc, hbrBody);
+        HGDIOBJ oldPen = SelectObject(hdc, hPenBody);
+        
+        Ellipse(hdc, cx - r - 1, cy - r, cx + r + 1, cy + r);
+        
+        HBRUSH hbrSlime = CreateSolidBrush(RGB(90, 220, 60));
+        SelectObject(hdc, hbrSlime);
+        SelectObject(hdc, GetStockObject(NULL_PEN));
+        int pulsate = (tick / 150) % 3;
+        Ellipse(hdc, cx - r/2 - pulsate, cy - r/2, cx - r/4, cy);
+        Ellipse(hdc, cx + r/4, cy, cx + r/2 + pulsate, cy + r/2);
+        
+        SelectObject(hdc, oldBr);
+        SelectObject(hdc, oldPen);
+        DeleteObject(hbrBody); DeleteObject(hPenBody); DeleteObject(hbrSlime);
     }
 }
 
@@ -782,10 +812,11 @@ void Draw3DTile(HDC hdc, int x, int y, int size, int isRevealed, int isPressed) 
         
         // Terrain texture (dirt/rock details)
         int seed = (x * 73 + y * 37) % 100;
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < 6; i++) {
             int dx = (seed * (i + 1) * 13) % size;
             int dy = (seed * (i + 1) * 17) % size;
             int dotColor = ((i % 2) == 0) ? RGB(20, 22, 32) : RGB(30, 34, 48);
+            if (i == 5) dotColor = RGB(40, 45, 60); // subtle highlight
             SetPixel(hdc, x + dx, y + dy, dotColor);
             SetPixel(hdc, x + dx + 1, y + dy, dotColor);
         }
@@ -797,6 +828,16 @@ void Draw3DTile(HDC hdc, int x, int y, int size, int isRevealed, int isPressed) 
     } else {
         HBRUSH hbrUnrev = CreateSolidBrush(RGB(65, 75, 100));
         FillRect(hdc, &rc, hbrUnrev); DeleteObject(hbrUnrev);
+        
+        // Add subtle unrevealed noise texture
+        int seed = (x * 19 + y * 53) % 100;
+        for(int i = 0; i < 4; i++) {
+            int dx = (seed * (i + 1) * 23) % size;
+            int dy = (seed * (i + 1) * 29) % size;
+            SetPixel(hdc, x + dx, y + dy, RGB(75, 85, 115));
+            SetPixel(hdc, x + dx + 1, y + dy + 1, RGB(55, 65, 90));
+        }
+
         HPEN hWhiteHi = CreatePen(PS_SOLID, 2, RGB(140, 155, 190));
         HPEN hDarkLo  = CreatePen(PS_SOLID, 2, RGB(30, 35, 50));
         HGDIOBJ oldPen = SelectObject(hdc, hWhiteHi);
@@ -812,10 +853,17 @@ void DrawBoard(HWND hwnd, HDC hdc) {
     DWORD tick = GetTickCount();
     
     POINT oldOrg;
-    if (tick - shockwaveTick < 400) {
-        int sx = (my_rand() % 10) - 5;
-        int sy = (my_rand() % 10) - 5;
-        SetViewportOrgEx(hdc, sx, sy, &oldOrg);
+    int isShaking = 0;
+    DWORD elapsedShake = tick - shakeTick;
+    if (elapsedShake < 500 && shakeIntensity > 0) {
+        float decay = 1.0f - ((float)elapsedShake / 500.0f);
+        int currentIntensity = (int)(shakeIntensity * decay);
+        if (currentIntensity > 0) {
+            int sx = (my_rand() % (currentIntensity * 2 + 1)) - currentIntensity;
+            int sy = (my_rand() % (currentIntensity * 2 + 1)) - currentIntensity;
+            SetViewportOrgEx(hdc, sx, sy, &oldOrg);
+            isShaking = 1;
+        }
     }
 
     RECT rcFull = { 0, 0, cols * CELL_SIZE, rows * CELL_SIZE + HEADER_HEIGHT };
@@ -991,8 +1039,8 @@ void DrawBoard(HWND hwnd, HDC hdc) {
         DeleteObject(hScanPen);
     }
 
-    if (tick - shockwaveTick < 500) {
-        float t = (float)(tick - shockwaveTick) / 500.0f;
+    if (tick - shockwaveTick < 400) {
+        float t = (float)(tick - shockwaveTick) / 400.0f;
         int radius = (int)(t * 300.0f);
         HPEN hWave = CreatePen(PS_SOLID, (int)((1.0f - t) * 12.0f) + 1, RGB(255, 60, 80));
         HGDIOBJ oldPen = SelectObject(hdc, hWave);
@@ -1002,7 +1050,7 @@ void DrawBoard(HWND hwnd, HDC hdc) {
         DeleteObject(hWave);
     }
 
-    if (tick - shockwaveTick < 400) {
+    if (isShaking) {
         SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, NULL);
     }
 }

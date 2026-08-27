@@ -217,6 +217,10 @@
     const bgCanvas = document.getElementById('bg-canvas');
     const bgCtx = bgCanvas.getContext('2d');
     let bgDust = [];
+    
+    // Screen Shake State
+    let shakeIntensity = 0;
+    let shakeTime = 0;
 
     function initBgDust() {
       bgCanvas.width = window.innerWidth;
@@ -266,12 +270,11 @@
               isShockwave: true, x: cx, y: cy, radius: 0,
               life: 1.0, decay: 0.015
           });
-          const gc = document.querySelector('.game-container');
-          gc.classList.remove('screen-shake');
-          void gc.offsetWidth;
-          gc.classList.add('screen-shake');
+          shakeIntensity = 15;
+          shakeTime = 500;
       }
       const colors = ['#f7768e', '#fbbf24', '#ff9e64', '#ffffff'];
+      const smokeColors = ['rgba(40,40,45,0.8)', 'rgba(80,80,90,0.6)'];
       // Multi-stage debris chunks
       for (let i = 0; i < 45; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -284,6 +287,20 @@
           size: size,
           color: colors[Math.floor(Math.random() * colors.length)],
           life: 1.0, decay: 0.015 + Math.random() * 0.02
+        });
+      }
+      // Smoke layered effect
+      for (let i = 0; i < 20; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 3;
+        particles.push({
+          isSmoke: true,
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 1.0,
+          size: 10 + Math.random() * 15,
+          color: smokeColors[Math.floor(Math.random() * smokeColors.length)],
+          life: 1.0, decay: 0.01 + Math.random() * 0.01
         });
       }
       if (!fxAnimFrame) updateFX();
@@ -365,6 +382,19 @@
             fxCtx.stroke();
             continue;
         }
+        if (p.isSmoke) {
+            p.x += p.vx; p.y += p.vy;
+            p.size += 0.5; // procedural growth for smoke
+            p.life -= p.decay;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            fxCtx.globalAlpha = Math.max(0, p.life);
+            fxCtx.fillStyle = p.color;
+            fxCtx.beginPath();
+            fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            fxCtx.fill();
+            continue;
+        }
+        
         p.x += p.vx; p.y += p.vy;
         p.vy += 0.12; p.vx *= 0.97;
         p.life -= p.decay;
@@ -386,6 +416,20 @@
       
       let now = Date.now();
       let keepAnimating = false;
+      
+      const gc = document.querySelector('.game-container');
+      if (shakeTime > 0) {
+          let progress = shakeTime / 500;
+          let currentInt = shakeIntensity * progress;
+          let sx = (Math.random() * currentInt * 2) - currentInt;
+          let sy = (Math.random() * currentInt * 2) - currentInt;
+          gc.style.transform = `translate(${sx}px, ${sy}px)`;
+          shakeTime -= 16;
+          keepAnimating = true;
+      } else {
+          gc.style.transform = `none`;
+      }
+
       if (now - sonarTick < 1000) {
           let radius = (now - sonarTick) * Math.max(fxCanvas.width, fxCanvas.height) / 1000;
           fxCtx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
@@ -497,6 +541,14 @@
       <circle cx="16" cy="16" r="9" fill="#14181f" stroke="#0a0f14" stroke-width="1.5"/>
       <circle cx="16" cy="16" r="5" fill="#0e7490" class="hitech-glow"/>
       <circle cx="16" cy="16" r="2.5" fill="#38bdf8"/>
+    </svg>`;
+
+    const MINE_SVG_BIOHAZARD = `<svg class="mine-svg" viewBox="0 0 32 32" width="20" height="20">
+      <circle cx="16" cy="16" r="9" fill="#143014" stroke="#0a1a0a" stroke-width="1.5"/>
+      <circle cx="16" cy="16" r="5" fill="#22c55e" class="hitech-glow"/>
+      <circle cx="11" cy="16" r="2.5" fill="#4ade80"/>
+      <circle cx="21" cy="16" r="2.5" fill="#4ade80"/>
+      <circle cx="16" cy="11" r="2.5" fill="#4ade80"/>
     </svg>`;
 
     const CHEST_SVG = `<svg class="chest-svg" viewBox="0 0 32 32" width="20" height="20">
@@ -1025,10 +1077,12 @@
             div.classList.add('revealed');
             if (grid[r][c] & 8) {
               div.classList.add('mine');
-              if ((r * 13 + c * 7) % 2 === 0) {
+              if ((r * 13 + c * 7) % 3 === 0) {
                 div.innerHTML = MINE_SVG_RUSTY;
-              } else {
+              } else if ((r * 13 + c * 7) % 3 === 1) {
                 div.innerHTML = MINE_SVG_HITECH;
+              } else {
+                div.innerHTML = MINE_SVG_BIOHAZARD;
               }
             } else {
               let m = countMines(r, c);
