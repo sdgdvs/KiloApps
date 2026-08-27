@@ -54,13 +54,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KColosseum (Gladiator management RPG)
-**Phase:** 4 (next to do)
+**Phase:** 5 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KColosseum directory (`KColosseum/`), create web HTML skeleton (`KiloOS/public/apps/kcolosseum.html`), register in App.jsx.
 - [x] Phase 2: Basic UI for gladiator ludus (stable) management, showing funds, and a list of available gladiators to buy.
 - [x] Phase 3: Native C version (`KColosseum/main.c`, `build.bat`) using Win32 API with functional parity.
-- [ ] Phase 4: Roman/Gladiator aesthetic styling (marble textures, serif fonts, gold/crimson accents).
+- [x] Phase 4: Roman/Gladiator aesthetic styling (marble textures, serif fonts, gold/crimson accents).
 - [ ] Phase 5: Implement gladiator stats (Strength, Agility, Vitality) and basic procedural generation of recruits.
 - [ ] Phase 6: Implement training system (spend funds and time to increase gladiator stats).
 - [ ] Phase 7: Arena combat system (turn-based tactical battles against AI opponents).
