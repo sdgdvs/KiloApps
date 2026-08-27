@@ -325,11 +325,11 @@
       <button class="btn-secondary" onclick="triggerImportJSON()" title="Import JSON file">Import JSON</button>
       <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="importJSON(event)">
       <button class="btn-secondary" onclick="resetToDefaults()" title="Reset database to default sample data">Reset</button>
-      <button class="btn-secondary" onclick="showHelp()" title="Show Help">Help [H]</button>
+      <button class="btn-secondary" onclick="showHelp()" title="Show Help">Help [F1/H]</button>
     </div>
   </div>
   <div class="query-hint">
-    Syntax tips: Combine terms (e.g. <code>dept:engineering role:lead</code>). Supports <code>id>102</code>, <code>id<105</code>, <code>name:alice</code>. Encryption key auto-saves encrypted payload. <strong>(Press H for Help)</strong>
+    Syntax tips: Combine terms (e.g. <code>dept:engineering role:lead</code>). Supports <code>id>102</code>, <code>id<105</code>, <code>name:alice</code>. Encryption key auto-saves encrypted payload. <strong>(Press F1 or H for Help)</strong>
   </div>
   <div class="table-container">
     <table id="empTable">
@@ -391,14 +391,15 @@
 </div>
 
 <script>
-if (window.resizeTo) window.resizeTo(1100, 800);
+if (window.resizeTo) window.resizeTo(900, 650);
 
 function showHelp() {
   alert(`KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 500 records.\n- Export and import via CSV or JSON.`);
 }
 
 window.addEventListener('keydown', function(e) {
-  if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+  if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    if (e.key === 'F1') e.preventDefault();
     showHelp();
   }
 });

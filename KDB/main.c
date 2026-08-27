@@ -3,8 +3,8 @@
 #include <commctrl.h>
 #include <commdlg.h>
 
-#define W 1100
-#define H 800
+#define W 900
+#define H 650
 #define IDC_SEARCH 101
 #define IDC_ADD_ID 102
 #define IDC_ADD_NAME 103
@@ -453,7 +453,7 @@ void InitListView(HWND hwnd) {
     hImpCSV = CreateWindowEx(0, "BUTTON", "Import CSV", WS_CHILD | WS_VISIBLE, 445, 10, 90, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
     hExpJSON = CreateWindowEx(0, "BUTTON", "Export JSON", WS_CHILD | WS_VISIBLE, 540, 10, 95, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
     hImpJSON = CreateWindowEx(0, "BUTTON", "Import JSON", WS_CHILD | WS_VISIBLE, 640, 10, 95, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
-    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [H]", WS_CHILD | WS_VISIBLE, 740, 10, 75, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
+    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1/H]", WS_CHILD | WS_VISIBLE, 740, 10, 85, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
     
     LoadDataFromFile();
 
@@ -474,7 +474,11 @@ void InitListView(HWND hwnd) {
     SendMessage(hListView, LVM_SETTEXTBKCOLOR, 0, (LPARAM)RGB(35, 40, 45));
     SendMessage(hListView, LVM_SETBKCOLOR, 0, (LPARAM)RGB(26, 32, 38));
     
-    hFont = CreateFontA(-18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+    HDC hdc = GetDC(hwnd);
+    int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+    ReleaseDC(hwnd, hdc);
+    int fontHeight = -MulDiv(12, dpi, 72);
+    hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
     SendMessage(hListView, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hPwd, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -494,7 +498,7 @@ void InitListView(HWND hwnd) {
 
     // Set placeholder cue banners
     SendMessageA(hPwd, EM_SETCUEBANNER, FALSE, (LPARAM)"Encryption Key");
-    SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)"Search / Query (Press H for Help)...");
+    SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)"Search / Query (Press F1/H for Help)...");
     SendMessageA(hAddId, EM_SETCUEBANNER, FALSE, (LPARAM)"ID");
     SendMessageA(hAddName, EM_SETCUEBANNER, FALSE, (LPARAM)"Name");
     SendMessageA(hAddDept, EM_SETCUEBANNER, FALSE, (LPARAM)"Department");
@@ -639,7 +643,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hPwd, 10, 10, 110, 25, TRUE);
             MoveWindow(hReload, 125, 10, 50, 25, TRUE);
             
-            int sh = nw - 670;
+            int sh = nw - 680;
             if (sh < 50) sh = 50;
             MoveWindow(hSearch, 185, 10, sh, 25, TRUE);
             
@@ -648,7 +652,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hImpCSV, rx + 95, 10, 90, 25, TRUE);
             MoveWindow(hExpJSON, rx + 190, 10, 95, 25, TRUE);
             MoveWindow(hImpJSON, rx + 290, 10, 95, 25, TRUE);
-            MoveWindow(hHelpBtn, rx + 390, 10, 75, 25, TRUE);
+            MoveWindow(hHelpBtn, rx + 390, 10, 85, 25, TRUE);
 
             MoveWindow(hListView, 10, 45, nw - 20, nh - 90, TRUE);
             
@@ -708,7 +712,7 @@ void MainEntry() {
     RECT rect = {0, 0, W, H};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database (Press H for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database (Press F1 or H for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -716,7 +720,7 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && msg.wParam == 'H') {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == VK_F1)) {
             char cls[64] = {0};
             GetClassNameA(msg.hwnd, cls, sizeof(cls));
             if (lstrcmpiA(cls, "EDIT") != 0) {
