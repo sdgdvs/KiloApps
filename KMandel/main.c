@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <process.h>
 
-#define W 1280
-#define H 720
+#define W 800
+#define H 600
 
 int _fltused = 0;
 
@@ -256,7 +256,7 @@ void SaveImage4K(HWND hwnd) {
     
     SetWindowText(hwnd, "KMandelApp - Rendering 4K image...");
     RenderMandelbrotToBuffer(buffer, expW, expH);
-    SetWindowText(hwnd, "KMandel - Press H for Help");
+    SetWindowText(hwnd, "KMandel - Press F1 or H for Help");
     
     OPENFILENAME ofn = {0};
     char szFileName[MAX_PATH] = "kmandel_4k.bmp";
@@ -410,8 +410,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (wParam == 'S') {
                 SaveImage4K(hwnd);
-            } else if (wParam == 'H') {
-                MessageBox(hwnd, "KMandel Help\n\nL/R Click: Zoom\nShift+L: Pick Julia\nZ/Y: Undo/Redo\nS: Save 4K\nR: Reset\nT: Theme\nC: Colors\nJ: Julia\nH: Help", "Help", MB_OK);
+            } else if (wParam == 'H' || wParam == VK_F1) {
+                MessageBox(hwnd, "KMandel Help\n\nL/R Click: Zoom\nShift+L: Pick Julia\nZ/Y: Undo/Redo\nS: Save 4K\nR: Reset\nT: Theme\nC: Colors\nJ: Julia\nF1/H: Help", "Help", MB_OK);
             }
             break;
         }
@@ -427,7 +427,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             // Draw Help Background with a stylized outline
-            RECT textBg = { 10, bmpH - 46, 180, bmpH - 10 };
+            RECT textBg = { 10, bmpH - 46, 220, bmpH - 10 };
             HBRUSH hBrush = CreateSolidBrush(RGB(20, 30, 50));
             HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 150, 255));
             HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
@@ -451,12 +451,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Draw Help Text
             SetBkMode(hdc, TRANSPARENT);
-            HFONT hFont = CreateFont(-16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFont(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
                                      DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
             SetTextColor(hdc, RGB(255, 255, 255));
-            TextOut(hdc, 44, bmpH - 36, "Press H for Help", 16);
+            TextOut(hdc, 44, bmpH - 36, "Press F1 or H for Help", 22);
             SelectObject(hdc, hOldFont);
             DeleteObject(hFont);
             
@@ -499,9 +501,9 @@ void MainEntry() {
     RegisterClass(&wc);
 
     RECT rect = { 0, 0, W, H };
-    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - Press H for Help", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     SaveState(); // Save initial state

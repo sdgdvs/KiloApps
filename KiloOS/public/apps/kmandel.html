@@ -194,7 +194,7 @@ html = """<!DOCTYPE html>
       </button>
     <div id="help-text" style="position: absolute; bottom: 20px; left: 20px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 8px 16px; color: #f8fafc; pointer-events: none; font-size: 14px; font-weight: 500; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); display: flex; align-items: center; gap: 8px;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-      Press H for Help
+      Press F1 or H for Help
     </div>
     <div id="help-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 100; justify-content: center; align-items: center; flex-direction: column; overflow-y: auto;">
       <h2>KMandel Help</h2>
@@ -208,7 +208,7 @@ html = """<!DOCTYPE html>
         <li><b>R:</b> Reset View</li>
         <li><b>T:</b> Toggle Theme</li>
         <li><b>J:</b> Toggle Julia Mode</li>
-        <li><b>H:</b> Toggle this Help</li>
+        <li><b>F1 / H:</b> Toggle this Help</li>
       </ul>
       <button id="btn-close-help" style="margin-top: 20px;">Close</button>
     </div>
@@ -558,7 +558,8 @@ html = """<!DOCTYPE html>
         if (e.key.toLowerCase() === 'r') document.getElementById('btn-reset').click();
         if (e.key.toLowerCase() === 't') document.getElementById('btn-theme').click();
         if (e.key.toLowerCase() === 'j') document.getElementById('btn-julia').click();
-        if (e.key.toLowerCase() === 'h') {
+        if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+            if (e.key === 'F1') e.preventDefault();
             const overlay = document.getElementById('help-overlay');
             overlay.style.display = overlay.style.display === 'none' ? 'flex' : 'none';
         }
