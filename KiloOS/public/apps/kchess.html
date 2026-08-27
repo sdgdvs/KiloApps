@@ -243,19 +243,24 @@
   }
 
   function spawnCaptureSparks(px, py, isCapture) {
-      let count = isCapture ? 30 : 15;
+      let count = isCapture ? 60 : 20;
       for (let i = 0; i < count; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const speed = isCapture ? (1.5 + Math.random() * 4.5) : (0.5 + Math.random() * 2.5);
+          const isSmoke = isCapture && Math.random() < 0.3;
+          const isCore = isCapture && !isSmoke && Math.random() < 0.2;
+          let speed = isCapture ? (2.0 + Math.random() * 5.0) : (0.5 + Math.random() * 2.5);
+          if (isSmoke) speed *= 0.5;
+          if (isCore) speed *= 0.2;
           const colors = isCapture ? ['#f59e0b', '#ef4444', '#fef08a', '#ffffff', '#38bdf8'] : ['#d2b48c', '#a0522d', '#cd853f'];
           particles.push({
               x: px, y: py,
               vx: Math.cos(angle) * speed,
-              vy: Math.sin(angle) * speed - (isCapture ? 0.5 : 0.2),
-              color: colors[Math.floor(Math.random() * colors.length)],
-              size: (isCapture ? 2.5 : 1.5) + Math.random() * 3.5,
+              vy: Math.sin(angle) * speed - (isCapture ? 0.8 : 0.2),
+              color: isSmoke ? '#475569' : colors[Math.floor(Math.random() * colors.length)],
+              size: (isSmoke ? 8.0 : (isCore ? 6.0 : 2.5)) + Math.random() * 3.5,
               life: 1.0,
-              decay: (isCapture ? 0.03 : 0.05) + Math.random() * 0.04
+              decay: (isCapture ? 0.02 : 0.05) + Math.random() * 0.03,
+              layer: isSmoke ? 'smoke' : (isCore ? 'core' : 'spark')
           });
       }
   }
@@ -915,8 +920,8 @@
       if (isCaptured) {
           playSound('capture');
           if (capturedType >= 2) {
-              screenShakeUntil = performance.now() + 400;
-              screenShakeMag = (capturedType >= 4) ? 12 : 6;
+              screenShakeUntil = performance.now() + 500;
+              screenShakeMag = (capturedType >= 4) ? 20 : 10;
           }
       } else {
           playSound('move');
@@ -1430,6 +1435,22 @@
           ctx.restore();
       }
 
+      // Visual Variations: Scratches / Veins based on position
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      let seed = (p + Math.floor(x) * 7 + Math.floor(y) * 13) % 100;
+      ctx.strokeStyle = isWhite ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 3 + (seed % 3); i++) {
+          let ox = -r * 0.3 + ((seed * (i+1) * 17) % (r * 0.6));
+          let oy = -r * 0.5 + ((seed * (i+2) * 23) % (r * 0.8));
+          ctx.beginPath();
+          ctx.moveTo(ox, oy);
+          ctx.lineTo(ox + ((seed * i) % 10 - 5), oy + ((seed * i * 3) % 15 + 5));
+          ctx.stroke();
+      }
+      ctx.restore();
+
       ctx.restore();
   }
 
@@ -1484,8 +1505,8 @@
       
       ctx.save();
       if (performance.now() < screenShakeUntil) {
-          let mag = screenShakeMag * ((screenShakeUntil - performance.now()) / 400);
-          ctx.translate((Math.random() - 0.5) * mag, (Math.random() - 0.5) * mag);
+          let mag = screenShakeMag * ((screenShakeUntil - performance.now()) / 500);
+          ctx.translate((Math.random() - 0.5) * mag * 2.0, (Math.random() - 0.5) * mag * 2.0);
       }
 
       // Environmental Art: 3D Ornate Table
@@ -1795,11 +1816,15 @@
 
       for (let i = particles.length - 1; i >= 0; i--) {
           let pt = particles[i];
-          pt.x += pt.vx; pt.y += pt.vy; pt.vy += 0.15; pt.life -= pt.decay;
+          pt.x += pt.vx; pt.y += pt.vy; pt.vy += (pt.layer === 'smoke' ? -0.05 : 0.15); pt.life -= pt.decay;
           if (pt.life <= 0) { particles.splice(i, 1); continue; }
           ctx.save();
-          ctx.globalAlpha = pt.life; ctx.fillStyle = pt.color;
-          ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size * pt.life, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = pt.layer === 'smoke' ? pt.life * 0.5 : pt.life; 
+          ctx.fillStyle = pt.color;
+          if (pt.layer !== 'smoke') { ctx.shadowColor = pt.color; ctx.shadowBlur = 8; }
+          ctx.beginPath(); 
+          ctx.arc(pt.x, pt.y, pt.size * (pt.layer === 'smoke' ? (2.0 - pt.life) : pt.life), 0, Math.PI * 2); 
+          ctx.fill();
           ctx.restore();
       }
 

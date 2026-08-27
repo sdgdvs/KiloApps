@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KChess
 - KPong
 - KMines
 - KAsteroids
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFarm
 - KAlchemy
 - KRogue
+- KChess
 ## Completed Work Log
+
+- **KChess (Loop 7):** Implemented highly polished visual effects including multi-layered particle explosions (smoke, core, and spark layers with distinct velocities and decay rates) upon captures, upgraded procedural screen-shake for heftier kinematic impact on captures, and highly detailed visual variations for pieces (procedurally generated scratches and veins seeded by piece type and board coordinates) in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
 - **KRogue (Loop 7):** Implemented highly polished visual effects including multi-layered particle explosions (layering fire, debris, and shockwaves for Boss deaths and Meteor spells), upgraded kinematic animations (decelerating drag on particles, dynamic color shifting from white to red on fire, and punchy shockwave expansion), procedural rotational and decaying screen-shake, and highly detailed procedural environmental variations (varied brick patterns and biome-specific cracks on walls, and biome-specific props like slime puddles, rock clusters, and lava pools on floors) in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 

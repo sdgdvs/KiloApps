@@ -74,8 +74,9 @@ typedef struct {
     float x, y, vx, vy;
     COLORREF color;
     int life;
+    int type;
 } Particle;
-Particle g_particles[128];
+Particle g_particles[256];
 int g_particleCount = 0;
 
 typedef struct {
@@ -182,17 +183,23 @@ static void SaveStatsFreestanding(void) {
 static void SpawnParticles(int px, int py, int isCapture) {
     COLORREF capColors[] = { RGB(245, 158, 11), RGB(239, 68, 68), RGB(254, 240, 138), RGB(255, 255, 255), RGB(56, 189, 248) };
     COLORREF dustColors[] = { RGB(210, 180, 140), RGB(180, 150, 100), RGB(139, 69, 19) };
-    int count = isCapture ? 30 : 15;
+    int count = isCapture ? 60 : 20;
     for (int i = 0; i < count; i++) {
-        if (g_particleCount >= 128) break;
+        if (g_particleCount >= 256) break;
+        int isSmoke = isCapture && (my_rand() % 100 < 30);
+        int isCore = isCapture && !isSmoke && (my_rand() % 100 < 20);
         float rx = (float)((my_rand() % 100) - 50) / 10.0f;
         float ry = (float)((my_rand() % 100) - 50) / 10.0f;
+        float speedMod = isCapture ? 1.5f : 0.8f;
+        if (isSmoke) speedMod *= 0.5f;
+        if (isCore) speedMod *= 0.2f;
         g_particles[g_particleCount].x = (float)px;
         g_particles[g_particleCount].y = (float)py;
-        g_particles[g_particleCount].vx = rx;
-        g_particles[g_particleCount].vy = ry - (isCapture ? 1.0f : 0.2f);
-        g_particles[g_particleCount].color = isCapture ? capColors[my_rand() % 5] : dustColors[my_rand() % 3];
-        g_particles[g_particleCount].life = (isCapture ? 20 : 10) + my_rand() % 15;
+        g_particles[g_particleCount].vx = rx * speedMod;
+        g_particles[g_particleCount].vy = (ry - (isCapture ? 1.0f : 0.2f)) * speedMod;
+        g_particles[g_particleCount].color = isSmoke ? RGB(100, 110, 120) : (isCapture ? capColors[my_rand() % 5] : dustColors[my_rand() % 3]);
+        g_particles[g_particleCount].life = (isCapture ? 30 : 15) + my_rand() % 20;
+        g_particles[g_particleCount].type = isSmoke ? 1 : (isCore ? 2 : 0);
         g_particleCount++;
     }
 }
@@ -1055,6 +1062,19 @@ static void DrawChessPiece(HDC hdc, int p, int x, int y, int ts) {
         Rectangle(hdc, hbar.left, hbar.top, hbar.right, hbar.bottom);
     }
 
+    // Visual Variations
+    int seed = (p + x * 7 + y * 13) % 100;
+    HPEN veinPen = CreatePen(PS_SOLID, 1, isWhite ? RGB(200, 200, 200) : RGB(100, 60, 40));
+    HGDIOBJ oldVein = SelectObject(hdc, veinPen);
+    for (int i = 0; i < 3 + (seed % 3); i++) {
+        int ox = cx - (int)(r * 0.3f) + ((seed * (i+1) * 17) % (int)(r * 0.6f + 1));
+        int oy = cy - (int)(r * 0.5f) + ((seed * (i+2) * 23) % (int)(r * 0.8f + 1));
+        MoveToEx(hdc, ox, oy, NULL);
+        LineTo(hdc, ox + ((seed * i) % 10 - 5), oy + ((seed * i * 3) % 15 + 5));
+    }
+    SelectObject(hdc, oldVein);
+    DeleteObject(veinPen);
+
     // 3D Specular Highlight (Polished Marble / Mahogany)
     HBRUSH glareBrush = CreateSolidBrush(RGB(255, 255, 255));
     HPEN glarePen = CreatePen(PS_NULL, 0, 0);
@@ -1169,8 +1189,8 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     if (isCaptured) {
         MessageBeep(MB_OK);
         if (capturedType >= 2) {
-            g_shakeUntil = GetTickCount() + 400;
-            g_shakeMag = (capturedType >= 4) ? 12 : 6;
+            g_shakeUntil = GetTickCount() + 500;
+            g_shakeMag = (capturedType >= 4) ? 20 : 10;
         }
     } else {
         MessageBeep(MB_OK);
@@ -1581,6 +1601,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HGDIOBJ oldPBrush = SelectObject(memDC, pBrush);
                     HPEN oldPPen = SelectObject(memDC, GetStockObject(NULL_PEN));
                     int size = (g_particles[i].life > 10) ? 3 : 2;
+                    if (g_particles[i].type == 1) size += (g_particles[i].life / 5);
+                    else if (g_particles[i].type == 2) size += 2;
                     Ellipse(memDC, (int)g_particles[i].x - size, (int)g_particles[i].y - size, (int)g_particles[i].x + size, (int)g_particles[i].y + size);
                     SelectObject(memDC, oldPPen);
                     SelectObject(memDC, oldPBrush);
@@ -1842,7 +1864,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (g_particles[i].life > 0) {
                         g_particles[i].x += g_particles[i].vx;
                         g_particles[i].y += g_particles[i].vy;
-                        g_particles[i].vy += 0.15f;
+                        g_particles[i].vy += (g_particles[i].type == 1) ? -0.05f : 0.15f;
                         g_particles[i].life--;
                         if (g_particles[i].life > 0) activeParticles++;
                     }
