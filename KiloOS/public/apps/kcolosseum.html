@@ -88,7 +88,10 @@
   
   <div class="dashboard">
     <div class="panel">
-      <h2>Available Recruits</h2>
+      <h2 style="display:flex; justify-content:space-between; align-items:center;">
+        Available Recruits
+        <button id="refreshBtn" onclick="refreshMarket()" style="font-size:0.6em; padding:2px 5px;">Refresh (50D)</button>
+      </h2>
       <ul id="marketList"></ul>
     </div>
     <div class="panel">
@@ -99,15 +102,35 @@
 
   <script>
     let funds = 1000;
-    const market = [
-      { id: 1, name: "Titus", cost: 300, desc: "A strong but slow fighter." },
-      { id: 2, name: "Flamma", cost: 500, desc: "Fierce veteran with many scars." },
-      { id: 3, name: "Spiculus", cost: 700, desc: "Highly agile, crowd favorite." }
-    ];
+    let nextId = 1;
+    const firstNames = ["Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus"];
+    const epithets = ["the Strong", "the Swift", "the Bear", "the Lion", "the Fierce", "the Giant"];
+
+    function generateGladiator() {
+      const name = firstNames[Math.floor(Math.random() * firstNames.length)] + 
+                   (Math.random() > 0.5 ? " " + epithets[Math.floor(Math.random() * epithets.length)] : "");
+      const str = Math.floor(Math.random() * 10) + 1;
+      const agi = Math.floor(Math.random() * 10) + 1;
+      const vit = Math.floor(Math.random() * 10) + 1;
+      const cost = (str + agi + vit) * 20 + Math.floor(Math.random() * 50);
+      return { id: nextId++, name, cost, str, agi, vit, desc: `STR:${str} AGI:${agi} VIT:${vit}` };
+    }
+
+    const market = [generateGladiator(), generateGladiator(), generateGladiator()];
     const owned = [];
+
+    function refreshMarket() {
+      if (funds >= 50) {
+        funds -= 50;
+        market.length = 0;
+        market.push(generateGladiator(), generateGladiator(), generateGladiator());
+        updateUI();
+      }
+    }
 
     function updateUI() {
       document.getElementById('fundsDisplay').innerText = funds;
+      document.getElementById('refreshBtn').disabled = funds < 50;
       
       const marketList = document.getElementById('marketList');
       marketList.innerHTML = '';

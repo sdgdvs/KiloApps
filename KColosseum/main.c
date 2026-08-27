@@ -1,31 +1,68 @@
 #include <windows.h>
 #include <stdio.h>
 
+static unsigned int g_seed = 0;
+void my_srand(unsigned int seed) {
+    g_seed = seed;
+}
+int my_rand() {
+    g_seed = (214013 * g_seed + 2531011);
+    return (g_seed >> 16) & 0x7FFF;
+}
+
 #define ID_BUY_BUTTON 101
 #define ID_MARKET_LIST 102
 #define ID_OWNED_LIST 103
 #define ID_FUNDS_LABEL 104
+#define ID_REFRESH_BUTTON 105
 
 typedef struct {
     int id;
     char name[32];
     int cost;
     char desc[64];
+    int str;
+    int agi;
+    int vit;
 } Gladiator;
 
-Gladiator market[] = {
-    {1, "Titus", 300, "A strong but slow fighter."},
-    {2, "Flamma", 500, "Fierce veteran with many scars."},
-    {3, "Spiculus", 700, "Highly agile, crowd favorite."}
-};
-int market_count = 3;
+const char* firstNames[] = {"Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus"};
+const char* epithets[] = {"the Strong", "the Swift", "the Bear", "the Lion", "the Fierce", "the Giant"};
+int nextId = 1;
+
+Gladiator GenerateGladiator() {
+    Gladiator g;
+    g.id = nextId++;
+    
+    int fNameIdx = my_rand() % 8;
+    if (my_rand() % 2 == 0) {
+        int epIdx = my_rand() % 6;
+        wsprintfA(g.name, "%s %s", firstNames[fNameIdx], epithets[epIdx]);
+    } else {
+        wsprintfA(g.name, "%s", firstNames[fNameIdx]);
+    }
+    
+    g.str = (my_rand() % 10) + 1;
+    g.agi = (my_rand() % 10) + 1;
+    g.vit = (my_rand() % 10) + 1;
+    
+    int statTotal = g.str + g.agi + g.vit;
+    g.cost = statTotal * 20 + (my_rand() % 50);
+    
+    wsprintfA(g.desc, "STR:%d AGI:%d VIT:%d", g.str, g.agi, g.vit);
+    
+    return g;
+}
+
+Gladiator market[10];
+int market_count = 0;
 
 Gladiator owned[10];
 int owned_count = 0;
 
 int funds = 1000;
 
-HWND hMarketList, hOwnedList, hFundsLabel, hBuyButton;
+HWND hMarketList, hOwnedList, hFundsLabel, hBuyButton, hRefreshButton;
 
 HBRUSH hbrBkgnd, hbrCrimson, hbrList;
 HFONT hFont, hTitleFont;
@@ -40,6 +77,8 @@ void UpdateUI() {
         wsprintfA(buf, "%s - %s (%dD)", market[i].name, market[i].desc, market[i].cost);
         SendMessageA(hMarketList, LB_ADDSTRING, 0, (LPARAM)buf);
     }
+
+    EnableWindow(hRefreshButton, funds >= 50);
 
     SendMessageA(hOwnedList, LB_RESETCONTENT, 0, 0);
     if (owned_count == 0) {
@@ -69,6 +108,11 @@ void BuyGladiator(int index) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
+            my_srand(GetTickCount());
+            for (int i = 0; i < 3; i++) {
+                market[market_count++] = GenerateGladiator();
+            }
+
             HWND hTitle = CreateWindowA("STATIC", "KColosseum - Ludus Management", WS_VISIBLE | WS_CHILD | SS_CENTER,
                           10, 10, 560, 30, hwnd, NULL, NULL, NULL);
             SendMessageA(hTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
@@ -78,8 +122,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessageA(hFundsLabel, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
 
             HWND hL1 = CreateWindowA("STATIC", "Available Recruits", WS_VISIBLE | WS_CHILD,
-                          10, 80, 270, 20, hwnd, NULL, NULL, NULL);
+                          10, 80, 140, 20, hwnd, NULL, NULL, NULL);
             SendMessageA(hL1, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hRefreshButton = CreateWindowA("BUTTON", "Refresh (50D)", WS_VISIBLE | WS_CHILD,
+                          160, 78, 120, 22, hwnd, (HMENU)ID_REFRESH_BUTTON, NULL, NULL);
+            SendMessageA(hRefreshButton, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hMarketList = CreateWindowA("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
                           10, 105, 270, 185, hwnd, (HMENU)ID_MARKET_LIST, NULL, NULL);
@@ -107,6 +155,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     BuyGladiator(sel);
                 } else {
                     MessageBoxA(hwnd, "Select a gladiator to buy.", "Info", MB_OK | MB_ICONINFORMATION);
+                }
+            } else if (LOWORD(wParam) == ID_REFRESH_BUTTON) {
+                if (funds >= 50) {
+                    funds -= 50;
+                    market_count = 0;
+                    for (int i = 0; i < 3; i++) {
+                        market[market_count++] = GenerateGladiator();
+                    }
+                    UpdateUI();
                 }
             }
             return 0;
