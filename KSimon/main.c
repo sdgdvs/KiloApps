@@ -98,6 +98,14 @@ int flash_btn = -1;
 int game_over_flash = 0;
 int game_over_flash_count = 0;
 
+float btn_scale[8] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+float btn_glow[8] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+int death_active = 0;
+float death_scale = 0.0f;
+float death_alpha = 0.0f;
+int mascot_frame = 0;
+
+
 int hints_remaining = 3;
 int slowmo_remaining = 2;
 int shields_remaining = 1;
@@ -221,6 +229,36 @@ void TriggerErrorShards(int cx, int cy) {
     }
 }
 
+void TriggerButtonBurst(int btn_idx) {
+    if (btn_idx < 0 || btn_idx >= 8) return;
+    int cx = (btn_rects[btn_idx].left + btn_rects[btn_idx].right) / 2;
+    int cy = (btn_rects[btn_idx].top + btn_rects[btn_idx].bottom) / 2;
+    int spawned = 0;
+    for (int i = 0; i < MAX_SPARKS && spawned < 15; i++) {
+        if (!spark_particles[i].active) {
+            float angle = ((float)rand() / RAND_MAX) * 6.28318f;
+            float speed = 1.0f + ((float)rand() / RAND_MAX) * 3.0f;
+            spark_particles[i].x = (float)cx;
+            spark_particles[i].y = (float)cy;
+            spark_particles[i].vx = cosf(angle) * speed;
+            spark_particles[i].vy = sinf(angle) * speed;
+            spark_particles[i].life = 1.0f;
+            spark_particles[i].decay = 0.03f + ((float)rand() / RAND_MAX) * 0.03f;
+            spark_particles[i].color = flash_colors[btn_idx];
+            spark_particles[i].active = 1;
+            spawned++;
+        }
+    }
+}
+
+void ActivateButton(int btn_idx) {
+    flash_btn = btn_idx;
+    btn_scale[btn_idx] = 1.15f;
+    btn_glow[btn_idx] = 1.0f;
+    TriggerSoundRipple(btn_idx);
+    TriggerButtonBurst(btn_idx);
+}
+
 void UpdateParticles() {
     for (int i = 0; i < MAX_RIPPLES; i++) {
         if (sound_ripples[i].active) {
@@ -241,6 +279,22 @@ void UpdateParticles() {
             }
         }
     }
+    for (int i = 0; i < 8; i++) {
+        if (btn_scale[i] > 1.0f) {
+            btn_scale[i] -= 0.02f;
+            if (btn_scale[i] < 1.0f) btn_scale[i] = 1.0f;
+        }
+        if (btn_glow[i] > 0.0f) {
+            btn_glow[i] -= 0.05f;
+            if (btn_glow[i] < 0.0f) btn_glow[i] = 0.0f;
+        }
+    }
+    if (death_active) {
+        death_scale += 0.05f;
+        death_alpha -= 0.02f;
+        if (death_alpha <= 0.0f) death_active = 0;
+    }
+    mascot_frame = (GetTickCount() / 200) % 4;
 }
 
 void LoadHighScores() {
@@ -558,13 +612,10 @@ void DrawBoard(HDC hdc, int width, int height) {
     for (int i = 0; i < num_btns; i++) {
         RECT r = btn_rects[i];
         int isFlash = (flash_btn == i);
-        if (isFlash) {
-            InflateRect(&r, 3, 3);
-        }
 
         int bCx = (r.left + r.right) / 2;
         int bCy = (r.top + r.bottom) / 2;
-        int radius = (r.right - r.left) / 2;
+        int radius = (int)(((r.right - r.left) / 2) * btn_scale[i]);
 
         int num_sides = 4;
         float angleOffset = 0.785398f; // 45 degrees
@@ -662,24 +713,73 @@ void DrawBoard(HDC hdc, int width, int height) {
     SelectObject(hdc, oldB);
     DeleteObject(discB);
 
-    // Equalizer
-    int t = GetTickCount() / 150;
-    for(int i=0; i<8; i++) {
-        int h = 10 + (int)(sin(t + i) * 15.0) + (is_playing_sequence ? rand() % 20 : 0);
-        RECT eqRc = {cx - 30 + i*8, cy + 10 - h, cx - 24 + i*8, cy + 10};
-        HBRUSH eqB = CreateSolidBrush(is_time_frozen ? RGB(0, 200, 255) : RGB(0, 255, 204));
-        FillRect(hdc, &eqRc, eqB);
-        DeleteObject(eqB);
+    // Mascot Frame Cycle
+    HBRUSH mascotFace = CreateSolidBrush(RGB(17, 17, 17));
+    oldB = SelectObject(hdc, mascotFace);
+    HPEN mascotPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 204));
+    HPEN oldP = SelectObject(hdc, mascotPen);
+    Ellipse(hdc, cx - 16, cy - 16 + 15, cx + 16, cy + 16 + 15);
+    SelectObject(hdc, oldB);
+    DeleteObject(mascotFace);
+
+    HBRUSH eyeBrush = CreateSolidBrush(RGB(0, 255, 204));
+    oldB = SelectObject(hdc, eyeBrush);
+    if (mascot_frame == 1) { // blink
+        RECT le = {cx - 6, cy - 4 + 15, cx - 2, cy - 3 + 15};
+        RECT re = {cx + 2, cy - 4 + 15, cx + 6, cy - 3 + 15};
+        FillRect(hdc, &le, eyeBrush); FillRect(hdc, &re, eyeBrush);
+    } else {
+        RECT le = {cx - 6, cy - 6 + 15, cx - 2, cy - 2 + 15};
+        RECT re = {cx + 2, cy - 6 + 15, cx + 6, cy - 2 + 15};
+        FillRect(hdc, &le, eyeBrush); FillRect(hdc, &re, eyeBrush);
     }
 
-
-    HPEN dPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 120));
-    HGDIOBJ oldP = SelectObject(hdc, dPen);
-    HGDIOBJ oldBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-    Ellipse(hdc, cx - discR, cy - discR, cx + discR, cy + discR);
+    if (is_playing_sequence) {
+        if (mascot_frame == 0 || mascot_frame == 2) {
+            Ellipse(hdc, cx - 3, cy + 1 + 15, cx + 3, cy + 7 + 15);
+        } else {
+            RECT mouth = {cx - 4, cy + 3 + 15, cx + 4, cy + 5 + 15};
+            FillRect(hdc, &mouth, eyeBrush);
+        }
+    } else {
+        if (mascot_frame == 3) {
+            MoveToEx(hdc, cx - 5, cy + 2 + 15, NULL);
+            LineTo(hdc, cx, cy + 6 + 15);
+            LineTo(hdc, cx + 5, cy + 2 + 15);
+        } else {
+            RECT mouth = {cx - 4, cy + 3 + 15, cx + 4, cy + 4 + 15};
+            FillRect(hdc, &mouth, eyeBrush);
+        }
+    }
+    SelectObject(hdc, oldB);
+    DeleteObject(eyeBrush);
     SelectObject(hdc, oldP);
-    SelectObject(hdc, oldBr);
-    DeleteObject(dPen);
+    DeleteObject(mascotPen);
+
+    // Death Effect (Skull Burst)
+    if (death_active) {
+        int dr = (int)(60 * death_scale);
+        HBRUSH skullB = CreateSolidBrush(RGB(255, 0, 0));
+        oldB = SelectObject(hdc, skullB);
+        HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+        oldP = SelectObject(hdc, nullPen);
+        
+        Ellipse(hdc, cx - dr, cy - dr - 10, cx + dr, cy + dr - 10);
+        RECT jaw = {cx - dr/2, cy + dr - 10, cx + dr/2, cy + dr + dr/2 - 10};
+        FillRect(hdc, &jaw, skullB);
+        
+        HBRUSH blackB = CreateSolidBrush(RGB(0, 0, 0));
+        SelectObject(hdc, blackB);
+        int er = dr / 4;
+        Ellipse(hdc, cx - dr/2 - er, cy - 10 - er, cx - dr/2 + er, cy - 10 + er);
+        Ellipse(hdc, cx + dr/2 - er, cy - 10 - er, cx + dr/2 + er, cy - 10 + er);
+        
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+        DeleteObject(skullB);
+        DeleteObject(blackB);
+        DeleteObject(nullPen);
+    }
 
     // LED Score Box
     RECT ledRc = {cx - 32, cy - 18, cx + 32, cy + 6};
@@ -849,6 +949,9 @@ void TriggerGameOver() {
     RECT rc;
     GetClientRect(hwndMain, &rc);
     TriggerErrorShards(rc.right / 2, rc.bottom / 2);
+    death_active = 1;
+    death_scale = 0.5f;
+    death_alpha = 1.0f;
     PlaySoundAsync(100, 800);
     game_over_flash_count = 0;
     game_over_flash = 1;
@@ -876,8 +979,7 @@ void HandleClick(int btn_id) {
     if (is_playing_sequence || sequence_length == 0) return;
     if (btn_id >= GetActiveButtonCount()) return;
 
-    flash_btn = btn_id;
-    TriggerSoundRipple(btn_id);
+    ActivateButton(btn_id);
     EnableWindow(hwndSaveBtn, FALSE);
     InvalidateRect(hwndMain, NULL, FALSE);
     SetTimer(hwndMain, TIMER_FLASH, (current_mode == MODE_SPEED) ? 150 : 300, NULL);
@@ -1151,8 +1253,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             InvalidateRect(hwndMain, NULL, FALSE);
                             SetTimer(hwnd, TIMER_COUNTDOWN, 100, NULL);
                         } else {
-                            flash_btn = sequence[current_flash_index++];
-                            TriggerSoundRipple(flash_btn);
+                            ActivateButton(sequence[current_flash_index++]);
                             InvalidateRect(hwndMain, NULL, FALSE);
                             int speed_factor = sequence_length - 1;
                             if (speed_factor < 0) speed_factor = 0;

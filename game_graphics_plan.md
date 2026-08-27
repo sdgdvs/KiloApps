@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSimon
 - KTrader
 - KDragon
 - KSolitaire
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAsteroids
 - K2048
 - KDarts
+- KSimon
 ## Completed Work Log
+
+- **KSimon (Loop 2):** Implemented sprite animations (frame cycles, death effects, particle bursts, animated button presses), replacing the static inflate flash with a smooth scale/glow decay, adding particle spark bursts on press, replacing the center disc with an animated blinking/talking robot mascot face, and introducing an animated expanding red skull death effect for Game Over in both Web Canvas (ksimon.html) and Native C Win32 GDI (KSimon/main.c).
 
 - **KDarts (Loop 4):** Implemented highly detailed visual variations including dynamic 3D drop-shadows that shift and scale based on dart height, procedural lighting/specular highlights (refined linear gradients in Web Canvas, drawn specular polygons in Native C GDI) for a glossy metallic barrel, and kinematically animated effects using dynamic shadow offsets in both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
 
