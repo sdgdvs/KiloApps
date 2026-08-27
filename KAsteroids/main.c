@@ -186,6 +186,7 @@ typedef struct { float x, y, radius, pull, anim_frame; bool active; } BlackHole;
 BlackHole black_hole = {0};
 
 bool branching_active = false;
+float screen_shake = 0.0f;
 
 Stats stats = {0};
 
@@ -323,7 +324,9 @@ void CreateExplosion(float x, float y, COLORREF color, int count, float max_radi
         sw->color = color; sw->active = true;
     }
 
-    
+    screen_shake += (max_radius / 10.0f);
+    if (screen_shake > 20.0f) screen_shake = 20.0f;
+
     for (int d = 0; d < count / 3; d++) {
         if (num_debrisArray >= 200) break;
         Debris* db = &debrisArray[num_debrisArray++];
@@ -342,15 +345,28 @@ void CreateExplosion(float x, float y, COLORREF color, int count, float max_radi
         Particle* pt = &particles[num_particles++];
         pt->x = x; pt->y = y;
         float ang = (rand() % 360) * 3.14159f / 180.0f;
-        float spd = 1.0f + (rand() % 500) / 80.0f;
+        float spd;
+        if (p % 4 == 0) {
+            spd = 4.0f + (rand() % 800) / 100.0f; // fast sparks
+            pt->type = 0;
+            pt->size = 1.5f;
+            pt->color = RGB(255, 255, 255);
+        } else if (p % 4 == 1) {
+            spd = 1.0f + (rand() % 300) / 100.0f; // dense smoke
+            pt->type = 1;
+            pt->size = 4.0f + (rand() % 3);
+            pt->color = color;
+        } else {
+            spd = 1.0f + (rand() % 500) / 100.0f; // normal
+            pt->type = 0;
+            pt->size = 2.5f + (rand() % 2);
+            pt->color = color;
+        }
         pt->vx = cos(ang) * spd;
         pt->vy = sin(ang) * spd;
-        pt->life = 25 + (rand() % 25);
+        pt->life = 20 + (rand() % 30);
         pt->max_life = pt->life;
-        pt->color = color;
         pt->active = true;
-        pt->type = (p % 3 == 0) ? 1 : 0;
-        pt->size = (pt->type == 1) ? 4.0f : 2.5f;
     }
 }
 
@@ -980,6 +996,11 @@ void CompactArrays() {
 }
 
 void Update() {
+    if (screen_shake > 0.0f) {
+        screen_shake -= 0.5f;
+        if (screen_shake < 0.0f) screen_shake = 0.0f;
+    }
+
     if (game_over) {
         if (keys['S'] || keys['K']) { showing_stats = true; showing_help = false; }
         if (keys['H']) { showing_help = true; showing_stats = false; }
@@ -1437,6 +1458,12 @@ void Update() {
 }
 
 void Draw(HDC hdc) {
+    if (screen_shake > 0.0f) {
+        int sx = (int)(((rand() % 100) - 50) / 50.0f * screen_shake);
+        int sy = (int)(((rand() % 100) - 50) / 50.0f * screen_shake);
+        SetViewportOrgEx(hdc, sx, sy, NULL);
+    }
+
     // Deep Space Background with Space Storm Tint
     COLORREF bgCol = is_space_storm ? RGB(15, 23, 42) : RGB(9, 13, 22);
     HBRUSH bgBrush = CreateSolidBrush(bgCol);
@@ -2099,6 +2126,10 @@ void Draw(HDC hdc) {
             SetTextColor(hdc, RGB(110, 231, 183));
             TextOutA(hdc, WIDTH / 2 - 90, HEIGHT / 2 + 115, "[H] How to Play", 15);
         }
+    }
+
+    if (screen_shake > 0.0f) {
+        SetViewportOrgEx(hdc, 0, 0, NULL);
     }
 }
 

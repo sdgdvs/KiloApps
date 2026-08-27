@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KAsteroids
 - K2048
 - KDarts
 - KSimon
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KChess
 - KPong
 - KMines
+- KAsteroids
 ## Completed Work Log
+
+- **KAsteroids (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by physics decay on explosion (applying translational jitter to the viewport origin based on explosion radius), and multi-layered particle explosions featuring distinct procedural layers (fast bright white sparks, dense slower smoke/plasma clouds matching the base color, and medium volume sparks) in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 
 - **KMines (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by physics decay on explosion (replacing CSS animations with dynamic transforms in Web and viewport origin shifts in Native C), multi-layered particle explosions featuring heavy kinematic debris chunks and expanding smoke layers, and detailed visual variations adding a 3rd "Biohazard Slime Mine" SVG/GDI asset and procedural noise textures to unrevealed rock tiles in both Web Canvas (kmines.html) and Native C Win32 GDI (KMines/main.c).
 

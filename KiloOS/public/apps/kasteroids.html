@@ -1612,23 +1612,44 @@
 
         let gameOver = true;
         let lastShootTime = 0;
+        let screenShake = 0;
 
         function createExplosion(x, y, color, particleCount = 30, maxRadius = 45) {
             shockwaves.push(new Shockwave(x, y, color, maxRadius));
+            
+            screenShake += maxRadius * 0.15;
+            if (screenShake > 25) screenShake = 25;
+
             for (let d = 0; d < particleCount / 3; d++) {
                 debrisArray.push(new Debris(x, y, color));
             }
 
             for (let p = 0; p < particleCount; p++) {
                 let ang = Math.random() * Math.PI * 2;
-                let spd = Math.random() * 6 + 1;
+                let spd, type, pColor = color, sizeMult = 1;
+                
+                if (p % 4 === 0) {
+                    spd = Math.random() * 8 + 4; // fast spark layer
+                    type = 'spark';
+                    pColor = '#ffffff';
+                    sizeMult = 0.6;
+                } else if (p % 4 === 1) {
+                    spd = Math.random() * 3 + 1; // slow smoke layer
+                    type = 'smoke';
+                    sizeMult = 1.2;
+                } else {
+                    spd = Math.random() * 5 + 1; // normal particle
+                    type = 'spark';
+                }
+
                 particles.push(new Particle(
                     x, y, 
                     Math.cos(ang) * spd, Math.sin(ang) * spd, 
-                    color, 
+                    pColor, 
                     25 + Math.random() * 25,
-                    (p % 3 === 0 ? 'smoke' : 'spark')
+                    type
                 ));
+                if (sizeMult !== 1) particles[particles.length-1].size *= sizeMult;
             }
         }
 
@@ -2050,6 +2071,11 @@
         }
 
         function update() {
+            if (screenShake > 0) {
+                screenShake -= 0.8;
+                if (screenShake < 0) screenShake = 0;
+            }
+
             if (gameOver) {
                 if (keys['Digit1']) initGame(0);
                 if (keys['Digit2']) initGame(1);
@@ -2262,6 +2288,12 @@
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            if (screenShake > 0) {
+                let dx = (Math.random() - 0.5) * screenShake;
+                let dy = (Math.random() - 0.5) * screenShake;
+                ctx.translate(dx, dy);
+            }
             drawStarfield();
             if (branchingActive) {
                 ctx.fillStyle = '#fff'; ctx.font = '20px Arial';
@@ -2290,7 +2322,7 @@
             shockwaves.forEach(s => s.draw());
             debrisArray.forEach(d => d.draw());
             floatingTexts.forEach(f => f.draw());
-
+            ctx.restore();
         }
 
         function gameLoop() {
