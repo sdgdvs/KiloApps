@@ -31,12 +31,12 @@
 <body>
     <div id="start-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,10,15,0.95); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#00ffff;">
         <h1 style="text-shadow: 0 0 10px #00ffff;">KColony Scenarios</h1>
-        <p style="text-align: center; color: #00ffff; text-shadow: 0 0 5px #00ffff; margin-top: 0; margin-bottom: 20px;">Press [H] at any time for Help & Manual</p>
+        <p style="text-align: center; color: #00ffff; text-shadow: 0 0 5px #00ffff; margin-top: 0; margin-bottom: 20px;">Press [H] or [F1] at any time for Help & Manual</p>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(0)">Endless Survival<br><small>Standard Mode</small></button>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(1)">Sandbox Mode<br><small>Unlimited Resources & Tech</small></button>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(2)">100-Day Survival<br><small>Survive 100 Days</small></button>
         <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="startGame(3)">Resource Rush<br><small>Get 1000 Mat & 100 AdvM by Day 50</small></button>
-        <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="toggleHelp()">[H] Help & Manual<br><small>How to Play</small></button>
+        <button class="btn" style="margin:10px; padding:15px; width:400px; text-align:center; font-size:16px;" onclick="toggleHelp()">[H] or [F1] Help & Manual<br><small>How to Play</small></button>
     </div>
     <div id="help-modal" style="display:none; position:fixed; top:5%; left:10%; width:80%; height:90%; background:rgba(10,20,30,0.95); z-index:200; border:2px solid #00ffff; border-radius:5px; padding:20px; overflow-y:auto; box-shadow:0 0 20px #00ffff; color:#00ffff;">
         <h2 style="text-shadow: 0 0 10px #00ffff; text-align:center; margin-top:0;">KColony Administrator's Manual</h2>
@@ -107,7 +107,7 @@
             <button class="btn research" id="btn-res-laser" onclick="research(3)">Res: Laser Def.<br><small>Cost: 150 Sci</small></button>
             <hr style="border-color:#00ffff; width:100%; margin: 5px 0;">
             <button class="btn expedition" id="btn-exped" onclick="expedition()">Launch Expedition<br><small>Req: 2 Pop | Cost: 30 Mat, 30 Pwr</small></button>
-            <button class="btn" id="btn-help" onclick="toggleHelp()">[H] Help & Manual</button>
+            <button class="btn" id="btn-help" onclick="toggleHelp()">[H] or [F1] Help & Manual</button>
         </div>
     </div>
     <script>
@@ -160,7 +160,8 @@
         }
 
         window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'h') {
+            if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+                if (e.key === 'F1') e.preventDefault();
                 toggleHelp();
             }
         });

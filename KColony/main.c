@@ -189,9 +189,9 @@ void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
     SelectObject(hdc, hFont);
     
     DrawText(hdc, "KCOLONY SCENARIOS", -1, &(RECT){0, 80, rc.right, 120}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    DrawText(hdc, "Press 'H' at any time for Help", -1, &(RECT){0, 120, rc.right, 150}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, "Press 'H' or 'F1' at any time for Help", -1, &(RECT){0, 120, rc.right, 150}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
-    const char* titles[] = { "1. ENDLESS SURVIVAL", "2. SANDBOX MODE (UNLIMITED)", "3. 100-DAY SURVIVAL", "4. RESOURCE RUSH (1000M, 100A by D50)", "5. [H] HELP & MANUAL" };
+    const char* titles[] = { "1. ENDLESS SURVIVAL", "2. SANDBOX MODE (UNLIMITED)", "3. 100-DAY SURVIVAL", "4. RESOURCE RUSH (1000M, 100A by D50)", "5. [H] OR [F1] HELP & MANUAL" };
     for (int i=0; i<5; i++) {
         RECT bRc = {rc.right/2 - 200, 160 + i*60, rc.right/2 + 200, 200 + i*60};
         HBRUSH br = CreateSolidBrush(RGB(17,17,34));
@@ -621,7 +621,7 @@ void DrawUI(HDC hdc, HFONT hFont) {
     btnY2 += 30;
     buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 150, btnY2 + 25 };
     buttons[btnCount].id = 300;
-    strcpy(buttons[btnCount].label, "[H] HELP / MANUAL");
+    strcpy(buttons[btnCount].label, "[H]/[F1] HELP/MANUAL");
     buttons[btnCount].isSelected = 0;
     btnCount++;
 
@@ -669,7 +669,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             break;
         }
         case WM_KEYDOWN:
-            if (wParam == 'H') {
+            if (wParam == 'H' || wParam == VK_F1) {
                 if (gameState == 2) {
                     gameState = prevState;
                 } else {
@@ -1064,7 +1064,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             FillRect(hdcMem, &rc, bg);
             DeleteObject(bg);
             
-            HFONT hFont = CreateFont(-16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH, "Courier New");
+            int dpi = GetDpiForWindow(hwnd);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFont(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH, "Courier New");
             
             if (gameState == 0) {
                 DrawMenu(hdcMem, hFont, rc);
@@ -1102,9 +1104,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     RegisterClass(&wc);
 
     RECT rcW = {0, 0, 850, 650};
-    AdjustWindowRect(&rcW, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
+    AdjustWindowRect(&rcW, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, FALSE);
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KColony", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        0, CLASS_NAME, "KColony", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rcW.right - rcW.left, rcW.bottom - rcW.top,
         NULL, NULL, hInstance, NULL
     );
