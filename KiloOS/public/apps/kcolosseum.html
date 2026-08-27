@@ -108,8 +108,10 @@
       <div id="enemyCombat" style="width:45%; padding:10px; background:#fdf5e6; border:1px solid #d4af37; border-radius:5px;"></div>
     </div>
     <div style="text-align:center;">
+      <div id="favorDisplay" style="font-weight:bold; color:#d4af37; background:#8b0000; padding:5px; margin-bottom:10px; border-radius:5px; border:1px solid #d4af37;">Crowd Favor: 0%</div>
       <button onclick="combatAction('attack')">Attack</button>
       <button onclick="combatAction('defend')">Defend</button>
+      <button onclick="combatAction('showboat')">Showboat</button>
       <button onclick="combatAction('flee')">Flee</button>
     </div>
     <div id="combatLog" style="margin-top:20px; height:150px; overflow-y:auto; background:#fff; color:#333; padding:10px; border:1px solid #ccc; font-family:monospace;"></div>
@@ -278,6 +280,7 @@
     let enemyFighter = null;
     let playerDefending = false;
     let combatOver = false;
+    let crowdFavor = 0;
 
     function enterArena(id) {
       currentFighter = owned.find(g => g.id === id);
@@ -327,6 +330,7 @@
       combatOver = false;
       playerDefending = false;
       enemyDefending = false;
+      crowdFavor = 0;
       
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('arenaPanel').style.display = 'block';
@@ -348,6 +352,24 @@
         <div style="font-weight:bold; color:#8b0000;">HP: ${enemyFighter.hp} / ${enemyFighter.maxHp}</div>
         <div style="font-size:0.9em; margin-top:5px;">STR:${getEffStr(enemyFighter)} AGI:${getEffAgi(enemyFighter)} VIT:${getEffVit(enemyFighter)}</div>
       `;
+      document.getElementById('favorDisplay').innerText = `Crowd Favor: ${crowdFavor}%`;
+    }
+    
+    function checkCrowdFavor() {
+      if (crowdFavor >= 100) {
+        crowdFavor = 0;
+        if (Math.random() < 0.5) {
+          let gold = 50 + Math.floor(Math.random() * 51);
+          funds += gold;
+          logCombat(`<strong>The crowd goes wild! They throw <span style="color:#d4af37;">${gold} Denarii</span> into the arena!</strong>`);
+        } else {
+          let heal = 20 + Math.floor(Math.random() * 21);
+          currentFighter.hp = Math.min(currentFighter.maxHp, currentFighter.hp + heal);
+          logCombat(`<strong>The crowd cheers! A medical sponge is thrown! Healed <span style="color:#228b22;">${heal} HP</span>!</strong>`);
+        }
+        updateCombatUI();
+        updateUI();
+      }
     }
     
     function logCombat(msg) {
@@ -375,6 +397,14 @@
       playerDefending = (action === 'defend');
       if (playerDefending) {
         logCombat(`${currentFighter.name} takes a defensive stance.`);
+        crowdFavor = Math.max(0, crowdFavor - 5);
+      }
+      
+      if (action === 'showboat') {
+        let favorGain = 30 + Math.floor(Math.random() * 21);
+        crowdFavor += favorGain;
+        logCombat(`${currentFighter.name} plays to the crowd!`);
+        checkCrowdFavor();
       }
       
       if (action === 'attack') {
@@ -384,8 +414,11 @@
           let dmg = Math.max(1, getEffStr(currentFighter) + Math.floor(Math.random() * 4));
           if (enemyDefending) dmg = Math.max(1, dmg - (enemyFighter.shield === 1 ? 5 : 3));
           enemyFighter.hp -= dmg;
+          crowdFavor += 5 + Math.floor(Math.random() * 11);
           logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+          checkCrowdFavor();
         } else {
+          crowdFavor = Math.max(0, crowdFavor - 5);
           logCombat(`<strong>${currentFighter.name}</strong> misses!`);
         }
       }

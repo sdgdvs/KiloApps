@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KColosseum (Gladiator management RPG)
-**Phase:** 12 (next to do)
+**Phase:** 13 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KColosseum directory (`KColosseum/`), create web HTML skeleton (`KiloOS/public/apps/kcolosseum.html`), register in App.jsx.
@@ -68,7 +68,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 9: Injury and healing system (gladiators take damage, require time and funds to heal, or die permanently).
 - [x] Phase 10: Arena league progression (climb through local pits to the grand Colosseum, facing tougher opponents).
 - [x] Phase 11: Special battle events (fight multiple enemies, wild beasts like lions, or chariot battles).
-- [ ] Phase 12: Crowd favor mechanic (perform spectacular moves to win crowd favor, unlocking special rewards).
+- [x] Phase 12: Crowd favor mechanic (perform spectacular moves to win crowd favor, unlocking special rewards).
 - [ ] Phase 13: Sound Effects — cheering crowds, sword clashes, and victory fanfares (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Lanista's Guide — How-to-play, combat tactics, equipment reference.
 

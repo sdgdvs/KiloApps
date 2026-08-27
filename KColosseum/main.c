@@ -29,6 +29,8 @@ int my_rand() {
 #define ID_EQ_ARMOR 116
 #define ID_EQ_SHIELD 117
 #define ID_HEAL_BUTTON 118
+#define ID_SHOWBOAT_BUTTON 119
+#define ID_FAVOR_LABEL 120
 typedef struct {
     int id;
     char name[32];
@@ -125,7 +127,7 @@ int funds = 1000;
 
 HWND hTitle, hFundsLabel, hL1, hRefreshButton, hMarketList, hBuyButton, hL2, hOwnedList, hTrainStrBtn, hTrainAgiBtn, hTrainVitBtn, hFightBtn;
 HWND hEqGladiusBtn, hEqTridentBtn, hEqArmorBtn, hEqShieldBtn, hHealBtn;
-HWND hCombatTitle, hCombatPlayer, hCombatEnemy, hAttackBtn, hDefendBtn, hFleeBtn, hCombatLog;
+HWND hCombatTitle, hCombatPlayer, hCombatEnemy, hAttackBtn, hDefendBtn, hShowboatBtn, hFleeBtn, hCombatLog, hFavorLabel;
 
 Gladiator* currentFighter = NULL;
 Gladiator enemyFighter;
@@ -133,6 +135,7 @@ int playerHp, playerMaxHp, enemyHp, enemyMaxHp;
 int playerDefending = 0;
 int enemyDefending = 0;
 int combatOver = 0;
+int crowdFavor = 0;
 
 HBRUSH hbrBkgnd, hbrCrimson, hbrList;
 HFONT hFont, hTitleFont;
@@ -202,8 +205,10 @@ void SwitchView(int view) {
     ShowWindow(hCombatEnemy, cmdComb);
     ShowWindow(hAttackBtn, cmdComb);
     ShowWindow(hDefendBtn, cmdComb);
+    ShowWindow(hShowboatBtn, cmdComb);
     ShowWindow(hFleeBtn, cmdComb);
     ShowWindow(hCombatLog, cmdComb);
+    ShowWindow(hFavorLabel, cmdComb);
 }
 
 void LogCombat(const char* msg) {
@@ -221,6 +226,30 @@ void UpdateCombatUI() {
     wsprintfA(buf, "%s\nHP: %d / %d\nSTR:%d AGI:%d VIT:%d",
         enemyFighter.name, enemyHp, enemyMaxHp, GetEffStr(&enemyFighter), GetEffAgi(&enemyFighter), GetEffVit(&enemyFighter));
     SetWindowTextA(hCombatEnemy, buf);
+
+    wsprintfA(buf, "Crowd Favor: %d%%", crowdFavor);
+    SetWindowTextA(hFavorLabel, buf);
+}
+
+void CheckCrowdFavor() {
+    if (crowdFavor >= 100) {
+        crowdFavor = 0;
+        char buf[128];
+        if ((my_rand() % 100) < 50) {
+            int gold = 50 + (my_rand() % 51);
+            funds += gold;
+            wsprintfA(buf, "The crowd goes wild! They throw %d Denarii into the arena!", gold);
+            LogCombat(buf);
+        } else {
+            int heal = 20 + (my_rand() % 21);
+            playerHp += heal;
+            if (playerHp > playerMaxHp) playerHp = playerMaxHp;
+            wsprintfA(buf, "The crowd cheers! A medical sponge is thrown! Healed %d HP!", heal);
+            LogCombat(buf);
+        }
+        UpdateCombatUI();
+        UpdateUI();
+    }
 }
 
 void EnterArena(int index) {
@@ -268,6 +297,7 @@ void EnterArena(int index) {
     combatOver = 0;
     playerDefending = 0;
     enemyDefending = 0;
+    crowdFavor = 0;
 
     SendMessageA(hCombatLog, LB_RESETCONTENT, 0, 0);
     char buf[128];
@@ -296,14 +326,25 @@ void CombatAction(int action) {
         combatOver = 1;
         SetWindowTextA(hAttackBtn, "Leave");
         EnableWindow(hDefendBtn, FALSE);
+        EnableWindow(hShowboatBtn, FALSE);
         EnableWindow(hFleeBtn, FALSE);
         return;
+    }
+
+    if (action == 3) { // showboat
+        int favorGain = 30 + (my_rand() % 21);
+        crowdFavor += favorGain;
+        wsprintfA(buf, "%s plays to the crowd!", currentFighter->name);
+        LogCombat(buf);
+        CheckCrowdFavor();
     }
 
     playerDefending = (action == 1);
     if (playerDefending) {
         wsprintfA(buf, "%s takes a defensive stance.", currentFighter->name);
         LogCombat(buf);
+        crowdFavor -= 5;
+        if (crowdFavor < 0) crowdFavor = 0;
     }
 
     if (action == 0) { // attack
@@ -315,9 +356,13 @@ void CombatAction(int action) {
             if (enemyDefending) dmg -= (enemyFighter.shield == 1 ? 5 : 3);
             if (dmg < 1) dmg = 1;
             enemyHp -= dmg;
+            crowdFavor += 5 + (my_rand() % 11);
             wsprintfA(buf, "%s hits for %d damage!", currentFighter->name, dmg);
             LogCombat(buf);
+            CheckCrowdFavor();
         } else {
+            crowdFavor -= 5;
+            if (crowdFavor < 0) crowdFavor = 0;
             wsprintfA(buf, "%s misses!", currentFighter->name);
             LogCombat(buf);
         }
@@ -342,6 +387,7 @@ void CombatAction(int action) {
         combatOver = 1;
         SetWindowTextA(hAttackBtn, "Leave");
         EnableWindow(hDefendBtn, FALSE);
+        EnableWindow(hShowboatBtn, FALSE);
         EnableWindow(hFleeBtn, FALSE);
         return;
     }
@@ -396,6 +442,7 @@ void CombatAction(int action) {
         combatOver = 1;
         SetWindowTextA(hAttackBtn, "Leave");
         EnableWindow(hDefendBtn, FALSE);
+        EnableWindow(hShowboatBtn, FALSE);
         EnableWindow(hFleeBtn, FALSE);
         
         for (int i = 0; i < owned_count; i++) {
@@ -500,16 +547,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                           310, 50, 240, 80, hwnd, NULL, NULL, NULL);
             SendMessageA(hCombatEnemy, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            hFavorLabel = CreateWindowA("STATIC", "Crowd Favor: 0%", WS_CHILD | SS_CENTER | WS_BORDER,
+                          220, 115, 120, 20, hwnd, (HMENU)ID_FAVOR_LABEL, NULL, NULL);
+            SendMessageA(hFavorLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hAttackBtn = CreateWindowA("BUTTON", "Attack", WS_CHILD,
-                          130, 140, 90, 30, hwnd, (HMENU)ID_ATTACK_BUTTON, NULL, NULL);
+                          70, 140, 90, 30, hwnd, (HMENU)ID_ATTACK_BUTTON, NULL, NULL);
             SendMessageA(hAttackBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hDefendBtn = CreateWindowA("BUTTON", "Defend", WS_CHILD,
-                          240, 140, 90, 30, hwnd, (HMENU)ID_DEFEND_BUTTON, NULL, NULL);
+                          170, 140, 90, 30, hwnd, (HMENU)ID_DEFEND_BUTTON, NULL, NULL);
             SendMessageA(hDefendBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            hShowboatBtn = CreateWindowA("BUTTON", "Showboat", WS_CHILD,
+                          270, 140, 90, 30, hwnd, (HMENU)ID_SHOWBOAT_BUTTON, NULL, NULL);
+            SendMessageA(hShowboatBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hFleeBtn = CreateWindowA("BUTTON", "Flee", WS_CHILD,
-                          350, 140, 90, 30, hwnd, (HMENU)ID_FLEE_BUTTON, NULL, NULL);
+                          370, 140, 90, 30, hwnd, (HMENU)ID_FLEE_BUTTON, NULL, NULL);
             SendMessageA(hFleeBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hCombatLog = CreateWindowA("LISTBOX", NULL, WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOINTEGRALHEIGHT,
@@ -609,6 +664,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (LOWORD(wParam) == ID_DEFEND_BUTTON) {
                 CombatAction(1);
+            } else if (LOWORD(wParam) == ID_SHOWBOAT_BUTTON) {
+                CombatAction(3);
             } else if (LOWORD(wParam) == ID_FLEE_BUTTON) {
                 CombatAction(2);
             } else if (LOWORD(wParam) == ID_FIGHT_BUTTON) {
@@ -620,6 +677,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     } else {
                         SetWindowTextA(hAttackBtn, "Attack");
                         EnableWindow(hDefendBtn, TRUE);
+                        EnableWindow(hShowboatBtn, TRUE);
                         EnableWindow(hFleeBtn, TRUE);
                         EnterArena(sel);
                     }
@@ -632,7 +690,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CTLCOLORSTATIC: {
             HDC hdcStatic = (HDC)wParam;
             HWND hCtrl = (HWND)lParam;
-            if (hCtrl == hFundsLabel || hCtrl == hCombatTitle) {
+            if (hCtrl == hFundsLabel || hCtrl == hCombatTitle || hCtrl == hFavorLabel) {
                 SetTextColor(hdcStatic, RGB(212, 175, 55));
                 SetBkColor(hdcStatic, RGB(139, 0, 0));
                 return (LRESULT)hbrCrimson;
