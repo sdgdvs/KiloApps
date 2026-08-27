@@ -11,13 +11,14 @@ void* __cdecl memset(void* dest, int c, size_t count) {
     return dest;
 }
 
-#define W 350
-#define H 170
+#define W 400
+#define H 250
 
 HWND hTitle;
 HWND hEditUrl;
 HWND hBtnPlay;
 HWND hBtnStop;
+HWND hHelp;
 
 char mciCmd[1024] = {0};
 
@@ -48,7 +49,15 @@ void StopStream() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            int dpi = 96;
+            HMODULE hUser32 = GetModuleHandleA("user32.dll");
+            if (hUser32) {
+                typedef UINT(WINAPI *GETDPIFORWINDOW)(HWND);
+                GETDPIFORWINDOW pGetDpiForWindow = (GETDPIFORWINDOW)GetProcAddress(hUser32, "GetDpiForWindow");
+                if (pGetDpiForWindow) dpi = pGetDpiForWindow(hwnd);
+            }
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hEditUrl = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "https://radio.erb.pw/public/subspace",
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
@@ -70,8 +79,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 10, 100, W - 36, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            hHelp = CreateWindowEx(0, "STATIC", "Press F1 or H for Help",
+                WS_CHILD | WS_VISIBLE,
+                10, 130, W - 36, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             // Auto play on startup
             PostMessage(hwnd, WM_COMMAND, MAKEWPARAM(1, 0), 0);
+            break;
+        }
+        case WM_KEYDOWN: {
+            if (wParam == VK_F1 || wParam == 'H') {
+                MessageBoxA(hwnd, "KRadio Help\n\nEnter a stream URL and click Play.\nClick Stop to stop playback.\nPress F1 or H to show this help.", "Help", MB_OK | MB_ICONINFORMATION);
+            }
             break;
         }
         case WM_COMMAND: {
@@ -97,6 +117,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL(WINAPI *SETPROCESSDPIAWARE)(void);
+        SETPROCESSDPIAWARE pSetProcessDPIAware = (SETPROCESSDPIAWARE)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (pSetProcessDPIAware) pSetProcessDPIAware();
+    }
+
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -106,8 +133,12 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KRadioApp", "KRadio", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    DWORD style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX | WS_CLIPCHILDREN;
+    RECT rect = { 0, 0, W, H };
+    AdjustWindowRect(&rect, style, FALSE);
+
+    HWND hwnd = CreateWindowEx(0, "KRadioApp", "KRadio", style,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
