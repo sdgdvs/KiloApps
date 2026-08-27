@@ -175,18 +175,33 @@ int my_rand() {
 }
 
 void SpawnMergeParticles(int centerX, int centerY, COLORREF color) {
-    int count = 18;
+    int count = 30;
     for (int k = 0; k < count; k++) {
         if (particleCount >= MAX_PARTICLES) break;
         Particle* p = &particles[particleCount++];
         p->x = (float)centerX;
         p->y = (float)centerY;
-        p->vx = (float)((my_rand() % 13) - 6);
-        p->vy = (float)((my_rand() % 13) - 8);
-        p->color = color;
-        p->life = 12 + (my_rand() % 12);
+        if (k < 10) {
+            p->vx = (float)((my_rand() % 25) - 12);
+            p->vy = (float)((my_rand() % 25) - 15);
+            p->color = RGB(255, 255, 255);
+            p->life = 8 + (my_rand() % 8);
+            p->size = 1 + (my_rand() % 3);
+        } else if (k < 20) {
+            p->vx = (float)((my_rand() % 15) - 7);
+            p->vy = (float)((my_rand() % 15) - 10);
+            p->color = color;
+            p->life = 15 + (my_rand() % 10);
+            p->size = 3 + (my_rand() % 5);
+        } else {
+            p->vx = (float)((my_rand() % 7) - 3);
+            p->vy = (float)((my_rand() % 7) - 5);
+            int r = GetRValue(color), g = GetGValue(color), b = GetBValue(color);
+            p->color = RGB(max(0, r-50), max(0, g-50), max(0, b-50));
+            p->life = 20 + (my_rand() % 15);
+            p->size = 4 + (my_rand() % 4);
+        }
         p->maxLife = p->life;
-        p->size = 2 + (my_rand() % 4);
     }
 }
 
@@ -1394,8 +1409,11 @@ int Move(int dx, int dy) {
                                 win = 1;
                                 hasWon = 1;
                             }
+                            if (mergeRes >= 512) {
+                                int intensity = (mergeRes >= 2048) ? 30 : (mergeRes >= 1024 ? 20 : 15);
+                                if (screenShakeTime < intensity) screenShakeTime = intensity;
+                            }
                             if (mergeRes >= 2048) {
-                                screenShakeTime = 15;
                                 for (int k=0; k<MAX_SHOCKWAVES; k++) {
                                     if (!shockwaves[k].active) {
                                         shockwaves[k].active = 1;
@@ -1679,8 +1697,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             int dx = 0, dy = 0;
             if (screenShakeTime > 0) {
-                dx = (my_rand() % 15) - 7;
-                dy = (my_rand() % 15) - 7;
+                dx = (my_rand() % (screenShakeTime + 2)) - (screenShakeTime / 2 + 1);
+                dy = (my_rand() % (screenShakeTime + 2)) - (screenShakeTime / 2 + 1);
                 screenShakeTime--;
             }
 

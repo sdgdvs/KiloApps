@@ -1021,6 +1021,8 @@
         let webParticles = [];
         let shockwaves = [];
         let fxAnimId = null;
+        let screenShakeTimeWeb = 0;
+        let screenShakeIntensityWeb = 0;
 
         function resizeFxCanvas() {
             if (!fxCanvas) return;
@@ -1107,17 +1109,33 @@
             const py = (gy + 0.5) * step;
             const color = getTileHexColor(val);
 
-            for (let i = 0; i < 22; i++) {
+            for (let i = 0; i < 40; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = 2 + Math.random() * 5;
+                let speed, particleColor, size, decay;
+                if (i < 15) {
+                    speed = 6 + Math.random() * 8;
+                    particleColor = '#ffffff';
+                    size = 1 + Math.random() * 2;
+                    decay = 0.05 + Math.random() * 0.05;
+                } else if (i < 30) {
+                    speed = 2 + Math.random() * 5;
+                    particleColor = color;
+                    size = 3 + Math.random() * 5;
+                    decay = 0.03 + Math.random() * 0.03;
+                } else {
+                    speed = 1 + Math.random() * 3;
+                    particleColor = color;
+                    size = 5 + Math.random() * 4;
+                    decay = 0.02 + Math.random() * 0.02;
+                }
                 webParticles.push({
                     x: px, y: py,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed - 1.5,
-                    color: color,
-                    size: 3 + Math.random() * 5,
+                    color: particleColor,
+                    size: size,
                     life: 1.0,
-                    decay: 0.03 + Math.random() * 0.03
+                    decay: decay
                 });
             }
 
@@ -1190,7 +1208,18 @@
                 }
             }
 
-            if (webParticles.length > 0 || shockwaves.length > 0) {
+            if (screenShakeTimeWeb > 0) {
+                let dx = (Math.random() - 0.5) * screenShakeIntensityWeb;
+                let dy = (Math.random() - 0.5) * screenShakeIntensityWeb;
+                let rot = (Math.random() - 0.5) * (screenShakeIntensityWeb * 0.1);
+                document.querySelector('.board-container').style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+                screenShakeTimeWeb--;
+                screenShakeIntensityWeb *= 0.9;
+            } else {
+                document.querySelector('.board-container').style.transform = 'none';
+            }
+
+            if (webParticles.length > 0 || shockwaves.length > 0 || screenShakeTimeWeb > 0) {
                 fxAnimId = requestAnimationFrame(renderFxLoop);
             } else {
                 fxAnimId = null;
@@ -1456,15 +1485,19 @@
                             updateTileEl(tile, true);
                             spawnWebParticles(tile.x, tile.y, tile.val);
 
-                            if (tile.val >= 2048) {
-                                spawnShockwave(tile.x, tile.y);
-                                let b = document.querySelector('.board-container');
-                                if (b) {
-                                    b.classList.remove('shake');
-                                    void b.offsetWidth;
-                                    b.classList.add('shake');
-                                    setTimeout(() => b.classList.remove('shake'), 400);
+                            if (tile.val >= 512) {
+                                if (tile.val >= 2048) {
+                                    spawnShockwave(tile.x, tile.y);
+                                    screenShakeTimeWeb = 30;
+                                    screenShakeIntensityWeb = 20;
+                                } else if (tile.val >= 1024) {
+                                    screenShakeTimeWeb = 20;
+                                    screenShakeIntensityWeb = 10;
+                                } else {
+                                    screenShakeTimeWeb = 15;
+                                    screenShakeIntensityWeb = 5;
                                 }
+                                if (!fxAnimId) fxAnimId = requestAnimationFrame(renderFxLoop);
                             }
                         } else if (oldX !== tile.x || oldY !== tile.y) {
                             updateTileEl(tile, false);

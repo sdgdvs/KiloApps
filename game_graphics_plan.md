@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- K2048
 - KDarts
 - KSimon
 - KTrader
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPong
 - KMines
 - KAsteroids
+- K2048
 ## Completed Work Log
+
+- **K2048 (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by physics decay on high-value merges (replacing static CSS with dynamic viewport translation/rotation offsets in both Web and Native C), and multi-layered particle explosions featuring distinct procedural layers (fast bright white sparks, medium-speed core chunks that inherit tile color, and slower large dark floating debris) in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 
 - **KAsteroids (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by physics decay on explosion (applying translational jitter to the viewport origin based on explosion radius), and multi-layered particle explosions featuring distinct procedural layers (fast bright white sparks, dense slower smoke/plasma clouds matching the base color, and medium volume sparks) in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 
