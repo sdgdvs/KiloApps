@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP â€” loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top â€” the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KiloOS Web UI
 - KFortress
 - KColony
 - KAlchemy
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPong
 - KClock
 - KDB
+- KiloOS Web UI
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KiloOS Web UI: Usability and UI issues fixed (added dedicated Help icon to desktop, removed flickering boot screen animation, verified optimizeLegibility CSS, and ensured responsive layout handling).
 - KDB: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 900x650, added explicit F1/H help bindings with visual instructions in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
 - KClock: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 340x580, explicitly instructed and bound F1/H keys for help, applied WS_CLIPCHILDREN for reduced flicker, and adopted negative font heights natively).
 - KPong: Usability and UI issues fixed (synchronized native window bounds to 940x780 matching App.jsx, added explicit F1/H help bindings with visual text in native and web versions, added negative font sizes for crisp text and WS_CLIPCHILDREN to eliminate flickering).
