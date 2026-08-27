@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KPong
 - KMines
 - KAsteroids
 - K2048
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAlchemy
 - KRogue
 - KChess
+- KPong
 ## Completed Work Log
+
+- **KPong (Loop 7):** Implemented highly polished visual effects including procedural kinematic screen-shake tied to impact intensity (walls, paddles, scoring) using randomized translation offsets, multi-layered particle explosions featuring distinct types (slow colorful cores vs fast kinematic white sparks), and dramatic animated visual variations for the Fireball trail using procedural sine-wave distortions to simulate a wriggling energy beam in both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 
 - **KChess (Loop 7):** Implemented highly polished visual effects including multi-layered particle explosions (smoke, core, and spark layers with distinct velocities and decay rates) upon captures, upgraded procedural screen-shake for heftier kinematic impact on captures, and highly detailed visual variations for pieces (procedurally generated scratches and veins seeded by piece type and board coordinates) in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 

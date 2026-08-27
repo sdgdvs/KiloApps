@@ -13,7 +13,7 @@
 #define BALL_SIZE 10
 #define TIMER_ID 1
 
-#define MAX_PARTICLES 80
+#define MAX_PARTICLES 200
 #define MAX_TRAIL 10
 #define MAX_SHOCKWAVES 10
 #define MAX_BALLS 6
@@ -25,6 +25,7 @@ typedef struct {
     float max_life;
     int size;
     COLORREF color;
+    int type;
 } Particle;
 
 typedef struct {
@@ -116,6 +117,7 @@ int p2_shield_timer = 0;
 float p1_hit_ripple = 0.0f;
 float p2_hit_ripple = 0.0f;
 float arena_pulse = 0.0f;
+float screen_shake = 0.0f;
 
 // Active Skills
 int skill_slow_timer = 0;
@@ -201,6 +203,25 @@ void AddParticles(float x, float y, COLORREF color, int count, float speed) {
                 particles[p].max_life = 1.0f;
                 particles[p].size = 2 + (rand() % 3);
                 particles[p].color = color;
+                particles[p].type = 0;
+                break;
+            }
+        }
+    }
+    for (int i = 0; i < count / 2; i++) {
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (particles[p].life <= 0) {
+                float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
+                float spd = (0.8f + ((float)(rand() % 50) / 100.0f)) * speed * 1.5f;
+                particles[p].x = x;
+                particles[p].y = y;
+                particles[p].vx = cosf(angle) * spd;
+                particles[p].vy = sinf(angle) * spd;
+                particles[p].life = 0.6f;
+                particles[p].max_life = 0.6f;
+                particles[p].size = 1 + (rand() % 2);
+                particles[p].color = RGB(255, 255, 255);
+                particles[p].type = 1;
                 break;
             }
         }
@@ -449,6 +470,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (p1_hit_ripple > 0.0f) { p1_hit_ripple -= 0.05f; if (p1_hit_ripple < 0.0f) p1_hit_ripple = 0.0f; }
             if (p2_hit_ripple > 0.0f) { p2_hit_ripple -= 0.05f; if (p2_hit_ripple < 0.0f) p2_hit_ripple = 0.0f; }
             if (arena_pulse > 0.0f) { arena_pulse -= 0.05f; if (arena_pulse < 0.0f) arena_pulse = 0.0f; }
+            if (screen_shake > 0.0f) { screen_shake *= 0.8f; if (screen_shake < 0.1f) screen_shake = 0.0f; }
 
             // Paddle Heights
             p1_pad_h = 50 - (rally * 2); if (p1_pad_h < 20) p1_pad_h = 20;
@@ -633,13 +655,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // Walls
                 if (balls[b].y < 0) {
-                    balls[b].y = 0; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f;
+                    balls[b].y = 0; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f; screen_shake = 3.0f;
                     AddParticles(balls[b].x + BALL_SIZE / 2, 0, RGB(255, 255, 255), 8, 4.0f);
                     AddShockwave(balls[b].x + BALL_SIZE / 2, 0, GetPrimaryColor());
                     MessageBeep(0xFFFFFFFF);
                 }
                 if (balls[b].y > H - BALL_SIZE) {
-                    balls[b].y = H - BALL_SIZE; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f;
+                    balls[b].y = H - BALL_SIZE; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f; screen_shake = 3.0f;
                     AddParticles(balls[b].x + BALL_SIZE / 2, (float)H, RGB(255, 255, 255), 8, 4.0f);
                     AddShockwave(balls[b].x + BALL_SIZE / 2, H, GetSecondaryColor());
                     MessageBeep(0xFFFFFFFF);
@@ -676,7 +698,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // P1 Paddle
                 if (balls[b].x < 20 + PAD_W && balls[b].y + BALL_SIZE > p1_y && balls[b].y < p1_y + p1_pad_h) {
-                    balls[b].x = 20 + PAD_W; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 1; p1_hit_ripple = 1.0f; arena_pulse = 1.0f;
+                    balls[b].x = 20 + PAD_W; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 1; p1_hit_ripple = 1.0f; arena_pulse = 1.0f; screen_shake = 5.0f;
                     if (skill_fireball_ready) { balls[b].is_fireball = 1; skill_fireball_ready = 0; AddShockwave(balls[b].x, balls[b].y + BALL_SIZE / 2, RGB(255, 100, 0)); }
                     rally++; RecordScore(rally);
                     float hit_pos = (float)((balls[b].y + BALL_SIZE / 2.0f) - (p1_y + p1_pad_h / 2.0f)) / (p1_pad_h / 2.0f);
@@ -695,7 +717,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // P2 Paddle
                 if (balls[b].x + BALL_SIZE > W - 20 - PAD_W && balls[b].y + BALL_SIZE > p2_y && balls[b].y < p2_y + p2_pad_h) {
-                    balls[b].x = W - 20 - PAD_W - BALL_SIZE; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 2; balls[b].is_fireball = 0; p2_hit_ripple = 1.0f; arena_pulse = 1.0f;
+                    balls[b].x = W - 20 - PAD_W - BALL_SIZE; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 2; balls[b].is_fireball = 0; p2_hit_ripple = 1.0f; arena_pulse = 1.0f; screen_shake = 5.0f;
                     rally++; RecordScore(rally);
                     float hit_pos = (float)((balls[b].y + BALL_SIZE / 2.0f) - (p2_y + p2_pad_h / 2.0f)) / (p2_pad_h / 2.0f);
                     balls[b].dy += (int)(hit_pos * 5.0f);
@@ -713,14 +735,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // Scoring
                 if (balls[b].x < -15) {
-                    balls[b].active = 0; p2_score++; rally = 0;
+                    balls[b].active = 0; p2_score++; rally = 0; screen_shake = 10.0f;
                     AddParticles(0, (float)(balls[b].y + BALL_SIZE / 2), GetSecondaryColor(), 35, 12.0f);
                     AddShockwave(0, (int)(balls[b].y + BALL_SIZE / 2), GetSecondaryColor());
                     MessageBeep(MB_ICONEXCLAMATION);
                     if (ActiveBallCount() == 0) ResetBalls();
                 }
                 if (balls[b].x > W + 15) {
-                    balls[b].active = 0; p1_score++; rally = 0;
+                    balls[b].active = 0; p1_score++; rally = 0; screen_shake = 10.0f;
                     AddParticles((float)W, (float)(balls[b].y + BALL_SIZE / 2), GetPrimaryColor(), 35, 12.0f);
                     AddShockwave(W, (int)(balls[b].y + BALL_SIZE / 2), GetPrimaryColor());
                     MessageBeep(MB_ICONEXCLAMATION);
@@ -767,6 +789,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             XFORM xform = {0};
             xform.eM11 = (float)cw / W;
             xform.eM22 = (float)ch / H;
+            if (screen_shake > 0.0f) {
+                xform.eDx = ((float)(rand() % 100) / 100.0f - 0.5f) * screen_shake * ((float)cw / W);
+                xform.eDy = ((float)(rand() % 100) / 100.0f - 0.5f) * screen_shake * ((float)ch / H);
+            }
             SetWorldTransform(memDC, &xform);
 
             HDC screenDC = GetDC(NULL);
@@ -917,14 +943,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     BYTE blue = (BYTE)((GetBValue(balls[b].trail[i].color) * factor) / MAX_TRAIL);
                     HPEN tPen = CreatePen(PS_SOLID, r * 2, RGB(red, green, blue));
                     HPEN pOld = (HPEN)SelectObject(memDC, tPen);
-                    MoveToEx(memDC, balls[b].trail[i].x, balls[b].trail[i].y, NULL);
-                    LineTo(memDC, balls[b].trail[i-1].x, balls[b].trail[i-1].y);
+                    int ox1 = 0, oy1 = 0, ox2 = 0, oy2 = 0;
+                    if (balls[b].is_fireball) {
+                        float tOffset = GetTickCount() * 0.015f;
+                        ox1 = (int)(cosf(i * 0.5f + tOffset) * r * 0.6f);
+                        oy1 = (int)(sinf(i * 0.5f + tOffset) * r * 0.6f);
+                        ox2 = (int)(cosf((i-1) * 0.5f + tOffset) * r * 0.6f);
+                        oy2 = (int)(sinf((i-1) * 0.5f + tOffset) * r * 0.6f);
+                    }
+                    MoveToEx(memDC, balls[b].trail[i].x + ox1, balls[b].trail[i].y + oy1, NULL);
+                    LineTo(memDC, balls[b].trail[i-1].x + ox2, balls[b].trail[i-1].y + oy2);
                     SelectObject(memDC, pOld); DeleteObject(tPen);
                 }
                 if (balls[b].trail_count > 0) {
                     HPEN tPen = CreatePen(PS_SOLID, BALL_SIZE, balls[b].trail[0].color);
                     HPEN pOld = (HPEN)SelectObject(memDC, tPen);
-                    MoveToEx(memDC, balls[b].trail[0].x, balls[b].trail[0].y, NULL);
+                    int ox1 = 0, oy1 = 0;
+                    if (balls[b].is_fireball) {
+                        float tOffset = GetTickCount() * 0.015f;
+                        ox1 = (int)(cosf(0 * 0.5f + tOffset) * (BALL_SIZE/2) * 0.6f);
+                        oy1 = (int)(sinf(0 * 0.5f + tOffset) * (BALL_SIZE/2) * 0.6f);
+                    }
+                    MoveToEx(memDC, balls[b].trail[0].x + ox1, balls[b].trail[0].y + oy1, NULL);
                     LineTo(memDC, (int)balls[b].x + BALL_SIZE/2, (int)balls[b].y + BALL_SIZE/2);
                     SelectObject(memDC, pOld); DeleteObject(tPen);
                 }
@@ -1113,9 +1153,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             for (int i = 0; i < MAX_PARTICLES; i++) {
                 if (particles[i].life > 0) {
-                    HBRUSH pB = CreateSolidBrush(particles[i].color);
-                    RECT pR = { (int)particles[i].x - particles[i].size / 2, (int)particles[i].y - particles[i].size / 2, (int)particles[i].x + particles[i].size / 2 + 1, (int)particles[i].y + particles[i].size / 2 + 1 };
-                    FillRect(memDC, &pR, pB); DeleteObject(pB);
+                    if (particles[i].type == 1) {
+                        HPEN pP = CreatePen(PS_SOLID, particles[i].size, particles[i].color);
+                        HPEN oldP = (HPEN)SelectObject(memDC, pP);
+                        MoveToEx(memDC, (int)particles[i].x, (int)particles[i].y, NULL);
+                        LineTo(memDC, (int)(particles[i].x - particles[i].vx * 2), (int)(particles[i].y - particles[i].vy * 2));
+                        SelectObject(memDC, oldP); DeleteObject(pP);
+                    } else {
+                        HBRUSH pB = CreateSolidBrush(particles[i].color);
+                        RECT pR = { (int)particles[i].x - particles[i].size / 2, (int)particles[i].y - particles[i].size / 2, (int)particles[i].x + particles[i].size / 2 + 1, (int)particles[i].y + particles[i].size / 2 + 1 };
+                        FillRect(memDC, &pR, pB); DeleteObject(pB);
+                    }
                 }
             }
 

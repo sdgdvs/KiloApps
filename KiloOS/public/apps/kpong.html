@@ -300,6 +300,7 @@
   let winScreen = false;
   let isPaused = false;
   let arenaPulse = 0;
+  let screenShake = 0;
 
   let powerupX = -1, powerupY = -1;
   let powerupActive = 0, powerupType = 0; // 0: Expand, 1: Shrink, 2: Freeze, 3: Multi-Ball, 4: Speed Boost, 5: Shield
@@ -416,7 +417,21 @@
               vy: Math.sin(angle) * spd,
               life: 1.0, maxLife: 1.0,
               size: 2 + Math.random() * 3,
-              color: color
+              color: color,
+              type: 0
+          });
+      }
+      for (let i = 0; i < count / 2; i++) {
+          let angle = Math.random() * Math.PI * 2;
+          let spd = (0.8 + Math.random() * 0.5) * speed * 1.5;
+          particles.push({
+              x: x, y: y,
+              vx: Math.cos(angle) * spd,
+              vy: Math.sin(angle) * spd,
+              life: 0.6, maxLife: 0.6,
+              size: 1 + Math.random() * 1.5,
+              color: '#ffffff',
+              type: 1
           });
       }
   }
@@ -662,6 +677,7 @@
       if (p1HitRipple > 0) p1HitRipple = Math.max(0, p1HitRipple - 0.05);
       if (p2HitRipple > 0) p2HitRipple = Math.max(0, p2HitRipple - 0.05);
       if (arenaPulse > 0) arenaPulse = Math.max(0, arenaPulse - 0.05);
+      if (screenShake > 0) { screenShake *= 0.8; if (screenShake < 0.1) screenShake = 0; }
 
       // Paddle Heights Calculation
       p1PadH = 50 - (rally * 1.5); if (p1PadH < 22) p1PadH = 22;
@@ -830,13 +846,13 @@
 
           // Top/Bottom Wall Collisions
           if (b.y < 0) {
-              b.y = 0; b.dy = -b.dy; arenaPulse = 1.0;
+              b.y = 0; b.dy = -b.dy; arenaPulse = 1.0; screenShake = 3;
               createParticles(b.x + BALL_SIZE/2, 0, '#ffffff', 8, 4);
               createShockwave(b.x + BALL_SIZE/2, 0, getPrimaryColor());
               playSound(800, 'hit');
           }
           if (b.y > H - BALL_SIZE) {
-              b.y = H - BALL_SIZE; b.dy = -b.dy; arenaPulse = 1.0;
+              b.y = H - BALL_SIZE; b.dy = -b.dy; arenaPulse = 1.0; screenShake = 3;
               createParticles(b.x + BALL_SIZE/2, H, '#ffffff', 8, 4);
               createShockwave(b.x + BALL_SIZE/2, H, getSecondaryColor());
               playSound(800, 'hit');
@@ -879,7 +895,7 @@
 
           // P1 Paddle Collision
           if (b.x < 20 + PAD_W && b.y + BALL_SIZE > p1y && b.y < p1y + p1PadH) {
-              b.x = 20 + PAD_W; b.dx = -b.dx; b.lastHitter = 1; p1HitRipple = 1.0; arenaPulse = 1.0;
+              b.x = 20 + PAD_W; b.dx = -b.dx; b.lastHitter = 1; p1HitRipple = 1.0; arenaPulse = 1.0; screenShake = 5;
               if (skillFireballReady) { b.isFireball = true; skillFireballReady = false; createShockwave(b.x, b.y + BALL_SIZE/2, '#ff6400'); }
               let hitPos = ((b.y + BALL_SIZE/2) - (p1y + p1PadH/2)) / (p1PadH/2);
               b.dy += hitPos * 5.0;
@@ -899,7 +915,7 @@
 
           // P2 Paddle Collision
           if (b.x + BALL_SIZE > W - 20 - PAD_W && b.y + BALL_SIZE > p2y && b.y < p2y + p2PadH) {
-              b.x = W - 20 - PAD_W - BALL_SIZE; b.dx = -b.dx; b.lastHitter = 2; p2HitRipple = 1.0; arenaPulse = 1.0;
+              b.x = W - 20 - PAD_W - BALL_SIZE; b.dx = -b.dx; b.lastHitter = 2; p2HitRipple = 1.0; arenaPulse = 1.0; screenShake = 5;
               b.isFireball = false;
               let hitPos = ((b.y + BALL_SIZE/2) - (p2y + p2PadH/2)) / (p2PadH/2);
               b.dy += hitPos * 5.0;
@@ -919,14 +935,14 @@
 
           // Out of Bounds / Scoring
           if (b.x < -15) {
-              b.active = false; s2++; rally = 0;
+              b.active = false; s2++; rally = 0; screenShake = 10;
               createParticles(0, b.y + BALL_SIZE/2, getSecondaryColor(), 30, 10);
               playSound(200, 'score');
               document.getElementById('s2').innerText = s2;
               if (activeBallCount() === 0) resetBalls();
           }
           if (b.x > W + 15) {
-              b.active = false; s1++; rally = 0;
+              b.active = false; s1++; rally = 0; screenShake = 10;
               createParticles(W, b.y + BALL_SIZE/2, getPrimaryColor(), 30, 10);
               playSound(200, 'score');
               document.getElementById('s1').innerText = s1;
@@ -1123,6 +1139,9 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.scale(2 * dpr, 2 * dpr);
+      if (screenShake > 0) {
+          ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+      }
       
       // Atmospheric Digital Dust (Loop 3)
       ctx.save();
@@ -1229,9 +1248,16 @@
                   let pt2 = b.trail[i+1];
                   let alpha = (1 - (i / b.trail.length)) * 0.7;
                   let radius = (BALL_SIZE / 2) * (1 - (i / b.trail.length) * 0.6);
+                  
+                  let ox = 0, oy = 0;
+                  if (b.isFireball) {
+                      ox = Math.cos(i * 0.5 + Date.now()*0.015) * (radius*0.6);
+                      oy = Math.sin(i * 0.5 + Date.now()*0.015) * (radius*0.6);
+                  }
+
                   ctx.beginPath();
-                  ctx.moveTo(pt1.x, pt1.y);
-                  ctx.lineTo(pt2.x, pt2.y);
+                  ctx.moveTo(pt1.x + ox, pt1.y + oy);
+                  ctx.lineTo(pt2.x + ox, pt2.y + oy);
                   ctx.strokeStyle = pt1.color;
                   ctx.lineWidth = radius * 2;
                   ctx.globalAlpha = alpha;
@@ -1284,8 +1310,14 @@
       }
       for (let p of particles) {
           ctx.save(); ctx.fillStyle = p.color; ctx.globalAlpha = p.life / p.maxLife;
-          ctx.shadowBlur = 6; ctx.shadowColor = p.color;
-          ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+          ctx.shadowBlur = p.type === 1 ? 2 : 6; ctx.shadowColor = p.color;
+          if (p.type === 1) {
+              ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx*2, p.y - p.vy*2);
+              ctx.strokeStyle = p.color; ctx.lineWidth = p.size; ctx.stroke();
+          } else {
+              ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
       }
       
       // HUD Header Overlay
