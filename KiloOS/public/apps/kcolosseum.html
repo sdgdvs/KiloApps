@@ -84,7 +84,7 @@
 </head>
 <body>
   <h1>KColosseum - Ludus Management</h1>
-  <div class="funds">Treasury: <span id="fundsDisplay">1000</span> Denarii</div>
+  <div class="funds">Treasury: <span id="fundsDisplay">1000</span> Denarii | League: <span id="leagueDisplay">Local Pits (Level 1)</span></div>
   
   <div class="dashboard" id="dashboard">
     <div class="panel">
@@ -118,6 +118,16 @@
   <script>
     let funds = 1000;
     let nextId = 1;
+    let arenaLevel = 1;
+    
+    function getLeagueName(level) {
+      if (level < 3) return "Local Pits";
+      if (level < 6) return "Provincial Arena";
+      if (level < 9) return "Capital Amphitheatre";
+      if (level < 10) return "The Grand Colosseum";
+      return "Champion of Rome";
+    }
+
     const firstNames = ["Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus"];
     const epithets = ["the Strong", "the Swift", "the Bear", "the Lion", "the Fierce", "the Giant"];
 
@@ -168,6 +178,7 @@
 
     function updateUI() {
       document.getElementById('fundsDisplay').innerText = funds;
+      document.getElementById('leagueDisplay').innerText = `${getLeagueName(arenaLevel)} (Level ${arenaLevel})`;
       document.getElementById('refreshBtn').disabled = funds < 50;
       
       const marketList = document.getElementById('marketList');
@@ -276,6 +287,17 @@
       currentFighter.hp = currentFighter.maxHp - currentFighter.damageTaken;
       
       enemyFighter = generateGladiator(true);
+      
+      enemyFighter.str += Math.floor(arenaLevel * 1.5);
+      enemyFighter.agi += Math.floor(arenaLevel * 1.5);
+      enemyFighter.vit += Math.floor(arenaLevel * 1.5);
+      if (arenaLevel > 2 && Math.random() < 0.5) enemyFighter.weapon = Math.floor(Math.random() * 2) + 1;
+      if (arenaLevel > 4 && Math.random() < 0.5) enemyFighter.shield = 1;
+      if (arenaLevel > 6 && Math.random() < 0.5) enemyFighter.armor = 1;
+      if (arenaLevel > 8) { enemyFighter.weapon = Math.floor(Math.random() * 2) + 1; enemyFighter.shield = 1; enemyFighter.armor = 1; }
+      
+      updateDesc(enemyFighter);
+      
       enemyFighter.hp = getEffVit(enemyFighter) * 10;
       enemyFighter.maxHp = enemyFighter.hp;
       
@@ -318,6 +340,10 @@
       
       if (action === 'flee') {
         logCombat(`${currentFighter.name} flees the arena in disgrace!`);
+        if (arenaLevel > 1) {
+          arenaLevel--;
+          logCombat(`<em>Your ludus drops to level ${arenaLevel}...</em>`);
+        }
         combatOver = true;
         setTimeout(exitArena, 1500);
         return;
@@ -344,8 +370,13 @@
       if (enemyFighter.hp <= 0) {
         enemyFighter.hp = 0;
         updateCombatUI();
-        logCombat(`<strong>${enemyFighter.name} is defeated! You win 100 Denarii!</strong>`);
-        funds += 100;
+        let reward = 100 + (arenaLevel * 50);
+        logCombat(`<strong>${enemyFighter.name} is defeated! You win ${reward} Denarii!</strong>`);
+        funds += reward;
+        if (arenaLevel < 10) {
+          arenaLevel++;
+          logCombat(`<em>Your ludus advances to level ${arenaLevel}!</em>`);
+        }
         updateUI();
         combatOver = true;
         setTimeout(exitArena, 2000);
@@ -375,6 +406,10 @@
         updateCombatUI();
         logCombat(`<strong>${currentFighter.name} is DEAD.</strong>`);
         owned.splice(owned.findIndex(g => g.id === currentFighter.id), 1);
+        if (arenaLevel > 1) {
+          arenaLevel--;
+          logCombat(`<em>Your ludus drops to level ${arenaLevel}...</em>`);
+        }
         updateUI();
         combatOver = true;
         setTimeout(exitArena, 2000);

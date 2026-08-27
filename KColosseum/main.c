@@ -46,6 +46,15 @@ typedef struct {
 const char* firstNames[] = {"Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus"};
 const char* epithets[] = {"the Strong", "the Swift", "the Bear", "the Lion", "the Fierce", "the Giant"};
 int nextId = 1;
+int arenaLevel = 1;
+
+const char* GetLeagueName(int level) {
+    if (level < 3) return "Local Pits";
+    if (level < 6) return "Provincial Arena";
+    if (level < 9) return "Capital Amphitheatre";
+    if (level < 10) return "The Grand Colosseum";
+    return "Champion of Rome";
+}
 
 int GetEffStr(Gladiator* g);
 int GetEffAgi(Gladiator* g);
@@ -128,7 +137,7 @@ HFONT hFont, hTitleFont;
 
 void UpdateUI() {
     char buf[256];
-    wsprintfA(buf, "Treasury: %d Denarii", funds);
+    wsprintfA(buf, "Treasury: %d Denarii | League: %s (Level %d)", funds, GetLeagueName(arenaLevel), arenaLevel);
     SetWindowTextA(hFundsLabel, buf);
 
     SendMessageA(hMarketList, LB_RESETCONTENT, 0, 0);
@@ -218,6 +227,17 @@ void EnterArena(int index) {
     playerHp = playerMaxHp - currentFighter->damageTaken;
     
     enemyFighter = GenerateGladiator(1);
+    
+    enemyFighter.str += (arenaLevel * 3) / 2;
+    enemyFighter.agi += (arenaLevel * 3) / 2;
+    enemyFighter.vit += (arenaLevel * 3) / 2;
+    if (arenaLevel > 2 && (my_rand() % 100) < 50) enemyFighter.weapon = (my_rand() % 2) + 1;
+    if (arenaLevel > 4 && (my_rand() % 100) < 50) enemyFighter.shield = 1;
+    if (arenaLevel > 6 && (my_rand() % 100) < 50) enemyFighter.armor = 1;
+    if (arenaLevel > 8) { enemyFighter.weapon = (my_rand() % 2) + 1; enemyFighter.shield = 1; enemyFighter.armor = 1; }
+    
+    UpdateGladiatorDesc(&enemyFighter);
+    
     enemyMaxHp = GetEffVit(&enemyFighter) * 10;
     enemyHp = enemyMaxHp;
 
@@ -244,6 +264,11 @@ void CombatAction(int action) {
     if (action == 2) { // flee
         wsprintfA(buf, "%s flees the arena in disgrace!", currentFighter->name);
         LogCombat(buf);
+        if (arenaLevel > 1) {
+            arenaLevel--;
+            wsprintfA(buf, "Your ludus drops to level %d...", arenaLevel);
+            LogCombat(buf);
+        }
         combatOver = 1;
         SetWindowTextA(hAttackBtn, "Leave");
         EnableWindow(hDefendBtn, FALSE);
@@ -277,9 +302,15 @@ void CombatAction(int action) {
     if (enemyHp <= 0) {
         enemyHp = 0;
         UpdateCombatUI();
-        wsprintfA(buf, "%s is defeated! You win 100 Denarii!", enemyFighter.name);
+        int reward = 100 + (arenaLevel * 50);
+        wsprintfA(buf, "%s is defeated! You win %d Denarii!", enemyFighter.name, reward);
         LogCombat(buf);
-        funds += 100;
+        funds += reward;
+        if (arenaLevel < 10) {
+            arenaLevel++;
+            wsprintfA(buf, "Your ludus advances to level %d!", arenaLevel);
+            LogCombat(buf);
+        }
         UpdateUI();
         combatOver = 1;
         SetWindowTextA(hAttackBtn, "Leave");
@@ -315,6 +346,11 @@ void CombatAction(int action) {
         UpdateCombatUI();
         wsprintfA(buf, "%s is DEAD...", currentFighter->name);
         LogCombat(buf);
+        if (arenaLevel > 1) {
+            arenaLevel--;
+            wsprintfA(buf, "Your ludus drops to level %d...", arenaLevel);
+            LogCombat(buf);
+        }
         combatOver = 1;
         SetWindowTextA(hAttackBtn, "Leave");
         EnableWindow(hDefendBtn, FALSE);
