@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KColosseum (Gladiator management RPG)
-**Phase:** 8 (next to do)
+**Phase:** 9 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KColosseum directory (`KColosseum/`), create web HTML skeleton (`KiloOS/public/apps/kcolosseum.html`), register in App.jsx.
