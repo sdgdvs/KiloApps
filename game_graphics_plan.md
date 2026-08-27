@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KTrader
 - KDragon
 - KSolitaire
 - KHex
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - K2048
 - KDarts
 - KSimon
+- KTrader
 ## Completed Work Log
+
+- **KTrader (Loop 1):** Replaced the purely text-based UI with actual graphical sprites by introducing a visualization overlay panel at the top of the screen. Created custom drawn graphical vector models for the Player Ship (blue angular hull with engine glow), Pirate Ship (red jagged dagger shape for combat), and Planets (colored circles with craters that change base hue depending on the ecoType economy). Implemented consistently using Canvas path primitives in Web Canvas (ktrader.html) and Win32 GDI primitives inside a new WM_PAINT render loop in Native C Win32 GDI (KTrader/main.c). UI layouts were shifted down to cleanly accommodate the new graphical viewport.
 
 - **KSimon (Loop 2):** Implemented sprite animations (frame cycles, death effects, particle bursts, animated button presses), replacing the static inflate flash with a smooth scale/glow decay, adding particle spark bursts on press, replacing the center disc with an animated blinking/talking robot mascot face, and introducing an animated expanding red skull death effect for Game Over in both Web Canvas (ksimon.html) and Native C Win32 GDI (KSimon/main.c).
 

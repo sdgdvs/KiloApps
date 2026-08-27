@@ -80,6 +80,7 @@
 <body>
   <button onclick="showHelp()" style="position: absolute; top: 20px; right: 20px; font-size: 1.2em; z-index: 50;">Help</button>
   <h1>KTrader Space Trading Sim</h1>
+  <canvas id="gfx-canvas" width="600" height="150" style="display:block; margin: 10px auto; background: rgba(0,20,30,0.5); border: 1px solid #0ff; box-shadow: 0 0 10px #0ff;"></canvas>
   
   <div id="help-modal" style="display:none; position:fixed; top:10%; left:10%; width:80%; height:80%; background:rgba(0,15,20,0.95); border:2px solid #0ff; z-index:100; overflow-y:auto; padding:20px; box-shadow:0 0 20px #0ff; color:#0ff; box-sizing:border-box;">
     <h2 style="margin-top:0;">Captain's Log - Help Guide</h2>
@@ -359,6 +360,97 @@
       el.scrollTop = el.scrollHeight;
     }
 
+    function drawGraphics() {
+      const canvas = document.getElementById('gfx-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw Player Ship (Left side)
+      ctx.save();
+      ctx.translate(100, 75);
+      // Ship body
+      ctx.fillStyle = '#0af';
+      ctx.beginPath();
+      ctx.moveTo(30, 0);
+      ctx.lineTo(-20, 20);
+      ctx.lineTo(-10, 0);
+      ctx.lineTo(-20, -20);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Engine glow
+      ctx.fillStyle = '#f80';
+      ctx.beginPath();
+      ctx.moveTo(-10, 0);
+      ctx.lineTo(-30, 5);
+      ctx.lineTo(-40, 0);
+      ctx.lineTo(-30, -5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      if (state.inCombat) {
+        // Draw Pirate Ship (Right side)
+        ctx.save();
+        ctx.translate(500, 75);
+        ctx.fillStyle = '#f00';
+        ctx.beginPath();
+        ctx.moveTo(-30, 0);
+        ctx.lineTo(20, 25);
+        ctx.lineTo(10, 0);
+        ctx.lineTo(20, -25);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Pirate Engine
+        ctx.fillStyle = '#ff0';
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(35, 8);
+        ctx.lineTo(45, 0);
+        ctx.lineTo(35, -8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      } else {
+        // Draw Planet (Right side)
+        const p = planets[state.location];
+        ctx.save();
+        ctx.translate(500, 75);
+        
+        let pColor = '#555';
+        if (p.ecoType === "Agri") pColor = '#2a2';
+        if (p.ecoType === "Mining") pColor = '#842';
+        if (p.ecoType === "Tech") pColor = '#0aa';
+        if (p.ecoType === "Industrial") pColor = '#888';
+        if (p.ecoType === "Balanced") pColor = '#258';
+        
+        // Planet body
+        ctx.fillStyle = pColor;
+        ctx.beginPath();
+        ctx.arc(0, 0, 40, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Craters
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath(); ctx.arc(-10, -10, 8, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(15, 5, 12, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-5, 20, 6, 0, Math.PI*2); ctx.fill();
+        
+        ctx.restore();
+      }
+    }
+
     function updateUI() {
       if (state.inCombat) {
         document.getElementById('ui-main-panel').style.display = 'none';
@@ -508,6 +600,7 @@
           missionsContainer.appendChild(btn);
         });
       }
+      drawGraphics();
     }
 
     function acceptMission(idx) {

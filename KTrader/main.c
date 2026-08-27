@@ -430,6 +430,7 @@ void Travel(int btnIdx, HWND hwnd) {
         }
 
         UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
     } else {
         PlaySoundEffect(5); // fail
         LogMessage("> Insufficient fuel!");
@@ -473,27 +474,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnHelp = CreateWindow("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 530, 15, 80, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hStatCredits = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 10, 60, 140, 20, hwnd, NULL, NULL, NULL);
-            hStatFuel = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 160, 60, 140, 20, hwnd, NULL, NULL, NULL);
-            hStatCargo = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 310, 60, 140, 20, hwnd, NULL, NULL, NULL);
-            hStatWeapons = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 460, 60, 140, 20, hwnd, NULL, NULL, NULL);
+            hStatCredits = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 10, 210, 140, 20, hwnd, NULL, NULL, NULL);
+            hStatFuel = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 160, 210, 140, 20, hwnd, NULL, NULL, NULL);
+            hStatCargo = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 310, 210, 140, 20, hwnd, NULL, NULL, NULL);
+            hStatWeapons = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 460, 210, 140, 20, hwnd, NULL, NULL, NULL);
 
-            hStatReps = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 10, 80, 600, 20, hwnd, NULL, NULL, NULL);
+            hStatReps = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 10, 230, 600, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatReps, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            CreateWindow("STATIC", "Navigation", WS_CHILD | WS_VISIBLE, 20, 100, 100, 20, hwnd, NULL, NULL, NULL);
-            hStatLoc = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 20, 130, 260, 20, hwnd, NULL, NULL, NULL);
+            CreateWindow("STATIC", "Navigation", WS_CHILD | WS_VISIBLE, 20, 250, 100, 20, hwnd, NULL, NULL, NULL);
+            hStatLoc = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 20, 280, 260, 20, hwnd, NULL, NULL, NULL);
 
-            hBtnDest1 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 160, 250, 30, hwnd, (HMENU)ID_BTN_DEST1, NULL, NULL);
-            hBtnDest2 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 200, 250, 30, hwnd, (HMENU)ID_BTN_DEST2, NULL, NULL);
-            hBtnDest3 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 240, 250, 30, hwnd, (HMENU)ID_BTN_DEST3, NULL, NULL);
+            hBtnDest1 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 310, 250, 30, hwnd, (HMENU)ID_BTN_DEST1, NULL, NULL);
+            hBtnDest2 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 350, 250, 30, hwnd, (HMENU)ID_BTN_DEST2, NULL, NULL);
+            hBtnDest3 = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 390, 250, 30, hwnd, (HMENU)ID_BTN_DEST3, NULL, NULL);
 
-            hStatCombatTitle = CreateWindow("STATIC", "🚨 COMBAT ENGAGED 🚨", WS_CHILD, 20, 100, 200, 20, hwnd, NULL, NULL, NULL);
-            hStatCombatPlayer = CreateWindow("STATIC", "Shields: 50", WS_CHILD, 20, 130, 200, 20, hwnd, NULL, NULL, NULL);
-            hStatCombatEnemy = CreateWindow("STATIC", "Enemy: 30 / 30", WS_CHILD, 20, 160, 200, 20, hwnd, NULL, NULL, NULL);
-            hBtnFire = CreateWindow("BUTTON", "Fire Weapons", WS_CHILD | BS_PUSHBUTTON, 20, 190, 120, 30, hwnd, (HMENU)ID_BTN_FIRE, NULL, NULL);
-            hBtnFlee = CreateWindow("BUTTON", "Attempt Flee", WS_CHILD | BS_PUSHBUTTON, 150, 190, 120, 30, hwnd, (HMENU)ID_BTN_FLEE, NULL, NULL);
-            hBtnBribe = CreateWindow("BUTTON", "Pay Toll(100cr)", WS_CHILD | BS_PUSHBUTTON, 280, 190, 150, 30, hwnd, (HMENU)ID_BTN_BRIBE, NULL, NULL);
+            hStatCombatTitle = CreateWindow("STATIC", "🚨 COMBAT ENGAGED 🚨", WS_CHILD, 20, 250, 200, 20, hwnd, NULL, NULL, NULL);
+            hStatCombatPlayer = CreateWindow("STATIC", "Shields: 50", WS_CHILD, 20, 280, 200, 20, hwnd, NULL, NULL, NULL);
+            hStatCombatEnemy = CreateWindow("STATIC", "Enemy: 30 / 30", WS_CHILD, 20, 310, 200, 20, hwnd, NULL, NULL, NULL);
+            hBtnFire = CreateWindow("BUTTON", "Fire Weapons", WS_CHILD | BS_PUSHBUTTON, 20, 340, 120, 30, hwnd, (HMENU)ID_BTN_FIRE, NULL, NULL);
+            hBtnFlee = CreateWindow("BUTTON", "Attempt Flee", WS_CHILD | BS_PUSHBUTTON, 150, 340, 120, 30, hwnd, (HMENU)ID_BTN_FLEE, NULL, NULL);
+            hBtnBribe = CreateWindow("BUTTON", "Pay Toll(100cr)", WS_CHILD | BS_PUSHBUTTON, 280, 340, 150, 30, hwnd, (HMENU)ID_BTN_BRIBE, NULL, NULL);
             
             SendMessage(hStatCombatTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hStatCombatPlayer, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -502,25 +503,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnFlee, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnBribe, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 280, 100, 20, hwnd, NULL, NULL, NULL);
+            HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 430, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatShipyard, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnUpgCargo = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 310, 140, 30, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
-            hBtnUpgEngine = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 310, 140, 30, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
-            hBtnUpgWeapon = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 320, 310, 140, 30, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
-            hBtnUpgDread = CreateWindow("BUTTON", "Dreadnought", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 470, 310, 140, 30, hwnd, (HMENU)ID_BTN_UPG_DREAD, NULL, NULL);
+            hBtnUpgCargo = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 460, 140, 30, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
+            hBtnUpgEngine = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 460, 140, 30, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
+            hBtnUpgWeapon = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 320, 460, 140, 30, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
+            hBtnUpgDread = CreateWindow("BUTTON", "Dreadnought", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 470, 460, 140, 30, hwnd, (HMENU)ID_BTN_UPG_DREAD, NULL, NULL);
             SendMessage(hBtnUpgCargo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnUpgEngine, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnUpgWeapon, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnUpgDread, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hStatMissions = CreateWindow("STATIC", "Mission Board", WS_CHILD | WS_VISIBLE, 20, 350, 150, 20, hwnd, NULL, NULL, NULL);
+            hStatMissions = CreateWindow("STATIC", "Mission Board", WS_CHILD | WS_VISIBLE, 20, 500, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatMissions, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hStatActiveMission = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 180, 350, 350, 20, hwnd, NULL, NULL, NULL);
+            hStatActiveMission = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 180, 500, 350, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatActiveMission, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnAbandonMission = CreateWindow("BUTTON", "Abandon", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 540, 350, 80, 20, hwnd, (HMENU)ID_BTN_ABANDON, NULL, NULL);
+            hBtnAbandonMission = CreateWindow("BUTTON", "Abandon", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 540, 500, 80, 20, hwnd, (HMENU)ID_BTN_ABANDON, NULL, NULL);
             SendMessage(hBtnAbandonMission, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             for(int i=0; i<3; i++) {
@@ -529,13 +530,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
 
             hListLog = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOINTEGRALHEIGHT,
-                20, 440, 600, 70, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
+                20, 590, 600, 70, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
 
-            HWND hStatMarket = CreateWindow("STATIC", "Market", WS_CHILD | WS_VISIBLE, 300, 100, 100, 20, hwnd, NULL, NULL, NULL);
+            HWND hStatMarket = CreateWindow("STATIC", "Market", WS_CHILD | WS_VISIBLE, 300, 250, 100, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatMarket, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             for (int i = 0; i < 8; i++) {
-                int y = 130 + i * 22;
+                int y = 280 + i * 22;
                 hStatGoodName[i] = CreateWindow("STATIC", goodNames[i], WS_CHILD | WS_VISIBLE, 300, y, 60, 20, hwnd, NULL, NULL, NULL);
                 hStatGoodPrice[i] = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 360, y, 60, 20, hwnd, NULL, NULL, NULL);
                 hStatGoodOwned[i] = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 430, y, 60, 20, hwnd, NULL, NULL, NULL);
@@ -557,6 +558,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             LogMessage("> Welcome to KTrader, Captain.");
             UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
             return 0;
         }
         case WM_COMMAND: {
@@ -593,6 +595,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     wsprintf(buf, "> Bought 1 %s for %d cr.", goodNames[good], price);
                     LogMessage(buf);
                     UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) >= ID_BTN_SELL_START && LOWORD(wParam) < ID_BTN_SELL_START + 8) {
                 int good = LOWORD(wParam) - ID_BTN_SELL_START;
@@ -607,6 +610,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     wsprintf(buf, "> Sold 1 %s for %d cr.", goodNames[good], price);
                     LogMessage(buf);
                     UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) == ID_BTN_UPG_CARGO) {
                 int cost = 500 * (state.cargoLevel + 1);
@@ -619,6 +623,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     wsprintf(buf, "> Cargo Bay upgraded! Max cargo now %d.", state.maxCargo);
                     LogMessage(buf);
                     UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) == ID_BTN_UPG_ENGINE) {
                 int cost = 1000 * (state.engineLevel + 1);
@@ -629,6 +634,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.maxFuel += 50;
                     LogMessage("> Engine upgraded! Less fuel used for travel.");
                     UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) == ID_BTN_UPG_WEAPON) {
                 int cost = 1500 * (state.weaponLevel + 1);
@@ -640,6 +646,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     wsprintf(buf, "> Weapons upgraded to level %d!", state.weaponLevel);
                     LogMessage(buf);
                     UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) == ID_BTN_UPG_DREAD) {
                 if (state.credits >= 100000 && !state.hasDreadnought) {
@@ -648,6 +655,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.hasDreadnought = 1;
                     LogMessage("> YOU WIN! You purchased the legendary Dreadnought! The galaxy is yours!");
                     UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) >= ID_BTN_MISSION1 && LOWORD(wParam) <= ID_BTN_MISSION3) {
                 int idx = LOWORD(wParam) - ID_BTN_MISSION1;
@@ -657,6 +665,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.activeMissionReward = availMissionReward[idx];
                     LogMessage("> Mission accepted.");
                     UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) == ID_BTN_ABANDON) {
                 if (state.activeMissionType != 0) {
@@ -664,6 +673,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.activeMissionType = 0;
                     LogMessage("> Mission abandoned.");
                     UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) == ID_BTN_FIRE) {
                 PlaySoundEffect(2); // laser
@@ -695,6 +705,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     EnemyTurn(hwnd);
                 }
                 UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == ID_BTN_FLEE) {
                 if ((SimpleRand() % 100) < 50) {
                     LogMessage("> Successfully fled from the pirates!");
@@ -704,6 +715,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     EnemyTurn(hwnd);
                 }
                 UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == ID_BTN_BRIBE) {
                 if (state.credits >= 100) {
                     state.credits -= 100;
@@ -711,8 +723,76 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.inCombat = 0;
                     LogMessage("> Paid 100 cr toll to pirates. Pirates Rep +5.");
                     UpdateUI(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
                 }
             }
+            return 0;
+        }
+        
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            
+            // Draw Player Ship at x=100, y=100
+            HBRUSH hShipBrush = CreateSolidBrush(RGB(0, 170, 255));
+            HBRUSH hEngineBrush = CreateSolidBrush(RGB(255, 136, 0));
+            HBRUSH hPirateBrush = CreateSolidBrush(RGB(255, 0, 0));
+            HBRUSH hPirateEngine = CreateSolidBrush(RGB(255, 255, 0));
+            HPEN hWhitePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+            HPEN hOldPen = (HPEN)SelectObject(hdc, hWhitePen);
+            
+            // Player Ship Polygon
+            POINT shipPts[4] = { {130, 100}, {80, 120}, {90, 100}, {80, 80} };
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hShipBrush);
+            Polygon(hdc, shipPts, 4);
+            
+            // Player Engine
+            POINT engPts[4] = { {90, 100}, {70, 105}, {60, 100}, {70, 95} };
+            SelectObject(hdc, hEngineBrush);
+            Polygon(hdc, engPts, 4);
+            
+            if (state.inCombat) {
+                // Pirate Ship at x=500, y=100
+                POINT pPts[4] = { {470, 100}, {520, 125}, {510, 100}, {520, 75} };
+                SelectObject(hdc, hPirateBrush);
+                Polygon(hdc, pPts, 4);
+                
+                POINT pEng[4] = { {510, 100}, {535, 108}, {545, 100}, {535, 92} };
+                SelectObject(hdc, hPirateEngine);
+                Polygon(hdc, pEng, 4);
+            } else {
+                // Planet at x=500, y=100
+                COLORREF pColor = RGB(85, 85, 85);
+                int eco = planets[state.location].ecoType;
+                if (eco == 0) pColor = RGB(34, 170, 34);
+                if (eco == 1) pColor = RGB(136, 68, 34);
+                if (eco == 2) pColor = RGB(0, 170, 170);
+                if (eco == 3) pColor = RGB(136, 136, 136);
+                if (eco == 4) pColor = RGB(34, 85, 136);
+                
+                HBRUSH hPlanet = CreateSolidBrush(pColor);
+                SelectObject(hdc, hPlanet);
+                Ellipse(hdc, 460, 60, 540, 140);
+                DeleteObject(hPlanet);
+                
+                // Craters
+                HBRUSH hCrater = CreateSolidBrush(RGB(30, 30, 30));
+                SelectObject(hdc, hCrater);
+                Ellipse(hdc, 480, 80, 496, 96);
+                Ellipse(hdc, 505, 95, 529, 119);
+                Ellipse(hdc, 485, 110, 497, 122);
+                DeleteObject(hCrater);
+            }
+            
+            SelectObject(hdc, hOldBrush);
+            SelectObject(hdc, hOldPen);
+            DeleteObject(hShipBrush);
+            DeleteObject(hEngineBrush);
+            DeleteObject(hPirateBrush);
+            DeleteObject(hPirateEngine);
+            DeleteObject(hWhitePen);
+            
+            EndPaint(hwnd, &ps);
             return 0;
         }
         case WM_ERASEBKGND: {
@@ -768,7 +848,7 @@ void __stdcall MainEntry() {
         CLASS_NAME,
         "KTrader",
         WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 650, 550,
+        CW_USEDEFAULT, CW_USEDEFAULT, 650, 700,
         NULL, NULL, hInstance, NULL
     );
 
