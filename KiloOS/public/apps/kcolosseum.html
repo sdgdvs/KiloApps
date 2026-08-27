@@ -152,7 +152,16 @@
       }
       owned.forEach(g => {
         const li = document.createElement('li');
-        li.innerHTML = `<div><strong>${g.name}</strong> - ${g.desc}</div>`;
+        li.innerHTML = `
+          <div style="margin-bottom:5px;"><strong>${g.name}</strong> - ${g.desc}</div>
+          <div style="display:flex; gap:5px;">
+            <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'str')" ${funds < 20 ? 'disabled' : ''}>+STR (20D)</button>
+            <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'agi')" ${funds < 20 ? 'disabled' : ''}>+AGI (20D)</button>
+            <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'vit')" ${funds < 20 ? 'disabled' : ''}>+VIT (20D)</button>
+          </div>
+        `;
+        li.style.flexDirection = 'column';
+        li.style.alignItems = 'flex-start';
         ownedList.appendChild(li);
       });
     }
@@ -164,6 +173,20 @@
         owned.push(market[index]);
         market.splice(index, 1);
         updateUI();
+      }
+    }
+
+    function trainGladiator(id, stat) {
+      if (funds >= 20) {
+        const gladiator = owned.find(g => g.id === id);
+        if (gladiator) {
+          funds -= 20;
+          if (stat === 'str') gladiator.str++;
+          if (stat === 'agi') gladiator.agi++;
+          if (stat === 'vit') gladiator.vit++;
+          gladiator.desc = `STR:${gladiator.str} AGI:${gladiator.agi} VIT:${gladiator.vit}`;
+          updateUI();
+        }
       }
     }
 

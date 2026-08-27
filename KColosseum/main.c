@@ -15,6 +15,9 @@ int my_rand() {
 #define ID_OWNED_LIST 103
 #define ID_FUNDS_LABEL 104
 #define ID_REFRESH_BUTTON 105
+#define ID_TRAIN_STR 106
+#define ID_TRAIN_AGI 107
+#define ID_TRAIN_VIT 108
 
 typedef struct {
     int id;
@@ -145,6 +148,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                           290, 105, 270, 185, hwnd, (HMENU)ID_OWNED_LIST, NULL, NULL);
             SendMessageA(hOwnedList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            HWND hTrainStrBtn = CreateWindowA("BUTTON", "+STR (20D)", WS_VISIBLE | WS_CHILD,
+                          290, 300, 85, 30, hwnd, (HMENU)ID_TRAIN_STR, NULL, NULL);
+            SendMessageA(hTrainStrBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            HWND hTrainAgiBtn = CreateWindowA("BUTTON", "+AGI (20D)", WS_VISIBLE | WS_CHILD,
+                          382, 300, 85, 30, hwnd, (HMENU)ID_TRAIN_AGI, NULL, NULL);
+            SendMessageA(hTrainAgiBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            HWND hTrainVitBtn = CreateWindowA("BUTTON", "+VIT (20D)", WS_VISIBLE | WS_CHILD,
+                          475, 300, 85, 30, hwnd, (HMENU)ID_TRAIN_VIT, NULL, NULL);
+            SendMessageA(hTrainVitBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             UpdateUI();
             return 0;
         }
@@ -155,6 +170,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     BuyGladiator(sel);
                 } else {
                     MessageBoxA(hwnd, "Select a gladiator to buy.", "Info", MB_OK | MB_ICONINFORMATION);
+                }
+            } else if (LOWORD(wParam) == ID_TRAIN_STR || LOWORD(wParam) == ID_TRAIN_AGI || LOWORD(wParam) == ID_TRAIN_VIT) {
+                int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) {
+                    if (funds >= 20) {
+                        funds -= 20;
+                        if (LOWORD(wParam) == ID_TRAIN_STR) owned[sel].str++;
+                        if (LOWORD(wParam) == ID_TRAIN_AGI) owned[sel].agi++;
+                        if (LOWORD(wParam) == ID_TRAIN_VIT) owned[sel].vit++;
+                        wsprintfA(owned[sel].desc, "STR:%d AGI:%d VIT:%d", owned[sel].str, owned[sel].agi, owned[sel].vit);
+                        UpdateUI();
+                        SendMessageA(hOwnedList, LB_SETCURSEL, sel, 0);
+                    } else {
+                        MessageBoxA(hwnd, "Not enough funds to train!", "Error", MB_OK | MB_ICONWARNING);
+                    }
+                } else {
+                    MessageBoxA(hwnd, "Select a gladiator to train.", "Info", MB_OK | MB_ICONINFORMATION);
                 }
             } else if (LOWORD(wParam) == ID_REFRESH_BUTTON) {
                 if (funds >= 50) {
