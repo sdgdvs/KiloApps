@@ -27,6 +27,9 @@ int funds = 1000;
 
 HWND hMarketList, hOwnedList, hFundsLabel, hBuyButton;
 
+HBRUSH hbrBkgnd, hbrCrimson, hbrList;
+HFONT hFont, hTitleFont;
+
 void UpdateUI() {
     char buf[256];
     wsprintfA(buf, "Treasury: %d Denarii", funds);
@@ -66,26 +69,33 @@ void BuyGladiator(int index) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
-            CreateWindowA("STATIC", "KColosseum - Ludus Management", WS_VISIBLE | WS_CHILD | SS_CENTER,
-                          10, 10, 560, 20, hwnd, NULL, NULL, NULL);
+            HWND hTitle = CreateWindowA("STATIC", "KColosseum - Ludus Management", WS_VISIBLE | WS_CHILD | SS_CENTER,
+                          10, 10, 560, 30, hwnd, NULL, NULL, NULL);
+            SendMessageA(hTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
 
             hFundsLabel = CreateWindowA("STATIC", "Treasury: 1000 Denarii", WS_VISIBLE | WS_CHILD | SS_CENTER,
-                          10, 40, 560, 20, hwnd, (HMENU)ID_FUNDS_LABEL, NULL, NULL);
+                          10, 45, 560, 25, hwnd, (HMENU)ID_FUNDS_LABEL, NULL, NULL);
+            SendMessageA(hFundsLabel, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
 
-            CreateWindowA("STATIC", "Available Recruits", WS_VISIBLE | WS_CHILD,
-                          10, 70, 270, 20, hwnd, NULL, NULL, NULL);
+            HWND hL1 = CreateWindowA("STATIC", "Available Recruits", WS_VISIBLE | WS_CHILD,
+                          10, 80, 270, 20, hwnd, NULL, NULL, NULL);
+            SendMessageA(hL1, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hMarketList = CreateWindowA("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
-                          10, 90, 270, 200, hwnd, (HMENU)ID_MARKET_LIST, NULL, NULL);
+                          10, 105, 270, 185, hwnd, (HMENU)ID_MARKET_LIST, NULL, NULL);
+            SendMessageA(hMarketList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBuyButton = CreateWindowA("BUTTON", "Buy Selected", WS_VISIBLE | WS_CHILD,
                           10, 300, 270, 30, hwnd, (HMENU)ID_BUY_BUTTON, NULL, NULL);
+            SendMessageA(hBuyButton, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            CreateWindowA("STATIC", "Your Gladiators", WS_VISIBLE | WS_CHILD,
-                          290, 70, 270, 20, hwnd, NULL, NULL, NULL);
+            HWND hL2 = CreateWindowA("STATIC", "Your Gladiators", WS_VISIBLE | WS_CHILD,
+                          290, 80, 270, 20, hwnd, NULL, NULL, NULL);
+            SendMessageA(hL2, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hOwnedList = CreateWindowA("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER,
-                          290, 90, 270, 200, hwnd, (HMENU)ID_OWNED_LIST, NULL, NULL);
+                          290, 105, 270, 185, hwnd, (HMENU)ID_OWNED_LIST, NULL, NULL);
+            SendMessageA(hOwnedList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             UpdateUI();
             return 0;
@@ -101,6 +111,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             return 0;
         }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdcStatic = (HDC)wParam;
+            HWND hCtrl = (HWND)lParam;
+            if (hCtrl == hFundsLabel) {
+                SetTextColor(hdcStatic, RGB(212, 175, 55));
+                SetBkColor(hdcStatic, RGB(139, 0, 0));
+                return (LRESULT)hbrCrimson;
+            } else {
+                SetTextColor(hdcStatic, RGB(139, 0, 0));
+                SetBkColor(hdcStatic, RGB(245, 245, 220));
+                return (LRESULT)hbrBkgnd;
+            }
+        }
+        case WM_CTLCOLORLISTBOX: {
+            HDC hdcList = (HDC)wParam;
+            SetTextColor(hdcList, RGB(51, 51, 51));
+            SetBkColor(hdcList, RGB(253, 245, 230));
+            return (LRESULT)hbrList;
+        }
         case WM_DESTROY: {
             PostQuitMessage(0);
             return 0;
@@ -113,12 +142,18 @@ void MainEntry() {
     HINSTANCE hInstance = GetModuleHandleA(NULL);
     const char CLASS_NAME[] = "KColosseumClass";
 
+    hbrBkgnd = CreateSolidBrush(RGB(245, 245, 220));
+    hbrCrimson = CreateSolidBrush(RGB(139, 0, 0));
+    hbrList = CreateSolidBrush(RGB(253, 245, 230));
+    hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_ROMAN, "Times New Roman");
+    hTitleFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_ROMAN, "Times New Roman");
+
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.hbrBackground = hbrBkgnd;
 
     RegisterClassA(&wc);
 
