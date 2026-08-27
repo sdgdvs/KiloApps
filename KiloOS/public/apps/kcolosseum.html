@@ -134,10 +134,14 @@
           if (Math.random() < 0.3) shield = 1;
       }
       const cost = (str + agi + vit) * 20 + Math.floor(Math.random() * 50) + (weapon ? 50 : 0) + (armor ? 50 : 0) + (shield ? 30 : 0);
-      let g = { id: nextId++, name, cost, str, agi, vit, weapon, armor, shield };
+      let g = { id: nextId++, name, cost, str, agi, vit, weapon, armor, shield, damageTaken: 0 };
       updateDesc(g);
       return g;
     }
+
+    function getEffStr(g) { return g.str + (g.weapon === 1 ? 3 : 0); }
+    function getEffAgi(g) { return g.agi + (g.weapon === 2 ? 3 : 0); }
+    function getEffVit(g) { return g.vit + (g.armor === 1 ? 5 : 0); }
 
     function updateDesc(g) {
       let eqStr = "";
@@ -145,12 +149,10 @@
       else if (g.weapon === 2) eqStr += " [Trid]";
       if (g.armor === 1) eqStr += " [Armr]";
       if (g.shield === 1) eqStr += " [Shld]";
-      g.desc = `STR:${g.str} AGI:${g.agi} VIT:${g.vit}${eqStr}`;
+      let maxHp = getEffVit(g) * 10;
+      let hp = maxHp - g.damageTaken;
+      g.desc = `HP:${hp}/${maxHp} STR:${g.str} AGI:${g.agi} VIT:${g.vit}${eqStr}`;
     }
-
-    function getEffStr(g) { return g.str + (g.weapon === 1 ? 3 : 0); }
-    function getEffAgi(g) { return g.agi + (g.weapon === 2 ? 3 : 0); }
-    function getEffVit(g) { return g.vit + (g.armor === 1 ? 5 : 0); }
 
     const market = [generateGladiator(), generateGladiator(), generateGladiator()];
     const owned = [];
@@ -201,8 +203,9 @@
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'agi')" ${funds < 20 ? 'disabled' : ''}>+AGI (20D)</button>
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'vit')" ${funds < 20 ? 'disabled' : ''}>+VIT (20D)</button>
           </div>
-          <div style="margin-top:5px;">
-            <button style="font-size:0.7em; background:#228b22; color:#fff;" onclick="enterArena(${g.id})">Fight in Arena</button>
+          <div style="margin-top:5px; display:flex; gap:5px;">
+            <button style="font-size:0.7em; background:#228b22; color:#fff;" onclick="enterArena(${g.id})" ${g.damageTaken >= getEffVit(g) * 10 ? 'disabled' : ''}>Fight in Arena</button>
+            ${g.damageTaken > 0 ? `<button style="font-size:0.7em; background:#4169e1; color:#fff;" onclick="healGladiator(${g.id})" ${(funds < g.damageTaken) ? 'disabled' : ''}>Heal (${g.damageTaken}D)</button>` : ''}
           </div>
         `;
         li.style.flexDirection = 'column';
@@ -250,6 +253,16 @@
       }
     }
 
+    function healGladiator(id) {
+      const g = owned.find(g => g.id === id);
+      if (g && g.damageTaken > 0 && funds >= g.damageTaken) {
+        funds -= g.damageTaken;
+        g.damageTaken = 0;
+        updateDesc(g);
+        updateUI();
+      }
+    }
+
     let currentFighter = null;
     let enemyFighter = null;
     let playerDefending = false;
@@ -259,8 +272,8 @@
       currentFighter = owned.find(g => g.id === id);
       if (!currentFighter) return;
       
-      currentFighter.hp = getEffVit(currentFighter) * 10;
-      currentFighter.maxHp = currentFighter.hp;
+      currentFighter.maxHp = getEffVit(currentFighter) * 10;
+      currentFighter.hp = currentFighter.maxHp - currentFighter.damageTaken;
       
       enemyFighter = generateGladiator(true);
       enemyFighter.hp = getEffVit(enemyFighter) * 10;
@@ -350,6 +363,7 @@
           let dmg = Math.max(1, getEffStr(enemyFighter) + Math.floor(Math.random() * 4));
           if (playerDefending) dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
           currentFighter.hp -= dmg;
+          currentFighter.damageTaken += dmg;
           logCombat(`<strong>${enemyFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
         } else {
           logCombat(`<strong>${enemyFighter.name}</strong> misses!`);
@@ -359,7 +373,9 @@
       if (currentFighter.hp <= 0) {
         currentFighter.hp = 0;
         updateCombatUI();
-        logCombat(`<strong>${currentFighter.name} is defeated...</strong>`);
+        logCombat(`<strong>${currentFighter.name} is DEAD.</strong>`);
+        owned.splice(owned.findIndex(g => g.id === currentFighter.id), 1);
+        updateUI();
         combatOver = true;
         setTimeout(exitArena, 2000);
         return;
@@ -371,6 +387,18 @@
     function exitArena() {
       document.getElementById('arenaPanel').style.display = 'none';
       document.getElementById('dashboard').style.display = 'flex';
+      
+      // Pass time slightly - all gladiators NOT fighting heal by 2 HP
+      owned.forEach(g => {
+        if (!currentFighter || g.id !== currentFighter.id) {
+          if (g.damageTaken > 0) {
+            g.damageTaken -= 2;
+            if (g.damageTaken < 0) g.damageTaken = 0;
+            updateDesc(g);
+          }
+        }
+      });
+      updateUI();
     }
 
     updateUI();

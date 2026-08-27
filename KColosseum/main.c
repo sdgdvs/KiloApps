@@ -28,6 +28,7 @@ int my_rand() {
 #define ID_EQ_TRIDENT 115
 #define ID_EQ_ARMOR 116
 #define ID_EQ_SHIELD 117
+#define ID_HEAL_BUTTON 118
 typedef struct {
     int id;
     char name[32];
@@ -39,11 +40,16 @@ typedef struct {
     int weapon;
     int armor;
     int shield;
+    int damageTaken;
 } Gladiator;
 
 const char* firstNames[] = {"Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus"};
 const char* epithets[] = {"the Strong", "the Swift", "the Bear", "the Lion", "the Fierce", "the Giant"};
 int nextId = 1;
+
+int GetEffStr(Gladiator* g);
+int GetEffAgi(Gladiator* g);
+int GetEffVit(Gladiator* g);
 
 void UpdateGladiatorDesc(Gladiator* g) {
     char eqStr[64];
@@ -52,7 +58,9 @@ void UpdateGladiatorDesc(Gladiator* g) {
     else if (g->weapon == 2) lstrcatA(eqStr, " [Trid]");
     if (g->armor == 1) lstrcatA(eqStr, " [Armr]");
     if (g->shield == 1) lstrcatA(eqStr, " [Shld]");
-    wsprintfA(g->desc, "STR:%d AGI:%d VIT:%d%s", g->str, g->agi, g->vit, eqStr);
+    int maxHp = GetEffVit(g) * 10;
+    int hp = maxHp - g->damageTaken;
+    wsprintfA(g->desc, "HP:%d/%d STR:%d AGI:%d VIT:%d%s", hp, maxHp, g->str, g->agi, g->vit, eqStr);
 }
 
 Gladiator GenerateGladiator(int forArena) {
@@ -60,6 +68,7 @@ Gladiator GenerateGladiator(int forArena) {
     g.weapon = 0;
     g.armor = 0;
     g.shield = 0;
+    g.damageTaken = 0;
     g.desc[0] = '\0';
     g.id = nextId++;
     
@@ -104,7 +113,7 @@ int owned_count = 0;
 int funds = 1000;
 
 HWND hTitle, hFundsLabel, hL1, hRefreshButton, hMarketList, hBuyButton, hL2, hOwnedList, hTrainStrBtn, hTrainAgiBtn, hTrainVitBtn, hFightBtn;
-HWND hEqGladiusBtn, hEqTridentBtn, hEqArmorBtn, hEqShieldBtn;
+HWND hEqGladiusBtn, hEqTridentBtn, hEqArmorBtn, hEqShieldBtn, hHealBtn;
 HWND hCombatTitle, hCombatPlayer, hCombatEnemy, hAttackBtn, hDefendBtn, hFleeBtn, hCombatLog;
 
 Gladiator* currentFighter = NULL;
@@ -175,6 +184,7 @@ void SwitchView(int view) {
     ShowWindow(hTrainAgiBtn, cmdDash);
     ShowWindow(hTrainVitBtn, cmdDash);
     ShowWindow(hFightBtn, cmdDash);
+    ShowWindow(hHealBtn, cmdDash);
 
     ShowWindow(hCombatTitle, cmdComb);
     ShowWindow(hCombatPlayer, cmdComb);
@@ -205,8 +215,8 @@ void UpdateCombatUI() {
 void EnterArena(int index) {
     currentFighter = &owned[index];
     playerMaxHp = GetEffVit(currentFighter) * 10;
-    playerHp = playerMaxHp;
-
+    playerHp = playerMaxHp - currentFighter->damageTaken;
+    
     enemyFighter = GenerateGladiator(1);
     enemyMaxHp = GetEffVit(&enemyFighter) * 10;
     enemyHp = enemyMaxHp;
@@ -291,6 +301,7 @@ void CombatAction(int action) {
             if (playerDefending) dmg -= (currentFighter->shield == 1 ? 5 : 3);
             if (dmg < 1) dmg = 1;
             playerHp -= dmg;
+            currentFighter->damageTaken += dmg;
             wsprintfA(buf, "%s hits for %d damage!", enemyFighter.name, dmg);
             LogCombat(buf);
         } else {
@@ -302,12 +313,23 @@ void CombatAction(int action) {
     if (playerHp <= 0) {
         playerHp = 0;
         UpdateCombatUI();
-        wsprintfA(buf, "%s is defeated...", currentFighter->name);
+        wsprintfA(buf, "%s is DEAD...", currentFighter->name);
         LogCombat(buf);
         combatOver = 1;
         SetWindowTextA(hAttackBtn, "Leave");
         EnableWindow(hDefendBtn, FALSE);
         EnableWindow(hFleeBtn, FALSE);
+        
+        for (int i = 0; i < owned_count; i++) {
+            if (&owned[i] == currentFighter) {
+                for (int j = i; j < owned_count - 1; j++) {
+                    owned[j] = owned[j + 1];
+                }
+                owned_count--;
+                break;
+            }
+        }
+        currentFighter = NULL;
         return;
     }
 
@@ -380,8 +402,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessageA(hTrainVitBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hFightBtn = CreateWindowA("BUTTON", "Fight in Arena", WS_VISIBLE | WS_CHILD,
-                          290, 310, 270, 25, hwnd, (HMENU)ID_FIGHT_BUTTON, NULL, NULL);
+                          290, 310, 180, 25, hwnd, (HMENU)ID_FIGHT_BUTTON, NULL, NULL);
             SendMessageA(hFightBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hHealBtn = CreateWindowA("BUTTON", "Heal", WS_VISIBLE | WS_CHILD,
+                          480, 310, 80, 25, hwnd, (HMENU)ID_HEAL_BUTTON, NULL, NULL);
+            SendMessageA(hHealBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             // Arena Combat Controls (Hidden by default)
             hCombatTitle = CreateWindowA("STATIC", "Arena Combat", WS_CHILD | SS_CENTER,
@@ -468,8 +494,37 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     UpdateUI();
                 }
+            } else if (LOWORD(wParam) == ID_HEAL_BUTTON) {
+                int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) {
+                    if (owned[sel].damageTaken > 0) {
+                        if (funds >= owned[sel].damageTaken) {
+                            funds -= owned[sel].damageTaken;
+                            owned[sel].damageTaken = 0;
+                            UpdateGladiatorDesc(&owned[sel]);
+                            UpdateUI();
+                            SendMessageA(hOwnedList, LB_SETCURSEL, sel, 0);
+                        } else {
+                            MessageBoxA(hwnd, "Not enough funds to heal fully!", "Error", MB_OK | MB_ICONWARNING);
+                        }
+                    } else {
+                        MessageBoxA(hwnd, "Gladiator is already at full health.", "Info", MB_OK | MB_ICONINFORMATION);
+                    }
+                } else {
+                    MessageBoxA(hwnd, "Select a gladiator to heal.", "Info", MB_OK | MB_ICONINFORMATION);
+                }
             } else if (LOWORD(wParam) == ID_ATTACK_BUTTON) {
                 if (combatOver) {
+                    for (int i = 0; i < owned_count; i++) {
+                        if (currentFighter == NULL || &owned[i] != currentFighter) {
+                            if (owned[i].damageTaken > 0) {
+                                owned[i].damageTaken -= 2;
+                                if (owned[i].damageTaken < 0) owned[i].damageTaken = 0;
+                                UpdateGladiatorDesc(&owned[i]);
+                            }
+                        }
+                    }
+                    UpdateUI();
                     SwitchView(0);
                 } else {
                     CombatAction(0);
@@ -481,10 +536,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_FIGHT_BUTTON) {
                 int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
                 if (sel != LB_ERR) {
-                    SetWindowTextA(hAttackBtn, "Attack");
-                    EnableWindow(hDefendBtn, TRUE);
-                    EnableWindow(hFleeBtn, TRUE);
-                    EnterArena(sel);
+                    int maxHp = GetEffVit(&owned[sel]) * 10;
+                    if (owned[sel].damageTaken >= maxHp) {
+                        MessageBoxA(hwnd, "Gladiator is too injured to fight!", "Error", MB_OK | MB_ICONWARNING);
+                    } else {
+                        SetWindowTextA(hAttackBtn, "Attack");
+                        EnableWindow(hDefendBtn, TRUE);
+                        EnableWindow(hFleeBtn, TRUE);
+                        EnterArena(sel);
+                    }
                 } else {
                     MessageBoxA(hwnd, "Select a gladiator to fight.", "Info", MB_OK | MB_ICONINFORMATION);
                 }
