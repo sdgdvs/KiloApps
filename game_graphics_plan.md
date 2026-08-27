@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KRogue
 - KChess
 - KPong
 - KMines
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColosseum
 - KFarm
 - KAlchemy
+- KRogue
 ## Completed Work Log
+
+- **KRogue (Loop 7):** Implemented highly polished visual effects including multi-layered particle explosions (layering fire, debris, and shockwaves for Boss deaths and Meteor spells), upgraded kinematic animations (decelerating drag on particles, dynamic color shifting from white to red on fire, and punchy shockwave expansion), procedural rotational and decaying screen-shake, and highly detailed procedural environmental variations (varied brick patterns and biome-specific cracks on walls, and biome-specific props like slime puddles, rock clusters, and lava pools on floors) in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
 - **KAlchemy (Loop 6):** Implemented highly polished visual effects including procedural screen-shake tied to alchemical transmutations (manipulating DOM styles via CSS transforms in Web and window offsets via SetWindowOrgEx in Native C Win32 GDI), and upgraded multi-layered particle explosions featuring distinct types of particles (slower/larger colored core elements and fast/thin bright white sparks) generated on each transmutation in both Web Canvas (kalchemy.html) and Native C Win32 GDI (KAlchemy/main.c).
 

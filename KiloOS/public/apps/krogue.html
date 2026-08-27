@@ -511,7 +511,7 @@
             });
         }
 
-        function addParticles(x, y, color, count = 10) {
+        function addParticles(x, y, color, count = 10, isFire = false) {
             for (let i = 0; i < count; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = 1 + Math.random() * 4;
@@ -523,7 +523,8 @@
                     color: color,
                     size: 2 + Math.random() * 4,
                     life: 1.0,
-                    gravity: 0
+                    gravity: 0,
+                    isFire: isFire
                 });
             }
         }
@@ -540,9 +541,19 @@
                     color: color,
                     size: 2 + Math.random() * 5,
                     life: 1.5,
-                    gravity: 0.4
+                    gravity: 0.4,
+                    isFire: false
                 });
             }
+        }
+
+        function addExplosion(x, y, size = 1) {
+            screenShake = 15 * size;
+            shockwaves.push({x: x, y: y, radius: 0, life: 1.5, maxLife: 1.5});
+            addParticles(x, y, '#ffffff', 15 * size, true);
+            addParticles(x, y, '#f6ad55', 25 * size, true);
+            addParticles(x, y, '#e53e3e', 20 * size, true);
+            addDebrisParticles(x, y, '#a0aec0', 15 * size);
         }
 
         function addAttackAnim(x, y, targetX, targetY, color = '#fc8181') {
@@ -815,29 +826,55 @@
             
             // Texture variation
             let crack = (x * 17 + y * 31) % 10;
+            let variation = (x * 11 + y * 43) % 4;
             
-            ctx.fillRect(px + 1, py + 1, TILE - 2, 9);
-            ctx.fillRect(px + 1, py + 11, TILE / 2 - 2, 9);
-            ctx.fillRect(px + TILE / 2 + 1, py + 11, TILE / 2 - 2, 9);
-            ctx.fillStyle = accentColor;
-            ctx.fillRect(px + 2, py + 8, TILE - 4, 2);
+            if (variation === 0) {
+                ctx.fillRect(px + 1, py + 1, TILE - 2, 9);
+                ctx.fillRect(px + 1, py + 11, TILE / 2 - 2, 9);
+                ctx.fillRect(px + TILE / 2 + 1, py + 11, TILE / 2 - 2, 9);
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(px + 2, py + 8, TILE - 4, 2);
+            } else if (variation === 1) {
+                ctx.fillRect(px + 1, py + 1, TILE / 2 - 2, 9);
+                ctx.fillRect(px + TILE / 2 + 1, py + 1, TILE / 2 - 2, 9);
+                ctx.fillRect(px + 1, py + 11, TILE - 2, 9);
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(px + 2, py + 18, TILE - 4, 2);
+            } else if (variation === 2) {
+                ctx.fillRect(px + 1, py + 1, TILE - 2, 6);
+                ctx.fillRect(px + 1, py + 8, TILE - 2, 6);
+                ctx.fillRect(px + 1, py + 15, TILE - 2, 5);
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(px + 2, py + 5, TILE - 4, 1);
+            } else {
+                ctx.fillRect(px + 1, py + 1, TILE - 2, TILE - 2);
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(px + 4, py + 4, TILE - 8, TILE - 8);
+            }
             
-            if (crack > 7) {
-                ctx.fillStyle = (biome === 'inferno') ? '#dd6b20' : mortarColor; // Lava cracks
+            if (crack > 6) {
+                ctx.fillStyle = (biome === 'inferno') ? '#dd6b20' : (biome === 'void' ? '#805ad5' : mortarColor);
                 ctx.fillRect(px + 4, py + 4, 2, 4);
-                if (biome === 'inferno') ctx.fillRect(px + 5, py + 2, 2, 2);
+                if (biome === 'inferno' || biome === 'void') ctx.fillRect(px + 5, py + 2, 2, 2);
+                if (crack === 9) { // deep crack
+                    ctx.fillRect(px + 6, py + 8, 3, 3);
+                    ctx.fillRect(px + 8, py + 11, 2, 4);
+                }
             }
             
             if (biome === 'sewers' && (x * 7 + y * 13) % 4 === 0) {
                 ctx.fillStyle = '#22543d'; // Vines
-                ctx.fillRect(px + 2, py, 2, 8);
-                ctx.fillRect(px + 4, py + 2, 2, 4);
+                ctx.fillRect(px + 2, py, 2, 10);
+                ctx.fillRect(px + 4, py + 2, 2, 6);
+                ctx.fillStyle = '#2f855a';
+                ctx.fillRect(px + 3, py + 4, 4, 4);
             } else if (biome === 'crypt' && (x * 11 + y * 5) % 6 === 0) {
                 ctx.fillStyle = '#cbd5e0'; // Skulls on walls
-                ctx.fillRect(px + 14, py + 3, 4, 4);
+                ctx.fillRect(px + 12, py + 3, 6, 6);
                 ctx.fillStyle = '#1a202c';
-                ctx.fillRect(px + 14, py + 4, 1, 1);
-                ctx.fillRect(px + 16, py + 4, 1, 1);
+                ctx.fillRect(px + 13, py + 4, 2, 2);
+                ctx.fillRect(px + 16, py + 4, 2, 2);
+                ctx.fillRect(px + 14, py + 7, 2, 1);
             }
             
             ctx.globalAlpha = 1.0;
@@ -867,18 +904,47 @@
             ctx.fillStyle = bg; ctx.fillRect(px, py, TILE, TILE);
             
             let pebble = (x * 23 + y * 19) % 5;
+            let tileStyle = (x * 7 + y * 11) % 3;
+            
+            if (tileStyle === 1) {
+                ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                ctx.fillRect(px, py, TILE, 1);
+                ctx.fillRect(px, py, 1, TILE);
+            } else if (tileStyle === 2) {
+                ctx.fillStyle = 'rgba(255,255,255,0.02)';
+                ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+            }
+            
             if (pebble === 0) {
-                ctx.fillStyle = (biome === 'inferno') ? '#c53030' : (biome === 'crypt' ? '#a0aec0' : 'rgba(255,255,255,0.04)');
+                ctx.fillStyle = (biome === 'inferno') ? '#c53030' : (biome === 'crypt' ? '#a0aec0' : 'rgba(255,255,255,0.06)');
                 ctx.fillRect(px + 4, py + 4, 3, 3);
                 ctx.fillStyle = (biome === 'inferno') ? '#dd6b20' : 'rgba(255,255,255,0.04)';
                 ctx.fillRect(px + 14, py + 12, 2, 2);
+                if (biome === 'sewers') {
+                    ctx.fillStyle = '#2f855a';
+                    ctx.fillRect(px + 2, py + 14, 4, 2);
+                }
             } else if (pebble === 1) {
                 if (biome === 'sewers') {
                     ctx.fillStyle = '#22543d'; // slime puddle
                     ctx.fillRect(px + 6, py + 6, 8, 6);
+                    ctx.fillStyle = '#48bb78'; // slime highlight
+                    ctx.fillRect(px + 8, py + 8, 2, 2);
+                } else if (biome === 'caves') {
+                    ctx.fillStyle = '#4a5568'; // rock cluster
+                    ctx.fillRect(px + 8, py + 8, 4, 4);
+                    ctx.fillRect(px + 6, py + 10, 2, 2);
                 } else {
                     ctx.fillStyle = 'rgba(255,255,255,0.04)';
                     ctx.fillRect(px + 8, py + 8, 4, 2);
+                    ctx.fillRect(px + 10, py + 4, 2, 2);
+                }
+            } else if (pebble === 2) {
+                if (biome === 'inferno') {
+                    ctx.fillStyle = '#dd6b20'; // small lava pool
+                    ctx.fillRect(px + 10, py + 10, 6, 4);
+                    ctx.fillStyle = '#f6ad55';
+                    ctx.fillRect(px + 12, py + 11, 2, 2);
                 }
             }
             
@@ -971,13 +1037,19 @@
 
         function render() {
             frameCount++;
-            if (screenShake > 0) screenShake--;
+            if (screenShake > 0) {
+                screenShake *= 0.92;
+                if (screenShake < 0.5) screenShake = 0;
+            }
             ctx.clearRect(0, 0, C_WIDTH, C_HEIGHT);
             ctx.save();
             if (screenShake > 0) {
-                let dx = (Math.random() - 0.5) * screenShake;
-                let dy = (Math.random() - 0.5) * screenShake;
-                ctx.translate(dx, dy);
+                let dx = (Math.random() - 0.5) * screenShake * 1.5;
+                let dy = (Math.random() - 0.5) * screenShake * 1.5;
+                let angle = (Math.random() - 0.5) * screenShake * 0.003;
+                ctx.translate(C_WIDTH/2, C_HEIGHT/2);
+                ctx.rotate(angle);
+                ctx.translate(-C_WIDTH/2 + dx, -C_HEIGHT/2 + dy);
             }
 
             let biome = getBiome(dlevel);
@@ -1097,23 +1169,28 @@
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.05;
                 if (p.gravity) p.vy += p.gravity;
-                ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                p.vx *= 0.93; // kinematic drag
+                p.vy *= 0.93;
+                let c = p.color;
+                if (p.isFire) c = p.life > 0.6 ? '#ffffff' : (p.life > 0.3 ? '#f6ad55' : '#e53e3e');
+                ctx.fillStyle = c; ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (0.5 + p.life * 0.5), 0, Math.PI * 2); ctx.fill();
                 ctx.globalAlpha = 1.0; if (p.life <= 0) particles.splice(i, 1);
             }
             
             // Shockwave FX
             for (let i = shockwaves.length - 1; i >= 0; i--) {
                 let sw = shockwaves[i];
-                sw.radius += 1.5;
+                sw.radius += 1.5 + (sw.life * 1.0); // expands faster initially
                 sw.life -= 0.05;
                 if (sw.life <= 0) {
                     shockwaves.splice(i, 1);
                     continue;
                 }
-                ctx.globalAlpha = sw.life;
+                let alpha = sw.maxLife ? sw.life / sw.maxLife : sw.life;
+                ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 2 + sw.life * 3;
+                ctx.lineWidth = 2 + alpha * 4;
                 ctx.beginPath();
                 ctx.ellipse((sw.x + 0.5) * TILE, (sw.y + 0.5) * TILE, sw.radius * TILE, sw.radius * TILE * 0.7, 0, 0, Math.PI * 2);
                 ctx.stroke();
@@ -1314,7 +1391,7 @@
                         if (mIdx >= 0) monsters[mIdx].hp -= 35;
                     }
                 }
-                addParticles(targetX, targetY, '#e53e3e', 30); addMsg("FIREBALL EXPLOSION!", 'msg-magic');
+                addExplosion(targetX, targetY, 1.5); addMsg("FIREBALL EXPLOSION!", 'msg-magic');
             } else if (activeTargetSpell === 'meteor') {
                 player.mp -= 12;
                 for (let dy = -2; dy <= 2; dy++) {
@@ -1323,9 +1400,7 @@
                         if (mIdx >= 0) monsters[mIdx].hp -= 60;
                     }
                 }
-                addParticles(targetX, targetY, '#b794f4', 50); addMsg("METEOR STRIKE ANNIHILATION!", 'msg-magic');
-                screenShake = 20;
-                shockwaves.push({x: targetX, y: targetY, radius: 0, life: 1.0});
+                addExplosion(targetX, targetY, 2.5); addMsg("METEOR STRIKE ANNIHILATION!", 'msg-magic');
             } else if (activeTargetSpell === 'missile') {
                 player.mp -= 3;
                 let mIdx = monsters.findIndex(m => m.x === targetX && m.y === targetY);
@@ -1514,10 +1589,7 @@
                 let m = monsters[i];
                 if (m.hp <= 0) {
                     if (m.boss) {
-                        addDebrisParticles(m.x, m.y, '#ecc94b', 100);
-                        addDebrisParticles(m.x, m.y, '#e53e3e', 50);
-                        screenShake = 30;
-                        shockwaves.push({x: m.x, y: m.y, radius: 0, life: 1.5});
+                        addExplosion(m.x, m.y, 3.0);
                         setTimeout(() => { state = 3; saveRunToLeaderboard('VICTORY'); }, 2000);
                     } else {
                         addParticles(m.x, m.y, '#fc8181', 15);

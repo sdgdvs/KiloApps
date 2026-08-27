@@ -154,14 +154,16 @@ typedef struct {
 #define S_BLESSING 7
 
 
-#define MAX_PARTICLES 300
+#define MAX_PARTICLES 800
 typedef struct {
     int active;
     float x, y;
     float vx, vy;
     COLORREF color;
     int life;
+    int max_life;
     int has_gravity;
+    int is_fire;
 } Particle;
 Particle particles[MAX_PARTICLES];
 
@@ -195,7 +197,29 @@ void spawn_particles(int x, int y, COLORREF color, int count) {
                 particles[i].vy = (float)(rand_range(0, 200) - 100) / 30.0f;
                 particles[i].color = color;
                 particles[i].life = rand_range(10, 30);
+                particles[i].max_life = particles[i].life;
                 particles[i].has_gravity = 0;
+                particles[i].is_fire = 0;
+                break;
+            }
+        }
+    }
+}
+
+void spawn_fire_particles(int x, int y, COLORREF color, int count) {
+    for(int j=0; j<count; j++) {
+        for(int i=0; i<MAX_PARTICLES; i++) {
+            if(!particles[i].active) {
+                particles[i].active = 1;
+                particles[i].x = (float)(x * 12 + 6);
+                particles[i].y = (float)(y * 20 + 10);
+                particles[i].vx = (float)(rand_range(0, 200) - 100) / 30.0f;
+                particles[i].vy = (float)(rand_range(0, 200) - 100) / 30.0f;
+                particles[i].color = color;
+                particles[i].life = rand_range(15, 45);
+                particles[i].max_life = particles[i].life;
+                particles[i].has_gravity = 0;
+                particles[i].is_fire = 1;
                 break;
             }
         }
@@ -213,15 +237,38 @@ void spawn_debris_particles(int x, int y, COLORREF color, int count) {
                 particles[i].vy = -(float)(rand_range(50, 150)) / 15.0f;
                 particles[i].color = color;
                 particles[i].life = rand_range(15, 40);
+                particles[i].max_life = particles[i].life;
                 particles[i].has_gravity = 1;
+                particles[i].is_fire = 0;
                 break;
             }
         }
     }
 }
 
+void spawn_explosion(int x, int y, int size) {
+    screen_shake = 10 * size;
+    for(int i=0; i<MAX_SHOCKWAVES; i++) {
+        if(!shockwaves[i].active) {
+            shockwaves[i].active = 1;
+            shockwaves[i].x = (float)(x * 12 + 6);
+            shockwaves[i].y = (float)(y * 20 + 10);
+            shockwaves[i].radius = 0;
+            shockwaves[i].life = 15 * size;
+            break;
+        }
+    }
+    spawn_fire_particles(x, y, RGB(255, 255, 255), 15 * size);
+    spawn_fire_particles(x, y, RGB(255, 150, 50), 25 * size);
+    spawn_fire_particles(x, y, RGB(255, 50, 50), 20 * size);
+    spawn_debris_particles(x, y, RGB(100, 100, 100), 10 * size);
+}
+
 void update_effects() {
-    if (screen_shake > 0) screen_shake--;
+    if (screen_shake > 0) {
+        screen_shake = (screen_shake * 9) / 10;
+        if (screen_shake == 1) screen_shake = 0;
+    }
     for(int i=0; i<MAX_PARTICLES; i++) {
         if(particles[i].active) {
             particles[i].x += particles[i].vx;
@@ -229,13 +276,24 @@ void update_effects() {
             if(particles[i].has_gravity) {
                 particles[i].vy += 0.4f;
             }
+            
+            particles[i].vx *= 0.93f;
+            particles[i].vy *= 0.93f;
+            
+            if(particles[i].is_fire) {
+                float ratio = (float)particles[i].life / (float)particles[i].max_life;
+                if(ratio > 0.6f) particles[i].color = RGB(255, 255, 255);
+                else if(ratio > 0.3f) particles[i].color = RGB(255, 150, 50);
+                else particles[i].color = RGB(255, 50, 50);
+            }
+            
             particles[i].life--;
             if(particles[i].life <= 0) particles[i].active = 0;
         }
     }
     for(int i=0; i<MAX_SHOCKWAVES; i++) {
         if(shockwaves[i].active) {
-            shockwaves[i].radius += 2.0f;
+            shockwaves[i].radius += 2.0f + (shockwaves[i].life * 0.1f);
             shockwaves[i].life--;
             if(shockwaves[i].life <= 0) shockwaves[i].active = 0;
         }
@@ -246,7 +304,11 @@ void draw_particles(HDC memDC) {
     for(int i=0; i<MAX_PARTICLES; i++) {
         if(particles[i].active) {
             HBRUSH b = CreateSolidBrush(particles[i].color);
-            RECT r = { (int)particles[i].x - 1, (int)particles[i].y - 1, (int)particles[i].x + 2, (int)particles[i].y + 2 };
+            int size = 1;
+            if(particles[i].is_fire) {
+                size = 1 + (particles[i].life * 2 / particles[i].max_life);
+            }
+            RECT r = { (int)particles[i].x - size, (int)particles[i].y - size, (int)particles[i].x + size + 1, (int)particles[i].y + size + 1 };
             FillRect(memDC, &r, b);
             DeleteObject(b);
         }
@@ -1187,19 +1249,9 @@ void gain_xp(Entity* p, int amount) {
 
 void handle_death(Entity* e, Entity* killer) {
     if(e->ch == '&') {
-        spawn_debris_particles(e->x, e->y, RGB(255, 215, 0), 100);
-        spawn_debris_particles(e->x, e->y, RGB(255, 50, 50), 50);
-        screen_shake = 30;
-        for(int i=0; i<MAX_SHOCKWAVES; i++) {
-            if(!shockwaves[i].active) {
-                shockwaves[i].active = 1;
-                shockwaves[i].x = e->x * char_w + char_w / 2;
-                shockwaves[i].y = e->y * char_h + char_h / 2;
-                shockwaves[i].radius = 0;
-                shockwaves[i].life = 30;
-                break;
-            }
-        }
+        spawn_explosion(e->x, e->y, 4);
+    } else if(e->ch == 'B') {
+        spawn_explosion(e->x, e->y, 2);
     } else {
         spawn_particles(e->x, e->y, RGB(255,50,50), 15);
     }
@@ -2666,18 +2718,7 @@ void fire_spell() {
     } else if (g.active_spell == S_METEOR) {
         p->mp -= 12;
         add_msg("METEOR STRIKE! Flaming meteors rain down!");
-        screen_shake = 20;
-        for(int i=0; i<MAX_SHOCKWAVES; i++) {
-            if(!shockwaves[i].active) {
-                shockwaves[i].active = 1;
-                shockwaves[i].x = g.target_x * char_w + char_w / 2;
-                shockwaves[i].y = g.target_y * char_h + char_h / 2;
-                shockwaves[i].radius = 0;
-                shockwaves[i].life = 20;
-                break;
-            }
-        }
-        spawn_particles(g.target_x, g.target_y, RGB(255, 100, 255), 50);
+        spawn_explosion(g.target_x, g.target_y, 3);
         for(int dy=-2; dy<=2; dy++) {
             for(int dx=-2; dx<=2; dx++) {
                 int tx = g.target_x + dx;
