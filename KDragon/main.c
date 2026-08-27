@@ -76,6 +76,28 @@ HBRUSH bgBrush;
 
 int current_event_id = 0;
 
+struct Particle { int x, y; int vx, vy; int life; COLORREF color; };
+#define MAX_PARTICLES 50
+struct Particle particles[MAX_PARTICLES];
+int anim_offset = 0;
+int player_shake = 0;
+int enemy_shake = 0;
+int player_attack_offset = 0;
+int enemy_attack_offset = 0;
+
+void spawn_particles(int x, int y, COLORREF color, int count) {
+    for (int i = 0; i < MAX_PARTICLES && count > 0; i++) {
+        if (particles[i].life <= 0) {
+            particles[i].x = x; particles[i].y = y;
+            particles[i].vx = (rand() % 21) - 10;
+            particles[i].vy = (rand() % 21) - 10;
+            particles[i].life = 5 + (rand() % 10);
+            particles[i].color = color;
+            count--;
+        }
+    }
+}
+
 void add_log(const char* msg) {
     for (int i = MAX_LOG_LINES - 1; i > 0; --i) {
         strcpy(log_messages[i], log_messages[i-1]);
@@ -267,6 +289,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_shp_back, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_evt_opt1, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_evt_opt2, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SetTimer(hwnd, 5, 50, NULL);
             }
             break;
             
@@ -275,6 +298,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 state = 1;
                 add_log("The egg hatched! A baby dragon emerged.");
                 Beep(150, 100); Beep(100, 200); Beep(80, 200);
+                spawn_particles(300, 150, RGB(255,255,255), 30);
                 ShowWindow(btn_incubate, SW_HIDE);
                 ShowWindow(btn_feed, SW_SHOW);
                 ShowWindow(btn_play, SW_SHOW);
@@ -298,6 +322,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (energy < 0) energy = 0;
                     add_log("You fed the dragon. It looks satisfied.");
                     Beep(400, 50); Beep(600, 50);
+                    spawn_particles(300, 150, RGB(255,50,50), 15);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -313,6 +338,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     hunger = hunger - 10;
                     if (hunger < 0) hunger = 0;
                     add_log("You played with the dragon! It's happy.");
+                    spawn_particles(300, 150, RGB(255,255,50), 15);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -323,6 +349,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hunger = hunger - 10;
                 if (hunger < 0) hunger = 0;
                 add_log("Dragon took a nap and regained energy.");
+                spawn_particles(300, 150, RGB(100,100,255), 10);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             else if (LOWORD(wParam) == BTN_TRAIN) {
@@ -516,6 +543,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             bat_enemy_hp -= dmg;
                             char m[128]; sprintf(m, "You hit the enemy for %d damage!", dmg); add_log(m);
                             Beep(800, 50); Beep(100, 50);
+                            player_attack_offset = 20; enemy_shake = 5; spawn_particles(414, 150, RGB(255,0,0), 10);
                         } else {
                             add_log("You missed!");
                         }
@@ -525,11 +553,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (e_def) dmg /= 2;
                             bat_enemy_hp -= dmg;
                             char m[128]; sprintf(m, "You used Fireball! Dealt %d damage.", dmg); add_log(m);
+                            player_attack_offset = 20; enemy_shake = 5; spawn_particles(414, 150, RGB(255,150,0), 20);
                         } else if (element == 4) { // Water
                             int heal = 30 + loyalty;
                             bat_player_hp += heal;
                             if (bat_player_hp > bat_player_max) bat_player_hp = bat_player_max;
                             char m[128]; sprintf(m, "You used Healing Stream! Restored %d HP.", heal); add_log(m);
+                            spawn_particles(184, 150, RGB(0,255,255), 20);
                         } else if (element == 3) { // Earth
                             int dmg = strength * 2;
                             if (dmg < 1) dmg = 1;
@@ -538,6 +568,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             bat_enemy_spd -= 5;
                             if (bat_enemy_spd < 1) bat_enemy_spd = 1;
                             char m[128]; sprintf(m, "You used Earthquake! Dealt %d damage and slowed enemy.", dmg); add_log(m);
+                            player_attack_offset = 20; enemy_shake = 5; spawn_particles(414, 150, RGB(139,69,19), 20);
                         }
                     } else if (action == 1) {
                         add_log("You are defending.");
@@ -558,6 +589,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 bat_player_hp -= dmg;
                                 char m[128]; sprintf(m, "Enemy hit you for %d damage! (HP: %d/%d)", dmg, bat_player_hp, bat_player_max); add_log(m);
                                 Beep(800, 50); Beep(100, 50);
+                                enemy_attack_offset = 20; player_shake = 5; spawn_particles(184, 150, RGB(255,0,0), 10);
                             } else {
                                 add_log("Enemy missed!");
                             }
@@ -848,13 +880,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
+            else if (wParam == 5) { // animation timer
+                anim_offset = ((GetTickCount() / 500) % 2 == 0) ? 0 : 4;
+                if (player_shake > 0) player_shake--;
+                if (enemy_shake > 0) enemy_shake--;
+                if (player_attack_offset > 0) player_attack_offset -= 4;
+                if (enemy_attack_offset > 0) enemy_attack_offset -= 4;
+                
+                for (int i = 0; i < MAX_PARTICLES; i++) {
+                    if (particles[i].life > 0) {
+                        particles[i].x += particles[i].vx;
+                        particles[i].y += particles[i].vy;
+                        particles[i].life--;
+                    }
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
             break;
 
         case WM_PAINT: {
             PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
+            HDC hdcPaint = BeginPaint(hwnd, &ps);
+            RECT rect; GetClientRect(hwnd, &rect);
+            HDC hdc = CreateCompatibleDC(hdcPaint);
+            HBITMAP hbmMem = CreateCompatibleBitmap(hdcPaint, rect.right, rect.bottom);
+            HGDIOBJ hOld = SelectObject(hdc, hbmMem);
             
-            FillRect(hdc, &ps.rcPaint, bgBrush);
+            FillRect(hdc, &rect, bgBrush);
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(42, 23, 4));
             
@@ -881,10 +933,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawText(hdc, buf, strlen(buf), &r, DT_CENTER | DT_TOP);
                 
                 int player_x = (state == 8) ? 120 : 236;
+                int p_dx = (player_shake > 0 ? ((rand() % 9) - 4) : 0) + player_attack_offset;
+                int e_dx = (enemy_shake > 0 ? ((rand() % 9) - 4) : 0) - enemy_attack_offset;
+
                 if (state == 1 || (state > 2 && prev_state == 1)) {
-                    DrawPixelArt(hdc, player_x, 90, 8, dragon_pixels, 0);
+                    DrawPixelArt(hdc, player_x + p_dx, 90 - anim_offset, 8, dragon_pixels, 0);
                 } else if (state == 2 || (state > 2 && prev_state == 2)) {
-                    DrawPixelArt(hdc, player_x, 90, 8, adult_dragon_pixels, element);
+                    DrawPixelArt(hdc, player_x + p_dx, 90 - anim_offset, 8, adult_dragon_pixels, element);
                 }
                 
                 if (state == 4) {
@@ -911,7 +966,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(hdc, RGB(200, 0, 0));
                     TextOut(hdc, 280, 140, text, strlen(text));
                     SetTextColor(hdc, RGB(42, 23, 4));
-                    DrawPixelArt(hdc, 350, 90, 8, adult_dragon_pixels, 5);
+                    DrawPixelArt(hdc, 350 + e_dx, 90 - anim_offset, 8, adult_dragon_pixels, 5);
                 } else if (state == 9) {
                     HBRUSH brown = CreateSolidBrush(RGB(150, 75, 0));
                     HBRUSH red = CreateSolidBrush(RGB(200, 50, 50));
@@ -955,11 +1010,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     sprintf(logStr, "> %s", log_messages[i]);
                     TextOut(hdc, 30, 330 + i * 20, logStr, strlen(logStr));
                 }
+                
+                for (int i = 0; i < MAX_PARTICLES; i++) {
+                    if (particles[i].life > 0) {
+                        HBRUSH b = CreateSolidBrush(particles[i].color);
+                        RECT r = {particles[i].x, particles[i].y, particles[i].x + 6, particles[i].y + 6};
+                        FillRect(hdc, &r, b);
+                        DeleteObject(b);
+                    }
+                }
             }
             
+            BitBlt(hdcPaint, 0, 0, rect.right, rect.bottom, hdc, 0, 0, SRCCOPY);
+            SelectObject(hdc, hOld);
+            DeleteObject(hbmMem);
+            DeleteDC(hdc);
             EndPaint(hwnd, &ps);
             break;
         }
+
+        case WM_ERASEBKGND:
+            return 1;
 
         case WM_CTLCOLORBTN: {
             HDC hdcBtn = (HDC)wParam;

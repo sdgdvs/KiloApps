@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KDragon
 - KSolitaire
 - KHex
 - KMine
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KDarts
 - KSimon
 - KTrader
+- KDragon
 ## Completed Work Log
+
+- **KDragon (Loop 2):** Implemented sprite animations including idle bobbing, attack lunges, and damage screen-shake. Added dynamic multi-colored particle bursts for hatching, feeding, playing, and attacking. Implemented via CSS keyframes and DOM elements in Web Canvas (kdragon.html), and via a double-buffered 50ms Win32 timer and particle struct array updating `DrawPixelArt` coordinates in Native C Win32 GDI (KDragon/main.c).
 
 - **KTrader (Loop 1):** Replaced the purely text-based UI with actual graphical sprites by introducing a visualization overlay panel at the top of the screen. Created custom drawn graphical vector models for the Player Ship (blue angular hull with engine glow), Pirate Ship (red jagged dagger shape for combat), and Planets (colored circles with craters that change base hue depending on the ecoType economy). Implemented consistently using Canvas path primitives in Web Canvas (ktrader.html) and Win32 GDI primitives inside a new WM_PAINT render loop in Native C Win32 GDI (KTrader/main.c). UI layouts were shifted down to cleanly accommodate the new graphical viewport.
 

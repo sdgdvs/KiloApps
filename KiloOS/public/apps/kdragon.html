@@ -21,6 +21,14 @@
         .modal-content { background-color: #ebd0a5; margin: 5% auto; padding: 20px; border: 4px solid #5a3814; width: 80%; max-width: 600px; border-radius: 5px; text-align: left; max-height: 80vh; overflow-y: auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 5px 15px rgba(0,0,0,0.5); }
         .close-btn { color: #5a3814; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: #8b5a2b; }
+        @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes attack-move { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(20px); } }
+        @keyframes attack-move-enemy { 0%, 100% { transform: scaleX(-1) translateX(0); } 50% { transform: scaleX(-1) translateX(-20px); } }
+        .bobbing { animation: bob 1.5s infinite ease-in-out; }
+        .shaking { animation: shake 0.2s 2; }
+        .attacking { animation: attack-move 0.3s; }
+        .attacking-enemy { animation: attack-move-enemy 0.3s; }
     </style>
 </head>
 <body>
@@ -38,7 +46,7 @@
                 <div class="stat">Loy: <span id="stat-loyalty">0</span></div>
                 <div class="stat">Gold: <span id="stat-gold">0</span></div>
             </div>
-            <div class="entity-display" id="entity-art"><svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <div class="entity-display" id="entity-art"><svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
   <rect x="5" y="4" width="1" height="1" fill="rgb(180,150,100)" />
   <rect x="6" y="4" width="4" height="1" fill="rgb(230,210,180)" />
@@ -166,7 +174,7 @@
         </div>
         
         <div id="start-screen">
-            <div class="entity-display"><svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <div class="entity-display"><svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
   <rect x="5" y="4" width="1" height="1" fill="rgb(180,150,100)" />
   <rect x="6" y="4" width="4" height="1" fill="rgb(230,210,180)" />
@@ -217,6 +225,45 @@
             minigameValue: 0,
             battleState: null,
             eventTimeout: null,
+            
+            spawnParticles(color, count, target='player') {
+                const el = target === 'player' ? document.getElementById('player-svg') : document.getElementById('enemy-svg');
+                if (!el) return;
+                const rect = el.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                for (let i = 0; i < count; i++) {
+                    let p = document.createElement('div');
+                    p.style.position = 'fixed';
+                    p.style.left = cx + 'px';
+                    p.style.top = cy + 'px';
+                    p.style.width = '8px';
+                    p.style.height = '8px';
+                    p.style.backgroundColor = color;
+                    p.style.borderRadius = '50%';
+                    p.style.pointerEvents = 'none';
+                    p.style.zIndex = 1000;
+                    document.body.appendChild(p);
+                    let vx = (Math.random() - 0.5) * 150;
+                    let vy = (Math.random() - 0.5) * 150 - 50;
+                    p.animate([
+                        { transform: `translate(0px, 0px) scale(1)`, opacity: 1 },
+                        { transform: `translate(${vx}px, ${vy}px) scale(0)`, opacity: 0 }
+                    ], { duration: 600 + Math.random() * 400, easing: 'ease-out' }).onfinish = () => p.remove();
+                }
+            },
+            
+            triggerAnim(target, animClass) {
+                let el = target === 'player' ? document.getElementById('player-svg') : document.getElementById('enemy-svg');
+                if (el) {
+                    el.classList.remove('bobbing');
+                    el.classList.add(animClass);
+                    setTimeout(() => {
+                        el.classList.remove(animClass);
+                        el.classList.add('bobbing');
+                    }, 400);
+                }
+            },
             
             playSound(type) {
                 if (!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -337,7 +384,7 @@
                 
                 let playerSvg = '';
                 if (this.state === 'egg') {
-                    playerSvg = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    playerSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
   <rect x="5" y="4" width="1" height="1" fill="rgb(180,150,100)" />
   <rect x="6" y="4" width="4" height="1" fill="rgb(230,210,180)" />
@@ -367,7 +414,7 @@
   <rect x="5" y="12" width="6" height="1" fill="rgb(180,150,100)" />
 </svg>`;
                 } else if (this.state === 'dragon') {
-                    playerSvg = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    playerSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="8" y="1" width="2" height="1" fill="rgb(30,100,30)" />
   <rect x="7" y="2" width="1" height="1" fill="rgb(30,100,30)" />
   <rect x="8" y="2" width="2" height="1" fill="rgb(60,180,60)" />
@@ -417,7 +464,7 @@
   <rect x="9" y="12" width="2" height="1" fill="rgb(30,100,30)" />
 </svg>`;
                 } else if (this.state === 'adult') {
-                    playerSvg = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    playerSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="5" y="1" width="2" height="1" fill="rgb(180,30,30)" />
   <rect x="4" y="2" width="1" height="1" fill="rgb(180,30,30)" />
   <rect x="5" y="2" width="2" height="1" fill="rgb(220,60,60)" />
@@ -471,7 +518,7 @@
                 }
                 
                 if (this.battleState) {
-                    let adultBaseSvg = `<svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    let adultBaseSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="5" y="1" width="2" height="1" fill="rgb(180,30,30)" />
   <rect x="4" y="2" width="1" height="1" fill="rgb(180,30,30)" />
   <rect x="5" y="2" width="2" height="1" fill="rgb(220,60,60)" />
@@ -517,7 +564,7 @@
   <rect x="3" y="13" width="4" height="1" fill="rgb(180,30,30)" />
   <rect x="9" y="13" width="4" height="1" fill="rgb(180,30,30)" />
 </svg>`;
-                    let enemySvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(128,0,128)").replace(/rgb\(220,60,60\)/g, "rgb(180,50,180)");
+                    let enemySvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(128,0,128)").replace(/rgb\(220,60,60\)/g, "rgb(180,50,180)").replace('id="player-svg"', 'id="enemy-svg"');
                     document.getElementById('entity-art').innerHTML = `<div style="display:flex; justify-content:space-between; width:350px; align-items:center;">${playerSvg}<div style="font-weight:bold; color:red; font-size:24px;">VS</div><div style="transform: scaleX(-1);">${enemySvg}</div></div>`;
                 } else {
                     document.getElementById('entity-art').innerHTML = playerSvg;
@@ -532,6 +579,7 @@
                 this.log("The egg hatched! A baby dragon emerged.");
                 this.updateUI();
                 this.playSound('roar');
+                this.spawnParticles('#ffffff', 30);
                 
                 this.tickInterval = setInterval(() => this.tick(), 3000);
             },
@@ -547,6 +595,7 @@
                     this.stats.energy = Math.max(0, this.stats.energy - 5);
                     this.log("You fed the dragon. It looks satisfied.");
                     this.playSound('munch');
+                    this.spawnParticles('#ff4444', 15);
                 } else if (type === 'play') {
                     if (this.stats.energy < 20) {
                         this.log("Dragon is too tired to play.");
@@ -557,11 +606,13 @@
                     this.stats.energy = Math.max(0, this.stats.energy - 20);
                     this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                     this.log("You played with the dragon! It's happy.");
+                    this.spawnParticles('#ffff44', 15);
                 } else if (type === 'sleep') {
                     this.sleepCount++;
                     this.stats.energy = Math.min(100, this.stats.energy + 40);
                     this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                     this.log("Dragon took a nap and regained energy.");
+                    this.spawnParticles('#8888ff', 10);
                 } else if (type === 'hoard') {
                     if (this.stats.energy < 30) {
                         this.log("Dragon is too tired for an expedition.");
@@ -745,6 +796,11 @@
                         this.battleState.enemyHp -= dmg;
                         this.log(`You hit the enemy for ${dmg} damage!`);
                         this.playSound('clash');
+                        this.triggerAnim('player', 'attacking');
+                        setTimeout(() => {
+                            this.triggerAnim('enemy', 'shaking');
+                            this.spawnParticles('#ff0000', 10, 'enemy');
+                        }, 150);
                     } else {
                         this.log("You missed!");
                     }
@@ -754,16 +810,27 @@
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
                         this.log(`You used Fireball! Dealt ${dmg} damage.`);
+                        this.triggerAnim('player', 'attacking');
+                        setTimeout(() => {
+                            this.triggerAnim('enemy', 'shaking');
+                            this.spawnParticles('#ffaa00', 20, 'enemy');
+                        }, 150);
                     } else if (this.element === 'Water') {
                         let heal = 30 + this.stats.loyalty;
                         this.battleState.playerHp = Math.min(this.battleState.playerMaxHp, this.battleState.playerHp + heal);
                         this.log(`You used Healing Stream! Restored ${heal} HP.`);
+                        this.spawnParticles('#00ffff', 20, 'player');
                     } else if (this.element === 'Earth') {
                         let dmg = Math.max(1, this.stats.strength * 2);
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
                         this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - 5);
                         this.log(`You used Earthquake! Dealt ${dmg} damage and slowed enemy.`);
+                        this.triggerAnim('player', 'attacking');
+                        setTimeout(() => {
+                            this.triggerAnim('enemy', 'shaking');
+                            this.spawnParticles('#8b4513', 20, 'enemy');
+                        }, 150);
                     }
                 } else if (action === 'defend') {
                     this.log("You are defending.");
@@ -783,6 +850,11 @@
                         this.battleState.playerHp -= dmg;
                         this.log(`Enemy hit you for ${dmg} damage! (HP: ${this.battleState.playerHp}/${this.battleState.playerMaxHp})`);
                         this.playSound('clash');
+                        this.triggerAnim('enemy', 'attacking-enemy');
+                        setTimeout(() => {
+                            this.triggerAnim('player', 'shaking');
+                            this.spawnParticles('#ff0000', 10, 'player');
+                        }, 150);
                     } else {
                         this.log("Enemy missed!");
                     }
