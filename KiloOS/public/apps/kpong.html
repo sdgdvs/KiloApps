@@ -180,7 +180,7 @@
       <button class="btn-sm" onclick="openStatsModal()">🏆 Stats</button>
       <button class="btn-sm" onclick="saveGameState()">💾 Save</button>
       <button class="btn-sm" onclick="loadGameState()">📂 Load</button>
-      <button class="btn-sm" onclick="openHelpModal()">❓ Help (H)</button>
+      <button class="btn-sm" onclick="openHelpModal()">❓ Help (F1/H)</button>
     </div>
   </div>
 
@@ -491,7 +491,8 @@
       if(e.key === 'e' || e.key === 'E') triggerSkill('mega');
       if(e.key === 'b' || e.key === 'B') triggerSkill('fire');
       if(e.key === ' ') togglePause();
-      if(e.key === 'h' || e.key === 'H') {
+      if(e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+          if(e.key === 'F1') e.preventDefault();
           if (document.getElementById('helpModal').classList.contains('active')) closeHelpModal();
           else openHelpModal();
       }

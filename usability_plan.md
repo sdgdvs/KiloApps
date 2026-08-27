@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP â€” loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top â€” the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KPong
 - KClock
 - KDB
 - KiloOS Web UI
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KAudio
 - KRadio
 - KBBS
+- KPong
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KPong: Usability and UI issues fixed (synchronized native window bounds to 940x780 matching App.jsx, added explicit F1/H help bindings with visual text in native and web versions, added negative font sizes for crisp text and WS_CLIPCHILDREN to eliminate flickering).
 - KBBS: Usability and UI issues fixed (adjusted App.jsx dimensions to 850x650, implemented F1/H help bindings with visible text instructions, added WS_CLIPCHILDREN to eliminate flickering, and enabled crisp DPI-scaled fonts).
 - KRadio: Usability and UI issues fixed (adjusted App.jsx dimensions to 400x250, mapped explicit F1/H help bindings with visual text in native and web versions, added negative font sizes for crisp text and WS_CLIPCHILDREN to eliminate flickering).
 - KAudio: Usability and UI issues fixed (adjusted App.jsx auto-opening bounds to 1040x840, explicit F1/H help bindings set with visual text in native and web versions, negative font sizes for crisp text, WS_CLIPCHILDREN added to prevent flickering).

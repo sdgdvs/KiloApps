@@ -384,7 +384,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 'V') is_pvp = !is_pvp;
             if (wParam == 'T') theme_index = (theme_index + 1) % 4;
             if (wParam == 'L') show_stats_overlay = !show_stats_overlay;
-            if (wParam == 'H') show_help_overlay = !show_help_overlay;
+            if (wParam == 'H' || wParam == VK_F1) show_help_overlay = !show_help_overlay;
             if (wParam == VK_F5) SaveGameState();
             if (wParam == VK_F9) LoadGameState();
             break;
@@ -769,7 +769,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             xform.eM22 = (float)ch / H;
             SetWorldTransform(memDC, &xform);
 
-            HFONT hFont = CreateFontA(-12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Arial");
+            HDC screenDC = GetDC(NULL);
+            int dpi = GetDeviceCaps(screenDC, LOGPIXELSX);
+            ReleaseDC(NULL, screenDC);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Arial");
             HFONT hOldFont = (HFONT)SelectObject(memDC, hFont);
 
 
@@ -1185,7 +1189,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 45, 175, "[F5] Save Game  |  [F9] Load Game", 33);
                 
                 SetTextColor(memDC, RGB(200, 200, 200));
-                TextOutA(memDC, 45, H - 55, "Press 'H' to Close Help", 23);
+                TextOutA(memDC, 45, H - 55, "Press F1 or 'H' to Close Help", 29);
             }
 
             if (is_paused) {
@@ -1252,7 +1256,7 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    RECT winRect = { 0, 0, 950, 750 };
+    RECT winRect = { 0, 0, 940, 780 };
     HDC screenDC = GetDC(NULL);
     int dpi = GetDeviceCaps(screenDC, LOGPIXELSX);
     ReleaseDC(NULL, screenDC);
@@ -1260,8 +1264,9 @@ void MainEntry() {
     winRect.right = (int)(winRect.right * scale);
     winRect.bottom = (int)(winRect.bottom * scale);
     
-    AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KPongApp", "KPong - Press 'H' for Help", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    DWORD style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX | WS_CLIPCHILDREN;
+    AdjustWindowRect(&winRect, style, FALSE);
+    HWND hwnd = CreateWindowEx(0, "KPongApp", "KPong - Press F1 or 'H' for Help", style,
         CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
