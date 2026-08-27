@@ -1113,21 +1113,26 @@ void DrawDetailed3DDart(HDC hdc, int x, int y, float scale, float angle, int sty
         outY = y + (int)(sx * sinA + sy * cosA); \
     } while(0)
 
-    if (!isAnimating) {
-        POINT shadowPts[10];
-        int pxs[] = {0, -4, -5, -2, -12, 0, 12, 2, 5, 4};
-        int pys[] = {0, -12, -34, -54, -76, -82, -76, -54, -34, -12};
-        for(int k=0; k<10; k++) {
-            TRANSFORM_PT(pxs[k] + 6, pys[k] + 10, shadowPts[k].x, shadowPts[k].y);
-        }
-        HBRUSH shBr = CreateSolidBrush(RGB(10, 10, 10));
-        HPEN shPen = CreatePen(PS_NULL, 0, 0);
-        HBRUSH oldB = (HBRUSH)SelectObject(hdc, shBr);
-        HPEN oldP = (HPEN)SelectObject(hdc, shPen);
-        Polygon(hdc, shadowPts, 10);
-        SelectObject(hdc, oldB); SelectObject(hdc, oldP);
-        DeleteObject(shBr); DeleteObject(shPen);
+    // Dynamic Drop Shadow
+    int shadowOffsetX = (int)(6.0f + (scale - 1.0f) * 15.0f);
+    int shadowOffsetY = (int)(10.0f + (scale - 1.0f) * 25.0f);
+    POINT shadowPts[10];
+    int pxs[] = {0, -4, -5, -2, -12, 0, 12, 2, 5, 4};
+    int pys[] = {0, -12, -34, -54, -76, -82, -76, -54, -34, -12};
+    for(int k=0; k<10; k++) {
+        TRANSFORM_PT(pxs[k] + shadowOffsetX, pys[k] + shadowOffsetY, shadowPts[k].x, shadowPts[k].y);
     }
+    int shadowGray = (int)(10 + (scale - 1.0f) * 100);
+    if (shadowGray > 255) shadowGray = 255;
+    if (shadowGray < 10) shadowGray = 10;
+    
+    HBRUSH shBr = CreateSolidBrush(RGB(shadowGray, shadowGray, shadowGray));
+    HPEN shPen = CreatePen(PS_NULL, 0, 0);
+    HBRUSH oldB = (HBRUSH)SelectObject(hdc, shBr);
+    HPEN oldP = (HPEN)SelectObject(hdc, shPen);
+    Polygon(hdc, shadowPts, 10);
+    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+    DeleteObject(shBr); DeleteObject(shPen);
 
     // Steel Tip (0,0) to (0,-14)
     POINT tipPts[3];
@@ -1158,6 +1163,22 @@ void DrawDetailed3DDart(HDC hdc, int x, int y, float scale, float angle, int sty
     Polygon(hdc, barPts, 4);
     SelectObject(hdc, oldB); SelectObject(hdc, oldP);
     DeleteObject(barBr); DeleteObject(barPen);
+
+    // Specular Highlight on Barrel
+    POINT specPts[4];
+    TRANSFORM_PT(-2, -14, specPts[0].x, specPts[0].y);
+    TRANSFORM_PT(0, -14, specPts[1].x, specPts[1].y);
+    TRANSFORM_PT(0, -38, specPts[2].x, specPts[2].y);
+    TRANSFORM_PT(-2, -38, specPts[3].x, specPts[3].y);
+    
+    COLORREF sColor = (style == 2) ? RGB(255, 255, 200) : RGB(255, 255, 255);
+    HBRUSH specBr = CreateSolidBrush(sColor);
+    HPEN specPen = CreatePen(PS_NULL, 0, 0);
+    oldB = (HBRUSH)SelectObject(hdc, specBr);
+    oldP = (HPEN)SelectObject(hdc, specPen);
+    Polygon(hdc, specPts, 4);
+    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+    DeleteObject(specBr); DeleteObject(specPen);
 
     // Knurling ridges
     HPEN ridgePen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));

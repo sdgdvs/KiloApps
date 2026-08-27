@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KDarts
 - KSimon
 - KTrader
 - KDragon
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMines
 - KAsteroids
 - K2048
+- KDarts
 ## Completed Work Log
+
+- **KDarts (Loop 4):** Implemented highly detailed visual variations including dynamic 3D drop-shadows that shift and scale based on dart height, procedural lighting/specular highlights (refined linear gradients in Web Canvas, drawn specular polygons in Native C GDI) for a glossy metallic barrel, and kinematically animated effects using dynamic shadow offsets in both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
 
 - **K2048 (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by physics decay on high-value merges (replacing static CSS with dynamic viewport translation/rotation offsets in both Web and Native C), and multi-layered particle explosions featuring distinct procedural layers (fast bright white sparks, medium-speed core chunks that inherit tile color, and slower large dark floating debris) in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 

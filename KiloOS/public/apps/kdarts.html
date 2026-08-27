@@ -1310,32 +1310,34 @@ function drawDetailedDart(ctx, x, y, scale, angle, styleColor, isAnimating) {
     ctx.rotate(angle);
     ctx.scale(scale, scale);
 
-    // 1. Soft Drop Shadow (when landed/near landing)
-    if (!isAnimating) {
-        ctx.save();
-        ctx.transform(1, 0.35, 0, 0.35, 6, 10);
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(-4, -12);
-        ctx.lineTo(-5, -34);
-        ctx.lineTo(-2, -54);
-        ctx.lineTo(-12, -76);
-        ctx.lineTo(0, -82);
-        ctx.lineTo(12, -76);
-        ctx.lineTo(2, -54);
-        ctx.lineTo(5, -34);
-        ctx.lineTo(4, -12);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-    }
+    // 1. Dynamic Drop Shadow
+    let shadowOffsetX = 6 + (scale - 1) * 15;
+    let shadowOffsetY = 10 + (scale - 1) * 25;
+    let shadowAlpha = Math.max(0.05, 0.4 - (scale - 1.0) * 0.2);
+    ctx.save();
+    ctx.transform(1, 0.35, 0, 0.35, shadowOffsetX, shadowOffsetY);
+    ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-4, -12);
+    ctx.lineTo(-5, -34);
+    ctx.lineTo(-2, -54);
+    ctx.lineTo(-12, -76);
+    ctx.lineTo(0, -82);
+    ctx.lineTo(12, -76);
+    ctx.lineTo(2, -54);
+    ctx.lineTo(5, -34);
+    ctx.lineTo(4, -12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
 
     // 2. Steel Needle Tip (0,0) to (0, -14)
     const tipGrad = ctx.createLinearGradient(-1.5, 0, 1.5, 0);
-    tipGrad.addColorStop(0, '#777');
-    tipGrad.addColorStop(0.5, '#ffffff');
-    tipGrad.addColorStop(1, '#555');
+    tipGrad.addColorStop(0, '#555');
+    tipGrad.addColorStop(0.3, '#ffffff'); // Specular highlight
+    tipGrad.addColorStop(0.7, '#888');
+    tipGrad.addColorStop(1, '#333');
     ctx.fillStyle = tipGrad;
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -1349,14 +1351,16 @@ function drawDetailedDart(ctx, x, y, scale, angle, styleColor, isAnimating) {
     if (styleColor === '#ffd700') {
         bGrad = ctx.createLinearGradient(-4.5, 0, 4.5, 0);
         bGrad.addColorStop(0, '#8a6d1c');
-        bGrad.addColorStop(0.3, '#fff2a3');
-        bGrad.addColorStop(0.7, '#d4af37');
+        bGrad.addColorStop(0.2, '#ffffff'); // Strong Specular highlight
+        bGrad.addColorStop(0.4, '#fff2a3');
+        bGrad.addColorStop(0.8, '#d4af37');
         bGrad.addColorStop(1, '#5c4710');
     } else {
         bGrad = ctx.createLinearGradient(-4.5, 0, 4.5, 0);
         bGrad.addColorStop(0, '#44444c');
-        bGrad.addColorStop(0.3, '#ffffff');
-        bGrad.addColorStop(0.7, '#aaaaaa');
+        bGrad.addColorStop(0.2, '#ffffff'); // Strong Specular highlight
+        bGrad.addColorStop(0.5, '#cccccc');
+        bGrad.addColorStop(0.8, '#888888');
         bGrad.addColorStop(1, '#222228');
     }
     ctx.fillStyle = bGrad;
