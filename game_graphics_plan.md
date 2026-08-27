@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KAlchemy
 - KRogue
 - KChess
 - KPong
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFortress
 - KColosseum
 - KFarm
+- KAlchemy
 ## Completed Work Log
+
+- **KAlchemy (Loop 6):** Implemented highly polished visual effects including procedural screen-shake tied to alchemical transmutations (manipulating DOM styles via CSS transforms in Web and window offsets via SetWindowOrgEx in Native C Win32 GDI), and upgraded multi-layered particle explosions featuring distinct types of particles (slower/larger colored core elements and fast/thin bright white sparks) generated on each transmutation in both Web Canvas (kalchemy.html) and Native C Win32 GDI (KAlchemy/main.c).
 
 - **KFarm (Loop 5):** Implemented highly polished visual effects including procedural screen-shake tied to tilling and harvesting with a natural decay curve, upgraded multi-layered particle explosions featuring distinct new types (golden Sparks and hovering white Stars) on crop harvest, and highly detailed visual variations for existing graphics via procedural generation of blades of grass and varied flowers tied to grid coordinates in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
 

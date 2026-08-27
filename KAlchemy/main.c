@@ -255,6 +255,7 @@ typedef struct {
     int soundEnabled;       // 1 = Sound Enabled, 0 = Muted
     int showHelpModal;      // 1 = Help Modal Overlay active, 0 = inactive
     int helpActiveTab;      // 0 = How to Play, 1 = Element Tiers, 2 = Lab Controls, 3 = Alchemy Lore
+    int screenShakeTime;    // Active screen shake duration
     char lastStatus[128];
     char searchFilter[64];
 } AlchemyState;
@@ -265,27 +266,37 @@ static const int g_AutoSorterCosts[5] = { 50, 100, 220, 400, 600 };
 static const int g_CatalystSpeedCosts[5] = { 35, 80, 160, 280, 450 };
 
 
-#define MAX_PARTICLES 100
+#define MAX_PARTICLES 200
 typedef struct {
     float x, y;
     float vx, vy;
     float life;
     float decay;
     COLORREF color;
+    int type; // 0=core, 1=spark
 } Particle;
 static Particle g_Particles[MAX_PARTICLES];
 
 static void SpawnExplosion(int cx, int cy, COLORREF color) {
-    for (int i = 0; i < 40; i++) {
+    g_State.screenShakeTime = 15;
+    for (int i = 0; i < 80; i++) {
         for (int j = 0; j < MAX_PARTICLES; j++) {
             if (g_Particles[j].life <= 0.0f) {
                 g_Particles[j].x = (float)cx;
                 g_Particles[j].y = (float)cy;
-                g_Particles[j].vx = (float)((FastRand() % 100) - 50) * 0.1f;
-                g_Particles[j].vy = (float)((FastRand() % 100) - 50) * 0.1f - 2.0f;
-                g_Particles[j].life = 1.0f;
+                if (i % 2 == 0) {
+                    g_Particles[j].vx = (float)((FastRand() % 100) - 50) * 0.25f;
+                    g_Particles[j].vy = (float)((FastRand() % 100) - 50) * 0.25f - 4.0f;
+                    g_Particles[j].color = RGB(255, 255, 255);
+                    g_Particles[j].type = 1;
+                } else {
+                    g_Particles[j].vx = (float)((FastRand() % 100) - 50) * 0.15f;
+                    g_Particles[j].vy = (float)((FastRand() % 100) - 50) * 0.15f - 2.0f;
+                    g_Particles[j].color = color;
+                    g_Particles[j].type = 0;
+                }
+                g_Particles[j].life = 1.2f;
                 g_Particles[j].decay = 0.02f + (float)(FastRand() % 20) * 0.001f;
-                g_Particles[j].color = color;
                 break;
             }
         }
@@ -902,6 +913,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_State.buffInvisibilityTimer > 0) { g_State.buffInvisibilityTimer--; changed = 1; }
             if (g_State.buffManaTimer > 0) { g_State.buffManaTimer--; changed = 1; }
             if (g_State.buffLifeTimer > 0) { g_State.buffLifeTimer--; changed = 1; }
+            if (g_State.screenShakeTime > 0) { g_State.screenShakeTime--; changed = 1; }
             // Particle update
             for (int i = 0; i < MAX_PARTICLES; i++) {
                 if (g_Particles[i].life > 0.0f) {
@@ -1676,6 +1688,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
+
+            if (g_State.screenShakeTime > 0) {
+                int sx = (FastRand() % 10) - 5;
+                int sy = (FastRand() % 10) - 5;
+                SetWindowOrgEx(hdc, sx, sy, NULL);
+            }
+
             SetBkMode(hdc, TRANSPARENT);
 
             // Environmental Art Background: Esoteric geometric patterns
@@ -2232,14 +2251,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (g_Particles[i].life > 0.0f) {
                         int px = (int)g_Particles[i].x;
                         int py = (int)g_Particles[i].y;
-                        int size = (int)(g_Particles[i].life * 6.0f);
+                        int size = (int)(g_Particles[i].life * (g_Particles[i].type == 1 ? 3.0f : 6.0f));
                         if (size < 1) size = 1;
                         HPEN pPen = CreatePen(PS_SOLID, 1, g_Particles[i].color);
                         HGDIOBJ oldPp = SelectObject(hdc, pPen);
-                        MoveToEx(hdc, px - size, py, NULL); LineTo(hdc, px + size + 1, py);
-                        MoveToEx(hdc, px, py - size, NULL); LineTo(hdc, px, py + size + 1);
-                        MoveToEx(hdc, px - size/2, py - size/2, NULL); LineTo(hdc, px + size/2 + 1, py + size/2 + 1);
-                        MoveToEx(hdc, px - size/2, py + size/2, NULL); LineTo(hdc, px + size/2 + 1, py - size/2 - 1);
+                        if (g_Particles[i].type == 1) {
+                            MoveToEx(hdc, px - size, py, NULL); LineTo(hdc, px + size, py);
+                            MoveToEx(hdc, px, py - size, NULL); LineTo(hdc, px, py + size);
+                        } else {
+                            MoveToEx(hdc, px - size, py, NULL); LineTo(hdc, px + size + 1, py);
+                            MoveToEx(hdc, px, py - size, NULL); LineTo(hdc, px, py + size + 1);
+                            MoveToEx(hdc, px - size/2, py - size/2, NULL); LineTo(hdc, px + size/2 + 1, py + size/2 + 1);
+                            MoveToEx(hdc, px - size/2, py + size/2, NULL); LineTo(hdc, px + size/2 + 1, py - size/2 - 1);
+                        }
                         SelectObject(hdc, oldPp);
                         DeleteObject(pPen);
                     }

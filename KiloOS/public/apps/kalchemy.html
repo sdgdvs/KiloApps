@@ -3913,19 +3913,40 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    let shakeTime = 0;
     function spawnExplosion(x, y, color) {
-      for(let i=0; i<40; i++) {
+      shakeTime = 15;
+      for(let i=0; i<60; i++) {
         particles.push({
           x: x, y: y,
-          vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12 - 3,
-          life: 1.0, decay: 0.015 + Math.random()*0.02,
-          color: color
+          vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15 - 4,
+          life: 1.2, decay: 0.015 + Math.random()*0.02,
+          color: color,
+          type: 'core'
         });
+        if (i % 2 === 0) {
+          particles.push({
+            x: x, y: y,
+            vx: (Math.random()-0.5)*25, vy: (Math.random()-0.5)*25 - 6,
+            life: 0.8, decay: 0.03 + Math.random()*0.02,
+            color: '#fff',
+            type: 'spark'
+          });
+        }
       }
     }
 
     function updateParticles() {
       fctx.clearRect(0,0,fxCanvas.width, fxCanvas.height);
+      
+      if (shakeTime > 0) {
+        let dx = (Math.random() - 0.5) * shakeTime * 1.5;
+        let dy = (Math.random() - 0.5) * shakeTime * 1.5;
+        document.body.style.transform = `translate(${dx}px, ${dy}px)`;
+        shakeTime--;
+        if (shakeTime <= 0) document.body.style.transform = '';
+      }
+
       for(let i=particles.length-1; i>=0; i--) {
         let p = particles[i];
         p.x += p.vx;
@@ -3938,7 +3959,11 @@
         fctx.globalAlpha = p.life;
         fctx.fillStyle = p.color;
         fctx.beginPath();
-        fctx.arc(p.x, p.y, p.life * 5 + 1, 0, Math.PI*2);
+        if (p.type === 'spark') {
+          fctx.arc(p.x, p.y, p.life * 2, 0, Math.PI*2);
+        } else {
+          fctx.arc(p.x, p.y, p.life * 5 + 1, 0, Math.PI*2);
+        }
         fctx.fill();
       }
       fctx.globalAlpha = 1.0;
