@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Implement gladiator stats (Strength, Agility, Vitality) and basic procedural generation of recruits.
 - [x] Phase 6: Implement training system (spend funds and time to increase gladiator stats).
 - [x] Phase 7: Arena combat system (turn-based tactical battles against AI opponents).
-- [ ] Phase 8: Equipment system (buy and equip weapons like gladius/trident, armor, and shields to alter stats).
+- [x] Phase 8: Equipment system (buy and equip weapons like gladius/trident, armor, and shields to alter stats).
 - [ ] Phase 9: Injury and healing system (gladiators take damage, require time and funds to heal, or die permanently).
 - [ ] Phase 10: Arena league progression (climb through local pits to the grand Colosseum, facing tougher opponents).
 - [ ] Phase 11: Special battle events (fight multiple enemies, wild beasts like lions, or chariot battles).

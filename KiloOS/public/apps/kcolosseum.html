@@ -121,15 +121,36 @@
     const firstNames = ["Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus"];
     const epithets = ["the Strong", "the Swift", "the Bear", "the Lion", "the Fierce", "the Giant"];
 
-    function generateGladiator() {
+    function generateGladiator(forArena = false) {
       const name = firstNames[Math.floor(Math.random() * firstNames.length)] + 
                    (Math.random() > 0.5 ? " " + epithets[Math.floor(Math.random() * epithets.length)] : "");
       const str = Math.floor(Math.random() * 10) + 1;
       const agi = Math.floor(Math.random() * 10) + 1;
       const vit = Math.floor(Math.random() * 10) + 1;
-      const cost = (str + agi + vit) * 20 + Math.floor(Math.random() * 50);
-      return { id: nextId++, name, cost, str, agi, vit, desc: `STR:${str} AGI:${agi} VIT:${vit}` };
+      let weapon = 0, armor = 0, shield = 0;
+      if (forArena || Math.random() < 0.3) {
+          if (Math.random() < 0.3) weapon = Math.floor(Math.random() * 2) + 1;
+          if (Math.random() < 0.3) armor = 1;
+          if (Math.random() < 0.3) shield = 1;
+      }
+      const cost = (str + agi + vit) * 20 + Math.floor(Math.random() * 50) + (weapon ? 50 : 0) + (armor ? 50 : 0) + (shield ? 30 : 0);
+      let g = { id: nextId++, name, cost, str, agi, vit, weapon, armor, shield };
+      updateDesc(g);
+      return g;
     }
+
+    function updateDesc(g) {
+      let eqStr = "";
+      if (g.weapon === 1) eqStr += " [Glad]";
+      else if (g.weapon === 2) eqStr += " [Trid]";
+      if (g.armor === 1) eqStr += " [Armr]";
+      if (g.shield === 1) eqStr += " [Shld]";
+      g.desc = `STR:${g.str} AGI:${g.agi} VIT:${g.vit}${eqStr}`;
+    }
+
+    function getEffStr(g) { return g.str + (g.weapon === 1 ? 3 : 0); }
+    function getEffAgi(g) { return g.agi + (g.weapon === 2 ? 3 : 0); }
+    function getEffVit(g) { return g.vit + (g.armor === 1 ? 5 : 0); }
 
     const market = [generateGladiator(), generateGladiator(), generateGladiator()];
     const owned = [];
@@ -169,6 +190,12 @@
         const li = document.createElement('li');
         li.innerHTML = `
           <div style="margin-bottom:5px;"><strong>${g.name}</strong> - ${g.desc}</div>
+          <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:5px;">
+            <button style="font-size:0.7em" onclick="equipItem(${g.id}, 'glad')" ${funds < 50 || g.weapon === 1 ? 'disabled' : ''}>Glad(50D)</button>
+            <button style="font-size:0.7em" onclick="equipItem(${g.id}, 'trid')" ${funds < 50 || g.weapon === 2 ? 'disabled' : ''}>Trid(50D)</button>
+            <button style="font-size:0.7em" onclick="equipItem(${g.id}, 'armr')" ${funds < 50 || g.armor === 1 ? 'disabled' : ''}>Armr(50D)</button>
+            <button style="font-size:0.7em" onclick="equipItem(${g.id}, 'shld')" ${funds < 30 || g.shield === 1 ? 'disabled' : ''}>Shld(30D)</button>
+          </div>
           <div style="display:flex; gap:5px;">
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'str')" ${funds < 20 ? 'disabled' : ''}>+STR (20D)</button>
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'agi')" ${funds < 20 ? 'disabled' : ''}>+AGI (20D)</button>
@@ -194,6 +221,21 @@
       }
     }
 
+    function equipItem(id, type) {
+      const g = owned.find(g => g.id === id);
+      if (!g) return;
+      let cost = (type === 'shld') ? 30 : 50;
+      if (funds >= cost) {
+          funds -= cost;
+          if (type === 'glad') g.weapon = 1;
+          if (type === 'trid') g.weapon = 2;
+          if (type === 'armr') g.armor = 1;
+          if (type === 'shld') g.shield = 1;
+          updateDesc(g);
+          updateUI();
+      }
+    }
+
     function trainGladiator(id, stat) {
       if (funds >= 20) {
         const gladiator = owned.find(g => g.id === id);
@@ -202,7 +244,7 @@
           if (stat === 'str') gladiator.str++;
           if (stat === 'agi') gladiator.agi++;
           if (stat === 'vit') gladiator.vit++;
-          gladiator.desc = `STR:${gladiator.str} AGI:${gladiator.agi} VIT:${gladiator.vit}`;
+          updateDesc(gladiator);
           updateUI();
         }
       }
@@ -217,15 +259,16 @@
       currentFighter = owned.find(g => g.id === id);
       if (!currentFighter) return;
       
-      currentFighter.hp = currentFighter.vit * 10;
+      currentFighter.hp = getEffVit(currentFighter) * 10;
       currentFighter.maxHp = currentFighter.hp;
       
-      enemyFighter = generateGladiator();
-      enemyFighter.hp = enemyFighter.vit * 10;
+      enemyFighter = generateGladiator(true);
+      enemyFighter.hp = getEffVit(enemyFighter) * 10;
       enemyFighter.maxHp = enemyFighter.hp;
       
       combatOver = false;
       playerDefending = false;
+      enemyDefending = false;
       
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('arenaPanel').style.display = 'block';
@@ -240,12 +283,12 @@
       document.getElementById('playerCombat').innerHTML = `
         <h3 style="margin-top:0;">${currentFighter.name}</h3>
         <div style="font-weight:bold; color:#8b0000;">HP: ${currentFighter.hp} / ${currentFighter.maxHp}</div>
-        <div style="font-size:0.9em; margin-top:5px;">STR:${currentFighter.str} AGI:${currentFighter.agi} VIT:${currentFighter.vit}</div>
+        <div style="font-size:0.9em; margin-top:5px;">STR:${getEffStr(currentFighter)} AGI:${getEffAgi(currentFighter)} VIT:${getEffVit(currentFighter)}</div>
       `;
       document.getElementById('enemyCombat').innerHTML = `
         <h3 style="margin-top:0;">${enemyFighter.name}</h3>
         <div style="font-weight:bold; color:#8b0000;">HP: ${enemyFighter.hp} / ${enemyFighter.maxHp}</div>
-        <div style="font-size:0.9em; margin-top:5px;">STR:${enemyFighter.str} AGI:${enemyFighter.agi} VIT:${enemyFighter.vit}</div>
+        <div style="font-size:0.9em; margin-top:5px;">STR:${getEffStr(enemyFighter)} AGI:${getEffAgi(enemyFighter)} VIT:${getEffVit(enemyFighter)}</div>
       `;
     }
     
@@ -255,6 +298,8 @@
       log.scrollTop = log.scrollHeight;
     }
     
+    let enemyDefending = false;
+
     function combatAction(action) {
       if (combatOver) return;
       
@@ -271,9 +316,11 @@
       }
       
       if (action === 'attack') {
-        let hitChance = 75 + (currentFighter.agi - enemyFighter.agi) * 5;
+        let hitChance = 75 + (getEffAgi(currentFighter) - getEffAgi(enemyFighter)) * 5;
+        if (enemyDefending) hitChance -= (enemyFighter.shield === 1 ? 50 : 30);
         if (Math.random() * 100 < hitChance) {
-          let dmg = Math.max(1, currentFighter.str + Math.floor(Math.random() * 4));
+          let dmg = Math.max(1, getEffStr(currentFighter) + Math.floor(Math.random() * 4));
+          if (enemyDefending) dmg = Math.max(1, dmg - (enemyFighter.shield === 1 ? 5 : 3));
           enemyFighter.hp -= dmg;
           logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
         } else {
@@ -292,16 +339,16 @@
         return;
       }
       
-      let enemyDefending = Math.random() < 0.25;
+      enemyDefending = Math.random() < 0.25;
       if (enemyDefending) {
         logCombat(`${enemyFighter.name} takes a defensive stance.`);
       } else {
-        let hitChance = 75 + (enemyFighter.agi - currentFighter.agi) * 5;
-        if (playerDefending) hitChance -= 30;
+        let hitChance = 75 + (getEffAgi(enemyFighter) - getEffAgi(currentFighter)) * 5;
+        if (playerDefending) hitChance -= (currentFighter.shield === 1 ? 50 : 30);
         
         if (Math.random() * 100 < hitChance) {
-          let dmg = Math.max(1, enemyFighter.str + Math.floor(Math.random() * 4));
-          if (playerDefending) dmg = Math.max(1, dmg - 3);
+          let dmg = Math.max(1, getEffStr(enemyFighter) + Math.floor(Math.random() * 4));
+          if (playerDefending) dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
           currentFighter.hp -= dmg;
           logCombat(`<strong>${enemyFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
         } else {

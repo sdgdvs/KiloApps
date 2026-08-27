@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
+#include <string.h>
 
 static unsigned int g_seed = 0;
 void my_srand(unsigned int seed) {
@@ -23,23 +24,43 @@ int my_rand() {
 #define ID_DEFEND_BUTTON 111
 #define ID_FLEE_BUTTON 112
 #define ID_COMBAT_LOG 113
-
+#define ID_EQ_GLADIUS 114
+#define ID_EQ_TRIDENT 115
+#define ID_EQ_ARMOR 116
+#define ID_EQ_SHIELD 117
 typedef struct {
     int id;
     char name[32];
     int cost;
-    char desc[64];
+    char desc[128];
     int str;
     int agi;
     int vit;
+    int weapon;
+    int armor;
+    int shield;
 } Gladiator;
 
 const char* firstNames[] = {"Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus"};
 const char* epithets[] = {"the Strong", "the Swift", "the Bear", "the Lion", "the Fierce", "the Giant"};
 int nextId = 1;
 
-Gladiator GenerateGladiator() {
+void UpdateGladiatorDesc(Gladiator* g) {
+    char eqStr[64];
+    eqStr[0] = '\0';
+    if (g->weapon == 1) lstrcatA(eqStr, " [Glad]");
+    else if (g->weapon == 2) lstrcatA(eqStr, " [Trid]");
+    if (g->armor == 1) lstrcatA(eqStr, " [Armr]");
+    if (g->shield == 1) lstrcatA(eqStr, " [Shld]");
+    wsprintfA(g->desc, "STR:%d AGI:%d VIT:%d%s", g->str, g->agi, g->vit, eqStr);
+}
+
+Gladiator GenerateGladiator(int forArena) {
     Gladiator g;
+    g.weapon = 0;
+    g.armor = 0;
+    g.shield = 0;
+    g.desc[0] = '\0';
     g.id = nextId++;
     
     int fNameIdx = my_rand() % 8;
@@ -54,13 +75,25 @@ Gladiator GenerateGladiator() {
     g.agi = (my_rand() % 10) + 1;
     g.vit = (my_rand() % 10) + 1;
     
+    if (forArena || (my_rand() % 100) < 30) {
+        if ((my_rand() % 100) < 30) g.weapon = (my_rand() % 2) + 1;
+        if ((my_rand() % 100) < 30) g.armor = 1;
+        if ((my_rand() % 100) < 30) g.shield = 1;
+    }
+    
     int statTotal = g.str + g.agi + g.vit;
     g.cost = statTotal * 20 + (my_rand() % 50);
+    if (g.weapon > 0) g.cost += 50;
+    if (g.armor > 0) g.cost += 50;
+    if (g.shield > 0) g.cost += 30;
     
-    wsprintfA(g.desc, "STR:%d AGI:%d VIT:%d", g.str, g.agi, g.vit);
-    
+    UpdateGladiatorDesc(&g);
     return g;
 }
+
+int GetEffStr(Gladiator* g) { return g->str + (g->weapon == 1 ? 3 : 0); }
+int GetEffAgi(Gladiator* g) { return g->agi + (g->weapon == 2 ? 3 : 0); }
+int GetEffVit(Gladiator* g) { return g->vit + (g->armor == 1 ? 5 : 0); }
 
 Gladiator market[10];
 int market_count = 0;
@@ -71,12 +104,14 @@ int owned_count = 0;
 int funds = 1000;
 
 HWND hTitle, hFundsLabel, hL1, hRefreshButton, hMarketList, hBuyButton, hL2, hOwnedList, hTrainStrBtn, hTrainAgiBtn, hTrainVitBtn, hFightBtn;
+HWND hEqGladiusBtn, hEqTridentBtn, hEqArmorBtn, hEqShieldBtn;
 HWND hCombatTitle, hCombatPlayer, hCombatEnemy, hAttackBtn, hDefendBtn, hFleeBtn, hCombatLog;
 
 Gladiator* currentFighter = NULL;
 Gladiator enemyFighter;
 int playerHp, playerMaxHp, enemyHp, enemyMaxHp;
 int playerDefending = 0;
+int enemyDefending = 0;
 int combatOver = 0;
 
 HBRUSH hbrBkgnd, hbrCrimson, hbrList;
@@ -132,6 +167,10 @@ void SwitchView(int view) {
     ShowWindow(hBuyButton, cmdDash);
     ShowWindow(hL2, cmdDash);
     ShowWindow(hOwnedList, cmdDash);
+    ShowWindow(hEqGladiusBtn, cmdDash);
+    ShowWindow(hEqTridentBtn, cmdDash);
+    ShowWindow(hEqArmorBtn, cmdDash);
+    ShowWindow(hEqShieldBtn, cmdDash);
     ShowWindow(hTrainStrBtn, cmdDash);
     ShowWindow(hTrainAgiBtn, cmdDash);
     ShowWindow(hTrainVitBtn, cmdDash);
@@ -155,25 +194,26 @@ void LogCombat(const char* msg) {
 void UpdateCombatUI() {
     char buf[256];
     wsprintfA(buf, "%s\nHP: %d / %d\nSTR:%d AGI:%d VIT:%d",
-        currentFighter->name, playerHp, playerMaxHp, currentFighter->str, currentFighter->agi, currentFighter->vit);
+        currentFighter->name, playerHp, playerMaxHp, GetEffStr(currentFighter), GetEffAgi(currentFighter), GetEffVit(currentFighter));
     SetWindowTextA(hCombatPlayer, buf);
 
     wsprintfA(buf, "%s\nHP: %d / %d\nSTR:%d AGI:%d VIT:%d",
-        enemyFighter.name, enemyHp, enemyMaxHp, enemyFighter.str, enemyFighter.agi, enemyFighter.vit);
+        enemyFighter.name, enemyHp, enemyMaxHp, GetEffStr(&enemyFighter), GetEffAgi(&enemyFighter), GetEffVit(&enemyFighter));
     SetWindowTextA(hCombatEnemy, buf);
 }
 
 void EnterArena(int index) {
     currentFighter = &owned[index];
-    playerMaxHp = currentFighter->vit * 10;
+    playerMaxHp = GetEffVit(currentFighter) * 10;
     playerHp = playerMaxHp;
 
-    enemyFighter = GenerateGladiator();
-    enemyMaxHp = enemyFighter.vit * 10;
+    enemyFighter = GenerateGladiator(1);
+    enemyMaxHp = GetEffVit(&enemyFighter) * 10;
     enemyHp = enemyMaxHp;
 
     combatOver = 0;
     playerDefending = 0;
+    enemyDefending = 0;
 
     SendMessageA(hCombatLog, LB_RESETCONTENT, 0, 0);
     char buf[128];
@@ -208,9 +248,12 @@ void CombatAction(int action) {
     }
 
     if (action == 0) { // attack
-        int hitChance = 75 + (currentFighter->agi - enemyFighter.agi) * 5;
+        int hitChance = 75 + (GetEffAgi(currentFighter) - GetEffAgi(&enemyFighter)) * 5;
+        if (enemyDefending) hitChance -= (enemyFighter.shield == 1 ? 50 : 30);
+        
         if ((my_rand() % 100) < hitChance) {
-            int dmg = currentFighter->str + (my_rand() % 4);
+            int dmg = GetEffStr(currentFighter) + (my_rand() % 4);
+            if (enemyDefending) dmg -= (enemyFighter.shield == 1 ? 5 : 3);
             if (dmg < 1) dmg = 1;
             enemyHp -= dmg;
             wsprintfA(buf, "%s hits for %d damage!", currentFighter->name, dmg);
@@ -235,17 +278,17 @@ void CombatAction(int action) {
         return;
     }
 
-    int enemyDefending = (my_rand() % 100) < 25;
+    enemyDefending = (my_rand() % 100) < 25;
     if (enemyDefending) {
         wsprintfA(buf, "%s takes a defensive stance.", enemyFighter.name);
         LogCombat(buf);
     } else {
-        int hitChance = 75 + (enemyFighter.agi - currentFighter->agi) * 5;
-        if (playerDefending) hitChance -= 30;
+        int hitChance = 75 + (GetEffAgi(&enemyFighter) - GetEffAgi(currentFighter)) * 5;
+        if (playerDefending) hitChance -= (currentFighter->shield == 1 ? 50 : 30);
         
         if ((my_rand() % 100) < hitChance) {
-            int dmg = enemyFighter.str + (my_rand() % 4);
-            if (playerDefending) dmg -= 3;
+            int dmg = GetEffStr(&enemyFighter) + (my_rand() % 4);
+            if (playerDefending) dmg -= (currentFighter->shield == 1 ? 5 : 3);
             if (dmg < 1) dmg = 1;
             playerHp -= dmg;
             wsprintfA(buf, "%s hits for %d damage!", enemyFighter.name, dmg);
@@ -276,7 +319,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE: {
             my_srand(GetTickCount());
             for (int i = 0; i < 3; i++) {
-                market[market_count++] = GenerateGladiator();
+                market[market_count++] = GenerateGladiator(0);
             }
 
             hTitle = CreateWindowA("STATIC", "KColosseum - Ludus Management", WS_VISIBLE | WS_CHILD | SS_CENTER,
@@ -296,11 +339,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessageA(hRefreshButton, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hMarketList = CreateWindowA("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
-                          10, 105, 270, 185, hwnd, (HMENU)ID_MARKET_LIST, NULL, NULL);
+                          10, 105, 270, 130, hwnd, (HMENU)ID_MARKET_LIST, NULL, NULL);
             SendMessageA(hMarketList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBuyButton = CreateWindowA("BUTTON", "Buy Selected", WS_VISIBLE | WS_CHILD,
-                          10, 300, 270, 30, hwnd, (HMENU)ID_BUY_BUTTON, NULL, NULL);
+                          10, 240, 270, 30, hwnd, (HMENU)ID_BUY_BUTTON, NULL, NULL);
             SendMessageA(hBuyButton, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hL2 = CreateWindowA("STATIC", "Your Gladiators", WS_VISIBLE | WS_CHILD,
@@ -308,23 +351,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessageA(hL2, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hOwnedList = CreateWindowA("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
-                          290, 105, 270, 185, hwnd, (HMENU)ID_OWNED_LIST, NULL, NULL);
+                          290, 105, 270, 130, hwnd, (HMENU)ID_OWNED_LIST, NULL, NULL);
             SendMessageA(hOwnedList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            hEqGladiusBtn = CreateWindowA("BUTTON", "Glad(50)", WS_VISIBLE | WS_CHILD,
+                          290, 240, 65, 30, hwnd, (HMENU)ID_EQ_GLADIUS, NULL, NULL);
+            SendMessageA(hEqGladiusBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            hEqTridentBtn = CreateWindowA("BUTTON", "Trid(50)", WS_VISIBLE | WS_CHILD,
+                          358, 240, 65, 30, hwnd, (HMENU)ID_EQ_TRIDENT, NULL, NULL);
+            SendMessageA(hEqTridentBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            hEqArmorBtn = CreateWindowA("BUTTON", "Armr(50)", WS_VISIBLE | WS_CHILD,
+                          426, 240, 65, 30, hwnd, (HMENU)ID_EQ_ARMOR, NULL, NULL);
+            SendMessageA(hEqArmorBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            hEqShieldBtn = CreateWindowA("BUTTON", "Shld(30)", WS_VISIBLE | WS_CHILD,
+                          494, 240, 65, 30, hwnd, (HMENU)ID_EQ_SHIELD, NULL, NULL);
+            SendMessageA(hEqShieldBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hTrainStrBtn = CreateWindowA("BUTTON", "+STR (20D)", WS_VISIBLE | WS_CHILD,
-                          290, 300, 85, 30, hwnd, (HMENU)ID_TRAIN_STR, NULL, NULL);
+                          290, 275, 85, 30, hwnd, (HMENU)ID_TRAIN_STR, NULL, NULL);
             SendMessageA(hTrainStrBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hTrainAgiBtn = CreateWindowA("BUTTON", "+AGI (20D)", WS_VISIBLE | WS_CHILD,
-                          382, 300, 85, 30, hwnd, (HMENU)ID_TRAIN_AGI, NULL, NULL);
+                          382, 275, 85, 30, hwnd, (HMENU)ID_TRAIN_AGI, NULL, NULL);
             SendMessageA(hTrainAgiBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hTrainVitBtn = CreateWindowA("BUTTON", "+VIT (20D)", WS_VISIBLE | WS_CHILD,
-                          475, 300, 85, 30, hwnd, (HMENU)ID_TRAIN_VIT, NULL, NULL);
+                          475, 275, 85, 30, hwnd, (HMENU)ID_TRAIN_VIT, NULL, NULL);
             SendMessageA(hTrainVitBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hFightBtn = CreateWindowA("BUTTON", "Fight in Arena", WS_VISIBLE | WS_CHILD,
-                          290, 335, 270, 25, hwnd, (HMENU)ID_FIGHT_BUTTON, NULL, NULL);
+                          290, 310, 270, 25, hwnd, (HMENU)ID_FIGHT_BUTTON, NULL, NULL);
             SendMessageA(hFightBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             // Arena Combat Controls (Hidden by default)
@@ -375,7 +431,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (LOWORD(wParam) == ID_TRAIN_STR) owned[sel].str++;
                         if (LOWORD(wParam) == ID_TRAIN_AGI) owned[sel].agi++;
                         if (LOWORD(wParam) == ID_TRAIN_VIT) owned[sel].vit++;
-                        wsprintfA(owned[sel].desc, "STR:%d AGI:%d VIT:%d", owned[sel].str, owned[sel].agi, owned[sel].vit);
+                        UpdateGladiatorDesc(&owned[sel]);
                         UpdateUI();
                         SendMessageA(hOwnedList, LB_SETCURSEL, sel, 0);
                     } else {
@@ -384,12 +440,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 } else {
                     MessageBoxA(hwnd, "Select a gladiator to train.", "Info", MB_OK | MB_ICONINFORMATION);
                 }
+            } else if (LOWORD(wParam) >= ID_EQ_GLADIUS && LOWORD(wParam) <= ID_EQ_SHIELD) {
+                int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) {
+                    int cost = (LOWORD(wParam) == ID_EQ_SHIELD) ? 30 : 50;
+                    if (funds >= cost) {
+                        funds -= cost;
+                        if (LOWORD(wParam) == ID_EQ_GLADIUS) owned[sel].weapon = 1;
+                        if (LOWORD(wParam) == ID_EQ_TRIDENT) owned[sel].weapon = 2;
+                        if (LOWORD(wParam) == ID_EQ_ARMOR) owned[sel].armor = 1;
+                        if (LOWORD(wParam) == ID_EQ_SHIELD) owned[sel].shield = 1;
+                        UpdateGladiatorDesc(&owned[sel]);
+                        UpdateUI();
+                        SendMessageA(hOwnedList, LB_SETCURSEL, sel, 0);
+                    } else {
+                        MessageBoxA(hwnd, "Not enough funds to equip!", "Error", MB_OK | MB_ICONWARNING);
+                    }
+                } else {
+                    MessageBoxA(hwnd, "Select a gladiator to equip.", "Info", MB_OK | MB_ICONINFORMATION);
+                }
             } else if (LOWORD(wParam) == ID_REFRESH_BUTTON) {
                 if (funds >= 50) {
                     funds -= 50;
                     market_count = 0;
                     for (int i = 0; i < 3; i++) {
-                        market[market_count++] = GenerateGladiator();
+                        market[market_count++] = GenerateGladiator(0);
                     }
                     UpdateUI();
                 }
