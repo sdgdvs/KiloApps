@@ -260,6 +260,7 @@ typedef struct {
     char searchFilter[64];
 } AlchemyState;
 
+static AlchemyState g_State;
 static const int g_CrucibleCapCosts[5] = { 40, 90, 180, 300, 450 };
 static const int g_EssenceYieldCosts[5] = { 30, 70, 140, 250, 400 };
 static const int g_AutoSorterCosts[5] = { 50, 100, 220, 400, 600 };
@@ -303,7 +304,7 @@ static void SpawnExplosion(int cx, int cy, COLORREF color) {
     }
 }
 
-static AlchemyState g_State;
+
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
 static HWND g_hEquipButtons[8];
@@ -765,11 +766,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hGoldPen = CreatePen(PS_SOLID, 2, RGB(243, 156, 18));
             hInnerGlowPen = CreatePen(PS_SOLID, 1, RGB(241, 196, 15));
 
-            hTitleFont = CreateFontA(-21, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hHeaderFont = CreateFontA(-15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hUIFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hSlotFont = CreateFontA(-14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hBadgeFont = CreateFontA(-12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            int dpi = 96;
+            HMODULE hUser32 = LoadLibraryA("user32.dll");
+            if (hUser32) {
+                typedef UINT (WINAPI *GETDPIFORWINDOW)(HWND);
+                GETDPIFORWINDOW pGetDpiForWindow = (GETDPIFORWINDOW)GetProcAddress(hUser32, "GetDpiForWindow");
+                if (pGetDpiForWindow) {
+                    dpi = pGetDpiForWindow(hwnd);
+                }
+                FreeLibrary(hUser32);
+            }
+            if (dpi == 0) dpi = 96;
+
+            int titleFontHeight = -MulDiv(21, dpi, 72);
+            int headerFontHeight = -MulDiv(15, dpi, 72);
+            int uiFontHeight = -MulDiv(13, dpi, 72);
+            int slotFontHeight = -MulDiv(14, dpi, 72);
+            int badgeFontHeight = -MulDiv(12, dpi, 72);
+
+            hTitleFont = CreateFontA(titleFontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hHeaderFont = CreateFontA(headerFontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hUIFont = CreateFontA(uiFontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hSlotFont = CreateFontA(slotFontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hBadgeFont = CreateFontA(badgeFontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
 
             // Tier Filter Buttons
             g_hTierButtons[0] = CreateWindowA("BUTTON", "All", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30, 96, 35, 22, hwnd, (HMENU)500, NULL, NULL);
@@ -809,7 +828,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hBlitzStartButton = CreateWindowA("BUTTON", "▶️ Start", WS_CHILD | BS_PUSHBUTTON, 409, 70, 50, 22, hwnd, (HMENU)1203, NULL, NULL);
             g_hPuzzleSkipButton = CreateWindowA("BUTTON", "🔄 Skip", WS_CHILD | BS_PUSHBUTTON, 409, 70, 50, 22, hwnd, (HMENU)1204, NULL, NULL);
             g_hSoundButton = CreateWindowA("BUTTON", "🔊 ON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 451, 70, 48, 22, hwnd, (HMENU)1300, NULL, NULL);
-            g_hHelpButton = CreateWindowA("BUTTON", "📘 Manual (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 502, 70, 85, 22, hwnd, (HMENU)1400, NULL, NULL);
+            g_hHelpButton = CreateWindowA("BUTTON", "📘 Manual (F1/H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 502, 70, 115, 22, hwnd, (HMENU)1400, NULL, NULL);
 
             // Help Modal Tab Buttons & Close Button (Initially hidden)
             g_hHelpTabButtons[0] = CreateWindowA("BUTTON", "🎮 How to Play", WS_CHILD | BS_PUSHBUTTON, 35, 55, 110, 26, hwnd, (HMENU)1401, NULL, NULL);
@@ -886,7 +905,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PlayGlassClink();
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
-            } else if (key == 'H' || key == 'h') {
+            } else if (key == 'H' || key == 'h' || key == VK_F1) {
                 g_State.showHelpModal = !g_State.showHelpModal;
                 UpdateEquipmentUI(hwnd);
                 PlayGlassClink();
@@ -2221,7 +2240,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             MoveToEx(hdc, sx - 20 + w*5, sy + 25, NULL);
                             LineTo(hdc, sx - 20 + w*5 + (FastRand()%10 - 5), sy + 25 - r);
                         } else { // Water wave distortions
-                            int offY = (int)(sin((tick + w*200) * 0.01) * 10.0);
+                            int offY = (((tick + w*200) / 50) % 20) - 10;
                             MoveToEx(hdc, sx - 30 + w*8, sy + 25, NULL);
                             LineTo(hdc, sx - 30 + w*8, sy + 25 + offY);
                         }
@@ -2238,7 +2257,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             MoveToEx(hdc, sx - 20 + w*5, sy + 25, NULL);
                             LineTo(hdc, sx - 20 + w*5 + (FastRand()%10 - 5), sy + 25 - r);
                         } else {
-                            int offY = (int)(sin((tick + w*200) * 0.01) * 10.0);
+                            int offY = (((tick + w*200) / 50) % 20) - 10;
                             MoveToEx(hdc, sx - 30 + w*8, sy + 25, NULL);
                             LineTo(hdc, sx - 30 + w*8, sy + 25 + offY);
                         }
@@ -2525,7 +2544,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     RegisterClassA(&wc);
 
-    DWORD dwStyle = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
+    DWORD dwStyle = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
     RECT rect = { 0, 0, 800, 570 };
     AdjustWindowRect(&rect, dwStyle, FALSE);
 

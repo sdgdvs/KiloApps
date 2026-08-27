@@ -164,9 +164,9 @@
     .app-main {
       flex: 1;
       display: grid;
-      grid-template-columns: 360px minmax(360px, 1fr) 340px;
-      gap: 16px;
-      padding: 16px;
+      grid-template-columns: 240px minmax(240px, 1fr) 240px;
+      gap: 12px;
+      padding: 12px;
       overflow: auto;
     }
 
@@ -1837,7 +1837,7 @@
         <span class="val" id="stat-puzzle-high">0</span>
       </div>
       <div class="stat-badge" style="cursor:pointer; background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(243, 156, 18, 0.3)); border-color: var(--accent-gold-light);" onclick="openHelpModal()" title="Open Grandmaster Manual & Help">
-        <span class="label" style="color:var(--accent-gold-light)">📘 Manual (Press H)</span>
+        <span class="label" style="color:var(--accent-gold-light)">📘 Manual (F1/H)</span>
       </div>
     </div>
   </header>
@@ -1991,7 +1991,7 @@
           <div class="log-time">System</div>
           <strong>Welcome Apprentice Alchemist!</strong><br />
           Select elements from your Grimoire to place into the Transmutation Crucible and combine them to discover 50+ secondary compounds across 5 Tiers.<br /><br />
-          📘 <strong>Press 'H'</strong> to open the Grandmaster Manual for help!
+          💡 <strong>Press F1 or H</strong> to open the Grandmaster Manual for help!
         </div>
       </div>
     </div>
@@ -3858,7 +3858,8 @@
     document.addEventListener('keydown', (evt) => {
       if (evt.target.tagName === 'INPUT' || evt.target.tagName === 'TEXTAREA') return;
       const key = evt.key.toLowerCase();
-      if (key === 'h' || key === '?') {
+      if (key === 'h' || key === '?' || evt.key === 'F1') {
+        if (evt.key === 'F1') evt.preventDefault();
         const modal = document.getElementById('help-modal-overlay');
         if (modal && modal.classList.contains('show')) {
           closeHelpModal();
@@ -4130,7 +4131,7 @@
               </div>
               <div>
                 <div class="help-list-item"><span class="key-badge">A</span> Trigger Auto-Fill (if unlocked)</div>
-                <div class="help-list-item"><span class="key-badge">H</span> Open Grandmaster Manual</div>
+                <div class="help-list-item"><span class="key-badge">F1 / H</span> Open Grandmaster Manual</div>
                 <div class="help-list-item"><span class="key-badge">ESC</span> Close Modals / Help Overlay</div>
               </div>
             </div>
