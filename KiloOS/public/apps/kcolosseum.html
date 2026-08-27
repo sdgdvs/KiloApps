@@ -118,6 +118,75 @@
   </div>
 
   <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playTone(freq, type, duration, vol) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playClash() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const bufferSize = audioCtx.sampleRate * 0.1; 
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 1000;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+      noise.start();
+      playTone(800, 'square', 0.1, 0.3);
+    }
+    
+    function playMiss() {
+      playTone(150, 'sine', 0.2, 0.3);
+    }
+
+    function playCheer() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const bufferSize = audioCtx.sampleRate * 2.0; 
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass'; filter.frequency.value = 500;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.5);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.0);
+      noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+      noise.start();
+    }
+
+    function playVictory() {
+      playTone(440, 'square', 0.15, 0.4);
+      setTimeout(() => playTone(440, 'square', 0.15, 0.4), 150);
+      setTimeout(() => playTone(440, 'square', 0.15, 0.4), 300);
+      setTimeout(() => playTone(587.33, 'square', 0.4, 0.4), 450);
+    }
+
+    function playDefeat() {
+      playTone(200, 'sawtooth', 0.5, 0.4);
+      setTimeout(() => playTone(150, 'sawtooth', 1.0, 0.4), 500);
+    }
+
     let funds = 1000;
     let nextId = 1;
     let arenaLevel = 1;
@@ -338,6 +407,7 @@
       const log = document.getElementById('combatLog');
       log.innerHTML = `<em>Match starts! ${currentFighter.name} vs ${enemyFighter.name}</em><br>`;
       
+      playCheer();
       updateCombatUI();
     }
     
@@ -358,6 +428,7 @@
     function checkCrowdFavor() {
       if (crowdFavor >= 100) {
         crowdFavor = 0;
+        playCheer();
         if (Math.random() < 0.5) {
           let gold = 50 + Math.floor(Math.random() * 51);
           funds += gold;
@@ -385,6 +456,7 @@
       
       if (action === 'flee') {
         logCombat(`${currentFighter.name} flees the arena in disgrace!`);
+        playDefeat();
         if (arenaLevel > 1) {
           arenaLevel--;
           logCombat(`<em>Your ludus drops to level ${arenaLevel}...</em>`);
@@ -416,10 +488,12 @@
           enemyFighter.hp -= dmg;
           crowdFavor += 5 + Math.floor(Math.random() * 11);
           logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+          playClash();
           checkCrowdFavor();
         } else {
           crowdFavor = Math.max(0, crowdFavor - 5);
           logCombat(`<strong>${currentFighter.name}</strong> misses!`);
+          playMiss();
         }
       }
       
@@ -431,6 +505,7 @@
             reward += 100 + (arenaLevel * 20);
         }
         logCombat(`<strong>${enemyFighter.name} is defeated! You win ${reward} Denarii!</strong>`);
+        playVictory();
         funds += reward;
         if (arenaLevel < 10) {
           arenaLevel++;
@@ -455,8 +530,10 @@
           currentFighter.hp -= dmg;
           currentFighter.damageTaken += dmg;
           logCombat(`<strong>${enemyFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+          playClash();
         } else {
           logCombat(`<strong>${enemyFighter.name}</strong> misses!`);
+          playMiss();
         }
         
         if (enemyFighter.isTwins && currentFighter.hp > 0) {
@@ -466,8 +543,10 @@
             currentFighter.hp -= dmg;
             currentFighter.damageTaken += dmg;
             logCombat(`<strong>${enemyFighter.name} (Twin 2)</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            playClash();
           } else {
             logCombat(`<strong>${enemyFighter.name} (Twin 2)</strong> misses!`);
+            playMiss();
           }
         }
       }
@@ -476,6 +555,7 @@
         currentFighter.hp = 0;
         updateCombatUI();
         logCombat(`<strong>${currentFighter.name} is DEAD.</strong>`);
+        playDefeat();
         owned.splice(owned.findIndex(g => g.id === currentFighter.id), 1);
         if (arenaLevel > 1) {
           arenaLevel--;

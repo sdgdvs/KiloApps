@@ -11,6 +11,19 @@ int my_rand() {
     return (g_seed >> 16) & 0x7FFF;
 }
 
+DWORD WINAPI SoundThread(LPVOID lpParam) {
+    int type = (int)(intptr_t)lpParam;
+    if (type == 1) { Beep(800, 100); }
+    else if (type == 2) { Beep(150, 200); }
+    else if (type == 3) { Beep(500, 100); Beep(550, 100); Beep(600, 100); Beep(650, 200); }
+    else if (type == 4) { Beep(440, 150); Sleep(50); Beep(440, 150); Sleep(50); Beep(440, 150); Sleep(50); Beep(587, 400); }
+    else if (type == 5) { Beep(200, 500); Beep(150, 1000); }
+    return 0;
+}
+void PlaySoundAsync(int type) {
+    CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+}
+
 #define ID_BUY_BUTTON 101
 #define ID_MARKET_LIST 102
 #define ID_OWNED_LIST 103
@@ -234,6 +247,7 @@ void UpdateCombatUI() {
 void CheckCrowdFavor() {
     if (crowdFavor >= 100) {
         crowdFavor = 0;
+        PlaySoundAsync(3);
         char buf[128];
         if ((my_rand() % 100) < 50) {
             int gold = 50 + (my_rand() % 51);
@@ -304,6 +318,7 @@ void EnterArena(int index) {
     wsprintfA(buf, "Match starts! %s vs %s", currentFighter->name, enemyFighter.name);
     LogCombat(buf);
 
+    PlaySoundAsync(3);
     UpdateCombatUI();
     SwitchView(1);
 }
@@ -318,6 +333,7 @@ void CombatAction(int action) {
     if (action == 2) { // flee
         wsprintfA(buf, "%s flees the arena in disgrace!", currentFighter->name);
         LogCombat(buf);
+        PlaySoundAsync(5);
         if (arenaLevel > 1) {
             arenaLevel--;
             wsprintfA(buf, "Your ludus drops to level %d...", arenaLevel);
@@ -359,12 +375,14 @@ void CombatAction(int action) {
             crowdFavor += 5 + (my_rand() % 11);
             wsprintfA(buf, "%s hits for %d damage!", currentFighter->name, dmg);
             LogCombat(buf);
+            PlaySoundAsync(1);
             CheckCrowdFavor();
         } else {
             crowdFavor -= 5;
             if (crowdFavor < 0) crowdFavor = 0;
             wsprintfA(buf, "%s misses!", currentFighter->name);
             LogCombat(buf);
+            PlaySoundAsync(2);
         }
     }
 
@@ -377,6 +395,7 @@ void CombatAction(int action) {
         }
         wsprintfA(buf, "%s is defeated! You win %d Denarii!", enemyFighter.name, reward);
         LogCombat(buf);
+        PlaySoundAsync(4);
         funds += reward;
         if (arenaLevel < 10) {
             arenaLevel++;
@@ -408,9 +427,11 @@ void CombatAction(int action) {
             currentFighter->damageTaken += dmg;
             wsprintfA(buf, "%s hits for %d damage!", enemyFighter.name, dmg);
             LogCombat(buf);
+            PlaySoundAsync(1);
         } else {
             wsprintfA(buf, "%s misses!", enemyFighter.name);
             LogCombat(buf);
+            PlaySoundAsync(2);
         }
         
         if (enemyFighter.isTwins && playerHp > 0) {
@@ -422,9 +443,11 @@ void CombatAction(int action) {
                 currentFighter->damageTaken += dmg;
                 wsprintfA(buf, "%s (Twin 2) hits for %d damage!", enemyFighter.name, dmg);
                 LogCombat(buf);
+                PlaySoundAsync(1);
             } else {
                 wsprintfA(buf, "%s (Twin 2) misses!", enemyFighter.name);
                 LogCombat(buf);
+                PlaySoundAsync(2);
             }
         }
     }
@@ -434,6 +457,7 @@ void CombatAction(int action) {
         UpdateCombatUI();
         wsprintfA(buf, "%s is DEAD...", currentFighter->name);
         LogCombat(buf);
+        PlaySoundAsync(5);
         if (arenaLevel > 1) {
             arenaLevel--;
             wsprintfA(buf, "Your ludus drops to level %d...", arenaLevel);
