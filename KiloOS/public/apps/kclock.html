@@ -617,7 +617,7 @@
       <button class="tab" role="tab" id="tab-btn-settings" aria-selected="false" aria-controls="tab-settings" onclick="switchTab('settings')">Settings</button>
     </div>
     <div class="header-actions">
-      <div style="font-size: 11px; color: var(--text-muted); margin-right: 8px;">Press 'h' for help</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-right: 8px;">Press 'h' or 'F1' for help</div>
       <button class="icon-btn" id="sound-toggle-btn" onclick="toggleSound()" aria-label="Toggle Sound">🔊 Sound On</button>
       <button class="icon-btn" id="format-toggle-btn" onclick="toggleFormat()" aria-label="Toggle 12/24 Hour Format">24H</button>
     </div>
@@ -1509,18 +1509,19 @@
 
     // Auto-opening size (for standalone/window mode)
     if (window.resizeTo) {
-      window.resizeTo(950, 650);
+      window.resizeTo(340, 580);
     }
     if (window.parent) {
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 950, height: 650 }, '*');
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 340, height: 580 }, '*');
     }
 
     // Help Keyboard listener
     document.addEventListener('keydown', (e) => {
       // Avoid triggering when typing in inputs
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.key === 'h' || e.key === 'H') {
-        showModal('KClock Help', 'Use the top tabs to navigate.\nPress "h" anytime to view this help message.');
+      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+        if (e.key === 'F1') e.preventDefault();
+        showModal('KClock Help', 'Use the top tabs to navigate.\nPress "H" or "F1" anytime to view this help message.');
       }
     });
   </script>

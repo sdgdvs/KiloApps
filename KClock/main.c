@@ -315,9 +315,13 @@ BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hFont = CreateFontA(-24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
-            hFontMono = CreateFontA(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
-            hFontSmall = CreateFontA(-14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            HDC hdc = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            ReleaseDC(hwnd, hdc);
+            
+            hFont = CreateFontA(-MulDiv(24, dpi, 72), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
+            hFontMono = CreateFontA(-MulDiv(12, dpi, 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
+            hFontSmall = CreateFontA(-MulDiv(14, dpi, 72), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             hBkBrush = CreateSolidBrush(RGB(240, 243, 246));
 
             // Local Time
@@ -369,7 +373,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Export / Import Config & Status Bar
             hBtnExport = CreateWindowA("BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 446, 60, 23, hwnd, (HMENU)14, NULL, NULL);
             hBtnImport = CreateWindowA("BUTTON", "Import", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 75, 446, 60, 23, hwnd, (HMENU)15, NULL, NULL);
-            hStatusDisplay = CreateWindowA("STATIC", "Ready (H: Help)", WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE, 140, 446, 170, 23, hwnd, NULL, NULL, NULL);
+            hStatusDisplay = CreateWindowA("STATIC", "Ready (H or F1: Help)", WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE, 140, 446, 170, 23, hwnd, NULL, NULL, NULL);
 
             hBtnSilenceAlarm = CreateWindowA("BUTTON", "Dismiss 🔔", WS_CHILD | BS_PUSHBUTTON, 10, 472, 140, 25, hwnd, (HMENU)11, NULL, NULL);
             hBtnSnoozeAlarm = CreateWindowA("BUTTON", "Snooze 5m 💤", WS_CHILD | BS_PUSHBUTTON, 160, 472, 140, 25, hwnd, (HMENU)16, NULL, NULL);
@@ -482,7 +486,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UpdateDisplays(hwnd);
             } else if (id == 11) { // Dismiss Alarm
                 alarmRinging = 0;
-                SetWindowTextA(hStatusDisplay, "Ready (H: Help)");
+                SetWindowTextA(hStatusDisplay, "Ready (H or F1: Help)");
                 ShowWindow(hBtnSilenceAlarm, SW_HIDE);
                 ShowWindow(hBtnSnoozeAlarm, SW_HIDE);
             } else if (id == 12) { // Toggle Alarm Enable/Disable
@@ -533,8 +537,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN:
-            if (wParam == 'H' || wParam == 'h') {
-                MessageBoxA(hwnd, "KClock Help:\n\n- Tabs: Click buttons to navigate.\n- Export/Import: Save your settings to kclock_config.txt.\n- Stopwatch: Press Start/Lap/Stop.\n- World Clock: Cycle through cities.\n\nKeyboard Shortcuts:\n- Press 'H' to view this help.", "KClock Help", MB_OK | MB_ICONINFORMATION);
+            if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+                MessageBoxA(hwnd, "KClock Help:\n\n- Tabs: Click buttons to navigate.\n- Export/Import: Save your settings to kclock_config.txt.\n- Stopwatch: Press Start/Lap/Stop.\n- World Clock: Cycle through cities.\n\nKeyboard Shortcuts:\n- Press 'H' or 'F1' to view this help.", "KClock Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         case WM_DESTROY:
@@ -560,11 +564,11 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    // Client area size: 320x560
-    RECT rc = {0, 0, 320, 560};
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
+    // Client area size: 340x580
+    RECT rc = {0, 0, 340, 580};
+    AdjustWindowRect(&rc, (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, FALSE);
     
-    HWND hwnd = CreateWindowExA(WS_EX_COMPOSITED, "KClockClass", "KClock (Press H for Help)", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(WS_EX_COMPOSITED, "KClockClass", "KClock (Press H or F1 for Help)", (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
