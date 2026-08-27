@@ -245,15 +245,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hbgMain = CreateSolidBrush(bgMainCol);
             hbgList = CreateSolidBrush(bgListCol);
 
-            hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            hBold = CreateFontA(-18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HDC hdc = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            if (dpi == 0) dpi = 96;
+            ReleaseDC(hwnd, hdc);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            int boldHeight = -MulDiv(14, dpi, 72);
+
+            hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hBold = CreateFontA(boldHeight, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hBtnCompose = CreateWindowEx(0, "BUTTON", "Compose", WS_CHILD | WS_VISIBLE, 10, 10, 100, 30, hwnd, (HMENU)ID_BTN_COMPOSE, NULL, NULL);
             SendMessage(hBtnCompose, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnImport = CreateWindowEx(0, "BUTTON", "Import", WS_CHILD | WS_VISIBLE, 115, 10, 60, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
             hBtnExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE, 180, 10, 60, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
-            hHelpLabel = CreateWindowEx(0, "STATIC", "Press 'H' for Help", WS_CHILD | WS_VISIBLE, 250, 15, 120, 20, hwnd, NULL, NULL, NULL);
+            hHelpLabel = CreateWindowEx(0, "STATIC", "Press F1 or H for Help", WS_CHILD | WS_VISIBLE, 250, 15, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hHelpLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -490,7 +497,7 @@ void MainEntry() {
     DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     RECT rect = {0, 0, W, H};
     AdjustWindowRect(&rect, style, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KMailApp", "KMail - Press H for Help", style,
+    HWND hwnd = CreateWindowEx(0, "KMailApp", "KMail - Press F1 or H for Help", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -498,7 +505,7 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h')) {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
             HWND hFocus = GetFocus();
             char cls[64] = {0};
             GetClassNameA(hFocus, cls, 64);
