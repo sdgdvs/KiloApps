@@ -18,6 +18,11 @@ int my_rand() {
 #define ID_TRAIN_STR 106
 #define ID_TRAIN_AGI 107
 #define ID_TRAIN_VIT 108
+#define ID_FIGHT_BUTTON 109
+#define ID_ATTACK_BUTTON 110
+#define ID_DEFEND_BUTTON 111
+#define ID_FLEE_BUTTON 112
+#define ID_COMBAT_LOG 113
 
 typedef struct {
     int id;
@@ -65,7 +70,14 @@ int owned_count = 0;
 
 int funds = 1000;
 
-HWND hMarketList, hOwnedList, hFundsLabel, hBuyButton, hRefreshButton;
+HWND hTitle, hFundsLabel, hL1, hRefreshButton, hMarketList, hBuyButton, hL2, hOwnedList, hTrainStrBtn, hTrainAgiBtn, hTrainVitBtn, hFightBtn;
+HWND hCombatTitle, hCombatPlayer, hCombatEnemy, hAttackBtn, hDefendBtn, hFleeBtn, hCombatLog;
+
+Gladiator* currentFighter = NULL;
+Gladiator enemyFighter;
+int playerHp, playerMaxHp, enemyHp, enemyMaxHp;
+int playerDefending = 0;
+int combatOver = 0;
 
 HBRUSH hbrBkgnd, hbrCrimson, hbrList;
 HFONT hFont, hTitleFont;
@@ -108,6 +120,157 @@ void BuyGladiator(int index) {
     }
 }
 
+void SwitchView(int view) {
+    int cmdDash = (view == 0) ? SW_SHOW : SW_HIDE;
+    int cmdComb = (view == 1) ? SW_SHOW : SW_HIDE;
+
+    ShowWindow(hTitle, cmdDash);
+    ShowWindow(hFundsLabel, cmdDash);
+    ShowWindow(hL1, cmdDash);
+    ShowWindow(hRefreshButton, cmdDash);
+    ShowWindow(hMarketList, cmdDash);
+    ShowWindow(hBuyButton, cmdDash);
+    ShowWindow(hL2, cmdDash);
+    ShowWindow(hOwnedList, cmdDash);
+    ShowWindow(hTrainStrBtn, cmdDash);
+    ShowWindow(hTrainAgiBtn, cmdDash);
+    ShowWindow(hTrainVitBtn, cmdDash);
+    ShowWindow(hFightBtn, cmdDash);
+
+    ShowWindow(hCombatTitle, cmdComb);
+    ShowWindow(hCombatPlayer, cmdComb);
+    ShowWindow(hCombatEnemy, cmdComb);
+    ShowWindow(hAttackBtn, cmdComb);
+    ShowWindow(hDefendBtn, cmdComb);
+    ShowWindow(hFleeBtn, cmdComb);
+    ShowWindow(hCombatLog, cmdComb);
+}
+
+void LogCombat(const char* msg) {
+    SendMessageA(hCombatLog, LB_ADDSTRING, 0, (LPARAM)msg);
+    int count = SendMessageA(hCombatLog, LB_GETCOUNT, 0, 0);
+    SendMessageA(hCombatLog, LB_SETTOPINDEX, count - 1, 0);
+}
+
+void UpdateCombatUI() {
+    char buf[256];
+    wsprintfA(buf, "%s\nHP: %d / %d\nSTR:%d AGI:%d VIT:%d",
+        currentFighter->name, playerHp, playerMaxHp, currentFighter->str, currentFighter->agi, currentFighter->vit);
+    SetWindowTextA(hCombatPlayer, buf);
+
+    wsprintfA(buf, "%s\nHP: %d / %d\nSTR:%d AGI:%d VIT:%d",
+        enemyFighter.name, enemyHp, enemyMaxHp, enemyFighter.str, enemyFighter.agi, enemyFighter.vit);
+    SetWindowTextA(hCombatEnemy, buf);
+}
+
+void EnterArena(int index) {
+    currentFighter = &owned[index];
+    playerMaxHp = currentFighter->vit * 10;
+    playerHp = playerMaxHp;
+
+    enemyFighter = GenerateGladiator();
+    enemyMaxHp = enemyFighter.vit * 10;
+    enemyHp = enemyMaxHp;
+
+    combatOver = 0;
+    playerDefending = 0;
+
+    SendMessageA(hCombatLog, LB_RESETCONTENT, 0, 0);
+    char buf[128];
+    wsprintfA(buf, "Match starts! %s vs %s", currentFighter->name, enemyFighter.name);
+    LogCombat(buf);
+
+    UpdateCombatUI();
+    SwitchView(1);
+}
+
+void CombatAction(int action) {
+    if (combatOver) {
+        SwitchView(0);
+        return;
+    }
+    
+    char buf[128];
+    if (action == 2) { // flee
+        wsprintfA(buf, "%s flees the arena in disgrace!", currentFighter->name);
+        LogCombat(buf);
+        combatOver = 1;
+        SetWindowTextA(hAttackBtn, "Leave");
+        EnableWindow(hDefendBtn, FALSE);
+        EnableWindow(hFleeBtn, FALSE);
+        return;
+    }
+
+    playerDefending = (action == 1);
+    if (playerDefending) {
+        wsprintfA(buf, "%s takes a defensive stance.", currentFighter->name);
+        LogCombat(buf);
+    }
+
+    if (action == 0) { // attack
+        int hitChance = 75 + (currentFighter->agi - enemyFighter.agi) * 5;
+        if ((my_rand() % 100) < hitChance) {
+            int dmg = currentFighter->str + (my_rand() % 4);
+            if (dmg < 1) dmg = 1;
+            enemyHp -= dmg;
+            wsprintfA(buf, "%s hits for %d damage!", currentFighter->name, dmg);
+            LogCombat(buf);
+        } else {
+            wsprintfA(buf, "%s misses!", currentFighter->name);
+            LogCombat(buf);
+        }
+    }
+
+    if (enemyHp <= 0) {
+        enemyHp = 0;
+        UpdateCombatUI();
+        wsprintfA(buf, "%s is defeated! You win 100 Denarii!", enemyFighter.name);
+        LogCombat(buf);
+        funds += 100;
+        UpdateUI();
+        combatOver = 1;
+        SetWindowTextA(hAttackBtn, "Leave");
+        EnableWindow(hDefendBtn, FALSE);
+        EnableWindow(hFleeBtn, FALSE);
+        return;
+    }
+
+    int enemyDefending = (my_rand() % 100) < 25;
+    if (enemyDefending) {
+        wsprintfA(buf, "%s takes a defensive stance.", enemyFighter.name);
+        LogCombat(buf);
+    } else {
+        int hitChance = 75 + (enemyFighter.agi - currentFighter->agi) * 5;
+        if (playerDefending) hitChance -= 30;
+        
+        if ((my_rand() % 100) < hitChance) {
+            int dmg = enemyFighter.str + (my_rand() % 4);
+            if (playerDefending) dmg -= 3;
+            if (dmg < 1) dmg = 1;
+            playerHp -= dmg;
+            wsprintfA(buf, "%s hits for %d damage!", enemyFighter.name, dmg);
+            LogCombat(buf);
+        } else {
+            wsprintfA(buf, "%s misses!", enemyFighter.name);
+            LogCombat(buf);
+        }
+    }
+
+    if (playerHp <= 0) {
+        playerHp = 0;
+        UpdateCombatUI();
+        wsprintfA(buf, "%s is defeated...", currentFighter->name);
+        LogCombat(buf);
+        combatOver = 1;
+        SetWindowTextA(hAttackBtn, "Leave");
+        EnableWindow(hDefendBtn, FALSE);
+        EnableWindow(hFleeBtn, FALSE);
+        return;
+    }
+
+    UpdateCombatUI();
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
@@ -116,7 +279,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 market[market_count++] = GenerateGladiator();
             }
 
-            HWND hTitle = CreateWindowA("STATIC", "KColosseum - Ludus Management", WS_VISIBLE | WS_CHILD | SS_CENTER,
+            hTitle = CreateWindowA("STATIC", "KColosseum - Ludus Management", WS_VISIBLE | WS_CHILD | SS_CENTER,
                           10, 10, 560, 30, hwnd, NULL, NULL, NULL);
             SendMessageA(hTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
 
@@ -124,7 +287,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                           10, 45, 560, 25, hwnd, (HMENU)ID_FUNDS_LABEL, NULL, NULL);
             SendMessageA(hFundsLabel, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
 
-            HWND hL1 = CreateWindowA("STATIC", "Available Recruits", WS_VISIBLE | WS_CHILD,
+            hL1 = CreateWindowA("STATIC", "Available Recruits", WS_VISIBLE | WS_CHILD,
                           10, 80, 140, 20, hwnd, NULL, NULL, NULL);
             SendMessageA(hL1, WM_SETFONT, (WPARAM)hFont, TRUE);
 
@@ -140,25 +303,58 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                           10, 300, 270, 30, hwnd, (HMENU)ID_BUY_BUTTON, NULL, NULL);
             SendMessageA(hBuyButton, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            HWND hL2 = CreateWindowA("STATIC", "Your Gladiators", WS_VISIBLE | WS_CHILD,
+            hL2 = CreateWindowA("STATIC", "Your Gladiators", WS_VISIBLE | WS_CHILD,
                           290, 80, 270, 20, hwnd, NULL, NULL, NULL);
             SendMessageA(hL2, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hOwnedList = CreateWindowA("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER,
+            hOwnedList = CreateWindowA("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
                           290, 105, 270, 185, hwnd, (HMENU)ID_OWNED_LIST, NULL, NULL);
             SendMessageA(hOwnedList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            HWND hTrainStrBtn = CreateWindowA("BUTTON", "+STR (20D)", WS_VISIBLE | WS_CHILD,
+            hTrainStrBtn = CreateWindowA("BUTTON", "+STR (20D)", WS_VISIBLE | WS_CHILD,
                           290, 300, 85, 30, hwnd, (HMENU)ID_TRAIN_STR, NULL, NULL);
             SendMessageA(hTrainStrBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            HWND hTrainAgiBtn = CreateWindowA("BUTTON", "+AGI (20D)", WS_VISIBLE | WS_CHILD,
+            hTrainAgiBtn = CreateWindowA("BUTTON", "+AGI (20D)", WS_VISIBLE | WS_CHILD,
                           382, 300, 85, 30, hwnd, (HMENU)ID_TRAIN_AGI, NULL, NULL);
             SendMessageA(hTrainAgiBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            HWND hTrainVitBtn = CreateWindowA("BUTTON", "+VIT (20D)", WS_VISIBLE | WS_CHILD,
+            hTrainVitBtn = CreateWindowA("BUTTON", "+VIT (20D)", WS_VISIBLE | WS_CHILD,
                           475, 300, 85, 30, hwnd, (HMENU)ID_TRAIN_VIT, NULL, NULL);
             SendMessageA(hTrainVitBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hFightBtn = CreateWindowA("BUTTON", "Fight in Arena", WS_VISIBLE | WS_CHILD,
+                          290, 335, 270, 25, hwnd, (HMENU)ID_FIGHT_BUTTON, NULL, NULL);
+            SendMessageA(hFightBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            // Arena Combat Controls (Hidden by default)
+            hCombatTitle = CreateWindowA("STATIC", "Arena Combat", WS_CHILD | SS_CENTER,
+                          10, 10, 560, 30, hwnd, NULL, NULL, NULL);
+            SendMessageA(hCombatTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
+
+            hCombatPlayer = CreateWindowA("STATIC", "", WS_CHILD,
+                          30, 50, 240, 80, hwnd, NULL, NULL, NULL);
+            SendMessageA(hCombatPlayer, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hCombatEnemy = CreateWindowA("STATIC", "", WS_CHILD,
+                          310, 50, 240, 80, hwnd, NULL, NULL, NULL);
+            SendMessageA(hCombatEnemy, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hAttackBtn = CreateWindowA("BUTTON", "Attack", WS_CHILD,
+                          130, 140, 90, 30, hwnd, (HMENU)ID_ATTACK_BUTTON, NULL, NULL);
+            SendMessageA(hAttackBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hDefendBtn = CreateWindowA("BUTTON", "Defend", WS_CHILD,
+                          240, 140, 90, 30, hwnd, (HMENU)ID_DEFEND_BUTTON, NULL, NULL);
+            SendMessageA(hDefendBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hFleeBtn = CreateWindowA("BUTTON", "Flee", WS_CHILD,
+                          350, 140, 90, 30, hwnd, (HMENU)ID_FLEE_BUTTON, NULL, NULL);
+            SendMessageA(hFleeBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hCombatLog = CreateWindowA("LISTBOX", NULL, WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOINTEGRALHEIGHT,
+                          30, 180, 520, 170, hwnd, (HMENU)ID_COMBAT_LOG, NULL, NULL);
+            SendMessageA(hCombatLog, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             UpdateUI();
             return 0;
@@ -197,13 +393,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     UpdateUI();
                 }
+            } else if (LOWORD(wParam) == ID_ATTACK_BUTTON) {
+                if (combatOver) {
+                    SwitchView(0);
+                } else {
+                    CombatAction(0);
+                }
+            } else if (LOWORD(wParam) == ID_DEFEND_BUTTON) {
+                CombatAction(1);
+            } else if (LOWORD(wParam) == ID_FLEE_BUTTON) {
+                CombatAction(2);
+            } else if (LOWORD(wParam) == ID_FIGHT_BUTTON) {
+                int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) {
+                    SetWindowTextA(hAttackBtn, "Attack");
+                    EnableWindow(hDefendBtn, TRUE);
+                    EnableWindow(hFleeBtn, TRUE);
+                    EnterArena(sel);
+                } else {
+                    MessageBoxA(hwnd, "Select a gladiator to fight.", "Info", MB_OK | MB_ICONINFORMATION);
+                }
             }
             return 0;
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdcStatic = (HDC)wParam;
             HWND hCtrl = (HWND)lParam;
-            if (hCtrl == hFundsLabel) {
+            if (hCtrl == hFundsLabel || hCtrl == hCombatTitle) {
                 SetTextColor(hdcStatic, RGB(212, 175, 55));
                 SetBkColor(hdcStatic, RGB(139, 0, 0));
                 return (LRESULT)hbrCrimson;

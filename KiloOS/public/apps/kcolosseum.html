@@ -86,7 +86,7 @@
   <h1>KColosseum - Ludus Management</h1>
   <div class="funds">Treasury: <span id="fundsDisplay">1000</span> Denarii</div>
   
-  <div class="dashboard">
+  <div class="dashboard" id="dashboard">
     <div class="panel">
       <h2 style="display:flex; justify-content:space-between; align-items:center;">
         Available Recruits
@@ -98,6 +98,21 @@
       <h2>Your Gladiators</h2>
       <ul id="ownedList"></ul>
     </div>
+    </div>
+  </div>
+
+  <div id="arenaPanel" style="display:none; margin:0 auto; width:80%;" class="panel">
+    <h2>Arena Combat</h2>
+    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+      <div id="playerCombat" style="width:45%; padding:10px; background:#fdf5e6; border:1px solid #d4af37; border-radius:5px;"></div>
+      <div id="enemyCombat" style="width:45%; padding:10px; background:#fdf5e6; border:1px solid #d4af37; border-radius:5px;"></div>
+    </div>
+    <div style="text-align:center;">
+      <button onclick="combatAction('attack')">Attack</button>
+      <button onclick="combatAction('defend')">Defend</button>
+      <button onclick="combatAction('flee')">Flee</button>
+    </div>
+    <div id="combatLog" style="margin-top:20px; height:150px; overflow-y:auto; background:#fff; color:#333; padding:10px; border:1px solid #ccc; font-family:monospace;"></div>
   </div>
 
   <script>
@@ -159,6 +174,9 @@
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'agi')" ${funds < 20 ? 'disabled' : ''}>+AGI (20D)</button>
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'vit')" ${funds < 20 ? 'disabled' : ''}>+VIT (20D)</button>
           </div>
+          <div style="margin-top:5px;">
+            <button style="font-size:0.7em; background:#228b22; color:#fff;" onclick="enterArena(${g.id})">Fight in Arena</button>
+          </div>
         `;
         li.style.flexDirection = 'column';
         li.style.alignItems = 'flex-start';
@@ -188,6 +206,124 @@
           updateUI();
         }
       }
+    }
+
+    let currentFighter = null;
+    let enemyFighter = null;
+    let playerDefending = false;
+    let combatOver = false;
+
+    function enterArena(id) {
+      currentFighter = owned.find(g => g.id === id);
+      if (!currentFighter) return;
+      
+      currentFighter.hp = currentFighter.vit * 10;
+      currentFighter.maxHp = currentFighter.hp;
+      
+      enemyFighter = generateGladiator();
+      enemyFighter.hp = enemyFighter.vit * 10;
+      enemyFighter.maxHp = enemyFighter.hp;
+      
+      combatOver = false;
+      playerDefending = false;
+      
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('arenaPanel').style.display = 'block';
+      
+      const log = document.getElementById('combatLog');
+      log.innerHTML = `<em>Match starts! ${currentFighter.name} vs ${enemyFighter.name}</em><br>`;
+      
+      updateCombatUI();
+    }
+    
+    function updateCombatUI() {
+      document.getElementById('playerCombat').innerHTML = `
+        <h3 style="margin-top:0;">${currentFighter.name}</h3>
+        <div style="font-weight:bold; color:#8b0000;">HP: ${currentFighter.hp} / ${currentFighter.maxHp}</div>
+        <div style="font-size:0.9em; margin-top:5px;">STR:${currentFighter.str} AGI:${currentFighter.agi} VIT:${currentFighter.vit}</div>
+      `;
+      document.getElementById('enemyCombat').innerHTML = `
+        <h3 style="margin-top:0;">${enemyFighter.name}</h3>
+        <div style="font-weight:bold; color:#8b0000;">HP: ${enemyFighter.hp} / ${enemyFighter.maxHp}</div>
+        <div style="font-size:0.9em; margin-top:5px;">STR:${enemyFighter.str} AGI:${enemyFighter.agi} VIT:${enemyFighter.vit}</div>
+      `;
+    }
+    
+    function logCombat(msg) {
+      const log = document.getElementById('combatLog');
+      log.innerHTML += msg + '<br>';
+      log.scrollTop = log.scrollHeight;
+    }
+    
+    function combatAction(action) {
+      if (combatOver) return;
+      
+      if (action === 'flee') {
+        logCombat(`${currentFighter.name} flees the arena in disgrace!`);
+        combatOver = true;
+        setTimeout(exitArena, 1500);
+        return;
+      }
+      
+      playerDefending = (action === 'defend');
+      if (playerDefending) {
+        logCombat(`${currentFighter.name} takes a defensive stance.`);
+      }
+      
+      if (action === 'attack') {
+        let hitChance = 75 + (currentFighter.agi - enemyFighter.agi) * 5;
+        if (Math.random() * 100 < hitChance) {
+          let dmg = Math.max(1, currentFighter.str + Math.floor(Math.random() * 4));
+          enemyFighter.hp -= dmg;
+          logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+        } else {
+          logCombat(`<strong>${currentFighter.name}</strong> misses!`);
+        }
+      }
+      
+      if (enemyFighter.hp <= 0) {
+        enemyFighter.hp = 0;
+        updateCombatUI();
+        logCombat(`<strong>${enemyFighter.name} is defeated! You win 100 Denarii!</strong>`);
+        funds += 100;
+        updateUI();
+        combatOver = true;
+        setTimeout(exitArena, 2000);
+        return;
+      }
+      
+      let enemyDefending = Math.random() < 0.25;
+      if (enemyDefending) {
+        logCombat(`${enemyFighter.name} takes a defensive stance.`);
+      } else {
+        let hitChance = 75 + (enemyFighter.agi - currentFighter.agi) * 5;
+        if (playerDefending) hitChance -= 30;
+        
+        if (Math.random() * 100 < hitChance) {
+          let dmg = Math.max(1, enemyFighter.str + Math.floor(Math.random() * 4));
+          if (playerDefending) dmg = Math.max(1, dmg - 3);
+          currentFighter.hp -= dmg;
+          logCombat(`<strong>${enemyFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+        } else {
+          logCombat(`<strong>${enemyFighter.name}</strong> misses!`);
+        }
+      }
+      
+      if (currentFighter.hp <= 0) {
+        currentFighter.hp = 0;
+        updateCombatUI();
+        logCombat(`<strong>${currentFighter.name} is defeated...</strong>`);
+        combatOver = true;
+        setTimeout(exitArena, 2000);
+        return;
+      }
+      
+      updateCombatUI();
+    }
+    
+    function exitArena() {
+      document.getElementById('arenaPanel').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'flex';
     }
 
     updateUI();
