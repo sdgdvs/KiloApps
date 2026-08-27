@@ -288,13 +288,36 @@
       
       enemyFighter = generateGladiator(true);
       
-      enemyFighter.str += Math.floor(arenaLevel * 1.5);
-      enemyFighter.agi += Math.floor(arenaLevel * 1.5);
-      enemyFighter.vit += Math.floor(arenaLevel * 1.5);
-      if (arenaLevel > 2 && Math.random() < 0.5) enemyFighter.weapon = Math.floor(Math.random() * 2) + 1;
-      if (arenaLevel > 4 && Math.random() < 0.5) enemyFighter.shield = 1;
-      if (arenaLevel > 6 && Math.random() < 0.5) enemyFighter.armor = 1;
-      if (arenaLevel > 8) { enemyFighter.weapon = Math.floor(Math.random() * 2) + 1; enemyFighter.shield = 1; enemyFighter.armor = 1; }
+      let isSpecial = (arenaLevel > 2 && Math.random() < 0.3);
+      if (isSpecial) {
+        let eventType = Math.floor(Math.random() * 3);
+        if (eventType === 0) {
+          enemyFighter.name = "Ferocious Lion";
+          enemyFighter.str += Math.floor(arenaLevel * 2);
+          enemyFighter.agi += Math.floor(arenaLevel * 2);
+          enemyFighter.vit += Math.floor(arenaLevel * 2);
+          enemyFighter.weapon = 0; enemyFighter.shield = 0; enemyFighter.armor = 0;
+          enemyFighter.isBeast = true;
+        } else if (eventType === 1) {
+          enemyFighter.name = "Armed Chariot";
+          enemyFighter.vit += Math.floor(arenaLevel * 3);
+          enemyFighter.str += Math.floor(arenaLevel * 1.5);
+          enemyFighter.armor = 1; enemyFighter.shield = 1;
+        } else {
+          enemyFighter.name = "Twin Gladiators";
+          enemyFighter.vit += Math.floor(arenaLevel * 1.5);
+          enemyFighter.str += Math.floor(arenaLevel * 1.5);
+          enemyFighter.isTwins = true;
+        }
+      } else {
+        enemyFighter.str += Math.floor(arenaLevel * 1.5);
+        enemyFighter.agi += Math.floor(arenaLevel * 1.5);
+        enemyFighter.vit += Math.floor(arenaLevel * 1.5);
+        if (arenaLevel > 2 && Math.random() < 0.5) enemyFighter.weapon = Math.floor(Math.random() * 2) + 1;
+        if (arenaLevel > 4 && Math.random() < 0.5) enemyFighter.shield = 1;
+        if (arenaLevel > 6 && Math.random() < 0.5) enemyFighter.armor = 1;
+        if (arenaLevel > 8) { enemyFighter.weapon = Math.floor(Math.random() * 2) + 1; enemyFighter.shield = 1; enemyFighter.armor = 1; }
+      }
       
       updateDesc(enemyFighter);
       
@@ -371,6 +394,9 @@
         enemyFighter.hp = 0;
         updateCombatUI();
         let reward = 100 + (arenaLevel * 50);
+        if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot") {
+            reward += 100 + (arenaLevel * 20);
+        }
         logCombat(`<strong>${enemyFighter.name} is defeated! You win ${reward} Denarii!</strong>`);
         funds += reward;
         if (arenaLevel < 10) {
@@ -398,6 +424,18 @@
           logCombat(`<strong>${enemyFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
         } else {
           logCombat(`<strong>${enemyFighter.name}</strong> misses!`);
+        }
+        
+        if (enemyFighter.isTwins && currentFighter.hp > 0) {
+          if (Math.random() * 100 < hitChance) {
+            let dmg = Math.max(1, getEffStr(enemyFighter) + Math.floor(Math.random() * 4));
+            if (playerDefending) dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
+            currentFighter.hp -= dmg;
+            currentFighter.damageTaken += dmg;
+            logCombat(`<strong>${enemyFighter.name} (Twin 2)</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+          } else {
+            logCombat(`<strong>${enemyFighter.name} (Twin 2)</strong> misses!`);
+          }
         }
       }
       

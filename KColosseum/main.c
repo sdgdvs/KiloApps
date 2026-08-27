@@ -41,6 +41,7 @@ typedef struct {
     int armor;
     int shield;
     int damageTaken;
+    int isTwins;
 } Gladiator;
 
 const char* firstNames[] = {"Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus"};
@@ -78,6 +79,7 @@ Gladiator GenerateGladiator(int forArena) {
     g.armor = 0;
     g.shield = 0;
     g.damageTaken = 0;
+    g.isTwins = 0;
     g.desc[0] = '\0';
     g.id = nextId++;
     
@@ -228,13 +230,35 @@ void EnterArena(int index) {
     
     enemyFighter = GenerateGladiator(1);
     
-    enemyFighter.str += (arenaLevel * 3) / 2;
-    enemyFighter.agi += (arenaLevel * 3) / 2;
-    enemyFighter.vit += (arenaLevel * 3) / 2;
-    if (arenaLevel > 2 && (my_rand() % 100) < 50) enemyFighter.weapon = (my_rand() % 2) + 1;
-    if (arenaLevel > 4 && (my_rand() % 100) < 50) enemyFighter.shield = 1;
-    if (arenaLevel > 6 && (my_rand() % 100) < 50) enemyFighter.armor = 1;
-    if (arenaLevel > 8) { enemyFighter.weapon = (my_rand() % 2) + 1; enemyFighter.shield = 1; enemyFighter.armor = 1; }
+    int isSpecial = (arenaLevel > 2 && (my_rand() % 100) < 30);
+    if (isSpecial) {
+        int eventType = my_rand() % 3;
+        if (eventType == 0) {
+            lstrcpyA(enemyFighter.name, "Ferocious Lion");
+            enemyFighter.str += arenaLevel * 2;
+            enemyFighter.agi += arenaLevel * 2;
+            enemyFighter.vit += arenaLevel * 2;
+            enemyFighter.weapon = 0; enemyFighter.shield = 0; enemyFighter.armor = 0;
+        } else if (eventType == 1) {
+            lstrcpyA(enemyFighter.name, "Armed Chariot");
+            enemyFighter.vit += arenaLevel * 3;
+            enemyFighter.str += (arenaLevel * 3) / 2;
+            enemyFighter.armor = 1; enemyFighter.shield = 1;
+        } else {
+            lstrcpyA(enemyFighter.name, "Twin Gladiators");
+            enemyFighter.vit += (arenaLevel * 3) / 2;
+            enemyFighter.str += (arenaLevel * 3) / 2;
+            enemyFighter.isTwins = 1;
+        }
+    } else {
+        enemyFighter.str += (arenaLevel * 3) / 2;
+        enemyFighter.agi += (arenaLevel * 3) / 2;
+        enemyFighter.vit += (arenaLevel * 3) / 2;
+        if (arenaLevel > 2 && (my_rand() % 100) < 50) enemyFighter.weapon = (my_rand() % 2) + 1;
+        if (arenaLevel > 4 && (my_rand() % 100) < 50) enemyFighter.shield = 1;
+        if (arenaLevel > 6 && (my_rand() % 100) < 50) enemyFighter.armor = 1;
+        if (arenaLevel > 8) { enemyFighter.weapon = (my_rand() % 2) + 1; enemyFighter.shield = 1; enemyFighter.armor = 1; }
+    }
     
     UpdateGladiatorDesc(&enemyFighter);
     
@@ -303,6 +327,9 @@ void CombatAction(int action) {
         enemyHp = 0;
         UpdateCombatUI();
         int reward = 100 + (arenaLevel * 50);
+        if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || lstrcmpA(enemyFighter.name, "Armed Chariot") == 0 || enemyFighter.isTwins) {
+            reward += 100 + (arenaLevel * 20);
+        }
         wsprintfA(buf, "%s is defeated! You win %d Denarii!", enemyFighter.name, reward);
         LogCombat(buf);
         funds += reward;
@@ -338,6 +365,21 @@ void CombatAction(int action) {
         } else {
             wsprintfA(buf, "%s misses!", enemyFighter.name);
             LogCombat(buf);
+        }
+        
+        if (enemyFighter.isTwins && playerHp > 0) {
+            if ((my_rand() % 100) < hitChance) {
+                int dmg = GetEffStr(&enemyFighter) + (my_rand() % 4);
+                if (playerDefending) dmg -= (currentFighter->shield == 1 ? 5 : 3);
+                if (dmg < 1) dmg = 1;
+                playerHp -= dmg;
+                currentFighter->damageTaken += dmg;
+                wsprintfA(buf, "%s (Twin 2) hits for %d damage!", enemyFighter.name, dmg);
+                LogCombat(buf);
+            } else {
+                wsprintfA(buf, "%s (Twin 2) misses!", enemyFighter.name);
+                LogCombat(buf);
+            }
         }
     }
 
