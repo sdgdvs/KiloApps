@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSolitaire
 - KHex
 - KMine
 - KMandel
@@ -144,7 +143,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSimon
 - KTrader
 - KDragon
+- KSolitaire
 ## Completed Work Log
+
+- **KSolitaire (Loop 7):** Implemented highly polished visual effects including multi-layered particle explosions featuring varied sizes, cyan/magenta colors, and gravity/friction decay physics, dynamic lighting via secondary glowing outlines (native C) and scaling box-shadows (Web Canvas), and procedural kinematic screen-shake driven by a quadratic physics decay in both Web Canvas (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
 - **KDragon (Loop 2):** Implemented sprite animations including idle bobbing, attack lunges, and damage screen-shake. Added dynamic multi-colored particle bursts for hatching, feeding, playing, and attacking. Implemented via CSS keyframes and DOM elements in Web Canvas (kdragon.html), and via a double-buffered 50ms Win32 timer and particle struct array updating `DrawPixelArt` coordinates in Native C Win32 GDI (KDragon/main.c).
 

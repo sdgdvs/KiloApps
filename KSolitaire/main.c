@@ -597,23 +597,24 @@ void SpawnParticles(HWND hwnd, int dstPile) {
     int cx = fx + CARD_W / 2;
     int cy = fy + CARD_H / 2;
     
-    COLORREF colors[4] = {RGB(255, 215, 0), RGB(255, 255, 255), RGB(255, 145, 0), RGB(0, 230, 118)};
+    COLORREF colors[6] = {RGB(255, 215, 0), RGB(255, 255, 255), RGB(255, 145, 0), RGB(0, 230, 118), RGB(0, 150, 255), RGB(255, 100, 255)};
     
-    for (int i = 0; i < 20; i++) {
-        for (int p = 0; p < 128; p++) {
-            if (!particles[p].active) {
-                particles[p].x = (float)cx;
-                particles[p].y = (float)cy;
-                float vx = (float)((rnd() % 100) - 50) / 10.0f;
-                float vy = (float)((rnd() % 100) - 50) / 10.0f;
-                particles[p].vx = vx;
-                particles[p].vy = vy;
-                particles[p].life = 20 + rnd() % 10;
-                particles[p].maxLife = particles[p].life;
-                particles[p].color = colors[rnd() % 4];
-                particles[p].active = 1;
-                break;
-            }
+    int spawned = 0;
+    for (int p = 0; p < 128 && spawned < 40; p++) {
+        if (!particles[p].active) {
+            particles[p].x = (float)cx;
+            particles[p].y = (float)cy;
+            
+            float angle = (float)(rnd() % 360) * 3.14159f / 180.0f;
+            float speed = (float)(rnd() % 80 + 30) / 10.0f;
+            particles[p].vx = (float)cos(angle) * speed;
+            particles[p].vy = (float)sin(angle) * speed;
+            
+            particles[p].life = 30 + rnd() % 20;
+            particles[p].maxLife = particles[p].life;
+            particles[p].color = colors[rnd() % 6];
+            particles[p].active = 1;
+            spawned++;
         }
     }
     particleActive = 1;
@@ -1831,6 +1832,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (particles[i].active) {
                         particles[i].x += particles[i].vx;
                         particles[i].y += particles[i].vy;
+                        particles[i].vx *= 0.92f; // Friction decay
+                        particles[i].vy += 0.4f;  // Gravity
                         particles[i].life--;
                         if (particles[i].life <= 0) {
                             particles[i].active = 0;
@@ -2042,11 +2045,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (particleActive) {
                 for (int i = 0; i < 128; i++) {
                     if (particles[i].active) {
-                        int size = 2 + (particles[i].life * 3) / particles[i].maxLife;
+                        int size = 1 + (particles[i].life * 4) / particles[i].maxLife;
                         HBRUSH pb = CreateSolidBrush(particles[i].color);
                         RECT pr = { (int)particles[i].x - size, (int)particles[i].y - size, (int)particles[i].x + size, (int)particles[i].y + size };
                         FillRect(memDC, &pr, pb);
                         DeleteObject(pb);
+                        
+                        if (size > 2) {
+                            HPEN gp = CreatePen(PS_SOLID, 1, particles[i].color);
+                            HPEN oldGP = (HPEN)SelectObject(memDC, gp);
+                            HBRUSH gb = (HBRUSH)GetStockObject(NULL_BRUSH);
+                            HBRUSH oldGB = (HBRUSH)SelectObject(memDC, gb);
+                            Ellipse(memDC, (int)particles[i].x - size*2, (int)particles[i].y - size*2, (int)particles[i].x + size*2, (int)particles[i].y + size*2);
+                            SelectObject(memDC, oldGP);
+                            SelectObject(memDC, oldGB);
+                            DeleteObject(gp);
+                        }
                     }
                 }
             }
@@ -2089,8 +2103,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (shakeActive) {
-                int dx = (rnd() % 20) - 10;
-                int dy = (rnd() % 20) - 10;
+                float decay = (15.0f - (float)shakeFrame) / 15.0f;
+                if (decay < 0.0f) decay = 0.0f;
+                int amp = (int)(25.0f * decay * decay);
+                if (amp < 1) amp = 1;
+                int dx = (rnd() % (amp * 2)) - amp;
+                int dy = (rnd() % (amp * 2)) - amp;
                 BitBlt(hdc, dx, dy, winW, winH, memDC, 0, 0, SRCCOPY);
             } else {
                 BitBlt(hdc, 0, 0, winW, winH, memDC, 0, 0, SRCCOPY);
