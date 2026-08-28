@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMatch3
 - KFreecell
 - KSudoku
 - KGo
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KConnect4
 - KHangman
 - KMech
+- KMatch3
 ## Completed Work Log
+
+- **KMatch3 (Loop 7):** Implemented highly polished visual effects including physics-driven screen-shake proportional to combo multipliers upon cascades, multi-layered particle explosions featuring heavy kinematic debris chunks and expanding smoke layers, and distinct procedural visual variations for special gems/power-ups (spinning CSS rings/pulsing bombs in HTML; real-time GetTickCount() facet rotation and pulsating opacities in Native C) in both Web Canvas (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
 
 - **KMech (Loop 2):** Implemented sprite animations including idle bobbing, attack lunges, and damage shakes with red flash drop-shadow effects via CSS keyframes and DOM manipulation in Web Canvas (kmech.html), and a 50ms Win32 timer driving continuous idle ping-pong bobbing, viewport offset attack lunges, screen shake damage effects, and dynamic/persistent particle bursts (yellow/orange sparks and death smoke) in Native C Win32 GDI (KMech/main.c).
 

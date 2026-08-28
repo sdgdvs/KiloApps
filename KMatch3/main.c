@@ -118,26 +118,47 @@ typedef struct {
     float size;
     float life, decay;
     COLORREF color;
+    int type; // 0=glow, 1=debris, 2=smoke
 } Particle;
 
 Particle particles[MAX_PARTICLES] = {0};
 
 void CreateParticles(int cx, int cy, COLORREF color) {
-    for (int i = 0; i < 25; i++) {
+    for (int i = 0; i < 30; i++) {
         for (int p = 0; p < MAX_PARTICLES; p++) {
             if (particles[p].life <= 0) {
                 particles[p].x = (float)cx;
                 particles[p].y = (float)cy;
                 float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
-                float speed = (i % 2 == 0) ? (float)((rand() % 80) + 50) / 10.0f : (float)((rand() % 40) + 10) / 10.0f;
-                particles[p].vx = cosf(angle) * speed;
-                particles[p].vy = sinf(angle) * speed;
                 particles[p].rot = (float)(rand() % 360);
                 particles[p].vrot = (float)((rand() % 40) - 20);
-                particles[p].size = (i % 2 == 0) ? (float)((rand() % 3) + 2) : (float)((rand() % 6) + 4);
                 particles[p].life = 1.0f;
-                particles[p].decay = (i % 2 == 0) ? (float)((rand() % 5) + 3) / 100.0f : (float)((rand() % 3) + 1) / 100.0f;
-                particles[p].color = (i % 3 == 0) ? RGB(255,255,255) : color;
+                
+                if (i < 10) { // Heavy Debris
+                    float speed = (float)((rand() % 80) + 40) / 10.0f;
+                    particles[p].vx = cosf(angle) * speed;
+                    particles[p].vy = sinf(angle) * speed;
+                    particles[p].size = (float)((rand() % 6) + 4);
+                    particles[p].decay = (float)((rand() % 5) + 2) / 100.0f;
+                    particles[p].color = color;
+                    particles[p].type = 1;
+                } else if (i < 20) { // Core Sparkles
+                    float speed = (float)((rand() % 50) + 20) / 10.0f;
+                    particles[p].vx = cosf(angle) * speed;
+                    particles[p].vy = sinf(angle) * speed;
+                    particles[p].size = (float)((rand() % 3) + 2);
+                    particles[p].decay = (float)((rand() % 8) + 4) / 100.0f;
+                    particles[p].color = RGB(255, 255, 255);
+                    particles[p].type = 0;
+                } else { // Expanding Smoke
+                    float speed = (float)((rand() % 20) + 5) / 10.0f;
+                    particles[p].vx = cosf(angle) * speed;
+                    particles[p].vy = sinf(angle) * speed - 1.0f;
+                    particles[p].size = (float)((rand() % 10) + 10);
+                    particles[p].decay = (float)((rand() % 3) + 1) / 100.0f;
+                    particles[p].color = RGB(150, 150, 150);
+                    particles[p].type = 2;
+                }
                 break;
             }
         }
@@ -149,7 +170,15 @@ void UpdateParticles() {
         if (particles[i].life > 0) {
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
-            particles[i].vy += 0.25f;
+            if (particles[i].type == 1) { // Debris has gravity
+                particles[i].vy += 0.4f;
+            } else if (particles[i].type == 2) { // Smoke expands
+                particles[i].size += 0.3f;
+                particles[i].vx *= 0.95f;
+                particles[i].vy *= 0.95f;
+            } else {
+                particles[i].vy += 0.1f;
+            }
             particles[i].rot += particles[i].vrot;
             particles[i].life -= particles[i].decay;
         }
@@ -184,6 +213,8 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
     }
 
     if (typeIdx == TYPE_RAINBOW) {
+        DWORD tick = GetTickCount();
+        int roffset = (tick / 50) % 16;
         HBRUSH bgRing = CreateSolidBrush(RGB(255, 215, 0));
         HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
         HBRUSH oldB = (HBRUSH)SelectObject(hdc, bgRing);
@@ -192,7 +223,7 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
         
         POINT pts[16];
         for (int i = 0; i < 16; i++) {
-            float r = (i % 2 == 0) ? (20.0f * scale) : (9.0f * scale);
+            float r = ((i + roffset) % 2 == 0) ? (20.0f * scale) : (9.0f * scale);
             float a = (float)i * 3.14159f / 8.0f;
             pts[i].x = cx + (int)(cosf(a) * r);
             pts[i].y = cy + (int)(sinf(a) * r);
@@ -312,8 +343,10 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
         DeleteObject(nullP); DeleteObject(sssB); DeleteObject(wB);
 
         if (typeIdx == TYPE_HORIZ) {
-            HPEN goldP = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
-            HBRUSH goldB = CreateSolidBrush(RGB(255, 170, 0));
+            DWORD tick = GetTickCount();
+            float pulse = (sinf(tick * 0.005f) + 1.0f) * 0.5f;
+            HPEN goldP = CreatePen(PS_SOLID, 2, RGB(255, 150 + (int)(105 * pulse), 0));
+            HBRUSH goldB = CreateSolidBrush(RGB(255, 100 + (int)(70 * pulse), 0));
             HPEN oP = (HPEN)SelectObject(hdc, goldP);
             HBRUSH oB = (HBRUSH)SelectObject(hdc, goldB);
             Ellipse(hdc, cx-r19, cy-r19, cx+r19, cy+r19);
@@ -326,8 +359,10 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
             SelectObject(hdc, oP); SelectObject(hdc, oB);
             DeleteObject(goldP); DeleteObject(goldB);
         } else if (typeIdx == TYPE_VERT) {
-            HPEN cyanP = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
-            HBRUSH cyanB = CreateSolidBrush(RGB(0, 136, 255));
+            DWORD tick = GetTickCount();
+            float pulse = (sinf(tick * 0.005f) + 1.0f) * 0.5f;
+            HPEN cyanP = CreatePen(PS_SOLID, 2, RGB(0, 150 + (int)(105 * pulse), 255));
+            HBRUSH cyanB = CreateSolidBrush(RGB(0, 100 + (int)(100 * pulse), 255));
             HPEN oP = (HPEN)SelectObject(hdc, cyanP);
             HBRUSH oB = (HBRUSH)SelectObject(hdc, cyanB);
             Ellipse(hdc, cx-r19, cy-r19, cx+r19, cy+r19);
@@ -340,12 +375,14 @@ void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx
             SelectObject(hdc, oP); SelectObject(hdc, oB);
             DeleteObject(cyanP); DeleteObject(cyanB);
         } else if (typeIdx == TYPE_BOMB) {
-            HBRUSH darkBomb = CreateSolidBrush(RGB(15, 15, 15));
-            HPEN redP = CreatePen(PS_SOLID, 2, RGB(255, 40, 40));
+            DWORD tick = GetTickCount();
+            float pulse = (sinf(tick * 0.01f) + 1.0f) * 0.5f;
+            HBRUSH darkBomb = CreateSolidBrush(RGB(15 + (int)(20 * pulse), 15, 15));
+            HPEN redP = CreatePen(PS_SOLID, 2, RGB(255, 40 + (int)(60 * pulse), 40));
             HPEN oP = (HPEN)SelectObject(hdc, redP);
             HBRUSH oB = (HBRUSH)SelectObject(hdc, darkBomb);
             Ellipse(hdc, cx-r16, cy-r16, cx+r16, cy+r16);
-            HBRUSH redCore = CreateSolidBrush(RGB(255, 40, 40));
+            HBRUSH redCore = CreateSolidBrush(RGB(255, 40 + (int)(60 * pulse), 40));
             SelectObject(hdc, redCore);
             Ellipse(hdc, cx-r5, cy-r5, cx+r5, cy+r5);
             DeleteObject(redCore);
@@ -765,30 +802,47 @@ void DrawBoard(HDC hdc) {
 
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
-            float r = particles[i].rot * 3.14159f / 180.0f;
-            float c_rot = cosf(r);
-            float s_rot = sinf(r);
-            float sz = particles[i].size;
-            float px = particles[i].x;
-            float py = particles[i].y;
-            
-            POINT pts[3];
-            pts[0].x = (int)(px + c_rot * sz - s_rot * 0);
-            pts[0].y = (int)(py + s_rot * sz + c_rot * 0);
-            pts[1].x = (int)(px + c_rot * (-sz) - s_rot * sz);
-            pts[1].y = (int)(py + s_rot * (-sz) + c_rot * sz);
-            pts[2].x = (int)(px + c_rot * (-sz) - s_rot * (-sz));
-            pts[2].y = (int)(py + s_rot * (-sz) + c_rot * (-sz));
+            if (particles[i].type == 2) { // Smoke
+                HBRUSH pb = CreateSolidBrush(particles[i].color);
+                HPEN pp = CreatePen(PS_NULL, 0, 0);
+                HBRUSH ob = (HBRUSH)SelectObject(hdc, pb);
+                HPEN op = (HPEN)SelectObject(hdc, pp);
+                int sz = (int)particles[i].size;
+                Ellipse(hdc, (int)particles[i].x - sz, (int)particles[i].y - sz, (int)particles[i].x + sz, (int)particles[i].y + sz);
+                SelectObject(hdc, ob);
+                SelectObject(hdc, op);
+                DeleteObject(pb);
+                DeleteObject(pp);
+            } else {
+                float r = particles[i].rot * 3.14159f / 180.0f;
+                float c_rot = cosf(r);
+                float s_rot = sinf(r);
+                float sz = particles[i].size;
+                float px = particles[i].x;
+                float py = particles[i].y;
+                
+                POINT pts[3];
+                pts[0].x = (int)(px + c_rot * sz - s_rot * 0);
+                pts[0].y = (int)(py + s_rot * sz + c_rot * 0);
+                pts[1].x = (int)(px + c_rot * (-sz) - s_rot * sz);
+                pts[1].y = (int)(py + s_rot * (-sz) + c_rot * sz);
+                pts[2].x = (int)(px + c_rot * (-sz) - s_rot * (-sz));
+                pts[2].y = (int)(py + s_rot * (-sz) + c_rot * (-sz));
 
-            HBRUSH pb = CreateSolidBrush(particles[i].color);
-            HPEN pp = CreatePen(PS_SOLID, 1, RGB(255,255,255));
-            HBRUSH ob = (HBRUSH)SelectObject(hdc, pb);
-            HPEN op = (HPEN)SelectObject(hdc, pp);
-            Polygon(hdc, pts, 3);
-            SelectObject(hdc, ob);
-            SelectObject(hdc, op);
-            DeleteObject(pb);
-            DeleteObject(pp);
+                HBRUSH pb = CreateSolidBrush(particles[i].color);
+                HPEN pp = CreatePen(PS_SOLID, 1, RGB(255,255,255));
+                if (particles[i].type == 1) { // Debris
+                    DeleteObject(pp);
+                    pp = CreatePen(PS_NULL, 0, 0);
+                }
+                HBRUSH ob = (HBRUSH)SelectObject(hdc, pb);
+                HPEN op = (HPEN)SelectObject(hdc, pp);
+                Polygon(hdc, pts, 3);
+                SelectObject(hdc, ob);
+                SelectObject(hdc, op);
+                DeleteObject(pb);
+                DeleteObject(pp);
+            }
         }
     }
 }
@@ -1063,8 +1117,9 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
 
                     COLORREF pc = (typeGrid[r][c] == TYPE_RAINBOW) ? RGB(255,255,255) : colors[grid[r][c]];
                     CreateParticles(BOARD_X + c * cellSize + cellSize / 2, BOARD_Y + r * cellSize + cellSize / 2, pc);
-                    if (typeGrid[r][c] != TYPE_NONE) screenShake = 15;
-                    else if (screenShake < 5) screenShake = 5;
+                    if (typeGrid[r][c] != TYPE_NONE) screenShake += 20 + comboMultiplier * 5;
+                    else screenShake += 5 + comboMultiplier * 2;
+                    if (screenShake > 50) screenShake = 50;
                 } else if (stoneToBreak[r][c]) {
                     popGrid[r][c] = 1;
                     score += 20;
@@ -1352,7 +1407,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             int needsUpdate = 0;
             if (screenShake > 0) {
-                screenShake--;
+                screenShake = (int)(screenShake * 0.9f) - 1;
+                if (screenShake < 0) screenShake = 0;
                 needsUpdate = 1;
             }
             for (int i = 0; i < MAX_PARTICLES; i++) {

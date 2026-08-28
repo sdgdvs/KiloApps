@@ -122,8 +122,6 @@
     80% { transform: translate(4px, 3px) rotate(-1deg); }
     100% { transform: translate(0, 0) rotate(0deg); }
   }
-  .shake { animation: boardShake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-  .shake-hard { animation: boardShake 0.6s cubic-bezier(.36,.07,.19,.97) both; }
   .ruins-bg {
     position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -2;
     background: 
@@ -146,6 +144,21 @@
     0% { transform: translateY(0px) translateX(0px); }
     50% { transform: translateY(-75px) translateX(20px); }
     100% { transform: translateY(-150px) translateX(0px); }
+  }
+  @keyframes spinRing {
+    to { transform: rotate(360deg); }
+  }
+  .powerup-ring {
+    transform-origin: 24px 24px;
+    animation: spinRing 3s linear infinite;
+  }
+  @keyframes pulseBomb {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px red); }
+    50% { transform: scale(1.15); filter: drop-shadow(0 0 8px red) brightness(1.5); }
+  }
+  .bomb-icon {
+    transform-origin: 24px 24px;
+    animation: pulseBomb 1s ease-in-out infinite;
   }
 </style>
 </head>
@@ -358,41 +371,79 @@
     }
 
     function createParticles(x, y, color) {
-      for (let i = 0; i < 24; i++) {
+      for (let i = 0; i < 30; i++) {
         let p = document.createElement('div');
         p.className = 'particle';
-        let isCore = i % 3 === 0;
-        let size = isCore ? Math.floor(Math.random() * 4) + 2 : Math.floor(Math.random() * 8) + 4;
-        let pColor = isCore ? '#ffffff' : color;
+        
+        let type = 0; // 0=core, 1=debris, 2=smoke
+        if (i < 10) type = 1;
+        else if (i < 20) type = 0;
+        else type = 2;
+
+        let size = type === 2 ? Math.floor(Math.random() * 10) + 10 : (type === 1 ? Math.floor(Math.random() * 6) + 4 : Math.floor(Math.random() * 4) + 2);
+        let pColor = type === 0 ? '#ffffff' : (type === 2 ? 'rgba(150,150,150,0.6)' : color);
+        
         p.style.width = size + 'px';
         p.style.height = size + 'px';
-        p.style.backgroundColor = pColor;
-        p.style.boxShadow = `0 0 ${size}px ${pColor}`;
+        p.style.backgroundColor = type === 2 ? 'transparent' : pColor;
+        
+        if (type === 2) {
+            p.style.background = `radial-gradient(circle, ${pColor} 0%, transparent 70%)`;
+            p.style.borderRadius = '50%';
+        } else {
+            p.style.boxShadow = `0 0 ${size}px ${pColor}`;
+            p.style.clipPath = type === 0 ? 'circle(50% at 50% 50%)' : 'polygon(50% 0%, 100% 25%, 80% 100%, 20% 100%, 0% 25%)';
+        }
+
         p.style.left = x + 'px';
         p.style.top = y + 'px';
-        p.style.clipPath = isCore ? 'circle(50% at 50% 50%)' : 'polygon(50% 0%, 100% 25%, 80% 100%, 20% 100%, 0% 25%)';
         boardEl.appendChild(p);
         
         let angle = Math.random() * Math.PI * 2;
-        let speed = isCore ? (Math.random() * 12 + 6) : (Math.random() * 6 + 2);
+        let speed = type === 1 ? (Math.random() * 8 + 4) : (type === 0 ? Math.random() * 5 + 2 : Math.random() * 2 + 0.5);
+        
         particles.push({
           el: p, x: x, y: y,
           vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
+          vy: Math.sin(angle) * speed - (type === 2 ? 1.0 : 0),
           rot: Math.random() * 360,
           vrot: (Math.random() - 0.5) * 40,
           life: 1.0,
-          decay: isCore ? (Math.random() * 0.06 + 0.04) : (Math.random() * 0.03 + 0.01)
+          decay: type === 1 ? (Math.random() * 0.05 + 0.02) : (type === 0 ? Math.random() * 0.08 + 0.04 : Math.random() * 0.03 + 0.01),
+          type: type,
+          size: size
         });
       }
     }
 
+    let currentShake = 0;
+    
     function updateParticles() {
+      if (currentShake > 0) {
+        let sx = (Math.random() - 0.5) * currentShake;
+        let sy = (Math.random() - 0.5) * currentShake;
+        boardEl.style.transform = `translate(${sx}px, ${sy}px)`;
+        currentShake *= 0.9;
+        if (currentShake < 0.5) {
+            currentShake = 0;
+            boardEl.style.transform = `translate(0px, 0px)`;
+        }
+      }
+
       for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.25; // gravity
+        if (p.type === 1) {
+            p.vy += 0.4;
+        } else if (p.type === 2) {
+            p.size += 0.3;
+            p.vx *= 0.95;
+            p.vy *= 0.95;
+        } else {
+            p.vy += 0.1;
+        }
+        
         p.rot += p.vrot;
         p.life -= p.decay;
         if (p.life <= 0) {
@@ -402,7 +453,12 @@
           p.el.style.left = p.x + 'px';
           p.el.style.top = p.y + 'px';
           p.el.style.opacity = p.life;
-          p.el.style.transform = `rotate(${p.rot}deg)`;
+          if (p.type === 2) {
+              p.el.style.width = p.size + 'px';
+              p.el.style.height = p.size + 'px';
+          } else {
+              p.el.style.transform = `rotate(${p.rot}deg)`;
+          }
         }
       }
       requestAnimationFrame(updateParticles);
@@ -508,19 +564,21 @@
 
         if (type === 1) {
           svgContent += `
-            <circle cx="24" cy="24" r="21" fill="none" stroke="#ffaa00" stroke-width="2.5" stroke-dasharray="6 3"/>
+            <circle class="powerup-ring" cx="24" cy="24" r="21" fill="none" stroke="#ffaa00" stroke-width="2.5" stroke-dasharray="6 3"/>
             <path d="M 6 24 L 16 17 L 16 21 L 32 21 L 32 17 L 42 24 L 32 31 L 32 27 L 16 27 L 16 31 Z" fill="#ffffff" stroke="#ff4400" stroke-width="1.5"/>
           `;
         } else if (type === 2) {
           svgContent += `
-            <circle cx="24" cy="24" r="21" fill="none" stroke="#00e5ff" stroke-width="2.5" stroke-dasharray="6 3"/>
+            <circle class="powerup-ring" cx="24" cy="24" r="21" fill="none" stroke="#00e5ff" stroke-width="2.5" stroke-dasharray="6 3"/>
             <path d="M 24 6 L 17 16 L 21 16 L 21 32 L 17 32 L 24 42 L 31 32 L 27 32 L 27 16 L 31 16 Z" fill="#ffffff" stroke="#0088ff" stroke-width="1.5"/>
           `;
         } else if (type === 4) {
           svgContent += `
-            <circle cx="24" cy="24" r="20" fill="none" stroke="#ff2244" stroke-width="2"/>
-            <rect x="14" y="14" width="20" height="20" rx="4" fill="#111111" opacity="0.85" stroke="#ff3333" stroke-width="1.5"/>
-            <text x="24" y="29" font-family="sans-serif" font-weight="900" font-size="13" fill="#ff3333" text-anchor="middle">💣</text>
+            <g class="bomb-icon">
+              <circle cx="24" cy="24" r="20" fill="none" stroke="#ff2244" stroke-width="2"/>
+              <rect x="14" y="14" width="20" height="20" rx="4" fill="#111111" opacity="0.85" stroke="#ff3333" stroke-width="1.5"/>
+              <text x="24" y="29" font-family="sans-serif" font-weight="900" font-size="13" fill="#ff3333" text-anchor="middle">💣</text>
+            </g>
           `;
         }
       }
@@ -1162,15 +1220,8 @@
             return {r, c};
         });
 
-        let didShake = false;
         destroyArr.forEach(m => {
           if (grid[m.r][m.c]) {
-            if (!didShake) {
-              boardEl.classList.remove('shake', 'shake-hard');
-              void boardEl.offsetWidth; // trigger reflow
-              boardEl.classList.add(grid[m.r][m.c].type > 0 ? 'shake-hard' : 'shake');
-              didShake = true;
-            }
             grid[m.r][m.c].el.classList.add('cracking');
             if (grid[m.r][m.c].color === '#ff4040') collectedRed++;
             else if (grid[m.r][m.c].color === '#40ff40') collectedGreen++;
@@ -1194,6 +1245,11 @@
             if (grid[m.r][m.c].type === 1) fireLaserRow(m.r);
             if (grid[m.r][m.c].type === 2) fireLaserCol(m.c);
             if (grid[m.r][m.c].type === 4) createScorePopup(m.c * cellSize + 10, m.r * cellSize + 10, 'BOOM!', '#ff3333');
+            
+            if (grid[m.r][m.c].type > 0) currentShake += 20 + comboMultiplier * 5;
+            else currentShake += 5 + comboMultiplier * 2;
+            if (currentShake > 50) currentShake = 50;
+
             let color = grid[m.r][m.c].color || '#ffffff';
             if (grid[m.r][m.c].type === 3) color = '#ffffff';
             createParticles(m.c * cellSize + cellSize/2, m.r * cellSize + cellSize/2, color);
