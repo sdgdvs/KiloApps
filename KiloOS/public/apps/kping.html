@@ -138,6 +138,7 @@
     <button id="btnAction" class="btn btn-primary">Ping</button>
     <button id="btnTrace" class="btn btn-primary">Trace</button>
     <button id="btnExport" class="btn btn-secondary">Export JSON</button>
+    <button id="btnHelp" class="btn btn-secondary">Help</button>
   </div>
   
   <div class="terminal-container">
@@ -149,7 +150,7 @@
         <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Session Log</span>
         <span style="margin-left: auto; font-size: 12px; color: var(--text-muted); font-family: monospace; font-weight: bold;">Press 'H' for Help</span>
       </div>
-      <textarea id="out" readonly spellcheck="false">Welcome to KPing. Enter a target host and click Ping or Trace to begin. Press 'h' for help.
+      <textarea id="out" readonly spellcheck="false">Welcome to KPing. Enter a target host and click Ping or Trace to begin. Press 'H' or F1 for help.
 
 </textarea>
     </div>
@@ -462,16 +463,33 @@
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logEntries, null, 2));
       const anchor = document.createElement('a');
       anchor.setAttribute("href", dataStr);
-      anchor.setAttribute("download", \`kping_log_\${new Date().getTime()}.json\`);
+      anchor.setAttribute("download", `kping_log_${new Date().getTime()}.json`);
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
   };
 
+  const btnHelp = document.getElementById('btnHelp');
+  if (btnHelp) {
+      btnHelp.onclick = () => {
+          append("\n--- KPing Help ---\n");
+          append("Ping: Send ICMP echo requests to the target host.\n");
+          append("Trace: Trace the route to the target host.\n");
+          append("Count: Number of requests to send (default 4).\n");
+          append("Size: Packet size in bytes.\n");
+          append("TTL: Time To Live for packets.\n");
+          append("-t: Ping the specified host until stopped.\n");
+          append("Hex Dump: Display simulated payload in hex format.\n");
+          append("Export JSON: Save the session log to a JSON file.\n");
+          append("------------------\n\n", "help");
+      };
+  }
+
   document.addEventListener('keydown', (e) => {
       const active = document.activeElement;
       const isInput = active.tagName === 'INPUT' || (active.tagName === 'TEXTAREA' && active.id !== 'out');
-      if ((e.key === 'h' || e.key === 'H') && !isInput) {
+      if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && !isInput) {
+          if (e.key === 'F1') e.preventDefault();
           append("\n--- KPing Help ---\n");
           append("Ping: Send ICMP echo requests to the target host.\n");
           append("Trace: Trace the route to the target host.\n");

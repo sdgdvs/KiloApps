@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <stdio.h>
 
-#define W 800
-#define H 600
+#define W 850
+#define H 650
 
 HWND hInput;
 HWND hBtn;
@@ -23,6 +23,7 @@ HBRUSH hbg;
 HBRUSH hinputBg;
 HFONT hFont;
 HFONT hFontMono;
+int fontHeight;
 
 // Helper to set crisp fonts
 #ifndef CLEARTYPE_QUALITY
@@ -196,9 +197,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hbg = CreateSolidBrush(RGB(15, 23, 42)); // #0f172a
             hinputBg = CreateSolidBrush(RGB(30, 41, 59)); // #1e293b
             
-            hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            hFontMono = CreateFontA(-15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
-            if (!hFontMono) hFontMono = CreateFontA(-15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Courier New");
+            HDC hdcScreen = GetDC(NULL);
+            int dpi = GetDeviceCaps(hdcScreen, LOGPIXELSY);
+            ReleaseDC(NULL, hdcScreen);
+            fontHeight = -MulDiv(12, dpi, 72);
+            
+            hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFontMono = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+            if (!hFontMono) hFontMono = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Courier New");
             
             hStatic = CreateWindowEx(0, "STATIC", "Target Host:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 22, hwnd, NULL, NULL, NULL);
             hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL, 100, 15, W - 315, 24, hwnd, NULL, NULL, NULL);
@@ -215,7 +221,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hCheckCont = CreateWindowEx(0, "BUTTON", "Continuous", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 310, 45, 100, 22, hwnd, NULL, NULL, NULL);
             hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 420, 45, 90, 22, hwnd, NULL, NULL, NULL);
             
-            hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing. Enter a target host and click Ping or Trace to begin. Press 'h' for help.\r\n\r\n", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 90, hwnd, NULL, NULL, NULL);
+            hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing. Enter a target host and click Ping or Trace to begin. Press 'H' or F1 for help.\r\n\r\n", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 90, hwnd, NULL, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFontMono, TRUE);
@@ -317,7 +323,7 @@ void MainEntry() {
     RECT r = {0, 0, W, H};
     AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KPingApp", "KPing (Press 'H' for Help)", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KPingApp", "KPing (Press F1 or 'H' for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, NULL);
         
     SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)CreateSolidBrush(RGB(15, 23, 42)));
@@ -327,7 +333,7 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && msg.wParam == 'H') {
+        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == VK_F1)) {
             HWND hFocus = GetFocus();
             if (hFocus != hInput && hFocus != hInputCount && hFocus != hInputSize && hFocus != hInputTTL) {
                 const char* helpMsg = "\r\n--- KPing Help ---\r\n"
