@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KColosseum (Gladiator management RPG)
-**Phase:** 14 (next to do)
+**App:** KStellar (Space exploration and trading RPG)
+**Phase:** 1 (next to do)
 **Status:** Creation
 
-- [x] Phase 1: Scaffold KColosseum directory (`KColosseum/`), create web HTML skeleton (`KiloOS/public/apps/kcolosseum.html`), register in App.jsx.
-- [x] Phase 2: Basic UI for gladiator ludus (stable) management, showing funds, and a list of available gladiators to buy.
-- [x] Phase 3: Native C version (`KColosseum/main.c`, `build.bat`) using Win32 API with functional parity.
-- [x] Phase 4: Roman/Gladiator aesthetic styling (marble textures, serif fonts, gold/crimson accents).
-- [x] Phase 5: Implement gladiator stats (Strength, Agility, Vitality) and basic procedural generation of recruits.
-- [x] Phase 6: Implement training system (spend funds and time to increase gladiator stats).
-- [x] Phase 7: Arena combat system (turn-based tactical battles against AI opponents).
-- [x] Phase 8: Equipment system (buy and equip weapons like gladius/trident, armor, and shields to alter stats).
-- [x] Phase 9: Injury and healing system (gladiators take damage, require time and funds to heal, or die permanently).
-- [x] Phase 10: Arena league progression (climb through local pits to the grand Colosseum, facing tougher opponents).
-- [x] Phase 11: Special battle events (fight multiple enemies, wild beasts like lions, or chariot battles).
-- [x] Phase 12: Crowd favor mechanic (perform spectacular moves to win crowd favor, unlocking special rewards).
-- [x] Phase 13: Sound Effects — cheering crowds, sword clashes, and victory fanfares (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Lanista's Guide — How-to-play, combat tactics, equipment reference.
+- [ ] Phase 1: Scaffold KStellar directory (`KStellar/`), create web HTML skeleton (`KiloOS/public/apps/kstellar.html`), register in App.jsx.
+- [ ] Phase 2: Basic UI for starship dashboard showing fuel, credits, cargo space, and a map of local star systems.
+- [ ] Phase 3: Native C version (`KStellar/main.c`, `build.bat`) using Win32 API with functional parity.
+- [ ] Phase 4: Sci-fi aesthetic styling (deep space black backgrounds, neon blue/green accents, monospaced fonts, scanlines).
+- [ ] Phase 5: Implement space travel mechanics (traveling consumes fuel, takes time, triggers random encounters).
+- [ ] Phase 6: Implement commodity trading system (buy low on agricultural planets, sell high on industrial/mining planets).
+- [ ] Phase 7: Add a ship upgrade system (buy better engines for less fuel usage, larger cargo bays, better shields/weapons).
+- [ ] Phase 8: Introduce hostile encounters (space pirates) with turn-based tactical space combat (attack, evade, use items).
+- [ ] Phase 9: Implement a mission/bounty board at space stations for additional credit opportunities.
+- [ ] Phase 10: Add procedural generation for a large galaxy with multiple sectors and varied planetary economies.
+- [ ] Phase 11: Special stellar phenomena events (black holes, solar flares, derelict ships to salvage).
+- [ ] Phase 12: Add a faction reputation system (actions affect standing with Galactic Federation, Pirates, Traders).
+- [ ] Phase 13: Sound Effects — warp drives, lasers, UI blips, ambient space drone (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Star Captain's Manual — How-to-play, trading tips, combat guide.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kmystery.html` AND `KMystery/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kstellar.html` AND `KStellar/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KColosseum (Phase 14 completed: Added Comprehensive Help & Lanista's Guide to both versions)
 - KMystery (Phase 14 completed: Added Comprehensive Help & Detective's Manual to both versions)
 - KTrader (Phase 14 completed: Added Comprehensive Help & Captain's Log to both versions)
 - KCyber (Phase 14 completed: Added Comprehensive Help & Runner's Guide to both versions)
@@ -171,7 +172,6 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KStellar** — Space exploration and trading RPG. Pilot a ship, trade goods, upgrade modules, and discover new star systems.
 - **KSanctuary** — Base-building survival game in a post-apocalyptic wasteland. Manage resources, defend against raids, and research tech.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
