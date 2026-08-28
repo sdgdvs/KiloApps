@@ -31,9 +31,14 @@ System systems[] = {
 #define ID_BTN_SELL_MINERALS 105
 #define ID_BTN_BUY_TECH 106
 #define ID_BTN_SELL_TECH 107
+#define ID_BTN_UPG_ENGINE 108
+#define ID_BTN_UPG_CARGO 109
+#define ID_BTN_UPG_WEAPON 110
+#define ID_BTN_UPG_SHIELD 111
 
 HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText, hCargoText;
 HWND hBtnBuyFood, hBtnSellFood, hBtnBuyMinerals, hBtnSellMinerals, hBtnBuyTech, hBtnSellTech;
+HWND hBtnUpgEngine, hBtnUpgCargo, hBtnUpgWeapon, hBtnUpgShield;
 
 int selectedSystem = -1;
 int currentSystemId = 0;
@@ -43,6 +48,11 @@ int cargoFood = 0;
 int cargoMinerals = 0;
 int cargoTech = 0;
 int cargoMax = 50;
+
+int engineLevel = 1;
+int cargoLevel = 1;
+int weaponLevel = 1;
+int shieldLevel = 1;
 
 static HFONT hFont = NULL;
 static HBRUSH hBgBrush = NULL;
@@ -91,6 +101,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 150, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
             
+            hBtnUpgEngine = CreateWindow("BUTTON", "Upg Eng", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 95, 25, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
+            hBtnUpgCargo = CreateWindow("BUTTON", "Upg Cargo", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 380, 95, 25, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
+            hBtnUpgWeapon = CreateWindow("BUTTON", "Upg Wpn", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 410, 95, 25, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
+            hBtnUpgShield = CreateWindow("BUTTON", "Upg Shld", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 410, 95, 25, hwnd, (HMENU)ID_BTN_UPG_SHIELD, NULL, NULL);
+
             ShowWindow(hBtnCourse, SW_HIDE);
             ShowWindow(hBtnBuyFood, SW_HIDE);
             ShowWindow(hBtnSellFood, SW_HIDE);
@@ -98,6 +113,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             ShowWindow(hBtnSellMinerals, SW_HIDE);
             ShowWindow(hBtnBuyTech, SW_HIDE);
             ShowWindow(hBtnSellTech, SW_HIDE);
+            ShowWindow(hBtnUpgEngine, SW_HIDE);
+            ShowWindow(hBtnUpgCargo, SW_HIDE);
+            ShowWindow(hBtnUpgWeapon, SW_HIDE);
+            ShowWindow(hBtnUpgShield, SW_HIDE);
             
             UpdateDashboard();
             return 0;
@@ -215,10 +234,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     
                     char infoText[512];
                     if (selectedSystem == currentSystemId) {
-                        sprintf(infoText, "%s (DOCKED)\n\n%s\n\nCoordinates: X:%d Y:%d\n\nMARKET PRICES:\nFood: %d\nMinerals: %d\nTech: %d\n\nYOUR CARGO:\nFood: %d | Min: %d | Tech: %d", 
-                            systems[i].name, systems[i].desc, systems[i].x, systems[i].y,
+                        sprintf(infoText, "%s (DOCKED)\n%s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+                            systems[i].name, systems[i].desc,
                             systems[i].food_price, systems[i].minerals_price, systems[i].tech_price,
-                            cargoFood, cargoMinerals, cargoTech);
+                            cargoFood, cargoMinerals, cargoTech,
+                            engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
+                            weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
                     } else {
                         sprintf(infoText, "%s\n\n%s\n\nCoordinates: X:%d Y:%d", 
                             systems[i].name, systems[i].desc, systems[i].x, systems[i].y);
@@ -233,6 +254,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         ShowWindow(hBtnSellMinerals, SW_HIDE);
                         ShowWindow(hBtnBuyTech, SW_HIDE);
                         ShowWindow(hBtnSellTech, SW_HIDE);
+                        ShowWindow(hBtnUpgEngine, SW_HIDE);
+                        ShowWindow(hBtnUpgCargo, SW_HIDE);
+                        ShowWindow(hBtnUpgWeapon, SW_HIDE);
+                        ShowWindow(hBtnUpgShield, SW_HIDE);
                     } else {
                         ShowWindow(hBtnCourse, SW_HIDE);
                         ShowWindow(hBtnBuyFood, SW_SHOW);
@@ -241,6 +266,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         ShowWindow(hBtnSellMinerals, SW_SHOW);
                         ShowWindow(hBtnBuyTech, SW_SHOW);
                         ShowWindow(hBtnSellTech, SW_SHOW);
+                        ShowWindow(hBtnUpgEngine, SW_SHOW);
+                        ShowWindow(hBtnUpgCargo, SW_SHOW);
+                        ShowWindow(hBtnUpgWeapon, SW_SHOW);
+                        ShowWindow(hBtnUpgShield, SW_SHOW);
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
@@ -253,7 +282,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int dx = systems[selectedSystem].x - systems[currentSystemId].x;
                 int dy = systems[selectedSystem].y - systems[currentSystemId].y;
                 int dist = (int)sqrt((double)(dx * dx + dy * dy));
-                int fuelCost = dist / 2;
+                int fuelCost = (dist / 2) / engineLevel;
+                if (fuelCost < 1) fuelCost = 1;
                 
                 if (fuel < fuelCost) {
                     char msg[128];
@@ -319,10 +349,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 UpdateDashboard();
                 
                 char infoText[512];
-                sprintf(infoText, "%s (DOCKED)\n\n%s\n\nCoordinates: X:%d Y:%d\n\nMARKET PRICES:\nFood: %d\nMinerals: %d\nTech: %d\n\nYOUR CARGO:\nFood: %d | Min: %d | Tech: %d", 
-                    sys->name, sys->desc, sys->x, sys->y,
+                sprintf(infoText, "%s (DOCKED)\n%s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+                    sys->name, sys->desc,
                     sys->food_price, sys->minerals_price, sys->tech_price,
-                    cargoFood, cargoMinerals, cargoTech);
+                    cargoFood, cargoMinerals, cargoTech,
+                    engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
+                    weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
+                SetWindowText(hInfoArea, infoText);
+            } else if (LOWORD(wParam) >= ID_BTN_UPG_ENGINE && LOWORD(wParam) <= ID_BTN_UPG_SHIELD && selectedSystem == currentSystemId) {
+                int cmd = LOWORD(wParam);
+                if (cmd == ID_BTN_UPG_ENGINE) {
+                    int cost = 1000 * engineLevel;
+                    if (credits >= cost) { credits -= cost; engineLevel++; }
+                } else if (cmd == ID_BTN_UPG_CARGO) {
+                    int cost = 1500 * cargoLevel;
+                    if (credits >= cost) { credits -= cost; cargoLevel++; cargoMax = 50 * cargoLevel; }
+                } else if (cmd == ID_BTN_UPG_WEAPON) {
+                    int cost = 2000 * weaponLevel;
+                    if (credits >= cost) { credits -= cost; weaponLevel++; }
+                } else if (cmd == ID_BTN_UPG_SHIELD) {
+                    int cost = 2000 * shieldLevel;
+                    if (credits >= cost) { credits -= cost; shieldLevel++; }
+                }
+                
+                UpdateDashboard();
+                
+                char infoText[512];
+                System *sys = &systems[currentSystemId];
+                sprintf(infoText, "%s (DOCKED)\n%s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+                    sys->name, sys->desc,
+                    sys->food_price, sys->minerals_price, sys->tech_price,
+                    cargoFood, cargoMinerals, cargoTech,
+                    engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
+                    weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
                 SetWindowText(hInfoArea, infoText);
             }
             return 0;

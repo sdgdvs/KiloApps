@@ -162,6 +162,11 @@
         let cargo = { food: 0, minerals: 0, tech: 0 };
         let cargoMax = 50;
 
+        let engineLevel = 1;
+        let cargoLevel = 1;
+        let weaponLevel = 1;
+        let shieldLevel = 1;
+
         function getCargoUsed() {
             return cargo.food + cargo.minerals + cargo.tech;
         }
@@ -172,6 +177,27 @@
             document.getElementById('cargo-used').innerText = getCargoUsed();
             document.getElementById('cargo-max').innerText = cargoMax;
         }
+
+        window.upgrade = function(type) {
+            let cost = 0;
+            if (type === 'engine') cost = 1000 * engineLevel;
+            else if (type === 'cargo') cost = 1500 * cargoLevel;
+            else if (type === 'weapon') cost = 2000 * weaponLevel;
+            else if (type === 'shield') cost = 2000 * shieldLevel;
+
+            if (credits >= cost) {
+                credits -= cost;
+                if (type === 'engine') engineLevel++;
+                else if (type === 'cargo') { cargoLevel++; cargoMax = 50 * cargoLevel; }
+                else if (type === 'weapon') weaponLevel++;
+                else if (type === 'shield') shieldLevel++;
+                updateDashboard();
+                showSystemInfo(systems.find(s => s.id === currentSystemId));
+                alert(type.toUpperCase() + " upgraded!");
+            } else {
+                alert("Not enough credits!");
+            }
+        };
 
         window.buy = function(item) {
             const sys = systems.find(s => s.id === currentSystemId);
@@ -209,7 +235,8 @@
             const target = systems.find(s => s.id === sysId);
             const current = systems.find(s => s.id === currentSystemId);
             const dist = Math.sqrt(Math.pow(target.x - current.x, 2) + Math.pow(target.y - current.y, 2));
-            const fuelCost = Math.round(dist * 0.5);
+            let fuelCost = Math.round((dist * 0.5) / engineLevel);
+            if (fuelCost < 1) fuelCost = 1;
             
             if (fuel < fuelCost) {
                 alert("Not enough fuel! You need " + fuelCost + "% fuel to reach " + target.name + ".");
@@ -280,6 +307,13 @@
                             <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('tech')">Sell</button>
                         </div>
                     </div>
+                </div>
+                <p style="color:#00ffff; font-weight:bold; margin-bottom:5px; margin-top:15px;">Shipyard (Upgrades)</p>
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('engine')">Upg Engine (₭${1000*engineLevel}) [Lvl ${engineLevel}]</button>
+                    <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('cargo')">Upg Cargo (₭${1500*cargoLevel}) [Lvl ${cargoLevel}]</button>
+                    <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('weapon')">Upg Weapons (₭${2000*weaponLevel}) [Lvl ${weaponLevel}]</button>
+                    <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('shield')">Upg Shields (₭${2000*shieldLevel}) [Lvl ${shieldLevel}]</button>
                 </div>`;
             }
             infoEl.innerHTML = html;
