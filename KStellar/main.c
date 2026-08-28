@@ -12,23 +12,51 @@ typedef struct {
     int x;
     int y;
     char desc[256];
+    int food_price;
+    int minerals_price;
+    int tech_price;
 } System;
 
 System systems[] = {
-    {1, "Sol", 50, 50, "Cradle of humanity. Highly developed planetary system with a stable economy."},
-    {2, "Alpha Centauri", 30, 70, "Primary mining colony. Resource rich, but known for pirate activity on the outskirts."},
-    {3, "Sirius", 75, 35, "Major trading hub. High tech goods are cheap here."},
-    {4, "Proxima", 20, 80, "Remote outpost. Dangerous but offers high rewards for smugglers."},
-    {5, "Vega", 80, 80, "Agricultural world. Supplies food to neighboring industrial systems."}
+    {1, "Sol", 50, 50, "Cradle of humanity. Highly developed planetary system with a stable economy.", 20, 40, 150},
+    {2, "Alpha Centauri", 30, 70, "Primary mining colony. Resource rich, but known for pirate activity on the outskirts.", 40, 15, 200},
+    {3, "Sirius", 75, 35, "Major trading hub. High tech goods are cheap here.", 30, 60, 80},
+    {4, "Proxima", 20, 80, "Remote outpost. Dangerous but offers high rewards for smugglers.", 50, 30, 300},
+    {5, "Vega", 80, 80, "Agricultural world. Supplies food to neighboring industrial systems.", 5, 80, 180}
 };
 
-HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText;
+#define ID_BTN_BUY_FOOD 102
+#define ID_BTN_SELL_FOOD 103
+#define ID_BTN_BUY_MINERALS 104
+#define ID_BTN_SELL_MINERALS 105
+#define ID_BTN_BUY_TECH 106
+#define ID_BTN_SELL_TECH 107
+
+HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText, hCargoText;
+HWND hBtnBuyFood, hBtnSellFood, hBtnBuyMinerals, hBtnSellMinerals, hBtnBuyTech, hBtnSellTech;
+
 int selectedSystem = -1;
 int currentSystemId = 0;
 int fuel = 100;
 int credits = 1000;
+int cargoFood = 0;
+int cargoMinerals = 0;
+int cargoTech = 0;
+int cargoMax = 50;
+
 static HFONT hFont = NULL;
 static HBRUSH hBgBrush = NULL;
+
+void UpdateDashboard() {
+    char buf[64];
+    sprintf(buf, "FUEL: %d%%", fuel);
+    SetWindowText(hFuelText, buf);
+    sprintf(buf, "CREDITS: %d", credits);
+    SetWindowText(hCreditsText, buf);
+    int used = cargoFood + cargoMinerals + cargoTech;
+    sprintf(buf, "CARGO: %d/%d TONS", used, cargoMax);
+    SetWindowText(hCargoText, buf);
+}
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -42,17 +70,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HWND h2 = CreateWindow("STATIC", "CREDITS: 1,000", WS_VISIBLE | WS_CHILD, 140, 20, 150, 20, hwnd, NULL, NULL, NULL);
             hCreditsText = h2;
             SendMessage(h2, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HWND h3 = CreateWindow("STATIC", "CARGO: 0/50 TONS", WS_VISIBLE | WS_CHILD, 300, 20, 150, 20, hwnd, NULL, NULL, NULL);
+            HWND h3 = CreateWindow("STATIC", "CARGO: 0/50 TONS", WS_VISIBLE | WS_CHILD, 300, 20, 180, 20, hwnd, NULL, NULL, NULL);
+            hCargoText = h3;
             SendMessage(h3, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND h4 = CreateWindow("STATIC", "LOCAL SYSTEMS", WS_VISIBLE | WS_CHILD, 440, 60, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(h4, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hInfoArea = CreateWindow("STATIC", "Select a system on the map for details.", WS_VISIBLE | WS_CHILD, 440, 90, 200, 150, hwnd, NULL, NULL, NULL);
+            hInfoArea = CreateWindow("STATIC", "Select a system on the map for details.", WS_VISIBLE | WS_CHILD, 440, 90, 220, 180, hwnd, NULL, NULL, NULL);
             SendMessage(hInfoArea, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 250, 150, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
+            hBtnBuyFood = CreateWindow("BUTTON", "Buy Food", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 25, hwnd, (HMENU)ID_BTN_BUY_FOOD, NULL, NULL);
+            hBtnSellFood = CreateWindow("BUTTON", "Sell Food", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 280, 95, 25, hwnd, (HMENU)ID_BTN_SELL_FOOD, NULL, NULL);
+            
+            hBtnBuyMinerals = CreateWindow("BUTTON", "Buy Min", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 310, 95, 25, hwnd, (HMENU)ID_BTN_BUY_MINERALS, NULL, NULL);
+            hBtnSellMinerals = CreateWindow("BUTTON", "Sell Min", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 310, 95, 25, hwnd, (HMENU)ID_BTN_SELL_MINERALS, NULL, NULL);
+            
+            hBtnBuyTech = CreateWindow("BUTTON", "Buy Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 340, 95, 25, hwnd, (HMENU)ID_BTN_BUY_TECH, NULL, NULL);
+            hBtnSellTech = CreateWindow("BUTTON", "Sell Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 340, 95, 25, hwnd, (HMENU)ID_BTN_SELL_TECH, NULL, NULL);
+
+            hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 150, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
+            
             ShowWindow(hBtnCourse, SW_HIDE);
+            ShowWindow(hBtnBuyFood, SW_HIDE);
+            ShowWindow(hBtnSellFood, SW_HIDE);
+            ShowWindow(hBtnBuyMinerals, SW_HIDE);
+            ShowWindow(hBtnSellMinerals, SW_HIDE);
+            ShowWindow(hBtnBuyTech, SW_HIDE);
+            ShowWindow(hBtnSellTech, SW_HIDE);
+            
+            UpdateDashboard();
             return 0;
         }
         case WM_CTLCOLORSTATIC: {
@@ -63,7 +110,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
         case WM_DRAWITEM: {
             LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
-            if (pdis->CtlID == ID_BTN_SET_COURSE) {
+            if (pdis->CtlType == ODT_BUTTON) {
                 HDC hdc = pdis->hDC;
                 RECT rect = pdis->rcItem;
                 int state = pdis->itemState;
@@ -167,14 +214,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     selectedSystem = i;
                     
                     char infoText[512];
-                    sprintf(infoText, "%s\n\n%s\n\nCoordinates: X:%d Y:%d", 
-                        systems[i].name, systems[i].desc, systems[i].x, systems[i].y);
+                    if (selectedSystem == currentSystemId) {
+                        sprintf(infoText, "%s (DOCKED)\n\n%s\n\nCoordinates: X:%d Y:%d\n\nMARKET PRICES:\nFood: %d\nMinerals: %d\nTech: %d\n\nYOUR CARGO:\nFood: %d | Min: %d | Tech: %d", 
+                            systems[i].name, systems[i].desc, systems[i].x, systems[i].y,
+                            systems[i].food_price, systems[i].minerals_price, systems[i].tech_price,
+                            cargoFood, cargoMinerals, cargoTech);
+                    } else {
+                        sprintf(infoText, "%s\n\n%s\n\nCoordinates: X:%d Y:%d", 
+                            systems[i].name, systems[i].desc, systems[i].x, systems[i].y);
+                    }
                         
                     SetWindowText(hInfoArea, infoText);
                     if (selectedSystem != currentSystemId) {
                         ShowWindow(hBtnCourse, SW_SHOW);
+                        ShowWindow(hBtnBuyFood, SW_HIDE);
+                        ShowWindow(hBtnSellFood, SW_HIDE);
+                        ShowWindow(hBtnBuyMinerals, SW_HIDE);
+                        ShowWindow(hBtnSellMinerals, SW_HIDE);
+                        ShowWindow(hBtnBuyTech, SW_HIDE);
+                        ShowWindow(hBtnSellTech, SW_HIDE);
                     } else {
                         ShowWindow(hBtnCourse, SW_HIDE);
+                        ShowWindow(hBtnBuyFood, SW_SHOW);
+                        ShowWindow(hBtnSellFood, SW_SHOW);
+                        ShowWindow(hBtnBuyMinerals, SW_SHOW);
+                        ShowWindow(hBtnSellMinerals, SW_SHOW);
+                        ShowWindow(hBtnBuyTech, SW_SHOW);
+                        ShowWindow(hBtnSellTech, SW_SHOW);
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
@@ -196,10 +262,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 } else {
                     fuel -= fuelCost;
                     currentSystemId = selectedSystem;
-                    
-                    char fuelStr[32];
-                    sprintf(fuelStr, "FUEL: %d%%", fuel);
-                    SetWindowText(hFuelText, fuelStr);
                     
                     char resultMsg[512];
                     sprintf(resultMsg, "Traveled to %s.\nFuel consumed: %d%%.", systems[currentSystemId].name, fuelCost);
@@ -227,9 +289,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         strcat(resultMsg, "\n\nThe journey was uneventful.");
                     }
                     
-                    char credStr[32];
-                    sprintf(credStr, "CREDITS: %d", credits);
-                    SetWindowText(hCreditsText, credStr);
+                    UpdateDashboard();
                     
                     MessageBox(hwnd, resultMsg, "Navigation Log", MB_OK);
                     
@@ -238,6 +298,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     selectedSystem = -1;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
+            } else if (LOWORD(wParam) >= ID_BTN_BUY_FOOD && LOWORD(wParam) <= ID_BTN_SELL_TECH && selectedSystem == currentSystemId) {
+                int used = cargoFood + cargoMinerals + cargoTech;
+                int cmd = LOWORD(wParam);
+                System *sys = &systems[currentSystemId];
+                
+                if (cmd == ID_BTN_BUY_FOOD) {
+                    if (credits >= sys->food_price && used < cargoMax) { credits -= sys->food_price; cargoFood++; }
+                } else if (cmd == ID_BTN_SELL_FOOD) {
+                    if (cargoFood > 0) { credits += sys->food_price; cargoFood--; }
+                } else if (cmd == ID_BTN_BUY_MINERALS) {
+                    if (credits >= sys->minerals_price && used < cargoMax) { credits -= sys->minerals_price; cargoMinerals++; }
+                } else if (cmd == ID_BTN_SELL_MINERALS) {
+                    if (cargoMinerals > 0) { credits += sys->minerals_price; cargoMinerals--; }
+                } else if (cmd == ID_BTN_BUY_TECH) {
+                    if (credits >= sys->tech_price && used < cargoMax) { credits -= sys->tech_price; cargoTech++; }
+                } else if (cmd == ID_BTN_SELL_TECH) {
+                    if (cargoTech > 0) { credits += sys->tech_price; cargoTech--; }
+                }
+                UpdateDashboard();
+                
+                char infoText[512];
+                sprintf(infoText, "%s (DOCKED)\n\n%s\n\nCoordinates: X:%d Y:%d\n\nMARKET PRICES:\nFood: %d\nMinerals: %d\nTech: %d\n\nYOUR CARGO:\nFood: %d | Min: %d | Tech: %d", 
+                    sys->name, sys->desc, sys->x, sys->y,
+                    sys->food_price, sys->minerals_price, sys->tech_price,
+                    cargoFood, cargoMinerals, cargoTech);
+                SetWindowText(hInfoArea, infoText);
             }
             return 0;
         }

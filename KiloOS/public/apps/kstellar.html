@@ -146,11 +146,11 @@
 
     <script>
         const systems = [
-            { id: 1, name: "Sol", x: 50, y: 50, desc: "Cradle of humanity. Highly developed planetary system with a stable economy." },
-            { id: 2, name: "Alpha Centauri", x: 30, y: 70, desc: "Primary mining colony. Resource rich, but known for pirate activity on the outskirts." },
-            { id: 3, name: "Sirius", x: 75, y: 35, desc: "Major trading hub. High tech goods are cheap here." },
-            { id: 4, name: "Proxima", x: 20, y: 80, desc: "Remote outpost. Dangerous but offers high rewards for smugglers." },
-            { id: 5, name: "Vega", x: 80, y: 80, desc: "Agricultural world. Supplies food to neighboring industrial systems." }
+            { id: 1, name: "Sol", x: 50, y: 50, desc: "Cradle of humanity. Highly developed planetary system with a stable economy.", market: {food: 20, minerals: 40, tech: 150} },
+            { id: 2, name: "Alpha Centauri", x: 30, y: 70, desc: "Primary mining colony. Resource rich, but known for pirate activity on the outskirts.", market: {food: 40, minerals: 15, tech: 200} },
+            { id: 3, name: "Sirius", x: 75, y: 35, desc: "Major trading hub. High tech goods are cheap here.", market: {food: 30, minerals: 60, tech: 80} },
+            { id: 4, name: "Proxima", x: 20, y: 80, desc: "Remote outpost. Dangerous but offers high rewards for smugglers.", market: {food: 50, minerals: 30, tech: 300} },
+            { id: 5, name: "Vega", x: 80, y: 80, desc: "Agricultural world. Supplies food to neighboring industrial systems.", market: {food: 5, minerals: 80, tech: 180} }
         ];
 
         const mapEl = document.getElementById('map');
@@ -159,6 +159,47 @@
         let currentSystemId = 1;
         let fuel = 100;
         let credits = 1000;
+        let cargo = { food: 0, minerals: 0, tech: 0 };
+        let cargoMax = 50;
+
+        function getCargoUsed() {
+            return cargo.food + cargo.minerals + cargo.tech;
+        }
+
+        function updateDashboard() {
+            document.getElementById('fuel').innerText = fuel;
+            document.getElementById('credits').innerText = credits;
+            document.getElementById('cargo-used').innerText = getCargoUsed();
+            document.getElementById('cargo-max').innerText = cargoMax;
+        }
+
+        window.buy = function(item) {
+            const sys = systems.find(s => s.id === currentSystemId);
+            const price = sys.market[item];
+            if (credits >= price && getCargoUsed() < cargoMax) {
+                credits -= price;
+                cargo[item]++;
+                updateDashboard();
+                showSystemInfo(sys);
+            } else if (getCargoUsed() >= cargoMax) {
+                alert("Cargo hold is full!");
+            } else {
+                alert("Not enough credits!");
+            }
+        };
+
+        window.sell = function(item) {
+            const sys = systems.find(s => s.id === currentSystemId);
+            const price = sys.market[item];
+            if (cargo[item] > 0) {
+                credits += price;
+                cargo[item]--;
+                updateDashboard();
+                showSystemInfo(sys);
+            } else {
+                alert("You don't have any " + item + " to sell!");
+            }
+        };
 
         window.travelTo = function(sysId) {
             if (sysId === currentSystemId) {
@@ -176,8 +217,8 @@
             }
             
             fuel -= fuelCost;
-            document.getElementById('fuel').innerText = fuel;
             currentSystemId = sysId;
+            updateDashboard();
             
             const randomEncounter = Math.random();
             let msg = "Traveled to " + target.name + ".\nFuel consumed: " + fuelCost + "%.";
@@ -200,16 +241,53 @@
                 msg += "\n\nThe journey was uneventful.";
             }
             
-            document.getElementById('credits').innerText = credits;
+            updateDashboard();
             alert(msg);
             renderMap();
             infoEl.innerHTML = "Select a system on the map for details.";
         };
 
+        function showSystemInfo(sys) {
+            let html = `
+                <h3>${sys.name.toUpperCase()}</h3>
+                <p>${sys.desc}</p>
+                <p><strong>Coordinates:</strong> X:${sys.x} Y:${sys.y}</p>
+            `;
+            
+            if (sys.id !== currentSystemId) {
+                html += `<button class="action-btn" onclick="travelTo(${sys.id})">Set Course</button>`;
+            } else {
+                html += `<p style="color:#00ffff; font-weight:bold; margin-bottom:5px;">Currently Docked - Local Market</p>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
+                        <span>Food (₭${sys.market.food}) [Inv: ${cargo.food}]</span>
+                        <div>
+                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="buy('food')">Buy</button>
+                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('food')">Sell</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
+                        <span>Minerals (₭${sys.market.minerals}) [Inv: ${cargo.minerals}]</span>
+                        <div>
+                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="buy('minerals')">Buy</button>
+                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('minerals')">Sell</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
+                        <span>Tech (₭${sys.market.tech}) [Inv: ${cargo.tech}]</span>
+                        <div>
+                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="buy('tech')">Buy</button>
+                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('tech')">Sell</button>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            infoEl.innerHTML = html;
+        }
+
         function renderMap() {
             mapEl.innerHTML = '';
             systems.forEach(sys => {
-                // System dot
                 const dot = document.createElement('div');
                 dot.className = 'system';
                 dot.style.left = sys.x + '%';
@@ -220,7 +298,6 @@
                     dot.style.boxShadow = '0 0 15px #00ffff';
                 }
                 
-                // System label
                 const label = document.createElement('div');
                 label.className = 'system-label';
                 label.style.left = sys.x + '%';
@@ -230,14 +307,7 @@
                     label.style.color = '#00ffff';
                 }
 
-                dot.addEventListener('click', () => {
-                    infoEl.innerHTML = `
-                        <h3>${sys.name.toUpperCase()}</h3>
-                        <p>${sys.desc}</p>
-                        <p><strong>Coordinates:</strong> X:${sys.x} Y:${sys.y}</p>
-                        ${sys.id !== currentSystemId ? `<button class="action-btn" onclick="travelTo(${sys.id})">Set Course</button>` : `<p style="color:#00ffff; font-weight:bold;">Currently Docked</p>`}
-                    `;
-                });
+                dot.addEventListener('click', () => showSystemInfo(sys));
 
                 mapEl.appendChild(dot);
                 mapEl.appendChild(label);
@@ -245,6 +315,7 @@
         }
 
         renderMap();
+        updateDashboard();
     </script>
 </body>
 </html>
