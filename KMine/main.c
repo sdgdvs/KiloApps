@@ -38,6 +38,16 @@ DWORD replayStartTime = 0;
 int replayMoveIdx = 0;
 
 typedef struct {
+    float x, y, vx, vy;
+    int life, maxLife;
+    COLORREF color;
+} Particle;
+#define MAX_PARTICLES 1000
+Particle particles[MAX_PARTICLES];
+int numParticles = 0;
+int animFrame = 0;
+
+typedef struct {
     int grid[MAX_ROWS][MAX_COLS];
     int state[MAX_ROWS][MAX_COLS];
     int cols, rows, totalMines, diff;
@@ -226,6 +236,7 @@ void InitGame(HWND hwnd, int keepGrid) {
     flagsPlaced = 0;
     timeElapsed = 0;
     isReplaying = 0;
+    numParticles = 0;
     if (hwnd) {
         KillTimer(hwnd, 1);
         KillTimer(hwnd, 2);
@@ -243,6 +254,17 @@ void Reveal(int x, int y) {
     state[y][x] = 1;
     if (grid[y][x] == 9) {
         gameOver = 1;
+        for (int i=0; i<30; i++) {
+            if (numParticles >= MAX_PARTICLES) break;
+            particles[numParticles].x = (float)(x * CELL + CELL/2);
+            particles[numParticles].y = (float)(y * CELL + CELL/2);
+            particles[numParticles].vx = ((MyRand() % 100) - 50) / 10.0f;
+            particles[numParticles].vy = ((MyRand() % 100) - 50) / 10.0f;
+            particles[numParticles].life = 0;
+            particles[numParticles].maxLife = 20 + MyRand() % 20;
+            particles[numParticles].color = RGB(255, MyRand() % 128, 0);
+            numParticles++;
+        }
         // reveal all
         for (int i=0; i<rows; i++)
             for (int j=0; j<cols; j++)
@@ -534,6 +556,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Game");
             SetMenu(hwnd, hMenu);
             SetDifficulty(hwnd, 1);
+            SetTimer(hwnd, 3, 30, NULL);
             break;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDM_RESTART) {
@@ -587,6 +610,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         KillTimer(hwnd, 2);
                     }
                 }
+            } else if (wParam == 3) {
+                animFrame++;
+                int needsRedraw = 0;
+                if (numParticles > 0) {
+                    for (int i=0; i<numParticles; i++) {
+                        particles[i].x += particles[i].vx;
+                        particles[i].y += particles[i].vy;
+                        particles[i].life++;
+                        if (particles[i].life >= particles[i].maxLife) {
+                            particles[i] = particles[numParticles-1];
+                            numParticles--;
+                            i--;
+                        }
+                    }
+                    needsRedraw = 1;
+                }
+                if (flagsPlaced > 0 && (animFrame % 5 == 0)) {
+                    needsRedraw = 1;
+                }
+                if (needsRedraw) InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         case WM_LBUTTONDOWN:
@@ -655,7 +698,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(blackBrush);
                         
                         HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
-                        POINT pts[3] = { {r.left + CELL/2, ptop}, {r.left + CELL/2 + CELL*12/30, ptop + CELL*5/30}, {r.left + CELL/2, ptop + CELL*10/30} };
+                        int wave = ((animFrame / 5) % 2 == 0) ? (CELL * 2 / 30) : 0;
+                        POINT pts[3] = { {r.left + CELL/2, ptop}, {r.left + CELL/2 + CELL*12/30 - wave, ptop + CELL*5/30}, {r.left + CELL/2, ptop + CELL*10/30} };
                         HGDIOBJ oldBrush = SelectObject(memDC, redBrush);
                         HGDIOBJ oldPen = SelectObject(memDC, GetStockObject(NULL_PEN));
                         Polygon(memDC, pts, 3);
@@ -728,6 +772,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 SelectObject(memDC, oldSmallFont);
                 DeleteObject(smallFont);
+            }
+
+            for (int i=0; i<numParticles; i++) {
+                int px = (int)particles[i].x;
+                int py = (int)particles[i].y;
+                int size = 2 + (particles[i].maxLife - particles[i].life) * 4 / particles[i].maxLife;
+                HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                RECT pRect = { px - size, py - size, px + size, py + size };
+                FillRect(memDC, &pRect, pBrush);
+                DeleteObject(pBrush);
             }
 
             SelectObject(memDC, oldFont);

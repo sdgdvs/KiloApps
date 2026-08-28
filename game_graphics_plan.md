@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMine
 - KMandel
 - KVoid
 - KStarship
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSolitaire
 - KHex
 - KStellar
+- KMine
 ## Completed Work Log
+
+- **KMine (Loop 2):** Implemented sprite animations including an oscillating wave effect for placed flags via animated polygon vertex offsets and an exploding multi-colored particle burst effect when hitting a mine. Implemented using requestAnimationFrame and array management in Web Canvas (kmine.html), and a dedicated 30ms Win32 timer driving a global particle array and redraw loops in Native C Win32 GDI (KMine/main.c).
 
 - **KHex (Loop 2):** Implemented sprite animations including an infinite pulsing CSS keyframe scale/rotate/drop-shadow animation for the SVG logo and dynamic Javascript particle burst effects on UI interaction in Web Canvas (khex.html), and a CRT-free 50ms Win32 timer driving a geometric throbbing/pulsing animation of the composed GDI polygon hexagon in Native C Win32 GDI (KHex/main.c).
 

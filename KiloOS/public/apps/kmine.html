@@ -50,6 +50,58 @@
   let startRealTime = 0;
   let quickSaveData = null;
   
+  let particles = [];
+  let animating = false;
+  let animFrame = 0;
+
+  setInterval(() => {
+      animFrame++;
+      let hasFlags = state.some(row => row.includes(2));
+      if (hasFlags && !animating && !isReplaying) {
+          draw();
+      }
+  }, 250);
+
+  function spawnExplosion(cx, cy) {
+      for (let i = 0; i < 30; i++) {
+          particles.push({
+              x: cx,
+              y: cy,
+              vx: (Math.random() - 0.5) * 10,
+              vy: (Math.random() - 0.5) * 10,
+              life: 0,
+              maxLife: 20 + Math.random() * 20,
+              color: `rgb(255, ${Math.floor(Math.random() * 128)}, 0)`
+          });
+      }
+      if (!animating) {
+          animating = true;
+          requestAnimationFrame(animLoop);
+      }
+  }
+
+  function animLoop() {
+      let active = false;
+      if (particles.length > 0) {
+          active = true;
+          for (let i = particles.length - 1; i >= 0; i--) {
+              let p = particles[i];
+              p.x += p.vx;
+              p.y += p.vy;
+              p.life++;
+              if (p.life >= p.maxLife) {
+                  particles.splice(i, 1);
+              }
+          }
+      }
+      draw();
+      if (active) {
+          requestAnimationFrame(animLoop);
+      } else {
+          animating = false;
+      }
+  }
+  
   function loadStats() {
       let s = localStorage.getItem('kmine_best');
       if(s) { try { bestTimes = JSON.parse(s); } catch(e){} }
@@ -195,6 +247,7 @@
       timeElapsed = 0;
       firstClick = !keepGrid;
       isReplaying = false;
+      particles = [];
       document.getElementById('replayBtn').style.display = 'none';
       stopTimer();
       updateStatus();
@@ -234,6 +287,7 @@
       state[y][x] = 1;
       if (grid[y][x] === 9) {
           gameOver = 1;
+          spawnExplosion(x * CELL + CELL/2, y * CELL + CELL/2);
           stopTimer();
           updateStatus();
           document.getElementById('replayBtn').style.display = 'inline-block';
@@ -393,8 +447,9 @@
                       
                       ctx.fillStyle = "red";
                       ctx.beginPath();
+                      let wave = (animFrame % 2 === 0) ? CELL*2/30 : 0;
                       ctx.moveTo(bx + CELL/2, ptop);
-                      ctx.lineTo(bx + CELL/2 + CELL*12/30, ptop + CELL*5/30);
+                      ctx.lineTo(bx + CELL/2 + CELL*12/30 - wave, ptop + CELL*5/30);
                       ctx.lineTo(bx + CELL/2, ptop + CELL*10/30);
                       ctx.fill();
                   }
@@ -436,6 +491,12 @@
                   }
               }
           }
+      }
+      
+      for (let p of particles) {
+          let size = 2 + ((p.maxLife - p.life) / p.maxLife) * 4;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - size, p.y - size, size*2, size*2);
       }
       
       if (firstClick && gameOver === 0) {
