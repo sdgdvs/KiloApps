@@ -156,7 +156,58 @@
         const mapEl = document.getElementById('map');
         const infoEl = document.getElementById('system-info');
 
+        let currentSystemId = 1;
+        let fuel = 100;
+        let credits = 1000;
+
+        window.travelTo = function(sysId) {
+            if (sysId === currentSystemId) {
+                alert("You are already in this system.");
+                return;
+            }
+            const target = systems.find(s => s.id === sysId);
+            const current = systems.find(s => s.id === currentSystemId);
+            const dist = Math.sqrt(Math.pow(target.x - current.x, 2) + Math.pow(target.y - current.y, 2));
+            const fuelCost = Math.round(dist * 0.5);
+            
+            if (fuel < fuelCost) {
+                alert("Not enough fuel! You need " + fuelCost + "% fuel to reach " + target.name + ".");
+                return;
+            }
+            
+            fuel -= fuelCost;
+            document.getElementById('fuel').innerText = fuel;
+            currentSystemId = sysId;
+            
+            const randomEncounter = Math.random();
+            let msg = "Traveled to " + target.name + ".\nFuel consumed: " + fuelCost + "%.";
+            
+            if (randomEncounter < 0.3) {
+                msg += "\n\nAlert: Hostile pirate vessel encountered!";
+                const stolen = Math.floor(Math.random() * 50) + 10;
+                if (credits >= stolen) {
+                    credits -= stolen;
+                    msg += "\nThey extorted ₭" + stolen + " before warping away.";
+                } else {
+                    msg += "\nThey found you have no money and left you alone.";
+                }
+            } else if (randomEncounter < 0.5) {
+                msg += "\n\nNotice: You found drifting debris.";
+                const found = Math.floor(Math.random() * 100) + 20;
+                credits += found;
+                msg += "\nSalvaged ₭" + found + " in raw materials.";
+            } else {
+                msg += "\n\nThe journey was uneventful.";
+            }
+            
+            document.getElementById('credits').innerText = credits;
+            alert(msg);
+            renderMap();
+            infoEl.innerHTML = "Select a system on the map for details.";
+        };
+
         function renderMap() {
+            mapEl.innerHTML = '';
             systems.forEach(sys => {
                 // System dot
                 const dot = document.createElement('div');
@@ -164,19 +215,27 @@
                 dot.style.left = sys.x + '%';
                 dot.style.top = sys.y + '%';
                 
+                if (sys.id === currentSystemId) {
+                    dot.style.backgroundColor = '#00ffff';
+                    dot.style.boxShadow = '0 0 15px #00ffff';
+                }
+                
                 // System label
                 const label = document.createElement('div');
                 label.className = 'system-label';
                 label.style.left = sys.x + '%';
                 label.style.top = sys.y + '%';
-                label.innerText = sys.name;
+                label.innerText = sys.name + (sys.id === currentSystemId ? " (YOU ARE HERE)" : "");
+                if (sys.id === currentSystemId) {
+                    label.style.color = '#00ffff';
+                }
 
                 dot.addEventListener('click', () => {
                     infoEl.innerHTML = `
                         <h3>${sys.name.toUpperCase()}</h3>
                         <p>${sys.desc}</p>
                         <p><strong>Coordinates:</strong> X:${sys.x} Y:${sys.y}</p>
-                        <button class="action-btn" onclick="alert('Navigation sequence initiated (Phase 5 feature)')">Set Course</button>
+                        ${sys.id !== currentSystemId ? `<button class="action-btn" onclick="travelTo(${sys.id})">Set Course</button>` : `<p style="color:#00ffff; font-weight:bold;">Currently Docked</p>`}
                     `;
                 });
 

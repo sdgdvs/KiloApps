@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+#include <stdlib.h>
 
 #define ID_BTN_SET_COURSE 101
 
@@ -20,8 +22,11 @@ System systems[] = {
     {5, "Vega", 80, 80, "Agricultural world. Supplies food to neighboring industrial systems."}
 };
 
-HWND hMapArea, hInfoArea, hBtnCourse;
+HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText;
 int selectedSystem = -1;
+int currentSystemId = 0;
+int fuel = 100;
+int credits = 1000;
 static HFONT hFont = NULL;
 static HBRUSH hBgBrush = NULL;
 
@@ -32,8 +37,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBgBrush = CreateSolidBrush(RGB(5, 5, 15));
             
             HWND h1 = CreateWindow("STATIC", "FUEL: 100%", WS_VISIBLE | WS_CHILD, 20, 20, 100, 20, hwnd, NULL, NULL, NULL);
+            hFuelText = h1;
             SendMessage(h1, WM_SETFONT, (WPARAM)hFont, TRUE);
             HWND h2 = CreateWindow("STATIC", "CREDITS: 1,000", WS_VISIBLE | WS_CHILD, 140, 20, 150, 20, hwnd, NULL, NULL, NULL);
+            hCreditsText = h2;
             SendMessage(h2, WM_SETFONT, (WPARAM)hFont, TRUE);
             HWND h3 = CreateWindow("STATIC", "CARGO: 0/50 TONS", WS_VISIBLE | WS_CHILD, 300, 20, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(h3, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -116,14 +123,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (i == selectedSystem) {
                     SelectObject(hdc, hCyanBrush);
                     SelectObject(hdc, GetStockObject(WHITE_PEN));
+                } else if (i == currentSystemId) {
+                    SelectObject(hdc, hCyanBrush);
+                    SelectObject(hdc, GetStockObject(NULL_PEN));
                 } else {
                     SelectObject(hdc, hGreenBrush);
                     SelectObject(hdc, GetStockObject(NULL_PEN));
                 }
                 
-                int r = (i == selectedSystem) ? 8 : 6;
+                int r = (i == selectedSystem || i == currentSystemId) ? 8 : 6;
                 Ellipse(hdc, px - r, py - r, px + r, py + r);
-                TextOut(hdc, px + 12, py - 8, systems[i].name, strlen(systems[i].name));
+                
+                char nameBuf[64];
+                if (i == currentSystemId) {
+                    sprintf(nameBuf, "%s (HERE)", systems[i].name);
+                } else {
+                    strcpy(nameBuf, systems[i].name);
+                }
+                
+                if (i == currentSystemId) {
+                    SetTextColor(hdc, RGB(0, 255, 255));
+                } else {
+                    SetTextColor(hdc, RGB(0, 255, 204));
+                }
+                TextOut(hdc, px + 12, py - 8, nameBuf, strlen(nameBuf));
             }
             
             DeleteObject(hGreenBrush);
@@ -148,7 +171,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         systems[i].name, systems[i].desc, systems[i].x, systems[i].y);
                         
                     SetWindowText(hInfoArea, infoText);
-                    ShowWindow(hBtnCourse, SW_SHOW);
+                    if (selectedSystem != currentSystemId) {
+                        ShowWindow(hBtnCourse, SW_SHOW);
+                    } else {
+                        ShowWindow(hBtnCourse, SW_HIDE);
+                    }
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
@@ -156,8 +183,61 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == ID_BTN_SET_COURSE) {
-                MessageBox(hwnd, "Navigation sequence initiated (Phase 5 feature)", "Navigation", MB_OK);
+            if (LOWORD(wParam) == ID_BTN_SET_COURSE && selectedSystem != -1) {
+                int dx = systems[selectedSystem].x - systems[currentSystemId].x;
+                int dy = systems[selectedSystem].y - systems[currentSystemId].y;
+                int dist = (int)sqrt((double)(dx * dx + dy * dy));
+                int fuelCost = dist / 2;
+                
+                if (fuel < fuelCost) {
+                    char msg[128];
+                    sprintf(msg, "Not enough fuel! You need %d%% fuel.", fuelCost);
+                    MessageBox(hwnd, msg, "Warning", MB_OK | MB_ICONWARNING);
+                } else {
+                    fuel -= fuelCost;
+                    currentSystemId = selectedSystem;
+                    
+                    char fuelStr[32];
+                    sprintf(fuelStr, "FUEL: %d%%", fuel);
+                    SetWindowText(hFuelText, fuelStr);
+                    
+                    char resultMsg[512];
+                    sprintf(resultMsg, "Traveled to %s.\nFuel consumed: %d%%.", systems[currentSystemId].name, fuelCost);
+                    
+                    int randomEncounter = rand() % 100;
+                    if (randomEncounter < 30) {
+                        strcat(resultMsg, "\n\nAlert: Hostile pirate vessel encountered!");
+                        int stolen = (rand() % 50) + 10;
+                        if (credits >= stolen) {
+                            credits -= stolen;
+                            char stealMsg[64];
+                            sprintf(stealMsg, "\nThey extorted %d credits.", stolen);
+                            strcat(resultMsg, stealMsg);
+                        } else {
+                            strcat(resultMsg, "\nThey found you have no money and left.");
+                        }
+                    } else if (randomEncounter < 50) {
+                        strcat(resultMsg, "\n\nNotice: You found drifting debris.");
+                        int found = (rand() % 100) + 20;
+                        credits += found;
+                        char foundMsg[64];
+                        sprintf(foundMsg, "\nSalvaged %d credits.", found);
+                        strcat(resultMsg, foundMsg);
+                    } else {
+                        strcat(resultMsg, "\n\nThe journey was uneventful.");
+                    }
+                    
+                    char credStr[32];
+                    sprintf(credStr, "CREDITS: %d", credits);
+                    SetWindowText(hCreditsText, credStr);
+                    
+                    MessageBox(hwnd, resultMsg, "Navigation Log", MB_OK);
+                    
+                    SetWindowText(hInfoArea, "Select a system on the map for details.");
+                    ShowWindow(hBtnCourse, SW_HIDE);
+                    selectedSystem = -1;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             }
             return 0;
         }
