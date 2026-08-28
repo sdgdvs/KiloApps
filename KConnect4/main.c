@@ -165,7 +165,7 @@ void UpdateParticles() {
     if (!g_dustInit) {
         for(int i=0; i<MAX_DUST; i++) {
             g_dust[i].x = (float)(rand() % 580);
-            g_dust[i].y = (float)(rand() % 720);
+            g_dust[i].y = (float)(rand() % 780);
             g_dust[i].vx = ((float)(rand() % 100) - 50.0f) / 100.0f;
             g_dust[i].vy = ((float)(rand() % 100) - 50.0f) / 100.0f;
             g_dust[i].size = rand() % 3 + 1;
@@ -179,8 +179,8 @@ void UpdateParticles() {
         g_dust[i].phase += 0.05f;
         if(g_dust[i].x < 0) g_dust[i].x += 580;
         if(g_dust[i].x > 580) g_dust[i].x -= 580;
-        if(g_dust[i].y < 0) g_dust[i].y += 720;
-        if(g_dust[i].y > 720) g_dust[i].y -= 720;
+        if(g_dust[i].y < 0) g_dust[i].y += 780;
+        if(g_dust[i].y > 780) g_dust[i].y -= 780;
     }
     for (int i = 0; i < g_particleCount; i++) {
         if (g_particles[i].life > 0) {
@@ -1263,7 +1263,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             srand((unsigned int)time(NULL));
             LoadStats();
-            hMainFont = CreateFont(-16, 0, 0, 0, FW_MEDIUM, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            HDC hdc = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            ReleaseDC(hwnd, hdc);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            hMainFont = CreateFont(fontHeight, 0, 0, 0, FW_MEDIUM, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             // Row 1 buttons
             hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 520, 95, 28, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hDiffSelect = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 522, 105, 200, hwnd, (HMENU)4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
@@ -1909,11 +1913,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 0;
     }
 
-    RECT winRect = { 0, 0, 580, 720 };
-    AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW, FALSE);
+    RECT winRect = { 0, 0, 580, 780 };
+    AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
     hwnd = CreateWindowEx(
         0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion (Press H for Help)",
-        WS_OVERLAPPEDWINDOW,
+        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top,
         NULL, NULL, hInstance, NULL);
 

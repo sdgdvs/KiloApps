@@ -1844,6 +1844,14 @@
     }
 
     if (window.resizeTo) window.resizeTo(600, 850);
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        toggleHelp();
+      }
+    });
+    
     loadStats();
     updateDiffSelect();
     initGame();
