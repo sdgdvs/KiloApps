@@ -132,6 +132,7 @@
             <div class="stat">CREDITS: ₭<span id="credits">1,000</span></div>
             <div class="stat">CARGO: <span id="cargo-used">0</span>/<span id="cargo-max">50</span> TONS</div>
         </div>
+        <div id="mission-status" style="color: #ff00ff; font-weight: bold; margin-bottom: 10px; min-height: 1.2em; text-shadow: 0 0 5px #ff00ff;"></div>
         <div id="main-view">
             <div id="map-container">
                 <div id="map"></div>
@@ -193,6 +194,24 @@
         let weaponLevel = 1;
         let shieldLevel = 1;
 
+        let activeMission = null;
+        let currentStationMissions = [];
+
+        function generateStationMissions() {
+            currentStationMissions = [];
+            for (let i = 0; i < 2; i++) {
+                let type = Math.random() > 0.5 ? 'delivery' : 'bounty';
+                let target = systems[Math.floor(Math.random() * systems.length)];
+                if (target.id === currentSystemId) {
+                    target = systems[(currentSystemId % systems.length)];
+                }
+                let reward = 300 + Math.floor(Math.random() * 500);
+                currentStationMissions.push({ id: Date.now() + i, type: type, targetId: target.id, targetName: target.name, reward: reward });
+            }
+        }
+        
+        generateStationMissions(); // Initial missions
+
         function getCargoUsed() {
             return cargo.food + cargo.minerals + cargo.tech;
         }
@@ -204,6 +223,13 @@
             document.getElementById('credits').innerText = credits;
             document.getElementById('cargo-used').innerText = getCargoUsed();
             document.getElementById('cargo-max').innerText = cargoMax;
+            
+            const mStatus = document.getElementById('mission-status');
+            if (activeMission) {
+                mStatus.innerText = `ACTIVE MISSION: ${activeMission.type === 'delivery' ? 'Deliver to' : 'Hunt bounty in'} ${activeMission.targetName} for ₭${activeMission.reward}`;
+            } else {
+                mStatus.innerText = '';
+            }
         }
 
         window.upgrade = function(type) {
@@ -273,14 +299,31 @@
             
             fuel -= fuelCost;
             currentSystemId = sysId;
+            generateStationMissions();
             updateDashboard();
             
-            const randomEncounter = Math.random();
-            let msg = "Traveled to " + target.name + ".\nFuel consumed: " + fuelCost + "%.";
+            let forcedCombat = false;
+            let missionMsg = "";
+            if (activeMission && activeMission.targetId === sysId) {
+                if (activeMission.type === 'delivery') {
+                    credits += activeMission.reward;
+                    missionMsg = `\n\nMission Complete: Delivery made to ${activeMission.targetName}. Earned ₭${activeMission.reward}.`;
+                    activeMission = null;
+                } else if (activeMission.type === 'bounty') {
+                    forcedCombat = true;
+                }
+            }
             
-            if (randomEncounter < 0.3) {
+            const randomEncounter = Math.random();
+            let msg = "Traveled to " + target.name + ".\nFuel consumed: " + fuelCost + "%." + missionMsg;
+            
+            if (forcedCombat || randomEncounter < 0.3) {
                 updateDashboard();
-                alert(msg + "\n\nAlert: Hostile pirate vessel encountered!");
+                if (forcedCombat) {
+                    alert(msg + "\n\nAlert: Bounty target located! Intercepting pirate vessel!");
+                } else {
+                    alert(msg + "\n\nAlert: Hostile pirate vessel encountered!");
+                }
                 startCombat();
                 return;
             } else if (randomEncounter < 0.5) {
@@ -353,7 +396,13 @@
             if (enemyHull <= 0) {
                 let bounty = 100 + currentSystemId * 50;
                 credits += bounty;
-                logCombat(`Pirate destroyed! Claimed ₭${bounty} bounty.`);
+                let logMsg = `Pirate destroyed! Claimed ₭${bounty} standard bounty.`;
+                if (activeMission && activeMission.type === 'bounty' && activeMission.targetId === currentSystemId) {
+                    credits += activeMission.reward;
+                    logMsg += `<br>Mission Complete! Earned extra ₭${activeMission.reward}.`;
+                    activeMission = null;
+                }
+                logCombat(logMsg);
                 setTimeout(endCombat, 1500);
                 return;
             }
@@ -387,6 +436,49 @@
             updateDashboard();
             renderMap();
             infoEl.innerHTML = "Select a system on the map for details.";
+        };
+
+        window.viewMissions = function() {
+            let html = `<h3>MISSION BOARD</h3>`;
+            if (activeMission) {
+                html += `<p style="color:#ff00ff;"><strong>Active Mission:</strong> ${activeMission.type === 'delivery' ? 'Deliver to' : 'Hunt bounty in'} ${activeMission.targetName} for ₭${activeMission.reward}</p>`;
+                html += `<button class="action-btn" style="margin-bottom:15px;" onclick="abandonMission()">Abandon Mission</button><br>`;
+            } else {
+                html += `<p style="color:#aaaaaa;">No active missions.</p>`;
+            }
+            
+            html += `<h4 style="color:#00ffff; margin-bottom:5px;">Available Missions</h4>`;
+            if (currentStationMissions.length === 0) {
+                html += `<p>No missions available at this station.</p>`;
+            } else {
+                currentStationMissions.forEach((m, idx) => {
+                    let title = m.type === 'delivery' ? 'Delivery to ' + m.targetName : 'Bounty in ' + m.targetName;
+                    html += `<div style="border:1px solid #00ffcc; padding:10px; margin-bottom:10px; background:rgba(0,0,0,0.5);">
+                        <p style="margin:0 0 5px 0; font-weight:bold;">${title}</p>
+                        <p style="margin:0 0 5px 0; color:#00ff00;">Reward: ₭${m.reward}</p>
+                        <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="acceptMission(${idx})">Accept</button>
+                    </div>`;
+                });
+            }
+            html += `<button class="action-btn" style="margin-top:15px;" onclick="showSystemInfo(systems.find(s=>s.id===currentSystemId))">Back to Station</button>`;
+            infoEl.innerHTML = html;
+        };
+
+        window.acceptMission = function(idx) {
+            if (activeMission) {
+                alert("You already have an active mission! Abandon it first to accept a new one.");
+                return;
+            }
+            activeMission = currentStationMissions[idx];
+            currentStationMissions.splice(idx, 1);
+            updateDashboard();
+            viewMissions();
+        };
+
+        window.abandonMission = function() {
+            activeMission = null;
+            updateDashboard();
+            viewMissions();
         };
 
         function showSystemInfo(sys) {
@@ -429,7 +521,9 @@
                     <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('cargo')">Upg Cargo (₭${1500*cargoLevel}) [Lvl ${cargoLevel}]</button>
                     <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('weapon')">Upg Weapons (₭${2000*weaponLevel}) [Lvl ${weaponLevel}]</button>
                     <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('shield')">Upg Shields (₭${2000*shieldLevel}) [Lvl ${shieldLevel}]</button>
-                </div>`;
+                </div>
+                <p style="color:#ff00ff; font-weight:bold; margin-bottom:5px; margin-top:15px;">Station Services</p>
+                <button class="action-btn" style="margin:0; padding:10px; border-color:#ff00ff; color:#ff00ff;" onclick="viewMissions()">MISSION BOARD</button>`;
             }
             infoEl.innerHTML = html;
         }

@@ -41,13 +41,42 @@ System systems[] = {
 #define ID_BTN_COMBAT_USE_TECH 122
 #define ID_BTN_COMBAT_FLEE 123
 
-HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText, hCargoText, hHullText;
+#define ID_BTN_MISSIONS 130
+#define ID_BTN_MISSION_ACCEPT_1 131
+#define ID_BTN_MISSION_ACCEPT_2 132
+#define ID_BTN_MISSION_ABANDON 133
+#define ID_BTN_MISSION_BACK 134
+
+typedef struct {
+    int type; // 0=None, 1=Delivery, 2=Bounty
+    int targetId;
+    int reward;
+} Mission;
+
+HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText, hCargoText, hHullText, hMissionText;
 HWND hBtnBuyFood, hBtnSellFood, hBtnBuyMinerals, hBtnSellMinerals, hBtnBuyTech, hBtnSellTech;
 HWND hBtnUpgEngine, hBtnUpgCargo, hBtnUpgWeapon, hBtnUpgShield;
 HWND hBtnCombatAttack, hBtnCombatEvade, hBtnCombatUseTech, hBtnCombatFlee;
+HWND hBtnMissions, hBtnMissionAccept1, hBtnMissionAccept2, hBtnMissionAbandon, hBtnMissionBack;
 
 int selectedSystem = -1;
 int currentSystemId = 0;
+int inMissionsView = 0;
+
+Mission activeMission = {0, -1, 0};
+Mission stationMissions[2] = {{0,-1,0}, {0,-1,0}};
+
+void GenerateStationMissions() {
+    for (int i=0; i<2; i++) {
+        stationMissions[i].type = (rand() % 2) + 1;
+        int target = rand() % 5;
+        if (target == currentSystemId) {
+            target = (target + 1) % 5;
+        }
+        stationMissions[i].targetId = target;
+        stationMissions[i].reward = 300 + (rand() % 500);
+    }
+}
 int fuel = 100;
 int credits = 1000;
 int cargoFood = 0;
@@ -81,8 +110,99 @@ void UpdateDashboard() {
     int used = cargoFood + cargoMinerals + cargoTech;
     sprintf(buf, "CARGO: %d/%d TONS", used, cargoMax);
     SetWindowText(hCargoText, buf);
+    
+    if (activeMission.type == 1) {
+        sprintf(buf, "MISSION: Deliver to %s (₭%d)", systems[activeMission.targetId].name, activeMission.reward);
+        SetWindowText(hMissionText, buf);
+    } else if (activeMission.type == 2) {
+        sprintf(buf, "MISSION: Hunt pirate in %s (₭%d)", systems[activeMission.targetId].name, activeMission.reward);
+        SetWindowText(hMissionText, buf);
+    } else {
+        SetWindowText(hMissionText, "");
+    }
 }
 
+void ShowStationView(HWND hwnd) {
+    inMissionsView = 0;
+    
+    ShowWindow(hBtnMissionAccept1, SW_HIDE);
+    ShowWindow(hBtnMissionAccept2, SW_HIDE);
+    ShowWindow(hBtnMissionAbandon, SW_HIDE);
+    ShowWindow(hBtnMissionBack, SW_HIDE);
+    
+    ShowWindow(hBtnMissions, SW_SHOW);
+    ShowWindow(hBtnCourse, SW_HIDE);
+    ShowWindow(hBtnBuyFood, SW_SHOW);
+    ShowWindow(hBtnSellFood, SW_SHOW);
+    ShowWindow(hBtnBuyMinerals, SW_SHOW);
+    ShowWindow(hBtnSellMinerals, SW_SHOW);
+    ShowWindow(hBtnBuyTech, SW_SHOW);
+    ShowWindow(hBtnSellTech, SW_SHOW);
+    ShowWindow(hBtnUpgEngine, SW_SHOW);
+    ShowWindow(hBtnUpgCargo, SW_SHOW);
+    ShowWindow(hBtnUpgWeapon, SW_SHOW);
+    ShowWindow(hBtnUpgShield, SW_SHOW);
+    
+    System *sys = &systems[currentSystemId];
+    char infoText[512];
+    sprintf(infoText, "%s (DOCKED)\n%s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+        sys->name, sys->desc,
+        sys->food_price, sys->minerals_price, sys->tech_price,
+        cargoFood, cargoMinerals, cargoTech,
+        engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
+        weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
+    SetWindowText(hInfoArea, infoText);
+}
+
+void ShowMissionsView(HWND hwnd) {
+    inMissionsView = 1;
+    
+    ShowWindow(hBtnMissions, SW_HIDE);
+    ShowWindow(hBtnCourse, SW_HIDE);
+    ShowWindow(hBtnBuyFood, SW_HIDE);
+    ShowWindow(hBtnSellFood, SW_HIDE);
+    ShowWindow(hBtnBuyMinerals, SW_HIDE);
+    ShowWindow(hBtnSellMinerals, SW_HIDE);
+    ShowWindow(hBtnBuyTech, SW_HIDE);
+    ShowWindow(hBtnSellTech, SW_HIDE);
+    ShowWindow(hBtnUpgEngine, SW_HIDE);
+    ShowWindow(hBtnUpgCargo, SW_HIDE);
+    ShowWindow(hBtnUpgWeapon, SW_HIDE);
+    ShowWindow(hBtnUpgShield, SW_HIDE);
+    
+    ShowWindow(hBtnMissionBack, SW_SHOW);
+    if (activeMission.type != 0) {
+        ShowWindow(hBtnMissionAbandon, SW_SHOW);
+        ShowWindow(hBtnMissionAccept1, SW_HIDE);
+        ShowWindow(hBtnMissionAccept2, SW_HIDE);
+    } else {
+        ShowWindow(hBtnMissionAbandon, SW_HIDE);
+        if (stationMissions[0].type != 0) ShowWindow(hBtnMissionAccept1, SW_SHOW);
+        if (stationMissions[1].type != 0) ShowWindow(hBtnMissionAccept2, SW_SHOW);
+    }
+    
+    char infoText[1024] = "--- MISSION BOARD ---\n\n";
+    if (activeMission.type != 0) {
+        char amsg[256];
+        sprintf(amsg, "Active: %s %s (₭%d)\n\n", 
+            activeMission.type == 1 ? "Deliver to" : "Bounty in", 
+            systems[activeMission.targetId].name, activeMission.reward);
+        strcat(infoText, amsg);
+    } else {
+        strcat(infoText, "No active missions.\n\n");
+    }
+    
+    strcat(infoText, "Available Missions:\n");
+    for (int i=0; i<2; i++) {
+        if (stationMissions[i].type != 0) {
+            char mmsg[128];
+            sprintf(mmsg, "M%d: %s %s (₭%d)\n", i+1,
+                stationMissions[i].type == 1 ? "Deliver to" : "Bounty in",
+                systems[stationMissions[i].targetId].name, stationMissions[i].reward);
+            strcat(infoText, mmsg);
+        }
+    }
+    SetWindowText(hInfoArea, infoText);
 }
 
 void UpdateCombatUI(HWND hwnd) {
@@ -126,6 +246,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HWND h4 = CreateWindow("STATIC", "LOCAL SYSTEMS", WS_VISIBLE | WS_CHILD, 440, 60, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(h4, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            hMissionText = CreateWindow("STATIC", "", WS_VISIBLE | WS_CHILD, 20, 45, 600, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hMissionText, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             hInfoArea = CreateWindow("STATIC", "Select a system on the map for details.", WS_VISIBLE | WS_CHILD, 440, 90, 220, 180, hwnd, NULL, NULL, NULL);
             SendMessage(hInfoArea, WM_SETFONT, (WPARAM)hFont, TRUE);
             
@@ -139,6 +262,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnSellTech = CreateWindow("BUTTON", "Sell Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 340, 95, 25, hwnd, (HMENU)ID_BTN_SELL_TECH, NULL, NULL);
 
             hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 150, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
+            hBtnMissions = CreateWindow("BUTTON", "MISSIONS", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 440, 150, 25, hwnd, (HMENU)ID_BTN_MISSIONS, NULL, NULL);
             
             hBtnUpgEngine = CreateWindow("BUTTON", "Upg Eng", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 95, 25, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
             hBtnUpgCargo = CreateWindow("BUTTON", "Upg Cargo", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 380, 95, 25, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
@@ -150,7 +274,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnCombatUseTech = CreateWindow("BUTTON", "Use Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 310, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_USE_TECH, NULL, NULL);
             hBtnCombatFlee = CreateWindow("BUTTON", "Flee", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 310, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_FLEE, NULL, NULL);
 
+            hBtnMissionAccept1 = CreateWindow("BUTTON", "Accept M1", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 25, hwnd, (HMENU)ID_BTN_MISSION_ACCEPT_1, NULL, NULL);
+            hBtnMissionAccept2 = CreateWindow("BUTTON", "Accept M2", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 280, 95, 25, hwnd, (HMENU)ID_BTN_MISSION_ACCEPT_2, NULL, NULL);
+            hBtnMissionAbandon = CreateWindow("BUTTON", "Abandon", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 310, 95, 25, hwnd, (HMENU)ID_BTN_MISSION_ABANDON, NULL, NULL);
+            hBtnMissionBack = CreateWindow("BUTTON", "Back", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 350, 150, 25, hwnd, (HMENU)ID_BTN_MISSION_BACK, NULL, NULL);
+
             ShowWindow(hBtnCourse, SW_HIDE);
+            ShowWindow(hBtnMissions, SW_HIDE);
             ShowWindow(hBtnBuyFood, SW_HIDE);
             ShowWindow(hBtnSellFood, SW_HIDE);
             ShowWindow(hBtnBuyMinerals, SW_HIDE);
@@ -166,7 +296,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             ShowWindow(hBtnCombatEvade, SW_HIDE);
             ShowWindow(hBtnCombatUseTech, SW_HIDE);
             ShowWindow(hBtnCombatFlee, SW_HIDE);
+
+            ShowWindow(hBtnMissionAccept1, SW_HIDE);
+            ShowWindow(hBtnMissionAccept2, SW_HIDE);
+            ShowWindow(hBtnMissionAbandon, SW_HIDE);
+            ShowWindow(hBtnMissionBack, SW_HIDE);
             
+            GenerateStationMissions();
             UpdateDashboard();
             return 0;
         }
@@ -211,9 +347,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(hdc, hMapBg);
             HPEN hBorderPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 204));
             SelectObject(hdc, hBorderPen);
-            Rectangle(hdc, 20, 60, 420, 460);
+            Rectangle(hdc, 20, 70, 420, 470);
             
-            for(int y = 62; y < 458; y += 4) {
+            for(int y = 72; y < 468; y += 4) {
                 HPEN hScanLine = CreatePen(PS_SOLID, 1, RGB(0, 50, 50));
                 SelectObject(hdc, hScanLine);
                 MoveToEx(hdc, 22, y, NULL);
@@ -233,7 +369,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             for (int i = 0; i < 5; i++) {
                 int px = 20 + (systems[i].x * 400 / 100);
-                int py = 60 + (systems[i].y * 400 / 100);
+                int py = 70 + (systems[i].y * 400 / 100);
                 
                 if (i == selectedSystem) {
                     SelectObject(hdc, hCyanBrush);
@@ -277,10 +413,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             for (int i = 0; i < 5; i++) {
                 int px = 20 + (systems[i].x * 400 / 100);
-                int py = 60 + (systems[i].y * 400 / 100);
+                int py = 70 + (systems[i].y * 400 / 100);
                 
                 if (abs(mx - px) < 15 && abs(my - py) < 15) {
                     selectedSystem = i;
+                    inMissionsView = 0;
                     
                     char infoText[512];
                     if (selectedSystem == currentSystemId) {
@@ -298,6 +435,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetWindowText(hInfoArea, infoText);
                     if (selectedSystem != currentSystemId) {
                         ShowWindow(hBtnCourse, SW_SHOW);
+                        ShowWindow(hBtnMissions, SW_HIDE);
                         ShowWindow(hBtnBuyFood, SW_HIDE);
                         ShowWindow(hBtnSellFood, SW_HIDE);
                         ShowWindow(hBtnBuyMinerals, SW_HIDE);
@@ -308,18 +446,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         ShowWindow(hBtnUpgCargo, SW_HIDE);
                         ShowWindow(hBtnUpgWeapon, SW_HIDE);
                         ShowWindow(hBtnUpgShield, SW_HIDE);
+                        
+                        ShowWindow(hBtnMissionAccept1, SW_HIDE);
+                        ShowWindow(hBtnMissionAccept2, SW_HIDE);
+                        ShowWindow(hBtnMissionAbandon, SW_HIDE);
+                        ShowWindow(hBtnMissionBack, SW_HIDE);
                     } else {
-                        ShowWindow(hBtnCourse, SW_HIDE);
-                        ShowWindow(hBtnBuyFood, SW_SHOW);
-                        ShowWindow(hBtnSellFood, SW_SHOW);
-                        ShowWindow(hBtnBuyMinerals, SW_SHOW);
-                        ShowWindow(hBtnSellMinerals, SW_SHOW);
-                        ShowWindow(hBtnBuyTech, SW_SHOW);
-                        ShowWindow(hBtnSellTech, SW_SHOW);
-                        ShowWindow(hBtnUpgEngine, SW_SHOW);
-                        ShowWindow(hBtnUpgCargo, SW_SHOW);
-                        ShowWindow(hBtnUpgWeapon, SW_SHOW);
-                        ShowWindow(hBtnUpgShield, SW_SHOW);
+                        ShowStationView(hwnd);
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
@@ -342,13 +475,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 } else {
                     fuel -= fuelCost;
                     currentSystemId = selectedSystem;
+                    GenerateStationMissions();
                     
-                    char resultMsg[512];
-                    sprintf(resultMsg, "Traveled to %s.\nFuel consumed: %d%%.", systems[currentSystemId].name, fuelCost);
+                    int forcedCombat = 0;
+                    char missionMsg[256] = "";
+                    if (activeMission.type != 0 && activeMission.targetId == currentSystemId) {
+                        if (activeMission.type == 1) {
+                            credits += activeMission.reward;
+                            sprintf(missionMsg, "\n\nMission Complete: Delivery made. Earned ₭%d.", activeMission.reward);
+                            activeMission.type = 0;
+                        } else if (activeMission.type == 2) {
+                            forcedCombat = 1;
+                        }
+                    }
+                    
+                    char resultMsg[1024];
+                    sprintf(resultMsg, "Traveled to %s.\nFuel consumed: %d%%.%s", systems[currentSystemId].name, fuelCost, missionMsg);
                     
                     int randomEncounter = rand() % 100;
-                    if (randomEncounter < 30) {
-                        MessageBox(hwnd, "Alert: Hostile pirate vessel encountered!", "Navigation Log", MB_OK);
+                    if (forcedCombat || randomEncounter < 30) {
+                        if (forcedCombat) MessageBox(hwnd, "Alert: Bounty target located! Intercepting pirate vessel!", "Navigation Log", MB_OK);
+                        else MessageBox(hwnd, "Alert: Hostile pirate vessel encountered!", "Navigation Log", MB_OK);
                         
                         inCombat = 1;
                         enemyMaxHull = 30 + currentSystemId * 20;
@@ -356,6 +503,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         strcpy(combatLog, "Pirate intercepts your ship!\nTactical combat initiated.\n");
                         
                         ShowWindow(hBtnCourse, SW_HIDE);
+                        ShowWindow(hBtnMissions, SW_HIDE);
                         ShowWindow(hBtnBuyFood, SW_HIDE);
                         ShowWindow(hBtnSellFood, SW_HIDE);
                         ShowWindow(hBtnBuyMinerals, SW_HIDE);
@@ -428,8 +576,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (enemyHull <= 0) {
                     int bounty = 100 + currentSystemId * 50;
                     credits += bounty;
-                    char winMsg[128];
-                    sprintf(winMsg, "Pirate destroyed! Claimed ₭%d bounty.", bounty);
+                    char winMsg[256];
+                    sprintf(winMsg, "Pirate destroyed! Claimed ₭%d standard bounty.", bounty);
+                    if (activeMission.type == 2 && activeMission.targetId == currentSystemId) {
+                        credits += activeMission.reward;
+                        char bMsg[128];
+                        sprintf(bMsg, "\nMission Complete! Earned extra ₭%d.", activeMission.reward);
+                        strcat(winMsg, bMsg);
+                        activeMission.type = 0;
+                    }
                     MessageBox(hwnd, winMsg, "Combat Won", MB_OK);
                     EndCombat(hwnd);
                     return 0;
@@ -513,6 +668,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
                     weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
                 SetWindowText(hInfoArea, infoText);
+            } else if (LOWORD(wParam) == ID_BTN_MISSIONS) {
+                ShowMissionsView(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_MISSION_ACCEPT_1) {
+                activeMission = stationMissions[0];
+                stationMissions[0].type = 0;
+                UpdateDashboard();
+                ShowMissionsView(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_MISSION_ACCEPT_2) {
+                activeMission = stationMissions[1];
+                stationMissions[1].type = 0;
+                UpdateDashboard();
+                ShowMissionsView(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_MISSION_ABANDON) {
+                activeMission.type = 0;
+                UpdateDashboard();
+                ShowMissionsView(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_MISSION_BACK) {
+                ShowStationView(hwnd);
             }
             return 0;
         }
