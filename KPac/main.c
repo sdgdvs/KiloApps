@@ -4,8 +4,8 @@
 
 #pragma comment(lib, "msvcrt.lib")
 
-#define W 300
-#define H 350
+#define W 340
+#define H 520
 #define COLS 15
 #define ROWS 15
 #define TS 20
@@ -1233,7 +1233,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (key == 'K') { bindState = 1; return 0; }
-            if (key == 'H') showHelp = !showHelp;
+            if (key == 'H' || key == VK_F1) showHelp = !showHelp;
             if (showHelp) break;
 
             if (key == 'E') {
@@ -1344,17 +1344,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             SelectObject(memDC, hbm);
             static HFONT hFont = NULL;
-            if (!hFont) hFont = CreateFontA(-14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
+            if (!hFont) {
+                HDC screenDC = GetDC(NULL);
+                int dpi = GetDeviceCaps(screenDC, LOGPIXELSY);
+                ReleaseDC(NULL, screenDC);
+                int fontHeight = -MulDiv(12, dpi, 72);
+                hFont = CreateFontA(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
+            }
             SelectObject(memDC, hFont);
             HBRUSH bg = CreateSolidBrush(RGB(3, 6, 17));
             RECT rc = {0, 0, W, H};
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
 
+            int offsetX = (W - 300) / 2;
+            int offsetY = (H - 350) / 2;
             if (screenShake > 0) {
                 int sx = (MyRand() % screenShake) - (screenShake / 2);
                 int sy = (MyRand() % screenShake) - (screenShake / 2);
-                SetWindowOrgEx(memDC, sx, sy, NULL);
+                SetWindowOrgEx(memDC, sx - offsetX, sy - offsetY, NULL);
+            } else {
+                SetWindowOrgEx(memDC, -offsetX, -offsetY, NULL);
             }
 
             // Cyber-grid background environmental art
@@ -1840,7 +1850,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(255, 255, 255));
             char sstr[128];
             wsprintfA(sstr, "Lv:%d/20 Sc:%d HI:%d Lvs:%d", level, score, highScore, lives);
-            TextOutA(memDC, 2, 305, sstr, lstrlenA(sstr));
+            TextOutA(memDC, 2, H - 65, sstr, lstrlenA(sstr));
 
             // Skill HUD Line
             char rText[16] = "";
@@ -1853,16 +1863,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 magnetCooldown > 0 ? "CD" : "OK",
                 shieldCooldown > 0 ? "CD" : (shieldActive ? "ON" : "OK"), rText);
             SetTextColor(memDC, RGB(255, 235, 59));
-            TextOutA(memDC, 2, 320, sstr, lstrlenA(sstr));
+            TextOutA(memDC, 2, H - 45, sstr, lstrlenA(sstr));
             
             SetTextColor(memDC, RGB(0, 255, 200));
-            TextOutA(memDC, 2, 335, "[Press H for Help] [K]Bind [E]Exp", 33);
+            TextOutA(memDC, 2, H - 25, "[Press H or F1 for Help] [K]Bind [E]Exp", 39);
 
             if (level == 20 && bossHp > 0) {
                 char bossStr[64];
                 wsprintfA(bossStr, "BOSS KING HP: %d/%d", bossHp, bossMaxHp);
                 SetTextColor(memDC, RGB(255, 215, 0));
-                TextOutA(memDC, W - 130, 305, bossStr, lstrlenA(bossStr));
+                TextOutA(memDC, W - 150, H - 65, bossStr, lstrlenA(bossStr));
             }
             
             if (bindState > 0) {
@@ -1890,7 +1900,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 50, 180, "Avoid ghosts, eat all dots.", 27);
                 TextOutA(memDC, 30, 200, "Power pellets let you eat ghosts!", 33);
                 SetTextColor(memDC, RGB(0, 230, 118));
-                TextOutA(memDC, 60, 250, "Press H to start/resume", 23);
+                TextOutA(memDC, 60, 250, "Press H or F1 to start/resume", 29);
             }
 
             if (saveMsgTimer > 0) {
@@ -1943,10 +1953,10 @@ void MainEntry() {
     RegisterClass(&wc);
 
     RECT rect = {0, 0, W, H};
-    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
+    AdjustWindowRect(&rect, (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, FALSE);
     int winW = rect.right - rect.left;
     int winH = rect.bottom - rect.top;
-    HWND hwnd = CreateWindowEx(0, "KPacApp", "KPac", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    HWND hwnd = CreateWindowEx(0, "KPacApp", "KPac", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

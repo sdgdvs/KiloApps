@@ -551,6 +551,7 @@
   
   const keys = {};
   document.addEventListener('keydown', e => {
+      if (e.key === 'F1') e.preventDefault();
       keys[e.key] = true;
       if (bindState > 0) {
           let k = e.key;
@@ -566,7 +567,7 @@
           return;
       }
       if (e.key === 'k' || e.key === 'K') { bindState = 1; return; }
-      if (e.key === 'h' || e.key === 'H') showHelp = !showHelp;
+      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') showHelp = !showHelp;
       if (showHelp) return;
 
       if (e.key === 'e' || e.key === 'E') {
@@ -1821,7 +1822,7 @@
       let rText = replayMode === 1 ? ' [REC]' : (replayMode === 2 ? ' [PLAY]' : '');
       ctx.fillText(`Diff:${diffNames[diffMode]}${rText} Save:V Load:L Bind:K`, 4, 316);
       ctx.fillStyle = '#00ffcc';
-      ctx.fillText(`[Press H for Help] Export/Import:E`, 4, 330);
+      ctx.fillText(`[Press H or F1 for Help] Export/Import:E`, 4, 330);
 
       if (bindState > 0) {
           ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
@@ -1849,7 +1850,7 @@
           ctx.fillText('Avoid ghosts, eat all dots.', 150, 200);
           ctx.fillText('Power pellets let you eat ghosts!', 150, 220);
           ctx.fillStyle = '#00e676';
-          ctx.fillText('Press H to start/resume', 150, 260);
+          ctx.fillText('Press H or F1 to start/resume', 150, 260);
           ctx.textAlign = 'left';
       }
 

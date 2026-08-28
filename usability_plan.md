@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP â€” loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top â€” the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KPac
 - KQuest
 - KNote
 - KPass
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMaze
 - KScript
 - KMine
+- KPac
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
 - KMine: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 550x630, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
@@ -150,7 +150,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSynth: Usability and UI issues fixed (increased App.jsx bounds to 950x750, added WS_CLIPCHILDREN to native, verified F1/? help hotkeys, checked explicit help instructions and crisp typography).
 - KPaint: Usability and UI issues fixed (updated App.jsx and native bounds to 1100x750 for proper canvas fit, enforced AdjustWindowRect, verified crisp text and existing help visibility).
 - KZip: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles to prevent flickering, mapped F1 to help in both versions, and explicitly updated instructions to state 'Press H or F1 for Help').
-- KPac: Usability and UI issues fixed (verified native C negative font heights and scaling, verified App.jsx bounds, applied optimizeLegibility to web CSS, and bumped OS version to 0.3.102).
+- KPac: Usability and UI issues fixed (adjusted App.jsx bounds to 340x520, synced native dimensions and added offsets, added WS_CLIPCHILDREN and negative font heights for crisp text, added F1 hotkey handling and explicit help text in both versions).
 - KContacts: Usability and UI issues fixed (added responsive grid layout for form, WS_CLIPCHILDREN for native window, and ES_WANTRETURN with EM_SETMARGINS for native edit control legibility).
 - KMine: Usability and UI issues fixed (updated App.jsx bounds to 1000x750 to accommodate Expert mode width, and added text-rendering: optimizeLegibility to web HTML).
 - KMaze: Usability and UI issues fixed (modified native CreateFont parameter to a negative height for crisp DPI rendering, and added text-rendering: optimizeLegibility to web HTML).
