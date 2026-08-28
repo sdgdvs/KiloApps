@@ -51,7 +51,6 @@
 ## Round-Robin Continuous Improvement Queue (NEVER STOP â€” loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top â€” the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KMaze
 - KScript
 - KMine
 - KPac
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMandel
 - KPing
 - KConnect4
+- KMaze
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KMaze: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 800x700, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
 - KConnect4: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 580x780, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
 - KPing: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 850x650, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
 - KMandel: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 800x600, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).

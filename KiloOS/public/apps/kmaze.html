@@ -24,7 +24,7 @@
     <button class="hudBtn" onclick="useSpeedShoes()">[S] Speed Shoes</button>
     <button class="hudBtn" onclick="useStunSpray()">[F] Stun Spray</button>
     <button class="hudBtn" onclick="useTimeFreeze()">[T] Time Freeze</button>
-    <button class="hudBtn" onclick="prevState=gameState; gameState=4;">[H] Help/Keys</button>
+    <button class="hudBtn" onclick="prevState=gameState; gameState=4;">[F1/H] Help/Keys</button>
     <button class="hudBtn" onclick="exportStats()">Export</button>
     <button class="hudBtn" onclick="document.getElementById('importFile').click()">Import</button>
   </div>
@@ -937,7 +937,8 @@
               replayLevels = [];
               nextLevel();
           }
-      } else if (e.key === 'h' || e.key === 'H') {
+      } else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+          if (e.key === 'F1') e.preventDefault();
           if (gameState === 0 || gameState === 1 || gameState === 2) {
               prevState = gameState; gameState = 4;
           }
@@ -1640,7 +1641,7 @@
       if (gameState === 0) {
           uiCtx.fillText("KMAZE", W/2 - 20, H/2 - 20);
           uiCtx.fillText("Press ENTER to start", W/2 - 70, H/2 + 10);
-          uiCtx.fillText("Press H for Help / Keys", W/2 - 75, H/2 + 25);
+          uiCtx.fillText("Press F1 or H for Help", W/2 - 75, H/2 + 25);
           uiCtx.fillText(`Games: ${totalGames} Escapes: ${totalEscapes}`, W/2 - 70, H/2 + 40);
       } else if (gameState === 2) {
           let elapsed = (endTime - startTime) / 1000;

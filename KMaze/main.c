@@ -1973,14 +1973,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             GetClientRect(hwnd, &clientRect);
             StretchBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcMem, 0, 0, W, H, SRCCOPY);
             
-            HFONT hFont = CreateFontA(-20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            int fontHeight = -MulDiv(12, dpi, 72);
+            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
             HGDIOBJ oldFont = SelectObject(hdc, hFont);
             
             SetBkMode(hdc, TRANSPARENT);
             if (gameState == 0) {
                 const char* t1 = "KMAZE";
                 const char* t2 = "Press ENTER to start";
-                const char* t3 = "Press H for Help / Keys";
+                const char* t3 = "Press F1 or H for Help";
                 char t4[64]; wsprintfA(t4, "Games: %d Escapes: %d", totalGames, totalEscapes);
                 
                 SetTextColor(hdc, RGB(0, 0, 0));
@@ -2024,7 +2026,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DWORD elapsedSec = (GetTickCount() - startTime) / 1000;
                 char t1[128]; wsprintfA(t1, "Lvl:%d/35 K:%d P:%d C:%d S:%d F:%d T:%d", currentLevel + 1, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges);
                 char t2[128]; wsprintfA(t2, "Score:%d Time:%ds", score, elapsedSec);
-                const char* t3 = "V:Save L:Load H:Help";
+                const char* t3 = "V:Save L:Load F1/H:Help";
                 
                 SetTextColor(hdc, RGB(0, 0, 0));
                 TextOutA(hdc, 22, 22, t1, lstrlenA(t1)); TextOutA(hdc, 22, 52, t2, lstrlenA(t2));
@@ -2081,7 +2083,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameState == 0 || gameState == 1) {
                 if (wParam == 'E') ExportStats();
                 if (wParam == 'I') ImportStats();
-                if (wParam == 'K' || wParam == 'H') { prevState = gameState; gameState = 4; }
+                if (wParam == 'K' || wParam == 'H' || wParam == VK_F1) { prevState = gameState; gameState = 4; }
             }
             if (gameState == 4) {
                 if (wParam == VK_ESCAPE) { waitingForKey = 0; gameState = prevState; }
@@ -2126,10 +2128,10 @@ void __stdcall MainEntry() {
     
     RegisterClassA(&wc);
     
-    RECT wr = {0, 0, 800, 600};
+    RECT wr = {0, 0, 800, 700};
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KMazeClass", "KMaze", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KMazeClass", "KMaze", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
