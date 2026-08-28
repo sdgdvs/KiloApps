@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStellar (Space exploration and trading RPG)
-**Phase:** 8 (next to do)
+**Phase:** 9 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KStellar directory (`KStellar/`), create web HTML skeleton (`KiloOS/public/apps/kstellar.html`), register in App.jsx.
@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Implement space travel mechanics (traveling consumes fuel, takes time, triggers random encounters).
 - [x] Phase 6: Implement commodity trading system (buy low on agricultural planets, sell high on industrial/mining planets).
 - [x] Phase 7: Add a ship upgrade system (buy better engines for less fuel usage, larger cargo bays, better shields/weapons).
-- [ ] Phase 8: Introduce hostile encounters (space pirates) with turn-based tactical space combat (attack, evade, use items).
+- [x] Phase 8: Introduce hostile encounters (space pirates) with turn-based tactical space combat (attack, evade, use items).
 - [ ] Phase 9: Implement a mission/bounty board at space stations for additional credit opportunities.
 - [ ] Phase 10: Add procedural generation for a large galaxy with multiple sectors and varied planetary economies.
 - [ ] Phase 11: Special stellar phenomena events (black holes, solar flares, derelict ships to salvage).

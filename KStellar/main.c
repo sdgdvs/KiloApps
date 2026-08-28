@@ -36,9 +36,15 @@ System systems[] = {
 #define ID_BTN_UPG_WEAPON 110
 #define ID_BTN_UPG_SHIELD 111
 
-HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText, hCargoText;
+#define ID_BTN_COMBAT_ATTACK 120
+#define ID_BTN_COMBAT_EVADE 121
+#define ID_BTN_COMBAT_USE_TECH 122
+#define ID_BTN_COMBAT_FLEE 123
+
+HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText, hCargoText, hHullText;
 HWND hBtnBuyFood, hBtnSellFood, hBtnBuyMinerals, hBtnSellMinerals, hBtnBuyTech, hBtnSellTech;
 HWND hBtnUpgEngine, hBtnUpgCargo, hBtnUpgWeapon, hBtnUpgShield;
+HWND hBtnCombatAttack, hBtnCombatEvade, hBtnCombatUseTech, hBtnCombatFlee;
 
 int selectedSystem = -1;
 int currentSystemId = 0;
@@ -54,11 +60,20 @@ int cargoLevel = 1;
 int weaponLevel = 1;
 int shieldLevel = 1;
 
+int hull = 100;
+int maxHull = 100;
+int enemyHull = 0;
+int enemyMaxHull = 0;
+int inCombat = 0;
+char combatLog[1024] = "";
+
 static HFONT hFont = NULL;
 static HBRUSH hBgBrush = NULL;
 
 void UpdateDashboard() {
     char buf[64];
+    sprintf(buf, "HULL: %d/%d", hull, maxHull);
+    SetWindowText(hHullText, buf);
     sprintf(buf, "FUEL: %d%%", fuel);
     SetWindowText(hFuelText, buf);
     sprintf(buf, "CREDITS: %d", credits);
@@ -68,19 +83,43 @@ void UpdateDashboard() {
     SetWindowText(hCargoText, buf);
 }
 
+}
+
+void UpdateCombatUI(HWND hwnd) {
+    char infoText[2048];
+    sprintf(infoText, "--- COMBAT ---\nYOU Hull: %d\nPIRATE Hull: %d\n\n%s", hull, enemyHull, combatLog);
+    SetWindowText(hInfoArea, infoText);
+    UpdateDashboard();
+}
+
+void EndCombat(HWND hwnd) {
+    inCombat = 0;
+    ShowWindow(hBtnCombatAttack, SW_HIDE);
+    ShowWindow(hBtnCombatEvade, SW_HIDE);
+    ShowWindow(hBtnCombatUseTech, SW_HIDE);
+    ShowWindow(hBtnCombatFlee, SW_HIDE);
+    
+    SetWindowText(hInfoArea, "Select a system on the map for details.");
+    selectedSystem = -1;
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
             hFont = CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
             hBgBrush = CreateSolidBrush(RGB(5, 5, 15));
             
-            HWND h1 = CreateWindow("STATIC", "FUEL: 100%", WS_VISIBLE | WS_CHILD, 20, 20, 100, 20, hwnd, NULL, NULL, NULL);
+            HWND h0 = CreateWindow("STATIC", "HULL: 100/100", WS_VISIBLE | WS_CHILD, 20, 20, 110, 20, hwnd, NULL, NULL, NULL);
+            hHullText = h0;
+            SendMessage(h0, WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND h1 = CreateWindow("STATIC", "FUEL: 100%", WS_VISIBLE | WS_CHILD, 140, 20, 100, 20, hwnd, NULL, NULL, NULL);
             hFuelText = h1;
             SendMessage(h1, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HWND h2 = CreateWindow("STATIC", "CREDITS: 1,000", WS_VISIBLE | WS_CHILD, 140, 20, 150, 20, hwnd, NULL, NULL, NULL);
+            HWND h2 = CreateWindow("STATIC", "CREDITS: 1,000", WS_VISIBLE | WS_CHILD, 240, 20, 150, 20, hwnd, NULL, NULL, NULL);
             hCreditsText = h2;
             SendMessage(h2, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HWND h3 = CreateWindow("STATIC", "CARGO: 0/50 TONS", WS_VISIBLE | WS_CHILD, 300, 20, 180, 20, hwnd, NULL, NULL, NULL);
+            HWND h3 = CreateWindow("STATIC", "CARGO: 0/50 TONS", WS_VISIBLE | WS_CHILD, 380, 20, 180, 20, hwnd, NULL, NULL, NULL);
             hCargoText = h3;
             SendMessage(h3, WM_SETFONT, (WPARAM)hFont, TRUE);
 
@@ -106,6 +145,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnUpgWeapon = CreateWindow("BUTTON", "Upg Wpn", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 410, 95, 25, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
             hBtnUpgShield = CreateWindow("BUTTON", "Upg Shld", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 410, 95, 25, hwnd, (HMENU)ID_BTN_UPG_SHIELD, NULL, NULL);
 
+            hBtnCombatAttack = CreateWindow("BUTTON", "Attack", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_ATTACK, NULL, NULL);
+            hBtnCombatEvade = CreateWindow("BUTTON", "Evade", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 280, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_EVADE, NULL, NULL);
+            hBtnCombatUseTech = CreateWindow("BUTTON", "Use Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 310, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_USE_TECH, NULL, NULL);
+            hBtnCombatFlee = CreateWindow("BUTTON", "Flee", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 310, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_FLEE, NULL, NULL);
+
             ShowWindow(hBtnCourse, SW_HIDE);
             ShowWindow(hBtnBuyFood, SW_HIDE);
             ShowWindow(hBtnSellFood, SW_HIDE);
@@ -117,6 +161,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             ShowWindow(hBtnUpgCargo, SW_HIDE);
             ShowWindow(hBtnUpgWeapon, SW_HIDE);
             ShowWindow(hBtnUpgShield, SW_HIDE);
+            
+            ShowWindow(hBtnCombatAttack, SW_HIDE);
+            ShowWindow(hBtnCombatEvade, SW_HIDE);
+            ShowWindow(hBtnCombatUseTech, SW_HIDE);
+            ShowWindow(hBtnCombatFlee, SW_HIDE);
             
             UpdateDashboard();
             return 0;
@@ -222,6 +271,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_LBUTTONDOWN: {
+            if (inCombat) return 0;
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
             
@@ -298,16 +348,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     
                     int randomEncounter = rand() % 100;
                     if (randomEncounter < 30) {
-                        strcat(resultMsg, "\n\nAlert: Hostile pirate vessel encountered!");
-                        int stolen = (rand() % 50) + 10;
-                        if (credits >= stolen) {
-                            credits -= stolen;
-                            char stealMsg[64];
-                            sprintf(stealMsg, "\nThey extorted %d credits.", stolen);
-                            strcat(resultMsg, stealMsg);
-                        } else {
-                            strcat(resultMsg, "\nThey found you have no money and left.");
-                        }
+                        MessageBox(hwnd, "Alert: Hostile pirate vessel encountered!", "Navigation Log", MB_OK);
+                        
+                        inCombat = 1;
+                        enemyMaxHull = 30 + currentSystemId * 20;
+                        enemyHull = enemyMaxHull;
+                        strcpy(combatLog, "Pirate intercepts your ship!\nTactical combat initiated.\n");
+                        
+                        ShowWindow(hBtnCourse, SW_HIDE);
+                        ShowWindow(hBtnBuyFood, SW_HIDE);
+                        ShowWindow(hBtnSellFood, SW_HIDE);
+                        ShowWindow(hBtnBuyMinerals, SW_HIDE);
+                        ShowWindow(hBtnSellMinerals, SW_HIDE);
+                        ShowWindow(hBtnBuyTech, SW_HIDE);
+                        ShowWindow(hBtnSellTech, SW_HIDE);
+                        ShowWindow(hBtnUpgEngine, SW_HIDE);
+                        ShowWindow(hBtnUpgCargo, SW_HIDE);
+                        ShowWindow(hBtnUpgWeapon, SW_HIDE);
+                        ShowWindow(hBtnUpgShield, SW_HIDE);
+                        
+                        ShowWindow(hBtnCombatAttack, SW_SHOW);
+                        ShowWindow(hBtnCombatEvade, SW_SHOW);
+                        ShowWindow(hBtnCombatUseTech, SW_SHOW);
+                        ShowWindow(hBtnCombatFlee, SW_SHOW);
+                        
+                        UpdateCombatUI(hwnd);
+                        return 0;
                     } else if (randomEncounter < 50) {
                         strcat(resultMsg, "\n\nNotice: You found drifting debris.");
                         int found = (rand() % 100) + 20;
@@ -328,6 +394,70 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     selectedSystem = -1;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
+            } else if (LOWORD(wParam) >= ID_BTN_COMBAT_ATTACK && LOWORD(wParam) <= ID_BTN_COMBAT_FLEE && inCombat) {
+                int cmd = LOWORD(wParam);
+                int playerEvading = 0;
+                char turnMsg[256] = "";
+                
+                if (cmd == ID_BTN_COMBAT_ATTACK) {
+                    int dmg = (10 + weaponLevel * 10) * (80 + rand() % 40) / 100;
+                    enemyHull -= dmg;
+                    sprintf(turnMsg, "You attack and deal %d damage!\n", dmg);
+                } else if (cmd == ID_BTN_COMBAT_EVADE) {
+                    playerEvading = 1;
+                    sprintf(turnMsg, "You take evasive maneuvers.\n");
+                } else if (cmd == ID_BTN_COMBAT_USE_TECH) {
+                    if (cargoTech > 0) {
+                        cargoTech--;
+                        hull += 40;
+                        if (hull > maxHull) hull = maxHull;
+                        sprintf(turnMsg, "Used 1 Tech cargo to repair hull.\n");
+                    } else {
+                        sprintf(turnMsg, "No Tech cargo available to use!\n");
+                    }
+                } else if (cmd == ID_BTN_COMBAT_FLEE) {
+                    if (rand() % 100 < 50) {
+                        MessageBox(hwnd, "Successfully escaped!", "Flee", MB_OK);
+                        EndCombat(hwnd);
+                        return 0;
+                    } else {
+                        sprintf(turnMsg, "Failed to escape!\n");
+                    }
+                }
+                
+                if (enemyHull <= 0) {
+                    int bounty = 100 + currentSystemId * 50;
+                    credits += bounty;
+                    char winMsg[128];
+                    sprintf(winMsg, "Pirate destroyed! Claimed ₭%d bounty.", bounty);
+                    MessageBox(hwnd, winMsg, "Combat Won", MB_OK);
+                    EndCombat(hwnd);
+                    return 0;
+                }
+                
+                int hitChance = playerEvading ? 50 : 90;
+                if (rand() % 100 < hitChance) {
+                    int eDmg = (5 + currentSystemId * 5) * (80 + rand() % 40) / 100;
+                    hull -= eDmg;
+                    char hitMsg[64];
+                    sprintf(hitMsg, "Pirate hits you for %d damage!\n", eDmg);
+                    strcat(turnMsg, hitMsg);
+                } else {
+                    strcat(turnMsg, "Pirate's attack misses!\n");
+                }
+                
+                strcpy(combatLog, turnMsg);
+                UpdateCombatUI(hwnd);
+                
+                if (hull <= 0) {
+                    MessageBox(hwnd, "CRITICAL: Hull integrity lost! Emergency tow to Sol.", "Defeat", MB_OK);
+                    hull = maxHull;
+                    credits -= 500;
+                    if (credits < 0) credits = 0;
+                    currentSystemId = 0;
+                    EndCombat(hwnd);
+                }
+                return 0;
             } else if (LOWORD(wParam) >= ID_BTN_BUY_FOOD && LOWORD(wParam) <= ID_BTN_SELL_TECH && selectedSystem == currentSystemId) {
                 int used = cargoFood + cargoMinerals + cargoTech;
                 int cmd = LOWORD(wParam);
@@ -369,7 +499,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (credits >= cost) { credits -= cost; weaponLevel++; }
                 } else if (cmd == ID_BTN_UPG_SHIELD) {
                     int cost = 2000 * shieldLevel;
-                    if (credits >= cost) { credits -= cost; shieldLevel++; }
+                    if (credits >= cost) { credits -= cost; shieldLevel++; maxHull = 100 + (shieldLevel - 1) * 50; hull = maxHull; }
                 }
                 
                 UpdateDashboard();

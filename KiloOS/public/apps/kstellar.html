@@ -127,6 +127,7 @@
 <body>
     <div id="app" style="display: flex; flex-direction: column; height: 100%;">
         <div id="dashboard">
+            <div class="stat">HULL: <span id="hull">100</span>/<span id="max-hull">100</span></div>
             <div class="stat">FUEL: <span id="fuel">100</span>%</div>
             <div class="stat">CREDITS: ₭<span id="credits">1,000</span></div>
             <div class="stat">CARGO: <span id="cargo-used">0</span>/<span id="cargo-max">50</span> TONS</div>
@@ -140,6 +141,26 @@
                 <div id="system-info">
                     Select a system on the map for details.
                 </div>
+            </div>
+        </div>
+        <div id="combat-overlay" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:100; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+            <h2 style="color:red; text-shadow:0 0 10px red;">PIRATE ATTACK</h2>
+            <div style="display:flex; justify-content:space-around; width:100%; margin-bottom:20px;">
+                <div style="text-align:center;">
+                    <h3>YOU</h3>
+                    <p>Hull: <span id="combat-player-hull">100</span></p>
+                </div>
+                <div style="text-align:center; color:red;">
+                    <h3>PIRATE</h3>
+                    <p>Hull: <span id="combat-enemy-hull">50</span></p>
+                </div>
+            </div>
+            <div id="combat-log" style="width:80%; height:150px; border:1px solid #00ffcc; overflow-y:auto; padding:10px; margin-bottom:20px; font-size:14px; background:rgba(0,20,30,0.8);"></div>
+            <div style="display:flex; gap:10px;">
+                <button class="action-btn" onclick="combatAction('attack')">Attack</button>
+                <button class="action-btn" onclick="combatAction('evade')">Evade</button>
+                <button class="action-btn" onclick="combatAction('tech')">Use Tech</button>
+                <button class="action-btn" onclick="combatAction('flee')">Flee</button>
             </div>
         </div>
     </div>
@@ -161,6 +182,11 @@
         let credits = 1000;
         let cargo = { food: 0, minerals: 0, tech: 0 };
         let cargoMax = 50;
+        let hull = 100;
+        let maxHull = 100;
+        let enemyHull = 0;
+        let enemyMaxHull = 0;
+        let inCombat = false;
 
         let engineLevel = 1;
         let cargoLevel = 1;
@@ -172,6 +198,8 @@
         }
 
         function updateDashboard() {
+            document.getElementById('hull').innerText = hull;
+            document.getElementById('max-hull').innerText = maxHull;
             document.getElementById('fuel').innerText = fuel;
             document.getElementById('credits').innerText = credits;
             document.getElementById('cargo-used').innerText = getCargoUsed();
@@ -190,7 +218,7 @@
                 if (type === 'engine') engineLevel++;
                 else if (type === 'cargo') { cargoLevel++; cargoMax = 50 * cargoLevel; }
                 else if (type === 'weapon') weaponLevel++;
-                else if (type === 'shield') shieldLevel++;
+                else if (type === 'shield') { shieldLevel++; maxHull = 100 + (shieldLevel - 1) * 50; hull = maxHull; }
                 updateDashboard();
                 showSystemInfo(systems.find(s => s.id === currentSystemId));
                 alert(type.toUpperCase() + " upgraded!");
@@ -251,14 +279,10 @@
             let msg = "Traveled to " + target.name + ".\nFuel consumed: " + fuelCost + "%.";
             
             if (randomEncounter < 0.3) {
-                msg += "\n\nAlert: Hostile pirate vessel encountered!";
-                const stolen = Math.floor(Math.random() * 50) + 10;
-                if (credits >= stolen) {
-                    credits -= stolen;
-                    msg += "\nThey extorted ₭" + stolen + " before warping away.";
-                } else {
-                    msg += "\nThey found you have no money and left you alone.";
-                }
+                updateDashboard();
+                alert(msg + "\n\nAlert: Hostile pirate vessel encountered!");
+                startCombat();
+                return;
             } else if (randomEncounter < 0.5) {
                 msg += "\n\nNotice: You found drifting debris.";
                 const found = Math.floor(Math.random() * 100) + 20;
@@ -270,6 +294,97 @@
             
             updateDashboard();
             alert(msg);
+            renderMap();
+            infoEl.innerHTML = "Select a system on the map for details.";
+        };
+
+        function startCombat() {
+            inCombat = true;
+            enemyMaxHull = 30 + currentSystemId * 20;
+            enemyHull = enemyMaxHull;
+            document.getElementById('combat-overlay').style.display = 'flex';
+            document.getElementById('combat-log').innerHTML = '<p>Pirate intercepts your ship! Tactical combat initiated.</p>';
+            updateCombatUI();
+        }
+
+        function updateCombatUI() {
+            document.getElementById('combat-player-hull').innerText = hull;
+            document.getElementById('combat-enemy-hull').innerText = enemyHull;
+            const logEl = document.getElementById('combat-log');
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function logCombat(msg) {
+            document.getElementById('combat-log').innerHTML += `<p>${msg}</p>`;
+            updateCombatUI();
+        }
+
+        window.combatAction = function(action) {
+            if (!inCombat) return;
+            let playerEvading = false;
+            
+            if (action === 'attack') {
+                let dmg = Math.floor((10 + weaponLevel * 10) * (0.8 + Math.random() * 0.4));
+                enemyHull -= dmg;
+                logCombat(`You attack and deal ${dmg} damage!`);
+            } else if (action === 'evade') {
+                playerEvading = true;
+                logCombat(`You take evasive maneuvers.`);
+            } else if (action === 'tech') {
+                if (cargo.tech > 0) {
+                    cargo.tech--;
+                    let heal = 40;
+                    hull = Math.min(maxHull, hull + heal);
+                    logCombat(`Used 1 Tech cargo to repair ${heal} hull.`);
+                } else {
+                    logCombat(`No Tech cargo available to use!`);
+                    return;
+                }
+            } else if (action === 'flee') {
+                if (Math.random() < 0.5) {
+                    logCombat(`Successfully escaped!`);
+                    setTimeout(endCombat, 1500);
+                    return;
+                } else {
+                    logCombat(`Failed to escape!`);
+                }
+            }
+            
+            if (enemyHull <= 0) {
+                let bounty = 100 + currentSystemId * 50;
+                credits += bounty;
+                logCombat(`Pirate destroyed! Claimed ₭${bounty} bounty.`);
+                setTimeout(endCombat, 1500);
+                return;
+            }
+            
+            // Enemy turn
+            let hitChance = playerEvading ? 0.5 : 0.9;
+            if (Math.random() < hitChance) {
+                let eDmg = Math.floor((5 + currentSystemId * 5) * (0.8 + Math.random() * 0.4));
+                hull -= eDmg;
+                logCombat(`Pirate hits you for ${eDmg} damage!`);
+            } else {
+                logCombat(`Pirate's attack misses!`);
+            }
+            
+            updateCombatUI();
+            
+            if (hull <= 0) {
+                logCombat(`CRITICAL: Hull integrity lost! Emergency tow to Sol.`);
+                setTimeout(() => {
+                    hull = maxHull;
+                    credits = Math.max(0, credits - 500);
+                    currentSystemId = 1;
+                    endCombat();
+                }, 2000);
+            }
+        };
+
+        function endCombat() {
+            inCombat = false;
+            document.getElementById('combat-overlay').style.display = 'none';
+            updateDashboard();
             renderMap();
             infoEl.innerHTML = "Select a system on the map for details.";
         };
