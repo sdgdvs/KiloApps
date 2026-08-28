@@ -294,17 +294,7 @@
     100% { transform: scale(1.08); filter: brightness(1.3); }
   }
 
-  @keyframes screenShake {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    20% { transform: translate(-10px, 8px) rotate(-1.5deg); filter: contrast(1.2); }
-    40% { transform: translate(8px, -10px) rotate(1.5deg); filter: contrast(1.1); }
-    60% { transform: translate(-6px, -6px) rotate(-0.5deg); filter: contrast(1.05); }
-    80% { transform: translate(4px, 4px) rotate(0.5deg); filter: contrast(1.0); }
-    100% { transform: translate(0, 0) rotate(0deg); filter: contrast(1); }
-  }
-  .shake {
-    animation: screenShake 0.45s cubic-bezier(.36,.07,.19,.97) both;
-  }
+
 
   @keyframes dropBounce {
     0% { transform: translateY(var(--drop-dist, -300px)) scaleY(1.1) scaleX(0.9); }
@@ -1618,19 +1608,20 @@
       }
     }
 
-    function triggerScreenShake() {
-      const boardW = document.getElementById('boardWrapper');
-      boardW.classList.remove('shake');
-      void boardW.offsetWidth; // trigger reflow
-      boardW.classList.add('shake');
+    let shakeAmp = 0;
+    let shakeDecay = 0.85;
+
+    function triggerScreenShake(amp = 15) {
+      shakeAmp = amp;
     }
 
     function spawnExplosion(r, c) {
-      triggerScreenShake();
+      triggerScreenShake(25);
       const x = 12 + 10 + c * (44 + 5) + 22, y = 12 + 10 + r * (44 + 5) + 22;
       const coreColors = ['#ffffff', '#ffff00', '#ffaa00'];
       const fireColors = ['#ff4400', '#ff8800', '#ffcc00'];
       const smokeColors = ['#444444', '#222222', '#111111'];
+      const debrisColors = ['#5a3a22', '#3e2723', '#2d1a11'];
       // Core bright burst
       for (let i = 0; i < 15; i++) {
         const angle = Math.random() * Math.PI * 2, speed = Math.random() * 12 + 4;
@@ -1648,22 +1639,35 @@
           x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
           size: Math.random() * 12 + 6, color: fireColors[Math.floor(Math.random() * fireColors.length)],
           rotation: Math.random() * Math.PI * 2, vRot: (Math.random() - 0.5) * 0.2,
-          life: 1.0, decay: Math.random() * 0.02 + 0.01, type: 'fire'
+          life: 1.0, decay: Math.random() * 0.02 + 0.01, type: 'fire',
+          sizeGrow: -0.1
         });
       }
-      // Smoke layer
+      // Smoke layer (expanding)
       for (let i = 0; i < 20; i++) {
         const angle = Math.random() * Math.PI * 2, speed = Math.random() * 5 + 1;
         particles.push({
           x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1,
-          size: Math.random() * 20 + 10, color: smokeColors[Math.floor(Math.random() * smokeColors.length)],
+          size: Math.random() * 15 + 10, color: smokeColors[Math.floor(Math.random() * smokeColors.length)],
           rotation: Math.random() * Math.PI * 2, vRot: (Math.random() - 0.5) * 0.1,
-          life: 1.0, decay: Math.random() * 0.015 + 0.005, type: 'smoke'
+          life: 1.0, decay: Math.random() * 0.015 + 0.005, type: 'smoke',
+          sizeGrow: 0.6
+        });
+      }
+      // Heavy kinematic debris chunks
+      for (let i = 0; i < 15; i++) {
+        const angle = Math.random() * Math.PI * 2, speed = Math.random() * 10 + 5;
+        particles.push({
+          x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 6,
+          size: Math.random() * 8 + 4, color: debrisColors[Math.floor(Math.random() * debrisColors.length)],
+          rotation: Math.random() * Math.PI * 2, vRot: (Math.random() - 0.5) * 0.8,
+          life: 1.0, decay: Math.random() * 0.01 + 0.005, type: 'debris',
+          gravityMult: 1.8
         });
       }
     }
     function spawnDrill(r, c) {
-      triggerScreenShake();
+      triggerScreenShake(15);
       const x = 12 + 10 + c * (44 + 5) + 22, y = 12 + 10 + (r+1) * (44 + 5) + 22;
       const colors = ['#00ffff', '#80deea', '#ffffff', '#004d40'];
       for (let i = 0; i < 50; i++) {
@@ -1676,7 +1680,7 @@
       }
     }
     function spawnMagnet(r, c) {
-      triggerScreenShake();
+      triggerScreenShake(10);
       const x = 12 + 10 + c * (44 + 5) + 22, y = 12 + 10 + r * (44 + 5) + 22;
       const colors = ['#e040fb', '#ea80fc', '#ffffff', '#4a148c'];
       for (let i = 0; i < 70; i++) {
@@ -1783,9 +1787,11 @@
         const p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
-        if (p.type !== 'magnet') p.vy += 0.08;
+        const gMult = p.gravityMult !== undefined ? p.gravityMult : 1;
+        if (p.type !== 'magnet') p.vy += 0.08 * gMult;
         p.rotation += p.vRot;
         p.life -= p.decay;
+        if (p.sizeGrow) p.size = Math.max(0, p.size + p.sizeGrow);
         const h = fxCanvas.clientHeight || 350;
 
         if (p.life <= 0 || p.y > h + 20) {
@@ -1834,10 +1840,34 @@
           fxCtx.beginPath();
           fxCtx.arc(0, 0, p.size/2, 0, Math.PI*2);
           fxCtx.fill();
+        } else if (p.type === 'debris') {
+          fxCtx.beginPath();
+          fxCtx.moveTo(-p.size/2, -p.size/2);
+          fxCtx.lineTo(p.size/2, -p.size*0.3);
+          fxCtx.lineTo(p.size*0.4, p.size/2);
+          fxCtx.lineTo(-p.size*0.3, p.size*0.4);
+          fxCtx.closePath();
+          fxCtx.fill();
         } else {
           fxCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
         }
         fxCtx.restore();
+      }
+
+      if (shakeAmp > 0.5) {
+        const sx = (Math.random() - 0.5) * 2 * shakeAmp;
+        const sy = (Math.random() - 0.5) * 2 * shakeAmp;
+        const rot = (Math.random() - 0.5) * 0.1 * shakeAmp;
+        const boardW = document.getElementById('boardWrapper');
+        if (boardW) {
+          boardW.style.transform = `translate(${sx}px, ${sy}px) rotate(${rot}deg)`;
+        }
+        shakeAmp *= shakeDecay;
+      } else {
+        const boardW = document.getElementById('boardWrapper');
+        if (boardW && boardW.style.transform !== '') {
+          boardW.style.transform = '';
+        }
       }
 
       requestAnimationFrame(renderFx);

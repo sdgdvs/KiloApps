@@ -72,14 +72,20 @@ typedef struct {
     float vx, vy;
     float rotation, vRot;
     COLORREF color;
-    int size;
+    float size;
+    float sizeGrow;
+    float gravityMult;
+    int type; // 0=normal, 1=debris
     int life;
 } Particle;
 
 #define MAX_PARTICLES 200
 Particle g_particles[MAX_PARTICLES];
 int g_particleCount = 0;
-int g_screenShakeTimer = 0;
+float g_shakeAmp = 0.0f;
+float g_shakeDecay = 0.85f;
+float g_shakeX = 0.0f;
+float g_shakeY = 0.0f;
 
 void SpawnConfetti() {
     COLORREF palette[] = {
@@ -95,13 +101,16 @@ void SpawnConfetti() {
         g_particles[i].rotation = ((float)(rand() % 360)) * 3.14159f / 180.0f;
         g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 100.0f;
         g_particles[i].color = palette[rand() % 6];
-        g_particles[i].size = rand() % 6 + 4;
+        g_particles[i].size = (float)(rand() % 6 + 4);
+        g_particles[i].sizeGrow = 0.0f;
+        g_particles[i].gravityMult = 1.0f;
+        g_particles[i].type = 0;
         g_particles[i].life = rand() % 60 + 60;
     }
 }
 
 void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
-    g_screenShakeTimer = 20; // Trigger procedural screen shake
+    g_shakeAmp = (type == 1) ? 25.0f : ((type == 2) ? 15.0f : 10.0f);
     RECT rect; GetClientRect(hwnd, &rect);
     int boardW = g_cols * 44 + 10;
     int boardLeft = (rect.right - rect.left - boardW) / 2;
@@ -113,23 +122,43 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
     if (type == 1) { // Bomb
         COLORREF firePal[] = {RGB(255, 68, 0), RGB(255, 136, 0), RGB(255, 204, 0)};
         COLORREF smokePal[] = {RGB(85, 85, 85), RGB(50, 50, 50), RGB(30, 30, 30)};
+        COLORREF debrisPal[] = {RGB(90, 58, 34), RGB(62, 39, 35), RGB(45, 26, 17)};
         for (int i = 0; i < MAX_PARTICLES; i++) {
             float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
-            float speed = ((float)(rand() % 100)) / 10.0f + 2.0f;
             g_particles[i].x = px; g_particles[i].y = py;
-            g_particles[i].vx = cosf(angle) * speed;
-            g_particles[i].vy = sinf(angle) * speed;
             g_particles[i].rotation = angle;
-            g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 100.0f;
-            if (i < MAX_PARTICLES * 0.6) {
+            g_particles[i].type = 0;
+            if (i < MAX_PARTICLES * 0.4) {
+                float speed = ((float)(rand() % 100)) / 10.0f + 2.0f;
+                g_particles[i].vx = cosf(angle) * speed;
+                g_particles[i].vy = sinf(angle) * speed;
+                g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 100.0f;
                 g_particles[i].color = firePal[rand() % 3];
-                g_particles[i].size = rand() % 12 + 6;
+                g_particles[i].size = (float)(rand() % 12 + 6);
+                g_particles[i].sizeGrow = -0.1f;
+                g_particles[i].gravityMult = 1.0f;
                 g_particles[i].life = rand() % 30 + 20;
-            } else {
+            } else if (i < MAX_PARTICLES * 0.7) {
+                float speed = ((float)(rand() % 100)) / 15.0f + 1.0f;
+                g_particles[i].vx = cosf(angle) * speed;
+                g_particles[i].vy = sinf(angle) * speed - 2.0f; // Smoke rises
+                g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 200.0f;
                 g_particles[i].color = smokePal[rand() % 3];
-                g_particles[i].size = rand() % 20 + 10;
+                g_particles[i].size = (float)(rand() % 15 + 10);
+                g_particles[i].sizeGrow = 0.6f;
+                g_particles[i].gravityMult = 0.5f;
                 g_particles[i].life = rand() % 40 + 40;
-                g_particles[i].vy -= 2.0f; // Smoke rises
+            } else {
+                float speed = ((float)(rand() % 100)) / 5.0f + 5.0f;
+                g_particles[i].vx = cosf(angle) * speed;
+                g_particles[i].vy = sinf(angle) * speed - 6.0f;
+                g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 20.0f;
+                g_particles[i].color = debrisPal[rand() % 3];
+                g_particles[i].size = (float)(rand() % 8 + 4);
+                g_particles[i].sizeGrow = 0.0f;
+                g_particles[i].gravityMult = 1.8f;
+                g_particles[i].type = 1;
+                g_particles[i].life = rand() % 50 + 30;
             }
         }
     } else if (type == 2) { // Drill
@@ -142,7 +171,10 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
             g_particles[i].rotation = ((float)(rand() % 360)) * 3.14159f / 180.0f;
             g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 50.0f;
             g_particles[i].color = pal[rand() % 4];
-            g_particles[i].size = rand() % 8 + 3;
+            g_particles[i].size = (float)(rand() % 8 + 3);
+            g_particles[i].sizeGrow = 0.0f;
+            g_particles[i].gravityMult = 1.0f;
+            g_particles[i].type = 0;
             g_particles[i].life = rand() % 35 + 25;
         }
     } else if (type == 3) { // Magnet
@@ -155,7 +187,10 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
             g_particles[i].vy = -sinf(angle) * (dist / 15.0f);
             g_particles[i].rotation = 0; g_particles[i].vRot = 0;
             g_particles[i].color = pal[rand() % 4];
-            g_particles[i].size = rand() % 5 + 2;
+            g_particles[i].size = (float)(rand() % 5 + 2);
+            g_particles[i].sizeGrow = 0.0f;
+            g_particles[i].gravityMult = 0.0f;
+            g_particles[i].type = 0;
             g_particles[i].life = 25; // Fixed lifetime to fly in
         }
     }
@@ -186,9 +221,12 @@ void UpdateParticles() {
         if (g_particles[i].life > 0) {
             g_particles[i].x += g_particles[i].vx;
             g_particles[i].y += g_particles[i].vy;
-            // Only apply gravity to confetti/bomb/drill, magnet pulls inward and has fixed life behavior
-            if (g_particles[i].vRot != 0) g_particles[i].vy += 0.15f; 
+            g_particles[i].vy += 0.15f * g_particles[i].gravityMult; 
             g_particles[i].rotation += g_particles[i].vRot;
+            if (g_particles[i].sizeGrow != 0.0f) {
+                g_particles[i].size += g_particles[i].sizeGrow;
+                if (g_particles[i].size < 0.0f) g_particles[i].size = 0.0f;
+            }
             g_particles[i].life--;
         }
     }
@@ -1497,7 +1535,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (animY_float >= animTargetY) {
                     animY_float = (float)animTargetY;
                     if (animVY > 5.0f && animBounceCount < 3) {
-                        g_screenShakeTimer = (int)(animVY / 2.5f);
+                        g_shakeAmp = animVY;
                         animVY = -animVY * 0.45f;
                         animBounceCount++;
                     } else {
@@ -1526,7 +1564,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             } else if (wParam == 4) {
-                if (g_screenShakeTimer > 0) g_screenShakeTimer--;
+                if (g_shakeAmp > 0.5f) {
+                    g_shakeX = (((rand() % 100) - 50) / 50.0f * g_shakeAmp);
+                    g_shakeY = (((rand() % 100) - 50) / 50.0f * g_shakeAmp);
+                    g_shakeAmp *= g_shakeDecay;
+                } else {
+                    g_shakeX = 0.0f; g_shakeY = 0.0f; g_shakeAmp = 0.0f;
+                }
                 UpdateParticles();
                 if (hintTimer > 0) {
                     hintTimer--;
@@ -1613,11 +1657,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int boardLeft = (rect.right - rect.left - boardW) / 2;
             int boardTop = 50;
 
-            if (g_screenShakeTimer > 0) {
-                int shakeAmp = g_screenShakeTimer / 2;
-                boardLeft += (rand() % (shakeAmp * 2 + 1)) - shakeAmp;
-                boardTop += (rand() % (shakeAmp * 2 + 1)) - shakeAmp;
-            }
+            boardLeft += (int)g_shakeX;
+            boardTop += (int)g_shakeY;
 
             int tableTop = boardTop + boardH - 20;
             RECT tableRect = {0, tableTop, rect.right, rect.bottom};
@@ -1776,14 +1817,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Draw Confetti Particles
             for (int i = 0; i < g_particleCount; i++) {
-                if (g_particles[i].life > 0) {
+                if (g_particles[i].life > 0 && g_particles[i].size > 0.0f) {
                     HBRUSH pBrush = CreateSolidBrush(g_particles[i].color);
                     HPEN pPen = GetStockObject(NULL_PEN);
                     SelectObject(hdc, pBrush); SelectObject(hdc, pPen);
                     int px = (int)g_particles[i].x;
                     int py = (int)g_particles[i].y;
-                    int sz = g_particles[i].size;
-                    Rectangle(hdc, px - sz/2, py - sz/2, px + sz/2, py + sz/2);
+                    int sz = (int)g_particles[i].size;
+                    
+                    if (g_particles[i].type == 1) { // Debris (triangle/poly)
+                        POINT pts[4];
+                        pts[0].x = px - sz/2; pts[0].y = py - sz/2;
+                        pts[1].x = px + sz/2; pts[1].y = py - (int)(sz*0.3f);
+                        pts[2].x = px + (int)(sz*0.4f); pts[2].y = py + sz/2;
+                        pts[3].x = px - (int)(sz*0.3f); pts[3].y = py + (int)(sz*0.4f);
+                        Polygon(hdc, pts, 4);
+                    } else {
+                        Rectangle(hdc, px - sz/2, py - sz/2, px + sz/2, py + sz/2);
+                    }
                     DeleteObject(pBrush);
                 }
             }
