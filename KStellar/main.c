@@ -22,51 +22,112 @@ System systems[] = {
 
 HWND hMapArea, hInfoArea, hBtnCourse;
 int selectedSystem = -1;
+static HFONT hFont = NULL;
+static HBRUSH hBgBrush = NULL;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
-            CreateWindow("STATIC", "FUEL: 100%", WS_VISIBLE | WS_CHILD, 20, 20, 100, 20, hwnd, NULL, NULL, NULL);
-            CreateWindow("STATIC", "CREDITS: 1,000", WS_VISIBLE | WS_CHILD, 140, 20, 150, 20, hwnd, NULL, NULL, NULL);
-            CreateWindow("STATIC", "CARGO: 0/50 TONS", WS_VISIBLE | WS_CHILD, 300, 20, 150, 20, hwnd, NULL, NULL, NULL);
+            hFont = CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+            hBgBrush = CreateSolidBrush(RGB(5, 5, 15));
+            
+            HWND h1 = CreateWindow("STATIC", "FUEL: 100%", WS_VISIBLE | WS_CHILD, 20, 20, 100, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(h1, WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND h2 = CreateWindow("STATIC", "CREDITS: 1,000", WS_VISIBLE | WS_CHILD, 140, 20, 150, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(h2, WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND h3 = CreateWindow("STATIC", "CARGO: 0/50 TONS", WS_VISIBLE | WS_CHILD, 300, 20, 150, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(h3, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            CreateWindow("STATIC", "LOCAL SYSTEMS", WS_VISIBLE | WS_CHILD, 440, 60, 150, 20, hwnd, NULL, NULL, NULL);
+            HWND h4 = CreateWindow("STATIC", "LOCAL SYSTEMS", WS_VISIBLE | WS_CHILD, 440, 60, 150, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(h4, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             hInfoArea = CreateWindow("STATIC", "Select a system on the map for details.", WS_VISIBLE | WS_CHILD, 440, 90, 200, 150, hwnd, NULL, NULL, NULL);
-            hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD, 440, 250, 150, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
+            SendMessage(hInfoArea, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 250, 150, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
             ShowWindow(hBtnCourse, SW_HIDE);
             return 0;
+        }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdcStatic = (HDC)wParam;
+            SetTextColor(hdcStatic, RGB(0, 255, 204));
+            SetBkColor(hdcStatic, RGB(5, 5, 15));
+            return (INT_PTR)hBgBrush;
+        }
+        case WM_DRAWITEM: {
+            LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
+            if (pdis->CtlID == ID_BTN_SET_COURSE) {
+                HDC hdc = pdis->hDC;
+                RECT rect = pdis->rcItem;
+                int state = pdis->itemState;
+                
+                if (state & ODS_SELECTED) {
+                    FillRect(hdc, &rect, CreateSolidBrush(RGB(0, 255, 204)));
+                    SetTextColor(hdc, RGB(0, 0, 0));
+                    SetBkColor(hdc, RGB(0, 255, 204));
+                } else {
+                    FillRect(hdc, &rect, CreateSolidBrush(RGB(0, 0, 0)));
+                    HBRUSH hBorder = CreateSolidBrush(RGB(0, 255, 204));
+                    FrameRect(hdc, &rect, hBorder);
+                    DeleteObject(hBorder);
+                    SetTextColor(hdc, RGB(0, 255, 204));
+                    SetBkColor(hdc, RGB(0, 0, 0));
+                }
+                char text[32];
+                GetWindowText(pdis->hwndItem, text, sizeof(text));
+                SelectObject(hdc, hFont);
+                DrawText(hdc, text, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                return TRUE;
+            }
+            return FALSE;
         }
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            HBRUSH hBlackBrush = CreateSolidBrush(RGB(5, 16, 5));
-            SelectObject(hdc, hBlackBrush);
+            HBRUSH hMapBg = CreateSolidBrush(RGB(2, 10, 16));
+            SelectObject(hdc, hMapBg);
+            HPEN hBorderPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 204));
+            SelectObject(hdc, hBorderPen);
             Rectangle(hdc, 20, 60, 420, 460);
-            DeleteObject(hBlackBrush);
+            
+            for(int y = 62; y < 458; y += 4) {
+                HPEN hScanLine = CreatePen(PS_SOLID, 1, RGB(0, 50, 50));
+                SelectObject(hdc, hScanLine);
+                MoveToEx(hdc, 22, y, NULL);
+                LineTo(hdc, 418, y);
+                DeleteObject(hScanLine);
+            }
+            
+            DeleteObject(hMapBg);
+            DeleteObject(hBorderPen);
             
             HBRUSH hGreenBrush = CreateSolidBrush(RGB(0, 255, 0));
-            HBRUSH hWhiteBrush = CreateSolidBrush(RGB(255, 255, 255));
+            HBRUSH hCyanBrush = CreateSolidBrush(RGB(0, 255, 255));
             
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(0, 255, 0));
+            SetTextColor(hdc, RGB(0, 255, 204));
+            SelectObject(hdc, hFont);
             
             for (int i = 0; i < 5; i++) {
                 int px = 20 + (systems[i].x * 400 / 100);
                 int py = 60 + (systems[i].y * 400 / 100);
                 
                 if (i == selectedSystem) {
-                    SelectObject(hdc, hWhiteBrush);
+                    SelectObject(hdc, hCyanBrush);
+                    SelectObject(hdc, GetStockObject(WHITE_PEN));
                 } else {
                     SelectObject(hdc, hGreenBrush);
+                    SelectObject(hdc, GetStockObject(NULL_PEN));
                 }
                 
-                Ellipse(hdc, px - 6, py - 6, px + 6, py + 6);
-                TextOut(hdc, px + 10, py - 8, systems[i].name, strlen(systems[i].name));
+                int r = (i == selectedSystem) ? 8 : 6;
+                Ellipse(hdc, px - r, py - r, px + r, py + r);
+                TextOut(hdc, px + 12, py - 8, systems[i].name, strlen(systems[i].name));
             }
             
             DeleteObject(hGreenBrush);
-            DeleteObject(hWhiteBrush);
+            DeleteObject(hCyanBrush);
             
             EndPaint(hwnd, &ps);
             return 0;
@@ -101,6 +162,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_DESTROY: {
+            if (hFont) DeleteObject(hFont);
+            if (hBgBrush) DeleteObject(hBgBrush);
             PostQuitMessage(0);
             return 0;
         }
@@ -115,7 +178,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.hbrBackground = CreateSolidBrush(RGB(5, 5, 15));
 
     RegisterClass(&wc);
 
