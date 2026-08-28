@@ -24,6 +24,8 @@ int flagsPlaced = 0;
 int timeElapsed = 0;
 int firstClick = 1;
 
+int g_dpi = 96;
+
 int cols = 16;
 int rows = 16;
 int totalMines = 40;
@@ -156,15 +158,15 @@ void UpdateTitle(HWND hwnd) {
 
     if (gameOver == 2) {
         char buf[128];
-        wsprintfA(buf, "KMine - YOU WIN! Time: %ds (Best: %ss) | H for Help", timeElapsed, bestStr);
+        wsprintfA(buf, "KMine - YOU WIN! Time: %ds (Best: %ss) | H/F1 for Help", timeElapsed, bestStr);
         SetWindowTextA(hwnd, buf);
     } else if (gameOver == 1) {
         char buf[128];
-        wsprintfA(buf, "KMine - GAME OVER! Time: %ds (Best: %ss) | H for Help", timeElapsed, bestStr);
+        wsprintfA(buf, "KMine - GAME OVER! Time: %ds (Best: %ss) | H/F1 for Help", timeElapsed, bestStr);
         SetWindowTextA(hwnd, buf);
     } else {
         char buf[128];
-        wsprintfA(buf, "KMine - Mines: %d | Time: %ds | Best: %ss | H for Help", totalMines - flagsPlaced, timeElapsed, bestStr);
+        wsprintfA(buf, "KMine - Mines: %d | Time: %ds | Best: %ss | H/F1 for Help", totalMines - flagsPlaced, timeElapsed, bestStr);
         SetWindowTextA(hwnd, buf);
     }
 }
@@ -406,7 +408,7 @@ void SetDifficultyWindow(HWND hwnd, int c, int r) {
     cols = c; rows = r;
     RECT rc;
     rc.left = 0; rc.top = 0; rc.right = cols * CELL; rc.bottom = rows * CELL;
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
+    AdjustWindowRect(&rc, (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, TRUE);
     SetWindowPos(hwnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
 }
 
@@ -548,7 +550,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubMenu, MF_STRING, IDM_INTERMEDIATE, "Intermediate");
             AppendMenuA(hSubMenu, MF_STRING, IDM_EXPERT, "Expert");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hSubMenu, MF_STRING, IDM_HINT, "Help/Hint\tH");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_HINT, "Help/Hint\tH/F1");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubMenu, MF_STRING, IDM_EXPORT_STATS, "Export Stats");
             AppendMenuA(hSubMenu, MF_STRING, IDM_IMPORT_STATS, "Import Stats");
@@ -579,7 +581,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_KEYDOWN:
-            if (wParam == 'H') {
+            if (wParam == 'H' || wParam == VK_F1) {
                 GiveHint(hwnd);
             } else if (wParam == VK_F2) {
                 InitGame(hwnd, 0);
@@ -672,7 +674,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &full, bg);
             DeleteObject(bg);
             
-            HFONT hFont = CreateFontA(-(20 * CELL / 30), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            int fontHeight = -MulDiv(16, g_dpi, 72);
+            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
             
@@ -762,13 +765,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 SetBkMode(memDC, TRANSPARENT);
                 SetTextColor(memDC, RGB(0, 0, 0));
-                HFONT smallFont = CreateFontA(-(16 * CELL / 30), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+                int smallFontHeight = -MulDiv(12, g_dpi, 72);
+                HFONT smallFont = CreateFontA(smallFontHeight, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
                 HGDIOBJ oldSmallFont = SelectObject(memDC, smallFont);
                 
                 RECT rText1 = { rBox.left, rBox.top + 5, rBox.right, rBox.top + 25 };
                 RECT rText2 = { rBox.left, rBox.top + 30, rBox.right, rBox.top + 50 };
                 DrawTextA(memDC, "L-Click: Reveal | R-Click: Flag", -1, &rText1, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                DrawTextA(memDC, "Press 'H' for Help", -1, &rText2, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                DrawTextA(memDC, "Press 'H' or 'F1' for Help", -1, &rText2, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 
                 SelectObject(memDC, oldSmallFont);
                 DeleteObject(smallFont);
@@ -821,8 +825,8 @@ void MainEntry() {
     }
     HDC hdc = GetDC(NULL);
     if (hdc) {
-        int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
-        CELL = 30 * dpi / 96;
+        g_dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+        CELL = 30 * g_dpi / 96;
         ReleaseDC(NULL, hdc);
     }
 
@@ -836,8 +840,8 @@ void MainEntry() {
 
     RECT r;
     r.left = 0; r.top = 0; r.right = 16 * CELL; r.bottom = 16 * CELL;
-    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
-    HWND hwnd = CreateWindowEx(0, "KMineApp", "KMine", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    AdjustWindowRect(&r, (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, TRUE);
+    HWND hwnd = CreateWindowEx(0, "KMineApp", "KMine", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

@@ -18,7 +18,7 @@
     <option value="2">Expert</option>
   </select>
   <button onclick="initGame()">Restart</button>
-  <button onclick="giveHint()" title="Press H for Help">Help/Hint (H)</button>
+  <button onclick="giveHint()" title="Press H or F1 for Help">Help/Hint (H/F1)</button>
   <span id="status" style="font-family: monospace; font-weight: bold; min-width: 140px; display: inline-block;"></span>
   <div class="stats-box">Best: <span id="bestTime">--</span>s</div>
   <button onclick="exportStats()">Export Stats</button>
@@ -26,7 +26,7 @@
   <input type="file" id="fileIn" style="display:none" accept=".json" onchange="importStats(event)">
   <button id="replayBtn" style="display:none;" onclick="startReplay()">Watch Replay</button>
 </div>
-<div style="font-size:14px; font-weight: bold; margin-bottom: 10px;">Press H for Help | F5: Quicksave | F9: Quickload</div>
+<div style="font-size:14px; font-weight: bold; margin-bottom: 10px;">Press H or F1 for Help | F5: Quicksave | F9: Quickload</div>
 <canvas id="cvs"></canvas>
 <script>
   const cvs = document.getElementById('cvs');
@@ -505,7 +505,7 @@
           ctx.fillStyle = "black";
           ctx.font = "bold 16px Arial";
           ctx.fillText("L-Click: Reveal | R-Click: Flag", (cols*CELL)/2, (rows*CELL)/2 - 10);
-          ctx.fillText("Press 'H' for Help", (cols*CELL)/2, (rows*CELL)/2 + 15);
+          ctx.fillText("Press 'H' or 'F1' for Help", (cols*CELL)/2, (rows*CELL)/2 + 15);
       }
   }
   
@@ -526,7 +526,10 @@
   });
   
   window.addEventListener('keydown', (e) => {
-      if (e.key === 'h' || e.key === 'H') giveHint();
+      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+          if (e.key === 'F1') e.preventDefault();
+          giveHint();
+      }
       if (e.key === 'F5') { e.preventDefault(); quickSave(); }
       if (e.key === 'F9') { e.preventDefault(); quickLoad(); }
   });
