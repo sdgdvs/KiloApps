@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <stdio.h>
 
-#define W 1000
-#define H 700
+#define W 960
+#define H 600
 
 HWND hInput, hOutput, hMemory, hRegexFind, hRegexRep;
 HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp;
@@ -240,7 +240,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_CREATE: {
             hbrBg = CreateSolidBrush(RGB(30, 30, 30));
-            hFont = CreateFontA(S(-15), 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
+            int fontHeight = -MulDiv(12, dpi, 72);
+            hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             // Toolbar
             hBtnRec  = CreateWindowEx(0, "BUTTON", "Rec Macro", WS_CHILD | WS_VISIBLE, S(10), S(10), S(100), S(24), hwnd, (HMENU)4, NULL, NULL);
