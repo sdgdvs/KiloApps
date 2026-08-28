@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KHangman
 - KMech
 - KMatch3
 - KFreecell
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KVoid
 - KStarship
 - KConnect4
+- KHangman
 ## Completed Work Log
+
+- **KHangman (Loop 7):** Implemented highly polished visual effects including multi-layered kinematic debris explosions (heavy gravity, air friction, floor bouncing physics) for the Bomb power-up, amplified procedural screen-shake physics, and dramatic animated character variations (panic expressions and flailing arms tied directly to the physics ticks while shake is active) in both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 
 - **KConnect4 (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by physics decay (amplitude decaying by 0.85 per frame), and multi-layered particle explosions featuring heavy kinematic debris chunks and expanding smoke layers across 4 layers (Core Sparks, Shrinking Fire, Expanding Smoke, Heavy Debris Polygons) in both Web Canvas (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 

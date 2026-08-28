@@ -82,7 +82,7 @@ typedef struct {
     COLORREF color;
     int life;
     int maxLife;
-    int type; // 0: confetti, 1: rain, 2: spark, 3: shooting star, 4: firework
+    int type; // 0: confetti, 1: rain, 2: spark, 3: shooting star, 4: firework, 5: debris
 } Particle;
 
 Particle particles[MAX_PARTICLES];
@@ -319,6 +319,26 @@ void SpawnWinParticles() {
     }
 }
 
+void SpawnBombParticles() {
+    COLORREF colors[] = {RGB(255, 100, 0), RGB(200, 50, 0), RGB(128, 128, 128), RGB(64, 64, 64), RGB(255, 200, 0)};
+    for (int i = 0; i < 60 && particle_count < MAX_PARTICLES; i++) {
+        particles[particle_count].x = (float)(W / 2 + (CustomRand() % 100 - 50));
+        particles[particle_count].y = (float)(H / 2 - 50 + (CustomRand() % 100 - 50));
+        float angle = (float)(CustomRand() % 360) * 3.14159f / 180.0f;
+        float speed = (float)(CustomRand() % 120 + 40) / 10.0f;
+        particles[particle_count].vx = cosf(angle) * speed;
+        particles[particle_count].vy = sinf(angle) * speed;
+        particles[particle_count].size = CustomRand() % 6 + 3;
+        particles[particle_count].color = colors[CustomRand() % 5];
+        particles[particle_count].life = 0;
+        particles[particle_count].maxLife = 50 + CustomRand() % 30;
+        particles[particle_count].type = 5; // debris
+        particle_count++;
+    }
+    shake_mag = 25.0f;
+    lightning_flash = 1.0f;
+}
+
 void SpawnLossParticles() {
     for (int i = 0; i < 30 && particle_count < MAX_PARTICLES; i++) {
         particles[particle_count].x = (float)(CustomRand() % W);
@@ -345,6 +365,14 @@ void UpdateParticles() {
             particles[i].vx *= 0.92f;
             particles[i].vy *= 0.92f;
             particles[i].vy += 0.08f;
+        } else if (particles[i].type == 5) {
+            particles[i].vy += 0.5f; // heavy gravity
+            particles[i].vx *= 0.96f; // air friction
+            if (particles[i].y > H - 150) { // bounce near bottom
+                particles[i].y = (float)(H - 150);
+                particles[i].vy = -particles[i].vy * 0.4f;
+                particles[i].vx *= 0.6f;
+            }
         }
         
         if (particles[i].life >= particles[i].maxLife || particles[i].y > H) {
@@ -617,6 +645,7 @@ void UseBomb() {
     if (bombs <= 0 || game_over) return;
     bombs--;
     PlaySoundEffect(6);
+    SpawnBombParticles();
     int elims = 0;
     for (int k = 0; k < 50 && elims < 3; k++) {
         int r = CustomRand() % 26;
@@ -1158,6 +1187,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MoveToEx(memDC, cx - 3, headY - 4, NULL); LineTo(memDC, cx - 7, headY);
                     MoveToEx(memDC, cx + 3, headY - 4, NULL); LineTo(memDC, cx + 7, headY);
                     MoveToEx(memDC, cx + 7, headY - 4, NULL); LineTo(memDC, cx + 3, headY);
+                } else if (shake_mag > 0.0f) {
+                    HBRUSH eyeBrush = CreateSolidBrush(RGB(20, 20, 50));
+                    SelectObject(memDC, eyeBrush);
+                    Ellipse(memDC, cx - 7, headY - 5, cx - 1, headY + 1);
+                    Ellipse(memDC, cx + 1, headY - 5, cx + 7, headY + 1);
+                    DeleteObject(eyeBrush);
+                    HBRUSH pupil = CreateSolidBrush(RGB(255, 255, 255));
+                    SelectObject(memDC, pupil);
+                    Ellipse(memDC, cx - 5, headY - 3, cx - 3, headY - 1);
+                    Ellipse(memDC, cx + 3, headY - 3, cx + 5, headY - 1);
+                    DeleteObject(pupil);
                 } else {
                     HBRUSH eyeBrush = CreateSolidBrush(RGB(20, 20, 50));
                     SelectObject(memDC, eyeBrush);
@@ -1197,12 +1237,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (errors > 2) {
                         SelectObject(memDC, charPen);
                         MoveToEx(memDC, cx - 7, bodyY1 + 5, NULL);
-                        LineTo(memDC, cx - 18, (game_over && won) ? bodyY1 - 10 : bodyY1 + 18);
+                        if (game_over && won) LineTo(memDC, cx - 18, bodyY1 - 10);
+                        else if (shake_mag > 0.0f) LineTo(memDC, cx - 20, bodyY1 + 5 + (int)(sinf(anim_ticks * 1.5f) * 10));
+                        else LineTo(memDC, cx - 18, bodyY1 + 18);
                     }
                     if (errors > 3) {
                         SelectObject(memDC, charPen);
                         MoveToEx(memDC, cx + 7, bodyY1 + 5, NULL);
-                        LineTo(memDC, cx + 18, (game_over && won) ? bodyY1 - 10 : bodyY1 + 18);
+                        if (game_over && won) LineTo(memDC, cx + 18, bodyY1 - 10);
+                        else if (shake_mag > 0.0f) LineTo(memDC, cx + 20, bodyY1 + 5 - (int)(sinf(anim_ticks * 1.5f) * 10));
+                        else LineTo(memDC, cx + 18, bodyY1 + 18);
                     }
                     if (errors > 4) {
                         HPEN legPen = CreatePen(PS_SOLID, 3, RGB(55, 71, 79));
@@ -1498,6 +1542,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     LineTo(memDC, (int)(particles[i].x - particles[i].vx * 3), (int)(particles[i].y - particles[i].vy * 3));
                     SelectObject(memDC, oldPen);
                     DeleteObject(ssPen);
+                } else if (particles[i].type == 5) { // debris
+                    HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                    int s = particles[i].size;
+                    RECT pRc = {(int)particles[i].x - s, (int)particles[i].y - s, (int)particles[i].x + s, (int)particles[i].y + s};
+                    FillRect(memDC, &pRc, pBrush);
+                    DeleteObject(pBrush);
+                    if (s > 4) {
+                        HBRUSH darkBrush = CreateSolidBrush(RGB(0, 0, 0));
+                        RECT dRc = {(int)particles[i].x - s/2, (int)particles[i].y - s/2, (int)particles[i].x + s/2, (int)particles[i].y + s/2};
+                        FillRect(memDC, &dRc, darkBrush);
+                        DeleteObject(darkBrush);
+                    }
                 } else {
                     HBRUSH pBrush = CreateSolidBrush(particles[i].color);
                     RECT pRc = {(int)particles[i].x, (int)particles[i].y, (int)particles[i].x + particles[i].size, (int)particles[i].y + particles[i].size};
