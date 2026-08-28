@@ -104,7 +104,7 @@ html = """<!DOCTYPE html>
     transform: translateY(-1px);
   }
   button:active {
-    transform: translateY(1px);
+    transform: scale(0.95);
   }
   .row {
     display: flex;
@@ -127,9 +127,23 @@ html = """<!DOCTYPE html>
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
   .loading.active {
     opacity: 1;
+  }
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
   input[type="color"] {
     width: 100%;
@@ -144,7 +158,7 @@ html = """<!DOCTYPE html>
 <body>
   <div id="canvas-container">
     <canvas id="c"></canvas>
-    <div class="loading" id="loading">Rendering...</div>
+    <div class="loading" id="loading"><div class="spinner"></div><span id="loading-text">Rendering...</span></div>
     <div class="controls">
       <div class="control-group">
         <label>Zoom Level</label>
@@ -531,7 +545,7 @@ html = """<!DOCTYPE html>
     document.getElementById('btn-redo').addEventListener('click', redo);
     
     document.getElementById('btn-save').addEventListener('click', () => {
-        loading.textContent = "Rendering 4K PNG...";
+        document.getElementById('loading-text').textContent = "Rendering 4K PNG...";
         loading.classList.add('active');
         
         // Create an offscreen canvas for 4K (3840x2160)
@@ -546,7 +560,7 @@ html = """<!DOCTYPE html>
             link.download = 'kmandel_4k.png';
             link.href = exportCanvas.toDataURL('image/png');
             link.click();
-            loading.textContent = "Rendering...";
+            document.getElementById('loading-text').textContent = "Rendering...";
             loading.classList.remove('active');
         });
     });
@@ -603,6 +617,31 @@ html = """<!DOCTYPE html>
     
     container.addEventListener('pointerdown', (e) => {
         if (e.target !== canvas) return;
+        
+        const ripple = document.createElement('div');
+        ripple.style.position = 'absolute';
+        ripple.style.left = e.clientX + 'px';
+        ripple.style.top = e.clientY + 'px';
+        ripple.style.width = '20px';
+        ripple.style.height = '20px';
+        ripple.style.marginLeft = '-10px';
+        ripple.style.marginTop = '-10px';
+        ripple.style.border = '2px solid rgba(255,255,255,0.8)';
+        ripple.style.borderRadius = '50%';
+        ripple.style.pointerEvents = 'none';
+        ripple.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+        ripple.style.transform = 'scale(0.5)';
+        ripple.style.opacity = '1';
+        ripple.style.zIndex = '9999';
+        container.appendChild(ripple);
+        
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                ripple.style.transform = 'scale(3)';
+                ripple.style.opacity = '0';
+            });
+        });
+        setTimeout(() => ripple.remove(), 400);
         
         // Interactive Julia bridging
         if (e.shiftKey && !isJulia) {

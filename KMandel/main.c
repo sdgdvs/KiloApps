@@ -331,6 +331,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 double im_factor = (maxIm - minIm) / (bmpH - 1);
                 juliaCRe = minRe + x * re_factor;
                 juliaCIm = maxIm - y * im_factor;
+                
+                HDC hdc = GetDC(hwnd);
+                HPEN hPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));
+                HPEN hOld = (HPEN)SelectObject(hdc, hPen);
+                MoveToEx(hdc, x - 15, y, NULL); LineTo(hdc, x + 16, y);
+                MoveToEx(hdc, x, y - 15, NULL); LineTo(hdc, x, y + 16);
+                SelectObject(hdc, hOld);
+                DeleteObject(hPen);
+                ReleaseDC(hwnd, hdc);
+                Sleep(50);
+                
                 isJulia = 1;
                 minRe = -2.0; maxRe = 2.0;
                 minIm = -2.0; maxIm = 2.0;
@@ -339,6 +350,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else {
+                HDC hdc = GetDC(hwnd);
+                HPEN hPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                HBRUSH hBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+                HPEN hOld = (HPEN)SelectObject(hdc, hPen);
+                HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hBrush);
+                Rectangle(hdc, x - 50, y - 37, x + 50, y + 37);
+                SelectObject(hdc, hOld);
+                SelectObject(hdc, hOldB);
+                DeleteObject(hPen);
+                ReleaseDC(hwnd, hdc);
+                Sleep(50);
+
                 Zoom(0.5, x, y); // Zoom in
                 SaveState();
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -348,6 +371,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_RBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
+            
+            HDC hdc = GetDC(hwnd);
+            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(200, 200, 200));
+            HBRUSH hBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HPEN hOld = (HPEN)SelectObject(hdc, hPen);
+            HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hBrush);
+            Rectangle(hdc, x - 100, y - 75, x + 100, y + 75);
+            SelectObject(hdc, hOld);
+            SelectObject(hdc, hOldB);
+            DeleteObject(hPen);
+            ReleaseDC(hwnd, hdc);
+            Sleep(50);
+            
             Zoom(2.0, x, y); // Zoom out
             SaveState();
             InvalidateRect(hwnd, NULL, FALSE);

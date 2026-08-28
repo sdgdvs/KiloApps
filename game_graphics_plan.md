@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMandel
 - KVoid
 - KStarship
 - KConnect4
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KHex
 - KStellar
 - KMine
+- KMandel
 ## Completed Work Log
+
+- **KMandel (Loop 2):** Implemented sprite animations including an animated spinning loader popup and dynamic DOM-based interaction ripples for canvas clicks in Web Canvas (kmandel.html), and implemented brief GDI flash overlays (yellow crosshairs for Julia pick, scaling zoom rectangles) directly during input events before thread blocking in Native C Win32 GDI (KMandel/main.c).
 
 - **KMine (Loop 2):** Implemented sprite animations including an oscillating wave effect for placed flags via animated polygon vertex offsets and an exploding multi-colored particle burst effect when hitting a mine. Implemented using requestAnimationFrame and array management in Web Canvas (kmine.html), and a dedicated 30ms Win32 timer driving a global particle array and redraw loops in Native C Win32 GDI (KMine/main.c).
 
