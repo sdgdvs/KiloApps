@@ -1,4 +1,5 @@
 #include <windows.h>
+#pragma comment(lib, "msimg32.lib")
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -133,6 +134,7 @@ int modal_enc_type = 0;
 int pirate_hp = 50;
 char combat_log[128] = "";
 int screen_shake = 0;
+float boss_whiteout = 0.0f;
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(intptr_t)lpParam;
@@ -276,6 +278,9 @@ void InitStars() {
 }
 
 void Update() {
+    if (boss_whiteout > 0.0f) {
+        boss_whiteout -= 0.02f;
+    }
     if (screen_shake > 0) {
         screen_shake -= 2;
         if (screen_shake < 0) screen_shake = 0;
@@ -794,6 +799,67 @@ void Draw(HDC hdc, RECT* rect) {
         }
     }
 
+    if (modal_open && modal_enc_type == 13) {
+        int bX = centerX;
+        int bY = centerY - 100;
+        int hY = bY + (int)(sin(GetTickCount() / 500.0f) * 10.0f);
+        
+        POINT bossPts[5] = {
+            {bX, hY - 80},
+            {bX + 120, hY + 40},
+            {bX + 60, hY + 80},
+            {bX - 60, hY + 80},
+            {bX - 120, hY + 40}
+        };
+        HBRUSH bBrush = CreateSolidBrush(RGB(34, 34, 34));
+        HPEN bPen = CreatePen(PS_SOLID, 3, RGB(255, 68, 68));
+        SelectObject(memDC, bBrush);
+        SelectObject(memDC, bPen);
+        Polygon(memDC, bossPts, 5);
+        DeleteObject(bBrush);
+        DeleteObject(bPen);
+        
+        if (pirate_hp > 100) {
+            POINT p1Pts[4] = { {bX, hY - 60}, {bX + 80, hY + 20}, {bX, hY + 60}, {bX - 80, hY + 20} };
+            HBRUSH p1Brush = CreateSolidBrush(RGB(85, 85, 85));
+            SelectObject(memDC, p1Brush);
+            SelectObject(memDC, GetStockObject(NULL_PEN));
+            Polygon(memDC, p1Pts, 4);
+            DeleteObject(p1Brush);
+        } else {
+            int debY1 = hY + ((GetTickCount() / 30) % 100);
+            int debY2 = hY - ((GetTickCount() / 20) % 100);
+            HBRUSH p1Brush = CreateSolidBrush(RGB(85, 85, 85));
+            SelectObject(memDC, p1Brush);
+            Rectangle(memDC, bX + 90, debY1, bX + 100, debY1 + 10);
+            Rectangle(memDC, bX - 80, debY2, bX - 65, debY2 + 10);
+            DeleteObject(p1Brush);
+        }
+        
+        if (pirate_hp > 50) {
+            HBRUSH p2Brush = CreateSolidBrush(RGB(119, 119, 119));
+            SelectObject(memDC, p2Brush);
+            Rectangle(memDC, bX - 40, hY + 10, bX + 40, hY + 40);
+            DeleteObject(p2Brush);
+        } else {
+            HBRUSH p2Brush = CreateSolidBrush(RGB(255, 0, 0));
+            SelectObject(memDC, p2Brush);
+            int rad = 20 + (rand() % 10);
+            Ellipse(memDC, bX - rad, hY + 25 - rad, bX + rad, hY + 25 + rad);
+            DeleteObject(p2Brush);
+        }
+        
+        if (pirate_hp > 0) {
+            float charge = (GetTickCount() % 2000) / 2000.0f;
+            int cRad = 10 + (int)(charge * 30);
+            HPEN cPen = CreatePen(PS_SOLID, 2, RGB(255, 100, 100));
+            SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            SelectObject(memDC, cPen);
+            Ellipse(memDC, bX - cRad, hY + 80 - cRad, bX + cRad, hY + 80 + cRad);
+            DeleteObject(cPen);
+        }
+    }
+
     int shake_x = 0;
     int shake_y = 0;
     if (screen_shake > 0) {
@@ -804,6 +870,41 @@ void Draw(HDC hdc, RECT* rect) {
         RECT r = {0, 0, width, height};
         FillRect(hdc, &r, blackBrush);
         DeleteObject(blackBrush);
+    }
+    
+    if (boss_whiteout > 0.0f) {
+        int alpha = (int)(boss_whiteout * 255);
+        if (alpha > 255) alpha = 255;
+        BLENDFUNCTION bf;
+        bf.BlendOp = AC_SRC_OVER;
+        bf.BlendFlags = 0;
+        bf.SourceConstantAlpha = alpha;
+        bf.AlphaFormat = 0;
+        
+        HDC whiteDC = CreateCompatibleDC(hdc);
+        HBITMAP whiteBmp = CreateCompatibleBitmap(hdc, width, height);
+        SelectObject(whiteDC, whiteBmp);
+        HBRUSH wBrush = CreateSolidBrush(RGB(255, 255, 255));
+        RECT wr = {0, 0, width, height};
+        FillRect(whiteDC, &wr, wBrush);
+        DeleteObject(wBrush);
+        
+        AlphaBlend(memDC, 0, 0, width, height, whiteDC, 0, 0, width, height, bf);
+        
+        if (boss_whiteout > 0.5f) {
+            bf.SourceConstantAlpha = (int)((boss_whiteout - 0.5f) * 255);
+            HBRUSH rBrush = CreateSolidBrush(RGB(255, 0, 0));
+            FillRect(whiteDC, &wr, rBrush);
+            DeleteObject(rBrush);
+            AlphaBlend(memDC, 10, 0, width, height, whiteDC, 0, 0, width, height, bf);
+            
+            HBRUSH cBrush = CreateSolidBrush(RGB(0, 255, 255));
+            FillRect(whiteDC, &wr, cBrush);
+            DeleteObject(cBrush);
+            AlphaBlend(memDC, -10, 0, width, height, whiteDC, 0, 0, width, height, bf);
+        }
+        DeleteObject(whiteBmp);
+        DeleteDC(whiteDC);
     }
 
     BitBlt(hdc, shake_x, shake_y, width, height, memDC, 0, 0, SRCCOPY);
@@ -922,6 +1023,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 SpawnExplosion(ship_x, ship_y - 40, 80, RGB(255, 50, 0), RGB(200, 200, 200));
                                 wsprintfA(combat_log, "You hit for %d! Fleet destroyed!", p_dmg);
                                 AddXP(2, 30);
+                                boss_whiteout = 1.0f;
+                                screen_shake = 30;
                             }
                         } else if (wParam == '2') {
                             int s_dmg = 25 - upg_shields * 2;

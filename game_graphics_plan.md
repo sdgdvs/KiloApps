@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KStarship
 - KConnect4
 - KHangman
 - KMech
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMine
 - KMandel
 - KVoid
+- KStarship
 ## Completed Work Log
+
+- **KStarship (Loop 5):** Implemented highly polished visual effects including multi-phase visual damage states where armor plates visibly shear off to expose glowing inner machinery, distinct telegraphing beam/laser charging animations that build up intensity before firing, and a massive full-screen chromatic aberration/distortion or whiteout flash effect when the boss is finally defeated in both Web Canvas (kstarship.html) and Native C Win32 GDI (KStarship/main.c).
 
 - **KVoid (Loop 2):** Implemented sprite animations including directional tracking and geometry interpolation for a wiggling walk cycle on the Player spaceship, a continuous contracting/expanding frame cycle for Aliens (which freezes upon EMP stun), and a physics-based particle engine handling radial cyan EMP bursts and massive red Player death explosions in both Web Canvas (kvoid.html) and Native C Win32 GDI (KVoid/main.c).
 
