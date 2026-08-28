@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KVoid
 - KStarship
 - KConnect4
 - KHangman
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStellar
 - KMine
 - KMandel
+- KVoid
 ## Completed Work Log
+
+- **KVoid (Loop 2):** Implemented sprite animations including directional tracking and geometry interpolation for a wiggling walk cycle on the Player spaceship, a continuous contracting/expanding frame cycle for Aliens (which freezes upon EMP stun), and a physics-based particle engine handling radial cyan EMP bursts and massive red Player death explosions in both Web Canvas (kvoid.html) and Native C Win32 GDI (KVoid/main.c).
 
 - **KMandel (Loop 2):** Implemented sprite animations including an animated spinning loader popup and dynamic DOM-based interaction ripples for canvas clicks in Web Canvas (kmandel.html), and implemented brief GDI flash overlays (yellow crosshairs for Julia pick, scaling zoom rectangles) directly during input events before thread blocking in Native C Win32 GDI (KMandel/main.c).
 

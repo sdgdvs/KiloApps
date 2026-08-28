@@ -54,6 +54,33 @@ int wonGame = 0;
 char winEnding[256] = "";
 int showHelp = 0;
 
+int playerDir = 0;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    COLORREF color;
+} Particle;
+#define MAX_PARTICLES 100
+Particle particles[MAX_PARTICLES];
+
+void SpawnParticles(float x, float y, COLORREF color, int count) {
+    for (int i = 0; i < count; i++) {
+        for (int j = 0; j < MAX_PARTICLES; j++) {
+            if (particles[j].life <= 0) {
+                particles[j].x = x;
+                particles[j].y = y;
+                particles[j].vx = ((rand() % 100) / 25.0f) - 2.0f;
+                particles[j].vy = ((rand() % 100) / 25.0f) - 2.0f;
+                particles[j].life = 10 + (rand() % 20);
+                particles[j].color = color;
+                break;
+            }
+        }
+    }
+}
+
 typedef struct {
     int x, y, w, h;
 } Room;
@@ -259,6 +286,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTimer(hwnd, 1, 50, NULL);
             return 0;
         case WM_TIMER:
+            for (int i = 0; i < MAX_PARTICLES; i++) {
+                if (particles[i].life > 0) {
+                    particles[i].x += particles[i].vx;
+                    particles[i].y += particles[i].vy;
+                    particles[i].life--;
+                }
+            }
             if (!isDead && !wonGame && !showHelp) {
                 static int tickCount = 0;
                 tickCount++;
@@ -353,6 +387,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         
                         if (aliens[i].x == playerX && aliens[i].y == playerY && !hidden) {
                             PlaySoundEffect(3);
+                            SpawnParticles(playerX * TILE_SIZE + TILE_SIZE / 2.0f, playerY * TILE_SIZE + TILE_SIZE / 2.0f + UI_HEIGHT, RGB(255, 0, 0), 50);
                             isDead = 1;
                             lstrcpy(sysMsg, "CAUGHT BY ALIEN. YOU ARE DEAD.");
                             msgTimer = 100;
@@ -515,6 +550,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             // Draw aliens
             SelectObject(hdcMem, GetStockObject(NULL_PEN));
+            int alienAnim = (GetTickCount() / 150) % 2;
             for (int i = 0; i < alienCount; i++) {
                 HBRUSH hAlienBrush;
                 if (aliens[i].state == 2) {
@@ -525,24 +561,57 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(hdcMem, hAlienBrush);
                 int acx = aliens[i].x * TILE_SIZE + TILE_SIZE / 2;
                 int acy = aliens[i].y * TILE_SIZE + TILE_SIZE / 2 + UI_HEIGHT;
+                int aa = (aliens[i].state == 2) ? 0 : alienAnim;
                 POINT pts[10] = {
-                    {acx, acy - 6}, {acx + 3, acy - 2}, {acx + 7, acy},
-                    {acx + 3, acy + 2}, {acx + 4, acy + 6}, {acx, acy + 3},
-                    {acx - 4, acy + 6}, {acx - 3, acy + 2}, {acx - 7, acy},
-                    {acx - 3, acy - 2}
+                    {acx, acy - 6 - aa}, {acx + 3 + aa, acy - 2}, {acx + 7, acy},
+                    {acx + 3 + aa, acy + 2}, {acx + 4, acy + 6 + aa}, {acx, acy + 3},
+                    {acx - 4, acy + 6 + aa}, {acx - 3 - aa, acy + 2}, {acx - 7, acy},
+                    {acx - 3 - aa, acy - 2}
                 };
                 Polygon(hdcMem, pts, 10);
                 DeleteObject(hAlienBrush);
             }
 
             // Draw player
-            SelectObject(hdcMem, hPlayerBrush);
-            int cx = playerX * TILE_SIZE + TILE_SIZE / 2;
-            int cy = playerY * TILE_SIZE + TILE_SIZE / 2 + UI_HEIGHT;
-            POINT p_pts[4] = {
-                {cx, cy - 6}, {cx + 5, cy + 5}, {cx, cy + 2}, {cx - 5, cy + 5}
-            };
-            Polygon(hdcMem, p_pts, 4);
+            if (!isDead) {
+                SelectObject(hdcMem, hPlayerBrush);
+                int cx = playerX * TILE_SIZE + TILE_SIZE / 2;
+                int cy = playerY * TILE_SIZE + TILE_SIZE / 2 + UI_HEIGHT;
+                int anim = (GetTickCount() / 200) % 2;
+                POINT p_pts[4];
+                if (playerDir == 0) {
+                    p_pts[0] = (POINT){cx, cy - 6};
+                    p_pts[1] = (POINT){cx + 5, cy + 5 - anim};
+                    p_pts[2] = (POINT){cx, cy + 2 + anim};
+                    p_pts[3] = (POINT){cx - 5, cy + 5 - anim};
+                } else if (playerDir == 1) {
+                    p_pts[0] = (POINT){cx, cy + 6};
+                    p_pts[1] = (POINT){cx + 5, cy - 5 + anim};
+                    p_pts[2] = (POINT){cx, cy - 2 - anim};
+                    p_pts[3] = (POINT){cx - 5, cy - 5 + anim};
+                } else if (playerDir == 2) {
+                    p_pts[0] = (POINT){cx - 6, cy};
+                    p_pts[1] = (POINT){cx + 5 - anim, cy - 5};
+                    p_pts[2] = (POINT){cx + 2 + anim, cy};
+                    p_pts[3] = (POINT){cx + 5 - anim, cy + 5};
+                } else {
+                    p_pts[0] = (POINT){cx + 6, cy};
+                    p_pts[1] = (POINT){cx - 5 + anim, cy - 5};
+                    p_pts[2] = (POINT){cx - 2 - anim, cy};
+                    p_pts[3] = (POINT){cx - 5 + anim, cy + 5};
+                }
+                Polygon(hdcMem, p_pts, 4);
+            }
+            
+            // Draw particles
+            for (int i = 0; i < MAX_PARTICLES; i++) {
+                if (particles[i].life > 0) {
+                    HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                    RECT pr = { (int)particles[i].x - 1, (int)particles[i].y - 1, (int)particles[i].x + 2, (int)particles[i].y + 2 };
+                    FillRect(hdcMem, &pr, pBrush);
+                    DeleteObject(pBrush);
+                }
+            }
             
             // Draw UI Text
             SetBkMode(hdcMem, TRANSPARENT);
@@ -660,25 +729,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             switch (wParam) {
                 case VK_UP:
                 case 'W':
-                    newY--;
+                    newY--; playerDir = 0;
                     break;
                 case VK_DOWN:
                 case 'S':
-                    newY++;
+                    newY++; playerDir = 1;
                     break;
                 case VK_LEFT:
                 case 'A':
-                    newX--;
+                    newX--; playerDir = 2;
                     break;
                 case VK_RIGHT:
                 case 'D':
-                    newX++;
+                    newX++; playerDir = 3;
                     break;
                 case VK_SPACE:
                     if (emps > 0) {
                         emps--;
                         lstrcpy(sysMsg, "EMP DEPLOYED. ALIENS STUNNED.");
                         msgTimer = 60;
+                        SpawnParticles(playerX * TILE_SIZE + TILE_SIZE / 2.0f, playerY * TILE_SIZE + TILE_SIZE / 2.0f + UI_HEIGHT, RGB(0, 255, 255), 30);
                         for (int i = 0; i < alienCount; i++) {
                             int dist = abs(aliens[i].x - playerX) + abs(aliens[i].y - playerY);
                             if (dist <= 8) {
@@ -790,6 +860,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     for (int i = 0; i < alienCount; i++) {
                         if (aliens[i].x == playerX && aliens[i].y == playerY && map[playerY][playerX] != 11) {
                             PlaySoundEffect(3);
+                            SpawnParticles(playerX * TILE_SIZE + TILE_SIZE / 2.0f, playerY * TILE_SIZE + TILE_SIZE / 2.0f + UI_HEIGHT, RGB(255, 0, 0), 50);
                             isDead = 1;
                             lstrcpy(sysMsg, "CAUGHT BY ALIEN. YOU ARE DEAD.");
                             msgTimer = 100;

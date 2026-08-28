@@ -176,6 +176,40 @@
         let winEnding = "";
         let showHelp = false;
 
+        let playerDir = 0;
+        let particles = [];
+
+        function spawnParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    life: 10 + Math.random() * 20,
+                    color: color
+                });
+            }
+        }
+        
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+        
+        function drawParticles() {
+            for (let p of particles) {
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x - 1, p.y - 1, 3, 3);
+            }
+        }
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playBeep(freq, type, duration, vol=0.1) {
@@ -445,15 +479,12 @@
         setInterval(gameTick, 1000);
 
         function die(msg) {
+            if (!isDead) {
+                spawnParticles(player.x * TILE_SIZE + TILE_SIZE/2, player.y * TILE_SIZE + TILE_SIZE/2, '#f00', 50);
+            }
             isDead = true;
             document.getElementById('message').innerText = msg;
             document.getElementById('message').style.color = '#f00';
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = '#f00';
-            ctx.font = '30px Courier New';
-            ctx.textAlign = 'center';
-            ctx.fillText("SIGNAL LOST", canvas.width/2, canvas.height/2);
         }
 
         function drawMap() {
@@ -542,23 +573,42 @@
             }
         }
 
-        function drawPlayer() {
+        function drawPlayer(time = performance.now()) {
             let px = player.x * TILE_SIZE + TILE_SIZE / 2;
             let py = player.y * TILE_SIZE + TILE_SIZE / 2;
+            let anim = Math.floor(time / 200) % 2;
             ctx.fillStyle = '#0f0';
             ctx.shadowBlur = 10;
             ctx.shadowColor = '#0f0';
             ctx.beginPath();
-            ctx.moveTo(px, py - 6);
-            ctx.lineTo(px + 5, py + 5);
-            ctx.lineTo(px, py + 2);
-            ctx.lineTo(px - 5, py + 5);
+            if (playerDir === 0) {
+                ctx.moveTo(px, py - 6);
+                ctx.lineTo(px + 5, py + 5 - anim);
+                ctx.lineTo(px, py + 2 + anim);
+                ctx.lineTo(px - 5, py + 5 - anim);
+            } else if (playerDir === 1) {
+                ctx.moveTo(px, py + 6);
+                ctx.lineTo(px + 5, py - 5 + anim);
+                ctx.lineTo(px, py - 2 - anim);
+                ctx.lineTo(px - 5, py - 5 + anim);
+            } else if (playerDir === 2) {
+                ctx.moveTo(px - 6, py);
+                ctx.lineTo(px + 5 - anim, py - 5);
+                ctx.lineTo(px + 2 + anim, py);
+                ctx.lineTo(px + 5 - anim, py + 5);
+            } else {
+                ctx.moveTo(px + 6, py);
+                ctx.lineTo(px - 5 + anim, py - 5);
+                ctx.lineTo(px - 2 - anim, py);
+                ctx.lineTo(px - 5 + anim, py + 5);
+            }
             ctx.closePath();
             ctx.fill();
             ctx.shadowBlur = 0;
         }
 
-        function drawAliens() {
+        function drawAliens(time = performance.now()) {
+            let alienAnim = Math.floor(time / 150) % 2;
             for (let a of aliens) {
                 if (a.state === 'stunned') {
                     ctx.fillStyle = '#55f';
@@ -570,28 +620,30 @@
                 ctx.shadowBlur = 10;
                 let ax = a.x * TILE_SIZE + TILE_SIZE / 2;
                 let ay = a.y * TILE_SIZE + TILE_SIZE / 2;
+                let aa = (a.state === 'stunned') ? 0 : alienAnim;
                 ctx.beginPath();
-                ctx.moveTo(ax, ay - 6);
-                ctx.lineTo(ax + 3, ay - 2);
+                ctx.moveTo(ax, ay - 6 - aa);
+                ctx.lineTo(ax + 3 + aa, ay - 2);
                 ctx.lineTo(ax + 7, ay);
-                ctx.lineTo(ax + 3, ay + 2);
-                ctx.lineTo(ax + 4, ay + 6);
+                ctx.lineTo(ax + 3 + aa, ay + 2);
+                ctx.lineTo(ax + 4, ay + 6 + aa);
                 ctx.lineTo(ax, ay + 3);
-                ctx.lineTo(ax - 4, ay + 6);
-                ctx.lineTo(ax - 3, ay + 2);
+                ctx.lineTo(ax - 4, ay + 6 + aa);
+                ctx.lineTo(ax - 3 - aa, ay + 2);
                 ctx.lineTo(ax - 7, ay);
-                ctx.lineTo(ax - 3, ay - 2);
+                ctx.lineTo(ax - 3 - aa, ay - 2);
                 ctx.closePath();
                 ctx.fill();
             }
             ctx.shadowBlur = 0;
         }
 
-        function draw() {
+        function draw(time = performance.now()) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawMap();
-            drawAliens();
-            drawPlayer();
+            drawAliens(time);
+            if (!isDead) drawPlayer(time);
+            drawParticles();
             if (wonGame) {
                 ctx.fillStyle = 'rgba(0,0,0,0.8)';
                 ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -599,6 +651,14 @@
                 ctx.font = '16px Courier New';
                 ctx.textAlign = 'center';
                 ctx.fillText(winEnding, canvas.width/2, canvas.height/2);
+            }
+            if (isDead) {
+                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = '#f00';
+                ctx.font = '30px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText("SIGNAL LOST", canvas.width/2, canvas.height/2);
             }
         }
 
@@ -660,7 +720,6 @@
                     return;
                 }
             }
-            draw();
         }
 
         function startAlienInterval() {
@@ -803,27 +862,28 @@
                 case 'ArrowUp':
                 case 'w':
                 case 'W':
-                    movePlayer(0, -1);
+                    movePlayer(0, -1); playerDir = 0;
                     break;
                 case 'ArrowDown':
                 case 's':
                 case 'S':
-                    movePlayer(0, 1);
+                    movePlayer(0, 1); playerDir = 1;
                     break;
                 case 'ArrowLeft':
                 case 'a':
                 case 'A':
-                    movePlayer(-1, 0);
+                    movePlayer(-1, 0); playerDir = 2;
                     break;
                 case 'ArrowRight':
                 case 'd':
                 case 'D':
-                    movePlayer(1, 0);
+                    movePlayer(1, 0); playerDir = 3;
                     break;
                 case ' ':
                     if (emps > 0) {
                         emps--;
                         showMessage("EMP DEPLOYED. ALIENS STUNNED.", "#0ff");
+                        spawnParticles(player.x * TILE_SIZE + TILE_SIZE/2, player.y * TILE_SIZE + TILE_SIZE/2, '#0ff', 30);
                         for (let a of aliens) {
                             if (Math.abs(a.x - player.x) + Math.abs(a.y - player.y) <= 8) {
                                 a.state = 'stunned';
@@ -831,13 +891,18 @@
                             }
                         }
                         updateInventoryDisplay();
-                        draw();
                     }
                     break;
             }
         });
 
-        draw();
+        let renderLoopId;
+        function renderLoop(time) {
+            updateParticles();
+            draw(time);
+            renderLoopId = requestAnimationFrame(renderLoop);
+        }
+        renderLoop(performance.now());
     </script>
 </body>
 </html>
