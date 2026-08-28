@@ -167,13 +167,48 @@
     </div>
 
     <script>
-        const systems = [
-            { id: 1, name: "Sol", x: 50, y: 50, desc: "Cradle of humanity. Highly developed planetary system with a stable economy.", market: {food: 20, minerals: 40, tech: 150} },
-            { id: 2, name: "Alpha Centauri", x: 30, y: 70, desc: "Primary mining colony. Resource rich, but known for pirate activity on the outskirts.", market: {food: 40, minerals: 15, tech: 200} },
-            { id: 3, name: "Sirius", x: 75, y: 35, desc: "Major trading hub. High tech goods are cheap here.", market: {food: 30, minerals: 60, tech: 80} },
-            { id: 4, name: "Proxima", x: 20, y: 80, desc: "Remote outpost. Dangerous but offers high rewards for smugglers.", market: {food: 50, minerals: 30, tech: 300} },
-            { id: 5, name: "Vega", x: 80, y: 80, desc: "Agricultural world. Supplies food to neighboring industrial systems.", market: {food: 5, minerals: 80, tech: 180} }
+        let systems = [];
+        const economyTypes = [
+            { name: "Agricultural", foodMult: 0.5, minMult: 1.5, techMult: 1.8 },
+            { name: "Mining", foodMult: 1.5, minMult: 0.5, techMult: 1.5 },
+            { name: "Industrial", foodMult: 1.3, minMult: 1.2, techMult: 0.8 },
+            { name: "Tech Hub", foodMult: 1.5, minMult: 1.5, techMult: 0.5 },
+            { name: "Trading Hub", foodMult: 1.0, minMult: 1.0, techMult: 1.0 }
         ];
+        const sysNames = ["Aegis", "Borealis", "Cygnus", "Draco", "Eridanus", "Fenrir", "Goliath", "Helios", "Icarus", "Juno", "Krypton", "Lyra", "Orion", "Pegasus", "Rigel", "Sirius", "Taurus", "Ursa", "Vega", "Wolf"];
+        const sectorNames = ["Alpha", "Beta", "Gamma", "Delta", "Omega"];
+
+        function generateGalaxy() {
+            systems.push({
+                id: 1, name: "Sol", sector: "Alpha", x: 50, y: 50, 
+                desc: "Cradle of humanity. Highly developed planetary system.", economy: "Trading Hub", 
+                market: {food: 20, minerals: 40, tech: 150}
+            });
+            for (let i = 2; i <= 30; i++) {
+                let sec = sectorNames[Math.floor(Math.random() * sectorNames.length)];
+                let namePrefix = sysNames[Math.floor(Math.random() * sysNames.length)];
+                let nameSuffix = ["Prime", "Secundus", "Tertius", "Minor", "Major", "Station", "Outpost", "Belt"][Math.floor(Math.random() * 8)];
+                let eco = economyTypes[Math.floor(Math.random() * economyTypes.length)];
+                let baseFood = 20 + Math.floor(Math.random() * 10);
+                let baseMin = 40 + Math.floor(Math.random() * 20);
+                let baseTech = 100 + Math.floor(Math.random() * 50);
+                systems.push({
+                    id: i,
+                    name: `${namePrefix} ${nameSuffix}`,
+                    sector: sec,
+                    x: Math.floor(Math.random() * 90) + 5,
+                    y: Math.floor(Math.random() * 90) + 5,
+                    desc: `A ${eco.name} system in the ${sec} sector.`,
+                    economy: eco.name,
+                    market: {
+                        food: Math.floor(baseFood * eco.foodMult),
+                        minerals: Math.floor(baseMin * eco.minMult),
+                        tech: Math.floor(baseTech * eco.techMult)
+                    }
+                });
+            }
+        }
+        generateGalaxy();
 
         const mapEl = document.getElementById('map');
         const infoEl = document.getElementById('system-info');
@@ -485,6 +520,7 @@
             let html = `
                 <h3>${sys.name.toUpperCase()}</h3>
                 <p>${sys.desc}</p>
+                <p><strong>Sector:</strong> ${sys.sector} | <strong>Economy:</strong> ${sys.economy}</p>
                 <p><strong>Coordinates:</strong> X:${sys.x} Y:${sys.y}</p>
             `;
             
@@ -548,8 +584,13 @@
                 label.innerText = sys.name + (sys.id === currentSystemId ? " (YOU ARE HERE)" : "");
                 if (sys.id === currentSystemId) {
                     label.style.color = '#00ffff';
+                    label.style.display = 'block';
+                } else {
+                    label.style.display = 'none';
                 }
 
+                dot.addEventListener('mouseover', () => { label.style.display = 'block'; });
+                dot.addEventListener('mouseout', () => { if (sys.id !== currentSystemId) label.style.display = 'none'; });
                 dot.addEventListener('click', () => showSystemInfo(sys));
 
                 mapEl.appendChild(dot);

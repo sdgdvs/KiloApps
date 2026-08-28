@@ -6,24 +6,76 @@
 
 #define ID_BTN_SET_COURSE 101
 
+#define MAX_SYSTEMS 30
 typedef struct {
     int id;
     char name[32];
+    char sector[16];
     int x;
     int y;
     char desc[256];
+    char economy[32];
     int food_price;
     int minerals_price;
     int tech_price;
 } System;
 
-System systems[] = {
-    {1, "Sol", 50, 50, "Cradle of humanity. Highly developed planetary system with a stable economy.", 20, 40, 150},
-    {2, "Alpha Centauri", 30, 70, "Primary mining colony. Resource rich, but known for pirate activity on the outskirts.", 40, 15, 200},
-    {3, "Sirius", 75, 35, "Major trading hub. High tech goods are cheap here.", 30, 60, 80},
-    {4, "Proxima", 20, 80, "Remote outpost. Dangerous but offers high rewards for smugglers.", 50, 30, 300},
-    {5, "Vega", 80, 80, "Agricultural world. Supplies food to neighboring industrial systems.", 5, 80, 180}
-};
+System systems[MAX_SYSTEMS];
+
+typedef struct {
+    char name[32];
+    float food;
+    float min;
+    float tech;
+} EconomyType;
+
+void GenerateGalaxy() {
+    const char* sysNames[] = {"Aegis", "Borealis", "Cygnus", "Draco", "Eridanus", "Fenrir", "Goliath", "Helios", "Icarus", "Juno", "Krypton", "Lyra", "Orion", "Pegasus", "Rigel", "Sirius", "Taurus", "Ursa", "Vega", "Wolf"};
+    const char* sectorNames[] = {"Alpha", "Beta", "Gamma", "Delta", "Omega"};
+    const char* suffixes[] = {"Prime", "Secundus", "Tertius", "Minor", "Major", "Station", "Outpost", "Belt"};
+
+    EconomyType economies[] = {
+        {"Agricultural", 0.5f, 1.5f, 1.8f},
+        {"Mining", 1.5f, 0.5f, 1.5f},
+        {"Industrial", 1.3f, 1.2f, 0.8f},
+        {"Tech Hub", 1.5f, 1.5f, 0.5f},
+        {"Trading Hub", 1.0f, 1.0f, 1.0f}
+    };
+
+    systems[0].id = 1;
+    strcpy(systems[0].name, "Sol");
+    strcpy(systems[0].sector, "Alpha");
+    systems[0].x = 50;
+    systems[0].y = 50;
+    strcpy(systems[0].desc, "Cradle of humanity. Highly developed planetary system.");
+    strcpy(systems[0].economy, "Trading Hub");
+    systems[0].food_price = 20;
+    systems[0].minerals_price = 40;
+    systems[0].tech_price = 150;
+
+    for (int i = 1; i < MAX_SYSTEMS; i++) {
+        systems[i].id = i + 1;
+        const char* sec = sectorNames[rand() % 5];
+        const char* prefix = sysNames[rand() % 20];
+        const char* suffix = suffixes[rand() % 8];
+        sprintf(systems[i].name, "%s %s", prefix, suffix);
+        strcpy(systems[i].sector, sec);
+        systems[i].x = 5 + (rand() % 90);
+        systems[i].y = 5 + (rand() % 90);
+        
+        int ecoIdx = rand() % 5;
+        strcpy(systems[i].economy, economies[ecoIdx].name);
+        sprintf(systems[i].desc, "A %s system in the %s sector.", economies[ecoIdx].name, sec);
+        
+        int bFood = 20 + (rand() % 10);
+        int bMin = 40 + (rand() % 20);
+        int bTech = 100 + (rand() % 50);
+        
+        systems[i].food_price = (int)(bFood * economies[ecoIdx].food);
+        systems[i].minerals_price = (int)(bMin * economies[ecoIdx].min);
+        systems[i].tech_price = (int)(bTech * economies[ecoIdx].tech);
+    }
+}
 
 #define ID_BTN_BUY_FOOD 102
 #define ID_BTN_SELL_FOOD 103
@@ -69,9 +121,9 @@ Mission stationMissions[2] = {{0,-1,0}, {0,-1,0}};
 void GenerateStationMissions() {
     for (int i=0; i<2; i++) {
         stationMissions[i].type = (rand() % 2) + 1;
-        int target = rand() % 5;
+        int target = rand() % MAX_SYSTEMS;
         if (target == currentSystemId) {
-            target = (target + 1) % 5;
+            target = (target + 1) % MAX_SYSTEMS;
         }
         stationMissions[i].targetId = target;
         stationMissions[i].reward = 300 + (rand() % 500);
@@ -145,8 +197,8 @@ void ShowStationView(HWND hwnd) {
     
     System *sys = &systems[currentSystemId];
     char infoText[512];
-    sprintf(infoText, "%s (DOCKED)\n%s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
-        sys->name, sys->desc,
+    sprintf(infoText, "%s (DOCKED)\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+        sys->name, sys->sector, sys->economy,
         sys->food_price, sys->minerals_price, sys->tech_price,
         cargoFood, cargoMinerals, cargoTech,
         engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
@@ -227,6 +279,8 @@ void EndCombat(HWND hwnd) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
+            srand(GetTickCount());
+            GenerateGalaxy();
             hFont = CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
             hBgBrush = CreateSolidBrush(RGB(5, 5, 15));
             
@@ -367,7 +421,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTextColor(hdc, RGB(0, 255, 204));
             SelectObject(hdc, hFont);
             
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < MAX_SYSTEMS; i++) {
                 int px = 20 + (systems[i].x * 400 / 100);
                 int py = 70 + (systems[i].y * 400 / 100);
                 
@@ -382,22 +436,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SelectObject(hdc, GetStockObject(NULL_PEN));
                 }
                 
-                int r = (i == selectedSystem || i == currentSystemId) ? 8 : 6;
+                int r = (i == selectedSystem || i == currentSystemId) ? 8 : 4;
                 Ellipse(hdc, px - r, py - r, px + r, py + r);
                 
-                char nameBuf[64];
-                if (i == currentSystemId) {
-                    sprintf(nameBuf, "%s (HERE)", systems[i].name);
-                } else {
-                    strcpy(nameBuf, systems[i].name);
+                if (i == selectedSystem || i == currentSystemId) {
+                    char nameBuf[64];
+                    if (i == currentSystemId) {
+                        sprintf(nameBuf, "%s (HERE)", systems[i].name);
+                        SetTextColor(hdc, RGB(0, 255, 255));
+                    } else {
+                        strcpy(nameBuf, systems[i].name);
+                        SetTextColor(hdc, RGB(0, 255, 204));
+                    }
+                    TextOut(hdc, px + 12, py - 8, nameBuf, strlen(nameBuf));
                 }
-                
-                if (i == currentSystemId) {
-                    SetTextColor(hdc, RGB(0, 255, 255));
-                } else {
-                    SetTextColor(hdc, RGB(0, 255, 204));
-                }
-                TextOut(hdc, px + 12, py - 8, nameBuf, strlen(nameBuf));
             }
             
             DeleteObject(hGreenBrush);
@@ -411,7 +463,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
             
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < MAX_SYSTEMS; i++) {
                 int px = 20 + (systems[i].x * 400 / 100);
                 int py = 70 + (systems[i].y * 400 / 100);
                 
@@ -421,15 +473,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     
                     char infoText[512];
                     if (selectedSystem == currentSystemId) {
-                        sprintf(infoText, "%s (DOCKED)\n%s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
-                            systems[i].name, systems[i].desc,
+                        sprintf(infoText, "%s (DOCKED)\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+                            systems[i].name, systems[i].sector, systems[i].economy,
                             systems[i].food_price, systems[i].minerals_price, systems[i].tech_price,
                             cargoFood, cargoMinerals, cargoTech,
                             engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
                             weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
                     } else {
-                        sprintf(infoText, "%s\n\n%s\n\nCoordinates: X:%d Y:%d", 
-                            systems[i].name, systems[i].desc, systems[i].x, systems[i].y);
+                        sprintf(infoText, "%s\nSector: %s\nEconomy: %s\n%s\n\nCoordinates: X:%d Y:%d", 
+                            systems[i].name, systems[i].sector, systems[i].economy, systems[i].desc, systems[i].x, systems[i].y);
                     }
                         
                     SetWindowText(hInfoArea, infoText);
@@ -634,8 +686,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 UpdateDashboard();
                 
                 char infoText[512];
-                sprintf(infoText, "%s (DOCKED)\n%s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
-                    sys->name, sys->desc,
+                sprintf(infoText, "%s (DOCKED)\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+                    sys->name, sys->sector, sys->economy,
                     sys->food_price, sys->minerals_price, sys->tech_price,
                     cargoFood, cargoMinerals, cargoTech,
                     engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
@@ -661,8 +713,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
                 char infoText[512];
                 System *sys = &systems[currentSystemId];
-                sprintf(infoText, "%s (DOCKED)\n%s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
-                    sys->name, sys->desc,
+                sprintf(infoText, "%s (DOCKED)\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+                    sys->name, sys->sector, sys->economy,
                     sys->food_price, sys->minerals_price, sys->tech_price,
                     cargoFood, cargoMinerals, cargoTech,
                     engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
