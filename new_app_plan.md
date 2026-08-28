@@ -54,12 +54,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStellar (Space exploration and trading RPG)
-**Phase:** 3 (next to do)
+**Phase:** 4 (next to do)
 **Status:** Creation
 
 - [x] Phase 1: Scaffold KStellar directory (`KStellar/`), create web HTML skeleton (`KiloOS/public/apps/kstellar.html`), register in App.jsx.
 - [x] Phase 2: Basic UI for starship dashboard showing fuel, credits, cargo space, and a map of local star systems.
-- [ ] Phase 3: Native C version (`KStellar/main.c`, `build.bat`) using Win32 API with functional parity.
+- [x] Phase 3: Native C version (`KStellar/main.c`, `build.bat`) using Win32 API with functional parity.
 - [ ] Phase 4: Sci-fi aesthetic styling (deep space black backgrounds, neon blue/green accents, monospaced fonts, scanlines).
 - [ ] Phase 5: Implement space travel mechanics (traveling consumes fuel, takes time, triggers random encounters).
 - [ ] Phase 6: Implement commodity trading system (buy low on agricultural planets, sell high on industrial/mining planets).
