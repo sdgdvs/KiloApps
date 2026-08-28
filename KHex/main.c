@@ -308,6 +308,7 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            SetTimer(hwnd, 1, 50, NULL);
             HDC hdc = GetDC(NULL);
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
             ReleaseDC(NULL, hdc);
@@ -436,6 +437,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_TIMER: {
+            if (wParam == 1) {
+                RECT rect = {680, 0, 740, 50};
+                InvalidateRect(hwnd, &rect, FALSE);
+            }
+            break;
+        }
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
             SetTextColor(hdc, RGB(148, 163, 184));
@@ -459,13 +467,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
             HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
             
+            DWORD ticks = GetTickCount();
+            int phase = (ticks / 50) % 20;
+            int offset = phase;
+            if (offset > 10) offset = 20 - offset;
+            offset = (offset / 2) - 2;
+            
             POINT hexPts[6] = {
-                { 710, 10 },
-                { 725, 18 },
-                { 725, 34 },
-                { 710, 42 },
-                { 695, 34 },
-                { 695, 18 }
+                { 710, 10 - offset },
+                { 725 + offset, 18 - offset/2 },
+                { 725 + offset, 34 + offset/2 },
+                { 710, 42 + offset },
+                { 695 - offset, 34 + offset/2 },
+                { 695 - offset, 18 - offset/2 }
             };
             Polygon(hdc, hexPts, 6);
             
@@ -482,6 +496,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             if (hFont) DeleteObject(hFont);
             if (hEditBrush) DeleteObject(hEditBrush);
             if (hBrushBg) DeleteObject(hBrushBg);

@@ -83,6 +83,7 @@
 </style>
 </head>
 <body>
+  <button onclick="document.getElementById('helpModal').style.display='flex'" style="position:absolute; top:20px; right:20px; z-index:100; font-size:1.1em; padding:10px;">Lanista's Guide</button>
   <h1>KColosseum - Ludus Management</h1>
   <div class="funds">Treasury: <span id="fundsDisplay">1000</span> Denarii | League: <span id="leagueDisplay">Local Pits (Level 1)</span></div>
   
@@ -115,6 +116,35 @@
       <button onclick="combatAction('flee')">Flee</button>
     </div>
     <div id="combatLog" style="margin-top:20px; height:150px; overflow-y:auto; background:#fff; color:#333; padding:10px; border:1px solid #ccc; font-family:monospace;"></div>
+  </div>
+
+  <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+    <div class="panel" style="width:80%; max-width:700px; max-height:85vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
+      <button onclick="document.getElementById('helpModal').style.display='none'" style="position:absolute; top:15px; right:15px;">Close</button>
+      <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0;">Lanista's Guide</h2>
+      <div style="font-size:1.1em; line-height:1.6; margin-top:20px;">
+        <p><strong>HOW TO PLAY:</strong><br>
+        Buy gladiators from the market, equip them, and train their stats.<br>
+        When ready, send them to the Arena to fight and earn Denarii.<br>
+        If your gladiator dies, they are lost forever! Heal them between fights.</p>
+        
+        <p><strong>COMBAT TACTICS:</strong></p>
+        <ul style="list-style-type:disc; padding-left:20px;">
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Attack:</strong>&nbsp;Uses STR for damage. Hit chance is based on AGI difference.</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Defend:</strong>&nbsp;Skips your turn, but drastically reduces enemy hit chance and damage.</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Showboat:</strong>&nbsp;Skips your turn to build Crowd Favor. At 100%, the crowd rewards you with gold or healing!</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Flee:</strong>&nbsp;Saves your gladiator's life, but you drop an Arena Level in disgrace.</li>
+        </ul>
+
+        <p><strong>EQUIPMENT REFERENCE:</strong></p>
+        <ul style="list-style-type:disc; padding-left:20px;">
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Gladius (Glad):</strong>&nbsp;+3 STR (More damage)</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Trident (Trid):</strong>&nbsp;+3 AGI (Higher hit & dodge chance)</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Armor (Armr):</strong>&nbsp;+5 VIT (+50 Max HP)</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Shield (Shld):</strong>&nbsp;Greatly increases effectiveness of the Defend command.</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <script>

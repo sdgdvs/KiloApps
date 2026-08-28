@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KHex
 - KMine
 - KMandel
 - KVoid
@@ -144,7 +143,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTrader
 - KDragon
 - KSolitaire
+- KHex
+- KStellar
 ## Completed Work Log
+
+- **KHex (Loop 2):** Implemented sprite animations including an infinite pulsing CSS keyframe scale/rotate/drop-shadow animation for the SVG logo and dynamic Javascript particle burst effects on UI interaction in Web Canvas (khex.html), and a CRT-free 50ms Win32 timer driving a geometric throbbing/pulsing animation of the composed GDI polygon hexagon in Native C Win32 GDI (KHex/main.c).
 
 - **KSolitaire (Loop 7):** Implemented highly polished visual effects including multi-layered particle explosions featuring varied sizes, cyan/magenta colors, and gravity/friction decay physics, dynamic lighting via secondary glowing outlines (native C) and scaling box-shadows (Web Canvas), and procedural kinematic screen-shake driven by a quadratic physics decay in both Web Canvas (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 

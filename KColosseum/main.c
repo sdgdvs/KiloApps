@@ -44,6 +44,8 @@ void PlaySoundAsync(int type) {
 #define ID_HEAL_BUTTON 118
 #define ID_SHOWBOAT_BUTTON 119
 #define ID_FAVOR_LABEL 120
+#define ID_HELP_BUTTON 121
+#define ID_HELP_BACK_BUTTON 122
 typedef struct {
     int id;
     char name[32];
@@ -141,6 +143,7 @@ int funds = 1000;
 HWND hTitle, hFundsLabel, hL1, hRefreshButton, hMarketList, hBuyButton, hL2, hOwnedList, hTrainStrBtn, hTrainAgiBtn, hTrainVitBtn, hFightBtn;
 HWND hEqGladiusBtn, hEqTridentBtn, hEqArmorBtn, hEqShieldBtn, hHealBtn;
 HWND hCombatTitle, hCombatPlayer, hCombatEnemy, hAttackBtn, hDefendBtn, hShowboatBtn, hFleeBtn, hCombatLog, hFavorLabel;
+HWND hHelpBtn, hHelpTitle, hHelpText, hHelpBackBtn;
 
 Gladiator* currentFighter = NULL;
 Gladiator enemyFighter;
@@ -194,6 +197,7 @@ void BuyGladiator(int index) {
 void SwitchView(int view) {
     int cmdDash = (view == 0) ? SW_SHOW : SW_HIDE;
     int cmdComb = (view == 1) ? SW_SHOW : SW_HIDE;
+    int cmdHelp = (view == 2) ? SW_SHOW : SW_HIDE;
 
     ShowWindow(hTitle, cmdDash);
     ShowWindow(hFundsLabel, cmdDash);
@@ -212,6 +216,7 @@ void SwitchView(int view) {
     ShowWindow(hTrainVitBtn, cmdDash);
     ShowWindow(hFightBtn, cmdDash);
     ShowWindow(hHealBtn, cmdDash);
+    ShowWindow(hHelpBtn, cmdDash);
 
     ShowWindow(hCombatTitle, cmdComb);
     ShowWindow(hCombatPlayer, cmdComb);
@@ -222,6 +227,10 @@ void SwitchView(int view) {
     ShowWindow(hFleeBtn, cmdComb);
     ShowWindow(hCombatLog, cmdComb);
     ShowWindow(hFavorLabel, cmdComb);
+
+    ShowWindow(hHelpTitle, cmdHelp);
+    ShowWindow(hHelpText, cmdHelp);
+    ShowWindow(hHelpBackBtn, cmdHelp);
 }
 
 void LogCombat(const char* msg) {
@@ -497,6 +506,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                           10, 10, 560, 30, hwnd, NULL, NULL, NULL);
             SendMessageA(hTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
 
+            hHelpBtn = CreateWindowA("BUTTON", "Guide", WS_VISIBLE | WS_CHILD,
+                          500, 10, 70, 25, hwnd, (HMENU)ID_HELP_BUTTON, NULL, NULL);
+            SendMessageA(hHelpBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hFundsLabel = CreateWindowA("STATIC", "Treasury: 1000 Denarii", WS_VISIBLE | WS_CHILD | SS_CENTER,
                           10, 45, 560, 25, hwnd, (HMENU)ID_FUNDS_LABEL, NULL, NULL);
             SendMessageA(hFundsLabel, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
@@ -595,6 +608,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                           30, 180, 520, 170, hwnd, (HMENU)ID_COMBAT_LOG, NULL, NULL);
             SendMessageA(hCombatLog, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            // Help Controls (Hidden by default)
+            hHelpTitle = CreateWindowA("STATIC", "Lanista's Guide", WS_CHILD | SS_CENTER,
+                          10, 10, 560, 30, hwnd, NULL, NULL, NULL);
+            SendMessageA(hHelpTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
+
+            const char* helpStr = "HOW TO PLAY:\n"
+                                  "Buy gladiators from the market, equip them, and train their stats.\n"
+                                  "Send them to the Arena to fight and earn Denarii. Dead gladiators are lost forever!\n\n"
+                                  "COMBAT TACTICS:\n"
+                                  "Attack: Uses STR for damage, AGI for hit chance vs enemy AGI.\n"
+                                  "Defend: Skips turn but drastically reduces enemy hit chance & damage.\n"
+                                  "Showboat: Skips turn to build Crowd Favor. At 100%, the crowd rewards you!\n"
+                                  "Flee: Saves your gladiator, but you drop an Arena Level.\n\n"
+                                  "EQUIPMENT:\n"
+                                  "Glad: +3 STR (More dmg) | Trid: +3 AGI (Higher hit/dodge)\n"
+                                  "Armr: +5 VIT (+50 HP)    | Shld: Increases Defend effectiveness\n";
+
+            hHelpText = CreateWindowA("STATIC", helpStr, WS_CHILD | SS_LEFT,
+                          20, 50, 540, 250, hwnd, NULL, NULL, NULL);
+            SendMessageA(hHelpText, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hHelpBackBtn = CreateWindowA("BUTTON", "Back to Ludus", WS_CHILD,
+                          230, 310, 140, 30, hwnd, (HMENU)ID_HELP_BACK_BUTTON, NULL, NULL);
+            SendMessageA(hHelpBackBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             UpdateUI();
             return 0;
         }
@@ -606,6 +644,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 } else {
                     MessageBoxA(hwnd, "Select a gladiator to buy.", "Info", MB_OK | MB_ICONINFORMATION);
                 }
+            } else if (LOWORD(wParam) == ID_HELP_BUTTON) {
+                SwitchView(2);
+            } else if (LOWORD(wParam) == ID_HELP_BACK_BUTTON) {
+                SwitchView(0);
             } else if (LOWORD(wParam) == ID_TRAIN_STR || LOWORD(wParam) == ID_TRAIN_AGI || LOWORD(wParam) == ID_TRAIN_VIT) {
                 int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
                 if (sel != LB_ERR) {
@@ -714,7 +756,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CTLCOLORSTATIC: {
             HDC hdcStatic = (HDC)wParam;
             HWND hCtrl = (HWND)lParam;
-            if (hCtrl == hFundsLabel || hCtrl == hCombatTitle || hCtrl == hFavorLabel) {
+            if (hCtrl == hFundsLabel || hCtrl == hCombatTitle || hCtrl == hFavorLabel || hCtrl == hHelpTitle) {
                 SetTextColor(hdcStatic, RGB(212, 175, 55));
                 SetBkColor(hdcStatic, RGB(139, 0, 0));
                 return (LRESULT)hbrCrimson;

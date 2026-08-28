@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KStellar</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        #dashboard {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #0f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        #main-view {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            min-height: 0;
+        }
+        #map-container {
+            flex: 2;
+            border: 1px solid #0f0;
+            position: relative;
+            background-color: #051005;
+            overflow: hidden;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #info-panel {
+            flex: 1;
+            border: 1px solid #0f0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        h2, h3 { margin-top: 0; color: #0f0; }
+        .system {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #0f0;
+            border-radius: 50%;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: all 0.2s;
+        }
+        .system:hover {
+            box-shadow: 0 0 15px #0f0;
+            background-color: #fff;
+        }
+        .system-label {
+            position: absolute;
+            color: #0f0;
+            font-size: 14px;
+            pointer-events: none;
+            transform: translate(12px, -7px);
+            white-space: nowrap;
+        }
+        .action-btn {
+            background-color: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 15px;
+            text-transform: uppercase;
+        }
+        .action-btn:hover {
+            background-color: #0f0;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" style="display: flex; flex-direction: column; height: 100%;">
+        <div id="dashboard">
+            <div class="stat">FUEL: <span id="fuel">100</span>%</div>
+            <div class="stat">CREDITS: ₭<span id="credits">1,000</span></div>
+            <div class="stat">CARGO: <span id="cargo-used">0</span>/<span id="cargo-max">50</span> TONS</div>
+        </div>
+        <div id="main-view">
+            <div id="map-container">
+                <div id="map"></div>
+            </div>
+            <div id="info-panel">
+                <h2>LOCAL SYSTEMS</h2>
+                <div id="system-info">
+                    Select a system on the map for details.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const systems = [
+            { id: 1, name: "Sol", x: 50, y: 50, desc: "Cradle of humanity. Highly developed planetary system with a stable economy." },
+            { id: 2, name: "Alpha Centauri", x: 30, y: 70, desc: "Primary mining colony. Resource rich, but known for pirate activity on the outskirts." },
+            { id: 3, name: "Sirius", x: 75, y: 35, desc: "Major trading hub. High tech goods are cheap here." },
+            { id: 4, name: "Proxima", x: 20, y: 80, desc: "Remote outpost. Dangerous but offers high rewards for smugglers." },
+            { id: 5, name: "Vega", x: 80, y: 80, desc: "Agricultural world. Supplies food to neighboring industrial systems." }
+        ];
+
+        const mapEl = document.getElementById('map');
+        const infoEl = document.getElementById('system-info');
+
+        function renderMap() {
+            systems.forEach(sys => {
+                // System dot
+                const dot = document.createElement('div');
+                dot.className = 'system';
+                dot.style.left = sys.x + '%';
+                dot.style.top = sys.y + '%';
+                
+                // System label
+                const label = document.createElement('div');
+                label.className = 'system-label';
+                label.style.left = sys.x + '%';
+                label.style.top = sys.y + '%';
+                label.innerText = sys.name;
+
+                dot.addEventListener('click', () => {
+                    infoEl.innerHTML = `
+                        <h3>${sys.name.toUpperCase()}</h3>
+                        <p>${sys.desc}</p>
+                        <p><strong>Coordinates:</strong> X:${sys.x} Y:${sys.y}</p>
+                        <button class="action-btn" onclick="alert('Navigation sequence initiated (Phase 5 feature)')">Set Course</button>
+                    `;
+                });
+
+                mapEl.appendChild(dot);
+                mapEl.appendChild(label);
+            });
+        }
+
+        renderMap();
+    </script>
+</body>
+</html>
