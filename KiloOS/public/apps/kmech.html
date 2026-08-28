@@ -146,6 +146,36 @@
             color: #f00;
             text-shadow: 0 0 2px #f00;
         }
+        @keyframes idle-bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        @keyframes anim-attack {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(15px); }
+        }
+        @keyframes anim-attack-enemy {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-15px); }
+        }
+        @keyframes anim-damage {
+            0%, 100% { transform: translateX(0) translateY(0); filter: drop-shadow(0 0 0 #f00); }
+            25% { transform: translateX(-4px) translateY(2px); filter: drop-shadow(0 0 5px #f00); }
+            50% { transform: translateX(4px) translateY(-2px); filter: drop-shadow(0 0 8px #f00); }
+            75% { transform: translateX(-2px) translateY(2px); filter: drop-shadow(0 0 5px #f00); }
+        }
+        .mech-sprite {
+            animation: idle-bob 2s infinite ease-in-out;
+        }
+        .mech-sprite.attacking {
+            animation: anim-attack 0.2s ease-out;
+        }
+        .mech-sprite.enemy-attacking {
+            animation: anim-attack-enemy 0.2s ease-out;
+        }
+        .mech-sprite.damaged {
+            animation: anim-damage 0.4s;
+        }
     </style>
 </head>
 <body>
@@ -213,7 +243,7 @@
                 <div class="mech-side">
                     <div class="mech-name">Player Mech</div>
                     <div class="wireframe">
-                        <svg width="100" height="100" viewBox="0 0 100 100">
+                        <svg id="player-mech-svg" class="mech-sprite" width="100" height="100" viewBox="0 0 100 100">
                             <g stroke="#0f0" stroke-width="2" fill="none">
                                 <rect x="40" y="10" width="20" height="15" />
                                 <line x1="45" y1="15" x2="55" y2="15" stroke-width="3" />
@@ -236,7 +266,7 @@
                 <div class="mech-side">
                     <div class="mech-name">Enemy Mech</div>
                     <div class="wireframe enemy-wireframe">
-                        <svg width="100" height="100" viewBox="0 0 100 100">
+                        <svg id="enemy-mech-svg" class="mech-sprite" width="100" height="100" viewBox="0 0 100 100">
                             <g stroke="#f00" stroke-width="2" fill="none">
                                 <circle cx="50" cy="15" r="8" />
                                 <circle cx="47" cy="15" r="2" fill="#f00" />
@@ -420,6 +450,17 @@
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('screen-' + id).classList.add('active');
+        }
+
+        function triggerAnim(id, animClass, duration) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove(animClass);
+            void el.offsetWidth; // trigger reflow
+            el.classList.add(animClass);
+            setTimeout(() => {
+                el.classList.remove(animClass);
+            }, duration);
         }
 
         function updateGarage() {
@@ -617,9 +658,12 @@
             if (hitChance > 1.0) hitChance = 1.0;
 
             if (Math.random() > hitChance) {
+                triggerAnim('player-mech-svg', 'attacking', 200);
                 playSound('miss');
                 logMsg(`You target ${targetLimb.name}... Missed!`);
             } else {
+                triggerAnim('player-mech-svg', 'attacking', 200);
+                setTimeout(() => triggerAnim('enemy-mech-svg', 'damaged', 400), 100);
                 playSound('laser');
                 setTimeout(() => playSound('impact'), 100);
                 let dmg = Math.max(1, playerStats.atk - (enemyIsDefending ? enemyStats.def * 2 : enemyStats.def) + Math.floor(Math.random() * 5));
@@ -678,6 +722,7 @@
             
             let effectiveChance = targetLimb.chance - specials[equipSpec].evadeBonus - ((playerLevel - 1) * 0.05);
             if (Math.random() > effectiveChance) {
+                triggerAnim('enemy-mech-svg', 'enemy-attacking', 200);
                 playSound('miss');
                 if (specials[equipSpec].evadeBonus > 0 || playerLevel > 1) {
                     logMsg(`Enemy targets ${targetLimb.name}... Evaded!`);
@@ -685,6 +730,8 @@
                     logMsg(`Enemy targets ${targetLimb.name}... Missed!`);
                 }
             } else {
+                triggerAnim('enemy-mech-svg', 'enemy-attacking', 200);
+                setTimeout(() => triggerAnim('player-mech-svg', 'damaged', 400), 100);
                 playSound('enemyLaser');
                 setTimeout(() => playSound('impact'), 100);
                 let dmg = Math.max(1, enemyStats.atk - (isDefending ? playerStats.def * 2 : playerStats.def) + Math.floor(Math.random() * 4));

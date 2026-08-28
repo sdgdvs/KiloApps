@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMech
 - KMatch3
 - KFreecell
 - KSudoku
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarship
 - KConnect4
 - KHangman
+- KMech
 ## Completed Work Log
+
+- **KMech (Loop 2):** Implemented sprite animations including idle bobbing, attack lunges, and damage shakes with red flash drop-shadow effects via CSS keyframes and DOM manipulation in Web Canvas (kmech.html), and a 50ms Win32 timer driving continuous idle ping-pong bobbing, viewport offset attack lunges, screen shake damage effects, and dynamic/persistent particle bursts (yellow/orange sparks and death smoke) in Native C Win32 GDI (KMech/main.c).
 
 - **KHangman (Loop 7):** Implemented highly polished visual effects including multi-layered kinematic debris explosions (heavy gravity, air friction, floor bouncing physics) for the Bomb power-up, amplified procedural screen-shake physics, and dramatic animated character variations (panic expressions and flailing arms tied directly to the physics ticks while shake is active) in both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 

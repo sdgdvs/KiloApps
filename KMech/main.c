@@ -90,6 +90,17 @@ bool isDefending = false;
 bool enemyIsDefending = false;
 int playerLimbDamage[5] = {0, 0, 0, 0, 0};
 
+int animPlayerOffset = 0;
+int animEnemyOffset = 0;
+int animPlayerDmg = 0;
+int animEnemyDmg = 0;
+
+int pingpong(int t, int max) {
+    int cycle = t % (max * 2);
+    if (cycle > max) return (max * 2) - cycle;
+    return cycle;
+}
+
 int currentTargetLimb = 1; // 0=Head, 1=Torso, 2=LArm, 3=RArm, 4=Legs
 const char* limbNames[] = { "Head", "Torso", "L.Arm", "R.Arm", "Legs" };
 float limbHitChance[] = { 0.2f, 0.8f, 0.6f, 0.6f, 0.5f };
@@ -122,6 +133,7 @@ void EnemyTurn() {
         return;
     }
 
+    animEnemyOffset = 8;
     enemyIsDefending = false;
     enemyStats.heat += 30;
 
@@ -166,6 +178,7 @@ void EnemyTurn() {
 
         playerStats.hp -= dmg;
         playerLimbDamage[target] += dmg;
+        animPlayerDmg = 10;
         
         char buf[128];
         wsprintfA(buf, "Enemy hits %s! Took %d dmg.", limbNames[target], dmg);
@@ -216,6 +229,7 @@ void ActionAttack() {
         }
     }
 
+    animPlayerOffset = 8;
     int target = currentTargetLimb;
     int hitRoll = my_rand() % 100;
     
@@ -233,6 +247,7 @@ void ActionAttack() {
         if (dmg < 1) dmg = 1;
         dmg = (int)(dmg * limbDmgMult[target]);
         enemyStats.hp -= dmg;
+        animEnemyDmg = 10;
 
         char buf[128];
         wsprintfA(buf, "You hit %s! Dealt %d dmg.", limbNames[target], dmg);
@@ -357,6 +372,20 @@ void DrawButton(HDC hdc, const RECT* r, const char* text) {
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
+        case WM_CREATE: {
+            SetTimer(hwnd, 1, 50, NULL);
+            break;
+        }
+        case WM_TIMER: {
+            bool needsRedraw = false;
+            if (animPlayerOffset > 0) { animPlayerOffset--; needsRedraw = true; }
+            if (animEnemyOffset > 0) { animEnemyOffset--; needsRedraw = true; }
+            if (animPlayerDmg > 0) { animPlayerDmg--; needsRedraw = true; }
+            if (animEnemyDmg > 0) { animEnemyDmg--; needsRedraw = true; }
+            if (gameState == STATE_BATTLE || gameState == STATE_POST_BATTLE) needsRedraw = true;
+            if (needsRedraw) InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
@@ -566,6 +595,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(memDC, &pHeatBar, heatP);
                 }
                 
+                int tick = GetTickCount();
+                bool playerDead = (playerStats.hp <= 0);
+                int playerBob = playerDead ? 10 : (pingpong(tick / 150, 6) - 3);
+                int pOffX = 0, pOffY = playerBob;
+                if (!playerDead && animPlayerOffset > 0) {
+                    pOffX += (animPlayerOffset > 4) ? (8 - animPlayerOffset) * 4 : animPlayerOffset * 4;
+                }
+                if (!playerDead && animPlayerDmg > 0) {
+                    pOffX += (my_rand() % 7) - 3; pOffY += (my_rand() % 7) - 3;
+                }
+                SetViewportOrgEx(memDC, pOffX, pOffY, NULL);
+
                 HPEN pPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
                 HBRUSH pBrush = CreateSolidBrush(RGB(0, 50, 0));
                 HGDIOBJ pOldPen = SelectObject(memDC, pPen);
@@ -585,6 +626,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(memDC, pOldBrush);
                 DeleteObject(pPen);
                 DeleteObject(pBrush);
+
+                if (animPlayerDmg > 0) {
+                    HPEN dmgPen = CreatePen(PS_SOLID, 2, RGB(255, 100, 0));
+                    HGDIOBJ old = SelectObject(memDC, dmgPen);
+                    for (int i=0; i<5; i++) {
+                        int px = 110 + (my_rand() % 60) - 30;
+                        int py = 140 + (my_rand() % 60) - 30;
+                        int pr = 3 + (my_rand() % 7);
+                        Ellipse(memDC, px-pr, py-pr, px+pr, py+pr);
+                    }
+                    SelectObject(memDC, old);
+                    DeleteObject(dmgPen);
+                }
+                if (playerDead) {
+                    HPEN firePen = CreatePen(PS_SOLID, 1, RGB(255, 100, 0));
+                    HBRUSH fireBrush = CreateSolidBrush(RGB(255, 50, 0));
+                    HGDIOBJ oldP = SelectObject(memDC, firePen);
+                    HGDIOBJ oldB = SelectObject(memDC, fireBrush);
+                    for (int i=0; i<10; i++) {
+                        int px = 110 + (my_rand() % 50) - 25;
+                        int py = 150 + (my_rand() % 40) - 20;
+                        int pr = 4 + (my_rand() % 8);
+                        Ellipse(memDC, px-pr, py-pr, px+pr, py+pr);
+                    }
+                    SelectObject(memDC, oldP);
+                    SelectObject(memDC, oldB);
+                    DeleteObject(fireBrush);
+                    DeleteObject(firePen);
+                }
+                SetViewportOrgEx(memDC, 0, 0, NULL);
                 
                 // Enemy Mech Stats
                 char bufE[64];
@@ -610,6 +681,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(memDC, &eHeatBar, heatP);
                 }
                 
+                bool enemyDead = (enemyStats.hp <= 0);
+                int enemyBob = enemyDead ? 10 : (pingpong((tick + 300) / 150, 6) - 3);
+                int eOffX = 0, eOffY = enemyBob;
+                if (!enemyDead && animEnemyOffset > 0) {
+                    eOffX -= (animEnemyOffset > 4) ? (8 - animEnemyOffset) * 4 : animEnemyOffset * 4;
+                }
+                if (!enemyDead && animEnemyDmg > 0) {
+                    eOffX += (my_rand() % 7) - 3; eOffY += (my_rand() % 7) - 3;
+                }
+                SetViewportOrgEx(memDC, eOffX, eOffY, NULL);
+
                 HPEN ePen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
                 HBRUSH eBrush = CreateSolidBrush(RGB(50, 0, 0));
                 HBRUSH eRedBrush = CreateSolidBrush(RGB(255, 0, 0));
@@ -631,6 +713,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(ePen);
                 DeleteObject(eBrush);
                 DeleteObject(eRedBrush);
+
+                if (animEnemyDmg > 0) {
+                    HPEN dmgPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));
+                    HGDIOBJ old = SelectObject(memDC, dmgPen);
+                    for (int i=0; i<5; i++) {
+                        int ex = 420 + (my_rand() % 60) - 30;
+                        int ey = 140 + (my_rand() % 60) - 30;
+                        int er = 3 + (my_rand() % 7);
+                        Ellipse(memDC, ex-er, ey-er, ex+er, ey+er);
+                    }
+                    SelectObject(memDC, old);
+                    DeleteObject(dmgPen);
+                }
+                if (enemyDead) {
+                    HPEN firePen = CreatePen(PS_SOLID, 1, RGB(255, 100, 0));
+                    HBRUSH fireBrush = CreateSolidBrush(RGB(255, 50, 0));
+                    HGDIOBJ oldP = SelectObject(memDC, firePen);
+                    HGDIOBJ oldB = SelectObject(memDC, fireBrush);
+                    for (int i=0; i<10; i++) {
+                        int ex = 420 + (my_rand() % 50) - 25;
+                        int ey = 150 + (my_rand() % 40) - 20;
+                        int er = 4 + (my_rand() % 8);
+                        Ellipse(memDC, ex-er, ey-er, ex+er, ey+er);
+                    }
+                    SelectObject(memDC, oldP);
+                    SelectObject(memDC, oldB);
+                    DeleteObject(fireBrush);
+                    DeleteObject(firePen);
+                }
+                SetViewportOrgEx(memDC, 0, 0, NULL);
                 SetTextColor(memDC, RGB(0, 255, 0)); // Restore color
                 
                 DeleteObject(hpBg);
