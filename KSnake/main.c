@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <math.h>
 
 #pragma function(memset)
 void* memset(void* dest, int c, unsigned int count) {
@@ -10,6 +9,15 @@ void* memset(void* dest, int c, unsigned int count) {
     return dest;
 }
 
+#pragma function(memcpy)
+void* memcpy(void* dest, const void* src, unsigned int count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) {
+        *d++ = *s++;
+    }
+    return dest;
+}
 
 #define CELL_SIZE 25
 #define GRID_WIDTH 20
@@ -18,12 +26,15 @@ void* memset(void* dest, int c, unsigned int count) {
 
 #define ABS(x) (((x) < 0) ? -(x) : (x))
 
+static const int cos_tab16[16] = { 100, 92, 70, 38, 0, -38, -70, -92, -100, -92, -70, -38, 0, 38, 70, 92 };
+static const int sin_tab16[16] = { 0, 38, 70, 92, 100, 92, 70, 38, 0, -38, -70, -92, -100, -92, -70, -38 };
+
 struct Point { int x; int y; };
 
 struct HighScoreEntry {
     char name[4];
     int score;
-    char mode[12];
+    char mode[16];
     char date[12];
 };
 
@@ -43,8 +54,13 @@ struct Boss {
     int max_hp;
     int dir_x, dir_y;
     int alive;
+    int boss_type; // 0=Hydra, 1=Basilisk, 2=Inferno, 3=Void Ouroboros
+    int laser_charge; // For Basilisk
+    int laser_row;
+    int laser_col;
+    int phase_timer; // For Void phase
+    int invisible;
 };
-
 
 struct Particle { int x, y, vx, vy, life; COLORREF color; };
 struct Particle particles[500];
@@ -53,8 +69,13 @@ int particle_count = 0;
 int screen_shake_timer = 0;
 int shockwave_timer = 0;
 int shockwave_x = 0, shockwave_y = 0;
+
 struct Point oil_slicks[50];
 int num_oil_slicks = 0;
+
+struct Point magma_hazards[50];
+int magma_timers[50];
+int num_magma = 0;
 
 // Replay System
 struct ReplayEvent {
@@ -81,12 +102,13 @@ int bind_freeze = 'F';
 int bind_mag = 'M';
 int bind_pause = 'P';
 
-int config_step = 0; // for state 6
+int config_step = 0;
 
-// Game State Enum: 0=Menu, 1=Playing, 2=GameOver, 3=Paused, 4=Victory, 5=Leaderboard, 6=Config, 7=Stats/Export
+// Game State Enum: 0=Menu, 1=Playing, 2=GameOver, 3=Paused, 4=Victory, 5=Leaderboard, 6=Config, 7=Stats, 8=Editor, 9=BranchSelect
 int game_state = 0; 
-int game_mode = 0; // 0=Classic, 1=Maze, 2=Speed Ramp, 3=Wrap, 4=Campaign, 5=VS
-const char* mode_names[] = { "Classic", "Maze", "Ramp", "Wrap", "Campaign", "VS Mode" };
+#define NUM_MODES 8
+int game_mode = 0; // 0=Classic, 1=Maze, 2=Speed Ramp, 3=Wrap, 4=Campaign, 5=VS, 6=Custom Map, 7=Boss Gauntlet
+const char* mode_names[NUM_MODES] = { "Classic", "Maze", "Ramp", "Wrap", "Campaign", "VS Mode", "Custom Map", "Gauntlet" };
 
 struct Point snake[400];
 int snake_len = 3;
@@ -109,12 +131,31 @@ int freeze_cd = 0, freeze_active = 0;
 int magnet_cd = 0, magnet_active = 0;
 
 // Obstacles & Portals
-struct Point obstacles[100];
+struct Point obstacles[120];
 int num_obstacles = 0;
 struct Point portal_a = { -1, -1 };
 struct Point portal_b = { -1, -1 };
 int portal_active = 0;
 int portal_shift_timer = 0;
+
+// Custom Map & Editor
+struct Point custom_obstacles[120];
+int num_custom_obstacles = 0;
+struct Point custom_portal_a = { 2, 10 };
+struct Point custom_portal_b = { 17, 10 };
+int custom_portal_active = 1;
+int editor_cursor_x = 10, editor_cursor_y = 10;
+int editor_brush = 0; // 0=Wall, 1=Portal A, 2=Portal B, 3=Erase
+
+// Gauntlet State
+int gauntlet_stage = 0; // 0=Hydra, 1=Basilisk, 2=Inferno, 3=Void Ouroboros
+const char* boss_names[4] = { "Hydra Viper", "Cyber Basilisk", "Inferno Wyrm", "Void Ouroboros" };
+int boss_banner_timer = 0;
+
+// Campaign Branch State
+int campaign_branch = 0; // 0=Solar Path, 1=Shadow Path
+int campaign_level = 1;
+int pending_branch_choice = 0;
 
 // CPU Rivals & Boss
 struct CPUSnake rivals[4];
@@ -127,7 +168,6 @@ int current_speed = 150;
 int base_speed = 150;
 int score_mult = 10;
 int wrap_mode = 0;
-int campaign_level = 1;
 int apples_eaten = 0;
 int total_apples = 0;
 int games_played = 0;
@@ -154,12 +194,17 @@ void PlacePoisonBerry(void);
 void PlaceSpeedBerry(void);
 void PlaceGhostBerry(void);
 void InitCampaignStage(int level);
+void InitGauntletStage(int b_type);
 void InitCPURivals(void);
 void InitGame(void);
 void SaveStats(void);
 void LoadStats(void);
 void SaveGameState(void);
 int RestoreGameState(void);
+void SaveCustomMap(void);
+void LoadCustomMap(void);
+void ClearCustomMap(void);
+void GenerateRandomMazeToCustom(void);
 void ExportStatsText(void);
 void ImportStatsText(void);
 
@@ -190,8 +235,6 @@ void SpawnExplosion(int x, int y, COLORREF base_color, int is_big) {
     }
 }
 
-
-// Helper String & Conversion functions
 char* my_strstr(const char* haystack, const char* needle) {
     if (!*needle) return (char*)haystack;
     for (; *haystack; haystack++) {
@@ -214,7 +257,6 @@ int my_atoi(const char* str) {
     }
     return res;
 }
-
 
 void SaveConfig() {
     HANDLE hFile = CreateFileA("ksnake_binds.cfg", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -242,6 +284,59 @@ void LoadConfig() {
         }
         CloseHandle(hFile);
     }
+}
+
+void SaveCustomMap() {
+    HANDLE hFile = CreateFileA("ksnake_custom_map.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bw;
+        WriteFile(hFile, &num_custom_obstacles, sizeof(int), &bw, NULL);
+        WriteFile(hFile, custom_obstacles, sizeof(struct Point) * num_custom_obstacles, &bw, NULL);
+        WriteFile(hFile, &custom_portal_active, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &custom_portal_a, sizeof(struct Point), &bw, NULL);
+        WriteFile(hFile, &custom_portal_b, sizeof(struct Point), &bw, NULL);
+        CloseHandle(hFile);
+        MessageBoxA(NULL, "Custom Map Saved Successfully!", "Map Editor", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+void LoadCustomMap() {
+    HANDLE hFile = CreateFileA("ksnake_custom_map.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD br;
+        ReadFile(hFile, &num_custom_obstacles, sizeof(int), &br, NULL);
+        if (num_custom_obstacles > 120) num_custom_obstacles = 120;
+        ReadFile(hFile, custom_obstacles, sizeof(struct Point) * num_custom_obstacles, &br, NULL);
+        ReadFile(hFile, &custom_portal_active, sizeof(int), &br, NULL);
+        ReadFile(hFile, &custom_portal_a, sizeof(struct Point), &br, NULL);
+        ReadFile(hFile, &custom_portal_b, sizeof(struct Point), &br, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void ClearCustomMap() {
+    num_custom_obstacles = 0;
+    custom_portal_active = 0;
+    custom_portal_a.x = -1; custom_portal_a.y = -1;
+    custom_portal_b.x = -1; custom_portal_b.y = -1;
+}
+
+void GenerateRandomMazeToCustom() {
+    int i, x, y;
+    ClearCustomMap();
+    for(i=0; i<30; i++) {
+        x = random_int(GRID_WIDTH);
+        y = random_int(GRID_HEIGHT);
+        if (y == 5 && (x >= 2 && x <= 6)) continue;
+        if (num_custom_obstacles < 100) {
+            custom_obstacles[num_custom_obstacles].x = x;
+            custom_obstacles[num_custom_obstacles].y = y;
+            num_custom_obstacles++;
+        }
+    }
+    custom_portal_active = 1;
+    custom_portal_a.x = 2; custom_portal_a.y = 2;
+    custom_portal_b.x = 17; custom_portal_b.y = 17;
 }
 
 void ExportReplay() {
@@ -328,6 +423,8 @@ void SaveGameState() {
         WriteFile(hFile, &num_obstacles, sizeof(int), &bw, NULL);
         WriteFile(hFile, obstacles, sizeof(struct Point) * num_obstacles, &bw, NULL);
         WriteFile(hFile, &campaign_level, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &campaign_branch, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &gauntlet_stage, sizeof(int), &bw, NULL);
         CloseHandle(hFile);
     }
 }
@@ -350,6 +447,8 @@ int RestoreGameState() {
     ReadFile(hFile, &num_obstacles, sizeof(int), &br, NULL);
     ReadFile(hFile, obstacles, sizeof(struct Point) * num_obstacles, &br, NULL);
     ReadFile(hFile, &campaign_level, sizeof(int), &br, NULL);
+    ReadFile(hFile, &campaign_branch, sizeof(int), &br, NULL);
+    ReadFile(hFile, &gauntlet_stage, sizeof(int), &br, NULL);
     CloseHandle(hFile);
     DeleteFileA("ksnake_save.dat");
     return 1;
@@ -473,14 +572,71 @@ void InitCPURivals() {
     }
 }
 
+void InitGauntletStage(int b_type) {
+    int k;
+    num_obstacles = 0;
+    portal_active = 0;
+    num_rivals = 0;
+    num_oil_slicks = 0;
+    num_magma = 0;
+    
+    boss.alive = 1;
+    boss.boss_type = b_type;
+    boss.laser_charge = 0;
+    boss.laser_row = -1;
+    boss.laser_col = -1;
+    boss.phase_timer = 0;
+    boss.invisible = 0;
+    boss.dir_x = 0;
+    boss.dir_y = 1;
+    
+    if (b_type == 0) { // Hydra Viper
+        boss.max_hp = 15; boss.hp = 15; boss.len = 7;
+        base_speed = 130;
+    } else if (b_type == 1) { // Cyber Basilisk
+        boss.max_hp = 20; boss.hp = 20; boss.len = 8;
+        base_speed = 120;
+        // Tech obstacles
+        obstacles[0].x = 4; obstacles[0].y = 4;
+        obstacles[1].x = 15; obstacles[1].y = 4;
+        obstacles[2].x = 4; obstacles[2].y = 15;
+        obstacles[3].x = 15; obstacles[3].y = 15;
+        num_obstacles = 4;
+    } else if (b_type == 2) { // Inferno Wyrm
+        boss.max_hp = 25; boss.hp = 25; boss.len = 9;
+        base_speed = 110;
+        // Ring of fire pillars
+        obstacles[0].x = 5; obstacles[0].y = 10;
+        obstacles[1].x = 14; obstacles[1].y = 10;
+        obstacles[2].x = 10; obstacles[2].y = 5;
+        obstacles[3].x = 10; obstacles[3].y = 14;
+        num_obstacles = 4;
+    } else { // Void Ouroboros
+        boss.max_hp = 30; boss.hp = 30; boss.len = 10;
+        base_speed = 100;
+        portal_active = 1;
+        portal_a.x = 3; portal_a.y = 3;
+        portal_b.x = 16; portal_b.y = 16;
+    }
+    
+    current_speed = base_speed;
+    for(k=0; k<boss.len; k++) {
+        boss.body[k].x = 10;
+        boss.body[k].y = 2 + k;
+    }
+    boss_banner_timer = 20;
+}
+
 void InitCampaignStage(int level) {
     int i, k, dx, dy;
     num_obstacles = 0;
     portal_active = 0;
-    portal_a.x = -1; portal_b.x = -1;
+    portal_a.x = -1; portal_a.y = -1;
+    portal_b.x = -1; portal_b.y = -1;
     num_rivals = 0;
     boss.alive = 0;
     num_oil_slicks = 0;
+    num_magma = 0;
 
     if (level == 1) {
         portal_active = 1;
@@ -520,204 +676,117 @@ void InitCampaignStage(int level) {
             }
         }
         num_rivals = 1;
-    } else if (level == 6) {
-        for(i=3; i<=14; i++) { obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 3; num_obstacles++; }
-        for(i=4; i<=15; i++) { obstacles[num_obstacles].x = 16; obstacles[num_obstacles].y = i; num_obstacles++; }
-        for(i=5; i<=16; i++) { obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 16; num_obstacles++; }
-        for(i=6; i<=13; i++) { obstacles[num_obstacles].x = 3; obstacles[num_obstacles].y = i; num_obstacles++; }
-    } else if (level == 7) {
-        int x, y;
-        for(x=4; x<=16; x+=4) {
-            for(y=4; y<=16; y+=4) {
-                obstacles[num_obstacles].x = x; obstacles[num_obstacles].y = y; num_obstacles++;
-                obstacles[num_obstacles].x = x+1; obstacles[num_obstacles].y = y; num_obstacles++;
+    } else if (level >= 6 && level <= 10) {
+        if (campaign_branch == 0) { // Solar Path (Portals & Open Speed)
+            for(i=2; i<=17; i+=5) {
+                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = i; num_obstacles++;
+                obstacles[num_obstacles].x = 19 - i; obstacles[num_obstacles].y = i; num_obstacles++;
             }
-        }
-        num_rivals = 1;
-    } else if (level == 8) {
-        for(i=0; i<6; i++) {
-            obstacles[num_obstacles].x = 10 - i; obstacles[num_obstacles].y = 3 + i; num_obstacles++;
-            obstacles[num_obstacles].x = 10 + i; obstacles[num_obstacles].y = 3 + i; num_obstacles++;
-            obstacles[num_obstacles].x = 10 - i; obstacles[num_obstacles].y = 16 - i; num_obstacles++;
-            obstacles[num_obstacles].x = 10 + i; obstacles[num_obstacles].y = 16 - i; num_obstacles++;
-        }
-        portal_active = 1;
-        portal_a.x = 10; portal_a.y = 2;
-        portal_b.x = 10; portal_b.y = 17;
-    } else if (level == 9) {
-        for(i=2; i<=17; i++) {
-            if (i >= 8 && i <= 11) continue;
-            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 3; num_obstacles++;
-            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 16; num_obstacles++;
-        }
-        for(i=4; i<=15; i++) {
-            obstacles[num_obstacles].x = 9; obstacles[num_obstacles].y = i; num_obstacles++;
-            obstacles[num_obstacles].x = 10; obstacles[num_obstacles].y = i; num_obstacles++;
-        }
-        num_rivals = 1;
-    } else if (level == 10) {
-        for(i=2; i<=17; i++) {
-            if (i != 9 && i != 10) {
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 2; num_obstacles++;
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 17; num_obstacles++;
+            portal_active = 1;
+            portal_a.x = (level % 2 == 0) ? 1 : 18; portal_a.y = 10;
+            portal_b.x = (level % 2 == 0) ? 18 : 1; portal_b.y = 10;
+            num_rivals = (level >= 8) ? 1 : 0;
+        } else { // Shadow Path (Tight stealth alleys & extra rivals)
+            for(i=3; i<=16; i++) {
+                if (i % 3 != 0) {
+                    obstacles[num_obstacles].x = 5; obstacles[num_obstacles].y = i; num_obstacles++;
+                    obstacles[num_obstacles].x = 14; obstacles[num_obstacles].y = i; num_obstacles++;
+                }
             }
+            num_rivals = 2;
         }
-        for(i=6; i<=13; i++) {
-            if (i != 9 && i != 10) {
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 6; num_obstacles++;
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 13; num_obstacles++;
+    } else if (level >= 11 && level <= 14) {
+        if (campaign_branch == 0) {
+            int y, x;
+            for(y=3; y<=16; y+=4) {
+                int start = (y % 8 == 0) ? 0 : 6;
+                int end = (y % 8 == 0) ? 13 : 19;
+                for(x=start; x<=end; x++) {
+                    obstacles[num_obstacles].x = x; obstacles[num_obstacles].y = y; num_obstacles++;
+                }
             }
-        }
-        num_rivals = 1;
-    } else if (level == 11) {
-        int y, x;
-        for(y=3; y<=16; y+=3) {
-            int start = (y % 6 == 0) ? 0 : 5;
-            int end = (y % 6 == 0) ? 14 : 19;
-            for(x=start; x<=end; x++) {
-                obstacles[num_obstacles].x = x; obstacles[num_obstacles].y = y; num_obstacles++;
+            portal_active = 1;
+            portal_a.x = 2; portal_a.y = 2;
+            portal_b.x = 17; portal_b.y = 17;
+            num_rivals = 1;
+        } else {
+            int x, y;
+            for(x=4; x<=16; x+=4) {
+                for(y=4; y<=16; y+=4) {
+                    obstacles[num_obstacles].x = x; obstacles[num_obstacles].y = y; num_obstacles++;
+                    obstacles[num_obstacles].x = x+1; obstacles[num_obstacles].y = y; num_obstacles++;
+                }
             }
+            num_rivals = 2;
         }
-        portal_active = 1;
-        portal_a.x = 0; portal_a.y = 0;
-        portal_b.x = 19; portal_b.y = 19;
-    } else if (level == 12) {
-        for(i=3; i<=16; i++) {
-            if (i != 9 && i != 10) {
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 3; num_obstacles++;
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 16; num_obstacles++;
-                obstacles[num_obstacles].x = 3; obstacles[num_obstacles].y = i; num_obstacles++;
-                obstacles[num_obstacles].x = 16; obstacles[num_obstacles].y = i; num_obstacles++;
-            }
-        }
-        num_rivals = 2;
-    } else if (level == 13) {
-        for(i=3; i<=16; i++) {
-            if (i >= 8 && i <= 11) continue;
-            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = i; num_obstacles++;
-            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 19 - i; num_obstacles++;
-        }
-        num_rivals = 2;
-    } else if (level == 14) {
-        int isles_x[6] = {3, 10, 16, 3, 10, 16};
-        int isles_y[6] = {3, 3, 3, 16, 16, 16};
-        for(k=0; k<6; k++) {
-            obstacles[num_obstacles].x = isles_x[k]; obstacles[num_obstacles].y = isles_y[k]; num_obstacles++;
-            obstacles[num_obstacles].x = isles_x[k]+1; obstacles[num_obstacles].y = isles_y[k]; num_obstacles++;
-            obstacles[num_obstacles].x = isles_x[k]; obstacles[num_obstacles].y = isles_y[k]+1; num_obstacles++;
-            obstacles[num_obstacles].x = isles_x[k]+1; obstacles[num_obstacles].y = isles_y[k]+1; num_obstacles++;
-        }
-        num_rivals = 2;
     } else if (level == 15) {
-        int i_x, j_y;
-        for(i_x=2; i_x<=17; i_x+=3) {
-            for(j_y=2; j_y<=17; j_y+=3) {
-                obstacles[num_obstacles].x = i_x; obstacles[num_obstacles].y = j_y; num_obstacles++;
-            }
-        }
-        portal_active = 1;
-        portal_a.x = 1; portal_a.y = 10;
-        portal_b.x = 18; portal_b.y = 10;
-        num_rivals = 2;
-    } else if (level == 16) {
-        int x, y;
-        for(x=2; x<=17; x+=2) {
-            for(y=1; y<=18; y++) {
-                if ((x / 2) % 2 == 0 && y > 14) continue;
-                if ((x / 2) % 2 == 1 && y < 5) continue;
-                obstacles[num_obstacles].x = x; obstacles[num_obstacles].y = y; num_obstacles++;
-            }
-        }
-        num_rivals = 2;
-    } else if (level == 17) {
-        for(i=0; i<30; i++) {
-            int cx = (i * 7 + 3) % 18 + 1;
-            int cy = (i * 11 + 5) % 18 + 1;
-            if (cy == 5 && cx >= 2 && cx <= 6) continue;
-            obstacles[num_obstacles].x = cx; obstacles[num_obstacles].y = cy; num_obstacles++;
-        }
-        portal_active = 1;
-        portal_a.x = 3; portal_a.y = 3;
-        portal_b.x = 16; portal_b.y = 16;
-        num_rivals = 2;
-    } else if (level == 18) {
-        for(i=2; i<=17; i++) {
-            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 5; num_obstacles++;
-            obstacles[num_obstacles].x = 19 - i; obstacles[num_obstacles].y = 14; num_obstacles++;
-        }
-        num_rivals = 2;
-    } else if (level == 19) {
-        for(i=2; i<=17; i++) {
-            if (i % 2 == 0) {
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 4; num_obstacles++;
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 8; num_obstacles++;
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 12; num_obstacles++;
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 16; num_obstacles++;
-            }
-        }
-        portal_active = 1;
-        portal_a.x = 1; portal_a.y = 1;
-        portal_b.x = 18; portal_b.y = 18;
-        num_rivals = 2;
-    } else if (level == 20) {
-        // Stage 20: HYDRA VIPER BOSS LAIR
-        int px[4] = {1, 17, 1, 17};
-        int py[4] = {1, 1, 17, 17};
-        for(k=0; k<4; k++) {
-            obstacles[num_obstacles].x = px[k]; obstacles[num_obstacles].y = py[k]; num_obstacles++;
-        }
-        boss.alive = 1;
-        boss.hp = 15;
-        boss.max_hp = 15;
-        boss.len = 8;
+        // Stage 15 Mid-Boss Encounter: Cyber Basilisk!
+        boss.alive = 1; boss.boss_type = 1; boss.hp = 18; boss.max_hp = 18; boss.len = 7;
         boss.dir_x = 0; boss.dir_y = 1;
-        for(k=0; k<boss.len; k++) {
-            boss.body[k].x = 10;
-            boss.body[k].y = 2 + k;
+        for(k=0; k<boss.len; k++) { boss.body[k].x = 10; boss.body[k].y = 2 + k; }
+        obstacles[0].x = 4; obstacles[0].y = 4; obstacles[1].x = 15; obstacles[1].y = 15;
+        num_obstacles = 2;
+    } else if (level >= 16 && level <= 19) {
+        if (campaign_branch == 0) {
+            for(i=2; i<=17; i++) {
+                if (i % 2 == 0) {
+                    obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 4; num_obstacles++;
+                    obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 15; num_obstacles++;
+                }
+            }
+            portal_active = 1; portal_a.x = 1; portal_a.y = 1; portal_b.x = 18; portal_b.y = 18;
+            num_rivals = 2;
+        } else {
+            for(i=2; i<=17; i++) {
+                if (i != 9 && i != 10) {
+                    obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 3; num_obstacles++;
+                    obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 16; num_obstacles++;
+                    obstacles[num_obstacles].x = 3; obstacles[num_obstacles].y = i; num_obstacles++;
+                    obstacles[num_obstacles].x = 16; obstacles[num_obstacles].y = i; num_obstacles++;
+                }
+            }
+            num_rivals = 3;
         }
-    } else if (level == 21) {
-        for(i=4; i<=15; i++) {
-            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 4; num_obstacles++;
-            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 15; num_obstacles++;
-        }
-        num_rivals = 2;
-    } else if (level == 22) {
-        for(i=6; i<=13; i++) {
-            obstacles[num_obstacles].x = 6; obstacles[num_obstacles].y = i; num_obstacles++;
-            obstacles[num_obstacles].x = 13; obstacles[num_obstacles].y = i; num_obstacles++;
-        }
-        num_rivals = 3;
-    } else if (level == 23) {
-        for(i=2; i<=17; i++) {
-            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = i; num_obstacles++;
-            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 19 - i; num_obstacles++;
-        }
-        num_rivals = 3;
-    } else if (level == 24) {
+    } else if (level == 20) {
+        // Stage 20 Boss: Inferno Wyrm
+        boss.alive = 1; boss.boss_type = 2; boss.hp = 22; boss.max_hp = 22; boss.len = 8;
+        boss.dir_x = 0; boss.dir_y = 1;
+        for(k=0; k<boss.len; k++) { boss.body[k].x = 10; boss.body[k].y = 2 + k; }
+    } else if (level >= 21 && level <= 24) {
         for(i=2; i<=17; i+=2) {
             for(k=2; k<=17; k+=2) {
+                if (i >= 8 && i <= 11 && k >= 8 && k <= 11) continue;
                 obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = k; num_obstacles++;
             }
         }
-        num_rivals = 4;
+        num_rivals = 3;
     } else if (level == 25) {
-        for(i=0; i<20; i++) {
-            if(i<8 || i>12) {
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 0; num_obstacles++;
-                obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 19; num_obstacles++;
-                obstacles[num_obstacles].x = 0; obstacles[num_obstacles].y = i; num_obstacles++;
-                obstacles[num_obstacles].x = 19; obstacles[num_obstacles].y = i; num_obstacles++;
-            }
-        }
-        boss.alive = 1; boss.hp = 25; boss.max_hp = 25; boss.len = 10;
+        // Stage 25 Boss: Hydra Viper
+        boss.alive = 1; boss.boss_type = 0; boss.hp = 25; boss.max_hp = 25; boss.len = 9;
         boss.dir_x = 0; boss.dir_y = 1;
         for(k=0; k<boss.len; k++) { boss.body[k].x = 10; boss.body[k].y = 2 + k; }
+        num_rivals = 1;
+    } else if (level >= 26 && level <= 29) {
+        for(i=1; i<=18; i++) {
+            if (i == 9 || i == 10) continue;
+            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 5; num_obstacles++;
+            obstacles[num_obstacles].x = i; obstacles[num_obstacles].y = 14; num_obstacles++;
+            obstacles[num_obstacles].x = 5; obstacles[num_obstacles].y = i; num_obstacles++;
+            obstacles[num_obstacles].x = 14; obstacles[num_obstacles].y = i; num_obstacles++;
+        }
+        portal_active = 1; portal_a.x = 0; portal_a.y = 0; portal_b.x = 19; portal_b.y = 19;
+        num_rivals = 3;
+    } else if (level == 30) {
+        // Stage 30 Final Grand Boss: Void Ouroboros!
+        boss.alive = 1; boss.boss_type = 3; boss.hp = 30; boss.max_hp = 30; boss.len = 10;
+        boss.dir_x = 0; boss.dir_y = 1;
+        for(k=0; k<boss.len; k++) { boss.body[k].x = 10; boss.body[k].y = 2 + k; }
+        portal_active = 1; portal_a.x = 2; portal_a.y = 2; portal_b.x = 17; portal_b.y = 17;
         num_rivals = 2;
     }
 
     if (num_rivals > 0) InitCPURivals();
 }
-
 
 void InitGame() {
     int i, x, y;
@@ -733,6 +802,7 @@ void InitGame() {
     match_apples_gained = 0;
     grid_coverage_count = 0;
     num_oil_slicks = 0;
+    num_magma = 0;
     screen_shake_timer = 0;
     shockwave_timer = 0;
     for(x=0; x<GRID_WIDTH; x++) for(y=0; y<GRID_HEIGHT; y++) grid_coverage[x][y] = 0;
@@ -764,6 +834,9 @@ void InitGame() {
     magnet_cd = 0; magnet_active = 0;
 
     num_obstacles = 0;
+    portal_active = 0;
+    boss.alive = 0;
+    
     if (game_mode == 1) { // Maze mode
         num_obstacles = (difficulty + 1) * 8;
         for(i=0; i<num_obstacles; i++) {
@@ -780,6 +853,16 @@ void InitGame() {
     } else if (game_mode == 5) { // VS Mode
         num_rivals = 2;
         InitCPURivals();
+    } else if (game_mode == 6) { // Custom Map Mode
+        num_obstacles = num_custom_obstacles;
+        for(i=0; i<num_obstacles; i++) obstacles[i] = custom_obstacles[i];
+        portal_active = custom_portal_active;
+        portal_a = custom_portal_a;
+        portal_b = custom_portal_b;
+        num_rivals = 0;
+    } else if (game_mode == 7) { // Boss Gauntlet
+        gauntlet_stage = 0;
+        InitGauntletStage(gauntlet_stage);
     } else {
         num_rivals = 0;
     }
@@ -915,6 +998,53 @@ void UpdateBoss() {
     boss.body[0].x += boss.dir_x;
     boss.body[0].y += boss.dir_y;
 
+    // Boss Specific Abilities
+    if (boss.boss_type == 0) { // Hydra Viper: Oil slicks
+        if (match_ticks % 25 == 0 && num_oil_slicks < 50) {
+            oil_slicks[num_oil_slicks].x = boss.body[boss.len-1].x;
+            oil_slicks[num_oil_slicks].y = boss.body[boss.len-1].y;
+            num_oil_slicks++;
+        }
+    } else if (boss.boss_type == 1) { // Cyber Basilisk: Laser charge
+        boss.laser_charge++;
+        if (boss.laser_charge == 20) {
+            boss.laser_row = boss.body[0].y;
+            boss.laser_col = boss.body[0].x;
+        } else if (boss.laser_charge >= 30) {
+            // Fire EMP Laser pulse
+            shockwave_timer = 20;
+            shockwave_x = boss.body[0].x; shockwave_y = boss.body[0].y;
+            if (ghost_active == 0) {
+                if (snake[0].y == boss.laser_row || snake[0].x == boss.laser_col) {
+                    score -= 100; if (score < 0) score = 0;
+                    screen_shake_timer = 20;
+                    MessageBeep(MB_ICONHAND);
+                }
+            }
+            boss.laser_charge = 0;
+            boss.laser_row = -1; boss.laser_col = -1;
+        }
+    } else if (boss.boss_type == 2) { // Inferno Wyrm: Magma hazard tiles
+        if (match_ticks % 15 == 0 && num_magma < 50) {
+            magma_hazards[num_magma].x = boss.body[boss.len-1].x;
+            magma_hazards[num_magma].y = boss.body[boss.len-1].y;
+            magma_timers[num_magma] = 60; // lingers 60 ticks
+            num_magma++;
+        }
+    } else if (boss.boss_type == 3) { // Void Ouroboros: Invisibility phase & Vortex
+        boss.phase_timer++;
+        if (boss.phase_timer >= 40) {
+            boss.invisible = !boss.invisible;
+            boss.phase_timer = 0;
+        }
+        // Vortex pull
+        if (match_ticks % 4 == 0) {
+            int bx = boss.body[0].x, by = boss.body[0].y;
+            if (food.x < bx) food.x++; else if (food.x > bx) food.x--;
+            if (food.y < by) food.y++; else if (food.y > by) food.y--;
+        }
+    }
+
     if (boss.max_hp > 0 && boss.hp * 100 / boss.max_hp < 25) {
         if (match_ticks % 2 == 0 && particle_count < 100) {
             particles[particle_count].x = boss.body[0].x * CELL_SIZE + CELL_SIZE/2 + (random_int(20)-10);
@@ -925,11 +1055,6 @@ void UpdateBoss() {
             int c_rnd = random_int(3);
             particles[particle_count].color = (c_rnd==0)?RGB(255,255,0):(c_rnd==1?RGB(255,100,0):RGB(255,255,255));
             particle_count++;
-        }
-        if (match_ticks % 30 == 0 && num_oil_slicks < 50) {
-            oil_slicks[num_oil_slicks].x = boss.body[boss.len-1].x;
-            oil_slicks[num_oil_slicks].y = boss.body[boss.len-1].y;
-            num_oil_slicks++;
         }
     }
 }
@@ -1010,9 +1135,8 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
         oldBrush = (HBRUSH)SelectObject(hdc, headBrush);
         oldPen = (HPEN)SelectObject(hdc, headPen);
 
-        Ellipse(hdc, px, py, px + CELL_SIZE, py + CELL_SIZE); // Slightly larger head
+        Ellipse(hdc, px, py, px + CELL_SIZE, py + CELL_SIZE);
 
-        // Eyes
         eyeBrush = CreateSolidBrush(RGB(255, 255, 255));
         SelectObject(hdc, eyeBrush);
 
@@ -1029,14 +1153,12 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
         Ellipse(hdc, eye1_x + d_x - 1, eye1_y + d_y - 1, eye1_x + d_x + 2, eye1_y + d_y + 2);
         Ellipse(hdc, eye2_x + d_x - 1, eye2_y + d_y - 1, eye2_x + d_x + 2, eye2_y + d_y + 2);
 
-        // Head Specular Highlight
         int headSpec = 150 + (ABS((anim_tick * 2) % 20 - 10) * 10);
         HBRUSH headHlBrush = CreateSolidBrush(RGB(headSpec, 255, headSpec + 50));
         SelectObject(hdc, headHlBrush);
         Ellipse(hdc, px + 4, py + 4, px + 8, py + 8);
         DeleteObject(headHlBrush);
 
-        // Tongue (flickering based on anim_tick)
         if ((anim_tick % 4) < 2) {
             tongueBrush = CreateSolidBrush(RGB(255, 71, 87));
             SelectObject(hdc, tongueBrush);
@@ -1052,11 +1174,9 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
         }
 
         DeleteObject(eyeBrush); DeleteObject(pupilBrush);
-
         SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
         DeleteObject(headBrush); DeleteObject(headPen);
     } else if (index == total - 1) {
-        // Tail segment
         HBRUSH tailBrush = CreateSolidBrush(is_ghost ? RGB(72, 219, 251) : (speed_active_timer > 0 ? RGB(241, 196, 15) : RGB(39, 174, 96)));
         HPEN tailPen = CreatePen(PS_SOLID, 1, RGB(25, 110, 90));
         oldBrush = (HBRUSH)SelectObject(hdc, tailBrush);
@@ -1089,7 +1209,6 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
 
         Ellipse(hdc, px + inset, py + inset, px + CELL_SIZE - inset, py + CELL_SIZE - inset);
         
-        // Striped pattern
         HPEN stripePen = CreatePen(PS_SOLID, 1, RGB(20, 90, 70));
         HPEN oldStripe = (HPEN)SelectObject(hdc, stripePen);
         MoveToEx(hdc, px + inset + 4, py + inset + 4, NULL);
@@ -1099,16 +1218,11 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
         SelectObject(hdc, oldStripe);
         DeleteObject(stripePen);
 
-        // Procedural Scale highlight
         int specIntensity = 100 + (ABS((anim_tick + index * 5) % 20 - 10) * 10);
         HBRUSH hlBrush = CreateSolidBrush(RGB(specIntensity, 255, specIntensity + 50));
         SelectObject(hdc, hlBrush);
         Ellipse(hdc, px + inset + 2, py + inset + 2, px + inset + 6, py + inset + 6);
         DeleteObject(hlBrush);
-        HBRUSH hlBrush2 = CreateSolidBrush(RGB(specIntensity/2, 200, specIntensity/2 + 50));
-        SelectObject(hdc, hlBrush2);
-        Ellipse(hdc, px + inset + 6, py + inset + 6, px + inset + 8, py + inset + 8);
-        DeleteObject(hlBrush2);
 
         SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
         DeleteObject(bodyBrush); DeleteObject(bodyPen);
@@ -1146,56 +1260,31 @@ void DrawRivalGDI(HDC hdc, int x, int y, int index, int type) {
         DeleteObject(eyeBrush);
     }
     
-    // Legs
-    HPEN legPen = CreatePen(PS_SOLID, is_aggro ? 3 : 2, is_aggro ? RGB(142, 68, 173) : RGB(44, 62, 80));
-    SelectObject(hdc, legPen);
-    int wiggle_spd = is_aggro ? 2 : 1;
-    int wiggle = ((anim_tick * wiggle_spd) + index) % 4;
-    if (wiggle > 2) wiggle = 4 - wiggle; // 0,1,2,1,0
-    wiggle = (wiggle - 1) * (is_aggro ? 4 : 2); // -2 to 2 or -4 to 4
-
-    MoveToEx(hdc, px+2, py+CELL_SIZE/2, NULL); LineTo(hdc, px-2-wiggle, py+CELL_SIZE/2+wiggle);
-    MoveToEx(hdc, px+CELL_SIZE-2, py+CELL_SIZE/2, NULL); LineTo(hdc, px+CELL_SIZE+2+wiggle, py+CELL_SIZE/2-wiggle);
-    DeleteObject(legPen);
-
     SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
     DeleteObject(brush); DeleteObject(pen);
 }
 
 void DrawBossGDI(HDC hdc, int x, int y, int index) {
+    if (boss.invisible && (anim_tick % 4 < 2)) return; // Void phasing
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
-    int hp_ratio_low = (boss.max_hp > 0 && boss.hp * 100 / boss.max_hp < 40);
-    HBRUSH brush = CreateSolidBrush(index == 0 ? RGB(45, 52, 54) : RGB(99, 110, 114));
-    HPEN pen = CreatePen(PS_SOLID, hp_ratio_low ? 2 : 1, (hp_ratio_low && (anim_tick % 4 < 2)) ? RGB(255, 0, 0) : RGB(178, 190, 195));
+    COLORREF bColor;
+    if (boss.boss_type == 0) bColor = (index == 0 ? RGB(45, 52, 54) : RGB(99, 110, 114));
+    else if (boss.boss_type == 1) bColor = (index == 0 ? RGB(0, 180, 216) : RGB(144, 224, 239)); // Cyber Basilisk
+    else if (boss.boss_type == 2) bColor = (index == 0 ? RGB(230, 57, 70) : RGB(244, 162, 97)); // Inferno Wyrm
+    else bColor = (index == 0 ? RGB(114, 9, 183) : RGB(181, 23, 158)); // Void Ouroboros
+
+    HBRUSH brush = CreateSolidBrush(bColor);
+    HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
 
-    Rectangle(hdc, px + (hp_ratio_low?1:0), py + (hp_ratio_low?1:0), px + CELL_SIZE - (hp_ratio_low?1:0), py + CELL_SIZE - (hp_ratio_low?1:0));
+    Rectangle(hdc, px, py, px + CELL_SIZE, py + CELL_SIZE);
     
     if (index == 0) {
-        // Red Pulsing Eye
-        int pulse = hp_ratio_low ? ((anim_tick % 4) < 2) : ((anim_tick % 10) > 5);
-        HBRUSH eyeBrush = CreateSolidBrush(pulse ? (hp_ratio_low ? RGB(255, 255, 0) : RGB(255, 118, 117)) : RGB(214, 48, 49));
+        HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 255, 0));
         SelectObject(hdc, eyeBrush);
-        int eSize = hp_ratio_low ? 3 : 4;
-        Ellipse(hdc, px+eSize, py+eSize, px+CELL_SIZE-eSize, py+CELL_SIZE-eSize);
+        Ellipse(hdc, px+4, py+4, px+CELL_SIZE-4, py+CELL_SIZE-4);
         DeleteObject(eyeBrush);
-    } else {
-        // Inner Details (Gears/Vents)
-        HBRUSH ventBrush = CreateSolidBrush(RGB(45, 52, 54));
-        SelectObject(hdc, ventBrush);
-        Rectangle(hdc, px+4, py+8, px+8, py+CELL_SIZE-8);
-        Rectangle(hdc, px+CELL_SIZE-8, py+8, px+CELL_SIZE-4, py+CELL_SIZE-8);
-        DeleteObject(ventBrush);
-        
-        // Metal rivets
-        HBRUSH rivetBrush = CreateSolidBrush(RGB(45, 52, 54));
-        SelectObject(hdc, rivetBrush);
-        Ellipse(hdc, px+2, py+2, px+4, py+4);
-        Ellipse(hdc, px+CELL_SIZE-4, py+2, px+CELL_SIZE-2, py+4);
-        Ellipse(hdc, px+2, py+CELL_SIZE-4, px+4, py+CELL_SIZE-2);
-        Ellipse(hdc, px+CELL_SIZE-4, py+CELL_SIZE-4, px+CELL_SIZE-2, py+CELL_SIZE-2);
-        DeleteObject(rivetBrush);
     }
 
     SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
@@ -1222,13 +1311,11 @@ void DrawGemGDI(HDC hdc, int x, int y, COLORREF color) {
         Polygon(hdc, pts, 10);
     } else {
         Ellipse(hdc, px + 2, py + 2, px + CELL_SIZE - 2, py + CELL_SIZE - 2);
-        // Add a shine for berry/apple
         HBRUSH shine = CreateSolidBrush(RGB(255, 255, 255));
         SelectObject(hdc, shine);
         Ellipse(hdc, px+4, py+4, px+6, py+6);
         DeleteObject(shine);
         
-        // Stem if apple (assuming red is apple)
         if (color == RGB(255, 71, 87)) {
             HPEN stem = CreatePen(PS_SOLID, 2, RGB(116, 81, 45));
             SelectObject(hdc, stem);
@@ -1253,12 +1340,11 @@ void DrawPortalGDI(HDC hdc, int x, int y, COLORREF color) {
     POINT pts[16];
     int i;
     for (i = 0; i < 16; i++) {
-        float angle = i * (3.14159f * 2.0f / 16.0f);
         int jitter = ((anim_tick * 3 + i * 7) % 11) - 5; 
         int r = (CELL_SIZE/2 - 2) + jitter;
         if (i % 2 == 0) r -= 4;
-        pts[i].x = cx + (int)(cos(angle) * r);
-        pts[i].y = cy + (int)(sin(angle) * r);
+        pts[i].x = cx + (cos_tab16[i] * r) / 100;
+        pts[i].y = cy + (sin_tab16[i] * r) / 100;
     }
     Polygon(hdc, pts, 16);
 
@@ -1266,12 +1352,11 @@ void DrawPortalGDI(HDC hdc, int x, int y, COLORREF color) {
     SelectObject(hdc, voidBrush);
     POINT pts_inner[16];
     for (i = 0; i < 16; i++) {
-        float angle = i * (3.14159f * 2.0f / 16.0f);
         int jitter = ((anim_tick * 5 + i * 13) % 7) - 3; 
         int r = (CELL_SIZE/4) + jitter;
         if (i % 2 == 0) r -= 2;
-        pts_inner[i].x = cx + (int)(cos(angle) * r);
-        pts_inner[i].y = cy + (int)(sin(angle) * r);
+        pts_inner[i].x = cx + (cos_tab16[i] * r) / 100;
+        pts_inner[i].y = cy + (sin_tab16[i] * r) / 100;
     }
     Polygon(hdc, pts_inner, 16);
     DeleteObject(voidBrush);
@@ -1286,21 +1371,18 @@ void DrawObstacleGDI(HDC hdc, int x, int y) {
     HBRUSH bgBrush = CreateSolidBrush(RGB(87, 101, 116));
     FillRect(hdc, &r, bgBrush);
     
-    // Highlight
     RECT hlt = { px, py, px + CELL_SIZE, py + 2 };
     HBRUSH hlBrush = CreateSolidBrush(RGB(131, 149, 167));
     FillRect(hdc, &hlt, hlBrush);
     RECT hll = { px, py, px + 2, py + CELL_SIZE };
     FillRect(hdc, &hll, hlBrush);
     
-    // Shadow
     RECT sdt = { px + CELL_SIZE - 2, py, px + CELL_SIZE, py + CELL_SIZE };
     HBRUSH sdBrush = CreateSolidBrush(RGB(34, 47, 62));
     FillRect(hdc, &sdt, sdBrush);
     RECT sdb = { px, py + CELL_SIZE - 2, px + CELL_SIZE, py + CELL_SIZE };
     FillRect(hdc, &sdb, sdBrush);
     
-    // Crack
     HPEN crackPen = CreatePen(PS_SOLID, 1, RGB(34, 47, 62));
     HPEN oldPen = (HPEN)SelectObject(hdc, crackPen);
     MoveToEx(hdc, px+3, py+3, NULL);
@@ -1317,8 +1399,53 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             LoadStats();
             LoadConfig();
+            LoadCustomMap();
             break;
 
+        case WM_LBUTTONDOWN: {
+            int mx = LOWORD(lParam);
+            int my = HIWORD(lParam);
+            HDC hdc = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+            ReleaseDC(hwnd, hdc);
+            float scale = dpi / 96.0f;
+            int gx = (int)(mx / (scale * CELL_SIZE));
+            int gy = (int)((my / scale - 45) / CELL_SIZE);
+            if (game_state == 8) { // Map Editor
+                if (gx >= 0 && gx < GRID_WIDTH && gy >= 0 && gy < GRID_HEIGHT) {
+                    editor_cursor_x = gx; editor_cursor_y = gy;
+                    if (editor_brush == 0) { // Toggle Wall
+                        int i, found = -1;
+                        for(i=0; i<num_custom_obstacles; i++) {
+                            if (custom_obstacles[i].x == gx && custom_obstacles[i].y == gy) { found = i; break; }
+                        }
+                        if (found >= 0) {
+                            custom_obstacles[found] = custom_obstacles[num_custom_obstacles-1];
+                            num_custom_obstacles--;
+                        } else if (num_custom_obstacles < 120) {
+                            custom_obstacles[num_custom_obstacles].x = gx;
+                            custom_obstacles[num_custom_obstacles].y = gy;
+                            num_custom_obstacles++;
+                        }
+                    } else if (editor_brush == 1) {
+                        custom_portal_a.x = gx; custom_portal_a.y = gy; custom_portal_active = 1;
+                    } else if (editor_brush == 2) {
+                        custom_portal_b.x = gx; custom_portal_b.y = gy; custom_portal_active = 1;
+                    } else if (editor_brush == 3) {
+                        int i;
+                        for(i=0; i<num_custom_obstacles; i++) {
+                            if (custom_obstacles[i].x == gx && custom_obstacles[i].y == gy) {
+                                custom_obstacles[i] = custom_obstacles[num_custom_obstacles-1];
+                                num_custom_obstacles--;
+                                break;
+                            }
+                        }
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            }
+            break;
+        }
 
         case WM_TIMER: {
             int i, r, effective_wrap, gain, spd;
@@ -1326,6 +1453,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (screen_shake_timer > 0) { screen_shake_timer--; InvalidateRect(hwnd, NULL, TRUE); }
                 if (shockwave_timer > 0) { shockwave_timer--; InvalidateRect(hwnd, NULL, TRUE); }
             }
+            if (boss_banner_timer > 0) boss_banner_timer--;
             if (game_state != 1) break;
             anim_tick++;
             match_ticks++;
@@ -1348,7 +1476,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-
             // Cooldown & Active Timers
             if (ghost_active > 0) ghost_active--;
             if (ghost_cd > 0) ghost_cd--;
@@ -1366,6 +1493,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Update CPUSnakes & Boss
             UpdateCPURivals();
             UpdateBoss();
+
+            // Magma Hazards decay
+            for(i=0; i<num_magma; i++) {
+                magma_timers[i]--;
+                if (magma_timers[i] <= 0) {
+                    magma_hazards[i] = magma_hazards[num_magma-1];
+                    magma_timers[i] = magma_timers[num_magma-1];
+                    num_magma--;
+                    i--;
+                }
+            }
 
             if (golden_apple.x != -1 && match_ticks % 2 == 0) {
                 if (particle_count < 500) {
@@ -1458,7 +1596,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (snake[0].x == rivals[r].body[i].x && snake[0].y == rivals[r].body[i].y) game_state = 2;
                     }
                 }
-                if (boss.alive) {
+                if (boss.alive && !boss.invisible) {
                     for(i = 0; i < boss.len; i++) {
                         if (snake[0].x == boss.body[i].x && snake[0].y == boss.body[i].y) game_state = 2;
                     }
@@ -1476,10 +1614,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         i--;
                     }
                 }
+                for(i = 0; i < num_magma; i++) {
+                    if (snake[0].x == magma_hazards[i].x && snake[0].y == magma_hazards[i].y) {
+                        MessageBeep(MB_ICONHAND);
+                        score -= 100; if (score < 0) score = 0;
+                        screen_shake_timer = 20;
+                        shockwave_timer = 20;
+                        shockwave_x = snake[0].x; shockwave_y = snake[0].y;
+                        SpawnExplosion(snake[0].x * CELL_SIZE + CELL_SIZE/2, snake[0].y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(230, 57, 70), 0);
+                    }
+                }
             }
 
             if (game_state == 2 && was_playing) {
-                screen_shake_timer = 30; // dramatically increased screen shake
+                screen_shake_timer = 30;
                 shockwave_timer = 30;
                 shockwave_x = snake[0].x;
                 shockwave_y = snake[0].y;
@@ -1504,6 +1652,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (snake_len < 400) { snake[snake_len] = snake[snake_len-1]; snake_len++; }
 
                 gain = score_mult;
+                if (game_mode == 4 && campaign_branch == 1) gain = (gain * 5) / 2; // Shadow Path bonus
                 score += gain;
                 total_apples++;
                 apples_eaten++;
@@ -1516,14 +1665,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (boss.hp <= 0) {
                         boss.alive = 0;
                         SpawnExplosion(boss.body[0].x * CELL_SIZE + CELL_SIZE/2, boss.body[0].y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(255, 215, 0), 1);
-                        game_state = 4; // VICTORY!
+                        if (game_mode == 7) { // Gauntlet
+                            if (gauntlet_stage < 3) {
+                                gauntlet_stage++;
+                                score += 1000 * gauntlet_stage;
+                                InitGauntletStage(gauntlet_stage);
+                                PlaceGoldenApple();
+                            } else {
+                                score += 5000;
+                                game_state = 4; // GRAND GAUNTLET VICTORY!
+                            }
+                        } else if (game_mode == 4 && campaign_level == 30) {
+                            score += 10000;
+                            game_state = 4; // CAMPAIGN CONQUERED!
+                        }
                     }
                 }
 
-                if (game_mode == 4 && apples_eaten >= 8 && campaign_level < 25) {
-                    campaign_level++;
-                    InitCampaignStage(campaign_level);
-                    apples_eaten = 0;
+                if (game_mode == 4 && apples_eaten >= 8 && campaign_level < 30) {
+                    if (campaign_level == 5 || campaign_level == 10 || campaign_level == 15 || campaign_level == 20) {
+                        // Trigger Branch Choice Checkpoint!
+                        game_state = 9;
+                        pending_branch_choice = campaign_level;
+                    } else {
+                        campaign_level++;
+                        InitCampaignStage(campaign_level);
+                        apples_eaten = 0;
+                    }
                 }
 
                 if (game_mode == 2 && current_speed > 35) current_speed -= 5;
@@ -1546,7 +1714,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (boss.hp <= 0) {
                         boss.alive = 0;
                         SpawnExplosion(boss.body[0].x * CELL_SIZE + CELL_SIZE/2, boss.body[0].y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(255, 215, 0), 1);
-                        game_state = 4;
+                        if (game_mode == 7) {
+                            if (gauntlet_stage < 3) {
+                                gauntlet_stage++;
+                                score += 1000 * gauntlet_stage;
+                                InitGauntletStage(gauntlet_stage);
+                            } else {
+                                game_state = 4;
+                            }
+                        } else if (game_mode == 4 && campaign_level == 30) {
+                            game_state = 4;
+                        }
                     }
                 }
                 golden_apple.x = -1;
@@ -1557,7 +1735,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SpawnExplosion(poison_berry.x * CELL_SIZE + CELL_SIZE/2, poison_berry.y * CELL_SIZE + 45 + CELL_SIZE/2, RGB(142, 68, 173), 1);
                 score -= 200; if (score < 0) score = 0;
                 poison_active_timer = 50;
-                screen_shake_timer = 30; // dramatically increased screen shake
+                screen_shake_timer = 30;
                 shockwave_timer = 30;
                 shockwave_x = snake[0].x; shockwave_y = snake[0].y;
                 poison_berry.x = -1;
@@ -1600,7 +1778,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     lstrcpyA(entry.name, initials_input);
                     entry.score = score;
                     lstrcpyA(entry.mode, mode_names[game_mode]);
-                    lstrcpyA(entry.date, "2026-07-23");
+                    lstrcpyA(entry.date, "2026-08-31");
 
                     leaderboard[4] = entry;
                     for(i=0; i<4; i++) {
@@ -1623,7 +1801,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN: {
             if (game_state == 0) { // Menu
-                if (wParam == 'M') { game_mode = (game_mode + 1) % 6; }
+                if (wParam == 'M') { game_mode = (game_mode + 1) % NUM_MODES; }
                 else if (wParam == '1') difficulty = 0;
                 else if (wParam == '2') difficulty = 1;
                 else if (wParam == '3') difficulty = 2;
@@ -1634,7 +1812,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL);
                     }
                 }
-                else if (wParam == 'E') ExportStatsText();
+                else if (wParam == 'E' || wParam == 'O') { game_state = 8; InvalidateRect(hwnd, NULL, TRUE); }
                 else if (wParam == 'I') ImportStatsText();
                 else if (wParam == 'C') { game_state = 6; config_step = 0; InvalidateRect(hwnd, NULL, TRUE); }
                 else if (wParam == 'X') { ImportReplay(); }
@@ -1642,6 +1820,70 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == VK_RETURN) {
                     is_replay_mode = 0;
                     InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (game_state == 8) { // Map Editor
+                if (wParam == VK_UP || wParam == 'W') { if (editor_cursor_y > 0) editor_cursor_y--; }
+                else if (wParam == VK_DOWN || wParam == 'S') { if (editor_cursor_y < GRID_HEIGHT - 1) editor_cursor_y++; }
+                else if (wParam == VK_LEFT || wParam == 'A') { if (editor_cursor_x > 0) editor_cursor_x--; }
+                else if (wParam == VK_RIGHT || wParam == 'D') { if (editor_cursor_x < GRID_WIDTH - 1) editor_cursor_x++; }
+                else if (wParam == VK_SPACE) {
+                    if (editor_brush == 0) {
+                        int i, found = -1;
+                        for(i=0; i<num_custom_obstacles; i++) {
+                            if (custom_obstacles[i].x == editor_cursor_x && custom_obstacles[i].y == editor_cursor_y) { found = i; break; }
+                        }
+                        if (found >= 0) {
+                            custom_obstacles[found] = custom_obstacles[num_custom_obstacles-1];
+                            num_custom_obstacles--;
+                        } else if (num_custom_obstacles < 120) {
+                            custom_obstacles[num_custom_obstacles].x = editor_cursor_x;
+                            custom_obstacles[num_custom_obstacles].y = editor_cursor_y;
+                            num_custom_obstacles++;
+                        }
+                    } else if (editor_brush == 1) {
+                        custom_portal_a.x = editor_cursor_x; custom_portal_a.y = editor_cursor_y; custom_portal_active = 1;
+                    } else if (editor_brush == 2) {
+                        custom_portal_b.x = editor_cursor_x; custom_portal_b.y = editor_cursor_y; custom_portal_active = 1;
+                    }
+                }
+                else if (wParam == '1') editor_brush = 0; // Wall
+                else if (wParam == '2') editor_brush = 1; // Portal A
+                else if (wParam == '3') editor_brush = 2; // Portal B
+                else if (wParam == '4') editor_brush = 3; // Erase
+                else if (wParam == 'C') ClearCustomMap();
+                else if (wParam == 'B') { // Border
+                    int x, y;
+                    for(x=0; x<GRID_WIDTH; x++) {
+                        if (num_custom_obstacles < 118) {
+                            custom_obstacles[num_custom_obstacles].x = x; custom_obstacles[num_custom_obstacles].y = 0; num_custom_obstacles++;
+                            custom_obstacles[num_custom_obstacles].x = x; custom_obstacles[num_custom_obstacles].y = GRID_HEIGHT-1; num_custom_obstacles++;
+                        }
+                    }
+                }
+                else if (wParam == 'R') GenerateRandomMazeToCustom();
+                else if (wParam == 'S') SaveCustomMap();
+                else if (wParam == 'L') LoadCustomMap();
+                else if (wParam == 'T' || wParam == VK_RETURN) {
+                    game_mode = 6; // Custom map mode
+                    InitGame();
+                    SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                }
+                else if (wParam == VK_ESCAPE) { game_state = 0; }
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (game_state == 9) { // Branch Choice Checkpoint
+                if (wParam == '1') {
+                    campaign_branch = 0; // Solar Path
+                    campaign_level++;
+                    InitCampaignStage(campaign_level);
+                    apples_eaten = 0;
+                    game_state = 1;
+                } else if (wParam == '2') {
+                    campaign_branch = 1; // Shadow Path
+                    campaign_level++;
+                    InitCampaignStage(campaign_level);
+                    apples_eaten = 0;
+                    game_state = 1;
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 6) { // Config
@@ -1706,7 +1948,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT logicalRect = {0, 0, 520, 620};
             HBRUSH bg = CreateSolidBrush(RGB(15, 15, 26)); FillRect(hdc, &logicalRect, bg); DeleteObject(bg);
 
-            HFONT hFont = CreateFontA(-22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT hFont = CreateFontA(-20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
 
             SetBkMode(hdc, TRANSPARENT);
@@ -1715,31 +1957,107 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (game_state == 0) { // MENU
                 char buf[64];
                 SetTextColor(hdc, RGB(0, 210, 211));
-                TextOutA(hdc, 170, 20, "KSNAKE ARCADE", 13);
+                TextOutA(hdc, 160, 15, "KSNAKE ARCADE", 13);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                wsprintfA(buf, "M - Mode: %s", mode_names[game_mode]); TextOutA(hdc, 120, 60, buf, lstrlenA(buf));
-                wsprintfA(buf, "1-3 - Difficulty: %s", difficulty==0?"Easy":difficulty==1?"Med":"Hard"); TextOutA(hdc, 120, 90, buf, lstrlenA(buf));
-                wsprintfA(buf, "W - Toggle Wrap: %s", (wrap_mode||game_mode==3)?"ON":"OFF"); TextOutA(hdc, 120, 120, buf, lstrlenA(buf));
-                TextOutA(hdc, 120, 150, "C - Config Keys", 15);
-                TextOutA(hdc, 120, 180, "S - Match Stats (Last)", 22);
-                TextOutA(hdc, 120, 210, "X - Play Replay (.ksr)", 22);
-                TextOutA(hdc, 120, 240, "Press H or F1 for Help / Scores", 31);
-                TextOutA(hdc, 120, 270, "R - Resume Saved Game", 21);
-                TextOutA(hdc, 120, 300, "E/I - Export/Import All", 23);
-                TextOutA(hdc, 120, 340, "Move: WASD/Arrows | Skills: G,F,M", 33);
+                wsprintfA(buf, "M - Mode: %s", mode_names[game_mode]); TextOutA(hdc, 110, 55, buf, lstrlenA(buf));
+                wsprintfA(buf, "1-3 - Difficulty: %s", difficulty==0?"Easy":difficulty==1?"Med":"Hard"); TextOutA(hdc, 110, 85, buf, lstrlenA(buf));
+                wsprintfA(buf, "W - Toggle Wrap: %s", (wrap_mode||game_mode==3)?"ON":"OFF"); TextOutA(hdc, 110, 115, buf, lstrlenA(buf));
+                TextOutA(hdc, 110, 145, "E - Custom Map Editor", 21);
+                TextOutA(hdc, 110, 175, "C - Config Keys", 15);
+                TextOutA(hdc, 110, 205, "S - Match Stats (Last)", 22);
+                TextOutA(hdc, 110, 235, "X - Play Replay (.ksr)", 22);
+                TextOutA(hdc, 110, 265, "Press H / F1 for Help & Scores", 30);
+                TextOutA(hdc, 110, 295, "R - Resume Saved Game", 21);
+                TextOutA(hdc, 110, 325, "Move: WASD/Arrows | Skills: G,F,M", 33);
                 SetTextColor(hdc, RGB(76, 209, 55));
-                TextOutA(hdc, 130, 420, "[ Press ENTER to Play ]", 23);
-            } else if (game_state == 6) {
-                char buf[64];
+                TextOutA(hdc, 120, 395, "[ Press ENTER to Play ]", 23);
+            } else if (game_state == 8) { // MAP EDITOR
+                int gx, gy, i;
+                char buf[128];
                 SetTextColor(hdc, RGB(251, 197, 49));
-                TextOutA(hdc, 160, 40, "KEY CONFIG", 10);
+                TextOutA(hdc, 160, 10, "MAP EDITOR LAB", 14);
+                SetTextColor(hdc, RGB(200, 200, 220));
+                
+                // Draw Grid
+                for (gx = 0; gx < GRID_WIDTH; gx++) {
+                    for (gy = 0; gy < GRID_HEIGHT; gy++) {
+                        RECT tile = { gx * CELL_SIZE, gy * CELL_SIZE + 45, (gx + 1) * CELL_SIZE, (gy + 1) * CELL_SIZE + 45 };
+                        HBRUSH bBrush = CreateSolidBrush((gx + gy) % 2 == 0 ? RGB(20, 24, 38) : RGB(25, 30, 48));
+                        FillRect(hdc, &tile, bBrush);
+                        DeleteObject(bBrush);
+                    }
+                }
+                // Draw Custom Walls
+                for(i=0; i<num_custom_obstacles; i++) DrawObstacleGDI(hdc, custom_obstacles[i].x, custom_obstacles[i].y);
+                // Draw Portals
+                if (custom_portal_active) {
+                    if (custom_portal_a.x >= 0) DrawPortalGDI(hdc, custom_portal_a.x, custom_portal_a.y, RGB(0, 210, 211));
+                    if (custom_portal_b.x >= 0) DrawPortalGDI(hdc, custom_portal_b.x, custom_portal_b.y, RGB(155, 89, 182));
+                }
+                // Draw Cursor
+                {
+                    RECT curRect = { editor_cursor_x * CELL_SIZE, editor_cursor_y * CELL_SIZE + 45, (editor_cursor_x + 1) * CELL_SIZE, (editor_cursor_y + 1) * CELL_SIZE + 45 };
+                    HPEN curPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+                    HPEN oldP = (HPEN)SelectObject(hdc, curPen);
+                    HBRUSH oldB = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));
+                    Rectangle(hdc, curRect.left, curRect.top, curRect.right, curRect.bottom);
+                    SelectObject(hdc, oldP); SelectObject(hdc, oldB);
+                    DeleteObject(curPen);
+                }
+                // Editor Controls HUD
+                wsprintfA(buf, "Brush: %s | [1]Wall [2]Portal A [3]Portal B [4]Erase", 
+                    editor_brush==0?"Wall":(editor_brush==1?"Portal A":(editor_brush==2?"Portal B":"Erase")));
+                SetTextColor(hdc, RGB(72, 219, 251));
+                TextOutA(hdc, 10, 550, buf, lstrlenA(buf));
                 SetTextColor(hdc, RGB(255, 255, 255));
+                TextOutA(hdc, 10, 575, "[SPACE/Click]Place | [C]Clear [B]Border [R]Maze | [T/ENTER]Test | [ESC]Back", 74);
+            } else if (game_state == 9) { // BRANCH SELECTION OVERLAY
+                SetTextColor(hdc, RGB(251, 197, 49));
+                TextOutA(hdc, 120, 80, "CHOOSE CAMPAIGN ROUTE", 21);
+                
+                // Route A Card: Solar Highway
+                RECT cardA = { 40, 130, 230, 380 };
+                HBRUSH bA = CreateSolidBrush(RGB(24, 32, 54)); FillRect(hdc, &cardA, bA); DeleteObject(bA);
+                HPEN pA = CreatePen(PS_SOLID, 2, RGB(0, 210, 211)); HPEN opA = (HPEN)SelectObject(hdc, pA);
+                SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));
+                Rectangle(hdc, cardA.left, cardA.top, cardA.right, cardA.bottom);
+                SelectObject(hdc, opA); DeleteObject(pA);
+                
+                SetTextColor(hdc, RGB(0, 210, 211));
+                TextOutA(hdc, 60, 150, "1. SOLAR HIGHWAY", 16);
+                SetTextColor(hdc, RGB(255, 255, 255));
+                TextOutA(hdc, 55, 190, "- Warp Portals", 14);
+                TextOutA(hdc, 55, 220, "- Speed Berries", 15);
+                TextOutA(hdc, 55, 250, "- High Speed Flow", 17);
+                SetTextColor(hdc, RGB(76, 209, 55));
+                TextOutA(hdc, 60, 330, "[ Press 1 ]", 11);
+
+                // Route B Card: Shadow Labyrinth
+                RECT cardB = { 270, 130, 460, 380 };
+                HBRUSH bB = CreateSolidBrush(RGB(40, 20, 45)); FillRect(hdc, &cardB, bB); DeleteObject(bB);
+                HPEN pB = CreatePen(PS_SOLID, 2, RGB(231, 76, 60)); HPEN opB = (HPEN)SelectObject(hdc, pB);
+                SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));
+                Rectangle(hdc, cardB.left, cardB.top, cardB.right, cardB.bottom);
+                SelectObject(hdc, opB); DeleteObject(pB);
+
+                SetTextColor(hdc, RGB(231, 76, 60));
+                TextOutA(hdc, 285, 150, "2. SHADOW LABYRINTH", 19);
+                SetTextColor(hdc, RGB(255, 255, 255));
+                TextOutA(hdc, 285, 190, "- Rival Vipers", 14);
+                TextOutA(hdc, 285, 220, "- Narrow Corridors", 18);
+                TextOutA(hdc, 285, 250, "- 2.5x Score Bonus", 18);
+                SetTextColor(hdc, RGB(76, 209, 55));
+                TextOutA(hdc, 305, 330, "[ Press 2 ]", 11);
+            } else if (game_state == 6) {
                 char* prompts[] = {"Press UP key...", "Press DOWN key...", "Press LEFT key...", "Press RIGHT key...", "Press GHOST key...", "Press FREEZE key...", "Press MAGNET key...", "Press PAUSE key..."};
+                SetTextColor(hdc, RGB(251, 197, 49));
+                TextOutA(hdc, 180, 40, "KEY CONFIG", 10);
+                SetTextColor(hdc, RGB(255, 255, 255));
                 TextOutA(hdc, 140, 100, prompts[config_step], lstrlenA(prompts[config_step]));
             } else if (game_state == 7) {
                 char buf[128];
                 SetTextColor(hdc, RGB(0, 210, 211));
-                TextOutA(hdc, 160, 40, "MATCH STATS", 11);
+                TextOutA(hdc, 180, 40, "MATCH STATS", 11);
                 SetTextColor(hdc, RGB(255, 255, 255));
                 wsprintfA(buf, "Ticks Alive: %d", match_ticks); TextOutA(hdc, 120, 100, buf, lstrlenA(buf));
                 wsprintfA(buf, "Apples Eaten: %d", match_apples_gained); TextOutA(hdc, 120, 140, buf, lstrlenA(buf));
@@ -1751,15 +2069,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (game_state == 5) {
                 int i;
                 SetTextColor(hdc, RGB(0, 210, 211));
-                TextOutA(hdc, 150, 40, "HIGH SCORES & HELP", 18);
+                TextOutA(hdc, 160, 30, "HIGH SCORES & HELP", 18);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 50, 90, "Controls: WASD/Arrows to Move, P to Pause", 41);
-                TextOutA(hdc, 50, 120, "Skills: G=Ghost, F=Freeze, M=Magnet", 35);
+                TextOutA(hdc, 40, 75, "Controls: WASD/Arrows to Move, P to Pause", 41);
+                TextOutA(hdc, 40, 105, "Skills: G=Ghost, F=Freeze, M=Magnet", 35);
+                TextOutA(hdc, 40, 135, "Modes: Classic, Maze, Ramp, Campaign, VS, Custom, Gauntlet", 59);
                 SetTextColor(hdc, RGB(251, 197, 49));
                 for(i=0; i<5; i++) {
                     char lbuf[64];
                     wsprintfA(lbuf, "%d. %s - %d pts (%s)", i+1, leaderboard[i].name, leaderboard[i].score, leaderboard[i].mode);
-                    TextOutA(hdc, 120, 180 + i * 32, lbuf, lstrlenA(lbuf));
+                    TextOutA(hdc, 100, 180 + i * 30, lbuf, lstrlenA(lbuf));
                 }
                 SetTextColor(hdc, RGB(0, 210, 211));
                 TextOutA(hdc, 140, 380, "Press ENTER to Return", 21);
@@ -1788,9 +2107,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (game_state == 4) { // VICTORY!
                 SetTextColor(hdc, RGB(255, 215, 0));
-                TextOutA(hdc, 130, 160, "CAMPAIGN CONQUERED!", 19);
-                SetTextColor(hdc, RGB(76, 209, 55));
-                TextOutA(hdc, 120, 210, "HYDRA VIPER DEFEATED!", 21);
+                if (game_mode == 7) {
+                    TextOutA(hdc, 110, 160, "GAUNTLET CHAMPION!", 18);
+                    SetTextColor(hdc, RGB(76, 209, 55));
+                    TextOutA(hdc, 100, 210, "ALL 4 BOSSES DEFEATED!", 22);
+                } else {
+                    TextOutA(hdc, 120, 160, "CAMPAIGN CONQUERED!", 19);
+                    SetTextColor(hdc, RGB(76, 209, 55));
+                    TextOutA(hdc, 110, 210, "STAGE 30 MASTER VICTORY!", 24);
+                }
                 SetTextColor(hdc, RGB(255, 255, 255));
                 TextOutA(hdc, 140, 300, "Press ENTER to Return", 21);
             } else { // PLAYING
@@ -1799,7 +2124,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char hud_text[64];
                 HBRUSH bg1, bg2, detail;
 
-                // Environmental art grid
+                // Grid background
                 bg1 = CreateSolidBrush(RGB(15, 17, 26));
                 bg2 = CreateSolidBrush(RGB(20, 23, 36));
                 detail = CreateSolidBrush(RGB(34, 39, 61));
@@ -1825,6 +2150,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     Ellipse(hdc, px + 2, py + 4, px + CELL_SIZE - 2, py + CELL_SIZE - 2);
                     SelectObject(hdc, oldB); SelectObject(hdc, oldP);
                     DeleteObject(oilBrush);
+                }
+
+                // Magma Hazards
+                for(i = 0; i < num_magma; i++) {
+                    int px = magma_hazards[i].x * CELL_SIZE, py = magma_hazards[i].y * CELL_SIZE + 45;
+                    HBRUSH mBrush = CreateSolidBrush(RGB(230, 57, 70));
+                    HBRUSH oldB = (HBRUSH)SelectObject(hdc, mBrush);
+                    HPEN oldP = (HPEN)SelectObject(hdc, (HPEN)GetStockObject(NULL_PEN));
+                    Ellipse(hdc, px + 3, py + 3, px + CELL_SIZE - 3, py + CELL_SIZE - 3);
+                    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+                    DeleteObject(mBrush);
+                }
+
+                // Cyber Basilisk Laser Telegraph
+                if (boss.alive && boss.boss_type == 1 && boss.laser_charge >= 20) {
+                    HPEN lPen = CreatePen(PS_SOLID, (anim_tick % 2 == 0) ? 3 : 1, RGB(0, 210, 211));
+                    HPEN oldLP = (HPEN)SelectObject(hdc, lPen);
+                    if (boss.laser_row >= 0) {
+                        MoveToEx(hdc, 0, boss.laser_row * CELL_SIZE + 45 + CELL_SIZE/2, NULL);
+                        LineTo(hdc, 500, boss.laser_row * CELL_SIZE + 45 + CELL_SIZE/2);
+                    }
+                    if (boss.laser_col >= 0) {
+                        MoveToEx(hdc, boss.laser_col * CELL_SIZE + CELL_SIZE/2, 45, NULL);
+                        LineTo(hdc, boss.laser_col * CELL_SIZE + CELL_SIZE/2, 545);
+                    }
+                    SelectObject(hdc, oldLP);
+                    DeleteObject(lPen);
                 }
 
                 if (portal_active) {
@@ -1856,7 +2208,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DrawSnakeSegmentGDI(hdc, snake[i].x, snake[i].y, i, snake_len, ghost_active > 0, (i==0?dir_x:0), (i==0?dir_y:0));
                 }
 
-                // Draw Particles
+                // Particles
                 for(i = 0; i < particle_count; i++) {
                     HBRUSH pBrush = CreateSolidBrush(particles[i].color);
                     HPEN pPen = (HPEN)GetStockObject(NULL_PEN);
@@ -1867,11 +2219,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(pBrush);
                 }
 
-                // Weather Effects: Rain
+                // Weather Effects: Rain / Sparks
                 {
-                    HPEN rainPen = CreatePen(PS_SOLID, 1, RGB(100, 150, 200));
+                    HPEN rainPen = CreatePen(PS_SOLID, 1, (campaign_branch == 1) ? RGB(180, 100, 180) : RGB(100, 150, 200));
                     HPEN oldPen2 = (HPEN)SelectObject(hdc, rainPen);
-                    for(i=0; i<40; i++) {
+                    for(i=0; i<30; i++) {
                         int rx = (i * 37 + (anim_tick * 4)) % 520;
                         int ry = (i * 53 + (anim_tick * 16)) % 620;
                         MoveToEx(hdc, rx, ry, NULL);
@@ -1881,14 +2233,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(rainPen);
                 }
 
-                if (game_mode == 4) {
-                    if ((campaign_level == 20 || campaign_level == 25) && boss.alive) {
-                        wsprintfA(score_text, "Score: %d  L20 BOSS HP: %d/%d", score, boss.hp, boss.max_hp);
+                // HUD Bar
+                if (game_mode == 7) { // Gauntlet
+                    wsprintfA(score_text, "Score: %d | BOSS [%d/4] %s HP:%d/%d", score, gauntlet_stage+1, boss_names[gauntlet_stage], boss.hp, boss.max_hp);
+                } else if (game_mode == 4) {
+                    if (boss.alive) {
+                        wsprintfA(score_text, "Score: %d | L%d BOSS HP: %d/%d", score, campaign_level, boss.hp, boss.max_hp);
                     } else {
-                        wsprintfA(score_text, "Score: %d  Stage: %d/25", score, campaign_level);
+                        wsprintfA(score_text, "Score: %d | Stage %d/30 [%s]", score, campaign_level, campaign_branch==0?"Solar":"Shadow");
                     }
                 } else {
-                    wsprintfA(score_text, "Score: %d  Mode: %s", score, mode_names[game_mode]);
+                    wsprintfA(score_text, "Score: %d | Mode: %s", score, mode_names[game_mode]);
                 }
                 TextOutA(hdc, 5, 5, score_text, lstrlenA(score_text));
 
@@ -1951,12 +2306,12 @@ void MainEntry() {
     float scale = dpi / 96.0f;
 
     winWidth = (int)((GRID_WIDTH * CELL_SIZE + 20) * scale);
-    winHeight = (int)((GRID_HEIGHT * CELL_SIZE + 105) * scale);
+    winHeight = (int)((GRID_HEIGHT * CELL_SIZE + 115) * scale);
 
     RECT rect = {0, 0, winWidth, winHeight};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
 
-    hwnd = CreateWindowExA(0, "KSnakeApp", "KSnake Arcade - Loop 8 [Press H or F1 for Help]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    hwnd = CreateWindowExA(0, "KSnakeApp", "KSnake Arcade - Loop 10 [Map Editor & Gauntlet]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

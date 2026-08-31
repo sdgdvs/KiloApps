@@ -147,7 +147,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KSnake     | Tier 1 | Loop 9 done (Snake vs Snake mode, growing walls, weather effects) | Loop 10: Map editor, boss gauntlet, branching campaigns |
 | KRogue     | Tier 1 | Loop 10 done (Final sanctuary floors, true ending, ultra bosses) | Loop 11: Classes/Loadouts (Warrior, Mage, Rogue) |
 | KQuest     | Tier 1 | Loop 9 done (Factions, mount system, crafting overhaul) | Loop 10: Kingdom management, army battles, castle defense |
 | KStarship  | Tier 1 | Loop 9 done (Interstellar factions, planetary landing, crew moral) | Loop 10: Galactic super-weapons, faction wars, alien boarding parties |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KMaze      | Tier 1 | Loop 10 done (Multi-level dungeons, save points, dynamic lighting) | Loop 11: Secret illusionary walls, dungeon lore tablets, stealth crouch mechanics |
 | KPac       | Tier 1 | Loop 10 done (Arcade endless mode, procedural ghost personalities & traits, Cyber-Forge item crafting) | Loop 11: Ghost companion pet summoning, labyrinth hazard portals, legendary relic forging |
 | KBreakout  | Tier 1 | Loop 10 done (Multi-ball chaos mode, gravity wells, custom powerup forging) | Loop 11: Orbital satellite barriers, laser reflectors, quantum resonance bricks |
+| KSnake     | Tier 1 | Loop 10 done (Map Editor lab, Boss Gauntlet with 4 serpents, 30-stage branching campaigns) | Loop 11: Co-op 2-player local mode, elemental snake skins, speedrun timer splits |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 10**
+- [x] KSnake (Loop 10: Added interactive Map Editor Lab [E/O / quick tools 1-4] with Wall, Portal A, Portal B, Eraser brushes, Clear, Border, Random Maze generator, Test play, and save/load persistence; dedicated Boss Gauntlet mode with 4 unique boss serpents [Hydra Viper, Cyber Basilisk with EMP laser charging, Inferno Wyrm with magma trail hazards, Void Ouroboros with void phase-shifting and gravity vortex] and dynamic boss HP bars; and Branching Campaign Expansion to 30 stages with milestone route selection cards [Solar Highway vs Shadow Labyrinth] offering distinct mechanics and scoring multipliers in both EXE and HTML)
 - [x] KBreakout (Loop 10: Added Multi-Ball Chaos Mode [toggle with C] with dynamic ball fission up to 32 balls and score scaling multipliers; Gravity Wells [Singularity Attractors & Pulsar Repulsors] bending ball trajectories in real-time with accretion disk visual vortex; and Cyber-Forge Power Lab [O/F / quick keys 1-5] with Plasma Shards, Quantum Cores, and Nano Alloy materials to synthesize 5 legendary enhancements [Nova Blast Ball, Chronos Paddle, Valkyrie Cannons, Quantum Aegis, Singularity Beacon] with save data persistence in both EXE and HTML)
 - [x] KPac (Loop 10: Added Arcade Endless mode with infinite procedural symmetrical mazes, dynamic scaling difficulty, score multipliers, and high-wave tracking [toggle with O]; Procedural Ghost Personalities & Traits [Vortex Magnet, Glitch Phase-Shifter, Trapper with sludge hazards, Mirage Illusionist, Hyper Chaser with auras]; and Cyber-Forge Item Crafting System with Ectoplasm, Fruit Essence, and Star Dust materials, 4 craftable recipes [Super Pellet, Chrono Warp, 2-Hit Aegis Shield, Void Pulse Bomb], and interactive forge menu [C] / quick-craft hotkeys [7-0] in both EXE and HTML)
 - [x] KMaze (Loop 10: Expanded campaign to 45 levels across 5 biomes [Catacombs, Cyber Labyrinth, Frost Caverns, Abyssal Depths, Inferno Citadel] ending with Stage 45 Minotaur Overlord Boss arena, added Sublevel Descent Stairwells [tile 38] with depth bonuses and charge replenishment, Ancient Save Shrine / Campfire Checkpoints [tile 28] with active state persistence and restore, and Dynamic Multi-Source Point Lighting with radiant Torch Sconces [tile 29], flame flicker, and real-time raycast surface illumination in both EXE and HTML)
