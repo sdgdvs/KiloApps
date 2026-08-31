@@ -177,7 +177,8 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
 }
 void AsyncBeep(DWORD freq, DWORD dur) {
     DWORD param = freq | (dur << 16);
-    CreateThread(NULL, 0, SoundThread, (LPVOID)(UINT_PTR)param, 0, NULL);
+    HANDLE hThread = CreateThread(NULL, 0, SoundThread, (LPVOID)(UINT_PTR)param, 0, NULL);
+    if (hThread) CloseHandle(hThread);
 }
 
 // --- Heatmap Export ---
@@ -228,6 +229,7 @@ void ExportHeatmapBMP(HWND hwnd) {
     
     DWORD dataSize = ((800 * 24 + 31) / 32) * 4 * 400;
     BYTE* pixels = (BYTE*)HeapAlloc(GetProcessHeap(), 0, dataSize);
+    SelectObject(memDC, oldBM);
     GetDIBits(hdc, hBitmap, 0, 400, pixels, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
     
     HANDLE hFile = CreateFileA("heatmap.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -244,7 +246,6 @@ void ExportHeatmapBMP(HWND hwnd) {
     }
     
     HeapFree(GetProcessHeap(), 0, pixels);
-    SelectObject(memDC, oldBM);
     DeleteObject(hBitmap);
     DeleteDC(memDC);
     ReleaseDC(hwnd, hdc);
@@ -326,13 +327,19 @@ void ExportCertificateBMP(HWND hwnd) {
     BITMAPINFOHEADER bi = {0};
     bi.biSize = sizeof(BITMAPINFOHEADER);
     bi.biWidth = 800;
-    bi.biHeight = -600; 
+    bi.biHeight = 600; 
     bi.biPlanes = 1;
     bi.biBitCount = 24;
     bi.biCompression = BI_RGB;
     
     DWORD dataSize = ((800 * 24 + 31) / 32) * 4 * 600;
     BYTE* pixels = (BYTE*)HeapAlloc(GetProcessHeap(), 0, dataSize);
+
+    DeleteObject(fontTitle);
+    DeleteObject(fontSub);
+    DeleteObject(fontScore);
+    DeleteObject(fontNormal);
+    SelectObject(memDC, oldBM);
     GetDIBits(hdc, hBitmap, 0, 600, pixels, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
     
     HANDLE hFile = CreateFileA("certificate.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -349,11 +356,6 @@ void ExportCertificateBMP(HWND hwnd) {
     }
     
     HeapFree(GetProcessHeap(), 0, pixels);
-    DeleteObject(fontTitle);
-    DeleteObject(fontSub);
-    DeleteObject(fontScore);
-    DeleteObject(fontNormal);
-    SelectObject(memDC, oldBM);
     DeleteObject(hBitmap);
     DeleteDC(memDC);
     ReleaseDC(hwnd, hdc);
@@ -429,7 +431,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_F5) { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F6 && currentMode == 3) { ExportHeatmapBMP(hwnd); break; }
             if (wParam == VK_F7) { ExportCertificateBMP(hwnd); break; }
-            if (wParam == 'H') { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (wParam == 'H' && currentMode != 0 && currentMode != 1 && currentMode != 2) { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_ESCAPE) {
                 if (currentMode == 0) {
                     arcadeLives = 3; arcadeScore = 0; arcadeCombo = 0;
@@ -826,6 +828,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_DESTROY:
+            SaveRegistryData();
             KillTimer(hwnd, 1);
             if (g_fontNav) DeleteObject(g_fontNav);
             if (g_fontMain) DeleteObject(g_fontMain);

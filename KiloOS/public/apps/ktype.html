@@ -887,6 +887,17 @@ try {
   testHistory = [];
 }
 
+// --- Helpers ---
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // --- Navigation Tabs ---
 function switchTab(tabId) {
   currentTab = tabId;
@@ -912,13 +923,18 @@ function switchTab(tabId) {
   } else if (tabId === 'history') {
     renderHistoryTable();
   } else if (tabId === 'arcade') {
-    initArcadeCanvas();
+    if (!arcadeRunning) {
+      initArcadeCanvas();
+    } else {
+      if (arcadeAnimationFrame) cancelAnimationFrame(arcadeAnimationFrame);
+      arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
+    }
   }
 }
 
 function toggleHelp() {
   const modal = document.getElementById('help-modal');
-  if (modal.style.display === 'none') {
+  if (modal.style.display === 'none' || modal.style.display === '') {
     modal.style.display = 'flex';
   } else {
     modal.style.display = 'none';
@@ -1115,6 +1131,7 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
   lastKeyTime = nowTime;
 
   const typedChar = inputVal[inputVal.length - 1];
+  e.target.value = ''; // Always clear to prevent backspace and stale character repetition
   const targetWord = testWords[wordIndex];
 
   if (!targetWord) return;
@@ -1125,7 +1142,6 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
     // Word submit
     wordIndex++;
     charIndex = 0;
-    e.target.value = '';
 
     if (testModeType === 'time' && wordIndex >= testWords.length - 10) {
       // Replenish words dynamically for time mode
@@ -1143,7 +1159,17 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
   }
 
   const expectedChar = targetWord[charIndex];
-  const charSpan = document.getElementById(`c-${wordIndex}-${charIndex}`);
+  let charSpan = document.getElementById(`c-${wordIndex}-${charIndex}`);
+  const targetWordEl = document.getElementById(`w-${wordIndex}`);
+
+  // Handle extra characters typed beyond target word length
+  if (!charSpan && targetWordEl) {
+    charSpan = document.createElement('span');
+    charSpan.className = 'char extra';
+    charSpan.id = `c-${wordIndex}-${charIndex}`;
+    charSpan.textContent = typedChar;
+    targetWordEl.appendChild(charSpan);
+  }
 
   // Record Heatmap Stats
   const targetKey = (expectedChar || typedChar).toLowerCase();
@@ -1154,18 +1180,18 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
     void charSpan.offsetWidth; // trigger reflow
   }
 
-  if (typedChar === expectedChar) {
+  if (expectedChar && typedChar === expectedChar) {
     if (charSpan) {
-        charSpan.className = 'char correct';
-        if (currentCadence > 10) charSpan.classList.add('kinetic-bounce');
+      charSpan.className = 'char correct';
+      if (currentCadence > 10) charSpan.classList.add('kinetic-bounce');
     }
     correctKeystrokes++;
     keyHeatmapData[targetKey].hits++;
     playSound('key', currentCadence);
   } else {
     if (charSpan) {
-        charSpan.className = 'char incorrect';
-        charSpan.classList.add('kinetic-shatter');
+      charSpan.className = charSpan.classList.contains('extra') ? 'char extra incorrect' : 'char incorrect';
+      charSpan.classList.add('kinetic-shatter');
     }
     errorCount++;
     keyHeatmapData[targetKey].errors++;
@@ -1186,7 +1212,13 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Backspace' && charIndex > 0) {
       charIndex--;
       const charSpan = document.getElementById(`c-${wordIndex}-${charIndex}`);
-      if (charSpan) charSpan.className = 'char';
+      if (charSpan) {
+        if (charSpan.classList.contains('extra')) {
+          charSpan.remove();
+        } else {
+          charSpan.className = 'char';
+        }
+      }
       updateCaretPosition();
     }
   } else if (currentTab === 'arcade' && arcadeRunning) {
@@ -1366,12 +1398,12 @@ function renderHeatmap() {
     sorted.slice(0, 5).forEach(item => {
       const finger = FINGER_MAP[item.key] || 'Finger';
       const li = document.createElement('li');
-      li.innerHTML = `Key <strong>'${item.key.toUpperCase()}'</strong> (${finger}) &mdash; ${item.errors} errors`;
+      li.innerHTML = `Key <strong>'${escapeHtml(item.key.toUpperCase())}'</strong> (${escapeHtml(finger)}) &mdash; ${Number(item.errors) || 0} errors`;
       listEl.appendChild(li);
     });
 
     const topWeakFinger = FINGER_MAP[sorted[0].key] || 'Weak Finger';
-    recEl.innerHTML = `Targeted focus needed for <strong>${topWeakFinger}</strong>. Recommended: practice custom drills isolating keys <code>${sorted.slice(0, 3).map(s => s.key.toUpperCase()).join(', ')}</code>.`;
+    recEl.innerHTML = `Targeted focus needed for <strong>${escapeHtml(topWeakFinger)}</strong>. Recommended: practice custom drills isolating keys <code>${sorted.slice(0, 3).map(s => escapeHtml(s.key.toUpperCase())).join(', ')}</code>.`;
   }
 }
 
@@ -1533,14 +1565,15 @@ function renderHistoryTable() {
 
   testHistory.forEach(item => {
     const tr = document.createElement('tr');
+    const errCount = Number(item.errors) || 0;
     tr.innerHTML = `
-      <td>${item.date}</td>
-      <td><span class="badge">${item.mode}</span> (${item.preset})</td>
-      <td style="color: var(--accent-cyan); font-weight: 700;">${item.wpm}</td>
-      <td>${item.accuracy}%</td>
-      <td>${item.cpm}</td>
-      <td style="color: ${item.errors > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}">${item.errors}</td>
-      <td>${item.duration}</td>
+      <td>${escapeHtml(item.date)}</td>
+      <td><span class="badge">${escapeHtml(item.mode)}</span> (${escapeHtml(item.preset)})</td>
+      <td style="color: var(--accent-cyan); font-weight: 700;">${Number(item.wpm) || 0}</td>
+      <td>${Number(item.accuracy) || 0}%</td>
+      <td>${Number(item.cpm) || 0}</td>
+      <td style="color: ${errCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}">${errCount}</td>
+      <td>${escapeHtml(item.duration)}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1548,12 +1581,16 @@ function renderHistoryTable() {
 
 function exportHistoryCSV() {
   if (testHistory.length === 0) return alert('No history data to export.');
-  let csv = 'Date,Mode,Preset,WPM,Accuracy,CPM,Errors,Duration\n';
+  let csv = 'Date,Mode,Preset,WPM,Accuracy,CPM,Errors,Duration\r\n';
   testHistory.forEach(h => {
-    csv += `"${h.date}","${h.mode}","${h.preset}",${h.wpm},${h.accuracy},${h.cpm},${h.errors},"${h.duration}"\n`;
+    const cleanDate = String(h.date || '').replace(/"/g, '""');
+    const cleanMode = String(h.mode || '').replace(/"/g, '""');
+    const cleanPreset = String(h.preset || '').replace(/"/g, '""');
+    const cleanDuration = String(h.duration || '').replace(/"/g, '""');
+    csv += `"${cleanDate}","${cleanMode}","${cleanPreset}",${Number(h.wpm) || 0},${Number(h.accuracy) || 0},${Number(h.cpm) || 0},${Number(h.errors) || 0},"${cleanDuration}"\r\n`;
   });
 
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -1758,7 +1795,6 @@ window.addEventListener('load', () => {
   resetTest();
   renderHeatmap();
   renderHistoryTable();
-  toggleHelp();
 });
 </script>
 </body>

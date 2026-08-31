@@ -315,6 +315,87 @@
   }
   .form-control:focus { border-color: var(--accent-gold); }
 
+  /* Templates Library & Cards */
+  .template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .template-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .template-card:hover {
+    border-color: var(--accent-gold);
+    background: rgba(229, 192, 123, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .template-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .template-card-icon { font-size: 20px; }
+  .template-card-title { font-size: 14px; font-weight: 700; color: var(--accent-gold); }
+  .template-card-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px; }
+  .template-card-preview {
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 4px;
+    padding: 6px 8px;
+    color: var(--text-main);
+    font-family: monospace;
+    max-height: 60px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    white-space: pre-line;
+  }
+  .template-btn-row {
+    display: flex;
+    gap: 6px;
+  }
+  .template-btn-row button {
+    flex: 1;
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+
+  /* Goal Progress Bar */
+  .goal-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .goal-bar-bg {
+    width: 90px;
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+  }
+  .goal-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-gold);
+    border-radius: 3px;
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+  .goal-bar-fill.achieved {
+    background: var(--accent-green);
+    box-shadow: 0 0 6px rgba(152, 195, 121, 0.6);
+  }
+
   /* Notification Toast */
   #toast {
     position: fixed; bottom: 20px; right: 20px;
@@ -427,6 +508,7 @@
       </div>
 
       <div class="toolbar-right">
+        <button class="btn" onclick="openTemplatesModal()">📋 Templates</button>
         <button class="btn" onclick="openImportExportModal()">📥 / 📤 Data</button>
         <button class="btn btn-danger" onclick="deleteCurrentEntry()">Delete</button>
         <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
@@ -436,9 +518,34 @@
     <div class="editor-container">
       <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' or F1 for Help)" oninput="updateEditorStats()"></textarea>
       <div class="editor-footer">
-        <div id="editorStats">0 words | 0 characters</div>
+        <div id="editorStats">0 words | 0 chars | ~0 min read</div>
+        <div id="goalProgressWrapper" class="goal-wrapper" title="Daily Writing Goal Progress">
+          <span id="goalLabel" style="font-size: 11px; color: var(--accent-gold); font-weight: 500;">Goal: 0/150 words (0%)</span>
+          <div class="goal-bar-bg">
+            <div id="goalBarFill" class="goal-bar-fill"></div>
+          </div>
+        </div>
         <div id="saveStatus">Saved locally</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Guided Reflection Prompts & Templates Modal -->
+<div class="modal-backdrop" id="templatesModal">
+  <div class="modal-card" style="width: 720px; max-width: 95vw;">
+    <div class="modal-header">
+      <h3>📋 Guided Reflection Prompts & Templates Library</h3>
+      <button class="icon-btn" onclick="closeModal('templatesModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom: 12px;">
+        Choose a structured journaling framework or guided prompt to spark your thoughts.
+      </p>
+      <div class="template-grid" id="templatesGrid"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('templatesModal')">Cancel</button>
     </div>
   </div>
 </div>
@@ -470,6 +577,21 @@
         </div>
       </div>
 
+      <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 16px; display: flex; justify-content: space-around; text-align: center;">
+        <div>
+          <div style="font-size: 16px; font-weight: bold; color: var(--accent-gold);" id="modalDailyGoal">150 words</div>
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Daily Goal 🎯</div>
+        </div>
+        <div>
+          <div style="font-size: 16px; font-weight: bold; color: var(--accent-cyan);" id="modalGoalHitRate">0%</div>
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Goal Hit Rate 🌟</div>
+        </div>
+        <div>
+          <div style="font-size: 16px; font-weight: bold; color: var(--accent-green);" id="modalEstReadTime">0 min</div>
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Total Read Time ⏱️</div>
+        </div>
+      </div>
+
       <div class="chart-section">
         <div class="chart-title">Mood Breakdown</div>
         <div id="moodBreakdown"></div>
@@ -485,10 +607,28 @@
 <div class="modal-backdrop" id="settingsModal">
   <div class="modal-card">
     <div class="modal-header">
-      <h3>⚙️ Settings & PIN Lock Security</h3>
+      <h3>⚙️ Settings & Preferences</h3>
       <button class="icon-btn" onclick="closeModal('settingsModal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="form-group">
+        <label><strong>Daily Writing Word Goal</strong></label>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+          Set a daily word count target to build consistent journaling habits.
+        </p>
+        <select id="dailyGoalSelect" class="form-control" onchange="updateDailyGoalSetting(this.value)">
+          <option value="50">50 words (Quick Check-in)</option>
+          <option value="100">100 words (Brief Reflection)</option>
+          <option value="150" selected>150 words (Standard Daily)</option>
+          <option value="250">250 words (Deep Dive)</option>
+          <option value="500">500 words (Long-form Journal)</option>
+          <option value="1000">1,000 words (Free Flow Essay)</option>
+          <option value="0">Disabled (No Goal)</option>
+        </select>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border-color); margin: 16px 0;">
+
       <div class="form-group">
         <label><strong>PIN Lock Security</strong></label>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
@@ -569,8 +709,10 @@
       <p><strong>Features:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
         <li>Select a date from the calendar to view or edit entries.</li>
+        <li><strong>Guided Reflection Templates:</strong> Click '📋 Templates' in toolbar to choose from 6 structured journaling frameworks (Morning, Evening, Gratitude, Goals, Stoic, Brain Dump).</li>
+        <li><strong>Daily Writing Goal:</strong> Set a target word count in Settings and track live progress with visual bar and estimated read time.</li>
         <li>Use hashtags (e.g. #happy) in your text to filter them easily later.</li>
-        <li>Your current writing streak and total words are tracked automatically!</li>
+        <li>Your current writing streak, total words, and goal achievement are tracked automatically!</li>
       </ul>
     </div>
     <div class="modal-footer">
@@ -582,12 +724,64 @@
 <script>
   // Core State
   let entries = {}; // { 'YYYY-MM-DD': { text: '', mood: '😀', updatedAt: timestamp } }
-  let settings = { pin: '', pinEnabled: false };
+  let settings = { pin: '', pinEnabled: false, dailyGoal: 150 };
   let selectedDate = '';
   let selectedMood = '';
   let selectedTagFilter = '';
   let calCurrentYear = new Date().getFullYear();
   let calCurrentMonth = new Date().getMonth(); // 0-indexed
+
+  // Guided Reflection Templates Library
+  const TEMPLATES = [
+    {
+      id: 'morning',
+      title: '5-Minute Morning Journal',
+      icon: '🌅',
+      desc: 'Start your morning with clarity, gratitude, and purposeful intentions.',
+      mood: '⚡',
+      content: `## 🌅 Morning Reflection\n\n### 🙏 3 Things I am Grateful For:\n1. \n2. \n3. \n\n### 🎯 What Would Make Today Great?\n- \n- \n\n### 💭 Daily Positive Affirmation / Focus:\n> `
+    },
+    {
+      id: 'evening',
+      title: 'Evening Reflection & Review',
+      icon: '🌙',
+      desc: 'Unwind, celebrate daily wins, and note key lessons learned before sleeping.',
+      mood: '😊',
+      content: `## 🌙 Evening Review\n\n### 🏆 Highlights & Daily Wins:\n- \n- \n\n### 🔄 What Could I Have Improved Today?\n- \n\n### 💡 Key Lessons & Thoughts for Tomorrow:\n- `
+    },
+    {
+      id: 'gratitude',
+      title: 'Gratitude & Positive Focus',
+      icon: '🙏',
+      desc: 'Cultivate deep appreciation for people, moments, and simple everyday pleasures.',
+      mood: '😀',
+      content: `## 🙏 Daily Gratitude Practice\n\n### 🌟 3 Specific Moments / Things I Appreciate Today:\n1. \n2. \n3. \n\n### 🤝 Someone Who Made a Positive Impact on My Life Recently:\n- \n\n### ☕ A Simple Everyday Pleasure I Enjoyed:\n- `
+    },
+    {
+      id: 'goals',
+      title: 'Daily Goals & Priority Alignment',
+      icon: '🎯',
+      desc: 'Focus ruthlessly on non-negotiable priorities and anticipate blockers.',
+      mood: '🧘',
+      content: `## 🎯 Daily Goals & Priorities\n\n### 📌 Top 3 Non-Negotiable Priorities Today:\n1. [ ] \n2. [ ] \n3. [ ] \n\n### 🚧 Potential Obstacles & Mitigation Strategy:\n- **Obstacle:** \n- **Strategy:** \n\n### ⚡ End-of-Day Key Deliverable / Milestone:\n- `
+    },
+    {
+      id: 'stoic',
+      title: 'Stoic / Mindfulness Reflection',
+      icon: '🏛️',
+      desc: 'Analyze control dichotomy, emotional responses, and practice core virtues.',
+      mood: '🧘',
+      content: `## 🏛️ Stoic Reflection\n\n### ⚖️ What Was Fully Within My Control Today?\n- \n\n### 🍃 What Was Outside My Control (and how did I react)?\n- \n\n### 🛡️ Core Virtue Practiced Today (Wisdom / Courage / Justice / Moderation):\n- `
+    },
+    {
+      id: 'braindump',
+      title: 'Brain Dump & Problem Solver',
+      icon: '💡',
+      desc: 'Deconstruct a tricky challenge with creative angles and direct action steps.',
+      mood: '⚡',
+      content: `## 💡 Brain Dump & Problem Solving\n\n### 🔍 The Core Challenge / Question:\n- \n\n### 🚀 Wild, Radical, or Alternative Approaches:\n- \n- \n\n### 📝 Immediate Next Action Step (Within 24 Hours):\n1. `
+    }
+  ];
 
   // PIN Input State
   let pinBuffer = '';
@@ -613,6 +807,7 @@
     }
 
     updateLockBtnState();
+    renderTemplates();
     renderCalendar();
     renderTagCloud();
     renderEntryList();
@@ -651,7 +846,13 @@
   function loadSettings() {
     try {
       const s = localStorage.getItem('kjournal_settings');
-      if (s) settings = JSON.parse(s);
+      if (s) {
+        settings = Object.assign({ pin: '', pinEnabled: false, dailyGoal: 150 }, JSON.parse(s));
+      }
+      const goalSel = document.getElementById('dailyGoalSelect');
+      if (goalSel && settings.dailyGoal !== undefined) {
+        goalSel.value = String(settings.dailyGoal);
+      }
     } catch (e) {}
   }
 
@@ -662,6 +863,76 @@
     } catch (e) {
       showToast('Storage limit reached! Cannot save settings.');
     }
+  }
+
+  function updateDailyGoalSetting(val) {
+    settings.dailyGoal = parseInt(val, 10) || 0;
+    saveSettingsToStorage();
+    updateEditorStats();
+    showToast(`Daily goal set to ${settings.dailyGoal > 0 ? settings.dailyGoal + ' words' : 'Disabled'}`);
+  }
+
+  // Templates Management & Rendering
+  function renderTemplates() {
+    const grid = document.getElementById('templatesGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    TEMPLATES.forEach(tmpl => {
+      const card = document.createElement('div');
+      card.className = 'template-card';
+      
+      const snippet = tmpl.content.replace(/## /g, '').replace(/### /g, '• ').slice(0, 95) + '...';
+
+      card.innerHTML = `
+        <div>
+          <div class="template-card-header">
+            <span class="template-card-icon">${tmpl.icon}</span>
+            <span class="template-card-title">${tmpl.title}</span>
+          </div>
+          <div class="template-card-desc">${tmpl.desc}</div>
+          <div class="template-card-preview">${snippet}</div>
+        </div>
+        <div class="template-btn-row">
+          <button class="btn btn-primary" onclick="applyTemplate('${tmpl.id}', 'replace')">Replace</button>
+          <button class="btn" onclick="applyTemplate('${tmpl.id}', 'append')">+ Append</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function openTemplatesModal() {
+    renderTemplates();
+    openModal('templatesModal');
+  }
+
+  function applyTemplate(tmplId, mode) {
+    const tmpl = TEMPLATES.find(t => t.id === tmplId);
+    if (!tmpl) return;
+
+    const editor = document.getElementById('journalArea');
+    if (mode === 'replace') {
+      if (editor.value.trim().length > 0) {
+        if (!confirm('Replace current journal text with template?')) return;
+      }
+      editor.value = tmpl.content;
+    } else {
+      if (editor.value.trim().length > 0) {
+        editor.value = editor.value.trimEnd() + '\n\n' + tmpl.content;
+      } else {
+        editor.value = tmpl.content;
+      }
+    }
+
+    if (tmpl.mood) {
+      selectMood(tmpl.mood, false);
+    }
+
+    updateEditorStats();
+    closeModal('templatesModal');
+    showToast(`Template "${tmpl.title}" inserted!`);
+    editor.focus();
   }
 
   function updateLockBtnState() {
@@ -1013,7 +1284,29 @@
     const text = document.getElementById('journalArea').value.trim();
     const words = text ? text.split(/\s+/).length : 0;
     const chars = text.length;
-    document.getElementById('editorStats').innerText = `${words} words | ${chars} characters`;
+    const readTime = words > 0 ? Math.max(1, Math.ceil(words / 200)) : 0;
+    document.getElementById('editorStats').innerText = `${words} word${words === 1 ? '' : 's'} | ${chars} char${chars === 1 ? '' : 's'} | ~${readTime} min read`;
+
+    const goalWrapper = document.getElementById('goalProgressWrapper');
+    const goalLabel = document.getElementById('goalLabel');
+    const goalBarFill = document.getElementById('goalBarFill');
+    const goal = settings.dailyGoal || 0;
+
+    if (goal > 0) {
+      goalWrapper.style.display = 'flex';
+      const pct = Math.round((words / goal) * 100);
+      goalLabel.innerText = `Goal: ${words}/${goal} words (${pct}%)`;
+      goalBarFill.style.width = `${Math.min(100, pct)}%`;
+      if (words >= goal) {
+        goalBarFill.classList.add('achieved');
+        goalLabel.style.color = 'var(--accent-green)';
+      } else {
+        goalBarFill.classList.remove('achieved');
+        goalLabel.style.color = 'var(--accent-gold)';
+      }
+    } else {
+      goalWrapper.style.display = 'none';
+    }
   }
 
   // Streak & Analytics Calculation
@@ -1022,18 +1315,26 @@
     const totalEntries = dates.length;
 
     let totalWords = 0;
+    let goalMetCount = 0;
     const moodCounts = {};
+    const goal = settings.dailyGoal || 150;
 
     dates.forEach(d => {
       const text = entries[d].text || '';
       const words = text.trim() ? text.trim().split(/\s+/).length : 0;
       totalWords += words;
 
+      if (goal > 0 && words >= goal) {
+        goalMetCount++;
+      }
+
       const mood = entries[d].mood || '😊';
       moodCounts[mood] = (moodCounts[mood] || 0) + 1;
     });
 
     const avgWords = totalEntries > 0 ? Math.round(totalWords / totalEntries) : 0;
+    const goalHitRate = (totalEntries > 0 && goal > 0) ? Math.round((goalMetCount / totalEntries) * 100) : 0;
+    const totalReadTime = Math.ceil(totalWords / 200);
 
     // Calculate Streaks
     let currentStreak = 0;
@@ -1084,7 +1385,7 @@
       });
     }
 
-    return { totalEntries, totalWords, avgWords, currentStreak, longestStreak, moodCounts };
+    return { totalEntries, totalWords, avgWords, currentStreak, longestStreak, moodCounts, goalHitRate, totalReadTime, goal };
   }
 
   function updateStreakWidget() {
@@ -1099,6 +1400,9 @@
     document.getElementById('modalBestStreak').innerText = `${stats.longestStreak} Days`;
     document.getElementById('modalTotalWords').innerText = stats.totalWords.toLocaleString();
     document.getElementById('modalAvgWords').innerText = stats.avgWords;
+    document.getElementById('modalDailyGoal').innerText = stats.goal > 0 ? `${stats.goal} words` : 'Disabled';
+    document.getElementById('modalGoalHitRate').innerText = `${stats.goalHitRate}%`;
+    document.getElementById('modalEstReadTime').innerText = `~${stats.totalReadTime} min`;
 
     const breakdown = document.getElementById('moodBreakdown');
     breakdown.innerHTML = '';

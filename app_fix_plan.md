@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KType
+**Target App:** KVault
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -275,4 +275,6 @@ Pass 1 Complete.
 - **KTimer**: Fixed XSS DOM injection vulnerability in custom preset and multi-timer rendering via `escapeHtml`. Added maximum capacity bounds for custom presets (max 30) and multi-timers (max 20) to prevent unbounded memory growth. Added live reactive input listeners for Pomodoro and HIIT interval configuration updates, and implemented Spacebar keyboard shortcut (Start/Pause active timer) across web and native Win32 versions. Added `WS_TABSTOP` styles and safe string bounded copy (`lstrcpynA`) in `main.c`. Recompiled native `KTimer.exe` (22 KB) and verified Vite web build.
  
 - **KTodo**: Fixed XSS DOM injection vulnerabilities by adding strict HTML entity escaping across badges (priority, category, due dates) in both List and Kanban views in `ktodo.html`. Added robust CSV parser (`parseCSVLine`) supporting embedded quotes/commas, CRLF string trimming, integer ID generation to prevent inline onclick float syntax issues, Escape key modal close handler, and localStorage quota error toast handling. In `main.c`, implemented bounded string copy/concatenation routines (`my_strncpy`, `my_strncat`), added metadata tag stripping (`StripTagsFromText`) on Markdown import to prevent metadata duplication on repeated import/export cycles, added parent window handle to modal dialogs, added `WS_TABSTOP` and listbox Space/Enter/Delete keyboard shortcuts, and preserved listbox selection index across toggle/delete. Recompiled native `KTodo.exe` (18.4 KB) and verified Vite web build.
+ 
+- **KType**: Fixed input listener replay bug in `ktype.html` where backspace re-evaluated stale buffered characters into mistypes by clearing input values per-key; added dynamic `.char.extra` elements and clean removal on backspace for typing beyond target word length. Fixed XSS vulnerabilities in leaderboard table and heatmap recommendations via `escapeHtml` sanitization, and escaped quotes in CSV exports. Prevented game freeze on tab switching in Arcade Cascade mode by resuming `requestAnimationFrame` on tab activation. In `main.c`, fixed critical 'H' key hijacking in `WM_KEYDOWN` that aborted active typing tests when words containing 'h' were typed, closed leaked thread kernel object handles in `AsyncBeep`, unselected device context bitmaps prior to `GetDIBits` in `ExportHeatmapBMP` and `ExportCertificateBMP`, and added `SaveRegistryData` on `WM_DESTROY`. Recompiled native `KType.exe` (18.9 KB) and verified Vite web build cleanly.
 

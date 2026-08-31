@@ -25,8 +25,76 @@ static const char *MOOD_LIST[] = {
     "Happy", "Calm", "Neutral", "Sad", "Energetic", "Focused"
 };
 #define NUM_MOODS 6
+#define DAILY_WORD_GOAL 150
+
+typedef struct {
+    const char *title;
+    const char *tag;
+    const char *desc;
+    const char *default_mood;
+    const char *template_content;
+} JournalTemplate;
+
+static const JournalTemplate TEMPLATE_LIST[] = {
+    {
+        "5-Minute Morning Journal",
+        "[Morning]",
+        "Start your morning with clarity, gratitude, and purposeful intentions.",
+        "Energetic",
+        "## Morning Reflection\n\n### 3 Things I am Grateful For:\n1. \n2. \n3. \n\n### What Would Make Today Great?\n- \n- \n\n### Daily Positive Affirmation / Focus:\n> \n"
+    },
+    {
+        "Evening Reflection & Review",
+        "[Evening]",
+        "Unwind, celebrate daily wins, and note key lessons learned before sleeping.",
+        "Calm",
+        "## Evening Review\n\n### Highlights & Daily Wins:\n- \n- \n\n### What Could I Have Improved Today?\n- \n\n### Key Lessons & Thoughts for Tomorrow:\n- \n"
+    },
+    {
+        "Gratitude & Positive Focus",
+        "[Gratitude]",
+        "Cultivate deep appreciation for people, moments, and simple everyday pleasures.",
+        "Happy",
+        "## Daily Gratitude Practice\n\n### 3 Specific Moments / Things I Appreciate Today:\n1. \n2. \n3. \n\n### Someone Who Made a Positive Impact on My Life Recently:\n- \n\n### A Simple Everyday Pleasure I Enjoyed:\n- \n"
+    },
+    {
+        "Daily Goals & Priority Alignment",
+        "[Goals]",
+        "Focus ruthlessly on non-negotiable priorities and anticipate blockers.",
+        "Focused",
+        "## Daily Goals & Priorities\n\n### Top 3 Non-Negotiable Priorities Today:\n1. [ ] \n2. [ ] \n3. [ ] \n\n### Potential Obstacles & Mitigation Strategy:\n- Obstacle: \n- Strategy: \n\n### End-of-Day Key Deliverable / Milestone:\n- \n"
+    },
+    {
+        "Stoic / Mindfulness Reflection",
+        "[Stoic]",
+        "Analyze control dichotomy, emotional responses, and practice core virtues.",
+        "Focused",
+        "## Stoic Reflection\n\n### What Was Fully Within My Control Today?\n- \n\n### What Was Outside My Control (and how did I react)?\n- \n\n### Core Virtue Practiced Today (Wisdom / Courage / Justice / Moderation):\n- \n"
+    },
+    {
+        "Brain Dump & Problem Solver",
+        "[BrainDump]",
+        "Deconstruct a tricky challenge with creative angles and direct action steps.",
+        "Energetic",
+        "## Brain Dump & Problem Solving\n\n### The Core Challenge / Question:\n- \n\n### Wild, Radical, or Alternative Approaches:\n- \n- \n\n### Immediate Next Action Step (Within 24 Hours):\n1. \n"
+    }
+};
+#define NUM_TEMPLATES 6
 
 void show_help();
+void templates_library_menu();
+void write_entry_flow(int preselected_template);
+
+int count_words_in_string(const char *str) {
+    if (!str) return 0;
+    int count = 0, in_word = 0;
+    while (*str) {
+        if (isspace((unsigned char)*str)) in_word = 0;
+        else if (!in_word) { in_word = 1; count++; }
+        str++;
+    }
+    return count;
+}
 
 void clear_screen() {
 #ifdef _WIN32
@@ -283,8 +351,8 @@ void free_entries(JournalEntry *entries, int count) {
     }
 }
 
-// Write new entry
-void write_entry() {
+// Write new entry with optional preselected template
+void write_entry_flow(int preselected_template) {
     clear_screen();
     printf("=========================================\n");
     printf("           WRITE JOURNAL ENTRY           \n");
@@ -303,19 +371,43 @@ void write_entry() {
     date_input[strcspn(date_input, "\r\n")] = '\0';
     if (strlen(date_input) == 0) strcpy(date_input, today_str);
 
+    int tmpl_choice = preselected_template;
+    if (tmpl_choice < 0) {
+        printf("\nJournaling Framework / Template:\n");
+        printf("  0. Blank / Freeform Entry\n");
+        for (int i = 0; i < NUM_TEMPLATES; i++) {
+            printf("  %d. %s %s\n", i + 1, TEMPLATE_LIST[i].title, TEMPLATE_LIST[i].tag);
+        }
+        printf("Choice (0-%d) [Default 0]: ", NUM_TEMPLATES);
+        char t_in[10];
+        if (fgets(t_in, sizeof(t_in), stdin)) {
+            int val = atoi(t_in);
+            if (val >= 1 && val <= NUM_TEMPLATES) tmpl_choice = val - 1;
+            else tmpl_choice = -1;
+        }
+    }
+
+    int default_mood_idx = 0;
+    if (tmpl_choice >= 0 && tmpl_choice < NUM_TEMPLATES) {
+        for (int m = 0; m < NUM_MOODS; m++) {
+            if (strcmp(MOOD_LIST[m], TEMPLATE_LIST[tmpl_choice].default_mood) == 0) {
+                default_mood_idx = m;
+                break;
+            }
+        }
+    }
+
     printf("\nSelect Mood:\n");
     for (int i = 0; i < NUM_MOODS; i++) {
-        printf("  %d. %s\n", i + 1, MOOD_LIST[i]);
+        printf("  %d. %s%s\n", i + 1, MOOD_LIST[i], (i == default_mood_idx) ? " (Template Recommended)" : "");
     }
-    printf("Mood choice (1-%d) [Default 1]: ", NUM_MOODS);
+    printf("Mood choice (1-%d) [Default %d]: ", NUM_MOODS, default_mood_idx + 1);
     char mood_choice[10];
-    int mood_idx = 0;
+    int mood_idx = default_mood_idx;
     if (fgets(mood_choice, sizeof(mood_choice), stdin)) {
         int val = atoi(mood_choice);
         if (val >= 1 && val <= NUM_MOODS) mood_idx = val - 1;
     }
-
-    printf("\nEnter your thoughts. Type 'EOF' on a new line to save and return.\n\n");
 
     FILE *f = fopen(JOURNAL_FILE, "a");
     if (!f) {
@@ -325,18 +417,83 @@ void write_entry() {
 
     fprintf(f, "\n=== Entry: %s %s | Mood: %s ===\n", date_input, time_str, MOOD_LIST[mood_idx]);
 
+    if (tmpl_choice >= 0 && tmpl_choice < NUM_TEMPLATES) {
+        fprintf(f, "%s\n", TEMPLATE_LIST[tmpl_choice].template_content);
+        printf("\nTemplate [%s] loaded.\n", TEMPLATE_LIST[tmpl_choice].title);
+        printf("Guided Prompts:\n%s\n", TEMPLATE_LIST[tmpl_choice].template_content);
+    }
+
+    printf("\nEnter your thoughts. Type 'EOF' on a new line to save and return.\n\n");
+
     char line[MAX_LINE];
+    int total_words = 0;
     while (fgets(line, sizeof(line), stdin)) {
         if (strncmp(line, "EOF", 3) == 0 && (line[3] == '\n' || line[3] == '\0' || line[3] == '\r')) {
             break;
         }
+        total_words += count_words_in_string(line);
         fprintf(f, "%s", line);
     }
 
     fclose(f);
-    printf("\nEntry saved successfully!\n");
+    int read_time = (total_words > 0) ? (total_words / 200 + 1) : 0;
+    printf("\nEntry saved successfully! (%d words | ~%d min read)\n", total_words, read_time);
+    if (total_words >= DAILY_WORD_GOAL) {
+        printf("🎉 Daily Writing Goal Achieved! (%d / %d words)\n", total_words, DAILY_WORD_GOAL);
+    } else {
+        printf("📊 Goal Progress: %d / %d words (%d%%)\n", total_words, DAILY_WORD_GOAL, (total_words * 100) / DAILY_WORD_GOAL);
+    }
     printf("Press Enter to continue...");
     getchar();
+}
+
+void write_entry() {
+    write_entry_flow(-1);
+}
+
+void templates_library_menu() {
+    while (1) {
+        clear_screen();
+        printf("====================================================\n");
+        printf("      GUIDED PROMPTS & TEMPLATES LIBRARY            \n");
+        printf("====================================================\n");
+        printf("Select a template to view prompts or start an entry:\n\n");
+
+        for (int i = 0; i < NUM_TEMPLATES; i++) {
+            printf("  %d. %-32s %s\n", i + 1, TEMPLATE_LIST[i].title, TEMPLATE_LIST[i].tag);
+            printf("     %s\n\n", TEMPLATE_LIST[i].desc);
+        }
+        printf("  7. Return to Main Menu\n");
+        printf("  H. Help / Instructions\n");
+        printf("====================================================\n");
+        printf("Choice (1-7): ");
+
+        char choice[10];
+        if (!fgets(choice, sizeof(choice), stdin)) break;
+
+        if (choice[0] >= '1' && choice[0] <= '6') {
+            int idx = choice[0] - '1';
+            clear_screen();
+            printf("====================================================\n");
+            printf("Template: %s %s\n", TEMPLATE_LIST[idx].title, TEMPLATE_LIST[idx].tag);
+            printf("Default Mood: %s\n", TEMPLATE_LIST[idx].default_mood);
+            printf("Description:  %s\n", TEMPLATE_LIST[idx].desc);
+            printf("----------------------------------------------------\n");
+            printf("PROMPT STRUCTURE:\n%s\n", TEMPLATE_LIST[idx].template_content);
+            printf("====================================================\n");
+            printf("Options: [W] Write New Entry with this Template   [B] Back\nChoice: ");
+            char sub[10];
+            if (fgets(sub, sizeof(sub), stdin)) {
+                if (sub[0] == 'w' || sub[0] == 'W') {
+                    write_entry_flow(idx);
+                }
+            }
+        } else if (choice[0] == 'h' || choice[0] == 'H') {
+            show_help();
+        } else if (choice[0] == '7') {
+            break;
+        }
+    }
 }
 
 // View all entries
@@ -346,18 +503,26 @@ void view_entries() {
     printf("            ALL JOURNAL ENTRIES          \n");
     printf("=========================================\n\n");
 
-    FILE *f = fopen(JOURNAL_FILE, "r");
-    if (!f) {
+    JournalEntry *entries = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+    int count = load_all_entries(entries, MAX_ENTRIES);
+
+    if (count == 0) {
         printf("No journal entries found.\n");
     } else {
-        char line[MAX_LINE];
-        while (fgets(line, sizeof(line), f)) {
-            printf("%s", line);
+        printf("Total Entries: %d\n\n", count);
+        for (int i = 0; i < count; i++) {
+            int words = count_words_in_string(entries[i].content);
+            int read_time = (words > 0) ? (words / 200 + 1) : 0;
+            printf("=== Entry: %s %s | Mood: %s | Words: %d (~%d min read) ===\n",
+                   entries[i].date_str, entries[i].time_str, entries[i].mood, words, read_time);
+            printf("%s\n\n", entries[i].content ? entries[i].content : "");
         }
-        fclose(f);
     }
 
-    printf("\nPress Enter to return to menu...");
+    free_entries(entries, count);
+    free(entries);
+
+    printf("Press Enter to return to menu...");
     getchar();
 }
 
@@ -650,20 +815,13 @@ void analytics_view() {
 
     int total_words = 0;
     int mood_counts[NUM_MOODS] = {0};
+    int goal_met_count = 0;
 
     for (int i = 0; i < count; i++) {
-        if (entries[i].content) {
-            char *ptr = entries[i].content;
-            int in_word = 0;
-            while (*ptr) {
-                if (isspace((unsigned char)*ptr)) {
-                    in_word = 0;
-                } else if (!in_word) {
-                    in_word = 1;
-                    total_words++;
-                }
-                ptr++;
-            }
+        int words = count_words_in_string(entries[i].content);
+        total_words += words;
+        if (words >= DAILY_WORD_GOAL) {
+            goal_met_count++;
         }
 
         for (int m = 0; m < NUM_MOODS; m++) {
@@ -675,6 +833,8 @@ void analytics_view() {
     }
 
     int avg_words = total_words / count;
+    int goal_hit_pct = (count > 0) ? (goal_met_count * 100 / count) : 0;
+    int total_read_time = (total_words > 0) ? ((total_words / 200) + 1) : 0;
 
     // Calculate Streaks
     int current_streak = 0;
@@ -690,6 +850,9 @@ void analytics_view() {
     printf("Total Entries written:   %d\n", count);
     printf("Total Words written:     %d\n", total_words);
     printf("Average Words / Entry:   %d\n", avg_words);
+    printf("Total Est. Reading Time: ~%d min\n", total_read_time);
+    printf("Daily Writing Word Goal: %d words\n", DAILY_WORD_GOAL);
+    printf("Goal Achievement Rate:   %d%% (%d of %d entries)\n", goal_hit_pct, goal_met_count, count);
     printf("Current Writing Streak:  %d days\n", current_streak);
     printf("Longest Streak Record:   %d days\n\n", longest_streak);
 
@@ -787,9 +950,11 @@ void show_help() {
     printf("Welcome to KJournal!\n\n");
     printf("Features:\n");
     printf("- Write new entries, auto-saved to journal.txt.\n");
+    printf("- Guided Prompts & Templates (5-Min Morning, Evening Review, Gratitude, Goals, Stoic, Brain Dump).\n");
+    printf("- Daily Writing Goal Tracking (Target: %d words) with Live Progress & Read Time.\n", DAILY_WORD_GOAL);
     printf("- Keep track of your mood each time you write.\n");
     printf("- Use hashtags (e.g. #happy) to easily search later.\n");
-    printf("- View your writing streaks and mood analytics.\n");
+    printf("- View your writing streaks, word counts, and mood analytics.\n");
     printf("- Secure your journal with a 4-digit PIN lock.\n");
     printf("- Export to Markdown or JSON, and import back!\n\n");
     printf("Press Enter to return to the main menu...");
@@ -850,8 +1015,9 @@ int main() {
         printf("5. Mood & Streak Analytics\n");
         printf("6. Security & PIN Lock\n");
         printf("7. Import / Export Data\n");
+        printf("8. Prompts & Templates Library\n");
         printf("H. Help / Instructions\n");
-        printf("8. Exit\n");
+        printf("9. Exit\n");
         printf("=========================================\n");
         printf("Choice: ");
         
@@ -871,9 +1037,11 @@ int main() {
             security_settings_menu();
         } else if (choice[0] == '7') {
             export_import_menu();
+        } else if (choice[0] == '8') {
+            templates_library_menu();
         } else if (choice[0] == 'h' || choice[0] == 'H') {
             show_help();
-        } else if (choice[0] == '8') {
+        } else if (choice[0] == '9') {
             break;
         }
     }

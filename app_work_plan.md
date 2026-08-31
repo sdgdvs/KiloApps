@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KJournal
+**Target App:** KPad
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KJournal (Added Calendar Entry Navigator, Mood Tracker & Writing Streak Analytics, Entry Search & Hashtag Filtering, PIN Lock Security, and Data Import/Export [JSON/MD/TXT])
 - KPad (Added Multi-Tab Document Sessions, Syntax Highlighting & Language Switcher, Find & Replace Panel with Regex Support, Line Numbers & Gutter Stats, and Document Export/Import)
 - KImage (Added Image Adjustments & Filters [Grayscale, Sepia, Invert, Brightness/Contrast, Blur], Transformations [Rotate 90°, Flips, Crop, Resize], RGB Color Histogram & EXIF Metadata Inspector, Auto-Slideshow Mode with Timer, and Image Export/Format Conversion [PNG/JPEG/WEBP/BMP])
 - KHex (Added Hex & ASCII Pattern Search/Replace, Data Inspector Panel [Int8..Int32, Float, Double, Endianness], Checksum & Cryptographic Hash Suite [CRC32, MD5, SHA-256], Byte Manipulation Operations [Fill, Invert, XOR Mask, Endian Swap], and Binary Data Export [Hex Dump, C Array, RAW])
@@ -129,4 +128,5 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KContacts (Added Real-time Search & Group Filters, vCard [.vcf] & CSV Import/Export, Duplicates Merger, Contact Avatar Initial/Color Generator, Quick Action buttons for Email/Phone, Dynamic Tag Badges & Multi-Tag Filter Chips, and Markdown Directory [.md] & Full JSON Backup [.json] Export/Import)
 - KRead (Added Real-Time Search & Highlight Navigation, Bookmarks Drawer & Persistence, Reading Statistics Engine [WPM & Time Remaining], Reader Themes & Font Controls, Highlights/Notes & JSON/TXT Export, and Multi-Tab Reading Sessions with Document Tabs & Session Persistence)
 - KBase (Added Simultaneous Multi-Base Converter [BIN/OCT/DEC/HEX/Base 2..36], 64-Bit Interactive Toggle Board & Bitwise Operator Suite [AND/OR/XOR/NOT/SHL/SHR/ROL/ROR], IEEE-754 Floating Point Breakdown, Conversion History Log & CSV/JSON Export, Variable-Length Integer Suite [ULEB128/SLEB128/Protobuf ZigZag Encoders/Decoders & Byte Breakdown], Multi-Width Integer Representation Inspector [Two's/Ones' Comp & Sign-Magnitude], and Structured Bitfield Slicer & Bit Diagnostics [Popcount, CLZ, CTZ, Parity])
+- KJournal (Added Calendar Entry Navigator, Mood Tracker & Writing Streak Analytics, Entry Search & Hashtag Filtering, PIN Lock Security, Data Import/Export [JSON/MD/TXT], Guided Reflection Prompts & Templates Library [Morning, Evening, Gratitude, Goals, Stoic, Brain Dump], and Daily Writing Goal Tracker with Live Progress Bar & Reading Time)
 
