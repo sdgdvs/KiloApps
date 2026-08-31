@@ -11,10 +11,10 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path` (e.g., using `[System.Environment]::GetEnvironmentVariable`). Doing this deletes the injected Antigravity runtime paths from the active agent's environment, causing the agent to immediately crash and enter a termination loop. If a specific tool like `crinkler` is missing, you must only APPEND to the path (e.g. `$env:Path += ";C:\path\to\tool"`), or better yet, simply restart the environment so it inherits the system paths natively. The PATH instructions have been removed from all MD files.
 
-## Current State (as of 2026-08-28 07:00 UTC)
-- **Total Apps:** 91 registered in App.jsx (up from 88 — KMystery, KColosseum, KStellar added). 🎯 **90 app milestone reached!**
-- **KiloOS Version:** 0.3.102.
-- **Games:** 39 titles (up from 36 — KMystery, KColosseum, KStellar added).
+## Current State (as of 2026-08-31 04:37 UTC)
+- **Total Apps:** 85 registered in App.jsx.
+- **KiloOS Version:** 0.3.104.
+- **Games:** 39 titles.
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
 - **Build Health:** ✅ Clean build — 242.02 KB JS (74.12 KB gzip), 21.50 KB CSS (5.04 KB gzip).
