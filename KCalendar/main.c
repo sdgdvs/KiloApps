@@ -2,19 +2,23 @@
 #include <windows.h>
 #include <commctrl.h>
 
-#define ID_MONTHCAL        1000
-#define ID_BTN_TODAY       1001
-#define ID_LIST_EVENTS     1002
-#define ID_EDIT_EVENT      1003
-#define ID_BTN_ADD         1004
-#define ID_BTN_DEL         1005
-#define ID_COMBO_CATEGORY  1006
-#define ID_COMBO_RECUR     1007
-#define ID_COMBO_FILTER    1008
-#define ID_EDIT_SEARCH     1009
-#define ID_BTN_EXPORT_ICS  1010
-#define ID_BTN_EXPORT_CSV  1011
-#define ID_BTN_HELP        1012
+#define ID_MONTHCAL              1000
+#define ID_BTN_TODAY             1001
+#define ID_LIST_EVENTS           1002
+#define ID_EDIT_EVENT            1003
+#define ID_BTN_ADD               1004
+#define ID_BTN_DEL               1005
+#define ID_COMBO_CATEGORY        1006
+#define ID_COMBO_RECUR           1007
+#define ID_COMBO_FILTER          1008
+#define ID_EDIT_SEARCH           1009
+#define ID_BTN_EXPORT_ICS        1010
+#define ID_BTN_EXPORT_CSV        1011
+#define ID_BTN_HELP              1012
+#define ID_COMBO_PRIORITY        1013
+#define ID_COMBO_PRIO_FILTER     1014
+#define ID_BTN_STATS             1015
+#define ID_BTN_EXPORT_MD         1016
 
 #define MAX_EVENTS 1000
 
@@ -22,6 +26,7 @@ typedef struct {
     int year, month, day;
     char category[32]; // Work, Personal, Health, Important, Other
     int recurring;     // 0=None, 1=Daily, 2=Weekly, 3=Monthly, 4=Yearly
+    int priority;      // 0=Low, 1=Normal, 2=High, 3=Urgent
     char text[128];
 } Event;
 
@@ -30,8 +35,8 @@ static int event_count = 0;
 static SYSTEMTIME selected_date;
 
 static HWND hMonthCal, hBtnToday, hListEvents, hEditEvent, hBtnAdd, hBtnDel;
-static HWND hComboCategory, hComboRecur, hComboFilter, hEditSearch;
-static HWND hBtnExportIcs, hBtnExportCsv;
+static HWND hComboCategory, hComboRecur, hComboPriority, hComboFilter, hComboPrioFilter, hEditSearch;
+static HWND hBtnExportIcs, hBtnExportCsv, hBtnExportMd, hBtnStats;
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hEditBrush = NULL;
 static WNDPROC oldEditProc = NULL;
@@ -39,6 +44,7 @@ static HFONT hFont = NULL;
 
 const char* CATEGORIES[] = { "Work", "Personal", "Health", "Important", "Other" };
 const char* RECURRENCES[] = { "None", "Daily", "Weekly", "Monthly", "Yearly" };
+const char* PRIORITIES[] = { "Low", "Normal", "High", "Urgent" };
 
 static BOOL CALLBACK SetFontCallback(HWND hwnd, LPARAM lParam) {
     SendMessage(hwnd, WM_SETFONT, (WPARAM)lParam, TRUE);
@@ -135,7 +141,7 @@ static void LoadEvents() {
         event_count = 0;
         char* ptr = buf;
         while (*ptr && event_count < MAX_EVENTS) {
-            int y = 0, m = 0, d = 0, recur = 0;
+            int y = 0, m = 0, d = 0, recur = 0, prio = 1;
             char cat[32] = "Work";
             while (*ptr == ' ' || *ptr == '\t' || *ptr == '\r' || *ptr == '\n') ptr++;
             if (!*ptr) break;
@@ -162,6 +168,13 @@ static void LoadEvents() {
                 while (*ptr == ' ') ptr++;
             }
 
+            // Optional priority
+            if (*ptr >= '0' && *ptr <= '9' && (*(ptr+1) == ' ' || *(ptr+1) == '\t')) {
+                prio = *ptr - '0';
+                ptr++;
+                while (*ptr == ' ') ptr++;
+            }
+
             int textIdx = 0;
             while (*ptr && *ptr != '\r' && *ptr != '\n' && textIdx < 127) {
                 events[event_count].text[textIdx++] = *ptr++;
@@ -176,6 +189,7 @@ static void LoadEvents() {
                 events[event_count].day = d;
                 my_strcpy(events[event_count].category, cat);
                 events[event_count].recurring = (recur >= 0 && recur <= 4) ? recur : 0;
+                events[event_count].priority = (prio >= 0 && prio <= 3) ? prio : 1;
                 event_count++;
             }
         }
@@ -191,10 +205,10 @@ static void SaveEvents() {
 
     for (int i = 0; i < event_count; i++) {
         char line[256];
-        int len = wsprintfA(line, "%d %d %d %s %d %s\r\n", 
+        int len = wsprintfA(line, "%d %d %d %s %d %d %s\r\n", 
             events[i].year, events[i].month, events[i].day, 
             events[i].category[0] ? events[i].category : "Work", 
-            events[i].recurring, events[i].text);
+            events[i].recurring, events[i].priority, events[i].text);
         DWORD written = 0;
         WriteFile(hFile, line, len, &written, NULL);
     }
@@ -211,8 +225,9 @@ static void ExportToIcs() {
 
     for (int i = 0; i < event_count; i++) {
         char buf[512];
-        int len = wsprintfA(buf, "BEGIN:VEVENT\r\nUID:native_%d@kcalendar\r\nDTSTART:%04d%02d%02dT090000\r\nSUMMARY:%s\r\nCATEGORIES:%s\r\nEND:VEVENT\r\n",
-            i, events[i].year, events[i].month, events[i].day, events[i].text, events[i].category);
+        int prioNum = (events[i].priority == 3) ? 1 : (events[i].priority == 2) ? 3 : (events[i].priority == 1) ? 5 : 9;
+        int len = wsprintfA(buf, "BEGIN:VEVENT\r\nUID:native_%d@kcalendar\r\nDTSTART:%04d%02d%02dT090000\r\nSUMMARY:%s\r\nCATEGORIES:%s\r\nPRIORITY:%d\r\nEND:VEVENT\r\n",
+            i, events[i].year, events[i].month, events[i].day, events[i].text, events[i].category, prioNum);
         WriteFile(hFile, buf, len, &written, NULL);
     }
 
@@ -226,20 +241,106 @@ static void ExportToCsv() {
     HANDLE hFile = CreateFileA("kcalendar_export.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return;
 
-    const char* header = "Year,Month,Day,Category,Recurrence,Title\r\n";
+    const char* header = "Year,Month,Day,Category,Recurrence,Priority,Title\r\n";
     DWORD written = 0;
     WriteFile(hFile, header, my_strlen(header), &written, NULL);
 
     for (int i = 0; i < event_count; i++) {
         char buf[512];
-        int len = wsprintfA(buf, "%d,%d,%d,%s,%s,\"%s\"\r\n",
+        int prioIdx = (events[i].priority >= 0 && events[i].priority <= 3) ? events[i].priority : 1;
+        int len = wsprintfA(buf, "%d,%d,%d,%s,%s,%s,\"%s\"\r\n",
             events[i].year, events[i].month, events[i].day, 
-            events[i].category, RECURRENCES[events[i].recurring], events[i].text);
+            events[i].category, RECURRENCES[events[i].recurring], PRIORITIES[prioIdx], events[i].text);
         WriteFile(hFile, buf, len, &written, NULL);
     }
 
     CloseHandle(hFile);
     MessageBoxA(NULL, "Exported events to kcalendar_export.csv", "Export Complete", MB_OK | MB_ICONINFORMATION);
+}
+
+static void ExportToMarkdown() {
+    HANDLE hFile = CreateFileA("kcalendar_agenda.md", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+
+    char header[512];
+    int hlen = wsprintfA(header, "# KCalendar Agenda & Schedule Report\r\n\r\n**Generated:** %04d-%02d-%02d | **Total Events:** %d\r\n\r\n| Status | Date | Priority | Category | Recurrence | Event |\r\n|:---:|:---:|:---:|:---:|:---:|:---|\r\n",
+        selected_date.wYear, selected_date.wMonth, selected_date.wDay, event_count);
+    DWORD written = 0;
+    WriteFile(hFile, header, hlen, &written, NULL);
+
+    for (int i = 0; i < event_count; i++) {
+        char buf[512];
+        const char* prioEmoji = (events[i].priority == 3) ? "[URGENT]" : (events[i].priority == 2) ? "[HIGH]" : (events[i].priority == 0) ? "[LOW]" : "[NORMAL]";
+        int recurIdx = (events[i].recurring >= 0 && events[i].recurring <= 4) ? events[i].recurring : 0;
+        int len = wsprintfA(buf, "| - [ ] | %04d-%02d-%02d | %s | %s | %s | %s |\r\n",
+            events[i].year, events[i].month, events[i].day,
+            prioEmoji,
+            events[i].category,
+            RECURRENCES[recurIdx],
+            events[i].text);
+        WriteFile(hFile, buf, len, &written, NULL);
+    }
+
+    const char* footer = "\r\n---\r\n*Report generated by KCalendar*\r\n";
+    WriteFile(hFile, footer, my_strlen(footer), &written, NULL);
+    CloseHandle(hFile);
+    MessageBoxA(NULL, "Exported markdown agenda to kcalendar_agenda.md", "Export Markdown", MB_OK | MB_ICONINFORMATION);
+}
+
+static void ShowStatistics(HWND hwnd) {
+    int totalEvents = event_count;
+    int thisMonthCount = 0;
+    int selectedDateCount = 0;
+    int catCounts[5] = {0};
+    int prioCounts[4] = {0};
+    int recurringCount = 0;
+
+    for (int i = 0; i < event_count; i++) {
+        if (events[i].month == selected_date.wMonth && events[i].year == selected_date.wYear) {
+            thisMonthCount++;
+        }
+        if (IsEventOnDate(&events[i], selected_date.wYear, selected_date.wMonth, selected_date.wDay)) {
+            selectedDateCount++;
+        }
+        if (events[i].recurring > 0) recurringCount++;
+
+        for (int c = 0; c < 5; c++) {
+            if (lstrcmpiA(events[i].category, CATEGORIES[c]) == 0) {
+                catCounts[c]++;
+                break;
+            }
+        }
+
+        int p = events[i].priority;
+        if (p >= 0 && p <= 3) prioCounts[p]++;
+        else prioCounts[1]++;
+    }
+
+    char statsMsg[1024];
+    wsprintfA(statsMsg,
+        "=== KCalendar Analytics & Summary ===\r\n\r\n"
+        "Date Selected: %04d-%02d-%02d\r\n"
+        "Total Database Events: %d\r\n"
+        "Events on Selected Date: %d\r\n"
+        "Events in Current Month (%04d-%02d): %d\r\n"
+        "Recurring Events: %d\r\n\r\n"
+        "--- Priority Breakdown ---\r\n"
+        "[!] Urgent: %d\r\n"
+        "[^] High: %d\r\n"
+        "[-] Normal: %d\r\n"
+        "[v] Low: %d\r\n\r\n"
+        "--- Category Distribution ---\r\n"
+        "Work: %d | Personal: %d | Health: %d\r\n"
+        "Important: %d | Other: %d\r\n\r\n"
+        "Tip: Click 'Export MD' to create a Markdown agenda file.",
+        selected_date.wYear, selected_date.wMonth, selected_date.wDay,
+        totalEvents, selectedDateCount,
+        selected_date.wYear, selected_date.wMonth, thisMonthCount,
+        recurringCount,
+        prioCounts[3], prioCounts[2], prioCounts[1], prioCounts[0],
+        catCounts[0], catCounts[1], catCounts[2], catCounts[3], catCounts[4]);
+
+    MessageBoxA(hwnd, statsMsg, "Calendar Analytics & Statistics", MB_OK | MB_ICONINFORMATION);
 }
 
 static void RefreshList() {
@@ -249,6 +350,7 @@ static void RefreshList() {
     GetWindowTextA(hEditSearch, searchBuf, 64);
 
     int filterSel = (int)SendMessage(hComboFilter, CB_GETCURSEL, 0, 0);
+    int prioFilterSel = (int)SendMessage(hComboPrioFilter, CB_GETCURSEL, 0, 0);
 
     for (int i = 0; i < event_count; i++) {
         if (IsEventOnDate(&events[i], selected_date.wYear, selected_date.wMonth, selected_date.wDay)) {
@@ -259,13 +361,23 @@ static void RefreshList() {
                 }
             }
 
+            // Priority filter (0=All, 1=Urgent, 2=High, 3=Normal, 4=Low)
+            if (prioFilterSel > 0) {
+                int targetPrio = (prioFilterSel == 1) ? 3 : (prioFilterSel == 2) ? 2 : (prioFilterSel == 3) ? 1 : 0;
+                if (events[i].priority != targetPrio) {
+                    continue;
+                }
+            }
+
             // Search filter
             if (searchBuf[0] && !my_stristr(events[i].text, searchBuf)) {
                 continue;
             }
 
+            const char* prioTag = (events[i].priority == 3) ? "[!]" : (events[i].priority == 2) ? "[^]" : (events[i].priority == 0) ? "[v]" : "[-]";
             char displayStr[256];
-            wsprintfA(displayStr, "[%s] %s %s", 
+            wsprintfA(displayStr, "%s [%s] %s %s", 
+                prioTag,
                 events[i].category, 
                 events[i].text, 
                 events[i].recurring > 0 ? "(🔄)" : "");
@@ -279,12 +391,17 @@ static int GetEventIndexFromListIndex(int selIndex) {
     char searchBuf[64] = "";
     GetWindowTextA(hEditSearch, searchBuf, 64);
     int filterSel = (int)SendMessage(hComboFilter, CB_GETCURSEL, 0, 0);
+    int prioFilterSel = (int)SendMessage(hComboPrioFilter, CB_GETCURSEL, 0, 0);
 
     int current = 0;
     for (int i = 0; i < event_count; i++) {
         if (IsEventOnDate(&events[i], selected_date.wYear, selected_date.wMonth, selected_date.wDay)) {
             if (filterSel > 0 && filterSel <= 5) {
                 if (lstrcmpiA(events[i].category, CATEGORIES[filterSel - 1]) != 0) continue;
+            }
+            if (prioFilterSel > 0) {
+                int targetPrio = (prioFilterSel == 1) ? 3 : (prioFilterSel == 2) ? 2 : (prioFilterSel == 3) ? 1 : 0;
+                if (events[i].priority != targetPrio) continue;
             }
             if (searchBuf[0] && !my_stristr(events[i].text, searchBuf)) continue;
 
@@ -325,6 +442,9 @@ static void AddEventFromInput() {
 
         int recurSel = (int)SendMessage(hComboRecur, CB_GETCURSEL, 0, 0);
         events[event_count].recurring = (recurSel >= 0 && recurSel <= 4) ? recurSel : 0;
+
+        int prioSel = (int)SendMessage(hComboPriority, CB_GETCURSEL, 0, 0);
+        events[event_count].priority = (prioSel >= 0 && prioSel <= 3) ? prioSel : 1;
 
         event_count++;
         SaveEvents();
@@ -374,44 +494,65 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int winWidth = SCALE(800);
             int winHeight = SCALE(600);
             int pad = SCALE(10);
-            int btnH = SCALE(28);
+            int btnH = SCALE(26);
             int editH = SCALE(24);
-            int spacing = SCALE(6);
+            int spacing = SCALE(5);
             
             int listX = pad + rc.right + SCALE(15);
             int rightW = winWidth - listX - SCALE(15);
             int listH = winHeight - SCALE(40) - SCALE(130);
 
             // Left column buttons
-            int btnY = pad + rc.bottom + SCALE(15);
+            int btnY = pad + rc.bottom + SCALE(10);
             hBtnToday = CreateWindowEx(0, "BUTTON", "Go to Today",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 pad, btnY, rc.right, btnH, hwnd, (HMENU)ID_BTN_TODAY, GetModuleHandle(NULL), NULL);
 
             int exportW = (rc.right - SCALE(5)) / 2;
+            btnY += btnH + spacing;
             hBtnExportIcs = CreateWindowEx(0, "BUTTON", "Export .ics",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                pad, btnY + btnH + spacing, exportW, btnH, hwnd, (HMENU)ID_BTN_EXPORT_ICS, GetModuleHandle(NULL), NULL);
+                pad, btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_EXPORT_ICS, GetModuleHandle(NULL), NULL);
 
             hBtnExportCsv = CreateWindowEx(0, "BUTTON", "Export CSV",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                pad + exportW + SCALE(5), btnY + btnH + spacing, exportW, btnH, hwnd, (HMENU)ID_BTN_EXPORT_CSV, GetModuleHandle(NULL), NULL);
+                pad + exportW + SCALE(5), btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_EXPORT_CSV, GetModuleHandle(NULL), NULL);
 
-            CreateWindowEx(0, "BUTTON", "Help (F1/H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, pad, btnY + (btnH + spacing) * 2, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
+            btnY += btnH + spacing;
+            hBtnExportMd = CreateWindowEx(0, "BUTTON", "Export MD",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                pad, btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_EXPORT_MD, GetModuleHandle(NULL), NULL);
 
-            // Search & Category Filter bar
-            int searchW = rightW - SCALE(165);
+            hBtnStats = CreateWindowEx(0, "BUTTON", "Analytics / Stats",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                pad + exportW + SCALE(5), btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_STATS, GetModuleHandle(NULL), NULL);
+
+            btnY += btnH + spacing;
+            CreateWindowEx(0, "BUTTON", "Help (F1/H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, pad, btnY, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
+
+            // Search & Category / Priority Filter bar
+            int searchW = rightW - SCALE(235);
             hEditSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
                 listX, pad, searchW, editH, hwnd, (HMENU)ID_EDIT_SEARCH, GetModuleHandle(NULL), NULL);
 
             hComboFilter = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                listX + searchW + SCALE(5), pad, SCALE(160), SCALE(120), hwnd, (HMENU)ID_COMBO_FILTER, GetModuleHandle(NULL), NULL);
+                listX + searchW + SCALE(5), pad, SCALE(110), SCALE(140), hwnd, (HMENU)ID_COMBO_FILTER, GetModuleHandle(NULL), NULL);
             
-            SendMessage(hComboFilter, CB_ADDSTRING, 0, (LPARAM)"All Categories");
+            SendMessage(hComboFilter, CB_ADDSTRING, 0, (LPARAM)"All Cats");
             for (int i = 0; i < 5; i++) SendMessage(hComboFilter, CB_ADDSTRING, 0, (LPARAM)CATEGORIES[i]);
             SendMessage(hComboFilter, CB_SETCURSEL, 0, 0);
+
+            hComboPrioFilter = CreateWindowEx(0, "COMBOBOX", "",
+                WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
+                listX + searchW + SCALE(120), pad, SCALE(110), SCALE(140), hwnd, (HMENU)ID_COMBO_PRIO_FILTER, GetModuleHandle(NULL), NULL);
+            SendMessage(hComboPrioFilter, CB_ADDSTRING, 0, (LPARAM)"All Prios");
+            SendMessage(hComboPrioFilter, CB_ADDSTRING, 0, (LPARAM)"[!] Urgent");
+            SendMessage(hComboPrioFilter, CB_ADDSTRING, 0, (LPARAM)"[^] High");
+            SendMessage(hComboPrioFilter, CB_ADDSTRING, 0, (LPARAM)"[-] Normal");
+            SendMessage(hComboPrioFilter, CB_ADDSTRING, 0, (LPARAM)"[v] Low");
+            SendMessage(hComboPrioFilter, CB_SETCURSEL, 0, 0);
 
             // Event List Box
             hListEvents = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
@@ -424,8 +565,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
                 listX, btmY, rightW, editH, hwnd, (HMENU)ID_EDIT_EVENT, GetModuleHandle(NULL), NULL);
 
-            btmY += editH + SCALE(10);
-            int comboW = (rightW - SCALE(5)) / 2;
+            btmY += editH + SCALE(8);
+            int comboW = (rightW - SCALE(10)) / 3;
             hComboCategory = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
                 listX, btmY, comboW, SCALE(120), hwnd, (HMENU)ID_COMBO_CATEGORY, GetModuleHandle(NULL), NULL);
@@ -438,7 +579,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int i = 0; i < 5; i++) SendMessage(hComboRecur, CB_ADDSTRING, 0, (LPARAM)RECURRENCES[i]);
             SendMessage(hComboRecur, CB_SETCURSEL, 0, 0);
 
-            btmY += SCALE(34);
+            hComboPriority = CreateWindowEx(0, "COMBOBOX", "",
+                WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
+                listX + (comboW + SCALE(5)) * 2, btmY, comboW, SCALE(120), hwnd, (HMENU)ID_COMBO_PRIORITY, GetModuleHandle(NULL), NULL);
+            for (int i = 0; i < 4; i++) SendMessage(hComboPriority, CB_ADDSTRING, 0, (LPARAM)PRIORITIES[i]);
+            SendMessage(hComboPriority, CB_SETCURSEL, 1, 0); // Default: Normal (index 1)
+
+            btmY += SCALE(32);
             int btnW = (rightW - SCALE(5)) / 2;
             hBtnAdd = CreateWindowEx(0, "BUTTON", "Add Event",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
@@ -499,7 +646,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_COMMAND:
             if (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == ID_EDIT_SEARCH) {
                 RefreshList();
-            } else if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == ID_COMBO_FILTER) {
+            } else if (HIWORD(wParam) == CBN_SELCHANGE && (LOWORD(wParam) == ID_COMBO_FILTER || LOWORD(wParam) == ID_COMBO_PRIO_FILTER)) {
                 RefreshList();
             } else if (LOWORD(wParam) == ID_BTN_TODAY) {
                 GetLocalTime(&selected_date);
@@ -513,8 +660,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportToIcs();
             } else if (LOWORD(wParam) == ID_BTN_EXPORT_CSV) {
                 ExportToCsv();
+            } else if (LOWORD(wParam) == ID_BTN_EXPORT_MD) {
+                ExportToMarkdown();
+            } else if (LOWORD(wParam) == ID_BTN_STATS) {
+                ShowStatistics(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
-                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date/export\n- Search or filter on top right\n- Double-click to delete\n- Add events at bottom right\n- Press F1 or H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date, export ICS/CSV/MD, or view Analytics\n- Search or filter by Category & Priority on top right\n- Double-click an event to delete\n- Add events with Priority & Recurrence at bottom right\n- Press F1 or H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_LIST_EVENTS && HIWORD(wParam) == LBN_DBLCLK) {
                 DeleteSelectedEvent();
             }
@@ -576,7 +727,7 @@ void MainEntry() {
             char cls[32] = {0};
             GetClassNameA(msg.hwnd, cls, 32);
             if (lstrcmpiA(cls, "EDIT") != 0) {
-                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date/export\n- Search or filter on top right\n- Double-click to delete\n- Add events at bottom right\n- Press F1 or H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date, export ICS/CSV/MD, or view Analytics\n- Search or filter by Category & Priority on top right\n- Double-click to delete\n- Add events at bottom right\n- Press F1 or H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
             }
         }
         TranslateMessage(&msg);

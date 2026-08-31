@@ -632,9 +632,11 @@
     <button class="btn btn-accent" id="newEventBtn">+ New Event</button>
     <button class="btn" id="exportIcsBtn" title="Export iCalendar (.ics)">Export .ics</button>
     <button class="btn" id="exportCsvBtn" title="Export CSV">Export CSV</button>
-    <button class="btn" id="importBtn" title="Import .ics or .csv">Import</button>
+    <button class="btn" id="exportMdBtn" title="Export Markdown Agenda (.md)">Export .md</button>
+    <button class="btn" id="statsBtn" title="Calendar Analytics & Statistics">📊 Analytics</button>
+    <button class="btn" id="importBtn" title="Import .ics, .csv, or .json">Import</button>
     <button class="btn" id="helpBtn" title="Help (Press H)">Help (H)</button>
-    <input type="file" id="importFileInput" accept=".ics,.csv" />
+    <input type="file" id="importFileInput" accept=".ics,.csv,.json" />
   </div>
 </div>
 
@@ -660,6 +662,14 @@
       <option value="Health">Health</option>
       <option value="Important">Important</option>
       <option value="Other">Other</option>
+    </select>
+
+    <select class="category-select" id="priorityFilter" aria-label="Filter by Priority">
+      <option value="ALL">All Priorities</option>
+      <option value="urgent">🔴 Urgent</option>
+      <option value="high">🟠 High</option>
+      <option value="normal">🔵 Normal</option>
+      <option value="low">⚪ Low</option>
     </select>
   </div>
 </div>
@@ -705,6 +715,15 @@
         </select>
       </div>
       <div class="form-group">
+        <label for="eventPrioritySelect">Priority</label>
+        <select class="select-field" id="eventPrioritySelect">
+          <option value="urgent">🔴 Urgent</option>
+          <option value="high">🟠 High</option>
+          <option value="normal" selected>🔵 Normal</option>
+          <option value="low">⚪ Low</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label for="eventRecurrenceSelect">Recurrence</label>
         <select class="select-field" id="eventRecurrenceSelect">
           <option value="none">None</option>
@@ -727,6 +746,24 @@
         <button class="btn" id="cancelModalBtn">Cancel</button>
         <button class="btn btn-accent" id="saveEventBtn">Save Event</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Calendar Analytics & Statistics Modal -->
+<div class="modal-overlay" id="statsModalOverlay" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
+  <div class="modal" style="width: 520px; max-width: 95vw;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="statsModalTitle">📊 Calendar Analytics & Overview</h3>
+      <button class="close-icon" id="closeStatsModalBtn">&times;</button>
+    </div>
+    <div id="statsModalBody" style="display:flex; flex-direction:column; gap:12px; font-size:13px; max-height:68vh; overflow-y:auto;">
+      <!-- Populated dynamically -->
+    </div>
+    <div class="modal-actions" style="margin-top:10px;">
+      <button class="btn btn-accent" id="exportMdFromStatsBtn">Export .md Agenda</button>
+      <button class="btn" id="exportJsonBackupBtn">Export JSON</button>
+      <button class="btn" id="closeStatsBtn" style="margin-left:auto;">Close</button>
     </div>
   </div>
 </div>
@@ -767,6 +804,7 @@
   let editingEventId = null;
   let searchQuery = '';
   let activeCategoryFilter = 'ALL';
+  let activePriorityFilter = 'ALL';
 
   const CATEGORY_COLORS = {
     Work: '#3b82f6',
@@ -776,6 +814,13 @@
     Other: '#8b5cf6'
   };
 
+  const PRIORITY_MAP = {
+    urgent: { label: 'Urgent', color: '#ef4444', icon: '🔴', weight: 4 },
+    high: { label: 'High', color: '#f97316', icon: '🟠', weight: 3 },
+    normal: { label: 'Normal', color: '#3b82f6', icon: '🔵', weight: 2 },
+    low: { label: 'Low', color: '#64748b', icon: '⚪', weight: 1 }
+  };
+
   // Load events
   let events = [];
   function loadEvents() {
@@ -783,6 +828,9 @@
       const storedV2 = localStorage.getItem('kcalendar_events_v2');
       if (storedV2) {
         events = JSON.parse(storedV2);
+        events.forEach(ev => {
+          if (!ev.priority) ev.priority = 'normal';
+        });
       } else {
         // Fallback migration from old key
         const oldStored = localStorage.getItem('kcalendar_events');
@@ -798,6 +846,7 @@
                   date: dateStr,
                   time: '',
                   category: 'Work',
+                  priority: 'normal',
                   recurring: 'none',
                   description: ''
                 });
@@ -809,9 +858,9 @@
           // Default sample events for first load
           const todayStr = formatDateStr(new Date());
           events = [
-            { id: generateId(), title: 'Project Kickoff', date: todayStr, time: '09:00', category: 'Work', recurring: 'none', description: 'Initial team alignment meeting.' },
-            { id: generateId(), title: 'Gym Workout', date: todayStr, time: '18:00', category: 'Health', recurring: 'daily', description: '30 mins cardio & strength.' },
-            { id: generateId(), title: 'Weekly Planning', date: todayStr, time: '11:00', category: 'Important', recurring: 'weekly', description: 'Review goals for the week.' }
+            { id: generateId(), title: 'Project Kickoff', date: todayStr, time: '09:00', category: 'Work', priority: 'high', recurring: 'none', description: 'Initial team alignment meeting.' },
+            { id: generateId(), title: 'Gym Workout', date: todayStr, time: '18:00', category: 'Health', priority: 'normal', recurring: 'daily', description: '30 mins cardio & strength.' },
+            { id: generateId(), title: 'Weekly Planning', date: todayStr, time: '11:00', category: 'Important', priority: 'urgent', recurring: 'weekly', description: 'Review quarterly goals for the week.' }
           ];
           saveEvents();
         }
@@ -846,9 +895,12 @@
     return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
   }
 
-  // Check if an event occurs on a specific target date string (handling recurrence)
+  // Check if an event occurs on a specific target date string (handling recurrence & filters)
   function isEventOnDate(event, targetDateStr) {
     if (activeCategoryFilter !== 'ALL' && event.category !== activeCategoryFilter) {
+      return false;
+    }
+    if (activePriorityFilter !== 'ALL' && (event.priority || 'normal') !== activePriorityFilter) {
       return false;
     }
     if (searchQuery) {
@@ -884,7 +936,12 @@
   }
 
   function getEventsForDate(dateStr) {
-    return events.filter(ev => isEventOnDate(ev, dateStr)).sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+    return events.filter(ev => isEventOnDate(ev, dateStr)).sort((a, b) => {
+      const prioA = PRIORITY_MAP[a.priority || 'normal']?.weight || 2;
+      const prioB = PRIORITY_MAP[b.priority || 'normal']?.weight || 2;
+      if (prioA !== prioB) return prioB - prioA; // Higher priority first
+      return (a.time || '00:00').localeCompare(b.time || '00:00');
+    });
   }
 
   // Rendering Routing
@@ -914,7 +971,7 @@
     } else if (currentView === 'day') {
       titleElem.textContent = selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
     } else if (currentView === 'agenda') {
-      titleElem.textContent = 'Agenda & Search';
+      titleElem.textContent = 'Agenda & Analytics';
     }
   }
 
@@ -1002,8 +1059,14 @@
       pill.className = 'event-pill';
       pill.style.backgroundColor = CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other;
       
-      let titleText = ev.time ? `${ev.time} ${ev.title}` : ev.title;
+      const prioObj = PRIORITY_MAP[ev.priority || 'normal'];
+      const prioIcon = (ev.priority === 'urgent' || ev.priority === 'high') ? prioObj.icon + ' ' : '';
+      let titleText = ev.time ? `${prioIcon}${ev.time} ${ev.title}` : `${prioIcon}${ev.title}`;
       pill.textContent = titleText;
+
+      if (ev.priority === 'urgent') {
+        pill.style.boxShadow = '0 0 4px #ef4444';
+      }
 
       if (ev.recurring && ev.recurring !== 'none') {
         const rec = document.createElement('span');
@@ -1074,7 +1137,8 @@
           card.style.padding = '6px';
           card.style.borderRadius = '6px';
           card.style.cursor = 'pointer';
-          card.innerHTML = `<strong>${ev.time || 'All day'}</strong> ${escapeHtml(ev.title)}`;
+          const prioObj = PRIORITY_MAP[ev.priority || 'normal'];
+          card.innerHTML = `<span>${prioObj.icon} <strong>${ev.time || 'All day'}</strong> ${escapeHtml(ev.title)}</span>`;
           card.onclick = () => openModal(ev.id);
           eventsContainer.appendChild(card);
         });
@@ -1131,7 +1195,8 @@
         card.style.padding = '6px 10px';
         card.style.borderRadius = '6px';
         card.style.cursor = 'pointer';
-        card.innerHTML = `<strong>${ev.time || 'All day'}</strong> - ${escapeHtml(ev.title)} <span style="opacity:0.8; font-size:11px;">(${ev.category})</span>`;
+        const prioObj = PRIORITY_MAP[ev.priority || 'normal'];
+        card.innerHTML = `<strong>${prioObj.icon} ${ev.time || 'All day'}</strong> - ${escapeHtml(ev.title)} <span style="opacity:0.8; font-size:11px;">(${ev.category} • ${prioObj.label})</span>`;
         card.onclick = () => openModal(ev.id);
         eventsDiv.appendChild(card);
       });
@@ -1154,9 +1219,10 @@
     const agendaView = document.createElement('div');
     agendaView.className = 'agenda-view';
 
-    // Get all events matching category/search
+    // Get all events matching category/priority/search
     let matchingEvents = events.filter(ev => {
       if (activeCategoryFilter !== 'ALL' && ev.category !== activeCategoryFilter) return false;
+      if (activePriorityFilter !== 'ALL' && (ev.priority || 'normal') !== activePriorityFilter) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const titleMatch = ev.title.toLowerCase().includes(q);
@@ -1181,12 +1247,14 @@
 
         const title = document.createElement('div');
         title.className = 'agenda-title';
-        title.textContent = ev.title;
+        const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
+        title.innerHTML = `<span>${prioObj.icon} ${escapeHtml(ev.title)}</span>`;
 
         const meta = document.createElement('div');
         meta.className = 'agenda-meta';
         meta.innerHTML = `<span>📅 ${ev.date} ${ev.time ? '⏰ ' + ev.time : ''}</span>` +
           `<span class="badge" style="background-color:${CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other}">${ev.category}</span>` +
+          `<span class="badge" style="background-color:${prioObj.color}; color:#fff;">${prioObj.label}</span>` +
           (ev.recurring && ev.recurring !== 'none' ? `<span style="color:var(--accent);">🔄 ${ev.recurring}</span>` : '');
 
         details.appendChild(title);
@@ -1221,6 +1289,7 @@
   const eventDateInput = document.getElementById('eventDateInput');
   const eventTimeInput = document.getElementById('eventTimeInput');
   const eventCategorySelect = document.getElementById('eventCategorySelect');
+  const eventPrioritySelect = document.getElementById('eventPrioritySelect');
   const eventRecurrenceSelect = document.getElementById('eventRecurrenceSelect');
   const eventDescInput = document.getElementById('eventDescInput');
   const deleteEventBtn = document.getElementById('deleteEventBtn');
@@ -1236,6 +1305,7 @@
       eventDateInput.value = ev.date;
       eventTimeInput.value = ev.time || '';
       eventCategorySelect.value = ev.category || 'Work';
+      eventPrioritySelect.value = ev.priority || 'normal';
       eventRecurrenceSelect.value = ev.recurring || 'none';
       eventDescInput.value = ev.description || '';
       deleteEventBtn.style.display = 'inline-block';
@@ -1245,6 +1315,7 @@
       eventDateInput.value = defaultDateStr || formatDateStr(selectedDate);
       eventTimeInput.value = defaultTimeStr || '';
       eventCategorySelect.value = 'Work';
+      eventPrioritySelect.value = 'normal';
       eventRecurrenceSelect.value = 'none';
       eventDescInput.value = '';
       deleteEventBtn.style.display = 'none';
@@ -1276,6 +1347,7 @@
           date: date,
           time: eventTimeInput.value,
           category: eventCategorySelect.value,
+          priority: eventPrioritySelect.value,
           recurring: eventRecurrenceSelect.value,
           description: eventDescInput.value
         };
@@ -1287,6 +1359,7 @@
         date: date,
         time: eventTimeInput.value,
         category: eventCategorySelect.value,
+        priority: eventPrioritySelect.value,
         recurring: eventRecurrenceSelect.value,
         description: eventDescInput.value
       });
@@ -1306,17 +1379,123 @@
     }
   }
 
+  // --- CALENDAR ANALYTICS MODAL ---
+  const statsModalOverlay = document.getElementById('statsModalOverlay');
+  const statsModalBody = document.getElementById('statsModalBody');
+
+  function openStatsModal() {
+    const totalEvents = events.length;
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth();
+
+    let thisMonthCount = 0;
+    let urgentCount = 0;
+    let highCount = 0;
+    let normalCount = 0;
+    let lowCount = 0;
+    const catMap = { Work: 0, Personal: 0, Health: 0, Important: 0, Other: 0 };
+
+    events.forEach(ev => {
+      const d = parseDateStr(ev.date);
+      if (d.getFullYear() === curYear && d.getMonth() === curMonth) {
+        thisMonthCount++;
+      }
+      const p = ev.priority || 'normal';
+      if (p === 'urgent') urgentCount++;
+      else if (p === 'high') highCount++;
+      else if (p === 'normal') normalCount++;
+      else if (p === 'low') lowCount++;
+
+      const c = ev.category || 'Other';
+      catMap[c] = (catMap[c] || 0) + 1;
+    });
+
+    let catBarsHtml = '';
+    Object.keys(catMap).forEach(cat => {
+      const count = catMap[cat];
+      const pct = totalEvents > 0 ? Math.round((count / totalEvents) * 100) : 0;
+      const color = CATEGORY_COLORS[cat] || '#8b5cf6';
+      catBarsHtml += `
+        <div style="margin-bottom:6px;">
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:2px;">
+            <span>${cat}</span>
+            <span style="color:var(--text-muted);">${count} (${pct}%)</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.1); border-radius:4px; height:8px; overflow:hidden;">
+            <div style="background:${color}; width:${pct}%; height:100%; border-radius:4px; transition:width 0.3s ease;"></div>
+          </div>
+        </div>`;
+    });
+
+    let prioBarsHtml = '';
+    [
+      { key: 'urgent', name: '🔴 Urgent', count: urgentCount, color: '#ef4444' },
+      { key: 'high', name: '🟠 High', count: highCount, color: '#f97316' },
+      { key: 'normal', name: '🔵 Normal', count: normalCount, color: '#3b82f6' },
+      { key: 'low', name: '⚪ Low', count: lowCount, color: '#64748b' }
+    ].forEach(p => {
+      const pct = totalEvents > 0 ? Math.round((p.count / totalEvents) * 100) : 0;
+      prioBarsHtml += `
+        <div style="margin-bottom:6px;">
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:2px;">
+            <span>${p.name}</span>
+            <span style="color:var(--text-muted);">${p.count} (${pct}%)</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.1); border-radius:4px; height:8px; overflow:hidden;">
+            <div style="background:${p.color}; width:${pct}%; height:100%; border-radius:4px; transition:width 0.3s ease;"></div>
+          </div>
+        </div>`;
+    });
+
+    statsModalBody.innerHTML = `
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px; text-align:center;">
+          <div style="font-size:22px; font-weight:700; color:var(--accent);">${totalEvents}</div>
+          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Total Events</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px; text-align:center;">
+          <div style="font-size:22px; font-weight:700; color:#3b82f6;">${thisMonthCount}</div>
+          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">This Month</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px; text-align:center;">
+          <div style="font-size:22px; font-weight:700; color:#ef4444;">${urgentCount + highCount}</div>
+          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Urgent / High</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:8px;">
+        <div style="background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:8px; padding:10px;">
+          <h4 style="margin:0 0 8px 0; font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">Categories</h4>
+          ${catBarsHtml}
+        </div>
+        <div style="background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:8px; padding:10px;">
+          <h4 style="margin:0 0 8px 0; font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">Priorities</h4>
+          ${prioBarsHtml}
+        </div>
+      </div>
+    `;
+
+    statsModalOverlay.classList.add('active');
+  }
+
+  function closeStatsModal() {
+    statsModalOverlay.classList.remove('active');
+  }
+
   // --- IMPORT / EXPORT ENGINE ---
   function exportIcs() {
     let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//KCalendar//EN\r\nCALSCALE:GREGORIAN\r\n";
     events.forEach(ev => {
       const dtStart = ev.date.replace(/-/g, '') + (ev.time ? 'T' + ev.time.replace(':', '') + '00' : '');
+      const prioNum = (ev.priority === 'urgent') ? 1 : (ev.priority === 'high') ? 3 : (ev.priority === 'low') ? 9 : 5;
       icsContent += "BEGIN:VEVENT\r\n";
       icsContent += `UID:${ev.id}@kcalendar\r\n`;
       icsContent += `DTSTART:${dtStart}\r\n`;
       icsContent += `SUMMARY:${cleanIcsText(ev.title)}\r\n`;
       if (ev.description) icsContent += `DESCRIPTION:${cleanIcsText(ev.description)}\r\n`;
       icsContent += `CATEGORIES:${ev.category}\r\n`;
+      icsContent += `PRIORITY:${prioNum}\r\n`;
       if (ev.recurring && ev.recurring !== 'none') {
         let rrule = ev.recurring.toUpperCase();
         icsContent += `RRULE:FREQ=${rrule}\r\n`;
@@ -1329,7 +1508,7 @@
   }
 
   function exportCsv() {
-    let csv = "ID,Title,Date,Time,Category,Recurrence,Description\n";
+    let csv = "ID,Title,Date,Time,Category,Priority,Recurrence,Description\n";
     events.forEach(ev => {
       const row = [
         ev.id,
@@ -1337,6 +1516,7 @@
         ev.date,
         ev.time || '',
         ev.category,
+        ev.priority || 'normal',
         ev.recurring || 'none',
         escapeCsv(ev.description || '')
       ].join(',');
@@ -1344,6 +1524,33 @@
     });
 
     downloadFile(csv, 'kcalendar_events.csv', 'text/csv;charset=utf-8;');
+  }
+
+  function exportMarkdownAgenda() {
+    const todayStr = formatDateStr(new Date());
+    let md = `# KCalendar Agenda & Schedule Report\n\n`;
+    md += `**Generated:** ${todayStr} | **Total Events:** ${events.length}\n\n`;
+    md += `## 📋 Event Overview\n\n`;
+    md += `| Status | Date | Time | Priority | Category | Recurrence | Title | Description |\n`;
+    md += `|:---:|:---:|:---:|:---:|:---:|:---:|:---|:---|\n`;
+
+    const sortedEvents = [...events].sort((a, b) => a.date.localeCompare(b.date) || (a.time || '00:00').localeCompare(b.time || '00:00'));
+
+    sortedEvents.forEach(ev => {
+      const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
+      const prioBadge = `${prioObj.icon} ${prioObj.label}`;
+      const desc = (ev.description || '').replace(/\n/g, ' ').replace(/\|/g, '\\|');
+      const title = ev.title.replace(/\|/g, '\\|');
+      md += `| - [ ] | ${ev.date} | ${ev.time || 'All day'} | ${prioBadge} | ${ev.category} | ${ev.recurring || 'none'} | **${title}** | ${desc} |\n`;
+    });
+
+    md += `\n---\n*Report generated by KCalendar*\n`;
+    downloadFile(md, 'kcalendar_agenda.md', 'text/markdown;charset=utf-8;');
+  }
+
+  function exportJsonBackup() {
+    const jsonStr = JSON.stringify(events, null, 2);
+    downloadFile(jsonStr, 'kcalendar_backup.json', 'application/json;charset=utf-8;');
   }
 
   function escapeCsv(str) {
@@ -1380,6 +1587,8 @@
         parseAndImportIcs(content);
       } else if (file.name.endsWith('.csv')) {
         parseAndImportCsv(content);
+      } else if (file.name.endsWith('.json')) {
+        parseAndImportJson(content);
       }
       saveEvents();
       renderApp();
@@ -1387,6 +1596,32 @@
     };
     reader.readAsText(file);
     e.target.value = '';
+  }
+
+  function parseAndImportJson(content) {
+    try {
+      const data = JSON.parse(content);
+      if (Array.isArray(data)) {
+        let count = 0;
+        data.forEach(item => {
+          if (item && item.title && item.date) {
+            events.push({
+              id: item.id || generateId(),
+              title: item.title,
+              date: item.date,
+              time: item.time || '',
+              category: item.category || 'Work',
+              priority: item.priority || 'normal',
+              recurring: item.recurring || 'none',
+              description: item.description || ''
+            });
+            count++;
+          }
+        });
+      }
+    } catch (err) {
+      alert('Failed to parse JSON backup file: ' + err.message);
+    }
   }
 
   function parseAndImportIcs(content) {
@@ -1398,7 +1633,7 @@
       line = line.trim();
       if (line === 'BEGIN:VEVENT') {
         inEvent = true;
-        curEvent = { id: generateId(), category: 'Work', recurring: 'none', description: '' };
+        curEvent = { id: generateId(), category: 'Work', priority: 'normal', recurring: 'none', description: '' };
       } else if (line === 'END:VEVENT') {
         if (curEvent.title && curEvent.date) {
           events.push(curEvent);
@@ -1417,6 +1652,12 @@
           }
         } else if (line.startsWith('CATEGORIES:')) {
           curEvent.category = line.substring(11).split(',')[0] || 'Work';
+        } else if (line.startsWith('PRIORITY:')) {
+          const p = parseInt(line.substring(9), 10);
+          if (p === 1 || p === 2) curEvent.priority = 'urgent';
+          else if (p === 3 || p === 4) curEvent.priority = 'high';
+          else if (p === 9) curEvent.priority = 'low';
+          else curEvent.priority = 'normal';
         } else if (line.startsWith('DESCRIPTION:')) {
           curEvent.description = line.substring(12);
         } else if (line.startsWith('RRULE:FREQ=')) {
@@ -1439,8 +1680,9 @@
           date: parts[2] || formatDateStr(new Date()),
           time: parts[3] || '',
           category: parts[4] || 'Work',
-          recurring: parts[5] || 'none',
-          description: parts[6] ? parts[6].replace(/^"|"$/g, '') : ''
+          priority: parts[5] || 'normal',
+          recurring: parts[6] || 'none',
+          description: parts[7] ? parts[7].replace(/^"|"$/g, '') : ''
         });
       }
     }
@@ -1489,6 +1731,11 @@
     renderApp();
   };
 
+  document.getElementById('priorityFilter').onchange = (e) => {
+    activePriorityFilter = e.target.value;
+    renderApp();
+  };
+
   document.getElementById('newEventBtn').onclick = () => openModal();
   document.getElementById('closeModalBtn').onclick = closeModal;
   document.getElementById('cancelModalBtn').onclick = closeModal;
@@ -1497,16 +1744,32 @@
 
   document.getElementById('exportIcsBtn').onclick = exportIcs;
   document.getElementById('exportCsvBtn').onclick = exportCsv;
+  document.getElementById('exportMdBtn').onclick = exportMarkdownAgenda;
+  document.getElementById('statsBtn').onclick = openStatsModal;
+  document.getElementById('closeStatsModalBtn').onclick = closeStatsModal;
+  document.getElementById('closeStatsBtn').onclick = closeStatsModal;
+  document.getElementById('exportMdFromStatsBtn').onclick = () => {
+    exportMarkdownAgenda();
+    closeStatsModal();
+  };
+  document.getElementById('exportJsonBackupBtn').onclick = () => {
+    exportJsonBackup();
+    closeStatsModal();
+  };
+
   document.getElementById('importBtn').onclick = () => document.getElementById('importFileInput').click();
   document.getElementById('importFileInput').onchange = handleImportFile;
 
   function showHelp() {
-    alert("KCalendar Help:\n- Use tabs to switch views\n- Click a day or time slot to add events\n- Click an event to edit or delete it\n- Use import/export to sync events\n- Press H anytime outside text boxes for this help");
+    alert("KCalendar Help:\n- Switch Views: Month, Week, Day, Agenda\n- Filter events by Category & Priority levels (Urgent, High, Normal, Low)\n- Click a day/slot to create events or click an event to edit/delete\n- Click 📊 Analytics to view statistics & category distributions\n- Export to .ics, CSV, JSON, or formatted Markdown (.md) Agenda\n- Press H anytime outside text boxes for this help");
   }
   document.getElementById('helpBtn').onclick = showHelp;
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && eventModalOverlay.classList.contains('active')) closeModal();
+    if (e.key === 'Escape') {
+      if (eventModalOverlay.classList.contains('active')) closeModal();
+      if (statsModalOverlay.classList.contains('active')) closeStatsModal();
+    }
     if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
       if (e.key === 'F1') e.preventDefault();
       showHelp();
