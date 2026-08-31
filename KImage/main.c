@@ -34,6 +34,10 @@
 #define ID_BTN_PLAY        122
 #define ID_BTN_NEXT        123
 #define ID_BTN_HELP        124
+#define ID_BTN_SHARPEN     125
+#define ID_BTN_EDGE        126
+#define ID_BTN_EMBOSS      127
+#define ID_BTN_SOBEL       128
 
 // Global State
 HBITMAP g_hBmpWork = NULL;
@@ -355,6 +359,86 @@ void FilterBlur() {
     HeapFree(GetProcessHeap(), 0, temp);
 }
 
+// Spatial 3x3 Convolution Matrix Engine
+void ApplyConvolution(const float kernel[3][3], float divisor, float bias) {
+    if (!g_pBitsWork || g_bmpW < 3 || g_bmpH < 3) return;
+    if ((long long)g_bmpW * g_bmpH * sizeof(RGBQUAD) > 256 * 1024 * 1024) return;
+    SIZE_T bufSize = (SIZE_T)g_bmpW * g_bmpH * sizeof(RGBQUAD);
+    RGBQUAD* srcCopy = (RGBQUAD*)HeapAlloc(GetProcessHeap(), 0, bufSize);
+    if (!srcCopy) return;
+    memcpy(srcCopy, g_pBitsWork, bufSize);
+
+    if (divisor == 0.0f) divisor = 1.0f;
+
+    for (int y = 0; y < g_bmpH; y++) {
+        for (int x = 0; x < g_bmpW; x++) {
+            float sumR = 0.0f, sumG = 0.0f, sumB = 0.0f;
+            for (int dy = -1; dy <= 1; dy++) {
+                int sy = y + dy;
+                if (sy < 0) sy = 0;
+                else if (sy >= g_bmpH) sy = g_bmpH - 1;
+
+                for (int dx = -1; dx <= 1; dx++) {
+                    int sx = x + dx;
+                    if (sx < 0) sx = 0;
+                    else if (sx >= g_bmpW) sx = g_bmpW - 1;
+
+                    RGBQUAD p = srcCopy[sy * g_bmpW + sx];
+                    float k = kernel[dy + 1][dx + 1];
+                    sumR += (float)p.rgbRed * k;
+                    sumG += (float)p.rgbGreen * k;
+                    sumB += (float)p.rgbBlue * k;
+                }
+            }
+
+            int r = (int)(sumR / divisor + bias);
+            int g = (int)(sumG / divisor + bias);
+            int b = (int)(sumB / divisor + bias);
+
+            g_pBitsWork[y * g_bmpW + x].rgbRed   = (BYTE)(r < 0 ? 0 : (r > 255 ? 255 : r));
+            g_pBitsWork[y * g_bmpW + x].rgbGreen = (BYTE)(g < 0 ? 0 : (g > 255 ? 255 : g));
+            g_pBitsWork[y * g_bmpW + x].rgbBlue  = (BYTE)(b < 0 ? 0 : (b > 255 ? 255 : b));
+        }
+    }
+    HeapFree(GetProcessHeap(), 0, srcCopy);
+}
+
+void FilterSharpen() {
+    static const float k[3][3] = {
+        {  0.0f, -1.0f,  0.0f },
+        { -1.0f,  5.0f, -1.0f },
+        {  0.0f, -1.0f,  0.0f }
+    };
+    ApplyConvolution(k, 1.0f, 0.0f);
+}
+
+void FilterEdgeDetect() {
+    static const float k[3][3] = {
+        {  0.0f,  1.0f,  0.0f },
+        {  1.0f, -4.0f,  1.0f },
+        {  0.0f,  1.0f,  0.0f }
+    };
+    ApplyConvolution(k, 1.0f, 128.0f);
+}
+
+void FilterEmboss() {
+    static const float k[3][3] = {
+        { -2.0f, -1.0f,  0.0f },
+        { -1.0f,  1.0f,  1.0f },
+        {  0.0f,  1.0f,  2.0f }
+    };
+    ApplyConvolution(k, 1.0f, 128.0f);
+}
+
+void FilterSobel() {
+    static const float k[3][3] = {
+        { -1.0f,  0.0f,  1.0f },
+        { -2.0f,  0.0f,  2.0f },
+        { -1.0f,  0.0f,  1.0f }
+    };
+    ApplyConvolution(k, 1.0f, 128.0f);
+}
+
 // Transformations
 void RotateImage90(int cw) {
     if (!g_pBitsWork) return;
@@ -538,72 +622,84 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int fontHeight = -MulDiv(12, dpi, 72);
             HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
-            int x = 6, y = 6, btnH = 28;
+            int x = 4, y = 6, btnH = 28;
 
-            HWND hBtn = CreateWindowEx(0, "BUTTON", "Open", WS_CHILD | WS_VISIBLE, x, y, 54, btnH, hwnd, (HMENU)ID_BTN_OPEN, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 58;
+            HWND hBtn = CreateWindowEx(0, "BUTTON", "Open", WS_CHILD | WS_VISIBLE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_OPEN, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 49;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, x, y, 54, btnH, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 58;
+            hBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 49;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
+            hBtn = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 45;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "-", WS_CHILD | WS_VISIBLE, x, y, 28, btnH, hwnd, (HMENU)ID_BTN_ZOOM_OUT, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 32;
+            hBtn = CreateWindowEx(0, "BUTTON", "-", WS_CHILD | WS_VISIBLE, x, y, 24, btnH, hwnd, (HMENU)ID_BTN_ZOOM_OUT, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 27;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "+", WS_CHILD | WS_VISIBLE, x, y, 28, btnH, hwnd, (HMENU)ID_BTN_ZOOM_IN, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 32;
+            hBtn = CreateWindowEx(0, "BUTTON", "+", WS_CHILD | WS_VISIBLE, x, y, 24, btnH, hwnd, (HMENU)ID_BTN_ZOOM_IN, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 27;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "1:1", WS_CHILD | WS_VISIBLE, x, y, 36, btnH, hwnd, (HMENU)ID_BTN_ZOOM_RESET, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 40;
+            hBtn = CreateWindowEx(0, "BUTTON", "1:1", WS_CHILD | WS_VISIBLE, x, y, 30, btnH, hwnd, (HMENU)ID_BTN_ZOOM_RESET, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 33;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "↺", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 36;
+            hBtn = CreateWindowEx(0, "BUTTON", "↺", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 29;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "↻", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_ROT_CW, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 36;
+            hBtn = CreateWindowEx(0, "BUTTON", "↻", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_ROT_CW, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 29;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Flip H", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_FLIP_H, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
+            hBtn = CreateWindowEx(0, "BUTTON", "FlpH", WS_CHILD | WS_VISIBLE, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_FLIP_H, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 41;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Flip V", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_FLIP_V, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
+            hBtn = CreateWindowEx(0, "BUTTON", "FlpV", WS_CHILD | WS_VISIBLE, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_FLIP_V, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 41;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Gray", WS_CHILD | WS_VISIBLE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_GRAYSCALE, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 50;
+            hBtn = CreateWindowEx(0, "BUTTON", "Gray", WS_CHILD | WS_VISIBLE, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_GRAYSCALE, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 41;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Sepia", WS_CHILD | WS_VISIBLE, x, y, 48, btnH, hwnd, (HMENU)ID_BTN_SEPIA, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 52;
+            hBtn = CreateWindowEx(0, "BUTTON", "Sepia", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_SEPIA, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 45;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Invert", WS_CHILD | WS_VISIBLE, x, y, 52, btnH, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 56;
+            hBtn = CreateWindowEx(0, "BUTTON", "Inv", WS_CHILD | WS_VISIBLE, x, y, 34, btnH, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 37;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Blur", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_BLUR, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 46;
+            hBtn = CreateWindowEx(0, "BUTTON", "Blur", WS_CHILD | WS_VISIBLE, x, y, 36, btnH, hwnd, (HMENU)ID_BTN_BLUR, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 39;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Br+", WS_CHILD | WS_VISIBLE, x, y, 36, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_UP, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 40;
+            hBtn = CreateWindowEx(0, "BUTTON", "Sharp", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_SHARPEN, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 45;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Br-", WS_CHILD | WS_VISIBLE, x, y, 36, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_DOWN, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 40;
+            hBtn = CreateWindowEx(0, "BUTTON", "Edge", WS_CHILD | WS_VISIBLE, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_EDGE, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 41;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 54;
+            hBtn = CreateWindowEx(0, "BUTTON", "Emboss", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_EMBOSS, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 53;
 
-            g_hBtnCrop = CreateWindowEx(0, "BUTTON", "Crop", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_CROP, NULL, NULL);
-            SendMessage(g_hBtnCrop, WM_SETFONT, (WPARAM)hFont, TRUE); x += 50;
+            hBtn = CreateWindowEx(0, "BUTTON", "Sobel", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_SOBEL, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 45;
 
-            g_hBtnDraw = CreateWindowEx(0, "BUTTON", "Draw", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_DRAW, NULL, NULL);
-            SendMessage(g_hBtnDraw, WM_SETFONT, (WPARAM)hFont, TRUE); x += 50;
+            hBtn = CreateWindowEx(0, "BUTTON", "Br+", WS_CHILD | WS_VISIBLE, x, y, 30, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_UP, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 33;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "◀", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 36;
+            hBtn = CreateWindowEx(0, "BUTTON", "Br-", WS_CHILD | WS_VISIBLE, x, y, 30, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_DOWN, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 33;
 
-            g_hBtnPlay = CreateWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE, x, y, 64, btnH, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
-            SendMessage(g_hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE); x += 68;
+            hBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE, x, y, 44, btnH, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 47;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "▶", WS_CHILD | WS_VISIBLE, x, y, 32, btnH, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
+            g_hBtnCrop = CreateWindowEx(0, "BUTTON", "Crop", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 40, btnH, hwnd, (HMENU)ID_BTN_CROP, NULL, NULL);
+            SendMessage(g_hBtnCrop, WM_SETFONT, (WPARAM)hFont, TRUE); x += 43;
+
+            g_hBtnDraw = CreateWindowEx(0, "BUTTON", "Draw", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 40, btnH, hwnd, (HMENU)ID_BTN_DRAW, NULL, NULL);
+            SendMessage(g_hBtnDraw, WM_SETFONT, (WPARAM)hFont, TRUE); x += 43;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "◀", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 29;
+
+            g_hBtnPlay = CreateWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE, x, y, 54, btnH, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
+            SendMessage(g_hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE); x += 57;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "▶", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             g_hPenDraw = CreatePen(PS_SOLID, 3, RGB(59, 130, 246));
@@ -620,7 +716,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SaveFileDlg(hwnd);
                     break;
                 case ID_BTN_HELP:
-                    MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- H/F1: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- S: Sharpen Filter\n- E: Edge Detect\n- H/F1: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
                     break;
                 case ID_BTN_ZOOM_IN:
                     g_zoom *= 1.2f;
@@ -665,6 +761,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_BTN_BLUR:
                     FilterBlur();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                case ID_BTN_SHARPEN:
+                    FilterSharpen();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                case ID_BTN_EDGE:
+                    FilterEdgeDetect();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                case ID_BTN_EMBOSS:
+                    FilterEmboss();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                case ID_BTN_SOBEL:
+                    FilterSobel();
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 case ID_BTN_BRIGHT_UP:
@@ -730,8 +842,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (wParam == 'O') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_OPEN, 0);
+            } else if (wParam == 'S') {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_SHARPEN, 0);
+            } else if (wParam == 'E') {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_EDGE, 0);
             } else if (wParam == 'H' || wParam == VK_F1) {
-                MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- H/F1: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- S: Sharpen Filter\n- E: Edge Detect\n- H/F1: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (wParam == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_PLAY, 0);
             } else if (wParam == VK_LEFT) {

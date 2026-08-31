@@ -201,6 +201,20 @@
     gap: 8px;
   }
 
+  .kernel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 8px 0;
+  }
+  .kernel-grid input {
+    text-align: center;
+    padding: 6px 2px;
+    font-size: 13px;
+    font-weight: 600;
+    width: 100%;
+  }
+
   /* Workspace / Canvas Area */
   .workspace {
     flex: 1;
@@ -398,6 +412,7 @@
     <div class="side-panel hidden" id="leftPanel">
       <div class="panel-tabs">
         <button class="tab-btn active" data-tab="tabAdjust">Adjust</button>
+        <button class="tab-btn" data-tab="tabKernel">Kernel FX</button>
         <button class="tab-btn" data-tab="tabTransform">Transform</button>
         <button class="tab-btn" data-tab="tabResize">Resize</button>
         <button class="tab-btn" data-tab="tabDraw">Draw</button>
@@ -439,6 +454,71 @@
           </div>
 
           <button id="btnResetAdjustments" class="danger" style="margin-top:12px;">Reset Adjustments</button>
+        </div>
+
+        <!-- Tab: Spatial Convolution & Kernel Studio -->
+        <div id="tabKernel" class="tab-page hidden">
+          <div class="control-group">
+            <label>Convolution Presets</label>
+            <select id="kernelPresetSelect">
+              <option value="sharpen">Sharpen (Crisp 3x3)</option>
+              <option value="unsharp">Unsharp Mask (High Pass)</option>
+              <option value="edge">Edge Detection (Laplacian)</option>
+              <option value="sobelH">Sobel Edge (Horizontal)</option>
+              <option value="sobelV">Sobel Edge (Vertical)</option>
+              <option value="emboss">Emboss (3D Relief)</option>
+              <option value="gauss">Gaussian Blur 3x3</option>
+              <option value="ridge">Ridge Detection</option>
+              <option value="motion">Diagonal Motion Blur</option>
+              <option value="custom">Custom 3x3 Matrix</option>
+            </select>
+          </div>
+
+          <div class="control-group" style="margin-top:10px;">
+            <label>3x3 Kernel Matrix Weights</label>
+            <div class="kernel-grid">
+              <input type="number" step="any" id="k00" value="0">
+              <input type="number" step="any" id="k01" value="-1">
+              <input type="number" step="any" id="k02" value="0">
+              <input type="number" step="any" id="k10" value="-1">
+              <input type="number" step="any" id="k11" value="5">
+              <input type="number" step="any" id="k12" value="-1">
+              <input type="number" step="any" id="k20" value="0">
+              <input type="number" step="any" id="k21" value="-1">
+              <input type="number" step="any" id="k22" value="0">
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="row">
+              <div style="flex:1;">
+                <label>Divisor</label>
+                <input type="number" step="any" id="kernelDivisor" value="1" style="width:100%;">
+              </div>
+              <div style="flex:1;">
+                <label>Bias / Offset</label>
+                <input type="number" step="any" id="kernelBias" value="0" style="width:100%;">
+              </div>
+            </div>
+            <div class="row" style="margin-top:6px;">
+              <button id="btnAutoDivisor" style="flex:1; font-size:11px; padding:4px 6px;" title="Compute sum of positive weights">Auto Divisor</button>
+              <button id="btnNormalizeKernel" style="flex:1; font-size:11px; padding:4px 6px;" title="Set Bias to 128 for Edge/Emboss">Bias +128</button>
+            </div>
+          </div>
+
+          <div class="control-group" style="margin-top:10px;">
+            <label>Target Channels</label>
+            <select id="kernelChannels">
+              <option value="rgb">All Channels (RGB)</option>
+              <option value="r">Red Channel Only</option>
+              <option value="g">Green Channel Only</option>
+              <option value="b">Blue Channel Only</option>
+              <option value="gray">Grayscale Luminance</option>
+            </select>
+          </div>
+
+          <button id="btnApplyKernel" class="primary" style="margin-top:12px;">Apply Kernel Filter</button>
+          <button id="btnRevertOriginal" class="danger" style="margin-top:8px;">Revert to Base Image</button>
         </div>
 
         <!-- Tab 2: Transform & Crop -->
@@ -968,6 +1048,162 @@
       };
     }
   });
+
+  // Convolution Matrix & Spatial Filtering Engine
+  const kernelPresets = {
+    sharpen: { m: [0, -1, 0, -1, 5, -1, 0, -1, 0], div: 1, bias: 0 },
+    unsharp: { m: [-1, -1, -1, -1, 9, -1, -1, -1, -1], div: 1, bias: 0 },
+    edge: { m: [0, 1, 0, 1, -4, 1, 0, 1, 0], div: 1, bias: 128 },
+    sobelH: { m: [-1, -2, -1, 0, 0, 0, 1, 2, 1], div: 1, bias: 128 },
+    sobelV: { m: [-1, 0, 1, -2, 0, 2, -1, 0, 1], div: 1, bias: 128 },
+    emboss: { m: [-2, -1, 0, -1, 1, 1, 0, 1, 2], div: 1, bias: 128 },
+    gauss: { m: [1, 2, 1, 2, 4, 2, 1, 2, 1], div: 16, bias: 0 },
+    ridge: { m: [-1, -1, -1, -1, 8, -1, -1, -1, -1], div: 1, bias: 0 },
+    motion: { m: [1, 0, 0, 0, 1, 0, 0, 0, 1], div: 3, bias: 0 }
+  };
+
+  const kernelInputs = [
+    document.getElementById('k00'), document.getElementById('k01'), document.getElementById('k02'),
+    document.getElementById('k10'), document.getElementById('k11'), document.getElementById('k12'),
+    document.getElementById('k20'), document.getElementById('k21'), document.getElementById('k22')
+  ];
+
+  function loadKernelPreset(name) {
+    const p = kernelPresets[name];
+    if (!p) return;
+    p.m.forEach((val, idx) => {
+      if (kernelInputs[idx]) kernelInputs[idx].value = val;
+    });
+    document.getElementById('kernelDivisor').value = p.div;
+    document.getElementById('kernelBias').value = p.bias;
+  }
+
+  const kernelPresetSelect = document.getElementById('kernelPresetSelect');
+  if (kernelPresetSelect) {
+    kernelPresetSelect.onchange = (e) => {
+      if (e.target.value !== 'custom') {
+        loadKernelPreset(e.target.value);
+      }
+    };
+  }
+
+  document.getElementById('btnAutoDivisor').onclick = () => {
+    let sum = 0;
+    kernelInputs.forEach(inp => {
+      const v = parseFloat(inp.value) || 0;
+      if (v > 0) sum += v;
+    });
+    document.getElementById('kernelDivisor').value = sum > 0 ? sum : 1;
+  };
+
+  document.getElementById('btnNormalizeKernel').onclick = () => {
+    document.getElementById('kernelBias').value = 128;
+  };
+
+  function applyConvolutionMatrix() {
+    const item = state.playlist[state.currentIndex];
+    if (!item) return;
+
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = item.img.width;
+    offCanvas.height = item.img.height;
+    const offCtx = offCanvas.getContext('2d');
+    offCtx.drawImage(item.img, 0, 0);
+
+    const w = offCanvas.width;
+    const h = offCanvas.height;
+    if (w <= 0 || h <= 0) return;
+
+    const srcImgData = offCtx.getImageData(0, 0, w, h);
+    const src = srcImgData.data;
+    const dstImgData = offCtx.createImageData(w, h);
+    const dst = dstImgData.data;
+
+    const k = kernelInputs.map(inp => parseFloat(inp.value) || 0);
+    const divisor = parseFloat(document.getElementById('kernelDivisor').value) || 1;
+    const bias = parseFloat(document.getElementById('kernelBias').value) || 0;
+    const targetChan = document.getElementById('kernelChannels').value;
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        let sumR = 0, sumG = 0, sumB = 0;
+        let kIdx = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          let sy = y + dy;
+          if (sy < 0) sy = 0;
+          else if (sy >= h) sy = h - 1;
+
+          for (let dx = -1; dx <= 1; dx++) {
+            let sx = x + dx;
+            if (sx < 0) sx = 0;
+            else if (sx >= w) sx = w - 1;
+
+            const pIdx = (sy * w + sx) * 4;
+            const weight = k[kIdx++];
+
+            sumR += src[pIdx] * weight;
+            sumG += src[pIdx + 1] * weight;
+            sumB += src[pIdx + 2] * weight;
+          }
+        }
+
+        const idx = (y * w + x) * 4;
+        let outR = sumR / divisor + bias;
+        let outG = sumG / divisor + bias;
+        let outB = sumB / divisor + bias;
+
+        outR = Math.max(0, Math.min(255, Math.round(outR)));
+        outG = Math.max(0, Math.min(255, Math.round(outG)));
+        outB = Math.max(0, Math.min(255, Math.round(outB)));
+
+        if (targetChan === 'rgb') {
+          dst[idx] = outR;
+          dst[idx + 1] = outG;
+          dst[idx + 2] = outB;
+        } else if (targetChan === 'r') {
+          dst[idx] = outR;
+          dst[idx + 1] = src[idx + 1];
+          dst[idx + 2] = src[idx + 2];
+        } else if (targetChan === 'g') {
+          dst[idx] = src[idx];
+          dst[idx + 1] = outG;
+          dst[idx + 2] = src[idx + 2];
+        } else if (targetChan === 'b') {
+          dst[idx] = src[idx];
+          dst[idx + 1] = src[idx + 1];
+          dst[idx + 2] = outB;
+        } else if (targetChan === 'gray') {
+          const gray = Math.max(0, Math.min(255, Math.round(0.299 * outR + 0.587 * outG + 0.114 * outB)));
+          dst[idx] = gray;
+          dst[idx + 1] = gray;
+          dst[idx + 2] = gray;
+        }
+        dst[idx + 3] = src[idx + 3];
+      }
+    }
+
+    offCtx.putImageData(dstImgData, 0, 0);
+
+    const newImg = new Image();
+    newImg.onload = () => {
+      state.playlist[state.currentIndex].img = newImg;
+      renderCanvas();
+    };
+    newImg.src = offCanvas.toDataURL();
+  }
+
+  document.getElementById('btnApplyKernel').onclick = applyConvolutionMatrix;
+
+  document.getElementById('btnRevertOriginal').onclick = () => {
+    const item = state.playlist[state.currentIndex];
+    if (!item) return;
+    const origImg = new Image();
+    origImg.onload = () => {
+      item.img = origImg;
+      renderCanvas();
+    };
+    origImg.src = URL.createObjectURL(item.file);
+  };
 
   // Transformations
   document.getElementById('btnRotateCCW').onclick = () => { state.rotation = (state.rotation - 90 + 360) % 360; renderCanvas(); };
