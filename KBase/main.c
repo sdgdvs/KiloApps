@@ -270,6 +270,251 @@ void DoConvertBases() {
     SetWindowTextA(hBitDisplay, bin);
 }
 
+// Multi-Width Representation Inspector
+void DoMultiWidthInspect() {
+    char buf[128];
+    GetWindowTextA(hInput, buf, 128);
+    UINT64 val = parse_u64(buf, 10);
+    if (val == 0 && buf[0] != '0') val = parse_u64(buf, 16);
+
+    INT8 s8 = (INT8)(val & 0xFF);
+    UINT8 u8 = (UINT8)(val & 0xFF);
+    UINT8 ones8 = (UINT8)(~u8);
+    UINT8 sm8 = (UINT8)(((u8 & 0x80) ? 0x80 : 0) | (u8 & 0x7F));
+
+    INT16 s16 = (INT16)(val & 0xFFFF);
+    UINT16 u16 = (UINT16)(val & 0xFFFF);
+    UINT16 ones16 = (UINT16)(~u16);
+    UINT16 sm16 = (UINT16)(((u16 & 0x8000) ? 0x8000 : 0) | (u16 & 0x7FFF));
+
+    INT32 s32 = (INT32)(val & 0xFFFFFFFF);
+    UINT32 u32 = (UINT32)(val & 0xFFFFFFFF);
+    UINT32 ones32 = (UINT32)(~u32);
+    UINT32 sm32 = (UINT32)(((u32 & 0x80000000) ? 0x80000000 : 0) | (u32 & 0x7FFFFFFF));
+
+    INT64 s64 = (INT64)val;
+    UINT64 ones64 = ~val;
+
+    char hex64[32], onesHex64[32], dec64[32], bin64[68], outStr[1024];
+    u64_to_hex(val, hex64);
+    u64_to_hex(ones64, onesHex64);
+    u64_to_dec(val, dec64);
+    u64_to_bin(val, bin64);
+
+    wsprintfA(outStr,
+        "=== Multi-Width Integer Representation ===\r\n"
+        "[8-Bit]   Signed: %d | Unsigned: %u | Hex: 0x%02X | 1's Comp: 0x%02X | Sign-Mag: 0x%02X\r\n"
+        "[16-Bit]  Signed: %d | Unsigned: %u | Hex: 0x%04X | 1's Comp: 0x%04X | Sign-Mag: 0x%04X\r\n"
+        "[32-Bit]  Signed: %d | Unsigned: %u | Hex: 0x%08X | 1's Comp: 0x%08X | Sign-Mag: 0x%08X\r\n"
+        "[64-Bit]  Hex: 0x%s | 1's Comp: 0x%s | Unsigned: %s\r\n"
+        "64-Bit Binary: %s",
+        (int)s8, (unsigned int)u8, (unsigned int)u8, (unsigned int)ones8, (unsigned int)sm8,
+        (int)s16, (unsigned int)u16, (unsigned int)u16, (unsigned int)ones16, (unsigned int)sm16,
+        (int)s32, (unsigned int)u32, (unsigned int)u32, (unsigned int)ones32, (unsigned int)sm32,
+        hex64, onesHex64, dec64, bin64);
+
+    SetWindowTextA(hOutput, outStr);
+    SetWindowTextA(hBitDisplay, bin64);
+}
+
+// Variable-Length Integer (LEB128 & Protobuf Varint)
+void DoVarintEncode() {
+    char buf[128];
+    GetWindowTextA(hInput, buf, 128);
+    
+    // Check if input is a hex byte sequence (contains spaces)
+    int hasSpace = 0;
+    for (int i = 0; buf[i]; i++) {
+        if (buf[i] == ' ' || buf[i] == ',' || buf[i] == '-') { hasSpace = 1; break; }
+    }
+
+    if (hasSpace) {
+        // Decode hex bytes
+        UINT64 ulebDec = 0;
+        int shift = 0;
+        const char* p = buf;
+        while (*p) {
+            while (*p == ' ' || *p == ',' || *p == '-' || *p == '\t') p++;
+            if (!*p) break;
+            int d1 = parse_hex_digit(*p++);
+            if (!*p) break;
+            int d2 = parse_hex_digit(*p++);
+            if (d1 >= 0 && d2 >= 0) {
+                BYTE b = (BYTE)((d1 << 4) | d2);
+                ulebDec |= ((UINT64)(b & 0x7F)) << shift;
+                if (!(b & 0x80)) break;
+                shift += 7;
+            }
+        }
+        char decStr[32], hexStr[32];
+        u64_to_dec(ulebDec, decStr);
+        u64_to_hex(ulebDec, hexStr);
+
+        char outStr[512];
+        wsprintfA(outStr,
+            "=== Decoded LEB128 / Varint Bytes ===\r\n"
+            "Raw Byte Stream: %s\r\n"
+            "Decoded Unsigned: %s\r\n"
+            "Decoded Hex: 0x%s",
+            buf, decStr, hexStr);
+        SetWindowTextA(hOutput, outStr);
+        return;
+    }
+
+    // Otherwise Encode integer to ULEB128, SLEB128 & ZigZag
+    UINT64 val = parse_u64(buf, 10);
+    if (val == 0 && buf[0] != '0') val = parse_u64(buf, 16);
+
+    // ULEB128 Encode
+    BYTE ulebBytes[16];
+    int ulebCount = 0;
+    UINT64 tempU = val;
+    do {
+        BYTE b = (BYTE)(tempU & 0x7F);
+        tempU >>= 7;
+        if (tempU != 0) b |= 0x80;
+        ulebBytes[ulebCount++] = b;
+    } while (tempU != 0);
+
+    // SLEB128 Encode
+    BYTE slebBytes[16];
+    int slebCount = 0;
+    INT64 tempS = (INT64)val;
+    int more = 1;
+    while (more) {
+        BYTE b = (BYTE)(tempS & 0x7F);
+        tempS >>= 7;
+        int signBit = (b & 0x40) != 0;
+        if ((tempS == 0 && !signBit) || (tempS == -1 && signBit)) {
+            more = 0;
+        } else {
+            b |= 0x80;
+        }
+        slebBytes[slebCount++] = b;
+    }
+
+    // ZigZag 64
+    INT64 sVal = (INT64)val;
+    UINT64 zzVal = (UINT64)((sVal << 1) ^ (sVal >> 63));
+    BYTE zzBytes[16];
+    int zzCount = 0;
+    UINT64 tempZZ = zzVal;
+    do {
+        BYTE b = (BYTE)(tempZZ & 0x7F);
+        tempZZ >>= 7;
+        if (tempZZ != 0) b |= 0x80;
+        zzBytes[zzCount++] = b;
+    } while (tempZZ != 0);
+
+    char ulebHex[64] = {0}, slebHex[64] = {0}, zzHex[64] = {0};
+    int pos = 0;
+    for (int i = 0; i < ulebCount; i++) pos += wsprintfA(&ulebHex[pos], "%02X ", ulebBytes[i]);
+    pos = 0;
+    for (int i = 0; i < slebCount; i++) pos += wsprintfA(&slebHex[pos], "%02X ", slebBytes[i]);
+    pos = 0;
+    for (int i = 0; i < zzCount; i++) pos += wsprintfA(&zzHex[pos], "%02X ", zzBytes[i]);
+
+    char outStr[1024];
+    wsprintfA(outStr,
+        "=== Variable-Length Integer (LEB128 & Protobuf Varint) ===\r\n"
+        "Input Value: %s\r\n\r\n"
+        "ULEB128 (Unsigned) Hex Bytes: %s (%d bytes)\r\n"
+        "SLEB128 (Signed) Hex Bytes:   %s (%d bytes)\r\n"
+        "Protobuf ZigZag Encoded Hex:  %s (%d bytes)\r\n\r\n"
+        "[First Byte Breakdown]\r\n"
+        "MSB (Continuation): %d | 7-bit Payload: 0x%02X (%d)",
+        buf, ulebHex, ulebCount, slebHex, slebCount, zzHex, zzCount,
+        (ulebBytes[0] & 0x80) ? 1 : 0, (int)(ulebBytes[0] & 0x7F), (int)(ulebBytes[0] & 0x7F));
+
+    SetWindowTextA(hOutput, outStr);
+}
+
+// Bitfield Slicer & Bit Metrics
+void DoBitfieldSlice() {
+    char bufA[64], bufB[64];
+    GetWindowTextA(hEditA, bufA, 64);
+    GetWindowTextA(hEditB, bufB, 64);
+
+    UINT64 valA = parse_u64(bufA, 16);
+    if (valA == 0 && bufA[0] != '0') valA = parse_u64(bufA, 10);
+
+    int high = 15, low = 8;
+    // Check if Operand B is "High:Low" format like "15:8"
+    char* colon = NULL;
+    for (int i = 0; bufB[i]; i++) {
+        if (bufB[i] == ':') { colon = &bufB[i]; break; }
+    }
+    if (colon) {
+        high = (int)parse_u64(bufB, 10);
+        low = (int)parse_u64(colon + 1, 10);
+    } else {
+        UINT64 b = parse_u64(bufB, 10);
+        if (b > 0 && b < 64) {
+            low = 0;
+            high = (int)b - 1;
+        }
+    }
+
+    if (high < 0) high = 0;
+    if (high > 63) high = 63;
+    if (low < 0) low = 0;
+    if (low > 63) low = 63;
+    if (high < low) { int t = high; high = low; low = t; }
+
+    int bitCount = high - low + 1;
+    UINT64 sliceMask = (bitCount >= 64) ? 0xFFFFFFFFFFFFFFFFULL : ((1ULL << bitCount) - 1ULL);
+    UINT64 extractedU = (valA >> low) & sliceMask;
+    INT64 extractedS = (INT64)extractedU;
+    if (bitCount < 64 && (extractedU & (1ULL << (bitCount - 1)))) {
+        extractedS |= ~sliceMask;
+    }
+    UINT64 fullMask = sliceMask << low;
+
+    // Bit Metrics (Popcount, CLZ, CTZ, Parity)
+    int popcount = 0;
+    for (int i = 0; i < 64; i++) {
+        if ((valA >> i) & 1) popcount++;
+    }
+
+    int clz = 0;
+    for (int i = 63; i >= 0; i--) {
+        if ((valA >> i) & 1) break;
+        clz++;
+    }
+
+    int ctz = 0;
+    for (int i = 0; i < 64; i++) {
+        if ((valA >> i) & 1) break;
+        ctz++;
+    }
+
+    char maskHex[32], extHex[32], valHex[32], outStr[1024];
+    u64_to_hex(fullMask, maskHex);
+    u64_to_hex(extractedU, extHex);
+    u64_to_hex(valA, valHex);
+
+    wsprintfA(outStr,
+        "=== Bitfield Slicer & Bit Metrics ===\r\n"
+        "Source Operand A: 0x%s\r\n"
+        "Bit Slice Range:  [%d : %d] (%d bits)\r\n"
+        "Bitmask:          0x%s\r\n\r\n"
+        "Extracted Unsigned: %d (0x%s)\r\n"
+        "Extracted Signed:   %d\r\n\r\n"
+        "[64-Bit Diagnostics]\r\n"
+        "Population Count (Hamming Weight): %d / 64\r\n"
+        "Count Leading Zeros (CLZ):         %d\r\n"
+        "Count Trailing Zeros (CTZ):        %d\r\n"
+        "Parity:                            %s\r\n"
+        "Is Power of 2:                     %s",
+        valHex, high, low, bitCount, maskHex,
+        (int)extractedU, extHex, (int)extractedS,
+        popcount, clz, ctz,
+        (popcount % 2 == 0) ? "Even (0)" : "Odd (1)",
+        (valA > 0 && (valA & (valA - 1)) == 0) ? "YES" : "NO");
+
+    SetWindowTextA(hOutput, outStr);
+}
+
 // Bitwise operations (AND, OR, XOR, NOT, SHL, SHR, ROL, ROR)
 void DoBitwiseOp(int op) {
     char bufA[64], bufB[64];
@@ -338,8 +583,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hEditA = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0x0F0F0F0F", WS_CHILD | WS_VISIBLE, 170, 85, 120, 22, hwnd, NULL, NULL, NULL);
             SendMessageA(hEditA, WM_SETFONT, (WPARAM)hFont, 0);
 
-            CreateWindowA("STATIC", "Operand B / Shift:", WS_CHILD | WS_VISIBLE, 300, 88, 140, 18, hwnd, NULL, NULL, NULL);
-            hEditB = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0x00FF00FF", WS_CHILD | WS_VISIBLE, 445, 85, 120, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Operand B / Shift / Slice [H:L]:", WS_CHILD | WS_VISIBLE, 300, 88, 220, 18, hwnd, NULL, NULL, NULL);
+            hEditB = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "15:8", WS_CHILD | WS_VISIBLE, 525, 85, 100, 22, hwnd, NULL, NULL, NULL);
             SendMessageA(hEditB, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Action Buttons - Base & Text Encoding
@@ -361,6 +606,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnHash = CreateWindowA("BUTTON", "SHA-256", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 435, 115, 80, 24, hwnd, (HMENU)3, NULL, NULL);
             SendMessageA(hBtnHash, WM_SETFONT, (WPARAM)hFont, 0);
 
+            HWND hBtnVarint = CreateWindowA("BUTTON", "Varint/LEB128", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 520, 115, 115, 24, hwnd, (HMENU)20, NULL, NULL);
+            SendMessageA(hBtnVarint, WM_SETFONT, (WPARAM)hFont, 0);
+
+            HWND hBtnInts = CreateWindowA("BUTTON", "Int Formats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 640, 115, 100, 24, hwnd, (HMENU)21, NULL, NULL);
+            SendMessageA(hBtnInts, WM_SETFONT, (WPARAM)hFont, 0);
+
             // Bitwise Operator Buttons
             HWND hBtnAnd = CreateWindowA("BUTTON", "AND", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 145, 60, 24, hwnd, (HMENU)10, NULL, NULL);
             SendMessageA(hBtnAnd, WM_SETFONT, (WPARAM)hFont, 0);
@@ -378,6 +629,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnRol, WM_SETFONT, (WPARAM)hFont, 0);
             HWND hBtnRor = CreateWindowA("BUTTON", "ROR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 470, 145, 60, 24, hwnd, (HMENU)17, NULL, NULL);
             SendMessageA(hBtnRor, WM_SETFONT, (WPARAM)hFont, 0);
+
+            HWND hBtnSlice = CreateWindowA("BUTTON", "Bitfield Slice", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 535, 145, 110, 24, hwnd, (HMENU)22, NULL, NULL);
+            SendMessageA(hBtnSlice, WM_SETFONT, (WPARAM)hFont, 0);
 
             // 64-Bit Binary Stream Display
             CreateWindowA("STATIC", "64-Bit Binary Stream:", WS_CHILD | WS_VISIBLE, 10, 178, 200, 18, hwnd, NULL, NULL, NULL);
@@ -404,7 +658,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 5) DoUrlDecode();
             else if (id == 6) DoHexEncode();
             else if (id == 7) DoHexDecode();
-            else if (id == 99) MessageBoxA(hwnd, "KBase Help:\n\n- Convert Base: Type number and click Convert.\n- Bitwise: Enter Operand A & B as Hex/Dec.\n- Strings: Encode/Decode/Hash text.\n- F1: Show this help dialog.", "KBase Help", MB_OK | MB_ICONINFORMATION);
+            else if (id == 20) DoVarintEncode();
+            else if (id == 21) DoMultiWidthInspect();
+            else if (id == 22) DoBitfieldSlice();
+            else if (id == 99) MessageBoxA(hwnd, "KBase Help:\n\n- Convert Base: Type number and click Convert.\n- Varint/LEB128: Encode number or decode hex bytes (e.g. E5 8E 26).\n- Int Formats: Inspect int8/16/32/64 two's comp, ones' comp, sign-mag.\n- Bitfield Slice: Extract bit slice [High:Low] from Operand A.\n- Bitwise: Enter Operand A & B as Hex/Dec.\n- Strings: Encode/Decode/Hash text.\n- F1: Show this help dialog.", "KBase Help", MB_OK | MB_ICONINFORMATION);
             else if (id == 100) DoConvertBases();
             else if (id >= 10 && id <= 17) DoBitwiseOp(id);
             break;
