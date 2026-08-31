@@ -147,7 +147,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KAsteroids | Tier 1 | Loop 9 done (Branching paths, escort missions, black hole hazard) | Loop 10: Supermassive asteroid bosses, warp core collection, zero-G inertia anomalies |
 | KMaze      | Tier 1 | Loop 9 done (Spike traps, boss rematches, cursed relics) | Loop 10: Multi-level dungeons, save points, dynamic lighting |
 | KPac       | Tier 1 | Loop 9 done (Multi-phase bosses, escort missions, branching paths) | Loop 10: Arcade endless mode, procedural ghost personalities, item crafting |
 | KBreakout  | Tier 1 | Loop 9 done (Advanced level editor, meteor hazards, boss rematches) | Loop 10: Multi-ball chaos mode, gravity wells, custom powerup forging |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KAlchemy   | Tier 1 | Loop 2 done (8 Tier-6 Mythic elements, 16 secret combos, Daily Trials with streaks, Magnum Opus Rebirth with 4 Astral Perks) | Loop 3: Ancient Alchemical Guild expeditions, planetary transmutations, elemental familiar summons |
 | KColony    | Tier 1 | Loop 2 done (4 new structures [Geothermal, Bio-Dome, Shield Pylon, Drone Hub], 10-tier tech tree, planetary biomes [Cryo, Volcanic, Acid] & dynamic weather, mutator anomalies, 3-tier expeditions) | Loop 3: Colony trade freighters, underground cavern networks, orbital strike beacons |
 | KSpace     | Tier 1 | Loop 10 done (Elite enemy squads, planetary bombardment missions, weapon overcharge) | Loop 11: Capital ship dreadnought sieges, drone companion wings, hyper-jump mechanics |
+| KAsteroids | Tier 1 | Loop 10 done (Supermassive asteroid bosses, warp core collection, zero-G inertia anomalies) | Loop 11: Drone wingmen companions, orbital defense platforms, EMP shockwave mines |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 10**
+- [x] KAsteroids (Loop 10: Added Supermassive Magma Titan Asteroid Bosses with magma shards and orbiting satellite shield rocks, Warp Core collection system with Overdrive hyper-mode [twin piercing beams, vacuum magnet, invincibility], and Zero-G Inertia Anomaly hazards with zero friction, vortex pull, and slingshot velocity boost in both EXE and HTML)
 - [x] KSpace (Loop 10: Added 4 Elite Enemy Squad archetypes [Valkyrie, Phantom, Cruiser, Drop Pod] with distinct elite behaviors and auras, dynamic Planetary Bombardment missions with targeted kinetic orbital strikes and burning surface terrain, Weapon Overcharge hyper-mode gauge system with triple damage and piercing energy plasma, Overcharge Core powerups, and alert banners in both EXE and HTML)
 - [x] KColony (Loop 2: Added 4 new advanced structures [Geothermal Generator, Bio-Dome, Shield Pylon, Drone Hub], 10-tier research tech tree with passive upgrades, planetary biomes [Mars Prime, Cryo Tundra, Volcanic Inferno, Acid Swamp] with dynamic weather [Blizzards, Solar Flares, Acid Rain, Seismic Tremors], mutator anomalies, and 3-tier expedition system in both EXE and HTML)
 - [x] KAlchemy (Loop 2: Added 8 Tier-6 Secret/Mythic elements, 16 secret combinations, Daily Alchemical Trials with streak tracking and rerolls, and Magnum Opus Rebirth prestige system with 4 permanent Astral Perks in both EXE and HTML)

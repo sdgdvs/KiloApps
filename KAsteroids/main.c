@@ -38,7 +38,9 @@ typedef struct {
     float points[10];
     float rot;
     float rot_speed;
-    int type; // 0 = Basalt Slate, 1 = Iron Rust, 2 = Cryo Ice
+    int type; // 0 = Basalt Slate, 1 = Iron Rust, 2 = Cryo Ice, 3 = Supermassive Titan Boss
+    int attack_timer;
+    float satellite_ang;
 } Asteroid;
 
 typedef struct {
@@ -178,6 +180,13 @@ int laser_timer = 0;
 int ufo_spawn_timer = 0;
 bool is_space_storm = false;
 bool is_asteroid_belt = false;
+bool is_inertia_anomaly = false;
+float anomaly_center_x = 400.0f;
+float anomaly_center_y = 300.0f;
+float anomaly_radius = 110.0f;
+float anomaly_anim = 0.0f;
+int warp_cores_collected = 0;
+int overdrive_timer = 0;
 
 typedef struct { float x, y, vx, vy, radius; int hp, max_hp; bool active; } Freighter;
 Freighter freighter = {0};
@@ -425,6 +434,43 @@ void SpawnBossUfo(int type) {
     u->anim_frame = 0;
 }
 
+void SpawnSupermassiveAsteroidBoss(float x, float y) {
+    if (num_asteroids >= 120) return;
+    Asteroid* a = &asteroids[num_asteroids++];
+    a->x = x;
+    a->y = y;
+    a->radius = 65.0f;
+    a->level = 4; // Supermassive Magma Titan Boss
+    a->is_armored = true;
+    a->max_hp = 35 + wave * 2;
+    a->hp = a->max_hp;
+    float angle = (rand() % 360) * 3.14159f / 180.0f;
+    a->vx = cos(angle) * 0.7f;
+    a->vy = sin(angle) * 0.7f;
+    a->rot = 0;
+    a->rot_speed = 0.008f;
+    a->type = 3; // 3 = Supermassive Titan Boss
+    a->attack_timer = 0;
+    a->satellite_ang = 0;
+    a->active = true;
+    for (int j = 0; j < 10; j++) {
+        a->points[j] = a->radius + (rand() % (int)(a->radius * 0.35f)) - a->radius * 0.15f;
+    }
+}
+
+void SpawnWarpCore(float x, float y) {
+    if (num_powerups >= 30) return;
+    PowerUp* pu = &powerups[num_powerups++];
+    pu->x = x;
+    pu->y = y;
+    pu->vx = ((rand() % 100) - 50) / 60.0f;
+    pu->vy = ((rand() % 100) - 50) / 60.0f;
+    pu->type = 5; // 5 = Warp Core
+    pu->life = 60 * 15;
+    pu->active = true;
+    pu->anim_frame = 0;
+}
+
 void SpawnHunterSquadron(int count) {
     for (int i = 0; i < count && num_ufos < 15; i++) {
         Ufo* u = &ufos[num_ufos++];
@@ -448,19 +494,25 @@ void SetupWave() {
     num_ufos = 0;
     num_mines = 0;
     is_space_storm = false;
+    is_inertia_anomaly = false;
     freighter.active = false;
     black_hole.active = false;
 
     if (game_mode == 3) { // 20-Sector Campaign
         // Sector Space Storm Check
-        if (wave == 4 || wave == 6 || wave == 9 || wave == 12 || wave == 14 || wave == 17 || wave == 19) {
+        if (wave == 4 || wave == 6 || wave == 9 || wave == 12 || wave == 14 || wave == 19) {
             is_space_storm = true;
+        }
+        // Zero-G Inertia Anomaly Check
+        if (wave == 7 || wave == 13 || wave == 17) {
+            is_inertia_anomaly = true;
         }
 
         if (wave == 20) {
-            // Stage 20 Ultimate Alien Mothership Core Boss!
+            // Stage 20 Ultimate Alien Mothership Core Boss + Supermassive Titan Climax!
             SpawnBossUfo(2);
-            SpawnAsteroids(4, 2);
+            SpawnSupermassiveAsteroidBoss(WIDTH / 2.0f, 380.0f);
+            SpawnAsteroids(3, 2);
             for (int m = 0; m < 4 && num_mines < 30; m++) {
                 Mine* mine = &mines[num_mines++];
                 mine->x = 100.0f + m * 200.0f;
@@ -468,7 +520,12 @@ void SetupWave() {
                 mine->vx = 0; mine->vy = 0;
                 mine->radius = 12.0f; mine->active = true; mine->anim_frame = 0;
             }
-        } else if (wave == 5 || wave == 10 || wave == 15) {
+        } else if (wave == 10) {
+            // Sector 10 Supermassive Titan Boss Climax!
+            SpawnSupermassiveAsteroidBoss(WIDTH / 2.0f, 150.0f);
+            SpawnBossUfo(1);
+            SpawnAsteroids(3, 1);
+        } else if (wave == 5 || wave == 15) {
             SpawnBossUfo(1);
             SpawnAsteroids(2 + wave / 3, wave / 4);
         } else if (wave == 8 || wave == 13) {
@@ -511,6 +568,10 @@ void SetupWave() {
             }
         }
     } else {
+        if (wave % 4 == 0) is_inertia_anomaly = true;
+        if (wave % 10 == 0) {
+            SpawnSupermassiveAsteroidBoss(WIDTH / 2.0f, 150.0f);
+        }
         int armored = (wave >= 3) ? (wave / 3) : 0;
         SpawnAsteroids(3 + wave, armored);
     }
@@ -527,6 +588,9 @@ void InitGame(int mode) {
     current_shots_hit = 0;
     showing_stats = false;
     showing_help = false;
+    warp_cores_collected = 0;
+    overdrive_timer = 0;
+    is_inertia_anomaly = false;
 
     ship.x = WIDTH / 2.0f;
     ship.y = HEIGHT / 2.0f;
@@ -824,6 +888,30 @@ void CheckCollisions() {
         if (!bullets[i].active) continue;
 
         if (!bullets[i].is_enemy) {
+            // Check Supermassive Asteroid Satellite Shield Rocks
+            for (int j = 0; j < num_asteroids; j++) {
+                if (!asteroids[j].active || asteroids[j].type != 3) continue;
+                bool sat_hit = false;
+                for (int s = 0; s < 3; s++) {
+                    float s_ang = asteroids[j].satellite_ang + s * (6.28318f / 3.0f);
+                    float sx = asteroids[j].x + cos(s_ang) * (asteroids[j].radius + 24.0f);
+                    float sy = asteroids[j].y + sin(s_ang) * (asteroids[j].radius + 24.0f);
+                    float sdist = sqrt(pow(bullets[i].x - sx, 2) + pow(bullets[i].y - sy, 2));
+                    if (sdist < 12.0f) {
+                        if (!bullets[i].is_laser) bullets[i].active = false;
+                        CreateExplosion(sx, sy, RGB(249, 115, 22), 6, 12.0f);
+                        PlaySoundEffect(1);
+                        sat_hit = true;
+                        break;
+                    }
+                }
+                if (sat_hit) break;
+            }
+        }
+
+        if (!bullets[i].active) continue;
+
+        if (!bullets[i].is_enemy) {
             for (int j = 0; j < num_asteroids; j++) {
                 if (!asteroids[j].active) continue;
                 float dist = sqrt(pow(bullets[i].x - asteroids[j].x, 2) + pow(bullets[i].y - asteroids[j].y, 2));
@@ -835,46 +923,82 @@ void CheckCollisions() {
                     current_shots_hit++;
                     SaveStats();
 
-                    CreateExplosion(bullets[i].x, bullets[i].y, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(148, 163, 184), 10, 20.0f);
+                    CreateExplosion(bullets[i].x, bullets[i].y, asteroids[j].type == 3 ? RGB(239, 68, 68) : (asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(148, 163, 184)), 10, 20.0f);
 
                     if (asteroids[j].hp <= 0) {
                         asteroids[j].active = false;
                         PlaySoundEffect(2);
-                        CreateExplosion(asteroids[j].x, asteroids[j].y, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(148, 163, 184), 25, 45.0f);
-                        stats.asteroids_destroyed++;
-                        SaveStats();
-                        int s_add = (4 - asteroids[j].level) * 10 + (asteroids[j].is_armored ? 30 : 0); score += s_add; SpawnFloatingText(asteroids[j].x, asteroids[j].y, s_add, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(253, 224, 71));
-                        UpdateHighScore();
+                        if (asteroids[j].type == 3) {
+                            PlaySoundEffect(6);
+                            CreateExplosion(asteroids[j].x, asteroids[j].y, RGB(249, 115, 22), 80, 110.0f);
+                            CreateExplosion(asteroids[j].x, asteroids[j].y, RGB(217, 70, 239), 50, 80.0f);
+                            stats.asteroids_destroyed++;
+                            SaveStats();
+                            score += 2500;
+                            SpawnFloatingText(asteroids[j].x, asteroids[j].y, 2500, RGB(250, 204, 21));
+                            UpdateHighScore();
+                            SpawnWarpCore(asteroids[j].x - 25.0f, asteroids[j].y);
+                            SpawnWarpCore(asteroids[j].x + 25.0f, asteroids[j].y);
 
-                        if (rand() % 100 < 20 && num_powerups < 30) {
-                            PowerUp* pu = &powerups[num_powerups++];
-                            pu->x = asteroids[j].x; pu->y = asteroids[j].y;
-                            pu->vx = ((rand() % 100) - 50) / 50.0f; pu->vy = ((rand() % 100) - 50) / 50.0f;
-                            pu->type = (rand() % 4) + 1;
-                            pu->life = 60 * 10; pu->active = true; pu->anim_frame = 0;
-                        }
+                            if (num_asteroids + 2 <= 120) {
+                                for (int k = 0; k < 2; k++) {
+                                    Asteroid* a = &asteroids[num_asteroids++];
+                                    a->x = asteroids[j].x + (k == 0 ? -30.0f : 30.0f);
+                                    a->y = asteroids[j].y;
+                                    a->radius = 35.0f;
+                                    a->level = 3;
+                                    a->is_armored = true;
+                                    a->max_hp = 3;
+                                    a->hp = 3;
+                                    float angle = (k == 0 ? 3.14159f : 0.0f) + (rand() % 50) / 100.0f;
+                                    a->vx = cos(angle) * 2.0f;
+                                    a->vy = sin(angle) * 2.0f;
+                                    a->rot = (rand() % 360) * 3.14159f / 180.0f;
+                                    a->rot_speed = ((rand() % 100) - 50) / 1500.0f;
+                                    a->type = 1;
+                                    a->active = true;
+                                    for (int p = 0; p < 10; p++) {
+                                        a->points[p] = a->radius + (rand() % (int)(a->radius * 0.4f)) - a->radius * 0.2f;
+                                    }
+                                }
+                            }
+                        } else {
+                            CreateExplosion(asteroids[j].x, asteroids[j].y, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(148, 163, 184), 25, 45.0f);
+                            stats.asteroids_destroyed++;
+                            SaveStats();
+                            int s_add = (4 - asteroids[j].level) * 10 + (asteroids[j].is_armored ? 30 : 0); score += s_add; SpawnFloatingText(asteroids[j].x, asteroids[j].y, s_add, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(253, 224, 71));
+                            UpdateHighScore();
 
-                        if (asteroids[j].level > 1 && num_asteroids + 2 <= 120) {
-                            for (int k = 0; k < 2; k++) {
-                                Asteroid* a = &asteroids[num_asteroids++];
-                                a->x = asteroids[j].x;
-                                a->y = asteroids[j].y;
-                                a->radius = asteroids[j].radius / 2.0f;
-                                a->level = asteroids[j].level - 1;
-                                a->is_armored = false;
-                                a->max_hp = 1;
-                                a->hp = 1;
-                                float angle = (rand() % 360) * 3.14159f / 180.0f;
-                                float speedMult = 1.0f + (wave - 1) * 0.12f;
-                                float speed = ((rand() % 200 + 100) / 100.0f) * speedMult;
-                                a->vx = cos(angle) * speed;
-                                a->vy = sin(angle) * speed;
-                                a->rot = (rand() % 360) * 3.14159f / 180.0f;
-                                a->rot_speed = ((rand() % 100) - 50) / 1500.0f;
-                                a->type = rand() % 3;
-                                a->active = true;
-                                for (int p = 0; p < 10; p++) {
-                                    a->points[p] = a->radius + (rand() % (int)(a->radius * 0.4f)) - a->radius * 0.2f;
+                            if (rand() % 100 < (asteroids[j].is_armored ? 35 : 20) && num_powerups < 30) {
+                                PowerUp* pu = &powerups[num_powerups++];
+                                pu->x = asteroids[j].x; pu->y = asteroids[j].y;
+                                pu->vx = ((rand() % 100) - 50) / 50.0f; pu->vy = ((rand() % 100) - 50) / 50.0f;
+                                pu->type = (asteroids[j].is_armored && rand() % 100 < 35) ? 5 : ((rand() % 4) + 1);
+                                pu->life = 60 * 10; pu->active = true; pu->anim_frame = 0;
+                            }
+
+                            if (asteroids[j].level > 1 && num_asteroids + 2 <= 120) {
+                                for (int k = 0; k < 2; k++) {
+                                    Asteroid* a = &asteroids[num_asteroids++];
+                                    a->x = asteroids[j].x;
+                                    a->y = asteroids[j].y;
+                                    a->radius = asteroids[j].radius / 2.0f;
+                                    a->level = asteroids[j].level - 1;
+                                    a->is_armored = false;
+                                    a->max_hp = 1;
+                                    a->hp = 1;
+                                    float angle = (rand() % 360) * 3.14159f / 180.0f;
+                                    float speedMult = 1.0f + (wave - 1) * 0.12f;
+                                    float speed = ((rand() % 200 + 100) / 100.0f) * speedMult;
+                                    a->vx = cos(angle) * speed;
+                                    a->vy = sin(angle) * speed;
+                                    a->rot = (rand() % 360) * 3.14159f / 180.0f;
+                                    a->rot_speed = ((rand() % 100) - 50) / 1500.0f;
+                                    a->type = rand() % 3;
+                                    a->active = true;
+                                    for (int p = 0; p < 10; p++) {
+                                        a->points[p] = a->radius + (rand() % (int)(a->radius * 0.4f)) - a->radius * 0.2f;
+                                    }
                                 }
                             }
                         }
@@ -1108,9 +1232,81 @@ void Update() {
         }
     }
 
+    // Zero-G Inertia Anomaly physics & Gravitational Slipstream
+    if (is_inertia_anomaly) {
+        anomaly_anim += 0.05f;
+        // Zero-G Frictionless drift
+        ship.vx *= 1.000f;
+        ship.vy *= 1.000f;
+
+        float cdx = anomaly_center_x - ship.x;
+        float cdy = anomaly_center_y - ship.y;
+        float cdist = sqrt(cdx * cdx + cdy * cdy);
+        if (cdist < anomaly_radius && cdist > 5.0f) {
+            float tang = atan2(cdy, cdx) + 1.5708f;
+            float force = 0.08f * (1.0f - cdist / anomaly_radius);
+            ship.vx += cos(tang) * force;
+            ship.vy += sin(tang) * force;
+
+            if (cdist < 35.0f && ship.active) {
+                float s_spd = sqrt(ship.vx * ship.vx + ship.vy * ship.vy);
+                if (s_spd < 8.5f) {
+                    float s_ang = atan2(ship.vy, ship.vx);
+                    ship.vx += cos(s_ang) * 1.5f;
+                    ship.vy += sin(s_ang) * 1.5f;
+                    CreateExplosion(ship.x, ship.y, RGB(56, 189, 248), 10, 30.0f);
+                    score += 50;
+                    SpawnFloatingText(ship.x, ship.y, 50, RGB(56, 189, 248));
+                }
+            }
+        }
+        // Anomaly swirling particles
+        if (rand() % 100 < 20 && num_particles < 700) {
+            float p_ang = (rand() % 360) * 3.14159f / 180.0f;
+            float p_dist = 20.0f + (rand() % (int)anomaly_radius);
+            Particle* pt = &particles[num_particles++];
+            pt->x = anomaly_center_x + cos(p_ang) * p_dist;
+            pt->y = anomaly_center_y + sin(p_ang) * p_dist;
+            float ptang = p_ang + 1.57f;
+            pt->vx = cos(ptang) * 2.0f;
+            pt->vy = sin(ptang) * 2.0f;
+            pt->color = (rand() % 2 == 0) ? RGB(56, 189, 248) : RGB(192, 132, 252);
+            pt->life = 35;
+            pt->max_life = 35;
+            pt->active = true;
+            pt->type = 0;
+            pt->size = 2.0f;
+        }
+    } else {
+        ship.vx *= 0.99f;
+        ship.vy *= 0.99f;
+    }
+
+    // Overdrive vacuum attraction and sparks
+    if (overdrive_timer > 0) {
+        overdrive_timer--;
+        for (int p = 0; p < num_powerups; p++) {
+            if (!powerups[p].active) continue;
+            float pdx = ship.x - powerups[p].x;
+            float pdy = ship.y - powerups[p].y;
+            float pdist = sqrt(pdx * pdx + pdy * pdy);
+            if (pdist > 5.0f && pdist < 350.0f) {
+                powerups[p].vx += (pdx / pdist) * 0.45f;
+                powerups[p].vy += (pdy / pdist) * 0.45f;
+            }
+        }
+        if (rand() % 100 < 35 && num_particles < 700 && ship.active) {
+            Particle* pt = &particles[num_particles++];
+            pt->x = ship.x + (rand() % 40 - 20);
+            pt->y = ship.y + (rand() % 40 - 20);
+            pt->vx = (rand() % 40 - 20) / 10.0f;
+            pt->vy = (rand() % 40 - 20) / 10.0f;
+            pt->color = (rand() % 2 == 0) ? RGB(250, 204, 21) : RGB(56, 189, 248);
+            pt->life = 20; pt->max_life = 20; pt->active = true; pt->type = 0; pt->size = 3.0f;
+        }
+    }
+
     ship.anim_frame += 0.2f;
-    ship.vx *= 0.99f;
-    ship.vy *= 0.99f;
     ship.x += ship.vx;
     ship.y += ship.vy;
 
@@ -1121,14 +1317,30 @@ void Update() {
 
     if (keys[VK_SPACE]) {
         long long now = GetTimeMs();
-        int cooldown = (laser_timer > 0) ? 90 : 200;
-        if (now - last_shoot_time > cooldown && num_bullets < 120) {
+        int cooldown = (overdrive_timer > 0) ? 80 : ((laser_timer > 0) ? 90 : 200);
+        if (now - last_shoot_time > cooldown && num_bullets < 118) {
             PlaySoundEffect(1);
             stats.shots_fired++;
             current_shots_fired++;
             SaveStats();
 
-            if (spread_timer > 0) {
+            if (overdrive_timer > 0) {
+                // Twin Piercing Hyper-Plasma Burst
+                for (int k = -1; k <= 1; k += 2) {
+                    Bullet* b = &bullets[num_bullets++];
+                    float ang = ship.angle;
+                    float perp = ang + 1.5708f;
+                    b->x = ship.x + cos(ang) * 16.0f + cos(perp) * (k * 8.0f);
+                    b->y = ship.y + sin(ang) * 16.0f + sin(perp) * (k * 8.0f);
+                    b->vx = cos(ang) * 10.5f;
+                    b->vy = sin(ang) * 10.5f;
+                    b->life = 60;
+                    b->active = true;
+                    b->is_enemy = false;
+                    b->is_laser = true;
+                    b->is_missile = false;
+                }
+            } else if (spread_timer > 0) {
                 for (int k = -1; k <= 1; k++) {
                     if (num_bullets < 120) {
                         Bullet* b = &bullets[num_bullets++];
@@ -1141,6 +1353,7 @@ void Update() {
                         b->active = true;
                         b->is_enemy = false;
                         b->is_laser = (laser_timer > 0);
+                        b->is_missile = false;
                     }
                 }
             } else {
@@ -1153,6 +1366,7 @@ void Update() {
                 b->active = true;
                 b->is_enemy = false;
                 b->is_laser = (laser_timer > 0);
+                b->is_missile = false;
             }
             last_shoot_time = now;
         }
@@ -1218,6 +1432,32 @@ void Update() {
         asteroids[i].x += asteroids[i].vx;
         asteroids[i].y += asteroids[i].vy;
         asteroids[i].rot += asteroids[i].rot_speed;
+
+        if (asteroids[i].type == 3) {
+            // Supermassive Magma Titan AI
+            asteroids[i].satellite_ang += 0.035f;
+            asteroids[i].attack_timer++;
+            if (asteroids[i].attack_timer > 220) {
+                asteroids[i].attack_timer = 0;
+                PlaySoundEffect(1);
+                CreateExplosion(asteroids[i].x, asteroids[i].y, RGB(249, 115, 22), 20, 45.0f);
+                for (int s = 0; s < 4; s++) {
+                    if (num_bullets < 120) {
+                        float s_ang = asteroids[i].satellite_ang + s * (3.14159f / 2.0f);
+                        Bullet* b = &bullets[num_bullets++];
+                        b->x = asteroids[i].x + cos(s_ang) * (asteroids[i].radius + 5.0f);
+                        b->y = asteroids[i].y + sin(s_ang) * (asteroids[i].radius + 5.0f);
+                        b->vx = cos(s_ang) * 4.5f;
+                        b->vy = sin(s_ang) * 4.5f;
+                        b->life = 90;
+                        b->active = true;
+                        b->is_enemy = true;
+                        b->is_laser = false;
+                        b->is_missile = false;
+                    }
+                }
+            }
+        }
 
         if (asteroids[i].x < -asteroids[i].radius) asteroids[i].x = WIDTH + asteroids[i].radius;
         if (asteroids[i].x > WIDTH + asteroids[i].radius) asteroids[i].x = -asteroids[i].radius;
@@ -1344,12 +1584,38 @@ void Update() {
             if (dist < ship.radius + 15) {
                 powerups[i].active = false;
                 PlaySoundEffect(4);
-                if (powerups[i].type == 1) { shield_timer = 60 * 10; ship.shield_cooldown = 0;
-    ship.missile_cooldown = 0; }
-                else if (powerups[i].type == 2) spread_timer = 60 * 10;
-                else if (powerups[i].type == 3) { TriggerEmp(); ship.emp_cooldown = 0; }
-                else if (powerups[i].type == 4) { laser_timer = 60 * 10; ship.laser_cooldown = 0; }
-                score += 50;
+                if (powerups[i].type == 1) { 
+                    shield_timer = 60 * 10; ship.shield_cooldown = 0; ship.missile_cooldown = 0;
+                    score += 50;
+                } else if (powerups[i].type == 2) {
+                    spread_timer = 60 * 10;
+                    score += 50;
+                } else if (powerups[i].type == 3) {
+                    TriggerEmp(); ship.emp_cooldown = 0;
+                    score += 50;
+                } else if (powerups[i].type == 4) {
+                    laser_timer = 60 * 10; ship.laser_cooldown = 0;
+                    score += 50;
+                } else if (powerups[i].type == 5) {
+                    // Warp Core Pickup!
+                    warp_cores_collected++;
+                    ship.emp_cooldown /= 2;
+                    ship.laser_cooldown /= 2;
+                    ship.missile_cooldown /= 2;
+                    ship.shield_cooldown /= 2;
+                    ship.hyperdrive_cooldown /= 2;
+                    score += 500;
+                    SpawnFloatingText(powerups[i].x, powerups[i].y, 500, RGB(250, 204, 21));
+                    if (warp_cores_collected >= 3) {
+                        warp_cores_collected = 0;
+                        overdrive_timer = 600; // 10s Hyper-Warp Overdrive
+                        ship.invincible_timer = 600;
+                        PlaySoundEffect(6);
+                        CreateExplosion(ship.x, ship.y, RGB(250, 204, 21), 50, 90.0f);
+                        SpawnFloatingText(ship.x, ship.y, 1000, RGB(56, 189, 248));
+                        score += 1000;
+                    }
+                }
                 UpdateHighScore();
             }
         }
@@ -1648,7 +1914,7 @@ void Draw(HDC hdc) {
 
         // Shield / Invincibility Aura
         if (shield_timer > 0 || ship.invincible_timer > 0) {
-            COLORREF sCol = (shield_timer > 0 ? RGB(147, 197, 253) : RGB(253, 224, 71));
+            COLORREF sCol = (overdrive_timer > 0 ? RGB(250, 204, 21) : (shield_timer > 0 ? RGB(147, 197, 253) : RGB(253, 224, 71)));
             HPEN shieldPen = CreatePen(PS_SOLID, 1, sCol);
             SelectObject(hdc, shieldPen);
             SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -1679,6 +1945,14 @@ void Draw(HDC hdc) {
                 }
             }
             DeleteObject(shieldPen);
+
+            if (overdrive_timer > 0) {
+                HPEN odPen = CreatePen(PS_SOLID, 2, RGB(250, 204, 21));
+                SelectObject(hdc, odPen);
+                SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Ellipse(hdc, (int)(ship.x - shieldRad - 6), (int)(ship.y - shieldRad - 6), (int)(ship.x + shieldRad + 6), (int)(ship.y + shieldRad + 6));
+                DeleteObject(odPen);
+            }
         }
 
         // Piercing Laser Cannon Beam Graphic
@@ -1710,9 +1984,81 @@ void Draw(HDC hdc) {
         DeleteObject(bhBrush); DeleteObject(bhPen);
     }
 
+    // Draw Zero-G Inertia Anomaly Distortions & Quantum Vortex
+    if (is_inertia_anomaly) {
+        HPEN anPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+        SelectObject(hdc, anPen); SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        for (int r_step = 25; r_step <= (int)anomaly_radius; r_step += 25) {
+            int r_rad = r_step + (int)(sin(anomaly_anim + r_step) * 5.0f);
+            Arc(hdc, (int)(anomaly_center_x - r_rad), (int)(anomaly_center_y - r_rad), (int)(anomaly_center_x + r_rad), (int)(anomaly_center_y + r_rad),
+                (int)(anomaly_center_x + cos(anomaly_anim + r_step * 0.1f) * r_rad), (int)(anomaly_center_y + sin(anomaly_anim + r_step * 0.1f) * r_rad),
+                (int)(anomaly_center_x + cos(anomaly_anim + 2.5f + r_step * 0.1f) * r_rad), (int)(anomaly_center_y + sin(anomaly_anim + 2.5f + r_step * 0.1f) * r_rad));
+        }
+        DeleteObject(anPen);
+
+        HPEN corePen = CreatePen(PS_SOLID, 1, RGB(192, 132, 252));
+        SelectObject(hdc, corePen);
+        Ellipse(hdc, (int)(anomaly_center_x - 15), (int)(anomaly_center_y - 15), (int)(anomaly_center_x + 15), (int)(anomaly_center_y + 15));
+        DeleteObject(corePen);
+    }
+
     // Draw Asteroids with Rotation & Texture Facets
     for (int i = 0; i < num_asteroids; i++) {
         if (!asteroids[i].active) continue;
+
+        if (asteroids[i].type == 3) {
+            // Supermassive Magma Titan Asteroid Boss
+            HPEN aPen = CreatePen(PS_SOLID, 4, RGB(239, 68, 68));
+            HBRUSH aBrush = CreateSolidBrush(RGB(69, 10, 10));
+            SelectObject(hdc, aPen); SelectObject(hdc, aBrush);
+
+            POINT pts[10];
+            for (int j = 0; j < 10; j++) {
+                float a = (j / 10.0f) * 3.14159f * 2.0f + asteroids[i].rot;
+                pts[j].x = (LONG)(asteroids[i].x + cos(a) * asteroids[i].points[j]);
+                pts[j].y = (LONG)(asteroids[i].y + sin(a) * asteroids[i].points[j]);
+            }
+            Polygon(hdc, pts, 10);
+
+            // Glowing Magma Core
+            HBRUSH coreB = CreateSolidBrush(RGB(249, 115, 22));
+            SelectObject(hdc, coreB); SelectObject(hdc, GetStockObject(NULL_PEN));
+            int cr = (int)(asteroids[i].radius * 0.55f + sin(asteroids[i].satellite_ang * 2.0f) * 4.0f);
+            Ellipse(hdc, (int)(asteroids[i].x) - cr, (int)(asteroids[i].y) - cr, (int)(asteroids[i].x) + cr, (int)(asteroids[i].y) + cr);
+            DeleteObject(coreB);
+
+            HBRUSH innerCoreB = CreateSolidBrush(RGB(254, 240, 138));
+            SelectObject(hdc, innerCoreB);
+            int icr = cr / 2;
+            Ellipse(hdc, (int)(asteroids[i].x) - icr, (int)(asteroids[i].y) - icr, (int)(asteroids[i].x) + icr, (int)(asteroids[i].y) + icr);
+            DeleteObject(innerCoreB);
+
+            // Orbiting Satellite Shield Rocks
+            HBRUSH satB = CreateSolidBrush(RGB(180, 83, 9));
+            HPEN satP = CreatePen(PS_SOLID, 2, RGB(249, 115, 22));
+            SelectObject(hdc, satB); SelectObject(hdc, satP);
+            for (int s = 0; s < 3; s++) {
+                float s_ang = asteroids[i].satellite_ang + s * (6.28318f / 3.0f);
+                int sx = (int)(asteroids[i].x + cos(s_ang) * (asteroids[i].radius + 24.0f));
+                int sy = (int)(asteroids[i].y + sin(s_ang) * (asteroids[i].radius + 24.0f));
+                Ellipse(hdc, sx - 8, sy - 8, sx + 8, sy + 8);
+            }
+            DeleteObject(satB); DeleteObject(satP);
+
+            // Boss HP Bar
+            HBRUSH hpBg = CreateSolidBrush(RGB(24, 24, 27));
+            HBRUSH hpFg = CreateSolidBrush(RGB(249, 115, 22));
+            RECT barBg = {(LONG)(asteroids[i].x - 45), (LONG)(asteroids[i].y - asteroids[i].radius - 22), (LONG)(asteroids[i].x + 45), (LONG)(asteroids[i].y - asteroids[i].radius - 14)};
+            FillRect(hdc, &barBg, hpBg);
+            float pct = (float)asteroids[i].hp / asteroids[i].max_hp;
+            if (pct < 0) pct = 0;
+            RECT barFg = {(LONG)(asteroids[i].x - 45), (LONG)(asteroids[i].y - asteroids[i].radius - 22), (LONG)(asteroids[i].x - 45 + 90 * pct), (LONG)(asteroids[i].y - asteroids[i].radius - 14)};
+            FillRect(hdc, &barFg, hpFg);
+            DeleteObject(hpBg); DeleteObject(hpFg);
+
+            DeleteObject(aPen); DeleteObject(aBrush);
+            continue;
+        }
 
         COLORREF fillC, strokeC;
         if (asteroids[i].is_armored) {
@@ -1960,6 +2306,23 @@ void Draw(HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);
     for (int i = 0; i < num_powerups; i++) {
         if (!powerups[i].active) continue;
+        if (powerups[i].type == 5) {
+            // Warp Core item (Golden glowing hyper-cube with cyan border)
+            HBRUSH b = CreateSolidBrush(RGB(250, 204, 21));
+            HPEN p = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+            SelectObject(hdc, b); SelectObject(hdc, p);
+            POINT dpts[4];
+            dpts[0].x = (LONG)(powerups[i].x);      dpts[0].y = (LONG)(powerups[i].y - 11);
+            dpts[1].x = (LONG)(powerups[i].x + 11); dpts[1].y = (LONG)(powerups[i].y);
+            dpts[2].x = (LONG)(powerups[i].x);      dpts[2].y = (LONG)(powerups[i].y + 11);
+            dpts[3].x = (LONG)(powerups[i].x - 11); dpts[3].y = (LONG)(powerups[i].y);
+            Polygon(hdc, dpts, 4);
+            DeleteObject(b); DeleteObject(p);
+            SetTextColor(hdc, RGB(15, 23, 42));
+            TextOutA(hdc, (int)powerups[i].x - 4, (int)powerups[i].y - 8, "W", 1);
+            continue;
+        }
+
         COLORREF color = RGB(59, 130, 246);
         const char* label = "S";
         if (powerups[i].type == 2) { color = RGB(34, 197, 94); label = "P"; }
@@ -2004,10 +2367,23 @@ void Draw(HDC hdc) {
     }
     TextOutA(hdc, 10, 10, scoreStr, strlen(scoreStr));
 
+    // Warp Core / Overdrive HUD indicator
+    char warpStr[64];
+    if (overdrive_timer > 0) {
+        sprintf(warpStr, "OVERDRIVE: ACTIVE (%ds)", overdrive_timer / 60 + 1);
+        SetTextColor(hdc, RGB(250, 204, 21));
+    } else {
+        sprintf(warpStr, "WARP CORES: %d/3", warp_cores_collected);
+        SetTextColor(hdc, RGB(56, 189, 248));
+    }
+    TextOutA(hdc, WIDTH - 190, 10, warpStr, strlen(warpStr));
     
     if (is_space_storm) {
         SetTextColor(hdc, RGB(56, 189, 248));
         TextOutA(hdc, WIDTH / 2 - 80, 40, "SECTOR SPACE STORM", 18);
+    } else if (is_inertia_anomaly) {
+        SetTextColor(hdc, RGB(56, 189, 248));
+        TextOutA(hdc, WIDTH / 2 - 95, 40, "ZERO-G INERTIA ANOMALY", 22);
     } else if (is_asteroid_belt) {
         SetTextColor(hdc, RGB(168, 85, 247));
         TextOutA(hdc, WIDTH / 2 - 90, 40, "DENSE ASTEROID BELT", 19);

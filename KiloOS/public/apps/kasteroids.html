@@ -111,7 +111,7 @@
 <body>
     <div id="gameContainer">
         <div id="ui">
-            <div class="score">Score: <span id="scoreVal">0</span> | High: <span id="highScoreVal">0</span> | <span id="waveLabel">Wave: </span><span id="waveVal">1</span> | Mode: <span id="modeVal">None</span></div>
+            <div class="score">Score: <span id="scoreVal">0</span> | High: <span id="highScoreVal">0</span> | <span id="waveLabel">Wave: </span><span id="waveVal">1</span> | Mode: <span id="modeVal">None</span> | <span id="warpVal" style="color:#facc15;">Warp Cores: 0/3</span></div>
             <div class="skills-bar">
                 <button id="btnEmp" class="skill-btn" onclick="triggerEmp()">[E] EMP</button>
                 <button id="btnLaser" class="skill-btn" onclick="triggerLaser()">[L] Laser</button>
@@ -121,6 +121,7 @@
             </div>
         </div>
         <div id="stormBanner">SECTOR SPACE STORM</div>
+        <div id="anomalyBanner" style="display:none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); color: #38bdf8; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); pointer-events: none; z-index: 10;">ZERO-G INERTIA ANOMALY</div>
         <div id="beltBanner" style="display:none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); color: #c084fc; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(192, 132, 252, 0.8); pointer-events: none; z-index: 10;">DENSE ASTEROID BELT</div>
         <div id="gameOver">
             <h2 id="gameOverTitle">K-ASTEROIDS</h2>
@@ -159,7 +160,9 @@
         const gameOverDiv = document.getElementById('gameOver');
         const highScoreSpan = document.getElementById('highScoreVal');
         const stormBanner = document.getElementById('stormBanner');
+        const anomalyBanner = document.getElementById('anomalyBanner');
         const beltBanner = document.getElementById('beltBanner');
+        const warpSpan = document.getElementById('warpVal');
 
         const btnEmp = document.getElementById('btnEmp');
         const btnLaser = document.getElementById('btnLaser');
@@ -405,6 +408,12 @@
         let currentShotsHit = 0;
         let campaignVictory = false;
         let isSpaceStorm = false;
+        let isInertiaAnomaly = false;
+        let anomalyCenter = { x: 400, y: 300 };
+        let anomalyRadius = 110;
+        let anomalyAnim = 0;
+        let warpCoresCollected = 0;
+        let overdriveTimer = 0;
         let branchingActive = false;
         let freighter = { active: false, x: 0, y: 0, vx: 0, vy: 0, radius: 25, hp: 30, maxHp: 30 };
         let blackHole = { active: false, x: 0, y: 0, radius: 40, pull: 0.05, animFrame: 0 };
@@ -485,7 +494,7 @@
                     setThrust(false);
                 }
 
-                // Active Skill Hotkeys (E, L, H, S)
+                // Active Skill Hotkeys (E, L, H, S, M)
                 if (keys['KeyE'] && !prevKeys['KeyE'] && this.empCooldown === 0) triggerEmp();
                 if (keys['KeyL'] && !prevKeys['KeyL'] && this.laserCooldown === 0) triggerLaser();
                 if (keys['KeyS'] && !prevKeys['KeyS'] && this.shieldCooldown === 0) triggerShield();
@@ -501,42 +510,60 @@
                     }
                 }
 
-                // Friction
-                this.vx *= 0.99;
-                this.vy *= 0.99;
+                // Zero-G Inertia Anomaly & Vortex Dynamics
+                if (isInertiaAnomaly) {
+                    anomalyAnim += 0.05;
+                    // Zero friction
+                    this.vx *= 1.0;
+                    this.vy *= 1.0;
 
-                
-                if (this.isMissile && !this.isEnemy) {
-                    let bestDist = 400;
-                    let target = null;
-                    for(let u of ufos) {
-                        if(u.active) {
-                            let d = Math.hypot(this.x - u.x, this.y - u.y);
-                            if(d < bestDist) { bestDist = d; target = u; }
-                        }
-                    }
-                    if (!target) {
-                        for(let a of asteroids) {
-                            if(a.active) {
-                                let d = Math.hypot(this.x - a.x, this.y - a.y);
-                                if(d < bestDist) { bestDist = d; target = a; }
+                    let cdx = anomalyCenter.x - this.x;
+                    let cdy = anomalyCenter.y - this.y;
+                    let cdist = Math.hypot(cdx, cdy);
+                    if (cdist < anomalyRadius && cdist > 5) {
+                        let tang = Math.atan2(cdy, cdx) + Math.PI / 2;
+                        let force = 0.08 * (1.0 - cdist / anomalyRadius);
+                        this.vx += Math.cos(tang) * force;
+                        this.vy += Math.sin(tang) * force;
+
+                        if (cdist < 35 && this.active) {
+                            let sSpd = Math.hypot(this.vx, this.vy);
+                            if (sSpd < 8.5) {
+                                let sAng = Math.atan2(this.vy, this.vx);
+                                this.vx += Math.cos(sAng) * 1.5;
+                                this.vy += Math.sin(sAng) * 1.5;
+                                createExplosion(this.x, this.y, '#38bdf8', 10, 30);
+                                score += 50;
+                                floatingTexts.push(new FloatingText(this.x, this.y, '+50', '#38bdf8'));
+                                scoreSpan.innerText = score;
                             }
                         }
                     }
-                    if (target) {
-                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
-                        let speed = Math.hypot(this.vx, this.vy);
-                        let currAng = Math.atan2(this.vy, this.vx);
-                        let diff = ang - currAng;
-                        while(diff > Math.PI) diff -= Math.PI*2;
-                        while(diff < -Math.PI) diff += Math.PI*2;
-                        currAng += diff * 0.1;
-                        this.vx = Math.cos(currAng) * speed;
-                        this.vy = Math.sin(currAng) * speed;
+                    if (Math.random() < 0.2) {
+                        let pAng = Math.random() * Math.PI * 2;
+                        let pDist = 20 + Math.random() * anomalyRadius;
+                        particles.push(new Particle(anomalyCenter.x + Math.cos(pAng)*pDist, anomalyCenter.y + Math.sin(pAng)*pDist, Math.cos(pAng + Math.PI/2)*2, Math.sin(pAng + Math.PI/2)*2, Math.random() > 0.5 ? '#38bdf8' : '#c084fc', 35, 'spark'));
                     }
-                    if (Math.random() < 0.3) {
-                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
-                        particles[particles.length-1].size = 3;
+                } else {
+                    this.vx *= 0.99;
+                    this.vy *= 0.99;
+                }
+
+                // Overdrive vacuum attraction and sparks
+                if (overdriveTimer > 0) {
+                    overdriveTimer--;
+                    for (let p of powerups) {
+                        if (!p.active) continue;
+                        let pdx = this.x - p.x;
+                        let pdy = this.y - p.y;
+                        let pdist = Math.hypot(pdx, pdy);
+                        if (pdist > 5 && pdist < 350) {
+                            p.vx += (pdx / pdist) * 0.45;
+                            p.vy += (pdy / pdist) * 0.45;
+                        }
+                    }
+                    if (Math.random() < 0.35 && this.active) {
+                        particles.push(new Particle(this.x + (Math.random()*40-20), this.y + (Math.random()*40-20), (Math.random()*4-2), (Math.random()*4-2), Math.random() > 0.5 ? '#facc15' : '#38bdf8', 20, 'spark'));
                     }
                 }
     
@@ -607,7 +634,7 @@
                     ctx.fill();
                 }
 
-                // Sleek Fighter Body (Dark Slate Metallic + Cyan trim)
+                // Sleek Fighter Body
                 ctx.fillStyle = '#1e293b';
                 ctx.strokeStyle = '#38bdf8';
                 ctx.lineWidth = 2;
@@ -644,7 +671,7 @@
                 ctx.lineWidth = 1;
                 ctx.stroke();
 
-                // Shield / Invincibility Aura
+                // Shield / Invincibility / Overdrive Aura
                 if (shieldTimer > 0 || this.invincibleTimer > 0) {
                     let pulse = Math.sin(this.animFrame * 0.2) * 2;
                     let shieldRad = 25 + pulse;
@@ -652,8 +679,8 @@
                     ctx.save();
                     let shieldGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, shieldRad);
                     shieldGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
-                    shieldGrad.addColorStop(0.8, (shieldTimer > 0 ? 'rgba(59, 130, 246, 0.4)' : 'rgba(234, 179, 8, 0.4)'));
-                    shieldGrad.addColorStop(1, (shieldTimer > 0 ? 'rgba(147, 197, 253, 0.8)' : 'rgba(253, 224, 71, 0.8)'));
+                    shieldGrad.addColorStop(0.8, (overdriveTimer > 0 ? 'rgba(250, 204, 21, 0.4)' : (shieldTimer > 0 ? 'rgba(59, 130, 246, 0.4)' : 'rgba(234, 179, 8, 0.4)')));
+                    shieldGrad.addColorStop(1, (overdriveTimer > 0 ? 'rgba(253, 224, 71, 0.9)' : (shieldTimer > 0 ? 'rgba(147, 197, 253, 0.8)' : 'rgba(253, 224, 71, 0.8)')));
                     
                     ctx.fillStyle = shieldGrad;
                     ctx.beginPath();
@@ -661,7 +688,7 @@
                     ctx.fill();
                     
                     // Hexagonal Energy Grid
-                    ctx.strokeStyle = shieldTimer > 0 ? 'rgba(147, 197, 253, 0.7)' : 'rgba(253, 224, 71, 0.7)';
+                    ctx.strokeStyle = overdriveTimer > 0 ? 'rgba(250, 204, 21, 0.8)' : (shieldTimer > 0 ? 'rgba(147, 197, 253, 0.7)' : 'rgba(253, 224, 71, 0.7)');
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
                     let hexSize = 8;
@@ -686,6 +713,14 @@
                         }
                     }
                     ctx.stroke();
+
+                    if (overdriveTimer > 0) {
+                        ctx.strokeStyle = '#facc15';
+                        ctx.lineWidth = 2.5;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, shieldRad + 6, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
                     ctx.restore();
                 }
 
@@ -711,67 +746,49 @@
         }
 
         class Asteroid {
-            constructor(x, y, radius, level, isArmored = false, speedMult = 1.0) {
+            constructor(x, y, radius, level, isArmored = false, speedMult = 1.0, type = null) {
                 this.x = x;
                 this.y = y;
                 this.radius = radius;
                 this.level = level;
                 this.isArmored = isArmored;
-                this.maxHp = isArmored ? 3 : 1; // 3 hits to split for Armored Asteroids
+                this.type = (type !== null) ? type : Math.floor(Math.random() * 3);
+                this.maxHp = (this.type === 3) ? (35 + wave * 2) : (isArmored ? 3 : 1);
                 this.hp = this.maxHp;
                 let a = Math.random() * Math.PI * 2;
-                let s = (Math.random() * 2 + 1) * speedMult;
+                let s = (this.type === 3) ? 0.7 : (Math.random() * 2 + 1) * speedMult;
                 this.vx = Math.cos(a) * s;
                 this.vy = Math.sin(a) * s;
                 this.rot = Math.random() * Math.PI * 2;
-                this.rotSpeed = (Math.random() - 0.5) * 0.03;
-                this.type = Math.floor(Math.random() * 3);
+                this.rotSpeed = (this.type === 3) ? 0.008 : (Math.random() - 0.5) * 0.03;
+                this.attackTimer = 0;
+                this.satelliteAng = 0;
                 
                 this.points = [];
                 for (let i = 0; i < 10; i++) {
-                    this.points.push(this.radius + Math.random() * (this.radius * 0.4) - this.radius * 0.2);
+                    let variance = (this.type === 3) ? 0.35 : 0.4;
+                    this.points.push(this.radius + Math.random() * (this.radius * variance) - this.radius * (variance / 2));
                 }
                 this.active = true;
             }
             update() {
-                
-                if (this.isMissile && !this.isEnemy) {
-                    let bestDist = 400;
-                    let target = null;
-                    for(let u of ufos) {
-                        if(u.active) {
-                            let d = Math.hypot(this.x - u.x, this.y - u.y);
-                            if(d < bestDist) { bestDist = d; target = u; }
-                        }
-                    }
-                    if (!target) {
-                        for(let a of asteroids) {
-                            if(a.active) {
-                                let d = Math.hypot(this.x - a.x, this.y - a.y);
-                                if(d < bestDist) { bestDist = d; target = a; }
-                            }
-                        }
-                    }
-                    if (target) {
-                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
-                        let speed = Math.hypot(this.vx, this.vy);
-                        let currAng = Math.atan2(this.vy, this.vx);
-                        let diff = ang - currAng;
-                        while(diff > Math.PI) diff -= Math.PI*2;
-                        while(diff < -Math.PI) diff += Math.PI*2;
-                        currAng += diff * 0.1;
-                        this.vx = Math.cos(currAng) * speed;
-                        this.vy = Math.sin(currAng) * speed;
-                    }
-                    if (Math.random() < 0.3) {
-                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
-                        particles[particles.length-1].size = 3;
-                    }
-                }
-    
                 this.x += this.vx;
                 this.y += this.vy;
                 this.rot += this.rotSpeed;
+
+                if (this.type === 3) {
+                    this.satelliteAng += 0.035;
+                    this.attackTimer++;
+                    if (this.attackTimer > 220) {
+                        this.attackTimer = 0;
+                        playSound('laser');
+                        createExplosion(this.x, this.y, '#f97316', 20, 45);
+                        for (let s = 0; s < 4; s++) {
+                            let sAng = this.satelliteAng + s * (Math.PI / 2);
+                            bullets.push(new Bullet(this.x + Math.cos(sAng) * (this.radius + 5), this.y + Math.sin(sAng) * (this.radius + 5), sAng, true));
+                        }
+                    }
+                }
 
                 if (this.x < -this.radius) this.x = canvas.width + this.radius;
                 if (this.x > canvas.width + this.radius) this.x = -this.radius;
@@ -781,6 +798,69 @@
             draw() {
                 ctx.save();
                 ctx.translate(this.x, this.y);
+
+                if (this.type === 3) {
+                    // Supermassive Magma Titan Boss
+                    ctx.rotate(this.rot);
+                    ctx.fillStyle = '#450a0a';
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 4;
+
+                    ctx.beginPath();
+                    for (let i = 0; i < 10; i++) {
+                        let a = (i / 10) * Math.PI * 2;
+                        let r = this.points[i];
+                        let x = Math.cos(a) * r;
+                        let y = Math.sin(a) * r;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Glowing Molten Core
+                    let coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 0.6);
+                    coreGrad.addColorStop(0, '#fef08a');
+                    coreGrad.addColorStop(0.5, '#f97316');
+                    coreGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                    ctx.fillStyle = coreGrad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Orbiting Satellite Shield Rocks
+                    ctx.restore();
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.fillStyle = '#b45309';
+                    ctx.strokeStyle = '#f97316';
+                    ctx.lineWidth = 2;
+                    for (let s = 0; s < 3; s++) {
+                        let sAng = this.satelliteAng + s * (Math.PI * 2 / 3);
+                        let sx = Math.cos(sAng) * (this.radius + 24);
+                        let sy = Math.sin(sAng) * (this.radius + 24);
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, 8, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+
+                    // Boss HP Bar
+                    ctx.fillStyle = '#18181b';
+                    ctx.fillRect(-45, -this.radius - 24, 90, 8);
+                    ctx.strokeStyle = '#52525b';
+                    ctx.strokeRect(-45, -this.radius - 24, 90, 8);
+                    let pct = Math.max(0, this.hp / this.maxHp);
+                    let hpGrad = ctx.createLinearGradient(-43, 0, 43, 0);
+                    hpGrad.addColorStop(0, '#ef4444');
+                    hpGrad.addColorStop(1, '#f97316');
+                    ctx.fillStyle = hpGrad;
+                    ctx.fillRect(-44, -this.radius - 23, 88 * pct, 6);
+                    ctx.restore();
+                    return;
+                }
+
                 ctx.rotate(this.rot);
 
                 let fillStyle, strokeStyle, crackStyle;
@@ -1428,51 +1508,16 @@
         let laserTimer = 0;
 
         class PowerUp {
-            constructor(x, y) {
+            constructor(x, y, type = null) {
                 this.x = x; this.y = y;
                 this.vx = (Math.random() - 0.5) * 2;
                 this.vy = (Math.random() - 0.5) * 2;
-                this.type = Math.floor(Math.random() * 4) + 1; // 1: Shield, 2: Spread, 3: EMP, 4: Laser
-                this.life = 60 * 10;
+                this.type = (type !== null) ? type : (Math.random() < 0.2 ? 5 : (Math.floor(Math.random() * 4) + 1)); // 1-4 standard, 5 Warp Core
+                this.life = 60 * 12;
                 this.active = true;
                 this.animFrame = Math.random() * 100;
             }
             update() {
-                
-                if (this.isMissile && !this.isEnemy) {
-                    let bestDist = 400;
-                    let target = null;
-                    for(let u of ufos) {
-                        if(u.active) {
-                            let d = Math.hypot(this.x - u.x, this.y - u.y);
-                            if(d < bestDist) { bestDist = d; target = u; }
-                        }
-                    }
-                    if (!target) {
-                        for(let a of asteroids) {
-                            if(a.active) {
-                                let d = Math.hypot(this.x - a.x, this.y - a.y);
-                                if(d < bestDist) { bestDist = d; target = a; }
-                            }
-                        }
-                    }
-                    if (target) {
-                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
-                        let speed = Math.hypot(this.vx, this.vy);
-                        let currAng = Math.atan2(this.vy, this.vx);
-                        let diff = ang - currAng;
-                        while(diff > Math.PI) diff -= Math.PI*2;
-                        while(diff < -Math.PI) diff += Math.PI*2;
-                        currAng += diff * 0.1;
-                        this.vx = Math.cos(currAng) * speed;
-                        this.vy = Math.sin(currAng) * speed;
-                    }
-                    if (Math.random() < 0.3) {
-                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
-                        particles[particles.length-1].size = 3;
-                    }
-                }
-    
                 this.x += this.vx; this.y += this.vy;
                 this.animFrame += 0.1;
                 this.life--;
@@ -1486,6 +1531,38 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 let pulse = Math.sin(this.animFrame * 0.3) * 1.5;
+
+                if (this.type === 5) {
+                    // Warp Core (Golden diamond hyper-cube with cyan glow)
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 14 + pulse, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.save();
+                    ctx.rotate(this.animFrame * 0.05);
+                    ctx.fillStyle = '#facc15';
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -11);
+                    ctx.lineTo(11, 0);
+                    ctx.lineTo(0, 11);
+                    ctx.lineTo(-11, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+
+                    ctx.fillStyle = '#0f172a';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('W', 0, 1);
+                    ctx.restore();
+                    return;
+                }
 
                 let color = '#3b82f6';
                 let label = 'S';
@@ -1535,40 +1612,6 @@
                 if (speed > 2.8) {
                     this.vx = (this.vx / speed) * 2.8;
                     this.vy = (this.vy / speed) * 2.8;
-                }
-                
-                if (this.isMissile && !this.isEnemy) {
-                    let bestDist = 400;
-                    let target = null;
-                    for(let u of ufos) {
-                        if(u.active) {
-                            let d = Math.hypot(this.x - u.x, this.y - u.y);
-                            if(d < bestDist) { bestDist = d; target = u; }
-                        }
-                    }
-                    if (!target) {
-                        for(let a of asteroids) {
-                            if(a.active) {
-                                let d = Math.hypot(this.x - a.x, this.y - a.y);
-                                if(d < bestDist) { bestDist = d; target = a; }
-                            }
-                        }
-                    }
-                    if (target) {
-                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
-                        let speed = Math.hypot(this.vx, this.vy);
-                        let currAng = Math.atan2(this.vy, this.vx);
-                        let diff = ang - currAng;
-                        while(diff > Math.PI) diff -= Math.PI*2;
-                        while(diff < -Math.PI) diff += Math.PI*2;
-                        currAng += diff * 0.1;
-                        this.vx = Math.cos(currAng) * speed;
-                        this.vy = Math.sin(currAng) * speed;
-                    }
-                    if (Math.random() < 0.3) {
-                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
-                        particles[particles.length-1].size = 3;
-                    }
                 }
     
                 this.x += this.vx; this.y += this.vy;
@@ -1682,27 +1725,40 @@
             ufos = [];
             mines = [];
             isSpaceStorm = false;
+            isInertiaAnomaly = false;
             freighter.active = false;
             blackHole.active = false;
             stormBanner.style.display = 'none';
+            anomalyBanner.style.display = 'none';
             beltBanner.style.display = 'none';
 
             if (gameMode === 3) { // 20-Sector Campaign
-                if ([4, 6, 9, 12, 14, 17, 19].includes(wave)) {
+                if ([4, 6, 9, 14, 17, 19].includes(wave)) {
                     isSpaceStorm = true;
                     stormBanner.style.display = 'block';
+                } else if ([3, 7, 12, 16].includes(wave)) {
+                    isInertiaAnomaly = true;
+                    anomalyBanner.style.display = 'block';
+                    anomalyCenter.x = 200 + Math.random() * 400;
+                    anomalyCenter.y = 150 + Math.random() * 300;
                 } else if ([8, 13].includes(wave)) {
                     beltBanner.style.display = 'block';
                 }
 
                 if (wave === 20) {
                     ufos.push(new Ufo(2, 50)); // Stage 20 Alien Mothership Core Boss
-                    spawnAsteroids(4, 2);
+                    asteroids.push(new Asteroid(canvas.width/2, 100, 65, 3, false, 1.0, 3)); // Supermassive Titan Boss
+                    spawnAsteroids(3, 1);
                     for (let m = 0; m < 4; m++) mines.push(new Mine());
-                } else if (wave === 5 || wave === 10 || wave === 15) {
-                    let hp = (wave === 15) ? 30 : (12 + wave * 2);
+                } else if (wave === 10 || wave === 15) {
+                    // Supermassive Asteroid Titan Boss Encounter
+                    asteroids.push(new Asteroid(canvas.width/2, 120, 65, 3, false, 1.0, 3));
+                    let hp = (wave === 15) ? 25 : 18;
                     ufos.push(new Ufo(1, hp));
-                    spawnAsteroids(2 + Math.floor(wave / 3), Math.floor(wave / 4));
+                    spawnAsteroids(2, 1);
+                } else if (wave === 5) {
+                    ufos.push(new Ufo(1, 15));
+                    spawnAsteroids(3, 1);
                 } else if ([8, 13].includes(wave)) {
                     spawnAsteroids(18 + wave, 0);
                     for (let a of asteroids) {
@@ -1733,12 +1789,20 @@
                     }
                 }
             } else {
+                if (wave % 4 === 0) {
+                    isInertiaAnomaly = true;
+                    anomalyBanner.style.display = 'block';
+                    anomalyCenter.x = 200 + Math.random() * 400;
+                    anomalyCenter.y = 150 + Math.random() * 300;
+                }
+                if (wave % 5 === 0) {
+                    asteroids.push(new Asteroid(canvas.width/2, 100, 65, 3, false, 1.0, 3));
+                }
                 let armored = (wave >= 3) ? Math.floor(wave / 3) : 0;
                 spawnAsteroids(3 + wave, armored);
             }
         }
 
-        
         function triggerMissile() {
             if (!ship.active || ship.missileCooldown > 0) return;
             ship.missileCooldown = 900; // 15s CD
@@ -1768,7 +1832,10 @@
             for (let a of asteroids) {
                 let dist = Math.hypot(a.x - ship.x, a.y - ship.y);
                 if (dist < 280) {
-                    if (a.isArmored) {
+                    if (a.type === 3) {
+                        a.hp -= 5;
+                        createExplosion(a.x, a.y, '#f97316', 30, 50);
+                    } else if (a.isArmored) {
                         a.hp -= 2;
                         if (a.hp <= 0) { a.active = false; createExplosion(a.x, a.y, '#f97316', 25, 40); score += 30; floatingTexts.push(new FloatingText(a.x, a.y, '+30', '#f97316')); }
                     } else if (a.level <= 2) {
@@ -1821,7 +1888,7 @@
         }
 
         function killShip() {
-            if (shieldTimer > 0 || ship.invincibleTimer > 0) return;
+            if (shieldTimer > 0 || ship.invincibleTimer > 0 || overdriveTimer > 0) return;
 
             ship.active = false;
             gameOver = true;
@@ -1853,8 +1920,12 @@
             lastTick = Date.now();
             currentShotsFired = 0;
             currentShotsHit = 0;
+            warpCoresCollected = 0;
+            overdriveTimer = 0;
+            isInertiaAnomaly = false;
             scoreSpan.innerText = score;
             highScoreSpan.innerText = getHighScore();
+            warpSpan.innerText = 'Warp Cores: 0/3';
             
             document.getElementById('waveLabel').innerText = (gameMode === 1) ? "Time: " : ((gameMode === 3) ? "Sector: " : "Wave: ");
             waveSpan.innerText = (gameMode === 1) ? timeLeft + "s" : ((gameMode === 3) ? wave + "/20" : wave);
@@ -1892,7 +1963,7 @@
                 if (b.isEnemy && ship.active) {
                     let dist = Math.hypot(b.x - ship.x, b.y - ship.y);
                     if (dist < ship.radius) {
-                        if (shieldTimer > 0 || ship.invincibleTimer > 0) {
+                        if (shieldTimer > 0 || ship.invincibleTimer > 0 || overdriveTimer > 0) {
                             b.active = false;
                             playSound('explosion');
                             createExplosion(b.x, b.y, '#38bdf8', 12, 20);
@@ -1982,6 +2053,24 @@
                 if (!b.isEnemy) {
                     for (let a of asteroids) {
                         if (!a.active) continue;
+
+                        // Satellite Shield Collision for Supermassive Titan Boss
+                        if (a.type === 3) {
+                            let satBlocked = false;
+                            for (let s = 0; s < 3; s++) {
+                                let sAng = a.satelliteAng + s * (Math.PI * 2 / 3);
+                                let sx = a.x + Math.cos(sAng) * (a.radius + 24);
+                                let sy = a.y + Math.sin(sAng) * (a.radius + 24);
+                                if (Math.hypot(b.x - sx, b.y - sy) < 14) {
+                                    if (!b.isLaser) b.active = false;
+                                    createExplosion(b.x, b.y, '#f97316', 8, 15);
+                                    satBlocked = true;
+                                    break;
+                                }
+                            }
+                            if (satBlocked) break;
+                        }
+
                         let dist = Math.hypot(b.x - a.x, b.y - a.y);
                         if (dist < a.radius) {
                             if (!b.isLaser) b.active = false;
@@ -1989,26 +2078,46 @@
                             stats.shotsHit++;
                             currentShotsHit++;
                             saveStats();
-                            createExplosion(b.x, b.y, a.isArmored ? '#f97316' : '#94a3b8', 10, 20);
+                            createExplosion(b.x, b.y, (a.type === 3 ? '#f97316' : (a.isArmored ? '#f97316' : '#94a3b8')), 10, 20);
 
                             if (a.hp <= 0) {
                                 a.active = false;
                                 playSound('explosion');
-                                createExplosion(a.x, a.y, a.isArmored ? '#f97316' : '#94a3b8', 25, 45);
-                                stats.asteroidsDestroyed++;
-                                saveStats();
-                                let s_add = (4 - a.level) * 10 + (a.isArmored ? 30 : 0); score += s_add; floatingTexts.push(new FloatingText(a.x, a.y, '+' + s_add, a.isArmored ? '#f97316' : '#fde047'));
-                                scoreSpan.innerText = score;
-                                updateHighScore();
 
-                                if (Math.random() < 0.20 && powerups.length < 30) {
-                                    powerups.push(new PowerUp(a.x, a.y));
-                                }
-                                
-                                if (a.level > 1) {
-                                    let speedMult = 1.0 + (wave - 1) * 0.12;
-                                    asteroids.push(new Asteroid(a.x, a.y, a.radius / 2, a.level - 1, false, speedMult));
-                                    asteroids.push(new Asteroid(a.x, a.y, a.radius / 2, a.level - 1, false, speedMult));
+                                if (a.type === 3) {
+                                    // Titan Boss Defeated!
+                                    createExplosion(a.x, a.y, '#f97316', 70, 110);
+                                    stats.asteroidsDestroyed++;
+                                    saveStats();
+                                    score += 2500;
+                                    floatingTexts.push(new FloatingText(a.x, a.y, '+2500 TITAN SLAYER!', '#facc15'));
+                                    scoreSpan.innerText = score;
+                                    updateHighScore();
+
+                                    // Guaranteed 2 Warp Cores
+                                    powerups.push(new PowerUp(a.x - 20, a.y, 5));
+                                    powerups.push(new PowerUp(a.x + 20, a.y, 5));
+
+                                    // Split into 2 Armored Asteroids
+                                    asteroids.push(new Asteroid(a.x - 25, a.y, 35, 2, true, 1.2));
+                                    asteroids.push(new Asteroid(a.x + 25, a.y, 35, 2, true, 1.2));
+                                } else {
+                                    createExplosion(a.x, a.y, a.isArmored ? '#f97316' : '#94a3b8', 25, 45);
+                                    stats.asteroidsDestroyed++;
+                                    saveStats();
+                                    let s_add = (4 - a.level) * 10 + (a.isArmored ? 30 : 0); score += s_add; floatingTexts.push(new FloatingText(a.x, a.y, '+' + s_add, a.isArmored ? '#f97316' : '#fde047'));
+                                    scoreSpan.innerText = score;
+                                    updateHighScore();
+
+                                    if (Math.random() < 0.20 && powerups.length < 30) {
+                                        powerups.push(new PowerUp(a.x, a.y));
+                                    }
+                                    
+                                    if (a.level > 1) {
+                                        let speedMult = 1.0 + (wave - 1) * 0.12;
+                                        asteroids.push(new Asteroid(a.x, a.y, a.radius / 2, a.level - 1, false, speedMult));
+                                        asteroids.push(new Asteroid(a.x, a.y, a.radius / 2, a.level - 1, false, speedMult));
+                                    }
                                 }
                             }
                             break;
@@ -2022,7 +2131,7 @@
                     if (!m.active) continue;
                     let dist = Math.hypot(ship.x - m.x, ship.y - m.y);
                     if (dist < m.radius + ship.radius) {
-                        if (shieldTimer > 0 || ship.invincibleTimer > 0) {
+                        if (shieldTimer > 0 || ship.invincibleTimer > 0 || overdriveTimer > 0) {
                             m.active = false;
                             playSound('explosion');
                             createExplosion(m.x, m.y, '#a855f7', 25, 45);
@@ -2044,10 +2153,15 @@
                     if (!a.active) continue;
                     let dist = Math.hypot(ship.x - a.x, ship.y - a.y);
                     if (dist < a.radius + ship.radius) {
-                        if (shieldTimer > 0 || ship.invincibleTimer > 0) {
-                            a.active = false;
-                            playSound('explosion');
-                            createExplosion(a.x, a.y, a.isArmored ? '#f97316' : '#94a3b8', 25, 45);
+                        if (shieldTimer > 0 || ship.invincibleTimer > 0 || overdriveTimer > 0) {
+                            if (a.type === 3) {
+                                a.hp -= 5;
+                                createExplosion(a.x, a.y, '#f97316', 20, 35);
+                            } else {
+                                a.active = false;
+                                playSound('explosion');
+                                createExplosion(a.x, a.y, a.isArmored ? '#f97316' : '#94a3b8', 25, 45);
+                            }
                         } else {
                             killShip();
                         }
@@ -2058,7 +2172,7 @@
                     if (!u.active) continue;
                     let dist = Math.hypot(ship.x - u.x, ship.y - u.y);
                     if (dist < u.radius + ship.radius) {
-                        if (shieldTimer > 0 || ship.invincibleTimer > 0) {
+                        if (shieldTimer > 0 || ship.invincibleTimer > 0 || overdriveTimer > 0) {
                             u.active = false;
                             playSound('explosion');
                             createExplosion(u.x, u.y, '#ef4444', 25, 45);
@@ -2163,9 +2277,15 @@
 
             if (keys['Space']) {
                 let now = Date.now();
-                let cooldown = (laserTimer > 0) ? 90 : 200;
+                let cooldown = (overdriveTimer > 0) ? 60 : ((laserTimer > 0) ? 90 : 200);
                 if (now - lastShootTime > cooldown) {
-                    if (spreadTimer > 0) {
+                    if (overdriveTimer > 0) {
+                        // Twin hyper piercing beams
+                        let c = Math.cos(ship.angle), s = Math.sin(ship.angle);
+                        let nx = -s * 6, ny = c * 6;
+                        bullets.push(new Bullet(ship.x + c * 15 + nx, ship.y + s * 15 + ny, ship.angle, false, true));
+                        bullets.push(new Bullet(ship.x + c * 15 - nx, ship.y + s * 15 - ny, ship.angle, false, true));
+                    } else if (spreadTimer > 0) {
                         for(let k=-1; k<=1; k++) {
                             bullets.push(new Bullet(ship.x + Math.cos(ship.angle)*15, ship.y + Math.sin(ship.angle)*15, ship.angle + k*0.2, false, laserTimer > 0));
                         }
@@ -2194,6 +2314,26 @@
                     else if (p.type === 2) spreadTimer = 60 * 10;
                     else if (p.type === 3) { triggerEmp(); ship.empCooldown = 0; }
                     else if (p.type === 4) { laserTimer = 60 * 10; ship.laserCooldown = 0; }
+                    else if (p.type === 5) {
+                        // Warp Core Collected
+                        warpCoresCollected++;
+                        ship.empCooldown = Math.floor(ship.empCooldown / 2);
+                        ship.laserCooldown = Math.floor(ship.laserCooldown / 2);
+                        ship.missileCooldown = Math.floor(ship.missileCooldown / 2);
+                        ship.hyperdriveCooldown = Math.floor(ship.hyperdriveCooldown / 2);
+                        ship.shieldCooldown = Math.floor(ship.shieldCooldown / 2);
+                        score += 500;
+                        floatingTexts.push(new FloatingText(p.x, p.y, '+500 WARP CORE', '#facc15'));
+
+                        if (warpCoresCollected >= 3) {
+                            warpCoresCollected = 0;
+                            overdriveTimer = 600; // 10s Overdrive!
+                            ship.invincibleTimer = 600;
+                            score += 1000;
+                            floatingTexts.push(new FloatingText(ship.x, ship.y, 'OVERDRIVE ENGAGED! +1000', '#facc15'));
+                            createExplosion(ship.x, ship.y, '#facc15', 50, 100);
+                        }
+                    }
                     score += 50;
                     scoreSpan.innerText = score;
                     updateHighScore();
@@ -2295,6 +2435,26 @@
                 ctx.translate(dx, dy);
             }
             drawStarfield();
+
+            // Draw Zero-G Inertia Anomaly Vortex
+            if (isInertiaAnomaly) {
+                ctx.save();
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1.5;
+                for (let r_step = 25; r_step <= anomalyRadius; r_step += 25) {
+                    let r_rad = r_step + Math.sin(anomalyAnim + r_step) * 5.0;
+                    ctx.beginPath();
+                    ctx.arc(anomalyCenter.x, anomalyCenter.y, r_rad, anomalyAnim + r_step * 0.1, anomalyAnim + 2.5 + r_step * 0.1);
+                    ctx.stroke();
+                }
+                ctx.strokeStyle = '#c084fc';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(anomalyCenter.x, anomalyCenter.y, 15, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
             if (branchingActive) {
                 ctx.fillStyle = '#fff'; ctx.font = '20px Arial';
                 ctx.fillText("PATH BRANCH DETECTED", canvas.width/2 - 120, canvas.height/2 - 50);
@@ -2312,6 +2472,15 @@
                 ctx.beginPath(); ctx.arc(blackHole.x, blackHole.y, blackHole.radius, 0, Math.PI*2);
                 ctx.fill(); ctx.stroke();
             }
+
+            if (overdriveTimer > 0) {
+                warpSpan.innerText = 'OVERDRIVE: ' + Math.ceil(overdriveTimer / 60) + 's';
+                warpSpan.style.color = '#facc15';
+            } else {
+                warpSpan.innerText = 'Warp Cores: ' + warpCoresCollected + '/3';
+                warpSpan.style.color = '#38bdf8';
+            }
+
             ship.draw();
             powerups.forEach(p => p.draw());
             mines.forEach(m => m.draw());
