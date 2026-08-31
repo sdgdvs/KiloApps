@@ -147,7 +147,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KPac       | Tier 1 | Loop 9 done (Multi-phase bosses, escort missions, branching paths) | Loop 10: Arcade endless mode, procedural ghost personalities, item crafting |
 | KBreakout  | Tier 1 | Loop 9 done (Advanced level editor, meteor hazards, boss rematches) | Loop 10: Multi-ball chaos mode, gravity wells, custom powerup forging |
 | KSnake     | Tier 1 | Loop 9 done (Snake vs Snake mode, growing walls, weather effects) | Loop 10: Map editor, boss gauntlet, branching campaigns |
 | KRogue     | Tier 1 | Loop 10 done (Final sanctuary floors, true ending, ultra bosses) | Loop 11: Classes/Loadouts (Warrior, Mage, Rogue) |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSpace     | Tier 1 | Loop 10 done (Elite enemy squads, planetary bombardment missions, weapon overcharge) | Loop 11: Capital ship dreadnought sieges, drone companion wings, hyper-jump mechanics |
 | KAsteroids | Tier 1 | Loop 10 done (Supermassive asteroid bosses, warp core collection, zero-G inertia anomalies) | Loop 11: Drone wingmen companions, orbital defense platforms, EMP shockwave mines |
 | KMaze      | Tier 1 | Loop 10 done (Multi-level dungeons, save points, dynamic lighting) | Loop 11: Secret illusionary walls, dungeon lore tablets, stealth crouch mechanics |
+| KPac       | Tier 1 | Loop 10 done (Arcade endless mode, procedural ghost personalities & traits, Cyber-Forge item crafting) | Loop 11: Ghost companion pet summoning, labyrinth hazard portals, legendary relic forging |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 10**
+- [x] KPac (Loop 10: Added Arcade Endless mode with infinite procedural symmetrical mazes, dynamic scaling difficulty, score multipliers, and high-wave tracking [toggle with O]; Procedural Ghost Personalities & Traits [Vortex Magnet, Glitch Phase-Shifter, Trapper with sludge hazards, Mirage Illusionist, Hyper Chaser with auras]; and Cyber-Forge Item Crafting System with Ectoplasm, Fruit Essence, and Star Dust materials, 4 craftable recipes [Super Pellet, Chrono Warp, 2-Hit Aegis Shield, Void Pulse Bomb], and interactive forge menu [C] / quick-craft hotkeys [7-0] in both EXE and HTML)
 - [x] KMaze (Loop 10: Expanded campaign to 45 levels across 5 biomes [Catacombs, Cyber Labyrinth, Frost Caverns, Abyssal Depths, Inferno Citadel] ending with Stage 45 Minotaur Overlord Boss arena, added Sublevel Descent Stairwells [tile 38] with depth bonuses and charge replenishment, Ancient Save Shrine / Campfire Checkpoints [tile 28] with active state persistence and restore, and Dynamic Multi-Source Point Lighting with radiant Torch Sconces [tile 29], flame flicker, and real-time raycast surface illumination in both EXE and HTML)
 - [x] KAsteroids (Loop 10: Added Supermassive Magma Titan Asteroid Bosses with magma shards and orbiting satellite shield rocks, Warp Core collection system with Overdrive hyper-mode [twin piercing beams, vacuum magnet, invincibility], and Zero-G Inertia Anomaly hazards with zero friction, vortex pull, and slingshot velocity boost in both EXE and HTML)
 - [x] KSpace (Loop 10: Added 4 Elite Enemy Squad archetypes [Valkyrie, Phantom, Cruiser, Drop Pod] with distinct elite behaviors and auras, dynamic Planetary Bombardment missions with targeted kinetic orbital strikes and burning surface terrain, Weapon Overcharge hyper-mode gauge system with triple damage and piercing energy plasma, Overcharge Core powerups, and alert banners in both EXE and HTML)

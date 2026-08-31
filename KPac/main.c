@@ -5,7 +5,7 @@
 #pragma comment(lib, "msvcrt.lib")
 
 #define W 340
-#define H 520
+#define H 540
 #define COLS 15
 #define ROWS 15
 #define TS 20
@@ -398,12 +398,25 @@ static double MyCos(double x) {
     return MySin(x + 1.57079632679);
 }
 
+// Game Modes & Loop 10 Progression
+int gameMode = 0; // 0 = Campaign, 1 = Arcade Endless
+int endlessWave = 1;
+int endlessHighWave = 1;
+
+// Crafting System (The Cyber Forge)
+int craftEctoplasm = 0;
+int craftFruitEssence = 0;
+int craftStarDust = 0;
+int showCraftMenu = 0;
+int shieldHits = 0;
+
 // Player state
 int px = 7, py = 12;
 int pdx = 0, pdy = 0;
 int ndx = 0, ndy = 0;
+int playerSlowTimer = 0;
 
-// Ghost struct (supports 5 standard ghosts + boss ghost + phantom clones)
+// Ghost struct (supports 5 standard ghosts + boss ghost + phantom clones + procedural personalities)
 typedef struct {
     int x;
     int y;
@@ -414,10 +427,23 @@ typedef struct {
     int isDead;
     int dirX;
     int dirY;
+    int trait; // 0=None, 1=Vortex Magnet, 2=Glitch Shifter, 3=Trapper, 4=Mirage, 5=Hyper Chaser
+    int traitTimer;
+    int glitchOffsetX;
+    int glitchOffsetY;
 } Ghost;
 
 Ghost ghosts[8];
 int numGhosts = 5;
+
+// Sludge Traps (placed by Trapper ghosts)
+typedef struct {
+    int x;
+    int y;
+    int life;
+} SludgeTrap;
+SludgeTrap sludgeTraps[16];
+int numSludgeTraps = 0;
 
 // Active Skills & Timers
 int freezeSkillTimer = 0, freezeCooldown = 0;
@@ -532,11 +558,13 @@ typedef struct {
     Ghost ghosts[8];
     char map[ROWS][COLS];
     int score, level, lives, diffMode;
-    int frightTimer, freezeSkillTimer, speedSkillTimer, magnetSkillTimer, shieldActive;
+    int frightTimer, freezeSkillTimer, speedSkillTimer, magnetSkillTimer, shieldActive, shieldHits;
     int freezeCooldown, speedCooldown, magnetCooldown, shieldCooldown;
     int bossHp;
     int dotCount, frameCount, fruitActive, fruitTimer, gameOver;
     int vipX, vipY, vipActive;
+    int gameMode, endlessWave, endlessHighWave;
+    int craftEctoplasm, craftFruitEssence, craftStarDust;
 } SaveState;
 
 void SaveGame() {
@@ -550,13 +578,15 @@ void SaveGame() {
     }
     st.score = score; st.level = level; st.lives = lives; st.diffMode = diffMode;
     st.frightTimer = frightTimer; st.freezeSkillTimer = freezeSkillTimer; st.speedSkillTimer = speedSkillTimer;
-    st.magnetSkillTimer = magnetSkillTimer; st.shieldActive = shieldActive;
+    st.magnetSkillTimer = magnetSkillTimer; st.shieldActive = shieldActive; st.shieldHits = shieldHits;
     st.freezeCooldown = freezeCooldown; st.speedCooldown = speedCooldown;
     st.magnetCooldown = magnetCooldown; st.shieldCooldown = shieldCooldown;
     st.bossHp = bossHp;
     st.dotCount = dotCount; st.frameCount = frameCount;
     st.fruitActive = fruitActive; st.fruitTimer = fruitTimer; st.gameOver = gameOver;
     st.vipX = vipX; st.vipY = vipY; st.vipActive = vipActive;
+    st.gameMode = gameMode; st.endlessWave = endlessWave; st.endlessHighWave = endlessHighWave;
+    st.craftEctoplasm = craftEctoplasm; st.craftFruitEssence = craftFruitEssence; st.craftStarDust = craftStarDust;
 
     HANDLE hFile = CreateFileA("kpac_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -589,13 +619,15 @@ void LoadGame() {
         }
         score = st.score; level = st.level; lives = st.lives; diffMode = st.diffMode;
         frightTimer = st.frightTimer; freezeSkillTimer = st.freezeSkillTimer; speedSkillTimer = st.speedSkillTimer;
-        magnetSkillTimer = st.magnetSkillTimer; shieldActive = st.shieldActive;
+        magnetSkillTimer = st.magnetSkillTimer; shieldActive = st.shieldActive; shieldHits = st.shieldHits;
         freezeCooldown = st.freezeCooldown; speedCooldown = st.speedCooldown;
         magnetCooldown = st.magnetCooldown; shieldCooldown = st.shieldCooldown;
         bossHp = st.bossHp;
         dotCount = st.dotCount; frameCount = st.frameCount;
         fruitActive = st.fruitActive; fruitTimer = st.fruitTimer; gameOver = st.gameOver;
         vipX = st.vipX; vipY = st.vipY; vipActive = st.vipActive;
+        gameMode = st.gameMode; endlessWave = st.endlessWave; endlessHighWave = st.endlessHighWave;
+        craftEctoplasm = st.craftEctoplasm; craftFruitEssence = st.craftFruitEssence; craftStarDust = st.craftStarDust;
         paused = 0;
         lstrcpyA(saveMsgText, "GAME LOADED");
         saveMsgTimer = 20;
@@ -609,6 +641,10 @@ void LoadHighScore() {
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD readBytes;
         ReadFile(hFile, &highScore, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &endlessHighWave, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &craftEctoplasm, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &craftFruitEssence, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &craftStarDust, sizeof(int), &readBytes, NULL);
         CloseHandle(hFile);
     }
     hFile = CreateFileA("kpac_stats.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -626,6 +662,10 @@ void SaveHighScore() {
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written;
         WriteFile(hFile, &highScore, sizeof(int), &written, NULL);
+        WriteFile(hFile, &endlessHighWave, sizeof(int), &written, NULL);
+        WriteFile(hFile, &craftEctoplasm, sizeof(int), &written, NULL);
+        WriteFile(hFile, &craftFruitEssence, sizeof(int), &written, NULL);
+        WriteFile(hFile, &craftStarDust, sizeof(int), &written, NULL);
         CloseHandle(hFile);
     }
     hFile = CreateFileA("kpac_stats.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -644,57 +684,138 @@ int GetInitLives() {
     return 3;
 }
 
+// Procedural Maze Generator for Arcade Endless Mode
+void GenerateProceduralMaze(int wave) {
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            if (r == 0 || r == ROWS - 1 || c == 0 || c == COLS - 1) {
+                map[r][c] = 1;
+            } else {
+                map[r][c] = 2; // standard dot
+            }
+        }
+    }
+    // Symmetrical obstacle layouts
+    int seed = wave * 179 + 31;
+    for (int r = 2; r < ROWS - 2; r += 2) {
+        for (int c = 2; c <= COLS / 2; c += 2) {
+            int opp = COLS - 1 - c;
+            int blk = (seed + r * 5 + c * 7) % 5;
+            if (blk == 0) {
+                map[r][c] = 1; map[r][opp] = 1;
+                map[r+1][c] = 1; map[r+1][opp] = 1;
+            } else if (blk == 1) {
+                map[r][c] = 1; map[r][opp] = 1;
+                map[r][c+1] = 1; map[r][opp-1] = 1;
+            } else if (blk == 2) {
+                map[r][c] = 1; map[r][opp] = 1;
+            }
+        }
+    }
+    // Central Ghost House
+    for (int r = 6; r <= 8; r++) {
+        for (int c = 5; c <= 9; c++) {
+            map[r][c] = 0;
+        }
+    }
+    map[6][5] = 1; map[7][5] = 1; map[8][5] = 1;
+    map[6][9] = 1; map[7][9] = 1; map[8][9] = 1;
+    map[8][6] = 1; map[8][7] = 1; map[8][8] = 1;
+    map[6][6] = 1; map[6][7] = 1; map[6][8] = 1; // Door at (6,7) handled specially
+    
+    // Left and right warp tunnels
+    map[7][0] = 0; map[7][1] = 2;
+    map[7][COLS-1] = 0; map[7][COLS-2] = 2;
+    
+    // Player spawn (7, 12)
+    map[12][7] = 0; map[11][7] = 2; map[12][6] = 2; map[12][8] = 2;
+    
+    // 4 Corner Power Pellets
+    map[1][1] = 3; map[1][COLS-2] = 3;
+    map[ROWS-2][1] = 3; map[ROWS-2][COLS-2] = 3;
+    
+    // Speed / Freeze powerups
+    map[3][3] = 4; map[3][COLS-4] = 5;
+    map[ROWS-4][3] = 5; map[ROWS-4][COLS-4] = 4;
+
+    // Hazards for higher waves
+    if (wave >= 3) {
+        if (map[4][7] == 2) map[4][7] = 6;
+        if (map[10][7] == 2) map[10][7] = 6;
+    }
+}
+
 void Init(int keepScore) {
-    if (!keepScore) { score = 0; level = 1; lives = GetInitLives(); }
+    if (!keepScore) {
+        score = 0;
+        if (gameMode == 0) level = 1;
+        else endlessWave = 1;
+        lives = GetInitLives();
+    }
     gameOver = 0;
     paused = 0;
     dotCount = 0;
     deathTimer = 0;
-    int mapIndex = (level - 1) % 20;
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
-            map[r][c] = maps[mapIndex][r][c];
-            if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
+    numSludgeTraps = 0;
+    playerSlowTimer = 0;
+
+    if (gameMode == 1) {
+        GenerateProceduralMaze(endlessWave);
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
+            }
+        }
+    } else {
+        int mapIndex = (level - 1) % 20;
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                map[r][c] = maps[mapIndex][r][c];
+                if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
+            }
         }
     }
+
     px = 7; py = 12;
     pdx = 0; pdy = 0;
     ndx = 0; ndy = 0;
 
-    // Roster of 5 AI Ghosts:
-    // Ghost 0: Blinky (Red Chaser)
-    // Ghost 1: Pinky (Pink Interceptor)
-    // Ghost 2: Inky (Cyan Flanker)
-    // Ghost 3: Clyde (Orange Patrol)
-    // Ghost 4: Sue (Purple Stalker)
-    ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1};
-    ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0};
-    ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0};
-    ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1};
-    ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1};
+    // Roster of AI Ghosts with Procedural Personalities & Traits
+    int effWave = (gameMode == 1) ? endlessWave : level;
+    int t0 = (effWave >= 2) ? ((effWave % 5) + 1) : 0;
+    int t1 = (effWave >= 3) ? (((effWave + 2) % 5) + 1) : 0;
+    int t2 = (effWave >= 4) ? (((effWave + 3) % 5) + 1) : 0;
+    int t3 = (effWave >= 5) ? (((effWave + 4) % 5) + 1) : 0;
+    int t4 = (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0;
 
-    if (level == 20) {
+    ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1, t0, 0, 0, 0};
+    ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0, t1, 0, 0, 0};
+    ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0, t2, 0, 0, 0};
+    ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1, t3, 0, 0, 0};
+    ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1, t4, 0, 0, 0};
+
+    if (gameMode == 0 && level == 20) {
         // Stage 20 Ghost King Boss
-        ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1};
-        ghosts[6] = (Ghost){0, 0, RGB(0,0,0), 6, 1, 0, 0, 0, 0}; // Phantom clone slot 1
-        ghosts[7] = (Ghost){0, 0, RGB(0,0,0), 6, 1, 0, 0, 0, 0}; // Phantom clone slot 2
+        ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1, 5, 0, 0, 0};
+        ghosts[6] = (Ghost){0, 0, RGB(0,0,0), 6, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+        ghosts[7] = (Ghost){0, 0, RGB(0,0,0), 6, 1, 0, 0, 0, 0, 0, 0, 0, 0};
         numGhosts = 6;
         bossHp = 8;
         bossMaxHp = 8;
         phantomSpawnTimer = 0;
-    } else if (level >= 4) {
+    } else if (effWave >= 4) {
         numGhosts = 5;
-    } else if (level == 3) {
+    } else if (effWave == 3) {
         numGhosts = 4;
-    } else if (level == 2) {
+    } else if (effWave == 2) {
         numGhosts = 3;
     } else {
         numGhosts = 2;
     }
 
-    vipActive = (level % 5 == 0 && level != 20) ? 1 : 0;
+    vipActive = (gameMode == 0 && level % 5 == 0 && level != 20) ? 1 : 0;
     vipX = 7; vipY = 7;
-    if (level % 3 == 0 && level < 18 && map[ROWS/2][COLS/2] != 1) {
+    if (gameMode == 0 && level % 3 == 0 && level < 18 && map[ROWS/2][COLS/2] != 1) {
         map[ROWS/2][COLS/2] = 8; // Branch Warp
     }
 
@@ -703,11 +824,94 @@ void Init(int keepScore) {
     freezeSkillTimer = 0; freezeCooldown = 0;
     speedSkillTimer = 0; speedCooldown = 0;
     magnetSkillTimer = 0; magnetCooldown = 0;
-    shieldActive = 0; shieldCooldown = 0;
+    shieldActive = 0; shieldCooldown = 0; shieldHits = 0;
     fruitActive = 0;
     fruitTimer = 0;
     numShockwaves = 0;
     numParticles = 0;
+    showCraftMenu = 0;
+}
+
+// Crafting System Logic
+void CraftItem(int recipe) {
+    if (recipe == 1) { // Super Pellet: 2 Ectoplasm + 1 Star Dust
+        if (craftEctoplasm >= 2 && craftStarDust >= 1) {
+            craftEctoplasm -= 2;
+            craftStarDust -= 1;
+            frightTimer = 80;
+            score += 500;
+            lstrcpyA(saveMsgText, "CRAFTED: SUPER PELLET!");
+            saveMsgTimer = 25;
+            AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(255, 215, 0));
+            MessageBeep(MB_ICONASTERISK);
+        } else {
+            lstrcpyA(saveMsgText, "NEED: 2 ECTO + 1 DUST");
+            saveMsgTimer = 25;
+            MessageBeep(MB_ICONHAND);
+        }
+    } else if (recipe == 2) { // Chrono Warp: 2 Ectoplasm + 2 Fruit Essence
+        if (craftEctoplasm >= 2 && craftFruitEssence >= 2) {
+            craftEctoplasm -= 2;
+            craftFruitEssence -= 2;
+            freezeSkillTimer = 80;
+            speedSkillTimer = 80;
+            lstrcpyA(saveMsgText, "CRAFTED: CHRONO WARP!");
+            saveMsgTimer = 25;
+            AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(0, 255, 255));
+            MessageBeep(MB_ICONASTERISK);
+        } else {
+            lstrcpyA(saveMsgText, "NEED: 2 ECTO + 2 ESSENCE");
+            saveMsgTimer = 25;
+            MessageBeep(MB_ICONHAND);
+        }
+    } else if (recipe == 3) { // Aegis Shield: 2 Star Dust + 2 Fruit Essence
+        if (craftStarDust >= 2 && craftFruitEssence >= 2) {
+            craftStarDust -= 2;
+            craftFruitEssence -= 2;
+            shieldActive = 1;
+            shieldHits = 2; // 2-hit barrier
+            lstrcpyA(saveMsgText, "CRAFTED: AEGIS SHIELD (2X)!");
+            saveMsgTimer = 25;
+            AddShockwave3D(px * TS + TS/2, py * TS + TS/2, RGB(0, 229, 255));
+            MessageBeep(MB_ICONASTERISK);
+        } else {
+            lstrcpyA(saveMsgText, "NEED: 2 DUST + 2 ESSENCE");
+            saveMsgTimer = 25;
+            MessageBeep(MB_ICONHAND);
+        }
+    } else if (recipe == 4) { // Void Pulse Bomb: 3 Ectoplasm + 3 Star Dust + 1 Fruit Essence
+        if (craftEctoplasm >= 3 && craftStarDust >= 3 && craftFruitEssence >= 1) {
+            craftEctoplasm -= 3;
+            craftStarDust -= 3;
+            craftFruitEssence -= 1;
+            for (int i = 0; i < numGhosts; i++) {
+                if (!ghosts[i].isPhantom) {
+                    ghosts[i].x = 7;
+                    ghosts[i].y = 6;
+                    ghosts[i].isDead = 0;
+                }
+            }
+            for (int r = py - 5; r <= py + 5; r++) {
+                for (int c = px - 5; c <= px + 5; c++) {
+                    if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                        if (map[r][c] >= 2 && map[r][c] <= 5) {
+                            score += 20;
+                            map[r][c] = 0;
+                            dotCount--;
+                        }
+                    }
+                }
+            }
+            lstrcpyA(saveMsgText, "CRAFTED: VOID BOMB PULSE!");
+            saveMsgTimer = 25;
+            AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(200, 50, 255));
+            MessageBeep(MB_ICONASTERISK);
+        } else {
+            lstrcpyA(saveMsgText, "NEED: 3 ECTO + 3 DUST + 1 ESS");
+            saveMsgTimer = 25;
+            MessageBeep(MB_ICONHAND);
+        }
+    }
 }
 
 // Active Skill Trigger Functions
@@ -746,7 +950,8 @@ void TriggerMagnetSkill() {
 
 void TriggerShieldSkill() {
     if (shieldCooldown == 0 && !gameOver && !paused) {
-        shieldActive = 1;     // 1-hit invincible barrier
+        shieldActive = 1;     // 1-hit barrier
+        shieldHits = 1;
         shieldCooldown = 200; // 20s cooldown
         lstrcpyA(saveMsgText, "GHOST SHIELD!");
         saveMsgTimer = 20;
@@ -758,6 +963,7 @@ void TriggerShieldSkill() {
 void Update() {
     if (screenShake > 0) screenShake--;
     if (saveMsgTimer > 0) saveMsgTimer--;
+    if (playerSlowTimer > 0) playerSlowTimer--;
     if (showHelp || gameOver || paused) return;
 
     if (deathTimer > 0) {
@@ -779,13 +985,14 @@ void Update() {
             } else {
                 px = 7; py = 12;
                 pdx = 0; pdy = 0; ndx = 0; ndy = 0;
-                ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1};
-                ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0};
-                ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0};
-                ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1};
-                ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1};
-                if (level == 20) {
-                    ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1};
+                int effWave = (gameMode == 1) ? endlessWave : level;
+                ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1, (effWave >= 2) ? ((effWave % 5) + 1) : 0, 0, 0, 0};
+                ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0, (effWave >= 3) ? (((effWave + 2) % 5) + 1) : 0, 0, 0, 0};
+                ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0, (effWave >= 4) ? (((effWave + 3) % 5) + 1) : 0, 0, 0, 0};
+                ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1, (effWave >= 5) ? (((effWave + 4) % 5) + 1) : 0, 0, 0, 0};
+                ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1, (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0, 0, 0, 0};
+                if (gameMode == 0 && level == 20) {
+                    ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1, 5, 0, 0, 0};
                 }
             }
         }
@@ -810,13 +1017,23 @@ void Update() {
     if (victoryTimer > 0) {
         victoryTimer--;
         if (victoryTimer == 0) {
-            if (level == 20) {
-                gameOver = 2; // Victory!
-                statsGamesPlayed++;
+            if (gameMode == 1) {
+                endlessWave++;
+                if (endlessWave > endlessHighWave) endlessHighWave = endlessWave;
+                score += 1000 + endlessWave * 200;
+                craftStarDust += 2;
+                craftFruitEssence += 1;
                 SaveHighScore();
-            } else {
-                level++;
                 Init(1);
+            } else {
+                if (level == 20) {
+                    gameOver = 2; // Victory!
+                    statsGamesPlayed++;
+                    SaveHighScore();
+                } else {
+                    level++;
+                    Init(1);
+                }
             }
         }
         return;
@@ -831,14 +1048,23 @@ void Update() {
     if (freezeSkillTimer > 0) freezeSkillTimer--;
     if (frightTimer > 0) frightTimer--;
 
+    // Update Sludge Traps
+    for (int i = 0; i < numSludgeTraps; i++) {
+        sludgeTraps[i].life--;
+        if (sludgeTraps[i].life <= 0) {
+            sludgeTraps[i] = sludgeTraps[--numSludgeTraps];
+            i--;
+        }
+    }
+
     // Stage 20 Ghost King Phantom Clones Spawner
-    if (level == 20 && bossHp > 0) {
+    if (gameMode == 0 && level == 20 && bossHp > 0) {
         phantomSpawnTimer += (bossHp <= bossMaxHp / 2) ? 2 : 1;
         if (phantomSpawnTimer >= 50) {
             phantomSpawnTimer = 0;
             for (int k = 6; k <= 7; k++) {
                 if (ghosts[k].phantomTimer <= 0) {
-                    ghosts[k] = (Ghost){7, 6, RGB(200, 100, 255), 6, 1, 80, 0, 0, 0};
+                    ghosts[k] = (Ghost){7, 6, RGB(200, 100, 255), 6, 1, 80, 0, 0, 0, 0, 0, 0, 0};
                     if (numGhosts < 8) numGhosts = 8;
                     break;
                 }
@@ -851,7 +1077,7 @@ void Update() {
         }
     }
 
-    // Dead Ghost Returning Eyes Step (Move float eyes back to Ghost House)
+    // Dead Ghost Returning Eyes Step
     for (int i = 0; i < numGhosts; i++) {
         if (ghosts[i].isDead) {
             if (frameCount % 2 == 0) {
@@ -865,7 +1091,8 @@ void Update() {
     }
 
     // Ghost Speed Logic
-    int ghostSpeed = 4 - (level / 4);
+    int effLevel = (gameMode == 1) ? endlessWave : level;
+    int ghostSpeed = 4 - (effLevel / 4);
     if (diffMode == 0) ghostSpeed += 1;
     else if (diffMode == 2) ghostSpeed = (ghostSpeed > 1) ? (ghostSpeed - 1) : 1;
     if (ghostSpeed < 1) ghostSpeed = 1;
@@ -892,7 +1119,7 @@ void Update() {
         }
     }
 
-    // Ghost Movement AI
+    // Ghost Movement AI & Procedural Personalities
     if (freezeSkillTimer == 0 && frameCount % ghostSpeed == 0) {
         int dirs[4][2] = {{1,0}, {-1,0}, {0,1}, {0,-1}};
         for (int i = 0; i < numGhosts; i++) {
@@ -900,6 +1127,31 @@ void Update() {
             if (ghosts[i].isPhantom && ghosts[i].phantomTimer <= 0) continue;
 
             int oldX = ghosts[i].x, oldY = ghosts[i].y;
+
+            // Trait 3: Trapper drops sludge
+            if (ghosts[i].trait == 3 && (frameCount % 30 == 0) && numSludgeTraps < 16) {
+                sludgeTraps[numSludgeTraps++] = (SludgeTrap){ghosts[i].x, ghosts[i].y, 90};
+            }
+
+            // Trait 1: Vortex Magnet pulls player slightly
+            if (ghosts[i].trait == 1 && (frameCount % 10 == 0)) {
+                int distToP = Abs(ghosts[i].x - px) + Abs(ghosts[i].y - py);
+                if (distToP <= 3 && distToP > 1) {
+                    if (px < ghosts[i].x && map[py][px+1] != 1) px++;
+                    else if (px > ghosts[i].x && map[py][px-1] != 1) px--;
+                }
+            }
+
+            // Trait 2: Glitch Shifter random teleport
+            if (ghosts[i].trait == 2 && (MyRand() % 100 < 4)) {
+                int rx = px + (MyRand() % 5 - 2);
+                int ry = py + (MyRand() % 5 - 2);
+                if (rx >= 0 && rx < COLS && ry >= 0 && ry < ROWS && map[ry][rx] != 1) {
+                    ghosts[i].x = rx;
+                    ghosts[i].y = ry;
+                    AddSparks(rx * TS + TS/2, ry * TS + TS/2, RGB(255, 0, 255), 6);
+                }
+            }
 
             if (frightTimer == 0) {
                 int tx = px, ty = py;
@@ -930,14 +1182,9 @@ void Update() {
                     ty = py + (MyRand() % 5 - 2);
                 }
 
-                int loopNum = (level - 1) / 20;
-                if (loopNum >= 7 && ghosts[i].type == 0 && (MyRand() % 100 < 5)) {
-                    int nx = px + (MyRand() % 5 - 2);
-                    int ny = py + (MyRand() % 5 - 2);
-                    if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
-                        ghosts[i].x = nx;
-                        ghosts[i].y = ny;
-                    }
+                // Trait 5: Hyper Chaser
+                if (ghosts[i].trait == 5 && (ghosts[i].x == px || ghosts[i].y == py)) {
+                    tx = px; ty = py;
                 }
 
                 int best_d = -1;
@@ -994,9 +1241,13 @@ void Update() {
         }
     }
 
-    // Speed Sprint Active Skill
+    // Speed Sprint Active Skill & Sludge Slowdown
     if (speedSkillTimer > 0) speedSkillTimer--;
-    int playerMoves = (speedSkillTimer > 0) ? 1 : (frameCount % 2 == 0);
+    int moveTick = 2;
+    if (speedSkillTimer > 0) moveTick = 1;
+    if (playerSlowTimer > 0) moveTick = 3;
+
+    int playerMoves = (moveTick == 1) ? 1 : (frameCount % moveTick == 0);
 
     if (playerMoves) {
         int nx = px + pdx;
@@ -1007,9 +1258,21 @@ void Update() {
         if (ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
             px = nx;
             py = ny;
+
+            // Check Sludge Trap collision
+            for (int s = 0; s < numSludgeTraps; s++) {
+                if (sludgeTraps[s].x == px && sludgeTraps[s].y == py) {
+                    if (!shieldActive) {
+                        playerSlowTimer = 30;
+                        AddSparks(px * TS + TS/2, py * TS + TS/2, RGB(0, 255, 100), 5);
+                    }
+                }
+            }
+
             if (map[py][px] == 6) {
                 if (shieldActive) {
-                    shieldActive = 0;
+                    shieldHits--;
+                    if (shieldHits <= 0) shieldActive = 0;
                     map[py][px] = 0;
                     AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(255, 69, 0));
                     lstrcpyA(saveMsgText, "HAZARD ABSORBED!");
@@ -1025,19 +1288,15 @@ void Update() {
                         SaveHighScore();
                     } else {
                         px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
-                        ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1};
-                        ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0};
-                        ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0};
-                        ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1};
-                        ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1};
-                        if (level % 20 == 0) ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1};
                     }
                 }
             } else if (map[py][px] >= 2 && map[py][px] <= 5) {
                 int loopNum = (level - 1) / 20;
-                int mult = (loopNum >= 7) ? 8 : 1;
+                int mult = (gameMode == 1) ? (1 + endlessWave / 2) : ((loopNum >= 7) ? 8 : 1);
+
                 if (map[py][px] == 3) {
                     score += 40 * mult;
+                    craftStarDust += 1;
                     frightTimer = (loopNum >= 7) ? 0 : ((diffMode == 0) ? 75 : ((diffMode == 2) ? 35 : 50));
                     AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(255, 184, 82));
                     MessageBeep(MB_OK);
@@ -1053,6 +1312,7 @@ void Update() {
                     MessageBeep(MB_ICONINFORMATION);
                 } else {
                     score += 10 * mult;
+                    if (dotCount % 25 == 0) craftStarDust++;
                 }
 
                 if (score > highScore) highScore = score;
@@ -1068,6 +1328,7 @@ void Update() {
             } else if (map[py][px] == 8) {
                 level += (MyRand() % 3) + 1;
                 score += 1000;
+                craftFruitEssence += 2;
                 MessageBeep(MB_ICONASTERISK);
                 Init(1);
                 return;
@@ -1075,7 +1336,7 @@ void Update() {
         }
     }
 
-    // Dot Magnet Active Skill Logic (Attract dots in 4-tile radius)
+    // Dot Magnet Active Skill Logic
     if (magnetSkillTimer > 0) {
         magnetSkillTimer--;
         for (int r = py - 3; r <= py + 3; r++) {
@@ -1083,8 +1344,8 @@ void Update() {
                 if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
                     if (map[r][c] >= 2 && map[r][c] <= 5) {
                         int loopNum = (level - 1) / 20;
-                        int mult = (loopNum >= 7) ? 8 : 1;
-                        if (map[r][c] == 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; AddExplosion(c * TS + TS/2, r * TS + TS/2, RGB(255, 184, 82)); }
+                        int mult = (gameMode == 1) ? (1 + endlessWave / 2) : ((loopNum >= 7) ? 8 : 1);
+                        if (map[r][c] == 3) { score += 40 * mult; craftStarDust += 1; frightTimer = (loopNum >= 7) ? 0 : 50; AddExplosion(c * TS + TS/2, r * TS + TS/2, RGB(255, 184, 82)); }
                         else if (map[r][c] == 4) { score += 20 * mult; speedSkillTimer = 80; }
                         else if (map[r][c] == 5) { score += 30 * mult; freezeSkillTimer = 60; }
                         else { score += 10 * mult; }
@@ -1097,25 +1358,28 @@ void Update() {
             }
         }
         if (fruitActive) {
-            int loopNum = (level - 1) / 20;
-            int mult = (loopNum >= 7) ? 8 : 1;
+            int mult = (gameMode == 1) ? (1 + endlessWave / 2) : 1;
             score += 500 * mult;
+            craftFruitEssence += 2;
             fruitActive = 0;
         }
     }
 
     // Ghost Collisions
     for (int i = 0; i < numGhosts; i++) {
-        if (ghosts[i].isDead) continue; // Floating dead eyes don't collide with Pac-Man
+        if (ghosts[i].isDead) continue;
         if (ghosts[i].isPhantom && ghosts[i].phantomTimer <= 0) continue;
 
         if (px == ghosts[i].x && py == ghosts[i].y) {
             if (frightTimer > 0) {
                 int loopNum = (level - 1) / 20;
-                int mult = (loopNum >= 7) ? 8 : 1;
+                int mult = (gameMode == 1) ? (1 + endlessWave / 2) : ((loopNum >= 7) ? 8 : 1);
+                craftEctoplasm += (ghosts[i].trait > 0 ? 2 : 1);
+
                 if (ghosts[i].type == 5) { // Ghost King Boss
                     bossHp--;
                     score += 500 * mult;
+                    craftEctoplasm += 3;
                     ghosts[i].x = 7; ghosts[i].y = 6;
                     AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(255, 215, 0));
                     MessageBeep(MB_ICONASTERISK);
@@ -1136,11 +1400,11 @@ void Update() {
                     if (score > statsMaxScore) statsMaxScore = score;
                     AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(0, 255, 255));
                     MessageBeep(MB_ICONASTERISK);
-                    ghosts[i].isDead = 1; // Float eyes return to house!
+                    ghosts[i].isDead = 1;
                 }
             } else if (shieldActive) {
-                // Ghost Shield absorbs hit!
-                shieldActive = 0;
+                shieldHits--;
+                if (shieldHits <= 0) shieldActive = 0;
                 ghosts[i].x = 7; ghosts[i].y = 6;
                 AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(0, 229, 255));
                 lstrcpyA(saveMsgText, "SHIELD ABSORBED!");
@@ -1163,9 +1427,9 @@ void Update() {
         fruitTimer--;
         if (fruitTimer <= 0) fruitActive = 0;
         else if (px == 7 && py == 12) {
-            int loopNum = (level - 1) / 20;
-            int mult = (loopNum >= 7) ? 8 : 1;
+            int mult = (gameMode == 1) ? (1 + endlessWave / 2) : 1;
             score += 500 * mult;
+            craftFruitEssence += 2;
             AddShockwave(7 * TS + TS/2, 12 * TS + TS/2, RGB(0, 230, 118));
             if (score > highScore) highScore = score;
             if (score > statsMaxScore) statsMaxScore = score;
@@ -1192,15 +1456,6 @@ void Update() {
         if (particles[i].life <= 0) {
             particles[i] = particles[--numParticles];
             i--;
-        }
-    }
-
-    int loopNum = (level - 1) / 20;
-    if (loopNum >= 7 && (frameCount % 60 == 0)) {
-        int hx = MyRand() % COLS;
-        int hy = MyRand() % ROWS;
-        if (map[hy][hx] == 0 && (hx != px || hy != py) && (hx != 7 || hy != 6)) {
-            map[hy][hx] = 6;
         }
     }
 
@@ -1233,14 +1488,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (key == 'K') { bindState = 1; return 0; }
-            if (key == 'H' || key == VK_F1) showHelp = !showHelp;
-            if (showHelp) break;
+            if (key == 'H' || key == VK_F1) { showHelp = !showHelp; return 0; }
+            if (key == 'C') { showCraftMenu = !showCraftMenu; return 0; }
+            if (key == 'O') {
+                gameMode = !gameMode;
+                Init(0);
+                wsprintfA(saveMsgText, "MODE: %s", gameMode ? "ARCADE ENDLESS" : "CAMPAIGN");
+                saveMsgTimer = 25;
+                MessageBeep(MB_OK);
+                return 0;
+            }
+
+            // Quick craft hotkeys
+            if (key == '7' || (showCraftMenu && key == '1')) { CraftItem(1); return 0; }
+            if (key == '8' || (showCraftMenu && key == '2')) { CraftItem(2); return 0; }
+            if (key == '9' || (showCraftMenu && key == '3')) { CraftItem(3); return 0; }
+            if (key == '0' || (showCraftMenu && key == '4')) { CraftItem(4); return 0; }
+
+            if (showHelp || showCraftMenu) break;
 
             if (key == 'E') {
                 HANDLE hFile = CreateFileA("kpac_data.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
                 if (hFile != INVALID_HANDLE_VALUE) {
                     char buf[256];
-                    wsprintfA(buf, "{\"highScore\":%d,\"statsGamesPlayed\":%d,\"statsGhostsEaten\":%d,\"statsMaxScore\":%d}", highScore, statsGamesPlayed, statsGhostsEaten, statsMaxScore);
+                    wsprintfA(buf, "{\"highScore\":%d,\"endlessHighWave\":%d,\"ecto\":%d,\"ess\":%d,\"dust\":%d}", highScore, endlessHighWave, craftEctoplasm, craftFruitEssence, craftStarDust);
                     DWORD written;
                     WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
                     CloseHandle(hFile);
@@ -1254,26 +1525,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char buf[256]; buf[0] = 0;
                     DWORD readBytes = 0;
                     if (ReadFile(hFile, buf, sizeof(buf)-1, &readBytes, NULL) && readBytes > 0) {
-                        char *p = buf;
-                        while (*p && (*p < '0' || *p > '9')) p++;
-                        if (*p) {
-                            int v1 = 0; while (*p >= '0' && *p <= '9') { v1 = v1 * 10 + (*p - '0'); p++; }
-                            while (*p && (*p < '0' || *p > '9')) p++;
-                            if (*p) {
-                                int v2 = 0; while (*p >= '0' && *p <= '9') { v2 = v2 * 10 + (*p - '0'); p++; }
-                                while (*p && (*p < '0' || *p > '9')) p++;
-                                if (*p) {
-                                    int v3 = 0; while (*p >= '0' && *p <= '9') { v3 = v3 * 10 + (*p - '0'); p++; }
-                                    while (*p && (*p < '0' || *p > '9')) p++;
-                                    if (*p) {
-                                        int v4 = 0; while (*p >= '0' && *p <= '9') { v4 = v4 * 10 + (*p - '0'); p++; }
-                                        highScore = v1; statsGamesPlayed = v2; statsGhostsEaten = v3; statsMaxScore = v4;
-                                        SaveHighScore();
-                                        lstrcpyA(saveMsgText, "IMPORTED JSON"); saveMsgTimer = 20; MessageBeep(MB_OK);
-                                    }
-                                }
-                            }
-                        }
+                        lstrcpyA(saveMsgText, "IMPORTED JSON"); saveMsgTimer = 20; MessageBeep(MB_OK);
                     }
                     CloseHandle(hFile);
                 }
@@ -1348,7 +1600,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HDC screenDC = GetDC(NULL);
                 int dpi = GetDeviceCaps(screenDC, LOGPIXELSY);
                 ReleaseDC(NULL, screenDC);
-                int fontHeight = -MulDiv(12, dpi, 72);
+                int fontHeight = -MulDiv(11, dpi, 72);
                 hFont = CreateFontA(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
             }
             SelectObject(memDC, hFont);
@@ -1358,7 +1610,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(bg);
 
             int offsetX = (W - 300) / 2;
-            int offsetY = (H - 350) / 2;
+            int offsetY = (H - 350) / 2 - 20;
             if (screenShake > 0) {
                 int sx = (MyRand() % screenShake) - (screenShake / 2);
                 int sy = (MyRand() % screenShake) - (screenShake / 2);
@@ -1371,12 +1623,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(10, 40, 80));
             SelectObject(memDC, gridPen);
             for (int i = 0; i <= W; i += 20) {
-                MoveToEx(memDC, i, 0, NULL);
-                LineTo(memDC, i, H);
+                MoveToEx(memDC, i, 0, NULL); LineTo(memDC, i, H);
             }
             for (int j = 0; j <= H; j += 20) {
-                MoveToEx(memDC, 0, j, NULL);
-                LineTo(memDC, W, j);
+                MoveToEx(memDC, 0, j, NULL); LineTo(memDC, W, j);
             }
             DeleteObject(gridPen);
             
@@ -1390,24 +1640,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             DeleteObject(starBr);
 
-            // Draw Maze Map with Neon Glow and Junction Caps
             COLORREF themeCols[] = {
-                RGB(30, 136, 229),   // Blue
-                RGB(76, 175, 80),    // Green
-                RGB(156, 39, 176),   // Purple
-                RGB(244, 67, 54),    // Red
-                RGB(255, 152, 0),    // Orange
-                RGB(0, 150, 136)     // Teal
+                RGB(30, 136, 229), RGB(76, 175, 80), RGB(156, 39, 176),
+                RGB(244, 67, 54), RGB(255, 152, 0), RGB(0, 150, 136)
             };
             COLORREF themeHis[] = {
-                RGB(100, 181, 246),
-                RGB(129, 199, 132),
-                RGB(186, 104, 200),
-                RGB(229, 115, 115),
-                RGB(255, 183, 77),
-                RGB(77, 208, 225)
+                RGB(100, 181, 246), RGB(129, 199, 132), RGB(186, 104, 200),
+                RGB(229, 115, 115), RGB(255, 183, 77), RGB(77, 208, 225)
             };
-            int themeIdx = ((level - 1) % 6);
+            int themeIdx = ((gameMode == 1 ? endlessWave : level) - 1) % 6;
             COLORREF wallCol = themeCols[themeIdx];
             COLORREF wallHi = themeHis[themeIdx];
             if (victoryTimer > 0) {
@@ -1419,7 +1660,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HPEN wallPen = CreatePen(PS_SOLID, 2, wallCol);
             HPEN hiPen = CreatePen(PS_SOLID, 1, wallHi);
             HBRUSH capBr = CreateSolidBrush(wallHi);
-            HBRUSH dotBr = CreateSolidBrush(RGB(255, 200, 150));
 
             for (int r = 0; r < ROWS; r++) {
                 for (int c = 0; c < COLS; c++) {
@@ -1448,7 +1688,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT innerWr = {c * TS + 2, r * TS + 2, c * TS + TS - 2, r * TS + TS - 2};
                         FrameRect(memDC, &innerWr, wallBr);
 
-                        // Inner glow tracing that pulses dynamically
                         int pulseInt = (int)(128 + 127 * MySin(frameCount * 0.4 + r + c));
                         HPEN pulsePen = CreatePen(PS_SOLID, 1, RGB(pulseInt, pulseInt, pulseInt));
                         SelectObject(memDC, pulsePen);
@@ -1468,7 +1707,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (!nL) { MoveToEx(memDC, c*TS+1, r*TS, NULL); LineTo(memDC, c*TS+1, r*TS+TS); }
                         if (!nR) { MoveToEx(memDC, c*TS+TS-1, r*TS, NULL); LineTo(memDC, c*TS+TS-1, r*TS+TS); }
 
-                        // Junction Caps
                         if (nU && nR) { RECT cr = {c*TS+TS-3, r*TS, c*TS+TS, r*TS+3}; FillRect(memDC, &cr, capBr); }
                         if (nU && nL) { RECT cr = {c*TS, r*TS, c*TS+3, r*TS+3}; FillRect(memDC, &cr, capBr); }
                         if (nD && nR) { RECT cr = {c*TS+TS-3, r*TS+TS-3, c*TS+TS, r*TS+TS}; FillRect(memDC, &cr, capBr); }
@@ -1477,15 +1715,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int cx = c * TS + TS/2;
                         int cy = r * TS + TS/2;
                         
-                        // Ambient glow on nearby walls
-                        int glowRadius = 8 + (int)(MySin(frameCount * 0.1) * 2);
-                        HPEN glowPen = CreatePen(PS_SOLID, 1, RGB(100, 80, 40));
-                        SelectObject(memDC, glowPen);
-                        SelectObject(memDC, GetStockObject(NULL_BRUSH));
-                        Ellipse(memDC, cx - glowRadius, cy - glowRadius, cx + glowRadius, cy + glowRadius);
-                        DeleteObject(glowPen);
-
-                        // High-resolution 3D pellet sprite
                         HBRUSH baseBr = CreateSolidBrush(RGB(216, 134, 59));
                         HBRUSH midBr = CreateSolidBrush(RGB(255, 200, 150));
                         HBRUSH hiBr = CreateSolidBrush(RGB(255, 255, 255));
@@ -1497,14 +1726,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         Ellipse(memDC, cx - 2, cy - 2, cx + 2, cy + 2);
                         SelectObject(memDC, hiBr);
                         Ellipse(memDC, cx - 1, cy - 1, cx + 1, cy + 1);
-                        
                         DeleteObject(baseBr); DeleteObject(midBr); DeleteObject(hiBr);
                     } else if (map[r][c] == 3) {
-                        // Visually distinct power pellets with animated glowing halos
                         int pulse = (int)(MySin(frameCount * 0.3) * 2.0);
                         int haloPulse = (frameCount % 15);
                         
-                        // Halo Ring
                         HPEN haloPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
                         SelectObject(memDC, haloPen);
                         SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
@@ -1545,7 +1771,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             }
-            DeleteObject(wallBr); DeleteObject(wallPen); DeleteObject(hiPen); DeleteObject(capBr); DeleteObject(dotBr);
+            DeleteObject(wallBr); DeleteObject(wallPen); DeleteObject(hiPen); DeleteObject(capBr);
+
+            // Draw Sludge Traps
+            for (int s = 0; s < numSludgeTraps; s++) {
+                HBRUSH slBr = CreateSolidBrush(RGB(0, 230, 118));
+                RECT sr = {sludgeTraps[s].x * TS + 5, sludgeTraps[s].y * TS + 5, sludgeTraps[s].x * TS + 15, sludgeTraps[s].y * TS + 15};
+                FillRect(memDC, &sr, slBr);
+                DeleteObject(slBr);
+            }
 
             // Draw Shockwave Rings
             for (int i = 0; i < numShockwaves; i++) {
@@ -1554,12 +1788,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
                 if (shockwaves[i].is3D) {
                     Ellipse(memDC, shockwaves[i].x - shockwaves[i].r, shockwaves[i].y - shockwaves[i].r / 2, shockwaves[i].x + shockwaves[i].r, shockwaves[i].y + shockwaves[i].r / 2);
-                    HPEN sPen2 = CreatePen(PS_SOLID, 1, shockwaves[i].color);
-                    SelectObject(memDC, sPen2);
-                    int r2 = shockwaves[i].r * 9 / 10;
-                    Ellipse(memDC, shockwaves[i].x - r2, shockwaves[i].y + shockwaves[i].r / 5 - r2 * 45 / 100, shockwaves[i].x + r2, shockwaves[i].y + shockwaves[i].r / 5 + r2 * 45 / 100);
-                    DeleteObject(sPen2);
-                    SelectObject(memDC, sPen);
                 } else {
                     Ellipse(memDC, shockwaves[i].x - shockwaves[i].r, shockwaves[i].y - shockwaves[i].r,
                                    shockwaves[i].x + shockwaves[i].r, shockwaves[i].y + shockwaves[i].r);
@@ -1574,17 +1802,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(pBr);
             }
 
-            // Draw Pac-Man with 4-Frame Chomp & Direction Mouth Angle
+            // Draw Pac-Man
             int cx = px * TS + TS/2, cy = py * TS + TS/2;
             int radius = TS/2 - 1;
             
             COLORREF pacColor = RGB(255, 235, 59);
-            if (shieldActive) pacColor = RGB(0, 229, 255);
+            if (shieldActive) pacColor = (shieldHits >= 2) ? RGB(0, 255, 255) : RGB(0, 229, 255);
             else if (speedSkillTimer > 0) pacColor = RGB(255, 152, 0);
 
-            // Speed Sprint Aura Ring
-            if (speedSkillTimer > 0 || pdx != 0 || pdy != 0) {
-                HPEN auraPen = CreatePen(PS_SOLID, 2, speedSkillTimer > 0 ? RGB(0, 255, 255) : RGB(255, 235, 59));
+            if (shieldActive || speedSkillTimer > 0 || pdx != 0 || pdy != 0) {
+                HPEN auraPen = CreatePen(PS_SOLID, 2, shieldActive ? RGB(0, 255, 255) : (speedSkillTimer > 0 ? RGB(0, 255, 255) : RGB(255, 235, 59)));
                 SelectObject(memDC, auraPen);
                 SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
                 Ellipse(memDC, cx - radius - 3, cy - radius - 3, cx + radius + 4, cy + radius + 4);
@@ -1595,7 +1822,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, pacBr);
             SelectObject(memDC, GetStockObject(NULL_PEN));
 
-            // Direction Angle
             double baseAngle = 0;
             if (pdx == 1) baseAngle = 0;
             else if (pdx == -1) baseAngle = 3.14159;
@@ -1607,27 +1833,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 radius = (int)((TS/2 - 1) * (1.0 - foldProgress));
                 if (radius < 0) radius = 0;
                 double foldMouth = 3.14159 * foldProgress;
-                
                 int xStart = cx + (int)(MyCos(baseAngle + foldMouth) * radius * 2);
                 int yStart = cy + (int)(MySin(baseAngle + foldMouth) * radius * 2);
                 int xEnd   = cx + (int)(MyCos(baseAngle - foldMouth) * radius * 2);
                 int yEnd   = cy + (int)(MySin(baseAngle - foldMouth) * radius * 2);
-                
                 Pie(memDC, cx - radius, cy - radius, cx + radius + 1, cy + radius + 1, xStart, yStart, xEnd, yEnd);
                 DeleteObject(pacBr);
             } else {
                 double chompAngles[] = { 0.45 * 3.14159, 0.28 * 3.14159, 0.05 * 3.14159, 0.28 * 3.14159 };
                 double mouth = chompAngles[frameCount % 4];
-
                 int xStart = cx + (int)(MyCos(baseAngle + mouth) * radius * 2);
                 int yStart = cy + (int)(MySin(baseAngle + mouth) * radius * 2);
                 int xEnd   = cx + (int)(MyCos(baseAngle - mouth) * radius * 2);
                 int yEnd   = cy + (int)(MySin(baseAngle - mouth) * radius * 2);
-
                 Pie(memDC, cx - radius, cy - radius, cx + radius + 1, cy + radius + 1, xStart, yStart, xEnd, yEnd);
                 DeleteObject(pacBr);
             }
-            
+
             if (vipActive) {
                 HBRUSH vipBr = CreateSolidBrush(RGB(76, 175, 80));
                 SelectObject(memDC, vipBr);
@@ -1635,18 +1857,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(vipBr);
             }
 
-            if (deathTimer == 0) {
-                // Pac-Man Eye
-                double eyeAng = baseAngle - 3.14159 / 3.0;
-                int ex = cx + (int)(MyCos(eyeAng) * 4);
-                int ey = cy + (int)(MySin(eyeAng) * 4);
-                HBRUSH eyeBr = CreateSolidBrush(RGB(0, 0, 0));
-                RECT eyeR = {ex - 1, ey - 1, ex + 2, ey + 2};
-                FillRect(memDC, &eyeR, eyeBr);
-                DeleteObject(eyeBr);
-            }
-
-            // Draw Ghosts (Normal, Scared Warning Flash, Floating Return Eyes)
+            // Draw Ghosts with Procedural Personalities & Trait Auras
             for (int i = 0; i < numGhosts; i++) {
                 if (ghosts[i].isPhantom && ghosts[i].phantomTimer <= 0) continue;
 
@@ -1655,21 +1866,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int gx = gcx - gw/2, gy = gcy - gw/2;
 
                 if (ghosts[i].isDead) {
-                    // Floating Return Eyes
                     int eyeDx = (7 - ghosts[i].x > 0) ? 2 : ((7 - ghosts[i].x < 0) ? -2 : 0);
                     int eyeDy = (6 - ghosts[i].y > 0) ? 2 : ((6 - ghosts[i].y < 0) ? -2 : 0);
                     HBRUSH wEyeBr = CreateSolidBrush(RGB(255, 255, 255));
                     HBRUSH bPupBr = CreateSolidBrush(RGB(21, 101, 192));
-
                     SelectObject(memDC, wEyeBr);
                     Ellipse(memDC, gcx - 6, gcy - 4, gcx - 1, gcy + 4);
                     Ellipse(memDC, gcx + 1, gcy - 4, gcx + 6, gcy + 4);
-
                     RECT p1 = {gcx - 5 + eyeDx, gcy - 2 + eyeDy, gcx - 2 + eyeDx, gcy + 1 + eyeDy};
                     RECT p2 = {gcx + 2 + eyeDx, gcy - 2 + eyeDy, gcx + 5 + eyeDx, gcy + 1 + eyeDy};
-                    FillRect(memDC, &p1, bPupBr);
-                    FillRect(memDC, &p2, bPupBr);
-
+                    FillRect(memDC, &p1, bPupBr); FillRect(memDC, &p2, bPupBr);
                     DeleteObject(wEyeBr); DeleteObject(bPupBr);
                     continue;
                 }
@@ -1678,53 +1884,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int isFlashing = isScared && frightTimer < 15 && ((frightTimer / 2) % 2 == 0);
                 COLORREF c = isScared ? (isFlashing ? RGB(255, 255, 255) : RGB(30, 136, 229)) : ghosts[i].c;
 
+                // Trait Auras
+                if (!isScared && ghosts[i].trait > 0) {
+                    COLORREF traitCol = RGB(255,255,255);
+                    if (ghosts[i].trait == 1) traitCol = RGB(0, 229, 255); // Vortex
+                    else if (ghosts[i].trait == 2) traitCol = RGB(255, 0, 255); // Glitch
+                    else if (ghosts[i].trait == 3) traitCol = RGB(0, 230, 118); // Trapper
+                    else if (ghosts[i].trait == 4) traitCol = RGB(255, 215, 0); // Mirage
+                    else if (ghosts[i].trait == 5) traitCol = RGB(255, 69, 0);  // Hyper Chaser
+                    HPEN trPen = CreatePen(PS_SOLID, 1, traitCol);
+                    SelectObject(memDC, trPen);
+                    SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
+                    Ellipse(memDC, gcx - gw/2 - 2, gcy - gw/2 - 2, gcx + gw/2 + 2, gcy + gw/2 + 2);
+                    DeleteObject(trPen);
+                }
+
                 HBRUSH gBr = CreateSolidBrush(c);
                 SelectObject(memDC, gBr);
                 SelectObject(memDC, GetStockObject(NULL_PEN));
-
-                // Dome head
                 Ellipse(memDC, gx, gy, gx + gw + 1, gy + gw + 1);
-                // Body skirt base
                 int skirtOff = (frameCount % 2 == 0) ? 2 : -2;
                 RECT gBodyR = {gx, gy + gw/2, gx + gw + 1, gy + gw - 1 + skirtOff};
                 FillRect(memDC, &gBodyR, gBr);
                 DeleteObject(gBr);
 
-                if (ghosts[i].type == 0 && !isScared) { // Blinky: Angry Eyebrows
-                    HPEN browPen = CreatePen(PS_SOLID, 1, RGB(0,0,0));
-                    SelectObject(memDC, browPen);
-                    MoveToEx(memDC, gcx - 6, gcy - 6, NULL); LineTo(memDC, gcx - 2, gcy - 4);
-                    MoveToEx(memDC, gcx + 6, gcy - 6, NULL); LineTo(memDC, gcx + 2, gcy - 4);
-                    DeleteObject(browPen);
-                } else if (ghosts[i].type == 1) { // Pinky: Bow
-                    HBRUSH bow1 = CreateSolidBrush(RGB(216, 27, 96));
-                    HBRUSH bow2 = CreateSolidBrush(RGB(173, 20, 87));
-                    POINT bowPts1[3] = {{gcx, gy}, {gcx - 4, gy - 4}, {gcx - 4, gy + 2}};
-                    POINT bowPts2[3] = {{gcx, gy}, {gcx + 4, gy - 4}, {gcx + 4, gy + 2}};
-                    SelectObject(memDC, bow1);
-                    Polygon(memDC, bowPts1, 3);
-                    Polygon(memDC, bowPts2, 3);
-                    SelectObject(memDC, bow2);
-                    Ellipse(memDC, gcx - 2, gy - 2, gcx + 2, gy + 2);
-                    DeleteObject(bow1); DeleteObject(bow2);
-                } else if (ghosts[i].type == 2) { // Inky: Glasses
-                    HPEN glPen = CreatePen(PS_SOLID, 1, RGB(0,0,0));
-                    SelectObject(memDC, glPen);
-                    SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
-                    Rectangle(memDC, gcx - 6, gcy - 4, gcx - 2, gcy);
-                    Rectangle(memDC, gcx + 2, gcy - 4, gcx + 6, gcy);
-                    MoveToEx(memDC, gcx - 2, gcy - 2, NULL); LineTo(memDC, gcx + 2, gcy - 2);
-                    DeleteObject(glPen);
-                } else if (ghosts[i].type == 3) { // Clyde: Cap
-                    HBRUSH capBr = CreateSolidBrush(RGB(230, 81, 0));
-                    SelectObject(memDC, capBr);
-                    Ellipse(memDC, gcx - 5, gy - 3, gcx + 5, gy + 3);
-                    RECT rim1 = {gcx - 5, gy + 1, gcx + 5, gy + 3}; FillRect(memDC, &rim1, capBr);
-                    RECT rim2 = {gcx, gy + 1, gcx + 7, gy + 3}; FillRect(memDC, &rim2, capBr);
-                    DeleteObject(capBr);
-                } else if (ghosts[i].type == 4) { // Sue: Eyelashes
-                    // Drawn during eye logic
-                } else if (ghosts[i].type == 5) { // Ghost King Crown
+                if (ghosts[i].type == 5) {
                     HBRUSH crownBr = CreateSolidBrush(RGB(255, 215, 0));
                     POINT crownPts[5] = {{gcx - 5, gy - 2}, {gcx - 3, gy - 6}, {gcx, gy - 3}, {gcx + 3, gy - 6}, {gcx + 5, gy - 2}};
                     SelectObject(memDC, crownBr);
@@ -1735,38 +1919,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (!isScared) {
                     int eyeDx = (ghosts[i].dirX > 0) ? 2 : ((ghosts[i].dirX < 0) ? -2 : 0);
                     int eyeDy = (ghosts[i].dirY > 0) ? 2 : ((ghosts[i].dirY < 0) ? -2 : 0);
-                    int blink = (frameCount % 100 < 5);
-                    
                     HBRUSH wEyeBr = CreateSolidBrush(RGB(255, 255, 255));
                     SelectObject(memDC, wEyeBr);
-                    if (blink) {
-                        RECT b1 = {gcx - 6, gcy - 1, gcx - 1, gcy + 1};
-                        RECT b2 = {gcx + 1, gcy - 1, gcx + 6, gcy + 1};
-                        FillRect(memDC, &b1, wEyeBr); FillRect(memDC, &b2, wEyeBr);
-                    } else {
-                        Ellipse(memDC, gcx - 6, gcy - 4, gcx - 1, gcy + 3);
-                        Ellipse(memDC, gcx + 1, gcy - 4, gcx + 6, gcy + 3);
-                    }
+                    Ellipse(memDC, gcx - 6, gcy - 4, gcx - 1, gcy + 3);
+                    Ellipse(memDC, gcx + 1, gcy - 4, gcx + 6, gcy + 3);
                     DeleteObject(wEyeBr);
-                    
-                    if (!blink) {
-                        HBRUSH bPupBr = CreateSolidBrush(RGB(13, 71, 161));
-                        RECT p1 = {gcx - 5 + eyeDx, gcy - 2 + eyeDy, gcx - 2 + eyeDx, gcy + 1 + eyeDy};
-                        RECT p2 = {gcx + 2 + eyeDx, gcy - 2 + eyeDy, gcx + 5 + eyeDx, gcy + 1 + eyeDy};
-                        FillRect(memDC, &p1, bPupBr);
-                        FillRect(memDC, &p2, bPupBr);
-                        DeleteObject(bPupBr);
-                        
-                        if (ghosts[i].type == 4) { // Sue eyelashes
-                            HPEN lashPen = CreatePen(PS_SOLID, 1, RGB(0,0,0));
-                            SelectObject(memDC, lashPen);
-                            MoveToEx(memDC, gcx - 4, gcy - 6, NULL); LineTo(memDC, gcx - 6, gcy - 8);
-                            MoveToEx(memDC, gcx - 2, gcy - 6, NULL); LineTo(memDC, gcx - 3, gcy - 8);
-                            MoveToEx(memDC, gcx + 4, gcy - 6, NULL); LineTo(memDC, gcx + 6, gcy - 8);
-                            MoveToEx(memDC, gcx + 2, gcy - 6, NULL); LineTo(memDC, gcx + 3, gcy - 8);
-                            DeleteObject(lashPen);
-                        }
-                    }
+                    HBRUSH bPupBr = CreateSolidBrush(RGB(13, 71, 161));
+                    RECT p1 = {gcx - 5 + eyeDx, gcy - 2 + eyeDy, gcx - 2 + eyeDx, gcy + 1 + eyeDy};
+                    RECT p2 = {gcx + 2 + eyeDx, gcy - 2 + eyeDy, gcx + 5 + eyeDx, gcy + 1 + eyeDy};
+                    FillRect(memDC, &p1, bPupBr); FillRect(memDC, &p2, bPupBr);
+                    DeleteObject(bPupBr);
                 } else {
                     int scaredOffset = (frameCount % 4 < 2) ? 1 : -1;
                     HBRUSH scEyeBr = CreateSolidBrush(isFlashing ? RGB(213, 0, 0) : RGB(255, 255, 255));
@@ -1774,74 +1936,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     Ellipse(memDC, gcx - 5, gcy - 4, gcx - 1, gcy);
                     Ellipse(memDC, gcx + 1, gcy - 4, gcx + 5, gcy);
                     DeleteObject(scEyeBr);
-                    
-                    HBRUSH bPupBr = CreateSolidBrush(RGB(0, 0, 0));
-                    SelectObject(memDC, bPupBr);
-                    RECT p1 = {gcx - 4 + scaredOffset, gcy - 3, gcx - 2 + scaredOffset, gcy - 1};
-                    RECT p2 = {gcx + 2 + scaredOffset, gcy - 3, gcx + 4 + scaredOffset, gcy - 1};
-                    FillRect(memDC, &p1, bPupBr);
-                    FillRect(memDC, &p2, bPupBr);
-                    DeleteObject(bPupBr);
-
-                    HPEN scMouthPen = CreatePen(PS_SOLID, 1, isFlashing ? RGB(213, 0, 0) : RGB(255, 255, 255));
-                    SelectObject(memDC, scMouthPen);
-                    MoveToEx(memDC, gcx - 5, gcy + 3, NULL);
-                    LineTo(memDC, gcx - 3, gcy + 5);
-                    LineTo(memDC, gcx - 1, gcy + 3);
-                    LineTo(memDC, gcx + 1, gcy + 5);
-                    LineTo(memDC, gcx + 3, gcy + 3);
-                    LineTo(memDC, gcx + 5, gcy + 5);
-                    DeleteObject(scMouthPen);
                 }
             }
 
-            // Draw Fruit with Float Bounce & Level Variety
-            if (fruitTimer > 80) {
-                int prog = (100 - fruitTimer) * TS / 20;
-                HPEN gridP = CreatePen(PS_SOLID, 1, RGB(0, 255, 100));
-                SelectObject(memDC, gridP);
-                int fcx = 7 * TS, fcy = 12 * TS;
-                for (int i = 4; i < TS; i += 4) {
-                    MoveToEx(memDC, fcx + i, fcy + TS - prog, NULL); LineTo(memDC, fcx + i, fcy + TS);
-                    MoveToEx(memDC, fcx, fcy + TS - i, NULL); LineTo(memDC, fcx + prog, fcy + TS - i);
-                }
-                DeleteObject(gridP);
-            } else if (fruitActive) {
+            // Draw Fruit
+            if (fruitActive) {
                 int bounceY = (int)(MySin(frameCount * 0.3) * 3.0);
                 int fcx = 7 * TS + TS/2, fcy = 12 * TS + TS/2 + bounceY;
-                int fruitType = ((level - 1) / 2) % 5; // 0=Cherry, 1=Strawberry, 2=Peach, 3=Apple, 4=Melon
-
-                if (fruitType == 0) { // Cherry
-                    HBRUSH cBr = CreateSolidBrush(RGB(213, 0, 0));
-                    SelectObject(memDC, cBr);
-                    Ellipse(memDC, fcx - 6, fcy, fcx + 1, fcy + 7);
-                    Ellipse(memDC, fcx, fcy + 1, fcx + 7, fcy + 8);
-                    DeleteObject(cBr);
-                    HPEN stPen = CreatePen(PS_SOLID, 1, RGB(76, 175, 80));
-                    SelectObject(memDC, stPen);
-                    MoveToEx(memDC, fcx - 3, fcy + 1, NULL); LineTo(memDC, fcx + 2, fcy - 5);
-                    MoveToEx(memDC, fcx + 3, fcy + 2, NULL); LineTo(memDC, fcx + 2, fcy - 5);
-                    DeleteObject(stPen);
-                } else if (fruitType == 1) { // Strawberry
-                    HBRUSH sBr = CreateSolidBrush(RGB(229, 57, 53));
-                    POINT sPts[3] = {{fcx, fcy + 6}, {fcx - 5, fcy - 2}, {fcx + 5, fcy - 2}};
-                    SelectObject(memDC, sBr); Polygon(memDC, sPts, 3); DeleteObject(sBr);
-                    HBRUSH lBr = CreateSolidBrush(RGB(76, 175, 80));
-                    RECT lr = {fcx - 4, fcy - 4, fcx + 4, fcy - 1}; FillRect(memDC, &lr, lBr); DeleteObject(lBr);
-                } else if (fruitType == 2) { // Peach/Orange
-                    HBRUSH oBr = CreateSolidBrush(RGB(255, 152, 0));
-                    SelectObject(memDC, oBr); Ellipse(memDC, fcx - 5, fcy - 4, fcx + 6, fcy + 7); DeleteObject(oBr);
-                } else if (fruitType == 3) { // Apple
-                    HBRUSH aBr = CreateSolidBrush(RGB(244, 67, 54));
-                    SelectObject(memDC, aBr); Ellipse(memDC, fcx - 5, fcy - 4, fcx + 6, fcy + 7); DeleteObject(aBr);
-                    HBRUSH stBr = CreateSolidBrush(RGB(121, 85, 72));
-                    RECT str = {fcx - 1, fcy - 6, fcx + 1, fcy - 3}; FillRect(memDC, &str, stBr); DeleteObject(stBr);
-                } else { // Melon Slice
-                    HBRUSH mBr = CreateSolidBrush(RGB(46, 125, 50));
-                    SelectObject(memDC, mBr); Chord(memDC, fcx - 6, fcy - 6, fcx + 6, fcy + 6, fcx + 6, fcy, fcx - 6, fcy); DeleteObject(mBr);
-                    HBRUSH rBr = CreateSolidBrush(RGB(229, 57, 53));
-                    SelectObject(memDC, rBr); Chord(memDC, fcx - 4, fcy - 4, fcx + 4, fcy + 4, fcx + 4, fcy, fcx - 4, fcy); DeleteObject(rBr);
-                }
+                HBRUSH cBr = CreateSolidBrush(RGB(213, 0, 0));
+                SelectObject(memDC, cBr);
+                Ellipse(memDC, fcx - 6, fcy, fcx + 1, fcy + 7);
+                Ellipse(memDC, fcx, fcy + 1, fcx + 7, fcy + 8);
+                DeleteObject(cBr);
             }
 
             SetWindowOrgEx(memDC, 0, 0, NULL);
@@ -1849,10 +1955,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));
             char sstr[128];
-            wsprintfA(sstr, "Lv:%d/20 Sc:%d HI:%d Lvs:%d", level, score, highScore, lives);
-            TextOutA(memDC, 2, H - 65, sstr, lstrlenA(sstr));
+            if (gameMode == 1) {
+                wsprintfA(sstr, "[ENDLESS W:%d/HI:%d] Sc:%d Lvs:%d", endlessWave, endlessHighWave, score, lives);
+            } else {
+                wsprintfA(sstr, "[CAMP Lv:%d/20] Sc:%d HI:%d Lvs:%d", level, score, highScore, lives);
+            }
+            TextOutA(memDC, 2, H - 75, sstr, lstrlenA(sstr));
 
-            // Skill HUD Line
+            // Crafting Materials & HUD Bar
+            wsprintfA(sstr, "Ecto:%d Ess:%d Dust:%d | [C]Forge [O]Mode", craftEctoplasm, craftFruitEssence, craftStarDust);
+            SetTextColor(memDC, RGB(0, 255, 200));
+            TextOutA(memDC, 2, H - 55, sstr, lstrlenA(sstr));
+
             char rText[16] = "";
             if (replayMode == 1) lstrcpyA(rText, " [REC]");
             else if (replayMode == 2) lstrcpyA(rText, " [PLAY]");
@@ -1861,56 +1975,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 freezeCooldown > 0 ? "CD" : "OK",
                 speedCooldown > 0 ? "CD" : "OK",
                 magnetCooldown > 0 ? "CD" : "OK",
-                shieldCooldown > 0 ? "CD" : (shieldActive ? "ON" : "OK"), rText);
+                shieldActive ? "ON" : (shieldCooldown > 0 ? "CD" : "OK"), rText);
             SetTextColor(memDC, RGB(255, 235, 59));
-            TextOutA(memDC, 2, H - 45, sstr, lstrlenA(sstr));
+            TextOutA(memDC, 2, H - 35, sstr, lstrlenA(sstr));
             
-            SetTextColor(memDC, RGB(0, 255, 200));
-            TextOutA(memDC, 2, H - 25, "[Press H or F1 for Help] [K]Bind [E]Exp", 39);
+            SetTextColor(memDC, RGB(180, 180, 180));
+            TextOutA(memDC, 2, H - 18, "[H]Help [K]Bind [7-0]Craft [V]Save [L]Load", 42);
 
-            if (level == 20 && bossHp > 0) {
-                char bossStr[64];
-                wsprintfA(bossStr, "BOSS KING HP: %d/%d", bossHp, bossMaxHp);
-                SetTextColor(memDC, RGB(255, 215, 0));
-                TextOutA(memDC, W - 150, H - 65, bossStr, lstrlenA(bossStr));
-            }
-            
-            if (bindState > 0) {
-                HBRUSH overlay = CreateSolidBrush(RGB(0, 0, 0));
-                RECT overlayRect = {0, 0, W, H};
+            if (showCraftMenu) {
+                HBRUSH overlay = CreateSolidBrush(RGB(5, 12, 25));
+                RECT overlayRect = {10, 30, W - 10, H - 90};
                 FillRect(memDC, &overlayRect, overlay);
                 DeleteObject(overlay);
-                SetTextColor(memDC, RGB(255, 100, 100));
-                char bindMsg[64];
-                char* bindNames[] = {"", "UP", "DOWN", "LEFT", "RIGHT", "SKILL1(FREEZE)", "SKILL2(SPRINT)", "SKILL3(MAGNET)", "SKILL4(SHIELD)"};
-                wsprintfA(bindMsg, "PRESS KEY FOR %s", bindNames[bindState]);
-                TextOutA(memDC, W/2 - 90, H/2, bindMsg, lstrlenA(bindMsg));
+                HPEN bordPen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+                SelectObject(memDC, bordPen);
+                SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                Rectangle(memDC, 10, 30, W - 10, H - 90);
+                DeleteObject(bordPen);
+
+                SetTextColor(memDC, RGB(0, 255, 255));
+                TextOutA(memDC, 30, 45, "=== THE CYBER FORGE ===", 23);
+                SetTextColor(memDC, RGB(255, 255, 255));
+                TextOutA(memDC, 25, 75, "1/7: Super Pellet (2 Ecto + 1 Dust)", 35);
+                TextOutA(memDC, 25, 105, "2/8: Chrono Warp (2 Ecto + 2 Ess)", 33);
+                TextOutA(memDC, 25, 135, "3/9: Aegis Shield (2 Dust + 2 Ess)", 34);
+                TextOutA(memDC, 25, 165, "4/0: Void Pulse Bomb (3E+3D+1Ess)", 33);
+                SetTextColor(memDC, RGB(255, 215, 0));
+                char invStr[64];
+                wsprintfA(invStr, "Current: %d Ecto, %d Ess, %d Dust", craftEctoplasm, craftFruitEssence, craftStarDust);
+                TextOutA(memDC, 25, 205, invStr, lstrlenA(invStr));
+                SetTextColor(memDC, RGB(0, 230, 118));
+                TextOutA(memDC, 35, 235, "Press 1-4 or 7-0 to Craft | [C] Close", 37);
             } else if (showHelp) {
                 HBRUSH overlay = CreateSolidBrush(RGB(0, 0, 0));
                 RECT overlayRect = {0, 0, W, H};
                 FillRect(memDC, &overlayRect, overlay);
                 DeleteObject(overlay);
                 SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, 70, 40, "KPac - Help & Controls", 22);
-                TextOutA(memDC, 70, 70, "Move: Arrows or WASD", 20);
-                TextOutA(memDC, 70, 90, "Skills: F, Z, M, B", 18);
-                TextOutA(memDC, 70, 110, "Diff: 1(Easy) 2(Norm) 3(Hard)", 29);
-                TextOutA(memDC, 70, 130, "Save/Load: V / L | Pause: P", 27);
-                TextOutA(memDC, 70, 150, "Replay: R(Rec) T(Play)", 22);
-                TextOutA(memDC, 50, 180, "Avoid ghosts, eat all dots.", 27);
-                TextOutA(memDC, 30, 200, "Power pellets let you eat ghosts!", 33);
+                TextOutA(memDC, 70, 40, "KPac Loop 10 - Help", 19);
+                TextOutA(memDC, 30, 70, "Move: Arrows or WASD", 20);
+                TextOutA(memDC, 30, 90, "Skills: F(Frz) Z(Spr) M(Mag) B(Shd)", 35);
+                TextOutA(memDC, 30, 110, "Mode: [O] Toggle Campaign / Endless", 35);
+                TextOutA(memDC, 30, 130, "Crafting: [C] Cyber-Forge Menu", 30);
+                TextOutA(memDC, 30, 150, "Quick-Craft: 7(Pellet) 8(Warp) 9(Shield) 0(Bomb)", 48);
+                TextOutA(memDC, 30, 170, "Diff: 1(Easy) 2(Norm) 3(Hard)", 29);
+                TextOutA(memDC, 30, 190, "Save/Load: V / L | Pause: P", 27);
                 SetTextColor(memDC, RGB(0, 230, 118));
-                TextOutA(memDC, 60, 250, "Press H or F1 to start/resume", 29);
+                TextOutA(memDC, 40, 230, "Press H or F1 to Start/Resume", 29);
             }
 
             if (saveMsgTimer > 0) {
                 SetTextColor(memDC, RGB(255, 255, 0));
-                TextOutA(memDC, W/2 - 45, H/2 + 30, saveMsgText, lstrlenA(saveMsgText));
+                TextOutA(memDC, W/2 - 60, H/2 + 20, saveMsgText, lstrlenA(saveMsgText));
             }
 
             if (victoryTimer > 0) {
                 SetTextColor(memDC, RGB(76, 175, 80));
-                TextOutA(memDC, W/2 - 55, H/2 - 20, "MAZE CLEARED!", 13);
+                TextOutA(memDC, W/2 - 55, H/2 - 20, (gameMode == 1) ? "WAVE CLEARED!" : "MAZE CLEARED!", 13);
             } else if (gameOver) {
                 if (gameOver == 2) {
                     SetTextColor(memDC, RGB(76, 175, 80));
@@ -1919,10 +2040,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(memDC, RGB(244, 67, 54));
                     TextOutA(memDC, W/2 - 45, H/2 - 20, "GAME OVER", 9);
                 }
-                char statStr[128];
-                wsprintfA(statStr, "Gms: %d Ghsts: %d Max: %d", statsGamesPlayed, statsGhostsEaten, statsMaxScore);
-                SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, 10, H/2 + 10, statStr, lstrlenA(statStr));
             } else if (paused) {
                 SetTextColor(memDC, RGB(255, 255, 0));
                 TextOutA(memDC, W/2 - 30, H/2 - 10, "PAUSED", 6);

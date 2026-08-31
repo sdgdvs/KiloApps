@@ -24,7 +24,7 @@
     flex-direction: column;
     align-items: center;
     background: #080d1a;
-    padding: 12px;
+    padding: 10px;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 15px rgba(30, 136, 229, 0.3);
     border: 1px solid #1e88e5;
@@ -37,8 +37,8 @@
   }
   .skills-bar {
     display: flex;
-    gap: 6px;
-    margin-top: 10px;
+    gap: 4px;
+    margin-top: 8px;
     width: 100%;
     max-width: 300px;
   }
@@ -48,8 +48,8 @@
     color: #fff;
     border: 1px solid #42a5f5;
     border-radius: 6px;
-    padding: 6px 4px;
-    font-size: 10px;
+    padding: 5px 2px;
+    font-size: 9px;
     font-weight: bold;
     cursor: pointer;
     text-align: center;
@@ -74,9 +74,17 @@
     border-color: #69f0ae;
     box-shadow: 0 0 10px rgba(105, 240, 174, 0.8);
   }
+  .craft-btn {
+    background: linear-gradient(185deg, #7b1fa2, #4a148c);
+    border-color: #ba68c8;
+  }
+  .mode-btn {
+    background: linear-gradient(185deg, #e65100, #bf360c);
+    border-color: #ff9800;
+  }
 </style>
 </head>
-<body data-width="400" data-height="570">
+<body data-width="400" data-height="580">
 <div id="game-container">
   <canvas id="gameCanvas" width="300" height="340"></canvas>
   <div class="skills-bar">
@@ -85,12 +93,20 @@
     <button id="btnMagnet" class="skill-btn" onclick="attemptSkill('s3')">Magnet [M]</button>
     <button id="btnShield" class="skill-btn" onclick="attemptSkill('s4')">Shield [B]</button>
   </div>
-  <div style="display: flex; flex-direction: column; align-items: center; margin-top: 12px; gap: 4px;">
-    <button class="skill-btn" style="width: 50px; height: 30px; font-size: 14px;" onmousedown="ndx=0;ndy=-1" ontouchstart="ndx=0;ndy=-1;event.preventDefault()">▲</button>
+  <div class="skills-bar" style="margin-top: 4px;">
+    <button id="btnCraft" class="skill-btn craft-btn" onclick="toggleCraftMenu()">Forge [C]</button>
+    <button id="btnMode" class="skill-btn mode-btn" onclick="toggleGameMode()">Mode [O]</button>
+    <button class="skill-btn" onclick="craftItem(1)">Pellet [7]</button>
+    <button class="skill-btn" onclick="craftItem(2)">Warp [8]</button>
+    <button class="skill-btn" onclick="craftItem(3)">Shield [9]</button>
+    <button class="skill-btn" onclick="craftItem(4)">Nuke [0]</button>
+  </div>
+  <div style="display: flex; flex-direction: column; align-items: center; margin-top: 8px; gap: 3px;">
+    <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=0;ndy=-1" ontouchstart="ndx=0;ndy=-1;event.preventDefault()">▲</button>
     <div style="display: flex; gap: 4px;">
-      <button class="skill-btn" style="width: 50px; height: 30px; font-size: 14px;" onmousedown="ndx=-1;ndy=0" ontouchstart="ndx=-1;ndy=0;event.preventDefault()">◀</button>
-      <button class="skill-btn" style="width: 50px; height: 30px; font-size: 14px;" onmousedown="ndx=0;ndy=1" ontouchstart="ndx=0;ndy=1;event.preventDefault()">▼</button>
-      <button class="skill-btn" style="width: 50px; height: 30px; font-size: 14px;" onmousedown="ndx=1;ndy=0" ontouchstart="ndx=1;ndy=0;event.preventDefault()">▶</button>
+      <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=-1;ndy=0" ontouchstart="ndx=-1;ndy=0;event.preventDefault()">◀</button>
+      <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=0;ndy=1" ontouchstart="ndx=0;ndy=1;event.preventDefault()">▼</button>
+      <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=1;ndy=0" ontouchstart="ndx=1;ndy=0;event.preventDefault()">▶</button>
     </div>
   </div>
 </div>
@@ -482,6 +498,22 @@
   let ghosts = [];
   let numGhosts = 5;
 
+  // Game Modes & Progression
+  let gameMode = 0; // 0 = Campaign, 1 = Arcade Endless
+  let endlessWave = 1;
+  let endlessHighWave = parseInt(localStorage.getItem('kpac_endless_wave') || 1);
+
+  // Crafting System (The Cyber Forge)
+  let craftEctoplasm = parseInt(localStorage.getItem('kpac_ecto') || 0);
+  let craftFruitEssence = parseInt(localStorage.getItem('kpac_essence') || 0);
+  let craftStarDust = parseInt(localStorage.getItem('kpac_dust') || 0);
+  let showCraftMenu = false;
+  let shieldHits = 0;
+
+  // Sludge Traps
+  let sludgeTraps = [];
+  let playerSlowTimer = 0;
+
   // Active Skills & Timers
   let freezeSkillTimer = 0, freezeCooldown = 0;
   let speedSkillTimer = 0, speedCooldown = 0;
@@ -567,27 +599,34 @@
           return;
       }
       if (e.key === 'k' || e.key === 'K') { bindState = 1; return; }
-      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') showHelp = !showHelp;
-      if (showHelp) return;
+      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') { showHelp = !showHelp; return; }
+      if (e.key === 'c' || e.key === 'C') { toggleCraftMenu(); return; }
+      if (e.key === 'o' || e.key === 'O') { toggleGameMode(); return; }
+
+      // Quick Craft Keys
+      if (e.key === '7' || (showCraftMenu && e.key === '1')) { craftItem(1); return; }
+      if (e.key === '8' || (showCraftMenu && e.key === '2')) { craftItem(2); return; }
+      if (e.key === '9' || (showCraftMenu && e.key === '3')) { craftItem(3); return; }
+      if (e.key === '0' || (showCraftMenu && e.key === '4')) { craftItem(4); return; }
+
+      if (showHelp || showCraftMenu) return;
 
       if (e.key === 'e' || e.key === 'E') {
           let mode = prompt("Type 'E' to Export JSON or 'I' to Import JSON:");
           if (mode) {
               if (mode.toUpperCase() === 'E') {
-                  prompt("Copy your save data:", JSON.stringify({highScore, statsGamesPlayed, statsGhostsEaten, statsMaxScore}));
+                  prompt("Copy your save data:", JSON.stringify({highScore, endlessHighWave, craftEctoplasm, craftFruitEssence, craftStarDust, statsGamesPlayed, statsGhostsEaten, statsMaxScore}));
               } else if (mode.toUpperCase() === 'I') {
                   let json = prompt("Paste your JSON:");
                   if (json) {
                       try {
                           let data = JSON.parse(json);
                           if (data.highScore !== undefined) highScore = data.highScore;
-                          if (data.statsGamesPlayed !== undefined) statsGamesPlayed = data.statsGamesPlayed;
-                          if (data.statsGhostsEaten !== undefined) statsGhostsEaten = data.statsGhostsEaten;
-                          if (data.statsMaxScore !== undefined) statsMaxScore = data.statsMaxScore;
-                          localStorage.setItem('kpac_highscore', highScore);
-                          localStorage.setItem('kpac_games', statsGamesPlayed);
-                          localStorage.setItem('kpac_ghosts', statsGhostsEaten);
-                          localStorage.setItem('kpac_maxscore', statsMaxScore);
+                          if (data.endlessHighWave !== undefined) endlessHighWave = data.endlessHighWave;
+                          if (data.craftEctoplasm !== undefined) craftEctoplasm = data.craftEctoplasm;
+                          if (data.craftFruitEssence !== undefined) craftFruitEssence = data.craftFruitEssence;
+                          if (data.craftStarDust !== undefined) craftStarDust = data.craftStarDust;
+                          saveStorage();
                           saveMsgText = 'JSON IMPORTED'; saveMsgTimer = 25;
                       } catch(err) { alert("Invalid JSON"); }
                   }
@@ -631,6 +670,117 @@
       if (e.key === 'l' || e.key === 'L') loadGame();
   });
   document.addEventListener('keyup', e => keys[e.key] = false);
+
+  function saveStorage() {
+      localStorage.setItem('kpac_highscore', highScore);
+      localStorage.setItem('kpac_endless_wave', endlessHighWave);
+      localStorage.setItem('kpac_ecto', craftEctoplasm);
+      localStorage.setItem('kpac_essence', craftFruitEssence);
+      localStorage.setItem('kpac_dust', craftStarDust);
+      localStorage.setItem('kpac_games', statsGamesPlayed);
+      localStorage.setItem('kpac_ghosts', statsGhostsEaten);
+      localStorage.setItem('kpac_maxscore', statsMaxScore);
+  }
+
+  function toggleGameMode() {
+      gameMode = gameMode === 0 ? 1 : 0;
+      init(false);
+      saveMsgText = gameMode === 1 ? 'MODE: ARCADE ENDLESS' : 'MODE: CAMPAIGN';
+      saveMsgTimer = 25;
+      playSound(700, 0.2, 'triangle');
+  }
+
+  function toggleCraftMenu() {
+      showCraftMenu = !showCraftMenu;
+      playSound(600, 0.15, 'sine');
+  }
+
+  function craftItem(recipe) {
+      if (recipe === 1) { // Super Pellet: 2 Ecto + 1 Dust
+          if (craftEctoplasm >= 2 && craftStarDust >= 1) {
+              craftEctoplasm -= 2;
+              craftStarDust -= 1;
+              frightTimer = 80;
+              score += 500;
+              saveMsgText = 'CRAFTED: SUPER PELLET!';
+              saveMsgTimer = 25;
+              saveStorage();
+              playSound(900, 0.3, 'sine');
+              addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffd700');
+              addPopup(px * TS + TS/2, py * TS + TS/2, 'SUPER PELLET!', '#ffd700');
+          } else {
+              saveMsgText = 'NEED: 2 ECTO + 1 DUST';
+              saveMsgTimer = 25;
+              playSound(200, 0.2, 'sawtooth');
+          }
+      } else if (recipe === 2) { // Chrono Warp: 2 Ecto + 2 Ess
+          if (craftEctoplasm >= 2 && craftFruitEssence >= 2) {
+              craftEctoplasm -= 2;
+              craftFruitEssence -= 2;
+              freezeSkillTimer = 80;
+              speedSkillTimer = 80;
+              saveMsgText = 'CRAFTED: CHRONO WARP!';
+              saveMsgTimer = 25;
+              saveStorage();
+              playSound(1000, 0.3, 'sine');
+              addShockwave(px * TS + TS/2, py * TS + TS/2, '#00ffff');
+              addPopup(px * TS + TS/2, py * TS + TS/2, 'CHRONO WARP!', '#00ffff');
+          } else {
+              saveMsgText = 'NEED: 2 ECTO + 2 ESSENCE';
+              saveMsgTimer = 25;
+              playSound(200, 0.2, 'sawtooth');
+          }
+      } else if (recipe === 3) { // Aegis Shield: 2 Dust + 2 Ess
+          if (craftStarDust >= 2 && craftFruitEssence >= 2) {
+              craftStarDust -= 2;
+              craftFruitEssence -= 2;
+              shieldActive = 1;
+              shieldHits = 2;
+              saveMsgText = 'CRAFTED: AEGIS SHIELD (2X)!';
+              saveMsgTimer = 25;
+              saveStorage();
+              playSound(1100, 0.3, 'square');
+              addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff', true);
+              addPopup(px * TS + TS/2, py * TS + TS/2, 'AEGIS SHIELD 2X!', '#00e5ff');
+          } else {
+              saveMsgText = 'NEED: 2 DUST + 2 ESSENCE';
+              saveMsgTimer = 25;
+              playSound(200, 0.2, 'sawtooth');
+          }
+      } else if (recipe === 4) { // Void Pulse Bomb: 3 Ecto + 3 Dust + 1 Ess
+          if (craftEctoplasm >= 3 && craftStarDust >= 3 && craftFruitEssence >= 1) {
+              craftEctoplasm -= 3;
+              craftStarDust -= 3;
+              craftFruitEssence -= 1;
+              for (let g of ghosts) {
+                  if (!g.isPhantom) {
+                      g.x = 7; g.y = 6; g.isDead = 0;
+                  }
+              }
+              for (let r = py - 5; r <= py + 5; r++) {
+                  for (let c = px - 5; c <= px + 5; c++) {
+                      if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                          if (map[r][c] >= 2 && map[r][c] <= 5) {
+                              score += 20;
+                              map[r][c] = 0;
+                              dotCount--;
+                          }
+                      }
+                  }
+              }
+              saveMsgText = 'CRAFTED: VOID BOMB!';
+              saveMsgTimer = 25;
+              saveStorage();
+              playSound(400, 0.5, 'sawtooth');
+              addExplosion(px * TS + TS/2, py * TS + TS/2, '#c832ff');
+              addPopup(px * TS + TS/2, py * TS + TS/2, 'VOID BOMB PULSE!', '#c832ff');
+          } else {
+              saveMsgText = 'NEED: 3 ECTO + 3 DUST + 1 ESS';
+              saveMsgTimer = 25;
+              playSound(200, 0.2, 'sawtooth');
+          }
+      }
+  }
 
   function attemptSkill(type) {
       if (replayMode === 1) replays.push({f: frameCount, act: type});
@@ -685,6 +835,7 @@
   function triggerShieldSkill() {
       if (shieldCooldown === 0 && !gameOver && !paused) {
           shieldActive = 1;
+          shieldHits = 1;
           shieldCooldown = 200;
           saveMsgText = 'GHOST SHIELD!';
           saveMsgTimer = 25;
@@ -698,9 +849,10 @@
       const data = {
           px, py, pdx, pdy, ndx, ndy,
           ghosts, map, score, level, lives, diffMode,
-          frightTimer, freezeSkillTimer, speedSkillTimer, magnetSkillTimer, shieldActive,
+          frightTimer, freezeSkillTimer, speedSkillTimer, magnetSkillTimer, shieldActive, shieldHits,
           freezeCooldown, speedCooldown, magnetCooldown, shieldCooldown,
-          bossHp, dotCount, frameCount, fruitActive, fruitTimer, gameOver, vipX, vipY, vipActive
+          bossHp, dotCount, frameCount, fruitActive, fruitTimer, gameOver, vipX, vipY, vipActive,
+          gameMode, endlessWave, endlessHighWave, craftEctoplasm, craftFruitEssence, craftStarDust
       };
       localStorage.setItem('kpac_save_state', JSON.stringify(data));
       saveMsgText = 'GAME SAVED';
@@ -728,6 +880,7 @@
           speedSkillTimer = data.speedSkillTimer || 0;
           magnetSkillTimer = data.magnetSkillTimer || 0;
           shieldActive = data.shieldActive || 0;
+          shieldHits = data.shieldHits || 1;
           freezeCooldown = data.freezeCooldown || 0;
           speedCooldown = data.speedCooldown || 0;
           magnetCooldown = data.magnetCooldown || 0;
@@ -737,6 +890,8 @@
           frameCount = data.frameCount; fruitActive = data.fruitActive;
           fruitTimer = data.fruitTimer; gameOver = data.gameOver;
           vipX = data.vipX || 7; vipY = data.vipY || 7; vipActive = data.vipActive || 0;
+          gameMode = data.gameMode || 0; endlessWave = data.endlessWave || 1; endlessHighWave = data.endlessHighWave || 1;
+          craftEctoplasm = data.craftEctoplasm || 0; craftFruitEssence = data.craftFruitEssence || 0; craftStarDust = data.craftStarDust || 0;
           paused = false;
           saveMsgText = 'GAME LOADED';
           saveMsgTimer = 25;
@@ -779,50 +934,107 @@
       shockwaves.push({ x: cx, y: cy, r: 2, maxR: 28, alpha: 1.0, color: color, is3D: is3D });
   }
 
+  function generateProceduralMaze(wave) {
+      let m = [];
+      for (let r = 0; r < ROWS; r++) {
+          let row = [];
+          for (let c = 0; c < COLS; c++) {
+              if (r === 0 || r === ROWS - 1 || c === 0 || c === COLS - 1) row.push(1);
+              else row.push(2);
+          }
+          m.push(row);
+      }
+      let seed = wave * 179 + 31;
+      for (let r = 2; r < ROWS - 2; r += 2) {
+          for (let c = 2; c <= Math.floor(COLS / 2); c += 2) {
+              let opp = COLS - 1 - c;
+              let blk = (seed + r * 5 + c * 7) % 5;
+              if (blk === 0) {
+                  m[r][c] = 1; m[r][opp] = 1;
+                  m[r+1][c] = 1; m[r+1][opp] = 1;
+              } else if (blk === 1) {
+                  m[r][c] = 1; m[r][opp] = 1;
+                  m[r][c+1] = 1; m[r][opp-1] = 1;
+              } else if (blk === 2) {
+                  m[r][c] = 1; m[r][opp] = 1;
+              }
+          }
+      }
+      for (let r = 6; r <= 8; r++) {
+          for (let c = 5; c <= 9; c++) m[r][c] = 0;
+      }
+      m[6][5] = 1; m[7][5] = 1; m[8][5] = 1;
+      m[6][9] = 1; m[7][9] = 1; m[8][9] = 1;
+      m[8][6] = 1; m[8][7] = 1; m[8][8] = 1;
+      m[6][6] = 1; m[6][7] = 1; m[6][8] = 1;
+      m[7][0] = 0; m[7][1] = 2; m[7][COLS-1] = 0; m[7][COLS-2] = 2;
+      m[12][7] = 0; m[11][7] = 2; m[12][6] = 2; m[12][8] = 2;
+      m[1][1] = 3; m[1][COLS-2] = 3; m[ROWS-2][1] = 3; m[ROWS-2][COLS-2] = 3;
+      m[3][3] = 4; m[3][COLS-4] = 5; m[ROWS-4][3] = 5; m[ROWS-4][COLS-4] = 4;
+      if (wave >= 3) {
+          if (m[4][7] === 2) m[4][7] = 6;
+          if (m[10][7] === 2) m[10][7] = 6;
+      }
+      return m;
+  }
+
   function init(keepScore) {
-      if (!keepScore) { score = 0; level = 1; lives = getInitLives(); }
-      const mapIndex = (level - 1) % 20;
-      map = maps[mapIndex].map(row => [...row]);
+      if (!keepScore) {
+          score = 0;
+          if (gameMode === 0) level = 1;
+          else endlessWave = 1;
+          lives = getInitLives();
+      }
+      if (gameMode === 1) {
+          map = generateProceduralMaze(endlessWave);
+      } else {
+          const mapIndex = (level - 1) % 20;
+          map = maps[mapIndex].map(row => [...row]);
+      }
       px = 7; py = 12;
       pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+      sludgeTraps = [];
+      playerSlowTimer = 0;
 
-      // 5 AI Ghost Personalities:
-      // Ghost 0: Blinky (Red Chaser)
-      // Ghost 1: Pinky (Pink Interceptor)
-      // Ghost 2: Inky (Cyan Flanker)
-      // Ghost 3: Clyde (Orange Patrol)
-      // Ghost 4: Sue (Purple Stalker)
+      // 5 AI Ghost Personalities with Procedural Traits
+      let effWave = (gameMode === 1) ? endlessWave : level;
+      let t0 = (effWave >= 2) ? ((effWave % 5) + 1) : 0;
+      let t1 = (effWave >= 3) ? (((effWave + 2) % 5) + 1) : 0;
+      let t2 = (effWave >= 4) ? (((effWave + 3) % 5) + 1) : 0;
+      let t3 = (effWave >= 5) ? (((effWave + 4) % 5) + 1) : 0;
+      let t4 = (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0;
+
       ghosts = [
-          {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0},
-          {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0},
-          {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0},
-          {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0},
-          {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0}
+          {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t0},
+          {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t1},
+          {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t2},
+          {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t3},
+          {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t4}
       ];
 
-      if (level === 20) {
+      if (gameMode === 0 && level === 20) {
           // Stage 20 Ghost King Boss
-          ghosts.push({x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0});
-          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0});
-          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0});
+          ghosts.push({x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: 5});
+          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, trait: 0});
+          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, trait: 0});
           numGhosts = 6;
           bossHp = 8;
           bossMaxHp = 8;
           phantomSpawnTimer = 0;
-      } else if (level >= 4) {
+      } else if (effWave >= 4) {
           numGhosts = 5;
-      } else if (level === 3) {
+      } else if (effWave === 3) {
           numGhosts = 4;
-      } else if (level === 2) {
+      } else if (effWave === 2) {
           numGhosts = 3;
       } else {
           numGhosts = 2;
       }
 
-      vipActive = (level % 5 === 0 && level !== 20) ? 1 : 0;
+      vipActive = (gameMode === 0 && level % 5 === 0 && level !== 20) ? 1 : 0;
       vipX = 7; vipY = 7;
-      if (level % 3 === 0 && level < 18 && map[Math.floor(ROWS/2)][Math.floor(COLS/2)] !== 1) {
-          map[Math.floor(ROWS/2)][Math.floor(COLS/2)] = 8; // Branch Warp
+      if (gameMode === 0 && level % 3 === 0 && level < 18 && map[Math.floor(ROWS/2)][Math.floor(COLS/2)] !== 1) {
+          map[Math.floor(ROWS/2)][Math.floor(COLS/2)] = 8;
       }
 
       frightTimer = 0;
@@ -831,7 +1043,7 @@
       freezeSkillTimer = 0; freezeCooldown = 0;
       speedSkillTimer = 0; speedCooldown = 0;
       magnetSkillTimer = 0; magnetCooldown = 0;
-      shieldActive = 0; shieldCooldown = 0;
+      shieldActive = 0; shieldCooldown = 0; shieldHits = 0;
       gameOver = 0; dotCount = 0; frameCount = 0;
       paused = false;
       fruitActive = 0;
@@ -840,6 +1052,7 @@
       popups = [];
       particles = [];
       shockwaves = [];
+      showCraftMenu = false;
       
       for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
@@ -862,11 +1075,12 @@
 
   function update() {
       if (saveMsgTimer > 0) saveMsgTimer--;
+      if (playerSlowTimer > 0) playerSlowTimer--;
       if (gameOver) {
           if (keys['Enter']) init(false);
           return;
       }
-      if (showHelp || paused) return;
+      if (showHelp || showCraftMenu || paused) return;
 
       if (deathTimer > 0) {
           deathTimer--;
@@ -879,15 +1093,9 @@
               if (lives <= 0) {
                   gameOver = 1;
                   statsGamesPlayed++;
-                  localStorage.setItem('kpac_games', statsGamesPlayed);
+                  saveStorage();
               } else {
                   px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
-                  ghosts[0] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                  ghosts[1] = {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                  ghosts[2] = {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                  ghosts[3] = {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                  ghosts[4] = {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0};
-                  if (level % 20 === 0) ghosts[5] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0};
               }
           }
           for (let i = particles.length - 1; i >= 0; i--) {
@@ -899,15 +1107,26 @@
       if (victoryTimer > 0) {
           victoryTimer--;
           if (victoryTimer === 0) {
-              if (level === 20) {
-                  gameOver = 2; // Campaign Victory!
-                  statsGamesPlayed++;
-                  localStorage.setItem('kpac_games', statsGamesPlayed);
-                  playSound(1200, 0.8, 'sine');
-              } else {
-                  level++;
-                  playSound(800, 0.5, 'sine');
+              if (gameMode === 1) {
+                  endlessWave++;
+                  if (endlessWave > endlessHighWave) endlessHighWave = endlessWave;
+                  score += 1000 + endlessWave * 200;
+                  craftStarDust += 2;
+                  craftFruitEssence += 1;
+                  saveStorage();
+                  playSound(1200, 0.6, 'sine');
                   init(true);
+              } else {
+                  if (level === 20) {
+                      gameOver = 2;
+                      statsGamesPlayed++;
+                      saveStorage();
+                      playSound(1200, 0.8, 'sine');
+                  } else {
+                      level++;
+                      playSound(800, 0.5, 'sine');
+                      init(true);
+                  }
               }
           }
           return;
@@ -945,14 +1164,20 @@
 
       updateSkillButtons();
 
+      // Sludge Traps Update
+      for (let i = sludgeTraps.length - 1; i >= 0; i--) {
+          sludgeTraps[i].life--;
+          if (sludgeTraps[i].life <= 0) sludgeTraps.splice(i, 1);
+      }
+
       // Stage 20 Phantom Clone Spawner
-      if (level === 20 && bossHp > 0) {
+      if (gameMode === 0 && level === 20 && bossHp > 0) {
           phantomSpawnTimer += (bossHp <= bossMaxHp / 2) ? 2 : 1;
           if (phantomSpawnTimer >= 50) {
               phantomSpawnTimer = 0;
               for (let k = 6; k <= 7; k++) {
                   if (ghosts[k].phantomTimer <= 0) {
-                      ghosts[k] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 80, isDead: 0};
+                      ghosts[k] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 80, isDead: 0, trait: 0};
                       if (numGhosts < 8) numGhosts = 8;
                       break;
                   }
@@ -965,7 +1190,7 @@
           }
       }
 
-      // Dead Ghost Returning Eyes Step (Move float eyes back to Ghost House)
+      // Dead Ghost Returning Eyes Step
       for (let i = 0; i < numGhosts; i++) {
           let g = ghosts[i];
           if (g.isDead) {
@@ -974,7 +1199,7 @@
                   else if (g.x > 7) g.x--;
                   if (g.y < 6) g.y++;
                   else if (g.y > 6) g.y--;
-                  if (g.x === 7 && g.y === 6) g.isDead = 0; // Respawned!
+                  if (g.x === 7 && g.y === 6) g.isDead = 0;
               }
           }
       }
@@ -994,12 +1219,13 @@
                   lives--;
                   playSound(200, 0.5, 'sawtooth');
                   vipX = 7; vipY = 7; px = 7; py = 12;
-                  if (lives <= 0) { gameOver = 1; localStorage.setItem('kpac_games', ++statsGamesPlayed); }
+                  if (lives <= 0) { gameOver = 1; saveStorage(); }
               }
           }
       }
 
-      let baseGhostSpeed = Math.max(1, 4 - Math.floor(level/4));
+      let effLvl = (gameMode === 1) ? endlessWave : level;
+      let baseGhostSpeed = Math.max(1, 4 - Math.floor(effLvl/4));
       if (diffMode === 0) baseGhostSpeed += 1;
       if (diffMode === 2) baseGhostSpeed = Math.max(1, baseGhostSpeed - 1);
       let ghostSpeed = baseGhostSpeed;
@@ -1012,38 +1238,49 @@
               if (g.isDead) continue;
               if (g.isPhantom && g.phantomTimer <= 0) continue;
 
+              // Trait 3: Trapper drops sludge
+              if (g.trait === 3 && (frameCount % 30 === 0) && sludgeTraps.length < 16) {
+                  sludgeTraps.push({x: g.x, y: g.y, life: 90});
+              }
+
+              // Trait 1: Vortex Magnet pulls player slightly
+              if (g.trait === 1 && (frameCount % 10 === 0)) {
+                  let distToP = Math.abs(g.x - px) + Math.abs(g.y - py);
+                  if (distToP <= 3 && distToP > 1) {
+                      if (px < g.x && map[py][px+1] !== 1) px++;
+                      else if (px > g.x && map[py][px-1] !== 1) px--;
+                  }
+              }
+
+              // Trait 2: Glitch Shifter random teleport
+              if (g.trait === 2 && Math.random() < 0.04) {
+                  let rx = px + Math.floor(Math.random() * 5 - 2);
+                  let ry = py + Math.floor(Math.random() * 5 - 2);
+                  if (rx >= 0 && rx < COLS && ry >= 0 && ry < ROWS && map[ry][rx] !== 1) {
+                      g.x = rx; g.y = ry;
+                      addSparks(rx * TS + TS/2, ry * TS + TS/2, '#ff00ff', 6);
+                  }
+              }
+
               let oldX = g.x, oldY = g.y;
               if (frightTimer === 0) {
                   let tx = px, ty = py;
-                  if (g.type === 1) { // Pinky
-                      tx = px + pdx * 3; ty = py + pdy * 3;
-                  } else if (g.type === 2) { // Inky
-                      tx = px - pdx * 2; ty = py - pdy * 2;
-                  } else if (g.type === 3) { // Clyde
+                  if (g.type === 1) { tx = px + pdx * 3; ty = py + pdy * 3; }
+                  else if (g.type === 2) { tx = px - pdx * 2; ty = py - pdy * 2; }
+                  else if (g.type === 3) {
                       let distToPac = Math.abs(g.x - px) + Math.abs(g.y - py);
                       if (distToPac > 6) { tx = px; ty = py; }
                       else { tx = 0; ty = ROWS - 1; }
-                  } else if (g.type === 4) { // Sue
-                      tx = px - pdx * 3; ty = py - pdy * 3;
-                  } else if (g.type === 5) { // Ghost King Boss
-                      if (bossHp <= bossMaxHp / 2) {
-                          tx = px + pdx * 2; ty = py + pdy * 2;
-                      } else {
-                          tx = px; ty = py;
-                      }
-                  } else if (g.type === 6) { // Phantom Clone
+                  } else if (g.type === 4) { tx = px - pdx * 3; ty = py - pdy * 3; }
+                  else if (g.type === 5) {
+                      if (bossHp <= bossMaxHp / 2) { tx = px + pdx * 2; ty = py + pdy * 2; }
+                      else { tx = px; ty = py; }
+                  } else if (g.type === 6) {
                       tx = px + Math.floor(Math.random() * 5 - 2);
                       ty = py + Math.floor(Math.random() * 5 - 2);
                   }
                   
-                  let loopNum = Math.floor((level - 1) / 20);
-                  if (loopNum >= 7 && g.type === 0 && (Math.random() < 0.05)) {
-                      let nx = px + Math.floor(Math.random() * 5 - 2);
-                      let ny = py + Math.floor(Math.random() * 5 - 2);
-                      if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
-                          g.x = nx; g.y = ny;
-                      }
-                  }
+                  if (g.trait === 5 && (g.x === px || g.y === py)) { tx = px; ty = py; }
 
                   let best_d = -1;
                   let min_dist = 9999;
@@ -1096,7 +1333,8 @@
       }
       
       if (speedSkillTimer > 0) speedSkillTimer--;
-      let playerMoves = (speedSkillTimer > 0) ? true : (frameCount % 2 === 0);
+      let moveTick = (speedSkillTimer > 0) ? 1 : ((playerSlowTimer > 0) ? 3 : 2);
+      let playerMoves = (moveTick === 1) ? true : (frameCount % moveTick === 0);
       
       if (playerMoves) {
           let nx = px + pdx, ny = py + pdy;
@@ -1105,10 +1343,22 @@
           
           if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
               px = nx; py = ny;
+
+              // Check Sludge collision
+              for (let s of sludgeTraps) {
+                  if (s.x === px && s.y === py) {
+                      if (!shieldActive) {
+                          playerSlowTimer = 30;
+                          addSparks(px * TS + TS/2, py * TS + TS/2, '#00e676', 5);
+                      }
+                  }
+              }
+
               if (map[py][px] === 6) {
                   let cx = px * TS + TS/2, cy = py * TS + TS/2;
                   if (shieldActive) {
-                      shieldActive = 0;
+                      shieldHits--;
+                      if (shieldHits <= 0) shieldActive = 0;
                       map[py][px] = 0;
                       addPopup(cx, cy, 'ABSORBED!', '#ff4500');
                       addExplosion(cx, cy, '#ff4500');
@@ -1120,9 +1370,9 @@
               } else if (map[py][px] >= 2 && map[py][px] <= 5) {
                   let cx = px * TS + TS/2, cy = py * TS + TS/2;
                   let loopNum = Math.floor((level - 1) / 20);
-                  let mult = (loopNum >= 7) ? 8 : 1;
+                  let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : ((loopNum >= 7) ? 8 : 1);
                   if (map[py][px] === 3) {
-                      score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; playSound(300, 0.3, 'sawtooth');
+                      score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; craftStarDust++; playSound(300, 0.3, 'sawtooth');
                       addPopup(cx, cy, '+' + (40 * mult), '#ffb852');
                       addExplosion(cx, cy, '#ffb852');
                   }
@@ -1138,9 +1388,11 @@
                   }
                   else {
                       score += 10 * mult; playSound(600, 0.05, 'square');
+                      if (dotCount % 25 === 0) craftStarDust++;
                   }
-                  if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
-                  if (score > statsMaxScore) { statsMaxScore = score; localStorage.setItem('kpac_maxscore', statsMaxScore); }
+                  if (score > highScore) { highScore = score; }
+                  if (score > statsMaxScore) { statsMaxScore = score; }
+                  saveStorage();
                   map[py][px] = 0;
                   dotCount--;
                   if (dotCount === 0) {
@@ -1150,6 +1402,7 @@
               } else if (map[py][px] === 8) {
                   level += Math.floor(Math.random() * 3) + 1;
                   score += 1000;
+                  craftFruitEssence += 2;
                   playSound(1000, 0.3, 'sine');
                   init(true);
                   return;
@@ -1166,8 +1419,8 @@
                       if (map[r][c] >= 2 && map[r][c] <= 5) {
                           let cx = c * TS + TS/2, cy = r * TS + TS/2;
                           let loopNum = Math.floor((level - 1) / 20);
-                          let mult = (loopNum >= 7) ? 8 : 1;
-                          if (map[r][c] === 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; addPopup(cx, cy, '+' + (40 * mult), '#ffb852'); addExplosion(cx, cy, '#ffb852'); }
+                          let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : ((loopNum >= 7) ? 8 : 1);
+                          if (map[r][c] === 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; craftStarDust++; addPopup(cx, cy, '+' + (40 * mult), '#ffb852'); addExplosion(cx, cy, '#ffb852'); }
                           else if (map[r][c] === 4) { score += 20 * mult; speedSkillTimer = 80; addPopup(cx, cy, 'SPEED!', '#00ffff'); }
                           else if (map[r][c] === 5) { score += 30 * mult; freezeSkillTimer = 60; addPopup(cx, cy, 'FREEZE!', '#ffffff'); }
                           else { score += 10 * mult; }
@@ -1178,21 +1431,30 @@
                   }
               }
           }
+          if (fruitActive) {
+              let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : 1;
+              score += 500 * mult;
+              craftFruitEssence += 2;
+              fruitActive = 0;
+          }
       }
       
       for (let i = 0; i < numGhosts; i++) {
           let g = ghosts[i];
-          if (g.isDead) continue; // Floating dead eyes don't collide with Pac-Man
+          if (g.isDead) continue;
           if (g.isPhantom && g.phantomTimer <= 0) continue;
 
           if (px === g.x && py === g.y) {
               let cx = px * TS + TS/2, cy = py * TS + TS/2;
               if (frightTimer > 0) {
                   let loopNum = Math.floor((level - 1) / 20);
-                  let mult = (loopNum >= 7) ? 8 : 1;
+                  let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : ((loopNum >= 7) ? 8 : 1);
+                  craftEctoplasm += (g.trait > 0 ? 2 : 1);
+
                   if (g.type === 5) { // Ghost King Boss
                       bossHp--;
                       score += 500 * mult;
+                      craftEctoplasm += 3;
                       addPopup(cx, cy, 'BOSS HIT! -1HP', '#ffd700');
                       addExplosion(cx, cy, '#ffd700');
                       g.x = 7; g.y = 6;
@@ -1201,7 +1463,7 @@
                           score += 2000 * mult;
                           victoryTimer = 30;
                           statsGamesPlayed++;
-                          localStorage.setItem('kpac_games', statsGamesPlayed);
+                          saveStorage();
                       }
                   } else if (g.type === 6) { // Phantom Clone
                       score += 100 * mult;
@@ -1211,17 +1473,15 @@
                   } else {
                       score += 200 * mult;
                       statsGhostsEaten++;
-                      localStorage.setItem('kpac_ghosts', statsGhostsEaten);
-                      if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
-                      if (score > statsMaxScore) { statsMaxScore = score; localStorage.setItem('kpac_maxscore', statsMaxScore); }
+                      saveStorage();
                       playSound(800, 0.1, 'triangle');
                       addPopup(cx, cy, '+' + (200 * mult), '#ffeb3b');
                       addExplosion(cx, cy, '#00ffff');
-                      g.isDead = 1; // Float eyes return to ghost house!
+                      g.isDead = 1;
                   }
               } else if (shieldActive) {
-                  // Ghost Shield Absorbs hit!
-                  shieldActive = 0;
+                  shieldHits--;
+                  if (shieldHits <= 0) shieldActive = 0;
                   g.x = 7; g.y = 6;
                   addPopup(cx, cy, 'SHIELD ABSORBED!', '#00e5ff');
                   addExplosion(cx, cy, '#00e5ff');
@@ -1242,15 +1502,14 @@
           fruitTimer--;
           if (fruitTimer <= 0) fruitActive = 0;
           else if (px === 7 && py === 12) {
-              let loopNum = Math.floor((level - 1) / 20);
-              let mult = (loopNum >= 7) ? 8 : 1;
+              let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : 1;
               score += 500 * mult;
+              craftFruitEssence += 2;
               let cx = 7 * TS + TS/2, cy = 12 * TS + TS/2;
               addPopup(cx, cy, '+' + (500 * mult), '#ff1744');
               addSparks(cx, cy, '#00e676', 14);
               addShockwave(cx, cy, '#00e676');
-              if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
-              if (score > statsMaxScore) { statsMaxScore = score; localStorage.setItem('kpac_maxscore', statsMaxScore); }
+              saveStorage();
               fruitActive = 0;
               playSound(1000, 0.1, 'square');
           }
@@ -1275,15 +1534,6 @@
           s.alpha -= 0.06;
           if (s.alpha <= 0 || s.r >= s.maxR) shockwaves.splice(i, 1);
       }
-      
-      let loopNum = Math.floor((level - 1) / 20);
-      if (loopNum >= 7 && (frameCount % 60 === 0)) {
-          let hx = Math.floor(Math.random() * COLS);
-          let hy = Math.floor(Math.random() * ROWS);
-          if (map[hy][hx] === 0 && (hx !== px || hy !== py) && (hx !== 7 || hy !== 6)) {
-              map[hy][hx] = 6;
-          }
-      }
 
       frameCount++;
   }
@@ -1292,7 +1542,6 @@
       let x = c * TS, y = r * TS;
 
       if (r === 6 && c === 7) {
-          // Forcefield door!
           let dist = 99;
           for (let g of ghosts) {
               if (!g.isDead && !(g.isPhantom && g.phantomTimer <= 0)) {
@@ -1301,14 +1550,12 @@
               }
           }
           let ripple = dist < 3 ? Math.sin(frameCount * 0.5) * 4 : Math.sin(frameCount * 0.1) * 1;
-          
           ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + Math.sin(frameCount*0.2)*0.3})`;
           ctx.lineWidth = 2 + ripple;
           ctx.beginPath();
           ctx.moveTo(x, y + TS/2 + ripple);
           ctx.bezierCurveTo(x + TS/3, y + TS/2 - ripple, x + 2*TS/3, y + TS/2 + ripple, x + TS, y + TS/2 - ripple);
           ctx.stroke();
-          
           ctx.fillStyle = `rgba(0, 200, 255, 0.15)`;
           ctx.fillRect(x, y, TS, TS);
           return;
@@ -1324,7 +1571,7 @@
 
       let themeCols = ['#1e88e5', '#4caf50', '#9c27b0', '#f44336', '#ff9800', '#009688'];
       let themeHis = ['#64b5f6', '#81c784', '#ba68c8', '#e57373', '#ffb74d', '#4dd0e1'];
-      let themeIdx = (level - 1) % 6;
+      let themeIdx = ((gameMode === 1 ? endlessWave : level) - 1) % 6;
       let wallColor = themeCols[themeIdx];
       let wallHighlight = themeHis[themeIdx];
       if (victoryTimer > 0) {
@@ -1340,7 +1587,6 @@
       ctx.lineWidth = 2;
       ctx.strokeRect(x + 2, y + 2, TS - 4, TS - 4);
 
-      // Inner glow tracing that pulses dynamically
       ctx.strokeStyle = 'rgba(255, 255, 255, ' + (0.3 + 0.3 * Math.sin(frameCount * 0.4 + r + c)) + ')';
       ctx.lineWidth = 1;
       ctx.strokeRect(x + 3, y + 3, TS - 6, TS - 6);
@@ -1354,7 +1600,6 @@
       if (!nR) { ctx.moveTo(x + TS - 1, y); ctx.lineTo(x + TS - 1, y + TS); }
       ctx.stroke();
 
-      // Corner junction caps
       ctx.fillStyle = wallHighlight;
       if (nU && nR) { ctx.fillRect(x + TS - 3, y, 3, 3); }
       if (nU && nL) { ctx.fillRect(x, y, 3, 3); }
@@ -1365,7 +1610,6 @@
 
   function drawDot(ctx, c, r) {
       let cx = c * TS + TS/2, cy = r * TS + TS/2;
-      
       let radGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 10 + Math.sin(frameCount * 0.1) * 2);
       radGrad.addColorStop(0, 'rgba(255, 220, 150, 0.4)');
       radGrad.addColorStop(1, 'rgba(255, 220, 150, 0)');
@@ -1387,18 +1631,15 @@
   function drawPowerPellet(ctx, c, r, frame) {
       let cx = c * TS + TS/2, cy = r * TS + TS/2;
       let radius = 4.5 + Math.sin(frame * 0.3) * 1.5;
-      
       let radGrad = ctx.createRadialGradient(cx, cy, 1, cx, cy, radius + 8);
       radGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
       radGrad.addColorStop(0.3, 'rgba(255, 184, 82, 0.8)');
       radGrad.addColorStop(1, 'rgba(255, 184, 82, 0)');
-      
       ctx.fillStyle = radGrad;
       ctx.beginPath();
       ctx.arc(cx, cy, radius + 8, 0, Math.PI * 2);
       ctx.fill();
       
-      // Animated glowing halo rings
       ctx.strokeStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(frame * 0.1) * 0.5})`;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -1417,12 +1658,8 @@
       ctx.shadowColor = '#00ffff';
       ctx.shadowBlur = 6;
       ctx.beginPath();
-      ctx.moveTo(cx + 2, cy - 6);
-      ctx.lineTo(cx - 4, cy + 1);
-      ctx.lineTo(cx, cy + 1);
-      ctx.lineTo(cx - 2, cy + 6);
-      ctx.lineTo(cx + 4, cy - 1);
-      ctx.lineTo(cx, cy - 1);
+      ctx.moveTo(cx + 2, cy - 6); ctx.lineTo(cx - 4, cy + 1); ctx.lineTo(cx, cy + 1);
+      ctx.lineTo(cx - 2, cy + 6); ctx.lineTo(cx + 4, cy - 1); ctx.lineTo(cx, cy - 1);
       ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -1443,55 +1680,18 @@
   function drawFruit(ctx, c, r) {
       let bounceY = Math.sin(frameCount * 0.25) * 3;
       let cx = c * TS + TS/2, cy = r * TS + TS/2 + bounceY;
-      let fruitType = Math.floor((level - 1) / 2) % 5; // 0=Cherry, 1=Strawberry, 2=Peach, 3=Apple, 4=Watermelon
-
-      if (fruitTimer > 80) {
-          // Wireframe materialization
-          let prog = (100 - fruitTimer) / 20;
-          ctx.strokeStyle = `rgba(0, 255, 100, ${prog})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          for(let i=4; i<TS; i+=4) {
-              ctx.moveTo(c*TS + i, r*TS + TS - prog*TS); ctx.lineTo(c*TS + i, r*TS + TS);
-              ctx.moveTo(c*TS, r*TS + TS - i); ctx.lineTo(c*TS + prog*TS, r*TS + TS - i);
-          }
-          ctx.stroke();
-          return;
-      }
-
-      if (fruitType === 0) { // Cherry
-          ctx.strokeStyle = '#4caf50'; ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(cx - 3, cy + 1); ctx.quadraticCurveTo(cx - 1, cy - 5, cx + 2, cy - 6);
-          ctx.moveTo(cx + 3, cy + 2); ctx.quadraticCurveTo(cx + 1, cy - 5, cx + 2, cy - 6);
-          ctx.stroke();
-          ctx.fillStyle = '#81c784'; ctx.beginPath(); ctx.arc(cx + 4, cy - 5, 2, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#d50000'; ctx.beginPath();
-          ctx.arc(cx - 3, cy + 2, 3.5, 0, Math.PI * 2);
-          ctx.arc(cx + 3, cy + 3, 3.5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 4, cy + 1, 1.5, 1.5); ctx.fillRect(cx + 2, cy + 2, 1.5, 1.5);
-      } else if (fruitType === 1) { // Strawberry
-          ctx.fillStyle = '#e53935'; ctx.beginPath();
-          ctx.moveTo(cx, cy + 6); ctx.lineTo(cx - 5, cy - 2); ctx.lineTo(cx + 5, cy - 2); ctx.closePath(); ctx.fill();
-          ctx.fillStyle = '#4caf50'; ctx.fillRect(cx - 4, cy - 4, 8, 2.5);
-          ctx.fillStyle = '#ffeb3b'; ctx.fillRect(cx - 2, cy, 1, 1); ctx.fillRect(cx + 2, cy, 1, 1); ctx.fillRect(cx, cy + 3, 1, 1);
-      } else if (fruitType === 2) { // Peach/Orange
-          ctx.fillStyle = '#ff9800'; ctx.beginPath(); ctx.arc(cx, cy + 1, 5.5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#4caf50'; ctx.fillRect(cx - 1, cy - 6, 4, 2);
-      } else if (fruitType === 3) { // Apple
-          ctx.fillStyle = '#f44336'; ctx.beginPath(); ctx.arc(cx, cy + 1, 5.5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#795548'; ctx.fillRect(cx - 1, cy - 6, 2, 3);
-          ctx.fillStyle = '#4caf50'; ctx.fillRect(cx + 1, cy - 6, 3, 2);
-      } else { // Melon Slice
-          ctx.fillStyle = '#2e7d32'; ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI, false); ctx.fill();
-          ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(cx, cy, 4.5, 0, Math.PI, false); ctx.fill();
-          ctx.fillStyle = '#000000'; ctx.fillRect(cx - 2, cy + 2, 1, 1); ctx.fillRect(cx + 2, cy + 2, 1, 1);
-      }
+      ctx.strokeStyle = '#4caf50'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - 3, cy + 1); ctx.quadraticCurveTo(cx - 1, cy - 5, cx + 2, cy - 6);
+      ctx.moveTo(cx + 3, cy + 2); ctx.quadraticCurveTo(cx + 1, cy - 5, cx + 2, cy - 6);
+      ctx.stroke();
+      ctx.fillStyle = '#d50000'; ctx.beginPath();
+      ctx.arc(cx - 3, cy + 2, 3.5, 0, Math.PI * 2);
+      ctx.arc(cx + 3, cy + 3, 3.5, 0, Math.PI * 2); ctx.fill();
   }
 
   function drawPacman(ctx, px, py, pdx, pdy, frame, speedTimer) {
       let cx = px * TS + TS/2, cy = py * TS + TS/2;
-      
       let angle = 0;
       if (pdx === 1) angle = 0;
       else if (pdx === -1) angle = Math.PI;
@@ -1502,7 +1702,6 @@
           let foldProgress = (40 - deathTimer) / 40.0;
           let foldRadius = (TS/2 - 1) * (1.0 - foldProgress);
           let foldMouth = Math.PI * foldProgress;
-          
           ctx.fillStyle = shieldActive ? '#00e5ff' : '#ffeb3b';
           ctx.beginPath();
           ctx.moveTo(cx, cy);
@@ -1512,32 +1711,19 @@
           return;
       }
 
-      // 4-frame smooth chomp animation frame sequence
       const chompFrames = [0.45 * Math.PI, 0.28 * Math.PI, 0.05 * Math.PI, 0.28 * Math.PI];
       let mouth = chompFrames[frame % 4];
 
-      // Speed glow aura & motion trail
-      if (speedTimer > 0 || pdx !== 0 || pdy !== 0) {
+      if (shieldActive || speedTimer > 0 || pdx !== 0 || pdy !== 0) {
           ctx.save();
-          ctx.strokeStyle = speedTimer > 0 ? 'rgba(0, 255, 255, 0.6)' : 'rgba(255, 235, 59, 0.3)';
-          ctx.lineWidth = 3;
-          ctx.shadowColor = speedTimer > 0 ? '#00ffff' : '#ffeb3b';
+          ctx.strokeStyle = shieldActive ? '#00e5ff' : (speedTimer > 0 ? '#00ffff' : '#ffeb3b');
+          ctx.lineWidth = shieldActive ? 3 : 2;
+          ctx.shadowColor = shieldActive ? '#00e5ff' : '#ffeb3b';
           ctx.shadowBlur = 8;
           ctx.beginPath();
-          ctx.arc(cx - pdx * 4, cy - pdy * 4, TS/2, 0, Math.PI * 2);
+          ctx.arc(cx, cy, TS/2 + (shieldActive ? 3 : 1), 0, Math.PI * 2);
           ctx.stroke();
           ctx.restore();
-      }
-
-      if (shieldActive) {
-          ctx.strokeStyle = '#00e5ff';
-          ctx.lineWidth = 3;
-          ctx.shadowColor = '#00e5ff';
-          ctx.shadowBlur = 8;
-          ctx.beginPath();
-          ctx.arc(cx, cy, TS/2 + 3, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.shadowBlur = 0;
       }
 
       ctx.fillStyle = shieldActive ? '#00e5ff' : '#ffeb3b';
@@ -1563,7 +1749,6 @@
       let w = TS - 4;
       let x = cx - w/2, y = cy - w/2;
 
-      // Dead eyes floating back to ghost house
       if (g.isDead) {
           let eyeDx = Math.sign(7 - g.x) * 2;
           let eyeDy = Math.sign(6 - g.y) * 2;
@@ -1583,6 +1768,18 @@
       let isScared = frightTimer > 0;
       let isFlashing = isScared && frightTimer < 15 && Math.floor(frightTimer / 2) % 2 === 0;
 
+      // Trait Aura Ring
+      if (!isScared && g.trait > 0) {
+          let traitCols = ['', '#00e5ff', '#ff00ff', '#00e676', '#ffd700', '#ff4500'];
+          ctx.save();
+          ctx.strokeStyle = traitCols[g.trait] || '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(cx, cy, w/2 + 2, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+      }
+
       let bodyColor = isScared ? (isFlashing ? '#ffffff' : '#1e88e5') : g.color;
 
       ctx.fillStyle = bodyColor;
@@ -1590,7 +1787,6 @@
       ctx.arc(cx, y + w/2, w/2, Math.PI, 0, false);
       ctx.lineTo(x + w, y + w);
 
-      // 2-frame skirt wobbly wave animation
       let skirtOffset = (frame % 2 === 0) ? 1.5 : -1.5;
       let step = w / 3;
       ctx.lineTo(x + w - step * 0.5, y + w - 3 + skirtOffset);
@@ -1600,44 +1796,11 @@
       ctx.closePath();
       ctx.fill();
 
-      if (g.type === 0 && !isScared) { // Blinky: Angry Eyebrows
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(cx - 6, cy - 6); ctx.lineTo(cx - 2, cy - 4);
-          ctx.moveTo(cx + 6, cy - 6); ctx.lineTo(cx + 2, cy - 4);
-          ctx.stroke();
-      } else if (g.type === 1) { // Pinky: Bow
-          ctx.fillStyle = '#d81b60';
-          ctx.beginPath();
-          ctx.moveTo(cx, y); ctx.lineTo(cx - 4, y - 4); ctx.lineTo(cx - 4, y + 2);
-          ctx.moveTo(cx, y); ctx.lineTo(cx + 4, y - 4); ctx.lineTo(cx + 4, y + 2);
-          ctx.fill();
-          ctx.fillStyle = '#ad1457';
-          ctx.beginPath(); ctx.arc(cx, y, 2, 0, Math.PI * 2); ctx.fill();
-      } else if (g.type === 2) { // Inky: Glasses
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.strokeRect(cx - 6, cy - 4, 4, 4);
-          ctx.strokeRect(cx + 2, cy - 4, 4, 4);
-          ctx.moveTo(cx - 2, cy - 2); ctx.lineTo(cx + 2, cy - 2);
-          ctx.stroke();
-      } else if (g.type === 3) { // Clyde: Cap
-          ctx.fillStyle = '#e65100';
-          ctx.beginPath(); ctx.arc(cx, y + 2, 5, Math.PI, 0); ctx.fill();
-          ctx.fillRect(cx - 5, y + 1, 10, 2);
-          ctx.fillRect(cx, y + 1, 7, 2);
-      } else if (g.type === 4) { // Sue: Eyelashes
-          // drawn during eye logic
-      } else if (g.type === 5) { // Ghost King Crown
+      if (g.type === 5) {
           ctx.fillStyle = '#ffd700';
           ctx.beginPath();
-          ctx.moveTo(cx - 5, y - 2);
-          ctx.lineTo(cx - 3, y - 6);
-          ctx.lineTo(cx, y - 3);
-          ctx.lineTo(cx + 3, y - 6);
-          ctx.lineTo(cx + 5, y - 2);
+          ctx.moveTo(cx - 5, y - 2); ctx.lineTo(cx - 3, y - 6); ctx.lineTo(cx, y - 3);
+          ctx.lineTo(cx + 3, y - 6); ctx.lineTo(cx + 5, y - 2);
           ctx.closePath();
           ctx.fill();
       }
@@ -1645,62 +1808,22 @@
       if (!isScared) {
           let eyeDx = (g.dirX || 0) * 2;
           let eyeDy = (g.dirY || 0) * 2;
-          let blink = (frame % 100 < 5); // Blink animation
-          
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          if (blink) {
-              ctx.ellipse(cx - 3, cy - 2, 3, 0.5, 0, 0, Math.PI * 2);
-              ctx.ellipse(cx + 3, cy - 2, 3, 0.5, 0, 0, Math.PI * 2);
-          } else {
-              ctx.ellipse(cx - 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
-              ctx.ellipse(cx + 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
-          }
+          ctx.ellipse(cx - 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
+          ctx.ellipse(cx + 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
           ctx.fill();
-
-          if (!blink) {
-              ctx.fillStyle = '#0d47a1';
-              ctx.beginPath();
-              ctx.arc(cx - 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
-              ctx.arc(cx + 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
-              ctx.fill();
-              
-              if (g.type === 4) { // Sue eyelashes
-                  ctx.strokeStyle = '#000000';
-                  ctx.lineWidth = 1;
-                  ctx.beginPath();
-                  ctx.moveTo(cx - 4, cy - 6); ctx.lineTo(cx - 6, cy - 8);
-                  ctx.moveTo(cx - 2, cy - 6); ctx.lineTo(cx - 3, cy - 8);
-                  ctx.moveTo(cx + 4, cy - 6); ctx.lineTo(cx + 6, cy - 8);
-                  ctx.moveTo(cx + 2, cy - 6); ctx.lineTo(cx + 3, cy - 8);
-                  ctx.stroke();
-              }
-          }
+          ctx.fillStyle = '#0d47a1';
+          ctx.beginPath();
+          ctx.arc(cx - 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
+          ctx.arc(cx + 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
+          ctx.fill();
       } else {
-          // Detailed frightened eyes based on state (wide wiggly)
-          let scaredOffset = (frame % 4 < 2) ? 1 : -1;
           ctx.fillStyle = isFlashing ? '#d50000' : '#ffffff';
           ctx.beginPath();
           ctx.arc(cx - 3, cy - 2, 2.5, 0, Math.PI * 2);
           ctx.arc(cx + 3, cy - 2, 2.5, 0, Math.PI * 2);
           ctx.fill();
-          
-          ctx.fillStyle = '#000000';
-          ctx.beginPath();
-          ctx.arc(cx - 3 + scaredOffset, cy - 2, 1, 0, Math.PI * 2);
-          ctx.arc(cx + 3 + scaredOffset, cy - 2, 1, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.strokeStyle = isFlashing ? '#d50000' : '#ffffff';
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.moveTo(cx - 5, cy + 3);
-          ctx.lineTo(cx - 3, cy + 5);
-          ctx.lineTo(cx - 1, cy + 3);
-          ctx.lineTo(cx + 1, cy + 5);
-          ctx.lineTo(cx + 3, cy + 3);
-          ctx.lineTo(cx + 5, cy + 5);
-          ctx.stroke();
       }
   }
 
@@ -1726,28 +1849,15 @@
           ctx.moveTo(0, j); ctx.lineTo(300, j);
       }
       ctx.stroke();
-      
-      // Twinkling background stars
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      for(let i = 0; i < 10; i++) {
-          let sx = (frameCount * 0.1 + i * 37) % 300;
-          let sy = (i * 53) % 340;
-          ctx.fillRect(sx, sy, 1.5, 1.5);
-      }
 
       for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
-              if (map[r][c] === 1) {
-                  drawWallTile(ctx, r, c);
-              } else if (map[r][c] === 2) {
-                  drawDot(ctx, c, r);
-              } else if (map[r][c] === 3) {
-                  drawPowerPellet(ctx, c, r, frameCount);
-              } else if (map[r][c] === 4) {
-                  drawSpeedItem(ctx, c, r, frameCount);
-              } else if (map[r][c] === 5) {
-                  drawFreezeItem(ctx, c, r, frameCount);
-              } else if (map[r][c] === 6) {
+              if (map[r][c] === 1) drawWallTile(ctx, r, c);
+              else if (map[r][c] === 2) drawDot(ctx, c, r);
+              else if (map[r][c] === 3) drawPowerPellet(ctx, c, r, frameCount);
+              else if (map[r][c] === 4) drawSpeedItem(ctx, c, r, frameCount);
+              else if (map[r][c] === 5) drawFreezeItem(ctx, c, r, frameCount);
+              else if (map[r][c] === 6) {
                   let px = c * TS, py = r * TS;
                   ctx.fillStyle = '#ff4500';
                   let pulse = (frameCount % 4 === 0) ? 1 : 0;
@@ -1760,10 +1870,13 @@
           }
       }
 
-      if (fruitActive) {
-          drawFruit(ctx, 7, 12);
+      // Draw Sludge Traps
+      for (let s of sludgeTraps) {
+          ctx.fillStyle = '#00e676';
+          ctx.fillRect(s.x * TS + 5, s.y * TS + 5, 10, 10);
       }
-      
+
+      if (fruitActive) drawFruit(ctx, 7, 12);
       drawPacman(ctx, px, py, pdx, pdy, frameCount, speedSkillTimer);
       
       if (vipActive) {
@@ -1783,17 +1896,8 @@
           ctx.strokeStyle = s.color;
           ctx.lineWidth = 2;
           ctx.beginPath();
-          if (s.is3D) {
-              ctx.ellipse(s.x, s.y, s.r, s.r * 0.5, 0, 0, Math.PI * 2);
-              ctx.stroke();
-              ctx.lineWidth = 1;
-              ctx.beginPath();
-              ctx.ellipse(s.x, s.y + s.r * 0.2, s.r * 0.9, s.r * 0.45, 0, 0, Math.PI * 2);
-              ctx.stroke();
-          } else {
-              ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-              ctx.stroke();
-          }
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.stroke();
           ctx.restore();
       }
 
@@ -1815,61 +1919,72 @@
       ctx.restore();
 
       ctx.fillStyle = '#fff';
-      ctx.font = '11px monospace';
+      ctx.font = '10px monospace';
       ctx.textBaseline = 'top';
-      const diffNames = ['EASY', 'NORM', 'HARD'];
-      ctx.fillText(`Lv:${level}/20 Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 302);
-      let rText = replayMode === 1 ? ' [REC]' : (replayMode === 2 ? ' [PLAY]' : '');
-      ctx.fillText(`Diff:${diffNames[diffMode]}${rText} Save:V Load:L Bind:K`, 4, 316);
+      if (gameMode === 1) {
+          ctx.fillText(`[ENDLESS W:${endlessWave}/HI:${endlessHighWave}] Sc:${score} Lvs:${lives}`, 4, 302);
+      } else {
+          ctx.fillText(`[CAMP Lv:${level}/20] Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 302);
+      }
       ctx.fillStyle = '#00ffcc';
-      ctx.fillText(`[Press H or F1 for Help] Export/Import:E`, 4, 330);
+      ctx.fillText(`Ecto:${craftEctoplasm} Ess:${craftFruitEssence} Dust:${craftStarDust} | [C]Forge [O]Mode`, 4, 314);
+      ctx.fillStyle = '#ffeb3b';
+      let rText = replayMode === 1 ? ' [REC]' : (replayMode === 2 ? ' [PLAY]' : '');
+      ctx.fillText(`F:${freezeCooldown>0?'CD':'OK'} Z:${speedCooldown>0?'CD':'OK'} M:${magnetCooldown>0?'CD':'OK'} B:${shieldActive?'ON':(shieldCooldown>0?'CD':'OK')}${rText} [H]Help`, 4, 326);
 
-      if (bindState > 0) {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-          ctx.fillRect(0, 0, 300, 340);
-          ctx.fillStyle = '#ff6464';
-          ctx.font = 'bold 16px sans-serif';
+      if (showCraftMenu) {
+          ctx.fillStyle = 'rgba(5, 12, 25, 0.92)';
+          ctx.fillRect(10, 20, 280, 260);
+          ctx.strokeStyle = '#00e5ff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(10, 20, 280, 260);
+
+          ctx.fillStyle = '#00e5ff';
+          ctx.font = 'bold 13px sans-serif';
           ctx.textAlign = 'center';
-          const bindNames = ["", "UP", "DOWN", "LEFT", "RIGHT", "SKILL 1 (FREEZE)", "SKILL 2 (SPRINT)", "SKILL 3 (MAGNET)", "SKILL 4 (SHIELD)"];
-          ctx.fillText(`PRESS KEY FOR ${bindNames[bindState]}`, 150, 170);
+          ctx.fillText('=== THE CYBER FORGE ===', 150, 30);
+          ctx.font = '11px monospace';
+          ctx.fillStyle = '#ffffff';
           ctx.textAlign = 'left';
+          ctx.fillText('1 / [7]: Super Pellet (2 Ecto + 1 Dust)', 20, 60);
+          ctx.fillText('2 / [8]: Chrono Warp (2 Ecto + 2 Ess)', 20, 90);
+          ctx.fillText('3 / [9]: Aegis Shield 2X (2 Dust + 2 Ess)', 20, 120);
+          ctx.fillText('4 / [0]: Void Pulse Bomb (3E + 3D + 1Ess)', 20, 150);
+          
+          ctx.fillStyle = '#ffd700';
+          ctx.fillText(`Stock: ${craftEctoplasm} Ecto, ${craftFruitEssence} Ess, ${craftStarDust} Dust`, 20, 190);
+          ctx.fillStyle = '#00e676';
+          ctx.fillText('Press 1-4 or 7-0 to Craft | [C] Close', 25, 230);
       } else if (showHelp) {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
           ctx.fillRect(0, 0, 300, 340);
           ctx.fillStyle = '#fff';
-          ctx.font = 'bold 16px sans-serif';
+          ctx.font = 'bold 15px sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('KPac - Help & Controls', 150, 40);
-          ctx.font = '12px sans-serif';
-          ctx.fillText('Move: Arrows or WASD', 150, 70);
-          ctx.fillText('Skills: F, Z, M, B (or buttons)', 150, 90);
-          ctx.fillText('Diff: 1(Easy) 2(Norm) 3(Hard)', 150, 110);
-          ctx.fillText('Save/Load: V / L  |  Pause: P', 150, 130);
-          ctx.fillText('Keybinds: K  |  JSON: E', 150, 150);
-          ctx.fillText('Replay: R(Rec) T(Play)', 150, 170);
-          ctx.fillText('Avoid ghosts, eat all dots.', 150, 200);
-          ctx.fillText('Power pellets let you eat ghosts!', 150, 220);
+          ctx.fillText('KPac Loop 10 - Help', 150, 25);
+          ctx.font = '11px sans-serif';
+          ctx.fillText('Move: Arrows or WASD', 150, 50);
+          ctx.fillText('Skills: F(Freeze) Z(Sprint) M(Magnet) B(Shield)', 150, 70);
+          ctx.fillText('Modes: [O] Toggle Campaign / Endless', 150, 90);
+          ctx.fillText('Crafting: [C] Cyber-Forge Menu', 150, 110);
+          ctx.fillText('Quick-Craft: 7(Pellet) 8(Warp) 9(Shield) 0(Nuke)', 150, 130);
+          ctx.fillText('Diff: 1(Easy) 2(Norm) 3(Hard) | Save: V / L', 150, 150);
+          ctx.fillText('Avoid ghosts, eat dots, craft powerups!', 150, 180);
           ctx.fillStyle = '#00e676';
-          ctx.fillText('Press H or F1 to start/resume', 150, 260);
+          ctx.fillText('Press H or F1 to start/resume', 150, 220);
           ctx.textAlign = 'left';
       }
 
-      if (level === 20 && bossHp > 0) {
-          ctx.fillStyle = '#ffd700';
-          ctx.font = 'bold 10px monospace';
-          ctx.fillText(`BOSS KING HP:${bossHp}/${bossMaxHp}`, 180, 308);
-      }
-      
       if (saveMsgTimer > 0) {
           ctx.fillStyle = '#ffeb3b';
           ctx.font = 'bold 12px monospace';
-          ctx.fillText(saveMsgText, 85, 175);
+          ctx.fillText(saveMsgText, 80, 160);
       }
 
       if (victoryTimer > 0) {
           ctx.fillStyle = '#00e676';
           ctx.font = 'bold 14px monospace';
-          ctx.fillText('MAZE CLEARED!', 90, 150);
+          ctx.fillText(gameMode === 1 ? 'WAVE CLEARED!' : 'MAZE CLEARED!', 85, 150);
       } else if (gameOver) {
           if (gameOver === 2) {
               ctx.fillStyle = '#00e676';
