@@ -384,6 +384,7 @@
     </select>
 
     <button id="btnHelp" aria-label="Help">❔ Help</button>
+    <button id="btnExportSvg" title="Export Scalable Vector Graphic">📐 SVG</button>
     <button id="btnExportPng">📷 PNG</button>
     <button id="btnExportCsv">📄 CSV</button>
     <button id="btnExportJson">📦 JSON</button>
@@ -396,7 +397,7 @@
   <!-- Left Side: Main Chart & Controls -->
   <div class="panel-card">
     <div class="panel-title">
-      <span>Visualization Canvas <span style="font-size: 12px; color: var(--accent); font-weight: 600; margin-left: 10px; background: rgba(59,130,246,0.1); padding: 2px 6px; border-radius: 4px;">[Press 'H' for Help]</span></span>
+      <span>Visualization Canvas <span style="font-size: 12px; color: var(--accent); font-weight: 600; margin-left: 10px; background: rgba(59,130,246,0.1); padding: 2px 6px; border-radius: 4px;">[Press 'H' for Help | 'T' for Trend]</span></span>
       <div class="toolbar">
         <div class="btn-group" id="chartTypeGroup">
           <button data-type="bar" class="active">Bar</button>
@@ -405,6 +406,12 @@
           <button data-type="pie">Pie</button>
           <button data-type="donut">Doughnut</button>
           <button data-type="radar">Radar</button>
+        </div>
+        <div class="btn-group" id="trendGroup" title="Trendline & Regression Analysis Overlay">
+          <button data-trend="none" class="active">Trend: Off</button>
+          <button data-trend="linear">Linear Fit</button>
+          <button data-trend="movavg">Mov Avg</button>
+          <button data-trend="mean">Mean</button>
         </div>
         <button id="btnRandomize">🎲 Randomize</button>
       </div>
@@ -416,7 +423,7 @@
 
     <!-- Statistical Analysis Suite -->
     <div class="panel-title" style="margin-top: 4px;">
-      <span>Statistical Analysis Suite</span>
+      <span>Statistical Analysis & Regression Suite</span>
     </div>
     <div class="stats-grid">
       <div class="stat-box"><span class="stat-label">Count</span><span class="stat-value" id="statCount">0</span></div>
@@ -424,8 +431,9 @@
       <div class="stat-box"><span class="stat-label">Mean</span><span class="stat-value" id="statMean">0</span></div>
       <div class="stat-box"><span class="stat-label">Median</span><span class="stat-value" id="statMedian">0</span></div>
       <div class="stat-box"><span class="stat-label">Std Dev</span><span class="stat-value" id="statStdDev">0</span></div>
-      <div class="stat-box"><span class="stat-label">Min</span><span class="stat-value" id="statMin">0</span></div>
-      <div class="stat-box"><span class="stat-label">Max</span><span class="stat-value" id="statMax">0</span></div>
+      <div class="stat-box"><span class="stat-label">Min / Max</span><span class="stat-value" id="statMinMax">0 / 0</span></div>
+      <div class="stat-box"><span class="stat-label">Slope (m)</span><span class="stat-value" id="statSlope">-</span></div>
+      <div class="stat-box"><span class="stat-label">R² Fit</span><span class="stat-value" id="statR2">-</span></div>
     </div>
   </div>
 
@@ -522,6 +530,8 @@
 
   let currentTheme = "teal";
   let chartType = "bar"; // bar, line, area, pie, donut, radar
+  let trendMode = "none"; // none, linear, movavg, mean
+  let trendStats = { slope: 0, intercept: 0, r2: 0 };
   let hoveredIndex = -1;
   let hoverX = -1, hoverY = -1;
 
@@ -536,8 +546,9 @@
   const statMean = document.getElementById('statMean');
   const statMedian = document.getElementById('statMedian');
   const statStdDev = document.getElementById('statStdDev');
-  const statMin = document.getElementById('statMin');
-  const statMax = document.getElementById('statMax');
+  const statMinMax = document.getElementById('statMinMax');
+  const statSlope = document.getElementById('statSlope');
+  const statR2 = document.getElementById('statR2');
 
   let canvasW = 600, canvasH = 480;
 
@@ -566,8 +577,10 @@
       statMean.textContent = "0";
       statMedian.textContent = "0";
       statStdDev.textContent = "0";
-      statMin.textContent = "0";
-      statMax.textContent = "0";
+      if (statMinMax) statMinMax.textContent = "0 / 0";
+      if (statSlope) statSlope.textContent = "-";
+      if (statR2) statR2.textContent = "-";
+      trendStats = { slope: 0, intercept: 0, r2: 0 };
       return;
     }
     const vals = data.map(d => Number(d.value) || 0);
@@ -588,13 +601,46 @@
     const min = sorted[0];
     const max = sorted[sorted.length - 1];
 
+    // Linear Regression & Correlation
+    if (count >= 2) {
+      let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+      for (let i = 0; i < count; i++) {
+        sumX += i;
+        sumY += vals[i];
+        sumXY += i * vals[i];
+        sumXX += i * i;
+      }
+      const denom = count * sumXX - sumX * sumX;
+      if (denom !== 0) {
+        const slope = (count * sumXY - sumX * sumY) / denom;
+        const intercept = (sumY - slope * sumX) / count;
+        let ssTot = 0, ssRes = 0;
+        for (let i = 0; i < count; i++) {
+          const yHat = slope * i + intercept;
+          ssTot += Math.pow(vals[i] - mean, 2);
+          ssRes += Math.pow(vals[i] - yHat, 2);
+        }
+        const r2 = ssTot > 0.0001 ? Math.max(0, Math.min(1, 1 - ssRes / ssTot)) : 1.0;
+        trendStats = { slope, intercept, r2 };
+        if (statSlope) statSlope.textContent = (slope >= 0 ? "+" : "") + slope.toFixed(2);
+        if (statR2) statR2.textContent = r2.toFixed(3);
+      } else {
+        trendStats = { slope: 0, intercept: mean, r2: 0 };
+        if (statSlope) statSlope.textContent = "0.00";
+        if (statR2) statR2.textContent = "0.000";
+      }
+    } else {
+      trendStats = { slope: 0, intercept: count === 1 ? vals[0] : 0, r2: 0 };
+      if (statSlope) statSlope.textContent = "-";
+      if (statR2) statR2.textContent = "-";
+    }
+
     statCount.textContent = count;
     statTotal.textContent = total.toLocaleString(undefined, { maximumFractionDigits: 2 });
     statMean.textContent = mean.toLocaleString(undefined, { maximumFractionDigits: 2 });
     statMedian.textContent = median.toLocaleString(undefined, { maximumFractionDigits: 2 });
     statStdDev.textContent = stdDev.toLocaleString(undefined, { maximumFractionDigits: 2 });
-    statMin.textContent = min.toLocaleString(undefined, { maximumFractionDigits: 2 });
-    statMax.textContent = max.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    if (statMinMax) statMinMax.textContent = `${min.toLocaleString(undefined, { maximumFractionDigits: 1 })} / ${max.toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
   }
 
   function renderTable() {

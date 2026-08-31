@@ -47,6 +47,7 @@ int seqPattern[16] = {1, 0, 0, 1,  0, 1, 0, 0,  1, 0, 1, 0,  0, 0, 1, 0};
 int seqPlaying = 0;
 int currentStep = 0;
 DWORD lastStepTime = 0;
+int lastSeqNote = -1;
 int showHelp = 1;
 
 // Waveform Visualizer Animation Offset
@@ -160,14 +161,22 @@ void ExportWavFile() {
     DWORD written = 0;
     WriteFile(hFile, &hdr, sizeof(WavHeader), &written, NULL);
 
-    // Synthesize 2 seconds of audio (Square wave arpeggio)
+    // Synthesize 2 seconds of audio (Buffered Square wave arpeggio)
+    short sampleBuf[1024];
+    DWORD bufIdx = 0;
     for (DWORD i = 0; i < totalSamples; i++) {
         double t = (double)i / (double)sampleRate;
         double freq = 261.63; // C4
         if (MyFmod(t, 0.4) > 0.2) freq = 329.63; // E4
         double val = (MyFmod(t * freq, 1.0) > 0.5) ? 0.3 : -0.3;
-        short pcmSample = (short)(val * 32767.0);
-        WriteFile(hFile, &pcmSample, sizeof(short), &written, NULL);
+        sampleBuf[bufIdx++] = (short)(val * 32767.0);
+        if (bufIdx == 1024) {
+            WriteFile(hFile, sampleBuf, bufIdx * sizeof(short), &written, NULL);
+            bufIdx = 0;
+        }
+    }
+    if (bufIdx > 0) {
+        WriteFile(hFile, sampleBuf, bufIdx * sizeof(short), &written, NULL);
     }
     CloseHandle(hFile);
     MessageBoxA(NULL, "WAV Export Saved to kaudio_export.wav!", "KAudio Export", MB_OK | MB_ICONINFORMATION);
@@ -216,6 +225,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, 1, 30, NULL);
             break;
 
+        case WM_KILLFOCUS:
+        case WM_ACTIVATE:
+            if (msg == WM_KILLFOCUS || (msg == WM_ACTIVATE && LOWORD(wParam) == WA_INACTIVE)) {
+                if (mouseActiveKey != -1) {
+                    if (GetCapture() == hwnd) ReleaseCapture();
+                    mouseActiveKey = -1;
+                }
+                for (int i = 0; i < NUM_KEYS; i++) {
+                    if (activeKeys[i]) {
+                        activeKeys[i] = 0;
+                        PlayNote(i, 0);
+                    }
+                }
+                if (lastSeqNote != -1) {
+                    PlayNote(lastSeqNote, 0);
+                    lastSeqNote = -1;
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
+
         case WM_TIMER:
             visOffset = (visOffset + 4) % 360;
 
@@ -224,9 +254,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DWORD now = GetTickCount();
                 if (now - lastStepTime >= 125) {
                     lastStepTime = now;
+                    if (lastSeqNote != -1) {
+                        PlayNote(lastSeqNote, 0);
+                        lastSeqNote = -1;
+                    }
                     currentStep = (currentStep + 1) % 16;
                     if (seqPattern[currentStep]) {
-                        PlayNote(currentStep % NUM_KEYS, 1);
+                        lastSeqNote = currentStep % NUM_KEYS;
+                        PlayNote(lastSeqNote, 1);
                     }
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -255,6 +290,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN: {
             int x = (short)LOWORD(lParam);
             int y = (short)HIWORD(lParam);
+
+            // Check Help Dismiss Click
+            if (showHelp) {
+                RECT helpRc = {W/2 - 150, H/2 - 100, W/2 + 150, H/2 + 120};
+                if (x >= helpRc.left && x <= helpRc.right && y >= helpRc.top && y <= helpRc.bottom) {
+                    showHelp = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+            }
+            if (x >= W - 180 && x <= W && y >= 0 && y <= 25) {
+                showHelp = !showHelp;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
 
             // Check Preset Buttons Click (y: 35-65)
             if (y >= 35 && y <= 65) {
@@ -298,6 +348,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
 
+        case WM_MOUSEMOVE: {
+            if (mouseActiveKey != -1 && (wParam & MK_LBUTTON)) {
+                int x = (short)LOWORD(lParam);
+                int y = (short)HIWORD(lParam);
+                int k = GetKeyAtPoint(x, y);
+                if (k != mouseActiveKey) {
+                    if (mouseActiveKey >= 0 && mouseActiveKey < NUM_KEYS && activeKeys[mouseActiveKey]) {
+                        activeKeys[mouseActiveKey] = 0;
+                        PlayNote(mouseActiveKey, 0);
+                        if (isRecording && numEvents < 4000) {
+                            recordedEvents[numEvents].keyIndex = mouseActiveKey;
+                            recordedEvents[numEvents].time = GetTickCount() - recordingStartTime;
+                            recordedEvents[numEvents].type = 0;
+                            numEvents++;
+                        }
+                    }
+                    mouseActiveKey = k;
+                    if (k != -1 && !activeKeys[k]) {
+                        activeKeys[k] = 1;
+                        PlayNote(k, 1);
+                        if (isRecording && numEvents < 4000) {
+                            recordedEvents[numEvents].keyIndex = k;
+                            recordedEvents[numEvents].time = GetTickCount() - recordingStartTime;
+                            recordedEvents[numEvents].type = 1;
+                            numEvents++;
+                        }
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            }
+            break;
+        }
+
         case WM_LBUTTONUP:
         case WM_CAPTURECHANGED: {
             if (mouseActiveKey != -1) {
@@ -321,9 +404,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN: {
             int isRepeat = (lParam & 0x40000000) != 0;
+            if (wParam == VK_ESCAPE && !isRepeat) {
+                if (showHelp) {
+                    showHelp = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+            }
             if (wParam == 'P' && !isRepeat) {
                 seqPlaying = !seqPlaying;
                 lastStepTime = GetTickCount();
+                if (!seqPlaying && lastSeqNote != -1) {
+                    PlayNote(lastSeqNote, 0);
+                    lastSeqNote = -1;
+                }
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -375,11 +469,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
             if (wParam == VK_LEFT && !isRepeat) {
-                if (octaveShift > -4) { octaveShift--; InvalidateRect(hwnd, NULL, FALSE); }
+                if (octaveShift > -4) {
+                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 0);
+                    octaveShift--;
+                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 1);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
                 break;
             }
             if (wParam == VK_RIGHT && !isRepeat) {
-                if (octaveShift < 4) { octaveShift++; InvalidateRect(hwnd, NULL, FALSE); }
+                if (octaveShift < 4) {
+                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 0);
+                    octaveShift++;
+                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 1);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
                 break;
             }
             for (int i = 0; i < NUM_KEYS; i++) {

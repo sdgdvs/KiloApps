@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KAudio
+**Target App:** KBBS
 **Status:** Next (Pass 4)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -284,5 +284,7 @@ Pass 1 Complete.
  
 ## Pass 4 Completed Apps
 - **K2048**: In `main.c`, fixed MSVC CRT linker errors for `_cos` and `_sin` in debris physics by implementing CRT-free `my_sin` and `my_cos` Taylor series functions, resolved compile errors for undeclared `cell_size` in `Move()`, added forward declaration for `GetTileColor`, added ruleset 2 (Threes) high score file support (`k2048_score_%d_threes.dat`) in `LoadBest`/`SaveBest` to avoid overwriting Classic scores, updated `stats_highestTile` during `DoTileUpgrade`, cleared `mergePop`/`squashTimer` in `DoTileHammer`, restored time attack timer on `DoFreeUndo`, and added 0x0 client size guard in `WM_PAINT`. In `k2048.html`, added safe DOM construction for statistics items in `showStats()`, updated `stats.highestTile` in `useUpgradeSkill()`, ensured bomb and partner tile elements are safely removed from DOM and array in `slideLine()`, and added Escape key handler to close active dialog modals. Recompiled native `K2048.exe` (33.2 KB) and verified Vite web build cleanly.
+
+- **KAudio**: In `kaudio.html`, eliminated orphan oscillator/gain node leaks in explosion preset, optimized canvas visualizer rendering to avoid costly per-frame canvas resize layout recalcs, updated offline WAV export to synthesize track-specific note pitches and bassline intervals, updated JSON project import to reset file input value and apply active filter node parameters immediately, added window blur listener to release active audio nodes on tab/window switch, added arrow key scroll prevention, and added Escape key handler to close help modal. In `main.c`, tracked sequencer note state (`lastSeqNote`) to send MIDI note-off on step changes and pause, preventing unreleased MIDI voice accumulation, added `WM_KILLFOCUS` and `WM_ACTIVATE` handlers to release all playing notes and mouse capture on focus loss, added `WM_MOUSEMOVE` mouse-drag glissando across piano keys, updated octave shift keys to cleanly re-trigger held notes at new pitch, buffered PCM WAV file export samples in 1024-sample chunks to reduce syscall overhead, and enabled Escape key and mouse click dismissal of instructions dialog. Recompiled native `KAudio.exe` (14.8 KB) and verified Vite web build cleanly.
 
 

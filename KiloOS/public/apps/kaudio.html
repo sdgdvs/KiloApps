@@ -777,6 +777,25 @@
     initAudio();
     let now = ctx.currentTime;
 
+    if (type === 'explosion') {
+      // Noise burst for explosion
+      let bufferSize = Math.floor(ctx.sampleRate * 0.3);
+      let buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      let data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      let noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      let noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.6, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      noise.connect(noiseGain);
+      noiseGain.connect(filterNode);
+      noise.start(now);
+      return;
+    }
+
     let osc = ctx.createOscillator();
     let gain = ctx.createGain();
     osc.connect(gain);
@@ -831,23 +850,6 @@
       gain.gain.setValueAtTime(0.3, now);
       gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
       osc.start(now); osc.stop(now + 0.05);
-    } else if (type === 'explosion') {
-      // Noise burst for explosion
-      let bufferSize = ctx.sampleRate * 0.3;
-      let buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      let data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      let noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      let noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.6, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-      noise.connect(noiseGain);
-      noiseGain.connect(filterNode);
-      noise.start(now);
-      return;
     } else if (type === 'random') {
       let types = ['square', 'sine', 'sawtooth', 'triangle'];
       let chosenType = types[Math.floor(Math.random() * types.length)];
@@ -874,36 +876,44 @@
       if (!analyserNode) return;
 
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = canvas.clientWidth * dpr;
-      canvas.height = canvas.clientHeight * dpr;
+      const displayW = canvas.clientWidth || 300;
+      const displayH = canvas.clientHeight || 110;
+      const targetW = Math.floor(displayW * dpr);
+      const targetH = Math.floor(displayH * dpr);
+
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+
+      canvasCtx.save();
       canvasCtx.scale(dpr, dpr);
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
 
       const bufferLength = analyserNode.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
       analyserNode.getByteTimeDomainData(dataArray);
 
       canvasCtx.fillStyle = 'rgba(11, 15, 25, 0.4)';
-      canvasCtx.fillRect(0, 0, width, height);
+      canvasCtx.fillRect(0, 0, displayW, displayH);
 
       // Oscilloscope Waveform
       canvasCtx.lineWidth = 2;
       canvasCtx.strokeStyle = '#38bdf8';
       canvasCtx.beginPath();
 
-      const sliceWidth = width * 1.0 / bufferLength;
+      const sliceWidth = displayW * 1.0 / bufferLength;
       let x = 0;
 
       for (let i = 0; i < bufferLength; i++) {
         let v = dataArray[i] / 128.0;
-        let y = v * height / 2;
+        let y = v * displayH / 2;
         if (i === 0) canvasCtx.moveTo(x, y);
         else canvasCtx.lineTo(x, y);
         x += sliceWidth;
       }
-      canvasCtx.lineTo(width, height / 2);
+      canvasCtx.lineTo(displayW, displayH / 2);
       canvasCtx.stroke();
+      canvasCtx.restore();
     }
     draw();
   }
@@ -940,17 +950,25 @@
       if (e.key === 'F1') e.preventDefault();
       toggleHelp();
     }
+    if (e.key === 'Escape') {
+      const m = document.getElementById('helpModal');
+      if (m.style.display === 'flex') {
+        m.style.display = 'none';
+      }
+    }
     if (e.key.toUpperCase() === 'P' && !e.repeat) {
       btnSeqPlay.click();
     }
 
     if (e.key === 'ArrowLeft') {
+      e.preventDefault();
       if (octaveShift > -4) {
         octaveShift--;
         octaveBadge.textContent = 'Octave: ' + octaveShift;
       }
     }
     if (e.key === 'ArrowRight') {
+      e.preventDefault();
       if (octaveShift < 4) {
         octaveShift++;
         octaveBadge.textContent = 'Octave: ' + octaveShift;
@@ -963,6 +981,13 @@
     if (['INPUT', 'SELECT'].includes(document.activeElement.tagName)) return;
     let idx = binds.indexOf(e.key.toUpperCase());
     if (idx !== -1) stopNote(idx);
+  });
+
+  // Release notes on window blur/tab switch to prevent stuck audio
+  window.addEventListener('blur', () => {
+    for (let i = 0; i < binds.length; i++) {
+      stopNote(i);
+    }
   });
 
   function startPlayback() {
@@ -1108,7 +1133,10 @@
   };
 
   const fileInputJson = document.getElementById('fileInputJson');
-  document.getElementById('btnImportJson').onclick = () => fileInputJson.click();
+  document.getElementById('btnImportJson').onclick = () => {
+    fileInputJson.value = '';
+    fileInputJson.click();
+  };
   fileInputJson.onchange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1127,11 +1155,18 @@
           filterType.value = data.filter.type;
           filterCutoff.value = data.filter.cutoff; valCutoff.textContent = data.filter.cutoff + 'Hz';
           filterQ.value = data.filter.q; valQ.textContent = data.filter.q;
+          if (filterNode && ctx) {
+            filterNode.type = data.filter.type;
+            filterNode.frequency.setValueAtTime(parseFloat(data.filter.cutoff), ctx.currentTime);
+            filterNode.Q.setValueAtTime(parseFloat(data.filter.q), ctx.currentTime);
+          }
         }
         if (data.bpm) { seqBpmEl.value = data.bpm; valBpmEl.textContent = data.bpm; }
         if (data.tracks) {
           data.tracks.forEach((tData, i) => {
-            if (seqTracks[i]) seqTracks[i].grid = tData.grid;
+            if (seqTracks[i] && Array.isArray(tData.grid)) {
+              seqTracks[i].grid = tData.grid.slice(0, 16);
+            }
           });
           buildSequencerGrid();
         }
@@ -1163,7 +1198,8 @@
           let gain = offlineCtx.createGain();
 
           osc.type = waveSelect.value;
-          let targetFreq = freqs[st % freqs.length];
+          let noteOffset = track.notes ? track.notes[st % track.notes.length] : (st % freqs.length);
+          let targetFreq = track.notes ? (freqs[0] * Math.pow(2, noteOffset / 12)) : freqs[st % freqs.length];
           osc.frequency.setValueAtTime(targetFreq, time);
 
           gain.gain.setValueAtTime(0, time);
