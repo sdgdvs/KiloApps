@@ -426,10 +426,10 @@
                 </div>
             </div>
             
-            <!-- Add Secret View -->
+            <!-- Add/Edit Secret View -->
             <div id="view-add" class="view-section">
                 <div class="card" style="max-width: 500px; margin: 20px auto; width: 100%;">
-                    <h2 style="margin:0 0 24px 0;">Add New Secret</h2>
+                    <h2 id="add-secret-heading" style="margin:0 0 24px 0;">Add New Secret</h2>
                     <div class="input-group">
                         <label for="new-secret-category">Category</label>
                         <select id="new-secret-category" style="background-color: var(--input-bg); border: 1px solid var(--glass-border); color: white; padding: 14px; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 15px; outline: none;">
@@ -484,6 +484,7 @@
         let vaultData = [];
         let autoLockTimeout = 60000;
         let idleTimer = null;
+        let editingSecretId = null;
 
         function escapeHtml(str) {
             if (!str) return '';
@@ -791,13 +792,18 @@
         function lockVault() {
             masterKey = null;
             vaultData = [];
+            editingSecretId = null;
             const passElem = document.getElementById('master-password');
             if (passElem) passElem.value = '';
             checkStrength();
             switchView('view-auth');
             document.getElementById('auth-controls').style.display = 'none';
             initAuthView();
-            try { navigator.clipboard.writeText(''); } catch(e) {}
+            try { 
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText('').catch(() => {});
+                }
+            } catch(e) {}
             showNotification("Vault locked & clipboard cleared");
             resetIdleTimer();
         }
@@ -818,10 +824,26 @@
         }
         
         function showAddSecret() {
-            switchView('view-add');
+            editingSecretId = null;
+            const heading = document.getElementById('add-secret-heading');
+            if (heading) heading.textContent = 'Add New Secret';
             document.getElementById('new-secret-title').value = '';
             document.getElementById('new-secret-value').value = '';
             document.getElementById('new-secret-category').value = 'General';
+            switchView('view-add');
+            setTimeout(() => document.getElementById('new-secret-title').focus(), 100);
+        }
+
+        function editSecret(id) {
+            const secret = vaultData.find(s => s.id === id);
+            if (!secret) return;
+            editingSecretId = id;
+            const heading = document.getElementById('add-secret-heading');
+            if (heading) heading.textContent = 'Edit Secret';
+            document.getElementById('new-secret-title').value = secret.title || '';
+            document.getElementById('new-secret-value').value = secret.value || '';
+            document.getElementById('new-secret-category').value = secret.category || 'General';
+            switchView('view-add');
             setTimeout(() => document.getElementById('new-secret-title').focus(), 100);
         }
         
@@ -848,17 +870,29 @@
                 return;
             }
             
-            vaultData.push({
-                id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7),
-                title: title,
-                value: value,
-                category: category,
-                created: new Date().toISOString()
-            });
+            if (editingSecretId) {
+                const item = vaultData.find(s => s.id === editingSecretId);
+                if (item) {
+                    item.title = title;
+                    item.value = value;
+                    item.category = category;
+                    item.modified = new Date().toISOString();
+                }
+                editingSecretId = null;
+                showNotification("Secret updated");
+            } else {
+                vaultData.push({
+                    id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7),
+                    title: title,
+                    value: value,
+                    category: category,
+                    created: new Date().toISOString()
+                });
+                showNotification("Secret saved");
+            }
             
             await saveVaultToStorage();
             showVault();
-            showNotification("Secret saved");
         }
         
         async function deleteSecret(id) {
@@ -896,14 +930,17 @@
         
         function filterSecrets() {
             const queryElem = document.getElementById('search-input');
-            const query = queryElem ? queryElem.value.toLowerCase() : '';
+            const query = queryElem ? queryElem.value.toLowerCase().trim() : '';
             const items = document.querySelectorAll('.secret-item');
             let visibleCount = 0;
             
             items.forEach(item => {
-                const titleSpan = item.querySelector('.secret-item-header span');
-                const title = titleSpan ? titleSpan.innerText.toLowerCase() : '';
-                if (title.includes(query)) {
+                const titleSpan = item.querySelector('.secret-item-header span:first-child');
+                const catSpan = item.querySelector('.secret-item-header .cat-badge');
+                const titleText = (titleSpan ? titleSpan.textContent : '');
+                const catText = (catSpan ? catSpan.textContent : '');
+                const searchTarget = (titleText + ' ' + catText).toLowerCase();
+                if (searchTarget.includes(query)) {
                     item.style.display = 'flex';
                     visibleCount++;
                 } else {
@@ -946,32 +983,37 @@
                     
                     const safeTitle = escapeHtml(secret.title);
                     const safeCat = escapeHtml(secret.category || '');
-                    const catBadge = safeCat ? `<span style="font-size: 11px; padding: 4px 8px; background: rgba(108, 92, 231, 0.2); border: 1px solid rgba(108, 92, 231, 0.3); border-radius: 12px; font-weight: normal; color: #a29bfe;">${safeCat}</span>` : '';
+                    const catBadge = safeCat ? `<span class="cat-badge" style="font-size: 11px; padding: 4px 8px; background: rgba(108, 92, 231, 0.2); border: 1px solid rgba(108, 92, 231, 0.3); border-radius: 12px; font-weight: normal; color: #a29bfe;">${safeCat}</span>` : '';
+                    const secId = String(secret.id || ('sec_' + index));
                     
                     item.innerHTML = `
                         <div class="secret-item-header">
                             <span>${safeTitle}</span>
                             ${catBadge}
                         </div>
-                        <div class="secret-item-value" id="secret-val-${secret.id}"></div>
+                        <div class="secret-item-value" id="secret-val-${secId}"></div>
                         <div class="secret-actions">
-                            <button class="btn secondary" id="secret-btn-toggle-${secret.id}" aria-expanded="false">Reveal</button>
-                            <button class="btn secondary" style="background: rgba(255,255,255,0.05);" id="secret-btn-copy-${secret.id}">Copy</button>
-                            <button class="btn danger" id="secret-btn-delete-${secret.id}">Delete</button>
+                            <button class="btn secondary" id="secret-btn-toggle-${secId}" aria-expanded="false">Reveal</button>
+                            <button class="btn secondary" style="background: rgba(255,255,255,0.05);" id="secret-btn-copy-${secId}">Copy</button>
+                            <button class="btn secondary" style="background: rgba(255,255,255,0.05);" id="secret-btn-edit-${secId}">Edit</button>
+                            <button class="btn danger" id="secret-btn-delete-${secId}">Delete</button>
                         </div>
                     `;
                     list.appendChild(item);
                     
-                    const valContainer = document.getElementById(`secret-val-${secret.id}`);
+                    const valContainer = document.getElementById(`secret-val-${secId}`);
                     if (valContainer) valContainer.textContent = secret.value;
                     
-                    const toggleBtn = document.getElementById(`secret-btn-toggle-${secret.id}`);
-                    if (toggleBtn) toggleBtn.onclick = () => toggleSecretValue(secret.id);
+                    const toggleBtn = document.getElementById(`secret-btn-toggle-${secId}`);
+                    if (toggleBtn) toggleBtn.onclick = () => toggleSecretValue(secId);
                     
-                    const copyBtn = document.getElementById(`secret-btn-copy-${secret.id}`);
+                    const copyBtn = document.getElementById(`secret-btn-copy-${secId}`);
                     if (copyBtn) copyBtn.onclick = () => copySecret(secret.value);
+
+                    const editBtn = document.getElementById(`secret-btn-edit-${secId}`);
+                    if (editBtn) editBtn.onclick = () => editSecret(secret.id);
                     
-                    const delBtn = document.getElementById(`secret-btn-delete-${secret.id}`);
+                    const delBtn = document.getElementById(`secret-btn-delete-${secId}`);
                     if (delBtn) delBtn.onclick = () => deleteSecret(secret.id);
                 });
                 
@@ -984,7 +1026,7 @@
         function showNotification(msg, type='success') {
             const notif = document.getElementById('notification');
             if (!notif) return;
-            notif.innerText = msg;
+            notif.textContent = msg;
             notif.className = `notification show ${type}`;
             
             if (window.notifTimeout) clearTimeout(window.notifTimeout);
@@ -1040,6 +1082,10 @@
             input.onchange = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+                if (file.size > 10 * 1024 * 1024) {
+                    showNotification("File exceeds 10MB limit", "error");
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     try {
@@ -1108,6 +1154,10 @@
             
             if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                 const file = e.dataTransfer.files[0];
+                if (file.size > 10 * 1024 * 1024) {
+                    showNotification("File exceeds 10MB limit", "error");
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     try {

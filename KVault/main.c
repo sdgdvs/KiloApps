@@ -299,7 +299,7 @@ void LoadFromFile(HWND hwnd, HWND hTextEdit) {
         HANDLE hFile = CreateFileA(ofn.lpstrFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
             DWORD fileSize = GetFileSize(hFile, NULL);
-            if (fileSize > 0 && fileSize < 10485760) {
+            if (fileSize != INVALID_FILE_SIZE && fileSize > 0 && fileSize < 10485760) {
                 char* buffer = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
                 if (buffer) {
                     DWORD bytesRead = 0;
@@ -374,7 +374,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hStatTimeout = CreateWindowA("STATIC", "Auto-lock:", WS_VISIBLE | WS_CHILD, 315, 22, 70, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatTimeout, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hComboTimeout = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE, 385, 20, 95, 100, hwnd, (HMENU)ID_COMBO_TIMEOUT, NULL, NULL);
+            HWND hComboTimeout = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 385, 20, 95, 100, hwnd, (HMENU)ID_COMBO_TIMEOUT, NULL, NULL);
             SendMessage(hComboTimeout, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hComboTimeout, CB_ADDSTRING, 0, (LPARAM)"1 min");
             SendMessage(hComboTimeout, CB_ADDSTRING, 0, (LPARAM)"5 min");
@@ -382,7 +382,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboTimeout, CB_ADDSTRING, 0, (LPARAM)"Never");
             SendMessage(hComboTimeout, CB_SETCURSEL, 0, 0);
             
-            HWND hComboTheme = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE, 490, 20, 90, 100, hwnd, (HMENU)ID_COMBO_THEME, NULL, NULL);
+            HWND hComboTheme = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 490, 20, 90, 100, hwnd, (HMENU)ID_COMBO_THEME, NULL, NULL);
             SendMessage(hComboTheme, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hComboTheme, CB_ADDSTRING, 0, (LPARAM)"Dark");
             SendMessage(hComboTheme, CB_ADDSTRING, 0, (LPARAM)"Light");
@@ -394,56 +394,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hStat = CreateWindowA("STATIC", "Master Key:", WS_VISIBLE | WS_CHILD, 15, 62, 80, 25, hwnd, NULL, NULL, NULL);
             SendMessage(hStat, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hPass = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_PASSWORD | ES_AUTOHSCROLL, 100, 60, 200, 25, hwnd, (HMENU)ID_EDIT_PASS, NULL, NULL);
+            hPass = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_PASSWORD | ES_AUTOHSCROLL | WS_TABSTOP, 100, 60, 200, 25, hwnd, (HMENU)ID_EDIT_PASS, NULL, NULL);
             SendMessage(hPass, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hPass, EM_SETCUEBANNER, 0, (LPARAM)L"Enter Master Password");
             
             HWND hStrength = CreateWindowA("STATIC", "", WS_VISIBLE | WS_CHILD, 100, 85, 200, 15, hwnd, (HMENU)ID_STATIC_STRENGTH, NULL, NULL);
             SendMessage(hStrength, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hBtnEnc = CreateWindowA("BUTTON", "Encrypt", WS_VISIBLE | WS_CHILD | BS_FLAT, 315, 60, 85, 25, hwnd, (HMENU)ID_BTN_ENCRYPT, NULL, NULL);
-            HWND hBtnDec = CreateWindowA("BUTTON", "Decrypt", WS_VISIBLE | WS_CHILD | BS_FLAT, 410, 60, 85, 25, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
-            HWND hBtnClr = CreateWindowA("BUTTON", "Clear", WS_VISIBLE | WS_CHILD | BS_FLAT, 505, 60, 75, 25, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
+            HWND hBtnEnc = CreateWindowA("BUTTON", "Encrypt", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 315, 60, 85, 25, hwnd, (HMENU)ID_BTN_ENCRYPT, NULL, NULL);
+            HWND hBtnDec = CreateWindowA("BUTTON", "Decrypt", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 410, 60, 85, 25, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
+            HWND hBtnClr = CreateWindowA("BUTTON", "Clear", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 505, 60, 75, 25, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
             
             SendMessage(hBtnEnc, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnDec, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnClr, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hData = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN, 15, 105, 565, 205, hwnd, (HMENU)ID_EDIT_DATA, NULL, NULL);
+            hData = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_TABSTOP, 15, 105, 565, 205, hwnd, (HMENU)ID_EDIT_DATA, NULL, NULL);
             SendMessage(hData, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hData, EM_LIMITTEXT, 0x100000, 0);
             SendMessage(hData, EM_SETCUEBANNER, 0, (LPARAM)L"Enter or load confidential data here...");
             
-            HWND hBtnLoad = CreateWindowA("BUTTON", "Load File", WS_VISIBLE | WS_CHILD | BS_FLAT, 15, 320, 100, 25, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
-            HWND hBtnSave = CreateWindowA("BUTTON", "Save File", WS_VISIBLE | WS_CHILD | BS_FLAT, 125, 320, 100, 25, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            HWND hBtnLoad = CreateWindowA("BUTTON", "Load File", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 15, 320, 100, 25, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+            HWND hBtnSave = CreateWindowA("BUTTON", "Save File", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 125, 320, 100, 25, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
             SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hFindEdit = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, 235, 320, 155, 25, hwnd, (HMENU)ID_EDIT_FIND, NULL, NULL);
+            HWND hFindEdit = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | WS_TABSTOP, 235, 320, 155, 25, hwnd, (HMENU)ID_EDIT_FIND, NULL, NULL);
             SendMessage(hFindEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hFindEdit, EM_SETCUEBANNER, 0, (LPARAM)L"Find text...");
             
-            HWND hBtnFind = CreateWindowA("BUTTON", "Find", WS_VISIBLE | WS_CHILD | BS_FLAT, 400, 320, 80, 25, hwnd, (HMENU)ID_BTN_FIND, NULL, NULL);
+            HWND hBtnFind = CreateWindowA("BUTTON", "Find", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 400, 320, 80, 25, hwnd, (HMENU)ID_BTN_FIND, NULL, NULL);
             SendMessage(hBtnFind, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HWND hBtnGen = CreateWindowA("BUTTON", "Gen Pass", WS_VISIBLE | WS_CHILD | BS_FLAT, 490, 320, 90, 25, hwnd, (HMENU)ID_BTN_GENERATE, NULL, NULL);
+            HWND hBtnGen = CreateWindowA("BUTTON", "Gen Pass", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 490, 320, 90, 25, hwnd, (HMENU)ID_BTN_GENERATE, NULL, NULL);
             SendMessage(hBtnGen, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hComboTpl = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE, 15, 355, 100, 100, hwnd, (HMENU)ID_COMBO_TEMPLATE, NULL, NULL);
+            HWND hComboTpl = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 355, 100, 100, hwnd, (HMENU)ID_COMBO_TEMPLATE, NULL, NULL);
             SendMessage(hComboTpl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Login");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Finance");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Note");
             SendMessage(hComboTpl, CB_SETCURSEL, 0, 0);
             
-            HWND hBtnTpl = CreateWindowA("BUTTON", "Insert", WS_VISIBLE | WS_CHILD | BS_FLAT, 125, 355, 60, 25, hwnd, (HMENU)ID_BTN_INSERT_TEMPLATE, NULL, NULL);
+            HWND hBtnTpl = CreateWindowA("BUTTON", "Insert", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 125, 355, 60, 25, hwnd, (HMENU)ID_BTN_INSERT_TEMPLATE, NULL, NULL);
             SendMessage(hBtnTpl, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hBtnCopyData = CreateWindowA("BUTTON", "Copy Data", WS_VISIBLE | WS_CHILD | BS_FLAT, 195, 355, 85, 25, hwnd, (HMENU)ID_BTN_COPY_DATA, NULL, NULL);
+            HWND hBtnCopyData = CreateWindowA("BUTTON", "Copy Data", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 195, 355, 85, 25, hwnd, (HMENU)ID_BTN_COPY_DATA, NULL, NULL);
             SendMessage(hBtnCopyData, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hBtnClearClip = CreateWindowA("BUTTON", "Clear Clip", WS_VISIBLE | WS_CHILD | BS_FLAT, 290, 355, 85, 25, hwnd, (HMENU)ID_BTN_CLEAR_CLIP, NULL, NULL);
+            HWND hBtnClearClip = CreateWindowA("BUTTON", "Clear Clip", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 290, 355, 85, 25, hwnd, (HMENU)ID_BTN_CLEAR_CLIP, NULL, NULL);
             SendMessage(hBtnClearClip, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hBtnHelp = CreateWindowA("BUTTON", "Help", WS_VISIBLE | WS_CHILD | BS_FLAT, 385, 355, 85, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            HWND hBtnHelp = CreateWindowA("BUTTON", "Help", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 385, 355, 85, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             LARGE_INTEGER pc;
@@ -460,7 +461,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HANDLE hFile = CreateFileA(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
                 if (hFile != INVALID_HANDLE_VALUE) {
                     DWORD fileSize = GetFileSize(hFile, NULL);
-                    if (fileSize > 0 && fileSize < 10485760) {
+                    if (fileSize != INVALID_FILE_SIZE && fileSize > 0 && fileSize < 10485760) {
                         char* buffer = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
                         if (buffer) {
                             DWORD bytesRead = 0;
@@ -626,6 +627,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             GetWindowTextA(hData, text, textLen + 1);
                             DWORD startSel = 0, endSel = 0;
                             SendMessage(hData, EM_GETSEL, (WPARAM)&startSel, (LPARAM)&endSel);
+                            if (endSel > (DWORD)textLen) endSel = (DWORD)textLen;
                             
                             const char* pos = my_strstr_ic(text + endSel, findText);
                             if (!pos && endSel > 0) {
@@ -640,6 +642,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             } else {
                                 MessageBoxA(hwnd, "Text not found.", "Find", MB_OK | MB_ICONINFORMATION);
                             }
+                            secure_zero(text, textLen + 1);
                             HeapFree(GetProcessHeap(), 0, text);
                         }
                     }
@@ -670,6 +673,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return (LRESULT)hDarkBrush;
         }
         case WM_DESTROY: {
+            KillTimer(hwnd, 1);
             if (hbgBrush) DeleteObject(hbgBrush);
             if (hDarkBrush) DeleteObject(hDarkBrush);
             if (hFont) DeleteObject(hFont);
@@ -690,7 +694,7 @@ void __stdcall MainEntry() {
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KVaultClass";
     wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(RGB(15, 15, 19));
+    wc.hbrBackground = NULL;
     
     RegisterClassA(&wc);
     
