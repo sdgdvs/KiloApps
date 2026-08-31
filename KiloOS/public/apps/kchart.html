@@ -839,7 +839,137 @@
       });
     }
 
+    if (trendMode !== 'none') {
+      renderTrendOverlay(padL, padT, chartW, chartH, maxVal, step, barW, vals);
+    }
+
     drawTooltipCartesian(padL, padT, chartW, chartH, maxVal, step, barW);
+  }
+
+  function renderTrendOverlay(padL, padT, chartW, chartH, maxVal, step, barW, vals) {
+    const n = data.length;
+    if (n < 2 || trendMode === 'none') return;
+
+    ctx.save();
+    if (trendMode === 'linear') {
+      const x0 = padL + step / 2;
+      const x1 = padL + (n - 1) * step + step / 2;
+      const yHat0 = trendStats.slope * 0 + trendStats.intercept;
+      const yHat1 = trendStats.slope * (n - 1) + trendStats.intercept;
+      const y0 = padT + chartH - (Math.max(0, yHat0) / maxVal) * chartH;
+      const y1 = padT + chartH - (Math.max(0, yHat1) / maxVal) * chartH;
+
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.strokeStyle = "#facc15";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 5]);
+      ctx.shadowColor = "#facc15";
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+
+      // Endpoints
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath();
+      ctx.arc(x0, y0, 4, 0, Math.PI * 2);
+      ctx.arc(x1, y1, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Badge
+      const badgeTxt = `Fit: y = ${trendStats.slope >= 0 ? '+' : ''}${trendStats.slope.toFixed(2)}x + ${trendStats.intercept.toFixed(2)}  (R² = ${trendStats.r2.toFixed(3)})`;
+      ctx.font = "600 11px 'Inter', sans-serif";
+      const bMetrics = ctx.measureText(badgeTxt);
+      const bx = padL + chartW - bMetrics.width - 16;
+      const by = padT + 8;
+      ctx.fillStyle = "rgba(24, 24, 27, 0.88)";
+      ctx.strokeStyle = "rgba(250, 204, 21, 0.5)";
+      ctx.lineWidth = 1;
+      drawRoundedRect(ctx, bx, by, bMetrics.width + 12, 22, 5);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#fde047";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(badgeTxt, bx + 6, by + 11);
+
+    } else if (trendMode === 'movavg') {
+      const maPts = [];
+      for (let i = 0; i < n; i++) {
+        const start = Math.max(0, i - 1);
+        const end = Math.min(n - 1, i + 1);
+        let sum = 0, count = 0;
+        for (let k = start; k <= end; k++) {
+          sum += vals[k];
+          count++;
+        }
+        const maVal = sum / count;
+        const x = padL + i * step + step / 2;
+        const y = padT + chartH - (maVal / maxVal) * chartH;
+        maPts.push({ x, y });
+      }
+
+      ctx.beginPath();
+      maPts.forEach((p, idx) => {
+        if (idx === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      ctx.shadowColor = "#38bdf8";
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+
+      const badgeTxt = "Moving Average (Window: 3)";
+      ctx.font = "600 11px 'Inter', sans-serif";
+      const bMetrics = ctx.measureText(badgeTxt);
+      const bx = padL + chartW - bMetrics.width - 16;
+      const by = padT + 8;
+      ctx.fillStyle = "rgba(24, 24, 27, 0.88)";
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.5)";
+      ctx.lineWidth = 1;
+      drawRoundedRect(ctx, bx, by, bMetrics.width + 12, 22, 5);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#7dd3fc";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(badgeTxt, bx + 6, by + 11);
+
+    } else if (trendMode === 'mean') {
+      const total = vals.reduce((a, b) => a + b, 0);
+      const mean = total / n;
+      const yMean = padT + chartH - (mean / maxVal) * chartH;
+
+      ctx.beginPath();
+      ctx.moveTo(padL, yMean);
+      ctx.lineTo(padL + chartW, yMean);
+      ctx.strokeStyle = "#ec4899";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.shadowColor = "#ec4899";
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+
+      const badgeTxt = `Mean Baseline: ${mean.toFixed(2)}`;
+      ctx.font = "600 11px 'Inter', sans-serif";
+      const bMetrics = ctx.measureText(badgeTxt);
+      const bx = padL + chartW - bMetrics.width - 16;
+      const by = padT + 8;
+      ctx.fillStyle = "rgba(24, 24, 27, 0.88)";
+      ctx.strokeStyle = "rgba(236, 72, 153, 0.5)";
+      ctx.lineWidth = 1;
+      drawRoundedRect(ctx, bx, by, bMetrics.width + 12, 22, 5);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#f472b6";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(badgeTxt, bx + 6, by + 11);
+    }
+    ctx.restore();
   }
 
   function renderPieOrDonut(isDonut) {
@@ -1147,7 +1277,7 @@
 
   // Button Listeners
   document.getElementById('btnHelp').onclick = () => {
-    alert("KChart Studio Help:\n\n- Select chart type from the toolbar.\n- Use the table editor to modify data.\n- Export options are in the top right.\n- Drag & drop a JSON/CSV file to import.");
+    alert("KChart Studio Help:\n\n- Select Chart Type from toolbar (Bar, Line, Area, Pie, Donut, Radar).\n- Use Trendline & Regression overlay buttons (Off, Linear Fit y=mx+b, Moving Avg, Mean).\n- Statistical Suite displays Count, Mean, Median, StdDev, Slope, and R² Fit.\n- Export options: SVG Vector (.svg), PNG Image (.png), CSV (.csv), JSON (.json).\n- Use the table editor to modify data points or drag & drop CSV/JSON files.\n- Hotkeys: 'H' for Help, 'T' to cycle Trendline overlays.");
   };
 
   document.getElementById('chartTypeGroup').onclick = (e) => {
@@ -1155,6 +1285,15 @@
       document.querySelectorAll('#chartTypeGroup button').forEach(b => b.classList.remove('active'));
       e.target.classList.add('active');
       chartType = e.target.dataset.type;
+      renderChart();
+    }
+  };
+
+  document.getElementById('trendGroup').onclick = (e) => {
+    if (e.target.tagName === 'BUTTON') {
+      document.querySelectorAll('#trendGroup button').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      trendMode = e.target.dataset.trend;
       renderChart();
     }
   };
@@ -1200,6 +1339,185 @@
   };
 
   // Export handlers
+  document.getElementById('btnExportSvg').onclick = () => {
+    exportSvg();
+  };
+
+  function exportSvg() {
+    const n = data.length;
+    if (n === 0) {
+      alert("No data available to export SVG.");
+      return;
+    }
+    const width = 800;
+    const height = 500;
+    const padL = 60, padR = 40, padT = 40, padB = 60;
+    const chartW = width - padL - padR;
+    const chartH = height - padT - padB;
+    const vals = data.map(d => Math.max(0, Number(d.value) || 0));
+    const maxVal = Math.max(1, ...vals);
+    const palette = THEMES[currentTheme] || THEMES.teal;
+
+    let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    svg += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" style="background:#09090b; font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">\n`;
+    
+    // Gradient definitions
+    svg += `  <defs>\n`;
+    svg += `    <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">\n`;
+    svg += `      <stop offset="0%" stop-color="${palette[0]}" stop-opacity="0.6"/>\n`;
+    svg += `      <stop offset="100%" stop-color="${palette[0]}" stop-opacity="0.0"/>\n`;
+    svg += `    </linearGradient>\n`;
+    svg += `  </defs>\n`;
+
+    // Chart Background & Title
+    svg += `  <rect width="${width}" height="${height}" fill="#09090b"/>\n`;
+    svg += `  <text x="${padL}" y="26" fill="#f4f4f5" font-size="16" font-weight="bold">KChart Studio - ${chartType.toUpperCase()} View</text>\n`;
+    svg += `  <text x="${width - padR}" y="26" fill="#a1a1aa" font-size="12" text-anchor="end">Theme: ${currentTheme.toUpperCase()} | Total: ${vals.reduce((a,b)=>a+b,0)}</text>\n`;
+
+    if (chartType === 'pie' || chartType === 'donut') {
+      const cx = width / 2 - 60;
+      const cy = height / 2;
+      const outerR = Math.min(width, height) * 0.35;
+      const innerR = (chartType === 'donut') ? outerR * 0.55 : 0;
+      const total = vals.reduce((a, b) => a + b, 0) || 1;
+      let startAngle = -Math.PI / 2;
+
+      for (let i = 0; i < n; i++) {
+        const sliceAngle = (vals[i] / total) * Math.PI * 2;
+        const endAngle = startAngle + sliceAngle;
+        const x1 = cx + outerR * Math.cos(startAngle);
+        const y1 = cy + outerR * Math.sin(startAngle);
+        const x2 = cx + outerR * Math.cos(endAngle);
+        const y2 = cy + outerR * Math.sin(endAngle);
+        const largeArc = sliceAngle > Math.PI ? 1 : 0;
+        const col = palette[i % palette.length];
+
+        if (chartType === 'donut') {
+          const ix1 = cx + innerR * Math.cos(endAngle);
+          const iy1 = cy + innerR * Math.sin(endAngle);
+          const ix2 = cx + innerR * Math.cos(startAngle);
+          const iy2 = cy + innerR * Math.sin(startAngle);
+          const d = `M ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} L ${ix1} ${iy1} A ${innerR} ${innerR} 0 ${largeArc} 0 ${ix2} ${iy2} Z`;
+          svg += `  <path d="${d}" fill="${col}" stroke="#09090b" stroke-width="2"/>\n`;
+        } else {
+          const d = `M ${cx} ${cy} L ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+          svg += `  <path d="${d}" fill="${col}" stroke="#09090b" stroke-width="2"/>\n`;
+        }
+        startAngle = endAngle;
+
+        // Legend
+        const legY = cy - 40 + i * 22;
+        svg += `  <rect x="${width - 150}" y="${legY - 10}" width="12" height="12" rx="3" fill="${col}"/>\n`;
+        svg += `  <text x="${width - 130}" y="${legY}" fill="#e4e4e7" font-size="12">${escapeHtml(data[i].label)}: ${vals[i]}</text>\n`;
+      }
+    } else if (chartType === 'radar') {
+      const cx = width / 2;
+      const cy = height / 2 + 15;
+      const radius = Math.min(chartW, chartH) * 0.42;
+      const angleStep = (Math.PI * 2) / n;
+
+      for (let level = 1; level <= 4; level++) {
+        const r = (radius * level) / 4;
+        const polyPts = [];
+        for (let i = 0; i < n; i++) {
+          const a = -Math.PI / 2 + i * angleStep;
+          polyPts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
+        }
+        svg += `  <polygon points="${polyPts.join(' ')}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>\n`;
+      }
+
+      for (let i = 0; i < n; i++) {
+        const a = -Math.PI / 2 + i * angleStep;
+        const sx = cx + radius * Math.cos(a);
+        const sy = cy + radius * Math.sin(a);
+        svg += `  <line x1="${cx}" y1="${cy}" x2="${sx}" y2="${sy}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>\n`;
+        const lx = cx + (radius + 20) * Math.cos(a);
+        const ly = cy + (radius + 20) * Math.sin(a);
+        svg += `  <text x="${lx}" y="${ly + 4}" fill="#a1a1aa" font-size="11" text-anchor="middle">${escapeHtml(data[i].label)}</text>\n`;
+      }
+
+      const dpts = [];
+      for (let i = 0; i < n; i++) {
+        const r = (vals[i] / maxVal) * radius;
+        const a = -Math.PI / 2 + i * angleStep;
+        dpts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
+      }
+      svg += `  <polygon points="${dpts.join(' ')}" fill="${palette[0]}" fill-opacity="0.3" stroke="${palette[0]}" stroke-width="2.5"/>\n`;
+    } else {
+      // Cartesian (Bar, Line, Area)
+      const ticks = 5;
+      for (let i = 0; i <= ticks; i++) {
+        const y = padT + (chartH / ticks) * i;
+        const valNum = Math.round(maxVal - (maxVal / ticks) * i);
+        svg += `  <line x1="${padL}" y1="${y}" x2="${padL + chartW}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>\n`;
+        svg += `  <text x="${padL - 10}" y="${y + 4}" fill="#71717a" font-size="11" text-anchor="end">${valNum}</text>\n`;
+      }
+
+      svg += `  <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
+      svg += `  <line x1="${padL}" y1="${padT + chartH}" x2="${padL + chartW}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
+
+      const step = chartW / n;
+      const barW = Math.min(48, Math.max(16, step * 0.6));
+
+      if (chartType === 'bar') {
+        for (let i = 0; i < n; i++) {
+          const bh = (vals[i] / maxVal) * chartH;
+          const bx = padL + i * step + (step - barW) / 2;
+          const by = padT + chartH - bh;
+          const col = palette[i % palette.length];
+          svg += `  <rect x="${bx}" y="${by}" width="${barW}" height="${bh}" rx="4" fill="${col}"/>\n`;
+          svg += `  <text x="${bx + barW / 2}" y="${padT + chartH + 18}" fill="#a1a1aa" font-size="11" text-anchor="middle">${escapeHtml(data[i].label)}</text>\n`;
+        }
+      } else if (chartType === 'line' || chartType === 'area') {
+        const pts = [];
+        for (let i = 0; i < n; i++) {
+          const bh = (vals[i] / maxVal) * chartH;
+          const bx = padL + i * step + step / 2;
+          const by = padT + chartH - bh;
+          pts.push({ x: bx, y: by });
+        }
+
+        if (chartType === 'area') {
+          const polyStr = `${pts[0].x},${padT + chartH} ` + pts.map(p => `${p.x},${p.y}`).join(' ') + ` ${pts[n-1].x},${padT + chartH}`;
+          svg += `  <polygon points="${polyStr}" fill="url(#chartGrad)"/>\n`;
+        }
+
+        const pathStr = pts.map((p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
+        svg += `  <path d="${pathStr}" fill="none" stroke="${palette[0]}" stroke-width="3"/>\n`;
+
+        pts.forEach((p, i) => {
+          svg += `  <circle cx="${p.x}" cy="${p.y}" r="5" fill="${palette[i % palette.length]}" stroke="#09090b" stroke-width="1.5"/>\n`;
+          svg += `  <text x="${p.x}" y="${padT + chartH + 18}" fill="#a1a1aa" font-size="11" text-anchor="middle">${escapeHtml(data[i].label)}</text>\n`;
+        });
+      }
+
+      // Trendline in SVG if active
+      if (trendMode === 'linear' && n >= 2) {
+        const x0 = padL + step / 2;
+        const x1 = padL + (n - 1) * step + step / 2;
+        const yHat0 = trendStats.slope * 0 + trendStats.intercept;
+        const yHat1 = trendStats.slope * (n - 1) + trendStats.intercept;
+        const y0 = padT + chartH - (Math.max(0, yHat0) / maxVal) * chartH;
+        const y1 = padT + chartH - (Math.max(0, yHat1) / maxVal) * chartH;
+        svg += `  <line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#facc15" stroke-width="2.5" stroke-dasharray="6,4"/>\n`;
+        svg += `  <text x="${padL + chartW}" y="${padT + 16}" fill="#fde047" font-size="11" text-anchor="end" font-weight="bold">Fit: y = ${trendStats.slope.toFixed(2)}x + ${trendStats.intercept.toFixed(2)} (R² = ${trendStats.r2.toFixed(3)})</text>\n`;
+      } else if (trendMode === 'mean') {
+        const mean = vals.reduce((a, b) => a + b, 0) / n;
+        const yMean = padT + chartH - (mean / maxVal) * chartH;
+        svg += `  <line x1="${padL}" y1="${yMean}" x2="${padL + chartW}" y2="${yMean}" stroke="#ec4899" stroke-width="2" stroke-dasharray="6,4"/>\n`;
+        svg += `  <text x="${padL + chartW}" y="${yMean - 6}" fill="#f472b6" font-size="11" text-anchor="end">Mean: ${mean.toFixed(2)}</text>\n`;
+      }
+    }
+
+    svg += `</svg>\n`;
+
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const link = document.createElement('a');
+    link.download = 'kchart_vector.svg';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  }
+
   document.getElementById('btnExportPng').onclick = () => {
     const link = document.createElement('a');
     link.download = 'KChart_export.png';
@@ -1295,12 +1613,23 @@
   // Window resize
   window.addEventListener('resize', resizeCanvas);
   
-  // Help shortcut
+  // Shortcuts
   window.addEventListener('keydown', (e) => {
     const tag = e.target.tagName;
-    if ((e.key === 'F1' || e.key === 'h' || e.key === 'H') && tag !== 'INPUT' && tag !== 'SELECT' && tag !== 'TEXTAREA') {
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+
+    if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
       if (e.key === 'F1') e.preventDefault();
-      alert("KChart Studio Help:\n\n- Select chart type from the toolbar.\n- Use the table editor to modify data.\n- Export options are in the top right.\n- Drag & drop a JSON/CSV file to import.");
+      alert("KChart Studio Help:\n\n- Select Chart Type from toolbar (Bar, Line, Area, Pie, Donut, Radar).\n- Use Trendline & Regression overlay buttons (Off, Linear Fit y=mx+b, Moving Avg, Mean).\n- Statistical Suite displays Count, Mean, Median, StdDev, Slope, and R² Fit.\n- Export options: SVG Vector (.svg), PNG Image (.png), CSV (.csv), JSON (.json).\n- Use the table editor to modify data points or drag & drop CSV/JSON files.\n- Hotkeys: 'H' for Help, 'T' to cycle Trendline overlays.");
+    } else if (e.key === 't' || e.key === 'T') {
+      const modes = ['none', 'linear', 'movavg', 'mean'];
+      const nextIdx = (modes.indexOf(trendMode) + 1) % modes.length;
+      trendMode = modes[nextIdx];
+      document.querySelectorAll('#trendGroup button').forEach(b => {
+        if (b.dataset.trend === trendMode) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+      renderChart();
     }
   });
   
