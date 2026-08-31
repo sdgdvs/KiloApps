@@ -89,9 +89,9 @@ const int orig_map1[10][10] = {
     {1,1,1,1,1,1,1,1,1,1},
     {1,0,0,5,0,0,1,5,0,1},
     {1,0,1,1,0,0,1,0,0,1},
-    {1,5,0,1,0,0,0,0,0,1},
+    {1,5,0,1,0,29,0,0,0,1},
     {1,0,0,1,1,1,1,0,0,1},
-    {1,0,0,0,0,0,0,0,5,1},
+    {1,0,0,0,0,28,0,0,5,1},
     {1,1,0,1,1,1,1,1,0,1},
     {1,0,0,0,5,0,0,1,0,1},
     {1,0,0,0,0,0,0,2,0,1},
@@ -102,11 +102,11 @@ const int orig_map2[12][12] = {
     {1,1,1,1,1,1,1,1,1,1,1,1},
     {1,0,5,0,0,1,0,0,0,5,0,1},
     {1,0,1,1,0,1,0,1,1,1,0,1},
-    {1,0,1,0,0,0,0,0,0,1,0,1},
+    {1,0,1,0,0,0,29,0,0,1,0,1},
     {1,0,1,0,1,1,1,1,0,1,0,1},
     {1,5,0,0,1,0,0,1,5,1,0,1},
     {1,1,1,0,1,0,1,1,0,1,0,1},
-    {1,0,0,0,1,0,0,0,0,0,0,1},
+    {1,0,0,0,1,0,28,0,0,0,0,1},
     {1,0,1,1,1,1,1,1,1,1,5,1},
     {1,0,5,0,0,0,0,0,0,1,0,1},
     {1,1,1,1,1,1,1,1,0,1,2,1},
@@ -117,13 +117,13 @@ const int orig_map3[15][15] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,0,0,0,5,0,0,0,0,0,0,5,0,0,1},
     {1,0,1,1,1,1,1,1,1,1,1,0,1,0,1},
-    {1,0,1,5,0,0,0,0,0,0,0,0,1,0,1},
+    {1,0,1,5,0,0,0,29,0,0,0,0,1,0,1},
     {1,0,1,0,1,1,1,1,1,1,1,0,1,0,1},
     {1,0,1,0,1,0,5,0,0,0,1,0,1,0,1},
     {1,0,1,0,1,0,1,1,1,0,1,0,1,0,1},
     {1,0,1,0,1,0,1,2,1,0,1,0,1,5,1},
     {1,0,1,0,1,0,1,0,1,0,1,0,1,0,1},
-    {1,0,1,0,1,0,0,0,1,0,1,0,1,0,1},
+    {1,0,1,0,1,0,28,0,1,0,1,0,1,0,1},
     {1,5,1,0,1,1,1,1,1,0,1,0,1,0,1},
     {1,0,1,0,0,5,0,0,0,0,1,0,1,0,1},
     {1,0,1,1,1,1,1,1,1,1,1,0,1,0,1},
@@ -137,7 +137,7 @@ const int orig_map4[10][10] = {
     {1,1,1,1,1,0,1,1,0,1},
     {1,5,0,0,1,0,0,0,0,1},
     {1,0,1,0,1,1,1,1,1,1},
-    {1,0,1,0,0,0,5,0,4,1},
+    {1,0,1,0,28,0,5,0,4,1},
     {1,0,1,1,1,1,1,0,1,1},
     {1,0,5,0,0,0,1,0,2,1},
     {1,1,1,1,1,1,1,1,1,1},
@@ -148,14 +148,14 @@ const int orig_map5[12][12] = {
     {1,1,1,1,1,1,1,1,1,1,1,1},
     {1,0,0,0,1,0,0,0,0,0,3,1},
     {1,0,1,0,1,0,1,1,1,1,1,1},
-    {1,0,1,0,1,0,0,0,0,0,0,1},
+    {1,0,1,0,1,0,0,29,0,0,0,1},
     {1,0,1,0,1,1,1,1,1,1,0,1},
     {1,0,1,0,0,0,0,0,0,1,0,1},
     {1,0,1,1,1,1,1,1,0,1,0,1},
-    {1,0,0,0,0,0,0,1,0,1,0,1},
+    {1,0,0,0,0,28,0,1,0,1,0,1},
     {1,1,1,1,1,1,0,1,0,1,0,1},
     {1,4,0,0,0,1,0,0,0,1,0,1},
-    {1,2,1,1,1,1,1,1,1,1,1,1},
+    {1,38,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
@@ -166,11 +166,11 @@ const int orig_map6[12][12] = {
     {1,0,1,5,0,1,0,6,0,1,0,1},
     {1,0,1,0,0,1,0,1,0,1,0,1},
     {1,0,1,1,4,1,1,1,0,1,0,1},
-    {1,0,0,0,0,0,0,0,0,1,0,1},
+    {1,0,0,0,0,29,0,0,0,1,0,1},
     {1,1,1,1,1,1,1,1,0,1,0,1},
     {1,3,6,0,5,0,0,1,0,1,0,1},
     {1,0,1,1,1,1,0,1,6,1,0,1},
-    {1,0,0,0,0,1,0,0,0,1,2,1},
+    {1,0,0,28,0,1,0,0,0,1,2,1},
     {1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
@@ -186,7 +186,7 @@ const int orig_map7[15][15] = {
     {1,0,1,0,1,0,1,0,1,0,1,0,1,1,1},
     {1,0,1,0,1,0,1,0,1,0,1,0,0,0,1},
     {1,0,1,0,1,0,1,0,1,0,1,1,1,0,1},
-    {1,0,0,0,1,0,0,0,1,0,0,0,4,0,1},
+    {1,0,0,0,1,0,28,0,1,0,0,0,4,0,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,0,1},
     {1,2,0,0,0,0,0,0,0,0,0,0,0,0,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
@@ -198,7 +198,7 @@ const int orig_map8[12][12] = {
     {1,1,0,1,4,1,0,1,1,1,1,1},
     {1,0,0,1,0,1,0,1,3,0,0,1},
     {1,0,1,1,7,1,1,1,1,1,0,1},
-    {1,0,0,0,0,0,0,1,5,0,0,1},
+    {1,0,0,0,0,29,0,1,5,0,0,1},
     {1,1,1,1,1,1,0,1,1,1,1,1},
     {1,5,0,0,0,1,0,1,0,0,0,1},
     {1,1,1,1,0,1,0,1,0,1,0,1},
@@ -232,7 +232,7 @@ const int orig_map10[15][15] = {
     {1,0,1,1,1,1,0,1,1,1,1,1,1,0,1},
     {1,0,0,6,0,1,0,4,0,0,0,1,0,0,1},
     {1,1,1,1,0,1,1,1,1,1,0,1,0,1,1},
-    {1,5,0,1,0,0,0,0,0,1,0,1,0,0,1},
+    {1,5,0,1,0,28,0,0,0,1,0,1,0,0,1},
     {1,0,1,1,1,1,1,1,0,1,0,1,1,0,1},
     {1,0,1,2,1,0,0,1,0,1,0,1,5,0,1},
     {1,0,1,4,1,1,0,1,0,1,0,1,1,1,1},
@@ -262,7 +262,7 @@ int hasCompass = 0;
 int speedBoost = 0;
 int hasPickaxe = 0;
 
-// Power-ups & Active Items
+// Power-ups, Active Items, and Dynamic Lighting
 int pathfinderCharges = 1;
 int pathfinderTimer = 0;
 int speedShoesCharges = 1;
@@ -271,13 +271,27 @@ int stunSprayCharges = 1;
 int stunSprayTimer = 0;
 int timeFreezeCharges = 1;
 int timeFreezeTimer = 0;
+int torchTimer = 0;
 int bossHP = 3;
+
+// Checkpoint System
+int checkpointLevel = -1;
+int checkpointScore = 0;
+float checkpointPX = 1.5f, checkpointPY = 1.5f;
+int checkpointKeys = 0;
+int checkpointPickaxe = 0;
+int checkpointPathfinder = 0;
+int checkpointSpeed = 0;
+int checkpointStun = 0;
+int checkpointFreeze = 0;
+int checkpointMapW = 15, checkpointMapH = 15;
+int checkpointMap[45][45];
 
 int totalGames = 0;
 int totalEscapes = 0;
 int totalScore = 0;
 
-int gameState = 0; // 0=start, 1=play, 2=win
+int gameState = 0; // 0=start, 1=play, 2=win, 3=replay, 4=keys
 int minotaurFacingDir[45][45] = {0};
 int damageFlinchTimer = 0;
 DWORD startTime = 0;
@@ -339,8 +353,8 @@ int replayLevel = 0;
 int replayMap[45][45];
 int replayCurFrame = 0;
 
-// 16x16 Textures buffer: 25 types, 256 DWORD colors (0x00RRGGBB)
-DWORD textures[40][256];
+// 16x16 Textures buffer: 50 types, 256 DWORD colors (0x00RRGGBB)
+DWORD textures[50][256];
 DWORD animFrameCount = 0;
 
 // Particles
@@ -386,7 +400,7 @@ void UpdateParticles() {
 
 // Procedural 16x16 Texture Generator
 void InitTextures() {
-    for (int t = 0; t < 30; t++) {
+    for (int t = 0; t < 40; t++) {
         for (int y = 0; y < 16; y++) {
             for (int x = 0; x < 16; x++) {
                 DWORD col = 0;
@@ -424,7 +438,7 @@ void InitTextures() {
                     float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
                     if (dist < 4.5f) col = (dist < 2.0f) ? 0x00FFFFFF : 0x00FFCC00;
                     else col = 0x008B4513;
-                } else if (t == 6) { // Trap (Lava/Spike)
+                } else if (t == 6) { // Trap (Lava)
                     if (y >= 12 && (x % 4 == 1 || x % 4 == 2)) col = 0x00CCCCCC;
                     else if ((x + y) % 6 < 2) col = 0x000044FF;
                     else col = 0x00001188;
@@ -457,7 +471,7 @@ void InitTextures() {
                     else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) col = 0x000000FF;
                     else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) col = 0x00FFFFFF;
                     else col = 0x00000099;
-                } else if (t == 16) { // NPC
+                } else if (t == 16) { // NPC Merchant
                     if (y >= 4 && y <= 12 && x >= 4 && x <= 11) col = 0x0000FF66; else if (y < 4 && x >= 6 && x <= 9) col = 0x00FFCC99; else col = 0x00222222;
                 } else if (t == 17) { // Switch
                     float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f)); if (dist < 4.0f) col = 0x00FF0000; else col = 0x00555555;
@@ -491,6 +505,27 @@ void InitTextures() {
                     if (dist < 4.0f) col = 0x00800080;
                     else if (dist < 6.0f) col = 0x00000000;
                     else col = 0x00220022;
+                } else if (t == 27) { // Magma Wall (Inferno Biome)
+                    int vein = ((x * 17 + y * 29) % 20);
+                    if (vein < 4) col = 0x000088FF; // Molten lava vein (RGB: 255, 136, 0)
+                    else if (vein < 7) col = 0x000022AA;
+                    else col = 0x00111122; // Obsidian crust
+                } else if (t == 28) { // Ancient Save Shrine / Campfire
+                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
+                    if (dist < 3.0f) col = 0x0000FFFF; // Golden flame core
+                    else if (dist < 5.0f) col = 0x000088FF; // Amber aura
+                    else if (y >= 12) col = 0x00888888; // Stone shrine base
+                    else col = 0x00222233;
+                } else if (t == 29) { // Wall Torch Sconce / Crystal
+                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 5.0f) * (y - 5.0f));
+                    if (dist < 3.0f) col = 0x0000FFFF; // Bright flame
+                    else if (y >= 8 && (x == 7 || x == 8)) col = 0x00444444; // Iron sconce bracket
+                    else col = 0x00111111;
+                } else if (t == 38) { // Dungeon Descent Stairwell / Shaft
+                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
+                    if (dist < 3.0f) col = 0x00111111; // Deep shaft pit
+                    else if (dist < 5.5f && ((int)(dist * 2.0f + (x+y)) % 2 == 0)) col = 0x00FFFF00; // Cyan rune steps
+                    else col = 0x00665544; // Stone rim
                 } else {
                     col = 0x00AA0000;
                 }
@@ -579,14 +614,11 @@ void UpdateTextures() {
             // Boss / Minotaur eyes breathing
             int m_breathe = (int)(sin(animFrameCount * 0.15f) * 1.5f);
             if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) {
-                // Minotaur
                 if (m_breathe > 0) textures[12][y * 16 + x] = 0x000088FF;
                 else textures[12][y * 16 + x] = 0x0000FFFF;
-                // Minotaur King Boss
                 if (bossHP <= 1) textures[15][y * 16 + x] = (m_breathe > 0) ? 0x0000FFFF : 0x00008888;
                 else textures[15][y * 16 + x] = (m_breathe > 0) ? 0x000000FF : 0x00000088;
             } else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) {
-                // Boss Snout variation
                 if (bossHP <= 1) textures[15][y * 16 + x] = 0x008888FF;
                 else textures[15][y * 16 + x] = 0x00FFFFFF;
             }
@@ -611,6 +643,33 @@ void UpdateTextures() {
             if (dist3 < 4.0f) textures[26][y * 16 + x] = 0x00FF00FF;
             else if (dist3 < 6.0f) textures[26][y * 16 + x] = 0x00000000;
             else textures[26][y * 16 + x] = 0x00220022;
+
+            // Magma Wall (t=27) - Pulsating Heat Veins
+            int vein = ((x * 17 + y * 29 + (int)(animFrameCount * 0.5f)) % 20);
+            if (vein < 3) textures[27][y * 16 + x] = 0x0000FFFF; // Radiant orange
+            else if (vein < 6) textures[27][y * 16 + x] = 0x000066FF; // Deep red
+            else textures[27][y * 16 + x] = 0x00111122; // Dark obsidian
+
+            // Save Shrine / Campfire (t=28) - Swirling Flame
+            float flameDist = (float)sqrt((x - 7.5f)*(x - 7.5f) + (y - 6.0f + sin(animFrameCount*0.2f)*1.5f)*(y - 6.0f + sin(animFrameCount*0.2f)*1.5f));
+            if (flameDist < 2.5f) textures[28][y * 16 + x] = 0x0000FFFF; // Gold
+            else if (flameDist < 4.5f) textures[28][y * 16 + x] = 0x000088FF; // Amber aura
+            else if (y >= 12) textures[28][y * 16 + x] = 0x00777777; // Pedestal
+            else textures[28][y * 16 + x] = 0x00222233;
+
+            // Torch Sconce (t=29) - Flickering Light Core
+            float torchDist = (float)sqrt((x - 7.5f)*(x - 7.5f) + (y - 5.0f + sin((animFrameCount + x)*0.3f)*1.0f)*(y - 5.0f + sin((animFrameCount + x)*0.3f)*1.0f));
+            if (torchDist < 2.5f) textures[29][y * 16 + x] = 0x0000FFFF; // Flame core
+            else if (torchDist < 4.5f) textures[29][y * 16 + x] = 0x000088FF;
+            else if (y >= 9 && (x == 7 || x == 8)) textures[29][y * 16 + x] = 0x00555555; // Iron bar
+            else textures[29][y * 16 + x] = 0x00111111;
+
+            // Descent Shaft (t=38) - Swirling Runes
+            float shaftDist = (float)sqrt((x - 7.5f)*(x - 7.5f) + (y - 7.5f)*(y - 7.5f));
+            float sAngle = (float)atan2(y - 7.5f, x - 7.5f) + animFrameCount * 0.08f;
+            if (shaftDist < 2.5f) textures[38][y * 16 + x] = 0x00050505; // Dark void center
+            else if (shaftDist < 5.5f && ((int)(shaftDist * 2.0f + sAngle * 2.0f) % 2 == 0)) textures[38][y * 16 + x] = 0x00FFFF00; // Cyan stairs
+            else textures[38][y * 16 + x] = 0x00444455;
 
             // Animated Void Wall (t=22)
             int noise = (rand() % 40) - 20;
@@ -677,7 +736,7 @@ void SetMapValue(int x, int y, int v) {
 
 int TryMove(int x, int y) {
     int val = GetMapValue(x, y);
-    if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8 || val == 9 || val == 10 || val == 11 || val == 12 || val == 13 || val == 14 || val == 15 || val == 16 || val == 17 || val == 19 || val == 25 || val == 26) return 1;
+    if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8 || val == 9 || val == 10 || val == 11 || val == 12 || val == 13 || val == 14 || val == 15 || val == 16 || val == 17 || val == 19 || val == 25 || val == 26 || val == 28 || val == 29 || val == 38) return 1;
     if (val == 4) {
         if (keysHeld > 0) {
             keysHeld--;
@@ -687,7 +746,7 @@ int TryMove(int x, int y) {
             return 1;
         }
     }
-    if (val == 1) {
+    if (val == 1 || val == 20 || val == 21 || val == 22 || val == 27) {
         if (hasPickaxe > 0 && x > 0 && y > 0) {
             int mapW = currentLevel >= 10 ? curRandW : 15;
             int mapH = currentLevel >= 10 ? curRandH : 15;
@@ -729,7 +788,7 @@ void ComputePathfinderPath() {
     if (targetX == -1) {
         for (int x = 0; x < mapW; x++) {
             for (int y = 0; y < mapH; y++) {
-                if (GetMapValue(x, y) == 2) { targetX = x; targetY = y; break; }
+                if (GetMapValue(x, y) == 2 || GetMapValue(x, y) == 38) { targetX = x; targetY = y; break; }
             }
         }
     }
@@ -762,7 +821,7 @@ void ComputePathfinderPath() {
             int ny = cy + dirs[d][1];
             if (nx >= 0 && nx < mapW && ny >= 0 && ny < mapH && parentX[nx][ny] == -1) {
                 int tile = GetMapValue(nx, ny);
-                if (tile == 0 || tile == 2 || tile == 3 || tile == 5 || tile == 6 || tile == 8 || tile == 9 || tile == 10 || tile == 11 || tile == 13 || tile == 14 || tile == 16 || tile == 17 || tile == 18 || tile == 19 || tile == 25 || tile == 26 || (tile == 4 && keysHeld > 0)) {
+                if (tile == 0 || tile == 2 || tile == 3 || tile == 5 || tile == 6 || tile == 8 || tile == 9 || tile == 10 || tile == 11 || tile == 13 || tile == 14 || tile == 16 || tile == 17 || tile == 18 || tile == 19 || tile == 25 || tile == 26 || tile == 28 || tile == 29 || tile == 38 || (tile == 4 && keysHeld > 0)) {
                     parentX[nx][ny] = cx;
                     parentY[nx][ny] = cy;
                     qX[qTail] = nx; qY[qTail] = ny; qTail++;
@@ -900,14 +959,31 @@ void GenerateMaze(int w, int h) {
             mapRandom[rx][ry] = 26;
         }
     }
-    if (currentLevel >= 10 && currentLevel % 5 == 0) {
+    // Place Ancient Save Shrine (t=28) - 1 or 2 per floor
+    for(int i=0; i < (w*h > 400 ? 2 : 1); i++) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY)) {
+            mapRandom[rx][ry] = 28;
+        }
+    }
+    // Place Torch Sconces (t=29) for dynamic lighting
+    for(int i=0; i < w*h/35; i++) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY)) {
+            mapRandom[rx][ry] = 29;
+        }
+    }
+
+    if (currentLevel >= 10 && currentLevel % 5 == 0 && currentLevel < 44) {
         int placedBoss = 0;
         while (!placedBoss) {
             int rx = 1 + rand()%(w-2);
             int ry = 1 + rand()%(h-2);
             if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY) && abs(rx - 1) + abs(ry - 1) > 8) {
                 mapRandom[rx][ry] = 15;
-                bossHP = 3;
+                bossHP = (currentLevel >= 40) ? 4 : 3;
                 placedBoss = 1;
             }
         }
@@ -944,19 +1020,26 @@ void GenerateMaze(int w, int h) {
         int rx = 1 + rand()%(w-2); int ry = 1 + rand()%(h-2);
         if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1)) mapRandom[rx][ry] = 17;
     }
-    
-    // Stage 35 (level 34) Boss Arena Chamber
-    if (currentLevel == 34) {
-        bossHP = 3;
-        for (int i = 15; i <= 25; i++) {
-            for (int j = 15; j <= 25; j++) {
+
+    // Descent Sublevel Shaft (t=38) on sublevel thresholds (every 5 levels)
+    if (currentLevel % 5 == 4 && currentLevel < 44) {
+        mapRandom[farX][farY] = 38;
+    } else if (currentLevel == 44) {
+        // Stage 45 Final Boss Lair: Minotaur Overlord
+        bossHP = 5;
+        for (int i = 14; i <= 26; i++) {
+            for (int j = 14; j <= 26; j++) {
                 mapRandom[i][j] = 0;
             }
         }
-        mapRandom[20][20] = 15; // Minotaur King Boss
-        mapRandom[17][17] = 12; // Guard Minotaur 1
-        mapRandom[23][23] = 12; // Guard Minotaur 2
-        mapRandom[25][25] = 3;  // Boss Key
+        mapRandom[20][20] = 15; // Minotaur Overlord Boss
+        mapRandom[16][16] = 12; // Guard Minotaur 1
+        mapRandom[24][24] = 12; // Guard Minotaur 2
+        mapRandom[16][24] = 12; // Guard Minotaur 3
+        mapRandom[20][16] = 28; // Ancient Save Shrine
+        mapRandom[15][20] = 29; // Torch Sconce 1
+        mapRandom[25][20] = 29; // Torch Sconce 2
+        mapRandom[26][26] = 3;  // Overlord Key
         mapRandom[farX][farY] = 2;
         if (farX > 1 && farY > 1) mapRandom[farX - 1][farY] = 4;
     } else {
@@ -1001,6 +1084,35 @@ void SaveBest() {
         WriteFile(hFile, &totalEscapes, sizeof(int), &written, NULL);
         WriteFile(hFile, &totalScore, sizeof(int), &written, NULL);
         CloseHandle(hFile);
+    }
+}
+
+void SaveCheckpoint() {
+    HANDLE hSave = CreateFileA("kmaze_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSave != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hSave, &currentLevel, sizeof(int), &written, NULL);
+        WriteFile(hSave, &score, sizeof(int), &written, NULL);
+        WriteFile(hSave, &keysHeld, sizeof(int), &written, NULL);
+        WriteFile(hSave, &hasCompass, sizeof(int), &written, NULL);
+        WriteFile(hSave, &speedBoost, sizeof(int), &written, NULL);
+        WriteFile(hSave, &hasPickaxe, sizeof(int), &written, NULL);
+        WriteFile(hSave, &pathfinderCharges, sizeof(int), &written, NULL);
+        WriteFile(hSave, &speedShoesCharges, sizeof(int), &written, NULL);
+        WriteFile(hSave, &stunSprayCharges, sizeof(int), &written, NULL);
+        WriteFile(hSave, &timeFreezeCharges, sizeof(int), &written, NULL);
+        WriteFile(hSave, &pX, sizeof(float), &written, NULL);
+        WriteFile(hSave, &pY, sizeof(float), &written, NULL);
+        WriteFile(hSave, &dX, sizeof(float), &written, NULL);
+        WriteFile(hSave, &dY, sizeof(float), &written, NULL);
+        WriteFile(hSave, &planeX, sizeof(float), &written, NULL);
+        WriteFile(hSave, &planeY, sizeof(float), &written, NULL);
+        DWORD elapsed = GetTickCount() - startTime;
+        WriteFile(hSave, &elapsed, sizeof(DWORD), &written, NULL);
+        WriteFile(hSave, &curRandW, sizeof(int), &written, NULL);
+        WriteFile(hSave, &curRandH, sizeof(int), &written, NULL);
+        WriteFile(hSave, mapRandom, sizeof(mapRandom), &written, NULL);
+        CloseHandle(hSave);
     }
 }
 
@@ -1055,10 +1167,11 @@ void NextLevel() {
     speedShoesTimer = 0;
     stunSprayTimer = 0;
     timeFreezeTimer = 0;
+    torchTimer = 0;
 
     currentLevel++;
     hasCompass = (currentLevel < 6) ? 1 : 0;
-    if (currentLevel > 34) {
+    if (currentLevel > 44) {
         gameState = 2;
         endTime = GetTickCount();
         float elapsed = (endTime - startTime) / 1000.0f;
@@ -1072,8 +1185,8 @@ void NextLevel() {
     }
     
     if (currentLevel >= 10) {
-        int s = 11 + 2 * (int)(((currentLevel - 10) * 15) / 24);
-        if (s > 41) s = 41;
+        int s = 11 + 2 * (int)(((currentLevel - 10) * 16) / 34);
+        if (s > 43) s = 43;
         if (s % 2 == 0) s++;
         GenerateMaze(s, s);
     }
@@ -1112,6 +1225,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (speedShoesTimer > 0) speedShoesTimer -= 30;
             if (stunSprayTimer > 0) stunSprayTimer -= 30;
             if (timeFreezeTimer > 0) timeFreezeTimer -= 30;
+            if (torchTimer > 0) torchTimer -= 30;
             if (damageFlinchTimer > 0) damageFlinchTimer--;
             if (screenShakeTimer > 0) {
                 screenShakeTimer--;
@@ -1180,7 +1294,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 score = (score >= 100) ? score - 100 : 0;
                                 if (mtype == 15) {
                                     pX = 1.5f; pY = 1.5f;
-                                    strcpy(msgText, "Trampled by Minotaur King!");
+                                    strcpy(msgText, "Trampled by Minotaur Boss!");
                                     msgTimer = 60;
                                 } else {
                                     currentLevel--;
@@ -1217,7 +1331,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int tx = (int)(pX + dX * 0.8f);
                         int ty = (int)(pY + dY * 0.8f);
                         int tVal = GetMapValue(tx, ty);
-                        if (tVal == 1 || tVal == 7) {
+                        if (tVal == 1 || tVal == 7 || tVal == 20 || tVal == 21 || tVal == 22 || tVal == 27) {
                             hasPickaxe--;
                             SetMapValue(tx, ty, 0);
                             MessageBeep(MB_OK);
@@ -1253,9 +1367,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (bossHP <= 0) {
                                 SetMapValue(tx, ty, 3);
                                 score += 1000;
-                                strcpy(msgText, "Minotaur King Slain! Key Dropped!");
+                                strcpy(msgText, "Minotaur Overlord Slain! Key Dropped!");
                             } else {
-                                strcpy(msgText, "Minotaur King Hit!");
+                                strcpy(msgText, "Minotaur Boss Hit!");
                             }
                             msgTimer = 60;
                             activeKeyCooldown = 300;
@@ -1310,36 +1424,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 if (GetAsyncKeyState('V') & 0x8000) {
-                    HANDLE hSave = CreateFileA("kmaze_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-                    if (hSave != INVALID_HANDLE_VALUE) {
-                        DWORD written = 0;
-                        WriteFile(hSave, &currentLevel, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &score, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &keysHeld, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &hasCompass, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &speedBoost, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &hasPickaxe, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &pathfinderCharges, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &speedShoesCharges, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &stunSprayCharges, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &timeFreezeCharges, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &pX, sizeof(float), &written, NULL);
-                        WriteFile(hSave, &pY, sizeof(float), &written, NULL);
-                        WriteFile(hSave, &dX, sizeof(float), &written, NULL);
-                        WriteFile(hSave, &dY, sizeof(float), &written, NULL);
-                        WriteFile(hSave, &planeX, sizeof(float), &written, NULL);
-                        WriteFile(hSave, &planeY, sizeof(float), &written, NULL);
-                        DWORD elapsed = GetTickCount() - startTime;
-                        WriteFile(hSave, &elapsed, sizeof(DWORD), &written, NULL);
-                        WriteFile(hSave, &curRandW, sizeof(int), &written, NULL);
-                        WriteFile(hSave, &curRandH, sizeof(int), &written, NULL);
-                        WriteFile(hSave, mapRandom, sizeof(mapRandom), &written, NULL);
-                        CloseHandle(hSave);
-                        strcpy(msgText, "Game Saved!");
-                        msgTimer = 60;
-                        activeKeyCooldown = 1000;
-                        MessageBeep(MB_OK);
-                    }
+                    SaveCheckpoint();
+                    strcpy(msgText, "Game Saved to Checkpoint!");
+                    msgTimer = 60;
+                    activeKeyCooldown = 1000;
+                    MessageBeep(MB_OK);
                 }
                 if (GetAsyncKeyState('L') & 0x8000) {
                     HANDLE hLoad = CreateFileA("kmaze_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1368,7 +1457,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         ReadFile(hLoad, &curRandH, sizeof(int), &readBytes, NULL);
                         ReadFile(hLoad, mapRandom, sizeof(mapRandom), &readBytes, NULL);
                         CloseHandle(hLoad);
-                        strcpy(msgText, "Game Loaded!");
+                        strcpy(msgText, "Checkpoint / Save Loaded!");
                         msgTimer = 60;
                         activeKeyCooldown = 1000;
                         MessageBeep(MB_OK);
@@ -1502,7 +1591,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddShockwave(pX, pY);
                 score = (score >= 150) ? score - 150 : 0;
                 pX = 1.5f; pY = 1.5f;
-                strcpy(msgText, "Attacked by Minotaur King!"); msgTimer = 60;
+                strcpy(msgText, "Attacked by Minotaur Boss!"); msgTimer = 60;
             } else if (curVal == 16) {
                 if (score >= 200) {
                     score -= 200; hasPickaxe++; timeFreezeCharges++;
@@ -1537,6 +1626,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MessageBeep(MB_ICONHAND);
                 AddParticles(160.0f, 120.0f, RGB(128, 0, 128), 30);
                 strcpy(msgText, "Cursed Relic: +500 Score, Lost Speed/Nav!"); msgTimer = 60;
+            } else if (curVal == 28) { // Save Shrine Checkpoint
+                checkpointLevel = currentLevel;
+                checkpointScore = score;
+                checkpointPX = pX;
+                checkpointPY = pY;
+                checkpointKeys = keysHeld;
+                checkpointPickaxe = hasPickaxe + 1;
+                checkpointPathfinder = pathfinderCharges + 1;
+                checkpointSpeed = speedShoesCharges + 1;
+                checkpointStun = stunSprayCharges + 1;
+                checkpointFreeze = timeFreezeCharges + 1;
+                checkpointMapW = curRandW;
+                checkpointMapH = curRandH;
+                for (int i = 0; i < 45; i++) for (int j = 0; j < 45; j++) checkpointMap[i][j] = GetMapValue(i, j);
+                
+                score += 300;
+                hasPickaxe = checkpointPickaxe;
+                pathfinderCharges = checkpointPathfinder;
+                speedShoesCharges = checkpointSpeed;
+                stunSprayCharges = checkpointStun;
+                timeFreezeCharges = checkpointFreeze;
+                SaveCheckpoint();
+                
+                MessageBeep(MB_ICONASTERISK);
+                AddParticles(160.0f, 120.0f, RGB(255, 215, 0), 35);
+                strcpy(msgText, "Ancient Save Shrine Activated! Checkpoint Saved!");
+                msgTimer = 90;
+            } else if (curVal == 29) { // Torch Sconce / Lantern
+                torchTimer = 15000;
+                score += 50;
+                MessageBeep(MB_ICONASTERISK);
+                AddParticles(160.0f, 120.0f, RGB(255, 180, 50), 20);
+                strcpy(msgText, "Ignited Wall Torch! Radiant Glow (+15s)!");
+                msgTimer = 60;
+            } else if (curVal == 38) { // Descent Sublevel Stairwell
+                score += 250;
+                hasPickaxe++;
+                pathfinderCharges++;
+                speedShoesCharges++;
+                stunSprayCharges++;
+                timeFreezeCharges++;
+                MessageBeep(MB_ICONASTERISK);
+                AddParticles(160.0f, 120.0f, RGB(0, 255, 200), 40);
+                strcpy(msgText, "Descended into Dungeon Depths! (+250 Score)");
+                msgTimer = 90;
+                NextLevel();
             }
 
             if (GetAsyncKeyState(keyBinds.right) & 0x8000) {
@@ -1599,7 +1734,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     drawDX += shakeX * 0.5f;
                 }
 
-                // 1. Ceiling & Floor Casting
+                // 1. Ceiling & Floor Casting with Dynamic Multi-Source Point Lighting
                 for (int y = 0; y < H; y++) {
                     int isFloor = (y >= H / 2);
                     int p = isFloor ? (y - H / 2) : (H / 2 - y);
@@ -1619,26 +1754,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     float floorX = drawPX + rowDistance * rayDirX0;
                     float floorY = drawPY + rowDistance * rayDirY0;
 
-                    float maxDist = (currentLevel >= 20) ? 4.5f : ((currentLevel >= 10) ? 7.0f : 12.0f);
-                    if (pathfinderTimer > 0) maxDist = 14.0f;
-                    float fog = 1.0f - rowDistance / maxDist;
-                    if (fog < 0.1f) fog = 0.1f; if (fog > 1.0f) fog = 1.0f;
-                    if (currentLevel >= 15 && rowDistance > maxDist && pathfinderTimer <= 0) fog = 0.0f;
-
                     for (int x = 0; x < W; ++x) {
                         int cellX = (int)floor(floorX);
                         int cellY = (int)floor(floorY);
                         int tx = (int)(16.0f * (floorX - cellX)) & 15;
                         int ty = (int)(16.0f * (floorY - cellY)) & 15;
 
-                        float lightR = 1.0f, lightG = 1.0f, lightB = 1.0f;
-                        if (muzzleFlashTimer > 0) {
-                            float dist = (float)sqrt((floorX - drawPX)*(floorX - drawPX) + (floorY - drawPY)*(floorY - drawPY));
-                            if (dist < 4.0f) {
-                                float intensity = (4.0f - dist) / 4.0f * (muzzleFlashTimer / 5.0f);
-                                lightR += intensity * 1.5f; lightG += intensity * 1.2f; lightB += intensity * 0.5f;
+                        // Ambient by biome
+                        float lightR = 0.12f, lightG = 0.12f, lightB = 0.12f;
+                        if (currentLevel >= 40) { lightR = 0.22f; lightG = 0.10f; lightB = 0.06f; }
+                        else if (currentLevel >= 30) { lightR = 0.10f; lightG = 0.05f; lightB = 0.15f; }
+                        else if (currentLevel >= 20) { lightR = 0.08f; lightG = 0.14f; lightB = 0.20f; }
+                        else if (currentLevel >= 10) { lightR = 0.06f; lightG = 0.18f; lightB = 0.08f; }
+
+                        // Player torch point light
+                        float distToPlayer = (float)sqrt((floorX - drawPX)*(floorX - drawPX) + (floorY - drawPY)*(floorY - drawPY));
+                        float pRadius = (torchTimer > 0) ? 8.5f : ((pathfinderTimer > 0) ? 14.0f : ((currentLevel >= 20) ? 4.5f : 7.0f));
+                        if (distToPlayer < pRadius) {
+                            float att = (1.0f - distToPlayer / pRadius);
+                            float flicker = 1.0f + 0.12f * (float)sin(animFrameCount * 0.25f);
+                            lightR += att * flicker * 1.0f;
+                            lightG += att * flicker * 0.85f;
+                            lightB += att * flicker * 0.65f;
+                        }
+
+                        // Torch sconces (tile 29) & Shrines (tile 28) in local area (scan +/- 3 cells)
+                        int minCX = (cellX - 3 < 0) ? 0 : cellX - 3;
+                        int maxCX = (cellX + 3 >= 45) ? 44 : cellX + 3;
+                        int minCY = (cellY - 3 < 0) ? 0 : cellY - 3;
+                        int maxCY = (cellY + 3 >= 45) ? 44 : cellY + 3;
+                        for (int scx = minCX; scx <= maxCX; scx++) {
+                            for (int scy = minCY; scy <= maxCY; scy++) {
+                                int sv = GetMapValue(scx, scy);
+                                if (sv == 29 || sv == 28 || sv == 38) {
+                                    float sDist = (float)sqrt((floorX - (scx + 0.5f))*(floorX - (scx + 0.5f)) + (floorY - (scy + 0.5f))*(floorY - (scy + 0.5f)));
+                                    if (sDist < 4.5f) {
+                                        float satt = (1.0f - sDist / 4.5f) * (1.0f + 0.15f * (float)sin((animFrameCount + scx*5 + scy*7)*0.2f));
+                                        if (sv == 28) { lightR += satt * 1.0f; lightG += satt * 0.9f; lightB += satt * 0.4f; }
+                                        else if (sv == 38) { lightR += satt * 0.2f; lightG += satt * 1.0f; lightB += satt * 0.8f; }
+                                        else { lightR += satt * 1.0f; lightG += satt * 0.65f; lightB += satt * 0.3f; }
+                                    }
+                                }
                             }
                         }
+
+                        if (muzzleFlashTimer > 0 && distToPlayer < 4.5f) {
+                            float intensity = (4.5f - distToPlayer) / 4.5f * (muzzleFlashTimer / 5.0f);
+                            lightR += intensity * 1.5f; lightG += intensity * 1.2f; lightB += intensity * 0.5f;
+                        }
+
                         float swDist = 0.0f;
                         for (int i = 0; i < shockwaveCount; i++) {
                             float d = (float)fabs(sqrt((floorX - shockwaves[i].x)*(floorX - shockwaves[i].x) + (floorY - shockwaves[i].y)*(floorY - shockwaves[i].y)) - shockwaves[i].radius);
@@ -1651,9 +1815,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int texIdx = isFloor ? 23 : 24;
                         DWORD srcCol = textures[texIdx][ty * 16 + tx];
 
-                        float fR = (srcCol & 0xFF) * fog * lightR + swDist * 255.0f;
-                        float fG = ((srcCol >> 8) & 0xFF) * fog * lightG + swDist * 100.0f;
-                        float fB = ((srcCol >> 16) & 0xFF) * fog * lightB + swDist * 100.0f;
+                        float fR = (srcCol & 0xFF) * lightR + swDist * 255.0f;
+                        float fG = ((srcCol >> 8) & 0xFF) * lightG + swDist * 100.0f;
+                        float fB = ((srcCol >> 16) & 0xFF) * lightB + swDist * 100.0f;
                         if (fR > 255.0f) fR = 255.0f; if (fR < 0.0f) fR = 0.0f;
                         if (fG > 255.0f) fG = 255.0f; if (fG < 0.0f) fG = 0.0f;
                         if (fB > 255.0f) fB = 255.0f; if (fB < 0.0f) fB = 0.0f;
@@ -1661,6 +1825,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         pBits[y * W + x] = RGB((BYTE)fR, (BYTE)fG, (BYTE)fB);
                     }
                 }
+
+                // 2. Wall Casting with Dynamic Multi-Source Point Lighting
                 for (int x = 0; x < W; x++) {
                     float cameraX = 2 * x / (float)W - 1;
                     float rayDX = drawDX + drawPlaneX * cameraX;
@@ -1698,8 +1864,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (hit == 12 || hit == 15) {
                         float dx_m = pX - (mapX + 0.5f);
                         float dy_m = pY - (mapY + 0.5f);
-                        float pAngle = atan2(dy_m, dx_m);
-                        float mAngle = minotaurFacingDir[mapX][mapY] * (PI / 4.0f);
+                        float pAngle = (float)atan2(dy_m, dx_m);
+                        float mAngle = minotaurFacingDir[mapX][mapY] * (float)(PI / 4.0f);
                         float diff = pAngle - mAngle;
                         while (diff < -PI) diff += 2 * PI;
                         while (diff > PI) diff -= 2 * PI;
@@ -1724,31 +1890,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int texX = (int)(wallX * 16.0f) & 15;
                     
                     if (hit == 7) hit = 1;
-                    if (hit < 1 || hit > 22) hit = 1;
-                    if (hit == 1) { if (currentLevel >= 30) hit = 22; else if (currentLevel >= 20) hit = 21; else if (currentLevel >= 10) hit = 20; }
+                    if (hit < 1 || hit > 38) hit = 1;
+                    if (hit == 1) {
+                        if (currentLevel >= 40) hit = 27; // Magma Wall (Inferno)
+                        else if (currentLevel >= 30) hit = 22; // Void Wall (Abyss)
+                        else if (currentLevel >= 20) hit = 21; // Ice Wall (Frost)
+                        else if (currentLevel >= 10) hit = 20; // Tech Wall (Cyber)
+                    }
                     
                     float step = 16.0f / lineHeight;
                     float texPos = (actualStart - H / 2 + lineHeight / 2) * step;
                     
-                    float maxDist = (currentLevel >= 20) ? 4.5f : ((currentLevel >= 10) ? 7.0f : 12.0f);
-                    if (pathfinderTimer > 0) maxDist = 14.0f;
-                    float fog = 1.0f - perpWallDist / maxDist;
-                    if (fog < 0.1f) fog = 0.1f; if (fog > 1.0f) fog = 1.0f;
-                    if (currentLevel >= 15 && perpWallDist > maxDist && pathfinderTimer <= 0) fog = 0.0f;
-                    
-                    float sideMult = (side == 1) ? 0.7f : 1.0f;
-                    
-                    float actualWX = (side == 0) ? mapX : drawPX + perpWallDist * rayDX;
-                    float actualWY = (side == 0) ? drawPY + perpWallDist * rayDY : mapY;
+                    float sideMult = (side == 1) ? 0.75f : 1.0f;
+                    float actualWX = (side == 0) ? (float)mapX : drawPX + perpWallDist * rayDX;
+                    float actualWY = (side == 0) ? drawPY + perpWallDist * rayDY : (float)mapY;
 
-                    float lightR = 1.0f, lightG = 1.0f, lightB = 1.0f;
-                    if (muzzleFlashTimer > 0) {
-                        float distw = (float)sqrt((actualWX - drawPX)*(actualWX - drawPX) + (actualWY - drawPY)*(actualWY - drawPY));
-                        if (distw < 4.0f) {
-                            float intensity = (4.0f - distw) / 4.0f * (muzzleFlashTimer / 5.0f);
-                            lightR += intensity * 1.5f; lightG += intensity * 1.2f; lightB += intensity * 0.5f;
+                    // Dynamic multi-source point lighting on wall
+                    float lightR = 0.12f, lightG = 0.12f, lightB = 0.12f;
+                    if (currentLevel >= 40) { lightR = 0.22f; lightG = 0.10f; lightB = 0.06f; }
+                    else if (currentLevel >= 30) { lightR = 0.10f; lightG = 0.05f; lightB = 0.15f; }
+                    else if (currentLevel >= 20) { lightR = 0.08f; lightG = 0.14f; lightB = 0.20f; }
+                    else if (currentLevel >= 10) { lightR = 0.06f; lightG = 0.18f; lightB = 0.08f; }
+
+                    float distToPlayer = perpWallDist;
+                    float pRadius = (torchTimer > 0) ? 8.5f : ((pathfinderTimer > 0) ? 14.0f : ((currentLevel >= 20) ? 4.5f : 7.0f));
+                    if (distToPlayer < pRadius) {
+                        float att = (1.0f - distToPlayer / pRadius);
+                        float flicker = 1.0f + 0.12f * (float)sin(animFrameCount * 0.25f);
+                        lightR += att * flicker * 1.0f;
+                        lightG += att * flicker * 0.85f;
+                        lightB += att * flicker * 0.65f;
+                    }
+
+                    int minCX = (mapX - 3 < 0) ? 0 : mapX - 3;
+                    int maxCX = (mapX + 3 >= 45) ? 44 : mapX + 3;
+                    int minCY = (mapY - 3 < 0) ? 0 : mapY - 3;
+                    int maxCY = (mapY + 3 >= 45) ? 44 : mapY + 3;
+                    for (int scx = minCX; scx <= maxCX; scx++) {
+                        for (int scy = minCY; scy <= maxCY; scy++) {
+                            int sv = GetMapValue(scx, scy);
+                            if (sv == 29 || sv == 28 || sv == 38) {
+                                float sDist = (float)sqrt((actualWX - (scx + 0.5f))*(actualWX - (scx + 0.5f)) + (actualWY - (scy + 0.5f))*(actualWY - (scy + 0.5f)));
+                                if (sDist < 4.5f) {
+                                    float satt = (1.0f - sDist / 4.5f) * (1.0f + 0.15f * (float)sin((animFrameCount + scx*5 + scy*7)*0.2f));
+                                    if (sv == 28) { lightR += satt * 1.0f; lightG += satt * 0.9f; lightB += satt * 0.4f; }
+                                    else if (sv == 38) { lightR += satt * 0.2f; lightG += satt * 1.0f; lightB += satt * 0.8f; }
+                                    else { lightR += satt * 1.0f; lightG += satt * 0.65f; lightB += satt * 0.3f; }
+                                }
+                            }
                         }
                     }
+
+                    if (muzzleFlashTimer > 0 && distToPlayer < 4.5f) {
+                        float intensity = (4.5f - distToPlayer) / 4.5f * (muzzleFlashTimer / 5.0f);
+                        lightR += intensity * 1.5f; lightG += intensity * 1.2f; lightB += intensity * 0.5f;
+                    }
+
                     float swDist = 0.0f;
                     for (int i = 0; i < shockwaveCount; i++) {
                         float d = (float)fabs(sqrt((actualWX - shockwaves[i].x)*(actualWX - shockwaves[i].x) + (actualWY - shockwaves[i].y)*(actualWY - shockwaves[i].y)) - shockwaves[i].radius);
@@ -1761,15 +1958,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         
                         DWORD srcCol = textures[hit][texY * 16 + texX];
                         float tintR = 1.0f, tintG = 1.0f, tintB = 1.0f;
-                        if (hit == 1 || hit == 20 || hit == 21 || hit == 22) {
+                        if (hit == 1 || hit == 20 || hit == 21 || hit == 22 || hit == 27) {
                             int varVal = (mapX * 13 + mapY * 37) % 3;
                             if (varVal == 0) { tintR = 0.85f; tintG = 0.9f; tintB = 1.0f; }
                             else if (varVal == 1) { tintR = 1.0f; tintG = 0.9f; tintB = 0.85f; }
                         }
                         
-                        float fR = (srcCol & 0xFF) * sideMult * fog * tintR * lightR + swDist * 255.0f;
-                        float fG = ((srcCol >> 8) & 0xFF) * sideMult * fog * tintG * lightG + swDist * 100.0f;
-                        float fB = ((srcCol >> 16) & 0xFF) * sideMult * fog * tintB * lightB + swDist * 100.0f;
+                        float fR = (srcCol & 0xFF) * sideMult * lightR * tintR + swDist * 255.0f;
+                        float fG = ((srcCol >> 8) & 0xFF) * sideMult * lightG * tintG + swDist * 100.0f;
+                        float fB = ((srcCol >> 16) & 0xFF) * sideMult * lightB * tintB + swDist * 100.0f;
                         if (fR > 255.0f) fR = 255.0f; if (fR < 0.0f) fR = 0.0f;
                         if (fG > 255.0f) fG = 255.0f; if (fG < 0.0f) fG = 0.0f;
                         if (fB > 255.0f) fB = 255.0f; if (fB < 0.0f) fB = 0.0f;
@@ -1779,7 +1976,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            // Draw HUD equipment & GDI overlay elements on hdcMem (Multi-Layered Particles)
+            // Draw HUD equipment & GDI overlay elements on hdcMem
             for (int i = 0; i < particleCount; i++) {
                 int px = (int)particles[i].x;
                 int py = (int)particles[i].y;
@@ -1787,13 +1984,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     float ratio = (float)particles[i].life / particles[i].maxLife;
                     int size = (int)(ratio * 6.0f) + 1;
                     
-                    // Outer glow
                     HBRUSH pb = CreateSolidBrush(particles[i].color);
                     RECT pr = {px - size/2, py - size/2, px + size/2 + 1, py + size/2 + 1};
                     FillRect(hdcMem, &pr, pb);
                     DeleteObject(pb);
                     
-                    // Inner core
                     if (size > 2) {
                         HBRUSH pb2 = CreateSolidBrush(RGB(255, 255, 255));
                         RECT pr2 = {px - size/4, py - size/4, px + size/4 + 1, py + size/4 + 1};
@@ -1807,11 +2002,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             static float lastPX = 1.5f, lastPY = 1.5f;
             static float swayX = 0.0f;
             static float lastDX = 1.0f, lastDY = 0.0f;
-            float mDist = sqrt((pX - lastPX)*(pX - lastPX) + (pY - lastPY)*(pY - lastPY));
+            float mDist = (float)sqrt((pX - lastPX)*(pX - lastPX) + (pY - lastPY)*(pY - lastPY));
             bobTime += mDist * 15.0f;
-            float bobY = sin(bobTime) * 5.0f;
-            float bobX = cos(bobTime * 0.5f) * 3.0f;
-            float turnAmount = atan2(dY, dX) - atan2(lastDY, lastDX);
+            float bobY = (float)sin(bobTime) * 5.0f;
+            float bobX = (float)cos(bobTime * 0.5f) * 3.0f;
+            float turnAmount = (float)atan2(dY, dX) - (float)atan2(lastDY, lastDX);
             while(turnAmount < -PI) turnAmount += 2*PI;
             while(turnAmount > PI) turnAmount -= 2*PI;
             swayX = swayX * 0.8f + turnAmount * 200.0f;
@@ -1852,7 +2047,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int ex = 8, ey = 8;
                     for (int i = 0; i < 45; i++) {
                         for (int j = 0; j < 45; j++) {
-                            if (GetMapValue(i, j) == 2) { ex = i; ey = j; break; }
+                            if (GetMapValue(i, j) == 2 || GetMapValue(i, j) == 38) { ex = i; ey = j; break; }
                         }
                     }
                     float targetAngle = (float)atan2(ey - pY, ex - pX) - (float)atan2(dY, dX);
@@ -1892,8 +2087,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(handleP); DeleteObject(headP);
                 }
             }
-            
-            // UI graphics are drawn above
 
             // Minimap with direction arrow & Pathfinder Path
             if (gameState == 1 && (hasCompass || pathfinderTimer > 0 || currentLevel < 15)) {
@@ -1932,17 +2125,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HBRUSH mMono = CreateSolidBrush(RGB(255, 50, 50));
                     HBRUSH mPick = CreateSolidBrush(RGB(150, 75, 0));
                     HBRUSH mStun = CreateSolidBrush(RGB(100, 200, 255));
+                    HBRUSH mShrine = CreateSolidBrush(RGB(255, 215, 0));
+                    HBRUSH mTorch = CreateSolidBrush(RGB(255, 140, 0));
+                    HBRUSH mShaft = CreateSolidBrush(RGB(0, 255, 200));
                     
                     for (int i = 0; i < mmW; i++) {
                         for (int j = 0; j < mmH; j++) {
                             if (currentLevel >= 15 && pathfinderTimer <= 0) {
-                                float distToPlayer = (float)sqrt((i - pX)*(i - pX) + (j - pY)*(j - pY));
-                                if (distToPlayer > 5.5f) continue;
+                                float distToP = (float)sqrt((i - pX)*(i - pX) + (j - pY)*(j - pY));
+                                if (distToP > 5.5f) continue;
                             }
                             int v = GetMapValue(i, j);
                             HBRUSH b = mFloor;
                             if (isPathTile[i][j] && pathfinderTimer > 0) b = mPath;
-                            else if (v == 1 || v == 7) b = mWall;
+                            else if (v == 1 || v == 7 || v == 20 || v == 21 || v == 22 || v == 27) b = mWall;
                             else if (v == 2) b = mExit;
                             else if (v == 3) b = mKey;
                             else if (v == 4) b = mDoor;
@@ -1955,6 +2151,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             else if (v == 13) b = mPick;
                             else if (v == 14) b = mStun;
                             else if (v == 15) b = mBoss;
+                            else if (v == 28) b = mShrine;
+                            else if (v == 29) b = mTorch;
+                            else if (v == 38) b = mShaft;
                             
                             RECT mr = {mmX + i*mmS, mmY + j*mmS, mmX + i*mmS + mmS, mmY + j*mmS + mmS};
                             FillRect(hdcMem, &mr, b);
@@ -1965,7 +2164,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     DeleteObject(mWall); DeleteObject(mExit); DeleteObject(mKey); DeleteObject(mDoor); DeleteObject(mFloor); DeleteObject(mPlayer); DeleteObject(mCoin);
                     DeleteObject(mTrap); DeleteObject(mComp); DeleteObject(mSpeed); DeleteObject(mTele); DeleteObject(mPath); DeleteObject(mBoss);
-                    DeleteObject(mMono); DeleteObject(mPick); DeleteObject(mStun);
+                    DeleteObject(mMono); DeleteObject(mPick); DeleteObject(mStun); DeleteObject(mShrine); DeleteObject(mTorch); DeleteObject(mShaft);
                 }
             }
 
@@ -1980,38 +2179,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetBkMode(hdc, TRANSPARENT);
             if (gameState == 0) {
-                const char* t1 = "KMAZE";
+                const char* t1 = "KMAZE - DUNGEON DESCENT";
                 const char* t2 = "Press ENTER to start";
-                const char* t3 = "Press F1 or H for Help";
-                char t4[64]; wsprintfA(t4, "Games: %d Escapes: %d", totalGames, totalEscapes);
+                const char* t3 = "Press F1 or H for Help | L to Load Checkpoint";
+                char t4[64]; wsprintfA(t4, "Games: %d Escapes: %d Best: %ds", totalGames, totalEscapes, (int)bestTime);
                 
                 SetTextColor(hdc, RGB(0, 0, 0));
-                TextOutA(hdc, clientRect.right/2 - 30 + 2, clientRect.bottom/2 - 40 + 2, t1, lstrlenA(t1));
+                TextOutA(hdc, clientRect.right/2 - 90 + 2, clientRect.bottom/2 - 40 + 2, t1, lstrlenA(t1));
                 TextOutA(hdc, clientRect.right/2 - 110 + 2, clientRect.bottom/2 - 10 + 2, t2, lstrlenA(t2));
-                TextOutA(hdc, clientRect.right/2 - 130 + 2, clientRect.bottom/2 + 20 + 2, t3, lstrlenA(t3));
-                TextOutA(hdc, clientRect.right/2 - 110 + 2, clientRect.bottom/2 + 50 + 2, t4, lstrlenA(t4));
+                TextOutA(hdc, clientRect.right/2 - 170 + 2, clientRect.bottom/2 + 20 + 2, t3, lstrlenA(t3));
+                TextOutA(hdc, clientRect.right/2 - 130 + 2, clientRect.bottom/2 + 50 + 2, t4, lstrlenA(t4));
                 
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, clientRect.right/2 - 30, clientRect.bottom/2 - 40, t1, lstrlenA(t1));
+                TextOutA(hdc, clientRect.right/2 - 90, clientRect.bottom/2 - 40, t1, lstrlenA(t1));
                 TextOutA(hdc, clientRect.right/2 - 110, clientRect.bottom/2 - 10, t2, lstrlenA(t2));
-                TextOutA(hdc, clientRect.right/2 - 130, clientRect.bottom/2 + 20, t3, lstrlenA(t3));
-                TextOutA(hdc, clientRect.right/2 - 110, clientRect.bottom/2 + 50, t4, lstrlenA(t4));
+                TextOutA(hdc, clientRect.right/2 - 170, clientRect.bottom/2 + 20, t3, lstrlenA(t3));
+                TextOutA(hdc, clientRect.right/2 - 130, clientRect.bottom/2 + 50, t4, lstrlenA(t4));
             } else if (gameState == 2) {
                 DWORD elapsedSec = (endTime - startTime) / 1000;
-                char t1[64]; wsprintfA(t1, "Escaped 35! Time: %ds", elapsedSec);
-                char t2[64]; wsprintfA(t2, "Score: %d", score);
+                char t1[64]; wsprintfA(t1, "Escaped 45 Stages! Time: %ds", elapsedSec);
+                char t2[64]; wsprintfA(t2, "Final Score: %d", score);
                 const char* t3 = "Press R for Replay";
                 const char* t4 = "ENTER to Restart";
                 
                 SetTextColor(hdc, RGB(0, 0, 0));
-                TextOutA(hdc, clientRect.right/2 - 110 + 2, clientRect.bottom/2 - 40 + 2, t1, lstrlenA(t1));
-                TextOutA(hdc, clientRect.right/2 - 60 + 2, clientRect.bottom/2 - 10 + 2, t2, lstrlenA(t2));
+                TextOutA(hdc, clientRect.right/2 - 120 + 2, clientRect.bottom/2 - 40 + 2, t1, lstrlenA(t1));
+                TextOutA(hdc, clientRect.right/2 - 70 + 2, clientRect.bottom/2 - 10 + 2, t2, lstrlenA(t2));
                 TextOutA(hdc, clientRect.right/2 - 100 + 2, clientRect.bottom/2 + 20 + 2, t3, lstrlenA(t3));
                 TextOutA(hdc, clientRect.right/2 - 90 + 2, clientRect.bottom/2 + 50 + 2, t4, lstrlenA(t4));
                 
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, clientRect.right/2 - 110, clientRect.bottom/2 - 40, t1, lstrlenA(t1));
-                TextOutA(hdc, clientRect.right/2 - 60, clientRect.bottom/2 - 10, t2, lstrlenA(t2));
+                TextOutA(hdc, clientRect.right/2 - 120, clientRect.bottom/2 - 40, t1, lstrlenA(t1));
+                TextOutA(hdc, clientRect.right/2 - 70, clientRect.bottom/2 - 10, t2, lstrlenA(t2));
                 TextOutA(hdc, clientRect.right/2 - 100, clientRect.bottom/2 + 20, t3, lstrlenA(t3));
                 TextOutA(hdc, clientRect.right/2 - 90, clientRect.bottom/2 + 50, t4, lstrlenA(t4));
             } else if (gameState == 3) {
@@ -2024,8 +2223,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(hdc, RGB(255, 255, 255)); TextOutA(hdc, 20, 20, uiText, lstrlenA(uiText));
             } else {
                 DWORD elapsedSec = (GetTickCount() - startTime) / 1000;
-                char t1[128]; wsprintfA(t1, "Lvl:%d/35 K:%d P:%d C:%d S:%d F:%d T:%d", currentLevel + 1, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges);
-                char t2[128]; wsprintfA(t2, "Score:%d Time:%ds", score, elapsedSec);
+                const char* biome = "Catacombs";
+                if (currentLevel >= 40) biome = "Inferno Citadel";
+                else if (currentLevel >= 30) biome = "Abyssal Depths";
+                else if (currentLevel >= 20) biome = "Frost Caverns";
+                else if (currentLevel >= 10) biome = "Cyber Labyrinth";
+
+                char t1[128]; wsprintfA(t1, "Lvl:%d/45 [%s] K:%d P:%d C:%d S:%d F:%d T:%d", currentLevel + 1, biome, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges);
+                char t2[128]; wsprintfA(t2, "Score:%d Time:%ds Torch:%ds", score, elapsedSec, torchTimer/1000);
                 const char* t3 = "V:Save L:Load F1/H:Help";
                 
                 SetTextColor(hdc, RGB(0, 0, 0));
@@ -2052,15 +2257,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (msgTimer > 0) {
                 SetTextColor(hdc, RGB(0, 0, 0));
-                TextOutA(hdc, clientRect.right/2 - 118 + 2, 82, msgText, lstrlenA(msgText));
+                TextOutA(hdc, clientRect.right/2 - 148 + 2, 82, msgText, lstrlenA(msgText));
                 SetTextColor(hdc, RGB(255, 255, 0));
-                TextOutA(hdc, clientRect.right/2 - 120, 80, msgText, lstrlenA(msgText));
+                TextOutA(hdc, clientRect.right/2 - 150, 80, msgText, lstrlenA(msgText));
             }
 
             // Active Items Legend HUD
             if (gameState == 1) {
-                char itemText[128];
-                wsprintfA(itemText, "[P]Break [C]Path:%ds [S]Speed:%ds [F]Stun:%ds [T]Freeze:%ds [H]Help", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000);
+                char itemText[160];
+                wsprintfA(itemText, "[P]Break [C]Path:%ds [S]Speed:%ds [F]Stun:%ds [T]Freeze:%ds [V]Save [L]Load", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000);
                 SetTextColor(hdc, RGB(0, 0, 0));
                 TextOutA(hdc, 22, clientRect.bottom - 28, itemText, lstrlenA(itemText));
                 SetTextColor(hdc, RGB(0, 255, 255));
