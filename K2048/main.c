@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <math.h>
 
 void* __cdecl memset(void* p, int c, size_t sz) {
     char* pb = (char*)p;
@@ -27,9 +26,24 @@ void* __cdecl memmove(void* dest, const void* src, size_t sz) {
     return dest;
 }
 
+#define MY_PI 3.14159265358979323846
+
+static float my_sin(float x) {
+    while (x < -MY_PI) x += 2.0f * (float)MY_PI;
+    while (x > MY_PI) x -= 2.0f * (float)MY_PI;
+    float x2 = x * x;
+    return x * (1.0f - x2 / 6.0f + (x2 * x2) / 120.0f - (x2 * x2 * x2) / 5040.0f);
+}
+
+static float my_cos(float x) {
+    return my_sin(x + (float)MY_PI / 2.0f);
+}
+
 #define MAX_GRID 6
 #define HEADER_HEIGHT 65
 #define MARGIN 10
+
+COLORREF GetTileColor(int val);
 
 int grid_size = 4;
 int grid[MAX_GRID][MAX_GRID];
@@ -234,9 +248,9 @@ void UpdateAndDrawParticles(HDC hdc) {
             if (debris[k].y > 800) debris[k].active = 0;
             else {
                 int s = (320 / grid_size) / 2 - 2;
-                float angle = debris[k].rot * 3.14159f / 180.0f;
-                float cosA = cosf(angle);
-                float sinA = sinf(angle);
+                float angle = debris[k].rot * (float)MY_PI / 180.0f;
+                float cosA = my_cos(angle);
+                float sinA = my_sin(angle);
                 POINT pts[4];
                 pts[0].x = (int)(debris[k].x + (-s)*cosA - (-s)*sinA);
                 pts[0].y = (int)(debris[k].y + (-s)*sinA + (-s)*cosA);
@@ -775,6 +789,8 @@ void LoadBest() {
     char filename[32];
     if (ruleset == 1) {
         wsprintfA(filename, "k2048_score_%d_fib.dat", grid_size);
+    } else if (ruleset == 2) {
+        wsprintfA(filename, "k2048_score_%d_threes.dat", grid_size);
     } else {
         wsprintfA(filename, "k2048_score_%d.dat", grid_size);
     }
@@ -824,6 +840,8 @@ void SaveBest() {
     char filename[32];
     if (ruleset == 1) {
         wsprintfA(filename, "k2048_score_%d_fib.dat", grid_size);
+    } else if (ruleset == 2) {
+        wsprintfA(filename, "k2048_score_%d_threes.dat", grid_size);
     } else {
         wsprintfA(filename, "k2048_score_%d.dat", grid_size);
     }
@@ -1074,6 +1092,10 @@ void DoTileUpgrade() {
         }
         grid[minI][minJ] = nextVal;
         frozen[minI][minJ] = 0;
+        if (nextVal > stats_highestTile) {
+            stats_highestTile = nextVal;
+            SaveStats();
+        }
         int cell_size = 320 / grid_size;
         int px = MARGIN + 8 + minJ * cell_size + cell_size / 2;
         int py = HEADER_HEIGHT + 8 + minI * cell_size + cell_size / 2;
@@ -1128,6 +1150,8 @@ void DoTileHammer() {
         SpawnMergeParticles(px, py, RGB(255, 60, 60));
         grid[targetI][targetJ] = 0;
         frozen[targetI][targetJ] = 0;
+        mergePop[targetI][targetJ] = 0;
+        squashTimer[targetI][targetJ] = 0;
         Beep(300, 45);
         InvalidateRect(mainHwnd, NULL, TRUE);
     }
@@ -1145,6 +1169,10 @@ void DoFreeUndo() {
     timeOut = 0;
     outOfMoves = 0;
     win = 0;
+    if (timeAttackEnabled && !timerActive && timeRemaining > 0 && mainHwnd) {
+        SetTimer(mainHwnd, 1, 1000, NULL);
+        timerActive = 1;
+    }
     Beep(500, 30);
     InvalidateRect(mainHwnd, NULL, TRUE);
 }
@@ -1332,6 +1360,7 @@ void DrawBoard(HDC hdc) {
 int Move(int dx, int dy) {
     if (gameOver || win) return 0;
     int moved = 0;
+    int cell_size = 320 / grid_size;
 
     int tempGrid[MAX_GRID][MAX_GRID];
     int tempFrozen[MAX_GRID][MAX_GRID];
@@ -1380,7 +1409,6 @@ int Move(int dx, int dy) {
                                 for (int c = nj - 1; c <= nj + 1; c++) {
                                     if (r >= 0 && r < grid_size && c >= 0 && c < grid_size) {
                                         if (grid[r][c] != 0) {
-                                            int cell_size = 320 / grid_size;
                                             int px = MARGIN + 8 + c * cell_size + cell_size / 2;
                                             int py = HEADER_HEIGHT + 8 + r * cell_size + cell_size / 2;
                                             SpawnMergeParticles(px, py, RGB(255, 60, 60));
@@ -1428,7 +1456,6 @@ int Move(int dx, int dy) {
                             squashTimer[ni][nj] = 0;
                         }
 
-                        int cell_size = 320 / grid_size;
                         int px = MARGIN + 8 + nj * cell_size + cell_size / 2;
                         int py = HEADER_HEIGHT + 8 + ni * cell_size + cell_size / 2;
                         COLORREF pColor = GetTileColor(mergeRes);
@@ -1691,6 +1718,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             RECT rc;
             GetClientRect(hwnd, &rc);
+            if (rc.right <= 0 || rc.bottom <= 0) {
+                EndPaint(hwnd, &ps);
+                return 0;
+            }
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBitmap = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
             HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);

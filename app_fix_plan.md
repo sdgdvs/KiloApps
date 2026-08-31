@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** K2048
+**Target App:** KAudio
 **Status:** Next (Pass 4)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -281,5 +281,8 @@ Pass 1 Complete.
 - **KVault**: Added secret editing functionality (`editSecret`), category and title search filtering, 10MB import/drop file size validation, safe DOM `textContent` notifications, and robust clipboard promise rejection handling in `kvault.html`. Fixed `INVALID_FILE_SIZE` checking on file load and drag-and-drop, eliminated startup `wc.hbrBackground` GDI brush leak, added missing `KillTimer` on `WM_DESTROY`, expanded edit control capacity to 1MB (`EM_LIMITTEXT`), added `WS_TABSTOP` styles for keyboard navigation, and added bounds checking and `secure_zero` for find text buffers in `main.c`. Recompiled native `KVault.exe` (14.3 KB) and verified build cleanly.
  
 - **KZip**: Fixed critical syntax error from escaped template literals in batch extraction, fixed unsigned right shift in `cryptXOR`, added safe fallback regex handling in search filter, enabled double-click on table rows to preview files, chunked base64 conversion to avoid call stack limits, and added native `.kza` drag-and-drop loading support in `kzip.html`. In `main.c`, added Win32 `DragAcceptFiles` and `WM_DROPFILES` drag-and-drop support for `.kza` archives and files, read length validation bounds in `OpenArchive`, non-intrusive silent mode for batch extractions, listbox selection preservation on file removal, and `VK_DELETE` keyboard shortcut to remove files. Pass 3 Complete. Recompiled native `KZip.exe` (18.4 KB) and verified Vite web build.
+ 
+## Pass 4 Completed Apps
+- **K2048**: In `main.c`, fixed MSVC CRT linker errors for `_cos` and `_sin` in debris physics by implementing CRT-free `my_sin` and `my_cos` Taylor series functions, resolved compile errors for undeclared `cell_size` in `Move()`, added forward declaration for `GetTileColor`, added ruleset 2 (Threes) high score file support (`k2048_score_%d_threes.dat`) in `LoadBest`/`SaveBest` to avoid overwriting Classic scores, updated `stats_highestTile` during `DoTileUpgrade`, cleared `mergePop`/`squashTimer` in `DoTileHammer`, restored time attack timer on `DoFreeUndo`, and added 0x0 client size guard in `WM_PAINT`. In `k2048.html`, added safe DOM construction for statistics items in `showStats()`, updated `stats.highestTile` in `useUpgradeSkill()`, ensured bomb and partner tile elements are safely removed from DOM and array in `slideLine()`, and added Escape key handler to close active dialog modals. Recompiled native `K2048.exe` (33.2 KB) and verified Vite web build cleanly.
 
 
