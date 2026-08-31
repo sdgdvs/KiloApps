@@ -1782,6 +1782,134 @@
       20% { opacity: 1; filter: brightness(2) blur(0px); }
       100% { transform: scale(1.5) rotate(90deg); opacity: 0; filter: brightness(1) blur(5px); }
     }
+
+    /* Tier 6 & Mythic styles */
+    .element-card.t6 {
+      border-color: #ff69b4;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 105, 180, 0.2) 0%, rgba(15, 14, 30, 0.9) 100%);
+      box-shadow: 0 0 14px rgba(255, 105, 180, 0.35);
+    }
+    .element-card.t6:hover {
+      border-color: #ff1493;
+      box-shadow: 0 0 22px rgba(255, 20, 147, 0.6);
+      transform: translateY(-3px) scale(1.03);
+    }
+
+    /* Daily Trials & Rebirth Containers */
+    .daily-container, .rebirth-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 520px;
+      margin: 10px auto;
+      z-index: 2;
+    }
+
+    .daily-card, .astral-card {
+      background: linear-gradient(135deg, rgba(22, 21, 46, 0.95), rgba(40, 28, 65, 0.95));
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      transition: all 0.2s ease;
+    }
+    .daily-card:hover, .astral-card:hover {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 16px rgba(243, 156, 18, 0.35);
+    }
+
+    .daily-info, .astral-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .daily-title, .astral-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .daily-progress-bar-bg {
+      width: 220px;
+      height: 7px;
+      background: rgba(9, 9, 20, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 3px;
+    }
+
+    .daily-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3498db, #2ecc71);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .btn-claim, .btn-astral {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      border: 1px solid #f1c40f;
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(243, 156, 18, 0.4);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-claim:hover, .btn-astral:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 16px rgba(243, 156, 18, 0.6);
+    }
+    .btn-claim.disabled, .btn-astral.disabled {
+      background: rgba(100, 100, 120, 0.2);
+      border-color: rgba(100, 100, 120, 0.4);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-rebirth-ascend {
+      background: linear-gradient(135deg, #e74c3c, #9b59b6);
+      border: 2px solid #f1c40f;
+      color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 800;
+      padding: 12px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+      transition: all 0.25s ease;
+      width: 100%;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .btn-rebirth-ascend:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 30px rgba(243, 156, 18, 0.8);
+    }
+    .btn-rebirth-ascend.disabled {
+      background: rgba(60, 60, 80, 0.4);
+      border-color: rgba(100, 100, 120, 0.4);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
   </style>
 </head>
 <body>
@@ -1836,6 +1964,18 @@
         <span class="label">Puzzle Best:</span>
         <span class="val" id="stat-puzzle-high">0</span>
       </div>
+      <div class="stat-badge" style="border-color:#ff69b4;">
+        <span class="label">✨ Astral:</span>
+        <span class="val" id="stat-astral" style="color:#ff69b4;">0</span>
+      </div>
+      <div class="stat-badge" style="border-color:#e67e22;">
+        <span class="label">Rebirth:</span>
+        <span class="val" id="stat-rebirth" style="color:#e67e22;">R0</span>
+      </div>
+      <div class="stat-badge" style="border-color:#f39c12;">
+        <span class="label">🔥 Streak:</span>
+        <span class="val" id="stat-streak" style="color:#f39c12;">0</span>
+      </div>
       <div class="stat-badge" style="cursor:pointer; background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(243, 156, 18, 0.3)); border-color: var(--accent-gold-light);" onclick="openHelpModal()" title="Open Grandmaster Manual & Help">
         <span class="label" style="color:var(--accent-gold-light)">📘 Manual (F1/H)</span>
       </div>
@@ -1867,6 +2007,7 @@
         <button class="tier-tab" onclick="setTierFilter(3)">T3 Metallurgy</button>
         <button class="tier-tab" onclick="setTierFilter(4)">T4 Arcane</button>
         <button class="tier-tab" onclick="setTierFilter(5)">T5 Celestial</button>
+        <button class="tier-tab" onclick="setTierFilter(6)">T6 Mythic</button>
       </div>
 
       <div class="grimoire-search">
@@ -1913,6 +2054,8 @@
         <button class="equip-tab" id="equip-workshop" onclick="selectEquipment('workshop')">🧙 Workshop</button>
         <button class="equip-tab" id="equip-brewing" onclick="selectEquipment('brewing')">🥣 Potions</button>
         <button class="equip-tab" id="equip-codex" onclick="selectEquipment('codex')">📖 Codex</button>
+        <button class="equip-tab" id="equip-daily" onclick="selectEquipment('daily')">🎯 Daily</button>
+        <button class="equip-tab" id="equip-rebirth" onclick="selectEquipment('rebirth')">🌟 Rebirth</button>
       </div>
 
       <div class="equipment-desc" id="equipment-desc">
@@ -1936,6 +2079,16 @@
 
       <!-- Master Alchemist Codex Container (Shown in Codex mode) -->
       <div class="codex-container" id="codex-container" style="display: none;">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Daily Trials Container (Shown in Daily mode) -->
+      <div class="daily-container" id="daily-container" style="display: none;">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Magnum Opus Rebirth Container (Shown in Rebirth mode) -->
+      <div class="rebirth-container" id="rebirth-container" style="display: none;">
         <!-- Injected by JS -->
       </div>
 
@@ -2003,7 +2156,8 @@
       { id: 2, name: 'Nature', threshold: 4, color: '#2ecc71', icon: '🌿' },
       { id: 3, name: 'Metallurgy', threshold: 12, color: '#e67e22', icon: '⚙️' },
       { id: 4, name: 'Arcane', threshold: 24, color: '#9b59b6', icon: '✨' },
-      { id: 5, name: 'Celestial', threshold: 38, color: '#f1c40f', icon: '⭐' }
+      { id: 5, name: 'Celestial', threshold: 38, color: '#f1c40f', icon: '⭐' },
+      { id: 6, name: 'Mythic', threshold: 48, color: '#ff69b4', icon: '🌟' }
     ];
 
     const ALL_ELEMENTS = [
@@ -2071,7 +2225,17 @@
       { id: 'supernova', name: 'Supernova', icon: '💥', tier: 5, lore: "Cataclysmic explosion seeding cosmos with gold.", basic: false },
       { id: 'blackhole', name: 'Black Hole', icon: '🕳️', tier: 5, lore: "Gravitational singularity swallowing light.", basic: false },
       { id: 'time', name: 'Time', icon: '⏳', tier: 5, lore: "Temporal river flowing continuously through cosmos.", basic: false },
-      { id: 'eternity', name: 'Eternity', icon: '♾️', tier: 5, lore: "Infinite timeless state beyond magic and space.", basic: false }
+      { id: 'eternity', name: 'Eternity', icon: '♾️', tier: 5, lore: "Infinite timeless state beyond magic and space.", basic: false },
+
+      // Tier 6: Secret / Mythic Combos (8)
+      { id: 'philosophers_stone', name: "Philosopher's Stone", icon: '🌟', tier: 6, lore: "The supreme magnum opus granting endless transmutation power and rejuvenation.", basic: false },
+      { id: 'dark_matter', name: "Dark Matter", icon: '🌌', tier: 6, lore: "Primordial invisible mass anchoring galaxies in the cosmic web.", basic: false },
+      { id: 'celestial_aegis', name: "Celestial Aegis", icon: '🛡️', tier: 6, lore: "An impenetrable shield forged from starlight and dragon scales.", basic: false },
+      { id: 'chrono_crystal', name: "Chrono Crystal", icon: '💎', tier: 6, lore: "A temporal singularity frozen in an iridescent crystalline lattice.", basic: false },
+      { id: 'primordial_ooze', name: "Primordial Ooze", icon: '🧬', tier: 6, lore: "The genesis broth from which all organic life was first sparked.", basic: false },
+      { id: 'aether', name: "Aether", icon: '✨', tier: 6, lore: "The elusive fifth essence permeating the spaces between stars.", basic: false },
+      { id: 'quintessence', name: "Quintessence", icon: '🔮', tier: 6, lore: "The ultimate divine spark connecting all physical and spiritual matter.", basic: false },
+      { id: 'nether_flame', name: "Nether Flame", icon: '🔥', tier: 6, lore: "An undying planar fire that burns without fuel in the dark void.", basic: false }
     ];
 
     const RECIPES = [
@@ -2143,7 +2307,24 @@
       { ingredients: ['mud', 'stone'], result: 'clay' },
       { ingredients: ['fire', 'clay'], result: 'glass' },
       { ingredients: ['electricity', 'water'], result: 'energy' },
-      { ingredients: ['light', 'glass'], result: 'starlight' }
+      { ingredients: ['light', 'glass'], result: 'starlight' },
+      // Tier 6: Secret Mythic Combinations (16)
+      { ingredients: ['gold', 'elixir'], result: 'philosophers_stone' },
+      { ingredients: ['gold', 'crystal'], result: 'philosophers_stone' },
+      { ingredients: ['blackhole', 'cosmos'], result: 'dark_matter' },
+      { ingredients: ['nether', 'blackhole'], result: 'dark_matter' },
+      { ingredients: ['starlight', 'dragon'], result: 'celestial_aegis' },
+      { ingredients: ['rune', 'sun'], result: 'celestial_aegis' },
+      { ingredients: ['time', 'crystal'], result: 'chrono_crystal' },
+      { ingredients: ['time', 'starlight'], result: 'chrono_crystal' },
+      { ingredients: ['mud', 'life'], result: 'primordial_ooze' },
+      { ingredients: ['swamp', 'spirit'], result: 'primordial_ooze' },
+      { ingredients: ['cosmos', 'air'], result: 'aether' },
+      { ingredients: ['light', 'spirit'], result: 'aether' },
+      { ingredients: ['aether', 'magic'], result: 'quintessence' },
+      { ingredients: ['philosophers_stone', 'mana'], result: 'quintessence' },
+      { ingredients: ['nether', 'fire'], result: 'nether_flame' },
+      { ingredients: ['explosion', 'nether'], result: 'nether_flame' }
     ];
 
 
@@ -2164,6 +2345,262 @@
     let upgrades = { crucibleCap: 0, essenceYield: 0, autoSorter: 0, catalystSpeed: 0 };
     let potions = { strength: 0, invisibility: 0, mana: 0, life: 0 };
     let activeBuffs = { strength: 0, invisibility: 0, mana: 0, life: 0 };
+
+    // Loop 2: Daily Trials & Magnum Opus Rebirth State
+    let astralShards = 0;
+    let prestigeLevel = 0;
+    let totalPrestiges = 0;
+    let astralPerks = { crucible: 0, midas: 0, grimoire: 0, catalysis: 0 };
+    let dailyChallenges = [];
+    let dailyStreak = 0;
+    let secretCombosFound = 0;
+
+
+    // Daily Trials Implementation
+    function initDailyChallenges() {
+      if (!dailyChallenges || dailyChallenges.length === 0) {
+        dailyChallenges = [
+          { id: 'dc_1', type: 0, desc: 'Perform 6 Transmutations', current: 0, target: 6, rewardGold: 120, rewardEssence: 150, rewardAstral: 1, claimed: false },
+          { id: 'dc_2', type: 1, desc: 'Fulfill 2 Guild Quests', current: 0, target: 2, rewardGold: 150, rewardEssence: 200, rewardAstral: 1, claimed: false },
+          { id: 'dc_3', type: 2, desc: 'Purify 4 Elements (Retort/Alembic/Anvil)', current: 0, target: 4, rewardGold: 100, rewardEssence: 100, rewardAstral: 1, claimed: false }
+        ];
+      }
+    }
+
+    function checkDailyProgress(type, amount = 1) {
+      initDailyChallenges();
+      let changed = false;
+      dailyChallenges.forEach(dc => {
+        if (!dc.claimed && dc.type === type) {
+          dc.current = Math.min(dc.target, dc.current + amount);
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveState();
+        if (activeEquipment === 'daily') renderDailyTrials();
+      }
+    }
+
+    function renderDailyTrials() {
+      const cont = document.getElementById('daily-container');
+      if (!cont) return;
+      initDailyChallenges();
+
+      let html = `
+        <div style="font-size:0.95rem; font-weight:800; color:var(--accent-gold-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; text-shadow:0 0 8px rgba(243,156,18,0.4); text-align:center;">
+          🎯 Daily Alchemical Trials (Streak: ${dailyStreak} Days 🔥)
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-bottom:8px;">
+          Complete daily trials to earn Gold, Essence & Astral Shards!
+        </div>
+      `;
+
+      dailyChallenges.forEach((dc, idx) => {
+        const isDone = dc.current >= dc.target;
+        const pct = Math.min(100, Math.round((dc.current / dc.target) * 100));
+        html += `
+          <div class="daily-card">
+            <div class="daily-info">
+              <div class="daily-title"><span>✦</span><span>${dc.desc}</span></div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Progress: <strong>${dc.current} / ${dc.target}</strong></div>
+              <div class="daily-progress-bar-bg">
+                <div class="daily-progress-bar-fill" style="width:${pct}%"></div>
+              </div>
+              <div style="font-size:0.72rem; color:var(--accent-gold); margin-top:2px;">
+                Rewards: +${dc.rewardGold} Gold, +${dc.rewardEssence} Ess, +${dc.rewardAstral} ✨ Astral
+              </div>
+            </div>
+            ${dc.claimed ? 
+              `<button class="btn-claim disabled" disabled>✅ Claimed</button>` :
+              (isDone ? 
+                `<button class="btn-claim" onclick="claimDailyTrial(${idx})">🎁 Claim</button>` :
+                `<button class="btn-claim disabled" disabled>⏳ ${dc.current}/${dc.target}</button>`
+              )}
+          </div>
+        `;
+      });
+
+      html += `
+        <div style="text-align:center; margin-top:6px;">
+          <button class="btn-reroll" onclick="rerollDailyTrials()">🔄 Reroll Trials (25 Gold)</button>
+        </div>
+      `;
+
+      cont.innerHTML = html;
+    }
+
+    function claimDailyTrial(idx) {
+      initDailyChallenges();
+      const dc = dailyChallenges[idx];
+      if (!dc || dc.claimed || dc.current < dc.target) return;
+
+      dc.claimed = true;
+      gold += dc.rewardGold;
+      essence += dc.rewardEssence;
+      astralShards += dc.rewardAstral;
+
+      triggerToast("🎯 Daily Trial Completed!", `+${dc.rewardGold} Gold, +${dc.rewardEssence} Ess, +${dc.rewardAstral} Astral Shard!`, '✨');
+      addLog(`🎯 <strong>DAILY TRIAL CLAIMED!</strong> Completed '<strong>${dc.desc}</strong>'! (+${dc.rewardGold} Gold, +${dc.rewardEssence} Essence, +${dc.rewardAstral} Astral Shard)`, true, false, false, 'oracle');
+      playFanfareDiscovery();
+
+      const allClaimed = dailyChallenges.every(c => c.claimed);
+      if (allClaimed) {
+        dailyStreak++;
+        gold += 200;
+        astralShards += 2;
+        triggerToast("🔥 ALL DAILY TRIALS COMPLETE!", `Streak: ${dailyStreak} Days! Bonus: +200 Gold, +2 Astral Shards!`, '🏆');
+        addLog(`🔥 <strong>ALL DAILY TRIALS COMPLETE!</strong> Streak: ${dailyStreak} Days! Bonus: +200 Gold, +2 Astral Shards!`, true, false, false, 'oracle');
+        playFanfareTier();
+      }
+
+      saveState();
+      updateStats();
+      renderDailyTrials();
+    }
+
+    function rerollDailyTrials() {
+      const COST = 25;
+      if (gold < COST) {
+        addLog(`⚠️ <strong>Not enough Gold!</strong> Need ${COST} Gold to reroll daily trials.`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      gold -= COST;
+      dailyChallenges = [];
+      initDailyChallenges();
+      saveState();
+      updateStats();
+      renderDailyTrials();
+      addLog(`🔄 Refreshed Daily Alchemical Trials (-${COST} Gold).`, false, false, false);
+      playChime(500, 'sine', 0.15);
+    }
+
+    // Magnum Opus Rebirth & Astral Perks
+    const ASTRAL_PERKS = [
+      { key: 'crucible', name: 'Astral Crucible', icon: '🫕', desc: '+25% Ess/Dust yield per rank.', max: 5 },
+      { key: 'midas', name: 'Midas Transmutation', icon: '🪙', desc: '+25% Gold from all crafts & quests.', max: 5 },
+      { key: 'grimoire', name: 'Ancient Grimoire', icon: '📖', desc: 'Starts rebirth with extra random unlocked elements.', max: 5 },
+      { key: 'catalysis', name: "Philosopher's Catalysis", icon: '✨', desc: '+15% chance to double output & Gold.', max: 5 }
+    ];
+
+    function renderRebirth() {
+      const cont = document.getElementById('rebirth-container');
+      if (!cont) return;
+
+      const canRebirth = discoveredIds.size >= 35;
+      const shardsToGain = 1 + Math.floor(Math.max(0, discoveredIds.size - 30) / 5);
+
+      let html = `
+        <div style="font-size:0.95rem; font-weight:800; color:var(--accent-gold-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; text-shadow:0 0 8px rgba(243,156,18,0.4); text-align:center;">
+          🌟 Magnum Opus Rebirth & Astral Ascension
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-bottom:10px;">
+          Prestige Rank: <strong>${prestigeLevel}</strong> | ✨ Astral Shards: <strong>${astralShards}</strong>
+        </div>
+
+        <button class="btn-rebirth-ascend ${canRebirth ? '' : 'disabled'}" ${canRebirth ? 'onclick="performMagnumOpusRebirth()"' : 'disabled'}>
+          🌟 Perform Magnum Opus (Gain +${shardsToGain} Astral Shards)
+        </button>
+        ${!canRebirth ? `<div style="font-size:0.75rem; color:var(--accent-crimson); text-align:center; margin-bottom:8px;">⚠️ Requires at least 35 discovered elements (Currently: ${discoveredIds.size}/35)</div>` : ''}
+
+        <div style="font-size:0.85rem; font-weight:800; color:var(--accent-gold-light); text-transform:uppercase; margin-top:8px; margin-bottom:4px;">
+          ✨ Astral Perks (Permanent Across Rebirths)
+        </div>
+      `;
+
+      ASTRAL_PERKS.forEach(p => {
+        const curLvl = astralPerks[p.key] || 0;
+        const isMax = curLvl >= p.max;
+        const cost = curLvl + 1;
+        const canAfford = !isMax && astralShards >= cost;
+
+        html += `
+          <div class="astral-card">
+            <div class="astral-info">
+              <div class="astral-title"><span>${p.icon}</span><span>${p.name} (Rank ${curLvl}/${p.max})</span></div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">${p.desc}</div>
+              <div style="font-size:0.72rem; color:#ff69b4; margin-top:2px;">
+                ${isMax ? '<span class="max-tag">MAX RANK</span>' : `Cost: ${cost} ✨ Astral Shards`}
+              </div>
+            </div>
+            ${isMax ? 
+              `<button class="btn-astral disabled" disabled>⭐ MAX</button>` :
+              `<button class="btn-astral ${canAfford ? '' : 'disabled'}" ${canAfford ? `onclick="buyAstralPerk('${p.key}')"` : 'disabled'}>✨ Unlock (${cost})</button>`}
+          </div>
+        `;
+      });
+
+      cont.innerHTML = html;
+    }
+
+    function buyAstralPerk(key) {
+      const perk = ASTRAL_PERKS.find(p => p.key === key);
+      if (!perk) return;
+      const curLvl = astralPerks[key] || 0;
+      if (curLvl >= perk.max) return;
+      const cost = curLvl + 1;
+
+      if (astralShards < cost) {
+        addLog(`⚠️ <strong>Not enough Astral Shards!</strong> Need ${cost} Astral Shards.`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      astralShards -= cost;
+      astralPerks[key] = curLvl + 1;
+      saveState();
+      updateStats();
+      renderRebirth();
+
+      triggerToast("✨ Astral Perk Unlocked!", `Upgraded ${perk.name} to Rank ${astralPerks[key]}!`, perk.icon);
+      addLog(`✨ <strong>ASTRAL PERK UNLOCKED:</strong> Upgraded <strong>${perk.name}</strong> ${perk.icon} to Rank ${astralPerks[key]}! (-${cost} Astral Shards)`, true, false, false, 'oracle');
+      playFanfareTier();
+    }
+
+    function performMagnumOpusRebirth() {
+      if (discoveredIds.size < 35) {
+        addLog("⚠️ Magnum Opus requires at least 35 discovered elements!", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      if (!confirm("Perform the Great Magnum Opus Rebirth?\n\nResets element discoveries to 4 basics, but preserves Guild Level, unlocks, and awards Astral Shards for permanent perks!")) {
+        return;
+      }
+
+      const gainedAstral = 1 + Math.floor(Math.max(0, discoveredIds.size - 30) / 5);
+      astralShards += gainedAstral;
+      prestigeLevel++;
+      totalPrestiges++;
+
+      discoveredIds = new Set(['fire', 'water', 'earth', 'air']);
+      unlockedTiers = new Set([1, 2]);
+      selectedSlots = [null, null];
+      essence = 100;
+      dust = 100;
+      gold += 100;
+
+      // Bonus starting elements from Ancient Grimoire perk
+      if (astralPerks.grimoire > 0) {
+        const candidates = ALL_ELEMENTS.filter(e => e.tier <= 3 && !discoveredIds.has(e.id));
+        for (let i = 0; i < Math.min(astralPerks.grimoire, candidates.length); i++) {
+          const randElem = candidates[Math.floor(Math.random() * candidates.length)];
+          if (randElem) discoveredIds.add(randElem.id);
+        }
+      }
+
+      saveState();
+      checkTierUnlocks(false);
+      updateStats();
+      renderGrimoire();
+      updateSlotsUI();
+      renderRebirth();
+
+      triggerToast(`🌟 MAGNUM OPUS COMPLETE!`, `Ascended to Prestige Rank ${prestigeLevel}! Gained +${gainedAstral} Astral Shards!`, '🌟');
+      addLog(`🌟 <strong>MAGNUM OPUS COMPLETE!</strong> Ascended to Prestige Rank ${prestigeLevel}! Gained +${gainedAstral} Astral Shards!`, true, false, true, 'oracle');
+      playFanfareTier();
+    }
 
     // Phase 12: Multiple Game Modes & Challenges State
     let gameMode = 0; // 0 = Classic, 1 = Timed Blitz, 2 = Puzzle Crucible
@@ -2358,6 +2795,13 @@
         localStorage.setItem('kalchemy_blitzHighScore', blitzHighScore);
         localStorage.setItem('kalchemy_puzzleHighScore', puzzleHighScore);
         localStorage.setItem('kalchemy_puzzleSolvedCount', puzzleSolvedCount);
+        localStorage.setItem('kalchemy_astralShards', astralShards);
+        localStorage.setItem('kalchemy_prestigeLevel', prestigeLevel);
+        localStorage.setItem('kalchemy_totalPrestiges', totalPrestiges);
+        localStorage.setItem('kalchemy_astralPerks', JSON.stringify(astralPerks));
+        localStorage.setItem('kalchemy_dailyChallenges', JSON.stringify(dailyChallenges));
+        localStorage.setItem('kalchemy_dailyStreak', dailyStreak);
+        localStorage.setItem('kalchemy_secretCombosFound', secretCombosFound);
       } catch(e){}
     }
 
@@ -2378,6 +2822,13 @@
         const savedBlitzHigh = localStorage.getItem('kalchemy_blitzHighScore');
         const savedPuzzleHigh = localStorage.getItem('kalchemy_puzzleHighScore');
         const savedPuzzleSolved = localStorage.getItem('kalchemy_puzzleSolvedCount');
+        const savedAstral = localStorage.getItem('kalchemy_astralShards');
+        const savedPrestige = localStorage.getItem('kalchemy_prestigeLevel');
+        const savedTotalP = localStorage.getItem('kalchemy_totalPrestiges');
+        const savedAstralPerks = localStorage.getItem('kalchemy_astralPerks');
+        const savedDailyC = localStorage.getItem('kalchemy_dailyChallenges');
+        const savedDailyS = localStorage.getItem('kalchemy_dailyStreak');
+        const savedSecrets = localStorage.getItem('kalchemy_secretCombosFound');
 
         if (savedDisc) {
           const arr = JSON.parse(savedDisc);
@@ -2433,8 +2884,16 @@
         }
         if (savedCrafts) { try { elementCraftCounts = JSON.parse(savedCrafts) || {}; } catch(e){} }
         if (savedUses) { try { elementUseCounts = JSON.parse(savedUses) || {}; } catch(e){} }
+        if (savedAstral !== null) astralShards = parseInt(savedAstral, 10) || 0;
+        if (savedPrestige !== null) prestigeLevel = parseInt(savedPrestige, 10) || 0;
+        if (savedTotalP !== null) totalPrestiges = parseInt(savedTotalP, 10) || 0;
+        if (savedDailyS !== null) dailyStreak = parseInt(savedDailyS, 10) || 0;
+        if (savedSecrets !== null) secretCombosFound = parseInt(savedSecrets, 10) || 0;
+        if (savedAstralPerks) { try { astralPerks = JSON.parse(savedAstralPerks) || astralPerks; } catch(e){} }
+        if (savedDailyC) { try { dailyChallenges = JSON.parse(savedDailyC) || []; } catch(e){} }
       } catch(e){}
       initQuests();
+      initDailyChallenges();
       checkTierUnlocks(false);
     }
 
@@ -2457,13 +2916,43 @@
       const wShopCont = document.getElementById('workshop-container');
       const brewCont = document.getElementById('brewing-container');
       const codexCont = document.getElementById('codex-container');
+      const dailyCont = document.getElementById('daily-container');
+      const rebirthCont = document.getElementById('rebirth-container');
       const autoFillBtn = document.getElementById('btn-auto-fill');
 
       if (autoFillBtn) {
         autoFillBtn.style.display = (upgrades.autoSorter > 0 && mode === 'crucible') ? 'inline-block' : 'none';
       }
 
-      if (mode === 'quests') {
+      if (mode === 'daily') {
+        descEl.innerHTML = "<strong>Daily Alchemical Trials:</strong> Complete rotating daily challenges to earn Gold, Essence & Astral Shards!";
+        if (transCircle) transCircle.style.display = 'none';
+        if (slotsCont) slotsCont.style.display = 'none';
+        if (mainActBtn) mainActBtn.style.display = 'none';
+        if (crucActions) crucActions.style.display = 'none';
+        if (oracleSec) oracleSec.style.display = 'none';
+        if (qBoardCont) qBoardCont.style.display = 'none';
+        if (wShopCont) wShopCont.style.display = 'none';
+        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
+        if (codexCont) codexCont.style.display = 'none';
+        if (dailyCont) dailyCont.style.display = 'flex';
+        if (rebirthCont) rebirthCont.style.display = 'none';
+        renderDailyTrials();
+      } else if (mode === 'rebirth') {
+        descEl.innerHTML = "<strong>Magnum Opus Rebirth:</strong> Ascend to earn Astral Shards and unlock permanent cosmic perks!";
+        if (transCircle) transCircle.style.display = 'none';
+        if (slotsCont) slotsCont.style.display = 'none';
+        if (mainActBtn) mainActBtn.style.display = 'none';
+        if (crucActions) crucActions.style.display = 'none';
+        if (oracleSec) oracleSec.style.display = 'none';
+        if (qBoardCont) qBoardCont.style.display = 'none';
+        if (wShopCont) wShopCont.style.display = 'none';
+        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
+        if (codexCont) codexCont.style.display = 'none';
+        if (dailyCont) dailyCont.style.display = 'none';
+        if (rebirthCont) rebirthCont.style.display = 'flex';
+        renderRebirth();
+      } else if (mode === 'quests') {
         descEl.innerHTML = "<strong>Guild Quest Board:</strong> Complete patron orders for Gold & Guild XP rewards!";
         if (transCircle) transCircle.style.display = 'none';
         if (slotsCont) slotsCont.style.display = 'none';
@@ -2472,7 +2961,7 @@
         if (oracleSec) oracleSec.style.display = 'none';
         if (qBoardCont) qBoardCont.style.display = 'flex';
         if (wShopCont) wShopCont.style.display = 'none';
-        if (brewCont) brewCont.style.display = 'none';
+        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
         renderQuestBoard();
       } else if (mode === 'workshop') {
         descEl.innerHTML = "<strong>Enchanter Workshop:</strong> Upgrade laboratory apparatus with Gold to boost yields, capacity & automation!";
@@ -2483,7 +2972,7 @@
         if (oracleSec) oracleSec.style.display = 'none';
         if (qBoardCont) qBoardCont.style.display = 'none';
         if (wShopCont) wShopCont.style.display = 'flex';
-        if (brewCont) brewCont.style.display = 'none';
+        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
         renderWorkshop();
       } else if (mode === 'brewing') {
         descEl.innerHTML = "<strong>Potion Brewing & Effect Tester:</strong> Combine discoverable herbs & essences in the cauldron to brew buff elixirs (Strength, Invisibility, Mana, Elixir of Life) and test active magical effects!";
@@ -2505,7 +2994,7 @@
         if (oracleSec) oracleSec.style.display = 'flex';
         if (qBoardCont) qBoardCont.style.display = 'none';
         if (wShopCont) wShopCont.style.display = 'none';
-        if (brewCont) brewCont.style.display = 'none';
+        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
 
         if (mode === 'crucible') {
           descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.";
@@ -2578,6 +3067,8 @@
       let xReward = q.xpReward;
       if (activeBuffs.strength > 0) gReward = Math.floor(gReward * 1.5);
       if (activeBuffs.life > 0) xReward = Math.floor(xReward * 2.0);
+      if (astralPerks.midas > 0) gReward = Math.floor(gReward * (1 + astralPerks.midas * 0.25));
+      checkDailyProgress(1, 1);
 
       gold += gReward;
       guildXP += xReward;
@@ -2832,6 +3323,12 @@
       if (blitzElem) blitzElem.innerText = blitzHighScore;
       const puzzleElem = document.getElementById('stat-puzzle-high');
       if (puzzleElem) puzzleElem.innerText = puzzleHighScore;
+      const astralElem = document.getElementById('stat-astral');
+      if (astralElem) astralElem.innerText = astralShards;
+      const rebirthElem = document.getElementById('stat-rebirth');
+      if (rebirthElem) rebirthElem.innerText = `R${prestigeLevel}`;
+      const streakElem = document.getElementById('stat-streak');
+      if (streakElem) streakElem.innerText = dailyStreak;
     }
 
     function setTierFilter(tierId) {
@@ -3136,6 +3633,7 @@
 
           const isNew = !discoveredIds.has(resElement.id);
           recordElementUsage(resElement.id, id1, id2);
+          checkDailyProgress(0, 1);
           triggerTransmuteFX(isNew ? '#f1c40f' : '#9b59b6');
 
           if (resElement.tier >= 3) {
@@ -3174,12 +3672,20 @@
           if (isNew) {
             discoveredIds.add(resElement.id);
 
-            const capBonusMult = 1 + (upgrades.crucibleCap || 0) * 0.15;
+            const capBonusMult = 1 + (upgrades.crucibleCap || 0) * 0.15 + (astralPerks.crucible || 0) * 0.25;
             let essGain = Math.floor(25 * capBonusMult);
             let dustGain = Math.floor(25 * capBonusMult);
 
             if (activeBuffs.strength > 0) essGain = Math.floor(essGain * 1.5);
             if (activeBuffs.invisibility > 0) dustGain += 25;
+
+            if (resElement.tier === 6) {
+              secretCombosFound++;
+              essGain += 250;
+              dustGain += 250;
+              gold += 200;
+              astralShards += 1;
+            }
 
             essence += essGain;
             dust += dustGain;
@@ -3229,6 +3735,7 @@
     }
 
     function distillRetort() {
+      checkDailyProgress(2, 1);
       if (!selectedSlots[0]) {
         addLog("Place a complex element into Slot 1 to distill in the Retort.", false, true, false);
         playChime(220, 'sawtooth', 0.2);
@@ -3271,6 +3778,7 @@
     }
 
     function extractAlembic() {
+      checkDailyProgress(2, 1);
       if (!selectedSlots[0]) {
         addLog("Place a complex element into Slot 1 to extract in the Alembic.", false, true, false);
         playChime(220, 'sawtooth', 0.2);
@@ -3313,6 +3821,7 @@
     }
 
     function crushAnvil() {
+      checkDailyProgress(2, 1);
       if (!selectedSlots[0]) {
         addLog("Place a complex element into Slot 1 to crush on the Anvil.", false, true, false);
         playChime(220, 'sawtooth', 0.2);

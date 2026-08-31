@@ -14,9 +14,9 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
     return dest;
 }
 
-#define TOTAL_ELEMENTS 56
-#define TOTAL_RECIPES 62
-#define TOTAL_TIERS 5
+#define TOTAL_ELEMENTS 64
+#define TOTAL_RECIPES 78
+#define TOTAL_TIERS 6
 #define GRID_SIZE 10
 
 typedef struct {
@@ -92,7 +92,17 @@ static const Element g_Elements[TOTAL_ELEMENTS] = {
     { 52, "Supernova", 5, 0, "Cataclysmic explosion seeding cosmos with gold." },
     { 53, "Black Hole", 5, 0, "Gravitational singularity swallowing light." },
     { 54, "Time", 5, 0, "Temporal river flowing continuously through cosmos." },
-    { 55, "Eternity", 5, 0, "Infinite timeless state beyond magic and space." }
+    { 55, "Eternity", 5, 0, "Infinite timeless state beyond magic and space." },
+
+    // Tier 6: Secret / Mythic Combos (8)
+    { 56, "Philosopher's Stone", 6, 0, "The supreme magnum opus granting endless transmutation power and rejuvenation." },
+    { 57, "Dark Matter", 6, 0, "Primordial invisible mass anchoring galaxies in the cosmic web." },
+    { 58, "Celestial Aegis", 6, 0, "An impenetrable shield forged from starlight and dragon scales." },
+    { 59, "Chrono Crystal", 6, 0, "A temporal singularity frozen in an iridescent crystalline lattice." },
+    { 60, "Primordial Ooze", 6, 0, "The genesis broth from which all organic life was first sparked." },
+    { 61, "Aether", 6, 0, "The elusive fifth essence permeating the spaces between stars." },
+    { 62, "Quintessence", 6, 0, "The ultimate divine spark connecting all physical and spiritual matter." },
+    { 63, "Nether Flame", 6, 0, "An undying planar fire that burns without fuel in the dark void." }
 };
 
 typedef struct {
@@ -107,7 +117,8 @@ static const TierInfo g_Tiers[TOTAL_TIERS] = {
     { 2, "Nature", 4, RGB(46, 204, 113) },
     { 3, "Metallurgy", 12, RGB(230, 126, 34) },
     { 4, "Arcane", 24, RGB(155, 89, 182) },
-    { 5, "Celestial", 38, RGB(241, 196, 15) }
+    { 5, "Celestial", 38, RGB(241, 196, 15) },
+    { 6, "Mythic", 48, RGB(255, 105, 180) }
 };
 
 typedef struct {
@@ -177,7 +188,7 @@ static const Recipe g_Recipes[TOTAL_RECIPES] = {
     { 48, 6, 54 }, // Cosmos + Energy -> Time
     { 54, 30, 55 },// Time + Magic -> Eternity
 
-    // Alternative Recipes (10)
+    // Alternative Standard Recipes (10)
     { 10, 1, 17 }, // Stone + Water -> Sand
     { 11, 1, 15 }, // Plant + Water -> Tree
     { 0, 15, 13 }, // Fire + Tree -> Charcoal
@@ -187,7 +198,25 @@ static const Recipe g_Recipes[TOTAL_RECIPES] = {
     { 7, 10, 27 }, // Mud + Stone -> Clay
     { 0, 27, 18 }, // Fire + Clay -> Glass
     { 22, 1, 6 },  // Electricity + Water -> Energy
-    { 40, 18, 51 } // Light + Glass -> Starlight
+    { 40, 18, 51 },// Light + Glass -> Starlight
+
+    // T6 Mythic / Secret Hidden Combos (16)
+    { 50, 37, 56 },// Gold + Elixir -> Philosopher's Stone
+    { 50, 34, 56 },// Gold + Crystal -> Philosopher's Stone
+    { 53, 48, 57 },// Black Hole + Cosmos -> Dark Matter
+    { 38, 53, 57 },// Nether + Black Hole -> Dark Matter
+    { 51, 33, 58 },// Starlight + Dragon -> Celestial Aegis
+    { 35, 42, 58 },// Rune + Sun -> Celestial Aegis
+    { 54, 34, 59 },// Time + Crystal -> Chrono Crystal
+    { 54, 51, 59 },// Time + Starlight -> Chrono Crystal
+    { 7, 28, 60 }, // Mud + Life -> Primordial Ooze
+    { 14, 41, 60 },// Swamp + Spirit -> Primordial Ooze
+    { 48, 3, 61 }, // Cosmos + Air -> Aether
+    { 40, 41, 61 },// Light + Spirit -> Aether
+    { 61, 30, 62 },// Aether + Magic -> Quintessence
+    { 56, 31, 62 },// Philosopher's Stone + Mana -> Quintessence
+    { 38, 0, 63 }, // Nether + Fire -> Nether Flame
+    { 25, 38, 63 } // Explosion + Nether -> Nether Flame
 };
 
 #define TOTAL_PATRONS 10
@@ -212,6 +241,17 @@ typedef struct {
 } Quest;
 
 typedef struct {
+    int type; // 0=Transmute, 1=Quest, 2=Retort/Anvil, 3=Brew
+    int target;
+    int current;
+    int rewardGold;
+    int rewardEssence;
+    int rewardAstral;
+    int claimed;
+    char desc[64];
+} DailyChallenge;
+
+typedef struct {
     int discovered[TOTAL_ELEMENTS];
     int unlockedTiers[TOTAL_TIERS];
     int discoveredCount;
@@ -223,8 +263,8 @@ typedef struct {
     Quest quests[3];
     int slot1;
     int slot2;
-    int selectedEquipment; // 0 = Crucible, 1 = Retort, 2 = Alembic, 3 = Anvil, 4 = Quests, 5 = Workshop, 6 = Potions
-    int selectedTierFilter; // 0 = All, 1..5 = T1..T5
+    int selectedEquipment; // 0=Crucible, 1=Retort, 2=Alembic, 3=Anvil, 4=Quests, 5=Shop, 6=Potions, 7=Codex, 8=Daily, 9=Prestige
+    int selectedTierFilter; // 0=All, 1..6=T1..T6
     int currentPage;
     int buttonElemMap[GRID_SIZE];
     int upgradeCrucibleCap;
@@ -258,6 +298,18 @@ typedef struct {
     int screenShakeTime;    // Active screen shake duration
     char lastStatus[128];
     char searchFilter[64];
+
+    // Loop 2 Features
+    DailyChallenge dailyChallenges[3];
+    int dailyStreak;
+    int prestigeLevel;
+    int astralShards;
+    int astralCrucible;   // +25% Ess/Dust per rank
+    int astralMidas;      // +25% Gold per rank
+    int astralGrimoire;   // Starts run with extra unlocked elements
+    int astralCatalysis;  // +15% double yield chance per rank
+    int totalPrestiges;
+    int secretCombosFound;
 } AlchemyState;
 
 static AlchemyState g_State;
@@ -266,6 +318,11 @@ static const int g_EssenceYieldCosts[5] = { 30, 70, 140, 250, 400 };
 static const int g_AutoSorterCosts[5] = { 50, 100, 220, 400, 600 };
 static const int g_CatalystSpeedCosts[5] = { 35, 80, 160, 280, 450 };
 
+static unsigned int g_RandSeed = 12345;
+static int FastRand() {
+    g_RandSeed = g_RandSeed * 1103515245 + 12345;
+    return (int)((g_RandSeed / 65536) & 0x7FFF);
+}
 
 #define MAX_PARTICLES 200
 typedef struct {
@@ -304,10 +361,9 @@ static void SpawnExplosion(int cx, int cy, COLORREF color) {
     }
 }
 
-
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
-static HWND g_hEquipButtons[8];
+static HWND g_hEquipButtons[10];
 static HWND g_hModeButtons[3];
 static HWND g_hBlitzStartButton = NULL;
 static HWND g_hPuzzleSkipButton = NULL;
@@ -330,6 +386,11 @@ static HWND g_hSoundButton = NULL;
 static HWND g_hHelpButton = NULL;
 static HWND g_hHelpTabButtons[4] = { NULL };
 static HWND g_hHelpCloseButton = NULL;
+
+static HWND g_hDailyClaimButtons[3] = { NULL };
+static HWND g_hDailyRerollButton = NULL;
+static HWND g_hPrestigeRebirthButton = NULL;
+static HWND g_hAstralPerkButtons[4] = { NULL };
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
@@ -384,7 +445,6 @@ static int StrContainsIgnoreCase(const char* haystack, const char* needle) {
     return 0;
 }
 
-// Phase 13 Win32 Beep Sound Effects Synthesizer
 static void PlayGlassClink() {
     if (!g_State.soundEnabled) return;
     Beep(1800, 30);
@@ -402,19 +462,19 @@ static void PlayTransmuteZap() {
 
 static void PlayDiscoveryChime() {
     if (!g_State.soundEnabled) return;
-    Beep(1046, 50);  // C6
-    Beep(1318, 50);  // E6
-    Beep(1568, 50);  // G6
-    Beep(2093, 80);  // C7
+    Beep(1046, 50);
+    Beep(1318, 50);
+    Beep(1568, 50);
+    Beep(2093, 80);
 }
 
 static void PlayMagicFanfare() {
     if (!g_State.soundEnabled) return;
-    Beep(523, 60);   // C5
-    Beep(659, 60);   // E5
-    Beep(784, 60);   // G5
-    Beep(1046, 90);  // C6
-    Beep(1318, 120); // E6
+    Beep(523, 60);
+    Beep(659, 60);
+    Beep(784, 60);
+    Beep(1046, 90);
+    Beep(1318, 120);
 }
 
 static void PlayBubbleSimmer() {
@@ -447,11 +507,9 @@ static void UpdateGrimoireGrid() {
     for (int i = 0; i < TOTAL_ELEMENTS; i++) {
         int isDisc = g_State.discovered[i];
         if (g_State.selectedEquipment == 7) {
-            // Codex Mode
             if (g_State.codexFilter == 1 && !isDisc) continue;
             if (g_State.codexFilter == 2 && isDisc) continue;
         } else {
-            // Standard Grimoire Mode
             if (!isDisc) continue;
         }
 
@@ -515,13 +573,6 @@ static int CheckTierUnlocks() {
     return highestTier;
 }
 
-static unsigned int g_RandSeed = 12345;
-
-static int FastRand() {
-    g_RandSeed = g_RandSeed * 1103515245 + 12345;
-    return (int)((g_RandSeed / 65536) & 0x7FFF);
-}
-
 static void GenerateQuest(int slotIdx) {
     if (slotIdx < 0 || slotIdx >= 3) return;
     g_State.quests[slotIdx].patronIdx = FastRand() % TOTAL_PATRONS;
@@ -545,6 +596,46 @@ static void GenerateQuest(int slotIdx) {
     g_State.quests[slotIdx].xpReward = g_Elements[target].tier * 60;
 }
 
+static void InitDailyChallenges() {
+    g_State.dailyChallenges[0].type = 0;
+    g_State.dailyChallenges[0].target = 6;
+    g_State.dailyChallenges[0].current = 0;
+    g_State.dailyChallenges[0].rewardGold = 120;
+    g_State.dailyChallenges[0].rewardEssence = 150;
+    g_State.dailyChallenges[0].rewardAstral = 1;
+    g_State.dailyChallenges[0].claimed = 0;
+    lstrcpyA(g_State.dailyChallenges[0].desc, "Perform 6 Transmutations");
+
+    g_State.dailyChallenges[1].type = 1;
+    g_State.dailyChallenges[1].target = 2;
+    g_State.dailyChallenges[1].current = 0;
+    g_State.dailyChallenges[1].rewardGold = 150;
+    g_State.dailyChallenges[1].rewardEssence = 200;
+    g_State.dailyChallenges[1].rewardAstral = 1;
+    g_State.dailyChallenges[1].claimed = 0;
+    lstrcpyA(g_State.dailyChallenges[1].desc, "Fulfill 2 Patron Quests");
+
+    g_State.dailyChallenges[2].type = 2;
+    g_State.dailyChallenges[2].target = 4;
+    g_State.dailyChallenges[2].current = 0;
+    g_State.dailyChallenges[2].rewardGold = 100;
+    g_State.dailyChallenges[2].rewardEssence = 100;
+    g_State.dailyChallenges[2].rewardAstral = 1;
+    g_State.dailyChallenges[2].claimed = 0;
+    lstrcpyA(g_State.dailyChallenges[2].desc, "Purify 4 Elements (Retort/Anvil)");
+}
+
+static void CheckDailyProgress(int actionType, int amount) {
+    for (int i = 0; i < 3; i++) {
+        if (!g_State.dailyChallenges[i].claimed && g_State.dailyChallenges[i].type == actionType) {
+            g_State.dailyChallenges[i].current += amount;
+            if (g_State.dailyChallenges[i].current > g_State.dailyChallenges[i].target) {
+                g_State.dailyChallenges[i].current = g_State.dailyChallenges[i].target;
+            }
+        }
+    }
+}
+
 static void UpdateEquipmentUI(HWND hwnd) {
     if (g_State.showHelpModal) {
         for (int t = 0; t < 4; t++) {
@@ -554,7 +645,7 @@ static void UpdateEquipmentUI(HWND hwnd) {
 
         for (int k = 0; k < GRID_SIZE; k++) if (g_hGridButtons[k]) ShowWindow(g_hGridButtons[k], SW_HIDE);
         for (int t = 0; t <= TOTAL_TIERS; t++) if (g_hTierButtons[t]) ShowWindow(g_hTierButtons[t], SW_HIDE);
-        for (int e = 0; e < 8; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_HIDE);
+        for (int e = 0; e < 10; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_HIDE);
         for (int m = 0; m < 3; m++) if (g_hModeButtons[m]) ShowWindow(g_hModeButtons[m], SW_HIDE);
         if (g_hBlitzStartButton) ShowWindow(g_hBlitzStartButton, SW_HIDE);
         if (g_hPuzzleSkipButton) ShowWindow(g_hPuzzleSkipButton, SW_HIDE);
@@ -574,6 +665,10 @@ static void UpdateEquipmentUI(HWND hwnd) {
         for (int p = 0; p < 4; p++) if (g_hPotionDrinkButtons[p]) ShowWindow(g_hPotionDrinkButtons[p], SW_HIDE);
         for (int q = 0; q < 3; q++) if (g_hQuestTurnInButtons[q]) ShowWindow(g_hQuestTurnInButtons[q], SW_HIDE);
         for (int u = 0; u < 4; u++) if (g_hUpgradeButtons[u]) ShowWindow(g_hUpgradeButtons[u], SW_HIDE);
+        for (int d = 0; d < 3; d++) if (g_hDailyClaimButtons[d]) ShowWindow(g_hDailyClaimButtons[d], SW_HIDE);
+        if (g_hDailyRerollButton) ShowWindow(g_hDailyRerollButton, SW_HIDE);
+        if (g_hPrestigeRebirthButton) ShowWindow(g_hPrestigeRebirthButton, SW_HIDE);
+        for (int a = 0; a < 4; a++) if (g_hAstralPerkButtons[a]) ShowWindow(g_hAstralPerkButtons[a], SW_HIDE);
         return;
     } else {
         for (int t = 0; t < 4; t++) {
@@ -582,7 +677,7 @@ static void UpdateEquipmentUI(HWND hwnd) {
         if (g_hHelpCloseButton) ShowWindow(g_hHelpCloseButton, SW_HIDE);
 
         for (int t = 0; t <= TOTAL_TIERS; t++) if (g_hTierButtons[t]) ShowWindow(g_hTierButtons[t], SW_SHOW);
-        for (int e = 0; e < 8; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_SHOW);
+        for (int e = 0; e < 10; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_SHOW);
         for (int m = 0; m < 3; m++) if (g_hModeButtons[m]) ShowWindow(g_hModeButtons[m], SW_SHOW);
         if (g_hSoundButton) ShowWindow(g_hSoundButton, SW_SHOW);
         if (g_hHelpButton) ShowWindow(g_hHelpButton, SW_SHOW);
@@ -598,9 +693,11 @@ static void UpdateEquipmentUI(HWND hwnd) {
     int isWorkshop = (g_State.selectedEquipment == 5);
     int isBrewing = (g_State.selectedEquipment == 6);
     int isCodex = (g_State.selectedEquipment == 7);
+    int isDaily = (g_State.selectedEquipment == 8);
+    int isPrestige = (g_State.selectedEquipment == 9);
     int isCrucible = (g_State.selectedEquipment == 0);
 
-    if (isQuests || isWorkshop || isCodex) {
+    if (isQuests || isWorkshop || isCodex || isDaily || isPrestige) {
         if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_HIDE);
         if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_HIDE);
         if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_HIDE);
@@ -688,6 +785,63 @@ static void UpdateEquipmentUI(HWND hwnd) {
         }
     }
 
+    if (isDaily) {
+        for (int d = 0; d < 3; d++) {
+            if (g_hDailyClaimButtons[d]) {
+                ShowWindow(g_hDailyClaimButtons[d], SW_SHOW);
+                if (g_State.dailyChallenges[d].claimed) {
+                    SetWindowTextA(g_hDailyClaimButtons[d], "Claimed");
+                    EnableWindow(g_hDailyClaimButtons[d], FALSE);
+                } else if (g_State.dailyChallenges[d].current >= g_State.dailyChallenges[d].target) {
+                    SetWindowTextA(g_hDailyClaimButtons[d], "Claim!");
+                    EnableWindow(g_hDailyClaimButtons[d], TRUE);
+                } else {
+                    SetWindowTextA(g_hDailyClaimButtons[d], "Incomplete");
+                    EnableWindow(g_hDailyClaimButtons[d], FALSE);
+                }
+            }
+        }
+        if (g_hDailyRerollButton) ShowWindow(g_hDailyRerollButton, SW_SHOW);
+    } else {
+        for (int d = 0; d < 3; d++) {
+            if (g_hDailyClaimButtons[d]) ShowWindow(g_hDailyClaimButtons[d], SW_HIDE);
+        }
+        if (g_hDailyRerollButton) ShowWindow(g_hDailyRerollButton, SW_HIDE);
+    }
+
+    if (isPrestige) {
+        if (g_hPrestigeRebirthButton) {
+            ShowWindow(g_hPrestigeRebirthButton, SW_SHOW);
+            EnableWindow(g_hPrestigeRebirthButton, g_State.discoveredCount >= 35 ? TRUE : FALSE);
+        }
+        int aLvls[4] = { g_State.astralCrucible, g_State.astralMidas, g_State.astralGrimoire, g_State.astralCatalysis };
+        for (int a = 0; a < 4; a++) {
+            if (g_hAstralPerkButtons[a]) {
+                ShowWindow(g_hAstralPerkButtons[a], SW_SHOW);
+                int cost = aLvls[a] + 1;
+                if (aLvls[a] >= 5) {
+                    SetWindowTextA(g_hAstralPerkButtons[a], "MAX");
+                    EnableWindow(g_hAstralPerkButtons[a], FALSE);
+                } else if (g_State.astralShards < cost) {
+                    char btnStr[32];
+                    wsprintfA(btnStr, "Cost: %d", cost);
+                    SetWindowTextA(g_hAstralPerkButtons[a], btnStr);
+                    EnableWindow(g_hAstralPerkButtons[a], FALSE);
+                } else {
+                    char btnStr[32];
+                    wsprintfA(btnStr, "Unlock (%d)", cost);
+                    SetWindowTextA(g_hAstralPerkButtons[a], btnStr);
+                    EnableWindow(g_hAstralPerkButtons[a], TRUE);
+                }
+            }
+        }
+    } else {
+        if (g_hPrestigeRebirthButton) ShowWindow(g_hPrestigeRebirthButton, SW_HIDE);
+        for (int a = 0; a < 4; a++) {
+            if (g_hAstralPerkButtons[a]) ShowWindow(g_hAstralPerkButtons[a], SW_HIDE);
+        }
+    }
+
     if (g_hBlitzStartButton) {
         ShowWindow(g_hBlitzStartButton, (g_State.gameMode == 1) ? SW_SHOW : SW_HIDE);
     }
@@ -732,6 +886,7 @@ static void InitGameState() {
     for (int q = 0; q < 3; q++) {
         GenerateQuest(q);
     }
+    InitDailyChallenges();
 }
 
 static void UpdateSlotButtonText() {
@@ -751,58 +906,89 @@ static void UpdateSlotButtonText() {
     }
 }
 
+static void PerformMagnumOpusRebirth(HWND hwnd) {
+    if (g_State.discoveredCount < 35) {
+        AddJournalLog("⚠️ Magnum Opus requires at least 35 discovered elements!");
+        PlayGlassClink();
+        return;
+    }
+
+    int gainedAstral = 1 + (g_State.discoveredCount - 30) / 5;
+    g_State.astralShards += gainedAstral;
+    g_State.prestigeLevel++;
+    g_State.totalPrestiges++;
+
+    for (int i = 0; i < TOTAL_ELEMENTS; i++) {
+        g_State.discovered[i] = (i < 4) ? 1 : 0;
+    }
+    g_State.discoveredCount = 4;
+    for (int t = 0; t < TOTAL_TIERS; t++) {
+        g_State.unlockedTiers[t] = (t < 2) ? 1 : 0;
+    }
+    g_State.essence = 100;
+    g_State.dust = 100;
+    g_State.gold += 100;
+    g_State.slot1 = -1;
+    g_State.slot2 = -1;
+
+    if (g_State.astralGrimoire > 0) {
+        int unlockedBonus = 0;
+        for (int tries = 0; tries < 50 && unlockedBonus < g_State.astralGrimoire; tries++) {
+            int candidate = 4 + (FastRand() % 24);
+            if (!g_State.discovered[candidate]) {
+                g_State.discovered[candidate] = 1;
+                g_State.discoveredCount++;
+                unlockedBonus++;
+            }
+        }
+    }
+
+    CheckTierUnlocks();
+    UpdateGrimoireGrid();
+    UpdateSlotButtonText();
+    UpdateEquipmentUI(hwnd);
+
+    char msg[256];
+    wsprintfA(msg, "🌟 MAGNUM OPUS COMPLETE! Ascended to Prestige Rank %d! Gained +%d Astral Shards!",
+        g_State.prestigeLevel, gainedAstral);
+    AddJournalLog(msg);
+    wsprintfA(g_State.lastStatus, "Prestige Rank %d Ascended (+%d Astral)!", g_State.prestigeLevel, gainedAstral);
+    PlayMagicFanfare();
+    SpawnExplosion(392, 168, RGB(255, 215, 0));
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             InitGameState();
 
-            hBgBrush = CreateSolidBrush(RGB(9, 9, 20));          // Deep violet/slate
-            hPanelBrush = CreateSolidBrush(RGB(22, 21, 46));       // Mystical panel background
-            hCrucibleBrush = CreateSolidBrush(RGB(29, 24, 61));    // Arcane laboratory crucible
-            hVesselBrush = CreateSolidBrush(RGB(55, 38, 95));      // Arcane purple vessel
-            hGoldBadgeBrush = CreateSolidBrush(RGB(45, 35, 12));   // Golden badge fill
-            hVesselPen = CreatePen(PS_DASH, 2, RGB(155, 89, 182));
+            hBgBrush = CreateSolidBrush(RGB(9, 9, 20));
+            hPanelBrush = CreateSolidBrush(RGB(22, 21, 46));
+            hCrucibleBrush = CreateSolidBrush(RGB(29, 24, 61));
+            hVesselBrush = CreateSolidBrush(RGB(40, 32, 80));
+            hGoldBadgeBrush = CreateSolidBrush(RGB(40, 35, 20));
+
+            hVesselPen = CreatePen(PS_SOLID, 2, RGB(243, 156, 18));
             hPurplePen = CreatePen(PS_SOLID, 2, RGB(155, 89, 182));
-            hGoldPen = CreatePen(PS_SOLID, 2, RGB(243, 156, 18));
-            hInnerGlowPen = CreatePen(PS_SOLID, 1, RGB(241, 196, 15));
+            hGoldPen = CreatePen(PS_SOLID, 1, RGB(241, 196, 15));
+            hInnerGlowPen = CreatePen(PS_SOLID, 1, RGB(176, 92, 219));
 
-            int dpi = 96;
-            HMODULE hUser32 = LoadLibraryA("user32.dll");
-            if (hUser32) {
-                typedef UINT (WINAPI *GETDPIFORWINDOW)(HWND);
-                GETDPIFORWINDOW pGetDpiForWindow = (GETDPIFORWINDOW)GetProcAddress(hUser32, "GetDpiForWindow");
-                if (pGetDpiForWindow) {
-                    dpi = pGetDpiForWindow(hwnd);
-                }
-                FreeLibrary(hUser32);
-            }
-            if (dpi == 0) dpi = 96;
+            hTitleFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hHeaderFont = CreateFontA(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hUIFont = CreateFontA(13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hSlotFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hBadgeFont = CreateFontA(11, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
-            int titleFontHeight = -MulDiv(21, dpi, 72);
-            int headerFontHeight = -MulDiv(15, dpi, 72);
-            int uiFontHeight = -MulDiv(13, dpi, 72);
-            int slotFontHeight = -MulDiv(14, dpi, 72);
-            int badgeFontHeight = -MulDiv(12, dpi, 72);
-
-            hTitleFont = CreateFontA(titleFontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hHeaderFont = CreateFontA(headerFontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hUIFont = CreateFontA(uiFontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hSlotFont = CreateFontA(slotFontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hBadgeFont = CreateFontA(badgeFontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-
-            // Tier Filter Buttons
-            g_hTierButtons[0] = CreateWindowA("BUTTON", "All", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30, 96, 35, 22, hwnd, (HMENU)500, NULL, NULL);
+            g_hTierButtons[0] = CreateWindowA("BUTTON", "All", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30, 96, 32, 22, hwnd, (HMENU)500, NULL, NULL);
             for (int t = 1; t <= TOTAL_TIERS; t++) {
                 char tStr[16];
                 wsprintfA(tStr, "T%d", t);
-                g_hTierButtons[t] = CreateWindowA("BUTTON", tStr, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30 + t * 37, 96, 35, 22, hwnd, (HMENU)(UINT_PTR)(500 + t), NULL, NULL);
+                g_hTierButtons[t] = CreateWindowA("BUTTON", tStr, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30 + t * 33, 96, 31, 22, hwnd, (HMENU)(UINT_PTR)(500 + t), NULL, NULL);
             }
 
-            // Grimoire Search Input
             g_hSearchEdit = CreateWindowA("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
                 30, 122, 225, 24, hwnd, (HMENU)401, NULL, NULL);
 
-            // Paginated Grid Buttons (2 columns of 5)
             for (int k = 0; k < GRID_SIZE; k++) {
                 int col = k % 2;
                 int row = k / 2;
@@ -813,14 +999,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     x, y, 110, 34, hwnd, (HMENU)(UINT_PTR)(100 + k), NULL, NULL);
             }
 
-            // Pagination Controls
             g_hPrevButton = CreateWindowA("BUTTON", "< Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30, 348, 65, 26, hwnd, (HMENU)601, NULL, NULL);
             g_hPageText = CreateWindowA("STATIC", "1/1", WS_CHILD | WS_VISIBLE | SS_CENTER, 100, 353, 85, 20, hwnd, (HMENU)602, NULL, NULL);
             g_hNextButton = CreateWindowA("BUTTON", "Next >", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 348, 65, 26, hwnd, (HMENU)602, NULL, NULL);
 
             UpdateGrimoireGrid();
 
-            // Game Mode Selection Buttons
             g_hModeButtons[0] = CreateWindowA("BUTTON", "Classic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 70, 45, 22, hwnd, (HMENU)1200, NULL, NULL);
             g_hModeButtons[1] = CreateWindowA("BUTTON", "Blitz", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 323, 70, 38, 22, hwnd, (HMENU)1201, NULL, NULL);
             g_hModeButtons[2] = CreateWindowA("BUTTON", "Puzzle", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 363, 70, 44, 22, hwnd, (HMENU)1202, NULL, NULL);
@@ -830,69 +1014,72 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hSoundButton = CreateWindowA("BUTTON", "🔊 ON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 451, 70, 48, 22, hwnd, (HMENU)1300, NULL, NULL);
             g_hHelpButton = CreateWindowA("BUTTON", "📘 Manual (F1/H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 502, 70, 115, 22, hwnd, (HMENU)1400, NULL, NULL);
 
-            // Help Modal Tab Buttons & Close Button (Initially hidden)
             g_hHelpTabButtons[0] = CreateWindowA("BUTTON", "🎮 How to Play", WS_CHILD | BS_PUSHBUTTON, 35, 55, 110, 26, hwnd, (HMENU)1401, NULL, NULL);
             g_hHelpTabButtons[1] = CreateWindowA("BUTTON", "📊 Element Tiers", WS_CHILD | BS_PUSHBUTTON, 150, 55, 110, 26, hwnd, (HMENU)1402, NULL, NULL);
             g_hHelpTabButtons[2] = CreateWindowA("BUTTON", "⚗️ Lab Controls", WS_CHILD | BS_PUSHBUTTON, 265, 55, 110, 26, hwnd, (HMENU)1403, NULL, NULL);
             g_hHelpTabButtons[3] = CreateWindowA("BUTTON", "📜 Alchemy Lore", WS_CHILD | BS_PUSHBUTTON, 380, 55, 110, 26, hwnd, (HMENU)1404, NULL, NULL);
             g_hHelpCloseButton = CreateWindowA("BUTTON", "✕ Close Manual", WS_CHILD | BS_PUSHBUTTON, 640, 55, 105, 26, hwnd, (HMENU)1405, NULL, NULL);
 
-            // Laboratory Equipment Nav Buttons
-            g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 96, 33, 22, hwnd, (HMENU)700, NULL, NULL);
-            g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 96, 31, 22, hwnd, (HMENU)701, NULL, NULL);
-            g_hEquipButtons[2] = CreateWindowA("BUTTON", "Alembic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 342, 96, 34, 22, hwnd, (HMENU)702, NULL, NULL);
-            g_hEquipButtons[3] = CreateWindowA("BUTTON", "Anvil", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 377, 96, 28, 22, hwnd, (HMENU)703, NULL, NULL);
-            g_hEquipButtons[4] = CreateWindowA("BUTTON", "Quests", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 406, 96, 34, 22, hwnd, (HMENU)704, NULL, NULL);
-            g_hEquipButtons[5] = CreateWindowA("BUTTON", "Shop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 441, 96, 31, 22, hwnd, (HMENU)705, NULL, NULL);
-            g_hEquipButtons[6] = CreateWindowA("BUTTON", "Potions", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 473, 96, 35, 22, hwnd, (HMENU)706, NULL, NULL);
-            g_hEquipButtons[7] = CreateWindowA("BUTTON", "Codex", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 509, 96, 35, 22, hwnd, (HMENU)707, NULL, NULL);
+            g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 94, 45, 20, hwnd, (HMENU)700, NULL, NULL);
+            g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 323, 94, 44, 20, hwnd, (HMENU)701, NULL, NULL);
+            g_hEquipButtons[2] = CreateWindowA("BUTTON", "Alembic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 369, 94, 45, 20, hwnd, (HMENU)702, NULL, NULL);
+            g_hEquipButtons[3] = CreateWindowA("BUTTON", "Anvil", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 416, 94, 43, 20, hwnd, (HMENU)703, NULL, NULL);
+            g_hEquipButtons[4] = CreateWindowA("BUTTON", "Quests", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 461, 94, 46, 20, hwnd, (HMENU)704, NULL, NULL);
 
-            // Codex Filter Buttons (Initially hidden)
-            g_hCodexFilterBtns[0] = CreateWindowA("BUTTON", "All", WS_CHILD | BS_PUSHBUTTON, 282, 120, 36, 22, hwnd, (HMENU)1100, NULL, NULL);
-            g_hCodexFilterBtns[1] = CreateWindowA("BUTTON", "Disc", WS_CHILD | BS_PUSHBUTTON, 320, 120, 38, 22, hwnd, (HMENU)1101, NULL, NULL);
-            g_hCodexFilterBtns[2] = CreateWindowA("BUTTON", "Lock", WS_CHILD | BS_PUSHBUTTON, 360, 120, 38, 22, hwnd, (HMENU)1102, NULL, NULL);
+            g_hEquipButtons[5] = CreateWindowA("BUTTON", "Shop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 116, 45, 20, hwnd, (HMENU)705, NULL, NULL);
+            g_hEquipButtons[6] = CreateWindowA("BUTTON", "Potions", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 323, 116, 44, 20, hwnd, (HMENU)706, NULL, NULL);
+            g_hEquipButtons[7] = CreateWindowA("BUTTON", "Codex", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 369, 116, 45, 20, hwnd, (HMENU)707, NULL, NULL);
+            g_hEquipButtons[8] = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 416, 116, 43, 20, hwnd, (HMENU)708, NULL, NULL);
+            g_hEquipButtons[9] = CreateWindowA("BUTTON", "Rebirth", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 461, 116, 46, 20, hwnd, (HMENU)709, NULL, NULL);
 
-            // Potion Drink Buttons (Initially hidden)
+            g_hCodexFilterBtns[0] = CreateWindowA("BUTTON", "All", WS_CHILD | BS_PUSHBUTTON, 282, 140, 36, 22, hwnd, (HMENU)1100, NULL, NULL);
+            g_hCodexFilterBtns[1] = CreateWindowA("BUTTON", "Disc", WS_CHILD | BS_PUSHBUTTON, 320, 140, 38, 22, hwnd, (HMENU)1101, NULL, NULL);
+            g_hCodexFilterBtns[2] = CreateWindowA("BUTTON", "Lock", WS_CHILD | BS_PUSHBUTTON, 360, 140, 38, 22, hwnd, (HMENU)1102, NULL, NULL);
+
             g_hPotionDrinkButtons[0] = CreateWindowA("BUTTON", "Drink Strength", WS_CHILD | BS_PUSHBUTTON, 282, 140, 108, 26, hwnd, (HMENU)1000, NULL, NULL);
             g_hPotionDrinkButtons[1] = CreateWindowA("BUTTON", "Drink Invis", WS_CHILD | BS_PUSHBUTTON, 394, 140, 108, 26, hwnd, (HMENU)1001, NULL, NULL);
             g_hPotionDrinkButtons[2] = CreateWindowA("BUTTON", "Drink Mana", WS_CHILD | BS_PUSHBUTTON, 282, 170, 108, 26, hwnd, (HMENU)1002, NULL, NULL);
             g_hPotionDrinkButtons[3] = CreateWindowA("BUTTON", "Drink Life", WS_CHILD | BS_PUSHBUTTON, 394, 170, 108, 26, hwnd, (HMENU)1003, NULL, NULL);
 
+            g_hDailyClaimButtons[0] = CreateWindowA("BUTTON", "Claim", WS_CHILD | BS_PUSHBUTTON, 430, 170, 70, 24, hwnd, (HMENU)1500, NULL, NULL);
+            g_hDailyClaimButtons[1] = CreateWindowA("BUTTON", "Claim", WS_CHILD | BS_PUSHBUTTON, 430, 245, 70, 24, hwnd, (HMENU)1501, NULL, NULL);
+            g_hDailyClaimButtons[2] = CreateWindowA("BUTTON", "Claim", WS_CHILD | BS_PUSHBUTTON, 430, 320, 70, 24, hwnd, (HMENU)1502, NULL, NULL);
+            g_hDailyRerollButton = CreateWindowA("BUTTON", "🔄 Reroll Trials (25 Gold)", WS_CHILD | BS_PUSHBUTTON, 315, 385, 160, 28, hwnd, (HMENU)1503, NULL, NULL);
+
+            g_hPrestigeRebirthButton = CreateWindowA("BUTTON", "🌟 Perform Magnum Opus Rebirth (35+ Elem)", WS_CHILD | BS_PUSHBUTTON, 280, 145, 225, 32, hwnd, (HMENU)1600, NULL, NULL);
+            g_hAstralPerkButtons[0] = CreateWindowA("BUTTON", "Unlock", WS_CHILD | BS_PUSHBUTTON, 435, 210, 68, 24, hwnd, (HMENU)1601, NULL, NULL);
+            g_hAstralPerkButtons[1] = CreateWindowA("BUTTON", "Unlock", WS_CHILD | BS_PUSHBUTTON, 435, 265, 68, 24, hwnd, (HMENU)1602, NULL, NULL);
+            g_hAstralPerkButtons[2] = CreateWindowA("BUTTON", "Unlock", WS_CHILD | BS_PUSHBUTTON, 435, 320, 68, 24, hwnd, (HMENU)1603, NULL, NULL);
+            g_hAstralPerkButtons[3] = CreateWindowA("BUTTON", "Unlock", WS_CHILD | BS_PUSHBUTTON, 435, 375, 68, 24, hwnd, (HMENU)1604, NULL, NULL);
+
             SetTimer(hwnd, 1, 1000, NULL);
 
-            // Workshop Upgrade Buttons (Initially hidden)
             g_hUpgradeButtons[0] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 142, 65, 24, hwnd, (HMENU)900, NULL, NULL);
             g_hUpgradeButtons[1] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 202, 65, 24, hwnd, (HMENU)901, NULL, NULL);
             g_hUpgradeButtons[2] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 262, 65, 24, hwnd, (HMENU)902, NULL, NULL);
             g_hUpgradeButtons[3] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 322, 65, 24, hwnd, (HMENU)903, NULL, NULL);
 
-            // Auto-Fill Button for Crucible
             g_hAutoFillButton = CreateWindowA("BUTTON", "⚡ Auto", WS_CHILD | BS_PUSHBUTTON, 280, 315, 46, 28, hwnd, (HMENU)904, NULL, NULL);
 
-            // Crucible Slots
             g_hSlot1Button = CreateWindowA("BUTTON", "[ Slot 1 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 295, 200, 90, 50, hwnd, (HMENU)301, NULL, NULL);
             g_hSlot2Button = CreateWindowA("BUTTON", "[ Slot 2 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 400, 200, 90, 50, hwnd, (HMENU)302, NULL, NULL);
 
-            // Action Buttons
             g_hMainActionButton = CreateWindowA("BUTTON", "✨ Transmute", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 315, 265, 155, 40, hwnd, (HMENU)201, NULL, NULL);
             CreateWindowA("BUTTON", "Clear Crucible", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 315, 125, 28, hwnd, (HMENU)202, NULL, NULL);
             CreateWindowA("BUTTON", "Reset Progress", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 350, 125, 26, hwnd, (HMENU)203, NULL, NULL);
 
-            // Quest Controls (Initially hidden until Quests tab selected)
             g_hQuestTurnInButtons[0] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 155, 65, 26, hwnd, (HMENU)800, NULL, NULL);
             g_hQuestTurnInButtons[1] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 235, 65, 26, hwnd, (HMENU)801, NULL, NULL);
             g_hQuestTurnInButtons[2] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 315, 65, 26, hwnd, (HMENU)802, NULL, NULL);
             g_hQuestRerollButton = CreateWindowA("BUTTON", "🔄 Reroll (15 Gold)", WS_CHILD | BS_PUSHBUTTON, 325, 385, 140, 28, hwnd, (HMENU)803, NULL, NULL);
 
-            // Oracle & Research Hint Buttons
             CreateWindowA("BUTTON", "💡 Hint (20)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 285, 440, 105, 30, hwnd, (HMENU)204, NULL, NULL);
             CreateWindowA("BUTTON", "👁️ Oracle (50)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 395, 440, 105, 30, hwnd, (HMENU)205, NULL, NULL);
 
-            // Journal Log Edit Control (Read-Only)
             g_hJournalEdit = CreateWindowA("EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_BORDER,
                 530, 96, 225, 415, hwnd, (HMENU)402, NULL, NULL);
 
-            AddJournalLog("Welcome Apprentice Alchemist!\r\nSelect elements from your Grimoire to combine in the Crucible across 5 Tiers!\r\n\r\nPress 'H' to open the Grandmaster Manual for help!");
+            AddJournalLog("Welcome Apprentice Alchemist!\r\nDiscover 60+ elements across 6 Tiers including Secret Mythic Combos!\r\n\r\nComplete Daily Trials and perform Magnum Opus Rebirth to earn Astral Shards!");
             break;
         }
 
@@ -919,7 +1106,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (key == 'A' || key == 'a') {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(904, 0), 0);
-                } else if (key >= '0' && key <= '5') {
+                } else if (key >= '0' && key <= '6') {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(500 + (key - '0'), 0), 0);
                 }
             }
@@ -933,7 +1120,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_State.buffManaTimer > 0) { g_State.buffManaTimer--; changed = 1; }
             if (g_State.buffLifeTimer > 0) { g_State.buffLifeTimer--; changed = 1; }
             if (g_State.screenShakeTime > 0) { g_State.screenShakeTime--; changed = 1; }
-            // Particle update
             for (int i = 0; i < MAX_PARTICLES; i++) {
                 if (g_Particles[i].life > 0.0f) {
                     g_Particles[i].x += g_Particles[i].vx;
@@ -942,7 +1128,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     changed = 1;
                 }
             }
-            // Animation update
             RECT vesselRect = { 300, 110, 480, 230 };
             InvalidateRect(hwnd, &vesselRect, FALSE);
             changed = 1;
@@ -976,33 +1161,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int id = LOWORD(wParam);
             int code = HIWORD(wParam);
 
-            // Open / Toggle Help Modal (1400)
             if (id == 1400) {
                 g_State.showHelpModal = !g_State.showHelpModal;
                 UpdateEquipmentUI(hwnd);
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Switch Help Modal Tabs (1401..1404)
             else if (id >= 1401 && id <= 1404) {
                 g_State.helpActiveTab = id - 1401;
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Close Help Modal (1405)
             else if (id == 1405) {
                 g_State.showHelpModal = 0;
                 UpdateEquipmentUI(hwnd);
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Search filter edit box changed
             else if (id == 401 && code == EN_CHANGE) {
                 GetWindowTextA(g_hSearchEdit, g_State.searchFilter, sizeof(g_State.searchFilter));
                 g_State.currentPage = 0;
                 UpdateGrimoireGrid();
             }
-            // Sound Toggle (1300)
             else if (id == 1300) {
                 g_State.soundEnabled = !g_State.soundEnabled;
                 if (g_hSoundButton) {
@@ -1011,14 +1191,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (g_State.soundEnabled) PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Tier Filter Buttons (500 = All, 501..505 = T1..T5)
             else if (id >= 500 && id <= 500 + TOTAL_TIERS) {
                 g_State.selectedTierFilter = id - 500;
                 g_State.currentPage = 0;
                 UpdateGrimoireGrid();
                 PlayGlassClink();
             }
-            // Grid element buttons (100 to 109)
             else if (id >= 100 && id < 100 + GRID_SIZE) {
                 int btnIdx = id - 100;
                 int elemIdx = g_State.buttonElemMap[btnIdx];
@@ -1041,35 +1219,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             }
-            // Page navigation
-            else if (id == 601) { // Prev
+            else if (id == 601) {
                 if (g_State.currentPage > 0) {
                     g_State.currentPage--;
                     UpdateGrimoireGrid();
                     PlayGlassClink();
                 }
             }
-            else if (id == 602) { // Next
+            else if (id == 602) {
                 g_State.currentPage++;
                 UpdateGrimoireGrid();
                 PlayGlassClink();
             }
-            // Clear Slot 1
             else if (id == 301) {
                 g_State.slot1 = -1;
                 UpdateSlotButtonText();
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Clear Slot 2
             else if (id == 302) {
                 g_State.slot2 = -1;
                 UpdateSlotButtonText();
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Equipment Selector (700 = Crucible, 701 = Retort, 702 = Alembic, 703 = Anvil, 704 = Quests, 705 = Shop, 706 = Potions)
-            else if (id >= 700 && id <= 706) {
+            else if (id >= 700 && id <= 709) {
                 g_State.selectedEquipment = id - 700;
                 if (g_hMainActionButton) {
                     if (g_State.selectedEquipment == 0) SetWindowTextA(g_hMainActionButton, "✨ Transmute");
@@ -1082,7 +1256,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Potion Drink Commands (1000 = Strength, 1001 = Invis, 1002 = Mana, 1003 = Life)
             else if (id >= 1000 && id <= 1003) {
                 int pIdx = id - 1000;
                 if (pIdx == 0 && g_State.potionStrength > 0) {
@@ -1116,7 +1289,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UpdateEquipmentUI(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Workshop Upgrades (900, 901, 902, 903)
             else if (id >= 900 && id <= 903) {
                 int uIdx = id - 900;
                 int* pLvl = NULL;
@@ -1146,7 +1318,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Auto-Fill Crucible Button (904)
             else if (id == 904) {
                 if (g_State.upgradeAutoSorter <= 0) {
                     AddJournalLog("⚠️ Unlock Auto-Sorter in the Enchanter Workshop first!");
@@ -1187,7 +1358,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Quest Turn In Buttons (800, 801, 802)
             else if (id >= 800 && id <= 802) {
                 int qIdx = id - 800;
                 int targetId = g_State.quests[qIdx].targetId;
@@ -1196,6 +1366,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int xRew = g_State.quests[qIdx].xpReward;
                     if (g_State.buffStrengthTimer > 0) gRew = gRew * 150 / 100;
                     if (g_State.buffLifeTimer > 0) xRew *= 2;
+                    if (g_State.astralMidas > 0) gRew += gRew * (g_State.astralMidas * 25) / 100;
 
                     g_State.gold += gRew;
                     g_State.guildXP += xRew;
@@ -1209,6 +1380,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(g_State.lastStatus, "Fulfilled %s's order!", g_Patrons[g_State.quests[qIdx].patronIdx]);
 
                     PlayMagicFanfare();
+                    CheckDailyProgress(1, 1);
 
                     GenerateQuest(qIdx);
                     UpdateEquipmentUI(hwnd);
@@ -1218,7 +1390,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PlayGlassClink();
                 }
             }
-            // Quest Reroll Button (803)
             else if (id == 803) {
                 const int COST = 15;
                 if (g_State.gold < COST) {
@@ -1237,7 +1408,85 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Game Mode Commands (1200 = Classic, 1201 = Blitz, 1202 = Puzzle, 1203 = Start Blitz, 1204 = Skip Target)
+            else if (id >= 1500 && id <= 1502) {
+                int dIdx = id - 1500;
+                if (!g_State.dailyChallenges[dIdx].claimed && g_State.dailyChallenges[dIdx].current >= g_State.dailyChallenges[dIdx].target) {
+                    g_State.dailyChallenges[dIdx].claimed = 1;
+                    g_State.gold += g_State.dailyChallenges[dIdx].rewardGold;
+                    g_State.essence += g_State.dailyChallenges[dIdx].rewardEssence;
+                    g_State.astralShards += g_State.dailyChallenges[dIdx].rewardAstral;
+
+                    char logMsg[256];
+                    wsprintfA(logMsg, "🎯 DAILY TRIAL CLAIMED! Completed '%s'! (+%d Gold, +%d Essence, +%d Astral Shard)",
+                        g_State.dailyChallenges[dIdx].desc,
+                        g_State.dailyChallenges[dIdx].rewardGold,
+                        g_State.dailyChallenges[dIdx].rewardEssence,
+                        g_State.dailyChallenges[dIdx].rewardAstral);
+                    AddJournalLog(logMsg);
+                    wsprintfA(g_State.lastStatus, "Claimed Daily Trial (+%d Astral)!", g_State.dailyChallenges[dIdx].rewardAstral);
+                    PlayMagicFanfare();
+
+                    if (g_State.dailyChallenges[0].claimed && g_State.dailyChallenges[1].claimed && g_State.dailyChallenges[2].claimed) {
+                        g_State.dailyStreak++;
+                        g_State.gold += 200;
+                        g_State.astralShards += 2;
+                        char sMsg[256];
+                        wsprintfA(sMsg, "🔥 ALL DAILY TRIALS COMPLETE! Streak: %d Days! Bonus: +200 Gold, +2 Astral Shards!", g_State.dailyStreak);
+                        AddJournalLog(sMsg);
+                        PlayDiscoveryFanfare();
+                    }
+                    UpdateEquipmentUI(hwnd);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            }
+            else if (id == 1503) {
+                const int COST = 25;
+                if (g_State.gold < COST) {
+                    AddJournalLog("⚠️ Not enough Gold to reroll daily trials! (Cost: 25 Gold)");
+                    PlayGlassClink();
+                } else {
+                    g_State.gold -= COST;
+                    InitDailyChallenges();
+                    AddJournalLog("🔄 Refreshed Daily Alchemical Trials (-25 Gold).");
+                    lstrcpyA(g_State.lastStatus, "Daily Trials Refreshed");
+                    PlayGlassClink();
+                    UpdateEquipmentUI(hwnd);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            }
+            else if (id == 1600) {
+                if (MessageBoxA(hwnd, "Perform the Great Magnum Opus Rebirth?\n\nResets element discoveries to 4 basics, but preserves Guild Level, unlocks, and awards Astral Shards for permanent perks!", "Magnum Opus Ascension", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                    PerformMagnumOpusRebirth(hwnd);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            }
+            else if (id >= 1601 && id <= 1604) {
+                int aIdx = id - 1601;
+                int* pLvl = NULL;
+                const char* pName = NULL;
+                if (aIdx == 0) { pLvl = &g_State.astralCrucible; pName = "Astral Crucible"; }
+                else if (aIdx == 1) { pLvl = &g_State.astralMidas; pName = "Midas Transmutation"; }
+                else if (aIdx == 2) { pLvl = &g_State.astralGrimoire; pName = "Ancient Grimoire"; }
+                else if (aIdx == 3) { pLvl = &g_State.astralCatalysis; pName = "Philosopher's Catalysis"; }
+
+                if (pLvl && *pLvl < 5) {
+                    int cost = *pLvl + 1;
+                    if (g_State.astralShards >= cost) {
+                        g_State.astralShards -= cost;
+                        (*pLvl)++;
+                        char logMsg[256];
+                        wsprintfA(logMsg, "✨ ASTRAL PERK UNLOCKED: %s upgraded to Rank %d! (-%d Astral Shards)", pName, *pLvl, cost);
+                        AddJournalLog(logMsg);
+                        wsprintfA(g_State.lastStatus, "Upgraded %s to Rank %d!", pName, *pLvl);
+                        PlayMagicFanfare();
+                        UpdateEquipmentUI(hwnd);
+                    } else {
+                        AddJournalLog("⚠️ Not enough Astral Shards to unlock perk!");
+                        PlayGlassClink();
+                    }
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             else if (id == 1200) {
                 g_State.gameMode = 0;
                 g_State.blitzActive = 0;
@@ -1263,7 +1512,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            else if (id == 1203) { // Start/Restart Blitz
+            else if (id == 1203) {
                 g_State.blitzTimeLeft = 60;
                 g_State.blitzScore = 0;
                 g_State.blitzActive = 1;
@@ -1272,7 +1521,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PlayMagicFanfare();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            else if (id == 1204) { // Skip Puzzle Target
+            else if (id == 1204) {
                 int r = FastRand() % TOTAL_RECIPES;
                 g_State.puzzleTargetId = g_Recipes[r].result;
                 g_State.puzzleMoves = 0;
@@ -1283,9 +1532,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Main Action (Transmute / Distill / Extract / Crush)
             else if (id == 201) {
-                if (g_State.selectedEquipment == 0) { // Crucible Transmute
+                if (g_State.selectedEquipment == 0) {
                     if (g_State.slot1 < 0 || g_State.slot2 < 0) {
                         lstrcpyA(g_State.lastStatus, "Select 2 elements for Crucible!");
                         AddJournalLog("Place two elements into the Crucible before transmuting.");
@@ -1304,12 +1552,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
 
+                        g_State.useCounts[e1]++;
+                        g_State.useCounts[e2]++;
+                        CheckDailyProgress(0, 1);
+
                         if (matchIdx >= 0) {
                             int res = g_Recipes[matchIdx].result;
                             int resTier = g_Elements[res].tier;
                             int reqThreshold = g_Tiers[resTier - 1].threshold;
 
-                            if (g_State.discoveredCount < reqThreshold) {
+                            if (g_State.discoveredCount < reqThreshold && resTier < 6) {
                                 wsprintfA(g_State.lastStatus, "🔒 Tier %d (%s) Locked!", resTier, g_Tiers[resTier - 1].name);
                                 char logMsg[256];
                                 wsprintfA(logMsg, "🔒 TIER LOCKED! Crafting %s requires Tier %d (%s) - discover %d elements!",
@@ -1318,8 +1570,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 PlayGlassClink();
                             } else {
                                 int isNew = !g_State.discovered[res];
+                                g_State.craftCounts[res]++;
 
-                                // Phase 12 Mode Checks
                                 if (g_State.gameMode == 1 && g_State.blitzActive) {
                                     int pts = resTier * 50;
                                     if (isNew) pts += 100;
@@ -1348,7 +1600,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     g_State.discovered[res] = 1;
                                     g_State.discoveredCount++;
 
-                                    int capMult = 100 + (g_State.upgradeCrucibleCap * 15);
+                                    int capMult = 100 + (g_State.upgradeCrucibleCap * 15) + (g_State.astralCrucible * 25);
                                     int essGain = 25 * capMult / 100;
                                     int dustGain = 25 * capMult / 100;
 
@@ -1358,7 +1610,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     g_State.essence += essGain;
                                     g_State.dust += dustGain;
 
-                                    int critChance = g_State.upgradeCatalystSpeed * 15;
+                                    int critChance = g_State.upgradeCatalystSpeed * 15 + (g_State.astralCatalysis * 15);
                                     int isCrit = (g_State.buffLifeTimer > 0) || ((FastRand() % 100) < critChance);
                                     char critLogStr[64] = "";
                                     if (isCrit) {
@@ -1371,23 +1623,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         }
                                     }
 
-                                    CheckTierUnlocks();
-                                    UpdateGrimoireGrid();
+                                    if (resTier == 6) {
+                                        g_State.secretCombosFound++;
+                                        g_State.essence += 250;
+                                        g_State.dust += 250;
+                                        g_State.gold += 200;
+                                        g_State.astralShards += 1;
+                                        char secretMsg[320];
+                                        wsprintfA(secretMsg, "🌟 SECRET / MYTHIC TRANSMUTATION! Unlocked '%s'! (+250 Ess, +250 Dust, +200 Gold, +1 Astral Shard!)",
+                                            g_Elements[res].name);
+                                        AddJournalLog(secretMsg);
+                                        wsprintfA(g_State.lastStatus, "🌟 SECRET: Discovered %s!", g_Elements[res].name);
+                                        SpawnExplosion(392, 168, RGB(255, 105, 180));
+                                        PlayMagicFanfare();
+                                    } else {
+                                        CheckTierUnlocks();
+                                        wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
+                                        SpawnExplosion(392, 168, g_Tiers[resTier - 1].color);
+                                        char logMsg[320];
+                                        wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+%d Dust)%s",
+                                            g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name, dustGain, critLogStr);
+                                        AddJournalLog(logMsg);
+                                        PlayDiscoveryChime();
+                                    }
 
-                                    wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
-                                    SpawnExplosion(392, 168, g_Tiers[resTier - 1].color);
-                                    
-                                    extern DWORD g_SigilEndTick;
+                                    UpdateGrimoireGrid();
                                     if (resTier >= 3) {
                                         g_SigilEndTick = GetTickCount() + 1500;
                                     }
-
-                                    char logMsg[320];
-                                    wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+%d Dust)%s",
-                                        g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name, dustGain, critLogStr);
-                                    AddJournalLog(logMsg);
-
-                                    PlayDiscoveryChime();
                                 } else {
                                     wsprintfA(g_State.lastStatus, "Created %s (Known)", g_Elements[res].name);
                                     char logMsg[256];
@@ -1409,7 +1672,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             PlayGlassClink();
                         }
                     }
-                } else if (g_State.selectedEquipment == 1) { // Retort Distillation
+                } else if (g_State.selectedEquipment == 1) {
                     if (g_State.slot1 < 0) {
                         lstrcpyA(g_State.lastStatus, "Place complex element in Slot 1!");
                         AddJournalLog("Place a complex element into Slot 1 to distill in the Retort.");
@@ -1433,11 +1696,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     CheckTierUnlocks();
                                     UpdateGrimoireGrid();
                                 }
-                                int yieldMult = 100 + (g_State.upgradeEssenceYield * 25);
+                                int yieldMult = 100 + (g_State.upgradeEssenceYield * 25) + (g_State.astralCrucible * 25);
                                 int essGain = 30 * yieldMult / 100;
                                 int dustGain = 15 * yieldMult / 100;
                                 g_State.essence += essGain;
                                 g_State.dust += dustGain;
+                                CheckDailyProgress(2, 1);
                                 wsprintfA(g_State.lastStatus, "Retort: Distilled %s -> %s!", g_Elements[e1].name, g_Elements[ing1].name);
                                 char logMsg[256];
                                 wsprintfA(logMsg, "⚗️ RETORT DISTILLATION: Distilled %s to extract primary essence %s! (+%d Essence, +%d Dust)",
@@ -1447,7 +1711,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                     }
-                } else if (g_State.selectedEquipment == 2) { // Alembic Extraction
+                } else if (g_State.selectedEquipment == 2) {
                     if (g_State.slot1 < 0) {
                         lstrcpyA(g_State.lastStatus, "Place complex element in Slot 1!");
                         AddJournalLog("Place a complex element into Slot 1 to extract in the Alembic.");
@@ -1471,11 +1735,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     CheckTierUnlocks();
                                     UpdateGrimoireGrid();
                                 }
-                                int yieldMult = 100 + (g_State.upgradeEssenceYield * 25);
+                                int yieldMult = 100 + (g_State.upgradeEssenceYield * 25) + (g_State.astralCrucible * 25);
                                 int essGain = 30 * yieldMult / 100;
                                 int dustGain = 15 * yieldMult / 100;
                                 g_State.essence += essGain;
                                 g_State.dust += dustGain;
+                                CheckDailyProgress(2, 1);
                                 wsprintfA(g_State.lastStatus, "Alembic: Extracted %s -> %s!", g_Elements[e1].name, g_Elements[ing2].name);
                                 char logMsg[256];
                                 wsprintfA(logMsg, "🧪 ALEMBIC EXTRACTION: Extracted secondary essence %s from %s! (+%d Essence, +%d Dust)",
@@ -1485,7 +1750,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                     }
-                } else if (g_State.selectedEquipment == 3) { // Anvil Crushing
+                } else if (g_State.selectedEquipment == 3) {
                     if (g_State.slot1 < 0) {
                         lstrcpyA(g_State.lastStatus, "Place complex element in Slot 1!");
                         AddJournalLog("Place a complex element into Slot 1 to crush on the Anvil.");
@@ -1498,11 +1763,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             PlayGlassClink();
                         } else {
                             int tier = g_Elements[e1].tier;
-                            int yieldMult = 100 + (g_State.upgradeEssenceYield * 25);
+                            int yieldMult = 100 + (g_State.upgradeEssenceYield * 25) + (g_State.astralCrucible * 25);
                             int essGain = (tier * 30) * yieldMult / 100;
                             int dustGain = (tier * 25) * yieldMult / 100;
                             g_State.essence += essGain;
                             g_State.dust += dustGain;
+                            CheckDailyProgress(2, 1);
                             wsprintfA(g_State.lastStatus, "Anvil: Smashed %s (+%d Ess, +%d Dust)!", g_Elements[e1].name, essGain, dustGain);
                             char logMsg[256];
                             wsprintfA(logMsg, "🔨 ANVIL ESSENCE HARVEST: Smashed %s [Tier %d] into pure base essence! (+%d Essence, +%d Dust)",
@@ -1511,7 +1777,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             PlayAnvilCrushSound();
                         }
                     }
-                } else if (g_State.selectedEquipment == 6) { // Potion Brewing
+                } else if (g_State.selectedEquipment == 6) {
                     if (g_State.slot1 < 0 || g_State.slot2 < 0) {
                         lstrcpyA(g_State.lastStatus, "Select herb and essence for brewing!");
                         AddJournalLog("Select an herb/ingredient and essence into slots to brew in Cauldron.");
@@ -1523,7 +1789,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int isHerb1 = (e1 == 11 || e1 == 15 || e1 == 14 || e1 == 7 || e1 == 36);
                         int isHerb2 = (e2 == 11 || e2 == 15 || e2 == 14 || e2 == 7 || e2 == 36);
 
-                        int brewedType = -1; // 0=Strength, 1=Invis, 2=Mana, 3=Life
+                        int brewedType = -1;
                         if (isHerb1 || isHerb2) {
                             int other = isHerb1 ? e2 : e1;
                             if (other == 6 || other == 0 || other == 16) brewedType = 0;
@@ -1564,7 +1830,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Clear Crucible
             else if (id == 202) {
                 g_State.slot1 = -1;
                 g_State.slot2 = -1;
@@ -1573,7 +1838,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Reset Progress
             else if (id == 203) {
                 if (MessageBoxA(hwnd, "Reset all discovered elements back to starter 4?", "Reset KAlchemy", MB_YESNO | MB_ICONQUESTION) == IDYES) {
                     InitGameState();
@@ -1586,7 +1850,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             }
-            // Vague Research Hint (204)
             else if (id == 204) {
                 int COST = 20;
                 if (g_State.buffInvisibilityTimer > 0) COST = 0;
@@ -1640,7 +1903,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Oracle Vision (205)
             else if (id == 205) {
                 int COST = 50;
                 if (g_State.buffInvisibilityTimer > 0) COST = 0;
@@ -1716,7 +1978,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetBkMode(hdc, TRANSPARENT);
 
-            // Environmental Art Background: Esoteric geometric patterns
             RECT clRect;
             GetClientRect(hwnd, &clRect);
             FillRect(hdc, &clRect, hBgBrush);
@@ -1734,7 +1995,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(SelectObject(hdc, oldPenBg));
             SelectObject(hdc, oldBrushBg);
 
-            // Helper macro for drawing glowing panel borders
             #define DRAW_RUNE_PANEL(r, brush) { \
                 FillRect(hdc, &(r), (brush)); \
                 HGDIOBJ pOldP = SelectObject(hdc, hPurplePen); \
@@ -1744,87 +2004,72 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdc, pOldP); \
             }
 
-            // Top Header Bar
             RECT headerRect = { 20, 10, 765, 60 };
             DRAW_RUNE_PANEL(headerRect, hPanelBrush);
 
             SelectObject(hdc, hTitleFont);
             SetTextColor(hdc, RGB(243, 156, 18));
-            TextOutA(hdc, 35, 18, "KALCHEMY - Arcane Laboratory", 28);
+            TextOutA(hdc, 35, 18, "KALCHEMY", 8);
 
-            // Rank calculation
-            const char* rankStr = "Apprentice";
-            if (g_State.discoveredCount >= 50) rankStr = "Celestial Master";
-            else if (g_State.discoveredCount >= 38) rankStr = "Grand Alchemist";
-            else if (g_State.discoveredCount >= 24) rankStr = "Master Alchemist";
-            else if (g_State.discoveredCount >= 12) rankStr = "Journeyman";
-            else if (g_State.discoveredCount >= 4) rankStr = "Adept";
-
-            int highestTier = CheckTierUnlocks();
-
-            // Golden Element Badges in Header
             SelectObject(hdc, hBadgeFont);
-            HGDIOBJ oldBrush = SelectObject(hdc, hGoldBadgeBrush);
-            HGDIOBJ oldPen = SelectObject(hdc, hGoldPen);
+            SetTextColor(hdc, RGB(176, 92, 219));
+            TextOutA(hdc, 36, 40, "MAGNUS OPUS", 11);
 
-            // Badge 1: Discovered
-            RECT badge1 = { 205, 18, 285, 52 };
+            HGDIOBJ oldPen = SelectObject(hdc, hGoldPen);
+            HGDIOBJ oldBrush = SelectObject(hdc, hGoldBadgeBrush);
+
+            RECT badge1 = { 150, 18, 225, 52 };
             RoundRect(hdc, badge1.left, badge1.top, badge1.right, badge1.bottom, 6, 6);
             char b1Str[32];
-            wsprintfA(b1Str, "Disc: %d/%d", g_State.discoveredCount, TOTAL_ELEMENTS);
-            SetTextColor(hdc, RGB(255, 215, 0));
+            wsprintfA(b1Str, "Ess: %d", g_State.essence);
+            SetTextColor(hdc, RGB(52, 152, 219));
             DrawTextA(hdc, b1Str, -1, &badge1, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 2: Highest Tier
-            RECT badge2 = { 290, 18, 375, 52 };
+            RECT badge2 = { 230, 18, 305, 52 };
             RoundRect(hdc, badge2.left, badge2.top, badge2.right, badge2.bottom, 6, 6);
             char b2Str[32];
-            wsprintfA(b2Str, "T%d %s", highestTier, g_Tiers[highestTier - 1].name);
-            SetTextColor(hdc, RGB(255, 215, 0));
+            wsprintfA(b2Str, "Dust: %d", g_State.dust);
+            SetTextColor(hdc, RGB(46, 204, 113));
             DrawTextA(hdc, b2Str, -1, &badge2, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 3: Essence
-            RECT badge3 = { 380, 18, 455, 52 };
+            RECT badge3 = { 310, 18, 385, 52 };
             RoundRect(hdc, badge3.left, badge3.top, badge3.right, badge3.bottom, 6, 6);
             char b3Str[32];
-            wsprintfA(b3Str, "Ess: %d", g_State.essence);
+            wsprintfA(b3Str, "Gold: %d", g_State.gold);
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b3Str, -1, &badge3, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 4: Alchemical Dust
-            RECT badge4 = { 460, 18, 535, 52 };
+            RECT badge4 = { 390, 18, 470, 52 };
             RoundRect(hdc, badge4.left, badge4.top, badge4.right, badge4.bottom, 6, 6);
             char b4Str[32];
-            wsprintfA(b4Str, "Dust: %d", g_State.dust);
-            SetTextColor(hdc, RGB(255, 215, 0));
+            wsprintfA(b4Str, "✨ Astral: %d", g_State.astralShards);
+            SetTextColor(hdc, RGB(255, 105, 180));
             DrawTextA(hdc, b4Str, -1, &badge4, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 5: Gold
-            RECT badge5 = { 540, 18, 615, 52 };
+            RECT badge5 = { 475, 18, 545, 52 };
             RoundRect(hdc, badge5.left, badge5.top, badge5.right, badge5.bottom, 6, 6);
             char b5Str[32];
-            wsprintfA(b5Str, "Gold: %d", g_State.gold);
-            SetTextColor(hdc, RGB(255, 215, 0));
+            wsprintfA(b5Str, "Lvl %d", g_State.guildLevel);
+            SetTextColor(hdc, RGB(241, 196, 15));
             DrawTextA(hdc, b5Str, -1, &badge5, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 6: Guild Level
-            RECT badge6 = { 620, 18, 695, 52 };
+            RECT badge6 = { 550, 18, 645, 52 };
             RoundRect(hdc, badge6.left, badge6.top, badge6.right, badge6.bottom, 6, 6);
             char b6Str[32];
-            wsprintfA(b6Str, "Lvl %d", g_State.guildLevel);
-            SetTextColor(hdc, RGB(255, 215, 0));
+            wsprintfA(b6Str, "Rebirth R%d", g_State.prestigeLevel);
+            SetTextColor(hdc, RGB(230, 126, 34));
             DrawTextA(hdc, b6Str, -1, &badge6, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 7: Rank
-            RECT badge7 = { 700, 18, 755, 52 };
+            RECT badge7 = { 650, 18, 755, 52 };
             RoundRect(hdc, badge7.left, badge7.top, badge7.right, badge7.bottom, 6, 6);
-            SetTextColor(hdc, RGB(255, 215, 0));
-            DrawTextA(hdc, rankStr, -1, &badge7, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+            char b7Str[32];
+            wsprintfA(b7Str, "🔥 Streak: %d", g_State.dailyStreak);
+            SetTextColor(hdc, RGB(243, 156, 18));
+            DrawTextA(hdc, b7Str, -1, &badge7, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
             SelectObject(hdc, oldBrush);
             SelectObject(hdc, oldPen);
 
-            // Left Panel - Element Grimoire
             RECT leftPanel = { 20, 68, 265, 523 };
             DRAW_RUNE_PANEL(leftPanel, hPanelBrush);
 
@@ -1833,12 +2078,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(hdc, 30, 74, "Elemental Grimoire", 18);
 
             char countStr[32];
-            wsprintfA(countStr, "(%d Elements)", g_State.discoveredCount);
+            wsprintfA(countStr, "(%d/64)", g_State.discoveredCount);
             SelectObject(hdc, hUIFont);
             SetTextColor(hdc, RGB(180, 160, 220));
-            TextOutA(hdc, 175, 76, countStr, lstrlenA(countStr));
+            TextOutA(hdc, 195, 76, countStr, lstrlenA(countStr));
 
-            // Center Panel - Transmutation Crucible / Laboratory Equipment
             RECT centerPanel = { 275, 68, 510, 523 };
             DRAW_RUNE_PANEL(centerPanel, hCrucibleBrush);
 
@@ -1849,20 +2093,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (g_State.selectedEquipment == 3) { modeTitle = "Anvil Essence Smelter"; vesselLabel = "Anvil"; }
             else if (g_State.selectedEquipment == 4) { modeTitle = "Guild Quest Board"; vesselLabel = "Quests"; }
             else if (g_State.selectedEquipment == 5) { modeTitle = "Enchanter Workshop"; vesselLabel = "Workshop"; }
+            else if (g_State.selectedEquipment == 6) { modeTitle = "Cauldron Brewing"; vesselLabel = "Potions"; }
+            else if (g_State.selectedEquipment == 7) { modeTitle = "Master Alchemist Codex"; vesselLabel = "Codex"; }
+            else if (g_State.selectedEquipment == 8) { modeTitle = "Daily Alchemical Trials"; vesselLabel = "Daily"; }
+            else if (g_State.selectedEquipment == 9) { modeTitle = "Magnum Opus Rebirth"; vesselLabel = "Rebirth"; }
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
-            TextOutA(hdc, 290, 74, modeTitle, lstrlenA(modeTitle));
+            TextOutA(hdc, 290, 72, modeTitle, lstrlenA(modeTitle));
 
             if (g_State.selectedEquipment == 4) {
                 SelectObject(hdc, hUIFont);
                 SetTextColor(hdc, RGB(180, 160, 220));
                 char subTitle[64];
                 wsprintfA(subTitle, "Guild Level %d (%d XP)", g_State.guildLevel, g_State.guildXP);
-                TextOutA(hdc, 290, 122, subTitle, lstrlenA(subTitle));
+                TextOutA(hdc, 290, 138, subTitle, lstrlenA(subTitle));
 
                 for (int q = 0; q < 3; q++) {
-                    RECT qCard = { 285, 142 + q * 80, 420, 212 + q * 80 };
+                    RECT qCard = { 285, 155 + q * 75, 420, 220 + q * 75 };
                     FillRect(hdc, &qCard, hPanelBrush);
                     HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
                     Rectangle(hdc, qCard.left, qCard.top, qCard.right, qCard.bottom);
@@ -1874,23 +2122,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(hdc, RGB(241, 196, 15));
                     char patronStr[64];
                     wsprintfA(patronStr, "%s", g_Patrons[pIdx]);
-                    TextOutA(hdc, qCard.left + 6, qCard.top + 6, patronStr, lstrlenA(patronStr));
+                    TextOutA(hdc, qCard.left + 6, qCard.top + 4, patronStr, lstrlenA(patronStr));
 
                     SetTextColor(hdc, RGB(226, 232, 240));
                     char reqStr[64];
                     wsprintfA(reqStr, "Order: %s (T%d)", g_Elements[tId].name, g_Elements[tId].tier);
-                    TextOutA(hdc, qCard.left + 6, qCard.top + 26, reqStr, lstrlenA(reqStr));
+                    TextOutA(hdc, qCard.left + 6, qCard.top + 22, reqStr, lstrlenA(reqStr));
 
                     SetTextColor(hdc, RGB(46, 204, 113));
                     char rewStr[64];
                     wsprintfA(rewStr, "+%d Gold, +%d XP", g_State.quests[q].goldReward, g_State.quests[q].xpReward);
-                    TextOutA(hdc, qCard.left + 6, qCard.top + 46, rewStr, lstrlenA(rewStr));
+                    TextOutA(hdc, qCard.left + 6, qCard.top + 40, rewStr, lstrlenA(rewStr));
                     SelectObject(hdc, oldP);
                 }
             } else if (g_State.selectedEquipment == 5) {
                 SelectObject(hdc, hUIFont);
                 SetTextColor(hdc, RGB(180, 160, 220));
-                TextOutA(hdc, 290, 120, "Laboratory Upgrades & Shop", 26);
+                TextOutA(hdc, 290, 138, "Laboratory Upgrades & Shop", 26);
 
                 const char* upgNames[4] = { "Crucible Cap", "Essence Yield", "Auto-Sorter", "Catalyst Speed" };
                 const char* upgDescs[4] = {
@@ -1908,7 +2156,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 };
 
                 for (int u = 0; u < 4; u++) {
-                    RECT uCard = { 285, 138 + u * 60, 425, 192 + u * 60 };
+                    RECT uCard = { 285, 155 + u * 58, 425, 205 + u * 58 };
                     FillRect(hdc, &uCard, hPanelBrush);
                     HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
                     Rectangle(hdc, uCard.left, uCard.top, uCard.right, uCard.bottom);
@@ -1917,100 +2165,95 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(hdc, RGB(241, 196, 15));
                     char nameStr[64];
                     wsprintfA(nameStr, "%s (Lvl %d/5)", upgNames[u], lvls[u]);
-                    TextOutA(hdc, uCard.left + 6, uCard.top + 4, nameStr, lstrlenA(nameStr));
+                    TextOutA(hdc, uCard.left + 6, uCard.top + 3, nameStr, lstrlenA(nameStr));
 
                     SelectObject(hdc, hUIFont);
                     SetTextColor(hdc, RGB(200, 210, 225));
-                    TextOutA(hdc, uCard.left + 6, uCard.top + 18, upgDescs[u], lstrlenA(upgDescs[u]));
+                    TextOutA(hdc, uCard.left + 6, uCard.top + 16, upgDescs[u], lstrlenA(upgDescs[u]));
 
                     if (lvls[u] >= 5) {
                         SetTextColor(hdc, RGB(46, 204, 113));
-                        TextOutA(hdc, uCard.left + 6, uCard.top + 34, "MAX LEVEL", 9);
+                        TextOutA(hdc, uCard.left + 6, uCard.top + 32, "MAX LEVEL", 9);
                     } else {
                         SetTextColor(hdc, RGB(241, 196, 15));
                         char costStr[32];
                         wsprintfA(costStr, "Cost: %d Gold", costs[u]);
-                        TextOutA(hdc, uCard.left + 6, uCard.top + 34, costStr, lstrlenA(costStr));
+                        TextOutA(hdc, uCard.left + 6, uCard.top + 32, costStr, lstrlenA(costStr));
                     }
                     SelectObject(hdc, oldP);
                 }
-            } else if (g_State.selectedEquipment == 6) {
+            } else if (g_State.selectedEquipment == 8) {
                 SelectObject(hdc, hUIFont);
-                SetTextColor(hdc, RGB(180, 160, 220));
-                TextOutA(hdc, 290, 120, "Cauldron Brewing & Effect Tester", 32);
+                SetTextColor(hdc, RGB(243, 156, 18));
+                char dHdr[64];
+                wsprintfA(dHdr, "Daily Trials (Streak: %d Days)", g_State.dailyStreak);
+                TextOutA(hdc, 285, 140, dHdr, lstrlenA(dHdr));
 
-                // Draw Potion Inventory Cards (4 boxes)
-                const char* pNames[4] = { "Strength", "Invis", "Mana", "Life" };
-                int pCounts[4] = { g_State.potionStrength, g_State.potionInvisibility, g_State.potionMana, g_State.potionLife };
-
-                for (int p = 0; p < 4; p++) {
-                    int col = p % 2;
-                    int row = p / 2;
-                    RECT pCard = { 282 + col * 112, 138 + row * 30, 390 + col * 112, 166 + row * 30 };
-                    FillRect(hdc, &pCard, hPanelBrush);
+                for (int d = 0; d < 3; d++) {
+                    RECT dCard = { 285, 160 + d * 75, 420, 225 + d * 75 };
+                    FillRect(hdc, &dCard, hPanelBrush);
                     HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
-                    Rectangle(hdc, pCard.left, pCard.top, pCard.right, pCard.bottom);
+                    Rectangle(hdc, dCard.left, dCard.top, dCard.right, dCard.bottom);
 
                     SelectObject(hdc, hBadgeFont);
                     SetTextColor(hdc, RGB(241, 196, 15));
-                    char pStr[32];
-                    wsprintfA(pStr, "%s: x%d", pNames[p], pCounts[p]);
-                    DrawTextA(hdc, pStr, -1, &pCard, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+                    TextOutA(hdc, dCard.left + 6, dCard.top + 4, g_State.dailyChallenges[d].desc, lstrlenA(g_State.dailyChallenges[d].desc));
+
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(226, 232, 240));
+                    char pStr[64];
+                    wsprintfA(pStr, "Progress: %d / %d", g_State.dailyChallenges[d].current, g_State.dailyChallenges[d].target);
+                    TextOutA(hdc, dCard.left + 6, dCard.top + 22, pStr, lstrlenA(pStr));
+
+                    SetTextColor(hdc, RGB(46, 204, 113));
+                    char rStr[64];
+                    wsprintfA(rStr, "+%d G, +%d Ess, +%d Astral",
+                        g_State.dailyChallenges[d].rewardGold,
+                        g_State.dailyChallenges[d].rewardEssence,
+                        g_State.dailyChallenges[d].rewardAstral);
+                    TextOutA(hdc, dCard.left + 6, dCard.top + 40, rStr, lstrlenA(rStr));
                     SelectObject(hdc, oldP);
                 }
-
-                // Effect Tester Status Monitor Box
-                RECT monRect = { 282, 330, 502, 430 };
-                FillRect(hdc, &monRect, hPanelBrush);
-                HGDIOBJ oldP = SelectObject(hdc, hPurplePen);
-                Rectangle(hdc, monRect.left, monRect.top, monRect.right, monRect.bottom);
-
+            } else if (g_State.selectedEquipment == 9) {
                 SelectObject(hdc, hBadgeFont);
                 SetTextColor(hdc, RGB(243, 156, 18));
-                TextOutA(hdc, monRect.left + 8, monRect.top + 6, "EFFECT TESTER MONITOR", 21);
+                char pInfo[128];
+                wsprintfA(pInfo, "Prestige Rank: %d | Astral Shards: %d | Prestiges: %d",
+                    g_State.prestigeLevel, g_State.astralShards, g_State.totalPrestiges);
+                TextOutA(hdc, 282, 182, pInfo, lstrlenA(pInfo));
 
-                SelectObject(hdc, hUIFont);
-                int yOffset = monRect.top + 26;
-                int hasBuffs = 0;
+                const char* perkNames[4] = { "Astral Crucible", "Midas Transmutation", "Ancient Grimoire", "Catalysis Blessing" };
+                const char* perkDescs[4] = {
+                    "+25% Ess/Dust yield per rank",
+                    "+25% Gold from all crafts",
+                    "Starts runs with +1 unlocked element",
+                    "+15% chance to double output"
+                };
+                int pLvls[4] = { g_State.astralCrucible, g_State.astralMidas, g_State.astralGrimoire, g_State.astralCatalysis };
 
-                if (g_State.buffStrengthTimer > 0) {
-                    SetTextColor(hdc, RGB(241, 196, 15));
-                    char bStr[64]; wsprintfA(bStr, "* Strength (%ds): +50%% Yield", g_State.buffStrengthTimer);
-                    TextOutA(hdc, monRect.left + 8, yOffset, bStr, lstrlenA(bStr));
-                    yOffset += 18; hasBuffs = 1;
-                }
-                if (g_State.buffInvisibilityTimer > 0) {
-                    SetTextColor(hdc, RGB(155, 89, 182));
-                    char bStr[64]; wsprintfA(bStr, "* Invis (%ds): Free Hints", g_State.buffInvisibilityTimer);
-                    TextOutA(hdc, monRect.left + 8, yOffset, bStr, lstrlenA(bStr));
-                    yOffset += 18; hasBuffs = 1;
-                }
-                if (g_State.buffManaTimer > 0) {
-                    SetTextColor(hdc, RGB(54, 152, 219));
-                    char bStr[64]; wsprintfA(bStr, "* Mana (%ds): 50%% Discount", g_State.buffManaTimer);
-                    TextOutA(hdc, monRect.left + 8, yOffset, bStr, lstrlenA(bStr));
-                    yOffset += 18; hasBuffs = 1;
-                }
-                if (g_State.buffLifeTimer > 0) {
-                    SetTextColor(hdc, RGB(46, 204, 113));
-                    char bStr[64]; wsprintfA(bStr, "* Life (%ds): 2x XP & 100%% Crit", g_State.buffLifeTimer);
-                    TextOutA(hdc, monRect.left + 8, yOffset, bStr, lstrlenA(bStr));
-                    yOffset += 18; hasBuffs = 1;
-                }
+                for (int a = 0; a < 4; a++) {
+                    RECT aCard = { 282, 202 + a * 55, 428, 250 + a * 55 };
+                    FillRect(hdc, &aCard, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, hPurplePen);
+                    Rectangle(hdc, aCard.left, aCard.top, aCard.right, aCard.bottom);
 
-                if (!hasBuffs) {
-                    SetTextColor(hdc, RGB(160, 170, 190));
-                    TextOutA(hdc, monRect.left + 8, yOffset, "No active buffs. Drink an elixir!", 33);
-                }
+                    SelectObject(hdc, hBadgeFont);
+                    SetTextColor(hdc, RGB(255, 105, 180));
+                    char nameStr[64];
+                    wsprintfA(nameStr, "%s (Rank %d/5)", perkNames[a], pLvls[a]);
+                    TextOutA(hdc, aCard.left + 6, aCard.top + 4, nameStr, lstrlenA(nameStr));
 
-                SelectObject(hdc, oldP);
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(200, 210, 225));
+                    TextOutA(hdc, aCard.left + 6, aCard.top + 20, perkDescs[a], lstrlenA(perkDescs[a]));
+                    SelectObject(hdc, oldP);
+                }
             } else if (g_State.selectedEquipment == 7) {
                 SelectObject(hdc, hUIFont);
                 SetTextColor(hdc, RGB(241, 196, 15));
-                TextOutA(hdc, 282, 145, "Master Alchemist Codex & Recipe Book", 36);
+                TextOutA(hdc, 282, 165, "Master Alchemist Codex & Recipe Book", 36);
 
-                // Draw Tier Discovery & Missing Breakdown Summary
-                int yT = 165;
+                int yT = 185;
                 SelectObject(hdc, hBadgeFont);
                 for (int t = 1; t <= TOTAL_TIERS; t++) {
                     int discT = 0, totalT = 0;
@@ -2025,41 +2268,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char tSummary[64];
                     wsprintfA(tSummary, "T%d %s: %d/%d Disc (%d Missing)", t, g_Tiers[t-1].name, discT, totalT, missingT);
                     TextOutA(hdc, 282, yT, tSummary, lstrlenA(tSummary));
-                    yT += 16;
+                    yT += 15;
                 }
 
-                // Draw Codex Inspector Detail Card
                 int selIdx = g_State.selectedCodexElem;
                 if (selIdx >= 0 && selIdx < TOTAL_ELEMENTS) {
-                    RECT cCard = { 282, 255, 502, 435 };
+                    RECT cCard = { 282, 280, 502, 440 };
                     FillRect(hdc, &cCard, hPanelBrush);
                     HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
                     Rectangle(hdc, cCard.left, cCard.top, cCard.right, cCard.bottom);
 
                     int isDisc = g_State.discovered[selIdx];
 
-                    // Title & Tier
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, isDisc ? RGB(241, 196, 15) : RGB(140, 150, 165));
                     char eTitle[64];
                     wsprintfA(eTitle, "%s (T%d %s)", isDisc ? g_Elements[selIdx].name : "Undiscovered Element", g_Elements[selIdx].tier, g_Elements[selIdx].isBasic ? "Basic" : "Compound");
-                    TextOutA(hdc, cCard.left + 8, cCard.top + 8, eTitle, lstrlenA(eTitle));
+                    TextOutA(hdc, cCard.left + 8, cCard.top + 6, eTitle, lstrlenA(eTitle));
 
-                    // Lore Text Quote
                     SelectObject(hdc, hUIFont);
                     SetTextColor(hdc, RGB(220, 225, 235));
-                    RECT loreRect = { cCard.left + 8, cCard.top + 28, cCard.right - 8, cCard.top + 78 };
+                    RECT loreRect = { cCard.left + 8, cCard.top + 24, cCard.right - 8, cCard.top + 70 };
                     DrawTextA(hdc, isDisc ? g_Elements[selIdx].lore : "Lore locked. Transmute elements to discover formulas.", -1, &loreRect, DT_WORDBREAK);
 
-                    // Synthesis Recipe
                     SetTextColor(hdc, RGB(243, 156, 18));
-                    TextOutA(hdc, cCard.left + 8, cCard.top + 82, "SYNTHESIS RECIPE:", 17);
+                    TextOutA(hdc, cCard.left + 8, cCard.top + 74, "SYNTHESIS RECIPE:", 17);
 
                     SetTextColor(hdc, RGB(200, 210, 225));
                     if (g_Elements[selIdx].isBasic) {
-                        TextOutA(hdc, cCard.left + 8, cCard.top + 98, "Primordial Element (Found naturally)", 36);
+                        TextOutA(hdc, cCard.left + 8, cCard.top + 90, "Primordial Element (Found naturally)", 36);
                     } else {
-                        // Find recipe
                         int foundR = 0;
                         for (int r = 0; r < TOTAL_RECIPES; r++) {
                             if (g_Recipes[r].result == selIdx) {
@@ -2070,53 +2308,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     g_State.discovered[i1] ? g_Elements[i1].name : "???",
                                     g_State.discovered[i2] ? g_Elements[i2].name : "???",
                                     g_Elements[selIdx].name);
-                                TextOutA(hdc, cCard.left + 8, cCard.top + 98, rStr, lstrlenA(rStr));
+                                TextOutA(hdc, cCard.left + 8, cCard.top + 90, rStr, lstrlenA(rStr));
                                 foundR = 1;
                                 break;
                             }
                         }
-                        if (!foundR) TextOutA(hdc, cCard.left + 8, cCard.top + 98, "Unknown Formula", 15);
+                        if (!foundR) TextOutA(hdc, cCard.left + 8, cCard.top + 90, "Unknown Formula", 15);
                     }
 
-                    // Transmutation Uses
-                    SetTextColor(hdc, RGB(243, 156, 18));
-                    TextOutA(hdc, cCard.left + 8, cCard.top + 118, "TRANSMUTATION USES:", 19);
-
-                    int yUse = cCard.top + 134;
-                    int useCount = 0;
-                    for (int r = 0; r < TOTAL_RECIPES; r++) {
-                        if (g_Recipes[r].ingredient1 == selIdx || g_Recipes[r].ingredient2 == selIdx) {
-                            int res = g_Recipes[r].result;
-                            int otherIng = (g_Recipes[r].ingredient1 == selIdx) ? g_Recipes[r].ingredient2 : g_Recipes[r].ingredient1;
-                            char uStr[128];
-                            wsprintfA(uStr, "+ %s -> %s [%s]",
-                                g_Elements[otherIng].name,
-                                g_Elements[res].name,
-                                g_State.discovered[res] ? "Discovered" : "Locked");
-                            SetTextColor(hdc, g_State.discovered[res] ? RGB(46, 204, 113) : RGB(140, 150, 165));
-                            TextOutA(hdc, cCard.left + 8, yUse, uStr, lstrlenA(uStr));
-                            yUse += 16;
-                            useCount++;
-                            if (useCount >= 2) break; // fit in box
-                        }
-                    }
-                    if (useCount == 0) {
-                        SetTextColor(hdc, RGB(160, 170, 185));
-                        TextOutA(hdc, cCard.left + 8, yUse, "Apex Element (No further combinations)", 38);
-                    }
-
-                    // Combination Stats
                     SetTextColor(hdc, RGB(180, 160, 220));
                     char sStr[128];
-                    wsprintfA(sStr, "Crafted: x%d | Used in Crucible: x%d", g_State.craftCounts[selIdx], g_State.useCounts[selIdx]);
-                    TextOutA(hdc, cCard.left + 8, cCard.top + 164, sStr, lstrlenA(sStr));
+                    wsprintfA(sStr, "Crafted: x%d | Used: x%d", g_State.craftCounts[selIdx], g_State.useCounts[selIdx]);
+                    TextOutA(hdc, cCard.left + 8, cCard.top + 115, sStr, lstrlenA(sStr));
 
                     SelectObject(hdc, oldP);
                 }
             } else {
-                // Phase 12 Mode HUD Drawing
                 if (g_State.gameMode == 1) {
-                    RECT blitzBox = { 280, 120, 505, 142 };
+                    RECT blitzBox = { 280, 140, 505, 162 };
                     FillRect(hdc, &blitzBox, hPanelBrush);
                     HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
                     Rectangle(hdc, blitzBox.left, blitzBox.top, blitzBox.right, blitzBox.bottom);
@@ -2127,7 +2336,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DrawTextA(hdc, bHudStr, -1, &blitzBox, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
                     SelectObject(hdc, oldP);
                 } else if (g_State.gameMode == 2) {
-                    RECT puzzleBox = { 280, 120, 505, 142 };
+                    RECT puzzleBox = { 280, 140, 505, 162 };
                     FillRect(hdc, &puzzleBox, hPanelBrush);
                     HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
                     Rectangle(hdc, puzzleBox.left, puzzleBox.top, puzzleBox.right, puzzleBox.bottom);
@@ -2141,7 +2350,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, oldP);
                 }
 
-                // Draw Custom Equipment Graphics with Animations
                 SelectObject(hdc, hGoldPen);
                 HGDIOBJ pNullB = GetStockObject(NULL_BRUSH);
                 SelectObject(hdc, pNullB);
@@ -2150,12 +2358,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int cy = 168;
                 DWORD tick = GetTickCount();
 
-                // Draw pulsing rune ring
                 int pulse = (tick / 50) % 10;
                 if (pulse > 5) pulse = 10 - pulse;
                 Ellipse(hdc, cx - 55 - pulse, cy - 25 - pulse, cx + 55 + pulse, cy + 25 + pulse);
 
-                // Dynamic 3D drop-shadow
                 int shadowOffset = 8 + (pulse / 2);
                 HBRUSH hShadowBrush = CreateSolidBrush(RGB(10, 10, 15));
                 HGDIOBJ oldShadow = SelectObject(hdc, hShadowBrush);
@@ -2177,21 +2383,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdc, hPurplePen);
 
                 if (g_State.selectedEquipment == 3) {
-                    // Anvil
                     POINT anvil[8] = {{cx-30, cy-15}, {cx+30, cy-15}, {cx+15, cy-5}, {cx+15, cy+10}, {cx+30, cy+20}, {cx-30, cy+20}, {cx-15, cy+10}, {cx-15, cy-5}};
                     Polygon(hdc, anvil, 8);
                 } else if (g_State.selectedEquipment == 1 || g_State.selectedEquipment == 2) {
-                    // Retort / Alembic
-                    Ellipse(hdc, cx - 25, cy - 20, cx + 25, cy + 20); // Bulb
+                    Ellipse(hdc, cx - 25, cy - 20, cx + 25, cy + 20);
                     MoveToEx(hdc, cx + 20, cy - 10, NULL);
-                    LineTo(hdc, cx + 50, cy + 15); // Tube
+                    LineTo(hdc, cx + 50, cy + 15);
                 } else {
-                    // Crucible / Flask
                     POINT flaskNeck[4] = {{cx-15, cy-25}, {cx+15, cy-25}, {cx+15, cy-5}, {cx-15, cy-5}};
                     Polygon(hdc, flaskNeck, 4);
                     Ellipse(hdc, cx - 35, cy - 10, cx + 35, cy + 25);
                     
-                    // Bubbling animation
                     int isValidCombo = 0;
                     if (g_State.slot1 >= 0 && g_State.slot2 >= 0) {
                         for (int r = 0; r < TOTAL_RECIPES; r++) {
@@ -2213,7 +2415,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 
-                // Procedural specular highlights for glass/brass
                 SelectObject(hdc, GetStockObject(NULL_PEN));
                 HBRUSH hHighlight = CreateSolidBrush(RGB(200, 200, 255));
                 HGDIOBJ oldHi = SelectObject(hdc, hHighlight);
@@ -2228,44 +2429,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdc, oldHi);
                 DeleteObject(hHighlight);
 
-
-                // Draw elemental component variations around the slots
-                if (g_State.slot1 == 0 || g_State.slot1 == 1) {
-                    HPEN varPen = CreatePen(PS_SOLID, 2, g_State.slot1 == 0 ? RGB(255, 100, 0) : RGB(0, 150, 255));
-                    HGDIOBJ oldVar = SelectObject(hdc, varPen);
-                    int sx = 295 + 45; int sy = 200 + 25;
-                    for (int w = 0; w < 8; w++) {
-                        int r = 30 + ((tick / 30 + w * 10) % 15);
-                        if (g_State.slot1 == 0) { // Fire flame patterns
-                            MoveToEx(hdc, sx - 20 + w*5, sy + 25, NULL);
-                            LineTo(hdc, sx - 20 + w*5 + (FastRand()%10 - 5), sy + 25 - r);
-                        } else { // Water wave distortions
-                            int offY = (((tick + w*200) / 50) % 20) - 10;
-                            MoveToEx(hdc, sx - 30 + w*8, sy + 25, NULL);
-                            LineTo(hdc, sx - 30 + w*8, sy + 25 + offY);
-                        }
-                    }
-                    SelectObject(hdc, oldVar); DeleteObject(varPen);
-                }
-                if (g_State.slot2 == 0 || g_State.slot2 == 1) {
-                    HPEN varPen = CreatePen(PS_SOLID, 2, g_State.slot2 == 0 ? RGB(255, 100, 0) : RGB(0, 150, 255));
-                    HGDIOBJ oldVar = SelectObject(hdc, varPen);
-                    int sx = 405 + 45; int sy = 200 + 25; // Slot 2 position
-                    for (int w = 0; w < 8; w++) {
-                        int r = 30 + ((tick / 30 + w * 10) % 15);
-                        if (g_State.slot2 == 0) {
-                            MoveToEx(hdc, sx - 20 + w*5, sy + 25, NULL);
-                            LineTo(hdc, sx - 20 + w*5 + (FastRand()%10 - 5), sy + 25 - r);
-                        } else {
-                            int offY = (((tick + w*200) / 50) % 20) - 10;
-                            MoveToEx(hdc, sx - 30 + w*8, sy + 25, NULL);
-                            LineTo(hdc, sx - 30 + w*8, sy + 25 + offY);
-                        }
-                    }
-                    SelectObject(hdc, oldVar); DeleteObject(varPen);
-                }
-
-                // Draw particles as magical sparkles
                 for (int i = 0; i < MAX_PARTICLES; i++) {
                     if (g_Particles[i].life > 0.0f) {
                         int px = (int)g_Particles[i].x;
@@ -2279,7 +2442,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             MoveToEx(hdc, px, py - size, NULL); LineTo(hdc, px, py + size);
                         } else {
                             MoveToEx(hdc, px - size, py, NULL); LineTo(hdc, px + size + 1, py);
-                            MoveToEx(hdc, px, py - size, NULL); LineTo(hdc, px, py + size + 1);
+                            MoveToEx(hdc, px, py - size, NULL); LineTo(hdc, px + size + 1, py);
                             MoveToEx(hdc, px - size/2, py - size/2, NULL); LineTo(hdc, px + size/2 + 1, py + size/2 + 1);
                             MoveToEx(hdc, px - size/2, py + size/2, NULL); LineTo(hdc, px + size/2 + 1, py - size/2 - 1);
                         }
@@ -2288,8 +2451,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                // Distinctly stylized multi-layered magical sigil
-                extern DWORD g_SigilEndTick;
                 if (tick < g_SigilEndTick) {
                     int scx = 392, scy = 168;
                     HPEN sigilPen = CreatePen(PS_SOLID, 3, RGB(241, 196, 15));
@@ -2316,14 +2477,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT vLabelRect = { cx - 50, cy - 15, cx + 50, cy + 15 };
                 DrawTextA(hdc, vesselLabel, -1, &vLabelRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-                // Status message centered below crucible buttons
                 SelectObject(hdc, hUIFont);
                 SetTextColor(hdc, RGB(120, 230, 180));
                 RECT statusRect = { 285, 390, 500, 440 };
                 DrawTextA(hdc, g_State.lastStatus, -1, &statusRect, DT_CENTER | DT_WORDBREAK);
             }
 
-            // Right Panel - Journal & Log
             RECT rightPanel = { 520, 68, 765, 523 };
             DRAW_RUNE_PANEL(rightPanel, hPanelBrush);
 
@@ -2331,7 +2490,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(243, 156, 18));
             TextOutA(hdc, 535, 74, "Alchemist's Journal", 19);
 
-            // Phase 14: Grandmaster Help & Manual Modal Overlay Drawing
             if (g_State.showHelpModal) {
                 RECT modalBg = { 20, 20, 765, 523 };
                 FillRect(hdc, &modalBg, hBgBrush);
@@ -2349,7 +2507,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(hdc, RGB(176, 92, 219));
                 TextOutA(hdc, 500, 30, "Arcane Knowledge Codex", 22);
 
-                // Tab Separator Line
                 SelectObject(hdc, hGoldPen);
                 MoveToEx(hdc, 25, 87, NULL);
                 LineTo(hdc, 760, 87);
@@ -2357,7 +2514,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdc, hUIFont);
                 SetTextColor(hdc, RGB(226, 232, 240));
 
-                if (g_State.helpActiveTab == 0) { // How to Play
+                if (g_State.helpActiveTab == 0) {
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(241, 196, 15));
                     TextOutA(hdc, 35, 98, "Core Alchemy Loop & Transmutation Rules:", 41);
@@ -2366,8 +2523,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(hdc, RGB(226, 232, 240));
                     TextOutA(hdc, 35, 122, "1. Select Slot 1 and Slot 2 from your Elemental Grimoire.", 57);
                     TextOutA(hdc, 35, 140, "2. Click 'Transmute Elements' to forge new compounds in the Crucible.", 69);
-                    TextOutA(hdc, 35, 158, "3. Discovered elements unlock permanently across 5 Alchemical Tiers.", 67);
-                    TextOutA(hdc, 35, 176, "4. Failed combinations yield Slag or Smoke (+5 Arcane Dust research bonus).", 74);
+                    TextOutA(hdc, 35, 158, "3. Discovered elements unlock permanently across 6 Alchemical Tiers.", 67);
+                    TextOutA(hdc, 35, 176, "4. Discover Tier 6 Secret Mythic Combos for huge Astral and Gold payouts.", 73);
 
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(241, 196, 15));
@@ -2380,53 +2537,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TextOutA(hdc, 35, 264, "• Alembic: Distills magical reagents into potent elixirs.", 56);
                     TextOutA(hdc, 35, 282, "• Anvil: Shatters high-tier artifacts into base components.", 58);
                     TextOutA(hdc, 35, 300, "• Quests: Fulfill Guild patron orders for Gold & XP rewards.", 58);
-                    TextOutA(hdc, 35, 318, "• Shop: Upgrade lab equipment capacity & unlock Auto-Sorter.", 59);
-                    TextOutA(hdc, 35, 336, "• Potions: Consume elixirs for temporary yield & XP boosts.", 57);
-                    TextOutA(hdc, 35, 354, "• Codex: Comprehensive elemental directory with full recipes & lore.", 67);
+                    TextOutA(hdc, 35, 318, "• Daily: Complete 3 unique daily trials to maintain your streak.", 63);
+                    TextOutA(hdc, 35, 336, "• Rebirth: Perform Magnum Opus to earn Astral Shards for permanent perks.", 73);
 
-                    SelectObject(hdc, hHeaderFont);
-                    SetTextColor(hdc, RGB(241, 196, 15));
-                    TextOutA(hdc, 35, 385, "Challenge Game Modes & Alchemist's Oracle:", 42);
-
-                    SelectObject(hdc, hUIFont);
-                    SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 408, "• Classic: Sandbox element discovery at your own pace.", 54);
-                    TextOutA(hdc, 35, 426, "• Timed Blitz: 60-second speed challenge to rack up high scores!", 64);
-                    TextOutA(hdc, 35, 444, "• Puzzle Crucible: Synthesize target elements in minimum moves.", 63);
-                    TextOutA(hdc, 35, 462, "• Oracle: Spend Arcane Dust for Vague Hints (20 Dust) or Vision (50 Dust).", 72);
-
-                } else if (g_State.helpActiveTab == 1) { // Element Tiers Guide
+                } else if (g_State.helpActiveTab == 1) {
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(52, 152, 219));
                     TextOutA(hdc, 35, 98, "Tier 1 — Primordial Basics (4 Elements)", 39);
                     SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 120, "Fire, Water, Earth, Air — Natural building blocks provided at apprenticeship start.", 82);
+                    TextOutA(hdc, 35, 120, "Fire, Water, Earth, Air — Natural building blocks provided at start.", 68);
 
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(46, 204, 113));
-                    TextOutA(hdc, 35, 155, "Tier 2 — Nature & Raw Resources (10 Elements)", 45);
+                    TextOutA(hdc, 35, 150, "Tier 2 — Nature & Raw Resources (12 Elements)", 45);
                     SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 178, "Steam, Mud, Lava, Dust, Energy, Rain, Plant, Metal, Pressure, Stone.", 68);
+                    TextOutA(hdc, 35, 172, "Steam, Mud, Lava, Dust, Energy, Rain, Plant, Stone, Cloud, Tree, Swamp.", 71);
 
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(230, 126, 34));
-                    TextOutA(hdc, 35, 215, "Tier 3 — Metallurgy & Crafting Reagents (14 Elements)", 53);
+                    TextOutA(hdc, 35, 202, "Tier 3 — Metallurgy & Crafting Reagents (12 Elements)", 53);
                     SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 238, "Glass, Steel, Life, Lightning, Firestorm, Clay, Charcoal, Cloud, etc.", 69);
+                    TextOutA(hdc, 35, 224, "Metal, Sand, Glass, Rust, Blade, Boiler, Electricity, Wire, Gunpowder.", 70);
 
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(155, 89, 182));
-                    TextOutA(hdc, 35, 275, "Tier 4 — Arcane Transmutations (16 Elements)", 44);
+                    TextOutA(hdc, 35, 254, "Tier 4 — Arcane Transmutations (14 Elements)", 44);
                     SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 298, "Golem, Electricity, Crystal, Magma Orb, Phoenix, Mana Core, etc.", 64);
+                    TextOutA(hdc, 35, 276, "Life, Golem, Magic, Mana, Phoenix, Dragon, Crystal, Rune, Potion, Elixir.", 73);
 
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(241, 196, 15));
-                    TextOutA(hdc, 35, 335, "Tier 5 — Celestial Apex Artifacts (12 Elements)", 47);
+                    TextOutA(hdc, 35, 306, "Tier 5 — Celestial Apex Artifacts (14 Elements)", 47);
                     SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 358, "Philosopher's Stone, Elixir of Life, Celestial Star, Primal Void, Cosmarch Orb.", 79);
+                    TextOutA(hdc, 35, 328, "Sun, Moon, Star, Comet, Meteor, Galaxy, Cosmos, Gold, Starlight, Time.", 70);
 
-                } else if (g_State.helpActiveTab == 2) { // Lab Controls Reference
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(255, 105, 180));
+                    TextOutA(hdc, 35, 358, "Tier 6 — Secret Mythic Combinations (8 Elements)", 48);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 380, "Philosopher's Stone, Dark Matter, Celestial Aegis, Chrono Crystal, Aether, Quintessence.", 88);
+
+                } else if (g_State.helpActiveTab == 2) {
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(241, 196, 15));
                     TextOutA(hdc, 35, 98, "Mouse & Workstation Controls:", 29);
@@ -2442,14 +2593,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TextOutA(hdc, 35, 222, "Keyboard Shortcuts Reference:", 29);
 
                     SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 246, "[1] - [5]  : Switch Tier Filters (T1 to T5)", 42);
+                    TextOutA(hdc, 35, 246, "[1] - [6]  : Switch Tier Filters (T1 to T6)", 42);
                     TextOutA(hdc, 35, 269, "[0]        : Show All Grimoire Elements", 38);
                     TextOutA(hdc, 35, 292, "[C]        : Clear Crucible Slots", 33);
                     TextOutA(hdc, 35, 315, "[A]        : Trigger Auto-Sorter Fill", 37);
                     TextOutA(hdc, 35, 338, "[H]        : Open / Toggle Grandmaster Manual", 45);
                     TextOutA(hdc, 35, 361, "[ESC]      : Close Manual Overlay", 33);
 
-                } else if (g_State.helpActiveTab == 3) { // Alchemy Lore Encyclopedia
+                } else if (g_State.helpActiveTab == 3) {
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(241, 196, 15));
                     TextOutA(hdc, 35, 98, "The Dawn of the Great Synthesis:", 31);
@@ -2459,24 +2610,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(241, 196, 15));
-                    TextOutA(hdc, 35, 175, "The Guild of Grandmaster Alchemists:", 35);
+                    TextOutA(hdc, 35, 175, "The Magnum Opus & Astral Ascendance:", 36);
                     SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 198, "Founded in the Citadel of Aethelgard, the Guild maps all 56 Sacred Reagents across 5 Tiers.", 90);
-                    TextOutA(hdc, 35, 216, "Only those who forge the Philosopher's Stone attain the supreme rank of Grandmaster.", 84);
-
-                    SelectObject(hdc, hHeaderFont);
-                    SetTextColor(hdc, RGB(241, 196, 15));
-                    TextOutA(hdc, 35, 255, "The Law of Equivalent Harmonics:", 31);
-                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 278, "No essence is lost during synthesis. When two reagents react in harmonic resonance,", 83);
-                    TextOutA(hdc, 35, 296, "their molecular structures realign, yielding a higher compound and Arcane Dust.", 79);
-
-                    SelectObject(hdc, hHeaderFont);
-                    SetTextColor(hdc, RGB(241, 196, 15));
-                    TextOutA(hdc, 35, 335, "Secrets of Apex Celestial Reagents:", 34);
-                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 358, "Tier 5 Reagents transcend earthly physical matter, fusing physical essence with cosmic soul", 92);
-                    TextOutA(hdc, 35, 376, "energy to produce artifacts capable of reshaping reality.", 57);
+                    TextOutA(hdc, 35, 198, "By transmuting 35+ elements, an alchemist may dissolve their worldly lab to ascend in Rebirth,", 94);
+                    TextOutA(hdc, 35, 216, "crystallizing their soul knowledge into indestructible Astral Shards.", 69);
                 }
 
                 SelectObject(hdc, oldP);
