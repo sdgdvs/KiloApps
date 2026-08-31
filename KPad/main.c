@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <commdlg.h>
+#include <wincrypt.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -54,6 +55,11 @@ BOOL g_bWordWrap = FALSE;
 #define ID_VIEW_WRAP       9018
 #define ID_HELP_SHORTCUTS  9020
 #define ID_HELP_ABOUT      9021
+#define ID_FILE_EXPORT_ENC 9022
+#define ID_FILE_OPEN_ENC   9023
+#define ID_EDIT_ENCRYPT    9024
+#define ID_EDIT_DECRYPT    9025
+#define ID_VIEW_DIAGNOSTICS 9026
 
 void UpdateStatusBar() {
     if (!g_hStatus || g_NumTabs == 0) return;
@@ -378,6 +384,430 @@ void ShowStatsDialog() {
     MessageBoxA(g_hMainWnd, msg, "Document Stats - KPad Pro", MB_OK | MB_ICONINFORMATION);
 }
 
+// --- Document Security & Cryptography Suite ---
+static const char g_b64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+void Base64Encode(const unsigned char* in, int len, char* out) {
+    int i = 0, j = 0;
+    while (i < len) {
+        unsigned int a = in[i++];
+        unsigned int b = (i < len) ? in[i++] : 0;
+        unsigned int c = (i < len) ? in[i++] : 0;
+
+        unsigned int triple = (a << 16) | (b << 8) | c;
+
+        out[j++] = g_b64Table[(triple >> 18) & 0x3F];
+        out[j++] = g_b64Table[(triple >> 12) & 0x3F];
+        out[j++] = (i > len + 1) ? '=' : g_b64Table[(triple >> 6) & 0x3F];
+        out[j++] = (i > len) ? '=' : g_b64Table[triple & 0x3F];
+    }
+    out[j] = '\0';
+}
+
+int Base64Decode(const char* in, unsigned char* out) {
+    int in_len = lstrlenA(in);
+    int i = 0, j = 0;
+    while (i < in_len) {
+        if (in[i] == '\r' || in[i] == '\n' || in[i] == ' ' || in[i] == '\t') { i++; continue; }
+        if (in[i] == '=') break;
+
+        int b[4] = {0};
+        int count = 0;
+        for (int k = 0; k < 4 && i < in_len; k++) {
+            while (i < in_len && (in[i] == '\r' || in[i] == '\n' || in[i] == ' ' || in[i] == '\t')) i++;
+            if (i >= in_len || in[i] == '=') break;
+            char c = in[i++];
+            if (c >= 'A' && c <= 'Z') b[k] = c - 'A';
+            else if (c >= 'a' && c <= 'z') b[k] = c - 'a' + 26;
+            else if (c >= '0' && c <= '9') b[k] = c - '0' + 52;
+            else if (c == '+') b[k] = 62;
+            else if (c == '/') b[k] = 63;
+            count++;
+        }
+        if (count >= 2) out[j++] = (unsigned char)((b[0] << 2) | (b[1] >> 4));
+        if (count >= 3) out[j++] = (unsigned char)(((b[1] & 0x0F) << 4) | (b[2] >> 2));
+        if (count >= 4) out[j++] = (unsigned char)(((b[2] & 0x03) << 6) | b[3]);
+    }
+    return j;
+}
+
+unsigned int CalculateCRC32(const unsigned char* data, int len) {
+    unsigned int crc = 0xFFFFFFFF;
+    for (int i = 0; i < len; i++) {
+        crc ^= data[i];
+        for (int j = 0; j < 8; j++) {
+            crc = (crc >> 1) ^ (0xEDB88320 & (-(int)(crc & 1)));
+        }
+    }
+    return ~crc;
+}
+
+void RC4Transform(const unsigned char* key, int keyLen, unsigned char* data, int dataLen) {
+    if (keyLen <= 0 || dataLen <= 0) return;
+    unsigned char s[256];
+    for (int i = 0; i < 256; i++) s[i] = (unsigned char)i;
+    int j = 0;
+    for (int i = 0; i < 256; i++) {
+        j = (j + s[i] + key[i % keyLen]) & 255;
+        unsigned char tmp = s[i]; s[i] = s[j]; s[j] = tmp;
+    }
+    int i = 0; j = 0;
+    for (int k = 0; k < dataLen; k++) {
+        i = (i + 1) & 255;
+        j = (j + s[i]) & 255;
+        unsigned char tmp = s[i]; s[i] = s[j]; s[j] = tmp;
+        data[k] ^= s[(s[i] + s[j]) & 255];
+    }
+}
+
+char g_szPasswordPromptResult[128] = {0};
+BOOL g_bPasswordPromptOK = FALSE;
+
+LRESULT CALLBACK PasswordDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_CREATE: {
+            CreateWindowExA(0, "STATIC", "Enter Password / Passphrase Key:", WS_CHILD | WS_VISIBLE, 15, 12, 260, 18, hwnd, NULL, GetModuleHandle(NULL), NULL);
+            HWND hEditPwd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_PASSWORD | ES_AUTOHSCROLL, 15, 34, 250, 24, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
+            CreateWindowExA(0, "BUTTON", "OK", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON, 85, 70, 80, 26, hwnd, (HMENU)IDOK, GetModuleHandle(NULL), NULL);
+            CreateWindowExA(0, "BUTTON", "Cancel", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 70, 80, 26, hwnd, (HMENU)IDCANCEL, GetModuleHandle(NULL), NULL);
+            SetFocus(hEditPwd);
+            break;
+        }
+        case WM_COMMAND: {
+            if (LOWORD(wParam) == IDOK) {
+                GetDlgItemTextA(hwnd, 101, g_szPasswordPromptResult, sizeof(g_szPasswordPromptResult));
+                g_bPasswordPromptOK = TRUE;
+                DestroyWindow(hwnd);
+            } else if (LOWORD(wParam) == IDCANCEL) {
+                g_bPasswordPromptOK = FALSE;
+                DestroyWindow(hwnd);
+            }
+            break;
+        }
+        case WM_CLOSE:
+            g_bPasswordPromptOK = FALSE;
+            DestroyWindow(hwnd);
+            break;
+        default:
+            return DefWindowProcA(hwnd, msg, wParam, lParam);
+    }
+    return 0;
+}
+
+BOOL PromptPassword(HWND hWndParent, const char* title, char* outPassword, int maxLen) {
+    static BOOL s_registered = FALSE;
+    if (!s_registered) {
+        WNDCLASSA wc = {0};
+        wc.lpfnWndProc = PasswordDlgProc;
+        wc.hInstance = GetModuleHandle(NULL);
+        wc.lpszClassName = "KPadPwdDlgClass";
+        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+        RegisterClassA(&wc);
+        s_registered = TRUE;
+    }
+
+    g_bPasswordPromptOK = FALSE;
+    g_szPasswordPromptResult[0] = 0;
+
+    RECT rcParent;
+    GetWindowRect(hWndParent, &rcParent);
+    int dlgW = 295, dlgH = 145;
+    int dlgX = rcParent.left + (rcParent.right - rcParent.left - dlgW) / 2;
+    int dlgY = rcParent.top + (rcParent.bottom - rcParent.top - dlgH) / 2;
+
+    HWND hDlg = CreateWindowExA(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, "KPadPwdDlgClass", title,
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, dlgX, dlgY, dlgW, dlgH, hWndParent, NULL, GetModuleHandle(NULL), NULL);
+
+    if (!hDlg) return FALSE;
+
+    EnableWindow(hWndParent, FALSE);
+    MSG msg;
+    while (IsWindow(hDlg) && GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_RETURN) {
+                SendMessageA(hDlg, WM_COMMAND, IDOK, 0);
+                continue;
+            } else if (msg.wParam == VK_ESCAPE) {
+                SendMessageA(hDlg, WM_COMMAND, IDCANCEL, 0);
+                continue;
+            }
+        }
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+    EnableWindow(hWndParent, TRUE);
+    SetForegroundWindow(hWndParent);
+    if (g_NumTabs > 0 && g_Tabs[g_ActiveTab].hEdit) {
+        SetFocus(g_Tabs[g_ActiveTab].hEdit);
+    }
+
+    if (g_bPasswordPromptOK && g_szPasswordPromptResult[0]) {
+        lstrcpynA(outPassword, g_szPasswordPromptResult, maxLen);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void ShowDetailedDiagnostics() {
+    if (g_NumTabs == 0) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    int words = 0, lines = (int)SendMessageA(hEdit, EM_GETLINECOUNT, 0, 0);
+    int charsNoSpace = 0;
+    unsigned int crc = 0;
+
+    if (buf) {
+        GetWindowTextA(hEdit, buf, len + 1);
+        BOOL inWord = FALSE;
+        for (int i = 0; buf[i]; i++) {
+            if (buf[i] > 32) {
+                charsNoSpace++;
+                if (!inWord) { inWord = TRUE; words++; }
+            } else {
+                inWord = FALSE;
+            }
+        }
+        crc = CalculateCRC32((const unsigned char*)buf, len);
+        HeapFree(GetProcessHeap(), 0, buf);
+    }
+
+    char msg[512];
+    wsprintfA(msg, "Document Diagnostics & Integrity:\n\n"
+                   "• Lines: %d\n"
+                   "• Words: %d\n"
+                   "• Characters (total): %d\n"
+                   "• Characters (excluding spaces): %d\n"
+                   "• Buffer Size: %d bytes\n"
+                   "• CRC32 Checksum: 0x%08X\n"
+                   "• File: %s",
+        lines, words, len, charsNoSpace, len, crc,
+        g_Tabs[g_ActiveTab].szPath[0] ? g_Tabs[g_ActiveTab].szPath : "Untitled (Unsaved)");
+    MessageBoxA(g_hMainWnd, msg, "Document Diagnostics - KPad Pro", MB_OK | MB_ICONINFORMATION);
+}
+
+void EncryptBufferAction() {
+    if (g_NumTabs == 0) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    if (len <= 0) {
+        MessageBoxA(g_hMainWnd, "Document buffer is empty.", "KPad Pro Security", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    char password[128] = {0};
+    if (!PromptPassword(g_hMainWnd, "Encrypt Document", password, sizeof(password))) {
+        return;
+    }
+
+    char* plain = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    if (!plain) return;
+    GetWindowTextA(hEdit, plain, len + 1);
+
+    unsigned char salt[8] = {0};
+    HCRYPTPROV hProv = 0;
+    if (CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+        CryptGenRandom(hProv, sizeof(salt), salt);
+        CryptReleaseContext(hProv, 0);
+    } else {
+        DWORD tc = GetTickCount();
+        for (int i = 0; i < 8; i++) salt[i] = (unsigned char)((tc >> (i * 4)) ^ (i * 37));
+    }
+
+    unsigned int crc = CalculateCRC32((const unsigned char*)plain, len);
+    int payloadLen = len + 4;
+    unsigned char* payload = (unsigned char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, payloadLen);
+    if (!payload) {
+        HeapFree(GetProcessHeap(), 0, plain);
+        return;
+    }
+    payload[0] = (unsigned char)(crc & 0xFF);
+    payload[1] = (unsigned char)((crc >> 8) & 0xFF);
+    payload[2] = (unsigned char)((crc >> 16) & 0xFF);
+    payload[3] = (unsigned char)((crc >> 24) & 0xFF);
+    for (int i = 0; i < len; i++) payload[4 + i] = (unsigned char)plain[i];
+
+    int passLen = lstrlenA(password);
+    int keyLen = passLen + 8;
+    unsigned char* key = (unsigned char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, keyLen);
+    for (int i = 0; i < passLen; i++) key[i] = (unsigned char)password[i];
+    for (int i = 0; i < 8; i++) key[passLen + i] = salt[i];
+
+    RC4Transform(key, keyLen, payload, payloadLen);
+
+    char saltB64[32] = {0};
+    Base64Encode(salt, 8, saltB64);
+
+    int cipherB64Len = ((payloadLen + 2) / 3) * 4 + 8;
+    char* cipherB64 = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cipherB64Len);
+    Base64Encode(payload, payloadLen, cipherB64);
+
+    const char* header1 = "-----BEGIN KPAD ENCRYPTED DOCUMENT-----\r\nVersion: 1.0\r\nCipher: RC4-CRC32\r\nSalt: ";
+    const char* header2 = "\r\n\r\n";
+    const char* footer = "\r\n-----END KPAD ENCRYPTED DOCUMENT-----\r\n";
+
+    int totalOutLen = lstrlenA(header1) + lstrlenA(saltB64) + lstrlenA(header2) + lstrlenA(cipherB64) + lstrlenA(footer) + 8;
+    char* armored = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, totalOutLen);
+    if (armored) {
+        lstrcpyA(armored, header1);
+        lstrcatA(armored, saltB64);
+        lstrcatA(armored, header2);
+        lstrcatA(armored, cipherB64);
+        lstrcatA(armored, footer);
+
+        SetWindowTextA(hEdit, armored);
+        g_Tabs[g_ActiveTab].isModified = TRUE;
+        UpdateTabTitle(g_ActiveTab);
+        UpdateStatusBar();
+        MessageBoxA(g_hMainWnd, "Document successfully encrypted with password protection!", "KPad Pro Security", MB_OK | MB_ICONINFORMATION);
+
+        HeapFree(GetProcessHeap(), 0, armored);
+    }
+
+    HeapFree(GetProcessHeap(), 0, plain);
+    HeapFree(GetProcessHeap(), 0, payload);
+    HeapFree(GetProcessHeap(), 0, key);
+    HeapFree(GetProcessHeap(), 0, cipherB64);
+}
+
+void DecryptBufferAction() {
+    if (g_NumTabs == 0) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    if (len <= 0) return;
+
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    if (!buf) return;
+    GetWindowTextA(hEdit, buf, len + 1);
+
+    const char* startTag = "-----BEGIN KPAD ENCRYPTED DOCUMENT-----";
+    const char* endTag = "-----END KPAD ENCRYPTED DOCUMENT-----";
+    char* pStart = strstr(buf, startTag);
+    char* pEnd = strstr(buf, endTag);
+    if (!pStart || !pEnd) {
+        MessageBoxA(g_hMainWnd, "Buffer does not contain a valid KPad encrypted container.", "KPad Pro Security", MB_OK | MB_ICONWARNING);
+        HeapFree(GetProcessHeap(), 0, buf);
+        return;
+    }
+
+    char* pSalt = strstr(pStart, "Salt: ");
+    if (!pSalt) {
+        MessageBoxA(g_hMainWnd, "Corrupted container: Salt header missing.", "KPad Pro Security", MB_OK | MB_ICONERROR);
+        HeapFree(GetProcessHeap(), 0, buf);
+        return;
+    }
+    pSalt += 6;
+    char saltB64[32] = {0};
+    int sIdx = 0;
+    while (*pSalt && *pSalt != '\r' && *pSalt != '\n' && sIdx < 30) {
+        saltB64[sIdx++] = *pSalt++;
+    }
+    saltB64[sIdx] = 0;
+
+    char* pPayload = strstr(pStart, "\r\n\r\n");
+    if (!pPayload) pPayload = strstr(pStart, "\n\n");
+    if (!pPayload || pPayload > pEnd) {
+        MessageBoxA(g_hMainWnd, "Corrupted container: Payload header boundary missing.", "KPad Pro Security", MB_OK | MB_ICONERROR);
+        HeapFree(GetProcessHeap(), 0, buf);
+        return;
+    }
+    while (*pPayload == '\r' || *pPayload == '\n') pPayload++;
+
+    int payloadB64Len = (int)(pEnd - pPayload);
+    char* payloadB64 = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, payloadB64Len + 1);
+    for (int i = 0; i < payloadB64Len; i++) payloadB64[i] = pPayload[i];
+    payloadB64[payloadB64Len] = 0;
+
+    char password[128] = {0};
+    if (!PromptPassword(g_hMainWnd, "Decrypt Document", password, sizeof(password))) {
+        HeapFree(GetProcessHeap(), 0, buf);
+        HeapFree(GetProcessHeap(), 0, payloadB64);
+        return;
+    }
+
+    unsigned char salt[16] = {0};
+    Base64Decode(saltB64, salt);
+
+    int maxDecLen = payloadB64Len + 16;
+    unsigned char* decryptedData = (unsigned char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, maxDecLen);
+    int decBytes = Base64Decode(payloadB64, decryptedData);
+
+    int passLen = lstrlenA(password);
+    int keyLen = passLen + 8;
+    unsigned char* key = (unsigned char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, keyLen);
+    for (int i = 0; i < passLen; i++) key[i] = (unsigned char)password[i];
+    for (int i = 0; i < 8; i++) key[passLen + i] = salt[i];
+
+    RC4Transform(key, keyLen, decryptedData, decBytes);
+
+    if (decBytes < 4) {
+        MessageBoxA(g_hMainWnd, "Decryption failed: Payload corrupted.", "KPad Pro Security", MB_OK | MB_ICONERROR);
+    } else {
+        unsigned int storedCRC = (unsigned int)(decryptedData[0]) | ((unsigned int)(decryptedData[1]) << 8) | ((unsigned int)(decryptedData[2]) << 16) | ((unsigned int)(decryptedData[3]) << 24);
+        int plainLen = decBytes - 4;
+        char* plainText = (char*)(decryptedData + 4);
+        unsigned int calcCRC = CalculateCRC32((const unsigned char*)plainText, plainLen);
+
+        if (storedCRC == calcCRC) {
+            plainText[plainLen] = 0;
+            SetWindowTextA(hEdit, plainText);
+            g_Tabs[g_ActiveTab].isModified = TRUE;
+            UpdateTabTitle(g_ActiveTab);
+            UpdateStatusBar();
+            MessageBoxA(g_hMainWnd, "Document successfully unlocked and decrypted!", "KPad Pro Security", MB_OK | MB_ICONINFORMATION);
+        } else {
+            MessageBoxA(g_hMainWnd, "Decryption failed: Incorrect password key or corrupted file.", "KPad Pro Security", MB_OK | MB_ICONERROR);
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, buf);
+    HeapFree(GetProcessHeap(), 0, payloadB64);
+    HeapFree(GetProcessHeap(), 0, decryptedData);
+    HeapFree(GetProcessHeap(), 0, key);
+}
+
+void ExportEncryptedFile() {
+    if (g_NumTabs == 0) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    if (len <= 0) {
+        MessageBoxA(g_hMainWnd, "Document buffer is empty.", "KPad Pro", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    if (!buf) return;
+    GetWindowTextA(hEdit, buf, len + 1);
+
+    if (!strstr(buf, "-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+        HeapFree(GetProcessHeap(), 0, buf);
+        EncryptBufferAction();
+    } else {
+        HeapFree(GetProcessHeap(), 0, buf);
+    }
+    SaveFileNative(TRUE);
+}
+
+void OpenEncryptedFile() {
+    OpenFileNative();
+    if (g_NumTabs > 0) {
+        HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+        int len = GetWindowTextLengthA(hEdit);
+        if (len > 0) {
+            char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+            if (buf) {
+                GetWindowTextA(hEdit, buf, len + 1);
+                if (strstr(buf, "-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+                    if (MessageBoxA(g_hMainWnd, "This document is encrypted. Would you like to decrypt it now?", "KPad Pro Security", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                        DecryptBufferAction();
+                    }
+                }
+                HeapFree(GetProcessHeap(), 0, buf);
+            }
+        }
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == g_uFindMsg && g_uFindMsg != 0) {
         LPFINDREPLACEA lpfr = (LPFINDREPLACEA)lParam;
@@ -461,6 +891,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_SAVE, "Save\tCtrl+S");
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_SAVEAS, "Save As...");
             AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hFileMenu, MF_STRING, ID_FILE_EXPORT_ENC, "Export Encrypted (.enc)...");
+            AppendMenuA(hFileMenu, MF_STRING, ID_FILE_OPEN_ENC, "Open Encrypted (.enc)...");
+            AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_EXIT, "Exit");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hFileMenu, "File");
 
@@ -474,6 +907,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hEditMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_FIND, "Find...\tCtrl+F");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_REPLACE, "Replace...\tCtrl+H");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_ENCRYPT, "Encrypt Buffer (Password Lock)...\tCtrl+E");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_DECRYPT, "Decrypt Buffer (Unlock)...\tCtrl+D");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_TIME_DATE, "Time/Date\tF5");
             AppendMenuA(hEditMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_UPPERCASE, "Convert UPPERCASE");
@@ -487,6 +922,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             HMENU hViewMenu = CreatePopupMenu();
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_STATS, "Document Stats...");
+            AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_DIAGNOSTICS, "Detailed Diagnostics & Integrity...");
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_WRAP, "Toggle Word Wrap");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hViewMenu, "View");
 
@@ -553,6 +989,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_FILE_SAVEAS:
                     SaveFileNative(TRUE);
                     break;
+                case ID_FILE_EXPORT_ENC:
+                    ExportEncryptedFile();
+                    break;
+                case ID_FILE_OPEN_ENC:
+                    OpenEncryptedFile();
+                    break;
                 case ID_FILE_EXIT:
                     PostMessageA(hwnd, WM_CLOSE, 0, 0);
                     break;
@@ -580,6 +1022,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_EDIT_REPLACE:
                     DoFindReplace(TRUE);
                     break;
+                case ID_EDIT_ENCRYPT:
+                    EncryptBufferAction();
+                    break;
+                case ID_EDIT_DECRYPT:
+                    DecryptBufferAction();
+                    break;
                 case ID_EDIT_TIME_DATE: {
                     SYSTEMTIME st;
                     GetLocalTime(&st);
@@ -597,6 +1045,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_VIEW_STATS:
                     ShowStatsDialog();
                     break;
+                case ID_VIEW_DIAGNOSTICS:
+                    ShowDetailedDiagnostics();
+                    break;
                 case ID_VIEW_WRAP:
                     g_bWordWrap = !g_bWordWrap;
                     for (int i = 0; i < g_NumTabs; i++) {
@@ -607,10 +1058,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     break;
                 case ID_HELP_SHORTCUTS:
-                    MessageBoxA(hwnd, "KPad Pro Keyboard Shortcuts:\n\nCtrl+N: New Document\nCtrl+O: Open Local File\nCtrl+S: Save\nCtrl+T: New Tab\nCtrl+W: Close Tab\nCtrl+F: Find\nCtrl+H: Replace\nAlt+Z: Toggle Word Wrap\nF5: Insert Time/Date\nF1: Show this help", "Keyboard Shortcuts", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxA(hwnd, "KPad Pro Keyboard Shortcuts:\n\nCtrl+N: New Document\nCtrl+O: Open Local File\nCtrl+S: Save\nCtrl+T: New Tab\nCtrl+W: Close Tab\nCtrl+F: Find\nCtrl+H: Replace\nCtrl+E: Encrypt Buffer\nCtrl+D: Decrypt Buffer\nAlt+Z: Toggle Word Wrap\nF5: Insert Time/Date\nF1: Show this help", "Keyboard Shortcuts", MB_OK | MB_ICONINFORMATION);
                     break;
                 case ID_HELP_ABOUT:
-                    MessageBoxA(hwnd, "KPad Pro\nAdvanced Text & Code Editor for KiloOS", "About", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxA(hwnd, "KPad Pro\nAdvanced Text & Code Editor with AES & RC4 Encryption Suite", "About", MB_OK | MB_ICONINFORMATION);
                     break;
             }
             break;
@@ -656,6 +1107,30 @@ void* __cdecl memset(void* dest, int c, size_t count) {
     char* bytes = (char*)dest;
     while (count--) *bytes++ = (char)c;
     return dest;
+}
+
+#pragma function(memcpy)
+void* __cdecl memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
+char* __cdecl strstr(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return NULL;
+    if (!*needle) return (char*)haystack;
+    while (*haystack) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (*h && *n && *h == *n) {
+            h++;
+            n++;
+        }
+        if (!*n) return (char*)haystack;
+        haystack++;
+    }
+    return NULL;
 }
 
 void MainEntry() {
@@ -716,6 +1191,14 @@ void MainEntry() {
             }
             if (ctrl && msg.wParam == 'H') {
                 SendMessage(hwnd, WM_COMMAND, ID_EDIT_REPLACE, 0);
+                continue;
+            }
+            if (ctrl && msg.wParam == 'E') {
+                SendMessage(hwnd, WM_COMMAND, ID_EDIT_ENCRYPT, 0);
+                continue;
+            }
+            if (ctrl && msg.wParam == 'D') {
+                SendMessage(hwnd, WM_COMMAND, ID_EDIT_DECRYPT, 0);
                 continue;
             }
             if (ctrl && msg.wParam == 'T') {

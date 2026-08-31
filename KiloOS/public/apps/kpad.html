@@ -523,6 +523,33 @@
     font-size: 11px;
     color: var(--accent-hover);
   }
+  .form-group { margin-bottom: 14px; text-align: left; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+  .form-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+  .modal-btn-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+  .modal-btn-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    border: none;
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .modal-btn-cancel:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
 </style>
 </head>
 <body>
@@ -539,9 +566,12 @@
         <div onclick="openFileNative()"><span>Open Local File</span><span class="shortcut">Ctrl+O</span></div>
         <div onclick="saveFileNative()"><span>Save As Local</span></div>
         <div class="divider"></div>
-        <div onclick="exportDocument('txt')"><span>Export as Plain Text (.txt)</span></div>
-        <div onclick="exportDocument('html')"><span>Export as HTML (.html)</span></div>
-        <div onclick="exportDocument('json')"><span>Export Session Backup (.json)</span></div>
+        <div onclick="exportDocument('txt')"><span>Export Plain Text (.txt)</span></div>
+        <div onclick="exportDocument('html')"><span>Export HTML (.html)</span></div>
+        <div onclick="exportDocument('json')"><span>Export Session (.json)</span></div>
+        <div onclick="exportEncrypted()"><span>Export Encrypted (.kpad.enc)</span></div>
+        <div class="divider"></div>
+        <div onclick="importEncrypted()"><span>Import Encrypted File...</span></div>
       </div>
     </div>
 
@@ -563,6 +593,9 @@
 
     <div class="menu-btn">Tools
       <div class="dropdown">
+        <div onclick="promptEncryptDocument()"><span>🔒 Encrypt Document (Password Lock)...</span><span class="shortcut">Ctrl+E</span></div>
+        <div onclick="promptDecryptDocument()"><span>🔓 Decrypt Document (Unlock)...</span><span class="shortcut">Ctrl+D</span></div>
+        <div class="divider"></div>
         <div onclick="transformText('upper')"><span>UPPERCASE</span></div>
         <div onclick="transformText('lower')"><span>lowercase</span></div>
         <div onclick="transformText('title')"><span>Title Case</span></div>
@@ -570,6 +603,8 @@
         <div onclick="trimWhitespace()"><span>Trim Trailing Spaces</span></div>
         <div onclick="formatJSON()"><span>Format JSON</span></div>
         <div onclick="sortLines()"><span>Sort Lines</span></div>
+        <div class="divider"></div>
+        <div onclick="showDiagnostics()"><span>📊 Document Diagnostics & Hash</span></div>
       </div>
     </div>
 
@@ -629,6 +664,7 @@
     <div class="status-left">
       <div class="status-item" id="file-path">Untitled 1</div>
       <div class="status-item" id="file-status">Ready</div>
+      <div class="status-item" id="stat-autosave" style="color: #34d399; font-size:10px;">● Auto-Saved</div>
     </div>
     <div class="status-right">
       <div class="status-item" style="cursor:pointer; font-weight:bold; color:var(--accent-hover);" onclick="showHelp()" title="Help (F1)">
@@ -1157,6 +1193,276 @@
       document.documentElement.setAttribute('data-theme', theme);
     }
 
+    // --- Document Security & AES Encryption Suite ---
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return window.btoa(binary);
+    }
+
+    function base64ToArrayBuffer(base64) {
+      const binary_string = window.atob(base64.replace(/\s/g, ''));
+      const len = binary_string.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    async function deriveAesKey(password, saltUint8) {
+      const enc = new TextEncoder();
+      const keyMaterial = await window.crypto.subtle.importKey(
+        "raw",
+        enc.encode(password),
+        { name: "PBKDF2" },
+        false,
+        ["deriveKey"]
+      );
+      return window.crypto.subtle.deriveKey(
+        {
+          name: "PBKDF2",
+          salt: saltUint8,
+          iterations: 100000,
+          hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    }
+
+    async function encryptDocumentText(plainText, password) {
+      const enc = new TextEncoder();
+      const salt = window.crypto.getRandomValues(new Uint8Array(16));
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveAesKey(password, salt);
+      const encrypted = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        enc.encode(plainText)
+      );
+
+      const saltB64 = arrayBufferToBase64(salt);
+      const ivB64 = arrayBufferToBase64(iv);
+      const cipherB64 = arrayBufferToBase64(encrypted);
+
+      return `-----BEGIN KPAD ENCRYPTED DOCUMENT-----\n` +
+             `Version: 1.0\n` +
+             `Cipher: AES-256-GCM\n` +
+             `Salt: ${saltB64}\n` +
+             `IV: ${ivB64}\n\n` +
+             `${cipherB64}\n` +
+             `-----END KPAD ENCRYPTED DOCUMENT-----`;
+    }
+
+    async function decryptDocumentText(armoredText, password) {
+      if (!armoredText.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+        throw new Error("Document is not a valid KPad encrypted container.");
+      }
+      const saltMatch = armoredText.match(/Salt:\s*([A-Za-z0-9+/=]+)/);
+      const ivMatch = armoredText.match(/IV:\s*([A-Za-z0-9+/=]+)/);
+      if (!saltMatch || !ivMatch) {
+        throw new Error("Invalid encryption metadata headers.");
+      }
+
+      const salt = new Uint8Array(base64ToArrayBuffer(saltMatch[1]));
+      const iv = new Uint8Array(base64ToArrayBuffer(ivMatch[1]));
+
+      const headerEnd = armoredText.indexOf("\n\n");
+      const footerStart = armoredText.indexOf("-----END KPAD ENCRYPTED DOCUMENT-----");
+      if (headerEnd === -1 || footerStart === -1) {
+        throw new Error("Corrupt armor format.");
+      }
+
+      const cipherB64 = armoredText.substring(headerEnd + 2, footerStart).trim();
+      const cipherBuf = base64ToArrayBuffer(cipherB64);
+
+      const key = await deriveAesKey(password, salt);
+      const decryptedBuf = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        cipherBuf
+      );
+
+      const dec = new TextDecoder();
+      return dec.decode(decryptedBuf);
+    }
+
+    function promptEncryptDocument() {
+      const bodyHTML = `
+        <div class="form-group">
+          <label class="form-label" for="enc-pass">Encryption Password / Passphrase:</label>
+          <input type="password" class="form-input" id="enc-pass" placeholder="Enter a secure password">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="enc-pass-confirm">Confirm Password:</label>
+          <input type="password" class="form-input" id="enc-pass-confirm" placeholder="Confirm your password">
+          <div class="form-hint">Uses AES-GCM 256-bit with PBKDF2 (100,000 SHA-256 iterations)</div>
+        </div>
+        <div class="modal-btn-row">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn" onclick="executeEncrypt()">🔒 Encrypt Buffer</button>
+        </div>
+      `;
+      openModal('🔒 Encrypt Document', bodyHTML);
+      setTimeout(() => {
+        const p = document.getElementById('enc-pass');
+        if (p) p.focus();
+      }, 50);
+    }
+
+    async function executeEncrypt() {
+      const p1 = document.getElementById('enc-pass').value;
+      const p2 = document.getElementById('enc-pass-confirm').value;
+      if (!p1) { alert("Please enter a password."); return; }
+      if (p1 !== p2) { alert("Passwords do not match."); return; }
+
+      try {
+        const armored = await encryptDocumentText(editor.value, p1);
+        editor.value = armored;
+        closeModal();
+        updateEditor();
+        document.getElementById('file-status').innerText = "🔒 Encrypted";
+        alert("Document successfully encrypted with AES-256!");
+      } catch (err) {
+        alert("Encryption error: " + err.message);
+      }
+    }
+
+    function promptDecryptDocument(armored = null) {
+      const currentText = armored || editor.value;
+      if (!currentText.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+        alert("Current document is not an encrypted container (missing armor header).");
+        return;
+      }
+
+      const bodyHTML = `
+        <div class="form-group">
+          <label class="form-label" for="dec-pass">Enter Decryption Password:</label>
+          <input type="password" class="form-input" id="dec-pass" placeholder="Enter document password" onkeydown="if(event.key==='Enter') executeDecrypt()">
+          <div class="form-hint">Enter the password used to lock this document</div>
+        </div>
+        <div class="modal-btn-row">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn" onclick="executeDecrypt()">🔓 Decrypt & View</button>
+        </div>
+      `;
+      openModal('🔓 Decrypt Document', bodyHTML);
+      setTimeout(() => {
+        const p = document.getElementById('dec-pass');
+        if (p) p.focus();
+      }, 50);
+    }
+
+    async function executeDecrypt() {
+      const pass = document.getElementById('dec-pass').value;
+      if (!pass) { alert("Please enter the password."); return; }
+
+      try {
+        const plain = await decryptDocumentText(editor.value, pass);
+        editor.value = plain;
+        closeModal();
+        updateEditor();
+        document.getElementById('file-status').innerText = "🔓 Decrypted";
+        alert("Document successfully unlocked and decrypted!");
+      } catch (err) {
+        alert("Decryption failed: Incorrect password or corrupt encrypted data.");
+      }
+    }
+
+    function exportEncrypted() {
+      if (!editor.value.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+        const pass = prompt("Enter password to encrypt this export:");
+        if (!pass) return;
+        encryptDocumentText(editor.value, pass).then(armored => {
+          downloadFile(armored, (tabs[activeTabIndex].name || 'document') + '.kpad.enc', 'text/plain');
+        }).catch(err => alert("Export failed: " + err.message));
+      } else {
+        downloadFile(editor.value, (tabs[activeTabIndex].name || 'document') + '.kpad.enc', 'text/plain');
+      }
+    }
+
+    function downloadFile(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importEncrypted() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.enc,.kpad.enc,.txt,*';
+      input.onchange = async e => {
+        if (e.target.files.length > 0) {
+          const file = e.target.files[0];
+          const text = await file.text();
+          createTab(file.name, text, null, 'plaintext');
+          if (text.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+            promptDecryptDocument(text);
+          }
+        }
+      };
+      input.click();
+    }
+
+    // --- Document Diagnostics & Hashes ---
+    async function showDiagnostics() {
+      const text = editor.value;
+      const lines = text.split('\n').length;
+      const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+      const chars = text.length;
+      const charsNoSpace = text.replace(/\s/g, '').length;
+      const bytes = new TextEncoder().encode(text).length;
+
+      // SHA-256
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const sha256Hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const html = `
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
+          <div class="shortcut-row"><span>Total Lines:</span><strong>${lines.toLocaleString()}</strong></div>
+          <div class="shortcut-row"><span>Total Words:</span><strong>${words.toLocaleString()}</strong></div>
+          <div class="shortcut-row"><span>Total Characters (with spaces):</span><strong>${chars.toLocaleString()}</strong></div>
+          <div class="shortcut-row"><span>Characters (excluding spaces):</span><strong>${charsNoSpace.toLocaleString()}</strong></div>
+          <div class="shortcut-row"><span>Document Size (UTF-8 Bytes):</span><strong>${bytes.toLocaleString()} bytes</strong></div>
+          <div style="margin-top:8px;">
+            <div style="font-weight:600; margin-bottom:4px; color:var(--accent-hover);">SHA-256 Hash Digest:</div>
+            <div style="background:rgba(0,0,0,0.5); padding:8px; border-radius:4px; font-family:monospace; font-size:11px; word-break:break-all; border:1px solid var(--border-glass);">${sha256Hex}</div>
+          </div>
+        </div>
+      `;
+      openModal('📊 Document Diagnostics & Hash', html);
+    }
+
+    // --- Auto-Save Recovery Engine ---
+    function triggerAutoSave() {
+      try {
+        if (tabs.length > 0) {
+          saveSession();
+          const d = new Date();
+          const pad = n => n.toString().padStart(2, '0');
+          const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+          const stat = document.getElementById('stat-autosave');
+          if (stat) {
+            stat.innerText = `● Auto-Saved ${timeStr}`;
+            stat.style.opacity = '1';
+          }
+        }
+      } catch (e) {}
+    }
+
+    setInterval(triggerAutoSave, 20000);
+
     // --- Export / Import Engine ---
     function exportDocument(format) {
       const tab = tabs[activeTabIndex];
@@ -1192,6 +1498,9 @@
         for (const file of e.dataTransfer.files) {
           const text = await file.text();
           createTab(file.name, text, null, detectLanguage(file.name));
+          if (text.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+            promptDecryptDocument(text);
+          }
         }
       }
     });
@@ -1219,7 +1528,11 @@
     async function loadVFSFile(path) {
       const res = await sendToOS({ type: 'VFS_READ', path });
       const filename = path.split('/').pop() || 'file';
-      createTab(filename, res.data || '', path, detectLanguage(filename));
+      const text = res.data || '';
+      createTab(filename, text, path, detectLanguage(filename));
+      if (text.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+        promptDecryptDocument(text);
+      }
     }
 
     async function openVFS() {
@@ -1251,6 +1564,9 @@
         const file = await fileHandle.getFile();
         const content = await file.text();
         createTab(file.name, content, null, detectLanguage(file.name));
+        if (content.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+          promptDecryptDocument(content);
+        }
       } catch (e) {}
     }
 
@@ -1318,6 +1634,8 @@
         { label: 'Close Tab', key: 'Ctrl + W' },
         { label: 'Find', key: 'Ctrl + F' },
         { label: 'Replace', key: 'Ctrl + H' },
+        { label: 'Encrypt Document', key: 'Ctrl + E' },
+        { label: 'Decrypt Document', key: 'Ctrl + D' },
         { label: 'Toggle Word Wrap', key: 'Alt + Z' },
         { label: 'Insert Time / Date', key: 'F5' },
         { label: 'Show Shortcuts / Help', key: 'F1' }
@@ -1336,12 +1654,12 @@
       const html = `
         <div style="text-align:center; padding: 10px 0;">
           <div style="font-size:24px; font-weight:800; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px;">KPad Pro</div>
-          <div style="color: var(--text-muted); font-size:12px; margin-bottom: 16px;">Version 1.2 • KiloOS Suite</div>
+          <div style="color: var(--text-muted); font-size:12px; margin-bottom: 16px;">Version 1.3 • KiloOS Suite</div>
           <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
-            A high-performance, minimalist text and code editor built for efficiency and speed.
+            A high-performance text and code editor with AES-256 document encryption, multi-tab sessions, and auto-save recovery.
           </p>
           <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 8px; padding: 12px; text-align: left; font-size: 12px; line-height: 1.6;">
-            <div>✨ <strong>Features:</strong> Multi-tab sessions, syntax highlighting, regex find/replace, custom themes, VFS integration, and session backups.</div>
+            <div>🔒 <strong>Document Security:</strong> 256-bit AES-GCM encryption with PBKDF2 password protection, encrypted file exports (.kpad.enc), auto-save recovery, and live SHA-256 diagnostics.</div>
           </div>
         </div>
       `;
@@ -1357,6 +1675,8 @@
       if (e.ctrlKey && e.key === 't') { e.preventDefault(); newTab(); }
       if (e.ctrlKey && e.key === 'w') { e.preventDefault(); closeTab(activeTabIndex); }
       if (e.ctrlKey && e.key === 'o') { e.preventDefault(); openFileNative(); }
+      if (e.ctrlKey && e.key === 'e') { e.preventDefault(); promptEncryptDocument(); }
+      if (e.ctrlKey && e.key === 'd') { e.preventDefault(); promptDecryptDocument(); }
       if (e.altKey && e.key === 'z') { e.preventDefault(); toggleWordWrap(); }
       if (e.key === 'F5') { e.preventDefault(); insertDateTime(); }
       if (e.key === 'F1') { e.preventDefault(); showHelp(); }
