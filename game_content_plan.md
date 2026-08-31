@@ -147,7 +147,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KBreakout  | Tier 1 | Loop 9 done (Advanced level editor, meteor hazards, boss rematches) | Loop 10: Multi-ball chaos mode, gravity wells, custom powerup forging |
 | KSnake     | Tier 1 | Loop 9 done (Snake vs Snake mode, growing walls, weather effects) | Loop 10: Map editor, boss gauntlet, branching campaigns |
 | KRogue     | Tier 1 | Loop 10 done (Final sanctuary floors, true ending, ultra bosses) | Loop 11: Classes/Loadouts (Warrior, Mage, Rogue) |
 | KQuest     | Tier 1 | Loop 9 done (Factions, mount system, crafting overhaul) | Loop 10: Kingdom management, army battles, castle defense |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KAsteroids | Tier 1 | Loop 10 done (Supermassive asteroid bosses, warp core collection, zero-G inertia anomalies) | Loop 11: Drone wingmen companions, orbital defense platforms, EMP shockwave mines |
 | KMaze      | Tier 1 | Loop 10 done (Multi-level dungeons, save points, dynamic lighting) | Loop 11: Secret illusionary walls, dungeon lore tablets, stealth crouch mechanics |
 | KPac       | Tier 1 | Loop 10 done (Arcade endless mode, procedural ghost personalities & traits, Cyber-Forge item crafting) | Loop 11: Ghost companion pet summoning, labyrinth hazard portals, legendary relic forging |
+| KBreakout  | Tier 1 | Loop 10 done (Multi-ball chaos mode, gravity wells, custom powerup forging) | Loop 11: Orbital satellite barriers, laser reflectors, quantum resonance bricks |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 10**
+- [x] KBreakout (Loop 10: Added Multi-Ball Chaos Mode [toggle with C] with dynamic ball fission up to 32 balls and score scaling multipliers; Gravity Wells [Singularity Attractors & Pulsar Repulsors] bending ball trajectories in real-time with accretion disk visual vortex; and Cyber-Forge Power Lab [O/F / quick keys 1-5] with Plasma Shards, Quantum Cores, and Nano Alloy materials to synthesize 5 legendary enhancements [Nova Blast Ball, Chronos Paddle, Valkyrie Cannons, Quantum Aegis, Singularity Beacon] with save data persistence in both EXE and HTML)
 - [x] KPac (Loop 10: Added Arcade Endless mode with infinite procedural symmetrical mazes, dynamic scaling difficulty, score multipliers, and high-wave tracking [toggle with O]; Procedural Ghost Personalities & Traits [Vortex Magnet, Glitch Phase-Shifter, Trapper with sludge hazards, Mirage Illusionist, Hyper Chaser with auras]; and Cyber-Forge Item Crafting System with Ectoplasm, Fruit Essence, and Star Dust materials, 4 craftable recipes [Super Pellet, Chrono Warp, 2-Hit Aegis Shield, Void Pulse Bomb], and interactive forge menu [C] / quick-craft hotkeys [7-0] in both EXE and HTML)
 - [x] KMaze (Loop 10: Expanded campaign to 45 levels across 5 biomes [Catacombs, Cyber Labyrinth, Frost Caverns, Abyssal Depths, Inferno Citadel] ending with Stage 45 Minotaur Overlord Boss arena, added Sublevel Descent Stairwells [tile 38] with depth bonuses and charge replenishment, Ancient Save Shrine / Campfire Checkpoints [tile 28] with active state persistence and restore, and Dynamic Multi-Source Point Lighting with radiant Torch Sconces [tile 29], flame flicker, and real-time raycast surface illumination in both EXE and HTML)
 - [x] KAsteroids (Loop 10: Added Supermassive Magma Titan Asteroid Bosses with magma shards and orbiting satellite shield rocks, Warp Core collection system with Overdrive hyper-mode [twin piercing beams, vacuum magnet, invincibility], and Zero-G Inertia Anomaly hazards with zero friction, vortex pull, and slingshot velocity boost in both EXE and HTML)

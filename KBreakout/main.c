@@ -12,10 +12,10 @@ int _fltused = 1;
 #define BR_W (W / COLS)
 #define BR_H 16
 
-#define MAX_TRAIL 6
+#define MAX_TRAIL 8
 typedef struct { float x, y; } TrailPoint;
 
-#define MAX_BALLS 16
+#define MAX_BALLS 32
 typedef struct {
     float x, y;
     float dx, dy;
@@ -27,14 +27,15 @@ typedef struct {
 } Ball;
 Ball balls[MAX_BALLS];
 
-#define MAX_LASERS 12
+#define MAX_LASERS 16
 typedef struct {
     float x, y;
     int active;
+    int type;
 } Laser;
 Laser lasers[MAX_LASERS];
 
-#define MAX_PARTICLES 128
+#define MAX_PARTICLES 160
 typedef struct {
     float x, y;
     float vx, vy;
@@ -44,7 +45,7 @@ typedef struct {
 } Particle;
 Particle particles[MAX_PARTICLES];
 
-#define MAX_SHOCKWAVES 8
+#define MAX_SHOCKWAVES 12
 typedef struct {
     float x, y;
     float r;
@@ -55,10 +56,22 @@ typedef struct {
 Shockwave shockwaves[MAX_SHOCKWAVES];
 int screen_shake = 0;
 
-#define MAX_METEORS 4
+#define MAX_METEORS 6
 typedef struct { float x, y; int active; } Meteor;
 Meteor meteors[MAX_METEORS];
 int meteor_active = 0;
+
+// Gravity Wells (Black Holes & Pulsar Repulsors)
+#define MAX_GRAVITY_WELLS 3
+typedef struct {
+    float x, y;
+    float mass;
+    float radius;
+    int active;
+    int type;
+    float spin;
+} GravityWell;
+GravityWell gravity_wells[MAX_GRAVITY_WELLS];
 
 // Game State
 int pad_x = W / 2 - 30;
@@ -71,11 +84,32 @@ int pad_squash_timer = 0;
 int score = 0;
 int high_score = 0;
 int lifetime_bricks = 0;
-int state = 0; // 0=start, 1=play, 2=gameover, 3=victory
+int state = 0; // 0=start, 1=play, 2=gameover, 3=victory, 4=editor, 5=forge
 int diff = 0; // 0=Easy, 1=Hard
 float speed = 3.5f;
 int lives = 3;
 int level = 1;
+
+// Multi-Ball Chaos System
+int chaos_mode = 0;
+
+// Materials & Cyber-Forge System
+int plasma_shards = 0;
+int quantum_cores = 0;
+int nano_alloys = 0;
+
+int forge_supernova = 0;
+int forge_chronos = 0;
+int forge_valkyrie = 0;
+int forge_aegis = 0;
+int forge_singularity = 0;
+
+int active_supernova = 0;
+int active_chronos = 0;
+int active_valkyrie = 0;
+int aegis_layers = 0;
+int active_singularity = 0;
+char forge_msg[64] = "Select recipe 1-5 to synthesize.";
 
 // Powerup Drop
 int power_active = 0;
@@ -90,6 +124,7 @@ int cd_laser = 0, dur_laser = 0;
 int cd_multi = 0;
 int cd_fire = 0, dur_fire = 0;
 int cd_barrier = 0, dur_barrier = 0;
+int cd_gravity = 0, dur_gravity = 0;
 
 // Hazard Shield
 int shield_active = 0;
@@ -104,14 +139,14 @@ int ufo_timer = 200;
 int ufo_bullet_active = 0;
 float ufo_bullet_x = 0, ufo_bullet_y = 0;
 
-// Boss Fortress (Stage 10, 20 & 30)
+// Boss Fortress
 int boss_active = 0;
 int boss_type = 1;
 int boss_dx = 0;
 int boss_hp = 50, boss_max_hp = 50;
 int boss_x = W / 2 - 50, boss_y = 35, boss_w = 100, boss_h = 40;
 float boss_shield_angle = 0.0f;
-#define MAX_BOSS_BULLETS 4
+#define MAX_BOSS_BULLETS 6
 typedef struct { float x, y; int active; } BossBullet;
 BossBullet boss_bullets[MAX_BOSS_BULLETS];
 
@@ -127,10 +162,20 @@ static int MyRand() {
 }
 
 static int MyAbs(int x) { return x < 0 ? -x : x; }
+static float MyAbsF(float x) { return x < 0.0f ? -x : x; }
+
+static float MySqrt(float x) {
+    if (x <= 0.0f) return 0.0f;
+    float r = x > 1.0f ? x * 0.5f : 1.0f;
+    for (int i = 0; i < 8; i++) {
+        r = 0.5f * (r + x / r);
+    }
+    return r;
+}
 
 static float MySin(float x) {
     const float PI2 = 6.283185f;
-    while (x < 0) x += PI2;
+    while (x < 0.0f) x += PI2;
     while (x >= PI2) x -= PI2;
     float t = x * 4.0f / PI2;
     if (t < 1.0f) return t;
@@ -149,7 +194,7 @@ void SpawnParticles(float x, float y, COLORREF color, int count) {
                 particles[p].vy = ((float)(MyRand() % 101 - 50)) / 10.0f - 2.0f;
                 particles[p].life = 15 + (MyRand() % 15);
                 particles[p].color = color;
-                particles[p].type = (MyRand() % 3); // 0=debris, 1=spark, 2=glow
+                particles[p].type = (MyRand() % 3);
                 break;
             }
         }
@@ -167,10 +212,26 @@ void SpawnShockwave(float x, float y, COLORREF color) {
     }
 }
 
+void SpawnGravityWell(float x, float y, float mass, int type) {
+    for (int i = 0; i < MAX_GRAVITY_WELLS; i++) {
+        if (!gravity_wells[i].active) {
+            gravity_wells[i].active = 1;
+            gravity_wells[i].x = x;
+            gravity_wells[i].y = y;
+            gravity_wells[i].mass = mass;
+            gravity_wells[i].radius = 110.0f;
+            gravity_wells[i].type = type;
+            gravity_wells[i].spin = 0.0f;
+            SpawnShockwave(x, y, type == 0 ? RGB(160, 32, 240) : RGB(0, 255, 255));
+            break;
+        }
+    }
+}
+
 void UpdateParticles() {
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
-            particles[i].vy += 0.25f; // gravity
+            particles[i].vy += 0.25f;
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
             particles[i].life--;
@@ -198,14 +259,14 @@ void DrawBevelBox(HDC hdc, int bx, int by, int bw, int bh, const char* txt, HPEN
 }
 
 COLORREF GetBrickColor(int type, int r, int c) {
-    if (type == 9) return RGB(120, 135, 150); // Steel
-    if (type == 8) return RGB(80, 80, 80);    // Armored
-    if (type == 7) return RGB(200, 255, 255); // Phantom
-    if (type == 2) return RGB(255, 65, 65);   // 2-Hit Red
-    if (type == 3) return RGB(184, 115, 51);  // 3-Hit Bronze
-    if (type == 4) return RGB(255, 100, 0);   // Explosive
-    if (type == 5) return RGB(170, 0, 255);   // Portal
-    if (type == 6) return RGB(0, 255, 204);   // Mystery
+    if (type == 9) return RGB(120, 135, 150);
+    if (type == 8) return RGB(80, 80, 80);
+    if (type == 7) return RGB(200, 255, 255);
+    if (type == 2) return RGB(255, 65, 65);
+    if (type == 3) return RGB(184, 115, 51);
+    if (type == 4) return RGB(255, 100, 0);
+    if (type == 5) return RGB(170, 0, 255);
+    if (type == 6) return RGB(0, 255, 204);
     COLORREF rowColors[6] = {
         RGB(255, 50, 100), RGB(255, 150, 50), RGB(255, 200, 0),
         RGB(50, 200, 100), RGB(50, 200, 255), RGB(200, 100, 255)
@@ -263,33 +324,33 @@ void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by, int hp) {
         }
     }
 
-    if (type == 9) { // Steel X
+    if (type == 9) {
         HPEN steelPen = CreatePen(PS_SOLID, 1, RGB(210, 220, 230));
         SelectObject(hdc, steelPen);
         MoveToEx(hdc, bx + 4, by + 3, NULL); LineTo(hdc, bx + BR_W - 4, by + BR_H - 3);
         MoveToEx(hdc, bx + BR_W - 4, by + 3, NULL); LineTo(hdc, bx + 4, by + BR_H - 3);
         DeleteObject(steelPen);
-    } else if (type == 3) { // Metal Stripes
+    } else if (type == 3) {
         HPEN stripePen = CreatePen(PS_SOLID, 1, RGB(255, 220, 160));
         SelectObject(hdc, stripePen);
         MoveToEx(hdc, bx + 6, by + 2, NULL); LineTo(hdc, bx + 6, by + BR_H - 2);
         MoveToEx(hdc, bx + BR_W - 6, by + 2, NULL); LineTo(hdc, bx + BR_W - 6, by + BR_H - 2);
         DeleteObject(stripePen);
-    } else if (type == 4) { // Explosive Yellow Core
+    } else if (type == 4) {
         HBRUSH yBr = CreateSolidBrush(RGB(255, 255, 0));
         SelectObject(hdc, yBr);
         Ellipse(hdc, bx + BR_W/2 - 3, by + BR_H/2 - 3, bx + BR_W/2 + 3, by + BR_H/2 + 3);
         DeleteObject(yBr);
-    } else if (type == 6) { // Mystery Mark ?
+    } else if (type == 6) {
         SetTextColor(hdc, RGB(0, 0, 0));
         SetBkMode(hdc, TRANSPARENT);
         TextOutA(hdc, bx + BR_W/2 - 3, by + 1, "?", 1);
-    } else if (type == 7) { // Phantom Glass
+    } else if (type == 7) {
         HPEN phantomPen = CreatePen(PS_DOT, 1, RGB(255, 255, 255));
         SelectObject(hdc, phantomPen);
         MoveToEx(hdc, bx + 2, by + 2, NULL); LineTo(hdc, bx + BR_W - 2, by + BR_H - 2);
         DeleteObject(phantomPen);
-    } else if (type == 8) { // Armored bolts
+    } else if (type == 8) {
         HBRUSH boltBr = CreateSolidBrush(RGB(40, 40, 40));
         SelectObject(hdc, boltBr);
         Ellipse(hdc, bx + 2, by + 2, bx + 5, by + 5);
@@ -341,6 +402,7 @@ void TriggerExplosion(int r, int c) {
                     bricks_left--;
                     score += 15;
                     lifetime_bricks++;
+                    plasma_shards += 1;
                     if (isExp && (nr != r || nc != c)) {
                         TriggerExplosion(nr, nc);
                     }
@@ -354,10 +416,18 @@ void LoadHighScore() {
     HANDLE hFile = CreateFileA("kbreakout_hi.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD read;
-        int buf[2] = {0, 0};
+        int buf[10] = {0};
         if (ReadFile(hFile, buf, sizeof(buf), &read, NULL)) {
             high_score = buf[0];
             lifetime_bricks = buf[1];
+            plasma_shards = buf[2];
+            quantum_cores = buf[3];
+            nano_alloys = buf[4];
+            forge_supernova = buf[5];
+            forge_chronos = buf[6];
+            forge_valkyrie = buf[7];
+            forge_aegis = buf[8];
+            forge_singularity = buf[9];
         }
         CloseHandle(hFile);
     }
@@ -368,9 +438,32 @@ void SaveHighScore() {
     HANDLE hFile = CreateFileA("kbreakout_hi.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written;
-        int buf[2] = { high_score, lifetime_bricks };
+        int buf[10] = {
+            high_score, lifetime_bricks,
+            plasma_shards, quantum_cores, nano_alloys,
+            forge_supernova, forge_chronos, forge_valkyrie, forge_aegis, forge_singularity
+        };
         WriteFile(hFile, buf, sizeof(buf), &written, NULL);
         CloseHandle(hFile);
+    }
+}
+
+void SplitBall(int idx) {
+    if (!balls[idx].active) return;
+    for (int n = 0; n < 2; n++) {
+        for (int k = 0; k < MAX_BALLS; k++) {
+            if (!balls[k].active) {
+                balls[k].active = 1;
+                balls[k].x = balls[idx].x;
+                balls[k].y = balls[idx].y;
+                balls[k].dx = balls[idx].dx + (n == 0 ? 2.2f : -2.2f);
+                balls[k].dy = balls[idx].dy;
+                balls[k].stuck = 0;
+                balls[k].trail_head = 0;
+                for (int t = 0; t < MAX_TRAIL; t++) { balls[k].trail[t].x = 0; balls[k].trail[t].y = 0; }
+                break;
+            }
+        }
     }
 }
 
@@ -381,26 +474,10 @@ void UseSkill(char skill) {
         MessageBeep(MB_OK);
     } else if ((skill == 'M' || skill == 'm') && cd_multi <= 0) {
         cd_multi = 900;
-        int current_count = 0;
-        for (int i = 0; i < MAX_BALLS; i++) if (balls[i].active) current_count++;
-
         for (int i = 0; i < MAX_BALLS; i++) {
             if (balls[i].active) {
-                for (int n = 0; n < 2; n++) {
-                    for (int k = 0; k < MAX_BALLS; k++) {
-                        if (!balls[k].active) {
-                            balls[k].active = 1;
-                            balls[k].x = balls[i].x;
-                            balls[k].y = balls[i].y;
-                            balls[k].dx = balls[i].dx + (n == 0 ? 2.0f : -2.0f);
-                            balls[k].dy = balls[i].dy;
-                            balls[k].stuck = 0;
-                            balls[k].trail_head = 0;
-                            for (int t = 0; t < MAX_TRAIL; t++) { balls[k].trail[t].x = 0; balls[k].trail[t].y = 0; }
-                            break;
-                        }
-                    }
-                }
+                SplitBall(i);
+                break;
             }
         }
         MessageBeep(MB_OK);
@@ -410,14 +487,79 @@ void UseSkill(char skill) {
     } else if ((skill == 'B' || skill == 'b') && cd_barrier <= 0) {
         dur_barrier = 600; cd_barrier = 1080;
         MessageBeep(MB_OK);
+    } else if ((skill == 'G' || skill == 'g') && cd_gravity <= 0) {
+        dur_gravity = 400; cd_gravity = 800;
+        SpawnGravityWell((float)(W / 2), 160.0f, 35.0f, 0);
+        MessageBeep(MB_ICONASTERISK);
     }
+}
+
+void CraftForge(int recipe) {
+    if (recipe == 1) {
+        if (plasma_shards >= 15 && nano_alloys >= 10) {
+            plasma_shards -= 15; nano_alloys -= 10;
+            forge_supernova++;
+            active_supernova = 1; dur_fire = 600;
+            wsprintfA(forge_msg, "Synthesized NOVA BLAST CORE! (Active)");
+            MessageBeep(MB_OK);
+        } else {
+            wsprintfA(forge_msg, "Need 15 Plasma + 10 Alloy!");
+            MessageBeep(0xFFFFFFFF);
+        }
+    } else if (recipe == 2) {
+        if (plasma_shards >= 12 && quantum_cores >= 8) {
+            plasma_shards -= 12; quantum_cores -= 8;
+            forge_chronos++;
+            active_chronos = 1;
+            wsprintfA(forge_msg, "Synthesized CHRONOS PADDLE! (Active)");
+            MessageBeep(MB_OK);
+        } else {
+            wsprintfA(forge_msg, "Need 12 Plasma + 8 Quantum!");
+            MessageBeep(0xFFFFFFFF);
+        }
+    } else if (recipe == 3) {
+        if (quantum_cores >= 10 && nano_alloys >= 15) {
+            quantum_cores -= 10; nano_alloys -= 15;
+            forge_valkyrie++;
+            active_valkyrie = 1; dur_laser = 600;
+            wsprintfA(forge_msg, "Synthesized VALKYRIE TURRETS! (Active)");
+            MessageBeep(MB_OK);
+        } else {
+            wsprintfA(forge_msg, "Need 10 Quantum + 15 Alloy!");
+            MessageBeep(0xFFFFFFFF);
+        }
+    } else if (recipe == 4) {
+        if (plasma_shards >= 10 && quantum_cores >= 10 && nano_alloys >= 10) {
+            plasma_shards -= 10; quantum_cores -= 10; nano_alloys -= 10;
+            forge_aegis++;
+            aegis_layers += 3; dur_barrier = 800;
+            wsprintfA(forge_msg, "Synthesized QUANTUM AEGIS! (+3 Layers)");
+            MessageBeep(MB_OK);
+        } else {
+            wsprintfA(forge_msg, "Need 10 Plasma + 10 Quantum + 10 Alloy!");
+            MessageBeep(0xFFFFFFFF);
+        }
+    } else if (recipe == 5) {
+        if (plasma_shards >= 20 && quantum_cores >= 15 && nano_alloys >= 15) {
+            plasma_shards -= 20; quantum_cores -= 15; nano_alloys -= 15;
+            forge_singularity++;
+            active_singularity = 1;
+            SpawnGravityWell((float)(W / 2), 140.0f, 45.0f, 0);
+            wsprintfA(forge_msg, "Synthesized SINGULARITY BEACON!");
+            MessageBeep(MB_OK);
+        } else {
+            wsprintfA(forge_msg, "Need 20 Plasma + 15 Quantum + 15 Alloy!");
+            MessageBeep(0xFFFFFFFF);
+        }
+    }
+    SaveHighScore();
 }
 
 void InitLevel() {
     bricks_left = 0;
     power_active = 0;
-    dur_laser = 0; dur_fire = 0; dur_barrier = 0;
-    cd_laser = 0; cd_multi = 0; cd_fire = 0; cd_barrier = 0;
+    dur_laser = 0; dur_fire = 0; dur_barrier = 0; dur_gravity = 0;
+    cd_laser = 0; cd_multi = 0; cd_fire = 0; cd_barrier = 0; cd_gravity = 0;
     paddle_timer = 0; sticky_timer = 0;
     ufo_bullet_active = 0;
 
@@ -426,10 +568,18 @@ void InitLevel() {
     for (int i = 0; i < MAX_SHOCKWAVES; i++) shockwaves[i].life = 0;
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) boss_bullets[i].active = 0;
     for (int i = 0; i < MAX_METEORS; i++) meteors[i].active = 0;
+    for (int i = 0; i < MAX_GRAVITY_WELLS; i++) gravity_wells[i].active = 0;
 
     ufo_active = 0;
     ufo_timer = 200;
     meteor_active = (level >= 12 && level % 4 == 0);
+
+    if (chaos_mode || (level >= 8 && level % 3 == 0)) {
+        SpawnGravityWell((float)(W / 3), 140.0f, 25.0f, 0);
+        if (level >= 18 || chaos_mode) {
+            SpawnGravityWell((float)(W * 2 / 3), 140.0f, -20.0f, 1);
+        }
+    }
 
     boss_active = (level % 10 == 0 && level > 0) || (level == 33) || (level == 36) || (level == 39);
     if (level == 10) { boss_hp = 25; boss_max_hp = 25; boss_type = 1; boss_dx = 2; boss_x = W / 2 - 50; }
@@ -443,7 +593,6 @@ void InitLevel() {
     shield_active = (level >= 14);
     shield_x = 50; shield_dx = (float)(2 + (level >= 16 ? 1 : 0));
 
-    // Reset single active ball
     for (int i = 0; i < MAX_BALLS; i++) balls[i].active = 0;
     balls[0].active = 1;
     balls[0].x = (float)(W / 2);
@@ -455,80 +604,93 @@ void InitLevel() {
     balls[0].trail_head = 0;
     for (int t = 0; t < MAX_TRAIL; t++) { balls[0].trail[t].x = 0; balls[0].trail[t].y = 0; }
 
+    if (chaos_mode) {
+        for (int b = 1; b < 3; b++) {
+            balls[b].active = 1;
+            balls[b].x = (float)(W / 2 + (b == 1 ? -20 : 20));
+            balls[b].y = (float)(H - 50);
+            balls[b].dx = speed * (b == 1 ? -1.2f : 1.2f);
+            balls[b].dy = -speed;
+            balls[b].stuck = 1;
+            balls[b].stuck_offset = pad_w / 2 + (b == 1 ? -15 : 15);
+            balls[b].trail_head = 0;
+            for (int t = 0; t < MAX_TRAIL; t++) { balls[b].trail[t].x = 0; balls[b].trail[t].y = 0; }
+        }
+    }
+
     pad_w = (diff == 1) ? 45 : 65;
+    if (active_chronos) pad_w += 15;
     pad_x = W / 2 - pad_w / 2;
 
-    // Generate Stage Bricks Architecture
     if (level != 99) {
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
-            int v = 0;
-            if (level == 1) {
-                if (r == 0) v = 2; else if (r <= 3) v = 1;
-            } else if (level == 2) {
-                v = ((r + c) % 2 == 0) ? 1 : 2;
-                if ((r == 0 || r == 4) && (c == 0 || c == 9)) v = 9;
-            } else if (level == 3) {
-                if (c >= r && c < COLS - r) v = (r == 0) ? 6 : (r == 1) ? 3 : 1;
-            } else if (level == 4) {
-                if ((r + c) % 3 == 0) v = 4; else v = (r % 2 == 0) ? 2 : 1;
-            } else if (level == 5) {
-                if (c == 0 || c == 9 || r == 0) v = 5; else if (r == 2 && (c == 4 || c == 5)) v = 6; else v = 2;
-            } else if (level == 6) {
-                if ((r == 1 && (c == 2 || c == 7)) || (r == 2 && c >= 2 && c <= 7) || (r == 3 && (c == 1 || c == 4 || c == 5 || c == 8))) v = 3;
-                else if (r == 2 && (c == 4 || c == 5)) v = 4;
-            } else if (level == 7) {
-                if (r == 2 && (c != 2 && c != 7)) v = 9; else if (r < 2) v = 3; else v = 4;
-            } else if (level == 8) {
-                if (c <= 2 || c >= 7) v = (r % 2 == 0) ? 3 : 2; else if (r == 1 && (c == 4 || c == 5)) v = 5;
-            } else if (level == 9) {
-                int pat[6] = {1, 2, 4, 5, 6, 3};
-                v = pat[(r * COLS + c) % 6];
-            } else if (level == 10) {
-                if (r >= 2) v = (r == 2) ? 3 : 2;
-            } else if (level == 11) {
-                if ((r == 0 && c < 8) || (c == 8 && r < 4) || (r == 4 && c > 1) || (c == 1 && r > 1)) v = (r % 2 == 0) ? 3 : 5; else v = 1;
-            } else if (level == 12) {
-                if (r == 0 && c % 2 == 0) v = 9; else if (r == 1) v = 3; else v = 4;
-            } else if (level == 13) {
-                if (r == 1) v = 3; else if (r == 2) v = 4; else if (r == 3) v = 6; else v = 1;
-            } else if (level == 14) {
-                if (MyAbs(r - 2) + MyAbs(c - 4) <= 3) v = (r == 2) ? 4 : 3;
-            } else if (level == 15) {
-                if (r >= 1 && r <= 2 && c >= 4 && c <= 5) v = 4; else v = 3;
-            } else if (level == 16) {
-                if (c == 2 || c == 7) v = 5; else v = (r % 2 == 0) ? 3 : 2;
-            } else if (level == 17) {
-                if (r == 0) v = 9; else if (r <= 2) v = 3; else v = 4;
-            } else if (level == 18) {
-                if ((r == 1 || r == 3) && (c == 2 || c == 7)) v = 5; else v = (r % 2 == 0) ? 4 : 3;
-            } else if (level == 19) {
-                if (r == 1) v = 9; else if (r == 2) v = 3; else v = 4;
-            } else if (level == 20) {
-                if (r >= 3) v = (r == 3) ? 3 : 2;
-            }
+                int v = 0;
+                if (level == 1) {
+                    if (r == 0) v = 2; else if (r <= 3) v = 1;
+                } else if (level == 2) {
+                    v = ((r + c) % 2 == 0) ? 1 : 2;
+                    if ((r == 0 || r == 4) && (c == 0 || c == 9)) v = 9;
+                } else if (level == 3) {
+                    if (c >= r && c < COLS - r) v = (r == 0) ? 6 : (r == 1) ? 3 : 1;
+                } else if (level == 4) {
+                    if ((r + c) % 3 == 0) v = 4; else v = (r % 2 == 0) ? 2 : 1;
+                } else if (level == 5) {
+                    if (c == 0 || c == 9 || r == 0) v = 5; else if (r == 2 && (c == 4 || c == 5)) v = 6; else v = 2;
+                } else if (level == 6) {
+                    if ((r == 1 && (c == 2 || c == 7)) || (r == 2 && c >= 2 && c <= 7) || (r == 3 && (c == 1 || c == 4 || c == 5 || c == 8))) v = 3;
+                    else if (r == 2 && (c == 4 || c == 5)) v = 4;
+                } else if (level == 7) {
+                    if (r == 2 && (c != 2 && c != 7)) v = 9; else if (r < 2) v = 3; else v = 4;
+                } else if (level == 8) {
+                    if (c <= 2 || c >= 7) v = (r % 2 == 0) ? 3 : 2; else if (r == 1 && (c == 4 || c == 5)) v = 5;
+                } else if (level == 9) {
+                    int pat[6] = {1, 2, 4, 5, 6, 3};
+                    v = pat[(r * COLS + c) % 6];
+                } else if (level == 10) {
+                    if (r >= 2) v = (r == 2) ? 3 : 2;
+                } else if (level == 11) {
+                    if ((r == 0 && c < 8) || (c == 8 && r < 4) || (r == 4 && c > 1) || (c == 1 && r > 1)) v = (r % 2 == 0) ? 3 : 5; else v = 1;
+                } else if (level == 12) {
+                    if (r == 0 && c % 2 == 0) v = 9; else if (r == 1) v = 3; else v = 4;
+                } else if (level == 13) {
+                    if (r == 1) v = 3; else if (r == 2) v = 4; else if (r == 3) v = 6; else v = 1;
+                } else if (level == 14) {
+                    if (MyAbs(r - 2) + MyAbs(c - 4) <= 3) v = (r == 2) ? 4 : 3;
+                } else if (level == 15) {
+                    if (r >= 1 && r <= 2 && c >= 4 && c <= 5) v = 4; else v = 3;
+                } else if (level == 16) {
+                    if (c == 2 || c == 7) v = 5; else v = (r % 2 == 0) ? 3 : 2;
+                } else if (level == 17) {
+                    if (r == 0) v = 9; else if (r <= 2) v = 3; else v = 4;
+                } else if (level == 18) {
+                    if ((r == 1 || r == 3) && (c == 2 || c == 7)) v = 5; else v = (r % 2 == 0) ? 4 : 3;
+                } else if (level == 19) {
+                    if (r == 1) v = 9; else if (r == 2) v = 3; else v = 4;
+                } else if (level == 20) {
+                    if (r >= 3) v = (r == 3) ? 3 : 2;
+                }
 
-            bricks[r][c] = v;
-            brick_hp[r][c] = (v == 8) ? 4 : 0;
-            if (v != 0 && v != 9) bricks_left++;
+                bricks[r][c] = v;
+                brick_hp[r][c] = (v == 8) ? 4 : 0;
+                if (v != 0 && v != 9) bricks_left++;
             }
         }
     }
     
-    // Level Editor Concepts (String Arrays for Stages 21-30)
     if (level >= 21 && level <= 30) {
         bricks_left = 0;
         const char* custom_stages[10][ROWS] = {
-            {"8888888888","7777777777","0000000000","1231231231","0000000000","0000000000"}, // 21
-            {"9000000009","0800000080","0070000700","0006006000","0000550000","0000000000"}, // 22
-            {"8787878787","7878787878","8787878787","7878787878","0000000000","0000000000"}, // 23
-            {"5000000005","0888888880","0877777780","0888888880","0000000000","0000000000"}, // 24
-            {"9999009999","7777007777","8888008888","7777007777","9999009999","0000000000"}, // 25
-            {"8000000008","0800000080","0080000800","0008008000","0000880000","0000000000"}, // 26
-            {"6666666666","7777777777","4444444444","8888888888","7777777777","6666666666"}, // 27
-            {"9876543210","0123456789","9876543210","0123456789","0000000000","0000000000"}, // 28
-            {"8889999888","7779999777","6669999666","5559999555","4449999444","0000000000"}, // 29
-            {"0000000000","0000000000","0008888000","0008888000","0000000000","0000000000"}  // 30
+            {"8888888888","7777777777","0000000000","1231231231","0000000000","0000000000"},
+            {"9000000009","0800000080","0070000700","0006006000","0000550000","0000000000"},
+            {"8787878787","7878787878","8787878787","7878787878","0000000000","0000000000"},
+            {"5000000005","0888888880","0877777780","0888888880","0000000000","0000000000"},
+            {"9999009999","7777007777","8888008888","7777007777","9999009999","0000000000"},
+            {"8000000008","0800000080","0080000800","0008008000","0000880000","0000000000"},
+            {"6666666666","7777777777","4444444444","8888888888","7777777777","6666666666"},
+            {"9876543210","0123456789","9876543210","0123456789","0000000000","0000000000"},
+            {"8889999888","7779999777","6669999666","5559999555","4449999444","0000000000"},
+            {"0000000000","0000000000","0008888000","0008888000","0000000000","0000000000"}
         };
         int idx = level - 21;
         for (int r = 0; r < ROWS; r++) {
@@ -578,10 +740,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             LoadHighScore();
             SetTimer(hwnd, TIMER_ID, 16, NULL);
             break;
-        case WM_LBUTTONDOWN:
+        case WM_LBUTTONDOWN: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
             if (state == 4) {
-                int x = LOWORD(lParam);
-                int y = HIWORD(lParam);
                 if (y >= 35 && y < 35 + ROWS * BR_H && x >= 0 && x < W) {
                     int r = (y - 35) / BR_H;
                     int c = x / BR_W;
@@ -589,32 +751,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     brick_hp[r][c] = (bricks[r][c] == 8) ? 4 : 0;
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
+            } else if (state == 5) {
+                if (y >= 70 && y <= 95) CraftForge(1);
+                else if (y >= 100 && y <= 125) CraftForge(2);
+                else if (y >= 130 && y <= 155) CraftForge(3);
+                else if (y >= 160 && y <= 185) CraftForge(4);
+                else if (y >= 190 && y <= 215) CraftForge(5);
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
+        }
         case WM_KEYDOWN:
             if (state == 1) {
                 if (wParam == 'L' || wParam == 'l') UseSkill('L');
                 if (wParam == 'M' || wParam == 'm') UseSkill('M');
                 if (wParam == 'F' || wParam == 'f') UseSkill('F');
                 if (wParam == 'B' || wParam == 'b') UseSkill('B');
+                if (wParam == 'G' || wParam == 'g') UseSkill('G');
+                if (wParam == 'O' || wParam == 'o') { state = 5; }
+                if (wParam >= '1' && wParam <= '5') CraftForge((int)(wParam - '0'));
+            } else if (state == 5) {
+                if (wParam >= '1' && wParam <= '5') CraftForge((int)(wParam - '0'));
+                if (wParam == VK_ESCAPE || wParam == 'O' || wParam == 'o' || wParam == VK_RETURN) state = 1;
             }
             break;
         case WM_TIMER:
             if (state == 1) {
                 frame_counter++;
-                // Skill Timers
                 if (dur_laser > 0) dur_laser--;
                 if (dur_fire > 0) dur_fire--;
                 if (dur_barrier > 0) dur_barrier--;
+                if (dur_gravity > 0) dur_gravity--;
                 if (cd_laser > 0) cd_laser--;
                 if (cd_multi > 0) cd_multi--;
                 if (cd_fire > 0) cd_fire--;
                 if (cd_barrier > 0) cd_barrier--;
+                if (cd_gravity > 0) cd_gravity--;
                 if (paddle_timer > 0) { paddle_timer--; if (paddle_timer == 0) pad_w = (diff == 1) ? 45 : 65; }
 
-                // Controls
-                if ((GetAsyncKeyState(VK_LEFT) & 0x8000) || (GetAsyncKeyState('A') & 0x8000)) pad_x -= 6;
-                if ((GetAsyncKeyState(VK_RIGHT) & 0x8000) || (GetAsyncKeyState('D') & 0x8000)) pad_x += 6;
+                int move_speed = active_chronos ? 8 : 6;
+                if ((GetAsyncKeyState(VK_LEFT) & 0x8000) || (GetAsyncKeyState('A') & 0x8000)) pad_x -= move_speed;
+                if ((GetAsyncKeyState(VK_RIGHT) & 0x8000) || (GetAsyncKeyState('D') & 0x8000)) pad_x += move_speed;
                 if (pad_x < 0) pad_x = 0;
                 if (pad_x > W - pad_w) pad_x = W - pad_w;
 
@@ -624,13 +801,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 UpdateParticles();
 
-                // Laser Auto-fire
-                if (dur_laser > 0 && dur_laser % 15 == 0) {
+                int laser_rate = active_valkyrie ? 8 : 15;
+                if (dur_laser > 0 && dur_laser % laser_rate == 0) {
                     for (int i = 0; i < MAX_LASERS; i++) {
                         if (!lasers[i].active) {
                             lasers[i].active = 1;
                             lasers[i].x = (float)(pad_x + 5);
                             lasers[i].y = (float)(H - 40);
+                            lasers[i].type = active_valkyrie ? 1 : 0;
                             break;
                         }
                     }
@@ -639,26 +817,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             lasers[i].active = 1;
                             lasers[i].x = (float)(pad_x + pad_w - 5);
                             lasers[i].y = (float)(H - 40);
+                            lasers[i].type = active_valkyrie ? 1 : 0;
                             break;
                         }
                     }
                 }
 
-                // Update Lasers
                 for (int i = 0; i < MAX_LASERS; i++) {
                     if (lasers[i].active) {
-                        lasers[i].y -= 7.0f;
+                        lasers[i].y -= (lasers[i].type == 1 ? 9.0f : 7.0f);
                         if (lasers[i].y < 0) lasers[i].active = 0;
                         else {
-                            // Laser vs Boss
                             if (boss_active && lasers[i].x > boss_x && lasers[i].x < boss_x + boss_w &&
                                 lasers[i].y > boss_y && lasers[i].y < boss_y + boss_h) {
-                                boss_hp--;
+                                boss_hp -= (lasers[i].type == 1 ? 2 : 1);
                                 lasers[i].active = 0;
                                 SpawnParticles(lasers[i].x, lasers[i].y, RGB(255, 0, 85), 4);
                                 MessageBeep(0xFFFFFFFF);
                                 if (boss_hp <= 0) {
                                     score += 500;
+                                    nano_alloys += 5;
+                                    quantum_cores += 3;
                                     SpawnParticles((float)(boss_x + boss_w/2), (float)(boss_y + boss_h/2), RGB(255, 0, 85), 40);
                                     boss_active = 0;
                                     level++;
@@ -667,7 +846,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 continue;
                             }
 
-                            // Laser vs Bricks
                             int r = ((int)lasers[i].y - 35) / BR_H;
                             int c = (int)lasers[i].x / BR_W;
                             if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
@@ -675,11 +853,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     lasers[i].active = 0;
                                     int type = bricks[r][c];
                                     SpawnParticles(lasers[i].x, lasers[i].y, GetBrickColor(type, r, c), 6);
+                                    plasma_shards += 1;
                                     if (type == 4) TriggerExplosion(r, c);
                                     else if (type == 7) { bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++; }
                                     else if (type == 8) {
-                                        brick_hp[r][c]--;
-                                        if (brick_hp[r][c] <= 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; }
+                                        brick_hp[r][c] -= (lasers[i].type == 1 ? 2 : 1);
+                                        if (brick_hp[r][c] <= 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; nano_alloys += 2; }
                                         else { score += 5; }
                                     }
                                     else if (type > 1 && type != 6) { bricks[r][c]--; score += 5; }
@@ -690,13 +869,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                // Update Hazard Shield
                 if (shield_active) {
                     shield_x += shield_dx;
                     if (shield_x < 10 || shield_x + shield_w > W - 10) shield_dx = -shield_dx;
                 }
 
-                // Update UFO Drone
+                for (int g = 0; g < MAX_GRAVITY_WELLS; g++) {
+                    if (gravity_wells[g].active) {
+                        gravity_wells[g].spin += 0.08f;
+                    }
+                }
+
                 if (ufo_active) {
                     ufo_x += ufo_dx;
                     if (ufo_x < 10 || ufo_x + 30 > W - 10) ufo_dx = -ufo_dx;
@@ -711,7 +894,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if (level >= 3) { ufo_active = 1; ufo_x = 10; ufo_dx = 2; ufo_timer = 300; }
                 }
 
-                // UFO Bullet
                 if (ufo_bullet_active) {
                     ufo_bullet_y += 3.5f;
                     if (ufo_bullet_y > H - 40 && ufo_bullet_y < H - 30 && ufo_bullet_x > pad_x && ufo_bullet_x < pad_x + pad_w) {
@@ -722,7 +904,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if (ufo_bullet_y > H) ufo_bullet_active = 0;
                 }
 
-                // Boss Attacks & Shields
                 if (boss_active) {
                     if (boss_type == 1 || boss_type == 3) {
                         boss_x += boss_dx;
@@ -753,9 +934,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                // Power-up falling
                 if (power_active) {
                     power_y += 2.5f;
+                    if (active_chronos) {
+                        float dx = (pad_x + pad_w / 2) - power_x;
+                        power_x += dx * 0.05f;
+                    }
                     if (power_y + 10 > H - 40 && power_y < H - 40 + pad_h && power_x + 10 > pad_x && power_x < pad_x + pad_w) {
                         power_active = 0;
                         pad_squash_timer = 15;
@@ -768,11 +952,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         else if (power_type == 5) { dur_laser = 360; }
                         else if (power_type == 6) { dur_barrier = 600; }
                         else if (power_type == 7) { UseSkill('M'); }
+                        else if (power_type == 8) { UseSkill('G'); }
                     }
                     if (power_y > H) power_active = 0;
                 }
 
-                // Meteor Hazard
                 if (meteor_active) {
                     if (MyRand() % 100 < 2) {
                         for (int i = 0; i < MAX_METEORS; i++) {
@@ -799,7 +983,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                // Update Active Balls
                 int active_balls_count = 0;
                 for (int i = 0; i < MAX_BALLS; i++) {
                     if (!balls[i].active) continue;
@@ -816,53 +999,77 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         continue;
                     }
 
+                    for (int g = 0; g < MAX_GRAVITY_WELLS; g++) {
+                        if (gravity_wells[g].active) {
+                            float gx = gravity_wells[g].x;
+                            float gy = gravity_wells[g].y;
+                            float gdx = gx - balls[i].x;
+                            float gdy = gy - balls[i].y;
+                            float dist_sq = gdx * gdx + gdy * gdy;
+                            float r_lim = gravity_wells[g].radius;
+                            if (dist_sq < r_lim * r_lim && dist_sq > 36.0f) {
+                                float dist = MySqrt(dist_sq);
+                                float force = (gravity_wells[g].mass * 0.08f) / (dist * 0.15f + 1.0f);
+                                balls[i].dx += (gdx / dist) * force;
+                                balls[i].dy += (gdy / dist) * force;
+                                if (frame_counter % 3 == 0) {
+                                    SpawnParticles(balls[i].x, balls[i].y, gravity_wells[g].type == 0 ? RGB(160, 32, 240) : RGB(0, 255, 255), 1);
+                                }
+                            }
+                        }
+                    }
+
+                    float max_spd = 9.0f;
+                    if (balls[i].dx > max_spd) balls[i].dx = max_spd;
+                    if (balls[i].dx < -max_spd) balls[i].dx = -max_spd;
+                    if (balls[i].dy > max_spd) balls[i].dy = max_spd;
+                    if (balls[i].dy < -max_spd) balls[i].dy = -max_spd;
+
                     balls[i].x += balls[i].dx;
                     balls[i].y += balls[i].dy;
                     
-                    // Update Trail
                     balls[i].trail[balls[i].trail_head].x = balls[i].x;
                     balls[i].trail[balls[i].trail_head].y = balls[i].y;
                     balls[i].trail_head = (balls[i].trail_head + 1) % MAX_TRAIL;
 
-                    // Wall collision
                     if (balls[i].x < 0) { balls[i].x = 0; balls[i].dx = -balls[i].dx; }
                     if (balls[i].x > W - 8) { balls[i].x = (float)(W - 8); balls[i].dx = -balls[i].dx; }
                     if (balls[i].y < 0) { balls[i].y = 0; balls[i].dy = -balls[i].dy; }
 
-                    // Barrier floor collision
-                    if (dur_barrier > 0 && balls[i].y >= H - 20) {
+                    if ((dur_barrier > 0 || aegis_layers > 0) && balls[i].y >= H - 20) {
                         balls[i].y = (float)(H - 20);
-                        balls[i].dy = -MyAbs((int)balls[i].dy);
+                        balls[i].dy = -MyAbsF(balls[i].dy);
                         SpawnParticles(balls[i].x, (float)(H - 10), RGB(0, 255, 255), 6);
                     }
 
-                    // Hazard Shield collision
                     if (shield_active && balls[i].y + 8 > shield_y && balls[i].y < shield_y + 8 &&
                         balls[i].x + 8 > shield_x && balls[i].x < shield_x + shield_w) {
                         balls[i].dy = -balls[i].dy;
                         SpawnParticles(balls[i].x, balls[i].y, RGB(0, 255, 255), 6);
                     }
 
-                    // UFO collision
                     if (ufo_active && balls[i].x + 8 > ufo_x && balls[i].x < ufo_x + 30 &&
                         balls[i].y + 8 > ufo_y && balls[i].y < ufo_y + 12) {
                         ufo_active = 0;
                         balls[i].dy = -balls[i].dy;
                         score += 100;
+                        quantum_cores += 2;
+                        plasma_shards += 3;
                         SpawnParticles(ufo_x + 15, (float)(ufo_y + 6), RGB(255, 0, 255), 15);
                         MessageBeep(0xFFFFFFFF);
-                        power_active = 1; power_type = 6; power_x = ufo_x + 15; power_y = (float)ufo_y;
+                        power_active = 1; power_type = (MyRand() % 8) + 1; power_x = ufo_x + 15; power_y = (float)ufo_y;
                     }
 
-                    // Boss Fortress collision
                     if (boss_active && balls[i].x + 8 > boss_x && balls[i].x < boss_x + boss_w &&
                         balls[i].y + 8 > boss_y && balls[i].y < boss_y + boss_h) {
-                        boss_hp -= (dur_fire > 0 ? 2 : 1);
-                        if (dur_fire <= 0) balls[i].dy = -balls[i].dy;
+                        boss_hp -= (dur_fire > 0 || active_supernova ? 3 : 1);
+                        if (dur_fire <= 0 && !active_supernova) balls[i].dy = -balls[i].dy;
                         SpawnParticles(balls[i].x, balls[i].y, RGB(255, 0, 85), 8);
                         MessageBeep(0xFFFFFFFF);
                         if (boss_hp <= 0) {
                             score += 1000;
+                            nano_alloys += 8;
+                            quantum_cores += 5;
                             SpawnParticles((float)(boss_x + boss_w/2), (float)(boss_y + boss_h/2), RGB(255, 0, 85), 50);
                             boss_active = 0;
                             level++;
@@ -871,15 +1078,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
-                    // Paddle collision
                     if (balls[i].y + 8 > H - 40 && balls[i].y < H - 40 + pad_h &&
                         balls[i].x + 8 > pad_x && balls[i].x < pad_x + pad_w) {
                         balls[i].y = (float)(H - 40 - 8);
-                        balls[i].dy = -MyAbs((int)balls[i].dy);
+                        balls[i].dy = -MyAbsF(balls[i].dy);
                         pad_squash_timer = 12;
                         float hit_pos = (balls[i].x + 4) - (pad_x + pad_w / 2);
                         balls[i].dx = hit_pos * 0.22f;
-                        if (MyAbs((int)balls[i].dx) == 0) balls[i].dx = (balls[i].dx > 0) ? 1.5f : -1.5f;
+                        if (MyAbsF(balls[i].dx) < 1.0f) balls[i].dx = (balls[i].dx >= 0) ? 1.5f : -1.5f;
                         MessageBeep(0xFFFFFFFF);
                         SpawnParticles(balls[i].x + 4, (float)(H - 40), RGB(0, 255, 255), 4);
                         SpawnShockwave(balls[i].x + 4, (float)(H - 40), RGB(0, 255, 255));
@@ -890,7 +1096,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
-                    // Bricks collision
                     int r = ((int)balls[i].y - 35) / BR_H;
                     int c = (int)balls[i].x / BR_W;
                     if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
@@ -898,62 +1103,70 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (type != 0) {
                             int bx = c * BR_W + BR_W / 2;
                             int by = r * BR_H + 35 + BR_H / 2;
+                            int chaos_mult = 1 + (active_balls_count / 3);
 
-                            if (type == 9) { // Steel Unbreakable
-                                if (dur_fire <= 0) balls[i].dy = -balls[i].dy;
+                            if (type == 9) {
+                                if (dur_fire <= 0 && !active_supernova) balls[i].dy = -balls[i].dy;
+                                else { bricks[r][c] = 0; bricks_left--; score += 50 * chaos_mult; nano_alloys += 2; }
                                 SpawnParticles(balls[i].x, balls[i].y, RGB(200, 210, 220), 4);
                                 SpawnShockwave(balls[i].x, balls[i].y, RGB(200, 210, 220));
                                 if (screen_shake < 4) screen_shake = 4;
                                 MessageBeep(0xFFFFFFFF);
-                            } else if (type == 4) { // Explosive
-                                bricks[r][c] = 0; bricks_left--;
-                                if (dur_fire <= 0) balls[i].dy = -balls[i].dy;
+                            } else if (type == 4) {
+                                bricks[r][c] = 0; bricks_left--; plasma_shards += 2;
+                                if (dur_fire <= 0 && !active_supernova) balls[i].dy = -balls[i].dy;
                                 TriggerExplosion(r, c);
-                            } else if (type == 5) { // Portal Warp
-                                bricks[r][c] = 0; bricks_left--; score += 20; lifetime_bricks++;
+                            } else if (type == 5) {
+                                bricks[r][c] = 0; bricks_left--; score += 20 * chaos_mult; lifetime_bricks++; quantum_cores += 1;
                                 SpawnParticles((float)bx, (float)by, RGB(170, 0, 255), 12);
                                 MessageBeep(0xFFFFFFFF);
                                 balls[i].x = (float)(20 + MyRand() % (W - 40));
                                 balls[i].y = 150.0f;
                                 balls[i].dx = (float)((MyRand() % 2 == 0 ? 1 : -1) * (speed + 1));
                                 balls[i].dy = speed;
-                            } else if (type == 6) { // Mystery Drop
-                                bricks[r][c] = 0; bricks_left--; score += 25; lifetime_bricks++;
+                            } else if (type == 6) {
+                                bricks[r][c] = 0; bricks_left--; score += 25 * chaos_mult; lifetime_bricks++; quantum_cores += 1;
                                 SpawnParticles((float)bx, (float)by, RGB(0, 255, 204), 10);
                                 MessageBeep(0xFFFFFFFF);
-                                power_active = 1; power_type = (MyRand() % 7) + 1;
+                                power_active = 1; power_type = (MyRand() % 8) + 1;
                                 power_x = (float)bx; power_y = (float)by;
-                            } else if (type == 7) { // Phantom Glass
-                                bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++;
+                            } else if (type == 7) {
+                                bricks[r][c] = 0; bricks_left--; score += 30 * chaos_mult; lifetime_bricks++; plasma_shards += 1;
                                 SpawnParticles((float)bx, (float)by, RGB(200, 255, 255), 10);
                                 MessageBeep(0xFFFFFFFF);
-                            } else if (type == 8) { // Armored
+                            } else if (type == 8) {
                                 SpawnParticles((float)bx, (float)by, RGB(80, 80, 80), 8);
-                                if (dur_fire > 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; }
-                                else {
+                                if (dur_fire > 0 || active_supernova) {
+                                    bricks[r][c] = 0; bricks_left--; score += 40 * chaos_mult; lifetime_bricks++; nano_alloys += 2;
+                                } else {
                                     brick_hp[r][c]--;
-                                    if (brick_hp[r][c] <= 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; }
+                                    if (brick_hp[r][c] <= 0) { bricks[r][c] = 0; bricks_left--; score += 40 * chaos_mult; lifetime_bricks++; nano_alloys += 2; }
                                     else { score += 5; }
                                     balls[i].dy = -balls[i].dy;
                                 }
                                 MessageBeep(0xFFFFFFFF);
-                            } else { // Normal / Reinforced
+                            } else {
                                 SpawnParticles((float)bx, (float)by, GetBrickColor(type, r, c), 8);
                                 SpawnShockwave((float)bx, (float)by, GetBrickColor(type, r, c));
                                 if (screen_shake < 5) screen_shake = 5;
-                                if (dur_fire > 0) {
-                                    bricks[r][c] = 0; bricks_left--; score += 15; lifetime_bricks++;
+                                plasma_shards += 1;
+                                if (dur_fire > 0 || active_supernova) {
+                                    bricks[r][c] = 0; bricks_left--; score += 15 * chaos_mult; lifetime_bricks++;
                                 } else {
                                     bricks[r][c]--;
-                                    if (bricks[r][c] == 0) { bricks_left--; score += 10; lifetime_bricks++; }
+                                    if (bricks[r][c] == 0) { bricks_left--; score += 10 * chaos_mult; lifetime_bricks++; }
                                     else score += 5;
                                     balls[i].dy = -balls[i].dy;
                                 }
                                 MessageBeep(0xFFFFFFFF);
 
+                                if (chaos_mode && (MyRand() % 4 == 0) && active_balls_count < MAX_BALLS - 2) {
+                                    SplitBall(i);
+                                }
+
                                 if (!power_active && (MyRand() % 5 == 0)) {
                                     power_active = 1;
-                                    power_type = (MyRand() % 7) + 1;
+                                    power_type = (MyRand() % 8) + 1;
                                     power_x = (float)bx; power_y = (float)by;
                                 }
                             }
@@ -966,8 +1179,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
-                    // Ball Out of Bottom
-                    if (balls[i].y > H && dur_barrier <= 0) {
+                    if (balls[i].y > H && dur_barrier <= 0 && aegis_layers <= 0) {
                         balls[i].active = 0;
                         active_balls_count--;
                     }
@@ -978,7 +1190,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     power_active = 0; sticky_timer = 0; dur_laser = 0; dur_fire = 0;
                     if (lives <= 0) {
                         SaveHighScore();
-                        state = 2; // Game Over
+                        state = 2;
                         MessageBeep(MB_ICONEXCLAMATION);
                     } else {
                         InitLevel();
@@ -987,18 +1199,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (state == 0 || state == 2 || state == 3) {
                 if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
-                    diff = 0; speed = 3.5f; score = 0; lives = 3; level = 1; InitLevel(); state = 1; pad_w = 65;
+                    diff = 0; speed = 3.5f; score = 0; lives = 3; level = 1; chaos_mode = 0; InitLevel(); state = 1; pad_w = 65;
                 }
                 if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-                    diff = 1; speed = 5.0f; score = 0; lives = 3; level = 1; InitLevel(); state = 1; pad_w = 45;
+                    diff = 1; speed = 5.0f; score = 0; lives = 3; level = 1; chaos_mode = 0; InitLevel(); state = 1; pad_w = 45;
+                }
+                if (GetAsyncKeyState('C') & 0x8000) {
+                    diff = 1; speed = 4.5f; score = 0; lives = 5; level = 1; chaos_mode = 1; InitLevel(); state = 1; pad_w = 70;
                 }
                 if (GetAsyncKeyState('E') & 0x8000) {
                     state = 4;
                     for (int r=0; r<ROWS; r++) for(int c=0; c<COLS; c++) bricks[r][c]=0;
                 }
+                if (GetAsyncKeyState('O') & 0x8000 || GetAsyncKeyState('F') & 0x8000) {
+                    state = 5;
+                }
             } else if (state == 4) {
                 if (GetAsyncKeyState('P') & 0x8000) {
-                    diff = 1; speed = 4.0f; score = 0; lives = 3; level = 99; InitLevel(); state = 1; pad_w = 65;
+                    diff = 1; speed = 4.0f; score = 0; lives = 3; level = 99; chaos_mode = 0; InitLevel(); state = 1; pad_w = 65;
                 }
                 if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) {
                     state = 0;
@@ -1022,13 +1240,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             SetViewportOrgEx(memDC, sx, sy, NULL);
             
-            HBRUSH bg = CreateSolidBrush(RGB(16, 16, 26));
+            HBRUSH bg = CreateSolidBrush(chaos_mode ? RGB(22, 10, 30) : RGB(16, 16, 26));
             RECT fullRc = {0, 0, W, H};
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
             
-            // Environmental Art: Cyber-grid and floating space dust
-            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(20, 40, 60));
+            HPEN gridPen = CreatePen(PS_SOLID, 1, chaos_mode ? RGB(60, 20, 80) : RGB(20, 40, 60));
             HGDIOBJ oldP2 = SelectObject(memDC, gridPen);
             for (int i = 0; i < W; i += 40) {
                 MoveToEx(memDC, i, 0, NULL);
@@ -1042,27 +1259,61 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldP2);
             DeleteObject(gridPen);
             
-            // Atmospheric dust
             for(int i = 0; i < 20; i++) {
                 int dx = (i * 73 + frame_counter) % W;
                 int dy = (i * 37 + frame_counter / 3) % H;
-                SetPixel(memDC, dx, dy, RGB(100, 150, 255));
+                SetPixel(memDC, dx, dy, chaos_mode ? RGB(255, 100, 255) : RGB(100, 150, 255));
             }
             
             SetTextColor(memDC, RGB(255, 255, 255));
             SetBkMode(memDC, TRANSPARENT);
             
             if (state == 0) {
-                char* t1 = "KBREAKOUT - LOOP 9";
-                char* t2 = "40 Stages - Advanced Editor";
-                char* t3 = "Press ENTER for Easy";
-                char* t4 = "Press SPACE for Hard";
-                char* t5 = "Press E for Level Editor";
-                TextOutA(memDC, W/2 - 70, H/2 - 45, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 80, H/2 - 20, t2, lstrlenA(t2));
-                TextOutA(memDC, W/2 - 70, H/2 + 10, t3, lstrlenA(t3));
-                TextOutA(memDC, W/2 - 70, H/2 + 30, t4, lstrlenA(t4));
-                TextOutA(memDC, W/2 - 75, H/2 + 50, t5, lstrlenA(t5));
+                char* t1 = "KBREAKOUT - LOOP 10";
+                char* t2 = "Multi-Ball Chaos & Gravity Wells";
+                char* t3 = "Press ENTER for Classic Campaign";
+                char* t4 = "Press SPACE for Hard Campaign";
+                char* t5 = "Press C for MULTI-BALL CHAOS MODE";
+                char* t6 = "Press O/F for CYBER-FORGE";
+                char* t7 = "Press E for Level Editor";
+                TextOutA(memDC, W/2 - 70, H/2 - 60, t1, lstrlenA(t1));
+                TextOutA(memDC, W/2 - 95, H/2 - 38, t2, lstrlenA(t2));
+                TextOutA(memDC, W/2 - 90, H/2 - 5, t3, lstrlenA(t3));
+                TextOutA(memDC, W/2 - 80, H/2 + 15, t4, lstrlenA(t4));
+                SetTextColor(memDC, RGB(255, 100, 255));
+                TextOutA(memDC, W/2 - 105, H/2 + 35, t5, lstrlenA(t5));
+                SetTextColor(memDC, RGB(0, 255, 255));
+                TextOutA(memDC, W/2 - 85, H/2 + 55, t6, lstrlenA(t6));
+                SetTextColor(memDC, RGB(180, 180, 180));
+                TextOutA(memDC, W/2 - 75, H/2 + 75, t7, lstrlenA(t7));
+            } else if (state == 5) {
+                SetTextColor(memDC, RGB(0, 255, 255));
+                char* title = "=== CYBER-FORGE POWER LAB ===";
+                TextOutA(memDC, W/2 - 100, 15, title, lstrlenA(title));
+
+                char matStr[96];
+                wsprintfA(matStr, "Materials: [Plasma:%d]  [Quantum:%d]  [Alloy:%d]", plasma_shards, quantum_cores, nano_alloys);
+                SetTextColor(memDC, RGB(255, 220, 0));
+                TextOutA(memDC, 20, 40, matStr, lstrlenA(matStr));
+
+                SetTextColor(memDC, RGB(200, 200, 200));
+                char* r1 = "[1] Nova Blast Ball (15 Plasma + 10 Alloy) -> Fire Explosions";
+                char* r2 = "[2] Chronos Paddle  (12 Plasma + 8 Quantum) -> Dilate + Magnet";
+                char* r3 = "[3] Valkyrie Guns   (10 Quantum + 15 Alloy)-> Heavy Cannons";
+                char* r4 = "[4] Quantum Aegis   (10 Pls + 10 Qtm + 10 Aly)-> +3 Shield Layers";
+                char* r5 = "[5] Singularity Core(20 Pls + 15 Qtm + 15 Aly)-> Spawn Black Hole";
+                TextOutA(memDC, 10, 75, r1, lstrlenA(r1));
+                TextOutA(memDC, 10, 105, r2, lstrlenA(r2));
+                TextOutA(memDC, 10, 135, r3, lstrlenA(r3));
+                TextOutA(memDC, 10, 165, r4, lstrlenA(r4));
+                TextOutA(memDC, 10, 195, r5, lstrlenA(r5));
+
+                SetTextColor(memDC, RGB(0, 255, 200));
+                TextOutA(memDC, 20, 240, forge_msg, lstrlenA(forge_msg));
+
+                SetTextColor(memDC, RGB(255, 255, 100));
+                char* sub = "Press 1-5 to synthesize. Press ESC / O / ENTER to return.";
+                TextOutA(memDC, 15, 275, sub, lstrlenA(sub));
             } else if (state == 4) {
                 char* t1 = "EDITOR MODE";
                 char* t2 = "Click grid to change blocks";
@@ -1091,18 +1342,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (state == 2) {
                 char* t1 = "GAME OVER";
-                char* t2 = "Press ENTER for Easy";
-                char* t3 = "Press SPACE for Hard";
+                char* t2 = "Press ENTER for Campaign";
+                char* t3 = "Press C for Chaos Mode";
                 TextOutA(memDC, W/2 - 40, H/2 - 20, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 70, H/2 + 10, t2, lstrlenA(t2));
-                TextOutA(memDC, W/2 - 70, H/2 + 30, t3, lstrlenA(t3));
+                TextOutA(memDC, W/2 - 75, H/2 + 10, t2, lstrlenA(t2));
+                TextOutA(memDC, W/2 - 75, H/2 + 30, t3, lstrlenA(t3));
             } else if (state == 3) {
                 char* t1 = "VICTORY! CAMPAIGN CLEARED";
                 char* t2 = "Press ENTER to Play Again";
                 TextOutA(memDC, W/2 - 85, H/2 - 20, t1, lstrlenA(t1));
                 TextOutA(memDC, W/2 - 75, H/2 + 15, t2, lstrlenA(t2));
             } else {
-                // Draw Bricks
                 for (int r = 0; r < ROWS; r++) {
                     for (int c = 0; c < COLS; c++) {
                         if (bricks[r][c]) {
@@ -1111,7 +1361,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                // Draw Hazard Shield
+                for (int g = 0; g < MAX_GRAVITY_WELLS; g++) {
+                    if (gravity_wells[g].active) {
+                        int gx = (int)gravity_wells[g].x;
+                        int gy = (int)gravity_wells[g].y;
+                        int isPulsar = gravity_wells[g].type == 1;
+
+                        HPEN rPen = CreatePen(PS_SOLID, 2, isPulsar ? RGB(0, 255, 255) : RGB(180, 50, 255));
+                        HGDIOBJ oP = SelectObject(memDC, rPen);
+                        HBRUSH hBr = CreateSolidBrush(RGB(5, 5, 10));
+                        HGDIOBJ oB = SelectObject(memDC, hBr);
+
+                        int r_well = 18;
+                        Ellipse(memDC, gx - r_well, gy - r_well, gx + r_well, gy + r_well);
+
+                        for (int k = 0; k < 4; k++) {
+                            float ang = gravity_wells[g].spin + ((float)k * 1.57f);
+                            int px = gx + (int)(MyCos(ang) * 26.0f);
+                            int py = gy + (int)(MySin(ang) * 16.0f);
+                            SetPixel(memDC, px, py, isPulsar ? RGB(255, 255, 255) : RGB(255, 100, 255));
+                        }
+
+                        SelectObject(memDC, oP);
+                        SelectObject(memDC, oB);
+                        DeleteObject(rPen);
+                        DeleteObject(hBr);
+                    }
+                }
+
                 if (shield_active) {
                     HBRUSH sBr = CreateSolidBrush(RGB(0, 255, 255));
                     RECT sRc = { (int)shield_x, (int)120, (int)(shield_x + shield_w), 128 };
@@ -1119,14 +1396,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(sBr);
                 }
 
-                // Draw UFO Drone
                 if (ufo_active) {
                     HBRUSH uBr = CreateSolidBrush(RGB(255, 0, 255));
                     RECT uRc = { (int)ufo_x, ufo_y, (int)(ufo_x + 30), ufo_y + 10 };
                     FillRect(memDC, &uRc, uBr);
                     DeleteObject(uBr);
                     
-                    // Animated UFO lights
                     for (int i = 0; i < 3; i++) {
                         int lx = (int)ufo_x + 5 + i * 10;
                         int blink = ((frame_counter % 30 < 15 && i % 2 == 0) || (frame_counter % 30 >= 15 && i % 2 != 0));
@@ -1143,7 +1418,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(ubBr);
                 }
 
-                // Draw Boss Fortress
                 if (boss_active) {
                     HBRUSH bBr = CreateSolidBrush(RGB(255, 0, 85));
                     RECT bRc = { boss_x, boss_y, boss_x + boss_w, boss_y + boss_h };
@@ -1154,7 +1428,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(bStr, "BOSS HP: %d/%d", boss_hp, boss_max_hp);
                     TextOutA(memDC, boss_x + 10, boss_y + 12, bStr, lstrlenA(bStr));
                     
-                    // Orbital Shields for Boss 2 and 3
                     if (boss_type == 2 || boss_type == 3) {
                         int ofs = (frame_counter % 80 < 40) ? (frame_counter % 40) * 2 - 40 : 40 - (frame_counter % 40) * 2;
                         int sx1 = boss_x + boss_w/2 + ofs;
@@ -1167,7 +1440,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(shBr);
                     }
 
-                    // Animated Boss Core Ring (Approximated with Ellipse)
                     int pulse = (frame_counter % 20 < 10) ? 2 : -2;
                     HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));
                     HGDIOBJ oldP = SelectObject(memDC, corePen);
@@ -1198,9 +1470,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                // Draw Safety Barrier
-                if (dur_barrier > 0) {
-                    HPEN barPen = CreatePen(PS_SOLID, 3, RGB(0, 255, 255));
+                if (dur_barrier > 0 || aegis_layers > 0) {
+                    HPEN barPen = CreatePen(PS_SOLID, aegis_layers > 0 ? 4 : 2, aegis_layers > 0 ? RGB(255, 200, 0) : RGB(0, 255, 255));
                     HGDIOBJ oP = SelectObject(memDC, barPen);
                     MoveToEx(memDC, 0, H - 20, NULL);
                     LineTo(memDC, W, H - 20);
@@ -1208,16 +1479,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(barPen);
                 }
 
-                // Draw Paddle
                 float p_squash = 1.0f + (pad_squash_timer > 0 ? MySin(pad_squash_timer * 0.5f) * 0.4f * ((float)pad_squash_timer / 15.0f) : 0.0f);
                 int dp_w = (int)(pad_w * p_squash);
                 int dp_h = (int)(pad_h * (2.0f - p_squash));
                 int dp_x = pad_x + (pad_w - dp_w) / 2;
                 int dp_y = (H - 40) + (pad_h - dp_h);
 
-                int r_base = dur_laser > 0 ? 0 : sticky_timer > 0 ? 50 : 70;
-                int g_base = dur_laser > 0 ? 204 : sticky_timer > 0 ? 140 : 100;
-                int b_base = dur_laser > 0 ? 204 : sticky_timer > 0 ? 255 : 170;
+                int r_base = dur_laser > 0 ? 0 : sticky_timer > 0 ? 50 : (chaos_mode ? 120 : 70);
+                int g_base = dur_laser > 0 ? 204 : sticky_timer > 0 ? 140 : (chaos_mode ? 40 : 100);
+                int b_base = dur_laser > 0 ? 204 : sticky_timer > 0 ? 255 : (chaos_mode ? 200 : 170);
 
                 for (int h_idx = 0; h_idx < dp_h; h_idx++) {
                     float t = (float)h_idx / (float)dp_h;
@@ -1242,7 +1512,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(memDC, oldH);
                 DeleteObject(hPen);
 
-                // Animated Energy Core on Paddle
                 int v_pulse = MyAbs(pad_vx) * 2;
                 int pulse_anim = (int)(MySin((float)frame_counter * (0.2f + (float)v_pulse * 0.01f)) * (5 + v_pulse));
                 int coreWidth = 10 + pulse_anim;
@@ -1254,7 +1523,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FillRect(memDC, &coreRc, coreBr);
                 DeleteObject(coreBr);
 
-                if (dur_laser > 0) {
+                if (dur_laser > 0 || active_valkyrie) {
                     int blink = (frame_counter % 6 < 3);
                     HBRUSH canBr = CreateSolidBrush(blink ? RGB(100, 255, 255) : RGB(0, 200, 200));
                     HGDIOBJ oB = SelectObject(memDC, canBr);
@@ -1273,17 +1542,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(canPen);
                 }
 
-                // Draw Lasers
-                HBRUSH lasBr = CreateSolidBrush(RGB(0, 255, 255));
                 for (int i = 0; i < MAX_LASERS; i++) {
                     if (lasers[i].active) {
+                        HBRUSH lasBr = CreateSolidBrush(lasers[i].type == 1 ? RGB(255, 100, 255) : RGB(0, 255, 255));
                         RECT rl = { (int)lasers[i].x - 2, (int)lasers[i].y - 5, (int)lasers[i].x + 2, (int)lasers[i].y + 5 };
                         FillRect(memDC, &rl, lasBr);
+                        DeleteObject(lasBr);
                     }
                 }
-                DeleteObject(lasBr);
 
-                // Render Powerup Drop
                 if (power_active) {
                     COLORREF pClr = RGB(255, 255, 255);
                     char pBadge[2] = "?";
@@ -1294,6 +1561,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if (power_type == 5) { pClr = RGB(0, 255, 255); pBadge[0] = 'L'; }
                     else if (power_type == 6) { pClr = RGB(0, 255, 200); pBadge[0] = 'B'; }
                     else if (power_type == 7) { pClr = RGB(255, 0, 255); pBadge[0] = 'M'; }
+                    else if (power_type == 8) { pClr = RGB(160, 32, 240); pBadge[0] = 'G'; }
                     
                     HBRUSH pwBr = CreateSolidBrush(pClr);
                     HGDIOBJ oldB = SelectObject(memDC, pwBr);
@@ -1330,11 +1598,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(memDC, RGB(255, 255, 255));
                 }
 
-                // Render Particles
                 for (int i = 0; i < MAX_PARTICLES; i++) {
                     if (particles[i].life > 0) {
                         COLORREF c = particles[i].type == 1 ? RGB(255, 255, 255) : particles[i].color;
-                        if (particles[i].type == 2) c = RGB(255, 255, 0); // extra glow/flash
+                        if (particles[i].type == 2) c = RGB(255, 255, 0);
                         HBRUSH pBr = CreateSolidBrush(c);
                         int s = particles[i].type == 1 ? 2 : (particles[i].type == 2 ? 6 : 4);
                         if (particles[i].type == 2) {
@@ -1353,7 +1620,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                // Render Shockwaves
                 for (int i = 0; i < MAX_SHOCKWAVES; i++) {
                     if (shockwaves[i].life > 0) {
                         HPEN swPen = CreatePen(PS_SOLID, 2 + (int)(shockwaves[i].life * 4.0f), shockwaves[i].color);
@@ -1362,7 +1628,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         HGDIOBJ oldB = SelectObject(memDC, nullBr);
                         
                         int rx = (int)shockwaves[i].r;
-                        int ry = (int)(shockwaves[i].r * 0.6f); // 3D Perspective Squish
+                        int ry = (int)(shockwaves[i].r * 0.6f);
                         Ellipse(memDC, (int)shockwaves[i].x - rx, (int)shockwaves[i].y - ry,
                                        (int)shockwaves[i].x + rx, (int)shockwaves[i].y + ry);
                         
@@ -1372,10 +1638,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                // Render Balls & Trails
                 for (int i = 0; i < MAX_BALLS; i++) {
                     if (balls[i].active) {
-                        COLORREF tBaseClr = dur_fire > 0 ? RGB(255, 100, 0) : RGB(0, 200, 255);
+                        COLORREF tBaseClr = (dur_fire > 0 || active_supernova) ? RGB(255, 100, 0) : (chaos_mode ? RGB(255, 50, 255) : RGB(0, 200, 255));
                         for (int t = 0; t < MAX_TRAIL; t++) {
                             int idx = (balls[i].trail_head + t) % MAX_TRAIL;
                             float tx = balls[i].trail[idx].x;
@@ -1398,20 +1663,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                     
-                        COLORREF bClr = dur_fire > 0 ? RGB(255, 50, 0) : RGB(0, 255, 255);
+                        COLORREF bClr = (dur_fire > 0 || active_supernova) ? RGB(255, 50, 0) : (chaos_mode ? RGB(255, 150, 255) : RGB(0, 255, 255));
                         HBRUSH bBr = CreateSolidBrush(bClr);
-                        HGDIOBJ oB = SelectObject(memDC, bBr);
+                        HGDIOBJ oB_ball = SelectObject(memDC, bBr);
                         HPEN bPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                        HGDIOBJ oP = SelectObject(memDC, bPen);
+                        HGDIOBJ oP_ball = SelectObject(memDC, bPen);
                         Ellipse(memDC, (int)balls[i].x, (int)balls[i].y, (int)balls[i].x + 8, (int)balls[i].y + 8);
-                        SelectObject(memDC, oB);
-                        SelectObject(memDC, oP);
+                        SelectObject(memDC, oB_ball);
+                        SelectObject(memDC, oP_ball);
                         DeleteObject(bBr);
                         DeleteObject(bPen);
                         
-                        // Animated spin core
                         HPEN wPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                        HGDIOBJ oP = SelectObject(memDC, wPen);
+                        HGDIOBJ oP_spin = SelectObject(memDC, wPen);
                         int bx = (int)balls[i].x + 4;
                         int by = (int)balls[i].y + 4;
                         if ((frame_counter % 8) < 4) {
@@ -1421,23 +1685,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             MoveToEx(memDC, bx - 2, by - 2, NULL); LineTo(memDC, bx + 2, by + 2);
                             MoveToEx(memDC, bx - 2, by + 2, NULL); LineTo(memDC, bx + 2, by - 2);
                         }
-                        SelectObject(memDC, oP);
+                        SelectObject(memDC, oP_spin);
                         DeleteObject(wPen);
                     }
                 }
 
-                // Render Active Skill Status Bar at Bottom
-                char skStr[128];
-                wsprintfA(skStr, "[L]Laser:%s [M]Split:%s [F]Fire:%s [B]Barrier:%s",
+                char skStr[140];
+                wsprintfA(skStr, "[L]Las:%s [M]Splt:%s [F]Fir:%s [B]Bar:%s [G]Grav:%s [O]FORGE",
                     dur_laser > 0 ? "ACT" : cd_laser <= 0 ? "RDY" : "CD",
                     cd_multi <= 0 ? "RDY" : "CD",
                     dur_fire > 0 ? "ACT" : cd_fire <= 0 ? "RDY" : "CD",
-                    dur_barrier > 0 ? "ACT" : cd_barrier <= 0 ? "RDY" : "CD");
-                TextOutA(memDC, 10, H - 16, skStr, lstrlenA(skStr));
+                    dur_barrier > 0 ? "ACT" : cd_barrier <= 0 ? "RDY" : "CD",
+                    dur_gravity > 0 ? "ACT" : cd_gravity <= 0 ? "RDY" : "CD");
+                SetTextColor(memDC, RGB(180, 220, 255));
+                TextOutA(memDC, 5, H - 16, skStr, lstrlenA(skStr));
             }
             
-            // HUD Top Bar 3D Beveled Display
-            SetViewportOrgEx(memDC, 0, 0, NULL); // Reset shake for UI
+            SetViewportOrgEx(memDC, 0, 0, NULL);
 
             HBRUSH uiBg = CreateSolidBrush(RGB(30, 30, 45));
             RECT uiRc = { 5, 2, W - 5, 28 };
@@ -1454,14 +1718,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char scStr[32], lvStr[32], infoStr[64];
             wsprintfA(scStr, "SCORE: %d", score);
             wsprintfA(lvStr, "LIVES: %d", lives);
-            if (level == 99) wsprintfA(infoStr, "STG: CSTM  HI: %d", high_score);
+            if (chaos_mode) wsprintfA(infoStr, "CHAOS!  MAT:%d/%d/%d", plasma_shards, quantum_cores, nano_alloys);
+            else if (level == 99) wsprintfA(infoStr, "STG: CSTM  HI: %d", high_score);
             else wsprintfA(infoStr, "STG: %d  HI: %d", level, high_score);
             
             SetBkMode(memDC, TRANSPARENT);
             DrawBevelBox(memDC, 10, 5, 100, 20, scStr, lPen, dPen);
             DrawBevelBox(memDC, 115, 5, 75, 20, lvStr, lPen, dPen);
-            SetTextColor(memDC, RGB(200, 200, 200));
-            TextOutA(memDC, 200, 8, infoStr, lstrlenA(infoStr));
+            SetTextColor(memDC, chaos_mode ? RGB(255, 100, 255) : RGB(200, 200, 200));
+            TextOutA(memDC, 198, 8, infoStr, lstrlenA(infoStr));
             
             DeleteObject(lPen);
             DeleteObject(dPen);
