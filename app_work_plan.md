@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KRead
+**Target App:** KBase
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KRead (Added Real-Time Search & Highlight Navigation, Bookmarks Drawer & Persistence, Reading Statistics Engine [WPM & Time Remaining], Reader Themes & Font Controls, Highlights/Notes & JSON/TXT Export)
 - KBase (Added Simultaneous Multi-Base Converter [BIN/OCT/DEC/HEX/Base 2..36], 64-Bit Interactive Toggle Board & Bitwise Operator Suite [AND/OR/XOR/NOT/SHL/SHR/ROL/ROR], IEEE-754 Floating Point Breakdown, and Conversion History Log & CSV/JSON Export)
 - KJournal (Added Calendar Entry Navigator, Mood Tracker & Writing Streak Analytics, Entry Search & Hashtag Filtering, PIN Lock Security, and Data Import/Export [JSON/MD/TXT])
 - KPad (Added Multi-Tab Document Sessions, Syntax Highlighting & Language Switcher, Find & Replace Panel with Regex Support, Line Numbers & Gutter Stats, and Document Export/Import)
@@ -129,3 +128,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KGraph (Added Multi-Function Plotting y1-y5, Derivative & Simpson Integral Calculators, Roots & Intersections Finders, Interactive Value Tracing Cursor, Preset Library, CSV/JSON/PNG Export, and Polar r(θ) & Parametric (x(t),y(t)) Plotting Engines with Polar Grids)
 - KTimer (Added Multi-Timer Engine [concurrent named timers], Pomodoro Work/Break Cycle Manager with Stats, Lap Split Analysis & CSV/TXT Export, Alarm Presets Library, Sound Alerts & Visual Progress Ring, and Interval / HIIT Circuit Timer Engine [Work/Rest/Prep cycles, Tabata/HIIT/Boxing presets])
 - KContacts (Added Real-time Search & Group Filters, vCard [.vcf] & CSV Import/Export, Duplicates Merger, Contact Avatar Initial/Color Generator, Quick Action buttons for Email/Phone, Dynamic Tag Badges & Multi-Tag Filter Chips, and Markdown Directory [.md] & Full JSON Backup [.json] Export/Import)
+- KRead (Added Real-Time Search & Highlight Navigation, Bookmarks Drawer & Persistence, Reading Statistics Engine [WPM & Time Remaining], Reader Themes & Font Controls, Highlights/Notes & JSON/TXT Export, and Multi-Tab Reading Sessions with Document Tabs & Session Persistence)

@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <commctrl.h>
 #include <commdlg.h>
 
 void* __cdecl memset(void* p, int c, size_t sz) {
@@ -8,19 +9,33 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 }
 #pragma function(memset)
 
-// Global Theme and Font state
-HFONT hFont = NULL;
-HBRUSH hBrush = NULL;
-HWND hEdit = NULL;
+#define MAX_TABS 12
 
-int currentFontSize = 18;
-char currentFontFace[32] = "Georgia";
+typedef struct {
+    char szTitle[64];
+    char* pszText;
+    DWORD dwTextLen;
+    DWORD dwBookmark;
+} KREAD_TAB;
 
-COLORREF g_bgColor = RGB(250, 250, 250);
-COLORREF g_textColor = RGB(30, 30, 30);
+static KREAD_TAB g_Tabs[MAX_TABS];
+static int g_NumTabs = 0;
+static int g_ActiveTab = 0;
 
-DWORD g_bookmarkCharIdx = 0;
-char g_lastSearchQuery[128] = {0};
+static HWND g_hMainWnd = NULL;
+static HWND g_hTabCtrl = NULL;
+static HWND hEdit = NULL;
+
+static HFONT hFont = NULL;
+static HBRUSH hBrush = NULL;
+
+static int currentFontSize = 18;
+static char currentFontFace[32] = "Georgia";
+
+static COLORREF g_bgColor = RGB(250, 250, 250);
+static COLORREF g_textColor = RGB(30, 30, 30);
+
+static char g_lastSearchQuery[128] = {0};
 
 void UpdateFont(HWND hwnd) {
     if (hFont) DeleteObject(hFont);
@@ -39,11 +54,153 @@ void SetTheme(HWND hwnd, COLORREF bg, COLORREF text) {
     g_textColor = text;
     if (hBrush) DeleteObject(hBrush);
     hBrush = CreateSolidBrush(g_bgColor);
-    InvalidateRect(hEdit, NULL, TRUE);
-    UpdateWindow(hEdit);
+    if (hEdit) {
+        InvalidateRect(hEdit, NULL, TRUE);
+        UpdateWindow(hEdit);
+    }
 }
 
-void OpenFileAndLoad(HWND hwnd) {
+void SaveActiveTabState() {
+    if (g_ActiveTab < 0 || g_ActiveTab >= g_NumTabs || !hEdit) return;
+    
+    // Save bookmark / cursor
+    DWORD start = 0, end = 0;
+    SendMessageA(hEdit, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+    g_Tabs[g_ActiveTab].dwBookmark = start;
+
+    // Save text
+    int len = GetWindowTextLengthA(hEdit);
+    if (g_Tabs[g_ActiveTab].pszText) {
+        VirtualFree(g_Tabs[g_ActiveTab].pszText, 0, MEM_RELEASE);
+        g_Tabs[g_ActiveTab].pszText = NULL;
+        g_Tabs[g_ActiveTab].dwTextLen = 0;
+    }
+    if (len > 0) {
+        char* buf = (char*)VirtualAlloc(NULL, len + 1, MEM_COMMIT, PAGE_READWRITE);
+        if (buf) {
+            GetWindowTextA(hEdit, buf, len + 1);
+            g_Tabs[g_ActiveTab].pszText = buf;
+            g_Tabs[g_ActiveTab].dwTextLen = len;
+        }
+    }
+}
+
+void LoadTabState(int index) {
+    if (index < 0 || index >= g_NumTabs || !hEdit) return;
+    g_ActiveTab = index;
+    
+    if (g_Tabs[index].pszText) {
+        SetWindowTextA(hEdit, g_Tabs[index].pszText);
+    } else {
+        SetWindowTextA(hEdit, "");
+    }
+    
+    DWORD bm = g_Tabs[index].dwBookmark;
+    SendMessageA(hEdit, EM_SETSEL, bm, bm);
+    SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
+    
+    if (g_hTabCtrl) {
+        TabCtrl_SetCurSel(g_hTabCtrl, index);
+    }
+}
+
+void SwitchToTab(HWND hwnd, int newIndex) {
+    if (newIndex < 0 || newIndex >= g_NumTabs || newIndex == g_ActiveTab) return;
+    SaveActiveTabState();
+    LoadTabState(newIndex);
+}
+
+void AddNewTab(HWND hwnd, const char* title, const char* initialText) {
+    if (g_NumTabs >= MAX_TABS) {
+        MessageBoxA(hwnd, "Maximum number of tabs reached (12).", "KRead Tabs", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    SaveActiveTabState();
+
+    int newIdx = g_NumTabs;
+    g_NumTabs++;
+
+    if (title && title[0]) {
+        lstrcpynA(g_Tabs[newIdx].szTitle, title, 60);
+    } else {
+        wsprintfA(g_Tabs[newIdx].szTitle, "Document %d", newIdx + 1);
+    }
+
+    g_Tabs[newIdx].dwBookmark = 0;
+    g_Tabs[newIdx].pszText = NULL;
+    g_Tabs[newIdx].dwTextLen = 0;
+
+    if (initialText) {
+        int len = lstrlenA(initialText);
+        if (len > 0) {
+            char* buf = (char*)VirtualAlloc(NULL, len + 1, MEM_COMMIT, PAGE_READWRITE);
+            if (buf) {
+                lstrcpyA(buf, initialText);
+                g_Tabs[newIdx].pszText = buf;
+                g_Tabs[newIdx].dwTextLen = len;
+            }
+        }
+    }
+
+    TCITEMA tie;
+    tie.mask = TCIF_TEXT;
+    tie.pszText = g_Tabs[newIdx].szTitle;
+    TabCtrl_InsertItem(g_hTabCtrl, newIdx, &tie);
+
+    LoadTabState(newIdx);
+}
+
+void CloseCurrentTab(HWND hwnd) {
+    if (g_NumTabs <= 1) {
+        // Just reset current tab
+        if (g_Tabs[0].pszText) {
+            VirtualFree(g_Tabs[0].pszText, 0, MEM_RELEASE);
+            g_Tabs[0].pszText = NULL;
+            g_Tabs[0].dwTextLen = 0;
+        }
+        g_Tabs[0].dwBookmark = 0;
+        lstrcpyA(g_Tabs[0].szTitle, "Untitled");
+        
+        TCITEMA tie;
+        tie.mask = TCIF_TEXT;
+        tie.pszText = g_Tabs[0].szTitle;
+        TabCtrl_SetItem(g_hTabCtrl, 0, &tie);
+        
+        SetWindowTextA(hEdit, "");
+        return;
+    }
+
+    int closingIdx = g_ActiveTab;
+    if (g_Tabs[closingIdx].pszText) {
+        VirtualFree(g_Tabs[closingIdx].pszText, 0, MEM_RELEASE);
+        g_Tabs[closingIdx].pszText = NULL;
+    }
+
+    TabCtrl_DeleteItem(g_hTabCtrl, closingIdx);
+
+    for (int i = closingIdx; i < g_NumTabs - 1; i++) {
+        g_Tabs[i] = g_Tabs[i + 1];
+    }
+    g_NumTabs--;
+
+    int nextIdx = closingIdx;
+    if (nextIdx >= g_NumTabs) nextIdx = g_NumTabs - 1;
+
+    LoadTabState(nextIdx);
+}
+
+void ExtractFileName(const char* fullPath, char* dest, int maxLen) {
+    const char* p = fullPath;
+    const char* lastSlash = fullPath;
+    while (*p) {
+        if (*p == '\\' || *p == '/') lastSlash = p + 1;
+        p++;
+    }
+    lstrcpynA(dest, lastSlash, maxLen);
+}
+
+void OpenFileAndLoad(HWND hwnd, BOOL inNewTab) {
     OPENFILENAMEA ofn;
     char szFile[260] = {0};
 
@@ -52,7 +209,7 @@ void OpenFileAndLoad(HWND hwnd) {
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "Text Files\0*.txt\0All Files\0*.*\0";
+    ofn.lpstrFilter = "Text & Document Files\0*.txt;*.md;*.csv;*.log;*.json\0All Files\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
@@ -63,11 +220,25 @@ void OpenFileAndLoad(HWND hwnd) {
             if (dwFileSize != INVALID_FILE_SIZE) {
                 char* pszFileText = (char*)VirtualAlloc(NULL, dwFileSize + 1, MEM_COMMIT, PAGE_READWRITE);
                 if (pszFileText) {
-                    DWORD dwRead;
+                    DWORD dwRead = 0;
                     if (ReadFile(hFile, pszFileText, dwFileSize, &dwRead, NULL)) {
                         pszFileText[dwRead] = 0;
-                        SetWindowTextA(hEdit, pszFileText);
-                        g_bookmarkCharIdx = 0;
+                        
+                        char fname[64];
+                        ExtractFileName(ofn.lpstrFile, fname, sizeof(fname));
+
+                        if (inNewTab || g_NumTabs == 0) {
+                            AddNewTab(hwnd, fname, pszFileText);
+                        } else {
+                            SetWindowTextA(hEdit, pszFileText);
+                            lstrcpynA(g_Tabs[g_ActiveTab].szTitle, fname, 60);
+                            g_Tabs[g_ActiveTab].dwBookmark = 0;
+                            
+                            TCITEMA tie;
+                            tie.mask = TCIF_TEXT;
+                            tie.pszText = g_Tabs[g_ActiveTab].szTitle;
+                            TabCtrl_SetItem(g_hTabCtrl, g_ActiveTab, &tie);
+                        }
                     }
                     VirtualFree(pszFileText, 0, MEM_RELEASE);
                 }
@@ -163,22 +334,33 @@ void PerformSearch(HWND hwnd) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            g_hMainWnd = hwnd;
             HMENU hMenu = CreateMenu();
             
             // File Menu
             HMENU hSubFile = CreatePopupMenu();
             AppendMenuA(hSubFile, MF_STRING, 1001, "Open File...");
+            AppendMenuA(hSubFile, MF_STRING, 1009, "Open File in New Tab...\tCtrl+O");
             AppendMenuA(hSubFile, MF_STRING, 1007, "Export Statistics...");
             AppendMenuA(hSubFile, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubFile, MF_STRING, 1002, "Exit");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubFile, "File");
+
+            // Tabs Menu
+            HMENU hSubTabs = CreatePopupMenu();
+            AppendMenuA(hSubTabs, MF_STRING, 1030, "New Tab\tCtrl+T");
+            AppendMenuA(hSubTabs, MF_STRING, 1031, "Close Current Tab\tCtrl+W");
+            AppendMenuA(hSubTabs, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubTabs, MF_STRING, 1032, "Next Tab\tCtrl+Tab");
+            AppendMenuA(hSubTabs, MF_STRING, 1033, "Previous Tab\tCtrl+Shift+Tab");
+            AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubTabs, "Tabs");
 
             // View Menu
             HMENU hSubView = CreatePopupMenu();
             AppendMenuA(hSubView, MF_STRING, 1003, "Reading Statistics Engine");
             AppendMenuA(hSubView, MF_STRING, 1004, "Find Text...");
             AppendMenuA(hSubView, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hSubView, MF_STRING, 1008, "Help");
+            AppendMenuA(hSubView, MF_STRING, 1008, "Help\tF1 / H");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubView, "View");
 
             // Bookmarks Menu
@@ -207,24 +389,58 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetMenu(hwnd, hMenu);
 
-            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KRead Native E-Reader.\r\nUse File -> Open to load a document.\r\nPress F1 or 'H' for Help.", 
+            // Tab Control
+            g_hTabCtrl = CreateWindowExA(0, WC_TABCONTROLA, "", 
+                WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | TCS_TABS | TCS_FOCUSNEVER, 
+                0, 0, 800, 28, hwnd, (HMENU)2001, GetModuleHandleA(NULL), NULL);
+
+            // Edit Control
+            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", 
                 WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_WANTRETURN | ES_READONLY, 
-                0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+                0, 28, 800, 500, hwnd, NULL, NULL, NULL);
 
             SendMessageA(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(16, 16));
 
             UpdateFont(hwnd);
             SetTheme(hwnd, RGB(250, 250, 250), RGB(30, 30, 30));
+
+            // Create Initial Tab
+            AddNewTab(hwnd, "Welcome", "Welcome to KRead Native E-Reader.\r\n\r\nFeatures:\r\n- Multi-Tab Reading Sessions (Ctrl+T for New Tab, Ctrl+W to Close)\r\n- File -> Open to load documents into tabs\r\n- Bookmarks & Reading Statistics Engine\r\n- Themes and Font Customization\r\n\r\nPress F1 or 'H' for Help.");
             break;
         }
         case WM_SIZE: {
-            MoveWindow(hEdit, 0, 0, LOWORD(lParam), HIWORD(lParam), TRUE);
+            int w = LOWORD(lParam);
+            int h = HIWORD(lParam);
+            int tabHeight = 28;
+            if (g_hTabCtrl) {
+                MoveWindow(g_hTabCtrl, 0, 0, w, tabHeight, TRUE);
+            }
+            if (hEdit) {
+                MoveWindow(hEdit, 0, tabHeight, w, h - tabHeight, TRUE);
+            }
+            break;
+        }
+        case WM_NOTIFY: {
+            LPNMHDR pnm = (LPNMHDR)lParam;
+            if (pnm->hwndFrom == g_hTabCtrl && pnm->code == TCN_SELCHANGE) {
+                int sel = TabCtrl_GetCurSel(g_hTabCtrl);
+                if (sel != g_ActiveTab) {
+                    SwitchToTab(hwnd, sel);
+                }
+            }
             break;
         }
         case WM_COMMAND: {
             int id = LOWORD(wParam);
-            if (id == 1001) OpenFileAndLoad(hwnd);
+            if (id == 1001) OpenFileAndLoad(hwnd, FALSE);
+            if (id == 1009) OpenFileAndLoad(hwnd, TRUE);
             if (id == 1002) PostQuitMessage(0);
+
+            // Tab Commands
+            if (id == 1030) AddNewTab(hwnd, "New Tab", "");
+            if (id == 1031) CloseCurrentTab(hwnd);
+            if (id == 1032 && g_NumTabs > 1) SwitchToTab(hwnd, (g_ActiveTab + 1) % g_NumTabs);
+            if (id == 1033 && g_NumTabs > 1) SwitchToTab(hwnd, (g_ActiveTab - 1 + g_NumTabs) % g_NumTabs);
             
             // Reading Statistics
             if (id == 1003 || id == 1007) {
@@ -248,8 +464,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                         int estMins = (words + 199) / 200; // 200 WPM
                         char msg[512];
-                        wsprintfA(msg, "--- KREAD STATISTICS ENGINE ---\n\nTotal Characters:\t%d\nTotal Words:\t\t%d\nTotal Lines:\t\t%d\nEst. Reading Speed:\t200 WPM\nEst. Time Remaining:\t%d minutes", 
-                            chars, words, lines, estMins);
+                        wsprintfA(msg, "--- KREAD STATISTICS ENGINE ---\n\nActive Tab:\t\t%s (%d of %d)\nTotal Characters:\t%d\nTotal Words:\t\t%d\nTotal Lines:\t\t%d\nEst. Reading Speed:\t200 WPM\nEst. Time Remaining:\t%d minutes", 
+                            g_Tabs[g_ActiveTab].szTitle, g_ActiveTab + 1, g_NumTabs, chars, words, lines, estMins);
                         
                         if (id == 1007) {
                             SaveStatsExport(hwnd, msg);
@@ -259,7 +475,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         VirtualFree(text, 0, MEM_RELEASE);
                     }
                 } else {
-                    MessageBoxA(hwnd, "Document is empty.", "KRead Statistics Engine", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxA(hwnd, "Current tab document is empty.", "KRead Statistics Engine", MB_OK | MB_ICONINFORMATION);
                 }
             }
 
@@ -270,18 +486,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Help
             if (id == 1008) {
-                MessageBoxA(hwnd, "KRead Help:\n\n- File -> Open: Load a text file\n- View -> Find Text: Search for text\n- View -> Statistics: Check reading progress\n- Bookmarks: Save your current position\n- Themes/Fonts: Customize the reader appearance", "KRead Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KRead Help:\n\n- Tabs -> New Tab (Ctrl+T): Open a new document tab\n- Tabs -> Close Tab (Ctrl+W): Close the current tab\n- File -> Open / Open in New Tab: Load text documents\n- View -> Statistics: Check reading progress & WPM\n- Bookmarks: Save & jump to position per tab\n- Themes/Fonts: Customize appearance", "KRead Help", MB_OK | MB_ICONINFORMATION);
             }
 
             // Bookmarks
             if (id == 1005) {
                 DWORD start = 0, end = 0;
                 SendMessageA(hEdit, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
-                g_bookmarkCharIdx = start;
-                MessageBoxA(hwnd, "Bookmark saved at current text selection position!", "KRead Bookmarks", MB_OK | MB_ICONINFORMATION);
+                g_Tabs[g_ActiveTab].dwBookmark = start;
+                MessageBoxA(hwnd, "Bookmark saved for current tab at text position!", "KRead Bookmarks", MB_OK | MB_ICONINFORMATION);
             }
             if (id == 1006) {
-                SendMessageA(hEdit, EM_SETSEL, g_bookmarkCharIdx, g_bookmarkCharIdx);
+                DWORD bm = g_Tabs[g_ActiveTab].dwBookmark;
+                SendMessageA(hEdit, EM_SETSEL, bm, bm);
                 SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
             }
 
@@ -311,6 +528,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            SaveActiveTabState();
+            for (int i = 0; i < g_NumTabs; i++) {
+                if (g_Tabs[i].pszText) {
+                    VirtualFree(g_Tabs[i].pszText, 0, MEM_RELEASE);
+                    g_Tabs[i].pszText = NULL;
+                }
+            }
             if (hFont) DeleteObject(hFont);
             if (hBrush) DeleteObject(hBrush);
             PostQuitMessage(0);
@@ -320,6 +544,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void __stdcall MainEntry() {
+    InitCommonControls();
     SetProcessDPIAware();
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
@@ -329,18 +554,45 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 
     RegisterClassA(&wc);
-    RECT rc = { 0, 0, 800, 600 };
+    RECT rc = { 0, 0, 850, 620 };
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, TRUE);
-    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader - Multi-Tab Edition (F1 for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == VK_F1 || msg.wParam == 'H')) {
-            SendMessageA(hwnd, WM_COMMAND, 1008, 0);
-            continue;
+        if (msg.message == WM_KEYDOWN) {
+            BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            BOOL shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+
+            if (ctrl && (msg.wParam == 'T' || msg.wParam == 't')) {
+                SendMessageA(hwnd, WM_COMMAND, 1030, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'W' || msg.wParam == 'w')) {
+                SendMessageA(hwnd, WM_COMMAND, 1031, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'O' || msg.wParam == 'o')) {
+                SendMessageA(hwnd, WM_COMMAND, 1009, 0);
+                continue;
+            }
+            if (ctrl && msg.wParam == VK_TAB) {
+                if (shift) {
+                    SendMessageA(hwnd, WM_COMMAND, 1033, 0);
+                } else {
+                    SendMessageA(hwnd, WM_COMMAND, 1032, 0);
+                }
+                continue;
+            }
+            if (msg.wParam == VK_F1 || msg.wParam == 'H') {
+                if (!ctrl && !shift) {
+                    SendMessageA(hwnd, WM_COMMAND, 1008, 0);
+                    continue;
+                }
+            }
         }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
