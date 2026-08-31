@@ -38,6 +38,8 @@
 #define ID_SKILL_SHUFFLE  1052
 #define ID_SKILL_UNDO     1053
 
+#define ID_HELP_RULES     1060
+
 #define CARD_W 84
 #define CARD_H 118
 #define GAP_X  14
@@ -173,8 +175,8 @@ void ZeroMem(void *ptr, size_t size) {
     memset(ptr, 0, size);
 }
 
-#pragma function(abs)
-int abs(int x) { return x < 0 ? -x : x; }
+int my_abs(int x) { return x < 0 ? -x : x; }
+#define abs(x) my_abs(x)
 
 double sin(double x) {
     while (x > 3.1415926535) x -= 6.283185307;
@@ -425,6 +427,10 @@ void PerformRedo() {
 }
 
 // --- Solitaire Game Engine ---
+int IsRedSuit(int suit);
+int CanMoveToFoundation(Card card, int fIdx);
+int CanMoveToTableau(Card topMoveCard, int tIdx);
+
 void ClearSelectionAndHints() {
     selectedType = -1;
     selectedPile = -1;
@@ -433,6 +439,16 @@ void ClearSelectionAndHints() {
 }
 
 void NewGame(HWND hwnd) {
+    // If a game was actively being played and abandoned, record in stats & bankroll
+    if (state.gameStarted && !gameWon && state.moves > 0) {
+        stats.played++;
+        if (state.vegasRules) {
+            stats.vegasCash += state.score;
+        }
+        stats.currentStreak = 0;
+        SaveStats();
+    }
+
     state.moves = 0;
     state.timerSeconds = 0;
     state.gameStarted = 0;
@@ -489,59 +505,99 @@ void NewGame(HWND hwnd) {
     ClearSelectionAndHints();
 
     Card deck[52];
-    int idx = 0;
-    for (int s = 0; s < 4; s++) {
-        for (int r = 1; r <= 13; r++) {
-            deck[idx].suit = s;
-            deck[idx].rank = r;
-            deck[idx].faceUp = 0;
-            deck[idx].isFrozen = 0;
-            idx++;
-        }
-    }
+    int dealFair = 0;
+    int dealAttempts = 0;
 
-    // Fisher-Yates Shuffle
-    for (int i = 51; i > 0; i--) {
-        int j = rnd() % (i + 1);
-        Card temp = deck[i];
-        deck[i] = deck[j];
-        deck[j] = temp;
-    }
-
-    for (int i = 0; i < 4; i++) {
-        state.foundation_cnt[i] = 0;
-        state.foundation_suit[i] = state.suitLocked ? i : -1;
-    }
-    state.waste_cnt = 0;
-
-    idx = 0;
-    for (int col = 0; col < 7; col++) {
-        state.tableau_cnt[col] = 0;
-        for (int row = 0; row <= col; row++) {
-            Card c = deck[idx++];
-            if (row == col) c.faceUp = 1;
-            state.tableau[col][state.tableau_cnt[col]++] = c;
-        }
-    }
-
-    // Apply Ice/Frozen Cards to initial face-up cards if required
-    if (frozenCardsToPlace > 0) {
-        int placed = 0;
-        int attempts = 0;
-        while (placed < frozenCardsToPlace && attempts < 50) {
-            attempts++;
-            int col = rnd() % 7;
-            int topIdx = state.tableau_cnt[col] - 1;
-            if (!state.tableau[col][topIdx].isFrozen) {
-                state.tableau[col][topIdx].isFrozen = 1;
-                placed++;
+    while (!dealFair && dealAttempts < 15) {
+        dealAttempts++;
+        int idx = 0;
+        for (int s = 0; s < 4; s++) {
+            for (int r = 1; r <= 13; r++) {
+                deck[idx].suit = s;
+                deck[idx].rank = r;
+                deck[idx].faceUp = 0;
+                deck[idx].isFrozen = 0;
+                idx++;
             }
         }
-    }
 
-    state.stock_cnt = 0;
-    while (idx < 52) {
-        state.stock[state.stock_cnt++] = deck[idx++];
+        // Fisher-Yates Shuffle
+        for (int i = 51; i > 0; i--) {
+            int j = rnd() % (i + 1);
+            Card temp = deck[i];
+            deck[i] = deck[j];
+            deck[j] = temp;
+        }
+
+        for (int i = 0; i < 4; i++) {
+            state.foundation_cnt[i] = 0;
+            state.foundation_suit[i] = state.suitLocked ? i : -1;
+        }
+        state.waste_cnt = 0;
+
+        idx = 0;
+        for (int col = 0; col < 7; col++) {
+            state.tableau_cnt[col] = 0;
+            for (int row = 0; row <= col; row++) {
+                Card c = deck[idx++];
+                if (row == col) c.faceUp = 1;
+                state.tableau[col][state.tableau_cnt[col]++] = c;
+            }
+        }
+
+        // Apply Ice/Frozen Cards to initial face-up cards if required
+        if (frozenCardsToPlace > 0) {
+            int placed = 0;
+            int attempts = 0;
+            while (placed < frozenCardsToPlace && attempts < 50) {
+                attempts++;
+                int col = rnd() % 7;
+                int topIdx = state.tableau_cnt[col] - 1;
+                if (!state.tableau[col][topIdx].isFrozen) {
+                    state.tableau[col][topIdx].isFrozen = 1;
+                    placed++;
+                }
+            }
+        }
+
+        state.stock_cnt = 0;
+        while (idx < 52) {
+            state.stock[state.stock_cnt++] = deck[idx++];
+        }
+
+        // Deal Fairness Verification: ensure at least 1 legal play exists
+        // 1. Check Ace moves to foundation or tableau moves
+        for (int t = 0; t < 7; t++) {
+            if (state.tableau_cnt[t] > 0) {
+                Card topCard = state.tableau[t][state.tableau_cnt[t] - 1];
+                if (!topCard.isFrozen) {
+                    for (int f = 0; f < 4; f++) {
+                        if (CanMoveToFoundation(topCard, f)) { dealFair = 1; break; }
+                    }
+                    if (dealFair) break;
+                    for (int t2 = 0; t2 < 7; t2++) {
+                        if (t != t2 && CanMoveToTableau(topCard, t2)) { dealFair = 1; break; }
+                    }
+                    if (dealFair) break;
+                }
+            }
+        }
+
+        // 2. Check first stock draw cards
+        if (!dealFair && state.stock_cnt > 0) {
+            int checkCount = (state.drawMode <= state.stock_cnt) ? state.drawMode : state.stock_cnt;
+            for (int i = 0; i < checkCount; i++) {
+                Card stockCard = state.stock[state.stock_cnt - 1 - i];
+                for (int f = 0; f < 4; f++) {
+                    if (CanMoveToFoundation(stockCard, f)) { dealFair = 1; break; }
+                }
+                if (dealFair) break;
+                for (int t2 = 0; t2 < 7; t2++) {
+                    if (CanMoveToTableau(stockCard, t2)) { dealFair = 1; break; }
+                }
+                if (dealFair) break;
+            }
+        }
     }
 
     SaveGameState();
@@ -757,7 +813,9 @@ int AttemptMove(int srcType, int srcPile, int srcIdx, int dstType, int dstPile, 
         for (int i = 0; i < moveCount; i++) {
             state.tableau[dstPile][state.tableau_cnt[dstPile]++] = cardsToMove[i];
         }
-        if (!state.vegasRules) {
+        if (state.vegasRules) {
+            if (srcType == 2) state.score -= 5;
+        } else {
             state.score += (srcType == 0 ? 5 : (srcType == 2 ? -15 : 0));
             if (state.score < 0) state.score = 0;
         }
@@ -1390,6 +1448,29 @@ void DrawSlotOutline(HDC hdc, int x, int y, const char *label, int isHintDst) {
     }
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    const char *helpText = 
+        "=== KSolitaire Guide & Rules ===\n\n"
+        "GOAL:\n"
+        "Build 4 foundation piles up by suit from Ace to King (A, 2, 3 ... K).\n\n"
+        "GAME MODES:\n"
+        "- Classic: Standard scoring (+10 to foundation, +5 tableau flip, -15 back to tableau).\n"
+        "- Vegas Money: -$52 buy-in. Earn +$5 per foundation card (-$5 if returned). Cumulative bankroll!\n"
+        "- Campaign: 20 progressive challenges with unique twists (Suit Locks, Frozen Ice Cards, Pass Caps).\n\n"
+        "ACTIVE SKILLS (3 charges per game):\n"
+        "- [W] Magic Wand: Auto-moves 1 eligible card to foundation.\n"
+        "- [X] X-Ray Vision: Temporarily reveals face-down tableau cards for 5s.\n"
+        "- [S] Shuffle Stock: Reshuffles all remaining stock and waste cards.\n\n"
+        "CONTROLS & SHORTCUTS:\n"
+        "- Left Click: Select & Move cards between columns\n"
+        "- Double-Click / Right-Click: Fast auto-move card to foundation\n"
+        "- [F1] / [H]: Smart Hint\n"
+        "- [F2]: New Game\n"
+        "- [U] / [Ctrl+Z]: Undo Move | [Ctrl+Y]: Redo Move\n"
+        "- [Ctrl+F]: Auto-Finish (when all hidden cards are cleared)";
+    MessageBoxA(hwnd, helpText, "KSolitaire - Help & Rules", MB_OK | MB_ICONINFORMATION);
+}
+
 // --- Window Procedure ---
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -1447,6 +1528,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hFeltMenu, MF_STRING, ID_FELT_CRIMSON, "Felt: Deep Crimson");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hFeltMenu, "Felt Color");
 
+            HMENU hHelpMenu = CreatePopupMenu();
+            AppendMenu(hHelpMenu, MF_STRING, ID_HELP_RULES, "How to Play & Shortcuts");
+            AppendMenu(hHelpMenu, MF_STRING, ID_HINT, "Hint\tF1");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hHelpMenu, "Help");
+
             SetMenu(hwnd, hMenu);
 
             seed = GetTickCount();
@@ -1482,6 +1568,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == ID_UNDO) PerformUndo();
             else if (id == ID_REDO) PerformRedo();
             else if (id == ID_HINT) GiveHint(hwnd);
+            else if (id == ID_HELP_RULES) ShowHelpDialog(hwnd);
             else if (id == ID_AUTOFINISH) {
                 if (CanAutoFinish()) {
                     autoFinishActive = 1;
@@ -1692,6 +1779,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameWon) return 0;
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam) - 35;
+
+            int wasteX = GAP_X + CARD_W + GAP_X;
+            int wasteY = GAP_Y;
+            if (state.waste_cnt > 0 && mx >= wasteX && mx <= wasteX + CARD_W && my >= wasteY && my <= wasteY + CARD_H) {
+                Card c = state.waste[state.waste_cnt - 1];
+                for (int f = 0; f < 4; f++) {
+                    if (CanMoveToFoundation(c, f)) {
+                        AttemptMove(0, 0, state.waste_cnt - 1, 2, f, hwnd);
+                        return 0;
+                    }
+                }
+            }
+
+            int tableauStartY = wasteY + CARD_H + GAP_Y;
+            for (int t = 0; t < 7; t++) {
+                int tx = GAP_X + t * (CARD_W + GAP_X);
+                int tCount = state.tableau_cnt[t];
+                if (tCount > 0) {
+                    int topY = tableauStartY + (tCount - 1) * 24;
+                    if (mx >= tx && mx <= tx + CARD_W && my >= topY && my <= topY + CARD_H) {
+                        Card c = state.tableau[t][tCount - 1];
+                        if (c.faceUp && !c.isFrozen) {
+                            for (int f = 0; f < 4; f++) {
+                                if (CanMoveToFoundation(c, f)) {
+                                    AttemptMove(1, t, tCount - 1, 2, f, hwnd);
+                                    return 0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        case WM_RBUTTONDOWN: {
+            if (gameWon) return 0;
+            int mx = LOWORD(lParam);
+            int my = HIWORD(lParam) - 35;
+            if (my < 0) return 0;
 
             int wasteX = GAP_X + CARD_W + GAP_X;
             int wasteY = GAP_Y;

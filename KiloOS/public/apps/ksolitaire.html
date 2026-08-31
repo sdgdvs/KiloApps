@@ -706,6 +706,7 @@
     </select>
 
     <button class="btn" onclick="openStatsModal()">📊 Stats</button>
+    <button class="btn" onclick="openHelpModal()">📖 Help</button>
     <button class="btn" onclick="toggleSound()"><span id="sound-icon">🔊</span></button>
   </div>
 
@@ -776,6 +777,39 @@
         <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importStats(event)">
       </div>
       <button class="btn btn-primary" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div id="help-modal" class="modal-overlay">
+  <div class="modal" style="max-width: 540px;">
+    <div class="modal-header">
+      <div class="modal-title">📖 How to Play & Rules</div>
+      <button class="modal-close" onclick="closeHelpModal()">&times;</button>
+    </div>
+    <div style="max-height: 65vh; overflow-y: auto; font-size: 13.5px; line-height: 1.6; color: #e2e8f0; display: flex; flex-direction: column; gap: 10px; text-align: left; padding-right: 6px;">
+      <div style="color:#ffd700; font-weight:700; font-size:14px; border-bottom:1px solid rgba(255,215,0,0.25); padding-bottom:3px;">Objective</div>
+      <div>Build all 4 foundation piles up by suit from Ace to King (A, 2, 3 ... K). In the 7 tableau columns, build down in alternating red/black suits.</div>
+
+      <div style="color:#ffd700; font-weight:700; font-size:14px; border-bottom:1px solid rgba(255,215,0,0.25); padding-bottom:3px;">Game Modes</div>
+      <div><strong>• Classic Solitaire:</strong> Traditional scoring (+10 foundation, +5 tableau card flip, -15 back to tableau).</div>
+      <div><strong>• Vegas Money Mode:</strong> Start with -$52 buy-in. Earn +$5 per foundation card (-$5 if returned to tableau). Your bankroll persists across matches!</div>
+      <div><strong>• Campaign Mode (20 Stages):</strong> Progressive challenge campaign featuring Suit-Locked foundations, Frozen ice cards, and stock recycling limits.</div>
+
+      <div style="color:#ffd700; font-weight:700; font-size:14px; border-bottom:1px solid rgba(255,215,0,0.25); padding-bottom:3px;">Active Skills (3 uses per match)</div>
+      <div><strong>🪄 [W] Magic Wand:</strong> Automatically moves 1 valid card from waste or tableau to foundation.</div>
+      <div><strong>👁️ [X] X-Ray Vision:</strong> Temporarily reveals all face-down tableau cards for 5 seconds.</div>
+      <div><strong>🔀 [S] Shuffle Stock:</strong> Shuffles all remaining stock and waste cards together.</div>
+
+      <div style="color:#ffd700; font-weight:700; font-size:14px; border-bottom:1px solid rgba(255,215,0,0.25); padding-bottom:3px;">Controls & Shortcuts</div>
+      <div><strong>• Left-Click:</strong> Select and move cards between tableau columns or foundations.</div>
+      <div><strong>• Double-Click / Right-Click:</strong> Instantly auto-play card to foundation.</div>
+      <div><strong>• [F1] / [H]:</strong> Smart Hint | <strong>[U] / [Ctrl+Z]:</strong> Undo | <strong>[Ctrl+Y]:</strong> Redo</div>
+      <div><strong>• [Ctrl+F]:</strong> Auto-Finish when all remaining cards are face-up.</div>
+    </div>
+    <div style="display:flex; justify-content: flex-end; margin-top: 14px;">
+      <button class="btn btn-primary" onclick="closeHelpModal()">Got it!</button>
     </div>
   </div>
 </div>
@@ -1024,7 +1058,46 @@ function shuffle(deck) {
   return deck;
 }
 
+function isDealFair(tab, stk) {
+  for (let t = 0; t < 7; t++) {
+    if (tab[t].length > 0) {
+      let topCard = tab[t][tab[t].length - 1];
+      if (!topCard.isFrozen) {
+        for (let f = 0; f < 4; f++) {
+          if (canMoveToFoundation(topCard, f)) return true;
+        }
+        for (let t2 = 0; t2 < 7; t2++) {
+          if (t !== t2 && canMoveToTableau([topCard], t2)) return true;
+        }
+      }
+    }
+  }
+  if (stk.length > 0) {
+    let checkCount = Math.min(drawMode, stk.length);
+    for (let i = 0; i < checkCount; i++) {
+      let card = stk[stk.length - 1 - i];
+      for (let f = 0; f < 4; f++) {
+        if (canMoveToFoundation(card, f)) return true;
+      }
+      for (let t2 = 0; t2 < 7; t2++) {
+        if (canMoveToTableau([card], t2)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 function newGame() {
+  // If previous game was active and abandoned, record in stats & bankroll
+  if (gameStarted && !gameWon && movesCount > 0) {
+    stats.played++;
+    if (vegasRules) {
+      stats.vegasCash += scoreCount;
+    }
+    stats.currentStreak = 0;
+    saveStats();
+  }
+
   stopTimer();
   stopXRay();
   timerSeconds = 0;
@@ -1081,35 +1154,44 @@ function newGame() {
   document.getElementById('draw-mode-select').value = drawMode;
   document.getElementById('score-label').textContent = vegasRules ? "Cash" : "Score";
 
-  let deck = shuffle(createDeck());
-  foundations = [[], [], [], []];
-  tableau = [[], [], [], [], [], [], []];
-  waste = [];
+  let deck;
+  let attempts = 0;
+  let fair = false;
 
-  for (let col = 0; col < 7; col++) {
-    for (let row = 0; row <= col; row++) {
-      let card = deck.pop();
-      if (row === col) card.faceUp = true;
-      tableau[col].push(card);
-    }
-  }
+  while (!fair && attempts < 15) {
+    attempts++;
+    deck = shuffle(createDeck());
+    foundations = [[], [], [], []];
+    tableau = [[], [], [], [], [], [], []];
+    waste = [];
 
-  // Freeze initial face-up cards if required
-  if (frozenCount > 0) {
-    let placed = 0;
-    let attempts = 0;
-    while (placed < frozenCount && attempts < 50) {
-      attempts++;
-      let col = Math.floor(Math.random() * 7);
-      let topCard = tableau[col][tableau[col].length - 1];
-      if (!topCard.isFrozen) {
-        topCard.isFrozen = true;
-        placed++;
+    for (let col = 0; col < 7; col++) {
+      for (let row = 0; row <= col; row++) {
+        let card = deck.pop();
+        if (row === col) card.faceUp = true;
+        tableau[col].push(card);
       }
     }
+
+    // Freeze initial face-up cards if required
+    if (frozenCount > 0) {
+      let placed = 0;
+      let freezeAttempts = 0;
+      while (placed < frozenCount && freezeAttempts < 50) {
+        freezeAttempts++;
+        let col = Math.floor(Math.random() * 7);
+        let topCard = tableau[col][tableau[col].length - 1];
+        if (!topCard.isFrozen) {
+          topCard.isFrozen = true;
+          placed++;
+        }
+      }
+    }
+
+    stock = deck;
+    fair = isDealFair(tableau, stock);
   }
 
-  stock = deck;
   clearHints();
   isDealing = true;
   render();
@@ -1609,7 +1691,9 @@ function attemptMove(src, dstType, dstPileIdx) {
     playSound('foundation');
   } else if (dstType === 'tableau') {
     tableau[dstPileIdx].push(...cardsToMove);
-    if (!vegasRules) {
+    if (vegasRules) {
+      if (src.type === 'foundation') scoreCount -= 5;
+    } else {
       scoreCount += (src.type === 'waste' ? 5 : (src.type === 'foundation' ? -15 : 0));
       if (scoreCount < 0) scoreCount = 0;
     }
@@ -2032,6 +2116,7 @@ function render() {
       cardEl.style.left = `${(i - startIdx) * 18}px`;
       cardEl.onclick = (e) => handleCardClick('waste', 0, i, e);
       cardEl.ondblclick = (e) => handleCardDoubleClick('waste', 0, i, e);
+      cardEl.oncontextmenu = (e) => { e.preventDefault(); handleCardDoubleClick('waste', 0, i, e); };
       
       if (selectedSelection && selectedSelection.type === 'waste' && i === waste.length - 1) {
         cardEl.classList.add('selected');
@@ -2075,6 +2160,7 @@ function render() {
         offsetY += 26;
         cardEl.onclick = (e) => handleCardClick('tableau', t, c, e);
         cardEl.ondblclick = (e) => handleCardDoubleClick('tableau', t, c, e);
+        cardEl.oncontextmenu = (e) => { e.preventDefault(); handleCardDoubleClick('tableau', t, c, e); };
       } else {
         offsetY += 14;
         cardEl.onclick = (e) => handleCardClick('tableau', t, c, e);
@@ -2213,6 +2299,14 @@ function openStatsModal() {
 
 function closeStatsModal() {
   document.getElementById('stats-modal').classList.remove('active');
+}
+
+function openHelpModal() {
+  document.getElementById('help-modal').classList.add('active');
+}
+
+function closeHelpModal() {
+  document.getElementById('help-modal').classList.remove('active');
 }
 
 function resetStats() {

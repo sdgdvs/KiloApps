@@ -163,7 +163,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KSolitaire | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check deal fairness, ensure Vegas mode scoring is balanced, verify undo/powerup economy. |
 | KFreecell  | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Checked that all dealt hands are solvable, rebalanced campaign difficulty constraints. |
 | KSudoku    | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Audit puzzle generation quality. Ensure Easy puzzles have unique solutions and Hard is solvable. |
 | K2048      | Tier 1 | Loop 8 done — BALANCE PASS COMPLETE | Check tile spawn rates, verify move-limit stages are achievable, audit powerup balance. |
@@ -180,11 +179,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KGo        | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Fixed AI turn skipping, handicap AI trigger, double-pass scoring, and tuned Grandmaster positional weights. |
 | KReversi   | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Fixed AI softlock on pass, increased Grandmaster Minimax depths, verified difficulty curve. |
 | KConnect4  | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Upgraded Grandmaster heuristic evaluation for stronger defensive and aggressive plays, verified blocker drop mechanics. |
+| KSolitaire | Tier 1 | Loop 9 done — BALANCE PASS COMPLETE | Guaranteed opening deal fairness, fixed foundation-to-tableau Vegas scoring, added bankroll persistence on abandon, and added right-click instant foundation play. |
 
 
 ## Progress Log
 
 **Loop 10**
+- [x] KSolitaire (Balance audit complete: Implemented deal fairness validator guaranteeing playable opening moves, fixed Vegas scoring exploit for returning cards to tableau, added active match bankroll persistence on abandon, and added right-click instant foundation play in both EXE and HTML)
 - [x] KRogue (Loop 10: Added True Sanctuary biome (floors 41-50), Tier 8 Ultra Bosses (Seraphim, Eldritch God), and relocated True Astaroth final battle to floor 50 in both EXE and HTML)
 
 **Loop 9**
