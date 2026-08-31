@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KCalc
+**Target App:** KCalendar
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KCalc (Added Scientific & Financial Calculators, Interactive History Tape with Recall, Memory Storage Banks [M+, M-, MR, MC, MS], Scientific Constants Library, Expression Formula Evaluator, and History Tape CSV/TXT Export)
 - KCalendar (Added Multi-view [Month, Week, Day, Agenda], Event Categories & Color Tagging, Real-time Search & Category Filters, Recurring Events Engine, and iCalendar [.ics]/CSV Import/Export)
 - KChart (Added Multi-Type Charting Engine [Bar, Line, Area, Pie, Doughnut, Radar], Interactive Data Table Editor, Statistical Analysis Suite [Mean, Median, Std Dev, Min/Max], Palette Themes, PNG Image Export, and CSV/JSON Import/Export)
 - KChess (Added PGN Move History Export & Import, FEN Board Position Loader & Exporter, AI Engine Difficulty Levels [Easy, Medium, Hard, Master], Interactive Undo/Redo Move Stack, Best Move Hint arrow/system, and Material Advantage & Captured Pieces Counter)
@@ -129,5 +128,6 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KPad (Added Multi-Tab Document Sessions, Syntax Highlighting & Language Switcher, Find & Replace Panel with Regex Support, Line Numbers & Gutter Stats, Document Export/Import, and Document Security & AES-256 / RC4 Password Encryption Suite with Encrypted Containers [.kpad.enc], Auto-Save Recovery, and SHA-256 / CRC32 Diagnostics)
 - KImage (Added Image Adjustments & Filters [Grayscale, Sepia, Invert, Brightness/Contrast, Blur], Transformations [Rotate 90°, Flips, Crop, Resize], RGB Color Histogram & EXIF Metadata Inspector, Auto-Slideshow Mode with Timer, Image Export/Format Conversion [PNG/JPEG/WEBP/BMP], and Spatial Convolution Matrix & Advanced Kernel Filter Studio [Sharpen, Unsharp Mask, Edge Detect, Sobel H/V, Emboss, Gaussian Blur, Ridge Detection, Custom 3x3 Matrix, Divisor/Bias, Channel Targeting])
 - KHex (Added Hex & ASCII Pattern Search/Replace, Data Inspector Panel [Int8..Int32, Float, Double, Endianness], Checksum & Cryptographic Hash Suite [CRC32, MD5, SHA-256], Byte Manipulation Operations [Fill, Invert, XOR Mask, Endian Swap], Binary Data Export [Hex Dump, C Array, RAW], and Shannon Entropy & Byte Frequency Distribution Suite with Magic Number / File Signature Dissector)
+- KCalc (Added Scientific & Financial Calculators, Interactive History Tape with Recall, Memory Storage Banks [M+, M-, MR, MC, MS], Scientific Constants Library, Expression Formula Evaluator, History Tape CSV/TXT Export, and Statistics & Linear Regression Analysis Suite [1-Var descriptive metrics N/Sum/Mean/Median/Mode/Range/Variance/StdDev/StdErr and 2-Var Linear Regression y=mx+b with Pearson r, R², & Prediction Tool])
 
 

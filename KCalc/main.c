@@ -80,7 +80,9 @@ double operand1 = 0;
 int operator = 0;
 double memoryStore = 0.0;
 int isNewOperand = 1;
-int currentMode = 0; // 0=Sci, 1=Fin, 2=Const, 3=History
+int currentMode = 0; // 0=Sci, 1=Fin, 2=Stats, 3=Const, 4=History
+double statLastMean = 0.0;
+double statLastSlope = 0.0;
 
 // History structure
 typedef struct {
@@ -92,15 +94,17 @@ HistoryEntry historyTape[50];
 int historyCount = 0;
 
 // View Handles
-HWND hModeBtns[4];
+HWND hModeBtns[5];
 HWND hSciBtns[42];
 HWND hFinControls[12];
+HWND hStatsControls[12];
 HWND hConstBtns[8];
 HWND hHistControls[4];
 
 // Control IDs
 #define ID_MODE_SCI   3001
 #define ID_MODE_FIN   3002
+#define ID_MODE_STATS 3005
 #define ID_MODE_CONST 3003
 #define ID_MODE_HIST  3004
 
@@ -108,10 +112,43 @@ HWND hHistControls[4];
 #define ID_FIN_CALC_FV   4002
 #define ID_FIN_CALC_MARG 4003
 
+#define ID_STATS_CALC_1VAR 4101
+#define ID_STATS_CALC_2VAR 4102
+#define ID_STATS_USE_MEAN  4103
+#define ID_STATS_USE_SLOPE 4104
+
 #define ID_HIST_LIST   5001
 #define ID_HIST_RECALL 5002
 #define ID_HIST_CLEAR  5003
 #define ID_HIST_EXPORT 5004
+
+int ParseDoubleList(const char* s, double* outArr, int maxCount) {
+    int count = 0;
+    while (*s && count < maxCount) {
+        while (*s && (*s == ' ' || *s == ',' || *s == ';' || *s == '\t' || *s == '\r' || *s == '\n')) s++;
+        if (!*s) break;
+        outArr[count++] = m_atof(s);
+        while (*s && *s != ' ' && *s != ',' && *s != ';' && *s != '\t' && *s != '\r' && *s != '\n') s++;
+    }
+    return count;
+}
+
+int ParsePointList(const char* s, double* outX, double* outY, int maxCount) {
+    int count = 0;
+    while (*s && count < maxCount) {
+        while (*s && (*s == ' ' || *s == ';' || *s == '\t' || *s == '\r' || *s == '\n' || *s == '(')) s++;
+        if (!*s) break;
+        outX[count] = m_atof(s);
+        while (*s && *s != ',' && *s != ':' && *s != ' ' && *s != '\t' && *s != ';' && *s != '\n') s++;
+        while (*s && (*s == ',' || *s == ':' || *s == ' ' || *s == '\t')) s++;
+        if (!*s) break;
+        outY[count] = m_atof(s);
+        count++;
+        while (*s && *s != ';' && *s != '\n' && *s != '\r' && *s != ')') s++;
+        if (*s) s++;
+    }
+    return count;
+}
 
 void FormatDisplay(double val) {
     if (val != val || val > 1e308 || val < -1e308) {
@@ -289,13 +326,17 @@ void SetViewMode(int mode) {
     for (int i = 0; i < 12; i++) {
         if (hFinControls[i]) ShowWindow(hFinControls[i], mode == 1 ? SW_SHOW : SW_HIDE);
     }
+    // Show/Hide Statistics Controls
+    for (int i = 0; i < 12; i++) {
+        if (hStatsControls[i]) ShowWindow(hStatsControls[i], mode == 2 ? SW_SHOW : SW_HIDE);
+    }
     // Show/Hide Constants Controls
     for (int i = 0; i < 7; i++) {
-        if (hConstBtns[i]) ShowWindow(hConstBtns[i], mode == 2 ? SW_SHOW : SW_HIDE);
+        if (hConstBtns[i]) ShowWindow(hConstBtns[i], mode == 3 ? SW_SHOW : SW_HIDE);
     }
     // Show/Hide History Controls
     for (int i = 0; i < 4; i++) {
-        if (hHistControls[i]) ShowWindow(hHistControls[i], mode == 3 ? SW_SHOW : SW_HIDE);
+        if (hHistControls[i]) ShowWindow(hHistControls[i], mode == 4 ? SW_SHOW : SW_HIDE);
     }
 }
 
@@ -346,10 +387,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hDisplayBgBrush = CreateSolidBrush(RGB(15, 23, 42));
 
             // Mode Selector Bar
-            hModeBtns[0] = CreateWindowA("BUTTON", "Scientific", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(8), S(78), S(26), hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
-            hModeBtns[1] = CreateWindowA("BUTTON", "Financial",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(92), S(8), S(78), S(26), hwnd, (HMENU)ID_MODE_FIN, NULL, NULL);
-            hModeBtns[2] = CreateWindowA("BUTTON", "Constants",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(174), S(8), S(78), S(26), hwnd, (HMENU)ID_MODE_CONST, NULL, NULL);
-            hModeBtns[3] = CreateWindowA("BUTTON", "History",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(256), S(8), S(78), S(26), hwnd, (HMENU)ID_MODE_HIST, NULL, NULL);
+            hModeBtns[0] = CreateWindowA("BUTTON", "Scientific", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(8), S(64), S(26), hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
+            hModeBtns[1] = CreateWindowA("BUTTON", "Financial",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(76), S(8), S(60), S(26), hwnd, (HMENU)ID_MODE_FIN, NULL, NULL);
+            hModeBtns[2] = CreateWindowA("BUTTON", "Stats",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(138), S(8), S(52), S(26), hwnd, (HMENU)ID_MODE_STATS, NULL, NULL);
+            hModeBtns[3] = CreateWindowA("BUTTON", "Constants",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(192), S(8), S(64), S(26), hwnd, (HMENU)ID_MODE_CONST, NULL, NULL);
+            hModeBtns[4] = CreateWindowA("BUTTON", "History",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(258), S(8), S(60), S(26), hwnd, (HMENU)ID_MODE_HIST, NULL, NULL);
 
             // Displays
             hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(38), S(324), S(18), hwnd, NULL, NULL, NULL);
@@ -416,13 +458,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFinControls[7] = CreateWindowA("BUTTON", "Calc Margin", WS_CHILD | BS_PUSHBUTTON, S(140), S(315), S(180), S(30), hwnd, (HMENU)ID_FIN_CALC_MARG, NULL, NULL);
             hFinControls[8] = CreateWindowExA(0, "STATIC", "Margin: 0.00%", WS_CHILD | SS_LEFT, S(15), S(355), S(300), S(24), hwnd, NULL, NULL, NULL);
 
-            // Mode 2: Scientific Constants
+            // Mode 2: Statistics Controls
+            hStatsControls[0] = CreateWindowA("STATIC", "1-Var Dataset (comma/space separated):", WS_CHILD | SS_LEFT, S(15), S(110), S(314), S(16), hwnd, NULL, NULL, NULL);
+            hStatsControls[1] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "14, 25, 33, 42, 18, 29, 35, 42, 58, 67", WS_CHILD | ES_AUTOHSCROLL, S(15), S(128), S(314), S(22), hwnd, NULL, NULL, NULL);
+            hStatsControls[2] = CreateWindowA("BUTTON", "Compute 1-Var", WS_CHILD | BS_PUSHBUTTON, S(15), S(154), S(150), S(26), hwnd, (HMENU)ID_STATS_CALC_1VAR, NULL, NULL);
+            hStatsControls[10] = CreateWindowA("BUTTON", "Use Mean", WS_CHILD | BS_PUSHBUTTON, S(170), S(154), S(75), S(26), hwnd, (HMENU)ID_STATS_USE_MEAN, NULL, NULL);
+            hStatsControls[3] = CreateWindowExA(0, "STATIC", "N=10 | Mean=36.3 | Med=34 | s=16.67", WS_CHILD | SS_LEFT, S(15), S(184), S(314), S(16), hwnd, NULL, NULL, NULL);
+            hStatsControls[4] = CreateWindowExA(0, "STATIC", "Min=14 | Max=67 | Range=53 | SE=5.27", WS_CHILD | SS_LEFT, S(15), S(202), S(314), S(16), hwnd, NULL, NULL, NULL);
+
+            hStatsControls[5] = CreateWindowA("STATIC", "2-Var Regress (x,y e.g. 1,2.5; 2,4.8; 3,7.1):", WS_CHILD | SS_LEFT, S(15), S(226), S(314), S(16), hwnd, NULL, NULL, NULL);
+            hStatsControls[6] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "1,2.5; 2,4.8; 3,7.1; 4,9.4; 5,11.9", WS_CHILD | ES_AUTOHSCROLL, S(15), S(244), S(314), S(22), hwnd, NULL, NULL, NULL);
+            hStatsControls[7] = CreateWindowA("BUTTON", "Compute Regression", WS_CHILD | BS_PUSHBUTTON, S(15), S(270), S(150), S(26), hwnd, (HMENU)ID_STATS_CALC_2VAR, NULL, NULL);
+            hStatsControls[9] = CreateWindowA("BUTTON", "Use Slope", WS_CHILD | BS_PUSHBUTTON, S(170), S(270), S(75), S(26), hwnd, (HMENU)ID_STATS_USE_SLOPE, NULL, NULL);
+            hStatsControls[8] = CreateWindowExA(0, "STATIC", "y = 2.34x + 0.12 | r = 0.9998 | R2 = 0.9996", WS_CHILD | SS_LEFT, S(15), S(300), S(314), S(32), hwnd, NULL, NULL, NULL);
+
+            // Mode 3: Scientific Constants
             char constLabels[7][24] = { "c (Speed of Light)", "h (Planck)", "G (Gravitational)", "N_A (Avogadro)", "R (Gas Constant)", "pi (Pi)", "e (Euler)" };
             for (int i = 0; i < 7; i++) {
                 hConstBtns[i] = CreateWindowA("BUTTON", constLabels[i], WS_CHILD | BS_PUSHBUTTON, S(20), S(115 + i * 38), S(304), S(32), hwnd, (HMENU)(INT_PTR)(6001 + i), NULL, NULL);
             }
 
-            // Mode 3: History Tape Controls
+            // Mode 4: History Tape Controls
             hHistControls[0] = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | LBS_NOTIFY | WS_VSCROLL, S(15), S(115), S(314), S(230), hwnd, (HMENU)ID_HIST_LIST, NULL, NULL);
             hHistControls[1] = CreateWindowA("BUTTON", "Recall Entry", WS_CHILD | BS_PUSHBUTTON, S(15), S(355), S(95), S(30), hwnd, (HMENU)ID_HIST_RECALL, NULL, NULL);
             hHistControls[2] = CreateWindowA("BUTTON", "Export TXT", WS_CHILD | BS_PUSHBUTTON, S(125), S(355), S(95), S(30), hwnd, (HMENU)ID_HIST_EXPORT, NULL, NULL);
@@ -451,8 +507,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (id == ID_MODE_SCI) SetViewMode(0);
             else if (id == ID_MODE_FIN) SetViewMode(1);
-            else if (id == ID_MODE_CONST) SetViewMode(2);
-            else if (id == ID_MODE_HIST) SetViewMode(3);
+            else if (id == ID_MODE_STATS) SetViewMode(2);
+            else if (id == ID_MODE_CONST) SetViewMode(3);
+            else if (id == ID_MODE_HIST) SetViewMode(4);
 
             else if ((id >= '0' && id <= '9') || id == '.') {
                 AppendChar(id);
@@ -528,6 +585,97 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FormatDisplay(profit);
                     AddHistoryEntry("Margin Calc", displayBuffer);
                 }
+            }
+            // Statistics 1-Var Calculation
+            else if (id == ID_STATS_CALC_1VAR) {
+                char buf[512];
+                GetWindowTextA(hStatsControls[1], buf, 512);
+                double nums[100];
+                int n = ParseDoubleList(buf, nums, 100);
+                if (n > 0) {
+                    double sum = 0, minVal = nums[0], maxVal = nums[0];
+                    for (int i = 0; i < n; i++) {
+                        sum += nums[i];
+                        if (nums[i] < minVal) minVal = nums[i];
+                        if (nums[i] > maxVal) maxVal = nums[i];
+                    }
+                    double mean = sum / (double)n;
+                    for (int i = 0; i < n - 1; i++) {
+                        for (int j = i + 1; j < n; j++) {
+                            if (nums[j] < nums[i]) {
+                                double tmp = nums[i]; nums[i] = nums[j]; nums[j] = tmp;
+                            }
+                        }
+                    }
+                    double median = (n % 2 == 1) ? nums[n/2] : (nums[n/2 - 1] + nums[n/2]) / 2.0;
+                    double sumDiffSq = 0;
+                    for (int i = 0; i < n; i++) {
+                        double diff = nums[i] - mean;
+                        sumDiffSq += diff * diff;
+                    }
+                    double sampleVar = (n > 1) ? (sumDiffSq / (double)(n - 1)) : 0.0;
+                    double sampleStdDev = m_sqrt(sampleVar);
+                    double stdErr = sampleStdDev / m_sqrt((double)n);
+                    statLastMean = mean;
+
+                    char out1[128], out2[128];
+                    m_sprintf(out1, "N=%d | Mean=%.4g | Med=%.4g | s=%.4g", n, mean, median, sampleStdDev);
+                    m_sprintf(out2, "Min=%.4g | Max=%.4g | Range=%.4g | SE=%.4g", minVal, maxVal, maxVal - minVal, stdErr);
+                    SetWindowTextA(hStatsControls[3], out1);
+                    SetWindowTextA(hStatsControls[4], out2);
+
+                    char histExpr[64], histRes[32];
+                    m_sprintf(histExpr, "1-Var Stats (N=%d)", n);
+                    m_sprintf(histRes, "Mean=%.4g, s=%.4g", mean, sampleStdDev);
+                    AddHistoryEntry(histExpr, histRes);
+                }
+            }
+            // Statistics 2-Var Regression Calculation
+            else if (id == ID_STATS_CALC_2VAR) {
+                char buf[512];
+                GetWindowTextA(hStatsControls[6], buf, 512);
+                double xs[50], ys[50];
+                int n = ParsePointList(buf, xs, ys, 50);
+                if (n >= 2) {
+                    double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+                    for (int i = 0; i < n; i++) {
+                        sumX += xs[i];
+                        sumY += ys[i];
+                        sumXY += xs[i] * ys[i];
+                        sumX2 += xs[i] * xs[i];
+                        sumY2 += ys[i] * ys[i];
+                    }
+                    double denomM = ((double)n * sumX2 - sumX * sumX);
+                    if (denomM != 0.0) {
+                        double m = ((double)n * sumXY - sumX * sumY) / denomM;
+                        double b = (sumY - m * sumX) / (double)n;
+                        double denomR = m_sqrt(((double)n * sumX2 - sumX * sumX) * ((double)n * sumY2 - sumY * sumY));
+                        double r = (denomR != 0.0) ? (((double)n * sumXY - sumX * sumY) / denomR) : 0.0;
+                        double r2 = r * r;
+                        statLastSlope = m;
+
+                        char outReg[128];
+                        if (b >= 0) m_sprintf(outReg, "y = %.4gx + %.4g | r=%.4g | R2=%.4g", m, b, r, r2);
+                        else m_sprintf(outReg, "y = %.4gx - %.4g | r=%.4g | R2=%.4g", m, -b, r, r2);
+                        SetWindowTextA(hStatsControls[8], outReg);
+
+                        char histExpr[64], histRes[32];
+                        m_sprintf(histExpr, "LinReg (N=%d)", n);
+                        m_sprintf(histRes, "m=%.4g, b=%.4g", m, b);
+                        AddHistoryEntry(histExpr, histRes);
+                    }
+                }
+            }
+            // Use Mean / Slope buttons
+            else if (id == ID_STATS_USE_MEAN) {
+                FormatDisplay(statLastMean);
+                isNewOperand = 1;
+                SetViewMode(0);
+            }
+            else if (id == ID_STATS_USE_SLOPE) {
+                FormatDisplay(statLastSlope);
+                isNewOperand = 1;
+                SetViewMode(0);
             }
             // Constants insertion
             else if (id >= 6001 && id <= 6007) {

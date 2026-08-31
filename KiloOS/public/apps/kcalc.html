@@ -416,6 +416,75 @@
     color: #34d399;
   }
 
+  /* Statistics Mode View Layout */
+  .stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .stat-tile {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .stat-tile:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    background: rgba(99, 102, 241, 0.04);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  .stat-btn-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .stats-textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    resize: vertical;
+    min-height: 70px;
+  }
+  .stats-textarea:focus { border-color: #6366f1; }
+
   /* Scientific Constants Panel */
   .constants-grid {
     display: grid;
@@ -561,6 +630,7 @@
     <nav class="mode-tabs">
       <button class="tab-btn active" onclick="switchView('scientific')">Scientific</button>
       <button class="tab-btn" onclick="switchView('financial')">Financial</button>
+      <button class="tab-btn" onclick="switchView('statistics')">Statistics</button>
       <button class="tab-btn" onclick="switchView('constants')">Constants</button>
       <button class="tab-btn" onclick="switchView('history')">History Tape</button>
     </nav>
@@ -801,6 +871,129 @@
                 <div id="cagr-res" class="fin-res-val">0.00%</div>
               </div>
               <button class="mini-btn" onclick="sendToCalc(document.getElementById('cagr-res').dataset.rawVal)">Use Result</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 2.5: Statistics & Regression Analysis Suite -->
+      <div id="view-statistics" class="view-panel">
+        <div class="stats-container">
+          <div class="fin-tool-nav">
+            <button class="fin-tab active" id="tab-stat-1var" onclick="switchStatsTool('1var')">1-Variable Statistics</button>
+            <button class="fin-tab" id="tab-stat-2var" onclick="switchStatsTool('2var')">2-Variable Linear Regression</button>
+          </div>
+
+          <!-- Tool 1: 1-Variable Stats -->
+          <div id="stat-1var-card" class="fin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3 style="margin:0;">Descriptive Statistics (1-Var)</h3>
+              <div style="display:flex; gap:6px;">
+                <button class="mini-btn" onclick="loadSample1VarData()">Load Example Data</button>
+                <button class="mini-btn" onclick="document.getElementById('stat-1var-input').value='';">Clear</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Dataset Values (separated by commas, spaces, or newlines):</label>
+              <textarea id="stat-1var-input" class="stats-textarea" placeholder="e.g. 14, 25, 33, 42, 18, 29, 35, 42, 58, 67">14, 25, 33, 42, 18, 29, 35, 42, 58, 67</textarea>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calc1VarStats()">Compute Statistics</button>
+
+            <div class="stats-grid">
+              <div class="stat-tile">
+                <div class="stat-label">Sample Size (N)</div>
+                <div id="stat-n" class="stat-val">10</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Sum (Σx)</div>
+                <div id="stat-sum" class="stat-val">363</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('stat-sum').textContent)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Mean (x̄)</div>
+                <div id="stat-mean" class="stat-val">36.3000</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('stat-mean').textContent)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Median</div>
+                <div id="stat-median" class="stat-val">34.0000</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('stat-median').textContent)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Mode</div>
+                <div id="stat-mode" class="stat-val">42</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Min / Max / Range</div>
+                <div id="stat-minmax" class="stat-val" style="font-size:13px;">14 / 67 (Range: 53)</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Sample Std Dev (s)</div>
+                <div id="stat-sdev" class="stat-val">16.6669</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('stat-sdev').textContent)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Pop Std Dev (σ)</div>
+                <div id="stat-pdev" class="stat-val">15.8117</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Sample Variance (s²)</div>
+                <div id="stat-svar" class="stat-val">277.7889</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Standard Error (SE)</div>
+                <div id="stat-stderr" class="stat-val">5.2705</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool 2: 2-Variable Linear Regression -->
+          <div id="stat-2var-card" class="fin-card" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3 style="margin:0;">Linear Regression Analysis (y = mx + b)</h3>
+              <div style="display:flex; gap:6px;">
+                <button class="mini-btn" onclick="loadSample2VarData()">Load Example Points</button>
+                <button class="mini-btn" onclick="document.getElementById('stat-2var-input').value='';">Clear</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Data Points (x, y pairs per line or separated by semicolons):</label>
+              <textarea id="stat-2var-input" class="stats-textarea" placeholder="e.g. 1, 2.5&#10;2, 4.8&#10;3, 7.1&#10;4, 9.4&#10;5, 11.9">1, 2.5&#10;2, 4.8&#10;3, 7.1&#10;4, 9.4&#10;5, 11.9</textarea>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calc2VarRegression()">Compute Regression</button>
+
+            <div class="stats-grid">
+              <div class="stat-tile" style="grid-column: span 2;">
+                <div class="stat-label">Linear Regression Model</div>
+                <div id="reg-equation" class="stat-val" style="color:#34d399; font-size:18px;">y = 2.3400x + 0.1200</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Slope (m)</div>
+                <div id="reg-slope" class="stat-val">2.3400</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('reg-slope').textContent)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Y-Intercept (b)</div>
+                <div id="reg-intercept" class="stat-val">0.1200</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('reg-intercept').textContent)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Pearson Correlation (r)</div>
+                <div id="reg-r" class="stat-val">0.9998</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Determination (R²)</div>
+                <div id="reg-r2" class="stat-val">0.9996</div>
+              </div>
+              <div class="stat-tile" style="grid-column: span 2;">
+                <div class="stat-label">Estimate y given x:</div>
+                <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                  <input type="number" id="reg-pred-x" value="6" style="width:90px; padding:6px 10px; font-size:13px;" oninput="predictRegressionY()">
+                  <span style="font-size:13px; color:var(--text-muted);">→ ŷ =</span>
+                  <span id="reg-pred-y" class="stat-val" style="color:#818cf8;">14.1600</span>
+                  <button class="mini-btn" onclick="sendToCalc(document.getElementById('reg-pred-y').textContent)">Use ŷ</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1163,6 +1356,173 @@
       const cagrElem = document.getElementById('cagr-res');
       cagrElem.textContent = cagr.toFixed(2) + '%';
       cagrElem.dataset.rawVal = cagr.toFixed(4);
+    }
+  }
+
+  // Statistics & Regression Suite Logic
+  let currentRegModel = { m: 2.34, b: 0.12 };
+
+  function switchStatsTool(toolId) {
+    document.getElementById('tab-stat-1var').classList.toggle('active', toolId === '1var');
+    document.getElementById('tab-stat-2var').classList.toggle('active', toolId === '2var');
+    document.getElementById('stat-1var-card').style.display = toolId === '1var' ? 'flex' : 'none';
+    document.getElementById('stat-2var-card').style.display = toolId === '2var' ? 'flex' : 'none';
+  }
+
+  function loadSample1VarData() {
+    document.getElementById('stat-1var-input').value = '14, 25, 33, 42, 18, 29, 35, 42, 58, 67';
+    calc1VarStats();
+  }
+
+  function loadSample2VarData() {
+    document.getElementById('stat-2var-input').value = '1, 2.5\n2, 4.8\n3, 7.1\n4, 9.4\n5, 11.9';
+    calc2VarRegression();
+  }
+
+  function parseNumbersList(text) {
+    if (!text) return [];
+    return text
+      .split(/[\s,;\n\r\t]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0 && !isNaN(s))
+      .map(s => parseFloat(s));
+  }
+
+  function calc1VarStats() {
+    const raw = document.getElementById('stat-1var-input').value;
+    const nums = parseNumbersList(raw);
+    if (nums.length === 0) {
+      alert('Please enter valid numeric data.');
+      return;
+    }
+
+    const n = nums.length;
+    let sum = 0;
+    let sumSq = 0;
+    let min = nums[0];
+    let max = nums[0];
+
+    const freqMap = {};
+    for (let i = 0; i < n; i++) {
+      const v = nums[i];
+      sum += v;
+      sumSq += v * v;
+      if (v < min) min = v;
+      if (v > max) max = v;
+      freqMap[v] = (freqMap[v] || 0) + 1;
+    }
+
+    const mean = sum / n;
+
+    // Median
+    const sorted = [...nums].sort((a, b) => a - b);
+    let median;
+    if (n % 2 === 1) {
+      median = sorted[Math.floor(n / 2)];
+    } else {
+      median = (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+    }
+
+    // Mode
+    let maxFreq = 0;
+    let modeVal = 'None';
+    for (let k in freqMap) {
+      if (freqMap[k] > maxFreq) {
+        maxFreq = freqMap[k];
+        modeVal = k;
+      }
+    }
+    if (maxFreq === 1 && n > 1) modeVal = 'None (Unique)';
+
+    // Variances & Std Devs
+    let sumDiffSq = 0;
+    for (let i = 0; i < n; i++) {
+      sumDiffSq += Math.pow(nums[i] - mean, 2);
+    }
+    const popVar = sumDiffSq / n;
+    const popStdDev = Math.sqrt(popVar);
+    const sampleVar = n > 1 ? sumDiffSq / (n - 1) : 0;
+    const sampleStdDev = Math.sqrt(sampleVar);
+    const stdErr = sampleStdDev / Math.sqrt(n);
+
+    // Update DOM
+    document.getElementById('stat-n').textContent = String(n);
+    document.getElementById('stat-sum').textContent = sum.toFixed(4).replace(/\.?0+$/, '');
+    document.getElementById('stat-mean').textContent = mean.toFixed(4);
+    document.getElementById('stat-median').textContent = median.toFixed(4);
+    document.getElementById('stat-mode').textContent = modeVal;
+    document.getElementById('stat-minmax').textContent = `${min} / ${max} (Range: ${(max - min).toFixed(4).replace(/\.?0+$/, '')})`;
+    document.getElementById('stat-sdev').textContent = sampleStdDev.toFixed(4);
+    document.getElementById('stat-pdev').textContent = popStdDev.toFixed(4);
+    document.getElementById('stat-svar').textContent = sampleVar.toFixed(4);
+    document.getElementById('stat-stderr').textContent = stdErr.toFixed(4);
+
+    addHistoryEntry(`1-Var Stats (N=${n})`, `Mean=${mean.toFixed(4)}, s=${sampleStdDev.toFixed(4)}`);
+  }
+
+  function calc2VarRegression() {
+    const raw = document.getElementById('stat-2var-input').value;
+    const lines = raw.split(/[\n;\r]+/);
+    const points = [];
+
+    for (let line of lines) {
+      const parts = line.replace(/[()]/g, '').trim().split(/[\s,:\t]+/);
+      if (parts.length >= 2) {
+        const x = parseFloat(parts[0]);
+        const y = parseFloat(parts[1]);
+        if (!isNaN(x) && !isNaN(y)) {
+          points.push({ x, y });
+        }
+      }
+    }
+
+    if (points.length < 2) {
+      alert('Please enter at least 2 valid (x, y) data pairs.');
+      return;
+    }
+
+    const n = points.length;
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+
+    for (let p of points) {
+      sumX += p.x;
+      sumY += p.y;
+      sumXY += p.x * p.y;
+      sumX2 += p.x * p.x;
+      sumY2 += p.y * p.y;
+    }
+
+    const denomM = (n * sumX2 - sumX * sumX);
+    if (denomM === 0) {
+      alert('Cannot compute vertical line slope (all X values are identical).');
+      return;
+    }
+
+    const m = (n * sumXY - sumX * sumY) / denomM;
+    const b = (sumY - m * sumX) / n;
+
+    const denomR = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+    const r = denomR !== 0 ? (n * sumXY - sumX * sumY) / denomR : 0;
+    const r2 = r * r;
+
+    currentRegModel = { m, b };
+
+    const sign = b >= 0 ? '+' : '-';
+    document.getElementById('reg-equation').textContent = `y = ${m.toFixed(4)}x ${sign} ${Math.abs(b).toFixed(4)}`;
+    document.getElementById('reg-slope').textContent = m.toFixed(4);
+    document.getElementById('reg-intercept').textContent = b.toFixed(4);
+    document.getElementById('reg-r').textContent = r.toFixed(4);
+    document.getElementById('reg-r2').textContent = r2.toFixed(4);
+
+    predictRegressionY();
+    addHistoryEntry(`LinReg (N=${n})`, `y=${m.toFixed(4)}x${sign}${Math.abs(b).toFixed(4)}, r=${r.toFixed(4)}`);
+  }
+
+  function predictRegressionY() {
+    const xInput = parseFloat(document.getElementById('reg-pred-x').value);
+    if (!isNaN(xInput)) {
+      const yPred = currentRegModel.m * xInput + currentRegModel.b;
+      document.getElementById('reg-pred-y').textContent = yPred.toFixed(4);
     }
   }
 
