@@ -528,6 +528,7 @@
   <div class="tab-nav">
     <button class="tab-btn active" onclick="switchTab('converter')">⚡ Converter & Inspector</button>
     <button class="tab-btn" onclick="switchTab('editor')">🔍 Hex Viewer & Buffer</button>
+    <button class="tab-btn" onclick="switchTab('entropy')">📊 Entropy & Dissection</button>
     <button class="tab-btn" onclick="switchTab('search')">🔎 Search & Replace</button>
     <button class="tab-btn" onclick="switchTab('hashes')">🔐 Checksum & Hashes</button>
     <button class="tab-btn" onclick="switchTab('operations')">🛠️ Byte Operations</button>
@@ -580,6 +581,9 @@
           <div class="inspector-item"><div class="inspector-label">Uint32 (Unsigned)</div><div class="inspector-value" id="valUint32">305419896</div></div>
           <div class="inspector-item"><div class="inspector-label">Float (32-bit IEEE 754)</div><div class="inspector-value" id="valFloat">5.6904566e-28</div></div>
           <div class="inspector-item"><div class="inspector-label">Double (64-bit IEEE 754)</div><div class="inspector-value" id="valDouble">1.50897587e-315</div></div>
+          <div class="inspector-item"><div class="inspector-label">Shannon Entropy (4-Byte)</div><div class="inspector-value" id="valEntropy">8.000 b/B (Max)</div></div>
+          <div class="inspector-item"><div class="inspector-label">PopCount (Bits Set)</div><div class="inspector-value" id="valPopCount">13 / 32 (Odd)</div></div>
+          <div class="inspector-item" style="grid-column: span 2;"><div class="inspector-label">File Magic / Signature Match</div><div class="inspector-value" id="valSig">Raw Binary / Custom Pattern</div></div>
         </div>
       </div>
     </div>
@@ -622,7 +626,67 @@
     </div>
   </div>
 
-  <!-- TAB 3: Search & Replace -->
+  <!-- TAB 3: Shannon Entropy & Structural Dissection -->
+  <div id="tab-entropy" class="tab-content">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">
+          <div class="title-left">📊 Shannon Entropy & Randomness Meter</div>
+          <button class="btn btn-cyan btn-sm" onclick="computeEntropyAndDistribution()">Analyze Buffer</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.9rem;">
+            <span>Shannon Entropy: <b id="entropyVal" style="color:var(--accent-cyan); font-size:1.1rem;">0.000</b> / 8.000 bits/byte</span>
+            <span id="entropyClassBadge" class="badge" style="color:var(--accent-emerald);">Padded / Constant</span>
+          </div>
+          <div style="background:var(--input-bg); border-radius:8px; height:18px; border:1px solid var(--border-color); overflow:hidden; position:relative;">
+            <div id="entropyBar" style="height:100%; width:0%; background:linear-gradient(90deg, #10b981, #f59e0b, #ef4444, #8b5cf6); transition:width 0.3s ease;"></div>
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">
+            • <b>0.00 - 3.00:</b> Low Entropy (Zero padded, sparse, or repetitive data)<br>
+            • <b>3.00 - 6.00:</b> Medium Entropy (Plain ASCII text, source code, config files)<br>
+            • <b>6.00 - 7.50:</b> High Entropy (Binary executables, compiled bytecode, packed assets)<br>
+            • <b>7.50 - 8.00:</b> Maximum Entropy (Encrypted payload, compressed zip/gzip/media, high randomness)
+          </div>
+        </div>
+        
+        <div class="inspector-grid" style="margin-top:10px;">
+          <div class="inspector-item"><div class="inspector-label">Bit Density / PopCount</div><div class="inspector-value" id="entropyPopCount">0 / 0 bits (0.0%)</div></div>
+          <div class="inspector-item"><div class="inspector-label">Null Bytes (0x00)</div><div class="inspector-value" id="entropyNullRatio">0 (0.0%)</div></div>
+          <div class="inspector-item"><div class="inspector-label">Printable ASCII (32-126)</div><div class="inspector-value" id="entropyAsciiRatio">0 (0.0%)</div></div>
+          <div class="inspector-item"><div class="inspector-label">High / Binary (>=128)</div><div class="inspector-value" id="entropyHighRatio">0 (0.0%)</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <div class="title-left">🔍 File Magic Header & Signature Dissector</div>
+          <button class="btn btn-purple btn-sm" onclick="dissectHeader()">Dissect Header</button>
+        </div>
+        <div class="form-group">
+          <label>Identified Container / File Type</label>
+          <input type="text" id="detectedFileType" readonly value="Scanning..." style="font-weight:bold; color:var(--accent-cyan);">
+        </div>
+        <div class="form-group">
+          <label>Signature Match Confidence & Details</label>
+          <div class="output-box" id="sigDetailsBox" style="max-height:180px;">No buffer loaded.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Byte Frequency Histogram Panel -->
+    <div class="panel">
+      <div class="panel-title">
+        <div class="title-left">📈 Top Byte Frequency Distribution</div>
+        <span style="font-size:0.75rem; color:var(--text-secondary);" id="uniqueBytesCountLabel">0 Unique Bytes</span>
+      </div>
+      <div id="byteFreqHistogram" style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
+        <!-- Dynamic Bars -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Search & Replace -->
   <div id="tab-search" class="tab-content">
     <div class="grid-2">
       <div class="panel">
@@ -804,6 +868,7 @@
     document.getElementById('tab-' + tabId).classList.add('active');
 
     if (tabId === 'editor') renderHexView();
+    if (tabId === 'entropy') computeEntropyAndDistribution();
     if (tabId === 'hashes') computeHashes();
     if (tabId === 'export') generateExport();
   }
@@ -896,6 +961,208 @@
     updateFromHex('0');
   }
 
+  // --- SHANNON ENTROPY & FILE SIGNATURE ENGINE ---
+  function calculateShannonEntropy(bytes) {
+    if (!bytes || bytes.length === 0) return 0;
+    let counts = new Uint32Array(256);
+    for (let i = 0; i < bytes.length; i++) counts[bytes[i]]++;
+    let entropy = 0;
+    let len = bytes.length;
+    for (let i = 0; i < 256; i++) {
+      if (counts[i] > 0) {
+        let p = counts[i] / len;
+        entropy -= p * Math.log2(p);
+      }
+    }
+    return entropy;
+  }
+
+  function getEntropyClassification(h) {
+    if (h < 1.0) return { label: 'Zero / Constant', color: '#10b981' };
+    if (h < 3.0) return { label: 'Low (Repetitive / Sparse)', color: '#06b6d4' };
+    if (h < 6.0) return { label: 'Medium (Structured / Plain Text)', color: '#3b82f6' };
+    if (h < 7.5) return { label: 'High (Code / Compiled Binary)', color: '#f59e0b' };
+    return { label: 'Maximum (Encrypted / Compressed / Random)', color: '#ef4444' };
+  }
+
+  function detectFileSignature(bytes) {
+    if (!bytes || bytes.length === 0) return { name: 'Empty Buffer', ext: '', desc: 'No data to inspect.' };
+    
+    let ascii = Array.from(bytes.slice(0, 16)).map(b => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.')).join('');
+
+    if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47 && bytes[4] === 0x0D && bytes[5] === 0x0A && bytes[6] === 0x1A && bytes[7] === 0x0A) {
+      return { name: 'PNG Image', ext: '.png', desc: 'Portable Network Graphics lossless bitmap container.' };
+    }
+    if (bytes.length >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
+      return { name: 'JPEG Image', ext: '.jpg', desc: 'Joint Photographic Experts Group lossy image stream.' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B && ((bytes[2] === 0x03 && bytes[3] === 0x04) || (bytes[2] === 0x05 && bytes[3] === 0x06))) {
+      return { name: 'ZIP / JAR / APK Archive', ext: '.zip', desc: 'PKZip archive container (used by ZIP, DOCX, XLSX, APK, JAR).' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x7F && bytes[1] === 0x45 && bytes[2] === 0x4C && bytes[3] === 0x46) {
+      return { name: 'ELF Executable', ext: '.elf', desc: 'Executable and Linkable Format (Linux / Unix binary).' };
+    }
+    if (bytes.length >= 2 && bytes[0] === 0x4D && bytes[1] === 0x5A) {
+      return { name: 'Windows PE / DOS Executable', ext: '.exe', desc: 'Portable Executable / MZ header (Windows EXE, DLL, SYS).' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+      return { name: 'PDF Document', ext: '.pdf', desc: 'Adobe Portable Document Format stream.' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) {
+      return { name: 'GIF Image', ext: '.gif', desc: 'Graphics Interchange Format (GIF87a / GIF89a).' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46) {
+      return { name: 'RIFF Container', ext: '.wav', desc: 'Resource Interchange File Format (WAV audio, AVI video, WEBP).' };
+    }
+    if (bytes.length >= 15 && ascii.startsWith('SQLite format 3')) {
+      return { name: 'SQLite 3 Database', ext: '.sqlite', desc: 'SQLite database storage file.' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x00 && bytes[1] === 0x61 && bytes[2] === 0x73 && bytes[3] === 0x6D) {
+      return { name: 'WebAssembly Binary', ext: '.wasm', desc: 'Compiled Wasm binary module.' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0xCA && bytes[1] === 0xFE && bytes[2] === 0xBA && bytes[3] === 0xBE) {
+      return { name: 'Java Class / Mach-O Fat', ext: '.class', desc: 'Java bytecode class file or Apple Mach-O universal binary.' };
+    }
+    if (bytes.length >= 6 && bytes[0] === 0xFD && bytes[1] === 0x37 && bytes[2] === 0x7A && bytes[3] === 0x58 && bytes[4] === 0x5A && bytes[5] === 0x00) {
+      return { name: 'XZ Compressed Archive', ext: '.xz', desc: 'XZ LZMA2 compression container.' };
+    }
+    if (bytes.length >= 2 && bytes[0] === 0x1F && bytes[1] === 0x8B) {
+      return { name: 'GZIP Compressed Stream', ext: '.gz', desc: 'GNU zip compression stream.' };
+    }
+    if (bytes.length >= 3 && bytes[0] === 0x42 && bytes[1] === 0x5A && bytes[2] === 0x68) {
+      return { name: 'BZip2 Compressed Archive', ext: '.bz2', desc: 'Burrows-Wheeler block sorting compression.' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x4F && bytes[1] === 0x67 && bytes[2] === 0x67 && bytes[3] === 0x53) {
+      return { name: 'OGG Multimedia Container', ext: '.ogg', desc: 'Ogg Vorbis/Opus audio/video multiplex stream.' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x1A && bytes[1] === 0x45 && bytes[2] === 0xDF && bytes[3] === 0xA3) {
+      return { name: 'Matroska / WebM Video', ext: '.mkv', desc: 'Extensible binary multimedia container.' };
+    }
+    if (bytes.length >= 3 && bytes[0] === 0x46 && bytes[1] === 0x4C && bytes[2] === 0x56) {
+      return { name: 'Flash Video Container', ext: '.flv', desc: 'Adobe Flash Video stream.' };
+    }
+    if (bytes.length >= 2 && bytes[0] === 0x42 && bytes[1] === 0x4D) {
+      return { name: 'BMP Bitmap Image', ext: '.bmp', desc: 'Windows Bitmap uncompressed raster image.' };
+    }
+    if (bytes.length >= 2 && bytes[0] === 0x23 && bytes[1] === 0x21) {
+      return { name: 'Unix Script Shebang', ext: '.sh', desc: 'Executable script interpreter directive (#!/...).' };
+    }
+    if (ascii.startsWith('<?xml') || ascii.startsWith('<!DOCTYPE') || ascii.startsWith('<html')) {
+      return { name: 'XML / HTML Markup', ext: '.html', desc: 'Structured markup text document.' };
+    }
+    if (ascii.trim().startsWith('{') || ascii.trim().startsWith('[')) {
+      return { name: 'JSON Object / Array', ext: '.json', desc: 'JavaScript Object Notation structured data.' };
+    }
+
+    return { name: 'Raw Binary / Custom Stream', ext: '.bin', desc: 'No standard magic header detected.' };
+  }
+
+  function computeEntropyAndDistribution() {
+    let target = (binaryBuffer && binaryBuffer.length > 0) ? binaryBuffer : new Uint8Array([0, 0, 0, 0]);
+    let len = target.length;
+    let entropy = calculateShannonEntropy(target);
+    let cls = getEntropyClassification(entropy);
+
+    document.getElementById('entropyVal').innerText = entropy.toFixed(3);
+    let badge = document.getElementById('entropyClassBadge');
+    badge.innerText = cls.label;
+    badge.style.color = cls.color;
+    badge.style.borderColor = cls.color;
+
+    let pct = (entropy / 8.0) * 100;
+    document.getElementById('entropyBar').style.width = Math.min(100, Math.max(0, pct)) + '%';
+
+    // Statistics
+    let counts = new Uint32Array(256);
+    let nullCount = 0;
+    let asciiCount = 0;
+    let highCount = 0;
+    let bitsSet = 0;
+
+    for (let i = 0; i < len; i++) {
+      let b = target[i];
+      counts[b]++;
+      if (b === 0) nullCount++;
+      if (b >= 32 && b <= 126) asciiCount++;
+      if (b >= 128) highCount++;
+      // Popcount
+      let v = b;
+      while (v > 0) {
+        bitsSet += (v & 1);
+        v >>= 1;
+      }
+    }
+
+    let totalBits = len * 8;
+    let bitPct = totalBits > 0 ? ((bitsSet / totalBits) * 100).toFixed(1) : '0.0';
+    document.getElementById('entropyPopCount').innerText = bitsSet + ' / ' + totalBits + ' (' + bitPct + '%)';
+    document.getElementById('entropyNullRatio').innerText = nullCount + ' (' + ((nullCount / len) * 100).toFixed(1) + '%)';
+    document.getElementById('entropyAsciiRatio').innerText = asciiCount + ' (' + ((asciiCount / len) * 100).toFixed(1) + '%)';
+    document.getElementById('entropyHighRatio').innerText = highCount + ' (' + ((highCount / len) * 100).toFixed(1) + '%)';
+
+    // Top Byte Frequency Histogram
+    let uniqueCount = 0;
+    let freqList = [];
+    for (let b = 0; b < 256; b++) {
+      if (counts[b] > 0) {
+        uniqueCount++;
+        freqList.push({ byte: b, count: counts[b] });
+      }
+    }
+    freqList.sort((a, b) => b.count - a.count);
+
+    document.getElementById('uniqueBytesCountLabel').innerText = uniqueCount + ' Unique Bytes in ' + len + ' Bytes Total';
+
+    let histContainer = document.getElementById('byteFreqHistogram');
+    histContainer.innerHTML = '';
+
+    let maxOccur = freqList.length > 0 ? freqList[0].count : 1;
+    let topToShow = freqList.slice(0, 12);
+
+    topToShow.forEach(item => {
+      let row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '8px';
+      row.style.fontSize = '0.78rem';
+      row.style.fontFamily = 'monospace';
+
+      let hexStr = '0x' + item.byte.toString(16).padStart(2, '0').toUpperCase();
+      let charStr = (item.byte >= 32 && item.byte <= 126) ? "'" + String.fromCharCode(item.byte) + "'" : "·";
+      let countPct = ((item.count / len) * 100).toFixed(1);
+      let barWidth = ((item.count / maxOccur) * 100).toFixed(1);
+
+      row.innerHTML = `
+        <span style="width:50px; color:var(--accent-cyan);">${hexStr}</span>
+        <span style="width:25px; color:var(--accent-emerald); text-align:center;">${charStr}</span>
+        <div style="flex-grow:1; background:var(--input-bg); border-radius:4px; height:12px; overflow:hidden; border:1px solid var(--border-color);">
+          <div style="width:${barWidth}%; height:100%; background:linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); border-radius:3px;"></div>
+        </div>
+        <span style="width:75px; text-align:right; color:var(--text-secondary);">${item.count} (${countPct}%)</span>
+      `;
+      histContainer.appendChild(row);
+    });
+
+    dissectHeader();
+  }
+
+  function dissectHeader() {
+    let target = (binaryBuffer && binaryBuffer.length > 0) ? binaryBuffer : new Uint8Array([0, 0, 0, 0]);
+    let sig = detectFileSignature(target);
+    document.getElementById('detectedFileType').value = sig.name + (sig.ext ? ' (' + sig.ext + ')' : '');
+
+    let headerHex = Array.from(target.slice(0, 16)).map(b => '0x' + b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    let headerAsc = Array.from(target.slice(0, 16)).map(b => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.')).join('');
+
+    let report = 'Header Magic Hex:      ' + headerHex + '\n' +
+                 'ASCII Representation:  |' + headerAsc + '|\n' +
+                 'Signature Description: ' + sig.desc + '\n' +
+                 'Buffer Total Length:   ' + target.length + ' Bytes\n' +
+                 'Endianness Profile:    ' + (isLittleEndian ? 'Little Endian (LE - Standard x86/ARM)' : 'Big Endian (BE - Network Byte Order)');
+
+    document.getElementById('sigDetailsBox').innerText = report;
+  }
+
   // --- DATA INSPECTOR PANEL ---
   function updateInspectorFromVal(val32) {
     let buf = new ArrayBuffer(8);
@@ -913,6 +1180,23 @@
     // Fill 64-bit with pattern
     view.setUint32(4, val32, isLittleEndian);
     document.getElementById('valDouble').innerText = view.getFloat64(0, isLittleEndian).toExponential(8);
+
+    // 4-byte Entropy & PopCount for inspector
+    let fourBytes = new Uint8Array(4);
+    for (let i = 0; i < 4; i++) fourBytes[i] = view.getUint8(i);
+    let ent = calculateShannonEntropy(fourBytes);
+    let entCls = getEntropyClassification(ent);
+    document.getElementById('valEntropy').innerText = ent.toFixed(3) + ' b/B (' + entCls.label.split(' ')[0] + ')';
+
+    let bits = 0;
+    for (let i = 0; i < 4; i++) {
+      let v = fourBytes[i];
+      while (v > 0) { bits += (v & 1); v >>= 1; }
+    }
+    document.getElementById('valPopCount').innerText = bits + ' / 32 (' + (bits % 2 === 0 ? 'Even' : 'Odd') + ')';
+
+    let sig = detectFileSignature(fourBytes);
+    document.getElementById('valSig').innerText = sig.name;
   }
 
   function updateInspector() {

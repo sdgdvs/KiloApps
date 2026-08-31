@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
+#include <shellapi.h>
 
 #ifndef ES_AUTOHSCRAWL
 #define ES_AUTOHSCRAWL 0x0080L
@@ -459,6 +460,10 @@ void OpenArchive(const char* filepath) {
         if (!payload) break;
 
         ReadFile(hFile, payload, archive[i].compSize, &read, NULL);
+        if (read != archive[i].compSize) {
+            HeapFree(GetProcessHeap(), 0, payload);
+            break;
+        }
 
         if (isV2 && (flags & 0x01)) {
             CryptData(payload, archive[i].compSize, pwdHash);
@@ -510,10 +515,10 @@ void ExtractSingleFile(int realIndex) {
     }
 }
 
-void ExtractAll() {
+int ExtractAll(int silent) {
     if (numFiles == 0) {
-        MessageBoxA(NULL, "No files to extract.", "KZip", MB_OK | MB_ICONWARNING);
-        return;
+        if (!silent) MessageBoxA(NULL, "No files to extract.", "KZip", MB_OK | MB_ICONWARNING);
+        return 0;
     }
     int count = 0;
     for (int i = 0; i < numFiles; i++) {
@@ -530,9 +535,12 @@ void ExtractAll() {
             count++;
         }
     }
-    char msg[128];
-    wsprintfA(msg, "Extracted %d file(s) to current directory.", count);
-    MessageBoxA(NULL, msg, "KZip", MB_OK | MB_ICONINFORMATION);
+    if (!silent) {
+        char msg[128];
+        wsprintfA(msg, "Extracted %d file(s) to current directory.", count);
+        MessageBoxA(NULL, msg, "KZip", MB_OK | MB_ICONINFORMATION);
+    }
+    return count;
 }
 
 void ShowPreview(int realIdx) {
@@ -689,6 +697,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Set Fonts
             EnumChildWindows(hwnd, SetFontEnumProc, (LPARAM)hFont);
 
+            DragAcceptFiles(hwnd, TRUE);
+            break;
+        }
+        case WM_DROPFILES: {
+            HDROP hDrop = (HDROP)wParam;
+            UINT count = DragQueryFileA(hDrop, 0xFFFFFFFF, NULL, 0);
+            for (UINT i = 0; i < count; i++) {
+                char dropFile[MAX_PATH] = {0};
+                DragQueryFileA(hDrop, i, dropFile, sizeof(dropFile));
+                int len = lstrlenA(dropFile);
+                if (len > 4 && FastToLower(dropFile[len - 4]) == '.' &&
+                               FastToLower(dropFile[len - 3]) == 'k' &&
+                               FastToLower(dropFile[len - 2]) == 'z' &&
+                               FastToLower(dropFile[len - 1]) == 'a') {
+                    OpenArchive(dropFile);
+                    break;
+                } else {
+                    AddFileToArchive(dropFile);
+                }
+            }
+            DragFinish(hDrop);
             break;
         }
         case WM_COMMAND: {
@@ -753,9 +782,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     numFiles--;
                     RefreshList();
+                    if (numVisible > 0) {
+                        int newSel = sel < numVisible ? sel : numVisible - 1;
+                        SendMessage(hListBox, LB_SETCURSEL, newSel, 0);
+                    }
                 }
             } else if (id == 6) { // Extract All
-                ExtractAll();
+                ExtractAll(0);
             } else if (id == 7) { // Verify
                 VerifyIntegrity();
             } else if (id == 8) { // Batch Extract
@@ -774,17 +807,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (*p == '\0') {
                         // Single file selected
                         OpenArchive(file);
-                        ExtractAll();
+                        ExtractAll(0);
                     } else {
                         // Multiple files
+                        int totalExtracted = 0;
                         while (*p) {
                             char fullPath[MAX_PATH];
                             wsprintfA(fullPath, "%s\\%s", dir, p);
                             OpenArchive(fullPath);
-                            ExtractAll();
+                            totalExtracted += ExtractAll(1);
                             p += lstrlenA(p) + 1;
                         }
-                        MessageBoxA(hwnd, "Batch extraction complete.", "KZip", MB_OK | MB_ICONINFORMATION);
+                        char msg[128];
+                        wsprintfA(msg, "Batch extraction complete. Extracted %d file(s).", totalExtracted);
+                        MessageBoxA(hwnd, msg, "KZip", MB_OK | MB_ICONINFORMATION);
                     }
                 }
             } else if (id == 9) { // Preview
@@ -795,7 +831,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MessageBoxA(NULL, "Please select a file to preview.", "KZip", MB_OK | MB_ICONWARNING);
                 }
             } else if (id == 10) { // Help
-                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' or F1 - This help", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' or F1 - This help\nDelete - Remove selected file", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (id == 105 && code == BN_CLICKED) { // Regex Checkbox
                 RefreshList();
             }
@@ -859,10 +895,17 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
-            HWND hFocus = GetFocus();
-            if (hFocus != hEditSearch && hFocus != hEditPassword) {
-                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' or F1 - This help", "Help", MB_OK | MB_ICONINFORMATION);
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) {
+                HWND hFocus = GetFocus();
+                if (hFocus != hEditSearch && hFocus != hEditPassword) {
+                    MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' or F1 - This help\nDelete - Remove selected file", "Help", MB_OK | MB_ICONINFORMATION);
+                }
+            } else if (msg.wParam == VK_DELETE) {
+                HWND hFocus = GetFocus();
+                if (hFocus == hListBox) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(5, BN_CLICKED), (LPARAM)hBtnRemove);
+                }
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {

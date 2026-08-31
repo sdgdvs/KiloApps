@@ -539,7 +539,7 @@
     if (!keyHashNum || !bytes) return bytes;
     const out = new Uint8Array(bytes.length);
     for (let i = 0; i < bytes.length; i++) {
-      const k = (keyHashNum + i * 31 + (keyHashNum >> (i % 8))) & 0xFF;
+      const k = (keyHashNum + i * 31 + (keyHashNum >>> (i % 8))) & 0xFF;
       out[i] = bytes[i] ^ k;
     }
     return out;
@@ -547,7 +547,8 @@
 
   function base64ToUint8(b64) {
     if (!b64) return new Uint8Array(0);
-    const str = atob(b64.includes(',') ? b64.split(',')[1] : b64);
+    const clean = b64.includes(',') ? b64.split(',')[1] : b64;
+    const str = atob(clean);
     const u8 = new Uint8Array(str.length);
     for (let i = 0; i < str.length; i++) u8[i] = str.charCodeAt(i);
     return u8;
@@ -557,8 +558,10 @@
     if (!u8) return '';
     let binary = '';
     const len = u8.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(u8[i]);
+    const chunkSize = 8192;
+    for (let i = 0; i < len; i += chunkSize) {
+      const slice = u8.subarray(i, Math.min(i + chunkSize, len));
+      binary += String.fromCharCode.apply(null, slice);
     }
     return btoa(binary);
   }
@@ -591,7 +594,10 @@
           try {
             const re = new RegExp(filterText, 'i');
             if (!re.test(f.name)) return;
-          } catch(e) { }
+          } catch(e) {
+            // Invalid regex pattern - fallback to case-insensitive substring
+            if (!f.name.toLowerCase().includes(filterText)) return;
+          }
         } else {
           if (!f.name.toLowerCase().includes(filterText)) return;
         }
@@ -603,6 +609,12 @@
       if (selectedIndices.has(idx)) {
         tr.classList.add('selected');
       }
+
+      tr.ondblclick = () => {
+        selectedIndices.clear();
+        selectedIndices.add(idx);
+        btnPreview.click();
+      };
 
       tr.onclick = (e) => {
         if (e.target.type === 'checkbox') return;
@@ -770,6 +782,66 @@
     }
   };
 
+  function loadArchiveData(parsed) {
+    files = [];
+    selectedIndices.clear();
+
+    if (parsed.magic === 'KZA2') {
+      const pwdHashNum = parsed.pwdHash || 0;
+      let userHashNum = 0;
+
+      if (parsed.flags & 1) {
+        const userPass = passwordInput.value || prompt("Archive is password protected! Enter Password:");
+        if (userPass) {
+          userHashNum = parseInt(calculateCRC32(new TextEncoder().encode(userPass)), 16);
+        }
+        if (userHashNum !== pwdHashNum) {
+          return alert("Access Denied: Incorrect Password!");
+        }
+      }
+
+      for (const f of parsed.files) {
+        if (f.uncompSize > MAX_FILE_SIZE || f.compSize > MAX_FILE_SIZE) {
+          alert(`File ${f.name} exceeds max size limit (100MB). Skipping.`);
+          continue;
+        }
+        let payload = base64ToUint8(f.data);
+        if (pwdHashNum) {
+          payload = cryptXOR(payload, pwdHashNum);
+        }
+        let raw = payload;
+        if (f.method === 1) {
+          raw = decompressRLE(payload, f.uncompSize);
+        }
+        files.push({
+          name: sanitizeFilename(f.name),
+          uncompSize: f.uncompSize,
+          compSize: f.compSize,
+          crc32: f.crc32,
+          method: f.method,
+          rawBytes: raw,
+          packedBytes: payload
+        });
+      }
+    } else if (Array.isArray(parsed)) {
+      // Legacy KZA v1 format
+      for (const f of parsed) {
+        const raw = base64ToUint8(f.data);
+        const crc = calculateCRC32(raw);
+        files.push({
+          name: sanitizeFilename(f.name),
+          uncompSize: raw.length,
+          compSize: raw.length,
+          crc32: crc,
+          method: 0,
+          rawBytes: raw,
+          packedBytes: raw
+        });
+      }
+    }
+    renderTable();
+  }
+
   btnOpen.onclick = async () => {
     try {
       const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
@@ -778,64 +850,7 @@
         if (readRes && readRes.data) {
           const jsonStr = atob(readRes.data.includes(',') ? readRes.data.split(',')[1] : readRes.data);
           const parsed = JSON.parse(jsonStr);
-
-          files = [];
-          selectedIndices.clear();
-
-          if (parsed.magic === 'KZA2') {
-            const pwdHashNum = parsed.pwdHash || 0;
-            let userHashNum = 0;
-
-            if (parsed.flags & 1) {
-              const userPass = passwordInput.value || prompt("Archive is password protected! Enter Password:");
-              if (userPass) {
-                userHashNum = parseInt(calculateCRC32(new TextEncoder().encode(userPass)), 16);
-              }
-              if (userHashNum !== pwdHashNum) {
-                return alert("Access Denied: Incorrect Password!");
-              }
-            }
-
-            for (const f of parsed.files) {
-              if (f.uncompSize > MAX_FILE_SIZE || f.compSize > MAX_FILE_SIZE) {
-                alert(`File ${f.name} exceeds max size limit (100MB). Skipping.`);
-                continue;
-              }
-              let payload = base64ToUint8(f.data);
-              if (pwdHashNum) {
-                payload = cryptXOR(payload, pwdHashNum);
-              }
-              let raw = payload;
-              if (f.method === 1) {
-                raw = decompressRLE(payload, f.uncompSize);
-              }
-              files.push({
-                name: sanitizeFilename(f.name),
-                uncompSize: f.uncompSize,
-                compSize: f.compSize,
-                crc32: f.crc32,
-                method: f.method,
-                rawBytes: raw,
-                packedBytes: payload
-              });
-            }
-          } else if (Array.isArray(parsed)) {
-            // Legacy KZA v1 format
-            for (const f of parsed) {
-              const raw = base64ToUint8(f.data);
-              const crc = calculateCRC32(raw);
-              files.push({
-                name: sanitizeFilename(f.name),
-                uncompSize: raw.length,
-                compSize: raw.length,
-                crc32: crc,
-                method: 0,
-                rawBytes: raw,
-                packedBytes: raw
-              });
-            }
-          }
-          renderTable();
+          loadArchiveData(parsed);
         }
       }
     } catch (e) {
@@ -976,10 +991,10 @@
            const pwdHashNum = parsed.pwdHash || 0;
            let userHashNum = 0;
            if (parsed.flags & 1) {
-             const userPass = prompt(\`Archive \${file.name} is password protected! Enter Password:\`);
+             const userPass = prompt(`Archive ${file.name} is password protected! Enter Password:`);
              if (userPass) userHashNum = parseInt(calculateCRC32(new TextEncoder().encode(userPass)), 16);
              if (userHashNum !== pwdHashNum) {
-               alert(\`Incorrect password for \${file.name}. Skipping.\`);
+               alert(`Incorrect password for ${file.name}. Skipping.`);
                continue;
              }
            }
@@ -997,7 +1012,7 @@
         console.error("Batch extract failed for", file.name, err);
       }
     }
-    alert(\`Batch extraction complete: \${count} files extracted.\`);
+    alert(`Batch extraction complete: ${count} files extracted.`);
   };
 
   const helpModal = document.getElementById('helpModal');
@@ -1047,6 +1062,20 @@
           alert(`File ${file.name} exceeds max size limit of 100MB.`);
           return;
         }
+        if (file.name.toLowerCase().endsWith('.kza')) {
+          const textReader = new FileReader();
+          textReader.onload = (evt) => {
+            try {
+              const parsed = JSON.parse(evt.target.result);
+              loadArchiveData(parsed);
+            } catch(err) {
+              alert("Failed to load archive: " + err.message);
+            }
+          };
+          textReader.readAsText(file);
+          return;
+        }
+
         const reader = new FileReader();
         reader.onload = (evt) => {
           const rawBytes = new Uint8Array(evt.target.result);
