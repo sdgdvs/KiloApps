@@ -1,4 +1,7 @@
 @echo off
-call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars32.bat"
-cl /O2 /c /MT main.c
-crinkler /SUBSYSTEM:WINDOWS main.obj kernel32.lib user32.lib gdi32.lib winmm.lib msvcrt.lib /ENTRY:WinMain /OUT:KFortress.exe
+set VCVARS="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars32.bat"
+call %VCVARS%
+cl /O2 /FeKFortress.exe main.c user32.lib gdi32.lib winmm.lib shell32.lib advapi32.lib
+if exist KFortress.exe (
+    copy /Y KFortress.exe ..\KiloOS\public\exe\KFortress.exe
+)

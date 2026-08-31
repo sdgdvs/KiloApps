@@ -147,7 +147,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KFortress  | Tier 1 | Creator building (Phase TBD) | Wait for Creator to finish — then Loop 1 content pass |
 | KAlchemy   | Tier 1 | Loop 1 done (Recipe variety, quest depth, lab upgrades) | Loop 2: Hidden elemental combos, daily challenges, prestige system |
 | KColony    | Tier 1 | Loop 1 done (Colony balance, alien difficulty, expedition depth) | Loop 2: Research tech tree, planetary conditions, mutator anomalies |
 | KSpace     | Tier 1 | Loop 9 done (Multi-phase bosses, escort missions, branching paths) | Loop 10: Elite enemy squads, planetary bombardment missions, weapon overcharge |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KRogue     | Tier 1 | Loop 10 done (Final sanctuary floors, true ending, ultra bosses) | Loop 11: Classes/Loadouts (Warrior, Mage, Rogue) |
 | KQuest     | Tier 1 | Loop 9 done (Factions, mount system, crafting overhaul) | Loop 10: Kingdom management, army battles, castle defense |
 | KStarship  | Tier 1 | Loop 9 done (Interstellar factions, planetary landing, crew moral) | Loop 10: Galactic super-weapons, faction wars, alien boarding parties |
+| KFortress  | Tier 1 | Loop 1 done (3 new towers [Tesla, Ballista, Poison], Dynamite trap, 4 new enemies [Necromancer, Skeleton, Wyvern, Golem], Hero Militia squad, 2 new maps) | Loop 2: Elemental tower fusions, siege weapon upgrades, endless challenge mutators |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 10**
+- [x] KFortress (Loop 1: Added Tesla, Ballista, and Poison towers, Dynamite trap, Necromancer, Skeleton, Wyvern boss, and Stone Golem enemies, Hero 4th skill [Militia Reinforcements], and 2 new maps [Thunder Peak, Eldritch Necropolis] in both EXE and HTML)
 - [x] KSolitaire (Balance audit complete: Implemented deal fairness validator guaranteeing playable opening moves, fixed Vegas scoring exploit for returning cards to tableau, added active match bankroll persistence on abandon, and added right-click instant foundation play in both EXE and HTML)
 - [x] KRogue (Loop 10: Added True Sanctuary biome (floors 41-50), Tier 8 Ultra Bosses (Seraphim, Eldritch God), and relocated True Astaroth final battle to floor 50 in both EXE and HTML)
 
