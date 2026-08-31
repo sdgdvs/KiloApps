@@ -822,7 +822,17 @@
 
     const RING_CIRCUMFERENCE = 2 * Math.PI * 95; // ~596.9
 
-    // --- LocalStorage Helpers ---
+    // --- LocalStorage & Security Helpers ---
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     function safeStorageGet(key, defaultVal) {
       try {
         const val = localStorage.getItem(key);
@@ -1159,7 +1169,7 @@
       customPresets.forEach((p, i) => {
         let btn = document.createElement('button');
         btn.className = 'chip-btn';
-        btn.innerHTML = `${p.name} (${p.time.substring(3)}) <span style="margin-left:4px; opacity:0.6;">&times;</span>`;
+        btn.innerHTML = `${escapeHtml(p.name)} (${escapeHtml(p.time.substring(3))}) <span style="margin-left:4px; opacity:0.6;" aria-label="Delete preset">&times;</span>`;
         btn.onclick = (e) => {
           if (e.target.tagName === 'SPAN') {
             customPresets.splice(i, 1);
@@ -1186,6 +1196,7 @@
       if (!name) return alert('Please enter a preset label.');
       let ms = parseTimeInput(timeVal);
       if (ms <= 0) return alert('Please set a valid time duration first.');
+      if (customPresets.length >= 30) return alert('Maximum of 30 custom presets reached.');
 
       customPresets.push({ name, time: formatMs(ms) });
       safeStorageSet('ktimer_custom_presets', customPresets);
@@ -1277,7 +1288,7 @@
         card.className = `multitimer-card ${t.remainingMs === 0 ? 'finished' : ''}`;
         card.innerHTML = `
           <div class="mt-header">
-            <span class="mt-name">${t.name}</span>
+            <span class="mt-name">${escapeHtml(t.name)}</span>
             <span class="mt-time">${formatMs(t.remainingMs)}</span>
           </div>
           <div class="mt-bar-bg">
@@ -1326,6 +1337,7 @@
       let timeVal = document.getElementById('mtTimeInput').value.trim();
       let ms = parseTimeInput(timeVal);
       if (!name || ms <= 0) return alert('Please specify a valid name and time.');
+      if (multiTimers.length >= 20) return alert('Maximum of 20 timers reached. Clear finished timers first.');
 
       multiTimers.push({
         id: Date.now(),
@@ -1732,11 +1744,51 @@
 
     renderIntervalUI();
 
-    // Help Shortcut
+    // Live config update listeners
+    ['pomoCfgWork', 'pomoCfgShort', 'pomoCfgLong'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => {
+          if (!pomoInterval) {
+            pomoTotal = getPomoDuration(pomoState);
+            pomoRemaining = pomoTotal;
+            renderPomoUI();
+          }
+        });
+      }
+    });
+
+    ['intCfgWork', 'intCfgRest', 'intCfgSets', 'intCfgPrep'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => {
+          if (!intInterval && intPhase === INT_PHASE.PREP) {
+            readIntervalConfig();
+            intTotalPhaseMs = intPrepMs;
+            intRemainingMs = intPrepMs;
+            renderIntervalUI();
+          }
+        });
+      }
+    });
+
+    // Keyboard Shortcuts (Space to Start/Pause, H/F1 for Help)
     document.addEventListener('keydown', (e) => {
-      if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT') {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        const activeTabObj = tabs.find(t => t.panel.classList.contains('active'));
+        if (activeTabObj) {
+          if (activeTabObj.name === 'stopwatch') swBtnStart.click();
+          else if (activeTabObj.name === 'timer') tmBtnStart.click();
+          else if (activeTabObj.name === 'pomodoro') pomoBtnStart.click();
+          else if (activeTabObj.name === 'interval') intBtnStart.click();
+        }
+        return;
+      }
+      if ((e.key.toLowerCase() === 'h' || e.key === 'F1')) {
         if (e.key === 'F1') e.preventDefault();
-        alert("KTimer Help:\n\n- Stopwatch: Track laps.\n- Timer: Count down.\n- Multi: Multiple timers.\n- Pomodoro: Work/Break cycles.\n- Interval: HIIT Work/Rest cycles.");
+        alert("KTimer Help:\n\n- Space: Start / Pause active timer\n- Stopwatch: Track laps with split analysis\n- Timer: Countdown with presets\n- Multi: Run multiple concurrent timers\n- Pomodoro: 25/5/15 work/break cycles\n- Interval: HIIT Work/Rest timer");
       }
     });
 

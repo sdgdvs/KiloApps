@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KTimer
+**Target App:** KTodo
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -271,3 +271,6 @@ Pass 1 Complete.
 - **KTerm**: Fixed parent window DOM mutation security issues in `kterm.html`. Fixed Ctrl+R reverse search query tracking and real-time input routing in both web and native versions. Fixed command prefix collisions (e.g., `category`) and flag handling (`ls -la`). Recompiled native `KTerm.exe` (19.9 KB) and verified Vite web build.
 
 - **KTetris**: Fixed state corruption and fast-forwarding replays caused by state mutations in `WM_PAINT` in `main.c`. Resolved per-frame GDI font leaks and fixed keybind file corruption. Added 5-line Pentris support and array bounds safety in C and HTML. Fixed replay mode softlocks and aligned native skill click hitboxes. Recompiled `KTetris.exe` (33.8 KB) and verified Vite web build.
+
+- **KTimer**: Fixed XSS DOM injection vulnerability in custom preset and multi-timer rendering via `escapeHtml`. Added maximum capacity bounds for custom presets (max 30) and multi-timers (max 20) to prevent unbounded memory growth. Added live reactive input listeners for Pomodoro and HIIT interval configuration updates, and implemented Spacebar keyboard shortcut (Start/Pause active timer) across web and native Win32 versions. Added `WS_TABSTOP` styles and safe string bounded copy (`lstrcpynA`) in `main.c`. Recompiled native `KTimer.exe` (22 KB) and verified Vite web build.
+

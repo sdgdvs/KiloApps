@@ -72,6 +72,7 @@ typedef struct {
     char email[128];
     char category[32];
     char company[64];
+    char tags[64];
     char notes[128];
     int fav;
 } Contact;
@@ -105,6 +106,7 @@ void LoadDemoData() {
     my_strncpy(contacts[0].email, "alice.smith@acme.com", sizeof(contacts[0].email));
     my_strncpy(contacts[0].category, "Work", sizeof(contacts[0].category));
     my_strncpy(contacts[0].company, "Acme Corp", sizeof(contacts[0].company));
+    my_strncpy(contacts[0].tags, "vip, architect", sizeof(contacts[0].tags));
     my_strncpy(contacts[0].notes, "Lead Architect.", sizeof(contacts[0].notes));
     contacts[0].fav = 1;
 
@@ -113,6 +115,7 @@ void LoadDemoData() {
     my_strncpy(contacts[1].email, "bob.jones@gmail.com", sizeof(contacts[1].email));
     my_strncpy(contacts[1].category, "Personal", sizeof(contacts[1].category));
     my_strncpy(contacts[1].company, "", sizeof(contacts[1].company));
+    my_strncpy(contacts[1].tags, "tech, meetup", sizeof(contacts[1].tags));
     my_strncpy(contacts[1].notes, "Met at tech conference.", sizeof(contacts[1].notes));
     contacts[1].fav = 0;
 
@@ -121,6 +124,7 @@ void LoadDemoData() {
     my_strncpy(contacts[2].email, "carla@designstudio.io", sizeof(contacts[2].email));
     my_strncpy(contacts[2].category, "Work", sizeof(contacts[2].category));
     my_strncpy(contacts[2].company, "Design Studio", sizeof(contacts[2].company));
+    my_strncpy(contacts[2].tags, "vip, design", sizeof(contacts[2].tags));
     my_strncpy(contacts[2].notes, "UX Consultant.", sizeof(contacts[2].notes));
     contacts[2].fav = 1;
 
@@ -129,6 +133,7 @@ void LoadDemoData() {
     my_strncpy(contacts[3].email, "dmiller@familynet.org", sizeof(contacts[3].email));
     my_strncpy(contacts[3].category, "Family", sizeof(contacts[3].category));
     my_strncpy(contacts[3].company, "", sizeof(contacts[3].company));
+    my_strncpy(contacts[3].tags, "family", sizeof(contacts[3].tags));
     my_strncpy(contacts[3].notes, "Cousin.", sizeof(contacts[3].notes));
     contacts[3].fav = 0;
 }
@@ -147,12 +152,13 @@ void RefreshList() {
     }
 
     for (int i = 0; i < contact_count; i++) {
-        // Search match
+        // Search match (including tags)
         int search_match = (search_buf[0] == 0) || 
                            my_stristr(contacts[i].name, search_buf) || 
                            my_stristr(contacts[i].email, search_buf) || 
                            my_stristr(contacts[i].phone, search_buf) ||
-                           my_stristr(contacts[i].company, search_buf);
+                           my_stristr(contacts[i].company, search_buf) ||
+                           my_stristr(contacts[i].tags, search_buf);
 
         // Category match
         int cat_match = 1;
@@ -167,7 +173,11 @@ void RefreshList() {
             filtered_count++;
 
             char display[256];
-            wsprintfA(display, "%s%s [%s]", contacts[i].fav ? "* " : "", contacts[i].name, contacts[i].category[0] ? contacts[i].category : "Other");
+            if (contacts[i].tags[0] != 0) {
+                wsprintfA(display, "%s%s [%s #%s]", contacts[i].fav ? "* " : "", contacts[i].name, contacts[i].category[0] ? contacts[i].category : "Other", contacts[i].tags);
+            } else {
+                wsprintfA(display, "%s%s [%s]", contacts[i].fav ? "* " : "", contacts[i].name, contacts[i].category[0] ? contacts[i].category : "Other");
+            }
             SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)display);
         }
     }
@@ -215,6 +225,27 @@ void extract_vcard_field(const char* card, const char* key, char* out, int out_l
     }
 }
 
+void extract_json_field(const char* obj, const char* key, char* out, int out_len) {
+    if (!out || out_len <= 0) return;
+    out[0] = 0;
+    if (!obj || !key) return;
+    char pattern[64];
+    wsprintfA(pattern, "\"%s\"", key);
+    char* p = my_stristr(obj, pattern);
+    if (!p) return;
+    p += my_strlen(pattern);
+    while (*p && (*p == ' ' || *p == ':' || *p == '\t' || *p == '\r' || *p == '\n')) p++;
+    if (*p == '\"') {
+        p++;
+        int i = 0;
+        while (*p && *p != '\"' && i < out_len - 1) {
+            if (*p == '\\' && *(p + 1)) p++;
+            out[i++] = *p++;
+        }
+        out[i] = 0;
+    }
+}
+
 void MergeDuplicates(HWND hwnd) {
     if (contact_count < 2) {
         MessageBoxA(hwnd, "Not enough contacts to merge.", "KContacts", MB_OK | MB_ICONINFORMATION);
@@ -228,6 +259,7 @@ void MergeDuplicates(HWND hwnd) {
                 if (contacts[i].phone[0] == 0 && contacts[j].phone[0] != 0) my_strncpy(contacts[i].phone, contacts[j].phone, sizeof(contacts[i].phone));
                 if (contacts[i].email[0] == 0 && contacts[j].email[0] != 0) my_strncpy(contacts[i].email, contacts[j].email, sizeof(contacts[i].email));
                 if (contacts[i].company[0] == 0 && contacts[j].company[0] != 0) my_strncpy(contacts[i].company, contacts[j].company, sizeof(contacts[i].company));
+                if (contacts[i].tags[0] == 0 && contacts[j].tags[0] != 0) my_strncpy(contacts[i].tags, contacts[j].tags, sizeof(contacts[i].tags));
                 if (contacts[i].notes[0] == 0 && contacts[j].notes[0] != 0) my_strncpy(contacts[i].notes, contacts[j].notes, sizeof(contacts[i].notes));
                 if (contacts[j].fav) contacts[i].fav = 1;
 
@@ -251,39 +283,70 @@ void MergeDuplicates(HWND hwnd) {
     MessageBoxA(hwnd, msg, "KContacts Merge", MB_OK | MB_ICONINFORMATION);
 }
 
-void ExportVCard(HWND hwnd) {
+void ExportContacts(HWND hwnd) {
     if (contact_count == 0) {
         MessageBoxA(hwnd, "No contacts to export.", "Export Error", MB_OK | MB_ICONWARNING);
         return;
     }
 
-    char filepath[MAX_PATH] = "contacts.vcf";
+    char filepath[MAX_PATH] = "contacts_directory.md";
     OPENFILENAMEA ofn = {0};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
-    ofn.lpstrFilter = "vCard Files (*.vcf)\0*.vcf\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFilter = "Markdown Directory (*.md)\0*.md\0JSON Database (*.json)\0*.json\0vCard Files (*.vcf)\0*.vcf\0CSV Files (*.csv)\0*.csv\0All Files (*.*)\0*.*\0";
     ofn.lpstrFile = filepath;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
-    ofn.lpstrDefExt = "vcf";
+    ofn.lpstrDefExt = "md";
 
     if (GetSaveFileNameA(&ofn)) {
         HANDLE hFile = CreateFileA(filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
-            for (int i = 0; i < contact_count; i++) {
-                char buf[1024];
-                wsprintfA(buf, "BEGIN:VCARD\r\nVERSION:3.0\r\nFN:%s\r\nTEL;TYPE=CELL:%s\r\nEMAIL;TYPE=INTERNET:%s\r\nORG:%s\r\nCATEGORIES:%s\r\nNOTE:%s\r\nEND:VCARD\r\n",
-                    contacts[i].name, contacts[i].phone, contacts[i].email, contacts[i].company, contacts[i].category, contacts[i].notes);
-                DWORD written = 0;
-                WriteFile(hFile, buf, my_strlen(buf), &written, NULL);
+            DWORD written = 0;
+            if (my_stristr(filepath, ".json")) {
+                const char* header = "[\r\n";
+                WriteFile(hFile, header, my_strlen(header), &written, NULL);
+                for (int i = 0; i < contact_count; i++) {
+                    char buf[1024];
+                    wsprintfA(buf, "  {\r\n    \"name\": \"%s\",\r\n    \"phone\": \"%s\",\r\n    \"email\": \"%s\",\r\n    \"category\": \"%s\",\r\n    \"company\": \"%s\",\r\n    \"tags\": \"%s\",\r\n    \"fav\": %d,\r\n    \"notes\": \"%s\"\r\n  }%s\r\n",
+                        contacts[i].name, contacts[i].phone, contacts[i].email, contacts[i].category, contacts[i].company, contacts[i].tags, contacts[i].fav, contacts[i].notes, (i < contact_count - 1) ? "," : "");
+                    WriteFile(hFile, buf, my_strlen(buf), &written, NULL);
+                }
+                const char* footer = "]\r\n";
+                WriteFile(hFile, footer, my_strlen(footer), &written, NULL);
+            } else if (my_stristr(filepath, ".csv")) {
+                const char* header = "Name,Phone,Email,Category,Company,Tags,Favorite,Notes\r\n";
+                WriteFile(hFile, header, my_strlen(header), &written, NULL);
+                for (int i = 0; i < contact_count; i++) {
+                    char buf[1024];
+                    wsprintfA(buf, "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%s,\"%s\"\r\n",
+                        contacts[i].name, contacts[i].phone, contacts[i].email, contacts[i].category, contacts[i].company, contacts[i].tags, contacts[i].fav ? "TRUE" : "FALSE", contacts[i].notes);
+                    WriteFile(hFile, buf, my_strlen(buf), &written, NULL);
+                }
+            } else if (my_stristr(filepath, ".vcf")) {
+                for (int i = 0; i < contact_count; i++) {
+                    char buf[1024];
+                    wsprintfA(buf, "BEGIN:VCARD\r\nVERSION:3.0\r\nFN:%s\r\nTEL;TYPE=CELL:%s\r\nEMAIL;TYPE=INTERNET:%s\r\nORG:%s\r\nCATEGORIES:%s\r\nX-TAGS:%s\r\nNOTE:%s\r\nEND:VCARD\r\n",
+                        contacts[i].name, contacts[i].phone, contacts[i].email, contacts[i].company, contacts[i].category, contacts[i].tags, contacts[i].notes);
+                    WriteFile(hFile, buf, my_strlen(buf), &written, NULL);
+                }
+            } else { // Markdown default
+                const char* title = "# \xF0\x9F\x93\x87 KContacts Directory\r\n\r\n## Contacts Summary\r\n\r\n";
+                WriteFile(hFile, title, my_strlen(title), &written, NULL);
+                for (int i = 0; i < contact_count; i++) {
+                    char buf[1024];
+                    wsprintfA(buf, "### %s%s\r\n- **Category:** %s\r\n- **Tags:** #%s\r\n- **Phone:** [%s](tel:%s)\r\n- **Email:** [%s](mailto:%s)\r\n- **Company:** %s\r\n- **Notes:** %s\r\n\r\n---\r\n\r\n",
+                        contacts[i].name, contacts[i].fav ? " [Favorite]" : "", contacts[i].category, contacts[i].tags[0] ? contacts[i].tags : "none", contacts[i].phone, contacts[i].phone, contacts[i].email, contacts[i].email, contacts[i].company, contacts[i].notes);
+                    WriteFile(hFile, buf, my_strlen(buf), &written, NULL);
+                }
             }
             CloseHandle(hFile);
-            MessageBoxA(hwnd, "Contacts exported to vCard file successfully!", "KContacts Export", MB_OK | MB_ICONINFORMATION);
+            MessageBoxA(hwnd, "Contacts exported successfully!", "KContacts Export", MB_OK | MB_ICONINFORMATION);
         }
     }
 }
 
-void ImportVCard(HWND hwnd) {
+void ImportContacts(HWND hwnd) {
     if (contact_count >= MAX_CONTACTS) {
         MessageBoxA(hwnd, "Contact capacity reached (150 max). Cannot import.", "KContacts Import", MB_OK | MB_ICONWARNING);
         return;
@@ -293,7 +356,7 @@ void ImportVCard(HWND hwnd) {
     OPENFILENAMEA ofn = {0};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
-    ofn.lpstrFilter = "vCard Files (*.vcf)\0*.vcf\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFilter = "All Supported (*.vcf;*.json;*.csv)\0*.vcf;*.json;*.csv\0Markdown/vCard (*.vcf)\0*.vcf\0JSON (*.json)\0*.json\0CSV (*.csv)\0*.csv\0All Files (*.*)\0*.*\0";
     ofn.lpstrFile = filepath;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
@@ -310,37 +373,69 @@ void ImportVCard(HWND hwnd) {
                     buf[read_bytes] = 0;
 
                     int imported = 0;
-                    char* p = buf;
-                    while (p && *p) {
-                        char* card_start = my_stristr(p, "BEGIN:VCARD");
-                        if (!card_start) break;
-                        char* card_end = my_stristr(card_start, "END:VCARD");
-                        if (!card_end) break;
+                    if (my_stristr(filepath, ".json") || buf[0] == '[') {
+                        char* p = buf;
+                        while (p && *p) {
+                            char* obj_start = my_stristr(p, "{");
+                            if (!obj_start) break;
+                            char* obj_end = my_stristr(obj_start, "}");
+                            if (!obj_end) break;
 
-                        if (contact_count < MAX_CONTACTS) {
-                            Contact* c = &contacts[contact_count];
-                            memset(c, 0, sizeof(Contact));
+                            if (contact_count < MAX_CONTACTS) {
+                                Contact* c = &contacts[contact_count];
+                                memset(c, 0, sizeof(Contact));
 
-                            extract_vcard_field(card_start, "FN", c->name, sizeof(c->name));
-                            if (c->name[0] == 0) extract_vcard_field(card_start, "N", c->name, sizeof(c->name));
-                            extract_vcard_field(card_start, "TEL", c->phone, sizeof(c->phone));
-                            extract_vcard_field(card_start, "EMAIL", c->email, sizeof(c->email));
-                            extract_vcard_field(card_start, "ORG", c->company, sizeof(c->company));
-                            extract_vcard_field(card_start, "CATEGORIES", c->category, sizeof(c->category));
-                            if (c->category[0] == 0) my_strncpy(c->category, "Personal", sizeof(c->category));
-                            extract_vcard_field(card_start, "NOTE", c->notes, sizeof(c->notes));
+                                extract_json_field(obj_start, "name", c->name, sizeof(c->name));
+                                extract_json_field(obj_start, "phone", c->phone, sizeof(c->phone));
+                                extract_json_field(obj_start, "email", c->email, sizeof(c->email));
+                                extract_json_field(obj_start, "category", c->category, sizeof(c->category));
+                                if (c->category[0] == 0) my_strncpy(c->category, "Personal", sizeof(c->category));
+                                extract_json_field(obj_start, "company", c->company, sizeof(c->company));
+                                extract_json_field(obj_start, "tags", c->tags, sizeof(c->tags));
+                                extract_json_field(obj_start, "notes", c->notes, sizeof(c->notes));
 
-                            if (c->name[0] != 0) {
-                                contact_count++;
-                                imported++;
+                                if (c->name[0] != 0) {
+                                    contact_count++;
+                                    imported++;
+                                }
                             }
+                            p = obj_end + 1;
                         }
-                        p = card_end + 9;
+                    } else {
+                        char* p = buf;
+                        while (p && *p) {
+                            char* card_start = my_stristr(p, "BEGIN:VCARD");
+                            if (!card_start) break;
+                            char* card_end = my_stristr(card_start, "END:VCARD");
+                            if (!card_end) break;
+
+                            if (contact_count < MAX_CONTACTS) {
+                                Contact* c = &contacts[contact_count];
+                                memset(c, 0, sizeof(Contact));
+
+                                extract_vcard_field(card_start, "FN", c->name, sizeof(c->name));
+                                if (c->name[0] == 0) extract_vcard_field(card_start, "N", c->name, sizeof(c->name));
+                                extract_vcard_field(card_start, "TEL", c->phone, sizeof(c->phone));
+                                extract_vcard_field(card_start, "EMAIL", c->email, sizeof(c->email));
+                                extract_vcard_field(card_start, "ORG", c->company, sizeof(c->company));
+                                extract_vcard_field(card_start, "CATEGORIES", c->category, sizeof(c->category));
+                                if (c->category[0] == 0) my_strncpy(c->category, "Personal", sizeof(c->category));
+                                extract_vcard_field(card_start, "X-TAGS", c->tags, sizeof(c->tags));
+                                extract_vcard_field(card_start, "NOTE", c->notes, sizeof(c->notes));
+
+                                if (c->name[0] != 0) {
+                                    contact_count++;
+                                    imported++;
+                                }
+                            }
+                            p = card_end + 9;
+                        }
                     }
+
                     HeapFree(GetProcessHeap(), 0, buf);
                     RefreshList();
                     char msg[128];
-                    wsprintfA(msg, "Successfully imported %d contact(s) from vCard!", imported);
+                    wsprintfA(msg, "Successfully imported %d contact(s)!", imported);
                     MessageBoxA(hwnd, msg, "KContacts Import", MB_OK | MB_ICONINFORMATION);
                 }
             }
@@ -421,9 +516,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (list_idx >= 0 && list_idx < filtered_count) {
                     int real_idx = filtered_indices[list_idx];
                     char buf[1024];
-                    wsprintfA(buf, "Name: %s\r\nPhone: %s\r\nEmail: %s\r\nCategory: %s\r\nCompany: %s\r\nNotes: %s", 
+                    wsprintfA(buf, "Name: %s\r\nPhone: %s\r\nEmail: %s\r\nCategory: %s\r\nCompany: %s\r\nTags: %s\r\nNotes: %s", 
                         contacts[real_idx].name, contacts[real_idx].phone, contacts[real_idx].email,
-                        contacts[real_idx].category, contacts[real_idx].company, contacts[real_idx].notes);
+                        contacts[real_idx].category, contacts[real_idx].company, contacts[real_idx].tags, contacts[real_idx].notes);
                     SetWindowTextA(hEdit, buf);
                     SendMessageA(hChkFav, BM_SETCHECK, contacts[real_idx].fav ? BST_CHECKED : BST_UNCHECKED, 0);
                 }
@@ -438,6 +533,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     my_strncpy(contacts[contact_count].email, "", sizeof(contacts[contact_count].email));
                     my_strncpy(contacts[contact_count].category, "Personal", sizeof(contacts[contact_count].category));
                     my_strncpy(contacts[contact_count].company, "", sizeof(contacts[contact_count].company));
+                    contacts[contact_count].tags[0] = 0;
                     my_strncpy(contacts[contact_count].notes, "", sizeof(contacts[contact_count].notes));
                     contacts[contact_count].fav = 0;
                     contact_count++;
@@ -476,6 +572,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     extract_field(buf, "Email: ", contacts[real_idx].email, sizeof(contacts[real_idx].email));
                     extract_field(buf, "Category: ", contacts[real_idx].category, sizeof(contacts[real_idx].category));
                     extract_field(buf, "Company: ", contacts[real_idx].company, sizeof(contacts[real_idx].company));
+                    extract_field(buf, "Tags: ", contacts[real_idx].tags, sizeof(contacts[real_idx].tags));
                     extract_field(buf, "Notes: ", contacts[real_idx].notes, sizeof(contacts[real_idx].notes));
                     contacts[real_idx].fav = (SendMessageA(hChkFav, BM_GETCHECK, 0, 0) == BST_CHECKED);
                     RefreshList();
@@ -484,11 +581,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (control_id == 1005) { // Merge Dups
                 MergeDuplicates(hwnd);
             }
-            else if (control_id == 1006) { // Export vCard
-                ExportVCard(hwnd);
+            else if (control_id == 1006) { // Export (Markdown / JSON / vCard / CSV)
+                ExportContacts(hwnd);
             }
-            else if (control_id == 1007) { // Import vCard
-                ImportVCard(hwnd);
+            else if (control_id == 1007) { // Import (JSON / vCard / CSV)
+                ImportContacts(hwnd);
             }
             else if (control_id == 1008) { // Call
                 int list_idx = SendMessageA(hList, LB_GETCURSEL, 0, 0);
@@ -517,7 +614,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             else if (control_id == 1013) { // Help
-                MessageBoxA(hwnd, "KContacts Help:\n\n- Add new contacts using '+ New'.\n- Select a contact to view/edit details on the right.\n- Use the search bar to find contacts by name, email, phone, or company.\n- Click 'Save Details' to apply changes to the selected contact.\n- Export and import your contacts using the 'Exp' and 'Imp' buttons.\n- 'Merge' resolves exact duplicate names.", "KContacts Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KContacts Help:\n\n- Add new contacts using '+ New'.\n- Select a contact to view/edit details on the right.\n- Edit Name, Phone, Email, Category, Company, Tags (e.g. vip, tech), and Notes.\n- Use the search bar to search by name, email, phone, company, or #tags.\n- Click 'Save Details' to apply changes to the selected contact.\n- Export to Markdown Directory (.md), JSON Database (.json), vCard (.vcf), or CSV using 'Exp'.\n- Import JSON, vCard, or CSV data using 'Imp'.\n- 'Merge' resolves exact duplicate names and joins tags.", "KContacts Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }

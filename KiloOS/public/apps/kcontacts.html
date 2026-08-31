@@ -286,6 +286,70 @@
   .badge-Friends { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
   .badge-Other { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
 
+  /* Tag Badges & Tag Pills */
+  .tag-pills {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 4px 0 2px 0;
+    scrollbar-width: none;
+  }
+  .tag-pills::-webkit-scrollbar { display: none; }
+
+  .tag-pill {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #334155;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .tag-pill:hover {
+    background: #334155;
+    color: #e2e8f0;
+  }
+  .tag-pill.active {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+  }
+
+  .item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 3px;
+  }
+
+  .tag-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 6px;
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .tag-badge:hover {
+    background: rgba(59, 130, 246, 0.35);
+    color: #fff;
+  }
+
+  .header-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
   /* Details Panel */
   .details-panel {
     flex: 1;
@@ -480,6 +544,10 @@
         <div class="pill" data-cat="Friends">Friends</div>
         <div class="pill" data-cat="Other">Other</div>
       </div>
+
+      <div class="tag-pills" id="tagPills" style="display: none;">
+        <!-- Dynamic Tag Filter Chips -->
+      </div>
     </div>
 
     <div class="contact-list" id="contactList">
@@ -507,6 +575,7 @@
             <span class="category-badge" id="headerCategoryBadge">Category</span>
             <span id="headerCompany" style="color: var(--text-muted); font-size: 13px;"></span>
           </div>
+          <div class="header-tags-container" id="headerTags"></div>
           <div class="quick-actions">
             <button class="btn btn-secondary" id="btnQuickCall"><span>📞</span> Call</button>
             <button class="btn btn-secondary" id="btnQuickEmail"><span>✉️</span> Email</button>
@@ -557,8 +626,13 @@
         </div>
 
         <div class="form-group">
+          <label>Tags (comma-separated)</label>
+          <input type="text" id="inpTags" placeholder="e.g. vip, client, lead, developer, friend">
+        </div>
+
+        <div class="form-group">
           <label>Notes</label>
-          <textarea id="inpNotes" rows="3" placeholder="Additional details, tags, or notes..."></textarea>
+          <textarea id="inpNotes" rows="3" placeholder="Additional details, meeting history, or notes..."></textarea>
         </div>
 
         <div class="checkbox-group">
@@ -574,7 +648,7 @@
   </div>
 
   <!-- Hidden File Input for Import -->
-  <input type="file" id="fileInput" accept=".vcf,.csv,.txt">
+  <input type="file" id="fileInput" accept=".vcf,.csv,.json,.txt">
 
   <!-- Help Modal -->
   <div id="helpModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
@@ -598,6 +672,7 @@
     let contacts = [];
     let selectedId = null;
     let currentFilter = 'All';
+    let selectedTag = null;
     const MAX_CONTACTS = 1000;
 
     // Help Modal Keydown
@@ -619,6 +694,7 @@
     const contactCount = document.getElementById('contactCount');
     const searchInput = document.getElementById('searchInput');
     const categoryPills = document.getElementById('categoryPills');
+    const tagPills = document.getElementById('tagPills');
     const emptyState = document.getElementById('emptyState');
     const contentView = document.getElementById('contentView');
     const fileInput = document.getElementById('fileInput');
@@ -628,6 +704,7 @@
     const headerFavStar = document.getElementById('headerFavStar');
     const headerCategoryBadge = document.getElementById('headerCategoryBadge');
     const headerCompany = document.getElementById('headerCompany');
+    const headerTags = document.getElementById('headerTags');
 
     const inpName = document.getElementById('inpName');
     const inpCategory = document.getElementById('inpCategory');
@@ -635,6 +712,7 @@
     const inpEmail = document.getElementById('inpEmail');
     const inpCompany = document.getElementById('inpCompany');
     const inpTitle = document.getElementById('inpTitle');
+    const inpTags = document.getElementById('inpTags');
     const inpNotes = document.getElementById('inpNotes');
     const inpFav = document.getElementById('inpFav');
 
@@ -678,14 +756,27 @@
       return (cat || 'Other').replace(/[^a-zA-Z0-9]/g, '');
     }
 
+    function parseTags(tagData) {
+      if (Array.isArray(tagData)) {
+        return tagData.map(t => String(t).trim().replace(/^#/, '')).filter(Boolean);
+      }
+      if (typeof tagData === 'string') {
+        return tagData.split(/[,;\s]+/).map(t => t.trim().replace(/^#/, '')).filter(Boolean);
+      }
+      return [];
+    }
+
     // Default Seed Data
     function seedData() {
-      const saved = localStorage.getItem('kcontacts_data_v2');
+      const saved = localStorage.getItem('kcontacts_data_v3') || localStorage.getItem('kcontacts_data_v2');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed)) {
-            contacts = parsed.slice(0, MAX_CONTACTS);
+            contacts = parsed.slice(0, MAX_CONTACTS).map(c => ({
+              ...c,
+              tags: parseTags(c.tags || [])
+            }));
             return;
           }
         } catch (e) {
@@ -702,6 +793,7 @@
           category: 'Work',
           company: 'Acme Corp',
           title: 'Lead Architect',
+          tags: ['vip', 'cloud', 'architect'],
           notes: 'Key contact for cloud infrastructure project.',
           fav: true
         },
@@ -713,6 +805,7 @@
           category: 'Personal',
           company: '',
           title: '',
+          tags: ['tech', 'meetup'],
           notes: 'Met at tech meetup in June.',
           fav: false
         },
@@ -724,6 +817,7 @@
           category: 'Work',
           company: 'Design Studio',
           title: 'UX Lead',
+          tags: ['vip', 'design', 'ux'],
           notes: 'Freelance UI/UX Consultant.',
           fav: true
         },
@@ -735,6 +829,7 @@
           category: 'Family',
           company: '',
           title: '',
+          tags: ['family'],
           notes: 'Cousin - Birthday Oct 14.',
           fav: false
         }
@@ -744,10 +839,53 @@
 
     function saveContacts() {
       try {
-        localStorage.setItem('kcontacts_data_v2', JSON.stringify(contacts));
+        localStorage.setItem('kcontacts_data_v3', JSON.stringify(contacts));
       } catch (e) {
         showToast('Storage quota exceeded. Could not save to localStorage.');
       }
+    }
+
+    // Refresh Dynamic Tag Filter Pills
+    function updateTagPills() {
+      const tagSet = new Set();
+      contacts.forEach(c => {
+        if (c.tags && Array.isArray(c.tags)) {
+          c.tags.forEach(t => tagSet.add(t.toLowerCase()));
+        }
+      });
+
+      const uniqueTags = Array.from(tagSet).sort();
+      if (uniqueTags.length === 0) {
+        tagPills.style.display = 'none';
+        tagPills.innerHTML = '';
+        return;
+      }
+
+      tagPills.style.display = 'flex';
+      tagPills.innerHTML = '';
+
+      // All Tags Pill
+      const allPill = document.createElement('div');
+      allPill.className = `tag-pill ${selectedTag === null ? 'active' : ''}`;
+      allPill.textContent = '#all-tags';
+      allPill.onclick = () => {
+        selectedTag = null;
+        updateTagPills();
+        renderList();
+      };
+      tagPills.appendChild(allPill);
+
+      uniqueTags.forEach(tag => {
+        const pill = document.createElement('div');
+        pill.className = `tag-pill ${selectedTag === tag ? 'active' : ''}`;
+        pill.textContent = `#${tag}`;
+        pill.onclick = () => {
+          selectedTag = selectedTag === tag ? null : tag;
+          updateTagPills();
+          renderList();
+        };
+        tagPills.appendChild(pill);
+      });
     }
 
     // Render Contact List
@@ -756,17 +894,26 @@
       contactList.innerHTML = '';
 
       const filtered = contacts.filter(c => {
+        const tagsStr = (c.tags || []).join(' ').toLowerCase();
         const matchesQuery = !rawQuery || 
           (c.name && c.name.toLowerCase().includes(rawQuery)) ||
           (c.email && c.email.toLowerCase().includes(rawQuery)) ||
           (c.phone && c.phone.toLowerCase().includes(rawQuery)) ||
-          (c.company && c.company.toLowerCase().includes(rawQuery));
+          (c.company && c.company.toLowerCase().includes(rawQuery)) ||
+          (c.title && c.title.toLowerCase().includes(rawQuery)) ||
+          (c.notes && c.notes.toLowerCase().includes(rawQuery)) ||
+          tagsStr.includes(rawQuery.replace(/^#/, ''));
 
         let matchesCat = true;
         if (currentFilter === 'Favorites') matchesCat = !!c.fav;
         else if (currentFilter !== 'All') matchesCat = c.category === currentFilter;
 
-        return matchesQuery && matchesCat;
+        let matchesTag = true;
+        if (selectedTag) {
+          matchesTag = c.tags && c.tags.some(t => t.toLowerCase() === selectedTag.toLowerCase());
+        }
+
+        return matchesQuery && matchesCat && matchesTag;
       });
 
       contactCount.textContent = `${contacts.length} Contact${contacts.length === 1 ? '' : 's'}`;
@@ -824,6 +971,30 @@
         info.appendChild(nameRow);
         info.appendChild(subRow);
 
+        if (c.tags && c.tags.length > 0) {
+          const tagsRow = document.createElement('div');
+          tagsRow.className = 'item-tags';
+          c.tags.slice(0, 3).forEach(tag => {
+            const tagEl = document.createElement('span');
+            tagEl.className = 'tag-badge';
+            tagEl.textContent = `#${tag}`;
+            tagEl.onclick = (e) => {
+              e.stopPropagation();
+              selectedTag = selectedTag === tag ? null : tag;
+              updateTagPills();
+              renderList();
+            };
+            tagsRow.appendChild(tagEl);
+          });
+          if (c.tags.length > 3) {
+            const moreEl = document.createElement('span');
+            moreEl.style.cssText = 'font-size: 9px; color: var(--text-muted);';
+            moreEl.textContent = `+${c.tags.length - 3}`;
+            tagsRow.appendChild(moreEl);
+          }
+          info.appendChild(tagsRow);
+        }
+
         item.appendChild(avatar);
         item.appendChild(info);
         item.appendChild(badge);
@@ -857,6 +1028,23 @@
       headerCategoryBadge.textContent = c.category || 'Other';
       headerCompany.textContent = c.company ? `${c.company} ${c.title ? '• ' + c.title : ''}` : c.title || '';
 
+      // Header tags
+      headerTags.innerHTML = '';
+      if (c.tags && c.tags.length > 0) {
+        c.tags.forEach(tag => {
+          const tBadge = document.createElement('span');
+          tBadge.className = 'tag-badge';
+          tBadge.textContent = `#${tag}`;
+          tBadge.onclick = () => {
+            selectedTag = tag;
+            updateTagPills();
+            renderList();
+            showToast(`Filtered by #${tag}`);
+          };
+          headerTags.appendChild(tBadge);
+        });
+      }
+
       // Form view
       inpName.value = c.name || '';
       inpCategory.value = c.category || 'Other';
@@ -864,6 +1052,7 @@
       inpEmail.value = c.email || '';
       inpCompany.value = c.company || '';
       inpTitle.value = c.title || '';
+      inpTags.value = (c.tags || []).join(', ');
       inpNotes.value = c.notes || '';
       inpFav.checked = !!c.fav;
     }
@@ -882,11 +1071,13 @@
         category: 'Personal',
         company: '',
         title: '',
+        tags: [],
         notes: '',
         fav: false
       };
       contacts.unshift(newContact);
       saveContacts();
+      updateTagPills();
       selectContact(newContact.id);
       showToast('Created new contact draft');
     };
@@ -909,10 +1100,12 @@
       c.email = inpEmail.value.trim().substring(0, 100);
       c.company = inpCompany.value.trim().substring(0, 100);
       c.title = inpTitle.value.trim().substring(0, 100);
+      c.tags = parseTags(inpTags.value);
       c.notes = inpNotes.value.trim().substring(0, 2000);
       c.fav = inpFav.checked;
 
       saveContacts();
+      updateTagPills();
       selectContact(selectedId);
       showToast('Contact updated successfully');
     };
@@ -927,6 +1120,7 @@
         contacts = contacts.filter(item => item.id !== selectedId);
         selectedId = null;
         saveContacts();
+        updateTagPills();
         renderList();
         emptyState.style.display = 'flex';
         contentView.style.display = 'none';
@@ -965,7 +1159,8 @@
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (c) {
-        const text = `Name: ${c.name}\nPhone: ${c.phone}\nEmail: ${c.email}\nCategory: ${c.category}\nCompany: ${c.company}\nNotes: ${c.notes}`;
+        const tagsStr = (c.tags && c.tags.length > 0) ? `\nTags: ${c.tags.map(t => '#' + t).join(' ')}` : '';
+        const text = `Name: ${c.name}\nPhone: ${c.phone}\nEmail: ${c.email}\nCategory: ${c.category}\nCompany: ${c.company}${tagsStr}\nNotes: ${c.notes}`;
         navigator.clipboard.writeText(text).then(() => {
           showToast('Copied contact info to clipboard');
         }).catch(() => {
@@ -1007,6 +1202,10 @@
           if (!existing.company && c.company) existing.company = c.company;
           if (!existing.title && c.title) existing.title = c.title;
 
+          // Merge tags
+          const mergedTags = new Set([...(existing.tags || []), ...(c.tags || [])]);
+          existing.tags = Array.from(mergedTags);
+
           const existingNotes = existing.notes || '';
           const cNotes = c.notes || '';
           if (!existingNotes && cNotes) {
@@ -1026,6 +1225,7 @@
       if (mergedCount > 0) {
         contacts = uniqueList;
         saveContacts();
+        updateTagPills();
         renderList();
         if (selectedId) selectContact(selectedId);
         showToast(`Merged ${mergedCount} duplicate contact(s)!`);
@@ -1034,22 +1234,68 @@
       }
     };
 
-    // vCard (.vcf) & CSV Export
+    // Export Handler (Markdown, JSON, vCard, CSV)
     document.getElementById('btnExport').onclick = () => {
       if (contacts.length === 0) {
         showToast('No contacts to export');
         return;
       }
 
-      const mode = prompt("Export Format: Type 'vcf' for vCard or 'csv' for CSV file:", "vcf");
+      const mode = prompt("Export Format:\n- 'md' for Markdown Contact Directory\n- 'json' for JSON Full Database\n- 'vcf' for vCard 3.0\n- 'csv' for Spreadsheet CSV", "md");
       if (!mode) return;
 
+      const format = mode.toLowerCase().trim();
       let content = '';
       let filename = '';
       let mimeType = '';
 
-      if (mode.toLowerCase() === 'csv') {
-        const headers = ["Name", "Phone", "Email", "Category", "Company", "Title", "Favorite", "Notes"];
+      if (format === 'md' || format === 'markdown') {
+        const total = contacts.length;
+        const favs = contacts.filter(c => c.fav).length;
+        const now = new Date().toLocaleDateString();
+
+        let md = `# 📇 KContacts Directory\n\n`;
+        md += `*Exported on ${now} • Total Contacts: **${total}** (Favorites: **${favs}**)*\n\n`;
+        md += `## Table of Contents\n`;
+        
+        const categories = ['Work', 'Personal', 'Family', 'Friends', 'Other'];
+        categories.forEach(cat => {
+          const catList = contacts.filter(c => (c.category || 'Other') === cat);
+          if (catList.length > 0) {
+            md += `- [${cat} (${catList.length})](#${cat.toLowerCase()})\n`;
+          }
+        });
+        md += `\n---\n\n`;
+
+        categories.forEach(cat => {
+          const catList = contacts.filter(c => (c.category || 'Other') === cat);
+          if (catList.length > 0) {
+            md += `## <a id="${cat.toLowerCase()}"></a>${cat} Contacts\n\n`;
+            catList.forEach(c => {
+              const star = c.fav ? ' ★' : '';
+              const tagsText = (c.tags && c.tags.length > 0) ? ` ` + c.tags.map(t => `\`#${t}\``).join(' ') : '';
+              md += `### ${c.name}${star}${tagsText}\n`;
+              if (c.company || c.title) {
+                md += `**Role / Company:** ${c.title || ''}${c.title && c.company ? ' at ' : ''}${c.company || ''}\n\n`;
+              }
+              if (c.phone) md += `- 📞 **Phone:** [${c.phone}](tel:${c.phone})\n`;
+              if (c.email) md += `- ✉️ **Email:** [${c.email}](mailto:${c.email})\n`;
+              if (c.notes) md += `- 📝 **Notes:** ${c.notes.replace(/\n/g, ' ')}\n`;
+              md += `\n`;
+            });
+            md += `---\n\n`;
+          }
+        });
+
+        content = md;
+        filename = 'kcontacts_directory.md';
+        mimeType = 'text/markdown';
+      } else if (format === 'json') {
+        content = JSON.stringify(contacts, null, 2);
+        filename = 'kcontacts_backup.json';
+        mimeType = 'application/json';
+      } else if (format === 'csv') {
+        const headers = ["Name", "Phone", "Email", "Category", "Company", "Title", "Tags", "Favorite", "Notes"];
         const rows = contacts.map(c => [
           `"${(c.name||'').replace(/"/g, '""')}"`,
           `"${(c.phone||'').replace(/"/g, '""')}"`,
@@ -1057,6 +1303,7 @@
           `"${(c.category||'').replace(/"/g, '""')}"`,
           `"${(c.company||'').replace(/"/g, '""')}"`,
           `"${(c.title||'').replace(/"/g, '""')}"`,
+          `"${(c.tags||[]).join(', ').replace(/"/g, '""')}"`,
           c.fav ? "TRUE" : "FALSE",
           `"${(c.notes||'').replace(/"/g, '""')}"`
         ].join(','));
@@ -1065,6 +1312,8 @@
         mimeType = 'text/csv';
       } else {
         content = contacts.map(c => {
+          const tagsArr = c.tags || [];
+          const categoriesStr = [c.category, ...tagsArr].filter(Boolean).join(',');
           return [
             'BEGIN:VCARD',
             'VERSION:3.0',
@@ -1073,7 +1322,8 @@
             `EMAIL;TYPE=INTERNET:${(c.email || '').replace(/\r?\n/g, ' ')}`,
             `ORG:${(c.company || '').replace(/\r?\n/g, ' ')}`,
             `TITLE:${(c.title || '').replace(/\r?\n/g, ' ')}`,
-            `CATEGORIES:${(c.category || '').replace(/\r?\n/g, ' ')}`,
+            `CATEGORIES:${categoriesStr.replace(/\r?\n/g, ' ')}`,
+            `X-TAGS:${tagsArr.join(',')}`,
             `NOTE:${(c.notes || '').replace(/\r?\n/g, '\\n')}`,
             'END:VCARD'
           ].join('\r\n');
@@ -1092,7 +1342,7 @@
       showToast(`Exported ${contacts.length} contacts to ${filename}`);
     };
 
-    // Import (.vcf / .csv)
+    // Import (.vcf / .csv / .json)
     document.getElementById('btnImport').onclick = () => {
       fileInput.click();
     };
@@ -1106,7 +1356,33 @@
         const text = event.target.result || '';
         let count = 0;
 
-        if (file.name.endsWith('.vcf') || text.includes('BEGIN:VCARD')) {
+        if (file.name.endsWith('.json') || (text.trim().startsWith('[') && text.trim().endsWith(']'))) {
+          try {
+            const parsed = JSON.parse(text);
+            if (Array.isArray(parsed)) {
+              parsed.forEach(item => {
+                if (contacts.length >= MAX_CONTACTS) return;
+                if (item && item.name) {
+                  contacts.push({
+                    id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                    name: String(item.name || 'Unnamed').substring(0, 100),
+                    phone: String(item.phone || '').substring(0, 50),
+                    email: String(item.email || '').substring(0, 100),
+                    category: String(item.category || 'Personal').substring(0, 50),
+                    company: String(item.company || '').substring(0, 100),
+                    title: String(item.title || '').substring(0, 100),
+                    tags: parseTags(item.tags || []),
+                    notes: String(item.notes || '').substring(0, 2000),
+                    fav: !!item.fav
+                  });
+                  count++;
+                }
+              });
+            }
+          } catch (err) {
+            showToast('Invalid JSON file.');
+          }
+        } else if (file.name.endsWith('.vcf') || text.includes('BEGIN:VCARD')) {
           const cards = text.split(/END:VCARD/i);
           cards.forEach(card => {
             if (!card.includes('BEGIN:VCARD')) return;
@@ -1116,18 +1392,22 @@
             const telMatch = card.match(/TEL(?:;[^:]*)?:([^\r\n]*)/i);
             const emailMatch = card.match(/EMAIL(?:;[^:]*)?:([^\r\n]*)/i);
             const catMatch = card.match(/CATEGORIES(?:;[^:]*)?:([^\r\n]*)/i);
+            const tagMatch = card.match(/X-TAGS(?:;[^:]*)?:([^\r\n]*)/i);
             const orgMatch = card.match(/ORG(?:;[^:]*)?:([^\r\n]*)/i);
             const noteMatch = card.match(/NOTE(?:;[^:]*)?:([^\r\n]*)/i);
 
             if (fnMatch && fnMatch[1].trim()) {
+              const rawCat = catMatch ? catMatch[1].trim() : 'Personal';
+              const tagsFromX = tagMatch ? tagMatch[1].trim() : '';
               contacts.push({
                 id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
                 name: fnMatch[1].trim().substring(0, 100),
                 phone: telMatch ? telMatch[1].trim().substring(0, 50) : '',
                 email: emailMatch ? emailMatch[1].trim().substring(0, 100) : '',
-                category: catMatch ? catMatch[1].trim().substring(0, 50) : 'Personal',
+                category: rawCat.split(',')[0].trim().substring(0, 50) || 'Personal',
                 company: orgMatch ? orgMatch[1].trim().substring(0, 100) : '',
                 title: '',
+                tags: parseTags(tagsFromX || rawCat),
                 notes: noteMatch ? noteMatch[1].replace(/\\n/g, '\n').trim().substring(0, 2000) : '',
                 fav: false
               });
@@ -1150,8 +1430,9 @@
                 category: (parts[3] || 'Personal').substring(0, 50),
                 company: (parts[4] || '').substring(0, 100),
                 title: (parts[5] || '').substring(0, 100),
-                notes: (parts[7] || '').substring(0, 2000),
-                fav: parts[6] === 'TRUE'
+                tags: parts[6] ? parseTags(parts[6]) : [],
+                notes: (parts[8] || '').substring(0, 2000),
+                fav: parts[7] === 'TRUE'
               });
               count++;
             }
@@ -1159,6 +1440,7 @@
         }
 
         saveContacts();
+        updateTagPills();
         renderList();
         showToast(`Successfully imported ${count} contacts!`);
         fileInput.value = '';
@@ -1183,6 +1465,7 @@
     // Initialization
     if (window.resizeTo) window.resizeTo(830, 565);
     seedData();
+    updateTagPills();
     renderList();
     setTimeout(() => showToast("Welcome to KContacts! Press H or F1 for Help."), 500);
   </script>

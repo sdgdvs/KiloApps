@@ -600,62 +600,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFontSmall = CreateFontA(-S(12), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             // Top Bar Tabs
-            hTabSW = CreateWindowA("BUTTON", "Stopwatch", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_SW_TAB, NULL, NULL);
-            hTabTM = CreateWindowA("BUTTON", "Timer", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(94), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_TM_TAB, NULL, NULL);
-            hTabMT = CreateWindowA("BUTTON", "Multi", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(178), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_MT_TAB, NULL, NULL);
-            hTabPOMO = CreateWindowA("BUTTON", "Pomo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(262), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_POMO_TAB, NULL, NULL);
-            hTabINT = CreateWindowA("BUTTON", "HIIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(346), S(10), S(84), S(30), hwnd, (HMENU)ID_BTN_INT_TAB, NULL, NULL);
+            hTabSW = CreateWindowA("BUTTON", "Stopwatch", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_SW_TAB, NULL, NULL);
+            hTabTM = CreateWindowA("BUTTON", "Timer", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(94), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_TM_TAB, NULL, NULL);
+            hTabMT = CreateWindowA("BUTTON", "Multi", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(178), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_MT_TAB, NULL, NULL);
+            hTabPOMO = CreateWindowA("BUTTON", "Pomo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(262), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_POMO_TAB, NULL, NULL);
+            hTabINT = CreateWindowA("BUTTON", "HIIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(346), S(10), S(84), S(30), hwnd, (HMENU)ID_BTN_INT_TAB, NULL, NULL);
 
             // Display & Input Controls
             hDisplay = CreateWindowExA(0, "STATIC", "00:00:00.000", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(50), S(420), S(40), hwnd, NULL, NULL, NULL);
-            hTmInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "00:05:00", WS_CHILD | ES_CENTER | ES_AUTOHSCROLL, S(10), S(50), S(420), S(40), hwnd, (HMENU)ID_EDIT_TM_INPUT, NULL, NULL);
+            hTmInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "00:05:00", WS_CHILD | ES_CENTER | ES_AUTOHSCROLL | WS_TABSTOP, S(10), S(50), S(420), S(40), hwnd, (HMENU)ID_EDIT_TM_INPUT, NULL, NULL);
 
             // Stopwatch Controls
-            hBtnStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_START, NULL, NULL);
-            hBtnLap = CreateWindowA("BUTTON", "Lap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(95), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_LAP, NULL, NULL);
-            hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(180), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
-            hBtnExportCsv = CreateWindowA("BUTTON", "CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(265), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_EXPORT_CSV, NULL, NULL);
-            hBtnExportTxt = CreateWindowA("BUTTON", "TXT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(350), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_EXPORT_TXT, NULL, NULL);
+            hBtnStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_START, NULL, NULL);
+            hBtnLap = CreateWindowA("BUTTON", "Lap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(95), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_LAP, NULL, NULL);
+            hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(180), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            hBtnExportCsv = CreateWindowA("BUTTON", "CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(265), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_EXPORT_CSV, NULL, NULL);
+            hBtnExportTxt = CreateWindowA("BUTTON", "TXT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(350), S(98), S(80), S(30), hwnd, (HMENU)ID_BTN_EXPORT_TXT, NULL, NULL);
 
-            hListLaps = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOINTEGRALHEIGHT, S(10), S(136), S(420), S(380), hwnd, (HMENU)ID_LIST_LAPS, NULL, NULL);
+            hListLaps = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | WS_TABSTOP, S(10), S(136), S(420), S(380), hwnd, (HMENU)ID_LIST_LAPS, NULL, NULL);
 
             // Timer Presets Buttons
             const char* presetLabels[8] = {"1m", "3m", "5m", "10m", "15m", "25m", "30m", "60m"};
             for (int i = 0; i < 8; i++) {
-                hPresets[i] = CreateWindowA("BUTTON", presetLabels[i], WS_CHILD | BS_PUSHBUTTON, S(10 + (i % 4) * 105), S(136 + (i / 4) * 36), S(95), S(30), hwnd, (HMENU)(INT_PTR)(ID_PRESET_1M + i), NULL, NULL);
+                hPresets[i] = CreateWindowA("BUTTON", presetLabels[i], WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(10 + (i % 4) * 105), S(136 + (i / 4) * 36), S(95), S(30), hwnd, (HMENU)(INT_PTR)(ID_PRESET_1M + i), NULL, NULL);
                 SendMessageA(hPresets[i], WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             }
 
             // Multi-Timer Controls
-            hEditMtName = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Tea", WS_CHILD | ES_AUTOHSCROLL, S(10), S(50), S(200), S(28), hwnd, (HMENU)ID_EDIT_MT_NAME, NULL, NULL);
-            hEditMtTime = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "03:00", WS_CHILD | ES_CENTER | ES_AUTOHSCROLL, S(215), S(50), S(110), S(28), hwnd, (HMENU)ID_EDIT_MT_TIME, NULL, NULL);
-            hBtnMtAdd = CreateWindowA("BUTTON", "+ Add", WS_CHILD | BS_PUSHBUTTON, S(330), S(50), S(100), S(28), hwnd, (HMENU)ID_BTN_MT_ADD, NULL, NULL);
-            hListMt = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VSCROLL | LBS_NOINTEGRALHEIGHT, S(10), S(86), S(420), S(380), hwnd, (HMENU)ID_LIST_MT, NULL, NULL);
-            hBtnMtStartAll = CreateWindowA("BUTTON", "Start All", WS_CHILD | BS_PUSHBUTTON, S(10), S(480), S(130), S(30), hwnd, (HMENU)ID_BTN_MT_STARTALL, NULL, NULL);
-            hBtnMtPauseAll = CreateWindowA("BUTTON", "Pause All", WS_CHILD | BS_PUSHBUTTON, S(150), S(480), S(130), S(30), hwnd, (HMENU)ID_BTN_MT_PAUSEALL, NULL, NULL);
-            hBtnMtDel = CreateWindowA("BUTTON", "Delete", WS_CHILD | BS_PUSHBUTTON, S(290), S(480), S(140), S(30), hwnd, (HMENU)ID_BTN_MT_DEL, NULL, NULL);
+            hEditMtName = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Tea", WS_CHILD | ES_AUTOHSCROLL | WS_TABSTOP, S(10), S(50), S(200), S(28), hwnd, (HMENU)ID_EDIT_MT_NAME, NULL, NULL);
+            hEditMtTime = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "03:00", WS_CHILD | ES_CENTER | ES_AUTOHSCROLL | WS_TABSTOP, S(215), S(50), S(110), S(28), hwnd, (HMENU)ID_EDIT_MT_TIME, NULL, NULL);
+            hBtnMtAdd = CreateWindowA("BUTTON", "+ Add", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(330), S(50), S(100), S(28), hwnd, (HMENU)ID_BTN_MT_ADD, NULL, NULL);
+            hListMt = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | WS_TABSTOP, S(10), S(86), S(420), S(380), hwnd, (HMENU)ID_LIST_MT, NULL, NULL);
+            hBtnMtStartAll = CreateWindowA("BUTTON", "Start All", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(480), S(130), S(30), hwnd, (HMENU)ID_BTN_MT_STARTALL, NULL, NULL);
+            hBtnMtPauseAll = CreateWindowA("BUTTON", "Pause All", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(150), S(480), S(130), S(30), hwnd, (HMENU)ID_BTN_MT_PAUSEALL, NULL, NULL);
+            hBtnMtDel = CreateWindowA("BUTTON", "Delete", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(290), S(480), S(140), S(30), hwnd, (HMENU)ID_BTN_MT_DEL, NULL, NULL);
 
             // Pomodoro Controls
-            hBtnPomoStart = CreateWindowA("BUTTON", "Start", WS_CHILD | BS_PUSHBUTTON, S(10), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_POMO_START, NULL, NULL);
-            hBtnPomoSkip = CreateWindowA("BUTTON", "Skip Phase", WS_CHILD | BS_PUSHBUTTON, S(150), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_POMO_SKIP, NULL, NULL);
-            hBtnPomoReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | BS_PUSHBUTTON, S(290), S(98), S(140), S(32), hwnd, (HMENU)ID_BTN_POMO_RESET, NULL, NULL);
+            hBtnPomoStart = CreateWindowA("BUTTON", "Start", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_POMO_START, NULL, NULL);
+            hBtnPomoSkip = CreateWindowA("BUTTON", "Skip Phase", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(150), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_POMO_SKIP, NULL, NULL);
+            hBtnPomoReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(290), S(98), S(140), S(32), hwnd, (HMENU)ID_BTN_POMO_RESET, NULL, NULL);
             hStaticStats = CreateWindowExA(0, "STATIC", "WORK SESSION\nDone: 0 | Focus: 0 mins", WS_CHILD | SS_CENTER, S(10), S(145), S(420), S(60), hwnd, NULL, NULL, NULL);
 
             // Interval / HIIT Controls
-            hBtnIntStart = CreateWindowA("BUTTON", "Start", WS_CHILD | BS_PUSHBUTTON, S(10), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_INT_START, NULL, NULL);
-            hBtnIntSkip = CreateWindowA("BUTTON", "Skip Phase", WS_CHILD | BS_PUSHBUTTON, S(150), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_INT_SKIP, NULL, NULL);
-            hBtnIntReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | BS_PUSHBUTTON, S(290), S(98), S(140), S(32), hwnd, (HMENU)ID_BTN_INT_RESET, NULL, NULL);
+            hBtnIntStart = CreateWindowA("BUTTON", "Start", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_INT_START, NULL, NULL);
+            hBtnIntSkip = CreateWindowA("BUTTON", "Skip Phase", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(150), S(98), S(130), S(32), hwnd, (HMENU)ID_BTN_INT_SKIP, NULL, NULL);
+            hBtnIntReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(290), S(98), S(140), S(32), hwnd, (HMENU)ID_BTN_INT_RESET, NULL, NULL);
             hStaticIntStats = CreateWindowExA(0, "STATIC", "PREPARE\nSet 1 of 8 | Work: 20s Rest: 10s", WS_CHILD | SS_CENTER, S(10), S(140), S(420), S(48), hwnd, NULL, NULL, NULL);
 
             hStaticIntLabels = CreateWindowExA(0, "STATIC", "Work(s)       Rest(s)       Sets          Prep(s)", WS_CHILD | SS_CENTER, S(10), S(195), S(420), S(18), hwnd, NULL, NULL, NULL);
-            hEditIntWork = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "20", WS_CHILD | ES_CENTER | ES_NUMBER, S(10), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_WORK, NULL, NULL);
-            hEditIntRest = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "10", WS_CHILD | ES_CENTER | ES_NUMBER, S(115), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_REST, NULL, NULL);
-            hEditIntSets = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "8", WS_CHILD | ES_CENTER | ES_NUMBER, S(220), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_SETS, NULL, NULL);
-            hEditIntPrep = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "5", WS_CHILD | ES_CENTER | ES_NUMBER, S(325), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_PREP, NULL, NULL);
+            hEditIntWork = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "20", WS_CHILD | ES_CENTER | ES_NUMBER | WS_TABSTOP, S(10), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_WORK, NULL, NULL);
+            hEditIntRest = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "10", WS_CHILD | ES_CENTER | ES_NUMBER | WS_TABSTOP, S(115), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_REST, NULL, NULL);
+            hEditIntSets = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "8", WS_CHILD | ES_CENTER | ES_NUMBER | WS_TABSTOP, S(220), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_SETS, NULL, NULL);
+            hEditIntPrep = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "5", WS_CHILD | ES_CENTER | ES_NUMBER | WS_TABSTOP, S(325), S(215), S(95), S(26), hwnd, (HMENU)ID_EDIT_INT_PREP, NULL, NULL);
 
-            hBtnPresetTabata = CreateWindowA("BUTTON", "Tabata 20/10x8", WS_CHILD | BS_PUSHBUTTON, S(10), S(250), S(130), S(28), hwnd, (HMENU)ID_PRESET_TABATA, NULL, NULL);
-            hBtnPresetHiit   = CreateWindowA("BUTTON", "HIIT 30/15x10", WS_CHILD | BS_PUSHBUTTON, S(150), S(250), S(130), S(28), hwnd, (HMENU)ID_PRESET_HIIT30, NULL, NULL);
-            hBtnPresetBoxing = CreateWindowA("BUTTON", "Boxing 3m/1mx3", WS_CHILD | BS_PUSHBUTTON, S(290), S(250), S(140), S(28), hwnd, (HMENU)ID_PRESET_BOXING, NULL, NULL);
+            hBtnPresetTabata = CreateWindowA("BUTTON", "Tabata 20/10x8", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(250), S(130), S(28), hwnd, (HMENU)ID_PRESET_TABATA, NULL, NULL);
+            hBtnPresetHiit   = CreateWindowA("BUTTON", "HIIT 30/15x10", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(150), S(250), S(130), S(28), hwnd, (HMENU)ID_PRESET_HIIT30, NULL, NULL);
+            hBtnPresetBoxing = CreateWindowA("BUTTON", "Boxing 3m/1mx3", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(290), S(250), S(140), S(28), hwnd, (HMENU)ID_PRESET_BOXING, NULL, NULL);
 
             HWND hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' or F1 for Help", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(540), S(440), S(20), hwnd, NULL, NULL, NULL);
 
@@ -799,7 +799,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     GetWindowTextA(hEditMtTime, timeBuf, sizeof(timeBuf) - 1);
                     DWORD ms = ParseTimerInput(timeBuf);
                     if (ms > 0) {
-                        lstrcpyA(g_multiTimers[g_multiTimerCount].name, nameBuf[0] ? nameBuf : "Timer");
+                        lstrcpynA(g_multiTimers[g_multiTimerCount].name, nameBuf[0] ? nameBuf : "Timer", sizeof(g_multiTimers[g_multiTimerCount].name));
                         g_multiTimers[g_multiTimerCount].totalMs = ms;
                         g_multiTimers[g_multiTimerCount].remainingMs = ms;
                         g_multiTimers[g_multiTimerCount].lastTick = GetTickCount();
@@ -1043,8 +1043,25 @@ void __stdcall MainEntry() {
             char className[32] = {0};
             GetClassNameA(hFocus, className, sizeof(className));
             if (lstrcmpiA(className, "EDIT") != 0) {
-                MessageBoxA(hwnd, "KTimer Help:\n\n- Stopwatch: Track laps.\n- Timer: Count down.\n- Multi: Multiple timers.\n- Pomodoro: Work/Break cycles.\n- HIIT: Interval Work/Rest cycles.", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KTimer Help:\n\n- Space: Start / Pause active timer\n- Stopwatch: Track laps\n- Timer: Count down\n- Multi: Multiple timers\n- Pomodoro: Work/Break cycles\n- HIIT: Interval Work/Rest cycles.", "Help", MB_OK | MB_ICONINFORMATION);
                 continue;
+            }
+        }
+        if (msg.message == WM_KEYDOWN && msg.wParam == VK_SPACE) {
+            HWND hFocus = GetFocus();
+            char className[32] = {0};
+            GetClassNameA(hFocus, className, sizeof(className));
+            if (lstrcmpiA(className, "EDIT") != 0 && lstrcmpiA(className, "BUTTON") != 0) {
+                if (g_mode == MODE_STOPWATCH || g_mode == MODE_TIMER) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_START, 0), (LPARAM)hBtnStart);
+                    continue;
+                } else if (g_mode == MODE_POMODORO) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_POMO_START, 0), (LPARAM)hBtnPomoStart);
+                    continue;
+                } else if (g_mode == MODE_INTERVAL) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INT_START, 0), (LPARAM)hBtnIntStart);
+                    continue;
+                }
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {
