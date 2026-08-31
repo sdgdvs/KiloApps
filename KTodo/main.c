@@ -31,6 +31,16 @@ void my_strcpy(char* dest, const char* src) {
     *dest = '\0';
 }
 
+void my_strncpy(char* dest, const char* src, int maxLen) {
+    if (!dest || !src || maxLen <= 0) return;
+    int i = 0;
+    while (src[i] && i < maxLen - 1) {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+}
+
 void my_strcat(char* dest, const char* src) {
     if (!dest || !src) return;
     while (*dest) dest++;
@@ -38,9 +48,31 @@ void my_strcat(char* dest, const char* src) {
     *dest = '\0';
 }
 
+void my_strncat(char* dest, const char* src, int maxLen) {
+    if (!dest || !src || maxLen <= 0) return;
+    int dlen = my_strlen(dest);
+    if (dlen >= maxLen - 1) return;
+    int i = 0;
+    while (src[i] && (dlen + i) < maxLen - 1) {
+        dest[dlen + i] = src[i];
+        i++;
+    }
+    dest[dlen + i] = '\0';
+}
+
 char to_lower(char c) {
     if (c >= 'A' && c <= 'Z') return c + 32;
     return c;
+}
+
+int starts_with_case(const char* str, const char* prefix) {
+    if (!str || !prefix) return 0;
+    while (*prefix) {
+        if (to_lower(*str) != to_lower(*prefix)) return 0;
+        str++;
+        prefix++;
+    }
+    return 1;
 }
 
 int my_stristr(const char* haystack, const char* needle) {
@@ -73,6 +105,39 @@ char* my_find_str(const char* haystack, const char* needle) {
     return NULL;
 }
 
+void StripTagsFromText(char* dest, const char* src, int maxLen) {
+    if (!dest || !src || maxLen <= 0) return;
+    int outIdx = 0;
+    for (int i = 0; src[i] != '\0' && outIdx < maxLen - 1; ) {
+        if (src[i] == '[') {
+            if (starts_with_case(&src[i], "[High]")) { i += 6; continue; }
+            if (starts_with_case(&src[i], "[Medium]")) { i += 8; continue; }
+            if (starts_with_case(&src[i], "[Med]")) { i += 5; continue; }
+            if (starts_with_case(&src[i], "[Low]")) { i += 5; continue; }
+            if (starts_with_case(&src[i], "[Due:")) {
+                while (src[i] && src[i] != ']') i++;
+                if (src[i] == ']') i++;
+                continue;
+            }
+            if (starts_with_case(&src[i], "[#")) {
+                while (src[i] && src[i] != ']') i++;
+                if (src[i] == ']') i++;
+                continue;
+            }
+        }
+        if (src[i] == '#' && (i == 0 || src[i-1] == ' ')) {
+            while (src[i] && src[i] != ' ' && src[i] != '\t') i++;
+            continue;
+        }
+        dest[outIdx++] = src[i++];
+    }
+    dest[outIdx] = '\0';
+    // Trim trailing whitespace
+    while (outIdx > 0 && (dest[outIdx - 1] == ' ' || dest[outIdx - 1] == '\t')) {
+        dest[--outIdx] = '\0';
+    }
+}
+
 #define MAX_TASKS 100
 #define MAX_SUBTASKS 10
 
@@ -94,6 +159,7 @@ typedef struct {
 Task g_tasks[MAX_TASKS];
 int g_taskCount = 0;
 
+HWND g_hWnd = NULL;
 HWND hInput, hCategory, hPriority, hDueDate, hAddBtn;
 HWND hSearch, hFilterStatus, hFilterCategory;
 HWND hList, hToggleBtn, hSubtaskBtn, hDeleteBtn, hClearBtn, hExportBtn, hImportBtn, hExportMDBtn, hImportMDBtn, hStatsBtn, hStatusText, hHelpBtn;
@@ -124,6 +190,9 @@ WNDPROC g_OldListProc = NULL;
 #define ID_HELPBTN        1018
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_GETDLGCODE) {
+        return DLGC_WANTALLKEYS;
+    }
     if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
         HWND hParent = GetParent(hwnd);
         if (hParent) {
@@ -145,12 +214,23 @@ LRESULT CALLBACK SearchSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 }
 
 LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (msg == WM_KEYDOWN && wParam == VK_DELETE) {
-        HWND hParent = GetParent(hwnd);
-        if (hParent) {
-            SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(ID_DELETEBTN, BN_CLICKED), (LPARAM)hDeleteBtn);
+    if (msg == WM_GETDLGCODE) {
+        return DLGC_WANTALLKEYS;
+    }
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_DELETE) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) {
+                SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(ID_DELETEBTN, BN_CLICKED), (LPARAM)hDeleteBtn);
+            }
+            return 0;
+        } else if (wParam == VK_SPACE || wParam == VK_RETURN) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) {
+                SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(ID_TOGGLEBTN, BN_CLICKED), (LPARAM)hToggleBtn);
+            }
+            return 0;
         }
-        return 0;
     }
     return CallWindowProcA(g_OldListProc, hwnd, msg, wParam, lParam);
 }
@@ -248,7 +328,7 @@ void RefreshTaskList() {
 
 void DoAddTask() {
     if (g_taskCount >= MAX_TASKS) {
-        MessageBoxA(NULL, "Task limit reached (100 tasks max).", "KTodo", MB_OK | MB_ICONWARNING);
+        MessageBoxA(g_hWnd, "Task limit reached (100 tasks max).", "KTodo", MB_OK | MB_ICONWARNING);
         return;
     }
 
@@ -263,19 +343,19 @@ void DoAddTask() {
         Task* t = &g_tasks[g_taskCount];
         memset(t, 0, sizeof(Task));
 
-        my_strcpy(t->text, p);
+        my_strncpy(t->text, p, sizeof(t->text));
 
         char cat[32] = {0};
         GetWindowTextA(hCategory, cat, sizeof(cat) - 1);
-        my_strcpy(t->category, my_strlen(cat) > 0 ? cat : "General");
+        my_strncpy(t->category, my_strlen(cat) > 0 ? cat : "General", sizeof(t->category));
 
         char prio[16] = {0};
         GetWindowTextA(hPriority, prio, sizeof(prio) - 1);
-        my_strcpy(t->priority, my_strlen(prio) > 0 ? prio : "Med");
+        my_strncpy(t->priority, my_strlen(prio) > 0 ? prio : "Med", sizeof(t->priority));
 
         char due[16] = {0};
         GetWindowTextA(hDueDate, due, sizeof(due) - 1);
-        my_strcpy(t->dueDate, due);
+        my_strncpy(t->dueDate, due, sizeof(t->dueDate));
 
         t->completed = 0;
         t->subtaskCount = 0;
@@ -290,19 +370,29 @@ void DoAddTask() {
 void DoToggleTask() {
     int idx = GetSelectedTaskIndex();
     if (idx >= 0) {
+        int sel = SendMessageA(hList, LB_GETCURSEL, 0, 0);
         g_tasks[idx].completed = !g_tasks[idx].completed;
         RefreshTaskList();
+        if (sel != LB_ERR && sel < SendMessageA(hList, LB_GETCOUNT, 0, 0)) {
+            SendMessageA(hList, LB_SETCURSEL, sel, 0);
+        }
     }
 }
 
 void DoDeleteTask() {
     int idx = GetSelectedTaskIndex();
     if (idx >= 0) {
+        int sel = SendMessageA(hList, LB_GETCURSEL, 0, 0);
         for (int i = idx; i < g_taskCount - 1; i++) {
             g_tasks[i] = g_tasks[i + 1];
         }
         g_taskCount--;
         RefreshTaskList();
+        int count = SendMessageA(hList, LB_GETCOUNT, 0, 0);
+        if (count > 0) {
+            if (sel >= count) sel = count - 1;
+            SendMessageA(hList, LB_SETCURSEL, sel, 0);
+        }
     }
 }
 
@@ -320,20 +410,20 @@ void DoClearCompleted() {
 void DoAddSubtask() {
     int idx = GetSelectedTaskIndex();
     if (idx < 0) {
-        MessageBoxA(NULL, "Please select a task first.", "KTodo", MB_OK | MB_ICONINFORMATION);
+        MessageBoxA(g_hWnd, "Please select a task first.", "KTodo", MB_OK | MB_ICONINFORMATION);
         return;
     }
 
     Task* t = &g_tasks[idx];
     if (t->subtaskCount >= MAX_SUBTASKS) {
-        MessageBoxA(NULL, "Subtask limit reached (10 max per task).", "KTodo", MB_OK | MB_ICONWARNING);
+        MessageBoxA(g_hWnd, "Subtask limit reached (10 max per task).", "KTodo", MB_OK | MB_ICONWARNING);
         return;
     }
 
     char promptMsg[256];
     wsprintfA(promptMsg, "Add subtask to: '%s'\n(Subtask will be added as 'Checklist item %d')", t->text, t->subtaskCount + 1);
     
-    int res = MessageBoxA(NULL, promptMsg, "Add Subtask", MB_OKCANCEL | MB_ICONQUESTION);
+    int res = MessageBoxA(g_hWnd, promptMsg, "Add Subtask", MB_OKCANCEL | MB_ICONQUESTION);
     if (res == IDOK) {
         SubTask* st = &t->subtasks[t->subtaskCount];
         wsprintfA(st->text, "Checklist item %d", t->subtaskCount + 1);
@@ -378,7 +468,7 @@ void DoShowStats() {
         total, active, completed, rate, highPrio, catWork, catPersonal, catProject, catOther
     );
 
-    MessageBoxA(NULL, msg, "KTodo Productivity Statistics", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(g_hWnd, msg, "KTodo Productivity Statistics", MB_OK | MB_ICONINFORMATION);
 }
 
 void DoExportData() {
@@ -404,9 +494,9 @@ void DoExportData() {
         WriteFile(hFile, footer, my_strlen(footer), &written, NULL);
         CloseHandle(hFile);
 
-        MessageBoxA(NULL, "Tasks successfully exported to 'ktodo_export.json'!", "Export Complete", MB_OK | MB_ICONINFORMATION);
+        MessageBoxA(g_hWnd, "Tasks successfully exported to 'ktodo_export.json'!", "Export Complete", MB_OK | MB_ICONINFORMATION);
     } else {
-        MessageBoxA(NULL, "Failed to create export file.", "Export Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(g_hWnd, "Failed to create export file.", "Export Error", MB_OK | MB_ICONERROR);
     }
 }
 
@@ -443,23 +533,23 @@ void DoExportMarkdown() {
             }
         }
         CloseHandle(hFile);
-        MessageBoxA(NULL, "Tasks successfully exported to 'ktodo_export.md'!", "Markdown Export", MB_OK | MB_ICONINFORMATION);
+        MessageBoxA(g_hWnd, "Tasks successfully exported to 'ktodo_export.md'!", "Markdown Export", MB_OK | MB_ICONINFORMATION);
     } else {
-        MessageBoxA(NULL, "Failed to create 'ktodo_export.md'.", "Export Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(g_hWnd, "Failed to create 'ktodo_export.md'.", "Export Error", MB_OK | MB_ICONERROR);
     }
 }
 
 void DoImportMarkdown() {
     HANDLE hFile = CreateFileA("ktodo_export.md", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
-        MessageBoxA(NULL, "File 'ktodo_export.md' not found.\nExport a Markdown file first or place 'ktodo_export.md' in the application folder.", "Import Markdown", MB_OK | MB_ICONWARNING);
+        MessageBoxA(g_hWnd, "File 'ktodo_export.md' not found.\nExport a Markdown file first or place 'ktodo_export.md' in the application folder.", "Import Markdown", MB_OK | MB_ICONWARNING);
         return;
     }
 
     DWORD fileSize = GetFileSize(hFile, NULL);
     if (fileSize == 0 || fileSize > 100000) {
         CloseHandle(hFile);
-        MessageBoxA(NULL, "File 'ktodo_export.md' is empty or too large.", "Import Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(g_hWnd, "File 'ktodo_export.md' is empty or too large.", "Import Error", MB_OK | MB_ICONERROR);
         return;
     }
 
@@ -499,7 +589,7 @@ void DoImportMarkdown() {
             while (*ptr == ' ') ptr++;
             if (my_strlen(ptr) > 0) {
                 int k = 0;
-                while (ptr[k] && ptr[k] != ' ' && ptr[k] != '\r' && ptr[k] != '\n' && k < 31) {
+                while (ptr[k] && ptr[k] != ' ' && ptr[k] != '\r' && ptr[k] != '\n' && k < sizeof(currentCategory) - 1) {
                     currentCategory[k] = ptr[k];
                     k++;
                 }
@@ -512,32 +602,43 @@ void DoImportMarkdown() {
 
             if (indent >= 2 && lastTask && lastTask->subtaskCount < MAX_SUBTASKS) {
                 SubTask* st = &lastTask->subtasks[lastTask->subtaskCount];
-                my_strcpy(st->text, textStart);
+                StripTagsFromText(st->text, textStart, sizeof(st->text));
                 st->completed = completed;
                 lastTask->subtaskCount++;
             } else if (g_taskCount < MAX_TASKS) {
                 Task* t = &g_tasks[g_taskCount];
                 memset(t, 0, sizeof(Task));
-                my_strcpy(t->text, textStart);
-                my_strcpy(t->category, currentCategory);
-                my_strcpy(t->priority, "Med");
+                StripTagsFromText(t->text, textStart, sizeof(t->text));
+                my_strncpy(t->category, currentCategory, sizeof(t->category));
+                my_strncpy(t->priority, "Med", sizeof(t->priority));
                 t->completed = completed;
 
                 if (my_stristr(textStart, "[High]")) {
-                    my_strcpy(t->priority, "High");
+                    my_strncpy(t->priority, "High", sizeof(t->priority));
                 } else if (my_stristr(textStart, "[Low]")) {
-                    my_strcpy(t->priority, "Low");
+                    my_strncpy(t->priority, "Low", sizeof(t->priority));
                 }
 
                 char* duePtr = my_find_str(textStart, "[Due:");
                 if (duePtr) {
                     duePtr += 5;
                     int d = 0;
-                    while (duePtr[d] && duePtr[d] != ']' && d < 15) {
+                    while (duePtr[d] && duePtr[d] != ']' && d < sizeof(t->dueDate) - 1) {
                         t->dueDate[d] = duePtr[d];
                         d++;
                     }
                     t->dueDate[d] = '\0';
+                }
+
+                char* catPtr = my_find_str(textStart, "[#");
+                if (catPtr) {
+                    catPtr += 2;
+                    int c = 0;
+                    while (catPtr[c] && catPtr[c] != ']' && catPtr[c] != ' ' && c < sizeof(t->category) - 1) {
+                        t->category[c] = catPtr[c];
+                        c++;
+                    }
+                    t->category[c] = '\0';
                 }
 
                 lastTask = t;
@@ -556,54 +657,56 @@ void DoImportMarkdown() {
 
     char msgBuf[128];
     wsprintfA(msgBuf, "Successfully imported %d tasks from 'ktodo_export.md'!", importedCount);
-    MessageBoxA(NULL, msgBuf, "Markdown Import Complete", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(g_hWnd, msgBuf, "Markdown Import Complete", MB_OK | MB_ICONINFORMATION);
 }
 
 void LoadSampleData() {
     g_taskCount = 0;
 
     Task* t1 = &g_tasks[0];
-    my_strcpy(t1->text, "Design & Code KTodo Markdown features");
-    my_strcpy(t1->category, "Project");
-    my_strcpy(t1->priority, "High");
-    my_strcpy(t1->dueDate, "2026-08-15");
+    my_strncpy(t1->text, "Design & Code KTodo Markdown features", sizeof(t1->text));
+    my_strncpy(t1->category, "Project", sizeof(t1->category));
+    my_strncpy(t1->priority, "High", sizeof(t1->priority));
+    my_strncpy(t1->dueDate, "2026-08-15", sizeof(t1->dueDate));
     t1->completed = 0;
     t1->subtaskCount = 2;
-    my_strcpy(t1->subtasks[0].text, "Search & filter system");
+    my_strncpy(t1->subtasks[0].text, "Search & filter system", sizeof(t1->subtasks[0].text));
     t1->subtasks[0].completed = 1;
-    my_strcpy(t1->subtasks[1].text, "Markdown task list import & export");
+    my_strncpy(t1->subtasks[1].text, "Markdown task list import & export", sizeof(t1->subtasks[1].text));
     t1->subtasks[1].completed = 1;
 
     Task* t2 = &g_tasks[1];
-    my_strcpy(t2->text, "Team sync meeting");
-    my_strcpy(t2->category, "Work");
-    my_strcpy(t2->priority, "Med");
-    my_strcpy(t2->dueDate, "2026-08-16");
+    my_strncpy(t2->text, "Team sync meeting", sizeof(t2->text));
+    my_strncpy(t2->category, "Work", sizeof(t2->category));
+    my_strncpy(t2->priority, "Med", sizeof(t2->priority));
+    my_strncpy(t2->dueDate, "2026-08-16", sizeof(t2->dueDate));
     t2->completed = 0;
     t2->subtaskCount = 0;
 
     Task* t3 = &g_tasks[2];
-    my_strcpy(t3->text, "Weekly grocery shopping");
-    my_strcpy(t3->category, "Shopping");
-    my_strcpy(t3->priority, "Low");
-    my_strcpy(t3->dueDate, "");
+    my_strncpy(t3->text, "Weekly grocery shopping", sizeof(t3->text));
+    my_strncpy(t3->category, "Shopping", sizeof(t3->category));
+    my_strncpy(t3->priority, "Low", sizeof(t3->priority));
+    my_strncpy(t3->dueDate, "", sizeof(t3->dueDate));
     t3->completed = 1;
     t3->subtaskCount = 0;
 
     g_taskCount = 3;
     RefreshTaskList();
-    MessageBoxA(NULL, "Sample tasks loaded into KTodo!", "Demo Tasks", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(g_hWnd, "Sample tasks loaded into KTodo!", "Demo Tasks", MB_OK | MB_ICONINFORMATION);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            g_hWnd = hwnd;
+
             // Row 1: Creator inputs
-            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 10, 150, 24, hwnd, (HMENU)ID_INPUT, NULL, NULL);
-            hCategory = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 165, 10, 80, 150, hwnd, (HMENU)ID_CATEGORY, NULL, NULL);
-            hPriority = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 250, 10, 60, 120, hwnd, (HMENU)ID_PRIORITY, NULL, NULL);
-            hDueDate = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 315, 10, 80, 24, hwnd, (HMENU)ID_DUEDATE, NULL, NULL);
-            hAddBtn = CreateWindowA("BUTTON", "+ Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 400, 10, 55, 24, hwnd, (HMENU)ID_ADDBTN, NULL, NULL);
+            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 10, 10, 150, 24, hwnd, (HMENU)ID_INPUT, NULL, NULL);
+            hCategory = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 165, 10, 80, 150, hwnd, (HMENU)ID_CATEGORY, NULL, NULL);
+            hPriority = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 250, 10, 60, 120, hwnd, (HMENU)ID_PRIORITY, NULL, NULL);
+            hDueDate = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 315, 10, 80, 24, hwnd, (HMENU)ID_DUEDATE, NULL, NULL);
+            hAddBtn = CreateWindowA("BUTTON", "+ Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 400, 10, 55, 24, hwnd, (HMENU)ID_ADDBTN, NULL, NULL);
 
             // Populate Category dropdown
             SendMessageA(hCategory, 0x0143, 0, (LPARAM)"General"); // CB_ADDSTRING
@@ -620,10 +723,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPriority, 0x014E, 1, 0); // Med
 
             // Row 2: Search & Filter Toolbar
-            hSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 40, 140, 24, hwnd, (HMENU)ID_SEARCH, NULL, NULL);
-            hFilterStatus = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 155, 40, 90, 150, hwnd, (HMENU)ID_FILTERSTATUS, NULL, NULL);
-            hFilterCategory = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 250, 40, 110, 150, hwnd, (HMENU)ID_FILTERCATEGORY, NULL, NULL);
-            hStatsBtn = CreateWindowA("BUTTON", "📊 Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 365, 40, 90, 24, hwnd, (HMENU)ID_STATSBTN, NULL, NULL);
+            hSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 10, 40, 140, 24, hwnd, (HMENU)ID_SEARCH, NULL, NULL);
+            hFilterStatus = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 155, 40, 90, 150, hwnd, (HMENU)ID_FILTERSTATUS, NULL, NULL);
+            hFilterCategory = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 250, 40, 110, 150, hwnd, (HMENU)ID_FILTERCATEGORY, NULL, NULL);
+            hStatsBtn = CreateWindowA("BUTTON", "📊 Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 365, 40, 90, 24, hwnd, (HMENU)ID_STATSBTN, NULL, NULL);
 
             // Status Filter options
             SendMessageA(hFilterStatus, 0x0143, 0, (LPARAM)"All");
@@ -642,18 +745,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hFilterCategory, 0x014E, 0, 0);
 
             // Row 3: Main Task ListBox
-            hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS, 10, 70, 445, 190, hwnd, (HMENU)ID_LIST, NULL, NULL);
+            hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | WS_TABSTOP, 10, 70, 445, 190, hwnd, (HMENU)ID_LIST, NULL, NULL);
 
             // Row 4: Action Buttons
-            hToggleBtn = CreateWindowA("BUTTON", "Toggle Done", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 265, 85, 26, hwnd, (HMENU)ID_TOGGLEBTN, NULL, NULL);
-            hSubtaskBtn = CreateWindowA("BUTTON", "+ Checklist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 100, 265, 80, 26, hwnd, (HMENU)ID_SUBTASKBTN, NULL, NULL);
-            hDeleteBtn = CreateWindowA("BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 185, 265, 60, 26, hwnd, (HMENU)ID_DELETEBTN, NULL, NULL);
-            hClearBtn = CreateWindowA("BUTTON", "Clear Done", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 250, 265, 75, 26, hwnd, (HMENU)ID_CLEARBTN, NULL, NULL);
-            hExportBtn = CreateWindowA("BUTTON", "Export JSON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 265, 80, 26, hwnd, (HMENU)ID_EXPORTBTN, NULL, NULL);
-            hExportMDBtn = CreateWindowA("BUTTON", "Export MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 415, 265, 70, 26, hwnd, (HMENU)ID_EXPORTMDBTN, NULL, NULL);
-            hImportMDBtn = CreateWindowA("BUTTON", "Import MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 490, 265, 70, 26, hwnd, (HMENU)ID_IMPORTMDBTN, NULL, NULL);
-            hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 565, 265, 50, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
-            hHelpBtn = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 620, 265, 50, 26, hwnd, (HMENU)ID_HELPBTN, NULL, NULL);
+            hToggleBtn = CreateWindowA("BUTTON", "Toggle Done", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 265, 85, 26, hwnd, (HMENU)ID_TOGGLEBTN, NULL, NULL);
+            hSubtaskBtn = CreateWindowA("BUTTON", "+ Checklist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 100, 265, 80, 26, hwnd, (HMENU)ID_SUBTASKBTN, NULL, NULL);
+            hDeleteBtn = CreateWindowA("BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 185, 265, 60, 26, hwnd, (HMENU)ID_DELETEBTN, NULL, NULL);
+            hClearBtn = CreateWindowA("BUTTON", "Clear Done", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 250, 265, 75, 26, hwnd, (HMENU)ID_CLEARBTN, NULL, NULL);
+            hExportBtn = CreateWindowA("BUTTON", "Export JSON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 330, 265, 80, 26, hwnd, (HMENU)ID_EXPORTBTN, NULL, NULL);
+            hExportMDBtn = CreateWindowA("BUTTON", "Export MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 415, 265, 70, 26, hwnd, (HMENU)ID_EXPORTMDBTN, NULL, NULL);
+            hImportMDBtn = CreateWindowA("BUTTON", "Import MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 490, 265, 70, 26, hwnd, (HMENU)ID_IMPORTMDBTN, NULL, NULL);
+            hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 565, 265, 50, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
+            hHelpBtn = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 620, 265, 50, 26, hwnd, (HMENU)ID_HELPBTN, NULL, NULL);
 
             // Row 5: Status Bar
             hStatusText = CreateWindowA("STATIC", "Total: 0 | Active: 0 | Done: 0 | [Press 'H' or F1 for Help]", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);

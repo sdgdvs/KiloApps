@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KTodo
+**Target App:** KType
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -273,4 +273,6 @@ Pass 1 Complete.
 - **KTetris**: Fixed state corruption and fast-forwarding replays caused by state mutations in `WM_PAINT` in `main.c`. Resolved per-frame GDI font leaks and fixed keybind file corruption. Added 5-line Pentris support and array bounds safety in C and HTML. Fixed replay mode softlocks and aligned native skill click hitboxes. Recompiled `KTetris.exe` (33.8 KB) and verified Vite web build.
 
 - **KTimer**: Fixed XSS DOM injection vulnerability in custom preset and multi-timer rendering via `escapeHtml`. Added maximum capacity bounds for custom presets (max 30) and multi-timers (max 20) to prevent unbounded memory growth. Added live reactive input listeners for Pomodoro and HIIT interval configuration updates, and implemented Spacebar keyboard shortcut (Start/Pause active timer) across web and native Win32 versions. Added `WS_TABSTOP` styles and safe string bounded copy (`lstrcpynA`) in `main.c`. Recompiled native `KTimer.exe` (22 KB) and verified Vite web build.
+ 
+- **KTodo**: Fixed XSS DOM injection vulnerabilities by adding strict HTML entity escaping across badges (priority, category, due dates) in both List and Kanban views in `ktodo.html`. Added robust CSV parser (`parseCSVLine`) supporting embedded quotes/commas, CRLF string trimming, integer ID generation to prevent inline onclick float syntax issues, Escape key modal close handler, and localStorage quota error toast handling. In `main.c`, implemented bounded string copy/concatenation routines (`my_strncpy`, `my_strncat`), added metadata tag stripping (`StripTagsFromText`) on Markdown import to prevent metadata duplication on repeated import/export cycles, added parent window handle to modal dialogs, added `WS_TABSTOP` and listbox Space/Enter/Delete keyboard shortcuts, and preserved listbox selection index across toggle/delete. Recompiled native `KTodo.exe` (18.4 KB) and verified Vite web build.
 

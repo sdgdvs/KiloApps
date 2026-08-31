@@ -776,6 +776,9 @@
       <h1>KTodo</h1>
     </div>
     <div class="header-actions">
+      <button class="btn" onclick="alert('KTodo Help:\n- Use the top bar to switch between List and Kanban views.\n- Click Category tabs to filter by project.\n- Click Import/Export to save or parse Markdown task lists.\n- Press \'h\' or F1 for help.')" title="Help">
+        ❓ Help
+      </button>
       <button class="btn" onclick="toggleStats()" title="Toggle Productivity Statistics">
         📊 <span id="statsToggleLabel">Stats</span>
       </button>
@@ -985,6 +988,7 @@
         localStorage.setItem('ktodo_v2_tasks', JSON.stringify(tasks));
       } catch (e) {
         console.error('Save error:', e);
+        showToast('⚠️ Storage quota exceeded! Tasks might not be saved.');
       }
       renderAppView();
     }
@@ -1092,7 +1096,7 @@
     }
 
     function toggleTask(id) {
-      const t = tasks.find(x => x.id === id);
+      const t = tasks.find(x => String(x.id) === String(id));
       if (t) {
         t.completed = !t.completed;
         if (t.completed) {
@@ -1105,7 +1109,7 @@
     }
 
     function deleteTask(id) {
-      tasks = tasks.filter(x => x.id !== id);
+      tasks = tasks.filter(x => String(x.id) !== String(id));
       saveTasks();
       showToast('Task removed.');
     }
@@ -1122,10 +1126,11 @@
     }
 
     function toggleSubtaskExpand(id) {
-      if (expandedSubtasks.has(id)) {
-        expandedSubtasks.delete(id);
+      const key = Number(id) || id;
+      if (expandedSubtasks.has(key)) {
+        expandedSubtasks.delete(key);
       } else {
-        expandedSubtasks.add(id);
+        expandedSubtasks.add(key);
       }
       renderAppView();
     }
@@ -1136,11 +1141,11 @@
       const text = input.value.trim();
       if (!text) return;
 
-      const task = tasks.find(x => x.id === taskId);
+      const task = tasks.find(x => String(x.id) === String(taskId));
       if (task) {
         if (!task.subtasks) task.subtasks = [];
         task.subtasks.push({
-          id: Date.now() + Math.random(),
+          id: Date.now() + Math.floor(Math.random() * 100000),
           text: text,
           completed: false
         });
@@ -1149,9 +1154,9 @@
     }
 
     function toggleSubtask(taskId, subtaskId) {
-      const task = tasks.find(x => x.id === taskId);
+      const task = tasks.find(x => String(x.id) === String(taskId));
       if (task && task.subtasks) {
-        const sub = task.subtasks.find(s => s.id === subtaskId);
+        const sub = task.subtasks.find(s => String(s.id) === String(subtaskId));
         if (sub) {
           sub.completed = !sub.completed;
           saveTasks();
@@ -1160,9 +1165,9 @@
     }
 
     function deleteSubtask(taskId, subtaskId) {
-      const task = tasks.find(x => x.id === taskId);
+      const task = tasks.find(x => String(x.id) === String(taskId));
       if (task && task.subtasks) {
-        task.subtasks = task.subtasks.filter(s => s.id !== subtaskId);
+        task.subtasks = task.subtasks.filter(s => String(s.id) !== String(subtaskId));
         saveTasks();
       }
     }
@@ -1291,7 +1296,7 @@
             <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})">
             <span class="task-title" onclick="toggleTask(${task.id})">${escapeHtml(task.text)}</span>
             <div class="badges">
-              <span class="badge badge-prio-${task.priority}">${task.priority}</span>
+              <span class="badge badge-prio-${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span>
               <span class="badge badge-cat">#${escapeHtml(task.category || 'General')}</span>
               ${dateBadgeHtml}
             </div>
@@ -1370,11 +1375,11 @@
           card.innerHTML = `
             <div class="kanban-card-title">${escapeHtml(task.text)}</div>
             <div class="badges">
-              <span class="badge badge-prio-${task.priority}">${task.priority}</span>
+              <span class="badge badge-prio-${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span>
               <span class="badge badge-cat">#${escapeHtml(task.category || 'General')}</span>
             </div>
             <div class="kanban-card-footer">
-              <span>${task.dueDate ? '📅 ' + task.dueDate : ''}</span>
+              <span>${task.dueDate ? '📅 ' + escapeHtml(task.dueDate) : ''}</span>
               <span>${subCount > 0 ? `📋 ${subDone}/${subCount}` : ''}</span>
             </div>
           `;
@@ -1469,11 +1474,36 @@
       showToast('Exported tasks to CSV!');
     }
 
+    function parseCSVLine(text) {
+      const result = [];
+      let cur = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (c === '"') {
+          if (inQuotes && text[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === ',' && !inQuotes) {
+          result.push(cur);
+          cur = '';
+        } else {
+          cur += c;
+        }
+      }
+      result.push(cur);
+      return result;
+    }
+
     function parseMarkdownString(content) {
-      const lines = content.split('\n');
+      const lines = content.split(/\r?\n/);
       const importedTasks = [];
       let currentCategory = 'General';
       let lastTask = null;
+      let counter = 1;
 
       lines.forEach(line => {
         const trimmed = line.trim();
@@ -1497,8 +1527,8 @@
           if (isSubtask && lastTask) {
             if (!lastTask.subtasks) lastTask.subtasks = [];
             lastTask.subtasks.push({
-              id: Date.now() + Math.random(),
-              text: textContent.replace(/\[(High|Medium|Med|Low)\]/gi, '').replace(/\[Due:.*?\]/gi, '').trim(),
+              id: Date.now() + counter++,
+              text: textContent.replace(/\[(High|Medium|Med|Low)\]/gi, '').replace(/\[Due:.*?\]/gi, '').replace(/\[?#\w+\]?/g, '').trim(),
               completed: isCompleted
             });
           } else {
@@ -1520,14 +1550,14 @@
             }
 
             let category = currentCategory;
-            const tagMatch = textContent.match(/#(\w+)/);
+            const tagMatch = textContent.match(/\[?#(\w+)\]?/);
             if (tagMatch) {
               category = tagMatch[1];
               textContent = textContent.replace(tagMatch[0], '');
             }
 
             const newTask = {
-              id: Date.now() + Math.random(),
+              id: Date.now() + counter++,
               text: textContent.trim(),
               category: category,
               priority: priority,
@@ -1594,19 +1624,19 @@
               alert('Invalid JSON format. Array of tasks expected.');
             }
           } else if (file.name.endsWith('.csv')) {
-            const lines = content.split('\n').filter(l => l.trim().length > 0);
+            const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
             if (lines.length > 1) {
               const imported = [];
               for (let i = 1; i < lines.length; i++) {
-                const cols = lines[i].split(',');
+                const cols = parseCSVLine(lines[i]);
                 if (cols.length >= 2) {
                   imported.push({
                     id: Date.now() + i,
-                    text: cols[1].replace(/^"|"$/g, ''),
-                    category: cols[2] ? cols[2].replace(/^"|"$/g, '') : 'General',
-                    priority: cols[3] || 'Medium',
-                    dueDate: cols[4] || '',
-                    completed: cols[5] === 'true',
+                    text: cols[1].replace(/^"|"$/g, '').trim(),
+                    category: cols[2] ? cols[2].replace(/^"|"$/g, '').trim() : 'General',
+                    priority: cols[3] ? cols[3].replace(/^"|"$/g, '').trim() : 'Medium',
+                    dueDate: cols[4] ? cols[4].replace(/^"|"$/g, '').trim() : '',
+                    completed: cols[5] ? cols[5].trim().toLowerCase() === 'true' : false,
                     subtasks: []
                   });
                 }
@@ -1673,11 +1703,15 @@
     renderAppView();
     
     document.addEventListener('keydown', (e) => {
-      if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
-        alert("KTodo Help:\n- Use the top bar to switch between List and Kanban views.\n- Click Category tabs to filter by project.\n- Click Import/Export to save or parse Markdown task lists.\n- Press 'h' for help.");
+      if (e.key === 'Escape') {
+        closeIOModal();
+      }
+      if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
+        if (e.key === 'F1') e.preventDefault();
+        alert("KTodo Help:\n- Use the top bar to switch between List and Kanban views.\n- Click Category tabs to filter by project.\n- Click Import/Export to save or parse Markdown task lists.\n- Press 'h' or F1 for help.");
       }
     });
-    setTimeout(() => showToast("Welcome to KTodo! Press 'h' for help."), 500);
+    setTimeout(() => showToast("Welcome to KTodo! Press 'h' or F1 for help."), 500);
   </script>
 </body>
 </html>
