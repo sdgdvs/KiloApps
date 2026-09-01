@@ -15,22 +15,30 @@
     --accent-hover: #2563eb;
     --danger: #ef4444;
     --tag-bg: #475569;
+    --gold: #f59e0b;
   }
   body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-main); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
   .sidebar { width: 200px; flex-shrink: 0; background: var(--bg-glass); border-right: 1px solid var(--border); backdrop-filter: blur(10px); display: flex; flex-direction: column; padding: 20px 0; }
-  .compose-btn { margin: 0 15px 20px 15px; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+  .compose-btn { margin: 0 15px 15px 15px; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
   .compose-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-  .folder { padding: 10px 20px; cursor: pointer; color: var(--text-sec); transition: background 0.2s, color 0.2s; }
+  .folder { padding: 10px 20px; cursor: pointer; color: var(--text-sec); display: flex; align-items: center; justify-content: space-between; transition: background 0.2s, color 0.2s; font-size: 14px; }
   .folder:hover, .folder.active { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); }
-  .list { width: 300px; flex-shrink: 0; background: rgba(15, 23, 42, 0.8); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
-  .item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; position: relative; }
+  .folder.active { font-weight: 600; border-left: 3px solid var(--accent); }
+  .folder-badge { font-size: 11px; background: rgba(255, 255, 255, 0.1); padding: 2px 6px; border-radius: 10px; color: var(--text-sec); }
+  .list { width: 310px; flex-shrink: 0; background: rgba(15, 23, 42, 0.8); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+  .item { padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; position: relative; display: flex; flex-direction: column; }
   .item:hover { background: rgba(255,255,255,0.03); }
   .item.selected { background: rgba(59, 130, 246, 0.2); border-left: 3px solid var(--accent); }
   .item.unread .subject { font-weight: 700; color: #fff; }
-  .item.unread::after { content: ''; position: absolute; top: 15px; right: 15px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
-  .item-tags { margin-top: 5px; display: flex; gap: 4px; flex-wrap: wrap; }
+  .item.unread::after { content: ''; position: absolute; top: 16px; right: 14px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+  .item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .star-btn { background: none; border: none; font-size: 15px; cursor: pointer; padding: 0; line-height: 1; transition: transform 0.15s; }
+  .star-btn:hover { transform: scale(1.2); }
+  .star-active { color: var(--gold); }
+  .star-inactive { color: #64748b; }
+  .item-tags { margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap; }
   .tag { font-size: 10px; background: var(--tag-bg); padding: 2px 6px; border-radius: 4px; }
-  .subject { font-weight: 500; margin-bottom: 4px; font-size: 14px; }
+  .subject { font-weight: 500; margin-bottom: 4px; font-size: 14px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sender { font-size: 12px; color: var(--text-sec); }
   .pane { flex: 1; display: flex; flex-direction: column; background: rgba(15, 23, 42, 0.95); position: relative; }
   .tabs { display: flex; background: #1e293b; border-bottom: 1px solid var(--border); overflow-x: auto; }
@@ -39,31 +47,52 @@
   .tab.active { background: var(--bg-main); color: var(--text-primary); border-bottom: 2px solid var(--accent); }
   .tab-close { cursor: pointer; font-size: 14px; color: var(--text-sec); }
   .tab-close:hover { color: var(--danger); }
-  .pane-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
-  .pane-subject { font-size: 22px; font-weight: 600; margin: 0 0 10px 0; }
-  .pane-sender { font-size: 14px; color: var(--text-sec); margin: 0; }
-  .pane-actions button { background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px; transition: 0.2s; }
+  .pane-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .pane-subject { font-size: 20px; font-weight: 600; margin: 0 0 8px 0; }
+  .pane-sender { font-size: 13px; color: var(--text-sec); margin: 0; }
+  .pane-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pane-actions button { background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; transition: 0.2s; }
   .pane-actions button:hover { background: rgba(255,255,255,0.2); }
-  .pane-body { padding: 20px; flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 15px; line-height: 1.6; color: #cbd5e1; }
+  .pane-actions button.btn-star-active { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); }
+  .pane-actions button.del-btn:hover { background: var(--danger); }
+  .pane-body { padding: 20px; flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 14px; line-height: 1.6; color: #cbd5e1; }
   
-  .compose-body { display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 20px; }
+  .compose-body { display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 20px; box-sizing: border-box; }
   .compose-body input, .compose-body textarea { background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: inherit; }
-  .compose-body textarea { flex: 1; resize: none; }
-  .compose-actions { display: flex; justify-content: space-between; }
+  .compose-body textarea { flex: 1; resize: none; font-size: 14px; line-height: 1.5; }
+  .compose-actions { display: flex; justify-content: space-between; align-items: center; }
+  .compose-btn-group { display: flex; gap: 8px; }
   
-  #empty-state { display: flex; flex: 1; align-items: center; justify-content: center; color: var(--text-sec); flex-direction: column; }
-  .search-container { padding: 15px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+  #empty-state { display: flex; flex: 1; align-items: center; justify-content: center; color: var(--text-sec); flex-direction: column; text-align: center; }
+  .search-container { padding: 12px 15px; border-bottom: 1px solid var(--border); margin-bottom: 5px; }
   .search-container input { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; font-family: inherit; margin-bottom: 8px; }
-  .search-container select { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 5px; border-radius: 4px; }
+  .search-container select { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 6px; border-radius: 4px; }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-  <button class="compose-btn" onclick="newComposeTab()">New Message</button>
-  <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox">Inbox</div>
-  <div class="folder" onclick="switchFolder('sent')" id="f-sent">Sent</div>
-  <div class="folder" onclick="switchFolder('trash')" id="f-trash">Trash</div>
+  <button class="compose-btn" onclick="newComposeTab()">+ New Message</button>
+  <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox">
+    <span>📥 Inbox</span>
+    <span class="folder-badge" id="b-inbox">0</span>
+  </div>
+  <div class="folder" onclick="switchFolder('starred')" id="f-starred">
+    <span>⭐ Starred</span>
+    <span class="folder-badge" id="b-starred">0</span>
+  </div>
+  <div class="folder" onclick="switchFolder('sent')" id="f-sent">
+    <span>📤 Sent</span>
+    <span class="folder-badge" id="b-sent">0</span>
+  </div>
+  <div class="folder" onclick="switchFolder('drafts')" id="f-drafts">
+    <span>📝 Drafts</span>
+    <span class="folder-badge" id="b-drafts">0</span>
+  </div>
+  <div class="folder" onclick="switchFolder('trash')" id="f-trash">
+    <span>🗑️ Trash</span>
+    <span class="folder-badge" id="b-trash">0</span>
+  </div>
   
   <div class="search-container">
     <input type="text" id="search-box" placeholder="Search emails..." onkeyup="handleSearch()">
@@ -72,16 +101,17 @@
       <option value="Urgent">Urgent</option>
       <option value="Work">Work</option>
       <option value="Personal">Personal</option>
+      <option value="News">News</option>
     </select>
   </div>
   
   <div style="flex:1"></div>
-  <div style="display:flex; flex-direction:column; gap:10px; padding: 0 15px; margin-bottom: 15px;">
-    <div style="text-align: center; color: var(--text-sec); font-size: 13px;">Press <kbd>F1</kbd> or <kbd>H</kbd> for Help</div>
-    <button class="compose-btn" style="margin:0; background:#059669;" onclick="document.getElementById('import-file').click()">Import JSON</button>
+  <div style="display:flex; flex-direction:column; gap:8px; padding: 0 15px; margin-bottom: 15px;">
+    <div style="text-align: center; color: var(--text-sec); font-size: 12px; margin-bottom: 4px;">Press <kbd>F1</kbd> or <kbd>H</kbd> for Help</div>
+    <button class="compose-btn" style="margin:0; background:#059669; font-size:12px; padding:8px;" onclick="document.getElementById('import-file').click()">Import JSON</button>
     <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json">
-    <button class="compose-btn" style="margin:0; background:#0284c7;" onclick="exportJson()">Export JSON</button>
-    <button class="compose-btn" style="margin:0; background:var(--danger);" onclick="emptyTrash()">Empty Trash</button>
+    <button class="compose-btn" style="margin:0; background:#0284c7; font-size:12px; padding:8px;" onclick="exportJson()">Export JSON</button>
+    <button class="compose-btn" style="margin:0; background:var(--danger); font-size:12px; padding:8px;" onclick="emptyTrash()">Empty Trash</button>
   </div>
 </div>
 
@@ -93,7 +123,7 @@
     <div id="empty-state">
       <h3>No email selected</h3>
       <p>Select an email from the list or compose a new one.</p>
-      <p style="font-size: 13px; color: var(--text-sec); margin-top: 20px;">Press <kbd>F1</kbd> or <kbd>h</kbd> for help</p>
+      <p style="font-size: 13px; color: var(--text-sec); margin-top: 15px;">Press <kbd>F1</kbd> or <kbd>h</kbd> for help</p>
     </div>
   </div>
 </div>
@@ -144,47 +174,83 @@
   }
 
   let emails = [
-    { id: 1, folder: 'inbox', subject: "Welcome to KiloOS", sender: "sysadmin@kilo.os", body: "Hello User,\n\nWelcome to KiloOS, your new minimalist operating environment.\n\n- SysAdmin", unread: true, tags: ["Work"], encrypted: false },
-    { id: 2, folder: 'inbox', subject: "Meeting at 3PM", sender: "boss@kilo.os", body: "Don't forget our meeting at 3PM.", unread: false, tags: ["Urgent", "Work"], encrypted: false },
-    { id: 3, folder: 'inbox', subject: "Top Secret Info", sender: "agent@kilo.os", body: '{"iv":[1,2,3,4,5,6,7,8,9,10,11,12],"cipher":[...]}', unread: true, tags: ["Personal"], encrypted: true } // mock encrypted
+    { id: 1, folder: 'inbox', subject: "Welcome to KiloOS Email Suite", sender: "sysadmin@kilo.os", body: "Hello User,\n\nWelcome to KiloOS Mail. Features include Starred priority marking, Drafts auto-saving, Multi-tab email browsing, EML/Markdown single email export, AES password encryption, and JSON backup.\n\n- SysAdmin", unread: true, tags: ["Work"], encrypted: false, starred: true },
+    { id: 2, folder: 'inbox', subject: "Meeting at 3PM with Team", sender: "boss@kilo.os", body: "Don't forget our meeting at 3PM today in Conference Room B. We will review the latest sprint releases.", unread: false, tags: ["Urgent", "Work"], encrypted: false, starred: true },
+    { id: 3, folder: 'inbox', subject: "Top Secret Info", sender: "agent@kilo.os", body: '{"iv":[1,2,3,4,5,6,7,8,9,10,11,12],"cipher":[...]}', unread: true, tags: ["Personal"], encrypted: true, starred: false },
+    { id: 4, folder: 'inbox', subject: "Newsletter #42 - Desktop Innovations", sender: "news@kilo.os", body: "Weekly digest on minimalist operating system architecture and high efficiency UI design...", unread: false, tags: ["News"], encrypted: false, starred: false },
+    { id: 5, folder: 'sent', subject: "Re: Meeting at 3PM with Team", sender: "boss@kilo.os", body: "I'll be there on time with the slides ready.", unread: false, tags: [], encrypted: false, starred: false },
+    { id: 6, folder: 'drafts', subject: "Draft: Q4 Architecture Roadmap", sender: "architecture@kilo.os", body: "Q4 Key Milestones:\n1. Expand KiloApps ecosystem\n2. Optimize native binary footprints under 999KB\n3. Parity enhancements across Web & Native", unread: false, tags: ["Work"], encrypted: false, starred: false }
   ];
   
   let currentFolder = 'inbox';
-  let nextId = 4;
+  let nextId = 7;
   let tabs = [];
   let activeTabId = null;
+
+  function updateFolderBadges() {
+    const inboxCount = emails.filter(e => e.folder === 'inbox' && e.unread).length;
+    const starredCount = emails.filter(e => e.starred && e.folder !== 'trash').length;
+    const sentCount = emails.filter(e => e.folder === 'sent').length;
+    const draftsCount = emails.filter(e => e.folder === 'drafts').length;
+    const trashCount = emails.filter(e => e.folder === 'trash').length;
+
+    document.getElementById('b-inbox').textContent = inboxCount;
+    document.getElementById('b-starred').textContent = starredCount;
+    document.getElementById('b-sent').textContent = sentCount;
+    document.getElementById('b-drafts').textContent = draftsCount;
+    document.getElementById('b-trash').textContent = trashCount;
+  }
 
   function handleSearch() { renderList(); }
 
   function renderList() {
+    updateFolderBadges();
     const list = document.getElementById('list');
     list.innerHTML = '';
     const sq = document.getElementById('search-box').value.toLowerCase();
     const tagF = document.getElementById('tag-filter').value;
     
-    const filtered = emails.filter(e => 
-      e.folder === currentFolder && 
-      (e.subject.toLowerCase().includes(sq) || e.sender.toLowerCase().includes(sq)) &&
-      (tagF === "" || (e.tags && e.tags.includes(tagF)))
-    );
+    const filtered = emails.filter(e => {
+      const matchesFolder = (currentFolder === 'starred') ? (e.starred && e.folder !== 'trash') : (e.folder === currentFolder);
+      const matchesSearch = (e.subject.toLowerCase().includes(sq) || e.sender.toLowerCase().includes(sq) || (e.body && typeof e.body === 'string' && e.body.toLowerCase().includes(sq)));
+      const matchesTag = (tagF === "" || (e.tags && e.tags.includes(tagF)));
+      return matchesFolder && matchesSearch && matchesTag;
+    });
     
     if (filtered.length === 0) {
-      list.innerHTML = '<div style="padding: 20px; color: #64748b; text-align: center; font-size: 14px;">No emails found</div>';
+      list.innerHTML = `<div style="padding: 24px 16px; color: #64748b; text-align: center; font-size: 13px;">No emails in ${escapeHTML(currentFolder)}</div>`;
+      return;
     }
 
     filtered.forEach(em => {
       let d = document.createElement('div');
-      // If there's an active tab showing this email, highlight it
-      let isSelected = activeTabId && tabs.find(t => t.id === activeTabId && t.emailId === em.id);
+      let isSelected = activeTabId && tabs.find(t => t.id === activeTabId && ((t.type === 'read' && t.emailId === em.id) || (t.type === 'compose' && t.draftId === em.id)));
       d.className = `item ${em.unread ? 'unread' : ''} ${isSelected ? 'selected' : ''}`;
       
-      let html = `<div class="subject">${em.encrypted ? '🔒 ' : ''}${escapeHTML(em.subject)}</div>
-                  <div class="sender">${em.folder === 'sent' ? 'To: ' + escapeHTML(em.sender) : escapeHTML(em.sender)}</div>
-                  <div class="item-tags">`;
-      if(em.tags) em.tags.forEach(t => { html += `<span class="tag">${escapeHTML(t)}</span>`; });
-      html += `</div>`;
+      let starHtml = `<button class="star-btn ${em.starred ? 'star-active' : 'star-inactive'}" onclick="toggleStar(${em.id}, event)" title="${em.starred ? 'Unstar' : 'Star'}">${em.starred ? '★' : '☆'}</button>`;
+      
+      let tagsHtml = '';
+      if (em.tags && em.tags.length > 0) {
+        tagsHtml = '<div class="item-tags">' + em.tags.map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('') + '</div>';
+      }
+
+      let html = `
+        <div class="item-top">
+          <div class="subject">${em.encrypted ? '🔒 ' : ''}${escapeHTML(em.subject || '(No Subject)')}</div>
+          ${starHtml}
+        </div>
+        <div class="sender">${em.folder === 'sent' ? 'To: ' + escapeHTML(em.sender) : (em.folder === 'drafts' ? 'Draft to: ' + escapeHTML(em.sender || 'recipient') : escapeHTML(em.sender))}</div>
+        ${tagsHtml}
+      `;
       d.innerHTML = html;
-      d.onclick = () => openEmailTab(em.id);
+      d.onclick = (e) => {
+        if (e.target.closest('.star-btn')) return;
+        if (em.folder === 'drafts') {
+          openDraftInCompose(em.id);
+        } else {
+          openEmailTab(em.id);
+        }
+      };
       list.appendChild(d);
     });
   }
@@ -195,12 +261,12 @@
     tabs.forEach(t => {
       let d = document.createElement('div');
       d.className = `tab ${t.id === activeTabId ? 'active' : ''}`;
-      d.innerHTML = `<span>${t.title}</span><span class="tab-close" onclick="closeTab('${t.id}', event)">✕</span>`;
+      d.innerHTML = `<span>${escapeHTML(t.title)}</span><span class="tab-close" onclick="closeTab('${t.id}', event)">✕</span>`;
       d.onclick = () => switchTab(t.id);
       tb.appendChild(d);
     });
     renderPane();
-    renderList(); // update highlights
+    renderList();
   }
 
   function openEmailTab(id) {
@@ -213,7 +279,34 @@
       activeTabId = existingTab.id;
     } else {
       let tid = 't_' + Date.now();
-      tabs.push({ id: tid, type: 'read', emailId: id, title: escapeHTML(em.subject) });
+      tabs.push({ id: tid, type: 'read', emailId: id, title: em.subject });
+      activeTabId = tid;
+    }
+    renderTabs();
+  }
+
+  function openDraftInCompose(id) {
+    let em = emails.find(e => e.id === id);
+    if (!em) return;
+
+    let existingTab = tabs.find(t => t.type === 'compose' && t.draftId === id);
+    if (existingTab) {
+      activeTabId = existingTab.id;
+    } else {
+      let tid = 't_' + Date.now();
+      tabs.push({
+        id: tid,
+        type: 'compose',
+        title: em.subject || 'Draft',
+        draftId: em.id,
+        data: {
+          to: em.sender || '',
+          sub: em.subject || '',
+          body: em.body || '',
+          encrypted: em.encrypted || false,
+          password: ''
+        }
+      });
       activeTabId = tid;
     }
     renderTabs();
@@ -225,7 +318,7 @@
     let sub = replyToEm ? (replyToEm.subject.startsWith('Re:') ? replyToEm.subject : 'Re: ' + replyToEm.subject) : '';
     let body = replyToEm ? `\n\n--- Original Message ---\n${replyToEm.body}` : '';
     
-    tabs.push({ id: tid, type: 'compose', title: 'New Message', data: { to, sub, body, encrypted: false, password: '' } });
+    tabs.push({ id: tid, type: 'compose', title: sub || 'New Message', draftId: null, data: { to, sub, body, encrypted: false, password: '' } });
     activeTabId = tid;
     renderTabs();
   }
@@ -254,6 +347,19 @@
     renderList();
   }
 
+  window.toggleStar = function(eid, event) {
+    if (event) event.stopPropagation();
+    let em = emails.find(e => e.id === eid);
+    if (em) {
+      em.starred = !em.starred;
+      renderList();
+      if (activeTabId) {
+        let t = tabs.find(tab => tab.id === activeTabId);
+        if (t && t.emailId === eid) renderPane();
+      }
+    }
+  }
+
   function renderPane() {
     const pane = document.getElementById('pane-content');
     if(!activeTabId) {
@@ -271,25 +377,28 @@
       
       let tagsHtml = (em.tags || []).map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('');
       
-      let actionsHtml = `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))">Reply</button>`;
+      let actionsHtml = `<button onclick="toggleStar(${em.id})" class="${em.starred ? 'btn-star-active' : ''}">${em.starred ? '★ Starred' : '☆ Star'}</button>`;
+      actionsHtml += `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))">Reply</button>`;
       actionsHtml += `<button onclick="addTag(${em.id})">+ Tag</button>`;
+      actionsHtml += `<button onclick="exportSingleEml(${em.id})">Export .EML</button>`;
+      actionsHtml += `<button onclick="exportSingleMd(${em.id})">Export .MD</button>`;
       actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})">Delete</button>`;
 
       let bodyHtml = escapeHTML(em.body);
       if (em.encrypted) {
         bodyHtml = `<div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:8px; text-align:center;">
-          <p>🔒 This message is encrypted.</p>
-          <input type="password" id="dec-pass-${em.id}" placeholder="Password" style="padding:8px; border-radius:4px; border:1px solid var(--border); background:rgba(255,255,255,0.1); color:white;">
-          <button onclick="attemptDecrypt(${em.id})" style="padding:8px 15px; background:var(--accent); border:none; color:white; border-radius:4px; cursor:pointer;">Decrypt</button>
+          <p>🔒 This message is encrypted with password protection.</p>
+          <input type="password" id="dec-pass-${em.id}" placeholder="Enter password" style="padding:8px; border-radius:4px; border:1px solid var(--border); background:rgba(255,255,255,0.1); color:white;">
+          <button onclick="attemptDecrypt(${em.id})" style="padding:8px 15px; background:var(--accent); border:none; color:white; border-radius:4px; cursor:pointer; margin-left:6px;">Decrypt</button>
         </div><div id="dec-res-${em.id}" style="margin-top:20px; display:none;"></div>`;
       }
 
       pane.innerHTML = `
         <div class="pane-header">
           <div>
-            <h2 class="pane-subject">${em.encrypted ? '🔒 ' : ''}${escapeHTML(em.subject)}</h2>
+            <h2 class="pane-subject">${em.starred ? '<span style="color:var(--gold)">★</span> ' : ''}${em.encrypted ? '🔒 ' : ''}${escapeHTML(em.subject)}</h2>
             <p class="pane-sender">${em.folder==='sent' ? 'To: ' + escapeHTML(em.sender) : 'From: ' + escapeHTML(em.sender)}</p>
-            <div class="item-tags" style="margin-top:10px;">${tagsHtml}</div>
+            <div class="item-tags" style="margin-top:8px;">${tagsHtml}</div>
           </div>
           <div class="pane-actions">${actionsHtml}</div>
         </div>
@@ -298,21 +407,23 @@
     } else if (tab.type === 'compose') {
       pane.innerHTML = `
         <div class="compose-body">
-          <input type="text" id="c-to-${tab.id}" placeholder="To" value="${escapeHTML(tab.data.to)}" oninput="updateTabData('${tab.id}', 'to', this.value)">
-          <input type="text" id="c-sub-${tab.id}" placeholder="Subject" value="${escapeHTML(tab.data.sub)}" oninput="updateTabData('${tab.id}', 'sub', this.value)">
+          <input type="text" id="c-to-${tab.id}" placeholder="To: recipient@kilo.os" value="${escapeHTML(tab.data.to)}" oninput="updateTabData('${tab.id}', 'to', this.value)">
+          <input type="text" id="c-sub-${tab.id}" placeholder="Subject: Important discussion" value="${escapeHTML(tab.data.sub)}" oninput="updateTabData('${tab.id}', 'sub', this.value)">
           <textarea id="c-body-${tab.id}" placeholder="Write your message here...">${escapeHTML(tab.data.body)}</textarea>
           <div class="compose-actions">
             <div>
-              <label style="font-size:13px; display:flex; align-items:center; gap:5px;">
+              <label style="font-size:13px; display:flex; align-items:center; gap:5px; cursor:pointer;">
                 <input type="checkbox" id="c-enc-${tab.id}" ${tab.data.encrypted ? 'checked' : ''} onchange="toggleEncrypt('${tab.id}', this.checked)"> Encrypt with Password
               </label>
-              <input type="password" id="c-pass-${tab.id}" placeholder="Password" style="display:${tab.data.encrypted ? 'inline-block' : 'none'}; margin-left:10px; width:150px;" value="${escapeHTML(tab.data.password)}" oninput="updateTabData('${tab.id}', 'password', this.value)">
+              <input type="password" id="c-pass-${tab.id}" placeholder="Encryption password" style="display:${tab.data.encrypted ? 'inline-block' : 'none'}; margin-left:10px; width:160px; padding:6px 10px;" value="${escapeHTML(tab.data.password)}" oninput="updateTabData('${tab.id}', 'password', this.value)">
             </div>
-            <button class="compose-btn" style="margin:0" onclick="sendEmail('${tab.id}')">Send</button>
+            <div class="compose-btn-group">
+              <button class="compose-btn" style="margin:0; background:#64748b;" onclick="saveDraft('${tab.id}')">💾 Save Draft</button>
+              <button class="compose-btn" style="margin:0" onclick="sendEmail('${tab.id}')">✈️ Send Message</button>
+            </div>
           </div>
         </div>
       `;
-      // Attach the textarea event via js to avoid escaping hell
       setTimeout(() => {
         const ta = document.getElementById(`c-body-${tab.id}`);
         if(ta) ta.oninput = (e) => updateTabData(tab.id, 'body', e.target.value);
@@ -326,14 +437,47 @@
       t.data[field] = val;
       if(field === 'sub') {
         t.title = val || 'New Message';
-        renderTabs(); // minimal re-render just to update tab title
+        const tabEl = document.querySelector(`.tab.active span`);
+        if (tabEl) tabEl.textContent = t.title;
       }
     }
   }
 
   window.toggleEncrypt = function(tid, checked) {
     updateTabData(tid, 'encrypted', checked);
-    document.getElementById(`c-pass-${tid}`).style.display = checked ? 'inline-block' : 'none';
+    const passInput = document.getElementById(`c-pass-${tid}`);
+    if (passInput) passInput.style.display = checked ? 'inline-block' : 'none';
+  }
+
+  window.saveDraft = function(tid) {
+    let t = tabs.find(t => t.id === tid);
+    if(!t) return;
+    let data = t.data;
+    
+    if (t.draftId) {
+      let existingDraft = emails.find(e => e.id === t.draftId);
+      if (existingDraft) {
+        existingDraft.subject = data.sub || 'Untitled Draft';
+        existingDraft.sender = data.to || 'draft@kilo.os';
+        existingDraft.body = data.body;
+      }
+    } else {
+      let draftId = nextId++;
+      t.draftId = draftId;
+      emails.unshift({
+        id: draftId,
+        folder: 'drafts',
+        subject: data.sub || 'Untitled Draft',
+        sender: data.to || 'draft@kilo.os',
+        body: data.body,
+        unread: false,
+        tags: ["Work"],
+        encrypted: false,
+        starred: false
+      });
+    }
+    renderList();
+    alert("Draft saved to Drafts folder.");
   }
 
   window.sendEmail = async function(tid) {
@@ -348,11 +492,30 @@
       finalBody = await encryptText(data.body, data.password);
     }
 
-    emails.unshift({
-      id: nextId++, folder: 'sent', subject: data.sub || 'No Subject', sender: data.to || 'unknown@kilo.os', body: finalBody, unread: false, tags: [], encrypted: isEncrypted
-    });
+    if (t.draftId) {
+      let existingDraft = emails.find(e => e.id === t.draftId);
+      if (existingDraft) {
+        existingDraft.folder = 'sent';
+        existingDraft.subject = data.sub || 'No Subject';
+        existingDraft.sender = data.to || 'unknown@kilo.os';
+        existingDraft.body = finalBody;
+        existingDraft.encrypted = isEncrypted;
+      }
+    } else {
+      emails.unshift({
+        id: nextId++,
+        folder: 'sent',
+        subject: data.sub || 'No Subject',
+        sender: data.to || 'unknown@kilo.os',
+        body: finalBody,
+        unread: false,
+        tags: [],
+        encrypted: isEncrypted,
+        starred: false
+      });
+    }
     closeTab(tid);
-    if(currentFolder === 'sent') renderList();
+    if(currentFolder === 'sent' || currentFolder === 'drafts') renderList();
   }
 
   window.attemptDecrypt = async function(eid) {
@@ -363,14 +526,14 @@
     if(dec !== null) {
       let resDiv = document.getElementById(`dec-res-${eid}`);
       resDiv.style.display = 'block';
-      resDiv.innerHTML = `<strong>Decrypted Content:</strong><br><br>${escapeHTML(dec).replace(/\\n/g, '<br>')}`;
+      resDiv.innerHTML = `<strong>Decrypted Content:</strong><br><br>${escapeHTML(dec).replace(/\n/g, '<br>')}`;
     } else {
       alert("Incorrect password or corrupted data.");
     }
   }
 
   window.addTag = function(eid) {
-    let tag = prompt("Enter tag name:");
+    let tag = prompt("Enter tag name (e.g. Urgent, Work, Personal):");
     if(tag) {
       let em = emails.find(e => e.id === eid);
       if(!em.tags) em.tags = [];
@@ -398,8 +561,32 @@
     alert("Trash emptied.");
   }
 
+  window.exportSingleEml = function(eid) {
+    let em = emails.find(e => e.id === eid);
+    if (!em) return;
+    const emlContent = `From: ${em.sender}\nTo: me@kilo.os\nSubject: ${em.subject}\nDate: ${new Date().toUTCString()}\nX-Tags: ${(em.tags||[]).join(', ')}\nX-Starred: ${em.starred ? 'yes' : 'no'}\nMIME-Version: 1.0\nContent-Type: text/plain; charset=utf-8\n\n${em.body}`;
+    const blob = new Blob([emlContent], { type: 'message/rfc822' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `email_${em.id}.eml`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  window.exportSingleMd = function(eid) {
+    let em = emails.find(e => e.id === eid);
+    if (!em) return;
+    const mdContent = `# ${em.subject}\n\n- **From:** ${em.sender}\n- **Folder:** ${em.folder}\n- **Tags:** ${(em.tags||[]).join(', ') || 'none'}\n- **Starred:** ${em.starred ? 'Yes' : 'No'}\n\n---\n\n${em.body}\n`;
+    const blob = new Blob([mdContent], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `email_${em.id}.md`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
   window.exportJson = function() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(emails));
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(emails, null, 2));
     const a = document.createElement('a');
     a.href = dataStr; a.download = "kmail_backup.json"; a.click();
   }
@@ -413,7 +600,7 @@
       try {
         const imported = JSON.parse(e.target.result);
         if(Array.isArray(imported)) {
-          emails = imported.slice(0, 1000); // limit to 1000 items
+          emails = imported.slice(0, 1000);
           nextId = Math.max(...emails.map(m=>m.id), 0) + 1;
           renderList();
           alert("Mailbox imported successfully.");
@@ -421,18 +608,18 @@
       } catch(err) { alert("Invalid JSON file."); }
     };
     reader.readAsText(file);
-    event.target.value = ''; // reset
+    event.target.value = '';
   }
 
   document.addEventListener('keydown', (e) => {
     if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
       if (e.key === 'F1') e.preventDefault();
-      alert("KMail Help:\n\n- Click 'New Message' to compose.\n- Select folders on the left.\n- Search and filter by tags.\n- Tabs let you open multiple emails.");
+      alert("KMail Help:\n\n- Click '+ New Message' to compose.\n- Click Star (⭐) to toggle priority on emails.\n- Click 'Save Draft' while composing to save to Drafts.\n- Click 'Export .EML' or 'Export .MD' to export single emails.\n- Select folders on sidebar (Inbox, Starred, Sent, Drafts, Trash).\n- Search and filter by tags.\n- Tabs let you open multiple emails concurrently.");
     }
   });
 
   if (window.opener) {
-    window.resizeTo(900, 600);
+    window.resizeTo(920, 620);
   }
 
   renderList();

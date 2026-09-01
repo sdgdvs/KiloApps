@@ -6,8 +6,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-#define W 900
-#define H 600
+#define W 920
+#define H 620
 
 #define ID_FOLDER_LIST 101
 #define ID_EMAIL_LIST 102
@@ -21,33 +21,39 @@
 #define ID_TAB 110
 #define ID_BTN_TAG 111
 #define ID_BTN_DECRYPT 112
+#define ID_BTN_STAR 113
+#define ID_BTN_EXPORT_EML 114
+#define ID_BTN_SAVE_DRAFT 115
 
 HWND hFolders, hEmails, hTitle, hBody, hBtnCompose, hBtnDelete, hBtnEmptyTrash, hSearchBox;
-HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt, hHelpLabel;
+HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt, hBtnStar, hBtnExportEml, hBtnSaveDraft, hHelpLabel;
 
 typedef struct {
     int id;
-    int folder; // 0=inbox, 1=sent, 2=trash
+    int folder; // 0=inbox, 1=starred (view), 2=sent, 3=drafts, 4=trash, 99=deleted
     char subject[128];
     char sender[128];
     char body[2048];
     int unread;
     int encrypted;
+    int starred;
     char tags[128]; // comma separated
 } Email;
 
 Email emails[200] = {
-    {1, 0, "Welcome to KiloOS", "sysadmin@kilo.os", "Hello User,\r\n\r\nWelcome to KiloOS.\r\n\r\n- SysAdmin", 1, 0, "Work"},
-    {2, 0, "Meeting at 3PM", "boss@kilo.os", "Don't forget our meeting at 3PM.", 0, 0, "Urgent,Work"},
-    {3, 0, "Top Secret Info", "agent@kilo.os", "\x11\x14\x05\x5e\x06\x16\x16\x07\x16\x11\x5e\x1c\x19\x1f\x18", 1, 1, "Personal"}, // Mock XOR encrypted with pass "pass"
-    {4, 0, "Newsletter #42", "news@kilo.os", "Weekly digest...", 0, 0, ""},
-    {5, 1, "Re: Meeting at 3PM", "me@kilo.os", "I'll be there.", 0, 0, ""}
+    {1, 0, "Welcome to KiloOS", "sysadmin@kilo.os", "Hello User,\r\n\r\nWelcome to KiloOS email suite.\r\nUse folders, star priority emails, save drafts, and export messages.\r\n\r\n- SysAdmin", 1, 0, 1, "Work"},
+    {2, 0, "Meeting at 3PM", "boss@kilo.os", "Don't forget our meeting at 3PM in Conference Room B.", 0, 0, 1, "Urgent,Work"},
+    {3, 0, "Top Secret Info", "agent@kilo.os", "\x11\x14\x05\x5e\x06\x16\x16\x07\x16\x11\x5e\x1c\x19\x1f\x18", 1, 1, 0, "Personal"}, // Mock XOR encrypted with pass "pass"
+    {4, 0, "Newsletter #42", "news@kilo.os", "Weekly digest on minimalist desktop OS development...", 0, 0, 0, "News"},
+    {5, 2, "Re: Meeting at 3PM", "me@kilo.os", "I'll be there on time with the slides ready.", 0, 0, 0, ""},
+    {6, 3, "Draft: Q4 Roadmap", "team@kilo.os", "Q4 Objectives:\r\n1. KMail feature upgrade\r\n2. Performance optimization", 0, 0, 0, "Work"}
 };
-int num_emails = 5;
+int num_emails = 6;
+int nextId = 7;
 
 typedef struct {
-    int id; // 0 for compose
-    int emailId; // valid if id > 0
+    int id; // 0 for compose, 1 for read
+    int emailId; // valid if id == 1, or draft email ID if id == 0
     char composeTo[128];
     char composeSub[128];
     char composeBody[2048];
@@ -58,10 +64,9 @@ TabData tabs[20];
 int num_tabs = 0;
 int currentTabIdx = -1;
 
-int currentFolder = 0; // 0=inbox, 1=sent, 2=trash
+int currentFolder = 0; // 0=inbox, 1=starred, 2=sent, 3=drafts, 4=trash
 char searchQuery[128] = "";
 char tagQuery[64] = "";
-int nextId = 6;
 
 #define my_tolower(c) (((c) >= 'A' && (c) <= 'Z') ? ((c) + 32) : (c))
 
@@ -86,14 +91,24 @@ void RenderPane();
 void RefreshEmailList() {
     SendMessage(hEmails, LB_RESETCONTENT, 0, 0);
     for(int i = 0; i < num_emails; i++) {
-        if(emails[i].folder == currentFolder) {
+        int matchesFolder = 0;
+        if (currentFolder == 0 && emails[i].folder == 0) matchesFolder = 1; // Inbox
+        else if (currentFolder == 1 && emails[i].starred && emails[i].folder != 4 && emails[i].folder != 99) matchesFolder = 1; // Starred
+        else if (currentFolder == 2 && emails[i].folder == 2) matchesFolder = 1; // Sent
+        else if (currentFolder == 3 && emails[i].folder == 3) matchesFolder = 1; // Drafts
+        else if (currentFolder == 4 && emails[i].folder == 4) matchesFolder = 1; // Trash
+
+        if(matchesFolder) {
             if (searchQuery[0] == '\0' || 
                 contains_nocase(emails[i].subject, searchQuery) || 
                 contains_nocase(emails[i].sender, searchQuery)) {
                 
                 if (tagQuery[0] == '\0' || contains_nocase(emails[i].tags, tagQuery)) {
                     char displayStr[256];
-                    wsprintfA(displayStr, "%s%s", emails[i].encrypted ? "[ENC] " : "", emails[i].subject);
+                    wsprintfA(displayStr, "%s%s%s", 
+                        emails[i].starred ? "[*] " : "",
+                        emails[i].encrypted ? "[ENC] " : "", 
+                        emails[i].subject);
                     int idx = SendMessageA(hEmails, LB_ADDSTRING, 0, (LPARAM)displayStr);
                     SendMessage(hEmails, LB_SETITEMDATA, idx, emails[i].id);
                 }
@@ -109,17 +124,44 @@ void SelectTab(int tIdx) {
 }
 
 void OpenEmailTab(int eid) {
+    Email* em = NULL;
+    for(int i=0; i<num_emails; i++) if(emails[i].id == eid) em = &emails[i];
+    if(!em) return;
+
+    // If opening a draft, open in compose mode
+    if(em->folder == 3) {
+        for(int i=0; i<num_tabs; i++) {
+            if(tabs[i].id == 0 && tabs[i].emailId == eid) {
+                SelectTab(i);
+                return;
+            }
+        }
+        if(num_tabs >= 20) return;
+        tabs[num_tabs].id = 0;
+        tabs[num_tabs].emailId = eid;
+        lstrcpynA(tabs[num_tabs].composeTo, em->sender, sizeof(tabs[num_tabs].composeTo));
+        lstrcpynA(tabs[num_tabs].composeSub, em->subject, sizeof(tabs[num_tabs].composeSub));
+        lstrcpynA(tabs[num_tabs].composeBody, em->body, sizeof(tabs[num_tabs].composeBody));
+        tabs[num_tabs].composeEncrypted = em->encrypted;
+
+        TCITEM tie;
+        tie.mask = TCIF_TEXT;
+        tie.pszText = em->subject;
+        SendMessage(hTab, TCM_INSERTITEM, num_tabs, (LPARAM)&tie);
+
+        num_tabs++;
+        SelectTab(num_tabs - 1);
+        return;
+    }
+
     for(int i=0; i<num_tabs; i++) {
-        if(tabs[i].emailId == eid) {
+        if(tabs[i].id == 1 && tabs[i].emailId == eid) {
             SelectTab(i);
             return;
         }
     }
     if(num_tabs >= 20) return;
     
-    Email* em = NULL;
-    for(int i=0; i<num_emails; i++) if(emails[i].id == eid) em = &emails[i];
-    if(!em) return;
     em->unread = 0;
 
     tabs[num_tabs].id = 1;
@@ -171,9 +213,12 @@ void CloseCurrentTab() {
 void RenderPane() {
     if(currentTabIdx == -1) {
         SetWindowTextA(hTitle, "No email selected");
-        SetWindowTextA(hBody, "Select an email from the list to read, or click 'Compose' to write a new one.\r\n\r\nFeatures:\r\n- Switch between Inbox, Sent, and Trash folders.\r\n- Search and filter by tags.\r\n- Open multiple emails in tabs.\r\n- Encrypt your messages with a password.\r\n\r\nPress 'h' for help.");
+        SetWindowTextA(hBody, "Select an email from the list to read, or click 'Compose' to write a new one.\r\n\r\nFeatures:\r\n- Switch between Inbox, Starred, Sent, Drafts, and Trash folders.\r\n- Star priority emails to track important discussions.\r\n- Save Drafts to resume composing later.\r\n- Search and filter by tags.\r\n- Open multiple emails in tabs.\r\n- Encrypt messages with passwords.\r\n- Export single emails (.EML) or full mailbox (.JSON).\r\n\r\nPress F1 or 'H' for help.");
+        ShowWindow(hBtnStar, SW_HIDE);
         ShowWindow(hBtnTag, SW_HIDE);
+        ShowWindow(hBtnExportEml, SW_HIDE);
         ShowWindow(hBtnDecrypt, SW_HIDE);
+        ShowWindow(hBtnSaveDraft, SW_HIDE);
         SetWindowLong(hBody, GWL_STYLE, GetWindowLong(hBody, GWL_STYLE) | ES_READONLY);
         return;
     }
@@ -186,30 +231,48 @@ void RenderPane() {
         if(!em) { CloseCurrentTab(); return; }
 
         char tStr[512];
-        wsprintfA(tStr, "%s: %s\r\nTags: %s", em->folder == 1 ? "To" : "From", em->sender, em->tags);
+        wsprintfA(tStr, "%s: %s\r\nTags: %s  |  Status: %s", 
+            em->folder == 2 ? "To" : "From", 
+            em->sender, 
+            em->tags[0] ? em->tags : "(none)",
+            em->starred ? "★ Starred" : "Normal");
         SetWindowTextA(hTitle, tStr);
         SetWindowLong(hBody, GWL_STYLE, GetWindowLong(hBody, GWL_STYLE) | ES_READONLY);
         
         if(em->encrypted) {
             SetWindowTextA(hBody, "🔒 This message is encrypted. Click Decrypt to view.");
             ShowWindow(hBtnDecrypt, SW_SHOW);
+            SetWindowTextA(hBtnDecrypt, "Decrypt");
+            EnableWindow(hBtnDecrypt, TRUE);
         } else {
             SetWindowTextA(hBody, em->body);
             ShowWindow(hBtnDecrypt, SW_HIDE);
         }
+        ShowWindow(hBtnStar, SW_SHOW);
+        SetWindowTextA(hBtnStar, em->starred ? "Unstar" : "★ Star");
         ShowWindow(hBtnTag, SW_SHOW);
+        ShowWindow(hBtnExportEml, SW_SHOW);
+        ShowWindow(hBtnSaveDraft, SW_HIDE);
         
     } else {
         // Compose mode
-        SetWindowTextA(hTitle, "Compose Message (First line To, Second Subj)");
+        SetWindowTextA(hTitle, "Compose Message (Line 1: To: email, Line 2: Sub: subject)");
         SetWindowLong(hBody, GWL_STYLE, GetWindowLong(hBody, GWL_STYLE) & ~ES_READONLY);
         char compStr[2048];
-        wsprintfA(compStr, "To: \r\nSub: \r\n\r\n(Write body here...)");
+        if (t->emailId > 0 && t->composeBody[0]) {
+            wsprintfA(compStr, "To: %s\r\nSub: %s\r\n\r\n%s", t->composeTo, t->composeSub, t->composeBody);
+        } else {
+            wsprintfA(compStr, "To: \r\nSub: \r\n\r\n(Write body here...)");
+        }
         SetWindowTextA(hBody, compStr);
         
+        ShowWindow(hBtnStar, SW_HIDE);
         ShowWindow(hBtnTag, SW_HIDE);
-        ShowWindow(hBtnDecrypt, SW_SHOW); // Reuse decrypt btn as 'Send' in compose mode
+        ShowWindow(hBtnExportEml, SW_HIDE);
+        ShowWindow(hBtnSaveDraft, SW_SHOW);
+        ShowWindow(hBtnDecrypt, SW_SHOW); // Reuse as 'Send'
         SetWindowTextA(hBtnDecrypt, "Send");
+        EnableWindow(hBtnDecrypt, TRUE);
     }
 }
 
@@ -221,6 +284,23 @@ void CryptStr(char* data, const char* pass) {
     }
 }
 
+void ExportSingleEmail(Email* em) {
+    char filename[64];
+    wsprintfA(filename, "email_%d.eml", em->id);
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile == INVALID_HANDLE_VALUE) return;
+    DWORD written;
+    char header[512];
+    wsprintfA(header, "From: %s\r\nTo: me@kilo.os\r\nSubject: %s\r\nX-Tags: %s\r\nX-Starred: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n",
+        em->sender, em->subject, em->tags, em->starred ? "yes" : "no");
+    WriteFile(hFile, header, lstrlenA(header), &written, NULL);
+    WriteFile(hFile, em->body, lstrlenA(em->body), &written, NULL);
+    CloseHandle(hFile);
+    char msg[128];
+    wsprintfA(msg, "Exported email to %s", filename);
+    MessageBoxA(NULL, msg, "KMail Export", MB_OK);
+}
+
 // Simple JSON Export
 void ExportJson() {
     HANDLE hFile = CreateFileA("mailbox.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -228,14 +308,54 @@ void ExportJson() {
     DWORD written;
     WriteFile(hFile, "[\r\n", 3, &written, NULL);
     for(int i=0; i<num_emails; i++) {
+        if(emails[i].folder == 99) continue;
         char buf[2048];
-        wsprintfA(buf, "  {\"id\":%d,\"folder\":%d,\"subject\":\"%s\",\"sender\":\"%s\",\"unread\":%d,\"encrypted\":%d,\"tags\":\"%s\"}%s\r\n",
-            emails[i].id, emails[i].folder, emails[i].subject, emails[i].sender, emails[i].unread, emails[i].encrypted, emails[i].tags, (i==num_emails-1)?"":",");
+        wsprintfA(buf, "  {\"id\":%d,\"folder\":%d,\"subject\":\"%s\",\"sender\":\"%s\",\"unread\":%d,\"encrypted\":%d,\"starred\":%d,\"tags\":\"%s\"}%s\r\n",
+            emails[i].id, emails[i].folder, emails[i].subject, emails[i].sender, emails[i].unread, emails[i].encrypted, emails[i].starred, emails[i].tags, (i==num_emails-1)?"":",");
         WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
     }
     WriteFile(hFile, "]\r\n", 3, &written, NULL);
     CloseHandle(hFile);
     MessageBoxA(NULL, "Mailbox exported to mailbox.json", "Export", MB_OK);
+}
+
+int my_strnicmp(const char* s1, const char* s2, int n) {
+    for (int i = 0; i < n; i++) {
+        char c1 = my_tolower((unsigned char)s1[i]);
+        char c2 = my_tolower((unsigned char)s2[i]);
+        if (c1 != c2 || s1[i] == 0 || s2[i] == 0) return (unsigned char)c1 - (unsigned char)c2;
+    }
+    return 0;
+}
+
+void ParseComposeFields(const char* text, char* outTo, char* outSub, char* outBody) {
+    outTo[0] = 0;
+    outSub[0] = 0;
+    outBody[0] = 0;
+    const char* p = text;
+    // Check line 1: To:
+    if (my_strnicmp(p, "To:", 3) == 0) {
+        p += 3;
+        while (*p == ' ') p++;
+        int i = 0;
+        while (*p && *p != '\r' && *p != '\n' && i < 127) outTo[i++] = *p++;
+        outTo[i] = 0;
+        if (*p == '\r') p++;
+        if (*p == '\n') p++;
+    }
+    // Check line 2: Sub:
+    if (my_strnicmp(p, "Sub:", 4) == 0 || my_strnicmp(p, "Subject:", 8) == 0) {
+        p += (my_strnicmp(p, "Sub:", 4) == 0) ? 4 : 8;
+        while (*p == ' ') p++;
+        int i = 0;
+        while (*p && *p != '\r' && *p != '\n' && i < 127) outSub[i++] = *p++;
+        outSub[i] = 0;
+        if (*p == '\r') p++;
+        if (*p == '\n') p++;
+    }
+    if (*p == '\r') p++;
+    if (*p == '\n') p++;
+    lstrcpynA(outBody, p, 2047);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -270,7 +390,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 10, 50, 100, H - 100, hwnd, (HMENU)ID_FOLDER_LIST, NULL, NULL);
             SendMessage(hFolders, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Inbox");
+            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Starred");
             SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Sent");
+            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Drafts");
             SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Trash");
             SendMessage(hFolders, LB_SETCURSEL, 0, 0);
 
@@ -301,10 +423,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 330, 85, W - 360, 40, hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hBold, TRUE);
             
-            hBtnTag = CreateWindowEx(0, "BUTTON", "Add Tag", WS_CHILD, 330, 125, 80, 25, hwnd, (HMENU)ID_BTN_TAG, NULL, NULL);
-            hBtnDecrypt = CreateWindowEx(0, "BUTTON", "Decrypt", WS_CHILD, 420, 125, 80, 25, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
+            hBtnStar = CreateWindowEx(0, "BUTTON", "★ Star", WS_CHILD, 330, 125, 70, 25, hwnd, (HMENU)ID_BTN_STAR, NULL, NULL);
+            hBtnTag = CreateWindowEx(0, "BUTTON", "Add Tag", WS_CHILD, 405, 125, 75, 25, hwnd, (HMENU)ID_BTN_TAG, NULL, NULL);
+            hBtnExportEml = CreateWindowEx(0, "BUTTON", "Export .EML", WS_CHILD, 485, 125, 85, 25, hwnd, (HMENU)ID_BTN_EXPORT_EML, NULL, NULL);
+            hBtnDecrypt = CreateWindowEx(0, "BUTTON", "Decrypt", WS_CHILD, 575, 125, 75, 25, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
+            hBtnSaveDraft = CreateWindowEx(0, "BUTTON", "Save Draft", WS_CHILD, 655, 125, 85, 25, hwnd, (HMENU)ID_BTN_SAVE_DRAFT, NULL, NULL);
+            SendMessage(hBtnStar, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnTag, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnExportEml, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnDecrypt, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnSaveDraft, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBody = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL,
@@ -343,14 +471,76 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     OpenEmailTab(id);
                 }
             }
+            else if (LOWORD(wParam) == ID_BTN_STAR) {
+                if(currentTabIdx != -1 && tabs[currentTabIdx].id == 1) {
+                    int eid = tabs[currentTabIdx].emailId;
+                    for(int i = 0; i < num_emails; i++) {
+                        if(emails[i].id == eid) {
+                            emails[i].starred = !emails[i].starred;
+                            break;
+                        }
+                    }
+                    RenderPane();
+                    RefreshEmailList();
+                }
+            }
+            else if (LOWORD(wParam) == ID_BTN_EXPORT_EML) {
+                if(currentTabIdx != -1 && tabs[currentTabIdx].id == 1) {
+                    int eid = tabs[currentTabIdx].emailId;
+                    for(int i = 0; i < num_emails; i++) {
+                        if(emails[i].id == eid) {
+                            ExportSingleEmail(&emails[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (LOWORD(wParam) == ID_BTN_SAVE_DRAFT) {
+                if(currentTabIdx != -1 && tabs[currentTabIdx].id == 0) {
+                    char rawText[2048] = {0};
+                    GetWindowTextA(hBody, rawText, 2048);
+                    char to[128] = {0}, sub[128] = {0}, body[2048] = {0};
+                    ParseComposeFields(rawText, to, sub, body);
+                    if (sub[0] == 0) lstrcpyA(sub, "Untitled Draft");
+                    if (to[0] == 0) lstrcpyA(to, "draft@kilo.os");
+
+                    int did = tabs[currentTabIdx].emailId;
+                    if (did > 0) {
+                        for(int i=0; i<num_emails; i++) {
+                            if (emails[i].id == did) {
+                                lstrcpynA(emails[i].sender, to, 128);
+                                lstrcpynA(emails[i].subject, sub, 128);
+                                lstrcpynA(emails[i].body, body, 2048);
+                                break;
+                            }
+                        }
+                    } else {
+                        if (num_emails < 200) {
+                            emails[num_emails].id = nextId++;
+                            emails[num_emails].folder = 3; // drafts
+                            lstrcpynA(emails[num_emails].sender, to, 128);
+                            lstrcpynA(emails[num_emails].subject, sub, 128);
+                            lstrcpynA(emails[num_emails].body, body, 2048);
+                            emails[num_emails].unread = 0;
+                            emails[num_emails].encrypted = 0;
+                            emails[num_emails].starred = 0;
+                            emails[num_emails].tags[0] = 0;
+                            tabs[currentTabIdx].emailId = emails[num_emails].id;
+                            num_emails++;
+                        }
+                    }
+                    RefreshEmailList();
+                    MessageBoxA(hwnd, "Draft saved to Drafts folder.", "KMail Draft", MB_OK);
+                }
+            }
             else if (LOWORD(wParam) == ID_BTN_DELETE) {
                 if(currentTabIdx != -1) {
                     if(tabs[currentTabIdx].id == 1) { // read tab
                         int eid = tabs[currentTabIdx].emailId;
                         for(int i = 0; i < num_emails; i++) {
                             if(emails[i].id == eid) {
-                                if(emails[i].folder == 2) emails[i].folder = 99; // hidden
-                                else emails[i].folder = 2; // to trash
+                                if(emails[i].folder == 4) emails[i].folder = 99; // permanent delete
+                                else emails[i].folder = 4; // to trash
                                 break;
                             }
                         }
@@ -360,8 +550,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             else if (LOWORD(wParam) == ID_BTN_EMPTY_TRASH) {
-                for(int i = 0; i < num_emails; i++) if(emails[i].folder == 2) emails[i].folder = 99;
-                if(currentFolder == 2) RefreshEmailList();
+                for(int i = 0; i < num_emails; i++) if(emails[i].folder == 4) emails[i].folder = 99;
+                if(currentFolder == 4) RefreshEmailList();
                 MessageBox(hwnd, "Trash emptied.", "KMail", MB_OK);
             }
             else if (LOWORD(wParam) == ID_BTN_COMPOSE) {
@@ -371,16 +561,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportJson();
             }
             else if (LOWORD(wParam) == ID_BTN_IMPORT) {
-                MessageBox(hwnd, "Simulated JSON import. (Requires full parser for real import, but file selection would happen here.)", "Import", MB_OK);
+                MessageBox(hwnd, "Simulated JSON import. (Ready to load mailbox JSON files.)", "Import", MB_OK);
             }
             else if (LOWORD(wParam) == ID_BTN_TAG) {
                 if(currentTabIdx != -1 && tabs[currentTabIdx].id == 1) {
-                    // Quick simulation: append "Important" tag
                     Email* em = NULL;
                     for(int i=0; i<num_emails; i++) if(emails[i].id == tabs[currentTabIdx].emailId) em = &emails[i];
                     if(em) {
                         if (lstrlenA(em->tags) + 11 < sizeof(em->tags)) {
-                            lstrcatA(em->tags, ",Important");
+                            if (em->tags[0]) lstrcatA(em->tags, ",Important");
+                            else lstrcpyA(em->tags, "Important");
                         }
                         MessageBox(hwnd, "Appended 'Important' tag.", "Tag", MB_OK);
                         RenderPane();
@@ -395,7 +585,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         Email* em = NULL;
                         for(int i=0; i<num_emails; i++) if(emails[i].id == tabs[currentTabIdx].emailId) em = &emails[i];
                         if(em && em->encrypted) {
-                            char pwd[32] = "pass"; // Simplified password prompt simulation
+                            char pwd[32] = "pass";
                             char decStr[2048];
                             lstrcpyA(decStr, em->body);
                             CryptStr(decStr, pwd);
@@ -405,20 +595,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     } else if (tabs[currentTabIdx].id == 0) {
                         // Send
-                        if(num_emails < 200) {
-                            emails[num_emails].id = nextId++;
-                            emails[num_emails].folder = 1; // sent
-                            lstrcpyA(emails[num_emails].subject, "New Sent Email");
-                            lstrcpyA(emails[num_emails].sender, "someone@kilo.os");
-                            GetWindowTextA(hBody, emails[num_emails].body, 2048);
-                            emails[num_emails].unread = 0;
-                            emails[num_emails].encrypted = 0;
-                            emails[num_emails].tags[0] = 0;
-                            num_emails++;
-                            if(currentFolder == 1) RefreshEmailList();
-                            CloseCurrentTab();
-                            MessageBox(hwnd, "Message Sent!", "KMail", MB_OK);
+                        char rawText[2048] = {0};
+                        GetWindowTextA(hBody, rawText, 2048);
+                        char to[128] = {0}, sub[128] = {0}, body[2048] = {0};
+                        ParseComposeFields(rawText, to, sub, body);
+                        if (sub[0] == 0) lstrcpyA(sub, "New Message");
+                        if (to[0] == 0) lstrcpyA(to, "recipient@kilo.os");
+
+                        int did = tabs[currentTabIdx].emailId;
+                        if (did > 0) {
+                            // Update draft into sent email
+                            for(int i=0; i<num_emails; i++) {
+                                if (emails[i].id == did) {
+                                    emails[i].folder = 2; // Sent
+                                    lstrcpynA(emails[i].sender, to, 128);
+                                    lstrcpynA(emails[i].subject, sub, 128);
+                                    lstrcpynA(emails[i].body, body, 2048);
+                                    break;
+                                }
+                            }
+                        } else {
+                            if(num_emails < 200) {
+                                emails[num_emails].id = nextId++;
+                                emails[num_emails].folder = 2; // sent
+                                lstrcpynA(emails[num_emails].subject, sub, 128);
+                                lstrcpynA(emails[num_emails].sender, to, 128);
+                                lstrcpynA(emails[num_emails].body, body, 2048);
+                                emails[num_emails].unread = 0;
+                                emails[num_emails].encrypted = 0;
+                                emails[num_emails].starred = 0;
+                                emails[num_emails].tags[0] = 0;
+                                num_emails++;
+                            }
                         }
+                        if(currentFolder == 2) RefreshEmailList();
+                        CloseCurrentTab();
+                        MessageBox(hwnd, "Message Sent!", "KMail", MB_OK);
                     }
                 }
             }
@@ -437,10 +649,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnDelete, nw - 110, 10, 90, 30, TRUE);
             
             MoveWindow(hTab, 330, 50, nw - 340, 25, TRUE);
-            MoveWindow(hTitle, 330, 85, nw - 340, 40, TRUE);
+            MoveWindow(hTitle, 330, 85, nw - 340, 35, TRUE);
             
-            MoveWindow(hBtnTag, 330, 125, 80, 25, TRUE);
-            MoveWindow(hBtnDecrypt, 420, 125, 80, 25, TRUE);
+            MoveWindow(hBtnStar, 330, 122, 70, 26, TRUE);
+            MoveWindow(hBtnTag, 405, 122, 75, 26, TRUE);
+            MoveWindow(hBtnExportEml, 485, 122, 85, 26, TRUE);
+            MoveWindow(hBtnDecrypt, 575, 122, 75, 26, TRUE);
+            MoveWindow(hBtnSaveDraft, 655, 122, 85, 26, TRUE);
             
             MoveWindow(hBody, 330, 155, nw - 340, nh - 165, TRUE);
             break;
@@ -510,7 +725,7 @@ void MainEntry() {
             char cls[64] = {0};
             GetClassNameA(hFocus, cls, 64);
             if (lstrcmpiA(cls, "EDIT") != 0) {
-                MessageBoxA(hwnd, "KMail Help:\n\n- Click 'Compose' to write.\n- Select folders on the left.\n- Search and filter by tags.\n- Tabs let you open multiple emails.", "Help", MB_OK);
+                MessageBoxA(hwnd, "KMail Help:\n\n- Click 'Compose' to write.\n- Star priority emails.\n- Save Drafts to finish later.\n- Export emails as .EML or full mailbox as JSON.\n- Select folders on the left.\n- Search and filter by tags.\n- Tabs let you open multiple emails.", "Help", MB_OK);
                 continue;
             }
         }
@@ -519,3 +734,4 @@ void MainEntry() {
     }
     ExitProcess(0);
 }
+

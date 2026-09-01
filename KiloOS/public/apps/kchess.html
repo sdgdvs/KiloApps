@@ -447,7 +447,8 @@
           epX: epX, epY: epY,
           wkm: wKingMoved, wrl: wRookLMoved, wrr: wRookRMoved,
           bkm: bKingMoved, brl: bRookLMoved, brr: bRookRMoved,
-          capturedEPPawn: 0, capturedEPX: -1, capturedEPY: -1
+          capturedEPPawn: 0, capturedEPX: -1, capturedEPY: -1,
+          isCastling: false
       };
       let isWhite = ms.srcP <= 6;
       let pType = isWhite ? ms.srcP : ms.srcP - 6;
@@ -464,6 +465,11 @@
 
       if (pType === 1 && (ty === 0 || ty === 7)) {
           board[ty][tx] = isWhite ? 5 : 11;
+      }
+      if (pType === 6 && Math.abs(tx - sx) === 2) {
+          ms.isCastling = true;
+          if (tx === 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
+          else if (tx === 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
       }
       if (pType === 6) { if (isWhite) wKingMoved = true; else bKingMoved = true; }
       if (pType === 4) {
@@ -489,6 +495,10 @@
       board[ty][tx] = ms.dstP;
       if (ms.capturedEPPawn !== 0) {
           board[ms.capturedEPY][ms.capturedEPX] = ms.capturedEPPawn;
+      }
+      if (ms.isCastling) {
+          if (tx === 6) { board[ty][7] = board[ty][5]; board[ty][5] = 0; }
+          else if (tx === 2) { board[ty][0] = board[ty][3]; board[ty][3] = 0; }
       }
       epX = ms.epX; epY = ms.epY;
       wKingMoved = ms.wkm; wRookLMoved = ms.wrl; wRookRMoved = ms.wrr;
@@ -1080,19 +1090,28 @@
       whiteTurn = !whiteTurn;
       pushHistoryState(moveSAN);
 
-      // Check Insufficient Material (King vs King)
-      let pieceCount = 0;
+      // Check Insufficient Material (King vs King, King+Knight vs King, King+Bishop vs King)
+      let pieces = [];
       for (let r = 0; r < 8; r++) {
           for (let c = 0; c < 8; c++) {
-              if (board[r][c] !== 0) pieceCount++;
+              if (board[r][c] !== 0) pieces.push(board[r][c]);
           }
       }
-      if (pieceCount <= 2) {
+      if (pieces.length <= 2) {
           gameOver = true;
           winner = 3;
-          updateAriaStatus("Draw by Insufficient Material");
+          updateAriaStatus("Draw by Insufficient Material (K vs K)");
           if (aiMode) { statsDraws++; saveStats(); }
           return;
+      } else if (pieces.length === 3) {
+          let hasMinor = pieces.some(p => p === 2 || p === 3 || p === 8 || p === 9);
+          if (hasMinor) {
+              gameOver = true;
+              winner = 3;
+              updateAriaStatus("Draw by Insufficient Material (Minor Piece)");
+              if (aiMode) { statsDraws++; saveStats(); }
+              return;
+          }
       }
 
       if (!hasLegalMoves(whiteTurn)) {
@@ -1308,23 +1327,26 @@
           wKingMoved = true; wRookLMoved = true; wRookRMoved = true;
           bKingMoved = true; bRookLMoved = true; bRookRMoved = true;
           if (parts[2] && parts[2] !== '-') {
-              if (parts[2].includes('K')) wKingMoved = false, wRookRMoved = false;
-              if (parts[2].includes('Q')) wKingMoved = false, wRookLMoved = false;
-              if (parts[2].includes('k')) bKingMoved = false, bRookRMoved = false;
-              if (parts[2].includes('q')) bKingMoved = false, bRookLMoved = false;
+              if (parts[2].includes('K')) { wKingMoved = false; wRookRMoved = false; }
+              if (parts[2].includes('Q')) { wKingMoved = false; wRookLMoved = false; }
+              if (parts[2].includes('k')) { bKingMoved = false; bRookRMoved = false; }
+              if (parts[2].includes('q')) { bKingMoved = false; bRookLMoved = false; }
           }
 
           epX = -1; epY = -1;
           if (parts[3] && parts[3] !== '-' && parts[3].length === 2) {
               epX = parts[3].charCodeAt(0) - 97;
               let rank = parseInt(parts[3][1]);
-              epY = 8 - rank;
+              let targetY = 8 - rank;
+              if (whiteTurn) epY = targetY + 1;
+              else epY = targetY - 1;
           }
 
           selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
           moveHistoryStack = []; historyIndex = -1; pushHistoryState();
           gameOver = false; winner = 0; hintActive = false;
           playSound('move');
+          updateAriaStatus("Loaded FEN position: " + (whiteTurn ? "White to move" : "Black to move"));
           return true;
       } catch(e) {
           return false;
@@ -1361,6 +1383,60 @@
       return pgn;
   }
 
+  function loadPGN(pgnStr) {
+      try {
+          let clean = pgnStr.replace(/\[.*?\]/g, ' ');
+          clean = clean.replace(/\{.*?\}/g, ' ').replace(/\(.*?\)/g, ' ');
+          clean = clean.replace(/\d+\.+/g, ' ');
+          clean = clean.replace(/1-0|0-1|1\/2-1\/2|\*/g, ' ');
+          let tokens = clean.trim().split(/\s+/).filter(t => t.length > 0);
+          if (tokens.length === 0) return false;
+
+          gameMode = 1;
+          resetGame();
+
+          for (let san of tokens) {
+              let cleanSAN = san.replace(/[+#?!]/g, '');
+              let matched = false;
+              let isWhite = whiteTurn;
+
+              for (let sy = 0; sy < 8; sy++) {
+                  for (let sx = 0; sx < 8; sx++) {
+                      let p = board[sy][sx];
+                      if (p !== 0 && (p <= 6) === isWhite) {
+                          for (let ty = 0; ty < 8; ty++) {
+                              for (let tx = 0; tx < 8; tx++) {
+                                  if (isValidMove(sx, sy, tx, ty, false)) {
+                                      if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, isWhite)) {
+                                          let isCap = board[ty][tx] !== 0 || (p % 6 === 1 && tx === epX && ty === (isWhite ? epY - 1 : epY + 1));
+                                          let genSAN = getSAN(sx, sy, tx, ty, p, isCap).replace(/[+#?!]/g, '');
+                                          if (genSAN === cleanSAN || (cleanSAN === 'O-O' && genSAN === 'O-O') || (cleanSAN === 'O-O-O' && genSAN === 'O-O-O')) {
+                                              performMove(sx, sy, tx, ty);
+                                              matched = true;
+                                              break;
+                                          }
+                                      }
+                                  }
+                              }
+                              if (matched) break;
+                          }
+                      }
+                      if (matched) break;
+                  }
+                  if (matched) break;
+              }
+              if (!matched) {
+                  return false;
+              }
+          }
+          playSound('move');
+          updateAriaStatus("Imported " + tokens.length + " moves from PGN");
+          return true;
+      } catch (e) {
+          return false;
+      }
+  }
+
   function openFENModal() {
       document.getElementById('fen-input').value = getFEN();
       document.getElementById('fen-modal').style.display = 'flex';
@@ -1379,7 +1455,7 @@
   function copyFEN() {
       const inp = document.getElementById('fen-input');
       inp.select();
-      navigator.clipboard.writeText(inp.value);
+      try { navigator.clipboard.writeText(inp.value); } catch(e) {}
   }
 
   function applyFEN() {
@@ -1394,11 +1470,20 @@
   function copyPGN() {
       const area = document.getElementById('pgn-input');
       area.select();
-      navigator.clipboard.writeText(area.value);
+      try { navigator.clipboard.writeText(area.value); } catch(e) {}
   }
 
   function applyPGN() {
-      closeModals();
+      const pgnText = document.getElementById('pgn-input').value;
+      if (!pgnText || !pgnText.trim()) {
+          closeModals();
+          return;
+      }
+      if (loadPGN(pgnText)) {
+          closeModals();
+      } else {
+          alert("Could not parse or execute all PGN moves!");
+      }
   }
 
   cvs.onmousedown = (e) => {
