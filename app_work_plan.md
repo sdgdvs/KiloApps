@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KMandel
+**Target App:** KPing
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KMandel (Added Multi-threading, Custom Palettes, 4K Export, Julia Sets)
 - KPing (Added Packet Logging, Jitter Analytics, Payload Config, Log Export)
 - KConnect4 (Added Save/Load States, Match Replay Viewer, Stats Tracker, JSON Export)
 - KScript (Added Advanced Regex Search & Replace, Macro Scripting, Deep Memory Inspector, and Step-Through Debugger)
@@ -129,6 +128,7 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KDB (Added CSV/JSON Import/Export engine, robust real-time search, advanced column filtering, password encryption, Interactive Column Header Sorting [ID/Name/Dept/Role Asc/Desc], Department Analytics & Headcount Distribution Breakdown, and Markdown [.md] Directory & Executive Summary Report Export)
 - KFont (Added deep TTF/OTF Font Metadata & Metrics inspection, a Unicode Range & Glyph Viewer with hexadecimal character mapping, a visual Glyph Kerning & Hinting diagnostics panel, and an interactive Glyph Anatomy & Vector Metrics Dissector with GDI/Canvas ABC spacing & bearings, GLYPHMETRICS bounding box outline geometry, multi-encoding codec suite [UTF-8/UTF-16/HTML entities/C escape], and Unicode range click-to-inspect)
 - KMail (Added Starred Priority Marking & Folder, Drafts Folder & Save Draft Workflow with Compose Resumption, Single Email EML & Markdown Export, Unread Badges, and JSON Backup I/O)
+- KMandel (Added Multi-threading, Custom Palettes, 4K Export, Julia Sets, Fractal Formula Engine [Mandelbrot, Burning Ship, Tricorn, Celtic, Buffalo], and Curated Landmark Presets Explorer)
 
 
 

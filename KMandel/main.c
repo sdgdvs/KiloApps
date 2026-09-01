@@ -15,12 +15,48 @@ int bmpW = 0, bmpH = 0;
 double minRe = -2.0, maxRe = 1.0;
 double minIm = -1.2, maxIm = 1.2;
 unsigned int max_iter = 100;
-int theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW, 4: Custom
+int theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW, 4: Emerald, 5: Sunset, 6: Custom
+int fractalType = 0; // 0: Mandelbrot, 1: Burning Ship, 2: Tricorn, 3: Celtic, 4: Buffalo
 int isJulia = 0;
 double juliaCRe = 0.0, juliaCIm = 0.0;
 
 unsigned char customColor1[3] = {255, 0, 0};
 unsigned char customColor2[3] = {0, 0, 255};
+
+const char* fractalNames[] = {
+    "Mandelbrot",
+    "Burning Ship",
+    "Tricorn",
+    "Celtic",
+    "Buffalo"
+};
+#define NUM_FRACTAL_TYPES 5
+
+typedef struct {
+    const char* name;
+    int fType;
+    int isJ;
+    double jRe, jIm;
+    double minRe, maxRe, minIm, maxIm;
+    unsigned int iter;
+} Landmark;
+
+static const Landmark landmarks[] = {
+    {"Mandelbrot Overview", 0, 0, 0.0, 0.0, -2.0, 1.0, -1.2, 1.2, 100},
+    {"Seahorse Valley", 0, 0, 0.0, 0.0, -0.755, -0.745, 0.095, 0.105, 350},
+    {"Elephant Valley", 0, 0, 0.0, 0.0, 0.265, 0.285, -0.010, 0.010, 300},
+    {"Triple Spiral", 0, 0, 0.0, 0.0, -0.0885, -0.0865, 0.654, 0.656, 450},
+    {"Mini Mandelbrot", 0, 0, 0.0, 0.0, -1.775, -1.765, -0.005, 0.005, 500},
+    {"Burning Ship Main", 1, 0, 0.0, 0.0, -1.8, 1.0, -1.8, 1.0, 150},
+    {"Ship Needle", 1, 0, 0.0, 0.0, -0.46, -0.44, -0.58, -0.56, 400},
+    {"Tricorn Main", 2, 0, 0.0, 0.0, -2.0, 1.0, -1.5, 1.5, 120},
+    {"Celtic Ring", 3, 0, 0.0, 0.0, -2.0, 1.0, -1.2, 1.2, 150},
+    {"Buffalo Heart", 4, 0, 0.0, 0.0, -2.0, 1.0, -1.5, 1.5, 150},
+    {"Julia Dendrite", 0, 1, -0.4, 0.6, -1.5, 1.5, -1.5, 1.5, 200},
+    {"Julia San Marco", 0, 1, -0.75, 0.0, -1.6, 1.6, -1.2, 1.2, 200}
+};
+#define NUM_LANDMARKS (sizeof(landmarks) / sizeof(landmarks[0]))
+int currentLandmark = 0;
 
 #define MAX_HISTORY 256
 typedef struct {
@@ -29,6 +65,7 @@ typedef struct {
     int isJulia;
     double juliaCRe, juliaCIm;
     int theme;
+    int fractalType;
     unsigned char cc1[3], cc2[3];
 } ViewState;
 
@@ -53,6 +90,7 @@ void SaveState() {
     history[history_idx].juliaCRe = juliaCRe;
     history[history_idx].juliaCIm = juliaCIm;
     history[history_idx].theme = theme;
+    history[history_idx].fractalType = fractalType;
     history[history_idx].cc1[0] = customColor1[0];
     history[history_idx].cc1[1] = customColor1[1];
     history[history_idx].cc1[2] = customColor1[2];
@@ -73,6 +111,7 @@ void LoadState(int idx) {
         juliaCRe = history[idx].juliaCRe;
         juliaCIm = history[idx].juliaCIm;
         theme = history[idx].theme;
+        fractalType = history[idx].fractalType;
         customColor1[0] = history[idx].cc1[0];
         customColor1[1] = history[idx].cc1[1];
         customColor1[2] = history[idx].cc1[2];
@@ -98,7 +137,15 @@ void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsig
     } else if (t == 3) { // BW
         unsigned char v = ((n % 20) > 10) ? 255 : 0;
         *r = v; *g = v; *b = v;
-    } else if (t == 4) { // Custom
+    } else if (t == 4) { // Emerald Matrix
+        *r = (unsigned char)((n * 30) % 100);
+        *g = (unsigned char)((n * 255) / iter);
+        *b = (unsigned char)((n * 90) % 180);
+    } else if (t == 5) { // Sunset Neon
+        *r = (unsigned char)((n * 255) / iter);
+        *g = (unsigned char)((n * 70) / iter);
+        *b = (unsigned char)((n * 190) / iter);
+    } else if (t == 6) { // Custom
         double f = (double)n / iter;
         *r = (unsigned char)(customColor1[0] + f * (customColor2[0] - customColor1[0]));
         *g = (unsigned char)(customColor1[1] + f * (customColor2[1] - customColor1[1]));
@@ -117,6 +164,7 @@ typedef struct {
     int isJ;
     double jCRe, jCIm;
     int th;
+    int fType;
 } RenderTask;
 
 DWORD WINAPI RenderThreadProc(LPVOID lpParam) {
@@ -133,14 +181,37 @@ DWORD WINAPI RenderThreadProc(LPVOID lpParam) {
             double Z_re = c_re_view, Z_im = c_im_view;
             int isInside = 1;
             unsigned int n = 0;
+            
             for (n = 0; n < task->mIter; ++n) {
                 double Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
-                if (Z_re2 + Z_im2 > 4) {
+                if (Z_re2 + Z_im2 > 4.0) {
                     isInside = 0;
                     break;
                 }
-                Z_im = 2 * Z_re * Z_im + c_im;
-                Z_re = Z_re2 - Z_im2 + c_re;
+                
+                if (task->fType == 1) { // Burning Ship
+                    double a = (Z_re < 0.0) ? -Z_re : Z_re;
+                    double b = (Z_im < 0.0) ? -Z_im : Z_im;
+                    Z_im = -2.0 * a * b + c_im;
+                    Z_re = Z_re2 - Z_im2 + c_re;
+                } else if (task->fType == 2) { // Tricorn
+                    Z_im = -2.0 * Z_re * Z_im + c_im;
+                    Z_re = Z_re2 - Z_im2 + c_re;
+                } else if (task->fType == 3) { // Celtic
+                    double re_temp = Z_re2 - Z_im2;
+                    if (re_temp < 0.0) re_temp = -re_temp;
+                    Z_im = 2.0 * Z_re * Z_im + c_im;
+                    Z_re = re_temp + c_re;
+                } else if (task->fType == 4) { // Buffalo
+                    double re_temp = Z_re2 - Z_im2;
+                    if (re_temp < 0.0) re_temp = -re_temp;
+                    double a = (Z_re < 0.0) ? -Z_re : Z_re;
+                    Z_im = -2.0 * a * Z_im + c_im;
+                    Z_re = re_temp + c_re;
+                } else { // 0: Standard Mandelbrot
+                    Z_im = 2.0 * Z_re * Z_im + c_im;
+                    Z_re = Z_re2 - Z_im2 + c_re;
+                }
             }
             if (isInside) {
                 task->buffer[y * task->width + x] = 0; // Black
@@ -174,6 +245,7 @@ void RenderMandelbrotToBuffer(DWORD* buffer, int width, int height) {
         tasks[i].isJ = isJulia;
         tasks[i].jCRe = juliaCRe; tasks[i].jCIm = juliaCIm;
         tasks[i].th = theme;
+        tasks[i].fType = fractalType;
         
         threads[i] = CreateThread(NULL, 0, RenderThreadProc, &tasks[i], 0, NULL);
     }
@@ -219,7 +291,6 @@ void Zoom(double factor, int mouseX, int mouseY) {
     double newWIm = (maxIm - minIm) * factor;
     
     if (newWRe < 1e-13 || newWRe > 10.0) return;
-
     
     minRe = centerRe - ((double)mouseX / bmpW) * newWRe;
     maxRe = minRe + newWRe;
@@ -254,7 +325,7 @@ void SaveImage4K(HWND hwnd) {
         return;
     }
     
-    SetWindowText(hwnd, "KMandelApp - Rendering 4K image...");
+    SetWindowText(hwnd, "KMandel - Rendering 4K image...");
     RenderMandelbrotToBuffer(buffer, expW, expH);
     SetWindowText(hwnd, "KMandel - Press F1 or H for Help");
     
@@ -310,6 +381,21 @@ void PickColor(HWND hwnd, unsigned char* color) {
         color[1] = GetGValue(cc.rgbResult);
         color[2] = GetBValue(cc.rgbResult);
     }
+}
+
+void ApplyLandmark(int idx) {
+    if (idx < 0 || idx >= NUM_LANDMARKS) return;
+    fractalType = landmarks[idx].fType;
+    isJulia = landmarks[idx].isJ;
+    juliaCRe = landmarks[idx].jRe;
+    juliaCIm = landmarks[idx].jIm;
+    minRe = landmarks[idx].minRe;
+    maxRe = landmarks[idx].maxRe;
+    minIm = landmarks[idx].minIm;
+    maxIm = landmarks[idx].maxIm;
+    max_iter = landmarks[idx].iter;
+    SaveState();
+    RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -390,7 +476,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
-            if (wParam == 'R') {
+            if (wParam == 'F') {
+                fractalType = (fractalType + 1) % NUM_FRACTAL_TYPES;
+                SaveState();
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'L' || wParam == 'P') {
+                currentLandmark = (currentLandmark + 1) % NUM_LANDMARKS;
+                ApplyLandmark(currentLandmark);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'R') {
                 if (isJulia) {
                     minRe = -2.0; maxRe = 2.0;
                     minIm = -2.0; maxIm = 2.0;
@@ -403,12 +498,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'T') {
-                theme = (theme + 1) % 5;
+                theme = (theme + 1) % 7;
                 SaveState();
                 RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'C') {
-                theme = 4; // Switch to Custom
+                theme = 6; // Switch to Custom
                 PickColor(hwnd, customColor1);
                 PickColor(hwnd, customColor2);
                 SaveState();
@@ -447,7 +542,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'S') {
                 SaveImage4K(hwnd);
             } else if (wParam == 'H' || wParam == VK_F1) {
-                MessageBox(hwnd, "KMandel Help\n\nL/R Click: Zoom\nShift+L: Pick Julia\nZ/Y: Undo/Redo\nS: Save 4K\nR: Reset\nT: Theme\nC: Colors\nJ: Julia\nF1/H: Help", "Help", MB_OK);
+                MessageBox(hwnd, 
+                    "KMandel Pro Fractal Explorer\n\n"
+                    "L / R Click: Zoom In / Out\n"
+                    "F: Switch Formula (Mandelbrot, Burning Ship, Tricorn, Celtic, Buffalo)\n"
+                    "L / P: Landmark / Bookmark Presets\n"
+                    "Shift + Click: Pick Julia Set\n"
+                    "J: Toggle Julia / Mandelbrot Mode\n"
+                    "T: Toggle Color Theme\n"
+                    "C: Customize Dual Palette\n"
+                    "Z / Y: Undo / Redo View History\n"
+                    "S: Export Ultra-HD 4K Image\n"
+                    "R: Reset Viewport Coordinates\n"
+                    "F1 / H: Toggle Help",
+                    "KMandel Help", MB_OK);
             }
             break;
         }
@@ -462,8 +570,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteDC(hdcMem);
             }
             
-            // Draw Help Background with a stylized outline
-            RECT textBg = { 10, bmpH - 46, 220, bmpH - 10 };
+            // Draw Help & Status HUD Background
+            RECT textBg = { 10, bmpH - 46, 420, bmpH - 10 };
             HBRUSH hBrush = CreateSolidBrush(RGB(20, 30, 50));
             HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 150, 255));
             HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
@@ -485,16 +593,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(hPen);
             DeleteObject(iconPen);
             
-            // Draw Help Text
+            // Draw HUD Text
             SetBkMode(hdc, TRANSPARENT);
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
-            int fontHeight = -MulDiv(12, dpi, 72);
+            int fontHeight = -MulDiv(11, dpi, 72);
             HFONT hFont = CreateFont(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
                                      DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
             SetTextColor(hdc, RGB(255, 255, 255));
-            TextOut(hdc, 44, bmpH - 36, "Press F1 or H for Help", 22);
+            
+            char hudMsg[128];
+            const char* curF = (fractalType >= 0 && fractalType < NUM_FRACTAL_TYPES) ? fractalNames[fractalType] : "Fractal";
+            wsprintf(hudMsg, "%s%s | [F]ormula [L]andmark [T]heme [F1]Help", curF, isJulia ? " (Julia)" : "");
+            
+            int len = 0;
+            while (hudMsg[len]) len++;
+            TextOut(hdc, 44, bmpH - 36, hudMsg, len);
+            
             SelectObject(hdc, hOldFont);
             DeleteObject(hFont);
             

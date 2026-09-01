@@ -1,27 +1,26 @@
-import sys
-
-html = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="window-width" content="1280">
 <meta name="window-height" content="720">
-<title>KMandel</title>
+<title>KMandel - Fractal Explorer</title>
 <style>
   :root {
-    --bg-color: #0f172a;
-    --panel-bg: rgba(15, 23, 42, 0.7);
-    --border-color: rgba(255, 255, 255, 0.1);
+    --bg-color: #0b0f19;
+    --panel-bg: rgba(15, 23, 42, 0.75);
+    --border-color: rgba(255, 255, 255, 0.12);
     --text-color: #f8fafc;
     --primary: #3b82f6;
     --primary-hover: #60a5fa;
+    --accent: #8b5cf6;
   }
   body {
     margin: 0;
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -38,9 +37,6 @@ html = """<!DOCTYPE html>
     cursor: crosshair;
     touch-action: none;
   }
-  #canvas-container:active {
-    cursor: crosshair;
-  }
   canvas {
     width: 100%;
     height: 100%;
@@ -51,20 +47,21 @@ html = """<!DOCTYPE html>
     top: 20px;
     right: 20px;
     background: var(--panel-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    width: 240px;
+    gap: 10px;
+    width: 260px;
     pointer-events: auto;
     user-select: none;
-    max-height: 90vh;
+    max-height: 92vh;
     overflow-y: auto;
+    z-index: 10;
   }
   .control-group {
     display: flex;
@@ -72,39 +69,58 @@ html = """<!DOCTYPE html>
     gap: 4px;
   }
   .control-group label {
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
     color: #94a3b8;
+    font-weight: 600;
   }
   .value-display {
-    font-family: monospace;
-    font-size: 13px;
-    background: rgba(0,0,0,0.3);
-    padding: 4px 8px;
-    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    background: rgba(0,0,0,0.35);
+    padding: 5px 8px;
+    border-radius: 6px;
     word-break: break-all;
+    border: 1px solid rgba(255,255,255,0.05);
   }
-  button {
+  select, button {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     border: 1px solid var(--border-color);
     color: var(--text-color);
     padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  select {
+    width: 100%;
+    outline: none;
+    background: rgba(30, 41, 59, 0.85);
+    box-sizing: border-box;
+  }
+  select option {
+    background: #0f172a;
+    color: #f8fafc;
   }
   button:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.18);
     transform: translateY(-1px);
+    border-color: rgba(255,255,255,0.25);
   }
   button:active {
-    transform: scale(0.95);
+    transform: scale(0.97);
+  }
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
   }
   .row {
     display: flex;
@@ -119,17 +135,19 @@ html = """<!DOCTYPE html>
     left: 50%;
     transform: translate(-50%, -50%);
     background: var(--panel-bg);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(12px);
     padding: 12px 24px;
     border-radius: 20px;
     border: 1px solid var(--border-color);
     font-size: 14px;
+    font-weight: 500;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.2s;
     display: flex;
     align-items: center;
     gap: 12px;
+    z-index: 50;
   }
   .loading.active {
     opacity: 1;
@@ -148,83 +166,201 @@ html = """<!DOCTYPE html>
   input[type="color"] {
     width: 100%;
     height: 30px;
-    border: none;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     cursor: pointer;
-    background: none;
+    background: rgba(0,0,0,0.3);
+    padding: 0;
+  }
+  #hud-badge {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: #f8fafc;
+    pointer-events: none;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+  }
+  #help-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 15, 25, 0.88);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .help-card {
+    background: #0f172a;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 28px 36px;
+    max-width: 520px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+  }
+  .help-card h2 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: var(--primary-hover);
+    font-size: 20px;
+  }
+  .help-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 8px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .help-key {
+    font-family: monospace;
+    background: rgba(255,255,255,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    text-align: center;
+    color: #93c5fd;
   }
 </style>
 </head>
 <body>
   <div id="canvas-container">
     <canvas id="c"></canvas>
-    <div class="loading" id="loading"><div class="spinner"></div><span id="loading-text">Rendering...</span></div>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <span id="loading-text">Rendering...</span>
+    </div>
+    
     <div class="controls">
       <div class="control-group">
-        <label>Zoom Level</label>
-        <div class="value-display" id="zoom-disp" aria-live="polite">1.0x</div>
+        <label for="fractal-select">Fractal Formula</label>
+        <select id="fractal-select" aria-label="Fractal Formula">
+          <option value="0">Mandelbrot (z² + c)</option>
+          <option value="1">Burning Ship</option>
+          <option value="2">Tricorn / Mandelbar</option>
+          <option value="3">Celtic Mandelbrot</option>
+          <option value="4">Buffalo Fractal</option>
+        </select>
       </div>
+
       <div class="control-group">
-        <label>Iterations</label>
-        <div class="value-display" id="iter-disp" aria-live="polite">100</div>
+        <label for="landmark-select">Landmark Presets</label>
+        <select id="landmark-select" aria-label="Landmark Presets">
+          <option value="-1">-- Jump to Landmark --</option>
+          <option value="0">Mandelbrot Overview</option>
+          <option value="1">Seahorse Valley</option>
+          <option value="2">Elephant Valley</option>
+          <option value="3">Triple Spiral</option>
+          <option value="4">Mini Mandelbrot</option>
+          <option value="5">Burning Ship Main</option>
+          <option value="6">Ship Needle</option>
+          <option value="7">Tricorn Main</option>
+          <option value="8">Celtic Ring</option>
+          <option value="9">Buffalo Heart</option>
+          <option value="10">Julia Dendrite</option>
+          <option value="11">Julia San Marco</option>
+        </select>
       </div>
-      <div class="row">
-        <button id="btn-zoom-in" aria-label="Zoom In">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom In
-        </button>
-        <button id="btn-zoom-out" aria-label="Zoom Out">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom Out
-        </button>
-      </div>
-      <div class="row">
-        <button id="btn-undo" disabled aria-label="Undo">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg> Undo
-        </button>
-        <button id="btn-redo" disabled aria-label="Redo">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg> Redo
-        </button>
-      </div>
-      <button id="btn-save" aria-label="Save Image">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save 4K PNG
-      </button>
-      <button id="btn-theme" aria-label="Toggle Theme">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg> Toggle Theme
-      </button>
-      <div class="control-group" id="custom-colors" style="display:none;">
-        <label>Custom Palette</label>
+
+      <div class="control-group">
+        <label>Zoom & Iterations</label>
         <div class="row">
-          <input type="color" id="color1" value="#ff0000">
-          <input type="color" id="color2" value="#0000ff">
+          <div class="value-display" id="zoom-disp" style="flex:1;" aria-live="polite">1.0x</div>
+          <div class="value-display" id="iter-disp" style="flex:1;" aria-live="polite">100 iter</div>
         </div>
       </div>
-      <button id="btn-julia" aria-label="Toggle Julia">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg> <span id="btn-julia-text">Toggle Julia</span>
-      </button>
-      <div class="control-group">
-        <label style="font-size: 11px;">Hint: Shift+Click to Pick Julia from Mandelbrot</label>
+
+      <div class="row">
+        <button id="btn-zoom-in" aria-label="Zoom In">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom In
+        </button>
+        <button id="btn-zoom-out" aria-label="Zoom Out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom Out
+        </button>
       </div>
-      <button id="btn-reset" aria-label="Reset View">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset View
+
+      <div class="row">
+        <button id="btn-undo" disabled aria-label="Undo">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg> Undo
+        </button>
+        <button id="btn-redo" disabled aria-label="Redo">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg> Redo
+        </button>
+      </div>
+
+      <div class="control-group">
+        <label for="theme-select">Color Theme</label>
+        <select id="theme-select" aria-label="Color Theme">
+          <option value="0">Fire Spectrum</option>
+          <option value="1">Deep Ocean</option>
+          <option value="2">Cyberpunk Neon</option>
+          <option value="3">Monochrome Band</option>
+          <option value="4">Emerald Matrix</option>
+          <option value="5">Sunset Glow</option>
+          <option value="6">Custom Dual Palette</option>
+        </select>
+      </div>
+
+      <div class="control-group" id="custom-colors" style="display:none;">
+        <label>Custom Gradient Colors</label>
+        <div class="row">
+          <input type="color" id="color1" value="#ff0055" aria-label="Start color">
+          <input type="color" id="color2" value="#00e5ff" aria-label="End color">
+        </div>
+      </div>
+
+      <button id="btn-julia" aria-label="Toggle Julia">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg> <span id="btn-julia-text">Toggle Julia Mode</span>
       </button>
-    <div id="help-text" style="position: absolute; bottom: 20px; left: 20px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 8px 16px; color: #f8fafc; pointer-events: none; font-size: 14px; font-weight: 500; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); display: flex; align-items: center; gap: 8px;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-      Press F1 or H for Help
+
+      <button id="btn-save" aria-label="Save 4K PNG">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Export 4K PNG
+      </button>
+
+      <button id="btn-reset" aria-label="Reset View">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset View
+      </button>
     </div>
-    <div id="help-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 100; justify-content: center; align-items: center; flex-direction: column; overflow-y: auto;">
-      <h2>KMandel Help</h2>
-      <ul style="list-style: none; padding: 0; font-size: 16px; line-height: 1.8; text-align: left;">
-        <li><b>Left Click / Scroll Up:</b> Zoom In</li>
-        <li><b>Right Click / Scroll Down:</b> Zoom Out</li>
-        <li><b>Drag:</b> Pan View</li>
-        <li><b>Shift + Click:</b> Pick Julia set from Mandelbrot</li>
-        <li><b>Z / Y:</b> Undo / Redo</li>
-        <li><b>S:</b> Save 4K PNG</li>
-        <li><b>R:</b> Reset View</li>
-        <li><b>T:</b> Toggle Theme</li>
-        <li><b>J:</b> Toggle Julia Mode</li>
-        <li><b>F1 / H:</b> Toggle this Help</li>
-      </ul>
-      <button id="btn-close-help" style="margin-top: 20px;">Close</button>
+
+    <div id="hud-badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      <span id="hud-text">Mandelbrot | Shift+Click to sample Julia | F1 for Help</span>
+    </div>
+
+    <div id="help-overlay">
+      <div class="help-card">
+        <h2>KMandel Pro Shortcuts & Navigation</h2>
+        <div class="help-grid">
+          <span class="help-key">Left Click / Drag</span><span>Zoom In & Pan Viewport</span>
+          <span class="help-key">Right Click / Scroll</span><span>Zoom Out Viewport</span>
+          <span class="help-key">Shift + Click</span><span>Pick Julia constant from coordinate</span>
+          <span class="help-key">F</span><span>Cycle Fractal Formulas</span>
+          <span class="help-key">L / P</span><span>Cycle Landmark Presets</span>
+          <span class="help-key">J</span><span>Toggle Julia / Mandelbrot Mode</span>
+          <span class="help-key">T</span><span>Cycle Color Themes</span>
+          <span class="help-key">Z / Y</span><span>Undo / Redo View History</span>
+          <span class="help-key">S</span><span>Export Ultra-HD 4K PNG</span>
+          <span class="help-key">R</span><span>Reset Coordinates</span>
+          <span class="help-key">F1 / H</span><span>Toggle this Help overlay</span>
+        </div>
+        <button id="btn-close-help" style="margin-top: 20px; width: 100%;">Close Help</button>
+      </div>
     </div>
   </div>
 
@@ -234,12 +370,14 @@ html = """<!DOCTYPE html>
     const zoomDisp = document.getElementById('zoom-disp');
     const iterDisp = document.getElementById('iter-disp');
     const loading = document.getElementById('loading');
+    const hudText = document.getElementById('hud-text');
     
     // Viewport state
     let minRe = -2.0, maxRe = 1.0;
     let minIm = -1.2, maxIm = 1.2;
     let max_iter = 100;
-    let theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW, 4: Custom
+    let theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW, 4: Emerald, 5: Sunset, 6: Custom
+    let fractalType = 0; // 0: Mandelbrot, 1: Burning Ship, 2: Tricorn, 3: Celtic, 4: Buffalo
     let isRendering = false;
     let renderRequested = false;
 
@@ -249,11 +387,28 @@ html = """<!DOCTYPE html>
     let history = [];
     let historyIdx = -1;
 
-    let customColor1 = [255, 0, 0];
-    let customColor2 = [0, 0, 255];
+    let customColor1 = [255, 0, 85];
+    let customColor2 = [0, 229, 255];
+
+    const fractalNames = ["Mandelbrot", "Burning Ship", "Tricorn", "Celtic", "Buffalo"];
+
+    const landmarks = [
+      { name: "Mandelbrot Overview", fType: 0, isJ: false, jRe: 0, jIm: 0, minRe: -2.0, maxRe: 1.0, minIm: -1.2, maxIm: 1.2, iter: 100 },
+      { name: "Seahorse Valley", fType: 0, isJ: false, jRe: 0, jIm: 0, minRe: -0.755, maxRe: -0.745, minIm: 0.095, maxIm: 0.105, iter: 350 },
+      { name: "Elephant Valley", fType: 0, isJ: false, jRe: 0, jIm: 0, minRe: 0.265, maxRe: 0.285, minIm: -0.010, maxIm: 0.010, iter: 300 },
+      { name: "Triple Spiral", fType: 0, isJ: false, jRe: 0, jIm: 0, minRe: -0.0885, maxRe: -0.0865, minIm: 0.654, maxIm: 0.656, iter: 450 },
+      { name: "Mini Mandelbrot", fType: 0, isJ: false, jRe: 0, jIm: 0, minRe: -1.775, maxRe: -1.765, minIm: -0.005, maxIm: 0.005, iter: 500 },
+      { name: "Burning Ship Main", fType: 1, isJ: false, jRe: 0, jIm: 0, minRe: -1.8, maxRe: 1.0, minIm: -1.8, maxIm: 1.0, iter: 150 },
+      { name: "Ship Needle", fType: 1, isJ: false, jRe: 0, jIm: 0, minRe: -0.46, maxRe: -0.44, minIm: -0.58, maxIm: -0.56, iter: 400 },
+      { name: "Tricorn Main", fType: 2, isJ: false, jRe: 0, jIm: 0, minRe: -2.0, maxRe: 1.0, minIm: -1.5, maxIm: 1.5, iter: 120 },
+      { name: "Celtic Ring", fType: 3, isJ: false, jRe: 0, jIm: 0, minRe: -2.0, maxRe: 1.0, minIm: -1.2, maxIm: 1.2, iter: 150 },
+      { name: "Buffalo Heart", fType: 4, isJ: false, jRe: 0, jIm: 0, minRe: -2.0, maxRe: 1.0, minIm: -1.5, maxIm: 1.5, iter: 150 },
+      { name: "Julia Dendrite", fType: 0, isJ: true, jRe: -0.4, jIm: 0.6, minRe: -1.5, maxRe: 1.5, minIm: -1.5, maxIm: 1.5, iter: 200 },
+      { name: "Julia San Marco", fType: 0, isJ: true, jRe: -0.75, jIm: 0.0, minRe: -1.6, maxRe: 1.6, minIm: -1.2, maxIm: 1.2, iter: 200 }
+    ];
 
     function hexToRgb(hex) {
-        var result = /^#?([a-f\\d]{2})([a-f\\d]{2})([a-f\\d]{2})$/i.exec(hex);
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? [
             parseInt(result[1], 16),
             parseInt(result[2], 16),
@@ -263,11 +418,11 @@ html = """<!DOCTYPE html>
     
     document.getElementById('color1').addEventListener('input', (e) => {
         customColor1 = hexToRgb(e.target.value);
-        if (theme === 4) requestRender();
+        if (theme === 6) requestRender();
     });
     document.getElementById('color2').addEventListener('input', (e) => {
         customColor2 = hexToRgb(e.target.value);
-        if (theme === 4) requestRender();
+        if (theme === 6) requestRender();
     });
 
     // Interaction state
@@ -277,7 +432,7 @@ html = """<!DOCTYPE html>
     let startMinRe, startMaxRe, startMinIm, startMaxIm;
     
     function saveState() {
-        const state = { minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, customColor1: [...customColor1], customColor2: [...customColor2] };
+        const state = { minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1: [...customColor1], customColor2: [...customColor2] };
         if (historyIdx < history.length - 1) {
             history = history.slice(0, historyIdx + 1);
         }
@@ -294,18 +449,23 @@ html = """<!DOCTYPE html>
         isJulia = state.isJulia;
         juliaCRe = state.juliaCRe; juliaCIm = state.juliaCIm;
         theme = state.theme;
+        fractalType = state.fractalType !== undefined ? state.fractalType : 0;
         customColor1 = [...state.customColor1];
         customColor2 = [...state.customColor2];
-        document.getElementById('color1').value = '#' + customColor1.map(x => x.toString(16).padStart(2, '0')).join('');
-        document.getElementById('color2').value = '#' + customColor2.map(x => x.toString(16).padStart(2, '0')).join('');
-        document.getElementById('custom-colors').style.display = theme === 4 ? 'block' : 'none';
+        
+        document.getElementById('fractal-select').value = fractalType;
+        document.getElementById('theme-select').value = theme;
+        document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
         updateUndoRedoButtons();
     }
     
     function updateUndoRedoButtons() {
         document.getElementById('btn-undo').disabled = historyIdx <= 0;
         document.getElementById('btn-redo').disabled = historyIdx >= history.length - 1;
-        document.getElementById('btn-julia-text').textContent = isJulia ? 'Mandelbrot Mode' : 'Toggle Julia';
+        document.getElementById('btn-julia-text').textContent = isJulia ? 'Return to Formula' : 'Toggle Julia Mode';
+        
+        const fName = fractalNames[fractalType] || "Fractal";
+        hudText.textContent = `${fName}${isJulia ? ' (Julia)' : ''} | Shift+Click to sample | F1 for Help`;
     }
 
     function undo() {
@@ -330,18 +490,19 @@ html = """<!DOCTYPE html>
       const zoomLevel = (baseW / wRe);
       let zoomStr = zoomLevel < 1000 ? zoomLevel.toFixed(1) : (zoomLevel < 1000000 ? (zoomLevel/1000).toFixed(1) + 'k' : (zoomLevel/1000000).toFixed(1) + 'M');
       zoomDisp.textContent = zoomStr + 'x';
-      iterDisp.textContent = max_iter;
+      iterDisp.textContent = max_iter + ' iter';
       
       const needed_iter = Math.floor(100 * Math.pow(zoomLevel, 0.2));
       if (needed_iter > max_iter && zoomLevel > 5) {
           max_iter = Math.min(needed_iter, 2000);
       }
+      updateUndoRedoButtons();
     }
 
     // WEB WORKER LOGIC
     const workerCode = `
       self.onmessage = function(e) {
-          const { id, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, customColor1, customColor2 } = e.data;
+          const { id, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1, customColor2 } = e.data;
           
           const re_factor = (maxRe - minRe) / (w - 1);
           const im_factor = (maxIm - minIm) / (h - 1);
@@ -362,12 +523,32 @@ html = """<!DOCTYPE html>
                   
                   for (n = 0; n < max_iter; ++n) {
                       const Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
-                      if (Z_re2 + Z_im2 > 4) {
+                      if (Z_re2 + Z_im2 > 4.0) {
                           isInside = false;
                           break;
                       }
-                      Z_im = 2 * Z_re * Z_im + c_im;
-                      Z_re = Z_re2 - Z_im2 + c_re;
+                      
+                      if (fractalType === 1) { // Burning Ship
+                          const a = Math.abs(Z_re);
+                          const b = Math.abs(Z_im);
+                          Z_im = -2.0 * a * b + c_im;
+                          Z_re = Z_re2 - Z_im2 + c_re;
+                      } else if (fractalType === 2) { // Tricorn
+                          Z_im = -2.0 * Z_re * Z_im + c_im;
+                          Z_re = Z_re2 - Z_im2 + c_re;
+                      } else if (fractalType === 3) { // Celtic
+                          const re_temp = Math.abs(Z_re2 - Z_im2);
+                          Z_im = 2.0 * Z_re * Z_im + c_im;
+                          Z_re = re_temp + c_re;
+                      } else if (fractalType === 4) { // Buffalo
+                          const re_temp = Math.abs(Z_re2 - Z_im2);
+                          const a = Math.abs(Z_re);
+                          Z_im = -2.0 * a * Z_im + c_im;
+                          Z_re = re_temp + c_re;
+                      } else { // Mandelbrot (0)
+                          Z_im = 2.0 * Z_re * Z_im + c_im;
+                          Z_re = Z_re2 - Z_im2 + c_re;
+                      }
                   }
                   
                   if (isInside) {
@@ -390,7 +571,15 @@ html = """<!DOCTYPE html>
                       } else if (theme === 3) { // BW
                         let f = (n % 20) > 10 ? 255 : 0;
                         r = f; g = f; b = f;
-                      } else if (theme === 4) { // Custom
+                      } else if (theme === 4) { // Emerald Matrix
+                        r = (n * 30) % 100;
+                        g = Math.floor((n * 255) / max_iter);
+                        b = (n * 90) % 180;
+                      } else if (theme === 5) { // Sunset Neon
+                        r = Math.floor((n * 255) / max_iter);
+                        g = Math.floor((n * 70) / max_iter);
+                        b = Math.floor((n * 190) / max_iter);
+                      } else if (theme === 6) { // Custom
                         let f = n / max_iter;
                         r = Math.floor(customColor1[0] + f * (customColor2[0] - customColor1[0]));
                         g = Math.floor(customColor1[1] + f * (customColor2[1] - customColor1[1]));
@@ -464,7 +653,7 @@ html = """<!DOCTYPE html>
           };
           
           workers[i].postMessage({
-              id: i, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, customColor1, customColor2
+              id: i, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1, customColor2
           });
       }
     }
@@ -482,7 +671,6 @@ html = """<!DOCTYPE html>
         const newWIm = (maxIm - minIm) * factor;
         
         if (newWRe < 1e-13 || newWRe > 10.0) return;
-
         
         minRe = centerRe - (centerX / w) * newWRe;
         maxRe = minRe + newWRe;
@@ -494,8 +682,54 @@ html = """<!DOCTYPE html>
         requestRender();
     }
 
+    function applyLandmark(idx) {
+        if (idx < 0 || idx >= landmarks.length) return;
+        const lm = landmarks[idx];
+        fractalType = lm.fType;
+        isJulia = lm.isJ;
+        juliaCRe = lm.jRe;
+        juliaCIm = lm.jIm;
+        minRe = lm.minRe;
+        maxRe = lm.maxRe;
+        minIm = lm.minIm;
+        maxIm = lm.maxIm;
+        max_iter = lm.iter;
+        document.getElementById('fractal-select').value = fractalType;
+        saveState();
+        requestRender();
+    }
+
     window.addEventListener('resize', () => requestRender());
     
+    document.getElementById('fractal-select').addEventListener('change', (e) => {
+        fractalType = parseInt(e.target.value, 10);
+        isJulia = false;
+        if (fractalType === 1) { // Burning ship default
+            minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0;
+        } else if (fractalType === 2) { // Tricorn default
+            minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5;
+        } else {
+            minRe = -2.0; maxRe = 1.0; minIm = -1.2; maxIm = 1.2;
+        }
+        max_iter = 100;
+        saveState();
+        requestRender();
+    });
+
+    document.getElementById('landmark-select').addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (val >= 0) {
+            applyLandmark(val);
+        }
+    });
+
+    document.getElementById('theme-select').addEventListener('change', (e) => {
+        theme = parseInt(e.target.value, 10);
+        document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
+        saveState();
+        requestRender();
+    });
+
     document.getElementById('btn-reset').addEventListener('click', () => {
         if (isJulia) {
             minRe = -2.0; maxRe = 2.0;
@@ -526,13 +760,6 @@ html = """<!DOCTYPE html>
         requestRender();
     });
     
-    document.getElementById('btn-theme').addEventListener('click', () => {
-        theme = (theme + 1) % 5;
-        document.getElementById('custom-colors').style.display = theme === 4 ? 'block' : 'none';
-        saveState();
-        requestRender();
-    });
-    
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
         zoom(0.5, window.innerWidth/2, window.innerHeight/2);
     });
@@ -548,7 +775,6 @@ html = """<!DOCTYPE html>
         document.getElementById('loading-text').textContent = "Rendering 4K PNG...";
         loading.classList.add('active');
         
-        // Create an offscreen canvas for 4K (3840x2160)
         const exportCanvas = document.createElement('canvas');
         const expW = 3840;
         const expH = 2160;
@@ -557,7 +783,7 @@ html = """<!DOCTYPE html>
         
         performRender(exportCanvas, expW, expH, true, () => {
             const link = document.createElement('a');
-            link.download = 'kmandel_4k.png';
+            link.download = `kmandel_${fractalNames[fractalType].toLowerCase().replace(/[^a-z0-9]/g, '_')}_4k.png`;
             link.href = exportCanvas.toDataURL('image/png');
             link.click();
             document.getElementById('loading-text').textContent = "Rendering...";
@@ -565,17 +791,34 @@ html = """<!DOCTYPE html>
         });
     });
 
+    let currentLandmarkIdx = 0;
     window.addEventListener('keydown', (e) => {
         if (e.key.toLowerCase() === 'z') undo();
         if (e.key.toLowerCase() === 'y') redo();
         if (e.key.toLowerCase() === 's') document.getElementById('btn-save').click();
         if (e.key.toLowerCase() === 'r') document.getElementById('btn-reset').click();
-        if (e.key.toLowerCase() === 't') document.getElementById('btn-theme').click();
+        if (e.key.toLowerCase() === 'f') {
+            fractalType = (fractalType + 1) % fractalNames.length;
+            document.getElementById('fractal-select').value = fractalType;
+            saveState();
+            requestRender();
+        }
+        if (e.key.toLowerCase() === 'l' || e.key.toLowerCase() === 'p') {
+            currentLandmarkIdx = (currentLandmarkIdx + 1) % landmarks.length;
+            applyLandmark(currentLandmarkIdx);
+        }
+        if (e.key.toLowerCase() === 't') {
+            theme = (theme + 1) % 7;
+            document.getElementById('theme-select').value = theme;
+            document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
+            saveState();
+            requestRender();
+        }
         if (e.key.toLowerCase() === 'j') document.getElementById('btn-julia').click();
         if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
             if (e.key === 'F1') e.preventDefault();
             const overlay = document.getElementById('help-overlay');
-            overlay.style.display = overlay.style.display === 'none' ? 'flex' : 'none';
+            overlay.style.display = overlay.style.display === 'none' || overlay.style.display === '' ? 'flex' : 'none';
         }
 
         const panAmount = 0.1;
