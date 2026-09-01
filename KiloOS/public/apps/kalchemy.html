@@ -1578,25 +1578,39 @@
       height: 100vh;
       background: rgba(4, 4, 12, 0.85);
       backdrop-filter: blur(8px);
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: center;
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.25s ease;
     }
 
     .help-modal-overlay.show {
+      display: flex;
       opacity: 1;
       pointer-events: auto;
+    }
+
+    .help-modal-overlay.show.minimized {
+      display: block;
+      background: transparent;
+      backdrop-filter: none;
+      pointer-events: none;
+      width: auto;
+      height: auto;
+      top: auto;
+      left: auto;
+      bottom: 16px;
+      right: 16px;
     }
 
     .help-modal-card {
       background: linear-gradient(145deg, #16152e 0%, #0d0c1d 100%);
       border: 2px solid var(--accent-gold);
       border-radius: 16px;
-      padding: 24px;
+      padding: 20px 24px;
       width: 92%;
       max-width: 720px;
       max-height: 85vh;
@@ -1605,11 +1619,58 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 40px var(--glow-gold);
       position: relative;
       transform: scale(0.92);
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .help-modal-overlay.show .help-modal-card {
       transform: scale(1);
+    }
+
+    .help-modal-overlay.show.minimized .help-modal-card {
+      pointer-events: auto;
+      transform: none;
+      width: auto;
+      max-width: 380px;
+      max-height: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(22, 21, 46, 0.96), rgba(35, 28, 66, 0.96));
+      border: 1.5px solid var(--accent-gold);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), 0 0 16px var(--glow-gold);
+      cursor: pointer;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      animation: floatBadge 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatBadge {
+      from { transform: translateY(0); }
+      to { transform: translateY(-3px); }
+    }
+
+    .help-modal-overlay.show.minimized .help-modal-header {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .help-modal-overlay.show.minimized .help-modal-subtitle,
+    .help-modal-overlay.show.minimized .help-tab-bar,
+    .help-modal-overlay.show.minimized .help-tab-content,
+    .help-modal-overlay.show.minimized .help-modal-footer {
+      display: none !important;
+    }
+
+    .help-modal-overlay.show.minimized .help-modal-title {
+      font-size: 0.92rem;
     }
 
     .help-modal-header {
@@ -1629,6 +1690,92 @@
       font-weight: 800;
       color: var(--accent-gold);
       text-shadow: 0 0 12px rgba(243, 156, 18, 0.4);
+    }
+
+    .help-modal-subtitle {
+      font-size: 0.75rem;
+      color: var(--accent-purple-glow);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .help-modal-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .help-control-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-muted);
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      line-height: 1;
+    }
+
+    .help-control-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.18);
+      border-color: var(--accent-gold);
+    }
+
+    .help-control-btn.help-btn-close:hover {
+      color: #fff;
+      background: var(--accent-crimson);
+      border-color: var(--accent-crimson);
+    }
+
+    .help-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 12px;
+      margin-top: 14px;
+    }
+
+    .btn-help-footer {
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.2), rgba(155, 89, 182, 0.2));
+      border: 1px solid var(--accent-gold);
+      color: var(--accent-gold-light);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-help-footer:hover {
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.4), rgba(155, 89, 182, 0.4));
+      box-shadow: 0 0 10px rgba(243, 156, 18, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-help-footer.btn-help-footer-close {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--border-color);
+      color: var(--text-muted);
+    }
+
+    .btn-help-footer.btn-help-footer-close:hover {
+      background: rgba(231, 76, 60, 0.2);
+      border-color: var(--accent-crimson);
+      color: #fff;
     }
 
     .help-tab-bar {
@@ -2087,7 +2234,7 @@
         <span class="label">🔥 Streak:</span>
         <span class="val" id="stat-streak" style="color:#f39c12;">0</span>
       </div>
-      <div class="stat-badge" style="cursor:pointer; background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(243, 156, 18, 0.3)); border-color: var(--accent-gold-light);" onclick="openHelpModal()" title="Open Grandmaster Manual & Help">
+      <div class="stat-badge" id="manual-stat-badge" style="cursor:pointer; background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(243, 156, 18, 0.3)); border-color: var(--accent-gold-light);" onclick="toggleHelpModal()" title="Open Grandmaster Manual & Help (F1/H)">
         <span class="label" style="color:var(--accent-gold-light)">📘 Manual (F1/H)</span>
       </div>
     </div>
@@ -4988,16 +5135,98 @@
     function openHelpModal(tab = 'howtoplay') {
       const modal = document.getElementById('help-modal-overlay');
       if (modal) {
+        modal.classList.remove('minimized');
         modal.classList.add('show');
+        const minBtn = document.getElementById('help-btn-min');
+        if (minBtn) {
+          minBtn.innerText = '🗕';
+          minBtn.title = 'Minimize Manual to corner widget (M)';
+        }
         switchHelpTab(tab);
+        updateManualBadge();
         playChime(550, 'sine', 0.15);
       }
     }
 
     function closeHelpModal(evt) {
-      if (evt && evt.target && evt.target.id !== 'help-modal-overlay' && !evt.target.classList.contains('codex-modal-close')) return;
+      if (evt && evt.stopPropagation) evt.stopPropagation();
       const modal = document.getElementById('help-modal-overlay');
-      if (modal) modal.classList.remove('show');
+      if (modal) {
+        modal.classList.remove('show');
+        modal.classList.remove('minimized');
+        updateManualBadge();
+      }
+    }
+
+    function minimizeHelpModal(evt) {
+      if (evt && evt.stopPropagation) evt.stopPropagation();
+      const modal = document.getElementById('help-modal-overlay');
+      if (modal) {
+        modal.classList.add('show');
+        modal.classList.add('minimized');
+        const minBtn = document.getElementById('help-btn-min');
+        if (minBtn) {
+          minBtn.innerText = '🗖';
+          minBtn.title = 'Restore Manual (M)';
+        }
+        updateManualBadge();
+        playChime(420, 'triangle', 0.1);
+      }
+    }
+
+    function restoreHelpModal(evt) {
+      if (evt && evt.stopPropagation) evt.stopPropagation();
+      openHelpModal();
+    }
+
+    function toggleMinimizeHelpModal(evt) {
+      if (evt && evt.stopPropagation) evt.stopPropagation();
+      const modal = document.getElementById('help-modal-overlay');
+      if (modal && modal.classList.contains('minimized')) {
+        restoreHelpModal(evt);
+      } else {
+        minimizeHelpModal(evt);
+      }
+    }
+
+    function onHelpCardClick(evt) {
+      evt.stopPropagation();
+      const modal = document.getElementById('help-modal-overlay');
+      if (modal && modal.classList.contains('minimized')) {
+        restoreHelpModal(evt);
+      }
+    }
+
+    function toggleHelpModal() {
+      const modal = document.getElementById('help-modal-overlay');
+      if (!modal) return;
+      if (modal.classList.contains('show')) {
+        if (modal.classList.contains('minimized')) {
+          restoreHelpModal();
+        } else {
+          closeHelpModal();
+        }
+      } else {
+        openHelpModal();
+      }
+    }
+
+    function updateManualBadge() {
+      const badge = document.getElementById('manual-stat-badge');
+      const modal = document.getElementById('help-modal-overlay');
+      if (!badge || !modal) return;
+      const isMinimized = modal.classList.contains('minimized');
+      const isOpen = modal.classList.contains('show') && !isMinimized;
+      if (isMinimized) {
+        badge.innerHTML = '<span class="label" style="color:var(--accent-gold-light)">📘 Manual [Minimized]</span>';
+        badge.title = "Click to restore Grandmaster Manual";
+      } else if (isOpen) {
+        badge.innerHTML = '<span class="label" style="color:var(--accent-gold-light)">📘 Manual [Open]</span>';
+        badge.title = "Click to close Grandmaster Manual";
+      } else {
+        badge.innerHTML = '<span class="label" style="color:var(--accent-gold-light)">📘 Manual (F1/H)</span>';
+        badge.title = "Open Grandmaster Manual & Help (F1/H)";
+      }
     }
 
     function switchHelpTab(tabName) {
@@ -5017,11 +5246,11 @@
       const key = evt.key.toLowerCase();
       if (key === 'h' || key === '?' || evt.key === 'F1') {
         if (evt.key === 'F1') evt.preventDefault();
+        toggleHelpModal();
+      } else if (key === 'm') {
         const modal = document.getElementById('help-modal-overlay');
         if (modal && modal.classList.contains('show')) {
-          closeHelpModal();
-        } else {
-          openHelpModal();
+          toggleMinimizeHelpModal();
         }
       } else if (key === 'escape') {
         closeHelpModal();
@@ -5175,15 +5404,18 @@
 
   <!-- Phase 14: Grandmaster Help & Manual Modal Overlay -->
   <div class="help-modal-overlay" id="help-modal-overlay" onclick="closeHelpModal(event)">
-    <div class="help-modal-card" onclick="event.stopPropagation()">
-      <button class="codex-modal-close" onclick="closeHelpModal()">✕</button>
+    <div class="help-modal-card" onclick="onHelpCardClick(event)">
       <div class="help-modal-header">
         <div class="help-modal-title">
-          <span style="font-size:1.6rem">📘</span>
+          <span style="font-size:1.4rem">📘</span>
           <div>
             <div>Grandmaster Alchemy Manual</div>
-            <div style="font-size:0.75rem; color:var(--accent-purple-glow); font-weight:600; text-transform:uppercase; letter-spacing:1px">Arcane Laboratory & Transmutation Reference</div>
+            <div class="help-modal-subtitle">Arcane Laboratory & Transmutation Reference</div>
           </div>
+        </div>
+        <div class="help-modal-controls">
+          <button class="help-control-btn help-btn-minimize" id="help-btn-min" onclick="toggleMinimizeHelpModal(event)" title="Minimize Manual to corner widget (M)">🗕</button>
+          <button class="help-control-btn help-btn-close" onclick="closeHelpModal(event)" title="Close Manual (ESC)">✕</button>
         </div>
       </div>
 
@@ -5288,7 +5520,8 @@
               </div>
               <div>
                 <div class="help-list-item"><span class="key-badge">A</span> Trigger Auto-Fill (if unlocked)</div>
-                <div class="help-list-item"><span class="key-badge">F1 / H</span> Open Grandmaster Manual</div>
+                <div class="help-list-item"><span class="key-badge">F1 / H</span> Open / Toggle Manual</div>
+                <div class="help-list-item"><span class="key-badge">M</span> Minimize / Restore Manual</div>
                 <div class="help-list-item"><span class="key-badge">ESC</span> Close Modals / Help Overlay</div>
               </div>
             </div>
@@ -5317,6 +5550,15 @@
             <p>Grandmaster alchemists whisper of Tier 5 Celestial Reagents — elements so pure that they transcend physical matter, granting infinite life, boundless essence, and mastery over space and time.</p>
           </div>
         </div>
+      </div>
+
+      <div class="help-modal-footer">
+        <button class="btn-help-footer" onclick="minimizeHelpModal(event)">
+          🗕 Minimize & Play
+        </button>
+        <button class="btn-help-footer btn-help-footer-close" onclick="closeHelpModal(event)">
+          ✕ Close Manual
+        </button>
       </div>
     </div>
   </div>
