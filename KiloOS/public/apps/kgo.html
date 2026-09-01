@@ -90,7 +90,36 @@
       10px 10px 0 #5c3a21, 11px 11px 0 #3d230d, 12px 12px 0 #5c3a21, 13px 13px 0 #2a1608,
       13px 25px 32px rgba(0,0,0,0.9);
     margin-bottom: 24px;
+    transition: transform 0.05s ease-out;
   }
+  .board-container::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    border-radius: 6px;
+    pointer-events: none;
+    box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.15);
+    animation: goldBorderShimmer 4s ease-in-out infinite alternate;
+  }
+  @keyframes goldBorderShimmer {
+    0% { border-color: rgba(255, 215, 0, 0.2); box-shadow: inset 0 0 6px rgba(255, 215, 0, 0.08); }
+    100% { border-color: rgba(255, 225, 120, 0.55); box-shadow: inset 0 0 16px rgba(255, 215, 0, 0.3); }
+  }
+  .goban-filigree {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    pointer-events: none;
+    z-index: 10;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2,2 L18,2 C18,7 13,8 10,10 C8,13 7,18 2,18 Z' fill='%23110d08' stroke='%23d4af37' stroke-width='1.5'/%3E%3Cpath d='M4,4 L14,4 C14,7 10,8 8,10 C7,12 7,14 4,14 Z' fill='%232a1f10' stroke='%23ffd700' stroke-width='0.8'/%3E%3Ccircle cx='7' cy='7' r='2' fill='%23ffe066' stroke='%238c6d1f' stroke-width='0.5'/%3E%3Cpath d='M16,2 Q24,2 24,10 Q24,16 16,16 Q20,20 28,14' fill='none' stroke='%23d4af37' stroke-width='0.8' opacity='0.7'/%3E%3C/svg%3E");
+  }
+  .goban-filigree-tl { top: -2px; left: -2px; }
+  .goban-filigree-tr { top: -2px; right: -2px; transform: scaleX(-1); }
+  .goban-filigree-bl { bottom: -2px; left: -2px; transform: scaleY(-1); }
+  .goban-filigree-br { bottom: -2px; right: -2px; transform: scale(-1, -1); }
   .board {
     display: grid;
     background: repeating-linear-gradient(85deg, #dcb35c 0px, #dcb35c 16px, #d3a74e 18px, #e2ba64 34px, #cfa247 38px), linear-gradient(135deg, #e6c06c, #c89c44);
@@ -214,6 +243,22 @@
     left: 2px;
     pointer-events: none;
     animation: rippleAnim 0.6s ease-out forwards;
+    z-index: 2;
+  }
+  @keyframes rippleAnim2 {
+    0% { transform: scale(0.8); opacity: 0.9; }
+    100% { transform: scale(3.2); opacity: 0; }
+  }
+  .ripple-outer {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 215, 0, 0.75);
+    top: 2px;
+    left: 2px;
+    pointer-events: none;
+    animation: rippleAnim2 0.75s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
     z-index: 2;
   }
   .stone.atari {
@@ -386,6 +431,49 @@
     100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; filter: hue-rotate(180deg); }
   }
 
+  .capture-smoke {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 12;
+    background: radial-gradient(circle, rgba(235,230,220,0.65) 0%, rgba(180,175,160,0.3) 50%, rgba(100,95,85,0) 80%);
+    animation: smokePuff 0.65s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+  }
+  @keyframes smokePuff {
+    0% { transform: translate(0, 0) scale(0.4); opacity: 0.85; }
+    50% { opacity: 0.55; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(2.2); opacity: 0; }
+  }
+
+  .capture-shard {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    pointer-events: none;
+    z-index: 13;
+    animation: shardPhysics 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  @keyframes shardPhysics {
+    0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+    60% { transform: translate(var(--dx), calc(var(--dy) - 14px)) rotate(var(--rot)) scale(0.9); opacity: 0.9; }
+    100% { transform: translate(calc(var(--dx) * 1.3), calc(var(--dy) + 32px)) rotate(calc(var(--rot) * 2)) scale(0.3); opacity: 0; }
+  }
+
+  .celebration-star {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    pointer-events: none;
+    z-index: 14;
+    clip-path: polygon(50% 0%, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0% 50%, 35% 35%);
+    animation: starFloat 0.8s ease-out forwards;
+  }
+  @keyframes starFloat {
+    0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; }
+    50% { transform: translate(var(--dx), var(--dy)) scale(1.3) rotate(180deg); opacity: 0.9; }
+    100% { transform: translate(calc(var(--dx) * 1.4), calc(var(--dy) - 10px)) scale(0) rotate(360deg); opacity: 0; }
+  }
+
   .controls {
     display: flex;
     flex-wrap: wrap;
@@ -452,7 +540,11 @@
     <div class="stage-info" id="stage-info">Komi: 6.5</div>
     <div class="analyzer-banner" id="analyzer-banner"></div>
   </div>
-  <div class="board-container">
+  <div class="board-container" id="board-container">
+    <div class="goban-filigree goban-filigree-tl"></div>
+    <div class="goban-filigree goban-filigree-tr"></div>
+    <div class="goban-filigree goban-filigree-bl"></div>
+    <div class="goban-filigree goban-filigree-br"></div>
     <div class="board" id="board"></div>
   </div>
   <div class="controls">
@@ -507,6 +599,29 @@
 
 <script>
   const boardEl = document.getElementById('board');
+  const boardContainerEl = document.getElementById('board-container');
+  let shakeMagnitude = 0;
+  let shakeAngle = 0;
+
+  function triggerScreenShake(intensity = 8) {
+    shakeMagnitude = Math.min(shakeMagnitude + intensity, 24);
+  }
+
+  function updateScreenShake() {
+    if (shakeMagnitude > 0.05) {
+      shakeAngle += 2.3;
+      const dx = Math.cos(shakeAngle) * shakeMagnitude;
+      const dy = Math.sin(shakeAngle * 1.35) * shakeMagnitude;
+      const rot = Math.sin(shakeAngle * 0.9) * shakeMagnitude * 0.12;
+      boardContainerEl.style.transform = `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) rotate(${rot.toFixed(2)}deg)`;
+      shakeMagnitude *= 0.86; // quadratic physics decay
+    } else if (shakeMagnitude !== 0) {
+      shakeMagnitude = 0;
+      boardContainerEl.style.transform = 'none';
+    }
+    requestAnimationFrame(updateScreenShake);
+  }
+  requestAnimationFrame(updateScreenShake);
   let size = 9;
   let board = [];
   let currentPlayer = 'B';
@@ -776,9 +891,7 @@
   function spawnCaptureSparks(stones) {
     if (!stones || !stones.length) return;
     
-    boardEl.classList.remove('shake-anim');
-    void boardEl.offsetWidth; // trigger reflow
-    boardEl.classList.add('shake-anim');
+    triggerScreenShake(7 + Math.min(stones.length * 3.5, 16));
 
     stones.forEach(s => {
       const cellX = (s.x + 0.5) * 30 + 14;
@@ -791,18 +904,19 @@
       boardEl.appendChild(flash);
       setTimeout(() => flash.remove(), 350);
 
-      const count = 12;
-      for (let i = 0; i < count; i++) {
+      // Layer 1: Incandescent Core Sparks
+      const sparkCount = 14;
+      for (let i = 0; i < sparkCount; i++) {
         const spark = document.createElement('div');
         spark.className = 'capture-spark';
-        const color = s.color === 'B' ? '#70c5ff' : '#ffa044';
+        const color = s.color === 'B' ? (i % 2 === 0 ? '#70c5ff' : '#ffffff') : (i % 2 === 0 ? '#ffa044' : '#ffe875');
         spark.style.backgroundColor = color;
-        spark.style.boxShadow = `0 0 6px ${color}`;
+        spark.style.boxShadow = `0 0 8px ${color}`;
         spark.style.left = `${cellX}px`;
         spark.style.top = `${cellY}px`;
 
-        const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.4 - 0.2);
-        const dist = 18 + Math.random() * 22;
+        const angle = (Math.PI * 2 * i) / sparkCount + (Math.random() * 0.4 - 0.2);
+        const dist = 20 + Math.random() * 24;
         const dx = Math.cos(angle) * dist;
         const dy = Math.sin(angle) * dist;
         spark.style.setProperty('--dx', `${dx}px`);
@@ -811,29 +925,75 @@
         boardEl.appendChild(spark);
         setTimeout(() => spark.remove(), 450);
       }
-      
-      const dustCount = 8;
-      for (let i = 0; i < dustCount; i++) {
-        const dust = document.createElement('div');
-        dust.className = 'capture-spark';
-        dust.style.width = '3px';
-        dust.style.height = '3px';
-        dust.style.animationDuration = '0.65s';
-        const color = s.color === 'B' ? '#ffffff' : '#ffea00';
-        dust.style.backgroundColor = color;
-        dust.style.boxShadow = `0 0 8px ${color}`;
-        dust.style.left = `${cellX}px`;
-        dust.style.top = `${cellY}px`;
+
+      // Layer 2: Expanding Smoke Puffs
+      const smokeCount = 7;
+      for (let i = 0; i < smokeCount; i++) {
+        const smoke = document.createElement('div');
+        smoke.className = 'capture-smoke';
+        const smokeSize = 10 + Math.random() * 8;
+        smoke.style.width = `${smokeSize}px`;
+        smoke.style.height = `${smokeSize}px`;
+        smoke.style.left = `${cellX - smokeSize/2}px`;
+        smoke.style.top = `${cellY - smokeSize/2}px`;
+
+        const angle = (Math.PI * 2 * i) / smokeCount + Math.random() * 0.5;
+        const dist = 12 + Math.random() * 16;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist - 8; // buoyancy upwards
+        smoke.style.setProperty('--dx', `${dx}px`);
+        smoke.style.setProperty('--dy', `${dy}px`);
+
+        boardEl.appendChild(smoke);
+        setTimeout(() => smoke.remove(), 650);
+      }
+
+      // Layer 3: Heavy Kinematic Stone Shard Debris
+      const shardCount = 8;
+      for (let i = 0; i < shardCount; i++) {
+        const shard = document.createElement('div');
+        shard.className = 'capture-shard';
+        const isSlate = s.color === 'B';
+        shard.style.backgroundColor = isSlate ? '#1a1d24' : '#f5f0e1';
+        shard.style.border = isSlate ? '1px solid #333c4d' : '1px solid #c9bda5';
+        shard.style.boxShadow = isSlate ? '0 0 3px rgba(0,0,0,0.8)' : '0 0 4px rgba(255,255,255,0.6)';
+        shard.style.borderRadius = i % 2 === 0 ? '2px' : '4px 0 4px 0';
+        shard.style.left = `${cellX}px`;
+        shard.style.top = `${cellY}px`;
 
         const angle = Math.random() * Math.PI * 2;
-        const dist = 8 + Math.random() * 15;
+        const dist = 16 + Math.random() * 24;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist * 0.8;
+        const rot = (Math.random() * 360 - 180) + 'deg';
+        shard.style.setProperty('--dx', `${dx}px`);
+        shard.style.setProperty('--dy', `${dy}px`);
+        shard.style.setProperty('--rot', rot);
+
+        boardEl.appendChild(shard);
+        setTimeout(() => shard.remove(), 700);
+      }
+      
+      // Layer 4: Radiant Celebration Stars / Embers
+      const starCount = 6;
+      for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.className = 'celebration-star';
+        const starColor = s.color === 'B' ? '#00f0ff' : '#ffd700';
+        star.style.backgroundColor = starColor;
+        star.style.boxShadow = `0 0 8px ${starColor}`;
+        star.style.left = `${cellX}px`;
+        star.style.top = `${cellY}px`;
+
+        const angle = (Math.PI * 2 * i) / starCount + Math.random() * 0.3;
+        const dist = 10 + Math.random() * 20;
         const dx = Math.cos(angle) * dist;
         const dy = Math.sin(angle) * dist;
-        dust.style.setProperty('--dx', `${dx}px`);
-        dust.style.setProperty('--dy', `${dy}px`);
+        star.style.setProperty('--dx', `${dx}px`);
+        star.style.setProperty('--dy', `${dy}px`);
 
-        boardEl.appendChild(dust);
-        setTimeout(() => dust.remove(), 650);
+        boardEl.appendChild(star);
+        setTimeout(() => star.remove(), 800);
       }
     });
   }
@@ -956,8 +1116,17 @@
             if (board[y][x] === 'B') ripple.style.borderColor = '#00ffc8';
             else ripple.style.borderColor = '#ffd700';
             stone.appendChild(ripple);
-            // Remove ripple element after animation
-            setTimeout(() => { if (ripple.parentNode) ripple.remove(); }, 600);
+
+            const rippleOuter = document.createElement('div');
+            rippleOuter.className = 'ripple-outer';
+            rippleOuter.style.borderColor = board[y][x] === 'B' ? '#00f0ff' : '#ffea00';
+            stone.appendChild(rippleOuter);
+
+            // Remove ripple elements after animation
+            setTimeout(() => { 
+              if (ripple.parentNode) ripple.remove(); 
+              if (rippleOuter.parentNode) rippleOuter.remove();
+            }, 750);
           }
 
           cell.appendChild(stone);
@@ -1109,6 +1278,7 @@
     }
     
     playSound('over');
+    triggerScreenShake(12.0);
     setTimeout(() => {
       if (currentCampaignStage !== -1) {
         if (totalB > totalW) {
@@ -1155,6 +1325,7 @@
     if (getLiberties(x, y, currentPlayer, visited) === 0) {
       board = boardBackup;
       captures = capBackup;
+      triggerScreenShake(5.0);
       alert("Suicide move is not allowed.");
       return;
     }
@@ -1163,6 +1334,7 @@
     if (history.includes(state)) {
       board = boardBackup;
       captures = capBackup;
+      triggerScreenShake(5.0);
       alert("Superko rule violation (recreating previous position).");
       return;
     }
@@ -1182,8 +1354,12 @@
     lastMove = {x, y};
     hintCell = null;
     
-    if (caps > 0) playSound('capture');
-    else playSound('place');
+    if (caps > 0) {
+      playSound('capture');
+    } else {
+      playSound('place');
+      triggerScreenShake(2.0);
+    }
 
     updateStatus();
     drawBoard();

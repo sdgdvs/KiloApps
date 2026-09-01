@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KGo
 - KTowers
 - KWords
 - KReversi
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMatch3
 - KFreecell
 - KSudoku
+- KGo
 ## Completed Work Log
+
+- **KGo (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on stone captures, move errors/violations, and victory scoring (replacing static CSS with continuous requestAnimationFrame mathematical translation/rotation in Web Canvas, and replacing SetViewportOrgEx single-buffered jitter with flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), multi-layered particle explosions featuring 4 distinct layers (incandescent core sparks, expanding buoyant smoke puffs, heavy kinematic slate/shell stone shard debris with gravity and tumbling rotation, and radiant golden celebration stars) upon stone captures and stage victories, and distinct procedural visual variations including ornate Japanese gold leaf corner filigree brackets on the Goban board frame, pulsating golden perimeter inlay shimmer, dual-tier concentric placement shockwave rings, and enhanced obsidian crescent sheen (slate) and delicate curved growth grain striations (clam shell) on stones in both Web Canvas (kgo.html) and Native C Win32 GDI (KGo/main.c).
 
 - **KSudoku (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on error placements, strike deductions, power-ups, and victory rumbles (replacing static CSS with continuous requestAnimationFrame mathematical translation/rotation in Web Canvas, and replacing SetWindowPos window jitter with flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), multi-layered particle explosions featuring heavy kinematic puzzle shard debris with gravity and tumbling rotation, expanding smoke puffs, incandescent core sparks, and radiant celebration stars for block completions, magic wand casts, and victory bursts, and distinct procedural visual variations including pulsating golden border shimmer on solved 3x3 blocks and ornate corner filigree L-brackets on every block in both Web Canvas (ksudoku.html) and Native C Win32 GDI (KSudoku/main.c).
 
