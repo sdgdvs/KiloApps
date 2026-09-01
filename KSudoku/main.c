@@ -49,8 +49,22 @@ int elapsedTime = 0;
 int score = 0;
 int timerActive = 0;
 int freezeTime = 0;
-int shakeFrames = 0;
-RECT origWinRect;
+
+float shakeTrauma = 0.0f;
+float shakeMaxTrauma = 0.0f;
+int shakeTicks = 0;
+int shakeMaxTicks = 0;
+
+void TriggerScreenShake(int intensity) {
+    float fIntensity = (float)intensity;
+    if (fIntensity > shakeTrauma) {
+        shakeTrauma = fIntensity;
+        shakeMaxTrauma = fIntensity;
+        shakeTicks = 0;
+        shakeMaxTicks = (int)(fIntensity * 3.5f + 6.0f);
+        if (shakeMaxTicks > 32) shakeMaxTicks = 32;
+    }
+}
 
 HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill, hBtnCampaign, hBtnMagic, hBtnShield, hBtnFreeze, hBtnRush;
 HFONT hFont, hFontSmall, hFontTiny;
@@ -62,17 +76,26 @@ typedef struct {
 } Prefs;
 Prefs prefs = {0, 1, 1};
 
+#define PARTICLE_SPARK  0
+#define PARTICLE_SMOKE  1
+#define PARTICLE_DEBRIS 2
+#define PARTICLE_STAR   3
+
 typedef struct {
     float x, y;
     float vx, vy;
     COLORREF color;
-    int size;
+    float size;
     int life;
     int maxLife;
-    int shape;
+    int type;
+    float rot;
+    float rotSpeed;
+    float gravity;
+    float drag;
 } WinParticle;
 
-#define MAX_WIN_PARTICLES 200
+#define MAX_WIN_PARTICLES 400
 WinParticle winParticles[MAX_WIN_PARTICLES];
 int winFxActive = 0;
 
@@ -102,62 +125,167 @@ void UpdateDustParticles() {
     }
 }
 
-void TriggerVictoryParticles() {
-    winFxActive = 1;
-    COLORREF colors[] = {
-        RGB(245, 158, 11), RGB(16, 185, 129), RGB(59, 130, 246),
-        RGB(236, 72, 153), RGB(139, 92, 246), RGB(239, 68, 68), RGB(56, 189, 248), RGB(255, 255, 255)
-    };
-    int numColors = sizeof(colors)/sizeof(colors[0]);
+void SpawnParticle(int type, float x, float y, float vx, float vy, COLORREF color, float size, int maxLife, float gravity, float drag, float rotSpeed) {
     for(int i = 0; i < MAX_WIN_PARTICLES; i++) {
-        winParticles[i].x = 220.0f;
-        winParticles[i].y = 255.0f;
-        float angle = (rand() % 360) * 3.14159f / 180.0f;
-        int layer = rand() % 3;
-        float speed = 0;
-        if (layer == 0) { // Fast sparks
-            speed = 15.0f + (rand() % 100) / 10.0f;
-            winParticles[i].size = 2 + (rand() % 3);
-            winParticles[i].shape = 1; // circle
-        } else if (layer == 1) { // Medium stars
-            speed = 8.0f + (rand() % 80) / 10.0f;
-            winParticles[i].size = 4 + (rand() % 6);
-            winParticles[i].shape = 2; // star
-        } else { // Slow confetti
-            speed = 3.0f + (rand() % 60) / 10.0f;
-            winParticles[i].size = 5 + (rand() % 8);
-            winParticles[i].shape = 0; // rect
+        if (winParticles[i].life <= 0) {
+            winParticles[i].type = type;
+            winParticles[i].x = x;
+            winParticles[i].y = y;
+            winParticles[i].vx = vx;
+            winParticles[i].vy = vy;
+            winParticles[i].color = color;
+            winParticles[i].size = size;
+            winParticles[i].maxLife = winParticles[i].life = maxLife;
+            winParticles[i].gravity = gravity;
+            winParticles[i].drag = drag;
+            winParticles[i].rot = (float)(rand() % 360) * 3.14159f / 180.0f;
+            winParticles[i].rotSpeed = rotSpeed;
+            winFxActive = 1;
+            break;
         }
-        winParticles[i].vx = cosf(angle) * speed;
-        winParticles[i].vy = sinf(angle) * speed - 5.0f;
-        winParticles[i].color = colors[rand() % numColors];
-        winParticles[i].maxLife = winParticles[i].life = 40 + (rand() % 60);
     }
 }
 
-void TriggerMagicParticles(int r, int c) {
-    winFxActive = 1;
-    COLORREF colors[] = { RGB(168, 85, 247), RGB(217, 70, 239), RGB(251, 207, 232), RGB(255, 255, 255) };
+int IsBlockSolved(int br, int bc) {
+    for(int r = br * boxH; r < (br + 1) * boxH; r++) {
+        for(int c = bc * boxW; c < (bc + 1) * boxW; c++) {
+            if (board[r][c] == 0 || board[r][c] != solution[r][c]) return 0;
+        }
+    }
+    return 1;
+}
+
+void TriggerErrorParticles(int r, int c) {
     int cell_sz = (gridSize == 4) ? 80 : (gridSize == 16 ? 22 : 40);
     int start_x = 40, start_y = 75;
     float cx = start_x + c * cell_sz + cell_sz / 2.0f;
     float cy = start_y + r * cell_sz + cell_sz / 2.0f;
-    
-    int count = 0;
-    for(int i = 0; i < MAX_WIN_PARTICLES && count < 50; i++) {
-        if (winParticles[i].life <= 0) {
-            float angle = (rand() % 360) * 3.14159f / 180.0f;
-            float speed = 2.0f + (rand() % 60) / 10.0f;
-            winParticles[i].x = cx;
-            winParticles[i].y = cy;
-            winParticles[i].vx = cosf(angle) * speed;
-            winParticles[i].vy = sinf(angle) * speed;
-            winParticles[i].color = colors[rand() % 4];
-            winParticles[i].size = 3 + (rand() % 4);
-            winParticles[i].maxLife = winParticles[i].life = 20 + (rand() % 30);
-            winParticles[i].shape = 2;
-            count++;
-        }
+
+    for (int i = 0; i < 16; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 4.0f + (rand() % 80) / 10.0f;
+        COLORREF col = (rand() % 3 == 0) ? RGB(255, 255, 255) : RGB(239, 68, 68);
+        SpawnParticle(PARTICLE_SPARK, cx, cy, cosf(angle)*speed, sinf(angle)*speed, col, 2.0f + rand()%2, 20 + rand()%15, 0.15f, 0.92f, 0.0f);
+    }
+    for (int i = 0; i < 6; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 0.5f + (rand() % 20) / 10.0f;
+        SpawnParticle(PARTICLE_SMOKE, cx, cy, cosf(angle)*speed, sinf(angle)*speed - 0.5f, RGB(180, 50, 50), 5.0f + rand()%4, 25 + rand()%15, -0.04f, 0.95f, 0.0f);
+    }
+    for (int i = 0; i < 10; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 2.0f + (rand() % 50) / 10.0f;
+        float spin = ((rand() % 100 - 50) / 50.0f) * 0.3f;
+        SpawnParticle(PARTICLE_DEBRIS, cx, cy, cosf(angle)*speed, sinf(angle)*speed - 1.5f, RGB(185, 28, 28), 4.0f + rand()%3, 30 + rand()%20, 0.35f, 0.94f, spin);
+    }
+}
+
+void TriggerCellSuccessParticles(int r, int c) {
+    int cell_sz = (gridSize == 4) ? 80 : (gridSize == 16 ? 22 : 40);
+    int start_x = 40, start_y = 75;
+    float cx = start_x + c * cell_sz + cell_sz / 2.0f;
+    float cy = start_y + r * cell_sz + cell_sz / 2.0f;
+
+    for (int i = 0; i < 12; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 2.0f + (rand() % 50) / 10.0f;
+        COLORREF col = (rand() % 2 == 0) ? RGB(96, 165, 250) : RGB(250, 204, 21);
+        SpawnParticle(PARTICLE_SPARK, cx, cy, cosf(angle)*speed, sinf(angle)*speed - 1.0f, col, 2.0f + rand()%2, 18 + rand()%12, 0.1f, 0.94f, 0.0f);
+    }
+}
+
+void TriggerBlockCompleteParticles(int br, int bc) {
+    int cell_sz = (gridSize == 4) ? 80 : (gridSize == 16 ? 22 : 40);
+    int start_x = 40, start_y = 75;
+    float bx = start_x + (bc * boxW + boxW / 2.0f) * cell_sz;
+    float by = start_y + (br * boxH + boxH / 2.0f) * cell_sz;
+
+    TriggerScreenShake(4);
+
+    for (int i = 0; i < 30; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 3.0f + (rand() % 80) / 10.0f;
+        COLORREF col = (rand() % 3 == 0) ? RGB(255, 255, 255) : RGB(250, 204, 21);
+        SpawnParticle(PARTICLE_SPARK, bx, by, cosf(angle)*speed, sinf(angle)*speed - 2.0f, col, 2.0f + rand()%3, 30 + rand()%20, 0.18f, 0.94f, 0.0f);
+    }
+    for (int i = 0; i < 10; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 1.0f + (rand() % 30) / 10.0f;
+        SpawnParticle(PARTICLE_SMOKE, bx, by, cosf(angle)*speed, sinf(angle)*speed - 0.8f, RGB(220, 180, 60), 6.0f + rand()%4, 35 + rand()%15, -0.03f, 0.95f, 0.0f);
+    }
+    for (int i = 0; i < 18; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 2.0f + (rand() % 60) / 10.0f;
+        float spin = ((rand() % 100 - 50) / 50.0f) * 0.3f;
+        SpawnParticle(PARTICLE_DEBRIS, bx, by, cosf(angle)*speed, sinf(angle)*speed - 2.5f, RGB(234, 179, 8), 5.0f + rand()%3, 40 + rand()%20, 0.3f, 0.94f, spin);
+    }
+}
+
+void TriggerMagicParticles(int r, int c) {
+    int cell_sz = (gridSize == 4) ? 80 : (gridSize == 16 ? 22 : 40);
+    int start_x = 40, start_y = 75;
+    float cx = start_x + c * cell_sz + cell_sz / 2.0f;
+    float cy = start_y + r * cell_sz + cell_sz / 2.0f;
+
+    TriggerScreenShake(4);
+
+    for (int i = 0; i < 20; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 2.0f + (rand() % 60) / 10.0f;
+        COLORREF col = (rand() % 3 == 0) ? RGB(255, 255, 255) : RGB(192, 132, 252);
+        SpawnParticle(PARTICLE_SPARK, cx, cy, cosf(angle)*speed, sinf(angle)*speed, col, 2.0f + rand()%3, 25 + rand()%15, 0.1f, 0.93f, 0.0f);
+    }
+    for (int i = 0; i < 8; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 1.0f + (rand() % 25) / 10.0f;
+        SpawnParticle(PARTICLE_SMOKE, cx, cy, cosf(angle)*speed, sinf(angle)*speed - 0.4f, RGB(168, 85, 247), 5.0f + rand()%4, 30 + rand()%15, -0.03f, 0.95f, 0.0f);
+    }
+    for (int i = 0; i < 15; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 1.5f + (rand() % 45) / 10.0f;
+        SpawnParticle(PARTICLE_STAR, cx, cy, cosf(angle)*speed, sinf(angle)*speed, RGB(244, 114, 182), 4.0f + rand()%3, 30 + rand()%15, 0.08f, 0.95f, 0.0f);
+    }
+}
+
+void TriggerVictoryParticles() {
+    int cell_sz = (gridSize == 4) ? 80 : (gridSize == 16 ? 22 : 40);
+    int start_x = 40, start_y = 75;
+    float cx = start_x + (gridSize * cell_sz) / 2.0f;
+    float cy = start_y + (gridSize * cell_sz) / 2.0f;
+
+    TriggerScreenShake(14);
+
+    COLORREF colors[] = {
+        RGB(245, 158, 11), RGB(16, 185, 129), RGB(59, 130, 246),
+        RGB(236, 72, 153), RGB(139, 92, 246), RGB(239, 68, 68),
+        RGB(56, 189, 248), RGB(250, 204, 21), RGB(255, 255, 255)
+    };
+    int numColors = sizeof(colors)/sizeof(colors[0]);
+
+    for (int i = 0; i < 100; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 6.0f + (rand() % 140) / 10.0f;
+        COLORREF col = colors[rand() % numColors];
+        SpawnParticle(PARTICLE_SPARK, cx, cy, cosf(angle)*speed, sinf(angle)*speed - 5.0f, col, 2.0f + rand()%3, 40 + rand()%30, 0.25f, 0.93f, 0.0f);
+    }
+    for (int i = 0; i < 30; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 1.5f + (rand() % 45) / 10.0f;
+        COLORREF col = RGB(220, 220, 240);
+        SpawnParticle(PARTICLE_SMOKE, cx, cy, cosf(angle)*speed, sinf(angle)*speed - 2.0f, col, 6.0f + rand()%5, 45 + rand()%25, -0.03f, 0.96f, 0.0f);
+    }
+    for (int i = 0; i < 80; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 3.0f + (rand() % 100) / 10.0f;
+        float spin = ((rand() % 100 - 50) / 50.0f) * 0.4f;
+        COLORREF col = colors[rand() % numColors];
+        SpawnParticle(PARTICLE_DEBRIS, cx, cy, cosf(angle)*speed, sinf(angle)*speed - 6.0f, col, 5.0f + rand()%4, 55 + rand()%35, 0.36f, 0.94f, spin);
+    }
+    for (int i = 0; i < 50; i++) {
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 2.0f + (rand() % 60) / 10.0f;
+        COLORREF col = colors[rand() % numColors];
+        SpawnParticle(PARTICLE_STAR, cx, cy, cosf(angle)*speed, sinf(angle)*speed - 3.5f, col, 4.0f + rand()%4, 60 + rand()%30, 0.16f, 0.95f, 0.0f);
     }
 }
 
@@ -168,15 +296,12 @@ void UpdateVictoryParticles() {
         if (winParticles[i].life > 0) {
             winParticles[i].x += winParticles[i].vx;
             winParticles[i].y += winParticles[i].vy;
-            
-            // drag for kinematic burst
-            winParticles[i].vx *= 0.94f;
-            winParticles[i].vy *= 0.94f;
-            
-            if (winParticles[i].shape != 2) {
-                winParticles[i].vy += 0.35f;
-            } else {
-                winParticles[i].vy += 0.15f;
+            winParticles[i].vx *= winParticles[i].drag;
+            winParticles[i].vy *= winParticles[i].drag;
+            winParticles[i].vy += winParticles[i].gravity;
+            winParticles[i].rot += winParticles[i].rotSpeed;
+            if (winParticles[i].type == PARTICLE_SMOKE) {
+                winParticles[i].size += 0.2f;
             }
             winParticles[i].life--;
             if (winParticles[i].life > 0) anyAlive = 1;
@@ -1088,19 +1213,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER: {
             if (wParam == 2) {
                 UpdateDustParticles();
-                InvalidateRect(hwnd, NULL, FALSE);
                 if (winFxActive) {
                     UpdateVictoryParticles();
                 }
-                if (shakeFrames > 0) {
-                    int dx = (rand() % 11) - 5;
-                    int dy = (rand() % 11) - 5;
-                    SetWindowPos(hwnd, NULL, origWinRect.left + dx, origWinRect.top + dy, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-                    shakeFrames--;
-                    if (shakeFrames == 0) {
-                        SetWindowPos(hwnd, NULL, origWinRect.left, origWinRect.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+                if (shakeTrauma > 0.01f) {
+                    shakeTicks++;
+                    if (shakeTicks >= shakeMaxTicks) {
+                        shakeTrauma = 0.0f;
+                        shakeTicks = 0;
                     }
                 }
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 1 && timerActive) {
                 if (freezeTime > 0) {
                     freezeTime--;
@@ -1405,9 +1528,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     shieldActive = 0;
                                     UpdatePowerupButtons();
                                     PlaySudokuSound(5);
+                                    TriggerScreenShake(5);
+                                    TriggerErrorParticles(sel_r, sel_c);
                                 } else {
-                                    if (shakeFrames == 0) GetWindowRect(hwnd, &origWinRect);
-                                    shakeFrames = 15;
+                                    TriggerScreenShake(8);
+                                    TriggerErrorParticles(sel_r, sel_c);
                                     PlaySudokuSound(4);
                                     score = max(0, score - 50);
                                     if (isRushMode) {
@@ -1425,6 +1550,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 }
                             } else {
                                 PlaySudokuSound(3);
+                                TriggerCellSuccessParticles(sel_r, sel_c);
                             }
                             board[sel_r][sel_c] = num;
                             error_cells[sel_r][sel_c] = 0;
@@ -1435,6 +1561,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     awarded[sel_r][sel_c] = 1;
                                     score += 100;
                                     if (isRushMode) elapsedTime += 10;
+                                }
+                                int br = sel_r / boxH;
+                                int bc = sel_c / boxW;
+                                if (IsBlockSolved(br, bc)) {
+                                    TriggerBlockCompleteParticles(br, bc);
                                 }
                             }
                             CheckWin(hwnd);
@@ -1482,12 +1613,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetFocus(hwnd);
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
+
+            HDC hdcMem = CreateCompatibleDC(hdc);
+            HBITMAP hbmMem = CreateCompatibleBitmap(hdc, clientRect.right, clientRect.bottom);
+            HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
             
             // Wooden desk background with candlelight gradient
             for (int y = 0; y < clientRect.bottom; y += 4) {
@@ -1501,7 +1638,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 RECT row = {0, y, clientRect.right, y + 4};
                 HBRUSH hWood = CreateSolidBrush(RGB(r, g, b));
-                FillRect(hdc, &row, hWood);
+                FillRect(hdcMem, &row, hWood);
                 DeleteObject(hWood);
             }
             
@@ -1512,21 +1649,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (phase > 5) {
                     HBRUSH hDust = CreateSolidBrush(dustParticles[i].color);
                     HPEN hDustPen = CreatePen(PS_SOLID, 1, dustParticles[i].color);
-                    HBRUSH oldB = (HBRUSH)SelectObject(hdc, hDust);
-                    HPEN oldP = (HPEN)SelectObject(hdc, hDustPen);
-                    Ellipse(hdc, (int)dustParticles[i].x, (int)dustParticles[i].y, 
-                                 (int)dustParticles[i].x + dustParticles[i].size, 
-                                 (int)dustParticles[i].y + dustParticles[i].size);
-                    SelectObject(hdc, oldB);
-                    SelectObject(hdc, oldP);
+                    HBRUSH oldB = (HBRUSH)SelectObject(hdcMem, hDust);
+                    HPEN oldP = (HPEN)SelectObject(hdcMem, hDustPen);
+                    Ellipse(hdcMem, (int)dustParticles[i].x, (int)dustParticles[i].y, 
+                                 (int)dustParticles[i].x + (int)dustParticles[i].size, 
+                                 (int)dustParticles[i].y + (int)dustParticles[i].size);
+                    SelectObject(hdcMem, oldB);
+                    SelectObject(hdcMem, oldP);
                     DeleteObject(hDust);
                     DeleteObject(hDustPen);
                 }
             }
             
-            HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
+            HFONT oldFont = (HFONT)SelectObject(hdcMem, hFont);
+            SetBkMode(hdcMem, TRANSPARENT);
+            SetTextColor(hdcMem, themes[prefs.theme][T_MUTABLE]);
             
             char info[128];
             char freezeStr[32] = "";
@@ -1534,13 +1671,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (isCampaignMode) {
                 sprintf(info, "Stage: %d/20 (%dx%d)   Strikes: %d/3   Time: %02d:%02d%s   Score: %d", campaignStage+1, gridSize, gridSize, strikes, elapsedTime/60, elapsedTime%60, freezeStr, score);
-                TextOutA(hdc, 20, 48, info, strlen(info));
+                TextOutA(hdcMem, 20, 48, info, strlen(info));
             } else if (isRushMode) {
                 sprintf(info, "RUSH MODE   Time Left: %02d:%02d%s   Score: %d", elapsedTime/60, elapsedTime%60, freezeStr, score);
-                TextOutA(hdc, 20, 48, info, strlen(info));
+                TextOutA(hdcMem, 20, 48, info, strlen(info));
             } else {
                 sprintf(info, "Time: %02d:%02d%s   Score: %d", elapsedTime/60, elapsedTime%60, freezeStr, score);
-                TextOutA(hdc, 20, 48, info, strlen(info));
+                TextOutA(hdcMem, 20, 48, info, strlen(info));
             }
             
             int cell_sz = (gridSize == 4) ? 80 : (gridSize == 16 ? 22 : 40);
@@ -1549,22 +1686,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             RECT outerFrame = {start_x - 6, start_y - 6, start_x + board_w + 6, start_y + board_w + 6};
             HBRUSH hFrameBrush = CreateSolidBrush(RGB(30, 41, 59));
-            FillRect(hdc, &outerFrame, hFrameBrush);
+            FillRect(hdcMem, &outerFrame, hFrameBrush);
             DeleteObject(hFrameBrush);
 
             HPEN hLightPen = CreatePen(PS_SOLID, 2, RGB(71, 85, 105));
             HPEN hDarkPen = CreatePen(PS_SOLID, 2, RGB(15, 23, 42));
-            HPEN oldPen = (HPEN)SelectObject(hdc, hLightPen);
+            HPEN oldPen = (HPEN)SelectObject(hdcMem, hLightPen);
 
-            MoveToEx(hdc, outerFrame.left, outerFrame.bottom, NULL);
-            LineTo(hdc, outerFrame.left, outerFrame.top);
-            LineTo(hdc, outerFrame.right, outerFrame.top);
+            MoveToEx(hdcMem, outerFrame.left, outerFrame.bottom, NULL);
+            LineTo(hdcMem, outerFrame.left, outerFrame.top);
+            LineTo(hdcMem, outerFrame.right, outerFrame.top);
 
-            SelectObject(hdc, hDarkPen);
-            LineTo(hdc, outerFrame.right, outerFrame.bottom);
-            LineTo(hdc, outerFrame.left, outerFrame.bottom);
+            SelectObject(hdcMem, hDarkPen);
+            LineTo(hdcMem, outerFrame.right, outerFrame.bottom);
+            LineTo(hdcMem, outerFrame.left, outerFrame.bottom);
 
-            SelectObject(hdc, oldPen);
+            SelectObject(hdcMem, oldPen);
             DeleteObject(hLightPen);
             DeleteObject(hDarkPen);
             
@@ -1601,47 +1738,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         cellBg = CreateSolidBrush(themes[prefs.theme][T_BG]);
                     }
                     
-                    FillRect(hdc, &cellInner, cellBg);
+                    FillRect(hdcMem, &cellInner, cellBg);
                     DeleteObject(cellBg);
 
                     // Cage dotted border
                     if (cage_id[r][c] > 0) {
                         HPEN hCagePen = CreatePen(PS_DOT, 1, RGB(234, 179, 8));
-                        oldPen = (HPEN)SelectObject(hdc, hCagePen);
+                        oldPen = (HPEN)SelectObject(hdcMem, hCagePen);
                         HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
-                        HBRUSH oldB = (HBRUSH)SelectObject(hdc, hNullB);
-                        Rectangle(hdc, cellInner.left, cellInner.top, cellInner.right, cellInner.bottom);
-                        SelectObject(hdc, oldB);
-                        SelectObject(hdc, oldPen);
+                        HBRUSH oldB = (HBRUSH)SelectObject(hdcMem, hNullB);
+                        Rectangle(hdcMem, cellInner.left, cellInner.top, cellInner.right, cellInner.bottom);
+                        SelectObject(hdcMem, oldB);
+                        SelectObject(hdcMem, oldPen);
                         DeleteObject(hCagePen);
                     }
 
                     // Recessed inset cell bevel
                     HPEN hInsetShadow = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
                     HPEN hInsetHighlight = CreatePen(PS_SOLID, 1, RGB(51, 65, 85));
-                    oldPen = (HPEN)SelectObject(hdc, hInsetShadow);
+                    oldPen = (HPEN)SelectObject(hdcMem, hInsetShadow);
 
-                    MoveToEx(hdc, cellInner.left, cellInner.bottom, NULL);
-                    LineTo(hdc, cellInner.left, cellInner.top);
-                    LineTo(hdc, cellInner.right, cellInner.top);
+                    MoveToEx(hdcMem, cellInner.left, cellInner.bottom, NULL);
+                    LineTo(hdcMem, cellInner.left, cellInner.top);
+                    LineTo(hdcMem, cellInner.right, cellInner.top);
 
-                    SelectObject(hdc, hInsetHighlight);
-                    LineTo(hdc, cellInner.right, cellInner.bottom);
-                    LineTo(hdc, cellInner.left, cellInner.bottom);
+                    SelectObject(hdcMem, hInsetHighlight);
+                    LineTo(hdcMem, cellInner.right, cellInner.bottom);
+                    LineTo(hdcMem, cellInner.left, cellInner.bottom);
 
-                    SelectObject(hdc, oldPen);
+                    SelectObject(hdcMem, oldPen);
                     DeleteObject(hInsetShadow);
                     DeleteObject(hInsetHighlight);
 
                     // Error Box
                     if(error_cells[r][c]) {
                         HPEN hErrPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
-                        oldPen = (HPEN)SelectObject(hdc, hErrPen);
+                        oldPen = (HPEN)SelectObject(hdcMem, hErrPen);
                         HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
-                        HBRUSH oldB = (HBRUSH)SelectObject(hdc, hNullB);
-                        Rectangle(hdc, rc.left - 1, rc.top - 1, rc.right + 1, rc.bottom + 1);
-                        SelectObject(hdc, oldB);
-                        SelectObject(hdc, oldPen);
+                        HBRUSH oldB = (HBRUSH)SelectObject(hdcMem, hNullB);
+                        Rectangle(hdcMem, rc.left - 1, rc.top - 1, rc.right + 1, rc.bottom + 1);
+                        SelectObject(hdcMem, oldB);
+                        SelectObject(hdcMem, oldPen);
                         DeleteObject(hErrPen);
                     }
 
@@ -1651,44 +1788,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         float pulse = (sinf((tc % 1500) / 1500.0f * 3.14159f * 2.0f) + 1.0f) * 0.5f;
                         int ext = 2 + (int)(4.0f * pulse);
                         HPEN hSelPen = CreatePen(PS_SOLID, 2, RGB((int)(147 + 50*pulse), (int)(197 + 50*pulse), 253));
-                        oldPen = (HPEN)SelectObject(hdc, hSelPen);
+                        oldPen = (HPEN)SelectObject(hdcMem, hSelPen);
                         HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
-                        HBRUSH oldB = (HBRUSH)SelectObject(hdc, hNullB);
+                        HBRUSH oldB = (HBRUSH)SelectObject(hdcMem, hNullB);
                         // Dynamic drop-shadow
                         for (int i=1; i<=ext; i++) {
                             int rCol = (int)(59 * (1.0f - i/(float)ext));
                             int gCol = (int)(130 * (1.0f - i/(float)ext));
                             int bCol = (int)(246 * (1.0f - i/(float)ext));
                             HPEN hShad = CreatePen(PS_SOLID, 1, RGB(rCol, gCol, bCol));
-                            HPEN o = (HPEN)SelectObject(hdc, hShad);
-                            Rectangle(hdc, rc.left - i, rc.top - i, rc.right + i, rc.bottom + i);
-                            SelectObject(hdc, o);
+                            HPEN o = (HPEN)SelectObject(hdcMem, hShad);
+                            Rectangle(hdcMem, rc.left - i, rc.top - i, rc.right + i, rc.bottom + i);
+                            SelectObject(hdcMem, o);
                             DeleteObject(hShad);
                         }
                         
-                        Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
-                        SelectObject(hdc, oldB);
-                        SelectObject(hdc, oldPen);
+                        Rectangle(hdcMem, rc.left, rc.top, rc.right, rc.bottom);
+                        SelectObject(hdcMem, oldB);
+                        SelectObject(hdcMem, oldPen);
                         DeleteObject(hSelPen);
                     }
                     
                     // Top-Left Cage Sum Text
                     if (cage_is_topleft[r][c] && cage_id[r][c] > 0) {
-                        HFONT oldF = (HFONT)SelectObject(hdc, hFontTiny);
-                        SetTextColor(hdc, RGB(250, 204, 21));
+                        HFONT oldF = (HFONT)SelectObject(hdcMem, hFontTiny);
+                        SetTextColor(hdcMem, RGB(250, 204, 21));
                         char cbuf[8];
                         sprintf(cbuf, "%d", cage_sum[cage_id[r][c]]);
-                        TextOutA(hdc, rc.left + 2, rc.top + 1, cbuf, strlen(cbuf));
-                        SelectObject(hdc, oldF);
+                        TextOutA(hdcMem, rc.left + 2, rc.top + 1, cbuf, strlen(cbuf));
+                        SelectObject(hdcMem, oldF);
                     }
 
                     if (fog_cells[r][c] && board[r][c] == 0) {
-                        HFONT oldFnt = (HFONT)SelectObject(hdc, gridSize == 16 ? hFontSmall : hFont);
-                        SetTextColor(hdc, RGB(148, 163, 184));
+                        HFONT oldFnt = (HFONT)SelectObject(hdcMem, gridSize == 16 ? hFontSmall : hFont);
+                        SetTextColor(hdcMem, RGB(148, 163, 184));
                         RECT textRc = rc;
                         textRc.top += 2;
-                        DrawTextA(hdc, "?", -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                        SelectObject(hdc, oldFnt);
+                        DrawTextA(hdcMem, "?", -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        SelectObject(hdcMem, oldFnt);
                     } else if(board[r][c] != 0) {
                         char buf[4];
                         int val = board[r][c];
@@ -1696,41 +1833,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         else sprintf(buf, "%d", val);
                         
                         if(fixed[r][c] && !error_cells[r][c]) {
-                            HFONT curF = (HFONT)SelectObject(hdc, gridSize == 16 ? hFontSmall : hFont);
+                            HFONT curF = (HFONT)SelectObject(hdcMem, gridSize == 16 ? hFontSmall : hFont);
                             
                             // Outer drop shadow
-                            SetTextColor(hdc, RGB(0, 0, 0));
+                            SetTextColor(hdcMem, RGB(0, 0, 0));
                             RECT shadowRc = rc; shadowRc.left += 2; shadowRc.top += 2;
-                            DrawTextA(hdc, buf, -1, &shadowRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                            DrawTextA(hdcMem, buf, -1, &shadowRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                             
                             // Top-left highlight (emboss effect)
-                            SetTextColor(hdc, RGB(180, 200, 220));
+                            SetTextColor(hdcMem, RGB(180, 200, 220));
                             RECT hlRc = rc; hlRc.left -= 1; hlRc.top -= 1;
-                            DrawTextA(hdc, buf, -1, &hlRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                            DrawTextA(hdcMem, buf, -1, &hlRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                             
                             // Inner dark rim
-                            SetTextColor(hdc, RGB(20, 30, 45));
+                            SetTextColor(hdcMem, RGB(20, 30, 45));
                             RECT inRc = rc; inRc.top += 1;
-                            DrawTextA(hdc, buf, -1, &inRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                            DrawTextA(hdcMem, buf, -1, &inRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                             
-                            SelectObject(hdc, curF);
-                            SetTextColor(hdc, RGB(248, 250, 252)); // main color
+                            SelectObject(hdcMem, curF);
+                            SetTextColor(hdcMem, RGB(248, 250, 252)); // main color
                         } else if(error_cells[r][c]) {
-                            SetTextColor(hdc, RGB(248, 113, 113));
+                            SetTextColor(hdcMem, RGB(248, 113, 113));
                         } else {
-                            SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
+                            SetTextColor(hdcMem, themes[prefs.theme][T_MUTABLE]);
                         }
                         
-                        HFONT curF = (HFONT)SelectObject(hdc, gridSize == 16 ? hFontSmall : hFont);
+                        HFONT curF = (HFONT)SelectObject(hdcMem, gridSize == 16 ? hFontSmall : hFont);
                         RECT textRc = rc;
                         if (cage_is_topleft[r][c]) textRc.top += 4;
-                        DrawTextA(hdc, buf, -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                        SelectObject(hdc, curF);
+                        DrawTextA(hdcMem, buf, -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        SelectObject(hdcMem, curF);
                     } else {
                         int hasNotes = 0;
                         for(int i=1; i<=gridSize; i++) if(notes[r][c][i]) hasNotes = 1;
                         if(hasNotes && gridSize <= 9) {
-                            HFONT oldFnt = (HFONT)SelectObject(hdc, hFontSmall);
+                            HFONT oldFnt = (HFONT)SelectObject(hdcMem, hFontSmall);
                             for(int i=1; i<=gridSize; i++) {
                                 if(notes[r][c][i]) {
                                     int sub_r = (i-1) / boxW;
@@ -1742,22 +1879,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     noteRc.bottom = noteRc.top + (cell_sz / boxH) - 1;
                                     
                                     HPEN hPencil = CreatePen(PS_SOLID, 1, RGB(147, 197, 253));
-                                    HPEN oldP = (HPEN)SelectObject(hdc, hPencil);
+                                    HPEN oldP = (HPEN)SelectObject(hdcMem, hPencil);
                                     
                                     int mx = noteRc.left + (noteRc.right - noteRc.left) / 2;
                                     int my = noteRc.top + (noteRc.bottom - noteRc.top) / 2;
                                     int d = 3;
                                     
                                     // Pencil-drawn cross-hatch pip instead of font
-                                    MoveToEx(hdc, mx - d, my - d, NULL); LineTo(hdc, mx + d, my + d);
-                                    MoveToEx(hdc, mx - d + 1, my + d, NULL); LineTo(hdc, mx + d, my - d + 1);
-                                    MoveToEx(hdc, mx - d, my, NULL); LineTo(hdc, mx + d, my);
+                                    MoveToEx(hdcMem, mx - d, my - d, NULL); LineTo(hdcMem, mx + d, my + d);
+                                    MoveToEx(hdcMem, mx - d + 1, my + d, NULL); LineTo(hdcMem, mx + d, my - d + 1);
+                                    MoveToEx(hdcMem, mx - d, my, NULL); LineTo(hdcMem, mx + d, my);
                                     
-                                    SelectObject(hdc, oldP);
+                                    SelectObject(hdcMem, oldP);
                                     DeleteObject(hPencil);
                                 }
                             }
-                            SelectObject(hdc, oldFnt);
+                            SelectObject(hdcMem, oldFnt);
                         }
                     }
                 }
@@ -1768,58 +1905,139 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int thickV = (i % boxW == 0);
                 COLORREF gridColV = thickV ? RGB(248, 250, 252) : themes[prefs.theme][T_GRID_THIN];
                 HPEN hPenV = CreatePen(PS_SOLID, thickV ? 3 : 1, gridColV);
-                HPEN oldPenV = (HPEN)SelectObject(hdc, hPenV);
-                MoveToEx(hdc, start_x + i*cell_sz, start_y, NULL);
-                LineTo(hdc, start_x + i*cell_sz, start_y + gridSize*cell_sz);
-                SelectObject(hdc, oldPenV);
+                HPEN oldPenV = (HPEN)SelectObject(hdcMem, hPenV);
+                MoveToEx(hdcMem, start_x + i*cell_sz, start_y, NULL);
+                LineTo(hdcMem, start_x + i*cell_sz, start_y + gridSize*cell_sz);
+                SelectObject(hdcMem, oldPenV);
                 DeleteObject(hPenV);
 
                 int thickH = (i % boxH == 0);
                 COLORREF gridColH = thickH ? RGB(248, 250, 252) : themes[prefs.theme][T_GRID_THIN];
                 HPEN hPenH = CreatePen(PS_SOLID, thickH ? 3 : 1, gridColH);
-                HPEN oldPenH = (HPEN)SelectObject(hdc, hPenH);
-                MoveToEx(hdc, start_x, start_y + i*cell_sz, NULL);
-                LineTo(hdc, start_x + gridSize*cell_sz, start_y + i*cell_sz);
-                SelectObject(hdc, oldPenH);
+                HPEN oldPenH = (HPEN)SelectObject(hdcMem, hPenH);
+                MoveToEx(hdcMem, start_x, start_y + i*cell_sz, NULL);
+                LineTo(hdcMem, start_x + gridSize*cell_sz, start_y + i*cell_sz);
+                SelectObject(hdcMem, oldPenH);
                 DeleteObject(hPenH);
             }
 
-            // Draw Victory Confetti Particles
+            // Draw Block Solved Shimmer & Corner Filigree L-Brackets
+            for(int br = 0; br < gridSize / boxH; br++) {
+                for(int bc = 0; bc < gridSize / boxW; bc++) {
+                    int bx0 = start_x + bc * boxW * cell_sz;
+                    int by0 = start_y + br * boxH * cell_sz;
+                    int bx1 = bx0 + boxW * cell_sz;
+                    int by1 = by0 + boxH * cell_sz;
+
+                    // Pulsating Golden Shimmer for Solved Blocks
+                    if (IsBlockSolved(br, bc)) {
+                        DWORD tc = GetTickCount();
+                        float shimmer = (sinf((tc % 1600) / 1600.0f * 3.14159f * 2.0f) + 1.0f) * 0.5f;
+                        int rG = 250, gG = (int)(200 + 40 * shimmer), bG = (int)(30 + 80 * shimmer);
+                        HPEN hGoldPen = CreatePen(PS_SOLID, 2, RGB(rG, gG, bG));
+                        HPEN oP = (HPEN)SelectObject(hdcMem, hGoldPen);
+                        HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+                        HBRUSH oB = (HBRUSH)SelectObject(hdcMem, hNullB);
+                        Rectangle(hdcMem, bx0 + 1, by0 + 1, bx1 - 1, by1 - 1);
+                        SelectObject(hdcMem, oB);
+                        SelectObject(hdcMem, oP);
+                        DeleteObject(hGoldPen);
+                    }
+
+                    // Ornate Corner Filigree L-Brackets
+                    HPEN hFiligreePen = CreatePen(PS_SOLID, 2, RGB(234, 179, 8));
+                    HPEN oP = (HPEN)SelectObject(hdcMem, hFiligreePen);
+                    // Top-Left corner
+                    MoveToEx(hdcMem, bx0 + 2, by0 + 8, NULL);
+                    LineTo(hdcMem, bx0 + 2, by0 + 2);
+                    LineTo(hdcMem, bx0 + 8, by0 + 2);
+                    // Top-Right corner
+                    MoveToEx(hdcMem, bx1 - 8, by0 + 2, NULL);
+                    LineTo(hdcMem, bx1 - 2, by0 + 2);
+                    LineTo(hdcMem, bx1 - 2, by0 + 8);
+                    // Bottom-Left corner
+                    MoveToEx(hdcMem, bx0 + 2, by1 - 8, NULL);
+                    LineTo(hdcMem, bx0 + 2, by1 - 2);
+                    LineTo(hdcMem, bx0 + 8, by1 - 2);
+                    // Bottom-Right corner
+                    MoveToEx(hdcMem, bx1 - 8, by1 - 2, NULL);
+                    LineTo(hdcMem, bx1 - 2, by1 - 2);
+                    LineTo(hdcMem, bx1 - 2, by1 - 8);
+                    SelectObject(hdcMem, oP);
+                    DeleteObject(hFiligreePen);
+                }
+            }
+
+            // Draw Multi-Layered Particle Explosions
             if (winFxActive) {
                 for(int i = 0; i < MAX_WIN_PARTICLES; i++) {
                     if (winParticles[i].life > 0) {
                         HBRUSH pBrush = CreateSolidBrush(winParticles[i].color);
                         HPEN pPen = CreatePen(PS_SOLID, 1, winParticles[i].color);
-                        HPEN oldP = (HPEN)SelectObject(hdc, pPen);
-                        HBRUSH oldB = (HBRUSH)SelectObject(hdc, pBrush);
+                        HPEN oldP = (HPEN)SelectObject(hdcMem, pPen);
+                        HBRUSH oldB = (HBRUSH)SelectObject(hdcMem, pBrush);
 
                         int px = (int)winParticles[i].x;
                         int py = (int)winParticles[i].y;
-                        int psz = winParticles[i].size;
+                        int psz = (int)winParticles[i].size;
+                        if (psz < 1) psz = 1;
 
-                        if (winParticles[i].life < winParticles[i].maxLife / 4) psz = max(1, psz - 1);
-
-                        if (winParticles[i].shape == 0) {
-                            Rectangle(hdc, px, py, px + psz, py + psz + 2);
-                        } else if (winParticles[i].shape == 1) {
-                            Ellipse(hdc, px, py, px + psz, py + psz);
-                        } else if (winParticles[i].shape == 2) {
+                        if (winParticles[i].type == PARTICLE_DEBRIS) {
+                            // Heavy kinematic rotated puzzle shard
+                            float ca = cosf(winParticles[i].rot);
+                            float sa = sinf(winParticles[i].rot);
+                            float s = (float)psz;
+                            POINT pts[4];
+                            pts[0].x = (int)(px + (-s * ca - -s*0.6f * sa));
+                            pts[0].y = (int)(py + (-s * sa + -s*0.6f * ca));
+                            pts[1].x = (int)(px + (s*0.8f * ca - -s*0.4f * sa));
+                            pts[1].y = (int)(py + (s*0.8f * sa + -s*0.4f * ca));
+                            pts[2].x = (int)(px + (s*0.6f * ca - s*0.8f * sa));
+                            pts[2].y = (int)(py + (s*0.6f * sa + s*0.8f * ca));
+                            pts[3].x = (int)(px + (-s*0.7f * ca - s*0.5f * sa));
+                            pts[3].y = (int)(py + (-s*0.7f * sa + s*0.5f * ca));
+                            Polygon(hdcMem, pts, 4);
+                        } else if (winParticles[i].type == PARTICLE_SMOKE) {
+                            Ellipse(hdcMem, px - psz, py - psz, px + psz, py + psz);
+                        } else if (winParticles[i].type == PARTICLE_STAR) {
                             POINT pts[4] = {
                                 {px, py - psz}, {px + psz, py},
                                 {px, py + psz}, {px - psz, py}
                             };
-                            Polygon(hdc, pts, 4);
+                            Polygon(hdcMem, pts, 4);
+                        } else {
+                            Rectangle(hdcMem, px, py, px + psz, py + psz);
                         }
 
-                        SelectObject(hdc, oldP);
-                        SelectObject(hdc, oldB);
+                        SelectObject(hdcMem, oldP);
+                        SelectObject(hdcMem, oldB);
                         DeleteObject(pPen);
                         DeleteObject(pBrush);
                     }
                 }
             }
             
-            SelectObject(hdc, oldFont);
+            // Viewport Screen-Shake with Quadratic Physics Decay
+            int shakeX = 0;
+            int shakeY = 0;
+            if (shakeTrauma > 0.01f && shakeMaxTicks > 0) {
+                float progress = (float)shakeTicks / (float)shakeMaxTicks;
+                if (progress > 1.0f) progress = 1.0f;
+                float decay = 1.0f - progress;
+                float currentAmp = shakeMaxTrauma * (decay * decay);
+                int iAmp = (int)currentAmp;
+                if (iAmp > 0) {
+                    shakeX = (rand() % (iAmp * 2 + 1)) - iAmp;
+                    shakeY = (rand() % (iAmp * 2 + 1)) - iAmp;
+                }
+            }
+            BitBlt(hdc, shakeX, shakeY, clientRect.right, clientRect.bottom, hdcMem, 0, 0, SRCCOPY);
+
+            SelectObject(hdcMem, oldFont);
+            SelectObject(hdcMem, hbmOld);
+            DeleteObject(hbmMem);
+            DeleteDC(hdcMem);
+
             EndPaint(hwnd, &ps);
             break;
         }

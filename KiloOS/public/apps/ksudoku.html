@@ -240,6 +240,62 @@
             border-radius: 8px;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px 2px rgba(255,255,255,0.05);
             border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+        /* Ornate corner filigree bracket accents */
+        .block::before, .block::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            pointer-events: none;
+            z-index: 5;
+            transition: all 0.3s ease;
+        }
+        .block::before {
+            top: 2px;
+            left: 2px;
+            border-top: 2px solid rgba(250, 204, 21, 0.5);
+            border-left: 2px solid rgba(250, 204, 21, 0.5);
+            border-top-left-radius: 4px;
+        }
+        .block::after {
+            bottom: 2px;
+            right: 2px;
+            border-bottom: 2px solid rgba(250, 204, 21, 0.5);
+            border-right: 2px solid rgba(250, 204, 21, 0.5);
+            border-bottom-right-radius: 4px;
+        }
+        @keyframes goldBlockShimmer {
+            0% {
+                box-shadow: inset 0 0 12px rgba(250, 204, 21, 0.3), 0 0 8px rgba(250, 204, 21, 0.4);
+                border-color: rgba(250, 204, 21, 0.6);
+            }
+            50% {
+                box-shadow: inset 0 0 22px rgba(250, 204, 21, 0.65), 0 0 18px rgba(250, 204, 21, 0.75);
+                border-color: rgba(250, 204, 21, 0.95);
+            }
+            100% {
+                box-shadow: inset 0 0 12px rgba(250, 204, 21, 0.3), 0 0 8px rgba(250, 204, 21, 0.4);
+                border-color: rgba(250, 204, 21, 0.6);
+            }
+        }
+        .block.block-solved {
+            animation: goldBlockShimmer 2.4s infinite ease-in-out;
+            border: 1.5px solid rgba(250, 204, 21, 0.85) !important;
+        }
+        .block.block-solved::before {
+            border-color: #facc15;
+            width: 12px;
+            height: 12px;
+            filter: drop-shadow(0 0 4px #facc15);
+        }
+        .block.block-solved::after {
+            border-color: #facc15;
+            width: 12px;
+            height: 12px;
+            filter: drop-shadow(0 0 4px #facc15);
         }
         .block.block-2 {
             grid-template-columns: repeat(2, 1fr);
@@ -962,6 +1018,7 @@
                     cells[r * gridSize + c].classList.remove('error');
                 }
             }
+            updateBlockSolvedStates(false);
             updateHighlights();
             saveGameState();
         }
@@ -987,6 +1044,7 @@
                     cells[r * gridSize + c].classList.remove('error');
                 }
             }
+            updateBlockSolvedStates(false);
             updateHighlights();
             saveGameState();
         }
@@ -1256,10 +1314,44 @@
             }
         }
 
+        let blockEls = [];
+        let blockSolvedState = [];
+
+        function isBlockSolved(b) {
+            if (!board || !solution) return false;
+            let blockW = boxW;
+            let blockH = boxH;
+            for (let i = 0; i < gridSize; i++) {
+                let r = Math.floor(b / blockW) * blockH + Math.floor(i / blockW);
+                let c = (b % blockW) * blockW + (i % blockW);
+                if (!board[r] || board[r][c] === 0 || board[r][c] !== solution[r][c]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function updateBlockSolvedStates(spawnFX = true) {
+            let numBlocks = gridSize;
+            for (let b = 0; b < numBlocks; b++) {
+                let solved = isBlockSolved(b);
+                let wasSolved = !!blockSolvedState[b];
+                blockSolvedState[b] = solved;
+                if (blockEls[b]) {
+                    blockEls[b].classList.toggle('block-solved', solved);
+                }
+                if (solved && !wasSolved && spawnFX) {
+                    triggerBlockCompleteFX(b);
+                }
+            }
+        }
+
         function initUI() {
             boardEl.innerHTML = '';
             boardEl.className = `sudoku-board grid-${gridSize}`;
             cells = new Array(gridSize * gridSize);
+            blockEls = [];
+            blockSolvedState = [];
             
             let numBlocks = gridSize;
             let blockW = boxW;
@@ -1268,6 +1360,8 @@
             for(let b=0; b<numBlocks; b++) {
                 let block = document.createElement('div');
                 block.className = `block block-${blockW}`;
+                blockEls.push(block);
+                blockSolvedState.push(false);
                 for(let i=0; i<gridSize; i++) {
                     let r = Math.floor(b / blockW) * blockH + Math.floor(i / blockW);
                     let c = (b % blockW) * blockW + (i % blockW);
@@ -1286,6 +1380,7 @@
                 }
                 boardEl.appendChild(block);
             }
+            updateBlockSolvedStates(false);
 
             // Build dynamic Numpad
             numpadEl.innerHTML = '';
@@ -1403,14 +1498,15 @@
                             shieldActive = false;
                             updateUIState();
                             playSound('powerup');
+                            triggerShieldBreakFX(selectedCell.r, selectedCell.c);
+                            triggerScreenShake(4.5, 200);
                         } else {
                             cell.classList.remove('flash-error');
                             void cell.offsetWidth;
                             cell.classList.add('flash-error');
                             
-                            boardEl.classList.remove('board-shake');
-                            void boardEl.offsetWidth;
-                            boardEl.classList.add('board-shake');
+                            triggerScreenShake(7.0, 280);
+                            triggerCellErrorFX(selectedCell.r, selectedCell.c);
                             
                             score = Math.max(0, score - 50);
                             playSound('error');
@@ -1432,6 +1528,7 @@
                         }
                     } else {
                         playSound('correct');
+                        triggerCellSuccessFX(selectedCell.r, selectedCell.c);
                     }
                     board[selectedCell.r][selectedCell.c] = num;
                     clearFogAround(selectedCell.r, selectedCell.c);
@@ -1444,17 +1541,61 @@
                             if (isRushMode) elapsedTime += 10;
                         }
                     }
+                    updateBlockSolvedStates();
                     updateUIState();
                 }
             }
             renderCell(selectedCell.r, selectedCell.c);
             cell.classList.remove('error');
             updateHighlights();
+            updateBlockSolvedStates(false);
             saveGameState();
             checkWin();
         }
         
-        // Particle System
+        // Procedural Screen Shake Engine (Physics-driven Quadratic Decay)
+        let shakeTrauma = 0;
+        let shakeMaxTrauma = 0;
+        let shakeStartTime = 0;
+        let shakeDuration = 0;
+        let shakeAnimationId = null;
+
+        function triggerScreenShake(intensity, durationMs = 280) {
+            shakeTrauma = Math.max(shakeTrauma, intensity);
+            shakeMaxTrauma = shakeTrauma;
+            shakeStartTime = performance.now();
+            shakeDuration = durationMs;
+            if (!shakeAnimationId) {
+                updateScreenShake();
+            }
+        }
+
+        function updateScreenShake() {
+            const target = boardEl || document.getElementById('board');
+            if (!target) {
+                shakeAnimationId = null;
+                return;
+            }
+            const now = performance.now();
+            const elapsed = now - shakeStartTime;
+            if (elapsed >= shakeDuration || shakeTrauma <= 0.001) {
+                target.style.transform = '';
+                shakeTrauma = 0;
+                shakeAnimationId = null;
+                return;
+            }
+            const progress = elapsed / shakeDuration;
+            const decay = 1 - progress;
+            const currentAmp = shakeMaxTrauma * (decay * decay); // Quadratic physics decay
+            const angle = Math.random() * Math.PI * 2;
+            const offsetX = Math.cos(angle) * currentAmp;
+            const offsetY = Math.sin(angle) * currentAmp;
+            const rot = (Math.random() - 0.5) * (currentAmp * 0.25);
+            target.style.transform = `translate(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px) rotate(${rot.toFixed(2)}deg)`;
+            shakeAnimationId = requestAnimationFrame(updateScreenShake);
+        }
+
+        // Multi-Layered Particle Engine (Sparks, Smoke, Heavy Debris, Stars)
         let fxParticles = [];
         let fxAnimId = null;
         let fxCanvas = null;
@@ -1479,32 +1620,50 @@
             fxParticles.forEach(p => {
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vx *= (p.drag || 1);
-                p.vy *= (p.drag || 1);
-                p.vy += p.gravity;
-                p.rot += p.rotSpeed;
+                p.vx *= (p.drag !== undefined ? p.drag : 0.96);
+                p.vy *= (p.drag !== undefined ? p.drag : 0.96);
+                if (p.gravity) p.vy += p.gravity;
+                if (p.rotSpeed) p.rot += p.rotSpeed;
+                if (p.growth) p.size += p.growth;
                 p.life -= p.decay;
 
-                if (p.y < fxCanvas.height + 50 && p.life > 0) alive = true;
+                if (p.y < fxCanvas.height + 60 && p.life > 0) alive = true;
 
                 ctx.save();
                 ctx.translate(p.x, p.y);
-                ctx.rotate(p.rot);
-                ctx.globalAlpha = Math.max(0, p.life);
+                if (p.rot) ctx.rotate(p.rot);
+                ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
                 ctx.fillStyle = p.color;
-                if (p.shape === 'rect') {
-                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 1.5);
-                } else if (p.shape === 'circle') {
+
+                if (p.type === 'debris') {
+                    // Heavy kinematic puzzle shard with specular outline
                     ctx.beginPath();
-                    ctx.arc(0, 0, p.size/2, 0, Math.PI * 2);
+                    ctx.moveTo(-p.size, -p.size * 0.6);
+                    ctx.lineTo(p.size * 0.8, -p.size * 0.4);
+                    ctx.lineTo(p.size * 0.6, p.size * 0.8);
+                    ctx.lineTo(-p.size * 0.7, p.size * 0.5);
+                    ctx.closePath();
                     ctx.fill();
-                } else if (p.shape === 'star') {
+                    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                } else if (p.type === 'smoke') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, Math.max(1, p.size), 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (p.type === 'star') {
                     ctx.beginPath();
                     for (let i = 0; i < 5; i++) {
                         ctx.lineTo(Math.cos((18+i*72)*Math.PI/180)*p.size, -Math.sin((18+i*72)*Math.PI/180)*p.size);
                         ctx.lineTo(Math.cos((54+i*72)*Math.PI/180)*p.size/2, -Math.sin((54+i*72)*Math.PI/180)*p.size/2);
                     }
                     ctx.closePath();
+                    ctx.fill();
+                } else if (p.shape === 'rect') {
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 1.6);
+                } else { // spark or circle
+                    ctx.beginPath();
+                    ctx.arc(0, 0, Math.max(0.5, p.size / 2), 0, Math.PI * 2);
                     ctx.fill();
                 }
                 ctx.restore();
@@ -1517,51 +1676,153 @@
             }
         }
 
-        function triggerVictoryFX() {
+        function triggerCellErrorFX(r, c) {
             initFxCanvas();
+            let cell = cells[r * gridSize + c];
+            if (!cell) return;
             const containerRect = document.querySelector('.app-container').getBoundingClientRect();
-            fxParticles = [];
-            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#ef4444', '#38bdf8', '#facc15', '#ffffff'];
-            let boardRect = boardEl.getBoundingClientRect();
-            let bx = boardRect.left - containerRect.left + boardRect.width / 2;
-            let by = boardRect.top - containerRect.top + boardRect.height / 2;
+            let cellRect = cell.getBoundingClientRect();
+            let cx = cellRect.left - containerRect.left + cellRect.width / 2;
+            let cy = cellRect.top - containerRect.top + cellRect.height / 2;
 
-            for (let i = 0; i < 400; i++) {
+            // Layer 1: Core crimson sparks
+            for (let i = 0; i < 16; i++) {
                 let angle = Math.random() * Math.PI * 2;
-                let layer = Math.floor(Math.random() * 3);
-                let speed = 0, size = 0, shape = '', decay = 0;
-                
-                if (layer === 0) { // Fast sparks
-                    speed = Math.random() * 30 + 10;
-                    size = Math.random() * 4 + 2;
-                    shape = 'circle';
-                    decay = 0.015 + Math.random() * 0.01;
-                } else if (layer === 1) { // Medium stars
-                    speed = Math.random() * 15 + 5;
-                    size = Math.random() * 8 + 4;
-                    shape = 'star';
-                    decay = 0.008 + Math.random() * 0.01;
-                } else { // Slow confetti
-                    speed = Math.random() * 8 + 2;
-                    size = Math.random() * 12 + 6;
-                    shape = 'rect';
-                    decay = 0.004 + Math.random() * 0.005;
-                }
-
+                let speed = Math.random() * 12 + 5;
                 fxParticles.push({
-                    x: bx,
-                    y: by,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed - 5,
-                    size: size,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    rot: Math.random() * Math.PI * 2,
-                    rotSpeed: (Math.random() - 0.5) * 0.4,
-                    shape: shape,
-                    gravity: 0.3 + Math.random() * 0.2,
-                    drag: 0.92,
-                    life: 1.5,
-                    decay: decay
+                    type: 'spark', x: cx, y: cy,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                    size: Math.random() * 3 + 2, color: Math.random() > 0.3 ? '#ef4444' : '#ffffff',
+                    life: 0.8, decay: 0.03 + Math.random() * 0.02, drag: 0.92, gravity: 0.15
+                });
+            }
+            // Layer 2: Expanding smoke puff
+            for (let i = 0; i < 6; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 2 + 0.5;
+                fxParticles.push({
+                    type: 'smoke', x: cx, y: cy,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.5,
+                    size: 8, growth: 0.35, color: 'rgba(239, 68, 68, 0.35)',
+                    life: 0.7, decay: 0.02, drag: 0.95
+                });
+            }
+            // Layer 3: Red shatter debris
+            for (let i = 0; i < 10; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 7 + 3;
+                fxParticles.push({
+                    type: 'debris', x: cx, y: cy,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+                    size: Math.random() * 5 + 3, color: '#b91c1c',
+                    rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.4,
+                    life: 0.9, decay: 0.02, drag: 0.94, gravity: 0.35
+                });
+            }
+            if (fxAnimId) cancelAnimationFrame(fxAnimId);
+            updateAndDrawFx();
+        }
+
+        function triggerShieldBreakFX(r, c) {
+            initFxCanvas();
+            let cell = cells[r * gridSize + c];
+            if (!cell) return;
+            const containerRect = document.querySelector('.app-container').getBoundingClientRect();
+            let cellRect = cell.getBoundingClientRect();
+            let cx = cellRect.left - containerRect.left + cellRect.width / 2;
+            let cy = cellRect.top - containerRect.top + cellRect.height / 2;
+
+            for (let i = 0; i < 20; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 10 + 4;
+                fxParticles.push({
+                    type: 'debris', x: cx, y: cy,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1.5,
+                    size: Math.random() * 5 + 3, color: Math.random() > 0.4 ? '#38bdf8' : '#ffffff',
+                    rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.4,
+                    life: 0.9, decay: 0.025, drag: 0.94, gravity: 0.3
+                });
+            }
+            for (let i = 0; i < 8; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 3 + 1;
+                fxParticles.push({
+                    type: 'smoke', x: cx, y: cy,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.3,
+                    size: 10, growth: 0.3, color: 'rgba(56, 189, 248, 0.4)',
+                    life: 0.8, decay: 0.02, drag: 0.95
+                });
+            }
+            if (fxAnimId) cancelAnimationFrame(fxAnimId);
+            updateAndDrawFx();
+        }
+
+        function triggerCellSuccessFX(r, c) {
+            initFxCanvas();
+            let cell = cells[r * gridSize + c];
+            if (!cell) return;
+            const containerRect = document.querySelector('.app-container').getBoundingClientRect();
+            let cellRect = cell.getBoundingClientRect();
+            let cx = cellRect.left - containerRect.left + cellRect.width / 2;
+            let cy = cellRect.top - containerRect.top + cellRect.height / 2;
+
+            for (let i = 0; i < 14; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 7 + 2;
+                fxParticles.push({
+                    type: 'spark', x: cx, y: cy,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1.5,
+                    size: Math.random() * 3 + 1.5, color: Math.random() > 0.4 ? '#60a5fa' : '#facc15',
+                    life: 0.7, decay: 0.035, drag: 0.94, gravity: 0.1
+                });
+            }
+            if (fxAnimId) cancelAnimationFrame(fxAnimId);
+            updateAndDrawFx();
+        }
+
+        function triggerBlockCompleteFX(b) {
+            initFxCanvas();
+            let blockEl = blockEls[b];
+            if (!blockEl) return;
+            const containerRect = document.querySelector('.app-container').getBoundingClientRect();
+            let blockRect = blockEl.getBoundingClientRect();
+            let bx = blockRect.left - containerRect.left + blockRect.width / 2;
+            let by = blockRect.top - containerRect.top + blockRect.height / 2;
+
+            triggerScreenShake(3.5, 220);
+
+            // Layer 1: Radiant gold sparks
+            for (let i = 0; i < 35; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 14 + 5;
+                fxParticles.push({
+                    type: 'spark', x: bx, y: by,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+                    size: Math.random() * 4 + 2, color: Math.random() > 0.3 ? '#facc15' : '#ffffff',
+                    life: 1.0, decay: 0.02, drag: 0.94, gravity: 0.2
+                });
+            }
+            // Layer 2: Expanding golden smoke
+            for (let i = 0; i < 12; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 4 + 1;
+                fxParticles.push({
+                    type: 'smoke', x: bx, y: by,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.8,
+                    size: 12, growth: 0.4, color: 'rgba(250, 204, 21, 0.35)',
+                    life: 0.85, decay: 0.018, drag: 0.95
+                });
+            }
+            // Layer 3: Tumbling golden debris
+            for (let i = 0; i < 20; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 10 + 3;
+                fxParticles.push({
+                    type: 'debris', x: bx, y: by,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 3,
+                    size: Math.random() * 6 + 3, color: '#eab308',
+                    rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.3,
+                    life: 1.1, decay: 0.015, drag: 0.94, gravity: 0.3
                 });
             }
             if (fxAnimId) cancelAnimationFrame(fxAnimId);
@@ -1577,23 +1838,101 @@
             let cx = cellRect.left - containerRect.left + cellRect.width / 2;
             let cy = cellRect.top - containerRect.top + cellRect.height / 2;
 
-            const colors = ['#a855f7', '#d946ef', '#fbcfe8', '#ffffff'];
+            triggerScreenShake(4.0, 220);
+
+            // Layer 1: Amethyst core sparks
+            for (let i = 0; i < 25; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 12 + 4;
+                fxParticles.push({
+                    type: 'spark', x: cx, y: cy,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                    size: Math.random() * 3 + 2, color: Math.random() > 0.3 ? '#c084fc' : '#ffffff',
+                    life: 0.9, decay: 0.025, drag: 0.93, gravity: 0.1
+                });
+            }
+            // Layer 2: Swirling violet smoke
+            for (let i = 0; i < 10; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 3 + 1;
+                fxParticles.push({
+                    type: 'smoke', x: cx, y: cy,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.5,
+                    size: 10, growth: 0.35, color: 'rgba(192, 132, 252, 0.35)',
+                    life: 0.8, decay: 0.02, drag: 0.95
+                });
+            }
+            // Layer 3: Arcane rune stars
+            for (let i = 0; i < 15; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 8 + 2;
+                fxParticles.push({
+                    type: 'star', x: cx, y: cy,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                    size: Math.random() * 6 + 3, color: '#f472b6',
+                    rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.4,
+                    life: 1.0, decay: 0.018, drag: 0.95, gravity: 0.08
+                });
+            }
+            if (fxAnimId) cancelAnimationFrame(fxAnimId);
+            updateAndDrawFx();
+        }
+
+        function triggerVictoryFX() {
+            initFxCanvas();
+            const containerRect = document.querySelector('.app-container').getBoundingClientRect();
+            fxParticles = [];
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#ef4444', '#38bdf8', '#facc15', '#ffffff'];
+            let boardRect = boardEl.getBoundingClientRect();
+            let bx = boardRect.left - containerRect.left + boardRect.width / 2;
+            let by = boardRect.top - containerRect.top + boardRect.height / 2;
+
+            triggerScreenShake(14.0, 850);
+
+            // Layer 1: Incandescent Core Sparks
+            for (let i = 0; i < 150; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 28 + 12;
+                fxParticles.push({
+                    type: 'spark', x: bx, y: by,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 6,
+                    size: Math.random() * 4 + 2, color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.2, decay: 0.015 + Math.random() * 0.01, drag: 0.93, gravity: 0.25
+                });
+            }
+            // Layer 2: Expanding Smoke Puffs
             for (let i = 0; i < 40; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 8 + 2;
                 fxParticles.push({
-                    x: cx,
-                    y: cy,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    size: Math.random() * 6 + 2,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    rot: Math.random() * Math.PI * 2,
-                    rotSpeed: (Math.random() - 0.5) * 0.5,
-                    shape: 'star',
-                    gravity: 0.1,
-                    life: 1.0,
-                    decay: Math.random() * 0.02 + 0.02
+                    type: 'smoke', x: bx, y: by,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+                    size: 14, growth: 0.5, color: 'rgba(255, 255, 255, 0.3)',
+                    life: 1.0, decay: 0.012, drag: 0.96
+                });
+            }
+            // Layer 3: Heavy Kinematic Puzzle Shard Debris
+            for (let i = 0; i < 120; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 18 + 5;
+                fxParticles.push({
+                    type: 'debris', x: bx, y: by,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 8,
+                    size: Math.random() * 8 + 4, color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.5,
+                    life: 1.5, decay: 0.008 + Math.random() * 0.006, drag: 0.94, gravity: 0.38
+                });
+            }
+            // Layer 4: Floating Confetti Stars
+            for (let i = 0; i < 100; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 10 + 3;
+                fxParticles.push({
+                    type: 'star', x: bx, y: by,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 5,
+                    size: Math.random() * 7 + 4, color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.3,
+                    life: 1.6, decay: 0.006 + Math.random() * 0.005, drag: 0.95, gravity: 0.18
                 });
             }
             if (fxAnimId) cancelAnimationFrame(fxAnimId);

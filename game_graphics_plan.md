@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSudoku
 - KGo
 - KTowers
 - KWords
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMech
 - KMatch3
 - KFreecell
+- KSudoku
 ## Completed Work Log
+
+- **KSudoku (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on error placements, strike deductions, power-ups, and victory rumbles (replacing static CSS with continuous requestAnimationFrame mathematical translation/rotation in Web Canvas, and replacing SetWindowPos window jitter with flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), multi-layered particle explosions featuring heavy kinematic puzzle shard debris with gravity and tumbling rotation, expanding smoke puffs, incandescent core sparks, and radiant celebration stars for block completions, magic wand casts, and victory bursts, and distinct procedural visual variations including pulsating golden border shimmer on solved 3x3 blocks and ornate corner filigree L-brackets on every block in both Web Canvas (ksudoku.html) and Native C Win32 GDI (KSudoku/main.c).
 
 - **KFreecell (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on card snaps, power-ups, and victory bursts, multi-layered particle explosions featuring heavy kinematic debris chunks with gravity and tumbling rotation, expanding smoke puffs, and glowing core sparks, and distinct procedural visual variations including pulsating golden border shimmer and corner filigree brackets on empty foundation & freecell slots in both Web Canvas (kfreecell.html) and Native C Win32 GDI (KFreecell/main.c).
 
