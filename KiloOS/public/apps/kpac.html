@@ -38,7 +38,7 @@
   .skills-bar {
     display: flex;
     gap: 4px;
-    margin-top: 8px;
+    margin-top: 6px;
     width: 100%;
     max-width: 300px;
   }
@@ -49,7 +49,7 @@
     border: 1px solid #42a5f5;
     border-radius: 6px;
     padding: 5px 2px;
-    font-size: 9px;
+    font-size: 8.5px;
     font-weight: bold;
     cursor: pointer;
     text-align: center;
@@ -69,11 +69,6 @@
     color: #78909c;
     cursor: not-allowed;
   }
-  .skill-btn.active {
-    background: linear-gradient(185deg, #00c853, #00a152);
-    border-color: #69f0ae;
-    box-shadow: 0 0 10px rgba(105, 240, 174, 0.8);
-  }
   .craft-btn {
     background: linear-gradient(185deg, #7b1fa2, #4a148c);
     border-color: #ba68c8;
@@ -82,9 +77,13 @@
     background: linear-gradient(185deg, #e65100, #bf360c);
     border-color: #ff9800;
   }
+  .pet-btn {
+    background: linear-gradient(185deg, #00897b, #004d40);
+    border-color: #4db6ac;
+  }
 </style>
 </head>
-<body data-width="400" data-height="580">
+<body data-width="400" data-height="600">
 <div id="game-container">
   <canvas id="gameCanvas" width="300" height="340"></canvas>
   <div class="skills-bar">
@@ -92,16 +91,18 @@
     <button id="btnSprint" class="skill-btn" onclick="attemptSkill('s2')">Sprint [Z]</button>
     <button id="btnMagnet" class="skill-btn" onclick="attemptSkill('s3')">Magnet [M]</button>
     <button id="btnShield" class="skill-btn" onclick="attemptSkill('s4')">Shield [B]</button>
+    <button id="btnPetUlt" class="skill-btn pet-btn" onclick="triggerPetUltimate()">Pet [U]</button>
   </div>
   <div class="skills-bar" style="margin-top: 4px;">
     <button id="btnCraft" class="skill-btn craft-btn" onclick="toggleCraftMenu()">Forge [C]</button>
+    <button id="btnPetType" class="skill-btn pet-btn" onclick="cyclePetCompanion()">Type [P]</button>
     <button id="btnMode" class="skill-btn mode-btn" onclick="toggleGameMode()">Mode [O]</button>
     <button class="skill-btn" onclick="craftItem(1)">Pellet [7]</button>
     <button class="skill-btn" onclick="craftItem(2)">Warp [8]</button>
     <button class="skill-btn" onclick="craftItem(3)">Shield [9]</button>
     <button class="skill-btn" onclick="craftItem(4)">Nuke [0]</button>
   </div>
-  <div style="display: flex; flex-direction: column; align-items: center; margin-top: 8px; gap: 3px;">
+  <div style="display: flex; flex-direction: column; align-items: center; margin-top: 6px; gap: 3px;">
     <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=0;ndy=-1" ontouchstart="ndx=0;ndy=-1;event.preventDefault()">▲</button>
     <div style="display: flex; gap: 4px;">
       <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=-1;ndy=0" ontouchstart="ndx=-1;ndy=0;event.preventDefault()">◀</button>
@@ -129,9 +130,9 @@
   const ROWS = 15;
   const TS = 20;
 
-  // 20 Unique Campaign Maps
+  // 20 Unique Campaign Maps (Expanded with Loop 11 Hazard Portals [9] and Phase Gateways [10])
   const maps = [
-      // Stage 1: Classic Maze
+      // Stage 1
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
@@ -149,7 +150,7 @@
           [1,1,1,3,2,2,2,1,2,2,2,3,1,1,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 2: Central Square
+      // Stage 2
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
@@ -167,7 +168,7 @@
           [1,3,1,1,1,1,2,2,2,1,1,1,1,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 3: Diamond Arena
+      // Stage 3
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,4,2,2,2,2,2,1,2,2,2,2,2,4,1],
@@ -185,12 +186,12 @@
           [1,3,2,2,2,2,2,3,2,2,2,2,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 4: Cross Tunnel
+      // Stage 4 (With Void Rifts [9])
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
           [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
-          [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+          [1,2,2,2,9,2,2,2,2,2,9,2,2,2,1],
           [1,1,1,2,1,1,1,1,1,1,1,2,1,1,1],
           [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
           [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
@@ -198,12 +199,12 @@
           [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
           [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
           [1,1,1,2,1,1,1,1,1,1,1,2,1,1,1],
-          [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+          [1,2,2,2,9,2,2,2,2,2,9,2,2,2,1],
           [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
           [1,4,2,2,2,2,2,1,2,2,2,2,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 5: Inward Spiral
+      // Stage 5
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,1,2,2,2,1,2,2,2,1,2,3,1],
@@ -221,7 +222,7 @@
           [1,4,2,1,2,2,2,1,2,2,2,1,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 6: Twin Chamber
+      // Stage 6
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,4,2,2,2,2,2,1,2,2,2,2,2,4,1],
@@ -239,7 +240,7 @@
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 7: Grid Labyrinth
+      // Stage 7
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,1,2,2,2,1,2,2,2,3,1],
@@ -257,12 +258,12 @@
           [1,4,2,2,2,1,2,2,2,1,2,2,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 8: Concentric Rings
+      // Stage 8 (With Phase Gateways [10])
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
           [1,2,1,1,1,1,1,1,1,1,1,1,1,2,1],
-          [1,2,1,2,2,2,2,2,2,2,2,2,1,2,1],
+          [1,2,1,2,2,2,10,2,10,2,2,2,1,2,1],
           [1,2,1,2,1,1,1,1,1,1,1,2,1,2,1],
           [1,2,1,2,1,2,2,2,2,2,1,2,1,2,1],
           [1,2,1,2,1,2,1,1,1,2,1,2,1,2,1],
@@ -270,12 +271,12 @@
           [1,2,1,2,1,2,1,1,1,2,1,2,1,2,1],
           [1,2,1,2,1,2,2,2,2,2,1,2,1,2,1],
           [1,2,1,2,1,1,1,1,1,1,1,2,1,2,1],
-          [1,2,1,2,2,2,2,2,2,2,2,2,1,2,1],
+          [1,2,1,2,2,2,10,2,10,2,2,2,1,2,1],
           [1,2,1,1,1,1,1,1,1,1,1,1,1,2,1],
           [1,4,2,2,2,2,2,2,2,2,2,2,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 9: Checkerboard Fortress
+      // Stage 9
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,1,2,1,2,1,2,1,2,1,2,3,1],
@@ -293,7 +294,7 @@
           [1,4,2,1,2,1,2,1,2,1,2,1,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 10: Central Hub
+      // Stage 10
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
@@ -311,7 +312,7 @@
           [1,4,2,2,2,2,2,2,2,2,2,2,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 11: Frost Vault
+      // Stage 11
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,5,2,2,2,2,1,2,1,2,2,2,2,5,1],
@@ -329,12 +330,12 @@
           [1,5,2,2,2,2,1,2,1,2,2,2,2,5,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 12: Dual Warp Arena
+      // Stage 12 (With Void Rifts [9])
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
           [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
-          [1,2,2,2,5,1,2,2,2,1,5,2,2,2,1],
+          [1,2,2,2,9,1,2,2,2,1,9,2,2,2,1],
           [1,1,1,1,2,1,1,1,1,1,2,1,1,1,1],
           [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
           [1,2,1,1,1,2,1,1,1,2,1,1,1,2,1],
@@ -342,12 +343,12 @@
           [1,2,1,1,1,2,1,1,1,2,1,1,1,2,1],
           [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
           [1,1,1,1,2,1,1,1,1,1,2,1,1,1,1],
-          [1,2,2,2,4,1,2,2,2,1,4,2,2,2,1],
+          [1,2,2,2,9,1,2,2,2,1,9,2,2,2,1],
           [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 13: Lightning Chamber
+      // Stage 13
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,5,2,1,2,2,2,2,2,2,2,1,2,5,1],
@@ -365,79 +366,79 @@
           [1,5,2,1,2,2,2,2,2,2,2,1,2,5,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 14: Pinwheel Crossroads
+      // Stage 14
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-          [1,3,2,2,2,1,2,5,2,1,2,2,2,3,1],
-          [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
-          [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
-          [1,1,1,1,1,2,1,1,1,2,1,1,1,1,1],
-          [1,2,2,2,1,2,2,2,2,2,1,2,2,2,1],
-          [1,2,1,2,1,1,1,1,1,1,1,2,1,2,1],
-          [0,2,1,2,2,2,2,0,2,2,2,2,1,2,0],
-          [1,2,1,2,1,1,1,1,1,1,1,2,1,2,1],
-          [1,2,2,2,1,2,2,2,2,2,1,2,2,2,1],
-          [1,1,1,1,1,2,1,1,1,2,1,1,1,1,1],
-          [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
-          [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
-          [1,3,2,2,2,1,2,5,2,1,2,2,2,3,1],
-          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-      ],
-      // Stage 15: Blockade Maze
-      [
-          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-          [1,5,2,2,2,2,2,2,2,2,2,2,2,5,1],
-          [1,2,1,1,1,1,1,2,1,1,1,1,1,2,1],
-          [1,2,1,3,2,2,1,2,1,2,2,3,1,2,1],
-          [1,2,1,2,1,2,1,2,1,2,1,2,1,2,1],
-          [1,2,1,2,1,2,2,2,2,2,1,2,1,2,1],
-          [1,2,2,2,1,1,1,1,1,1,1,2,2,2,1],
-          [1,1,1,2,2,2,2,0,2,2,2,2,1,1,1],
-          [1,2,2,2,1,1,1,1,1,1,1,2,2,2,1],
-          [1,2,1,2,1,2,2,2,2,2,1,2,1,2,1],
-          [1,2,1,2,1,2,1,2,1,2,1,2,1,2,1],
-          [1,2,1,4,2,2,1,2,1,2,2,4,1,2,1],
-          [1,2,1,1,1,1,1,2,1,1,1,1,1,2,1],
-          [1,5,2,2,2,2,2,2,2,2,2,2,2,5,1],
-          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-      ],
-      // Stage 16: Warp Tunnel Heavy
-      [
-          [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1],
           [1,3,2,2,2,1,2,2,2,1,2,2,2,3,1],
           [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
-          [1,2,1,4,2,2,2,1,2,2,2,4,1,2,1],
-          [1,2,2,2,1,1,2,2,2,1,1,2,2,2,1],
-          [0,0,0,2,1,2,2,1,2,2,1,2,0,0,0],
-          [1,1,1,2,1,2,1,1,1,2,1,2,1,1,1],
-          [0,0,0,2,2,2,1,0,1,2,2,2,0,0,0],
-          [1,1,1,2,1,2,1,1,1,2,1,2,1,1,1],
-          [0,0,0,2,1,2,2,1,2,2,1,2,0,0,0],
-          [1,2,2,2,1,1,2,2,2,1,1,2,2,2,1],
-          [1,2,1,5,2,2,2,1,2,2,2,5,1,2,1],
+          [1,2,1,2,2,2,2,1,2,2,2,2,1,2,1],
+          [1,2,2,2,1,1,2,1,2,1,1,2,2,2,1],
+          [1,1,1,2,1,2,2,2,2,2,1,2,1,1,1],
+          [1,2,2,2,2,2,1,0,1,2,2,2,2,2,1],
+          [0,2,1,1,1,2,0,0,0,2,1,1,1,2,0],
+          [1,2,2,2,2,2,1,0,1,2,2,2,2,2,1],
+          [1,1,1,2,1,2,2,2,2,2,1,2,1,1,1],
+          [1,2,2,2,1,1,2,1,2,1,1,2,2,2,1],
+          [1,2,1,2,2,2,2,1,2,2,2,2,1,2,1],
           [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
-          [1,3,2,2,2,1,2,2,2,1,2,2,2,3,1],
-          [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1]
-      ],
-      // Stage 17: Speed Zone Arena
-      [
-          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-          [1,4,4,4,2,2,2,1,2,2,2,4,4,4,1],
-          [1,4,1,1,1,2,1,1,1,2,1,1,1,4,1],
-          [1,4,1,3,2,2,2,4,2,2,2,3,1,4,1],
-          [1,2,1,2,1,1,2,1,2,1,1,2,1,2,1],
-          [1,2,2,2,1,4,4,4,4,4,1,2,2,2,1],
-          [1,1,1,2,1,4,1,1,1,4,1,2,1,1,1],
-          [0,0,0,2,4,4,1,0,1,4,4,2,0,0,0],
-          [1,1,1,2,1,4,1,1,1,4,1,2,1,1,1],
-          [1,2,2,2,1,4,4,4,4,4,1,2,2,2,1],
-          [1,2,1,2,1,1,2,1,2,1,1,2,1,2,1],
-          [1,4,1,3,2,2,2,4,2,2,2,3,1,4,1],
-          [1,4,1,1,1,2,1,1,1,2,1,1,1,4,1],
-          [1,4,4,4,2,2,2,1,2,2,2,4,4,4,1],
+          [1,4,2,2,2,1,2,2,2,1,2,2,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 18: Spiral Shadow Labyrinth
+      // Stage 15
+      [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
+          [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+          [1,2,1,0,0,1,2,1,2,1,0,0,1,2,1],
+          [1,2,1,0,0,1,2,2,2,1,0,0,1,2,1],
+          [1,2,1,1,1,1,1,0,1,1,1,1,1,2,1],
+          [1,2,2,2,2,2,2,0,2,2,2,2,2,2,1],
+          [0,0,0,1,1,1,2,0,2,1,1,1,0,0,0],
+          [1,2,2,2,2,2,2,0,2,2,2,2,2,2,1],
+          [1,2,1,1,1,1,1,0,1,1,1,1,1,2,1],
+          [1,2,1,0,0,1,2,2,2,1,0,0,1,2,1],
+          [1,2,1,0,0,1,2,1,2,1,0,0,1,2,1],
+          [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+          [1,4,2,2,2,2,2,1,2,2,2,2,2,4,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+      ],
+      // Stage 16 (With Void Rifts [9])
+      [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,3,2,6,2,2,2,1,2,2,2,6,2,3,1],
+          [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+          [1,2,1,2,2,2,2,2,2,2,2,2,1,2,1],
+          [1,2,1,2,1,1,1,1,1,1,1,2,1,2,1],
+          [1,2,2,2,2,2,9,0,9,2,2,2,2,2,1],
+          [1,1,1,1,2,1,1,0,1,1,2,1,1,1,1],
+          [0,2,2,2,2,1,0,0,0,1,2,2,2,2,0],
+          [1,1,1,1,2,1,1,0,1,1,2,1,1,1,1],
+          [1,2,2,2,2,2,9,0,9,2,2,2,2,2,1],
+          [1,2,1,2,1,1,1,1,1,1,1,2,1,2,1],
+          [1,2,1,2,2,2,2,2,2,2,2,2,1,2,1],
+          [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+          [1,4,2,6,2,2,2,1,2,2,2,6,2,4,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+      ],
+      // Stage 17
+      [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,3,2,2,2,1,2,2,2,1,2,2,2,3,1],
+          [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
+          [1,2,1,2,2,2,2,1,2,2,2,2,1,2,1],
+          [1,2,2,2,1,1,2,2,2,1,1,2,2,2,1],
+          [1,1,1,2,1,0,0,0,0,0,1,2,1,1,1],
+          [0,0,1,2,1,0,0,0,0,0,1,2,1,0,0],
+          [1,1,1,2,2,0,0,0,0,0,2,2,1,1,1],
+          [0,0,1,2,1,0,0,0,0,0,1,2,1,0,0],
+          [1,1,1,2,1,0,0,0,0,0,1,2,1,1,1],
+          [1,2,2,2,1,1,2,2,2,1,1,2,2,2,1],
+          [1,2,1,2,2,2,2,1,2,2,2,2,1,2,1],
+          [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
+          [1,4,2,2,2,1,2,2,2,1,2,2,2,4,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+      ],
+      // Stage 18
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
@@ -455,7 +456,7 @@
           [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 19: The Gauntlet
+      // Stage 19
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,1,3,2,1,2,1,2,3,1,2,3,1],
@@ -473,12 +474,12 @@
           [1,3,2,1,3,2,1,2,1,2,3,1,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
-      // Stage 20: Ghost King Lair (Boss Chamber)
+      // Stage 20 (Boss Chamber with Void Rifts)
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
           [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
-          [1,2,1,5,2,2,2,2,2,2,2,5,1,2,1],
+          [1,2,1,5,2,9,2,2,2,9,2,5,1,2,1],
           [1,2,1,2,1,1,1,0,1,1,1,2,1,2,1],
           [1,2,2,2,1,0,0,0,0,0,1,2,2,2,1],
           [1,1,1,2,1,0,0,0,0,0,1,2,1,1,1],
@@ -486,463 +487,177 @@
           [1,1,1,2,1,0,0,0,0,0,1,2,1,1,1],
           [1,2,2,2,1,0,0,0,0,0,1,2,2,2,1],
           [1,2,1,2,1,1,1,0,1,1,1,2,1,2,1],
-          [1,2,1,4,2,2,2,2,2,2,2,4,1,2,1],
+          [1,2,1,4,2,9,2,2,2,9,2,4,1,2,1],
           [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ]
   ];
+
   let map = [];
-  
-  let px, py, pdx, pdy, ndx, ndy;
+  let gameMode = 0; // 0=Campaign, 1=Arcade Endless
+  let endlessWave = 1;
+  let endlessHighWave = 1;
+
+  // Cyber-Forge & Relics
+  let craftEctoplasm = 0;
+  let craftFruitEssence = 0;
+  let craftStarDust = 0;
+  let showCraftMenu = false;
+  let craftMenuPage = 0; // 0=Consumables, 1=Mythic Relics
+
+  let relicCrown = 0;
+  let relicHourglass = 0;
+  let relicOrb = 0;
+  let relicAegis = 0;
+  let relicStone = 0;
+  let relicAegisTimer = 0;
+
+  // Companion Pet System
+  let petActive = 1;
+  let petType = 0; // 0=Blinky Jr, 1=Inky Spark, 2=Pinky Heart, 3=Gold Kinglet
+  let petLevel = 1;
+  let petExp = 0;
+  let petX = 7, petY = 12;
+  let petFloatAngle = 0;
+  let petCooldown = 0;
+  let petBurstTimer = 0;
+
+  // Player state
+  let px = 7, py = 12;
+  let pdx = 0, pdy = 0;
+  let ndx = 0, ndy = 0;
+  let playerSlowTimer = 0;
+  let shieldActive = 0, shieldHits = 0;
+
+  // Ghosts
   let ghosts = [];
   let numGhosts = 5;
-
-  // Game Modes & Progression
-  let gameMode = 0; // 0 = Campaign, 1 = Arcade Endless
-  let endlessWave = 1;
-  let endlessHighWave = parseInt(localStorage.getItem('kpac_endless_wave') || 1);
-
-  // Crafting System (The Cyber Forge)
-  let craftEctoplasm = parseInt(localStorage.getItem('kpac_ecto') || 0);
-  let craftFruitEssence = parseInt(localStorage.getItem('kpac_essence') || 0);
-  let craftStarDust = parseInt(localStorage.getItem('kpac_dust') || 0);
-  let showCraftMenu = false;
-  let shieldHits = 0;
-
-  // Sludge Traps
   let sludgeTraps = [];
-  let playerSlowTimer = 0;
 
-  // Active Skills & Timers
+  // Skills
   let freezeSkillTimer = 0, freezeCooldown = 0;
   let speedSkillTimer = 0, speedCooldown = 0;
   let magnetSkillTimer = 0, magnetCooldown = 0;
-  let shieldActive = 0, shieldCooldown = 0;
+  let shieldCooldown = 0;
 
-  // Stage 20 Boss State
-  let bossHp = 8;
-  let bossMaxHp = 8;
+  // Boss & General
+  let bossHp = 8, bossMaxHp = 8;
   let phantomSpawnTimer = 0;
-  
   let vipX = 7, vipY = 7, vipActive = 0;
 
-  let score = 0, gameOver = 0, dotCount = 0, frameCount = 0;
-  let deathTimer = 0;
-  let screenShake = 0;
-  let level = 1;
-  let frightTimer = 0;
-  let victoryTimer = 0;
-  let highScore = parseInt(localStorage.getItem('kpac_highscore') || 0);
-  let statsGamesPlayed = parseInt(localStorage.getItem('kpac_games') || 0);
-  let statsGhostsEaten = parseInt(localStorage.getItem('kpac_ghosts') || 0);
-  let statsMaxScore = parseInt(localStorage.getItem('kpac_maxscore') || 0);
-  let lives = 3;
-  let paused = false;
-  let fruitActive = 0;
-  let fruitTimer = 0;
-  
-  let diffMode = 1; // 0 = Easy, 1 = Normal, 2 = Hard
-  let saveMsgText = '';
-  let saveMsgTimer = 0;
-  let showHelp = 1;
+  let score = 0, highScore = 0;
+  let gameOver = 0, dotCount = 0, frameCount = 0;
+  let deathTimer = 0, screenShake = 0, level = 1;
+  let frightTimer = 0, victoryTimer = 0, lives = 3;
+  let paused = 0, fruitActive = 0, fruitTimer = 0;
+  let saveMsgText = "", saveMsgTimer = 0, showHelp = true;
+  let diffMode = 1; // 0=Easy, 1=Norm, 2=Hard
 
-  let bindState = 0;
-  let keybinds = {
-      up: ['ArrowUp', 'w', 'W'],
-      down: ['ArrowDown', 's', 'S'],
-      left: ['ArrowLeft', 'a', 'A'],
-      right: ['ArrowRight', 'd', 'D'],
-      skill1: ['f', 'F'],
-      skill2: ['z', 'Z'],
-      skill3: ['m', 'M'],
-      skill4: ['b', 'B']
-  };
-  const isKey = (arr) => arr.some(k => keys[k]);
+  let statsGamesPlayed = 0, statsGhostsEaten = 0, statsMaxScore = 0, statsRelicsForged = 0;
+  let shockwaves = [], particles = [], popups = [];
 
-  let replayMode = 0; // 0=off, 1=record, 2=playback
-  let replays = [];
-  let replayIndex = 0;
-  let replaySeed = 0;
-  let replayDiffMode = 1;
-
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playSound(freq, dur, type='square') {
-      if(audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      gain.gain.setValueAtTime(1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
-      osc.stop(audioCtx.currentTime + dur);
-  }
-  
-  const keys = {};
-  document.addEventListener('keydown', e => {
-      if (e.key === 'F1') e.preventDefault();
-      keys[e.key] = true;
-      if (bindState > 0) {
-          let k = e.key;
-          if (bindState === 1) keybinds.up = [k];
-          else if (bindState === 2) keybinds.down = [k];
-          else if (bindState === 3) keybinds.left = [k];
-          else if (bindState === 4) keybinds.right = [k];
-          else if (bindState === 5) keybinds.skill1 = [k];
-          else if (bindState === 6) keybinds.skill2 = [k];
-          else if (bindState === 7) keybinds.skill3 = [k];
-          else if (bindState === 8) { keybinds.skill4 = [k]; bindState = 0; saveMsgText = 'KEYS BOUND!'; saveMsgTimer = 25; }
-          if (bindState > 0) bindState++;
-          return;
-      }
-      if (e.key === 'k' || e.key === 'K') { bindState = 1; return; }
-      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') { showHelp = !showHelp; return; }
-      if (e.key === 'c' || e.key === 'C') { toggleCraftMenu(); return; }
-      if (e.key === 'o' || e.key === 'O') { toggleGameMode(); return; }
-
-      // Quick Craft Keys
-      if (e.key === '7' || (showCraftMenu && e.key === '1')) { craftItem(1); return; }
-      if (e.key === '8' || (showCraftMenu && e.key === '2')) { craftItem(2); return; }
-      if (e.key === '9' || (showCraftMenu && e.key === '3')) { craftItem(3); return; }
-      if (e.key === '0' || (showCraftMenu && e.key === '4')) { craftItem(4); return; }
-
-      if (showHelp || showCraftMenu) return;
-
-      if (e.key === 'e' || e.key === 'E') {
-          let mode = prompt("Type 'E' to Export JSON or 'I' to Import JSON:");
-          if (mode) {
-              if (mode.toUpperCase() === 'E') {
-                  prompt("Copy your save data:", JSON.stringify({highScore, endlessHighWave, craftEctoplasm, craftFruitEssence, craftStarDust, statsGamesPlayed, statsGhostsEaten, statsMaxScore}));
-              } else if (mode.toUpperCase() === 'I') {
-                  let json = prompt("Paste your JSON:");
-                  if (json) {
-                      try {
-                          let data = JSON.parse(json);
-                          if (data.highScore !== undefined) highScore = data.highScore;
-                          if (data.endlessHighWave !== undefined) endlessHighWave = data.endlessHighWave;
-                          if (data.craftEctoplasm !== undefined) craftEctoplasm = data.craftEctoplasm;
-                          if (data.craftFruitEssence !== undefined) craftFruitEssence = data.craftFruitEssence;
-                          if (data.craftStarDust !== undefined) craftStarDust = data.craftStarDust;
-                          saveStorage();
-                          saveMsgText = 'JSON IMPORTED'; saveMsgTimer = 25;
-                      } catch(err) { alert("Invalid JSON"); }
-                  }
-              }
-          }
-          return;
-      }
-
-      if (e.key === 'r' || e.key === 'R') {
-          if (replayMode === 1) { replayMode = 0; saveMsgText = 'RECORD STOPPED'; saveMsgTimer = 25; }
-          else {
-              replayMode = 1; replays = [];
-              replaySeed = Math.floor(Math.random() * 1000000); randSeed = replaySeed;
-              replayDiffMode = diffMode; init(false);
-              saveMsgText = 'RECORDING...'; saveMsgTimer = 25;
-          }
-          return;
-      }
-      if (e.key === 't' || e.key === 'T') {
-          if (replayMode === 2) { replayMode = 0; saveMsgText = 'PLAYBACK STOPPED'; saveMsgTimer = 25; }
-          else if (replays.length > 0) {
-              replayMode = 2; replayIndex = 0;
-              randSeed = replaySeed; diffMode = replayDiffMode; init(false);
-              saveMsgText = 'PLAYING REPLAY'; saveMsgTimer = 25;
-          }
-          return;
-      }
-
-      if ((e.key === 'p' || e.key === 'P') && !gameOver) paused = !paused;
-      if (e.key === '1') { diffMode = 0; saveMsgText = 'DIFF: EASY'; saveMsgTimer = 20; playSound(400, 0.1, 'sine'); }
-      if (e.key === '2') { diffMode = 1; saveMsgText = 'DIFF: NORMAL'; saveMsgTimer = 20; playSound(500, 0.1, 'sine'); }
-      if (e.key === '3') { diffMode = 2; saveMsgText = 'DIFF: HARD'; saveMsgTimer = 20; playSound(600, 0.1, 'sine'); }
-
-      // Active Skills hotkeys
-      if (keybinds.skill1.includes(e.key)) attemptSkill('s1');
-      if (keybinds.skill2.includes(e.key)) attemptSkill('s2');
-      if (keybinds.skill3.includes(e.key)) attemptSkill('s3');
-      if (keybinds.skill4.includes(e.key)) attemptSkill('s4');
-
-      if ((e.key === 'v' || e.key === 'V') && !gameOver) saveGame();
-      if (e.key === 'l' || e.key === 'L') loadGame();
-  });
-  document.addEventListener('keyup', e => keys[e.key] = false);
-
-  function saveStorage() {
-      localStorage.setItem('kpac_highscore', highScore);
-      localStorage.setItem('kpac_endless_wave', endlessHighWave);
-      localStorage.setItem('kpac_ecto', craftEctoplasm);
-      localStorage.setItem('kpac_essence', craftFruitEssence);
-      localStorage.setItem('kpac_dust', craftStarDust);
-      localStorage.setItem('kpac_games', statsGamesPlayed);
-      localStorage.setItem('kpac_ghosts', statsGhostsEaten);
-      localStorage.setItem('kpac_maxscore', statsMaxScore);
-  }
-
-  function toggleGameMode() {
-      gameMode = gameMode === 0 ? 1 : 0;
-      init(false);
-      saveMsgText = gameMode === 1 ? 'MODE: ARCADE ENDLESS' : 'MODE: CAMPAIGN';
-      saveMsgTimer = 25;
-      playSound(700, 0.2, 'triangle');
-  }
-
-  function toggleCraftMenu() {
-      showCraftMenu = !showCraftMenu;
-      playSound(600, 0.15, 'sine');
-  }
-
-  function craftItem(recipe) {
-      if (recipe === 1) { // Super Pellet: 2 Ecto + 1 Dust
-          if (craftEctoplasm >= 2 && craftStarDust >= 1) {
-              craftEctoplasm -= 2;
-              craftStarDust -= 1;
-              frightTimer = 80;
-              score += 500;
-              saveMsgText = 'CRAFTED: SUPER PELLET!';
-              saveMsgTimer = 25;
-              saveStorage();
-              playSound(900, 0.3, 'sine');
-              addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffd700');
-              addPopup(px * TS + TS/2, py * TS + TS/2, 'SUPER PELLET!', '#ffd700');
-          } else {
-              saveMsgText = 'NEED: 2 ECTO + 1 DUST';
-              saveMsgTimer = 25;
-              playSound(200, 0.2, 'sawtooth');
-          }
-      } else if (recipe === 2) { // Chrono Warp: 2 Ecto + 2 Ess
-          if (craftEctoplasm >= 2 && craftFruitEssence >= 2) {
-              craftEctoplasm -= 2;
-              craftFruitEssence -= 2;
-              freezeSkillTimer = 80;
-              speedSkillTimer = 80;
-              saveMsgText = 'CRAFTED: CHRONO WARP!';
-              saveMsgTimer = 25;
-              saveStorage();
-              playSound(1000, 0.3, 'sine');
-              addShockwave(px * TS + TS/2, py * TS + TS/2, '#00ffff');
-              addPopup(px * TS + TS/2, py * TS + TS/2, 'CHRONO WARP!', '#00ffff');
-          } else {
-              saveMsgText = 'NEED: 2 ECTO + 2 ESSENCE';
-              saveMsgTimer = 25;
-              playSound(200, 0.2, 'sawtooth');
-          }
-      } else if (recipe === 3) { // Aegis Shield: 2 Dust + 2 Ess
-          if (craftStarDust >= 2 && craftFruitEssence >= 2) {
-              craftStarDust -= 2;
-              craftFruitEssence -= 2;
-              shieldActive = 1;
-              shieldHits = 2;
-              saveMsgText = 'CRAFTED: AEGIS SHIELD (2X)!';
-              saveMsgTimer = 25;
-              saveStorage();
-              playSound(1100, 0.3, 'square');
-              addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff', true);
-              addPopup(px * TS + TS/2, py * TS + TS/2, 'AEGIS SHIELD 2X!', '#00e5ff');
-          } else {
-              saveMsgText = 'NEED: 2 DUST + 2 ESSENCE';
-              saveMsgTimer = 25;
-              playSound(200, 0.2, 'sawtooth');
-          }
-      } else if (recipe === 4) { // Void Pulse Bomb: 3 Ecto + 3 Dust + 1 Ess
-          if (craftEctoplasm >= 3 && craftStarDust >= 3 && craftFruitEssence >= 1) {
-              craftEctoplasm -= 3;
-              craftStarDust -= 3;
-              craftFruitEssence -= 1;
-              for (let g of ghosts) {
-                  if (!g.isPhantom) {
-                      g.x = 7; g.y = 6; g.isDead = 0;
-                  }
-              }
-              for (let r = py - 5; r <= py + 5; r++) {
-                  for (let c = px - 5; c <= px + 5; c++) {
-                      if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
-                          if (map[r][c] >= 2 && map[r][c] <= 5) {
-                              score += 20;
-                              map[r][c] = 0;
-                              dotCount--;
-                          }
-                      }
-                  }
-              }
-              saveMsgText = 'CRAFTED: VOID BOMB!';
-              saveMsgTimer = 25;
-              saveStorage();
-              playSound(400, 0.5, 'sawtooth');
-              addExplosion(px * TS + TS/2, py * TS + TS/2, '#c832ff');
-              addPopup(px * TS + TS/2, py * TS + TS/2, 'VOID BOMB PULSE!', '#c832ff');
-          } else {
-              saveMsgText = 'NEED: 3 ECTO + 3 DUST + 1 ESS';
-              saveMsgTimer = 25;
-              playSound(200, 0.2, 'sawtooth');
-          }
-      }
-  }
-
-  function attemptSkill(type) {
-      if (replayMode === 1) replays.push({f: frameCount, act: type});
-      if (type === 's1') triggerFreezeSkill();
-      if (type === 's2') triggerSpeedSkill();
-      if (type === 's3') triggerMagnetSkill();
-      if (type === 's4') triggerShieldSkill();
-  }
-
-  function getInitLives() {
-      if (diffMode === 0) return 5;
-      if (diffMode === 2) return 2;
-      return 3;
-  }
-
-  function triggerFreezeSkill() {
-      if (freezeCooldown === 0 && !gameOver && !paused) {
-          freezeSkillTimer = 60;
-          freezeCooldown = 150;
-          saveMsgText = 'FREEZE SKILL!';
-          saveMsgTimer = 25;
-          playSound(800, 0.25, 'sine');
-          addPopup(px * TS + TS/2, py * TS + TS/2, 'FREEZE!', '#ffffff');
-          addSparks(px * TS + TS/2, py * TS + TS/2, '#ffffff', 12);
-      }
-  }
-
-  function triggerSpeedSkill() {
-      if (speedCooldown === 0 && !gameOver && !paused) {
-          speedSkillTimer = 80;
-          speedCooldown = 150;
-          saveMsgText = 'SPEED SPRINT!';
-          saveMsgTimer = 25;
-          playSound(950, 0.2, 'triangle');
-          addPopup(px * TS + TS/2, py * TS + TS/2, 'SPRINT!', '#00ffff');
-          addSparks(px * TS + TS/2, py * TS + TS/2, '#00ffff', 12);
-      }
-  }
-
-  function triggerMagnetSkill() {
-      if (magnetCooldown === 0 && !gameOver && !paused) {
-          magnetSkillTimer = 50;
-          magnetCooldown = 150;
-          saveMsgText = 'DOT MAGNET!';
-          saveMsgTimer = 25;
-          playSound(650, 0.3, 'sine');
-          addPopup(px * TS + TS/2, py * TS + TS/2, 'MAGNET!', '#ffeb3b');
-          addSparks(px * TS + TS/2, py * TS + TS/2, '#ffeb3b', 12);
-      }
-  }
-
-  function triggerShieldSkill() {
-      if (shieldCooldown === 0 && !gameOver && !paused) {
-          shieldActive = 1;
-          shieldHits = 1;
-          shieldCooldown = 200;
-          saveMsgText = 'GHOST SHIELD!';
-          saveMsgTimer = 25;
-          playSound(750, 0.3, 'square');
-          addPopup(px * TS + TS/2, py * TS + TS/2, 'SHIELD!', '#00e5ff');
-          addSparks(px * TS + TS/2, py * TS + TS/2, '#00e5ff', 12);
-      }
-  }
-
-  function saveGame() {
-      const data = {
-          px, py, pdx, pdy, ndx, ndy,
-          ghosts, map, score, level, lives, diffMode,
-          frightTimer, freezeSkillTimer, speedSkillTimer, magnetSkillTimer, shieldActive, shieldHits,
-          freezeCooldown, speedCooldown, magnetCooldown, shieldCooldown,
-          bossHp, dotCount, frameCount, fruitActive, fruitTimer, gameOver, vipX, vipY, vipActive,
-          gameMode, endlessWave, endlessHighWave, craftEctoplasm, craftFruitEssence, craftStarDust
-      };
-      localStorage.setItem('kpac_save_state', JSON.stringify(data));
-      saveMsgText = 'GAME SAVED';
-      saveMsgTimer = 25;
-      playSound(700, 0.15, 'sine');
-  }
-
-  function loadGame() {
-      const raw = localStorage.getItem('kpac_save_state');
-      if (!raw) {
-          saveMsgText = 'NO SAVE FOUND';
-          saveMsgTimer = 25;
-          playSound(200, 0.2, 'sawtooth');
-          return;
-      }
+  // Web Audio Synthesizer
+  let audioCtx = null;
+  function playSound(freq, duration, type = 'sine', slide = 0) {
       try {
-          const data = JSON.parse(raw);
-          px = data.px; py = data.py; pdx = data.pdx; pdy = data.pdy;
-          ndx = data.ndx; ndy = data.ndy;
-          ghosts = data.ghosts; map = data.map;
-          score = data.score; level = data.level; lives = data.lives;
-          diffMode = data.diffMode !== undefined ? data.diffMode : 1;
-          frightTimer = data.frightTimer;
-          freezeSkillTimer = data.freezeSkillTimer || 0;
-          speedSkillTimer = data.speedSkillTimer || 0;
-          magnetSkillTimer = data.magnetSkillTimer || 0;
-          shieldActive = data.shieldActive || 0;
-          shieldHits = data.shieldHits || 1;
-          freezeCooldown = data.freezeCooldown || 0;
-          speedCooldown = data.speedCooldown || 0;
-          magnetCooldown = data.magnetCooldown || 0;
-          shieldCooldown = data.shieldCooldown || 0;
-          bossHp = data.bossHp || 8;
-          dotCount = data.dotCount;
-          frameCount = data.frameCount; fruitActive = data.fruitActive;
-          fruitTimer = data.fruitTimer; gameOver = data.gameOver;
-          vipX = data.vipX || 7; vipY = data.vipY || 7; vipActive = data.vipActive || 0;
-          gameMode = data.gameMode || 0; endlessWave = data.endlessWave || 1; endlessHighWave = data.endlessHighWave || 1;
-          craftEctoplasm = data.craftEctoplasm || 0; craftFruitEssence = data.craftFruitEssence || 0; craftStarDust = data.craftStarDust || 0;
-          paused = false;
-          saveMsgText = 'GAME LOADED';
-          saveMsgTimer = 25;
-          playSound(900, 0.15, 'sine');
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          let osc = audioCtx.createOscillator();
+          let gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          if (slide !== 0) osc.frequency.linearRampToValueAtTime(freq + slide, audioCtx.currentTime + duration);
+          gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
       } catch(e) {}
   }
 
-  let popups = [];
-  let particles = [];
-  let shockwaves = [];
+  function addShockwave(x, y, color) {
+      shockwaves.push({x, y, r: 2, maxR: 28, color, alpha: 1.0});
+  }
 
-  function addSparks(cx, cy, color, count=8) {
+  function addSparks(cx, cy, color, count = 12) {
       for (let i = 0; i < count; i++) {
           let ang = Math.random() * Math.PI * 2;
-          let spd = 1 + Math.random() * 4;
+          let spd = 1.0 + Math.random() * 3.5;
           particles.push({
               x: cx, y: cy,
               vx: Math.cos(ang) * spd,
               vy: Math.sin(ang) * spd,
-              life: 20 + Math.random() * 10,
-              maxLife: 30,
-              color: color
+              color,
+              life: 25,
+              maxLife: 25
           });
       }
   }
 
   function addExplosion(cx, cy, color) {
-      addShockwave(cx, cy, color, true);
-      addShockwave(cx, cy, '#ffffff', false);
+      addShockwave(cx, cy, color);
+      addShockwave(cx, cy, '#ffffff');
       addSparks(cx, cy, color, 15);
-      addSparks(cx, cy, '#ffffff', 10);
-      screenShake = 15;
+      addSparks(cx, cy, '#ffffff', 8);
+      screenShake = 12;
   }
 
-  function addPopup(cx, cy, text, color='#fff') {
-      popups.push({ x: cx, y: cy, text: text, color: color, life: 20 });
+  function loadHighScore() {
+      try {
+          highScore = parseInt(localStorage.getItem('kpac_high') || '0', 10);
+          endlessHighWave = parseInt(localStorage.getItem('kpac_endless_high') || '1', 10);
+          craftEctoplasm = parseInt(localStorage.getItem('kpac_ecto') || '0', 10);
+          craftFruitEssence = parseInt(localStorage.getItem('kpac_ess') || '0', 10);
+          craftStarDust = parseInt(localStorage.getItem('kpac_dust') || '0', 10);
+          relicCrown = parseInt(localStorage.getItem('kpac_relic_crown') || '0', 10);
+          relicHourglass = parseInt(localStorage.getItem('kpac_relic_hourglass') || '0', 10);
+          relicOrb = parseInt(localStorage.getItem('kpac_relic_orb') || '0', 10);
+          relicAegis = parseInt(localStorage.getItem('kpac_relic_aegis') || '0', 10);
+          relicStone = parseInt(localStorage.getItem('kpac_relic_stone') || '0', 10);
+          petType = parseInt(localStorage.getItem('kpac_pet_type') || '0', 10);
+          petLevel = parseInt(localStorage.getItem('kpac_pet_level') || '1', 10);
+          statsGamesPlayed = parseInt(localStorage.getItem('kpac_stat_games') || '0', 10);
+          statsGhostsEaten = parseInt(localStorage.getItem('kpac_stat_ghosts') || '0', 10);
+          statsMaxScore = parseInt(localStorage.getItem('kpac_stat_maxsc') || '0', 10);
+      } catch(e) {}
   }
 
-  function addShockwave(cx, cy, color='#ffb852', is3D=false) {
-      shockwaves.push({ x: cx, y: cy, r: 2, maxR: 28, alpha: 1.0, color: color, is3D: is3D });
+  function saveHighScore() {
+      try {
+          localStorage.setItem('kpac_high', highScore);
+          localStorage.setItem('kpac_endless_high', endlessHighWave);
+          localStorage.setItem('kpac_ecto', craftEctoplasm);
+          localStorage.setItem('kpac_ess', craftFruitEssence);
+          localStorage.setItem('kpac_dust', craftStarDust);
+          localStorage.setItem('kpac_relic_crown', relicCrown);
+          localStorage.setItem('kpac_relic_hourglass', relicHourglass);
+          localStorage.setItem('kpac_relic_orb', relicOrb);
+          localStorage.setItem('kpac_relic_aegis', relicAegis);
+          localStorage.setItem('kpac_relic_stone', relicStone);
+          localStorage.setItem('kpac_pet_type', petType);
+          localStorage.setItem('kpac_pet_level', petLevel);
+          localStorage.setItem('kpac_stat_games', statsGamesPlayed);
+          localStorage.setItem('kpac_stat_ghosts', statsGhostsEaten);
+          localStorage.setItem('kpac_stat_maxsc', statsMaxScore);
+      } catch(e) {}
+  }
+
+  function getInitLives() {
+      let base = (diffMode === 0) ? 5 : ((diffMode === 2) ? 2 : 3);
+      if (relicStone) base += 1;
+      return base;
   }
 
   function generateProceduralMaze(wave) {
-      let m = [];
+      map = [];
       for (let r = 0; r < ROWS; r++) {
-          let row = [];
+          map[r] = [];
           for (let c = 0; c < COLS; c++) {
-              if (r === 0 || r === ROWS - 1 || c === 0 || c === COLS - 1) row.push(1);
-              else row.push(2);
+              if (r === 0 || r === ROWS - 1 || c === 0 || c === COLS - 1) map[r][c] = 1;
+              else map[r][c] = 2;
           }
-          m.push(row);
       }
       let seed = wave * 179 + 31;
       for (let r = 2; r < ROWS - 2; r += 2) {
@@ -950,32 +665,41 @@
               let opp = COLS - 1 - c;
               let blk = (seed + r * 5 + c * 7) % 5;
               if (blk === 0) {
-                  m[r][c] = 1; m[r][opp] = 1;
-                  m[r+1][c] = 1; m[r+1][opp] = 1;
+                  map[r][c] = 1; map[r][opp] = 1;
+                  map[r+1][c] = 1; map[r+1][opp] = 1;
               } else if (blk === 1) {
-                  m[r][c] = 1; m[r][opp] = 1;
-                  m[r][c+1] = 1; m[r][opp-1] = 1;
+                  map[r][c] = 1; map[r][opp] = 1;
+                  map[r][c+1] = 1; map[r][opp-1] = 1;
               } else if (blk === 2) {
-                  m[r][c] = 1; m[r][opp] = 1;
+                  map[r][c] = 1; map[r][opp] = 1;
               }
           }
       }
       for (let r = 6; r <= 8; r++) {
-          for (let c = 5; c <= 9; c++) m[r][c] = 0;
+          for (let c = 5; c <= 9; c++) map[r][c] = 0;
       }
-      m[6][5] = 1; m[7][5] = 1; m[8][5] = 1;
-      m[6][9] = 1; m[7][9] = 1; m[8][9] = 1;
-      m[8][6] = 1; m[8][7] = 1; m[8][8] = 1;
-      m[6][6] = 1; m[6][7] = 1; m[6][8] = 1;
-      m[7][0] = 0; m[7][1] = 2; m[7][COLS-1] = 0; m[7][COLS-2] = 2;
-      m[12][7] = 0; m[11][7] = 2; m[12][6] = 2; m[12][8] = 2;
-      m[1][1] = 3; m[1][COLS-2] = 3; m[ROWS-2][1] = 3; m[ROWS-2][COLS-2] = 3;
-      m[3][3] = 4; m[3][COLS-4] = 5; m[ROWS-4][3] = 5; m[ROWS-4][COLS-4] = 4;
-      if (wave >= 3) {
-          if (m[4][7] === 2) m[4][7] = 6;
-          if (m[10][7] === 2) m[10][7] = 6;
+      map[6][5] = 1; map[7][5] = 1; map[8][5] = 1;
+      map[6][9] = 1; map[7][9] = 1; map[8][9] = 1;
+      map[8][6] = 1; map[8][7] = 1; map[8][8] = 1;
+      map[6][6] = 1; map[6][7] = 1; map[6][8] = 1;
+
+      map[7][0] = 0; map[7][1] = 2;
+      map[7][COLS-1] = 0; map[7][COLS-2] = 2;
+
+      map[12][7] = 0; map[11][7] = 2; map[12][6] = 2; map[12][8] = 2;
+      map[1][1] = 3; map[1][COLS-2] = 3;
+      map[ROWS-2][1] = 3; map[ROWS-2][COLS-2] = 3;
+      map[3][3] = 4; map[3][COLS-4] = 5;
+      map[ROWS-4][3] = 5; map[ROWS-4][COLS-4] = 4;
+
+      if (wave >= 2) {
+          if (map[3][7] === 2) map[3][7] = 9;
+          if (map[11][7] === 2) map[11][7] = 9;
       }
-      return m;
+      if (wave >= 4) {
+          if (map[5][3] === 2) map[5][3] = 10;
+          if (map[5][COLS-4] === 2) map[5][COLS-4] = 10;
+      }
   }
 
   function init(keepScore) {
@@ -985,18 +709,38 @@
           else endlessWave = 1;
           lives = getInitLives();
       }
-      if (gameMode === 1) {
-          map = generateProceduralMaze(endlessWave);
-      } else {
-          const mapIndex = (level - 1) % 20;
-          map = maps[mapIndex].map(row => [...row]);
-      }
-      px = 7; py = 12;
-      pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+      gameOver = 0;
+      paused = 0;
+      dotCount = 0;
+      deathTimer = 0;
       sludgeTraps = [];
       playerSlowTimer = 0;
+      petBurstTimer = 0;
+      petCooldown = 0;
 
-      // 5 AI Ghost Personalities with Procedural Traits
+      if (gameMode === 1) {
+          generateProceduralMaze(endlessWave);
+          for (let r = 0; r < ROWS; r++) {
+              for (let c = 0; c < COLS; c++) {
+                  if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
+              }
+          }
+      } else {
+          let mapIdx = (level - 1) % 20;
+          map = [];
+          for (let r = 0; r < ROWS; r++) {
+              map[r] = [];
+              for (let c = 0; c < COLS; c++) {
+                  map[r][c] = maps[mapIdx][r][c];
+                  if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
+              }
+          }
+      }
+
+      px = 7; py = 12;
+      pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+      petX = px; petY = py;
+
       let effWave = (gameMode === 1) ? endlessWave : level;
       let t0 = (effWave >= 2) ? ((effWave % 5) + 1) : 0;
       let t1 = (effWave >= 3) ? (((effWave + 2) % 5) + 1) : 0;
@@ -1005,31 +749,25 @@
       let t4 = (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0;
 
       ghosts = [
-          {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t0},
-          {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t1},
-          {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t2},
-          {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t3},
-          {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: t4}
+          {x: 7, y: 6, c: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: t0, stunTimer: 0},
+          {x: 6, y: 7, c: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: -1, dirY: 0, trait: t1, stunTimer: 0},
+          {x: 8, y: 7, c: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 1, dirY: 0, trait: t2, stunTimer: 0},
+          {x: 7, y: 7, c: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 1, trait: t3, stunTimer: 0},
+          {x: 7, y: 5, c: '#aa00ff', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: t4, stunTimer: 0}
       ];
 
       if (gameMode === 0 && level === 20) {
-          // Stage 20 Ghost King Boss
-          ghosts.push({x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0, trait: 5});
-          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, trait: 0});
-          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, trait: 0});
+          ghosts.push({x: 7, y: 6, c: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: 5, stunTimer: 0});
+          ghosts.push({x: 0, y: 0, c: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 0, trait: 0, stunTimer: 0});
+          ghosts.push({x: 0, y: 0, c: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 0, trait: 0, stunTimer: 0});
           numGhosts = 6;
           bossHp = 8;
           bossMaxHp = 8;
           phantomSpawnTimer = 0;
-      } else if (effWave >= 4) {
-          numGhosts = 5;
-      } else if (effWave === 3) {
-          numGhosts = 4;
-      } else if (effWave === 2) {
-          numGhosts = 3;
-      } else {
-          numGhosts = 2;
-      }
+      } else if (effWave >= 4) numGhosts = 5;
+      else if (effWave === 3) numGhosts = 4;
+      else if (effWave === 2) numGhosts = 3;
+      else numGhosts = 2;
 
       vipActive = (gameMode === 0 && level % 5 === 0 && level !== 20) ? 1 : 0;
       vipX = 7; vipY = 7;
@@ -1037,69 +775,272 @@
           map[Math.floor(ROWS/2)][Math.floor(COLS/2)] = 8;
       }
 
-      frightTimer = 0;
-      victoryTimer = 0;
-      deathTimer = 0;
+      frightTimer = 0; victoryTimer = 0;
       freezeSkillTimer = 0; freezeCooldown = 0;
       speedSkillTimer = 0; speedCooldown = 0;
       magnetSkillTimer = 0; magnetCooldown = 0;
       shieldActive = 0; shieldCooldown = 0; shieldHits = 0;
-      gameOver = 0; dotCount = 0; frameCount = 0;
-      paused = false;
-      fruitActive = 0;
-      fruitTimer = 0;
-      screenShake = 0;
-      popups = [];
-      particles = [];
-      shockwaves = [];
+      fruitActive = 0; fruitTimer = 0;
+      shockwaves = []; particles = []; popups = [];
       showCraftMenu = false;
-      
-      for (let r = 0; r < ROWS; r++) {
-          for (let c = 0; c < COLS; c++) {
-              if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
+  }
+
+  function craftItem(recipe) {
+      if (recipe === 1) {
+          if (craftEctoplasm >= 2 && craftStarDust >= 1) {
+              craftEctoplasm -= 2; craftStarDust -= 1;
+              frightTimer = relicCrown ? 120 : 80;
+              score += 500;
+              saveMsgText = "CRAFTED: SUPER PELLET!"; saveMsgTimer = 25;
+              addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffd700');
+              playSound(520, 0.25, 'triangle', 200);
+          } else {
+              saveMsgText = "NEED: 2 ECTO + 1 DUST"; saveMsgTimer = 25;
+              playSound(180, 0.15, 'sawtooth');
           }
+      } else if (recipe === 2) {
+          if (craftEctoplasm >= 2 && craftFruitEssence >= 2) {
+              craftEctoplasm -= 2; craftFruitEssence -= 2;
+              freezeSkillTimer = 80; speedSkillTimer = 80;
+              saveMsgText = "CRAFTED: CHRONO WARP!"; saveMsgTimer = 25;
+              addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
+              playSound(660, 0.3, 'sine', -200);
+          } else {
+              saveMsgText = "NEED: 2 ECTO + 2 ESS"; saveMsgTimer = 25;
+              playSound(180, 0.15, 'sawtooth');
+          }
+      } else if (recipe === 3) {
+          if (craftStarDust >= 2 && craftFruitEssence >= 2) {
+              craftStarDust -= 2; craftFruitEssence -= 2;
+              shieldActive = 1; shieldHits = 2;
+              saveMsgText = "CRAFTED: AEGIS SHIELD 2X!"; saveMsgTimer = 25;
+              addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
+              playSound(440, 0.3, 'square', 150);
+          } else {
+              saveMsgText = "NEED: 2 DUST + 2 ESS"; saveMsgTimer = 25;
+              playSound(180, 0.15, 'sawtooth');
+          }
+      } else if (recipe === 4) {
+          if (craftEctoplasm >= 3 && craftStarDust >= 3 && craftFruitEssence >= 1) {
+              craftEctoplasm -= 3; craftStarDust -= 3; craftFruitEssence -= 1;
+              for (let i = 0; i < numGhosts; i++) {
+                  if (!ghosts[i].isPhantom) { ghosts[i].x = 7; ghosts[i].y = 6; ghosts[i].isDead = 0; }
+              }
+              for (let r = py - 5; r <= py + 5; r++) {
+                  for (let c = px - 5; c <= px + 5; c++) {
+                      if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                          if (map[r][c] >= 2 && map[r][c] <= 5) {
+                              score += 20; map[r][c] = 0; dotCount--;
+                          }
+                      }
+                  }
+              }
+              saveMsgText = "CRAFTED: VOID BOMB PULSE!"; saveMsgTimer = 25;
+              addExplosion(px * TS + TS/2, py * TS + TS/2, '#c832ff');
+              playSound(220, 0.4, 'sawtooth', -100);
+          } else {
+              saveMsgText = "NEED: 3 ECTO + 3 DUST + 1 ESS"; saveMsgTimer = 25;
+              playSound(180, 0.15, 'sawtooth');
+          }
+      } else if (recipe === 5) {
+          if (relicCrown) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          else if (craftEctoplasm >= 4 && craftStarDust >= 3) {
+              craftEctoplasm -= 4; craftStarDust -= 3; relicCrown = 1; statsRelicsForged++;
+              saveHighScore(); saveMsgText = "FORGED: GHOST KING CROWN!"; saveMsgTimer = 30;
+              addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffd700');
+              playSound(750, 0.5, 'triangle', 250);
+          } else { saveMsgText = "NEED: 4 ECTO + 3 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
+      } else if (recipe === 6) {
+          if (relicHourglass) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          else if (craftFruitEssence >= 4 && craftStarDust >= 3) {
+              craftFruitEssence -= 4; craftStarDust -= 3; relicHourglass = 1; statsRelicsForged++;
+              saveHighScore(); saveMsgText = "FORGED: CHRONO HOURGLASS!"; saveMsgTimer = 30;
+              addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
+              playSound(750, 0.5, 'triangle', 250);
+          } else { saveMsgText = "NEED: 4 ESS + 3 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
+      } else if (recipe === 7) {
+          if (relicOrb) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          else if (craftEctoplasm >= 4 && craftStarDust >= 4) {
+              craftEctoplasm -= 4; craftStarDust -= 4; relicOrb = 1; statsRelicsForged++;
+              saveHighScore(); saveMsgText = "FORGED: ASTRAL ORB!"; saveMsgTimer = 30;
+              addExplosion(px * TS + TS/2, py * TS + TS/2, '#ba68c8');
+              playSound(750, 0.5, 'triangle', 250);
+          } else { saveMsgText = "NEED: 4 ECTO + 4 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
+      } else if (recipe === 8) {
+          if (relicAegis) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          else if (craftFruitEssence >= 4 && craftStarDust >= 4) {
+              craftFruitEssence -= 4; craftStarDust -= 4; relicAegis = 1; shieldActive = 1; shieldHits = 3; statsRelicsForged++;
+              saveHighScore(); saveMsgText = "FORGED: SUN TITAN AEGIS!"; saveMsgTimer = 30;
+              addShockwave(px * TS + TS/2, py * TS + TS/2, '#ff9800');
+              playSound(750, 0.5, 'triangle', 250);
+          } else { saveMsgText = "NEED: 4 ESS + 4 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
+      } else if (recipe === 9) {
+          if (relicStone) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          else if (craftEctoplasm >= 5 && craftFruitEssence >= 5 && craftStarDust >= 5) {
+              craftEctoplasm -= 5; craftFruitEssence -= 5; craftStarDust -= 5; relicStone = 1; lives += 1; statsRelicsForged++;
+              saveHighScore(); saveMsgText = "FORGED: PHILOSOPHER STONE!"; saveMsgTimer = 30;
+              addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffd700');
+              playSound(880, 0.6, 'sine', 300);
+          } else { saveMsgText = "NEED: 5 ECTO + 5 ESS + 5 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
       }
   }
 
-  function updateSkillButtons() {
-      document.getElementById('btnFreeze').disabled = freezeCooldown > 0;
-      document.getElementById('btnSprint').disabled = speedCooldown > 0;
-      document.getElementById('btnMagnet').disabled = magnetCooldown > 0;
-      document.getElementById('btnShield').disabled = shieldCooldown > 0 || shieldActive > 0;
-
-      document.getElementById('btnFreeze').classList.toggle('active', freezeSkillTimer > 0);
-      document.getElementById('btnSprint').classList.toggle('active', speedSkillTimer > 0);
-      document.getElementById('btnMagnet').classList.toggle('active', magnetSkillTimer > 0);
-      document.getElementById('btnShield').classList.toggle('active', shieldActive > 0);
+  function attemptSkill(s) {
+      if (s === 's1' && freezeCooldown === 0) {
+          freezeSkillTimer = 60; freezeCooldown = 150;
+          saveMsgText = "FREEZE SKILL!"; saveMsgTimer = 20;
+          addSparks(px * TS + TS/2, py * TS + TS/2, '#ffffff', 12);
+          playSound(600, 0.2, 'sine');
+      } else if (s === 's2' && speedCooldown === 0) {
+          speedSkillTimer = 80; speedCooldown = 150;
+          saveMsgText = "SPEED SPRINT!"; saveMsgTimer = 20;
+          addSparks(px * TS + TS/2, py * TS + TS/2, '#00e5ff', 12);
+          playSound(700, 0.2, 'triangle', 100);
+      } else if (s === 's3' && magnetCooldown === 0) {
+          magnetSkillTimer = 50; magnetCooldown = 150;
+          saveMsgText = "DOT MAGNET!"; saveMsgTimer = 20;
+          addSparks(px * TS + TS/2, py * TS + TS/2, '#ffeb3b', 12);
+          playSound(550, 0.2, 'square');
+      } else if (s === 's4' && shieldCooldown === 0) {
+          shieldActive = 1; shieldHits = Math.max(1, shieldHits + 1); shieldCooldown = 200;
+          saveMsgText = "GHOST SHIELD!"; saveMsgTimer = 20;
+          addSparks(px * TS + TS/2, py * TS + TS/2, '#00e5ff', 12);
+          playSound(480, 0.25, 'sine');
+      }
   }
+
+  function triggerPetUltimate() {
+      if (petCooldown === 0 && !gameOver && !paused && petActive) {
+          petCooldown = 180; petBurstTimer = 40;
+          if (petType === 0) {
+              for (let g of ghosts) { g.stunTimer = 60; addSparks(g.x * TS + TS/2, g.y * TS + TS/2, '#ff1744', 8); }
+              if (gameMode === 0 && level === 20 && bossHp > 0) {
+                  bossHp--; if (bossHp <= 0) victoryTimer = 30;
+              }
+              saveMsgText = "PET: PYRE FIRESTORM!"; addExplosion(petX * TS + TS/2, petY * TS + TS/2, '#ff1744');
+          } else if (petType === 1) {
+              for (let r = py - 5; r <= py + 5; r++) {
+                  for (let c = px - 5; c <= px + 5; c++) {
+                      if (r >= 0 && r < ROWS && c >= 0 && c < COLS && map[r][c] >= 2 && map[r][c] <= 5) {
+                          score += 15; map[r][c] = 0; dotCount--;
+                      }
+                  }
+              }
+              freezeSkillTimer = 50; saveMsgText = "PET: EMP VACUUM STORM!";
+              addShockwave(petX * TS + TS/2, petY * TS + TS/2, '#00e5ff');
+          } else if (petType === 2) {
+              shieldActive = 1; shieldHits += 2; frightTimer = relicCrown ? 90 : 60;
+              saveMsgText = "PET: DIVINE AEGIS + FRIGHT!"; addShockwave(petX * TS + TS/2, petY * TS + TS/2, '#f06292');
+          } else if (petType === 3) {
+              score += 1000; craftStarDust += 1; craftFruitEssence += 1; craftEctoplasm += 1;
+              saveMsgText = "PET: MIDAS GOLDEN RAIN!"; addExplosion(petX * TS + TS/2, petY * TS + TS/2, '#ffd700');
+          }
+          saveMsgTimer = 25;
+          playSound(800, 0.4, 'triangle', 200);
+      }
+  }
+
+  function cyclePetCompanion() {
+      petType = (petType + 1) % 4;
+      let names = ["Blinky Jr (Pyre)", "Inky (Cyan Spark)", "Pinky (Guardian)", "Kinglet (Gold)"];
+      saveMsgText = `PET: ${names[petType]}`;
+      saveMsgTimer = 25;
+      addSparks(px * TS + TS/2, py * TS + TS/2, '#ffd700', 10);
+      saveHighScore();
+      playSound(650, 0.2, 'sine');
+  }
+
+  function toggleCraftMenu() {
+      showCraftMenu = !showCraftMenu;
+  }
+
+  function toggleGameMode() {
+      gameMode = gameMode === 0 ? 1 : 0;
+      init(false);
+      saveMsgText = `MODE: ${gameMode ? "ARCADE ENDLESS" : "CAMPAIGN"}`;
+      saveMsgTimer = 25;
+  }
+
+  // Input bindings
+  window.addEventListener('keydown', e => {
+      let key = e.key.toUpperCase();
+      if (key === 'ARROWUP' || key === 'W') ndx = 0, ndy = -1;
+      else if (key === 'ARROWDOWN' || key === 'S') ndx = 0, ndy = 1;
+      else if (key === 'ARROWLEFT' || key === 'A') ndx = -1, ndy = 0;
+      else if (key === 'ARROWRIGHT' || key === 'D') ndx = 1, ndy = 0;
+      else if (key === 'F') attemptSkill('s1');
+      else if (key === 'Z') attemptSkill('s2');
+      else if (key === 'M') attemptSkill('s3');
+      else if (key === 'B') attemptSkill('s4');
+      else if (key === 'U') triggerPetUltimate();
+      else if (key === 'P') cyclePetCompanion();
+      else if (key === 'C') toggleCraftMenu();
+      else if (key === 'TAB' && showCraftMenu) { e.preventDefault(); craftMenuPage = craftMenuPage ? 0 : 1; }
+      else if (key === 'O') toggleGameMode();
+      else if (key === ' ' || key === 'ESCAPE') paused = !paused;
+      else if (key === 'H') showHelp = !showHelp;
+      else if (key === 'ENTER' && gameOver) init(false);
+      else if (showCraftMenu && craftMenuPage === 0) {
+          if (key === '1' || key === '7') craftItem(1);
+          if (key === '2' || key === '8') craftItem(2);
+          if (key === '3' || key === '9') craftItem(3);
+          if (key === '4' || key === '0') craftItem(4);
+      } else if (showCraftMenu && craftMenuPage === 1) {
+          if (key === '1' || key === '5') craftItem(5);
+          if (key === '2' || key === '6') craftItem(6);
+          if (key === '3' || key === '7') craftItem(7);
+          if (key === '4' || key === '8') craftItem(8);
+          if (key === '5' || key === '9') craftItem(9);
+      } else {
+          if (key === '7') craftItem(1);
+          if (key === '8') craftItem(2);
+          if (key === '9') craftItem(3);
+          if (key === '0') craftItem(4);
+      }
+  });
 
   function update() {
+      if (screenShake > 0) screenShake--;
       if (saveMsgTimer > 0) saveMsgTimer--;
-      if (playerSlowTimer > 0) playerSlowTimer--;
-      if (gameOver) {
-          if (keys['Enter']) init(false);
-          return;
+      if (playerSlowTimer > 0 && !relicAegis) playerSlowTimer--;
+      if (showHelp || gameOver || paused) return;
+
+      if (relicAegis) {
+          relicAegisTimer++;
+          if (relicAegisTimer >= 250) {
+              relicAegisTimer = 0;
+              if (shieldHits < 3) {
+                  shieldActive = 1; shieldHits++;
+                  addShockwave(px * TS + TS/2, py * TS + TS/2, '#ff9800');
+                  saveMsgText = "AEGIS: SHIELD RECHARGED!"; saveMsgTimer = 20;
+              }
+          }
       }
-      if (showHelp || showCraftMenu || paused) return;
 
       if (deathTimer > 0) {
           deathTimer--;
           if (deathTimer % 2 === 0) {
-              const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
-              addSparks(px * TS + TS/2, py * TS + TS/2, colors[Math.floor(Math.random() * colors.length)], 3);
+              let cols = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
+              let rc = cols[Math.floor(Math.random() * cols.length)];
+              addShockwave(px * TS + TS/2, py * TS + TS/2, rc);
+              addSparks(px * TS + TS/2, py * TS + TS/2, rc, 5);
           }
           if (deathTimer === 0) {
               lives--;
+              playSound(150, 0.4, 'sawtooth');
               if (lives <= 0) {
-                  gameOver = 1;
-                  statsGamesPlayed++;
-                  saveStorage();
+                  gameOver = 1; statsGamesPlayed++;
+                  if (score > statsMaxScore) statsMaxScore = score;
+                  saveHighScore();
               } else {
-                  px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+                  px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0; petX = px; petY = py;
+                  let effWave = (gameMode === 1) ? endlessWave : level;
+                  ghosts[0] = {x: 7, y: 6, c: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: (effWave >= 2) ? ((effWave % 5) + 1) : 0, stunTimer: 0};
+                  ghosts[1] = {x: 6, y: 7, c: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: -1, dirY: 0, trait: (effWave >= 3) ? (((effWave + 2) % 5) + 1) : 0, stunTimer: 0};
+                  ghosts[2] = {x: 8, y: 7, c: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 1, dirY: 0, trait: (effWave >= 4) ? (((effWave + 3) % 5) + 1) : 0, stunTimer: 0};
+                  ghosts[3] = {x: 7, y: 7, c: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 1, trait: (effWave >= 5) ? (((effWave + 4) % 5) + 1) : 0, stunTimer: 0};
+                  ghosts[4] = {x: 7, y: 5, c: '#aa00ff', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0, stunTimer: 0};
               }
-          }
-          for (let i = particles.length - 1; i >= 0; i--) {
-              let p = particles[i]; p.x += p.vx; p.y += p.vy; p.vx *= 0.95; p.vy += 0.15; p.life--; if (p.life <= 0) particles.splice(i, 1);
           }
           return;
       }
@@ -1110,429 +1051,307 @@
               if (gameMode === 1) {
                   endlessWave++;
                   if (endlessWave > endlessHighWave) endlessHighWave = endlessWave;
-                  score += 1000 + endlessWave * 200;
-                  craftStarDust += 2;
-                  craftFruitEssence += 1;
-                  saveStorage();
-                  playSound(1200, 0.6, 'sine');
-                  init(true);
+                  let mult = relicStone ? 2 : 1;
+                  score += (1000 + endlessWave * 200) * mult;
+                  craftStarDust += 2; craftFruitEssence += 1;
+                  saveHighScore(); init(true);
               } else {
                   if (level === 20) {
-                      gameOver = 2;
-                      statsGamesPlayed++;
-                      saveStorage();
-                      playSound(1200, 0.8, 'sine');
+                      gameOver = 2; statsGamesPlayed++; saveHighScore();
                   } else {
-                      level++;
-                      playSound(800, 0.5, 'sine');
-                      init(true);
+                      level++; init(true);
                   }
               }
           }
           return;
       }
-      
-      if (replayMode === 2) {
-          while (replayIndex < replays.length && replays[replayIndex].f === frameCount) {
-              let ev = replays[replayIndex];
-              if (ev.act === 'move') { ndx = ev.nx; ndy = ev.ny; }
-              else if (ev.act === 's1') triggerFreezeSkill();
-              else if (ev.act === 's2') triggerSpeedSkill();
-              else if (ev.act === 's3') triggerMagnetSkill();
-              else if (ev.act === 's4') triggerShieldSkill();
-              replayIndex++;
-          }
-      } else {
-          let oldNdx = ndx, oldNdy = ndy;
-          if (isKey(keybinds.left)) { ndx = -1; ndy = 0; }
-          if (isKey(keybinds.right)) { ndx = 1; ndy = 0; }
-          if (isKey(keybinds.up)) { ndx = 0; ndy = -1; }
-          if (isKey(keybinds.down)) { ndx = 0; ndy = 1; }
-          if (replayMode === 1 && (ndx !== oldNdx || ndy !== oldNdy)) {
-              replays.push({f: frameCount, act: 'move', nx: ndx, ny: ndy});
-          }
-      }
-      
+
       if (freezeCooldown > 0) freezeCooldown--;
       if (speedCooldown > 0) speedCooldown--;
       if (magnetCooldown > 0) magnetCooldown--;
       if (shieldCooldown > 0) shieldCooldown--;
+      if (petCooldown > 0) petCooldown--;
+      if (petBurstTimer > 0) petBurstTimer--;
 
       if (freezeSkillTimer > 0) freezeSkillTimer--;
       if (frightTimer > 0) frightTimer--;
-      if (screenShake > 0) screenShake--;
 
-      updateSkillButtons();
-
-      // Sludge Traps Update
-      for (let i = sludgeTraps.length - 1; i >= 0; i--) {
+      for (let i = 0; i < sludgeTraps.length; i++) {
           sludgeTraps[i].life--;
-          if (sludgeTraps[i].life <= 0) sludgeTraps.splice(i, 1);
+          if (sludgeTraps[i].life <= 0) { sludgeTraps.splice(i, 1); i--; }
       }
+      for (let g of ghosts) { if (g.stunTimer > 0) g.stunTimer--; }
 
-      // Stage 20 Phantom Clone Spawner
-      if (gameMode === 0 && level === 20 && bossHp > 0) {
-          phantomSpawnTimer += (bossHp <= bossMaxHp / 2) ? 2 : 1;
-          if (phantomSpawnTimer >= 50) {
-              phantomSpawnTimer = 0;
-              for (let k = 6; k <= 7; k++) {
-                  if (ghosts[k].phantomTimer <= 0) {
-                      ghosts[k] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 80, isDead: 0, trait: 0};
-                      if (numGhosts < 8) numGhosts = 8;
-                      break;
-                  }
-              }
-          }
-      }
-      for (let k = 6; k <= 7; k++) {
-          if (ghosts[k].isPhantom && ghosts[k].phantomTimer > 0) {
-              ghosts[k].phantomTimer--;
-          }
-      }
-
-      // Dead Ghost Returning Eyes Step
-      for (let i = 0; i < numGhosts; i++) {
-          let g = ghosts[i];
-          if (g.isDead) {
-              if (frameCount % 2 === 0) {
-                  if (g.x < 7) g.x++;
-                  else if (g.x > 7) g.x--;
-                  if (g.y < 6) g.y++;
-                  else if (g.y > 6) g.y--;
-                  if (g.x === 7 && g.y === 6) g.isDead = 0;
-              }
-          }
-      }
-      
-      // VIP Escort Logic
-      if (vipActive && freezeSkillTimer === 0) {
-          if (frameCount % 3 === 0) {
-              let dirs = [[1,0], [-1,0], [0,1], [0,-1]];
-              let d = Math.floor(Math.random() * 4);
-              let nx = vipX + dirs[d][0], ny = vipY + dirs[d][1];
-              if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
-                  vipX = nx; vipY = ny;
-              }
-          }
-          for (let i = 0; i < numGhosts; i++) {
-              if (!ghosts[i].isDead && ghosts[i].type !== 6 && ghosts[i].x === vipX && ghosts[i].y === vipY && frightTimer === 0) {
-                  lives--;
-                  playSound(200, 0.5, 'sawtooth');
-                  vipX = 7; vipY = 7; px = 7; py = 12;
-                  if (lives <= 0) { gameOver = 1; saveStorage(); }
-              }
-          }
-      }
-
-      let effLvl = (gameMode === 1) ? endlessWave : level;
-      let baseGhostSpeed = Math.max(1, 4 - Math.floor(effLvl/4));
-      if (diffMode === 0) baseGhostSpeed += 1;
-      if (diffMode === 2) baseGhostSpeed = Math.max(1, baseGhostSpeed - 1);
-      let ghostSpeed = baseGhostSpeed;
+      let effLevel = (gameMode === 1) ? endlessWave : level;
+      let ghostSpeed = 4 - Math.floor(effLevel / 4);
+      if (diffMode === 0) ghostSpeed += 1;
+      else if (diffMode === 2) ghostSpeed = Math.max(1, ghostSpeed - 1);
+      if (relicHourglass) ghostSpeed += 1;
+      ghostSpeed = Math.max(1, ghostSpeed);
       if (frightTimer > 0) ghostSpeed *= 2;
-      
+
+      // Ghost movement
       if (freezeSkillTimer === 0 && frameCount % ghostSpeed === 0) {
-          const dirs = [[1,0], [-1,0], [0,1], [0,-1]];
+          let dirs = [[1,0], [-1,0], [0,1], [0,-1]];
           for (let i = 0; i < numGhosts; i++) {
               let g = ghosts[i];
-              if (g.isDead) continue;
+              if (g.isDead || g.stunTimer > 0) continue;
               if (g.isPhantom && g.phantomTimer <= 0) continue;
 
-              // Trait 3: Trapper drops sludge
+              let oldX = g.x, oldY = g.y;
               if (g.trait === 3 && (frameCount % 30 === 0) && sludgeTraps.length < 16) {
                   sludgeTraps.push({x: g.x, y: g.y, life: 90});
               }
 
-              // Trait 1: Vortex Magnet pulls player slightly
-              if (g.trait === 1 && (frameCount % 10 === 0)) {
-                  let distToP = Math.abs(g.x - px) + Math.abs(g.y - py);
-                  if (distToP <= 3 && distToP > 1) {
-                      if (px < g.x && map[py][px+1] !== 1) px++;
-                      else if (px > g.x && map[py][px-1] !== 1) px--;
-                  }
-              }
-
-              // Trait 2: Glitch Shifter random teleport
-              if (g.trait === 2 && Math.random() < 0.04) {
-                  let rx = px + Math.floor(Math.random() * 5 - 2);
-                  let ry = py + Math.floor(Math.random() * 5 - 2);
-                  if (rx >= 0 && rx < COLS && ry >= 0 && ry < ROWS && map[ry][rx] !== 1) {
-                      g.x = rx; g.y = ry;
-                      addSparks(rx * TS + TS/2, ry * TS + TS/2, '#ff00ff', 6);
-                  }
-              }
-
-              let oldX = g.x, oldY = g.y;
               if (frightTimer === 0) {
                   let tx = px, ty = py;
                   if (g.type === 1) { tx = px + pdx * 3; ty = py + pdy * 3; }
                   else if (g.type === 2) { tx = px - pdx * 2; ty = py - pdy * 2; }
                   else if (g.type === 3) {
-                      let distToPac = Math.abs(g.x - px) + Math.abs(g.y - py);
-                      if (distToPac > 6) { tx = px; ty = py; }
-                      else { tx = 0; ty = ROWS - 1; }
+                      let d = Math.abs(g.x - px) + Math.abs(g.y - py);
+                      if (d <= 6) { tx = 0; ty = ROWS - 1; }
                   } else if (g.type === 4) { tx = px - pdx * 3; ty = py - pdy * 3; }
-                  else if (g.type === 5) {
-                      if (bossHp <= bossMaxHp / 2) { tx = px + pdx * 2; ty = py + pdy * 2; }
-                      else { tx = px; ty = py; }
-                  } else if (g.type === 6) {
-                      tx = px + Math.floor(Math.random() * 5 - 2);
-                      ty = py + Math.floor(Math.random() * 5 - 2);
-                  }
-                  
-                  if (g.trait === 5 && (g.x === px || g.y === py)) { tx = px; ty = py; }
 
-                  let best_d = -1;
-                  let min_dist = 9999;
-                  let randThreshold = diffMode === 0 ? 0.35 : (diffMode === 2 ? 0.1 : 0.2);
-                  if (Math.random() < randThreshold) {
-                      best_d = Math.floor(Math.random() * 4);
-                  } else {
-                      for (let d = 0; d < 4; d++) {
-                          let nx = g.x + dirs[d][0], ny = g.y + dirs[d][1];
-                          if (nx < 0) nx = COLS - 1;
-                          if (nx >= COLS) nx = 0;
-                          if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
-                              let dist = Math.abs(nx - tx) + Math.abs(ny - ty);
-                              if (dist < min_dist) { min_dist = dist; best_d = d; }
-                          }
-                      }
-                  }
-                  if (best_d !== -1) {
-                      let nx = g.x + dirs[best_d][0];
+                  let bestD = -1, minDist = 99999;
+                  for (let d = 0; d < 4; d++) {
+                      let nx = g.x + dirs[d][0], ny = g.y + dirs[d][1];
                       if (nx < 0) nx = COLS - 1;
                       if (nx >= COLS) nx = 0;
-                      if (map[g.y + dirs[best_d][1]][nx] !== 1) {
-                          g.x = nx; g.y += dirs[best_d][1];
+                      if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+                          let dist = Math.abs(nx - tx) + Math.abs(ny - ty);
+                          if (dist < minDist) { minDist = dist; bestD = d; }
                       }
                   }
+                  if (bestD !== -1) {
+                      let nx = g.x + dirs[bestD][0], ny = g.y + dirs[bestD][1];
+                      if (nx < 0) nx = COLS - 1;
+                      if (nx >= COLS) nx = 0;
+                      if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) { g.x = nx; g.y = ny; }
+                  }
               } else {
-                  const d = Math.floor(Math.random() * 4);
-                  let nx = g.x + dirs[d][0];
+                  let d = Math.floor(Math.random() * 4);
+                  let nx = g.x + dirs[d][0], ny = g.y + dirs[d][1];
                   if (nx < 0) nx = COLS - 1;
                   if (nx >= COLS) nx = 0;
-                  if (map[g.y + dirs[d][1]][nx] !== 1) {
-                      g.x = nx; g.y += dirs[d][1];
-                  }
+                  if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) { g.x = nx; g.y = ny; }
               }
-              if (g.x < 0) g.x = COLS - 1;
-              if (g.x >= COLS) g.x = 0;
-              if (g.x !== oldX || g.y !== oldY) {
-                  g.dirX = Math.sign(g.x - oldX);
-                  g.dirY = Math.sign(g.y - oldY);
-              }
+              g.dirX = g.x - oldX; g.dirY = g.y - oldY;
           }
       }
-      
+
       if (ndx !== 0 || ndy !== 0) {
-          const nx = px + ndx, ny = py + ndy;
+          let nx = px + ndx, ny = py + ndy;
           if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
-              pdx = ndx; pdy = ndy;
-              ndx = 0; ndy = 0;
+              pdx = ndx; pdy = ndy; ndx = 0; ndy = 0;
           }
       }
-      
+
       if (speedSkillTimer > 0) speedSkillTimer--;
-      let moveTick = (speedSkillTimer > 0) ? 1 : ((playerSlowTimer > 0) ? 3 : 2);
-      let playerMoves = (moveTick === 1) ? true : (frameCount % moveTick === 0);
-      
-      if (playerMoves) {
+      let moveTick = (speedSkillTimer > 0) ? 1 : ((playerSlowTimer > 0 && !relicAegis) ? 3 : 2);
+
+      if (moveTick === 1 || frameCount % moveTick === 0) {
           let nx = px + pdx, ny = py + pdy;
           if (nx < 0) nx = COLS - 1;
           if (nx >= COLS) nx = 0;
-          
+
           if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
               px = nx; py = ny;
 
-              // Check Sludge collision
-              for (let s of sludgeTraps) {
-                  if (s.x === px && s.y === py) {
-                      if (!shieldActive) {
-                          playerSlowTimer = 30;
-                          addSparks(px * TS + TS/2, py * TS + TS/2, '#00e676', 5);
+              if (!relicAegis) {
+                  for (let s of sludgeTraps) {
+                      if (s.x === px && s.y === py && !shieldActive) {
+                          playerSlowTimer = 30; addSparks(px * TS + TS/2, py * TS + TS/2, '#00e676', 4);
                       }
                   }
               }
 
-              if (map[py][px] === 6) {
-                  let cx = px * TS + TS/2, cy = py * TS + TS/2;
-                  if (shieldActive) {
-                      shieldHits--;
-                      if (shieldHits <= 0) shieldActive = 0;
-                      map[py][px] = 0;
-                      addPopup(cx, cy, 'ABSORBED!', '#ff4500');
-                      addExplosion(cx, cy, '#ff4500');
-                      playSound(1000, 0.3, 'sine');
+              // Void Rift Warp [Tile 9]
+              if (map[py][px] === 9) {
+                  let tx = COLS - 1 - px, ty = ROWS - 1 - py;
+                  if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS && map[ty][tx] !== 1) {
+                      px = tx; py = ty;
+                  }
+                  addExplosion(px * TS + TS/2, py * TS + TS/2, '#ba68c8');
+                  if (shieldActive || frightTimer > 0) {
+                      score += 300; craftStarDust += 1;
+                      saveMsgText = "VOID RIFT STABILIZED! +300"; saveMsgTimer = 25;
                   } else {
-                      playSound(200, 0.5, 'sawtooth');
-                      deathTimer = 40;
+                      saveMsgText = "DIMENSIONAL WARP!"; saveMsgTimer = 20;
+                  }
+                  playSound(600, 0.3, 'sine', -250);
+              }
+
+              if (map[py][px] === 6) {
+                  if (shieldActive) {
+                      shieldHits--; if (shieldHits <= 0) shieldActive = 0;
+                      map[py][px] = 0; addShockwave(px * TS + TS/2, py * TS + TS/2, '#ff4500');
+                      saveMsgText = "HAZARD ABSORBED!"; saveMsgTimer = 20;
+                  } else {
+                      lives--; playSound(150, 0.3, 'sawtooth');
+                      if (lives <= 0) { gameOver = 1; statsGamesPlayed++; saveHighScore(); }
+                      else { px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0; }
                   }
               } else if (map[py][px] >= 2 && map[py][px] <= 5) {
-                  let cx = px * TS + TS/2, cy = py * TS + TS/2;
                   let loopNum = Math.floor((level - 1) / 20);
                   let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : ((loopNum >= 7) ? 8 : 1);
+                  if (relicStone) mult *= 2;
+
+                  petExp++;
+                  if (petExp >= 25 * petLevel && petLevel < 5) {
+                      petLevel++; petExp = 0;
+                      saveMsgText = "PET LEVEL UP!"; saveMsgTimer = 25;
+                      addExplosion(petX * TS + TS/2, petY * TS + TS/2, '#ffd700');
+                      saveHighScore();
+                      playSound(880, 0.4, 'sine', 200);
+                  }
+
                   if (map[py][px] === 3) {
-                      score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; craftStarDust++; playSound(300, 0.3, 'sawtooth');
-                      addPopup(cx, cy, '+' + (40 * mult), '#ffb852');
-                      addExplosion(cx, cy, '#ffb852');
-                  }
-                  else if (map[py][px] === 4) {
-                      score += 20 * mult; speedSkillTimer = 80; playSound(900, 0.1, 'triangle');
-                      addPopup(cx, cy, 'SPEED!', '#00ffff');
-                      addExplosion(cx, cy, '#00ffff');
-                  }
-                  else if (map[py][px] === 5) {
-                      score += 30 * mult; freezeSkillTimer = 60; playSound(700, 0.2, 'sine');
-                      addPopup(cx, cy, 'FREEZE!', '#ffffff');
-                      addExplosion(cx, cy, '#80deea');
-                  }
-                  else {
-                      score += 10 * mult; playSound(600, 0.05, 'square');
+                      score += 40 * mult; craftStarDust++;
+                      let baseFright = (diffMode === 0) ? 75 : ((diffMode === 2) ? 35 : 50);
+                      if (relicCrown) baseFright = Math.floor(baseFright * 1.5);
+                      frightTimer = (loopNum >= 7) ? 0 : baseFright;
+                      addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffb852');
+                      playSound(400, 0.2, 'triangle', 200);
+                  } else if (map[py][px] === 4) {
+                      score += 20 * mult; speedSkillTimer = 80;
+                      addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
+                  } else if (map[py][px] === 5) {
+                      score += 30 * mult; freezeSkillTimer = 60;
+                      addShockwave(px * TS + TS/2, py * TS + TS/2, '#80deea');
+                  } else {
+                      let dotPts = relicOrb ? 25 : 10;
+                      if (petType === 3) dotPts *= 3;
+                      score += dotPts * mult;
                       if (dotCount % 25 === 0) craftStarDust++;
                   }
-                  if (score > highScore) { highScore = score; }
-                  if (score > statsMaxScore) { statsMaxScore = score; }
-                  saveStorage();
-                  map[py][px] = 0;
-                  dotCount--;
-                  if (dotCount === 0) {
-                      victoryTimer = 30;
-                      playSound(1200, 0.5, 'sine');
-                  }
+
+                  if (score > highScore) highScore = score;
+                  if (score > statsMaxScore) statsMaxScore = score;
+                  map[py][px] = 0; dotCount--;
+                  if (dotCount === 0) { victoryTimer = 30; playSound(600, 0.4, 'sine', 300); }
               } else if (map[py][px] === 8) {
-                  level += Math.floor(Math.random() * 3) + 1;
-                  score += 1000;
-                  craftFruitEssence += 2;
-                  playSound(1000, 0.3, 'sine');
-                  init(true);
-                  return;
+                  level += Math.floor(Math.random() * 3) + 1; score += 1000; craftFruitEssence += 2;
+                  init(true); return;
               }
           }
       }
 
-      // Dot Magnet Skill
+      // Companion Pet AI
+      if (petActive) {
+          petFloatAngle += 0.15;
+          if (frameCount % 2 === 0) {
+              if (petX < px) petX++; else if (petX > px) petX--;
+              if (petY < py) petY++; else if (petY > py) petY--;
+          }
+          if (petType === 0 && frameCount % 15 === 0) {
+              for (let g of ghosts) {
+                  if (!g.isDead && g.stunTimer === 0) {
+                      let dist = Math.abs(g.x - petX) + Math.abs(g.y - petY);
+                      if (dist <= 2 + petLevel) {
+                          g.stunTimer = 30 + petLevel * 5;
+                          addSparks(g.x * TS + TS/2, g.y * TS + TS/2, '#ff1744', 5);
+                          break;
+                      }
+                  }
+              }
+          }
+          let vacRadius = (relicOrb ? 2 : 0) + (petType === 1 ? (1 + Math.floor(petLevel / 2)) : 0);
+          if (vacRadius > 0 && frameCount % 3 === 0) {
+              for (let r = petY - vacRadius; r <= petY + vacRadius; r++) {
+                  for (let c = petX - vacRadius; c <= petX + vacRadius; c++) {
+                      if (r >= 0 && r < ROWS && c >= 0 && c < COLS && map[r][c] === 2) {
+                          let dotPts = relicOrb ? 25 : 10;
+                          if (petType === 3) dotPts *= 3;
+                          let mult = relicStone ? 2 : 1;
+                          score += dotPts * mult; map[r][c] = 0; dotCount--;
+                          if (dotCount === 0) { victoryTimer = 30; playSound(600, 0.4, 'sine', 300); }
+                      }
+                  }
+              }
+          }
+      }
+
+      // Dot Magnet
       if (magnetSkillTimer > 0) {
           magnetSkillTimer--;
           for (let r = py - 3; r <= py + 3; r++) {
               for (let c = px - 3; c <= px + 3; c++) {
-                  if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
-                      if (map[r][c] >= 2 && map[r][c] <= 5) {
-                          let cx = c * TS + TS/2, cy = r * TS + TS/2;
-                          let loopNum = Math.floor((level - 1) / 20);
-                          let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : ((loopNum >= 7) ? 8 : 1);
-                          if (map[r][c] === 3) { score += 40 * mult; frightTimer = (loopNum >= 7) ? 0 : 50; craftStarDust++; addPopup(cx, cy, '+' + (40 * mult), '#ffb852'); addExplosion(cx, cy, '#ffb852'); }
-                          else if (map[r][c] === 4) { score += 20 * mult; speedSkillTimer = 80; addPopup(cx, cy, 'SPEED!', '#00ffff'); }
-                          else if (map[r][c] === 5) { score += 30 * mult; freezeSkillTimer = 60; addPopup(cx, cy, 'FREEZE!', '#ffffff'); }
-                          else { score += 10 * mult; }
-                          map[r][c] = 0;
-                          dotCount--;
-                          addSparks(cx, cy, '#ffeb3b', 4);
-                      }
+                  if (r >= 0 && r < ROWS && c >= 0 && c < COLS && map[r][c] >= 2 && map[r][c] <= 5) {
+                      let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : 1;
+                      if (relicStone) mult *= 2;
+                      score += 10 * mult; map[r][c] = 0; dotCount--;
                   }
               }
           }
-          if (fruitActive) {
-              let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : 1;
-              score += 500 * mult;
-              craftFruitEssence += 2;
-              fruitActive = 0;
-          }
       }
-      
+
+      // Ghost Collisions
       for (let i = 0; i < numGhosts; i++) {
           let g = ghosts[i];
-          if (g.isDead) continue;
-          if (g.isPhantom && g.phantomTimer <= 0) continue;
+          if (g.isDead || (g.isPhantom && g.phantomTimer <= 0)) continue;
 
           if (px === g.x && py === g.y) {
-              let cx = px * TS + TS/2, cy = py * TS + TS/2;
               if (frightTimer > 0) {
-                  let loopNum = Math.floor((level - 1) / 20);
-                  let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : ((loopNum >= 7) ? 8 : 1);
+                  let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : 1;
+                  if (relicStone) mult *= 2;
                   craftEctoplasm += (g.trait > 0 ? 2 : 1);
+                  if (relicCrown) craftFruitEssence += 1;
+                  let eatScore = relicCrown ? 400 : 200;
 
-                  if (g.type === 5) { // Ghost King Boss
-                      bossHp--;
-                      score += 500 * mult;
-                      craftEctoplasm += 3;
-                      addPopup(cx, cy, 'BOSS HIT! -1HP', '#ffd700');
-                      addExplosion(cx, cy, '#ffd700');
-                      g.x = 7; g.y = 6;
-                      playSound(900, 0.3, 'square');
-                      if (bossHp <= 0) {
-                          score += 2000 * mult;
-                          victoryTimer = 30;
-                          statsGamesPlayed++;
-                          saveStorage();
-                      }
-                  } else if (g.type === 6) { // Phantom Clone
-                      score += 100 * mult;
-                      g.phantomTimer = 0;
-                      addPopup(cx, cy, '+' + (100 * mult), '#ce93d8');
-                      addExplosion(cx, cy, '#ce93d8');
+                  if (g.type === 5) {
+                      bossHp--; score += 500 * mult; craftEctoplasm += 3;
+                      g.x = 7; g.y = 6; addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffd700');
+                      if (bossHp <= 0) { score += 2000 * mult; victoryTimer = 30; statsGamesPlayed++; saveHighScore(); }
+                  } else if (g.type === 6) {
+                      score += 100 * mult; g.phantomTimer = 0; addExplosion(px * TS + TS/2, py * TS + TS/2, '#ce93d8');
                   } else {
-                      score += 200 * mult;
-                      statsGhostsEaten++;
-                      saveStorage();
-                      playSound(800, 0.1, 'triangle');
-                      addPopup(cx, cy, '+' + (200 * mult), '#ffeb3b');
-                      addExplosion(cx, cy, '#00ffff');
+                      score += eatScore * mult; statsGhostsEaten++;
+                      addExplosion(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
+                      playSound(550, 0.25, 'triangle', 200);
                       g.isDead = 1;
                   }
               } else if (shieldActive) {
-                  shieldHits--;
-                  if (shieldHits <= 0) shieldActive = 0;
-                  g.x = 7; g.y = 6;
-                  addPopup(cx, cy, 'SHIELD ABSORBED!', '#00e5ff');
-                  addExplosion(cx, cy, '#00e5ff');
-                  playSound(1000, 0.3, 'sine');
+                  shieldHits--; if (shieldHits <= 0) shieldActive = 0;
+                  g.x = 7; g.y = 6; addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
+                  saveMsgText = "SHIELD ABSORBED!"; saveMsgTimer = 20;
               } else {
-                  playSound(200, 0.5, 'sawtooth');
-                  deathTimer = 40;
-                  break;
+                  deathTimer = 40; playSound(150, 0.4, 'sawtooth'); break;
               }
           }
       }
-      
-      if (dotCount < 40 && fruitActive === 0 && fruitTimer === 0 && Math.random() < 0.006) {
-          fruitActive = 1;
-          fruitTimer = 100;
+
+      // Fruit
+      if (dotCount < 40 && fruitActive === 0 && fruitTimer === 0 && Math.random() < 0.01) {
+          fruitActive = 1; fruitTimer = 100;
       }
       if (fruitActive) {
           fruitTimer--;
           if (fruitTimer <= 0) fruitActive = 0;
           else if (px === 7 && py === 12) {
               let mult = (gameMode === 1) ? (1 + Math.floor(endlessWave / 2)) : 1;
-              score += 500 * mult;
+              if (relicStone) mult *= 2;
+              score += (relicStone ? 2500 : 500) * mult;
               craftFruitEssence += 2;
-              let cx = 7 * TS + TS/2, cy = 12 * TS + TS/2;
-              addPopup(cx, cy, '+' + (500 * mult), '#ff1744');
-              addSparks(cx, cy, '#00e676', 14);
-              addShockwave(cx, cy, '#00e676');
-              saveStorage();
+              addShockwave(7 * TS + TS/2, 12 * TS + TS/2, relicStone ? '#ffd700' : '#00e676');
               fruitActive = 0;
-              playSound(1000, 0.1, 'square');
+              playSound(700, 0.3, 'sine', 150);
           }
       }
 
-      for (let i = particles.length - 1; i >= 0; i--) {
+      for (let i = 0; i < shockwaves.length; i++) {
+          shockwaves[i].r += 2;
+          shockwaves[i].alpha -= 0.05;
+          if (shockwaves[i].r >= shockwaves[i].maxR || shockwaves[i].alpha <= 0) {
+              shockwaves.splice(i, 1); i--;
+          }
+      }
+
+      for (let i = 0; i < particles.length; i++) {
           let p = particles[i];
           p.x += p.vx; p.y += p.vy;
           p.vx *= 0.95; p.vy += 0.15;
           p.life--;
-          if (p.life <= 0) particles.splice(i, 1);
-      }
-      for (let i = popups.length - 1; i >= 0; i--) {
-          let pop = popups[i];
-          pop.y -= 0.5;
-          pop.life--;
-          if (pop.life <= 0) popups.splice(i, 1);
-      }
-      for (let i = shockwaves.length - 1; i >= 0; i--) {
-          let s = shockwaves[i];
-          s.r += 1.8;
-          s.alpha -= 0.06;
-          if (s.alpha <= 0 || s.r >= s.maxR) shockwaves.splice(i, 1);
+          if (p.life <= 0) { particles.splice(i, 1); i--; }
       }
 
       frameCount++;
@@ -1540,291 +1359,11 @@
 
   function drawWallTile(ctx, r, c) {
       let x = c * TS, y = r * TS;
-
-      if (r === 6 && c === 7) {
-          let dist = 99;
-          for (let g of ghosts) {
-              if (!g.isDead && !(g.isPhantom && g.phantomTimer <= 0)) {
-                  let d = Math.abs(g.x - c) + Math.abs(g.y - r);
-                  if (d < dist) dist = d;
-              }
-          }
-          let ripple = dist < 3 ? Math.sin(frameCount * 0.5) * 4 : Math.sin(frameCount * 0.1) * 1;
-          ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + Math.sin(frameCount*0.2)*0.3})`;
-          ctx.lineWidth = 2 + ripple;
-          ctx.beginPath();
-          ctx.moveTo(x, y + TS/2 + ripple);
-          ctx.bezierCurveTo(x + TS/3, y + TS/2 - ripple, x + 2*TS/3, y + TS/2 + ripple, x + TS, y + TS/2 - ripple);
-          ctx.stroke();
-          ctx.fillStyle = `rgba(0, 200, 255, 0.15)`;
-          ctx.fillRect(x, y, TS, TS);
-          return;
-      }
-
-      ctx.fillStyle = '#060a17';
+      ctx.fillStyle = '#080e1e';
       ctx.fillRect(x, y, TS, TS);
-
-      let nU = r > 0 && map[r-1][c] === 1;
-      let nD = r < ROWS-1 && map[r+1][c] === 1;
-      let nL = c > 0 && map[r][c-1] === 1;
-      let nR = c < COLS-1 && map[r][c+1] === 1;
-
-      let themeCols = ['#1e88e5', '#4caf50', '#9c27b0', '#f44336', '#ff9800', '#009688'];
-      let themeHis = ['#64b5f6', '#81c784', '#ba68c8', '#e57373', '#ffb74d', '#4dd0e1'];
-      let themeIdx = ((gameMode === 1 ? endlessWave : level) - 1) % 6;
-      let wallColor = themeCols[themeIdx];
-      let wallHighlight = themeHis[themeIdx];
-      if (victoryTimer > 0) {
-          const colors = ['#ffffff', '#00ffff', '#ffd700', '#1e88e5'];
-          wallColor = colors[(victoryTimer + r + c) % colors.length];
-          wallHighlight = '#ffffff';
-      }
-
-      ctx.save();
-      ctx.shadowColor = wallColor;
-      ctx.shadowBlur = 6 + Math.sin(frameCount * 0.2) * 2;
-      ctx.strokeStyle = wallColor;
+      ctx.strokeStyle = '#1e88e5';
       ctx.lineWidth = 2;
       ctx.strokeRect(x + 2, y + 2, TS - 4, TS - 4);
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, ' + (0.3 + 0.3 * Math.sin(frameCount * 0.4 + r + c)) + ')';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x + 3, y + 3, TS - 6, TS - 6);
-
-      ctx.strokeStyle = wallHighlight;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      if (!nU) { ctx.moveTo(x, y + 1); ctx.lineTo(x + TS, y + 1); }
-      if (!nD) { ctx.moveTo(x, y + TS - 1); ctx.lineTo(x + TS, y + TS - 1); }
-      if (!nL) { ctx.moveTo(x + 1, y); ctx.lineTo(x + 1, y + TS); }
-      if (!nR) { ctx.moveTo(x + TS - 1, y); ctx.lineTo(x + TS - 1, y + TS); }
-      ctx.stroke();
-
-      ctx.fillStyle = wallHighlight;
-      if (nU && nR) { ctx.fillRect(x + TS - 3, y, 3, 3); }
-      if (nU && nL) { ctx.fillRect(x, y, 3, 3); }
-      if (nD && nR) { ctx.fillRect(x + TS - 3, y + TS - 3, 3, 3); }
-      if (nD && nL) { ctx.fillRect(x, y + TS - 3, 3, 3); }
-      ctx.restore();
-  }
-
-  function drawDot(ctx, c, r) {
-      let cx = c * TS + TS/2, cy = r * TS + TS/2;
-      let radGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 10 + Math.sin(frameCount * 0.1) * 2);
-      radGrad.addColorStop(0, 'rgba(255, 220, 150, 0.4)');
-      radGrad.addColorStop(1, 'rgba(255, 220, 150, 0)');
-      ctx.fillStyle = radGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 12, 0, Math.PI * 2);
-      ctx.fill();
-
-      let pelletGrad = ctx.createRadialGradient(cx - 1, cy - 1, 0, cx, cy, 3);
-      pelletGrad.addColorStop(0, '#ffffff');
-      pelletGrad.addColorStop(0.3, '#ffc896');
-      pelletGrad.addColorStop(1, '#d8863b');
-      ctx.fillStyle = pelletGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-      ctx.fill();
-  }
-
-  function drawPowerPellet(ctx, c, r, frame) {
-      let cx = c * TS + TS/2, cy = r * TS + TS/2;
-      let radius = 4.5 + Math.sin(frame * 0.3) * 1.5;
-      let radGrad = ctx.createRadialGradient(cx, cy, 1, cx, cy, radius + 8);
-      radGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      radGrad.addColorStop(0.3, 'rgba(255, 184, 82, 0.8)');
-      radGrad.addColorStop(1, 'rgba(255, 184, 82, 0)');
-      ctx.fillStyle = radGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius + 8, 0, Math.PI * 2);
-      ctx.fill();
-      
-      ctx.strokeStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(frame * 0.1) * 0.5})`;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius + 2 + (frame % 15) * 0.2, 0, Math.PI * 2);
-      ctx.stroke();
-      
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 0.75, 0, Math.PI * 2);
-      ctx.fill();
-  }
-
-  function drawSpeedItem(ctx, c, r, frame) {
-      let cx = c * TS + TS/2, cy = r * TS + TS/2;
-      ctx.fillStyle = '#00ffff';
-      ctx.shadowColor = '#00ffff';
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      ctx.moveTo(cx + 2, cy - 6); ctx.lineTo(cx - 4, cy + 1); ctx.lineTo(cx, cy + 1);
-      ctx.lineTo(cx - 2, cy + 6); ctx.lineTo(cx + 4, cy - 1); ctx.lineTo(cx, cy - 1);
-      ctx.closePath();
-      ctx.fill();
-      ctx.shadowBlur = 0;
-  }
-
-  function drawFreezeItem(ctx, c, r, frame) {
-      let cx = c * TS + TS/2, cy = r * TS + TS/2;
-      ctx.strokeStyle = '#80deea';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(cx - 5, cy); ctx.lineTo(cx + 5, cy);
-      ctx.moveTo(cx, cy - 5); ctx.lineTo(cx, cy + 5);
-      ctx.moveTo(cx - 3, cy - 3); ctx.lineTo(cx + 3, cy + 3);
-      ctx.moveTo(cx + 3, cy - 3); ctx.lineTo(cx - 3, cy + 3);
-      ctx.stroke();
-  }
-
-  function drawFruit(ctx, c, r) {
-      let bounceY = Math.sin(frameCount * 0.25) * 3;
-      let cx = c * TS + TS/2, cy = r * TS + TS/2 + bounceY;
-      ctx.strokeStyle = '#4caf50'; ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx - 3, cy + 1); ctx.quadraticCurveTo(cx - 1, cy - 5, cx + 2, cy - 6);
-      ctx.moveTo(cx + 3, cy + 2); ctx.quadraticCurveTo(cx + 1, cy - 5, cx + 2, cy - 6);
-      ctx.stroke();
-      ctx.fillStyle = '#d50000'; ctx.beginPath();
-      ctx.arc(cx - 3, cy + 2, 3.5, 0, Math.PI * 2);
-      ctx.arc(cx + 3, cy + 3, 3.5, 0, Math.PI * 2); ctx.fill();
-  }
-
-  function drawPacman(ctx, px, py, pdx, pdy, frame, speedTimer) {
-      let cx = px * TS + TS/2, cy = py * TS + TS/2;
-      let angle = 0;
-      if (pdx === 1) angle = 0;
-      else if (pdx === -1) angle = Math.PI;
-      else if (pdy === 1) angle = Math.PI / 2;
-      else if (pdy === -1) angle = 3 * Math.PI / 2;
-
-      if (deathTimer > 0) {
-          let foldProgress = (40 - deathTimer) / 40.0;
-          let foldRadius = (TS/2 - 1) * (1.0 - foldProgress);
-          let foldMouth = Math.PI * foldProgress;
-          ctx.fillStyle = shieldActive ? '#00e5ff' : '#ffeb3b';
-          ctx.beginPath();
-          ctx.moveTo(cx, cy);
-          ctx.arc(cx, cy, Math.max(0, foldRadius), angle + foldMouth, angle + Math.PI * 2 - foldMouth);
-          ctx.closePath();
-          ctx.fill();
-          return;
-      }
-
-      const chompFrames = [0.45 * Math.PI, 0.28 * Math.PI, 0.05 * Math.PI, 0.28 * Math.PI];
-      let mouth = chompFrames[frame % 4];
-
-      if (shieldActive || speedTimer > 0 || pdx !== 0 || pdy !== 0) {
-          ctx.save();
-          ctx.strokeStyle = shieldActive ? '#00e5ff' : (speedTimer > 0 ? '#00ffff' : '#ffeb3b');
-          ctx.lineWidth = shieldActive ? 3 : 2;
-          ctx.shadowColor = shieldActive ? '#00e5ff' : '#ffeb3b';
-          ctx.shadowBlur = 8;
-          ctx.beginPath();
-          ctx.arc(cx, cy, TS/2 + (shieldActive ? 3 : 1), 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
-      }
-
-      ctx.fillStyle = shieldActive ? '#00e5ff' : '#ffeb3b';
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, TS/2 - 1, angle + mouth, angle + Math.PI * 2 - mouth);
-      ctx.closePath();
-      ctx.fill();
-
-      let eyeAngle = angle - Math.PI / 3;
-      let ex = cx + Math.cos(eyeAngle) * (TS / 4);
-      let ey = cy + Math.sin(eyeAngle) * (TS / 4);
-      ctx.fillStyle = '#000000';
-      ctx.beginPath();
-      ctx.arc(ex, ey, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-  }
-
-  function drawGhost(ctx, g, frame, frightTimer) {
-      if (g.isPhantom && g.phantomTimer <= 0) return;
-
-      let cx = g.x * TS + TS/2, cy = g.y * TS + TS/2;
-      let w = TS - 4;
-      let x = cx - w/2, y = cy - w/2;
-
-      if (g.isDead) {
-          let eyeDx = Math.sign(7 - g.x) * 2;
-          let eyeDy = Math.sign(6 - g.y) * 2;
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.ellipse(cx - 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
-          ctx.ellipse(cx + 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#1565c0';
-          ctx.beginPath();
-          ctx.arc(cx - 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
-          ctx.arc(cx + 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
-          ctx.fill();
-          return;
-      }
-
-      let isScared = frightTimer > 0;
-      let isFlashing = isScared && frightTimer < 15 && Math.floor(frightTimer / 2) % 2 === 0;
-
-      // Trait Aura Ring
-      if (!isScared && g.trait > 0) {
-          let traitCols = ['', '#00e5ff', '#ff00ff', '#00e676', '#ffd700', '#ff4500'];
-          ctx.save();
-          ctx.strokeStyle = traitCols[g.trait] || '#ffffff';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.arc(cx, cy, w/2 + 2, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
-      }
-
-      let bodyColor = isScared ? (isFlashing ? '#ffffff' : '#1e88e5') : g.color;
-
-      ctx.fillStyle = bodyColor;
-      ctx.beginPath();
-      ctx.arc(cx, y + w/2, w/2, Math.PI, 0, false);
-      ctx.lineTo(x + w, y + w);
-
-      let skirtOffset = (frame % 2 === 0) ? 1.5 : -1.5;
-      let step = w / 3;
-      ctx.lineTo(x + w - step * 0.5, y + w - 3 + skirtOffset);
-      ctx.lineTo(x + w - step, y + w);
-      ctx.lineTo(x + step * 0.5, y + w - 3 - skirtOffset);
-      ctx.lineTo(x, y + w);
-      ctx.closePath();
-      ctx.fill();
-
-      if (g.type === 5) {
-          ctx.fillStyle = '#ffd700';
-          ctx.beginPath();
-          ctx.moveTo(cx - 5, y - 2); ctx.lineTo(cx - 3, y - 6); ctx.lineTo(cx, y - 3);
-          ctx.lineTo(cx + 3, y - 6); ctx.lineTo(cx + 5, y - 2);
-          ctx.closePath();
-          ctx.fill();
-      }
-
-      if (!isScared) {
-          let eyeDx = (g.dirX || 0) * 2;
-          let eyeDy = (g.dirY || 0) * 2;
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.ellipse(cx - 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
-          ctx.ellipse(cx + 3, cy - 2, 3, 4, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#0d47a1';
-          ctx.beginPath();
-          ctx.arc(cx - 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
-          ctx.arc(cx + 3 + eyeDx, cy - 2 + eyeDy, 1.8, 0, Math.PI * 2);
-          ctx.fill();
-      } else {
-          ctx.fillStyle = isFlashing ? '#d50000' : '#ffffff';
-          ctx.beginPath();
-          ctx.arc(cx - 3, cy - 2, 2.5, 0, Math.PI * 2);
-          ctx.arc(cx + 3, cy - 2, 2.5, 0, Math.PI * 2);
-          ctx.fill();
-      }
   }
 
   function draw() {
@@ -1838,173 +1377,206 @@
           ctx.translate(sx, sy);
       }
 
-      // Cyber-grid background environmental art
+      // Cyber Grid
       ctx.strokeStyle = 'rgba(30, 136, 229, 0.15)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      for (let i = 0; i <= 300; i += 20) {
-          ctx.moveTo(i, 0); ctx.lineTo(i, 340);
-      }
-      for (let j = 0; j <= 340; j += 20) {
-          ctx.moveTo(0, j); ctx.lineTo(300, j);
-      }
+      for (let i = 0; i <= 300; i += 20) { ctx.moveTo(i, 0); ctx.lineTo(i, 340); }
+      for (let j = 0; j <= 340; j += 20) { ctx.moveTo(0, j); ctx.lineTo(300, j); }
       ctx.stroke();
 
       for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
               if (map[r][c] === 1) drawWallTile(ctx, r, c);
-              else if (map[r][c] === 2) drawDot(ctx, c, r);
-              else if (map[r][c] === 3) drawPowerPellet(ctx, c, r, frameCount);
-              else if (map[r][c] === 4) drawSpeedItem(ctx, c, r, frameCount);
-              else if (map[r][c] === 5) drawFreezeItem(ctx, c, r, frameCount);
-              else if (map[r][c] === 6) {
-                  let px = c * TS, py = r * TS;
-                  ctx.fillStyle = '#ff4500';
-                  let pulse = (frameCount % 4 === 0) ? 1 : 0;
-                  ctx.fillRect(px + 4 - pulse, py + 4 - pulse, TS - 8 + pulse * 2, TS - 8 + pulse * 2);
-              } else if (map[r][c] === 8) {
+              else if (map[r][c] === 2) {
                   let cx = c * TS + TS/2, cy = r * TS + TS/2;
+                  ctx.fillStyle = relicOrb ? '#ba68c8' : (petType === 3 ? '#ffd700' : '#d8863b');
+                  ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+              } else if (map[r][c] === 3) {
+                  let cx = c * TS + TS/2, cy = r * TS + TS/2;
+                  let p = Math.sin(frameCount * 0.3) * 2;
+                  ctx.fillStyle = '#ffb852';
+                  ctx.beginPath(); ctx.arc(cx, cy, 6 + p, 0, Math.PI * 2); ctx.fill();
+              } else if (map[r][c] === 4) {
+                  ctx.fillStyle = '#00e5ff';
+                  ctx.fillRect(c * TS + 6, r * TS + 6, 8, 8);
+              } else if (map[r][c] === 5) {
+                  ctx.fillStyle = '#80deea';
+                  ctx.fillRect(c * TS + 5, r * TS + 5, 10, 10);
+              } else if (map[r][c] === 6) {
+                  ctx.fillStyle = '#ff4500';
+                  ctx.fillRect(c * TS + 5, r * TS + 5, 10, 10);
+              } else if (map[r][c] === 8) {
                   ctx.fillStyle = '#c832ff';
-                  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI*2); ctx.fill();
+                  ctx.beginPath(); ctx.arc(c * TS + TS/2, r * TS + TS/2, 6, 0, Math.PI * 2); ctx.fill();
+              } else if (map[r][c] === 9) { // Void Rift
+                  let cx = c * TS + TS/2, cy = r * TS + TS/2;
+                  let p = Math.sin(frameCount * 0.4) * 3;
+                  ctx.strokeStyle = '#ba68c8'; ctx.lineWidth = 2;
+                  ctx.beginPath(); ctx.arc(cx, cy, 7 + p, 0, Math.PI * 2); ctx.stroke();
+                  ctx.fillStyle = '#4a148c'; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+              } else if (map[r][c] === 10) { // Phase Gateway
+                  let cx = c * TS + TS/2, cy = r * TS + TS/2;
+                  let open = (frameCount % 40 < 20);
+                  ctx.strokeStyle = open ? '#00e676' : '#ff1744'; ctx.lineWidth = 2;
+                  ctx.beginPath(); ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy); ctx.stroke();
               }
           }
       }
 
-      // Draw Sludge Traps
       for (let s of sludgeTraps) {
           ctx.fillStyle = '#00e676';
           ctx.fillRect(s.x * TS + 5, s.y * TS + 5, 10, 10);
       }
 
-      if (fruitActive) drawFruit(ctx, 7, 12);
-      drawPacman(ctx, px, py, pdx, pdy, frameCount, speedSkillTimer);
-      
-      if (vipActive) {
-          ctx.fillStyle = '#4caf50';
-          ctx.beginPath();
-          ctx.arc(vipX * TS + TS/2, vipY * TS + TS/2, TS/2 - 2, 0, Math.PI * 2);
-          ctx.fill();
+      if (fruitActive) {
+          ctx.fillStyle = relicStone ? '#ffd700' : '#d50000';
+          ctx.beginPath(); ctx.arc(7 * TS + TS/2, 12 * TS + TS/2, 6, 0, Math.PI * 2); ctx.fill();
       }
 
+      // Draw Companion Pet
+      if (petActive) {
+          let petCx = petX * TS + TS/2;
+          let petCy = petY * TS + TS/2 + Math.sin(petFloatAngle) * 3;
+          let petCol = (petType === 0) ? '#ff5252' : ((petType === 1) ? '#00e5ff' : ((petType === 2) ? '#f06292' : '#ffd700'));
+          ctx.strokeStyle = petCol; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(petCx, petCy, 9, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = petCol; ctx.beginPath(); ctx.arc(petCx, petCy, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(petCx - 2, petCy - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(petCx + 2, petCy - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Draw Pac-Man
+      let cx = px * TS + TS/2, cy = py * TS + TS/2;
+      let pacColor = shieldActive ? ((shieldHits >= 2) ? '#00ffff' : '#00e5ff') : ((speedSkillTimer > 0) ? '#ff9800' : '#ffeb3b');
+      ctx.fillStyle = pacColor;
+      ctx.beginPath();
+      let mouth = [0.4, 0.2, 0.05, 0.2][frameCount % 4] * Math.PI;
+      let baseAngle = (pdx === 1) ? 0 : ((pdx === -1) ? Math.PI : ((pdy === 1) ? Math.PI/2 : (pdy === -1 ? Math.PI*1.5 : 0)));
+      ctx.arc(cx, cy, TS/2 - 1, baseAngle + mouth, baseAngle + Math.PI * 2 - mouth);
+      ctx.lineTo(cx, cy);
+      ctx.fill();
+
+      // Draw Ghosts
       for (let i = 0; i < numGhosts; i++) {
-          drawGhost(ctx, ghosts[i], frameCount, frightTimer);
+          let g = ghosts[i];
+          if (g.isPhantom && g.phantomTimer <= 0) continue;
+          let gcx = g.x * TS + TS/2, gcy = g.y * TS + TS/2;
+          let isScared = frightTimer > 0;
+          let c = isScared ? ((frightTimer < 15 && Math.floor(frightTimer / 2) % 2 === 0) ? '#ffffff' : '#1e88e5') : g.c;
+          ctx.fillStyle = c;
+          ctx.beginPath();
+          ctx.arc(gcx, gcy - 2, TS/2 - 2, Math.PI, 0, false);
+          ctx.lineTo(gcx + TS/2 - 2, gcy + TS/2 - 2);
+          ctx.lineTo(gcx - TS/2 + 2, gcy + TS/2 - 2);
+          ctx.fill();
+
+          if (!isScared) {
+              ctx.fillStyle = '#fff';
+              ctx.beginPath();
+              ctx.arc(gcx - 3, gcy - 2, 2.5, 0, Math.PI * 2);
+              ctx.arc(gcx + 3, gcy - 2, 2.5, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#0d47a1';
+              ctx.beginPath();
+              ctx.arc(gcx - 3 + (g.dirX||0)*1.5, gcy - 2 + (g.dirY||0)*1.5, 1.2, 0, Math.PI * 2);
+              ctx.arc(gcx + 3 + (g.dirX||0)*1.5, gcy - 2 + (g.dirY||0)*1.5, 1.2, 0, Math.PI * 2);
+              ctx.fill();
+          }
       }
 
       for (let s of shockwaves) {
-          ctx.save();
-          ctx.globalAlpha = Math.max(0, s.alpha);
-          ctx.strokeStyle = s.color;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
+          ctx.strokeStyle = s.color; ctx.lineWidth = 2; ctx.globalAlpha = Math.max(0, s.alpha);
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.stroke();
       }
-
       for (let p of particles) {
-          ctx.globalAlpha = Math.max(0, p.life / (p.maxLife || 30));
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+          ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
       }
       ctx.globalAlpha = 1.0;
-
-      for (let pop of popups) {
-          ctx.fillStyle = pop.color;
-          ctx.font = 'bold 10px monospace';
-          ctx.fillText(pop.text, pop.x - 10, pop.y);
-      }
-      
       ctx.restore();
 
-      ctx.fillStyle = '#fff';
-      ctx.font = '10px monospace';
-      ctx.textBaseline = 'top';
+      // HUD Text
+      ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.textBaseline = 'top';
       if (gameMode === 1) {
           ctx.fillText(`[ENDLESS W:${endlessWave}/HI:${endlessHighWave}] Sc:${score} Lvs:${lives}`, 4, 302);
       } else {
           ctx.fillText(`[CAMP Lv:${level}/20] Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 302);
       }
+
+      let relicBadges = "";
+      if (relicCrown) relicBadges += "C";
+      if (relicHourglass) relicBadges += "H";
+      if (relicOrb) relicBadges += "O";
+      if (relicAegis) relicBadges += "A";
+      if (relicStone) relicBadges += "S";
+
       ctx.fillStyle = '#00ffcc';
-      ctx.fillText(`Ecto:${craftEctoplasm} Ess:${craftFruitEssence} Dust:${craftStarDust} | [C]Forge [O]Mode`, 4, 314);
+      ctx.fillText(`Ect:${craftEctoplasm} Ess:${craftFruitEssence} Dst:${craftStarDust} [${relicBadges||"-"}] | Pet:Lv${petLevel}`, 4, 314);
       ctx.fillStyle = '#ffeb3b';
-      let rText = replayMode === 1 ? ' [REC]' : (replayMode === 2 ? ' [PLAY]' : '');
-      ctx.fillText(`F:${freezeCooldown>0?'CD':'OK'} Z:${speedCooldown>0?'CD':'OK'} M:${magnetCooldown>0?'CD':'OK'} B:${shieldActive?'ON':(shieldCooldown>0?'CD':'OK')}${rText} [H]Help`, 4, 326);
+      ctx.fillText(`F:${freezeCooldown>0?'CD':'OK'} Z:${speedCooldown>0?'CD':'OK'} M:${magnetCooldown>0?'CD':'OK'} B:${shieldActive?'ON':(shieldCooldown>0?'CD':'OK')} U:${petCooldown>0?'CD':'OK'} [H]Help`, 4, 326);
 
       if (showCraftMenu) {
-          ctx.fillStyle = 'rgba(5, 12, 25, 0.92)';
-          ctx.fillRect(10, 20, 280, 260);
-          ctx.strokeStyle = '#00e5ff';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(10, 20, 280, 260);
+          ctx.fillStyle = 'rgba(5, 12, 25, 0.94)';
+          ctx.fillRect(10, 15, 280, 275);
+          ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2;
+          ctx.strokeRect(10, 15, 280, 275);
 
-          ctx.fillStyle = '#00e5ff';
-          ctx.font = 'bold 13px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('=== THE CYBER FORGE ===', 150, 30);
-          ctx.font = '11px monospace';
-          ctx.fillStyle = '#ffffff';
-          ctx.textAlign = 'left';
-          ctx.fillText('1 / [7]: Super Pellet (2 Ecto + 1 Dust)', 20, 60);
-          ctx.fillText('2 / [8]: Chrono Warp (2 Ecto + 2 Ess)', 20, 90);
-          ctx.fillText('3 / [9]: Aegis Shield 2X (2 Dust + 2 Ess)', 20, 120);
-          ctx.fillText('4 / [0]: Void Pulse Bomb (3E + 3D + 1Ess)', 20, 150);
-          
+          ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(craftMenuPage === 0 ? '=== CYBER FORGE: CONSUMABLES ===' : '=== CYBER FORGE: MYTHIC RELICS ===', 150, 25);
+          ctx.font = '10.5px monospace'; ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+
+          if (craftMenuPage === 0) {
+              ctx.fillText('1 / [7]: Super Pellet (2 Ecto + 1 Dust)', 20, 55);
+              ctx.fillText('2 / [8]: Chrono Warp (2 Ecto + 2 Ess)', 20, 85);
+              ctx.fillText('3 / [9]: Aegis Shield 2X (2 Dust + 2 Ess)', 20, 115);
+              ctx.fillText('4 / [0]: Void Pulse Bomb (3E + 3D + 1Ess)', 20, 145);
+          } else {
+              ctx.fillText('1 / [5]: Ghost King Crown (4E + 3D)', 20, 50);
+              ctx.fillText('2 / [6]: Chrono Hourglass (4Ess + 3D)', 20, 75);
+              ctx.fillText('3 / [7]: Astral Devourer Orb (4E + 4D)', 20, 100);
+              ctx.fillText('4 / [8]: Sun Titan Aegis (4Ess + 4D)', 20, 125);
+              ctx.fillText('5 / [9]: Philosopher Stone (5E+5S+5D)', 20, 150);
+          }
+
           ctx.fillStyle = '#ffd700';
-          ctx.fillText(`Stock: ${craftEctoplasm} Ecto, ${craftFruitEssence} Ess, ${craftStarDust} Dust`, 20, 190);
+          ctx.fillText(`Stock: ${craftEctoplasm} Ecto, ${craftFruitEssence} Ess, ${craftStarDust} Dust`, 20, 185);
           ctx.fillStyle = '#00e676';
-          ctx.fillText('Press 1-4 or 7-0 to Craft | [C] Close', 25, 230);
+          ctx.fillText('Press [Tab] to Toggle Relics | [C] Close', 20, 220);
       } else if (showHelp) {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-          ctx.fillRect(0, 0, 300, 340);
-          ctx.fillStyle = '#fff';
-          ctx.font = 'bold 15px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('KPac Loop 10 - Help', 150, 25);
-          ctx.font = '11px sans-serif';
-          ctx.fillText('Move: Arrows or WASD', 150, 50);
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'; ctx.fillRect(0, 0, 300, 340);
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText('KPac Loop 11 - Help', 150, 22);
+          ctx.font = '10.5px sans-serif';
+          ctx.fillText('Move: Arrows / WASD | Space: Pause', 150, 48);
           ctx.fillText('Skills: F(Freeze) Z(Sprint) M(Magnet) B(Shield)', 150, 70);
-          ctx.fillText('Modes: [O] Toggle Campaign / Endless', 150, 90);
-          ctx.fillText('Crafting: [C] Cyber-Forge Menu', 150, 110);
-          ctx.fillText('Quick-Craft: 7(Pellet) 8(Warp) 9(Shield) 0(Nuke)', 150, 130);
-          ctx.fillText('Diff: 1(Easy) 2(Norm) 3(Hard) | Save: V / L', 150, 150);
-          ctx.fillText('Avoid ghosts, eat dots, craft powerups!', 150, 180);
+          ctx.fillText('Pet: [U] Pet Ultimate | [P] Cycle Pet Type', 150, 92);
+          ctx.fillText('Cyber-Forge: [C] Menu [Tab] Mythic Relics', 150, 114);
+          ctx.fillText('Modes: [O] Toggle Campaign / Endless', 150, 136);
+          ctx.fillText('Portals: Step on Void Rifts to Warp', 150, 158);
           ctx.fillStyle = '#00e676';
-          ctx.fillText('Press H or F1 to start/resume', 150, 220);
+          ctx.fillText('Press H or click to start/resume', 150, 200);
           ctx.textAlign = 'left';
       }
 
       if (saveMsgTimer > 0) {
-          ctx.fillStyle = '#ffeb3b';
-          ctx.font = 'bold 12px monospace';
-          ctx.fillText(saveMsgText, 80, 160);
+          ctx.fillStyle = '#ffeb3b'; ctx.font = 'bold 12px monospace';
+          ctx.fillText(saveMsgText, 50, 160);
       }
-
       if (victoryTimer > 0) {
-          ctx.fillStyle = '#00e676';
-          ctx.font = 'bold 14px monospace';
+          ctx.fillStyle = '#00e676'; ctx.font = 'bold 14px monospace';
           ctx.fillText(gameMode === 1 ? 'WAVE CLEARED!' : 'MAZE CLEARED!', 85, 150);
       } else if (gameOver) {
-          if (gameOver === 2) {
-              ctx.fillStyle = '#00e676';
-              ctx.font = 'bold 12px monospace';
-              ctx.fillText('CAMPAIGN VICTORY!', 85, 140);
-          } else {
-              ctx.fillStyle = '#ff1744';
-              ctx.font = 'bold 12px monospace';
-              ctx.fillText('GAME OVER', 115, 140);
-          }
-          ctx.fillStyle = '#fff';
-          ctx.font = '10px monospace';
-          ctx.fillText(`Games: ${statsGamesPlayed} Ghosts: ${statsGhostsEaten} Max: ${statsMaxScore}`, 35, 160);
+          ctx.fillStyle = (gameOver === 2) ? '#00e676' : '#ff1744'; ctx.font = 'bold 12px monospace';
+          ctx.fillText(gameOver === 2 ? 'CAMPAIGN VICTORY!' : 'GAME OVER', 95, 140);
       } else if (paused) {
-          ctx.fillStyle = '#ffeb3b';
-          ctx.font = 'bold 12px monospace';
+          ctx.fillStyle = '#ffeb3b'; ctx.font = 'bold 12px monospace';
           ctx.fillText('PAUSED', 125, 150);
       }
   }
 
+  loadHighScore();
   init(false);
   setInterval(() => {
       update();

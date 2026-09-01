@@ -10,7 +10,7 @@
 #define ROWS 15
 #define TS 20
 
-// 20 Unique Campaign Maps
+// 20 Unique Campaign Maps (Expanded with Loop 11 Hazard Portals [9] and Phase Gateways [10])
 char maps[20][ROWS][COLS] = {
     // Stage 1: Classic Maze
     {
@@ -66,12 +66,12 @@ char maps[20][ROWS][COLS] = {
         {1,3,2,2,2,2,2,3,2,2,2,2,2,3,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     },
-    // Stage 4: Cross Tunnel
+    // Stage 4: Cross Tunnel & Void Rifts
     {
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
         {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
         {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
-        {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
+        {1,2,2,2,9,2,2,2,2,2,9,2,2,2,1},
         {1,1,1,2,1,1,1,1,1,1,1,2,1,1,1},
         {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
         {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
@@ -79,7 +79,7 @@ char maps[20][ROWS][COLS] = {
         {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
         {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
         {1,1,1,2,1,1,1,1,1,1,1,2,1,1,1},
-        {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
+        {1,2,2,2,9,2,2,2,2,2,9,2,2,2,1},
         {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
         {1,4,2,2,2,2,2,1,2,2,2,2,2,4,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
@@ -138,12 +138,12 @@ char maps[20][ROWS][COLS] = {
         {1,4,2,2,2,1,2,2,2,1,2,2,2,4,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     },
-    // Stage 8: Concentric Rings
+    // Stage 8: Concentric Rings & Phase Gateways
     {
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
         {1,3,2,2,2,2,2,2,2,2,2,2,2,3,1},
         {1,2,1,1,1,1,1,1,1,1,1,1,1,2,1},
-        {1,2,1,2,2,2,2,2,2,2,2,2,1,2,1},
+        {1,2,1,2,2,2,10,2,10,2,2,2,1,2,1},
         {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
         {1,2,1,2,1,2,2,2,2,2,1,2,1,2,1},
         {1,2,1,2,1,2,1,1,1,2,1,2,1,2,1},
@@ -151,7 +151,7 @@ char maps[20][ROWS][COLS] = {
         {1,2,1,2,1,2,1,1,1,2,1,2,1,2,1},
         {1,2,1,2,1,2,2,2,2,2,1,2,1,2,1},
         {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
-        {1,2,1,2,2,2,2,2,2,2,2,2,1,2,1},
+        {1,2,1,2,2,2,10,2,10,2,2,2,1,2,1},
         {1,2,1,1,1,1,1,1,1,1,1,1,1,2,1},
         {1,4,2,2,2,2,2,2,2,2,2,2,2,4,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
@@ -210,12 +210,12 @@ char maps[20][ROWS][COLS] = {
         {1,5,2,2,2,2,1,2,1,2,2,2,2,5,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     },
-    // Stage 12: Dual Warp Arena
+    // Stage 12: Dual Warp Arena & Void Rifts
     {
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
         {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
         {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
-        {1,2,2,2,5,1,2,2,2,1,5,2,2,2,1},
+        {1,2,2,2,9,1,2,2,2,1,9,2,2,2,1},
         {1,1,1,1,2,1,1,1,1,1,2,1,1,1,1},
         {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
         {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
@@ -223,7 +223,7 @@ char maps[20][ROWS][COLS] = {
         {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
         {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
         {1,1,1,1,2,1,1,1,1,1,2,1,1,1,1},
-        {1,2,2,2,4,1,2,2,2,1,4,2,2,2,1},
+        {1,2,2,2,9,1,2,2,2,1,9,2,2,2,1},
         {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
         {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
@@ -249,73 +249,73 @@ char maps[20][ROWS][COLS] = {
     // Stage 14: Pinwheel Crossroads
     {
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-        {1,3,2,2,2,1,2,5,2,1,2,2,2,3,1},
-        {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
-        {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
-        {1,1,1,1,1,2,1,1,1,2,1,1,1,1,1},
-        {1,2,2,2,1,2,2,2,2,2,1,2,2,2,1},
-        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
-        {0,2,1,2,2,2,2,0,2,2,2,2,1,2,0},
-        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
-        {1,2,2,2,1,2,2,2,2,2,1,2,2,2,1},
-        {1,1,1,1,1,2,1,1,1,2,1,1,1,1,1},
-        {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
-        {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
-        {1,3,2,2,2,1,2,5,2,1,2,2,2,3,1},
-        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
-    },
-    // Stage 15: Blockade Maze
-    {
-        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-        {1,5,2,2,2,2,2,2,2,2,2,2,2,5,1},
-        {1,2,1,1,1,1,1,2,1,1,1,1,1,2,1},
-        {1,2,1,3,2,2,1,2,1,2,2,3,1,2,1},
-        {1,2,1,2,1,2,1,2,1,2,1,2,1,2,1},
-        {1,2,1,2,1,2,2,2,2,2,1,2,1,2,1},
-        {1,2,2,2,1,1,1,1,1,1,1,2,2,2,1},
-        {1,1,1,2,2,2,2,0,2,2,2,2,1,1,1},
-        {1,2,2,2,1,1,1,1,1,1,1,2,2,2,1},
-        {1,2,1,2,1,2,2,2,2,2,1,2,1,2,1},
-        {1,2,1,2,1,2,1,2,1,2,1,2,1,2,1},
-        {1,2,1,4,2,2,1,2,1,2,2,4,1,2,1},
-        {1,2,1,1,1,1,1,2,1,1,1,1,1,2,1},
-        {1,5,2,2,2,2,2,2,2,2,2,2,2,5,1},
-        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
-    },
-    // Stage 16: Warp Tunnel Heavy
-    {
-        {1,1,1,1,1,1,0,0,0,1,1,1,1,1,1},
         {1,3,2,2,2,1,2,2,2,1,2,2,2,3,1},
         {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
-        {1,2,1,4,2,2,2,1,2,2,2,4,1,2,1},
-        {1,2,2,2,1,1,2,2,2,1,1,2,2,2,1},
-        {0,0,0,2,1,2,2,1,2,2,1,2,0,0,0},
-        {1,1,1,2,1,2,1,1,1,2,1,2,1,1,1},
-        {0,0,0,2,2,2,1,0,1,2,2,2,0,0,0},
-        {1,1,1,2,1,2,1,1,1,2,1,2,1,1,1},
-        {0,0,0,2,1,2,2,1,2,2,1,2,0,0,0},
-        {1,2,2,2,1,1,2,2,2,1,1,2,2,2,1},
-        {1,2,1,5,2,2,2,1,2,2,2,5,1,2,1},
+        {1,2,1,2,2,2,2,1,2,2,2,2,1,2,1},
+        {1,2,2,2,1,1,2,1,2,1,1,2,2,2,1},
+        {1,1,1,2,1,2,2,2,2,2,1,2,1,1,1},
+        {1,2,2,2,2,2,1,0,1,2,2,2,2,2,1},
+        {0,2,1,1,1,2,0,0,0,2,1,1,1,2,0},
+        {1,2,2,2,2,2,1,0,1,2,2,2,2,2,1},
+        {1,1,1,2,1,2,2,2,2,2,1,2,1,1,1},
+        {1,2,2,2,1,1,2,1,2,1,1,2,2,2,1},
+        {1,2,1,2,2,2,2,1,2,2,2,2,1,2,1},
         {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
-        {1,3,2,2,2,1,2,2,2,1,2,2,2,3,1},
-        {1,1,1,1,1,1,0,0,0,1,1,1,1,1,1}
+        {1,4,2,2,2,1,2,2,2,1,2,2,2,4,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     },
-    // Stage 17: Speed Zone Arena
+    // Stage 15: Cyber Fortress
     {
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-        {1,4,4,4,2,2,2,1,2,2,2,4,4,4,1},
-        {1,4,1,1,1,2,1,1,1,2,1,1,1,4,1},
-        {1,4,1,3,2,2,2,4,2,2,2,3,1,4,1},
-        {1,2,1,2,1,1,2,1,2,1,1,2,1,2,1},
-        {1,2,2,2,1,4,4,4,4,4,1,2,2,2,1},
-        {1,1,1,2,1,4,1,1,1,4,1,2,1,1,1},
-        {0,0,0,2,4,4,1,0,1,4,4,2,0,0,0},
-        {1,1,1,2,1,4,1,1,1,4,1,2,1,1,1},
-        {1,2,2,2,1,4,4,4,4,4,1,2,2,2,1},
-        {1,2,1,2,1,1,2,1,2,1,1,2,1,2,1},
-        {1,4,1,3,2,2,2,4,2,2,2,3,1,4,1},
-        {1,4,1,1,1,2,1,1,1,2,1,1,1,4,1},
-        {1,4,4,4,2,2,2,1,2,2,2,4,4,4,1},
+        {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,2,1,0,0,1,2,1,2,1,0,0,1,2,1},
+        {1,2,1,0,0,1,2,2,2,1,0,0,1,2,1},
+        {1,2,1,1,1,1,1,0,1,1,1,1,1,2,1},
+        {1,2,2,2,2,2,2,0,2,2,2,2,2,2,1},
+        {0,0,0,1,1,1,2,0,2,1,1,1,0,0,0},
+        {1,2,2,2,2,2,2,0,2,2,2,2,2,2,1},
+        {1,2,1,1,1,1,1,0,1,1,1,1,1,2,1},
+        {1,2,1,0,0,1,2,2,2,1,0,0,1,2,1},
+        {1,2,1,0,0,1,2,1,2,1,0,0,1,2,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,4,2,2,2,2,2,1,2,2,2,2,2,4,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    },
+    // Stage 16: Hazard Matrix & Void Rifts
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,3,2,6,2,2,2,1,2,2,2,6,2,3,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,2,1,2,2,2,2,2,2,2,2,2,1,2,1},
+        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
+        {1,2,2,2,2,2,9,0,9,2,2,2,2,2,1},
+        {1,1,1,1,2,1,1,0,1,1,2,1,1,1,1},
+        {0,2,2,2,2,1,0,0,0,1,2,2,2,2,0},
+        {1,1,1,1,2,1,1,0,1,1,2,1,1,1,1},
+        {1,2,2,2,2,2,9,0,9,2,2,2,2,2,1},
+        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
+        {1,2,1,2,2,2,2,2,2,2,2,2,1,2,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,4,2,6,2,2,2,1,2,2,2,6,2,4,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    },
+    // Stage 17: Neon Citadel
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,3,2,2,2,1,2,2,2,1,2,2,2,3,1},
+        {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
+        {1,2,1,2,2,2,2,1,2,2,2,2,1,2,1},
+        {1,2,2,2,1,1,2,2,2,1,1,2,2,2,1},
+        {1,1,1,2,1,0,0,0,0,0,1,2,1,1,1},
+        {0,0,1,2,1,0,0,0,0,0,1,2,1,0,0},
+        {1,1,1,2,2,0,0,0,0,0,2,2,1,1,1},
+        {0,0,1,2,1,0,0,0,0,0,1,2,1,0,0},
+        {1,1,1,2,1,0,0,0,0,0,1,2,1,1,1},
+        {1,2,2,2,1,1,2,2,2,1,1,2,2,2,1},
+        {1,2,1,2,2,2,2,1,2,2,2,2,1,2,1},
+        {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
+        {1,4,2,2,2,1,2,2,2,1,2,2,2,4,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     },
     // Stage 18: Spiral Shadow Labyrinth
@@ -354,12 +354,12 @@ char maps[20][ROWS][COLS] = {
         {1,3,2,1,3,2,1,2,1,2,3,1,2,3,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     },
-    // Stage 20: Ghost King Lair (Boss Chamber)
+    // Stage 20: Ghost King Lair (Boss Chamber with Void Rifts)
     {
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
         {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
         {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
-        {1,2,1,5,2,2,2,2,2,2,2,5,1,2,1},
+        {1,2,1,5,2,9,2,2,2,9,2,5,1,2,1},
         {1,2,1,2,1,1,1,0,1,1,1,2,1,2,1},
         {1,2,2,2,1,0,0,0,0,0,1,2,2,2,1},
         {1,1,1,2,1,0,0,0,0,0,1,2,1,1,1},
@@ -367,7 +367,7 @@ char maps[20][ROWS][COLS] = {
         {1,1,1,2,1,0,0,0,0,0,1,2,1,1,1},
         {1,2,2,2,1,0,0,0,0,0,1,2,2,2,1},
         {1,2,1,2,1,1,1,0,1,1,1,2,1,2,1},
-        {1,2,1,4,2,2,2,2,2,2,2,4,1,2,1},
+        {1,2,1,4,2,9,2,2,2,9,2,4,1,2,1},
         {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
         {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
@@ -398,17 +398,37 @@ static double MyCos(double x) {
     return MySin(x + 1.57079632679);
 }
 
-// Game Modes & Loop 10 Progression
+// Game Modes & Progression
 int gameMode = 0; // 0 = Campaign, 1 = Arcade Endless
 int endlessWave = 1;
 int endlessHighWave = 1;
 
-// Crafting System (The Cyber Forge)
+// Crafting Materials (The Cyber Forge)
 int craftEctoplasm = 0;
 int craftFruitEssence = 0;
 int craftStarDust = 0;
 int showCraftMenu = 0;
+int craftMenuPage = 0; // 0 = Consumables, 1 = Legendary Relics
 int shieldHits = 0;
+
+// Loop 11: Legendary Relics
+int relicCrown = 0;      // Recipe 5: Crown of Ghost King (+50% Fright timer, 2x ghost eaten score, essence drop)
+int relicHourglass = 0;  // Recipe 6: Chrono-Phase Hourglass (Ghosts 25% slower, turn slow-mo)
+int relicOrb = 0;        // Recipe 7: Astral Devourer Orb (Dots = 25 pts, 2-tile vacuum aura)
+int relicAegis = 0;      // Recipe 8: Sun Titan Aegis (Regen +1 shield every 25s, sludge immune)
+int relicStone = 0;      // Recipe 9: Philosopher's Pac-Stone (Mythic Ambrosia fruit +2500, +1 Max Life, 2x Global Mult)
+int relicAegisTimer = 0;
+
+// Loop 11: Ghost Companion Pet System ("Ghost Whisperer")
+int petActive = 1;
+int petType = 0;       // 0=Blinky Jr (Pyre Wisp), 1=Inky Spark (Cyan Orbit), 2=Pinky Heart (Rose Guardian), 3=Gold Kinglet (Aurum Pixie)
+int petLevel = 1;      // 1..5
+int petExp = 0;
+int petX = 7, petY = 12;
+double petFloatAngle = 0;
+int petCooldown = 0;
+int petBurstTimer = 0;
+int petStunTarget = -1;
 
 // Player state
 int px = 7, py = 12;
@@ -416,12 +436,12 @@ int pdx = 0, pdy = 0;
 int ndx = 0, ndy = 0;
 int playerSlowTimer = 0;
 
-// Ghost struct (supports 5 standard ghosts + boss ghost + phantom clones + procedural personalities)
+// Ghost struct
 typedef struct {
     int x;
     int y;
     COLORREF c;
-    int type; // 0=Blinky(Red), 1=Pinky(Pink), 2=Inky(Cyan), 3=Clyde(Orange), 4=Sue(Purple Stalker), 5=GhostKing, 6=Phantom
+    int type; // 0=Blinky, 1=Pinky, 2=Inky, 3=Clyde, 4=Sue, 5=GhostKing, 6=Phantom
     int isPhantom;
     int phantomTimer;
     int isDead;
@@ -429,6 +449,7 @@ typedef struct {
     int dirY;
     int trait; // 0=None, 1=Vortex Magnet, 2=Glitch Shifter, 3=Trapper, 4=Mirage, 5=Hyper Chaser
     int traitTimer;
+    int stunTimer;
     int glitchOffsetX;
     int glitchOffsetY;
 } Ghost;
@@ -552,6 +573,7 @@ int replayDiffMode = 1;
 int statsGamesPlayed = 0;
 int statsGhostsEaten = 0;
 int statsMaxScore = 0;
+int statsRelicsForged = 0;
 
 typedef struct {
     int px, py, pdx, pdy, ndx, ndy;
@@ -565,6 +587,8 @@ typedef struct {
     int vipX, vipY, vipActive;
     int gameMode, endlessWave, endlessHighWave;
     int craftEctoplasm, craftFruitEssence, craftStarDust;
+    int relicCrown, relicHourglass, relicOrb, relicAegis, relicStone;
+    int petActive, petType, petLevel, petExp;
 } SaveState;
 
 void SaveGame() {
@@ -587,6 +611,9 @@ void SaveGame() {
     st.vipX = vipX; st.vipY = vipY; st.vipActive = vipActive;
     st.gameMode = gameMode; st.endlessWave = endlessWave; st.endlessHighWave = endlessHighWave;
     st.craftEctoplasm = craftEctoplasm; st.craftFruitEssence = craftFruitEssence; st.craftStarDust = craftStarDust;
+    st.relicCrown = relicCrown; st.relicHourglass = relicHourglass; st.relicOrb = relicOrb;
+    st.relicAegis = relicAegis; st.relicStone = relicStone;
+    st.petActive = petActive; st.petType = petType; st.petLevel = petLevel; st.petExp = petExp;
 
     HANDLE hFile = CreateFileA("kpac_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -620,14 +647,17 @@ void LoadGame() {
         score = st.score; level = st.level; lives = st.lives; diffMode = st.diffMode;
         frightTimer = st.frightTimer; freezeSkillTimer = st.freezeSkillTimer; speedSkillTimer = st.speedSkillTimer;
         magnetSkillTimer = st.magnetSkillTimer; shieldActive = st.shieldActive; shieldHits = st.shieldHits;
-        freezeCooldown = st.freezeCooldown; speedCooldown = st.speedCooldown;
-        magnetCooldown = st.magnetCooldown; shieldCooldown = st.shieldCooldown;
+        freezeCooldown = st.freezeCooldown; speedCooldown = speedCooldown;
+        magnetCooldown = st.magnetCooldown; shieldCooldown = shieldCooldown;
         bossHp = st.bossHp;
         dotCount = st.dotCount; frameCount = st.frameCount;
         fruitActive = st.fruitActive; fruitTimer = st.fruitTimer; gameOver = st.gameOver;
         vipX = st.vipX; vipY = st.vipY; vipActive = st.vipActive;
         gameMode = st.gameMode; endlessWave = st.endlessWave; endlessHighWave = st.endlessHighWave;
         craftEctoplasm = st.craftEctoplasm; craftFruitEssence = st.craftFruitEssence; craftStarDust = st.craftStarDust;
+        relicCrown = st.relicCrown; relicHourglass = st.relicHourglass; relicOrb = st.relicOrb;
+        relicAegis = st.relicAegis; relicStone = st.relicStone;
+        petActive = st.petActive; petType = st.petType; petLevel = st.petLevel; petExp = st.petExp;
         paused = 0;
         lstrcpyA(saveMsgText, "GAME LOADED");
         saveMsgTimer = 20;
@@ -645,6 +675,13 @@ void LoadHighScore() {
         ReadFile(hFile, &craftEctoplasm, sizeof(int), &readBytes, NULL);
         ReadFile(hFile, &craftFruitEssence, sizeof(int), &readBytes, NULL);
         ReadFile(hFile, &craftStarDust, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &relicCrown, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &relicHourglass, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &relicOrb, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &relicAegis, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &relicStone, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &petType, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &petLevel, sizeof(int), &readBytes, NULL);
         CloseHandle(hFile);
     }
     hFile = CreateFileA("kpac_stats.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -653,6 +690,7 @@ void LoadHighScore() {
         ReadFile(hFile, &statsGamesPlayed, sizeof(int), &readBytes, NULL);
         ReadFile(hFile, &statsGhostsEaten, sizeof(int), &readBytes, NULL);
         ReadFile(hFile, &statsMaxScore, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &statsRelicsForged, sizeof(int), &readBytes, NULL);
         CloseHandle(hFile);
     }
 }
@@ -666,6 +704,13 @@ void SaveHighScore() {
         WriteFile(hFile, &craftEctoplasm, sizeof(int), &written, NULL);
         WriteFile(hFile, &craftFruitEssence, sizeof(int), &written, NULL);
         WriteFile(hFile, &craftStarDust, sizeof(int), &written, NULL);
+        WriteFile(hFile, &relicCrown, sizeof(int), &written, NULL);
+        WriteFile(hFile, &relicHourglass, sizeof(int), &written, NULL);
+        WriteFile(hFile, &relicOrb, sizeof(int), &written, NULL);
+        WriteFile(hFile, &relicAegis, sizeof(int), &written, NULL);
+        WriteFile(hFile, &relicStone, sizeof(int), &written, NULL);
+        WriteFile(hFile, &petType, sizeof(int), &written, NULL);
+        WriteFile(hFile, &petLevel, sizeof(int), &written, NULL);
         CloseHandle(hFile);
     }
     hFile = CreateFileA("kpac_stats.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -674,14 +719,17 @@ void SaveHighScore() {
         WriteFile(hFile, &statsGamesPlayed, sizeof(int), &written, NULL);
         WriteFile(hFile, &statsGhostsEaten, sizeof(int), &written, NULL);
         WriteFile(hFile, &statsMaxScore, sizeof(int), &written, NULL);
+        WriteFile(hFile, &statsRelicsForged, sizeof(int), &written, NULL);
         CloseHandle(hFile);
     }
 }
 
 int GetInitLives() {
-    if (diffMode == 0) return 5;
-    if (diffMode == 2) return 2;
-    return 3;
+    int base = 3;
+    if (diffMode == 0) base = 5;
+    if (diffMode == 2) base = 2;
+    if (relicStone) base += 1; // Philosopher's Pac-Stone +1 Max Life
+    return base;
 }
 
 // Procedural Maze Generator for Arcade Endless Mode
@@ -721,9 +769,9 @@ void GenerateProceduralMaze(int wave) {
     map[6][5] = 1; map[7][5] = 1; map[8][5] = 1;
     map[6][9] = 1; map[7][9] = 1; map[8][9] = 1;
     map[8][6] = 1; map[8][7] = 1; map[8][8] = 1;
-    map[6][6] = 1; map[6][7] = 1; map[6][8] = 1; // Door at (6,7) handled specially
+    map[6][6] = 1; map[6][7] = 1; map[6][8] = 1; // Door at (6,7)
     
-    // Left and right warp tunnels
+    // Warp tunnels
     map[7][0] = 0; map[7][1] = 2;
     map[7][COLS-1] = 0; map[7][COLS-2] = 2;
     
@@ -738,10 +786,14 @@ void GenerateProceduralMaze(int wave) {
     map[3][3] = 4; map[3][COLS-4] = 5;
     map[ROWS-4][3] = 5; map[ROWS-4][COLS-4] = 4;
 
-    // Hazards for higher waves
-    if (wave >= 3) {
-        if (map[4][7] == 2) map[4][7] = 6;
-        if (map[10][7] == 2) map[10][7] = 6;
+    // Hazards and Portals for higher waves
+    if (wave >= 2) {
+        if (map[3][7] == 2) map[3][7] = 9;  // Void Rift A
+        if (map[11][7] == 2) map[11][7] = 9; // Void Rift B
+    }
+    if (wave >= 4) {
+        if (map[5][3] == 2) map[5][3] = 10;
+        if (map[5][COLS-4] == 2) map[5][COLS-4] = 10;
     }
 }
 
@@ -758,6 +810,9 @@ void Init(int keepScore) {
     deathTimer = 0;
     numSludgeTraps = 0;
     playerSlowTimer = 0;
+    petBurstTimer = 0;
+    petCooldown = 0;
+    petStunTarget = -1;
 
     if (gameMode == 1) {
         GenerateProceduralMaze(endlessWave);
@@ -779,6 +834,7 @@ void Init(int keepScore) {
     px = 7; py = 12;
     pdx = 0; pdy = 0;
     ndx = 0; ndy = 0;
+    petX = px; petY = py;
 
     // Roster of AI Ghosts with Procedural Personalities & Traits
     int effWave = (gameMode == 1) ? endlessWave : level;
@@ -788,17 +844,17 @@ void Init(int keepScore) {
     int t3 = (effWave >= 5) ? (((effWave + 4) % 5) + 1) : 0;
     int t4 = (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0;
 
-    ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1, t0, 0, 0, 0};
-    ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0, t1, 0, 0, 0};
-    ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0, t2, 0, 0, 0};
-    ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1, t3, 0, 0, 0};
-    ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1, t4, 0, 0, 0};
+    ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1, t0, 0, 0, 0, 0};
+    ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0, t1, 0, 0, 0, 0};
+    ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0, t2, 0, 0, 0, 0};
+    ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1, t3, 0, 0, 0, 0};
+    ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1, t4, 0, 0, 0, 0};
 
     if (gameMode == 0 && level == 20) {
         // Stage 20 Ghost King Boss
-        ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1, 5, 0, 0, 0};
-        ghosts[6] = (Ghost){0, 0, RGB(0,0,0), 6, 1, 0, 0, 0, 0, 0, 0, 0, 0};
-        ghosts[7] = (Ghost){0, 0, RGB(0,0,0), 6, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+        ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1, 5, 0, 0, 0, 0};
+        ghosts[6] = (Ghost){0, 0, RGB(0,0,0), 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        ghosts[7] = (Ghost){0, 0, RGB(0,0,0), 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         numGhosts = 6;
         bossHp = 8;
         bossMaxHp = 8;
@@ -830,15 +886,16 @@ void Init(int keepScore) {
     numShockwaves = 0;
     numParticles = 0;
     showCraftMenu = 0;
+    craftMenuPage = 0;
 }
 
-// Crafting System Logic
+// Crafting System Logic (Consumables & Legendary Relics)
 void CraftItem(int recipe) {
     if (recipe == 1) { // Super Pellet: 2 Ectoplasm + 1 Star Dust
         if (craftEctoplasm >= 2 && craftStarDust >= 1) {
             craftEctoplasm -= 2;
             craftStarDust -= 1;
-            frightTimer = 80;
+            frightTimer = relicCrown ? 120 : 80;
             score += 500;
             lstrcpyA(saveMsgText, "CRAFTED: SUPER PELLET!");
             saveMsgTimer = 25;
@@ -846,8 +903,7 @@ void CraftItem(int recipe) {
             MessageBeep(MB_ICONASTERISK);
         } else {
             lstrcpyA(saveMsgText, "NEED: 2 ECTO + 1 DUST");
-            saveMsgTimer = 25;
-            MessageBeep(MB_ICONHAND);
+            saveMsgTimer = 25; MessageBeep(MB_ICONHAND);
         }
     } else if (recipe == 2) { // Chrono Warp: 2 Ectoplasm + 2 Fruit Essence
         if (craftEctoplasm >= 2 && craftFruitEssence >= 2) {
@@ -861,8 +917,7 @@ void CraftItem(int recipe) {
             MessageBeep(MB_ICONASTERISK);
         } else {
             lstrcpyA(saveMsgText, "NEED: 2 ECTO + 2 ESSENCE");
-            saveMsgTimer = 25;
-            MessageBeep(MB_ICONHAND);
+            saveMsgTimer = 25; MessageBeep(MB_ICONHAND);
         }
     } else if (recipe == 3) { // Aegis Shield: 2 Star Dust + 2 Fruit Essence
         if (craftStarDust >= 2 && craftFruitEssence >= 2) {
@@ -876,8 +931,7 @@ void CraftItem(int recipe) {
             MessageBeep(MB_ICONASTERISK);
         } else {
             lstrcpyA(saveMsgText, "NEED: 2 DUST + 2 ESSENCE");
-            saveMsgTimer = 25;
-            MessageBeep(MB_ICONHAND);
+            saveMsgTimer = 25; MessageBeep(MB_ICONHAND);
         }
     } else if (recipe == 4) { // Void Pulse Bomb: 3 Ectoplasm + 3 Star Dust + 1 Fruit Essence
         if (craftEctoplasm >= 3 && craftStarDust >= 3 && craftFruitEssence >= 1) {
@@ -886,9 +940,7 @@ void CraftItem(int recipe) {
             craftFruitEssence -= 1;
             for (int i = 0; i < numGhosts; i++) {
                 if (!ghosts[i].isPhantom) {
-                    ghosts[i].x = 7;
-                    ghosts[i].y = 6;
-                    ghosts[i].isDead = 0;
+                    ghosts[i].x = 7; ghosts[i].y = 6; ghosts[i].isDead = 0;
                 }
             }
             for (int r = py - 5; r <= py + 5; r++) {
@@ -908,8 +960,101 @@ void CraftItem(int recipe) {
             MessageBeep(MB_ICONASTERISK);
         } else {
             lstrcpyA(saveMsgText, "NEED: 3 ECTO + 3 DUST + 1 ESS");
+            saveMsgTimer = 25; MessageBeep(MB_ICONHAND);
+        }
+    } else if (recipe == 5) { // Relic: Crown of the Ghost King (4 Ecto + 3 Dust)
+        if (relicCrown) {
+            lstrcpyA(saveMsgText, "RELIC ALREADY FORGED!");
             saveMsgTimer = 25;
-            MessageBeep(MB_ICONHAND);
+        } else if (craftEctoplasm >= 4 && craftStarDust >= 3) {
+            craftEctoplasm -= 4;
+            craftStarDust -= 3;
+            relicCrown = 1;
+            statsRelicsForged++;
+            SaveHighScore();
+            lstrcpyA(saveMsgText, "FORGED: GHOST KING CROWN!");
+            saveMsgTimer = 30;
+            AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(255, 215, 0));
+            MessageBeep(MB_ICONASTERISK);
+        } else {
+            lstrcpyA(saveMsgText, "NEED: 4 ECTO + 3 DUST");
+            saveMsgTimer = 25; MessageBeep(MB_ICONHAND);
+        }
+    } else if (recipe == 6) { // Relic: Chrono-Phase Hourglass (4 Essence + 3 Dust)
+        if (relicHourglass) {
+            lstrcpyA(saveMsgText, "RELIC ALREADY FORGED!");
+            saveMsgTimer = 25;
+        } else if (craftFruitEssence >= 4 && craftStarDust >= 3) {
+            craftFruitEssence -= 4;
+            craftStarDust -= 3;
+            relicHourglass = 1;
+            statsRelicsForged++;
+            SaveHighScore();
+            lstrcpyA(saveMsgText, "FORGED: CHRONO HOURGLASS!");
+            saveMsgTimer = 30;
+            AddShockwave3D(px * TS + TS/2, py * TS + TS/2, RGB(0, 229, 255));
+            MessageBeep(MB_ICONASTERISK);
+        } else {
+            lstrcpyA(saveMsgText, "NEED: 4 ESSENCE + 3 DUST");
+            saveMsgTimer = 25; MessageBeep(MB_ICONHAND);
+        }
+    } else if (recipe == 7) { // Relic: Astral Devourer Orb (4 Ecto + 4 Dust)
+        if (relicOrb) {
+            lstrcpyA(saveMsgText, "RELIC ALREADY FORGED!");
+            saveMsgTimer = 25;
+        } else if (craftEctoplasm >= 4 && craftStarDust >= 4) {
+            craftEctoplasm -= 4;
+            craftStarDust -= 4;
+            relicOrb = 1;
+            statsRelicsForged++;
+            SaveHighScore();
+            lstrcpyA(saveMsgText, "FORGED: ASTRAL ORB!");
+            saveMsgTimer = 30;
+            AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(186, 104, 200));
+            MessageBeep(MB_ICONASTERISK);
+        } else {
+            lstrcpyA(saveMsgText, "NEED: 4 ECTO + 4 DUST");
+            saveMsgTimer = 25; MessageBeep(MB_ICONHAND);
+        }
+    } else if (recipe == 8) { // Relic: Sun Titan Aegis (4 Essence + 4 Dust)
+        if (relicAegis) {
+            lstrcpyA(saveMsgText, "RELIC ALREADY FORGED!");
+            saveMsgTimer = 25;
+        } else if (craftFruitEssence >= 4 && craftStarDust >= 4) {
+            craftFruitEssence -= 4;
+            craftStarDust -= 4;
+            relicAegis = 1;
+            shieldActive = 1;
+            shieldHits = 3;
+            statsRelicsForged++;
+            SaveHighScore();
+            lstrcpyA(saveMsgText, "FORGED: SUN TITAN AEGIS!");
+            saveMsgTimer = 30;
+            AddShockwave3D(px * TS + TS/2, py * TS + TS/2, RGB(255, 152, 0));
+            MessageBeep(MB_ICONASTERISK);
+        } else {
+            lstrcpyA(saveMsgText, "NEED: 4 ESSENCE + 4 DUST");
+            saveMsgTimer = 25; MessageBeep(MB_ICONHAND);
+        }
+    } else if (recipe == 9) { // Relic: Philosopher's Pac-Stone (5 Ecto + 5 Ess + 5 Dust)
+        if (relicStone) {
+            lstrcpyA(saveMsgText, "RELIC ALREADY FORGED!");
+            saveMsgTimer = 25;
+        } else if (craftEctoplasm >= 5 && craftFruitEssence >= 5 && craftStarDust >= 5) {
+            craftEctoplasm -= 5;
+            craftFruitEssence -= 5;
+            craftStarDust -= 5;
+            relicStone = 1;
+            lives += 1;
+            statsRelicsForged++;
+            SaveHighScore();
+            lstrcpyA(saveMsgText, "FORGED: PHILOSOPHER STONE!");
+            saveMsgTimer = 30;
+            AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(255, 215, 0));
+            MessageBeep(MB_ICONASTERISK);
+        } else {
+            lstrcpyA(saveMsgText, "NEED: 5 ECTO + 5 ESS + 5 DUST");
+            saveMsgTimer = 25; MessageBeep(MB_ICONHAND);
         }
     }
 }
@@ -917,7 +1062,7 @@ void CraftItem(int recipe) {
 // Active Skill Trigger Functions
 void TriggerFreezeSkill() {
     if (freezeCooldown == 0 && !gameOver && !paused) {
-        freezeSkillTimer = 60; // 6 seconds freeze
+        freezeSkillTimer = 60; // 6s freeze
         freezeCooldown = 150;  // 15s cooldown
         lstrcpyA(saveMsgText, "FREEZE SKILL!");
         saveMsgTimer = 20;
@@ -928,7 +1073,7 @@ void TriggerFreezeSkill() {
 
 void TriggerSpeedSkill() {
     if (speedCooldown == 0 && !gameOver && !paused) {
-        speedSkillTimer = 80; // 8 seconds 2x speed
+        speedSkillTimer = 80; // 8s sprint
         speedCooldown = 150;  // 15s cooldown
         lstrcpyA(saveMsgText, "SPEED SPRINT!");
         saveMsgTimer = 20;
@@ -939,7 +1084,7 @@ void TriggerSpeedSkill() {
 
 void TriggerMagnetSkill() {
     if (magnetCooldown == 0 && !gameOver && !paused) {
-        magnetSkillTimer = 50; // 5 seconds magnet
+        magnetSkillTimer = 50; // 5s magnet
         magnetCooldown = 150;  // 15s cooldown
         lstrcpyA(saveMsgText, "DOT MAGNET!");
         saveMsgTimer = 20;
@@ -951,7 +1096,7 @@ void TriggerMagnetSkill() {
 void TriggerShieldSkill() {
     if (shieldCooldown == 0 && !gameOver && !paused) {
         shieldActive = 1;     // 1-hit barrier
-        shieldHits = 1;
+        shieldHits = (shieldHits < 1) ? 1 : (shieldHits + 1);
         shieldCooldown = 200; // 20s cooldown
         lstrcpyA(saveMsgText, "GHOST SHIELD!");
         saveMsgTimer = 20;
@@ -960,11 +1105,86 @@ void TriggerShieldSkill() {
     }
 }
 
+// Loop 11: Companion Pet Command / Ultimate Ability Trigger
+void TriggerPetUltimate() {
+    if (petCooldown == 0 && !gameOver && !paused && petActive) {
+        petCooldown = 180; // 18s cooldown
+        petBurstTimer = 40;
+        if (petType == 0) { // Blinky Jr: Firestorm stun on all ghosts + 1 boss damage
+            for (int i = 0; i < numGhosts; i++) {
+                ghosts[i].stunTimer = 60;
+                AddSparks(ghosts[i].x * TS + TS/2, ghosts[i].y * TS + TS/2, RGB(255, 23, 68), 8);
+            }
+            if (gameMode == 0 && level == 20 && bossHp > 0) {
+                bossHp--;
+                if (bossHp <= 0) { victoryTimer = 30; }
+            }
+            lstrcpyA(saveMsgText, "PET: PYRE FIRESTORM!");
+            AddExplosion(petX * TS + TS/2, petY * TS + TS/2, RGB(255, 23, 68));
+        } else if (petType == 1) { // Inky Spark: Magnet EMP storm vacuuming dots in 5-tile radius
+            for (int r = py - 5; r <= py + 5; r++) {
+                for (int c = px - 5; c <= px + 5; c++) {
+                    if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                        if (map[r][c] >= 2 && map[r][c] <= 5) {
+                            score += 15;
+                            map[r][c] = 0;
+                            dotCount--;
+                        }
+                    }
+                }
+            }
+            freezeSkillTimer = 50;
+            lstrcpyA(saveMsgText, "PET: EMP VACUUM STORM!");
+            AddShockwave3D(petX * TS + TS/2, petY * TS + TS/2, RGB(0, 229, 255));
+        } else if (petType == 2) { // Pinky Heart: Divine Aegis
+            shieldActive = 1;
+            shieldHits += 2;
+            frightTimer = relicCrown ? 90 : 60;
+            lstrcpyA(saveMsgText, "PET: DIVINE AEGIS + FRIGHT!");
+            AddShockwave(petX * TS + TS/2, petY * TS + TS/2, RGB(240, 98, 146));
+        } else if (petType == 3) { // Gold Kinglet: Midas Golden Rain
+            score += 1000;
+            craftStarDust += 1;
+            craftFruitEssence += 1;
+            craftEctoplasm += 1;
+            lstrcpyA(saveMsgText, "PET: MIDAS GOLDEN RAIN!");
+            AddExplosion(petX * TS + TS/2, petY * TS + TS/2, RGB(255, 215, 0));
+        }
+        saveMsgTimer = 25;
+        MessageBeep(MB_ICONASTERISK);
+    }
+}
+
+void CyclePetCompanion() {
+    petType = (petType + 1) % 4;
+    char names[4][20] = {"Blinky Jr (Pyre)", "Inky (Cyan Spark)", "Pinky (Guardian)", "Kinglet (Gold)"};
+    wsprintfA(saveMsgText, "PET: %s", names[petType]);
+    saveMsgTimer = 25;
+    AddSparks(px * TS + TS/2, py * TS + TS/2, RGB(255, 215, 0), 10);
+    SaveHighScore();
+    MessageBeep(MB_OK);
+}
+
 void Update() {
     if (screenShake > 0) screenShake--;
     if (saveMsgTimer > 0) saveMsgTimer--;
-    if (playerSlowTimer > 0) playerSlowTimer--;
+    if (playerSlowTimer > 0 && !relicAegis) playerSlowTimer--;
     if (showHelp || gameOver || paused) return;
+
+    // Loop 11: Sun Titan Aegis passive shield regeneration
+    if (relicAegis) {
+        relicAegisTimer++;
+        if (relicAegisTimer >= 250) { // every 25 seconds
+            relicAegisTimer = 0;
+            if (shieldHits < 3) {
+                shieldActive = 1;
+                shieldHits++;
+                AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(255, 152, 0));
+                lstrcpyA(saveMsgText, "AEGIS: SHIELD RECHARGED!");
+                saveMsgTimer = 20;
+            }
+        }
+    }
 
     if (deathTimer > 0) {
         deathTimer--;
@@ -985,14 +1205,15 @@ void Update() {
             } else {
                 px = 7; py = 12;
                 pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+                petX = px; petY = py;
                 int effWave = (gameMode == 1) ? endlessWave : level;
-                ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1, (effWave >= 2) ? ((effWave % 5) + 1) : 0, 0, 0, 0};
-                ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0, (effWave >= 3) ? (((effWave + 2) % 5) + 1) : 0, 0, 0, 0};
-                ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0, (effWave >= 4) ? (((effWave + 3) % 5) + 1) : 0, 0, 0, 0};
-                ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1, (effWave >= 5) ? (((effWave + 4) % 5) + 1) : 0, 0, 0, 0};
-                ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1, (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0, 0, 0, 0};
+                ghosts[0] = (Ghost){7, 6, RGB(255, 23, 68), 0, 0, 0, 0, 0, -1, (effWave >= 2) ? ((effWave % 5) + 1) : 0, 0, 0, 0, 0};
+                ghosts[1] = (Ghost){6, 7, RGB(240, 98, 146), 1, 0, 0, 0, -1, 0, (effWave >= 3) ? (((effWave + 2) % 5) + 1) : 0, 0, 0, 0, 0};
+                ghosts[2] = (Ghost){8, 7, RGB(0, 229, 255), 2, 0, 0, 0, 1, 0, (effWave >= 4) ? (((effWave + 3) % 5) + 1) : 0, 0, 0, 0, 0};
+                ghosts[3] = (Ghost){7, 7, RGB(255, 145, 0), 3, 0, 0, 0, 0, 1, (effWave >= 5) ? (((effWave + 4) % 5) + 1) : 0, 0, 0, 0, 0};
+                ghosts[4] = (Ghost){7, 5, RGB(170, 0, 255), 4, 0, 0, 0, 0, -1, (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0, 0, 0, 0, 0};
                 if (gameMode == 0 && level == 20) {
-                    ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1, 5, 0, 0, 0};
+                    ghosts[5] = (Ghost){7, 6, RGB(255, 215, 0), 5, 0, 0, 0, 0, -1, 5, 0, 0, 0, 0};
                 }
             }
         }
@@ -1020,7 +1241,8 @@ void Update() {
             if (gameMode == 1) {
                 endlessWave++;
                 if (endlessWave > endlessHighWave) endlessHighWave = endlessWave;
-                score += 1000 + endlessWave * 200;
+                int mult = relicStone ? 2 : 1;
+                score += (1000 + endlessWave * 200) * mult;
                 craftStarDust += 2;
                 craftFruitEssence += 1;
                 SaveHighScore();
@@ -1044,6 +1266,8 @@ void Update() {
     if (speedCooldown > 0) speedCooldown--;
     if (magnetCooldown > 0) magnetCooldown--;
     if (shieldCooldown > 0) shieldCooldown--;
+    if (petCooldown > 0) petCooldown--;
+    if (petBurstTimer > 0) petBurstTimer--;
 
     if (freezeSkillTimer > 0) freezeSkillTimer--;
     if (frightTimer > 0) frightTimer--;
@@ -1057,6 +1281,11 @@ void Update() {
         }
     }
 
+    // Update Ghost Stun Timers
+    for (int i = 0; i < numGhosts; i++) {
+        if (ghosts[i].stunTimer > 0) ghosts[i].stunTimer--;
+    }
+
     // Stage 20 Ghost King Phantom Clones Spawner
     if (gameMode == 0 && level == 20 && bossHp > 0) {
         phantomSpawnTimer += (bossHp <= bossMaxHp / 2) ? 2 : 1;
@@ -1064,7 +1293,7 @@ void Update() {
             phantomSpawnTimer = 0;
             for (int k = 6; k <= 7; k++) {
                 if (ghosts[k].phantomTimer <= 0) {
-                    ghosts[k] = (Ghost){7, 6, RGB(200, 100, 255), 6, 1, 80, 0, 0, 0, 0, 0, 0, 0};
+                    ghosts[k] = (Ghost){7, 6, RGB(200, 100, 255), 6, 1, 80, 0, 0, 0, 0, 0, 0, 0, 0};
                     if (numGhosts < 8) numGhosts = 8;
                     break;
                 }
@@ -1090,11 +1319,12 @@ void Update() {
         }
     }
 
-    // Ghost Speed Logic
+    // Ghost Speed Logic (Chrono Hourglass makes ghosts 25% slower)
     int effLevel = (gameMode == 1) ? endlessWave : level;
     int ghostSpeed = 4 - (effLevel / 4);
     if (diffMode == 0) ghostSpeed += 1;
     else if (diffMode == 2) ghostSpeed = (ghostSpeed > 1) ? (ghostSpeed - 1) : 1;
+    if (relicHourglass) ghostSpeed += 1; // 25% slower
     if (ghostSpeed < 1) ghostSpeed = 1;
     if (frightTimer > 0) ghostSpeed *= 2;
 
@@ -1124,6 +1354,7 @@ void Update() {
         int dirs[4][2] = {{1,0}, {-1,0}, {0,1}, {0,-1}};
         for (int i = 0; i < numGhosts; i++) {
             if (ghosts[i].isDead) continue;
+            if (ghosts[i].stunTimer > 0) continue;
             if (ghosts[i].isPhantom && ghosts[i].phantomTimer <= 0) continue;
 
             int oldX = ghosts[i].x, oldY = ghosts[i].y;
@@ -1174,8 +1405,7 @@ void Update() {
                         tx = px + pdx * 2;
                         ty = py + pdy * 2;
                     } else {
-                        tx = px;
-                        ty = py;
+                        tx = px; ty = py;
                     }
                 } else if (ghosts[i].type == 6) { // Phantom Clone: Random Pursuit
                     tx = px + (MyRand() % 5 - 2);
@@ -1245,7 +1475,7 @@ void Update() {
     if (speedSkillTimer > 0) speedSkillTimer--;
     int moveTick = 2;
     if (speedSkillTimer > 0) moveTick = 1;
-    if (playerSlowTimer > 0) moveTick = 3;
+    if (playerSlowTimer > 0 && !relicAegis) moveTick = 3;
 
     int playerMoves = (moveTick == 1) ? 1 : (frameCount % moveTick == 0);
 
@@ -1259,17 +1489,41 @@ void Update() {
             px = nx;
             py = ny;
 
-            // Check Sludge Trap collision
-            for (int s = 0; s < numSludgeTraps; s++) {
-                if (sludgeTraps[s].x == px && sludgeTraps[s].y == py) {
-                    if (!shieldActive) {
-                        playerSlowTimer = 30;
-                        AddSparks(px * TS + TS/2, py * TS + TS/2, RGB(0, 255, 100), 5);
+            // Check Sludge Trap collision (immune if Sun Titan Aegis equipped)
+            if (!relicAegis) {
+                for (int s = 0; s < numSludgeTraps; s++) {
+                    if (sludgeTraps[s].x == px && sludgeTraps[s].y == py) {
+                        if (!shieldActive) {
+                            playerSlowTimer = 30;
+                            AddSparks(px * TS + TS/2, py * TS + TS/2, RGB(0, 255, 100), 5);
+                        }
                     }
                 }
             }
 
-            if (map[py][px] == 6) {
+            // Loop 11: Hazard Portal / Void Rift [Tile 9] Interaction
+            if (map[py][px] == 9) {
+                // Find matching/mirror portal or opposite quadrant
+                int targetX = COLS - 1 - px;
+                int targetY = ROWS - 1 - py;
+                if (targetX >= 0 && targetX < COLS && targetY >= 0 && targetY < ROWS && map[targetY][targetX] != 1) {
+                    px = targetX;
+                    py = targetY;
+                }
+                AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(186, 104, 200));
+                if (shieldActive || frightTimer > 0) {
+                    score += 300;
+                    craftStarDust += 1;
+                    lstrcpyA(saveMsgText, "VOID RIFT STABILIZED! +300");
+                    saveMsgTimer = 25;
+                } else {
+                    lstrcpyA(saveMsgText, "DIMENSIONAL WARP!");
+                    saveMsgTimer = 20;
+                }
+                MessageBeep(MB_ICONASTERISK);
+            }
+
+            if (map[py][px] == 6) { // Lava / Hazard
                 if (shieldActive) {
                     shieldHits--;
                     if (shieldHits <= 0) shieldActive = 0;
@@ -1293,11 +1547,25 @@ void Update() {
             } else if (map[py][px] >= 2 && map[py][px] <= 5) {
                 int loopNum = (level - 1) / 20;
                 int mult = (gameMode == 1) ? (1 + endlessWave / 2) : ((loopNum >= 7) ? 8 : 1);
+                if (relicStone) mult *= 2; // Philosopher's Pac-Stone 2x Global Mult
+
+                // Pet Leveling progression
+                petExp++;
+                if (petExp >= 25 * petLevel && petLevel < 5) {
+                    petLevel++;
+                    petExp = 0;
+                    lstrcpyA(saveMsgText, "PET LEVEL UP!");
+                    saveMsgTimer = 25;
+                    AddExplosion(petX * TS + TS/2, petY * TS + TS/2, RGB(255, 215, 0));
+                    SaveHighScore();
+                }
 
                 if (map[py][px] == 3) {
                     score += 40 * mult;
                     craftStarDust += 1;
-                    frightTimer = (loopNum >= 7) ? 0 : ((diffMode == 0) ? 75 : ((diffMode == 2) ? 35 : 50));
+                    int baseFright = (diffMode == 0) ? 75 : ((diffMode == 2) ? 35 : 50);
+                    if (relicCrown) baseFright = (int)(baseFright * 1.5);
+                    frightTimer = (loopNum >= 7) ? 0 : baseFright;
                     AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(255, 184, 82));
                     MessageBeep(MB_OK);
                 } else if (map[py][px] == 4) {
@@ -1311,7 +1579,9 @@ void Update() {
                     AddShockwave(px * TS + TS/2, py * TS + TS/2, RGB(128, 222, 234));
                     MessageBeep(MB_ICONINFORMATION);
                 } else {
-                    score += 10 * mult;
+                    int dotPts = relicOrb ? 25 : 10; // Astral Devourer Orb gives +25
+                    if (petType == 3) dotPts *= 3;    // Gold Kinglet triples dot score
+                    score += dotPts * mult;
                     if (dotCount % 25 == 0) craftStarDust++;
                 }
 
@@ -1336,6 +1606,52 @@ void Update() {
         }
     }
 
+    // Loop 11: Companion Pet AI Updates (Patrol, Assist, Vacuum, Stun)
+    if (petActive) {
+        petFloatAngle += 0.15;
+        // Smoothly follow Pac-Man trail
+        if (frameCount % 2 == 0) {
+            if (petX < px) petX++;
+            else if (petX > px) petX--;
+            if (petY < py) petY++;
+            else if (petY > py) petY--;
+        }
+
+        // Pet Type 0 (Blinky Jr): Attacks closest hostile ghost
+        if (petType == 0 && frameCount % 15 == 0) {
+            for (int i = 0; i < numGhosts; i++) {
+                if (!ghosts[i].isDead && ghosts[i].stunTimer == 0) {
+                    int dist = Abs(ghosts[i].x - petX) + Abs(ghosts[i].y - petY);
+                    if (dist <= 2 + petLevel) {
+                        ghosts[i].stunTimer = 30 + petLevel * 5;
+                        AddSparks(ghosts[i].x * TS + TS/2, ghosts[i].y * TS + TS/2, RGB(255, 23, 68), 5);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Pet Type 1 (Inky Spark) or Astral Orb: Vacuum dots in radius
+        int vacRadius = (relicOrb ? 2 : 0) + (petType == 1 ? (1 + petLevel / 2) : 0);
+        if (vacRadius > 0 && frameCount % 3 == 0) {
+            for (int r = petY - vacRadius; r <= petY + vacRadius; r++) {
+                for (int c = petX - vacRadius; c <= petX + vacRadius; c++) {
+                    if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                        if (map[r][c] == 2) {
+                            int dotPts = relicOrb ? 25 : 10;
+                            if (petType == 3) dotPts *= 3;
+                            int mult = relicStone ? 2 : 1;
+                            score += dotPts * mult;
+                            map[r][c] = 0;
+                            dotCount--;
+                            if (dotCount == 0) { victoryTimer = 30; MessageBeep(MB_ICONASTERISK); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Dot Magnet Active Skill Logic
     if (magnetSkillTimer > 0) {
         magnetSkillTimer--;
@@ -1345,6 +1661,7 @@ void Update() {
                     if (map[r][c] >= 2 && map[r][c] <= 5) {
                         int loopNum = (level - 1) / 20;
                         int mult = (gameMode == 1) ? (1 + endlessWave / 2) : ((loopNum >= 7) ? 8 : 1);
+                        if (relicStone) mult *= 2;
                         if (map[r][c] == 3) { score += 40 * mult; craftStarDust += 1; frightTimer = (loopNum >= 7) ? 0 : 50; AddExplosion(c * TS + TS/2, r * TS + TS/2, RGB(255, 184, 82)); }
                         else if (map[r][c] == 4) { score += 20 * mult; speedSkillTimer = 80; }
                         else if (map[r][c] == 5) { score += 30 * mult; freezeSkillTimer = 60; }
@@ -1359,7 +1676,8 @@ void Update() {
         }
         if (fruitActive) {
             int mult = (gameMode == 1) ? (1 + endlessWave / 2) : 1;
-            score += 500 * mult;
+            int fruitPts = relicStone ? 2500 : 500;
+            score += fruitPts * mult;
             craftFruitEssence += 2;
             fruitActive = 0;
         }
@@ -1374,7 +1692,11 @@ void Update() {
             if (frightTimer > 0) {
                 int loopNum = (level - 1) / 20;
                 int mult = (gameMode == 1) ? (1 + endlessWave / 2) : ((loopNum >= 7) ? 8 : 1);
+                if (relicStone) mult *= 2;
                 craftEctoplasm += (ghosts[i].trait > 0 ? 2 : 1);
+                if (relicCrown) craftFruitEssence += 1; // Crown drops essence on eat
+
+                int eatScore = relicCrown ? 400 : 200;
 
                 if (ghosts[i].type == 5) { // Ghost King Boss
                     bossHp--;
@@ -1394,7 +1716,7 @@ void Update() {
                     ghosts[i].phantomTimer = 0;
                     AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(206, 147, 216));
                 } else {
-                    score += 200 * mult;
+                    score += eatScore * mult;
                     statsGhostsEaten++;
                     if (score > highScore) highScore = score;
                     if (score > statsMaxScore) statsMaxScore = score;
@@ -1418,7 +1740,7 @@ void Update() {
         }
     }
 
-    // Fruit Spawning
+    // Fruit Spawning (Mythic Ambrosia if Philosopher's Pac-Stone is forged)
     if (dotCount < 40 && fruitActive == 0 && fruitTimer == 0 && (MyRand() % 150 == 0)) {
         fruitActive = 1;
         fruitTimer = 100;
@@ -1428,9 +1750,11 @@ void Update() {
         if (fruitTimer <= 0) fruitActive = 0;
         else if (px == 7 && py == 12) {
             int mult = (gameMode == 1) ? (1 + endlessWave / 2) : 1;
-            score += 500 * mult;
+            if (relicStone) mult *= 2;
+            int fruitPts = relicStone ? 2500 : 500;
+            score += fruitPts * mult;
             craftFruitEssence += 2;
-            AddShockwave(7 * TS + TS/2, 12 * TS + TS/2, RGB(0, 230, 118));
+            AddShockwave(7 * TS + TS/2, 12 * TS + TS/2, relicStone ? RGB(255, 215, 0) : RGB(0, 230, 118));
             if (score > highScore) highScore = score;
             if (score > statsMaxScore) statsMaxScore = score;
             fruitActive = 0;
@@ -1490,6 +1814,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (key == 'K') { bindState = 1; return 0; }
             if (key == 'H' || key == VK_F1) { showHelp = !showHelp; return 0; }
             if (key == 'C') { showCraftMenu = !showCraftMenu; return 0; }
+            if (key == VK_TAB && showCraftMenu) { craftMenuPage = !craftMenuPage; return 0; }
             if (key == 'O') {
                 gameMode = !gameMode;
                 Init(0);
@@ -1499,19 +1824,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 return 0;
             }
 
+            // Loop 11: Pet Companion Hotkeys: U = Pet Ultimate, P = Pet Type Cycle
+            if (key == 'U') { TriggerPetUltimate(); return 0; }
+            if (key == 'P') { CyclePetCompanion(); return 0; }
+
             // Quick craft hotkeys
-            if (key == '7' || (showCraftMenu && key == '1')) { CraftItem(1); return 0; }
-            if (key == '8' || (showCraftMenu && key == '2')) { CraftItem(2); return 0; }
-            if (key == '9' || (showCraftMenu && key == '3')) { CraftItem(3); return 0; }
-            if (key == '0' || (showCraftMenu && key == '4')) { CraftItem(4); return 0; }
+            if (showCraftMenu && craftMenuPage == 0) {
+                if (key == '1' || key == '7') { CraftItem(1); return 0; }
+                if (key == '2' || key == '8') { CraftItem(2); return 0; }
+                if (key == '3' || key == '9') { CraftItem(3); return 0; }
+                if (key == '4' || key == '0') { CraftItem(4); return 0; }
+            } else if (showCraftMenu && craftMenuPage == 1) {
+                if (key == '1' || key == '5') { CraftItem(5); return 0; }
+                if (key == '2' || key == '6') { CraftItem(6); return 0; }
+                if (key == '3' || key == '7') { CraftItem(7); return 0; }
+                if (key == '4' || key == '8') { CraftItem(8); return 0; }
+                if (key == '5' || key == '9') { CraftItem(9); return 0; }
+            } else {
+                if (key == '7') { CraftItem(1); return 0; }
+                if (key == '8') { CraftItem(2); return 0; }
+                if (key == '9') { CraftItem(3); return 0; }
+                if (key == '0') { CraftItem(4); return 0; }
+            }
 
             if (showHelp || showCraftMenu) break;
 
             if (key == 'E') {
                 HANDLE hFile = CreateFileA("kpac_data.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
                 if (hFile != INVALID_HANDLE_VALUE) {
-                    char buf[256];
-                    wsprintfA(buf, "{\"highScore\":%d,\"endlessHighWave\":%d,\"ecto\":%d,\"ess\":%d,\"dust\":%d}", highScore, endlessHighWave, craftEctoplasm, craftFruitEssence, craftStarDust);
+                    char buf[512];
+                    wsprintfA(buf, "{\"highScore\":%d,\"endlessHighWave\":%d,\"ecto\":%d,\"ess\":%d,\"dust\":%d,\"crown\":%d,\"hourglass\":%d,\"orb\":%d,\"aegis\":%d,\"stone\":%d,\"petType\":%d,\"petLevel\":%d}",
+                        highScore, endlessHighWave, craftEctoplasm, craftFruitEssence, craftStarDust, relicCrown, relicHourglass, relicOrb, relicAegis, relicStone, petType, petLevel);
                     DWORD written;
                     WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
                     CloseHandle(hFile);
@@ -1522,7 +1865,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (key == 'I') {
                 HANDLE hFile = CreateFileA("kpac_data.json", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
                 if (hFile != INVALID_HANDLE_VALUE) {
-                    char buf[256]; buf[0] = 0;
+                    char buf[512]; buf[0] = 0;
                     DWORD readBytes = 0;
                     if (ReadFile(hFile, buf, sizeof(buf)-1, &readBytes, NULL) && readBytes > 0) {
                         lstrcpyA(saveMsgText, "IMPORTED JSON"); saveMsgTimer = 20; MessageBeep(MB_OK);
@@ -1577,7 +1920,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (key == bindSkill4) { if (replayMode == 1 && replayCount < 9999) { replays[replayCount++] = (ReplayEvent){frameCount, 8}; } TriggerShieldSkill(); }
 
             if (key == VK_RETURN && gameOver) Init(0);
-            if (key == 'P') paused = !paused;
+            if (key == VK_SPACE) paused = !paused;
             if (key == '1') { diffMode = 0; lstrcpyA(saveMsgText, "DIFF: EASY"); saveMsgTimer = 20; MessageBeep(MB_OK); }
             if (key == '2') { diffMode = 1; lstrcpyA(saveMsgText, "DIFF: NORMAL"); saveMsgTimer = 20; MessageBeep(MB_OK); }
             if (key == '3') { diffMode = 2; lstrcpyA(saveMsgText, "DIFF: HARD"); saveMsgTimer = 20; MessageBeep(MB_OK); }
@@ -1715,8 +2058,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int cx = c * TS + TS/2;
                         int cy = r * TS + TS/2;
                         
-                        HBRUSH baseBr = CreateSolidBrush(RGB(216, 134, 59));
-                        HBRUSH midBr = CreateSolidBrush(RGB(255, 200, 150));
+                        HBRUSH baseBr = CreateSolidBrush(relicOrb ? RGB(186, 104, 200) : (petType == 3 ? RGB(255, 215, 0) : RGB(216, 134, 59)));
+                        HBRUSH midBr = CreateSolidBrush(relicOrb ? RGB(225, 190, 231) : (petType == 3 ? RGB(255, 235, 59) : RGB(255, 200, 150)));
                         HBRUSH hiBr = CreateSolidBrush(RGB(255, 255, 255));
                         
                         SelectObject(memDC, GetStockObject(NULL_PEN));
@@ -1768,6 +2111,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT dr = {c * TS + 4, r * TS + 4, c * TS + 16, r * TS + 16};
                         FillRect(memDC, &dr, brBr);
                         DeleteObject(brBr);
+                    } else if (map[r][c] == 9) { // Void Rift / Hazard Portal
+                        int cx = c * TS + TS/2, cy = r * TS + TS/2;
+                        int pulse = (int)(MySin(frameCount * 0.4) * 3);
+                        HPEN rPen = CreatePen(PS_SOLID, 2, RGB(186, 104, 200));
+                        SelectObject(memDC, rPen);
+                        SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
+                        Ellipse(memDC, cx - 7 - pulse, cy - 7 - pulse, cx + 7 + pulse, cy + 7 + pulse);
+                        DeleteObject(rPen);
+                        HBRUSH coreBr = CreateSolidBrush(RGB(74, 20, 140));
+                        SelectObject(memDC, coreBr);
+                        SelectObject(memDC, GetStockObject(NULL_PEN));
+                        Ellipse(memDC, cx - 4, cy - 4, cx + 4, cy + 4);
+                        DeleteObject(coreBr);
+                    } else if (map[r][c] == 10) { // Phase Gateway
+                        int cx = c * TS + TS/2, cy = r * TS + TS/2;
+                        int open = (frameCount % 40 < 20);
+                        HPEN gPen = CreatePen(PS_SOLID, 2, open ? RGB(0, 230, 118) : RGB(255, 23, 68));
+                        SelectObject(memDC, gPen);
+                        MoveToEx(memDC, cx - 6, cy, NULL); LineTo(memDC, cx + 6, cy);
+                        DeleteObject(gPen);
                     }
                 }
             }
@@ -1800,6 +2163,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT pR = {(int)particles[i].x - 1, (int)particles[i].y - 1, (int)particles[i].x + 2, (int)particles[i].y + 2};
                 FillRect(memDC, &pR, pBr);
                 DeleteObject(pBr);
+            }
+
+            // Draw Loop 11: Companion Pet
+            if (petActive) {
+                int petCx = petX * TS + TS/2;
+                int petCy = petY * TS + TS/2 + (int)(MySin(petFloatAngle) * 3);
+                COLORREF petCol = RGB(255, 215, 0);
+                if (petType == 0) petCol = RGB(255, 82, 82);       // Blinky Jr Pyre Wisp
+                else if (petType == 1) petCol = RGB(0, 229, 255);   // Inky Spark
+                else if (petType == 2) petCol = RGB(240, 98, 146);  // Pinky Heart
+                else if (petType == 3) petCol = RGB(255, 215, 0);   // Gold Kinglet
+
+                HPEN petAura = CreatePen(PS_SOLID, 1, petCol);
+                SelectObject(memDC, petAura);
+                SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
+                Ellipse(memDC, petCx - 8, petCy - 8, petCx + 9, petCy + 9);
+                DeleteObject(petAura);
+
+                HBRUSH petBr = CreateSolidBrush(petCol);
+                SelectObject(memDC, petBr);
+                SelectObject(memDC, GetStockObject(NULL_PEN));
+                Ellipse(memDC, petCx - 5, petCy - 5, petCx + 6, petCy + 6);
+                DeleteObject(petBr);
+
+                // Mini Eyes
+                HBRUSH pEye = CreateSolidBrush(RGB(255, 255, 255));
+                SelectObject(memDC, pEye);
+                Ellipse(memDC, petCx - 3, petCy - 2, petCx, petCy + 1);
+                Ellipse(memDC, petCx + 1, petCy - 2, petCx + 4, petCy + 1);
+                DeleteObject(pEye);
             }
 
             // Draw Pac-Man
@@ -1930,7 +2323,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(memDC, &p1, bPupBr); FillRect(memDC, &p2, bPupBr);
                     DeleteObject(bPupBr);
                 } else {
-                    int scaredOffset = (frameCount % 4 < 2) ? 1 : -1;
                     HBRUSH scEyeBr = CreateSolidBrush(isFlashing ? RGB(213, 0, 0) : RGB(255, 255, 255));
                     SelectObject(memDC, scEyeBr);
                     Ellipse(memDC, gcx - 5, gcy - 4, gcx - 1, gcy);
@@ -1943,7 +2335,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (fruitActive) {
                 int bounceY = (int)(MySin(frameCount * 0.3) * 3.0);
                 int fcx = 7 * TS + TS/2, fcy = 12 * TS + TS/2 + bounceY;
-                HBRUSH cBr = CreateSolidBrush(RGB(213, 0, 0));
+                HBRUSH cBr = CreateSolidBrush(relicStone ? RGB(255, 215, 0) : RGB(213, 0, 0));
                 SelectObject(memDC, cBr);
                 Ellipse(memDC, fcx - 6, fcy, fcx + 1, fcy + 7);
                 Ellipse(memDC, fcx, fcy + 1, fcx + 7, fcy + 8);
@@ -1962,8 +2354,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             TextOutA(memDC, 2, H - 75, sstr, lstrlenA(sstr));
 
-            // Crafting Materials & HUD Bar
-            wsprintfA(sstr, "Ecto:%d Ess:%d Dust:%d | [C]Forge [O]Mode", craftEctoplasm, craftFruitEssence, craftStarDust);
+            // Crafting Materials & HUD Bar (With Relic Badges)
+            char relicIcons[16] = "";
+            if (relicCrown) lstrcatA(relicIcons, "C");
+            if (relicHourglass) lstrcatA(relicIcons, "H");
+            if (relicOrb) lstrcatA(relicIcons, "O");
+            if (relicAegis) lstrcatA(relicIcons, "A");
+            if (relicStone) lstrcatA(relicIcons, "S");
+
+            wsprintfA(sstr, "Ect:%d Ess:%d Dst:%d [%s] | Pet:Lv%d", craftEctoplasm, craftFruitEssence, craftStarDust, relicIcons[0] ? relicIcons : "-", petLevel);
             SetTextColor(memDC, RGB(0, 255, 200));
             TextOutA(memDC, 2, H - 55, sstr, lstrlenA(sstr));
 
@@ -1971,57 +2370,69 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (replayMode == 1) lstrcpyA(rText, " [REC]");
             else if (replayMode == 2) lstrcpyA(rText, " [PLAY]");
 
-            wsprintfA(sstr, "F:%s Z:%s M:%s B:%s%s",
+            wsprintfA(sstr, "F:%s Z:%s M:%s B:%s U:%s%s",
                 freezeCooldown > 0 ? "CD" : "OK",
                 speedCooldown > 0 ? "CD" : "OK",
                 magnetCooldown > 0 ? "CD" : "OK",
-                shieldActive ? "ON" : (shieldCooldown > 0 ? "CD" : "OK"), rText);
+                shieldActive ? "ON" : (shieldCooldown > 0 ? "CD" : "OK"),
+                petCooldown > 0 ? "CD" : "OK", rText);
             SetTextColor(memDC, RGB(255, 235, 59));
             TextOutA(memDC, 2, H - 35, sstr, lstrlenA(sstr));
             
             SetTextColor(memDC, RGB(180, 180, 180));
-            TextOutA(memDC, 2, H - 18, "[H]Help [K]Bind [7-0]Craft [V]Save [L]Load", 42);
+            TextOutA(memDC, 2, H - 18, "[H]Help [U]PetUlt [P]PetType [C]Forge [O]Mode", 45);
 
             if (showCraftMenu) {
                 HBRUSH overlay = CreateSolidBrush(RGB(5, 12, 25));
-                RECT overlayRect = {10, 30, W - 10, H - 90};
+                RECT overlayRect = {10, 20, W - 10, H - 85};
                 FillRect(memDC, &overlayRect, overlay);
                 DeleteObject(overlay);
                 HPEN bordPen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
                 SelectObject(memDC, bordPen);
                 SelectObject(memDC, GetStockObject(NULL_BRUSH));
-                Rectangle(memDC, 10, 30, W - 10, H - 90);
+                Rectangle(memDC, 10, 20, W - 10, H - 85);
                 DeleteObject(bordPen);
 
                 SetTextColor(memDC, RGB(0, 255, 255));
-                TextOutA(memDC, 30, 45, "=== THE CYBER FORGE ===", 23);
-                SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, 25, 75, "1/7: Super Pellet (2 Ecto + 1 Dust)", 35);
-                TextOutA(memDC, 25, 105, "2/8: Chrono Warp (2 Ecto + 2 Ess)", 33);
-                TextOutA(memDC, 25, 135, "3/9: Aegis Shield (2 Dust + 2 Ess)", 34);
-                TextOutA(memDC, 25, 165, "4/0: Void Pulse Bomb (3E+3D+1Ess)", 33);
+                if (craftMenuPage == 0) {
+                    TextOutA(memDC, 25, 30, "=== CYBER FORGE: CONSUMABLES ===", 32);
+                    SetTextColor(memDC, RGB(255, 255, 255));
+                    TextOutA(memDC, 20, 55, "1/7: Super Pellet (2 Ecto + 1 Dust)", 35);
+                    TextOutA(memDC, 20, 80, "2/8: Chrono Warp (2 Ecto + 2 Ess)", 33);
+                    TextOutA(memDC, 20, 105, "3/9: Aegis Shield (2 Dust + 2 Ess)", 34);
+                    TextOutA(memDC, 20, 130, "4/0: Void Pulse Bomb (3E+3D+1Ess)", 33);
+                } else {
+                    TextOutA(memDC, 25, 30, "=== CYBER FORGE: MYTHIC RELICS ===", 34);
+                    SetTextColor(memDC, RGB(255, 255, 255));
+                    TextOutA(memDC, 20, 52, "1/5: Crown of Ghost King (4E+3D)", 32);
+                    TextOutA(memDC, 20, 74, "2/6: Chrono Hourglass (4Ess+3D)", 31);
+                    TextOutA(memDC, 20, 96, "3/7: Astral Devourer Orb (4E+4D)", 32);
+                    TextOutA(memDC, 20, 118, "4/8: Sun Titan Aegis (4Ess+4D)", 30);
+                    TextOutA(memDC, 20, 140, "5/9: Philosopher Stone (5E+5S+5D)", 33);
+                }
                 SetTextColor(memDC, RGB(255, 215, 0));
                 char invStr[64];
                 wsprintfA(invStr, "Current: %d Ecto, %d Ess, %d Dust", craftEctoplasm, craftFruitEssence, craftStarDust);
-                TextOutA(memDC, 25, 205, invStr, lstrlenA(invStr));
+                TextOutA(memDC, 20, 165, invStr, lstrlenA(invStr));
                 SetTextColor(memDC, RGB(0, 230, 118));
-                TextOutA(memDC, 35, 235, "Press 1-4 or 7-0 to Craft | [C] Close", 37);
+                TextOutA(memDC, 20, 190, "[Tab] Toggle Relics | [C] Close", 31);
             } else if (showHelp) {
                 HBRUSH overlay = CreateSolidBrush(RGB(0, 0, 0));
                 RECT overlayRect = {0, 0, W, H};
                 FillRect(memDC, &overlayRect, overlay);
                 DeleteObject(overlay);
                 SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, 70, 40, "KPac Loop 10 - Help", 19);
-                TextOutA(memDC, 30, 70, "Move: Arrows or WASD", 20);
-                TextOutA(memDC, 30, 90, "Skills: F(Frz) Z(Spr) M(Mag) B(Shd)", 35);
-                TextOutA(memDC, 30, 110, "Mode: [O] Toggle Campaign / Endless", 35);
-                TextOutA(memDC, 30, 130, "Crafting: [C] Cyber-Forge Menu", 30);
-                TextOutA(memDC, 30, 150, "Quick-Craft: 7(Pellet) 8(Warp) 9(Shield) 0(Bomb)", 48);
-                TextOutA(memDC, 30, 170, "Diff: 1(Easy) 2(Norm) 3(Hard)", 29);
-                TextOutA(memDC, 30, 190, "Save/Load: V / L | Pause: P", 27);
+                TextOutA(memDC, 70, 30, "KPac Loop 11 - Help", 19);
+                TextOutA(memDC, 25, 55, "Move: Arrows / WASD | Space: Pause", 34);
+                TextOutA(memDC, 25, 75, "Skills: F(Frz) Z(Spr) M(Mag) B(Shd)", 35);
+                TextOutA(memDC, 25, 95, "Pet: [U] Pet Ultimate | [P] Cycle Pet", 37);
+                TextOutA(memDC, 25, 115, "Mode: [O] Toggle Campaign / Endless", 35);
+                TextOutA(memDC, 25, 135, "Cyber-Forge: [C] Menu [Tab] Relics", 34);
+                TextOutA(memDC, 25, 155, "Portals: Blue/Purple Void Rifts", 31);
+                TextOutA(memDC, 25, 175, "Diff: 1(Easy) 2(Norm) 3(Hard)", 29);
+                TextOutA(memDC, 25, 195, "Save/Load: V / L | Replay: R / T", 32);
                 SetTextColor(memDC, RGB(0, 230, 118));
-                TextOutA(memDC, 40, 230, "Press H or F1 to Start/Resume", 29);
+                TextOutA(memDC, 35, 230, "Press H or F1 to Start/Resume", 29);
             }
 
             if (saveMsgTimer > 0) {
