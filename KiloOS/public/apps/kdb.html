@@ -17,6 +17,8 @@
     --danger: #ef4444;
     --danger-hover: #dc2626;
     --success: #10b981;
+    --accent: #a855f7;
+    --accent-hover: #9333ea;
   }
   * { box-sizing: border-box; }
   body { 
@@ -46,14 +48,14 @@
     flex-grow: 1;
   }
   .header {
-    padding: 16px 20px;
+    padding: 14px 18px;
     border-bottom: 1px solid var(--border-color);
     background: rgba(0,0,0,0.25);
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
   }
   .header-title {
     display: flex;
@@ -62,7 +64,7 @@
   }
   .header h1 { 
     margin: 0; 
-    font-size: 20px; 
+    font-size: 19px; 
     font-weight: 700; 
     color: var(--primary); 
     letter-spacing: 0.5px;
@@ -78,7 +80,7 @@
   }
   .controls {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     flex-grow: 1;
     flex-wrap: wrap;
@@ -86,18 +88,18 @@
   }
   .search-box {
     flex-grow: 1;
-    min-width: 200px;
+    min-width: 170px;
     position: relative;
   }
   .search-box input {
     width: 100%;
-    padding: 8px 12px;
+    padding: 7px 11px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
     background: rgba(0, 0, 0, 0.3);
     color: var(--text-main);
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
   }
   .search-box input:focus {
     outline: none;
@@ -106,17 +108,17 @@
   }
   .pwd-box {
     position: relative;
-    width: 150px;
+    width: 125px;
   }
   .pwd-box input {
     width: 100%;
-    padding: 8px 12px;
+    padding: 7px 11px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
     background: rgba(0, 0, 0, 0.3);
     color: var(--text-main);
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
   }
   .pwd-box input:focus {
     outline: none;
@@ -127,9 +129,9 @@
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-main);
     border: 1px solid var(--border-color);
-    padding: 8px 12px;
+    padding: 7px 11px;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
@@ -138,6 +140,22 @@
   .btn-secondary:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.25);
+  }
+  .btn-accent {
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    padding: 7px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .btn-accent:hover {
+    background: rgba(168, 85, 247, 0.3);
+    border-color: rgba(168, 85, 247, 0.5);
   }
   .table-container {
     overflow-y: auto;
@@ -149,21 +167,34 @@
     font-size: 14px; 
   }
   th, td { 
-    padding: 12px 16px; 
+    padding: 11px 16px; 
     text-align: left; 
     border-bottom: 1px solid var(--border-color); 
   }
   th { 
-    background-color: rgba(15, 20, 28, 0.9); 
+    background-color: rgba(15, 20, 28, 0.92); 
     color: var(--text-muted); 
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.8px;
     position: sticky;
     top: 0;
     z-index: 10;
     backdrop-filter: blur(8px);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s, background-color 0.15s;
+  }
+  th:hover {
+    color: var(--primary);
+    background-color: rgba(20, 28, 40, 0.95);
+  }
+  .sort-indicator {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 10px;
+    color: var(--primary);
   }
   tr { transition: background-color 0.15s ease; }
   tr:hover { background-color: rgba(255, 255, 255, 0.04); }
@@ -208,7 +239,7 @@
     display: grid;
     grid-template-columns: 80px 1fr 1fr 1fr auto;
     gap: 10px;
-    padding: 14px 20px;
+    padding: 12px 18px;
     background: rgba(0,0,0,0.3);
     border-top: 1px solid var(--border-color);
     align-items: center;
@@ -220,7 +251,7 @@
     background: rgba(255,255,255,0.05);
     color: var(--text-main);
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
   }
   .add-form input:focus {
     outline: none;
@@ -233,7 +264,7 @@
     background: var(--primary);
     color: #0f141c;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     font-family: inherit;
     transition: background 0.2s;
@@ -241,7 +272,7 @@
   .btn-primary:hover { background: var(--primary-hover); }
 
   .status-bar {
-    padding: 8px 20px;
+    padding: 8px 18px;
     background: rgba(0,0,0,0.4);
     border-top: 1px solid rgba(255,255,255,0.05);
     font-size: 11px;
@@ -262,19 +293,25 @@
     background: var(--success);
   }
   .query-hint {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
-    padding: 4px 20px;
+    padding: 5px 18px;
     background: rgba(0,0,0,0.15);
     border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
   }
-  /* Edit Modal */
+  
+  /* Modals */
   .modal-overlay {
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(5px);
     z-index: 100;
     align-items: center;
     justify-content: center;
@@ -284,12 +321,17 @@
     background: #1a202c;
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    padding: 20px;
-    width: 360px;
+    padding: 22px;
+    width: 380px;
     max-width: 90%;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   }
-  .modal h3 { margin-top: 0; margin-bottom: 14px; color: var(--primary); font-size: 16px; }
+  .modal-wide {
+    width: 520px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .modal h3 { margin-top: 0; margin-bottom: 14px; color: var(--primary); font-size: 16px; font-weight: 700; }
   .modal-field { margin-bottom: 12px; }
   .modal-field label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
   .modal-field input {
@@ -301,7 +343,56 @@
     color: var(--text-main);
     font-family: inherit;
   }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+  /* Analytics Cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 2px;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .dept-bar-container {
+    margin-bottom: 10px;
+  }
+  .dept-bar-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--text-main);
+  }
+  .dept-progress-bg {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .dept-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
 </style>
 </head>
 <body>
@@ -318,28 +409,31 @@
       <div class="pwd-box">
         <input type="password" id="dbPassword" aria-label="Database Encryption Password" placeholder="Encryption Key..." onchange="loadRecords()" title="Set password to encrypt/decrypt database">
       </div>
+      <button class="btn-accent" onclick="openStatsModal()" title="View Department Analytics & Database Metrics">Analytics / Stats</button>
       <button class="btn-secondary" onclick="exportCSV()" title="Export database as CSV">Export CSV</button>
       <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file">Import CSV</button>
       <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
       <button class="btn-secondary" onclick="exportJSON()" title="Export database as JSON">Export JSON</button>
       <button class="btn-secondary" onclick="triggerImportJSON()" title="Import JSON file">Import JSON</button>
       <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="importJSON(event)">
+      <button class="btn-secondary" onclick="exportMarkdown()" title="Export database summary & directory as Markdown (.md)">Export MD</button>
       <button class="btn-secondary" onclick="resetToDefaults()" title="Reset database to default sample data">Reset</button>
       <button class="btn-secondary" onclick="showHelp()" title="Show Help">Help [F1/H]</button>
     </div>
   </div>
   <div class="query-hint">
-    Syntax tips: Combine terms (e.g. <code>dept:engineering role:lead</code>). Supports <code>id>102</code>, <code>id<105</code>, <code>name:alice</code>. Encryption key auto-saves encrypted payload. <strong>(Press F1 or H for Help)</strong>
+    <span>Syntax: <code>dept:engineering</code>, <code>role:lead</code>, <code>id>102</code>, <code>name:alice</code>. Click column headers to sort (▲/▼).</span>
+    <span>Encryption key auto-saves encrypted payload. <strong>(F1/H for Help)</strong></span>
   </div>
   <div class="table-container">
     <table id="empTable">
       <thead>
         <tr>
-          <th style="width: 80px;">ID</th>
-          <th>Name</th>
-          <th>Department</th>
-          <th>Role</th>
-          <th style="width: 110px; text-align: right;">Actions</th>
+          <th style="width: 90px;" onclick="handleSort('id')">ID <span id="sort-id" class="sort-indicator"></span></th>
+          <th onclick="handleSort('name')">Name <span id="sort-name" class="sort-indicator"></span></th>
+          <th onclick="handleSort('dept')">Department <span id="sort-dept" class="sort-indicator"></span></th>
+          <th onclick="handleSort('role')">Role <span id="sort-role" class="sort-indicator"></span></th>
+          <th style="width: 110px; text-align: right; cursor: default;">Actions</th>
         </tr>
       </thead>
       <tbody id="empTableBody">
@@ -390,11 +484,46 @@
   </div>
 </div>
 
+<!-- Analytics & Statistics Modal -->
+<div class="modal-overlay" id="statsModal">
+  <div class="modal modal-wide">
+    <h3>📊 Database Analytics & Metrics</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotalEmployees">0</div>
+        <div class="stat-label">Total Employees</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statTotalDepts">0</div>
+        <div class="stat-label">Departments</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statTotalRoles">0</div>
+        <div class="stat-label">Unique Roles</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statNextId">--</div>
+        <div class="stat-label">Next Suggested ID</div>
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 16px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 13px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.6px;">Department Distribution</h4>
+      <div id="deptDistributionContainer"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-accent" onclick="exportMarkdown(); closeStatsModal();">Export Markdown Report</button>
+      <button class="btn-secondary" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 if (window.resizeTo) window.resizeTo(900, 650);
 
 function showHelp() {
-  alert(`KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 500 records.\n- Export and import via CSV or JSON.`);
+  alert(`KDB Employee Database - Help\n\n- Search query supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Numeric comparisons: 'id>102' or 'id<105'\n- Click any column header (ID, Name, Dept, Role) to sort Asc/Desc.\n- Analytics & Stats modal provides department headcount breakdown and metrics.\n- Export options: CSV, JSON, and Markdown (.md) Report.\n- Data is auto-saved locally with optional password encryption.\n- Max table capacity: 500 records.`);
 }
 
 window.addEventListener('keydown', function(e) {
@@ -416,6 +545,8 @@ const DEFAULT_RECORDS = [
 ];
 
 let records = [];
+let sortCol = null;
+let sortAsc = true;
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
@@ -445,6 +576,49 @@ function cryptData(text, key) {
     out += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
   }
   return out;
+}
+
+function handleSort(col) {
+  if (sortCol === col) {
+    sortAsc = !sortAsc;
+  } else {
+    sortCol = col;
+    sortAsc = true;
+  }
+  updateSortIndicators();
+  filterTable();
+}
+
+function updateSortIndicators() {
+  const cols = ['id', 'name', 'dept', 'role'];
+  cols.forEach(c => {
+    const el = document.getElementById(`sort-${c}`);
+    if (el) {
+      if (sortCol === c) {
+        el.textContent = sortAsc ? '▲' : '▼';
+      } else {
+        el.textContent = '';
+      }
+    }
+  });
+}
+
+function sortRecordList(list) {
+  if (!sortCol) return list;
+  return [...list].sort((a, b) => {
+    let valA = a[sortCol] || '';
+    let valB = b[sortCol] || '';
+
+    if (sortCol === 'id') {
+      const numA = parseInt(valA, 10);
+      const numB = parseInt(valB, 10);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return sortAsc ? (numA - numB) : (numB - numA);
+      }
+    }
+    const cmp = String(valA).localeCompare(String(valB), undefined, { numeric: true, sensitivity: 'base' });
+    return sortAsc ? cmp : -cmp;
+  });
 }
 
 function loadRecords() {
@@ -484,7 +658,7 @@ function loadRecords() {
     records = [];
     updateStatus('Error loading data. Wrong key?', true);
   }
-  filterTable(); // Render table with filters applied
+  filterTable();
 }
 
 function saveRecords() {
@@ -503,7 +677,9 @@ function saveRecords() {
 }
 
 function renderTable(filteredRecords = null) {
-  const displayList = filteredRecords || records;
+  let displayList = filteredRecords !== null ? filteredRecords : records;
+  displayList = sortRecordList(displayList);
+
   const tbody = document.getElementById('empTableBody');
   tbody.innerHTML = '';
 
@@ -664,7 +840,6 @@ function filterTable() {
     return;
   }
 
-  // Parse structured query expressions, support multiple conditions
   const queryTerms = rawQuery.slice(0, 100).match(/(?:[^\s"]+|"[^"]*")+/g) || [];
   
   const filtered = records.filter(r => {
@@ -690,7 +865,6 @@ function filterTable() {
         if (!isNaN(num)) return parseInt(r.id, 10) < num;
       } 
       
-      // Fallback general text search
       return r.id.toLowerCase().includes(term) ||
              r.name.toLowerCase().includes(term) ||
              r.dept.toLowerCase().includes(term) ||
@@ -708,13 +882,58 @@ function handleSearchKey(e) {
   }
 }
 
-function resetToDefaults() {
-  if (confirm("Reset database to default sample data? All current data will be lost.")) {
-    records = [...DEFAULT_RECORDS];
-    saveRecords();
-    filterTable();
-    updateStatus('Database reset to defaults');
+function openStatsModal() {
+  document.getElementById('statTotalEmployees').textContent = records.length;
+  
+  const depts = {};
+  const roles = new Set();
+  let maxId = 0;
+
+  records.forEach(r => {
+    const d = r.dept || 'Unassigned';
+    depts[d] = (depts[d] || 0) + 1;
+    if (r.role) roles.add(r.role);
+    const parsedId = parseInt(r.id, 10);
+    if (!isNaN(parsedId) && parsedId > maxId) {
+      maxId = parsedId;
+    }
+  });
+
+  const deptKeys = Object.keys(depts).sort((a, b) => depts[b] - depts[a]);
+  document.getElementById('statTotalDepts').textContent = deptKeys.length;
+  document.getElementById('statTotalRoles').textContent = roles.size;
+  document.getElementById('statNextId').textContent = maxId > 0 ? (maxId + 1) : (records.length + 101);
+
+  const container = document.getElementById('deptDistributionContainer');
+  container.innerHTML = '';
+
+  if (deptKeys.length === 0) {
+    container.innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">No records available.</div>';
+  } else {
+    deptKeys.forEach(dept => {
+      const count = depts[dept];
+      const pct = records.length > 0 ? ((count / records.length) * 100).toFixed(1) : 0;
+      
+      const item = document.createElement('div');
+      item.className = 'dept-bar-container';
+      item.innerHTML = `
+        <div class="dept-bar-header">
+          <span><strong>${escapeHtml(dept)}</strong></span>
+          <span style="color: var(--text-muted);">${count} (${pct}%)</span>
+        </div>
+        <div class="dept-progress-bg">
+          <div class="dept-progress-fill" style="width: ${pct}%;"></div>
+        </div>
+      `;
+      container.appendChild(item);
+    });
   }
+
+  document.getElementById('statsModal').classList.add('active');
+}
+
+function closeStatsModal() {
+  document.getElementById('statsModal').classList.remove('active');
 }
 
 function exportCSV() {
@@ -768,7 +987,6 @@ function importCSV(e) {
 
       for (let i = 1; i < lines.length; i++) {
         if (records.length >= MAX_RECORDS) break;
-        // Simple regex CSV line split with quotes handling
         const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
         if (cols.length >= 4) {
           const clean = val => val.replace(/^"|"$/g, '').replace(/""/g, '"').trim();
@@ -890,9 +1108,72 @@ function importJSON(e) {
   e.target.value = '';
 }
 
+function exportMarkdown() {
+  if (records.length === 0) {
+    alert('No records available to export.');
+    return;
+  }
+
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const depts = {};
+  const roles = new Set();
+  let maxId = 0;
+
+  records.forEach(r => {
+    const d = r.dept || 'Unassigned';
+    depts[d] = (depts[d] || 0) + 1;
+    if (r.role) roles.add(r.role);
+    const pid = parseInt(r.id, 10);
+    if (!isNaN(pid) && pid > maxId) maxId = pid;
+  });
+
+  const sortedList = sortRecordList(records);
+
+  let md = `# 📁 KDB Employee Directory & Analytics Report\n\n`;
+  md += `*Generated on: ${dateStr}*\n\n`;
+  md += `## 📊 Executive Summary\n\n`;
+  md += `- **Total Active Records**: ${records.length}\n`;
+  md += `- **Total Departments**: ${Object.keys(depts).length}\n`;
+  md += `- **Unique Job Roles**: ${roles.size}\n`;
+  md += `- **Next Suggested ID**: ${maxId > 0 ? (maxId + 1) : (records.length + 101)}\n\n`;
+
+  md += `## 🏢 Department Breakdown\n\n`;
+  md += `| Department | Headcount | Distribution |\n`;
+  md += `| :--- | :--- | :--- |\n`;
+  const sortedDepts = Object.keys(depts).sort((a, b) => depts[b] - depts[a]);
+  sortedDepts.forEach(dept => {
+    const count = depts[dept];
+    const pct = ((count / records.length) * 100).toFixed(1);
+    md += `| ${dept} | ${count} | ${pct}% |\n`;
+  });
+  md += `\n`;
+
+  md += `## 👥 Employee Roster\n\n`;
+  md += `| ID | Full Name | Department | Role |\n`;
+  md += `| :--- | :--- | :--- | :--- |\n`;
+  sortedList.forEach(r => {
+    md += `| ${r.id} | ${r.name} | ${r.dept} | ${r.role} |\n`;
+  });
+  md += `\n---\n*KDB - KiloApps High Performance Lightweight Suite*\n`;
+
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kdb_employees_${dateStr}.md`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  updateStatus('Exported database Markdown (.md) report');
+}
+
 function resetToDefaults() {
   if (confirm('Are you sure you want to reset all employee data to default records?')) {
     records = [...DEFAULT_RECORDS];
+    sortCol = null;
+    sortAsc = true;
+    updateSortIndicators();
     saveRecords();
     document.getElementById('searchInput').value = '';
     filterTable();
@@ -907,14 +1188,6 @@ if (window.parent !== window) {
   window.parent.postMessage({ type: 'OS_RESIZE_WINDOW', width: 800, height: 600 }, '*');
 }
 window.resizeTo(800, 600);
-
-
-document.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-    alert("KDB Database Manager - Help\n\n- Search query supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 500 records.\n- Export and import via CSV or JSON.");
-  }
-});
-
 </script>
 </body>
 </html>

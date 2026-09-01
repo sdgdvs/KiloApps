@@ -19,11 +19,13 @@
 #define IDC_IMPORT_JSON 112
 #define IDC_RELOAD_BTN 113
 #define IDC_HELP_BTN 114
+#define IDC_STATS_BTN 115
+#define IDC_EXPORT_MD 116
 
 HWND hListView;
 HWND hSearch;
 HWND hAddId, hAddName, hAddDept, hAddRole, hAddBtn, hDelBtn;
-HWND hPwd, hExpCSV, hImpCSV, hExpJSON, hImpJSON, hReload, hHelpBtn;
+HWND hPwd, hExpCSV, hImpCSV, hExpJSON, hImpJSON, hExpMD, hStatsBtn, hReload, hHelpBtn;
 HFONT hFont;
 HBRUSH hBgBrush;
 HBRUSH hEditBgBrush;
@@ -48,6 +50,8 @@ Record data[MAX_RECORDS] = {
     {"105", "Evan Wright", "HR", "Manager"}
 };
 int data_count = 5;
+int g_sortCol = -1;
+int g_sortAsc = 1;
 
 #pragma function(memcpy)
 void* __cdecl memcpy(void* dest, const void* src, size_t count) {
@@ -151,7 +155,6 @@ void LoadDataFromFile() {
             int encrypted = (magic == 0x4B444245);
             if (encrypted && !key[0]) {
                 CloseHandle(hFile);
-                // Can't load without key.
                 data_count = 0;
                 return;
             }
@@ -168,7 +171,7 @@ void LoadDataFromFile() {
                             memcpy(data, buffer + sizeof(int), count * sizeof(Record));
                             data_count = count;
                         } else {
-                            data_count = 0; // Failed decryption
+                            data_count = 0;
                         }
                     }
                     GlobalFree(buffer);
@@ -199,7 +202,7 @@ int MatchQuery(const Record* rec, const char* query) {
         }
         
         char* term = p;
-        p = end; // next
+        p = end;
         
         int match = 0;
         char* colon = (char*)FindChar(term, ':');
@@ -231,6 +234,36 @@ int MatchQuery(const Record* rec, const char* query) {
         if (!match) return 0;
     }
     return 1;
+}
+
+void SortRecords(int col, int asc) {
+    if (data_count <= 1 || col < 0 || col > 3) return;
+    for (int i = 0; i < data_count - 1; i++) {
+        for (int j = 0; j < data_count - i - 1; j++) {
+            int cmp = 0;
+            if (col == 0) {
+                int numA = atoi(data[j].id);
+                int numB = atoi(data[j + 1].id);
+                if (numA > 0 && numB > 0 && numA != numB) {
+                    cmp = (numA > numB) ? 1 : -1;
+                } else {
+                    cmp = lstrcmpiA(data[j].id, data[j + 1].id);
+                }
+            } else if (col == 1) {
+                cmp = lstrcmpiA(data[j].name, data[j + 1].name);
+            } else if (col == 2) {
+                cmp = lstrcmpiA(data[j].dept, data[j + 1].dept);
+            } else if (col == 3) {
+                cmp = lstrcmpiA(data[j].role, data[j + 1].role);
+            }
+            if (!asc) cmp = -cmp;
+            if (cmp > 0) {
+                Record temp = data[j];
+                data[j] = data[j + 1];
+                data[j + 1] = temp;
+            }
+        }
+    }
 }
 
 void PopulateListView(const char* filter) {
@@ -272,9 +305,9 @@ void AutoScaleListViewColumns(int totalWidth) {
     int remaining = totalWidth - colId - 25;
     if (remaining < 150) remaining = 150;
 
-    int colName = (remaining * 40) / 100;
-    int colDept = (remaining * 30) / 100;
-    int colRole = (remaining * 30) / 100;
+    int colName = (remaining * 38) / 100;
+    int colDept = (remaining * 31) / 100;
+    int colRole = (remaining * 31) / 100;
 
     ListView_SetColumnWidth(hListView, 0, colId);
     ListView_SetColumnWidth(hListView, 1, colName);
@@ -312,7 +345,7 @@ void ExportCSV(HWND hwnd) {
                 WriteFile(hFile, buf, lstrlenA(buf), &w, NULL);
             }
             CloseHandle(hFile);
-            MessageBoxA(hwnd, "Exported successfully", "Success", MB_OK);
+            MessageBoxA(hwnd, "Exported CSV successfully.", "Success", MB_OK);
         }
     }
 }
@@ -365,7 +398,7 @@ void ImportCSV(HWND hwnd) {
             }
             CloseHandle(hFile);
             SaveDataToFile();
-            char msg[128]; wsprintfA(msg, "Imported CSV. Total: %d", data_count);
+            char msg[128]; wsprintfA(msg, "Imported CSV. Total records: %d", data_count);
             MessageBoxA(hwnd, msg, "Success", MB_OK);
         }
     }
@@ -386,7 +419,7 @@ void ExportJSON(HWND hwnd) {
             }
             WriteFile(hFile, "]\r\n", 3, &w, NULL);
             CloseHandle(hFile);
-            MessageBoxA(hwnd, "Exported successfully", "Success", MB_OK);
+            MessageBoxA(hwnd, "Exported JSON successfully.", "Success", MB_OK);
         }
     }
 }
@@ -438,22 +471,127 @@ void ImportJSON(HWND hwnd) {
             }
             CloseHandle(hFile);
             SaveDataToFile();
-            char msg[128]; wsprintfA(msg, "Imported JSON. Total: %d", data_count);
+            char msg[128]; wsprintfA(msg, "Imported JSON. Total records: %d", data_count);
             MessageBoxA(hwnd, msg, "Success", MB_OK);
         }
     }
 }
 
+void ExportMarkdown(HWND hwnd) {
+    char path[MAX_PATH];
+    if (PromptFile(hwnd, path, 1, "Markdown Files\0*.md\0All Files\0*.*\0", "md")) {
+        HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD w;
+            char depts[32][64];
+            int dept_counts[32] = {0};
+            int dept_total = 0;
+            int maxId = 0;
+
+            for (int i = 0; i < data_count; i++) {
+                int pid = atoi(data[i].id);
+                if (pid > maxId) maxId = pid;
+                
+                int found = 0;
+                for (int d = 0; d < dept_total; d++) {
+                    if (lstrcmpiA(depts[d], data[i].dept) == 0) {
+                        dept_counts[d]++;
+                        found = 1;
+                        break;
+                    }
+                }
+                if (!found && dept_total < 32) {
+                    lstrcpynA(depts[dept_total], data[i].dept, 64);
+                    dept_counts[dept_total] = 1;
+                    dept_total++;
+                }
+            }
+
+            char buf[512];
+            const char* title = "# 📁 KDB Employee Directory & Analytics Report\r\n\r\n## 📊 Executive Summary\r\n";
+            WriteFile(hFile, title, lstrlenA(title), &w, NULL);
+
+            wsprintfA(buf, "- **Total Active Records**: %d\r\n- **Departments**: %d\r\n- **Next Suggested ID**: %d\r\n\r\n",
+                data_count, dept_total, maxId > 0 ? (maxId + 1) : (data_count + 101));
+            WriteFile(hFile, buf, lstrlenA(buf), &w, NULL);
+
+            const char* deptHdr = "## 🏢 Department Breakdown\r\n\r\n| Department | Headcount |\r\n| :--- | :--- |\r\n";
+            WriteFile(hFile, deptHdr, lstrlenA(deptHdr), &w, NULL);
+
+            for (int d = 0; d < dept_total; d++) {
+                wsprintfA(buf, "| %s | %d |\r\n", depts[d], dept_counts[d]);
+                WriteFile(hFile, buf, lstrlenA(buf), &w, NULL);
+            }
+
+            const char* rosterHdr = "\r\n## 👥 Employee Roster\r\n\r\n| ID | Full Name | Department | Role |\r\n| :--- | :--- | :--- | :--- |\r\n";
+            WriteFile(hFile, rosterHdr, lstrlenA(rosterHdr), &w, NULL);
+
+            for (int i = 0; i < data_count; i++) {
+                wsprintfA(buf, "| %s | %s | %s | %s |\r\n", data[i].id, data[i].name, data[i].dept, data[i].role);
+                WriteFile(hFile, buf, lstrlenA(buf), &w, NULL);
+            }
+
+            const char* footer = "\r\n---\r\n*KDB - KiloApps High Performance Lightweight Suite*\r\n";
+            WriteFile(hFile, footer, lstrlenA(footer), &w, NULL);
+
+            CloseHandle(hFile);
+            MessageBoxA(hwnd, "Exported Markdown report successfully.", "Success", MB_OK);
+        }
+    }
+}
+
+void ShowStats(HWND hwnd) {
+    char depts[32][64];
+    int dept_counts[32] = {0};
+    int dept_total = 0;
+    int maxId = 0;
+
+    for (int i = 0; i < data_count; i++) {
+        int pid = atoi(data[i].id);
+        if (pid > maxId) maxId = pid;
+        
+        int found = 0;
+        for (int d = 0; d < dept_total; d++) {
+            if (lstrcmpiA(depts[d], data[i].dept) == 0) {
+                dept_counts[d]++;
+                found = 1;
+                break;
+            }
+        }
+        if (!found && dept_total < 32) {
+            lstrcpynA(depts[dept_total], data[i].dept, 64);
+            dept_counts[dept_total] = 1;
+            dept_total++;
+        }
+    }
+
+    char msg[1024];
+    char temp[128];
+    wsprintfA(msg, "📊 KDB Database Analytics & Metrics\n\nTotal Employees: %d\nDepartments: %d\nNext Suggested ID: %d\n\nDepartment Headcount Breakdown:\n",
+        data_count, dept_total, maxId > 0 ? (maxId + 1) : (data_count + 101));
+
+    for (int d = 0; d < dept_total; d++) {
+        int pct = data_count > 0 ? ((dept_counts[d] * 100) / data_count) : 0;
+        wsprintfA(temp, "  • %s: %d (%d%%)\n", depts[d], dept_counts[d], pct);
+        lstrcatA(msg, temp);
+    }
+
+    lstrcatA(msg, "\nTip: Click column headers to sort, or Export MD for full reports.");
+    MessageBoxA(hwnd, msg, "KDB Analytics & Statistics", MB_OK | MB_ICONINFORMATION);
+}
+
 void InitListView(HWND hwnd) {
-    hPwd = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_PASSWORD, 10, 10, 100, 25, hwnd, (HMENU)IDC_PWD, GetModuleHandle(NULL), NULL);
-    hReload = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE, 115, 10, 45, 25, hwnd, (HMENU)IDC_RELOAD_BTN, GetModuleHandle(NULL), NULL);
-    hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 165, 10, 180, 25, hwnd, (HMENU)IDC_SEARCH, GetModuleHandle(NULL), NULL);
+    hPwd = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_PASSWORD, 10, 10, 85, 25, hwnd, (HMENU)IDC_PWD, GetModuleHandle(NULL), NULL);
+    hReload = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE, 100, 10, 45, 25, hwnd, (HMENU)IDC_RELOAD_BTN, GetModuleHandle(NULL), NULL);
+    hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 150, 10, 150, 25, hwnd, (HMENU)IDC_SEARCH, GetModuleHandle(NULL), NULL);
     
-    hExpCSV = CreateWindowEx(0, "BUTTON", "Export CSV", WS_CHILD | WS_VISIBLE, 350, 10, 90, 25, hwnd, (HMENU)IDC_EXPORT_CSV, GetModuleHandle(NULL), NULL);
-    hImpCSV = CreateWindowEx(0, "BUTTON", "Import CSV", WS_CHILD | WS_VISIBLE, 445, 10, 90, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
-    hExpJSON = CreateWindowEx(0, "BUTTON", "Export JSON", WS_CHILD | WS_VISIBLE, 540, 10, 95, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
-    hImpJSON = CreateWindowEx(0, "BUTTON", "Import JSON", WS_CHILD | WS_VISIBLE, 640, 10, 95, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
-    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1/H]", WS_CHILD | WS_VISIBLE, 740, 10, 85, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
+    hStatsBtn = CreateWindowEx(0, "BUTTON", "Stats", WS_CHILD | WS_VISIBLE, 305, 10, 55, 25, hwnd, (HMENU)IDC_STATS_BTN, GetModuleHandle(NULL), NULL);
+    hExpCSV = CreateWindowEx(0, "BUTTON", "Exp CSV", WS_CHILD | WS_VISIBLE, 365, 10, 68, 25, hwnd, (HMENU)IDC_EXPORT_CSV, GetModuleHandle(NULL), NULL);
+    hImpCSV = CreateWindowEx(0, "BUTTON", "Imp CSV", WS_CHILD | WS_VISIBLE, 438, 10, 68, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
+    hExpJSON = CreateWindowEx(0, "BUTTON", "Exp JSON", WS_CHILD | WS_VISIBLE, 511, 10, 72, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
+    hImpJSON = CreateWindowEx(0, "BUTTON", "Imp JSON", WS_CHILD | WS_VISIBLE, 588, 10, 72, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
+    hExpMD = CreateWindowEx(0, "BUTTON", "Exp MD", WS_CHILD | WS_VISIBLE, 665, 10, 65, 25, hwnd, (HMENU)IDC_EXPORT_MD, GetModuleHandle(NULL), NULL);
+    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, 735, 10, 75, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
     
     LoadDataFromFile();
 
@@ -483,10 +621,12 @@ void InitListView(HWND hwnd) {
     SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hPwd, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hReload, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hStatsBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hExpCSV, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hImpCSV, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hExpJSON, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hImpJSON, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hExpMD, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hHelpBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
     
     SendMessage(hAddId, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -496,9 +636,8 @@ void InitListView(HWND hwnd) {
     SendMessage(hAddBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hDelBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-    // Set placeholder cue banners
-    SendMessageA(hPwd, EM_SETCUEBANNER, FALSE, (LPARAM)"Encryption Key");
-    SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)"Search / Query (Press F1/H for Help)...");
+    SendMessageA(hPwd, EM_SETCUEBANNER, FALSE, (LPARAM)"Key");
+    SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)"Search / Query (F1 for Help)...");
     SendMessageA(hAddId, EM_SETCUEBANNER, FALSE, (LPARAM)"ID");
     SendMessageA(hAddName, EM_SETCUEBANNER, FALSE, (LPARAM)"Name");
     SendMessageA(hAddDept, EM_SETCUEBANNER, FALSE, (LPARAM)"Department");
@@ -529,6 +668,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             InitListView(hwnd);
             break;
         }
+        case WM_NOTIFY: {
+            NMHDR* pnmh = (NMHDR*)lParam;
+            if (pnmh->hwndFrom == hListView && pnmh->code == LVN_COLUMNCLICK) {
+                NMLISTVIEW* pnmv = (NMLISTVIEW*)lParam;
+                int col = pnmv->iSubItem;
+                if (g_sortCol == col) {
+                    g_sortAsc = !g_sortAsc;
+                } else {
+                    g_sortCol = col;
+                    g_sortAsc = 1;
+                }
+                SortRecords(g_sortCol, g_sortAsc);
+                char buf[128] = {0};
+                GetWindowTextA(hSearch, buf, sizeof(buf));
+                PopulateListView(buf);
+            }
+            break;
+        }
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
@@ -545,6 +702,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LoadDataFromFile();
                 char buf[128]; GetWindowTextA(hSearch, buf, sizeof(buf));
                 PopulateListView(buf);
+            } else if (LOWORD(wParam) == IDC_STATS_BTN) {
+                ShowStats(hwnd);
             } else if (LOWORD(wParam) == IDC_EXPORT_CSV) {
                 ExportCSV(hwnd);
             } else if (LOWORD(wParam) == IDC_IMPORT_CSV) {
@@ -557,8 +716,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ImportJSON(hwnd);
                 char buf[128]; GetWindowTextA(hSearch, buf, sizeof(buf));
                 PopulateListView(buf);
+            } else if (LOWORD(wParam) == IDC_EXPORT_MD) {
+                ExportMarkdown(hwnd);
             } else if (LOWORD(wParam) == IDC_HELP_BTN) {
-                MessageBoxA(hwnd, "KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 200 records.\n- Export and import via CSV or JSON.", "KDB Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions: 'id>102' or 'id<105'\n- Click Column Headers to sort (Ascending / Descending)\n- Stats button displays department breakdown\n- Export as CSV, JSON, or Markdown (.md)\n- Data is auto-saved locally.", "KDB Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == IDC_ADD_BTN) {
                 if (data_count >= MAX_RECORDS) {
                     MessageBoxA(hwnd, "Database capacity limit reached (200 records).", "Database Full", MB_OK | MB_ICONWARNING);
@@ -579,7 +740,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
 
-                // Check duplicate ID
                 int dup = 0;
                 for (int i = 0; i < data_count; i++) {
                     if (lstrcmpiA(data[i].id, newId) == 0) {
@@ -598,6 +758,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 lstrcpynA(data[data_count].role, newRole, sizeof(data[data_count].role));
                 data_count++;
 
+                if (g_sortCol >= 0) SortRecords(g_sortCol, g_sortAsc);
                 SaveDataToFile();
 
                 SetWindowTextA(hAddId, "");
@@ -640,19 +801,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nh = HIWORD(lParam);
             if (nw < 100 || nh < 100) break;
 
-            MoveWindow(hPwd, 10, 10, 110, 25, TRUE);
-            MoveWindow(hReload, 125, 10, 50, 25, TRUE);
+            MoveWindow(hPwd, 10, 10, 85, 25, TRUE);
+            MoveWindow(hReload, 98, 10, 42, 25, TRUE);
             
-            int sh = nw - 680;
-            if (sh < 50) sh = 50;
-            MoveWindow(hSearch, 185, 10, sh, 25, TRUE);
+            int btnSpace = 550;
+            int sh = nw - 145 - btnSpace - 20;
+            if (sh < 80) sh = 80;
+            MoveWindow(hSearch, 145, 10, sh, 25, TRUE);
             
-            int rx = 185 + sh + 10;
-            MoveWindow(hExpCSV, rx, 10, 90, 25, TRUE);
-            MoveWindow(hImpCSV, rx + 95, 10, 90, 25, TRUE);
-            MoveWindow(hExpJSON, rx + 190, 10, 95, 25, TRUE);
-            MoveWindow(hImpJSON, rx + 290, 10, 95, 25, TRUE);
-            MoveWindow(hHelpBtn, rx + 390, 10, 85, 25, TRUE);
+            int rx = 145 + sh + 8;
+            MoveWindow(hStatsBtn, rx, 10, 52, 25, TRUE);
+            MoveWindow(hExpCSV, rx + 56, 10, 68, 25, TRUE);
+            MoveWindow(hImpCSV, rx + 128, 10, 68, 25, TRUE);
+            MoveWindow(hExpJSON, rx + 200, 10, 72, 25, TRUE);
+            MoveWindow(hImpJSON, rx + 276, 10, 72, 25, TRUE);
+            MoveWindow(hExpMD, rx + 352, 10, 65, 25, TRUE);
+            MoveWindow(hHelpBtn, rx + 421, 10, 72, 25, TRUE);
 
             MoveWindow(hListView, 10, 45, nw - 20, nh - 90, TRUE);
             
@@ -712,7 +876,7 @@ void MainEntry() {
     RECT rect = {0, 0, W, H};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database (Press F1 or H for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database & Analytics (Press F1 or H for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -724,7 +888,7 @@ void MainEntry() {
             char cls[64] = {0};
             GetClassNameA(msg.hwnd, cls, sizeof(cls));
             if (lstrcmpiA(cls, "EDIT") != 0) {
-                MessageBoxA(hwnd, "KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions (e.g. 'id>102' or 'id<105')\n- Data is auto-saved locally.\n- Set a password to encrypt/decrypt database payloads.\n- Max table capacity is 200 records.\n- Export and import via CSV or JSON.", "KDB Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KDB Help\n\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Conditions: 'id>102' or 'id<105'\n- Click Column Headers to sort (Ascending / Descending)\n- Stats button displays department breakdown\n- Export as CSV, JSON, or Markdown (.md)\n- Data is auto-saved locally.", "KDB Help", MB_OK | MB_ICONINFORMATION);
                 continue;
             }
         }
