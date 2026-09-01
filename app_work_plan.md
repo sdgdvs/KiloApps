@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KClock
+**Target App:** KPong
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KClock (Added Multi-City World Clock Selector, Repeating Alarms Manager with Snooze, Lap Split Stopwatch with Fastest/Slowest badges, Timezone Converter, and Settings Export/Import [JSON])
 - KPong (Added 2-Player Local PvP Mode, 5 Game Modes, Power-Up System [Paddle Extend, Speed Boost, Multi-Ball, Shield, Freeze], Leaderboard & Win-Rate Stats Tracker, Theme Switcher, and Save/Resume State)
 - KDB (Added CSV/JSON Import/Export engine, robust real-time search and advanced column filtering, and simple password protection/encryption)
 - KFont (Added deep TTF/OTF Font Metadata & Metrics inspection, a Unicode Range & Glyph Viewer with hexadecimal character mapping, and a visual Glyph Kerning & Hinting diagnostics panel)
@@ -129,6 +128,7 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KChat (Added Multi-Room/Channel Support, AI Persona Selector [5 Personalities], Real-time Search & Filtering, Message Pinning & Reactions, Chat History Export/Import [JSON/TXT], and Interactive Poll Creation & Live Voting Suite, Channel Topic Banners, Chat Analytics & Statistics Modal, and Extended Slash Commands [/topic, /poll, /vote, /roll, /stats, /me, /shrug, /tableflip])
 - KBBS (Added Door Games Mini-Suite [LORD/TradeWars text adventure], ANSI Color & Art Viewer Mode, Multi-Node Dialing Directory Manager, Session Log Capture & Export [ANSI/TXT], Custom BBS Script Macro Auto-Login, and BBS Message Base & FidoNet EchoMail Conference Reader Suite)
 - KAudio (Added Sound FX Generator Presets, ADSR Envelope & Filter Controls, 16-Step Multi-Track Sequencer, Waveform Visualizer, WAV/JSON Export & Import, DSP Effects Rack [Stereo Delay & Overdrive Saturation], and Dual-Mode 32-Band FFT Frequency Spectrum Analyzer)
+- KClock (Added Multi-City World Clock Selector, Repeating Alarms Manager with Snooze, Lap Split Stopwatch with Fastest/Slowest badges, Timezone Converter, Settings Export/Import [JSON], and Unix Epoch & Precision Time Suite [Live Ticker, Bidirectional Converter, Day-of-Year DOY & ISO Week Calculator, Julian Date Number])
 
 
 

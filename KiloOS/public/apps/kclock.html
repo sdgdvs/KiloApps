@@ -555,6 +555,57 @@
     color: var(--text-muted);
   }
 
+  /* Epoch & Precision Suite */
+  .epoch-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .metric-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+
+  .metric-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .metric-lbl {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
   /* Modal Overlay */
   .modal-overlay {
     position: fixed;
@@ -611,6 +662,7 @@
       <button class="tab active" role="tab" id="tab-btn-clock" aria-selected="true" aria-controls="tab-clock" onclick="switchTab('clock')">Clock</button>
       <button class="tab" role="tab" id="tab-btn-world" aria-selected="false" aria-controls="tab-world" onclick="switchTab('world')">World Clock</button>
       <button class="tab" role="tab" id="tab-btn-tzcalc" aria-selected="false" aria-controls="tab-tzcalc" onclick="switchTab('tzcalc')">TZ Calculator</button>
+      <button class="tab" role="tab" id="tab-btn-epoch" aria-selected="false" aria-controls="tab-epoch" onclick="switchTab('epoch')">Epoch & Precision</button>
       <button class="tab" role="tab" id="tab-btn-stopwatch" aria-selected="false" aria-controls="tab-stopwatch" onclick="switchTab('stopwatch')">Stopwatch</button>
       <button class="tab" role="tab" id="tab-btn-timer" aria-selected="false" aria-controls="tab-timer" onclick="switchTab('timer')">Timer</button>
       <button class="tab" role="tab" id="tab-btn-alarms" aria-selected="false" aria-controls="tab-alarms" onclick="switchTab('alarms')">Alarms</button>
@@ -711,7 +763,87 @@
       </div>
     </div>
 
-    <!-- Tab 4: Stopwatch -->
+    <!-- Tab 4: Epoch & Precision Time -->
+    <div id="tab-epoch" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-epoch">
+      <div class="calc-card" style="max-width: 640px; padding: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <div style="font-weight: 700; font-size: 18px; color: #ffffff;">Unix Epoch & Precision Ticker</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Seconds since January 1, 1970 00:00:00 UTC</div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="icon-btn" onclick="copyLiveEpoch('sec')" id="copy-sec-btn">📋 Copy (s)</button>
+            <button class="icon-btn" onclick="copyLiveEpoch('ms')" id="copy-ms-btn">📋 Copy (ms)</button>
+          </div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; text-align: center;">
+          <div class="digital-clock" id="epoch-sec-display" style="font-size: 38px; color: var(--primary);">0000000000</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-muted); margin-top: 4px;" id="epoch-ms-display">0000000000000 ms</div>
+        </div>
+
+        <!-- Precision Calendar Metrics -->
+        <div class="epoch-metric-grid">
+          <div class="metric-card">
+            <div class="metric-lbl">Day of Year (DOY)</div>
+            <div class="metric-val" id="metric-doy">-- / 365</div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="metric-doy-bar"></div></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-lbl">ISO-8601 Week</div>
+            <div class="metric-val" id="metric-iso-week">Week --</div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;" id="metric-leap-status">Standard Year</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-lbl">Julian Day (JDN)</div>
+            <div class="metric-val" id="metric-jdn" style="font-size: 15px;">--</div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;" id="metric-mjd">MJD: --</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-lbl">Days Left in Year</div>
+            <div class="metric-val" id="metric-days-left">--</div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;" id="metric-year-pct">--% done</div>
+          </div>
+        </div>
+
+        <!-- Bidirectional Converter -->
+        <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px; margin-top: 6px;">
+          <div style="font-weight: 700; font-size: 14px; color: #ffffff; margin-bottom: 10px;">Bidirectional Timestamp Converter</div>
+          
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Converter A: Epoch -> Human Date -->
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px;">
+              <div class="calc-label" style="margin-bottom: 6px;">Timestamp to Human Date</div>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="conv-epoch-input" placeholder="e.g. 1725177600 or 1725177600000" style="flex: 1; min-width: 180px; font-family: 'JetBrains Mono', monospace;" oninput="convertEpochToHuman()">
+                <button class="btn" onclick="setEpochConvToNow()">Set Now</button>
+              </div>
+              <div id="conv-epoch-result" style="margin-top: 8px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--primary); line-height: 1.5; background: rgba(56, 189, 248, 0.06); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(56,189,248,0.15);">
+                UTC: --<br>Local: --<br>Relative: --
+              </div>
+            </div>
+
+            <!-- Converter B: Human Date -> Epoch -->
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px;">
+              <div class="calc-label" style="margin-bottom: 6px;">Human Date to Timestamp</div>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <input type="datetime-local" id="conv-date-input" style="flex: 1; min-width: 180px;" oninput="convertHumanToEpoch()">
+                <select id="conv-date-tz" style="width: 100px;" onchange="convertHumanToEpoch()">
+                  <option value="local">Local</option>
+                  <option value="utc">UTC</option>
+                </select>
+              </div>
+              <div id="conv-date-result" style="margin-top: 8px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--primary); line-height: 1.5; background: rgba(56, 189, 248, 0.06); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(56,189,248,0.15);">
+                Seconds: --<br>Milliseconds: --
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Tab 5: Stopwatch -->
     <div id="tab-stopwatch" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-stopwatch">
       <div class="digital-clock" id="stopwatch-display">00:00.00</div>
       <div class="btn-row">
@@ -902,7 +1034,7 @@
     }
 
     // Navigation Tabs
-    const tabOrder = ['clock', 'world', 'tzcalc', 'stopwatch', 'timer', 'alarms', 'settings'];
+    const tabOrder = ['clock', 'world', 'tzcalc', 'epoch', 'stopwatch', 'timer', 'alarms', 'settings'];
     
     function switchTab(tabId) {
       tabOrder.forEach(id => {
@@ -919,6 +1051,7 @@
         }
       });
       if (tabId === 'tzcalc') initTzCalcDefaults();
+      if (tabId === 'epoch') initEpochDefaults();
     }
 
     // Keyboard accessibility for tablist
@@ -1090,6 +1223,176 @@
       } catch (e) {
         document.getElementById('calc-target-result').innerText = 'Calculation Error';
       }
+    }
+
+    // --- Tab: Unix Epoch & Precision Time Suite ---
+    function isLeapYear(year) {
+      return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
+    function getDayOfYear(date) {
+      const start = new Date(date.getFullYear(), 0, 0);
+      const diff = (date - start) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000);
+      const oneDay = 1000 * 60 * 60 * 24;
+      return Math.floor(diff / oneDay);
+    }
+
+    function getIsoWeekNumber(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    function getJulianDate(date) {
+      const time = date.getTime();
+      return (time / 86400000) + 2440587.5;
+    }
+
+    function updateEpochTicker() {
+      const now = new Date();
+      const nowMs = now.getTime();
+      const nowSec = Math.floor(nowMs / 1000);
+
+      const secEl = document.getElementById('epoch-sec-display');
+      const msEl = document.getElementById('epoch-ms-display');
+      if (secEl) secEl.innerText = nowSec.toLocaleString('en-US').replace(/,/g, '');
+      if (msEl) msEl.innerText = `${nowMs} ms`;
+
+      // Calendar Metrics
+      const doy = getDayOfYear(now);
+      const totalDays = isLeapYear(now.getFullYear()) ? 366 : 365;
+      const doyEl = document.getElementById('metric-doy');
+      const doyBar = document.getElementById('metric-doy-bar');
+      if (doyEl) doyEl.innerText = `${doy} / ${totalDays}`;
+      const pct = ((doy / totalDays) * 100).toFixed(1);
+      if (doyBar) doyBar.style.width = `${pct}%`;
+
+      const weekNum = getIsoWeekNumber(now);
+      const weekEl = document.getElementById('metric-iso-week');
+      if (weekEl) weekEl.innerText = `Week ${weekNum}`;
+
+      const leapEl = document.getElementById('metric-leap-status');
+      if (leapEl) leapEl.innerText = isLeapYear(now.getFullYear()) ? '✨ Leap Year (366d)' : 'Standard Year (365d)';
+
+      const jdn = getJulianDate(now);
+      const jdnEl = document.getElementById('metric-jdn');
+      if (jdnEl) jdnEl.innerText = jdn.toFixed(4);
+
+      const mjd = jdn - 2400000.5;
+      const mjdEl = document.getElementById('metric-mjd');
+      if (mjdEl) mjdEl.innerText = `MJD: ${mjd.toFixed(4)}`;
+
+      const daysLeft = totalDays - doy;
+      const daysLeftEl = document.getElementById('metric-days-left');
+      if (daysLeftEl) daysLeftEl.innerText = `${daysLeft} days`;
+
+      const yearPctEl = document.getElementById('metric-year-pct');
+      if (yearPctEl) yearPctEl.innerText = `${pct}% done`;
+    }
+
+    setInterval(updateEpochTicker, 50);
+    updateEpochTicker();
+
+    function copyLiveEpoch(mode) {
+      const now = Date.now();
+      const text = mode === 'sec' ? Math.floor(now / 1000).toString() : now.toString();
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById(mode === 'sec' ? 'copy-sec-btn' : 'copy-ms-btn');
+        if (btn) {
+          const orig = btn.innerText;
+          btn.innerText = '✅ Copied!';
+          setTimeout(() => { btn.innerText = orig; }, 1200);
+        }
+      }).catch(() => {});
+    }
+
+    function initEpochDefaults() {
+      const input = document.getElementById('conv-epoch-input');
+      if (input && !input.value) {
+        input.value = Math.floor(Date.now() / 1000);
+        convertEpochToHuman();
+      }
+      const dateInput = document.getElementById('conv-date-input');
+      if (dateInput && !dateInput.value) {
+        const now = new Date();
+        const iso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        dateInput.value = iso;
+        convertHumanToEpoch();
+      }
+    }
+
+    function setEpochConvToNow() {
+      const input = document.getElementById('conv-epoch-input');
+      if (input) {
+        input.value = Math.floor(Date.now() / 1000);
+        convertEpochToHuman();
+      }
+    }
+
+    function convertEpochToHuman() {
+      const raw = document.getElementById('conv-epoch-input').value.trim();
+      const res = document.getElementById('conv-epoch-result');
+      if (!raw || isNaN(raw)) {
+        res.innerHTML = 'Please enter a valid numeric timestamp.';
+        return;
+      }
+      let val = Number(raw);
+      if (raw.length <= 10) val = val * 1000;
+
+      const date = new Date(val);
+      if (isNaN(date.getTime())) {
+        res.innerHTML = 'Invalid date representation.';
+        return;
+      }
+
+      const utcStr = date.toUTCString() + ` (${date.toISOString()})`;
+      const locStr = date.toString();
+
+      const diffSec = Math.round((Date.now() - date.getTime()) / 1000);
+      let relStr = '';
+      if (Math.abs(diffSec) < 60) {
+        relStr = diffSec >= 0 ? `${diffSec} seconds ago` : `in ${-diffSec} seconds`;
+      } else if (Math.abs(diffSec) < 3600) {
+        const mins = Math.round(diffSec / 60);
+        relStr = mins >= 0 ? `${mins} minutes ago` : `in ${-mins} minutes`;
+      } else if (Math.abs(diffSec) < 86400) {
+        const hrs = (diffSec / 3600).toFixed(1);
+        relStr = diffSec >= 0 ? `${hrs} hours ago` : `in ${-hrs} hours`;
+      } else {
+        const days = (diffSec / 86400).toFixed(1);
+        relStr = diffSec >= 0 ? `${days} days ago` : `in ${-days} days`;
+      }
+
+      res.innerHTML = `<strong>UTC:</strong> ${utcStr}<br><strong>Local:</strong> ${locStr}<br><strong>Relative:</strong> ${relStr}`;
+    }
+
+    function convertHumanToEpoch() {
+      const dateVal = document.getElementById('conv-date-input').value;
+      const tzMode = document.getElementById('conv-date-tz').value;
+      const res = document.getElementById('conv-date-result');
+
+      if (!dateVal) {
+        res.innerHTML = 'Please select a date and time.';
+        return;
+      }
+
+      let date;
+      if (tzMode === 'utc') {
+        date = new Date(dateVal + 'Z');
+      } else {
+        date = new Date(dateVal);
+      }
+
+      if (isNaN(date.getTime())) {
+        res.innerHTML = 'Invalid date input.';
+        return;
+      }
+
+      const ms = date.getTime();
+      const sec = Math.floor(ms / 1000);
+      res.innerHTML = `<strong>Epoch Seconds:</strong> ${sec}<br><strong>Epoch Milliseconds:</strong> ${ms}<br><strong>ISO-8601:</strong> ${date.toISOString()}`;
     }
 
     // --- Tab 4: Stopwatch with Fastest / Slowest Badges ---
