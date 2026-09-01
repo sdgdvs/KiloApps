@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStellar (Space exploration and trading RPG)
-**Phase:** 11 (next to do)
+**Phase:** 12 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KStellar directory (`KStellar/`), create web HTML skeleton (`KiloOS/public/apps/kstellar.html`), register in App.jsx.
@@ -67,7 +67,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 8: Introduce hostile encounters (space pirates) with turn-based tactical space combat (attack, evade, use items).
 - [x] Phase 9: Implement a mission/bounty board at space stations for additional credit opportunities.
 - [x] Phase 10: Add procedural generation for a large galaxy with multiple sectors and varied planetary economies.
-- [ ] Phase 11: Special stellar phenomena events (black holes, solar flares, derelict ships to salvage).
+- [x] Phase 11: Special stellar phenomena events (black holes, solar flares, derelict ships to salvage).
 - [ ] Phase 12: Add a faction reputation system (actions affect standing with Galactic Federation, Pirates, Traders).
 - [ ] Phase 13: Sound Effects — warp drives, lasers, UI blips, ambient space drone (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Star Captain's Manual — How-to-play, trading tips, combat guide.

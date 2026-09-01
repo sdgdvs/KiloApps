@@ -122,6 +122,30 @@
             color: #000;
             box-shadow: 0 0 15px #00ffcc;
         }
+        .phenom-ring {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            box-sizing: border-box;
+        }
+        .phenom-blackhole {
+            border: 2px dashed #ff00ff;
+            box-shadow: 0 0 10px #ff00ff, inset 0 0 6px #ff00ff;
+            animation: phenom-spin 6s linear infinite;
+        }
+        .phenom-solarflare {
+            border: 2px dashed #ffaa00;
+            box-shadow: 0 0 10px #ffaa00, inset 0 0 6px #ffaa00;
+            animation: phenom-pulse 2s ease-in-out infinite;
+        }
+        .phenom-derelict {
+            border: 2px dashed #b0d0ff;
+            box-shadow: 0 0 10px #b0d0ff;
+            animation: phenom-pulse 3s ease-in-out infinite;
+        }
+        @keyframes phenom-spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes phenom-pulse { 0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
     </style>
 </head>
 <body>
@@ -182,6 +206,7 @@
             systems.push({
                 id: 1, name: "Sol", sector: "Alpha", x: 50, y: 50, 
                 desc: "Cradle of humanity. Highly developed planetary system.", economy: "Trading Hub", 
+                phenomenon: "None",
                 market: {food: 20, minerals: 40, tech: 150}
             });
             for (let i = 2; i <= 30; i++) {
@@ -192,6 +217,11 @@
                 let baseFood = 20 + Math.floor(Math.random() * 10);
                 let baseMin = 40 + Math.floor(Math.random() * 20);
                 let baseTech = 100 + Math.floor(Math.random() * 50);
+                let phenom = "None";
+                if (i % 3 === 0) {
+                    const pList = ["Black Hole", "Solar Flare", "Derelict Salvage"];
+                    phenom = pList[Math.floor((i / 3)) % pList.length];
+                }
                 systems.push({
                     id: i,
                     name: `${namePrefix} ${nameSuffix}`,
@@ -200,6 +230,7 @@
                     y: Math.floor(Math.random() * 90) + 5,
                     desc: `A ${eco.name} system in the ${sec} sector.`,
                     economy: eco.name,
+                    phenomenon: phenom,
                     market: {
                         food: Math.floor(baseFood * eco.foodMult),
                         minerals: Math.floor(baseMin * eco.minMult),
@@ -352,7 +383,7 @@
             const randomEncounter = Math.random();
             let msg = "Traveled to " + target.name + ".\nFuel consumed: " + fuelCost + "%." + missionMsg;
             
-            if (forcedCombat || randomEncounter < 0.3) {
+            if (forcedCombat || randomEncounter < 0.25) {
                 updateDashboard();
                 if (forcedCombat) {
                     alert(msg + "\n\nAlert: Bounty target located! Intercepting pirate vessel!");
@@ -361,7 +392,30 @@
                 }
                 startCombat();
                 return;
-            } else if (randomEncounter < 0.5) {
+            } else if (randomEncounter < 0.40) {
+                let salvageCreds = Math.floor(Math.random() * 150) + 200;
+                credits += salvageCreds;
+                let hullRepair = 20;
+                hull = Math.min(maxHull, hull + hullRepair);
+                let cargoMsg = "";
+                if (getCargoUsed() < cargoMax) {
+                    cargo.tech++;
+                    cargoMsg = " and salvaged 1 ton of intact Tech cargo";
+                }
+                msg += `\n\n[STELLAR PHENOMENON: DERELICT STARSHIP]\nSensors detected an abandoned freighter drifting in deep space. Boarding drones salvaged ₭${salvageCreds}${cargoMsg}, and used hull scrap to repair +${hullRepair} Hull!`;
+            } else if (randomEncounter < 0.55) {
+                let dmg = Math.max(5, 22 - shieldLevel * 3);
+                hull -= dmg;
+                let fuelGain = 25;
+                fuel = Math.min(100, fuel + fuelGain);
+                msg += `\n\n[STELLAR PHENOMENON: SOLAR FLARE]\nA violent coronal mass ejection swept across your hyperspace corridor! Radiation waves buffeted your vessel (-${dmg} Hull), but emergency collectors absorbed +${fuelGain}% Fuel!`;
+            } else if (randomEncounter < 0.70) {
+                let dmg = Math.max(5, 25 - shieldLevel * 4);
+                hull -= dmg;
+                let credsGain = Math.floor(Math.random() * 150) + 300;
+                credits += credsGain;
+                msg += `\n\n[STELLAR PHENOMENON: BLACK HOLE GRAVITATIONAL SHEAR]\nYour ship skirted the accretion disk of a micro Black Hole! Tidal forces stressed your bulkheads (-${dmg} Hull), but the gravity slingshot accelerated flight and sensors recorded Hawking radiation telemetry worth ₭${credsGain}!`;
+            } else if (randomEncounter < 0.85) {
                 msg += "\n\nNotice: You found drifting debris.";
                 const found = Math.floor(Math.random() * 100) + 20;
                 credits += found;
@@ -370,6 +424,13 @@
                 msg += "\n\nThe journey was uneventful.";
             }
             
+            if (hull <= 0) {
+                msg += "\n\nCRITICAL: Hull integrity lost during transit! Emergency tow to Sol.";
+                hull = maxHull;
+                credits = Math.max(0, credits - 500);
+                currentSystemId = 1;
+            }
+
             updateDashboard();
             alert(msg);
             renderMap();
@@ -517,9 +578,18 @@
         };
 
         function showSystemInfo(sys) {
+            let phenomBadge = "";
+            if (sys.phenomenon && sys.phenomenon !== "None") {
+                let pColor = sys.phenomenon === "Black Hole" ? "#ff00ff" : (sys.phenomenon === "Solar Flare" ? "#ffaa00" : "#aaccff");
+                phenomBadge = `<div style="margin: 8px 0; padding: 6px; border: 1px dashed ${pColor}; color: ${pColor}; background: rgba(0,0,0,0.4); font-size: 13px;">
+                    <strong>[★ PHENOMENON DETECTED]</strong><br>${sys.phenomenon.toUpperCase()}
+                </div>`;
+            }
+
             let html = `
                 <h3>${sys.name.toUpperCase()}</h3>
                 <p>${sys.desc}</p>
+                ${phenomBadge}
                 <p><strong>Sector:</strong> ${sys.sector} | <strong>Economy:</strong> ${sys.economy}</p>
                 <p><strong>Coordinates:</strong> X:${sys.x} Y:${sys.y}</p>
             `;
@@ -527,6 +597,16 @@
             if (sys.id !== currentSystemId) {
                 html += `<button class="action-btn" onclick="travelTo(${sys.id})">Set Course</button>`;
             } else {
+                let phenomAction = "";
+                if (sys.phenomenon && sys.phenomenon !== "None") {
+                    let pColor = sys.phenomenon === "Black Hole" ? "#ff00ff" : (sys.phenomenon === "Solar Flare" ? "#ffaa00" : "#aaccff");
+                    let btnText = sys.phenomenon === "Black Hole" ? "PROBE EVENT HORIZON" : (sys.phenomenon === "Solar Flare" ? "HARVEST SOLAR PLASMA" : "SALVAGE DERELICT STARSHIP");
+                    phenomAction = `
+                    <p style="color:${pColor}; font-weight:bold; margin-bottom:5px; margin-top:15px;">Phenomenon Operations</p>
+                    <button class="action-btn" style="margin:0; padding:10px; border-color:${pColor}; color:${pColor}; width:100%;" onclick="investigatePhenomenon()">${btnText}</button>
+                    `;
+                }
+
                 html += `<p style="color:#00ffff; font-weight:bold; margin-bottom:5px;">Currently Docked - Local Market</p>
                 <div style="display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
@@ -558,15 +638,81 @@
                     <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('weapon')">Upg Weapons (₭${2000*weaponLevel}) [Lvl ${weaponLevel}]</button>
                     <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('shield')">Upg Shields (₭${2000*shieldLevel}) [Lvl ${shieldLevel}]</button>
                 </div>
+                ${phenomAction}
                 <p style="color:#ff00ff; font-weight:bold; margin-bottom:5px; margin-top:15px;">Station Services</p>
                 <button class="action-btn" style="margin:0; padding:10px; border-color:#ff00ff; color:#ff00ff;" onclick="viewMissions()">MISSION BOARD</button>`;
             }
             infoEl.innerHTML = html;
         }
 
+        window.investigatePhenomenon = function() {
+            const sys = systems.find(s => s.id === currentSystemId);
+            if (!sys || !sys.phenomenon || sys.phenomenon === "None") return;
+
+            let title = "";
+            let details = "";
+            if (sys.phenomenon === "Black Hole") {
+                let dmg = Math.max(5, 25 - shieldLevel * 3);
+                hull -= dmg;
+                let reward = Math.floor(Math.random() * 200) + 600;
+                credits += reward;
+                title = "BLACK HOLE PROBE OPERATION";
+                details = `Your scientific probe pierced the event horizon accretion disk.\nSevere gravitational shear caused -${dmg} Hull damage to your vessel.\nHowever, rare Dark Matter & Chroniton telemetry earned you ₭${reward} credits from the Science Academy!`;
+            } else if (sys.phenomenon === "Solar Flare") {
+                let dmg = Math.max(5, 18 - shieldLevel * 2);
+                hull -= dmg;
+                let fuelGain = 35;
+                fuel = Math.min(100, fuel + fuelGain);
+                let reward = Math.floor(Math.random() * 100) + 350;
+                credits += reward;
+                title = "SOLAR FLARE HARVESTING";
+                details = `Magnetic scoops deployed into the massive coronal mass ejection.\nSolar radiation inflicted -${dmg} Hull damage.\nSuperheated plasma harvested: +${fuelGain}% Fuel and ₭${reward} in synthesized plasma cells!`;
+            } else if (sys.phenomenon === "Derelict Salvage") {
+                let reward = Math.floor(Math.random() * 150) + 400;
+                credits += reward;
+                let hullRepair = 30;
+                hull = Math.min(maxHull, hull + hullRepair);
+                let cargoMsg = "No free cargo space for raw parts.";
+                if (getCargoUsed() + 2 <= cargoMax) {
+                    cargo.tech++;
+                    cargo.minerals++;
+                    cargoMsg = "Recovered 1 ton of Tech and 1 ton of Minerals!";
+                }
+                title = "DERELICT BOARDING OPERATION";
+                details = `Your salvage crew boarded the derelict starship hull.\nRecovered ₭${reward} in salvageable components.\nRestored +${hullRepair} Hull using structural plating.\n${cargoMsg}`;
+            }
+
+            sys.phenomenon = "None";
+            updateDashboard();
+            renderMap();
+            showSystemInfo(sys);
+            alert(`[${title}]\n\n${details}`);
+
+            if (hull <= 0) {
+                alert("CRITICAL: Fatal damage sustained during operation! Emergency tow to Sol.");
+                hull = maxHull;
+                credits = Math.max(0, credits - 500);
+                currentSystemId = 1;
+                updateDashboard();
+                renderMap();
+                showSystemInfo(systems.find(s => s.id === 1));
+            }
+        };
+
         function renderMap() {
             mapEl.innerHTML = '';
             systems.forEach(sys => {
+                if (sys.phenomenon && sys.phenomenon !== "None") {
+                    const ring = document.createElement('div');
+                    let pClass = sys.phenomenon === "Black Hole" ? "phenom-blackhole" : (sys.phenomenon === "Solar Flare" ? "phenom-solarflare" : "phenom-derelict");
+                    ring.className = `phenom-ring ${pClass}`;
+                    ring.style.left = sys.x + '%';
+                    ring.style.top = sys.y + '%';
+                    ring.style.width = '24px';
+                    ring.style.height = '24px';
+                    mapEl.appendChild(ring);
+                }
+
                 const dot = document.createElement('div');
                 dot.className = 'system';
                 dot.style.left = sys.x + '%';
@@ -581,7 +727,11 @@
                 label.className = 'system-label';
                 label.style.left = sys.x + '%';
                 label.style.top = sys.y + '%';
-                label.innerText = sys.name + (sys.id === currentSystemId ? " (YOU ARE HERE)" : "");
+                let labelText = sys.name + (sys.id === currentSystemId ? " (YOU ARE HERE)" : "");
+                if (sys.phenomenon && sys.phenomenon !== "None") {
+                    labelText += ` [★ ${sys.phenomenon}]`;
+                }
+                label.innerText = labelText;
                 if (sys.id === currentSystemId) {
                     label.style.color = '#00ffff';
                     label.style.display = 'block';

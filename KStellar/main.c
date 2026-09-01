@@ -18,6 +18,7 @@ typedef struct {
     int food_price;
     int minerals_price;
     int tech_price;
+    int phenomenon; // 0=None, 1=Black Hole, 2=Solar Flare, 3=Derelict Ship
 } System;
 
 System systems[MAX_SYSTEMS];
@@ -52,6 +53,7 @@ void GenerateGalaxy() {
     systems[0].food_price = 20;
     systems[0].minerals_price = 40;
     systems[0].tech_price = 150;
+    systems[0].phenomenon = 0;
 
     for (int i = 1; i < MAX_SYSTEMS; i++) {
         systems[i].id = i + 1;
@@ -74,6 +76,7 @@ void GenerateGalaxy() {
         systems[i].food_price = (int)(bFood * economies[ecoIdx].food);
         systems[i].minerals_price = (int)(bMin * economies[ecoIdx].min);
         systems[i].tech_price = (int)(bTech * economies[ecoIdx].tech);
+        systems[i].phenomenon = (i % 3 == 0) ? (((i / 3) % 3) + 1) : 0;
     }
 }
 
@@ -99,6 +102,8 @@ void GenerateGalaxy() {
 #define ID_BTN_MISSION_ABANDON 133
 #define ID_BTN_MISSION_BACK 134
 
+#define ID_BTN_INVESTIGATE 140
+
 typedef struct {
     int type; // 0=None, 1=Delivery, 2=Bounty
     int targetId;
@@ -110,6 +115,7 @@ HWND hBtnBuyFood, hBtnSellFood, hBtnBuyMinerals, hBtnSellMinerals, hBtnBuyTech, 
 HWND hBtnUpgEngine, hBtnUpgCargo, hBtnUpgWeapon, hBtnUpgShield;
 HWND hBtnCombatAttack, hBtnCombatEvade, hBtnCombatUseTech, hBtnCombatFlee;
 HWND hBtnMissions, hBtnMissionAccept1, hBtnMissionAccept2, hBtnMissionAbandon, hBtnMissionBack;
+HWND hBtnInvestigate;
 
 int selectedSystem = -1;
 int currentSystemId = 0;
@@ -196,9 +202,26 @@ void ShowStationView(HWND hwnd) {
     ShowWindow(hBtnUpgShield, SW_SHOW);
     
     System *sys = &systems[currentSystemId];
+    char phenomStr[64] = "";
+    if (sys->phenomenon == 1) {
+        strcpy(phenomStr, "\n[★ PHENOMENON: Black Hole]");
+        SetWindowText(hBtnInvestigate, "Probe BH");
+        ShowWindow(hBtnInvestigate, SW_SHOW);
+    } else if (sys->phenomenon == 2) {
+        strcpy(phenomStr, "\n[★ PHENOMENON: Solar Flare]");
+        SetWindowText(hBtnInvestigate, "Harvest");
+        ShowWindow(hBtnInvestigate, SW_SHOW);
+    } else if (sys->phenomenon == 3) {
+        strcpy(phenomStr, "\n[★ PHENOMENON: Derelict Ship]");
+        SetWindowText(hBtnInvestigate, "Salvage");
+        ShowWindow(hBtnInvestigate, SW_SHOW);
+    } else {
+        ShowWindow(hBtnInvestigate, SW_HIDE);
+    }
+
     char infoText[512];
-    sprintf(infoText, "%s (DOCKED)\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
-        sys->name, sys->sector, sys->economy,
+    sprintf(infoText, "%s (DOCKED)%s\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+        sys->name, phenomStr, sys->sector, sys->economy,
         sys->food_price, sys->minerals_price, sys->tech_price,
         cargoFood, cargoMinerals, cargoTech,
         engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
@@ -210,6 +233,7 @@ void ShowMissionsView(HWND hwnd) {
     inMissionsView = 1;
     
     ShowWindow(hBtnMissions, SW_HIDE);
+    ShowWindow(hBtnInvestigate, SW_HIDE);
     ShowWindow(hBtnCourse, SW_HIDE);
     ShowWindow(hBtnBuyFood, SW_HIDE);
     ShowWindow(hBtnSellFood, SW_HIDE);
@@ -270,6 +294,7 @@ void EndCombat(HWND hwnd) {
     ShowWindow(hBtnCombatEvade, SW_HIDE);
     ShowWindow(hBtnCombatUseTech, SW_HIDE);
     ShowWindow(hBtnCombatFlee, SW_HIDE);
+    ShowWindow(hBtnInvestigate, SW_HIDE);
     
     SetWindowText(hInfoArea, "Select a system on the map for details.");
     selectedSystem = -1;
@@ -316,7 +341,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnSellTech = CreateWindow("BUTTON", "Sell Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 340, 95, 25, hwnd, (HMENU)ID_BTN_SELL_TECH, NULL, NULL);
 
             hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 150, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
-            hBtnMissions = CreateWindow("BUTTON", "MISSIONS", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 440, 150, 25, hwnd, (HMENU)ID_BTN_MISSIONS, NULL, NULL);
+            hBtnMissions = CreateWindow("BUTTON", "MISSIONS", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 440, 95, 25, hwnd, (HMENU)ID_BTN_MISSIONS, NULL, NULL);
+            hBtnInvestigate = CreateWindow("BUTTON", "Anomaly", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 440, 95, 25, hwnd, (HMENU)ID_BTN_INVESTIGATE, NULL, NULL);
             
             hBtnUpgEngine = CreateWindow("BUTTON", "Upg Eng", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 95, 25, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
             hBtnUpgCargo = CreateWindow("BUTTON", "Upg Cargo", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 380, 95, 25, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
@@ -335,6 +361,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             ShowWindow(hBtnCourse, SW_HIDE);
             ShowWindow(hBtnMissions, SW_HIDE);
+            ShowWindow(hBtnInvestigate, SW_HIDE);
             ShowWindow(hBtnBuyFood, SW_HIDE);
             ShowWindow(hBtnSellFood, SW_HIDE);
             ShowWindow(hBtnBuyMinerals, SW_HIDE);
@@ -416,6 +443,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             HBRUSH hGreenBrush = CreateSolidBrush(RGB(0, 255, 0));
             HBRUSH hCyanBrush = CreateSolidBrush(RGB(0, 255, 255));
+            HPEN hBlackHolePen = CreatePen(PS_DOT, 1, RGB(255, 0, 255));
+            HPEN hSolarPen = CreatePen(PS_DOT, 1, RGB(255, 180, 0));
+            HPEN hDerelictPen = CreatePen(PS_DOT, 1, RGB(160, 210, 255));
+            HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
             
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(0, 255, 204));
@@ -424,6 +455,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             for (int i = 0; i < MAX_SYSTEMS; i++) {
                 int px = 20 + (systems[i].x * 400 / 100);
                 int py = 70 + (systems[i].y * 400 / 100);
+
+                if (systems[i].phenomenon != 0) {
+                    SelectObject(hdc, hNullBrush);
+                    if (systems[i].phenomenon == 1) SelectObject(hdc, hBlackHolePen);
+                    else if (systems[i].phenomenon == 2) SelectObject(hdc, hSolarPen);
+                    else if (systems[i].phenomenon == 3) SelectObject(hdc, hDerelictPen);
+                    int pr = (i == selectedSystem || i == currentSystemId) ? 12 : 8;
+                    Ellipse(hdc, px - pr, py - pr, px + pr, py + pr);
+                }
                 
                 if (i == selectedSystem) {
                     SelectObject(hdc, hCyanBrush);
@@ -448,12 +488,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         strcpy(nameBuf, systems[i].name);
                         SetTextColor(hdc, RGB(0, 255, 204));
                     }
+                    if (systems[i].phenomenon == 1) strcat(nameBuf, " [BH]");
+                    else if (systems[i].phenomenon == 2) strcat(nameBuf, " [FLARE]");
+                    else if (systems[i].phenomenon == 3) strcat(nameBuf, " [HULK]");
                     TextOut(hdc, px + 12, py - 8, nameBuf, strlen(nameBuf));
                 }
             }
             
             DeleteObject(hGreenBrush);
             DeleteObject(hCyanBrush);
+            DeleteObject(hBlackHolePen);
+            DeleteObject(hSolarPen);
+            DeleteObject(hDerelictPen);
             
             EndPaint(hwnd, &ps);
             return 0;
@@ -471,23 +517,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     selectedSystem = i;
                     inMissionsView = 0;
                     
+                    char phenomStr[64] = "";
+                    if (systems[i].phenomenon == 1) strcpy(phenomStr, "\n[★ PHENOMENON: Black Hole]");
+                    else if (systems[i].phenomenon == 2) strcpy(phenomStr, "\n[★ PHENOMENON: Solar Flare]");
+                    else if (systems[i].phenomenon == 3) strcpy(phenomStr, "\n[★ PHENOMENON: Derelict Ship]");
+
                     char infoText[512];
                     if (selectedSystem == currentSystemId) {
-                        sprintf(infoText, "%s (DOCKED)\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
-                            systems[i].name, systems[i].sector, systems[i].economy,
+                        sprintf(infoText, "%s (DOCKED)%s\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+                            systems[i].name, phenomStr, systems[i].sector, systems[i].economy,
                             systems[i].food_price, systems[i].minerals_price, systems[i].tech_price,
                             cargoFood, cargoMinerals, cargoTech,
                             engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
                             weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
                     } else {
-                        sprintf(infoText, "%s\nSector: %s\nEconomy: %s\n%s\n\nCoordinates: X:%d Y:%d", 
-                            systems[i].name, systems[i].sector, systems[i].economy, systems[i].desc, systems[i].x, systems[i].y);
+                        sprintf(infoText, "%s%s\nSector: %s\nEconomy: %s\n%s\n\nCoordinates: X:%d Y:%d", 
+                            systems[i].name, phenomStr, systems[i].sector, systems[i].economy, systems[i].desc, systems[i].x, systems[i].y);
                     }
                         
                     SetWindowText(hInfoArea, infoText);
                     if (selectedSystem != currentSystemId) {
                         ShowWindow(hBtnCourse, SW_SHOW);
                         ShowWindow(hBtnMissions, SW_HIDE);
+                        ShowWindow(hBtnInvestigate, SW_HIDE);
                         ShowWindow(hBtnBuyFood, SW_HIDE);
                         ShowWindow(hBtnSellFood, SW_HIDE);
                         ShowWindow(hBtnBuyMinerals, SW_HIDE);
@@ -545,7 +597,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     sprintf(resultMsg, "Traveled to %s.\nFuel consumed: %d%%.%s", systems[currentSystemId].name, fuelCost, missionMsg);
                     
                     int randomEncounter = rand() % 100;
-                    if (forcedCombat || randomEncounter < 30) {
+                    if (forcedCombat || randomEncounter < 25) {
                         if (forcedCombat) MessageBox(hwnd, "Alert: Bounty target located! Intercepting pirate vessel!", "Navigation Log", MB_OK);
                         else MessageBox(hwnd, "Alert: Hostile pirate vessel encountered!", "Navigation Log", MB_OK);
                         
@@ -556,6 +608,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         
                         ShowWindow(hBtnCourse, SW_HIDE);
                         ShowWindow(hBtnMissions, SW_HIDE);
+                        ShowWindow(hBtnInvestigate, SW_HIDE);
                         ShowWindow(hBtnBuyFood, SW_HIDE);
                         ShowWindow(hBtnSellFood, SW_HIDE);
                         ShowWindow(hBtnBuyMinerals, SW_HIDE);
@@ -574,7 +627,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         
                         UpdateCombatUI(hwnd);
                         return 0;
-                    } else if (randomEncounter < 50) {
+                    } else if (randomEncounter < 40) {
+                        int salvageCreds = (rand() % 150) + 200;
+                        credits += salvageCreds;
+                        hull += 20;
+                        if (hull > maxHull) hull = maxHull;
+                        int used = cargoFood + cargoMinerals + cargoTech;
+                        char extra[64] = "";
+                        if (used < cargoMax) {
+                            cargoTech++;
+                            strcpy(extra, " and salvaged 1 ton of Tech cargo");
+                        }
+                        char dMsg[256];
+                        sprintf(dMsg, "\n\n[STELLAR PHENOMENON: DERELICT SHIP]\nDrifting derelict starship salvaged! Gained %d credits%s, and repaired +20 Hull!", salvageCreds, extra);
+                        strcat(resultMsg, dMsg);
+                    } else if (randomEncounter < 55) {
+                        int dmg = 22 - shieldLevel * 3;
+                        if (dmg < 5) dmg = 5;
+                        hull -= dmg;
+                        fuel += 25;
+                        if (fuel > 100) fuel = 100;
+                        char sMsg[256];
+                        sprintf(sMsg, "\n\n[STELLAR PHENOMENON: SOLAR FLARE]\nCoronal mass ejection storm struck your ship! Lost %d Hull, but magnetic collectors recharged +25%% Fuel!", dmg);
+                        strcat(resultMsg, sMsg);
+                    } else if (randomEncounter < 70) {
+                        int dmg = 25 - shieldLevel * 4;
+                        if (dmg < 5) dmg = 5;
+                        hull -= dmg;
+                        int sData = (rand() % 150) + 300;
+                        credits += sData;
+                        char bMsg[256];
+                        sprintf(bMsg, "\n\n[STELLAR PHENOMENON: BLACK HOLE]\nMicro Black Hole gravitational shear! Tidal forces inflicted %d Hull damage, but gravity slingshot recorded Hawking telemetry worth %d credits!", dmg, sData);
+                        strcat(resultMsg, bMsg);
+                    } else if (randomEncounter < 85) {
                         strcat(resultMsg, "\n\nNotice: You found drifting debris.");
                         int found = (rand() % 100) + 20;
                         credits += found;
@@ -583,6 +668,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         strcat(resultMsg, foundMsg);
                     } else {
                         strcat(resultMsg, "\n\nThe journey was uneventful.");
+                    }
+                    
+                    if (hull <= 0) {
+                        strcat(resultMsg, "\n\nCRITICAL: Hull integrity lost during transit! Emergency tow to Sol.");
+                        hull = maxHull;
+                        credits -= 500;
+                        if (credits < 0) credits = 0;
+                        currentSystemId = 0;
                     }
                     
                     UpdateDashboard();
@@ -738,6 +831,56 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 ShowMissionsView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_MISSION_BACK) {
                 ShowStationView(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_INVESTIGATE && selectedSystem == currentSystemId) {
+                System *sys = &systems[currentSystemId];
+                if (sys->phenomenon == 0) return 0;
+                
+                char phenomMsg[512] = "";
+                if (sys->phenomenon == 1) { // Black Hole
+                    int dmg = 25 - shieldLevel * 3;
+                    if (dmg < 5) dmg = 5;
+                    hull -= dmg;
+                    int reward = (rand() % 200) + 600;
+                    credits += reward;
+                    sprintf(phenomMsg, "BLACK HOLE PROBE OPERATION\n\nYour scientific probe pierced the event horizon accretion disk.\nSevere gravitational tidal shear inflicted %d Hull damage.\nTelemetry yielded rare Dark Matter & Chroniton data: Earned ₭%d credits!", dmg, reward);
+                } else if (sys->phenomenon == 2) { // Solar Flare
+                    int dmg = 18 - shieldLevel * 2;
+                    if (dmg < 5) dmg = 5;
+                    hull -= dmg;
+                    fuel += 35;
+                    if (fuel > 100) fuel = 100;
+                    int reward = (rand() % 100) + 350;
+                    credits += reward;
+                    sprintf(phenomMsg, "SOLAR FLARE HARVESTING\n\nMagnetic scoops deployed into coronal mass ejection.\nSolar radiation inflicted %d Hull damage.\nSuperheated plasma harvested: +35%% Fuel and ₭%d in synthesized plasma cells!", dmg, reward);
+                } else if (sys->phenomenon == 3) { // Derelict Ship
+                    int reward = (rand() % 150) + 400;
+                    credits += reward;
+                    hull += 30;
+                    if (hull > maxHull) hull = maxHull;
+                    int used = cargoFood + cargoMinerals + cargoTech;
+                    char cargoInfo[128] = "Cargo hold full - components stripped to scrap.";
+                    if (used + 2 <= cargoMax) {
+                        cargoTech++;
+                        cargoMinerals++;
+                        strcpy(cargoInfo, "Recovered 1 ton of Tech and 1 ton of Minerals cargo!");
+                    }
+                    sprintf(phenomMsg, "DERELICT SALVAGE OPERATION\n\nBoarding party scavenged the abandoned vessel.\nRecovered ₭%d in scrap credits.\nRepaired +30 Hull using intact hull plating.\n%s", reward, cargoInfo);
+                }
+                
+                sys->phenomenon = 0; // Cleared
+                UpdateDashboard();
+                MessageBox(hwnd, phenomMsg, "Phenomenon Report", MB_OK);
+                
+                if (hull <= 0) {
+                    MessageBox(hwnd, "CRITICAL: Fatal damage sustained during operation! Emergency tow to Sol.", "Disaster", MB_OK);
+                    hull = maxHull;
+                    credits -= 500;
+                    if (credits < 0) credits = 0;
+                    currentSystemId = 0;
+                }
+                
+                ShowStationView(hwnd);
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             return 0;
         }

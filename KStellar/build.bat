@@ -1,3 +1,7 @@
 @echo off
-if not exist build mkdir build
-gcc main.c -o build\kstellar.exe -mwindows -lgdi32
+set VCVARS="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars32.bat"
+call %VCVARS%
+cl /O1 /Os /c main.c
+link /SUBSYSTEM:WINDOWS main.obj kernel32.lib user32.lib gdi32.lib /OUT:KStellar.exe
+if not exist "..\KiloOS\public\exe" mkdir "..\KiloOS\public\exe"
+copy /Y KStellar.exe "..\KiloOS\public\exe\KStellar.exe"
