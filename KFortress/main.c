@@ -32,13 +32,14 @@ float custom_sqrtf(float val) {
 #define TOWER_SLOT_HOVER RGB(60, 68, 82)
 
 #define MAX_SLOTS 14
-#define MAX_ENEMIES 80
-#define MAX_PROJECTILES 80
-#define MAX_FLOATING_TEXTS 40
+#define MAX_ENEMIES 90
+#define MAX_PROJECTILES 100
+#define MAX_FLOATING_TEXTS 50
 #define MAX_TRAPS 32
 #define MAX_WAYPOINTS 6
 #define MAX_MAPS 12
 #define MAX_MILITIA 8
+#define MAX_LAVA_POOLS 24
 
 typedef struct {
     int x, y;
@@ -63,20 +64,39 @@ typedef struct {
 static MapDef g_maps[MAX_MAPS];
 static int g_currentMap = 0;
 
+// Tower Types
+#define TOWER_ARCHER 1
+#define TOWER_MAGE 2
+#define TOWER_CANNON 3
+#define TOWER_FROST 4
+#define TOWER_TESLA 5
+#define TOWER_BALLISTA 6
+#define TOWER_POISON 7
+#define TOWER_INFERNO 8
+#define TOWER_SUPERCONDUCTOR 9
+#define TOWER_VENOMSPITE 10
+#define TOWER_SOLAR_BEAM 11
+
+#define TRAP_SPIKE 12
+#define TRAP_OIL 13
+#define TRAP_BARRICADE 14
+#define TRAP_DYNAMITE 15
+
 typedef struct {
     int x, y;
     BOOL occupied;
-    int towerType; // 1=Archer, 2=Mage, 3=Cannon, 4=Frost, 5=Tesla, 6=Ballista, 7=Poison
-    int level;
+    int towerType;
+    int level; // 1-3, 4=FUSION
     int cooldown;
     int maxCooldown;
     int range;
     int damage;
     int splash;
     int attackAnim;
+    int beamTargetId;
 } TowerSlot;
 
-#define MAX_PARTICLES 400
+#define MAX_PARTICLES 450
 typedef struct {
     BOOL active;
     float x, y;
@@ -100,6 +120,16 @@ typedef struct {
 } ScorchMark;
 static ScorchMark g_scorchMarks[MAX_SCORCH_MARKS];
 static int g_scorchIndex = 0;
+
+typedef struct {
+    BOOL active;
+    float x, y;
+    int radius;
+    int life;
+    int maxLife;
+    int damage;
+} LavaPool;
+static LavaPool g_lavaPools[MAX_LAVA_POOLS];
 
 void SpawnAdvancedParticle(float x, float y, float vx, float vy, COLORREF color, int life, int type, float size) {
     for (int p = 0; p < MAX_PARTICLES; p++) {
@@ -162,6 +192,9 @@ typedef struct {
     int type;
     int splash;
     BOOL isCrit;
+    BOOL isPiercing;
+    float vx, vy;
+    int lifeTimer;
 } Projectile;
 
 typedef struct {
@@ -175,7 +208,7 @@ typedef struct {
 typedef struct {
     BOOL active;
     float x, y;
-    int type; // 8=Spike, 9=Oil, 10=Barricade, 11=Dynamite
+    int type;
     int charges;
     float hp;
     int radius;
@@ -209,11 +242,31 @@ static int g_bossesKilled = 0;
 static int g_hsEndless = 0;
 static int g_hsBoss = 0;
 
+// Mutators
+#define MUTATOR_BLOODLUST   0x01
+#define MUTATOR_TITAN       0x02
+#define MUTATOR_ECLIPSE     0x04
+#define MUTATOR_METEOR      0x08
+#define MUTATOR_PHASE_SHIFT 0x10
+static int g_mutators = 0;
+static BOOL g_showMutators = FALSE;
+
+// Castle Siege Weapons
+static int g_trebuchetCd = 0;
+static int g_maxTrebuchetCd = 360;
+static int g_castleBallistaCd = 0;
+static int g_meteorTimer = 0;
+
+// Research Academy Techs
 int g_techStartingGold = 0;
 int g_techWallHp = 0;
 int g_techHeroCd = 0;
 int g_techTowerDmg = 0;
 int g_techMilitia = 0;
+int g_techSiegeEng = 0;
+int g_techFusion = 0;
+int g_techFortTraps = 0;
+
 BOOL g_showAcademy = FALSE;
 BOOL g_showHelp = FALSE;
 
@@ -236,22 +289,9 @@ typedef struct {
 
 static Hero g_hero;
 
-#define TOWER_ARCHER 1
-#define TOWER_MAGE 2
-#define TOWER_CANNON 3
-#define TOWER_FROST 4
-#define TOWER_TESLA 5
-#define TOWER_BALLISTA 6
-#define TOWER_POISON 7
-
-#define TRAP_SPIKE 8
-#define TRAP_OIL 9
-#define TRAP_BARRICADE 10
-#define TRAP_DYNAMITE 11
-
 static int g_selectedTowerTypeToBuild = TOWER_ARCHER;
 
-#define MAX_SPAWN_QUEUE 120
+#define MAX_SPAWN_QUEUE 140
 static int g_spawnQueue[MAX_SPAWN_QUEUE];
 static int g_spawnQueueCount = 0;
 static int g_spawnQueueHead = 0;
@@ -278,7 +318,7 @@ static int g_nextEnemyId = 1;
 
 typedef struct {
     float x, y;
-    int type; // 0 = rock, 1 = grass
+    int type;
     float size;
 } EnvArt;
 static EnvArt g_envArt[150];
@@ -305,8 +345,22 @@ void AddFloatingText(float x, float y, const char* txt, COLORREF color) {
     }
 }
 
+void SpawnLavaPool(float x, float y, int radius, int life, int dmg) {
+    for (int i = 0; i < MAX_LAVA_POOLS; i++) {
+        if (!g_lavaPools[i].active) {
+            g_lavaPools[i].active = TRUE;
+            g_lavaPools[i].x = x;
+            g_lavaPools[i].y = y;
+            g_lavaPools[i].radius = radius;
+            g_lavaPools[i].life = life;
+            g_lavaPools[i].maxLife = life;
+            g_lavaPools[i].damage = dmg;
+            break;
+        }
+    }
+}
+
 void InitMaps() {
-    // 0: Forest Outpost
     lstrcpyA(g_maps[0].name, "Forest Outpost"); g_maps[0].bg = RGB(10, 26, 10); g_maps[0].path = RGB(45, 55, 45);
     Point wp0[] = {{40,200}, {330,200}, {330,390}, {520,390}, {520,220}, {730,220}};
     for(int i=0;i<6;i++) g_maps[0].waypoints[i] = wp0[i];
@@ -314,7 +368,6 @@ void InitMaps() {
     g_maps[0].numSlots = 12; for(int i=0;i<12;i++) g_maps[0].slots[i] = sl0[i];
     g_maps[0].numObs = 3; g_maps[0].obs[0]=(Obstacle){100,380,"T"}; g_maps[0].obs[1]=(Obstacle){450,150,"T"}; g_maps[0].obs[2]=(Obstacle){600,400,"T"};
 
-    // 1: Desert Pass
     lstrcpyA(g_maps[1].name, "Desert Pass"); g_maps[1].bg = RGB(42, 28, 10); g_maps[1].path = RGB(74, 53, 24);
     Point wp1[] = {{40,100}, {200,100}, {200,450}, {600,450}, {600,200}, {730,200}};
     for(int i=0;i<6;i++) g_maps[1].waypoints[i] = wp1[i];
@@ -322,7 +375,6 @@ void InitMaps() {
     g_maps[1].numSlots = 7; for(int i=0;i<7;i++) g_maps[1].slots[i] = sl1[i];
     g_maps[1].numObs = 3; g_maps[1].obs[0]=(Obstacle){350,250,"C"}; g_maps[1].obs[1]=(Obstacle){450,120,"C"}; g_maps[1].obs[2]=(Obstacle){650,350,"R"};
 
-    // 2: Frozen Fortress
     lstrcpyA(g_maps[2].name, "Frozen Fortress"); g_maps[2].bg = RGB(10, 21, 42); g_maps[2].path = RGB(31, 59, 90);
     Point wp2[] = {{40,450}, {400,450}, {400,150}, {600,150}, {600,350}, {730,350}};
     for(int i=0;i<6;i++) g_maps[2].waypoints[i] = wp2[i];
@@ -330,7 +382,6 @@ void InitMaps() {
     g_maps[2].numSlots = 6; for(int i=0;i<6;i++) g_maps[2].slots[i] = sl2[i];
     g_maps[2].numObs = 3; g_maps[2].obs[0]=(Obstacle){200,200,"I"}; g_maps[2].obs[1]=(Obstacle){500,80,"S"}; g_maps[2].obs[2]=(Obstacle){150,150,"M"};
 
-    // 3: Volcanic Citadel
     lstrcpyA(g_maps[3].name, "Volcanic Citadel"); g_maps[3].bg = RGB(42, 10, 10); g_maps[3].path = RGB(74, 28, 28);
     Point wp3[] = {{40,150}, {150,150}, {150,400}, {500,400}, {500,150}, {730,150}};
     for(int i=0;i<6;i++) g_maps[3].waypoints[i] = wp3[i];
@@ -338,7 +389,6 @@ void InitMaps() {
     g_maps[3].numSlots = 6; for(int i=0;i<6;i++) g_maps[3].slots[i] = sl3[i];
     g_maps[3].numObs = 3; g_maps[3].obs[0]=(Obstacle){300,200,"V"}; g_maps[3].obs[1]=(Obstacle){650,400,"F"}; g_maps[3].obs[2]=(Obstacle){100,300,"F"};
 
-    // 4: Swamp of Sorrows
     lstrcpyA(g_maps[4].name, "Swamp of Sorrows"); g_maps[4].bg = RGB(21, 42, 21); g_maps[4].path = RGB(44, 62, 44);
     Point wp4[] = {{40,300}, {250,300}, {250,150}, {600,150}, {600,450}, {730,450}};
     for(int i=0;i<6;i++) g_maps[4].waypoints[i] = wp4[i];
@@ -346,7 +396,6 @@ void InitMaps() {
     g_maps[4].numSlots = 6; for(int i=0;i<6;i++) g_maps[4].slots[i] = sl4[i];
     g_maps[4].numObs = 3; g_maps[4].obs[0]=(Obstacle){200,400,"M"}; g_maps[4].obs[1]=(Obstacle){400,100,"S"}; g_maps[4].obs[2]=(Obstacle){500,250,"W"};
 
-    // 5: Crystal Caves
     lstrcpyA(g_maps[5].name, "Crystal Caves"); g_maps[5].bg = RGB(26, 10, 42); g_maps[5].path = RGB(53, 31, 74);
     Point wp5[] = {{40,400}, {200,400}, {200,200}, {450,200}, {450,350}, {730,350}};
     for(int i=0;i<6;i++) g_maps[5].waypoints[i] = wp5[i];
@@ -354,7 +403,6 @@ void InitMaps() {
     g_maps[5].numSlots = 6; for(int i=0;i<6;i++) g_maps[5].slots[i] = sl5[i];
     g_maps[5].numObs = 3; g_maps[5].obs[0]=(Obstacle){150,150,"C"}; g_maps[5].obs[1]=(Obstacle){350,450,"C"}; g_maps[5].obs[2]=(Obstacle){600,100,"C"};
 
-    // 6: Haunted Graveyard
     lstrcpyA(g_maps[6].name, "Haunted Graveyard"); g_maps[6].bg = RGB(10, 12, 16); g_maps[6].path = RGB(31, 41, 55);
     Point wp6[] = {{40,250}, {150,250}, {150,100}, {550,100}, {550,300}, {730,300}};
     for(int i=0;i<6;i++) g_maps[6].waypoints[i] = wp6[i];
@@ -362,7 +410,6 @@ void InitMaps() {
     g_maps[6].numSlots = 6; for(int i=0;i<6;i++) g_maps[6].slots[i] = sl6[i];
     g_maps[6].numObs = 3; g_maps[6].obs[0]=(Obstacle){200,400,"G"}; g_maps[6].obs[1]=(Obstacle){400,350,"G"}; g_maps[6].obs[2]=(Obstacle){650,150,"X"};
 
-    // 7: Sky Kingdom
     lstrcpyA(g_maps[7].name, "Sky Kingdom"); g_maps[7].bg = RGB(10, 37, 58); g_maps[7].path = RGB(47, 90, 122);
     Point wp7[] = {{40,100}, {300,100}, {300,450}, {600,450}, {600,250}, {730,250}};
     for(int i=0;i<6;i++) g_maps[7].waypoints[i] = wp7[i];
@@ -370,7 +417,6 @@ void InitMaps() {
     g_maps[7].numSlots = 6; for(int i=0;i<6;i++) g_maps[7].slots[i] = sl7[i];
     g_maps[7].numObs = 3; g_maps[7].obs[0]=(Obstacle){100,400,"W"}; g_maps[7].obs[1]=(Obstacle){450,150,"W"}; g_maps[7].obs[2]=(Obstacle){650,100,"W"};
 
-    // 8: Dragon's Peak
     lstrcpyA(g_maps[8].name, "Dragon's Peak"); g_maps[8].bg = RGB(42, 16, 10); g_maps[8].path = RGB(74, 44, 31);
     Point wp8[] = {{40,350}, {350,350}, {350,150}, {550,150}, {550,400}, {730,400}};
     for(int i=0;i<6;i++) g_maps[8].waypoints[i] = wp8[i];
@@ -378,7 +424,6 @@ void InitMaps() {
     g_maps[8].numSlots = 6; for(int i=0;i<6;i++) g_maps[8].slots[i] = sl8[i];
     g_maps[8].numObs = 3; g_maps[8].obs[0]=(Obstacle){150,150,"D"}; g_maps[8].obs[1]=(Obstacle){250,450,"F"}; g_maps[8].obs[2]=(Obstacle){500,80,"V"};
 
-    // 9: The Void Abyss
     lstrcpyA(g_maps[9].name, "The Void Abyss"); g_maps[9].bg = RGB(5, 5, 16); g_maps[9].path = RGB(31, 31, 58);
     Point wp9[] = {{40,200}, {150,400}, {350,150}, {550,450}, {650,250}, {730,250}};
     for(int i=0;i<6;i++) g_maps[9].waypoints[i] = wp9[i];
@@ -386,7 +431,6 @@ void InitMaps() {
     g_maps[9].numSlots = 6; for(int i=0;i<6;i++) g_maps[9].slots[i] = sl9[i];
     g_maps[9].numObs = 3; g_maps[9].obs[0]=(Obstacle){100,100,"X"}; g_maps[9].obs[1]=(Obstacle){450,100,"X"}; g_maps[9].obs[2]=(Obstacle){300,400,"X"};
 
-    // 10: Thunder Peak
     lstrcpyA(g_maps[10].name, "Thunder Peak"); g_maps[10].bg = RGB(11, 26, 46); g_maps[10].path = RGB(58, 80, 107);
     Point wp10[] = {{40,150}, {250,150}, {250,420}, {480,420}, {480,180}, {730,180}};
     for(int i=0;i<6;i++) g_maps[10].waypoints[i] = wp10[i];
@@ -394,7 +438,6 @@ void InitMaps() {
     g_maps[10].numSlots = 7; for(int i=0;i<7;i++) g_maps[10].slots[i] = sl10[i];
     g_maps[10].numObs = 3; g_maps[10].obs[0]=(Obstacle){180,80,"E"}; g_maps[10].obs[1]=(Obstacle){400,250,"E"}; g_maps[10].obs[2]=(Obstacle){620,400,"L"};
 
-    // 11: Eldritch Necropolis
     lstrcpyA(g_maps[11].name, "Eldritch Necropolis"); g_maps[11].bg = RGB(18, 9, 28); g_maps[11].path = RGB(46, 27, 64);
     Point wp11[] = {{40,380}, {200,380}, {200,120}, {520,120}, {520,360}, {730,360}};
     for(int i=0;i<6;i++) g_maps[11].waypoints[i] = wp11[i];
@@ -422,6 +465,7 @@ void LoadCurrentMap(int bfX, int bfY, int bfW) {
         g_slots[i].damage = 12;
         g_slots[i].splash = 0;
         g_slots[i].attackAnim = 0;
+        g_slots[i].beamTargetId = -1;
     }
 
     g_envArtCount = 0;
@@ -464,6 +508,10 @@ void LoadGame() {
         fread(&g_techMilitia, sizeof(int), 1, f);
         fread(&g_hsEndless, sizeof(int), 1, f);
         fread(&g_hsBoss, sizeof(int), 1, f);
+        fread(&g_techSiegeEng, sizeof(int), 1, f);
+        fread(&g_techFusion, sizeof(int), 1, f);
+        fread(&g_techFortTraps, sizeof(int), 1, f);
+        fread(&g_mutators, sizeof(int), 1, f);
         fclose(f);
     }
 }
@@ -478,6 +526,10 @@ void SaveGame() {
         fwrite(&g_techMilitia, sizeof(int), 1, f);
         fwrite(&g_hsEndless, sizeof(int), 1, f);
         fwrite(&g_hsBoss, sizeof(int), 1, f);
+        fwrite(&g_techSiegeEng, sizeof(int), 1, f);
+        fwrite(&g_techFusion, sizeof(int), 1, f);
+        fwrite(&g_techFortTraps, sizeof(int), 1, f);
+        fwrite(&g_mutators, sizeof(int), 1, f);
         fclose(f);
     }
 }
@@ -501,8 +553,13 @@ void InitGameState() {
     g_bossesKilled = 0;
     g_blizzTimer = 0;
     g_screenShake = 0;
+    g_trebuchetCd = 0;
+    g_castleBallistaCd = 0;
+    g_meteorTimer = 0;
 
     float heroCdMod = 1.0f - (g_techHeroCd * 0.1f);
+    if (g_mutators & MUTATOR_ECLIPSE) heroCdMod *= 1.4f;
+
     g_hero.x = 400.0f; g_hero.y = 300.0f;
     g_hero.targetX = 400.0f; g_hero.targetY = 300.0f;
     g_hero.maxHp = 100.0f; g_hero.hp = 100.0f;
@@ -523,6 +580,7 @@ void InitGameState() {
     for (int i = 0; i < MAX_TRAPS; i++) g_traps[i].active = FALSE;
     for (int i = 0; i < MAX_MILITIA; i++) g_militia[i].active = FALSE;
     for (int i = 0; i < MAX_SCORCH_MARKS; i++) g_scorchMarks[i].active = FALSE;
+    for (int i = 0; i < MAX_LAVA_POOLS; i++) g_lavaPools[i].active = FALSE;
 }
 
 void SummonMilitia() {
@@ -541,9 +599,38 @@ void SummonMilitia() {
             g_militia[i].speed = 1.8f;
             g_militia[i].damage = (int)(18 * hpBonus);
             g_militia[i].attackCd = 0;
-            g_militia[i].lifeTimer = 450; // 15 seconds
+            g_militia[i].lifeTimer = 450;
             spawned++;
             SpawnParticleBurst(g_militia[i].x, g_militia[i].y, RGB(59, 130, 246), 8);
+        }
+    }
+}
+
+void TriggerTrebuchetStrike(float targetX, float targetY) {
+    if (g_trebuchetCd > 0) return;
+    g_trebuchetCd = g_maxTrebuchetCd;
+    g_screenShake = 22;
+    Beep(120, 150); Beep(80, 150);
+
+    SpawnExplosion(targetX, targetY, RGB(251, 191, 36));
+    AddFloatingText(targetX, targetY - 40, "SIEGE TREBUCHET!", TEXT_GOLD);
+
+    float dmgBonus = 1.0f + (g_techSiegeEng * 0.25f);
+    int siegeDmg = (int)(220 * dmgBonus);
+
+    for (int e = 0; e < MAX_ENEMIES; e++) {
+        if (g_enemies[e].active) {
+            float dx = g_enemies[e].x - targetX;
+            float dy = g_enemies[e].y - targetY;
+            if (custom_sqrtf(dx*dx + dy*dy) <= 135.0f) {
+                g_enemies[e].hp -= siegeDmg;
+                SpawnParticleBurst(g_enemies[e].x, g_enemies[e].y, RGB(239, 68, 68), 6);
+                if (g_enemies[e].hp <= 0) {
+                    g_enemies[e].active = FALSE;
+                    int bounty = (g_mutators & MUTATOR_BLOODLUST) ? 25 : 15;
+                    g_gold += bounty;
+                }
+            }
         }
     }
 }
@@ -551,7 +638,99 @@ void SummonMilitia() {
 void UpdateGameLogic() {
     if (g_gameOver) return;
 
-    // Spawn queue handling
+    if ((g_mutators & MUTATOR_METEOR) && g_waveActive) {
+        g_meteorTimer++;
+        if (g_meteorTimer >= 180) {
+            g_meteorTimer = 0;
+            int rIdx = rand() % 5;
+            float rx = (float)g_waypoints[rIdx].x + (rand() % 60 - 30);
+            float ry = (float)g_waypoints[rIdx].y + (rand() % 60 - 30);
+            SpawnExplosion(rx, ry, RGB(239, 68, 68));
+            AddFloatingText(rx, ry - 30, "METEOR!", TEXT_RED);
+            Beep(200, 80);
+
+            for (int e = 0; e < MAX_ENEMIES; e++) {
+                if (g_enemies[e].active) {
+                    float dx = g_enemies[e].x - rx;
+                    float dy = g_enemies[e].y - ry;
+                    if (custom_sqrtf(dx*dx + dy*dy) <= 85.0f) {
+                        g_enemies[e].hp -= 70;
+                        if (g_enemies[e].hp <= 0) { g_enemies[e].active = FALSE; g_gold += 15; }
+                    }
+                }
+            }
+        }
+    }
+
+    if (g_techSiegeEng > 0 && g_waveActive) {
+        g_castleBallistaCd++;
+        if (g_castleBallistaCd >= 75) {
+            g_castleBallistaCd = 0;
+            float castleX = (float)g_waypoints[5].x;
+            float castleY = (float)g_waypoints[5].y;
+            int bestE = -1;
+            float bestDist = 9999.0f;
+            for (int e = 0; e < MAX_ENEMIES; e++) {
+                if (!g_enemies[e].active) continue;
+                float dx = g_enemies[e].x - castleX;
+                float dy = g_enemies[e].y - castleY;
+                float d = custom_sqrtf(dx*dx + dy*dy);
+                if (d <= 270.0f && d < bestDist) {
+                    bestDist = d;
+                    bestE = e;
+                }
+            }
+            if (bestE != -1) {
+                for (int p = 0; p < MAX_PROJECTILES; p++) {
+                    if (!g_projectiles[p].active) {
+                        g_projectiles[p].active = TRUE;
+                        g_projectiles[p].x = castleX;
+                        g_projectiles[p].y = castleY;
+                        g_projectiles[p].targetEnemyId = g_enemies[bestE].id;
+                        g_projectiles[p].targetX = g_enemies[bestE].x;
+                        g_projectiles[p].targetY = g_enemies[bestE].y;
+                        g_projectiles[p].damage = 45 + (g_techSiegeEng * 20);
+                        g_projectiles[p].speed = 18.0f;
+                        g_projectiles[p].type = TOWER_BALLISTA;
+                        g_projectiles[p].splash = 0;
+                        g_projectiles[p].isCrit = FALSE;
+                        g_projectiles[p].isPiercing = FALSE;
+                        Beep(850, 25);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (g_trebuchetCd > 0) g_trebuchetCd--;
+
+    for (int lp = 0; lp < MAX_LAVA_POOLS; lp++) {
+        if (!g_lavaPools[lp].active) continue;
+        g_lavaPools[lp].life--;
+        if (g_lavaPools[lp].life <= 0) {
+            g_lavaPools[lp].active = FALSE;
+            continue;
+        }
+
+        if (g_lavaPools[lp].life % 12 == 0) {
+            for (int e = 0; e < MAX_ENEMIES; e++) {
+                if (g_enemies[e].active) {
+                    float dx = g_enemies[e].x - g_lavaPools[lp].x;
+                    float dy = g_enemies[e].y - g_lavaPools[lp].y;
+                    if (custom_sqrtf(dx*dx + dy*dy) <= (float)g_lavaPools[lp].radius) {
+                        g_enemies[e].hp -= g_lavaPools[lp].damage;
+                        SpawnParticleBurst(g_enemies[e].x, g_enemies[e].y, RGB(249, 115, 22), 3);
+                        if (g_enemies[e].hp <= 0) {
+                            g_enemies[e].active = FALSE;
+                            g_gold += 15;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     if (g_waveActive && g_spawnQueueHead < g_spawnQueueCount) {
         g_spawnTimer++;
         int interval = (g_gameMode == 2) ? 14 : 22;
@@ -591,6 +770,9 @@ void UpdateGameLogic() {
                     else if (type == ENEMY_WYVERN) { baseHp = 240 + g_wave * 45; speed = 1.4f; r = 18; }
                     else if (type == ENEMY_GOLEM) { baseHp = 420 + g_wave * 70; speed = 0.5f; r = 20; }
 
+                    if (g_mutators & MUTATOR_TITAN) baseHp = (int)(baseHp * 2.0f);
+                    if (g_mutators & MUTATOR_BLOODLUST) speed *= 1.4f;
+
                     g_enemies[i].hp = baseHp;
                     g_enemies[i].maxHp = baseHp;
                     g_enemies[i].speed = speed;
@@ -601,7 +783,6 @@ void UpdateGameLogic() {
         }
     }
 
-    // Update Hero
     if (g_hero.healCd > 0) g_hero.healCd--;
     if (g_hero.shieldCd > 0) g_hero.shieldCd--;
     if (g_hero.meteorCd > 0) g_hero.meteorCd--;
@@ -652,6 +833,7 @@ void UpdateGameLogic() {
                 if (g_enemies[bestE].hp <= 0) {
                     g_enemies[bestE].active = FALSE;
                     int reward = (g_enemies[bestE].type == ENEMY_OGRE || g_enemies[bestE].type == ENEMY_WYVERN || g_enemies[bestE].type == ENEMY_GOLEM) ? 80 : 15;
+                    if (g_mutators & MUTATOR_BLOODLUST) reward = (int)(reward * 1.5f);
                     g_gold += reward;
                     char rBuf[16]; wsprintfA(rBuf, "+%dg", reward);
                     AddFloatingText(g_enemies[bestE].x, g_enemies[bestE].y - 10, rBuf, TEXT_GOLD);
@@ -660,7 +842,6 @@ void UpdateGameLogic() {
         }
     }
 
-    // Update Militia
     for (int m = 0; m < MAX_MILITIA; m++) {
         if (!g_militia[m].active) continue;
         g_militia[m].lifeTimer--;
@@ -705,14 +886,12 @@ void UpdateGameLogic() {
         }
     }
 
-    // Update Enemies
     if (g_blizzTimer > 0) g_blizzTimer--;
     int activeEnemyCount = 0;
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!g_enemies[i].active) continue;
         activeEnemyCount++;
 
-        // Poison DoT
         if (g_enemies[i].poisonTicks > 0) {
             if (g_enemies[i].poisonTicks % 15 == 0) {
                 g_enemies[i].hp -= g_enemies[i].poisonDmg;
@@ -726,7 +905,6 @@ void UpdateGameLogic() {
             }
         }
 
-        // Necromancer summoning
         if (g_enemies[i].type == ENEMY_NECROMANCER) {
             g_enemies[i].summonTimer++;
             if (g_enemies[i].summonTimer >= 130) {
@@ -741,8 +919,10 @@ void UpdateGameLogic() {
                         g_enemies[s].waypointIndex = g_enemies[i].waypointIndex;
                         g_enemies[s].slowed = FALSE;
                         g_enemies[s].hp = 18 + g_wave * 3;
+                        if (g_mutators & MUTATOR_TITAN) g_enemies[s].hp *= 2;
                         g_enemies[s].maxHp = g_enemies[s].hp;
                         g_enemies[s].speed = 2.2f;
+                        if (g_mutators & MUTATOR_BLOODLUST) g_enemies[s].speed *= 1.4f;
                         g_enemies[s].radius = 10;
                         SpawnParticleBurst(g_enemies[s].x, g_enemies[s].y, RGB(168, 85, 247), 8);
                         AddFloatingText(g_enemies[i].x, g_enemies[i].y - 20, "RAISE!", RGB(168, 85, 247));
@@ -752,11 +932,10 @@ void UpdateGameLogic() {
             }
         }
 
-        // Slow check
         g_enemies[i].slowed = (g_blizzTimer > 0 && g_enemies[i].type != ENEMY_WYVERN && g_enemies[i].type != ENEMY_GOLEM);
         if (!g_enemies[i].slowed && g_enemies[i].type != ENEMY_WYVERN && g_enemies[i].type != ENEMY_GOLEM) {
             for (int t = 0; t < g_slotCount; t++) {
-                if (g_slots[t].occupied && g_slots[t].towerType == TOWER_FROST) {
+                if (g_slots[t].occupied && (g_slots[t].towerType == TOWER_FROST || g_slots[t].towerType == TOWER_SUPERCONDUCTOR)) {
                     float fdx = g_enemies[i].x - g_slots[t].x;
                     float fdy = g_enemies[i].y - g_slots[t].y;
                     if (custom_sqrtf(fdx*fdx + fdy*fdy) <= (float)g_slots[t].range) {
@@ -774,7 +953,8 @@ void UpdateGameLogic() {
                 float tdy = g_enemies[i].y - g_traps[tr].y;
                 if (custom_sqrtf(tdx*tdx + tdy*tdy) <= (float)(g_traps[tr].radius + g_enemies[i].radius)) {
                     if (g_traps[tr].type == TRAP_SPIKE) {
-                        g_enemies[i].hp -= 50;
+                        int spikeDmg = 50 + (g_techFortTraps * 20);
+                        g_enemies[i].hp -= spikeDmg;
                         g_traps[tr].charges--;
                         SpawnParticleBurst(g_enemies[i].x, g_enemies[i].y, RGB(239, 68, 68), 5);
                         if (g_traps[tr].charges <= 0) g_traps[tr].active = FALSE;
@@ -809,7 +989,8 @@ void UpdateGameLogic() {
         if (g_enemies[i].hp <= 0) {
             g_enemies[i].active = FALSE;
             SpawnParticleBurst(g_enemies[i].x, g_enemies[i].y, RGB(34, 197, 94), 10);
-            g_gold += 15;
+            int bounty = (g_mutators & MUTATOR_BLOODLUST) ? 25 : 15;
+            g_gold += bounty;
             continue;
         }
 
@@ -881,7 +1062,6 @@ void UpdateGameLogic() {
         }
     }
 
-    // Update Towers & Attacks
     for (int i = 0; i < g_slotCount; i++) {
         if (!g_slots[i].occupied) continue;
         if (g_slots[i].towerType == TOWER_FROST) continue;
@@ -913,18 +1093,33 @@ void UpdateGameLogic() {
                 g_slots[i].cooldown = g_slots[i].maxCooldown;
                 g_slots[i].attackAnim = 5;
 
-                // Tesla tower chain lightning
-                if (g_slots[i].towerType == TOWER_TESLA) {
+                if (g_slots[i].towerType == TOWER_SOLAR_BEAM) {
+                    g_slots[i].beamTargetId = g_enemies[targetIdx].id;
+                    int beamDmg = g_slots[i].damage;
+                    if (g_enemies[targetIdx].maxHp > 100) beamDmg += (int)(g_enemies[targetIdx].hp * 0.04f);
+                    g_enemies[targetIdx].hp -= beamDmg;
+                    SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(254, 240, 138), 3);
+                    if (g_enemies[targetIdx].hp <= 0) {
+                        g_enemies[targetIdx].active = FALSE;
+                        g_gold += 15;
+                    }
+                    continue;
+                }
+
+                if (g_slots[i].towerType == TOWER_TESLA || g_slots[i].towerType == TOWER_SUPERCONDUCTOR) {
+                    int maxChains = (g_slots[i].towerType == TOWER_SUPERCONDUCTOR) ? 5 : 2;
                     g_enemies[targetIdx].hp -= g_slots[i].damage;
-                    SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(56, 189, 248), 8);
+                    if (g_slots[i].towerType == TOWER_SUPERCONDUCTOR) g_enemies[targetIdx].slowed = TRUE;
+                    SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, (g_slots[i].towerType == TOWER_SUPERCONDUCTOR) ? RGB(14, 165, 233) : RGB(56, 189, 248), 8);
                     
                     int chains = 0;
-                    for (int e2 = 0; e2 < MAX_ENEMIES && chains < 2; e2++) {
+                    for (int e2 = 0; e2 < MAX_ENEMIES && chains < maxChains; e2++) {
                         if (g_enemies[e2].active && e2 != targetIdx) {
                             float cdx = g_enemies[e2].x - g_enemies[targetIdx].x;
                             float cdy = g_enemies[e2].y - g_enemies[targetIdx].y;
-                            if (custom_sqrtf(cdx*cdx + cdy*cdy) <= 90.0f) {
+                            if (custom_sqrtf(cdx*cdx + cdy*cdy) <= (g_slots[i].towerType == TOWER_SUPERCONDUCTOR ? 140.0f : 90.0f)) {
                                 g_enemies[e2].hp -= (int)(g_slots[i].damage * 0.75f);
+                                if (g_slots[i].towerType == TOWER_SUPERCONDUCTOR) g_enemies[e2].slowed = TRUE;
                                 SpawnParticleBurst(g_enemies[e2].x, g_enemies[e2].y, RGB(147, 197, 253), 6);
                                 chains++;
                             }
@@ -938,7 +1133,35 @@ void UpdateGameLogic() {
                     continue;
                 }
 
-                // Projectiles for Archer, Mage, Cannon, Ballista, Poison
+                if (g_slots[i].towerType == TOWER_VENOMSPITE) {
+                    for (int p = 0; p < MAX_PROJECTILES; p++) {
+                        if (!g_projectiles[p].active) {
+                            g_projectiles[p].active = TRUE;
+                            g_projectiles[p].x = (float)g_slots[i].x;
+                            g_projectiles[p].y = (float)g_slots[i].y;
+                            g_projectiles[p].targetEnemyId = g_enemies[targetIdx].id;
+                            g_projectiles[p].targetX = g_enemies[targetIdx].x;
+                            g_projectiles[p].targetY = g_enemies[targetIdx].y;
+                            g_projectiles[p].damage = g_slots[i].damage;
+                            g_projectiles[p].type = TOWER_VENOMSPITE;
+                            g_projectiles[p].splash = g_slots[i].splash;
+                            g_projectiles[p].speed = 15.0f;
+                            g_projectiles[p].isCrit = TRUE;
+                            g_projectiles[p].isPiercing = TRUE;
+
+                            float dx = g_enemies[targetIdx].x - (float)g_slots[i].x;
+                            float dy = g_enemies[targetIdx].y - (float)g_slots[i].y;
+                            float d = custom_sqrtf(dx*dx + dy*dy);
+                            g_projectiles[p].vx = (dx / d) * 15.0f;
+                            g_projectiles[p].vy = (dy / d) * 15.0f;
+                            g_projectiles[p].lifeTimer = 35;
+                            Beep(700, 30);
+                            break;
+                        }
+                    }
+                    continue;
+                }
+
                 for (int p = 0; p < MAX_PROJECTILES; p++) {
                     if (!g_projectiles[p].active) {
                         g_projectiles[p].active = TRUE;
@@ -947,33 +1170,56 @@ void UpdateGameLogic() {
                         g_projectiles[p].targetEnemyId = g_enemies[targetIdx].id;
                         g_projectiles[p].targetX = g_enemies[targetIdx].x;
                         g_projectiles[p].targetY = g_enemies[targetIdx].y;
-                        
-                        float spd = 10.0f;
-                        if (g_slots[i].towerType == TOWER_CANNON) spd = 7.0f;
-                        else if (g_slots[i].towerType == TOWER_BALLISTA) spd = 16.0f;
-                        else if (g_slots[i].towerType == TOWER_POISON) spd = 8.0f;
-
-                        g_projectiles[p].speed = spd;
                         g_projectiles[p].damage = g_slots[i].damage;
                         g_projectiles[p].type = g_slots[i].towerType;
                         g_projectiles[p].splash = g_slots[i].splash;
                         g_projectiles[p].isCrit = (g_slots[i].towerType == TOWER_BALLISTA && (rand() % 100 < 35));
+                        g_projectiles[p].isPiercing = FALSE;
 
-                        if (g_slots[i].towerType == TOWER_CANNON) { Beep(150, 60); }
-                        else if (g_slots[i].towerType == TOWER_MAGE) { Beep(900, 30); }
-                        else if (g_slots[i].towerType == TOWER_BALLISTA) { Beep(700, 30); }
-                        else if (g_slots[i].towerType == TOWER_POISON) { Beep(450, 40); }
-                        else { Beep(800, 20); }
+                        if (g_slots[i].towerType == TOWER_CANNON || g_slots[i].towerType == TOWER_INFERNO) g_projectiles[p].speed = 6.0f;
+                        else if (g_slots[i].towerType == TOWER_BALLISTA) g_projectiles[p].speed = 16.0f;
+                        else if (g_slots[i].towerType == TOWER_POISON) g_projectiles[p].speed = 8.0f;
+                        else g_projectiles[p].speed = 9.0f;
+
+                        if (g_slots[i].towerType == TOWER_CANNON || g_slots[i].towerType == TOWER_INFERNO) Beep(180, 20);
+                        else if (g_slots[i].towerType == TOWER_MAGE) Beep(600, 20);
+                        else Beep(450, 20);
                         break;
                     }
                 }
+            } else {
+                g_slots[i].beamTargetId = -1;
             }
         }
     }
 
-    // Update Projectiles
     for (int p = 0; p < MAX_PROJECTILES; p++) {
         if (!g_projectiles[p].active) continue;
+
+        if (g_projectiles[p].isPiercing) {
+            g_projectiles[p].x += g_projectiles[p].vx;
+            g_projectiles[p].y += g_projectiles[p].vy;
+            g_projectiles[p].lifeTimer--;
+
+            for (int e = 0; e < MAX_ENEMIES; e++) {
+                if (!g_enemies[e].active) continue;
+                float edx = g_enemies[e].x - g_projectiles[p].x;
+                float edy = g_enemies[e].y - g_projectiles[p].y;
+                if (custom_sqrtf(edx*edx + edy*edy) <= (float)(g_enemies[e].radius + 10)) {
+                    g_enemies[e].hp -= g_projectiles[p].damage;
+                    g_enemies[e].poisonTicks = 120;
+                    g_enemies[e].poisonDmg = 12;
+                    SpawnParticleBurst(g_enemies[e].x, g_enemies[e].y, RGB(34, 197, 94), 6);
+                    if (g_enemies[e].hp <= 0) {
+                        g_enemies[e].active = FALSE;
+                        g_gold += 15;
+                    }
+                }
+            }
+
+            if (g_projectiles[p].lifeTimer <= 0) g_projectiles[p].active = FALSE;
+            continue;
+        }
 
         int targetIdx = -1;
         for (int e = 0; e < MAX_ENEMIES; e++) {
@@ -985,118 +1231,106 @@ void UpdateGameLogic() {
             }
         }
 
-        float dx = g_projectiles[p].targetX - g_projectiles[p].x;
-        float dy = g_projectiles[p].targetY - g_projectiles[p].y;
-        float dist = custom_sqrtf(dx * dx + dy * dy);
+        float pdx = g_projectiles[p].targetX - g_projectiles[p].x;
+        float pdy = g_projectiles[p].targetY - g_projectiles[p].y;
+        float pdist = custom_sqrtf(pdx * pdx + pdy * pdy);
 
-        if (dist < g_projectiles[p].speed) {
-            COLORREF hitCol = TEXT_GOLD;
-            if (g_projectiles[p].type == TOWER_CANNON) hitCol = RGB(71, 85, 105);
-            else if (g_projectiles[p].type == TOWER_MAGE) hitCol = RGB(216, 180, 254);
-            else if (g_projectiles[p].type == TOWER_POISON) hitCol = RGB(34, 197, 94);
-            else if (g_projectiles[p].type == TOWER_BALLISTA) hitCol = RGB(251, 191, 36);
-
-            if (g_projectiles[p].type == TOWER_CANNON) SpawnExplosion(g_projectiles[p].targetX, g_projectiles[p].targetY, hitCol);
-            else SpawnParticleBurst(g_projectiles[p].targetX, g_projectiles[p].targetY, hitCol, 8);
-            
-            if (g_projectiles[p].type == TOWER_CANNON || g_projectiles[p].type == TOWER_POISON) {
-                g_scorchMarks[g_scorchIndex].x = g_projectiles[p].targetX;
-                g_scorchMarks[g_scorchIndex].y = g_projectiles[p].targetY;
-                g_scorchMarks[g_scorchIndex].radius = (float)(g_projectiles[p].splash > 0 ? g_projectiles[p].splash : 30);
-                g_scorchMarks[g_scorchIndex].active = TRUE;
-                g_scorchMarks[g_scorchIndex].color = (g_projectiles[p].type == TOWER_POISON) ? RGB(20, 50, 20) : RGB(20, 10, 10);
-                g_scorchIndex = (g_scorchIndex + 1) % MAX_SCORCH_MARKS;
-            }
-
+        if (pdist < g_projectiles[p].speed) {
+            g_projectiles[p].active = FALSE;
             int baseDmg = g_projectiles[p].damage;
             if (g_projectiles[p].isCrit) {
                 baseDmg *= 2;
-                AddFloatingText(g_projectiles[p].targetX, g_projectiles[p].targetY - 25, "CRIT!", TEXT_GOLD);
+                AddFloatingText(g_projectiles[p].targetX, g_projectiles[p].targetY - 20, "CRIT!", TEXT_GOLD);
+            }
+
+            if ((g_mutators & MUTATOR_PHASE_SHIFT) && (rand() % 100 < 25) && g_projectiles[p].type != TOWER_BALLISTA) {
+                AddFloatingText(g_projectiles[p].targetX, g_projectiles[p].targetY - 15, "PHASE!", RGB(168, 85, 247));
+                continue;
+            }
+
+            if (g_projectiles[p].type == TOWER_INFERNO) {
+                SpawnExplosion(g_projectiles[p].targetX, g_projectiles[p].targetY, RGB(249, 115, 22));
+                SpawnLavaPool(g_projectiles[p].targetX, g_projectiles[p].targetY, 65, 180, 18);
             }
 
             if (g_projectiles[p].splash > 0) {
+                if (g_projectiles[p].type == TOWER_CANNON || g_projectiles[p].type == TOWER_POISON || g_projectiles[p].type == TOWER_INFERNO) {
+                    if (g_scorchIndex < MAX_SCORCH_MARKS) {
+                        g_scorchMarks[g_scorchIndex].active = TRUE;
+                        g_scorchMarks[g_scorchIndex].x = g_projectiles[p].targetX;
+                        g_scorchMarks[g_scorchIndex].y = g_projectiles[p].targetY;
+                        g_scorchMarks[g_scorchIndex].radius = (float)g_projectiles[p].splash;
+                        g_scorchMarks[g_scorchIndex].color = (g_projectiles[p].type == TOWER_INFERNO) ? RGB(80, 20, 10) : RGB(20, 20, 20);
+                        g_scorchIndex = (g_scorchIndex + 1) % MAX_SCORCH_MARKS;
+                    }
+                }
+
                 for (int e2 = 0; e2 < MAX_ENEMIES; e2++) {
-                    if (!g_enemies[e2].active) continue;
-                    float edx = g_enemies[e2].x - g_projectiles[p].targetX;
-                    float edy = g_enemies[e2].y - g_projectiles[p].targetY;
-                    if (custom_sqrtf(edx*edx + edy*edy) <= (float)g_projectiles[p].splash) {
-                        int dmg = baseDmg;
-                        if (g_enemies[e2].type == ENEMY_ORC && g_projectiles[p].type != TOWER_MAGE && g_projectiles[p].type != TOWER_CANNON && g_projectiles[p].type != TOWER_BALLISTA) {
-                            dmg = dmg / 2; if (dmg < 1) dmg = 1;
-                        }
-                        g_enemies[e2].hp -= dmg;
-                        if (g_projectiles[p].type == TOWER_POISON) {
-                            g_enemies[e2].poisonTicks = 75;
-                            g_enemies[e2].poisonDmg = 6;
-                        }
-                        if (g_enemies[e2].hp <= 0) {
-                            g_enemies[e2].active = FALSE;
-                            int reward = (g_enemies[e2].type == ENEMY_OGRE || g_enemies[e2].type == ENEMY_WYVERN || g_enemies[e2].type == ENEMY_GOLEM) ? 100 : 15;
-                            g_gold += reward;
-                            char rBuf[16]; wsprintfA(rBuf, "+%dg", reward);
-                            AddFloatingText(g_enemies[e2].x, g_enemies[e2].y - 10, rBuf, TEXT_GOLD);
+                    if (g_enemies[e2].active) {
+                        float edx = g_enemies[e2].x - g_projectiles[p].targetX;
+                        float edy = g_enemies[e2].y - g_projectiles[p].targetY;
+                        if (custom_sqrtf(edx*edx + edy*edy) <= (float)g_projectiles[p].splash) {
+                            int d = baseDmg;
+                            if (g_enemies[e2].type == ENEMY_ORC && g_projectiles[p].type != TOWER_MAGE && g_projectiles[p].type != TOWER_CANNON && g_projectiles[p].type != TOWER_BALLISTA && g_projectiles[p].type != TOWER_INFERNO) {
+                                d = d / 2; if (d < 1) d = 1;
+                            }
+                            g_enemies[e2].hp -= d;
+                            if (g_projectiles[p].type == TOWER_POISON) {
+                                g_enemies[e2].poisonTicks = 75;
+                                g_enemies[e2].poisonDmg = 6;
+                            }
+                            SpawnParticleBurst(g_enemies[e2].x, g_enemies[e2].y, (g_projectiles[p].type == TOWER_INFERNO) ? RGB(249, 115, 22) : RGB(168, 85, 247), 5);
+                            if (g_enemies[e2].hp <= 0) {
+                                g_enemies[e2].active = FALSE;
+                                int reward = (g_enemies[e2].type == ENEMY_OGRE || g_enemies[e2].type == ENEMY_WYVERN || g_enemies[e2].type == ENEMY_GOLEM) ? 100 : 15;
+                                if (g_mutators & MUTATOR_BLOODLUST) reward = (int)(reward * 1.5f);
+                                g_gold += reward;
+                            }
                         }
                     }
                 }
-            } else {
-                if (targetIdx != -1) {
-                    int dmg = baseDmg;
-                    if (g_enemies[targetIdx].type == ENEMY_ORC && g_projectiles[p].type != TOWER_MAGE && g_projectiles[p].type != TOWER_CANNON && g_projectiles[p].type != TOWER_BALLISTA) {
-                        dmg = dmg / 2; if (dmg < 1) dmg = 1;
-                    }
-                    g_enemies[targetIdx].hp -= dmg;
-                    if (g_projectiles[p].type == TOWER_POISON) {
-                        g_enemies[targetIdx].poisonTicks = 75;
-                        g_enemies[targetIdx].poisonDmg = 6;
-                    }
-                    if (g_enemies[targetIdx].hp <= 0) {
-                        g_enemies[targetIdx].active = FALSE;
-                        int reward = (g_enemies[targetIdx].type == ENEMY_OGRE || g_enemies[targetIdx].type == ENEMY_WYVERN || g_enemies[targetIdx].type == ENEMY_GOLEM) ? 100 : 15;
-                        g_gold += reward;
-                        char rBuf[16]; wsprintfA(rBuf, "+%dg", reward);
-                        AddFloatingText(g_enemies[targetIdx].x, g_enemies[targetIdx].y - 10, rBuf, TEXT_GOLD);
-                    }
+            } else if (targetIdx != -1) {
+                int d = baseDmg;
+                if (g_enemies[targetIdx].type == ENEMY_ORC && g_projectiles[p].type != TOWER_MAGE && g_projectiles[p].type != TOWER_CANNON && g_projectiles[p].type != TOWER_BALLISTA && g_projectiles[p].type != TOWER_INFERNO) {
+                    d = d / 2; if (d < 1) d = 1;
+                }
+                g_enemies[targetIdx].hp -= d;
+                if (g_projectiles[p].type == TOWER_POISON) {
+                    g_enemies[targetIdx].poisonTicks = 75;
+                    g_enemies[targetIdx].poisonDmg = 6;
+                }
+                if (g_projectiles[p].type == TOWER_CANNON) SpawnExplosion(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(71, 85, 105));
+                else SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, TEXT_GOLD, 4);
+
+                if (g_enemies[targetIdx].hp <= 0) {
+                    g_enemies[targetIdx].active = FALSE;
+                    int reward = (g_enemies[targetIdx].type == ENEMY_OGRE || g_enemies[targetIdx].type == ENEMY_WYVERN || g_enemies[targetIdx].type == ENEMY_GOLEM) ? 100 : 15;
+                    if (g_mutators & MUTATOR_BLOODLUST) reward = (int)(reward * 1.5f);
+                    g_gold += reward;
                 }
             }
-            g_projectiles[p].active = FALSE;
         } else {
-            g_projectiles[p].x += (dx / dist) * g_projectiles[p].speed;
-            g_projectiles[p].y += (dy / dist) * g_projectiles[p].speed;
+            g_projectiles[p].x += (pdx / pdist) * g_projectiles[p].speed;
+            g_projectiles[p].y += (pdy / pdist) * g_projectiles[p].speed;
         }
     }
 
-    // Update Particles
     for (int p = 0; p < MAX_PARTICLES; p++) {
         if (!g_particles[p].active) continue;
         g_particles[p].x += g_particles[p].vx;
         g_particles[p].y += g_particles[p].vy;
-        
-        if (g_particles[p].type == 1) {
-            g_particles[p].vy += 0.2f;
-            g_particles[p].vx *= 0.95f;
-        } else if (g_particles[p].type == 2) {
-            g_particles[p].vx *= 0.9f;
-            g_particles[p].vy *= 0.9f;
-            g_particles[p].vy -= 0.1f;
-            g_particles[p].size += 0.2f;
-        } else if (g_particles[p].type == 3) {
-            g_particles[p].size += 2.0f;
-            g_particles[p].vx = 0; g_particles[p].vy = 0;
-        }
-
         g_particles[p].life--;
         if (g_particles[p].life <= 0) g_particles[p].active = FALSE;
     }
 
-    int weatherType = (g_currentMap == 2 || g_currentMap == 5) ? 1 : 0;
-    for (int k = 0; k < 3; k++) {
+    if (rand() % 100 < 20) {
         for (int p = 0; p < 200; p++) {
             if (!g_weatherParticles[p].active) {
                 g_weatherParticles[p].active = TRUE;
-                g_weatherParticles[p].x = 10.0f + (rand() % (WINDOW_WIDTH - 220));
-                g_weatherParticles[p].y = 50.0f;
-                g_weatherParticles[p].vx = weatherType ? (-1.0f + (rand() % 3)) : 1.0f;
-                g_weatherParticles[p].vy = weatherType ? (1.0f + (rand() % 2)) : (5.0f + (rand() % 3));
+                g_weatherParticles[p].x = (float)(rand() % WINDOW_WIDTH);
+                g_weatherParticles[p].y = 0.0f;
+                g_weatherParticles[p].vx = -0.5f + (rand() % 10) / 10.0f;
+                g_weatherParticles[p].vy = 2.0f + (rand() % 20) / 10.0f;
                 break;
             }
         }
@@ -1109,7 +1343,6 @@ void UpdateGameLogic() {
         }
     }
 
-    // Update Floating Texts
     for (int f = 0; f < MAX_FLOATING_TEXTS; f++) {
         if (!g_floatingTexts[f].active) continue;
         g_floatingTexts[f].y -= 0.8f;
@@ -1117,14 +1350,13 @@ void UpdateGameLogic() {
         if (g_floatingTexts[f].life <= 0) g_floatingTexts[f].active = FALSE;
     }
 
-    // Screen Shake
     if (g_screenShake > 0) g_screenShake--;
 
-    // Wave completion
     if (g_waveActive && g_spawnQueueHead == g_spawnQueueCount && activeEnemyCount == 0) {
         g_waveActive = FALSE;
         int bonus = 20 + g_wave * 5;
         if (g_gameMode == 2) bonus = 100 + g_wave * 20;
+        if (g_mutators & MUTATOR_TITAN) bonus *= 2;
         g_gold += bonus;
 
         char buf[32];
@@ -1164,7 +1396,6 @@ void Render(HDC hdc, HWND hwnd) {
     HBITMAP memBitmap = CreateCompatibleBitmap(hdc, w, h);
     HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
 
-    // Background
     HBRUSH bgBrush = CreateSolidBrush(BG_COLOR);
     FillRect(memDC, &clientRect, bgBrush);
     DeleteObject(bgBrush);
@@ -1172,7 +1403,6 @@ void Render(HDC hdc, HWND hwnd) {
     int dpi = GetDpiForWindow(hwnd);
     if (dpi == 0) dpi = 96;
 
-    // Header Area
     DrawRoundedRect(memDC, 10, 10, w - 10, 60, CARD_BG, BORDER_COLOR, 8);
 
     HFONT hFontTitle = CreateFontA(-MulDiv(20, dpi, 72), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
@@ -1189,31 +1419,36 @@ void Render(HDC hdc, HWND hwnd) {
 
     SelectObject(memDC, hFontSub);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, 150, 26, "Loop 1 Expanded Content", 23);
+    TextOutA(memDC, 150, 26, "Loop 2: Fusions & Siege", 23);
 
     SelectObject(memDC, hFontStat);
     char buf[64];
     wsprintfA(buf, "Gold: %d", g_gold);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, w - 320, 24, buf, (int)lstrlenA(buf));
+    TextOutA(memDC, w - 380, 24, buf, (int)lstrlenA(buf));
 
     wsprintfA(buf, "Base HP: %d/%d", g_baseHp, g_maxBaseHp);
     SetTextColor(memDC, TEXT_RED);
-    TextOutA(memDC, w - 210, 24, buf, (int)lstrlenA(buf));
+    TextOutA(memDC, w - 270, 24, buf, (int)lstrlenA(buf));
 
     wsprintfA(buf, "Wave: %d", g_wave);
     SetTextColor(memDC, TEXT_WHITE);
-    TextOutA(memDC, w - 90, 24, buf, (int)lstrlenA(buf));
+    TextOutA(memDC, w - 140, 24, buf, (int)lstrlenA(buf));
 
-    DrawRoundedRect(memDC, w - 410, 20, w - 340, 45, RGB(59, 130, 246), BORDER_COLOR, 4);
+    if (g_mutators != 0) {
+        DrawRoundedRect(memDC, w - 500, 20, w - 400, 45, RGB(168, 85, 247), BORDER_COLOR, 4);
+        SetTextColor(memDC, TEXT_WHITE);
+        TextOutA(memDC, w - 490, 23, "MUTATORS ON", 11);
+    }
+
+    DrawRoundedRect(memDC, w - 80, 20, w - 20, 45, RGB(59, 130, 246), BORDER_COLOR, 4);
     SetTextColor(memDC, TEXT_WHITE);
-    TextOutA(memDC, w - 402, 23, "HELP", 4);
+    TextOutA(memDC, w - 70, 23, "HELP", 4);
 
     DeleteObject(hFontTitle);
     DeleteObject(hFontSub);
     DeleteObject(hFontStat);
 
-    // Battlefield Area
     int bfX = 10, bfY = 70, bfW = w - 220, bfH = h - 80;
     
     if (g_screenShake > 0) {
@@ -1223,20 +1458,19 @@ void Render(HDC hdc, HWND hwnd) {
     
     DrawRoundedRect(memDC, bfX, bfY, bfX + bfW, bfY + bfH, g_maps[g_currentMap].bg, BORDER_COLOR, 8);
 
-    // Draw Environmental Art
     for (int i = 0; i < g_envArtCount; i++) {
         int ex = (int)g_envArt[i].x;
         int ey = (int)g_envArt[i].y;
         int sz = (int)g_envArt[i].size;
         if (ex - sz < bfX || ex + sz > bfX + bfW || ey - sz < bfY || ey + sz > bfY + bfH) continue;
 
-        if (g_envArt[i].type == 0) { // Rock
+        if (g_envArt[i].type == 0) {
             POINT rPts[] = {{ex - sz, ey + sz/2}, {ex + sz, ey + sz/2}, {ex, ey - sz}};
             HBRUSH rB = CreateSolidBrush(RGB(71, 85, 105)); HPEN rP = CreatePen(PS_NULL, 0, 0);
             HBRUSH oB = (HBRUSH)SelectObject(memDC, rB); HPEN oP = (HPEN)SelectObject(memDC, rP);
             Polygon(memDC, rPts, 3);
             SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(rB); DeleteObject(rP);
-        } else { // Grass
+        } else {
             HBRUSH gB = CreateSolidBrush(RGB(22, 101, 52)); HPEN gP = CreatePen(PS_NULL, 0, 0);
             HBRUSH oB = (HBRUSH)SelectObject(memDC, gB); HPEN oP = (HPEN)SelectObject(memDC, gP);
             Pie(memDC, ex - sz, ey - sz, ex + sz, ey + sz, ex + sz, ey, ex - sz, ey);
@@ -1244,7 +1478,6 @@ void Render(HDC hdc, HWND hwnd) {
         }
     }
 
-    // Draw Map Obstacles
     HFONT hObsFont = CreateFontA(-MulDiv(20, dpi, 72), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hObsFont);
     SetTextColor(memDC, RGB(255,255,255));
@@ -1255,7 +1488,6 @@ void Render(HDC hdc, HWND hwnd) {
     }
     DeleteObject(hObsFont);
 
-    // Draw Winding Path
     POINT pts[MAX_WAYPOINTS];
     for (int i = 0; i < MAX_WAYPOINTS; i++) {
         pts[i].x = g_waypoints[i].x;
@@ -1273,7 +1505,20 @@ void Render(HDC hdc, HWND hwnd) {
     DeleteObject(pathPen);
     DeleteObject(pathBorderPen);
 
-    // Draw Scorch Marks
+    for (int i = 0; i < MAX_LAVA_POOLS; i++) {
+        if (g_lavaPools[i].active) {
+            float lx = g_lavaPools[i].x;
+            float ly = g_lavaPools[i].y;
+            float lr = (float)g_lavaPools[i].radius;
+            HBRUSH lpB = CreateSolidBrush(RGB(234, 88, 12));
+            HPEN lpP = CreatePen(PS_SOLID, 2, RGB(251, 146, 60));
+            HBRUSH ob = (HBRUSH)SelectObject(memDC, lpB); HPEN op = (HPEN)SelectObject(memDC, lpP);
+            Ellipse(memDC, (int)(lx - lr), (int)(ly - lr), (int)(lx + lr), (int)(ly + lr));
+            SelectObject(memDC, ob); SelectObject(memDC, op);
+            DeleteObject(lpB); DeleteObject(lpP);
+        }
+    }
+
     for (int i = 0; i < MAX_SCORCH_MARKS; i++) {
         if (g_scorchMarks[i].active) {
             float sx = g_scorchMarks[i].x;
@@ -1290,7 +1535,6 @@ void Render(HDC hdc, HWND hwnd) {
         }
     }
 
-    // Draw Range Circle for selected slot
     if (g_selectedSlot != -1) {
         HPEN glowPen = CreatePen(PS_SOLID, 2, TEXT_GOLD);
         HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
@@ -1305,17 +1549,14 @@ void Render(HDC hdc, HWND hwnd) {
         DeleteObject(glowPen);
     }
 
-    // Draw Spawn Gate
     DrawRoundedRect(memDC, g_waypoints[0].x - 22, g_waypoints[0].y - 22, g_waypoints[0].x + 22, g_waypoints[0].y + 22, RGB(180, 40, 40), RGB(239, 68, 68), 6);
     SetTextColor(memDC, TEXT_WHITE);
     TextOutA(memDC, g_waypoints[0].x - 14, g_waypoints[0].y - 6, "GATE", 4);
 
-    // Draw Castle Fortress Base
     DrawRoundedRect(memDC, g_waypoints[5].x - 30, g_waypoints[5].y - 30, g_waypoints[5].x + 35, g_waypoints[5].y + 35, CASTLE_COLOR, TEXT_GOLD, 8);
     SetTextColor(memDC, TEXT_GOLD);
     TextOutA(memDC, g_waypoints[5].x - 24, g_waypoints[5].y - 8, "CASTLE", 6);
 
-    // Draw Tower Slots
     for (int i = 0; i < g_slotCount; i++) {
         COLORREF fill = (g_selectedSlot == i) ? TOWER_SLOT_HOVER : TOWER_SLOT_BG;
         COLORREF border = (g_selectedSlot == i) ? TEXT_GOLD : BORDER_COLOR;
@@ -1360,10 +1601,32 @@ void Render(HDC hdc, HWND hwnd) {
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, pB); HPEN oP = (HPEN)SelectObject(memDC, pP);
                 Ellipse(memDC, g_slots[i].x - 13, g_slots[i].y - 13, g_slots[i].x + 13, g_slots[i].y + 13);
                 SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(pB); DeleteObject(pP);
+            } else if (type == TOWER_INFERNO) {
+                HBRUSH inB = CreateSolidBrush(RGB(220, 38, 38)); HPEN inP = CreatePen(PS_SOLID, 2, RGB(251, 191, 36));
+                HBRUSH oB = (HBRUSH)SelectObject(memDC, inB); HPEN oP = (HPEN)SelectObject(memDC, inP);
+                Ellipse(memDC, g_slots[i].x - 16, g_slots[i].y - 16, g_slots[i].x + 16, g_slots[i].y + 16);
+                SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(inB); DeleteObject(inP);
+            } else if (type == TOWER_SUPERCONDUCTOR) {
+                HBRUSH scB = CreateSolidBrush(RGB(3, 105, 161)); HPEN scP = CreatePen(PS_SOLID, 2, RGB(125, 211, 252));
+                HBRUSH oB = (HBRUSH)SelectObject(memDC, scB); HPEN oP = (HPEN)SelectObject(memDC, scP);
+                Ellipse(memDC, g_slots[i].x - 15, g_slots[i].y - 15, g_slots[i].x + 15, g_slots[i].y + 15);
+                SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(scB); DeleteObject(scP);
+            } else if (type == TOWER_VENOMSPITE) {
+                HBRUSH vnB = CreateSolidBrush(RGB(20, 83, 45)); HPEN vnP = CreatePen(PS_SOLID, 2, RGB(134, 239, 172));
+                HBRUSH oB = (HBRUSH)SelectObject(memDC, vnB); HPEN oP = (HPEN)SelectObject(memDC, vnP);
+                Rectangle(memDC, g_slots[i].x - 15, g_slots[i].y - 15, g_slots[i].x + 15, g_slots[i].y + 15);
+                SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(vnB); DeleteObject(vnP);
+            } else if (type == TOWER_SOLAR_BEAM) {
+                HBRUSH sbB = CreateSolidBrush(RGB(202, 138, 4)); HPEN sbP = CreatePen(PS_SOLID, 2, RGB(254, 240, 138));
+                HBRUSH oB = (HBRUSH)SelectObject(memDC, sbB); HPEN oP = (HPEN)SelectObject(memDC, sbP);
+                Ellipse(memDC, g_slots[i].x - 15, g_slots[i].y - 15, g_slots[i].x + 15, g_slots[i].y + 15);
+                SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(sbB); DeleteObject(sbP);
             }
             
-            SetTextColor(memDC, TEXT_GOLD);
-            char lvlBuf[4]; wsprintfA(lvlBuf, "L%d", g_slots[i].level);
+            SetTextColor(memDC, (g_slots[i].level == 4) ? RGB(254, 240, 138) : TEXT_GOLD);
+            char lvlBuf[8];
+            if (g_slots[i].level == 4) wsprintfA(lvlBuf, "FUS");
+            else wsprintfA(lvlBuf, "L%d", g_slots[i].level);
             TextOutA(memDC, g_slots[i].x + 4, g_slots[i].y + 4, lvlBuf, lstrlenA(lvlBuf));
         } else {
             SetTextColor(memDC, TEXT_MUTED);
@@ -1371,7 +1634,6 @@ void Render(HDC hdc, HWND hwnd) {
         }
     }
 
-    // Draw Traps
     for (int tr = 0; tr < MAX_TRAPS; tr++) {
         if (!g_traps[tr].active) continue;
         int tx = (int)g_traps[tr].x; int ty = (int)g_traps[tr].y; int trr = g_traps[tr].radius;
@@ -1390,14 +1652,12 @@ void Render(HDC hdc, HWND hwnd) {
         TextOutA(memDC, tx-4, ty-6, lbl, 1);
     }
 
-    // Draw Militia
     for (int m = 0; m < MAX_MILITIA; m++) {
         if (!g_militia[m].active) continue;
         int mx = (int)g_militia[m].x;
         int my = (int)g_militia[m].y;
         DrawRoundedRect(memDC, mx - 8, my - 8, mx + 8, my + 8, RGB(59, 130, 246), TEXT_GOLD, 3);
         
-        // HP Bar
         float mRatio = g_militia[m].hp / g_militia[m].maxHp;
         DrawRoundedRect(memDC, mx - 10, my - 14, mx + 10, my - 11, RGB(20,20,20), RGB(0,0,0), 0);
         HBRUSH mHpB = CreateSolidBrush(RGB(34, 197, 94));
@@ -1405,7 +1665,6 @@ void Render(HDC hdc, HWND hwnd) {
         FillRect(memDC, &mHpR, mHpB); DeleteObject(mHpB);
     }
 
-    // Draw Enemies
     for (int e = 0; e < MAX_ENEMIES; e++) {
         if (!g_enemies[e].active) continue;
 
@@ -1431,7 +1690,6 @@ void Render(HDC hdc, HWND hwnd) {
         SelectObject(memDC, oldB); SelectObject(memDC, oldP);
         DeleteObject(eB); DeleteObject(eP);
 
-        // HP bar overhead
         int barW = (t == ENEMY_OGRE || t == ENEMY_WYVERN || t == ENEMY_GOLEM) ? 36 : 22;
         float hpRatio = (float)g_enemies[e].hp / (float)g_enemies[e].maxHp;
         DrawRoundedRect(memDC, ex - barW/2, ey - r - 8, ex + barW/2, ey - r - 4, RGB(20,20,20), RGB(0,0,0), 0);
@@ -1440,7 +1698,6 @@ void Render(HDC hdc, HWND hwnd) {
         FillRect(memDC, &hpR, hpB); DeleteObject(hpB);
     }
 
-    // Draw Hero
     if (g_hero.respawnTimer <= 0) {
         if (g_hero.shieldActive > 0) {
             HPEN shP = CreatePen(PS_SOLID, 2, RGB(96, 165, 250));
@@ -1452,7 +1709,22 @@ void Render(HDC hdc, HWND hwnd) {
         DrawRoundedRect(memDC, (int)g_hero.x - 12, (int)g_hero.y - 12, (int)g_hero.x + 12, (int)g_hero.y + 12, TEXT_GOLD, RGB(255,255,255), 4);
     }
 
-    // Draw Projectiles
+    for (int i = 0; i < g_slotCount; i++) {
+        if (g_slots[i].occupied && g_slots[i].towerType == TOWER_SOLAR_BEAM && g_slots[i].beamTargetId != -1) {
+            for (int e = 0; e < MAX_ENEMIES; e++) {
+                if (g_enemies[e].active && g_enemies[e].id == g_slots[i].beamTargetId) {
+                    HPEN beamPen = CreatePen(PS_SOLID, 3, RGB(254, 240, 138));
+                    HPEN oldP = (HPEN)SelectObject(memDC, beamPen);
+                    MoveToEx(memDC, g_slots[i].x, g_slots[i].y, NULL);
+                    LineTo(memDC, (int)g_enemies[e].x, (int)g_enemies[e].y);
+                    SelectObject(memDC, oldP);
+                    DeleteObject(beamPen);
+                    break;
+                }
+            }
+        }
+    }
+
     for (int p = 0; p < MAX_PROJECTILES; p++) {
         if (!g_projectiles[p].active) continue;
         int px = (int)g_projectiles[p].x;
@@ -1462,18 +1734,19 @@ void Render(HDC hdc, HWND hwnd) {
         else if (g_projectiles[p].type == TOWER_CANNON) pColor = RGB(30, 41, 59);
         else if (g_projectiles[p].type == TOWER_POISON) pColor = RGB(34, 197, 94);
         else if (g_projectiles[p].type == TOWER_BALLISTA) pColor = RGB(251, 191, 36);
+        else if (g_projectiles[p].type == TOWER_INFERNO) pColor = RGB(249, 115, 22);
+        else if (g_projectiles[p].type == TOWER_VENOMSPITE) pColor = RGB(34, 197, 94);
 
         HBRUSH prjB = CreateSolidBrush(pColor);
         HPEN prjP = CreatePen(PS_SOLID, 1, RGB(255,255,255));
         HBRUSH oB = (HBRUSH)SelectObject(memDC, prjB);
         HPEN oP = (HPEN)SelectObject(memDC, prjP);
-        int sz = (g_projectiles[p].type == TOWER_CANNON || g_projectiles[p].type == TOWER_BALLISTA) ? 5 : 3;
+        int sz = (g_projectiles[p].type == TOWER_CANNON || g_projectiles[p].type == TOWER_BALLISTA || g_projectiles[p].type == TOWER_INFERNO) ? 5 : 3;
         Ellipse(memDC, px - sz, py - sz, px + sz, py + sz);
         SelectObject(memDC, oB); SelectObject(memDC, oP);
         DeleteObject(prjB); DeleteObject(prjP);
     }
 
-    // Draw Floating Texts
     for (int i = 0; i < MAX_FLOATING_TEXTS; i++) {
         if (g_floatingTexts[i].active) {
             SetTextColor(memDC, g_floatingTexts[i].color);
@@ -1481,11 +1754,9 @@ void Render(HDC hdc, HWND hwnd) {
         }
     }
 
-    // Right Control Sidebar
     int sbX = w - 200, sbY = 70, sbW = 190, sbH = h - 80;
     DrawRoundedRect(memDC, sbX, sbY, sbX + sbW, sbY + sbH, CARD_BG, BORDER_COLOR, 8);
 
-    // Map Selector
     DrawRoundedRect(memDC, sbX + 5, sbY + 5, sbX + 30, sbY + 25, RGB(44, 50, 62), BORDER_COLOR, 4);
     DrawRoundedRect(memDC, sbX + sbW - 35, sbY + 5, sbX + sbW - 10, sbY + 25, RGB(44, 50, 62), BORDER_COLOR, 4);
     SetTextColor(memDC, TEXT_WHITE);
@@ -1497,151 +1768,177 @@ void Render(HDC hdc, HWND hwnd) {
 
     sbY += 28;
 
-    // Modes
-    SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 10, sbY + 5, "MODE", 4);
-    DrawRoundedRect(memDC, sbX + 50, sbY + 3, sbX + 90, sbY + 23, g_gameMode == 0 ? TEXT_GOLD : RGB(44, 50, 62), BORDER_COLOR, 4);
-    DrawRoundedRect(memDC, sbX + 95, sbY + 3, sbX + 135, sbY + 23, g_gameMode == 1 ? TEXT_GOLD : RGB(44, 50, 62), BORDER_COLOR, 4);
-    DrawRoundedRect(memDC, sbX + 140, sbY + 3, sbX + 185, sbY + 23, g_gameMode == 2 ? TEXT_GOLD : RGB(44, 50, 62), BORDER_COLOR, 4);
-    SetTextColor(memDC, g_gameMode == 0 ? RGB(0,0,0) : TEXT_WHITE); TextOutA(memDC, sbX + 56, sbY + 6, "Camp", 4);
-    SetTextColor(memDC, g_gameMode == 1 ? RGB(0,0,0) : TEXT_WHITE); TextOutA(memDC, sbX + 102, sbY + 6, "Endl", 4);
-    SetTextColor(memDC, g_gameMode == 2 ? RGB(0,0,0) : TEXT_WHITE); TextOutA(memDC, sbX + 148, sbY + 6, "Boss", 4);
+    DrawRoundedRect(memDC, sbX + 5, sbY + 3, sbX + 45, sbY + 23, g_gameMode == 0 ? TEXT_GOLD : RGB(44, 50, 62), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 50, sbY + 3, sbX + 90, sbY + 23, g_gameMode == 1 ? TEXT_GOLD : RGB(44, 50, 62), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 95, sbY + 3, sbX + 135, sbY + 23, g_gameMode == 2 ? TEXT_GOLD : RGB(44, 50, 62), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + 140, sbY + 3, sbX + 185, sbY + 23, g_mutators ? RGB(168, 85, 247) : RGB(44, 50, 62), BORDER_COLOR, 4);
+    SetTextColor(memDC, g_gameMode == 0 ? RGB(0,0,0) : TEXT_WHITE); TextOutA(memDC, sbX + 10, sbY + 6, "Camp", 4);
+    SetTextColor(memDC, g_gameMode == 1 ? RGB(0,0,0) : TEXT_WHITE); TextOutA(memDC, sbX + 55, sbY + 6, "Endl", 4);
+    SetTextColor(memDC, g_gameMode == 2 ? RGB(0,0,0) : TEXT_WHITE); TextOutA(memDC, sbX + 102, sbY + 6, "Boss", 4);
+    SetTextColor(memDC, TEXT_WHITE); TextOutA(memDC, sbX + 145, sbY + 6, "MUTS", 4);
 
     sbY += 28;
 
-    // Tower Shop Selection
     const char* tNames[] = {"Archer (50g)", "Mage (100g)", "Cannon (150g)", "Frost (120g)", "Tesla (180g)", "Ballista (160g)", "Poison (140g)"};
     for (int i = 0; i < 7; i++) {
         COLORREF bg = (g_selectedTowerTypeToBuild == i+1) ? RGB(60, 70, 85) : RGB(30, 41, 59);
         COLORREF bd = (g_selectedTowerTypeToBuild == i+1) ? TEXT_GOLD : BORDER_COLOR;
-        DrawRoundedRect(memDC, sbX + 5, sbY + i*23, sbX + sbW - 5, sbY + (i+1)*23 - 2, bg, bd, 3);
+        DrawRoundedRect(memDC, sbX + 5, sbY + i*21, sbX + sbW - 5, sbY + (i+1)*21 - 2, bg, bd, 3);
         SetTextColor(memDC, (g_selectedTowerTypeToBuild == i+1) ? TEXT_GOLD : TEXT_WHITE);
-        TextOutA(memDC, sbX + 10, sbY + i*23 + 2, tNames[i], lstrlenA(tNames[i]));
+        TextOutA(memDC, sbX + 10, sbY + i*21 + 2, tNames[i], lstrlenA(tNames[i]));
     }
 
-    sbY += 7 * 23 + 6;
+    sbY += 7 * 21 + 4;
 
-    // Traps Selection
     const char* trapNames[] = {"Spike (30g)", "Oil (40g)", "Barricade (50g)", "Dynamite (60g)"};
     for (int i = 0; i < 4; i++) {
         COLORREF bg = (g_selectedTowerTypeToBuild == TRAP_SPIKE + i) ? RGB(60, 70, 85) : RGB(30, 41, 59);
         COLORREF bd = (g_selectedTowerTypeToBuild == TRAP_SPIKE + i) ? TEXT_GOLD : BORDER_COLOR;
-        DrawRoundedRect(memDC, sbX + 5, sbY + i*22, sbX + sbW - 5, sbY + (i+1)*22 - 2, bg, bd, 3);
+        DrawRoundedRect(memDC, sbX + 5, sbY + i*20, sbX + sbW - 5, sbY + (i+1)*20 - 2, bg, bd, 3);
         SetTextColor(memDC, (g_selectedTowerTypeToBuild == TRAP_SPIKE + i) ? TEXT_GOLD : TEXT_WHITE);
-        TextOutA(memDC, sbX + 10, sbY + i*22 + 2, trapNames[i], lstrlenA(trapNames[i]));
+        TextOutA(memDC, sbX + 10, sbY + i*20 + 2, trapNames[i], lstrlenA(trapNames[i]));
     }
 
-    sbY += 4 * 22 + 6;
+    sbY += 4 * 20 + 4;
 
-    // Scrolls
-    DrawRoundedRect(memDC, sbX + 5, sbY, sbX + 62, sbY + 22, RGB(220,38,38), BORDER_COLOR, 3);
-    DrawRoundedRect(memDC, sbX + 65, sbY, sbX + 122, sbY + 22, RGB(37,99,235), BORDER_COLOR, 3);
-    DrawRoundedRect(memDC, sbX + 125, sbY, sbX + 185, sbY + 22, RGB(217,119,6), BORDER_COLOR, 3);
+    DrawRoundedRect(memDC, sbX + 5, sbY, sbX + 58, sbY + 22, (g_trebuchetCd > 0) ? RGB(60,40,20) : RGB(217, 119, 6), BORDER_COLOR, 3);
+    DrawRoundedRect(memDC, sbX + 62, sbY, sbX + 122, sbY + 22, RGB(220,38,38), BORDER_COLOR, 3);
+    DrawRoundedRect(memDC, sbX + 126, sbY, sbX + 185, sbY + 22, RGB(37,99,235), BORDER_COLOR, 3);
     SetTextColor(memDC, TEXT_WHITE);
-    TextOutA(memDC, sbX+10, sbY+4, "Fire(100)", 9);
-    TextOutA(memDC, sbX+70, sbY+4, "Bliz(80)", 8);
-    TextOutA(memDC, sbX+130, sbY+4, "Magn(60)", 8);
+    TextOutA(memDC, sbX+8, sbY+4, "Siege(5)", 8);
+    TextOutA(memDC, sbX+66, sbY+4, "Fire(100)", 9);
+    TextOutA(memDC, sbX+130, sbY+4, "Bliz(80)", 8);
 
-    sbY += 28;
+    sbY += 26;
 
-    // Start Wave Button
     COLORREF btnBg = g_waveActive ? RGB(60, 70, 85) : RGB(16, 185, 129);
-    DrawRoundedRect(memDC, sbX + 10, sbY, sbX + sbW - 10, sbY + 30, btnBg, BORDER_COLOR, 5);
+    DrawRoundedRect(memDC, sbX + 10, sbY, sbX + sbW - 10, sbY + 28, btnBg, BORDER_COLOR, 5);
     SetTextColor(memDC, TEXT_WHITE);
     char buf2[32]; wsprintfA(buf2, g_waveActive ? "IN PROGRESS" : "START WAVE %d", g_wave);
-    TextOutA(memDC, sbX + 35, sbY + 7, buf2, (int)lstrlenA(buf2));
+    TextOutA(memDC, sbX + 35, sbY + 6, buf2, (int)lstrlenA(buf2));
 
-    sbY += 34;
+    sbY += 32;
 
-    // Academy & Reset
-    DrawRoundedRect(memDC, sbX + 10, sbY, sbX + sbW/2 - 5, sbY + 24, RGB(79, 70, 229), BORDER_COLOR, 4);
-    DrawRoundedRect(memDC, sbX + sbW/2 + 5, sbY, sbX + sbW - 10, sbY + 24, RGB(225, 29, 72), BORDER_COLOR, 4);
-    TextOutA(memDC, sbX + 22, sbY + 4, "ACADEMY", 7);
-    TextOutA(memDC, sbX + sbW/2 + 20, sbY + 4, "RESET", 5);
+    DrawRoundedRect(memDC, sbX + 10, sbY, sbX + sbW/2 - 5, sbY + 22, RGB(79, 70, 229), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + sbW/2 + 5, sbY, sbX + sbW - 10, sbY + 22, RGB(225, 29, 72), BORDER_COLOR, 4);
+    TextOutA(memDC, sbX + 22, sbY + 3, "ACADEMY", 7);
+    TextOutA(memDC, sbX + sbW/2 + 20, sbY + 3, "RESET", 5);
 
-    sbY += 30;
+    sbY += 26;
 
-    // Hero Section
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 10, sbY, "HERO & SQUAD [1-4]", 18);
-    sbY += 18;
+    TextOutA(memDC, sbX + 10, sbY, "HERO & SKILLS [1-5]", 19);
+    sbY += 16;
 
-    // Hero Skills: 1=Heal, 2=Shield, 3=Meteor, 4=Militia
     int btnW = 40;
-    DrawRoundedRect(memDC, sbX + 5, sbY, sbX + 5 + btnW, sbY + 24, g_hero.healCd > 0 ? RGB(100,80,20) : TEXT_GOLD, BORDER_COLOR, 3);
-    DrawRoundedRect(memDC, sbX + 50, sbY, sbX + 50 + btnW, sbY + 24, g_hero.shieldCd > 0 ? RGB(30,60,100) : RGB(59, 130, 246), BORDER_COLOR, 3);
-    DrawRoundedRect(memDC, sbX + 95, sbY, sbX + 95 + btnW, sbY + 24, g_hero.meteorCd > 0 ? RGB(100,20,20) : TEXT_RED, BORDER_COLOR, 3);
-    DrawRoundedRect(memDC, sbX + 140, sbY, sbX + 140 + btnW, sbY + 24, g_hero.summonCd > 0 ? RGB(60,60,60) : RGB(34, 197, 94), BORDER_COLOR, 3);
+    DrawRoundedRect(memDC, sbX + 5, sbY, sbX + 5 + btnW, sbY + 22, g_hero.healCd > 0 ? RGB(100,80,20) : TEXT_GOLD, BORDER_COLOR, 3);
+    DrawRoundedRect(memDC, sbX + 50, sbY, sbX + 50 + btnW, sbY + 22, g_hero.shieldCd > 0 ? RGB(30,60,100) : RGB(59, 130, 246), BORDER_COLOR, 3);
+    DrawRoundedRect(memDC, sbX + 95, sbY, sbX + 95 + btnW, sbY + 22, g_hero.meteorCd > 0 ? RGB(100,20,20) : TEXT_RED, BORDER_COLOR, 3);
+    DrawRoundedRect(memDC, sbX + 140, sbY, sbX + 140 + btnW, sbY + 22, g_hero.summonCd > 0 ? RGB(60,60,60) : RGB(34, 197, 94), BORDER_COLOR, 3);
     
-    SetTextColor(memDC, RGB(0,0,0)); TextOutA(memDC, sbX + 10, sbY + 4, "H(1)", 4);
-    SetTextColor(memDC, TEXT_WHITE); TextOutA(memDC, sbX + 55, sbY + 4, "S(2)", 4);
-    TextOutA(memDC, sbX + 100, sbY + 4, "M(3)", 4);
-    SetTextColor(memDC, RGB(0,0,0)); TextOutA(memDC, sbX + 145, sbY + 4, "R(4)", 4);
+    SetTextColor(memDC, RGB(0,0,0)); TextOutA(memDC, sbX + 10, sbY + 3, "H(1)", 4);
+    SetTextColor(memDC, TEXT_WHITE); TextOutA(memDC, sbX + 55, sbY + 3, "S(2)", 4);
+    TextOutA(memDC, sbX + 100, sbY + 3, "M(3)", 4);
+    SetTextColor(memDC, RGB(0,0,0)); TextOutA(memDC, sbX + 145, sbY + 3, "R(4)", 4);
 
     if (g_showAcademy) {
-        int mx = w/2 - 220, my = h/2 - 170;
-        DrawRoundedRect(memDC, mx, my, mx + 440, my + 340, CARD_BG, TEXT_GOLD, 12);
+        int mx = w/2 - 240, my = h/2 - 220;
+        DrawRoundedRect(memDC, mx, my, mx + 480, my + 440, CARD_BG, TEXT_GOLD, 12);
         SetTextColor(memDC, TEXT_GOLD);
-        TextOutA(memDC, mx + 140, my + 15, "RESEARCH ACADEMY", 16);
+        TextOutA(memDC, mx + 150, my + 12, "RESEARCH ACADEMY", 16);
         
-        const char* tNames[] = {"Starting Gold (+50)", "Wall Durability (+10 HP)", "Hero Cooldowns (-10%)", "Tower Damage (+10%)", "Militia Training (+50%)"};
-        int* tLevels[] = {&g_techStartingGold, &g_techWallHp, &g_techHeroCd, &g_techTowerDmg, &g_techMilitia};
-        int tBaseCosts[] = {100, 150, 200, 250, 200};
+        const char* tNames[] = {
+            "Starting Gold (+50)", "Wall Durability (+10 HP)", "Hero Cooldowns (-10%)",
+            "Tower Damage (+10%)", "Militia Training (+50%)", "Siege Weaponry (Auto-Ballista & Mortar)",
+            "Fusion Mastery (+25% Dmg/AoE)", "Fortified Traps (+1 Charge, +75 HP)"
+        };
+        int* tLevels[] = {&g_techStartingGold, &g_techWallHp, &g_techHeroCd, &g_techTowerDmg, &g_techMilitia, &g_techSiegeEng, &g_techFusion, &g_techFortTraps};
+        int tBaseCosts[] = {100, 150, 200, 250, 200, 300, 350, 180};
         
-        for (int i=0; i<5; i++) {
-            DrawRoundedRect(memDC, mx + 20, my + 45 + i*48, mx + 420, my + 85 + i*48, RGB(20,20,20), BORDER_COLOR, 4);
+        for (int i=0; i<8; i++) {
+            DrawRoundedRect(memDC, mx + 15, my + 40 + i*44, mx + 465, my + 78 + i*44, RGB(20,20,20), BORDER_COLOR, 4);
             SetTextColor(memDC, TEXT_WHITE);
-            TextOutA(memDC, mx + 30, my + 50 + i*48, tNames[i], lstrlenA(tNames[i]));
+            TextOutA(memDC, mx + 25, my + 44 + i*44, tNames[i], lstrlenA(tNames[i]));
             char lvlBuf[32]; wsprintfA(lvlBuf, "Level %d/5", *tLevels[i]);
             SetTextColor(memDC, TEXT_MUTED);
-            TextOutA(memDC, mx + 30, my + 65 + i*48, lvlBuf, lstrlenA(lvlBuf));
+            TextOutA(memDC, mx + 25, my + 59 + i*44, lvlBuf, lstrlenA(lvlBuf));
             
             int cost = tBaseCosts[i] * (*tLevels[i] + 1);
             COLORREF btnC = (g_gold >= cost && *tLevels[i] < 5) ? RGB(34, 197, 94) : RGB(44, 50, 62);
-            DrawRoundedRect(memDC, mx + 340, my + 50 + i*48, mx + 410, my + 78 + i*48, btnC, BORDER_COLOR, 4);
+            DrawRoundedRect(memDC, mx + 380, my + 45 + i*44, mx + 455, my + 73 + i*44, btnC, BORDER_COLOR, 4);
             SetTextColor(memDC, (g_gold >= cost && *tLevels[i] < 5) ? RGB(0,0,0) : TEXT_MUTED);
             if (*tLevels[i] < 5) {
                 char cBuf[16]; wsprintfA(cBuf, "%dg", cost);
-                TextOutA(memDC, mx + 355, my + 56 + i*48, cBuf, lstrlenA(cBuf));
+                TextOutA(memDC, mx + 395, my + 51 + i*44, cBuf, lstrlenA(cBuf));
             } else {
-                TextOutA(memDC, mx + 360, my + 56 + i*48, "MAX", 3);
+                TextOutA(memDC, mx + 400, my + 51 + i*44, "MAX", 3);
             }
         }
         
-        DrawRoundedRect(memDC, mx + 340, my + 295, mx + 410, my + 325, RGB(220,38,38), BORDER_COLOR, 4);
+        DrawRoundedRect(memDC, mx + 380, my + 398, mx + 455, my + 428, RGB(220,38,38), BORDER_COLOR, 4);
         SetTextColor(memDC, TEXT_WHITE);
-        TextOutA(memDC, mx + 355, my + 302, "CLOSE", 5);
+        TextOutA(memDC, mx + 395, my + 405, "CLOSE", 5);
+    }
+
+    if (g_showMutators) {
+        int mx = w/2 - 220, my = h/2 - 160;
+        DrawRoundedRect(memDC, mx, my, mx + 440, my + 320, CARD_BG, RGB(168, 85, 247), 12);
+        SetTextColor(memDC, RGB(168, 85, 247));
+        TextOutA(memDC, mx + 130, my + 15, "CHALLENGE MUTATORS", 18);
+
+        const char* mutNames[] = {
+            "Bloodlust (+40% Speed, +50% Gold)",
+            "Titan Brood (+100% HP, 2x Boss, 2x Score)",
+            "Arcane Eclipse (Hero CD +40%, Towers +30% Spd)",
+            "Meteor Tempest (Sky Meteor Cataclysms)",
+            "Phase Shift (25% Dodge Chance, +75% Gold)"
+        };
+        int mBits[] = {MUTATOR_BLOODLUST, MUTATOR_TITAN, MUTATOR_ECLIPSE, MUTATOR_METEOR, MUTATOR_PHASE_SHIFT};
+
+        for (int i=0; i<5; i++) {
+            BOOL active = (g_mutators & mBits[i]) != 0;
+            DrawRoundedRect(memDC, mx + 20, my + 45 + i*48, mx + 420, my + 85 + i*48, RGB(20,20,20), active ? RGB(168, 85, 247) : BORDER_COLOR, 4);
+            SetTextColor(memDC, active ? RGB(254, 240, 138) : TEXT_WHITE);
+            TextOutA(memDC, mx + 30, my + 57 + i*48, mutNames[i], lstrlenA(mutNames[i]));
+
+            DrawRoundedRect(memDC, mx + 355, my + 52 + i*48, mx + 410, my + 78 + i*48, active ? RGB(168, 85, 247) : RGB(44, 50, 62), BORDER_COLOR, 4);
+            SetTextColor(memDC, active ? RGB(255,255,255) : TEXT_MUTED);
+            TextOutA(memDC, mx + 365, my + 56 + i*48, active ? "ON" : "OFF", active ? 2 : 3);
+        }
+
+        DrawRoundedRect(memDC, mx + 340, my + 285, mx + 410, my + 312, RGB(220,38,38), BORDER_COLOR, 4);
+        SetTextColor(memDC, TEXT_WHITE);
+        TextOutA(memDC, mx + 355, my + 291, "DONE", 4);
     }
 
     if (g_showHelp) {
-        int hW = 650, hH = 500;
+        int hW = 680, hH = 520;
         int hX = (w - hW) / 2, hY = (h - hH) / 2;
         DrawRoundedRect(memDC, hX, hY, hX + hW, hY + hH, CARD_BG, TEXT_GOLD, 12);
         
         SetTextColor(memDC, TEXT_GOLD);
-        TextOutA(memDC, hX + 180, hY + 15, "COMMANDER'S FIELD GUIDE", 23);
+        TextOutA(memDC, hX + 200, hY + 15, "COMMANDER'S FIELD GUIDE - LOOP 2", 32);
         
         int cy = hY + 45;
-        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "HOW TO PLAY & CONTROLS", 22); cy += 18;
+        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "ELEMENTAL TOWER FUSIONS (MAX LEVEL 3 -> FUSION)", 47); cy += 18;
         SetTextColor(memDC, TEXT_WHITE);
-        TextOutA(memDC, hX + 20, cy, "Build towers on empty slots (+) using Gold. Protect your Base HP to survive.", 75); cy += 16;
-        TextOutA(memDC, hX + 20, cy, "Keys 1-4: Heal, Shield Wall, Meteor Strike, Call Militia Reinforcements.", 72); cy += 22;
+        TextOutA(memDC, hX + 20, cy, "- Inferno Mortar: Blazing magma mortars that ignite lingering lava puddles.", 75); cy += 16;
+        TextOutA(memDC, hX + 20, cy, "- Superconductor: Cryo-electric storms arcing to 5 targets with 65% freeze slow.", 80); cy += 16;
+        TextOutA(memDC, hX + 20, cy, "- Venomspite Piercer: Heavy plague javelins piercing entire enemy lines with acid DoT.", 86); cy += 16;
+        TextOutA(memDC, hX + 20, cy, "- Solar Prism Beam: Continuous focused photon laser ramping damage vs bosses.", 77); cy += 22;
         
-        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "EXPANDED TOWER ARSENAL", 22); cy += 18;
+        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "SIEGE DEFENSES & TREBUCHET (KEY 5)", 34); cy += 18;
         SetTextColor(memDC, TEXT_WHITE);
-        TextOutA(memDC, hX + 20, cy, "- Tesla (180g): Chain lightning zaps up to 3 enemies.", 53); cy += 16;
-        TextOutA(memDC, hX + 20, cy, "- Ballista (160g): Heavy siege sniper with armor-piercing and 35% CRIT.", 71); cy += 16;
-        TextOutA(memDC, hX + 20, cy, "- Poison (140g): Corrosive toxic cloud dealing Damage-Over-Time.", 64); cy += 22;
+        TextOutA(memDC, hX + 20, cy, "- Castle Trebuchet (5): Calls down massive siege boulders at target location.", 77); cy += 16;
+        TextOutA(memDC, hX + 20, cy, "- Automated Castle Wall Ballistas: Researched in Academy for auto gate defense.", 78); cy += 22;
         
-        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "NEW FOES & BOSSES", 17); cy += 18;
+        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "CHALLENGE MUTATORS (BUTTON M)", 29); cy += 18;
         SetTextColor(memDC, TEXT_WHITE);
-        TextOutA(memDC, hX + 20, cy, "- Necromancer: Summons Skeleton minions periodically.", 53); cy += 16;
-        TextOutA(memDC, hX + 20, cy, "- Wyvern: Winged boss immune to freezing slow effects.", 54); cy += 16;
-        TextOutA(memDC, hX + 20, cy, "- Stone Golem: Armored juggernaut that crushes barricades instantly.", 68); cy += 25;
+        TextOutA(memDC, hX + 20, cy, "- Toggle Bloodlust, Titan Brood, Arcane Eclipse, Meteor Rain, & Phase Shift!", 77); cy += 25;
         
-        DrawRoundedRect(memDC, hX + 250, hY + hH - 45, hX + 400, hY + hH - 15, RGB(16, 185, 129), BORDER_COLOR, 6);
+        DrawRoundedRect(memDC, hX + 260, hY + hH - 45, hX + 420, hY + hH - 15, RGB(16, 185, 129), BORDER_COLOR, 6);
         SetTextColor(memDC, RGB(0,0,0));
-        TextOutA(memDC, hX + 275, hY + hH - 37, "UNDERSTOOD", 10);
+        TextOutA(memDC, hX + 295, hY + hH - 37, "UNDERSTOOD", 10);
     }
 
     BitBlt(hdc, 0, 0, w, h, memDC, 0, 0, SRCCOPY);
@@ -1665,6 +1962,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_KEYDOWN: {
         if (wParam == 'h' || wParam == 'H' || wParam == VK_F1) {
             g_showHelp = !g_showHelp;
+            InvalidateRect(hwnd, NULL, FALSE);
+        }
+        if (wParam == 'm' || wParam == 'M') {
+            g_showMutators = !g_showMutators;
             InvalidateRect(hwnd, NULL, FALSE);
         }
         if (wParam == '1' && g_hero.healCd <= 0 && g_hero.respawnTimer <= 0) {
@@ -1701,6 +2002,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SummonMilitia();
             AddFloatingText(g_hero.x, g_hero.y - 30, "MILITIA REINFORCEMENTS!", RGB(59, 130, 246));
             Beep(600, 60); Beep(900, 80);
+        } else if (wParam == '5') {
+            TriggerTrebuchetStrike(g_hero.targetX, g_hero.targetY);
         }
         break;
     }
@@ -1714,26 +2017,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         int h = clientRect.bottom;
         
         if (g_showHelp) {
-            int hW = 650, hH = 500;
+            int hW = 680, hH = 520;
             int hX = (w - hW) / 2, hY = (h - hH) / 2;
-            if (x >= hX + 250 && x <= hX + 400 && y >= hY + hH - 45 && y <= hY + hH - 15) {
+            if (x >= hX + 260 && x <= hX + 420 && y >= hY + hH - 45 && y <= hY + hH - 15) {
                 g_showHelp = FALSE;
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             return 0;
         }
+
+        if (g_showMutators) {
+            int mx = w/2 - 220, my = h/2 - 160;
+            if (x >= mx + 340 && x <= mx + 410 && y >= my + 285 && y <= my + 312) {
+                g_showMutators = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            int mBits[] = {MUTATOR_BLOODLUST, MUTATOR_TITAN, MUTATOR_ECLIPSE, MUTATOR_METEOR, MUTATOR_PHASE_SHIFT};
+            for (int i=0; i<5; i++) {
+                if (x >= mx + 20 && x <= mx + 420 && y >= my + 45 + i*48 && y <= my + 85 + i*48) {
+                    g_mutators ^= mBits[i];
+                    SaveGame();
+                    Beep(500, 40);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            }
+            return 0;
+        }
         
         if (g_showAcademy) {
-            int mx = w/2 - 220, my = h/2 - 170;
-            if (x >= mx + 340 && x <= mx + 410 && y >= my + 295 && y <= my + 325) {
+            int mx = w/2 - 240, my = h/2 - 220;
+            if (x >= mx + 380 && x <= mx + 455 && y >= my + 398 && y <= my + 428) {
                 g_showAcademy = FALSE;
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
-            int tBaseCosts[] = {100, 150, 200, 250, 200};
-            int* tLevels[] = {&g_techStartingGold, &g_techWallHp, &g_techHeroCd, &g_techTowerDmg, &g_techMilitia};
-            for (int i=0; i<5; i++) {
-                if (x >= mx + 340 && x <= mx + 410 && y >= my + 50 + i*48 && y <= my + 78 + i*48) {
+            int tBaseCosts[] = {100, 150, 200, 250, 200, 300, 350, 180};
+            int* tLevels[] = {&g_techStartingGold, &g_techWallHp, &g_techHeroCd, &g_techTowerDmg, &g_techMilitia, &g_techSiegeEng, &g_techFusion, &g_techFortTraps};
+            for (int i=0; i<8; i++) {
+                if (x >= mx + 380 && x <= mx + 455 && y >= my + 45 + i*44 && y <= my + 73 + i*44) {
                     int cost = tBaseCosts[i] * (*tLevels[i] + 1);
                     if (*tLevels[i] < 5 && g_gold >= cost) {
                         g_gold -= cost;
@@ -1750,8 +2073,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
 
-        // Help Button
-        if (x >= w - 410 && x <= w - 340 && y >= 20 && y <= 45) {
+        if (x >= w - 80 && x <= w - 20 && y >= 20 && y <= 45) {
             g_showHelp = TRUE;
             InvalidateRect(hwnd, NULL, FALSE);
             return 0;
@@ -1759,7 +2081,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         int sbX = w - 200, sbY = 70, sbW = 190;
 
-        // Map Selector Clicks
         if (x >= sbX + 5 && x <= sbX + 30 && y >= sbY + 5 && y <= sbY + 25) {
             if (!g_waveActive) {
                 g_currentMap = (g_currentMap - 1 + MAX_MAPS) % MAX_MAPS;
@@ -1781,59 +2102,50 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         
         sbY += 28;
         
-        // Mode Selection
         if (!g_waveActive) {
-            if (x >= sbX + 50 && x <= sbX + 90 && y >= sbY + 3 && y <= sbY + 23) { g_gameMode = 0; InitGameState(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
-            if (x >= sbX + 95 && x <= sbX + 135 && y >= sbY + 3 && y <= sbY + 23) { g_gameMode = 1; InitGameState(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
-            if (x >= sbX + 140 && x <= sbX + 185 && y >= sbY + 3 && y <= sbY + 23) { g_gameMode = 2; InitGameState(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            if (x >= sbX + 5 && x <= sbX + 45 && y >= sbY + 3 && y <= sbY + 23) { g_gameMode = 0; InitGameState(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            if (x >= sbX + 50 && x <= sbX + 90 && y >= sbY + 3 && y <= sbY + 23) { g_gameMode = 1; InitGameState(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            if (x >= sbX + 95 && x <= sbX + 135 && y >= sbY + 3 && y <= sbY + 23) { g_gameMode = 2; InitGameState(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            if (x >= sbX + 140 && x <= sbX + 185 && y >= sbY + 3 && y <= sbY + 23) { g_showMutators = TRUE; InvalidateRect(hwnd, NULL, FALSE); return 0; }
         }
         sbY += 28;
 
-        // Tower Selection Shop (7 Towers)
         for (int i=0; i<7; i++) {
-            if (x >= sbX + 5 && x <= sbX + sbW - 5 && y >= sbY + i*23 && y <= sbY + (i+1)*23 - 2) {
+            if (x >= sbX + 5 && x <= sbX + sbW - 5 && y >= sbY + i*21 && y <= sbY + (i+1)*21 - 2) {
                 g_selectedTowerTypeToBuild = i + 1;
                 Beep(400, 20);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
         }
-        sbY += 7 * 23 + 6;
+        sbY += 7 * 21 + 4;
         
-        // Shop Info traps (4 Traps)
         for (int i=0; i<4; i++) {
-            if (x >= sbX + 5 && x <= sbX + sbW - 5 && y >= sbY + i*22 && y <= sbY + (i+1)*22 - 2) {
+            if (x >= sbX + 5 && x <= sbX + sbW - 5 && y >= sbY + i*20 && y <= sbY + (i+1)*20 - 2) {
                 g_selectedTowerTypeToBuild = TRAP_SPIKE + i;
                 Beep(400, 20); InvalidateRect(hwnd, NULL, FALSE); return 0;
             }
         }
-        sbY += 4 * 22 + 6;
+        sbY += 4 * 20 + 4;
         
-        // Scrolls
-        if (x >= sbX + 5 && x <= sbX + 62 && y >= sbY && y <= sbY + 22) {
+        if (x >= sbX + 5 && x <= sbX + 58 && y >= sbY && y <= sbY + 22) {
+            TriggerTrebuchetStrike(g_hero.targetX, g_hero.targetY);
+            InvalidateRect(hwnd, NULL, FALSE); return 0;
+        }
+        if (x >= sbX + 62 && x <= sbX + 122 && y >= sbY && y <= sbY + 22) {
             if (g_gold >= 100) { g_gold -= 100; AddFloatingText(400, 300, "FIRESTORM!", TEXT_RED); Beep(100, 300);
                 for(int e=0; e<MAX_ENEMIES; e++) if(g_enemies[e].active) { g_enemies[e].hp -= 150; if(g_enemies[e].hp<=0) { g_enemies[e].active=FALSE; g_gold+=15; } }
             }
             InvalidateRect(hwnd, NULL, FALSE); return 0;
         }
-        if (x >= sbX + 65 && x <= sbX + 122 && y >= sbY && y <= sbY + 22) {
+        if (x >= sbX + 126 && x <= sbX + 185 && y >= sbY && y <= sbY + 22) {
             if (g_gold >= 80) { g_gold -= 80; g_blizzTimer = 300; AddFloatingText(400, 300, "BLIZZARD!", RGB(59, 130, 246)); Beep(600, 300); }
             InvalidateRect(hwnd, NULL, FALSE); return 0;
         }
-        if (x >= sbX + 125 && x <= sbX + 185 && y >= sbY && y <= sbY + 22) {
-            if (g_gold >= 60) {
-                g_gold -= 60;
-                int b = 0; for(int e=0; e<MAX_ENEMIES; e++) if(g_enemies[e].active) b += 15;
-                g_gold += b; char buf[32]; wsprintfA(buf, "MAGNET: +%dg", b);
-                AddFloatingText(400, 300, buf, TEXT_GOLD); Beep(800, 200);
-            }
-            InvalidateRect(hwnd, NULL, FALSE); return 0;
-        }
 
-        sbY += 28;
+        sbY += 26;
 
-        // Start Wave
-        if (x >= sbX + 10 && x <= sbX + sbW - 10 && y >= sbY && y <= sbY + 30) {
+        if (x >= sbX + 10 && x <= sbX + sbW - 10 && y >= sbY && y <= sbY + 28) {
             if (!g_waveActive && !g_gameOver) {
                 g_waveActive = TRUE;
                 if (g_gameMode == 2) {
@@ -1862,25 +2174,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_spawnTimer = 0; Beep(600, 40);
             }
         }
-        sbY += 34;
+        sbY += 32;
 
-        // Academy
-        if (x >= sbX + 10 && x <= sbX + sbW/2 - 5 && y >= sbY && y <= sbY + 24) {
+        if (x >= sbX + 10 && x <= sbX + sbW/2 - 5 && y >= sbY && y <= sbY + 22) {
             g_showAcademy = TRUE; InvalidateRect(hwnd, NULL, FALSE); return 0;
         }
-        // Reset Defense
-        if (x >= sbX + sbW/2 + 5 && x <= sbX + sbW - 10 && y >= sbY && y <= sbY + 24) {
+        if (x >= sbX + sbW/2 + 5 && x <= sbX + sbW - 10 && y >= sbY && y <= sbY + 22) {
             InitGameState(); Beep(300, 60);
         }
-        sbY += 30;
+        sbY += 26;
 
-        // Hero Skill Buttons (1, 2, 3, 4)
-        if (x >= sbX + 5 && x <= sbX + 45 && y >= sbY + 18 && y <= sbY + 42) SendMessage(hwnd, WM_KEYDOWN, '1', 0);
-        else if (x >= sbX + 50 && x <= sbX + 90 && y >= sbY + 18 && y <= sbY + 42) SendMessage(hwnd, WM_KEYDOWN, '2', 0);
-        else if (x >= sbX + 95 && x <= sbX + 135 && y >= sbY + 18 && y <= sbY + 42) SendMessage(hwnd, WM_KEYDOWN, '3', 0);
-        else if (x >= sbX + 140 && x <= sbX + 180 && y >= sbY + 18 && y <= sbY + 42) SendMessage(hwnd, WM_KEYDOWN, '4', 0);
+        if (x >= sbX + 5 && x <= sbX + 45 && y >= sbY + 16 && y <= sbY + 38) SendMessage(hwnd, WM_KEYDOWN, '1', 0);
+        else if (x >= sbX + 50 && x <= sbX + 90 && y >= sbY + 16 && y <= sbY + 38) SendMessage(hwnd, WM_KEYDOWN, '2', 0);
+        else if (x >= sbX + 95 && x <= sbX + 135 && y >= sbY + 16 && y <= sbY + 38) SendMessage(hwnd, WM_KEYDOWN, '3', 0);
+        else if (x >= sbX + 140 && x <= sbX + 180 && y >= sbY + 16 && y <= sbY + 38) SendMessage(hwnd, WM_KEYDOWN, '4', 0);
 
-        // Check slot clicks
         else if (!g_gameOver) {
             BOOL clickedSlot = FALSE;
             g_selectedSlot = -1;
@@ -1945,8 +2253,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), buf, RGB(239, 68, 68));
                                 Beep(200, 100);
                             }
+                        } else if (g_slots[i].level == 3) {
+                            int fusCost = 220;
+                            if (g_gold >= fusCost) {
+                                g_gold -= fusCost;
+                                g_slots[i].level = 4;
+                                float fusBonus = 1.0f + (g_techFusion * 0.25f);
+                                
+                                if (g_slots[i].towerType == TOWER_MAGE || g_slots[i].towerType == TOWER_CANNON) {
+                                    g_slots[i].towerType = TOWER_INFERNO;
+                                    g_slots[i].damage = (int)(90 * fusBonus);
+                                    g_slots[i].splash = 70;
+                                    g_slots[i].range = 160;
+                                    g_slots[i].maxCooldown = 40;
+                                    AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "INFERNO FUSION!", RGB(249, 115, 22));
+                                } else if (g_slots[i].towerType == TOWER_TESLA || g_slots[i].towerType == TOWER_FROST) {
+                                    g_slots[i].towerType = TOWER_SUPERCONDUCTOR;
+                                    g_slots[i].damage = (int)(65 * fusBonus);
+                                    g_slots[i].range = 160;
+                                    g_slots[i].maxCooldown = 22;
+                                    AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "SUPERCONDUCTOR!", RGB(14, 165, 233));
+                                } else if (g_slots[i].towerType == TOWER_POISON || g_slots[i].towerType == TOWER_BALLISTA) {
+                                    g_slots[i].towerType = TOWER_VENOMSPITE;
+                                    g_slots[i].damage = (int)(110 * fusBonus);
+                                    g_slots[i].range = 210;
+                                    g_slots[i].maxCooldown = 32;
+                                    AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "VENOMSPITE FUSION!", RGB(34, 197, 94));
+                                } else {
+                                    g_slots[i].towerType = TOWER_SOLAR_BEAM;
+                                    g_slots[i].damage = (int)(16 * fusBonus);
+                                    g_slots[i].range = 180;
+                                    g_slots[i].maxCooldown = 4;
+                                    AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "SOLAR BEAM FUSION!", RGB(254, 240, 138));
+                                }
+                                Beep(1000, 60); Beep(1300, 80);
+                            } else {
+                                char buf[32]; wsprintfA(buf, "FUSE: NEED %dg!", fusCost);
+                                AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), buf, RGB(239, 68, 68));
+                                Beep(200, 100);
+                            }
                         } else {
-                            AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "MAX LEVEL!", TEXT_MUTED);
+                            AddFloatingText((float)g_slots[i].x, (float)(g_slots[i].y - 20), "FUSION MASTERED!", TEXT_GOLD);
                             Beep(500, 30);
                         }
                     }
@@ -1969,8 +2316,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 g_traps[tr].active = TRUE;
                                 g_traps[tr].x = (float)x; g_traps[tr].y = (float)y;
                                 g_traps[tr].type = g_selectedTowerTypeToBuild;
-                                g_traps[tr].charges = (g_selectedTowerTypeToBuild == TRAP_SPIKE) ? 3 : -1;
-                                g_traps[tr].hp = (g_selectedTowerTypeToBuild == TRAP_BARRICADE) ? 200.0f : 0;
+                                g_traps[tr].charges = (g_selectedTowerTypeToBuild == TRAP_SPIKE) ? (3 + g_techFortTraps) : -1;
+                                g_traps[tr].hp = (g_selectedTowerTypeToBuild == TRAP_BARRICADE) ? (200.0f + g_techFortTraps * 75.0f) : 0;
                                 g_traps[tr].radius = (g_selectedTowerTypeToBuild == TRAP_OIL || g_selectedTowerTypeToBuild == TRAP_DYNAMITE) ? 45 : 25;
                                 Beep(300, 40);
                                 break;

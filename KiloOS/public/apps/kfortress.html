@@ -16,6 +16,7 @@
       --red-glow: rgba(244, 63, 94, 0.8);
       --green-color: #10b981;
       --blue-color: #3b82f6;
+      --purple-color: #a855f7;
       --text-white: #e2e8f0;
       --text-muted: #94a3b8;
       --path-color: #1a202c;
@@ -75,16 +76,16 @@
 
     .hud-stats {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
     }
 
     .stat-badge {
       background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border-color);
-      padding: 5px 12px;
+      padding: 5px 10px;
       border-radius: 20px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -95,6 +96,7 @@
     .stat-gold { color: var(--gold-color); border-color: var(--gold-color); box-shadow: 0 0 10px var(--gold-glow), inset 0 0 5px var(--gold-glow); text-shadow: 0 0 8px var(--gold-glow); }
     .stat-hp { color: var(--red-color); border-color: var(--red-color); box-shadow: 0 0 10px var(--red-glow), inset 0 0 5px var(--red-glow); text-shadow: 0 0 8px var(--red-glow); }
     .stat-wave { color: var(--text-white); border-color: rgba(255, 255, 255, 0.2); }
+    .stat-mut { color: var(--purple-color); border-color: var(--purple-color); cursor: pointer; }
 
     .main-container {
       flex: 1;
@@ -124,24 +126,24 @@
     }
 
     .sidebar {
-      width: 270px;
+      width: 275px;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 10px;
-      padding: 12px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       overflow-y: auto;
     }
 
     .sidebar h2 {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
       color: var(--gold-color);
       border-bottom: 1px solid var(--border-color);
-      padding-bottom: 4px;
+      padding-bottom: 3px;
       letter-spacing: 1px;
       text-transform: uppercase;
     }
@@ -149,17 +151,17 @@
     .tower-selection {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
     }
 
     .tower-card {
       background: rgba(0,0,0,0.25);
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 6px 8px;
+      padding: 4px 6px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       cursor: pointer;
       transition: all 0.15s ease;
     }
@@ -176,14 +178,14 @@
     }
 
     .tower-icon {
-      width: 30px;
-      height: 30px;
+      width: 26px;
+      height: 26px;
       border-radius: 4px;
       background: #475569;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 16px;
+      font-size: 14px;
       border: 1px solid rgba(255,255,255,0.2);
     }
 
@@ -192,30 +194,25 @@
     }
 
     .tower-name {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--text-white);
     }
 
     .tower-cost {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       color: var(--gold-color);
-    }
-
-    .tower-stats {
-      font-size: 10px;
-      color: var(--text-muted);
     }
 
     .btn {
       background: var(--card-hover);
       color: var(--text-white);
       border: 1px solid var(--border-color);
-      padding: 8px;
+      padding: 6px;
       border-radius: 6px;
       font-weight: 700;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
       transition: all 0.15s ease;
       text-align: center;
@@ -256,6 +253,17 @@
       background: #ef4444;
       box-shadow: 0 0 14px rgba(239, 68, 68, 0.4);
     }
+
+    .modal-overlay {
+      display: none;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -263,67 +271,70 @@
   <header>
     <div class="title-group">
       <h1>KFORTRESS</h1>
-      <span>Loop 1 Expanded Content</span>
-      <button class="btn" id="helpBtn" style="padding:3px 8px; font-size:11px; margin-left:12px; background:var(--blue-color); color:#fff; border:none; letter-spacing:0.5px;">HELP [H]</button>
+      <span>Loop 2: Fusions & Siege</span>
+      <button class="btn" id="helpBtn" style="padding:3px 8px; font-size:11px; margin-left:8px; background:var(--blue-color); color:#fff; border:none; letter-spacing:0.5px;">GUIDE [H]</button>
     </div>
     <div class="hud-stats">
+      <div class="stat-badge stat-mut" id="hudMutatorBtn">⚡ Mutators: <span id="hudMutCount">0</span></div>
       <div class="stat-badge stat-gold">🪙 Gold: <span id="goldVal">100</span></div>
       <div class="stat-badge stat-hp">❤️ Base HP: <span id="hpVal">20/20</span></div>
       <div class="stat-badge stat-wave">⚔️ Wave: <span id="waveVal">1</span></div>
     </div>
   </header>
 
-  <div id="academyModal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100; justify-content:center; align-items:center;">
-    <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:20px; border-radius:12px; width:480px; box-shadow: 0 0 20px rgba(0,0,0,0.8);">
-      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:15px; font-weight:900;">RESEARCH ACADEMY</h2>
-      <div style="display:flex; flex-direction:column; gap:10px;" id="techList"></div>
-      <div style="display:flex; justify-content:space-between; margin-top:16px; align-items:center;">
+  <!-- ACADEMY MODAL -->
+  <div id="academyModal" class="modal-overlay">
+    <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:18px; border-radius:12px; width:520px; box-shadow: 0 0 25px rgba(0,0,0,0.85);">
+      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:12px; font-weight:900;">RESEARCH ACADEMY</h2>
+      <div style="display:flex; flex-direction:column; gap:8px; max-height:60vh; overflow-y:auto;" id="techList"></div>
+      <div style="display:flex; justify-content:space-between; margin-top:14px; align-items:center;">
         <div class="stat-badge stat-gold">🪙 <span id="academyGoldDisplay">0</span></div>
         <button class="btn btn-danger" id="closeAcademyBtn">CLOSE</button>
       </div>
     </div>
   </div>
 
-  <div id="helpModal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200; justify-content:center; align-items:center;">
+  <!-- MUTATORS MODAL -->
+  <div id="mutatorsModal" class="modal-overlay">
+    <div style="background:var(--card-bg); border:1px solid var(--purple-color); padding:18px; border-radius:12px; width:500px; box-shadow: 0 0 25px rgba(168,85,247,0.4);">
+      <h2 style="color:var(--purple-color); text-align:center; margin-bottom:12px; font-weight:900; letter-spacing:1px;">CHALLENGE MUTATORS</h2>
+      <div style="display:flex; flex-direction:column; gap:8px;" id="mutatorList"></div>
+      <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+        <button class="btn btn-primary" id="closeMutatorsBtn" style="background:var(--purple-color); color:#fff; border-color:#9333ea;">DONE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HELP MODAL -->
+  <div id="helpModal" class="modal-overlay" style="z-index:200;">
     <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:20px; border-radius:12px; width:680px; max-height:85vh; overflow-y:auto; box-shadow: 0 0 30px rgba(0,0,0,0.9); font-size:13px; color:var(--text-white);">
-      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:12px; font-weight:900; font-size:20px; letter-spacing:1px;">COMMANDER'S FIELD GUIDE</h2>
+      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:12px; font-weight:900; font-size:20px; letter-spacing:1px;">COMMANDER'S FIELD GUIDE - LOOP 2</h2>
       
-      <h3 style="color:var(--green-color); margin-top:10px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">📖 HOW TO PLAY</h3>
-      <p style="margin-top:6px; line-height:1.5;">Defend your Castle Fortress from enemy waves! Build towers on empty slots (+) using Gold. Use Hero abilities and summon Militia to defend your base.</p>
-      
-      <h3 style="color:var(--green-color); margin-top:12px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">🏰 TOWER ARSENAL (7 TYPES)</h3>
+      <h3 style="color:var(--green-color); margin-top:10px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">🌟 ELEMENTAL TOWER FUSIONS (MAX LEVEL 3 -> FUSION)</h3>
+      <p style="margin-top:4px; line-height:1.5;">When any tower reaches Level 3, click it again to fuse into a Mythic Elemental Fusion Tower for 220g:</p>
       <ul style="margin-top:6px; line-height:1.6; padding-left:20px;">
-        <li><b>🏹 Archer (50g):</b> Fast firing, medium range. Reliable basic tower.</li>
-        <li><b>🔮 Mage (100g):</b> Arcane bolts with area-of-effect splash damage.</li>
-        <li><b>💣 Cannon (150g):</b> Heavy artillery explosive shell. Screen-shaking impact.</li>
-        <li><b>❄️ Frost (120g):</b> Freezing aura slows passing foes by 60%.</li>
-        <li><b>⚡ Tesla (180g):</b> Emits high-voltage chain lightning jumping to up to 3 nearby enemies!</li>
-        <li><b>🎯 Ballista (160g):</b> Heavy siege sniper bolt. Ignores armor reduction and has 35% CRITICAL strike chance!</li>
-        <li><b>🧪 Poison (140g):</b> Hurls alchemical acid flasks inflicting corrosive damage-over-time.</li>
-      </ul>
-      
-      <h3 style="color:var(--green-color); margin-top:12px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">👹 ENEMY BESTIARY (9 FOES)</h3>
-      <ul style="margin-top:6px; line-height:1.6; padding-left:20px;">
-        <li><b>👺 Goblin:</b> Fast, low HP swarm runner.</li>
-        <li><b>👹 Orc:</b> Heavy armor (resists 50% basic physical dmg).</li>
-        <li><b>🐺 Hound:</b> Extremely fast flanker.</li>
-        <li><b>🦇 Gargoyle:</b> Winged flyer that bypasses ground paths straight to base.</li>
-        <li><b>🧌 Ogre:</b> Giant boss with massive HP (deals 5 damage to base).</li>
-        <li><b>🔮 Necromancer:</b> Dark robed sorcerer that summons Skeletons from the dead!</li>
-        <li><b>💀 Skeleton:</b> Swift undead minion.</li>
-        <li><b>🐉 Wyvern:</b> Winged dragon boss immune to frost slow effects!</li>
-        <li><b>🗿 Stone Golem:</b> Colossal juggernaut that crushes barricades instantly and deals 3 base damage.</li>
+        <li><b>🌋 Inferno Mortar (Mage / Cannon):</b> Blazing magma mortars that ignite lingering lava puddles melting all enemy ranks.</li>
+        <li><b>🌩️ Superconductor (Tesla / Frost):</b> High-voltage cryo-electric storms arcing to 5 targets with 65% freeze slow.</li>
+        <li><b>☣️ Venomspite Piercer (Poison / Ballista):</b> Heavy plague javelins piercing entire enemy lines with corrosive blight DoT.</li>
+        <li><b>☀️ Solar Prism Beam (Archer):</b> High-frequency radiant photon laser that ramps damage against bosses and titans.</li>
       </ul>
 
-      <h3 style="color:var(--green-color); margin-top:12px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">🛡️ HERO SKILLS & MILITIA</h3>
+      <h3 style="color:var(--green-color); margin-top:12px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">🏰 CASTLE SIEGE DEFENSES & TREBUCHET (HOTKEY 5)</h3>
       <ul style="margin-top:6px; line-height:1.6; padding-left:20px;">
-        <li><b>Heal (1):</b> Heals Hero by 50 HP and Base by 5 HP.</li>
-        <li><b>Shield Wall (2):</b> Grants invulnerability and blocks all castle damage.</li>
-        <li><b>Meteor (3):</b> Calls down catastrophic fire in a 150px radius.</li>
-        <li><b>Militia (4):</b> Summons Royal Guard soldiers to hold the line and fight foes!</li>
+        <li><b>Siege Trebuchet (5):</b> Calldown massive siege boulder bombardment anywhere on the map for 220 area damage.</li>
+        <li><b>Castle Auto-Ballistas:</b> Research "Siege Weaponry" in the Academy to mount automated defense ballistas on the fortress.</li>
       </ul>
       
-      <div style="display:flex; justify-content:center; margin-top:20px;">
+      <h3 style="color:var(--green-color); margin-top:12px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">⚡ CHALLENGE MUTATORS (M)</h3>
+      <ul style="margin-top:6px; line-height:1.6; padding-left:20px;">
+        <li><b>Bloodlust:</b> +40% enemy speed, +50% gold reward.</li>
+        <li><b>Titan Brood:</b> +100% enemy HP, 2x boss spawns, +100% score bonus.</li>
+        <li><b>Arcane Eclipse:</b> Hero cooldowns +40%, Towers gain +30% attack speed.</li>
+        <li><b>Meteor Tempest:</b> Sky meteor strikes periodically rain down on the battlefield.</li>
+        <li><b>Phase Shift:</b> Enemies have 25% phase dodge chance vs standard attacks, +75% gold reward.</li>
+      </ul>
+      
+      <div style="display:flex; justify-content:center; margin-top:18px;">
         <button class="btn btn-primary" id="closeHelpBtn" style="width:180px; padding:8px;">UNDERSTOOD</button>
       </div>
     </div>
@@ -388,7 +399,7 @@
         </div>
       </div>
 
-      <h2>TRAPS & SCROLLS</h2>
+      <h2>TRAPS & SIEGE ARTILLERY</h2>
       <div class="tower-selection">
         <div class="tower-card" data-type="Spike" id="spikeCard">
           <div class="tower-icon">🪤</div>
@@ -418,27 +429,28 @@
             <div class="tower-cost">60g | 140 AoE Blast</div>
           </div>
         </div>
-        <div style="display:flex; gap:4px; margin-top:4px;">
+        <div style="display:flex; gap:4px; margin-top:2px;">
+          <button class="btn" id="btnTrebuchet" style="flex:1; padding:5px 2px; font-size:9px; background:#d97706; color:#fff; border-color:#b45309;">Siege (5)</button>
           <button class="btn" id="btnFirestorm" style="flex:1; padding:5px 2px; font-size:9px; background:#dc2626; color:#fff; border-color:#b91c1c;">Fire (100g)</button>
           <button class="btn" id="btnBlizzard" style="flex:1; padding:5px 2px; font-size:9px; background:#0284c7; color:#fff; border-color:#0369a1;">Bliz (80g)</button>
-          <button class="btn" id="btnGoldMagnet" style="flex:1; padding:5px 2px; font-size:9px; background:#d97706; color:#fff; border-color:#b45309;">Magn (60g)</button>
         </div>
       </div>
 
-      <h2>GAME MODE & MAPS</h2>
-      <div style="display:flex; gap:4px;">
-        <button class="btn" id="modeCampaignBtn" style="flex:1; padding:5px; font-size:10px; background:var(--gold-color); color:#000;">Camp</button>
-        <button class="btn" id="modeEndlessBtn" style="flex:1; padding:5px; font-size:10px;">Endl</button>
-        <button class="btn" id="modeBossBtn" style="flex:1; padding:5px; font-size:10px;">Boss</button>
+      <h2>MODES & MUTATORS</h2>
+      <div style="display:flex; gap:3px;">
+        <button class="btn" id="modeCampaignBtn" style="flex:1; padding:4px; font-size:10px; background:var(--gold-color); color:#000;">Camp</button>
+        <button class="btn" id="modeEndlessBtn" style="flex:1; padding:4px; font-size:10px;">Endl</button>
+        <button class="btn" id="modeBossBtn" style="flex:1; padding:4px; font-size:10px;">Boss</button>
+        <button class="btn" id="btnMutatorsModal" style="flex:1; padding:4px; font-size:10px; background:var(--purple-color); color:#fff; border-color:#9333ea;">Muts</button>
       </div>
       <div style="font-size:10px; color:var(--text-muted); text-align:center;">
         Best Endl: <span id="hsEndless" style="color:var(--gold-color)">0</span> | Boss: <span id="hsBoss" style="color:var(--gold-color)">0</span>
       </div>
 
       <div style="display:flex; gap:4px;">
-        <button class="btn" id="prevMapBtn" style="flex:1; padding:5px; font-size:11px;">◀</button>
-        <div id="mapNameDisplay" style="flex:3; text-align:center; font-size:11px; font-weight:bold; color:var(--gold-color); line-height:26px; background:rgba(0,0,0,0.3); border-radius:4px; border:1px solid var(--border-color);">Forest Outpost</div>
-        <button class="btn" id="nextMapBtn" style="flex:1; padding:5px; font-size:11px;">▶</button>
+        <button class="btn" id="prevMapBtn" style="flex:1; padding:4px; font-size:11px;">◀</button>
+        <div id="mapNameDisplay" style="flex:3; text-align:center; font-size:11px; font-weight:bold; color:var(--gold-color); line-height:24px; background:rgba(0,0,0,0.3); border-radius:4px; border:1px solid var(--border-color);">Forest Outpost</div>
+        <button class="btn" id="nextMapBtn" style="flex:1; padding:4px; font-size:11px;">▶</button>
       </div>
 
       <button class="btn btn-primary" id="waveBtn">START WAVE 1</button>
@@ -447,15 +459,15 @@
         <button class="btn btn-danger" id="resetBtn" style="flex:1; font-size:11px;">RESET</button>
       </div>
 
-      <h2>HERO & SQUAD [1-4]</h2>
+      <h2>HERO & SKILLS [1-5]</h2>
       <div style="font-size:11px; font-weight:bold; color:var(--text-white);">
         HP: <span id="heroHpVal" style="color:var(--green-color);">100/100</span> | <span id="heroStatusVal">Ready</span>
       </div>
-      <div style="display:flex; gap:4px;">
-        <button class="btn" id="btnHeal" style="flex:1; padding:6px 2px; font-size:10px; background:#fbbf24; color:#000; border-color:#d97706;">Heal (1)</button>
-        <button class="btn" id="btnShield" style="flex:1; padding:6px 2px; font-size:10px; background:#3b82f6; color:#fff; border-color:#2563eb;">Shld (2)</button>
-        <button class="btn" id="btnMeteor" style="flex:1; padding:6px 2px; font-size:10px; background:#ef4444; color:#fff; border-color:#dc2626;">Mtr (3)</button>
-        <button class="btn" id="btnReinforce" style="flex:1; padding:6px 2px; font-size:10px; background:#10b981; color:#000; border-color:#059669;">Milt (4)</button>
+      <div style="display:flex; gap:3px;">
+        <button class="btn" id="btnHeal" style="flex:1; padding:5px 2px; font-size:9px; background:#fbbf24; color:#000; border-color:#d97706;">Heal (1)</button>
+        <button class="btn" id="btnShield" style="flex:1; padding:5px 2px; font-size:9px; background:#3b82f6; color:#fff; border-color:#2563eb;">Shld (2)</button>
+        <button class="btn" id="btnMeteor" style="flex:1; padding:5px 2px; font-size:9px; background:#ef4444; color:#fff; border-color:#dc2626;">Mtr (3)</button>
+        <button class="btn" id="btnReinforce" style="flex:1; padding:5px 2px; font-size:9px; background:#10b981; color:#000; border-color:#059669;">Milt (4)</button>
       </div>
     </div>
   </div>
@@ -482,6 +494,18 @@
     let techHeroCd = parseInt(localStorage.getItem('kf_techHeroCd')) || 0;
     let techTowerDmg = parseInt(localStorage.getItem('kf_techTowerDmg')) || 0;
     let techMilitia = parseInt(localStorage.getItem('kf_techMilitia')) || 0;
+    let techSiegeEng = parseInt(localStorage.getItem('kf_techSiegeEng')) || 0;
+    let techFusion = parseInt(localStorage.getItem('kf_techFusion')) || 0;
+    let techFortTraps = parseInt(localStorage.getItem('kf_techFortTraps')) || 0;
+
+    // Mutators
+    let mutators = {
+      bloodlust: localStorage.getItem('kf_mut_bloodlust') === 'true',
+      titan: localStorage.getItem('kf_mut_titan') === 'true',
+      eclipse: localStorage.getItem('kf_mut_eclipse') === 'true',
+      meteor: localStorage.getItem('kf_mut_meteor') === 'true',
+      phaseshift: localStorage.getItem('kf_mut_phaseshift') === 'true'
+    };
 
     let hsEndless = parseInt(localStorage.getItem('kf_hsEndless')) || 0;
     let hsBoss = parseInt(localStorage.getItem('kf_hsBoss')) || 0;
@@ -501,6 +525,11 @@
     let spawnTimer = 0;
     let SPAWN_INTERVAL = 60;
 
+    let trebuchetCd = 0;
+    let maxTrebuchetCd = 360;
+    let castleBallistaTimer = 0;
+    let meteorRainTimer = 0;
+
     let hero = {
       x: 400, y: 300,
       targetX: 400, targetY: 300,
@@ -519,7 +548,8 @@
     let militia = [];
 
     function initHero() {
-      const cdMod = 1 - (techHeroCd * 0.1);
+      let cdMod = 1 - (techHeroCd * 0.1);
+      if (mutators.eclipse) cdMod *= 1.4;
       hero.maxHealCd = Math.max(30, Math.floor(300 * cdMod));
       hero.maxShieldCd = Math.max(60, Math.floor(600 * cdMod));
       hero.maxMeteorCd = Math.max(45, Math.floor(450 * cdMod));
@@ -530,6 +560,7 @@
       hero.shieldActive = 0;
       hero.x = 400; hero.y = 300; hero.targetX = 400; hero.targetY = 300;
       militia = [];
+      trebuchetCd = 0;
     }
     initHero();
 
@@ -616,6 +647,7 @@
     let floatingTexts = [];
     let particles = [];
     let traps = [];
+    let lavaPools = [];
     let screenShake = 0;
     let blizzTimer = 0;
     let envArt = [];
@@ -673,7 +705,13 @@
       Frost: { cost: 120, range: 100, damage: 0, cooldown: 0 },
       Tesla: { cost: 180, range: 135, damage: 28, cooldown: 50 },
       Ballista: { cost: 160, range: 190, damage: 75, cooldown: 90 },
-      Poison: { cost: 140, range: 120, damage: 12, cooldown: 55, splash: 45 }
+      Poison: { cost: 140, range: 120, damage: 12, cooldown: 55, splash: 45 },
+
+      // Fusion Classes (Tier 4)
+      Inferno: { cost: 220, range: 160, damage: 90, cooldown: 80, splash: 70, isFusion: true },
+      Superconductor: { cost: 220, range: 160, damage: 65, cooldown: 45, isFusion: true },
+      Venomspite: { cost: 220, range: 210, damage: 110, cooldown: 65, isFusion: true },
+      SolarBeam: { cost: 220, range: 180, damage: 16, cooldown: 8, isFusion: true }
     };
 
     document.querySelectorAll('.tower-card').forEach(card => {
@@ -685,10 +723,15 @@
       });
     });
 
+    function getActiveMutatorCount() {
+      return Object.values(mutators).filter(Boolean).length;
+    }
+
     function updateHUD() {
       document.getElementById('goldVal').textContent = gold;
       document.getElementById('hpVal').textContent = `${Math.max(0, baseHp)}/${maxBaseHp}`;
       document.getElementById('waveVal').textContent = wave;
+      document.getElementById('hudMutCount').textContent = getActiveMutatorCount();
       
       const heroHpSpan = document.getElementById('heroHpVal');
       const heroStatusSpan = document.getElementById('heroStatusVal');
@@ -706,6 +749,7 @@
       document.getElementById('btnShield').textContent = hero.shieldCd > 0 ? `Shld (${Math.ceil(hero.shieldCd/30)})` : "Shld (2)";
       document.getElementById('btnMeteor').textContent = hero.meteorCd > 0 ? `Mtr (${Math.ceil(hero.meteorCd/30)})` : "Mtr (3)";
       document.getElementById('btnReinforce').textContent = hero.summonCd > 0 ? `Milt (${Math.ceil(hero.summonCd/30)})` : "Milt (4)";
+      document.getElementById('btnTrebuchet').textContent = trebuchetCd > 0 ? `Siege (${Math.ceil(trebuchetCd/30)})` : "Siege (5)";
 
       document.getElementById('hsEndless').textContent = hsEndless;
       document.getElementById('hsBoss').textContent = hsBoss;
@@ -738,7 +782,10 @@
       { id: 'techWall', name: 'Wall Durability (+10 HP)', baseCost: 150, getLvl: () => techWallHp, setLvl: v => { techWallHp = v; localStorage.setItem('kf_techWallHp', v); } },
       { id: 'techHero', name: 'Hero Cooldowns (-10%)', baseCost: 200, getLvl: () => techHeroCd, setLvl: v => { techHeroCd = v; localStorage.setItem('kf_techHeroCd', v); } },
       { id: 'techDmg', name: 'Tower Damage (+10%)', baseCost: 250, getLvl: () => techTowerDmg, setLvl: v => { techTowerDmg = v; localStorage.setItem('kf_techTowerDmg', v); } },
-      { id: 'techMilitia', name: 'Militia Training (+50% HP/Dmg)', baseCost: 200, getLvl: () => techMilitia, setLvl: v => { techMilitia = v; localStorage.setItem('kf_techMilitia', v); } }
+      { id: 'techMilitia', name: 'Militia Training (+50% HP/Dmg)', baseCost: 200, getLvl: () => techMilitia, setLvl: v => { techMilitia = v; localStorage.setItem('kf_techMilitia', v); } },
+      { id: 'techSiegeEng', name: 'Siege Engineering (Castle Wall Ballistas)', baseCost: 300, getLvl: () => techSiegeEng, setLvl: v => { techSiegeEng = v; localStorage.setItem('kf_techSiegeEng', v); } },
+      { id: 'techFusion', name: 'Fusion Mastery (+25% Fusion Dmg/AoE)', baseCost: 350, getLvl: () => techFusion, setLvl: v => { techFusion = v; localStorage.setItem('kf_techFusion', v); } },
+      { id: 'techFortTraps', name: 'Fortified Traps (+1 Charge, +75 HP)', baseCost: 180, getLvl: () => techFortTraps, setLvl: v => { techFortTraps = v; localStorage.setItem('kf_techFortTraps', v); } }
     ];
 
     function updateAcademyUI() {
@@ -777,6 +824,51 @@
         playBeep(200, 0.15, 'sawtooth', 0.2);
       }
     };
+
+    const mutatorDefs = [
+      { id: 'bloodlust', name: 'Bloodlust Swarm', desc: '+40% Enemy Speed, +50% Gold bounty' },
+      { id: 'titan', name: 'Titan Brood', desc: '+100% Enemy HP, 2x Boss spawns, +100% Score' },
+      { id: 'eclipse', name: 'Arcane Eclipse', desc: 'Hero Cooldowns +40%, Towers +30% Attack Rate' },
+      { id: 'meteor', name: 'Meteor Tempest', desc: 'Periodic falling meteor cataclysms on path' },
+      { id: 'phaseshift', name: 'Phase Shift', desc: '25% Dodge Chance vs non-siege, +75% Gold' }
+    ];
+
+    function updateMutatorUI() {
+      const list = document.getElementById('mutatorList');
+      list.innerHTML = '';
+      mutatorDefs.forEach(m => {
+        const active = mutators[m.id];
+        const div = document.createElement('div');
+        div.style = `display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:6px; border:1px solid ${active ? 'var(--purple-color)' : 'var(--border-color)'}; cursor:pointer;`;
+        div.innerHTML = `
+          <div>
+            <div style="font-weight:bold; color:${active ? 'var(--gold-color)' : 'var(--text-white)'}; font-size:12px;">${m.name}</div>
+            <div style="font-size:11px; color:var(--text-muted);">${m.desc}</div>
+          </div>
+          <button class="btn" style="padding:4px 10px; font-size:11px; background:${active ? 'var(--purple-color)' : 'var(--card-hover)'}; color:#fff;">${active ? 'ON' : 'OFF'}</button>
+        `;
+        div.onclick = () => {
+          mutators[m.id] = !mutators[m.id];
+          localStorage.setItem('kf_mut_' + m.id, mutators[m.id]);
+          playBeep(500, 0.08, 'triangle', 0.15);
+          updateMutatorUI();
+          updateHUD();
+        };
+        list.appendChild(div);
+      });
+    }
+
+    document.getElementById('hudMutatorBtn').addEventListener('click', () => {
+      document.getElementById('mutatorsModal').style.display = 'flex';
+      updateMutatorUI();
+    });
+    document.getElementById('btnMutatorsModal').addEventListener('click', () => {
+      document.getElementById('mutatorsModal').style.display = 'flex';
+      updateMutatorUI();
+    });
+    document.getElementById('closeMutatorsBtn').addEventListener('click', () => {
+      document.getElementById('mutatorsModal').style.display = 'none';
+    });
 
     document.getElementById('academyBtn').addEventListener('click', () => {
       document.getElementById('academyModal').style.display = 'flex';
@@ -851,17 +943,43 @@
       spawnFloatingText(hero.x, hero.y - 30, "MILITIA SQUAD!", "#3b82f6");
       updateHUD();
     }
+
+    function castTrebuchet(targetX, targetY) {
+      if (trebuchetCd > 0) return;
+      trebuchetCd = maxTrebuchetCd;
+      const tx = targetX || hero.targetX;
+      const ty = targetY || hero.targetY;
+      screenShake = 22;
+      playBeep(120, 0.4, 'sawtooth', 0.35);
+      spawnExplosion(tx, ty, "#fbbf24");
+      spawnFloatingText(tx, ty - 40, "SIEGE TREBUCHET!", "#fbbf24");
+      const dmg = Math.floor(220 * (1 + techSiegeEng * 0.25));
+      enemies.forEach(e => {
+        if (Math.hypot(e.x - tx, e.y - ty) <= 135) {
+          e.hp -= dmg;
+          spawnParticleEffect(e.x, e.y, "#ef4444");
+        }
+      });
+      updateHUD();
+    }
     
     document.getElementById('btnHeal').addEventListener('click', castHeal);
     document.getElementById('btnShield').addEventListener('click', castShield);
     document.getElementById('btnMeteor').addEventListener('click', castMeteor);
     document.getElementById('btnReinforce').addEventListener('click', castReinforce);
+    document.getElementById('btnTrebuchet').addEventListener('click', () => castTrebuchet(hero.targetX, hero.targetY));
     
     window.addEventListener('keydown', (e) => {
       if (e.key === '1') castHeal();
       if (e.key === '2') castShield();
       if (e.key === '3') castMeteor();
       if (e.key === '4') castReinforce();
+      if (e.key === '5') castTrebuchet(hero.targetX, hero.targetY);
+      if (e.key.toLowerCase() === 'm') {
+        const modal = document.getElementById('mutatorsModal');
+        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+        if (modal.style.display === 'flex') updateMutatorUI();
+      }
       if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
         if(e.key === 'F1') e.preventDefault();
         const modal = document.getElementById('helpModal');
@@ -915,7 +1033,8 @@
                 cooldown: 0,
                 maxCooldown: def.cooldown,
                 splash: def.splash || 0,
-                animTimer: 0
+                animTimer: 0,
+                beamTarget: null
               };
               playBeep(600, 0.08, 'square', 0.15);
               spawnFloatingText(slot.sx, slot.sy - 20, "-" + def.cost + "g", "#ef4444");
@@ -941,8 +1060,46 @@
                 playBeep(200, 0.15, 'sawtooth', 0.2);
                 spawnFloatingText(slot.sx, slot.sy - 20, "NEED " + upCost + "g!", "#ef4444");
               }
+            } else if (t.level === 3) {
+              // FUSION UPGRADE (Tier 4)
+              const fusCost = 220;
+              if (gold >= fusCost) {
+                gold -= fusCost;
+                t.level = 4;
+                const fusBonus = 1 + (techFusion * 0.25);
+                if (t.type === 'Mage' || t.type === 'Cannon') {
+                  t.type = 'Inferno';
+                  t.damage = Math.floor(90 * fusBonus);
+                  t.splash = 70;
+                  t.range = 160;
+                  t.maxCooldown = 70;
+                  spawnFloatingText(slot.sx, slot.sy - 20, "INFERNO FUSION!", "#f97316");
+                } else if (t.type === 'Tesla' || t.type === 'Frost') {
+                  t.type = 'Superconductor';
+                  t.damage = Math.floor(65 * fusBonus);
+                  t.range = 160;
+                  t.maxCooldown = 40;
+                  spawnFloatingText(slot.sx, slot.sy - 20, "SUPERCONDUCTOR!", "#0ea5e9");
+                } else if (t.type === 'Poison' || t.type === 'Ballista') {
+                  t.type = 'Venomspite';
+                  t.damage = Math.floor(110 * fusBonus);
+                  t.range = 210;
+                  t.maxCooldown = 55;
+                  spawnFloatingText(slot.sx, slot.sy - 20, "VENOMSPITE FUSION!", "#22c55e");
+                } else {
+                  t.type = 'SolarBeam';
+                  t.damage = Math.floor(16 * fusBonus);
+                  t.range = 180;
+                  t.maxCooldown = 8;
+                  spawnFloatingText(slot.sx, slot.sy - 20, "SOLAR BEAM FUSION!", "#fef08a");
+                }
+                playBeep(1000, 0.2, 'square', 0.25);
+              } else {
+                playBeep(200, 0.15, 'sawtooth', 0.2);
+                spawnFloatingText(slot.sx, slot.sy - 20, "FUSE: NEED " + fusCost + "g!", "#ef4444");
+              }
             } else {
-              spawnFloatingText(slot.sx, slot.sy - 20, "MAX LEVEL!", "#94a3b8");
+              spawnFloatingText(slot.sx, slot.sy - 20, "FUSION MASTERED!", "#fbbf24");
             }
           }
         }
@@ -956,8 +1113,8 @@
             traps.push({
               x: clickX, y: clickY,
               type: selectedTowerType,
-              charges: def.charges,
-              hp: def.hp,
+              charges: selectedTowerType === 'Spike' ? (def.charges + techFortTraps) : def.charges,
+              hp: selectedTowerType === 'Barricade' ? (def.hp + techFortTraps * 75) : def.hp,
               radius: def.radius
             });
             playBeep(300, 0.1, 'square', 0.1);
@@ -993,17 +1150,6 @@
         playBeep(600, 0.5, 'sine', 0.3);
         const rect = canvas.getBoundingClientRect();
         spawnFloatingText(rect.width/2, rect.height/2, "BLIZZARD!", "#3b82f6");
-        updateHUD();
-      }
-    });
-    document.getElementById('btnGoldMagnet').addEventListener('click', () => {
-      if(gold >= 60) {
-        gold -= 60;
-        let bonus = enemies.length * 15;
-        gold += bonus;
-        playBeep(800, 0.3, 'square', 0.2);
-        const rect = canvas.getBoundingClientRect();
-        spawnFloatingText(rect.width/2, rect.height/2, "MAGNET: +" + bonus + "g", "#fbbf24");
         updateHUD();
       }
     });
@@ -1076,6 +1222,7 @@
       particles = [];
       slots.forEach(s => { s.occupied = false; s.tower = null; });
       traps = [];
+      lavaPools = [];
       blizzTimer = 0;
       scorchMarks = [];
       playBeep(300, 0.1, 'sawtooth', 0.2);
@@ -1141,6 +1288,75 @@
       const waypoints = getScaledWaypoints();
       const scaledSlots = getScaledSlots();
 
+      if (trebuchetCd > 0) trebuchetCd--;
+
+      // Meteor Tempest Mutator
+      if (mutators.meteor && waveInProgress) {
+        meteorRainTimer++;
+        if (meteorRainTimer >= 180) {
+          meteorRainTimer = 0;
+          const rIdx = Math.floor(Math.random() * (waypoints.length - 1));
+          const rx = waypoints[rIdx].x + (Math.random() * 60 - 30);
+          const ry = waypoints[rIdx].y + (Math.random() * 60 - 30);
+          spawnExplosion(rx, ry, "#ef4444");
+          spawnFloatingText(rx, ry - 30, "METEOR!", "#ef4444");
+          enemies.forEach(e => {
+            if (Math.hypot(e.x - rx, e.y - ry) <= 85) {
+              e.hp -= 70;
+            }
+          });
+        }
+      }
+
+      // Castle automated ballistas
+      if (techSiegeEng > 0 && waveInProgress) {
+        castleBallistaTimer++;
+        if (castleBallistaTimer >= 75) {
+          castleBallistaTimer = 0;
+          const castleP = waypoints[waypoints.length - 1];
+          let bestE = null;
+          let bestDist = 9999;
+          enemies.forEach(e => {
+            const d = Math.hypot(e.x - castleP.x, e.y - castleP.y);
+            if (d <= 270 && d < bestDist) {
+              bestDist = d;
+              bestE = e;
+            }
+          });
+          if (bestE) {
+            projectiles.push({
+              x: castleP.x,
+              y: castleP.y,
+              target: bestE,
+              speed: 18,
+              damage: 45 + techSiegeEng * 20,
+              type: 'Ballista',
+              splash: 0,
+              isCrit: false
+            });
+            playBeep(850, 0.05, 'triangle', 0.1);
+          }
+        }
+      }
+
+      // Update Lava Pools
+      for (let i = lavaPools.length - 1; i >= 0; i--) {
+        const lp = lavaPools[i];
+        lp.life--;
+        if (lp.life <= 0) {
+          lavaPools.splice(i, 1);
+          continue;
+        }
+        if (lp.life % 12 === 0) {
+          enemies.forEach(e => {
+            if (Math.hypot(e.x - lp.x, e.y - lp.y) <= lp.radius) {
+              e.hp -= lp.damage;
+              spawnParticleEffect(e.x, e.y, "#f97316");
+            }
+          });
+        }
+      }
+
       // Spawn Enemies
       if (waveInProgress && spawnQueue.length > 0) {
         spawnTimer++;
@@ -1162,6 +1378,9 @@
           else if (type === 'Skeleton') { hp = 18 + wave*3; speed = 2.2; icon = '💀'; color = '#e2e8f0'; radius = 10; }
           else if (type === 'Wyvern') { hp = 240 + wave*45; speed = 1.4; icon = '🐉'; color = '#b91c1c'; radius = 18; }
           else if (type === 'Golem') { hp = 420 + wave*70; speed = 0.5; icon = '🗿'; color = '#334155'; radius = 20; }
+
+          if (mutators.titan) hp *= 2;
+          if (mutators.bloodlust) speed *= 1.4;
 
           enemies.push({
             id: Math.random(),
@@ -1273,7 +1492,6 @@
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         
-        // Poison DoT
         if (e.poisonTicks > 0) {
           if (e.poisonTicks % 15 === 0) {
             e.hp -= e.poisonDmg;
@@ -1282,23 +1500,24 @@
           e.poisonTicks--;
           if (e.hp <= 0) {
             enemies.splice(i, 1);
-            gold += 15;
+            gold += (mutators.bloodlust ? 25 : 15);
             continue;
           }
         }
 
-        // Necromancer summon
         if (e.type === 'Necromancer') {
           e.summonTimer++;
           if (e.summonTimer >= 130) {
             e.summonTimer = 0;
+            let skHp = 18 + wave*3;
+            if (mutators.titan) skHp *= 2;
             enemies.push({
               id: Math.random(),
               type: 'Skeleton',
               x: e.x, y: e.y,
               waypointIndex: e.waypointIndex,
-              hp: 18 + wave*3, maxHp: 18 + wave*3,
-              speed: 2.2, radius: 10,
+              hp: skHp, maxHp: skHp,
+              speed: mutators.bloodlust ? 3.0 : 2.2, radius: 10,
               icon: '💀', color: '#e2e8f0',
               poisonTicks: 0, poisonDmg: 0, summonTimer: 0
             });
@@ -1310,7 +1529,7 @@
         e.slowed = (blizzTimer > 0 && e.type !== 'Wyvern' && e.type !== 'Golem');
         if (!e.slowed && e.type !== 'Wyvern' && e.type !== 'Golem') {
           scaledSlots.forEach((slot, index) => {
-            if (slots[index].occupied && slots[index].tower.type === 'Frost') {
+            if (slots[index].occupied && (slots[index].tower.type === 'Frost' || slots[index].tower.type === 'Superconductor')) {
               const dx = e.x - slot.sx;
               const dy = e.y - slot.sy;
               if (dx*dx + dy*dy <= slots[index].tower.range * slots[index].tower.range) {
@@ -1326,7 +1545,8 @@
            let dx = e.x - trp.x, dy = e.y - trp.y;
            if(Math.hypot(dx, dy) <= trp.radius + e.radius) {
               if(trp.type === 'Spike') {
-                 e.hp -= 50;
+                 const spikeDmg = 50 + techFortTraps * 20;
+                 e.hp -= spikeDmg;
                  trp.charges--;
                  spawnParticleEffect(e.x, e.y, "#ef4444");
                  if(trp.charges <= 0) { traps.splice(t, 1); t--; }
@@ -1447,16 +1667,30 @@
             tower.cooldown = tower.maxCooldown;
             tower.animTimer = 5;
 
-            // Tesla chain lightning
-            if (tower.type === 'Tesla') {
+            // Solar Beam Fusion
+            if (tower.type === 'SolarBeam') {
+              tower.beamTarget = target;
+              let dmg = tower.damage;
+              if (target.maxHp > 100) dmg += Math.floor(target.hp * 0.04);
+              target.hp -= dmg;
+              spawnParticleEffect(target.x, target.y, "#fef08a");
+              playBeep(1200, 0.03, 'sine', 0.08);
+              return;
+            }
+
+            // Tesla & Superconductor chain lightning
+            if (tower.type === 'Tesla' || tower.type === 'Superconductor') {
+              const maxChains = (tower.type === 'Superconductor') ? 5 : 2;
               target.hp -= tower.damage;
-              spawnParticleEffect(target.x, target.y, "#38bdf8");
+              if (tower.type === 'Superconductor') target.slowed = true;
+              spawnParticleEffect(target.x, target.y, tower.type === 'Superconductor' ? "#0ea5e9" : "#38bdf8");
               playBeep(1100, 0.08, 'square', 0.15);
               
               let chains = 0;
               enemies.forEach(e2 => {
-                if (e2 !== target && chains < 2 && Math.hypot(e2.x - target.x, e2.y - target.y) <= 90) {
+                if (e2 !== target && chains < maxChains && Math.hypot(e2.x - target.x, e2.y - target.y) <= (tower.type === 'Superconductor' ? 140 : 90)) {
                   e2.hp -= Math.floor(tower.damage * 0.75);
+                  if (tower.type === 'Superconductor') e2.slowed = true;
                   spawnParticleEffect(e2.x, e2.y, "#93c5fd");
                   chains++;
                 }
@@ -1464,8 +1698,27 @@
               return;
             }
 
+            // Venomspite Piercing Bolt
+            if (tower.type === 'Venomspite') {
+              const dx = target.x - slot.sx;
+              const dy = target.y - slot.sy;
+              const d = Math.hypot(dx, dy);
+              projectiles.push({
+                x: slot.sx,
+                y: slot.sy,
+                vx: (dx / d) * 15,
+                vy: (dy / d) * 15,
+                isPiercing: true,
+                lifeTimer: 35,
+                damage: tower.damage,
+                type: 'Venomspite'
+              });
+              playBeep(700, 0.08, 'triangle', 0.15);
+              return;
+            }
+
             let spd = 9;
-            if (tower.type === 'Cannon') spd = 6;
+            if (tower.type === 'Cannon' || tower.type === 'Inferno') spd = 6;
             else if (tower.type === 'Ballista') spd = 16;
             else if (tower.type === 'Poison') spd = 8;
 
@@ -1479,7 +1732,9 @@
               splash: tower.splash,
               isCrit: (tower.type === 'Ballista' && Math.random() < 0.35)
             });
-            playBeep(tower.type === 'Cannon' ? 180 : (tower.type === 'Mage' ? 600 : 450), 0.05, 'triangle', 0.1);
+            playBeep(tower.type === 'Cannon' ? 180 : (tower.type === 'Mage' ? 600 : (tower.type === 'Inferno' ? 220 : 450)), 0.05, 'triangle', 0.1);
+          } else {
+            tower.beamTarget = null;
           }
         }
       });
@@ -1487,6 +1742,25 @@
       // Update Projectiles
       for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i];
+
+        if (p.isPiercing) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.lifeTimer--;
+
+          enemies.forEach(e => {
+            if (Math.hypot(e.x - p.x, e.y - p.y) <= e.radius + 10) {
+              e.hp -= p.damage;
+              e.poisonTicks = 120;
+              e.poisonDmg = 12;
+              spawnParticleEffect(e.x, e.y, "#22c55e");
+            }
+          });
+
+          if (p.lifeTimer <= 0) projectiles.splice(i, 1);
+          continue;
+        }
+
         if (!enemies.includes(p.target)) {
           projectiles.splice(i, 1);
           continue;
@@ -1503,7 +1777,18 @@
             spawnFloatingText(p.target.x, p.target.y - 25, "CRIT!", "#fbbf24");
           }
 
-          if (p.type === 'Cannon' || p.type === 'Poison') {
+          if (mutators.phaseshift && Math.random() < 0.25 && p.type !== 'Ballista') {
+            spawnFloatingText(p.target.x, p.target.y - 15, "PHASE!", "#a855f7");
+            projectiles.splice(i, 1);
+            continue;
+          }
+
+          if (p.type === 'Inferno') {
+            lavaPools.push({ x: p.target.x, y: p.target.y, radius: 65, life: 180, damage: 18 });
+            spawnExplosion(p.target.x, p.target.y, "#f97316");
+          }
+
+          if (p.type === 'Cannon' || p.type === 'Poison' || p.type === 'Inferno') {
             scorchMarks.push({ x: p.target.x, y: p.target.y, radius: p.splash > 0 ? p.splash : 30 });
           }
 
@@ -1511,17 +1796,17 @@
             enemies.forEach(e2 => {
               if (Math.hypot(e2.x - p.target.x, e2.y - p.target.y) <= p.splash) {
                 let dmg = baseDmg;
-                if (e2.type === 'Orc' && p.type !== 'Mage' && p.type !== 'Cannon' && p.type !== 'Ballista') {
+                if (e2.type === 'Orc' && p.type !== 'Mage' && p.type !== 'Cannon' && p.type !== 'Ballista' && p.type !== 'Inferno') {
                   dmg = Math.max(1, Math.floor(dmg * 0.5));
                 }
                 e2.hp -= dmg;
                 if (p.type === 'Poison') { e2.poisonTicks = 75; e2.poisonDmg = 6; }
-                spawnParticleEffect(e2.x, e2.y, p.type === 'Poison' ? "#22c55e" : "#a855f7");
+                spawnParticleEffect(e2.x, e2.y, p.type === 'Poison' ? "#22c55e" : (p.type === 'Inferno' ? "#f97316" : "#a855f7"));
               }
             });
           } else {
             let dmg = baseDmg;
-            if (p.target.type === 'Orc' && p.type !== 'Mage' && p.type !== 'Cannon' && p.type !== 'Ballista') {
+            if (p.target.type === 'Orc' && p.type !== 'Mage' && p.type !== 'Cannon' && p.type !== 'Ballista' && p.type !== 'Inferno') {
               dmg = Math.max(1, Math.floor(dmg * 0.5));
             }
             p.target.hp -= dmg;
@@ -1530,27 +1815,28 @@
             else spawnParticleEffect(p.target.x, p.target.y, "#ffd700");
           }
 
-          // Clean up dead enemies
-          for (let j = enemies.length - 1; j >= 0; j--) {
-            if (enemies[j].hp <= 0) {
-              let reward = 15;
-              if (enemies[j].type === 'Ogre' || enemies[j].type === 'Wyvern' || enemies[j].type === 'Golem') {
-                reward = 100;
-                if (gameMode === 'BossBlitz') {
-                   bossesKilled++;
-                   if (bossesKilled > hsBoss) { hsBoss = bossesKilled; localStorage.setItem('kf_hsBoss', hsBoss); }
-                }
-              }
-              gold += reward;
-              spawnFloatingText(enemies[j].x, enemies[j].y - 15, "+" + reward + "g", "#ffd700");
-              enemies.splice(j, 1);
-            }
-          }
-          updateHUD();
           projectiles.splice(i, 1);
         } else {
           p.x += (dx / dist) * p.speed;
           p.y += (dy / dist) * p.speed;
+        }
+      }
+
+      // Clean up dead enemies
+      for (let j = enemies.length - 1; j >= 0; j--) {
+        if (enemies[j].hp <= 0) {
+          let reward = 15;
+          if (enemies[j].type === 'Ogre' || enemies[j].type === 'Wyvern' || enemies[j].type === 'Golem') {
+            reward = 100;
+            if (gameMode === 'BossBlitz') {
+               bossesKilled++;
+               if (bossesKilled > hsBoss) { hsBoss = bossesKilled; localStorage.setItem('kf_hsBoss', hsBoss); }
+            }
+          }
+          if (mutators.bloodlust) reward = Math.floor(reward * 1.5);
+          gold += reward;
+          spawnFloatingText(enemies[j].x, enemies[j].y - 15, "+" + reward + "g", "#ffd700");
+          enemies.splice(j, 1);
         }
       }
 
@@ -1576,6 +1862,7 @@
         waveInProgress = false;
         let waveBonus = 20 + wave * 5;
         if (gameMode === 'BossBlitz') waveBonus = 100 + wave * 20;
+        if (mutators.titan) waveBonus *= 2;
         gold += waveBonus;
         const rect = canvas.getBoundingClientRect();
         spawnFloatingText(rect.width / 2, rect.height / 2, `WAVE ${wave} CLEAR! +${waveBonus}g`, "#10b981");
@@ -1621,6 +1908,13 @@
       ctx.textAlign = 'center';
       map.obs.forEach(o => {
          ctx.fillText(o.i, o.x * (w / 800), o.y * (h / 560));
+      });
+
+      // Lava Pools
+      lavaPools.forEach(lp => {
+        ctx.fillStyle = 'rgba(234, 88, 12, 0.5)';
+        ctx.beginPath(); ctx.arc(lp.x, lp.y, lp.radius, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#f97316'; ctx.lineWidth = 2; ctx.stroke();
       });
 
       // Traps
@@ -1675,6 +1969,19 @@
         ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
       }
 
+      // Solar Beams
+      scaledSlots.forEach((slot, index) => {
+        const rawSlot = slots[index];
+        if (rawSlot.occupied && rawSlot.tower && rawSlot.tower.type === 'SolarBeam' && rawSlot.tower.beamTarget) {
+          ctx.beginPath();
+          ctx.moveTo(slot.sx, slot.sy);
+          ctx.lineTo(rawSlot.tower.beamTarget.x, rawSlot.tower.beamTarget.y);
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+      });
+
       // Slots & Towers
       scaledSlots.forEach((slot, index) => {
         const rawSlot = slots[index];
@@ -1692,10 +1999,15 @@
           else if (type === 'Tesla') icon = '⚡';
           else if (type === 'Ballista') icon = '🎯';
           else if (type === 'Poison') icon = '🧪';
+          else if (type === 'Inferno') icon = '🌋';
+          else if (type === 'Superconductor') icon = '🌩️';
+          else if (type === 'Venomspite') icon = '☣️';
+          else if (type === 'SolarBeam') icon = '☀️';
+
           ctx.font = '16px Segoe UI';
           ctx.fillText(icon, slot.sx, slot.sy + 5);
-          ctx.fillStyle = '#fbbf24'; ctx.font = '700 9px Segoe UI';
-          ctx.fillText('L' + rawSlot.tower.level, slot.sx + 12, slot.sy + 12);
+          ctx.fillStyle = (rawSlot.tower.level === 4) ? '#fef08a' : '#fbbf24'; ctx.font = '700 9px Segoe UI';
+          ctx.fillText(rawSlot.tower.level === 4 ? 'FUS' : ('L' + rawSlot.tower.level), slot.sx + 12, slot.sy + 12);
         } else {
           ctx.fillStyle = '#94a3b8'; ctx.font = '700 14px Segoe UI';
           ctx.fillText('+', slot.sx, slot.sy + 5);
@@ -1736,8 +2048,8 @@
 
       // Projectiles
       projectiles.forEach(p => {
-        ctx.fillStyle = p.type === 'Mage' ? '#d8b4fe' : (p.type === 'Poison' ? '#22c55e' : (p.type === 'Ballista' ? '#fbbf24' : '#ffffff'));
-        ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = p.type === 'Mage' ? '#d8b4fe' : (p.type === 'Poison' || p.type === 'Venomspite' ? '#22c55e' : (p.type === 'Ballista' ? '#fbbf24' : (p.type === 'Inferno' ? '#f97316' : '#ffffff')));
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.isPiercing ? 6 : 4, 0, Math.PI*2); ctx.fill();
       });
 
       // Particles
