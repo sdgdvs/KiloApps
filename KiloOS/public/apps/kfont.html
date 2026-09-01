@@ -28,12 +28,12 @@
   .metric-card { background: #fafafa; padding: 15px; border: 1px solid #eaeaea; border-radius: 6px; transition: 0.2s; }
   .metric-card:hover { border-color: #0078d7; box-shadow: 0 2px 8px rgba(0,120,215,0.1); }
   .metric-title { font-size: 11px; color: #888; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-  .metric-value { font-size: 24px; color: #222; font-family: "Consolas", monospace; }
+  .metric-value { font-size: 20px; color: #222; font-family: "Consolas", monospace; word-break: break-all; }
   
   .glyph-controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
   .glyph-controls select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; }
   .glyph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
-  .glyph-cell { border: 1px solid #eee; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; cursor: pointer; transition: 0.15s; }
+  .glyph-cell { border: 1px solid #eee; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; cursor: pointer; transition: 0.15s; position: relative; }
   .glyph-cell:hover { background: #f0f8ff; border-color: #0078d7; transform: scale(1.05); }
   .glyph-char { font-size: 28px; margin-bottom: 8px; line-height: 1; color: #111; }
   .glyph-hex { font-size: 11px; color: #888; font-family: "Consolas", monospace; }
@@ -50,9 +50,24 @@
   #canvasMetrics { display: none; }
   .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; }
   
+  .anatomy-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; background: #f9f9f9; padding: 12px 16px; border-radius: 6px; border: 1px solid #eee; }
+  .anatomy-input { width: 80px; padding: 8px; font-size: 18px; text-align: center; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; outline: none; font-family: "Segoe UI", sans-serif; }
+  .anatomy-input:focus { border-color: #0078d7; }
+  .chip-btn { padding: 5px 10px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 14px; font-family: inherit; transition: 0.15s; }
+  .chip-btn:hover { background: #0078d7; color: white; border-color: #0078d7; }
+  .action-btn { padding: 8px 14px; background: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
+  .action-btn:hover { background: #0063b1; }
+  
+  .anatomy-canvas-container { position: relative; width: 100%; max-width: 800px; margin-bottom: 25px; }
+  #anatomyCanvas { border: 1px solid #ddd; border-radius: 6px; background: #fafafa; width: 100%; height: 320px; box-shadow: inset 0 0 8px rgba(0,0,0,0.03); }
+  
+  .guideline-legend { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: #555; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
   #helpOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
   #helpOverlay.visible { display: flex; animation: fadeIn 0.2s; }
-  .help-modal { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 450px; font-family: "Segoe UI", sans-serif; }
+  .help-modal { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 480px; font-family: "Segoe UI", sans-serif; }
   .help-modal h2 { margin-top: 0; border-bottom: none; color: #0078d7; }
   .help-modal ul { margin-bottom: 20px; line-height: 1.6; }
 </style>
@@ -94,6 +109,7 @@
       <button class="tab-btn active" data-target="panel-metrics">Metrics & OS/2</button>
       <button class="tab-btn" data-target="panel-glyphs">Unicode Ranges</button>
       <button class="tab-btn" data-target="panel-diagnostics">Kerning & Hinting</button>
+      <button class="tab-btn" data-target="panel-anatomy">Glyph Anatomy</button>
       <button class="tab-btn" data-target="panel-sample">Live Sample</button>
     </div>
     
@@ -124,6 +140,7 @@
             <option value="9600,9631">Block Elements (U+2580 - U+259F)</option>
             <option value="9632,9727">Geometric Shapes (U+25A0 - U+25FF)</option>
           </select>
+          <span style="font-size:12px; color:#777; margin-left:auto;">(Click any glyph to inspect in Anatomy tab)</span>
         </div>
         <div class="glyph-grid" id="glyphGrid"></div>
       </div>
@@ -138,6 +155,51 @@
         <h3>Rasterization & Grid Fitting (Hinting)</h3>
         <p>Rendering at specific pixel sizes to expose pixel-snapping and hinting instructions across scale.</p>
         <canvas id="hintingCanvas" width="800" height="200" style="border:1px solid #ddd; border-radius:4px; background:#fafafa; max-width:100%;"></canvas>
+      </div>
+
+      <!-- Glyph Anatomy & Vector Metrics -->
+      <div id="panel-anatomy" class="panel">
+        <h2>Glyph Anatomy & Vector Metrics Dissector</h2>
+        <p>Interactive character inspection with baseline, cap-height, x-height, ascent/descent guides, side bearings (LSB/RSB), and multi-encoding codec breakdown.</p>
+        
+        <div class="anatomy-controls">
+          <label style="font-weight:600; font-size:14px;">Character / Hex:</label>
+          <input type="text" id="anatomyInput" class="anatomy-input" value="A" maxlength="8">
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:12px; color:#777;">Quick Presets:</span>
+            <button class="chip-btn" data-char="A">A</button>
+            <button class="chip-btn" data-char="g">g</button>
+            <button class="chip-btn" data-char="Q">Q</button>
+            <button class="chip-btn" data-char="&">&amp;</button>
+            <button class="chip-btn" data-char="f">f</button>
+            <button class="chip-btn" data-char="W">W</button>
+            <button class="chip-btn" data-char="0">0</button>
+            <button class="chip-btn" data-char="€">€</button>
+            <button class="chip-btn" data-char="Ω">Ω</button>
+            <button class="chip-btn" data-char="Ж">Ж</button>
+            <button class="chip-btn" data-char="★">★</button>
+            <button class="chip-btn" data-char="漢">漢</button>
+          </div>
+          <button id="copyAnatomyReportBtn" class="action-btn" style="margin-left:auto;">Copy JSON Report</button>
+        </div>
+
+        <div class="anatomy-canvas-container">
+          <canvas id="anatomyCanvas" width="800" height="320"></canvas>
+          <div class="guideline-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#dc3232;"></div> Baseline (Y:0)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#2878f0;"></div> Cap Height</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#00a0a0;"></div> x-Height</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#28a028;"></div> Ascent</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#b428b4;"></div> Descent</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#e68c00;"></div> Bearings (LSB / RSB)</div>
+          </div>
+        </div>
+
+        <h3>ABC Spacing & Bounding Box Diagnostics</h3>
+        <div class="metric-grid" id="anatomySpacingGrid"></div>
+
+        <h3>Multi-Encoding & Codec Dissector</h3>
+        <div class="metric-grid" id="anatomyCodecGrid"></div>
       </div>
       
       <!-- Sample -->
@@ -161,8 +223,9 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       <p>Welcome to KFont inspector. Use the controls to explore system fonts.</p>
       <ul>
         <li><strong>Metrics & OS/2</strong>: Inspect font measurements and bounds.</li>
-        <li><strong>Unicode Ranges</strong>: View glyphs organized by unicode block.</li>
+        <li><strong>Unicode Ranges</strong>: View glyphs organized by unicode block (click any glyph to inspect).</li>
         <li><strong>Diagnostics</strong>: Check visual kerning and hinting at various sizes.</li>
+        <li><strong>Glyph Anatomy</strong>: Interactive vector metrics, ABC spacing, bearings & multi-encoding dissector.</li>
         <li><strong>Live Sample</strong>: Test how the font looks with custom text.</li>
       </ul>
       <p style="font-size: 12px; color: #777;">Press <strong>H</strong>, click the Help button, or click outside this box to dismiss.</p>
@@ -182,6 +245,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     const boldCheck = document.getElementById('boldCheck');
     const italicCheck = document.getElementById('italicCheck');
     const unicodeRange = document.getElementById('unicodeRange');
+    const anatomyInput = document.getElementById('anatomyInput');
     
     function getFontString(familyOverride, sizeOverride) {
       const family = familyOverride || `"${fontList.value}"`;
@@ -233,18 +297,29 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const [start, end] = unicodeRange.value.split(',').map(Number);
       const grid = document.getElementById('glyphGrid');
       let html = '';
-      const fontStr = getFontString();
       for(let i=start; i<=end; i++) {
         const hex = i.toString(16).toUpperCase().padStart(4, '0');
         const char = String.fromCodePoint(i);
         html += `
-          <div class="glyph-cell">
-            <div class="glyph-char" style="font-family: ${fontList.value}; font-weight: ${boldCheck.checked?'bold':'normal'}; font-style: ${italicCheck.checked?'italic':'normal'};">${char}</div>
+          <div class="glyph-cell" data-char="${char}" title="Click to inspect ${char} (U+${hex})">
+            <div class="glyph-char" style="font-family: '${fontList.value}'; font-weight: ${boldCheck.checked?'bold':'normal'}; font-style: ${italicCheck.checked?'italic':'normal'};">${char}</div>
             <div class="glyph-hex">U+${hex}</div>
           </div>
         `;
       }
       grid.innerHTML = html;
+
+      // Add click listeners to inspect in Anatomy tab
+      grid.querySelectorAll('.glyph-cell').forEach(cell => {
+        cell.onclick = () => {
+          const ch = cell.getAttribute('data-char');
+          if (ch) {
+            anatomyInput.value = ch;
+            switchToTab('panel-anatomy');
+            updateAnatomy();
+          }
+        };
+      });
     }
     
     function updateDiagnostics() {
@@ -292,6 +367,218 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         y += sz + 15;
       });
     }
+
+    function getCharInfo(char) {
+      if (!char) return null;
+      let codePoint = char.codePointAt(0);
+      if (char.startsWith('U+') || char.startsWith('0x') || (/^[0-9A-Fa-f]{2,6}$/.test(char) && char.length > 1)) {
+        const hex = char.replace(/^(U\+|0x)/i, '');
+        const parsed = parseInt(hex, 16);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 0x10FFFF) {
+          codePoint = parsed;
+          char = String.fromCodePoint(codePoint);
+        }
+      }
+      
+      const hex = codePoint.toString(16).toUpperCase().padStart(4, '0');
+      
+      // UTF-8 bytes
+      const encoder = new TextEncoder();
+      const utf8Arr = Array.from(encoder.encode(char));
+      const utf8Hex = utf8Arr.map(b => '0x' + b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+
+      // UTF-16
+      const utf16Hex = Array.from(char).map(c => '0x' + c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')).join(' ');
+
+      // HTML Entity
+      const entityMap = {
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;',
+        '©': '&copy;', '®': '&reg;', '€': '&euro;', '£': '&pound;', '¥': '&yen;',
+        '°': '&deg;', '•': '&bull;', '™': '&trade;', '§': '&sect;', '¶': '&para;'
+      };
+      const namedEntity = entityMap[char] || '-';
+      const decEntity = `&#${codePoint};`;
+      const hexEntity = `&#x${hex};`;
+
+      // C & JS Escapes
+      const cEscape = codePoint <= 0xFFFF ? `\\u${hex}` : `\\U${codePoint.toString(16).toUpperCase().padStart(8, '0')}`;
+      const jsEscape = `\\u{${hex}}`;
+      const uriEncoded = encodeURIComponent(char);
+
+      // General Category
+      let category = "General Character";
+      if (codePoint >= 0x41 && codePoint <= 0x5A) category = "Uppercase Latin Letter";
+      else if (codePoint >= 0x61 && codePoint <= 0x7A) category = "Lowercase Latin Letter";
+      else if (codePoint >= 0x30 && codePoint <= 0x39) category = "Decimal Digit";
+      else if (codePoint >= 0x20 && codePoint <= 0x7E) category = "ASCII Punctuation / Symbol";
+      else if (codePoint >= 0x00A0 && codePoint <= 0x00FF) category = "Latin-1 Supplement";
+      else if (codePoint >= 0x0370 && codePoint <= 0x03FF) category = "Greek & Coptic";
+      else if (codePoint >= 0x0400 && codePoint <= 0x04FF) category = "Cyrillic Script";
+      else if (codePoint >= 0x20A0 && codePoint <= 0x20CF) category = "Currency Symbol";
+      else if (codePoint >= 0x4E00 && codePoint <= 0x9FFF) category = "CJK Unified Ideograph";
+      else if (codePoint >= 0x2500 && codePoint <= 0x257F) category = "Box Drawing Symbol";
+
+      return {
+        char,
+        codePoint,
+        hex: `U+${hex}`,
+        utf8Hex,
+        utf16Hex,
+        namedEntity,
+        decEntity,
+        hexEntity,
+        cEscape,
+        jsEscape,
+        uriEncoded,
+        category
+      };
+    }
+
+    function updateAnatomy() {
+      const raw = anatomyInput.value.trim() || 'A';
+      const info = getCharInfo(raw);
+      if (!info) return;
+
+      const canvas = document.getElementById('anatomyCanvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.parentElement.clientWidth || 800;
+      const h = 320;
+
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const fontSize = 160;
+      const fontStr = `${italicCheck.checked?'italic':'normal'} ${boldCheck.checked?'bold':'normal'} ${fontSize}px "${fontList.value}", sans-serif`;
+      ctx.font = fontStr;
+
+      const metrics = ctx.measureText(info.char);
+      const fontAsc = metrics.fontBoundingBoxAscent || fontSize * 0.8;
+      const fontDesc = metrics.fontBoundingBoxDescent || fontSize * 0.2;
+      const actAsc = metrics.actualBoundingBoxAscent || fontSize * 0.7;
+      const actDesc = metrics.actualBoundingBoxDescent || 0;
+      const actLeft = metrics.actualBoundingBoxLeft || 0;
+      const actRight = metrics.actualBoundingBoxRight || metrics.width;
+      const advWidth = metrics.width;
+
+      const baselineY = 220;
+      const originX = Math.max(80, Math.floor(w / 2 - advWidth / 2));
+
+      // Guidelines
+      const capH = fontAsc * 0.72;
+      const xH = fontAsc * 0.50;
+
+      // Draw Grid Lines
+      function drawLine(y, color, dash, label) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = dash ? 1.5 : 2;
+        ctx.setLineDash(dash ? [5, 4] : []);
+        ctx.beginPath();
+        ctx.moveTo(20, y);
+        ctx.lineTo(w - 20, y);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.font = '11px "Segoe UI", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(label, w - 25, y - 4);
+      }
+
+      // Ascent line
+      drawLine(baselineY - fontAsc, '#28a028', true, `Ascent (-${fontAsc.toFixed(1)}px)`);
+      // Cap Height
+      drawLine(baselineY - capH, '#2878f0', true, `Cap Height (-${capH.toFixed(1)}px)`);
+      // X-Height
+      drawLine(baselineY - xH, '#00a0a0', true, `x-Height (-${xH.toFixed(1)}px)`);
+      // Baseline
+      drawLine(baselineY, '#dc3232', false, `Baseline (Y:0)`);
+      // Descent
+      drawLine(baselineY + fontDesc, '#b428b4', true, `Descent (+${fontDesc.toFixed(1)}px)`);
+
+      // Side Bearings & Bounding vertical lines
+      const lsbX = originX - actLeft;
+      const rsbX = originX + actRight;
+      const advX = originX + advWidth;
+
+      function drawVertLine(x, color, label, topOffset) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x, baselineY - fontAsc - 10);
+        ctx.lineTo(x, baselineY + fontDesc + 10);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.font = '11px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x, baselineY + fontDesc + (topOffset || 22));
+      }
+
+      drawVertLine(originX, '#888', 'Origin (0)', 22);
+      drawVertLine(lsbX, '#e68c00', 'LSB', 34);
+      drawVertLine(rsbX, '#e68c00', 'RSB', 34);
+      drawVertLine(advX, '#0078d7', 'Advance', 22);
+
+      // Black box bounding rectangle
+      ctx.strokeStyle = 'rgba(0, 120, 215, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([]);
+      ctx.strokeRect(lsbX, baselineY - actAsc, rsbX - lsbX, actAsc + actDesc);
+
+      // Render Glyph
+      ctx.font = fontStr;
+      ctx.fillStyle = '#1a1a1a';
+      ctx.textAlign = 'left';
+      ctx.fillText(info.char, originX, baselineY);
+
+      // Update Spacing Diagnostics Cards
+      const blackBoxW = (actRight + actLeft);
+      const lsbVal = -actLeft;
+      const rsbVal = advWidth - actRight;
+
+      const spacingFields = [
+        { name: "Left Side Bearing (LSB)", val: `${lsbVal.toFixed(2)} px` },
+        { name: "Black Box Width", val: `${blackBoxW.toFixed(2)} px` },
+        { name: "Right Side Bearing (RSB)", val: `${rsbVal.toFixed(2)} px` },
+        { name: "Total Advance Width", val: `${advWidth.toFixed(2)} px` },
+        { name: "Actual BBox Height", val: `${(actAsc + actDesc).toFixed(2)} px` },
+        { name: "Font Em Height", val: `${(fontAsc + fontDesc).toFixed(2)} px` }
+      ];
+
+      document.getElementById('anatomySpacingGrid').innerHTML = spacingFields.map(f => `
+        <div class="metric-card">
+          <div class="metric-title">${f.name}</div>
+          <div class="metric-value">${f.val}</div>
+        </div>
+      `).join('');
+
+      // Update Multi-Encoding Codec Cards
+      const codecFields = [
+        { name: "Unicode Code Point", val: `${info.hex} (Dec: ${info.codePoint})` },
+        { name: "UTF-8 Bytes (Hex)", val: info.utf8Hex },
+        { name: "UTF-16 Code Units", val: info.utf16Hex },
+        { name: "HTML Entities", val: `${info.hexEntity} | ${info.decEntity}` + (info.namedEntity !== '-' ? ` | ${info.namedEntity}` : '') },
+        { name: "C/C++ / Java Literal", val: info.cEscape },
+        { name: "JS Unicode Escape", val: info.jsEscape },
+        { name: "URI Percent Encoded", val: info.uriEncoded },
+        { name: "Unicode Script / Block", val: info.category }
+      ];
+
+      document.getElementById('anatomyCodecGrid').innerHTML = codecFields.map(f => `
+        <div class="metric-card">
+          <div class="metric-title">${f.name}</div>
+          <div class="metric-value" style="font-size:16px;">${f.val}</div>
+        </div>
+      `).join('');
+    }
     
     function updateSample() {
       const el = document.getElementById('sampleOutput');
@@ -302,15 +589,25 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       updateMetrics();
       updateGlyphs();
       updateDiagnostics();
+      updateAnatomy();
       updateSample();
     }
     
+    function switchToTab(targetId) {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.target === targetId);
+      });
+      document.querySelectorAll('.panel').forEach(p => {
+        p.classList.toggle('active', p.id === targetId);
+      });
+    }
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.onclick = () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.target).classList.add('active');
+        switchToTab(btn.dataset.target);
+        if (btn.dataset.target === 'panel-anatomy') {
+          updateAnatomy();
+        }
       };
     });
     
@@ -319,6 +616,36 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     boldCheck.onchange = updateAll;
     italicCheck.onchange = updateAll;
     unicodeRange.onchange = updateGlyphs;
+    anatomyInput.oninput = updateAnatomy;
+
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+      btn.onclick = () => {
+        anatomyInput.value = btn.getAttribute('data-char');
+        updateAnatomy();
+      };
+    });
+
+    document.getElementById('copyAnatomyReportBtn').onclick = () => {
+      const info = getCharInfo(anatomyInput.value.trim() || 'A');
+      if (!info) return;
+      const report = {
+        fontFamily: fontList.value,
+        character: info.char,
+        codePoint: info.codePoint,
+        hex: info.hex,
+        utf8Bytes: info.utf8Hex,
+        utf16: info.utf16Hex,
+        cEscape: info.cEscape,
+        category: info.category,
+        timestamp: new Date().toISOString()
+      };
+      navigator.clipboard.writeText(JSON.stringify(report, null, 2)).then(() => {
+        const btn = document.getElementById('copyAnatomyReportBtn');
+        const orig = btn.innerText;
+        btn.innerText = 'Copied JSON!';
+        setTimeout(() => { btn.innerText = orig; }, 2000);
+      });
+    };
     
     // Initial call
     updateAll();
@@ -340,3 +667,4 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
   </script>
 </body>
 </html>
+

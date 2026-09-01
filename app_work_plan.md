@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KFont
+**Target App:** KMail
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KFont (Added deep TTF/OTF Font Metadata & Metrics inspection, a Unicode Range & Glyph Viewer with hexadecimal character mapping, and a visual Glyph Kerning & Hinting diagnostics panel)
 - KMail (Added Multi-Tab Email Sessions, AES Encryption/Password Protection, Advanced Tagging & Filtering, and JSON Import/Export)
 - KMandel (Added Multi-threading, Custom Palettes, 4K Export, Julia Sets)
 - KPing (Added Packet Logging, Jitter Analytics, Payload Config, Log Export)
@@ -114,7 +113,7 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KTimer (Added Multi-Timer Engine [concurrent named timers], Pomodoro Work/Break Cycle Manager with Stats, Lap Split Analysis & CSV/TXT Export, Alarm Presets Library, Sound Alerts & Visual Progress Ring, and Interval / HIIT Circuit Timer Engine [Work/Rest/Prep cycles, Tabata/HIIT/Boxing presets])
 - KContacts (Added Real-time Search & Group Filters, vCard [.vcf] & CSV Import/Export, Duplicates Merger, Contact Avatar Initial/Color Generator, Quick Action buttons for Email/Phone, Dynamic Tag Badges & Multi-Tag Filter Chips, and Markdown Directory [.md] & Full JSON Backup [.json] Export/Import)
 - KRead (Added Real-Time Search & Highlight Navigation, Bookmarks Drawer & Persistence, Reading Statistics Engine [WPM & Time Remaining], Reader Themes & Font Controls, Highlights/Notes & JSON/TXT Export, and Multi-Tab Reading Sessions with Document Tabs & Session Persistence)
-- KBase (Added Simultaneous Multi-Base Converter [BIN/OCT/DEC/HEX/Base 2..36], 64-Bit Interactive Toggle Board & Bitwise Operator Suite [AND/OR/XOR/NOT/SHL/SHR/ROL/ROR], IEEE-754 Floating Point Breakdown, Conversion History Log & CSV/JSON Export, Variable-Length Integer Suite [ULEB128/SLEB128/Protobuf ZigZag Encoders/Decoders & Byte Breakdown], Multi-Width Integer Representation Inspector [Two's/Ones' Comp & Sign-Magnitude], and Structured Bitfield Slicer & Bit Diagnostics [Popcount, CLZ, CTZ, Parity])
+- KBase (Added Simultaneous Multi-Base Converter [BIN/OCT/DEC/HEX/Base 2..36], 64-Bit Interactive Toggle Board & Bitwise Operator Suite [AND/OR/XOR/NOT/SHL/SHR/ROR/ROR], IEEE-754 Floating Point Breakdown, Conversion History Log & CSV/JSON Export, Variable-Length Integer Suite [ULEB128/SLEB128/Protobuf ZigZag Encoders/Decoders & Byte Breakdown], Multi-Width Integer Representation Inspector [Two's/Ones' Comp & Sign-Magnitude], and Structured Bitfield Slicer & Bit Diagnostics [Popcount, CLZ, CTZ, Parity])
 - KJournal (Added Calendar Entry Navigator, Mood Tracker & Writing Streak Analytics, Entry Search & Hashtag Filtering, PIN Lock Security, Data Import/Export [JSON/MD/TXT], Guided Reflection Prompts & Templates Library [Morning, Evening, Gratitude, Goals, Stoic, Brain Dump], and Daily Writing Goal Tracker with Live Progress Bar & Reading Time)
 - KPad (Added Multi-Tab Document Sessions, Syntax Highlighting & Language Switcher, Find & Replace Panel with Regex Support, Line Numbers & Gutter Stats, Document Export/Import, and Document Security & AES-256 / RC4 Password Encryption Suite with Encrypted Containers [.kpad.enc], Auto-Save Recovery, and SHA-256 / CRC32 Diagnostics)
 - KImage (Added Image Adjustments & Filters [Grayscale, Sepia, Invert, Brightness/Contrast, Blur], Transformations [Rotate 90°, Flips, Crop, Resize], RGB Color Histogram & EXIF Metadata Inspector, Auto-Slideshow Mode with Timer, Image Export/Format Conversion [PNG/JPEG/WEBP/BMP], and Spatial Convolution Matrix & Advanced Kernel Filter Studio [Sharpen, Unsharp Mask, Edge Detect, Sobel H/V, Emboss, Gaussian Blur, Ridge Detection, Custom 3x3 Matrix, Divisor/Bias, Channel Targeting])
@@ -129,6 +128,7 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KClock (Added Multi-City World Clock Selector, Repeating Alarms Manager with Snooze, Lap Split Stopwatch with Fastest/Slowest badges, Timezone Converter, Settings Export/Import [JSON], and Unix Epoch & Precision Time Suite [Live Ticker, Bidirectional Converter, Day-of-Year DOY & ISO Week Calculator, Julian Date Number])
 - KPong (Added 2-Player Local PvP Mode, 5 Game Modes, Power-Up System [Paddle Extend, Speed Boost, Multi-Ball, Shield, Freeze], Leaderboard & Win-Rate Stats Tracker, Theme Switcher, Save/Resume State, Match Replay Recording & Playback System with Timeline Scrubber and Multi-Speed Controls, and Match Stats & Leaderboard JSON Export/Import)
 - KDB (Added CSV/JSON Import/Export engine, robust real-time search, advanced column filtering, password encryption, Interactive Column Header Sorting [ID/Name/Dept/Role Asc/Desc], Department Analytics & Headcount Distribution Breakdown, and Markdown [.md] Directory & Executive Summary Report Export)
+- KFont (Added deep TTF/OTF Font Metadata & Metrics inspection, a Unicode Range & Glyph Viewer with hexadecimal character mapping, a visual Glyph Kerning & Hinting diagnostics panel, and an interactive Glyph Anatomy & Vector Metrics Dissector with GDI/Canvas ABC spacing & bearings, GLYPHMETRICS bounding box outline geometry, multi-encoding codec suite [UTF-8/UTF-16/HTML entities/C escape], and Unicode range click-to-inspect)
 
 
 
