@@ -24,6 +24,7 @@
     <button class="hudBtn" onclick="useSpeedShoes()">[S] Speed Shoes</button>
     <button class="hudBtn" onclick="useStunSpray()">[F] Stun Spray</button>
     <button class="hudBtn" onclick="useTimeFreeze()">[T] Time Freeze</button>
+    <button class="hudBtn" onclick="toggleCrouch()">[X] Crouch</button>
     <button class="hudBtn" onclick="saveCheckpointGame()">[V] Save Game</button>
     <button class="hudBtn" onclick="loadCheckpointGame()">[L] Load Game</button>
     <button class="hudBtn" onclick="prevState=gameState; gameState=4;">[F1/H] Keys</button>
@@ -48,13 +49,13 @@
     [
       [1,1,1,1,1,1,1,1,1,1],
       [1,0,0,5,0,0,1,5,0,1],
-      [1,0,1,1,0,0,1,0,0,1],
+      [1,0,1,1,39,0,1,0,0,1],
       [1,5,0,1,0,29,0,0,0,1],
       [1,0,0,1,1,1,1,0,0,1],
       [1,0,0,0,0,28,0,0,5,1],
       [1,1,0,1,1,1,1,1,0,1],
       [1,0,0,0,5,0,0,1,0,1],
-      [1,0,0,0,0,0,0,2,0,1],
+      [1,40,0,0,0,0,0,2,0,1],
       [1,1,1,1,1,1,1,1,1,1]
     ],
     [
@@ -76,7 +77,7 @@
       [1,0,0,0,5,0,0,0,0,0,0,5,0,0,1],
       [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
       [1,0,1,5,0,0,0,29,0,0,0,0,1,0,1],
-      [1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
+      [1,0,1,0,1,1,1,1,1,1,1,39,1,0,1],
       [1,0,1,0,1,0,5,0,0,0,1,0,1,0,1],
       [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
       [1,0,1,0,1,0,1,2,1,0,1,0,1,5,1],
@@ -85,7 +86,7 @@
       [1,5,1,0,1,1,1,1,1,0,1,0,1,0,1],
       [1,0,1,0,0,5,0,0,0,0,1,0,1,0,1],
       [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
-      [1,0,0,0,0,0,0,5,0,0,0,0,1,0,1],
+      [1,40,0,0,0,0,0,5,0,0,0,0,1,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     [
@@ -102,7 +103,7 @@
     ],
     [
       [1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,1,0,0,0,0,0,3,1],
+      [1,40,0,0,1,0,0,0,0,0,3,1],
       [1,0,1,0,1,0,1,1,1,1,1,1],
       [1,0,1,0,1,0,0,29,0,0,0,1],
       [1,0,1,0,1,1,1,1,1,1,0,1],
@@ -110,7 +111,7 @@
       [1,0,1,1,1,1,1,1,0,1,0,1],
       [1,0,0,0,0,28,0,1,0,1,0,1],
       [1,1,1,1,1,1,0,1,0,1,0,1],
-      [1,4,0,0,0,1,0,0,0,1,0,1],
+      [1,4,0,0,39,1,0,0,0,1,0,1],
       [1,38,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1]
     ],
@@ -205,6 +206,7 @@
   let timeFreezeCharges = 1;
   let timeFreezeTimer = 0;
   let torchTimer = 0;
+  let isCrouching = false;
   let bossHP = 3;
   let map = JSON.parse(JSON.stringify(maps[currentLevel]));
   let isPathTile = [];
@@ -247,7 +249,8 @@
       pathfinder: 'c',
       speed: 's',
       stun: 'f',
-      freeze: 't'
+      freeze: 't',
+      crouch: 'x'
   };
   let waitingForKey = null;
   let replayLevels = [];
@@ -308,7 +311,7 @@
   // Procedural 16x16 Texture Generator
   const textures = new Array(50);
   function initTextures() {
-      for (let t = 0; t < 40; t++) {
+      for (let t = 0; t <= 40; t++) {
           textures[t] = new Uint32Array(256);
           for (let y = 0; y < 16; y++) {
               for (let x = 0; x < 16; x++) {
@@ -437,6 +440,25 @@
                       if (dist < 3.0) { r = 17; g = 17; b = 17; }
                       else if (dist < 5.5 && ((Math.floor(dist * 2) + x + y) % 2 === 0)) { r = 0; g = 255; b = 255; }
                       else { r = 68; g = 85; b = 102; }
+                  } else if (t === 39) { // Secret Illusionary Wall
+                      let isMortar = (y === 3 || y === 7 || y === 11 || y === 15);
+                      if (!isMortar) {
+                          let rowShift = (Math.floor(y / 4) % 2) * 8;
+                          if (((x + rowShift) % 8) === 7) isMortar = true;
+                      }
+                      if (isMortar) { r = 80; g = 30; b = 110; }
+                      else {
+                          let noise = ((x * 13 + y * 37) % 30) - 15;
+                          r = Math.min(255, Math.max(0, 140 + noise));
+                          g = Math.min(255, Math.max(0, 70 + Math.floor(noise / 2)));
+                          b = Math.min(255, Math.max(0, 190 + noise));
+                      }
+                  } else if (t === 40) { // Ancient Dungeon Lore Tablet
+                      let isBorder = (x === 1 || x === 14 || y === 1 || y === 14);
+                      let isRune = (x >= 4 && x <= 11 && y >= 4 && y <= 11) && (((x + y) % 3 === 0) || ((x * y) % 5 === 0));
+                      if (isRune) { r = 0; g = 255; b = 230; }
+                      else if (isBorder) { r = 160; g = 200; b = 220; }
+                      else { r = 35; g = 45; b = 60; }
                   } else {
                       r = 170; g = 0; b = 0;
                   }
@@ -586,6 +608,27 @@
               let b38 = sDist < 2.5 ? 5 : (sDist < 5.5 && ((Math.floor(sDist * 2 + sAng * 2) % 2) === 0) ? 255 : 85);
               textures[38][y * 16 + x] = (255 << 24) | (b38 << 16) | (g38 << 8) | r38;
 
+              // Secret Illusionary Wall (t=39)
+              let phase = Math.sin((frameCount * 0.1) + (x + y) * 0.5);
+              let isM = (y === 3 || y === 7 || y === 11 || y === 15);
+              if (!isM) {
+                  let rShift = (Math.floor(y / 4) % 2) * 8;
+                  if (((x + rShift) % 8) === 7) isM = true;
+              }
+              let r39 = isM ? Math.floor(70 + phase * 20) : Math.floor(130 + phase * 35);
+              let g39 = isM ? Math.floor(30 + phase * 15) : Math.floor(60 + phase * 25);
+              let b39 = isM ? Math.floor(110 + phase * 30) : Math.floor(190 + phase * 40);
+              textures[39][y * 16 + x] = (255 << 24) | (b39 << 16) | (g39 << 8) | r39;
+
+              // Ancient Dungeon Lore Tablet (t=40)
+              let runeGlow = Math.sin(frameCount * 0.15 + (x ^ y) * 0.4);
+              let isB = (x === 1 || x === 14 || y === 1 || y === 14);
+              let isR = (x >= 4 && x <= 11 && y >= 4 && y <= 11) && (((x + y) % 3 === 0) || ((x * y) % 5 === 0));
+              let r40 = isR ? Math.floor(30 + runeGlow * 20) : (isB ? 150 : 35);
+              let g40 = isR ? Math.floor(220 + runeGlow * 35) : (isB ? 190 : 45);
+              let b40 = isR ? Math.floor(220 + runeGlow * 35) : (isB ? 210 : 60);
+              textures[40][y * 16 + x] = (255 << 24) | (b40 << 16) | (g40 << 8) | r40;
+
               // Animated Void Wall (t=22)
               let noise = Math.floor(Math.random() * 40 - 20);
               let v_old = textures[22][y * 16 + x];
@@ -639,7 +682,7 @@
               let nx = cx + d[0], ny = cy + d[1];
               if (nx >= 0 && nx < map.length && ny >= 0 && ny < map[0].length && !parent[nx][ny]) {
                   let tile = map[nx][ny];
-                  if ([0,2,3,5,6,8,9,10,11,13,14,16,17,18,19,25,26,28,29,38].includes(tile) || (tile === 4 && keysHeld > 0)) {
+                  if ([0,2,3,5,6,8,9,10,11,13,14,16,17,18,19,25,26,28,29,38,39,40].includes(tile) || (tile === 4 && keysHeld > 0)) {
                       parent[nx][ny] = [cx, cy];
                       queue.push([nx, ny]);
                   }
@@ -754,6 +797,20 @@
           let rx = 1 + Math.floor(Math.random()*(w-2));
           let ry = 1 + Math.floor(Math.random()*(h-2));
           if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 29;
+      }
+      // Illusionary Fake Walls (t=39)
+      let numIllusion = 1 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < numIllusion; i++) {
+          let rx = 1 + Math.floor(Math.random() * (w - 2));
+          let ry = 1 + Math.floor(Math.random() * (h - 2));
+          if (m[rx][ry] === 1 && rx > 1 && rx < w - 2 && ry > 1 && ry < h - 2) m[rx][ry] = 39;
+      }
+      // Ancient Dungeon Lore Tablets (t=40)
+      let numLore = 1 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < numLore; i++) {
+          let rx = 1 + Math.floor(Math.random() * (w - 2));
+          let ry = 1 + Math.floor(Math.random() * (h - 2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 40;
       }
 
       if (currentLevel >= 10 && currentLevel % 5 === 0 && currentLevel < 44) {
@@ -899,7 +956,7 @@
       let saveData = {
           currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
           pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges,
-          pX, pY, dX, dY, planeX, planeY, map,
+          pX, pY, dX, dY, planeX, planeY, map, isCrouching,
           elapsed: Date.now() - startTime
       };
       localStorage.setItem('kmaze_save', JSON.stringify(saveData));
@@ -926,6 +983,7 @@
           dX = saveData.dX; dY = saveData.dY;
           planeX = saveData.planeX; planeY = saveData.planeY;
           map = saveData.map;
+          isCrouching = !!saveData.isCrouching;
           startTime = Date.now() - saveData.elapsed;
           msgText = "Checkpoint / Save Loaded!";
           msgTimer = 60;
@@ -936,17 +994,39 @@
       }
   }
 
+  function toggleCrouch() {
+      if (gameState !== 1) return;
+      isCrouching = !isCrouching;
+      if (isCrouching) {
+          msgText = "Stealth Crouch Active (Sneaking / Silenced)!";
+          msgTimer = 60;
+          playTone(550, 'sine', 0.15);
+          addParticles(W/2, H/2, '#00ff96', 20);
+      } else {
+          msgText = "Standing Stance.";
+          msgTimer = 40;
+          playTone(450, 'sine', 0.1);
+      }
+  }
+
   function usePickaxe() {
       if (gameState !== 1 || hasPickaxe <= 0) return;
       let tx = Math.floor(pX + dX * 0.8);
       let ty = Math.floor(pY + dY * 0.8);
       let tVal = map[tx] && map[tx][ty];
-      if (tVal === 1 || tVal === 7 || tVal === 20 || tVal === 21 || tVal === 22 || tVal === 27) {
+      if (tVal === 1 || tVal === 7 || tVal === 20 || tVal === 21 || tVal === 22 || tVal === 27 || tVal === 39) {
           hasPickaxe--;
           map[tx][ty] = 0;
           playTone(400, 'square', 0.1);
-          addParticles(W/2, H/2, '#a06030', 40);
-          msgText = "Wall Broken!"; msgTimer = 60;
+          if (tVal === 39) {
+              score += 150;
+              addParticles(W/2, H/2, '#b432ff', 45);
+              msgText = "Illusionary Wall Shattered! (+150 Score)";
+          } else {
+              addParticles(W/2, H/2, '#a06030', 40);
+              msgText = "Wall Broken!";
+          }
+          msgTimer = 60;
           recoilOffset = 15;
           muzzleFlashTimer = 5;
           addScreenShake(15, 0.2);
@@ -1069,6 +1149,7 @@
           if (e.key.toLowerCase() === keyBinds.speed.toLowerCase()) useSpeedShoes();
           if (e.key.toLowerCase() === keyBinds.stun.toLowerCase()) useStunSpray();
           if (e.key.toLowerCase() === keyBinds.freeze.toLowerCase()) useTimeFreeze();
+          if (e.key.toLowerCase() === (keyBinds.crouch || 'x').toLowerCase() || e.key === 'Control') toggleCrouch();
           if (e.key === 'v' || e.key === 'V') saveCheckpointGame();
           if (e.key === 'l' || e.key === 'L') loadCheckpointGame();
       }
@@ -1138,11 +1219,21 @@
                   }
               }
               for (let m of minotaurs) {
+                  let distP = Math.abs(Math.floor(pX) - m.x) + Math.abs(Math.floor(pY) - m.y);
+                  let detectRadius = (m.type === 15) ? (isCrouching ? 4 : 12) : (isCrouching ? 2 : 8);
                   let dx = 0, dy = 0;
-                  if (Math.floor(pX) > m.x) dx = 1;
-                  else if (Math.floor(pX) < m.x) dx = -1;
-                  if (Math.floor(pY) > m.y) dy = 1;
-                  else if (Math.floor(pY) < m.y) dy = -1;
+                  if (distP <= detectRadius) {
+                      if (Math.floor(pX) > m.x) dx = 1;
+                      else if (Math.floor(pX) < m.x) dx = -1;
+                      if (Math.floor(pY) > m.y) dy = 1;
+                      else if (Math.floor(pY) < m.y) dy = -1;
+                  } else {
+                      let rDir = Math.floor(Math.random() * 4);
+                      if (rDir === 0) dx = 1;
+                      else if (rDir === 1) dx = -1;
+                      else if (rDir === 2) dy = 1;
+                      else if (rDir === 3) dy = -1;
+                  }
                   
                   if (dx !== 0 && map[m.x + dx] && map[m.x + dx][m.y] === 0) {
                       map[m.x][m.y] = 0;
@@ -1182,6 +1273,7 @@
       
       if (keys['Shift']) moveSpeed *= 1.5;
       if (speedShoesTimer > 0 || speedBoost) moveSpeed *= 2.0;
+      if (isCrouching) moveSpeed *= 0.5;
       
       if (replayLevels.length > 0) {
           let cl = replayLevels[replayLevels.length - 1];
@@ -1190,7 +1282,7 @@
       
       let tryMove = (mx, my) => {
           let val = map[Math.floor(mx)] && map[Math.floor(mx)][Math.floor(my)];
-          if ([0,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,19,25,26,28,29,38].includes(val)) return true;
+          if ([0,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,19,25,26,28,29,38,39,40].includes(val)) return true;
           if (val === 4) {
               if (keysHeld > 0) {
                   keysHeld--;
@@ -1200,12 +1292,19 @@
                   return true;
               }
           }
-          if (val === 1 || val === 20 || val === 21 || val === 22 || val === 27) {
+          if (val === 1 || val === 20 || val === 21 || val === 22 || val === 27 || val === 39) {
               if (hasPickaxe > 0 && Math.floor(mx) > 0 && Math.floor(my) > 0 && Math.floor(mx) < map.length - 1 && Math.floor(my) < map[0].length - 1) {
                   hasPickaxe--;
                   map[Math.floor(mx)][Math.floor(my)] = 0;
                   playTone(400, 'square', 0.1);
-                  addParticles(W/2, H/2, '#a06030', 25);
+                  if (val === 39) {
+                      score += 150;
+                      addParticles(W/2, H/2, '#b432ff', 45);
+                      msgText = "Illusionary Wall Shattered! (+150 Score)";
+                  } else {
+                      addParticles(W/2, H/2, '#a06030', 25);
+                  }
+                  msgTimer = 60;
                   return true;
               }
           }
@@ -1237,14 +1336,16 @@
           playTone(500, 'square', 0.1);
           addParticles(W/2, H/2, '#ffcc00', 15);
       } else if (curVal === 6) {
+          let trapDmg = isCrouching ? 25 : 50;
           playTone(200, 'sawtooth', 0.2);
           damageFlinchTimer = 20;
           addScreenShake(20, 0.3);
           shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
-          score = Math.max(0, score - 50);
+          score = Math.max(0, score - trapDmg);
           pX = 1.5; pY = 1.5;
           addParticles(W/2, H/2, '#ff3300', 40);
-          msgText = "Burnt by Lava Trap!"; msgTimer = 60;
+          msgText = isCrouching ? "Crouch Light Step Cushioned Lava Trap! (-25 Score)" : "Burnt by Lava Trap! (-50 Score)";
+          msgTimer = 60;
       } else if (curVal === 7) {
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(400, 'square', 0.1);
@@ -1336,14 +1437,16 @@
           msgText = "+1 Time Freeze!"; msgTimer = 60;
       } else if (curVal === 25) {
           if (Math.floor(frameCount / 10) % 2 === 0) {
+              let trapDmg = isCrouching ? 35 : 75;
               playTone(200, 'sawtooth', 0.2);
               damageFlinchTimer = 20;
               addScreenShake(20, 0.4);
               shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
-              score = Math.max(0, score - 75);
+              score = Math.max(0, score - trapDmg);
               pX = 1.5; pY = 1.5;
               addParticles(W/2, H/2, '#ff0000', 40);
-              msgText = "Impaled by Spike Trap!"; msgTimer = 60;
+              msgText = isCrouching ? "Stealth Stance Softened Spike Trap! (-35 Score)" : "Impaled by Spike Trap! (-75 Score)";
+              msgTimer = 60;
           }
       } else if (curVal === 26) {
           score += 500;
@@ -1386,6 +1489,45 @@
           msgText = "Descended into Dungeon Depths! (+250 Score)";
           msgTimer = 90;
           nextLevel();
+      } else if (curVal === 39) { // Secret Illusionary Wall
+          map[Math.floor(pX)][Math.floor(pY)] = 0;
+          score += 150;
+          playTone(800, 'sine', 0.2);
+          addParticles(W/2, H/2, '#b432ff', 45);
+          shockwaves.push({x: pX, y: pY, radius: 0, life: 15});
+          addScreenShake(10, 0.15);
+          msgText = "Discovered Secret Illusionary Wall! (+150 Score)";
+          msgTimer = 90;
+      } else if (curVal === 40) { // Ancient Dungeon Lore Tablet
+          map[Math.floor(pX)][Math.floor(pY)] = 0;
+          score += 200;
+          let rReward = Math.floor(Math.random() * 5);
+          if (rReward === 0) hasPickaxe++;
+          else if (rReward === 1) pathfinderCharges++;
+          else if (rReward === 2) speedShoesCharges++;
+          else if (rReward === 3) stunSprayCharges++;
+          else timeFreezeCharges++;
+          
+          const loreQuotes = [
+              "Lore: 'Phantasmal walls shimmer softly to the discerning eye...'",
+              "Lore: 'Crouch [X] to silence footsteps and evade hunting beasts...'",
+              "Lore: 'Ancient Shrines restore item charges and preserve progress...'",
+              "Lore: 'Minotaurs detect running footsteps from 8 paces away...'",
+              "Lore: 'Descent shafts plunge deeper into the labyrinth depths...'",
+              "Lore: 'Pickaxes can cleave through cursed beasts and walls alike...'",
+              "Lore: 'Treading lightly in stealth stance cushions trap damage...'",
+              "Lore: 'Lava flows ignite the infernal depths beyond floor 40...'",
+              "Lore: 'The Time Freeze relic halts all monsters in their tracks...'",
+              "Lore: 'The Minotaur Overlord guards the exit on the 45th descent...'",
+              "Lore: 'Stun sprays blind monsters with concentrated frost mist...'",
+              "Lore: 'Hidden chambers behind phantoms store ancient miner tools...'"
+          ];
+          let qIdx = Math.floor(Math.random() * loreQuotes.length);
+          msgText = loreQuotes[qIdx];
+          msgTimer = 120;
+          playTone(950, 'sine', 0.3);
+          addParticles(W/2, H/2, '#00ffdc', 40);
+          shockwaves.push({x: pX, y: pY, radius: 0, life: 20});
       }
 
       if (keys[keyBinds.right] || keys[keyBinds.right.toLowerCase()] || keys[keyBinds.right.toUpperCase()]) {
@@ -1449,12 +1591,13 @@
       }
 
       // 1. Ceiling & Floor Casting with Dynamic Point Lighting
+      let horizon = isCrouching ? Math.floor(H * 3 / 8) : Math.floor(H / 2);
       for (let y = 0; y < H; y++) {
-          let isFloor = y >= H / 2;
-          let p = isFloor ? (y - H / 2) : (H / 2 - y);
+          let isFloor = y >= horizon;
+          let p = isFloor ? (y - horizon) : (horizon - y);
           if (p === 0) p = 1;
           
-          let posZ = 0.5 * H;
+          let posZ = isFloor ? (isCrouching ? 0.35 * H : 0.5 * H) : (isCrouching ? 0.65 * H : 0.5 * H);
           let rowDistance = posZ / p;
           
           let rayDirX0 = drawDX - drawPlaneX;
@@ -1582,8 +1725,8 @@
           else            perpWallDist = (sideDistY - deltaDistY);
           
           let lineHeight = Math.floor(H / perpWallDist);
-          let drawStart = -lineHeight / 2 + H / 2;
-          let drawEnd = lineHeight / 2 + H / 2;
+          let drawStart = -lineHeight / 2 + horizon;
+          let drawEnd = lineHeight / 2 + horizon;
           let actualStart = Math.max(0, Math.floor(drawStart));
           let actualEnd = Math.min(H - 1, Math.floor(drawEnd));
           
@@ -1594,7 +1737,7 @@
           let texX = Math.floor(wallX * 16) & 15;
           
           if (hit === 7) hit = 1;
-          if (hit < 1 || hit > 38) hit = 1;
+          if (hit < 1 || hit > 40) hit = 1;
           if (hit === 1) {
               if (currentLevel >= 40) hit = 27; // Magma Wall
               else if (currentLevel >= 30) hit = 22; // Void Wall
@@ -1604,7 +1747,7 @@
           let tex = textures[hit] || textures[1];
           
           let step = 16 / lineHeight;
-          let texPos = (actualStart - H / 2 + lineHeight / 2) * step;
+          let texPos = (actualStart - horizon + lineHeight / 2) * step;
           let sideMult = (side === 1) ? 0.75 : 1.0;
           
           let actualWX = side === 0 ? mapX : drawPX + perpWallDist * rayDX;
@@ -1807,7 +1950,9 @@
           else if (currentLevel >= 20) biome = "Frost Caverns";
           else if (currentLevel >= 10) biome = "Cyber Labyrinth";
 
-          uiCtx.fillText(`Lvl:${currentLevel+1}/45 [${biome}] K:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges} T:${timeFreezeCharges}`, 10, 15);
+          uiCtx.fillStyle = isCrouching ? '#00ffb4' : 'white';
+          uiCtx.fillText(`Lvl:${currentLevel+1}/45 [${biome}] K:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges} T:${timeFreezeCharges} [${isCrouching ? "CROUCH" : "STAND"}]`, 10, 15);
+          uiCtx.fillStyle = 'white';
           uiCtx.fillText(`Score:${score} Time:${elapsed.toFixed(1)}s Torch:${Math.max(0, Math.floor(torchTimer/1000))}s`, 10, 30);
           uiCtx.fillText("V:Save L:Load", W - 90, 15);
           
@@ -1861,6 +2006,8 @@
                       else if (v === 28) uiCtx.fillStyle = '#ffd700';
                       else if (v === 29) uiCtx.fillStyle = '#ff8800';
                       else if (v === 38) uiCtx.fillStyle = '#00ffcc';
+                      else if (v === 39) uiCtx.fillStyle = '#784696';
+                      else if (v === 40) uiCtx.fillStyle = '#00e5ff';
                       else uiCtx.fillStyle = '#141419';
                       uiCtx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
                   }

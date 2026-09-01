@@ -88,13 +88,13 @@ const int H = 240;
 const int orig_map1[10][10] = {
     {1,1,1,1,1,1,1,1,1,1},
     {1,0,0,5,0,0,1,5,0,1},
-    {1,0,1,1,0,0,1,0,0,1},
+    {1,0,1,1,39,0,1,0,0,1},
     {1,5,0,1,0,29,0,0,0,1},
     {1,0,0,1,1,1,1,0,0,1},
     {1,0,0,0,0,28,0,0,5,1},
     {1,1,0,1,1,1,1,1,0,1},
     {1,0,0,0,5,0,0,1,0,1},
-    {1,0,0,0,0,0,0,2,0,1},
+    {1,40,0,0,0,0,0,2,0,1},
     {1,1,1,1,1,1,1,1,1,1}
 };
 
@@ -118,7 +118,7 @@ const int orig_map3[15][15] = {
     {1,0,0,0,5,0,0,0,0,0,0,5,0,0,1},
     {1,0,1,1,1,1,1,1,1,1,1,0,1,0,1},
     {1,0,1,5,0,0,0,29,0,0,0,0,1,0,1},
-    {1,0,1,0,1,1,1,1,1,1,1,0,1,0,1},
+    {1,0,1,0,1,1,1,1,1,1,1,39,1,0,1},
     {1,0,1,0,1,0,5,0,0,0,1,0,1,0,1},
     {1,0,1,0,1,0,1,1,1,0,1,0,1,0,1},
     {1,0,1,0,1,0,1,2,1,0,1,0,1,5,1},
@@ -127,7 +127,7 @@ const int orig_map3[15][15] = {
     {1,5,1,0,1,1,1,1,1,0,1,0,1,0,1},
     {1,0,1,0,0,5,0,0,0,0,1,0,1,0,1},
     {1,0,1,1,1,1,1,1,1,1,1,0,1,0,1},
-    {1,0,0,0,0,0,0,5,0,0,0,0,1,0,1},
+    {1,40,0,0,0,0,0,5,0,0,0,0,1,0,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
@@ -146,7 +146,7 @@ const int orig_map4[10][10] = {
 
 const int orig_map5[12][12] = {
     {1,1,1,1,1,1,1,1,1,1,1,1},
-    {1,0,0,0,1,0,0,0,0,0,3,1},
+    {1,40,0,0,1,0,0,0,0,0,3,1},
     {1,0,1,0,1,0,1,1,1,1,1,1},
     {1,0,1,0,1,0,0,29,0,0,0,1},
     {1,0,1,0,1,1,1,1,1,1,0,1},
@@ -154,7 +154,7 @@ const int orig_map5[12][12] = {
     {1,0,1,1,1,1,1,1,0,1,0,1},
     {1,0,0,0,0,28,0,1,0,1,0,1},
     {1,1,1,1,1,1,0,1,0,1,0,1},
-    {1,4,0,0,0,1,0,0,0,1,0,1},
+    {1,4,0,0,39,1,0,0,0,1,0,1},
     {1,38,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1}
 };
@@ -299,8 +299,9 @@ DWORD endTime = 0;
 float bestTime = 9999.9f;
 int score = 0;
 
-char msgText[64] = "";
+char msgText[128] = "";
 int msgTimer = 0;
+int isCrouching = 0;
 
 int muzzleFlashTimer = 0;
 int recoilOffset = 0;
@@ -340,8 +341,8 @@ float pX = 1.5f, pY = 1.5f;
 float dX = 1.0f, dY = 0.0f;
 float planeX = 0.0f, planeY = 0.66f;
 
-typedef struct { int up, down, left, right, pickaxe, pathfinder, speed, stun, freeze; } KeyBinds;
-KeyBinds keyBinds = { VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, 'P', 'C', 'S', 'F', 'T' };
+typedef struct { int up, down, left, right, pickaxe, pathfinder, speed, stun, freeze, crouch; } KeyBinds;
+KeyBinds keyBinds = { VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, 'P', 'C', 'S', 'F', 'T', 'X' };
 int waitingForKey = 0;
 int prevState = 0;
 
@@ -526,6 +527,21 @@ void InitTextures() {
                     if (dist < 3.0f) col = 0x00111111; // Deep shaft pit
                     else if (dist < 5.5f && ((int)(dist * 2.0f + (x+y)) % 2 == 0)) col = 0x00FFFF00; // Cyan rune steps
                     else col = 0x00665544; // Stone rim
+                } else if (t == 39) { // Secret Illusionary Fake Wall
+                    int isMortar = (y == 3 || y == 7 || y == 11 || y == 15);
+                    if (isMortar) col = 0x00443355;
+                    else {
+                        int rune = ((x + y * 3) % 5 == 0);
+                        if (rune) col = 0x00DDAA00;
+                        else col = 0x00664488;
+                    }
+                } else if (t == 40) { // Dungeon Lore Tablet / Ancient Runestone
+                    if (x == 0 || x == 15 || y == 0 || y >= 13) col = 0x00222222;
+                    else if ((x >= 3 && x <= 12) && (y >= 2 && y <= 11)) {
+                        int glyph = ((x * 7 + y * 13) % 4 == 0) || (x == 7) || (y == 4 || y == 8);
+                        if (glyph) col = 0x00FFFF00;
+                        else col = 0x00111822;
+                    } else col = 0x00333344;
                 } else {
                     col = 0x00AA0000;
                 }
@@ -671,6 +687,28 @@ void UpdateTextures() {
             else if (shaftDist < 5.5f && ((int)(shaftDist * 2.0f + sAngle * 2.0f) % 2 == 0)) textures[38][y * 16 + x] = 0x00FFFF00; // Cyan stairs
             else textures[38][y * 16 + x] = 0x00444455;
 
+            // Illusionary Wall (t=39) - Ethereal Shimmering Phase Pulses
+            float pPhase = (float)sin((animFrameCount * 0.15f) + (x + y * 0.5f));
+            int isMortar39 = (y == 3 || y == 7 || y == 11 || y == 15);
+            if (isMortar39) textures[39][y * 16 + x] = 0x00443355;
+            else {
+                int rune39 = ((x + y * 3) % 5 == 0);
+                if (rune39 && pPhase > 0.2f) textures[39][y * 16 + x] = 0x00FFFF88;
+                else if (pPhase > 0.0f) textures[39][y * 16 + x] = RGB(120 + (int)(pPhase*40), 60, 160 + (int)(pPhase*50));
+                else textures[39][y * 16 + x] = RGB(80, 40, 110);
+            }
+
+            // Lore Tablet (t=40) - Pulsating Arcane Glyphs
+            float tabletPulse = (float)sin(animFrameCount * 0.12f + (x * 0.4f));
+            if (x == 0 || x == 15 || y == 0 || y >= 13) textures[40][y * 16 + x] = 0x00222222;
+            else if ((x >= 3 && x <= 12) && (y >= 2 && y <= 11)) {
+                int glyph = ((x * 7 + y * 13) % 4 == 0) || (x == 7) || (y == 4 || y == 8);
+                if (glyph) {
+                    if (tabletPulse > 0.2f) textures[40][y * 16 + x] = 0x00FFFF00;
+                    else textures[40][y * 16 + x] = 0x0000D7FF;
+                } else textures[40][y * 16 + x] = 0x00111822;
+            } else textures[40][y * 16 + x] = 0x00333344;
+
             // Animated Void Wall (t=22)
             int noise = (rand() % 40) - 20;
             DWORD v_old = textures[22][y * 16 + x];
@@ -736,7 +774,7 @@ void SetMapValue(int x, int y, int v) {
 
 int TryMove(int x, int y) {
     int val = GetMapValue(x, y);
-    if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8 || val == 9 || val == 10 || val == 11 || val == 12 || val == 13 || val == 14 || val == 15 || val == 16 || val == 17 || val == 19 || val == 25 || val == 26 || val == 28 || val == 29 || val == 38) return 1;
+    if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8 || val == 9 || val == 10 || val == 11 || val == 12 || val == 13 || val == 14 || val == 15 || val == 16 || val == 17 || val == 19 || val == 25 || val == 26 || val == 28 || val == 29 || val == 38 || val == 39 || val == 40) return 1;
     if (val == 4) {
         if (keysHeld > 0) {
             keysHeld--;
@@ -746,7 +784,7 @@ int TryMove(int x, int y) {
             return 1;
         }
     }
-    if (val == 1 || val == 20 || val == 21 || val == 22 || val == 27) {
+    if (val == 1 || val == 20 || val == 21 || val == 22 || val == 27 || val == 39) {
         if (hasPickaxe > 0 && x > 0 && y > 0) {
             int mapW = currentLevel >= 10 ? curRandW : 15;
             int mapH = currentLevel >= 10 ? curRandH : 15;
@@ -821,7 +859,7 @@ void ComputePathfinderPath() {
             int ny = cy + dirs[d][1];
             if (nx >= 0 && nx < mapW && ny >= 0 && ny < mapH && parentX[nx][ny] == -1) {
                 int tile = GetMapValue(nx, ny);
-                if (tile == 0 || tile == 2 || tile == 3 || tile == 5 || tile == 6 || tile == 8 || tile == 9 || tile == 10 || tile == 11 || tile == 13 || tile == 14 || tile == 16 || tile == 17 || tile == 18 || tile == 19 || tile == 25 || tile == 26 || tile == 28 || tile == 29 || tile == 38 || (tile == 4 && keysHeld > 0)) {
+                if (tile == 0 || tile == 2 || tile == 3 || tile == 5 || tile == 6 || tile == 8 || tile == 9 || tile == 10 || tile == 11 || tile == 13 || tile == 14 || tile == 16 || tile == 17 || tile == 18 || tile == 19 || tile == 25 || tile == 26 || tile == 28 || tile == 29 || tile == 38 || tile == 39 || tile == 40 || (tile == 4 && keysHeld > 0)) {
                     parentX[nx][ny] = cx;
                     parentY[nx][ny] = cy;
                     qX[qTail] = nx; qY[qTail] = ny; qTail++;
@@ -973,6 +1011,24 @@ void GenerateMaze(int w, int h) {
         int ry = 1 + rand()%(h-2);
         if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY)) {
             mapRandom[rx][ry] = 29;
+        }
+    }
+    // Place Secret Illusionary Fake Walls (t=39) - 1 to 3 per floor
+    int numFakeWalls = 1 + (w*h > 400 ? 2 : 1);
+    for (int i=0; i < numFakeWalls; i++) {
+        int rx = 2 + rand()%(w-4);
+        int ry = 2 + rand()%(h-4);
+        if (mapRandom[rx][ry] == 1) {
+            mapRandom[rx][ry] = 39;
+        }
+    }
+    // Place Ancient Dungeon Lore Tablets (t=40) - 1 to 2 per floor
+    int numLoreTablets = 1 + (w*h > 400 ? 1 : 0);
+    for (int i=0; i < numLoreTablets; i++) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY)) {
+            mapRandom[rx][ry] = 40;
         }
     }
 
@@ -1240,6 +1296,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             float moveSpeed = 0.1f;
             float rotSpeed = 0.05f;
             if (speedShoesTimer > 0 || speedBoost) moveSpeed *= 2.0f;
+            if (isCrouching) moveSpeed *= 0.5f;
             
             if (gameState == 1) {
                 minotaurTimer += 30;
@@ -1268,11 +1325,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int mx = minotaurs[i][0];
                             int my = minotaurs[i][1];
                             int mtype = minotaurs[i][2];
+                            
+                            int distP = abs((int)pX - mx) + abs((int)pY - my);
+                            int detectRadius = (mtype == 15) ? (isCrouching ? 4 : 12) : (isCrouching ? 2 : 8);
+                            
                             int mdx = 0, mdy = 0;
-                            if ((int)pX > mx) mdx = 1;
-                            else if ((int)pX < mx) mdx = -1;
-                            if ((int)pY > my) mdy = 1;
-                            else if ((int)pY < my) mdy = -1;
+                            if (distP <= detectRadius) {
+                                if ((int)pX > mx) mdx = 1;
+                                else if ((int)pX < mx) mdx = -1;
+                                if ((int)pY > my) mdy = 1;
+                                else if ((int)pY < my) mdy = -1;
+                            } else {
+                                int rDir = rand() % 4;
+                                if (rDir == 0) mdx = 1;
+                                else if (rDir == 1) mdx = -1;
+                                else if (rDir == 2) mdy = 1;
+                                else if (rDir == 3) mdy = -1;
+                            }
                             
                             if (mdx != 0 && GetMapValue(mx + mdx, my) == 0) {
                                 SetMapValue(mx, my, 0);
@@ -1326,17 +1395,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             if (gameState == 1 && activeKeyCooldown <= 0) {
+                if (GetAsyncKeyState(keyBinds.crouch) & 0x8000 || GetAsyncKeyState(VK_CONTROL) & 0x8000) {
+                    isCrouching = !isCrouching;
+                    if (isCrouching) {
+                        strcpy(msgText, "Stealth Crouch Active (Sneaking / Silenced)!");
+                        msgTimer = 60;
+                        MessageBeep(MB_OK);
+                        AddParticles(160.0f, 120.0f, RGB(0, 255, 150), 20);
+                    } else {
+                        strcpy(msgText, "Standing Stance.");
+                        msgTimer = 40;
+                    }
+                    activeKeyCooldown = 250;
+                }
                 if (GetAsyncKeyState(keyBinds.pickaxe) & 0x8000) {
                     if (hasPickaxe > 0) {
                         int tx = (int)(pX + dX * 0.8f);
                         int ty = (int)(pY + dY * 0.8f);
                         int tVal = GetMapValue(tx, ty);
-                        if (tVal == 1 || tVal == 7 || tVal == 20 || tVal == 21 || tVal == 22 || tVal == 27) {
+                        if (tVal == 1 || tVal == 7 || tVal == 20 || tVal == 21 || tVal == 22 || tVal == 27 || tVal == 39) {
                             hasPickaxe--;
                             SetMapValue(tx, ty, 0);
                             MessageBeep(MB_OK);
-                            AddParticles(160.0f, 120.0f, RGB(180, 100, 50), 40);
-                            strcpy(msgText, "Wall Broken!");
+                            if (tVal == 39) {
+                                score += 150;
+                                AddParticles(160.0f, 120.0f, RGB(180, 50, 255), 45);
+                                strcpy(msgText, "Illusionary Wall Shattered! (+150 Score)");
+                            } else {
+                                AddParticles(160.0f, 120.0f, RGB(180, 100, 50), 40);
+                                strcpy(msgText, "Wall Broken!");
+                            }
                             msgTimer = 60;
                             activeKeyCooldown = 300;
                             recoilOffset = 15;
@@ -1515,14 +1603,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MessageBeep(MB_OK);
                 AddParticles(160.0f, 120.0f, RGB(255, 200, 0), 15);
             } else if (curVal == 6) {
+                int trapDmg = isCrouching ? 25 : 50;
                 MessageBeep(MB_ICONHAND);
                 damageFlinchTimer = 20;
                 AddScreenShake(20, 0.3f);
                 AddShockwave(pX, pY);
-                score = (score >= 50) ? score - 50 : 0;
+                score = (score >= trapDmg) ? score - trapDmg : 0;
                 pX = 1.5f; pY = 1.5f;
                 AddParticles(160.0f, 120.0f, RGB(255, 50, 0), 40);
-                strcpy(msgText, "Burnt by Lava Trap!"); msgTimer = 60;
+                if (isCrouching) {
+                    strcpy(msgText, "Crouch Light Step Cushioned Lava Trap! (-25 Score)");
+                } else {
+                    strcpy(msgText, "Burnt by Lava Trap! (-50 Score)");
+                }
+                msgTimer = 60;
             } else if (curVal == 7) {
                 SetMapValue((int)pX, (int)pY, 0);
                 MessageBeep(MB_OK);
@@ -1607,14 +1701,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 strcpy(msgText, "+1 Time Freeze!"); msgTimer = 60;
             } else if (curVal == 25) {
                 if ((animFrameCount / 10) % 2 == 0) {
+                    int trapDmg = isCrouching ? 35 : 75;
                     MessageBeep(MB_ICONHAND);
                     damageFlinchTimer = 20;
                     AddScreenShake(20, 0.4f);
                     AddShockwave(pX, pY);
-                    score = (score >= 75) ? score - 75 : 0;
+                    score = (score >= trapDmg) ? score - trapDmg : 0;
                     pX = 1.5f; pY = 1.5f;
                     AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 40);
-                    strcpy(msgText, "Impaled by Spike Trap!"); msgTimer = 60;
+                    if (isCrouching) {
+                        strcpy(msgText, "Stealth Stance Softened Spike Trap! (-35 Score)");
+                    } else {
+                        strcpy(msgText, "Impaled by Spike Trap! (-75 Score)");
+                    }
+                    msgTimer = 60;
                 }
             } else if (curVal == 26) {
                 score += 500;
@@ -1672,6 +1772,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 strcpy(msgText, "Descended into Dungeon Depths! (+250 Score)");
                 msgTimer = 90;
                 NextLevel();
+            } else if (curVal == 39) { // Secret Illusionary Fake Wall
+                SetMapValue((int)pX, (int)pY, 0);
+                score += 150;
+                MessageBeep(MB_ICONASTERISK);
+                AddParticles(160.0f, 120.0f, RGB(180, 50, 255), 45);
+                AddShockwave(pX, pY);
+                AddScreenShake(10, 0.15f);
+                strcpy(msgText, "Discovered Secret Illusionary Wall! (+150 Score)");
+                msgTimer = 90;
+            } else if (curVal == 40) { // Ancient Dungeon Lore Tablet
+                SetMapValue((int)pX, (int)pY, 0);
+                score += 200;
+                int rReward = rand() % 5;
+                if (rReward == 0) { hasPickaxe++; }
+                else if (rReward == 1) { pathfinderCharges++; }
+                else if (rReward == 2) { speedShoesCharges++; }
+                else if (rReward == 3) { stunSprayCharges++; }
+                else { timeFreezeCharges++; }
+                
+                static const char* const loreQuotes[] = {
+                    "Lore: 'Phantasmal walls shimmer softly to the discerning eye...'",
+                    "Lore: 'Crouch [X] to silence footsteps and evade hunting beasts...'",
+                    "Lore: 'Ancient Shrines restore item charges and preserve progress...'",
+                    "Lore: 'Minotaurs detect running footsteps from 8 paces away...'",
+                    "Lore: 'Descent shafts plunge deeper into the labyrinth depths...'",
+                    "Lore: 'Pickaxes can cleave through cursed beasts and walls alike...'",
+                    "Lore: 'Treading lightly in stealth stance cushions trap damage...'",
+                    "Lore: 'Lava flows ignite the infernal depths beyond floor 40...'",
+                    "Lore: 'The Time Freeze relic halts all monsters in their tracks...'",
+                    "Lore: 'The Minotaur Overlord guards the exit on the 45th descent...'",
+                    "Lore: 'Stun sprays blind monsters with concentrated frost mist...'",
+                    "Lore: 'Hidden chambers behind phantoms store ancient miner tools...'"
+                };
+                int qIdx = rand() % 12;
+                strcpy(msgText, loreQuotes[qIdx]);
+                msgTimer = 120;
+                MessageBeep(MB_ICONASTERISK);
+                AddParticles(160.0f, 120.0f, RGB(0, 255, 220), 40);
+                AddShockwave(pX, pY);
             }
 
             if (GetAsyncKeyState(keyBinds.right) & 0x8000) {
@@ -1735,12 +1874,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 // 1. Ceiling & Floor Casting with Dynamic Multi-Source Point Lighting
+                int horizon = isCrouching ? (H * 3 / 8) : (H / 2);
                 for (int y = 0; y < H; y++) {
-                    int isFloor = (y >= H / 2);
-                    int p = isFloor ? (y - H / 2) : (H / 2 - y);
+                    int isFloor = (y >= horizon);
+                    int p = isFloor ? (y - horizon) : (horizon - y);
                     if (p == 0) p = 1;
 
-                    float posZ = 0.5f * H;
+                    float posZ = isFloor ? (isCrouching ? 0.35f * H : 0.5f * H) : (isCrouching ? 0.65f * H : 0.5f * H);
                     float rowDistance = posZ / p;
 
                     float rayDirX0 = drawDX - drawPlaneX;
@@ -1878,8 +2018,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else           perpWallDist = (sideDistY - deltaDistY);
                     
                     int lineHeight = (int)(H / perpWallDist);
-                    int drawStart = -lineHeight / 2 + H / 2;
-                    int drawEnd = lineHeight / 2 + H / 2;
+                    int drawStart = -lineHeight / 2 + horizon;
+                    int drawEnd = lineHeight / 2 + horizon;
                     int actualStart = (drawStart < 0) ? 0 : drawStart;
                     int actualEnd = (drawEnd >= H) ? H - 1 : drawEnd;
                     
@@ -1890,7 +2030,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int texX = (int)(wallX * 16.0f) & 15;
                     
                     if (hit == 7) hit = 1;
-                    if (hit < 1 || hit > 38) hit = 1;
+                    if (hit < 1 || hit > 40) hit = 1;
                     if (hit == 1) {
                         if (currentLevel >= 40) hit = 27; // Magma Wall (Inferno)
                         else if (currentLevel >= 30) hit = 22; // Void Wall (Abyss)
@@ -1899,7 +2039,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     
                     float step = 16.0f / lineHeight;
-                    float texPos = (actualStart - H / 2 + lineHeight / 2) * step;
+                    float texPos = (actualStart - horizon + lineHeight / 2) * step;
                     
                     float sideMult = (side == 1) ? 0.75f : 1.0f;
                     float actualWX = (side == 0) ? (float)mapX : drawPX + perpWallDist * rayDX;
@@ -2128,6 +2268,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HBRUSH mShrine = CreateSolidBrush(RGB(255, 215, 0));
                     HBRUSH mTorch = CreateSolidBrush(RGB(255, 140, 0));
                     HBRUSH mShaft = CreateSolidBrush(RGB(0, 255, 200));
+                    HBRUSH mFake = CreateSolidBrush(RGB(120, 70, 150));
+                    HBRUSH mLore = CreateSolidBrush(RGB(0, 229, 255));
                     
                     for (int i = 0; i < mmW; i++) {
                         for (int j = 0; j < mmH; j++) {
@@ -2154,6 +2296,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             else if (v == 28) b = mShrine;
                             else if (v == 29) b = mTorch;
                             else if (v == 38) b = mShaft;
+                            else if (v == 39) b = mFake;
+                            else if (v == 40) b = mLore;
                             
                             RECT mr = {mmX + i*mmS, mmY + j*mmS, mmX + i*mmS + mmS, mmY + j*mmS + mmS};
                             FillRect(hdcMem, &mr, b);
@@ -2165,6 +2309,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(mWall); DeleteObject(mExit); DeleteObject(mKey); DeleteObject(mDoor); DeleteObject(mFloor); DeleteObject(mPlayer); DeleteObject(mCoin);
                     DeleteObject(mTrap); DeleteObject(mComp); DeleteObject(mSpeed); DeleteObject(mTele); DeleteObject(mPath); DeleteObject(mBoss);
                     DeleteObject(mMono); DeleteObject(mPick); DeleteObject(mStun); DeleteObject(mShrine); DeleteObject(mTorch); DeleteObject(mShaft);
+                    DeleteObject(mFake); DeleteObject(mLore);
                 }
             }
 
@@ -2229,7 +2374,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (currentLevel >= 20) biome = "Frost Caverns";
                 else if (currentLevel >= 10) biome = "Cyber Labyrinth";
 
-                char t1[128]; wsprintfA(t1, "Lvl:%d/45 [%s] K:%d P:%d C:%d S:%d F:%d T:%d", currentLevel + 1, biome, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges);
+                char t1[128]; wsprintfA(t1, "Lvl:%d/45 [%s] K:%d P:%d C:%d S:%d F:%d T:%d [%s]", currentLevel + 1, biome, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges, isCrouching ? "CROUCH" : "STAND");
                 char t2[128]; wsprintfA(t2, "Score:%d Time:%ds Torch:%ds", score, elapsedSec, torchTimer/1000);
                 const char* t3 = "V:Save L:Load F1/H:Help";
                 
@@ -2237,17 +2382,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, 22, 22, t1, lstrlenA(t1)); TextOutA(hdc, 22, 52, t2, lstrlenA(t2));
                 TextOutA(hdc, clientRect.right - 248, 22, t3, lstrlenA(t3));
                 
-                SetTextColor(hdc, RGB(255, 255, 255));
+                SetTextColor(hdc, isCrouching ? RGB(0, 255, 180) : RGB(255, 255, 255));
                 TextOutA(hdc, 20, 20, t1, lstrlenA(t1)); TextOutA(hdc, 20, 50, t2, lstrlenA(t2));
+                SetTextColor(hdc, RGB(255, 255, 255));
                 TextOutA(hdc, clientRect.right - 250, 20, t3, lstrlenA(t3));
             }
             
             if (gameState == 4) {
                 char kbText[64];
                 int y = 80;
-                const char* names[] = {"Up", "Down", "Left", "Right", "Pickaxe", "Pathfinder", "Speed", "Stun Spray", "Freeze"};
-                int vals[] = {keyBinds.up, keyBinds.down, keyBinds.left, keyBinds.right, keyBinds.pickaxe, keyBinds.pathfinder, keyBinds.speed, keyBinds.stun, keyBinds.freeze};
-                for (int i = 0; i < 9; i++) {
+                const char* names[] = {"Up", "Down", "Left", "Right", "Pickaxe", "Pathfinder", "Speed", "Stun Spray", "Freeze", "Crouch"};
+                int vals[] = {keyBinds.up, keyBinds.down, keyBinds.left, keyBinds.right, keyBinds.pickaxe, keyBinds.pathfinder, keyBinds.speed, keyBinds.stun, keyBinds.freeze, keyBinds.crouch};
+                for (int i = 0; i < 10; i++) {
                     if (waitingForKey == i + 1) wsprintfA(kbText, "%s: ...", names[i]);
                     else wsprintfA(kbText, "%s: %c (%d)", names[i], (char)vals[i], vals[i]);
                     TextOutA(hdc, 80, y, kbText, lstrlenA(kbText));
@@ -2265,7 +2411,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Active Items Legend HUD
             if (gameState == 1) {
                 char itemText[160];
-                wsprintfA(itemText, "[P]Break [C]Path:%ds [S]Speed:%ds [F]Stun:%ds [T]Freeze:%ds [V]Save [L]Load", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000);
+                wsprintfA(itemText, "[P]Break [C]Path:%ds [S]Speed:%ds [F]Stun:%ds [T]Freeze:%ds [X]Crouch:%s [V]Save [L]Load", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000, isCrouching ? "ON" : "OFF");
                 SetTextColor(hdc, RGB(0, 0, 0));
                 TextOutA(hdc, 22, clientRect.bottom - 28, itemText, lstrlenA(itemText));
                 SetTextColor(hdc, RGB(0, 255, 255));
@@ -2280,7 +2426,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameState == 4) {
                 int y = HIWORD(lParam);
                 int idx = (y - 80) / 30;
-                if (idx >= 0 && idx < 9) waitingForKey = idx + 1;
+                if (idx >= 0 && idx < 10) waitingForKey = idx + 1;
             }
             break;
         }
@@ -2301,6 +2447,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (waitingForKey == 6) keyBinds.pathfinder = (int)wParam;
                     if (waitingForKey == 7) keyBinds.speed = (int)wParam;
                     if (waitingForKey == 8) keyBinds.stun = (int)wParam;
+                    if (waitingForKey == 9) keyBinds.freeze = (int)wParam;
+                    if (waitingForKey == 10) keyBinds.crouch = (int)wParam;
                     waitingForKey = 0;
                 }
             }
