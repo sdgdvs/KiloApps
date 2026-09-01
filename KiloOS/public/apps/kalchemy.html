@@ -1910,6 +1910,117 @@
       transform: none;
     }
 
+    /* Loop 3: Expeditions, Planetary, and Familiars Containers */
+    .expeditions-container, .planetary-container, .familiars-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 6px 12px;
+      z-index: 2;
+    }
+
+    .expeditions-container::-webkit-scrollbar,
+    .planetary-container::-webkit-scrollbar,
+    .familiars-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .expeditions-container::-webkit-scrollbar-thumb,
+    .planetary-container::-webkit-scrollbar-thumb,
+    .familiars-container::-webkit-scrollbar-thumb {
+      background: var(--border-gold);
+      border-radius: 3px;
+    }
+
+    .expedition-card, .planet-card, .familiar-card {
+      background: linear-gradient(135deg, rgba(22, 21, 46, 0.95), rgba(38, 29, 68, 0.95));
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 8px rgba(243, 156, 18, 0.15);
+      transition: all 0.25s ease;
+    }
+    .expedition-card:hover, .planet-card:hover, .familiar-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.6), 0 0 16px var(--glow-gold);
+    }
+
+    .expedition-info, .planet-info, .familiar-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .expedition-title, .planet-title, .familiar-title {
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-expedition, .btn-planet, .btn-familiar {
+      background: linear-gradient(135deg, #f39c12, #d4ac0d);
+      border: 1px solid #f1c40f;
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(243, 156, 18, 0.4);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-expedition:hover, .btn-planet:hover, .btn-familiar:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 16px rgba(243, 156, 18, 0.7);
+    }
+    .btn-expedition.disabled, .btn-planet.disabled, .btn-familiar.disabled {
+      background: rgba(60, 60, 80, 0.4);
+      border-color: rgba(100, 100, 120, 0.4);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-familiar-burst {
+      background: linear-gradient(135deg, #e74c3c, #9b59b6);
+      border: 2px solid #f1c40f;
+      color: #ffffff;
+      font-size: 0.88rem;
+      font-weight: 800;
+      padding: 10px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(231, 76, 60, 0.6);
+      transition: all 0.25s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+    .btn-familiar-burst:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 24px rgba(241, 196, 15, 0.8);
+    }
+    .btn-familiar-burst.disabled {
+      background: rgba(60, 60, 80, 0.4);
+      border-color: rgba(100, 100, 120, 0.4);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
   </style>
 </head>
 <body>
@@ -2056,6 +2167,9 @@
         <button class="equip-tab" id="equip-codex" onclick="selectEquipment('codex')">📖 Codex</button>
         <button class="equip-tab" id="equip-daily" onclick="selectEquipment('daily')">🎯 Daily</button>
         <button class="equip-tab" id="equip-rebirth" onclick="selectEquipment('rebirth')">🌟 Rebirth</button>
+        <button class="equip-tab" id="equip-expeditions" onclick="selectEquipment('expeditions')">🗺️ Expeditions</button>
+        <button class="equip-tab" id="equip-planetary" onclick="selectEquipment('planetary')">🪐 Planetary</button>
+        <button class="equip-tab" id="equip-familiars" onclick="selectEquipment('familiars')">🐾 Familiars</button>
       </div>
 
       <div class="equipment-desc" id="equipment-desc">
@@ -2089,6 +2203,21 @@
 
       <!-- Magnum Opus Rebirth Container (Shown in Rebirth mode) -->
       <div class="rebirth-container" id="rebirth-container" style="display: none;">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Ancient Guild Expeditions Container (Shown in Expeditions mode) -->
+      <div class="expeditions-container" id="expeditions-container" style="display: none;">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Planetary Transmutation Matrix Container (Shown in Planetary mode) -->
+      <div class="planetary-container" id="planetary-container" style="display: none;">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Elemental Familiars Sanctuary Container (Shown in Familiars mode) -->
+      <div class="familiars-container" id="familiars-container" style="display: none;">
         <!-- Injected by JS -->
       </div>
 
@@ -2355,6 +2484,479 @@
     let dailyStreak = 0;
     let secretCombosFound = 0;
 
+    // Loop 3: Expeditions, Planetary, and Familiars State
+    let expeditions = [];
+    let planets = [];
+    let familiars = [];
+    let activeFamiliarIdx = 0;
+    let planetaryPassiveTimer = 0;
+
+    function initExpeditions() {
+      if (!expeditions || expeditions.length === 0) {
+        expeditions = [
+          { id: 'exp_1', name: 'Whispering Mire', duration: 30, timeLeft: 0, status: 0, req1: 'mud', req2: 'plant', rewardEss: 60, rewardDust: 40, rewardGold: 80, rewardAstral: 0, rewardXP: 50, relic: 'Mire Lily 🌺' },
+          { id: 'exp_2', name: 'Volcanic Caldera', duration: 60, timeLeft: 0, status: 0, req1: 'lava', req2: 'metal', rewardEss: 120, rewardDust: 80, rewardGold: 150, rewardAstral: 0, rewardXP: 100, relic: 'Obsidian Core 🪨' },
+          { id: 'exp_3', name: 'Aether Peak', duration: 120, timeLeft: 0, status: 0, req1: 'starlight', req2: 'rune', rewardEss: 250, rewardDust: 200, rewardGold: 300, rewardAstral: 1, rewardXP: 250, relic: 'Aether Prism 💎' },
+          { id: 'exp_4', name: 'Primordial Void', duration: 180, timeLeft: 0, status: 0, req1: 'blackhole', req2: 'time', rewardEss: 400, rewardDust: 350, rewardGold: 500, rewardAstral: 2, rewardXP: 400, relic: 'Chrono Singularity 🌌' }
+        ];
+      }
+    }
+
+    function renderExpeditions() {
+      const cont = document.getElementById('expeditions-container');
+      if (!cont) return;
+      initExpeditions();
+
+      let html = `
+        <div style="font-size:0.95rem; font-weight:800; color:var(--accent-gold-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; text-shadow:0 0 8px rgba(243,156,18,0.4); text-align:center;">
+          🗺️ Ancient Alchemical Guild Expeditions
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-bottom:8px;">
+          Dispatch exploration parties to discover ancient relics & harvest cosmic resources!
+        </div>
+      `;
+
+      expeditions.forEach((ex, idx) => {
+        const hasReq = discoveredIds.has(ex.req1) && discoveredIds.has(ex.req2);
+        const req1El = ALL_ELEMENTS.find(e => e.id === ex.req1);
+        const req2El = ALL_ELEMENTS.find(e => e.id === ex.req2);
+
+        let actionBtnHtml = '';
+        if (ex.status === 0) {
+          actionBtnHtml = `<button class="btn-expedition ${hasReq ? '' : 'disabled'}" ${hasReq ? `onclick="dispatchExpedition(${idx})"` : 'disabled'}>🚀 Dispatch (${ex.duration}s)</button>`;
+        } else if (ex.status === 1) {
+          actionBtnHtml = `<button class="btn-expedition disabled" disabled>⏳ En Route (${ex.timeLeft}s)</button>`;
+        } else if (ex.status === 2) {
+          actionBtnHtml = `<button class="btn-expedition" style="background:linear-gradient(135deg, #2ecc71, #27ae60); border-color:#2ecc71;" onclick="claimExpedition(${idx})">🎁 Claim Loot</button>`;
+        }
+
+        html += `
+          <div class="expedition-card">
+            <div class="expedition-info">
+              <div class="expedition-title">
+                <span>🗺️</span>
+                <span>${ex.name} (${ex.duration}s)</span>
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">
+                Catalysts: <strong>${req1El ? req1El.name : ex.req1}</strong> ${req1El ? req1El.icon : ''} + <strong>${req2El ? req2El.name : ex.req2}</strong> ${req2El ? req2El.icon : ''}
+              </div>
+              <div style="font-size:0.72rem; color:var(--accent-gold); margin-top:2px;">
+                Yield: +${ex.rewardEss} Ess, +${ex.rewardDust} Dust, +${ex.rewardGold} Gold, +${ex.rewardXP} XP${ex.rewardAstral > 0 ? `, +${ex.rewardAstral} ✨ Astral` : ''} | Relic: <em>${ex.relic}</em>
+              </div>
+            </div>
+            ${actionBtnHtml}
+          </div>
+        `;
+      });
+
+      cont.innerHTML = html;
+    }
+
+    function dispatchExpedition(idx) {
+      initExpeditions();
+      const ex = expeditions[idx];
+      if (!ex || ex.status !== 0) return;
+      if (!discoveredIds.has(ex.req1) || !discoveredIds.has(ex.req2)) {
+        addLog(`⚠️ Discover required catalyst elements first!`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      ex.status = 1;
+      ex.timeLeft = ex.duration;
+      saveState();
+      renderExpeditions();
+      addLog(`🗺️ <strong>EXPEDITION DISPATCHED:</strong> Exploration party set out for <strong>${ex.name}</strong> (${ex.duration}s duration)!`, false, false, false, 'oracle');
+      playFanfareDiscovery();
+    }
+
+    function claimExpedition(idx) {
+      initExpeditions();
+      const ex = expeditions[idx];
+      if (!ex || ex.status !== 2) return;
+      ex.status = 0;
+
+      let gGain = ex.rewardGold;
+      if (activeFamiliarIdx === 2) gGain = Math.floor(gGain * 1.3);
+      if (astralPerks.midas > 0) gGain = Math.floor(gGain * (1 + astralPerks.midas * 0.25));
+
+      essence += ex.rewardEss;
+      dust += ex.rewardDust;
+      gold += gGain;
+      astralShards += ex.rewardAstral;
+      guildXP += ex.rewardXP;
+
+      triggerToast("🏆 EXPEDITION COMPLETE!", `Claimed loot from ${ex.name}: +${ex.rewardEss} Ess, +${ex.rewardDust} Dust, +${gGain} Gold, Relic: ${ex.relic}!`, '🗺️');
+      addLog(`🏆 <strong>EXPEDITION REWARDS:</strong> Claimed loot from <strong>${ex.name}</strong>! (+${ex.rewardEss} Ess, +${ex.rewardDust} Dust, +${gGain} Gold, +${ex.rewardAstral} Astral, +${ex.rewardXP} XP, Relic: <strong>${ex.relic}</strong>)`, true, false, false, 'oracle');
+      playFanfareTier();
+
+      saveState();
+      updateStats();
+      renderExpeditions();
+    }
+
+    // Loop 3: Planetary Transmutations Implementation
+    function initPlanets() {
+      if (!planets || planets.length === 0) {
+        planets = [
+          { id: 'pl_1', name: 'Ignis-Orb', icon: '🔥', desc: 'Solar Core: +10 Ess, +10 Dust, +15 Gold passive.', req1: 'fire', req2: 'lava', req3: 'energy', isForged: false, level: 0, charge: 100, passiveEss: 10, passiveDust: 10, passiveGold: 15, passiveAstral: 0 },
+          { id: 'pl_2', name: 'Oceanus-Orb', icon: '💧', desc: 'Tidal Core: +15 Ess, +5 Dust, +15 Gold passive.', req1: 'water', req2: 'rain', req3: 'steam', isForged: false, level: 0, charge: 100, passiveEss: 15, passiveDust: 5, passiveGold: 15, passiveAstral: 0 },
+          { id: 'pl_3', name: 'Terra-Core', icon: '🌍', desc: 'Mantle Core: +5 Ess, +15 Dust, +25 Gold passive.', req1: 'earth', req2: 'stone', req3: 'metal', isForged: false, level: 0, charge: 100, passiveEss: 5, passiveDust: 15, passiveGold: 25, passiveAstral: 0 },
+          { id: 'pl_4', name: 'Zephyros-Vortex', icon: '🌪️', desc: 'Aero Core: +10 Ess, +10 Dust, +20 Gold passive.', req1: 'air', req2: 'cloud', req3: 'dust', isForged: false, level: 0, charge: 100, passiveEss: 10, passiveDust: 10, passiveGold: 20, passiveAstral: 0 },
+          { id: 'pl_5', name: 'Sol-Helios', icon: '☀️', desc: 'Stellar Core: +25 Ess, +20 Dust, +50 Gold passive.', req1: 'sun', req2: 'gold', req3: 'starlight', isForged: false, level: 0, charge: 100, passiveEss: 25, passiveDust: 20, passiveGold: 50, passiveAstral: 0 },
+          { id: 'pl_6', name: 'Astra-Chronos', icon: '🌌', desc: 'Cosmic Core: +35 Ess, +35 Dust, +75 Gold, +1✨ passive.', req1: 'cosmos', req2: 'galaxy', req3: 'time', isForged: false, level: 0, charge: 100, passiveEss: 35, passiveDust: 35, passiveGold: 75, passiveAstral: 1 }
+        ];
+      }
+    }
+
+    function renderPlanetary() {
+      const cont = document.getElementById('planetary-container');
+      if (!cont) return;
+      initPlanets();
+
+      let html = `
+        <div style="font-size:0.95rem; font-weight:800; color:var(--accent-gold-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; text-shadow:0 0 8px rgba(243,156,18,0.4); text-align:center;">
+          🪐 Planetary Transmutation Matrix
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-bottom:8px;">
+          Forge celestial planetary cores into orbit for permanent passive alchemical dividends!
+        </div>
+        <div style="text-align:center; margin-bottom:10px;">
+          <button class="btn-planet" style="background:linear-gradient(135deg, #9b59b6, #e67e22);" onclick="overchargePlanets()">⚡ Overcharge Matrix (50 Essence)</button>
+        </div>
+      `;
+
+      planets.forEach((pl, idx) => {
+        const hasReq = discoveredIds.has(pl.req1) && discoveredIds.has(pl.req2) && discoveredIds.has(pl.req3);
+        const req1El = ALL_ELEMENTS.find(e => e.id === pl.req1);
+        const req2El = ALL_ELEMENTS.find(e => e.id === pl.req2);
+        const req3El = ALL_ELEMENTS.find(e => e.id === pl.req3);
+
+        const upCost = pl.isForged ? pl.level * 150 : 100;
+        const isMax = pl.level >= 5;
+        const canAfford = gold >= upCost;
+
+        let btnHtml = '';
+        if (!pl.isForged) {
+          btnHtml = `<button class="btn-planet ${hasReq && canAfford ? '' : 'disabled'}" ${hasReq && canAfford ? `onclick="forgePlanet(${idx})"` : 'disabled'}>🪐 Forge (100 G)</button>`;
+        } else if (isMax) {
+          btnHtml = `<button class="btn-planet disabled" disabled>⭐ MAX LVL 5</button>`;
+        } else {
+          btnHtml = `<button class="btn-planet ${canAfford ? '' : 'disabled'}" ${canAfford ? `onclick="upgradePlanet(${idx})"` : 'disabled'}>⬆️ Lvl ${pl.level + 1} (${upCost}G)</button>`;
+        }
+
+        html += `
+          <div class="planet-card" style="border-color:${pl.isForged ? 'var(--accent-gold)' : 'var(--border-color)'};">
+            <div class="planet-info">
+              <div class="planet-title">
+                <span>${pl.icon}</span>
+                <span>${pl.name} ${pl.isForged ? `(Orbital Lvl ${pl.level}/5)` : '(Unforged)'}</span>
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">
+                ${pl.desc}
+              </div>
+              <div style="font-size:0.72rem; color:var(--accent-gold); margin-top:2px;">
+                Catalysts: ${req1El ? req1El.name : pl.req1} + ${req2El ? req2El.name : pl.req2} + ${req3El ? req3El.name : pl.req3}
+              </div>
+            </div>
+            ${btnHtml}
+          </div>
+        `;
+      });
+
+      cont.innerHTML = html;
+    }
+
+    function forgePlanet(idx) {
+      initPlanets();
+      const pl = planets[idx];
+      if (!pl || pl.isForged) return;
+      if (!discoveredIds.has(pl.req1) || !discoveredIds.has(pl.req2) || !discoveredIds.has(pl.req3)) {
+        addLog("⚠️ Discover all 3 catalyst elements to forge this Planetary Core!", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      if (gold < 100) {
+        addLog("⚠️ Need 100 Gold to forge Planetary Core!", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      gold -= 100;
+      pl.isForged = true;
+      pl.level = 1;
+      pl.charge = 100;
+      saveState();
+      updateStats();
+      renderPlanetary();
+      triggerToast("🪐 Planetary Core Forged!", `Forged ${pl.name} ${pl.icon} into orbit!`, pl.icon);
+      addLog(`🪐 <strong>PLANETARY TRANSMUTATION:</strong> Forged <strong>${pl.name}</strong> ${pl.icon} into orbit! Unlocked passive dividends!`, true, false, false, 'oracle');
+      playFanfareTier();
+    }
+
+    function upgradePlanet(idx) {
+      initPlanets();
+      const pl = planets[idx];
+      if (!pl || !pl.isForged || pl.level >= 5) return;
+      const cost = pl.level * 150;
+      if (gold < cost) {
+        addLog(`⚠️ Need ${cost} Gold to upgrade Planetary Core!`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      gold -= cost;
+      pl.level++;
+      pl.passiveGold += 10;
+      pl.passiveEss += 10;
+      pl.passiveDust += 10;
+      saveState();
+      updateStats();
+      renderPlanetary();
+      triggerToast("🪐 Planetary Core Upgraded!", `${pl.name} reached Orbital Level ${pl.level}!`, pl.icon);
+      addLog(`🪐 <strong>PLANETARY UPGRADE:</strong> Upgraded <strong>${pl.name}</strong> ${pl.icon} to Level ${pl.level}! Enhanced passive yields!`, true, false, false, 'oracle');
+      playFanfareDiscovery();
+    }
+
+    function overchargePlanets() {
+      if (essence < 50) {
+        addLog("⚠️ Need at least 50 Essence to overcharge Planetary Matrix!", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      initPlanets();
+      essence -= 50;
+      let forgedCount = 0;
+      let totG = 0, totE = 0, totD = 0;
+      planets.forEach(pl => {
+        if (pl.isForged) {
+          pl.charge = 100;
+          forgedCount++;
+          totG += pl.passiveGold * 2;
+          totE += pl.passiveEss * 2;
+          totD += pl.passiveDust * 2;
+        }
+      });
+      gold += totG;
+      essence += totE;
+      dust += totD;
+      saveState();
+      updateStats();
+      renderPlanetary();
+      triggerToast("⚡ Matrix Overcharged!", `Recharged ${forgedCount} Cores! Instant dividend: +${totG}G, +${totE}Ess, +${totD}Dust!`, '⚡');
+      addLog(`⚡ <strong>PLANETARY OVERCHARGE:</strong> Recharged ${forgedCount} Planetary Cores! Instant Dividend (+${totG} Gold, +${totE} Ess, +${totD} Dust)!`, true, false, false, 'oracle');
+      playFanfareTier();
+    }
+
+    // Loop 3: Elemental Familiars Sanctuary Implementation
+    function initFamiliars() {
+      if (!familiars || familiars.length === 0) {
+        familiars = [
+          { id: 'fam_1', name: 'Ignis', icon: '🦎', title: 'Fire Salamander', element: 'Fire', affinity: '+Dust Harvest', bondLevel: 1, burstCooldown: 0, burstName: 'Flame Torrent', burstDesc: '+150 Dust, +100 Essence' },
+          { id: 'fam_2', name: 'Hydra', icon: '🐉', title: 'Water Drake', element: 'Water', affinity: '+Essence Harvest', bondLevel: 1, burstCooldown: 0, burstName: 'Tidal Surge', burstDesc: '+150 Ess, +100 Gold, 30s +50% Yield' },
+          { id: 'fam_3', name: 'Terran', icon: '🗿', title: 'Stone Gargoyle', element: 'Earth', affinity: '+Gold Harvest', bondLevel: 1, burstCooldown: 0, burstName: 'Midas Quake', burstDesc: '+250 Gold, +100 Dust' },
+          { id: 'fam_4', name: 'Zephyr', icon: '🧚', title: 'Aether Sylph', element: 'Air', affinity: '+Ess/Dust Balance', bondLevel: 1, burstCooldown: 0, burstName: 'Aether Gale', burstDesc: 'Instant Discovery or +300 Gold' },
+          { id: 'fam_5', name: 'Astron', icon: '🦅', title: 'Cosmic Phoenix', element: 'Celestial', affinity: '+All Yields & Astral', bondLevel: 1, burstCooldown: 0, burstName: 'Supernova Bloom', burstDesc: '+1 Astral, +200 Ess/Dust/Gold' }
+        ];
+      }
+    }
+
+    function renderFamiliars() {
+      const cont = document.getElementById('familiars-container');
+      if (!cont) return;
+      initFamiliars();
+
+      const activeFam = familiars[activeFamiliarIdx] || familiars[0];
+      const isBurstReady = activeFam.burstCooldown <= 0;
+
+      let html = `
+        <div style="font-size:0.95rem; font-weight:800; color:var(--accent-gold-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; text-shadow:0 0 8px rgba(243,156,18,0.4); text-align:center;">
+          🐾 Elemental Familiars Sanctuary
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-bottom:8px;">
+          Active Companion: <strong>${activeFam.name} the ${activeFam.title}</strong> (${activeFam.affinity})
+        </div>
+        <div style="text-align:center; margin-bottom:10px;">
+          <button class="btn-familiar-burst ${isBurstReady ? '' : 'disabled'}" ${isBurstReady ? 'onclick="triggerFamiliarBurst()"' : 'disabled'}>
+            ${isBurstReady ? `🔥 BURST: ${activeFam.burstName} (Ready!)` : `⏳ Cooldown (${activeFam.burstCooldown}s)`}
+          </button>
+        </div>
+      `;
+
+      familiars.forEach((fa, idx) => {
+        const isActive = activeFamiliarIdx === idx;
+        const feedCost = fa.bondLevel * 40;
+        const goldCost = Math.floor(feedCost / 2);
+        const isMax = fa.bondLevel >= 10;
+        const canFeed = !isMax && essence >= feedCost && gold >= goldCost;
+
+        html += `
+          <div class="familiar-card" style="border-color:${isActive ? 'var(--accent-gold)' : 'var(--border-color)'};">
+            <div class="familiar-info">
+              <div class="familiar-title">
+                <span>${fa.icon}</span>
+                <span>${fa.name} (Lvl ${fa.bondLevel}/10)</span>
+                ${isActive ? '<span style="font-size:0.7rem; color:#2ecc71; border:1px solid #2ecc71; border-radius:4px; padding:0 4px">Active</span>' : ''}
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">
+                ${fa.title} | Affinity: <strong>${fa.affinity}</strong>
+              </div>
+              <div style="font-size:0.72rem; color:var(--accent-gold); margin-top:2px;">
+                Burst Ability: <em>${fa.burstName}</em> (${fa.burstDesc})
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              ${isActive ? 
+                `<button class="btn-familiar disabled" disabled>Active</button>` : 
+                `<button class="btn-familiar" onclick="summonFamiliar(${idx})">Summon</button>`}
+              ${isMax ? 
+                `<button class="btn-familiar disabled" disabled>MAX</button>` : 
+                `<button class="btn-familiar ${canFeed ? '' : 'disabled'}" ${canFeed ? `onclick="feedFamiliar(${idx})"` : 'disabled'}>🍖 Feed (${feedCost}E)</button>`}
+            </div>
+          </div>
+        `;
+      });
+
+      cont.innerHTML = html;
+    }
+
+    function summonFamiliar(idx) {
+      initFamiliars();
+      activeFamiliarIdx = idx;
+      const fa = familiars[idx];
+      saveState();
+      renderFamiliars();
+      triggerToast("🐾 Familiar Summoned!", `${fa.name} the ${fa.title} is now accompanying you!`, fa.icon);
+      addLog(`🐾 <strong>FAMILIAR SUMMONED:</strong> <strong>${fa.name}</strong> (${fa.title}) is now your active companion! Passive buff activated!`, true, false, false, 'oracle');
+      playFanfareDiscovery();
+    }
+
+    function feedFamiliar(idx) {
+      initFamiliars();
+      const fa = familiars[idx];
+      if (!fa || fa.bondLevel >= 10) return;
+      const feedCost = fa.bondLevel * 40;
+      const goldCost = Math.floor(feedCost / 2);
+      if (essence < feedCost || gold < goldCost) {
+        addLog("⚠️ Need more Essence and Gold to feed familiar!", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      essence -= feedCost;
+      gold -= goldCost;
+      fa.bondLevel++;
+      saveState();
+      updateStats();
+      renderFamiliars();
+      triggerToast("🍖 Familiar Bond Leveled!", `${fa.name} reached Bond Level ${fa.bondLevel}!`, fa.icon);
+      addLog(`🍖 <strong>FAMILIAR BOND INCREASED:</strong> <strong>${fa.name}</strong> reached Bond Level ${fa.bondLevel}! (+Passives Enhanced)`, true, false, false, 'oracle');
+      playFanfareTier();
+    }
+
+    function triggerFamiliarBurst() {
+      initFamiliars();
+      const fa = familiars[activeFamiliarIdx] || familiars[0];
+      if (fa.burstCooldown > 0) return;
+
+      fa.burstCooldown = 45; // 45 second cooldown
+      if (activeFamiliarIdx === 0) { // Ignis
+        dust += 150; essence += 100;
+        addLog("🔥 <strong>FAMILIAR BURST:</strong> Ignis unleashes <strong>Flame Torrent</strong>! (+150 Dust, +100 Essence!)", true, false, false, 'oracle');
+      } else if (activeFamiliarIdx === 1) { // Hydra
+        essence += 150; gold += 100;
+        activeBuffs.strength = (activeBuffs.strength || 0) + 30;
+        addLog("🌊 <strong>FAMILIAR BURST:</strong> Hydra invokes <strong>Tidal Surge</strong>! (+150 Ess, +100 Gold, 30s +50% Yield!)", true, false, false, 'oracle');
+      } else if (activeFamiliarIdx === 2) { // Terran
+        gold += 250; dust += 100;
+        addLog("💎 <strong>FAMILIAR BURST:</strong> Terran triggers <strong>Midas Quake</strong>! (+250 Gold, +100 Dust!)", true, false, false, 'oracle');
+      } else if (activeFamiliarIdx === 3) { // Zephyr
+        dust += 100;
+        const missing = ALL_ELEMENTS.find(e => !discoveredIds.has(e.id));
+        if (missing) {
+          discoveredIds.add(missing.id);
+          checkTierUnlocks(true);
+          renderGrimoire();
+          addLog(`💨 <strong>FAMILIAR BURST:</strong> Zephyr summons <strong>Aether Gale</strong>! Instant Discovery: <strong>${missing.name}</strong> ${missing.icon} [Tier ${missing.tier}]!`, true, false, false, 'oracle');
+        } else {
+          gold += 300;
+          addLog("💨 <strong>FAMILIAR BURST:</strong> Zephyr creates a whirlwind of wealth! (+300 Gold!)", true, false, false, 'oracle');
+        }
+      } else if (activeFamiliarIdx === 4) { // Astron
+        astralShards += 1;
+        essence += 200; dust += 200; gold += 200;
+        addLog("🌟 <strong>FAMILIAR BURST:</strong> Astron channels <strong>Supernova Bloom</strong>! (+1 Astral Shard, +200 Ess/Dust/Gold!)", true, false, false, 'oracle');
+      }
+
+      triggerToast("🔥 FAMILIAR BURST!", `${fa.name} unleashed ${fa.burstName}!`, fa.icon);
+      playFanfareTier();
+      saveState();
+      updateStats();
+      renderFamiliars();
+    }
+
+    // Loop 3: Periodic Timer Tick Handler
+    function updateLoop3Ticks() {
+      let changed = false;
+
+      // Expedition countdowns
+      if (expeditions && expeditions.length > 0) {
+        expeditions.forEach(ex => {
+          if (ex.status === 1 && ex.timeLeft > 0) {
+            ex.timeLeft--;
+            if (ex.timeLeft <= 0) {
+              ex.status = 2; // Ready to claim
+              triggerToast("🗺️ Expedition Returned!", `Exploration party returned from ${ex.name}! Claim rewards!`, '🎁');
+              addLog(`🗺️ <strong>EXPEDITION COMPLETE:</strong> Party safely returned from <strong>${ex.name}</strong> with rare treasures! Click Claim Loot!`, true, false, false, 'oracle');
+              playFanfareDiscovery();
+            }
+            changed = true;
+          }
+        });
+      }
+
+      // Familiar burst cooldown
+      if (familiars && familiars.length > 0) {
+        familiars.forEach(fa => {
+          if (fa.burstCooldown > 0) {
+            fa.burstCooldown--;
+            changed = true;
+          }
+        });
+      }
+
+      // Active familiar passive harvest (every 10s)
+      if (familiars && familiars.length > 0) {
+        const fa = familiars[activeFamiliarIdx];
+        if (fa) {
+          const bLvl = fa.bondLevel || 1;
+          if (activeFamiliarIdx === 0) dust += Math.floor(bLvl * 0.5);
+          else if (activeFamiliarIdx === 1) essence += Math.floor(bLvl * 0.5);
+          else if (activeFamiliarIdx === 2) gold += Math.floor(bLvl * 0.5);
+          else if (activeFamiliarIdx === 3) { essence += Math.floor(bLvl * 0.3); dust += Math.floor(bLvl * 0.3); }
+          else if (activeFamiliarIdx === 4) { essence += Math.floor(bLvl * 0.4); dust += Math.floor(bLvl * 0.4); gold += Math.floor(bLvl * 0.4); }
+        }
+      }
+
+      // Planetary passive dividends (every 20s)
+      planetaryPassiveTimer = (planetaryPassiveTimer || 0) + 1;
+      if (planetaryPassiveTimer >= 20) {
+        planetaryPassiveTimer = 0;
+        if (planets && planets.length > 0) {
+          planets.forEach(pl => {
+            if (pl.isForged) {
+              gold += pl.passiveGold * pl.level;
+              essence += pl.passiveEss * pl.level;
+              dust += pl.passiveDust * pl.level;
+              astralShards += pl.passiveAstral * pl.level;
+            }
+          });
+        }
+      }
+
+      if (changed) {
+        if (activeEquipment === 'expeditions') renderExpeditions();
+        if (activeEquipment === 'familiars') renderFamiliars();
+        if (activeEquipment === 'planetary') renderPlanetary();
+      }
+    }
+    setInterval(updateLoop3Ticks, 1000);
 
     // Daily Trials Implementation
     function initDailyChallenges() {
@@ -2802,6 +3404,10 @@
         localStorage.setItem('kalchemy_dailyChallenges', JSON.stringify(dailyChallenges));
         localStorage.setItem('kalchemy_dailyStreak', dailyStreak);
         localStorage.setItem('kalchemy_secretCombosFound', secretCombosFound);
+        localStorage.setItem('kalchemy_expeditions', JSON.stringify(expeditions));
+        localStorage.setItem('kalchemy_planets', JSON.stringify(planets));
+        localStorage.setItem('kalchemy_familiars', JSON.stringify(familiars));
+        localStorage.setItem('kalchemy_activeFamiliarIdx', activeFamiliarIdx);
       } catch(e){}
     }
 
@@ -2829,6 +3435,10 @@
         const savedDailyC = localStorage.getItem('kalchemy_dailyChallenges');
         const savedDailyS = localStorage.getItem('kalchemy_dailyStreak');
         const savedSecrets = localStorage.getItem('kalchemy_secretCombosFound');
+        const savedExpeditions = localStorage.getItem('kalchemy_expeditions');
+        const savedPlanets = localStorage.getItem('kalchemy_planets');
+        const savedFamiliars = localStorage.getItem('kalchemy_familiars');
+        const savedActiveFam = localStorage.getItem('kalchemy_activeFamiliarIdx');
 
         if (savedDisc) {
           const arr = JSON.parse(savedDisc);
@@ -2891,9 +3501,16 @@
         if (savedSecrets !== null) secretCombosFound = parseInt(savedSecrets, 10) || 0;
         if (savedAstralPerks) { try { astralPerks = JSON.parse(savedAstralPerks) || astralPerks; } catch(e){} }
         if (savedDailyC) { try { dailyChallenges = JSON.parse(savedDailyC) || []; } catch(e){} }
+        if (savedExpeditions) { try { expeditions = JSON.parse(savedExpeditions) || []; } catch(e){} }
+        if (savedPlanets) { try { planets = JSON.parse(savedPlanets) || []; } catch(e){} }
+        if (savedFamiliars) { try { familiars = JSON.parse(savedFamiliars) || []; } catch(e){} }
+        if (savedActiveFam !== null) activeFamiliarIdx = parseInt(savedActiveFam, 10) || 0;
       } catch(e){}
       initQuests();
       initDailyChallenges();
+      initExpeditions();
+      initPlanets();
+      initFamiliars();
       checkTierUnlocks(false);
     }
 
@@ -2913,16 +3530,29 @@
       const oracleSec = document.querySelector('.oracle-section');
       const qBoardCont = document.getElementById('quest-board-container');
       const wShopCont = document.getElementById('workshop-container');
-      const wShopCont = document.getElementById('workshop-container');
       const brewCont = document.getElementById('brewing-container');
       const codexCont = document.getElementById('codex-container');
       const dailyCont = document.getElementById('daily-container');
       const rebirthCont = document.getElementById('rebirth-container');
+      const expCont = document.getElementById('expeditions-container');
+      const planetCont = document.getElementById('planetary-container');
+      const famCont = document.getElementById('familiars-container');
       const autoFillBtn = document.getElementById('btn-auto-fill');
 
       if (autoFillBtn) {
         autoFillBtn.style.display = (upgrades.autoSorter > 0 && mode === 'crucible') ? 'inline-block' : 'none';
       }
+
+      // Hide all sub-containers first
+      if (qBoardCont) qBoardCont.style.display = 'none';
+      if (wShopCont) wShopCont.style.display = 'none';
+      if (brewCont) brewCont.style.display = 'none';
+      if (codexCont) codexCont.style.display = 'none';
+      if (dailyCont) dailyCont.style.display = 'none';
+      if (rebirthCont) rebirthCont.style.display = 'none';
+      if (expCont) expCont.style.display = 'none';
+      if (planetCont) planetCont.style.display = 'none';
+      if (famCont) famCont.style.display = 'none';
 
       if (mode === 'daily') {
         descEl.innerHTML = "<strong>Daily Alchemical Trials:</strong> Complete rotating daily challenges to earn Gold, Essence & Astral Shards!";
@@ -2931,12 +3561,7 @@
         if (mainActBtn) mainActBtn.style.display = 'none';
         if (crucActions) crucActions.style.display = 'none';
         if (oracleSec) oracleSec.style.display = 'none';
-        if (qBoardCont) qBoardCont.style.display = 'none';
-        if (wShopCont) wShopCont.style.display = 'none';
-        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
-        if (codexCont) codexCont.style.display = 'none';
         if (dailyCont) dailyCont.style.display = 'flex';
-        if (rebirthCont) rebirthCont.style.display = 'none';
         renderDailyTrials();
       } else if (mode === 'rebirth') {
         descEl.innerHTML = "<strong>Magnum Opus Rebirth:</strong> Ascend to earn Astral Shards and unlock permanent cosmic perks!";
@@ -2945,13 +3570,35 @@
         if (mainActBtn) mainActBtn.style.display = 'none';
         if (crucActions) crucActions.style.display = 'none';
         if (oracleSec) oracleSec.style.display = 'none';
-        if (qBoardCont) qBoardCont.style.display = 'none';
-        if (wShopCont) wShopCont.style.display = 'none';
-        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
-        if (codexCont) codexCont.style.display = 'none';
-        if (dailyCont) dailyCont.style.display = 'none';
         if (rebirthCont) rebirthCont.style.display = 'flex';
         renderRebirth();
+      } else if (mode === 'expeditions') {
+        descEl.innerHTML = "<strong>Ancient Guild Expeditions:</strong> Send parties to ancient ruins to harvest relics, essence & gold!";
+        if (transCircle) transCircle.style.display = 'none';
+        if (slotsCont) slotsCont.style.display = 'none';
+        if (mainActBtn) mainActBtn.style.display = 'none';
+        if (crucActions) crucActions.style.display = 'none';
+        if (oracleSec) oracleSec.style.display = 'none';
+        if (expCont) expCont.style.display = 'flex';
+        renderExpeditions();
+      } else if (mode === 'planetary') {
+        descEl.innerHTML = "<strong>Planetary Transmutation Matrix:</strong> Forge cosmic planetary cores to unlock permanent passive yields!";
+        if (transCircle) transCircle.style.display = 'none';
+        if (slotsCont) slotsCont.style.display = 'none';
+        if (mainActBtn) mainActBtn.style.display = 'none';
+        if (crucActions) crucActions.style.display = 'none';
+        if (oracleSec) oracleSec.style.display = 'none';
+        if (planetCont) planetCont.style.display = 'flex';
+        renderPlanetary();
+      } else if (mode === 'familiars') {
+        descEl.innerHTML = "<strong>Elemental Familiars Sanctuary:</strong> Summon and feed companion familiars to unlock powerful passive buffs and burst abilities!";
+        if (transCircle) transCircle.style.display = 'none';
+        if (slotsCont) slotsCont.style.display = 'none';
+        if (mainActBtn) mainActBtn.style.display = 'none';
+        if (crucActions) crucActions.style.display = 'none';
+        if (oracleSec) oracleSec.style.display = 'none';
+        if (famCont) famCont.style.display = 'flex';
+        renderFamiliars();
       } else if (mode === 'quests') {
         descEl.innerHTML = "<strong>Guild Quest Board:</strong> Complete patron orders for Gold & Guild XP rewards!";
         if (transCircle) transCircle.style.display = 'none';
@@ -2960,8 +3607,6 @@
         if (crucActions) crucActions.style.display = 'none';
         if (oracleSec) oracleSec.style.display = 'none';
         if (qBoardCont) qBoardCont.style.display = 'flex';
-        if (wShopCont) wShopCont.style.display = 'none';
-        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
         renderQuestBoard();
       } else if (mode === 'workshop') {
         descEl.innerHTML = "<strong>Enchanter Workshop:</strong> Upgrade laboratory apparatus with Gold to boost yields, capacity & automation!";
@@ -2970,19 +3615,15 @@
         if (mainActBtn) mainActBtn.style.display = 'none';
         if (crucActions) crucActions.style.display = 'none';
         if (oracleSec) oracleSec.style.display = 'none';
-        if (qBoardCont) qBoardCont.style.display = 'none';
         if (wShopCont) wShopCont.style.display = 'flex';
-        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
         renderWorkshop();
       } else if (mode === 'brewing') {
-        descEl.innerHTML = "<strong>Potion Brewing & Effect Tester:</strong> Combine discoverable herbs & essences in the cauldron to brew buff elixirs (Strength, Invisibility, Mana, Elixir of Life) and test active magical effects!";
+        descEl.innerHTML = "<strong>Potion Brewing & Effect Tester:</strong> Combine discoverable herbs & essences in the cauldron to brew buff elixirs and test active magical effects!";
         if (transCircle) transCircle.style.display = 'flex';
         if (slotsCont) slotsCont.style.display = 'flex';
         if (mainActBtn) mainActBtn.style.display = 'block';
         if (crucActions) crucActions.style.display = 'flex';
         if (oracleSec) oracleSec.style.display = 'flex';
-        if (qBoardCont) qBoardCont.style.display = 'none';
-        if (wShopCont) wShopCont.style.display = 'none';
         if (brewCont) brewCont.style.display = 'flex';
         actionBtn.innerHTML = "🥣 Brew Buff Elixir";
         renderBrewingUI();
@@ -2992,9 +3633,6 @@
         if (mainActBtn) mainActBtn.style.display = 'block';
         if (crucActions) crucActions.style.display = 'flex';
         if (oracleSec) oracleSec.style.display = 'flex';
-        if (qBoardCont) qBoardCont.style.display = 'none';
-        if (wShopCont) wShopCont.style.display = 'none';
-        if (brewCont) brewCont.style.display = 'none'; if (dailyCont) dailyCont.style.display = 'none'; if (rebirthCont) rebirthCont.style.display = 'none';
 
         if (mode === 'crucible') {
           descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.";
@@ -3564,14 +4202,24 @@
         gold = 100;
         guildXP = 0;
         quests = [];
+        expeditions = [];
+        planets = [];
+        familiars = [];
+        activeFamiliarIdx = 0;
         upgrades = { crucibleCap: 0, essenceYield: 0, autoSorter: 0, catalystSpeed: 0 };
         initQuests();
+        initExpeditions();
+        initPlanets();
+        initFamiliars();
         saveState();
         updateStats();
         renderGrimoire();
         updateSlotsUI();
         if (activeEquipment === 'quests') renderQuestBoard();
         if (activeEquipment === 'workshop') renderWorkshop();
+        if (activeEquipment === 'expeditions') renderExpeditions();
+        if (activeEquipment === 'planetary') renderPlanetary();
+        if (activeEquipment === 'familiars') renderFamiliars();
         addLog("Journal reset. Basic elements restored.", false, false, false);
       }
     }

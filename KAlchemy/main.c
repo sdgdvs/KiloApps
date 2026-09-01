@@ -251,6 +251,55 @@ typedef struct {
     char desc[64];
 } DailyChallenge;
 
+#define TOTAL_EXPEDITIONS 4
+typedef struct {
+    char name[48];
+    char desc[80];
+    int duration;      // in seconds: 30, 60, 90, 120
+    int timeLeft;      // current remaining seconds
+    int status;        // 0=Ready to dispatch, 1=In progress, 2=Completed/Claimable
+    int reqElem1;
+    int reqElem2;
+    int rewardEss;
+    int rewardDust;
+    int rewardGold;
+    int rewardAstral;
+    int rewardXP;
+    char relic[48];
+} GuildExpedition;
+
+#define TOTAL_PLANETS 6
+typedef struct {
+    char name[32];
+    char desc[64];
+    int reqElem1;
+    int reqElem2;
+    int reqElem3;
+    int isForged;
+    int level;          // 1..5
+    int charge;         // 0..100%
+    int passiveEss;
+    int passiveDust;
+    int passiveGold;
+    int passiveAstral;
+} PlanetaryOrb;
+
+#define TOTAL_FAMILIARS 5
+typedef struct {
+    char name[32];
+    char title[32];
+    char affinity[32];
+    int elemAffinity1;
+    int elemAffinity2;
+    int bondLevel;      // 1..10
+    int bondXP;
+    int isUnlocked;
+    int burstCooldown;  // in seconds (0 = ready, max 45s)
+    char passiveDesc[64];
+    char burstName[32];
+    char burstDesc[64];
+} ElementalFamiliar;
+
 typedef struct {
     int discovered[TOTAL_ELEMENTS];
     int unlockedTiers[TOTAL_TIERS];
@@ -263,7 +312,7 @@ typedef struct {
     Quest quests[3];
     int slot1;
     int slot2;
-    int selectedEquipment; // 0=Crucible, 1=Retort, 2=Alembic, 3=Anvil, 4=Quests, 5=Shop, 6=Potions, 7=Codex, 8=Daily, 9=Prestige
+    int selectedEquipment; // 0=Crucible, 1=Retort, 2=Alembic, 3=Anvil, 4=Quests, 5=Shop, 6=Potions, 7=Codex, 8=Daily, 9=Prestige, 10=Expeditions, 11=Planetary, 12=Familiars
     int selectedTierFilter; // 0=All, 1..6=T1..T6
     int currentPage;
     int buttonElemMap[GRID_SIZE];
@@ -310,6 +359,13 @@ typedef struct {
     int astralCatalysis;  // +15% double yield chance per rank
     int totalPrestiges;
     int secretCombosFound;
+
+    // Loop 3 Features
+    GuildExpedition expeditions[TOTAL_EXPEDITIONS];
+    PlanetaryOrb planets[TOTAL_PLANETS];
+    ElementalFamiliar familiars[TOTAL_FAMILIARS];
+    int activeFamiliarIdx; // 0..4, or -1 if none
+    int planetaryPassiveTimer; // accumulates seconds towards passive tick
 } AlchemyState;
 
 static AlchemyState g_State;
@@ -363,7 +419,7 @@ static void SpawnExplosion(int cx, int cy, COLORREF color) {
 
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
-static HWND g_hEquipButtons[10];
+static HWND g_hEquipButtons[13];
 static HWND g_hModeButtons[3];
 static HWND g_hBlitzStartButton = NULL;
 static HWND g_hPuzzleSkipButton = NULL;
@@ -391,6 +447,14 @@ static HWND g_hDailyClaimButtons[3] = { NULL };
 static HWND g_hDailyRerollButton = NULL;
 static HWND g_hPrestigeRebirthButton = NULL;
 static HWND g_hAstralPerkButtons[4] = { NULL };
+
+// Loop 3 HWND Controls
+static HWND g_hExpeditionActionButtons[TOTAL_EXPEDITIONS] = { NULL };
+static HWND g_hPlanetForgeButtons[TOTAL_PLANETS] = { NULL };
+static HWND g_hPlanetChargeButton = NULL;
+static HWND g_hFamiliarSummonButtons[TOTAL_FAMILIARS] = { NULL };
+static HWND g_hFamiliarFeedButtons[TOTAL_FAMILIARS] = { NULL };
+static HWND g_hFamiliarBurstButton = NULL;
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
@@ -636,6 +700,196 @@ static void CheckDailyProgress(int actionType, int amount) {
     }
 }
 
+static void InitExpeditions() {
+    lstrcpyA(g_State.expeditions[0].name, "Atlantis Catacombs");
+    lstrcpyA(g_State.expeditions[0].desc, "Submerged ruins rich in primordial aquatic flora.");
+    g_State.expeditions[0].duration = 30;
+    g_State.expeditions[0].timeLeft = 0;
+    g_State.expeditions[0].status = 0;
+    g_State.expeditions[0].reqElem1 = 1; // Water
+    g_State.expeditions[0].reqElem2 = 11; // Plant
+    g_State.expeditions[0].rewardEss = 200;
+    g_State.expeditions[0].rewardDust = 150;
+    g_State.expeditions[0].rewardGold = 120;
+    g_State.expeditions[0].rewardAstral = 0;
+    g_State.expeditions[0].rewardXP = 150;
+    lstrcpyA(g_State.expeditions[0].relic, "Coral Siphon");
+
+    lstrcpyA(g_State.expeditions[1].name, "Aether Citadel");
+    lstrcpyA(g_State.expeditions[1].desc, "Floating cloud spire radiating pure celestial currents.");
+    g_State.expeditions[1].duration = 60;
+    g_State.expeditions[1].timeLeft = 0;
+    g_State.expeditions[1].status = 0;
+    g_State.expeditions[1].reqElem1 = 3; // Air
+    g_State.expeditions[1].reqElem2 = 44; // Star
+    g_State.expeditions[1].rewardEss = 350;
+    g_State.expeditions[1].rewardDust = 250;
+    g_State.expeditions[1].rewardGold = 200;
+    g_State.expeditions[1].rewardAstral = 1;
+    g_State.expeditions[1].rewardXP = 300;
+    lstrcpyA(g_State.expeditions[1].relic, "Zephyr Crown");
+
+    lstrcpyA(g_State.expeditions[2].name, "Magma Caldera");
+    lstrcpyA(g_State.expeditions[2].desc, "Infernal planar trench burning with subterranean embers.");
+    g_State.expeditions[2].duration = 90;
+    g_State.expeditions[2].timeLeft = 0;
+    g_State.expeditions[2].status = 0;
+    g_State.expeditions[2].reqElem1 = 0; // Fire
+    g_State.expeditions[2].reqElem2 = 5; // Lava
+    g_State.expeditions[2].rewardEss = 500;
+    g_State.expeditions[2].rewardDust = 400;
+    g_State.expeditions[2].rewardGold = 300;
+    g_State.expeditions[2].rewardAstral = 1;
+    g_State.expeditions[2].rewardXP = 450;
+    lstrcpyA(g_State.expeditions[2].relic, "Obsidian Core");
+
+    lstrcpyA(g_State.expeditions[3].name, "Chrono Rift");
+    lstrcpyA(g_State.expeditions[3].desc, "Fractured singularity where past and future collide.");
+    g_State.expeditions[3].duration = 120;
+    g_State.expeditions[3].timeLeft = 0;
+    g_State.expeditions[3].status = 0;
+    g_State.expeditions[3].reqElem1 = 54; // Time
+    g_State.expeditions[3].reqElem2 = 30; // Magic
+    g_State.expeditions[3].rewardEss = 800;
+    g_State.expeditions[3].rewardDust = 600;
+    g_State.expeditions[3].rewardGold = 500;
+    g_State.expeditions[3].rewardAstral = 2;
+    g_State.expeditions[3].rewardXP = 600;
+    lstrcpyA(g_State.expeditions[3].relic, "Temporal Hourglass");
+}
+
+static void InitPlanets() {
+    lstrcpyA(g_State.planets[0].name, "Mercury Core");
+    lstrcpyA(g_State.planets[0].desc, "+20 Gold/tick passive gold synthesis.");
+    g_State.planets[0].reqElem1 = 16; // Metal
+    g_State.planets[0].reqElem2 = 0;  // Fire
+    g_State.planets[0].reqElem3 = 6;  // Energy
+    g_State.planets[0].isForged = 0;
+    g_State.planets[0].level = 1;
+    g_State.planets[0].charge = 100;
+    g_State.planets[0].passiveGold = 20;
+
+    lstrcpyA(g_State.planets[1].name, "Venusian Vapor");
+    lstrcpyA(g_State.planets[1].desc, "+25 Essence/tick atmospheric distillation.");
+    g_State.planets[1].reqElem1 = 4;  // Steam
+    g_State.planets[1].reqElem2 = 7;  // Mud
+    g_State.planets[1].reqElem3 = 31; // Mana
+    g_State.planets[1].isForged = 0;
+    g_State.planets[1].level = 1;
+    g_State.planets[1].charge = 100;
+    g_State.planets[1].passiveEss = 25;
+
+    lstrcpyA(g_State.planets[2].name, "Terra Biosphere");
+    lstrcpyA(g_State.planets[2].desc, "+30 Dust/tick organic flora harvesting.");
+    g_State.planets[2].reqElem1 = 28; // Life
+    g_State.planets[2].reqElem2 = 11; // Plant
+    g_State.planets[2].reqElem3 = 15; // Tree
+    g_State.planets[2].isForged = 0;
+    g_State.planets[2].level = 1;
+    g_State.planets[2].charge = 100;
+    g_State.planets[2].passiveDust = 30;
+
+    lstrcpyA(g_State.planets[3].name, "Mars Iron Crust");
+    lstrcpyA(g_State.planets[3].desc, "+15 Ess & +15 Dust / tick rust refinement.");
+    g_State.planets[3].reqElem1 = 19; // Rust
+    g_State.planets[3].reqElem2 = 5;  // Lava
+    g_State.planets[3].reqElem3 = 20; // Blade
+    g_State.planets[3].isForged = 0;
+    g_State.planets[3].level = 1;
+    g_State.planets[3].charge = 100;
+    g_State.planets[3].passiveEss = 15;
+    g_State.planets[3].passiveDust = 15;
+
+    lstrcpyA(g_State.planets[4].name, "Jupiter Great Eye");
+    lstrcpyA(g_State.planets[4].desc, "+30 Gold & +25 Ess / tick vortex harvesting.");
+    g_State.planets[4].reqElem1 = 22; // Electricity
+    g_State.planets[4].reqElem2 = 25; // Explosion
+    g_State.planets[4].reqElem3 = 30; // Magic
+    g_State.planets[4].isForged = 0;
+    g_State.planets[4].level = 1;
+    g_State.planets[4].charge = 100;
+    g_State.planets[4].passiveGold = 30;
+    g_State.planets[4].passiveEss = 25;
+
+    lstrcpyA(g_State.planets[5].name, "Solar Singularity");
+    lstrcpyA(g_State.planets[5].desc, "+1 Astral Shard + 50 Gold / tick stellar furnace.");
+    g_State.planets[5].reqElem1 = 42; // Sun
+    g_State.planets[5].reqElem2 = 52; // Supernova
+    g_State.planets[5].reqElem3 = 56; // Philosopher's Stone
+    g_State.planets[5].isForged = 0;
+    g_State.planets[5].level = 1;
+    g_State.planets[5].charge = 100;
+    g_State.planets[5].passiveGold = 50;
+    g_State.planets[5].passiveAstral = 1;
+}
+
+static void InitFamiliars() {
+    lstrcpyA(g_State.familiars[0].name, "Ignis");
+    lstrcpyA(g_State.familiars[0].title, "Pyre Salamander");
+    lstrcpyA(g_State.familiars[0].affinity, "Fire / Lava");
+    g_State.familiars[0].elemAffinity1 = 0;
+    g_State.familiars[0].elemAffinity2 = 5;
+    g_State.familiars[0].bondLevel = 1;
+    g_State.familiars[0].bondXP = 0;
+    g_State.familiars[0].isUnlocked = 1;
+    g_State.familiars[0].burstCooldown = 0;
+    lstrcpyA(g_State.familiars[0].passiveDesc, "+15 Dust/tick & +20% Transmute speed");
+    lstrcpyA(g_State.familiars[0].burstName, "Flame Torrent");
+    lstrcpyA(g_State.familiars[0].burstDesc, "Instant +150 Dust & +100 Essence burst");
+
+    lstrcpyA(g_State.familiars[1].name, "Hydra");
+    lstrcpyA(g_State.familiars[1].title, "Tidal Drake");
+    lstrcpyA(g_State.familiars[1].affinity, "Water / Rain");
+    g_State.familiars[1].elemAffinity1 = 1;
+    g_State.familiars[1].elemAffinity2 = 8;
+    g_State.familiars[1].bondLevel = 1;
+    g_State.familiars[1].bondXP = 0;
+    g_State.familiars[1].isUnlocked = 1;
+    g_State.familiars[1].burstCooldown = 0;
+    lstrcpyA(g_State.familiars[1].passiveDesc, "+20 Ess/tick & +25% Potion duration");
+    lstrcpyA(g_State.familiars[1].burstName, "Tidal Surge");
+    lstrcpyA(g_State.familiars[1].burstDesc, "Instant +150 Essence & +100 Gold burst");
+
+    lstrcpyA(g_State.familiars[2].name, "Terran");
+    lstrcpyA(g_State.familiars[2].title, "Crystal Golem");
+    lstrcpyA(g_State.familiars[2].affinity, "Earth / Crystal");
+    g_State.familiars[2].elemAffinity1 = 2;
+    g_State.familiars[2].elemAffinity2 = 34;
+    g_State.familiars[2].bondLevel = 1;
+    g_State.familiars[2].bondXP = 0;
+    g_State.familiars[2].isUnlocked = 1;
+    g_State.familiars[2].burstCooldown = 0;
+    lstrcpyA(g_State.familiars[2].passiveDesc, "+15 Gold/tick & +30% Quest rewards");
+    lstrcpyA(g_State.familiars[2].burstName, "Midas Quake");
+    lstrcpyA(g_State.familiars[2].burstDesc, "Instant +250 Gold & +100 Dust burst");
+
+    lstrcpyA(g_State.familiars[3].name, "Zephyr");
+    lstrcpyA(g_State.familiars[3].title, "Aether Sylph");
+    lstrcpyA(g_State.familiars[3].affinity, "Air / Magic");
+    g_State.familiars[3].elemAffinity1 = 3;
+    g_State.familiars[3].elemAffinity2 = 30;
+    g_State.familiars[3].bondLevel = 1;
+    g_State.familiars[3].bondXP = 0;
+    g_State.familiars[3].isUnlocked = 1;
+    g_State.familiars[3].burstCooldown = 0;
+    lstrcpyA(g_State.familiars[3].passiveDesc, "Auto-fills recipes & +20% Blitz score");
+    lstrcpyA(g_State.familiars[3].burstName, "Aether Gale");
+    lstrcpyA(g_State.familiars[3].burstDesc, "Free Oracle hint + instant random discovery");
+
+    lstrcpyA(g_State.familiars[4].name, "Astron");
+    lstrcpyA(g_State.familiars[4].title, "Cosmic Chimera");
+    lstrcpyA(g_State.familiars[4].affinity, "Cosmos / Mythic");
+    g_State.familiars[4].elemAffinity1 = 48;
+    g_State.familiars[4].elemAffinity2 = 62;
+    g_State.familiars[4].bondLevel = 1;
+    g_State.familiars[4].bondXP = 0;
+    g_State.familiars[4].isUnlocked = 1;
+    g_State.familiars[4].burstCooldown = 0;
+    lstrcpyA(g_State.familiars[4].passiveDesc, "Boosts all familiar passives by +50%");
+    lstrcpyA(g_State.familiars[4].burstName, "Supernova Bloom");
+    lstrcpyA(g_State.familiars[4].burstDesc, "Instant +1 Astral Shard & +200 Ess/Dust/Gold");
+}
+
 static void UpdateEquipmentUI(HWND hwnd) {
     if (g_State.showHelpModal) {
         for (int t = 0; t < 4; t++) {
@@ -645,7 +899,7 @@ static void UpdateEquipmentUI(HWND hwnd) {
 
         for (int k = 0; k < GRID_SIZE; k++) if (g_hGridButtons[k]) ShowWindow(g_hGridButtons[k], SW_HIDE);
         for (int t = 0; t <= TOTAL_TIERS; t++) if (g_hTierButtons[t]) ShowWindow(g_hTierButtons[t], SW_HIDE);
-        for (int e = 0; e < 10; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_HIDE);
+        for (int e = 0; e < 13; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_HIDE);
         for (int m = 0; m < 3; m++) if (g_hModeButtons[m]) ShowWindow(g_hModeButtons[m], SW_HIDE);
         if (g_hBlitzStartButton) ShowWindow(g_hBlitzStartButton, SW_HIDE);
         if (g_hPuzzleSkipButton) ShowWindow(g_hPuzzleSkipButton, SW_HIDE);
@@ -669,6 +923,14 @@ static void UpdateEquipmentUI(HWND hwnd) {
         if (g_hDailyRerollButton) ShowWindow(g_hDailyRerollButton, SW_HIDE);
         if (g_hPrestigeRebirthButton) ShowWindow(g_hPrestigeRebirthButton, SW_HIDE);
         for (int a = 0; a < 4; a++) if (g_hAstralPerkButtons[a]) ShowWindow(g_hAstralPerkButtons[a], SW_HIDE);
+        for (int ex = 0; ex < TOTAL_EXPEDITIONS; ex++) if (g_hExpeditionActionButtons[ex]) ShowWindow(g_hExpeditionActionButtons[ex], SW_HIDE);
+        for (int pl = 0; pl < TOTAL_PLANETS; pl++) if (g_hPlanetForgeButtons[pl]) ShowWindow(g_hPlanetForgeButtons[pl], SW_HIDE);
+        if (g_hPlanetChargeButton) ShowWindow(g_hPlanetChargeButton, SW_HIDE);
+        for (int fa = 0; fa < TOTAL_FAMILIARS; fa++) {
+            if (g_hFamiliarSummonButtons[fa]) ShowWindow(g_hFamiliarSummonButtons[fa], SW_HIDE);
+            if (g_hFamiliarFeedButtons[fa]) ShowWindow(g_hFamiliarFeedButtons[fa], SW_HIDE);
+        }
+        if (g_hFamiliarBurstButton) ShowWindow(g_hFamiliarBurstButton, SW_HIDE);
         return;
     } else {
         for (int t = 0; t < 4; t++) {
@@ -677,7 +939,7 @@ static void UpdateEquipmentUI(HWND hwnd) {
         if (g_hHelpCloseButton) ShowWindow(g_hHelpCloseButton, SW_HIDE);
 
         for (int t = 0; t <= TOTAL_TIERS; t++) if (g_hTierButtons[t]) ShowWindow(g_hTierButtons[t], SW_SHOW);
-        for (int e = 0; e < 10; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_SHOW);
+        for (int e = 0; e < 13; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_SHOW);
         for (int m = 0; m < 3; m++) if (g_hModeButtons[m]) ShowWindow(g_hModeButtons[m], SW_SHOW);
         if (g_hSoundButton) ShowWindow(g_hSoundButton, SW_SHOW);
         if (g_hHelpButton) ShowWindow(g_hHelpButton, SW_SHOW);
@@ -695,9 +957,12 @@ static void UpdateEquipmentUI(HWND hwnd) {
     int isCodex = (g_State.selectedEquipment == 7);
     int isDaily = (g_State.selectedEquipment == 8);
     int isPrestige = (g_State.selectedEquipment == 9);
+    int isExpeditions = (g_State.selectedEquipment == 10);
+    int isPlanetary = (g_State.selectedEquipment == 11);
+    int isFamiliars = (g_State.selectedEquipment == 12);
     int isCrucible = (g_State.selectedEquipment == 0);
 
-    if (isQuests || isWorkshop || isCodex || isDaily || isPrestige) {
+    if (isQuests || isWorkshop || isCodex || isDaily || isPrestige || isExpeditions || isPlanetary || isFamiliars) {
         if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_HIDE);
         if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_HIDE);
         if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_HIDE);
@@ -842,6 +1107,141 @@ static void UpdateEquipmentUI(HWND hwnd) {
         }
     }
 
+    // Loop 3: Expeditions UI Toggle
+    if (isExpeditions) {
+        for (int ex = 0; ex < TOTAL_EXPEDITIONS; ex++) {
+            if (g_hExpeditionActionButtons[ex]) {
+                ShowWindow(g_hExpeditionActionButtons[ex], SW_SHOW);
+                if (g_State.expeditions[ex].status == 0) {
+                    int hasReq = g_State.discovered[g_State.expeditions[ex].reqElem1] && g_State.discovered[g_State.expeditions[ex].reqElem2];
+                    if (hasReq) {
+                        SetWindowTextA(g_hExpeditionActionButtons[ex], "Dispatch");
+                        EnableWindow(g_hExpeditionActionButtons[ex], TRUE);
+                    } else {
+                        SetWindowTextA(g_hExpeditionActionButtons[ex], "Req Locked");
+                        EnableWindow(g_hExpeditionActionButtons[ex], FALSE);
+                    }
+                } else if (g_State.expeditions[ex].status == 1) {
+                    char tBuf[32];
+                    wsprintfA(tBuf, "%ds Left", g_State.expeditions[ex].timeLeft);
+                    SetWindowTextA(g_hExpeditionActionButtons[ex], tBuf);
+                    EnableWindow(g_hExpeditionActionButtons[ex], FALSE);
+                } else {
+                    SetWindowTextA(g_hExpeditionActionButtons[ex], "Claim!");
+                    EnableWindow(g_hExpeditionActionButtons[ex], TRUE);
+                }
+            }
+        }
+    } else {
+        for (int ex = 0; ex < TOTAL_EXPEDITIONS; ex++) {
+            if (g_hExpeditionActionButtons[ex]) ShowWindow(g_hExpeditionActionButtons[ex], SW_HIDE);
+        }
+    }
+
+    // Loop 3: Planetary UI Toggle
+    if (isPlanetary) {
+        for (int pl = 0; pl < TOTAL_PLANETS; pl++) {
+            if (g_hPlanetForgeButtons[pl]) {
+                ShowWindow(g_hPlanetForgeButtons[pl], SW_SHOW);
+                int hasCat = g_State.discovered[g_State.planets[pl].reqElem1] &&
+                             g_State.discovered[g_State.planets[pl].reqElem2] &&
+                             g_State.discovered[g_State.planets[pl].reqElem3];
+                if (!g_State.planets[pl].isForged) {
+                    if (hasCat && g_State.gold >= 100) {
+                        SetWindowTextA(g_hPlanetForgeButtons[pl], "Forge (100G)");
+                        EnableWindow(g_hPlanetForgeButtons[pl], TRUE);
+                    } else {
+                        SetWindowTextA(g_hPlanetForgeButtons[pl], hasCat ? "100 Gold" : "Locked");
+                        EnableWindow(g_hPlanetForgeButtons[pl], FALSE);
+                    }
+                } else {
+                    if (g_State.planets[pl].level >= 5) {
+                        SetWindowTextA(g_hPlanetForgeButtons[pl], "MAX");
+                        EnableWindow(g_hPlanetForgeButtons[pl], FALSE);
+                    } else {
+                        int upCost = g_State.planets[pl].level * 150;
+                        if (g_State.gold >= upCost) {
+                            char bStr[32];
+                            wsprintfA(bStr, "Lvl %d (%dG)", g_State.planets[pl].level + 1, upCost);
+                            SetWindowTextA(g_hPlanetForgeButtons[pl], bStr);
+                            EnableWindow(g_hPlanetForgeButtons[pl], TRUE);
+                        } else {
+                            SetWindowTextA(g_hPlanetForgeButtons[pl], "Upgrade");
+                            EnableWindow(g_hPlanetForgeButtons[pl], FALSE);
+                        }
+                    }
+                }
+            }
+        }
+        if (g_hPlanetChargeButton) {
+            ShowWindow(g_hPlanetChargeButton, SW_SHOW);
+            EnableWindow(g_hPlanetChargeButton, g_State.essence >= 50 ? TRUE : FALSE);
+        }
+    } else {
+        for (int pl = 0; pl < TOTAL_PLANETS; pl++) {
+            if (g_hPlanetForgeButtons[pl]) ShowWindow(g_hPlanetForgeButtons[pl], SW_HIDE);
+        }
+        if (g_hPlanetChargeButton) ShowWindow(g_hPlanetChargeButton, SW_HIDE);
+    }
+
+    // Loop 3: Familiars UI Toggle
+    if (isFamiliars) {
+        for (int fa = 0; fa < TOTAL_FAMILIARS; fa++) {
+            if (g_hFamiliarSummonButtons[fa]) {
+                ShowWindow(g_hFamiliarSummonButtons[fa], SW_SHOW);
+                if (g_State.activeFamiliarIdx == fa) {
+                    SetWindowTextA(g_hFamiliarSummonButtons[fa], "Active");
+                    EnableWindow(g_hFamiliarSummonButtons[fa], FALSE);
+                } else {
+                    SetWindowTextA(g_hFamiliarSummonButtons[fa], "Summon");
+                    EnableWindow(g_hFamiliarSummonButtons[fa], TRUE);
+                }
+            }
+            if (g_hFamiliarFeedButtons[fa]) {
+                ShowWindow(g_hFamiliarFeedButtons[fa], SW_SHOW);
+                int feedCost = g_State.familiars[fa].bondLevel * 40;
+                if (g_State.familiars[fa].bondLevel >= 10) {
+                    SetWindowTextA(g_hFamiliarFeedButtons[fa], "MAX");
+                    EnableWindow(g_hFamiliarFeedButtons[fa], FALSE);
+                } else if (g_State.essence >= feedCost && g_State.gold >= feedCost / 2) {
+                    char fStr[32];
+                    wsprintfA(fStr, "Feed (%dE)", feedCost);
+                    SetWindowTextA(g_hFamiliarFeedButtons[fa], fStr);
+                    EnableWindow(g_hFamiliarFeedButtons[fa], TRUE);
+                } else {
+                    SetWindowTextA(g_hFamiliarFeedButtons[fa], "Feed");
+                    EnableWindow(g_hFamiliarFeedButtons[fa], FALSE);
+                }
+            }
+        }
+        if (g_hFamiliarBurstButton) {
+            ShowWindow(g_hFamiliarBurstButton, SW_SHOW);
+            if (g_State.activeFamiliarIdx >= 0) {
+                int cd = g_State.familiars[g_State.activeFamiliarIdx].burstCooldown;
+                if (cd <= 0) {
+                    char bStr[64];
+                    wsprintfA(bStr, "🔥 BURST: %s (Ready!)", g_State.familiars[g_State.activeFamiliarIdx].burstName);
+                    SetWindowTextA(g_hFamiliarBurstButton, bStr);
+                    EnableWindow(g_hFamiliarBurstButton, TRUE);
+                } else {
+                    char bStr[64];
+                    wsprintfA(bStr, "⏳ %s Cooldown (%ds)", g_State.familiars[g_State.activeFamiliarIdx].burstName, cd);
+                    SetWindowTextA(g_hFamiliarBurstButton, bStr);
+                    EnableWindow(g_hFamiliarBurstButton, FALSE);
+                }
+            } else {
+                SetWindowTextA(g_hFamiliarBurstButton, "No Companion Summoned");
+                EnableWindow(g_hFamiliarBurstButton, FALSE);
+            }
+        }
+    } else {
+        for (int fa = 0; fa < TOTAL_FAMILIARS; fa++) {
+            if (g_hFamiliarSummonButtons[fa]) ShowWindow(g_hFamiliarSummonButtons[fa], SW_HIDE);
+            if (g_hFamiliarFeedButtons[fa]) ShowWindow(g_hFamiliarFeedButtons[fa], SW_HIDE);
+        }
+        if (g_hFamiliarBurstButton) ShowWindow(g_hFamiliarBurstButton, SW_HIDE);
+    }
+
     if (g_hBlitzStartButton) {
         ShowWindow(g_hBlitzStartButton, (g_State.gameMode == 1) ? SW_SHOW : SW_HIDE);
     }
@@ -881,12 +1281,16 @@ static void InitGameState() {
     g_State.soundEnabled = 1;
     g_State.showHelpModal = 0;
     g_State.helpActiveTab = 0;
+    g_State.activeFamiliarIdx = 0; // Default to Ignis
     lstrcpyA(g_State.lastStatus, "Transmutation Crucible Ready");
     g_State.searchFilter[0] = '\0';
     for (int q = 0; q < 3; q++) {
         GenerateQuest(q);
     }
     InitDailyChallenges();
+    InitExpeditions();
+    InitPlanets();
+    InitFamiliars();
 }
 
 static void UpdateSlotButtonText() {
@@ -1032,32 +1436,60 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hEquipButtons[8] = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 416, 116, 43, 20, hwnd, (HMENU)708, NULL, NULL);
             g_hEquipButtons[9] = CreateWindowA("BUTTON", "Rebirth", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 461, 116, 46, 20, hwnd, (HMENU)709, NULL, NULL);
 
-            g_hCodexFilterBtns[0] = CreateWindowA("BUTTON", "All", WS_CHILD | BS_PUSHBUTTON, 282, 140, 36, 22, hwnd, (HMENU)1100, NULL, NULL);
-            g_hCodexFilterBtns[1] = CreateWindowA("BUTTON", "Disc", WS_CHILD | BS_PUSHBUTTON, 320, 140, 38, 22, hwnd, (HMENU)1101, NULL, NULL);
-            g_hCodexFilterBtns[2] = CreateWindowA("BUTTON", "Lock", WS_CHILD | BS_PUSHBUTTON, 360, 140, 38, 22, hwnd, (HMENU)1102, NULL, NULL);
+            g_hEquipButtons[10] = CreateWindowA("BUTTON", "Expeditions", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 138, 74, 20, hwnd, (HMENU)710, NULL, NULL);
+            g_hEquipButtons[11] = CreateWindowA("BUTTON", "Planetary", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 353, 138, 74, 20, hwnd, (HMENU)711, NULL, NULL);
+            g_hEquipButtons[12] = CreateWindowA("BUTTON", "Familiars", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 430, 138, 77, 20, hwnd, (HMENU)712, NULL, NULL);
 
-            g_hPotionDrinkButtons[0] = CreateWindowA("BUTTON", "Drink Strength", WS_CHILD | BS_PUSHBUTTON, 282, 140, 108, 26, hwnd, (HMENU)1000, NULL, NULL);
-            g_hPotionDrinkButtons[1] = CreateWindowA("BUTTON", "Drink Invis", WS_CHILD | BS_PUSHBUTTON, 394, 140, 108, 26, hwnd, (HMENU)1001, NULL, NULL);
-            g_hPotionDrinkButtons[2] = CreateWindowA("BUTTON", "Drink Mana", WS_CHILD | BS_PUSHBUTTON, 282, 170, 108, 26, hwnd, (HMENU)1002, NULL, NULL);
-            g_hPotionDrinkButtons[3] = CreateWindowA("BUTTON", "Drink Life", WS_CHILD | BS_PUSHBUTTON, 394, 170, 108, 26, hwnd, (HMENU)1003, NULL, NULL);
+            g_hCodexFilterBtns[0] = CreateWindowA("BUTTON", "All", WS_CHILD | BS_PUSHBUTTON, 282, 160, 36, 22, hwnd, (HMENU)1100, NULL, NULL);
+            g_hCodexFilterBtns[1] = CreateWindowA("BUTTON", "Disc", WS_CHILD | BS_PUSHBUTTON, 320, 160, 38, 22, hwnd, (HMENU)1101, NULL, NULL);
+            g_hCodexFilterBtns[2] = CreateWindowA("BUTTON", "Lock", WS_CHILD | BS_PUSHBUTTON, 360, 160, 38, 22, hwnd, (HMENU)1102, NULL, NULL);
+
+            g_hPotionDrinkButtons[0] = CreateWindowA("BUTTON", "Drink Strength", WS_CHILD | BS_PUSHBUTTON, 282, 160, 108, 26, hwnd, (HMENU)1000, NULL, NULL);
+            g_hPotionDrinkButtons[1] = CreateWindowA("BUTTON", "Drink Invis", WS_CHILD | BS_PUSHBUTTON, 394, 160, 108, 26, hwnd, (HMENU)1001, NULL, NULL);
+            g_hPotionDrinkButtons[2] = CreateWindowA("BUTTON", "Drink Mana", WS_CHILD | BS_PUSHBUTTON, 282, 190, 108, 26, hwnd, (HMENU)1002, NULL, NULL);
+            g_hPotionDrinkButtons[3] = CreateWindowA("BUTTON", "Drink Life", WS_CHILD | BS_PUSHBUTTON, 394, 190, 108, 26, hwnd, (HMENU)1003, NULL, NULL);
 
             g_hDailyClaimButtons[0] = CreateWindowA("BUTTON", "Claim", WS_CHILD | BS_PUSHBUTTON, 430, 170, 70, 24, hwnd, (HMENU)1500, NULL, NULL);
             g_hDailyClaimButtons[1] = CreateWindowA("BUTTON", "Claim", WS_CHILD | BS_PUSHBUTTON, 430, 245, 70, 24, hwnd, (HMENU)1501, NULL, NULL);
             g_hDailyClaimButtons[2] = CreateWindowA("BUTTON", "Claim", WS_CHILD | BS_PUSHBUTTON, 430, 320, 70, 24, hwnd, (HMENU)1502, NULL, NULL);
             g_hDailyRerollButton = CreateWindowA("BUTTON", "🔄 Reroll Trials (25 Gold)", WS_CHILD | BS_PUSHBUTTON, 315, 385, 160, 28, hwnd, (HMENU)1503, NULL, NULL);
 
-            g_hPrestigeRebirthButton = CreateWindowA("BUTTON", "🌟 Perform Magnum Opus Rebirth (35+ Elem)", WS_CHILD | BS_PUSHBUTTON, 280, 145, 225, 32, hwnd, (HMENU)1600, NULL, NULL);
+            g_hPrestigeRebirthButton = CreateWindowA("BUTTON", "🌟 Perform Magnum Opus Rebirth (35+ Elem)", WS_CHILD | BS_PUSHBUTTON, 280, 165, 225, 32, hwnd, (HMENU)1600, NULL, NULL);
             g_hAstralPerkButtons[0] = CreateWindowA("BUTTON", "Unlock", WS_CHILD | BS_PUSHBUTTON, 435, 210, 68, 24, hwnd, (HMENU)1601, NULL, NULL);
             g_hAstralPerkButtons[1] = CreateWindowA("BUTTON", "Unlock", WS_CHILD | BS_PUSHBUTTON, 435, 265, 68, 24, hwnd, (HMENU)1602, NULL, NULL);
             g_hAstralPerkButtons[2] = CreateWindowA("BUTTON", "Unlock", WS_CHILD | BS_PUSHBUTTON, 435, 320, 68, 24, hwnd, (HMENU)1603, NULL, NULL);
             g_hAstralPerkButtons[3] = CreateWindowA("BUTTON", "Unlock", WS_CHILD | BS_PUSHBUTTON, 435, 375, 68, 24, hwnd, (HMENU)1604, NULL, NULL);
 
+            // Loop 3: Expedition Action Buttons
+            for (int ex = 0; ex < TOTAL_EXPEDITIONS; ex++) {
+                g_hExpeditionActionButtons[ex] = CreateWindowA("BUTTON", "Dispatch", WS_CHILD | BS_PUSHBUTTON,
+                    430, 172 + ex * 56, 68, 26, hwnd, (HMENU)(UINT_PTR)(1700 + ex), NULL, NULL);
+            }
+
+            // Loop 3: Planetary Forge Buttons & Overcharge
+            for (int pl = 0; pl < TOTAL_PLANETS; pl++) {
+                g_hPlanetForgeButtons[pl] = CreateWindowA("BUTTON", "Forge", WS_CHILD | BS_PUSHBUTTON,
+                    428, 168 + pl * 34, 70, 22, hwnd, (HMENU)(UINT_PTR)(1800 + pl), NULL, NULL);
+            }
+            g_hPlanetChargeButton = CreateWindowA("BUTTON", "⚡ Overcharge Planets (50 Ess)", WS_CHILD | BS_PUSHBUTTON,
+                295, 385, 195, 28, hwnd, (HMENU)1806, NULL, NULL);
+
+            // Loop 3: Familiar Summon & Feed Buttons
+            for (int fa = 0; fa < TOTAL_FAMILIARS; fa++) {
+                g_hFamiliarSummonButtons[fa] = CreateWindowA("BUTTON", "Summon", WS_CHILD | BS_PUSHBUTTON,
+                    370, 168 + fa * 36, 60, 22, hwnd, (HMENU)(UINT_PTR)(1900 + fa), NULL, NULL);
+                g_hFamiliarFeedButtons[fa] = CreateWindowA("BUTTON", "Feed", WS_CHILD | BS_PUSHBUTTON,
+                    435, 168 + fa * 36, 65, 22, hwnd, (HMENU)(UINT_PTR)(1910 + fa), NULL, NULL);
+            }
+            g_hFamiliarBurstButton = CreateWindowA("BUTTON", "🔥 ACTIVATE FAMILIAR BURST", WS_CHILD | BS_PUSHBUTTON,
+                285, 360, 215, 30, hwnd, (HMENU)1920, NULL, NULL);
+
             SetTimer(hwnd, 1, 1000, NULL);
 
-            g_hUpgradeButtons[0] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 142, 65, 24, hwnd, (HMENU)900, NULL, NULL);
-            g_hUpgradeButtons[1] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 202, 65, 24, hwnd, (HMENU)901, NULL, NULL);
-            g_hUpgradeButtons[2] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 262, 65, 24, hwnd, (HMENU)902, NULL, NULL);
-            g_hUpgradeButtons[3] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 322, 65, 24, hwnd, (HMENU)903, NULL, NULL);
+            g_hUpgradeButtons[0] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 162, 65, 24, hwnd, (HMENU)900, NULL, NULL);
+            g_hUpgradeButtons[1] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 222, 65, 24, hwnd, (HMENU)901, NULL, NULL);
+            g_hUpgradeButtons[2] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 282, 65, 24, hwnd, (HMENU)902, NULL, NULL);
+            g_hUpgradeButtons[3] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 342, 65, 24, hwnd, (HMENU)903, NULL, NULL);
 
             g_hAutoFillButton = CreateWindowA("BUTTON", "⚡ Auto", WS_CHILD | BS_PUSHBUTTON, 280, 315, 46, 28, hwnd, (HMENU)904, NULL, NULL);
 
@@ -1068,8 +1500,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowA("BUTTON", "Clear Crucible", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 315, 125, 28, hwnd, (HMENU)202, NULL, NULL);
             CreateWindowA("BUTTON", "Reset Progress", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 350, 125, 26, hwnd, (HMENU)203, NULL, NULL);
 
-            g_hQuestTurnInButtons[0] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 155, 65, 26, hwnd, (HMENU)800, NULL, NULL);
-            g_hQuestTurnInButtons[1] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 235, 65, 26, hwnd, (HMENU)801, NULL, NULL);
+            g_hQuestTurnInButtons[0] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 175, 65, 26, hwnd, (HMENU)800, NULL, NULL);
+            g_hQuestTurnInButtons[1] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 245, 65, 26, hwnd, (HMENU)801, NULL, NULL);
             g_hQuestTurnInButtons[2] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 315, 65, 26, hwnd, (HMENU)802, NULL, NULL);
             g_hQuestRerollButton = CreateWindowA("BUTTON", "🔄 Reroll (15 Gold)", WS_CHILD | BS_PUSHBUTTON, 325, 385, 140, 28, hwnd, (HMENU)803, NULL, NULL);
 
@@ -1079,7 +1511,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hJournalEdit = CreateWindowA("EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_BORDER,
                 530, 96, 225, 415, hwnd, (HMENU)402, NULL, NULL);
 
-            AddJournalLog("Welcome Apprentice Alchemist!\r\nDiscover 60+ elements across 6 Tiers including Secret Mythic Combos!\r\n\r\nComplete Daily Trials and perform Magnum Opus Rebirth to earn Astral Shards!");
+            AddJournalLog("Welcome Apprentice Alchemist!\r\nDiscover 60+ elements across 6 Tiers including Secret Mythic Combos!\r\n\r\nLaunch Guild Expeditions, forge Planetary Cores, and summon Elemental Familiars!");
             break;
         }
 
@@ -1106,6 +1538,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (key == 'A' || key == 'a') {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(904, 0), 0);
+                } else if (key == 'F' || key == 'f') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1920, 0), 0);
                 } else if (key >= '0' && key <= '6') {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(500 + (key - '0'), 0), 0);
                 }
@@ -1131,6 +1565,73 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT vesselRect = { 300, 110, 480, 230 };
             InvalidateRect(hwnd, &vesselRect, FALSE);
             changed = 1;
+
+            // Loop 3: Expedition Timers
+            for (int ex = 0; ex < TOTAL_EXPEDITIONS; ex++) {
+                if (g_State.expeditions[ex].status == 1) {
+                    if (g_State.expeditions[ex].timeLeft > 0) {
+                        g_State.expeditions[ex].timeLeft--;
+                        if (g_State.expeditions[ex].timeLeft == 0) {
+                            g_State.expeditions[ex].status = 2; // Complete
+                            char logMsg[256];
+                            wsprintfA(logMsg, "🗺️ EXPEDITION COMPLETE! Party safely returned from %s with rare treasures!",
+                                g_State.expeditions[ex].name);
+                            AddJournalLog(logMsg);
+                            wsprintfA(g_State.lastStatus, "Expedition Returned: %s!", g_State.expeditions[ex].name);
+                            PlayDiscoveryFanfare();
+                        }
+                        changed = 1;
+                    }
+                }
+            }
+
+            // Loop 3: Familiar Burst Cooldown
+            for (int fa = 0; fa < TOTAL_FAMILIARS; fa++) {
+                if (g_State.familiars[fa].burstCooldown > 0) {
+                    g_State.familiars[fa].burstCooldown--;
+                    changed = 1;
+                }
+            }
+
+            // Loop 3: Active Familiar Passive Harvesting (every 10s)
+            static int famTick = 0;
+            famTick++;
+            if (famTick >= 10) {
+                famTick = 0;
+                if (g_State.activeFamiliarIdx >= 0) {
+                    int fa = g_State.activeFamiliarIdx;
+                    int bLvl = g_State.familiars[fa].bondLevel;
+                    if (fa == 0) g_State.dust += 5 * bLvl;
+                    else if (fa == 1) g_State.essence += 5 * bLvl;
+                    else if (fa == 2) g_State.gold += 5 * bLvl;
+                    else if (fa == 3) { g_State.essence += 3 * bLvl; g_State.dust += 3 * bLvl; }
+                    else if (fa == 4) { g_State.essence += 4 * bLvl; g_State.dust += 4 * bLvl; g_State.gold += 4 * bLvl; }
+                    changed = 1;
+                }
+            }
+
+            // Loop 3: Planetary Passive Dividends (every 20s)
+            g_State.planetaryPassiveTimer++;
+            if (g_State.planetaryPassiveTimer >= 20) {
+                g_State.planetaryPassiveTimer = 0;
+                int pG = 0, pE = 0, pD = 0, pA = 0;
+                for (int pl = 0; pl < TOTAL_PLANETS; pl++) {
+                    if (g_State.planets[pl].isForged) {
+                        int lvl = g_State.planets[pl].level;
+                        pG += g_State.planets[pl].passiveGold * lvl;
+                        pE += g_State.planets[pl].passiveEss * lvl;
+                        pD += g_State.planets[pl].passiveDust * lvl;
+                        pA += g_State.planets[pl].passiveAstral * lvl;
+                    }
+                }
+                if (pG > 0 || pE > 0 || pD > 0 || pA > 0) {
+                    g_State.gold += pG;
+                    g_State.essence += pE;
+                    g_State.dust += pD;
+                    g_State.astralShards += pA;
+                    changed = 1;
+                }
+            }
 
             if (g_State.gameMode == 1 && g_State.blitzActive) {
                 if (g_State.blitzTimeLeft > 0) {
@@ -1243,7 +1744,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            else if (id >= 700 && id <= 709) {
+            else if (id >= 700 && id <= 712) {
                 g_State.selectedEquipment = id - 700;
                 if (g_hMainActionButton) {
                     if (g_State.selectedEquipment == 0) SetWindowTextA(g_hMainActionButton, "✨ Transmute");
@@ -1254,6 +1755,227 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 UpdateEquipmentUI(hwnd);
                 PlayGlassClink();
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id >= 1700 && id <= 1703) {
+                int ex = id - 1700;
+                if (g_State.expeditions[ex].status == 0) {
+                    int hasReq = g_State.discovered[g_State.expeditions[ex].reqElem1] && g_State.discovered[g_State.expeditions[ex].reqElem2];
+                    if (!hasReq) {
+                        AddJournalLog("⚠️ Required catalyst elements not discovered yet!");
+                        PlayGlassClink();
+                    } else {
+                        g_State.expeditions[ex].status = 1;
+                        g_State.expeditions[ex].timeLeft = g_State.expeditions[ex].duration;
+                        char msg[256];
+                        wsprintfA(msg, "🗺️ EXPEDITION DISPATCHED: Exploration party set out for %s (%ds duration)!",
+                            g_State.expeditions[ex].name, g_State.expeditions[ex].duration);
+                        AddJournalLog(msg);
+                        wsprintfA(g_State.lastStatus, "Expedition: %s En Route", g_State.expeditions[ex].name);
+                        PlayMagicFanfare();
+                        UpdateEquipmentUI(hwnd);
+                    }
+                } else if (g_State.expeditions[ex].status == 2) {
+                    g_State.expeditions[ex].status = 0;
+                    int essG = g_State.expeditions[ex].rewardEss;
+                    int dustG = g_State.expeditions[ex].rewardDust;
+                    int goldG = g_State.expeditions[ex].rewardGold;
+                    int astG = g_State.expeditions[ex].rewardAstral;
+                    int xpG = g_State.expeditions[ex].rewardXP;
+
+                    if (g_State.activeFamiliarIdx == 2) goldG = goldG * 130 / 100;
+                    if (g_State.astralMidas > 0) goldG += goldG * (g_State.astralMidas * 25) / 100;
+
+                    g_State.essence += essG;
+                    g_State.dust += dustG;
+                    g_State.gold += goldG;
+                    g_State.astralShards += astG;
+                    g_State.guildXP += xpG;
+                    g_State.guildLevel = 1 + (g_State.guildXP / 200);
+
+                    char msg[320];
+                    wsprintfA(msg, "🏆 EXPEDITION REWARDS: Claimed loot from %s! (+%d Ess, +%d Dust, +%d Gold, +%d Astral, +%d XP, Relic: %s)",
+                        g_State.expeditions[ex].name, essG, dustG, goldG, astG, xpG, g_State.expeditions[ex].relic);
+                    AddJournalLog(msg);
+                    wsprintfA(g_State.lastStatus, "Loot Claimed: %s!", g_State.expeditions[ex].relic);
+                    PlayDiscoveryFanfare();
+                    SpawnExplosion(392, 168, RGB(255, 215, 0));
+                    UpdateEquipmentUI(hwnd);
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id >= 1800 && id <= 1805) {
+                int pl = id - 1800;
+                int hasCat = g_State.discovered[g_State.planets[pl].reqElem1] &&
+                             g_State.discovered[g_State.planets[pl].reqElem2] &&
+                             g_State.discovered[g_State.planets[pl].reqElem3];
+                if (!g_State.planets[pl].isForged) {
+                    if (!hasCat) {
+                        AddJournalLog("⚠️ Discover all 3 catalyst elements to forge this Planetary Orb!");
+                        PlayGlassClink();
+                    } else if (g_State.gold < 100) {
+                        AddJournalLog("⚠️ Need 100 Gold to forge Planetary Core!");
+                        PlayGlassClink();
+                    } else {
+                        g_State.gold -= 100;
+                        g_State.planets[pl].isForged = 1;
+                        g_State.planets[pl].level = 1;
+                        g_State.planets[pl].charge = 100;
+                        char msg[256];
+                        wsprintfA(msg, "🪐 PLANETARY TRANSMUTATION: Forged %s into orbit! Unlocked passive dividends!", g_State.planets[pl].name);
+                        AddJournalLog(msg);
+                        wsprintfA(g_State.lastStatus, "Forged %s!", g_State.planets[pl].name);
+                        PlayMagicFanfare();
+                        SpawnExplosion(392, 168, RGB(100, 200, 255));
+                        UpdateEquipmentUI(hwnd);
+                    }
+                } else {
+                    if (g_State.planets[pl].level < 5) {
+                        int upCost = g_State.planets[pl].level * 150;
+                        if (g_State.gold >= upCost) {
+                            g_State.gold -= upCost;
+                            g_State.planets[pl].level++;
+                            g_State.planets[pl].passiveGold += 10;
+                            g_State.planets[pl].passiveEss += 10;
+                            g_State.planets[pl].passiveDust += 10;
+                            char msg[256];
+                            wsprintfA(msg, "🪐 PLANETARY UPGRADE: Upgraded %s to Level %d! Enhanced passive yields!", g_State.planets[pl].name, g_State.planets[pl].level);
+                            AddJournalLog(msg);
+                            wsprintfA(g_State.lastStatus, "Upgraded %s to Lvl %d", g_State.planets[pl].name, g_State.planets[pl].level);
+                            PlayMagicFanfare();
+                            UpdateEquipmentUI(hwnd);
+                        } else {
+                            AddJournalLog("⚠️ Not enough Gold to upgrade Planetary Core!");
+                            PlayGlassClink();
+                        }
+                    }
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id == 1806) {
+                if (g_State.essence < 50) {
+                    AddJournalLog("⚠️ Need at least 50 Essence to overcharge Planetary Matrix!");
+                    PlayGlassClink();
+                } else {
+                    g_State.essence -= 50;
+                    int forgedCount = 0;
+                    int totG = 0, totE = 0, totD = 0;
+                    for (int pl = 0; pl < TOTAL_PLANETS; pl++) {
+                        if (g_State.planets[pl].isForged) {
+                            g_State.planets[pl].charge = 100;
+                            forgedCount++;
+                            totG += g_State.planets[pl].passiveGold * 2;
+                            totE += g_State.planets[pl].passiveEss * 2;
+                            totD += g_State.planets[pl].passiveDust * 2;
+                        }
+                    }
+                    g_State.gold += totG;
+                    g_State.essence += totE;
+                    g_State.dust += totD;
+                    char msg[256];
+                    wsprintfA(msg, "⚡ PLANETARY OVERCHARGE: Recharged %d Planetary Cores! Instant Dividend (+%d G, +%d Ess, +%d Dust)!",
+                        forgedCount, totG, totE, totD);
+                    AddJournalLog(msg);
+                    wsprintfA(g_State.lastStatus, "Planetary Matrix Overcharged (+%dG)!", totG);
+                    PlayDiscoveryFanfare();
+                    SpawnExplosion(392, 168, RGB(255, 220, 50));
+                    UpdateEquipmentUI(hwnd);
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id >= 1900 && id <= 1904) {
+                int fa = id - 1900;
+                g_State.activeFamiliarIdx = fa;
+                char msg[256];
+                wsprintfA(msg, "🐾 FAMILIAR SUMMONED: %s (%s) is now accompanying you! Passive buff activated!",
+                    g_State.familiars[fa].name, g_State.familiars[fa].title);
+                AddJournalLog(msg);
+                wsprintfA(g_State.lastStatus, "Summoned %s the %s", g_State.familiars[fa].name, g_State.familiars[fa].title);
+                PlayMagicFanfare();
+                UpdateEquipmentUI(hwnd);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id >= 1910 && id <= 1914) {
+                int fa = id - 1910;
+                int feedCost = g_State.familiars[fa].bondLevel * 40;
+                int goldCost = feedCost / 2;
+                if (g_State.familiars[fa].bondLevel < 10) {
+                    if (g_State.essence >= feedCost && g_State.gold >= goldCost) {
+                        g_State.essence -= feedCost;
+                        g_State.gold -= goldCost;
+                        g_State.familiars[fa].bondLevel++;
+                        char msg[256];
+                        wsprintfA(msg, "🍖 FAMILIAR BOND INCREASED: %s reached Bond Level %d! (+Passives Enhanced)",
+                            g_State.familiars[fa].name, g_State.familiars[fa].bondLevel);
+                        AddJournalLog(msg);
+                        wsprintfA(g_State.lastStatus, "%s Bond Level %d!", g_State.familiars[fa].name, g_State.familiars[fa].bondLevel);
+                        PlayDiscoveryFanfare();
+                        SpawnExplosion(392, 168, RGB(255, 105, 180));
+                        UpdateEquipmentUI(hwnd);
+                    } else {
+                        AddJournalLog("⚠️ Need more Essence/Gold to feed and train familiar!");
+                        PlayGlassClink();
+                    }
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id == 1920) {
+                if (g_State.activeFamiliarIdx >= 0) {
+                    int fa = g_State.activeFamiliarIdx;
+                    if (g_State.familiars[fa].burstCooldown == 0) {
+                        g_State.familiars[fa].burstCooldown = 45;
+                        if (fa == 0) {
+                            g_State.dust += 150; g_State.essence += 100;
+                            AddJournalLog("🔥 FAMILIAR BURST: Ignis unleashes Flame Torrent! (+150 Dust, +100 Essence!)");
+                            wsprintfA(g_State.lastStatus, "Ignis Burst: Flame Torrent (+150 Dust)!");
+                            SpawnExplosion(392, 168, RGB(255, 80, 0));
+                        } else if (fa == 1) {
+                            g_State.essence += 150; g_State.gold += 100;
+                            g_State.buffStrengthTimer += 30;
+                            AddJournalLog("🌊 FAMILIAR BURST: Hydra invokes Tidal Surge! (+150 Ess, +100 Gold, 30s +50% Yield!)");
+                            wsprintfA(g_State.lastStatus, "Hydra Burst: Tidal Surge (+150 Ess)!");
+                            SpawnExplosion(392, 168, RGB(0, 180, 255));
+                        } else if (fa == 2) {
+                            g_State.gold += 250; g_State.dust += 100;
+                            AddJournalLog("💎 FAMILIAR BURST: Terran triggers Midas Quake! (+250 Gold, +100 Dust!)");
+                            wsprintfA(g_State.lastStatus, "Terran Burst: Midas Quake (+250 Gold)!");
+                            SpawnExplosion(392, 168, RGB(241, 196, 15));
+                        } else if (fa == 3) {
+                            g_State.dust += 100;
+                            int foundIdx = -1;
+                            for (int r = 0; r < TOTAL_RECIPES; r++) {
+                                int res = g_Recipes[r].result;
+                                if (!g_State.discovered[res]) { foundIdx = res; break; }
+                            }
+                            if (foundIdx >= 0) {
+                                g_State.discovered[foundIdx] = 1;
+                                g_State.discoveredCount++;
+                                CheckTierUnlocks();
+                                UpdateGrimoireGrid();
+                                char logStr[256];
+                                wsprintfA(logStr, "💨 FAMILIAR BURST: Zephyr summons Aether Gale! Instant Discovery: %s [Tier %d]!",
+                                    g_Elements[foundIdx].name, g_Elements[foundIdx].tier);
+                                AddJournalLog(logStr);
+                                wsprintfA(g_State.lastStatus, "Zephyr Burst: Discovered %s!", g_Elements[foundIdx].name);
+                            } else {
+                                g_State.gold += 300;
+                                AddJournalLog("💨 FAMILIAR BURST: Zephyr creates a whirlwind of wealth! (+300 Gold!)");
+                                wsprintfA(g_State.lastStatus, "Zephyr Burst: +300 Gold!");
+                            }
+                            SpawnExplosion(392, 168, RGB(180, 120, 255));
+                        } else if (fa == 4) {
+                            g_State.astralShards += 1;
+                            g_State.essence += 200;
+                            g_State.dust += 200;
+                            g_State.gold += 200;
+                            AddJournalLog("🌟 FAMILIAR BURST: Astron channels Supernova Bloom! (+1 Astral Shard, +200 Ess/Dust/Gold!)");
+                            wsprintfA(g_State.lastStatus, "Astron Burst: +1 Astral Shard!");
+                            SpawnExplosion(392, 168, RGB(255, 105, 180));
+                        }
+                        PlayMagicFanfare();
+                        UpdateEquipmentUI(hwnd);
+                    }
+                }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             else if (id >= 1000 && id <= 1003) {
@@ -2097,12 +2819,96 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (g_State.selectedEquipment == 7) { modeTitle = "Master Alchemist Codex"; vesselLabel = "Codex"; }
             else if (g_State.selectedEquipment == 8) { modeTitle = "Daily Alchemical Trials"; vesselLabel = "Daily"; }
             else if (g_State.selectedEquipment == 9) { modeTitle = "Magnum Opus Rebirth"; vesselLabel = "Rebirth"; }
+            else if (g_State.selectedEquipment == 10) { modeTitle = "Guild Expeditions"; vesselLabel = "Expeditions"; }
+            else if (g_State.selectedEquipment == 11) { modeTitle = "Planetary Transmutation"; vesselLabel = "Planetary"; }
+            else if (g_State.selectedEquipment == 12) { modeTitle = "Elemental Familiars"; vesselLabel = "Familiars"; }
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
             TextOutA(hdc, 290, 72, modeTitle, lstrlenA(modeTitle));
 
-            if (g_State.selectedEquipment == 4) {
+            if (g_State.selectedEquipment == 10) {
+                SelectObject(hdc, hUIFont);
+                SetTextColor(hdc, RGB(243, 156, 18));
+                TextOutA(hdc, 285, 138, "Ancient Alchemical Guild Expeditions", 36);
+
+                for (int ex = 0; ex < TOTAL_EXPEDITIONS; ex++) {
+                    RECT exCard = { 282, 160 + ex * 56, 425, 210 + ex * 56 };
+                    FillRect(hdc, &exCard, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
+                    Rectangle(hdc, exCard.left, exCard.top, exCard.right, exCard.bottom);
+
+                    SelectObject(hdc, hBadgeFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    char exTitle[64];
+                    wsprintfA(exTitle, "%s (%ds)", g_State.expeditions[ex].name, g_State.expeditions[ex].duration);
+                    TextOutA(hdc, exCard.left + 6, exCard.top + 3, exTitle, lstrlenA(exTitle));
+
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(200, 210, 225));
+                    char reqStr[64];
+                    wsprintfA(reqStr, "Req: %s + %s",
+                        g_Elements[g_State.expeditions[ex].reqElem1].name,
+                        g_Elements[g_State.expeditions[ex].reqElem2].name);
+                    TextOutA(hdc, exCard.left + 6, exCard.top + 16, reqStr, lstrlenA(reqStr));
+
+                    SetTextColor(hdc, RGB(46, 204, 113));
+                    char rewStr[64];
+                    wsprintfA(rewStr, "+%d Ess, +%d G%s",
+                        g_State.expeditions[ex].rewardEss,
+                        g_State.expeditions[ex].rewardGold,
+                        g_State.expeditions[ex].rewardAstral > 0 ? " +1✨" : "");
+                    TextOutA(hdc, exCard.left + 6, exCard.top + 32, rewStr, lstrlenA(rewStr));
+                    SelectObject(hdc, oldP);
+                }
+            } else if (g_State.selectedEquipment == 11) {
+                SelectObject(hdc, hUIFont);
+                SetTextColor(hdc, RGB(243, 156, 18));
+                TextOutA(hdc, 285, 138, "Planetary Transmutation Matrix", 30);
+
+                for (int pl = 0; pl < TOTAL_PLANETS; pl++) {
+                    RECT plCard = { 282, 160 + pl * 34, 422, 190 + pl * 34 };
+                    FillRect(hdc, &plCard, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, g_State.planets[pl].isForged ? hGoldPen : hPurplePen);
+                    Rectangle(hdc, plCard.left, plCard.top, plCard.right, plCard.bottom);
+
+                    SelectObject(hdc, hBadgeFont);
+                    SetTextColor(hdc, g_State.planets[pl].isForged ? RGB(241, 196, 15) : RGB(160, 160, 180));
+                    char plNameStr[64];
+                    wsprintfA(plNameStr, "%s%s", g_State.planets[pl].name, g_State.planets[pl].isForged ? " (Orbital)" : " (Unforged)");
+                    TextOutA(hdc, plCard.left + 5, plCard.top + 2, plNameStr, lstrlenA(plNameStr));
+
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(200, 210, 225));
+                    TextOutA(hdc, plCard.left + 5, plCard.top + 15, g_State.planets[pl].desc, lstrlenA(g_State.planets[pl].desc));
+                    SelectObject(hdc, oldP);
+                }
+            } else if (g_State.selectedEquipment == 12) {
+                SelectObject(hdc, hBadgeFont);
+                SetTextColor(hdc, RGB(243, 156, 18));
+                char famHdr[64];
+                wsprintfA(famHdr, "Companion Familiars (Active: %s)",
+                    g_State.activeFamiliarIdx >= 0 ? g_State.familiars[g_State.activeFamiliarIdx].name : "None");
+                TextOutA(hdc, 282, 140, famHdr, lstrlenA(famHdr));
+
+                for (int fa = 0; fa < TOTAL_FAMILIARS; fa++) {
+                    RECT faCard = { 282, 160 + fa * 36, 365, 192 + fa * 36 };
+                    FillRect(hdc, &faCard, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, g_State.activeFamiliarIdx == fa ? hGoldPen : hPurplePen);
+                    Rectangle(hdc, faCard.left, faCard.top, faCard.right, faCard.bottom);
+
+                    SelectObject(hdc, hBadgeFont);
+                    SetTextColor(hdc, g_State.activeFamiliarIdx == fa ? RGB(255, 215, 0) : RGB(220, 200, 240));
+                    char fTitle[64];
+                    wsprintfA(fTitle, "%s (Lvl %d)", g_State.familiars[fa].name, g_State.familiars[fa].bondLevel);
+                    TextOutA(hdc, faCard.left + 4, faCard.top + 2, fTitle, lstrlenA(fTitle));
+
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(180, 190, 210));
+                    TextOutA(hdc, faCard.left + 4, faCard.top + 15, g_State.familiars[fa].affinity, lstrlenA(g_State.familiars[fa].affinity));
+                    SelectObject(hdc, oldP);
+                }
+            } else if (g_State.selectedEquipment == 4) {
                 SelectObject(hdc, hUIFont);
                 SetTextColor(hdc, RGB(180, 160, 220));
                 char subTitle[64];

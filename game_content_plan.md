@@ -147,7 +147,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KAlchemy   | Tier 1 | Loop 2 done (8 Tier-6 Mythic elements, 16 secret combos, Daily Trials with streaks, Magnum Opus Rebirth with 4 Astral Perks) | Loop 3: Ancient Alchemical Guild expeditions, planetary transmutations, elemental familiar summons |
 | KColony    | Tier 1 | Loop 2 done (4 new structures [Geothermal, Bio-Dome, Shield Pylon, Drone Hub], 10-tier tech tree, planetary biomes [Cryo, Volcanic, Acid] & dynamic weather, mutator anomalies, 3-tier expeditions) | Loop 3: Colony trade freighters, underground cavern networks, orbital strike beacons |
 | KSpace     | Tier 1 | Loop 10 done (Elite enemy squads, planetary bombardment missions, weapon overcharge) | Loop 11: Capital ship dreadnought sieges, drone companion wings, hyper-jump mechanics |
 | KAsteroids | Tier 1 | Loop 10 done (Supermassive asteroid bosses, warp core collection, zero-G inertia anomalies) | Loop 11: Drone wingmen companions, orbital defense platforms, EMP shockwave mines |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KQuest     | Tier 1 | Loop 10 done (Kingdom management, army battles, castle defense) | Loop 11: Guild alliances, naval expeditions, realm artifacts |
 | KStarship  | Tier 1 | Loop 10 done (Galactic super-weapons, faction wars, alien boarding parties) | Loop 11: Capital ship dreadnought sieges, wormhole gate networks, cybernetic crew augmentations |
 | KFortress  | Tier 1 | Loop 2 done (4 Elemental Tower Fusions [Inferno, Superconductor, Venomspite, Solar Prism Beam], Castle Siege Trebuchet strike, automated wall ballistas, 3 new Academy techs [Siege Eng, Fusion Mastery, Fort Traps], and 5 Challenge Mutators) | Loop 3: Rune socketing system, siege boss war engines, multi-lane branching maps |
+| KAlchemy   | Tier 1 | Loop 3 done (Ancient Alchemical Guild expeditions, planetary transmutations, elemental familiar summons) | Loop 4: Master Alchemist Guild tournaments, astrological eclipse alignments, philosopher homunculus creation |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -185,6 +185,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ## Progress Log
 
 **Loop 11**
+- [x] KAlchemy (Loop 3: Added Ancient Alchemical Guild expeditions with 4 tiered expedition zones, real-time party dispatch & relic discoveries; Planetary Transmutation Matrix with 6 orbital core transmutations, levels 1-5, and matrix overcharge; and Elemental Familiars Sanctuary with 5 companions [Ignis, Hydra, Terran, Zephyr, Astron], bond feeding & leveling, passive yields, and active burst abilities [Flame Torrent, Tidal Surge, Midas Quake, Aether Gale, Supernova Bloom] with full parity in both native Win32 C and HTML5)
 - [x] KFortress (Loop 2: Added 4 Elemental Tower Fusions [Inferno Mortar with burning lava puddles, Superconductor with 5-target cryo-electric chain and 65% freeze slow, Venomspite Piercer with piercing toxic javelins and corrosive acid DoT, Solar Prism Beam with focused ramping boss melting laser]; Castle Siege Defenses [Castle Trebuchet bombardment calldown on hotkey 5, automated Castle Wall Ballista defense engine]; 3 new Research Academy techs [Siege Engineering, Fusion Mastery, Fortified Traps]; and 5 Challenge Mutators [Bloodlust Swarm, Titan Brood, Arcane Eclipse, Meteor Tempest, Phase Shift] with persistence and HUD integration in both native Win32 C and HTML5)
 - [x] KRogue (Loop 11: Added 9 Class Loadout Archetypes [Fighter: Vanguard, Berserker, Paladin; Wizard: Elementalist, Necromancer, Arcanist; Rogue: Assassin, Ranger, Shadow Thief] with custom starting gear, spells, and stat profiles; Class Passive Perks [Shield Bastion mitigation, Blood Fury missing HP damage boost, Holy Aura vs undead + HP regen, Elementalist burn DoT, Necromancer Soul Reaper HP/MP kill siphon, Arcanist MP regen, Assassin 3.5x stealth ambush + crit & venom, Ranger precision, Shadow Thief 25% dodge + 100% trap disarm]; and Active Ability system [[A] Berserk Cleave 360-degree whirlwind swipe, Arcane Nova 5x5 radiating shockwave with knockback, Shadow Step teleport blink + smoke cloud + stealth] in both native Win32 C and HTML5)
 
