@@ -511,28 +511,64 @@
       </div>
     </div>
 
-    <!-- Right Panel: Real-Time Audio Visualizer & Octave Info -->
+    <!-- Right Panel: Audio Visualizer & DSP Effects Rack -->
     <div class="panel">
       <div class="panel-header">
-        <div class="section-title">📊 Real-Time Waveform & Spectrum</div>
-        <span class="badge" id="octaveBadge">Octave: 0</span>
+        <div class="section-title">📊 Visualizer & DSP FX Rack</div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button class="btn" id="btnVisMode" style="padding: 2px 8px; font-size: 11px;">Mode: Scope</button>
+          <span class="badge" id="octaveBadge">Octave: 0</span>
+        </div>
       </div>
       <div class="visualizer-container">
         <canvas id="visCanvas"></canvas>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: #94a3b8;">
-        <div style="display: flex; justify-content: space-between;">
-          <span>🎹 Keyboard Bindings:</span>
-          <span style="color: #e2e8f0; font-family: monospace;">A W S E D F T G Y H U J K</span>
+      <!-- DSP Effects Controls -->
+      <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+        <div class="panel-header">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #38bdf8; cursor: pointer;">
+            <input type="checkbox" id="chkDelay" checked> 🔄 Stereo Delay / Echo (L)
+          </label>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span>🎼 Octave Shift:</span>
-          <span style="color: #38bdf8; font-weight: 600;">Left / Right Arrows</span>
+
+        <div class="control-row">
+          <span class="control-label">Delay Time:</span>
+          <div class="slider-container">
+            <input type="range" id="delayTime" min="0.05" max="1.0" step="0.01" value="0.25">
+            <span class="val-display" id="valDelayTime">0.25s</span>
+          </div>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span>🎙️ Live Rec/Play:</span>
-          <span style="color: #f43f5e; font-weight: 600;">Z (Rec) / X (Play)</span>
+
+        <div class="control-row">
+          <span class="control-label">Feedback:</span>
+          <div class="slider-container">
+            <input type="range" id="delayFeedback" min="0" max="0.85" step="0.01" value="0.40">
+            <span class="val-display" id="valDelayFeedback">40%</span>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Wet Mix:</span>
+          <div class="slider-container">
+            <input type="range" id="delayMix" min="0" max="1" step="0.01" value="0.35">
+            <span class="val-display" id="valDelayMix">35%</span>
+          </div>
+        </div>
+
+        <div style="border-top: 1px dashed rgba(255,255,255,0.06); margin-top: 2px; padding-top: 6px;">
+          <div class="panel-header">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #f43f5e; cursor: pointer;">
+              <input type="checkbox" id="chkDrive"> 🔥 Overdrive / Saturation (O)
+            </label>
+          </div>
+          <div class="control-row">
+            <span class="control-label">Drive:</span>
+            <div class="slider-container">
+              <input type="range" id="driveAmount" min="1" max="50" step="1" value="15">
+              <span class="val-display" id="valDriveAmount">15x</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -567,13 +603,16 @@
 </div>
 
 <div id="helpModal" style="display: none; position: fixed; inset: 0; background: rgba(11, 15, 25, 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
-  <div style="background: rgba(30, 41, 59, 0.95); padding: 30px; border-radius: 12px; border: 1px solid #38bdf8; min-width: 320px;">
-    <h2 style="color: #38bdf8; margin-bottom: 20px; text-align: center;">KAudio Instructions</h2>
-    <div style="display: grid; grid-template-columns: auto auto; gap: 12px; color: #f1f5f9; margin-bottom: 24px; font-size: 14px;">
+  <div style="background: rgba(30, 41, 59, 0.95); padding: 30px; border-radius: 12px; border: 1px solid #38bdf8; min-width: 340px; box-shadow: 0 20px 40px rgba(0,0,0,0.8);">
+    <h2 style="color: #38bdf8; margin-bottom: 20px; text-align: center;">KAudio Pro Instructions</h2>
+    <div style="display: grid; grid-template-columns: auto auto; gap: 10px; color: #f1f5f9; margin-bottom: 24px; font-size: 13px;">
       <strong style="text-align: right; color: #fbbf24;">A-K:</strong> <span>Play Piano Keys</span>
-      <strong style="text-align: right; color: #fbbf24;">Arrows:</strong> <span>Change Octave</span>
+      <strong style="text-align: right; color: #fbbf24;">Arrows L/R:</strong> <span>Change Octave</span>
       <strong style="text-align: right; color: #fbbf24;">Z / X:</strong> <span>Record / Play</span>
       <strong style="text-align: right; color: #fbbf24;">P:</strong> <span>Play/Stop Sequencer</span>
+      <strong style="text-align: right; color: #fbbf24;">L:</strong> <span>Toggle Delay / Echo FX</span>
+      <strong style="text-align: right; color: #fbbf24;">O:</strong> <span>Toggle Overdrive FX</span>
+      <strong style="text-align: right; color: #fbbf24;">V:</strong> <span>Toggle FFT Spectrum / Scope</span>
     </div>
     <div style="text-align: center; color: #f43f5e; font-weight: 600; cursor: pointer; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px;" onclick="toggleHelp()">Press F1, 'H', or Click to Close</div>
   </div>
@@ -590,6 +629,13 @@
   let masterGain = null;
   let filterNode = null;
   let analyserNode = null;
+  let delayNode = null;
+  let delayFeedbackNode = null;
+  let delayDryGainNode = null;
+  let delayWetGainNode = null;
+  let driveNode = null;
+  let driveGainNode = null;
+  let visMode = 'scope'; // 'scope' or 'spectrum'
 
   // Synthesizer Key & Note Configs
   const binds = ['A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K'];
@@ -628,7 +674,21 @@
   const octaveBadge = document.getElementById('octaveBadge');
   const recStatus = document.getElementById('recStatus');
 
-  // Slider Event Listeners
+  // DSP FX UI Elements
+  const chkDelay = document.getElementById('chkDelay');
+  const delayTime = document.getElementById('delayTime');
+  const delayFeedback = document.getElementById('delayFeedback');
+  const delayMix = document.getElementById('delayMix');
+  const valDelayTime = document.getElementById('valDelayTime');
+  const valDelayFeedback = document.getElementById('valDelayFeedback');
+  const valDelayMix = document.getElementById('valDelayMix');
+
+  const chkDrive = document.getElementById('chkDrive');
+  const driveAmount = document.getElementById('driveAmount');
+  const valDriveAmount = document.getElementById('valDriveAmount');
+  const btnVisMode = document.getElementById('btnVisMode');
+
+  // Slider & FX Event Listeners
   envA.oninput = () => valA.textContent = parseFloat(envA.value).toFixed(2) + 's';
   envD.oninput = () => valD.textContent = parseFloat(envD.value).toFixed(2) + 's';
   envS.oninput = () => valS.textContent = parseFloat(envS.value).toFixed(2);
@@ -648,7 +708,54 @@
     if (masterGain && ctx) masterGain.gain.setValueAtTime(parseFloat(masterVol.value), ctx.currentTime);
   };
 
-  // Initialize Web Audio Context
+  chkDelay.onchange = () => {
+    if (delayWetGainNode && ctx) {
+      delayWetGainNode.gain.setValueAtTime(chkDelay.checked ? parseFloat(delayMix.value) : 0, ctx.currentTime);
+    }
+  };
+  delayTime.oninput = () => {
+    valDelayTime.textContent = parseFloat(delayTime.value).toFixed(2) + 's';
+    if (delayNode && ctx) delayNode.delayTime.setValueAtTime(parseFloat(delayTime.value), ctx.currentTime);
+  };
+  delayFeedback.oninput = () => {
+    valDelayFeedback.textContent = Math.round(parseFloat(delayFeedback.value) * 100) + '%';
+    if (delayFeedbackNode && ctx) delayFeedbackNode.gain.setValueAtTime(parseFloat(delayFeedback.value), ctx.currentTime);
+  };
+  delayMix.oninput = () => {
+    valDelayMix.textContent = Math.round(parseFloat(delayMix.value) * 100) + '%';
+    if (delayWetGainNode && ctx && chkDelay.checked) delayWetGainNode.gain.setValueAtTime(parseFloat(delayMix.value), ctx.currentTime);
+  };
+
+  function makeDistortionCurve(amount = 15) {
+    let k = typeof amount === 'number' ? amount : 15;
+    let n_samples = 44100;
+    let curve = new Float32Array(n_samples);
+    let deg = Math.PI / 180;
+    for (let i = 0; i < n_samples; ++i) {
+      let x = (i * 2) / n_samples - 1;
+      curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+    }
+    return curve;
+  }
+
+  chkDrive.onchange = () => {
+    if (driveNode) {
+      driveNode.curve = chkDrive.checked ? makeDistortionCurve(parseFloat(driveAmount.value)) : null;
+    }
+  };
+  driveAmount.oninput = () => {
+    valDriveAmount.textContent = driveAmount.value + 'x';
+    if (driveNode && chkDrive.checked) {
+      driveNode.curve = makeDistortionCurve(parseFloat(driveAmount.value));
+    }
+  };
+
+  btnVisMode.onclick = () => {
+    visMode = (visMode === 'scope' ? 'spectrum' : 'scope');
+    btnVisMode.textContent = (visMode === 'scope' ? 'Mode: Scope' : 'Mode: Spectrum');
+  };
+
+  // Initialize Web Audio Context with Full DSP Pipeline
   function initAudio() {
     if (!ctx) {
       ctx = new AudioCtx();
@@ -660,10 +767,45 @@
       filterNode.frequency.setValueAtTime(parseFloat(filterCutoff.value), ctx.currentTime);
       filterNode.Q.setValueAtTime(parseFloat(filterQ.value), ctx.currentTime);
 
+      // Overdrive Saturation
+      driveNode = ctx.createWaveShaper();
+      driveNode.oversample = '4x';
+      if (chkDrive.checked) {
+        driveNode.curve = makeDistortionCurve(parseFloat(driveAmount.value));
+      }
+      driveGainNode = ctx.createGain();
+
+      // Delay FX Nodes
+      delayNode = ctx.createDelay(5.0);
+      delayNode.delayTime.setValueAtTime(parseFloat(delayTime.value), ctx.currentTime);
+
+      delayFeedbackNode = ctx.createGain();
+      delayFeedbackNode.gain.setValueAtTime(parseFloat(delayFeedback.value), ctx.currentTime);
+
+      delayDryGainNode = ctx.createGain();
+      delayDryGainNode.gain.setValueAtTime(1.0, ctx.currentTime);
+
+      delayWetGainNode = ctx.createGain();
+      delayWetGainNode.gain.setValueAtTime(chkDelay.checked ? parseFloat(delayMix.value) : 0, ctx.currentTime);
+
+      // Delay Feedback loop
+      delayNode.connect(delayFeedbackNode);
+      delayFeedbackNode.connect(delayNode);
+
+      // Audio Graph Connections
+      filterNode.connect(driveNode);
+      driveNode.connect(driveGainNode);
+
+      driveGainNode.connect(delayDryGainNode);
+      delayDryGainNode.connect(masterGain);
+
+      driveGainNode.connect(delayNode);
+      delayNode.connect(delayWetGainNode);
+      delayWetGainNode.connect(masterGain);
+
       analyserNode = ctx.createAnalyser();
       analyserNode.fftSize = 512;
 
-      filterNode.connect(masterGain);
       masterGain.connect(analyserNode);
       analyserNode.connect(ctx.destination);
 
@@ -866,7 +1008,7 @@
     }
   }
 
-  // Real-Time Canvas Visualizer (Oscilloscope + Bars)
+  // Real-Time Canvas Visualizer (Dual-Mode: Oscilloscope & 32-Band FFT Spectrum)
   function startVisualizer() {
     const canvas = document.getElementById('visCanvas');
     const canvasCtx = canvas.getContext('2d');
@@ -889,30 +1031,71 @@
       canvasCtx.save();
       canvasCtx.scale(dpr, dpr);
 
-      const bufferLength = analyserNode.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      analyserNode.getByteTimeDomainData(dataArray);
-
       canvasCtx.fillStyle = 'rgba(11, 15, 25, 0.4)';
       canvasCtx.fillRect(0, 0, displayW, displayH);
 
-      // Oscilloscope Waveform
-      canvasCtx.lineWidth = 2;
-      canvasCtx.strokeStyle = '#38bdf8';
-      canvasCtx.beginPath();
+      if (visMode === 'scope') {
+        const bufferLength = analyserNode.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyserNode.getByteTimeDomainData(dataArray);
 
-      const sliceWidth = displayW * 1.0 / bufferLength;
-      let x = 0;
+        // Oscilloscope Waveform
+        canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = '#38bdf8';
+        canvasCtx.shadowColor = '#0ea5e9';
+        canvasCtx.shadowBlur = 6;
+        canvasCtx.beginPath();
 
-      for (let i = 0; i < bufferLength; i++) {
-        let v = dataArray[i] / 128.0;
-        let y = v * displayH / 2;
-        if (i === 0) canvasCtx.moveTo(x, y);
-        else canvasCtx.lineTo(x, y);
-        x += sliceWidth;
+        const sliceWidth = displayW * 1.0 / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          let v = dataArray[i] / 128.0;
+          let y = v * displayH / 2;
+          if (i === 0) canvasCtx.moveTo(x, y);
+          else canvasCtx.lineTo(x, y);
+          x += sliceWidth;
+        }
+        canvasCtx.lineTo(displayW, displayH / 2);
+        canvasCtx.stroke();
+      } else {
+        // 32-Band FFT Frequency Spectrum Bars
+        const bufferLength = analyserNode.frequencyBinCount;
+        const freqArray = new Uint8Array(bufferLength);
+        analyserNode.getByteFrequencyData(freqArray);
+
+        const numBars = 32;
+        const barSlotW = displayW / numBars;
+        const barWidth = Math.max(3, barSlotW - 2);
+
+        for (let i = 0; i < numBars; i++) {
+          let binIdx = Math.floor(i * (bufferLength / 2) / numBars);
+          let val = freqArray[binIdx] / 255.0;
+          let barH = Math.max(3, val * (displayH - 14));
+
+          let x = i * barSlotW + 1;
+          let y = displayH - barH - 2;
+
+          let gradient = canvasCtx.createLinearGradient(0, displayH, 0, y);
+          if (i < 10) {
+            gradient.addColorStop(0, '#0284c7');
+            gradient.addColorStop(1, '#38bdf8');
+          } else if (i < 20) {
+            gradient.addColorStop(0, '#6366f1');
+            gradient.addColorStop(1, '#a855f7');
+          } else {
+            gradient.addColorStop(0, '#f43f5e');
+            gradient.addColorStop(1, '#fb7185');
+          }
+
+          canvasCtx.fillStyle = gradient;
+          canvasCtx.fillRect(x, y, barWidth, barH);
+
+          // Peak Cap
+          canvasCtx.fillStyle = '#ffffff';
+          canvasCtx.fillRect(x, y - 2, barWidth, 2);
+        }
       }
-      canvasCtx.lineTo(displayW, displayH / 2);
-      canvasCtx.stroke();
       canvasCtx.restore();
     }
     draw();
@@ -944,6 +1127,18 @@
       if (recordedEvents.length === 0) return;
       if (isPlaying) stopPlayback();
       else startPlayback();
+    }
+
+    if (e.key.toUpperCase() === 'L' && !e.repeat) {
+      chkDelay.checked = !chkDelay.checked;
+      chkDelay.onchange();
+    }
+    if (e.key.toUpperCase() === 'O' && !e.repeat) {
+      chkDrive.checked = !chkDrive.checked;
+      chkDrive.onchange();
+    }
+    if (e.key.toUpperCase() === 'V' && !e.repeat) {
+      btnVisMode.click();
     }
 
     if ((e.key.toUpperCase() === 'H' || e.key === 'F1') && !e.repeat) {
@@ -1114,12 +1309,20 @@
     buildSequencerGrid();
   };
 
-  // JSON Export / Import
+  // JSON Export / Import with Effects
   document.getElementById('btnExportJson').onclick = () => {
     const projectData = {
       waveType: waveSelect.value,
       adsr: { attack: envA.value, decay: envD.value, sustain: envS.value, release: envR.value },
       filter: { type: filterType.value, cutoff: filterCutoff.value, q: filterQ.value },
+      effects: {
+        delay: chkDelay.checked,
+        delayTime: delayTime.value,
+        delayFeedback: delayFeedback.value,
+        delayMix: delayMix.value,
+        drive: chkDrive.checked,
+        driveAmount: driveAmount.value
+      },
       bpm: seqBpmEl.value,
       tracks: seqTracks.map(t => ({ name: t.name, grid: t.grid }))
     };
@@ -1161,6 +1364,20 @@
             filterNode.Q.setValueAtTime(parseFloat(data.filter.q), ctx.currentTime);
           }
         }
+        if (data.effects) {
+          if (typeof data.effects.delay !== 'undefined') {
+            chkDelay.checked = !!data.effects.delay;
+            if (data.effects.delayTime) { delayTime.value = data.effects.delayTime; delayTime.oninput(); }
+            if (data.effects.delayFeedback) { delayFeedback.value = data.effects.delayFeedback; delayFeedback.oninput(); }
+            if (data.effects.delayMix) { delayMix.value = data.effects.delayMix; delayMix.oninput(); }
+            chkDelay.onchange();
+          }
+          if (typeof data.effects.drive !== 'undefined') {
+            chkDrive.checked = !!data.effects.drive;
+            if (data.effects.driveAmount) { driveAmount.value = data.effects.driveAmount; driveAmount.oninput(); }
+            chkDrive.onchange();
+          }
+        }
         if (data.bpm) { seqBpmEl.value = data.bpm; valBpmEl.textContent = data.bpm; }
         if (data.tracks) {
           data.tracks.forEach((tData, i) => {
@@ -1178,12 +1395,51 @@
     reader.readAsText(file);
   };
 
-  // WAV Audio Export via OfflineAudioContext
+  // WAV Audio Export via OfflineAudioContext with DSP Processing
   document.getElementById('btnExportWav').onclick = async () => {
     initAudio();
     const duration = 4.0; // 4 seconds export
     const sampleRate = 44100;
     const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
+
+    // Build DSP Effects Chain in Offline Context
+    let offFilter = offlineCtx.createBiquadFilter();
+    offFilter.type = filterType.value;
+    offFilter.frequency.setValueAtTime(parseFloat(filterCutoff.value), 0);
+    offFilter.Q.setValueAtTime(parseFloat(filterQ.value), 0);
+
+    let offDrive = offlineCtx.createWaveShaper();
+    if (chkDrive.checked) {
+      offDrive.curve = makeDistortionCurve(parseFloat(driveAmount.value));
+    }
+    let offDriveGain = offlineCtx.createGain();
+
+    let offDelay = offlineCtx.createDelay(5.0);
+    offDelay.delayTime.setValueAtTime(parseFloat(delayTime.value), 0);
+
+    let offFb = offlineCtx.createGain();
+    offFb.gain.setValueAtTime(parseFloat(delayFeedback.value), 0);
+
+    let offDry = offlineCtx.createGain();
+    offDry.gain.setValueAtTime(1.0, 0);
+
+    let offWet = offlineCtx.createGain();
+    offWet.gain.setValueAtTime(chkDelay.checked ? parseFloat(delayMix.value) : 0, 0);
+
+    // Connect Delay feedback
+    offDelay.connect(offFb);
+    offFb.connect(offDelay);
+
+    // Audio Graph
+    offFilter.connect(offDrive);
+    offDrive.connect(offDriveGain);
+
+    offDriveGain.connect(offDry);
+    offDry.connect(offlineCtx.destination);
+
+    offDriveGain.connect(offDelay);
+    offDelay.connect(offWet);
+    offWet.connect(offlineCtx.destination);
 
     // Synthesize active sequencer tracks into offline context
     const bpm = parseInt(seqBpmEl.value);
@@ -1207,7 +1463,7 @@
           gain.gain.exponentialRampToValueAtTime(0.001, time + stepTime * 0.9);
 
           osc.connect(gain);
-          gain.connect(offlineCtx.destination);
+          gain.connect(offFilter);
           osc.start(time);
           osc.stop(time + stepTime * 0.9);
         }
