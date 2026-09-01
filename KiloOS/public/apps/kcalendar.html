@@ -891,8 +891,9 @@
   }
 
   function parseDateStr(str) {
+    if (!str) return new Date();
     const parts = str.split('-');
-    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
   }
 
   // Check if an event occurs on a specific target date string (handling recurrence & filters)
@@ -976,10 +977,10 @@
   }
 
   function getStartOfWeek(d) {
-    const date = new Date(d);
+    const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const day = date.getDay();
-    const diff = date.getDate() - day;
-    return new Date(date.setDate(diff));
+    date.setDate(date.getDate() - day);
+    return date;
   }
 
   // --- MONTH VIEW ---
@@ -1096,6 +1097,14 @@
       openModal(null, dateStr);
     };
 
+    cell.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectedDate = parseDateStr(dateStr);
+        openModal(null, dateStr);
+      }
+    };
+
     return cell;
   }
 
@@ -1137,8 +1146,8 @@
           card.style.padding = '6px';
           card.style.borderRadius = '6px';
           card.style.cursor = 'pointer';
-          const prioObj = PRIORITY_MAP[ev.priority || 'normal'];
-          card.innerHTML = `<span>${prioObj.icon} <strong>${ev.time || 'All day'}</strong> ${escapeHtml(ev.title)}</span>`;
+          const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
+          card.innerHTML = `<span>${prioObj.icon} <strong>${escapeHtml(ev.time || 'All day')}</strong> ${escapeHtml(ev.title)}</span>`;
           card.onclick = () => openModal(ev.id);
           eventsContainer.appendChild(card);
         });
@@ -1195,8 +1204,8 @@
         card.style.padding = '6px 10px';
         card.style.borderRadius = '6px';
         card.style.cursor = 'pointer';
-        const prioObj = PRIORITY_MAP[ev.priority || 'normal'];
-        card.innerHTML = `<strong>${prioObj.icon} ${ev.time || 'All day'}</strong> - ${escapeHtml(ev.title)} <span style="opacity:0.8; font-size:11px;">(${ev.category} • ${prioObj.label})</span>`;
+        const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
+        card.innerHTML = `<strong>${prioObj.icon} ${escapeHtml(ev.time || 'All day')}</strong> - ${escapeHtml(ev.title)} <span style="opacity:0.8; font-size:11px;">(${escapeHtml(ev.category)} • ${escapeHtml(prioObj.label)})</span>`;
         card.onclick = () => openModal(ev.id);
         eventsDiv.appendChild(card);
       });
@@ -1252,10 +1261,10 @@
 
         const meta = document.createElement('div');
         meta.className = 'agenda-meta';
-        meta.innerHTML = `<span>📅 ${ev.date} ${ev.time ? '⏰ ' + ev.time : ''}</span>` +
-          `<span class="badge" style="background-color:${CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other}">${ev.category}</span>` +
-          `<span class="badge" style="background-color:${prioObj.color}; color:#fff;">${prioObj.label}</span>` +
-          (ev.recurring && ev.recurring !== 'none' ? `<span style="color:var(--accent);">🔄 ${ev.recurring}</span>` : '');
+        meta.innerHTML = `<span>📅 ${escapeHtml(ev.date)} ${ev.time ? '⏰ ' + escapeHtml(ev.time) : ''}</span>` +
+          `<span class="badge" style="background-color:${CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other}">${escapeHtml(ev.category)}</span>` +
+          `<span class="badge" style="background-color:${prioObj.color}; color:#fff;">${escapeHtml(prioObj.label)}</span>` +
+          (ev.recurring && ev.recurring !== 'none' ? `<span style="color:var(--accent);">🔄 ${escapeHtml(ev.recurring)}</span>` : '');
 
         details.appendChild(title);
         details.appendChild(meta);
@@ -1667,12 +1676,36 @@
     });
   }
 
+  function parseCsvRow(row) {
+    const result = [];
+    let insideQuote = false;
+    let entry = '';
+    for (let i = 0; i < row.length; i++) {
+      const c = row[i];
+      if (c === '"') {
+        if (insideQuote && row[i + 1] === '"') {
+          entry += '"';
+          i++;
+        } else {
+          insideQuote = !insideQuote;
+        }
+      } else if (c === ',' && !insideQuote) {
+        result.push(entry.trim());
+        entry = '';
+      } else {
+        entry += c;
+      }
+    }
+    result.push(entry.trim());
+    return result;
+  }
+
   function parseAndImportCsv(content) {
-    const lines = content.split('\n');
+    const lines = content.split(/\r?\n/);
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
-      const parts = line.split(',');
+      const parts = parseCsvRow(line);
       if (parts.length >= 3) {
         events.push({
           id: generateId(),
@@ -1694,16 +1727,32 @@
 
   // --- EVENT LISTENERS & INITIALIZATION ---
   document.getElementById('prevBtn').onclick = () => {
-    if (currentView === 'month') selectedDate.setMonth(selectedDate.getMonth() - 1);
-    else if (currentView === 'week') selectedDate.setDate(selectedDate.getDate() - 7);
-    else if (currentView === 'day') selectedDate.setDate(selectedDate.getDate() - 1);
+    if (currentView === 'month') {
+      const curDay = selectedDate.getDate();
+      selectedDate.setDate(1);
+      selectedDate.setMonth(selectedDate.getMonth() - 1);
+      const maxDays = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
+      selectedDate.setDate(Math.min(curDay, maxDays));
+    } else if (currentView === 'week') {
+      selectedDate.setDate(selectedDate.getDate() - 7);
+    } else if (currentView === 'day') {
+      selectedDate.setDate(selectedDate.getDate() - 1);
+    }
     renderApp();
   };
 
   document.getElementById('nextBtn').onclick = () => {
-    if (currentView === 'month') selectedDate.setMonth(selectedDate.getMonth() + 1);
-    else if (currentView === 'week') selectedDate.setDate(selectedDate.getDate() + 7);
-    else if (currentView === 'day') selectedDate.setDate(selectedDate.getDate() + 1);
+    if (currentView === 'month') {
+      const curDay = selectedDate.getDate();
+      selectedDate.setDate(1);
+      selectedDate.setMonth(selectedDate.getMonth() + 1);
+      const maxDays = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
+      selectedDate.setDate(Math.min(curDay, maxDays));
+    } else if (currentView === 'week') {
+      selectedDate.setDate(selectedDate.getDate() + 7);
+    } else if (currentView === 'day') {
+      selectedDate.setDate(selectedDate.getDate() + 1);
+    }
     renderApp();
   };
 

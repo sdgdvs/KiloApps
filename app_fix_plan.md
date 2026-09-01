@@ -43,7 +43,7 @@
 
 ---
 
-**Target App:** KCalendar
+**Target App:** KChart
 **Status:** Next (Pass 4)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -290,6 +290,5 @@ Pass 1 Complete.
 - **KBBS**: In `main.c`, fixed missing pipe delimiter before `type` in `SaveBBSList` that corrupted BBS directory records on save/reload, resolved thread kernel object handle leaks in `PlayANSI` and `PlayChimeAsync` by closing handles returned by `CreateThread`, and added missing `KillTimer` calls on `WM_DESTROY`. In `kbbs.html`, fixed JavaScript multi-line string syntax errors in `dynMacros` and `newMacro`, implemented missing `startTransfer()` and `handleFileUpload()` functions for XMODEM/ZMODEM download/upload actions, implemented `onNodeSelectChange()` for multi-node BBS switching, added `escapeHTML` sanitization against DOM XSS in directory and macro list rendering, added saved cursor (`ESC[s`/`ESC[u`) support in ANSI parser, added active `localEcho` rendering in keydown handler, added Alt+key macro triggers, enabled Escape key dismissal of all active modal dialogs, and added auto-scrolling to door game log containers. Recompiled native `KBBS.exe` (44.5 KB) and verified Vite web build cleanly.
  
 - **KCalc**: In `kcalc.html`, fixed `evalExpression` bug where global regex `replace(/e/g, ...)` corrupted function names (e.g. `ceil` to `c2.718...il`) causing evaluation errors by binding mathematical constants directly in evaluation context, added support for postfix factorials (`5!`) and percentage expressions, prevented global hotkey interference when typing in Statistics textareas, added `escapeHtml` protection against XSS in history rendering, made financial calculators robust against zero interest rates and zero sell prices, and added Escape key modal dismissal. In `main.c`, fixed missing control handle tracking in Financial and Statistics modes that caused all static labels to disappear upon switching modes, added live operator and calculation string updates to `hSubDisplay`, added DEG/RAD trigonometry mode support and status bar indicator (with 'D' hotkey toggle), updated `+/-` unary negate to allow continuous number entry without resetting operand state, added dark theme `WM_CTLCOLOREDIT` handling, and cleaned up edit background brushes on `WM_DESTROY`. Recompiled native `KCalc.exe` (23.0 KB) and verified Vite web build cleanly.
-
-
-
+ 
+- **KCalendar**: In `kcalendar.html`, fixed month navigation day rollover overflow bug by clamping date to maximum days in target month, sanitized `date`, `time`, `category`, `priority`, and `recurring` variables across week, day, and agenda views against XSS injection, implemented a robust CSV parser (`parseCsvRow`) supporting quoted strings and commas, added keyboard activation (`Enter`/`Space`) on month day cells, and added explicit base-10 radix to `parseDateStr`. In `main.c`, fixed `MCN_GETDAYSTATE` bold day rendering to evaluate recurring events across all days of the month, added `WS_TABSTOP` to all interactive controls and enabled `IsDialogMessage` with `WM_GETDLGCODE` for full Win32 keyboard navigation, added `VK_DELETE`/`VK_BACK` event removal in listbox subclass, escaped pipe characters in Markdown agenda export, and eliminated `wc.hbrBackground` GDI brush leak on exit. Recompiled native `KCalendar.exe` (18.4 KB) and verified Vite web build cleanly.
