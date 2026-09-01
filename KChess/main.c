@@ -664,6 +664,234 @@ static void RedoMove(void) {
     MessageBeep(MB_OK);
 }
 
+// ----------------------------------------------------------------------------
+// Quick Save & Quick Load State Engine (F5 / F9)
+// ----------------------------------------------------------------------------
+#define SAVE_MAGIC 0x4B434853 // "KCHS"
+
+static char* my_strchr(const char* s, int c) {
+    while (s && *s) {
+        if (*s == (char)c) return (char*)s;
+        s++;
+    }
+    return NULL;
+}
+
+static char* my_strrchr(const char* s, int c) {
+    const char* last = NULL;
+    while (s && *s) {
+        if (*s == (char)c) last = s;
+        s++;
+    }
+    return (char*)last;
+}
+
+typedef struct {
+    DWORD magic;
+    int version;
+    int board[8][8];
+    int whiteTurn;
+    int wkm, wrl, wrr, bkm, brl, brr;
+    int epX, epY;
+    int lastMoveSx, lastMoveSy, lastMoveTx, lastMoveTy;
+    int gameMode;
+    int currentStage;
+    int puzzleIndex;
+    int aiPersonality;
+    int aiMode;
+    int gameOver;
+    int winner;
+    float blitzTimeWhite;
+    float blitzTimeBlack;
+    int freezePowerups;
+    int blackFrozen;
+    int statsWins, statsLosses, statsDraws;
+    int historyCount;
+    HistoryState history[256];
+} KChessSaveState;
+
+static int SaveGameStateToFile(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kchess_save.dat");
+
+    HANDLE hFile = CreateFileA(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    KChessSaveState state;
+    ZeroMemory(&state, sizeof(state));
+    state.magic = SAVE_MAGIC;
+    state.version = 1;
+    memcpy(state.board, board, sizeof(board));
+    state.whiteTurn = whiteTurn;
+    state.wkm = wKingMoved; state.wrl = wRookLMoved; state.wrr = wRookRMoved;
+    state.bkm = bKingMoved; state.brl = bRookLMoved; state.brr = bRookRMoved;
+    state.epX = epX; state.epY = epY;
+    state.lastMoveSx = lastMoveSx; state.lastMoveSy = lastMoveSy;
+    state.lastMoveTx = lastMoveTx; state.lastMoveTy = lastMoveTy;
+    state.gameMode = gameMode;
+    state.currentStage = currentStage;
+    state.puzzleIndex = puzzleIndex;
+    state.aiPersonality = aiPersonality;
+    state.aiMode = aiMode;
+    state.gameOver = gameOver;
+    state.winner = winner;
+    state.blitzTimeWhite = blitzTimeWhite;
+    state.blitzTimeBlack = blitzTimeBlack;
+    state.freezePowerups = freezePowerups;
+    state.blackFrozen = blackFrozen;
+    state.statsWins = statsWins;
+    state.statsLosses = statsLosses;
+    state.statsDraws = statsDraws;
+    state.historyCount = (g_historyIndex >= 0 && g_historyIndex < 256) ? (g_historyIndex + 1) : 0;
+    if (state.historyCount > 0) {
+        memcpy(state.history, g_historyStack, sizeof(HistoryState) * state.historyCount);
+    }
+
+    DWORD bytesWritten = 0;
+    WriteFile(hFile, &state, sizeof(state), &bytesWritten, NULL);
+    CloseHandle(hFile);
+    return 1;
+}
+
+static int LoadGameStateFromFile(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kchess_save.dat");
+
+    HANDLE hFile = CreateFileA(szPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    KChessSaveState state;
+    DWORD bytesRead = 0;
+    BOOL bRes = ReadFile(hFile, &state, sizeof(state), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (!bRes || bytesRead < sizeof(state) || state.magic != SAVE_MAGIC) return 0;
+
+    memcpy(board, state.board, sizeof(board));
+    whiteTurn = state.whiteTurn;
+    wKingMoved = state.wkm; wRookLMoved = state.wrl; wRookRMoved = state.wrr;
+    bKingMoved = state.bkm; bRookLMoved = state.brl; bRookRMoved = state.brr;
+    epX = state.epX; epY = state.epY;
+    lastMoveSx = state.lastMoveSx; lastMoveSy = state.lastMoveSy;
+    lastMoveTx = state.lastMoveTx; lastMoveTy = state.lastMoveTy;
+    gameMode = state.gameMode;
+    currentStage = state.currentStage;
+    puzzleIndex = state.puzzleIndex;
+    aiPersonality = state.aiPersonality;
+    aiMode = state.aiMode;
+    gameOver = state.gameOver;
+    winner = state.winner;
+    blitzTimeWhite = state.blitzTimeWhite;
+    blitzTimeBlack = state.blitzTimeBlack;
+    freezePowerups = state.freezePowerups;
+    blackFrozen = state.blackFrozen;
+    statsWins = state.statsWins;
+    statsLosses = state.statsLosses;
+    statsDraws = state.statsDraws;
+    if (state.historyCount > 0 && state.historyCount <= 256) {
+        memcpy(g_historyStack, state.history, sizeof(HistoryState) * state.historyCount);
+        g_historyIndex = state.historyCount - 1;
+    } else {
+        g_historyIndex = -1;
+    }
+    selX = -1; selY = -1; hintActive = 0;
+    return 1;
+}
+
+// ----------------------------------------------------------------------------
+// Real-time Chess Opening Book Classifier & ECO Encyclopedia
+// ----------------------------------------------------------------------------
+typedef struct {
+    const char* eco;
+    const char* name;
+    int moveCount;
+    const char* moves[10];
+} ChessOpening;
+
+static const ChessOpening g_openings[] = {
+    { "C60", "Ruy Lopez", 5, {"e4", "e5", "Nf3", "Nc6", "Bb5"} },
+    { "C50", "Italian Game", 5, {"e4", "e5", "Nf3", "Nc6", "Bc4"} },
+    { "C51", "Evans Gambit", 7, {"e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "b4"} },
+    { "C44", "Scotch Game", 5, {"e4", "e5", "Nf3", "Nc6", "d4"} },
+    { "C46", "Four Knights Game", 6, {"e4", "e5", "Nf3", "Nc6", "Nc3", "Nf6"} },
+    { "C42", "Petrov's Defense", 4, {"e4", "e5", "Nf3", "Nf6"} },
+    { "C41", "Philidor Defense", 4, {"e4", "e5", "Nf3", "d6"} },
+    { "C23", "Vienna Game", 3, {"e4", "e5", "Nc3"} },
+    { "C30", "King's Gambit", 3, {"e4", "e5", "f4"} },
+    { "C20", "King's Pawn Game", 2, {"e4", "e5"} },
+    { "B90", "Sicilian Najdorf", 10, {"e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6"} },
+    { "B70", "Sicilian Dragon", 10, {"e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "g6"} },
+    { "B30", "Sicilian Open", 4, {"e4", "c5", "Nf3", "Nc6"} },
+    { "B23", "Closed Sicilian", 3, {"e4", "c5", "Nc3"} },
+    { "B20", "Sicilian Defense", 2, {"e4", "c5"} },
+    { "C02", "French Advance", 5, {"e4", "e6", "d4", "d5", "e5"} },
+    { "C00", "French Defense", 2, {"e4", "e6"} },
+    { "B12", "Caro-Kann Advance", 5, {"e4", "c6", "d4", "d5", "e5"} },
+    { "B10", "Caro-Kann Defense", 2, {"e4", "c6"} },
+    { "B01", "Scandinavian Defense", 2, {"e4", "d5"} },
+    { "B02", "Alekhine's Defense", 2, {"e4", "Nf6"} },
+    { "B07", "Pirc Defense", 2, {"e4", "d6"} },
+    { "D30", "Queen's Gambit Declined", 4, {"d4", "d5", "c4", "e6"} },
+    { "D20", "Queen's Gambit Accepted", 4, {"d4", "d5", "c4", "dxc4"} },
+    { "D10", "Slav Defense", 4, {"d4", "d5", "c4", "c6"} },
+    { "D06", "Queen's Gambit", 3, {"d4", "d5", "c4"} },
+    { "D00", "London System", 3, {"d4", "d5", "Bf4"} },
+    { "D02", "Queen's Pawn Game", 2, {"d4", "d5"} },
+    { "E60", "King's Indian Defense", 4, {"d4", "Nf6", "c4", "g6"} },
+    { "E20", "Nimzo-Indian Defense", 6, {"d4", "Nf6", "c4", "e6", "Nc3", "Bb4"} },
+    { "E00", "Catalan / Queen's Indian", 4, {"d4", "Nf6", "c4", "e6"} },
+    { "A56", "Benoni Defense", 4, {"d4", "Nf6", "c4", "c5"} },
+    { "A45", "Indian Defense", 2, {"d4", "Nf6"} },
+    { "A80", "Dutch Defense", 2, {"d4", "f5"} },
+    { "A10", "English Opening", 1, {"c4"} },
+    { "A04", "Reti Opening", 1, {"Nf3"} },
+    { "A02", "Bird's Opening", 1, {"f4"} },
+    { "A01", "Nimzo-Larsen Attack", 1, {"b3"} },
+    { "A00", "Benko's Opening", 1, {"g3"} }
+};
+static const int g_openingCount = sizeof(g_openings) / sizeof(g_openings[0]);
+
+static void GetDetectedOpening(char* outBuf, int maxLen) {
+    outBuf[0] = '\0';
+    if (g_historyIndex <= 0) return;
+
+    int bestIdx = -1;
+    int maxMatch = 0;
+
+    for (int o = 0; o < g_openingCount; o++) {
+        if (g_historyIndex >= g_openings[o].moveCount) {
+            int match = 1;
+            for (int m = 0; m < g_openings[o].moveCount; m++) {
+                char cleanSan[16];
+                lstrcpynA(cleanSan, g_historyStack[m + 1].san, 16);
+                char* pPlus = my_strchr(cleanSan, '+');
+                if (pPlus) *pPlus = '\0';
+                char* pHash = my_strchr(cleanSan, '#');
+                if (pHash) *pHash = '\0';
+
+                if (lstrcmpA(cleanSan, g_openings[o].moves[m]) != 0) {
+                    match = 0;
+                    break;
+                }
+            }
+            if (match && g_openings[o].moveCount > maxMatch) {
+                maxMatch = g_openings[o].moveCount;
+                bestIdx = o;
+            }
+        }
+    }
+
+    if (bestIdx != -1) {
+        wsprintfA(outBuf, "Book: [%s] %s", g_openings[bestIdx].eco, g_openings[bestIdx].name);
+    }
+}
+
 static void GenerateFEN(char* outFen) {
     int pos = 0;
     const char pieceMap[] = " PNBQKpnbqk";
@@ -1699,24 +1927,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             int diff = bLossVal - wLossVal;
             if (diff != 0) {
-                RECT matRc = { W - 200, 70, W - 30, 90 };
+                RECT matRc = { W - 200, 68, W - 30, 88 };
                 char matBuf[32];
                 wsprintfA(matBuf, "Advantage: %+d", diff);
                 SetTextColor(memDC, diff > 0 ? RGB(94, 234, 212) : RGB(244, 63, 94));
                 DrawTextA(memDC, matBuf, -1, &matRc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
             }
 
+            char opBuf[128];
+            GetDetectedOpening(opBuf, sizeof(opBuf));
+            if (opBuf[0] != '\0') {
+                RECT opRc = { W - 320, 95, W - 30, 115 };
+                SetTextColor(memDC, RGB(253, 230, 138));
+                DrawTextA(memDC, opBuf, -1, &opRc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+            }
+
             // Skill & Utility Buttons Row at bottom
-            struct Button { int x, y, w, h; char* text; } btns[6] = {
-                { 30, 740, 105, 36, "Help (F1/H)" },
-                { 145, 740, 105, 36, "Undo (U)" },
-                { 260, 740, 105, 36, "Redo (Y)" },
-                { 375, 740, 105, 36, "Freeze (F)" },
-                { 490, 740, 125, 36, diffNames[aiPersonality - 1] },
-                { 625, 740, 105, 36, "FEN/PGN" }
+            struct Button { int x, y, w, h; char* text; } btns[7] = {
+                { 30, 740, 85, 36, "Help (H)" },
+                { 123, 740, 80, 36, "Undo (U)" },
+                { 211, 740, 80, 36, "Redo (Y)" },
+                { 299, 740, 85, 36, "Save (F5)" },
+                { 392, 740, 85, 36, "Load (F9)" },
+                { 485, 740, 115, 36, diffNames[aiPersonality - 1] },
+                { 608, 740, 122, 36, "FEN / PGN" }
             };
 
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 7; i++) {
                 RECT btnRc = { btns[i].x, btns[i].y, btns[i].x + btns[i].w, btns[i].y + btns[i].h };
                 HBRUSH btnBrush = CreateSolidBrush(RGB(30, 41, 59));
                 FillRect(memDC, &btnRc, btnBrush);
@@ -1822,6 +2059,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'Y') { // REDO MOVE SKILL
                 RedoMove();
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_F5 || wParam == 'S') { // QUICK SAVE STATE
+                if (SaveGameStateToFile()) {
+                    wsprintfA(hintText, "Game State Saved (F5)!");
+                    hintActive = 1;
+                    MessageBeep(MB_OK);
+                } else {
+                    wsprintfA(hintText, "Failed to Save State!");
+                    hintActive = 1;
+                    MessageBeep(MB_ICONWARNING);
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_F9 || wParam == 'L') { // QUICK LOAD STATE
+                if (LoadGameStateFromFile()) {
+                    wsprintfA(hintText, "Game State Loaded (F9)!");
+                    hintActive = 1;
+                    MessageBeep(MB_OK);
+                } else {
+                    wsprintfA(hintText, "No Saved State Found (F9)!");
+                    hintActive = 1;
+                    MessageBeep(MB_ICONWARNING);
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'E') { // COPY FEN TO CLIPBOARD
                 char fenBuf[128];
                 GenerateFEN(fenBuf);
@@ -1838,19 +2097,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hintActive = 1;
                 MessageBeep(MB_OK);
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'L') { // LOAD FEN FROM CLIPBOARD
-                char* clipText = GetTextFromClipboard(hwnd);
-                if (clipText) {
-                    if (LoadFEN(clipText)) {
-                        wsprintfA(hintText, "FEN Loaded from Clipboard!");
-                        hintActive = 1;
-                        MessageBeep(MB_OK);
-                    } else {
-                        MessageBeep(MB_ICONWARNING);
-                    }
-                    GlobalFree((HGLOBAL)clipText);
-                    InvalidateRect(hwnd, NULL, FALSE);
-                }
             }
             break;
         }
@@ -1858,6 +2104,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 1) {
                 KillTimer(hwnd, 1);
                 DoBlackAIMove();
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 2) {
                 int activeParticles = 0;
                 for (int i = 0; i < g_particleCount; i++) {
@@ -1910,12 +2157,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Check skill & action buttons (Y: 740..776)
             if (my >= 740 && my <= 776) {
-                if (mx >= 30 && mx <= 135) { SendMessage(hwnd, WM_KEYDOWN, 'H', 0); return 0; }
-                if (mx >= 145 && mx <= 250) { SendMessage(hwnd, WM_KEYDOWN, 'U', 0); return 0; }
-                if (mx >= 260 && mx <= 365) { SendMessage(hwnd, WM_KEYDOWN, 'Y', 0); return 0; }
-                if (mx >= 375 && mx <= 480) { SendMessage(hwnd, WM_KEYDOWN, 'F', 0); return 0; }
-                if (mx >= 490 && mx <= 615) { SendMessage(hwnd, WM_KEYDOWN, 'P', 0); return 0; }
-                if (mx >= 625 && mx <= 730) { SendMessage(hwnd, WM_KEYDOWN, 'E', 0); return 0; }
+                if (mx >= 30 && mx <= 115) { SendMessage(hwnd, WM_KEYDOWN, 'H', 0); return 0; }
+                if (mx >= 123 && mx <= 203) { SendMessage(hwnd, WM_KEYDOWN, 'U', 0); return 0; }
+                if (mx >= 211 && mx <= 291) { SendMessage(hwnd, WM_KEYDOWN, 'Y', 0); return 0; }
+                if (mx >= 299 && mx <= 384) { SendMessage(hwnd, WM_KEYDOWN, VK_F5, 0); return 0; }
+                if (mx >= 392 && mx <= 477) { SendMessage(hwnd, WM_KEYDOWN, VK_F9, 0); return 0; }
+                if (mx >= 485 && mx <= 600) { SendMessage(hwnd, WM_KEYDOWN, 'P', 0); return 0; }
+                if (mx >= 608 && mx <= 730) { SendMessage(hwnd, WM_KEYDOWN, 'E', 0); return 0; }
             }
 
             if (gameOver) {

@@ -680,6 +680,152 @@
       playSound('move');
   }
 
+  // --------------------------------------------------------------------------
+  // Quick Save & Quick Load State Engine (F5 / F9)
+  // --------------------------------------------------------------------------
+  function saveGameState() {
+      try {
+          const state = {
+              board: board.map(row => [...row]),
+              whiteTurn: whiteTurn,
+              wKingMoved: wKingMoved, wRookLMoved: wRookLMoved, wRookRMoved: wRookRMoved,
+              bKingMoved: bKingMoved, bRookLMoved: bRookLMoved, bRookRMoved: bRookRMoved,
+              epX: epX, epY: epY,
+              lastMoveSx: lastMoveSx, lastMoveSy: lastMoveSy, lastMoveTx: lastMoveTx, lastMoveTy: lastMoveTy,
+              gameMode: gameMode,
+              currentStage: currentStage,
+              puzzleIndex: puzzleIndex,
+              aiPersonality: aiPersonality,
+              aiMode: aiMode,
+              gameOver: gameOver,
+              winner: winner,
+              blitzTimeWhite: blitzTimeWhite,
+              blitzTimeBlack: blitzTimeBlack,
+              freezePowerups: freezePowerups,
+              blackFrozen: blackFrozen,
+              moveHistoryStack: moveHistoryStack,
+              historyIndex: historyIndex
+          };
+          localStorage.setItem('kchess_save_state', JSON.stringify(state));
+          hintText = "Game State Saved (F5)!";
+          hintActive = true;
+          playSound('move');
+          updateAriaStatus("Game state saved");
+      } catch (e) {
+          console.error(e);
+      }
+  }
+
+  function loadGameState() {
+      try {
+          const data = localStorage.getItem('kchess_save_state');
+          if (!data) {
+              hintText = "No Saved State Found (F9)!";
+              hintActive = true;
+              return false;
+          }
+          const state = JSON.parse(data);
+          board = state.board.map(row => [...row]);
+          whiteTurn = state.whiteTurn;
+          wKingMoved = state.wKingMoved; wRookLMoved = state.wRookLMoved; wRookRMoved = state.wRookRMoved;
+          bKingMoved = state.bKingMoved; bRookLMoved = state.bRookLMoved; bRookRMoved = state.bRookRMoved;
+          epX = state.epX; epY = state.epY;
+          lastMoveSx = state.lastMoveSx; lastMoveSy = state.lastMoveSy;
+          lastMoveTx = state.lastMoveTx; lastMoveTy = state.lastMoveTy;
+          gameMode = state.gameMode;
+          currentStage = state.currentStage;
+          puzzleIndex = state.puzzleIndex || 0;
+          aiPersonality = state.aiPersonality;
+          aiMode = state.aiMode;
+          gameOver = state.gameOver;
+          winner = state.winner;
+          blitzTimeWhite = state.blitzTimeWhite;
+          blitzTimeBlack = state.blitzTimeBlack;
+          freezePowerups = state.freezePowerups;
+          blackFrozen = state.blackFrozen;
+          moveHistoryStack = state.moveHistoryStack || [];
+          historyIndex = state.historyIndex !== undefined ? state.historyIndex : (moveHistoryStack.length - 1);
+          selX = -1; selY = -1;
+          hintActive = true;
+          hintText = "Game State Loaded (F9)!";
+          moveAnimation = null;
+          playSound('move');
+          updateAriaStatus("Game state loaded");
+          return true;
+      } catch (e) {
+          console.error(e);
+          return false;
+      }
+  }
+
+  // --------------------------------------------------------------------------
+  // Real-time Chess Opening Book Classifier & ECO Encyclopedia
+  // --------------------------------------------------------------------------
+  const chessOpenings = [
+      { eco: "C60", name: "Ruy Lopez", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5"] },
+      { eco: "C50", name: "Italian Game", moves: ["e4", "e5", "Nf3", "Nc6", "Bc4"] },
+      { eco: "C51", name: "Evans Gambit", moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "b4"] },
+      { eco: "C44", name: "Scotch Game", moves: ["e4", "e5", "Nf3", "Nc6", "d4"] },
+      { eco: "C46", name: "Four Knights Game", moves: ["e4", "e5", "Nf3", "Nc6", "Nc3", "Nf6"] },
+      { eco: "C42", name: "Petrov's Defense", moves: ["e4", "e5", "Nf3", "Nf6"] },
+      { eco: "C41", name: "Philidor Defense", moves: ["e4", "e5", "Nf3", "d6"] },
+      { eco: "C23", name: "Vienna Game", moves: ["e4", "e5", "Nc3"] },
+      { eco: "C30", name: "King's Gambit", moves: ["e4", "e5", "f4"] },
+      { eco: "C20", name: "King's Pawn Game", moves: ["e4", "e5"] },
+      { eco: "B90", name: "Sicilian Najdorf", moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6"] },
+      { eco: "B70", name: "Sicilian Dragon", moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "g6"] },
+      { eco: "B30", name: "Sicilian Open", moves: ["e4", "c5", "Nf3", "Nc6"] },
+      { eco: "B23", name: "Closed Sicilian", moves: ["e4", "c5", "Nc3"] },
+      { eco: "B20", name: "Sicilian Defense", moves: ["e4", "c5"] },
+      { eco: "C02", name: "French Advance", moves: ["e4", "e6", "d4", "d5", "e5"] },
+      { eco: "C00", "name": "French Defense", moves: ["e4", "e6"] },
+      { eco: "B12", name: "Caro-Kann Advance", moves: ["e4", "c6", "d4", "d5", "e5"] },
+      { eco: "B10", name: "Caro-Kann Defense", moves: ["e4", "c6"] },
+      { eco: "B01", name: "Scandinavian Defense", moves: ["e4", "d5"] },
+      { eco: "B02", name: "Alekhine's Defense", moves: ["e4", "Nf6"] },
+      { eco: "B07", name: "Pirc Defense", moves: ["e4", "d6"] },
+      { eco: "D30", name: "Queen's Gambit Declined", moves: ["d4", "d5", "c4", "e6"] },
+      { eco: "D20", name: "Queen's Gambit Accepted", moves: ["d4", "d5", "c4", "dxc4"] },
+      { eco: "D10", name: "Slav Defense", moves: ["d4", "d5", "c4", "c6"] },
+      { eco: "D06", name: "Queen's Gambit", moves: ["d4", "d5", "c4"] },
+      { eco: "D00", name: "London System", moves: ["d4", "d5", "Bf4"] },
+      { eco: "D02", name: "Queen's Pawn Game", moves: ["d4", "d5"] },
+      { eco: "E60", name: "King's Indian Defense", moves: ["d4", "Nf6", "c4", "g6"] },
+      { eco: "E20", name: "Nimzo-Indian Defense", moves: ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4"] },
+      { eco: "E00", name: "Catalan / Queen's Indian", moves: ["d4", "Nf6", "c4", "e6"] },
+      { eco: "A56", name: "Benoni Defense", moves: ["d4", "Nf6", "c4", "c5"] },
+      { eco: "A45", name: "Indian Defense", moves: ["d4", "Nf6"] },
+      { eco: "A80", name: "Dutch Defense", moves: ["d4", "f5"] },
+      { eco: "A10", name: "English Opening", moves: ["c4"] },
+      { eco: "A04", name: "Reti Opening", moves: ["Nf3"] },
+      { eco: "A02", name: "Bird's Opening", moves: ["f4"] },
+      { eco: "A01", name: "Nimzo-Larsen Attack", moves: ["b3"] },
+      { eco: "A00", name: "Benko's Opening", moves: ["g3"] }
+  ];
+
+  function getDetectedOpening() {
+      if (historyIndex <= 0) return null;
+      let best = null;
+      let maxMoves = 0;
+      for (let op of chessOpenings) {
+          if (historyIndex >= op.moves.length) {
+              let match = true;
+              for (let i = 0; i < op.moves.length; i++) {
+                  let san = (moveHistoryStack[i + 1]?.moveSAN || "").replace(/[+#]/g, '');
+                  if (san !== op.moves[i]) {
+                      match = false;
+                      break;
+                  }
+              }
+              if (match && op.moves.length > maxMoves) {
+                  maxMoves = op.moves.length;
+                  best = op;
+              }
+          }
+      }
+      return best;
+  }
+
   function resetGame() {
       wKingMoved = false; wRookLMoved = false; wRookRMoved = false;
       bKingMoved = false; bRookLMoved = false; bRookRMoved = false;
@@ -836,6 +982,10 @@
           undoMove();
       } else if (k === 'y') {
           redoMove();
+      } else if (k === 's' || k === 'f5') {
+          saveGameState();
+      } else if (k === 'l' || k === 'f9') {
+          loadGameState();
       } else if (k === 'e') {
           openFENModal();
       } else if (k === 'g') {
@@ -848,7 +998,7 @@
           return;
       }
       const k = e.key;
-      if (k === 'F1') e.preventDefault();
+      if (k === 'F1' || k === 'F5' || k === 'F9') e.preventDefault();
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter', 'Escape'].includes(k)) {
           e.preventDefault();
           kbActive = true;
@@ -1256,14 +1406,15 @@
       const mx = (e.clientX - rect.left) * (W / rect.width);
       const my = (e.clientY - rect.top) * (H / rect.height);
 
-      // Bottom skill & action buttons
+      // Bottom skill & action buttons (Y: 740..776)
       if (my >= 740 && my <= 776) {
-          if (mx >= 30 && mx <= 135) { handleHotkey('h'); return; }
-          if (mx >= 145 && mx <= 250) { undoMove(); return; }
-          if (mx >= 260 && mx <= 365) { redoMove(); return; }
-          if (mx >= 375 && mx <= 480) { handleHotkey('f'); return; }
-          if (mx >= 490 && mx <= 615) { handleHotkey('p'); return; }
-          if (mx >= 625 && mx <= 730) { openFENModal(); return; }
+          if (mx >= 30 && mx <= 115) { handleHotkey('h'); return; }
+          if (mx >= 123 && mx <= 203) { undoMove(); return; }
+          if (mx >= 211 && mx <= 291) { redoMove(); return; }
+          if (mx >= 299 && mx <= 384) { saveGameState(); return; }
+          if (mx >= 392 && mx <= 477) { loadGameState(); return; }
+          if (mx >= 485 && mx <= 600) { handleHotkey('p'); return; }
+          if (mx >= 608 && mx <= 730) { openFENModal(); return; }
       }
 
       const tx = Math.floor((mx - OX) / TS);
@@ -1901,14 +2052,24 @@
           ctx.fillText(`Material Advantage: ${diffStr}`, W - 180, 80);
       }
 
+      // Detected Opening Book Badge
+      const detectedOp = getDetectedOpening();
+      if (detectedOp) {
+          ctx.font = "bold 13px 'Inter', sans-serif";
+          ctx.fillStyle = "#fde68a";
+          ctx.textAlign = "right";
+          ctx.fillText(`Book: [${detectedOp.eco}] ${detectedOp.name}`, W - 40, 105);
+      }
+
       // Bottom Skill & Action Buttons Row
       let buttons = [
-          { x: 30, y: 740, w: 105, h: 36, text: `Help (H)` },
-          { x: 145, y: 740, w: 105, h: 36, text: `Undo (U)` },
-          { x: 260, y: 740, w: 105, h: 36, text: `Redo (Y)` },
-          { x: 375, y: 740, w: 105, h: 36, text: `Freeze (${freezePowerups})` },
-          { x: 490, y: 740, w: 125, h: 36, text: `AI: ${difficultyNames[aiPersonality - 1]}` },
-          { x: 625, y: 740, w: 105, h: 36, text: `FEN/PGN` }
+          { x: 30, y: 740, w: 85, h: 36, text: `Help (H)` },
+          { x: 123, y: 740, w: 80, h: 36, text: `Undo (U)` },
+          { x: 211, y: 740, w: 80, h: 36, text: `Redo (Y)` },
+          { x: 299, y: 740, w: 85, h: 36, text: `Save (F5)` },
+          { x: 392, y: 740, w: 85, h: 36, text: `Load (F9)` },
+          { x: 485, y: 740, w: 115, h: 36, text: `AI: ${difficultyNames[aiPersonality - 1]}` },
+          { x: 608, y: 740, w: 122, h: 36, text: `FEN / PGN` }
       ];
 
       ctx.textAlign = "center";

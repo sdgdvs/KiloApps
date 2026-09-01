@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KChess
+**Target App:** KChat
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KChess (Added PGN Move History Export & Import, FEN Board Position Loader & Exporter, AI Engine Difficulty Levels [Easy, Medium, Hard, Master], Interactive Undo/Redo Move Stack, Best Move Hint arrow/system, and Material Advantage & Captured Pieces Counter)
 - KChat (Added Multi-Room/Channel Support, AI Persona Selector [5 Personalities], Real-time Search & Filtering, Message Pinning & Reactions, and Chat History Export/Import [JSON/TXT])
 - KBBS (Added Door Games Mini-Suite [LORD/TradeWars text adventure], ANSI Color & Art Viewer Mode, Multi-Node Dialing Directory Manager, Session Log Capture & Export [ANSI/TXT], and Custom BBS Script Macro Auto-Login)
 - KAudio (Added Sound FX Generator Presets, ADSR Envelope & Filter Controls, 16-Step Multi-Track Sequencer, Waveform Visualizer, and WAV/JSON Export & Import)
@@ -129,5 +128,7 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KCalc (Added Scientific & Financial Calculators, Interactive History Tape with Recall, Memory Storage Banks [M+, M-, MR, MC, MS], Scientific Constants Library, Expression Formula Evaluator, History Tape CSV/TXT Export, and Statistics & Linear Regression Analysis Suite [1-Var descriptive metrics N/Sum/Mean/Median/Mode/Range/Variance/StdDev/StdErr and 2-Var Linear Regression y=mx+b with Pearson r, R², & Prediction Tool])
 - KCalendar (Added Multi-view [Month, Week, Day, Agenda], Event Categories & Color Tagging, Real-time Search & Category Filters, Recurring Events Engine, Event Priority Levels [Low, Normal, High, Urgent] with Badges & Filters, Calendar Analytics & Statistics Breakdown Suite, Markdown Agenda Report [.md] Export, and JSON Backup & Restore)
 - KChart (Added Multi-Type Charting Engine [Bar, Line, Area, Pie, Doughnut, Radar], Interactive Data Table Editor, Statistical Analysis Suite [Mean, Median, Std Dev, Min/Max], Trendline & Linear Regression Engine [Least-Squares Fit y=mx+b with Slope, Intercept & R² score], 3-Point Moving Average, Mean Baseline Overlays, SVG Vector Graphic Export, Palette Themes, PNG Image Export, and CSV/JSON Import/Export)
+- KChess (Added PGN Move History Export & Import, FEN Board Position Loader & Exporter, AI Engine Difficulty Levels [Easy, Medium, Hard, Master], Interactive Undo/Redo Move Stack, Best Move Hint arrow/system, Material Advantage & Captured Pieces Counter, Quick Save & Quick Load State Engine [F5/F9], and Real-Time Chess Opening Book Classifier & ECO Encyclopedia [35+ openings])
+
 
 
