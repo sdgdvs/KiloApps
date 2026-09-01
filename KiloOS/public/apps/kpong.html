@@ -177,6 +177,7 @@
       <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp">👥 1P vs AI</button>
       <button class="btn-sm" onclick="cycleGameMode()" id="btn-mode">🎮 Mode: Classic</button>
       <button class="btn-sm" onclick="cycleTheme()" id="btn-theme">🎨 Theme</button>
+      <button class="btn-sm" onclick="toggleReplay()" id="btn-replay">📽️ Replay (P)</button>
       <button class="btn-sm" onclick="openStatsModal()">🏆 Stats</button>
       <button class="btn-sm" onclick="saveGameState()">💾 Save</button>
       <button class="btn-sm" onclick="loadGameState()">📂 Load</button>
@@ -191,6 +192,25 @@
   </div>
 
   <canvas id="gameCanvas" width="900" height="640" style="width: 900px; height: 640px; max-width: 100%; height: auto;" aria-label="Pong Game Canvas" tabindex="0"></canvas>
+
+  <!-- Replay Toolbar -->
+  <div id="replay-bar" style="display: none; width: 100%; gap: 8px; justify-content: space-between; align-items: center; background: rgba(5,15,30,0.85); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--primary); font-size: 12px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(0,229,255,0.2);">
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <button class="btn-sm" onclick="stepReplay(-15)" title="Step Back 15 frames (Left Arrow / A)">⏮️ -15f</button>
+      <button class="btn-sm" onclick="toggleReplayPause()" id="btn-replay-play">⏸️ Pause</button>
+      <button class="btn-sm" onclick="stepReplay(15)" title="Step Forward 15 frames (Right Arrow / D)">⏭️ +15f</button>
+    </div>
+    <div style="display: flex; flex: 1; min-width: 200px; align-items: center; gap: 8px;">
+      <input type="range" id="replay-scrubber" min="0" max="0" value="0" style="flex: 1; cursor: pointer;" oninput="onReplayScrub(this.value)">
+      <span id="replay-frame-text" style="font-family: monospace; font-size: 11px; color: var(--primary);">0/0</span>
+    </div>
+    <div style="display: flex; gap: 4px; align-items: center;">
+      <button class="btn-sm" onclick="setReplaySpeed(0.5)" id="btn-spd-05">0.5x</button>
+      <button class="btn-sm" onclick="setReplaySpeed(1)" id="btn-spd-1" style="border-color: var(--accent); color: var(--accent);">1.0x</button>
+      <button class="btn-sm" onclick="setReplaySpeed(2)" id="btn-spd-2">2.0x</button>
+      <button class="btn-sm" onclick="stopReplay()" style="color: #ff5555; margin-left: 6px;">✖ Close</button>
+    </div>
+  </div>
 
   <div class="skills-bar">
     <button class="skill-btn" id="btn-slow" onclick="triggerSkill('slow')">⚡ [F] Slow-Mo</button>
@@ -210,6 +230,8 @@
       <tr><th>P2 Controls</th><td>Up / Down (in 2P Local PvP mode)</td></tr>
       <tr><th>Skills</th><td>[F] Slow-Mo | [E] Mega Paddle | [B] Fireball</td></tr>
       <tr><th>System</th><td>[Space] Pause | [M] Mode | [V] PvP | [T] Theme</td></tr>
+      <tr><th>Replay</th><td>[P] Match Replay | [Space] Pause | [←/→] Scrub | [1/2/3] Speed</td></tr>
+      <tr><th>Stats</th><td>[L] Stats Modal | JSON Export & Import</td></tr>
       <tr><th>Save/Load</th><td>[F5] Save Game | [F9] Load Game</td></tr>
     </table>
     <div class="modal-actions">
@@ -239,6 +261,12 @@
         <tr><td colspan="4">No scores recorded yet.</td></tr>
       </tbody>
     </table>
+
+    <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+      <button class="btn-sm" onclick="exportStatsJSON()">📥 Export JSON</button>
+      <button class="btn-sm" onclick="document.getElementById('statsFileInput').click()">📤 Import JSON</button>
+      <input type="file" id="statsFileInput" accept=".json" style="display:none" onchange="importStatsJSON(event)">
+    </div>
 
     <div class="modal-actions">
       <button class="btn-sm" onclick="resetStatsData()" style="color: #ff5555;">Reset Stats</button>
@@ -320,6 +348,15 @@
       games: 0, wins: 0, losses: 0, highRally: 0
   };
   let leaderboard = JSON.parse(localStorage.getItem('kpong_leaderboard_v2')) || [];
+
+  // Match Replay System
+  let replayFrames = [];
+  const MAX_REPLAY_FRAMES = 1200;
+  let isReplaying = false;
+  let replayCurFrame = 0;
+  let replayPaused = false;
+  let replaySpeed = 1.0;
+  let replaySubframe = 0;
 
   // Arena Features
   let obsY = H/2 - 20, obsDy = 3, obs1Active = true, obs1Respawn = 0;
@@ -497,11 +534,164 @@
       showToast(isPaused ? "Game Paused" : "Game Resumed");
   }
 
+  // Match Replay Controls
+  function recordReplayFrame() {
+      if (replayFrames.length >= MAX_REPLAY_FRAMES) {
+          replayFrames.shift();
+      }
+      replayFrames.push({
+          p1y, p2y, p1PadH, p2PadH, s1, s2, rally, gameMode, isPvP, campaignLevel,
+          balls: balls.map(b => ({ x: b.x, y: b.y, dx: b.dx, dy: b.dy, active: b.active, isFireball: b.isFireball, lastHitter: b.lastHitter })),
+          obsY, obs2X, obs1Active, obs2Active,
+          bossShieldY, bossShieldHp,
+          powerupX, powerupY, powerupType, powerupActive
+      });
+  }
+
+  function startReplay() {
+      if (replayFrames.length === 0) {
+          showToast("No match replay frames recorded yet!");
+          return;
+      }
+      isReplaying = true;
+      replayPaused = false;
+      replayCurFrame = 0;
+      replaySubframe = 0;
+      document.getElementById('replay-bar').style.display = 'flex';
+      document.getElementById('replay-scrubber').max = replayFrames.length - 1;
+      document.getElementById('replay-scrubber').value = 0;
+      updateReplayUI();
+      showToast("Replay Mode Active [Space] Pause [←/→] Scrub");
+  }
+
+  function stopReplay() {
+      isReplaying = false;
+      document.getElementById('replay-bar').style.display = 'none';
+      showToast("Exited Replay");
+  }
+
+  function toggleReplay() {
+      if (isReplaying) stopReplay();
+      else startReplay();
+  }
+
+  function toggleReplayPause() {
+      replayPaused = !replayPaused;
+      updateReplayUI();
+  }
+
+  function stepReplay(delta) {
+      if (replayFrames.length === 0) return;
+      replayCurFrame = Math.max(0, Math.min(replayFrames.length - 1, replayCurFrame + delta));
+      updateReplayUI();
+  }
+
+  function onReplayScrub(val) {
+      if (replayFrames.length === 0) return;
+      replayCurFrame = parseInt(val, 10);
+      updateReplayUI();
+  }
+
+  function setReplaySpeed(spd) {
+      replaySpeed = spd;
+      document.getElementById('btn-spd-05').style.borderColor = spd === 0.5 ? 'var(--accent)' : 'rgba(255,255,255,0.2)';
+      document.getElementById('btn-spd-05').style.color = spd === 0.5 ? 'var(--accent)' : '#fff';
+      document.getElementById('btn-spd-1').style.borderColor = spd === 1.0 ? 'var(--accent)' : 'rgba(255,255,255,0.2)';
+      document.getElementById('btn-spd-1').style.color = spd === 1.0 ? 'var(--accent)' : '#fff';
+      document.getElementById('btn-spd-2').style.borderColor = spd === 2.0 ? 'var(--accent)' : 'rgba(255,255,255,0.2)';
+      document.getElementById('btn-spd-2').style.color = spd === 2.0 ? 'var(--accent)' : '#fff';
+      showToast("Replay Speed: " + spd + "x");
+  }
+
+  function updateReplayUI() {
+      const scrub = document.getElementById('replay-scrubber');
+      if (scrub) scrub.value = replayCurFrame;
+      const text = document.getElementById('replay-frame-text');
+      if (text) {
+          const curSec = Math.floor(replayCurFrame / 30);
+          const totSec = Math.floor(replayFrames.length / 30);
+          const cM = String(Math.floor(curSec / 60)).padStart(2, '0');
+          const cS = String(curSec % 60).padStart(2, '0');
+          const tM = String(Math.floor(totSec / 60)).padStart(2, '0');
+          const tS = String(totSec % 60).padStart(2, '0');
+          text.innerText = `${replayCurFrame + 1}/${replayFrames.length} (${cM}:${cS}/${tM}:${tS})`;
+      }
+      const pBtn = document.getElementById('btn-replay-play');
+      if (pBtn) pBtn.innerText = replayPaused ? "▶️ Play" : "⏸️ Pause";
+  }
+
+  function exportStatsJSON() {
+      const data = {
+          total_games: stats.games,
+          wins: stats.wins,
+          losses: stats.losses,
+          win_rate: stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0,
+          high_rally: stats.highRally,
+          top_scores: leaderboard
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kpong_stats.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Stats exported to kpong_stats.json!");
+  }
+
+  function importStatsJSON(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          try {
+              const data = JSON.parse(e.target.result);
+              if (typeof data.total_games === 'number') stats.games = data.total_games;
+              else if (typeof data.games === 'number') stats.games = data.games;
+              if (typeof data.wins === 'number') stats.wins = data.wins;
+              if (typeof data.losses === 'number') stats.losses = data.losses;
+              if (typeof data.high_rally === 'number') stats.highRally = data.high_rally;
+              else if (typeof data.highRally === 'number') stats.highRally = data.highRally;
+
+              if (Array.isArray(data.top_scores)) {
+                  leaderboard = data.top_scores;
+              }
+              localStorage.setItem('kpong_stats_v2', JSON.stringify(stats));
+              localStorage.setItem('kpong_leaderboard_v2', JSON.stringify(leaderboard));
+              openStatsModal();
+              showToast("Stats imported successfully from JSON!");
+          } catch (err) {
+              showToast("Invalid JSON stats file!");
+          }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+  }
+
   // Keyboard Inputs
   const keys = {};
   document.addEventListener('keydown', e => { 
       keys[e.key] = true;
-      if(['ArrowUp','ArrowDown','w','s','W','S',' '].includes(e.key)) e.preventDefault();
+      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','s','W','S',' '].includes(e.key)) e.preventDefault();
+
+      if (isReplaying) {
+          if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { stopReplay(); return; }
+          if (e.key === ' ') { toggleReplayPause(); return; }
+          if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { stepReplay(-15); return; }
+          if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { stepReplay(15); return; }
+          if (e.key === '1') { setReplaySpeed(0.5); return; }
+          if (e.key === '2') { setReplaySpeed(1.0); return; }
+          if (e.key === '3') { setReplaySpeed(2.0); return; }
+      }
+
+      if (e.key === 'p' || e.key === 'P') {
+          if (!document.getElementById('statsModal').classList.contains('active') &&
+              !document.getElementById('helpModal').classList.contains('active')) {
+              toggleReplay();
+              return;
+          }
+      }
+
       if(e.key === 'f' || e.key === 'F') triggerSkill('slow');
       if(e.key === 'e' || e.key === 'E') triggerSkill('mega');
       if(e.key === 'b' || e.key === 'B') triggerSkill('fire');
@@ -510,6 +700,10 @@
           if(e.key === 'F1') e.preventDefault();
           if (document.getElementById('helpModal').classList.contains('active')) closeHelpModal();
           else openHelpModal();
+      }
+      if(e.key === 'l' || e.key === 'L') {
+          if (document.getElementById('statsModal').classList.contains('active')) closeStatsModal();
+          else openStatsModal();
       }
       if(e.key === 'm' || e.key === 'M') cycleGameMode();
       if(e.key === 'v' || e.key === 'V') togglePvPMode();
@@ -635,9 +829,34 @@
 
   // Update Game Logic Loop
   function update() {
+      if (isReplaying) {
+          if (!replayPaused && replayFrames.length > 0) {
+              if (replaySpeed === 0.5) {
+                  replaySubframe++;
+                  if (replaySubframe >= 2) {
+                      replaySubframe = 0;
+                      if (replayCurFrame < replayFrames.length - 1) replayCurFrame++;
+                      else replayPaused = true;
+                  }
+              } else if (replaySpeed === 1.0) {
+                  if (replayCurFrame < replayFrames.length - 1) replayCurFrame++;
+                  else replayPaused = true;
+              } else if (replaySpeed === 2.0) {
+                  if (replayCurFrame < replayFrames.length - 2) replayCurFrame += 2;
+                  else { replayCurFrame = replayFrames.length - 1; replayPaused = true; }
+              }
+              updateReplayUI();
+          }
+          return;
+      }
+
       if (isPaused) return;
 
       if (gameOver) {
+          if (keys['p'] || keys['P']) {
+              startReplay();
+              return;
+          }
           if (keys['r'] || keys['R']) {
               s1 = 0; s2 = 0; rally = 0; winScreen = false;
               skillSlowTimer = 0; skillSlowCooldown = 0;
@@ -1000,6 +1219,8 @@
           btnFire.classList.toggle('active', skillFireballReady);
           btnFire.innerText = skillFireballReady ? "🔥 FIRE READY!" : (skillFireballCooldown > 0 ? `🔥 [B] (${Math.ceil(skillFireballCooldown/30)}s)` : "🔥 [B] Fireball");
       }
+
+      recordReplayFrame();
   }
 
   function drawPaddle(x, y, w, h, isP1, freezeTimer, buffTimer, shieldTimer) {
@@ -1139,6 +1360,84 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.scale(2 * dpr, 2 * dpr);
+
+      if (isReplaying && replayFrames.length > 0) {
+          let rf = replayFrames[replayCurFrame] || replayFrames[0];
+
+          // 3D Perspective Grid Background
+          ctx.save();
+          ctx.strokeStyle = themeIndex === 2 ? 'rgba(255, 113, 206, 0.15)' : 'rgba(0, 229, 255, 0.1)';
+          ctx.lineWidth = 1;
+          for (let i = -W; i < W*2; i += 40) {
+              ctx.beginPath(); ctx.moveTo(W/2, H/2); ctx.lineTo(i, H); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(W/2, H/2); ctx.lineTo(i, 0); ctx.stroke();
+          }
+          ctx.restore();
+
+          // Border Neon Lines
+          ctx.save();
+          ctx.strokeStyle = '#ff3366';
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = '#ff3366';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(2, 2, W - 4, H - 4);
+          ctx.restore();
+
+          // Center Line
+          ctx.setLineDash([8, 12]); ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H);
+          ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
+
+          // Obstacles from frame
+          const hasObstacles = (rf.gameMode === 1 || (rf.gameMode === 4 && campaignLevel >= 5));
+          if (hasObstacles) {
+              if (rf.obs1Active) {
+                  ctx.save(); ctx.fillStyle = 'rgba(255, 120, 0, 0.85)'; ctx.shadowBlur = 15; ctx.shadowColor = '#ff7800';
+                  ctx.fillRect(W/2 - 6, rf.obsY, 12, 40); ctx.restore();
+              }
+              if (rf.obs2Active) {
+                  ctx.save(); ctx.fillStyle = 'rgba(0, 200, 255, 0.85)'; ctx.shadowBlur = 15; ctx.shadowColor = '#00c8ff';
+                  ctx.fillRect(rf.obs2X, H/2 - 6, 40, 12); ctx.restore();
+              }
+          }
+
+          // Render Balls from frame
+          for (let b of rf.balls) {
+              if (!b.active) continue;
+              ctx.save();
+              let ballGlow = b.isFireball ? '#ff6400' : (b.lastHitter === 1 ? getPrimaryColor() : (b.lastHitter === 2 ? getSecondaryColor() : '#ffffff'));
+              ctx.shadowBlur = 16; ctx.shadowColor = ballGlow;
+              ctx.fillStyle = b.isFireball ? '#ffc832' : '#ffffff';
+              ctx.beginPath(); ctx.arc(b.x + BALL_SIZE/2, b.y + BALL_SIZE/2, BALL_SIZE/2, 0, Math.PI * 2); ctx.fill();
+              ctx.restore();
+          }
+
+          // Render Paddles from frame
+          drawPaddle(20, rf.p1y, PAD_W, rf.p1PadH, true, 0, 0, 0);
+          drawPaddle(W - 20 - PAD_W, rf.p2y, PAD_W, rf.p2PadH, false, 0, 0, 0);
+
+          // Powerup Capsule if active
+          if (rf.powerupX !== -1 && rf.powerupActive > 0) {
+              drawPowerup(rf.powerupX, rf.powerupY, rf.powerupType);
+          }
+
+          // Replay Header & Info
+          ctx.save();
+          ctx.fillStyle = '#ff3366';
+          ctx.shadowBlur = 15; ctx.shadowColor = '#ff3366';
+          ctx.font = 'bold 14px Inter'; ctx.textAlign = 'center';
+          ctx.fillText("● REPLAY PLAYBACK", W/2, 22);
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#ffffff'; ctx.font = '12px Inter';
+          ctx.fillText(`${rf.s1} - ${rf.s2}  |  Rally: ${rf.rally}`, W/2, 38);
+
+          ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '11px Inter';
+          ctx.fillText("[Space] Pause  [←/→] Scrub  [1/2/3] Speed  [P/Esc] Exit", W/2, H - 12);
+          ctx.restore();
+
+          ctx.restore();
+          return;
+      }
+
       if (screenShake > 0) {
           ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
       }
@@ -1350,7 +1649,7 @@
               ctx.fillText(s1 > s2 ? (isPvP ? "PLAYER 1 WINS!" : "YOU WIN!") : (isPvP ? "PLAYER 2 WINS!" : "CPU WINS!"), W/2, H/2 - 10);
           }
           ctx.shadowBlur = 0; ctx.fillStyle = 'white'; ctx.font = '14px Inter';
-          ctx.fillText("Press 'R' to Restart", W/2, H/2 + 35);
+          ctx.fillText("Press 'P' for Match Replay  |  'R' to Restart", W/2, H/2 + 35);
       }
       ctx.restore();
   }
