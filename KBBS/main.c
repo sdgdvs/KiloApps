@@ -360,7 +360,7 @@ unsigned char transferBuf[132];
 int transferBytesTotal = 0;
 char transferStatusMsg[128] = "";
 
-HWND hBtnXmDl, hBtnXmUl, hBtnZmDl, hBtnZmUl, hBtnDoor, hBtnArt;
+HWND hBtnXmDl, hBtnXmUl, hBtnZmDl, hBtnZmUl, hBtnDoor, hBtnArt, hBtnMsg;
 unsigned char sigBuf[6] = {0};
 
 /* ZMODEM State */
@@ -1238,6 +1238,255 @@ INT_PTR CALLBACK SettingsProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
+void ClearScreen(void);
+void StreamAnsiString(const char* str);
+
+#define IDD_MSGREADER  5000
+#define IDC_MSG_AREA   5001
+#define IDC_MSG_LIST   5002
+#define IDC_MSG_VIEW   5003
+#define IDC_MSG_STREAM 5004
+#define IDC_MSG_NEW    5005
+#define IDC_MSG_PREV   5006
+#define IDC_MSG_NEXT   5007
+
+#define IDD_COMPOSEMSG 5100
+#define IDC_COMP_AREA  5101
+#define IDC_COMP_TO    5102
+#define IDC_COMP_SUBJ  5103
+#define IDC_COMP_BODY  5104
+
+struct BbsMessage {
+    int id;
+    int area;
+    char from[32];
+    char to[32];
+    char fido[24];
+    char date[32];
+    char subj[64];
+    char body[768];
+};
+
+#define MAX_MSGS 50
+struct BbsMessage msgBase[MAX_MSGS] = {
+    { 101, 1, "SysOp Merlin", "All", "1:100/42.0", "31-Aug-2026 20:15", "Welcome to KiloBBS Station Node 1!", "Welcome all callers to KiloBBS!\r\n\r\nFeel free to explore our Door Games suite (LORD and TradeWars), check out the ANSI Art gallery, and participate in our FidoNet EchoMail conferences.\r\n\r\n--- KBBS EchoReader v2.0\r\n* Origin: KiloBBS Station Hub (1:100/42.0)" },
+    { 102, 1, "ZeroCool", "SysOp Merlin", "1:249/106.1", "31-Aug-2026 20:45", "Great system setup & fast Zmodem speeds", "> Welcome all callers to KiloBBS!\r\n\r\nHey Merlin, loved the new ANSI login screen and the Zmodem batch download speeds. What baud rate is the serial port mapped to?\r\n\r\n--- KBBS EchoReader v2.0\r\n* Origin: Acid Underground Node (1:249/106.1)" },
+    { 103, 2, "Acid_Burn", "All", "1:100/42.5", "31-Aug-2026 21:00", "TheDRAW 4.63 & CP437 Shading Tutorial", "Quick tip for demoscene ANSI artists:\r\n\r\nWhen doing high-contrast lighting on block letters, mix CP437 characters 0xB0 (176 light shade), 0xB1 (177 med shade), and 0xDB (219 solid block) with intense foreground colors (e.g. Cyan and Yellow).\r\n\r\n--- KBBS EchoReader v2.0\r\n* Origin: ACiD Telecomm Art Group (1:100/42.5)" },
+    { 104, 3, "DragonSlayer", "All", "1:100/42.12", "31-Aug-2026 21:18", "L.O.R.D. Red Dragon slaying strategy", "For anyone struggling with the Red Dragon in LORD:\r\n1. Deposit your excess gold in the Royal Bank daily so thieves cannot rob you.\r\n2. Upgrade to at least the Broadsword before venturing into level 5 forest.\r\n3. Flirt with Violet at the tavern for free HP restoration!\r\n\r\n--- KBBS EchoReader v2.0\r\n* Origin: Dragon Realm BBS (1:100/42.12)" },
+    { 105, 3, "SectorTrader", "All", "2:201/33.0", "31-Aug-2026 21:30", "TradeWars: Sol to Alpha Centauri loop", "I mapped an optimal trade circuit:\r\nSector 1 (Sol) -> Buy Ore @ $12 -> Warp to Sector 7 -> Sell Ore @ $48 -> Buy Equipment -> Return to Sol!\r\n\r\nYields ~3,600 credits per 10-turn jump. Beware of pirate fighters in Sector 4.\r\n\r\n--- KBBS EchoReader v2.0\r\n* Origin: Starport Exchange (2:201/33.0)" },
+    { 106, 4, "ModemGuru", "All", "1:100/42.2", "31-Aug-2026 21:40", "USRobotics Courier V.Everything DIP switches", "If your USR modem drops carrier on 33.6k handshake:\r\nSet DIP Switch 3 ON (Suppress Result Codes OFF), DIP Switch 8 ON (Enable dumb mode OFF), and init string AT&F1&K3&C1&D2.\r\n\r\nProvides rock-solid V.42bis compression and hardware flow control.\r\n\r\n--- KBBS EchoReader v2.0\r\n* Origin: Hardware Depot BBS (1:100/42.2)" },
+    { 107, 5, "ZoneCoordinator", "SysOps", "1:1/0.0", "31-Aug-2026 21:55", "FidoNet Zone 1 Route & EchoMail Policy update", "Attention all Node SysOps:\r\n\r\nNational Zone 1 EchoMail tosser runs at 03:00 UTC daily during ZMH (Zone Mail Hour). Ensure your FrontDoor / BinkleyTerm mailers are configured for CRC32 Zmodem packet transfer.\r\n\r\n--- KBBS EchoReader v2.0\r\n* Origin: FidoNet Zone 1 Coord (1:1/0.0)" }
+};
+int numMsgBase = 7;
+int curMsgArea = 1;
+int curSelectedMsgIdx = 0;
+int areaMsgIndices[MAX_MSGS];
+int numAreaMsgs = 0;
+
+void UpdateMsgReaderDisplay(HWND hdlg) {
+    HWND hView = GetDlgItem(hdlg, IDC_MSG_VIEW);
+    if (numAreaMsgs <= 0 || curSelectedMsgIdx < 0 || curSelectedMsgIdx >= numMsgBase) {
+        SetWindowTextA(hView, "No messages in this area.");
+        return;
+    }
+    struct BbsMessage* m = &msgBase[curSelectedMsgIdx];
+    const char* areaNames[6] = { "", "General BBS Chat", "ANSI Art & Demos", "Door Games & RPG", "Vintage Hardware", "FidoNet SysOp Desk" };
+    const char* aName = (m->area >= 1 && m->area <= 5) ? areaNames[m->area] : "EchoMail";
+    
+    char viewBuf[2048];
+    wsprintfA(viewBuf, "Msg #%d (%s)\r\nDate: %s\r\nFrom: %s [%s]\r\nTo:   %s\r\nSubj: %s\r\n----------------------------------------\r\n%s",
+        m->id, aName, m->date, m->from, m->fido, m->to, m->subj, m->body);
+    SetWindowTextA(hView, viewBuf);
+}
+
+void PopulateMsgList(HWND hdlg) {
+    HWND hList = GetDlgItem(hdlg, IDC_MSG_LIST);
+    SendMessageA(hList, LB_RESETCONTENT, 0, 0);
+    numAreaMsgs = 0;
+    int i;
+    for (i = 0; i < numMsgBase; i++) {
+        if (msgBase[i].area == curMsgArea) {
+            areaMsgIndices[numAreaMsgs] = i;
+            char item[128];
+            wsprintfA(item, "#%d %s", msgBase[i].id, msgBase[i].subj);
+            SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)item);
+            numAreaMsgs++;
+        }
+    }
+    if (numAreaMsgs > 0) {
+        SendMessageA(hList, LB_SETCURSEL, 0, 0);
+        curSelectedMsgIdx = areaMsgIndices[0];
+    } else {
+        curSelectedMsgIdx = -1;
+    }
+    UpdateMsgReaderDisplay(hdlg);
+}
+
+INT_PTR CALLBACK ComposeMsgProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_INITDIALOG: {
+            HWND hArea = GetDlgItem(hdlg, IDC_COMP_AREA);
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[1] General BBS Chat");
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[2] ANSI Art & Demos");
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[3] Door Games & Strategy");
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[4] Vintage Hardware");
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[5] FidoNet 1:100/42");
+            SendMessageA(hArea, CB_SETCURSEL, curMsgArea - 1, 0);
+            SetDlgItemTextA(hdlg, IDC_COMP_TO, "All");
+            SetDlgItemTextA(hdlg, IDC_COMP_SUBJ, "");
+            SetDlgItemTextA(hdlg, IDC_COMP_BODY, "\r\n\r\n--- KBBS EchoReader v2.0\r\n* Origin: KiloBBS Station Hub (1:100/42.99)");
+            return TRUE;
+        }
+        case WM_COMMAND: {
+            int id = LOWORD(wParam);
+            if (id == 1) { /* Post */
+                if (numMsgBase < MAX_MSGS) {
+                    int selArea = (int)SendMessageA(GetDlgItem(hdlg, IDC_COMP_AREA), CB_GETCURSEL, 0, 0) + 1;
+                    char toBuf[32], subjBuf[64], bodyBuf[768];
+                    GetDlgItemTextA(hdlg, IDC_COMP_TO, toBuf, 32);
+                    GetDlgItemTextA(hdlg, IDC_COMP_SUBJ, subjBuf, 64);
+                    GetDlgItemTextA(hdlg, IDC_COMP_BODY, bodyBuf, 768);
+
+                    int maxId = 100;
+                    int i;
+                    for (i = 0; i < numMsgBase; i++) {
+                        if (msgBase[i].id > maxId) maxId = msgBase[i].id;
+                    }
+
+                    struct BbsMessage* newM = &msgBase[numMsgBase];
+                    newM->id = maxId + 1;
+                    newM->area = selArea;
+                    my_strcpy(newM->from, "SysOp Caller");
+                    my_strcpy(newM->to, toBuf[0] ? toBuf : "All");
+                    my_strcpy(newM->fido, "1:100/42.99");
+                    my_strcpy(newM->date, "31-Aug-2026 22:00");
+                    my_strcpy(newM->subj, subjBuf[0] ? subjBuf : "No Subject");
+                    my_strcpy(newM->body, bodyBuf);
+                    numMsgBase++;
+                    curMsgArea = selArea;
+                }
+                EndDialog(hdlg, 1);
+            } else if (id == 2) {
+                EndDialog(hdlg, 0);
+            }
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+void StreamMessageToTerminal(int idx) {
+    if (idx < 0 || idx >= numMsgBase) return;
+    ClearScreen();
+    struct BbsMessage* m = &msgBase[idx];
+    const char* areaNames[6] = { "", "General BBS Chat", "ANSI Art & Demos", "Door Games & RPG", "Vintage Hardware", "FidoNet SysOp Desk" };
+    const char* aName = (m->area >= 1 && m->area <= 5) ? areaNames[m->area] : "EchoMail";
+    
+    char hdr[512];
+    StreamAnsiString("\x1B[1;36m==============================================================================\r\n");
+    wsprintfA(hdr, "\x1B[1;33mMsg #%d \x1B[1;36m| \x1B[0;37mArea: \x1B[1;32m%-22s \x1B[1;36m| \x1B[0;37mDate: \x1B[1;37m%s\r\n", m->id, aName, m->date);
+    StreamAnsiString(hdr);
+    wsprintfA(hdr, "\x1B[0;37mFrom: \x1B[1;33m%-25s (%s) \x1B[0;37mTo: \x1B[1;36m%s\r\n", m->from, m->fido, m->to);
+    StreamAnsiString(hdr);
+    wsprintfA(hdr, "\x1B[0;37mSubj: \x1B[1;37m%s\r\n", m->subj);
+    StreamAnsiString(hdr);
+    StreamAnsiString("\x1B[1;36m------------------------------------------------------------------------------\r\n\x1B[0m");
+
+    /* Stream body line by line */
+    const char* p = m->body;
+    char line[256];
+    int lp = 0;
+    while (*p) {
+        if (*p == '\r' || *p == '\n') {
+            line[lp] = 0;
+            if (lp > 0) {
+                if (line[0] == '>') {
+                    StreamAnsiString("\x1B[1;30m");
+                } else if (line[0] == '-' && line[1] == '-' && line[2] == '-') {
+                    StreamAnsiString("\x1B[0;36m");
+                } else if (line[0] == '*' && line[1] == ' ' && line[2] == 'O') {
+                    StreamAnsiString("\x1B[1;33m");
+                } else {
+                    StreamAnsiString("\x1B[0;37m");
+                }
+                StreamAnsiString(line);
+                StreamAnsiString("\x1B[0m");
+            }
+            StreamAnsiString("\r\n");
+            lp = 0;
+            if (*p == '\r' && *(p + 1) == '\n') p++;
+        } else if (lp < 250) {
+            line[lp++] = *p;
+        }
+        p++;
+    }
+    if (lp > 0) {
+        line[lp] = 0;
+        StreamAnsiString("\x1B[0;37m");
+        StreamAnsiString(line);
+        StreamAnsiString("\x1B[0m\r\n");
+    }
+    StreamAnsiString("\x1B[1;36m==============================================================================\r\n\x1B[0m");
+}
+
+INT_PTR CALLBACK MsgReaderProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_INITDIALOG: {
+            HWND hArea = GetDlgItem(hdlg, IDC_MSG_AREA);
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[1] General BBS Chat");
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[2] ANSI Art & Demos");
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[3] Door Games & Strategy");
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[4] Vintage Hardware");
+            SendMessageA(hArea, CB_ADDSTRING, 0, (LPARAM)"[5] FidoNet 1:100/42");
+            SendMessageA(hArea, CB_SETCURSEL, curMsgArea - 1, 0);
+            PopulateMsgList(hdlg);
+            return TRUE;
+        }
+        case WM_COMMAND: {
+            int id = LOWORD(wParam);
+            int code = HIWORD(wParam);
+            if (id == IDC_MSG_AREA && code == CBN_SELCHANGE) {
+                curMsgArea = (int)SendMessageA(GetDlgItem(hdlg, IDC_MSG_AREA), CB_GETCURSEL, 0, 0) + 1;
+                PopulateMsgList(hdlg);
+            } else if (id == IDC_MSG_LIST && code == LBN_SELCHANGE) {
+                int sel = (int)SendMessageA(GetDlgItem(hdlg, IDC_MSG_LIST), LB_GETCURSEL, 0, 0);
+                if (sel >= 0 && sel < numAreaMsgs) {
+                    curSelectedMsgIdx = areaMsgIndices[sel];
+                    UpdateMsgReaderDisplay(hdlg);
+                }
+            } else if (id == IDC_MSG_PREV) {
+                int sel = (int)SendMessageA(GetDlgItem(hdlg, IDC_MSG_LIST), LB_GETCURSEL, 0, 0);
+                if (sel > 0) {
+                    SendMessageA(GetDlgItem(hdlg, IDC_MSG_LIST), LB_SETCURSEL, sel - 1, 0);
+                    curSelectedMsgIdx = areaMsgIndices[sel - 1];
+                    UpdateMsgReaderDisplay(hdlg);
+                }
+            } else if (id == IDC_MSG_NEXT) {
+                int sel = (int)SendMessageA(GetDlgItem(hdlg, IDC_MSG_LIST), LB_GETCURSEL, 0, 0);
+                if (sel >= 0 && sel < numAreaMsgs - 1) {
+                    SendMessageA(GetDlgItem(hdlg, IDC_MSG_LIST), LB_SETCURSEL, sel + 1, 0);
+                    curSelectedMsgIdx = areaMsgIndices[sel + 1];
+                    UpdateMsgReaderDisplay(hdlg);
+                }
+            } else if (id == IDC_MSG_STREAM) {
+                if (curSelectedMsgIdx >= 0 && curSelectedMsgIdx < numMsgBase) {
+                    StreamMessageToTerminal(curSelectedMsgIdx);
+                    EndDialog(hdlg, 1);
+                }
+            } else if (id == IDC_MSG_NEW) {
+                if (DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_COMPOSEMSG), hdlg, ComposeMsgProc, 0)) {
+                    SendMessageA(GetDlgItem(hdlg, IDC_MSG_AREA), CB_SETCURSEL, curMsgArea - 1, 0);
+                    PopulateMsgList(hdlg);
+                }
+            } else if (id == 1 || id == 2) {
+                EndDialog(hdlg, 0);
+            }
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 void ClearScreen(void) {
     int r, c;
     for (r = 0; r < MAX_LINES; r++) {
@@ -1830,6 +2079,9 @@ LRESULT CALLBACK WndProc
             hBtnArt = CreateWindowA("BUTTON", "Art", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 dpiScale(608), dpiScale(4), dpiScale(40), dpiScale(22), hwnd, (HMENU)114, 0, 0);
 
+            hBtnMsg = CreateWindowA("BUTTON", "Msgs", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(652), dpiScale(4), dpiScale(48), dpiScale(22), hwnd, (HMENU)115, 0, 0);
+
             /* Second Row (y = 30) */
             hBtnXmDl = CreateWindowA("BUTTON", "DL (XM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 dpiScale(5), dpiScale(30), dpiScale(60), dpiScale(22), hwnd, (HMENU)103, 0, 0);
@@ -1877,6 +2129,7 @@ LRESULT CALLBACK WndProc
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnDoor, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnArt, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnMsg, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hUIFont, TRUE);
 
             ClearScreen();
@@ -2114,6 +2367,8 @@ LRESULT CALLBACK WndProc
                 }
             } else if (LOWORD(wParam) == 114) {
                 RunAnsiArtStream();
+            } else if (LOWORD(wParam) == 115) {
+                DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_MSGREADER), hwnd, MsgReaderProc, 0);
             }
             break;
         }

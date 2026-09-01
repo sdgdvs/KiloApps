@@ -75,14 +75,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KBBS
+**Target App:** KAudio
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
 
-- KBBS (Added Door Games Mini-Suite [LORD/TradeWars text adventure], ANSI Color & Art Viewer Mode, Multi-Node Dialing Directory Manager, Session Log Capture & Export [ANSI/TXT], and Custom BBS Script Macro Auto-Login)
 - KAudio (Added Sound FX Generator Presets, ADSR Envelope & Filter Controls, 16-Step Multi-Track Sequencer, Waveform Visualizer, and WAV/JSON Export & Import)
 - KClock (Added Multi-City World Clock Selector, Repeating Alarms Manager with Snooze, Lap Split Stopwatch with Fastest/Slowest badges, Timezone Converter, and Settings Export/Import [JSON])
 - KPong (Added 2-Player Local PvP Mode, 5 Game Modes, Power-Up System [Paddle Extend, Speed Boost, Multi-Ball, Shield, Freeze], Leaderboard & Win-Rate Stats Tracker, Theme Switcher, and Save/Resume State)
@@ -129,6 +128,7 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KChart (Added Multi-Type Charting Engine [Bar, Line, Area, Pie, Doughnut, Radar], Interactive Data Table Editor, Statistical Analysis Suite [Mean, Median, Std Dev, Min/Max], Trendline & Linear Regression Engine [Least-Squares Fit y=mx+b with Slope, Intercept & R² score], 3-Point Moving Average, Mean Baseline Overlays, SVG Vector Graphic Export, Palette Themes, PNG Image Export, and CSV/JSON Import/Export)
 - KChess (Added PGN Move History Export & Import, FEN Board Position Loader & Exporter, AI Engine Difficulty Levels [Easy, Medium, Hard, Master], Interactive Undo/Redo Move Stack, Best Move Hint arrow/system, Material Advantage & Captured Pieces Counter, Quick Save & Quick Load State Engine [F5/F9], and Real-Time Chess Opening Book Classifier & ECO Encyclopedia [35+ openings])
 - KChat (Added Multi-Room/Channel Support, AI Persona Selector [5 Personalities], Real-time Search & Filtering, Message Pinning & Reactions, Chat History Export/Import [JSON/TXT], and Interactive Poll Creation & Live Voting Suite, Channel Topic Banners, Chat Analytics & Statistics Modal, and Extended Slash Commands [/topic, /poll, /vote, /roll, /stats, /me, /shrug, /tableflip])
+- KBBS (Added Door Games Mini-Suite [LORD/TradeWars text adventure], ANSI Color & Art Viewer Mode, Multi-Node Dialing Directory Manager, Session Log Capture & Export [ANSI/TXT], Custom BBS Script Macro Auto-Login, and BBS Message Base & FidoNet EchoMail Conference Reader Suite)
 
 
 
