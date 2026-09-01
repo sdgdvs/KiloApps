@@ -72,5 +72,41 @@ BEGIN
     LTEXT           "- Scrollback: Shift+PgUp / Shift+PgDn or Wheel", -1, 10, 100, 200, 8
     LTEXT           "- Selection: Drag to select, copies to clipboard", -1, 10, 115, 200, 8
     LTEXT           "- Session Capture: Cap button logs to text file", -1, 10, 130, 200, 8
-    DEFPUSHBUTTON   "OK", 1, 85, 155, 50, 14
+    LTEXT           "- EchoNet / Msgs: Browse conferences & stream", -1, 10, 145, 200, 8
+    DEFPUSHBUTTON   "OK", 1, 85, 160, 50, 14
+END
+
+5000 DIALOGEX 0, 0, 360, 230
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "BBS Message Base & FidoNet EchoMail Reader"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Area / Sub-Board:", -1, 5, 8, 70, 8
+    COMBOBOX        5001, 80, 6, 140, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Conference Messages:", -1, 5, 24, 80, 8
+    LISTBOX         5002, 5, 35, 140, 160, LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Message Header & Content:", -1, 150, 24, 100, 8
+    EDITTEXT        5003, 150, 35, 205, 160, ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL
+    PUSHBUTTON      "Stream to Term", 5004, 5, 204, 70, 16
+    PUSHBUTTON      "New Post", 5005, 80, 204, 50, 16
+    PUSHBUTTON      "Prev", 5006, 135, 204, 35, 16
+    PUSHBUTTON      "Next", 5007, 175, 204, 35, 16
+    DEFPUSHBUTTON   "Close", 1, 300, 204, 55, 16
+END
+
+5100 DIALOGEX 0, 0, 280, 190
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Compose EchoMail Message"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Area:", -1, 10, 10, 25, 8
+    COMBOBOX        5101, 40, 8, 120, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "To:", -1, 170, 10, 15, 8
+    EDITTEXT        5102, 190, 8, 80, 14, ES_AUTOHSCROLL
+    LTEXT           "Subject:", -1, 10, 28, 30, 8
+    EDITTEXT        5103, 40, 26, 230, 14, ES_AUTOHSCROLL
+    LTEXT           "Message Body:", -1, 10, 46, 60, 8
+    EDITTEXT        5104, 10, 58, 260, 105, ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON   "Post", 1, 165, 168, 50, 16
+    PUSHBUTTON      "Cancel", 2, 220, 168, 50, 16
 END

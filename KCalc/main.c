@@ -68,9 +68,10 @@ rand_t m_rand;
 #define CONST_NA  6.02214076e23
 #define CONST_R   8.314462618
 
+int isDeg = 1;
 HWND hDisplay, hSubDisplay, hStatusText;
 HFONT hFontMain, hFontSub, hFontSmall;
-HBRUSH hDisplayBgBrush;
+HBRUSH hDisplayBgBrush, hEditBgBrush;
 int dpiX = 96;
 #define S(x) MulDiv((x), dpiX, 96)
 
@@ -96,8 +97,8 @@ int historyCount = 0;
 // View Handles
 HWND hModeBtns[5];
 HWND hSciBtns[42];
-HWND hFinControls[12];
-HWND hStatsControls[12];
+HWND hFinControls[14];
+HWND hStatsControls[14];
 HWND hConstBtns[8];
 HWND hHistControls[4];
 
@@ -136,7 +137,7 @@ int ParseDoubleList(const char* s, double* outArr, int maxCount) {
 int ParsePointList(const char* s, double* outX, double* outY, int maxCount) {
     int count = 0;
     while (*s && count < maxCount) {
-        while (*s && (*s == ' ' || *s == ';' || *s == '\t' || *s == '\r' || *s == '\n' || *s == '(')) s++;
+        while (*s && (*s == ' ' || *s == ';' || *s == ',' || *s == '\t' || *s == '\r' || *s == '\n' || *s == '(')) s++;
         if (!*s) break;
         outX[count] = m_atof(s);
         while (*s && *s != ',' && *s != ':' && *s != ' ' && *s != '\t' && *s != ';' && *s != '\n') s++;
@@ -162,9 +163,11 @@ void FormatDisplay(double val) {
 }
 
 void UpdateStatusText() {
-    char statusBuf[64] = "Press 'H' or F1 for Help";
+    char statusBuf[64];
     if (memoryStore != 0.0) {
-        m_sprintf(statusBuf, "[M: %.6g] | Press 'H' or F1 for Help", memoryStore);
+        m_sprintf(statusBuf, "[%s] [M: %.6g] | Press 'H' or F1 for Help", isDeg ? "DEG" : "RAD", memoryStore);
+    } else {
+        m_sprintf(statusBuf, "[%s] | Press 'H' or F1 for Help", isDeg ? "DEG" : "RAD");
     }
     SetWindowTextA(hStatusText, statusBuf);
 }
@@ -258,6 +261,9 @@ void DoCalculate() {
     m_sprintf(exprBuf, "%.6g %c %.6g", operand1, opChar, operand2);
     FormatDisplay(res);
     my_strcpy(resBuf, displayBuffer);
+
+    m_sprintf(subDisplayBuffer, "%.6g %c %.6g =", operand1, opChar, operand2);
+    SetWindowTextA(hSubDisplay, subDisplayBuffer);
     
     AddHistoryEntry(exprBuf, resBuf);
 
@@ -270,9 +276,21 @@ void DoUnary(int type) {
     double res = val;
     const char* funcName = "";
 
-    if (type == 1) { res = m_sin(val); funcName = "sin"; }
-    else if (type == 2) { res = m_cos(val); funcName = "cos"; }
-    else if (type == 3) { res = m_tan(val); funcName = "tan"; }
+    if (type == 1) {
+        double rad = isDeg ? (val * (PI / 180.0)) : val;
+        res = m_sin(rad);
+        funcName = "sin";
+    }
+    else if (type == 2) {
+        double rad = isDeg ? (val * (PI / 180.0)) : val;
+        res = m_cos(rad);
+        funcName = "cos";
+    }
+    else if (type == 3) {
+        double rad = isDeg ? (val * (PI / 180.0)) : val;
+        res = m_tan(rad);
+        funcName = "tan";
+    }
     else if (type == 4) {
         if (val <= 0) { my_strcpy(displayBuffer, "Error"); SetWindowTextA(hDisplay, displayBuffer); isNewOperand = 1; return; }
         res = m_log(val); funcName = "ln";
@@ -286,7 +304,22 @@ void DoUnary(int type) {
         res = m_sqrt(val); funcName = "sqrt";
     }
     else if (type == 7) { res = m_exp(val); funcName = "exp"; }
-    else if (type == 8) res = -val;
+    else if (type == 8) {
+        if (!isNewOperand && displayBuffer[0]) {
+            if (displayBuffer[0] == '-') {
+                for (int i = 0; displayBuffer[i]; i++) displayBuffer[i] = displayBuffer[i+1];
+            } else {
+                int len = my_strlen(displayBuffer);
+                if (len < 60) {
+                    for (int i = len; i >= 0; i--) displayBuffer[i+1] = displayBuffer[i];
+                    displayBuffer[0] = '-';
+                }
+            }
+            SetWindowTextA(hDisplay, displayBuffer);
+            return;
+        }
+        res = -val;
+    }
     else if (type == 9) {
         if (val == 0) { my_strcpy(displayBuffer, "Error"); SetWindowTextA(hDisplay, displayBuffer); isNewOperand = 1; return; }
         res = 1.0 / val; funcName = "1/";
@@ -323,11 +356,11 @@ void SetViewMode(int mode) {
         if (hSciBtns[i]) ShowWindow(hSciBtns[i], mode == 0 ? SW_SHOW : SW_HIDE);
     }
     // Show/Hide Financial Controls
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 14; i++) {
         if (hFinControls[i]) ShowWindow(hFinControls[i], mode == 1 ? SW_SHOW : SW_HIDE);
     }
     // Show/Hide Statistics Controls
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 14; i++) {
         if (hStatsControls[i]) ShowWindow(hStatsControls[i], mode == 2 ? SW_SHOW : SW_HIDE);
     }
     // Show/Hide Constants Controls
@@ -385,6 +418,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             m_rand = (rand_t)GetProcAddress(hMsvcrt, "rand");
 
             hDisplayBgBrush = CreateSolidBrush(RGB(15, 23, 42));
+            hEditBgBrush = CreateSolidBrush(RGB(30, 41, 59));
 
             // Mode Selector Bar
             hModeBtns[0] = CreateWindowA("BUTTON", "Scientific", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(8), S(64), S(26), hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
@@ -396,7 +430,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Displays
             hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(38), S(324), S(18), hwnd, NULL, NULL, NULL);
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(58), S(324), S(34), hwnd, NULL, NULL, NULL);
-            hStatusText = CreateWindowExA(0, "STATIC", "Press 'H' or F1 for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, S(10), S(94), S(300), S(16), hwnd, NULL, NULL, NULL);
+            hStatusText = CreateWindowExA(0, "STATIC", "[DEG] | Press 'H' or F1 for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, S(10), S(94), S(300), S(16), hwnd, NULL, NULL, NULL);
 
             hFontMain = CreateFontA(-MulDiv(24, dpiX, 72), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Consolas");
             hFontSub = CreateFontA(-MulDiv(14, dpiX, 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
@@ -410,7 +444,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char labels[40][6] = {
                 "MC",  "MR",  "MS",  "M+",  "M-",
                 "sin", "cos", "tan", "pi",  "C",
-                "ln",  "log", "sqr", "e",   "<",
+                "ln",  "log", "sqrt", "e",  "<",
                 "n!",  "abs", "rnd", "x^2", "10^x",
                 "exp", "7",   "8",   "9",   "/",
                 "^",   "4",   "5",   "6",   "*",
@@ -437,26 +471,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Mode 1: Financial Controls
-            CreateWindowA("STATIC", "Loan Amount ($):", WS_CHILD | SS_LEFT, S(15), S(115), S(120), S(20), hwnd, NULL, NULL, NULL);
-            hFinControls[0] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "250000", WS_CHILD | ES_NUMBER, S(140), S(112), S(180), S(24), hwnd, NULL, NULL, NULL);
+            hFinControls[0] = CreateWindowA("STATIC", "Loan Amount ($):", WS_CHILD | SS_LEFT, S(15), S(115), S(120), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[1] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "250000", WS_CHILD | ES_NUMBER, S(140), S(112), S(180), S(24), hwnd, NULL, NULL, NULL);
             
-            CreateWindowA("STATIC", "Interest Rate (%):", WS_CHILD | SS_LEFT, S(15), S(145), S(120), S(20), hwnd, NULL, NULL, NULL);
-            hFinControls[1] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6.5", WS_CHILD, S(140), S(142), S(180), S(24), hwnd, NULL, NULL, NULL);
+            hFinControls[2] = CreateWindowA("STATIC", "Interest Rate (%):", WS_CHILD | SS_LEFT, S(15), S(145), S(120), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[3] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6.5", WS_CHILD, S(140), S(142), S(180), S(24), hwnd, NULL, NULL, NULL);
 
-            CreateWindowA("STATIC", "Term (Years):", WS_CHILD | SS_LEFT, S(15), S(175), S(120), S(20), hwnd, NULL, NULL, NULL);
-            hFinControls[2] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "30", WS_CHILD | ES_NUMBER, S(140), S(172), S(180), S(24), hwnd, NULL, NULL, NULL);
+            hFinControls[4] = CreateWindowA("STATIC", "Term (Years):", WS_CHILD | SS_LEFT, S(15), S(175), S(120), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[5] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "30", WS_CHILD | ES_NUMBER, S(140), S(172), S(180), S(24), hwnd, NULL, NULL, NULL);
 
-            hFinControls[3] = CreateWindowA("BUTTON", "Calculate PMT", WS_CHILD | BS_PUSHBUTTON, S(140), S(205), S(180), S(30), hwnd, (HMENU)ID_FIN_CALC_PMT, NULL, NULL);
-            hFinControls[4] = CreateWindowExA(0, "STATIC", "Monthly PMT: $0.00", WS_CHILD | SS_LEFT, S(15), S(245), S(300), S(24), hwnd, NULL, NULL, NULL);
+            hFinControls[6] = CreateWindowA("BUTTON", "Calculate PMT", WS_CHILD | BS_PUSHBUTTON, S(140), S(205), S(180), S(30), hwnd, (HMENU)ID_FIN_CALC_PMT, NULL, NULL);
+            hFinControls[7] = CreateWindowExA(0, "STATIC", "Monthly PMT: $0.00", WS_CHILD | SS_LEFT, S(15), S(245), S(300), S(24), hwnd, NULL, NULL, NULL);
 
-            CreateWindowA("STATIC", "Cost ($):", WS_CHILD | SS_LEFT, S(15), S(285), S(60), S(20), hwnd, NULL, NULL, NULL);
-            hFinControls[5] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "50", WS_CHILD, S(80), S(282), S(80), S(24), hwnd, NULL, NULL, NULL);
+            hFinControls[8] = CreateWindowA("STATIC", "Cost ($):", WS_CHILD | SS_LEFT, S(15), S(285), S(60), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[9] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "50", WS_CHILD, S(80), S(282), S(80), S(24), hwnd, NULL, NULL, NULL);
 
-            CreateWindowA("STATIC", "Sell ($):", WS_CHILD | SS_LEFT, S(170), S(285), S(60), S(20), hwnd, NULL, NULL, NULL);
-            hFinControls[6] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "80", WS_CHILD, S(235), S(282), S(85), S(24), hwnd, NULL, NULL, NULL);
+            hFinControls[10] = CreateWindowA("STATIC", "Sell ($):", WS_CHILD | SS_LEFT, S(170), S(285), S(60), S(20), hwnd, NULL, NULL, NULL);
+            hFinControls[11] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "80", WS_CHILD, S(235), S(282), S(85), S(24), hwnd, NULL, NULL, NULL);
 
-            hFinControls[7] = CreateWindowA("BUTTON", "Calc Margin", WS_CHILD | BS_PUSHBUTTON, S(140), S(315), S(180), S(30), hwnd, (HMENU)ID_FIN_CALC_MARG, NULL, NULL);
-            hFinControls[8] = CreateWindowExA(0, "STATIC", "Margin: 0.00%", WS_CHILD | SS_LEFT, S(15), S(355), S(300), S(24), hwnd, NULL, NULL, NULL);
+            hFinControls[12] = CreateWindowA("BUTTON", "Calc Margin", WS_CHILD | BS_PUSHBUTTON, S(140), S(315), S(180), S(30), hwnd, (HMENU)ID_FIN_CALC_MARG, NULL, NULL);
+            hFinControls[13] = CreateWindowExA(0, "STATIC", "Margin: 0.00%", WS_CHILD | SS_LEFT, S(15), S(355), S(300), S(24), hwnd, NULL, NULL, NULL);
 
             // Mode 2: Statistics Controls
             hStatsControls[0] = CreateWindowA("STATIC", "1-Var Dataset (comma/space separated):", WS_CHILD | SS_LEFT, S(15), S(110), S(314), S(16), hwnd, NULL, NULL, NULL);
@@ -502,6 +536,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkColor(hdcStatic, RGB(15, 23, 42));
             return (INT_PTR)hDisplayBgBrush;
         }
+        case WM_CTLCOLOREDIT: {
+            HDC hdcEdit = (HDC)wParam;
+            SetTextColor(hdcEdit, RGB(248, 250, 252));
+            SetBkColor(hdcEdit, RGB(30, 41, 59));
+            return (INT_PTR)hEditBgBrush;
+        }
         case WM_COMMAND: {
             int id = LOWORD(wParam);
 
@@ -515,7 +555,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AppendChar(id);
             } else if (id == 'C') {
                 my_strcpy(displayBuffer, "0");
+                subDisplayBuffer[0] = 0;
                 SetWindowTextA(hDisplay, displayBuffer);
+                SetWindowTextA(hSubDisplay, "");
                 operand1 = 0;
                 operator = 0;
                 isNewOperand = 1;
@@ -526,6 +568,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 operand1 = m_atof(displayBuffer);
                 operator = id;
                 isNewOperand = 1;
+                m_sprintf(subDisplayBuffer, "%.6g %c", operand1, (char)operator);
+                SetWindowTextA(hSubDisplay, subDisplayBuffer);
             } else if (id == '=') {
                 DoCalculate();
                 operator = 0;
@@ -554,17 +598,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Financial PMT Calculation
             else if (id == ID_FIN_CALC_PMT) {
                 char pBuf[32], rBuf[32], yBuf[32];
-                GetWindowTextA(hFinControls[0], pBuf, 32);
-                GetWindowTextA(hFinControls[1], rBuf, 32);
-                GetWindowTextA(hFinControls[2], yBuf, 32);
+                GetWindowTextA(hFinControls[1], pBuf, 32);
+                GetWindowTextA(hFinControls[3], rBuf, 32);
+                GetWindowTextA(hFinControls[5], yBuf, 32);
                 double P = m_atof(pBuf);
-                double r = m_atof(rBuf) / 100.0 / 12.0;
+                double rPct = m_atof(rBuf);
+                double r = (rPct / 100.0) / 12.0;
                 double n = m_atof(yBuf) * 12.0;
-                if (P > 0 && r > 0 && n > 0) {
-                    double pmt = (P * r * m_pow(1.0 + r, n)) / (m_pow(1.0 + r, n) - 1.0);
+                if (P > 0 && n > 0 && rPct >= 0) {
+                    double pmt = 0;
+                    if (r == 0) pmt = P / n;
+                    else pmt = (P * r * m_pow(1.0 + r, n)) / (m_pow(1.0 + r, n) - 1.0);
                     char outBuf[64];
                     m_sprintf(outBuf, "Monthly PMT: $%.2f", pmt);
-                    SetWindowTextA(hFinControls[4], outBuf);
+                    SetWindowTextA(hFinControls[7], outBuf);
                     FormatDisplay(pmt);
                     AddHistoryEntry("PMT Loan Calc", displayBuffer);
                 }
@@ -572,16 +619,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Financial Margin Calculation
             else if (id == ID_FIN_CALC_MARG) {
                 char cBuf[32], sBuf[32];
-                GetWindowTextA(hFinControls[5], cBuf, 32);
-                GetWindowTextA(hFinControls[6], sBuf, 32);
+                GetWindowTextA(hFinControls[9], cBuf, 32);
+                GetWindowTextA(hFinControls[11], sBuf, 32);
                 double cost = m_atof(cBuf);
                 double sell = m_atof(sBuf);
-                if (cost > 0 && sell > 0) {
+                if (cost >= 0 && sell > 0) {
                     double profit = sell - cost;
                     double marginPct = (profit / sell) * 100.0;
                     char outBuf[64];
                     m_sprintf(outBuf, "Profit: $%.2f | Margin: %.2f%%", profit, marginPct);
-                    SetWindowTextA(hFinControls[8], outBuf);
+                    SetWindowTextA(hFinControls[13], outBuf);
                     FormatDisplay(profit);
                     AddHistoryEntry("Margin Calc", displayBuffer);
                 }
@@ -713,6 +760,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hFontSub) DeleteObject(hFontSub);
             if (hFontSmall) DeleteObject(hFontSmall);
             if (hDisplayBgBrush) DeleteObject(hDisplayBgBrush);
+            if (hEditBgBrush) DeleteObject(hEditBgBrush);
             PostQuitMessage(0);
             return 0;
     }
@@ -752,7 +800,12 @@ void __stdcall MainEntry() {
             int key = msg.wParam;
             int cmd = 0;
             if (key == 'H' || key == VK_F1) {
-                MessageBoxA(hwnd, "KCalc Pro Help:\n- Switch modes using the buttons above.\n- Keyboard shortcuts: Numpad/numbers, +, -, *, /, %, ^, Enter, Backspace, Esc.\n- History exports to kcalc_history.txt.", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KCalc Pro Help:\n- Switch modes using the buttons above.\n- Keyboard shortcuts: Numpad/numbers, +, -, *, /, %, ^, Enter, Backspace, Esc.\n- Press 'D' to toggle DEG / RAD.\n- History exports to kcalc_history.txt.", "Help", MB_OK | MB_ICONINFORMATION);
+                continue;
+            }
+            if ((key == 'D' || key == 'd') && currentMode == 0) {
+                isDeg = !isDeg;
+                UpdateStatusText();
                 continue;
             }
             if (key >= '0' && key <= '9') {

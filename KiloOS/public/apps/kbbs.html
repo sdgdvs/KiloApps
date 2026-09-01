@@ -127,6 +127,7 @@
         <button id="btnMacros" onclick="showMacros()">Macros</button>
         <button id="btnDoorGames" onclick="showDoorGames()" style="background: linear-gradient(180deg, #ec4899 0%, #be185d 100%); border-color: #9d174d;">Door Games</button>
         <button id="btnAnsiArt" onclick="showAnsiArtViewer()" style="background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%); border-color: #3730a3;">ANSI Art</button>
+        <button id="btnMsgBase" onclick="showMsgBase()" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">EchoNet (Msgs)</button>
         <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:4px;">DL (XM)</button>
         <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
         <button id="btnZmDl" onclick="startTransfer(3)" title="ZMODEM Download" style="background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); border-color: #0369a1;">DL (ZM)</button>
@@ -137,6 +138,7 @@
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
         <input type="file" id="ansFileUpload" accept=".ans,.txt,.ice" style="display:none" onchange="loadAnsFile(event)">
         <input type="file" id="dirImportUpload" accept=".json" style="display:none" onchange="importDirectoryJSON(event)">
+        <input type="file" id="msgImportUpload" accept=".json" style="display:none" onchange="importMsgBaseJSON(event)">
     </div>
     <div class="main">
         <div class="term-wrap">
@@ -412,6 +414,7 @@ SEND:"secret\r"'></textarea>
                     <div><strong style="color: #0ea5e9;">Dialing Directory:</strong> Multi-node manager to save, ping, and connect to live BBS systems.</div>
                     <div><strong style="color: #ec4899;">Door Games Mini-Suite:</strong> Play classic Legend of the Red Dragon (L.O.R.D.) or TradeWars 2015 text adventures!</div>
                     <div><strong style="color: #6366f1;">ANSI Art Viewer:</strong> Render, animate, and export retro ANSI art files with baud rate playback.</div>
+                    <div><strong style="color: #f59e0b;">EchoNet / Msg Base:</strong> Browse 5 message conferences, read FidoNet EchoMail, post replies, and stream threads to screen.</div>
                     <div><strong style="color: #10b981;">Session Log Capture:</strong> Export incoming terminal logs as raw ANSI (.ans) or clean text (.txt).</div>
                     <div><strong style="color: #f59e0b;">Script Auto-Login Engine:</strong> Automate logins using WAIT and SEND sequence scripts.</div>
                     <div><strong style="color: #0ea5e9;">XMODEM / ZMODEM:</strong> Full protocol binary file upload and download support.</div>
@@ -419,6 +422,88 @@ SEND:"secret\r"'></textarea>
                 </div>
                 <div style="padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: flex-end;">
                     <button class="btn-action" onclick="closeHelp()">Got It</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BBS Message Base & FidoNet EchoMail Reader Modal -->
+        <div id="msgBaseModal" class="modal-overlay">
+            <div class="modal-card" style="width: 800px; max-width: 95%; height: 590px; max-height: 95%;">
+                <div class="modal-header" style="background: linear-gradient(90deg, #b45309 0%, #78350f 100%);">
+                    <span>📬 BBS Message Base & FidoNet EchoMail Conference Reader</span>
+                    <button class="modal-close" onclick="closeMsgBase()">X</button>
+                </div>
+                <div style="padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; background: rgba(0,0,0,0.3); align-items: center; flex-wrap: wrap;">
+                    <span style="font-size:11px; font-weight:600; color:#d4d4d8; text-transform:uppercase;">Area:</span>
+                    <select id="msgAreaSelect" style="background:#09090b; border:1px solid #27272a; color:#f59e0b; padding:5px 8px; border-radius:4px; font-weight:600;" onchange="changeMsgArea()">
+                        <option value="1">[1] General BBS Chat & Intros</option>
+                        <option value="2">[2] ANSI Art & Telecomm Demos</option>
+                        <option value="3">[3] Door Games & RPG Strategy</option>
+                        <option value="4">[4] Vintage Hardware & Modems</option>
+                        <option value="5">[5] FidoNet 1:100/42 SysOps</option>
+                    </select>
+                    <input type="text" id="msgSearchInput" placeholder="Search subject, sender, or text..." style="flex:1; min-width:140px; background:#09090b; border:1px solid #27272a; color:#fff; padding:5px 8px; border-radius:4px; outline:none;" oninput="renderMsgList()">
+                    <button class="btn-action" style="background:#f59e0b; color:#000;" onclick="openNewMsgModal()">+ New Post</button>
+                    <button class="btn-secondary" onclick="exportMsgBaseJSON()">Export JSON</button>
+                    <button class="btn-secondary" onclick="document.getElementById('msgImportUpload').click()">Import JSON</button>
+                </div>
+                <div style="flex: 1; display: flex; overflow: hidden;">
+                    <!-- Message list left pane -->
+                    <div style="width: 270px; border-right: 1px solid #27272a; overflow-y: auto; background: rgba(0,0,0,0.2);" id="msgListPane">
+                        <!-- Populated by JS -->
+                    </div>
+                    <!-- Message viewer right pane -->
+                    <div style="flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; background: #000;" id="msgViewPane">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                <div style="padding: 10px 16px; border-top: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
+                    <span id="msgStatusCount" style="font-size:11px; color:#a1a1aa;">Showing 0 messages</span>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-secondary" onclick="openReplyModal()">Reply (Quote)</button>
+                        <button class="btn-secondary" onclick="exportCurrentMsgFile()">Export .MSG</button>
+                        <button class="btn-action" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%);" onclick="streamMsgToTerminal()">Stream to Terminal Screen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compose Message Modal -->
+        <div id="composeMsgModal" class="modal-overlay" style="z-index: 110;">
+            <div class="modal-card" style="width: 580px; max-width: 95%; height: 490px; max-height: 95%;">
+                <div class="modal-header" style="background: linear-gradient(90deg, #d97706 0%, #b45309 100%);">
+                    <span id="composeModalTitle">Compose BBS EchoMail Message</span>
+                    <button class="modal-close" onclick="closeComposeModal()">X</button>
+                </div>
+                <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1;">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex: 1;">
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Area</label>
+                            <select id="compAreaSelect" style="width:100%; background:#09090b; border:1px solid #27272a; color:#f59e0b; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
+                                <option value="1">[1] General BBS Chat & Intros</option>
+                                <option value="2">[2] ANSI Art & Telecomm Demos</option>
+                                <option value="3">[3] Door Games & RPG Strategy</option>
+                                <option value="4">[4] Vintage Hardware & Modems</option>
+                                <option value="5">[5] FidoNet 1:100/42 SysOps</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">To Recipient</label>
+                            <input type="text" id="compTo" value="All" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Subject</label>
+                        <input type="text" id="compSubject" placeholder="Enter message subject..." style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;">
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Message Body</label>
+                        <textarea id="compBody" style="flex: 1; background: #000; border: 1px solid #27272a; color: #10b981; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 12px; resize: none; margin-top: 3px;" placeholder="Write message... Use > for quotes."></textarea>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; padding-top: 6px;">
+                        <button class="btn-secondary" onclick="closeComposeModal()">Cancel</button>
+                        <button class="btn-action" style="background:#f59e0b; color:#000;" onclick="saveComposedMessage()">Post Message</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -464,7 +549,7 @@ SEND:"secret\r"'></textarea>
         document.querySelector('.term-wrap').style.setProperty('--crt-display', crt ? 'block' : 'none');
         document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
     }
-    document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); loadDirectory(); loadMacros(); });
+    document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); loadDirectory(); loadMacros(); loadMsgBase(); });
     document.addEventListener("keydown", (e) => {
         if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
             if (e.key === 'F1') e.preventDefault();
@@ -1225,6 +1310,340 @@ SEND:"secret\r"'></textarea>
         let a = document.createElement('a'); a.download = 'ansi_art.png'; a.href = artCanvas.toDataURL(); a.click();
     }
 
+    // ─── 6. BBS Message Base & FidoNet EchoMail Reader Suite ───
+    const DEFAULT_BBS_MSGS = [
+        {
+            id: 101,
+            area: 1,
+            from: "SysOp Merlin",
+            to: "All",
+            fido: "1:100/42.0",
+            date: "31-Aug-2026 20:15:00",
+            subj: "Welcome to KiloBBS Station Node 1!",
+            body: "Welcome all new callers to KiloBBS!\n\nFeel free to explore our Door Games suite (LORD and TradeWars), check out the ANSI Art gallery, and participate in our FidoNet EchoMail conferences.\n\nUpload/Download ratios are relaxed for verified users.\n\n--- KBBS EchoReader v2.0\n* Origin: KiloBBS Station Hub (1:100/42.0)"
+        },
+        {
+            id: 102,
+            area: 1,
+            from: "ZeroCool",
+            to: "SysOp Merlin",
+            fido: "1:249/106.1",
+            date: "31-Aug-2026 20:45:12",
+            subj: "Great system setup & fast Zmodem speeds",
+            body: "> Welcome all new callers to KiloBBS!\n\nHey Merlin, loved the new ANSI login screen and the Zmodem batch download speeds. What baud rate is the serial port mapped to?\n\nKeep up the awesome board!\n\n--- KBBS EchoReader v2.0\n* Origin: Acid Underground Node (1:249/106.1)"
+        },
+        {
+            id: 103,
+            area: 2,
+            from: "Acid_Burn",
+            to: "All",
+            fido: "1:100/42.5",
+            date: "31-Aug-2026 21:00:30",
+            subj: "TheDRAW 4.63 & CP437 Shading Tutorial",
+            body: "Quick tip for demoscene ANSI artists:\n\nWhen doing high-contrast lighting on block letters, mix CP437 characters 0xB0 (176 light shade \u2591), 0xB1 (177 med shade \u2592), and 0xDB (219 solid block \u2588) with intense foreground colors (e.g. 1;36m Cyan / 1;33m Yellow).\n\nNew ANSI packs drop this Friday in the file library!\n\n--- KBBS EchoReader v2.0\n* Origin: ACiD Telecomm Art Group (1:100/42.5)"
+        },
+        {
+            id: 104,
+            area: 3,
+            from: "DragonSlayer",
+            to: "All",
+            fido: "1:100/42.12",
+            date: "31-Aug-2026 21:18:44",
+            subj: "L.O.R.D. Red Dragon slaying strategy",
+            body: "For anyone struggling with the Red Dragon in LORD:\n1. Deposit your excess gold in the Royal Bank daily so thieves cannot rob you.\n2. Upgrade to at least the Broadsword before venturing into level 5 forest.\n3. Flirt with Violet at the tavern for free HP restoration!\n\n--- KBBS EchoReader v2.0\n* Origin: Dragon Realm BBS (1:100/42.12)"
+        },
+        {
+            id: 105,
+            area: 3,
+            from: "SectorTrader",
+            to: "All",
+            fido: "2:201/33.0",
+            date: "31-Aug-2026 21:30:19",
+            subj: "TradeWars: Sol to Alpha Centauri loop",
+            body: "I mapped an optimal trade circuit:\nSector 1 (Sol) -> Buy Ore @ $12 -> Warp to Sector 7 -> Sell Ore @ $48 -> Buy Equipment -> Return to Sol!\n\nYields ~3,600 credits per 10-turn jump. Beware of pirate fighters in Sector 4.\n\n--- KBBS EchoReader v2.0\n* Origin: Starport Exchange (2:201/33.0)"
+        },
+        {
+            id: 106,
+            area: 4,
+            from: "ModemGuru",
+            to: "All",
+            fido: "1:100/42.2",
+            date: "31-Aug-2026 21:40:05",
+            subj: "USRobotics Courier V.Everything DIP switches",
+            body: "If your USR modem drops carrier on 33.6k handshake:\nSet DIP Switch 3 ON (Suppress Result Codes OFF), DIP Switch 8 ON (Enable dumb mode OFF), and init string AT&F1&K3&C1&D2.\n\nProvides rock-solid V.42bis compression and hardware flow control.\n\n--- KBBS EchoReader v2.0\n* Origin: Hardware Depot BBS (1:100/42.2)"
+        },
+        {
+            id: 107,
+            area: 5,
+            from: "ZoneCoordinator",
+            to: "SysOps",
+            fido: "1:1/0.0",
+            date: "31-Aug-2026 21:55:00",
+            subj: "FidoNet Zone 1 Route & EchoMail Policy update",
+            body: "Attention all Node SysOps:\n\nNational Zone 1 EchoMail tosser runs at 03:00 UTC daily during ZMH (Zone Mail Hour). Ensure your FrontDoor / BinkleyTerm mailers are configured for CRC32 Zmodem packet transfer.\n\nNode routing table update v2026.08 is available for sync.\n\n--- KBBS EchoReader v2.0\n* Origin: FidoNet Zone 1 Coord (1:1/0.0)"
+        }
+    ];
+
+    let bbsMessages = [...DEFAULT_BBS_MSGS];
+    let selectedMsgId = 101;
+    let currentMsgArea = 1;
+
+    function loadMsgBase() {
+        const saved = localStorage.getItem('kbbs_messages_v1');
+        if (saved) {
+            try { bbsMessages = JSON.parse(saved); } catch(e) {}
+        }
+    }
+
+    function saveMsgBase() {
+        localStorage.setItem('kbbs_messages_v1', JSON.stringify(bbsMessages));
+    }
+
+    function showMsgBase() {
+        document.getElementById('msgBaseModal').style.display = 'flex';
+        document.getElementById('msgAreaSelect').value = currentMsgArea;
+        renderMsgList();
+        selectMsg(selectedMsgId);
+    }
+
+    function closeMsgBase() {
+        document.getElementById('msgBaseModal').style.display = 'none';
+        canvas.focus();
+    }
+
+    function changeMsgArea() {
+        currentMsgArea = parseInt(document.getElementById('msgAreaSelect').value) || 1;
+        let areaMsgs = bbsMessages.filter(m => m.area === currentMsgArea);
+        if (areaMsgs.length > 0) {
+            selectedMsgId = areaMsgs[0].id;
+        }
+        renderMsgList();
+        selectMsg(selectedMsgId);
+    }
+
+    function getSelectedMsg() {
+        return bbsMessages.find(m => m.id === selectedMsgId) || bbsMessages[0];
+    }
+
+    function renderMsgList() {
+        const pane = document.getElementById('msgListPane');
+        const search = (document.getElementById('msgSearchInput').value || '').toLowerCase().trim();
+        pane.innerHTML = '';
+        
+        let filtered = bbsMessages.filter(m => {
+            const matchArea = search ? true : (m.area === currentMsgArea);
+            const matchQuery = !search || (m.subj.toLowerCase().includes(search) || m.from.toLowerCase().includes(search) || m.body.toLowerCase().includes(search));
+            return matchArea && matchQuery;
+        });
+
+        document.getElementById('msgStatusCount').textContent = `Showing ${filtered.length} of ${bbsMessages.length} messages`;
+
+        if (filtered.length === 0) {
+            pane.innerHTML = '<div style="padding:16px; color:#71717a; text-align:center; font-size:11px;">No messages found in this area.</div>';
+            return;
+        }
+
+        filtered.forEach(m => {
+            let item = document.createElement('div');
+            let isSel = (m.id === selectedMsgId);
+            item.style.padding = '10px 12px';
+            item.style.cursor = 'pointer';
+            item.style.borderBottom = '1px solid #27272a';
+            item.style.background = isSel ? 'rgba(245, 158, 11, 0.2)' : 'transparent';
+            item.style.borderLeft = isSel ? '3px solid #f59e0b' : '3px solid transparent';
+            item.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color:${isSel ? '#f59e0b' : '#fff'}; font-size:12px;">#${m.id} ${escapeHTML(m.subj)}</strong>
+                </div>
+                <div style="font-size:10px; color:#a1a1aa; margin-top:3px; display:flex; justify-content:space-between;">
+                    <span>From: ${escapeHTML(m.from)}</span>
+                    <span>${escapeHTML(m.date.split(' ')[0])}</span>
+                </div>
+            `;
+            item.onclick = () => selectMsg(m.id);
+            pane.appendChild(item);
+        });
+    }
+
+    function selectMsg(id) {
+        selectedMsgId = id;
+        renderMsgList();
+        renderMsgViewer();
+    }
+
+    function renderMsgViewer() {
+        const pane = document.getElementById('msgViewPane');
+        let msg = getSelectedMsg();
+        if (!msg) {
+            pane.innerHTML = '<div style="color:#71717a; padding:20px; text-align:center;">Select a message to view.</div>';
+            return;
+        }
+
+        const areaNames = ["", "General BBS Chat", "ANSI Art & Telecomm Demos", "Door Games & RPG Strategy", "Vintage Hardware & Modems", "FidoNet SysOp Roundtable"];
+        let aName = areaNames[msg.area] || `Area ${msg.area}`;
+
+        let bodyHtml = escapeHTML(msg.body)
+            .replace(/^(&gt;.*)$/gm, '<span style="color:#60a5fa; font-style:italic;">$1</span>')
+            .replace(/^(---.*)$/gm, '<span style="color:#a1a1aa;">$1</span>')
+            .replace(/^(\* Origin:.*)$/gm, '<span style="color:#f59e0b; font-weight:600;">$1</span>')
+            .replace(/\n/g, '<br>');
+
+        pane.innerHTML = `
+            <div style="background:#18181b; border:1px solid #3f3f46; border-radius:6px; padding:12px; font-family:monospace; font-size:12px; color:#e4e4e7;">
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #27272a; padding-bottom:6px; margin-bottom:6px;">
+                    <span style="color:#f59e0b; font-weight:bold;">Msg #${msg.id} (${aName})</span>
+                    <span style="color:#a1a1aa;">${escapeHTML(msg.date)}</span>
+                </div>
+                <div style="display:grid; grid-template-columns: 80px 1fr; gap:4px; line-height:1.5;">
+                    <span style="color:#71717a;">From:</span>
+                    <span style="color:#38bdf8; font-weight:600;">${escapeHTML(msg.from)} <span style="color:#a1a1aa; font-weight:normal;">[${escapeHTML(msg.fido)}]</span></span>
+                    <span style="color:#71717a;">To:</span>
+                    <span style="color:#10b981;">${escapeHTML(msg.to)}</span>
+                    <span style="color:#71717a;">Subject:</span>
+                    <span style="color:#fff; font-weight:bold;">${escapeHTML(msg.subj)}</span>
+                </div>
+            </div>
+            <div style="flex:1; background:#09090b; border:1px solid #27272a; border-radius:6px; padding:12px; font-family:monospace; font-size:12px; color:#10b981; line-height:1.6; overflow-y:auto; white-space:pre-wrap;">${bodyHtml}</div>
+        `;
+    }
+
+    function openNewMsgModal() {
+        document.getElementById('composeModalTitle').textContent = 'Compose BBS EchoMail Message';
+        document.getElementById('compAreaSelect').value = currentMsgArea;
+        document.getElementById('compTo').value = 'All';
+        document.getElementById('compSubject').value = '';
+        document.getElementById('compBody').value = '\n\n--- KBBS EchoReader v2.0\n* Origin: KiloBBS Caller Station (1:100/42.99)';
+        document.getElementById('composeMsgModal').style.display = 'flex';
+    }
+
+    function openReplyModal() {
+        let msg = getSelectedMsg();
+        if (!msg) return;
+        document.getElementById('composeModalTitle').textContent = `Reply to Msg #${msg.id}`;
+        document.getElementById('compAreaSelect').value = msg.area;
+        document.getElementById('compTo').value = msg.from;
+        let subj = msg.subj.startsWith('Re: ') ? msg.subj : `Re: ${msg.subj}`;
+        document.getElementById('compSubject').value = subj;
+
+        let quoted = msg.body.split('\n')
+            .filter(l => !l.startsWith('---') && !l.startsWith('* Origin:'))
+            .map(l => `> ${l}`)
+            .join('\n');
+
+        document.getElementById('compBody').value = `${quoted}\n\n\n--- KBBS EchoReader v2.0\n* Origin: KiloBBS Caller Station (1:100/42.99)`;
+        document.getElementById('composeMsgModal').style.display = 'flex';
+    }
+
+    function closeComposeModal() {
+        document.getElementById('composeMsgModal').style.display = 'none';
+    }
+
+    function saveComposedMessage() {
+        let area = parseInt(document.getElementById('compAreaSelect').value) || 1;
+        let to = document.getElementById('compTo').value.trim() || 'All';
+        let subj = document.getElementById('compSubject').value.trim() || 'No Subject';
+        let body = document.getElementById('compBody').value.trim();
+        if (!body) {
+            alert('Please enter a message body.');
+            return;
+        }
+
+        let maxId = bbsMessages.reduce((max, m) => (m.id > max ? m.id : max), 100);
+        let now = new Date();
+        let dateStr = `${now.getDate()}-${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][now.getMonth()]}-${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+        let newMsg = {
+            id: maxId + 1,
+            area: area,
+            from: "SysOp Caller",
+            to: to,
+            fido: "1:100/42.99",
+            date: dateStr,
+            subj: subj,
+            body: body
+        };
+
+        bbsMessages.unshift(newMsg);
+        saveMsgBase();
+        selectedMsgId = newMsg.id;
+        currentMsgArea = area;
+        document.getElementById('msgAreaSelect').value = currentMsgArea;
+        closeComposeModal();
+        renderMsgList();
+        selectMsg(selectedMsgId);
+    }
+
+    function exportCurrentMsgFile() {
+        let msg = getSelectedMsg();
+        if (!msg) return;
+        let text = `Area: ${msg.area}\nMsg: #${msg.id}\nDate: ${msg.date}\nFrom: ${msg.from} (${msg.fido})\nTo: ${msg.to}\nSubject: ${msg.subj}\n\n${msg.body}\n`;
+        let blob = new Blob([text], { type: 'text/plain' });
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `msg_${msg.id}.msg`;
+        a.click();
+    }
+
+    function exportMsgBaseJSON() {
+        let blob = new Blob([JSON.stringify(bbsMessages, null, 2)], { type: 'application/json' });
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'kbbs_message_base.json';
+        a.click();
+    }
+
+    function importMsgBaseJSON(event) {
+        let file = event.target.files[0];
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                let parsed = JSON.parse(e.target.result);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    bbsMessages = parsed;
+                    saveMsgBase();
+                    if (bbsMessages[0]) selectedMsgId = bbsMessages[0].id;
+                    renderMsgList();
+                    selectMsg(selectedMsgId);
+                    alert(`Imported ${parsed.length} messages successfully!`);
+                }
+            } catch(err) {
+                alert('Invalid JSON message file.');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function streamMsgToTerminal() {
+        let msg = getSelectedMsg();
+        if (!msg) return;
+        closeMsgBase();
+        initScreen();
+
+        const areaNames = ["", "General BBS Chat", "ANSI Art & Demoscene", "Door Games & RPG", "Vintage Hardware", "FidoNet SysOp Roundtable"];
+        let aName = areaNames[msg.area] || "EchoMail";
+
+        let text = `\x1B[1;36m╔══════════════════════════════════════════════════════════════════════════════╗\r\n`;
+        text += `║ \x1B[1;33mMsg #${msg.id} of ${bbsMessages.length}\x1B[1;36m \x1B[0;37mArea: \x1B[1;32m${aName.padEnd(28)}\x1B[1;36m \x1B[0;37mDate: \x1B[1;37m${msg.date.padEnd(19)}\x1B[1;36m ║\r\n`;
+        text += `║ \x1B[0;37mFrom: \x1B[1;33m${(msg.from + ' (' + msg.fido + ')').padEnd(32)}\x1B[1;36m \x1B[0;37mTo: \x1B[1;36m${msg.to.padEnd(31)}\x1B[1;36m ║\r\n`;
+        text += `║ \x1B[0;37mSubj: \x1B[1;37m${msg.subj.padEnd(70)}\x1B[1;36m ║\r\n`;
+        text += `╠══════════════════════════════════════════════════════════════════════════════╣\x1B[0m\r\n`;
+
+        let bodyLines = msg.body.split('\n');
+        for (let l of bodyLines) {
+            if (l.startsWith('>')) {
+                text += `\x1B[1;30m${l}\x1B[0m\r\n`;
+            } else if (l.startsWith('---') || l.startsWith('* Origin:')) {
+                text += `\x1B[0;36m${l}\x1B[0m\r\n`;
+            } else {
+                text += `\x1B[0;37m${l}\x1B[0m\r\n`;
+            }
+        }
+        text += `\x1B[1;36m╚══════════════════════════════════════════════════════════════════════════════╝\x1B[0m\r\n`;
+
+        processData(text);
+    }
+
     // ─── Sound Effects ───
     let audioCtx = null;
     function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -1263,7 +1682,7 @@ SEND:"secret\r"'></textarea>
     function resetPalette() { COLORS = [...DEFAULT_COLORS]; render(); }
 
     function closeAnyOpenModal() {
-        let modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal'];
+        let modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'msgBaseModal', 'composeMsgModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal'];
         let closedAny = false;
         for (let m of modals) {
             let el = document.getElementById(m);

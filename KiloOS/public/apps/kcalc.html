@@ -1177,6 +1177,17 @@
     render();
   }
 
+  // Helper to escape HTML characters
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   function showMemoryModal() {
     alert(`Memory Registers:\nActive M: ${memoryStore}\nM1: ${multiMemory.M1}\nM2: ${multiMemory.M2}\nM3: ${multiMemory.M3}`);
   }
@@ -1194,18 +1205,29 @@
   function evalExpression(inputStr) {
     if (!inputStr) return 0;
     
-    let sanitized = inputStr
-      .replace(/Ans/g, String(lastAns))
-      .replace(/pi/g, String(Math.PI))
-      .replace(/e/g, String(Math.E))
-      .replace(/(\d+)\%/g, '($1/100)');
+    let sanitized = inputStr.trim();
+
+    // Replace e^(...) with exp(...)
+    sanitized = sanitized.replace(/e\^\(/g, 'exp(');
+
+    // Support postfix factorial e.g. 5! -> fact(5)
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))!/g, 'fact($1)');
+
+    // Support percentage e.g. 50% -> (50/100)
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))%/g, '($1/100)');
 
     // DEG/RAD handling for trig functions
     const degMultiplier = isDeg ? (Math.PI / 180) : 1;
     const radMultiplier = isDeg ? (180 / Math.PI) : 1;
 
-    // Define context functions
+    // Define context functions and constants
     const ctx = {
+      e: Math.E,
+      E: Math.E,
+      pi: Math.PI,
+      PI: Math.PI,
+      Ans: lastAns,
+      ans: lastAns,
       sin: (x) => Math.sin(x * degMultiplier),
       cos: (x) => Math.cos(x * degMultiplier),
       tan: (x) => Math.tan(x * degMultiplier),
@@ -1217,6 +1239,7 @@
       log2: (x) => Math.log2(x),
       sqrt: (x) => Math.sqrt(x),
       cbrt: (x) => Math.cbrt(x),
+      exp: (x) => Math.exp(x),
       abs: (x) => Math.abs(x),
       floor: (x) => Math.floor(x),
       ceil: (x) => Math.ceil(x),
@@ -1227,7 +1250,7 @@
     // Replace caret with power operator
     sanitized = sanitized.replace(/\^/g, '**');
 
-    // Auto-insert implicit multiplication: e.g. 5( -> 5*( or 5sin -> 5*sin
+    // Auto-insert implicit multiplication: e.g. 5( -> 5*( or 5sin -> 5*sin or 5pi -> 5*pi
     sanitized = sanitized.replace(/([0-9\)])(?=[a-zA-Z\(])/g, '$1*');
 
     // Auto balance parentheses
@@ -1299,18 +1322,25 @@
 
   function calcPMT() {
     const P = parseFloat(document.getElementById('pmt-principal').value);
-    const r = parseFloat(document.getElementById('pmt-rate').value) / 100 / 12;
-    const n = parseFloat(document.getElementById('pmt-years').value) * 12;
+    const rPct = parseFloat(document.getElementById('pmt-rate').value);
+    const years = parseFloat(document.getElementById('pmt-years').value);
+    const r = (rPct / 100) / 12;
+    const n = years * 12;
 
-    if (P > 0 && r > 0 && n > 0) {
-      const pmt = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    if (P > 0 && n > 0 && rPct >= 0) {
+      let pmt = 0;
+      if (r === 0) {
+        pmt = P / n;
+      } else {
+        pmt = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+      }
       const totalPaid = pmt * n;
       const totalInterest = totalPaid - P;
 
       const pmtElem = document.getElementById('pmt-res');
       pmtElem.textContent = '$' + pmt.toFixed(2);
       pmtElem.dataset.rawVal = pmt.toFixed(4);
-      document.getElementById('pmt-total-interest').textContent = `Total Interest: $${totalInterest.toFixed(2)}`;
+      document.getElementById('pmt-total-interest').textContent = `Total Interest: $${Math.max(0, totalInterest).toFixed(2)}`;
     }
   }
 
@@ -1320,7 +1350,7 @@
     const t = parseFloat(document.getElementById('fv-years').value);
     const n = parseFloat(document.getElementById('fv-freq').value);
 
-    if (P >= 0 && r >= 0 && t > 0) {
+    if (P >= 0 && r >= 0 && t > 0 && n > 0) {
       const fv = P * Math.pow(1 + (r / n), n * t);
       const fvElem = document.getElementById('fv-res');
       fvElem.textContent = '$' + fv.toFixed(2);
@@ -1333,10 +1363,10 @@
     const cost = parseFloat(document.getElementById('margin-cost').value);
     const sell = parseFloat(document.getElementById('margin-sell').value);
 
-    if (cost > 0 && sell > 0) {
+    if (cost >= 0 && sell > 0) {
       const profit = sell - cost;
       const marginPct = (profit / sell) * 100;
-      const markupPct = (profit / cost) * 100;
+      const markupPct = cost > 0 ? (profit / cost) * 100 : 0;
 
       const profitElem = document.getElementById('margin-profit');
       profitElem.textContent = '$' + profit.toFixed(2);
@@ -1583,18 +1613,40 @@
     filtered.forEach(h => {
       const item = document.createElement('div');
       item.className = 'history-item';
-      item.innerHTML = `
-        <div class="hist-meta">
-          <span>Formula</span>
-          <span>${h.time}</span>
-        </div>
-        <div class="hist-expr">${h.formula}</div>
-        <div class="hist-res">= ${h.result}</div>
-        <div class="hist-actions">
-          <button class="mini-btn" onclick="recallFormula('${h.formula.replace(/'/g, "\\'")}')">Recall Expression</button>
-          <button class="mini-btn" onclick="sendToCalc('${h.result}')">Recall Result</button>
-        </div>
-      `;
+      
+      const meta = document.createElement('div');
+      meta.className = 'hist-meta';
+      meta.innerHTML = `<span>Formula</span><span>${escapeHtml(h.time)}</span>`;
+      
+      const exprDiv = document.createElement('div');
+      exprDiv.className = 'hist-expr';
+      exprDiv.textContent = h.formula;
+
+      const resDiv = document.createElement('div');
+      resDiv.className = 'hist-res';
+      resDiv.textContent = '= ' + h.result;
+
+      const actions = document.createElement('div');
+      actions.className = 'hist-actions';
+
+      const btnRecall = document.createElement('button');
+      btnRecall.className = 'mini-btn';
+      btnRecall.textContent = 'Recall Expression';
+      btnRecall.onclick = () => recallFormula(h.formula);
+
+      const btnResult = document.createElement('button');
+      btnResult.className = 'mini-btn';
+      btnResult.textContent = 'Recall Result';
+      btnResult.onclick = () => sendToCalc(String(h.result));
+
+      actions.appendChild(btnRecall);
+      actions.appendChild(btnResult);
+
+      item.appendChild(meta);
+      item.appendChild(exprDiv);
+      item.appendChild(resDiv);
+      item.appendChild(actions);
+
       list.appendChild(item);
     });
   }
@@ -1628,7 +1680,7 @@
     if (historyTape.length === 0) { alert('History is empty!'); return; }
     let csv = 'Time,Expression,Result\n';
     historyTape.forEach(h => {
-      csv += `"${h.time}","${h.formula.replace(/"/g, '""')}","${h.result}"\n`;
+      csv += `"${h.time}","${String(h.formula).replace(/"/g, '""')}","${String(h.result).replace(/"/g, '""')}"\n`;
     });
     downloadFile('kcalc_history.csv', csv, 'text/csv');
   }
@@ -1657,7 +1709,7 @@
 
   // Global Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {
-    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') return;
 
     if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
       if (e.key === 'F1') e.preventDefault();
