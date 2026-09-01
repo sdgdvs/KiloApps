@@ -4,7 +4,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define MAX_PARTICLES 300
+int screen_shake = 0;
+float boss_whiteout = 0.0f;
+
+#define MAX_PARTICLES 400
 typedef struct {
     float x, y;
     float vx, vy;
@@ -49,8 +52,16 @@ void SpawnExplosion(float x, float y, int count, COLORREF color1, COLORREF color
     }
 }
 
+void SpawnBeamEffect(float x, float y, COLORREF color) {
+    for (int i=0; i<60; i++) {
+        float vx = (rand() % 200 - 100) / 30.0f;
+        float vy = -8.0f - (rand() % 100) / 10.0f;
+        float decay = 0.02f + (rand() % 30) / 1000.0f;
+        SpawnParticle(x + (rand() % 20 - 10), y, vx, vy, decay, color);
+    }
+}
 
-#define NUM_SYSTEMS 200
+#define NUM_SYSTEMS 220
 #define MAP_SIZE 2000
 typedef struct {
     int x;
@@ -66,6 +77,7 @@ typedef struct {
 } StarSystem;
 
 const char* faction_names[] = {"Independent", "Federation", "Syndicate", "Xenon"};
+int faction_rep[4] = {50, 50, 30, 10}; // 0: Ind, 1: Fed, 2: Syn, 3: Xen
 
 StarSystem systems[NUM_SYSTEMS];
 
@@ -80,9 +92,15 @@ int res_hull = 100;
 int res_credits = 1000;
 int res_morale = 100;
 
+// Superweapon system
+int superweapon_type = 1; // 0=None, 1=Tachyon Beam, 2=Antimatter Torpedo, 3=Chrono Disruptor, 4=Nova Obliterator
+int superweapon_charges = 3;
+int superweapon_max = 5;
+const char* superweapon_names[] = {"None", "Tachyon Beam", "Antimatter Torpedo", "Chrono Disruptor", "Nova Obliterator"};
+
 typedef struct {
     char name[16];
-    int role; // 0=Unassigned, 1=Pilot, 2=Gunner, 3=Engineer
+    int role; // 0=Unassigned, 1=Pilot, 2=Gunner, 3=Engineer, 4=Security
     int level;
     int xp;
 } CrewMember;
@@ -132,20 +150,28 @@ int upg_cargo = 1;
 int modal_open = 0;
 int modal_enc_type = 0;
 int pirate_hp = 50;
-char combat_log[128] = "";
-int screen_shake = 0;
-float boss_whiteout = 0.0f;
+int enemy_max_hp = 50;
+char combat_log[256] = "";
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(intptr_t)lpParam;
     if (type == 1) { // Laser
-        Beep(800, 50);
-        Beep(400, 50);
+        Beep(800, 40);
+        Beep(400, 40);
     } else if (type == 2) { // Alarm
-        Beep(400, 250);
-        Beep(600, 250);
-        Beep(400, 250);
-        Beep(600, 250);
+        Beep(400, 200);
+        Beep(600, 200);
+        Beep(400, 200);
+        Beep(600, 200);
+    } else if (type == 3) { // Superweapon
+        Beep(300, 100);
+        Beep(500, 100);
+        Beep(900, 150);
+        Beep(1200, 250);
+    } else if (type == 4) { // Boarding Klaxon
+        Beep(700, 120);
+        Beep(350, 120);
+        Beep(700, 120);
     }
     return 0;
 }
@@ -171,11 +197,19 @@ void TriggerEncounter(int type) {
     if (type == 1) {
         PlaySoundEffect(2); // Alarm
         pirate_hp = 50;
+        enemy_max_hp = 50;
         lstrcpyA(combat_log, "Space pirates ambush you!");
     } else if (type == 13) {
         PlaySoundEffect(2); // Alarm
-        pirate_hp = 150;
-        lstrcpyA(combat_log, "A hostile fleet intercepts you!");
+        pirate_hp = 160;
+        enemy_max_hp = 160;
+        lstrcpyA(combat_log, "A hostile dreadnought fleet intercepts you!");
+    } else if (type == 16) {
+        PlaySoundEffect(2);
+        lstrcpyA(combat_log, "WARNING: Entered active Faction War combat zone!");
+    } else if (type == 17) {
+        PlaySoundEffect(4); // Boarding klaxon
+        lstrcpyA(combat_log, "INTRUDER ALERT: Alien boarding party has breached deck C!");
     } else if (type == 3) {
         if (roster_count < 50) {
             lstrcpyA(roster[roster_count].name, first_names[rand() % 16]);
@@ -244,13 +278,13 @@ void InitStars() {
         systems[i].y = (rand() % MAP_SIZE) - MAP_SIZE/2;
         
         int r = rand() % 100;
-        if (r < 40) {
+        if (r < 35) {
             systems[i].type_idx = 0; systems[i].color = RGB(255, 170, 170);
             systems[i].size = 2; systems[i].num_planets = 1 + rand() % 3;
-        } else if (r < 80) {
+        } else if (r < 70) {
             systems[i].type_idx = 1; systems[i].color = RGB(255, 255, 170);
             systems[i].size = 3; systems[i].num_planets = 2 + rand() % 5;
-        } else if (r < 95) {
+        } else if (r < 90) {
             systems[i].type_idx = 2; systems[i].color = RGB(170, 221, 255);
             systems[i].size = 4; systems[i].num_planets = rand() % 3;
         } else {
@@ -262,14 +296,17 @@ void InitStars() {
             systems[i].planets[p] = rand() % 5;
         }
 
-        int enc = rand() % 9;
-        if (enc == 0) systems[i].encounter_type = 1;
-        else if (enc == 1) systems[i].encounter_type = 2;
-        else if (enc == 2) systems[i].encounter_type = 3;
-        else if (enc == 3) systems[i].encounter_type = 4;
-        else if (enc == 4) systems[i].encounter_type = 7 + (rand() % 3);
-        else if (enc == 5) systems[i].encounter_type = 13;
-        else if (enc == 6) systems[i].encounter_type = 14;
+        int enc = rand() % 12;
+        if (enc == 0) systems[i].encounter_type = 1; // Pirates
+        else if (enc == 1) systems[i].encounter_type = 2; // Anomaly
+        else if (enc == 2) systems[i].encounter_type = 3; // Trader
+        else if (enc == 3) systems[i].encounter_type = 4; // Station
+        else if (enc == 4) systems[i].encounter_type = 7 + (rand() % 3); // Story
+        else if (enc == 5) systems[i].encounter_type = 13; // Fleet Battle
+        else if (enc == 6) systems[i].encounter_type = 14; // Diplomacy
+        else if (enc == 7) systems[i].encounter_type = 16; // Faction War Zone
+        else if (enc == 8) systems[i].encounter_type = 17; // Alien Boarding Party
+        else if (enc == 9) systems[i].encounter_type = 18; // Superweapon Forge
         else systems[i].encounter_type = 0;
         
         systems[i].visited = 0;
@@ -315,9 +352,6 @@ void Update() {
         if (rand() % 10 == 0) AddXP(1, 1);
     }
 
-    // (Particle updates moved to start of Update function to run during modals)
-    
-
     if (is_moving) {
         for (int i=0; i<5; i++) {
             float px = ship_x + (rand() % 9 - 4);
@@ -359,7 +393,7 @@ void Draw(HDC hdc, RECT* rect) {
     int width = rect->right - rect->left;
     int height = rect->bottom - rect->top;
     
-    int mapWidth = width - 200;
+    int mapWidth = width - 210;
     if (mapWidth < 100) mapWidth = 100;
 
     HDC memDC = CreateCompatibleDC(hdc);
@@ -379,7 +413,6 @@ void Draw(HDC hdc, RECT* rect) {
         float sx = bgstars[i].x - (ship_x * 0.05f);
         float sy = bgstars[i].y - (ship_y * 0.05f);
         
-        // Wrap around logic for infinite background
         while (sx < -mapWidth) sx += mapWidth * 2;
         while (sx > mapWidth) sx -= mapWidth * 2;
         while (sy < -height) sy += height * 2;
@@ -397,7 +430,6 @@ void Draw(HDC hdc, RECT* rect) {
                     SetPixel(memDC, drawX+1, drawY+1, bgstars[i].color);
                 }
             } else {
-                // Dimmer when twinkling out
                 SetPixel(memDC, drawX, drawY, RGB(100, 100, 100));
             }
         }
@@ -448,7 +480,7 @@ void Draw(HDC hdc, RECT* rect) {
     SelectObject(memDC, neonBorderPen);
     SelectObject(memDC, GetStockObject(NULL_BRUSH));
     Rectangle(memDC, 0, 0, mapWidth, height);
-    Rectangle(memDC, mapWidth + 5, 5, width - 5, height - 5);
+    Rectangle(memDC, mapWidth + 4, 4, width - 4, height - 4);
     DeleteObject(neonBorderPen);
 
     HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(0, 40, 40));
@@ -485,7 +517,7 @@ void Draw(HDC hdc, RECT* rect) {
         }
     }
 
-    // Dynamic 3D drop-shadow based on position relative to map center
+    // Dynamic 3D drop-shadow
     int shadowOffX = -ship_x / 100;
     int shadowOffY = -ship_y / 100;
     POINT shadowPts[4] = {
@@ -502,14 +534,14 @@ void Draw(HDC hdc, RECT* rect) {
     DeleteObject(shadowBrush);
     DeleteObject(shadowPen);
 
-    // Highly detailed procedural lighting/specular highlights on the ship hull (layered polygons)
+    // Ship Hull
     POINT shipPts[4] = {
         {centerX, centerY - 10},
         {centerX + 8, centerY + 8},
         {centerX, centerY + 4},
         {centerX - 8, centerY + 8}
     };
-    HBRUSH shipBrush = CreateSolidBrush(RGB(0, 150, 150)); // Darker base
+    HBRUSH shipBrush = CreateSolidBrush(RGB(0, 150, 150));
     HPEN shipPen = CreatePen(PS_SOLID, 1, RGB(0, 200, 200));
     SelectObject(memDC, shipBrush);
     SelectObject(memDC, shipPen);
@@ -517,7 +549,7 @@ void Draw(HDC hdc, RECT* rect) {
     DeleteObject(shipBrush);
     DeleteObject(shipPen);
     
-    // Specular highlight polygon (left side light reflection)
+    // Specular highlight
     POINT specPts[3] = {
         {centerX, centerY - 8},
         {centerX - 5, centerY + 6},
@@ -531,7 +563,7 @@ void Draw(HDC hdc, RECT* rect) {
     DeleteObject(specBrush);
     DeleteObject(specPen);
 
-    // Frame cycle animation for ship lights
+    // Ship lights
     if ((GetTickCount() % 1000) < 500) {
         SetPixel(memDC, centerX - 5, centerY + 5, RGB(255, 0, 0));
         SetPixel(memDC, centerX + 5, centerY + 5, RGB(0, 255, 0));
@@ -540,7 +572,7 @@ void Draw(HDC hdc, RECT* rect) {
         SetPixel(memDC, centerX + 5, centerY + 5, RGB(0, 100, 0));
     }
 
-    // Draw particles with kinematically animated motion blur
+    // Draw particles
     for (int i=0; i<MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
             int screenX = centerX + (int)(particles[i].x - ship_x);
@@ -552,8 +584,7 @@ void Draw(HDC hdc, RECT* rect) {
                 LineTo(memDC, screenX, screenY);
                 SelectObject(memDC, oldPen);
                 DeleteObject(partPen);
-                
-                SetPixel(memDC, screenX, screenY, RGB(255, 255, 255)); // Hot core
+                SetPixel(memDC, screenX, screenY, RGB(255, 255, 255));
             }
         }
     }
@@ -568,7 +599,6 @@ void Draw(HDC hdc, RECT* rect) {
     DeleteObject(pulsePen);
 
     if (is_moving) {
-        // Stylized kinematically animated effects for thrusters with motion blur trails
         int baseLength = 16 + (GetTickCount() % 4);
         for (int i = 0; i < 3; i++) {
             int flameLength = baseLength + i * 5;
@@ -591,78 +621,68 @@ void Draw(HDC hdc, RECT* rect) {
 
     SetBkMode(memDC, TRANSPARENT);
     char buf[128];
-    
     HPEN linePen = CreatePen(PS_SOLID, 1, RGB(0, 85, 85));
     
+    // UI Panel Drawing
     wsprintfA(buf, "SHIP STATUS");
     SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 20, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 12, 12, buf, lstrlenA(buf));
     
     SelectObject(memDC, linePen);
-    MoveToEx(memDC, mapWidth + 15, 38, NULL);
-    LineTo(memDC, width - 15, 38);
+    MoveToEx(memDC, mapWidth + 12, 28, NULL);
+    LineTo(memDC, width - 12, 28);
 
-    wsprintfA(buf, "Location: %d, %d", ship_x, ship_y);
+    wsprintfA(buf, "Loc: %d, %d", ship_x, ship_y);
     SetTextColor(memDC, RGB(255, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 45, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 12, 32, buf, lstrlenA(buf));
 
-    wsprintfA(buf, "RESOURCES");
-    SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 75, buf, lstrlenA(buf));
-    
-    MoveToEx(memDC, mapWidth + 15, 93, NULL);
-    LineTo(memDC, width - 15, 93);
-    
     wsprintfA(buf, "Fuel: %d", (int)res_fuel);
-    SetTextColor(memDC, RGB(255, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 100, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 12, 48, buf, lstrlenA(buf));
     
-    wsprintfA(buf, "Hull: %d%%", res_hull);
-    TextOutA(memDC, mapWidth + 15, 120, buf, lstrlenA(buf));
+    wsprintfA(buf, "Hull: %d%%  Morale: %d%%", res_hull, res_morale);
+    TextOutA(memDC, mapWidth + 12, 64, buf, lstrlenA(buf));
     
-    wsprintfA(buf, "Morale: %d%%", res_morale);
-    TextOutA(memDC, mapWidth + 15, 140, buf, lstrlenA(buf));
-    
-    wsprintfA(buf, "Crew: %d", roster_count);
-    TextOutA(memDC, mapWidth + 15, 160, buf, lstrlenA(buf));
+    wsprintfA(buf, "Crew: %d  Credits: %d", roster_count, res_credits);
+    TextOutA(memDC, mapWidth + 12, 80, buf, lstrlenA(buf));
 
-    wsprintfA(buf, "Credits: %d", res_credits);
-    TextOutA(memDC, mapWidth + 15, 180, buf, lstrlenA(buf));
+    wsprintfA(buf, "SUPERWEAPON");
+    SetTextColor(memDC, RGB(255, 180, 0));
+    TextOutA(memDC, mapWidth + 12, 102, buf, lstrlenA(buf));
+    MoveToEx(memDC, mapWidth + 12, 118, NULL);
+    LineTo(memDC, width - 12, 118);
 
-    wsprintfA(buf, "CARGO");
+    wsprintfA(buf, "%s [%d/%d]", superweapon_names[superweapon_type], superweapon_charges, superweapon_max);
+    SetTextColor(memDC, RGB(255, 220, 100));
+    TextOutA(memDC, mapWidth + 12, 122, buf, lstrlenA(buf));
+
+    wsprintfA(buf, "FACTIONS");
     SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 205, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 12, 142, buf, lstrlenA(buf));
+    MoveToEx(memDC, mapWidth + 12, 158, NULL);
+    LineTo(memDC, width - 12, 158);
 
-    MoveToEx(memDC, mapWidth + 15, 223, NULL);
-    LineTo(memDC, width - 15, 223);
+    wsprintfA(buf, "Fed:%d Syn:%d Xen:%d", faction_rep[1], faction_rep[2], faction_rep[3]);
+    SetTextColor(memDC, RGB(180, 240, 255));
+    TextOutA(memDC, mapWidth + 12, 162, buf, lstrlenA(buf));
 
-    wsprintfA(buf, "Minerals: %d", cargo_minerals);
-    SetTextColor(memDC, RGB(255, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 230, buf, lstrlenA(buf));
-
-    wsprintfA(buf, "Tech: %d", cargo_tech);
-    TextOutA(memDC, mapWidth + 15, 250, buf, lstrlenA(buf));
-
-    wsprintfA(buf, "UPGRADES");
+    wsprintfA(buf, "CARGO & UPGRADES");
     SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 280, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 12, 184, buf, lstrlenA(buf));
+    MoveToEx(memDC, mapWidth + 12, 200, NULL);
+    LineTo(memDC, width - 12, 200);
 
-    MoveToEx(memDC, mapWidth + 15, 298, NULL);
-    LineTo(memDC, width - 15, 298);
-
-    wsprintfA(buf, "Wpn: L%d  Shd: L%d", upg_weapons, upg_shields);
+    wsprintfA(buf, "Min:%d Tech:%d", cargo_minerals, cargo_tech);
     SetTextColor(memDC, RGB(255, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 305, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 12, 204, buf, lstrlenA(buf));
 
-    wsprintfA(buf, "Eng: L%d  Car: L%d", upg_engines, upg_cargo);
-    TextOutA(memDC, mapWidth + 15, 325, buf, lstrlenA(buf));
+    wsprintfA(buf, "W:%d S:%d E:%d C:%d", upg_weapons, upg_shields, upg_engines, upg_cargo);
+    TextOutA(memDC, mapWidth + 12, 220, buf, lstrlenA(buf));
 
     wsprintfA(buf, "SCANNER");
     SetTextColor(memDC, RGB(0, 255, 255));
-    TextOutA(memDC, mapWidth + 15, 355, buf, lstrlenA(buf));
-    
-    MoveToEx(memDC, mapWidth + 15, 373, NULL);
-    LineTo(memDC, width - 15, 373);
+    TextOutA(memDC, mapWidth + 12, 242, buf, lstrlenA(buf));
+    MoveToEx(memDC, mapWidth + 12, 258, NULL);
+    LineTo(memDC, width - 12, 258);
     DeleteObject(linePen);
 
     int found_sys_idx = -1;
@@ -679,7 +699,7 @@ void Draw(HDC hdc, RECT* rect) {
         StarSystem* sys = &systems[found_sys_idx];
         wsprintfA(buf, "Star: %s\nFaction: %s\nPlanets: %d", star_names[sys->type_idx], faction_names[sys->faction], sys->num_planets);
         SetTextColor(memDC, RGB(0, 255, 255));
-        RECT textRect = {mapWidth + 15, 380, width - 10, 440};
+        RECT textRect = {mapWidth + 12, 264, width - 8, 320};
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
         
         char pbuf[256] = "";
@@ -689,25 +709,25 @@ void Draw(HDC hdc, RECT* rect) {
         }
         if (sys->num_planets == 0) lstrcatA(pbuf, "None");
         SetTextColor(memDC, RGB(136, 204, 204));
-        RECT pRect = {mapWidth + 15, 440, width - 10, 500};
+        RECT pRect = {mapWidth + 12, 324, width - 8, 380};
         DrawTextA(memDC, pbuf, -1, &pRect, DT_WORDBREAK);
     } else {
         wsprintfA(buf, "Deep space. Nothing nearby.");
         SetTextColor(memDC, RGB(136, 136, 136));
-        RECT textRect = {mapWidth + 15, 380, width - 10, 460};
+        RECT textRect = {mapWidth + 12, 264, width - 8, 330};
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
     }
     
     wsprintfA(buf, "[C] Crew  [H] Help");
     SetTextColor(memDC, RGB(255, 255, 0));
-    TextOutA(memDC, mapWidth + 15, height - 50, buf, lstrlenA(buf));
+    TextOutA(memDC, mapWidth + 12, height - 52, buf, lstrlenA(buf));
     if (found_sys_idx != -1 && systems[found_sys_idx].num_planets > 0) {
         wsprintfA(buf, "[L] Land on Planet");
-        TextOutA(memDC, mapWidth + 15, height - 30, buf, lstrlenA(buf));
+        TextOutA(memDC, mapWidth + 12, height - 32, buf, lstrlenA(buf));
     }
 
     if (modal_open) {
-        RECT modalRect = { mapWidth/2 - 170, height/2 - 100, mapWidth/2 + 170, height/2 + 100 };
+        RECT modalRect = { mapWidth/2 - 180, height/2 - 120, mapWidth/2 + 180, height/2 + 120 };
         HBRUSH mBrush = CreateSolidBrush(RGB(5, 5, 20));
         HPEN mPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
         SelectObject(memDC, mBrush);
@@ -718,16 +738,17 @@ void Draw(HDC hdc, RECT* rect) {
         
         char* title = "";
         char* desc = "";
-        char desc_buf[256] = "";
+        char desc_buf[350] = "";
+
         if (modal_enc_type == 1) { 
             title = "PIRATES ENCOUNTER";
             if (res_hull <= 0) {
                 desc = "Your ship has been destroyed!\r\nGame Over.\r\nSPACE: Exit";
             } else if (pirate_hp <= 0) {
-                wsprintfA(desc_buf, "%s\r\nSPACE: Claim Bounty (100C)", combat_log);
+                wsprintfA(desc_buf, "%s\r\nSPACE: Claim Bounty (120C, +5 Fed Rep)", combat_log);
                 desc = desc_buf;
             } else {
-                wsprintfA(desc_buf, "%s\r\nPirate HP: %d | Hull: %d%%\r\n1: Fire Weapons  2: Flee", combat_log, pirate_hp, res_hull);
+                wsprintfA(desc_buf, "%s\r\nPirate HP: %d | Hull: %d%%\r\n1: Fire Lasers  2: Flee\r\n3: Fire Superweapon [%d charges]", combat_log, pirate_hp, res_hull, superweapon_charges);
                 desc = desc_buf;
             }
         }
@@ -736,12 +757,41 @@ void Draw(HDC hdc, RECT* rect) {
             if (res_hull <= 0) {
                 desc = "Your ship has been destroyed!\r\nGame Over.\r\nSPACE: Exit";
             } else if (pirate_hp <= 0) {
-                wsprintfA(desc_buf, "%s\r\nSPACE: Claim Rewards (300C, 2 Tech)", combat_log);
+                wsprintfA(desc_buf, "%s\r\nSPACE: Claim Rewards (350C, 2 Tech, +15 Rep)", combat_log);
                 desc = desc_buf;
             } else {
-                wsprintfA(desc_buf, "%s\r\nFleet HP: %d | Hull: %d%%\r\n1: Fire Weapons  2: Flee", combat_log, pirate_hp, res_hull);
+                wsprintfA(desc_buf, "%s\r\nFleet HP: %d | Hull: %d%%\r\n1: Fire Lasers  2: Flee\r\n3: Fire Superweapon [%d charges]", combat_log, pirate_hp, res_hull, superweapon_charges);
                 desc = desc_buf;
             }
+        }
+        else if (modal_enc_type == 16) {
+            title = "FACTION WAR ZONE";
+            desc = "Federation and Syndicate dreadnoughts are locked in battle!\r\n"
+                   "1: Aid Federation (+25 Fed, 200C)\r\n"
+                   "2: Aid Syndicate (+25 Syn, 2 Tech)\r\n"
+                   "3: Salvage Under Crossfire (Risk Hull)\r\n"
+                   "4: Negotiate Ceasefire (Requires 60 Morale)\r\n"
+                   "SPACE: Withdraw";
+        }
+        else if (modal_enc_type == 17) {
+            title = "ALIEN BOARDING PARTY";
+            desc = "Alien xenomorphs breached the lower bulkheads!\r\n"
+                   "1: Security Tactical Sweep (Gunner Lvl roll)\r\n"
+                   "2: Vent Atmosphere (Cost 200 Fuel)\r\n"
+                   "3: Overcharge Defense Grid (1 SW Charge or 100C)\r\n"
+                   "4: Hand-to-Hand Crew Charge (Risk crew for tech)\r\n"
+                   "SPACE: Seal Blast Doors";
+        }
+        else if (modal_enc_type == 18) {
+            title = "SUPERWEAPON FORGE";
+            wsprintfA(desc_buf, "Active: %s (Charges: %d/%d)\r\n"
+                                "1: Tachyon Beam (200C, 2 Tech)\r\n"
+                                "2: Antimatter Torpedo (400C, 4 Tech)\r\n"
+                                "3: Nova Obliterator (800C, 6 Tech)\r\n"
+                                "4: Synthesize 2 Charges (100C, 1 Tech)\r\n"
+                                "SPACE: Exit Forge",
+                                superweapon_names[superweapon_type], superweapon_charges, superweapon_max);
+            desc = desc_buf;
         }
         else if (modal_enc_type == 14) { title = "ALIEN DIPLOMACY"; desc = "An alien vessel hails you.\r\n1: Trade (100C for 1 Tech)\r\n2: Insult (Starts Combat)\r\nSPACE: Ignore"; }
         else if (modal_enc_type == 10) { title = "PIRATES ENCOUNTER"; wsprintfA(desc_buf, "%s\r\nHull: %d%%\r\nSPACE: Continue", combat_log, res_hull); desc = desc_buf; }
@@ -751,18 +801,17 @@ void Draw(HDC hdc, RECT* rect) {
         else if (modal_enc_type == 9) { title = "ANCIENT RUINS"; desc = "Scanners detect ancient ruins.\r\n1: Explore (Risk Crew, Gain Tech)\r\n2: Leave"; }
         else if (modal_enc_type == 2) { title = "DEEP SPACE ANOMALY"; desc = "A swirling rift in space.\r\n1: Scan (Risk Hull, Gain Tech)\r\n2: Harvest (Risk Crew, Gain Fuel)\r\nSPACE: Leave"; }
         else if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
-        else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard 8: Tavern(Recruit 100C)\r\nSPACE: Leave"; }
+        else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard 8: Recruit(100C)\r\n9: Superweapon Bay  SPACE: Leave"; }
         else if (modal_enc_type == 5) { title = "SHIPYARD"; desc = "1: Upg Wpn 2: Upg Shd (500C/Lvl)\r\n3: Upg Eng 4: Upg Cargo (500C/Lvl)\r\nSPACE: Back to Station"; }
         else if (modal_enc_type == 15) { title = "PLANETARY LANDING"; desc = "You landed on a planet.\r\n1: Explore (Risk Morale, Gain Min)\r\n2: Rest (Gain Morale)\r\nSPACE: Leave"; }
         else if (modal_enc_type == 12) {
-            title = "CAPTAIN'S MANUAL";
-            desc = "GOAL: Explore, trade, upgrade.\r\n"
-                   "CTRLS: W/A/S/D move, C Crew, H Help.\r\n"
-                   "RES: Fuel(move), Hull(health), Credits.\r\n"
-                   "CREW: Pilot(spd), Gun(dmg), Eng(def).\r\n"
-                   "UPG: Improve ship at stations.\r\n"
-                   "LAND: Press L to land on planets.\r\n"
-                   "MORALE: Drops in combat, rises at rest.\r\n";
+            title = "CAPTAIN'S MANUAL (LOOP 10)";
+            desc = "SUPERWEAPONS: Key [3] in combat to fire!\r\n"
+                   "FACTION WARS: Intervene in war zones for rep & bounties.\r\n"
+                   "BOARDING: Repel alien intruders with tactical deck sweeps.\r\n"
+                   "CTRLS: W/A/S/D move, C Crew, H Help, L Land.\r\n"
+                   "RES: Fuel, Hull, Morale, Credits, Tech, Minerals.\r\n"
+                   "STATION: Refuel, upgrade, and craft Superweapons.\r\n";
         }
         else if (modal_enc_type == 6) {
             title = "CREW MANAGEMENT";
@@ -777,22 +826,24 @@ void Draw(HDC hdc, RECT* rect) {
         }
         
         SetTextColor(memDC, RGB(255, 136, 0));
-        RECT tRect = { modalRect.left + 10, modalRect.top + 10, modalRect.right - 10, modalRect.top + 30 };
+        RECT tRect = { modalRect.left + 10, modalRect.top + 8, modalRect.right - 10, modalRect.top + 28 };
         DrawTextA(memDC, title, -1, &tRect, DT_CENTER);
         
         SetTextColor(memDC, RGB(255, 255, 255));
-        RECT dRect = { modalRect.left + 10, modalRect.top + 40, modalRect.right - 10, modalRect.bottom - 40 };
+        RECT dRect = { modalRect.left + 10, modalRect.top + 34, modalRect.right - 10, modalRect.bottom - 32 };
         DrawTextA(memDC, desc, -1, &dRect, DT_CENTER | DT_WORDBREAK);
         
         SetTextColor(memDC, RGB(0, 255, 255));
-        RECT bRect = { modalRect.left + 10, modalRect.bottom - 30, modalRect.right - 10, modalRect.bottom - 10 };
+        RECT bRect = { modalRect.left + 10, modalRect.bottom - 26, modalRect.right - 10, modalRect.bottom - 6 };
         if (modal_enc_type == 4) {
-            DrawTextA(memDC, "[ 1-8 OR SPACE ]", -1, &bRect, DT_CENTER);
+            DrawTextA(memDC, "[ 1-9 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 6) {
             DrawTextA(memDC, "[ 1-3 OR SPACE ]", -1, &bRect, DT_CENTER);
-        } else if (modal_enc_type == 5) {
+        } else if (modal_enc_type == 5 || modal_enc_type == 16 || modal_enc_type == 17 || modal_enc_type == 18) {
             DrawTextA(memDC, "[ 1-4 OR SPACE ]", -1, &bRect, DT_CENTER);
-        } else if ((modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) || (modal_enc_type == 13 && res_hull > 0 && pirate_hp > 0) || modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9 || modal_enc_type == 14 || modal_enc_type == 2 || modal_enc_type == 15) {
+        } else if ((modal_enc_type == 1 && res_hull > 0 && pirate_hp > 0) || (modal_enc_type == 13 && res_hull > 0 && pirate_hp > 0)) {
+            DrawTextA(memDC, "[ 1: Laser  2: Flee  3: Superweapon ]", -1, &bRect, DT_CENTER);
+        } else if (modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9 || modal_enc_type == 14 || modal_enc_type == 2 || modal_enc_type == 15) {
             DrawTextA(memDC, "[ 1-2 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else {
             DrawTextA(memDC, "[ PRESS SPACE ]", -1, &bRect, DT_CENTER);
@@ -865,7 +916,6 @@ void Draw(HDC hdc, RECT* rect) {
     if (screen_shake > 0) {
         shake_x = (rand() % (screen_shake * 2 + 1)) - screen_shake;
         shake_y = (rand() % (screen_shake * 2 + 1)) - screen_shake;
-        // Fill black border if shaking
         HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
         RECT r = {0, 0, width, height};
         FillRect(hdc, &r, blackBrush);
@@ -912,6 +962,38 @@ void Draw(HDC hdc, RECT* rect) {
     DeleteDC(memDC);
 }
 
+void ExecuteSuperweaponAttack(int is_fleet) {
+    if (superweapon_charges <= 0) {
+        lstrcpyA(combat_log, "No Superweapon charges remaining!");
+        return;
+    }
+    superweapon_charges--;
+    PlaySoundEffect(3); // Superweapon audio
+    int base_dmg = 70 + superweapon_type * 25 + (rand() % 20);
+    int g_idx = GetOfficer(2); if(g_idx != -1) base_dmg += roster[g_idx].level * 4;
+    
+    pirate_hp -= base_dmg;
+    if (pirate_hp < 0) pirate_hp = 0;
+    
+    boss_whiteout = 1.0f;
+    screen_shake = 35;
+    SpawnBeamEffect((float)ship_x, (float)(ship_y - 20), RGB(0, 255, 255));
+    SpawnExplosion((float)ship_x, (float)(ship_y - 50), 60, RGB(0, 255, 255), RGB(255, 200, 0));
+    
+    if (pirate_hp <= 0) {
+        SpawnExplosion((float)ship_x, (float)(ship_y - 40), 90, RGB(255, 100, 0), RGB(255, 255, 255));
+        wsprintfA(combat_log, "SUPERWEAPON HIT for %d! Target obliterated!", base_dmg);
+        AddXP(2, 40);
+    } else {
+        int s_dmg = (is_fleet ? 15 : 8) - upg_shields * 2;
+        if (s_dmg < 0) s_dmg = 0;
+        res_hull -= s_dmg;
+        if (res_hull < 0) res_hull = 0;
+        wsprintfA(combat_log, "SUPERWEAPON HIT for %d! Counter-fire takes %d hull.", base_dmg, s_dmg);
+        AddXP(2, 20);
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
@@ -949,7 +1031,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (res_hull <= 0) {
                         if (wParam == VK_SPACE) { PostQuitMessage(0); }
                     } else if (pirate_hp <= 0) {
-                        if (wParam == VK_SPACE) { res_credits += 100; modal_open = 0; }
+                        if (wParam == VK_SPACE) { 
+                            res_credits += 120; 
+                            faction_rep[1] += 5; // Federation bounty
+                            modal_open = 0; 
+                        }
                     } else {
                         if (wParam == '1') {
                             PlaySoundEffect(1); // Laser
@@ -960,24 +1046,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (s_dmg < 0) s_dmg = 0;
                             pirate_hp -= p_dmg;
                             if (pirate_hp < 0) pirate_hp = 0;
-                            // Weapon impact on pirate
-                            SpawnExplosion(ship_x, ship_y - 40, 20, RGB(255, 100, 0), RGB(255, 0, 0));
+                            SpawnExplosion((float)ship_x, (float)(ship_y - 40), 20, RGB(255, 100, 0), RGB(255, 0, 0));
                             if (pirate_hp > 0) {
                                 res_hull -= s_dmg;
                                 res_morale -= s_dmg / 2;
                                 if (res_morale < 0) res_morale = 0;
                                 if (res_hull < 0) res_hull = 0;
-                                // Weapon impact on ship
-                                SpawnExplosion(ship_x, ship_y, 15, RGB(0, 255, 255), RGB(255, 255, 255));
+                                SpawnExplosion((float)ship_x, (float)ship_y, 15, RGB(0, 255, 255), RGB(255, 255, 255));
                                 if (res_hull <= 0) {
-                                    // Death effect
-                                    SpawnExplosion(ship_x, ship_y, 100, RGB(255, 0, 0), RGB(255, 255, 0));
+                                    SpawnExplosion((float)ship_x, (float)ship_y, 100, RGB(255, 0, 0), RGB(255, 255, 0));
                                 }
                                 wsprintfA(combat_log, "You hit for %d! Pirate hits for %d!", p_dmg, s_dmg);
                                 AddXP(2, 10); AddXP(3, 10);
                             } else {
-                                // Pirate death explosion
-                                SpawnExplosion(ship_x, ship_y - 40, 50, RGB(255, 50, 0), RGB(200, 200, 200));
+                                SpawnExplosion((float)ship_x, (float)(ship_y - 40), 50, RGB(255, 50, 0), RGB(200, 200, 200));
                                 wsprintfA(combat_log, "You hit for %d! Pirate destroyed!", p_dmg);
                                 AddXP(2, 20);
                             }
@@ -990,13 +1072,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (res_hull < 0) res_hull = 0;
                             wsprintfA(combat_log, "You fled! Took %d damage.", s_dmg);
                             modal_enc_type = 10;
+                        } else if (wParam == '3') {
+                            ExecuteSuperweaponAttack(0);
                         }
                     }
                 } else if (modal_enc_type == 13) {
                     if (res_hull <= 0) {
                         if (wParam == VK_SPACE) { PostQuitMessage(0); }
                     } else if (pirate_hp <= 0) {
-                        if (wParam == VK_SPACE) { res_credits += 300; cargo_tech += 2; modal_open = 0; }
+                        if (wParam == VK_SPACE) { 
+                            res_credits += 350; 
+                            cargo_tech += 2; 
+                            faction_rep[1] += 15;
+                            modal_open = 0; 
+                        }
                     } else {
                         if (wParam == '1') {
                             PlaySoundEffect(1); // Laser
@@ -1007,20 +1096,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (s_dmg < 0) s_dmg = 0;
                             pirate_hp -= p_dmg;
                             if (pirate_hp < 0) pirate_hp = 0;
-                            SpawnExplosion(ship_x, ship_y - 40, 30, RGB(255, 100, 0), RGB(255, 0, 0));
+                            SpawnExplosion((float)ship_x, (float)(ship_y - 40), 30, RGB(255, 100, 0), RGB(255, 0, 0));
                             if (pirate_hp > 0) {
                                 res_hull -= s_dmg;
                                 res_morale -= s_dmg / 2;
                                 if (res_morale < 0) res_morale = 0;
                                 if (res_hull < 0) res_hull = 0;
-                                SpawnExplosion(ship_x, ship_y, 25, RGB(0, 255, 255), RGB(255, 255, 255));
+                                SpawnExplosion((float)ship_x, (float)ship_y, 25, RGB(0, 255, 255), RGB(255, 255, 255));
                                 if (res_hull <= 0) {
-                                    SpawnExplosion(ship_x, ship_y, 100, RGB(255, 0, 0), RGB(255, 255, 0));
+                                    SpawnExplosion((float)ship_x, (float)ship_y, 100, RGB(255, 0, 0), RGB(255, 255, 0));
                                 }
                                 wsprintfA(combat_log, "You hit for %d! Fleet hits for %d!", p_dmg, s_dmg);
                                 AddXP(2, 15); AddXP(3, 15);
                             } else {
-                                SpawnExplosion(ship_x, ship_y - 40, 80, RGB(255, 50, 0), RGB(200, 200, 200));
+                                SpawnExplosion((float)ship_x, (float)(ship_y - 40), 80, RGB(255, 50, 0), RGB(200, 200, 200));
                                 wsprintfA(combat_log, "You hit for %d! Fleet destroyed!", p_dmg);
                                 AddXP(2, 30);
                                 boss_whiteout = 1.0f;
@@ -1033,14 +1122,124 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (res_hull < 0) res_hull = 0;
                             wsprintfA(combat_log, "You fled! Took %d damage.", s_dmg);
                             modal_enc_type = 10;
+                        } else if (wParam == '3') {
+                            ExecuteSuperweaponAttack(1);
                         }
+                    }
+                } else if (modal_enc_type == 16) { // Faction War
+                    if (wParam == '1') {
+                        faction_rep[1] += 25;
+                        faction_rep[2] -= 15;
+                        res_credits += 200;
+                        lstrcpyA(combat_log, "You supported the Federation! (+25 Fed, -15 Syn, +200C)");
+                        modal_enc_type = 11;
+                    } else if (wParam == '2') {
+                        faction_rep[2] += 25;
+                        faction_rep[1] -= 15;
+                        cargo_tech += 2;
+                        lstrcpyA(combat_log, "You supported the Syndicate! (+25 Syn, -15 Fed, +2 Tech)");
+                        modal_enc_type = 11;
+                    } else if (wParam == '3') {
+                        if (rand() % 2 == 0) {
+                            cargo_minerals += 2; cargo_tech += 1;
+                            lstrcpyA(combat_log, "Daring salvage under crossfire! Gained 2 Min, 1 Tech.");
+                        } else {
+                            res_hull -= 20; if (res_hull < 0) res_hull = 0;
+                            lstrcpyA(combat_log, "Stray torpedo hit! Lost 20 Hull during salvage.");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '4') {
+                        if (res_morale >= 60) {
+                            faction_rep[1] += 15; faction_rep[2] += 15; res_credits += 150;
+                            lstrcpyA(combat_log, "Diplomatic ceasefire brokered! (+15 Rep with both, +150C)");
+                        } else {
+                            lstrcpyA(combat_log, "Crew morale too low to command diplomatic respect!");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == VK_SPACE) {
+                        modal_open = 0;
+                    }
+                } else if (modal_enc_type == 17) { // Alien Boarding Party
+                    if (wParam == '1') { // Security sweep
+                        int g_idx = GetOfficer(2);
+                        int roll = (g_idx != -1 ? roster[g_idx].level * 25 : 10) + (rand() % 40);
+                        if (roll >= 45) {
+                            cargo_tech += 1;
+                            lstrcpyA(combat_log, "Security sweep successful! Alien intruders eliminated. (+1 Tech)");
+                            AddXP(2, 25);
+                        } else {
+                            res_hull -= 15; if (res_hull < 0) res_hull = 0;
+                            lstrcpyA(combat_log, "Fierce firefight on deck B. Lost 15 Hull.");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '2') { // Vent atmosphere
+                        if (res_fuel >= 200.0f) {
+                            res_fuel -= 200.0f;
+                            lstrcpyA(combat_log, "Deck vented! Alien lifeforms flushed into vacuum. (200 Fuel used)");
+                        } else {
+                            lstrcpyA(combat_log, "Not enough fuel for emergency atmospheric purge!");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '3') { // Overcharge defense grid
+                        if (superweapon_charges > 0) {
+                            superweapon_charges--;
+                            lstrcpyA(combat_log, "Defense grid overcharged via Superweapon core! Aliens vaporized.");
+                        } else if (res_credits >= 100) {
+                            res_credits -= 100;
+                            lstrcpyA(combat_log, "Defense turrets overloaded with auxiliary power! (100C spent)");
+                        } else {
+                            lstrcpyA(combat_log, "Insufficient energy or credits to overcharge defenses!");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '4') { // Crew melee charge
+                        if (roster_count > 1 && rand() % 2 == 0) {
+                            roster_count--;
+                            cargo_tech += 2;
+                            lstrcpyA(combat_log, "Aliens repelled, but a valiant crew member fell. (+2 Tech)");
+                        } else {
+                            cargo_tech += 2;
+                            res_credits += 100;
+                            lstrcpyA(combat_log, "Heroic crew assault victorious! (+2 Tech, +100C)");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == VK_SPACE) {
+                        modal_open = 0;
+                    }
+                } else if (modal_enc_type == 18) { // Superweapon Forge
+                    if (wParam == '1' && res_credits >= 200 && cargo_tech >= 2) {
+                        res_credits -= 200; cargo_tech -= 2;
+                        superweapon_type = 1; superweapon_charges = superweapon_max;
+                        lstrcpyA(combat_log, "Tachyon Beam superweapon forged & fully charged!");
+                        modal_enc_type = 11;
+                    } else if (wParam == '2' && res_credits >= 400 && cargo_tech >= 4) {
+                        res_credits -= 400; cargo_tech -= 4;
+                        superweapon_type = 2; superweapon_charges = superweapon_max;
+                        lstrcpyA(combat_log, "Antimatter Torpedo launcher forged & fully charged!");
+                        modal_enc_type = 11;
+                    } else if (wParam == '3' && res_credits >= 800 && cargo_tech >= 6) {
+                        res_credits -= 800; cargo_tech -= 6;
+                        superweapon_type = 4; superweapon_charges = superweapon_max;
+                        lstrcpyA(combat_log, "Nova Obliterator forged & fully charged!");
+                        modal_enc_type = 11;
+                    } else if (wParam == '4' && res_credits >= 100 && cargo_tech >= 1) {
+                        if (superweapon_charges < superweapon_max) {
+                            res_credits -= 100; cargo_tech -= 1;
+                            superweapon_charges = (superweapon_charges + 2 > superweapon_max) ? superweapon_max : superweapon_charges + 2;
+                            lstrcpyA(combat_log, "Superweapon antimatter charges synthesized (+2 charges)!");
+                        } else {
+                            lstrcpyA(combat_log, "Superweapon charges are already at maximum!");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == VK_SPACE) {
+                        modal_open = 0;
                     }
                 } else if (modal_enc_type == 14) {
                     if (wParam == '1') {
                         if (res_credits >= 100) {
                             res_credits -= 100;
                             cargo_tech += 1;
-                            lstrcpyA(combat_log, "You successfully traded with the aliens.");
+                            faction_rep[3] += 10;
+                            lstrcpyA(combat_log, "You successfully traded with the aliens. (+10 Xenon Rep)");
                         } else {
                             lstrcpyA(combat_log, "You don't have enough credits!");
                         }
@@ -1048,6 +1247,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if (wParam == '2') {
                         PlaySoundEffect(2);
                         pirate_hp = 80;
+                        enemy_max_hp = 80;
+                        faction_rep[3] -= 20;
                         lstrcpyA(combat_log, "The aliens are offended and attack!");
                         modal_enc_type = 1;
                     } else if (wParam == VK_SPACE) {
@@ -1094,9 +1295,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if (wParam == VK_SPACE) {
                         modal_open = 0;
                     }
-                } else if (modal_enc_type == 10) {
-                    if (wParam == VK_SPACE) { modal_open = 0; }
-                } else if (modal_enc_type == 11) {
+                } else if (modal_enc_type == 10 || modal_enc_type == 11) {
                     if (wParam == VK_SPACE) { modal_open = 0; }
                 } else if (modal_enc_type == 7) {
                     if (wParam == '1') {
@@ -1117,6 +1316,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             res_fuel -= 50;
                             if (rand() % 10 < 6) {
                                 res_credits += 150;
+                                faction_rep[1] += 5;
                                 lstrcpyA(combat_log, "You rescued a merchant. Earned 150 Credits.");
                             } else {
                                 lstrcpyA(combat_log, "It was a false alarm. You wasted fuel.");
@@ -1160,6 +1360,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         roster[roster_count].xp = 0;
                         roster_count++;
                     }
+                    if (wParam == '9') { modal_enc_type = 18; } // Superweapon Bay
                     if (wParam == VK_SPACE) { modal_open = 0; }
                 } else if (modal_enc_type == 6) {
                     if (wParam == '1') CycleOfficer(1);

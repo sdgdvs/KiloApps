@@ -17,8 +17,8 @@
     overflow: hidden;
   }
   h1 {
-    margin: 10px 0;
-    font-size: 24px;
+    margin: 8px 0;
+    font-size: 22px;
     text-transform: uppercase;
     letter-spacing: 2px;
     color: #00ffff;
@@ -28,7 +28,7 @@
   #game-container {
     display: flex;
     flex-direction: row;
-    gap: 20px;
+    gap: 16px;
   }
   canvas {
     border: 1px solid #00ffff;
@@ -38,29 +38,30 @@
   #ui-panel {
     display: flex;
     flex-direction: column;
-    width: 200px;
+    width: 220px;
     border: 1px solid #00ffff;
-    padding: 15px;
-    background-color: rgba(5, 5, 20, 0.8);
+    padding: 12px;
+    background-color: rgba(5, 5, 20, 0.85);
     box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    font-size: 13px;
   }
   .info-box {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
   .info-box div {
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
   .label {
     color: #00ffff;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 1px;
     border-bottom: 1px solid #005555;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     padding-bottom: 2px;
     text-shadow: 0 0 5px #00ffff;
   }
   .value {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     color: #ffffff;
     text-shadow: 0 0 5px #ffffff;
@@ -68,7 +69,7 @@
   .controls {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 5px;
+    gap: 4px;
     margin-top: auto;
   }
   button {
@@ -76,10 +77,10 @@
     color: #00ffff;
     border: 1px solid #00ffff;
     box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
-    padding: 10px;
+    padding: 8px;
     cursor: pointer;
     font-family: monospace;
-    font-size: 16px;
+    font-size: 14px;
     transition: all 0.2s ease-in-out;
   }
   button:hover {
@@ -98,24 +99,26 @@
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(5, 5, 20, 0.95);
+    background-color: rgba(5, 5, 20, 0.96);
     border: 2px solid #00ffff;
     padding: 20px;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
     text-align: center;
     display: none;
     z-index: 100;
-    width: 300px;
+    width: 360px;
   }
-  #modal h2 { margin-top: 0; color: #ff8800; font-size: 20px; }
-  #modal p { font-size: 14px; margin-bottom: 20px; line-height: 1.4; }
-  #modal-actions { display: flex; flex-direction: column; gap: 10px; }
-  .action-btn { background: #00ffff; color: #000; border: none; padding: 10px; cursor: pointer; font-weight: bold; width: 100%; font-family: 'Courier New', Courier, monospace; }
+  #modal h2 { margin-top: 0; color: #ff8800; font-size: 18px; letter-spacing: 1px; }
+  #modal p { font-size: 13px; margin-bottom: 16px; line-height: 1.4; white-space: pre-line; }
+  #modal-actions { display: flex; flex-direction: column; gap: 8px; }
+  .action-btn { background: #00ffff; color: #000; border: none; padding: 9px; cursor: pointer; font-weight: bold; width: 100%; font-family: 'Courier New', Courier, monospace; font-size: 13px; }
   .action-btn:hover { background: #ffffff; }
+  .action-btn.super { background: #ffaa00; color: #000; }
+  .action-btn.super:hover { background: #ffee66; }
 </style>
 </head>
 <body>
-  <h1>KStarship Command</h1>
+  <h1>KStarship Command — Loop 10</h1>
   <div id="game-container">
     <canvas id="starmap" width="600" height="600"></canvas>
     <div id="ui-panel">
@@ -126,24 +129,29 @@
       <div class="info-box">
         <div class="label">RESOURCES</div>
         <div>Fuel: <span id="res-fuel" class="value">10000</span></div>
-        <div>Hull: <span id="res-hull" class="value">100%</span></div>
-        <div>Morale: <span id="res-morale" class="value">100%</span></div>
-        <div>Crew: <span id="res-crew" class="value">10</span></div>
-        <div>Credits: <span id="res-credits" class="value">1000</span></div>
+        <div>Hull: <span id="res-hull" class="value">100%</span> | Morale: <span id="res-morale" class="value">100%</span></div>
+        <div>Crew: <span id="res-crew" class="value">10</span> | Credits: <span id="res-credits" class="value">1000</span></div>
       </div>
       <div class="info-box">
-        <div class="label">CARGO</div>
-        <div>Minerals: <span id="cargo-minerals" class="value">0</span></div>
-        <div>Tech: <span id="cargo-tech" class="value">0</span></div>
+        <div class="label" style="color:#ffaa00;">SUPERWEAPON</div>
+        <div style="font-size:12px; color:#ffee88;" id="swpn-name">Tachyon Beam</div>
+        <div>Charges: <span id="swpn-charges" class="value">3 / 5</span></div>
       </div>
       <div class="info-box">
-        <div class="label">UPGRADES</div>
-        <div style="display:flex; justify-content:space-between;"><span>Wpn: <span id="upg-wpn" class="value">1</span></span> <span>Shd: <span id="upg-shd" class="value">1</span></span></div>
-        <div style="display:flex; justify-content:space-between;"><span>Eng: <span id="upg-eng" class="value">1</span></span> <span>Cargo: <span id="upg-car" class="value">1</span></span></div>
+        <div class="label">FACTION REPUTATION</div>
+        <div style="font-size:11px; color:#b0eeff;" id="faction-rep">Fed: 50 | Syn: 30 | Xen: 10</div>
+      </div>
+      <div class="info-box">
+        <div class="label">CARGO & UPGRADES</div>
+        <div>Min: <span id="cargo-minerals" class="value">0</span> | Tech: <span id="cargo-tech" class="value">0</span></div>
+        <div style="font-size:11px; display:flex; justify-content:space-between; margin-top:2px;">
+          <span>W:<span id="upg-wpn">1</span> S:<span id="upg-shd">1</span></span>
+          <span>E:<span id="upg-eng">1</span> C:<span id="upg-car">1</span></span>
+        </div>
       </div>
       <div class="info-box">
         <div class="label">SCANNER</div>
-        <div id="scanner-info">No objects nearby.</div>
+        <div id="scanner-info" style="font-size:11px;">No objects nearby.</div>
       </div>
       <div class="controls">
         <button id="btn-up">W</button>
@@ -151,9 +159,9 @@
         <button id="btn-down">S</button>
         <button id="btn-right">D</button>
       </div>
-      <button id="btn-crew" style="width:100%; margin-top:10px; font-size:14px;">MANAGE CREW (C)</button>
-      <button id="btn-help" style="width:100%; margin-top:10px; font-size:14px;">CAPTAIN'S MANUAL (H)</button>
-      <button id="btn-land" style="width:100%; margin-top:10px; font-size:14px; display:none; color: #00ff00; border-color: #00ff00;">LAND ON PLANET (L)</button>
+      <button id="btn-crew" style="width:100%; margin-top:6px; font-size:12px;">CREW ROSTER (C)</button>
+      <button id="btn-help" style="width:100%; margin-top:4px; font-size:12px;">MANUAL (H)</button>
+      <button id="btn-land" style="width:100%; margin-top:4px; font-size:12px; display:none; color: #00ff00; border-color: #00ff00;">LAND ON PLANET (L)</button>
     </div>
   </div>
 
@@ -175,6 +183,9 @@
     const resCredits = document.getElementById('res-credits');
     const cargoMinerals = document.getElementById('cargo-minerals');
     const cargoTech = document.getElementById('cargo-tech');
+    const swpnName = document.getElementById('swpn-name');
+    const swpnCharges = document.getElementById('swpn-charges');
+    const factionRep = document.getElementById('faction-rep');
     const upgWpn = document.getElementById('upg-wpn');
     const upgShd = document.getElementById('upg-shd');
     const upgEng = document.getElementById('upg-eng');
@@ -191,12 +202,26 @@
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(800, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.2);
+    }
+    function playSuperweapon() {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+      osc.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.4);
+      gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.5);
     }
     function playAlarm() {
       if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -204,15 +229,15 @@
       const gain = audioCtx.createGain();
       osc.type = 'square';
       osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-      osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.25);
-      osc.frequency.setValueAtTime(400, audioCtx.currentTime + 0.5);
-      osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.75);
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.2);
+      osc.frequency.setValueAtTime(400, audioCtx.currentTime + 0.4);
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.6);
       gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.0);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 1.0);
+      osc.stop(audioCtx.currentTime + 0.8);
     }
     
     let humOsc = null;
@@ -243,6 +268,8 @@
       resources: { fuel: 10000, hull: 100, morale: 100, credits: 1000 },
       cargo: { minerals: 0, tech: 0 },
       upgrades: { weapons: 1, shields: 1, engines: 1, cargo: 1 },
+      superweapon: { type: 1, name: 'Tachyon Beam', charges: 3, maxCharges: 5 },
+      factions: { Federation: 50, Syndicate: 30, Xenon: 10, Independent: 50 },
       crew: [],
       stars: [], particles: [], asteroids: [], nebulas: [], bgStars: [],
       mapSize: 2000,
@@ -289,7 +316,7 @@
     }
 
     function spawnExplosion(x, y, count, color1, color2) {
-      state.screenShake = Math.max(state.screenShake || 0, count / 5);
+      state.screenShake = Math.max(state.screenShake || 0, count / 4);
       for (let i=0; i<count; i++) {
         let angle = Math.random() * Math.PI * 2;
         let speed = Math.random() * (count > 40 ? 8 : 4);
@@ -303,22 +330,25 @@
           size: Math.random() * 3 + 1
         });
       }
-      for (let i=0; i<count/3; i++) {
-        let angle = Math.random() * Math.PI * 2;
-        let speed = Math.random() * 2;
+    }
+
+    function spawnSuperweaponBeam(x, y) {
+      state.screenShake = 35;
+      state.whiteout = 1.0;
+      for (let i=0; i<60; i++) {
         state.particles.push({
-          x: x, y: y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
+          x: x + (Math.random() * 20 - 10),
+          y: y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: -10 - Math.random() * 6,
           life: 1.0,
-          decay: 0.03 + Math.random() * 0.05,
-          color: '#ffffff',
-          size: Math.random() * 2 + 2
+          decay: 0.03 + Math.random() * 0.03,
+          color: '#00ffff',
+          size: 3 + Math.random() * 3
         });
       }
     }
 
-    // Generate random stars and planets
     function generateStars() {
       const starTypes = [
         { type: 'Red Dwarf', color: '#ffaaaa', minP: 1, maxP: 3, size: 2 },
@@ -327,8 +357,9 @@
         { type: 'White Dwarf', color: '#ffffff', minP: 0, maxP: 1, size: 1 }
       ];
       const planetTypes = ['Terrestrial', 'Gas Giant', 'Ice World', 'Lava', 'Barren'];
+      const encounterPool = ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None', 'Fleet', 'Diplomacy', 'FactionWar', 'Boarding', 'Superweapon'];
 
-      for (let i = 0; i < 200; i++) {
+      for (let i = 0; i < 220; i++) {
         const sType = starTypes[Math.floor(Math.random() * starTypes.length)];
         const numPlanets = sType.minP + Math.floor(Math.random() * (sType.maxP - sType.minP + 1));
         const planets = [];
@@ -344,7 +375,7 @@
           name: sType.type,
           planets: planets,
           faction: ['Independent', 'Federation', 'Syndicate', 'Xenon'][Math.floor(Math.random() * 4)],
-          encounter: ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None', 'Fleet', 'Diplomacy'][Math.floor(Math.random() * 8)],
+          encounter: encounterPool[Math.floor(Math.random() * encounterPool.length)],
           visited: false
         });
       }
@@ -378,14 +409,12 @@
       }
     }
 
-    // Map drawing logic
     function draw() {
       ctx.save();
       if (state.screenShake > 0) {
         let sx = (Math.random() - 0.5) * state.screenShake * 2;
         let sy = (Math.random() - 0.5) * state.screenShake * 2;
         ctx.translate(sx, sy);
-        // Also shake UI
         document.getElementById('game-container').style.transform = `translate(${sx}px, ${sy}px)`;
         state.screenShake *= 0.9;
         if (state.screenShake < 0.5) {
@@ -394,20 +423,18 @@
         }
       }
 
-      ctx.fillStyle = '#05050a'; // deeper space background
+      ctx.fillStyle = '#05050a';
       ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
 
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       
-      // Solar glow / lens flare
       let sunGrad = ctx.createRadialGradient(canvas.width*0.8, canvas.height*0.2, 0, canvas.width*0.8, canvas.height*0.2, 500);
       sunGrad.addColorStop(0, 'rgba(255, 200, 150, 0.15)');
       sunGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = sunGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // BG Stars with deep parallax
       state.bgStars.forEach(s => {
         const screenX = ((s.x - state.ship.x * 0.05) % (canvas.width * 2) + canvas.width * 2) % (canvas.width * 2) - canvas.width * 0.5;
         const screenY = ((s.y - state.ship.y * 0.05) % (canvas.height * 2) + canvas.height * 2) % (canvas.height * 2) - canvas.height * 0.5;
@@ -419,7 +446,6 @@
       });
       ctx.globalAlpha = 1.0;
 
-      // Nebulas with slow parallax
       state.nebulas.forEach(neb => {
         const screenX = centerX + (neb.x - state.ship.x * 0.2);
         const screenY = centerY + (neb.y - state.ship.y * 0.2);
@@ -434,7 +460,6 @@
         }
       });
       
-      // Asteroids with medium parallax
       ctx.fillStyle = '#555555';
       state.asteroids.forEach(ast => {
         const screenX = centerX + (ast.x - state.ship.x * 0.5);
@@ -454,7 +479,6 @@
         }
       });
 
-      // Draw grid
       ctx.strokeStyle = 'rgba(0, 34, 34, 0.5)';
       ctx.lineWidth = 1;
       const gridSize = 100;
@@ -468,12 +492,10 @@
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
       }
 
-      // Draw stars relative to ship
       state.stars.forEach(star => {
         const screenX = centerX + (star.x - state.ship.x);
         const screenY = centerY + (star.y - state.ship.y);
         
-        // Only draw if on screen
         if (screenX >= 0 && screenX <= canvas.width && screenY >= 0 && screenY <= canvas.height) {
           ctx.fillStyle = star.color;
           ctx.beginPath();
@@ -482,17 +504,7 @@
         }
       });
 
-      // Dynamic 3D drop-shadow based on position
-      const shadowOffsetX = -state.ship.x * 0.01;
-      const shadowOffsetY = -state.ship.y * 0.01;
-      
-      ctx.save();
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-      ctx.shadowBlur = 10;
-      ctx.shadowOffsetX = shadowOffsetX;
-      ctx.shadowOffsetY = shadowOffsetY;
-
-      // Draw ship at center
+      // Ship
       ctx.beginPath();
       ctx.moveTo(centerX, centerY - 10);
       ctx.lineTo(centerX + 8, centerY + 8);
@@ -500,25 +512,14 @@
       ctx.lineTo(centerX - 8, centerY + 8);
       ctx.closePath();
       
-      // Highly detailed procedural lighting/specular highlights on the ship hull
       const shipGrad = ctx.createLinearGradient(centerX - 8, centerY - 10, centerX + 8, centerY + 8);
-      shipGrad.addColorStop(0, '#ffffff'); // Specular highlight
-      shipGrad.addColorStop(0.3, '#00ffff'); // Base color
-      shipGrad.addColorStop(1, '#005555'); // Shaded edge
+      shipGrad.addColorStop(0, '#ffffff');
+      shipGrad.addColorStop(0.3, '#00ffff');
+      shipGrad.addColorStop(1, '#005555');
       ctx.fillStyle = shipGrad;
       ctx.fill();
-      
-      // Inner detail lines
-      ctx.strokeStyle = '#aaffff';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY - 8);
-      ctx.lineTo(centerX, centerY + 2);
-      ctx.stroke();
 
-      ctx.restore();
-      
-      // Ship frame cycle lights
+      // Lights
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(centerX - 5, centerY + 3, 2, 2);
@@ -531,7 +532,7 @@
         ctx.fillRect(centerX + 3, centerY + 3, 2, 2);
       }
       
-      // Draw particles with motion blur
+      // Particles
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
       state.particles.forEach(p => {
@@ -539,24 +540,17 @@
         const screenY = centerY + (p.y - state.ship.y);
         if (screenX >= 0 && screenX <= canvas.width && screenY >= 0 && screenY <= canvas.height) {
           ctx.beginPath();
-          // Draw a line based on velocity for motion blur effect
           ctx.moveTo(screenX - p.vx * 2, screenY - p.vy * 2);
           ctx.lineTo(screenX, screenY);
           ctx.strokeStyle = p.color;
           ctx.lineWidth = p.size || 2;
           ctx.globalAlpha = p.life;
           ctx.stroke();
-          
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(screenX, screenY, (p.size || 1.5), 0, Math.PI * 2);
-          ctx.fill();
         }
       });
       ctx.restore();
       ctx.globalAlpha = 1.0;
       
-      // Scanner pulse animation around ship
       const pulseTime = Date.now() / 200;
       ctx.strokeStyle = `rgba(0, 255, 255, ${(Math.sin(pulseTime) + 1)/4})`;
       ctx.lineWidth = 2;
@@ -564,16 +558,12 @@
       ctx.arc(centerX, centerY, 20 + Math.sin(pulseTime)*5, 0, Math.PI*2);
       ctx.stroke();
 
-      // Ship thrust trail if moving (with stylized kinematically animated effects & motion blur)
       if (state.ship.moving) {
         ctx.save();
-        // Motion blur via shadow
         ctx.shadowColor = '#ff4400';
         ctx.shadowBlur = 15;
         ctx.globalCompositeOperation = 'lighter';
-        
-        const numFlames = 3; // for motion blur trails
-        for (let i = 0; i < numFlames; i++) {
+        for (let i = 0; i < 3; i++) {
           const flameLength = 16 + (Math.floor(Date.now() / 50) % 4) + i * 4;
           const alpha = 1 - (i * 0.3);
           ctx.fillStyle = `rgba(255, 136, 0, ${alpha})`;
@@ -610,20 +600,6 @@
               ctx.moveTo(bX, hY - 60); ctx.lineTo(bX + 80, hY + 20);
               ctx.lineTo(bX, hY + 60); ctx.lineTo(bX - 80, hY + 20);
               ctx.fill();
-          } else {
-              ctx.fillStyle = '#555555';
-              ctx.fillRect(bX + 90, hY + (Date.now()%3000)/30, 10, 10);
-              ctx.fillRect(bX - 80, hY - (Date.now()%2000)/20, 15, 10);
-          }
-          
-          if (state.bossHp > 50) {
-              ctx.fillStyle = '#777777';
-              ctx.fillRect(bX - 40, hY + 10, 80, 30);
-          } else {
-              ctx.fillStyle = '#ff0000';
-              ctx.globalCompositeOperation = 'lighter';
-              ctx.beginPath(); ctx.arc(bX, hY + 25, 20 + Math.random()*10, 0, Math.PI*2); ctx.fill();
-              ctx.globalCompositeOperation = 'source-over';
           }
           
           if (state.bossHp > 0) {
@@ -636,12 +612,6 @@
       if (state.whiteout > 0) {
           ctx.fillStyle = `rgba(255, 255, 255, ${state.whiteout})`;
           ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
-          if (state.whiteout > 0.5) {
-             ctx.fillStyle = `rgba(255, 0, 0, ${state.whiteout - 0.5})`;
-             ctx.fillRect(10-50, -50, canvas.width + 100, canvas.height + 100);
-             ctx.fillStyle = `rgba(0, 255, 255, ${state.whiteout - 0.5})`;
-             ctx.fillRect(-10-50, -50, canvas.width + 100, canvas.height + 100);
-          }
           state.whiteout -= 0.02;
       }
 
@@ -659,12 +629,14 @@
       resCredits.innerText = state.resources.credits;
       cargoMinerals.innerText = state.cargo.minerals;
       cargoTech.innerText = state.cargo.tech;
+      swpnName.innerText = state.superweapon.name;
+      swpnCharges.innerText = `${state.superweapon.charges} / ${state.superweapon.maxCharges}`;
+      factionRep.innerText = `Fed: ${state.factions.Federation} | Syn: ${state.factions.Syndicate} | Xen: ${state.factions.Xenon}`;
       upgWpn.innerText = state.upgrades.weapons;
       upgShd.innerText = state.upgrades.shields;
       upgEng.innerText = state.upgrades.engines;
       upgCar.innerText = state.upgrades.cargo;
 
-      // Check nearby stars
       const nearby = state.stars.filter(s => 
         Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 50
       );
@@ -692,7 +664,7 @@
     function triggerEncounter(type) {
       state.modalOpen = true;
       state.currentEncounter = type;
-      state.bossHp = (type === 'Fleet' ? 150 : (type === 'Pirates' ? 50 : 0));
+      state.bossHp = (type === 'Fleet' ? 160 : (type === 'Pirates' ? 50 : 0));
       const modal = document.getElementById('modal');
       const title = document.getElementById('modal-title');
       const desc = document.getElementById('modal-desc');
@@ -701,9 +673,9 @@
       title.innerText = type.toUpperCase() + " ENCOUNTER";
       actions.innerHTML = '';
 
-      const addBtn = (text, onClick) => {
+      const addBtn = (text, onClick, isSuper = false) => {
         const btn = document.createElement('button');
-        btn.className = 'action-btn';
+        btn.className = isSuper ? 'action-btn super' : 'action-btn';
         btn.innerText = text;
         btn.onclick = onClick;
         actions.appendChild(btn);
@@ -716,15 +688,20 @@
         });
       };
 
-      if (type === 'Pirates') {
+      if (type === 'Pirates' || type === 'Fleet') {
         playAlarm();
-        let pirateHp = 50;
+        let enemyHp = type === 'Fleet' ? 160 : 50;
+        state.bossHp = enemyHp;
         const updateCombatBtns = (msg) => {
-            desc.innerText = msg + `\nPirate HP: ${pirateHp} | Your Hull: ${state.resources.hull}%`;
+            state.bossHp = enemyHp;
+            desc.innerText = msg + `\nEnemy HP: ${enemyHp} | Your Hull: ${state.resources.hull}%`;
             actions.innerHTML = '';
-            if (pirateHp <= 0) {
-                addBtn('Claim Bounty (100C)', () => {
-                    state.resources.credits += 100;
+            if (enemyHp <= 0) {
+                const rewardC = type === 'Fleet' ? 350 : 120;
+                addBtn(`Claim Bounty (${rewardC}C, +10 Rep)`, () => {
+                    state.resources.credits += rewardC;
+                    if (type === 'Fleet') state.cargo.tech += 2;
+                    state.factions.Federation += 10;
                     modal.style.display = 'none';
                     state.modalOpen = false;
                     updateUI();
@@ -733,34 +710,55 @@
                 desc.innerText = "Your ship has been destroyed. Game Over.";
                 addBtn('Restart', () => { location.reload(); });
             } else {
-                addBtn('Fire Weapons', () => {
+                addBtn('Fire Lasers', () => {
                     playLaser();
                     let pDmg = 10 + state.upgrades.weapons * 5 + Math.floor(Math.random()*10);
                     let gIdx = getOfficer(2); if (gIdx !== -1) pDmg += state.crew[gIdx].level * 2;
-                    let sDmg = Math.max(0, 20 - state.upgrades.shields * 3 + Math.floor(Math.random()*5));
+                    let sDmg = Math.max(0, (type==='Fleet'?30:20) - state.upgrades.shields * 3 + Math.floor(Math.random()*6));
                     let eIdx = getOfficer(3); if (eIdx !== -1) sDmg -= state.crew[eIdx].level * 1;
                     if (sDmg < 0) sDmg = 0;
-                    pirateHp -= pDmg;
-                    if (pirateHp < 0) pirateHp = 0;
-                    spawnExplosion(state.ship.x, state.ship.y - 40, 20, '#ff6600', '#ff0000'); // Weapon impact on pirate
-                    let result = `You hit pirate for ${pDmg}!`;
-                    if (pirateHp > 0) {
+                    enemyHp -= pDmg;
+                    if (enemyHp < 0) enemyHp = 0;
+                    spawnExplosion(state.ship.x, state.ship.y - 40, 20, '#ff6600', '#ff0000');
+                    let result = `You hit enemy for ${pDmg}!`;
+                    if (enemyHp > 0) {
                         state.resources.hull -= sDmg;
                         state.resources.morale = Math.max(0, state.resources.morale - Math.floor(sDmg/2));
                         if (state.resources.hull < 0) state.resources.hull = 0;
-                        spawnExplosion(state.ship.x, state.ship.y, 15, '#00ffff', '#ffffff'); // Impact on ship
+                        spawnExplosion(state.ship.x, state.ship.y, 15, '#00ffff', '#ffffff');
                         if (state.resources.hull <= 0) {
-                             spawnExplosion(state.ship.x, state.ship.y, 100, '#ff0000', '#ffff00'); // Death
+                             spawnExplosion(state.ship.x, state.ship.y, 100, '#ff0000', '#ffff00');
                         }
-                        result += ` Pirate hits you for ${sDmg}!`;
+                        result += ` Enemy hits you for ${sDmg}!`;
                         addXP(2, 10); addXP(3, 10);
                     } else {
-                        spawnExplosion(state.ship.x, state.ship.y - 40, 50, '#ff3300', '#cccccc'); // Pirate death
-                        result += ` Pirate destroyed!`;
-                        addXP(2, 20);
+                        spawnExplosion(state.ship.x, state.ship.y - 40, 60, '#ff3300', '#cccccc');
+                        result += ` Enemy vessel obliterated!`;
+                        addXP(2, 25);
                     }
                     updateCombatBtns(result);
                 });
+                if (state.superweapon.charges > 0) {
+                    addBtn(`Fire ${state.superweapon.name} [${state.superweapon.charges}]`, () => {
+                        state.superweapon.charges--;
+                        playSuperweapon();
+                        spawnSuperweaponBeam(state.ship.x, state.ship.y);
+                        let swDmg = 75 + state.superweapon.type * 30 + Math.floor(Math.random()*20);
+                        let gIdx = getOfficer(2); if (gIdx !== -1) swDmg += state.crew[gIdx].level * 5;
+                        enemyHp -= swDmg;
+                        if (enemyHp < 0) enemyHp = 0;
+                        let result = `SUPERWEAPON BLAST hits for ${swDmg}!`;
+                        if (enemyHp > 0) {
+                            let sDmg = Math.max(0, (type==='Fleet'?15:8) - state.upgrades.shields * 2);
+                            state.resources.hull -= sDmg;
+                            result += ` Counter-fire caused ${sDmg} hull dmg.`;
+                        } else {
+                            result += ` Target completely annihilated!`;
+                        }
+                        updateCombatBtns(result);
+                        updateUI();
+                    }, true);
+                }
                 addBtn('Flee', () => {
                     let sDmg = Math.max(0, 15 - state.upgrades.shields * 2);
                     state.resources.hull -= sDmg;
@@ -772,75 +770,167 @@
                 });
             }
         };
-        updateCombatBtns("Space pirates ambush you!");
-      } else if (type === 'Fleet') {
-        playAlarm();
-        let pirateHp = 150;
-        const updateCombatBtns = (msg) => {
-            state.bossHp = pirateHp;
-            desc.innerText = msg + `\nFleet HP: ${pirateHp} | Your Hull: ${state.resources.hull}%`;
+        updateCombatBtns(type === 'Fleet' ? "Hostile Dreadnought Fleet intercepts you!" : "Space pirates ambush you!");
+      } else if (type === 'FactionWar') {
+        title.innerText = "FACTION WAR ZONE";
+        desc.innerText = "Federation and Syndicate capital ships are battling in this sector!\nChoose how to intervene:";
+        addBtn('Aid Federation (+25 Fed, -15 Syn, +200C)', () => {
+            state.factions.Federation += 25;
+            state.factions.Syndicate -= 15;
+            state.resources.credits += 200;
+            desc.innerText = "Federation forces thank you for your support!\n(+25 Federation Rep, +200 Credits)";
             actions.innerHTML = '';
-            if (pirateHp <= 0) {
-                addBtn('Claim Rewards (300C, 2 Tech)', () => {
-                    state.resources.credits += 300;
-                    state.cargo.tech += 2;
-                    modal.style.display = 'none';
-                    state.modalOpen = false;
-                    updateUI();
-                });
-            } else if (state.resources.hull <= 0) {
-                desc.innerText = "Your ship has been destroyed. Game Over.";
-                addBtn('Restart', () => { location.reload(); });
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Aid Syndicate (+25 Syn, -15 Fed, +2 Tech)', () => {
+            state.factions.Syndicate += 25;
+            state.factions.Federation -= 15;
+            state.cargo.tech += 2;
+            desc.innerText = "Syndicate reward officers transmit classified military data.\n(+25 Syndicate Rep, +2 Tech)";
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Salvage Under Crossfire (Risk Hull, Gain Cargo)', () => {
+            if (Math.random() < 0.5) {
+                state.cargo.minerals += 2; state.cargo.tech += 1;
+                desc.innerText = "Daring salvage successful! Gained 2 Minerals and 1 Tech.";
             } else {
-                addBtn('Fire Weapons', () => {
-                    playLaser();
-                    let pDmg = 10 + state.upgrades.weapons * 5 + Math.floor(Math.random()*10);
-                    let gIdx = getOfficer(2); if (gIdx !== -1) pDmg += state.crew[gIdx].level * 2;
-                    let sDmg = Math.max(0, 30 - state.upgrades.shields * 3 + Math.floor(Math.random()*10));
-                    let eIdx = getOfficer(3); if (eIdx !== -1) sDmg -= state.crew[eIdx].level * 1;
-                    if (sDmg < 0) sDmg = 0;
-                    pirateHp -= pDmg;
-                    if (pirateHp < 0) pirateHp = 0;
-                    spawnExplosion(state.ship.x, state.ship.y - 40, 30, '#ff6600', '#ff0000');
-                    let result = `You hit fleet for ${pDmg}!`;
-                    if (pirateHp > 0) {
-                        state.resources.hull -= sDmg;
-                        state.resources.morale = Math.max(0, state.resources.morale - Math.floor(sDmg/2));
-                        if (state.resources.hull < 0) state.resources.hull = 0;
-                        spawnExplosion(state.ship.x, state.ship.y, 25, '#00ffff', '#ffffff');
-                        if (state.resources.hull <= 0) {
-                             spawnExplosion(state.ship.x, state.ship.y, 100, '#ff0000', '#ffff00');
-                        }
-                        result += ` Fleet hits you for ${sDmg}!`;
-                        addXP(2, 15); addXP(3, 15);
-                    } else {
-                        spawnExplosion(state.ship.x, state.ship.y - 40, 80, '#ff3300', '#cccccc');
-                        result += ` Fleet destroyed!`;
-                        addXP(2, 30);
-                        state.whiteout = 1.0;
-                        state.screenShake = 30;
-                    }
-                    updateCombatBtns(result);
-                });
-                addBtn('Flee', () => {
-                    let sDmg = Math.max(0, 25 - state.upgrades.shields * 2);
-                    state.resources.hull -= sDmg;
-                    state.resources.morale = Math.max(0, state.resources.morale - Math.floor(sDmg/2));
-                    if (state.resources.hull < 0) state.resources.hull = 0;
-                    desc.innerText = `You fled! Took ${sDmg} damage while escaping.\nYour Hull: ${state.resources.hull}%`;
-                    actions.innerHTML = '';
-                    closeBtn();
-                });
+                state.resources.hull -= 20; if (state.resources.hull < 0) state.resources.hull = 0;
+                desc.innerText = "Stray torpedo barrage hit! Lost 20 Hull.";
             }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Negotiate Ceasefire (Requires 60% Morale)', () => {
+            if (state.resources.morale >= 60) {
+                state.factions.Federation += 15;
+                state.factions.Syndicate += 15;
+                state.resources.credits += 150;
+                desc.innerText = "Diplomatic truce brokered! (+15 Rep with both factions, +150 Credits)";
+            } else {
+                desc.innerText = "Crew morale too shaken to negotiate an effective ceasefire!";
+            }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Withdraw', () => {
+            modal.style.display = 'none';
+            state.modalOpen = false;
+        });
+      } else if (type === 'Boarding') {
+        playAlarm();
+        title.innerText = "ALIEN BOARDING PARTY";
+        desc.innerText = "Intruders have breached deck C bulkheads! Repel the boarding party:";
+        addBtn('Security Tactical Sweep (Gunner Check)', () => {
+            let gIdx = getOfficer(2);
+            let roll = (gIdx !== -1 ? state.crew[gIdx].level * 25 : 10) + Math.floor(Math.random() * 40);
+            if (roll >= 45) {
+                state.cargo.tech += 1;
+                addXP(2, 25);
+                desc.innerText = "Security sweep successful! Alien intruders eliminated. (+1 Tech)";
+            } else {
+                state.resources.hull -= 15; if (state.resources.hull < 0) state.resources.hull = 0;
+                desc.innerText = "Fierce corridor firefight! Repelled intruders with 15 Hull damage.";
+            }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Vent Deck Atmosphere (Cost 200 Fuel)', () => {
+            if (state.resources.fuel >= 200) {
+                state.resources.fuel -= 200;
+                desc.innerText = "Deck vented! Alien lifeforms flushed into the cold void of space.";
+            } else {
+                desc.innerText = "Not enough fuel pressure to trigger atmospheric purging!";
+            }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Overcharge Defense Grid (1 SW Charge or 100C)', () => {
+            if (state.superweapon.charges > 0) {
+                state.superweapon.charges--;
+                desc.innerText = "Internal defense turrets supercharged with antimatter! Aliens vaporized.";
+            } else if (state.resources.credits >= 100) {
+                state.resources.credits -= 100;
+                desc.innerText = "Auxiliary emergency capacitors ignited! Aliens repelled (100C spent).";
+            } else {
+                desc.innerText = "Insufficient energy or credits to overcharge defenses!";
+            }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+        addBtn('Hand-to-Hand Crew Assault (High Risk / High Reward)', () => {
+            if (state.crew.length > 1 && Math.random() < 0.5) {
+                state.crew.pop();
+                state.cargo.tech += 2;
+                desc.innerText = "Alien leader slain and xenotech captured, but a crew member was lost.";
+            } else {
+                state.cargo.tech += 2;
+                state.resources.credits += 100;
+                desc.innerText = "Heroic boarding counter-assault victorious! (+2 Tech, +100 Credits)";
+            }
+            actions.innerHTML = '';
+            closeBtn();
+            updateUI();
+        });
+      } else if (type === 'Superweapon') {
+        title.innerText = "SUPERWEAPON FORGE";
+        const updateForge = () => {
+            desc.innerText = `Active Superweapon: ${state.superweapon.name} [${state.superweapon.charges}/${state.superweapon.maxCharges}]\nSynthesize advanced galactic weaponry:`;
+            actions.innerHTML = '';
+            addBtn('Forge Tachyon Beam (200C, 2 Tech)', () => {
+                if (state.resources.credits >= 200 && state.cargo.tech >= 2) {
+                    state.resources.credits -= 200; state.cargo.tech -= 2;
+                    state.superweapon.type = 1; state.superweapon.name = 'Tachyon Beam';
+                    state.superweapon.charges = state.superweapon.maxCharges;
+                    updateForge(); updateUI();
+                }
+            });
+            addBtn('Forge Antimatter Torpedo (400C, 4 Tech)', () => {
+                if (state.resources.credits >= 400 && state.cargo.tech >= 4) {
+                    state.resources.credits -= 400; state.cargo.tech -= 4;
+                    state.superweapon.type = 2; state.superweapon.name = 'Antimatter Torpedo';
+                    state.superweapon.charges = state.superweapon.maxCharges;
+                    updateForge(); updateUI();
+                }
+            });
+            addBtn('Forge Nova Obliterator (800C, 6 Tech)', () => {
+                if (state.resources.credits >= 800 && state.cargo.tech >= 6) {
+                    state.resources.credits -= 800; state.cargo.tech -= 6;
+                    state.superweapon.type = 4; state.superweapon.name = 'Nova Obliterator';
+                    state.superweapon.charges = state.superweapon.maxCharges;
+                    updateForge(); updateUI();
+                }
+            });
+            addBtn('Synthesize 2 Charges (100C, 1 Tech)', () => {
+                if (state.resources.credits >= 100 && state.cargo.tech >= 1) {
+                    if (state.superweapon.charges < state.superweapon.maxCharges) {
+                        state.resources.credits -= 100; state.cargo.tech -= 1;
+                        state.superweapon.charges = Math.min(state.superweapon.maxCharges, state.superweapon.charges + 2);
+                        updateForge(); updateUI();
+                    }
+                }
+            });
+            addBtn('Exit Forge', () => {
+                modal.style.display = 'none';
+                state.modalOpen = false;
+            });
         };
-        updateCombatBtns("A hostile fleet intercepts you!");
+        updateForge();
       } else if (type === 'Diplomacy') {
         desc.innerText = "An alien vessel hails you.";
         addBtn('Trade (100C for 1 Tech)', () => {
             if (state.resources.credits >= 100) {
                 state.resources.credits -= 100;
                 state.cargo.tech += 1;
-                desc.innerText = "You successfully traded with the aliens.";
+                state.factions.Xenon += 10;
+                desc.innerText = "You successfully traded with the aliens. (+10 Xenon Rep)";
             } else {
                 desc.innerText = "You don't have enough credits!";
             }
@@ -951,6 +1041,9 @@
                         updateStationBtns('main');
                     }
                 });
+                addBtn(`Superweapon Bay`, () => {
+                    triggerEncounter('Superweapon');
+                }, true);
                 addBtn(`Shipyard (Upgrades)`, () => {
                     updateStationBtns('shipyard');
                 });
@@ -1038,6 +1131,7 @@
                     state.resources.fuel -= 50;
                     if (Math.random() < 0.6) {
                         state.resources.credits += 150;
+                        state.factions.Federation += 5;
                         desc.innerText = "You rescued a wealthy merchant. Earned 150 Credits.";
                     } else {
                         desc.innerText = "It was a false alarm. You wasted fuel.";
@@ -1074,7 +1168,6 @@
             addBtn('Leave', () => {
                 modal.style.display = 'none';
                 state.modalOpen = false;
-                closeStory();
             });
         }
       } else if (type === 'Land') {
@@ -1106,15 +1199,12 @@
       
       modal.style.display = 'block';
       keys.w = keys.a = keys.s = keys.d = false;
-      updateUI(); // refresh resources instantly
+      updateUI();
     }
 
-    // Navigation logic
-    const moveSpeed = 5;
     const keys = { w: false, a: false, s: false, d: false };
 
     function update() {
-      // Update particles
       for (let i = state.particles.length - 1; i >= 0; i--) {
         let p = state.particles[i];
         p.x += p.vx;
@@ -1151,9 +1241,7 @@
         setHum(false);
       }
 
-      // Boundaries
       if (state.ship.moving) {
-        // Spawn thruster particles
         for (let i=0; i<5; i++) {
           state.particles.push({
             x: state.ship.x + (Math.random() * 6 - 3),
@@ -1176,7 +1264,6 @@
       requestAnimationFrame(update);
     }
 
-    // Input handlers
     function openCrewModal() {
         if (state.modalOpen) return;
         state.modalOpen = true;
@@ -1226,19 +1313,13 @@
         const desc = document.getElementById('modal-desc');
         const actions = document.getElementById('modal-actions');
         
-        title.innerText = "CAPTAIN'S MANUAL";
-        desc.innerHTML = `<div style="text-align:left; font-size:12px;">
-            <b>GOAL:</b> Explore space, trade, upgrade, and survive.<br>
-            <b>CONTROLS:</b> W/A/S/D to move, C for Crew, H for Help.<br>
-            <b>RESOURCES:</b><br>
-            - Fuel: Depletes as you move. Buy at stations.<br>
-            - Hull: Takes damage in combat. Repair at stations.<br>
-            - Credits: Earned via bounties, trading, and events.<br>
-            <b>CREW:</b><br>
-            - Pilot (W/A/S/D speed bonus)<br>
-            - Gunner (Weapon damage bonus)<br>
-            - Engineer (Shield defense bonus)<br>
-            <b>UPGRADES:</b> Improve weapons, shields, engines, cargo at stations.
+        title.innerText = "CAPTAIN'S MANUAL (LOOP 10)";
+        desc.innerHTML = `<div style="text-align:left; font-size:11px; line-height:1.4;">
+            <b>SUPERWEAPONS:</b> Synthesize Tachyon Beams, Antimatter Torpedoes, & Nova Obliterators at Stations or Forges. Fire in combat for devastating damage!<br>
+            <b>FACTION WARS:</b> Intervene in battles between Federation and Syndicate fleets. Choose sides to gain rep and rewards.<br>
+            <b>BOARDING PARTIES:</b> Aliens may breach your ship! Repel intruders with Security Sweeps, Atmospheric Venting, or Overcharged Defenses.<br>
+            <b>CONTROLS:</b> W/A/S/D to fly, C for Crew, H for Help, L to Land on Planets.<br>
+            <b>RESOURCES:</b> Fuel (movement), Hull (health), Morale (diplomacy bonus), Credits, Minerals & Tech (crafting).
             </div>`;
         actions.innerHTML = '';
         
@@ -1295,7 +1376,6 @@
     setupButton('btn-left', 'a');
     setupButton('btn-right', 'd');
 
-    // Init
     generateStars();
     generateEnvironment();
     update();
