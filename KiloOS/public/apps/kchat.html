@@ -728,6 +728,67 @@
             }
         ];
 
+        const STORAGE_KEY = 'kchat_pro_state_v2';
+        function safeLoadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.messages && Array.isArray(parsed.messages)) messages = parsed.messages;
+                    if (parsed.rooms && Array.isArray(parsed.rooms)) rooms = parsed.rooms;
+                    if (parsed.roomTopics && typeof parsed.roomTopics === 'object') roomTopics = parsed.roomTopics;
+                    if (parsed.currentUsername) currentUsername = parsed.currentUsername;
+                    if (parsed.currentRoom) currentRoom = parsed.currentRoom;
+                    if (parsed.activePersona) activePersona = parsed.activePersona;
+                }
+            } catch(e) {
+                console.warn("Could not load KChat state from localStorage:", e);
+            }
+        }
+
+        function safeSaveState() {
+            try {
+                const state = {
+                    messages: messages.slice(-150),
+                    rooms: rooms,
+                    roomTopics: roomTopics,
+                    currentUsername: currentUsername,
+                    currentRoom: currentRoom,
+                    activePersona: activePersona
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch(e) {
+                console.warn("Could not save KChat state to localStorage:", e);
+            }
+        }
+
+        let audioCtx = null;
+        function playChime(freq = 587.33, duration = 0.12) {
+            try {
+                if (!audioCtx) {
+                    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtxClass) audioCtx = new AudioCtxClass();
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                if (audioCtx) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                }
+            } catch(e) {}
+        }
+
+        safeLoadState();
+
         const logEl = document.getElementById('log');
         const inputEl = document.getElementById('input');
         const btnConnect = document.getElementById('btnConnect');
@@ -965,7 +1026,9 @@
             };
             messages.push(newMsg);
             if (messages.length > 300) messages.shift();
+            safeSaveState();
             window.renderMessages();
+            if (!isAI && user !== 'System') playChime(659.25, 0.08);
         }
 
         window.createPoll = function(user, question, optionTexts, room = currentRoom) {
@@ -1021,6 +1084,7 @@
                     m.pollVotedUser = optionIndex;
                     showToast(`Voted for: ${m.pollOptions[optionIndex].text}`);
                 }
+                safeSaveState();
                 window.renderMessages();
             }
         };
@@ -1032,6 +1096,7 @@
                 if (pill.textContent === roomName) pill.classList.add('active');
                 else pill.classList.remove('active');
             });
+            safeSaveState();
             window.renderMessages();
         };
 
@@ -1051,12 +1116,14 @@
                     channelBar.insertBefore(newPill, channelBar.lastElementChild);
                     showToast(`Created channel ${formatted}`);
                 }
+                safeSaveState();
                 window.switchRoom(formatted);
             }
         };
 
         window.changePersona = function() {
             activePersona = document.getElementById('aiPersona').value;
+            safeSaveState();
             showToast(`Switched AI Persona to ${activePersona}`);
         };
 
@@ -1076,6 +1143,7 @@
             if (m) {
                 m.pinned = !m.pinned;
                 showToast(m.pinned ? "Message pinned!" : "Message unpinned!");
+                safeSaveState();
                 window.renderMessages();
             }
         };
@@ -1084,6 +1152,7 @@
             const pinnedInRoom = messages.filter(m => (m.room || '#general') === currentRoom && m.pinned);
             if (pinnedInRoom.length > 0) {
                 pinnedInRoom[pinnedInRoom.length - 1].pinned = false;
+                safeSaveState();
                 window.renderMessages();
             }
         };
@@ -1101,6 +1170,7 @@
                     m.reactions[emoji] = (m.reactions[emoji] || 0) + 1;
                     m.userReacted[emoji] = true;
                 }
+                safeSaveState();
                 window.renderMessages();
             }
         };
@@ -1139,11 +1209,19 @@
         };
 
         window.showHelp = function() {
-            showToast("Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /ai <prompt>");
+            showToast("Commands: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <action>, /shrug, /ai <prompt>, /clear, /unpin");
         };
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
+            if (e.key === 'Escape') {
+                if (statsModalEl.classList.contains('active')) {
+                    window.closeStatsModal();
+                } else if (searchInput === document.activeElement) {
+                    searchInput.value = '';
+                    window.renderMessages();
+                    searchInput.blur();
+                }
+            } else if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
                 e.preventDefault();
                 window.showHelp();
             }
@@ -1369,7 +1447,19 @@
             if (!msg) return;
 
             if (msg === '/help' || msg.startsWith('/help ')) {
-                addMessage("System", "KChat Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /tableflip, /nick <name>, /join <#room>, /ai <prompt>", currentRoom, false);
+                addMessage("System", "KChat Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /tableflip, /nick <name>, /join <#room>, /ai <prompt>, /clear, /unpin", currentRoom, false);
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/clear') {
+                window.clearLog();
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/unpin') {
+                window.unpinTop();
                 inputEl.value = '';
                 return;
             }

@@ -41,6 +41,11 @@ void my_strncpy(char* d, const char* s, int n) {
     while (i < n - 1 && s[i]) { d[i] = s[i]; i++; }
     d[i] = 0;
 }
+void my_strcat(char* d, const char* s) {
+    while (*d) d++;
+    while (*s) *d++ = *s++;
+    *d = 0;
+}
 void my_itoa(int val, char* buf) {
     char t[16]; int i = 0, j = 0;
     if (val == 0) { buf[0] = '0'; buf[1] = 0; return; }
@@ -388,16 +393,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             CreateWindowA("STATIC", "Port:", WS_CHILD|WS_VISIBLE, 10, 10, 40, 20, hwnd, 0, 0, 0);
-            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 50, 10, 60, 24, hwnd, 0, 0, 0);
+            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 50, 10, 60, 24, hwnd, 0, 0, 0);
             
             CreateWindowA("STATIC", "MOTD:", WS_CHILD|WS_VISIBLE, 120, 10, 40, 20, hwnd, 0, 0, 0);
-            hMotd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KChat!", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 165, 10, 140, 24, hwnd, 0, 0, 0);
+            hMotd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KChat!", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 165, 10, 140, 24, hwnd, 0, 0, 0);
             
-            hBtn = CreateWindowA("BUTTON", "Start", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 315, 10, 60, 24, hwnd, (HMENU)100, 0, 0);
+            hBtn = CreateWindowA("BUTTON", "Start", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 315, 10, 60, 24, hwnd, (HMENU)100, 0, 0);
             
-            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY, 10, 40, 365, 260, hwnd, 0, 0, 0);
+            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, 10, 40, 365, 260, hwnd, 0, 0, 0);
             
-            hUIFont = CreateFontA(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            int dpi = 96;
+            HDC hdc = GetDC(NULL);
+            if (hdc) {
+                dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+                ReleaseDC(NULL, hdc);
+            }
+            int fontHeight = -MulDiv(10, dpi, 72);
+            hUIFont = CreateFontA(fontHeight, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hMotd, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -518,6 +531,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (WSAGETSELECTEVENT(lParam) == FD_CLOSE) {
                 for (int i=0; i<MAX_CLIENTS; i++) {
                     if (clients[i].s == s) {
+                        char out[128]; my_memset(out, 0, sizeof(out));
+                        my_strcpy(out, "System: ");
+                        my_strncpy(out + 8, clients[i].nick, 31);
+                        my_strcat(out, " disconnected.");
+                        Broadcast(clients[i].room, out);
+
                         clients[i].s = INVALID_SOCKET;
                         closesocket(s);
                         Log("Client disconnected.");
@@ -548,6 +567,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 void __stdcall MainEntry() {
     WNDCLASSA wc; my_memset(&wc, 0, sizeof(wc));
+    HMODULE hUser32 = GetModuleHandleA("user32.dll");
+    if (hUser32) {
+        typedef BOOL (WINAPI *SetProcessDPIAwareFunc)(void);
+        SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDpiAware) setDpiAware();
+    }
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KChatServerClass";
@@ -562,8 +587,10 @@ void __stdcall MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
     ExitProcess(0);
 }

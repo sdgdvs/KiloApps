@@ -10,7 +10,7 @@
 #pragma comment(lib, "comdlg32.lib")
 
 #define WM_SOCKET (WM_USER + 1)
-#define MAX_MSGS 200
+#define MAX_MSGS 250
 #define MAX_ROOMS 16
 
 typedef struct {
@@ -40,6 +40,7 @@ HWND hTopicLabel, hPollBtn, hVoteBtn, hStatsBtn, hHelpBtn;
 
 char logBuf[65536] = "";
 char currentRoom[32] = "#general";
+char currentUsername[32] = "User";
 char activePersona[32] = "Assistant";
 char searchKeyword[64] = "";
 int filterPinnedOnly = 0;
@@ -57,7 +58,7 @@ RoomTopic g_roomTopics[MAX_ROOMS] = {
 int g_topicCount = 4;
 
 HFONT hUIFont = NULL;
-HFONT hBoldFont = NULL;
+HBRUSH hBgBrush = NULL;
 WNDPROC oldInputProc = NULL;
 static unsigned int g_rand_seed = 987654321;
 
@@ -161,9 +162,9 @@ void RebuildLogView() {
     for (int i = 0; i < g_msgCount; i++) {
         if (my_strcmp(g_messages[i].room, currentRoom) == 0 && g_messages[i].pinned) {
             if (pinnedCount == 0) {
-                my_strcat(logBuf, "--- 📌 PINNED IN ");
+                my_strcat(logBuf, "--- [PINNED IN ");
                 my_strcat(logBuf, currentRoom);
-                my_strcat(logBuf, " ---\r\n");
+                my_strcat(logBuf, "] ---\r\n");
             }
             my_strcat(logBuf, "  [");
             my_strcat(logBuf, g_messages[i].user);
@@ -192,7 +193,7 @@ void RebuildLogView() {
             // Render interactive Poll card in log
             my_strcat(logBuf, "[");
             my_strcat(logBuf, m->room);
-            my_strcat(logBuf, "] 📊 [POLL by ");
+            my_strcat(logBuf, "] [POLL by ");
             my_strcat(logBuf, m->user);
             my_strcat(logBuf, "]: ");
             my_strcat(logBuf, m->poll_question);
@@ -221,15 +222,15 @@ void RebuildLogView() {
             my_strcat(logBuf, "] <");
             my_strcat(logBuf, m->user);
             my_strcat(logBuf, ">");
-            if (m->pinned) my_strcat(logBuf, " 📌");
+            if (m->pinned) my_strcat(logBuf, " [PIN]");
             my_strcat(logBuf, " ");
             my_strcat(logBuf, m->text);
 
             if (m->reactions_like > 0 || m->reactions_love > 0 || m->reactions_rocket > 0) {
                 my_strcat(logBuf, " (Reactions:");
-                if (m->reactions_like > 0) my_strcat(logBuf, " 👍");
-                if (m->reactions_love > 0) my_strcat(logBuf, " ❤️");
-                if (m->reactions_rocket > 0) my_strcat(logBuf, " 🚀");
+                if (m->reactions_like > 0) my_strcat(logBuf, " +1");
+                if (m->reactions_love > 0) my_strcat(logBuf, " <3");
+                if (m->reactions_rocket > 0) my_strcat(logBuf, " ^");
                 my_strcat(logBuf, ")");
             }
             my_strcat(logBuf, "\r\n");
@@ -315,8 +316,8 @@ void ShowRoomStats() {
     }
 
     char statsReport[384];
-    wsprintfA(statsReport, "📊 [STATS for %s]: Total Messages: %d (Global: %d) | Pinned: %d | Active Polls: %d (Votes Cast: %d) | Persona: %s",
-        currentRoom, roomMsgs, g_msgCount, roomPinned, roomPolls, totalVotes, activePersona);
+    wsprintfA(statsReport, "[STATS for %s]: User: %s | Messages: %d (Total: %d) | Pinned: %d | Active Polls: %d (Votes: %d) | Persona: %s",
+        currentRoom, currentUsername, roomMsgs, g_msgCount, roomPinned, roomPolls, totalVotes, activePersona);
     AddMessage("System", statsReport, currentRoom, 0);
 }
 
@@ -327,21 +328,21 @@ void GenerateAIResponse(const char* prompt) {
     my_strcat(userPersonaTag, " AI");
 
     if (my_strcmp(activePersona, "Cyberpunk") == 0) {
-        my_strcpy(reply, "⚡ Data node ping received on grid. Encrypted packet decrypted: ");
+        my_strcpy(reply, "Data node ping received on grid. Packet decrypted: ");
         my_strcat(reply, prompt);
         my_strcat(reply, ". Cyber signal status: 100Gbps active.");
     } else if (my_strcmp(activePersona, "CodeBot") == 0) {
-        my_strcpy(reply, "💻 [CODEBOT]: // Processed query: ");
+        my_strcpy(reply, "[CODEBOT]: // Processed query: ");
         my_strcat(reply, prompt);
         my_strcat(reply, " -> Status: 200 OK. Compiled with 0 errors.");
     } else if (my_strcmp(activePersona, "Sarcastic") == 0) {
-        my_strcpy(reply, "😈 Really? \"");
+        my_strcpy(reply, "Really? \"");
         my_strcat(reply, prompt);
         my_strcat(reply, "\"? Groundbreaking input. Pausing quantum computing to appreciate that.");
     } else if (my_strcmp(activePersona, "Cerberus") == 0) {
-        my_strcpy(reply, "🛡️ [CERBERUS]: Security Protocol 9 active. Query audited and cleared.");
+        my_strcpy(reply, "[CERBERUS]: Security Protocol 9 active. Query audited and cleared.");
     } else {
-        my_strcpy(reply, "🤖 I am happy to assist you with \"");
+        my_strcpy(reply, "I am happy to assist you with \"");
         my_strcat(reply, prompt);
         my_strcat(reply, "\". Everything in ");
         my_strcat(reply, currentRoom);
@@ -349,6 +350,19 @@ void GenerateAIResponse(const char* prompt) {
     }
 
     AddMessage(userPersonaTag, reply, currentRoom, 0);
+}
+
+void EscapeJsonString(const char* src, char* dst, int maxDst) {
+    int j = 0;
+    for (int i = 0; src[i] && j < maxDst - 6; i++) {
+        if (src[i] == '"') { dst[j++] = '\\'; dst[j++] = '"'; }
+        else if (src[i] == '\\') { dst[j++] = '\\'; dst[j++] = '\\'; }
+        else if (src[i] == '\r') { dst[j++] = '\\'; dst[j++] = 'r'; }
+        else if (src[i] == '\n') { dst[j++] = '\\'; dst[j++] = 'n'; }
+        else if (src[i] == '\t') { dst[j++] = '\\'; dst[j++] = 't'; }
+        else { dst[j++] = src[i]; }
+    }
+    dst[j] = '\0';
 }
 
 LRESULT CALLBACK InputSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -373,15 +387,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Row 1: Network & Room & Persona controls
             CreateWindowA("STATIC", "IP:", WS_CHILD|WS_VISIBLE, 10, 10, 20, 20, hwnd, 0, 0, 0);
-            hIp = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "127.0.0.1", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 32, 8, 75, 22, hwnd, 0, 0, 0);
+            hIp = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "127.0.0.1", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 32, 8, 75, 22, hwnd, 0, 0, 0);
             
             CreateWindowA("STATIC", "Port:", WS_CHILD|WS_VISIBLE, 112, 10, 30, 20, hwnd, 0, 0, 0);
-            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 145, 8, 42, 22, hwnd, 0, 0, 0);
+            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 145, 8, 42, 22, hwnd, 0, 0, 0);
             
-            hBtn = CreateWindowA("BUTTON", "Connect", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 192, 8, 62, 23, hwnd, (HMENU)100, 0, 0);
+            hBtn = CreateWindowA("BUTTON", "Connect", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 192, 8, 62, 23, hwnd, (HMENU)100, 0, 0);
             
             CreateWindowA("STATIC", "Room:", WS_CHILD|WS_VISIBLE, 260, 10, 40, 20, hwnd, 0, 0, 0);
-            hRoomCombo = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_VSCROLL, 302, 8, 90, 150, hwnd, (HMENU)104, 0, 0);
+            hRoomCombo = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP, 302, 8, 90, 150, hwnd, (HMENU)104, 0, 0);
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#general");
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#dev");
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#random");
@@ -389,7 +403,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hRoomCombo, CB_SETCURSEL, 0, 0);
 
             CreateWindowA("STATIC", "AI:", WS_CHILD|WS_VISIBLE, 398, 10, 22, 20, hwnd, 0, 0, 0);
-            hPersonaCombo = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_VSCROLL, 422, 8, 110, 150, hwnd, (HMENU)105, 0, 0);
+            hPersonaCombo = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP, 422, 8, 110, 150, hwnd, (HMENU)105, 0, 0);
             SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Assistant");
             SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Cyberpunk");
             SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"CodeBot");
@@ -397,31 +411,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Cerberus");
             SendMessageA(hPersonaCombo, CB_SETCURSEL, 0, 0);
 
-            hPollBtn = CreateWindowA("BUTTON", "📊 Poll", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 538, 8, 55, 23, hwnd, (HMENU)113, 0, 0);
-            hVoteBtn = CreateWindowA("BUTTON", "🗳️ Vote", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 597, 8, 55, 23, hwnd, (HMENU)114, 0, 0);
-            hStatsBtn = CreateWindowA("BUTTON", "📈 Stats", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 656, 8, 58, 23, hwnd, (HMENU)115, 0, 0);
-            hHelpBtn = CreateWindowA("BUTTON", "Help", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 718, 8, 48, 23, hwnd, (HMENU)112, 0, 0);
+            hPollBtn = CreateWindowA("BUTTON", "Poll", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 538, 8, 55, 23, hwnd, (HMENU)113, 0, 0);
+            hVoteBtn = CreateWindowA("BUTTON", "Vote", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 597, 8, 55, 23, hwnd, (HMENU)114, 0, 0);
+            hStatsBtn = CreateWindowA("BUTTON", "Stats", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 656, 8, 58, 23, hwnd, (HMENU)115, 0, 0);
+            hHelpBtn = CreateWindowA("BUTTON", "Help", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 718, 8, 48, 23, hwnd, (HMENU)112, 0, 0);
 
             // Row 2: Search, Pin, Reaction, Export/Import controls + Topic Header
             CreateWindowA("STATIC", "Search:", WS_CHILD|WS_VISIBLE, 10, 38, 45, 20, hwnd, 0, 0, 0);
-            hSearchInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 58, 36, 105, 22, hwnd, (HMENU)111, 0, 0);
+            hSearchInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 58, 36, 105, 22, hwnd, (HMENU)111, 0, 0);
             
-            hPinBtn = CreateWindowA("BUTTON", "📌 Pin", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 168, 36, 48, 23, hwnd, (HMENU)107, 0, 0);
-            hReactBtn = CreateWindowA("BUTTON", "👍 React", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 219, 36, 58, 23, hwnd, (HMENU)108, 0, 0);
-            hExportJson = CreateWindowA("BUTTON", "JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 280, 36, 48, 23, hwnd, (HMENU)109, 0, 0);
-            hImportBtn = CreateWindowA("BUTTON", "Import", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 331, 36, 52, 23, hwnd, (HMENU)110, 0, 0);
-            hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 386, 36, 48, 23, hwnd, (HMENU)102, 0, 0);
+            hPinBtn = CreateWindowA("BUTTON", "Pin", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 168, 36, 48, 23, hwnd, (HMENU)107, 0, 0);
+            hReactBtn = CreateWindowA("BUTTON", "React", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 219, 36, 58, 23, hwnd, (HMENU)108, 0, 0);
+            hExportJson = CreateWindowA("BUTTON", "JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 280, 36, 48, 23, hwnd, (HMENU)109, 0, 0);
+            hImportBtn = CreateWindowA("BUTTON", "Import", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 331, 36, 52, 23, hwnd, (HMENU)110, 0, 0);
+            hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 386, 36, 48, 23, hwnd, (HMENU)102, 0, 0);
 
             hTopicLabel = CreateWindowA("STATIC", "Topic: General discussions & community hub", WS_CHILD|WS_VISIBLE|SS_LEFTNOWORDWRAP, 440, 38, 380, 20, hwnd, 0, 0, 0);
 
             // Row 3: Log area
-            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY, 10, 65, 810, 510, hwnd, 0, 0, 0);
+            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, 10, 65, 810, 510, hwnd, 0, 0, 0);
             
             // Row 4: Send & Input area
-            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 10, 585, 580, 24, hwnd, 0, 0, 0);
-            hSend = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 600, 585, 55, 24, hwnd, (HMENU)101, 0, 0);
-            hAskAI = CreateWindowA("BUTTON", "Ask AI", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 665, 585, 60, 24, hwnd, (HMENU)106, 0, 0);
-            hSave = CreateWindowA("BUTTON", "Save TXT", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 735, 585, 85, 24, hwnd, (HMENU)103, 0, 0);
+            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 10, 585, 580, 24, hwnd, 0, 0, 0);
+            hSend = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 600, 585, 55, 24, hwnd, (HMENU)101, 0, 0);
+            hAskAI = CreateWindowA("BUTTON", "Ask AI", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 665, 585, 60, 24, hwnd, (HMENU)106, 0, 0);
+            hSave = CreateWindowA("BUTTON", "Save TXT", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 735, 585, 85, 24, hwnd, (HMENU)103, 0, 0);
             
             oldInputProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)InputSubclassProc);
 
@@ -461,7 +475,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             const char* sampleOpts[] = { "C/Win32 Native App", "HTML5/JS Web App", "Both with Full Parity" };
             AddPollMessage("KChatBot", "What is your favorite KiloApp architecture style?", sampleOpts, 3, "#general");
 
-            AddMessage("System", "Commands: /poll <q>? <opt1> | <opt2>, /vote <1-4>, /topic <text>, /roll [d20], /stats, /me <act>, /shrug, /ai <prompt>", "#general", 0);
+            AddMessage("System", "Commands: /poll <q>? <opt1> | <opt2>, /vote <1-4>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <act>, /shrug, /ai <prompt>", "#general", 0);
             UpdateTopicDisplay();
             break;
         }
@@ -496,10 +510,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 GetWindowTextA(hSearchInput, searchKeyword, sizeof(searchKeyword));
                 RebuildLogView();
             } else if (wmId == 112) { // Help
-                AddMessage("System", "KChat Commands: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /roll [d6/d20], /stats, /me <act>, /shrug, /tableflip, /nick <name>, /join <#room>, /ai <prompt>", currentRoom, 0);
+                AddMessage("System", "KChat Commands: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d6/d20], /stats, /me <act>, /shrug, /table, /join <#room>, /ai <prompt>, /clear, /unpin", currentRoom, 0);
             } else if (wmId == 113) { // Poll Button
                 const char* defaultOpts[] = { "Yes, absolutely!", "Needs more testing", "Not sure" };
-                AddPollMessage("User", "Should we launch the next KiloApp release today?", defaultOpts, 3, currentRoom);
+                AddPollMessage(currentUsername, "Should we launch the next KiloApp release today?", defaultOpts, 3, currentRoom);
             } else if (wmId == 114) { // Vote Button (Vote Option 1 on latest poll)
                 int res = VoteOnLatestPoll(1);
                 if (res == 1) {
@@ -560,10 +574,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 GetWindowTextA(hInput, buf, sizeof(buf));
                 if (buf[0]) {
                     // Slash command handling
+                    if (my_strcmp(buf, "/help") == 0) {
+                        AddMessage("System", "Help: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <act>, /shrug, /ai <prompt>, /clear, /unpin", currentRoom, 0);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (my_strcmp(buf, "/clear") == 0) {
+                        g_msgCount = 0;
+                        RebuildLogView();
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (my_strcmp(buf, "/unpin") == 0) {
+                        for (int i = g_msgCount - 1; i >= 0; i--) {
+                            if (my_strcmp(g_messages[i].room, currentRoom) == 0 && g_messages[i].pinned) {
+                                g_messages[i].pinned = 0;
+                                RebuildLogView();
+                                break;
+                            }
+                        }
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (buf[0] == '/' && buf[1] == 'n' && buf[2] == 'i' && buf[3] == 'c' && buf[4] == 'k' && buf[5] == ' ') {
+                        my_strncpy(currentUsername, buf + 6, sizeof(currentUsername));
+                        char nMsg[64];
+                        wsprintfA(nMsg, "Nickname changed to %s", currentUsername);
+                        AddMessage("System", nMsg, currentRoom, 0);
+                        if (s != INVALID_SOCKET) {
+                            send(s, buf, my_strlen(buf), 0);
+                            send(s, "\n", 1, 0);
+                        }
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
                     if (buf[0] == '/' && buf[1] == 'j' && buf[2] == 'o' && buf[3] == 'i' && buf[4] == 'n' && buf[5] == ' ') {
-                        my_strcpy(currentRoom, buf + 6);
+                        my_strncpy(currentRoom, buf + 6, sizeof(currentRoom));
                         UpdateTopicDisplay();
                         AddMessage("System", "Switched room.", currentRoom, 0);
+                        if (s != INVALID_SOCKET) {
+                            send(s, buf, my_strlen(buf), 0);
+                            send(s, "\n", 1, 0);
+                        }
                         SetWindowTextA(hInput, "");
                         break;
                     }
@@ -612,10 +668,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
 
                         if (optCount >= 2) {
-                            AddPollMessage("User", question, optPtrs, optCount, currentRoom);
+                            AddPollMessage(currentUsername, question, optPtrs, optCount, currentRoom);
                         } else {
                             const char* defOpts[] = { "Option A", "Option B" };
-                            AddPollMessage("User", question[0] ? question : "Quick Poll", defOpts, 2, currentRoom);
+                            AddPollMessage(currentUsername, question[0] ? question : "Quick Poll", defOpts, 2, currentRoom);
                         }
                         SetWindowTextA(hInput, "");
                         break;
@@ -652,50 +708,51 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (maxSides <= 1) maxSides = 6;
                         int rollVal = my_rand(1, maxSides);
                         char rollMsg[128];
-                        wsprintfA(rollMsg, "🎲 rolled a d%d: %d!", maxSides, rollVal);
-                        AddMessage("User", rollMsg, currentRoom, 0);
+                        wsprintfA(rollMsg, "rolled a d%d: %d!", maxSides, rollVal);
+                        AddMessage(currentUsername, rollMsg, currentRoom, 0);
                         SetWindowTextA(hInput, "");
                         break;
                     }
 
                     if (buf[0] == '/' && buf[1] == 's' && buf[2] == 'h' && buf[3] == 'r' && buf[4] == 'u' && buf[5] == 'g') {
-                        AddMessage("User", "¯\\_(ツ)_/¯", currentRoom, 0);
+                        AddMessage(currentUsername, "¯\\_(ツ)_/¯", currentRoom, 0);
                         SetWindowTextA(hInput, "");
                         break;
                     }
 
                     if (buf[0] == '/' && buf[1] == 't' && buf[2] == 'a' && buf[3] == 'b' && buf[4] == 'l' && buf[5] == 'e') {
-                        AddMessage("User", "(╯°□°)╯︵ ┻━┻", currentRoom, 0);
+                        AddMessage(currentUsername, "(╯°□°)╯︵ ┻━┻", currentRoom, 0);
                         SetWindowTextA(hInput, "");
                         break;
                     }
 
                     if (buf[0] == '/' && buf[1] == 'm' && buf[2] == 'e' && buf[3] == ' ') {
                         char actMsg[256];
-                        my_strcpy(actMsg, "* User ");
+                        my_strcpy(actMsg, "* ");
+                        my_strcat(actMsg, currentUsername);
+                        my_strcat(actMsg, " ");
                         my_strcat(actMsg, buf + 4);
                         my_strcat(actMsg, " *");
                         AddMessage("Action", actMsg, currentRoom, 0);
-                        SetWindowTextA(hInput, "");
-                        break;
-                    }
-
-                    if (buf[0] == '/' && buf[1] == 'h' && buf[2] == 'e' && buf[3] == 'l' && buf[4] == 'p') {
-                        AddMessage("System", "Help: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <act>, /shrug, /ai <prompt>", currentRoom, 0);
+                        if (s != INVALID_SOCKET) {
+                            send(s, buf, my_strlen(buf), 0);
+                            send(s, "\n", 1, 0);
+                        }
                         SetWindowTextA(hInput, "");
                         break;
                     }
 
                     if (buf[0] == '/' && buf[1] == 'a' && buf[2] == 'i' && buf[3] == ' ') {
-                        AddMessage("User", buf, currentRoom, 0);
+                        AddMessage(currentUsername, buf, currentRoom, 0);
                         GenerateAIResponse(buf + 4);
                         SetWindowTextA(hInput, "");
                         break;
                     }
 
-                    AddMessage("User", buf, currentRoom, 0);
+                    AddMessage(currentUsername, buf, currentRoom, 0);
                     if (s != INVALID_SOCKET) {
                         send(s, buf, my_strlen(buf), 0);
+                        send(s, "\n", 1, 0);
                     }
                     SetWindowTextA(hInput, "");
                 }
@@ -703,7 +760,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char buf[384];
                 GetWindowTextA(hInput, buf, sizeof(buf));
                 if (!buf[0]) my_strcpy(buf, "What is your system status?");
-                AddMessage("User", buf, currentRoom, 0);
+                AddMessage(currentUsername, buf, currentRoom, 0);
                 GenerateAIResponse(buf);
                 SetWindowTextA(hInput, "");
             } else if (wmId == 107) { // Pin Last
@@ -720,13 +777,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HANDLE hFile = CreateFileA("kchat_history.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
                 if (hFile != INVALID_HANDLE_VALUE) {
                     DWORD written;
-                    char jsonHeader[] = "{\r\n  \"app\": \"KChat Native\",\r\n  \"messages\": [\r\n";
+                    char jsonHeader[] = "{\r\n  \"app\": \"KChat Native Pro\",\r\n  \"messages\": [\r\n";
                     WriteFile(hFile, jsonHeader, my_strlen(jsonHeader), &written, NULL);
 
                     for (int i = 0; i < g_msgCount; i++) {
-                        char item[512];
+                        char escRoom[64], escUser[64], escText[768];
+                        EscapeJsonString(g_messages[i].room, escRoom, sizeof(escRoom));
+                        EscapeJsonString(g_messages[i].user, escUser, sizeof(escUser));
+                        EscapeJsonString(g_messages[i].text, escText, sizeof(escText));
+
+                        char item[1024];
                         wsprintfA(item, "    {\"room\": \"%s\", \"user\": \"%s\", \"text\": \"%s\", \"pinned\": %d, \"is_poll\": %d}%s\r\n",
-                            g_messages[i].room, g_messages[i].user, g_messages[i].text, g_messages[i].pinned, g_messages[i].is_poll,
+                            escRoom, escUser, escText, g_messages[i].pinned, g_messages[i].is_poll,
                             (i == g_msgCount - 1) ? "" : ",");
                         WriteFile(hFile, item, my_strlen(item), &written, NULL);
                     }
@@ -756,8 +818,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DWORD readBytes;
                         if (ReadFile(hFile, buffer, sizeof(buffer) - 1, &readBytes, NULL)) {
                             buffer[readBytes] = 0;
-                            AddMessage("Imported", "History loaded from file.", currentRoom, 0);
-                            AddMessage("ImportedData", buffer, currentRoom, 0);
+                            AddMessage("System", "Imported history file.", currentRoom, 0);
+                            
+                            // Parse lines
+                            char* line = buffer;
+                            while (*line) {
+                                while (*line == '\r' || *line == '\n') line++;
+                                if (!*line) break;
+                                char* nextLine = line;
+                                while (*nextLine && *nextLine != '\r' && *nextLine != '\n') nextLine++;
+                                int lineLen = (int)(nextLine - line);
+                                if (lineLen > 0 && lineLen < 350) {
+                                    char cleanLine[384];
+                                    my_strncpy(cleanLine, line, lineLen + 1);
+                                    if (cleanLine[0] != '{' && cleanLine[0] != '}' && cleanLine[0] != '[') {
+                                        AddMessage("Imported", cleanLine, currentRoom, 0);
+                                    }
+                                }
+                                line = nextLine;
+                            }
                         }
                         CloseHandle(hFile);
                     }
@@ -817,7 +896,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             if (s != INVALID_SOCKET) closesocket(s);
             if (hUIFont) DeleteObject(hUIFont);
-            if (hBoldFont) DeleteObject(hBoldFont);
+            if (hBgBrush) DeleteObject(hBgBrush);
             WSACleanup();
             PostQuitMessage(0);
             return 0;
@@ -834,11 +913,12 @@ void __stdcall MainEntry() {
         SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
         if (setDpiAware) setDpiAware();
     }
+    hBgBrush = CreateSolidBrush(RGB(15, 23, 42));
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KChatClass";
     wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
+    wc.hbrBackground = hBgBrush;
 
     RegisterClassA(&wc);
     RECT rect = { 0, 0, 850, 650 };
@@ -850,10 +930,12 @@ void __stdcall MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
-    DeleteObject(wc.hbrBackground);
+    if (hBgBrush) DeleteObject(hBgBrush);
     ExitProcess(0);
 }
 

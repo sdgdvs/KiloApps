@@ -32,12 +32,15 @@
             padding: 12px; 
             background: radial-gradient(circle at 10% 10%, #1e1b4b, var(--bg-color) 70%);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            font-size: 13px; 
+            font-size: 14px; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             color: var(--text-main);
             display: flex; 
             flex-direction: column; 
             height: 100vh; 
             overflow: hidden;
+            text-rendering: optimizeLegibility;
         }
 
         /* Top Header Control Bar */
@@ -62,10 +65,10 @@
 
         input[type="text"], select { 
             border: 1px solid var(--border); 
-            padding: 6px 10px; 
+            padding: 8px 12px; 
             font-family: inherit; 
-            font-size: 13px; 
-            background: rgba(0, 0, 0, 0.3);
+            font-size: 14px; 
+            background: rgba(0, 0, 0, 0.5);
             color: var(--text-main);
             border-radius: var(--radius-sm);
             outline: none;
@@ -84,9 +87,9 @@
 
         button { 
             font-family: inherit; 
-            font-size: 12px; 
+            font-size: 13px; 
             font-weight: 600;
-            padding: 6px 12px; 
+            padding: 8px 14px; 
             background: var(--accent);
             color: white;
             border: none;
@@ -172,6 +175,33 @@
             font-weight: 600;
         }
 
+        /* Topic Header Bar */
+        .topic-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 12px;
+            color: #93c5fd;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            margin-top: 4px;
+        }
+        .topic-title {
+            font-weight: 600;
+            color: #60a5fa;
+            white-space: nowrap;
+        }
+        .topic-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #e2e8f0;
+        }
+
         /* Pinned Banner */
         .pinned-banner {
             background: rgba(245, 158, 11, 0.1);
@@ -187,6 +217,139 @@
         .pinned-banner.visible { display: flex; }
         .pinned-title { color: var(--accent-amber); font-weight: 600; flex-shrink: 0; }
         .pinned-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; color: var(--text-main); }
+
+        /* Poll Card UI */
+        .poll-card {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-top: 6px;
+        }
+        .poll-question {
+            font-weight: 600;
+            font-size: 14px;
+            color: #c084fc;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .poll-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .poll-opt-row {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        .poll-opt-row:hover {
+            border-color: var(--accent-purple);
+            background: rgba(15, 23, 42, 0.9);
+        }
+        .poll-opt-row.voted {
+            border-color: #a855f7;
+            box-shadow: 0 0 0 1px #a855f7;
+        }
+        .poll-bar-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(139, 92, 246, 0.25);
+            transition: width 0.3s ease;
+            z-index: 0;
+        }
+        .poll-opt-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        .poll-opt-votes {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .poll-footer-info {
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: #111827;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            width: 440px;
+            max-width: 90%;
+            padding: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 15px;
+            color: #60a5fa;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-val {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 4px;
+        }
+        .stat-lbl {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
         /* Main Chat Area */
         #chatContainer {
@@ -268,8 +431,9 @@
         .msg-content {
             white-space: pre-wrap;
             word-break: break-word;
-            line-height: 1.45;
+            line-height: 1.5;
             color: var(--text-main);
+            font-size: 14px;
         }
 
         .msg-footer {
@@ -370,7 +534,7 @@
         }
     </style>
 </head>
-<body>
+<body data-width="850" data-height="650">
 
     <!-- Header Controls -->
     <div class="app-header" role="region" aria-label="KChat Header Controls">
@@ -385,9 +549,9 @@
                 </button>
                 <span style="opacity: 0.3;">|</span>
                 <label for="ip">IP:</label>
-                <input type="text" id="ip" value="127.0.0.1" style="width: 85px;" aria-label="Custom server IP address">
+                <input type="text" id="ip" value="127.0.0.1" style="width: 95px;" aria-label="Custom server IP address">
                 <label for="port">Port:</label>
-                <input type="text" id="port" value="6667" style="width: 45px;" aria-label="Custom server port">
+                <input type="text" id="port" value="6667" style="width: 50px;" aria-label="Custom server port">
                 <button id="btnConnect" onclick="window.connect()" aria-label="Connect or disconnect from custom server">Connect</button>
             </div>
 
@@ -416,6 +580,8 @@
             </div>
 
             <div class="row">
+                <button class="btn-secondary" onclick="window.promptNewPoll()" title="Create an interactive poll">📊 Poll</button>
+                <button class="btn-secondary" onclick="window.openStatsModal()" title="View Chat Analytics">📈 Stats</button>
                 <input type="text" id="searchInput" placeholder="🔍 Search messages..." oninput="window.renderMessages()" style="width: 140px;" aria-label="Search messages">
                 <button id="btnFilterPinned" class="btn-secondary" onclick="window.toggleFilterPinned()" aria-label="Toggle pinned filter">📌 Pinned</button>
                 <span style="opacity: 0.3;">|</span>
@@ -424,7 +590,15 @@
                 <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import history">📤 Import</button>
                 <input type="file" id="importFileInput" style="display:none;" accept=".json,.txt" onchange="window.importFile(event)">
                 <button id="btnClear" class="btn-secondary" onclick="window.clearLog()" aria-label="Clear chat log">Clear</button>
+                <button id="btnHelp" class="btn-secondary" onclick="window.showHelp()" aria-label="Help">Help</button>
             </div>
+        </div>
+
+        <!-- Topic Banner -->
+        <div class="topic-row" id="topicBanner">
+            <span class="topic-title">💬 Topic:</span>
+            <span class="topic-text" id="topicText">General discussions & community hub</span>
+            <button class="action-icon-btn" onclick="window.promptNewTopic()" title="Edit channel topic" style="font-size: 11px;">✏️ Edit</button>
         </div>
     </div>
 
@@ -442,8 +616,44 @@
 
     <!-- Message Composition Bar -->
     <div class="input-bar" role="region" aria-label="Message composition">
-        <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" aria-label="Chat message input" placeholder="Type a message or /join #room or /nick name...">
+        <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" aria-label="Chat message input" placeholder="Type a message or /poll, /topic, /roll, /vote, /stats, /join #room...">
         <button id="btnSend" class="btn-active" onclick="window.send()" aria-label="Send message">Send</button>
+    </div>
+
+    <!-- Stats Modal Overlay -->
+    <div class="modal-overlay" id="statsModal" onclick="if(event.target===this) window.closeStatsModal()">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>📈 KChat Pro Analytics & Insights</span>
+                <button class="action-icon-btn" onclick="window.closeStatsModal()" style="font-size: 14px;">✕</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="statTotalMsgs">0</div>
+                    <div class="stat-lbl">Total Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="statRoomMsgs">0</div>
+                    <div class="stat-lbl">Active Room Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="statTotalPolls">0</div>
+                    <div class="stat-lbl">Active Polls</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="statTotalVotes">0</div>
+                    <div class="stat-lbl">Total Votes Cast</div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 10px; border-radius: var(--radius-sm); line-height: 1.6;">
+                <div><strong>Current Channel:</strong> <span id="statCurrentRoom" style="color: #60a5fa;">#general</span></div>
+                <div><strong>Active AI Persona:</strong> <span id="statActiveAI" style="color: #c084fc;">Assistant</span></div>
+                <div><strong>Active Server:</strong> <span id="statServerStatus" style="color: #34d399;">Local / Offline</span></div>
+            </div>
+            <div style="text-align: right;">
+                <button class="btn-secondary" onclick="window.closeStatsModal()">Close</button>
+            </div>
+        </div>
     </div>
 
     <div id="toast" class="toast"></div>
@@ -478,19 +688,106 @@
         let activePersona = "Assistant";
 
         let rooms = ["#general", "#dev", "#random", "#ai-lounge"];
+        let roomTopics = {
+            "#general": "General discussions & community hub",
+            "#dev": "KiloApps architecture, C/ASM & Web dev",
+            "#random": "Off-topic banters and fun",
+            "#ai-lounge": "Prompt crafting & neural explorations"
+        };
+
         let messages = [
             {
                 id: 'sys_1',
                 user: 'System',
-                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>',
-                timestamp: Date.now(),
+                text: 'Welcome to KChat Pro Suite! Multi-Room, Interactive Polls, Topics, AI Personas, and Slash Commands active.\nType /help or press F1 for commands.',
+                timestamp: Date.now() - 3000,
                 room: '#general',
                 pinned: true,
                 reactions: { '👍': 2, '🚀': 1 },
                 userReacted: {},
                 isAI: false
+            },
+            {
+                id: 'poll_init_1',
+                user: 'KChatBot',
+                text: '[Poll: What is your favorite KiloApp architecture style?]',
+                timestamp: Date.now() - 1000,
+                room: '#general',
+                pinned: false,
+                reactions: { '💡': 3 },
+                userReacted: {},
+                isAI: true,
+                isPoll: true,
+                pollQuestion: 'What is your favorite KiloApp architecture style?',
+                pollOptions: [
+                    { text: 'C/Win32 Native App', votes: 4 },
+                    { text: 'HTML5/JS Web App', votes: 3 },
+                    { text: 'Both with Full Parity', votes: 7 }
+                ],
+                pollVotedUser: null
             }
         ];
+
+        const STORAGE_KEY = 'kchat_pro_state_v2';
+        function safeLoadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.messages && Array.isArray(parsed.messages)) messages = parsed.messages;
+                    if (parsed.rooms && Array.isArray(parsed.rooms)) rooms = parsed.rooms;
+                    if (parsed.roomTopics && typeof parsed.roomTopics === 'object') roomTopics = parsed.roomTopics;
+                    if (parsed.currentUsername) currentUsername = parsed.currentUsername;
+                    if (parsed.currentRoom) currentRoom = parsed.currentRoom;
+                    if (parsed.activePersona) activePersona = parsed.activePersona;
+                }
+            } catch(e) {
+                console.warn("Could not load KChat state from localStorage:", e);
+            }
+        }
+
+        function safeSaveState() {
+            try {
+                const state = {
+                    messages: messages.slice(-150),
+                    rooms: rooms,
+                    roomTopics: roomTopics,
+                    currentUsername: currentUsername,
+                    currentRoom: currentRoom,
+                    activePersona: activePersona
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch(e) {
+                console.warn("Could not save KChat state to localStorage:", e);
+            }
+        }
+
+        let audioCtx = null;
+        function playChime(freq = 587.33, duration = 0.12) {
+            try {
+                if (!audioCtx) {
+                    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtxClass) audioCtx = new AudioCtxClass();
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                if (audioCtx) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                }
+            } catch(e) {}
+        }
+
+        safeLoadState();
 
         const logEl = document.getElementById('log');
         const inputEl = document.getElementById('input');
@@ -500,6 +797,8 @@
         const searchInput = document.getElementById('searchInput');
         const pinnedBanner = document.getElementById('pinnedBanner');
         const pinnedBannerText = document.getElementById('pinnedBannerText');
+        const topicTextEl = document.getElementById('topicText');
+        const statsModalEl = document.getElementById('statsModal');
         const toastEl = document.getElementById('toast');
 
         function showToast(msg) {
@@ -508,9 +807,25 @@
             setTimeout(() => { toastEl.style.display = 'none'; }, 3000);
         }
 
+        function updateTopicUI() {
+            const currentTopic = roomTopics[currentRoom] || "No topic set for this room. Use /topic <text> to set one.";
+            if (topicTextEl) topicTextEl.textContent = currentTopic;
+        }
+
+        window.promptNewTopic = function() {
+            const current = roomTopics[currentRoom] || "";
+            const newTopic = prompt(`Enter new topic for ${currentRoom}:`, current);
+            if (newTopic !== null) {
+                const trimmed = newTopic.trim();
+                roomTopics[currentRoom] = trimmed || "General discussion";
+                updateTopicUI();
+                addMessage("System", `Channel topic changed to: "${roomTopics[currentRoom]}"`, currentRoom);
+                showToast("Channel topic updated!");
+            }
+        };
+
         // Persona Responses Generator
         function generateAIResponse(userPrompt) {
-            const promptLower = userPrompt.toLowerCase();
             switch(activePersona) {
                 case 'Cyberpunk':
                     return `⚡ [CYBERPUNK AI]: Data stream captured from room ${currentRoom}. Processing "${userPrompt}". Signal output: Matrix node updated at 100Gbps. Neon protocols engaged.`;
@@ -536,9 +851,10 @@
                 if (!inRoom) return false;
                 if (showOnlyPinned && !m.pinned) return false;
                 if (searchKeyword) {
-                    const matchUser = m.user.toLowerCase().includes(searchKeyword);
-                    const matchText = m.text.toLowerCase().includes(searchKeyword);
-                    if (!matchUser && !matchText) return false;
+                    const matchUser = (m.user || '').toLowerCase().includes(searchKeyword);
+                    const matchText = (m.text || '').toLowerCase().includes(searchKeyword);
+                    const matchPoll = m.isPoll && (m.pollQuestion || '').toLowerCase().includes(searchKeyword);
+                    if (!matchUser && !matchText && !matchPoll) return false;
                 }
                 return true;
             });
@@ -552,6 +868,8 @@
             } else {
                 pinnedBanner.classList.remove('visible');
             }
+
+            updateTopicUI();
 
             if (filtered.length === 0) {
                 const emptyEl = document.createElement('div');
@@ -573,6 +891,7 @@
                 let authorTagClass = 'user-tag';
                 let avatarIcon = '👤';
                 if (m.user === 'System') { authorTagClass = 'sys-tag'; avatarIcon = '⚙️'; }
+                else if (m.user === 'Action') { authorTagClass = 'sys-tag'; avatarIcon = '⚡'; }
                 else if (m.isAI || m.user.includes('AI') || m.user.includes('Bot') || m.user.includes('Cerberus')) { 
                     authorTagClass = 'ai-tag'; avatarIcon = '🤖'; 
                 }
@@ -589,10 +908,64 @@
                     <div class="msg-time">${timeStr}</div>
                 `;
 
-                // Content
+                // Content or Poll
                 const content = document.createElement('div');
                 content.className = 'msg-content';
-                content.textContent = m.text;
+
+                if (m.isPoll) {
+                    const pollCard = document.createElement('div');
+                    pollCard.className = 'poll-card';
+                    
+                    const qHeader = document.createElement('div');
+                    qHeader.className = 'poll-question';
+                    qHeader.innerHTML = `<span>📊</span> <span>${escapeHtml(m.pollQuestion)}</span>`;
+                    pollCard.appendChild(qHeader);
+
+                    const optsContainer = document.createElement('div');
+                    optsContainer.className = 'poll-options';
+
+                    let totalVotes = 0;
+                    (m.pollOptions || []).forEach(opt => totalVotes += (opt.votes || 0));
+
+                    (m.pollOptions || []).forEach((opt, idx) => {
+                        const optVotes = opt.votes || 0;
+                        const pct = totalVotes > 0 ? Math.round((optVotes / totalVotes) * 100) : 0;
+                        const isVoted = m.pollVotedUser === idx;
+
+                        const optRow = document.createElement('div');
+                        optRow.className = `poll-opt-row ${isVoted ? 'voted' : ''}`;
+                        optRow.onclick = () => window.votePoll(m.id, idx);
+
+                        const barFill = document.createElement('div');
+                        barFill.className = 'poll-bar-fill';
+                        barFill.style.width = pct + '%';
+
+                        const optContent = document.createElement('div');
+                        optContent.className = 'poll-opt-content';
+                        optContent.innerHTML = `
+                            <span>${isVoted ? '✓ ' : ''}<strong>${idx + 1}.</strong> ${escapeHtml(opt.text)}</span>
+                            <span class="poll-opt-votes">${optVotes} votes (${pct}%)</span>
+                        `;
+
+                        optRow.appendChild(barFill);
+                        optRow.appendChild(optContent);
+                        optsContainer.appendChild(optRow);
+                    });
+
+                    pollCard.appendChild(optsContainer);
+
+                    const pollFooter = document.createElement('div');
+                    pollFooter.className = 'poll-footer-info';
+                    pollFooter.innerHTML = `
+                        <span>Total Votes: <strong>${totalVotes}</strong></span>
+                        <span style="opacity: 0.8;">Click an option or type <code>/vote ${1}..${m.pollOptions.length}</code></span>
+                    `;
+                    pollCard.appendChild(pollFooter);
+
+                    content.appendChild(pollCard);
+                } else {
+                    content.textContent = m.text;
+                }
 
                 // Footer & Reactions
                 const footer = document.createElement('div');
@@ -653,8 +1026,68 @@
             };
             messages.push(newMsg);
             if (messages.length > 300) messages.shift();
+            safeSaveState();
             window.renderMessages();
+            if (!isAI && user !== 'System') playChime(659.25, 0.08);
         }
+
+        window.createPoll = function(user, question, optionTexts, room = currentRoom) {
+            const pollMsg = {
+                id: 'poll_' + Date.now() + '_' + Math.floor(Math.random()*10000),
+                user: user,
+                text: `[Poll: ${question}]`,
+                timestamp: Date.now(),
+                room: room,
+                pinned: false,
+                reactions: { '📊': 1 },
+                userReacted: {},
+                isAI: false,
+                isPoll: true,
+                pollQuestion: question,
+                pollOptions: optionTexts.map(t => ({ text: t, votes: 0 })),
+                pollVotedUser: null
+            };
+            messages.push(pollMsg);
+            if (messages.length > 300) messages.shift();
+            window.renderMessages();
+            showToast("Created new interactive poll!");
+        };
+
+        window.promptNewPoll = function() {
+            const q = prompt("Enter Poll Question (e.g. Which feature should we build next?):");
+            if (!q || !q.trim()) return;
+
+            const optStr = prompt("Enter Poll Options separated by commas (e.g. Dark Mode, Export Tools, Mini Games):", "Option A, Option B, Option C");
+            if (!optStr) return;
+
+            const opts = optStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            if (opts.length < 2) {
+                alert("Please provide at least 2 options for the poll.");
+                return;
+            }
+
+            window.createPoll(currentUsername, q.trim(), opts.slice(0, 5), currentRoom);
+        };
+
+        window.votePoll = function(msgId, optionIndex) {
+            const m = messages.find(item => item.id === msgId && item.isPoll);
+            if (m && m.pollOptions && m.pollOptions[optionIndex]) {
+                if (m.pollVotedUser !== null && m.pollVotedUser === optionIndex) {
+                    m.pollOptions[optionIndex].votes = Math.max(0, m.pollOptions[optionIndex].votes - 1);
+                    m.pollVotedUser = null;
+                    showToast("Removed vote.");
+                } else {
+                    if (m.pollVotedUser !== null && m.pollOptions[m.pollVotedUser]) {
+                        m.pollOptions[m.pollVotedUser].votes = Math.max(0, m.pollOptions[m.pollVotedUser].votes - 1);
+                    }
+                    m.pollOptions[optionIndex].votes = (m.pollOptions[optionIndex].votes || 0) + 1;
+                    m.pollVotedUser = optionIndex;
+                    showToast(`Voted for: ${m.pollOptions[optionIndex].text}`);
+                }
+                safeSaveState();
+                window.renderMessages();
+            }
+        };
 
         // Room Controls
         window.switchRoom = function(roomName) {
@@ -663,6 +1096,7 @@
                 if (pill.textContent === roomName) pill.classList.add('active');
                 else pill.classList.remove('active');
             });
+            safeSaveState();
             window.renderMessages();
         };
 
@@ -673,6 +1107,7 @@
                 if (!formatted.startsWith('#')) formatted = '#' + formatted;
                 if (!rooms.includes(formatted)) {
                     rooms.push(formatted);
+                    if (!roomTopics[formatted]) roomTopics[formatted] = "Channel for " + formatted;
                     const channelBar = document.getElementById('channelBar');
                     const newPill = document.createElement('div');
                     newPill.className = 'channel-pill';
@@ -681,12 +1116,14 @@
                     channelBar.insertBefore(newPill, channelBar.lastElementChild);
                     showToast(`Created channel ${formatted}`);
                 }
+                safeSaveState();
                 window.switchRoom(formatted);
             }
         };
 
         window.changePersona = function() {
             activePersona = document.getElementById('aiPersona').value;
+            safeSaveState();
             showToast(`Switched AI Persona to ${activePersona}`);
         };
 
@@ -706,6 +1143,7 @@
             if (m) {
                 m.pinned = !m.pinned;
                 showToast(m.pinned ? "Message pinned!" : "Message unpinned!");
+                safeSaveState();
                 window.renderMessages();
             }
         };
@@ -714,6 +1152,7 @@
             const pinnedInRoom = messages.filter(m => (m.room || '#general') === currentRoom && m.pinned);
             if (pinnedInRoom.length > 0) {
                 pinnedInRoom[pinnedInRoom.length - 1].pinned = false;
+                safeSaveState();
                 window.renderMessages();
             }
         };
@@ -731,6 +1170,7 @@
                     m.reactions[emoji] = (m.reactions[emoji] || 0) + 1;
                     m.userReacted[emoji] = true;
                 }
+                safeSaveState();
                 window.renderMessages();
             }
         };
@@ -743,14 +1183,59 @@
             window.renderMessages();
         };
 
+        // Stats Modal
+        window.openStatsModal = function() {
+            const totalMsgs = messages.length;
+            const roomMsgs = messages.filter(m => (m.room || '#general') === currentRoom).length;
+            const pollMsgs = messages.filter(m => m.isPoll);
+            let totalVotes = 0;
+            pollMsgs.forEach(p => {
+                (p.pollOptions || []).forEach(opt => totalVotes += (opt.votes || 0));
+            });
+
+            document.getElementById('statTotalMsgs').textContent = totalMsgs;
+            document.getElementById('statRoomMsgs').textContent = roomMsgs;
+            document.getElementById('statTotalPolls').textContent = pollMsgs.length;
+            document.getElementById('statTotalVotes').textContent = totalVotes;
+            document.getElementById('statCurrentRoom').textContent = currentRoom;
+            document.getElementById('statActiveAI').textContent = activePersona;
+            document.getElementById('statServerStatus').textContent = isFirebase ? 'Firebase Global RTDB' : (ws ? 'Connected TCP/WS' : 'Local / Offline');
+
+            statsModalEl.classList.add('active');
+        };
+
+        window.closeStatsModal = function() {
+            statsModalEl.classList.remove('active');
+        };
+
+        window.showHelp = function() {
+            showToast("Commands: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <action>, /shrug, /ai <prompt>, /clear, /unpin");
+        };
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (statsModalEl.classList.contains('active')) {
+                    window.closeStatsModal();
+                } else if (searchInput === document.activeElement) {
+                    searchInput.value = '';
+                    window.renderMessages();
+                    searchInput.blur();
+                }
+            } else if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
+                e.preventDefault();
+                window.showHelp();
+            }
+        });
+
         // Export & Import
         window.exportJSON = function() {
             const exportData = {
                 app: "KChat Pro",
-                version: "2.0",
+                version: "2.5",
                 exportTime: new Date().toISOString(),
                 currentRoom: currentRoom,
                 rooms: rooms,
+                roomTopics: roomTopics,
                 messages: messages
             };
             const jsonStr = JSON.stringify(exportData, null, 2);
@@ -766,12 +1251,20 @@
         window.exportTXT = function() {
             let txt = `=======================================\n`;
             txt += `KChat Pro History Export (${new Date().toLocaleString()})\n`;
-            txt += `Current Channel: ${currentRoom}\n`;
+            txt += `Current Channel: ${currentRoom} -- Topic: ${roomTopics[currentRoom] || 'N/A'}\n`;
             txt += `=======================================\n\n`;
 
             messages.forEach(m => {
                 const time = new Date(m.timestamp).toLocaleString();
-                txt += `[${time}] [${m.room || '#general'}] <${m.user}>${m.pinned ? ' 📌[PINNED]' : ''}\n${m.text}\n\n`;
+                if (m.isPoll) {
+                    txt += `[${time}] [${m.room || '#general'}] 📊 [POLL by ${m.user}]: ${m.pollQuestion}\n`;
+                    (m.pollOptions || []).forEach((opt, idx) => {
+                        txt += `   [${idx + 1}] ${opt.text} -- ${opt.votes} votes\n`;
+                    });
+                    txt += `\n`;
+                } else {
+                    txt += `[${time}] [${m.room || '#general'}] <${m.user}>${m.pinned ? ' 📌[PINNED]' : ''}\n${m.text}\n\n`;
+                }
             });
 
             const blob = new Blob([txt], { type: 'text/plain' });
@@ -798,6 +1291,9 @@
                             if (parsed.rooms && Array.isArray(parsed.rooms)) {
                                 rooms = parsed.rooms;
                             }
+                            if (parsed.roomTopics && typeof parsed.roomTopics === 'object') {
+                                roomTopics = parsed.roomTopics;
+                            }
                             showToast("Successfully imported JSON chat history!");
                             window.renderMessages();
                         } else {
@@ -807,7 +1303,6 @@
                         alert("Error parsing JSON file: " + err.message);
                     }
                 } else {
-                    // TXT Import
                     addMessage("System", `--- Imported History from ${file.name} ---`, currentRoom);
                     const lines = content.split('\n');
                     lines.forEach(l => {
@@ -902,7 +1397,6 @@
             
             btnConnectGlobal.disabled = true;
 
-            // Virtual nodes logic preserved
             if ((ip === 'localhost' || ip === '127.0.0.1') && (port === '8082' || port === '8081' || port === '8080')) {
                 isVirtual = true;
                 ws = {
@@ -951,6 +1445,110 @@
         window.send = function() {
             const msg = inputEl.value.trim();
             if (!msg) return;
+
+            if (msg === '/help' || msg.startsWith('/help ')) {
+                addMessage("System", "KChat Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /tableflip, /nick <name>, /join <#room>, /ai <prompt>, /clear, /unpin", currentRoom, false);
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/clear') {
+                window.clearLog();
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/unpin') {
+                window.unpinTop();
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/stats' || msg.startsWith('/stats ')) {
+                window.openStatsModal();
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg.startsWith('/topic ')) {
+                const newTopic = msg.substring(7).trim();
+                if (newTopic) {
+                    roomTopics[currentRoom] = newTopic;
+                    updateTopicUI();
+                    addMessage("System", `Channel topic updated to: "${newTopic}"`, currentRoom);
+                }
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg.startsWith('/poll ')) {
+                const pollBody = msg.substring(6).trim();
+                let question = "Poll";
+                let opts = ["Option A", "Option B"];
+
+                if (pollBody.includes('?')) {
+                    const parts = pollBody.split('?');
+                    question = parts[0].trim() + '?';
+                    const optParts = parts.slice(1).join('?');
+                    const splitOpts = optParts.split('|').map(s => s.trim()).filter(s => s.length > 0);
+                    if (splitOpts.length >= 2) opts = splitOpts;
+                } else if (pollBody.includes('|')) {
+                    const splitOpts = pollBody.split('|').map(s => s.trim()).filter(s => s.length > 0);
+                    if (splitOpts.length >= 2) opts = splitOpts;
+                }
+                window.createPoll(currentUsername, question, opts.slice(0, 4), currentRoom);
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg.startsWith('/vote ')) {
+                const optNum = parseInt(msg.substring(6).trim(), 10);
+                const activePolls = messages.filter(m => (m.room || '#general') === currentRoom && m.isPoll);
+                if (activePolls.length > 0) {
+                    const latestPoll = activePolls[activePolls.length - 1];
+                    if (!isNaN(optNum) && optNum >= 1 && optNum <= (latestPoll.pollOptions || []).length) {
+                        window.votePoll(latestPoll.id, optNum - 1);
+                    } else {
+                        showToast(`Invalid option. Choose between 1 and ${latestPoll.pollOptions.length}`);
+                    }
+                } else {
+                    showToast("No active poll found in this channel to vote on.");
+                }
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg.startsWith('/roll')) {
+                let sides = 20;
+                const rollArgs = msg.substring(5).trim();
+                if (rollArgs) {
+                    const parsed = parseInt(rollArgs.replace(/^d/i, ''), 10);
+                    if (!isNaN(parsed) && parsed > 1) sides = parsed;
+                }
+                const res = Math.floor(Math.random() * sides) + 1;
+                addMessage(currentUsername, `🎲 rolled a d${sides}: ${res}!`, currentRoom);
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/shrug') {
+                addMessage(currentUsername, '¯\\_(ツ)_/¯', currentRoom);
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/tableflip') {
+                addMessage(currentUsername, '(╯°□°)╯︵ ┻━┻', currentRoom);
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg.startsWith('/me ')) {
+                const actionText = msg.substring(4).trim();
+                addMessage("Action", `* ${currentUsername} ${actionText} *`, currentRoom);
+                inputEl.value = '';
+                return;
+            }
 
             if (msg.startsWith('/nick ')) {
                 const newName = msg.substring(6).trim();
@@ -1009,3 +1607,4 @@
     </script>
 </body>
 </html>
+ 
