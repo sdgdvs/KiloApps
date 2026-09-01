@@ -327,7 +327,8 @@ void PlayANSI(const char* str) {
     struct MusicArgs* args = (struct MusicArgs*)GlobalAlloc(GPTR, sizeof(struct MusicArgs));
     if (args) {
         lstrcpynA(args->data, str, sizeof(args->data));
-        CreateThread(NULL, 0, MusicThread, args, 0, NULL);
+        HANDLE hThread = CreateThread(NULL, 0, MusicThread, args, 0, NULL);
+        if (hThread) CloseHandle(hThread);
     }
 }
 // wait let's write a proper PlayChimeThread
@@ -338,7 +339,8 @@ DWORD WINAPI ChimeThread(LPVOID lpParam) {
     return 0;
 }
 void PlayChimeAsync(int type) {
-    CreateThread(NULL, 0, ChimeThread, (LPVOID)(INT_PTR)type, 0, NULL);
+    HANDLE hThread = CreateThread(NULL, 0, ChimeThread, (LPVOID)(INT_PTR)type, 0, NULL);
+    if (hThread) CloseHandle(hThread);
 }
 
 /* Transfer state */
@@ -873,6 +875,7 @@ void SaveBBSList(void) {
             my_strcpy(buf + my_strlen(buf), dynBbsList[i].host);
             my_strcpy(buf + my_strlen(buf), "|");
             my_strcpy(buf + my_strlen(buf), portStr);
+            my_strcpy(buf + my_strlen(buf), "|");
             my_strcpy(buf + my_strlen(buf), dynBbsList[i].type);
             my_strcpy(buf + my_strlen(buf), "|");
             my_strcpy(buf + my_strlen(buf), dynBbsList[i].autologin);
@@ -2638,6 +2641,8 @@ LRESULT CALLBACK WndProc
             break; // Let DefWindowProc handle it
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
+            KillTimer(hwnd, 2);
             if (sock != INVALID_SOCKET) closesocket(sock);
             if (hTermFont) DeleteObject(hTermFont);
             if (hUIFont) DeleteObject(hUIFont);

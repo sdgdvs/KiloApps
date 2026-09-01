@@ -5,7 +5,7 @@
     <title>KBBS - Retro BBS Terminal & Utility Suite</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#09090b; font-family:'Inter', system-ui, sans-serif; font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; color: #a1a1aa; }
+        body { background:#09090b; font-family:'Inter', system-ui, sans-serif; font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; color: #a1a1aa; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
 
         .conn-bar { 
             display:flex; align-items:center; gap:6px; padding:10px 14px; 
@@ -42,7 +42,7 @@
 
         /* Terminal */
         .term-wrap { flex:1; display:flex; flex-direction:column; background:#000; position: relative; }
-        #terminal { flex:1; display:block; image-rendering:pixelated; cursor:text; z-index: 1; }
+        #terminal { display:block; image-rendering:pixelated; cursor:text; z-index: 1; margin: 0 auto; }
 
         /* CRT Scanline overlay */
         .term-wrap::after {
@@ -133,7 +133,7 @@
         <button id="btnZmUl" onclick="startTransfer(4)" title="ZMODEM Upload" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">UL (ZM)</button>
         <button id="btnSettings" onclick="showSettings()">Settings</button>
         <button id="btnCapture" onclick="showCaptureManager()" style="background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF</button>
-        <button id="btnHelp" onclick="showHelp()" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help</button>
+        <button id="btnHelp" onclick="showHelp()" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help (F1)</button>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
         <input type="file" id="ansFileUpload" accept=".ans,.txt,.ice" style="display:none" onchange="loadAnsFile(event)">
         <input type="file" id="dirImportUpload" accept=".json" style="display:none" onchange="importDirectoryJSON(event)">
@@ -145,8 +145,8 @@
                 <span id="scriptBannerText">Script Running...</span>
                 <button onclick="stopScriptMacro()" style="background:transparent; border:none; color:#ef4444; font-weight:bold; cursor:pointer; margin-left:8px;">✕</button>
             </div>
-            <div style="display: flex; flex: 1; width: 100%; height: 100%; position: relative;">
-                <canvas id="terminal" tabindex="0" role="img" aria-label="BBS Terminal Screen" style="flex: 1;"></canvas>
+            <div style="display: flex; flex: 1; width: 100%; height: 100%; position: relative; justify-content: center; align-items: center; overflow: auto; background: #000;">
+                <canvas id="terminal" tabindex="0" role="img" aria-label="BBS Terminal Screen"></canvas>
                 <div id="scrollContainer" style="width: 16px; height: 100%; overflow-y: scroll; background: #09090b; border-left: 1px solid #27272a; z-index: 3; display: none;" onscroll="handleScroll(event)">
                     <div id="scrollSpacer" style="height: 100px;"></div>
                 </div>
@@ -426,7 +426,7 @@ SEND:"secret\r"'></textarea>
     </div>
 
     <div class="status-bar">
-        <span id="statusInfo">Ready — Select a BBS or enter an address</span>
+        <span id="statusInfo">Ready — Select a BBS or enter an address (Press F1 or 'H' for Help)</span>
         <span id="bytesInfo">0 B | Cap: OFF</span>
     </div>
 
@@ -465,6 +465,12 @@ SEND:"secret\r"'></textarea>
         document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
     }
     document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); loadDirectory(); loadMacros(); });
+    document.addEventListener("keydown", (e) => {
+        if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            if (e.key === 'F1') e.preventDefault();
+            if (!ws || e.key === 'F1') showHelp();
+        }
+    });
 
     function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelp() { document.getElementById('helpModal').style.display = 'none'; }
@@ -475,8 +481,14 @@ SEND:"secret\r"'></textarea>
     const ctx = canvas.getContext('2d');
     let ws = null, bytesRx = 0, bytesTx = 0;
     
+    function escapeHTML(str) {
+        if (typeof str !== 'string') return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
     let screen = [];
     let curX = 0, curY = 0;
+    let savedX = 0, savedY = 0;
     let curFg = 7, curBg = 0;
     let scrollOffset = 0;
 
@@ -487,7 +499,7 @@ SEND:"secret\r"'></textarea>
             for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: curFg, bg: curBg });
             screen.push(row);
         }
-        curX = 0; curY = 0; scrollOffset = 0;
+        curX = 0; curY = 0; savedX = 0; savedY = 0; scrollOffset = 0;
     }
 
     function resizeCanvas() {
@@ -496,8 +508,14 @@ SEND:"secret\r"'></textarea>
         const h = wrap.clientHeight;
         CELL_H = kbbsSettings.fontSize || 16;
         CELL_W = Math.max(1, Math.floor(CELL_H / 2));
-        canvas.width = COLS * CELL_W;
-        canvas.height = ROWS * CELL_H;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = COLS * CELL_W * dpr;
+        canvas.height = ROWS * CELL_H * dpr;
+        canvas.style.width = (COLS * CELL_W) + 'px';
+        canvas.style.height = (ROWS * CELL_H) + 'px';
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+        ctx.scale(dpr, dpr);
+        ctx.imageSmoothingEnabled = false;
         render();
     }
 
@@ -575,13 +593,15 @@ SEND:"secret\r"'></textarea>
             curY = Math.max(0, Math.min(ROWS - 1, (parts[0] || 1) - 1));
             curX = Math.max(0, Math.min(COLS - 1, (parts[1] || 1) - 1));
         } else if (cmd === 'J') {
-            if (parts[0] === 2) initScreen();
+            if (parts[0] === 2 || parts[0] === 0 || params === '' || params === '2') initScreen();
         } else if (cmd === 'K') {
             for (let c = curX; c < COLS; c++) screen[curY][c] = { ch: ' ', fg: curFg, bg: curBg };
         } else if (cmd === 'A') curY = Math.max(0, curY - (parts[0] || 1));
         else if (cmd === 'B') curY = Math.min(ROWS - 1, curY + (parts[0] || 1));
         else if (cmd === 'C') curX = Math.min(COLS - 1, curX + (parts[0] || 1));
         else if (cmd === 'D') curX = Math.max(0, curX - (parts[0] || 1));
+        else if (cmd === 's') { savedX = curX; savedY = curY; }
+        else if (cmd === 'u') { curX = savedX; curY = savedY; }
     }
 
     function feedByte(ch) {
@@ -726,10 +746,25 @@ SEND:"secret\r"'></textarea>
             div.style.padding = '10px 12px'; div.style.cursor = 'pointer'; div.style.borderBottom = '1px solid #27272a';
             div.style.background = (idx === selectedDirIndex) ? '#0ea5e9' : 'transparent';
             div.style.color = (idx === selectedDirIndex) ? '#fff' : '#d4d4d8';
-            div.innerHTML = `<strong>${e.name}</strong><br><span style="font-size:10px; opacity:0.8;">${e.host}:${e.port} ${(e.tags||'')}</span>`;
+            div.innerHTML = `<strong>${escapeHTML(e.name)}</strong><br><span style="font-size:10px; opacity:0.8;">${escapeHTML(e.host)}:${escapeHTML(String(e.port))} ${escapeHTML(e.tags||'')}</span>`;
             div.onclick = () => selectEntry(idx);
             list.appendChild(div);
         });
+    }
+
+    function onNodeSelectChange() {
+        let nodeVal = parseInt(document.getElementById('dirNodeSelect').value) || 1;
+        if (selectedDirIndex >= 0 && selectedDirIndex < dirEntries.length) {
+            let entry = dirEntries[selectedDirIndex];
+            if (entry.nodes && entry.nodes.length >= nodeVal) {
+                let node = entry.nodes[nodeVal - 1];
+                if (node) {
+                    if (node.host) document.getElementById('dirHost').value = node.host;
+                    if (node.port) document.getElementById('dirPort').value = node.port;
+                    if (node.type) document.getElementById('dirType').value = node.type;
+                }
+            }
+        }
     }
 
     function selectEntry(idx) {
@@ -742,6 +777,7 @@ SEND:"secret\r"'></textarea>
             document.getElementById('dirType').value = e.type || 'telnet';
             document.getElementById('dirAutoLogin').value = e.autoLogin || '';
             document.getElementById('dirTags').value = e.tags || '';
+            document.getElementById('dirNodeSelect').value = '1';
         }
     }
 
@@ -878,12 +914,45 @@ SEND:"secret\r"'></textarea>
         window.captureBuffer = ''; window.captureByteCount = 0; updateCaptureUI(); updateBytes();
     }
 
+    // ─── File Transfer Handlers ───
+    function startTransfer(type) {
+        if (!ws || ws.readyState !== 1) {
+            alert("Please connect to a BBS before starting file transfer.");
+            return;
+        }
+        if (type === 1) { // XMODEM DL
+            alert("XMODEM Download initiated. Waiting for remote host data stream...");
+            ws.send(String.fromCharCode(0x15)); // NAK
+        } else if (type === 2) { // XMODEM UL
+            document.getElementById('fileUpload').click();
+        } else if (type === 3) { // ZMODEM DL
+            alert("ZMODEM Download initiated.");
+            processData("\x1B[1;36m[ZMODEM Download Initialized]\r\n");
+        } else if (type === 4) { // ZMODEM UL
+            document.getElementById('fileUpload').click();
+        }
+    }
+
+    function handleFileUpload(event) {
+        let file = event.target.files[0];
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = (e) => {
+            if (ws && ws.readyState === 1) {
+                ws.send(e.target.result);
+                bytesTx += (e.target.result.byteLength || e.target.result.length || 0);
+                updateBytes();
+                alert(`File "${file.name}" sent (${file.size} bytes)!`);
+            } else {
+                alert("Cannot upload: Not connected to BBS.");
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
     // ─── 3. Custom BBS Script Macro Engine & Auto-Login ───
     let dynMacros = [
-        { key: 'L', title: 'Auto-Login Script', str: 'WAIT:"login:"
-SEND:"guest\r"
-WAIT:"password:"
-SEND:"guest\r"' }
+        { key: 'L', title: 'Auto-Login Script', str: 'WAIT:"login:"\nSEND:"guest\\r"\nWAIT:"password:"\nSEND:"guest\\r"' }
     ];
     let selectedMacroIndex = 0;
     let activeScript = null;
@@ -905,7 +974,7 @@ SEND:"guest\r"' }
             let div = document.createElement('div'); div.style.padding = '10px 12px'; div.style.cursor = 'pointer'; div.style.borderBottom = '1px solid #27272a';
             div.style.background = (idx === selectedMacroIndex) ? '#0ea5e9' : 'transparent';
             div.style.color = (idx === selectedMacroIndex) ? '#fff' : '#d4d4d8';
-            div.innerHTML = `<strong>Alt + ${m.key}</strong><br><span style="font-size:10px;">${m.title || 'Script'}</span>`;
+            div.innerHTML = `<strong>Alt + ${escapeHTML(m.key)}</strong><br><span style="font-size:10px;">${escapeHTML(m.title || 'Script')}</span>`;
             div.onclick = () => selectMacro(idx);
             lst.appendChild(div);
         });
@@ -925,8 +994,7 @@ SEND:"guest\r"' }
         selectedMacroIndex = -1; renderMacroList();
         document.getElementById('macroKey').value = 'M';
         document.getElementById('macroTitle').value = 'New Script';
-        document.getElementById('macroString').value = 'WAIT:"login:"
-SEND:"user\r"';
+        document.getElementById('macroString').value = 'WAIT:"login:"\nSEND:"user\\r"';
     }
 
     function saveMacro() {
@@ -1089,6 +1157,7 @@ SEND:"user\r"';
             if (lordPlayer.gold >= 50) { lordPlayer.gold -= 50; lordPlayer.weapon = "Iron Blade"; log.innerHTML += "<br>⚔️ Upgraded weapon to Iron Blade!"; }
             else log.innerHTML += "<br>Not enough gold!";
         }
+        if (log) log.scrollTop = log.scrollHeight;
         renderDoorContent();
     }
 
@@ -1101,6 +1170,7 @@ SEND:"user\r"';
         } else if (act === 'pirate') {
             twPlayer.credits += 400; log.innerHTML += "<br>🏴‍☠️ Destroyed Pirate Raider! +$400 Bounty!";
         }
+        if (log) log.scrollTop = log.scrollHeight;
         renderDoorContent();
     }
 
@@ -1133,7 +1203,7 @@ SEND:"user\r"';
             artCtx.fillStyle = '#0ea5e9'; artCtx.fillText(" ╚══════════════════════════════════════════════╝", 20, 60);
         } else if (type === 'dragon') {
             artCtx.fillStyle = '#ef4444'; artCtx.fillText("   (===>  RED DRAGON ANSI ART  <===)", 20, 20);
-            artCtx.fillStyle = '#f59e0b'; artCtx.fillText("         /\_/\  ( S L A Y E R )", 20, 40);
+            artCtx.fillStyle = '#f59e0b'; artCtx.fillText("         /\\_/\\  ( S L A Y E R )", 20, 40);
         } else {
             artCtx.fillStyle = '#8b5cf6'; artCtx.fillText(" [ RETROWAVE SYNTH BBS SYSTEM v2.0 ]", 20, 20);
         }
@@ -1191,6 +1261,109 @@ SEND:"user\r"';
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; canvas.focus(); }
     function resetPalette() { COLORS = [...DEFAULT_COLORS]; render(); }
+
+    function closeAnyOpenModal() {
+        let modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal'];
+        let closedAny = false;
+        for (let m of modals) {
+            let el = document.getElementById(m);
+            if (el && el.style.display === 'flex') {
+                el.style.display = 'none';
+                closedAny = true;
+            }
+        }
+        if (closedAny) canvas.focus();
+        return closedAny;
+    }
+
+    window.addEventListener('keydown', (e) => {
+        let tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+            if (e.key === 'Escape') closeAnyOpenModal();
+            return;
+        }
+
+        if (e.key === 'Escape') {
+            if (closeAnyOpenModal()) {
+                e.preventDefault();
+                return;
+            }
+        }
+
+        if (e.altKey && e.key) {
+            let k = e.key.toUpperCase();
+            let m = dynMacros.find(macro => macro.key.toUpperCase() === k);
+            if (m) {
+                runScriptMacro(m.str);
+                e.preventDefault();
+                return;
+            }
+        }
+        
+        if (!ws || ws.readyState !== 1) {
+            if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+                showHelp();
+                e.preventDefault();
+                return;
+            }
+        }
+        
+        if (ws && ws.readyState === 1) {
+            let echo = document.getElementById('localEcho').checked;
+            if (e.key.length === 1 && !e.ctrlKey && !e.altKey) {
+                ws.send(e.key);
+                bytesTx += 1;
+                updateBytes();
+                if (echo) { feedByte(e.key); render(); }
+                e.preventDefault();
+            } else if (e.key === 'Enter') {
+                ws.send('\r\n');
+                bytesTx += 2;
+                updateBytes();
+                if (echo) { feedByte('\r'); feedByte('\n'); render(); }
+                e.preventDefault();
+            } else if (e.key === 'Backspace') {
+                ws.send('\x08');
+                bytesTx += 1;
+                updateBytes();
+                if (echo) { feedByte('\x08'); render(); }
+                e.preventDefault();
+            } else if (e.key === 'Escape') {
+                ws.send('\x1B');
+                bytesTx += 1;
+                updateBytes();
+                e.preventDefault();
+            } else if (e.key === 'Tab') {
+                ws.send('\t');
+                bytesTx += 1;
+                updateBytes();
+                if (echo) { feedByte('\t'); render(); }
+                e.preventDefault();
+            } else if (e.key === 'ArrowUp') {
+                ws.send('\x1B[A'); bytesTx += 3; updateBytes(); e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                ws.send('\x1B[B'); bytesTx += 3; updateBytes(); e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                ws.send('\x1B[C'); bytesTx += 3; updateBytes(); e.preventDefault();
+            } else if (e.key === 'ArrowLeft') {
+                ws.send('\x1B[D'); bytesTx += 3; updateBytes(); e.preventDefault();
+            } else if (e.key === 'Insert') {
+                ws.send('\x1B[2~'); bytesTx += 4; updateBytes(); e.preventDefault();
+            } else if (e.key === 'Delete') {
+                ws.send('\x1B[3~'); bytesTx += 4; updateBytes(); e.preventDefault();
+            } else if (e.key === 'Home') {
+                ws.send('\x1B[H'); bytesTx += 3; updateBytes(); e.preventDefault();
+            } else if (e.key === 'End') {
+                ws.send('\x1B[F'); bytesTx += 3; updateBytes(); e.preventDefault();
+            } else if (e.key === 'PageUp') {
+                ws.send('\x1B[5~'); bytesTx += 4; updateBytes(); e.preventDefault();
+            } else if (e.key === 'PageDown') {
+                ws.send('\x1B[6~'); bytesTx += 4; updateBytes(); e.preventDefault();
+            } else if (e.key === 'F1') {
+                showHelp(); e.preventDefault();
+            }
+        }
+    });
 
     window.addEventListener('resize', resizeCanvas);
     setTimeout(resizeCanvas, 50);
