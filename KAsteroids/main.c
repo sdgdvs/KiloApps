@@ -22,6 +22,9 @@ typedef struct {
     int laser_cooldown;
     int shield_cooldown;
     int missile_cooldown;
+    int drone_cooldown;
+    int platform_cooldown;
+    int emp_mine_cooldown;
     int invincible_timer;
     float anim_frame;
 } Ship;
@@ -144,6 +147,34 @@ typedef struct {
 } Star;
 
 typedef struct {
+    float x, y;
+    float angle;
+    int life;
+    int shoot_timer;
+    bool active;
+} DroneWingman;
+
+typedef struct {
+    float x, y;
+    float angle;
+    int hp;
+    int max_hp;
+    int life;
+    int shoot_timer;
+    float anim_frame;
+    bool active;
+} OrbitalPlatform;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    int arm_timer;
+    float anim_frame;
+    bool active;
+} PlayerEmpMine;
+
+typedef struct {
     int high_score_classic;
     int high_score_time_attack;
     int high_score_hardcore;
@@ -172,6 +203,12 @@ int num_particles = 0;
 Shockwave shockwaves[30];
 int num_shockwaves = 0;
 Star stars[300];
+DroneWingman drones[2] = {0};
+int num_drones = 0;
+OrbitalPlatform platforms[6] = {0};
+int num_platforms = 0;
+PlayerEmpMine player_mines[12] = {0};
+int num_player_mines = 0;
 int hyperspace_jump_timer = 0;
 
 int shield_timer = 0;
@@ -232,6 +269,11 @@ DWORD WINAPI SoundThread(LPVOID param) {
         Beep(300, 50);
         Beep(900, 50);
         Beep(1800, 50);
+    } else if (type == 7) { // Drone / Turret Pulse
+        Beep(1100, 35);
+    } else if (type == 8) { // Deploy platform / mine / drones
+        Beep(450, 40);
+        Beep(850, 60);
     }
     return 0;
 }
@@ -604,6 +646,9 @@ void InitGame(int mode) {
     ship.laser_cooldown = 0;
     ship.shield_cooldown = 0;
     ship.missile_cooldown = 0;
+    ship.drone_cooldown = 0;
+    ship.platform_cooldown = 0;
+    ship.emp_mine_cooldown = 0;
     ship.invincible_timer = 0;
     ship.anim_frame = 0;
 
@@ -614,6 +659,9 @@ void InitGame(int mode) {
     num_mines = 0;
     num_particles = 0;
     num_shockwaves = 0;
+    num_drones = 0;
+    num_platforms = 0;
+    num_player_mines = 0;
 
     shield_timer = 0;
     spread_timer = 0;
@@ -625,6 +673,138 @@ void InitGame(int mode) {
     SaveStats();
 
     SetupWave();
+}
+
+void TriggerDrones() {
+    if (!ship.active) return;
+    ship.drone_cooldown = 1080; // 18s CD
+    PlaySoundEffect(8);
+    num_drones = 2;
+    for (int i = 0; i < 2; i++) {
+        drones[i].active = true;
+        drones[i].life = 1200; // 20s duration
+        drones[i].shoot_timer = i * 14;
+        drones[i].angle = i * 3.14159f;
+        drones[i].x = ship.x;
+        drones[i].y = ship.y;
+    }
+    CreateExplosion(ship.x, ship.y, RGB(56, 189, 248), 20, 35.0f);
+}
+
+void TriggerPlatform() {
+    if (!ship.active) return;
+    ship.platform_cooldown = 1500; // 25s CD
+    PlaySoundEffect(8);
+    if (num_platforms < 6) {
+        OrbitalPlatform* op = &platforms[num_platforms++];
+        op->x = ship.x;
+        op->y = ship.y;
+        op->angle = 0;
+        op->hp = 25;
+        op->max_hp = 25;
+        op->life = 1500; // 25s duration
+        op->shoot_timer = 0;
+        op->anim_frame = 0;
+        op->active = true;
+        CreateExplosion(ship.x, ship.y, RGB(56, 189, 248), 25, 45.0f);
+    }
+}
+
+void DetonatePlayerEmpMine(int idx) {
+    if (!player_mines[idx].active) return;
+    player_mines[idx].active = false;
+    float mx = player_mines[idx].x;
+    float my = player_mines[idx].y;
+    PlaySoundEffect(5);
+    CreateExplosion(mx, my, RGB(56, 189, 248), 60, 110.0f);
+    CreateExplosion(mx, my, RGB(217, 70, 239), 40, 80.0f);
+
+    // Wipe enemy bullets in 220px
+    for (int i = 0; i < num_bullets; i++) {
+        if (bullets[i].active && bullets[i].is_enemy) {
+            float d = sqrt(pow(bullets[i].x - mx, 2) + pow(bullets[i].y - my, 2));
+            if (d < 220.0f) bullets[i].active = false;
+        }
+    }
+
+    // Destroy hostile mines in 220px
+    for (int m = 0; m < num_mines; m++) {
+        if (mines[m].active) {
+            float d = sqrt(pow(mines[m].x - mx, 2) + pow(mines[m].y - my, 2));
+            if (d < 220.0f) {
+                mines[m].active = false;
+                CreateExplosion(mines[m].x, mines[m].y, RGB(168, 85, 247), 20, 35.0f);
+                score += 150;
+                SpawnFloatingText(mines[m].x, mines[m].y, 150, RGB(168, 85, 247));
+            }
+        }
+    }
+
+    // Freeze & heavy damage to UFOs
+    for (int u = 0; u < num_ufos; u++) {
+        if (ufos[u].active) {
+            float d = sqrt(pow(ufos[u].x - mx, 2) + pow(ufos[u].y - my, 2));
+            if (d < 220.0f) {
+                ufos[u].freeze_timer = 300; // 5s freeze
+                ufos[u].hp -= 12;
+                if (ufos[u].hp <= 0) {
+                    ufos[u].active = false;
+                    int s_add = (ufos[u].type == 2) ? 1500 : ((ufos[u].type == 1) ? 500 : 200);
+                    score += s_add;
+                    SpawnFloatingText(ufos[u].x, ufos[u].y, s_add, RGB(56, 189, 248));
+                    CreateExplosion(ufos[u].x, ufos[u].y, RGB(217, 70, 239), 50, 70.0f);
+                }
+            }
+        }
+    }
+
+    // Damage / shatter asteroids
+    for (int a = 0; a < num_asteroids; a++) {
+        if (!asteroids[a].active) continue;
+        float d = sqrt(pow(asteroids[a].x - mx, 2) + pow(asteroids[a].y - my, 2));
+        if (d < 220.0f) {
+            if (asteroids[a].type == 3) {
+                asteroids[a].hp -= 8;
+                CreateExplosion(asteroids[a].x, asteroids[a].y, RGB(249, 115, 22), 25, 45.0f);
+            } else if (asteroids[a].is_armored) {
+                asteroids[a].hp -= 3;
+                if (asteroids[a].hp <= 0) {
+                    asteroids[a].active = false;
+                    stats.asteroids_destroyed++;
+                    score += 40;
+                    SpawnFloatingText(asteroids[a].x, asteroids[a].y, 40, RGB(249, 115, 22));
+                    CreateExplosion(asteroids[a].x, asteroids[a].y, RGB(249, 115, 22), 25, 40.0f);
+                }
+            } else if (asteroids[a].level <= 2) {
+                asteroids[a].active = false;
+                stats.asteroids_destroyed++;
+                score += (4 - asteroids[a].level) * 10;
+                SpawnFloatingText(asteroids[a].x, asteroids[a].y, (4 - asteroids[a].level) * 10, RGB(253, 224, 71));
+                CreateExplosion(asteroids[a].x, asteroids[a].y, RGB(217, 70, 239), 20, 35.0f);
+            } else {
+                asteroids[a].hp -= 2;
+            }
+        }
+    }
+    UpdateHighScore();
+}
+
+void TriggerEmpMine() {
+    if (!ship.active) return;
+    ship.emp_mine_cooldown = 720; // 12s CD
+    PlaySoundEffect(8);
+    if (num_player_mines < 12) {
+        PlayerEmpMine* pm = &player_mines[num_player_mines++];
+        pm->x = ship.x;
+        pm->y = ship.y;
+        pm->vx = -cos(ship.angle) * 1.5f;
+        pm->vy = -sin(ship.angle) * 1.5f;
+        pm->life = 600; // 10s fuse if no trigger
+        pm->arm_timer = 30; // 0.5s arming delay
+        pm->anim_frame = 0;
+        pm->active = true;
+        CreateExplosion(ship.x, ship.y, RGB(56, 189, 248), 12, 20.0f);
+    }
 }
 
 
@@ -876,7 +1056,8 @@ void CheckCollisions() {
                             PowerUp* pu = &powerups[num_powerups++];
                             pu->x = ufos[k].x; pu->y = ufos[k].y;
                             pu->vx = ((rand() % 100) - 50) / 50.0f; pu->vy = ((rand() % 100) - 50) / 50.0f;
-                            pu->type = (rand() % 4) + 1;
+                            int r_type = (rand() % 5) + 1;
+                            pu->type = (r_type == 5) ? 6 : r_type;
                             pu->life = 60 * 10; pu->active = true; pu->anim_frame = 0;
                         }
                     }
@@ -973,7 +1154,12 @@ void CheckCollisions() {
                                 PowerUp* pu = &powerups[num_powerups++];
                                 pu->x = asteroids[j].x; pu->y = asteroids[j].y;
                                 pu->vx = ((rand() % 100) - 50) / 50.0f; pu->vy = ((rand() % 100) - 50) / 50.0f;
-                                pu->type = (asteroids[j].is_armored && rand() % 100 < 35) ? 5 : ((rand() % 4) + 1);
+                                if (asteroids[j].is_armored && rand() % 100 < 35) {
+                                    pu->type = 5; // Warp Core
+                                } else {
+                                    int rt = (rand() % 5) + 1;
+                                    pu->type = (rt == 5) ? 6 : rt; // 6 = Drone Pod
+                                }
                                 pu->life = 60 * 10; pu->active = true; pu->anim_frame = 0;
                             }
 
@@ -1106,6 +1292,18 @@ void CompactArrays() {
     }
     num_debrisArray = ad;
     
+    int adr = 0;
+    for (int i = 0; i < num_drones; i++) if (drones[i].active) drones[adr++] = drones[i];
+    num_drones = adr;
+
+    int apl = 0;
+    for (int i = 0; i < num_platforms; i++) if (platforms[i].active) platforms[apl++] = platforms[i];
+    num_platforms = apl;
+
+    int apm = 0;
+    for (int i = 0; i < num_player_mines; i++) if (player_mines[i].active) player_mines[apm++] = player_mines[i];
+    num_player_mines = apm;
+
     int aft = 0;
     for (int i = 0; i < num_floatingTexts; i++) {
         if (floatingTexts[i].active) {
@@ -1182,13 +1380,20 @@ void Update() {
     if (ship.emp_cooldown > 0) ship.emp_cooldown--;
     if (ship.laser_cooldown > 0) ship.laser_cooldown--;
     if (ship.shield_cooldown > 0) ship.shield_cooldown--;
-        if (ship.missile_cooldown > 0) ship.missile_cooldown--;
+    if (ship.missile_cooldown > 0) ship.missile_cooldown--;
+    if (ship.drone_cooldown > 0) ship.drone_cooldown--;
+    if (ship.platform_cooldown > 0) ship.platform_cooldown--;
+    if (ship.emp_mine_cooldown > 0) ship.emp_mine_cooldown--;
     if (ship.invincible_timer > 0) ship.invincible_timer--;
 
     // Key Hotkey Active Skills (Edge Triggered)
     if ((keys['E'] && !prev_keys['E']) && ship.emp_cooldown == 0) TriggerEmp();
     if ((keys['L'] && !prev_keys['L']) && ship.laser_cooldown == 0) TriggerLaser();
+    if ((keys['M'] && !prev_keys['M']) && ship.missile_cooldown == 0) TriggerMissile();
     if ((keys['S'] && !prev_keys['S']) && ship.shield_cooldown == 0) TriggerShield();
+    if ((keys['D'] && !prev_keys['D']) && ship.drone_cooldown == 0) TriggerDrones();
+    if ((keys['O'] && !prev_keys['O']) && ship.platform_cooldown == 0) TriggerPlatform();
+    if ((keys['X'] && !prev_keys['X']) && ship.emp_mine_cooldown == 0) TriggerEmpMine();
     if (((keys['H'] && !prev_keys['H']) || (keys['C'] && !prev_keys['C']) || (keys[VK_SHIFT] && !prev_keys[VK_SHIFT])) && ship.hyperdrive_cooldown == 0) TriggerHyperdrive();
 
     for (int k = 0; k < 256; k++) prev_keys[k] = keys[k];
@@ -1615,8 +1820,240 @@ void Update() {
                         SpawnFloatingText(ship.x, ship.y, 1000, RGB(56, 189, 248));
                         score += 1000;
                     }
+                } else if (powerups[i].type == 6) {
+                    TriggerDrones(); ship.drone_cooldown = 0;
+                    score += 150;
+                    SpawnFloatingText(powerups[i].x, powerups[i].y, 150, RGB(56, 189, 248));
                 }
                 UpdateHighScore();
+            }
+        }
+    }
+
+    // Update Drone Wingmen
+    for (int i = 0; i < num_drones; i++) {
+        if (!drones[i].active) continue;
+        drones[i].life--;
+        if (drones[i].life <= 0 || !ship.active) {
+            drones[i].active = false;
+            CreateExplosion(drones[i].x, drones[i].y, RGB(56, 189, 248), 10, 20.0f);
+            continue;
+        }
+
+        drones[i].angle += 0.045f;
+        drones[i].x = ship.x + cos(drones[i].angle) * 36.0f;
+        drones[i].y = ship.y + sin(drones[i].angle) * 36.0f;
+
+        // Propulsion particle trail
+        if (rand() % 100 < 35 && num_particles < 700) {
+            Particle* pt = &particles[num_particles++];
+            pt->x = drones[i].x; pt->y = drones[i].y;
+            pt->vx = -cos(drones[i].angle) * 1.5f + (rand() % 20 - 10) / 10.0f;
+            pt->vy = -sin(drones[i].angle) * 1.5f + (rand() % 20 - 10) / 10.0f;
+            pt->color = RGB(56, 189, 248);
+            pt->life = 12; pt->max_life = 12; pt->active = true; pt->type = 0; pt->size = 2.0f;
+        }
+
+        // Point Defense: zap enemy bullets or hostile mines close to drone
+        for (int b = 0; b < num_bullets; b++) {
+            if (bullets[b].active && bullets[b].is_enemy) {
+                float d = sqrt(pow(bullets[b].x - drones[i].x, 2) + pow(bullets[b].y - drones[i].y, 2));
+                if (d < 24.0f) {
+                    bullets[b].active = false;
+                    PlaySoundEffect(7);
+                    CreateExplosion(bullets[b].x, bullets[b].y, RGB(56, 189, 248), 6, 12.0f);
+                    break;
+                }
+            }
+        }
+        for (int m = 0; m < num_mines; m++) {
+            if (mines[m].active) {
+                float d = sqrt(pow(mines[m].x - drones[i].x, 2) + pow(mines[m].y - drones[i].y, 2));
+                if (d < 25.0f) {
+                    mines[m].active = false;
+                    PlaySoundEffect(2);
+                    CreateExplosion(mines[m].x, mines[m].y, RGB(168, 85, 247), 15, 30.0f);
+                    score += 150;
+                    SpawnFloatingText(mines[m].x, mines[m].y, 150, RGB(168, 85, 247));
+                    UpdateHighScore();
+                    break;
+                }
+            }
+        }
+
+        // Auto-Targeting Laser / Plasma fire
+        drones[i].shoot_timer++;
+        if (drones[i].shoot_timer > 26 && num_bullets < 118) {
+            float best_dist = 280.0f;
+            float tx = -1, ty = -1;
+            for (int u = 0; u < num_ufos; u++) {
+                if (ufos[u].active) {
+                    float d = sqrt(pow(ufos[u].x - drones[i].x, 2) + pow(ufos[u].y - drones[i].y, 2));
+                    if (d < best_dist) { best_dist = d; tx = ufos[u].x; ty = ufos[u].y; }
+                }
+            }
+            if (tx == -1) {
+                for (int a = 0; a < num_asteroids; a++) {
+                    if (asteroids[a].active) {
+                        float d = sqrt(pow(asteroids[a].x - drones[i].x, 2) + pow(asteroids[a].y - drones[i].y, 2));
+                        if (d < best_dist) { best_dist = d; tx = asteroids[a].x; ty = asteroids[a].y; }
+                    }
+                }
+            }
+            if (tx != -1) {
+                drones[i].shoot_timer = 0;
+                PlaySoundEffect(7);
+                float ang = atan2(ty - drones[i].y, tx - drones[i].x);
+                Bullet* b = &bullets[num_bullets++];
+                b->x = drones[i].x;
+                b->y = drones[i].y;
+                b->vx = cos(ang) * 9.5f;
+                b->vy = sin(ang) * 9.5f;
+                b->life = 55;
+                b->active = true;
+                b->is_enemy = false;
+                b->is_laser = true;
+                b->is_missile = false;
+            }
+        }
+    }
+
+    // Update Orbital Defense Platforms
+    for (int i = 0; i < num_platforms; i++) {
+        if (!platforms[i].active) continue;
+        platforms[i].life--;
+        platforms[i].anim_frame += 0.05f;
+        platforms[i].angle += 0.02f;
+        if (platforms[i].life <= 0 || platforms[i].hp <= 0) {
+            platforms[i].active = false;
+            PlaySoundEffect(2);
+            CreateExplosion(platforms[i].x, platforms[i].y, RGB(56, 189, 248), 35, 60.0f);
+            continue;
+        }
+
+        // Platform Shield Aura Particles
+        if (rand() % 100 < 20 && num_particles < 700) {
+            float sang = (rand() % 360) * 3.14159f / 180.0f;
+            Particle* pt = &particles[num_particles++];
+            pt->x = platforms[i].x + cos(sang) * 22.0f;
+            pt->y = platforms[i].y + sin(sang) * 22.0f;
+            pt->vx = cos(sang) * 0.8f;
+            pt->vy = sin(sang) * 0.8f;
+            pt->color = RGB(56, 189, 248);
+            pt->life = 20; pt->max_life = 20; pt->active = true; pt->type = 0; pt->size = 2.0f;
+        }
+
+        // Auto-aim twin flak cannon
+        platforms[i].shoot_timer++;
+        if (platforms[i].shoot_timer > 22 && num_bullets < 118) {
+            float best_dist = 340.0f;
+            float tx = -1, ty = -1;
+            for (int u = 0; u < num_ufos; u++) {
+                if (ufos[u].active) {
+                    float d = sqrt(pow(ufos[u].x - platforms[i].x, 2) + pow(ufos[u].y - platforms[i].y, 2));
+                    if (d < best_dist) { best_dist = d; tx = ufos[u].x; ty = ufos[u].y; }
+                }
+            }
+            if (tx == -1) {
+                for (int a = 0; a < num_asteroids; a++) {
+                    if (asteroids[a].active) {
+                        float d = sqrt(pow(asteroids[a].x - platforms[i].x, 2) + pow(asteroids[a].y - platforms[i].y, 2));
+                        if (d < best_dist) { best_dist = d; tx = asteroids[a].x; ty = asteroids[a].y; }
+                    }
+                }
+            }
+            if (tx != -1) {
+                platforms[i].shoot_timer = 0;
+                PlaySoundEffect(7);
+                float ang = atan2(ty - platforms[i].y, tx - platforms[i].x);
+                float perp = ang + 1.5708f;
+                for (int k = -1; k <= 1; k += 2) {
+                    if (num_bullets < 120) {
+                        Bullet* b = &bullets[num_bullets++];
+                        b->x = platforms[i].x + cos(ang) * 14.0f + cos(perp) * (k * 7.0f);
+                        b->y = platforms[i].y + sin(ang) * 14.0f + sin(perp) * (k * 7.0f);
+                        b->vx = cos(ang) * 10.0f;
+                        b->vy = sin(ang) * 10.0f;
+                        b->life = 60;
+                        b->active = true;
+                        b->is_enemy = false;
+                        b->is_laser = false;
+                        b->is_missile = false;
+                    }
+                }
+            }
+        }
+
+        // Contact damage with asteroids / UFOs
+        for (int a = 0; a < num_asteroids; a++) {
+            if (!asteroids[a].active) continue;
+            float d = sqrt(pow(asteroids[a].x - platforms[i].x, 2) + pow(asteroids[a].y - platforms[i].y, 2));
+            if (d < asteroids[a].radius + 20.0f) {
+                platforms[i].hp -= 2;
+                asteroids[a].hp -= 2;
+                CreateExplosion(platforms[i].x, platforms[i].y, RGB(56, 189, 248), 10, 20.0f);
+                PlaySoundEffect(2);
+                if (asteroids[a].hp <= 0) {
+                    asteroids[a].active = false;
+                    stats.asteroids_destroyed++;
+                    score += 30;
+                    SpawnFloatingText(asteroids[a].x, asteroids[a].y, 30, RGB(253, 224, 71));
+                    CreateExplosion(asteroids[a].x, asteroids[a].y, RGB(249, 115, 22), 20, 35.0f);
+                    UpdateHighScore();
+                }
+            }
+        }
+    }
+
+    // Update Player EMP Mines
+    for (int i = 0; i < num_player_mines; i++) {
+        if (!player_mines[i].active) continue;
+        player_mines[i].anim_frame += 0.15f;
+        player_mines[i].life--;
+        if (player_mines[i].arm_timer > 0) player_mines[i].arm_timer--;
+
+        player_mines[i].x += player_mines[i].vx;
+        player_mines[i].y += player_mines[i].vy;
+        player_mines[i].vx *= 0.96f;
+        player_mines[i].vy *= 0.96f;
+
+        if (player_mines[i].x < 0) player_mines[i].x = WIDTH;
+        if (player_mines[i].x > WIDTH) player_mines[i].x = 0;
+        if (player_mines[i].y < 0) player_mines[i].y = HEIGHT;
+        if (player_mines[i].y > HEIGHT) player_mines[i].y = 0;
+
+        if (player_mines[i].life <= 0) {
+            DetonatePlayerEmpMine(i);
+            continue;
+        }
+
+        // Proximity sensor check (when armed)
+        if (player_mines[i].arm_timer == 0) {
+            bool triggered = false;
+            for (int u = 0; u < num_ufos; u++) {
+                if (ufos[u].active) {
+                    float d = sqrt(pow(ufos[u].x - player_mines[i].x, 2) + pow(ufos[u].y - player_mines[i].y, 2));
+                    if (d < ufos[u].radius + 30.0f) { triggered = true; break; }
+                }
+            }
+            if (!triggered) {
+                for (int a = 0; a < num_asteroids; a++) {
+                    if (asteroids[a].active) {
+                        float d = sqrt(pow(asteroids[a].x - player_mines[i].x, 2) + pow(asteroids[a].y - player_mines[i].y, 2));
+                        if (d < asteroids[a].radius + 25.0f) { triggered = true; break; }
+                    }
+                }
+            }
+            if (!triggered) {
+                for (int b = 0; b < num_bullets; b++) {
+                    if (bullets[b].active && bullets[b].is_enemy) {
+                        float d = sqrt(pow(bullets[b].x - player_mines[i].x, 2) + pow(bullets[b].y - player_mines[i].y, 2));
+                        if (d < 30.0f) { triggered = true; break; }
+                    }
+                }
+            }
+            if (triggered) {
+                DetonatePlayerEmpMine(i);
             }
         }
     }
@@ -2323,6 +2760,23 @@ void Draw(HDC hdc) {
             continue;
         }
 
+        if (powerups[i].type == 6) {
+            // Drone Pod item (Cyan diamond with rotating aura)
+            HBRUSH b = CreateSolidBrush(RGB(56, 189, 248));
+            HPEN p = CreatePen(PS_SOLID, 2, RGB(186, 230, 253));
+            SelectObject(hdc, b); SelectObject(hdc, p);
+            POINT dpts[4];
+            dpts[0].x = (LONG)(powerups[i].x);      dpts[0].y = (LONG)(powerups[i].y - 10);
+            dpts[1].x = (LONG)(powerups[i].x + 10); dpts[1].y = (LONG)(powerups[i].y);
+            dpts[2].x = (LONG)(powerups[i].x);      dpts[2].y = (LONG)(powerups[i].y + 10);
+            dpts[3].x = (LONG)(powerups[i].x - 10); dpts[3].y = (LONG)(powerups[i].y);
+            Polygon(hdc, dpts, 4);
+            DeleteObject(b); DeleteObject(p);
+            SetTextColor(hdc, RGB(15, 23, 42));
+            TextOutA(hdc, (int)powerups[i].x - 4, (int)powerups[i].y - 8, "D", 1);
+            continue;
+        }
+
         COLORREF color = RGB(59, 130, 246);
         const char* label = "S";
         if (powerups[i].type == 2) { color = RGB(34, 197, 94); label = "P"; }
@@ -2351,6 +2805,120 @@ void Draw(HDC hdc) {
         LineTo(hdc, (int)mines[m].x, (int)(mines[m].y + mines[m].radius + 3));
     }
     DeleteObject(minePen);
+
+    // Draw Orbital Defense Platforms
+    for (int i = 0; i < num_platforms; i++) {
+        if (!platforms[i].active) continue;
+        float px = platforms[i].x, py = platforms[i].y;
+        float pang = platforms[i].angle;
+
+        // Armored hexagonal battle platform
+        HPEN platPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+        HBRUSH platBrush = CreateSolidBrush(RGB(15, 23, 42));
+        SelectObject(hdc, platPen); SelectObject(hdc, platBrush);
+        POINT hpts[6];
+        for (int j = 0; j < 6; j++) {
+            float a = j * 3.14159f / 3.0f + pang;
+            hpts[j].x = (LONG)(px + cos(a) * 20.0f);
+            hpts[j].y = (LONG)(py + sin(a) * 20.0f);
+        }
+        Polygon(hdc, hpts, 6);
+        DeleteObject(platPen); DeleteObject(platBrush);
+
+        // Core Reactor
+        HBRUSH coreB = CreateSolidBrush(RGB(56, 189, 248));
+        SelectObject(hdc, coreB); SelectObject(hdc, GetStockObject(NULL_PEN));
+        Ellipse(hdc, (int)px - 7, (int)py - 7, (int)px + 7, (int)py + 7);
+        DeleteObject(coreB);
+
+        // Rotating Flak Turret Cannons
+        HPEN cannonPen = CreatePen(PS_SOLID, 3, RGB(250, 204, 21));
+        SelectObject(hdc, cannonPen);
+        float perp = pang + 1.5708f;
+        for (int k = -1; k <= 1; k += 2) {
+            MoveToEx(hdc, (int)(px + cos(perp) * (k * 6.0f)), (int)(py + sin(perp) * (k * 6.0f)), NULL);
+            LineTo(hdc, (int)(px + cos(perp) * (k * 6.0f) + cos(pang) * 16.0f), (int)(py + sin(perp) * (k * 6.0f) + sin(pang) * 16.0f));
+        }
+        DeleteObject(cannonPen);
+
+        // Shield Arc
+        HPEN arcPen = CreatePen(PS_SOLID, 1, RGB(147, 197, 253));
+        SelectObject(hdc, arcPen); SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        int prad = 26 + (int)(sin(platforms[i].anim_frame * 2.0f) * 2);
+        Arc(hdc, (int)px - prad, (int)py - prad, (int)px + prad, (int)py + prad,
+            (int)(px + cos(pang) * prad), (int)(py + sin(pang) * prad),
+            (int)(px + cos(pang + 2.5f) * prad), (int)(py + sin(pang + 2.5f) * prad));
+        DeleteObject(arcPen);
+
+        // HP Bar
+        HBRUSH hpBg = CreateSolidBrush(RGB(24, 24, 27));
+        HBRUSH hpFg = CreateSolidBrush(RGB(56, 189, 248));
+        RECT pbarBg = {(LONG)(px - 18), (LONG)(py - 30), (LONG)(px + 18), (LONG)(py - 25)};
+        FillRect(hdc, &pbarBg, hpBg);
+        float pct = (float)platforms[i].hp / platforms[i].max_hp;
+        if (pct < 0) pct = 0;
+        RECT pbarFg = {(LONG)(px - 18), (LONG)(py - 30), (LONG)(px - 18 + 36 * pct), (LONG)(py - 25)};
+        FillRect(hdc, &pbarFg, hpFg);
+        DeleteObject(hpBg); DeleteObject(hpFg);
+    }
+
+    // Draw Player EMP Shockwave Mines
+    for (int i = 0; i < num_player_mines; i++) {
+        if (!player_mines[i].active) continue;
+        float mx = player_mines[i].x, my = player_mines[i].y;
+        float anim = player_mines[i].anim_frame;
+
+        // Armed EM core
+        HPEN pmPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+        HBRUSH pmBrush = CreateSolidBrush(RGB(88, 28, 135));
+        SelectObject(hdc, pmPen); SelectObject(hdc, pmBrush);
+        Ellipse(hdc, (int)mx - 9, (int)my - 9, (int)mx + 9, (int)my + 9);
+        DeleteObject(pmPen); DeleteObject(pmBrush);
+
+        // 4 EM Coils / Prongs
+        HPEN coilPen = CreatePen(PS_SOLID, 2, RGB(217, 70, 239));
+        SelectObject(hdc, coilPen);
+        for (int k = 0; k < 4; k++) {
+            float cang = k * 3.14159f / 2.0f + anim;
+            MoveToEx(hdc, (int)(mx + cos(cang) * 6.0f), (int)(my + sin(cang) * 6.0f), NULL);
+            LineTo(hdc, (int)(mx + cos(cang) * 14.0f), (int)(my + sin(cang) * 14.0f));
+        }
+        DeleteObject(coilPen);
+
+        // Pulsating Shock Radius Guide
+        if (player_mines[i].arm_timer == 0) {
+            int pulRad = 15 + (int)(sin(anim * 3.0f) * 5);
+            HPEN pulPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+            SelectObject(hdc, pulPen); SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, (int)mx - pulRad, (int)my - pulRad, (int)mx + pulRad, (int)my + pulRad);
+            DeleteObject(pulPen);
+        }
+    }
+
+    // Draw Drone Wingmen Companions
+    for (int i = 0; i < num_drones; i++) {
+        if (!drones[i].active) continue;
+        float dx = drones[i].x, dy = drones[i].y;
+        float dang = drones[i].angle + 1.5708f; // Face forward along orbit
+
+        HPEN drPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+        HBRUSH drBrush = CreateSolidBrush(RGB(15, 23, 42));
+        SelectObject(hdc, drPen); SelectObject(hdc, drBrush);
+        POINT dpts[4];
+        float c = cos(dang), s = sin(dang);
+        dpts[0].x = (LONG)(dx + (9 * c - 0 * s));   dpts[0].y = (LONG)(dy + (9 * s + 0 * c));
+        dpts[1].x = (LONG)(dx + (-4 * c - (-6) * s)); dpts[1].y = (LONG)(dy + (-4 * s + (-6) * c));
+        dpts[2].x = (LONG)(dx + (-7 * c - 0 * s));  dpts[2].y = (LONG)(dy + (-7 * s + 0 * c));
+        dpts[3].x = (LONG)(dx + (-4 * c - 6 * s));  dpts[3].y = (LONG)(dy + (-4 * s + 6 * c));
+        Polygon(hdc, dpts, 4);
+        DeleteObject(drPen); DeleteObject(drBrush);
+
+        // Drone glowing sensor optic
+        HBRUSH opticB = CreateSolidBrush(RGB(250, 204, 21));
+        SelectObject(hdc, opticB); SelectObject(hdc, GetStockObject(NULL_PEN));
+        Ellipse(hdc, (int)dx - 2, (int)dy - 2, (int)dx + 2, (int)dy + 2);
+        DeleteObject(opticB);
+    }
 
     // Draw HUD
     SetTextColor(hdc, RGB(56, 189, 248));
@@ -2419,31 +2987,36 @@ void Draw(HDC hdc) {
 
     // Active Skills Bar HUD
     if (ship.active) {
-
-        char skillsStr[160];
-        char empBuf[20], laserBuf[20], warpBuf[20], shieldBuf[20];
+        char skillsStr[200];
+        char empBuf[20], laserBuf[20], misBuf[20], warpBuf[20], shieldBuf[20], droneBuf[20], platBuf[20], mineBuf[20];
         
-        
-        if (ship.emp_cooldown == 0) sprintf(empBuf, "[E] EMP: READY");
+        if (ship.emp_cooldown == 0) sprintf(empBuf, "[E]EMP");
         else sprintf(empBuf, "[E]:%ds", ship.emp_cooldown / 60 + 1);
 
-        if (ship.laser_cooldown == 0) sprintf(laserBuf, "[L] Laser: READY");
+        if (ship.laser_cooldown == 0) sprintf(laserBuf, "[L]Las");
         else sprintf(laserBuf, "[L]:%ds", ship.laser_cooldown / 60 + 1);
         
-        char misBuf[20];
-        if (ship.missile_cooldown == 0) sprintf(misBuf, "[M] Missile: READY");
+        if (ship.missile_cooldown == 0) sprintf(misBuf, "[M]Mis");
         else sprintf(misBuf, "[M]:%ds", ship.missile_cooldown / 60 + 1);
 
-        if (ship.hyperdrive_cooldown == 0) sprintf(warpBuf, "[H] Warp: READY");
+        if (ship.hyperdrive_cooldown == 0) sprintf(warpBuf, "[H]Warp");
         else sprintf(warpBuf, "[H]:%ds", ship.hyperdrive_cooldown / 60 + 1);
 
-        if (ship.shield_cooldown == 0) sprintf(shieldBuf, "[S] Shield: READY");
+        if (ship.shield_cooldown == 0) sprintf(shieldBuf, "[S]Shld");
         else sprintf(shieldBuf, "[S]:%ds", ship.shield_cooldown / 60 + 1);
 
-        sprintf(skillsStr, "%s  %s  %s  %s  %s", empBuf, laserBuf, misBuf, warpBuf, shieldBuf);
+        if (ship.drone_cooldown == 0) sprintf(droneBuf, "[D]Drone");
+        else sprintf(droneBuf, "[D]:%ds", ship.drone_cooldown / 60 + 1);
+
+        if (ship.platform_cooldown == 0) sprintf(platBuf, "[O]Platf");
+        else sprintf(platBuf, "[O]:%ds", ship.platform_cooldown / 60 + 1);
+
+        if (ship.emp_mine_cooldown == 0) sprintf(mineBuf, "[X]Mine");
+        else sprintf(mineBuf, "[X]:%ds", ship.emp_mine_cooldown / 60 + 1);
+
+        sprintf(skillsStr, "%s  %s  %s  %s  %s  %s  %s  %s", empBuf, laserBuf, misBuf, warpBuf, shieldBuf, droneBuf, platBuf, mineBuf);
         SetTextColor(hdc, RGB(250, 204, 21));
         TextOutA(hdc, 10, 32, skillsStr, strlen(skillsStr));
-
     }
 
     // Draw Game Over / Menu / Stats / Victory
@@ -2484,8 +3057,8 @@ void Draw(HDC hdc) {
             TextOutA(hdc, WIDTH / 2 - 45, HEIGHT / 2 - 20, "How to Play", 11);
             SetTextColor(hdc, RGB(161, 161, 170));
             TextOutA(hdc, WIDTH / 2 - 110, HEIGHT / 2 + 10, "Arrows: Rotate & Thrust | Space: Shoot", 38);
-            TextOutA(hdc, WIDTH / 2 - 110, HEIGHT / 2 + 30, "Active Skills: [E]mp, [L]aser, [H]yperdrive, [S]hield", 53);
-            TextOutA(hdc, WIDTH / 2 - 110, HEIGHT / 2 + 50, "Pickups: [S]hield, [P]spread, [E]mp, [L]aser", 44);
+            TextOutA(hdc, WIDTH / 2 - 135, HEIGHT / 2 + 30, "Skills: [E]mp [L]aser [M]issile [H]yper [S]hield [D]rone [O]rbit [X]Mine", 72);
+            TextOutA(hdc, WIDTH / 2 - 110, HEIGHT / 2 + 50, "Pickups: [S]hield [P]spread [E]mp [L]aser [D]rone [W]arp", 55);
 
             SetTextColor(hdc, RGB(250, 204, 21));
             TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 95, "[B] Back to Menu", 16);
