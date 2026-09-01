@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>KBreakout - Loop 10: Multi-Ball Chaos & Cyber-Forge</title>
+<title>KBreakout - Loop 11: Satellites, Reflectors & Quantum Resonance</title>
 <style>
 * { box-sizing: border-box; }
 body { background: #0e0e17; color: #fff; margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; }
@@ -15,17 +15,17 @@ body { background: #0e0e17; color: #fff; margin: 0; display: flex; flex-directio
 #boss-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff6600); transition: width 0.1s; }
 canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cursor: crosshair; }
 #skill-bar { display: flex; justify-content: space-between; width: 400px; margin-top: 8px; gap: 4px; }
-.skill-btn { flex: 1; background: #1e1e36; border: 1px solid #3a3a60; border-radius: 4px; padding: 6px 2px; color: #aaa; font-size: 10px; font-weight: bold; text-align: center; cursor: pointer; transition: all 0.15s; }
+.skill-btn { flex: 1; background: #1e1e36; border: 1px solid #3a3a60; border-radius: 4px; padding: 5px 2px; color: #aaa; font-size: 10px; font-weight: bold; text-align: center; cursor: pointer; transition: all 0.15s; }
 .skill-btn.ready { background: #2a2a54; border-color: #00ffff; color: #fff; box-shadow: 0 0 6px rgba(0,255,255,0.3); }
 .skill-btn.ready:hover { background: #3a3a74; color: #00ffff; transform: translateY(-1px); }
 .skill-btn.active { background: #0088aa; border-color: #00ffff; color: #fff; animation: pulse 0.5s infinite alternate; }
-.skill-key { display: inline-block; background: #111; color: #00ffff; padding: 1px 4px; border-radius: 3px; margin-right: 2px; }
+.skill-key { display: inline-block; background: #111; color: #00ffff; padding: 1px 3px; border-radius: 3px; margin-right: 2px; }
 @keyframes pulse { 0% { box-shadow: 0 0 4px #00ffff; } 100% { box-shadow: 0 0 12px #00ffff; } }
 
-#forge-overlay { display: none; position: absolute; top: 45px; left: 15px; width: 390px; background: rgba(12, 14, 28, 0.96); border: 2px solid #00ffff; border-radius: 8px; padding: 12px; box-shadow: 0 0 25px rgba(0,255,255,0.5); z-index: 100; }
-#forge-title { color: #00ffff; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 6px; text-shadow: 0 0 8px #00ffff; }
-.forge-item { display: flex; justify-content: space-between; align-items: center; background: #181a32; border: 1px solid #334; border-radius: 4px; padding: 5px 8px; margin-bottom: 5px; font-size: 11px; }
-.forge-btn { background: #0088aa; border: 1px solid #00ffff; color: #fff; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+#forge-overlay { display: none; position: absolute; top: 35px; left: 10px; width: 400px; background: rgba(12, 14, 28, 0.97); border: 2px solid #00ffff; border-radius: 8px; padding: 10px; box-shadow: 0 0 25px rgba(0,255,255,0.5); z-index: 100; max-height: 400px; overflow-y: auto; }
+#forge-title { color: #00ffff; font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 4px; text-shadow: 0 0 8px #00ffff; }
+.forge-item { display: flex; justify-content: space-between; align-items: center; background: #181a32; border: 1px solid #334; border-radius: 4px; padding: 4px 6px; margin-bottom: 4px; font-size: 10.5px; }
+.forge-btn { background: #0088aa; border: 1px solid #00ffff; color: #fff; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; }
 .forge-btn:hover { background: #00aacc; }
 </style>
 </head>
@@ -48,17 +48,18 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
     <canvas id="c" width="400" height="420"></canvas>
 
     <div id="skill-bar">
-        <div id="btn-laser" class="skill-btn ready" onclick="useSkill('laser')"><span class="skill-key">L</span>LASER</div>
-        <div id="btn-multi" class="skill-btn ready" onclick="useSkill('multi')"><span class="skill-key">M</span>SPLIT</div>
-        <div id="btn-fire" class="skill-btn ready" onclick="useSkill('fire')"><span class="skill-key">F</span>FIRE</div>
-        <div id="btn-barrier" class="skill-btn ready" onclick="useSkill('barrier')"><span class="skill-key">B</span>BARRIER</div>
-        <div id="btn-grav" class="skill-btn ready" onclick="useSkill('grav')"><span class="skill-key">G</span>GRAV</div>
-        <div id="btn-forge" class="skill-btn ready" onclick="toggleForge()"><span class="skill-key">O</span>FORGE</div>
+        <div id="btn-laser" class="skill-btn ready" onclick="useSkill('laser')"><span class="skill-key">L</span>LAS</div>
+        <div id="btn-multi" class="skill-btn ready" onclick="useSkill('multi')"><span class="skill-key">M</span>SPL</div>
+        <div id="btn-fire" class="skill-btn ready" onclick="useSkill('fire')"><span class="skill-key">F</span>FIR</div>
+        <div id="btn-barrier" class="skill-btn ready" onclick="useSkill('barrier')"><span class="skill-key">B</span>BAR</div>
+        <div id="btn-grav" class="skill-btn ready" onclick="useSkill('grav')"><span class="skill-key">G</span>GRV</div>
+        <div id="btn-sat" class="skill-btn ready" onclick="useSkill('sat')"><span class="skill-key">S</span>SAT</div>
+        <div id="btn-forge" class="skill-btn ready" onclick="toggleForge()"><span class="skill-key">O</span>FRG</div>
     </div>
 
     <div id="forge-overlay">
         <div id="forge-title">⚡ CYBER-FORGE POWER LAB ⚡</div>
-        <div style="font-size: 11px; color: #ffdd44; margin-bottom: 8px; text-align: center;" id="forge-mat-display">
+        <div style="font-size: 11px; color: #ffdd44; margin-bottom: 6px; text-align: center;" id="forge-mat-display">
             Plasma: 0 | Quantum: 0 | Alloy: 0
         </div>
         <div class="forge-item">
@@ -81,7 +82,15 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
             <div><b>[5] Singularity Beacon</b><br><span style="color:#aaa;">20 Pls + 15 Qtm + 15 Aly</span></div>
             <button class="forge-btn" onclick="craftForge(5)">CRAFT</button>
         </div>
-        <div style="text-align: center; margin-top: 8px;">
+        <div class="forge-item">
+            <div><b>[6] Orbital Satellite Array</b><br><span style="color:#aaa;">12 Pls + 12 Qtm + 12 Aly</span></div>
+            <button class="forge-btn" onclick="craftForge(6)">CRAFT</button>
+        </div>
+        <div class="forge-item">
+            <div><b>[7] Resonance Catalyst</b><br><span style="color:#aaa;">15 Quantum + 10 Alloy</span></div>
+            <button class="forge-btn" onclick="craftForge(7)">CRAFT</button>
+        </div>
+        <div style="text-align: center; margin-top: 6px;">
             <button class="forge-btn" onclick="toggleForge()">CLOSE [ESC]</button>
         </div>
     </div>
@@ -111,6 +120,8 @@ let active_chronos = 0;
 let active_valkyrie = 0;
 let aegis_layers = 0;
 let active_singularity = 0;
+let active_satellite_boost = 0;
+let active_resonance_catalyst = 0;
 let forge_open = false;
 
 // Paddle
@@ -119,6 +130,13 @@ let last_pad_x = pad_x, pad_vx = 0, pad_squash_timer = 0;
 
 // Multi-Ball system (up to 32 balls)
 let balls = [];
+
+// Orbital Satellites
+let satellites = [
+    { angle: 0, dist: 42, x: 0, y: 0 },
+    { angle: Math.PI, dist: 42, x: 0, y: 0 }
+];
+let dur_satellite = 0, cd_satellite = 0;
 
 // Timers & Powerups
 let power_active = 0, power_x = 0, power_y = 0, power_type = 0;
@@ -221,6 +239,10 @@ function spawnGravityWell(x, y, mass, type) {
     }
 }
 
+function spawnLaser(x, y, vx, vy, type) {
+    lasers.push({ x: x, y: y, vx: vx, vy: vy, active: 1, type: type });
+}
+
 function saveGameData() {
     localStorage.setItem('kbreakout_hi', high_score);
     localStorage.setItem('kbreakout_bricks', lifetime_bricks);
@@ -273,6 +295,18 @@ function craftForge(recipe) {
             spawnGravityWell(w / 2, 140, 45, 0);
             playTone(400, 'sawtooth', 0.4);
         } else { playTone(150, 'sawtooth', 0.15); }
+    } else if (recipe === 6) {
+        if (plasma_shards >= 12 && quantum_cores >= 12 && nano_alloys >= 12) {
+            plasma_shards -= 12; quantum_cores -= 12; nano_alloys -= 12;
+            active_satellite_boost = 1; dur_satellite = 700;
+            playTone(750, 'sine', 0.3);
+        } else { playTone(150, 'sawtooth', 0.15); }
+    } else if (recipe === 7) {
+        if (quantum_cores >= 15 && nano_alloys >= 10) {
+            quantum_cores -= 15; nano_alloys -= 10;
+            active_resonance_catalyst = 1;
+            playTone(850, 'triangle', 0.3);
+        } else { playTone(150, 'sawtooth', 0.15); }
     }
     saveGameData();
     updateForgeMatDisplay();
@@ -318,10 +352,41 @@ function useSkill(skill) {
         dur_gravity = 400; cd_gravity = 800;
         spawnGravityWell(w / 2, 160, 35, 0);
         playTone(400, 'sine', 0.3);
+    } else if (skill === 'sat' && cd_satellite <= 0) {
+        dur_satellite = 480; cd_satellite = 840;
+        spawnShockwave(pad_x + pad_w / 2, h - 40, '#00ffcc');
+        playTone(650, 'sine', 0.25);
+    }
+}
+
+function triggerQuantumResonance(orig_r, orig_c) {
+    let chain = 0;
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            if (bricks[r] && bricks[r][c] === 11) {
+                chain++;
+                bricks[r][c] = 0;
+                bricks_left--;
+                let bx = c * BR_W + BR_W / 2;
+                let by = r * BR_H + 35 + BR_H / 2;
+                spawnParticles(bx, by, '#aa00ff', 14);
+                spawnParticles(bx, by, '#00ffff', 10);
+                spawnShockwave(bx, by, '#aa00ff');
+                score += 35 * chain;
+                lifetime_bricks++;
+                quantum_cores += 2;
+            }
+        }
+    }
+    if (chain > 0) {
+        screenShake = Math.max(screenShake, 12);
+        playTone(520 + chain * 60, 'sine', 0.3);
     }
 }
 
 function getBrickColor(type, r, c) {
+    if (type === 11) return '#a028f0'; // Quantum Resonance
+    if (type === 10) return '#b4f0ff'; // Laser Reflector Prism
     if (type === 9) return '#7a8a99';
     if (type === 8) return '#505050';
     if (type === 7) return '#c8ffff';
@@ -347,7 +412,31 @@ function drawBrick(r, c, type, bx, by, hp) {
     ctx.fillRect(bx + 1, by + BR_H - 3, BR_W - 2, 2);
     ctx.fillRect(bx + BR_W - 3, by + 1, 2, BR_H - 2);
 
-    if (type === 9) {
+    if (type === 11) {
+        // Quantum Resonance Brick: pulsing core + diamond boundary
+        let pulse = (frame % 20 < 10) ? 1 : 0;
+        ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx + 5 - pulse, by + BR_H/2);
+        ctx.lineTo(bx + BR_W/2, by + 2 - pulse);
+        ctx.lineTo(bx + BR_W - 5 + pulse, by + BR_H/2);
+        ctx.lineTo(bx + BR_W/2, by + BR_H - 3 + pulse);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffc8ff';
+        ctx.fillRect(bx + BR_W/2 - 2, by + BR_H/2 - 2, 4, 4);
+    } else if (type === 10) {
+        // Laser Reflector Prism
+        ctx.strokeStyle = '#00c8ff'; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx + 3, by + BR_H - 3);
+        ctx.lineTo(bx + BR_W/2, by + 2);
+        ctx.lineTo(bx + BR_W - 3, by + BR_H - 3);
+        ctx.moveTo(bx + BR_W/2, by + 2);
+        ctx.lineTo(bx + BR_W/2, by + BR_H - 2);
+        ctx.stroke();
+    } else if (type === 9) {
         ctx.strokeStyle = '#d0d8e0'; ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(bx + 4, by + 3); ctx.lineTo(bx + BR_W - 4, by + BR_H - 3);
@@ -395,6 +484,8 @@ function triggerExplosion(r, c) {
                     spawnShockwave(bx, by, '#ffaa00');
                     screenShake = Math.max(screenShake, 14);
                     let isExp = (bricks[nr][nc] === 4);
+                    let isRef = (bricks[nr][nc] === 10);
+                    let isRes = (bricks[nr][nc] === 11);
                     bricks[nr][nc] = 0;
                     bricks_left--;
                     score += 15;
@@ -402,6 +493,13 @@ function triggerExplosion(r, c) {
                     plasma_shards += 1;
                     if (isExp && (nr !== r || nc !== c)) {
                         triggerExplosion(nr, nc);
+                    }
+                    if (isRef) {
+                        spawnLaser(bx, by, -6.0, -2.0, 2);
+                        spawnLaser(bx, by, 6.0, -2.0, 2);
+                    }
+                    if (isRes) {
+                        triggerQuantumResonance(nr, nc);
                     }
                 }
             }
@@ -414,8 +512,8 @@ function initLevel() {
     brick_hp = [];
     bricks_left = 0;
     power_active = 0;
-    dur_laser = 0; dur_fire = 0; dur_barrier = 0; dur_gravity = 0;
-    cd_laser = 0; cd_multi = 0; cd_fire = 0; cd_barrier = 0; cd_gravity = 0;
+    dur_laser = 0; dur_fire = 0; dur_barrier = 0; dur_gravity = 0; dur_satellite = 0;
+    cd_laser = 0; cd_multi = 0; cd_fire = 0; cd_barrier = 0; cd_gravity = 0; cd_satellite = 0;
     paddle_timer = 0; sticky_timer = 0;
     lasers = [];
     meteors = [];
@@ -495,12 +593,18 @@ function initLevel() {
             } else if (level === 4) {
                 if ((r + c) % 3 === 0) v = 4; else v = (r % 2 === 0) ? 2 : 1;
             } else if (level === 5) {
-                if (c === 0 || c === 9 || r === 0) v = 5; else if (r === 2 && (c === 4 || c === 5)) v = 6; else v = 2;
+                if (c === 0 || c === 9 || r === 0) v = 10; else if (r === 2 && (c === 4 || c === 5)) v = 11; else v = 2;
+            } else if (level === 8) {
+                if (c <= 2 || c >= 7) v = (r % 2 === 0) ? 10 : 2; else if (r === 1 && (c === 4 || c === 5)) v = 11;
+            } else if (level === 9) {
+                let pat = [1, 2, 4, 10, 11, 3];
+                v = pat[(r * COLS + c) % 6];
             } else if (level >= 6 && level <= 20) {
                 v = ((r + c + level) % 5) + 1;
                 if ((r === 0 || r === 5) && (c === 0 || c === 9)) v = 9;
+                if ((r === 1 || r === 3) && (c === 3 || c === 6)) v = (level % 2 === 0 ? 10 : 11);
             } else if (level >= 21 && level <= 40) {
-                v = (level % 2 === 0) ? ((r % 2 === 0) ? 8 : 4) : ((c % 2 === 0) ? 7 : 5);
+                v = (level % 2 === 0) ? ((r % 2 === 0) ? 11 : 10) : ((c % 2 === 0) ? 10 : 5);
             }
             bricks[r][c] = v;
             brick_hp[r][c] = (v === 8 ? 4 : 0);
@@ -517,11 +621,13 @@ function update() {
         if (dur_fire > 0) dur_fire--;
         if (dur_barrier > 0) dur_barrier--;
         if (dur_gravity > 0) dur_gravity--;
+        if (dur_satellite > 0) dur_satellite--;
         if (cd_laser > 0) cd_laser--;
         if (cd_multi > 0) cd_multi--;
         if (cd_fire > 0) cd_fire--;
         if (cd_barrier > 0) cd_barrier--;
         if (cd_gravity > 0) cd_gravity--;
+        if (cd_satellite > 0) cd_satellite--;
         if (paddle_timer > 0) { paddle_timer--; if (paddle_timer === 0) pad_w = (diff === 1 ? 45 : 65); }
 
         let moveSpeed = active_chronos ? 8 : 6;
@@ -534,17 +640,37 @@ function update() {
         last_pad_x = pad_x;
         if (pad_squash_timer > 0) pad_squash_timer--;
 
+        // Update Satellites
+        let satSpd = (dur_satellite > 0 || active_satellite_boost) ? 0.08 : 0.04;
+        let satR = (dur_satellite > 0) ? 55 : 42;
+        satellites[0].angle += satSpd;
+        satellites[1].angle = satellites[0].angle + Math.PI;
+        let pcx = pad_x + pad_w / 2;
+        let pcy = h - 40 + pad_h / 2;
+        for (let s of satellites) {
+            s.x = pcx + Math.cos(s.angle) * satR;
+            s.y = pcy + Math.sin(s.angle) * (satR * 0.45);
+        }
+
+        if (dur_satellite > 0 && dur_satellite % 14 === 0) {
+            for (let s of satellites) {
+                spawnLaser(s.x, s.y, 0, -8, 1);
+            }
+            playTone(700, 'square', 0.04);
+        }
+
         let laserRate = active_valkyrie ? 8 : 15;
         if (dur_laser > 0 && dur_laser % laserRate === 0) {
-            lasers.push({ x: pad_x + 5, y: h - 40, active: 1, type: active_valkyrie ? 1 : 0 });
-            lasers.push({ x: pad_x + pad_w - 5, y: h - 40, active: 1, type: active_valkyrie ? 1 : 0 });
+            spawnLaser(pad_x + 5, h - 40, 0, active_valkyrie ? -9 : -7, active_valkyrie ? 1 : 0);
+            spawnLaser(pad_x + pad_w - 5, h - 40, 0, active_valkyrie ? -9 : -7, active_valkyrie ? 1 : 0);
             playTone(600, 'square', 0.05);
         }
 
         for (let l of lasers) {
             if (!l.active) continue;
-            l.y -= (l.type === 1 ? 9 : 7);
-            if (l.y < 0) l.active = 0;
+            l.x += (l.vx || 0);
+            l.y += (l.vy || -7);
+            if (l.y < 0 || l.x < 0 || l.x > w) l.active = 0;
             else {
                 if (boss_active && l.x > boss_x && l.x < boss_x + boss_w && l.y > boss_y && l.y < boss_y + boss_h) {
                     boss_hp -= (l.type === 1 ? 2 : 1);
@@ -561,13 +687,20 @@ function update() {
                 let r = Math.floor((l.y - 35) / BR_H);
                 let c = Math.floor(l.x / BR_W);
                 if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
-                    if (bricks[r][c] && bricks[r][c] !== 9) {
+                    if (bricks[r] && bricks[r][c] && bricks[r][c] !== 9) {
                         l.active = 0;
                         let type = bricks[r][c];
                         spawnParticles(l.x, l.y, getBrickColor(type, r, c), 5);
                         plasma_shards++;
-                        if (type === 4) triggerExplosion(r, c);
-                        else {
+                        if (type === 10) {
+                            spawnLaser(c * BR_W + BR_W/2, r * BR_H + 35 + BR_H/2, -5.5, -2.5, 2);
+                            spawnLaser(c * BR_W + BR_W/2, r * BR_H + 35 + BR_H/2, 5.5, -2.5, 2);
+                            score += 20;
+                        } else if (type === 11) {
+                            triggerQuantumResonance(r, c);
+                        } else if (type === 4) {
+                            triggerExplosion(r, c);
+                        } else {
                             bricks[r][c] = 0; bricks_left--; score += 10; lifetime_bricks++;
                         }
                     }
@@ -599,6 +732,20 @@ function update() {
                     let force = (gw.mass * 0.08) / (dist * 0.15 + 1.0);
                     b.dx += (gdx / dist) * force;
                     b.dy += (gdy / dist) * force;
+                }
+            }
+
+            // Satellite collisions
+            for (let s of satellites) {
+                let bsx = (b.x + 4) - s.x;
+                let bsy = (b.y + 4) - s.y;
+                if (bsx * bsx + bsy * bsy < 144) {
+                    b.dy = -Math.abs(b.dy) * 1.15;
+                    b.dx += bsx * 0.3;
+                    spawnParticles(s.x, s.y, '#00ffcc', 8);
+                    spawnShockwave(s.x, s.y, '#00ffcc');
+                    score += 10;
+                    playTone(600, 'sine', 0.1);
                 }
             }
 
@@ -635,13 +782,26 @@ function update() {
             let r = Math.floor((b.y - 35) / BR_H);
             let c = Math.floor(b.x / BR_W);
             if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
-                let type = bricks[r][c];
+                let type = bricks[r] ? bricks[r][c] : 0;
                 if (type) {
                     let bx = c * BR_W + BR_W / 2;
                     let by = r * BR_H + 35 + BR_H / 2;
                     let chaosMult = 1 + Math.floor(balls.length / 3);
 
-                    if (type === 9) {
+                    if (type === 11 || active_resonance_catalyst) {
+                        triggerQuantumResonance(r, c);
+                        if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
+                    } else if (type === 10) {
+                        bricks[r][c] = 0; bricks_left--; score += 30 * chaosMult; lifetime_bricks++;
+                        quantum_cores++; plasma_shards++;
+                        spawnLaser(bx, by, -7, 0, 2);
+                        spawnLaser(bx, by, 7, 0, 2);
+                        spawnLaser(bx, by, 0, -7, 2);
+                        spawnLaser(bx, by, 0, 7, 2);
+                        spawnParticles(bx, by, '#00ffff', 14);
+                        spawnShockwave(bx, by, '#00ffff');
+                        if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
+                    } else if (type === 9) {
                         if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
                         else { bricks[r][c] = 0; bricks_left--; score += 50 * chaosMult; nano_alloys += 2; }
                     } else if (type === 4) {
@@ -691,6 +851,14 @@ function update() {
     document.getElementById('hi').innerText = high_score;
     document.getElementById('lv').innerText = lives;
     document.getElementById('mat').innerText = `${plasma_shards}/${quantum_cores}/${nano_alloys}`;
+
+    // Update skill bar UI classes
+    document.getElementById('btn-laser').className = 'skill-btn ' + (dur_laser > 0 ? 'active' : (cd_laser <= 0 ? 'ready' : ''));
+    document.getElementById('btn-multi').className = 'skill-btn ' + (cd_multi <= 0 ? 'ready' : '');
+    document.getElementById('btn-fire').className = 'skill-btn ' + (dur_fire > 0 ? 'active' : (cd_fire <= 0 ? 'ready' : ''));
+    document.getElementById('btn-barrier').className = 'skill-btn ' + (dur_barrier > 0 ? 'active' : (cd_barrier <= 0 ? 'ready' : ''));
+    document.getElementById('btn-grav').className = 'skill-btn ' + (dur_gravity > 0 ? 'active' : (cd_gravity <= 0 ? 'ready' : ''));
+    document.getElementById('btn-sat').className = 'skill-btn ' + (dur_satellite > 0 ? 'active' : (cd_satellite <= 0 ? 'ready' : ''));
 }
 
 function render() {
@@ -701,16 +869,16 @@ function render() {
 
     if (state === 0) {
         ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Segoe UI'; ctx.textAlign = 'center';
-        ctx.fillText("KBREAKOUT - LOOP 10", w/2, h/2 - 60);
+        ctx.fillText("KBREAKOUT - LOOP 11", w/2, h/2 - 60);
         ctx.fillStyle = '#00ffff'; ctx.font = '12px Segoe UI';
-        ctx.fillText("Multi-Ball Chaos & Gravity Wells", w/2, h/2 - 38);
+        ctx.fillText("Satellites, Reflectors & Quantum Resonance", w/2, h/2 - 38);
         ctx.fillStyle = '#ddd';
         ctx.fillText("Press ENTER for Classic Campaign", w/2, h/2 - 5);
         ctx.fillText("Press SPACE for Hard Campaign", w/2, h/2 + 18);
         ctx.fillStyle = '#ff66ff';
         ctx.fillText("Press C for MULTI-BALL CHAOS MODE", w/2, h/2 + 40);
         ctx.fillStyle = '#00ffcc';
-        ctx.fillText("Press O/F for CYBER-FORGE", w/2, h/2 + 62);
+        ctx.fillText("Press O/F for CYBER-FORGE LAB", w/2, h/2 + 62);
     } else if (state === 2) {
         ctx.fillStyle = '#ff3366'; ctx.font = 'bold 20px Segoe UI'; ctx.textAlign = 'center';
         ctx.fillText("GAME OVER", w/2, h/2 - 10);
@@ -740,11 +908,26 @@ function render() {
             ctx.fill();
         }
 
+        // Satellites
+        for (let s of satellites) {
+            ctx.fillStyle = dur_satellite > 0 ? '#ff66ff' : '#00ffcc';
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(s.x - 6, s.y); ctx.lineTo(s.x + 6, s.y);
+            ctx.moveTo(s.x, s.y - 6); ctx.lineTo(s.x, s.y + 6);
+            ctx.stroke();
+        }
+
         ctx.fillStyle = (dur_laser > 0 ? '#00cccc' : (chaos_mode ? '#cc44ff' : '#00ffff'));
         ctx.fillRect(pad_x, h - 40, pad_w, pad_h);
 
         ctx.fillStyle = '#ff00ff';
         for (let l of lasers) {
+            ctx.fillStyle = l.type === 1 ? '#ff66ff' : (l.type === 2 ? '#00ffcc' : '#00ffff');
             ctx.fillRect(l.x - 2, l.y - 5, 4, 10);
         }
 
@@ -797,8 +980,9 @@ window.addEventListener('keydown', e => {
     if (e.code === 'KeyF') useSkill('fire');
     if (e.code === 'KeyB') useSkill('barrier');
     if (e.code === 'KeyG') useSkill('grav');
-    if (e.code === 'KeyO') toggleForge();
-    if (e.code >= 'Digit1' && e.code <= 'Digit5') craftForge(parseInt(e.key));
+    if (e.code === 'KeyS') useSkill('sat');
+    if (e.code === 'KeyO' || e.code === 'KeyF') toggleForge();
+    if (e.code >= 'Digit1' && e.code <= 'Digit7') craftForge(parseInt(e.key));
     if (e.code === 'Escape' && forge_open) toggleForge();
 });
 

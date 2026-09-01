@@ -3,6 +3,14 @@
 
 int _fltused = 1;
 
+void* memset(void* dest, int c, size_t count) {
+    char* bytes = (char*)dest;
+    while (count--) {
+        *bytes++ = (char)c;
+    }
+    return dest;
+}
+
 #define W 400
 #define H 450
 #define TIMER_ID 1
@@ -27,15 +35,16 @@ typedef struct {
 } Ball;
 Ball balls[MAX_BALLS];
 
-#define MAX_LASERS 16
+#define MAX_LASERS 32
 typedef struct {
     float x, y;
+    float vx, vy;
     int active;
-    int type;
+    int type; // 0=normal, 1=valkyrie, 2=refracted prism laser
 } Laser;
 Laser lasers[MAX_LASERS];
 
-#define MAX_PARTICLES 160
+#define MAX_PARTICLES 180
 typedef struct {
     float x, y;
     float vx, vy;
@@ -45,7 +54,7 @@ typedef struct {
 } Particle;
 Particle particles[MAX_PARTICLES];
 
-#define MAX_SHOCKWAVES 12
+#define MAX_SHOCKWAVES 16
 typedef struct {
     float x, y;
     float r;
@@ -72,6 +81,18 @@ typedef struct {
     float spin;
 } GravityWell;
 GravityWell gravity_wells[MAX_GRAVITY_WELLS];
+
+// Orbital Satellite Barriers System
+#define MAX_SATELLITES 2
+typedef struct {
+    float angle;
+    float dist;
+    float x, y;
+    int active;
+} Satellite;
+Satellite satellites[MAX_SATELLITES];
+int sat_active = 1;
+int dur_satellite = 0, cd_satellite = 0;
 
 // Game State
 int pad_x = W / 2 - 30;
@@ -103,13 +124,17 @@ int forge_chronos = 0;
 int forge_valkyrie = 0;
 int forge_aegis = 0;
 int forge_singularity = 0;
+int forge_satellite = 0;
+int forge_resonance = 0;
 
 int active_supernova = 0;
 int active_chronos = 0;
 int active_valkyrie = 0;
 int aegis_layers = 0;
 int active_singularity = 0;
-char forge_msg[64] = "Select recipe 1-5 to synthesize.";
+int active_satellite_boost = 0;
+int active_resonance_catalyst = 0;
+char forge_msg[64] = "Select recipe 1-7 to synthesize.";
 
 // Powerup Drop
 int power_active = 0;
@@ -228,6 +253,20 @@ void SpawnGravityWell(float x, float y, float mass, int type) {
     }
 }
 
+void SpawnLaser(float x, float y, float vx, float vy, int type) {
+    for (int i = 0; i < MAX_LASERS; i++) {
+        if (!lasers[i].active) {
+            lasers[i].active = 1;
+            lasers[i].x = x;
+            lasers[i].y = y;
+            lasers[i].vx = vx;
+            lasers[i].vy = vy;
+            lasers[i].type = type;
+            break;
+        }
+    }
+}
+
 void UpdateParticles() {
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
@@ -259,6 +298,8 @@ void DrawBevelBox(HDC hdc, int bx, int by, int bw, int bh, const char* txt, HPEN
 }
 
 COLORREF GetBrickColor(int type, int r, int c) {
+    if (type == 11) return RGB(160, 40, 240); // Quantum Resonance
+    if (type == 10) return RGB(180, 240, 255); // Laser Reflector Prism
     if (type == 9) return RGB(120, 135, 150);
     if (type == 8) return RGB(80, 80, 80);
     if (type == 7) return RGB(200, 255, 255);
@@ -324,7 +365,35 @@ void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by, int hp) {
         }
     }
 
-    if (type == 9) {
+    if (type == 11) {
+        // Quantum Resonance Brick: pulsing core + concentric harmonic rings
+        int pulse = (frame_counter % 20 < 10) ? 1 : 0;
+        HPEN qPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+        HGDIOBJ oldQ = SelectObject(hdc, qPen);
+        MoveToEx(hdc, bx + 5 - pulse, by + BR_H / 2, NULL);
+        LineTo(hdc, bx + BR_W / 2, by + 2 - pulse);
+        LineTo(hdc, bx + BR_W - 5 + pulse, by + BR_H / 2);
+        LineTo(hdc, bx + BR_W / 2, by + BR_H - 3 + pulse);
+        LineTo(hdc, bx + 5 - pulse, by + BR_H / 2);
+        
+        HBRUSH qCore = CreateSolidBrush(RGB(255, 200, 255));
+        RECT qr = { bx + BR_W/2 - 2, by + BR_H/2 - 2, bx + BR_W/2 + 2, by + BR_H/2 + 2 };
+        FillRect(hdc, &qr, qCore);
+        DeleteObject(qCore);
+        SelectObject(hdc, oldQ);
+        DeleteObject(qPen);
+    } else if (type == 10) {
+        // Laser Reflector Prism: Refraction prism facets
+        HPEN refPen = CreatePen(PS_SOLID, 1, RGB(0, 200, 255));
+        HGDIOBJ oldR = SelectObject(hdc, refPen);
+        MoveToEx(hdc, bx + 3, by + BR_H - 3, NULL);
+        LineTo(hdc, bx + BR_W / 2, by + 2);
+        LineTo(hdc, bx + BR_W - 3, by + BR_H - 3);
+        MoveToEx(hdc, bx + BR_W / 2, by + 2, NULL);
+        LineTo(hdc, bx + BR_W / 2, by + BR_H - 2);
+        SelectObject(hdc, oldR);
+        DeleteObject(refPen);
+    } else if (type == 9) {
         HPEN steelPen = CreatePen(PS_SOLID, 1, RGB(210, 220, 230));
         SelectObject(hdc, steelPen);
         MoveToEx(hdc, bx + 4, by + 3, NULL); LineTo(hdc, bx + BR_W - 4, by + BR_H - 3);
@@ -398,6 +467,8 @@ void TriggerExplosion(int r, int c) {
                     SpawnShockwave((float)bx, (float)by, RGB(255, 100, 0));
                     if (screen_shake < 14) screen_shake = 14;
                     int isExp = (bricks[nr][nc] == 4);
+                    int isRef = (bricks[nr][nc] == 10);
+                    int isRes = (bricks[nr][nc] == 11);
                     bricks[nr][nc] = 0;
                     bricks_left--;
                     score += 15;
@@ -406,9 +477,38 @@ void TriggerExplosion(int r, int c) {
                     if (isExp && (nr != r || nc != c)) {
                         TriggerExplosion(nr, nc);
                     }
+                    if (isRef) {
+                        SpawnLaser((float)bx, (float)by, -6.0f, -2.0f, 2);
+                        SpawnLaser((float)bx, (float)by, 6.0f, -2.0f, 2);
+                    }
                 }
             }
         }
+    }
+}
+
+void TriggerQuantumResonance(int orig_r, int orig_c) {
+    int chain = 0;
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            if (bricks[r][c] == 11) {
+                chain++;
+                bricks[r][c] = 0;
+                bricks_left--;
+                int bx = c * BR_W + BR_W / 2;
+                int by = r * BR_H + 35 + BR_H / 2;
+                SpawnParticles((float)bx, (float)by, RGB(180, 50, 255), 14);
+                SpawnParticles((float)bx, (float)by, RGB(0, 255, 255), 10);
+                SpawnShockwave((float)bx, (float)by, RGB(180, 50, 255));
+                score += 35 * chain;
+                lifetime_bricks++;
+                quantum_cores += 2;
+            }
+        }
+    }
+    if (chain > 0) {
+        if (screen_shake < 12) screen_shake = 12;
+        MessageBeep(MB_ICONASTERISK);
     }
 }
 
@@ -416,7 +516,8 @@ void LoadHighScore() {
     HANDLE hFile = CreateFileA("kbreakout_hi.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD read;
-        int buf[10] = {0};
+        int buf[12];
+        for (int k = 0; k < 12; k++) buf[k] = 0;
         if (ReadFile(hFile, buf, sizeof(buf), &read, NULL)) {
             high_score = buf[0];
             lifetime_bricks = buf[1];
@@ -428,6 +529,8 @@ void LoadHighScore() {
             forge_valkyrie = buf[7];
             forge_aegis = buf[8];
             forge_singularity = buf[9];
+            forge_satellite = buf[10];
+            forge_resonance = buf[11];
         }
         CloseHandle(hFile);
     }
@@ -438,10 +541,11 @@ void SaveHighScore() {
     HANDLE hFile = CreateFileA("kbreakout_hi.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written;
-        int buf[10] = {
+        int buf[12] = {
             high_score, lifetime_bricks,
             plasma_shards, quantum_cores, nano_alloys,
-            forge_supernova, forge_chronos, forge_valkyrie, forge_aegis, forge_singularity
+            forge_supernova, forge_chronos, forge_valkyrie, forge_aegis, forge_singularity,
+            forge_satellite, forge_resonance
         };
         WriteFile(hFile, buf, sizeof(buf), &written, NULL);
         CloseHandle(hFile);
@@ -491,6 +595,10 @@ void UseSkill(char skill) {
         dur_gravity = 400; cd_gravity = 800;
         SpawnGravityWell((float)(W / 2), 160.0f, 35.0f, 0);
         MessageBeep(MB_ICONASTERISK);
+    } else if ((skill == 'S' || skill == 's') && cd_satellite <= 0) {
+        dur_satellite = 480; cd_satellite = 840;
+        SpawnShockwave((float)(pad_x + pad_w / 2), (float)(H - 40), RGB(0, 255, 200));
+        MessageBeep(MB_OK);
     }
 }
 
@@ -551,6 +659,29 @@ void CraftForge(int recipe) {
             wsprintfA(forge_msg, "Need 20 Plasma + 15 Quantum + 15 Alloy!");
             MessageBeep(0xFFFFFFFF);
         }
+    } else if (recipe == 6) {
+        if (plasma_shards >= 12 && quantum_cores >= 12 && nano_alloys >= 12) {
+            plasma_shards -= 12; quantum_cores -= 12; nano_alloys -= 12;
+            forge_satellite++;
+            active_satellite_boost = 1;
+            dur_satellite = 700;
+            wsprintfA(forge_msg, "Synthesized ORBITAL SATELLITE ARRAY!");
+            MessageBeep(MB_OK);
+        } else {
+            wsprintfA(forge_msg, "Need 12 Pls + 12 Qtm + 12 Aly!");
+            MessageBeep(0xFFFFFFFF);
+        }
+    } else if (recipe == 7) {
+        if (quantum_cores >= 15 && nano_alloys >= 10) {
+            quantum_cores -= 15; nano_alloys -= 10;
+            forge_resonance++;
+            active_resonance_catalyst = 1;
+            wsprintfA(forge_msg, "Synthesized RESONANCE CATALYST!");
+            MessageBeep(MB_OK);
+        } else {
+            wsprintfA(forge_msg, "Need 15 Quantum + 10 Alloy!");
+            MessageBeep(0xFFFFFFFF);
+        }
     }
     SaveHighScore();
 }
@@ -558,8 +689,8 @@ void CraftForge(int recipe) {
 void InitLevel() {
     bricks_left = 0;
     power_active = 0;
-    dur_laser = 0; dur_fire = 0; dur_barrier = 0; dur_gravity = 0;
-    cd_laser = 0; cd_multi = 0; cd_fire = 0; cd_barrier = 0; cd_gravity = 0;
+    dur_laser = 0; dur_fire = 0; dur_barrier = 0; dur_gravity = 0; dur_satellite = 0;
+    cd_laser = 0; cd_multi = 0; cd_fire = 0; cd_barrier = 0; cd_gravity = 0; cd_satellite = 0;
     paddle_timer = 0; sticky_timer = 0;
     ufo_bullet_active = 0;
 
@@ -569,6 +700,9 @@ void InitLevel() {
     for (int i = 0; i < MAX_BOSS_BULLETS; i++) boss_bullets[i].active = 0;
     for (int i = 0; i < MAX_METEORS; i++) meteors[i].active = 0;
     for (int i = 0; i < MAX_GRAVITY_WELLS; i++) gravity_wells[i].active = 0;
+
+    satellites[0].active = 1; satellites[0].angle = 0.0f; satellites[0].dist = 42.0f;
+    satellites[1].active = 1; satellites[1].angle = 3.14159f; satellites[1].dist = 42.0f;
 
     ufo_active = 0;
     ufo_timer = 200;
@@ -636,37 +770,37 @@ void InitLevel() {
                 } else if (level == 4) {
                     if ((r + c) % 3 == 0) v = 4; else v = (r % 2 == 0) ? 2 : 1;
                 } else if (level == 5) {
-                    if (c == 0 || c == 9 || r == 0) v = 5; else if (r == 2 && (c == 4 || c == 5)) v = 6; else v = 2;
+                    if (c == 0 || c == 9 || r == 0) v = 10; else if (r == 2 && (c == 4 || c == 5)) v = 11; else v = 2;
                 } else if (level == 6) {
                     if ((r == 1 && (c == 2 || c == 7)) || (r == 2 && c >= 2 && c <= 7) || (r == 3 && (c == 1 || c == 4 || c == 5 || c == 8))) v = 3;
                     else if (r == 2 && (c == 4 || c == 5)) v = 4;
                 } else if (level == 7) {
                     if (r == 2 && (c != 2 && c != 7)) v = 9; else if (r < 2) v = 3; else v = 4;
                 } else if (level == 8) {
-                    if (c <= 2 || c >= 7) v = (r % 2 == 0) ? 3 : 2; else if (r == 1 && (c == 4 || c == 5)) v = 5;
+                    if (c <= 2 || c >= 7) v = (r % 2 == 0) ? 10 : 2; else if (r == 1 && (c == 4 || c == 5)) v = 11;
                 } else if (level == 9) {
-                    int pat[6] = {1, 2, 4, 5, 6, 3};
+                    int pat[6] = {1, 2, 4, 10, 11, 3};
                     v = pat[(r * COLS + c) % 6];
                 } else if (level == 10) {
                     if (r >= 2) v = (r == 2) ? 3 : 2;
                 } else if (level == 11) {
-                    if ((r == 0 && c < 8) || (c == 8 && r < 4) || (r == 4 && c > 1) || (c == 1 && r > 1)) v = (r % 2 == 0) ? 3 : 5; else v = 1;
+                    if ((r == 0 && c < 8) || (c == 8 && r < 4) || (r == 4 && c > 1) || (c == 1 && r > 1)) v = (r % 2 == 0) ? 11 : 10; else v = 1;
                 } else if (level == 12) {
                     if (r == 0 && c % 2 == 0) v = 9; else if (r == 1) v = 3; else v = 4;
                 } else if (level == 13) {
-                    if (r == 1) v = 3; else if (r == 2) v = 4; else if (r == 3) v = 6; else v = 1;
+                    if (r == 1) v = 10; else if (r == 2) v = 4; else if (r == 3) v = 11; else v = 1;
                 } else if (level == 14) {
-                    if (MyAbs(r - 2) + MyAbs(c - 4) <= 3) v = (r == 2) ? 4 : 3;
+                    if (MyAbs(r - 2) + MyAbs(c - 4) <= 3) v = (r == 2) ? 11 : 10;
                 } else if (level == 15) {
                     if (r >= 1 && r <= 2 && c >= 4 && c <= 5) v = 4; else v = 3;
                 } else if (level == 16) {
-                    if (c == 2 || c == 7) v = 5; else v = (r % 2 == 0) ? 3 : 2;
+                    if (c == 2 || c == 7) v = 11; else v = (r % 2 == 0) ? 10 : 2;
                 } else if (level == 17) {
-                    if (r == 0) v = 9; else if (r <= 2) v = 3; else v = 4;
+                    if (r == 0) v = 9; else if (r <= 2) v = 10; else v = 11;
                 } else if (level == 18) {
                     if ((r == 1 || r == 3) && (c == 2 || c == 7)) v = 5; else v = (r % 2 == 0) ? 4 : 3;
                 } else if (level == 19) {
-                    if (r == 1) v = 9; else if (r == 2) v = 3; else v = 4;
+                    if (r == 1) v = 9; else if (r == 2) v = 11; else v = 10;
                 } else if (level == 20) {
                     if (r >= 3) v = (r == 3) ? 3 : 2;
                 }
@@ -697,6 +831,8 @@ void InitLevel() {
             for (int c = 0; c < COLS; c++) {
                 char ch = custom_stages[idx][r][c];
                 int v = (ch >= '0' && ch <= '9') ? (ch - '0') : 0;
+                if (idx % 2 == 0 && (r == 0 || r == 3) && (c == 4 || c == 5) && v != 0) v = 11;
+                if (idx % 2 == 1 && (r == 1 || r == 2) && (c == 2 || c == 7) && v != 0) v = 10;
                 bricks[r][c] = v;
                 brick_hp[r][c] = (v == 8) ? 4 : 0;
                 if (v != 0 && v != 9) bricks_left++;
@@ -709,12 +845,12 @@ void InitLevel() {
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
                 int v = 0;
-                if (level == 31) v = (r % 2 == 0) ? 8 : 4;
-                else if (level == 32) v = (c % 2 == 0) ? 7 : 5;
-                else if (level == 34) v = (r == c || r == COLS - 1 - c) ? 9 : 6;
-                else if (level == 35) v = (r < 3) ? 8 : 2;
-                else if (level == 37) v = ((r + c) % 3 == 0) ? 4 : 8;
-                else if (level == 38) v = 7;
+                if (level == 31) v = (r % 2 == 0) ? 11 : 10;
+                else if (level == 32) v = (c % 2 == 0) ? 10 : 5;
+                else if (level == 34) v = (r == c || r == COLS - 1 - c) ? 9 : 11;
+                else if (level == 35) v = (r < 3) ? 10 : 11;
+                else if (level == 37) v = ((r + c) % 3 == 0) ? 11 : 8;
+                else if (level == 38) v = (c % 3 == 0) ? 10 : 7;
                 bricks[r][c] = v;
                 brick_hp[r][c] = (v == 8) ? 4 : 0;
                 if (v != 0 && v != 9) bricks_left++;
@@ -747,16 +883,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (y >= 35 && y < 35 + ROWS * BR_H && x >= 0 && x < W) {
                     int r = (y - 35) / BR_H;
                     int c = x / BR_W;
-                    bricks[r][c] = (bricks[r][c] + 1) % 10;
+                    bricks[r][c] = (bricks[r][c] + 1) % 12;
                     brick_hp[r][c] = (bricks[r][c] == 8) ? 4 : 0;
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (state == 5) {
-                if (y >= 70 && y <= 95) CraftForge(1);
-                else if (y >= 100 && y <= 125) CraftForge(2);
-                else if (y >= 130 && y <= 155) CraftForge(3);
-                else if (y >= 160 && y <= 185) CraftForge(4);
-                else if (y >= 190 && y <= 215) CraftForge(5);
+                if (y >= 55 && y <= 75) CraftForge(1);
+                else if (y >= 78 && y <= 98) CraftForge(2);
+                else if (y >= 101 && y <= 121) CraftForge(3);
+                else if (y >= 124 && y <= 144) CraftForge(4);
+                else if (y >= 147 && y <= 167) CraftForge(5);
+                else if (y >= 170 && y <= 190) CraftForge(6);
+                else if (y >= 193 && y <= 213) CraftForge(7);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
@@ -768,10 +906,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == 'F' || wParam == 'f') UseSkill('F');
                 if (wParam == 'B' || wParam == 'b') UseSkill('B');
                 if (wParam == 'G' || wParam == 'g') UseSkill('G');
+                if (wParam == 'S' || wParam == 's') UseSkill('S');
                 if (wParam == 'O' || wParam == 'o') { state = 5; }
-                if (wParam >= '1' && wParam <= '5') CraftForge((int)(wParam - '0'));
+                if (wParam >= '1' && wParam <= '7') CraftForge((int)(wParam - '0'));
             } else if (state == 5) {
-                if (wParam >= '1' && wParam <= '5') CraftForge((int)(wParam - '0'));
+                if (wParam >= '1' && wParam <= '7') CraftForge((int)(wParam - '0'));
                 if (wParam == VK_ESCAPE || wParam == 'O' || wParam == 'o' || wParam == VK_RETURN) state = 1;
             }
             break;
@@ -782,11 +921,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (dur_fire > 0) dur_fire--;
                 if (dur_barrier > 0) dur_barrier--;
                 if (dur_gravity > 0) dur_gravity--;
+                if (dur_satellite > 0) dur_satellite--;
                 if (cd_laser > 0) cd_laser--;
                 if (cd_multi > 0) cd_multi--;
                 if (cd_fire > 0) cd_fire--;
                 if (cd_barrier > 0) cd_barrier--;
                 if (cd_gravity > 0) cd_gravity--;
+                if (cd_satellite > 0) cd_satellite--;
                 if (paddle_timer > 0) { paddle_timer--; if (paddle_timer == 0) pad_w = (diff == 1) ? 45 : 65; }
 
                 int move_speed = active_chronos ? 8 : 6;
@@ -801,32 +942,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 UpdateParticles();
 
+                // Update Orbital Satellites
+                float sat_spd = (dur_satellite > 0 || active_satellite_boost) ? 0.08f : 0.04f;
+                float sat_r = (dur_satellite > 0) ? 55.0f : 42.0f;
+                satellites[0].angle += sat_spd;
+                satellites[1].angle = satellites[0].angle + 3.14159f;
+                int pcx = pad_x + pad_w / 2;
+                int pcy = H - 40 + pad_h / 2;
+                for (int s = 0; s < MAX_SATELLITES; s++) {
+                    satellites[s].x = (float)pcx + MyCos(satellites[s].angle) * sat_r;
+                    satellites[s].y = (float)pcy + MySin(satellites[s].angle) * (sat_r * 0.45f);
+                }
+
+                // Satellite laser fire during Satellite Surge
+                if (dur_satellite > 0 && dur_satellite % 14 == 0) {
+                    for (int s = 0; s < MAX_SATELLITES; s++) {
+                        SpawnLaser(satellites[s].x, satellites[s].y, 0.0f, -8.0f, 1);
+                    }
+                }
+
                 int laser_rate = active_valkyrie ? 8 : 15;
                 if (dur_laser > 0 && dur_laser % laser_rate == 0) {
-                    for (int i = 0; i < MAX_LASERS; i++) {
-                        if (!lasers[i].active) {
-                            lasers[i].active = 1;
-                            lasers[i].x = (float)(pad_x + 5);
-                            lasers[i].y = (float)(H - 40);
-                            lasers[i].type = active_valkyrie ? 1 : 0;
-                            break;
-                        }
-                    }
-                    for (int i = 0; i < MAX_LASERS; i++) {
-                        if (!lasers[i].active) {
-                            lasers[i].active = 1;
-                            lasers[i].x = (float)(pad_x + pad_w - 5);
-                            lasers[i].y = (float)(H - 40);
-                            lasers[i].type = active_valkyrie ? 1 : 0;
-                            break;
-                        }
-                    }
+                    SpawnLaser((float)(pad_x + 5), (float)(H - 40), 0.0f, active_valkyrie ? -9.0f : -7.0f, active_valkyrie ? 1 : 0);
+                    SpawnLaser((float)(pad_x + pad_w - 5), (float)(H - 40), 0.0f, active_valkyrie ? -9.0f : -7.0f, active_valkyrie ? 1 : 0);
                 }
 
                 for (int i = 0; i < MAX_LASERS; i++) {
                     if (lasers[i].active) {
-                        lasers[i].y -= (lasers[i].type == 1 ? 9.0f : 7.0f);
-                        if (lasers[i].y < 0) lasers[i].active = 0;
+                        lasers[i].x += lasers[i].vx;
+                        lasers[i].y += lasers[i].vy;
+                        if (lasers[i].y < 0 || lasers[i].x < 0 || lasers[i].x > W) lasers[i].active = 0;
                         else {
                             if (boss_active && lasers[i].x > boss_x && lasers[i].x < boss_x + boss_w &&
                                 lasers[i].y > boss_y && lasers[i].y < boss_y + boss_h) {
@@ -850,19 +995,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int c = (int)lasers[i].x / BR_W;
                             if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
                                 if (bricks[r][c] != 0 && bricks[r][c] != 9) {
-                                    lasers[i].active = 0;
                                     int type = bricks[r][c];
                                     SpawnParticles(lasers[i].x, lasers[i].y, GetBrickColor(type, r, c), 6);
                                     plasma_shards += 1;
-                                    if (type == 4) TriggerExplosion(r, c);
-                                    else if (type == 7) { bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++; }
-                                    else if (type == 8) {
+                                    
+                                    if (type == 10) { // Laser Reflector Prism! Splits laser
+                                        lasers[i].active = 0;
+                                        SpawnLaser((float)(c * BR_W + BR_W/2), (float)(r * BR_H + 35 + BR_H/2), -5.5f, -2.5f, 2);
+                                        SpawnLaser((float)(c * BR_W + BR_W/2), (float)(r * BR_H + 35 + BR_H/2), 5.5f, -2.5f, 2);
+                                        SpawnParticles(lasers[i].x, lasers[i].y, RGB(0, 255, 255), 10);
+                                        score += 20;
+                                    } else if (type == 11) { // Quantum Resonance
+                                        lasers[i].active = 0;
+                                        TriggerQuantumResonance(r, c);
+                                    } else if (type == 4) {
+                                        lasers[i].active = 0;
+                                        TriggerExplosion(r, c);
+                                    } else if (type == 7) {
+                                        lasers[i].active = 0;
+                                        bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++;
+                                    } else if (type == 8) {
+                                        lasers[i].active = 0;
                                         brick_hp[r][c] -= (lasers[i].type == 1 ? 2 : 1);
                                         if (brick_hp[r][c] <= 0) { bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; nano_alloys += 2; }
                                         else { score += 5; }
+                                    } else if (type > 1 && type != 6) {
+                                        lasers[i].active = 0;
+                                        bricks[r][c]--; score += 5;
+                                    } else {
+                                        lasers[i].active = 0;
+                                        bricks[r][c] = 0; bricks_left--; score += 10; lifetime_bricks++;
                                     }
-                                    else if (type > 1 && type != 6) { bricks[r][c]--; score += 5; }
-                                    else { bricks[r][c] = 0; bricks_left--; score += 10; lifetime_bricks++; }
                                 }
                             }
                         }
@@ -896,7 +1059,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 if (ufo_bullet_active) {
                     ufo_bullet_y += 3.5f;
-                    if (ufo_bullet_y > H - 40 && ufo_bullet_y < H - 30 && ufo_bullet_x > pad_x && ufo_bullet_x < pad_x + pad_w) {
+                    // Check collision with orbital satellites
+                    for (int s = 0; s < MAX_SATELLITES; s++) {
+                        float sdx = ufo_bullet_x - satellites[s].x;
+                        float sdy = ufo_bullet_y - satellites[s].y;
+                        if (sdx * sdx + sdy * sdy < 144.0f) {
+                            ufo_bullet_active = 0;
+                            SpawnParticles(satellites[s].x, satellites[s].y, RGB(0, 255, 200), 8);
+                            SpawnShockwave(satellites[s].x, satellites[s].y, RGB(0, 255, 200));
+                            break;
+                        }
+                    }
+                    if (ufo_bullet_active && ufo_bullet_y > H - 40 && ufo_bullet_y < H - 30 && ufo_bullet_x > pad_x && ufo_bullet_x < pad_x + pad_w) {
                         ufo_bullet_active = 0;
                         SpawnParticles(ufo_bullet_x, ufo_bullet_y, RGB(255, 0, 255), 10);
                         if (score > 25) score -= 25;
@@ -925,7 +1099,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
                     if (boss_bullets[i].active) {
                         boss_bullets[i].y += 3.0f;
-                        if (boss_bullets[i].y > H - 40 && boss_bullets[i].y < H - 30 &&
+                        // Check satellite interception
+                        for (int s = 0; s < MAX_SATELLITES; s++) {
+                            float sdx = boss_bullets[i].x - satellites[s].x;
+                            float sdy = boss_bullets[i].y - satellites[s].y;
+                            if (sdx * sdx + sdy * sdy < 144.0f) {
+                                boss_bullets[i].active = 0;
+                                SpawnParticles(satellites[s].x, satellites[s].y, RGB(0, 255, 200), 8);
+                                break;
+                            }
+                        }
+                        if (boss_bullets[i].active && boss_bullets[i].y > H - 40 && boss_bullets[i].y < H - 30 &&
                             boss_bullets[i].x > pad_x && boss_bullets[i].x < pad_x + pad_w) {
                             boss_bullets[i].active = 0;
                             SpawnParticles(boss_bullets[i].x, boss_bullets[i].y, RGB(255, 0, 85), 8);
@@ -953,6 +1137,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         else if (power_type == 6) { dur_barrier = 600; }
                         else if (power_type == 7) { UseSkill('M'); }
                         else if (power_type == 8) { UseSkill('G'); }
+                        else if (power_type == 9) { UseSkill('S'); }
                     }
                     if (power_y > H) power_active = 0;
                 }
@@ -971,7 +1156,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for (int i = 0; i < MAX_METEORS; i++) {
                         if (meteors[i].active) {
                             meteors[i].y += 3.5f;
-                            if (meteors[i].y > H - 40 && meteors[i].y < H - 30 && meteors[i].x > pad_x && meteors[i].x < pad_x + pad_w) {
+                            // Check satellite interception
+                            for (int s = 0; s < MAX_SATELLITES; s++) {
+                                float sdx = meteors[i].x - satellites[s].x;
+                                float sdy = meteors[i].y - satellites[s].y;
+                                if (sdx * sdx + sdy * sdy < 196.0f) {
+                                    meteors[i].active = 0;
+                                    SpawnParticles(satellites[s].x, satellites[s].y, RGB(255, 150, 50), 12);
+                                    SpawnShockwave(satellites[s].x, satellites[s].y, RGB(255, 150, 50));
+                                    break;
+                                }
+                            }
+                            if (meteors[i].active && meteors[i].y > H - 40 && meteors[i].y < H - 30 && meteors[i].x > pad_x && meteors[i].x < pad_x + pad_w) {
                                 meteors[i].active = 0;
                                 sticky_timer = 0;
                                 pad_w = (diff == 1) ? 30 : 45;
@@ -1019,6 +1215,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
+                    // Orbital Satellite Collision Check
+                    for (int s = 0; s < MAX_SATELLITES; s++) {
+                        float bsx = (balls[i].x + 4) - satellites[s].x;
+                        float bsy = (balls[i].y + 4) - satellites[s].y;
+                        if (bsx * bsx + bsy * bsy < 144.0f) {
+                            balls[i].dy = -MyAbsF(balls[i].dy) * 1.15f;
+                            balls[i].dx += bsx * 0.3f;
+                            SpawnParticles(satellites[s].x, satellites[s].y, RGB(0, 255, 200), 8);
+                            SpawnShockwave(satellites[s].x, satellites[s].y, RGB(0, 255, 200));
+                            score += 10;
+                            MessageBeep(0xFFFFFFFF);
+                        }
+                    }
+
                     float max_spd = 9.0f;
                     if (balls[i].dx > max_spd) balls[i].dx = max_spd;
                     if (balls[i].dx < -max_spd) balls[i].dx = -max_spd;
@@ -1057,7 +1267,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         plasma_shards += 3;
                         SpawnParticles(ufo_x + 15, (float)(ufo_y + 6), RGB(255, 0, 255), 15);
                         MessageBeep(0xFFFFFFFF);
-                        power_active = 1; power_type = (MyRand() % 8) + 1; power_x = ufo_x + 15; power_y = (float)ufo_y;
+                        power_active = 1; power_type = (MyRand() % 9) + 1; power_x = ufo_x + 15; power_y = (float)ufo_y;
                     }
 
                     if (boss_active && balls[i].x + 8 > boss_x && balls[i].x < boss_x + boss_w &&
@@ -1105,7 +1315,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int by = r * BR_H + 35 + BR_H / 2;
                             int chaos_mult = 1 + (active_balls_count / 3);
 
-                            if (type == 9) {
+                            if (type == 11 || active_resonance_catalyst) { // Quantum Resonance
+                                TriggerQuantumResonance(r, c);
+                                if (dur_fire <= 0 && !active_supernova) balls[i].dy = -balls[i].dy;
+                            } else if (type == 10) { // Laser Reflector Prism
+                                bricks[r][c] = 0; bricks_left--; score += 30 * chaos_mult; lifetime_bricks++;
+                                quantum_cores += 1; plasma_shards += 1;
+                                SpawnLaser((float)bx, (float)by, -7.0f, 0.0f, 2);
+                                SpawnLaser((float)bx, (float)by, 7.0f, 0.0f, 2);
+                                SpawnLaser((float)bx, (float)by, 0.0f, -7.0f, 2);
+                                SpawnLaser((float)bx, (float)by, 0.0f, 7.0f, 2);
+                                SpawnParticles((float)bx, (float)by, RGB(0, 255, 255), 14);
+                                SpawnShockwave((float)bx, (float)by, RGB(0, 255, 255));
+                                if (dur_fire <= 0 && !active_supernova) balls[i].dy = -balls[i].dy;
+                                MessageBeep(0xFFFFFFFF);
+                            } else if (type == 9) {
                                 if (dur_fire <= 0 && !active_supernova) balls[i].dy = -balls[i].dy;
                                 else { bricks[r][c] = 0; bricks_left--; score += 50 * chaos_mult; nano_alloys += 2; }
                                 SpawnParticles(balls[i].x, balls[i].y, RGB(200, 210, 220), 4);
@@ -1128,7 +1352,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 bricks[r][c] = 0; bricks_left--; score += 25 * chaos_mult; lifetime_bricks++; quantum_cores += 1;
                                 SpawnParticles((float)bx, (float)by, RGB(0, 255, 204), 10);
                                 MessageBeep(0xFFFFFFFF);
-                                power_active = 1; power_type = (MyRand() % 8) + 1;
+                                power_active = 1; power_type = (MyRand() % 9) + 1;
                                 power_x = (float)bx; power_y = (float)by;
                             } else if (type == 7) {
                                 bricks[r][c] = 0; bricks_left--; score += 30 * chaos_mult; lifetime_bricks++; plasma_shards += 1;
@@ -1166,7 +1390,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                                 if (!power_active && (MyRand() % 5 == 0)) {
                                     power_active = 1;
-                                    power_type = (MyRand() % 8) + 1;
+                                    power_type = (MyRand() % 9) + 1;
                                     power_x = (float)bx; power_y = (float)by;
                                 }
                             }
@@ -1187,7 +1411,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 if (active_balls_count <= 0) {
                     lives--;
-                    power_active = 0; sticky_timer = 0; dur_laser = 0; dur_fire = 0;
+                    power_active = 0; sticky_timer = 0; dur_laser = 0; dur_fire = 0; dur_satellite = 0;
                     if (lives <= 0) {
                         SaveHighScore();
                         state = 2;
@@ -1269,15 +1493,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             
             if (state == 0) {
-                char* t1 = "KBREAKOUT - LOOP 10";
-                char* t2 = "Multi-Ball Chaos & Gravity Wells";
+                char* t1 = "KBREAKOUT - LOOP 11";
+                char* t2 = "Satellites, Reflectors & Quantum Resonance";
                 char* t3 = "Press ENTER for Classic Campaign";
                 char* t4 = "Press SPACE for Hard Campaign";
                 char* t5 = "Press C for MULTI-BALL CHAOS MODE";
-                char* t6 = "Press O/F for CYBER-FORGE";
+                char* t6 = "Press O/F for CYBER-FORGE LAB";
                 char* t7 = "Press E for Level Editor";
                 TextOutA(memDC, W/2 - 70, H/2 - 60, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 95, H/2 - 38, t2, lstrlenA(t2));
+                TextOutA(memDC, W/2 - 120, H/2 - 38, t2, lstrlenA(t2));
                 TextOutA(memDC, W/2 - 90, H/2 - 5, t3, lstrlenA(t3));
                 TextOutA(memDC, W/2 - 80, H/2 + 15, t4, lstrlenA(t4));
                 SetTextColor(memDC, RGB(255, 100, 255));
@@ -1289,38 +1513,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (state == 5) {
                 SetTextColor(memDC, RGB(0, 255, 255));
                 char* title = "=== CYBER-FORGE POWER LAB ===";
-                TextOutA(memDC, W/2 - 100, 15, title, lstrlenA(title));
+                TextOutA(memDC, W/2 - 100, 10, title, lstrlenA(title));
 
                 char matStr[96];
                 wsprintfA(matStr, "Materials: [Plasma:%d]  [Quantum:%d]  [Alloy:%d]", plasma_shards, quantum_cores, nano_alloys);
                 SetTextColor(memDC, RGB(255, 220, 0));
-                TextOutA(memDC, 20, 40, matStr, lstrlenA(matStr));
+                TextOutA(memDC, 20, 32, matStr, lstrlenA(matStr));
 
                 SetTextColor(memDC, RGB(200, 200, 200));
-                char* r1 = "[1] Nova Blast Ball (15 Plasma + 10 Alloy) -> Fire Explosions";
-                char* r2 = "[2] Chronos Paddle  (12 Plasma + 8 Quantum) -> Dilate + Magnet";
-                char* r3 = "[3] Valkyrie Guns   (10 Quantum + 15 Alloy)-> Heavy Cannons";
-                char* r4 = "[4] Quantum Aegis   (10 Pls + 10 Qtm + 10 Aly)-> +3 Shield Layers";
-                char* r5 = "[5] Singularity Core(20 Pls + 15 Qtm + 15 Aly)-> Spawn Black Hole";
-                TextOutA(memDC, 10, 75, r1, lstrlenA(r1));
-                TextOutA(memDC, 10, 105, r2, lstrlenA(r2));
-                TextOutA(memDC, 10, 135, r3, lstrlenA(r3));
-                TextOutA(memDC, 10, 165, r4, lstrlenA(r4));
-                TextOutA(memDC, 10, 195, r5, lstrlenA(r5));
+                char* r1 = "[1] Nova Blast Ball (15 Pls + 10 Aly) -> Fire Explosions";
+                char* r2 = "[2] Chronos Paddle  (12 Pls + 8 Qtm)  -> Dilate + Magnet";
+                char* r3 = "[3] Valkyrie Guns   (10 Qtm + 15 Aly) -> Heavy Cannons";
+                char* r4 = "[4] Quantum Aegis   (10/10/10)        -> +3 Shield Layers";
+                char* r5 = "[5] Singularity Core(20/15/15)        -> Spawn Black Hole";
+                char* r6 = "[6] Satellite Array (12/12/12)        -> Orbital Overdrive";
+                char* r7 = "[7] Resonance Catalyst(15 Qtm + 10 Aly)-> Quantum Shockwaves";
+                TextOutA(memDC, 10, 58, r1, lstrlenA(r1));
+                TextOutA(memDC, 10, 82, r2, lstrlenA(r2));
+                TextOutA(memDC, 10, 106, r3, lstrlenA(r3));
+                TextOutA(memDC, 10, 130, r4, lstrlenA(r4));
+                TextOutA(memDC, 10, 154, r5, lstrlenA(r5));
+                TextOutA(memDC, 10, 178, r6, lstrlenA(r6));
+                TextOutA(memDC, 10, 202, r7, lstrlenA(r7));
 
                 SetTextColor(memDC, RGB(0, 255, 200));
-                TextOutA(memDC, 20, 240, forge_msg, lstrlenA(forge_msg));
+                TextOutA(memDC, 20, 235, forge_msg, lstrlenA(forge_msg));
 
                 SetTextColor(memDC, RGB(255, 255, 100));
-                char* sub = "Press 1-5 to synthesize. Press ESC / O / ENTER to return.";
-                TextOutA(memDC, 15, 275, sub, lstrlenA(sub));
+                char* sub = "Press 1-7 to synthesize. Press ESC / O / ENTER to return.";
+                TextOutA(memDC, 15, 265, sub, lstrlenA(sub));
             } else if (state == 4) {
                 char* t1 = "EDITOR MODE";
-                char* t2 = "Click grid to change blocks";
+                char* t2 = "Click grid to cycle block types (0-11)";
                 char* t3 = "Press P to Play Custom Level";
                 char* t4 = "Press ESC to return";
                 TextOutA(memDC, W/2 - 45, H/2 - 20, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 85, H/2 + 10, t2, lstrlenA(t2));
+                TextOutA(memDC, W/2 - 105, H/2 + 10, t2, lstrlenA(t2));
                 TextOutA(memDC, W/2 - 85, H/2 + 30, t3, lstrlenA(t3));
                 TextOutA(memDC, W/2 - 60, H/2 + 50, t4, lstrlenA(t4));
 
@@ -1523,6 +1751,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FillRect(memDC, &coreRc, coreBr);
                 DeleteObject(coreBr);
 
+                // Draw Orbital Satellites
+                for (int s = 0; s < MAX_SATELLITES; s++) {
+                    int sx_sat = (int)satellites[s].x;
+                    int sy_sat = (int)satellites[s].y;
+                    HBRUSH satBr = CreateSolidBrush(dur_satellite > 0 ? RGB(255, 100, 255) : RGB(0, 255, 220));
+                    HGDIOBJ oB = SelectObject(memDC, satBr);
+                    HPEN satPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                    HGDIOBJ oP = SelectObject(memDC, satPen);
+                    
+                    Ellipse(memDC, sx_sat - 5, sy_sat - 5, sx_sat + 5, sy_sat + 5);
+                    
+                    // Drone antenna wings
+                    MoveToEx(memDC, sx_sat - 7, sy_sat, NULL); LineTo(memDC, sx_sat + 7, sy_sat);
+                    MoveToEx(memDC, sx_sat, sy_sat - 7, NULL); LineTo(memDC, sx_sat, sy_sat + 7);
+
+                    SelectObject(memDC, oB);
+                    SelectObject(memDC, oP);
+                    DeleteObject(satBr);
+                    DeleteObject(satPen);
+                }
+
                 if (dur_laser > 0 || active_valkyrie) {
                     int blink = (frame_counter % 6 < 3);
                     HBRUSH canBr = CreateSolidBrush(blink ? RGB(100, 255, 255) : RGB(0, 200, 200));
@@ -1544,7 +1793,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 for (int i = 0; i < MAX_LASERS; i++) {
                     if (lasers[i].active) {
-                        HBRUSH lasBr = CreateSolidBrush(lasers[i].type == 1 ? RGB(255, 100, 255) : RGB(0, 255, 255));
+                        COLORREF lClr = lasers[i].type == 1 ? RGB(255, 100, 255) : (lasers[i].type == 2 ? RGB(0, 255, 200) : RGB(0, 255, 255));
+                        HBRUSH lasBr = CreateSolidBrush(lClr);
                         RECT rl = { (int)lasers[i].x - 2, (int)lasers[i].y - 5, (int)lasers[i].x + 2, (int)lasers[i].y + 5 };
                         FillRect(memDC, &rl, lasBr);
                         DeleteObject(lasBr);
@@ -1562,6 +1812,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if (power_type == 6) { pClr = RGB(0, 255, 200); pBadge[0] = 'B'; }
                     else if (power_type == 7) { pClr = RGB(255, 0, 255); pBadge[0] = 'M'; }
                     else if (power_type == 8) { pClr = RGB(160, 32, 240); pBadge[0] = 'G'; }
+                    else if (power_type == 9) { pClr = RGB(0, 255, 220); pBadge[0] = 'D'; } // Drone Satellite
                     
                     HBRUSH pwBr = CreateSolidBrush(pClr);
                     HGDIOBJ oldB = SelectObject(memDC, pwBr);
@@ -1570,7 +1821,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     if (power_type == 1 || power_type == 4) {
                         RoundRect(memDC, (int)power_x - 8, (int)power_y - 6, (int)power_x + 8, (int)power_y + 6, 6, 6);
-                    } else if (power_type == 2 || power_type == 6) {
+                    } else if (power_type == 2 || power_type == 6 || power_type == 9) {
                         POINT pts[6] = {
                             {(int)power_x, (int)power_y - 8}, {(int)power_x + 8, (int)power_y - 4},
                             {(int)power_x + 8, (int)power_y + 4}, {(int)power_x, (int)power_y + 8},
@@ -1690,15 +1941,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                char skStr[140];
-                wsprintfA(skStr, "[L]Las:%s [M]Splt:%s [F]Fir:%s [B]Bar:%s [G]Grav:%s [O]FORGE",
+                char skStr[160];
+                wsprintfA(skStr, "[L]Las:%s [M]Splt:%s [F]Fir:%s [B]Bar:%s [G]Grv:%s [S]Sat:%s [O]FORGE",
                     dur_laser > 0 ? "ACT" : cd_laser <= 0 ? "RDY" : "CD",
                     cd_multi <= 0 ? "RDY" : "CD",
                     dur_fire > 0 ? "ACT" : cd_fire <= 0 ? "RDY" : "CD",
                     dur_barrier > 0 ? "ACT" : cd_barrier <= 0 ? "RDY" : "CD",
-                    dur_gravity > 0 ? "ACT" : cd_gravity <= 0 ? "RDY" : "CD");
+                    dur_gravity > 0 ? "ACT" : cd_gravity <= 0 ? "RDY" : "CD",
+                    dur_satellite > 0 ? "ACT" : cd_satellite <= 0 ? "RDY" : "CD");
                 SetTextColor(memDC, RGB(180, 220, 255));
-                TextOutA(memDC, 5, H - 16, skStr, lstrlenA(skStr));
+                TextOutA(memDC, 2, H - 16, skStr, lstrlenA(skStr));
             }
             
             SetViewportOrgEx(memDC, 0, 0, NULL);
