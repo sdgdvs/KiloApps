@@ -67,19 +67,25 @@
             <li><b>Factory (C):</b> Converts 2 Mat into 1 AdvM per tick. Costs 10 Power.</li>
         </ul>
 
-        <h3>New Advanced Structures (Loop 2)</h3>
+        <h3>Advanced & Expansion Structures (Loop 2 & 3)</h3>
         <ul style="line-height:1.5; font-size:12px;">
             <li><b>Geothermal Generator (G):</b> +35 Power constantly (immune to dust storms/blizzards; +50 Power on Cryo world). Cost: 35 Mat, 15 AdvM.</li>
             <li><b>Bio-Dome / Terraformer (V):</b> +25 Food, +8 Pop cap, +2 Happiness per tick up to 120%. Cost: 40 Mat, 20 AdvM, 20 Power.</li>
             <li><b>Shield Pylon (E):</b> 3x3 Energy Barrier protecting structures from meteors, blizzards, acid rain, and repels alien invasions. Cost: 50 Mat, 25 AdvM, 30 Power.</li>
             <li><b>Drone Hub (U):</b> Automated nanite repair drones fix broken structures on the grid (5 Mat) and boost nearby production. Cost: 60 Mat, 30 AdvM, 25 Power.</li>
+            <li><b>Trade Port (P):</b> +10 Happiness, +3 Mat & +1 AdvM tariffs. Interstellar freighters arrive every 4 days! Cost: 70 Mat, 35 AdvM, 30 Power.</li>
+            <li><b>Cavern Drill (K):</b> +40 Power deep magma tap, +5 Mat & +2 AdvM 24/7. 100% immune to surface disasters! Cost: 80 Mat, 40 AdvM, 40 Power.</li>
+            <li><b>Orbital Beacon (O):</b> 100% planetary defense umbrella against meteors and unlocks tactical ORBITAL BOMBARDMENT! Cost: 100 Mat, 50 AdvM, 50 Power.</li>
         </ul>
 
-        <h3>Expeditions & Mutator Anomalies</h3>
+        <h3>Expeditions & Operations</h3>
         <p style="font-size:12px; line-height:1.5;">
             - <b>Scout Recon (1 Pop, 15 Mat, 15 Pwr):</b> Low risk survey for raw materials and terrain data.<br>
             - <b>Ruins Excavation (2 Pop, 30 Mat, 30 Pwr):</b> High rewards; chance to unlock <i>Crystal Monolith (+50% Science)</i>.<br>
-            - <b>Hive Incursion (4 Pop, 60 Mat, 50 Pwr):</b> Strike alien brood nest; unlocks <i>Subterranean Geode (Mines yield AdvM)</i> or <i>Ionized Aurora (+50 Max Power)</i>!
+            - <b>Hive Incursion (4 Pop, 60 Mat, 50 Pwr):</b> Strike alien brood nest; unlocks <i>Subterranean Geode</i> or <i>Ionized Aurora</i>!<br>
+            - <b>Freighter Trade:</b> Exchange surplus Food or Mat for AdvM, Science, and emergency power.<br>
+            - <b>Cavern Dive:</b> Excavate deep subterranean crystal vaults for massive rare alloy caches.<br>
+            - <b>Orbital Strike:</b> Calls down kinetic bombardment from orbit to vaporize all aliens instantly!
         </p>
     </div>
 
@@ -131,6 +137,9 @@
                 <button class="btn" id="btn-bio" onclick="selectType(14)" style="display:none">[14] Bio-Dome<br><small>Cost: 40 Mat, 20 AdvM, 20 Pwr</small></button>
                 <button class="btn" id="btn-shield" onclick="selectType(15)" style="display:none">[15] Shield Pylon<br><small>Cost: 50 Mat, 25 AdvM, 30 Pwr</small></button>
                 <button class="btn" id="btn-drone" onclick="selectType(16)" style="display:none">[16] Drone Hub<br><small>Cost: 60 Mat, 30 AdvM, 25 Pwr</small></button>
+                <button class="btn" id="btn-trade" onclick="selectType(17)" style="display:none">[17] Trade Port<br><small>Cost: 70 Mat, 35 AdvM, 30 Pwr</small></button>
+                <button class="btn" id="btn-cavern" onclick="selectType(18)" style="display:none">[18] Cavern Drill<br><small>Cost: 80 Mat, 40 AdvM, 40 Pwr</small></button>
+                <button class="btn" id="btn-orbital" onclick="selectType(19)" style="display:none">[19] Orbital Beacon<br><small>Cost: 100 Mat, 50 AdvM, 50 Pwr</small></button>
             </div>
 
             <div class="panel-col">
@@ -144,12 +153,18 @@
                 <button class="btn research" id="btn-res-geo" onclick="research(7)">Res: Geothermal<br><small>Cost: 200 Sci</small></button>
                 <button class="btn research" id="btn-res-bio" onclick="research(8)">Res: Bio-Dome<br><small>Cost: 250 Sci</small></button>
                 <button class="btn research" id="btn-res-shield" onclick="research(9)">Res: Shield Pylon<br><small>Cost: 300 Sci</small></button>
+                <button class="btn research" id="btn-res-trade" onclick="research(11)">Res: Trade Port<br><small>Cost: 350 Sci</small></button>
                 <button class="btn research" id="btn-res-drone" onclick="research(10)">Res: Drone Hub<br><small>Cost: 400 Sci</small></button>
+                <button class="btn research" id="btn-res-cavern" onclick="research(12)">Res: Cavern Drill<br><small>Cost: 450 Sci</small></button>
+                <button class="btn research" id="btn-res-orbital" onclick="research(13)">Res: Orbital Uplink<br><small>Cost: 500 Sci</small></button>
                 
-                <h3 style="margin-top:6px;">Expeditions</h3>
+                <h3 style="margin-top:6px;">Expeditions & Ops</h3>
                 <button class="btn expedition" onclick="launchExpedition(1)">Exped: Scout Recon<br><small>Req: 1 Pop | 15 Mat, 15 Pwr</small></button>
                 <button class="btn expedition" onclick="launchExpedition(2)">Exped: Ruins Excav.<br><small>Req: 2 Pop | 30 Mat, 30 Pwr</small></button>
                 <button class="btn expedition" onclick="launchExpedition(3)">Exped: Hive Incursion<br><small>Req: 4 Pop | 60 Mat, 50 Pwr</small></button>
+                <button class="btn expedition" onclick="tradeFreighter()">Freighter Trade<br><small>Trade Food/Mat for AdvM/Sci</small></button>
+                <button class="btn expedition" onclick="cavernDive()">Cavern Dive<br><small>Req: 2 Pop | 40 Mat, 40 Pwr</small></button>
+                <button class="btn expedition" onclick="orbitalStrike()">Orbital Strike<br><small>Req: Beacon | 40 Pwr</small></button>
                 
                 <button class="btn" style="margin-top:6px;" onclick="toggleHelp()">[H] / [F1] Manual</button>
             </div>
@@ -167,6 +182,7 @@
         
         let unlockedHydro = false, unlockedNuke = false, unlockedLaser = false, unlockedFactory = false;
         let unlockedSolar4 = false, unlockedXenoArmor = false, unlockedGeo = false, unlockedBio = false, unlockedShield = false, unlockedDrone = false;
+        let unlockedTrade = false, unlockedCavern = false, unlockedOrbital = false, freighterDays = 0;
 
         let planetType = 0; // 0=Mars, 1=Cryo, 2=Volcanic, 3=Acid
         const planetNames = ["MARS PRIME", "CRYO TUNDRA (GLIESE 667)", "VOLCANIC INFERNO (KEPLER 10B)", "ACID SWAMP (PROXIMA B)"];
@@ -280,6 +296,7 @@
             pop = 0; maxPop = 0; happiness = 100; popWait = 0; sci = 0;
             unlockedHydro = false; unlockedNuke = false; unlockedLaser = false; unlockedFactory = false;
             unlockedSolar4 = false; unlockedXenoArmor = false; unlockedGeo = false; unlockedBio = false; unlockedShield = false; unlockedDrone = false;
+            unlockedTrade = false; unlockedCavern = false; unlockedOrbital = false; freighterDays = 0;
             activeAnomaly = 0; weatherType = 0; weatherTicks = 0; dustStormTicks = 0;
 
             tick = 0; day = 1; isDay = true;
@@ -295,7 +312,8 @@
             const bMap = {
                 'hydro': unlockedHydro, 'factory': unlockedFactory, 'nuke': unlockedNuke,
                 'laser': unlockedLaser, 'geo': unlockedGeo, 'bio': unlockedBio,
-                'shield': unlockedShield, 'drone': unlockedDrone
+                'shield': unlockedShield, 'drone': unlockedDrone, 'trade': unlockedTrade,
+                'cavern': unlockedCavern, 'orbital': unlockedOrbital
             };
             for(let k in bMap) {
                 document.getElementById('btn-' + k).style.display = 'none';
@@ -309,6 +327,7 @@
                 food = 9999; power = 9999; maxPower = 9999; mat = 9999; advm = 9999; sci = 9999;
                 unlockedHydro = true; unlockedNuke = true; unlockedLaser = true; unlockedFactory = true;
                 unlockedSolar4 = true; unlockedXenoArmor = true; unlockedGeo = true; unlockedBio = true; unlockedShield = true; unlockedDrone = true;
+                unlockedTrade = true; unlockedCavern = true; unlockedOrbital = true;
                 for(let k in bMap) {
                     document.getElementById('btn-' + k).style.display = 'block';
                     let rb = document.getElementById('btn-res-' + k);
@@ -329,7 +348,7 @@
             document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
             if (type === -1) document.getElementById('btn-repair').classList.add('active');
             else {
-                const btns = ['none', 'solar', 'farm', 'mine', 'hab', 'battery', 'lab', 'nuke', 'hydro', 'laser', 'wall', 'turret', 'factory', 'geo', 'bio', 'shield', 'drone'];
+                const btns = ['none', 'solar', 'farm', 'mine', 'hab', 'battery', 'lab', 'nuke', 'hydro', 'laser', 'wall', 'turret', 'factory', 'geo', 'bio', 'shield', 'drone', 'trade', 'cavern', 'orbital'];
                 const el = document.getElementById('btn-' + btns[type]);
                 if (el) el.classList.add('active');
             }
@@ -372,10 +391,25 @@
                 sci -= 300; unlockedShield = true; playUnlock();
                 document.getElementById('btn-res-shield').style.display = 'none';
                 document.getElementById('btn-shield').style.display = 'block';
+            } else if (r === 11 && sci >= 350 && !unlockedTrade) {
+                sci -= 350; unlockedTrade = true; playUnlock();
+                document.getElementById('btn-res-trade').style.display = 'none';
+                document.getElementById('btn-trade').style.display = 'block';
+                alert("Tech Breakthrough: Trade Port!\nInterstellar freighters will now dock and commercial tariffs generate steady revenue.");
             } else if (r === 10 && sci >= 400 && !unlockedDrone) {
                 sci -= 400; unlockedDrone = true; playUnlock();
                 document.getElementById('btn-res-drone').style.display = 'none';
                 document.getElementById('btn-drone').style.display = 'block';
+            } else if (r === 12 && sci >= 450 && !unlockedCavern) {
+                sci -= 450; unlockedCavern = true; playUnlock();
+                document.getElementById('btn-res-cavern').style.display = 'none';
+                document.getElementById('btn-cavern').style.display = 'block';
+                alert("Tech Breakthrough: Cavern Excavator!\nCavern Drills tap deep magma power and pristine geodes immune to surface disasters.");
+            } else if (r === 13 && sci >= 500 && !unlockedOrbital) {
+                sci -= 500; unlockedOrbital = true; playUnlock();
+                document.getElementById('btn-res-orbital').style.display = 'none';
+                document.getElementById('btn-orbital').style.display = 'block';
+                alert("Tech Breakthrough: Orbital Uplink!\nPlanetary defense shield intercepts meteors and allows calling tactical Orbital Bombardments.");
             }
             updateUI();
         }
@@ -434,6 +468,73 @@
             updateUI();
         }
 
+        function tradeFreighter() {
+            if (food >= 50 && mat >= 30) {
+                food -= 50; mat -= 30; advm += 25; sci += 100;
+                playTone(587, 'sine', 0.1, 0.1);
+                setTimeout(() => playTone(880, 'sine', 0.15, 0.1), 100);
+                setTimeout(() => playTone(1174, 'sine', 0.2, 0.1), 250);
+                alert("Interstellar Trade Contract Executed!\nExported: 50 Food, 30 Mat.\nImported: +25 AdvM, +100 Science!");
+            } else if (mat >= 60) {
+                mat -= 60; food += 80; power = Math.min(maxPower, power + 40);
+                playTone(587, 'sine', 0.1, 0.1);
+                setTimeout(() => playTone(880, 'sine', 0.15, 0.1), 100);
+                alert("Emergency Supplies Imported!\nExported: 60 Mat.\nImported: +80 Food, +40 Power!");
+            } else {
+                alert("Need 50 Food + 30 Mat (or 60 Mat) for Freighter Trade.");
+            }
+            updateUI();
+        }
+
+        function cavernDive() {
+            if (pop >= 2 && mat >= 40 && power >= 40) {
+                mat -= 40; power -= 40;
+                playTone(180, 'sawtooth', 0.2, 0.1);
+                let r = Math.random();
+                if (r < 0.45) {
+                    advm += 45; sci += 180;
+                    alert("Cavern Expedition Report:\nUnsealed deep subterranean crystal geode chamber!\n(+45 AdvM, +180 Science)");
+                } else if (r < 0.8) {
+                    activeAnomaly = 3; mat += 100;
+                    alert("SUBTERRANEAN DISCOVERY!\nTapped active magma vent! Subterranean Geode mutator online!\n(+100 Mat, Mines yield AdvM)");
+                } else {
+                    pop -= 1; happiness = Math.max(0, happiness - 10);
+                    alert("Cavern Hazard Alert:\nSeismic tremor collapsed deep exploratory shaft!\n(-1 Pop, -10% Happiness)");
+                }
+            } else {
+                alert("Need 2 Pop, 40 Mat, 40 Power for Cavern Dive.");
+            }
+            updateUI();
+        }
+
+        function orbitalStrike() {
+            let orbFound = grid.some(g => g === 19);
+            if (power >= 40) {
+                if (!orbFound) {
+                    alert("Requires an operational Orbital Beacon on the grid to uplink targeting coordinates!");
+                } else if (aliens.length === 0) {
+                    alert("Orbital telemetry scans report no hostiles on the grid.");
+                } else {
+                    power -= 40;
+                    playTone(1000, 'sawtooth', 0.2, 0.15);
+                    setTimeout(() => playTone(300, 'sawtooth', 0.3, 0.2), 150);
+                    setTimeout(() => playTone(100, 'sine', 0.5, 0.3), 350);
+                    for (let a of aliens) {
+                        spawnExplosion(a.x, a.y);
+                    }
+                    aliens = [];
+                    msgText = "TACTICAL ORBITAL BOMBARDMENT CONFIRMED!";
+                    msgTicks = 6;
+                    document.getElementById('msg').innerText = msgText;
+                    renderAll();
+                    alert("ORBITAL STRIKE CONFIRMED!\nKinetic orbital barrage obliterated all surface hostiles!");
+                }
+            } else {
+                alert("Need at least 40 Power to charge Orbital Beacon capacitors.");
+            }
+            updateUI();
+        }
+
         function build(x, y) {
             if (gameState !== 1) return;
             if (currentType === 0) return;
@@ -471,6 +572,9 @@
             else if (currentType === 14) { costMat = 40; costAdv = 20; costPwr = 20; }
             else if (currentType === 15) { costMat = 50; costAdv = 25; costPwr = 30; }
             else if (currentType === 16) { costMat = 60; costAdv = 30; costPwr = 25; }
+            else if (currentType === 17) { costMat = 70; costAdv = 35; costPwr = 30; }
+            else if (currentType === 18) { costMat = 80; costAdv = 40; costPwr = 40; }
+            else if (currentType === 19) { costMat = 100; costAdv = 50; costPwr = 50; }
 
             if (mat >= costMat && power >= costPwr && advm >= costAdv) {
                 mat -= costMat;
@@ -518,6 +622,9 @@
             V: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="#032" stroke="#0fa" stroke-width="1.5"/><circle cx="10" cy="11" r="5" fill="#0f8"><animate attributeName="r" values="4;5.5;4" dur="1.5s" repeatCount="indefinite"/></circle></svg>')}`,
             E: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,2 17,6 17,14 10,18 3,14 3,6" fill="#024" stroke="#0df" stroke-width="1.5"/><circle cx="10" cy="10" r="3" fill="#0ff"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.6s" repeatCount="indefinite"/></circle></svg>')}`,
             U: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="14" width="14" height="4" fill="#230" stroke="#cf0"/><rect x="6" y="6" width="8" height="5" fill="#cf0"/><line x1="3" y1="5" x2="17" y2="5" stroke="#cf0" stroke-width="1.5"><animate attributeName="y1" values="5;7;5" dur="0.5s" repeatCount="indefinite"/><animate attributeName="y2" values="5;7;5" dur="0.5s" repeatCount="indefinite"/></line></svg>')}`,
+            P: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="16" height="16" fill="#123" stroke="#fa0" stroke-width="1.5"/><line x1="5" y1="5" x2="15" y2="15" stroke="#fa0"/><line x1="15" y1="5" x2="5" y2="15" stroke="#fa0"/><circle cx="10" cy="10" r="4" fill="#fc0"><animate attributeName="opacity" values="0.5;1;0.5" dur="0.8s" repeatCount="indefinite"/></circle></svg>')}`,
+            K: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,2 3,17 17,17" fill="#321" stroke="#e62" stroke-width="1.5"/><rect x="8" y="8" width="4" height="6" fill="#f84"><animate attributeName="y" values="8;12;8" dur="0.4s" repeatCount="indefinite"/></rect><ellipse cx="10" cy="17" rx="5" ry="2" fill="#f40"/></svg>')}`,
+            O: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M3,16 Q10,6 17,16" stroke="#0cf" fill="none" stroke-width="1.5"/><line x1="10" y1="16" x2="10" y2="2" stroke="#0cf" stroke-width="2"/><circle cx="10" cy="3" r="2.5" fill="#aef"><animate attributeName="r" values="2;4;2" dur="0.5s" repeatCount="indefinite"/></circle></svg>')}`,
             X: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><line x1="2" y1="2" x2="18" y2="18" stroke="#f00" stroke-width="3"/><line x1="18" y1="2" x2="2" y2="18" stroke="#f00" stroke-width="3"/></svg>')}`,
             A: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#505" stroke="#f0f"/><circle cx="7" cy="9" r="2" fill="#000"/><circle cx="13" cy="9" r="2" fill="#000"/><path d="M7,14 Q10,16 13,14" stroke="#000" fill="none" stroke-width="1.5"/></svg>')}`
         };
@@ -551,6 +658,9 @@
             else if (t === 14) { cell.style.backgroundImage = `url("${SVGS.V}")`; cell.style.backgroundColor = '#003322'; cell.style.borderColor = '#00ffb4'; }
             else if (t === 15) { cell.style.backgroundImage = `url("${SVGS.E}")`; cell.style.backgroundColor = '#002244'; cell.style.borderColor = '#00ccff'; }
             else if (t === 16) { cell.style.backgroundImage = `url("${SVGS.U}")`; cell.style.backgroundColor = '#223300'; cell.style.borderColor = '#ccff00'; }
+            else if (t === 17) { cell.style.backgroundImage = `url("${SVGS.P}")`; cell.style.backgroundColor = '#152535'; cell.style.borderColor = '#ffaa00'; }
+            else if (t === 18) { cell.style.backgroundImage = `url("${SVGS.K}")`; cell.style.backgroundColor = '#352010'; cell.style.borderColor = '#ee6622'; }
+            else if (t === 19) { cell.style.backgroundImage = `url("${SVGS.O}")`; cell.style.backgroundColor = '#102040'; cell.style.borderColor = '#00ccff'; }
             else { cell.style.backgroundColor = 'transparent'; cell.style.borderColor = 'rgba(0,51,51,0.5)'; }
 
             if (isShielded(x, y) && t > 0) {
@@ -805,6 +915,11 @@
                     msgTicks = 6;
                     playAlarm();
                 }
+
+                let orbitalCount = grid.filter(g => g === 19).length;
+                let tradeCount = grid.filter(g => g === 17).length;
+                let cavernCount = grid.filter(g => g === 18).length;
+                let droneHubCount = grid.filter(g => g === 16).length;
                 
                 // Disaster events
                 if (Math.random() < 0.06) {
@@ -812,22 +927,29 @@
                     let targets = [];
                     for(let i=0; i<grid.length; i++) if(grid[i] > 0 && grid[i] <= 20) targets.push(i);
                     if (r < 0.35 && targets.length > 0) {
-                        let hits = Math.min(3, targets.length);
-                        for(let i=0; i<hits; i++) {
-                            let idx = targets[Math.floor(Math.random() * targets.length)];
-                            let tx = idx % GRID_W, ty = Math.floor(idx / GRID_W);
-                            if (isShielded(tx, ty) && power >= 10) {
-                                power -= 10;
-                                spawnParticles(tx, ty, '#00ccff', 20);
-                                msgText = "METEOR DEFLECTED BY SHIELD PYLON!";
-                            } else if (grid[idx] > 0 && grid[idx] <= 20) {
-                                grid[idx] += 20;
-                                spawnExplosion(tx, ty);
-                                msgText = "METEOR SHOWER! Structure damaged.";
+                        if (orbitalCount > 0 && power >= 20) {
+                            power -= 20;
+                            msgText = "ORBITAL DEFENSE INTERCEPTED METEORS!";
+                            msgTicks = 5;
+                            playTone(1000, 'sawtooth', 0.2, 0.1);
+                        } else {
+                            let hits = Math.min(3, targets.length);
+                            for(let i=0; i<hits; i++) {
+                                let idx = targets[Math.floor(Math.random() * targets.length)];
+                                let tx = idx % GRID_W, ty = Math.floor(idx / GRID_W);
+                                if (isShielded(tx, ty) && power >= 10) {
+                                    power -= 10;
+                                    spawnParticles(tx, ty, '#00ccff', 20);
+                                    msgText = "METEOR DEFLECTED BY SHIELD PYLON!";
+                                } else if (grid[idx] > 0 && grid[idx] <= 20) {
+                                    grid[idx] += 20;
+                                    spawnExplosion(tx, ty);
+                                    msgText = "METEOR SHOWER! Structure damaged.";
+                                }
                             }
+                            msgTicks = 5;
+                            playAlarm();
                         }
-                        msgTicks = 5;
-                        playAlarm();
                     } else if (r < 0.65) {
                         dustStormTicks = 8;
                         msgText = "DUST STORM! Solar power reduced.";
@@ -852,9 +974,22 @@
                     if (msgTicks <= 0) document.getElementById('msg').innerText = "";
                 }
 
+                // Trade Port Periodic Freighter Visits
+                if (tradeCount > 0 && power > 0 && tick % 10 === 0) {
+                    freighterDays++;
+                    if (freighterDays >= 4) {
+                        freighterDays = 0;
+                        food += 40; mat += 30; advm += 10;
+                        msgText = "FREIGHTER DOCKED: +40F, +30M, +10A!";
+                        msgTicks = 6;
+                        document.getElementById('msg').innerText = msgText;
+                        playTone(587, 'sine', 0.1, 0.1);
+                        setTimeout(() => playTone(880, 'sine', 0.15, 0.1), 100);
+                    }
+                }
+
                 // Drone Hub Auto-repairs (Type 16)
-                let droneHubs = grid.filter(g => g === 16).length;
-                if (droneHubs > 0 && power > 0) {
+                if (droneHubCount > 0 && power > 0) {
                     for (let idx = 0; idx < grid.length; idx++) {
                         if (grid[idx] > 20 && mat >= 5) {
                             mat -= 5;
@@ -892,6 +1027,17 @@
                             }
                         }
                     }
+                }
+
+                // Orbital Beacon Automated Defense Blasts
+                if (orbitalCount > 0 && power >= 25 && aliens.length > 0 && tick % 2 === 0) {
+                    power -= 25;
+                    aliens[0].hp -= 5;
+                    spawnExplosion(aliens[0].x, aliens[0].y);
+                    msgText = "ORBITAL BEACON VAPORIZED ALIEN!";
+                    msgTicks = 4;
+                    document.getElementById('msg').innerText = msgText;
+                    if (aliens[0].hp <= 0) aliens.splice(0, 1);
                 }
 
                 // Aliens move & assault
@@ -963,7 +1109,7 @@
                 // Resource Calculations
                 let pwrProd = 0, farmCount = 0, mineCount = 0, habCount = 0, batCount = 0;
                 let labCount = 0, nukeCount = 0, hydroCount = 0, laserCount = 0, turretCount = 0, factoryCount = 0;
-                let geoCount = 0, bioCount = 0, shieldCount = 0, droneHubCount = 0;
+                let geoCount = 0, bioCount = 0, shieldCount = 0;
 
                 for(let i=0; i<grid.length; i++) {
                     let b = grid[i];
@@ -986,16 +1132,17 @@
                     if(b===13) geoCount++;
                     if(b===14) bioCount++;
                     if(b===15) shieldCount++;
-                    if(b===16) droneHubCount++;
                 }
 
                 maxPop = habCount * 5 + bioCount * 8;
                 maxPower = 50 + batCount * 50 + (activeAnomaly === 4 ? 50 : 0);
                 pwrProd += nukeCount * 20;
                 pwrProd += geoCount * (planetType === 1 ? 50 : 35);
+                pwrProd += cavernCount * 40;
                 
                 let pwrCons = farmCount * 5 + mineCount * 10 + habCount * 5 + labCount * 5 + hydroCount * 10 + 
-                              laserCount * 20 + turretCount * 5 + factoryCount * 10 + bioCount * 20 + shieldCount * 30 + droneHubCount * 25;
+                              laserCount * 20 + turretCount * 5 + factoryCount * 10 + bioCount * 20 + shieldCount * 30 + droneHubCount * 25 +
+                              tradeCount * 15 + cavernCount * 25 + orbitalCount * 30;
                 power += (pwrProd - pwrCons);
                 
                 let pwrEff = 1.0;
@@ -1011,7 +1158,7 @@
 
                 let mBase = mineCount * 3;
                 if (planetType === 2) mBase = Math.floor(mBase * 1.5);
-                let matProd = Math.floor(mBase * eff);
+                let matProd = Math.floor(mBase * eff) + Math.floor(tradeCount * 3 * eff) + Math.floor(cavernCount * 5 * eff);
 
                 let sciProd = Math.floor(labCount * 2 * eff);
                 if (activeAnomaly === 1) sciProd = Math.floor(sciProd * 1.5);
@@ -1023,6 +1170,8 @@
                 if (activeAnomaly === 3 && mineCount > 0 && Math.random() < 0.25) {
                     advm += mineCount;
                 }
+                if (cavernCount > 0) advm += cavernCount * 2;
+                if (tradeCount > 0) advm += tradeCount;
 
                 let factoryActive = Math.floor(factoryCount * eff);
                 let matConsForAdv = factoryActive * 2;
@@ -1037,12 +1186,13 @@
                 advm += advmProd;
 
                 if (bioCount > 0 && power > 0) happiness = Math.min(120, happiness + bioCount * 2);
+                if (tradeCount > 0 && power > 0) happiness = Math.min(120, happiness + tradeCount * 2);
 
                 let foodCons = pop;
                 if (food >= foodCons) {
                     food -= foodCons;
                     happiness = Math.min(120, happiness + 5);
-                    if (bioCount === 0 && happiness > 100) happiness = 100;
+                    if (bioCount === 0 && tradeCount === 0 && happiness > 100) happiness = 100;
                 } else {
                     food = 0;
                     happiness = Math.max(0, happiness - 10);

@@ -22,6 +22,12 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
         Beep(523, 60); Beep(659, 60); Beep(784, 80); Beep(1046, 120);
     } else if (type == 6) { // Shield / Drone
         Beep(900, 40); Beep(1100, 40);
+    } else if (type == 7) { // Orbital Strike
+        Beep(1000, 100); Beep(600, 150); Beep(300, 250); Beep(120, 400);
+    } else if (type == 8) { // Trade Chime
+        Beep(587, 80); Beep(880, 120); Beep(1174, 160);
+    } else if (type == 9) { // Cavern Drill
+        Beep(180, 100); Beep(220, 100); Beep(260, 150);
     }
     return 0;
 }
@@ -115,6 +121,8 @@ int sci = 0;
 // Tech tree unlocks
 int unlockedHydro = 0, unlockedNuke = 0, unlockedLaser = 0, unlockedFactory = 0;
 int unlockedSolar4 = 0, unlockedXenoArmor = 0, unlockedGeo = 0, unlockedBio = 0, unlockedShield = 0, unlockedDrone = 0;
+int unlockedTrade = 0, unlockedCavern = 0, unlockedOrbital = 0;
+int freighterDays = 0;
 
 int selectedType = 0;
 int grid[GRID_W * GRID_H] = {0};
@@ -215,7 +223,7 @@ typedef struct {
     char label[36];
     int isSelected;
 } Button;
-Button buttons[40];
+Button buttons[60];
 int btnCount = 0;
 
 // Shield detection helper
@@ -266,7 +274,7 @@ void DrawHelp(HDC hdc, HFONT hFont, RECT rc) {
     SetTextColor(hdc, RGB(0, 255, 255));
     SelectObject(hdc, hFont);
     
-    RECT textRc = {25, 20, rc.right - 25, rc.bottom - 60};
+    RECT textRc = {25, 15, rc.right - 25, rc.bottom - 55};
     const char* helpText = 
         "KCOLONY ADMINISTRATOR'S MANUAL & EXPANDED SPEC SHEET\n\n"
         "RESOURCES: Food (Colony upkeep) | Power (System operations) | Mat (Basic building)\n"
@@ -276,17 +284,18 @@ void DrawHelp(HDC hdc, HFONT hFont, RECT rc) {
         "Hab (H): +5 Max Pop, -5 Pwr | Battery (B): +50 Max Pwr | Lab (L): +2 Sci, -5 Pwr\n"
         "Nuke (N): +20 Pwr constant | Hydro (Y): +15 Food, -10 Pwr | Factory (C): 2 Mat -> 1 AdvM\n"
         "Wall (W): Deflects aliens | Turret (T): Range 3, -5 Pwr | Laser (D): Range 5, -20 Pwr\n\n"
-        "NEW ADVANCED STRUCTURES (LOOP 2):\n"
+        "ADVANCED & EXPANSION STRUCTURES (LOOP 2 & 3):\n"
         "Geothermal (G): +35 Pwr 24/7 immune to storms (+50 Pwr on Cryo). Cost: 35M, 15A.\n"
         "Bio-Dome (V): +25 Food, +8 Pop cap, +2 Happiness/tick up to 120%. Cost: 40M, 20A, 20P.\n"
         "Shield Pylon (E): 3x3 Energy Barrier protecting from meteors & attacks! Cost: 50M, 25A, 30P.\n"
-        "Drone Hub (U): Auto-repairs broken grid structures (5M) & buffs mines. Cost: 60M, 30A, 25P.\n\n"
-        "PLANETARY BIOMES & EXPEDITIONS:\n"
-        "- Mars Prime: Standard balanced climate & dust storms.\n"
-        "- Cryo Tundra: Extreme blizzards (-50% Solar, +50% Geothermal).\n"
-        "- Volcanic Inferno: Extreme heat & solar flares (+50% Mine output, fast breakdowns).\n"
-        "- Acid Swamp: Corrosive acid rain & 2x alien spawns (+50% Food from Hydro/Bio).\n"
-        "- Expeditions: Launch Scout Recon, Ruins Excavation, or Hive Incursions for Mutators!\n";
+        "Drone Hub (U): Auto-repairs broken grid structures (5M) & buffs mines. Cost: 60M, 30A, 25P.\n"
+        "Trade Port (P): +10 Hap, +3 Mat, +1 AdvM tariffs. Freighters arrive every 4 days! Cost: 70M, 35A, 30P.\n"
+        "Cavern Drill (K): +40 Pwr magma tap, +5 Mat, +2 AdvM 24/7. Immune to weather! Cost: 80M, 40A, 40P.\n"
+        "Orbital Beacon (O): 100% planetary defense umbrella vs meteors & unlocks ORBITAL STRIKE! Cost: 100M, 50A, 50P.\n\n"
+        "EXPEDITIONS & OPERATIONS:\n"
+        "- Scout Recon (1P, 15M, 15Pwr) | Ruins Excavation (2P, 30M, 30Pwr) | Hive Incursion (4P, 60M, 50Pwr)\n"
+        "- Freighter Trade (Exchange Food/Mat for AdvM/Sci/Power) | Cavern Dive (Harvest pristine geodes)\n"
+        "- Orbital Strike (Call devastating kinetic bombardment to obliterate all aliens on map!)\n";
         
     DrawText(hdc, helpText, -1, &textRc, DT_LEFT | DT_TOP);
     
@@ -310,10 +319,11 @@ void StartGame(HWND hwnd, int mode) {
 
     food = 50; power = 50; maxPower = 50; mat = 50; advm = 0;
     pop = 0; maxPop = 0; happiness = 100; sci = 0; popWait = 0;
-    day = 1; isDay = 1; tick = 0;
+    day = 1; isDay = 1; tick = 0; freighterDays = 0;
     
     unlockedHydro = 0; unlockedNuke = 0; unlockedLaser = 0; unlockedFactory = 0;
     unlockedSolar4 = 0; unlockedXenoArmor = 0; unlockedGeo = 0; unlockedBio = 0; unlockedShield = 0; unlockedDrone = 0;
+    unlockedTrade = 0; unlockedCavern = 0; unlockedOrbital = 0;
     activeAnomaly = 0; weatherType = 0; weatherTicks = 0; dustStormTicks = 0;
 
     alienCount = 0;
@@ -323,6 +333,7 @@ void StartGame(HWND hwnd, int mode) {
         food = 9999; power = 9999; maxPower = 9999; mat = 9999; advm = 9999; sci = 9999;
         unlockedHydro = 1; unlockedNuke = 1; unlockedLaser = 1; unlockedFactory = 1;
         unlockedSolar4 = 1; unlockedXenoArmor = 1; unlockedGeo = 1; unlockedBio = 1; unlockedShield = 1; unlockedDrone = 1;
+        unlockedTrade = 1; unlockedCavern = 1; unlockedOrbital = 1;
     }
     
     HDC hdc = GetDC(hwnd);
@@ -400,9 +411,12 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             else if (t == 14) { bgCol = RGB(0, 45, 30); borderCol = RGB(0, 255, 180); textCol = RGB(50, 255, 180); } // Bio
             else if (t == 15) { bgCol = RGB(0, 30, 60); borderCol = RGB(0, 180, 255); textCol = RGB(0, 200, 255); } // Shield
             else if (t == 16) { bgCol = RGB(30, 45, 10); borderCol = RGB(200, 255, 0); textCol = RGB(220, 255, 50); } // Drone
+            else if (t == 17) { bgCol = RGB(15, 30, 45); borderCol = RGB(255, 200, 0); textCol = RGB(255, 220, 50); } // Trade Port
+            else if (t == 18) { bgCol = RGB(35, 20, 10); borderCol = RGB(220, 110, 40); textCol = RGB(255, 140, 50); } // Cavern Drill
+            else if (t == 19) { bgCol = RGB(10, 20, 50); borderCol = RGB(0, 200, 255); textCol = RGB(100, 220, 255); } // Orbital Beacon
             
             if (t > 0) {
-                if (t == 9 || t == 11 || t == 7 || t == 13 || t == 15) {
+                if (t == 9 || t == 11 || t == 7 || t == 13 || t == 15 || t == 17 || t == 18 || t == 19) {
                     int tod = tick % 10;
                     if (tod < 5) {
                         int sx = 0, sy = 0;
@@ -577,6 +591,32 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                     Rectangle(hdc, rc.left+6, rc.top+4+dy, rc.right-6, rc.top+8+dy);
                     MoveToEx(hdc, rc.left+4, rc.top+3+dy, NULL); LineTo(hdc, rc.right-4, rc.top+3+dy);
                     SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 17) { // Trade Port
+                    HPEN p2 = CreatePen(PS_SOLID, 1, RGB(255, 200, 0)); HPEN oldP = SelectObject(hdc, p2);
+                    Rectangle(hdc, rc.left+2, rc.top+2, rc.right-2, rc.bottom-2);
+                    MoveToEx(hdc, rc.left+5, rc.top+5, NULL); LineTo(hdc, rc.right-5, rc.bottom-5);
+                    MoveToEx(hdc, rc.right-5, rc.top+5, NULL); LineTo(hdc, rc.left+5, rc.bottom-5);
+                    HBRUSH b2 = CreateSolidBrush(RGB(255, 220, 50)); HBRUSH oldB = SelectObject(hdc, b2);
+                    Ellipse(hdc, rc.left+7, rc.top+7, rc.right-7, rc.bottom-7);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 18) { // Cavern Drill
+                    HPEN p2 = CreatePen(PS_SOLID, 1, RGB(220, 110, 40)); HPEN oldP = SelectObject(hdc, p2);
+                    POINT pts[3] = {{rc.left+10, rc.top+2}, {rc.left+3, rc.bottom-3}, {rc.right-3, rc.bottom-3}};
+                    Polygon(hdc, pts, 3);
+                    HBRUSH b2 = CreateSolidBrush(RGB(255, 140, 50)); HBRUSH oldB = SelectObject(hdc, b2);
+                    int dy = (animFrame % 6);
+                    Rectangle(hdc, rc.left+8, rc.top+6 + dy, rc.right-8, rc.top+10 + dy);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
+                } else if (t == 19) { // Orbital Beacon
+                    HPEN p2 = CreatePen(PS_SOLID, 2, RGB(0, 200, 255)); HPEN oldP = SelectObject(hdc, p2);
+                    Arc(hdc, rc.left+3, rc.top+5, rc.right-3, rc.bottom+3, rc.right-3, rc.bottom-2, rc.left+3, rc.bottom-2);
+                    MoveToEx(hdc, rc.left+10, rc.top+8, NULL); LineTo(hdc, rc.left+10, rc.top+1);
+                    HBRUSH b2 = CreateSolidBrush(RGB(150, 230, 255)); HBRUSH oldB = SelectObject(hdc, b2);
+                    Ellipse(hdc, rc.left+8, rc.top+1, rc.left+12, rc.top+5);
+                    SelectObject(hdc, oldB); DeleteObject(b2);
+                    SelectObject(hdc, oldP); DeleteObject(p2);
                 }
                 
                 if (power < 15 && t <= 20) {
@@ -711,12 +751,13 @@ void DrawUI(HDC hdc, HFONT hFont) {
     const char* labels[] = { 
         "[-1] REPAIR", "[0] INSPECT", "[1] SOLAR", "[2] FARM", "[3] MINE", "[4] HAB", 
         "[5] BATT", "[6] LAB", "[7] NUKE", "[8] HYDRO", "[9] LASER", "[10] WALL", 
-        "[11] TURRET", "[12] FACTORY", "[13] GEOTHERMAL", "[14] BIODOME", "[15] SHIELD", "[16] DRONE HUB" 
+        "[11] TURRET", "[12] FACTORY", "[13] GEOTHERMAL", "[14] BIODOME", "[15] SHIELD", "[16] DRONE HUB",
+        "[17] TRADE PORT", "[18] CAVERN DRILL", "[19] ORBITAL BEACON"
     };
     
     btnCount = 0;
     int btnY = OFFSET_Y;
-    for (int i = -1; i <= 16; i++) {
+    for (int i = -1; i <= 19; i++) {
         if (i == 7 && !unlockedNuke) continue;
         if (i == 8 && !unlockedHydro) continue;
         if (i == 9 && !unlockedLaser) continue;
@@ -725,13 +766,16 @@ void DrawUI(HDC hdc, HFONT hFont) {
         if (i == 14 && !unlockedBio) continue;
         if (i == 15 && !unlockedShield) continue;
         if (i == 16 && !unlockedDrone) continue;
+        if (i == 17 && !unlockedTrade) continue;
+        if (i == 18 && !unlockedCavern) continue;
+        if (i == 19 && !unlockedOrbital) continue;
         
-        buttons[btnCount].rc = (RECT){ sidebarX, btnY, sidebarX + 185, btnY + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX, btnY, sidebarX + 185, btnY + 22 };
         buttons[btnCount].id = i;
         strcpy(buttons[btnCount].label, labels[i + 1]);
         buttons[btnCount].isSelected = (i == selectedType);
         btnCount++;
-        btnY += 26;
+        btnY += 24;
     }
     
     int btnY2 = OFFSET_Y;
@@ -739,85 +783,118 @@ void DrawUI(HDC hdc, HFONT hFont) {
     
     // Tech Tree Research Buttons
     if (!unlockedHydro) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 101;
         strcpy(buttons[btnCount].label, "RES: HYDRO (50S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
     }
     if (!unlockedFactory) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 104;
         strcpy(buttons[btnCount].label, "RES: FACTORY (75S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
     }
     if (!unlockedNuke) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 102;
         strcpy(buttons[btnCount].label, "RES: NUKE (100S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
     }
     if (!unlockedSolar4) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 105;
         strcpy(buttons[btnCount].label, "RES: SOLAR IV (120S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
     }
     if (!unlockedLaser) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 103;
         strcpy(buttons[btnCount].label, "RES: LASER (150S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
     }
     if (!unlockedXenoArmor) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 106;
         strcpy(buttons[btnCount].label, "RES: XENO-ARM (180S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
     }
     if (!unlockedGeo) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 107;
         strcpy(buttons[btnCount].label, "RES: GEOTHERM (200S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
     }
     if (!unlockedBio) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 108;
         strcpy(buttons[btnCount].label, "RES: BIODOME (250S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
     }
     if (!unlockedShield) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 109;
         strcpy(buttons[btnCount].label, "RES: SHIELD (300S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
+    }
+    if (!unlockedTrade) {
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
+        buttons[btnCount].id = 111;
+        strcpy(buttons[btnCount].label, "RES: TRADE PORT (350S)");
+        btnCount++; btnY2 += 24;
     }
     if (!unlockedDrone) {
-        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
         buttons[btnCount].id = 110;
         strcpy(buttons[btnCount].label, "RES: DRONES (400S)");
-        btnCount++; btnY2 += 26;
+        btnCount++; btnY2 += 24;
+    }
+    if (!unlockedCavern) {
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
+        buttons[btnCount].id = 112;
+        strcpy(buttons[btnCount].label, "RES: CAVERN DRILL (450S)");
+        btnCount++; btnY2 += 24;
+    }
+    if (!unlockedOrbital) {
+        buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
+        buttons[btnCount].id = 113;
+        strcpy(buttons[btnCount].label, "RES: ORBITAL UPLINK (500S)");
+        btnCount++; btnY2 += 24;
     }
 
-    btnY2 += 6;
-    // 3-Tier Expeditions
-    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+    btnY2 += 4;
+    // Expeditions & Operations
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
     buttons[btnCount].id = 201;
     strcpy(buttons[btnCount].label, "EXPED: SCOUT (1P,15M)");
-    btnCount++; btnY2 += 26;
+    btnCount++; btnY2 += 24;
 
-    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
     buttons[btnCount].id = 202;
     strcpy(buttons[btnCount].label, "EXPED: RUINS (2P,30M)");
-    btnCount++; btnY2 += 26;
+    btnCount++; btnY2 += 24;
 
-    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
     buttons[btnCount].id = 203;
     strcpy(buttons[btnCount].label, "EXPED: HIVE (4P,60M)");
-    btnCount++; btnY2 += 26;
+    btnCount++; btnY2 += 24;
 
-    btnY2 += 6;
-    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 23 };
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
+    buttons[btnCount].id = 204;
+    strcpy(buttons[btnCount].label, "TRADE FREIGHTER");
+    btnCount++; btnY2 += 24;
+
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
+    buttons[btnCount].id = 205;
+    strcpy(buttons[btnCount].label, "CAVERN DIVE (2P,40M)");
+    btnCount++; btnY2 += 24;
+
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
+    buttons[btnCount].id = 206;
+    strcpy(buttons[btnCount].label, "ORBITAL STRIKE (40 PWR)");
+    btnCount++; btnY2 += 24;
+
+    btnY2 += 4;
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
     buttons[btnCount].id = 300;
     strcpy(buttons[btnCount].label, "[H]/[F1] HELP/MANUAL");
     btnCount++;
@@ -911,7 +988,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             if (gameState != 1) break;
             tick++;
-            if (tick % 10 == 0) { day++; isDay = 1; }
+            if (tick % 10 == 0) { 
+                day++; 
+                isDay = 1; 
+            }
             else if (tick % 10 == 5) { isDay = 0; }
             
             // Dynamic Planetary Weather Cycles
@@ -933,7 +1013,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 msgTicks = 6;
             }
 
-            // Random Disaster Events
+            int orbitalCount = 0, tradeCount = 0, cavernCount = 0, droneHubCount = 0;
+            for (int i = 0; i < GRID_W * GRID_H; i++) {
+                if (grid[i] == 19) orbitalCount++;
+                if (grid[i] == 17) tradeCount++;
+                if (grid[i] == 18) cavernCount++;
+                if (grid[i] == 16) droneHubCount++;
+            }
+
+            // Random Disaster Events with Orbital Defense Check
             if (rand() % 100 < 6) {
                 int r = rand() % 100;
                 int targets[GRID_W * GRID_H];
@@ -943,23 +1031,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
                 
                 if (r < 35 && targetCount > 0) { // Meteor Shower
-                    int hits = targetCount < 3 ? targetCount : 3;
-                    for (int i = 0; i < hits; i++) {
-                        int idx = targets[rand() % targetCount];
-                        int tx = idx % GRID_W, ty = idx / GRID_W;
-                        if (IsShielded(tx, ty) && power >= 10) {
-                            power -= 10;
-                            SpawnParticles(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2, RGB(0, 200, 255), 20);
-                            strcpy(msgText, "METEOR DEFLECTED BY SHIELD PYLON!");
-                            PlayGameSound(6);
-                        } else if (grid[idx] > 0 && grid[idx] <= 20) {
-                            grid[idx] += 20;
-                            SpawnExplosion(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2);
-                            strcpy(msgText, "METEOR IMPACT! Structure damaged.");
-                            PlayGameSound(2);
+                    if (orbitalCount > 0 && power >= 20) {
+                        power -= 20;
+                        strcpy(msgText, "ORBITAL DEFENSE INTERCEPTED METEORS!");
+                        PlayGameSound(7);
+                        msgTicks = 5;
+                    } else {
+                        int hits = targetCount < 3 ? targetCount : 3;
+                        for (int i = 0; i < hits; i++) {
+                            int idx = targets[rand() % targetCount];
+                            int tx = idx % GRID_W, ty = idx / GRID_W;
+                            if (IsShielded(tx, ty) && power >= 10) {
+                                power -= 10;
+                                SpawnParticles(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2, RGB(0, 200, 255), 20);
+                                strcpy(msgText, "METEOR DEFLECTED BY SHIELD PYLON!");
+                                PlayGameSound(6);
+                            } else if (grid[idx] > 0 && grid[idx] <= 20) {
+                                grid[idx] += 20;
+                                SpawnExplosion(OFFSET_X + tx * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + ty * CELL_SIZE + CELL_SIZE/2);
+                                strcpy(msgText, "METEOR IMPACT! Structure damaged.");
+                                PlayGameSound(2);
+                            }
                         }
+                        msgTicks = 5;
                     }
-                    msgTicks = 5;
                 } else if (r < 65) {
                     dustStormTicks = 8;
                     strcpy(msgText, "SAND WHIRLWIND!");
@@ -981,11 +1076,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (dustStormTicks > 0) dustStormTicks--;
             if (msgTicks > 0) msgTicks--;
 
-            // Automated Drone Hub Repairs (Type 16)
-            int droneHubCount = 0;
-            for (int i = 0; i < GRID_W * GRID_H; i++) {
-                if (grid[i] == 16) droneHubCount++;
+            // Trade Port Periodic Freighter Visits
+            if (tradeCount > 0 && power > 0 && tick % 10 == 0) {
+                freighterDays++;
+                if (freighterDays >= 4) {
+                    freighterDays = 0;
+                    food += 40; mat += 30; advm += 10;
+                    strcpy(msgText, "FREIGHTER DOCKED: +40F, +30M, +10A!");
+                    PlayGameSound(8);
+                    msgTicks = 6;
+                }
             }
+
+            // Automated Drone Hub Repairs (Type 16)
             if (droneHubCount > 0 && power > 0) {
                 for (int i = 0; i < GRID_W * GRID_H; i++) {
                     if (grid[i] > 20 && mat >= 5) {
@@ -1025,6 +1128,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             break;
                         }
                     }
+                }
+            }
+
+            // Orbital Beacon Automated Defense Blasts
+            if (orbitalCount > 0 && power >= 25 && alienCount > 0 && tick % 2 == 0) {
+                power -= 25;
+                PlayGameSound(7);
+                aliens[0].hp -= 5;
+                SpawnExplosion(OFFSET_X + aliens[0].x * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + aliens[0].y * CELL_SIZE + CELL_SIZE/2);
+                FireProjectile(OFFSET_X + aliens[0].x * CELL_SIZE + CELL_SIZE/2, 0, OFFSET_X + aliens[0].x * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + aliens[0].y * CELL_SIZE + CELL_SIZE/2, RGB(0, 255, 255));
+                strcpy(msgText, "ORBITAL BEACON VAPORIZED ALIEN!");
+                msgTicks = 4;
+                if (aliens[0].hp <= 0) {
+                    aliens[0] = aliens[--alienCount];
                 }
             }
 
@@ -1133,9 +1250,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             maxPower = 50 + batCount * 50 + (activeAnomaly == 4 ? 50 : 0);
             pwrProd += nukeCount * 20;
             pwrProd += geoCount * (planetType == 1 ? 50 : 35); // Geothermal boosted on Cryo
+            pwrProd += cavernCount * 40; // Cavern Drill geothermal magma power
             
             int pwrCons = farmCount * 5 + mineCount * 10 + habCount * 5 + labCount * 5 + hydroCount * 10 + 
-                          laserCount * 20 + turretCount * 5 + factoryCount * 10 + bioCount * 20 + shieldCount * 30 + droneHubCount * 25;
+                          laserCount * 20 + turretCount * 5 + factoryCount * 10 + bioCount * 20 + shieldCount * 30 + droneHubCount * 25 +
+                          tradeCount * 15 + cavernCount * 25 + orbitalCount * 30;
             power += (pwrProd - pwrCons);
             
             float pwrEff = 1.0f;
@@ -1151,7 +1270,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             int mBase = mineCount * 3;
             if (planetType == 2) mBase = (int)(mBase * 1.5f); // Volcanic rich minerals
-            int matProd = (int)(mBase * eff);
+            int matProd = (int)(mBase * eff) + (int)(tradeCount * 3 * eff) + (int)(cavernCount * 5 * eff);
 
             int sciProd = (int)(labCount * 2 * eff);
             if (activeAnomaly == 1) sciProd = (int)(sciProd * 1.5f); // Crystal Monolith
@@ -1160,10 +1279,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             mat += matProd;
             sci += sciProd;
 
-            // Subterranean Geode anomaly: Mines extract AdvM
+            // Subterranean Geode anomaly & Cavern Drill minerals
             if (activeAnomaly == 3 && mineCount > 0 && rand() % 4 == 0) {
                 advm += mineCount;
             }
+            if (cavernCount > 0) advm += cavernCount * 2;
+            if (tradeCount > 0) advm += tradeCount;
 
             int factoryActive = (int)(factoryCount * eff);
             int matConsForAdv = factoryActive * 2;
@@ -1177,14 +1298,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             advm += advmProd;
 
-            // Bio-Dome bonus happiness
+            // Bio-Dome and Trade Port bonus happiness
             if (bioCount > 0 && power > 0) happiness = min(120, happiness + bioCount * 2);
+            if (tradeCount > 0 && power > 0) happiness = min(120, happiness + tradeCount * 2);
 
             int foodCons = pop;
             if (food >= foodCons) {
                 food -= foodCons;
                 happiness += 5;
-                if (happiness > 100 && bioCount == 0) happiness = 100;
+                if (happiness > 100 && bioCount == 0 && tradeCount == 0) happiness = 100;
             } else {
                 food = 0;
                 happiness -= 10;
@@ -1258,7 +1380,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 for (int i = 0; i < btnCount; i++) {
                     if (x >= buttons[i].rc.left && x <= buttons[i].rc.right && y >= buttons[i].rc.top && y <= buttons[i].rc.bottom) {
                         int id = buttons[i].id;
-                        if (id <= 16 && id >= -1) {
+                        if (id <= 19 && id >= -1) {
                             selectedType = id;
                         } 
                         // Research Tree Unlocks
@@ -1282,10 +1404,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             sci -= 250; unlockedBio = 1; PlayGameSound(5);
                         } else if (id == 109 && sci >= 300 && !unlockedShield) {
                             sci -= 300; unlockedShield = 1; PlayGameSound(5);
+                        } else if (id == 111 && sci >= 350 && !unlockedTrade) {
+                            sci -= 350; unlockedTrade = 1; PlayGameSound(5);
+                            MessageBox(hwnd, "Trade Port Tech Unlocked! Build Trade Ports to attract freighters and establish interstellar commerce.", "Tech Breakthrough", MB_OK | MB_ICONINFORMATION);
                         } else if (id == 110 && sci >= 400 && !unlockedDrone) {
                             sci -= 400; unlockedDrone = 1; PlayGameSound(5);
+                        } else if (id == 112 && sci >= 450 && !unlockedCavern) {
+                            sci -= 450; unlockedCavern = 1; PlayGameSound(5);
+                            MessageBox(hwnd, "Cavern Excavator Unlocked! Build Cavern Drills to tap deep geothermal magma and harvest pristine geodes immune to surface disasters.", "Tech Breakthrough", MB_OK | MB_ICONINFORMATION);
+                        } else if (id == 113 && sci >= 500 && !unlockedOrbital) {
+                            sci -= 500; unlockedOrbital = 1; PlayGameSound(5);
+                            MessageBox(hwnd, "Orbital Defense Uplink Unlocked! Establish beacons to connect with the fleet, intercept meteors, and call orbital bombardments.", "Tech Breakthrough", MB_OK | MB_ICONINFORMATION);
                         }
-                        // 3-Tier Expeditions
+                        // Expeditions & Operations
                         else if (id == 201) { // Scout Recon
                             if (pop >= 1 && mat >= 15 && power >= 15) {
                                 mat -= 15; power -= 15;
@@ -1341,6 +1472,54 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             } else {
                                 MessageBox(hwnd, "Need 4 Pop, 60 Mat, 50 Power for Hive Incursion.", "Expedition Error", MB_OK | MB_ICONWARNING);
                             }
+                        } else if (id == 204) { // Trade Freighter
+                            if (food >= 50 && mat >= 30) {
+                                food -= 50; mat -= 30; advm += 25; sci += 100; PlayGameSound(8);
+                                MessageBox(hwnd, "Interstellar Trade Contract Executed!\nExported: 50 Food, 30 Mat.\nImported: +25 AdvM, +100 Science!", "Trade Freighter", MB_OK | MB_ICONINFORMATION);
+                            } else if (mat >= 60) {
+                                mat -= 60; food += 80; power = min(maxPower, power + 40); PlayGameSound(8);
+                                MessageBox(hwnd, "Emergency Supplies Imported!\nExported: 60 Mat.\nImported: +80 Food, +40 Power!", "Trade Freighter", MB_OK | MB_ICONINFORMATION);
+                            } else {
+                                MessageBox(hwnd, "Need 50 Food + 30 Mat (or 60 Mat) for Freighter Trade.", "Trade Error", MB_OK | MB_ICONWARNING);
+                            }
+                        } else if (id == 205) { // Cavern Dive
+                            if (pop >= 2 && mat >= 40 && power >= 40) {
+                                mat -= 40; power -= 40; PlayGameSound(9);
+                                int r = rand() % 100;
+                                if (r < 45) {
+                                    advm += 45; sci += 180;
+                                    MessageBox(hwnd, "Deep Cavern team excavated a pristine geode vault!\n(+45 AdvM, +180 Science)", "Cavern Discovery", MB_OK | MB_ICONINFORMATION);
+                                } else if (r < 80) {
+                                    activeAnomaly = 3; mat += 100;
+                                    MessageBox(hwnd, "Subterranean Magma Vent tapped! Subterranean Geode active!\n(+100 Mat, Mines yield AdvM)", "Subterranean Discovery", MB_OK | MB_ICONINFORMATION);
+                                } else {
+                                    pop -= 1; happiness = max(0, happiness - 10);
+                                    MessageBox(hwnd, "Seismic collapse inside deep cavern shaft!\n(-1 Pop, -10% Happiness)", "Cavern Hazard", MB_OK | MB_ICONERROR);
+                                }
+                            } else {
+                                MessageBox(hwnd, "Need 2 Pop, 40 Mat, 40 Power for Cavern Dive.", "Expedition Error", MB_OK | MB_ICONWARNING);
+                            }
+                        } else if (id == 206) { // Orbital Strike
+                            int orbFound = 0;
+                            for (int gi = 0; gi < GRID_W * GRID_H; gi++) if (grid[gi] == 19) orbFound++;
+                            if (power >= 40) {
+                                if (orbFound == 0) {
+                                    MessageBox(hwnd, "Requires an operational Orbital Beacon on the grid to uplink targeting coordinates!", "Orbital Strike Offline", MB_OK | MB_ICONWARNING);
+                                } else if (alienCount == 0) {
+                                    MessageBox(hwnd, "Orbital telemetry scans report no hostiles on the grid.", "No Targets", MB_OK | MB_ICONINFORMATION);
+                                } else {
+                                    power -= 40; PlayGameSound(7); shakeTicks = 30;
+                                    for (int ai = 0; ai < alienCount; ai++) {
+                                        SpawnExplosion(OFFSET_X + aliens[ai].x * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + aliens[ai].y * CELL_SIZE + CELL_SIZE/2);
+                                    }
+                                    alienCount = 0;
+                                    strcpy(msgText, "TACTICAL ORBITAL BOMBARDMENT CONFIRMED!");
+                                    msgTicks = 6;
+                                    MessageBox(hwnd, "ORBITAL STRIKE CONFIRMED!\nKinetic orbital barrage obliterated all surface hostiles!", "Orbital Strike", MB_OK | MB_ICONINFORMATION);
+                                }
+                            } else {
+                                MessageBox(hwnd, "Need at least 40 Power to charge Orbital Beacon capacitors.", "Low Power", MB_OK | MB_ICONWARNING);
+                            }
                         } else if (id == 300) {
                             prevState = 1;
                             gameState = 2;
@@ -1382,6 +1561,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     else if (selectedType == 14) { costMat = 40; costAdv = 20; costPwr = 20; } // Bio-Dome
                     else if (selectedType == 15) { costMat = 50; costAdv = 25; costPwr = 30; } // Shield Pylon
                     else if (selectedType == 16) { costMat = 60; costAdv = 30; costPwr = 25; } // Drone Hub
+                    else if (selectedType == 17) { costMat = 70; costAdv = 35; costPwr = 30; } // Trade Port
+                    else if (selectedType == 18) { costMat = 80; costAdv = 40; costPwr = 40; } // Cavern Drill
+                    else if (selectedType == 19) { costMat = 100; costAdv = 50; costPwr = 50; } // Orbital Beacon
                     
                     if (mat >= costMat && power >= costPwr && advm >= costAdv) {
                         mat -= costMat;
