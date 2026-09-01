@@ -107,6 +107,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KNote
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KPass: TIMEOUT (Subagent failed to complete usability fixes or encountered an error).
 - KNote: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 800x600, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
 - KQuest: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 1000x760, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
 - KMine: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 550x630, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
