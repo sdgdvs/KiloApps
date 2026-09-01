@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>KPing (Press 'H' for Help)</title>
+<title>KPing - Network Diagnostics & Path MTU</title>
 <style>
   :root {
     --bg: #0f172a;
@@ -14,6 +14,7 @@
     --accent-hover: #60a5fa;
     --success: #10b981;
     --danger: #ef4444;
+    --warning: #f59e0b;
   }
   body {
     margin: 0; padding: 20px; font-family: "Inter", "Segoe UI", sans-serif;
@@ -33,30 +34,34 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
   .controls {
-    display: flex; flex-wrap: wrap; gap: 15px; padding: 15px; margin-bottom: 20px; align-items: flex-end;
+    display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 16px; margin-bottom: 16px; align-items: flex-end;
   }
   .input-group {
-    display: flex; flex-direction: column; gap: 5px;
+    display: flex; flex-direction: column; gap: 4px;
   }
   .input-group label {
-    font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
   }
-  input[type="text"], input[type="number"] {
+  input[type="text"], input[type="number"], select {
     background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border);
-    color: var(--text); padding: 8px 12px; border-radius: 6px; outline: none;
-    font-family: "Consolas", monospace; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s;
+    color: var(--text); padding: 7px 10px; border-radius: 6px; outline: none;
+    font-family: "Consolas", monospace; font-size: 13px; transition: border-color 0.2s, box-shadow 0.2s;
   }
-  input[type="text"]:focus, input[type="number"]:focus {
+  input[type="text"]:focus, input[type="number"]:focus, select:focus {
     border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
   }
-  .checkbox-group {
-    display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; padding-bottom: 8px;
+  select option {
+    background: #1e293b;
+    color: #e2e8f0;
   }
-  input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .checkbox-group {
+    display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; padding-bottom: 6px;
+  }
+  input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
   .btn {
-    padding: 8px 20px; border: none; border-radius: 6px; font-weight: 600;
+    padding: 7px 16px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px;
     cursor: pointer; transition: all 0.2s ease;
-    display: flex; align-items: center; justify-content: center; min-width: 100px;
+    display: flex; align-items: center; justify-content: center; min-width: 80px;
   }
   .btn-primary { background: var(--accent); color: white; }
   .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
@@ -64,6 +69,8 @@
   .btn-danger:hover { background: #f87171; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
   .btn-secondary { background: #475569; color: white; }
   .btn-secondary:hover { background: #64748b; transform: translateY(-1px); }
+  .btn-mtu { background: #8b5cf6; color: white; }
+  .btn-mtu:hover { background: #a78bfa; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
   
   .terminal-container {
@@ -71,7 +78,7 @@
   }
   
   .terminal {
-    flex: 1; display: flex; flex-direction: column; padding: 15px; border-radius: 12px;
+    flex: 1; display: flex; flex-direction: column; padding: 14px; border-radius: 12px;
     background: rgba(0, 0, 0, 0.6); border: 1px solid var(--border); overflow: hidden;
   }
   .terminal-header {
@@ -81,7 +88,7 @@
   .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
   #out {
     flex: 1; background: transparent; border: none; color: #a3be8c;
-    font-family: "Consolas", "Courier New", monospace; font-size: 14px;
+    font-family: "Consolas", "Courier New", monospace; font-size: 13.5px;
     resize: none; outline: none; overflow-y: auto; line-height: 1.5;
   }
   ::-webkit-scrollbar { width: 8px; }
@@ -90,15 +97,15 @@
   ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
   
   .analytics-panel {
-    height: 120px; display: flex; gap: 15px; border-radius: 12px;
+    height: 110px; display: flex; gap: 12px; border-radius: 12px;
     background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); padding: 10px; box-sizing: border-box;
   }
   .stats-box {
-    display: flex; flex-direction: column; justify-content: center; padding: 10px;
-    background: rgba(255,255,255,0.05); border-radius: 8px; min-width: 120px;
+    display: flex; flex-direction: column; justify-content: center; padding: 8px 12px;
+    background: rgba(255,255,255,0.05); border-radius: 8px; min-width: 110px;
   }
-  .stats-box span { font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
-  .stats-box strong { font-size: 24px; color: var(--text); margin-top: 5px; }
+  .stats-box span { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+  .stats-box strong { font-size: 20px; color: var(--text); margin-top: 4px; }
   .graph-box {
     flex: 1; position: relative; display: flex; flex-direction: column;
   }
@@ -107,35 +114,54 @@
 </head>
 <body>
   <div class="glass controls">
-    <div class="input-group" style="flex: 1; min-width: 150px;">
+    <div class="input-group" style="flex: 1; min-width: 140px;">
       <label for="host">Target Host / IP</label>
-      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. google.com">
+      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or google.com">
     </div>
-    <div class="input-group" style="width: 80px;">
+    <div class="input-group" style="width: 140px;">
+      <label for="presetSelect">Presets</label>
+      <select id="presetSelect">
+        <option value="">Quick Presets...</option>
+        <option value="127.0.0.1">127.0.0.1 (Localhost)</option>
+        <option value="1.1.1.1">1.1.1.1 (Cloudflare)</option>
+        <option value="8.8.8.8">8.8.8.8 (Google DNS)</option>
+        <option value="9.9.9.9">9.9.9.9 (Quad9 DNS)</option>
+        <option value="208.67.222.222">208.67.222.222 (OpenDNS)</option>
+        <option value="192.168.1.1">192.168.1.1 (Gateway)</option>
+      </select>
+    </div>
+    <div class="input-group" style="width: 65px;">
       <label for="count">Count</label>
       <input type="number" id="count" value="4" min="1" max="100">
     </div>
-    <div class="input-group" style="width: 90px;">
+    <div class="input-group" style="width: 75px;">
       <label for="size">Size (B)</label>
       <input type="number" id="size" value="32" min="1" max="65500">
     </div>
-    <div class="input-group" style="width: 80px;">
+    <div class="input-group" style="width: 65px;">
       <label for="ttl">TTL</label>
       <input type="number" id="ttl" value="115" min="1" max="255">
     </div>
     <div class="input-group">
-      <label class="checkbox-group" for="continuous" style="padding: 0; margin-top: auto; margin-bottom: 8px;">
+      <label class="checkbox-group" for="continuous" style="padding: 0; margin-top: auto; margin-bottom: 6px;">
         <input type="checkbox" id="continuous">
-        <span style="font-size: 12px; color: var(--text-muted)">Continuous</span>
+        <span style="font-size: 11px; color: var(--text-muted)">-t (Cont)</span>
       </label>
     </div>
     <div class="input-group">
-      <label class="checkbox-group" for="hexdump" style="padding: 0; margin-top: auto; margin-bottom: 8px;">
+      <label class="checkbox-group" for="hexdump" style="padding: 0; margin-top: auto; margin-bottom: 6px;">
         <input type="checkbox" id="hexdump">
-        <span style="font-size: 12px; color: var(--text-muted)">Hex Dump</span>
+        <span style="font-size: 11px; color: var(--text-muted)">Hex Dump</span>
+      </label>
+    </div>
+    <div class="input-group">
+      <label class="checkbox-group" for="dfbit" style="padding: 0; margin-top: auto; margin-bottom: 6px;" title="Don't-Fragment bit in IP header">
+        <input type="checkbox" id="dfbit">
+        <span style="font-size: 11px; color: var(--text-muted)">-f (DF Bit)</span>
       </label>
     </div>
     <button id="btnAction" class="btn btn-primary">Ping</button>
+    <button id="btnMTU" class="btn btn-mtu">MTU Sweep</button>
     <button id="btnTrace" class="btn btn-primary">Trace</button>
     <button id="btnExport" class="btn btn-secondary">Export JSON</button>
     <button id="btnHelp" class="btn btn-secondary">Help</button>
@@ -147,10 +173,12 @@
         <div class="dot dot-red"></div>
         <div class="dot dot-yellow"></div>
         <div class="dot dot-green"></div>
-        <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Session Log</span>
-        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted); font-family: monospace; font-weight: bold;">Press 'H' for Help</span>
+        <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Diagnostics & Path MTU Log</span>
+        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted); font-family: monospace; font-weight: bold;">Press 'H' or F1 for Help</span>
       </div>
-      <textarea id="out" readonly spellcheck="false">Welcome to KPing. Enter a target host and click Ping or Trace to begin. Press 'H' or F1 for help.
+      <textarea id="out" readonly spellcheck="false">Welcome to KPing Network Diagnostics.
+Features: ICMP Ping, Path MTU Discovery (PMTU), Route Tracing, Hex Dump, DF-Flag Toggle, Log Export.
+Press 'H' or F1 for help.
 
 </textarea>
     </div>
@@ -164,8 +192,12 @@
         <span>Packet Loss</span>
         <strong id="valLoss">0%</strong>
       </div>
+      <div class="stats-box">
+        <span>Path MTU</span>
+        <strong id="valMTU">-</strong>
+      </div>
       <div class="graph-box">
-        <span style="font-size: 12px; color: var(--text-muted); position: absolute; top: 5px; left: 10px;">Latency & Jitter Analytics (ms)</span>
+        <span style="font-size: 11px; color: var(--text-muted); position: absolute; top: 4px; left: 8px;">Latency & Jitter Analytics (ms)</span>
         <canvas id="graphCanvas"></canvas>
       </div>
     </div>
@@ -173,33 +205,45 @@
 
 <script>
   if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 850, height: 650 }, '*');
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 870, height: 650 }, '*');
   }
 
   const hostInput = document.getElementById('host');
+  const presetSelect = document.getElementById('presetSelect');
   const countInput = document.getElementById('count');
   const sizeInput = document.getElementById('size');
   const ttlInput = document.getElementById('ttl');
   const continuousCheck = document.getElementById('continuous');
   const hexdumpCheck = document.getElementById('hexdump');
+  const dfCheck = document.getElementById('dfbit');
   const btnAction = document.getElementById('btnAction');
+  const btnMTU = document.getElementById('btnMTU');
   const btnTrace = document.getElementById('btnTrace');
   const btnExport = document.getElementById('btnExport');
+  const btnHelp = document.getElementById('btnHelp');
   const out = document.getElementById('out');
   const canvas = document.getElementById('graphCanvas');
   const ctx = canvas.getContext('2d');
   
   const valJitter = document.getElementById('valJitter');
   const valLoss = document.getElementById('valLoss');
+  const valMTU = document.getElementById('valMTU');
   
   let pingInterval = null;
   let isPinging = false;
   let isTracing = false;
+  let isMtuSweeping = false;
   let stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
   let currentHost = '';
   
   let historyData = [];
   let logEntries = [];
+
+  presetSelect.addEventListener('change', () => {
+    if (presetSelect.value) {
+      hostInput.value = presetSelect.value;
+    }
+  });
 
   function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
@@ -241,10 +285,21 @@
                   chunk.push(Math.floor(Math.random() * 256).toString(16).padStart(2, '0'));
               }
           }
-          hex += \`  0x\${i.toString(16).padStart(4, '0')}  \${chunk.join(' ')}\n\`;
+          hex += `  0x${i.toString(16).padStart(4, '0')}  ${chunk.join(' ')}\n`;
       }
-      if (size > 128) hex += \`  ... (\${size - 128} more bytes)\n\`;
+      if (size > 128) hex += `  ... (${size - 128} more bytes)\n`;
       return hex;
+  }
+
+  function setInputsDisabled(disabled) {
+      hostInput.disabled = disabled;
+      presetSelect.disabled = disabled;
+      sizeInput.disabled = disabled;
+      ttlInput.disabled = disabled;
+      continuousCheck.disabled = disabled;
+      hexdumpCheck.disabled = disabled;
+      dfCheck.disabled = disabled;
+      countInput.disabled = disabled || continuousCheck.checked;
   }
 
   function startPing() {
@@ -253,6 +308,7 @@
       const count = parseInt(countInput.value) || 4;
       const ttl = parseInt(ttlInput.value) || 115;
       const continuous = continuousCheck.checked;
+      const df = dfCheck.checked;
       
       out.value = "";
       logEntries = [];
@@ -261,7 +317,7 @@
       valJitter.textContent = "0ms";
       valLoss.textContent = "0%";
       
-      append(\`Pinging \${currentHost} with \${size} bytes of data:\n\n\`, 'header');
+      append(`Pinging ${currentHost} with ${size} bytes of data [DF=${df ? 1 : 0}]:\n\n`, 'header');
       if (hexdumpCheck.checked) {
           append(generateHexDump(size) + "\n", 'hexdump');
       }
@@ -270,7 +326,8 @@
       btnAction.textContent = 'Stop';
       btnAction.className = 'btn btn-danger';
       btnTrace.disabled = true;
-      hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true; hexdumpCheck.disabled = true;
+      btnMTU.disabled = true;
+      setInputsDisabled(true);
       
       stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
       
@@ -281,22 +338,29 @@
           }
           
           stats.sent++;
-          const success = Math.random() > 0.05; 
-          if (success) {
-              const baseTime = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 15;
-              const time = Math.floor(baseTime + Math.random() * 20);
-              stats.recv++;
-              if (time < stats.min) stats.min = time;
-              if (time > stats.max) stats.max = time;
-              stats.sum += time;
-              historyData.push(time);
-              if (historyData.length > 200) historyData.shift();
-              append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=${ttl}\n`, 'reply', { host: currentHost, bytes: size, time, ttl });
-          } else {
+          if (df && size > 1472 && currentHost !== '127.0.0.1' && currentHost !== 'localhost') {
               stats.lost++;
               historyData.push(null);
               if (historyData.length > 200) historyData.shift();
-              append(`Request timed out.\n`, 'timeout', { host: currentHost, error: 'timeout' });
+              append(`Packet needs to be fragmented but DF set. (Packet size ${size+28} exceeds MTU)\n`, 'error', { host: currentHost, error: 'DF_SET_FRAGMENTATION_NEEDED', size });
+          } else {
+              const success = Math.random() > 0.05; 
+              if (success) {
+                  const baseTime = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 14;
+                  const time = Math.floor(baseTime + Math.random() * 18);
+                  stats.recv++;
+                  if (time < stats.min) stats.min = time;
+                  if (time > stats.max) stats.max = time;
+                  stats.sum += time;
+                  historyData.push(time);
+                  if (historyData.length > 200) historyData.shift();
+                  append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=${ttl}\n`, 'reply', { host: currentHost, bytes: size, time, ttl, df });
+              } else {
+                  stats.lost++;
+                  historyData.push(null);
+                  if (historyData.length > 200) historyData.shift();
+                  append(`Request timed out.\n`, 'timeout', { host: currentHost, error: 'timeout' });
+              }
           }
           updateAnalytics();
           drawGraph();
@@ -305,7 +369,7 @@
   
   function updateAnalytics() {
       const lossPercent = Math.round((stats.lost / stats.sent) * 100) || 0;
-      valLoss.textContent = \`\${lossPercent}%\`;
+      valLoss.textContent = `${lossPercent}%`;
       
       let jitterSum = 0;
       let jitterCount = 0;
@@ -320,7 +384,7 @@
           }
       }
       const avgJitter = jitterCount > 0 ? Math.round(jitterSum / jitterCount) : 0;
-      valJitter.textContent = \`\${avgJitter}ms\`;
+      valJitter.textContent = `${avgJitter}ms`;
   }
 
   function drawGraph() {
@@ -330,10 +394,10 @@
       ctx.clearRect(0, 0, w, h);
       if (historyData.length === 0) return;
       
-      const padding = 20;
-      
-      let maxTime = Math.max(...historyData.filter(d => d !== null));
-      if (maxTime < 50) maxTime = 50;
+      const padding = 15;
+      const valid = historyData.filter(d => d !== null);
+      let maxTime = valid.length > 0 ? Math.max(...valid) : 50;
+      if (maxTime < 40) maxTime = 40;
       
       const pts = historyData.length;
       const stepX = (w - padding * 2) / Math.max(10, pts - 1);
@@ -353,20 +417,10 @@
               continue;
           }
           const y = h - padding - ((val / maxTime) * (h - padding * 2));
-          
-          if (first) {
-              ctx.moveTo(x, y);
-              first = false;
-          } else {
-              ctx.lineTo(x, y);
-          }
-          
+          if (first) { ctx.moveTo(x, y); first = false; } else { ctx.lineTo(x, y); }
           ctx.fillStyle = '#3b82f6';
-          ctx.beginPath();
-          ctx.arc(x, y, 3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(x, y);
+          ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(x, y);
       }
       ctx.stroke();
   }
@@ -378,25 +432,122 @@
       btnAction.textContent = 'Ping';
       btnAction.className = 'btn btn-primary';
       btnTrace.disabled = false;
-      hostInput.disabled = false; sizeInput.disabled = false; ttlInput.disabled = false; continuousCheck.disabled = false; hexdumpCheck.disabled = false;
-      countInput.disabled = continuousCheck.checked;
+      btnMTU.disabled = false;
+      setInputsDisabled(false);
       
       const lossPercent = Math.round((stats.lost / stats.sent) * 100) || 0;
-      append(\`\nPing statistics for \${currentHost}:\n\`, 'summary_header');
-      append(\`    Packets: Sent = \${stats.sent}, Received = \${stats.recv}, Lost = \${stats.lost} (\${lossPercent}% loss),\n\`, 'summary_packets');
+      append(`\nPing statistics for ${currentHost}:\n`, 'summary_header');
+      append(`    Packets: Sent = ${stats.sent}, Received = ${stats.recv}, Lost = ${stats.lost} (${lossPercent}% loss),\n`, 'summary_packets');
       
       if (stats.recv > 0) {
           const min = stats.min;
           const max = stats.max;
           const avg = Math.round(stats.sum / stats.recv);
-          append(\`Approximate round trip times in milli-seconds:\n\`, 'summary_times_header');
-          append(\`    Minimum = \${min}ms, Maximum = \${max}ms, Average = \${avg}ms\n\`, 'summary_times', { min, max, avg });
+          append(`Approximate round trip times in milli-seconds:\n`, 'summary_times_header');
+          append(`    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms\n`, 'summary_times', { min, max, avg });
       }
+  }
+
+  function startMtuSweep() {
+      currentHost = hostInput.value.trim() || '127.0.0.1';
+      out.value = "";
+      logEntries = [];
+      historyData = [];
+      valJitter.textContent = "-";
+      valLoss.textContent = "-";
+      valMTU.textContent = "...";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      append(`============================================================\n`, 'mtu_header');
+      append(` KPing Path MTU (PMTU) & Fragmentation Diagnostics\n`, 'mtu_header');
+      append(` Target Host: ${currentHost}\n`, 'mtu_header');
+      append(` Probing with Don't-Fragment (DF) flag set across buffer boundaries...\n`, 'mtu_header');
+      append(`============================================================\n\n`, 'mtu_header');
+
+      isMtuSweeping = true;
+      btnMTU.textContent = 'Stop';
+      btnMTU.className = 'btn btn-danger';
+      btnAction.disabled = true;
+      btnTrace.disabled = true;
+      setInputsDisabled(true);
+
+      const probeSizes = [548, 1000, 1400, 1452, 1460, 1472, 1492, 1500];
+      let pIndex = 0;
+      let maxPass = 0;
+
+      const maxAllowedPayload = (currentHost === '127.0.0.1' || currentHost === 'localhost') ? 65500 : 1472;
+
+      pingInterval = setInterval(() => {
+          if (pIndex >= probeSizes.length) {
+              finishMtuSweep(maxPass);
+              return;
+          }
+
+          const curSize = probeSizes[pIndex];
+          const totalIpSize = curSize + 28;
+          pIndex++;
+
+          if (curSize <= maxAllowedPayload) {
+              maxPass = Math.max(maxPass, curSize);
+              const lat = Math.floor(Math.random() * 15) + (currentHost === '127.0.0.1' ? 1 : 12);
+              historyData.push(lat);
+              append(`[Probe ${pIndex}/${probeSizes.length}] Payload ${curSize} B (IP Packet ${totalIpSize} B) -> [PASS] Unfragmented reply OK (${lat}ms)\n`, 'mtu_pass', { probe: pIndex, size: curSize, totalIpSize, pass: true, latency: lat });
+          } else {
+              historyData.push(null);
+              append(`[Probe ${pIndex}/${probeSizes.length}] Payload ${curSize} B (IP Packet ${totalIpSize} B) -> [FRAG] Packet exceeds Path MTU (DF set)\n`, 'mtu_frag', { probe: pIndex, size: curSize, totalIpSize, pass: false, error: 'Packet needs to be fragmented but DF set' });
+          }
+          drawGraph();
+      }, 700);
+  }
+
+  function finishMtuSweep(maxPass) {
+      clearInterval(pingInterval);
+      isMtuSweeping = false;
+      btnMTU.textContent = 'MTU Sweep';
+      btnMTU.className = 'btn btn-mtu';
+      btnAction.disabled = false;
+      btnTrace.disabled = false;
+      setInputsDisabled(false);
+
+      const calculatedMTU = maxPass > 0 ? (maxPass + 28) : 0;
+      const recommendedMSS = calculatedMTU > 40 ? (calculatedMTU - 40) : 0;
+      let classification = "Unknown / Filtered";
+      if (calculatedMTU >= 1500) classification = "Standard Ethernet (1500 bytes) - Optimal";
+      else if (calculatedMTU >= 1480) classification = "PPPoE / DSL Clamped (1480-1492 bytes)";
+      else if (calculatedMTU >= 1400) classification = "VPN / Tunnel Encapsulation (1400-1479 bytes)";
+      else if (calculatedMTU > 0) classification = "Restricted MTU / Nested Tunnel (<1400 bytes)";
+
+      valMTU.textContent = `${calculatedMTU}B`;
+
+      append(`\n------------------------------------------------------------\n`, 'mtu_summary');
+      append(` PMTU Diagnostics Report for ${currentHost}:\n`, 'mtu_summary');
+      append(`   - Max Unfragmented Payload: ${maxPass} bytes\n`, 'mtu_summary');
+      append(`   - Discovered Path MTU:      ${calculatedMTU} bytes (Payload + 20B IP + 8B ICMP)\n`, 'mtu_summary');
+      append(`   - Recommended TCP MSS:      ${recommendedMSS} bytes (MTU - 40B TCP/IP headers)\n`, 'mtu_summary');
+      append(`   - Classification:           ${classification}\n`, 'mtu_summary');
+      append(`------------------------------------------------------------\n\n`, 'mtu_summary', { maxPass, calculatedMTU, recommendedMSS, classification });
+  }
+
+  function stopMtuSweep() {
+      if (!isMtuSweeping) return;
+      clearInterval(pingInterval);
+      isMtuSweeping = false;
+      btnMTU.textContent = 'MTU Sweep';
+      btnMTU.className = 'btn btn-mtu';
+      btnAction.disabled = false;
+      btnTrace.disabled = false;
+      setInputsDisabled(false);
+      append(`\n[!] Path MTU Discovery cancelled by user.\n\n`, 'warning');
   }
 
   btnAction.onclick = () => {
       if (isPinging) stopPing();
       else startPing();
+  };
+
+  btnMTU.onclick = () => {
+      if (isMtuSweeping) stopMtuSweep();
+      else startMtuSweep();
   };
 
   btnTrace.onclick = () => {
@@ -413,20 +564,21 @@
       valLoss.textContent = "-";
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      append(\`Tracing route to \${currentHost} over a maximum of 30 hops:\n\n\`, 'trace_header');
+      append(`Tracing route to ${currentHost} over a maximum of 30 hops:\n\n`, 'trace_header');
       
       isTracing = true;
       btnTrace.textContent = 'Stop';
       btnTrace.className = 'btn btn-danger';
       btnAction.disabled = true;
-      hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true; hexdumpCheck.disabled = true;
+      btnMTU.disabled = true;
+      setInputsDisabled(true);
       
       let hop = 1;
       const maxHops = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 8 + Math.floor(Math.random() * 5); 
       
       pingInterval = setInterval(() => {
           if (hop > maxHops) {
-              append(\`\nTrace complete.\n\`, 'trace_complete');
+              append(`\nTrace complete.\n`, 'trace_complete');
               stopTrace();
               return;
           }
@@ -437,12 +589,12 @@
           
           let ip = "";
           if (hop === maxHops) {
-              ip = currentHost === '127.0.0.1' ? '127.0.0.1' : \`93.184.216.\${Math.floor(Math.random()*255)}\`; 
-              append(\` \${hop.toString().padStart(2, ' ')}    \${t1} ms    \${t2} ms    \${t3} ms  \${currentHost} [\${ip}]\n\`, 'trace_hop', { hop, t1, t2, t3, host: currentHost, ip });
+              ip = currentHost === '127.0.0.1' ? '127.0.0.1' : `93.184.216.${Math.floor(Math.random()*255)}`; 
+              append(` ${hop.toString().padStart(2, ' ')}    ${t1} ms    ${t2} ms    ${t3} ms  ${currentHost} [${ip}]\n`, 'trace_hop', { hop, t1, t2, t3, host: currentHost, ip });
           } else {
-              ip = \`10.\${Math.floor(Math.random()*255)}.\${Math.floor(Math.random()*255)}.\${Math.floor(Math.random()*255)}\`;
-              const rHost = \`router-\${hop}.network\`;
-              append(\` \${hop.toString().padStart(2, ' ')}    \${t1} ms    \${t2} ms    \${t3} ms  \${rHost} [\${ip}]\n\`, 'trace_hop', { hop, t1, t2, t3, host: rHost, ip });
+              ip = `10.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+              const rHost = `router-${hop}.network`;
+              append(` ${hop.toString().padStart(2, ' ')}    ${t1} ms    ${t2} ms    ${t3} ms  ${rHost} [${ip}]\n`, 'trace_hop', { hop, t1, t2, t3, host: rHost, ip });
           }
           hop++;
       }, 1000);
@@ -455,12 +607,17 @@
       btnTrace.textContent = 'Trace';
       btnTrace.className = 'btn btn-primary';
       btnAction.disabled = false;
-      hostInput.disabled = false; sizeInput.disabled = false; ttlInput.disabled = false; continuousCheck.disabled = false; hexdumpCheck.disabled = false;
-      countInput.disabled = continuousCheck.checked;
+      btnMTU.disabled = false;
+      setInputsDisabled(false);
   }
   
   btnExport.onclick = () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logEntries, null, 2));
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+          host: hostInput.value.trim(),
+          timestamp: new Date().toISOString(),
+          stats,
+          logs: logEntries
+      }, null, 2));
       const anchor = document.createElement('a');
       anchor.setAttribute("href", dataStr);
       anchor.setAttribute("download", `kping_log_${new Date().getTime()}.json`);
@@ -469,37 +626,32 @@
       anchor.remove();
   };
 
-  const btnHelp = document.getElementById('btnHelp');
+  const showHelp = () => {
+      append("\n================ KPing Diagnostics Help ================\n");
+      append("Ping:       Send ICMP echo requests to the target host.\n");
+      append("Trace:      Trace router hops to destination (traceroute).\n");
+      append("MTU Sweep:  Perform Path MTU (PMTU) discovery with DF bit.\n");
+      append("Count:      Number of ICMP echo requests to send.\n");
+      append("Size:       Payload buffer size in bytes (excludes 28B header).\n");
+      append("TTL:        Time-To-Live hop limit (default 115).\n");
+      append("Continuous: Loop ping until Stop clicked (-t flag).\n");
+      append("Hex Dump:   Display packet payload buffer in hex format.\n");
+      append("DF Bit:     Set Don't-Fragment bit in IP header (-f flag).\n");
+      append("Presets:    Quickly select standard DNS or gateway targets.\n");
+      append("Export:     Save output console session to JSON file.\n");
+      append("========================================================\n\n", "help");
+  };
+
   if (btnHelp) {
-      btnHelp.onclick = () => {
-          append("\n--- KPing Help ---\n");
-          append("Ping: Send ICMP echo requests to the target host.\n");
-          append("Trace: Trace the route to the target host.\n");
-          append("Count: Number of requests to send (default 4).\n");
-          append("Size: Packet size in bytes.\n");
-          append("TTL: Time To Live for packets.\n");
-          append("-t: Ping the specified host until stopped.\n");
-          append("Hex Dump: Display simulated payload in hex format.\n");
-          append("Export JSON: Save the session log to a JSON file.\n");
-          append("------------------\n\n", "help");
-      };
+      btnHelp.onclick = showHelp;
   }
 
   document.addEventListener('keydown', (e) => {
       const active = document.activeElement;
-      const isInput = active.tagName === 'INPUT' || (active.tagName === 'TEXTAREA' && active.id !== 'out');
+      const isInput = active.tagName === 'INPUT' || (active.tagName === 'TEXTAREA' && active.id !== 'out') || active.tagName === 'SELECT';
       if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && !isInput) {
           if (e.key === 'F1') e.preventDefault();
-          append("\n--- KPing Help ---\n");
-          append("Ping: Send ICMP echo requests to the target host.\n");
-          append("Trace: Trace the route to the target host.\n");
-          append("Count: Number of requests to send (default 4).\n");
-          append("Size: Packet size in bytes.\n");
-          append("TTL: Time To Live for packets.\n");
-          append("-t: Ping the specified host until stopped.\n");
-          append("Hex Dump: Display simulated payload in hex format.\n");
-          append("Export JSON: Save the session log to a JSON file.\n");
-          append("------------------\n\n", "help");
+          showHelp();
       }
   });
 
