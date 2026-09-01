@@ -156,6 +156,11 @@
             <div class="stat">CREDITS: ₭<span id="credits">1,000</span></div>
             <div class="stat">CARGO: <span id="cargo-used">0</span>/<span id="cargo-max">50</span> TONS</div>
         </div>
+        <div id="faction-bar" style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:10px; padding:6px 10px; border:1px solid #00ffcc; background:rgba(0,25,35,0.7); box-shadow: 0 0 10px rgba(0,255,204,0.2);">
+            <span>FEDERATION: <span id="rep-fed" style="color:#00ffff; font-weight:bold;">+10 (Neutral)</span></span>
+            <span>TRADERS GUILD: <span id="rep-trd" style="color:#00ff00; font-weight:bold;">+15 (Friendly)</span></span>
+            <span>PIRATE SYNDICATE: <span id="rep-pir" style="color:#ff6666; font-weight:bold;">-15 (Unfriendly)</span></span>
+        </div>
         <div id="mission-status" style="color: #ff00ff; font-weight: bold; margin-bottom: 10px; min-height: 1.2em; text-shadow: 0 0 5px #ff00ff;"></div>
         <div id="main-view">
             <div id="map-container">
@@ -263,6 +268,44 @@
         let activeMission = null;
         let currentStationMissions = [];
 
+        let repFed = 10;
+        let repTraders = 15;
+        let repPirates = -15;
+
+        function getFactionTier(rep) {
+            if (rep >= 50) return "Allied";
+            if (rep >= 15) return "Friendly";
+            if (rep > -15) return "Neutral";
+            if (rep > -50) return "Unfriendly";
+            return "Hostile";
+        }
+
+        function getRepColor(rep) {
+            if (rep >= 15) return "#00ff66";
+            if (rep > -15) return "#00ffff";
+            return "#ff5555";
+        }
+
+        function adjustRep(fed, trd, pir) {
+            repFed = Math.max(-100, Math.min(100, repFed + fed));
+            repTraders = Math.max(-100, Math.min(100, repTraders + trd));
+            repPirates = Math.max(-100, Math.min(100, repPirates + pir));
+        }
+
+        function getBuyPrice(basePrice) {
+            let p = basePrice;
+            if (repTraders >= 15) p = Math.round(p * 0.9);
+            else if (repTraders <= -15) p = Math.round(p * 1.1);
+            return Math.max(1, p);
+        }
+
+        function getSellPrice(basePrice) {
+            let p = basePrice;
+            if (repTraders >= 15) p = Math.round(p * 1.1);
+            else if (repTraders <= -15) p = Math.round(p * 0.9);
+            return Math.max(1, p);
+        }
+
         function generateStationMissions() {
             currentStationMissions = [];
             for (let i = 0; i < 2; i++) {
@@ -290,6 +333,22 @@
             document.getElementById('cargo-used').innerText = getCargoUsed();
             document.getElementById('cargo-max').innerText = cargoMax;
             
+            const fedEl = document.getElementById('rep-fed');
+            const trdEl = document.getElementById('rep-trd');
+            const pirEl = document.getElementById('rep-pir');
+            if (fedEl) {
+                fedEl.innerText = `${repFed > 0 ? '+' : ''}${repFed} (${getFactionTier(repFed)})`;
+                fedEl.style.color = getRepColor(repFed);
+            }
+            if (trdEl) {
+                trdEl.innerText = `${repTraders > 0 ? '+' : ''}${repTraders} (${getFactionTier(repTraders)})`;
+                trdEl.style.color = getRepColor(repTraders);
+            }
+            if (pirEl) {
+                pirEl.innerText = `${repPirates > 0 ? '+' : ''}${repPirates} (${getFactionTier(repPirates)})`;
+                pirEl.style.color = getRepColor(repPirates);
+            }
+
             const mStatus = document.getElementById('mission-status');
             if (activeMission) {
                 mStatus.innerText = `ACTIVE MISSION: ${activeMission.type === 'delivery' ? 'Deliver to' : 'Hunt bounty in'} ${activeMission.targetName} for ₭${activeMission.reward}`;
@@ -321,10 +380,11 @@
 
         window.buy = function(item) {
             const sys = systems.find(s => s.id === currentSystemId);
-            const price = sys.market[item];
+            const price = getBuyPrice(sys.market[item]);
             if (credits >= price && getCargoUsed() < cargoMax) {
                 credits -= price;
                 cargo[item]++;
+                adjustRep(0, 1, 0);
                 updateDashboard();
                 showSystemInfo(sys);
             } else if (getCargoUsed() >= cargoMax) {
@@ -336,10 +396,11 @@
 
         window.sell = function(item) {
             const sys = systems.find(s => s.id === currentSystemId);
-            const price = sys.market[item];
+            const price = getSellPrice(sys.market[item]);
             if (cargo[item] > 0) {
                 credits += price;
                 cargo[item]--;
+                adjustRep(0, 1, 0);
                 updateDashboard();
                 showSystemInfo(sys);
             } else {
@@ -373,7 +434,8 @@
             if (activeMission && activeMission.targetId === sysId) {
                 if (activeMission.type === 'delivery') {
                     credits += activeMission.reward;
-                    missionMsg = `\n\nMission Complete: Delivery made to ${activeMission.targetName}. Earned ₭${activeMission.reward}.`;
+                    adjustRep(2, 8, 0);
+                    missionMsg = `\n\nMission Complete: Delivery made to ${activeMission.targetName}. Earned ₭${activeMission.reward}.\nReputation: +8 Traders Guild, +2 Federation.`;
                     activeMission = null;
                 } else if (activeMission.type === 'bounty') {
                     forcedCombat = true;
@@ -387,11 +449,17 @@
                 updateDashboard();
                 if (forcedCombat) {
                     alert(msg + "\n\nAlert: Bounty target located! Intercepting pirate vessel!");
+                    startCombat();
+                    return;
+                } else if (repPirates >= 15) {
+                    credits += 150;
+                    adjustRep(0, 0, 1);
+                    msg += `\n\n[PIRATE SYNDICATE HAIL]\nA pirate corsair intercepts your course, but recognizes your friendly colors!\n"Greetings, corsair brother! The Syndicate honors our friends."\nThey grant safe passage and offer ₭150 in tribute!`;
                 } else {
                     alert(msg + "\n\nAlert: Hostile pirate vessel encountered!");
+                    startCombat();
+                    return;
                 }
-                startCombat();
-                return;
             } else if (randomEncounter < 0.40) {
                 let salvageCreds = Math.floor(Math.random() * 150) + 200;
                 credits += salvageCreds;
@@ -463,9 +531,12 @@
             let playerEvading = false;
             
             if (action === 'attack') {
-                let dmg = Math.floor((10 + weaponLevel * 10) * (0.8 + Math.random() * 0.4));
+                let baseDmg = 10 + weaponLevel * 10;
+                let fedBonus = repFed >= 15 ? 1.2 : 1.0;
+                let dmg = Math.floor(baseDmg * fedBonus * (0.8 + Math.random() * 0.4));
                 enemyHull -= dmg;
-                logCombat(`You attack and deal ${dmg} damage!`);
+                let aidText = repFed >= 15 ? " (Federation escort aids attack!)" : "";
+                logCombat(`You attack and deal ${dmg} damage!${aidText}`);
             } else if (action === 'evade') {
                 playerEvading = true;
                 logCombat(`You take evasive maneuvers.`);
@@ -492,10 +563,15 @@
             if (enemyHull <= 0) {
                 let bounty = 100 + currentSystemId * 50;
                 credits += bounty;
-                let logMsg = `Pirate destroyed! Claimed ₭${bounty} standard bounty.`;
+                adjustRep(6, 3, -8);
+                let logMsg = `Pirate destroyed! Claimed ₭${bounty} standard bounty.<br>Reputation: +6 Federation, +3 Traders, -8 Pirates.`;
                 if (activeMission && activeMission.type === 'bounty' && activeMission.targetId === currentSystemId) {
-                    credits += activeMission.reward;
-                    logMsg += `<br>Mission Complete! Earned extra ₭${activeMission.reward}.`;
+                    let fedBonus = repFed >= 15 ? Math.round(activeMission.reward * 0.15) : 0;
+                    let totalReward = activeMission.reward + fedBonus;
+                    credits += totalReward;
+                    adjustRep(10, 4, -12);
+                    let bonusStr = fedBonus > 0 ? ` (includes ₭${fedBonus} Fed Friendly Bonus)` : "";
+                    logMsg += `<br>Mission Complete! Earned extra ₭${totalReward}${bonusStr}.<br>Bounty Rep: +10 Federation, +4 Traders, -12 Pirates.`;
                     activeMission = null;
                 }
                 logCombat(logMsg);
@@ -610,21 +686,21 @@
                 html += `<p style="color:#00ffff; font-weight:bold; margin-bottom:5px;">Currently Docked - Local Market</p>
                 <div style="display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
-                        <span>Food (₭${sys.market.food}) [Inv: ${cargo.food}]</span>
+                        <span>Food [Inv: ${cargo.food}] (Buy ₭${getBuyPrice(sys.market.food)} / Sell ₭${getSellPrice(sys.market.food)})</span>
                         <div>
                             <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="buy('food')">Buy</button>
                             <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('food')">Sell</button>
                         </div>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
-                        <span>Minerals (₭${sys.market.minerals}) [Inv: ${cargo.minerals}]</span>
+                        <span>Minerals [Inv: ${cargo.minerals}] (Buy ₭${getBuyPrice(sys.market.minerals)} / Sell ₭${getSellPrice(sys.market.minerals)})</span>
                         <div>
                             <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="buy('minerals')">Buy</button>
                             <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('minerals')">Sell</button>
                         </div>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
-                        <span>Tech (₭${sys.market.tech}) [Inv: ${cargo.tech}]</span>
+                        <span>Tech [Inv: ${cargo.tech}] (Buy ₭${getBuyPrice(sys.market.tech)} / Sell ₭${getSellPrice(sys.market.tech)})</span>
                         <div>
                             <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="buy('tech')">Buy</button>
                             <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('tech')">Sell</button>
@@ -640,10 +716,93 @@
                 </div>
                 ${phenomAction}
                 <p style="color:#ff00ff; font-weight:bold; margin-bottom:5px; margin-top:15px;">Station Services</p>
-                <button class="action-btn" style="margin:0; padding:10px; border-color:#ff00ff; color:#ff00ff;" onclick="viewMissions()">MISSION BOARD</button>`;
+                <div style="display:flex; gap:10px;">
+                    <button class="action-btn" style="flex:1; margin:0; padding:10px; border-color:#ff00ff; color:#ff00ff;" onclick="viewMissions()">MISSIONS</button>
+                    <button class="action-btn" style="flex:1; margin:0; padding:10px; border-color:#00ffff; color:#00ffff;" onclick="viewFactions()">FACTIONS</button>
+                </div>`;
             }
             infoEl.innerHTML = html;
         }
+
+        window.viewFactions = function() {
+            let fedTier = getFactionTier(repFed);
+            let trdTier = getFactionTier(repTraders);
+            let pirTier = getFactionTier(repPirates);
+            
+            let fedColor = getRepColor(repFed);
+            let trdColor = getRepColor(repTraders);
+            let pirColor = getRepColor(repPirates);
+
+            let html = `<h3>FACTION DIPLOMACY</h3>
+            <p style="font-size:12px; color:#aaa; margin-top:-5px;">Standing affects combat assistance, trade margins, and pirate hostility.</p>
+            
+            <div style="border:1px solid #005577; padding:8px; margin-bottom:10px; background:rgba(0,10,20,0.6);">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong style="color:#00ffff;">GALACTIC FEDERATION</strong>
+                    <span style="color:${fedColor}; font-weight:bold;">${repFed > 0 ? '+' : ''}${repFed} (${fedTier})</span>
+                </div>
+                <p style="font-size:12px; margin:4px 0;"><strong>Perks:</strong> +20% Combat attack damage & +15% Bounty reward bonus when Friendly (≥+15).</p>
+                <button class="action-btn" style="margin:4px 0 0 0; padding:4px 8px; font-size:12px;" onclick="donateFed()">Donate to Naval Patrol (₭350) [+15 Fed, -8 Pir]</button>
+            </div>
+
+            <div style="border:1px solid #007733; padding:8px; margin-bottom:10px; background:rgba(0,20,10,0.6);">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong style="color:#00ff88;">TRADERS GUILD</strong>
+                    <span style="color:${trdColor}; font-weight:bold;">${repTraders > 0 ? '+' : ''}${repTraders} (${trdTier})</span>
+                </div>
+                <p style="font-size:12px; margin:4px 0;"><strong>Perks:</strong> 10% buy discount & +10% sell markup on all commodities when Friendly (≥+15).</p>
+                <button class="action-btn" style="margin:4px 0 0 0; padding:4px 8px; font-size:12px;" onclick="payGuildDues()">Pay Guild Dues (₭300) [+15 Traders]</button>
+            </div>
+
+            <div style="border:1px solid #772222; padding:8px; margin-bottom:10px; background:rgba(25,0,0,0.6);">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong style="color:#ff6666;">PIRATE SYNDICATE</strong>
+                    <span style="color:${pirColor}; font-weight:bold;">${repPirates > 0 ? '+' : ''}${repPirates} (${pirTier})</span>
+                </div>
+                <p style="font-size:12px; margin:4px 0;"><strong>Perks:</strong> Random pirate encounters grant safe passage and ₭150 tribute when Friendly (≥+15).</p>
+                <button class="action-btn" style="margin:4px 0 0 0; padding:4px 8px; font-size:12px;" onclick="bribePirates()">Bribe Syndicate Smuggler (₭400) [+15 Pir, -8 Fed]</button>
+            </div>
+
+            <button class="action-btn" style="margin-top:10px;" onclick="showSystemInfo(systems.find(s=>s.id===currentSystemId))">Back to Station</button>
+            `;
+            infoEl.innerHTML = html;
+        };
+
+        window.donateFed = function() {
+            if (credits >= 350) {
+                credits -= 350;
+                adjustRep(15, 0, -8);
+                updateDashboard();
+                viewFactions();
+                alert("You donated ₭350 to the Galactic Federation Naval Fleet.\nReputation: +15 Federation, -8 Pirate Syndicate.");
+            } else {
+                alert("Not enough credits to donate!");
+            }
+        };
+
+        window.payGuildDues = function() {
+            if (credits >= 300) {
+                credits -= 300;
+                adjustRep(0, 15, 0);
+                updateDashboard();
+                viewFactions();
+                alert("You paid ₭300 in Traders Guild annual dues.\nReputation: +15 Traders Guild.");
+            } else {
+                alert("Not enough credits for guild dues!");
+            }
+        };
+
+        window.bribePirates = function() {
+            if (credits >= 400) {
+                credits -= 400;
+                adjustRep(-8, 0, 15);
+                updateDashboard();
+                viewFactions();
+                alert("You slipped ₭400 to a Syndicate shadow contact.\nReputation: +15 Pirate Syndicate, -8 Galactic Federation.");
+            } else {
+                alert("Not enough credits for bribe!");
+            }
+        };
 
         window.investigatePhenomenon = function() {
             const sys = systems.find(s => s.id === currentSystemId);
@@ -656,8 +815,9 @@
                 hull -= dmg;
                 let reward = Math.floor(Math.random() * 200) + 600;
                 credits += reward;
+                adjustRep(5, 0, 0);
                 title = "BLACK HOLE PROBE OPERATION";
-                details = `Your scientific probe pierced the event horizon accretion disk.\nSevere gravitational shear caused -${dmg} Hull damage to your vessel.\nHowever, rare Dark Matter & Chroniton telemetry earned you ₭${reward} credits from the Science Academy!`;
+                details = `Your scientific probe pierced the event horizon accretion disk.\nSevere gravitational shear caused -${dmg} Hull damage to your vessel.\nHowever, rare Dark Matter & Chroniton telemetry earned you ₭${reward} credits from the Science Academy!\nFederation reputation increased (+5 Fed).`;
             } else if (sys.phenomenon === "Solar Flare") {
                 let dmg = Math.max(5, 18 - shieldLevel * 2);
                 hull -= dmg;
@@ -665,8 +825,9 @@
                 fuel = Math.min(100, fuel + fuelGain);
                 let reward = Math.floor(Math.random() * 100) + 350;
                 credits += reward;
+                adjustRep(0, 4, 0);
                 title = "SOLAR FLARE HARVESTING";
-                details = `Magnetic scoops deployed into the massive coronal mass ejection.\nSolar radiation inflicted -${dmg} Hull damage.\nSuperheated plasma harvested: +${fuelGain}% Fuel and ₭${reward} in synthesized plasma cells!`;
+                details = `Magnetic scoops deployed into the massive coronal mass ejection.\nSolar radiation inflicted -${dmg} Hull damage.\nSuperheated plasma harvested: +${fuelGain}% Fuel and ₭${reward} in synthesized plasma cells!\nTraders Guild reputation increased (+4 Traders).`;
             } else if (sys.phenomenon === "Derelict Salvage") {
                 let reward = Math.floor(Math.random() * 150) + 400;
                 credits += reward;
@@ -678,8 +839,9 @@
                     cargo.minerals++;
                     cargoMsg = "Recovered 1 ton of Tech and 1 ton of Minerals!";
                 }
+                adjustRep(-2, 1, 5);
                 title = "DERELICT BOARDING OPERATION";
-                details = `Your salvage crew boarded the derelict starship hull.\nRecovered ₭${reward} in salvageable components.\nRestored +${hullRepair} Hull using structural plating.\n${cargoMsg}`;
+                details = `Your salvage crew boarded the derelict starship hull.\nRecovered ₭${reward} in salvageable components.\nRestored +${hullRepair} Hull using structural plating.\n${cargoMsg}\nReputation changed: +5 Pirates, +1 Traders, -2 Federation.`;
             }
 
             sys.phenomenon = "None";

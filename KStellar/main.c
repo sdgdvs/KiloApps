@@ -104,22 +104,68 @@ void GenerateGalaxy() {
 
 #define ID_BTN_INVESTIGATE 140
 
+#define ID_BTN_FACTIONS 150
+#define ID_BTN_FACT_DONATE 151
+#define ID_BTN_FACT_DUES 152
+#define ID_BTN_FACT_BRIBE 153
+#define ID_BTN_FACT_BACK 154
+
 typedef struct {
     int type; // 0=None, 1=Delivery, 2=Bounty
     int targetId;
     int reward;
 } Mission;
 
-HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText, hCargoText, hHullText, hMissionText;
+HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText, hCargoText, hHullText, hMissionText, hFactionText;
 HWND hBtnBuyFood, hBtnSellFood, hBtnBuyMinerals, hBtnSellMinerals, hBtnBuyTech, hBtnSellTech;
 HWND hBtnUpgEngine, hBtnUpgCargo, hBtnUpgWeapon, hBtnUpgShield;
 HWND hBtnCombatAttack, hBtnCombatEvade, hBtnCombatUseTech, hBtnCombatFlee;
 HWND hBtnMissions, hBtnMissionAccept1, hBtnMissionAccept2, hBtnMissionAbandon, hBtnMissionBack;
+HWND hBtnFactions, hBtnFactDonate, hBtnFactDues, hBtnFactBribe, hBtnFactBack;
 HWND hBtnInvestigate;
 
 int selectedSystem = -1;
 int currentSystemId = 0;
 int inMissionsView = 0;
+int inFactionsView = 0;
+
+int repFed = 10;
+int repTraders = 15;
+int repPirates = -15;
+
+const char* GetFactionTier(int rep) {
+    if (rep >= 50) return "Allied";
+    if (rep >= 15) return "Friendly";
+    if (rep > -15) return "Neutral";
+    if (rep > -50) return "Unfriendly";
+    return "Hostile";
+}
+
+void AdjustRep(int fed, int trd, int pir) {
+    repFed += fed;
+    if (repFed > 100) repFed = 100;
+    if (repFed < -100) repFed = -100;
+    repTraders += trd;
+    if (repTraders > 100) repTraders = 100;
+    if (repTraders < -100) repTraders = -100;
+    repPirates += pir;
+    if (repPirates > 100) repPirates = 100;
+    if (repPirates < -100) repPirates = -100;
+}
+
+int GetBuyPrice(int basePrice) {
+    int p = basePrice;
+    if (repTraders >= 15) p = p * 9 / 10;
+    else if (repTraders <= -15) p = p * 11 / 10;
+    return (p < 1) ? 1 : p;
+}
+
+int GetSellPrice(int basePrice) {
+    int p = basePrice;
+    if (repTraders >= 15) p = p * 11 / 10;
+    else if (repTraders <= -15) p = p * 9 / 10;
+    return (p < 1) ? 1 : p;
+}
 
 Mission activeMission = {0, -1, 0};
 Mission stationMissions[2] = {{0,-1,0}, {0,-1,0}};
@@ -168,6 +214,10 @@ void UpdateDashboard() {
     int used = cargoFood + cargoMinerals + cargoTech;
     sprintf(buf, "CARGO: %d/%d TONS", used, cargoMax);
     SetWindowText(hCargoText, buf);
+
+    char fBuf[64];
+    sprintf(fBuf, "F:%+d T:%+d P:%+d", repFed, repTraders, repPirates);
+    SetWindowText(hFactionText, fBuf);
     
     if (activeMission.type == 1) {
         sprintf(buf, "MISSION: Deliver to %s (₭%d)", systems[activeMission.targetId].name, activeMission.reward);
@@ -182,13 +232,20 @@ void UpdateDashboard() {
 
 void ShowStationView(HWND hwnd) {
     inMissionsView = 0;
+    inFactionsView = 0;
     
     ShowWindow(hBtnMissionAccept1, SW_HIDE);
     ShowWindow(hBtnMissionAccept2, SW_HIDE);
     ShowWindow(hBtnMissionAbandon, SW_HIDE);
     ShowWindow(hBtnMissionBack, SW_HIDE);
+
+    ShowWindow(hBtnFactDonate, SW_HIDE);
+    ShowWindow(hBtnFactDues, SW_HIDE);
+    ShowWindow(hBtnFactBribe, SW_HIDE);
+    ShowWindow(hBtnFactBack, SW_HIDE);
     
     ShowWindow(hBtnMissions, SW_SHOW);
+    ShowWindow(hBtnFactions, SW_SHOW);
     ShowWindow(hBtnCourse, SW_HIDE);
     ShowWindow(hBtnBuyFood, SW_SHOW);
     ShowWindow(hBtnSellFood, SW_SHOW);
@@ -220,9 +277,10 @@ void ShowStationView(HWND hwnd) {
     }
 
     char infoText[512];
-    sprintf(infoText, "%s (DOCKED)%s\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+    sprintf(infoText, "%s (DOCKED)%s\nSec: %s | Eco: %s\nBuy: F:%d M:%d T:%d\nSel: F:%d M:%d T:%d\nInv: F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
         sys->name, phenomStr, sys->sector, sys->economy,
-        sys->food_price, sys->minerals_price, sys->tech_price,
+        GetBuyPrice(sys->food_price), GetBuyPrice(sys->minerals_price), GetBuyPrice(sys->tech_price),
+        GetSellPrice(sys->food_price), GetSellPrice(sys->minerals_price), GetSellPrice(sys->tech_price),
         cargoFood, cargoMinerals, cargoTech,
         engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
         weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
@@ -231,8 +289,10 @@ void ShowStationView(HWND hwnd) {
 
 void ShowMissionsView(HWND hwnd) {
     inMissionsView = 1;
+    inFactionsView = 0;
     
     ShowWindow(hBtnMissions, SW_HIDE);
+    ShowWindow(hBtnFactions, SW_HIDE);
     ShowWindow(hBtnInvestigate, SW_HIDE);
     ShowWindow(hBtnCourse, SW_HIDE);
     ShowWindow(hBtnBuyFood, SW_HIDE);
@@ -245,6 +305,11 @@ void ShowMissionsView(HWND hwnd) {
     ShowWindow(hBtnUpgCargo, SW_HIDE);
     ShowWindow(hBtnUpgWeapon, SW_HIDE);
     ShowWindow(hBtnUpgShield, SW_HIDE);
+
+    ShowWindow(hBtnFactDonate, SW_HIDE);
+    ShowWindow(hBtnFactDues, SW_HIDE);
+    ShowWindow(hBtnFactBribe, SW_HIDE);
+    ShowWindow(hBtnFactBack, SW_HIDE);
     
     ShowWindow(hBtnMissionBack, SW_SHOW);
     if (activeMission.type != 0) {
@@ -281,6 +346,49 @@ void ShowMissionsView(HWND hwnd) {
     SetWindowText(hInfoArea, infoText);
 }
 
+void ShowFactionsView(HWND hwnd) {
+    inFactionsView = 1;
+    inMissionsView = 0;
+
+    ShowWindow(hBtnMissions, SW_HIDE);
+    ShowWindow(hBtnFactions, SW_HIDE);
+    ShowWindow(hBtnInvestigate, SW_HIDE);
+    ShowWindow(hBtnCourse, SW_HIDE);
+    ShowWindow(hBtnBuyFood, SW_HIDE);
+    ShowWindow(hBtnSellFood, SW_HIDE);
+    ShowWindow(hBtnBuyMinerals, SW_HIDE);
+    ShowWindow(hBtnSellMinerals, SW_HIDE);
+    ShowWindow(hBtnBuyTech, SW_HIDE);
+    ShowWindow(hBtnSellTech, SW_HIDE);
+    ShowWindow(hBtnUpgEngine, SW_HIDE);
+    ShowWindow(hBtnUpgCargo, SW_HIDE);
+    ShowWindow(hBtnUpgWeapon, SW_HIDE);
+    ShowWindow(hBtnUpgShield, SW_HIDE);
+
+    ShowWindow(hBtnMissionAccept1, SW_HIDE);
+    ShowWindow(hBtnMissionAccept2, SW_HIDE);
+    ShowWindow(hBtnMissionAbandon, SW_HIDE);
+    ShowWindow(hBtnMissionBack, SW_HIDE);
+
+    ShowWindow(hBtnFactDonate, SW_SHOW);
+    ShowWindow(hBtnFactDues, SW_SHOW);
+    ShowWindow(hBtnFactBribe, SW_SHOW);
+    ShowWindow(hBtnFactBack, SW_SHOW);
+
+    char infoText[1024];
+    sprintf(infoText, "--- FACTIONS & DIPLOMACY ---\n\n"
+                      "FEDERATION: %+d (%s)\n"
+                      "Perk: +20%% Attack & +15%% Bounty (≥+15)\n\n"
+                      "TRADERS: %+d (%s)\n"
+                      "Perk: 10%% Buy disc / Sell markup (≥+15)\n\n"
+                      "PIRATES: %+d (%s)\n"
+                      "Perk: Safe passage & Tribute (≥+15)\n",
+                      repFed, GetFactionTier(repFed),
+                      repTraders, GetFactionTier(repTraders),
+                      repPirates, GetFactionTier(repPirates));
+    SetWindowText(hInfoArea, infoText);
+}
+
 void UpdateCombatUI(HWND hwnd) {
     char infoText[2048];
     sprintf(infoText, "--- COMBAT ---\nYOU Hull: %d\nPIRATE Hull: %d\n\n%s", hull, enemyHull, combatLog);
@@ -306,29 +414,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE: {
             srand(GetTickCount());
             GenerateGalaxy();
-            hFont = CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+            hFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
             hBgBrush = CreateSolidBrush(RGB(5, 5, 15));
             
             HWND h0 = CreateWindow("STATIC", "HULL: 100/100", WS_VISIBLE | WS_CHILD, 20, 20, 110, 20, hwnd, NULL, NULL, NULL);
             hHullText = h0;
             SendMessage(h0, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HWND h1 = CreateWindow("STATIC", "FUEL: 100%", WS_VISIBLE | WS_CHILD, 140, 20, 100, 20, hwnd, NULL, NULL, NULL);
+            HWND h1 = CreateWindow("STATIC", "FUEL: 100%", WS_VISIBLE | WS_CHILD, 135, 20, 90, 20, hwnd, NULL, NULL, NULL);
             hFuelText = h1;
             SendMessage(h1, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HWND h2 = CreateWindow("STATIC", "CREDITS: 1,000", WS_VISIBLE | WS_CHILD, 240, 20, 150, 20, hwnd, NULL, NULL, NULL);
+            HWND h2 = CreateWindow("STATIC", "CREDITS: 1,000", WS_VISIBLE | WS_CHILD, 230, 20, 120, 20, hwnd, NULL, NULL, NULL);
             hCreditsText = h2;
             SendMessage(h2, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HWND h3 = CreateWindow("STATIC", "CARGO: 0/50 TONS", WS_VISIBLE | WS_CHILD, 380, 20, 180, 20, hwnd, NULL, NULL, NULL);
+            HWND h3 = CreateWindow("STATIC", "CARGO: 0/50 TONS", WS_VISIBLE | WS_CHILD, 355, 20, 115, 20, hwnd, NULL, NULL, NULL);
             hCargoText = h3;
             SendMessage(h3, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            hFactionText = CreateWindow("STATIC", "F:+10 T:+15 P:-15", WS_VISIBLE | WS_CHILD, 475, 20, 195, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hFactionText, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND h4 = CreateWindow("STATIC", "LOCAL SYSTEMS", WS_VISIBLE | WS_CHILD, 440, 60, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(h4, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hMissionText = CreateWindow("STATIC", "", WS_VISIBLE | WS_CHILD, 20, 45, 600, 20, hwnd, NULL, NULL, NULL);
+            hMissionText = CreateWindow("STATIC", "", WS_VISIBLE | WS_CHILD, 20, 45, 650, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hMissionText, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hInfoArea = CreateWindow("STATIC", "Select a system on the map for details.", WS_VISIBLE | WS_CHILD, 440, 90, 220, 180, hwnd, NULL, NULL, NULL);
+            hInfoArea = CreateWindow("STATIC", "Select a system on the map for details.", WS_VISIBLE | WS_CHILD, 440, 85, 230, 185, hwnd, NULL, NULL, NULL);
             SendMessage(hInfoArea, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnBuyFood = CreateWindow("BUTTON", "Buy Food", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 25, hwnd, (HMENU)ID_BTN_BUY_FOOD, NULL, NULL);
@@ -340,14 +451,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnBuyTech = CreateWindow("BUTTON", "Buy Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 340, 95, 25, hwnd, (HMENU)ID_BTN_BUY_TECH, NULL, NULL);
             hBtnSellTech = CreateWindow("BUTTON", "Sell Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 340, 95, 25, hwnd, (HMENU)ID_BTN_SELL_TECH, NULL, NULL);
 
-            hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 150, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
+            hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 195, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
             hBtnMissions = CreateWindow("BUTTON", "MISSIONS", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 440, 95, 25, hwnd, (HMENU)ID_BTN_MISSIONS, NULL, NULL);
-            hBtnInvestigate = CreateWindow("BUTTON", "Anomaly", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 440, 95, 25, hwnd, (HMENU)ID_BTN_INVESTIGATE, NULL, NULL);
+            hBtnFactions = CreateWindow("BUTTON", "FACTIONS", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 440, 95, 25, hwnd, (HMENU)ID_BTN_FACTIONS, NULL, NULL);
+            hBtnInvestigate = CreateWindow("BUTTON", "Anomaly", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 470, 195, 25, hwnd, (HMENU)ID_BTN_INVESTIGATE, NULL, NULL);
             
-            hBtnUpgEngine = CreateWindow("BUTTON", "Upg Eng", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 95, 25, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
-            hBtnUpgCargo = CreateWindow("BUTTON", "Upg Cargo", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 380, 95, 25, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
-            hBtnUpgWeapon = CreateWindow("BUTTON", "Upg Wpn", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 410, 95, 25, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
-            hBtnUpgShield = CreateWindow("BUTTON", "Upg Shld", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 410, 95, 25, hwnd, (HMENU)ID_BTN_UPG_SHIELD, NULL, NULL);
+            hBtnUpgEngine = CreateWindow("BUTTON", "Upg Eng", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 375, 95, 25, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
+            hBtnUpgCargo = CreateWindow("BUTTON", "Upg Cargo", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 375, 95, 25, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
+            hBtnUpgWeapon = CreateWindow("BUTTON", "Upg Wpn", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 405, 95, 25, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
+            hBtnUpgShield = CreateWindow("BUTTON", "Upg Shld", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 405, 95, 25, hwnd, (HMENU)ID_BTN_UPG_SHIELD, NULL, NULL);
 
             hBtnCombatAttack = CreateWindow("BUTTON", "Attack", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_ATTACK, NULL, NULL);
             hBtnCombatEvade = CreateWindow("BUTTON", "Evade", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 280, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_EVADE, NULL, NULL);
@@ -357,10 +469,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnMissionAccept1 = CreateWindow("BUTTON", "Accept M1", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 25, hwnd, (HMENU)ID_BTN_MISSION_ACCEPT_1, NULL, NULL);
             hBtnMissionAccept2 = CreateWindow("BUTTON", "Accept M2", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 280, 95, 25, hwnd, (HMENU)ID_BTN_MISSION_ACCEPT_2, NULL, NULL);
             hBtnMissionAbandon = CreateWindow("BUTTON", "Abandon", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 310, 95, 25, hwnd, (HMENU)ID_BTN_MISSION_ABANDON, NULL, NULL);
-            hBtnMissionBack = CreateWindow("BUTTON", "Back", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 350, 150, 25, hwnd, (HMENU)ID_BTN_MISSION_BACK, NULL, NULL);
+            hBtnMissionBack = CreateWindow("BUTTON", "Back", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 350, 195, 25, hwnd, (HMENU)ID_BTN_MISSION_BACK, NULL, NULL);
+
+            hBtnFactDonate = CreateWindow("BUTTON", "Donate Fed (350)", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 195, 25, hwnd, (HMENU)ID_BTN_FACT_DONATE, NULL, NULL);
+            hBtnFactDues = CreateWindow("BUTTON", "Guild Dues (300)", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 310, 195, 25, hwnd, (HMENU)ID_BTN_FACT_DUES, NULL, NULL);
+            hBtnFactBribe = CreateWindow("BUTTON", "Bribe Pirate (400)", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 340, 195, 25, hwnd, (HMENU)ID_BTN_FACT_BRIBE, NULL, NULL);
+            hBtnFactBack = CreateWindow("BUTTON", "Back", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 375, 195, 25, hwnd, (HMENU)ID_BTN_FACT_BACK, NULL, NULL);
 
             ShowWindow(hBtnCourse, SW_HIDE);
             ShowWindow(hBtnMissions, SW_HIDE);
+            ShowWindow(hBtnFactions, SW_HIDE);
             ShowWindow(hBtnInvestigate, SW_HIDE);
             ShowWindow(hBtnBuyFood, SW_HIDE);
             ShowWindow(hBtnSellFood, SW_HIDE);
@@ -382,6 +500,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             ShowWindow(hBtnMissionAccept2, SW_HIDE);
             ShowWindow(hBtnMissionAbandon, SW_HIDE);
             ShowWindow(hBtnMissionBack, SW_HIDE);
+
+            ShowWindow(hBtnFactDonate, SW_HIDE);
+            ShowWindow(hBtnFactDues, SW_HIDE);
+            ShowWindow(hBtnFactBribe, SW_HIDE);
+            ShowWindow(hBtnFactBack, SW_HIDE);
             
             GenerateStationMissions();
             UpdateDashboard();
@@ -412,7 +535,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetTextColor(hdc, RGB(0, 255, 204));
                     SetBkColor(hdc, RGB(0, 0, 0));
                 }
-                char text[32];
+                char text[64];
                 GetWindowText(pdis->hwndItem, text, sizeof(text));
                 SelectObject(hdc, hFont);
                 DrawText(hdc, text, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -516,6 +639,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (abs(mx - px) < 15 && abs(my - py) < 15) {
                     selectedSystem = i;
                     inMissionsView = 0;
+                    inFactionsView = 0;
                     
                     char phenomStr[64] = "";
                     if (systems[i].phenomenon == 1) strcpy(phenomStr, "\n[★ PHENOMENON: Black Hole]");
@@ -524,9 +648,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     char infoText[512];
                     if (selectedSystem == currentSystemId) {
-                        sprintf(infoText, "%s (DOCKED)%s\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+                        sprintf(infoText, "%s (DOCKED)%s\nSec: %s | Eco: %s\nBuy: F:%d M:%d T:%d\nSel: F:%d M:%d T:%d\nInv: F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
                             systems[i].name, phenomStr, systems[i].sector, systems[i].economy,
-                            systems[i].food_price, systems[i].minerals_price, systems[i].tech_price,
+                            GetBuyPrice(systems[i].food_price), GetBuyPrice(systems[i].minerals_price), GetBuyPrice(systems[i].tech_price),
+                            GetSellPrice(systems[i].food_price), GetSellPrice(systems[i].minerals_price), GetSellPrice(systems[i].tech_price),
                             cargoFood, cargoMinerals, cargoTech,
                             engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
                             weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
@@ -539,6 +664,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (selectedSystem != currentSystemId) {
                         ShowWindow(hBtnCourse, SW_SHOW);
                         ShowWindow(hBtnMissions, SW_HIDE);
+                        ShowWindow(hBtnFactions, SW_HIDE);
                         ShowWindow(hBtnInvestigate, SW_HIDE);
                         ShowWindow(hBtnBuyFood, SW_HIDE);
                         ShowWindow(hBtnSellFood, SW_HIDE);
@@ -555,6 +681,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         ShowWindow(hBtnMissionAccept2, SW_HIDE);
                         ShowWindow(hBtnMissionAbandon, SW_HIDE);
                         ShowWindow(hBtnMissionBack, SW_HIDE);
+
+                        ShowWindow(hBtnFactDonate, SW_HIDE);
+                        ShowWindow(hBtnFactDues, SW_HIDE);
+                        ShowWindow(hBtnFactBribe, SW_HIDE);
+                        ShowWindow(hBtnFactBack, SW_HIDE);
                     } else {
                         ShowStationView(hwnd);
                     }
@@ -586,7 +717,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (activeMission.type != 0 && activeMission.targetId == currentSystemId) {
                         if (activeMission.type == 1) {
                             credits += activeMission.reward;
-                            sprintf(missionMsg, "\n\nMission Complete: Delivery made. Earned ₭%d.", activeMission.reward);
+                            AdjustRep(2, 8, 0);
+                            sprintf(missionMsg, "\n\nMission Complete: Delivery made. Earned ₭%d.\nReputation: +8 Traders Guild, +2 Federation.", activeMission.reward);
                             activeMission.type = 0;
                         } else if (activeMission.type == 2) {
                             forcedCombat = 1;
@@ -598,8 +730,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     
                     int randomEncounter = rand() % 100;
                     if (forcedCombat || randomEncounter < 25) {
-                        if (forcedCombat) MessageBox(hwnd, "Alert: Bounty target located! Intercepting pirate vessel!", "Navigation Log", MB_OK);
-                        else MessageBox(hwnd, "Alert: Hostile pirate vessel encountered!", "Navigation Log", MB_OK);
+                        if (forcedCombat) {
+                            MessageBox(hwnd, "Alert: Bounty target located! Intercepting pirate vessel!", "Navigation Log", MB_OK);
+                        } else if (repPirates >= 15) {
+                            credits += 150;
+                            AdjustRep(0, 0, 1);
+                            char pMsg[256];
+                            sprintf(pMsg, "\n\n[PIRATE SYNDICATE HAIL]\nA corsair recognizes your Friendly standing!\n'Hail, brother corsair!' Safe passage granted with ₭150 tribute!");
+                            strcat(resultMsg, pMsg);
+                            goto encounter_processed;
+                        } else {
+                            MessageBox(hwnd, "Alert: Hostile pirate vessel encountered!", "Navigation Log", MB_OK);
+                        }
                         
                         inCombat = 1;
                         enemyMaxHull = 30 + currentSystemId * 20;
@@ -608,6 +750,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         
                         ShowWindow(hBtnCourse, SW_HIDE);
                         ShowWindow(hBtnMissions, SW_HIDE);
+                        ShowWindow(hBtnFactions, SW_HIDE);
                         ShowWindow(hBtnInvestigate, SW_HIDE);
                         ShowWindow(hBtnBuyFood, SW_HIDE);
                         ShowWindow(hBtnSellFood, SW_HIDE);
@@ -619,6 +762,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         ShowWindow(hBtnUpgCargo, SW_HIDE);
                         ShowWindow(hBtnUpgWeapon, SW_HIDE);
                         ShowWindow(hBtnUpgShield, SW_HIDE);
+
+                        ShowWindow(hBtnFactDonate, SW_HIDE);
+                        ShowWindow(hBtnFactDues, SW_HIDE);
+                        ShowWindow(hBtnFactBribe, SW_HIDE);
+                        ShowWindow(hBtnFactBack, SW_HIDE);
                         
                         ShowWindow(hBtnCombatAttack, SW_SHOW);
                         ShowWindow(hBtnCombatEvade, SW_SHOW);
@@ -638,8 +786,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             cargoTech++;
                             strcpy(extra, " and salvaged 1 ton of Tech cargo");
                         }
+                        AdjustRep(-2, 1, 5);
                         char dMsg[256];
-                        sprintf(dMsg, "\n\n[STELLAR PHENOMENON: DERELICT SHIP]\nDrifting derelict starship salvaged! Gained %d credits%s, and repaired +20 Hull!", salvageCreds, extra);
+                        sprintf(dMsg, "\n\n[STELLAR PHENOMENON: DERELICT SHIP]\nDrifting derelict starship salvaged! Gained %d credits%s, and repaired +20 Hull!\nReputation: +5 Pirates, +1 Traders, -2 Federation.", salvageCreds, extra);
                         strcat(resultMsg, dMsg);
                     } else if (randomEncounter < 55) {
                         int dmg = 22 - shieldLevel * 3;
@@ -647,8 +796,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         hull -= dmg;
                         fuel += 25;
                         if (fuel > 100) fuel = 100;
+                        AdjustRep(0, 4, 0);
                         char sMsg[256];
-                        sprintf(sMsg, "\n\n[STELLAR PHENOMENON: SOLAR FLARE]\nCoronal mass ejection storm struck your ship! Lost %d Hull, but magnetic collectors recharged +25%% Fuel!", dmg);
+                        sprintf(sMsg, "\n\n[STELLAR PHENOMENON: SOLAR FLARE]\nCoronal mass ejection storm struck your ship! Lost %d Hull, but magnetic collectors recharged +25%% Fuel!\nReputation: +4 Traders Guild.", dmg);
                         strcat(resultMsg, sMsg);
                     } else if (randomEncounter < 70) {
                         int dmg = 25 - shieldLevel * 4;
@@ -656,8 +806,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         hull -= dmg;
                         int sData = (rand() % 150) + 300;
                         credits += sData;
+                        AdjustRep(5, 0, 0);
                         char bMsg[256];
-                        sprintf(bMsg, "\n\n[STELLAR PHENOMENON: BLACK HOLE]\nMicro Black Hole gravitational shear! Tidal forces inflicted %d Hull damage, but gravity slingshot recorded Hawking telemetry worth %d credits!", dmg, sData);
+                        sprintf(bMsg, "\n\n[STELLAR PHENOMENON: BLACK HOLE]\nMicro Black Hole gravitational shear! Tidal forces inflicted %d Hull damage, but gravity slingshot recorded Hawking telemetry worth %d credits!\nReputation: +5 Federation.", dmg, sData);
                         strcat(resultMsg, bMsg);
                     } else if (randomEncounter < 85) {
                         strcat(resultMsg, "\n\nNotice: You found drifting debris.");
@@ -670,6 +821,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         strcat(resultMsg, "\n\nThe journey was uneventful.");
                     }
                     
+encounter_processed:
                     if (hull <= 0) {
                         strcat(resultMsg, "\n\nCRITICAL: Hull integrity lost during transit! Emergency tow to Sol.");
                         hull = maxHull;
@@ -693,9 +845,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 char turnMsg[256] = "";
                 
                 if (cmd == ID_BTN_COMBAT_ATTACK) {
-                    int dmg = (10 + weaponLevel * 10) * (80 + rand() % 40) / 100;
-                    enemyHull -= dmg;
-                    sprintf(turnMsg, "You attack and deal %d damage!\n", dmg);
+                    int baseDmg = (10 + weaponLevel * 10) * (80 + rand() % 40) / 100;
+                    if (repFed >= 15) baseDmg = baseDmg * 12 / 10;
+                    enemyHull -= baseDmg;
+                    if (repFed >= 15) sprintf(turnMsg, "You attack for %d damage! (Fed escort assists)\n", baseDmg);
+                    else sprintf(turnMsg, "You attack and deal %d damage!\n", baseDmg);
                 } else if (cmd == ID_BTN_COMBAT_EVADE) {
                     playerEvading = 1;
                     sprintf(turnMsg, "You take evasive maneuvers.\n");
@@ -721,12 +875,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (enemyHull <= 0) {
                     int bounty = 100 + currentSystemId * 50;
                     credits += bounty;
-                    char winMsg[256];
-                    sprintf(winMsg, "Pirate destroyed! Claimed ₭%d standard bounty.", bounty);
+                    AdjustRep(6, 3, -8);
+                    char winMsg[512];
+                    sprintf(winMsg, "Pirate destroyed! Claimed ₭%d standard bounty.\nReputation: +6 Fed, +3 Traders, -8 Pirates.", bounty);
                     if (activeMission.type == 2 && activeMission.targetId == currentSystemId) {
-                        credits += activeMission.reward;
+                        int fedBonus = (repFed >= 15) ? (activeMission.reward * 15 / 100) : 0;
+                        int totalReward = activeMission.reward + fedBonus;
+                        credits += totalReward;
+                        AdjustRep(10, 4, -12);
                         char bMsg[128];
-                        sprintf(bMsg, "\nMission Complete! Earned extra ₭%d.", activeMission.reward);
+                        sprintf(bMsg, "\nMission Complete! Earned extra ₭%d (Fed bonus: ₭%d).\nBounty Rep: +10 Fed, +4 Traders, -12 Pirates.", totalReward, fedBonus);
                         strcat(winMsg, bMsg);
                         activeMission.type = 0;
                     }
@@ -762,30 +920,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int used = cargoFood + cargoMinerals + cargoTech;
                 int cmd = LOWORD(wParam);
                 System *sys = &systems[currentSystemId];
+                int bPrice, sPrice;
                 
                 if (cmd == ID_BTN_BUY_FOOD) {
-                    if (credits >= sys->food_price && used < cargoMax) { credits -= sys->food_price; cargoFood++; }
+                    bPrice = GetBuyPrice(sys->food_price);
+                    if (credits >= bPrice && used < cargoMax) { credits -= bPrice; cargoFood++; AdjustRep(0, 1, 0); }
                 } else if (cmd == ID_BTN_SELL_FOOD) {
-                    if (cargoFood > 0) { credits += sys->food_price; cargoFood--; }
+                    sPrice = GetSellPrice(sys->food_price);
+                    if (cargoFood > 0) { credits += sPrice; cargoFood--; AdjustRep(0, 1, 0); }
                 } else if (cmd == ID_BTN_BUY_MINERALS) {
-                    if (credits >= sys->minerals_price && used < cargoMax) { credits -= sys->minerals_price; cargoMinerals++; }
+                    bPrice = GetBuyPrice(sys->minerals_price);
+                    if (credits >= bPrice && used < cargoMax) { credits -= bPrice; cargoMinerals++; AdjustRep(0, 1, 0); }
                 } else if (cmd == ID_BTN_SELL_MINERALS) {
-                    if (cargoMinerals > 0) { credits += sys->minerals_price; cargoMinerals--; }
+                    sPrice = GetSellPrice(sys->minerals_price);
+                    if (cargoMinerals > 0) { credits += sPrice; cargoMinerals--; AdjustRep(0, 1, 0); }
                 } else if (cmd == ID_BTN_BUY_TECH) {
-                    if (credits >= sys->tech_price && used < cargoMax) { credits -= sys->tech_price; cargoTech++; }
+                    bPrice = GetBuyPrice(sys->tech_price);
+                    if (credits >= bPrice && used < cargoMax) { credits -= bPrice; cargoTech++; AdjustRep(0, 1, 0); }
                 } else if (cmd == ID_BTN_SELL_TECH) {
-                    if (cargoTech > 0) { credits += sys->tech_price; cargoTech--; }
+                    sPrice = GetSellPrice(sys->tech_price);
+                    if (cargoTech > 0) { credits += sPrice; cargoTech--; AdjustRep(0, 1, 0); }
                 }
                 UpdateDashboard();
-                
-                char infoText[512];
-                sprintf(infoText, "%s (DOCKED)\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
-                    sys->name, sys->sector, sys->economy,
-                    sys->food_price, sys->minerals_price, sys->tech_price,
-                    cargoFood, cargoMinerals, cargoTech,
-                    engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
-                    weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
-                SetWindowText(hInfoArea, infoText);
+                ShowStationView(hwnd);
             } else if (LOWORD(wParam) >= ID_BTN_UPG_ENGINE && LOWORD(wParam) <= ID_BTN_UPG_SHIELD && selectedSystem == currentSystemId) {
                 int cmd = LOWORD(wParam);
                 if (cmd == ID_BTN_UPG_ENGINE) {
@@ -803,18 +960,43 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
                 
                 UpdateDashboard();
-                
-                char infoText[512];
-                System *sys = &systems[currentSystemId];
-                sprintf(infoText, "%s (DOCKED)\nSector: %s | Econ: %s\nMkt:F:%d M:%d T:%d\nInv:F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
-                    sys->name, sys->sector, sys->economy,
-                    sys->food_price, sys->minerals_price, sys->tech_price,
-                    cargoFood, cargoMinerals, cargoTech,
-                    engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
-                    weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
-                SetWindowText(hInfoArea, infoText);
+                ShowStationView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_MISSIONS) {
                 ShowMissionsView(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_FACTIONS) {
+                ShowFactionsView(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_FACT_DONATE) {
+                if (credits >= 350) {
+                    credits -= 350;
+                    AdjustRep(15, 0, -8);
+                    UpdateDashboard();
+                    ShowFactionsView(hwnd);
+                    MessageBox(hwnd, "Donated ₭350 to Galactic Federation Naval Fleet!\nReputation: +15 Fed, -8 Pirates.", "Diplomacy", MB_OK);
+                } else {
+                    MessageBox(hwnd, "Not enough credits to donate!", "Diplomacy", MB_OK | MB_ICONWARNING);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_FACT_DUES) {
+                if (credits >= 300) {
+                    credits -= 300;
+                    AdjustRep(0, 15, 0);
+                    UpdateDashboard();
+                    ShowFactionsView(hwnd);
+                    MessageBox(hwnd, "Paid ₭300 in Traders Guild annual dues!\nReputation: +15 Traders Guild.", "Diplomacy", MB_OK);
+                } else {
+                    MessageBox(hwnd, "Not enough credits for guild dues!", "Diplomacy", MB_OK | MB_ICONWARNING);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_FACT_BRIBE) {
+                if (credits >= 400) {
+                    credits -= 400;
+                    AdjustRep(-8, 0, 15);
+                    UpdateDashboard();
+                    ShowFactionsView(hwnd);
+                    MessageBox(hwnd, "Slipped ₭400 to Pirate Syndicate contact!\nReputation: +15 Pirates, -8 Federation.", "Diplomacy", MB_OK);
+                } else {
+                    MessageBox(hwnd, "Not enough credits for bribe!", "Diplomacy", MB_OK | MB_ICONWARNING);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_FACT_BACK) {
+                ShowStationView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_MISSION_ACCEPT_1) {
                 activeMission = stationMissions[0];
                 stationMissions[0].type = 0;
@@ -842,7 +1024,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     hull -= dmg;
                     int reward = (rand() % 200) + 600;
                     credits += reward;
-                    sprintf(phenomMsg, "BLACK HOLE PROBE OPERATION\n\nYour scientific probe pierced the event horizon accretion disk.\nSevere gravitational tidal shear inflicted %d Hull damage.\nTelemetry yielded rare Dark Matter & Chroniton data: Earned ₭%d credits!", dmg, reward);
+                    AdjustRep(5, 0, 0);
+                    sprintf(phenomMsg, "BLACK HOLE PROBE OPERATION\n\nYour scientific probe pierced the event horizon accretion disk.\nSevere gravitational tidal shear inflicted %d Hull damage.\nTelemetry yielded rare Dark Matter & Chroniton data: Earned ₭%d credits!\nReputation: +5 Federation.", dmg, reward);
                 } else if (sys->phenomenon == 2) { // Solar Flare
                     int dmg = 18 - shieldLevel * 2;
                     if (dmg < 5) dmg = 5;
@@ -851,7 +1034,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (fuel > 100) fuel = 100;
                     int reward = (rand() % 100) + 350;
                     credits += reward;
-                    sprintf(phenomMsg, "SOLAR FLARE HARVESTING\n\nMagnetic scoops deployed into coronal mass ejection.\nSolar radiation inflicted %d Hull damage.\nSuperheated plasma harvested: +35%% Fuel and ₭%d in synthesized plasma cells!", dmg, reward);
+                    AdjustRep(0, 4, 0);
+                    sprintf(phenomMsg, "SOLAR FLARE HARVESTING\n\nMagnetic scoops deployed into coronal mass ejection.\nSolar radiation inflicted %d Hull damage.\nSuperheated plasma harvested: +35%% Fuel and ₭%d in synthesized plasma cells!\nReputation: +4 Traders Guild.", dmg, reward);
                 } else if (sys->phenomenon == 3) { // Derelict Ship
                     int reward = (rand() % 150) + 400;
                     credits += reward;
@@ -864,7 +1048,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         cargoMinerals++;
                         strcpy(cargoInfo, "Recovered 1 ton of Tech and 1 ton of Minerals cargo!");
                     }
-                    sprintf(phenomMsg, "DERELICT SALVAGE OPERATION\n\nBoarding party scavenged the abandoned vessel.\nRecovered ₭%d in scrap credits.\nRepaired +30 Hull using intact hull plating.\n%s", reward, cargoInfo);
+                    AdjustRep(-2, 1, 5);
+                    sprintf(phenomMsg, "DERELICT SALVAGE OPERATION\n\nBoarding party scavenged the abandoned vessel.\nRecovered ₭%d in scrap credits.\nRepaired +30 Hull using intact hull plating.\n%s\nReputation: +5 Pirates, +1 Traders, -2 Federation.", reward, cargoInfo);
                 }
                 
                 sys->phenomenon = 0; // Cleared
@@ -908,9 +1093,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hwnd = CreateWindowEx(
         0,
         CLASS_NAME,
-        "KStellar Phase 3",
+        "KStellar Phase 12",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 680, 520,
+        CW_USEDEFAULT, CW_USEDEFAULT, 700, 550,
         NULL,
         NULL,
         hInstance,
