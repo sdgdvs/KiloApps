@@ -977,8 +977,62 @@
     let soundEnabled = true;
     let use24Hour = false;
     let audioCtx = null;
+    let currentTab = 'clock';
 
     const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function safeGetStorage(key, fallback) {
+      try {
+        const val = localStorage.getItem(key);
+        return val ? JSON.parse(val) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        console.warn('localStorage quota or error:', e);
+      }
+    }
+
+    // Load persisted state
+    const savedSettings = safeGetStorage('kclock_settings', {});
+    if (typeof savedSettings.use24Hour === 'boolean') use24Hour = savedSettings.use24Hour;
+    if (typeof savedSettings.soundEnabled === 'boolean') soundEnabled = savedSettings.soundEnabled;
+
+    let worldCities = [
+      'America/New_York',
+      'Europe/London',
+      'Asia/Tokyo',
+      'Australia/Sydney'
+    ];
+    const savedCities = safeGetStorage('kclock_cities', null);
+    if (Array.isArray(savedCities) && savedCities.length > 0) {
+      worldCities = savedCities;
+    }
+
+    let alarms = [
+      { id: '1', time: '07:30', label: 'Morning Alarm', days: [1, 2, 3, 4, 5], active: true, triggered: false },
+      { id: '2', time: '09:00', label: 'Weekend Wakeup', days: [0, 6], active: true, triggered: false }
+    ];
+    const savedAlarms = safeGetStorage('kclock_alarms', null);
+    if (Array.isArray(savedAlarms)) {
+      alarms = savedAlarms;
+    }
+
+    function saveState() {
+      safeSetStorage('kclock_settings', { use24Hour, soundEnabled });
+      safeSetStorage('kclock_cities', worldCities);
+      safeSetStorage('kclock_alarms', alarms);
+    }
 
     function initAudio() {
       if (!audioCtx) {
@@ -1023,6 +1077,7 @@
       const btn = document.getElementById('sound-toggle-btn');
       btn.innerText = soundEnabled ? '🔊 Sound On' : '🔇 Muted';
       document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
+      saveState();
     }
 
     function toggleFormat() {
@@ -1031,12 +1086,14 @@
       document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
       updateClock();
       updateWorldClock();
+      saveState();
     }
 
     // Navigation Tabs
     const tabOrder = ['clock', 'world', 'tzcalc', 'epoch', 'stopwatch', 'timer', 'alarms', 'settings'];
     
     function switchTab(tabId) {
+      currentTab = tabId;
       tabOrder.forEach(id => {
         const btn = document.getElementById('tab-btn-' + id);
         const panel = document.getElementById('tab-' + id);
@@ -1092,24 +1149,19 @@
     updateClock();
 
     // --- Tab 2: World Clock ---
-    let worldCities = [
-      'America/New_York',
-      'Europe/London',
-      'Asia/Tokyo',
-      'Australia/Sydney'
-    ];
-
     function addWorldCity() {
       const sel = document.getElementById('city-select').value;
       if (!worldCities.includes(sel)) {
         worldCities.push(sel);
         updateWorldClock();
+        saveState();
       }
     }
 
     function removeWorldCity(tz) {
       worldCities = worldCities.filter(c => c !== tz);
       updateWorldClock();
+      saveState();
     }
 
     function getTimezoneOffsetMinutes(tzName, date = new Date()) {
@@ -1157,18 +1209,21 @@
 
           const card = document.createElement('div');
           card.className = 'city-card';
-          const cityName = tz.split('/')[1] ? tz.split('/')[1].replace(/_/g, ' ') : tz;
+          const rawCityName = tz.split('/')[1] ? tz.split('/')[1].replace(/_/g, ' ') : tz;
+          const safeCityName = escapeHtml(rawCityName);
+          const safeTz = escapeHtml(tz);
           
           card.innerHTML = `
             <div class="city-header">
-              <span class="city-name">${cityName}</span>
+              <span class="city-name">${safeCityName}</span>
               <span class="city-daydiff">${dayDiffLabel}</span>
             </div>
             <div class="city-time">${timeStr}</div>
-            <div class="city-date">${dateStr} (${tz})</div>
+            <div class="city-date">${dateStr} (${safeTz})</div>
             <div class="city-offset-badge">${offsetBadgeStr}</div>
-            <button onclick="removeWorldCity('${tz}')" class="btn danger" style="margin-top: 8px; padding: 2px 8px; font-size: 11px; align-self: flex-end;">Remove</button>
+            <button class="btn danger remove-city-btn" style="margin-top: 8px; padding: 2px 8px; font-size: 11px; align-self: flex-end;">Remove</button>
           `;
+          card.querySelector('.remove-city-btn').onclick = () => removeWorldCity(tz);
           grid.appendChild(card);
         } catch (e) {
           console.warn('World clock error for timezone:', tz, e);
@@ -1219,22 +1274,21 @@
         const targetDate = new Date(baseDate.getTime() + diffMins * 60000);
         const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: !use24Hour };
         const formattedTgt = targetDate.toLocaleDateString('en-US', options);
-        document.getElementById('calc-target-result').innerHTML = `Target City Time: <strong>${formattedTgt}</strong>`;
+        document.getElementById('calc-target-result').innerHTML = `Target City Time: <strong>${escapeHtml(formattedTgt)}</strong>`;
       } catch (e) {
         document.getElementById('calc-target-result').innerText = 'Calculation Error';
       }
     }
 
-    // --- Tab: Unix Epoch & Precision Time Suite ---
+    // --- Tab 4: Unix Epoch & Precision Time Suite ---
     function isLeapYear(year) {
       return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
     }
 
     function getDayOfYear(date) {
-      const start = new Date(date.getFullYear(), 0, 0);
-      const diff = (date - start) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000);
-      const oneDay = 1000 * 60 * 60 * 24;
-      return Math.floor(diff / oneDay);
+      const start = Date.UTC(date.getFullYear(), 0, 0);
+      const current = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+      return Math.floor((current - start) / 86400000);
     }
 
     function getIsoWeekNumber(date) {
@@ -1347,8 +1401,8 @@
         return;
       }
 
-      const utcStr = date.toUTCString() + ` (${date.toISOString()})`;
-      const locStr = date.toString();
+      const utcStr = escapeHtml(date.toUTCString() + ` (${date.toISOString()})`);
+      const locStr = escapeHtml(date.toString());
 
       const diffSec = Math.round((Date.now() - date.getTime()) / 1000);
       let relStr = '';
@@ -1365,7 +1419,7 @@
         relStr = diffSec >= 0 ? `${days} days ago` : `in ${-days} days`;
       }
 
-      res.innerHTML = `<strong>UTC:</strong> ${utcStr}<br><strong>Local:</strong> ${locStr}<br><strong>Relative:</strong> ${relStr}`;
+      res.innerHTML = `<strong>UTC:</strong> ${utcStr}<br><strong>Local:</strong> ${locStr}<br><strong>Relative:</strong> ${escapeHtml(relStr)}`;
     }
 
     function convertHumanToEpoch() {
@@ -1392,10 +1446,10 @@
 
       const ms = date.getTime();
       const sec = Math.floor(ms / 1000);
-      res.innerHTML = `<strong>Epoch Seconds:</strong> ${sec}<br><strong>Epoch Milliseconds:</strong> ${ms}<br><strong>ISO-8601:</strong> ${date.toISOString()}`;
+      res.innerHTML = `<strong>Epoch Seconds:</strong> ${sec}<br><strong>Epoch Milliseconds:</strong> ${ms}<br><strong>ISO-8601:</strong> ${escapeHtml(date.toISOString())}`;
     }
 
-    // --- Tab 4: Stopwatch with Fastest / Slowest Badges ---
+    // --- Tab 5: Stopwatch with Fastest / Slowest Badges ---
     let swStart = 0;
     let swElapsed = 0;
     let swRaf = null;
@@ -1511,7 +1565,7 @@
       document.getElementById('sw-btn').classList.add('primary');
     }
 
-    // --- Tab 5: Timer ---
+    // --- Tab 6: Timer ---
     let tmStart = 0;
     let tmDuration = 0;
     let tmRemaining = 0;
@@ -1588,11 +1642,7 @@
       document.getElementById('tm-btn').classList.add('primary');
     }
 
-    // --- Tab 6: Repeating Alarms Manager ---
-    let alarms = [
-      { id: '1', time: '07:30', label: 'Morning Alarm', days: [1, 2, 3, 4, 5], active: true, triggered: false },
-      { id: '2', time: '09:00', label: 'Weekend Wakeup', days: [0, 6], active: true, triggered: false }
-    ];
+    // --- Tab 7: Repeating Alarms Manager ---
     let activeAlarmIndex = -1;
 
     function toggleDaySelect(btn) {
@@ -1632,6 +1682,10 @@
         alert('Please select at least one day for the alarm.');
         return;
       }
+      if (alarms.length >= 50) {
+        alert('Maximum alarm capacity (50) reached.');
+        return;
+      }
 
       alarms.push({
         id: 'alarm_' + Date.now(),
@@ -1643,18 +1697,25 @@
       });
 
       renderAlarms();
+      saveState();
       document.getElementById('alarm-label').value = '';
     }
 
     function toggleAlarm(index) {
-      alarms[index].active = !alarms[index].active;
-      alarms[index].triggered = false;
-      renderAlarms();
+      if (alarms[index]) {
+        alarms[index].active = !alarms[index].active;
+        alarms[index].triggered = false;
+        renderAlarms();
+        saveState();
+      }
     }
 
     function deleteAlarm(index) {
-      alarms.splice(index, 1);
-      renderAlarms();
+      if (alarms[index]) {
+        alarms.splice(index, 1);
+        renderAlarms();
+        saveState();
+      }
     }
 
     function renderAlarms() {
@@ -1667,21 +1728,26 @@
         
         let daysPillsHtml = '';
         DAY_NAMES.forEach((name, dayIdx) => {
-          const isSel = a.days.includes(dayIdx);
+          const isSel = Array.isArray(a.days) && a.days.includes(dayIdx);
           daysPillsHtml += `<span class="day-pill ${isSel ? 'active' : ''}">${name[0]}</span>`;
         });
 
+        const safeTime = escapeHtml(a.time);
+        const safeLabel = escapeHtml(a.label || 'Alarm');
+
         card.innerHTML = `
           <div>
-            <div class="alarm-time">${a.time}</div>
-            <div style="font-size: 13px; color: var(--text-main); font-weight: 500;">${a.label}</div>
+            <div class="alarm-time">${safeTime}</div>
+            <div style="font-size: 13px; color: var(--text-main); font-weight: 500;">${safeLabel}</div>
             <div class="alarm-days-pills">${daysPillsHtml}</div>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button class="btn" onclick="toggleAlarm(${i})">${a.active ? 'Disable' : 'Enable'}</button>
-            <button class="btn danger" onclick="deleteAlarm(${i})">Delete</button>
+            <button class="btn toggle-alarm-btn">${a.active ? 'Disable' : 'Enable'}</button>
+            <button class="btn danger del-alarm-btn">Delete</button>
           </div>
         `;
+        card.querySelector('.toggle-alarm-btn').onclick = () => toggleAlarm(i);
+        card.querySelector('.del-alarm-btn').onclick = () => deleteAlarm(i);
         list.appendChild(card);
       });
     }
@@ -1693,11 +1759,11 @@
       const currentDay = now.getDay();
 
       alarms.forEach((a, index) => {
-        if (a.active && a.days.includes(currentDay) && a.time === hhmm && !a.triggered) {
+        if (a.active && Array.isArray(a.days) && a.days.includes(currentDay) && a.time === hhmm && !a.triggered) {
           a.triggered = true;
           activeAlarmIndex = index;
           playChime([523.25, 659.25, 783.99], 0.35);
-          showModal(`⏰ ${a.label}`, `Alarm ringing for ${a.time}`, true);
+          showModal(`⏰ ${a.label || 'Alarm'}`, `Alarm ringing for ${a.time}`, true);
         }
         if (a.time !== hhmm) {
           a.triggered = false;
@@ -1715,16 +1781,17 @@
         alarms.push({
           id: 'snooze_' + Date.now(),
           time: `${hh}:${mm}`,
-          label: `${alarms[activeAlarmIndex].label} (Snoozed ${mins}m)`,
+          label: `${alarms[activeAlarmIndex].label || 'Alarm'} (Snoozed ${mins}m)`,
           days: [snoozedDay],
           active: true,
           triggered: false
         });
         renderAlarms();
+        saveState();
       }
     }
 
-    // --- Tab 7: Settings Export & Import [JSON] ---
+    // --- Tab 8: Settings Export & Import [JSON] ---
     function exportSettingsJSON() {
       const data = {
         version: "1.0",
@@ -1757,21 +1824,34 @@
         try {
           const imported = JSON.parse(e.target.result);
           if (imported.settings) {
-            if (typeof imported.settings.use24Hour === 'boolean' && imported.settings.use24Hour !== use24Hour) {
-              toggleFormat();
+            if (typeof imported.settings.use24Hour === 'boolean') {
+              use24Hour = imported.settings.use24Hour;
+              document.getElementById('format-toggle-btn').innerText = use24Hour ? '12H' : '24H';
+              document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
+              updateClock();
             }
-            if (typeof imported.settings.soundEnabled === 'boolean' && imported.settings.soundEnabled !== soundEnabled) {
-              toggleSound();
+            if (typeof imported.settings.soundEnabled === 'boolean') {
+              soundEnabled = imported.settings.soundEnabled;
+              document.getElementById('sound-toggle-btn').innerText = soundEnabled ? '🔊 Sound On' : '🔇 Muted';
+              document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
             }
           }
           if (Array.isArray(imported.worldCities)) {
-            worldCities = imported.worldCities;
+            worldCities = imported.worldCities.filter(c => typeof c === 'string');
             updateWorldClock();
           }
           if (Array.isArray(imported.alarms)) {
-            alarms = imported.alarms;
+            alarms = imported.alarms.map((a, idx) => ({
+              id: a.id || ('alarm_' + Date.now() + '_' + idx),
+              time: typeof a.time === 'string' ? a.time : '08:00',
+              label: typeof a.label === 'string' ? a.label : 'Alarm',
+              days: Array.isArray(a.days) ? a.days : [0, 1, 2, 3, 4, 5, 6],
+              active: typeof a.active === 'boolean' ? a.active : true,
+              triggered: false
+            }));
             renderAlarms();
           }
+          saveState();
           alert('Settings & Data successfully imported!');
         } catch (err) {
           alert('Failed to import JSON file. Please verify file format.');
@@ -1807,7 +1887,11 @@
       }
     }
 
-    // Initial renders
+    // Initial renders & UI sync
+    document.getElementById('format-toggle-btn').innerText = use24Hour ? '12H' : '24H';
+    document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
+    document.getElementById('sound-toggle-btn').innerText = soundEnabled ? '🔊 Sound On' : '🔇 Muted';
+    document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
     renderAlarms();
 
     // Auto-opening size (for standalone/window mode)
@@ -1818,14 +1902,48 @@
       window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 340, height: 580 }, '*');
     }
 
-    // Help Keyboard listener
+    // Keyboard listener for help, shortcuts, and Escape
     document.addEventListener('keydown', (e) => {
-      // Avoid triggering when typing in inputs
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      // Escape closes modal anywhere
+      if (e.key === 'Escape') {
+        dismissModal();
+        return;
+      }
+
+      // Avoid triggering action shortcuts when typing in inputs or selects
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
       if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
-        showModal('KClock Help', 'Use the top tabs to navigate.\nPress "H" or "F1" anytime to view this help message.');
+        showModal('KClock Help', 'Use the top tabs to navigate.\nPress "H" or "F1" anytime to view this help message.\nSpace: Start/Stop Stopwatch or Timer.\nL: Lap Stopwatch.\nR: Reset Stopwatch or Timer.\nEsc: Dismiss Alarm Modal.');
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        if (currentTab === 'stopwatch') {
+          toggleStopwatch();
+        } else if (currentTab === 'timer') {
+          toggleTimer();
+        }
+      } else if (e.key === 'l' || e.key === 'L') {
+        if (currentTab === 'stopwatch') {
+          lapStopwatch();
+        }
+      } else if (e.key === 'r' || e.key === 'R') {
+        if (currentTab === 'stopwatch') {
+          resetStopwatch();
+        } else if (currentTab === 'timer') {
+          resetTimer();
+        }
       }
+    });
+
+    // Cleanup on beforeunload
+    window.addEventListener('beforeunload', () => {
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close().catch(() => {});
+      }
+      if (alertAudioLoop) clearInterval(alertAudioLoop);
+      if (tmInterval) clearInterval(tmInterval);
+      if (swRaf) cancelAnimationFrame(swRaf);
     });
   </script>
 </body>
