@@ -23,6 +23,7 @@
     display: flex;
     background: #2d2d2d;
     border-bottom: 1px solid #3d3d3d;
+    align-items: center;
   }
   .tab {
     flex: 1;
@@ -32,30 +33,75 @@
     font-weight: 600;
     color: #888;
     transition: all 0.2s;
+    user-select: none;
   }
   .tab.active {
     color: #fff;
     background: #3d3d3d;
     border-bottom: 2px solid #e74c3c;
   }
+  .tab-help {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #3d3d3d;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .tab-help:hover {
+    color: #fff;
+    background: #3d3d3d;
+  }
   .content {
     flex: 1;
-    padding: 20px;
+    padding: 18px 20px;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
   }
+  .help-hint {
+    text-align: center;
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s;
+  }
+  .help-hint:hover {
+    color: #e74c3c;
+    text-decoration: underline;
+  }
   .display {
     background: #111;
     border: 1px solid #333;
-    padding: 15px;
+    padding: 14px;
     border-radius: 6px;
     font-family: 'Consolas', monospace;
-    font-size: 24px;
+    font-size: 22px;
     color: #e74c3c;
     text-align: center;
     margin-bottom: 10px;
     word-break: break-all;
+    cursor: pointer;
+    user-select: all;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .display:hover {
+    border-color: #555;
+    background: #181818;
+  }
+  .display-hint {
+    font-size: 11px;
+    color: #666;
+    margin-top: 4px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
   .strength-container {
     display: flex;
@@ -97,24 +143,38 @@
     align-items: center;
     gap: 10px;
   }
+  .control-row label {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
   input[type="text"], input[type="password"], select {
     flex: 1;
-    padding: 10px;
+    padding: 9px 12px;
     background: #222;
     border: 1px solid #444;
     color: #fff;
     border-radius: 6px;
+    font-size: 13px;
+    box-sizing: border-box;
+  }
+  input[type="text"]:focus, input[type="password"]:focus, select:focus {
+    outline: none;
+    border-color: #e74c3c;
   }
   button {
     background: #333;
     color: white;
     border: 1px solid #444;
-    padding: 10px 18px;
+    padding: 9px 16px;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 13px;
     transition: all 0.2s;
+    user-select: none;
   }
   button:hover {
     background: #444;
@@ -133,7 +193,7 @@
   .vault-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 12px;
   }
   .vault-list {
@@ -150,12 +210,16 @@
     align-items: center;
     gap: 10px;
     border-left: 4px solid #e74c3c;
+    transition: background 0.15s;
+  }
+  .vault-item:hover {
+    background: #303030;
   }
   .vault-info {
     flex: 1;
     overflow: hidden;
   }
-  .vault-label { font-weight: bold; color: #fff; font-size: 15px; }
+  .vault-label { font-weight: bold; color: #fff; font-size: 14px; }
   .vault-category {
     font-size: 11px;
     padding: 2px 6px;
@@ -165,22 +229,31 @@
     margin-left: 8px;
     font-weight: normal;
   }
-  .vault-pass { font-family: monospace; color: #aaa; font-size: 14px; word-break: break-all; margin-top:4px;}
   .vault-badge {
     font-size: 11px;
     padding: 2px 6px;
     border-radius: 4px;
     background: #444;
     color: #ddd;
-    margin-left: 8px;
+    margin-left: 6px;
     font-weight: normal;
+  }
+  .vault-pass {
+    font-family: 'Consolas', monospace;
+    color: #bbb;
+    font-size: 13px;
+    word-break: break-all;
+    margin-top: 4px;
+    cursor: pointer;
+    user-select: all;
   }
   .item-btns {
     display: flex;
     gap: 6px;
+    align-items: center;
   }
   .btn-sm {
-    padding: 6px 12px;
+    padding: 6px 10px;
     font-size: 12px;
   }
   .btn-danger {
@@ -206,48 +279,82 @@
   #lockScreen h1 {
     color: #e74c3c;
     margin-bottom: 20px;
+    font-size: 24px;
   }
   #lockScreen input {
     width: 100%;
     max-width: 300px;
     margin-bottom: 15px;
-    font-size: 18px;
+    font-size: 16px;
     text-align: center;
   }
   #lockScreen button {
     width: 100%;
     max-width: 300px;
   }
-  .setup-msg { color: #aaa; font-size: 13px; margin-top: 10px; max-width: 300px; }
-  #lockError { color: #e74c3c; margin-top: 10px; font-weight: bold; }
+  .setup-msg { color: #aaa; font-size: 13px; margin-top: 10px; max-width: 320px; line-height: 1.4; }
+  #lockError { color: #e74c3c; margin-top: 10px; font-weight: bold; font-size: 13px; }
+
+  /* Toast Notification */
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #2b2b2b;
+    color: #fff;
+    border: 1px solid #444;
+    border-left: 4px solid #2ecc71;
+    padding: 10px 18px;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+  #toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
 </style>
 </head>
 <body>
   <!-- Lock Screen Overlay -->
   <div id="lockScreen">
     <h1>KPass Vault Locked</h1>
-    <input type="password" id="masterPass" placeholder="Master Password">
+    <input type="password" id="masterPass" placeholder="Master Password" autofocus>
     <button class="primary" id="btnUnlock">Unlock / Setup</button>
     <div id="lockError"></div>
-    <div class="setup-msg" id="setupMsg">If this is your first time, entering a password will encrypt and set up your vault.</div>
+    <div class="setup-msg" id="setupMsg">If this is your first time, entering a password will initialize your encrypted vault. Press Enter to unlock.</div>
   </div>
 
-  <div id="helpOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; flex-direction: column; justify-content: center; align-items: center; color: #fff; padding: 20px; text-align: center;">
-    <h2 style="color: #e74c3c;">KPass Help</h2>
-    <p style="max-width: 400px; margin-bottom: 10px;"><strong>Generator:</strong> Customize your password complexity and length, then click Generate. You can save generated passwords to your Vault.</p>
-    <p style="max-width: 400px;"><strong>Vault:</strong> View, copy, search, and manage your saved passwords. Import/export is also available.</p>
-    <p style="max-width: 400px;"><strong>Auto-Lock:</strong> The vault auto-locks after 1 minute of inactivity.</p>
-    <p style="color: #aaa; margin-top: 20px;">Press 'H' / F1 or Click to close</p>
+  <!-- Help Overlay -->
+  <div id="helpOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 3000; flex-direction: column; justify-content: center; align-items: center; color: #fff; padding: 25px; text-align: center;">
+    <h2 style="color: #e74c3c; margin-top: 0;">KPass Help &amp; Shortcuts</h2>
+    <div style="max-width: 440px; text-align: left; background: #252525; border: 1px solid #3d3d3d; border-radius: 8px; padding: 18px; font-size: 13px; line-height: 1.5; color: #ddd;">
+      <p style="margin: 0 0 8px;"><strong>Generator:</strong> Customize password complexity and length (8-64 chars), then click <em>Generate</em> or press Enter. Click the password text anytime to quickly copy it.</p>
+      <p style="margin: 0 0 8px;"><strong>Vault:</strong> View, copy, search, categorize, and safely store your passwords encrypted locally with AES-GCM 256.</p>
+      <p style="margin: 0 0 8px;"><strong>Auto-Lock:</strong> For your protection, the vault auto-locks after 1 minute of inactivity.</p>
+      <p style="margin: 0 0 8px;"><strong>Import / Export:</strong> Easily backup or restore your vault using CSV or JSON formats.</p>
+      <p style="margin: 0; color: #2ecc71;"><strong>Shortcuts:</strong> 'H' or F1 = Toggle Help | Esc = Close Help | Enter = Unlock / Save / Generate</p>
+    </div>
+    <button style="margin-top: 18px; background: #e74c3c; border-color: #e74c3c; padding: 8px 24px;" id="btnCloseHelp">Close Help</button>
   </div>
   
   <div class="tabs">
     <div class="tab active" id="tabGen">Generator</div>
     <div class="tab" id="tabVault">Vault (<span id="vaultCount">0</span>)</div>
+    <div class="tab-help" id="btnHelpToggle" title="Help &amp; Shortcuts (F1)">? Help (F1)</div>
   </div>
   
   <div class="content" id="contentGen">
-    <div style="text-align: center; font-size: 13px; color: #aaa; margin-bottom: 10px;">Press 'H' or F1 for Help</div>
-    <div class="display" id="pwdDisplay">...</div>
+    <div class="help-hint" id="hintHelp">Press 'H' or F1 for Help</div>
+    <div class="display" id="pwdDisplay" title="Click to copy password">...
+      <div class="display-hint">Click password to copy</div>
+    </div>
     
     <!-- Password Strength Meter -->
     <div class="strength-container">
@@ -260,39 +367,39 @@
 
     <div class="controls">
       <div class="control-row">
-        <label><input type="checkbox" id="chkUpper" checked> Uppercase</label>
-        <label><input type="checkbox" id="chkLower" checked> Lowercase</label>
+        <label><input type="checkbox" id="chkUpper" checked> Uppercase (A-Z)</label>
+        <label><input type="checkbox" id="chkLower" checked> Lowercase (a-z)</label>
       </div>
       <div class="control-row">
-        <label><input type="checkbox" id="chkNum" checked> Numbers</label>
-        <label><input type="checkbox" id="chkSym" checked> Symbols</label>
+        <label><input type="checkbox" id="chkNum" checked> Numbers (0-9)</label>
+        <label><input type="checkbox" id="chkSym" checked> Symbols (!@#$%...)</label>
       </div>
-      <div class="control-row" style="margin-top: 10px;">
-        <label style="flex: 1; color: #fff;">Length: <span id="lenVal">16</span></label>
-        <input type="range" id="rngLen" min="8" max="64" value="16" style="flex: 2;">
+      <div class="control-row" style="margin-top: 6px;">
+        <label style="flex: 1; color: #fff;">Length: <span id="lenVal" style="font-weight:bold; color:#e74c3c;">16</span></label>
+        <input type="range" id="rngLen" min="8" max="64" value="16" style="flex: 2; accent-color: #e74c3c; cursor: pointer;">
       </div>
       <div class="control-row">
         <input type="text" id="labelInput" placeholder="Label (e.g. Work Email)">
-        <select id="catInput" style="max-width: 120px;">
+        <select id="catInput" style="max-width: 110px;">
           <option value="Personal">Personal</option>
           <option value="Work">Work</option>
           <option value="Finance">Finance</option>
           <option value="Social">Social</option>
           <option value="Other">Other</option>
         </select>
-        <button id="btnSave">Save to Vault</button>
+        <button id="btnSave" title="Save password to vault">Save to Vault</button>
       </div>
-      <div class="control-row" style="margin-top: 10px;">
+      <div class="control-row" style="margin-top: 6px;">
         <button class="primary" id="btnGen" style="flex: 1;">Generate</button>
-        <button class="primary" id="btnCopy" style="flex: 1; background: #3498db; border-color: #3498db;">Copy</button>
+        <button class="primary" id="btnCopy" style="flex: 1; background: #3498db; border-color: #3498db;">Copy Password</button>
       </div>
     </div>
   </div>
   
   <div class="content" id="contentVault" style="display: none;">
     <div class="vault-actions">
-      <input type="text" id="vaultSearch" placeholder="Search...">
-      <select id="vaultCatFilter" style="max-width: 120px;">
+      <input type="text" id="vaultSearch" placeholder="Search credentials...">
+      <select id="vaultCatFilter" style="max-width: 110px;">
         <option value="">All Cats</option>
         <option value="Personal">Personal</option>
         <option value="Work">Work</option>
@@ -300,10 +407,10 @@
         <option value="Social">Social</option>
         <option value="Other">Other</option>
       </select>
-      <button class="btn-sm" id="btnExportJSON" title="Export to JSON">JSON</button>
-      <button class="btn-sm" id="btnExportCSV" title="Export to CSV">CSV</button>
-      <button class="btn-sm" id="btnImport" title="Import Vault">Import</button>
-      <button class="btn-sm btn-danger" id="btnLock" title="Lock Vault">Lock</button>
+      <button class="btn-sm" id="btnExportJSON" title="Export vault to JSON">JSON</button>
+      <button class="btn-sm" id="btnExportCSV" title="Export vault to CSV">CSV</button>
+      <button class="btn-sm" id="btnImport" title="Import credentials from CSV or JSON">Import</button>
+      <button class="btn-sm btn-danger" id="btnLock" title="Instantly lock vault">Lock</button>
       <input type="file" id="fileImport" accept=".json,.csv" style="display:none;">
     </div>
     <div class="vault-list" id="vaultList">
@@ -311,8 +418,52 @@
     </div>
   </div>
 
+  <div id="toast"></div>
+
   <script>
     window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 500, height: 620 }, '*');
+
+    // Toast Notification System
+    function showToast(msg, isSuccess = true) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.style.borderLeftColor = isSuccess ? '#2ecc71' : '#e74c3c';
+      toast.classList.add('show');
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    // Safe clipboard helper
+    function copyText(str, successMsg = "Copied to clipboard!") {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(str).then(() => {
+          showToast(successMsg);
+        }).catch(() => {
+          fallbackCopy(str, successMsg);
+        });
+      } else {
+        fallbackCopy(str, successMsg);
+      }
+    }
+
+    function fallbackCopy(str, successMsg) {
+      const ta = document.createElement('textarea');
+      ta.value = str;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(successMsg);
+      } catch(err) {
+        showToast("Copy failed", false);
+      }
+      document.body.removeChild(ta);
+    }
+
     // Crypto utilities
     async function deriveKey(password, salt) {
       const enc = new TextEncoder();
@@ -351,6 +502,7 @@
     let vault = [];
     let currentMasterPass = null;
     let autoLockTimer = null;
+    const revealedKeys = new Set();
     const LOCK_TIMEOUT = 60000; // 1 minute
 
     const lockScreen = document.getElementById('lockScreen');
@@ -367,6 +519,9 @@
     const contentVault = document.getElementById('contentVault');
     const pwdDisplay = document.getElementById('pwdDisplay');
     const helpOverlay = document.getElementById('helpOverlay');
+    const btnHelpToggle = document.getElementById('btnHelpToggle');
+    const btnCloseHelp = document.getElementById('btnCloseHelp');
+    const hintHelp = document.getElementById('hintHelp');
     const btnGen = document.getElementById('btnGen');
     const btnCopy = document.getElementById('btnCopy');
     const btnSave = document.getElementById('btnSave');
@@ -395,12 +550,14 @@
     function lockVault() {
         currentMasterPass = null;
         vault = [];
+        revealedKeys.clear();
         lockScreen.style.display = 'flex';
         masterPassInput.value = '';
         lockError.innerText = '';
         renderVault();
         updateVaultCount();
         clearTimeout(autoLockTimer);
+        masterPassInput.focus();
     }
     btnLock.addEventListener('click', lockVault);
 
@@ -430,6 +587,7 @@
                 resetAutoLock();
                 renderVault();
                 updateVaultCount();
+                showToast("Vault unlocked successfully!");
             } catch(e) {
                 lockError.innerText = "Error decrypting vault.";
             }
@@ -442,6 +600,7 @@
             setupMsg.style.display = 'none';
             btnUnlock.innerText = "Unlock Vault";
             resetAutoLock();
+            showToast("Master password set! Vault ready.");
         }
     });
 
@@ -468,13 +627,30 @@
     tabGen.addEventListener('click', () => switchTab(true));
     tabVault.addEventListener('click', () => switchTab(false));
 
+    function toggleHelp(show) {
+        if (show === undefined) {
+            show = helpOverlay.style.display !== 'flex';
+        }
+        helpOverlay.style.display = show ? 'flex' : 'none';
+    }
+
+    btnHelpToggle.addEventListener('click', () => toggleHelp());
+    btnCloseHelp.addEventListener('click', () => toggleHelp(false));
+    hintHelp.addEventListener('click', () => toggleHelp(true));
+    helpOverlay.addEventListener('click', (e) => {
+        if (e.target === helpOverlay) toggleHelp(false);
+    });
+
     document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && helpOverlay.style.display === 'flex') {
+            toggleHelp(false);
+            return;
+        }
         if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && lockScreen.style.display === 'none') {
             if (e.key === 'F1') e.preventDefault();
-            helpOverlay.style.display = helpOverlay.style.display === 'flex' ? 'none' : 'flex';
+            toggleHelp();
         }
     });
-    helpOverlay.addEventListener('click', () => helpOverlay.style.display = 'none');
 
     const chkUpper = document.getElementById('chkUpper');
     const chkLower = document.getElementById('chkLower');
@@ -538,22 +714,36 @@
         for(let i=0; i<len; i++) {
             pass += chars[array[i] % chars.length];
         }
-        pwdDisplay.innerText = pass;
+        pwdDisplay.innerHTML = pass + '<div class="display-hint">Click password to copy</div>';
         evaluateStrength(pass);
     }
     btnGen.addEventListener('click', generate);
 
+    function getCurrentPassword() {
+        const text = pwdDisplay.innerText;
+        return text.replace(/Click password to copy/g, '').trim();
+    }
+
+    pwdDisplay.addEventListener('click', () => {
+        const pwd = getCurrentPassword();
+        if (pwd && pwd !== '...') {
+            copyText(pwd, "Password copied to clipboard!");
+        }
+    });
+
     btnCopy.addEventListener('click', () => {
-        navigator.clipboard.writeText(pwdDisplay.innerText).then(() => {
+        const pwd = getCurrentPassword();
+        if (pwd && pwd !== '...') {
+            copyText(pwd, "Password copied to clipboard!");
             const oldText = btnCopy.innerText;
             btnCopy.innerText = 'Copied!';
             setTimeout(() => btnCopy.innerText = oldText, 2000);
-        });
+        }
     });
 
-    btnSave.addEventListener('click', async () => {
+    async function handleSave() {
         const label = labelInput.value.trim();
-        const pass = pwdDisplay.innerText;
+        const pass = getCurrentPassword();
         const cat = catInput.value;
         if (label && pass && pass !== '...') {
             const strInfo = evaluateStrength(pass);
@@ -561,10 +751,14 @@
             await saveVault();
             labelInput.value = '';
             updateVaultCount();
-            alert("Saved to Vault!");
+            showToast("Saved to Vault!");
         } else {
-            alert("Please enter a label and generate a password.");
+            showToast("Please enter a label and generate a password.", false);
         }
+    }
+    btnSave.addEventListener('click', handleSave);
+    labelInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') handleSave();
     });
 
     vaultSearch.addEventListener('input', renderVault);
@@ -582,13 +776,14 @@
         });
 
         if (filtered.length === 0) {
-            vaultList.innerHTML = '<div style="text-align:center;color:#666;margin-top:20px;">' + 
-                (vault.length === 0 ? 'Vault is empty' : 'No matching entries found') + '</div>';
+            vaultList.innerHTML = '<div style="text-align:center;color:#777;margin-top:30px;font-size:14px;">' + 
+                (vault.length === 0 ? 'Your vault is currently empty.' : 'No matching entries found.') + '</div>';
             return;
         }
 
         filtered.forEach((item) => {
             const realIndex = vault.indexOf(item);
+            const isRevealed = revealedKeys.has(realIndex);
             const div = document.createElement('div');
             div.className = 'vault-item';
             div.innerHTML = `
@@ -598,51 +793,64 @@
                         <span class="vault-category"></span>
                         <span class="vault-badge"></span>
                     </div>
-                    <div class="vault-pass"></div>
+                    <div class="vault-pass" title="Click to copy password"></div>
                 </div>
                 <div class="item-btns">
-                    <button class="btn-sm btn-copy">Copy</button>
-                    <button class="btn-sm btn-danger btn-del">X</button>
+                    <button class="btn-sm btn-reveal" title="Toggle visibility">${isRevealed ? 'Hide' : 'Show'}</button>
+                    <button class="btn-sm btn-copy" title="Copy password">Copy</button>
+                    <button class="btn-sm btn-danger btn-del" title="Delete entry">&times;</button>
                 </div>
             `;
             div.querySelector('.vault-label').textContent = item.label;
             div.querySelector('.vault-category').textContent = item.category || 'Other';
             div.querySelector('.vault-badge').textContent = item.strength || 'Saved';
-            div.querySelector('.vault-pass').textContent = item.pass;
             
-            div.querySelector('.btn-copy').addEventListener('click', () => copyVaultItem(encodeURIComponent(item.pass)));
+            const passEl = div.querySelector('.vault-pass');
+            passEl.textContent = isRevealed ? item.pass : '••••••••••••';
+            passEl.addEventListener('click', () => copyText(item.pass, "Vault password copied!"));
+
+            div.querySelector('.btn-reveal').addEventListener('click', () => {
+                if (revealedKeys.has(realIndex)) {
+                    revealedKeys.delete(realIndex);
+                } else {
+                    revealedKeys.add(realIndex);
+                }
+                renderVault();
+            });
+
+            div.querySelector('.btn-copy').addEventListener('click', () => copyText(item.pass, "Vault password copied!"));
             div.querySelector('.btn-del').addEventListener('click', () => deleteItem(realIndex));
             vaultList.appendChild(div);
         });
     }
 
-    window.copyVaultItem = (encodedPass) => {
-        navigator.clipboard.writeText(decodeURIComponent(encodedPass)).then(() => alert("Copied!"));
-    };
-
-    window.deleteItem = async (index) => {
+    async function deleteItem(index) {
         vault.splice(index, 1);
+        revealedKeys.delete(index);
         await saveVault();
         renderVault();
         updateVaultCount();
-    };
+        showToast("Entry removed from vault.");
+    }
 
     // Export JSON
     document.getElementById('btnExportJSON').addEventListener('click', () => {
-        if(vault.length===0){ alert("Empty!"); return;}
+        if(vault.length===0){ showToast("Vault is empty!", false); return;}
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vault, null, 2));
         downloadFile(dataStr, "kpass_vault.json");
+        showToast("Exported to kpass_vault.json");
     });
 
     // Export CSV
     document.getElementById('btnExportCSV').addEventListener('click', () => {
-        if(vault.length===0){ alert("Empty!"); return;}
+        if(vault.length===0){ showToast("Vault is empty!", false); return;}
         let csv = "label,category,pass,strength,date\n";
         vault.forEach(i => {
             csv += `"${i.label.replace(/"/g, '""')}","${(i.category||'').replace(/"/g, '""')}","${i.pass.replace(/"/g, '""')}","${(i.strength||'').replace(/"/g, '""')}","${(i.date||'').replace(/"/g, '""')}"\n`;
         });
         const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
         downloadFile(dataStr, "kpass_vault.csv");
+        showToast("Exported to kpass_vault.csv");
     });
 
     function downloadFile(data, filename) {
@@ -666,8 +874,8 @@
             if(file.name.endsWith('.json')) {
                 try {
                     imported = JSON.parse(text);
-                    if(!Array.isArray(imported)) throw new Error("Invalid");
-                } catch(err) { return alert("Invalid JSON"); }
+                    if(!Array.isArray(imported)) throw new Error("Invalid format");
+                } catch(err) { return showToast("Invalid JSON file", false); }
             } else if(file.name.endsWith('.csv')) {
                 let lines = text.split('\n');
                 for(let i=1; i<lines.length; i++) {
@@ -688,7 +896,9 @@
                 await saveVault();
                 renderVault();
                 updateVaultCount();
-                alert(`Imported ${imported.length} entries!`);
+                showToast(`Imported ${imported.length} entries!`);
+            } else {
+                showToast("No valid entries found in file.", false);
             }
         };
         reader.readAsText(file);

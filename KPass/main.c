@@ -64,13 +64,13 @@ int g_vaultCount = 0;
 char g_masterPass[128] = {0};
 int g_locked = 1;
 
-HWND hDisplay, hStrengthDisplay, hBtnGen, hBtnCopy, hUpper, hLower, hNum, hSym, hLen;
-HWND hHelpLabel;
+HWND hDisplay, hStrengthDisplay, hBtnGen, hBtnCopy, hUpper, hLower, hNum, hSym, hLen, hLenLabel;
+HWND hHelpLabel, hBtnHelp;
 HWND hLabelInput, hCatInput, hBtnSave, hVaultSearch, hFilterCat, hVaultList;
-HWND hBtnCopyVault, hBtnDelVault, hBtnExpCSV, hBtnExpJSON, hBtnImp;
-HWND hLockInput, hBtnUnlock, hLockLabel;
+HWND hBtnCopyVault, hBtnDelVault, hBtnExpCSV, hBtnExpJSON, hBtnImp, hBtnLockMain;
+HWND hLockInput, hBtnUnlock, hLockLabel, hLockHelpLabel;
 HFONT hFont, hBtnFont, hSmallFont;
-HBRUSH hBgBrush;
+HBRUSH hBgBrush, hEditBrush;
 
 // AES Encryption functions
 int EncryptData(const char* password, const char* plainText, int plainLen, char* cipherBuffer, int* cipherMaxLen) {
@@ -311,20 +311,57 @@ void LockUI(int lock) {
     g_locked = lock;
     int showMain = lock ? SW_HIDE : SW_SHOW;
     ShowWindow(hHelpLabel, showMain);
+    ShowWindow(hBtnHelp, showMain);
     ShowWindow(hDisplay, showMain);
     ShowWindow(hStrengthDisplay, showMain);
     ShowWindow(hBtnGen, showMain);
     ShowWindow(hBtnCopy, showMain);
-    ShowWindow(hUpper, showMain); ShowWindow(hLower, showMain); ShowWindow(hNum, showMain); ShowWindow(hSym, showMain); ShowWindow(hLen, showMain);
-    ShowWindow(hLabelInput, showMain); ShowWindow(hCatInput, showMain); ShowWindow(hBtnSave, showMain);
-    ShowWindow(hVaultSearch, showMain); ShowWindow(hFilterCat, showMain); ShowWindow(hVaultList, showMain);
-    ShowWindow(hBtnCopyVault, showMain); ShowWindow(hBtnDelVault, showMain);
-    ShowWindow(hBtnExpCSV, showMain); ShowWindow(hBtnExpJSON, showMain); ShowWindow(hBtnImp, showMain);
+    ShowWindow(hUpper, showMain);
+    ShowWindow(hLower, showMain);
+    ShowWindow(hNum, showMain);
+    ShowWindow(hSym, showMain);
+    ShowWindow(hLenLabel, showMain);
+    ShowWindow(hLen, showMain);
+    ShowWindow(hLabelInput, showMain);
+    ShowWindow(hCatInput, showMain);
+    ShowWindow(hBtnSave, showMain);
+    ShowWindow(hVaultSearch, showMain);
+    ShowWindow(hFilterCat, showMain);
+    ShowWindow(hVaultList, showMain);
+    ShowWindow(hBtnCopyVault, showMain);
+    ShowWindow(hBtnDelVault, showMain);
+    ShowWindow(hBtnExpCSV, showMain);
+    ShowWindow(hBtnExpJSON, showMain);
+    ShowWindow(hBtnImp, showMain);
+    ShowWindow(hBtnLockMain, showMain);
 
     int showLock = lock ? SW_SHOW : SW_HIDE;
     ShowWindow(hLockLabel, showLock);
     ShowWindow(hLockInput, showLock);
     ShowWindow(hBtnUnlock, showLock);
+    ShowWindow(hLockHelpLabel, showLock);
+
+    if (lock) {
+        SetFocus(hLockInput);
+    } else {
+        SetFocus(hBtnGen);
+    }
+}
+
+void ShowHelpModal(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KPass Security & Vault Manager\n\n"
+        "Features:\n"
+        "  - Generator: Customize password length (8-64) and character sets.\n"
+        "  - Vault: Encrypted credentials store using AES-256.\n"
+        "  - Search: Real-time search by label or category.\n"
+        "  - Auto-Lock: Automatically locks after 1 minute of inactivity.\n"
+        "  - Export / Import: Backup credentials to CSV or JSON.\n\n"
+        "Keyboard Shortcuts:\n"
+        "  - F1 or 'H': Display this Help dialog\n"
+        "  - Enter: Unlock vault (on lock screen) / Save / Generate\n"
+        "  - Double-Click list entry: Copy password immediately",
+        "KPass Help", MB_OK | MB_ICONINFORMATION);
 }
 
 void ExportFile(HWND hwnd, int isJSON) {
@@ -390,76 +427,94 @@ void ImportFile(HWND hwnd) {
     }
 }
 
+static BOOL CALLBACK SetChildFont(HWND hChild, LPARAM lParam) {
+    SendMessageA(hChild, WM_SETFONT, (WPARAM)lParam, TRUE);
+    return TRUE;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hHelpLabel = CreateWindowA("STATIC", "Press 'H' or F1 for Help", WS_CHILD | SS_CENTER, 20, 5, 420, 15, hwnd, NULL, NULL, NULL);
-            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Click Generate...", WS_CHILD | ES_CENTER | ES_READONLY | ES_AUTOHSCROLL, 20, 25, 420, 32, hwnd, NULL, NULL, NULL);
-            hStrengthDisplay = CreateWindowA("STATIC", "Strength: - (0 bits)", WS_CHILD | SS_CENTER, 20, 62, 420, 20, hwnd, NULL, NULL, NULL);
+            // Window client width is 500, height is 620
+            hHelpLabel = CreateWindowA("STATIC", "KPass Security & Vault Manager [Press H or F1 for Help]", WS_CHILD | SS_LEFT, 20, 8, 380, 18, hwnd, NULL, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | BS_PUSHBUTTON, 405, 5, 75, 22, hwnd, (HMENU)1009, NULL, NULL);
 
-            hUpper = CreateWindowA("BUTTON", "Uppercase", WS_CHILD | BS_AUTOCHECKBOX, 20, 88, 100, 20, hwnd, NULL, NULL, NULL);
-            hLower = CreateWindowA("BUTTON", "Lowercase", WS_CHILD | BS_AUTOCHECKBOX, 125, 88, 100, 20, hwnd, NULL, NULL, NULL);
-            hNum = CreateWindowA("BUTTON", "Numbers", WS_CHILD | BS_AUTOCHECKBOX, 230, 88, 90, 20, hwnd, NULL, NULL, NULL);
-            hSym = CreateWindowA("BUTTON", "Symbols", WS_CHILD | BS_AUTOCHECKBOX, 330, 88, 90, 20, hwnd, NULL, NULL, NULL);
+            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Click Generate...", WS_CHILD | ES_CENTER | ES_READONLY | ES_AUTOHSCROLL, 20, 32, 460, 32, hwnd, NULL, NULL, NULL);
+            hStrengthDisplay = CreateWindowA("STATIC", "Strength: - (0 bits)", WS_CHILD | SS_CENTER, 20, 68, 460, 18, hwnd, NULL, NULL, NULL);
 
-            CreateWindowA("STATIC", "Length:", WS_CHILD | WS_VISIBLE, 20, 114, 55, 20, hwnd, NULL, NULL, NULL);
-            hLen = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "16", WS_CHILD | ES_NUMBER, 75, 112, 45, 22, hwnd, NULL, NULL, NULL);
-            
+            hUpper = CreateWindowA("BUTTON", "Uppercase", WS_CHILD | BS_AUTOCHECKBOX, 20, 92, 110, 20, hwnd, NULL, NULL, NULL);
+            hLower = CreateWindowA("BUTTON", "Lowercase", WS_CHILD | BS_AUTOCHECKBOX, 135, 92, 110, 20, hwnd, NULL, NULL, NULL);
+            hNum = CreateWindowA("BUTTON", "Numbers", WS_CHILD | BS_AUTOCHECKBOX, 250, 92, 110, 20, hwnd, NULL, NULL, NULL);
+            hSym = CreateWindowA("BUTTON", "Symbols", WS_CHILD | BS_AUTOCHECKBOX, 365, 92, 110, 20, hwnd, NULL, NULL, NULL);
+
             SendMessage(hUpper, BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(hLower, BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(hNum, BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(hSym, BM_SETCHECK, BST_CHECKED, 0);
-            
-            hBtnGen = CreateWindowA("BUTTON", "Generate", WS_CHILD | BS_PUSHBUTTON, 130, 112, 140, 24, hwnd, (HMENU)1001, NULL, NULL);
-            hBtnCopy = CreateWindowA("BUTTON", "Copy Password", WS_CHILD | BS_PUSHBUTTON, 280, 112, 160, 24, hwnd, (HMENU)1002, NULL, NULL);
 
-            hLabelInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_AUTOHSCROLL, 20, 150, 150, 24, hwnd, NULL, NULL, NULL);
-            SendMessageA(hLabelInput, EM_SETCUEBANNER, FALSE, (LPARAM)L"Label");
-            hCatInput = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWN, 180, 150, 100, 100, hwnd, NULL, NULL, NULL);
+            hLenLabel = CreateWindowA("STATIC", "Length:", WS_CHILD, 20, 120, 52, 20, hwnd, NULL, NULL, NULL);
+            hLen = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "16", WS_CHILD | ES_NUMBER | ES_CENTER, 74, 118, 46, 24, hwnd, NULL, NULL, NULL);
+            
+            hBtnGen = CreateWindowA("BUTTON", "Generate (Enter)", WS_CHILD | BS_PUSHBUTTON, 130, 118, 150, 24, hwnd, (HMENU)1001, NULL, NULL);
+            hBtnCopy = CreateWindowA("BUTTON", "Copy Password", WS_CHILD | BS_PUSHBUTTON, 290, 118, 190, 24, hwnd, (HMENU)1002, NULL, NULL);
+
+            hLabelInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_AUTOHSCROLL, 20, 152, 160, 24, hwnd, NULL, NULL, NULL);
+            SendMessageA(hLabelInput, EM_SETCUEBANNER, FALSE, (LPARAM)L"Label (e.g. Email)");
+            hCatInput = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWN, 190, 152, 110, 120, hwnd, NULL, NULL, NULL);
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Personal");
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Work");
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Finance");
+            SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Social");
+            SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Other");
             SendMessageA(hCatInput, CB_SETCURSEL, 0, 0);
             
-            hBtnSave = CreateWindowA("BUTTON", "Save to Vault", WS_CHILD | BS_PUSHBUTTON, 290, 150, 150, 24, hwnd, (HMENU)1003, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save to Vault", WS_CHILD | BS_PUSHBUTTON, 310, 152, 170, 24, hwnd, (HMENU)1003, NULL, NULL);
 
-            hVaultSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_AUTOHSCROLL, 20, 185, 150, 24, hwnd, (HMENU)2001, NULL, NULL);
-            SendMessageA(hVaultSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search...");
-            hFilterCat = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWNLIST, 180, 185, 100, 100, hwnd, (HMENU)2003, NULL, NULL);
+            hVaultSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_AUTOHSCROLL, 20, 186, 160, 24, hwnd, (HMENU)2001, NULL, NULL);
+            SendMessageA(hVaultSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search vault...");
+            hFilterCat = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWNLIST, 190, 186, 110, 120, hwnd, (HMENU)2003, NULL, NULL);
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"All Cats");
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Personal");
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Work");
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Finance");
+            SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Social");
+            SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Other");
             SendMessageA(hFilterCat, CB_SETCURSEL, 0, 0);
 
-            hBtnCopyVault = CreateWindowA("BUTTON", "Copy", WS_CHILD | BS_PUSHBUTTON, 290, 185, 70, 24, hwnd, (HMENU)1004, NULL, NULL);
-            hBtnDelVault = CreateWindowA("BUTTON", "Del", WS_CHILD | BS_PUSHBUTTON, 370, 185, 70, 24, hwnd, (HMENU)1005, NULL, NULL);
+            hBtnCopyVault = CreateWindowA("BUTTON", "Copy Pass", WS_CHILD | BS_PUSHBUTTON, 310, 186, 85, 24, hwnd, (HMENU)1004, NULL, NULL);
+            hBtnDelVault = CreateWindowA("BUTTON", "Delete", WS_CHILD | BS_PUSHBUTTON, 402, 186, 78, 24, hwnd, (HMENU)1005, NULL, NULL);
 
-            hVaultList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_NOTIFY, 20, 220, 420, 160, hwnd, (HMENU)2002, NULL, NULL);
+            hVaultList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_NOTIFY, 20, 220, 460, 320, hwnd, (HMENU)2002, NULL, NULL);
             
-            hBtnExpCSV = CreateWindowA("BUTTON", "Exp CSV", WS_CHILD | BS_PUSHBUTTON, 20, 390, 80, 24, hwnd, (HMENU)1006, NULL, NULL);
-            hBtnExpJSON = CreateWindowA("BUTTON", "Exp JSON", WS_CHILD | BS_PUSHBUTTON, 110, 390, 80, 24, hwnd, (HMENU)1007, NULL, NULL);
-            hBtnImp = CreateWindowA("BUTTON", "Imp CSV", WS_CHILD | BS_PUSHBUTTON, 200, 390, 80, 24, hwnd, (HMENU)1008, NULL, NULL);
+            hBtnExpCSV = CreateWindowA("BUTTON", "Exp CSV", WS_CHILD | BS_PUSHBUTTON, 20, 550, 80, 26, hwnd, (HMENU)1006, NULL, NULL);
+            hBtnExpJSON = CreateWindowA("BUTTON", "Exp JSON", WS_CHILD | BS_PUSHBUTTON, 106, 550, 80, 26, hwnd, (HMENU)1007, NULL, NULL);
+            hBtnImp = CreateWindowA("BUTTON", "Imp CSV", WS_CHILD | BS_PUSHBUTTON, 192, 550, 80, 26, hwnd, (HMENU)1008, NULL, NULL);
+            hBtnLockMain = CreateWindowA("BUTTON", "Lock Vault", WS_CHILD | BS_PUSHBUTTON, 360, 550, 120, 26, hwnd, (HMENU)1010, NULL, NULL);
 
             // Lock screen controls
-            hLockLabel = CreateWindowA("STATIC", "Enter Master Password:", WS_CHILD | SS_CENTER, 140, 150, 200, 20, hwnd, NULL, NULL, NULL);
-            hLockInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_PASSWORD | ES_AUTOHSCROLL | ES_CENTER, 140, 180, 200, 24, hwnd, NULL, NULL, NULL);
-            hBtnUnlock = CreateWindowA("BUTTON", "Unlock / Setup", WS_CHILD | BS_PUSHBUTTON, 165, 220, 150, 30, hwnd, (HMENU)3001, NULL, NULL);
+            hLockLabel = CreateWindowA("STATIC", "KPass Vault Locked", WS_CHILD | SS_CENTER, 40, 185, 420, 26, hwnd, NULL, NULL, NULL);
+            hLockInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_PASSWORD | ES_AUTOHSCROLL | ES_CENTER, 125, 220, 250, 26, hwnd, NULL, NULL, NULL);
+            SendMessageA(hLockInput, EM_SETCUEBANNER, FALSE, (LPARAM)L"Master Password");
+            hBtnUnlock = CreateWindowA("BUTTON", "Unlock / Setup (Enter)", WS_CHILD | BS_PUSHBUTTON, 150, 258, 200, 32, hwnd, (HMENU)3001, NULL, NULL);
+            hLockHelpLabel = CreateWindowA("STATIC", "Enter your master password to unlock.\nIf first time, entering a password initializes your encrypted vault.", WS_CHILD | SS_CENTER, 40, 305, 420, 36, hwnd, NULL, NULL, NULL);
 
-            hBgBrush = CreateSolidBrush(RGB(20, 20, 20));
+            hBgBrush = CreateSolidBrush(RGB(30, 30, 30));
+            hEditBrush = CreateSolidBrush(RGB(22, 22, 22));
+
             hFont = CreateFontA(-22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_MODERN, "Consolas");
+            hBtnFont = CreateFontA(-13, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hSmallFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+
+            EnumChildWindows(hwnd, SetChildFont, (LPARAM)hSmallFont);
+
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
-            
-            hBtnFont = CreateFontA(-14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             SendMessageA(hBtnGen, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hBtnCopy, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hBtnUnlock, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
-
-            hSmallFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            SendMessageA(hVaultList, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
+            SendMessageA(hBtnLockMain, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hStrengthDisplay, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
-            SendMessageA(hHelpLabel, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
+            SendMessageA(hLockLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             LockUI(1);
             SetTimer(hwnd, 1, 1000, NULL);
@@ -500,13 +555,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RefreshVaultList();
                     SetWindowTextA(hLockInput, "");
                 }
+            } else if (wmId == 1009) { // Help
+                ShowHelpModal(hwnd);
             } else if(!g_locked) {
                 if (wmId == 1001) {
                     GeneratePassword();
                 } else if (wmId == 1002) {
                     char pwd[65];
                     GetWindowTextA(hDisplay, pwd, 65);
-                    CopyToClipboard(hwnd, pwd);
+                    if (pwd[0] && !my_strstr_ic(pwd, "Click Generate")) {
+                        CopyToClipboard(hwnd, pwd);
+                        SetWindowTextA(hStrengthDisplay, "Password copied to clipboard!");
+                    }
                 } else if (wmId == 1003) {
                     char label[64] = {0}, cat[32] = {0}, pass[64] = {0};
                     GetWindowTextA(hLabelInput, label, 64);
@@ -524,13 +584,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             SaveVaultToFile();
                             RefreshVaultList();
                             SetWindowTextA(hLabelInput, "");
-                        } else { MessageBoxA(hwnd, "Vault full.", "Error", MB_OK); }
+                            SetWindowTextA(hStrengthDisplay, "Saved to vault successfully!");
+                        } else { MessageBoxA(hwnd, "Vault is full (max 200 entries).", "Error", MB_OK); }
+                    } else {
+                        MessageBoxA(hwnd, "Please enter a label and generate a password first.", "KPass", MB_OK | MB_ICONINFORMATION);
                     }
-                } else if (wmId == 1004) {
+                } else if (wmId == 1004 || (wmId == 2002 && wmEvent == LBN_DBLCLK)) {
                     int sel = SendMessageA(hVaultList, LB_GETCURSEL, 0, 0);
                     if(sel != LB_ERR) {
                         int realIdx = SendMessageA(hVaultList, LB_GETITEMDATA, sel, 0);
                         CopyToClipboard(hwnd, g_vault[realIdx].pass);
+                        SetWindowTextA(hStrengthDisplay, "Vault password copied to clipboard!");
                     }
                 } else if (wmId == 1005) {
                     int sel = SendMessageA(hVaultList, LB_GETCURSEL, 0, 0);
@@ -540,6 +604,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         g_vaultCount--;
                         SaveVaultToFile();
                         RefreshVaultList();
+                        SetWindowTextA(hStrengthDisplay, "Entry deleted.");
                     }
                 } else if (wmId == 1006) {
                     ExportFile(hwnd, 0);
@@ -547,6 +612,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ExportFile(hwnd, 1);
                 } else if (wmId == 1008) {
                     ImportFile(hwnd);
+                } else if (wmId == 1010) { // Lock
+                    g_masterPass[0] = 0;
+                    g_vaultCount = 0;
+                    LockUI(1);
+                    SetWindowTextA(hLockInput, "");
                 } else if ((wmId == 2001 && wmEvent == EN_CHANGE) || (wmId == 2003 && wmEvent == CBN_SELCHANGE)) {
                     RefreshVaultList();
                 }
@@ -555,12 +625,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
-            SetBkColor(hdc, RGB(20, 20, 20));
-            SetTextColor(hdc, RGB(231, 76, 60));
+            HWND hCtrl = (HWND)lParam;
+            SetBkColor(hdc, RGB(30, 30, 30));
+            if (hCtrl == hStrengthDisplay) {
+                SetTextColor(hdc, RGB(46, 204, 113));
+            } else if (hCtrl == hHelpLabel || hCtrl == hLockHelpLabel) {
+                SetTextColor(hdc, RGB(160, 160, 160));
+            } else if (hCtrl == hLockLabel) {
+                SetTextColor(hdc, RGB(231, 76, 60));
+            } else {
+                SetTextColor(hdc, RGB(225, 225, 225));
+            }
             return (LRESULT)hBgBrush;
+        }
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(22, 22, 22));
+            SetTextColor(hdc, RGB(245, 245, 245));
+            return (LRESULT)hEditBrush;
+        }
+        case WM_CTLCOLORLISTBOX: {
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(22, 22, 22));
+            SetTextColor(hdc, RGB(235, 235, 235));
+            return (LRESULT)hEditBrush;
         }
         case WM_DESTROY:
             if (hBgBrush) DeleteObject(hBgBrush);
+            if (hEditBrush) DeleteObject(hEditBrush);
             if (hFont) DeleteObject(hFont);
             if (hBtnFont) DeleteObject(hBtnFont);
             if (hSmallFont) DeleteObject(hSmallFont);
@@ -594,11 +686,31 @@ void __stdcall MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
-            char cls[64] = {0};
-            GetClassNameA(GetFocus(), cls, 64);
-            if (my_strstr_ic(cls, "EDIT") == 0) {
-                MessageBoxA(hwnd, "KPass Help\n\n- Generator: Custom length & chars.\n- Vault: Saves encrypted passes.\n- Auto-locks after 1 min idle.", "Help", MB_OK | MB_ICONINFORMATION);
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F1) {
+                ShowHelpModal(hwnd);
+                continue;
+            } else if (msg.wParam == 'H' || msg.wParam == 'h') {
+                char cls[64] = {0};
+                GetClassNameA(GetFocus(), cls, 64);
+                if (my_strstr_ic(cls, "EDIT") == 0) {
+                    ShowHelpModal(hwnd);
+                    continue;
+                }
+            } else if (msg.wParam == VK_RETURN) {
+                if (g_locked) {
+                    SendMessage(hwnd, WM_COMMAND, 3001, 0);
+                    continue;
+                } else {
+                    HWND hFoc = GetFocus();
+                    if (hFoc == hLabelInput) {
+                        SendMessage(hwnd, WM_COMMAND, 1003, 0);
+                        continue;
+                    } else if (hFoc == hLen || hFoc == hDisplay) {
+                        SendMessage(hwnd, WM_COMMAND, 1001, 0);
+                        continue;
+                    }
+                }
             }
         }
         TranslateMessage(&msg);
