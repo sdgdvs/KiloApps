@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KColor - Advanced Color Picker & Palette Tool</title>
+<title>KColor - Advanced Color Picker & Palette Studio</title>
 <style>
   :root {
     --bg-dark: #0f172a;
-    --card-bg: rgba(30, 41, 59, 0.75);
-    --card-border: rgba(255, 255, 255, 0.1);
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(255, 255, 255, 0.12);
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --accent: #38bdf8;
@@ -55,7 +55,13 @@
   h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
   .subtitle { font-size: 0.75rem; color: var(--text-muted); }
 
-  .eyedropper-btn {
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .action-btn {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     color: var(--text-main);
@@ -63,12 +69,13 @@
     border-radius: var(--radius);
     cursor: pointer;
     font-size: 0.85rem;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     transition: all 0.2s;
   }
-  .eyedropper-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
+  .action-btn:hover { background: rgba(255,255,255,0.12); border-color: var(--accent); }
+  .action-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .grid-layout {
     display: grid;
@@ -115,6 +122,7 @@
     transition: background-color 0.15s ease, color 0.15s ease;
     position: relative;
     overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.15);
   }
 
   .preview-hex {
@@ -129,13 +137,13 @@
     justify-content: space-between;
     font-size: 0.8rem;
     font-weight: 600;
-    opacity: 0.9;
+    opacity: 0.95;
   }
 
   /* Tabs */
   .tabs {
     display: flex;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.3);
     border-radius: 8px;
     padding: 3px;
     gap: 2px;
@@ -154,17 +162,19 @@
     transition: all 0.2s;
   }
 
+  .tab-btn:hover { color: var(--text-main); }
   .tab-btn.active {
     background: var(--card-bg);
     color: var(--accent);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
   /* Slider Group */
   .control-group { display: flex; flex-direction: column; gap: 10px; }
   .slider-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
   .slider-label { width: 32px; font-weight: 700; color: var(--text-muted); }
-  .slider-val { width: 36px; text-align: right; font-family: monospace; font-weight: 600; }
+  .slider-val { width: 44px; text-align: right; font-family: monospace; font-weight: 600; }
   
   input[type="range"] {
     flex: 1;
@@ -173,6 +183,11 @@
     background: rgba(255,255,255,0.15);
     border-radius: 3px;
     outline: none;
+  }
+
+  input[type="range"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   input[type="range"]::-webkit-slider-thumb {
@@ -192,6 +207,7 @@
   #range-g { background: linear-gradient(to right, #000, #0f0); }
   #range-b { background: linear-gradient(to right, #000, #00f); }
   #range-h { background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+  #range-hsv-h { background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
 
   /* Color Formats Table */
   .format-list { display: flex; flex-direction: column; gap: 8px; }
@@ -199,10 +215,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.25);
     padding: 8px 12px;
     border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
   }
   .format-name { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); width: 70px; }
   .format-val { font-family: monospace; font-size: 0.85rem; color: var(--text-main); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -218,12 +234,13 @@
     transition: all 0.2s;
     margin-left: 8px;
   }
-  .copy-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .copy-btn:hover { background: var(--accent); color: #0f172a; font-weight: 700; border-color: var(--accent); }
+  .copy-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
   /* Color Harmonies & Palettes */
   .swatch-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: 8px;
   }
 
@@ -240,18 +257,23 @@
     font-weight: 700;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     transition: transform 0.15s, box-shadow 0.15s;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
     position: relative;
+    user-select: none;
   }
   .swatch-item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+  .swatch-item:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
   .swatch-hex {
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.7);
     color: #fff;
     padding: 2px 4px;
     border-radius: 3px;
     text-align: center;
     backdrop-filter: blur(2px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Contrast Checker */
@@ -260,17 +282,29 @@
     gap: 12px;
     align-items: center;
   }
+  @media (max-width: 600px) {
+    .contrast-box { flex-direction: column; }
+  }
   .contrast-card {
     flex: 1;
-    padding: 10px;
+    width: 100%;
+    padding: 12px;
     border-radius: 8px;
     text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     font-size: 0.8rem;
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: background-color 0.15s;
   }
-  .contrast-score { font-size: 1.1rem; font-weight: 800; }
+  .contrast-score { font-size: 1.25rem; font-weight: 800; font-family: monospace; }
+  .badges-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
   .badge {
     display: inline-block;
     padding: 2px 6px;
@@ -279,13 +313,13 @@
     font-weight: 800;
     text-transform: uppercase;
   }
-  .badge-pass { background: #22c55e; color: #fff; }
-  .badge-fail { background: #ef4444; color: #fff; }
+  .badge-pass { background: #22c55e; color: #052e16; }
+  .badge-fail { background: #ef4444; color: #450a0a; }
 
   /* Shading Scale */
   .shade-bar {
     display: flex;
-    height: 36px;
+    height: 38px;
     border-radius: 8px;
     overflow: hidden;
     border: 1px solid var(--card-border);
@@ -296,20 +330,28 @@
     transition: opacity 0.1s;
   }
   .shade-step:hover { opacity: 0.8; }
+  .shade-step:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 
   /* Input fields */
   input[type="text"] {
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.35);
     border: 1px solid var(--card-border);
     color: var(--text-main);
-    padding: 6px 10px;
+    padding: 7px 10px;
     border-radius: 6px;
     font-family: monospace;
     font-size: 0.85rem;
     width: 100%;
     outline: none;
+    transition: border-color 0.2s;
   }
   input[type="text"]:focus { border-color: var(--accent); }
+
+  .quick-btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
 
   /* Toast Notification */
   #toast {
@@ -327,6 +369,7 @@
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 1000;
     font-size: 0.85rem;
+    pointer-events: none;
   }
   #toast.show { transform: translateY(0); opacity: 1; }
 </style>
@@ -335,23 +378,31 @@
 
 <header>
   <div class="title-group">
-    <div class="title-icon"></div>
+    <div class="title-icon" aria-hidden="true"></div>
     <div>
       <h1>KColor</h1>
       <div class="subtitle">Color Picker, Conversions & Palette Studio</div>
     </div>
   </div>
-  <button class="eyedropper-btn" id="eyedropperBtn">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9M19 8l-5-5-2 2 5 5 2-2Z"/></svg>
-    Eyedropper
-  </button>
+  <div class="header-actions">
+    <button class="action-btn" id="randomBtn" title="Generate Random Color (Hotkey: R)" aria-label="Generate Random Color">
+      🎲 Random
+    </button>
+    <button class="action-btn" id="invertBtn" title="Invert Active Color" aria-label="Invert Active Color">
+      🌓 Invert
+    </button>
+    <button class="action-btn" id="eyedropperBtn" title="Sample Screen Color" aria-label="Sample Screen Color">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m2 22 1-1h3l9-9M19 8l-5-5-2 2 5 5 2-2Z"/></svg>
+      Eyedropper
+    </button>
+  </div>
 </header>
 
 <div class="grid-layout">
   <!-- Left Panel: Preview & Sliders -->
   <div class="card">
     <div class="card-title">Active Color</div>
-    <div class="preview-box" id="mainPreview">
+    <div class="preview-box" id="mainPreview" role="region" aria-live="polite" aria-label="Active color preview">
       <div class="preview-hex" id="previewHex">#6496C8</div>
       <div class="preview-details">
         <span id="previewRgb">rgb(100, 150, 200)</span>
@@ -360,101 +411,106 @@
     </div>
 
     <!-- Mode Selector Tabs -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="rgb">RGB</button>
-      <button class="tab-btn" data-tab="hsl">HSL</button>
-      <button class="tab-btn" data-tab="hsv">HSV</button>
-      <button class="tab-btn" data-tab="cmyk">CMYK</button>
+    <div class="tabs" role="tablist" aria-label="Color Mode Tabs">
+      <button class="tab-btn active" role="tab" aria-selected="true" data-tab="rgb" id="tabRgb">RGB</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="hsl" id="tabHsl">HSL</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="hsv" id="tabHsv">HSV</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="cmyk" id="tabCmyk">CMYK</button>
     </div>
 
     <!-- Sliders Container -->
-    <div class="control-group" id="slidersRgb">
+    <div class="control-group" id="slidersRgb" role="tabpanel" aria-labelledby="tabRgb">
       <div class="slider-row">
-        <span class="slider-label">R</span>
-        <input type="range" id="range-r" min="0" max="255" value="100" aria-label="Red">
+        <label for="range-r" class="slider-label">R</label>
+        <input type="range" id="range-r" min="0" max="255" value="100" aria-label="Red" aria-valuemin="0" aria-valuemax="255" aria-valuenow="100">
         <span class="slider-val" id="val-r">100</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label">G</span>
-        <input type="range" id="range-g" min="0" max="255" value="150" aria-label="Green">
+        <label for="range-g" class="slider-label">G</label>
+        <input type="range" id="range-g" min="0" max="255" value="150" aria-label="Green" aria-valuemin="0" aria-valuemax="255" aria-valuenow="150">
         <span class="slider-val" id="val-g">150</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label">B</span>
-        <input type="range" id="range-b" min="0" max="255" value="200" aria-label="Blue">
+        <label for="range-b" class="slider-label">B</label>
+        <input type="range" id="range-b" min="0" max="255" value="200" aria-label="Blue" aria-valuemin="0" aria-valuemax="255" aria-valuenow="200">
         <span class="slider-val" id="val-b">200</span>
       </div>
     </div>
 
-    <div class="control-group" id="slidersHsl" style="display:none;">
+    <div class="control-group" id="slidersHsl" role="tabpanel" aria-labelledby="tabHsl" style="display:none;">
       <div class="slider-row">
-        <span class="slider-label">H</span>
-        <input type="range" id="range-h" min="0" max="360" value="210" aria-label="Hue">
+        <label for="range-h" class="slider-label">H</label>
+        <input type="range" id="range-h" min="0" max="360" value="210" aria-label="Hue" aria-valuemin="0" aria-valuemax="360" aria-valuenow="210">
         <span class="slider-val" id="val-h">210°</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label">S</span>
-        <input type="range" id="range-s" min="0" max="100" value="50" aria-label="Saturation">
+        <label for="range-s" class="slider-label">S</label>
+        <input type="range" id="range-s" min="0" max="100" value="50" aria-label="Saturation" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
         <span class="slider-val" id="val-s">50%</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label">L</span>
-        <input type="range" id="range-l" min="0" max="100" value="59" aria-label="Lightness">
+        <label for="range-l" class="slider-label">L</label>
+        <input type="range" id="range-l" min="0" max="100" value="59" aria-label="Lightness" aria-valuemin="0" aria-valuemax="100" aria-valuenow="59">
         <span class="slider-val" id="val-l">59%</span>
       </div>
     </div>
 
-    <div class="control-group" id="slidersHsv" style="display:none;">
+    <div class="control-group" id="slidersHsv" role="tabpanel" aria-labelledby="tabHsv" style="display:none;">
       <div class="slider-row">
-        <span class="slider-label">H</span>
-        <input type="range" id="range-hsv-h" min="0" max="360" value="210" aria-label="HSV Hue">
+        <label for="range-hsv-h" class="slider-label">H</label>
+        <input type="range" id="range-hsv-h" min="0" max="360" value="210" aria-label="HSV Hue" aria-valuemin="0" aria-valuemax="360" aria-valuenow="210">
         <span class="slider-val" id="val-hsv-h">210°</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label">S</span>
-        <input type="range" id="range-hsv-s" min="0" max="100" value="50" aria-label="HSV Saturation">
+        <label for="range-hsv-s" class="slider-label">S</label>
+        <input type="range" id="range-hsv-s" min="0" max="100" value="50" aria-label="HSV Saturation" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
         <span class="slider-val" id="val-hsv-s">50%</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label">V</span>
-        <input type="range" id="range-hsv-v" min="0" max="100" value="78" aria-label="HSV Value">
+        <label for="range-hsv-v" class="slider-label">V</label>
+        <input type="range" id="range-hsv-v" min="0" max="100" value="78" aria-label="HSV Value" aria-valuemin="0" aria-valuemax="100" aria-valuenow="78">
         <span class="slider-val" id="val-hsv-v">78%</span>
       </div>
     </div>
 
-    <div class="control-group" id="slidersCmyk" style="display:none;">
+    <div class="control-group" id="slidersCmyk" role="tabpanel" aria-labelledby="tabCmyk" style="display:none;">
       <div class="slider-row">
-        <span class="slider-label">C</span>
-        <input type="range" id="range-cmyk-c" min="0" max="100" value="50" aria-label="Cyan">
+        <label for="range-cmyk-c" class="slider-label">C</label>
+        <input type="range" id="range-cmyk-c" min="0" max="100" value="50" aria-label="Cyan" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
         <span class="slider-val" id="val-cmyk-c">50%</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label">M</span>
-        <input type="range" id="range-cmyk-m" min="0" max="100" value="25" aria-label="Magenta">
+        <label for="range-cmyk-m" class="slider-label">M</label>
+        <input type="range" id="range-cmyk-m" min="0" max="100" value="25" aria-label="Magenta" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25">
         <span class="slider-val" id="val-cmyk-m">25%</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label">Y</span>
-        <input type="range" id="range-cmyk-y" min="0" max="100" value="0" aria-label="Yellow">
+        <label for="range-cmyk-y" class="slider-label">Y</label>
+        <input type="range" id="range-cmyk-y" min="0" max="100" value="0" aria-label="Yellow" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <span class="slider-val" id="val-cmyk-y">0%</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label">K</span>
-        <input type="range" id="range-cmyk-k" min="0" max="100" value="22" aria-label="Black Key">
+        <label for="range-cmyk-k" class="slider-label">K</label>
+        <input type="range" id="range-cmyk-k" min="0" max="100" value="22" aria-label="Black Key" aria-valuemin="0" aria-valuemax="100" aria-valuenow="22">
         <span class="slider-val" id="val-cmyk-k">22%</span>
       </div>
     </div>
 
-    <!-- Custom Hex Direct Input -->
+    <!-- Custom Hex / CSS Direct Input -->
     <div>
-      <div class="card-title" style="margin-bottom:6px;">Hex / CSS Input</div>
-      <input type="text" id="customHexInput" value="#6496C8" placeholder="#HEX, rgb(), hsl()" aria-label="Hex or CSS color input">
+      <div class="card-title" style="margin-bottom:6px;">Universal Color / CSS Input</div>
+      <input type="text" id="customHexInput" value="#6496C8" placeholder="#HEX, rgb(), hsl(), cmyk(), color name" aria-label="Hex or CSS color input">
     </div>
 
     <!-- Quick Actions -->
-    <button class="eyedropper-btn" id="addSwatchBtn" style="justify-content:center; background:var(--accent); color:#0f172a; font-weight:700;">
-      + Save to Palette History
-    </button>
+    <div class="quick-btn-row">
+      <button class="action-btn" id="addSwatchBtn" style="justify-content:center; background:var(--accent); color:#0f172a; font-weight:700;">
+        + Save Swatch
+      </button>
+      <button class="action-btn" id="copyHexBtn" style="justify-content:center;">
+        📋 Copy HEX
+      </button>
+    </div>
   </div>
 
   <!-- Right Panel: Formats, Harmonies, Swatches & Accessibility -->
@@ -466,32 +522,37 @@
         <div class="format-row">
           <span class="format-name">HEX</span>
           <span class="format-val" id="fmtHex">#6496C8</span>
-          <button class="copy-btn" onclick="copyValue('fmtHex')">Copy</button>
+          <button class="copy-btn" onclick="copyValue('fmtHex')" aria-label="Copy HEX">Copy</button>
         </div>
         <div class="format-row">
           <span class="format-name">RGB</span>
           <span class="format-val" id="fmtRgb">rgb(100, 150, 200)</span>
-          <button class="copy-btn" onclick="copyValue('fmtRgb')">Copy</button>
+          <button class="copy-btn" onclick="copyValue('fmtRgb')" aria-label="Copy RGB">Copy</button>
         </div>
         <div class="format-row">
           <span class="format-name">HSL</span>
           <span class="format-val" id="fmtHsl">hsl(210, 50%, 59%)</span>
-          <button class="copy-btn" onclick="copyValue('fmtHsl')">Copy</button>
+          <button class="copy-btn" onclick="copyValue('fmtHsl')" aria-label="Copy HSL">Copy</button>
+        </div>
+        <div class="format-row">
+          <span class="format-name">HSV</span>
+          <span class="format-val" id="fmtHsv">hsv(210, 50%, 78%)</span>
+          <button class="copy-btn" onclick="copyValue('fmtHsv')" aria-label="Copy HSV">Copy</button>
         </div>
         <div class="format-row">
           <span class="format-name">CMYK</span>
           <span class="format-val" id="fmtCmyk">cmyk(50%, 25%, 0%, 22%)</span>
-          <button class="copy-btn" onclick="copyValue('fmtCmyk')">Copy</button>
+          <button class="copy-btn" onclick="copyValue('fmtCmyk')" aria-label="Copy CMYK">Copy</button>
         </div>
         <div class="format-row">
           <span class="format-name">CSS VAR</span>
           <span class="format-val" id="fmtCss">--color: #6496C8;</span>
-          <button class="copy-btn" onclick="copyValue('fmtCss')">Copy</button>
+          <button class="copy-btn" onclick="copyValue('fmtCss')" aria-label="Copy CSS Variable">Copy</button>
         </div>
         <div class="format-row">
-          <span class="format-name">C++</span>
+          <span class="format-name">Win32 C</span>
           <span class="format-val" id="fmtCpp">RGB(100, 150, 200)</span>
-          <button class="copy-btn" onclick="copyValue('fmtCpp')">Copy</button>
+          <button class="copy-btn" onclick="copyValue('fmtCpp')" aria-label="Copy Win32 C Color">Copy</button>
         </div>
       </div>
     </div>
@@ -499,41 +560,43 @@
     <!-- Tints & Shades -->
     <div class="card">
       <div class="card-title">Tints & Shades</div>
-      <div class="shade-bar" id="shadeScale"></div>
+      <div class="shade-bar" id="shadeScale" role="group" aria-label="Tints and Shades range"></div>
     </div>
 
     <!-- Harmonies -->
     <div class="card">
       <div class="card-title">Color Harmonies</div>
-      <div class="swatch-grid" id="harmoniesGrid"></div>
+      <div class="swatch-grid" id="harmoniesGrid" role="group" aria-label="Color Harmonies"></div>
     </div>
 
     <!-- Saved & Preset Swatches -->
     <div class="card">
       <div class="card-title">
         <span>Palette Library</span>
-        <button class="copy-btn" id="clearSwatchesBtn">Clear Saved</button>
+        <button class="copy-btn" id="clearSwatchesBtn" aria-label="Clear Saved Swatches">Clear Saved</button>
       </div>
-      <div class="swatch-grid" id="swatchGrid"></div>
+      <div class="swatch-grid" id="swatchGrid" role="group" aria-label="Palette Library Swatches"></div>
     </div>
 
     <!-- Accessibility & Contrast -->
     <div class="card">
-      <div class="card-title">WCAG Accessibility Contrast</div>
+      <div class="card-title">WCAG 2.1 Accessibility Contrast</div>
       <div class="contrast-box">
         <div class="contrast-card" id="cardVsWhite" style="background:#ffffff; color:#000000;">
-          <span>On White Text</span>
-          <span class="contrast-score" id="scoreWhite">4.2:1</span>
-          <div>
-            <span class="badge" id="badgeWhiteAA">AA</span>
+          <span><strong>White Text</strong> on Color</span>
+          <span class="contrast-score" id="scoreWhite">4.20:1</span>
+          <div class="badges-row">
+            <span class="badge" id="badgeWhiteAA">AA Normal</span>
+            <span class="badge" id="badgeWhiteAALarge">AA Large</span>
             <span class="badge" id="badgeWhiteAAA">AAA</span>
           </div>
         </div>
         <div class="contrast-card" id="cardVsBlack" style="background:#0f172a; color:#ffffff;">
-          <span>On Dark Text</span>
-          <span class="contrast-score" id="scoreBlack">7.8:1</span>
-          <div>
-            <span class="badge" id="badgeBlackAA">AA</span>
+          <span><strong>Dark Text</strong> on Color</span>
+          <span class="contrast-score" id="scoreBlack">7.80:1</span>
+          <div class="badges-row">
+            <span class="badge" id="badgeBlackAA">AA Normal</span>
+            <span class="badge" id="badgeBlackAALarge">AA Large</span>
             <span class="badge" id="badgeBlackAAA">AAA</span>
           </div>
         </div>
@@ -542,17 +605,33 @@
   </div>
 </div>
 
-<div id="toast">Copied to clipboard!</div>
+<div id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
 
 <script>
+  // Safe Storage Helper
+  function safeGetStorage(key, fallback) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? JSON.parse(val) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function safeSetStorage(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch (e) {
+      // Ignore quota error
+    }
+  }
+
   // State
   let state = { r: 100, g: 150, b: 200 };
   let activeTab = 'rgb';
-  let savedSwatches = JSON.parse(localStorage.getItem('kcolor_saved_swatches') || '[]');
-  
-  if (savedSwatches.length === 0) {
-    savedSwatches = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899'];
-  }
+  let savedSwatches = safeGetStorage('kcolor_saved_swatches', [
+    '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899'
+  ]);
 
   // Preset Colors
   const presets = ['#0F172A', '#1E293B', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#F8FAFC'];
@@ -580,13 +659,13 @@
   const fmtHex = document.getElementById('fmtHex');
   const fmtRgb = document.getElementById('fmtRgb');
   const fmtHsl = document.getElementById('fmtHsl');
+  const fmtHsv = document.getElementById('fmtHsv');
   const fmtCmyk = document.getElementById('fmtCmyk');
   const fmtCss = document.getElementById('fmtCss');
   const fmtCpp = document.getElementById('fmtCpp');
 
   // --- COLOR CONVERSION MATH BOUNDS ---
 
-  // Clamp helper
   function clamp(val, min, max) {
     return Math.min(Math.max(val, min), max);
   }
@@ -596,18 +675,68 @@
     r = clamp(Math.round(r), 0, 255);
     g = clamp(Math.round(g), 0, 255);
     b = clamp(Math.round(b), 0, 255);
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
   }
 
-  // HEX to RGB
-  function hexToRgb(hex) {
-    hex = hex.replace(/^#/, '').trim();
-    if (hex.length === 3) {
-      hex = hex.split('').map(c => c + c).join('');
+  // Universal CSS Color Parser
+  const parseCanvasCtx = document.createElement('canvas').getContext('2d');
+  function parseColorString(str) {
+    if (!str) return null;
+    str = str.trim();
+
+    // 1. Check HEX formats (#RGB, #RGBA, #RRGGBB, #RRGGBBAA)
+    const hexMatch = str.match(/^#?([0-9a-fA-F]{3,8})$/);
+    if (hexMatch) {
+      const hex = hexMatch[1];
+      if (hex.length === 3 || hex.length === 4) {
+        return {
+          r: parseInt(hex[0] + hex[0], 16),
+          g: parseInt(hex[1] + hex[1], 16),
+          b: parseInt(hex[2] + hex[2], 16)
+        };
+      } else if (hex.length === 6 || hex.length === 8) {
+        return {
+          r: parseInt(hex.slice(0, 2), 16),
+          g: parseInt(hex.slice(2, 4), 16),
+          b: parseInt(hex.slice(4, 6), 16)
+        };
+      }
     }
-    if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return null;
-    const num = parseInt(hex, 16);
-    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+
+    // 2. Check rgb / rgba
+    const rgbMatch = str.match(/^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (rgbMatch) {
+      return {
+        r: clamp(parseInt(rgbMatch[1]), 0, 255),
+        g: clamp(parseInt(rgbMatch[2]), 0, 255),
+        b: clamp(parseInt(rgbMatch[3]), 0, 255)
+      };
+    }
+
+    // 3. Check hsl / hsla
+    const hslMatch = str.match(/^hsla?\s*\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?/i);
+    if (hslMatch) {
+      return hslToRgb(parseInt(hslMatch[1]), parseInt(hslMatch[2]), parseInt(hslMatch[3]));
+    }
+
+    // 4. Check cmyk
+    const cmykMatch = str.match(/^cmyk\s*\(\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*\)/i);
+    if (cmykMatch) {
+      return cmykToRgb(parseInt(cmykMatch[1]), parseInt(cmykMatch[2]), parseInt(cmykMatch[3]), parseInt(cmykMatch[4]));
+    }
+
+    // 5. Canvas fallback for CSS named colors (e.g. coral, dodgerblue, tomato)
+    try {
+      parseCanvasCtx.fillStyle = '#000000';
+      parseCanvasCtx.fillStyle = str;
+      const computed = parseCanvasCtx.fillStyle;
+      if (computed && computed.startsWith('#')) {
+        const num = parseInt(computed.slice(1), 16);
+        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+      }
+    } catch (e) {}
+
+    return null;
   }
 
   // RGB to HSL (H: 0-360, S: 0-100, L: 0-100)
@@ -644,7 +773,7 @@
     
     let r, g, b;
     if (s === 0) {
-      r = g = b = l; // achromatic
+      r = g = b = l;
     } else {
       const hue2rgb = (p, q, t) => {
         if (t < 0) t += 1;
@@ -711,7 +840,7 @@
   function rgbToCmyk(r, g, b) {
     const rN = r / 255, gN = g / 255, bN = b / 255;
     const k = 1 - Math.max(rN, gN, bN);
-    if (k >= 1) return { c: 0, m: 0, y: 0, k: 100 }; // pure black safeguard
+    if (k >= 1) return { c: 0, m: 0, y: 0, k: 100 };
     const c = (1 - rN - k) / (1 - k);
     const m = (1 - gN - k) / (1 - k);
     const y = (1 - bN - k) / (1 - k);
@@ -772,42 +901,56 @@
 
     // Sliders update
     if (source !== 'rgb') {
-      rangeR.value = state.r; valR.textContent = state.r;
-      rangeG.value = state.g; valG.textContent = state.g;
-      rangeB.value = state.b; valB.textContent = state.b;
+      rangeR.value = state.r; valR.textContent = state.r; rangeR.setAttribute('aria-valuenow', state.r);
+      rangeG.value = state.g; valG.textContent = state.g; rangeG.setAttribute('aria-valuenow', state.g);
+      rangeB.value = state.b; valB.textContent = state.b; rangeB.setAttribute('aria-valuenow', state.b);
     } else {
       valR.textContent = state.r; valG.textContent = state.g; valB.textContent = state.b;
+      rangeR.setAttribute('aria-valuenow', state.r);
+      rangeG.setAttribute('aria-valuenow', state.g);
+      rangeB.setAttribute('aria-valuenow', state.b);
     }
 
     if (source !== 'hsl') {
-      rangeH.value = hsl.h; valH.textContent = `${hsl.h}°`;
-      rangeS.value = hsl.s; valS.textContent = `${hsl.s}%`;
-      rangeL.value = hsl.l; valL.textContent = `${hsl.l}%`;
+      rangeH.value = hsl.h; valH.textContent = `${hsl.h}°`; rangeH.setAttribute('aria-valuenow', hsl.h);
+      rangeS.value = hsl.s; valS.textContent = `${hsl.s}%`; rangeS.setAttribute('aria-valuenow', hsl.s);
+      rangeL.value = hsl.l; valL.textContent = `${hsl.l}%`; rangeL.setAttribute('aria-valuenow', hsl.l);
     } else {
       valH.textContent = `${hsl.h}°`; valS.textContent = `${hsl.s}%`; valL.textContent = `${hsl.l}%`;
+      rangeH.setAttribute('aria-valuenow', hsl.h);
+      rangeS.setAttribute('aria-valuenow', hsl.s);
+      rangeL.setAttribute('aria-valuenow', hsl.l);
     }
 
     if (source !== 'hsv') {
-      rangeHsvH.value = hsv.h; valHsvH.textContent = `${hsv.h}°`;
-      rangeHsvS.value = hsv.s; valHsvS.textContent = `${hsv.s}%`;
-      rangeHsvV.value = hsv.v; valHsvV.textContent = `${hsv.v}%`;
+      rangeHsvH.value = hsv.h; valHsvH.textContent = `${hsv.h}°`; rangeHsvH.setAttribute('aria-valuenow', hsv.h);
+      rangeHsvS.value = hsv.s; valHsvS.textContent = `${hsv.s}%`; rangeHsvS.setAttribute('aria-valuenow', hsv.s);
+      rangeHsvV.value = hsv.v; valHsvV.textContent = `${hsv.v}%`; rangeHsvV.setAttribute('aria-valuenow', hsv.v);
     } else {
       valHsvH.textContent = `${hsv.h}°`; valHsvS.textContent = `${hsv.s}%`; valHsvV.textContent = `${hsv.v}%`;
+      rangeHsvH.setAttribute('aria-valuenow', hsv.h);
+      rangeHsvS.setAttribute('aria-valuenow', hsv.s);
+      rangeHsvV.setAttribute('aria-valuenow', hsv.v);
     }
 
     if (source !== 'cmyk') {
-      rangeCmykC.value = cmyk.c; valCmykC.textContent = `${cmyk.c}%`;
-      rangeCmykM.value = cmyk.m; valCmykM.textContent = `${cmyk.m}%`;
-      rangeCmykY.value = cmyk.y; valCmykY.textContent = `${cmyk.y}%`;
-      rangeCmykK.value = cmyk.k; valCmykK.textContent = `${cmyk.k}%`;
+      rangeCmykC.value = cmyk.c; valCmykC.textContent = `${cmyk.c}%`; rangeCmykC.setAttribute('aria-valuenow', cmyk.c);
+      rangeCmykM.value = cmyk.m; valCmykM.textContent = `${cmyk.m}%`; rangeCmykM.setAttribute('aria-valuenow', cmyk.m);
+      rangeCmykY.value = cmyk.y; valCmykY.textContent = `${cmyk.y}%`; rangeCmykY.setAttribute('aria-valuenow', cmyk.y);
+      rangeCmykK.value = cmyk.k; valCmykK.textContent = `${cmyk.k}%`; rangeCmykK.setAttribute('aria-valuenow', cmyk.k);
     } else {
       valCmykC.textContent = `${cmyk.c}%`; valCmykM.textContent = `${cmyk.m}%`; valCmykY.textContent = `${cmyk.y}%`; valCmykK.textContent = `${cmyk.k}%`;
+      rangeCmykC.setAttribute('aria-valuenow', cmyk.c);
+      rangeCmykM.setAttribute('aria-valuenow', cmyk.m);
+      rangeCmykY.setAttribute('aria-valuenow', cmyk.y);
+      rangeCmykK.setAttribute('aria-valuenow', cmyk.k);
     }
 
     // Formats
     fmtHex.textContent = hex;
     fmtRgb.textContent = `rgb(${state.r}, ${state.g}, ${state.b})`;
     fmtHsl.textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+    fmtHsv.textContent = `hsv(${hsv.h}, ${hsv.s}%, ${hsv.v}%)`;
     fmtCmyk.textContent = `cmyk(${cmyk.c}%, ${cmyk.m}%, ${cmyk.y}%, ${cmyk.k}%)`;
     fmtCss.textContent = `--color: ${hex};`;
     fmtCpp.textContent = `RGB(${state.r}, ${state.g}, ${state.b})`;
@@ -829,10 +972,20 @@
       const el = document.createElement('div');
       el.className = 'shade-step';
       el.style.backgroundColor = stepHex;
-      el.title = stepHex;
+      el.title = `${stepHex} (${l}% Lightness)`;
+      el.tabIndex = 0;
+      el.role = 'button';
+      el.setAttribute('aria-label', `Shade ${stepHex}, lightness ${l}%`);
       el.onclick = () => {
         state = stepRgb;
         updateAll();
+      };
+      el.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          state = stepRgb;
+          updateAll();
+        }
       };
       container.appendChild(el);
     }
@@ -844,10 +997,13 @@
 
     const angles = [
       { name: 'Complementary', offset: 180 },
-      { name: 'Analogous 1', offset: -30 },
-      { name: 'Analogous 2', offset: 30 },
+      { name: 'Analogous -30°', offset: -30 },
+      { name: 'Analogous +30°', offset: 30 },
       { name: 'Triadic 1', offset: 120 },
-      { name: 'Triadic 2', offset: 240 }
+      { name: 'Triadic 2', offset: 240 },
+      { name: 'Split Comp 1', offset: 150 },
+      { name: 'Split Comp 2', offset: 210 },
+      { name: 'Tetradic +90°', offset: 90 }
     ];
 
     angles.forEach(item => {
@@ -858,7 +1014,18 @@
       const swatch = document.createElement('div');
       swatch.className = 'swatch-item';
       swatch.style.backgroundColor = targetHex;
+      swatch.tabIndex = 0;
+      swatch.role = 'button';
+      swatch.title = `${item.name}: ${targetHex}`;
+      swatch.setAttribute('aria-label', `${item.name}: ${targetHex}`);
       swatch.onclick = () => { state = targetRgb; updateAll(); };
+      swatch.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          state = targetRgb;
+          updateAll();
+        }
+      };
 
       const label = document.createElement('div');
       label.className = 'swatch-hex';
@@ -880,9 +1047,20 @@
       const swatch = document.createElement('div');
       swatch.className = 'swatch-item';
       swatch.style.backgroundColor = hex;
+      swatch.tabIndex = 0;
+      swatch.role = 'button';
+      swatch.title = `Swatch ${hex}`;
+      swatch.setAttribute('aria-label', `Palette Swatch ${hex}`);
       swatch.onclick = () => {
-        const rgb = hexToRgb(hex);
+        const rgb = parseColorString(hex);
         if (rgb) { state = rgb; updateAll(); }
+      };
+      swatch.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const rgb = parseColorString(hex);
+          if (rgb) { state = rgb; updateAll(); }
+        }
       };
 
       const label = document.createElement('div');
@@ -896,30 +1074,59 @@
 
   function renderAccessibility(colorLum) {
     const whiteLum = 1.0;
-    const blackLum = 0.015; // approximate dark card luminance
+    const blackLum = 0.015;
 
     const ratioWhite = getContrastRatio(colorLum, whiteLum);
     const ratioBlack = getContrastRatio(colorLum, blackLum);
 
     // Vs White
-    document.getElementById('cardVsWhite').style.backgroundColor = rgbToHex(state.r, state.g, state.b);
-    document.getElementById('cardVsWhite').style.color = '#ffffff';
+    const hex = rgbToHex(state.r, state.g, state.b);
+    const cardWhite = document.getElementById('cardVsWhite');
+    cardWhite.style.backgroundColor = hex;
+    cardWhite.style.color = '#ffffff';
     document.getElementById('scoreWhite').textContent = `${ratioWhite.toFixed(2)}:1`;
 
     const whiteAA = document.getElementById('badgeWhiteAA');
+    const whiteAALarge = document.getElementById('badgeWhiteAALarge');
     const whiteAAA = document.getElementById('badgeWhiteAAA');
     whiteAA.className = ratioWhite >= 4.5 ? 'badge badge-pass' : 'badge badge-fail';
+    whiteAALarge.className = ratioWhite >= 3.0 ? 'badge badge-pass' : 'badge badge-fail';
     whiteAAA.className = ratioWhite >= 7.0 ? 'badge badge-pass' : 'badge badge-fail';
 
     // Vs Black
-    document.getElementById('cardVsBlack').style.backgroundColor = rgbToHex(state.r, state.g, state.b);
-    document.getElementById('cardVsBlack').style.color = '#0f172a';
+    const cardBlack = document.getElementById('cardVsBlack');
+    cardBlack.style.backgroundColor = hex;
+    cardBlack.style.color = '#0f172a';
     document.getElementById('scoreBlack').textContent = `${ratioBlack.toFixed(2)}:1`;
 
     const blackAA = document.getElementById('badgeBlackAA');
+    const blackAALarge = document.getElementById('badgeBlackAALarge');
     const blackAAA = document.getElementById('badgeBlackAAA');
     blackAA.className = ratioBlack >= 4.5 ? 'badge badge-pass' : 'badge badge-fail';
+    blackAALarge.className = ratioBlack >= 3.0 ? 'badge badge-pass' : 'badge badge-fail';
     blackAAA.className = ratioBlack >= 7.0 ? 'badge badge-pass' : 'badge badge-fail';
+  }
+
+  // --- RANDOM & INVERT HELPERS ---
+
+  function randomizeColor() {
+    state = {
+      r: Math.floor(Math.random() * 256),
+      g: Math.floor(Math.random() * 256),
+      b: Math.floor(Math.random() * 256)
+    };
+    updateAll();
+    showToast(`Generated random color: ${rgbToHex(state.r, state.g, state.b)}`);
+  }
+
+  function invertColor() {
+    state = {
+      r: 255 - state.r,
+      g: 255 - state.g,
+      b: 255 - state.b
+    };
+    updateAll();
+    showToast(`Inverted color: ${rgbToHex(state.r, state.g, state.b)}`);
   }
 
   // --- EVENT HANDLERS ---
@@ -968,10 +1175,9 @@
     });
   });
 
-  // Direct Hex Input Parser
+  // Universal Color Direct Input Parser
   customHexInput.addEventListener('input', () => {
-    const val = customHexInput.value.trim();
-    const parsed = hexToRgb(val);
+    const parsed = parseColorString(customHexInput.value);
     if (parsed) {
       state = parsed;
       updateAll('customHexInput');
@@ -981,8 +1187,12 @@
   // Tabs Switching
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
       e.target.classList.add('active');
+      e.target.setAttribute('aria-selected', 'true');
 
       const tab = e.target.getAttribute('data-tab');
       activeTab = tab;
@@ -1000,7 +1210,7 @@
       try {
         const eyeDropper = new EyeDropper();
         const result = await eyeDropper.open();
-        const rgb = hexToRgb(result.sRGBHex);
+        const rgb = parseColorString(result.sRGBHex);
         if (rgb) {
           state = rgb;
           updateAll();
@@ -1010,8 +1220,18 @@
         // User canceled eyedropper
       }
     } else {
-      alert("Eyedropper API is not supported in this browser environment.");
+      showToast("Eyedropper not supported in this browser");
     }
+  });
+
+  // Random / Invert Buttons
+  document.getElementById('randomBtn').addEventListener('click', randomizeColor);
+  document.getElementById('invertBtn').addEventListener('click', invertColor);
+
+  // Copy Active Hex
+  document.getElementById('copyHexBtn').addEventListener('click', () => {
+    const hex = rgbToHex(state.r, state.g, state.b);
+    copyStringToClipboard(hex);
   });
 
   // Add Swatch
@@ -1020,23 +1240,29 @@
     if (!savedSwatches.includes(currentHex)) {
       savedSwatches.unshift(currentHex);
       if (savedSwatches.length > 24) savedSwatches.pop();
-      localStorage.setItem('kcolor_saved_swatches', JSON.stringify(savedSwatches));
+      safeSetStorage('kcolor_saved_swatches', savedSwatches);
       renderSwatches();
       showToast(`Saved ${currentHex} to library!`);
+    } else {
+      showToast(`${currentHex} is already in library`);
     }
   });
 
   // Clear Swatches
   document.getElementById('clearSwatchesBtn').addEventListener('click', () => {
     savedSwatches = [];
-    localStorage.removeItem('kcolor_saved_swatches');
+    safeSetStorage('kcolor_saved_swatches', []);
     renderSwatches();
     showToast('Cleared saved swatches');
   });
 
-  // Clipboard Helper with Safe Fallback
+  // Clipboard Helpers
   function copyValue(elementId) {
     const text = document.getElementById(elementId).textContent;
+    copyStringToClipboard(text);
+  }
+
+  function copyStringToClipboard(text) {
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(() => {
         showToast(`Copied: ${text}`);
@@ -1057,17 +1283,52 @@
       document.execCommand('copy');
       showToast(`Copied: ${text}`);
     } catch (err) {
-      alert('Failed to copy');
+      showToast('Failed to copy');
     }
     document.body.removeChild(ta);
   }
 
+  let toastTimer = null;
   function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2200);
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
   }
+
+  // Global Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      if (e.key === 'Escape') {
+        e.target.blur();
+      }
+      return;
+    }
+
+    if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      randomizeColor();
+    } else if (e.key === 'i' || e.key === 'I') {
+      e.preventDefault();
+      invertColor();
+    } else if (e.key === 'c' || e.key === 'C') {
+      e.preventDefault();
+      const hex = rgbToHex(state.r, state.g, state.b);
+      copyStringToClipboard(hex);
+    } else if (e.key >= '1' && e.key <= '9') {
+      const idx = parseInt(e.key) - 1;
+      const all = [...new Set([...savedSwatches, ...presets])];
+      if (all[idx]) {
+        const rgb = parseColorString(all[idx]);
+        if (rgb) {
+          state = rgb;
+          updateAll();
+          showToast(`Selected swatch #${e.key}: ${all[idx]}`);
+        }
+      }
+    }
+  });
 
   // Init
   renderSwatches();

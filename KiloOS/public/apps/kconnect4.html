@@ -367,12 +367,146 @@
     font-weight: bold;
   }
   #helpModal button.close:hover { background: #ff7070; }
+
+  /* Live Positional Evaluation & Advantage Meter */
+  #evalBarWrapper {
+    width: 380px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .eval-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8em;
+    color: #90caf9;
+    font-weight: 600;
+  }
+  #evalBar {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #111a2e;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+    border: 1px solid #2a3b5c;
+  }
+  #evalFillRed {
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff1744 0%, #ff5252 100%);
+    transition: width 0.3s ease;
+  }
+  #evalFillYellow {
+    flex: 1;
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700 0%, #ffab00 100%);
+  }
+  #evalCenterTick {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #ffffff;
+    transform: translateX(-50%);
+    z-index: 2;
+    box-shadow: 0 0 3px #fff;
+  }
+
+  /* Notation & Position Modal */
+  #notationModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #122244;
+    color: #fff;
+    padding: 20px;
+    border-radius: 14px;
+    border: 2px solid #3c6edb;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+    z-index: 120;
+    width: 90%;
+    max-width: 440px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  #notationModal h2 {
+    margin-top: 0;
+    color: #4fc3f7;
+    font-size: 1.25em;
+    border-bottom: 1px solid #254687;
+    padding-bottom: 6px;
+  }
+  .notation-field {
+    margin: 10px 0;
+  }
+  .notation-field label {
+    display: block;
+    font-size: 0.82em;
+    color: #ffd700;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .notation-input-group {
+    display: flex;
+    gap: 6px;
+  }
+  .notation-input-group input, .notation-input-group textarea {
+    flex: 1;
+    background: #0d182e;
+    border: 1px solid #3b4e70;
+    color: #e0e0e0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.85em;
+  }
+  .notation-moves-box {
+    background: #091122;
+    border: 1px solid #203358;
+    border-radius: 6px;
+    padding: 8px;
+    font-family: monospace;
+    font-size: 0.82em;
+    max-height: 90px;
+    overflow-y: auto;
+    color: #a0c4ff;
+    line-height: 1.4;
+  }
+  .eval-analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: #0b1730;
+    padding: 8px;
+    border-radius: 6px;
+    margin: 8px 0;
+    font-size: 0.82em;
+    border: 1px solid #1f3666;
+  }
 </style>
 </head>
 <body data-width="580" data-height="780">
   <h1>KConnect4</h1>
-  <div style="font-size: 1em; color: #ffeb3b; margin-bottom: 8px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Press H for Help (or click Help button)</div>
+  <div style="font-size: 1em; color: #ffeb3b; margin-bottom: 6px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Press H for Help (or click Help button)</div>
   <div id="status">Player 1's turn (Red)</div>
+  <div id="evalBarWrapper">
+    <div class="eval-header">
+      <span id="evalScoreText">Eval: 0.0 (Even)</span>
+      <span id="threatsText">Threats: R 0 ⚡ | Y 0 ⚡</span>
+    </div>
+    <div id="evalBar">
+      <div id="evalFillRed"></div>
+      <div id="evalFillYellow"></div>
+      <div id="evalCenterTick"></div>
+    </div>
+  </div>
   <div id="timerContainer"><div id="timerBar"></div></div>
   <div id="boardWrapper">
     <div id="tableSurface"></div>
@@ -399,12 +533,22 @@
     <button onclick="loadGame()">Load (F9)</button>
     <button onclick="exportJSON()">Export JSON</button>
     <button onclick="document.getElementById('importFile').click()">Import JSON</button>
+    <button id="notationBtn" onclick="toggleNotationModal()">Notation (N)</button>
     <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
   </div>
   <div class="controls-row" id="replayControls" style="display:none;">
-    <button onclick="replayStep(-1)">&#9664; Prev Move</button>
-    <span id="replayStatus" style="color:#aaa; align-self:center; margin: 0 10px; font-weight:bold;">Replay</span>
-    <button onclick="replayStep(1)">Next Move &#9654;</button>
+    <button onclick="replayJump(0)" title="Jump to start (Home)">&#9198;</button>
+    <button onclick="replayStep(-1)">&#9664; Prev</button>
+    <button id="autoReplayBtn" onclick="toggleAutoReplay()">&#9654; Auto</button>
+    <button onclick="replayStep(1)">Next &#9654;</button>
+    <button onclick="replayJump(-1)" title="Jump to end (End)">&#9197;</button>
+    <select id="replaySpeed" onchange="setReplaySpeed()" style="padding: 4px 6px; font-size: 0.8em;">
+      <option value="1000">1.0x</option>
+      <option value="500">2.0x</option>
+      <option value="250">4.0x</option>
+      <option value="2000">0.5x</option>
+    </select>
+    <span id="replayStatus" style="color:#aaa; align-self:center; margin-left: 6px; font-weight:bold; font-size:0.85em;">Replay</span>
   </div>
   <div id="stats">
     Wins (Red): <span id="s-red">0</span> |
@@ -430,8 +574,48 @@
       <li><strong>AI Hint (T):</strong> Highlights best move column.</li>
       <li><strong>Undo Move (U):</strong> Reverts last turn pair.</li>
       <li><strong>Column Freeze (F):</strong> Freezes opponent column for 2 turns.</li>
+      <li><strong>Notation & Match Analysis (N):</strong> View C4N move sequence, FEN string, and load custom positions.</li>
     </ul>
     <button class="close" onclick="toggleHelp()">Close</button>
+  </div>
+
+  <div id="notationModal">
+    <h2>Connect-4 Match Notation & Analysis</h2>
+    <div class="eval-analysis-grid">
+      <div><strong>Score Eval:</strong> <span id="modalEvalScore">0.0</span></div>
+      <div><strong>Win Prob:</strong> <span id="modalWinProb">Red 50% / Ylw 50%</span></div>
+      <div><strong>Red Threats:</strong> <span id="modalThreatsRed">0</span></div>
+      <div><strong>Yellow Threats:</strong> <span id="modalThreatsYel">0</span></div>
+    </div>
+    <div class="notation-field">
+      <label>Move Transcript:</label>
+      <div id="modalMoveList" class="notation-moves-box">No moves recorded yet.</div>
+    </div>
+    <div class="notation-field">
+      <label>C4N Move String:</label>
+      <div class="notation-input-group">
+        <input type="text" id="modalC4N" readonly value="">
+        <button onclick="copyModalField('modalC4N')">Copy</button>
+      </div>
+    </div>
+    <div class="notation-field">
+      <label>FEN Board Position:</label>
+      <div class="notation-input-group">
+        <input type="text" id="modalFEN" readonly value="">
+        <button onclick="copyModalField('modalFEN')">Copy</button>
+      </div>
+    </div>
+    <div class="notation-field">
+      <label>Load Custom Position / C4N String:</label>
+      <div class="notation-input-group">
+        <input type="text" id="customPositionInput" placeholder="e.g. 4443215 or FEN string...">
+        <button onclick="applyCustomPosition()">Load Position</button>
+      </div>
+    </div>
+    <div style="display:flex; gap:6px; margin-top:12px;">
+      <button style="flex:1;" onclick="downloadC4NFile()">Download .C4N</button>
+      <button style="flex:1; background:#ff5252;" onclick="toggleNotationModal()">Close</button>
+    </div>
   </div>
 
   <script>
@@ -683,6 +867,316 @@
       document.getElementById('s-stage').textContent = stats.maxCampaignStage;
     }
 
+    // --- Live Positional Evaluation & Threat Radar ---
+    function countThreats(b, p) {
+      if (!b || b.length === 0) return 0;
+      let count = 0;
+      for (let c = 0; c < COLS; c++) {
+        let targetRow = -1;
+        for (let r = 0; r < ROWS; r++) {
+          if (b[r][c] !== 0) { targetRow = r - 1; break; }
+        }
+        if (targetRow === -1 && b[ROWS-1][c] === 0) targetRow = ROWS - 1;
+        if (targetRow >= 0) {
+          b[targetRow][c] = p;
+          if (checkWinBoard(b, p)) count++;
+          b[targetRow][c] = 0;
+        }
+      }
+      return count;
+    }
+
+    function calculateBoardEval() {
+      if (!board || board.length === 0) return { score: 0, winProb: 50, threatsRed: 0, threatsYellow: 0 };
+      if (checkWinBoard(board, 1)) return { score: 100.0, winProb: 100, threatsRed: 0, threatsYellow: 0 };
+      if (checkWinBoard(board, 2)) return { score: -100.0, winProb: 0, threatsRed: 0, threatsYellow: 0 };
+      
+      const s1 = scoreBoard(board, 1);
+      const s2 = scoreBoard(board, 2);
+      const t1 = countThreats(board, 1);
+      const t2 = countThreats(board, 2);
+      
+      const rawEval = (s1 - s2) + (t1 * 20 - t2 * 20);
+      const evalScore = rawEval / 10.0;
+      let winProb = Math.round(1 / (1 + Math.exp(-evalScore * 0.15)) * 100);
+      if (winProb < 1) winProb = 1;
+      if (winProb > 99) winProb = 99;
+      return { score: evalScore, winProb: winProb, threatsRed: t1, threatsYellow: t2 };
+    }
+
+    function updateEvaluation() {
+      const evalData = calculateBoardEval();
+      const redFill = document.getElementById('evalFillRed');
+      const scoreText = document.getElementById('evalScoreText');
+      const threatsText = document.getElementById('threatsText');
+      
+      if (redFill) redFill.style.width = `${evalData.winProb}%`;
+      if (scoreText) {
+        if (evalData.winProb === 50) {
+          scoreText.textContent = 'Eval: 0.0 (Even)';
+        } else if (evalData.winProb > 50) {
+          scoreText.textContent = `Eval: +${Math.abs(evalData.score).toFixed(1)} (Red ${evalData.winProb}%)`;
+        } else {
+          scoreText.textContent = `Eval: -${Math.abs(evalData.score).toFixed(1)} (Ylw ${100 - evalData.winProb}%)`;
+        }
+      }
+      if (threatsText) {
+        threatsText.textContent = `Threats: R ${evalData.threatsRed} ⚡ | Y ${evalData.threatsYellow} ⚡`;
+      }
+      
+      const mScore = document.getElementById('modalEvalScore');
+      const mProb = document.getElementById('modalWinProb');
+      const mT1 = document.getElementById('modalThreatsRed');
+      const mT2 = document.getElementById('modalThreatsYel');
+      if (mScore) mScore.textContent = (evalData.score >= 0 ? '+' : '') + evalData.score.toFixed(1);
+      if (mProb) mProb.textContent = `Red ${evalData.winProb}% / Ylw ${100 - evalData.winProb}%`;
+      if (mT1) mT1.textContent = evalData.threatsRed;
+      if (mT2) mT2.textContent = evalData.threatsYellow;
+    }
+
+    // --- Connect-4 Notation (C4N & FEN) Suite ---
+    function getC4NString() {
+      let str = '';
+      const list = (replayHistory && replayHistory.length > 0 && !gameActive) ? replayHistory : moveHistory;
+      for (let m of list) {
+        if (m.col !== undefined) {
+          str += (m.col + 1);
+        }
+      }
+      return str;
+    }
+
+    function getFENString() {
+      let fen = '';
+      for (let r = 0; r < ROWS; r++) {
+        let empty = 0;
+        for (let c = 0; c < COLS; c++) {
+          let v = board[r][c];
+          if (v === 0) empty++;
+          else {
+            if (empty > 0) { fen += empty; empty = 0; }
+            if (v === 1) fen += 'r';
+            else if (v === 2) fen += 'y';
+            else if (v === 3) fen += 'x';
+            else if (v === 4) fen += 'c';
+          }
+        }
+        if (empty > 0) fen += empty;
+        if (r < ROWS - 1) fen += '/';
+      }
+      fen += ` ${currentPlayer === 1 ? 'r' : 'y'}`;
+      return fen;
+    }
+
+    function toggleNotationModal() {
+      const modal = document.getElementById('notationModal');
+      if (!modal) return;
+      const isOpen = modal.style.display === 'block';
+      if (!isOpen) {
+        const c4n = getC4NString();
+        const fen = getFENString();
+        document.getElementById('modalC4N').value = c4n || '(none)';
+        document.getElementById('modalFEN').value = fen;
+        
+        const list = (replayHistory && replayHistory.length > 0 && !gameActive) ? replayHistory : moveHistory;
+        let movesHtml = '';
+        if (list.length === 0) {
+          movesHtml = 'No moves made in current session.';
+        } else {
+          let turn = 1;
+          for (let i = 0; i < list.length; i++) {
+            let m = list[i];
+            let colName = m.col !== undefined ? `Col ${m.col + 1}` : `Drop`;
+            let pName = (m.p === 1 || i % 2 === 0) ? 'Red' : 'Yellow';
+            if (i % 2 === 0) {
+              movesHtml += `<div><strong>${turn}.</strong> ${pName}: ${colName}`;
+            } else {
+              movesHtml += ` &nbsp;|&nbsp; ${pName}: ${colName}</div>`;
+              turn++;
+            }
+          }
+          if (list.length % 2 !== 0) movesHtml += `</div>`;
+        }
+        document.getElementById('modalMoveList').innerHTML = movesHtml;
+        updateEvaluation();
+      }
+      modal.style.display = isOpen ? 'none' : 'block';
+    }
+
+    function copyModalField(fieldId) {
+      const input = document.getElementById(fieldId);
+      if (input) {
+        navigator.clipboard.writeText(input.value).then(() => {
+          alert('Copied to clipboard!');
+        }).catch(() => {
+          input.select();
+          document.execCommand('copy');
+          alert('Copied to clipboard!');
+        });
+      }
+    }
+
+    function applyCustomPosition() {
+      const input = document.getElementById('customPositionInput').value.trim();
+      if (!input) return;
+      
+      if (/^[1-9]+$/.test(input)) {
+        initGame();
+        for (let i = 0; i < input.length; i++) {
+          let col = parseInt(input[i]) - 1;
+          if (col >= 0 && col < COLS && gameActive) {
+            let targetRow = -1;
+            for (let r = 0; r < ROWS; r++) {
+              if (board[r][col] !== 0) { targetRow = r - 1; break; }
+            }
+            if (targetRow === -1 && board[ROWS-1][col] === 0) targetRow = ROWS - 1;
+            if (targetRow >= 0) {
+              moveHistory.push({
+                board: JSON.stringify(board),
+                col: col,
+                row: targetRow,
+                rows: ROWS, cols: COLS,
+                stats: JSON.stringify(stats),
+                p: currentPlayer
+              });
+              board[targetRow][col] = currentPlayer;
+              if (checkWin(targetRow, col)) {
+                gameActive = false;
+              } else {
+                currentPlayer = (currentPlayer === 1) ? 2 : 1;
+              }
+            }
+          }
+        }
+        renderBoard();
+        updateStatus();
+        toggleNotationModal();
+        alert('C4N Custom Position Loaded Successfully!');
+        return;
+      }
+      
+      if (input.includes('/')) {
+        let parts = input.split(' ');
+        let rows = parts[0].split('/');
+        if (rows.length <= 10) {
+          ROWS = rows.length;
+          COLS = 7;
+          board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+          for (let r = 0; r < ROWS; r++) {
+            let rowStr = rows[r];
+            let colIdx = 0;
+            for (let ch of rowStr) {
+              if (/[1-9]/.test(ch)) {
+                colIdx += parseInt(ch);
+              } else if (ch === 'r' || ch === 'R') {
+                if (colIdx < COLS) board[r][colIdx++] = 1;
+              } else if (ch === 'y' || ch === 'Y') {
+                if (colIdx < COLS) board[r][colIdx++] = 2;
+              } else if (ch === 'x' || ch === 'X') {
+                if (colIdx < COLS) board[r][colIdx++] = 3;
+              } else if (ch === 'c' || ch === 'C') {
+                if (colIdx < COLS) board[r][colIdx++] = 4;
+              }
+            }
+          }
+          if (parts.length > 1) {
+            currentPlayer = (parts[1].toLowerCase() === 'y' || parts[1] === '2') ? 2 : 1;
+          }
+          
+          boardEl.style.setProperty('--cols', COLS);
+          boardEl.style.setProperty('--rows', ROWS);
+          boardEl.innerHTML = '';
+          for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+              const cell = document.createElement('div');
+              cell.className = 'cell';
+              cell.id = `cell-${r}-${c}`;
+              boardEl.appendChild(cell);
+            }
+          }
+          moveHistory = [];
+          gameActive = true;
+          renderBoard();
+          updateStatus();
+          toggleNotationModal();
+          alert('FEN Position Loaded Successfully!');
+          return;
+        }
+      }
+      alert('Invalid notation format. Please enter a C4N column string (e.g. 444321) or standard FEN.');
+    }
+
+    function downloadC4NFile() {
+      const c4n = getC4NString();
+      const fen = getFENString();
+      const evalData = calculateBoardEval();
+      const modeName = gameMode === 0 ? "2 Player" : gameMode === 1 ? "vs AI" : gameMode === 2 ? "Campaign" : "Speed";
+      
+      let text = `[Event "KConnect4 Match"]\n`;
+      text += `[Mode "${modeName}"]\n`;
+      text += `[Grid "${COLS}x${ROWS}"]\n`;
+      text += `[Moves "${moveHistory.length}"]\n`;
+      text += `[Eval "${evalData.score.toFixed(1)} (Red ${evalData.winProb}%)"]\n`;
+      text += `[FEN "${fen}"]\n`;
+      text += `[C4N "${c4n || 'start'}"]\n`;
+      
+      const blob = new Blob([text], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'kconnect4_match.c4n';
+      a.click();
+    }
+
+    // --- Enhanced Replay Controls ---
+    let autoReplayTimer = null;
+    let autoReplayDelay = 1000;
+
+    function replayJump(targetIndex) {
+      if (gameActive || !replayHistory || replayHistory.length === 0) return;
+      if (targetIndex === -1) replayIndex = replayHistory.length - 1;
+      else replayIndex = Math.max(0, Math.min(targetIndex, replayHistory.length - 1));
+      let m = replayHistory[replayIndex];
+      board = JSON.parse(m.board);
+      renderBoard();
+      updateReplayStatus();
+    }
+
+    function toggleAutoReplay() {
+      const btn = document.getElementById('autoReplayBtn');
+      if (autoReplayTimer) {
+        clearInterval(autoReplayTimer);
+        autoReplayTimer = null;
+        if (btn) btn.innerHTML = '&#9654; Auto';
+      } else {
+        if (replayIndex >= replayHistory.length - 1) replayIndex = 0;
+        if (btn) btn.innerHTML = '&#10074;&#10074; Pause';
+        autoReplayTimer = setInterval(() => {
+          if (replayIndex < replayHistory.length - 1) {
+            replayStep(1);
+          } else {
+            toggleAutoReplay();
+          }
+        }, autoReplayDelay);
+      }
+    }
+
+    function setReplaySpeed() {
+      const sel = document.getElementById('replaySpeed');
+      if (sel) {
+        autoReplayDelay = parseInt(sel.value) || 1000;
+        if (autoReplayTimer) {
+          clearInterval(autoReplayTimer);
+          autoReplayTimer = setInterval(() => {
+            if (replayIndex < replayHistory.length - 1) {
+              replayStep(1);
+            } else {
+              toggleAutoReplay();
+            }
+          }, autoReplayDelay);
+        }
+      }
+    }
+
     function endGameSetupReplay() {
       let finalState = {
         board: JSON.stringify(board), rows: ROWS, cols: COLS, stats: JSON.stringify(stats), p: currentPlayer,
@@ -710,7 +1204,12 @@
     }
     
     function exportJSON() {
-      let data = { stats: stats, history: replayHistory && replayHistory.length > 0 ? replayHistory : moveHistory };
+      let data = {
+        stats: stats,
+        c4n: getC4NString(),
+        fen: getFENString(),
+        history: replayHistory && replayHistory.length > 0 ? replayHistory : moveHistory
+      };
       let blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
       let a = document.createElement('a');
       a.href = URL.createObjectURL(blob);

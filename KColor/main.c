@@ -1,8 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define WIN_W 540
-#define WIN_H 430
+#define WIN_W 560
+#define WIN_H 450
 
 // Control IDs
 #define IDC_SCROLL_R 101
@@ -16,6 +16,8 @@
 #define IDC_BTN_COPY_HEX 108
 #define IDC_BTN_COPY_RGB 109
 #define IDC_BTN_COPY_HSL 110
+#define IDC_BTN_RANDOM   111
+#define IDC_BTN_INVERT   112
 
 // Swatch rect count
 #define NUM_SWATCHES 10
@@ -29,6 +31,7 @@ typedef struct {
 // Global State
 static int g_r = 100, g_g = 150, g_b = 200;
 static int g_h = 210, g_s = 50, g_l = 59;
+static unsigned int g_randSeed = 123456789;
 
 static BOOL g_bUpdatingScrolls = FALSE;
 static BOOL g_bUpdatingHexEdit = FALSE;
@@ -40,6 +43,7 @@ static HWND g_hValR, g_hValG, g_hValB;
 static HWND g_hValH, g_hValS, g_hValL;
 static HWND g_hEditHex;
 static HWND g_hBtnCopyHex, g_hBtnCopyRgb, g_hBtnCopyHsl;
+static HWND g_hBtnRandom, g_hBtnInvert;
 static HWND g_hStatus;
 
 static HFONT g_hFontNormal = NULL;
@@ -77,6 +81,11 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
     const char* s = (const char*)src;
     while (count--) *d++ = *s++;
     return dest;
+}
+
+static unsigned int fast_rand() {
+    g_randSeed = (g_randSeed * 1103515245 + 12345) & 0x7fffffff;
+    return g_randSeed;
 }
 
 // --- MATH & CONVERSION BOUNDS ---
@@ -162,7 +171,7 @@ static BOOL ParseHexColor(const char* str, int* outR, int* outG, int* outB) {
     int len = 0;
     while (str[len] && str[len] != ' ' && str[len] != '\r' && str[len] != '\n') len++;
 
-    if (len == 3) {
+    if (len == 3 || len == 4) {
         int r1 = HexCharVal(str[0]);
         int g1 = HexCharVal(str[1]);
         int b1 = HexCharVal(str[2]);
@@ -198,7 +207,7 @@ static void CopyTextToClipboard(HWND hwndOwner, const char* text) {
                 lstrcpyA(pMem, text);
                 GlobalUnlock(hMem);
                 if (!SetClipboardData(CF_TEXT, hMem)) {
-                    GlobalFree(hMem); // free if clipboard rejected memory
+                    GlobalFree(hMem);
                 }
             } else {
                 GlobalFree(hMem);
@@ -217,7 +226,7 @@ static void CopyTextToClipboard(HWND hwndOwner, const char* text) {
 
 static LRESULT CALLBACK HexEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_CHAR) {
-        if (wParam < 32 || wParam == 127) { // backspace, ctrl+c, etc.
+        if (wParam < 32 || wParam == 127) {
             return CallWindowProcA(g_OldEditProc, hwnd, msg, wParam, lParam);
         }
         char c = (char)wParam;
@@ -225,12 +234,19 @@ static LRESULT CALLBACK HexEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, 
             return CallWindowProcA(g_OldEditProc, hwnd, msg, wParam, lParam);
         }
         MessageBeep(MB_OK);
-        return 0; // block non-hex chars
+        return 0;
     }
     if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
         HWND hParent = GetParent(hwnd);
         if (hParent) {
             SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(IDC_HEX_EDIT, EN_CHANGE), (LPARAM)hwnd);
+        }
+        return 0;
+    }
+    if (msg == WM_KEYDOWN && wParam == VK_ESCAPE) {
+        HWND hParent = GetParent(hwnd);
+        if (hParent) {
+            SetFocus(hParent);
         }
         return 0;
     }
@@ -280,6 +296,8 @@ static void SyncControlsFromRgb(HWND hwnd, BOOL updateHexEdit) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            g_randSeed = GetTickCount();
+
             g_hFontNormal = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             g_hFontBold = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             g_hFontMono = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
@@ -292,19 +310,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // R
             CreateWindowExA(0, "STATIC", "R:", WS_CHILD | WS_VISIBLE, 10, 35, 20, 20, hwnd, NULL, NULL, NULL);
-            g_hScrollR = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | SBS_HORZ, 30, 35, 140, 20, hwnd, (HMENU)IDC_SCROLL_R, NULL, NULL);
+            g_hScrollR = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | SBS_HORZ, 30, 35, 140, 20, hwnd, (HMENU)IDC_SCROLL_R, NULL, NULL);
             SetScrollRange(g_hScrollR, SB_CTL, 0, 255, FALSE);
             g_hValR = CreateWindowExA(0, "STATIC", "100", WS_CHILD | WS_VISIBLE | SS_RIGHT, 175, 35, 30, 20, hwnd, NULL, NULL, NULL);
 
             // G
             CreateWindowExA(0, "STATIC", "G:", WS_CHILD | WS_VISIBLE, 10, 65, 20, 20, hwnd, NULL, NULL, NULL);
-            g_hScrollG = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | SBS_HORZ, 30, 65, 140, 20, hwnd, (HMENU)IDC_SCROLL_G, NULL, NULL);
+            g_hScrollG = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | SBS_HORZ, 30, 65, 140, 20, hwnd, (HMENU)IDC_SCROLL_G, NULL, NULL);
             SetScrollRange(g_hScrollG, SB_CTL, 0, 255, FALSE);
             g_hValG = CreateWindowExA(0, "STATIC", "150", WS_CHILD | WS_VISIBLE | SS_RIGHT, 175, 65, 30, 20, hwnd, NULL, NULL, NULL);
 
             // B
             CreateWindowExA(0, "STATIC", "B:", WS_CHILD | WS_VISIBLE, 10, 95, 20, 20, hwnd, NULL, NULL, NULL);
-            g_hScrollB = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | SBS_HORZ, 30, 95, 140, 20, hwnd, (HMENU)IDC_SCROLL_B, NULL, NULL);
+            g_hScrollB = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | SBS_HORZ, 30, 95, 140, 20, hwnd, (HMENU)IDC_SCROLL_B, NULL, NULL);
             SetScrollRange(g_hScrollB, SB_CTL, 0, 255, FALSE);
             g_hValB = CreateWindowExA(0, "STATIC", "200", WS_CHILD | WS_VISIBLE | SS_RIGHT, 175, 95, 30, 20, hwnd, NULL, NULL, NULL);
 
@@ -314,43 +332,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // H
             CreateWindowExA(0, "STATIC", "H:", WS_CHILD | WS_VISIBLE, 10, 155, 20, 20, hwnd, NULL, NULL, NULL);
-            g_hScrollH = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | SBS_HORZ, 30, 155, 140, 20, hwnd, (HMENU)IDC_SCROLL_H, NULL, NULL);
+            g_hScrollH = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | SBS_HORZ, 30, 155, 140, 20, hwnd, (HMENU)IDC_SCROLL_H, NULL, NULL);
             SetScrollRange(g_hScrollH, SB_CTL, 0, 360, FALSE);
             g_hValH = CreateWindowExA(0, "STATIC", "210°", WS_CHILD | WS_VISIBLE | SS_RIGHT, 175, 155, 30, 20, hwnd, NULL, NULL, NULL);
 
             // S
             CreateWindowExA(0, "STATIC", "S:", WS_CHILD | WS_VISIBLE, 10, 185, 20, 20, hwnd, NULL, NULL, NULL);
-            g_hScrollS = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | SBS_HORZ, 30, 185, 140, 20, hwnd, (HMENU)IDC_SCROLL_S, NULL, NULL);
+            g_hScrollS = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | SBS_HORZ, 30, 185, 140, 20, hwnd, (HMENU)IDC_SCROLL_S, NULL, NULL);
             SetScrollRange(g_hScrollS, SB_CTL, 0, 100, FALSE);
             g_hValS = CreateWindowExA(0, "STATIC", "50%", WS_CHILD | WS_VISIBLE | SS_RIGHT, 175, 185, 30, 20, hwnd, NULL, NULL, NULL);
 
             // L
             CreateWindowExA(0, "STATIC", "L:", WS_CHILD | WS_VISIBLE, 10, 215, 20, 20, hwnd, NULL, NULL, NULL);
-            g_hScrollL = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | SBS_HORZ, 30, 215, 140, 20, hwnd, (HMENU)IDC_SCROLL_L, NULL, NULL);
+            g_hScrollL = CreateWindowExA(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | SBS_HORZ, 30, 215, 140, 20, hwnd, (HMENU)IDC_SCROLL_L, NULL, NULL);
             SetScrollRange(g_hScrollL, SB_CTL, 0, 100, FALSE);
             g_hValL = CreateWindowExA(0, "STATIC", "59%", WS_CHILD | WS_VISIBLE | SS_RIGHT, 175, 215, 30, 20, hwnd, NULL, NULL, NULL);
 
             // Hex Input & Copy Buttons
             CreateWindowExA(0, "STATIC", "Hex Code:", WS_CHILD | WS_VISIBLE, 225, 130, 70, 20, hwnd, NULL, NULL, NULL);
-            g_hEditHex = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "#6496C8", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 300, 127, 90, 24, hwnd, (HMENU)IDC_HEX_EDIT, NULL, NULL);
+            g_hEditHex = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "#6496C8", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, 300, 127, 90, 24, hwnd, (HMENU)IDC_HEX_EDIT, NULL, NULL);
             SendMessageA(g_hEditHex, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
 
             // Subclass the Edit control
             g_OldEditProc = (WNDPROC)SetWindowLongPtrA(g_hEditHex, GWLP_WNDPROC, (LONG_PTR)HexEditSubclassProc);
 
-            // Buttons
-            g_hBtnCopyHex = CreateWindowExA(0, "BUTTON", "Copy HEX", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 225, 160, 90, 26, hwnd, (HMENU)IDC_BTN_COPY_HEX, NULL, NULL);
-            g_hBtnCopyRgb = CreateWindowExA(0, "BUTTON", "Copy RGB", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 325, 160, 90, 26, hwnd, (HMENU)IDC_BTN_COPY_RGB, NULL, NULL);
-            g_hBtnCopyHsl = CreateWindowExA(0, "BUTTON", "Copy HSL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 425, 160, 90, 26, hwnd, (HMENU)IDC_BTN_COPY_HSL, NULL, NULL);
+            // Copy Buttons
+            g_hBtnCopyHex = CreateWindowExA(0, "BUTTON", "Copy HEX", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 160, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_HEX, NULL, NULL);
+            g_hBtnCopyRgb = CreateWindowExA(0, "BUTTON", "Copy RGB", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 160, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_RGB, NULL, NULL);
+            g_hBtnCopyHsl = CreateWindowExA(0, "BUTTON", "Copy HSL", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 425, 160, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_HSL, NULL, NULL);
+
+            // Utility Buttons: Random & Invert
+            g_hBtnRandom = CreateWindowExA(0, "BUTTON", "Random (R)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 192, 110, 26, hwnd, (HMENU)IDC_BTN_RANDOM, NULL, NULL);
+            g_hBtnInvert = CreateWindowExA(0, "BUTTON", "Invert (I)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 345, 192, 110, 26, hwnd, (HMENU)IDC_BTN_INVERT, NULL, NULL);
 
             // Status Bar
-            g_hStatus = CreateWindowExA(0, "STATIC", "Ready", WS_CHILD | WS_VISIBLE | SS_SUNKEN, 10, 360, 505, 20, hwnd, NULL, NULL, NULL);
+            g_hStatus = CreateWindowExA(0, "STATIC", "Ready (L-Click select swatch, R-Click save to swatch, R: Random, I: Invert)", WS_CHILD | WS_VISIBLE | SS_SUNKEN, 10, 380, 525, 22, hwnd, NULL, NULL, NULL);
 
             // Apply font to all controls
             EnumChildWindows(hwnd, (WNDENUMPROC)SendMessageA, (LPARAM)WM_SETFONT);
 
             // Calculate Swatch Rectangles (bottom area)
-            int swX = 225, swY = 215, swW = 26, swH = 26, gap = 3;
+            int swX = 225, swY = 260, swW = 27, swH = 27, gap = 4;
             for (int i = 0; i < NUM_SWATCHES; i++) {
                 int col = i % 10;
                 g_swatches[i].rect.left = swX + col * (swW + gap);
@@ -427,6 +449,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char hsl[32];
                 wsprintfA(hsl, "hsl(%d, %d%%, %d%%)", g_h, g_s, g_l);
                 CopyTextToClipboard(hwnd, hsl);
+            } else if (id == IDC_BTN_RANDOM) {
+                g_r = fast_rand() % 256;
+                g_g = fast_rand() % 256;
+                g_b = fast_rand() % 256;
+                SyncControlsFromRgb(hwnd, TRUE);
+                if (g_hStatus) SetWindowTextA(g_hStatus, "Generated Random Color");
+            } else if (id == IDC_BTN_INVERT) {
+                g_r = 255 - g_r;
+                g_g = 255 - g_g;
+                g_b = 255 - g_b;
+                SyncControlsFromRgb(hwnd, TRUE);
+                if (g_hStatus) SetWindowTextA(g_hStatus, "Inverted Active Color");
+            }
+            break;
+        }
+
+        case WM_KEYDOWN: {
+            if (wParam == 'R' || wParam == 'r') {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_RANDOM, 0), 0);
+            } else if (wParam == 'I' || wParam == 'i') {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_INVERT, 0), 0);
+            } else if (wParam == 'C' || wParam == 'c') {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_COPY_HEX, 0), 0);
+            } else if (wParam >= '1' && wParam <= '9') {
+                int idx = (int)(wParam - '1');
+                if (idx < NUM_SWATCHES) {
+                    COLORREF c = g_swatches[idx].color;
+                    g_r = GetRValue(c);
+                    g_g = GetGValue(c);
+                    g_b = GetBValue(c);
+                    SyncControlsFromRgb(hwnd, TRUE);
+                    if (g_hStatus) {
+                        char msg[64];
+                        wsprintfA(msg, "Selected Palette Swatch: %s", g_swatches[idx].name);
+                        SetWindowTextA(g_hStatus, msg);
+                    }
+                }
+            } else if (wParam == '0') {
+                COLORREF c = g_swatches[9].color;
+                g_r = GetRValue(c);
+                g_g = GetGValue(c);
+                g_b = GetBValue(c);
+                SyncControlsFromRgb(hwnd, TRUE);
+                if (g_hStatus) {
+                    char msg[64];
+                    wsprintfA(msg, "Selected Palette Swatch: %s", g_swatches[9].name);
+                    SetWindowTextA(g_hStatus, msg);
+                }
             }
             break;
         }
@@ -454,6 +524,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
 
+        case WM_RBUTTONDOWN: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
+            POINT pt = { x, y };
+
+            for (int i = 0; i < NUM_SWATCHES; i++) {
+                if (PtInRect(&g_swatches[i].rect, pt)) {
+                    g_swatches[i].color = RGB(g_r, g_g, g_b);
+                    InvalidateRect(hwnd, &g_swatches[i].rect, FALSE);
+                    if (g_hStatus) {
+                        char msg[64];
+                        wsprintfA(msg, "Saved #%02X%02X%02X into Swatch %d (%s)!", g_r, g_g, g_b, i + 1, g_swatches[i].name);
+                        SetWindowTextA(g_hStatus, msg);
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -470,7 +560,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &clientRect, g_hBgBrush);
 
             // Draw Main Color Preview Box (Right Side)
-            RECT previewRect = { 225, 10, 515, 115 };
+            RECT previewRect = { 225, 10, 520, 115 };
             HBRUSH colorBrush = CreateSolidBrush(RGB(g_r, g_g, g_b));
             FillRect(memDC, &previewRect, colorBrush);
             DeleteObject(colorBrush);
@@ -494,7 +584,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Draw Swatches Title
             SelectObject(memDC, g_hFontBold);
             SetTextColor(memDC, RGB(30, 41, 59));
-            TextOutA(memDC, 225, 195, "Quick Palette Swatches:", 23);
+            TextOutA(memDC, 225, 235, "Quick Palette Swatches (L-Click select, R-Click save):", 54);
 
             // Draw Swatch Rects
             for (int i = 0; i < NUM_SWATCHES; i++) {
@@ -542,7 +632,7 @@ void MainEntry() {
     wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
     RegisterClassA(&wc);
 
-    HWND hwnd = CreateWindowExA(0, "KColorAppClass", "KColor - Color Picker Studio",
+    HWND hwnd = CreateWindowExA(0, "KColorAppClass", "KColor - Advanced Color Picker & Palette Studio",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, WIN_W, WIN_H, NULL, NULL, hInstance, NULL);
 
@@ -551,8 +641,10 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0) > 0) {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessageA(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
     ExitProcess(0);
 }

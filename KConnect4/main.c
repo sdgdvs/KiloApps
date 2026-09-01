@@ -493,6 +493,8 @@ typedef struct {
     int p1Magnets, p2Magnets;
     int p1Freezes, p2Freezes;
     int frozenCol, frozenTurns, frozenPlayer;
+    int moveCol;
+    int moveRow;
     GameStats oldStats;
 } MoveRecord;
 
@@ -501,6 +503,12 @@ int historyCount = 0;
 int replayIndex = -1;
 
 void SaveStats();
+void CopyToClipboard(const char* text);
+void GetC4NSequence(char* out, int maxLen);
+void GetFENPosition(char* out, int maxLen);
+float CalculateBoardEval(int *pThreats1, int *pThreats2);
+void ShowNotationDialog(HWND hwnd);
+void LoadCustomPosition(HWND hwnd);
 
 void ExportJSON() {
     FILE *f = fopen("kconnect4_data.json", "w");
@@ -1057,6 +1065,187 @@ int GetBestMoveAI(int player) {
     return 0;
 }
 
+void CopyToClipboard(const char* text) {
+    if (!text || !*text) return;
+    if (OpenClipboard(NULL)) {
+        EmptyClipboard();
+        size_t len = strlen(text) + 1;
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+        if (hMem) {
+            memcpy(GlobalLock(hMem), text, len);
+            GlobalUnlock(hMem);
+            SetClipboardData(CF_TEXT, hMem);
+        }
+        CloseClipboard();
+    }
+}
+
+void GetC4NSequence(char* out, int maxLen) {
+    out[0] = '\0';
+    int pos = 0;
+    for (int i = 0; i < historyCount; i++) {
+        if (pos + 2 < maxLen) {
+            int c = moveHistory[i].moveCol + 1;
+            if (c >= 1 && c <= 9) out[pos++] = (char)('0' + c);
+            else if (c == 10) out[pos++] = '0';
+        }
+    }
+    out[pos] = '\0';
+}
+
+void GetFENPosition(char* out, int maxLen) {
+    out[0] = '\0';
+    int pos = 0;
+    for (int r = 0; r < g_rows; r++) {
+        int emptyCount = 0;
+        for (int c = 0; c < g_cols; c++) {
+            int v = board[r][c];
+            if (v == 0) {
+                emptyCount++;
+            } else {
+                if (emptyCount > 0) {
+                    if (pos < maxLen - 1) out[pos++] = (char)('0' + emptyCount);
+                    emptyCount = 0;
+                }
+                if (pos < maxLen - 1) {
+                    if (v == 1) out[pos++] = 'r';
+                    else if (v == 2) out[pos++] = 'y';
+                    else if (v == 3) out[pos++] = 'x';
+                    else if (v == 4) out[pos++] = 'c';
+                }
+            }
+        }
+        if (emptyCount > 0 && pos < maxLen - 1) {
+            out[pos++] = (char)('0' + emptyCount);
+        }
+        if (r < g_rows - 1 && pos < maxLen - 1) {
+            out[pos++] = '/';
+        }
+    }
+    if (pos < maxLen - 3) {
+        out[pos++] = ' ';
+        out[pos++] = (currentPlayer == 1) ? 'r' : 'y';
+    }
+    out[pos] = '\0';
+}
+
+float CalculateBoardEval(int *pThreats1, int *pThreats2) {
+    if (pThreats1) *pThreats1 = 0;
+    if (pThreats2) *pThreats2 = 0;
+    if (checkWinBoard(board, 1)) return 100.0f;
+    if (checkWinBoard(board, 2)) return -100.0f;
+    int s1 = scoreBoard(board, 1);
+    int s2 = scoreBoard(board, 2);
+    int t1 = 0, t2 = 0;
+    for (int c = 0; c < g_cols; c++) {
+        int r = getNextOpenRow(board, c);
+        if (r >= 0) {
+            board[r][c] = 1;
+            if (checkWinBoard(board, 1)) t1++;
+            board[r][c] = 2;
+            if (checkWinBoard(board, 2)) t2++;
+            board[r][c] = 0;
+        }
+    }
+    if (pThreats1) *pThreats1 = t1;
+    if (pThreats2) *pThreats2 = t2;
+    float diff = (float)(s1 - s2) + (float)(t1 * 20 - t2 * 20);
+    return diff / 10.0f;
+}
+
+void LoadCustomPosition(HWND hwnd) {
+    FILE *f = fopen("kconnect4_custom.c4n", "r");
+    if (!f) f = fopen("kconnect4_custom.txt", "r");
+    if (f) {
+        char seq[256];
+        if (fgets(seq, sizeof(seq), f)) {
+            fclose(f);
+            ResetGame();
+            for (int i = 0; seq[i]; i++) {
+                char ch = seq[i];
+                int col = -1;
+                if (ch >= '1' && ch <= '9') col = (ch - '1');
+                else if (ch == '0' || ch == 'T' || ch == 't') col = 9;
+                if (col >= 0 && col < g_cols && gameActive) {
+                    int r = getNextOpenRow(board, col);
+                    if (r >= 0) {
+                        moveHistory[historyCount].moveCol = col;
+                        moveHistory[historyCount].moveRow = r;
+                        memcpy(moveHistory[historyCount].board, board, sizeof(board));
+                        moveHistory[historyCount].rows = g_rows;
+                        moveHistory[historyCount].cols = g_cols;
+                        moveHistory[historyCount].currentPlayer = currentPlayer;
+                        historyCount++;
+                        board[r][col] = currentPlayer;
+                        if (checkWinBoard(board, currentPlayer)) gameActive = false;
+                        else currentPlayer = (currentPlayer == 1) ? 2 : 1;
+                    }
+                }
+            }
+            InvalidateRect(hwnd, NULL, TRUE);
+            MessageBox(hwnd, "Custom C4N Position Loaded Successfully!", "Position Setup", MB_OK | MB_ICONINFORMATION);
+            return;
+        }
+        fclose(f);
+    }
+}
+
+void ShowNotationDialog(HWND hwnd) {
+    char c4n[256] = "";
+    char fen[256] = "";
+    GetC4NSequence(c4n, sizeof(c4n));
+    GetFENPosition(fen, sizeof(fen));
+    int t1 = 0, t2 = 0;
+    float eval = CalculateBoardEval(&t1, &t2);
+    float redWinPct = 1.0f / (1.0f + expf(-eval * 0.15f)) * 100.0f;
+    if (redWinPct < 1.0f) redWinPct = 1.0f;
+    if (redWinPct > 99.0f) redWinPct = 99.0f;
+
+    FILE *f = fopen("kconnect4_match.c4n", "w");
+    if (f) {
+        fprintf(f, "[Event \"KConnect4 Match\"]\n");
+        fprintf(f, "[Mode \"%s\"]\n", (gameMode == 0) ? "2 Player" : (gameMode == 1) ? "vs AI" : (gameMode == 2) ? "Campaign" : "Speed");
+        fprintf(f, "[Grid \"%dx%d\"]\n", g_cols, g_rows);
+        fprintf(f, "[Moves \"%d\"]\n", historyCount);
+        fprintf(f, "[Eval \"%.1f (Red %.0f%%)\"]\n", eval, redWinPct);
+        fprintf(f, "[FEN \"%s\"]\n", fen);
+        fprintf(f, "[C4N \"%s\"]\n", c4n[0] ? c4n : "start");
+        fclose(f);
+    }
+
+    char clipBuf[1024];
+    wsprintf(clipBuf, "C4N: %s\nFEN: %s", c4n[0] ? c4n : "none", fen);
+    CopyToClipboard(clipBuf);
+
+    char msg[1024];
+    wsprintf(msg, "--- CONNECT-4 MATCH NOTATION & ANALYSIS ---\n\n"
+                  "C4N Move String: %s\n"
+                  "FEN Board Position: %s\n\n"
+                  "Moves Played: %d\n"
+                  "Positional Evaluation: %s%d.%d\n"
+                  "Red Win Probability: %d%% (Yellow: %d%%)\n"
+                  "Active Threats: Red %d ⚡ | Yellow %d ⚡\n\n"
+                  "✓ Notation copied to clipboard!\n"
+                  "✓ Saved to 'kconnect4_match.c4n'\n\n"
+                  "Tip: Create 'kconnect4_custom.c4n' to load custom puzzles/positions.",
+             c4n[0] ? c4n : "(Game start - no moves yet)",
+             fen, historyCount,
+             (eval >= 0) ? "+" : "-",
+             abs((int)eval), abs((int)(eval * 10.0f) % 10),
+             (int)redWinPct, 100 - (int)redWinPct, t1, t2);
+
+    MessageBox(hwnd, msg, "Match Notation & Analysis", MB_OK | MB_ICONINFORMATION);
+
+    FILE *checkF = fopen("kconnect4_custom.c4n", "r");
+    if (!checkF) checkF = fopen("kconnect4_custom.txt", "r");
+    if (checkF) {
+        fclose(checkF);
+        if (MessageBox(hwnd, "Found 'kconnect4_custom.c4n' / 'kconnect4_custom.txt'.\nWould you like to load this position now?", "Load Custom Position", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+            LoadCustomPosition(hwnd);
+        }
+    }
+}
+
 void ExecuteDrop(HWND hwnd, int col, int player, int powerType) {
     int targetRow = -1;
     for (int r = 0; r < g_rows; r++) {
@@ -1077,6 +1266,8 @@ void ExecuteDrop(HWND hwnd, int col, int player, int powerType) {
         moveHistory[historyCount].rows = g_rows;
         moveHistory[historyCount].cols = g_cols;
         moveHistory[historyCount].currentPlayer = currentPlayer;
+        moveHistory[historyCount].moveCol = col;
+        moveHistory[historyCount].moveRow = r;
         moveHistory[historyCount].p1Bombs = p1Bombs; moveHistory[historyCount].p2Bombs = p2Bombs;
         moveHistory[historyCount].p1Drills = p1Drills; moveHistory[historyCount].p2Drills = p2Drills;
         moveHistory[historyCount].p1Magnets = p1Magnets; moveHistory[historyCount].p2Magnets = p2Magnets;
@@ -1324,9 +1515,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Row 3 buttons
             hSaveBtn = CreateWindow("BUTTON", "Save (F5)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 590, 75, 28, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hLoadBtn = CreateWindow("BUTTON", "Load (F9)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 90, 590, 75, 28, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            
-            HWND hExportBtn = CreateWindow("BUTTON", "Export JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 170, 590, 95, 28, hwnd, (HMENU)14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            HWND hImportBtn = CreateWindow("BUTTON", "Import JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 270, 590, 95, 28, hwnd, (HMENU)15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            HWND hExportBtn = CreateWindow("BUTTON", "Export JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 170, 590, 90, 28, hwnd, (HMENU)14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            HWND hImportBtn = CreateWindow("BUTTON", "Import JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 265, 590, 90, 28, hwnd, (HMENU)15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            HWND hNotationBtn = CreateWindow("BUTTON", "Notation (N)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 360, 590, 95, 28, hwnd, (HMENU)16, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             
             SendMessage(hModeBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
             SendMessage(hDiffSelect, WM_SETFONT, (WPARAM)hMainFont, TRUE);
@@ -1343,6 +1534,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hLoadBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
             SendMessage(hExportBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
             SendMessage(hImportBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
+            SendMessage(hNotationBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
 
             UpdateDiffSelectUI();
             ResetGame();
@@ -1358,6 +1550,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(6, 0), 0);
             } else if (key == VK_F9) { // F9 Quickload
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(7, 0), 0);
+            } else if (key == 'N' || key == 'n') { // C4N Notation & Match Analysis
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(16, 0), 0);
+            } else if (key == VK_HOME && !gameActive && historyCount > 0) { // Replay Start
+                replayIndex = 0;
+                memcpy(board, moveHistory[0].board, sizeof(board));
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (key == VK_END && !gameActive && historyCount > 0) { // Replay End
+                replayIndex = historyCount - 1;
+                memcpy(board, moveHistory[replayIndex].board, sizeof(board));
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if (key == VK_LEFT && !gameActive) { // Replay Prev
                 if (replayIndex > 0) {
                     replayIndex--;
@@ -1487,6 +1689,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportJSON();
             } else if (LOWORD(wParam) == 15) { // Import JSON
                 ImportJSON(hwnd);
+            } else if (LOWORD(wParam) == 16) { // Notation (N)
+                ShowNotationDialog(hwnd);
             } else if (LOWORD(wParam) == 3) { // Undo
                 if (historyCount == 0 || isAnimating) break;
                 
@@ -1627,14 +1831,56 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             TextOut(hdc, 20, 15, statusText, lstrlen(statusText));
             
+            // --- Live Positional Evaluation & Advantage Meter ---
+            int evalThreats1 = 0, evalThreats2 = 0;
+            float currentEval = CalculateBoardEval(&evalThreats1, &evalThreats2);
+            float redWinRate = 1.0f / (1.0f + expf(-currentEval * 0.15f));
+            if (redWinRate < 0.02f) redWinRate = 0.02f;
+            if (redWinRate > 0.98f) redWinRate = 0.98f;
+            int pctRed = (int)(redWinRate * 100.0f + 0.5f);
+
+            int evalBarLeft = 20;
+            int evalBarRight = rect.right - 20;
+            if (evalBarRight > 550) evalBarRight = 550;
+            int evalBarTop = (gameMode == 3 && gameActive) ? 46 : 38;
+            int evalBarBot = evalBarTop + 6;
+            int evalBarW = evalBarRight - evalBarLeft;
+            int splitX = evalBarLeft + (int)(redWinRate * (float)evalBarW);
+            if (splitX < evalBarLeft + 2) splitX = evalBarLeft + 2;
+            if (splitX > evalBarRight - 2) splitX = evalBarRight - 2;
+
+            RECT redSide = {evalBarLeft, evalBarTop, splitX, evalBarBot};
+            HBRUSH redBr = CreateSolidBrush(RGB(220, 50, 50));
+            FillRect(hdc, &redSide, redBr);
+            DeleteObject(redBr);
+
+            RECT yelSide = {splitX, evalBarTop, evalBarRight, evalBarBot};
+            HBRUSH yelBr = CreateSolidBrush(RGB(240, 200, 30));
+            FillRect(hdc, &yelSide, yelBr);
+            DeleteObject(yelBr);
+
+            HPEN divPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            SelectObject(hdc, divPen);
+            int midX = evalBarLeft + evalBarW / 2;
+            MoveToEx(hdc, midX, evalBarTop - 1, NULL); LineTo(hdc, midX, evalBarBot + 1);
+            DeleteObject(divPen);
+
+            char evalStr[96];
+            if (pctRed == 50) wsprintf(evalStr, "Eval: 0.0 (Even)");
+            else if (pctRed > 50) wsprintf(evalStr, "Eval: +%d.%d (Red %d%%) [Threats R:%d Y:%d]", abs((int)currentEval), abs((int)(currentEval * 10.0f) % 10), pctRed, evalThreats1, evalThreats2);
+            else wsprintf(evalStr, "Eval: -%d.%d (Ylw %d%%) [Threats R:%d Y:%d]", abs((int)currentEval), abs((int)(currentEval * 10.0f) % 10), 100 - pctRed, evalThreats1, evalThreats2);
+
+            SetTextColor(hdc, RGB(180, 220, 255));
+            TextOut(hdc, 275, 15, evalStr, lstrlen(evalStr));
+
             if (gameMode == 3 && gameActive) {
                 int barWidth = (410 * turnTimeLeftMs) / 7000;
-                RECT timerBg = {20, 38, 430, 44};
+                RECT timerBg = {20, 34, 430, 40};
                 HBRUSH tBg = CreateSolidBrush(RGB(30, 40, 55));
                 FillRect(hdc, &timerBg, tBg);
                 DeleteObject(tBg);
                 
-                RECT timerFg = {20, 38, 20 + barWidth, 44};
+                RECT timerFg = {20, 34, 20 + barWidth, 40};
                 HBRUSH tFg = CreateSolidBrush((turnTimeLeftMs < 2000) ? RGB(255, 82, 82) : RGB(76, 175, 80));
                 FillRect(hdc, &timerFg, tFg);
                 DeleteObject(tFg);
