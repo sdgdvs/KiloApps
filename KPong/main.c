@@ -83,6 +83,40 @@ typedef struct {
     Ball balls[MAX_BALLS];
 } SaveState;
 
+#define MAX_REPLAY_FRAMES 1200
+
+typedef struct {
+    float x, y;
+    int active;
+    int is_fireball;
+    int last_hitter;
+} ReplayBall;
+
+typedef struct {
+    int p1_y, p2_y;
+    int p1_pad_h, p2_pad_h;
+    int p1_score, p2_score;
+    int rally;
+    int game_mode;
+    int theme_index;
+    int powerup_x, powerup_y, powerup_active, powerup_type;
+    int obs_y, obs2_x;
+    int obs1_active, obs2_active;
+    int boss_shield_y, boss_shield_hp;
+    ReplayBall balls[MAX_BALLS];
+} ReplayFrame;
+
+ReplayFrame replay_frames[MAX_REPLAY_FRAMES];
+int replay_frame_count = 0;
+int replay_cur_frame = 0;
+int is_replaying = 0;
+int replay_paused = 0;
+int replay_speed = 1; // 0: 0.5x, 1: 1x, 2: 2x
+int replay_subframe = 0;
+
+char msg_text[64] = {0};
+int msg_timer = 0;
+
 Particle particles[MAX_PARTICLES];
 Shockwave shockwaves[MAX_SHOCKWAVES];
 Ball balls[MAX_BALLS];
@@ -299,6 +333,156 @@ void RecordScore(int r) {
     SaveStats();
 }
 
+void SetStatusMessage(const char* txt) {
+    lstrcpynA(msg_text, txt, sizeof(msg_text));
+    msg_timer = 75;
+}
+
+void RecordReplayFrame() {
+    if (replay_frame_count >= MAX_REPLAY_FRAMES) {
+        memmove(&replay_frames[0], &replay_frames[1], sizeof(ReplayFrame) * (MAX_REPLAY_FRAMES - 1));
+        replay_frame_count = MAX_REPLAY_FRAMES - 1;
+    }
+    ReplayFrame* f = &replay_frames[replay_frame_count];
+    f->p1_y = p1_y;
+    f->p2_y = p2_y;
+    f->p1_pad_h = p1_pad_h;
+    f->p2_pad_h = p2_pad_h;
+    f->p1_score = p1_score;
+    f->p2_score = p2_score;
+    f->rally = rally;
+    f->game_mode = game_mode;
+    f->theme_index = theme_index;
+    f->powerup_x = powerup_x;
+    f->powerup_y = powerup_y;
+    f->powerup_active = powerup_active;
+    f->powerup_type = powerup_type;
+    f->obs_y = obs_y;
+    f->obs2_x = obs2_x;
+    f->obs1_active = obs1_active;
+    f->obs2_active = obs2_active;
+    f->boss_shield_y = boss_shield_y;
+    f->boss_shield_hp = boss_shield_hp;
+    for (int i = 0; i < MAX_BALLS; i++) {
+        f->balls[i].x = balls[i].x;
+        f->balls[i].y = balls[i].y;
+        f->balls[i].active = balls[i].active;
+        f->balls[i].is_fireball = balls[i].is_fireball;
+        f->balls[i].last_hitter = balls[i].last_hitter;
+    }
+    replay_frame_count++;
+}
+
+void StartReplay() {
+    if (replay_frame_count > 0) {
+        is_replaying = 1;
+        replay_paused = 0;
+        replay_cur_frame = 0;
+        replay_subframe = 0;
+        SetStatusMessage("Replay Started - [Space] Pause [1/2/3] Spd");
+    } else {
+        SetStatusMessage("No match replay frames recorded yet!");
+    }
+}
+
+void StopReplay() {
+    is_replaying = 0;
+    SetStatusMessage("Replay Exited");
+}
+
+void ExportStatsJSON() {
+    FILE* f = fopen("kpong_stats.json", "w");
+    if (f) {
+        int wr = (stats.total_games > 0) ? (stats.wins * 100 / stats.total_games) : 0;
+        fprintf(f, "{\n");
+        fprintf(f, "  \"total_games\": %d,\n", stats.total_games);
+        fprintf(f, "  \"wins\": %d,\n", stats.wins);
+        fprintf(f, "  \"losses\": %d,\n", stats.losses);
+        fprintf(f, "  \"win_rate\": %d,\n", wr);
+        fprintf(f, "  \"high_rally\": %d,\n", stats.high_rally);
+        fprintf(f, "  \"top_scores\": [\n");
+        for (int i = 0; i < 5; i++) {
+            fprintf(f, "    {\"rank\": %d, \"rally\": %d, \"mode\": %d, \"date\": \"%s\"}%s\n",
+                i + 1, stats.top_scores[i].rally, stats.top_scores[i].mode,
+                stats.top_scores[i].date[0] ? stats.top_scores[i].date : "N/A",
+                (i < 4) ? "," : "");
+        }
+        fprintf(f, "  ]\n");
+        fprintf(f, "}\n");
+        fclose(f);
+        SetStatusMessage("Exported kpong_stats.json!");
+        MessageBeep(MB_OK);
+    } else {
+        SetStatusMessage("Failed to export stats!");
+    }
+}
+
+void ImportStatsJSON() {
+    FILE* f = fopen("kpong_stats.json", "r");
+    if (!f) {
+        SetStatusMessage("kpong_stats.json not found!");
+        return;
+    }
+    char buf[4096] = {0};
+    size_t readBytes = fread(buf, 1, sizeof(buf) - 1, f);
+    fclose(f);
+    if (readBytes == 0) {
+        SetStatusMessage("Empty kpong_stats.json file!");
+        return;
+    }
+    
+    char* p = strstr(buf, "\"total_games\":");
+    if (p) {
+        p += 14; while (*p == ' ' || *p == '\t') p++;
+        stats.total_games = atoi(p);
+    }
+    p = strstr(buf, "\"wins\":");
+    if (p) {
+        p += 7; while (*p == ' ' || *p == '\t') p++;
+        stats.wins = atoi(p);
+    }
+    p = strstr(buf, "\"losses\":");
+    if (p) {
+        p += 9; while (*p == ' ' || *p == '\t') p++;
+        stats.losses = atoi(p);
+    }
+    p = strstr(buf, "\"high_rally\":");
+    if (p) {
+        p += 13; while (*p == ' ' || *p == '\t') p++;
+        stats.high_rally = atoi(p);
+    }
+
+    char* top = strstr(buf, "\"top_scores\"");
+    if (top) {
+        char* cur = top;
+        for (int i = 0; i < 5; i++) {
+            cur = strstr(cur, "\"rally\":");
+            if (!cur) break;
+            cur += 8; while (*cur == ' ' || *cur == '\t') cur++;
+            stats.top_scores[i].rally = atoi(cur);
+
+            char* m = strstr(cur, "\"mode\":");
+            if (m && m < cur + 50) {
+                m += 7; while (*m == ' ' || *m == '\t') m++;
+                stats.top_scores[i].mode = atoi(m);
+            }
+
+            char* d = strstr(cur, "\"date\":");
+            if (d && d < cur + 100) {
+                d += 7; while (*d == ' ' || *d == '\t' || *d == '\"') d++;
+                int di = 0;
+                while (*d && *d != '\"' && di < 15) {
+                    stats.top_scores[i].date[di++] = *d++;
+                }
+                stats.top_scores[i].date[di] = '\0';
+            }
+        }
+    }
+    SaveStats();
+    SetStatusMessage("Imported stats from JSON!");
+    MessageBeep(MB_OK);
+}
+
 void SaveGameState() {
     FILE* f = fopen("kpong_save.dat", "wb");
     if (f) {
@@ -400,6 +584,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, TIMER_ID, 30, NULL);
             break;
         case WM_KEYDOWN:
+            if (is_replaying) {
+                if (wParam == 'P' || wParam == VK_ESCAPE) { StopReplay(); }
+                else if (wParam == VK_SPACE) { replay_paused = !replay_paused; }
+                else if (wParam == VK_LEFT || wParam == 'A') { replay_cur_frame -= 15; if (replay_cur_frame < 0) replay_cur_frame = 0; }
+                else if (wParam == VK_RIGHT || wParam == 'D') { replay_cur_frame += 15; if (replay_cur_frame >= replay_frame_count) replay_cur_frame = replay_frame_count - 1; }
+                else if (wParam == '1') { replay_speed = 0; SetStatusMessage("Replay Speed: 0.5x"); }
+                else if (wParam == '2') { replay_speed = 1; SetStatusMessage("Replay Speed: 1.0x"); }
+                else if (wParam == '3') { replay_speed = 2; SetStatusMessage("Replay Speed: 2.0x"); }
+                break;
+            }
+            if (wParam == 'P') { StartReplay(); break; }
             if (wParam == VK_SPACE) is_paused = !is_paused;
             if (wParam == 'M') { game_mode = (game_mode + 1) % 5; p1_score = 0; p2_score = 0; rally = 0; ResetBalls(); }
             if (wParam == 'V') is_pvp = !is_pvp;
@@ -408,12 +603,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 'H' || wParam == VK_F1) show_help_overlay = !show_help_overlay;
             if (wParam == VK_F5) SaveGameState();
             if (wParam == VK_F9) LoadGameState();
+            if (show_stats_overlay) {
+                if (wParam == 'E') ExportStatsJSON();
+                if (wParam == 'I') ImportStatsJSON();
+            }
             break;
 
         case WM_TIMER:
+            if (msg_timer > 0) msg_timer--;
+
+            if (is_replaying) {
+                if (!replay_paused && replay_frame_count > 0) {
+                    if (replay_speed == 0) { // 0.5x
+                        replay_subframe++;
+                        if (replay_subframe >= 2) {
+                            replay_subframe = 0;
+                            if (replay_cur_frame < replay_frame_count - 1) replay_cur_frame++;
+                            else replay_paused = 1;
+                        }
+                    } else if (replay_speed == 1) { // 1.0x
+                        if (replay_cur_frame < replay_frame_count - 1) replay_cur_frame++;
+                        else replay_paused = 1;
+                    } else if (replay_speed == 2) { // 2.0x
+                        if (replay_cur_frame < replay_frame_count - 2) replay_cur_frame += 2;
+                        else { replay_cur_frame = replay_frame_count - 1; replay_paused = 1; }
+                    }
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
             if (is_paused) { InvalidateRect(hwnd, NULL, FALSE); break; }
 
             if (game_over) {
+                if (GetAsyncKeyState('P') & 0x8000) {
+                    StartReplay();
+                }
                 if (GetAsyncKeyState('R') & 0x8000) {
                     p1_score = 0; p2_score = 0; rally = 0;
                     game_over = 0; win_screen = 0;
@@ -440,7 +665,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddShockwave(W / 2, H / 2, GetPrimaryColor());
                 MessageBeep(MB_OK);
             }
-            if (((GetAsyncKeyState('E') & 0x8000) || (GetAsyncKeyState('P') & 0x8000)) && skill_mega_cooldown == 0) {
+            if ((GetAsyncKeyState('E') & 0x8000) && skill_mega_cooldown == 0) {
                 skill_mega_timer = 240; skill_mega_cooldown = 450;
                 AddShockwave(20, p1_y + p1_pad_h / 2, RGB(255, 215, 0));
                 MessageBeep(MB_OK);
@@ -767,6 +992,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             UpdateParticles();
             UpdateShockwaves();
+
+            RecordReplayFrame();
 
             InvalidateRect(hwnd, NULL, FALSE);
             break;

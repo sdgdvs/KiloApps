@@ -26,6 +26,22 @@ static double my_sqrt(double x) {
     return guess;
 }
 
+static double my_atan(double z) {
+    if (z > 1.0) return MY_PI / 2.0 - my_atan(1.0 / z);
+    if (z < -1.0) return -MY_PI / 2.0 - my_atan(1.0 / z);
+    double z2 = z * z;
+    return z * (1.0 - z2 / 3.0 + (z2 * z2) / 5.0 - (z2 * z2 * z2) / 7.0 + (z2 * z2 * z2 * z2) / 9.0);
+}
+
+static double my_atan2(double y, double x) {
+    if (x > 0.0) return my_atan(y / x);
+    if (x < 0.0 && y >= 0.0) return my_atan(y / x) + MY_PI;
+    if (x < 0.0 && y < 0.0) return my_atan(y / x) - MY_PI;
+    if (x == 0.0 && y > 0.0) return MY_PI / 2.0;
+    if (x == 0.0 && y < 0.0) return -MY_PI / 2.0;
+    return 0.0;
+}
+
 #define NUM_ITEMS 5
 
 int values[NUM_ITEMS] = { 20, 60, 45, 80, 30 };
@@ -89,14 +105,19 @@ static void FormatTrendEq(char* dest, double slope, double intercept, double r2)
     int iFrac = (int)((absInt - (double)iWhole) * 100.0 + 0.5);
     if (iFrac >= 100) { iWhole++; iFrac = 0; }
 
-    int rFrac = (int)(r2 * 1000.0 + 0.5);
-    if (rFrac > 1000) rFrac = 1000;
-    if (rFrac < 0) rFrac = 0;
-
-    wsprintfA(dest, "Fit: y = %s%d.%02dx %c %d.%02d (R2=0.%03d)",
-        sSign < 0 ? "-" : "", sWhole, sFrac,
-        iSign < 0 ? '-' : '+', iWhole, iFrac,
-        rFrac);
+    if (r2 >= 0.9995) {
+        wsprintfA(dest, "Fit: y = %s%d.%02dx %c %d.%02d (R2=1.000)",
+            sSign < 0 ? "-" : "", sWhole, sFrac,
+            iSign < 0 ? '-' : '+', iWhole, iFrac);
+    } else {
+        int rFrac = (int)(r2 * 1000.0 + 0.5);
+        if (rFrac > 999) rFrac = 999;
+        if (rFrac < 0) rFrac = 0;
+        wsprintfA(dest, "Fit: y = %s%d.%02dx %c %d.%02d (R2=0.%03d)",
+            sSign < 0 ? "-" : "", sWhole, sFrac,
+            iSign < 0 ? '-' : '+', iWhole, iFrac,
+            rFrac);
+    }
 }
 
 int hoveredIndex = -1;
@@ -202,22 +223,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: {
             randSeed = GetTickCount();
             hBtnRandomize = CreateWindowEx(0, "BUTTON", "Randomize",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 80, 26, hwnd, (HMENU)1, NULL, NULL);
             hBtnToggle = CreateWindowEx(0, "BUTTON", "Mode",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 80, 26, hwnd, (HMENU)2, NULL, NULL);
             hBtnTheme = CreateWindowEx(0, "BUTTON", "Theme",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 80, 26, hwnd, (HMENU)3, NULL, NULL);
             hBtnTrend = CreateWindowEx(0, "BUTTON", "Trend",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 80, 26, hwnd, (HMENU)6, NULL, NULL);
             hBtnSort = CreateWindowEx(0, "BUTTON", "Sort",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 80, 26, hwnd, (HMENU)4, NULL, NULL);
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 80, 26, hwnd, (HMENU)5, NULL, NULL);
             
             int fontHeight = -MulDiv(12, dpi, 72);
@@ -260,16 +281,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int innerR = chartMode == 4 ? outerR * 55 / 100 : 0;
 
                 if (distSq >= innerR * innerR && distSq <= (outerR + 10) * (outerR + 10)) {
-                    double angle = 0;
-                    if (dx != 0 || dy != 0) {
-                        double absX = dx < 0 ? -dx : dx;
-                        double absY = dy < 0 ? -dy : dy;
-                        if (absX > absY) {
-                            angle = (dy >= 0 ? 1.0 : -1.0) * (MY_PI / 2.0 - (dx >= 0 ? absY / absX : MY_PI - absY / absX));
-                        } else {
-                            angle = (dy >= 0 ? MY_PI / 2.0 : -MY_PI / 2.0);
-                        }
-                    }
+                    double angle = my_atan2((double)dy, (double)dx);
                     if (angle < -MY_PI / 2.0) angle += MY_PI * 2.0;
 
                     int total = 0;
@@ -297,16 +309,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int distSq = dx * dx + dy * dy;
 
                 if (distSq <= (radius + 20) * (radius + 20)) {
-                    double angle = 0;
-                    if (dx != 0 || dy != 0) {
-                        double absX = dx < 0 ? -dx : dx;
-                        double absY = dy < 0 ? -dy : dy;
-                        if (absX > absY) {
-                            angle = (dy >= 0 ? 1.0 : -1.0) * (MY_PI / 2.0 - (dx >= 0 ? absY / absX : MY_PI - absY / absX));
-                        } else {
-                            angle = (dy >= 0 ? MY_PI / 2.0 : -MY_PI / 2.0);
-                        }
-                    }
+                    double angle = my_atan2((double)dy, (double)dx);
                     if (angle < -MY_PI / 2.0) angle += MY_PI * 2.0;
 
                     for (int i = 0; i < NUM_ITEMS; i++) {
@@ -322,9 +325,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else { // Bar, Line, Area
                 int chartX = 50;
-                int chartY = 35;
+                int chartY = 45;
                 int chartW = W - 75;
-                int chartH = H - 110;
+                int chartH = H - 95;
                 if (chartW < 50) chartW = 50;
                 if (chartH < 50) chartH = 50;
 
@@ -365,9 +368,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
-                MessageBox(hwnd, "KChart Studio Help:\n\n- Mode button: switch chart views\n- Theme button: switch color themes\n- Trend button ('T'): cycle Trendline & Regression overlays (Off, Linear Fit, Mov Avg, Mean Line)\n- Sort button: sort values\n- Randomize: generate new dataset", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "KChart Studio Help:\n\n- Mode button ('M'): switch chart views (Bar, Line, Area, Pie, Donut, Radar)\n- Theme button ('C'): switch color themes\n- Trend button ('T'): cycle Trendline & Regression overlays (Off, Linear Fit, Mov Avg, Mean Line)\n- Sort button ('S'): sort values\n- Randomize ('R'): generate new dataset\n- Hotkeys: 'H'/F1 Help, 'M' Mode, 'C' Theme, 'T' Trend, 'S' Sort, 'R' Randomize", "Help", MB_OK | MB_ICONINFORMATION);
             } else if (wParam == 'T' || wParam == 't') {
                 trendMode = (trendMode + 1) % 4;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'M' || wParam == 'm') {
+                chartMode = (chartMode + 1) % 6;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'C' || wParam == 'c') {
+                currentTheme = (currentTheme + 1) % NUM_THEMES;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'R' || wParam == 'r') {
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    target[i] = 10 + (MyRand() % 90);
+                }
+            } else if (wParam == 'S' || wParam == 's') {
+                for (int i = 0; i < NUM_ITEMS - 1; i++) {
+                    for (int j = 0; j < NUM_ITEMS - i - 1; j++) {
+                        if (target[j] > target[j + 1]) {
+                            int t = target[j]; target[j] = target[j + 1]; target[j + 1] = t;
+                            int tv = values[j]; values[j] = values[j + 1]; values[j + 1] = tv;
+                            const char* tl = labels[j]; labels[j] = labels[j + 1]; labels[j + 1] = tl;
+                        }
+                    }
+                }
+                CalculateStats();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
@@ -412,11 +437,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for (int j = 0; j < NUM_ITEMS - i - 1; j++) {
                         if (target[j] > target[j + 1]) {
                             int t = target[j]; target[j] = target[j + 1]; target[j + 1] = t;
+                            int tv = values[j]; values[j] = values[j + 1]; values[j + 1] = tv;
+                            const char* tl = labels[j]; labels[j] = labels[j + 1]; labels[j + 1] = tl;
                         }
                     }
                 }
+                CalculateStats();
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 5) { // Help
-                MessageBox(hwnd, "KChart Studio Help:\n\n- Mode button: switch chart views\n- Theme button: switch color themes\n- Trend button ('T'): cycle Trendline & Regression overlays (Off, Linear Fit, Mov Avg, Mean Line)\n- Sort button: sort values\n- Randomize: generate new dataset", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "KChart Studio Help:\n\n- Mode button ('M'): switch chart views (Bar, Line, Area, Pie, Donut, Radar)\n- Theme button ('C'): switch color themes\n- Trend button ('T'): cycle Trendline & Regression overlays (Off, Linear Fit, Mov Avg, Mean Line)\n- Sort button ('S'): sort values\n- Randomize ('R'): generate new dataset\n- Hotkeys: 'H'/F1 Help, 'M' Mode, 'C' Theme, 'T' Trend, 'S' Sort, 'R' Randomize", "Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }

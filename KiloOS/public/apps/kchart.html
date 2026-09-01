@@ -563,10 +563,9 @@
     const dpr = window.devicePixelRatio || 1;
     canvasW = rect.width || 600;
     canvasH = rect.height || 480;
-    canvas.width = canvasW * dpr;
-    canvas.height = canvasH * dpr;
-    ctx.resetTransform();
-    ctx.scale(dpr, dpr);
+    canvas.width = Math.floor(canvasW * dpr);
+    canvas.height = Math.floor(canvasH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     renderChart();
   }
 
@@ -1312,6 +1311,15 @@
   };
 
   document.getElementById('btnRandomize').onclick = () => {
+    if (data.length === 0) {
+      data = [
+        { label: "Q1", value: 20 },
+        { label: "Q2", value: 60 },
+        { label: "Q3", value: 45 },
+        { label: "Q4", value: 80 },
+        { label: "Q5", value: 30 }
+      ];
+    }
     data.forEach(item => {
       item.value = Math.floor(10 + Math.random() * 90);
     });
@@ -1319,17 +1327,21 @@
   };
 
   document.getElementById('btnAddRow').onclick = () => {
+    if (data.length >= 100) {
+      alert("Maximum limit of 100 data points reached.");
+      return;
+    }
     data.push({ label: `Item ${data.length + 1}`, value: Math.floor(10 + Math.random() * 50) });
     updateAll();
   };
 
   document.getElementById('btnSortAsc').onclick = () => {
-    data.sort((a, b) => a.value - b.value);
+    data.sort((a, b) => (Number(a.value) || 0) - (Number(b.value) || 0));
     updateAll();
   };
 
   document.getElementById('btnSortDesc').onclick = () => {
-    data.sort((a, b) => b.value - a.value);
+    data.sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
     updateAll();
   };
 
@@ -1516,6 +1528,7 @@
     link.download = 'kchart_vector.svg';
     link.href = URL.createObjectURL(blob);
     link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   }
 
   document.getElementById('btnExportPng').onclick = () => {
@@ -1535,6 +1548,7 @@
     link.download = 'kchart_data.csv';
     link.href = URL.createObjectURL(blob);
     link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   };
 
   document.getElementById('btnExportJson').onclick = () => {
@@ -1544,6 +1558,7 @@
     link.download = 'kchart_data.json';
     link.href = URL.createObjectURL(blob);
     link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   };
 
   // Import handlers
@@ -1553,6 +1568,7 @@
   fileInput.onchange = (e) => {
     const file = e.target.files[0];
     if (file) loadFile(file);
+    fileInput.value = '';
   };
 
   const dropZone = document.getElementById('dropZone');
@@ -1571,6 +1587,29 @@
     }
   };
 
+  function parseCsvLine(line) {
+    const res = [];
+    let cur = '', inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (c === ',' && !inQuotes) {
+        res.push(cur.trim());
+        cur = '';
+      } else {
+        cur += c;
+      }
+    }
+    res.push(cur.trim());
+    return res;
+  }
+
   function loadFile(file) {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -1579,8 +1618,8 @@
         try {
           const parsed = JSON.parse(content);
           if (Array.isArray(parsed)) {
-            data = parsed.map((item, i) => ({
-              label: item.label || item.name || `Point ${i + 1}`,
+            data = parsed.slice(0, 100).map((item, i) => ({
+              label: String(item.label || item.name || `Point ${i + 1}`),
               value: Number(item.value || item.val || 0)
             }));
             updateAll();
@@ -1594,7 +1633,7 @@
         const newData = [];
         lines.forEach((line, idx) => {
           if (idx === 0 && (line.toLowerCase().includes('label') || line.toLowerCase().includes('name'))) return;
-          const parts = line.split(',');
+          const parts = parseCsvLine(line);
           if (parts.length >= 2) {
             const lbl = parts[0].replace(/^"|"$/g, '').trim();
             const val = parseFloat(parts[1].replace(/^"|"$/g, '').trim()) || 0;
@@ -1602,7 +1641,7 @@
           }
         });
         if (newData.length > 0) {
-          data = newData;
+          data = newData.slice(0, 100);
           updateAll();
         }
       }
@@ -1620,7 +1659,7 @@
 
     if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
       if (e.key === 'F1') e.preventDefault();
-      alert("KChart Studio Help:\n\n- Select Chart Type from toolbar (Bar, Line, Area, Pie, Donut, Radar).\n- Use Trendline & Regression overlay buttons (Off, Linear Fit y=mx+b, Moving Avg, Mean).\n- Statistical Suite displays Count, Mean, Median, StdDev, Slope, and R² Fit.\n- Export options: SVG Vector (.svg), PNG Image (.png), CSV (.csv), JSON (.json).\n- Use the table editor to modify data points or drag & drop CSV/JSON files.\n- Hotkeys: 'H' for Help, 'T' to cycle Trendline overlays.");
+      alert("KChart Studio Help:\n\n- Select Chart Type from toolbar (Bar, Line, Area, Pie, Donut, Radar).\n- Use Trendline & Regression overlay buttons (Off, Linear Fit y=mx+b, Moving Avg, Mean).\n- Statistical Suite displays Count, Mean, Median, StdDev, Slope, and R² Fit.\n- Export options: SVG Vector (.svg), PNG Image (.png), CSV (.csv), JSON (.json).\n- Use the table editor to modify data points or drag & drop CSV/JSON files.\n- Hotkeys:\n  • 'H'/F1: Help\n  • 'M': Cycle Chart Type\n  • 'C': Cycle Theme\n  • 'T': Cycle Trendline overlays\n  • 'R': Randomize\n  • 'S': Sort ascending\n  • 'Escape': Unfocus active element");
     } else if (e.key === 't' || e.key === 'T') {
       const modes = ['none', 'linear', 'movavg', 'mean'];
       const nextIdx = (modes.indexOf(trendMode) + 1) % modes.length;
@@ -1630,6 +1669,27 @@
         else b.classList.remove('active');
       });
       renderChart();
+    } else if (e.key === 'm' || e.key === 'M') {
+      const types = ['bar', 'line', 'area', 'pie', 'donut', 'radar'];
+      const nextIdx = (types.indexOf(chartType) + 1) % types.length;
+      chartType = types[nextIdx];
+      document.querySelectorAll('#chartTypeGroup button').forEach(b => {
+        if (b.dataset.type === chartType) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+      renderChart();
+    } else if (e.key === 'c' || e.key === 'C') {
+      const themeKeys = Object.keys(THEMES);
+      const nextIdx = (themeKeys.indexOf(currentTheme) + 1) % themeKeys.length;
+      currentTheme = themeKeys[nextIdx];
+      document.getElementById('themeSelect').value = currentTheme;
+      updateAll();
+    } else if (e.key === 'r' || e.key === 'R') {
+      document.getElementById('btnRandomize').click();
+    } else if (e.key === 's' || e.key === 'S') {
+      document.getElementById('btnSortAsc').click();
+    } else if (e.key === 'Escape') {
+      if (document.activeElement) document.activeElement.blur();
     }
   });
   
