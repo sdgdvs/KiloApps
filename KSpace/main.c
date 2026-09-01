@@ -69,6 +69,7 @@ typedef struct {
     int bossActive, bossHp, bossMaxHp, bossLevel, bossIsMothership;
     float bossX, bossY;
     int turretHp[4], turretActive[4];
+    int bossIsDreadnought, dreadGenL, dreadGenR, droneCount, hyperJumpEnergy;
 } SaveState;
 
 // --- GLOBAL GAME DATA ---
@@ -99,6 +100,25 @@ int bombardmentActive = 0;
 int bombardmentTimer = 0;
 int bombardmentBanner = 0;
 OrbitalStrike strikes[MAX_STRIKES] = {0};
+
+// Loop 11: Drone Companion Wings
+int droneCount = 0; // 0, 1, or 2 support combat drones
+typedef struct { float x, y, targetX, targetY; int shootTimer; } DroneWing;
+DroneWing drones[2] = {0};
+
+// Loop 11: Hyper-Jump Drive
+int hyperJumpEnergy = 0; // 0 to 100%
+int hyperJumpTimer = 0;  // Frames for warp distortion
+int kbHyperJump = 'J';
+int kbDeployDrone = 'W';
+
+// Loop 11: Capital Ship Dreadnought Sieges
+int bossIsDreadnought = 0;
+int dreadGenL = 80, dreadMaxGenL = 80;
+int dreadGenR = 80, dreadMaxGenR = 80;
+int dreadIonCharge = 0;    // 0 to 100
+int dreadIonBeamTimer = 0; // Active mega-beam frames
+int dreadFlakTimer = 0;
 
 Ent b[MAX_BULLETS] = {0};
 Ent e[MAX_ENEMIES] = {0};
@@ -188,6 +208,9 @@ DWORD WINAPI SndThread(LPVOID param) {
     else if (type == 6) { Beep(400, 80); Beep(600, 80); Beep(800, 100); Beep(1200, 150); } // Victory
     else if (type == 7) { Beep(600, 30); Beep(900, 30); Beep(1300, 40); Beep(1800, 60); } // Overcharge
     else if (type == 8) { Beep(300, 70); Beep(220, 70); Beep(180, 100); } // Tactical siren
+    else if (type == 9) { Beep(1200, 35); Beep(800, 35); Beep(400, 45); Beep(950, 60); } // Hyper-Jump Warp
+    else if (type == 10) Beep(1400, 18);  // Drone Vulcan / Point Defense
+    else if (type == 11) { Beep(260, 40); Beep(190, 70); } // Dreadnought Mega-Ion Beam
     return 0;
 }
 
@@ -441,6 +464,11 @@ void SaveGameState() {
             s.turretHp[i] = turretHp[i];
             s.turretActive[i] = turretActive[i];
         }
+        s.bossIsDreadnought = bossIsDreadnought;
+        s.dreadGenL = dreadGenL;
+        s.dreadGenR = dreadGenR;
+        s.droneCount = droneCount;
+        s.hyperJumpEnergy = hyperJumpEnergy;
 
         RegSetValueExA(hKey, "Data", 0, REG_BINARY, (const BYTE*)&s, sizeof(SaveState));
         RegCloseKey(hKey);
@@ -488,6 +516,11 @@ int LoadGameState() {
                 turretHp[i] = s.turretHp[i];
                 turretActive[i] = s.turretActive[i];
             }
+            bossIsDreadnought = s.bossIsDreadnought;
+            dreadGenL = s.dreadGenL;
+            dreadGenR = s.dreadGenR;
+            droneCount = s.droneCount;
+            hyperJumpEnergy = s.hyperJumpEnergy;
 
             for (int i = 0; i < MAX_ENEMIES; i++) e[i].active = 0;
             for (int i = 0; i < MAX_BULLETS; i++) b[i].active = 0;
@@ -519,15 +552,29 @@ int IsMothershipShieldActive() {
 
 void SpawnBoss(int lvl) {
     bossActive = 1;
-    bossX = W / 2.0f - 45.0f;
-    bossY = -70.0f;
     bossLevel = lvl;
-    bossDx = 2.0f;
     bossAttackTimer = 0;
     bossPhase = 1;
 
-    if (wave >= 20 || lvl >= 4) {
+    if (wave == 8 || wave == 16 || (modeIndex == MODE_BOSS_RUSH && (lvl == 2 || lvl == 4))) {
+        bossIsDreadnought = 1;
+        bossIsMothership = 0;
+        bossX = W / 2.0f - 60.0f;
+        bossY = -75.0f;
+        bossDx = 1.4f;
+        bossMaxHp = 500 + lvl * 50;
+        bossHp = bossMaxHp;
+        dreadGenL = 80; dreadMaxGenL = 80;
+        dreadGenR = 80; dreadMaxGenR = 80;
+        dreadIonCharge = 0;
+        dreadIonBeamTimer = 0;
+        dreadFlakTimer = 0;
+    } else if (wave >= 20 || (modeIndex == MODE_BOSS_RUSH && lvl >= 5) || lvl >= 4) {
+        bossIsDreadnought = 0;
         bossIsMothership = 1;
+        bossX = W / 2.0f - 45.0f;
+        bossY = -70.0f;
+        bossDx = 2.0f;
         bossMaxHp = 600;
         bossHp = bossMaxHp;
         for (int i = 0; i < 4; i++) {
@@ -535,7 +582,11 @@ void SpawnBoss(int lvl) {
             turretActive[i] = 1;
         }
     } else {
+        bossIsDreadnought = 0;
         bossIsMothership = 0;
+        bossX = W / 2.0f - 30.0f;
+        bossY = -60.0f;
+        bossDx = 2.0f;
         bossMaxHp = 140 + lvl * 90;
         bossHp = bossMaxHp;
     }
@@ -545,23 +596,27 @@ void SpawnBoss(int lvl) {
 void DestroyBoss() {
     comboTimer = 180;
     if (comboMultiplier < 10) comboMultiplier++;
-    int baseScore = (bossIsMothership ? 10000 : (1200 * bossLevel));
+    int baseScore = bossIsDreadnought ? 8000 : (bossIsMothership ? 10000 : (1200 * bossLevel));
     score += baseScore * comboMultiplier;
     enemiesKilled += 10;
     totalKills += 10;
-    AddExplosion(bossX + 45.0f, bossY + 30.0f, 60, RGB(255, 23, 68));
+    hyperJumpEnergy += 50; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
+    overchargeEnergy += 40; if (overchargeEnergy > 100) overchargeEnergy = 100;
+
+    AddExplosion(bossX + (bossIsDreadnought ? 60.0f : 45.0f), bossY + 30.0f, 60, RGB(255, 23, 68));
     bossDeathFlash = 150;
     bossActive = 0;
+    bossIsDreadnought = 0;
     PlaySnd(3);
 
-    // Drop Powerups
+    // Drop Powerups (including guaranteed Drone Wing or Overcharge Core)
     for (int k = 0; k < MAX_POWERUPS; k++) {
         if (!pu[k].active) {
             pu[k].active = 1.0f;
-            pu[k].x = bossX + 15.0f + (k % 3) * 25.0f;
+            pu[k].x = bossX + 20.0f + (k % 3) * 30.0f;
             pu[k].y = bossY + 20.0f;
             pu[k].dy = 1.5f;
-            pu[k].type = (float)(rnd() % 9);
+            pu[k].type = (k == 0 ? 10.0f : (float)(rnd() % 11)); // 10 = Drone Wing Pod
             if (k >= 2) break;
         }
     }
@@ -699,7 +754,11 @@ void UseSmartBomb() {
     for (int i = 0; i < MAX_EBULLETS; i++) eb[i].active = 0;
 
     if (bossActive) {
-        if (bossIsMothership) {
+        if (bossIsDreadnought) {
+            if (dreadGenL > 0) { dreadGenL -= 40; if (dreadGenL < 0) dreadGenL = 0; }
+            if (dreadGenR > 0) { dreadGenR -= 40; if (dreadGenR < 0) dreadGenR = 0; }
+            bossHp -= 60;
+        } else if (bossIsMothership) {
             for (int i = 0; i < 4; i++) {
                 if (turretActive[i]) {
                     turretHp[i] -= 60;
@@ -746,6 +805,83 @@ void UseOvercharge() {
         AddShockwave(p.x + 10.0f, p.y + 10.0f, 60.0f, RGB(255, 234, 0));
         AddShockwave(p.x + 10.0f, p.y + 10.0f, 40.0f, RGB(0, 229, 255));
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 30, RGB(255, 234, 0));
+    }
+}
+
+// Loop 11: Hyper-Jump Warp Activation
+void UseHyperJump() {
+    if (gameState != STATE_PLAYING) return;
+    if (hyperJumpEnergy >= 100 && hyperJumpTimer <= 0) {
+        hyperJumpEnergy = 0;
+        hyperJumpTimer = 40;
+        invincibleTimer = 90; // 1.5s invulnerability
+        PlaySnd(9);
+        AddShockwave(p.x + 10.0f, p.y + 10.0f, 95.0f, RGB(0, 229, 255));
+        AddShockwave(p.x + 10.0f, p.y + 10.0f, 60.0f, RGB(255, 234, 0));
+        AddExplosion(p.x + 10.0f, p.y + 10.0f, 40, RGB(0, 229, 255));
+
+        // Clear all enemy bullets on screen
+        for (int i = 0; i < MAX_EBULLETS; i++) eb[i].active = 0;
+
+        // Deal 60 warp damage to all active enemies
+        for (int i = 0; i < MAX_ENEMIES; i++) {
+            if (e[i].active) {
+                e[i].hp -= 60;
+                AddExplosion(e[i].x + 10.0f, e[i].y + 10.0f, 15, RGB(0, 229, 255));
+                if (e[i].hp <= 0) {
+                    e[i].active = 0.0f;
+                    comboTimer = 180;
+                    if (comboMultiplier < 10) comboMultiplier++;
+                    score += 50 * comboMultiplier;
+                    enemiesKilled++;
+                    totalKills++;
+                }
+            }
+        }
+
+        // Deal damage to Boss / Dreadnought
+        if (bossActive) {
+            if (bossIsDreadnought) {
+                if (dreadGenL > 0) { dreadGenL -= 40; if (dreadGenL < 0) dreadGenL = 0; }
+                if (dreadGenR > 0) { dreadGenR -= 40; if (dreadGenR < 0) dreadGenR = 0; }
+                bossHp -= 70;
+            } else if (bossIsMothership) {
+                for (int tIdx = 0; tIdx < 4; tIdx++) {
+                    if (turretActive[tIdx]) {
+                        turretHp[tIdx] -= 40;
+                        if (turretHp[tIdx] <= 0) turretActive[tIdx] = 0;
+                    }
+                }
+                if (!IsMothershipShieldActive()) bossHp -= 70;
+            } else {
+                bossHp -= 80;
+            }
+            AddExplosion(bossX + 45.0f, bossY + 30.0f, 35, RGB(0, 229, 255));
+            if (bossHp <= 0) {
+                if (bossPhase == 1) {
+                    bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
+                    bossDx = (bossDx > 0 ? bossDx + 0.5f : bossDx - 0.5f);
+                    AddExplosion(bossX + 45.0f, bossY + 30.0f, 40, RGB(255, 234, 0));
+                } else {
+                    DestroyBoss();
+                }
+            }
+        }
+    }
+}
+
+// Loop 11: Deploy or Upgrade Drone Companion Wings
+void DeployDroneWing() {
+    if (gameState != STATE_PLAYING) return;
+    if (droneCount < 2) {
+        droneCount++;
+        int dIdx = droneCount - 1;
+        drones[dIdx].x = p.x + (dIdx == 0 ? -22.0f : 22.0f);
+        drones[dIdx].y = p.y + 6.0f;
+        drones[dIdx].shootTimer = 0;
+        PlaySnd(2);
+        AddShockwave(drones[dIdx].x + 6.0f, drones[dIdx].y + 6.0f, 30.0f, RGB(0, 229, 255));
+        AddExplosion(drones[dIdx].x + 6.0f, drones[dIdx].y + 6.0f, 15, RGB(0, 229, 255));
     }
 }
 
@@ -967,6 +1103,10 @@ void StartNewGame(int modeIdx) {
     bombardmentTimer = 0;
     bombardmentBanner = 0;
     bossActive = 0;
+    bossIsDreadnought = 0;
+    droneCount = 0;
+    hyperJumpEnergy = 0;
+    hyperJumpTimer = 0;
 
     for (int i = 0; i < MAX_STRIKES; i++) strikes[i].active = 0;
     for (int i = 0; i < MAX_ENEMIES; i++) e[i].active = 0;
@@ -1025,12 +1165,18 @@ void ApplyPowerup(int type) {
         AddShockwave(p.x + 10.0f, p.y + 10.0f, 30.0f, RGB(255, 234, 0));
         PlaySnd(2);
     }
+    else if (type == 10) { // Loop 11: Drone Wing Pod
+        DeployDroneWing();
+        hyperJumpEnergy += 35;
+        if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
+    }
 }
 
 void Update() {
     if (bombFlash > 0) bombFlash--;
     if (bossDeathFlash > 0) bossDeathFlash -= 5;
     if (screenShake > 0) screenShake--;
+    if (hyperJumpTimer > 0) hyperJumpTimer--;
     if (gameState != STATE_PLAYING) return;
     timeSurvivedFrames++;
     if (comboTimer > 0) {
@@ -1055,6 +1201,47 @@ void Update() {
 
     if (bombardmentBanner > 0) bombardmentBanner--;
     if (eliteSquadTimer > 0) eliteSquadTimer--;
+
+    // Loop 11: Drone Companion Wings Update & Support Systems
+    for (int d = 0; d < droneCount; d++) {
+        float targetX = p.x + (d == 0 ? -22.0f : 22.0f);
+        int phase = (frameCount + (d == 0 ? 0 : 10)) % 20;
+        float floatOffset = (phase < 10 ? (float)(phase - 5) : (float)(15 - phase)) * 0.6f;
+        float targetY = p.y + 6.0f + floatOffset;
+        drones[d].x += (targetX - drones[d].x) * 0.25f;
+        drones[d].y += (targetY - drones[d].y) * 0.25f;
+
+        // Drones Auto-Firing support vulcan bolts
+        drones[d].shootTimer++;
+        if (drones[d].shootTimer % 14 == 0) {
+            for (int i = 0; i < MAX_BULLETS; i++) {
+                if (!b[i].active) {
+                    b[i].active = 1.0f;
+                    b[i].x = drones[d].x + 4.0f;
+                    b[i].y = drones[d].y - 2.0f;
+                    b[i].dx = (d == 0 ? -0.4f : 0.4f);
+                    b[i].dy = -8.5f;
+                    b[i].type = 0.0f;
+                    break;
+                }
+            }
+            PlaySnd(10);
+            AddMuzzleFlash(drones[d].x + 4.0f, drones[d].y - 2.0f, RGB(0, 229, 255), 4.0f);
+        }
+
+        // Drones Point-Defense: Destroy enemy bullets near the drone
+        for (int i = 0; i < MAX_EBULLETS; i++) {
+            if (eb[i].active) {
+                float dx = eb[i].x - (drones[d].x + 5.0f);
+                float dy = eb[i].y - (drones[d].y + 5.0f);
+                if (dx * dx + dy * dy < 256.0f) {
+                    eb[i].active = 0.0f;
+                    AddExplosion(eb[i].x, eb[i].y, 3, RGB(0, 229, 255));
+                    PlaySnd(10);
+                }
+            }
+        }
+    }
 
     // Loop 10: Planetary Bombardment Mission Simulation
     if (bombardmentActive) {
@@ -1110,6 +1297,8 @@ void Update() {
             score += 3000 * comboMultiplier;
             overchargeEnergy += 25;
             if (overchargeEnergy > 100) overchargeEnergy = 100;
+            hyperJumpEnergy += 25;
+            if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
             PlaySnd(6);
         }
     }
@@ -1125,11 +1314,13 @@ void Update() {
             score += 2500 * comboMultiplier;
             overchargeEnergy += 35;
             if (overchargeEnergy > 100) overchargeEnergy = 100;
+            hyperJumpEnergy += 35;
+            if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
             PlaySnd(6);
             for (int k = 0; k < MAX_POWERUPS; k++) {
                 if (!pu[k].active) {
                     pu[k].active = 1.0f; pu[k].x = W / 2.0f - 15.0f; pu[k].y = 50.0f; pu[k].dy = 1.5f;
-                    pu[k].type = 9.0f; // Overcharge Core
+                    pu[k].type = (k == 0 ? 10.0f : 9.0f); // 10 = Drone Pod, 9 = Overcharge Core
                     break;
                 }
             }
@@ -1147,14 +1338,14 @@ void Update() {
             else if (wave == 4 && !bombardmentActive && !bossActive) TriggerBombardment();
             else if (wave == 5 && !bossActive) SpawnBoss(1);
             else if (wave == 7 && !eliteSquadActive && !bossActive) SpawnEliteSquad(1);
-            else if (wave == 8 && !bombardmentActive && !bossActive) TriggerBombardment();
-            else if (wave == 10 && !bossActive) SpawnBoss(2);
+            else if (wave == 8 && !bossActive) SpawnBoss(2); // Loop 11: Capital Ship Dreadnought Siege!
+            else if (wave == 10 && !bossActive) SpawnBoss(3);
             else if (wave == 11 && !eliteSquadActive && !bossActive) SpawnEliteSquad(2);
             else if (wave == 12 && !bombardmentActive && !bossActive) TriggerBombardment();
-            else if (wave == 15 && !bossActive) SpawnBoss(3);
-            else if (wave == 16 && !bombardmentActive && !bossActive) TriggerBombardment();
+            else if (wave == 15 && !bossActive) SpawnBoss(4);
+            else if (wave == 16 && !bossActive) SpawnBoss(5); // Loop 11: Capital Ship Dreadnought Siege Rematch!
             else if (wave == 17 && !eliteSquadActive && !bossActive) SpawnEliteSquad(rnd() % 3);
-            else if (wave == 20 && !bossActive) SpawnBoss(4); // Stage 20 Alien Mothership Boss
+            else if (wave == 20 && !bossActive) SpawnBoss(6); // Stage 20 Alien Mothership Boss
             else if (wave % 4 == 0) SpawnFormation(rnd() % 3 == 0 ? 9 : (rnd() % 2 == 0 ? 7 : 8));
         }
     } else if (modeIndex == MODE_ENDURANCE) {
@@ -1245,7 +1436,7 @@ void Update() {
                 float closestDist = 999999.0f;
                 int hasTarget = 0;
                 if (bossActive) {
-                    targetX = bossX + 45.0f;
+                    targetX = bossX + (bossIsDreadnought ? 60.0f : 45.0f);
                     hasTarget = 1;
                 } else {
                     for (int k = 0; k < MAX_ENEMIES; k++) {
@@ -1269,131 +1460,245 @@ void Update() {
         }
     }
 
-    // Boss & Alien Mothership Logic
+    // Loop 11: Dreadnought Boss & Mothership Logic
     if (bossActive) {
-        if (bossY < 45.0f) bossY += 1.0f;
-        else {
-            bossX += bossDx;
-            if (bossX < 10.0f || bossX > W - (bossIsMothership ? 95.0f : 70.0f)) bossDx = -bossDx;
-        }
+        if (bossIsDreadnought) {
+            if (bossY < 35.0f) bossY += 0.8f;
+            else {
+                bossX += bossDx;
+                if (bossX < 5.0f || bossX > W - 125.0f) bossDx = -bossDx;
+            }
 
-        bossAttackTimer++;
-        if (timeStopTimer == 0 && bossAttackTimer % (bossIsMothership ? 35 : 45) == 0) {
-            if (bossIsMothership) {
-                // Turret Firing Phase
-                for (int tIdx = 0; tIdx < 4; tIdx++) {
-                    if (turretActive[tIdx]) {
-                        float tx = bossX + (tIdx == 0 ? 5 : (tIdx == 1 ? 25 : (tIdx == 2 ? 65 : 85)));
-                        float ty = bossY + 35.0f;
-                        for (int k = 0; k < MAX_EBULLETS; k++) {
-                            if (!eb[k].active) {
-                                eb[k].active = 1.0f;
-                                eb[k].x = tx; eb[k].y = ty;
-                                eb[k].dy = 3.5f;
-                                eb[k].dx = (tIdx == 0 ? -1.5f : (tIdx == 3 ? 1.5f : 0.0f));
-                                break;
-                            }
-                        }
-                    }
+            bossAttackTimer++;
+            dreadFlakTimer++;
+
+            // Mega-Ion Cannon Charging & Firing
+            if (timeStopTimer == 0) {
+                dreadIonCharge += 1;
+                if (dreadIonCharge >= 100) {
+                    dreadIonCharge = 0;
+                    dreadIonBeamTimer = 45; // 0.75 seconds of mega-beam
+                    PlaySnd(11);
+                    screenShake = 15;
                 }
-                if (!IsMothershipShieldActive() && (bossAttackTimer % 50 == 0)) {
-                    // Core Burst Ring
-                    for (int a = -2; a <= 2; a++) {
-                        for (int k = 0; k < MAX_EBULLETS; k++) {
-                            if (!eb[k].active) {
-                                eb[k].active = 1.0f;
-                                eb[k].x = bossX + 45.0f; eb[k].y = bossY + 45.0f;
-                                eb[k].dy = 3.8f; eb[k].dx = (float)a * 1.5f;
-                                break;
-                            }
-                        }
-                    }
+            }
+
+            if (dreadIonBeamTimer > 0) {
+                dreadIonBeamTimer--;
+                float beamX = bossX + 60.0f;
+                if (p.x + 18.0f > beamX - 14.0f && p.x + 2.0f < beamX + 14.0f) {
+                    if (frameCount % 6 == 0) PlayerHit();
                 }
-            } else {
-                int bspawned = 0;
-                float bdx[] = {-1.5f, 0.0f, 1.5f};
+            }
+
+            // Dreadnought Flak & Homing Salvos
+            if (timeStopTimer == 0 && dreadFlakTimer % 38 == 0) {
                 for (int k = 0; k < MAX_EBULLETS; k++) {
                     if (!eb[k].active) {
                         eb[k].active = 1.0f;
-                        eb[k].x = bossX + 30.0f; eb[k].y = bossY + 45.0f;
-                        eb[k].dy = 3.5f; eb[k].dx = bdx[bspawned];
-                        bspawned++;
-                        if (bspawned >= 3) break;
+                        eb[k].x = bossX + 20.0f; eb[k].y = bossY + 40.0f;
+                        eb[k].dx = -1.8f; eb[k].dy = 3.2f;
+                        break;
+                    }
+                }
+                for (int k = 0; k < MAX_EBULLETS; k++) {
+                    if (!eb[k].active) {
+                        eb[k].active = 1.0f;
+                        eb[k].x = bossX + 100.0f; eb[k].y = bossY + 40.0f;
+                        eb[k].dx = 1.8f; eb[k].dy = 3.2f;
+                        break;
+                    }
+                }
+                for (int k = 0; k < MAX_EBULLETS; k++) {
+                    if (!eb[k].active) {
+                        eb[k].active = 1.0f;
+                        eb[k].x = bossX + 60.0f; eb[k].y = bossY + 50.0f;
+                        eb[k].dx = (frameCount % 2 == 0 ? -0.8f : 0.8f); eb[k].dy = 3.8f;
+                        break;
                     }
                 }
             }
-        }
 
-        // Bullets & Laser vs Boss
-        for (int i = 0; i < MAX_BULLETS; i++) {
-            if (b[i].active) {
-                if (bossIsMothership) {
-                    // Turrets check
-                    int hitTurret = 0;
-                    float tOffsetsX[] = {5, 25, 65, 85};
-                    for (int tIdx = 0; tIdx < 4; tIdx++) {
-                        if (turretActive[tIdx]) {
-                            float tx = bossX + tOffsetsX[tIdx];
-                            float ty = bossY + 25.0f;
-                            if (b[i].x >= tx - 6 && b[i].x <= tx + 18 && b[i].y >= ty - 6 && b[i].y <= ty + 18) {
-                                b[i].active = 0.0f;
-                                int dmg = (b[i].type == 1.0f) ? 12 : ((b[i].type == 2.0f) ? 15 : 3);
-                                if (overchargeTimer > 0) dmg *= 3;
-                                turretHp[tIdx] -= dmg;
-                                overchargeEnergy++;
-                                if (overchargeEnergy > 100) overchargeEnergy = 100;
-                                AddExplosion(b[i].x, b[i].y, 4, RGB(255, 145, 0));
-                                if (turretHp[tIdx] <= 0) {
-                                    turretActive[tIdx] = 0;
-                                    overchargeEnergy += 15;
-                                    if (overchargeEnergy > 100) overchargeEnergy = 100;
-                                    AddExplosion(tx, ty, 20, RGB(255, 23, 68));
-                                }
-                                hitTurret = 1;
-                                break;
+            // Bullets vs Dreadnought Subsystems & Hull
+            for (int i = 0; i < MAX_BULLETS; i++) {
+                if (b[i].active) {
+                    // Check Left Shield Generator
+                    if (dreadGenL > 0 && b[i].x >= bossX + 8.0f && b[i].x <= bossX + 42.0f && b[i].y >= bossY + 12.0f && b[i].y <= bossY + 46.0f) {
+                        b[i].active = 0.0f;
+                        int dmg = (b[i].type == 1.0f) ? 10 : (b[i].type == 2.0f ? 14 : 3);
+                        if (overchargeTimer > 0) dmg *= 3;
+                        dreadGenL -= dmg;
+                        shotsHit++;
+                        AddExplosion(b[i].x, b[i].y, 4, RGB(0, 229, 255));
+                        if (dreadGenL <= 0) {
+                            dreadGenL = 0;
+                            AddExplosion(bossX + 25.0f, bossY + 30.0f, 25, RGB(255, 23, 68));
+                            score += 1500 * comboMultiplier;
+                            hyperJumpEnergy += 25; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
+                        }
+                        continue;
+                    }
+                    // Check Right Shield Generator
+                    if (dreadGenR > 0 && b[i].x >= bossX + 78.0f && b[i].x <= bossX + 112.0f && b[i].y >= bossY + 12.0f && b[i].y <= bossY + 46.0f) {
+                        b[i].active = 0.0f;
+                        int dmg = (b[i].type == 1.0f) ? 10 : (b[i].type == 2.0f ? 14 : 3);
+                        if (overchargeTimer > 0) dmg *= 3;
+                        dreadGenR -= dmg;
+                        shotsHit++;
+                        AddExplosion(b[i].x, b[i].y, 4, RGB(0, 229, 255));
+                        if (dreadGenR <= 0) {
+                            dreadGenR = 0;
+                            AddExplosion(bossX + 95.0f, bossY + 30.0f, 25, RGB(255, 23, 68));
+                            score += 1500 * comboMultiplier;
+                            hyperJumpEnergy += 25; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
+                        }
+                        continue;
+                    }
+
+                    // Check Central Hull
+                    if (b[i].x >= bossX && b[i].x <= bossX + 120.0f && b[i].y >= bossY && b[i].y <= bossY + 60.0f) {
+                        b[i].active = 0.0f;
+                        int isShielded = (dreadGenL > 0 || dreadGenR > 0);
+                        if (isShielded) {
+                            AddWeaponHitParticles(b[i].x, b[i].y, weaponType, RGB(0, 229, 255));
+                        } else {
+                            int dmg = (b[i].type == 1.0f) ? 8 : (b[i].type == 2.0f ? 12 : 2);
+                            if (overchargeTimer > 0) dmg *= 3;
+                            bossHp -= dmg;
+                            shotsHit++;
+                            overchargeEnergy++; if (overchargeEnergy > 100) overchargeEnergy = 100;
+                            hyperJumpEnergy++; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
+                            AddWeaponHitParticles(b[i].x, b[i].y, weaponType, RGB(255, 23, 68));
+                            if (bossHp <= 0) {
+                                DestroyBoss();
                             }
                         }
                     }
-                    if (!hitTurret && b[i].x >= bossX && b[i].x <= bossX + 90.0f && b[i].y >= bossY && b[i].y <= bossY + 60.0f) {
-                        b[i].active = 0.0f;
-                        if (IsMothershipShieldActive()) {
-                            AddWeaponHitParticles(b[i].x, b[i].y, weaponType, RGB(0, 229, 255)); // Deflector absorbed!
-                        } else {
-                            shotsHit++;
-                            int dmg = (b[i].type == 1.0f) ? 8 : ((b[i].type == 2.0f) ? 12 : 2);
-                            if (overchargeTimer > 0) dmg *= 3;
-                            bossHp -= dmg;
-                            overchargeEnergy++;
-                            if (overchargeEnergy > 100) overchargeEnergy = 100;
-                            AddWeaponHitParticles(b[i].x, b[i].y, weaponType, (overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(255, 23, 68)));
-                            if (bossHp <= 0) {
-                                if (bossPhase == 1) {
-                                    bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
-                                    bossDx = (bossDx > 0 ? bossDx + 0.5f : bossDx - 0.5f);
-                                    AddExplosion(bossX + 45.0f, bossY + 30.0f, 40, RGB(255, 234, 0));
-                                } else {
-                                    DestroyBoss();
+                }
+            }
+        } else {
+            // Mothership / Regular Boss
+            if (bossY < 45.0f) bossY += 1.0f;
+            else {
+                bossX += bossDx;
+                if (bossX < 10.0f || bossX > W - (bossIsMothership ? 95.0f : 70.0f)) bossDx = -bossDx;
+            }
+
+            bossAttackTimer++;
+            if (timeStopTimer == 0 && bossAttackTimer % (bossIsMothership ? 35 : 45) == 0) {
+                if (bossIsMothership) {
+                    for (int tIdx = 0; tIdx < 4; tIdx++) {
+                        if (turretActive[tIdx]) {
+                            float tx = bossX + (tIdx == 0 ? 5 : (tIdx == 1 ? 25 : (tIdx == 2 ? 65 : 85)));
+                            float ty = bossY + 35.0f;
+                            for (int k = 0; k < MAX_EBULLETS; k++) {
+                                if (!eb[k].active) {
+                                    eb[k].active = 1.0f;
+                                    eb[k].x = tx; eb[k].y = ty;
+                                    eb[k].dy = 3.5f;
+                                    eb[k].dx = (tIdx == 0 ? -1.5f : (tIdx == 3 ? 1.5f : 0.0f));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (!IsMothershipShieldActive() && (bossAttackTimer % 50 == 0)) {
+                        for (int a = -2; a <= 2; a++) {
+                            for (int k = 0; k < MAX_EBULLETS; k++) {
+                                if (!eb[k].active) {
+                                    eb[k].active = 1.0f;
+                                    eb[k].x = bossX + 45.0f; eb[k].y = bossY + 45.0f;
+                                    eb[k].dy = 3.8f; eb[k].dx = (float)a * 1.5f;
+                                    break;
                                 }
                             }
                         }
                     }
                 } else {
-                    if (b[i].x >= bossX && b[i].x <= bossX + 60.0f && b[i].y >= bossY && b[i].y <= bossY + 50.0f) {
-                        b[i].active = 0.0f;
-                        shotsHit++;
-                        int dmg = (b[i].type == 1.0f) ? 8 : ((b[i].type == 2.0f) ? 12 : 2);
-                        if (overchargeTimer > 0) dmg *= 3;
-                        bossHp -= dmg;
-                        overchargeEnergy++;
-                        if (overchargeEnergy > 100) overchargeEnergy = 100;
-                        AddWeaponHitParticles(b[i].x, b[i].y, weaponType, (overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 229, 255)));
-                        if (bossHp <= 0) {
-                            if (bossPhase == 1) {
-                                bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
-                                bossDx = (bossDx > 0 ? bossDx + 0.5f : bossDx - 0.5f);
-                                AddExplosion(bossX + 30.0f, bossY + 25.0f, 40, RGB(255, 234, 0));
+                    int bspawned = 0;
+                    float bdx[] = {-1.5f, 0.0f, 1.5f};
+                    for (int k = 0; k < MAX_EBULLETS; k++) {
+                        if (!eb[k].active) {
+                            eb[k].active = 1.0f;
+                            eb[k].x = bossX + 30.0f; eb[k].y = bossY + 45.0f;
+                            eb[k].dy = 3.5f; eb[k].dx = bdx[bspawned];
+                            bspawned++;
+                            if (bspawned >= 3) break;
+                        }
+                    }
+                }
+            }
+
+            // Bullets & Laser vs Mothership/Boss
+            for (int i = 0; i < MAX_BULLETS; i++) {
+                if (b[i].active) {
+                    if (bossIsMothership) {
+                        int hitTurret = 0;
+                        float tOffsetsX[] = {5, 25, 65, 85};
+                        for (int tIdx = 0; tIdx < 4; tIdx++) {
+                            if (turretActive[tIdx]) {
+                                float tx = bossX + tOffsetsX[tIdx];
+                                float ty = bossY + 25.0f;
+                                if (b[i].x >= tx - 6 && b[i].x <= tx + 18 && b[i].y >= ty - 6 && b[i].y <= ty + 18) {
+                                    b[i].active = 0.0f;
+                                    int dmg = (b[i].type == 1.0f) ? 12 : ((b[i].type == 2.0f) ? 15 : 3);
+                                    if (overchargeTimer > 0) dmg *= 3;
+                                    turretHp[tIdx] -= dmg;
+                                    overchargeEnergy++; if (overchargeEnergy > 100) overchargeEnergy = 100;
+                                    hyperJumpEnergy++; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
+                                    AddExplosion(b[i].x, b[i].y, 4, RGB(255, 145, 0));
+                                    if (turretHp[tIdx] <= 0) {
+                                        turretActive[tIdx] = 0;
+                                        overchargeEnergy += 15; if (overchargeEnergy > 100) overchargeEnergy = 100;
+                                        hyperJumpEnergy += 15; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
+                                        AddExplosion(tx, ty, 20, RGB(255, 23, 68));
+                                    }
+                                    hitTurret = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!hitTurret && b[i].x >= bossX && b[i].x <= bossX + 90.0f && b[i].y >= bossY && b[i].y <= bossY + 60.0f) {
+                            b[i].active = 0.0f;
+                            if (IsMothershipShieldActive()) {
+                                AddWeaponHitParticles(b[i].x, b[i].y, weaponType, RGB(0, 229, 255));
                             } else {
-                                DestroyBoss();
+                                shotsHit++;
+                                int dmg = (b[i].type == 1.0f) ? 8 : ((b[i].type == 2.0f) ? 12 : 2);
+                                if (overchargeTimer > 0) dmg *= 3;
+                                bossHp -= dmg;
+                                overchargeEnergy++; if (overchargeEnergy > 100) overchargeEnergy = 100;
+                                hyperJumpEnergy++; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
+                                AddWeaponHitParticles(b[i].x, b[i].y, weaponType, (overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(255, 23, 68)));
+                                if (bossHp <= 0) {
+                                    if (bossPhase == 1) {
+                                        bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
+                                        bossDx = (bossDx > 0 ? bossDx + 0.5f : bossDx - 0.5f);
+                                        AddExplosion(bossX + 45.0f, bossY + 30.0f, 40, RGB(255, 234, 0));
+                                    } else {
+                                        DestroyBoss();
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        if (b[i].x >= bossX && b[i].x <= bossX + 60.0f && b[i].y >= bossY && b[i].y <= bossY + 50.0f) {
+                            b[i].active = 0.0f;
+                            shotsHit++;
+                            int dmg = (b[i].type == 1.0f) ? 8 : ((b[i].type == 2.0f) ? 12 : 2);
+                            if (overchargeTimer > 0) dmg *= 3;
+                            bossHp -= dmg;
+                            overchargeEnergy++; if (overchargeEnergy > 100) overchargeEnergy = 100;
+                            hyperJumpEnergy++; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
+                            AddWeaponHitParticles(b[i].x, b[i].y, weaponType, (overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 229, 255)));
+                            if (bossHp <= 0) {
+                                if (bossPhase == 1) {
+                                    bossPhase = 2; bossMaxHp = (int)(bossMaxHp * 1.5f); bossHp = bossMaxHp;
+                                    bossDx = (bossDx > 0 ? bossDx + 0.5f : bossDx - 0.5f);
+                                    AddExplosion(bossX + 30.0f, bossY + 25.0f, 40, RGB(255, 234, 0));
+                                } else {
+                                    DestroyBoss();
+                                }
                             }
                         }
                     }
@@ -1506,8 +1811,8 @@ void Update() {
                 if (p.x + 10.0f >= e[i].x && p.x + 10.0f <= e[i].x + ew && p.y > e[i].y) {
                     if (!e[i].cloaked) {
                         e[i].hp -= (overchargeTimer > 0 ? 3 : 1);
-                        overchargeEnergy++;
-                        if (overchargeEnergy > 100) overchargeEnergy = 100;
+                        overchargeEnergy++; if (overchargeEnergy > 100) overchargeEnergy = 100;
+                        hyperJumpEnergy++; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
                     }
                     AddWeaponHitParticles(p.x + 10.0f, e[i].y + eh/2.0f, 2, RGB(0, 229, 255));
                 }
@@ -1531,8 +1836,8 @@ void Update() {
                         int dmg = (b[j].type == 1.0f) ? 6 : ((b[j].type == 2.0f) ? 10 : 1);
                         if (overchargeTimer > 0) dmg *= 3;
                         e[i].hp -= dmg;
-                        overchargeEnergy++;
-                        if (overchargeEnergy > 100) overchargeEnergy = 100;
+                        overchargeEnergy++; if (overchargeEnergy > 100) overchargeEnergy = 100;
+                        hyperJumpEnergy++; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
                         AddWeaponHitParticles(b[j].x, b[j].y, weaponType, (overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 229, 255)));
                     }
                     break;
@@ -1549,17 +1854,19 @@ void Update() {
                 totalKills++;
                 overchargeEnergy += (e[i].isElite ? 12 : 4);
                 if (overchargeEnergy > 100) overchargeEnergy = 100;
+                hyperJumpEnergy += (e[i].isElite ? 15 : 3);
+                if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
                 PlaySnd(1);
                 AddExplosion(e[i].x + ew/2.0f, e[i].y + eh/2.0f, (e[i].isElite ? 25 : 14), (e[i].isElite ? RGB(255, 215, 0) : RGB(255, 152, 0)));
 
                 if (score > highScore) { highScore = score; SaveLeaderboard(); }
 
-                int dropChance = e[i].isElite ? 75 : 22;
+                int dropChance = e[i].isElite ? 80 : 22;
                 if ((rnd() % 100) < dropChance) {
                     for (int k = 0; k < MAX_POWERUPS; k++) {
                         if (!pu[k].active) {
                             pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 1.8f;
-                            pu[k].type = (float)(rnd() % 10);
+                            pu[k].type = (float)(rnd() % 11); // Powerup 0..10
                             break;
                         }
                     }
@@ -1799,6 +2106,65 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int
     SelectObject(hdc, oldPen);
 }
 
+void DrawDroneWingsGDI(HDC hdc, int frame) {
+    if (droneCount <= 0) return;
+    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    for (int d = 0; d < droneCount; d++) {
+        int dx = (int)drones[d].x, dy = (int)drones[d].y;
+        // Drone Thruster flame
+        int flame = 3 + (frame % 3) * 2;
+        HBRUSH fbr = CreateSolidBrush((frame % 2 == 0) ? RGB(0, 229, 255) : RGB(255, 234, 0));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, fbr);
+        POINT fpts[3] = { {dx + 3, dy + 10}, {dx + 5, dy + 10 + flame}, {dx + 7, dy + 10} };
+        Polygon(hdc, fpts, 3);
+        SelectObject(hdc, oldBr); DeleteObject(fbr);
+
+        // Drone Body
+        HBRUSH dbr = CreateSolidBrush(RGB(0, 176, 255));
+        oldBr = (HBRUSH)SelectObject(hdc, dbr);
+        POINT pts[5] = { {dx + 5, dy}, {dx + 10, dy + 8}, {dx + 8, dy + 10}, {dx + 2, dy + 10}, {dx, dy + 8} };
+        Polygon(hdc, pts, 5);
+        SelectObject(hdc, oldBr); DeleteObject(dbr);
+
+        // Drone Plasma Cockpit
+        HBRUSH cbr = CreateSolidBrush(RGB(255, 234, 0));
+        SelectObject(hdc, cbr);
+        Ellipse(hdc, dx + 3, dy + 3, dx + 7, dy + 7);
+        SelectObject(hdc, oldBr); DeleteObject(cbr);
+
+        // Point Defense Energy Ring
+        HPEN spen = CreatePen(PS_SOLID, 1, (frame % 4 < 2) ? RGB(0, 229, 255) : RGB(255, 255, 255));
+        SelectObject(hdc, spen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, dx - 2, dy - 2, dx + 12, dy + 12);
+        SelectObject(hdc, oldPen); DeleteObject(spen);
+    }
+    SelectObject(hdc, oldPen);
+}
+
+void DrawHyperJumpEffectGDI(HDC hdc, int frame) {
+    if (hyperJumpTimer <= 0) return;
+    static const float cosTable[16] = { 1.0f, 0.9238f, 0.7071f, 0.3826f, 0.0f, -0.3826f, -0.7071f, -0.9238f, -1.0f, -0.9238f, -0.7071f, -0.3826f, 0.0f, 0.3826f, 0.7071f, 0.9238f };
+    static const float sinTable[16] = { 0.0f, 0.3826f, 0.7071f, 0.9238f, 1.0f, 0.9238f, 0.7071f, 0.3826f, 0.0f, -0.3826f, -0.7071f, -0.9238f, -1.0f, -0.9238f, -0.7071f, -0.3826f };
+
+    HPEN wPen = CreatePen(PS_SOLID, 2, (frame % 2 == 0) ? RGB(0, 229, 255) : RGB(255, 255, 255));
+    HPEN oldPen = (HPEN)SelectObject(hdc, wPen);
+
+    for (int i = 0; i < 16; i++) {
+        float len1 = 15.0f + (float)(rnd() % 30);
+        float len2 = len1 + 60.0f + (float)(rnd() % 60);
+        int sx = (int)(p.x + 10.0f + cosTable[i] * len1);
+        int sy = (int)(p.y + 10.0f + sinTable[i] * len1);
+        int ex = (int)(p.x + 10.0f + cosTable[i] * len2);
+        int ey = (int)(p.y + 10.0f + sinTable[i] * len2);
+        MoveToEx(hdc, sx, sy, NULL);
+        LineTo(hdc, ex, ey);
+    }
+    SelectObject(hdc, oldPen); DeleteObject(wPen);
+}
+
 void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
     int x = (int)fx, y = (int)fy;
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
@@ -1807,9 +2173,99 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
     int isEnraged = (bossHp < bossMaxHp / 2);
     int isCritical = (bossHp < bossMaxHp / 4);
 
-    if (bossIsMothership) {
+    if (bossIsDreadnought) {
+        // Massive Dreadnought Warship (120 wide, 65 tall)
+        HBRUSH hullBr = CreateSolidBrush(isEnraged ? RGB(160, 20, 40) : RGB(60, 70, 90));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, hullBr);
+        POINT dpts[10] = {
+            {x + 60, y + 62}, {x + 100, y + 45}, {x + 120, y + 25}, {x + 115, y + 5}, {x + 85, y + 2},
+            {x + 60, y + 10}, {x + 35, y + 2}, {x + 5, y + 5}, {x + 0, y + 25}, {x + 20, y + 45}
+        };
+        Polygon(hdc, dpts, 10);
+        SelectObject(hdc, oldBr); DeleteObject(hullBr);
+
+        // Armor Plates & Girders
+        HBRUSH armorBr = CreateSolidBrush(isCritical ? RGB(90, 20, 20) : RGB(100, 115, 135));
+        oldBr = (HBRUSH)SelectObject(hdc, armorBr);
+        POINT lPlate[4] = { {x + 15, y + 12}, {x + 45, y + 12}, {x + 40, y + 38}, {x + 10, y + 30} };
+        Polygon(hdc, lPlate, 4);
+        POINT rPlate[4] = { {x + 75, y + 12}, {x + 105, y + 12}, {x + 110, y + 30}, {x + 80, y + 38} };
+        Polygon(hdc, rPlate, 4);
+        SelectObject(hdc, oldBr); DeleteObject(armorBr);
+
+        // Left Shield Generator Subsystem
+        if (dreadGenL > 0) {
+            HBRUSH genBr = CreateSolidBrush(RGB(0, 229, 255));
+            oldBr = (HBRUSH)SelectObject(hdc, genBr);
+            Ellipse(hdc, x + 18, y + 18, x + 38, y + 38);
+            SelectObject(hdc, oldBr); DeleteObject(genBr);
+            HPEN sPen = CreatePen(PS_SOLID, 2, (frame % 4 < 2) ? RGB(0, 229, 255) : RGB(128, 216, 255));
+            SelectObject(hdc, sPen);
+            SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Arc(hdc, x - 10, y - 5, x + 65, y + 65, x + 60, y + 60, x, y);
+            SelectObject(hdc, oldPen); DeleteObject(sPen);
+        } else {
+            HBRUSH charredBr = CreateSolidBrush(RGB(30, 30, 30));
+            oldBr = (HBRUSH)SelectObject(hdc, charredBr);
+            Ellipse(hdc, x + 18, y + 18, x + 38, y + 38);
+            SelectObject(hdc, oldBr); DeleteObject(charredBr);
+        }
+
+        // Right Shield Generator Subsystem
+        if (dreadGenR > 0) {
+            HBRUSH genBr = CreateSolidBrush(RGB(0, 229, 255));
+            oldBr = (HBRUSH)SelectObject(hdc, genBr);
+            Ellipse(hdc, x + 82, y + 18, x + 102, y + 38);
+            SelectObject(hdc, oldBr); DeleteObject(genBr);
+            HPEN sPen = CreatePen(PS_SOLID, 2, (frame % 4 < 2) ? RGB(0, 229, 255) : RGB(128, 216, 255));
+            SelectObject(hdc, sPen);
+            SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Arc(hdc, x + 55, y - 5, x + 130, y + 65, x + 120, y, x + 60, y + 60);
+            SelectObject(hdc, oldPen); DeleteObject(sPen);
+        } else {
+            HBRUSH charredBr = CreateSolidBrush(RGB(30, 30, 30));
+            oldBr = (HBRUSH)SelectObject(hdc, charredBr);
+            Ellipse(hdc, x + 82, y + 18, x + 102, y + 38);
+            SelectObject(hdc, oldBr); DeleteObject(charredBr);
+        }
+
+        // Central Mega-Ion Cannon
+        HBRUSH ionBr = CreateSolidBrush(dreadIonCharge >= 70 ? RGB(255, 234, 0) : RGB(0, 229, 255));
+        oldBr = (HBRUSH)SelectObject(hdc, ionBr);
+        RECT ionRc = {x + 52, y + 35, x + 68, y + 58};
+        FillRect(hdc, &ionRc, ionBr);
+        SelectObject(hdc, oldBr); DeleteObject(ionBr);
+
+        // Telegraph targeting guide laser
+        if (dreadIonCharge >= 70 && dreadIonBeamTimer <= 0) {
+            HPEN tPen = CreatePen(PS_SOLID, 1, (frame % 4 < 2) ? RGB(255, 23, 68) : RGB(255, 234, 0));
+            SelectObject(hdc, tPen);
+            MoveToEx(hdc, x + 60, y + 58, NULL);
+            LineTo(hdc, x + 60, H);
+            SelectObject(hdc, oldPen); DeleteObject(tPen);
+        }
+
+        // Active Mega-Ion Cannon Beam
+        if (dreadIonBeamTimer > 0) {
+            HBRUSH beamBr = CreateSolidBrush((frame % 2 == 0) ? RGB(0, 229, 255) : RGB(0, 176, 255));
+            RECT bRc = {x + 48, y + 58, x + 72, H};
+            FillRect(hdc, &bRc, beamBr);
+            DeleteObject(beamBr);
+
+            HBRUSH coreBr = CreateSolidBrush(RGB(255, 255, 255));
+            RECT cRc = {x + 55, y + 58, x + 65, H};
+            FillRect(hdc, &cRc, coreBr);
+            DeleteObject(coreBr);
+        }
+
+        // Flak Turrets on Wings
+        HBRUSH flakBr = CreateSolidBrush(RGB(255, 145, 0));
+        oldBr = (HBRUSH)SelectObject(hdc, flakBr);
+        Ellipse(hdc, x + 10, y + 35, x + 24, y + 49);
+        Ellipse(hdc, x + 96, y + 35, x + 110, y + 49);
+        SelectObject(hdc, oldBr); DeleteObject(flakBr);
+    } else if (bossIsMothership) {
         if (isCritical) {
-            // Armor plates sheared off exposing glowing inner machinery
             HBRUSH ib = CreateSolidBrush(RGB(40, 40, 40));
             HBRUSH oldBr = (HBRUSH)SelectObject(hdc, ib);
             POINT ipts[8] = { {x + 45, y + 58}, {x + 85, y + 35}, {x + 90, y + 10}, {x + 65, y + 2}, {x + 45, y + 12}, {x + 25, y + 2}, {x + 0, y + 10}, {x + 5, y + 35} };
@@ -1827,7 +2283,6 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             Polygon(hdc, pts1, 3);
             SelectObject(hdc, oldBr); DeleteObject(br);
         } else {
-            // Stage 20 Alien Mothership Hull
             HBRUSH br = CreateSolidBrush(isEnraged ? RGB(183, 28, 28) : RGB(136, 14, 79));
             HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
             POINT pts[8] = { {x + 45, y + 58}, {x + 85, y + 35}, {x + 90, y + 10}, {x + 65, y + 2}, {x + 45, y + 12}, {x + 25, y + 2}, {x + 0, y + 10}, {x + 5, y + 35} };
@@ -1835,7 +2290,6 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             SelectObject(hdc, oldBr); DeleteObject(br);
         }
 
-        // Distinct telegraphing charging animation building up intensity before firing
         int charge = bossAttackTimer % 35;
         if (charge > 15 && !IsMothershipShieldActive()) {
             int r = charge - 15;
@@ -1847,7 +2301,6 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             SelectObject(hdc, oldBr); SelectObject(hdc, oPen); DeleteObject(cPen);
         }
 
-        // Enraged Phase Electric Lightning Arcs
         if (isEnraged && frame % 2 == 0) {
             HPEN lpen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
             SelectObject(hdc, lpen);
@@ -1856,14 +2309,12 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             SelectObject(hdc, oldPen); DeleteObject(lpen);
         }
 
-        // Core Eye Overload
         COLORREF coreCol = isEnraged ? ((frame % 4 < 2) ? RGB(255, 234, 0) : RGB(255, 23, 68)) : ((frame % 8 < 4) ? RGB(0, 229, 255) : RGB(255, 23, 68));
         HBRUSH cbr = CreateSolidBrush(coreCol);
         HBRUSH oldBr = (HBRUSH)SelectObject(hdc, cbr);
         Ellipse(hdc, x + 35, y + 20, x + 55, y + 40);
         SelectObject(hdc, oldBr); DeleteObject(cbr);
 
-        // Turrets Rendering
         float tOffsetsX[] = {5, 25, 65, 85};
         for (int i = 0; i < 4; i++) {
             if (turretActive[i]) {
@@ -1874,7 +2325,6 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             }
         }
 
-        // Deflector Shield Ring
         if (IsMothershipShieldActive()) {
             HPEN spen = CreatePen(PS_SOLID, 3, RGB(0, 229, 255));
             SelectObject(hdc, spen);
@@ -1883,9 +2333,8 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             Ellipse(hdc, x - 10, y - 10, x + 100, y + 68);
             SelectObject(hdc, oldSBr); DeleteObject(spen);
         }
-    } else { // Dreadnought Boss
+    } else { // Normal Dreadnought Boss
         if (isCritical) {
-            // Armor plates sheared off exposing glowing inner machinery
             HBRUSH ib = CreateSolidBrush(RGB(40, 40, 40));
             HBRUSH oldBr = (HBRUSH)SelectObject(hdc, ib);
             POINT ipts[6] = { {x + 30, y + 48}, {x + 58, y + 12}, {x + 45, y + 2}, {x + 30, y + 14}, {x + 15, y + 2}, {x + 2, y + 12} };
@@ -1909,7 +2358,6 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             SelectObject(hdc, oldBr); DeleteObject(br);
         }
 
-        // Distinct telegraphing charging animation building up intensity before firing
         int charge = bossAttackTimer % 45;
         if (charge > 20) {
             int r = charge - 20;
@@ -1941,14 +2389,21 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
 
 void DrawPowerupGDI(HDC hdc, float fx, float fy, float ftype, int frame) {
     int x = (int)fx, y = (int)fy, type = (int)ftype;
-    COLORREF cols[10] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(61, 90, 255), RGB(255, 23, 68), RGB(255, 234, 0), RGB(213, 0, 249), RGB(255, 215, 0), RGB(0, 176, 255), RGB(255, 100, 200), RGB(255, 234, 0) };
-    COLORREF c = (type >= 0 && type < 10) ? cols[type] : RGB(255, 255, 255);
+    COLORREF cols[11] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(61, 90, 255), RGB(255, 23, 68), RGB(255, 234, 0), RGB(213, 0, 249), RGB(255, 215, 0), RGB(0, 176, 255), RGB(255, 100, 200), RGB(255, 234, 0), RGB(0, 229, 255) };
+    COLORREF c = (type >= 0 && type < 11) ? cols[type] : RGB(255, 255, 255);
     HBRUSH br = CreateSolidBrush(c);
     HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
     int pulse = (frame % 20 < 10) ? 1 : 0;
-    if (type == 9) { // Overcharge Energy Core
+    if (type == 10) { // Drone Wing Pod
+        POINT pts[6] = { {x + 8, y - pulse}, {x + 16 + pulse, y + 6}, {x + 12, y + 16 + pulse}, {x + 8, y + 12}, {x + 4, y + 16 + pulse}, {x - pulse, y + 6} };
+        Polygon(hdc, pts, 6);
+        HBRUSH coreB = CreateSolidBrush(RGB(255, 234, 0));
+        SelectObject(hdc, coreB);
+        Ellipse(hdc, x + 5, y + 5, x + 11, y + 11);
+        SelectObject(hdc, oldBr); DeleteObject(coreB);
+    } else if (type == 9) { // Overcharge Energy Core
         POINT pts[4] = { {x + 8, y - pulse}, {x + 16 + pulse, y + 8}, {x + 8, y + 16 + pulse}, {x - pulse, y + 8} };
         Polygon(hdc, pts, 4);
         HBRUSH coreB = CreateSolidBrush(RGB(255, 255, 255));
@@ -2010,6 +2465,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == VK_ESCAPE) gameState = STATE_MENU;
             } else if (gameState == STATE_PLAYING) {
                 if (wParam == kbPause || wParam == VK_ESCAPE) { gameState = STATE_PAUSED; menuIndex = 0; }
+                else if (wParam == kbHyperJump || wParam == 'J') UseHyperJump();
+                else if (wParam == kbDeployDrone || wParam == 'W') DeployDroneWing();
                 else if (wParam == kbTimeStop) UseTimeStop();
                 else if (wParam == kbDash) UseTacticalDash();
                 else if (wParam == kbBomb || wParam == 'X') UseSmartBomb();
@@ -2242,7 +2699,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(memDC, RGB(0, 229, 255));
                     TextOutA(memDC, W/2 - 40, 90, "KSPACE", 6);
                     SetTextColor(memDC, RGB(128, 216, 255));
-                    TextOutA(memDC, W/2 - 80, 120, "Loop 10 Space Command", 21);
+                    TextOutA(memDC, W/2 - 80, 120, "Loop 11 Space Command", 21);
 
                     int saved = HasSavedGame();
                     char* opts[] = {"START NEW GAME", "RESUME SAVED GAME", "HIGH SCORES", "SELECT GAME MODE", "EXPORT SCORES"};
@@ -2282,29 +2739,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TextOutA(memDC, W/2 - 80, H - 40, "Press ENTER to Launch", 21);
                 } else if (gameState == STATE_HELP) {
                     SetTextColor(memDC, RGB(0, 229, 255));
-                    TextOutA(memDC, W/2 - 45, 45, "HOW TO PLAY", 11);
+                    TextOutA(memDC, W/2 - 45, 30, "HOW TO PLAY", 11);
                     SetTextColor(memDC, RGB(255, 255, 255));
                     char* lines[] = {
                         "ARROWS : Move Ship",
                         "SPACE  : Fire Weapon",
                         "",
-                        "--- SKILLS ---",
-                        "O : Overcharge (Hyper Mode)",
-                        "T : Time Stop (Freeze)",
-                        "D : Tactical Dash (Invinc.)",
-                        "B : Smart Bomb (Clear)",
-                        "S : Hyper Shield (Protect)",
+                        "--- LOOP 11 SYSTEMS ---",
+                        "J : Hyper-Jump Warp Drive",
+                        "W : Deploy Drone Wing",
+                        "O : Overcharge Hyper-Mode",
+                        "T : Time Stop Chrono-Field",
+                        "D : Tactical Dash Burst",
+                        "B : Smart Bomb Subsystems",
+                        "S : Hyper Shield Barricade",
                         "",
-                        "--- ITEMS ---",
+                        "--- POWERUP PODS ---",
                         "S:Spread L:Laser H:Shield",
-                        "B:Bomb R:Rapid T:Time Stop",
-                        "Y:Hyper D:Dash W:Upgrade O:Core"
+                        "B:Bomb R:Rapid T:Time",
+                        "W:Drone Pod O:Overcharge Core"
                     };
-                    for (int i = 0; i < 14; i++) {
-                        TextOutA(memDC, W/2 - 95, 80 + i * 19, lines[i], lstrlenA(lines[i]));
+                    for (int i = 0; i < 16; i++) {
+                        TextOutA(memDC, W/2 - 100, 60 + i * 18, lines[i], lstrlenA(lines[i]));
                     }
                     SetTextColor(memDC, RGB(255, 234, 0));
-                    TextOutA(memDC, W/2 - 90, H - 35, "Press [H] or ENTER to return", 28);
+                    TextOutA(memDC, W/2 - 90, H - 30, "Press [H] or ENTER to return", 28);
                 } else if (gameState == STATE_LEADERBOARD) {
                     SetTextColor(memDC, RGB(0, 229, 255));
                     TextOutA(memDC, W/2 - 60, 60, "TOP COMMANDERS", 14);
@@ -2317,7 +2776,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(memDC, RGB(128, 216, 255));
                     TextOutA(memDC, W/2 - 75, H - 40, "Press ENTER to return", 21);
                 } else if (gameState == STATE_PLAYING || gameState == STATE_PAUSED || gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) {
+                    DrawDroneWingsGDI(memDC, frameCount);
                     DrawPlayerShipGDI(memDC, (int)p.x, (int)p.y, shieldActive, frameCount);
+                    DrawHyperJumpEffectGDI(memDC, frameCount);
 
                     HBRUSH bbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 229, 255));
                     for (int i = 0; i < MAX_BULLETS; i++) {
@@ -2455,17 +2916,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TextOutA(memDC, 10, 10, hudStr, lstrlenA(hudStr));
 
                     char statStr[64];
-                    wsprintfA(statStr, "HP: %d  B:[B]%d  Shield: %s", p.hp, bombCount, (hyperShieldTimer > 0 || shieldActive) ? "ON" : "OFF");
+                    wsprintfA(statStr, "HP: %d  B:[B]%d  Drones:[W]%d/2", p.hp, bombCount, droneCount);
                     TextOutA(memDC, 10, 26, statStr, lstrlenA(statStr));
 
-                    // Overcharge Gauge Status
+                    // Overcharge & Hyper-Jump Status
                     char ocStr[96];
-                    if (overchargeTimer > 0) {
-                        wsprintfA(ocStr, "[O]OVERCHARGE: ACTIVE (%ds)", overchargeTimer / 60 + 1);
+                    if (hyperJumpTimer > 0) {
+                        wsprintfA(ocStr, "[J]HYPER-JUMP WARP ACTIVE!");
+                        SetTextColor(memDC, (frameCount % 4 < 2) ? RGB(255, 234, 0) : RGB(0, 229, 255));
+                    } else if (overchargeTimer > 0) {
+                        wsprintfA(ocStr, "[O]OVERCHARGE: ACTIVE (%ds)  [J]Jump:%d%%", overchargeTimer / 60 + 1, hyperJumpEnergy);
                         SetTextColor(memDC, (frameCount % 4 < 2) ? RGB(255, 234, 0) : RGB(0, 229, 255));
                     } else {
-                        wsprintfA(ocStr, "[O]Overcharge: %d%% %s", overchargeEnergy, overchargeEnergy >= 100 ? "[READY]" : "");
-                        SetTextColor(memDC, overchargeEnergy >= 100 ? RGB(255, 234, 0) : RGB(0, 230, 118));
+                        wsprintfA(ocStr, "[O]Overcharge: %d%% %s  [J]Jump: %d%%%s",
+                            overchargeEnergy, overchargeEnergy >= 100 ? "[RDY]" : "",
+                            hyperJumpEnergy, hyperJumpEnergy >= 100 ? "[RDY]" : "");
+                        SetTextColor(memDC, (overchargeEnergy >= 100 || hyperJumpEnergy >= 100) ? RGB(255, 234, 0) : RGB(0, 230, 118));
                     }
                     TextOutA(memDC, 10, H - 38, ocStr, lstrlenA(ocStr));
 
@@ -2484,7 +2950,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         FillRect(memDC, &rbg, barBg);
                         DeleteObject(barBg);
 
-                        HBRUSH barFg = CreateSolidBrush(bossIsMothership ? RGB(213, 0, 249) : RGB(255, 23, 68));
+                        HBRUSH barFg = CreateSolidBrush(bossIsDreadnought ? RGB(255, 23, 68) : (bossIsMothership ? RGB(213, 0, 249) : RGB(255, 145, 0)));
                         int wFill = (int)((W - 80) * ((float)bossHp / bossMaxHp));
                         if (wFill < 0) wFill = 0;
                         RECT rfg = {40, 42, 40 + wFill, 52};
@@ -2492,7 +2958,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(barFg);
 
                         SetTextColor(memDC, RGB(255, 255, 255));
-                        TextOutA(memDC, W/2 - 60, 40, bossIsMothership ? "ALIEN MOTHERSHIP" : "DREADNOUGHT BOSS", bossIsMothership ? 16 : 16);
+                        if (bossIsDreadnought) {
+                            char dStr[64];
+                            wsprintfA(dStr, "DREADNOUGHT SIEGE [L-GEN:%s R-GEN:%s]", (dreadGenL > 0 ? "ON" : "OFF"), (dreadGenR > 0 ? "ON" : "OFF"));
+                            TextOutA(memDC, W/2 - lstrlenA(dStr)*4, 40, dStr, lstrlenA(dStr));
+                        } else {
+                            TextOutA(memDC, W/2 - 60, 40, bossIsMothership ? "ALIEN MOTHERSHIP" : "FLAGSHIP COMMANDER", bossIsMothership ? 16 : 18);
+                        }
                     }
 
                     if (gameState == STATE_PAUSED) {
