@@ -1,93 +1,126 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <title>KMedia</title>
 <style>
+  * { box-sizing: border-box; }
   body { margin: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; color: #fff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
-  .header { padding: 10px 20px; background: #2d2d2d; border-bottom: 1px solid #444; display: flex; flex-direction: column; gap: 10px; }
-  .title { font-size: 16px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #e0e0e0; }
-  .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-  button { padding: 6px 12px; font-size: 13px; cursor: pointer; border: none; background: #4caf50; color: white; border-radius: 4px; transition: background 0.2s; }
+  .header { padding: 10px 16px; background: #242424; border-bottom: 1px solid #383838; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+  .title { font-size: 14px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #e0e0e0; letter-spacing: 0.2px; }
+  .controls { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  button { padding: 5px 11px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; background: #4caf50; color: white; border-radius: 4px; transition: background 0.15s ease, transform 0.05s ease; user-select: none; display: inline-flex; align-items: center; justify-content: center; }
   button:hover { background: #45a049; }
-  button:active { background: #3d8b40; }
-  button.secondary { background: #555; }
-  button.secondary:hover { background: #666; }
+  button:active { background: #3d8b40; transform: scale(0.98); }
+  button.secondary { background: #3c3c3c; color: #eee; }
+  button.secondary:hover { background: #4a4a4a; }
+  button.secondary:active { background: #333; }
   
-  .main-layout { display: flex; flex: 1; overflow: hidden; }
-  .player-section { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; }
+  .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+  .player-section { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; min-width: 0; }
   
-  .video-container { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+  .video-container { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #080808; cursor: pointer; }
   video { width: 100%; height: 100%; object-fit: contain; }
   
-  .subtitle-overlay { position: absolute; bottom: 15%; width: 100%; text-align: center; color: yellow; text-shadow: 2px 2px 4px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-size: 24px; font-weight: bold; pointer-events: none; z-index: 10; display: flex; justify-content: center; }
-  .subtitle-text { background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
+  .empty-state { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; color: #888; z-index: 5; padding: 20px; }
+  .empty-icon { font-size: 48px; margin-bottom: 8px; opacity: 0.7; }
+  .empty-title { font-size: 16px; font-weight: 600; color: #ccc; margin-bottom: 6px; }
+  .empty-desc { font-size: 13px; line-height: 1.4; max-width: 320px; }
+  .empty-hint { font-size: 12px; color: #4caf50; margin-top: 10px; }
+
+  .drop-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(46, 125, 50, 0.85); z-index: 90; justify-content: center; align-items: center; flex-direction: column; color: #fff; pointer-events: none; border: 3px dashed #a5d6a7; }
   
-  .waveform-container { width: 100%; height: 80px; background: #111; border-top: 1px solid #333; position: relative; }
+  .subtitle-overlay { position: absolute; bottom: 12%; width: 100%; text-align: center; color: #ffeb3b; text-shadow: 2px 2px 3px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-size: 22px; font-weight: bold; pointer-events: none; z-index: 10; display: flex; justify-content: center; }
+  .subtitle-text { background: rgba(0,0,0,0.65); padding: 4px 12px; border-radius: 4px; max-width: 85%; }
+  
+  .waveform-container { width: 100%; height: 70px; background: #111; border-top: 1px solid #2d2d2d; position: relative; flex-shrink: 0; }
   canvas#waveform { width: 100%; height: 100%; display: block; }
   
-  .sidebar { width: 300px; background: #222; border-left: 1px solid #333; display: flex; flex-direction: column; overflow-y: auto; }
+  .sidebar { width: 280px; background: #202020; border-left: 1px solid #333; display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
   
-  .panel { padding: 15px; border-bottom: 1px solid #333; }
-  .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+  .panel { padding: 12px 14px; border-bottom: 1px solid #2e2e2e; }
+  .panel-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #999; text-transform: uppercase; letter-spacing: 0.8px; }
   
-  .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
-  .slider-row span { width: 70px; color: #ccc; }
+  .slider-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+  .slider-row span { width: 65px; color: #bbb; }
   .slider-row input[type=range] { flex: 1; }
-  .slider-row .val { width: 30px; text-align: right; color: #888; }
+  .slider-row .val { width: 34px; text-align: right; color: #888; font-variant-numeric: tabular-nums; }
   
+  .playlist-header { padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #777; background: #1c1c1c; border-bottom: 1px solid #2c2c2c; display: flex; justify-content: space-between; }
   .playlist { flex: 1; list-style: none; padding: 0; margin: 0; overflow-y: auto; }
-  .playlist-item { padding: 10px 15px; border-bottom: 1px solid #333; cursor: pointer; font-size: 13px; color: #ddd; transition: background 0.2s; }
-  .playlist-item:hover { background: #333; }
-  .playlist-item.active { background: #4caf50; color: white; border-left: 4px solid #81c784; padding-left: 11px; }
+  .playlist-empty { padding: 20px 14px; text-align: center; color: #777; font-size: 12px; line-height: 1.4; }
+  .playlist-item { padding: 8px 12px; border-bottom: 1px solid #2a2a2a; cursor: pointer; font-size: 12px; color: #ccc; transition: background 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .playlist-item:hover { background: #2c2c2c; color: #fff; }
+  .playlist-item.active { background: #388e3c; color: white; border-left: 4px solid #a5d6a7; padding-left: 8px; font-weight: 500; }
   
   input[type="file"] { display: none; }
-  .search-box { width: 100%; padding: 8px; background: #333; border: none; color: white; font-size: 13px; outline: none; box-sizing: border-box; border-bottom: 1px solid #444; }
+  .search-box { width: 100%; padding: 7px 10px; background: #2a2a2a; border: none; color: white; font-size: 12px; outline: none; box-sizing: border-box; border-bottom: 1px solid #3a3a3a; }
+  .search-box:focus { background: #303030; border-bottom-color: #4caf50; }
   
-  .seek-bar-container { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #aaa; }
+  .seek-bar-container { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #aaa; }
   .seek-slider { flex: 1; }
-  .vol-slider { width: 80px; }
+  .vol-slider { width: 75px; }
   
-  input[type=range] { -webkit-appearance: none; background: transparent; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #4caf50; cursor: pointer; margin-top: -5px; }
-  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #555; border-radius: 2px; }
+  input[type=range] { -webkit-appearance: none; background: transparent; height: 16px; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #4caf50; cursor: pointer; margin-top: -4px; transition: transform 0.1s ease; }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #444; border-radius: 2px; }
 
   #helpOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; }
-  .help-box { background: #2d2d2d; border: 1px solid #555; padding: 20px; border-radius: 8px; max-width: 400px; color: #fff; font-size: 14px; line-height: 1.6; text-align: left; }
-  .help-box h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-  .help-box ul { margin: 10px 0; padding-left: 20px; }
-  .help-box button { margin-top: 15px; width: 100%; }
+  .help-box { background: #262626; border: 1px solid #444; padding: 22px; border-radius: 8px; max-width: 440px; width: 90%; color: #fff; font-size: 13px; line-height: 1.6; text-align: left; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
+  .help-box h2 { margin-top: 0; font-size: 17px; border-bottom: 1px solid #3d3d3d; padding-bottom: 8px; color: #81c784; }
+  .help-box table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  .help-box td { padding: 4px 6px; font-size: 12px; }
+  .help-box td:first-child { font-weight: 600; color: #81c784; width: 40%; }
+  .help-box td:last-child { color: #ddd; }
+  .help-box button { margin-top: 14px; width: 100%; padding: 8px; }
+
+  #toast { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #222; color: #81c784; border: 1px solid #4caf50; padding: 8px 18px; border-radius: 20px; font-size: 12px; z-index: 10000; box-shadow: 0 4px 15px rgba(0,0,0,0.6); pointer-events: none; transition: opacity 0.25s ease; opacity: 0; }
 </style>
 </head>
 <body data-width="950" data-height="700">
 
 <div class="header">
-  <div class="title" id="title">No media selected (Press 'h' or F1 for help)</div>
+  <div class="title" id="title">No media selected (Press 'H' or F1 for help)</div>
   <div class="controls">
     <button id="btnAdd">Add Media/Subtitles</button>
-    <button id="btnPlay" class="secondary">Play/Pause</button>
-    <button id="btnStop" class="secondary">Stop</button>
-    <button id="btnPrev" class="secondary">Prev</button>
-    <button id="btnNext" class="secondary">Next</button>
+    <button id="btnPlay" class="secondary">▶ Play</button>
+    <button id="btnStop" class="secondary">■ Stop</button>
+    <button id="btnPrev" class="secondary">⏮ Prev</button>
+    <button id="btnNext" class="secondary">⏭ Next</button>
+    <button id="btnSeekBack" class="secondary">« 5s</button>
+    <button id="btnSeekFwd" class="secondary">» 5s</button>
     <button id="btnRemove" class="secondary">Remove</button>
     <button id="btnClear" class="secondary">Clear</button>
     <button id="btnMode" class="secondary">Mode: Normal</button>
     <button id="btnSpeed" class="secondary">1.0x</button>
-    <button id="btnExport">Export Frame</button>
+    <button id="btnExport" class="secondary">Export Frame</button>
     <button id="btnHelp" class="secondary">Help (F1)</button>
   </div>
   <div class="seek-bar-container">
-    <span id="timeDisplay">0:00 / 0:00</span>
+    <span id="timeDisplay" style="font-variant-numeric: tabular-nums; min-width: 90px;">0:00 / 0:00</span>
     <input type="range" id="seekSlider" class="seek-slider" min="0" max="100" value="0" step="0.1" aria-label="Seek bar" />
-    <span>Vol</span>
+    <button id="btnMute" class="secondary" style="padding: 2px 7px; font-size: 11px;">🔊 Vol</button>
     <input type="range" id="volumeSlider" class="vol-slider" min="0" max="1" step="0.05" value="1" aria-label="Volume" />
+    <span id="volValue" style="min-width: 34px; text-align: right; font-variant-numeric: tabular-nums;">100%</span>
   </div>
 </div>
 
 <div class="main-layout">
   <div class="player-section">
-    <div class="video-container" id="videoContainer">
+    <div class="video-container" id="videoContainer" title="Click to play/pause, double click for fullscreen">
       <video id="mediaPlayer" crossorigin="anonymous" playsinline></video>
       <div class="subtitle-overlay"><div class="subtitle-text" id="subtitleText" style="display:none;"></div></div>
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🎬</div>
+        <div class="empty-title">No Media Loaded</div>
+        <div class="empty-desc">Drag &amp; drop audio, video, or subtitle files here, or click <strong>Add Media</strong> to get started.</div>
+        <div class="empty-hint">Press <strong>H</strong> or <strong>F1</strong> for keyboard shortcuts</div>
+      </div>
+      <div class="drop-overlay" id="dropOverlay">
+        <div style="font-size: 40px; margin-bottom: 8px;">📂</div>
+        <div style="font-size: 18px; font-weight: 600;">Drop Media Files Here</div>
+      </div>
     </div>
     <div class="waveform-container">
       <canvas id="waveform"></canvas>
@@ -100,7 +133,7 @@
       <div class="slider-row"><span>Brightness</span><input type="range" id="fBright" min="0" max="2" step="0.05" value="1" aria-label="Brightness"><span class="val" id="vBright">1.0</span></div>
       <div class="slider-row"><span>Contrast</span><input type="range" id="fCont" min="0" max="2" step="0.05" value="1" aria-label="Contrast"><span class="val" id="vCont">1.0</span></div>
       <div class="slider-row"><span>Saturation</span><input type="range" id="fSat" min="0" max="2" step="0.05" value="1" aria-label="Saturation"><span class="val" id="vSat">1.0</span></div>
-      <button id="btnResetVideo" class="secondary" style="width:100%; margin-top:5px; font-size:11px;">Reset Video Filters</button>
+      <button id="btnResetVideo" class="secondary" style="width:100%; margin-top:4px; font-size:11px;">Reset Video Filters</button>
     </div>
     
     <div class="panel">
@@ -108,10 +141,14 @@
       <div class="slider-row"><span>Bass</span><input type="range" id="eqLow" min="-20" max="20" step="1" value="0" aria-label="Bass"><span class="val" id="vLow">0</span></div>
       <div class="slider-row"><span>Mid</span><input type="range" id="eqMid" min="-20" max="20" step="1" value="0" aria-label="Mid"><span class="val" id="vMid">0</span></div>
       <div class="slider-row"><span>Treble</span><input type="range" id="eqHigh" min="-20" max="20" step="1" value="0" aria-label="Treble"><span class="val" id="vHigh">0</span></div>
-      <button id="btnResetAudio" class="secondary" style="width:100%; margin-top:5px; font-size:11px;">Reset Audio EQ</button>
+      <button id="btnResetAudio" class="secondary" style="width:100%; margin-top:4px; font-size:11px;">Reset Audio EQ</button>
     </div>
     
     <input type="text" id="searchInput" class="search-box" placeholder="Search playlist..." aria-label="Search playlist" />
+    <div class="playlist-header">
+      <span>Playlist</span>
+      <span id="playlistCount">0 items</span>
+    </div>
     <ul class="playlist" id="playlist"></ul>
   </div>
 </div>
@@ -119,20 +156,28 @@
 <input type="file" id="fileInput" accept="audio/*,video/*,.srt,.vtt" multiple aria-label="Open file" />
 
 <div id="helpOverlay">
-  <div class="help-box">
-    <h2>KMedia Help</h2>
-    <p>Keyboard Shortcuts:</p>
-    <ul>
-      <li><strong>Space:</strong> Play / Pause</li>
-      <li><strong>Left Arrow / P:</strong> Previous Track</li>
-      <li><strong>Right Arrow / N:</strong> Next Track</li>
-      <li><strong>S:</strong> Stop</li>
-      <li><strong>M:</strong> Change Mode</li>
-      <li><strong>H:</strong> Toggle Help</li>
-    </ul>
-    <button id="btnCloseHelp">Close</button>
+  <div class="help-box" id="helpBox">
+    <h2>KMedia Shortcuts &amp; Help</h2>
+    <table>
+      <tr><td>Space</td><td>Play / Pause</td></tr>
+      <tr><td>Left / Right Arrow</td><td>Seek Backward / Forward 5s</td></tr>
+      <tr><td>[ / ]</td><td>Seek Backward / Forward 5s</td></tr>
+      <tr><td>Up / Down Arrow</td><td>Volume Up / Down (5%)</td></tr>
+      <tr><td>P / N</td><td>Previous / Next Track</td></tr>
+      <tr><td>S</td><td>Stop Playback</td></tr>
+      <tr><td>M</td><td>Cycle Playback Mode</td></tr>
+      <tr><td>F</td><td>Toggle Fullscreen</td></tr>
+      <tr><td>H / F1</td><td>Toggle this Help screen</td></tr>
+      <tr><td>Esc</td><td>Close Help / Exit Fullscreen</td></tr>
+      <tr><td>Drag &amp; Drop</td><td>Drop files to add to playlist</td></tr>
+      <tr><td>Click Video</td><td>Play / Pause toggle</td></tr>
+      <tr><td>Double Click</td><td>Toggle Fullscreen</td></tr>
+    </table>
+    <button id="btnCloseHelp">Got It</button>
   </div>
 </div>
+
+<div id="toast"></div>
 
 <script>
   const UI = {
@@ -142,18 +187,26 @@
     btnStop: document.getElementById('btnStop'),
     btnPrev: document.getElementById('btnPrev'),
     btnNext: document.getElementById('btnNext'),
+    btnSeekBack: document.getElementById('btnSeekBack'),
+    btnSeekFwd: document.getElementById('btnSeekFwd'),
     btnRemove: document.getElementById('btnRemove'),
     btnClear: document.getElementById('btnClear'),
     btnMode: document.getElementById('btnMode'),
     btnSpeed: document.getElementById('btnSpeed'),
     btnExport: document.getElementById('btnExport'),
     btnHelp: document.getElementById('btnHelp'),
+    btnMute: document.getElementById('btnMute'),
+    volValue: document.getElementById('volValue'),
     seekSlider: document.getElementById('seekSlider'),
     volumeSlider: document.getElementById('volumeSlider'),
     timeDisplay: document.getElementById('timeDisplay'),
     fileInput: document.getElementById('fileInput'),
     mediaPlayer: document.getElementById('mediaPlayer'),
+    videoContainer: document.getElementById('videoContainer'),
+    emptyState: document.getElementById('emptyState'),
+    dropOverlay: document.getElementById('dropOverlay'),
     playlistEl: document.getElementById('playlist'),
+    playlistCount: document.getElementById('playlistCount'),
     searchInput: document.getElementById('searchInput'),
     subText: document.getElementById('subtitleText'),
     waveform: document.getElementById('waveform'),
@@ -163,54 +216,144 @@
 
   let playlist = [];
   let currentIndex = -1;
-  let subtitles = []; // array of {start, end, text}
+  let subtitles = [];
   let audioCtx, analyser, source, eqNodes = {};
+  let lastVolume = 1;
+  let toastTimer = null;
   
   const modes = ['Normal', 'Repeat All', 'Repeat 1', 'Shuffle'];
   let currentModeIndex = 0;
   const speeds = [1.0, 1.25, 1.5, 2.0, 0.5];
   let currentSpeedIndex = 0;
 
-  // Setup Canvas Crispness
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.opacity = '1'; }, 10);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => { toast.style.display = 'none'; }, 250);
+    }, 2400);
+  }
+
+  // Setup Canvas Crispness & Idle Display
+  const wCtx = UI.waveform.getContext('2d');
   function resizeCanvas() {
     const rect = UI.waveform.parentElement.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     UI.waveform.width = rect.width * dpr;
     UI.waveform.height = rect.height * dpr;
+    if (!analyser) drawIdleWaveform();
   }
   window.addEventListener('resize', resizeCanvas);
+
+  function drawIdleWaveform() {
+    const w = UI.waveform.width;
+    const h = UI.waveform.height;
+    wCtx.fillStyle = '#111';
+    wCtx.fillRect(0, 0, w, h);
+    wCtx.strokeStyle = '#2d4b2e';
+    wCtx.lineWidth = 1;
+    wCtx.beginPath();
+    wCtx.moveTo(0, h / 2);
+    wCtx.lineTo(w, h / 2);
+    wCtx.stroke();
+  }
   resizeCanvas();
 
   UI.btnAdd.onclick = () => UI.fileInput.click();
 
-  UI.fileInput.onchange = async (e) => {
-    const files = Array.from(e.target.files);
+  async function handleFiles(files) {
+    let addedCount = 0;
     for (let f of files) {
       if (f.name.endsWith('.srt') || f.name.endsWith('.vtt')) {
         const text = await f.text();
         parseSubtitles(text, f.name.endsWith('.srt'));
-        alert('Loaded subtitles: ' + f.name);
+        showToast('Loaded subtitles: ' + f.name);
       } else {
         if (playlist.length < 500) {
           playlist.push({ name: f.name, url: URL.createObjectURL(f) });
+          addedCount++;
         }
       }
     }
-    renderPlaylist();
+    if (addedCount > 0) {
+      showToast(`Added ${addedCount} media item(s) to playlist`);
+      renderPlaylist();
+      if (currentIndex === -1) {
+        playTrack(playlist.length - addedCount);
+      }
+    }
+  }
+
+  UI.fileInput.onchange = async (e) => {
+    await handleFiles(Array.from(e.target.files));
     UI.fileInput.value = '';
   };
+
+  // Drag and Drop handlers
+  window.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    UI.dropOverlay.style.display = 'flex';
+  });
+
+  window.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+      UI.dropOverlay.style.display = 'none';
+    }
+  });
+
+  window.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    UI.dropOverlay.style.display = 'none';
+    if (e.dataTransfer && e.dataTransfer.files) {
+      await handleFiles(Array.from(e.dataTransfer.files));
+    }
+  });
+
+  function updateEmptyState() {
+    if (playlist.length === 0 && !UI.mediaPlayer.src) {
+      UI.emptyState.style.display = 'flex';
+    } else {
+      UI.emptyState.style.display = 'none';
+    }
+  }
 
   function renderPlaylist() {
     UI.playlistEl.innerHTML = '';
     const filter = UI.searchInput.value.toLowerCase();
+    let matches = 0;
     playlist.forEach((item, index) => {
       if (filter && !item.name.toLowerCase().includes(filter)) return;
+      matches++;
       const li = document.createElement('li');
       li.className = 'playlist-item' + (index === currentIndex ? ' active' : '');
-      li.textContent = item.name;
+      li.title = item.name;
+      li.textContent = `${index + 1}. ${item.name}`;
       li.onclick = () => playTrack(index);
       UI.playlistEl.appendChild(li);
     });
+
+    UI.playlistCount.textContent = `${playlist.length} item${playlist.length === 1 ? '' : 's'}`;
+
+    if (playlist.length === 0) {
+      const emptyLi = document.createElement('div');
+      emptyLi.className = 'playlist-empty';
+      emptyLi.innerHTML = 'Playlist is empty.<br>Drop files or click <strong>Add Media</strong>.';
+      UI.playlistEl.appendChild(emptyLi);
+    } else if (matches === 0) {
+      const emptyLi = document.createElement('div');
+      emptyLi.className = 'playlist-empty';
+      emptyLi.textContent = 'No matching tracks found.';
+      UI.playlistEl.appendChild(emptyLi);
+    }
+    updateEmptyState();
   }
 
   UI.searchInput.oninput = renderPlaylist;
@@ -219,14 +362,26 @@
     if (index >= 0 && index < playlist.length) {
       currentIndex = index;
       const track = playlist[index];
-      UI.title.textContent = track.name + " (Press 'h' for help)";
+      UI.title.textContent = track.name + " (Press 'H' or F1 for help)";
       UI.mediaPlayer.src = track.url;
       UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
       UI.mediaPlayer.play().catch(e => console.log('Playback error:', e));
       renderPlaylist();
       initAudio();
+      updateEmptyState();
     }
   }
+
+  // Play/Pause State Synchronization
+  UI.mediaPlayer.addEventListener('play', () => {
+    UI.btnPlay.textContent = '⏸ Pause';
+    UI.btnPlay.classList.remove('secondary');
+  });
+
+  UI.mediaPlayer.addEventListener('pause', () => {
+    UI.btnPlay.textContent = '▶ Play';
+    UI.btnPlay.classList.add('secondary');
+  });
 
   UI.btnPlay.onclick = () => {
     if (UI.mediaPlayer.paused && UI.mediaPlayer.src) UI.mediaPlayer.play();
@@ -238,11 +393,21 @@
     if (UI.mediaPlayer.src) {
       UI.mediaPlayer.pause();
       UI.mediaPlayer.currentTime = 0;
+      UI.btnPlay.textContent = '▶ Play';
+      UI.btnPlay.classList.add('secondary');
     }
   };
 
   UI.btnPrev.onclick = () => { if (currentIndex > 0) playTrack(currentIndex - 1); };
   UI.btnNext.onclick = playNextTrackAuto;
+
+  function seekDelta(secs) {
+    if (UI.mediaPlayer.duration) {
+      UI.mediaPlayer.currentTime = Math.max(0, Math.min(UI.mediaPlayer.duration, UI.mediaPlayer.currentTime + secs));
+    }
+  }
+  UI.btnSeekBack.onclick = () => seekDelta(-5);
+  UI.btnSeekFwd.onclick = () => seekDelta(5);
 
   UI.btnRemove.onclick = () => {
     if (currentIndex >= 0 && currentIndex < playlist.length) {
@@ -250,7 +415,7 @@
       if (playlist.length === 0) {
         UI.mediaPlayer.pause();
         UI.mediaPlayer.removeAttribute('src');
-        UI.title.textContent = 'No media selected (Press \'h\' or F1 for help)';
+        UI.title.textContent = 'No media selected (Press \'H\' or F1 for help)';
         currentIndex = -1;
       } else {
         if (currentIndex >= playlist.length) currentIndex = playlist.length - 1;
@@ -264,7 +429,7 @@
     playlist = [];
     UI.mediaPlayer.pause();
     UI.mediaPlayer.removeAttribute('src');
-    UI.title.textContent = 'No media selected (Press \'h\' or F1 for help)';
+    UI.title.textContent = 'No media selected (Press \'H\' or F1 for help)';
     currentIndex = -1;
     renderPlaylist();
   };
@@ -282,13 +447,40 @@
   UI.btnMode.onclick = () => {
     currentModeIndex = (currentModeIndex + 1) % modes.length;
     UI.btnMode.textContent = 'Mode: ' + modes[currentModeIndex];
+    showToast('Mode: ' + modes[currentModeIndex]);
   };
 
   UI.btnSpeed.onclick = () => {
     currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
     UI.btnSpeed.textContent = speeds[currentSpeedIndex].toFixed(1) + 'x';
     UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
+    showToast('Speed: ' + speeds[currentSpeedIndex].toFixed(1) + 'x');
   };
+
+  // Video interaction (Click to play/pause, Double-click to fullscreen)
+  UI.videoContainer.addEventListener('click', (e) => {
+    if (e.target === UI.videoContainer || e.target === UI.mediaPlayer) {
+      if (UI.mediaPlayer.src) {
+        UI.btnPlay.click();
+      } else if (playlist.length > 0) {
+        playTrack(0);
+      }
+    }
+  });
+
+  UI.videoContainer.addEventListener('dblclick', (e) => {
+    if (e.target === UI.videoContainer || e.target === UI.mediaPlayer) {
+      toggleFullscreen();
+    }
+  });
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      if (UI.videoContainer.requestFullscreen) UI.videoContainer.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+    }
+  }
 
   // Seeker & Volume
   setInterval(() => {
@@ -298,7 +490,7 @@
       UI.timeDisplay.textContent = formatTime(UI.mediaPlayer.currentTime) + ' / ' + formatTime(UI.mediaPlayer.duration);
       updateSubtitleOverlay(UI.mediaPlayer.currentTime);
     }
-  }, 250);
+  }, 200);
 
   UI.seekSlider.oninput = () => {
     if (UI.mediaPlayer.duration) {
@@ -306,7 +498,24 @@
     }
   };
 
-  UI.volumeSlider.oninput = () => { UI.mediaPlayer.volume = UI.volumeSlider.value; };
+  function updateVolume(val) {
+    val = Math.max(0, Math.min(1, val));
+    UI.mediaPlayer.volume = val;
+    UI.volumeSlider.value = val;
+    UI.volValue.textContent = Math.round(val * 100) + '%';
+    UI.btnMute.textContent = val === 0 ? '🔇 Mute' : '🔊 Vol';
+  }
+
+  UI.volumeSlider.oninput = () => updateVolume(UI.volumeSlider.value);
+
+  UI.btnMute.onclick = () => {
+    if (UI.mediaPlayer.volume > 0) {
+      lastVolume = UI.mediaPlayer.volume;
+      updateVolume(0);
+    } else {
+      updateVolume(lastVolume || 1);
+    }
+  };
 
   function formatTime(secs) {
     if (isNaN(secs)) return '0:00';
@@ -333,7 +542,7 @@
       limit++;
       const lines = b.split('\n');
       if (lines.length >= 2) {
-        let timeLine = isSrt ? lines[1] : lines[0]; // VTT might have header/notes
+        let timeLine = isSrt ? lines[1] : lines[0];
         let textStart = isSrt ? 2 : 1;
         if(timeLine && timeLine.includes('-->')) {
             if (lines.length > 50) lines.length = 50;
@@ -385,31 +594,33 @@
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 512;
     
-    source = audioCtx.createMediaElementSource(UI.mediaPlayer);
-    
-    eqNodes.low = audioCtx.createBiquadFilter();
-    eqNodes.low.type = 'lowshelf';
-    eqNodes.low.frequency.value = 320;
-    
-    eqNodes.mid = audioCtx.createBiquadFilter();
-    eqNodes.mid.type = 'peaking';
-    eqNodes.mid.frequency.value = 1000;
-    eqNodes.mid.Q.value = 0.5;
-    
-    eqNodes.high = audioCtx.createBiquadFilter();
-    eqNodes.high.type = 'highshelf';
-    eqNodes.high.frequency.value = 3200;
-    
-    source.connect(eqNodes.low);
-    eqNodes.low.connect(eqNodes.mid);
-    eqNodes.mid.connect(eqNodes.high);
-    eqNodes.high.connect(analyser);
-    analyser.connect(audioCtx.destination);
-    
-    drawWaveform();
+    try {
+      source = audioCtx.createMediaElementSource(UI.mediaPlayer);
+      eqNodes.low = audioCtx.createBiquadFilter();
+      eqNodes.low.type = 'lowshelf';
+      eqNodes.low.frequency.value = 320;
+      
+      eqNodes.mid = audioCtx.createBiquadFilter();
+      eqNodes.mid.type = 'peaking';
+      eqNodes.mid.frequency.value = 1000;
+      eqNodes.mid.Q.value = 0.5;
+      
+      eqNodes.high = audioCtx.createBiquadFilter();
+      eqNodes.high.type = 'highshelf';
+      eqNodes.high.frequency.value = 3200;
+      
+      source.connect(eqNodes.low);
+      eqNodes.low.connect(eqNodes.mid);
+      eqNodes.mid.connect(eqNodes.high);
+      eqNodes.high.connect(analyser);
+      analyser.connect(audioCtx.destination);
+      
+      drawWaveform();
+    } catch(err) {
+      console.log('AudioContext source setup failed (CORS or audio-only):', err);
+    }
   }
 
-  const wCtx = UI.waveform.getContext('2d');
   function drawWaveform() {
     requestAnimationFrame(drawWaveform);
     if (!analyser) return;
@@ -458,6 +669,7 @@
   document.getElementById('btnResetVideo').onclick = () => {
     UI.fBright.value = 1; UI.fCont.value = 1; UI.fSat.value = 1;
     updateVideoFilters();
+    showToast('Video filters reset');
   };
 
   // --- Audio EQ Update ---
@@ -479,19 +691,20 @@
   document.getElementById('btnResetAudio').onclick = () => {
     UI.eqLow.value = 0; UI.eqMid.value = 0; UI.eqHigh.value = 0;
     updateAudioEQ();
+    showToast('Audio EQ reset');
   };
 
   // --- Frame Export ---
   UI.btnExport.onclick = () => {
     if(UI.mediaPlayer.readyState < 2) {
-      alert('No video ready to export.');
+      showToast('No video ready to export.');
       return;
     }
     const vc = document.createElement('canvas');
     vc.width = UI.mediaPlayer.videoWidth;
     vc.height = UI.mediaPlayer.videoHeight;
     if(vc.width === 0 || vc.height === 0) {
-      alert('Cannot export frame (not a video or not loaded).');
+      showToast('Cannot export frame (not a video or not loaded).');
       return;
     }
     const vctx = vc.getContext('2d');
@@ -500,7 +713,7 @@
     
     if (UI.subText.style.display !== 'none') {
       vctx.font = 'bold 32px sans-serif';
-      vctx.fillStyle = 'yellow';
+      vctx.fillStyle = '#ffeb3b';
       vctx.textAlign = 'center';
       vctx.shadowColor = 'black';
       vctx.shadowBlur = 4;
@@ -515,6 +728,7 @@
     a.href = dataURL;
     a.download = `frame_${Date.now()}.png`;
     a.click();
+    showToast('Frame exported as PNG');
   };
 
   // Help Overlay Logic
@@ -522,25 +736,50 @@
   document.getElementById('btnCloseHelp').onclick = () => {
     helpOverlay.style.display = 'none';
   };
+  helpOverlay.onclick = (e) => {
+    if (e.target === helpOverlay) helpOverlay.style.display = 'none';
+  };
 
   UI.btnHelp.onclick = () => {
     helpOverlay.style.display = helpOverlay.style.display === 'flex' ? 'none' : 'flex';
   };
 
   window.addEventListener('keydown', (e) => {
-    if (document.activeElement === UI.searchInput) return;
+    if (document.activeElement === UI.searchInput) {
+      if (e.key === 'Escape') {
+        UI.searchInput.blur();
+      }
+      return;
+    }
 
     if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
       helpOverlay.style.display = helpOverlay.style.display === 'flex' ? 'none' : 'flex';
       e.preventDefault();
+    } else if (e.key === 'Escape') {
+      if (helpOverlay.style.display === 'flex') {
+        helpOverlay.style.display = 'none';
+        e.preventDefault();
+      }
     } else if (e.code === 'Space') {
       UI.btnPlay.click();
       e.preventDefault();
-    } else if (e.key.toLowerCase() === 'p' || e.key === 'ArrowLeft') {
+    } else if (e.key.toLowerCase() === 'p') {
       UI.btnPrev.click();
       e.preventDefault();
-    } else if (e.key.toLowerCase() === 'n' || e.key === 'ArrowRight') {
+    } else if (e.key.toLowerCase() === 'n') {
       UI.btnNext.click();
+      e.preventDefault();
+    } else if (e.key === 'ArrowLeft' || e.key === '[') {
+      seekDelta(-5);
+      e.preventDefault();
+    } else if (e.key === 'ArrowRight' || e.key === ']') {
+      seekDelta(5);
+      e.preventDefault();
+    } else if (e.key === 'ArrowUp') {
+      updateVolume(UI.mediaPlayer.volume + 0.05);
+      e.preventDefault();
+    } else if (e.key === 'ArrowDown') {
+      updateVolume(UI.mediaPlayer.volume - 0.05);
       e.preventDefault();
     } else if (e.key.toLowerCase() === 's') {
       UI.btnStop.click();
@@ -548,8 +787,13 @@
     } else if (e.key.toLowerCase() === 'm') {
       UI.btnMode.click();
       e.preventDefault();
+    } else if (e.key.toLowerCase() === 'f') {
+      toggleFullscreen();
+      e.preventDefault();
     }
   });
+
+  renderPlaylist();
 </script>
 </body>
 </html>

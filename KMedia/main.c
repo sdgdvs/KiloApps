@@ -34,6 +34,7 @@ char* my_strrchr(const char* str, int ch) {
 
 HWND g_hwndMain;
 HWND hTitle, hEditSearch, hBtnOpen, hBtnPlay, hBtnStop, hBtnPrev, hBtnNext, hBtnRem, hBtnClear, hBtnMode, hBtnSpeed, hBtnExport, hListBox, hSubText, hBtnHelp;
+HWND hBtnSeekBack, hBtnSeekFwd, hTimeStatus;
 
 char g_tracks[MAX_TRACKS][MAX_PATH];
 int g_trackCount = 0;
@@ -65,6 +66,13 @@ int str_to_int(const char* str) {
         str++;
     }
     return val;
+}
+
+void FormatTimeMs(int ms, char* out, int outSize) {
+    int totalSecs = ms / 1000;
+    int m = totalSecs / 60;
+    int s = totalSecs % 60;
+    wsprintfA(out, "%d:%02d", m, s);
 }
 
 void LoadSrt(const char* videoPath) {
@@ -249,7 +257,9 @@ void PlayTrackByIndex(int masterIdx) {
         
         char* title = my_strrchr(currentFile, '\\');
         title = title ? title + 1 : currentFile;
-        SetWindowTextA(hTitle, title);
+        char titleBuf[MAX_PATH + 64];
+        wsprintfA(titleBuf, "%s (Press 'H' or F1 for help)", title);
+        SetWindowTextA(hTitle, titleBuf);
         
         mciSendStringA("close myMedia", NULL, 0, NULL);
         wsprintfA(mciCmd, "open \"%s\" alias myMedia", currentFile);
@@ -262,6 +272,7 @@ void PlayTrackByIndex(int masterIdx) {
         mciSendStringA(mciCmd, NULL, 0, NULL);
         
         mciSendStringA("play myMedia from 0 notify", NULL, 0, g_hwndMain);
+        SetWindowTextA(hBtnPlay, "Pause");
         
         LoadSrt(currentFile);
         
@@ -298,7 +309,11 @@ void PlayNextTrackAuto() {
         int next = (g_currentIndex + 1) % g_trackCount;
         PlayTrackByIndex(next);
     } else {
-        if (g_currentIndex + 1 < g_trackCount) PlayTrackByIndex(g_currentIndex + 1);
+        if (g_currentIndex + 1 < g_trackCount) {
+            PlayTrackByIndex(g_currentIndex + 1);
+        } else {
+            SetWindowTextA(hBtnPlay, "Play");
+        }
     }
 }
 
@@ -323,7 +338,15 @@ void CycleSpeed() {
 
 void TogglePlayPause() {
     if (currentFile[0] != '\0') {
-        mciSendStringA("play myMedia notify", NULL, 0, g_hwndMain);
+        char modeStr[64] = {0};
+        mciSendStringA("status myMedia mode", modeStr, sizeof(modeStr), NULL);
+        if (lstrcmpA(modeStr, "playing") == 0) {
+            mciSendStringA("pause myMedia", NULL, 0, NULL);
+            SetWindowTextA(hBtnPlay, "Play");
+        } else {
+            mciSendStringA("play myMedia notify", NULL, 0, g_hwndMain);
+            SetWindowTextA(hBtnPlay, "Pause");
+        }
     } else if (g_trackCount > 0) {
         PlaySelectedTrack();
     }
@@ -331,15 +354,43 @@ void TogglePlayPause() {
 
 void StopTrack() {
     mciSendStringA("stop myMedia", NULL, 0, NULL);
+    mciSendStringA("seek myMedia to start", NULL, 0, NULL);
+    SetWindowTextA(hBtnPlay, "Play");
+}
+
+void SeekRelative(int msDelta) {
+    if (currentFile[0] == '\0') return;
+    char posStr[64] = {0};
+    mciSendStringA("status myMedia position", posStr, sizeof(posStr), NULL);
+    int pos = str_to_int(posStr) + msDelta;
+    if (pos < 0) pos = 0;
+    
+    char lenStr[64] = {0};
+    mciSendStringA("status myMedia length", lenStr, sizeof(lenStr), NULL);
+    int len = str_to_int(lenStr);
+    if (len > 0 && pos > len) pos = len;
+    
+    char modeStr[64] = {0};
+    mciSendStringA("status myMedia mode", modeStr, sizeof(modeStr), NULL);
+    
+    wsprintfA(mciCmd, "seek myMedia to %d", pos);
+    mciSendStringA(mciCmd, NULL, 0, NULL);
+    
+    if (lstrcmpA(modeStr, "playing") == 0) {
+        mciSendStringA("play myMedia notify", NULL, 0, g_hwndMain);
+    }
 }
 
 void ExportFrameToBMP() {
-    if (currentFile[0] == '\0') return;
+    if (currentFile[0] == '\0') {
+        MessageBoxA(g_hwndMain, "No media file currently loaded to export.", "Export Frame", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
     
     // Attempt MCI capture first
     MCIERROR err = mciSendStringA("capture myMedia as frame.bmp", NULL, 0, NULL);
     if (err == 0) {
-        MessageBoxA(g_hwndMain, "Frame exported as frame.bmp using MCI.", "Export Frame", MB_OK);
+        MessageBoxA(g_hwndMain, "Frame exported successfully as frame.bmp using MCI.", "Export Frame", MB_OK);
         return;
     }
     
@@ -370,13 +421,27 @@ void ExportFrameToBMP() {
             HeapFree(GetProcessHeap(), 0, bits);
         }
         CloseHandle(hFile);
-        MessageBoxA(g_hwndMain, "Client area exported as frame.bmp.", "Export Frame", MB_OK);
+        MessageBoxA(g_hwndMain, "Client view exported as frame.bmp.", "Export Frame", MB_OK);
     }
     
     SelectObject(hdcMem, hOldBmp);
     DeleteObject(hbm);
     DeleteDC(hdcMem);
     ReleaseDC(g_hwndMain, hdcWindow);
+}
+
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KMedia Keyboard & Mouse Shortcuts:\n\n"
+        "  Space            Play / Pause\n"
+        "  Left Arrow / P   Previous Track\n"
+        "  Right Arrow / N  Next Track\n"
+        "  [ / ]            Seek Backward / Forward 5s\n"
+        "  S                Stop Playback\n"
+        "  M                Cycle Playback Mode\n"
+        "  H / F1           Show this Help\n"
+        "  Double Click     Play track from playlist\n",
+        "KMedia Help", MB_OK | MB_ICONINFORMATION);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -395,6 +460,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hEditSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hEditSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Filter playlist...");
             
+            // Row 1 controls (y=62)
             hBtnOpen = CreateWindowEx(0, "BUTTON", "Add",
                 WS_CHILD | WS_VISIBLE,
                 10, 62, 75, 26, hwnd, (HMENU)1, NULL, NULL);
@@ -402,19 +468,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hBtnPlay = CreateWindowEx(0, "BUTTON", "Play",
                 WS_CHILD | WS_VISIBLE,
-                93, 62, 75, 26, hwnd, (HMENU)2, NULL, NULL);
+                90, 62, 75, 26, hwnd, (HMENU)2, NULL, NULL);
             SendMessage(hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnStop = CreateWindowEx(0, "BUTTON", "Stop",
                 WS_CHILD | WS_VISIBLE,
-                176, 62, 75, 26, hwnd, (HMENU)3, NULL, NULL);
+                170, 62, 75, 26, hwnd, (HMENU)3, NULL, NULL);
             SendMessage(hBtnStop, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnClear = CreateWindowEx(0, "BUTTON", "Clear",
                 WS_CHILD | WS_VISIBLE,
-                259, 62, 75, 26, hwnd, (HMENU)8, NULL, NULL);
+                250, 62, 75, 26, hwnd, (HMENU)8, NULL, NULL);
             SendMessage(hBtnClear, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            hTimeStatus = CreateWindowEx(0, "STATIC", "0:00 / 0:00  [No Media]",
+                WS_CHILD | WS_VISIBLE | SS_RIGHT,
+                335, 66, W - 36 - 335, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hTimeStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            // Row 2 controls (y=93)
             hBtnPrev = CreateWindowEx(0, "BUTTON", "Prev",
                 WS_CHILD | WS_VISIBLE,
                 10, 93, 75, 26, hwnd, (HMENU)5, NULL, NULL);
@@ -422,41 +494,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hBtnNext = CreateWindowEx(0, "BUTTON", "Next",
                 WS_CHILD | WS_VISIBLE,
-                93, 93, 75, 26, hwnd, (HMENU)6, NULL, NULL);
+                90, 93, 75, 26, hwnd, (HMENU)6, NULL, NULL);
             SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnSeekBack = CreateWindowEx(0, "BUTTON", "<< 5s",
+                WS_CHILD | WS_VISIBLE,
+                170, 93, 75, 26, hwnd, (HMENU)14, NULL, NULL);
+            SendMessage(hBtnSeekBack, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnSeekFwd = CreateWindowEx(0, "BUTTON", ">> 5s",
+                WS_CHILD | WS_VISIBLE,
+                250, 93, 75, 26, hwnd, (HMENU)15, NULL, NULL);
+            SendMessage(hBtnSeekFwd, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnRem = CreateWindowEx(0, "BUTTON", "Remove",
                 WS_CHILD | WS_VISIBLE,
-                176, 93, 75, 26, hwnd, (HMENU)7, NULL, NULL);
+                330, 93, 75, 26, hwnd, (HMENU)7, NULL, NULL);
             SendMessage(hBtnRem, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnSpeed = CreateWindowEx(0, "BUTTON", "Spd: 1.0x",
                 WS_CHILD | WS_VISIBLE,
-                259, 93, 75, 26, hwnd, (HMENU)10, NULL, NULL);
+                410, 93, 85, 26, hwnd, (HMENU)10, NULL, NULL);
             SendMessage(hBtnSpeed, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            // Row 3 controls (y=124)
             hBtnMode = CreateWindowEx(0, "BUTTON", "Mode: Normal",
                 WS_CHILD | WS_VISIBLE,
-                10, 124, 160, 26, hwnd, (HMENU)9, NULL, NULL);
+                10, 124, 155, 26, hwnd, (HMENU)9, NULL, NULL);
             SendMessage(hBtnMode, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnExport = CreateWindowEx(0, "BUTTON", "Export Frame",
                 WS_CHILD | WS_VISIBLE,
-                176, 124, 158, 26, hwnd, (HMENU)12, NULL, NULL);
+                170, 124, 155, 26, hwnd, (HMENU)12, NULL, NULL);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help (F1)",
                 WS_CHILD | WS_VISIBLE,
-                342, 124, 85, 26, hwnd, (HMENU)13, NULL, NULL);
+                330, 124, 165, 26, hwnd, (HMENU)13, NULL, NULL);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            // ListBox
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | WS_HSCROLL,
                 10, 155, W - 36, H - 315, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            // Subtitle / Lyrics Area
             HFONT hSubFont = CreateFontA(-16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            hSubText = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "",
+            hSubText = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "[ Subtitles will display here when playing media with .srt ]",
                 WS_CHILD | WS_VISIBLE | SS_CENTER,
                 10, H - 150, W - 36, 105, hwnd, NULL, NULL, NULL);
             SendMessage(hSubText, WM_SETFONT, (WPARAM)hSubFont, TRUE);
@@ -467,6 +552,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER: {
             if (wParam == 1) {
                 UpdateSubtitles();
+                if (currentFile[0] != '\0') {
+                    char posStr[64] = {0};
+                    char lenStr[64] = {0};
+                    char modeStr[64] = {0};
+                    mciSendStringA("status myMedia position", posStr, sizeof(posStr), NULL);
+                    mciSendStringA("status myMedia length", lenStr, sizeof(lenStr), NULL);
+                    mciSendStringA("status myMedia mode", modeStr, sizeof(modeStr), NULL);
+                    int pos = str_to_int(posStr);
+                    int len = str_to_int(lenStr);
+                    char szPos[32], szLen[32], statusBuf[128];
+                    FormatTimeMs(pos, szPos, sizeof(szPos));
+                    FormatTimeMs(len, szLen, sizeof(szLen));
+                    wsprintfA(statusBuf, "%s / %s  [%s]", szPos, szLen, modeStr[0] ? modeStr : "stopped");
+                    SetWindowTextA(hTimeStatus, statusBuf);
+                } else {
+                    SetWindowTextA(hTimeStatus, "0:00 / 0:00  [No Media]");
+                }
             }
             break;
         }
@@ -474,7 +576,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (LOWORD(wParam) == 1) {
                 OpenFileDlg(hwnd);
             } else if (LOWORD(wParam) == 2) {
-                PlaySelectedTrack();
+                TogglePlayPause();
             } else if (LOWORD(wParam) == 3) {
                 StopTrack();
             } else if (LOWORD(wParam) == 5) {
@@ -495,6 +597,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             mciSendStringA("close myMedia", NULL, 0, NULL);
                             currentFile[0] = '\0';
                             SetWindowTextA(hTitle, "No file selected (Press 'H' or F1 for help)");
+                            SetWindowTextA(hSubText, "[ Subtitles will display here when playing media with .srt ]");
                             g_currentIndex = -1;
                         } else if (g_currentIndex > masterIdx) {
                             g_currentIndex--;
@@ -509,6 +612,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 StopTrack();
                 mciSendStringA("close myMedia", NULL, 0, NULL);
                 SetWindowTextA(hTitle, "No file selected (Press 'H' or F1 for help)");
+                SetWindowTextA(hSubText, "[ Subtitles will display here when playing media with .srt ]");
                 RefilterPlaylist();
             } else if (LOWORD(wParam) == 9) {
                 CycleMode();
@@ -520,7 +624,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == 12) {
                 ExportFrameToBMP();
             } else if (LOWORD(wParam) == 13) {
-                MessageBoxA(g_hwndMain, "Keyboard Shortcuts:\nSpace : Play/Pause\nLeft Arrow / P : Previous Track\nRight Arrow / N : Next Track\nS : Stop\nM : Change Mode\nH / F1 : Help", "Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(g_hwndMain);
+            } else if (LOWORD(wParam) == 14) {
+                SeekRelative(-5000);
+            } else if (LOWORD(wParam) == 15) {
+                SeekRelative(5000);
             } else if (LOWORD(wParam) == 4 && HIWORD(wParam) == LBN_DBLCLK) {
                 PlaySelectedTrack();
             }
@@ -582,6 +690,10 @@ void MainEntry() {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F1) {
+                ShowHelpDialog(g_hwndMain);
+                continue;
+            }
             HWND hFocus = GetFocus();
             if (hFocus != hEditSearch) {
                 if (msg.wParam == VK_SPACE) {
@@ -593,14 +705,20 @@ void MainEntry() {
                 } else if (msg.wParam == 'N' || msg.wParam == 'n' || msg.wParam == VK_RIGHT) {
                     PlayNextTrackAuto();
                     continue;
+                } else if (msg.wParam == VK_OEM_4 /* [ */) {
+                    SeekRelative(-5000);
+                    continue;
+                } else if (msg.wParam == VK_OEM_6 /* ] */) {
+                    SeekRelative(5000);
+                    continue;
                 } else if (msg.wParam == 'S' || msg.wParam == 's') {
                     StopTrack();
                     continue;
                 } else if (msg.wParam == 'M' || msg.wParam == 'm') {
                     CycleMode();
                     continue;
-                } else if (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) {
-                    MessageBoxA(g_hwndMain, "Keyboard Shortcuts:\nSpace : Play/Pause\nLeft Arrow / P : Previous Track\nRight Arrow / N : Next Track\nS : Stop\nM : Change Mode\nH / F1 : Help", "Help", MB_OK | MB_ICONINFORMATION);
+                } else if (msg.wParam == 'H' || msg.wParam == 'h') {
+                    ShowHelpDialog(g_hwndMain);
                     continue;
                 }
             }
