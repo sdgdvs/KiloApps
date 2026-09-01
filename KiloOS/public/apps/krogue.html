@@ -130,7 +130,7 @@
         .btn-modal-close:hover { background: #30363d; color: #fff; }
 
         /* Class Selector Grid */
-        .class-grid { display: flex; gap: 12px; margin-bottom: 16px; }
+        .class-grid { display: flex; gap: 12px; margin-bottom: 12px; }
         .class-card {
             flex: 1; background: #0d1117; border: 2px solid #30363d; border-radius: 8px;
             padding: 12px; cursor: pointer; transition: all 0.2s; text-align: center;
@@ -141,14 +141,25 @@
         .class-title { font-weight: bold; font-size: 15px; color: #e2e8f0; margin-bottom: 4px; }
         .class-desc { font-size: 11px; color: #a0aec0; line-height: 1.3; }
 
-        .race-grid { display: flex; gap: 10px; margin-bottom: 16px; }
+        .loadout-grid { display: flex; gap: 10px; margin-bottom: 14px; }
+        .loadout-card {
+            flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+            padding: 8px 10px; cursor: pointer; text-align: left; transition: all 0.2s;
+        }
+        .loadout-card:hover { border-color: #63b3ed; transform: translateY(-1px); }
+        .loadout-card.selected { border-color: #ecc94b; background: #1c2128; box-shadow: 0 0 8px rgba(236, 201, 75, 0.25); }
+        .loadout-title { font-weight: bold; font-size: 12px; color: #ecc94b; margin-bottom: 3px; }
+        .loadout-gear { font-size: 11px; color: #63b3ed; margin-bottom: 2px; }
+        .loadout-desc { font-size: 10px; color: #a0aec0; line-height: 1.25; }
+
+        .race-grid { display: flex; gap: 10px; margin-bottom: 14px; }
         .race-card {
             flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
             padding: 8px; cursor: pointer; text-align: center; font-size: 12px; font-weight: bold;
         }
         .race-card.selected { border-color: #68d391; background: #1c2128; color: #68d391; }
 
-        .seed-input-group { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+        .seed-input-group { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
         .seed-input {
             flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
             padding: 6px 12px; color: #e2e8f0; font-family: monospace; font-size: 14px;
@@ -241,28 +252,33 @@
                     <div class="class-card selected" id="card-warrior" onclick="selectClass('warrior')">
                         <div class="class-icon">⚔️</div>
                         <div class="class-title">Warrior</div>
-                        <div class="class-desc">High HP (35), +4 STR, Heavy Armor. Ability: <b>Berserk Slash</b> (Cleaves adjacent enemies).</div>
+                        <div class="class-desc">High HP (35), +4 STR, Heavy Armor. Ability: <b>Berserk Cleave</b>.</div>
                     </div>
                     <div class="class-card" id="card-mage" onclick="selectClass('mage')">
                         <div class="class-icon">🔮</div>
                         <div class="class-title">Mage</div>
-                        <div class="class-desc">High MP (50), Spell Boost. Starts with Magic Missile & Fireball. Ability: <b>Arcane Burst</b>.</div>
+                        <div class="class-desc">High MP (50), Magic Spells. Passive MP regen. Ability: <b>Arcane Nova</b>.</div>
                     </div>
                     <div class="class-card" id="card-rogue" onclick="selectClass('rogue')">
                         <div class="class-icon">🗡️</div>
                         <div class="class-title">Rogue</div>
-                        <div class="class-desc">High DEX (+4), Bow/Dagger master. Ability: <b>Shadow Step</b> (Teleport + Invisibility).</div>
+                        <div class="class-desc">High DEX (+4), Stealth & Dodge. Trap disarm. Ability: <b>Shadow Step</b>.</div>
                     </div>
                 </div>
 
-                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">2. Select Race</div>
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">2. Choose Starting Loadout Archetype</div>
+                <div class="loadout-grid" id="loadout-container">
+                    <!-- Populated dynamically based on chosen class -->
+                </div>
+
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">3. Select Race</div>
                 <div class="race-grid">
                     <div class="race-card selected" id="race-human" onclick="selectRace('human')">Human (+2 All, +15% XP)</div>
                     <div class="race-card" id="race-elf" onclick="selectRace('elf')">Elf (+4 DEX, +10 MP, +1 Sight)</div>
                     <div class="race-card" id="race-dwarf" onclick="selectRace('dwarf')">Dwarf (+8 HP, +3 DEF, Poison Res)</div>
                 </div>
 
-                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">3. Dungeon Seed</div>
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">4. Dungeon Seed</div>
                 <div class="seed-input-group">
                     <input type="text" id="seed-input" class="seed-input" value="KR-7492" placeholder="Custom Seed String">
                     <button class="btn-modal-close" onclick="generateRandomSeed()">🎲 Random Seed</button>
@@ -475,6 +491,25 @@
         // Character Select state temp variables
         let selectedClass = 'warrior';
         let selectedRace = 'human';
+        let selectedLoadout = 0;
+
+        const LOADOUT_DATA = {
+            warrior: [
+                { id: 0, title: "🛡️ Vanguard", gear: "Broadsword (+4) & Tower Shield (+3)", perk: "Shield Bastion (25% Mitigation)" },
+                { id: 1, title: "🪓 Berserker", gear: "Battle Greataxe (+6) & Fury", perk: "Blood Fury (+ATK per missing HP)" },
+                { id: 2, title: "✝️ Paladin", gear: "Blessed Flail (+4) & Holy Aegis", perk: "Holy Aura (+HP regen & vs Undead)" }
+            ],
+            mage: [
+                { id: 0, title: "🔥 Elementalist", gear: "Elemental Staff (+3) & Spells", perk: "Elemental Burn & Slow effects" },
+                { id: 1, title: "💀 Necromancer", gear: "Shadow Scythe (+4) & Siphon", perk: "Soul Reaper (+5 HP/+3 MP per kill)" },
+                { id: 2, title: "✨ Arcanist", gear: "Aether Wand (+2) & Meteor", perk: "Aether Resonance (-25% MP cost & regen)" }
+            ],
+            rogue: [
+                { id: 0, title: "🗡️ Assassin", gear: "Dual Daggers (+3) & Venom", perk: "Assassinate (3.5x Stealth Ambush Crit)" },
+                { id: 1, title: "🏹 Ranger", gear: "Elven Longbow (+5) & Quiver", perk: "Eagle Eye (Piercing arrows & vision)" },
+                { id: 2, title: "🗝️ Shadow Thief", gear: "Jeweled Stiletto (+2) & Cloak", perk: "Acrobatic Dodge (25% evasion & trap disarm)" }
+            ]
+        };
 
         // Particles & visual effects
         let particles = [];
@@ -592,12 +627,35 @@
         // Setup Character Select Modal
         function openCharSelect() {
             document.getElementById('modal-char-select').style.display = 'flex';
+            renderLoadoutCards();
         }
 
         function selectClass(c) {
             selectedClass = c;
+            selectedLoadout = 0;
             document.querySelectorAll('.class-card').forEach(el => el.classList.remove('selected'));
             document.getElementById(`card-${c}`).classList.add('selected');
+            renderLoadoutCards();
+        }
+
+        function selectLoadout(idx) {
+            selectedLoadout = idx;
+            document.querySelectorAll('.loadout-card').forEach(el => el.classList.remove('selected'));
+            let el = document.getElementById(`loadout-${idx}`);
+            if (el) el.classList.add('selected');
+        }
+
+        function renderLoadoutCards() {
+            let container = document.getElementById('loadout-container');
+            if (!container) return;
+            let list = LOADOUT_DATA[selectedClass] || [];
+            container.innerHTML = list.map(item => `
+                <div class="loadout-card ${item.id === selectedLoadout ? 'selected' : ''}" id="loadout-${item.id}" onclick="selectLoadout(${item.id})">
+                    <div class="loadout-title">${item.title}</div>
+                    <div class="loadout-gear">${item.gear}</div>
+                    <div class="loadout-desc">${item.perk}</div>
+                </div>
+            `).join('');
         }
 
         function selectRace(r) {
@@ -614,41 +672,83 @@
         function confirmStartGame() {
             let seedVal = document.getElementById('seed-input').value.trim() || "KR-1000";
             closeModal('modal-char-select');
-            startNewGame(selectedClass, selectedRace, seedVal);
+            startNewGame(selectedClass, selectedRace, seedVal, selectedLoadout);
         }
 
-        function startNewGame(cls, race, seedStr) {
+        function startNewGame(cls, race, seedStr, loadout = 0) {
             dlevel = 1;
             total_kills = 0;
             msgs = [];
             currentSeedVal = seedFromString(seedStr);
+            knownSpells = { missile: true };
 
             player = {
                 x: 2, y: 2,
                 hp: 25, max_hp: 25, mp: 30, max_mp: 30,
                 xp: 0, level: 1, gold: 0, hunger: 400, max_hunger: 400,
-                str: 10, dex: 10, def: 2, atk: 4,
-                class: cls, race: race, seedStr: seedStr,
-                invisible_turns: 0, poisoned_turns: 0, rooted_turns: 0, berserk_turns: 0
+                str: 10, dex: 10, tou: 10, int_stat: 10, wil: 10, def: 2, atk: 4,
+                class: cls, loadout: loadout, race: race, seedStr: seedStr,
+                invisible_turns: 0, poisoned_turns: 0, rooted_turns: 0, berserk_turns: 0,
+                turn_parity: 0
             };
 
-            // Stat and Starting Gear Adjustments
+            equipment = { weapon: null, armor: null, shield: null, ring: null };
+
+            // Stat, Gear and Loadout adjustments
             if (cls === 'warrior') {
                 player.max_hp = player.hp = 35; player.str += 4; player.atk += 3;
-                equipment.weapon = { name: "Iron Broadsword", type: "weapon", val: 4, fg: "#319795" };
-                equipment.armor = { name: "Chainmail Vest", type: "armor", val: 3, fg: "#cbd5e0" };
-                document.getElementById('btn-class-ability').innerText = "[A] Berserk Slash (10 MP)";
+                document.getElementById('btn-class-ability').innerText = "[A] Berserk Cleave (8 MP)";
+                if (loadout === 0) { // Vanguard
+                    equipment.weapon = { name: "Iron Broadsword", type: "weapon", val: 4, fg: "#319795" };
+                    equipment.shield = { name: "Iron Kite Shield", type: "shield", val: 3, fg: "#ecc94b" };
+                    equipment.armor = { name: "Chainmail Armor", type: "armor", val: 3, fg: "#cbd5e0" };
+                } else if (loadout === 1) { // Berserker
+                    player.str += 3; player.atk += 3;
+                    equipment.weapon = { name: "Battle Greataxe", type: "weapon", val: 6, fg: "#e53e3e" };
+                    equipment.armor = { name: "Leather Tunic", type: "armor", val: 1, fg: "#dd6b20" };
+                } else { // Paladin
+                    player.max_hp = player.hp = 40;
+                    equipment.weapon = { name: "Blessed Flail", type: "weapon", val: 4, fg: "#ecc94b" };
+                    equipment.shield = { name: "Tower Shield", type: "shield", val: 3, fg: "#ecc94b" };
+                    equipment.ring = { name: "Ring of Vitality", type: "ring", val: 15, fg: "#f6ad55" };
+                }
             } else if (cls === 'mage') {
                 player.max_hp = player.hp = 20; player.max_mp = player.mp = 50; player.str -= 2;
-                equipment.weapon = { name: "Arcane Wand", type: "weapon", val: 2, fg: "#b794f4" };
-                equipment.armor = { name: "Mage Robes", type: "armor", val: 1, fg: "#805ad5" };
-                knownSpells['fireball'] = true;
-                document.getElementById('btn-class-ability').innerText = "[A] Arcane Burst (10 MP)";
+                document.getElementById('btn-class-ability').innerText = "[A] Arcane Nova (10 MP)";
+                if (loadout === 0) { // Elementalist
+                    knownSpells['fireball'] = true;
+                    knownSpells['freeze'] = true;
+                    equipment.weapon = { name: "Elemental Staff", type: "weapon", val: 3, fg: "#ed8936" };
+                    equipment.armor = { name: "Arcane Robes", type: "armor", val: 1, fg: "#805ad5" };
+                } else if (loadout === 1) { // Necromancer
+                    knownSpells['invisibility'] = true;
+                    knownSpells['heal'] = true;
+                    equipment.weapon = { name: "Shadow Scythe", type: "weapon", val: 4, fg: "#805ad5" };
+                    equipment.armor = { name: "Robe of the Damned", type: "armor", val: 2, fg: "#4a5568" };
+                } else { // Arcanist
+                    knownSpells['meteor'] = true;
+                    knownSpells['blessing'] = true;
+                    player.max_mp = player.mp = 65;
+                    equipment.weapon = { name: "Aether Wand", type: "weapon", val: 2, fg: "#b794f4" };
+                    equipment.armor = { name: "Celestial Cloak", type: "armor", val: 2, fg: "#63b3ed" };
+                    equipment.ring = { name: "Ring of Wisdom", type: "ring", val: 20, fg: "#b794f4" };
+                }
             } else if (cls === 'rogue') {
                 player.max_hp = player.hp = 26; player.dex += 4; player.atk += 2;
-                equipment.weapon = { name: "Dual Daggers", type: "weapon", val: 3, fg: "#4fd1c5" };
-                equipment.armor = { name: "Leather Jerkin", type: "armor", val: 2, fg: "#dd6b20" };
                 document.getElementById('btn-class-ability').innerText = "[A] Shadow Step (8 MP)";
+                if (loadout === 0) { // Assassin
+                    player.dex += 2;
+                    equipment.weapon = { name: "Serrated Daggers", type: "weapon", val: 3, fg: "#4fd1c5" };
+                    equipment.armor = { name: "Leather Cuirass", type: "armor", val: 2, fg: "#dd6b20" };
+                } else if (loadout === 1) { // Ranger
+                    equipment.weapon = { name: "Elven Longbow", type: "weapon", val: 5, fg: "#48bb78" };
+                    equipment.armor = { name: "Ranger Cloak", type: "armor", val: 2, fg: "#38a169" };
+                } else { // Shadow Thief
+                    player.gold += 100;
+                    equipment.weapon = { name: "Jeweled Stiletto", type: "weapon", val: 2, fg: "#ecc94b" };
+                    equipment.armor = { name: "Cloak of Shadows", type: "armor", val: 2, fg: "#718096" };
+                    equipment.ring = { name: "Ring of Agility", type: "ring", val: 4, fg: "#63b3ed" };
+                }
             }
 
             if (race === 'elf') { player.dex += 4; player.max_mp += 10; player.mp += 10; }
@@ -656,13 +756,14 @@
             else if (race === 'human') { player.str += 2; player.dex += 2; }
 
             inventory = [
-                { name: "Health Potion", type: "heal", val: 20, fg: "#f56565" },
+                { name: "Health Potion", type: "heal", val: 30, fg: "#f56565" },
                 { name: "Food Ration", type: "food", val: 250, fg: "#ed8936" }
             ];
 
             state = 1;
-            addMsg(`Journey Begun! Class: ${cls.toUpperCase()} | Seed: ${seedStr}`, 'good');
-            addMsg("Descend 50 floors & conquer True Astaroth!");
+            let lName = LOADOUT_DATA[cls] && LOADOUT_DATA[cls][loadout] ? LOADOUT_DATA[cls][loadout].title : "Standard";
+            addMsg(`Journey Begun! Class: ${cls.toUpperCase()} (${lName}) | Seed: ${seedStr}`, 'good');
+            addMsg("Descend 50 floors & conquer True Astaroth! Use [A] for Class Ability.");
             initMap();
         }
 
@@ -1214,7 +1315,8 @@
             document.getElementById('food-bar').style.width = (Math.max(0, player.hunger) / player.max_hunger * 100) + '%';
             document.getElementById('food-text').innerText = `${player.hunger}/${player.max_hunger}`;
 
-            document.getElementById('val-class').innerText = player.class.toUpperCase();
+            let lName = LOADOUT_DATA[player.class] && LOADOUT_DATA[player.class][player.loadout] ? LOADOUT_DATA[player.class][player.loadout].title.split(' ')[1] : "";
+            document.getElementById('val-class').innerText = `${player.class.toUpperCase()}${lName ? ' (' + lName + ')' : ''}`;
             document.getElementById('val-lvl').innerText = player.level;
             document.getElementById('val-xp').innerText = player.xp;
             document.getElementById('val-gold').innerText = player.gold;
@@ -1236,33 +1338,71 @@
         function useClassAbility() {
             if (state !== 1) return;
             if (player.class === 'warrior') {
-                if (player.mp < 10) { addMsg("Not enough MP for Berserk Slash (10 MP)!"); return; }
-                player.mp -= 10; player.berserk_turns = 4;
-                addMsg("BERSERK SLASH! Next attacks deal 2x damage & cleave!", 'msg-magic');
-                addParticles(player.x, player.y, '#e53e3e', 25);
-            } else if (player.class === 'mage') {
-                if (player.mp < 10) { addMsg("Not enough MP for Arcane Burst (10 MP)!"); return; }
-                player.mp -= 10;
-                addMsg("ARCANE BURST! Knocked back surrounding foes!", 'msg-magic');
-                addParticles(player.x, player.y, '#b794f4', 30);
+                if (player.mp < 8) { addMsg("Not enough MP for Berserk Cleave (8 MP required)!"); return; }
+                player.mp -= 8; player.berserk_turns = 5;
+                addMsg("WAR CRY & BERSERK CLEAVE! 360-degree sweep strikes surrounding foes!", 'msg-magic');
+                addParticles(player.x, player.y, '#e53e3e', 30);
+                screenShake = 12;
+                shockwaves.push({x: player.x, y: player.y, radius: 0, life: 1.2});
                 for (let dy = -1; dy <= 1; dy++) {
                     for (let dx = -1; dx <= 1; dx++) {
+                        if (dx === 0 && dy === 0) continue;
                         let mIdx = monsters.findIndex(m => m.x === player.x + dx && m.y === player.y + dy);
                         if (mIdx >= 0) {
-                            monsters[mIdx].hp -= 20 + player.level * 4;
-                            addFloatText(monsters[mIdx].x, monsters[mIdx].y, `-20`, '#b794f4');
+                            let cdmg = player.atk * 2 + 10;
+                            monsters[mIdx].hp -= cdmg;
+                            addFloatText(monsters[mIdx].x, monsters[mIdx].y, `-${cdmg}`, '#e53e3e');
+                            addParticles(monsters[mIdx].x, monsters[mIdx].y, '#f56565', 10);
+                            if (monsters[mIdx].hp <= 0) {
+                                addMsg(`${monsters[mIdx].name} is cleaved in two!`, 'good');
+                                player.xp += 10; total_kills++;
+                                monsters.splice(mIdx, 1);
+                            }
+                        }
+                    }
+                }
+            } else if (player.class === 'mage') {
+                if (player.mp < 10) { addMsg("Not enough MP for Arcane Nova (10 MP required)!"); return; }
+                player.mp -= 10;
+                addMsg("ARCANE NOVA! Massive shockwave blasts and knocks back enemies!", 'msg-magic');
+                addParticles(player.x, player.y, '#b794f4', 35);
+                screenShake = 10;
+                shockwaves.push({x: player.x, y: player.y, radius: 0, life: 1.5});
+                for (let dy = -2; dy <= 2; dy++) {
+                    for (let dx = -2; dx <= 2; dx++) {
+                        if (dx === 0 && dy === 0) continue;
+                        let mIdx = monsters.findIndex(m => m.x === player.x + dx && m.y === player.y + dy);
+                        if (mIdx >= 0) {
+                            let mdmg = 25 + player.level * 5;
+                            monsters[mIdx].hp -= mdmg;
+                            addFloatText(monsters[mIdx].x, monsters[mIdx].y, `-${mdmg}`, '#b794f4');
+                            // Knockback
+                            let kx = monsters[mIdx].x + Math.sign(dx);
+                            let ky = monsters[mIdx].y + Math.sign(dy);
+                            if (kx >= 0 && kx < COLS && ky >= 0 && ky < ROWS && map[ky][kx] !== '#' && !monsters.some(other => other !== monsters[mIdx] && other.x === kx && other.y === ky)) {
+                                monsters[mIdx].x = kx; monsters[mIdx].y = ky;
+                            }
+                            if (monsters[mIdx].hp <= 0) {
+                                addMsg(`${monsters[mIdx].name} dissolves into arcane dust!`, 'good');
+                                player.xp += 10; total_kills++;
+                                monsters.splice(mIdx, 1);
+                            }
                         }
                     }
                 }
             } else if (player.class === 'rogue') {
-                if (player.mp < 8) { addMsg("Not enough MP for Shadow Step (8 MP)!"); return; }
-                player.mp -= 8; player.invisible_turns = 4;
-                let rx = player.x + rngRange(-3, 3), ry = player.y + rngRange(-3, 3);
-                if (rx > 1 && rx < COLS - 1 && ry > 1 && ry < ROWS - 1 && map[ry][rx] !== '#') {
-                    player.x = rx; player.y = ry;
+                if (player.mp < 8) { addMsg("Not enough MP for Shadow Step (8 MP required)!"); return; }
+                player.mp -= 8; player.invisible_turns = 6;
+                addParticles(player.x, player.y, '#718096', 30);
+                for (let attempt = 0; attempt < 20; attempt++) {
+                    let rx = player.x + rngRange(-3, 3);
+                    let ry = player.y + rngRange(-3, 3);
+                    if (rx >= 1 && rx < COLS - 1 && ry >= 1 && ry < ROWS - 1 && map[ry][rx] !== '#' && !monsters.some(m => m.x === rx && m.y === ry)) {
+                        player.x = rx; player.y = ry;
+                        break;
+                    }
                 }
-                addMsg("SHADOW STEP! Teleported & became invisible!", 'msg-magic');
-                addParticles(player.x, player.y, '#38a169', 20);
+                addMsg("SHADOW STEP! You drop a smoke bomb, vanish into stealth, and blink away!", 'msg-magic');
             }
             endTurn();
         }
@@ -1562,8 +1702,9 @@
         function saveRunToLeaderboard(result) {
             let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
             let score = dlevel * 100 + total_kills * 25 + player.gold * 2 + player.level * 50;
+            let lTitle = LOADOUT_DATA[player.class] && LOADOUT_DATA[player.class][player.loadout] ? LOADOUT_DATA[player.class][player.loadout].title : player.class.toUpperCase();
             history.push({
-                name: "Hero", class: player.class, floor: dlevel, kills: total_kills,
+                name: "Hero", class: `${player.class.toUpperCase()} (${lTitle.replace(/[^a-zA-Z0-9 ]/g, '').trim()})`, floor: dlevel, kills: total_kills,
                 gold: player.gold, score: score, seed: player.seedStr, result: result, date: new Date().toLocaleDateString()
             });
             history.sort((a, b) => b.score - a.score);
@@ -1577,6 +1718,14 @@
         }
 
         function endTurn() {
+            player.turn_parity = (player.turn_parity || 0) + 1;
+            if (player.class === 'mage' && player.turn_parity % 3 === 0 && player.mp < player.max_mp) {
+                player.mp++;
+            }
+            if (player.class === 'warrior' && player.loadout === 2 && player.turn_parity % 4 === 0 && player.hp < player.max_hp) {
+                player.hp++;
+            }
+
             if (player.invisible_turns > 0) player.invisible_turns--;
             if (player.berserk_turns > 0) player.berserk_turns--;
             if (player.poisoned_turns > 0) { player.hp--; player.poisoned_turns--; if (player.hp <= 0) { triggerGameOver(); return; } }
@@ -1603,8 +1752,18 @@
                 m.turn++;
                 let mdx = Math.sign(player.x - m.x), mdy = Math.sign(player.y - m.y);
                 if (m.x + mdx === player.x && m.y + mdy === player.y) {
+                    if (player.class === 'rogue') {
+                        let dodgeChance = player.loadout === 2 ? 0.25 : 0.15;
+                        if (Math.random() < dodgeChance) {
+                            addMsg(`You acrobatically DODGE ${m.name}'s attack!`, 'good');
+                            addFloatText(player.x, player.y, 'DODGE!', '#68d391');
+                            continue;
+                        }
+                    }
                     let calcDef = player.def + (equipment.armor ? equipment.armor.val : 0) + (equipment.shield ? equipment.shield.val : 0);
+                    if (player.class === 'warrior' && player.loadout === 0) calcDef += 2; // Vanguard Shield Bastion
                     let dmg = Math.max(1, 3 + Math.floor(dlevel * 0.5) - calcDef);
+                    if (player.class === 'warrior' && player.loadout === 0) dmg = Math.max(1, Math.floor(dmg * 0.75));
                     player.hp -= dmg;
                     addMsg(`${m.name} strikes you for ${dmg} dmg.`, 'msg-combat');
                     addFloatText(player.x, player.y, `-${dmg}`, '#e53e3e');
@@ -1692,19 +1851,48 @@
                         let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
                         if (mIdx >= 0) {
                             let calcAtk = player.atk + (equipment.weapon ? equipment.weapon.val : 0);
-                            if (player.berserk_turns > 0) calcAtk *= 2;
-                            let isCrit = Math.random() < 0.15;
-                            if (isCrit) {
+                            if (player.berserk_turns > 0) calcAtk = Math.floor(calcAtk * 2);
+                            if (player.class === 'warrior' && player.loadout === 1) { // Blood Fury
+                                let missing = player.max_hp - player.hp;
+                                if (missing > 0) calcAtk += Math.floor(missing / 8);
+                            }
+                            if (player.class === 'warrior' && player.loadout === 2 && ['z', 's', 'w', 'D', 'L', 'B', '&'].includes(monsters[mIdx].ch)) {
                                 calcAtk = Math.floor(calcAtk * 1.5);
+                            }
+                            let critChance = player.class === 'rogue' ? (player.loadout === 0 ? 0.35 : 0.25) : 0.15;
+                            let isCrit = Math.random() < critChance;
+                            let isStealth = false;
+                            if (player.invisible_turns > 0) {
+                                isStealth = true;
+                                calcAtk = Math.floor(calcAtk * 3.5);
+                                player.invisible_turns = 0;
+                            } else if (isCrit) {
+                                calcAtk = Math.floor(calcAtk * 1.5);
+                            }
+                            if (isCrit || isStealth) {
                                 screenShake = 10;
                                 shockwaves.push({x: nx, y: ny, radius: 0, life: 1.0});
-                                addMsg(`CRITICAL HIT on ${monsters[mIdx].name} for ${calcAtk} dmg!`, 'msg-magic');
+                                if (isStealth) addMsg(`STEALTH AMBUSH STRIKE on ${monsters[mIdx].name} for ${calcAtk} dmg!`, 'msg-magic');
+                                else addMsg(`CRITICAL HIT on ${monsters[mIdx].name} for ${calcAtk} dmg!`, 'msg-magic');
                             } else {
                                 addMsg(`You strike ${monsters[mIdx].name} for ${calcAtk} dmg!`);
                             }
                             addFloatText(nx, ny, `-${calcAtk}`, '#e53e3e');
                             monsters[mIdx].hp -= calcAtk;
+                            if (player.class === 'mage' && player.loadout === 0 && Math.random() < 0.4) {
+                                addMsg("Elemental burns ignite the target!", 'msg-magic');
+                                monsters[mIdx].hp -= 5;
+                            }
+                            if (player.class === 'rogue' && player.loadout === 0 && Math.random() < 0.5) {
+                                addMsg("Venomous toxin infects the wound!", 'msg-magic');
+                                monsters[mIdx].hp -= 4;
+                            }
                             if (monsters[mIdx].hp <= 0) {
+                                if (player.class === 'mage' && player.loadout === 1) { // Necromancer Soul Reaper
+                                    player.hp = Math.min(player.max_hp, player.hp + 5);
+                                    player.mp = Math.min(player.max_mp, player.mp + 3);
+                                    addMsg("Soul Reaper: +5 HP, +3 MP!", 'msg-magic');
+                                }
                                 if (monsters[mIdx].boss) {
                                     addDebrisParticles(monsters[mIdx].x, monsters[mIdx].y, '#ecc94b', 80);
                                     addDebrisParticles(monsters[mIdx].x, monsters[mIdx].y, '#e53e3e', 40);
@@ -1729,6 +1917,15 @@
                             }
                             let trapIdx = traps.findIndex(t => t.x === nx && t.y === ny);
                             if (trapIdx >= 0 && !traps[trapIdx].revealed) {
+                                if (player.class === 'rogue') {
+                                    let disarmChance = player.loadout === 2 ? 1.0 : 0.75;
+                                    if (Math.random() < disarmChance) {
+                                        traps[trapIdx].revealed = true;
+                                        addMsg("Your keen rogue senses detect and safely disarm the trap!", 'good');
+                                        endTurn();
+                                        return;
+                                    }
+                                }
                                 traps[trapIdx].revealed = true;
                                 let ty = traps[trapIdx].type;
                                 if(ty === 'poison') { player.poisoned_turns = 10; addMsg("Triggered a poison trap!", 'msg-combat'); }

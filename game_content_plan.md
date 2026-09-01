@@ -147,7 +147,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
 | Game       | Parity | Status | Next Work |
 |------------|--------|--------|-----------|
-| KRogue     | Tier 1 | Loop 10 done (Final sanctuary floors, true ending, ultra bosses) | Loop 11: Classes/Loadouts (Warrior, Mage, Rogue) |
 | KQuest     | Tier 1 | Loop 9 done (Factions, mount system, crafting overhaul) | Loop 10: Kingdom management, army battles, castle defense |
 | KStarship  | Tier 1 | Loop 9 done (Interstellar factions, planetary landing, crew moral) | Loop 10: Galactic super-weapons, faction wars, alien boarding parties |
 | KFortress  | Tier 1 | Loop 1 done (3 new towers [Tesla, Ballista, Poison], Dynamite trap, 4 new enemies [Necromancer, Skeleton, Wyvern, Golem], Hero Militia squad, 2 new maps) | Loop 2: Elemental tower fusions, siege weapon upgrades, endless challenge mutators |
@@ -159,6 +158,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KPac       | Tier 1 | Loop 10 done (Arcade endless mode, procedural ghost personalities & traits, Cyber-Forge item crafting) | Loop 11: Ghost companion pet summoning, labyrinth hazard portals, legendary relic forging |
 | KBreakout  | Tier 1 | Loop 10 done (Multi-ball chaos mode, gravity wells, custom powerup forging) | Loop 11: Orbital satellite barriers, laser reflectors, quantum resonance bricks |
 | KSnake     | Tier 1 | Loop 10 done (Map Editor lab, Boss Gauntlet with 4 serpents, 30-stage branching campaigns) | Loop 11: Co-op 2-player local mode, elemental snake skins, speedrun timer splits |
+| KRogue     | Tier 1 | Loop 11 done (9 Class Loadout Archetypes, Class Passives & Active Abilities) | Loop 12: Enchanting altar socketing, companion pets, branching secret challenge vaults |
 
 ### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
 | Game       | Parity | Status | Next Work |
@@ -183,6 +183,9 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 
 ## Progress Log
+
+**Loop 11**
+- [x] KRogue (Loop 11: Added 9 Class Loadout Archetypes [Fighter: Vanguard, Berserker, Paladin; Wizard: Elementalist, Necromancer, Arcanist; Rogue: Assassin, Ranger, Shadow Thief] with custom starting gear, spells, and stat profiles; Class Passive Perks [Shield Bastion mitigation, Blood Fury missing HP damage boost, Holy Aura vs undead + HP regen, Elementalist burn DoT, Necromancer Soul Reaper HP/MP kill siphon, Arcanist MP regen, Assassin 3.5x stealth ambush + crit & venom, Ranger precision, Shadow Thief 25% dodge + 100% trap disarm]; and Active Ability system [[A] Berserk Cleave 360-degree whirlwind swipe, Arcane Nova 5x5 radiating shockwave with knockback, Shadow Step teleport blink + smoke cloud + stealth] in both native Win32 C and HTML5)
 
 **Loop 10**
 - [x] KSnake (Loop 10: Added interactive Map Editor Lab [E/O / quick tools 1-4] with Wall, Portal A, Portal B, Eraser brushes, Clear, Border, Random Maze generator, Test play, and save/load persistence; dedicated Boss Gauntlet mode with 4 unique boss serpents [Hydra Viper, Cyber Basilisk with EMP laser charging, Inferno Wyrm with magma trail hazards, Void Ouroboros with void phase-shifting and gravity vortex] and dynamic boss HP bars; and Branching Campaign Expansion to 30 stages with milestone route selection cards [Solar Highway vs Shadow Labyrinth] offering distinct mechanics and scoring multipliers in both EXE and HTML)

@@ -79,6 +79,7 @@ typedef struct {
 #define STATUS_POISON 1
 #define STATUS_ROOTED 2
 #define STATUS_INVISIBLE 3
+#define STATUS_BERSERK 4
 
 #define ABILITY_NONE 0
 #define ABILITY_SPLIT 1
@@ -344,6 +345,7 @@ typedef struct {
     int targeting_mode; // 0=bow, 1=spell
     int char_race;
     int char_class;
+    int char_loadout;
     int seed;
     int known_spells[MAX_SPELLS];
     int active_spell;
@@ -1129,6 +1131,7 @@ void init_game() {
     g.state = 4; // Character creation
     g.char_race = RACE_HUMAN;
     g.char_class = CLASS_FIGHTER;
+    g.char_loadout = 0;
     g.difficulty = 0;
     g.seed = 7492;
 }
@@ -1160,38 +1163,129 @@ void finalize_character() {
     if(p->class_id == CLASS_ROGUE) { p->dex += 4; }
     if(p->class_id == CLASS_WIZARD) { p->int_stat += 4; p->wil += 2; }
     
+    // Loadout attribute bonuses
+    if(p->class_id == CLASS_FIGHTER) {
+        if(g.char_loadout == 0) { p->tou += 2; } // Vanguard
+        else if(g.char_loadout == 1) { p->str += 3; } // Berserker
+        else { p->wil += 2; } // Paladin
+    } else if(p->class_id == CLASS_ROGUE) {
+        if(g.char_loadout == 0) { p->dex += 2; } // Assassin
+        else if(g.char_loadout == 1) { p->dex += 1; p->wil += 1; } // Ranger
+        else { p->str += 1; p->tou += 1; } // Shadow Thief
+    } else if(p->class_id == CLASS_WIZARD) {
+        if(g.char_loadout == 0) { p->int_stat += 2; } // Elementalist
+        else if(g.char_loadout == 1) { p->tou += 2; } // Necromancer
+        else { p->wil += 3; } // Arcanist
+    }
     
     calc_stats(p);
     p->hp = p->max_hp;
     p->mp = p->max_mp;
     
-    // Unlock artifact spells & abilities
-    g.known_spells[S_MISSILE] = 1;
-    g.known_spells[S_METEOR] = 1;
-    g.known_spells[S_INVISIBILITY] = 1;
-    g.known_spells[S_BLESSING] = 1;
+    // Starting items and spells based on Class and Loadout Archetype
+    if(p->class_id == CLASS_FIGHTER) {
+        if(g.char_loadout == 0) { // Vanguard (Sword & Shield)
+            Item sword = {1, 0, 0, '(', C_WEAPON, "Iron Broadsword", TYPE_WEAPON, W_SWORD, 3, 0};
+            Item shield = {1, 0, 0, '[', C_ARMOR, "Iron Kite Shield", TYPE_SHIELD, 0, 3, 0};
+            Item armor = {1, 0, 0, '[', C_ARMOR, "Chainmail Armor", TYPE_ARMOR, 0, 2, 0};
+            g.equip_weapon = sword;
+            g.equip_shield = shield;
+            g.equip_armor = armor;
+            Item pot1 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 30, 0};
+            Item pot2 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 30, 0};
+            g.inventory[0] = pot1;
+            g.inventory[1] = pot2;
+        } else if(g.char_loadout == 1) { // Berserker (Greataxe)
+            Item axe = {1, 0, 0, '(', C_WEAPON, "Battle Greataxe", TYPE_WEAPON, W_HAMMER, 6, 0};
+            Item armor = {1, 0, 0, '[', C_ARMOR, "Leather Tunic", TYPE_ARMOR, 0, 1, 0};
+            g.equip_weapon = axe;
+            g.equip_armor = armor;
+            Item pot1 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 30, 0};
+            Item pot2 = {1, 0, 0, '!', C_POTION, "Greater Health Potion", TYPE_HEAL, 0, 60, 0};
+            g.inventory[0] = pot1;
+            g.inventory[1] = pot2;
+        } else { // Paladin / Templar (Holy Flail & Aegis)
+            Item flail = {1, 0, 0, '(', C_WEAPON, "Blessed Flail", TYPE_WEAPON, W_SWORD, 4, 0};
+            Item shield = {1, 0, 0, '[', C_ARMOR, "Tower Shield", TYPE_SHIELD, 0, 3, 0};
+            Item ring = {1, 0, 0, '=', RGB(255,215,0), "Ring of Vitality", TYPE_RING, 1, 15, 0};
+            g.equip_weapon = flail;
+            g.equip_shield = shield;
+            g.equip_ring = ring;
+            Item pot1 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 40, 0};
+            g.inventory[0] = pot1;
+        }
+    } else if(p->class_id == CLASS_ROGUE) {
+        if(g.char_loadout == 0) { // Assassin (Dual Venom Daggers)
+            Item dagger = {1, 0, 0, '(', C_WEAPON, "Serrated Dagger", TYPE_WEAPON, W_SWORD, 3, 0};
+            Item armor = {1, 0, 0, '[', C_ARMOR, "Leather Cuirass", TYPE_ARMOR, 0, 1, 0};
+            Item bow = {1, 0, 0, '(', C_WEAPON, "Shortbow", TYPE_WEAPON, W_BOW, 2, 0};
+            g.equip_weapon = dagger;
+            g.equip_armor = armor;
+            g.inventory[0] = bow;
+            Item pot1 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 30, 0};
+            g.inventory[1] = pot1;
+        } else if(g.char_loadout == 1) { // Ranger / Sharpshooter (Longbow)
+            Item bow = {1, 0, 0, '(', C_WEAPON, "Elven Longbow", TYPE_WEAPON, W_BOW, 5, 0};
+            Item dagger = {1, 0, 0, '(', C_WEAPON, "Hunting Knife", TYPE_WEAPON, W_SWORD, 2, 0};
+            Item armor = {1, 0, 0, '[', C_ARMOR, "Ranger Cloak", TYPE_ARMOR, 0, 1, 0};
+            g.equip_weapon = bow;
+            g.equip_armor = armor;
+            g.inventory[0] = dagger;
+            Item pot1 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 30, 0};
+            g.inventory[1] = pot1;
+        } else { // Shadow Thief (Stiletto & Evasion)
+            Item stiletto = {1, 0, 0, '(', C_WEAPON, "Jeweled Stiletto", TYPE_WEAPON, W_SWORD, 2, 0};
+            Item cloak = {1, 0, 0, '[', C_ARMOR, "Cloak of Shadows", TYPE_ARMOR, 0, 2, 0};
+            Item ring = {1, 0, 0, '=', RGB(100,200,255), "Ring of Agility", TYPE_RING, 0, 4, 0};
+            g.equip_weapon = stiletto;
+            g.equip_armor = cloak;
+            g.equip_ring = ring;
+            p->gold += 100;
+            Item pot1 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 30, 0};
+            g.inventory[0] = pot1;
+        }
+    } else if(p->class_id == CLASS_WIZARD) {
+        if(g.char_loadout == 0) { // Elementalist (Fire & Ice)
+            g.known_spells[S_FIREBALL] = 1;
+            g.known_spells[S_FREEZE] = 1;
+            g.known_spells[S_LIGHTNING] = 1;
+            g.known_spells[S_MISSILE] = 1;
+            Item staff = {1, 0, 0, '(', C_WEAPON, "Elemental Staff", TYPE_WEAPON, W_SWORD, 3, 0};
+            Item robe = {1, 0, 0, '[', C_ARMOR, "Arcane Robes", TYPE_ARMOR, 0, 1, 0};
+            g.equip_weapon = staff;
+            g.equip_armor = robe;
+            Item pot1 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 25, 0};
+            g.inventory[0] = pot1;
+        } else if(g.char_loadout == 1) { // Necromancer (Scythe & Siphon)
+            g.known_spells[S_INVISIBILITY] = 1;
+            g.known_spells[S_MISSILE] = 1;
+            g.known_spells[S_HEAL] = 1;
+            Item scythe = {1, 0, 0, '(', C_WEAPON, "Shadow Scythe", TYPE_WEAPON, W_SWORD, 4, 0};
+            Item robe = {1, 0, 0, '[', C_ARMOR, "Robe of the Damned", TYPE_ARMOR, 0, 2, 0};
+            g.equip_weapon = scythe;
+            g.equip_armor = robe;
+            Item pot1 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 35, 0};
+            g.inventory[0] = pot1;
+        } else { // Arcanist (Aether Wand & Meteor)
+            g.known_spells[S_METEOR] = 1;
+            g.known_spells[S_BLESSING] = 1;
+            g.known_spells[S_MISSILE] = 1;
+            Item wand = {1, 0, 0, '(', C_WEAPON, "Aether Wand", TYPE_WEAPON, W_SWORD, 2, 0};
+            Item robe = {1, 0, 0, '[', C_ARMOR, "Celestial Cloak", TYPE_ARMOR, 0, 2, 0};
+            Item ring = {1, 0, 0, '=', RGB(200,100,255), "Ring of Wisdom", TYPE_RING, 1, 20, 0};
+            g.equip_weapon = wand;
+            g.equip_armor = robe;
+            g.equip_ring = ring;
+            Item pot1 = {1, 0, 0, '!', C_POTION, "Health Potion", TYPE_HEAL, 0, 25, 0};
+            g.inventory[0] = pot1;
+        }
+    }
     
     add_msg("Welcome to KRogue!");
-    add_msg("Find the stairs '>'. Defeat evil. F5 to quicksave.");
-    add_msg("Press 'H' or '?' for help.");
+    add_msg("Find the stairs '>'. Defeat evil. Use [A] for Class Ability!");
+    add_msg("Press 'H' or '?' for help. F5 to quicksave.");
     
     generate_map();
-    
-    // Starting items
-    if(p->class_id == CLASS_FIGHTER) {
-        Item sword = {1, 0, 0, '(', C_WEAPON, "Iron Sword", 2, W_SWORD, 3};
-        g.equip_weapon = sword;
-    } else if(p->class_id == CLASS_ROGUE) {
-        Item bow = {1, 0, 0, '(', C_WEAPON, "Shortbow", 2, W_BOW, 2};
-        g.equip_weapon = bow;
-    } else if(p->class_id == CLASS_WIZARD) {
-        g.known_spells[S_HEAL] = 1;
-        g.known_spells[S_FIREBALL] = 1;
-        g.known_spells[S_FREEZE] = 1;
-        g.known_spells[S_LIGHTNING] = 1;
-        Item stick = {1, 0, 0, '(', C_WEAPON, "Stick", 2, W_SWORD, 1};
-        g.equip_weapon = stick;
-    }
 }
 
 Entity* get_entity_at(int x, int y) {
@@ -1336,22 +1430,67 @@ void combat(Entity* attacker, Entity* defender) {
     int atk = attacker->atk;
     int def = defender->def;
     
-    if(attacker == get_player() && g.equip_weapon.active) {
-        atk += g.equip_weapon.val;
-        if(g.equip_weapon.subtype == W_HAMMER) def = def / 2;
-        if(g.equip_weapon.subtype == W_SPEAR && (defender->behavior == B_FAST || defender->behavior == B_ERRATIC)) atk *= 2;
+    if(attacker == get_player()) {
+        if(g.equip_weapon.active) {
+            atk += g.equip_weapon.val;
+            if(g.equip_weapon.subtype == W_HAMMER) def = def / 2;
+            if(g.equip_weapon.subtype == W_SPEAR && (defender->behavior == B_FAST || defender->behavior == B_ERRATIC)) atk *= 2;
+        }
+        if(attacker->status_effect == STATUS_BERSERK) {
+            atk += 4;
+        }
+        if(attacker->class_id == CLASS_FIGHTER) {
+            if(g.char_loadout == 1) { // Berserker Blood Fury
+                int missing_hp = attacker->max_hp - attacker->hp;
+                if(missing_hp > 0) atk += missing_hp / 8;
+            } else if(g.char_loadout == 2) { // Paladin Holy Aura
+                if(defender->ch == 'z' || defender->ch == 's' || defender->ch == 'w' || defender->ch == 'D' || defender->ch == 'L' || defender->ch == '&') {
+                    atk = atk * 3 / 2;
+                }
+            }
+        }
     }
     if(defender == get_player()) {
         if(g.equip_armor.active) def += g.equip_armor.val;
         if(g.equip_shield.active) def += g.equip_shield.val;
+        if(defender->class_id == CLASS_FIGHTER && g.char_loadout == 0) { // Vanguard Shield Bastion
+            def += 2;
+        }
+        if(defender->class_id == CLASS_ROGUE) { // Rogue Acrobatic Dodge
+            int dodge_chance = (g.char_loadout == 2) ? 25 : 15;
+            if(rand_range(0, 100) < dodge_chance) {
+                add_msg("You acrobatically DODGE the attack!");
+                return;
+            }
+        }
     }
 
     int dmg = rand_range(1, atk) - rand_range(0, def / 2);
     if(dmg < 1) dmg = 1;
+    if(attacker == get_player() && attacker->status_effect == STATUS_BERSERK) {
+        dmg = dmg * 2;
+    }
+    if(defender == get_player() && defender->class_id == CLASS_FIGHTER && g.char_loadout == 0) {
+        dmg = dmg * 3 / 4;
+        if(dmg < 1) dmg = 1;
+    }
     
-    int is_crit = (attacker == get_player() && rand_range(0, 100) < 15);
-    if (is_crit) {
+    int crit_chance = 15;
+    if(attacker == get_player() && attacker->class_id == CLASS_ROGUE) {
+        crit_chance = (g.char_loadout == 0) ? 35 : 25;
+    }
+    int is_crit = (attacker == get_player() && rand_range(0, 100) < crit_chance);
+    int is_stealth_strike = 0;
+    if(attacker == get_player() && attacker->status_effect == STATUS_INVISIBLE) {
+        is_stealth_strike = 1;
+        dmg = dmg * 3;
+        attacker->status_effect = STATUS_NONE;
+        attacker->status_duration = 0;
+    } else if (is_crit) {
         dmg = dmg * 3 / 2;
+    }
+
+    if (is_crit || is_stealth_strike) {
         screen_shake = 10;
         for(int i=0; i<MAX_SHOCKWAVES; i++) {
             if(!shockwaves[i].active) {
@@ -1367,11 +1506,28 @@ void combat(Entity* attacker, Entity* defender) {
     defender->hp -= dmg;
     
     char buf[100];
-    if (is_crit) wsprintfA(buf, "CRITICAL HIT! %s hits %s for %d dmg.", attacker->name, defender->name, dmg);
+    if (is_stealth_strike) wsprintfA(buf, "STEALTH AMBUSH! %s strikes %s for %d dmg!", attacker->name, defender->name, dmg);
+    else if (is_crit) wsprintfA(buf, "CRITICAL HIT! %s hits %s for %d dmg.", attacker->name, defender->name, dmg);
     else wsprintfA(buf, "%s hits %s for %d dmg.", attacker->name, defender->name, dmg);
     add_msg(buf);
+
+    if(attacker == get_player() && attacker->class_id == CLASS_WIZARD && g.char_loadout == 0 && rand_range(0, 100) < 40) {
+        defender->status_effect = STATUS_POISON;
+        defender->status_duration = 4;
+        add_msg("Elemental burns ignite the target!");
+    }
+    if(attacker == get_player() && attacker->class_id == CLASS_ROGUE && g.char_loadout == 0 && rand_range(0, 100) < 50) {
+        defender->status_effect = STATUS_POISON;
+        defender->status_duration = 5;
+        add_msg("Venomous toxin infects the wound!");
+    }
     
     if(defender->hp <= 0) {
+        if(attacker == get_player() && attacker->class_id == CLASS_WIZARD && g.char_loadout == 1) { // Necromancer Soul Reaper
+            attacker->hp += 5; if(attacker->hp > attacker->max_hp) attacker->hp = attacker->max_hp;
+            attacker->mp += 3; if(attacker->mp > attacker->max_mp) attacker->mp = attacker->max_mp;
+            add_msg("Soul Reaper: Siphoned essence from fallen foe! (+5 HP, +3 MP)");
+        }
         handle_death(defender, attacker);
     }
 }
@@ -1393,7 +1549,9 @@ int process_status_effects(Entity* e) { // returns 1 if died
         if(e->status_duration == 0) {
             char buf[100];
             if(e->status_effect == STATUS_POISON) wsprintfA(buf, "%s is no longer poisoned.", e->name);
-            else wsprintfA(buf, "%s is no longer rooted.", e->name);
+            else if(e->status_effect == STATUS_ROOTED) wsprintfA(buf, "%s is no longer rooted.", e->name);
+            else if(e->status_effect == STATUS_INVISIBLE) wsprintfA(buf, "%s is no longer invisible.", e->name);
+            else if(e->status_effect == STATUS_BERSERK) wsprintfA(buf, "%s's berserk rage subsides.", e->name);
             if(e == get_player() || (e->x >= 0 && g.map[e->y][e->x].visible)) add_msg(buf);
             e->status_effect = STATUS_NONE;
         }
@@ -1403,6 +1561,14 @@ int process_status_effects(Entity* e) { // returns 1 if died
 
 void check_trap(Entity* e) {
     if(g.map[e->y][e->x].has_trap) {
+        if(e == get_player() && e->class_id == CLASS_ROGUE) {
+            int disarm_chance = (g.char_loadout == 2) ? 100 : 75;
+            if(rand_range(0, 100) < disarm_chance) {
+                g.map[e->y][e->x].has_trap = 0;
+                add_msg("Your keen rogue senses detect and safely disarm the trap!");
+                return;
+            }
+        }
         g.map[e->y][e->x].has_trap = 0;
         int t = rand_range(0, 4);
         char buf[100];
@@ -1568,11 +1734,18 @@ void do_monsters_turn(int is_bonus) {
 }
 
 void monsters_turn() {
+    Entity* p = get_player();
+    p->turn_parity++;
+    if(p->class_id == CLASS_WIZARD && (p->turn_parity % 3 == 0) && p->mp < p->max_mp) {
+        p->mp++;
+    }
+    if(p->class_id == CLASS_FIGHTER && g.char_loadout == 2 && (p->turn_parity % 4 == 0) && p->hp < p->max_hp) { // Paladin Holy Aura
+        p->hp++;
+    }
     do_monsters_turn(0);
     do_monsters_turn(1);
     process_status_effects(get_player());
     
-    Entity* p = get_player();
     if(p->hunger > 0) {
         p->hunger--;
     } else {
@@ -2242,9 +2415,11 @@ void draw_game(HDC hdc) {
         char status_str[50] = "";
         if(p->status_effect == STATUS_POISON) str_cpy(status_str, "[POISONED]");
         else if(p->status_effect == STATUS_ROOTED) str_cpy(status_str, "[ROOTED]");
+        else if(p->status_effect == STATUS_INVISIBLE) str_cpy(status_str, "[STEALTH]");
+        else if(p->status_effect == STATUS_BERSERK) str_cpy(status_str, "[BERSERK]");
         
         if(status_str[0] != '\0') {
-            SetTextColor(memDC, RGB(255, 0, 0));
+            SetTextColor(memDC, (p->status_effect == STATUS_INVISIBLE) ? RGB(100, 255, 100) : ((p->status_effect == STATUS_BERSERK) ? RGB(255, 100, 50) : RGB(255, 0, 0)));
             TextOutA(memDC, W * char_w - 100, H * char_h, status_str, str_len(status_str));
             SetTextColor(memDC, RGB(200,200,200));
         }
@@ -2253,7 +2428,7 @@ void draw_game(HDC hdc) {
             TextOutA(memDC, 0, (H + 1 + i) * char_h, g.msgs[MAX_MSGS - 1 - i], str_len(g.msgs[MAX_MSGS - 1 - i]));
         }
         SetTextColor(memDC, RGB(150, 150, 150));
-        const char* hint = "[Arrows]:Move/Atk | [.]:Wait | [I]:Inv | [C]:Char | [M]:Spells | [H]:Help";
+        const char* hint = "[Arrows]:Move/Atk | [.]:Wait | [A]:Ability | [I]:Inv | [C]:Char | [M]:Spells | [H]:Help";
         TextOutA(memDC, 0, (H + 5) * char_h, hint, str_len(hint));
         
         if(g.state == 3) {
@@ -2329,27 +2504,44 @@ void draw_game(HDC hdc) {
     } else if(g.state == 4) { // create char
         SetTextColor(memDC, RGB(255,255,255));
         SetBkColor(memDC, RGB(0,0,0));
-        TextOutA(memDC, 20, 20, "CHARACTER CREATION", 18);
+        TextOutA(memDC, 20, 20, "=== CHARACTER CREATION ===", 26);
         
-        char buf[100];
-        wsprintfA(buf, "Race: %s (Press R to change)", g.char_race == RACE_HUMAN ? "Human" : (g.char_race == RACE_ELF ? "Elf" : "Dwarf"));
-        TextOutA(memDC, 20, 60, buf, str_len(buf));
+        char buf[160];
+        wsprintfA(buf, "Race: %s (Press R to change)", g.char_race == RACE_HUMAN ? "Human (+2 All)" : (g.char_race == RACE_ELF ? "Elf (+4 DEX/MP)" : "Dwarf (+8 HP, +3 DEF)"));
+        TextOutA(memDC, 20, 50, buf, str_len(buf));
         
-        wsprintfA(buf, "Class: %s (Press C to change)", g.char_class == CLASS_FIGHTER ? "Fighter" : (g.char_class == CLASS_ROGUE ? "Rogue" : "Wizard"));
-        TextOutA(memDC, 20, 80, buf, str_len(buf));
+        wsprintfA(buf, "Class: %s (Press C to change)", g.char_class == CLASS_FIGHTER ? "Fighter (Melee & Armor)" : (g.char_class == CLASS_ROGUE ? "Rogue (Bows & Stealth)" : "Wizard (Spells & Mana)"));
+        TextOutA(memDC, 20, 75, buf, str_len(buf));
         
-        wsprintfA(buf, "Difficulty: %s (Press D to change)", g.difficulty == 0 ? "Normal" : (g.difficulty == 1 ? "Hard" : "Nightmare"));
+        const char* loadout_names[3][3] = {
+            {"Vanguard (Sword & Shield)", "Berserker (Battle Greataxe)", "Paladin (Blessed Flail & Aegis)"},
+            {"Assassin (Dual Venom Daggers)", "Ranger (Elven Longbow & Sniping)", "Shadow Thief (Stiletto & Trap Disarm)"},
+            {"Elementalist (Fire & Ice Staff)", "Necromancer (Shadow Scythe & Siphon)", "Arcanist (Aether Wand & Meteor)"}
+        };
+        const char* loadout_perks[3][3] = {
+            {"Perk: Shield Bastion (25% Mitigation) | Ability: [A] Berserk Cleave (8 MP)", "Perk: Blood Fury (+ATK on low HP) | Ability: [A] Berserk Cleave (8 MP)", "Perk: Holy Aura (+HP regen & vs Undead) | Ability: [A] Berserk Cleave (8 MP)"},
+            {"Perk: 3.5x Stealth Ambush & Poison Strike | Ability: [A] Shadow Step (8 MP)", "Perk: Eagle Eye (Bow master & high range) | Ability: [A] Shadow Step (8 MP)", "Perk: Acrobatic Dodge (25% evasion & trap disarm) | Ability: [A] Shadow Step (8 MP)"},
+            {"Perk: Elemental Burn & Slow on attacks | Ability: [A] Arcane Nova (10 MP)", "Perk: Soul Reaper (+5 HP/+3 MP on monster kill) | Ability: [A] Arcane Nova (10 MP)", "Perk: Aether Resonance (Passive MP regen & cheaper spells) | Ability: [A] Arcane Nova (10 MP)"}
+        };
+        
+        wsprintfA(buf, "Loadout Archetype: %s (Press L to cycle)", loadout_names[g.char_class][g.char_loadout]);
+        SetTextColor(memDC, RGB(255, 220, 100));
         TextOutA(memDC, 20, 100, buf, str_len(buf));
+        SetTextColor(memDC, RGB(180, 230, 180));
+        TextOutA(memDC, 20, 120, loadout_perks[g.char_class][g.char_loadout], str_len(loadout_perks[g.char_class][g.char_loadout]));
+
+        SetTextColor(memDC, RGB(200, 200, 200));
+        wsprintfA(buf, "Difficulty: %s (Press D to change)", g.difficulty == 0 ? "Normal" : (g.difficulty == 1 ? "Hard" : "Nightmare"));
+        TextOutA(memDC, 20, 145, buf, str_len(buf));
         
         wsprintfA(buf, "Seed: %u (Press S to randomize)", g.seed);
-        TextOutA(memDC, 20, 120, buf, str_len(buf));
+        TextOutA(memDC, 20, 165, buf, str_len(buf));
 
         SetTextColor(memDC, RGB(255, 215, 0));
-        TextOutA(memDC, 20, 150, "Press T to view Run History Leaderboard", 39);
-        TextOutA(memDC, 20, 170, "Press K for Keybinds | Press H for Help", 39);
+        TextOutA(memDC, 20, 195, "Press T: Leaderboard | Press K: Keybinds | Press H: Help", 56);
 
         SetTextColor(memDC, RGB(255, 255, 255));
-        TextOutA(memDC, 20, 200, "Press ENTER to begin your journey...", 36);
+        TextOutA(memDC, 20, 225, "Press ENTER to begin your journey...", 36);
     } else if(g.state == 11) { // Leaderboard screen
         SetTextColor(memDC, RGB(255, 215, 0));
         SetBkColor(memDC, RGB(0,0,0));
@@ -2414,20 +2606,26 @@ void draw_game(HDC hdc) {
         TextOutA(memDC, 20, 40, "Press ESC or C to return.", 25);
         
         Entity* p = get_player();
-        char buf[100];
-        wsprintfA(buf, "Name:  %s", p->name); TextOutA(memDC, 20, 80, buf, str_len(buf));
-        wsprintfA(buf, "Race:  %s", p->race == RACE_HUMAN ? "Human" : (p->race == RACE_ELF ? "Elf" : "Dwarf")); TextOutA(memDC, 20, 100, buf, str_len(buf));
-        wsprintfA(buf, "Class: %s", p->class_id == CLASS_FIGHTER ? "Fighter" : (p->class_id == CLASS_ROGUE ? "Rogue" : "Wizard")); TextOutA(memDC, 20, 120, buf, str_len(buf));
-        wsprintfA(buf, "Level: %d", p->level); TextOutA(memDC, 20, 140, buf, str_len(buf));
-        wsprintfA(buf, "XP:    %d / %d", p->xp, p->level * 20); TextOutA(memDC, 20, 160, buf, str_len(buf));
-        wsprintfA(buf, "Food:  %d / 1000", p->hunger); TextOutA(memDC, 20, 180, buf, str_len(buf));
-        wsprintfA(buf, "Kills: %d", g.total_kills); TextOutA(memDC, 200, 180, buf, str_len(buf));
+        char buf[128];
+        const char* loadout_names[3][3] = {
+            {"Vanguard", "Berserker", "Paladin"},
+            {"Assassin", "Ranger", "Shadow Thief"},
+            {"Elementalist", "Necromancer", "Arcanist"}
+        };
+        wsprintfA(buf, "Name:    %s", p->name); TextOutA(memDC, 20, 80, buf, str_len(buf));
+        wsprintfA(buf, "Race:    %s", p->race == RACE_HUMAN ? "Human" : (p->race == RACE_ELF ? "Elf" : "Dwarf")); TextOutA(memDC, 20, 100, buf, str_len(buf));
+        wsprintfA(buf, "Class:   %s (%s)", p->class_id == CLASS_FIGHTER ? "Fighter" : (p->class_id == CLASS_ROGUE ? "Rogue" : "Wizard"), loadout_names[p->class_id][g.char_loadout]); TextOutA(memDC, 20, 120, buf, str_len(buf));
+        wsprintfA(buf, "Ability: [A] %s", p->class_id == CLASS_FIGHTER ? "Berserk Cleave (8 MP)" : (p->class_id == CLASS_ROGUE ? "Shadow Step (8 MP)" : "Arcane Nova (10 MP)")); TextOutA(memDC, 20, 140, buf, str_len(buf));
+        wsprintfA(buf, "Level:   %d", p->level); TextOutA(memDC, 20, 160, buf, str_len(buf));
+        wsprintfA(buf, "XP:      %d / %d", p->xp, p->level * 20); TextOutA(memDC, 20, 180, buf, str_len(buf));
+        wsprintfA(buf, "Food:    %d / 1000", p->hunger); TextOutA(memDC, 20, 200, buf, str_len(buf));
+        wsprintfA(buf, "Kills:   %d", g.total_kills); TextOutA(memDC, 200, 200, buf, str_len(buf));
         
-        wsprintfA(buf, "STR: %d", p->str); TextOutA(memDC, 20, 200, buf, str_len(buf));
-        wsprintfA(buf, "DEX: %d", p->dex); TextOutA(memDC, 20, 220, buf, str_len(buf));
-        wsprintfA(buf, "TOU: %d", p->tou); TextOutA(memDC, 20, 240, buf, str_len(buf));
-        wsprintfA(buf, "INT: %d", p->int_stat); TextOutA(memDC, 20, 260, buf, str_len(buf));
-        wsprintfA(buf, "WIL: %d", p->wil); TextOutA(memDC, 20, 280, buf, str_len(buf));
+        wsprintfA(buf, "STR: %d", p->str); TextOutA(memDC, 20, 225, buf, str_len(buf));
+        wsprintfA(buf, "DEX: %d", p->dex); TextOutA(memDC, 20, 245, buf, str_len(buf));
+        wsprintfA(buf, "TOU: %d", p->tou); TextOutA(memDC, 20, 265, buf, str_len(buf));
+        wsprintfA(buf, "INT: %d", p->int_stat); TextOutA(memDC, 20, 285, buf, str_len(buf));
+        wsprintfA(buf, "WIL: %d", p->wil); TextOutA(memDC, 20, 305, buf, str_len(buf));
     } else if(g.state == 6) { // spells
         SetTextColor(memDC, RGB(255,255,255));
         SetBkColor(memDC, RGB(0,0,0));
@@ -2505,6 +2703,7 @@ void draw_game(HDC hdc) {
         SetTextColor(memDC, RGB(100, 200, 255));
         TextOutA(memDC, 20, y, "-- Actions --", 13); y += char_h;
         SetTextColor(memDC, RGB(200, 200, 200));
+        TextOutA(memDC, 20, y, "A         Active Class Ability", 30); y += char_h;
         TextOutA(memDC, 20, y, "G or ,    Pick up item", 22); y += char_h;
         TextOutA(memDC, 20, y, "I         Inventory (a-z use, 1-4 unequip)", 43); y += char_h;
         TextOutA(memDC, 20, y, "C         Character sheet", 25); y += char_h;
@@ -2753,6 +2952,90 @@ void fire_spell() {
     monsters_turn();
 }
 
+void use_class_ability() {
+    if(g.state != 0) return;
+    Entity* p = get_player();
+    if(p->class_id == CLASS_FIGHTER) {
+        if(p->mp < 8) {
+            add_msg("Not enough MP for Berserk Cleave! (8 MP required)");
+            return;
+        }
+        p->mp -= 8;
+        p->status_effect = STATUS_BERSERK;
+        p->status_duration = 5;
+        screen_shake = 12;
+        spawn_fire_particles(p->x, p->y, RGB(255, 50, 50), 30);
+        add_msg("WAR CRY & BERSERK CLEAVE! You unleash a raging 360-degree sweep!");
+        for(int dy = -1; dy <= 1; dy++) {
+            for(int dx = -1; dx <= 1; dx++) {
+                if(dx == 0 && dy == 0) continue;
+                Entity* m = get_entity_at(p->x + dx, p->y + dy);
+                if(m && m->behavior != B_NPC && m->behavior != B_SHOPKEEPER) {
+                    int cdmg = p->atk * 2 + 10;
+                    m->hp -= cdmg;
+                    spawn_particles(m->x, m->y, RGB(255, 100, 50), 10);
+                    char b[100];
+                    wsprintfA(b, "Cleave slashes %s for %d dmg!", m->name, cdmg);
+                    add_msg(b);
+                    if(m->hp <= 0) handle_death(m, p);
+                }
+            }
+        }
+        monsters_turn();
+    } else if(p->class_id == CLASS_WIZARD) {
+        if(p->mp < 10) {
+            add_msg("Not enough MP for Arcane Nova! (10 MP required)");
+            return;
+        }
+        p->mp -= 10;
+        screen_shake = 10;
+        spawn_particles(p->x, p->y, RGB(0, 220, 255), 35);
+        add_msg("ARCANE NOVA! Radiating magical burst blasts surrounding enemies!");
+        for(int dy = -2; dy <= 2; dy++) {
+            for(int dx = -2; dx <= 2; dx++) {
+                if(dx == 0 && dy == 0) continue;
+                Entity* m = get_entity_at(p->x + dx, p->y + dy);
+                if(m && m->behavior != B_NPC && m->behavior != B_SHOPKEEPER) {
+                    int mdmg = 25 + p->level * 5;
+                    m->hp -= mdmg;
+                    spawn_particles(m->x, m->y, RGB(100, 200, 255), 10);
+                    char b[100];
+                    wsprintfA(b, "Arcane burst blasts %s for %d dmg!", m->name, mdmg);
+                    add_msg(b);
+                    // Knockback
+                    int kx = m->x + (dx > 0 ? 1 : (dx < 0 ? -1 : 0));
+                    int ky = m->y + (dy > 0 ? 1 : (dy < 0 ? -1 : 0));
+                    if(kx >= 0 && kx < W && ky >= 0 && ky < H && g.map[ky][kx].walkable && !get_entity_at(kx, ky)) {
+                        m->x = kx; m->y = ky;
+                    }
+                    if(m->hp <= 0) handle_death(m, p);
+                }
+            }
+        }
+        monsters_turn();
+    } else if(p->class_id == CLASS_ROGUE) {
+        if(p->mp < 8) {
+            add_msg("Not enough MP for Shadow Step! (8 MP required)");
+            return;
+        }
+        p->mp -= 8;
+        p->status_effect = STATUS_INVISIBLE;
+        p->status_duration = 6;
+        spawn_particles(p->x, p->y, RGB(120, 120, 120), 30);
+        for(int attempt = 0; attempt < 20; attempt++) {
+            int tx = p->x + rand_range(-3, 3);
+            int ty = p->y + rand_range(-3, 3);
+            if(tx >= 1 && tx < W-1 && ty >= 1 && ty < H-1 && g.map[ty][tx].walkable && !get_entity_at(tx, ty)) {
+                p->x = tx; p->y = ty;
+                break;
+            }
+        }
+        calc_fov_bresenham();
+        add_msg("SHADOW STEP! You drop a smoke bomb, vanish into stealth, and blink away!");
+        monsters_turn();
+    }
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
@@ -2786,6 +3069,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if(wParam == VK_NUMPAD1 || wParam == 'B') move_player(-1, 1);
                 else if(wParam == VK_NUMPAD3 || wParam == 'N') move_player(1, 1);
                 else if(wParam == g_keybinds.wait || wParam == VK_NUMPAD5 || wParam == '.') monsters_turn();
+                else if(wParam == 'A') use_class_ability();
                 else if(wParam == 'G' || wParam == ',') pickup_item();
                 else if(wParam == g_keybinds.inv || wParam == 'I') g.state = 2;
                 else if(wParam == g_keybinds.sheet || wParam == 'C') g.state = 5;
@@ -2836,7 +3120,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if(g.state == 4) { // create char
                 if(wParam == 'R') g.char_race = (g.char_race + 1) % 3;
-                else if(wParam == 'C') g.char_class = (g.char_class + 1) % 3;
+                else if(wParam == 'C') { g.char_class = (g.char_class + 1) % 3; g.char_loadout = 0; }
+                else if(wParam == 'L') g.char_loadout = (g.char_loadout + 1) % 3;
                 else if(wParam == 'D') g.difficulty = (g.difficulty + 1) % 3;
                 else if(wParam == 'S') g.seed = (g.seed * 3 + 1234) % 90000 + 1000;
                 else if(wParam == 'T') g.state = 11;
