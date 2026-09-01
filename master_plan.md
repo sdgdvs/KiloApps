@@ -11,11 +11,11 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path` (e.g., using `[System.Environment]::GetEnvironmentVariable`). Doing this deletes the injected Antigravity runtime paths from the active agent's environment, causing the agent to immediately crash and enter a termination loop.
 
-## Current State (as of 2026-09-01 07:00 UTC)
-- **Total Apps:** 91 registered in App.jsx.
-- **KiloOS Version:** 0.3.104.
+## Current State (as of 2026-09-01 12:00 UTC)
+- **Total Apps:** 85 registered in App.jsx.
+- **KiloOS Version:** 0.3.105.
 - **Games:** 39 titles.
-- **Build Health:** ✅ Clean — 242.62 KB JS (74.34 KB gzip), 21.50 KB CSS (5.04 KB gzip).
+- **Build Health:** ✅ Clean.
 - **Model:** All worker agents switched to **Gemini 3.7 Flash** on Aug 30.
 
 ### Game Library (39 titles)
@@ -25,34 +25,34 @@ K2048, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KConnect4, 
 
 | Agent | Status | Current Task | Recent Activity |
 |---|---|---|---|
-| Feature Expander | ✅ **Highly Active** | KAudio | 12 commits in 24h — processing queue rapidly |
-| QA & Build | ✅ **Active** | KCalendar (Pass 3) | 7 commits in 24h |
-| Game Content | ✅ **Active** | KQuest Loop 10 | 10 commits in 24h — deep games getting Loop 10+ |
-| App Creator | ⚠️ **Stalled** | KStellar Phase 11 | No commits since Aug 28 — Prompt A dispatcher may not be running |
-| Game Graphics | ⚠️ **Stalled** | Loop 7 queue | No commits since Aug 28 — Prompt A dispatcher may not be running |
-| Usability | ⚠️ **Stalled** | Queue sweep | No commits since Aug 28 — Prompt A dispatcher may not be running |
+| Feature Expander | ✅ **Highly Active** | KMandel | Processing entire suite rapidly, many new features in tools |
+| QA & Build | ✅ **Active** | Pass 4 | Deep into Pass 4, completing 50+ apps |
+| Game Content | ✅ **Active** | KRogue Loop 12 | Deep games reached Loop 11 |
+| App Creator | ⚠️ **Stalled** | KStellar Phase 11 | Stalled since Aug 28 |
+| Game Graphics | ✅ **Active** | Loop 7 queue | Completed massive batch of Loop 7 visual polish |
+| Usability | ✅ **Active** | Queue sweep | Swept through many apps fixing clipping and scaling |
 | Director #1 | ✅ Active | This review | On schedule |
-| Director #2 | ✅ Active | Aug 30 review | v0.3.104 bump |
+| Director #2 | ✅ Active | Aug 30 review | v0.3.105 bump |
 
 ### Content Depth
-- **Deep Games:** KRogue at Loop 11 (!), KQuest/KSnake/KBreakout/KPac/KMaze/KAsteroids/KSpace at Loop 10.
-- **Newer games catching up:** KColony L2, KAlchemy L2, KFortress L1.
+- **Deep Games:** KRogue, KMaze, KAsteroids, KSpace at Loop 11.
+- **Newer games catching up:** KColony L3, KAlchemy L3, KFortress L2.
 - **Classic Games: ALL 17 Balance Passes COMPLETE** ✅
 
 ### Graphics Agent
-**Loop 7 in progress but stalled since Aug 28.** Prompt A dispatcher needs verification.
+**Loop 7 heavily progressing** for classic/arcade games.
 
 ### QA
-**Pass 3 in progress.** Target: KCalendar. Rapidly processing queue — 7 apps fixed in 24h. ✅
+**Pass 4 in progress.** Processed nearly 50 apps recently. ✅
 
 ### Feature Expander
-Targeting **KAudio**. Blazing fast on Gemini 3.7 Flash — 12 apps expanded in 24h with deep, meaningful features (encryption suites, statistics engines, convolution filters). ✅
+Processing the suite rapidly. Blazing fast on Gemini 3.7 Flash. ✅
 
 ### Creator
-**31 apps completed.** KStellar at Phase 11. ⚠️ No progress since Aug 28 — Prompt A dispatcher may need restart.
+**31 apps completed.** KStellar at Phase 11. ⚠️ No progress since Aug 28.
 
 ### Usability
-⚠️ Stalled since Aug 28 — Prompt A dispatcher may need restart. Progress log at 196 lines.
+Actively fixing native layouts and web optimizations. ✅
 
 ## Milestones
 
@@ -65,22 +65,22 @@ Targeting **KAudio**. Blazing fast on Gemini 3.7 Flash — 12 apps expanded in 2
 6. **ALL 17 Classic Games Balance Passes COMPLETE** — Aug 12. ✅ 🎯
 7. **80+ apps milestone reached** — Aug 1. 🎯
 8. **85 apps milestone reached** — Aug 13. 🎯
-9. **🎯 90 APPS MILESTONE REACHED** — 91 apps — Aug 26. 🎯
+9. **90 APPS MILESTONE REACHED** — (Count was corrected to 85, working towards 90 again)
 10. **39 games** — Aug 27. 🎯
 11. **Model migration to Gemini 3.7 Flash** — Aug 30. ✅
 12. **ALL 6 WORKER AGENTS ALIVE** — Aug 30. ✅
-13. **KiloOS v0.3.104** — Aug 30. ✅
+13. **KiloOS v0.3.105** — Sep 1. ✅
 14. **KRogue reaches Loop 11** — Aug 31. ✅
 15. **7 deep games reach Loop 10** — Aug 31. ✅
-16. **Feature Expander: 12 apps expanded in 24h** — record throughput on 3.7 Flash — Aug 31. ✅
+16. **Graphics Loop 7 progressing for many titles** — Sep 1. ✅
 
 ### Active 🔄
-- Creator: KStellar Phase 11 (stalled — needs Prompt A dispatcher check).
-- QA: Pass 3, target KCalendar.
-- Feature Expander: Processing KAudio.
-- Game Content: Deep games Loop 10-11.
-- Graphics: Loop 7 (stalled — needs Prompt A dispatcher check).
-- Usability: Queue sweep (stalled — needs Prompt A dispatcher check).
+- Creator: KStellar Phase 11 (stalled).
+- QA: Pass 4.
+- Feature Expander: Sweeping bottom of queue.
+- Game Content: Deep games Loop 11-12.
+- Graphics: Loop 7.
+- Usability: Queue sweep.
 
 ### Upcoming 📋
 - **95 apps milestone** — 4 apps away (needs Creator restart).
