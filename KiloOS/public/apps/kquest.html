@@ -1545,7 +1545,10 @@
       ACHIEVEMENTS: 'ACHIEVEMENTS',
       TAVERN: 'TAVERN',
       FACTIONS: 'FACTIONS',
-      MOUNTS: 'MOUNTS'
+      MOUNTS: 'MOUNTS',
+      KINGDOM: 'KINGDOM',
+      ARMY_BATTLE: 'ARMY_BATTLE',
+      CASTLE_DEFENSE: 'CASTLE_DEFENSE'
     };
 
     let currentState = STATE.CHAR_CREATE;
@@ -1898,7 +1901,21 @@
       ngLevel: 0,
       achievements: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       faction: 'None',
-      mount: 'None'
+      mount: 'None',
+      kingdom: {
+        castleLevel: 1,
+        barracksLevel: 1,
+        treasury: 50,
+        morale: 80,
+        footmen: 4,
+        archers: 2,
+        mages: 1,
+        knights: 0,
+        warTrophies: 0,
+        armyWins: 0,
+        defenseWave: 1,
+        defenseBestWave: 0
+      }
     };
 
     // Current Enemy in Combat
@@ -2334,6 +2351,7 @@
       if (state === STATE.CHAR_CREATE) {
         renderCharCreate();
       } else if (state === STATE.TOWN) {
+        collectKingdomTaxes();
         renderTown();
       } else if (state === STATE.TAVERN) {
         renderTavern();
@@ -2361,6 +2379,16 @@
         renderSaveLoad();
       } else if (state === STATE.ACHIEVEMENTS) {
         renderAchievements();
+      } else if (state === STATE.FACTIONS) {
+        renderFactions();
+      } else if (state === STATE.MOUNTS) {
+        renderMounts();
+      } else if (state === STATE.KINGDOM) {
+        renderKingdom();
+      } else if (state === STATE.ARMY_BATTLE) {
+        renderArmyBattle();
+      } else if (state === STATE.CASTLE_DEFENSE) {
+        renderCastleDefense();
       }
       updateUI();
     }
@@ -2668,9 +2696,9 @@
         <button class="btn btn-craft" onclick="setGameState(STATE.CRAFTING)">⚒️ Alchemy & Forge</button>
         <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MERCENARY)">🛡️ Mercenary Guild</button>
         <button class="btn" style="background:#a6e3a1; color:#11111b;" onclick="setGameState(STATE.SAVE_LOAD)">💾 Save / Load</button>
-        <button class="btn" style="background:#fab387; color:#11111b;" onclick="setGameState(STATE.ACHIEVEMENTS)">🏆 Achievements</button>
         <button class="btn" style="background:#f38ba8; color:#11111b;" onclick="setGameState(STATE.FACTIONS)">🚩 Factions</button>
         <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MOUNTS)">🐎 Mounts</button>
+        <button class="btn" style="background:linear-gradient(135deg, #ffd700, #fab387); color:#11111b; font-weight:700;" onclick="setGameState(STATE.KINGDOM)">👑 Kingdom & War</button>
         ${(player.ngLevel || 0) > 0 ? `<button class="btn" style="background:linear-gradient(135deg, #f5c2e7, #cba6f7); color:#11111b; font-weight:700;" onclick="enterNewGamePlus()">✨ New Game+ (NG+ ${(player.ngLevel || 0) + 1})</button>` : ''}
       `;
     }
@@ -3489,6 +3517,528 @@
         <p style="margin-top:10px; color:#89b4fa;">Current: ${player.mount}</p>
       `;
       document.getElementById('controls-panel').innerHTML = `<button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>`;
+    }
+
+    // --- PHASE 13: KINGDOM MANAGEMENT, ARMY BATTLES & CASTLE DEFENSE ---
+    const WAR_ARMIES = [
+      { id: 0, name: 'Goblin Raider Warband', hp: 180, str: 22, def: 8, gold: 150, trophies: 2, icon: '👺', desc: 'A raucous swarm of goblin pillagers and wolf-riders.' },
+      { id: 1, name: 'Undead Scourge Legion', hp: 280, str: 32, def: 14, gold: 280, trophies: 4, icon: '💀', desc: 'Armored skeleton phalanxes led by dread necromancers.' },
+      { id: 2, name: 'Dragonkin Vanguard Army', hp: 420, str: 46, def: 20, gold: 480, trophies: 6, icon: '🐲', desc: 'Fire-breathing draconic shock troopers and wyvern lancers.' },
+      { id: 3, name: 'Abyssal Shadow Armada', hp: 600, str: 60, def: 28, gold: 800, trophies: 10, icon: '🌌', desc: 'Eldritch void titans marching under an eclipse.' }
+    ];
+    let currentWarArmy = null;
+    let warShieldWallTurns = 0;
+
+    const SIEGE_WAVES = [
+      { id: 0, name: 'Goblin Battering Ram', hp: 160, siegePower: 20, icon: '🔨', desc: 'Spiked iron-capped log pushed by frenzied goblins.' },
+      { id: 1, name: 'Orcish Sapper Catapult', hp: 240, siegePower: 30, icon: '💣', desc: 'Heavy war engine hurling incendiary boulder shot.' },
+      { id: 2, name: 'Bone Siege Titan', hp: 360, siegePower: 45, icon: '☠️', desc: 'Monolithic undead giant swinging an iron wrecking ball.' },
+      { id: 3, name: 'Infernal Siege Drake', hp: 500, siegePower: 60, icon: '🐲', desc: 'Ancient fire drake breathing concentrated molten magma at the gates.' },
+      { id: 4, name: 'Abyssal Dread Behemoth', hp: 680, siegePower: 80, icon: '🌌', desc: 'Towering void leviathan crushing stone fortifications underfoot.' }
+    ];
+    let currentSiegeWave = null;
+    let castleGateHp = 200;
+    let castleGateMaxHp = 200;
+    let castleBarrierTurns = 0;
+
+    function collectKingdomTaxes() {
+      if (!player.kingdom) return;
+      const tax = player.kingdom.castleLevel * 15 + Math.floor(player.kingdom.morale / 10);
+      player.gold += tax;
+      logMsg(`👑 Collected +${tax} Gold in Royal Realm Taxes!`, 'town');
+      updateUI();
+    }
+
+    function upgradeCastle() {
+      const k = player.kingdom;
+      if (k.castleLevel >= 5) return logMsg("Castle Fortifications are already at maximum level 5!", "warning");
+      const cost = k.castleLevel * 100;
+      const ironCost = k.castleLevel;
+      if (player.gold < cost || player.materials.iron < ironCost) {
+        return logMsg(`Need ${cost} Gold and ${ironCost} Iron Scrap to upgrade Castle Fortifications!`, "warning");
+      }
+      player.gold -= cost;
+      player.materials.iron -= ironCost;
+      k.castleLevel++;
+      sfxSpellCast();
+      logMsg(`🏰 Upgraded Castle to Level ${k.castleLevel}! Gate durability & floor taxes increased!`, "system");
+      updateUI();
+      renderKingdom();
+    }
+
+    function upgradeBarracks() {
+      const k = player.kingdom;
+      if (k.barracksLevel >= 5) return logMsg("Barracks are already at maximum level 5!", "warning");
+      const cost = k.barracksLevel * 80;
+      const ironCost = k.barracksLevel;
+      if (player.gold < cost || player.materials.iron < ironCost) {
+        return logMsg(`Need ${cost} Gold and ${ironCost} Iron Scrap to upgrade Barracks!`, "warning");
+      }
+      player.gold -= cost;
+      player.materials.iron -= ironCost;
+      k.barracksLevel++;
+      sfxSpellCast();
+      logMsg(`⚔️ Upgraded Barracks to Level ${k.barracksLevel}! Troop training capacity increased to ${k.barracksLevel * 10} per unit type!`, "system");
+      updateUI();
+      renderKingdom();
+    }
+
+    function recruitUnit(type) {
+      const k = player.kingdom;
+      const maxCap = k.barracksLevel * 10;
+      if (type === 'footman') {
+        if (k.footmen >= maxCap) return logMsg("Footmen barracks capacity reached! Upgrade Barracks to train more.", "warning");
+        if (player.gold < 15 || player.materials.iron < 1) return logMsg("Need 15 Gold and 1 Iron Scrap for 2x Footmen!", "warning");
+        player.gold -= 15; player.materials.iron -= 1;
+        k.footmen += 2;
+        logMsg("🛡️ Trained 2x Royal Footmen (+Shield Wall power)!", "system");
+      } else if (type === 'archer') {
+        if (k.archers >= maxCap) return logMsg("Archers barracks capacity reached! Upgrade Barracks to train more.", "warning");
+        if (player.gold < 25 || player.materials.iron < 1) return logMsg("Need 25 Gold and 1 Iron Scrap for 2x Archers!", "warning");
+        player.gold -= 25; player.materials.iron -= 1;
+        k.archers += 2;
+        logMsg("🏹 Trained 2x Royal Archers (+Arrow Volley piercing DPS)!", "system");
+      } else if (type === 'mage') {
+        if (k.mages >= maxCap) return logMsg("Battlemages capacity reached! Upgrade Barracks to train more.", "warning");
+        if (player.gold < 40 || player.materials.dust < 1) return logMsg("Need 40 Gold and 1 Arcane Dust for 1x Battlemage!", "warning");
+        player.gold -= 40; player.materials.dust -= 1;
+        k.mages += 1;
+        logMsg("🔮 Trained 1x Arcane Battlemage (+Meteor Storm AoE & Arcane Barrier)!", "system");
+      } else if (type === 'knight') {
+        if (k.knights >= maxCap) return logMsg("Knights capacity reached! Upgrade Barracks to train more.", "warning");
+        if (player.gold < 60 || player.materials.core < 1) return logMsg("Need 60 Gold and 1 Elemental Core for 1x Siege Knight!", "warning");
+        player.gold -= 60; player.materials.core -= 1;
+        k.knights += 1;
+        logMsg("🐎 Trained 1x Heavy Siege Knight (+Knight Charge & Garrison Sally)!", "system");
+      }
+      sfxItemPickup();
+      updateUI();
+      renderKingdom();
+    }
+
+    function renderKingdom() {
+      const k = player.kingdom;
+      const armyHp = (k.footmen * 20) + (k.archers * 15) + (k.mages * 12) + (k.knights * 30) + 100;
+      const maxUnits = k.barracksLevel * 10;
+      const taxes = k.castleLevel * 15 + Math.floor(k.morale / 10);
+
+      document.getElementById('location-title').textContent = '👑 Realm Stronghold & Kingdom War Room';
+      document.getElementById('location-desc').textContent = 'Manage kingdom infrastructure, recruit military units, launch tactical war campaigns against hostile armies, and defend against siege assaults!';
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div style="background:#181825; padding:12px; border-radius:8px; border:1px solid #fab387; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <h3 style="color:#f9e2af; font-size:1.1rem; margin-bottom:4px;">🏰 Kingdom Fortress: Level ${k.castleLevel} / 5</h3>
+              <div style="font-size:0.85rem; color:#bac2de;">Gate Max HP: <span style="color:#a6e3a1; font-weight:700;">${150 + k.castleLevel * 50} HP</span> | Barracks: <span style="color:#89b4fa; font-weight:700;">Level ${k.barracksLevel}</span> (Cap: ${maxUnits}/unit)</div>
+            </div>
+            <div>
+              <div style="font-size:0.85rem; color:#bac2de;">Realm Morale: <span style="color:#f38ba8; font-weight:700;">${k.morale}%</span> | Floor Taxes: <span style="color:#f9e2af; font-weight:700;">+${taxes} Gold</span></div>
+              <div style="font-size:0.85rem; color:#bac2de;">War Trophies: <span style="color:#fab387; font-weight:700;">🏆 ${k.warTrophies}</span> | Victories: <span style="color:#cba6f7; font-weight:700;">${k.armyWins}</span> | Defense Wave: <span style="color:#a6e3a1; font-weight:700;">Wave ${k.defenseWave}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stronghold Infrastructure Upgrades -->
+        <h4 style="color:#cba6f7; font-size:0.95rem; margin-bottom:8px;">🏛️ Stronghold Infrastructure</h4>
+        <div class="craft-grid" style="margin-bottom:12px;">
+          <div class="craft-card" onclick="upgradeCastle()">
+            <h3>🏰 Upgrade Castle (Lvl ${k.castleLevel})</h3>
+            <p>Increases Gate HP (+50) and floor tax income (+15G).</p>
+            <div style="font-size:0.75rem; color:#fab387; margin-top:4px;">${k.castleLevel < 5 ? `Cost: ${k.castleLevel * 100} Gold + ${k.castleLevel} Iron` : 'MAX LEVEL'}</div>
+          </div>
+          <div class="craft-card" onclick="upgradeBarracks()">
+            <h3>⚔️ Upgrade Barracks (Lvl ${k.barracksLevel})</h3>
+            <p>Expands unit recruitment capacity (+10 cap for all troops).</p>
+            <div style="font-size:0.75rem; color:#fab387; margin-top:4px;">${k.barracksLevel < 5 ? `Cost: ${k.barracksLevel * 80} Gold + ${k.barracksLevel} Iron` : 'MAX LEVEL'}</div>
+          </div>
+        </div>
+
+        <!-- Troop Recruitment Roster -->
+        <h4 style="color:#89b4fa; font-size:0.95rem; margin-bottom:8px;">🛡️ Royal Army Recruitment (Current Army HP: ${armyHp})</h4>
+        <div class="craft-grid">
+          <div class="craft-card" onclick="recruitUnit('footman')">
+            <h3>🛡️ Footman (x${k.footmen}/${maxUnits})</h3>
+            <p>Frontline infantry. Enables Shield Wall damage absorption and counterattacks.</p>
+            <div style="font-size:0.75rem; color:#fab387; margin-top:4px;">Cost: 15 Gold + 1 Iron Scrap (Recruits 2)</div>
+          </div>
+          <div class="craft-card" onclick="recruitUnit('archer')">
+            <h3>🏹 Royal Archer (x${k.archers}/${maxUnits})</h3>
+            <p>Ranged marksmen. Unleashes piercing Arrow Volleys across enemy lines.</p>
+            <div style="font-size:0.75rem; color:#fab387; margin-top:4px;">Cost: 25 Gold + 1 Iron Scrap (Recruits 2)</div>
+          </div>
+          <div class="craft-card" onclick="recruitUnit('mage')">
+            <h3>🔮 Battlemage (x${k.mages}/${maxUnits})</h3>
+            <p>Elemental sorcerer. Casts Arcane Meteor Storms & defensive barriers.</p>
+            <div style="font-size:0.75rem; color:#fab387; margin-top:4px;">Cost: 40 Gold + 1 Arcane Dust (Recruits 1)</div>
+          </div>
+          <div class="craft-card" onclick="recruitUnit('knight')">
+            <h3>🐎 Siege Knight (x${k.knights}/${maxUnits})</h3>
+            <p>Armored vanguard. Performs devastating heavy Knight Charges.</p>
+            <div style="font-size:0.75rem; color:#fab387; margin-top:4px;">Cost: 60 Gold + 1 Elemental Core (Recruits 1)</div>
+          </div>
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-danger" onclick="startArmyBattle()">⚔️ Launch War Campaign</button>
+        <button class="btn" style="background:#fab387; color:#11111b; font-weight:700;" onclick="startCastleDefense()">🛡️ Defend Castle Gate (Wave ${k.defenseWave})</button>
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+      `;
+    }
+
+    // --- STRATEGIC ARMY BATTLE SYSTEM ---
+    function startArmyBattle(armyIdx = null) {
+      const k = player.kingdom;
+      const totalUnits = k.footmen + k.archers + k.mages + k.knights;
+      if (totalUnits <= 0) return logMsg("You need troops in your army before marching to war! Recruit at Stronghold.", "warning");
+      
+      const idx = (armyIdx !== null) ? armyIdx : (k.armyWins % WAR_ARMIES.length);
+      const template = WAR_ARMIES[idx];
+      currentWarArmy = {
+        ...template,
+        currentHp: template.hp,
+        maxHp: template.hp
+      };
+      warShieldWallTurns = 0;
+      logMsg(`⚔️ WAR COMMENCED! Marching against ${currentWarArmy.icon} ${currentWarArmy.name}!`, 'combat');
+      setGameState(STATE.ARMY_BATTLE);
+    }
+
+    function renderArmyBattle() {
+      if (!currentWarArmy) return setGameState(STATE.KINGDOM);
+      const k = player.kingdom;
+      const armyHp = (k.footmen * 20) + (k.archers * 15) + (k.mages * 12) + (k.knights * 30) + 100;
+      const enemyPct = Math.max(0, Math.min(100, (currentWarArmy.currentHp / currentWarArmy.maxHp) * 100));
+
+      document.getElementById('location-title').textContent = `⚔️ Strategic Field Warfare: vs ${currentWarArmy.name}`;
+      document.getElementById('location-desc').textContent = currentWarArmy.desc;
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div style="background:#181825; padding:12px; border-radius:8px; border:1px solid #f38ba8; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <strong style="color:#f38ba8; font-size:1.1rem;">${currentWarArmy.icon} ${currentWarArmy.name}</strong>
+            <span style="color:#fab387; font-weight:700;">HP: ${currentWarArmy.currentHp} / ${currentWarArmy.maxHp}</span>
+          </div>
+          <div style="height:14px; background:#11111b; border-radius:7px; overflow:hidden; border:1px solid #313244;">
+            <div style="height:100%; width:${enemyPct}%; background:linear-gradient(90deg, #f38ba8, #eba0ac); transition:width 0.3s;"></div>
+          </div>
+          <div style="display:flex; gap:16px; margin-top:8px; font-size:0.85rem; color:#bac2de;">
+            <span>Attack Power: ⚔️ ${currentWarArmy.str}</span>
+            <span>Armor: 🛡️ ${currentWarArmy.def}</span>
+            <span>Victory Spoils: 🪙 ${currentWarArmy.gold}G | 🏆 ${currentWarArmy.trophies} Tr</span>
+          </div>
+        </div>
+
+        <div style="background:#1e1e2e; padding:12px; border-radius:8px; border:1px solid #89b4fa;">
+          <h4 style="color:#89b4fa; margin-bottom:6px;">👑 Royal Army Battlegroup</h4>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:0.9rem; margin-bottom:6px;">
+            <span>🛡️ Footmen: <strong style="color:#f9e2af;">${k.footmen}</strong></span>
+            <span>🏹 Archers: <strong style="color:#a6e3a1;">${k.archers}</strong></span>
+            <span>🔮 Battlemages: <strong style="color:#cba6f7;">${k.mages}</strong></span>
+            <span>🐎 Knights: <strong style="color:#89b4fa;">${k.knights}</strong></span>
+            <span>Army Health: <strong style="color:#a6e3a1;">${armyHp} HP</strong></span>
+          </div>
+          <div style="font-size:0.8rem; color:#bac2de;">
+            Tactical Stance: <span style="color:${warShieldWallTurns > 0 ? '#a6e3a1' : '#f9e2af'}; font-weight:700;">${warShieldWallTurns > 0 ? 'SHIELD WALL ACTIVE (50% Mitigation)' : 'Standard Attack Formation'}</span>
+          </div>
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="armyShieldWall()">🛡️ Shield Wall Stance</button>
+        <button class="btn" style="background:#a6e3a1; color:#11111b; font-weight:700;" onclick="armyArrowVolley()">🏹 Arrow Volley</button>
+        <button class="btn" style="background:#cba6f7; color:#11111b; font-weight:700;" onclick="armyArcaneMeteor()">🔮 Arcane Meteor</button>
+        <button class="btn" style="background:#89b4fa; color:#11111b; font-weight:700;" onclick="armyKnightCharge()">🐎 Knight Charge</button>
+        <button class="btn" style="background:#ffd700; color:#11111b; font-weight:700;" onclick="armyHeroRally()">👑 Hero Battle Rally</button>
+        <button class="btn btn-danger" onclick="armyRetreat()">🏳️ Tactical Retreat</button>
+      `;
+    }
+
+    function armyShieldWall() {
+      warShieldWallTurns = 1;
+      const k = player.kingdom;
+      const counterDmg = k.footmen * 4 + 6;
+      currentWarArmy.currentHp -= counterDmg;
+      sfxCombatHit();
+      logMsg(`🛡️ Footmen locked shield wall! Speared enemy frontline for ${counterDmg} damage!`, 'combat');
+      if (currentWarArmy.currentHp <= 0) return armyVictory();
+      armyEnemyTurn();
+    }
+
+    function armyArrowVolley() {
+      const k = player.kingdom;
+      const vDmg = k.archers * 9 + Math.floor(player.agi / 2) + 5;
+      currentWarArmy.currentHp -= vDmg;
+      sfxCombatHit();
+      logMsg(`🏹 Royal Archers unleashed a high-angle arrow storm dealing ${vDmg} piercing damage!`, 'combat');
+      if (currentWarArmy.currentHp <= 0) return armyVictory();
+      armyEnemyTurn();
+    }
+
+    function armyArcaneMeteor() {
+      const k = player.kingdom;
+      const mDmg = k.mages * 16 + (player.int * 2) + 10;
+      currentWarArmy.currentHp -= mDmg;
+      sfxSpellCast();
+      logMsg(`🔮 Battlemages summoned an Arcane Meteor Storm, shattering enemy ranks for ${mDmg} magic damage!`, 'spell');
+      if (currentWarArmy.currentHp <= 0) return armyVictory();
+      armyEnemyTurn();
+    }
+
+    function armyKnightCharge() {
+      const k = player.kingdom;
+      const kDmg = k.knights * 25 + (player.str * 2) + 8;
+      currentWarArmy.currentHp -= kDmg;
+      sfxCombatHit();
+      logMsg(`🐎 Heavy Knights thundered forward, crushing the enemy line for ${kDmg} heavy damage!`, 'combat');
+      if (currentWarArmy.currentHp <= 0) return armyVictory();
+      armyEnemyTurn();
+    }
+
+    function armyHeroRally() {
+      const hDmg = player.str * 2 + player.weapon.bonusStr + 12;
+      currentWarArmy.currentHp -= hDmg;
+      player.kingdom.morale = Math.min(100, player.kingdom.morale + 5);
+      sfxSpellCast();
+      logMsg(`👑 Hero led a glorious charge for ${hDmg} damage and rallied Army Morale (+5%)!`, 'system');
+      if (currentWarArmy.currentHp <= 0) return armyVictory();
+      armyEnemyTurn();
+    }
+
+    function armyEnemyTurn() {
+      if (currentWarArmy.currentHp <= 0) return;
+      const k = player.kingdom;
+      let dmg = currentWarArmy.str;
+      if (warShieldWallTurns > 0) {
+        warShieldWallTurns--;
+        dmg = Math.floor(dmg / 2);
+        logMsg("🛡️ Shield Wall absorbed 50% of the enemy army assault!", "system");
+      }
+
+      let casualties = Math.max(1, Math.floor(dmg / 15));
+      if (k.footmen > 0) {
+        const lost = Math.min(k.footmen, casualties);
+        k.footmen -= lost;
+        casualties -= lost;
+        logMsg(`⚠️ Frontline clash! Lost ${lost} Footmen.`, 'warning');
+      }
+      if (casualties > 0 && k.archers > 0) {
+        const lost = Math.min(k.archers, casualties);
+        k.archers -= lost;
+        casualties -= lost;
+        logMsg(`⚠️ Enemy archer fire! Lost ${lost} Archers.`, 'warning');
+      }
+      if (casualties > 0 && k.mages > 0) {
+        const lost = Math.min(k.mages, casualties);
+        k.mages -= lost;
+        casualties -= lost;
+        logMsg(`⚠️ Enemy flanking assault! Lost ${lost} Battlemages.`, 'warning');
+      }
+
+      const totalRemaining = k.footmen + k.archers + k.mages + k.knights;
+      if (totalRemaining <= 0) {
+        sfxDeath();
+        logMsg("💀 DEFEAT! Royal Army routed! Forced into retreat.", "warning");
+        k.morale = Math.max(10, k.morale - 15);
+        k.footmen = 2; // survival remnants
+        setGameState(STATE.KINGDOM);
+        return;
+      }
+
+      updateUI();
+      renderArmyBattle();
+    }
+
+    function armyVictory() {
+      const k = player.kingdom;
+      player.gold += currentWarArmy.gold;
+      k.warTrophies += currentWarArmy.trophies;
+      k.armyWins++;
+      k.morale = Math.min(100, k.morale + 15);
+      player.materials.dust += 2;
+      player.materials.core += 1;
+      sfxLevelUp();
+      logMsg(`🏆 TOTAL ARMY VICTORY! Smashed ${currentWarArmy.name}! +${currentWarArmy.gold} Gold, +${currentWarArmy.trophies} War Trophies, +2 Dust, +1 Core, +15 Morale!`, 'system');
+      currentWarArmy = null;
+      updateUI();
+      setGameState(STATE.KINGDOM);
+    }
+
+    function armyRetreat() {
+      logMsg("🏳️ Sounded tactical retreat back to Stronghold.", "system");
+      currentWarArmy = null;
+      setGameState(STATE.KINGDOM);
+    }
+
+    // --- CASTLE DEFENSE / SIEGE MODE ---
+    function startCastleDefense(waveIdx = null) {
+      const k = player.kingdom;
+      const wIdx = (waveIdx !== null) ? waveIdx : ((k.defenseWave - 1) % SIEGE_WAVES.length);
+      const template = SIEGE_WAVES[wIdx];
+      currentSiegeWave = {
+        ...template,
+        currentHp: template.hp,
+        maxHp: template.hp,
+        waveNumber: wIdx + 1
+      };
+      castleGateMaxHp = 150 + k.castleLevel * 50;
+      castleGateHp = castleGateMaxHp;
+      castleBarrierTurns = 0;
+      logMsg(`🚨 SIEGE IMMINENT! Wave ${currentSiegeWave.waveNumber}: ${currentSiegeWave.icon} ${currentSiegeWave.name} assault on Castle Gates!`, 'combat');
+      setGameState(STATE.CASTLE_DEFENSE);
+    }
+
+    function renderCastleDefense() {
+      if (!currentSiegeWave) return setGameState(STATE.KINGDOM);
+      const k = player.kingdom;
+      const gatePct = Math.max(0, Math.min(100, (castleGateHp / castleGateMaxHp) * 100));
+      const bossPct = Math.max(0, Math.min(100, (currentSiegeWave.currentHp / currentSiegeWave.maxHp) * 100));
+
+      document.getElementById('location-title').textContent = `🛡️ Castle Gate Defense — Wave ${currentSiegeWave.waveNumber}: ${currentSiegeWave.name}`;
+      document.getElementById('location-desc').textContent = currentSiegeWave.desc;
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <!-- Gate Health Meter -->
+        <div style="background:#181825; padding:12px; border-radius:8px; border:1px solid #89b4fa; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <strong style="color:#89b4fa; font-size:1.05rem;">🏰 Castle Stronghold Gate Integrity</strong>
+            <span style="color:#a6e3a1; font-weight:700;">${castleGateHp} / ${castleGateMaxHp} HP</span>
+          </div>
+          <div style="height:14px; background:#11111b; border-radius:7px; overflow:hidden; border:1px solid #313244;">
+            <div style="height:100%; width:${gatePct}%; background:linear-gradient(90deg, #a6e3a1, #94e2d5); transition:width 0.3s;"></div>
+          </div>
+          <div style="font-size:0.8rem; color:#bac2de; margin-top:6px;">
+            Arcane Barrier: <span style="color:${castleBarrierTurns > 0 ? '#cba6f7' : '#6c7086'}; font-weight:700;">${castleBarrierTurns > 0 ? 'ACTIVE (100% Impact Deflection)' : 'Inactive'}</span>
+          </div>
+        </div>
+
+        <!-- Attacking Siege Engine -->
+        <div style="background:#1e1e2e; padding:12px; border-radius:8px; border:1px solid #f38ba8;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <strong style="color:#f38ba8; font-size:1.05rem;">${currentSiegeWave.icon} ${currentSiegeWave.name}</strong>
+            <span style="color:#fab387; font-weight:700;">HP: ${currentSiegeWave.currentHp} / ${currentSiegeWave.maxHp}</span>
+          </div>
+          <div style="height:14px; background:#11111b; border-radius:7px; overflow:hidden; border:1px solid #313244;">
+            <div style="height:100%; width:${bossPct}%; background:linear-gradient(90deg, #f38ba8, #eba0ac); transition:width 0.3s;"></div>
+          </div>
+          <div style="margin-top:6px; font-size:0.85rem; color:#bac2de;">
+            Siege Strike Power: <span style="color:#f38ba8; font-weight:700;">💥 ${currentSiegeWave.siegePower} Gate Damage/Turn</span>
+          </div>
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="defenseBallista()">🏹 Fire Twin Ballistas</button>
+        <button class="btn" style="background:#fab387; color:#11111b; font-weight:700;" onclick="defenseBoilingOil()">🔥 Pour Boiling Pitch</button>
+        <button class="btn" style="background:#a6e3a1; color:#11111b; font-weight:700;" onclick="defenseGarrisonSally()">⚔️ Garrison Sally</button>
+        <button class="btn" style="background:#cba6f7; color:#11111b; font-weight:700;" onclick="defenseArcaneBarrier()">🔮 Arcane Barrier</button>
+        <button class="btn" style="background:#ffd700; color:#11111b; font-weight:700;" onclick="defenseDuelCommander()">👑 Duel Commander</button>
+        <button class="btn btn-accent" onclick="defenseRepairGate()">🔨 Repair Gate (2 Iron)</button>
+      `;
+    }
+
+    function defenseBallista() {
+      const bDmg = 40 + player.kingdom.castleLevel * 12;
+      currentSiegeWave.currentHp -= bDmg;
+      sfxCombatHit();
+      logMsg(`🏹 Twin Heavy Ballistas hurled armor-shredding bolts for ${bDmg} structural damage!`, 'combat');
+      if (currentSiegeWave.currentHp <= 0) return siegeVictory();
+      siegeEnemyTurn();
+    }
+
+    function defenseBoilingOil() {
+      const oilDmg = 55 + player.kingdom.castleLevel * 10;
+      currentSiegeWave.currentHp -= oilDmg;
+      sfxSpellCast();
+      logMsg(`🔥 Boiling Pitch & Oil engulfed the siege forces for ${oilDmg} fire damage!`, 'spell');
+      if (currentSiegeWave.currentHp <= 0) return siegeVictory();
+      siegeEnemyTurn();
+    }
+
+    function defenseGarrisonSally() {
+      const k = player.kingdom;
+      const sallyDmg = k.footmen * 5 + k.knights * 15 + player.str;
+      currentSiegeWave.currentHp -= sallyDmg;
+      sfxCombatHit();
+      logMsg(`⚔️ Garrison Troops sallied from the side gate, clashing for ${sallyDmg} heavy damage!`, 'combat');
+      if (currentSiegeWave.currentHp <= 0) return siegeVictory();
+      siegeEnemyTurn();
+    }
+
+    function defenseArcaneBarrier() {
+      if (player.kingdom.mages <= 0) return logMsg("Need at least 1 Battlemage in garrison to cast Arcane Barrier!", "warning");
+      castleBarrierTurns = 2;
+      sfxSpellCast();
+      logMsg("🔮 Battlemages projected a shimmering Arcane Barrier over Castle Gates! (100% Impact Deflection)", "system");
+      siegeEnemyTurn();
+    }
+
+    function defenseDuelCommander() {
+      const dDmg = player.str * 3 + player.weapon.bonusStr * 2 + 15;
+      currentSiegeWave.currentHp -= dDmg;
+      sfxCombatHit();
+      logMsg(`👑 Hero sallied forth to duel the Siege Commander, landing a heroic blow for ${dDmg} damage!`, 'combat');
+      if (currentSiegeWave.currentHp <= 0) return siegeVictory();
+      siegeEnemyTurn();
+    }
+
+    function defenseRepairGate() {
+      if (player.materials.iron < 2) return logMsg("Need 2 Iron Scrap to repair the Castle Gate!", "warning");
+      player.materials.iron -= 2;
+      castleGateHp = Math.min(castleGateMaxHp, castleGateHp + 40);
+      sfxItemPickup();
+      logMsg("🔨 Consumed 2 Iron Scrap to reinforce and repair Gate (+40 HP)!", "system");
+      updateUI();
+      renderCastleDefense();
+    }
+
+    function siegeEnemyTurn() {
+      if (currentSiegeWave.currentHp <= 0) return;
+      if (castleBarrierTurns > 0) {
+        castleBarrierTurns--;
+        logMsg("🔮 Arcane Barrier completely deflected the siege weapon impact!", "system");
+      } else {
+        const dmg = currentSiegeWave.siegePower;
+        castleGateHp -= dmg;
+        sfxCombatHit();
+        logMsg(`💥 ${currentSiegeWave.name} rammed the gate dealing ${dmg} structural damage!`, 'warning');
+        if (castleGateHp <= 0) {
+          castleGateHp = 0;
+          sfxDeath();
+          logMsg("🚨 CASTLE GATE BREACHED! Enemy invaders overran the courtyard. Defense Failed!", "warning");
+          player.kingdom.morale = Math.max(10, player.kingdom.morale - 20);
+          currentSiegeWave = null;
+          setGameState(STATE.KINGDOM);
+          return;
+        }
+      }
+      updateUI();
+      renderCastleDefense();
+    }
+
+    function siegeVictory() {
+      const k = player.kingdom;
+      const goldReward = 200 + currentSiegeWave.waveNumber * 150;
+      const trophyReward = 3 + currentSiegeWave.waveNumber * 2;
+      player.gold += goldReward;
+      k.warTrophies += trophyReward;
+      k.defenseWave++;
+      if (k.defenseWave > k.defenseBestWave) k.defenseBestWave = k.defenseWave;
+      k.morale = Math.min(100, k.morale + 20);
+      player.materials.iron += 3;
+      player.materials.core += 1;
+      sfxLevelUp();
+      logMsg(`🏰 SIEGE CRUSHED! Destroyed ${currentSiegeWave.name}! Rewarded +${goldReward} Gold, +${trophyReward} Trophies, +3 Iron, +1 Core, +20 Morale!`, 'system');
+      currentSiegeWave = null;
+      updateUI();
+      setGameState(STATE.KINGDOM);
     }
 
     // --- PHASE 6: CRAFTING & EQUIPMENT ENCHANTING SYSTEM ---

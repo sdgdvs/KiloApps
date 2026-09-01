@@ -37,6 +37,9 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
 #define STATE_TOWN_PAGE2    20
 #define STATE_FACTIONS      21
 #define STATE_MOUNTS        22
+#define STATE_KINGDOM       23
+#define STATE_ARMY_BATTLE   24
+#define STATE_CASTLE_DEFENSE 25
 
 static int g_KeyBinds[6] = {'1', '2', '3', '4', '5', '6'};
 static char g_MatchReplays[50][128];
@@ -82,6 +85,48 @@ static const ArenaBossDef g_ArenaBosses[5] = {
     {"⚡ Storm Titan Sovereign (Boss Rush)", 360, 360, 45, 22, 1000, 800, 5},
     {"🌌 Void Overlord Malakor (Boss Rush)", 480, 480, 54, 26, 1600, 1200, 8}
 };
+
+typedef struct {
+    char name[48];
+    int hp, maxHp;
+    int str, def;
+    int rewardGold, rewardTrophies;
+} WarArmyDef;
+
+static const WarArmyDef g_WarArmies[4] = {
+    {"Goblin Raider Warband", 180, 180, 22, 8, 150, 2},
+    {"Undead Scourge Legion", 280, 280, 32, 14, 280, 4},
+    {"Dragonkin Vanguard Army", 420, 420, 46, 20, 480, 6},
+    {"Abyssal Shadow Armada", 600, 600, 60, 28, 800, 10}
+};
+static int g_CurrentWarArmyIdx = 0;
+static int g_WarEnemyHp = 0, g_WarEnemyMaxHp = 0;
+static int g_WarShieldWallTurns = 0;
+
+typedef struct {
+    char name[48];
+    int hp, maxHp;
+    int siegePower;
+} SiegeWaveDef;
+
+static const SiegeWaveDef g_SiegeWaves[5] = {
+    {"Goblin Battering Ram", 160, 160, 20},
+    {"Orcish Sapper Catapult", 240, 240, 30},
+    {"Bone Siege Titan", 360, 360, 45},
+    {"Infernal Siege Drake", 500, 500, 60},
+    {"Abyssal Dread Behemoth", 680, 680, 80}
+};
+static int g_CastleGateHp = 200, g_CastleGateMaxHp = 200;
+static int g_SiegeWaveIndex = 0;
+static int g_SiegeEnemyHp = 0, g_SiegeEnemyMaxHp = 0;
+static int g_CastleBarrierTurns = 0;
+
+void StartArmyBattle(int armyIdx);
+void ArmyEnemyTurn();
+void ArmyVictory();
+void StartCastleDefense(int waveIdx);
+void SiegeEnemyTurn();
+void SiegeVictory();
 
 typedef struct {
     int id;
@@ -401,6 +446,18 @@ typedef struct {
     Companion companion;
     int faction;
     int mount;
+    int castleLevel;
+    int barracksLevel;
+    int treasury;
+    int kingdomMorale;
+    int footmen;
+    int archers;
+    int mages;
+    int knights;
+    int warTrophies;
+    int armyWins;
+    int defenseWave;
+    int defenseBestWave;
     int poisonedTurns;
     int burningTurns;
     int frozenTurns;
@@ -994,6 +1051,20 @@ void InitHero(int classIdx) {
     player.questBossKilled = 0;
     player.companion.active = 0;
     player.companion.isDown = 0;
+    player.faction = 0;
+    player.mount = 0;
+    player.castleLevel = 1;
+    player.barracksLevel = 1;
+    player.treasury = 50;
+    player.kingdomMorale = 80;
+    player.footmen = 4;
+    player.archers = 2;
+    player.mages = 1;
+    player.knights = 0;
+    player.warTrophies = 0;
+    player.armyWins = 0;
+    player.defenseWave = 1;
+    player.defenseBestWave = 0;
     player.maxInvSlots = 10;
     player.invCount = 0;
     player.invFilter = 0;
@@ -1155,38 +1226,21 @@ void UpdateUI() {
         locStr = "Inventory Hub";
     } else if (gameState == STATE_SAVE_LOAD) {
         locStr = "Save/Load Manager";
-    } else if (gameState == STATE_FACTIONS || gameState == STATE_MOUNTS) {
-        gameState = STATE_TOWN_PAGE2;
-        SetupButtons();
-        UpdateUI();
+    } else if (gameState == STATE_FACTIONS) {
+        locStr = "Faction Encampments";
+    } else if (gameState == STATE_MOUNTS) {
+        locStr = "Town Stables";
+    } else if (gameState == STATE_KINGDOM) {
+        locStr = "Kingdom Stronghold";
+    } else if (gameState == STATE_ARMY_BATTLE) {
+        locStr = "War Campaign";
+    } else if (gameState == STATE_CASTLE_DEFENSE) {
+        locStr = "Castle Defense Siege";
     } else if (gameState == STATE_ACHIEVEMENTS) {
         locStr = "Achievements Hub";
-    } else if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
-    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
-    if (gameState == STATE_TAVERN) {
-        if (player.gold >= 5) {
-            player.gold -= 5;
-            player.hp += 15;
-            if (player.hp > player.maxHp) player.hp = player.maxHp;
-            LogMessage("🍺 Drank Ale. Recovered 15 HP.");
-            UpdateUI();
-        } else {
-            LogMessage("Not enough gold for Ale.");
-        }
-        return;
-    }
-    if (gameState == STATE_TAVERN) {
-        if (player.ironScrap >= 3) {
-            player.ironScrap -= 3;
-            player.gold += 60;
-            LogMessage("Side Quest Complete! Traded 3 Scrap for 60 Gold.");
-            UpdateUI();
-        } else {
-            LogMessage("Side Quest: 'Bring me 3 Iron Scrap, I'll pay 60 Gold.'");
-        }
-        return;
-    }
-    if (gameState == STATE_HELP) {
+    } else if (gameState == STATE_TAVERN) {
+        locStr = "Rusty Dragon Tavern";
+    } else if (gameState == STATE_HELP) {
         locStr = "Help & Lore Codex";
     }
 
@@ -1204,9 +1258,6 @@ void UpdateUI() {
         if (player.companion.active == 1) bonusDef += 4;
         if (player.companion.active == 2) bonusInt += 5;
     }
-
-    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
-    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
         wsprintfA(statusBuf, "=== COMPREHENSIVE HELP & LORE CODEX (Tab %d/4: %s) ===",
             g_HelpTab + 1,
@@ -1260,10 +1311,67 @@ void UpdateUI() {
             g_SelectedSaveSlot == 1 ? ">>" : "  ", slot2,
             g_SelectedSaveSlot == 2 ? ">>" : "  ", slot3,
             g_SelectedSaveSlot == 3 ? ">>" : "  ", slot4);
-    } else if (gameState == STATE_FACTIONS || gameState == STATE_MOUNTS) {
-        gameState = STATE_TOWN_PAGE2;
-        SetupButtons();
-        UpdateUI();
+    } else if (gameState == STATE_FACTIONS) {
+        const char* fName = player.faction == 1 ? "Vanguard (+5 STR)" : (player.faction == 2 ? "Arcane Order (+5 INT)" : (player.faction == 3 ? "Syndicate (+5 AGI)" : "None"));
+        wsprintfA(infoBuf,
+            "🚩 FACTION ENCAMPMENTS  |  Current Allegiance: %s\r\n"
+            "• [1] Vanguard: Heavy martial legion granting +5 Permanent Strength\r\n"
+            "• [2] Arcane Order: Ancient mages council granting +5 Permanent Intelligence\r\n"
+            "• [3] Syndicate: Shadow rogue brotherhood granting +5 Permanent Agility\r\n"
+            "Choose a faction to claim your allegiance & bonuses!", fName);
+    } else if (gameState == STATE_MOUNTS) {
+        const char* mName = player.mount == 1 ? "Royal Steed (+20 HP)" : (player.mount == 2 ? "Dire Wolf (+10 HP, +10 AGI)" : (player.mount == 3 ? "Ancient Drake (+30 HP, +10 STR)" : "None"));
+        wsprintfA(infoBuf,
+            "🐎 OAKHAVEN STABLES & BEASTMASTER  |  Current Mount: %s\r\n"
+            "• [1] Royal Steed (100G): Sturdy warhorse providing +20 Max Health\r\n"
+            "• [2] Dire Wolf (200G): Fierce predator providing +10 Max Health and +10 Agility\r\n"
+            "• [3] Ancient Drake (500G): Mythic winged beast providing +30 Max Health and +10 Strength\r\n"
+            "Mounts accompany you into battle and amplify your combat might!", mName);
+    } else if (gameState == STATE_KINGDOM) {
+        int armyHp = (player.footmen * 20) + (player.archers * 15) + (player.mages * 12) + (player.knights * 30) + 100;
+        int maxUnits = player.barracksLevel * 10;
+        wsprintfA(infoBuf,
+            "👑 REALM OVERVIEW & KINGDOM STRONGHOLD\r\n"
+            "• Stronghold: Castle Lvl %d (Gate HP: %d) | Barracks Lvl %d (Unit Cap: %d/type) | Morale: %d%%\r\n"
+            "• Royal Army: 🛡️ Footmen: %d | 🏹 Archers: %d | 🔮 Mages: %d | 🐎 Knights: %d (Total HP: %d)\r\n"
+            "• War Record: Victories: %d | 🏆 War Trophies: %d | Defense Wave: %d (Best: %d)\r\n"
+            "• Realm Taxes: Generates +%d Gold per dungeon floor explored!\r\n"
+            "[1] Upgrade Castle  |  [2] Upgrade Barracks  |  [3] Recruit Units  |  [4] War Campaign  |  [5] Castle Defense",
+            player.castleLevel, 150 + player.castleLevel * 50, player.barracksLevel, maxUnits, player.kingdomMorale,
+            player.footmen, player.archers, player.mages, player.knights, armyHp,
+            player.armyWins, player.warTrophies, player.defenseWave, player.defenseBestWave,
+            player.castleLevel * 15 + (player.kingdomMorale / 10));
+    } else if (gameState == STATE_ARMY_BATTLE) {
+        const WarArmyDef* a = &g_WarArmies[g_CurrentWarArmyIdx];
+        int armyHp = (player.footmen * 20) + (player.archers * 15) + (player.mages * 12) + (player.knights * 30) + 100;
+        wsprintfA(infoBuf,
+            "⚔️ STRATEGIC WAR CAMPAIGN — %s\r\n"
+            "• Invader Army: %s (HP: %d/%d, STR: %d, DEF: %d)\r\n"
+            "• Player Army HP: %d | Units: %d Footmen, %d Archers, %d Mages, %d Knights\r\n"
+            "• Tactical Stance: %s\r\n"
+            "[1] 🛡️ Shield Wall  [2] 🏹 Arrow Volley  [3] 🔮 Arcane Meteor  [4] 🐎 Knight Charge  [5] 👑 Hero Rally  [6] 🏳️ Retreat",
+            a->name, a->name, g_WarEnemyHp, g_WarEnemyMaxHp, a->str, a->def,
+            armyHp, player.footmen, player.archers, player.mages, player.knights,
+            g_WarShieldWallTurns > 0 ? "SHIELD WALL ACTIVE (50% Mitigation)" : "Standard Formation");
+    } else if (gameState == STATE_CASTLE_DEFENSE) {
+        const SiegeWaveDef* s = &g_SiegeWaves[g_SiegeWaveIndex];
+        wsprintfA(infoBuf,
+            "🛡️ CASTLE DEFENSE — SIEGE WAVE %d / 5: %s\r\n"
+            "• Castle Gate HP: %d / %d  |  Barrier: %s\r\n"
+            "• Siege Threat: %s (HP: %d / %d, Siege Power: %d Dmg/Turn)\r\n"
+            "• Garrison Units: %d Footmen, %d Knights, %d Mages ready on battlements\r\n"
+            "[1] 🏹 Ballista  [2] 🔥 Boiling Oil  [3] ⚔️ Garrison Sally  [4] 🔮 Arcane Barrier  [5] 👑 Duel Boss  [6] 🔨 Repair Gate",
+            g_SiegeWaveIndex + 1, s->name,
+            g_CastleGateHp, g_CastleGateMaxHp, g_CastleBarrierTurns > 0 ? "ACTIVE (100% Ward)" : "Inactive",
+            s->name, g_SiegeEnemyHp, g_SiegeEnemyMaxHp, s->siegePower,
+            player.footmen, player.knights, player.mages);
+    } else if (gameState == STATE_TAVERN) {
+        wsprintfA(infoBuf,
+            "🍻 RUSTY DRAGON TAVERN & INN\r\n"
+            "• Barkeep: 'Rest your bones, hero! The Spire grows more treacherous with every descent.'\r\n"
+            "• Side Quest: 'Bring 3 Iron Scrap, I'll pay 60 Gold.' (Current Scrap: %d)\r\n"
+            "• [1] Talk to Barkeep  |  [2] Listen to Rumors  |  [3] Drink Ale (5G, +20 HP)  |  [4] Turn in Scrap  |  [5] Back",
+            player.ironScrap);
     } else if (gameState == STATE_ACHIEVEMENTS) {
         int count = 0;
         for (int i = 0; i < 10; i++) if (g_Achievements[i]) count++;
@@ -1491,9 +1599,9 @@ void SetupButtons() {
         case STATE_TOWN_PAGE2:
             SetWindowTextA(hBtn1, "🚩 Factions");
             SetWindowTextA(hBtn2, "🐎 Mounts");
-            SetWindowTextA(hBtn3, "⚙️ System Utils");
-            SetWindowTextA(hBtn4, "---");
-            SetWindowTextA(hBtn5, "---");
+            SetWindowTextA(hBtn3, "👑 Kingdom & War");
+            SetWindowTextA(hBtn4, "⚙️ System Utils");
+            SetWindowTextA(hBtn5, "🏆 Achievements");
             SetWindowTextA(hBtn6, "◀️ Back to Town 1");
             break;
 
@@ -1619,7 +1727,7 @@ void SetupButtons() {
             SetWindowTextA(hBtn6, "---");
             break;
 
-                case STATE_FACTIONS:
+        case STATE_FACTIONS:
             SetWindowTextA(hBtn1, "Join Vanguard (STR)");
             SetWindowTextA(hBtn2, "Join Arcane (INT)");
             SetWindowTextA(hBtn3, "Join Syndicate (AGI)");
@@ -1634,6 +1742,34 @@ void SetupButtons() {
             SetWindowTextA(hBtn4, "---");
             SetWindowTextA(hBtn5, "---");
             SetWindowTextA(hBtn6, "Back");
+            break;
+        case STATE_KINGDOM: {
+            char b1[64], b2[64];
+            wsprintfA(b1, "Castle L%d (%dG)", player.castleLevel, player.castleLevel * 100);
+            wsprintfA(b2, "Barracks L%d (%dG)", player.barracksLevel, player.barracksLevel * 80);
+            SetWindowTextA(hBtn1, b1);
+            SetWindowTextA(hBtn2, b2);
+            SetWindowTextA(hBtn3, "Recruit Troops");
+            SetWindowTextA(hBtn4, "⚔️ Army Battle");
+            SetWindowTextA(hBtn5, "🛡️ Castle Defense");
+            SetWindowTextA(hBtn6, "⬅️ Back to Town");
+            break;
+        }
+        case STATE_ARMY_BATTLE:
+            SetWindowTextA(hBtn1, "🛡️ Shield Wall");
+            SetWindowTextA(hBtn2, "🏹 Arrow Volley");
+            SetWindowTextA(hBtn3, "🔮 Arcane Meteor");
+            SetWindowTextA(hBtn4, "🐎 Knight Charge");
+            SetWindowTextA(hBtn5, "👑 Hero Rally");
+            SetWindowTextA(hBtn6, "🏳️ Retreat");
+            break;
+        case STATE_CASTLE_DEFENSE:
+            SetWindowTextA(hBtn1, "🏹 Fire Ballista");
+            SetWindowTextA(hBtn2, "🔥 Boiling Oil");
+            SetWindowTextA(hBtn3, "⚔️ Garrison Sally");
+            SetWindowTextA(hBtn4, "🔮 Arcane Barrier");
+            SetWindowTextA(hBtn5, "👑 Duel Boss");
+            SetWindowTextA(hBtn6, "🔨 Repair (2 Iron)");
             break;
         case STATE_CRAFTING:
             SetWindowTextA(hBtn1, "Salvage Loot (20G)");
@@ -1735,8 +1871,162 @@ void PayCompanionUpkeep() {
             char msg[128];
             wsprintfA(msg, "⚠️ Cannot afford %d Gold upkeep! Companion %s departed your party.", player.companion.upkeep, player.companion.name);
             LogMessage(msg);
-            player.companion.active = 0;
         }
+    }
+}
+
+void CollectKingdomTaxes() {
+    int tax = player.castleLevel * 15 + (player.kingdomMorale / 10);
+    player.gold += tax;
+    char tmsg[128];
+    wsprintfA(tmsg, "👑 Collected +%d Gold in Royal Kingdom Taxes!", tax);
+    LogMessage(tmsg);
+}
+
+void StartArmyBattle(int armyIdx) {
+    if (armyIdx < 0 || armyIdx >= 4) armyIdx = 0;
+    g_CurrentWarArmyIdx = armyIdx;
+    const WarArmyDef* a = &g_WarArmies[armyIdx];
+    g_WarEnemyMaxHp = a->hp;
+    g_WarEnemyHp = a->hp;
+    g_WarShieldWallTurns = 0;
+    gameState = STATE_ARMY_BATTLE;
+    Beep(440, 100); Beep(550, 150);
+    char msg[128];
+    wsprintfA(msg, "⚔️ WAR DECLARED! Engaging %s in strategic field warfare!", a->name);
+    LogMessage(msg);
+    SetupButtons();
+    UpdateUI();
+}
+
+void ArmyVictory() {
+    const WarArmyDef* a = &g_WarArmies[g_CurrentWarArmyIdx];
+    player.gold += a->rewardGold;
+    player.warTrophies += a->rewardTrophies;
+    player.armyWins++;
+    player.kingdomMorale += 15;
+    if (player.kingdomMorale > 100) player.kingdomMorale = 100;
+    player.arcaneDust += 2;
+    player.elementalCore += 1;
+    SfxLevelUp();
+    char msg[192];
+    wsprintfA(msg, "🏆 TOTAL ARMY VICTORY! Smashed %s! Gained +%d Gold, +%d War Trophies, +2 Dust, +1 Core, +15 Morale!",
+        a->name, a->rewardGold, a->rewardTrophies);
+    LogMessage(msg);
+    gameState = STATE_KINGDOM;
+    SetupButtons();
+    UpdateUI();
+}
+
+void ArmyEnemyTurn() {
+    if (g_WarEnemyHp <= 0) return;
+    const WarArmyDef* a = &g_WarArmies[g_CurrentWarArmyIdx];
+    int enemyDmg = a->str;
+    if (g_WarShieldWallTurns > 0) {
+        g_WarShieldWallTurns--;
+        enemyDmg /= 2;
+        LogMessage("🛡️ Shield Wall deflected 50% of the enemy army's assault!");
+    }
+    
+    int casualties = enemyDmg / 15;
+    if (casualties < 1) casualties = 1;
+    
+    if (player.footmen > 0) {
+        int lost = casualties > player.footmen ? player.footmen : casualties;
+        player.footmen -= lost;
+        casualties -= lost;
+        char msg[128]; wsprintfA(msg, "⚠️ Enemy wave struck frontline! Lost %d Footmen in the clash.", lost); LogMessage(msg);
+    }
+    if (casualties > 0 && player.archers > 0) {
+        int lost = casualties > player.archers ? player.archers : casualties;
+        player.archers -= lost;
+        casualties -= lost;
+        char msg[128]; wsprintfA(msg, "⚠️ Enemy archers retaliated! Lost %d Archers.", lost); LogMessage(msg);
+    }
+    if (casualties > 0 && player.mages > 0) {
+        int lost = casualties > player.mages ? player.mages : casualties;
+        player.mages -= lost;
+        casualties -= lost;
+        char msg[128]; wsprintfA(msg, "⚠️ Enemy cavalry breached flank! Lost %d Battlemages.", lost); LogMessage(msg);
+    }
+    
+    int totalUnits = player.footmen + player.archers + player.mages + player.knights;
+    if (totalUnits <= 0) {
+        SfxDeath();
+        LogMessage("💀 DEFEAT! Royal Army routed! Forced to retreat back to Stronghold.");
+        player.kingdomMorale -= 15;
+        if (player.kingdomMorale < 10) player.kingdomMorale = 10;
+        player.footmen = 2; // Emergency remnants
+        gameState = STATE_KINGDOM;
+        SetupButtons();
+        UpdateUI();
+    }
+}
+
+void StartCastleDefense(int waveIdx) {
+    if (waveIdx < 0 || waveIdx >= 5) waveIdx = 0;
+    g_SiegeWaveIndex = waveIdx;
+    const SiegeWaveDef* s = &g_SiegeWaves[waveIdx];
+    g_CastleGateMaxHp = 150 + player.castleLevel * 50;
+    g_CastleGateHp = g_CastleGateMaxHp;
+    g_SiegeEnemyMaxHp = s->hp;
+    g_SiegeEnemyHp = s->hp;
+    g_CastleBarrierTurns = 0;
+    gameState = STATE_CASTLE_DEFENSE;
+    Beep(330, 100); Beep(440, 150);
+    char msg[128];
+    wsprintfA(msg, "🚨 SIEGE ALERT! Wave %d: %s attacking Castle Gates!", waveIdx + 1, s->name);
+    LogMessage(msg);
+    SetupButtons();
+    UpdateUI();
+}
+
+void SiegeVictory() {
+    const SiegeWaveDef* s = &g_SiegeWaves[g_SiegeWaveIndex];
+    int goldReward = 200 + (g_SiegeWaveIndex + 1) * 150;
+    int trophyReward = 3 + g_SiegeWaveIndex * 2;
+    player.gold += goldReward;
+    player.warTrophies += trophyReward;
+    player.defenseWave++;
+    if (player.defenseWave > player.defenseBestWave) player.defenseBestWave = player.defenseWave;
+    player.kingdomMorale += 20;
+    if (player.kingdomMorale > 100) player.kingdomMorale = 100;
+    player.ironScrap += 3;
+    player.elementalCore += 1;
+    SfxLevelUp();
+    char msg[192];
+    wsprintfA(msg, "🏰 SIEGE CRUSHED! Destroyed %s! Rewarded +%d Gold, +%d Trophies, +3 Iron, +1 Core, +20 Morale!",
+        s->name, goldReward, trophyReward);
+    LogMessage(msg);
+    gameState = STATE_KINGDOM;
+    SetupButtons();
+    UpdateUI();
+}
+
+void SiegeEnemyTurn() {
+    if (g_SiegeEnemyHp <= 0) return;
+    const SiegeWaveDef* s = &g_SiegeWaves[g_SiegeWaveIndex];
+    if (g_CastleBarrierTurns > 0) {
+        g_CastleBarrierTurns--;
+        LogMessage("🔮 Arcane Barrier completely deflected the siege ram/catapult impact!");
+        return;
+    }
+    
+    int dmg = s->siegePower;
+    g_CastleGateHp -= dmg;
+    char msg[128];
+    wsprintfA(msg, "💥 %s rams the gate dealing %d structural damage! (Gate HP: %d/%d)", s->name, dmg, g_CastleGateHp, g_CastleGateMaxHp);
+    LogMessage(msg);
+    
+    if (g_CastleGateHp <= 0) {
+        g_CastleGateHp = 0;
+        SfxDeath();
+        LogMessage("🚨 CASTLE GATE BREACHED! Enemy invaders overran the outer courtyard. Defense Failed!");
+        player.kingdomMorale -= 20;
+        if (player.kingdomMorale < 10) player.kingdomMorale = 10;
+        gameState = STATE_KINGDOM;
+        SetupButtons();
+        UpdateUI();
     }
 }
 
@@ -2136,8 +2426,84 @@ void HandleButton1() {
         return;
     }
 
-    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
-    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
+    if (gameState == STATE_TOWN_PAGE2) {
+        gameState = STATE_FACTIONS;
+        LogMessage("🚩 Entered Faction Encampments.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_FACTIONS) {
+        if (player.faction == 0) {
+            player.faction = 1;
+            player.str += 5;
+            LogMessage("🚩 Sworn to the Vanguard Legion! Gained +5 Permanent STR!");
+            UpdateUI();
+        } else {
+            LogMessage("Already sworn allegiance to a faction!");
+        }
+        return;
+    }
+    if (gameState == STATE_MOUNTS) {
+        if (player.mount == 0 && player.gold >= 100) {
+            player.gold -= 100;
+            player.mount = 1;
+            player.maxHp += 20; player.hp += 20;
+            LogMessage("🐎 Purchased Royal Steed! Gained +20 Max HP!");
+            UpdateUI();
+        } else if (player.mount > 0) {
+            LogMessage("Already own a mount!");
+        } else {
+            LogMessage("Need 100 Gold for Royal Steed!");
+        }
+        return;
+    }
+    if (gameState == STATE_KINGDOM) {
+        int cost = player.castleLevel * 100;
+        int ironCost = player.castleLevel;
+        if (player.gold >= cost && player.ironScrap >= ironCost && player.castleLevel < 5) {
+            player.gold -= cost;
+            player.ironScrap -= ironCost;
+            player.castleLevel++;
+            char msg[128];
+            wsprintfA(msg, "🏰 Castle upgraded to Level %d! Gate HP & Taxes increased!", player.castleLevel);
+            LogMessage(msg);
+            SetupButtons();
+            UpdateUI();
+        } else if (player.castleLevel >= 5) {
+            LogMessage("Castle Fortifications already at maximum rank!");
+        } else {
+            LogMessage("Need more Gold and Iron Scrap to upgrade Castle!");
+        }
+        return;
+    }
+    if (gameState == STATE_ARMY_BATTLE) {
+        g_WarShieldWallTurns = 1;
+        int counterDmg = player.footmen * 4 + 5;
+        g_WarEnemyHp -= counterDmg;
+        char msg[128];
+        wsprintfA(msg, "🛡️ Shield Wall formed! Footmen counter-thrust for %d damage!", counterDmg);
+        LogMessage(msg);
+        if (g_WarEnemyHp <= 0) { g_WarEnemyHp = 0; ArmyVictory(); return; }
+        ArmyEnemyTurn();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_CASTLE_DEFENSE) {
+        int bDmg = 40 + player.castleLevel * 12;
+        g_SiegeEnemyHp -= bDmg;
+        char msg[128];
+        wsprintfA(msg, "🏹 Castle Ballistas unleashed giant steel bolts dealing %d damage!", bDmg);
+        LogMessage(msg);
+        if (g_SiegeEnemyHp <= 0) { g_SiegeEnemyHp = 0; SiegeVictory(); return; }
+        SiegeEnemyTurn();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_TAVERN) {
+        LogMessage("🍻 Barkeep: 'Rest your bones, champion! War rages outside, but our hearth is warm.'");
+        return;
+    }
     if (gameState == STATE_HELP) {
         g_HelpTab = 0;
         SetupButtons();
@@ -2453,8 +2819,84 @@ void HandleButton2() {
         return;
     }
 
-    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
-    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
+    if (gameState == STATE_TOWN_PAGE2) {
+        gameState = STATE_MOUNTS;
+        LogMessage("🐎 Entered Town Stables & Beastmaster.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_FACTIONS) {
+        if (player.faction == 0) {
+            player.faction = 2;
+            player.intStat += 5;
+            LogMessage("🚩 Sworn to the Arcane Order! Gained +5 Permanent INT!");
+            UpdateUI();
+        } else {
+            LogMessage("Already sworn allegiance to a faction!");
+        }
+        return;
+    }
+    if (gameState == STATE_MOUNTS) {
+        if (player.mount == 0 && player.gold >= 200) {
+            player.gold -= 200;
+            player.mount = 2;
+            player.maxHp += 10; player.hp += 10;
+            player.agi += 10;
+            LogMessage("🐺 Purchased Dire Wolf! Gained +10 Max HP & +10 AGI!");
+            UpdateUI();
+        } else if (player.mount > 0) {
+            LogMessage("Already own a mount!");
+        } else {
+            LogMessage("Need 200 Gold for Dire Wolf!");
+        }
+        return;
+    }
+    if (gameState == STATE_KINGDOM) {
+        int cost = player.barracksLevel * 80;
+        int ironCost = player.barracksLevel;
+        if (player.gold >= cost && player.ironScrap >= ironCost && player.barracksLevel < 5) {
+            player.gold -= cost;
+            player.ironScrap -= ironCost;
+            player.barracksLevel++;
+            char msg[128];
+            wsprintfA(msg, "⚔️ Barracks upgraded to Level %d! Troop training cap increased!", player.barracksLevel);
+            LogMessage(msg);
+            SetupButtons();
+            UpdateUI();
+        } else if (player.barracksLevel >= 5) {
+            LogMessage("Barracks already at maximum rank!");
+        } else {
+            LogMessage("Need more Gold and Iron Scrap to upgrade Barracks!");
+        }
+        return;
+    }
+    if (gameState == STATE_ARMY_BATTLE) {
+        int vDmg = player.archers * 9 + (player.agi / 2);
+        g_WarEnemyHp -= vDmg;
+        char msg[128];
+        wsprintfA(msg, "🏹 Royal Archer Volley fires high-angle piercing arrows for %d damage!", vDmg);
+        LogMessage(msg);
+        if (g_WarEnemyHp <= 0) { g_WarEnemyHp = 0; ArmyVictory(); return; }
+        ArmyEnemyTurn();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_CASTLE_DEFENSE) {
+        int oilDmg = 55 + player.castleLevel * 10;
+        g_SiegeEnemyHp -= oilDmg;
+        char msg[128];
+        wsprintfA(msg, "🔥 Boiling Pitch & Oil cascades from battlements for %d fire damage!", oilDmg);
+        LogMessage(msg);
+        if (g_SiegeEnemyHp <= 0) { g_SiegeEnemyHp = 0; SiegeVictory(); return; }
+        SiegeEnemyTurn();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_TAVERN) {
+        LogMessage("📜 Rumor: 'Armies assembled at the Stronghold can defend against siege waves for great plunder!'");
+        return;
+    }
     if (gameState == STATE_HELP) {
         g_HelpTab = 1;
         SetupButtons();
@@ -2653,8 +3095,96 @@ void HandleButton3() {
         return;
     }
 
-    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
-    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
+    if (gameState == STATE_TOWN_PAGE2) {
+        gameState = STATE_KINGDOM;
+        LogMessage("👑 Entered Kingdom Stronghold.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_FACTIONS) {
+        if (player.faction == 0) {
+            player.faction = 3;
+            player.agi += 5;
+            LogMessage("🚩 Sworn to the Shadow Syndicate! Gained +5 Permanent AGI!");
+            UpdateUI();
+        } else {
+            LogMessage("Already sworn allegiance to a faction!");
+        }
+        return;
+    }
+    if (gameState == STATE_MOUNTS) {
+        if (player.mount == 0 && player.gold >= 500) {
+            player.gold -= 500;
+            player.mount = 3;
+            player.maxHp += 30; player.hp += 30;
+            player.str += 10;
+            LogMessage("🐲 Purchased Ancient Drake! Gained +30 Max HP & +10 STR!");
+            UpdateUI();
+        } else if (player.mount > 0) {
+            LogMessage("Already own a mount!");
+        } else {
+            LogMessage("Need 500 Gold for Ancient Drake!");
+        }
+        return;
+    }
+    if (gameState == STATE_KINGDOM) {
+        int maxCap = player.barracksLevel * 10;
+        if (player.gold >= 15 && player.ironScrap >= 1 && player.footmen < maxCap) {
+            player.gold -= 15; player.ironScrap -= 1; player.footmen += 2;
+            LogMessage("🛡️ Recruited 2x Footmen into Royal Army! (15G + 1 Scrap)");
+            UpdateUI();
+        } else if (player.gold >= 25 && player.ironScrap >= 1 && player.archers < maxCap) {
+            player.gold -= 25; player.ironScrap -= 1; player.archers += 2;
+            LogMessage("🏹 Recruited 2x Royal Archers into Royal Army! (25G + 1 Scrap)");
+            UpdateUI();
+        } else if (player.gold >= 40 && player.arcaneDust >= 1 && player.mages < maxCap) {
+            player.gold -= 40; player.arcaneDust -= 1; player.mages += 1;
+            LogMessage("🔮 Recruited 1x Arcane Battlemage into Royal Army! (40G + 1 Dust)");
+            UpdateUI();
+        } else if (player.gold >= 60 && player.elementalCore >= 1 && player.knights < maxCap) {
+            player.gold -= 60; player.elementalCore -= 1; player.knights += 1;
+            LogMessage("🐎 Recruited 1x Heavy Siege Knight into Royal Army! (60G + 1 Core)");
+            UpdateUI();
+        } else {
+            LogMessage("Need Gold and Scrap/Dust/Core to recruit troops!");
+        }
+        return;
+    }
+    if (gameState == STATE_ARMY_BATTLE) {
+        int mDmg = player.mages * 16 + (player.intStat * 2);
+        g_WarEnemyHp -= mDmg;
+        char msg[128];
+        wsprintfA(msg, "🔮 Arcane Meteor Storm bombards enemy forces for %d magic damage!", mDmg);
+        LogMessage(msg);
+        if (g_WarEnemyHp <= 0) { g_WarEnemyHp = 0; ArmyVictory(); return; }
+        ArmyEnemyTurn();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_CASTLE_DEFENSE) {
+        int sallyDmg = player.footmen * 5 + player.knights * 15 + player.str;
+        g_SiegeEnemyHp -= sallyDmg;
+        char msg[128];
+        wsprintfA(msg, "⚔️ Garrison Troops Sally Forth, clashing for %d damage!", sallyDmg);
+        LogMessage(msg);
+        if (g_SiegeEnemyHp <= 0) { g_SiegeEnemyHp = 0; SiegeVictory(); return; }
+        SiegeEnemyTurn();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_TAVERN) {
+        if (player.gold >= 5) {
+            player.gold -= 5;
+            player.hp += 20;
+            if (player.hp > player.maxHp) player.hp = player.maxHp;
+            LogMessage("🍺 Drank Foamy Dwarven Stout. Restored +20 HP.");
+            UpdateUI();
+        } else {
+            LogMessage("Not enough gold for Stout!");
+        }
+        return;
+    }
     if (gameState == STATE_HELP) {
         g_HelpTab = 2;
         SetupButtons();
@@ -2805,8 +3335,50 @@ void HandleButton4() {
         return;
     }
 
-    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
-    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
+    if (gameState == STATE_TOWN_PAGE2) {
+        gameState = STATE_UTILS;
+        LogMessage("⚙️ System Utilities Opened.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_KINGDOM) {
+        int warTier = player.armyWins % 4;
+        StartArmyBattle(warTier);
+        return;
+    }
+    if (gameState == STATE_ARMY_BATTLE) {
+        int kDmg = player.knights * 25 + (player.str * 2);
+        g_WarEnemyHp -= kDmg;
+        char msg[128];
+        wsprintfA(msg, "🐎 Heavy Knights Charge shatters the enemy line for %d crush damage!", kDmg);
+        LogMessage(msg);
+        if (g_WarEnemyHp <= 0) { g_WarEnemyHp = 0; ArmyVictory(); return; }
+        ArmyEnemyTurn();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_CASTLE_DEFENSE) {
+        if (player.mages > 0) {
+            g_CastleBarrierTurns = 2;
+            LogMessage("🔮 Battlemages summon Arcane Barrier! Next siege strike will be absorbed!");
+            UpdateUI();
+        } else {
+            LogMessage("Need at least 1 Battlemage in garrison to cast Arcane Barrier!");
+        }
+        return;
+    }
+    if (gameState == STATE_TAVERN) {
+        if (player.ironScrap >= 3) {
+            player.ironScrap -= 3;
+            player.gold += 60;
+            LogMessage("🪙 Side Quest Complete! Traded 3 Scrap for 60 Gold.");
+            UpdateUI();
+        } else {
+            LogMessage("Side Quest: 'Bring 3 Iron Scrap, I'll pay 60 Gold.'");
+        }
+        return;
+    }
     if (gameState == STATE_HELP) {
         g_HelpTab = 3;
         SetupButtons();
@@ -2981,8 +3553,49 @@ void HandleButton5() {
         return;
     }
 
-    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
-    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
+    if (gameState == STATE_TOWN_PAGE2) {
+        gameState = STATE_ACHIEVEMENTS;
+        LogMessage("🏆 Opened Milestones & Achievements.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_KINGDOM) {
+        int siegeIdx = (player.defenseWave - 1) % 5;
+        StartCastleDefense(siegeIdx);
+        return;
+    }
+    if (gameState == STATE_ARMY_BATTLE) {
+        int hDmg = player.str * 2 + player.weaponBonusStr;
+        g_WarEnemyHp -= hDmg;
+        player.kingdomMorale += 5;
+        if (player.kingdomMorale > 100) player.kingdomMorale = 100;
+        char msg[128];
+        wsprintfA(msg, "👑 Hero leads frontline assault! Dealt %d damage and rallied army morale (+5%%)!", hDmg);
+        LogMessage(msg);
+        if (g_WarEnemyHp <= 0) { g_WarEnemyHp = 0; ArmyVictory(); return; }
+        ArmyEnemyTurn();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_CASTLE_DEFENSE) {
+        int dDmg = player.str * 3 + player.weaponBonusStr * 2;
+        g_SiegeEnemyHp -= dDmg;
+        char msg[128];
+        wsprintfA(msg, "👑 Hero sallies forth to duel the Siege Commander, dealing %d heroic damage!", dDmg);
+        LogMessage(msg);
+        if (g_SiegeEnemyHp <= 0) { g_SiegeEnemyHp = 0; SiegeVictory(); return; }
+        SiegeEnemyTurn();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_TAVERN) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town Square.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_HELP) {
         g_HelpTab = (g_HelpTab + 1) % 4;
         SetupButtons();
@@ -3114,10 +3727,50 @@ void HandleButton5() {
 
 void HandleButton6() {
     if (gameState == STATE_TOWN) {
-        gameState = STATE_UTILS;
-        LogMessage("⚙️ Opened System Utilities.");
+        gameState = STATE_TOWN_PAGE2;
+        LogMessage("▶️ More Town Options.");
         SetupButtons();
         UpdateUI();
+        return;
+    }
+    if (gameState == STATE_TOWN_PAGE2) {
+        gameState = STATE_TOWN;
+        LogMessage("◀️ Back to Town Square.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_FACTIONS || gameState == STATE_MOUNTS) {
+        gameState = STATE_TOWN_PAGE2;
+        LogMessage("Returned to Town Options.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_KINGDOM) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town Square.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_ARMY_BATTLE) {
+        LogMessage("🏳️ Sounded tactical retreat back to Stronghold.");
+        gameState = STATE_KINGDOM;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_CASTLE_DEFENSE) {
+        if (player.ironScrap >= 2) {
+            player.ironScrap -= 2;
+            g_CastleGateHp += 40;
+            if (g_CastleGateHp > g_CastleGateMaxHp) g_CastleGateHp = g_CastleGateMaxHp;
+            LogMessage("🔨 Consumed 2 Iron Scrap to repair Castle Gate (+40 HP)!");
+            UpdateUI();
+        } else {
+            LogMessage("Need 2 Iron Scrap to repair Castle Gate in siege!");
+        }
         return;
     }
     if (gameState == STATE_UTILS || gameState == STATE_REPLAYS || gameState == STATE_CONFIG) {
@@ -3657,7 +4310,11 @@ void RenderGdiScene(HDC hdc, int w, int h) {
 
     if ((gameState == STATE_COMBAT || gameState == STATE_BOSS_RUSH) && currentEnemy.hp > 0) {
         DrawGdiMonsterSprite(hdc, monsterX, monsterY, currentEnemy.name, g_GfxFrame, currentEnemy.poisonedTurns, currentEnemy.burningTurns, currentEnemy.frozenTurns);
-    } else if (gameState == STATE_TOWN || gameState == STATE_TOWN_PAGE2 || gameState == STATE_FACTIONS || gameState == STATE_MOUNTS || gameState == STATE_SHOP || gameState == STATE_CRAFTING) {
+    } else if (gameState == STATE_ARMY_BATTLE && g_WarEnemyHp > 0) {
+        DrawGdiMonsterSprite(hdc, monsterX, monsterY, g_WarArmies[g_CurrentWarArmyIdx].name, g_GfxFrame, 0, 0, 0);
+    } else if (gameState == STATE_CASTLE_DEFENSE && g_SiegeEnemyHp > 0) {
+        DrawGdiMonsterSprite(hdc, monsterX, monsterY, g_SiegeWaves[g_SiegeWaveIndex].name, g_GfxFrame, 0, 0, 0);
+    } else if (gameState == STATE_TOWN || gameState == STATE_TOWN_PAGE2 || gameState == STATE_FACTIONS || gameState == STATE_MOUNTS || gameState == STATE_KINGDOM || gameState == STATE_SHOP || gameState == STATE_CRAFTING || gameState == STATE_TAVERN) {
         DrawGdiNPCSprite(hdc, 560, 70, g_GfxFrame);
     }
 
@@ -3920,7 +4577,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetupButtons();
                 UpdateUI();
             } else if (wParam == VK_ESCAPE) {
-                if (gameState == STATE_HELP || gameState == STATE_INVENTORY || gameState == STATE_SAVE_LOAD || gameState == STATE_ACHIEVEMENTS || gameState == STATE_QUEST_BOARD || gameState == STATE_TRAINING_HALL || gameState == STATE_SHOP || gameState == STATE_CRAFTING || gameState == STATE_TAVERN || gameState == STATE_MERCENARY || gameState == STATE_BOSS_RUSH) {
+                if (gameState == STATE_HELP || gameState == STATE_INVENTORY || gameState == STATE_SAVE_LOAD || gameState == STATE_ACHIEVEMENTS || gameState == STATE_QUEST_BOARD || gameState == STATE_TRAINING_HALL || gameState == STATE_SHOP || gameState == STATE_CRAFTING || gameState == STATE_TAVERN || gameState == STATE_MERCENARY || gameState == STATE_BOSS_RUSH || gameState == STATE_KINGDOM || gameState == STATE_ARMY_BATTLE || gameState == STATE_CASTLE_DEFENSE || gameState == STATE_FACTIONS || gameState == STATE_MOUNTS || gameState == STATE_TOWN_PAGE2) {
                     gameState = STATE_TOWN;
                     LogMessage("Returned to Town Square.");
                     SetupButtons();
