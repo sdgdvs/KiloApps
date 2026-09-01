@@ -61,6 +61,7 @@ typedef struct {
 
 HistoryState g_historyStack[256];
 int g_historyIndex = -1;
+int g_historyMax = -1;
 
 int kbX = 4, kbY = 6;
 int kbActive = 0;
@@ -415,6 +416,7 @@ int EvaluateBoardStatic(void) {
 typedef struct {
     int srcP, dstP, epX, epY, wkm, wrl, wrr, bkm, brl, brr;
     int capturedEPPawn, capturedEPX, capturedEPY;
+    int isCastling;
 } MoveState;
 
 static void MakeMoveSim(int sx, int sy, int tx, int ty, MoveState* ms) {
@@ -424,6 +426,7 @@ static void MakeMoveSim(int sx, int sy, int tx, int ty, MoveState* ms) {
     ms->wkm = wKingMoved; ms->wrl = wRookLMoved; ms->wrr = wRookRMoved;
     ms->bkm = bKingMoved; ms->brl = bRookLMoved; ms->brr = bRookRMoved;
     ms->capturedEPPawn = 0; ms->capturedEPX = -1; ms->capturedEPY = -1;
+    ms->isCastling = 0;
 
     int isWhite = (ms->srcP <= 6);
     int pType = isWhite ? ms->srcP : ms->srcP - 6;
@@ -440,6 +443,11 @@ static void MakeMoveSim(int sx, int sy, int tx, int ty, MoveState* ms) {
 
     if (pType == 1 && (ty == 0 || ty == 7)) {
         board[ty][tx] = isWhite ? 5 : 11;
+    }
+    if (pType == 6 && my_abs(tx - sx) == 2) {
+        ms->isCastling = 1;
+        if (tx == 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
+        else if (tx == 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
     }
     if (pType == 6) { if (isWhite) wKingMoved = 1; else bKingMoved = 1; }
     if (pType == 4) {
@@ -459,6 +467,10 @@ static void UnmakeMoveSim(int sx, int sy, int tx, int ty, const MoveState* ms) {
     board[ty][tx] = ms->dstP;
     if (ms->capturedEPPawn != 0) {
         board[ms->capturedEPY][ms->capturedEPX] = ms->capturedEPPawn;
+    }
+    if (ms->isCastling) {
+        if (tx == 6) { board[ty][7] = board[ty][5]; board[ty][5] = 0; }
+        else if (tx == 2) { board[ty][0] = board[ty][3]; board[ty][3] = 0; }
     }
     epX = ms->epX; epY = ms->epY;
     wKingMoved = ms->wkm; wRookLMoved = ms->wrl; wRookRMoved = ms->wrr;
@@ -617,6 +629,7 @@ static void GetSAN(int sx, int sy, int tx, int ty, int p, int isCapture, char* o
 static void PushHistoryState(const char* san) {
     if (g_historyIndex < 255) {
         g_historyIndex++;
+        g_historyMax = g_historyIndex;
         HistoryState* st = &g_historyStack[g_historyIndex];
         for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) st->board[y][x] = board[y][x];
         st->whiteTurn = whiteTurn;
@@ -626,11 +639,12 @@ static void PushHistoryState(const char* san) {
         st->lastMoveSx = lastMoveSx; st->lastMoveSy = lastMoveSy;
         st->lastMoveTx = lastMoveTx; st->lastMoveTy = lastMoveTy;
         if (san) lstrcpyA(st->san, san); else st->san[0] = '\0';
+        if (g_historyIndex + 1 < 256) g_historyStack[g_historyIndex + 1].san[0] = '\0';
     }
 }
 
 static void RestoreHistoryState(int idx) {
-    if (idx < 0 || idx > g_historyIndex) return;
+    if (idx < 0 || idx > g_historyMax) return;
     HistoryState* st = &g_historyStack[idx];
     for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) board[y][x] = st->board[y][x];
     whiteTurn = st->whiteTurn;
@@ -654,10 +668,9 @@ static void UndoMove(void) {
 }
 
 static void RedoMove(void) {
-    if (g_historyIndex >= 255) return;
-    if (g_historyStack[g_historyIndex + 1].san[0] == '\0' && g_historyIndex >= 0) return;
+    if (g_historyIndex >= g_historyMax || g_historyIndex >= 255) return;
     int target = g_historyIndex + 1;
-    if (aiMode && target < 255 && g_historyStack[target].whiteTurn != 1) {
+    if (aiMode && target < g_historyMax && g_historyStack[target].whiteTurn != 1) {
         target++;
     }
     RestoreHistoryState(target);
@@ -998,7 +1011,9 @@ static int LoadFEN(const char* fen) {
         p++;
         if (*p >= '1' && *p <= '8') {
             int rank = *p - '0';
-            epY = 8 - rank;
+            int targetY = 8 - rank;
+            if (whiteTurn) epY = targetY + 1;
+            else epY = targetY - 1;
         }
     }
 
@@ -1428,12 +1443,17 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     PushHistoryState(san);
 
     int pieceCount = 0;
+    int hasMinor = 0;
     for (int r = 0; r < 8; r++) {
         for (int c = 0; c < 8; c++) {
-            if (board[r][c] != 0) pieceCount++;
+            int curP = board[r][c];
+            if (curP != 0) {
+                pieceCount++;
+                if (curP == 2 || curP == 3 || curP == 8 || curP == 9) hasMinor = 1;
+            }
         }
     }
-    if (pieceCount <= 2) {
+    if (pieceCount <= 2 || (pieceCount == 3 && hasMinor)) {
         gameOver = 1;
         winner = 3;
         if (aiMode) { statsDraws++; SaveStatsFreestanding(); }
@@ -1540,6 +1560,82 @@ void DoBlackAIMove(void) {
         TriggerMove(g_hwndMain, moves[chosen].sx, moves[chosen].sy, moves[chosen].tx, moves[chosen].ty);
         InvalidateRect(g_hwndMain, NULL, FALSE);
     }
+}
+
+static void HandleSquareClick(HWND hwnd, int tx, int ty) {
+    if (gameOver) {
+        if (gameMode == 0 && winner == 1 && currentStage < 20) {
+            currentStage++;
+        }
+        ResetGame();
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+    }
+
+    if (aiMode && !whiteTurn) return;
+
+    if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8) {
+        hintActive = 0; // Clear hint on click
+        if (selX == -1) {
+            if (board[ty][tx] != 0) {
+                int isWhite = board[ty][tx] <= 6;
+                if ((whiteTurn && isWhite) || (!whiteTurn && !isWhite)) {
+                    selX = tx; selY = ty;
+                }
+            }
+        } else {
+            if (selX == tx && selY == ty) {
+                selX = -1; selY = -1;
+            } else {
+                int p = board[selY][selX];
+                int isWhite = p <= 6;
+                int dstP = board[ty][tx];
+                int dstIsWhite = dstP <= 6;
+                
+                if (dstP != 0 && isWhite == dstIsWhite) {
+                    selX = tx; selY = ty;
+                } else {
+                    if (IsValidMove(selX, selY, tx, ty, 0)) {
+                        if (!SimulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
+                            int curSelX = selX; int curSelY = selY;
+                            selX = -1; selY = -1;
+
+                            TriggerMove(hwnd, curSelX, curSelY, tx, ty);
+
+                            if (aiMode && !whiteTurn && !gameOver) {
+                                SetTimer(hwnd, 1, 350, NULL);
+                            }
+                        } else {
+                            MessageBeep(MB_ICONWARNING);
+                        }
+                    }
+                }
+            }
+        }
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
+static void ImportFromClipboard(HWND hwnd) {
+    char* clip = GetTextFromClipboard(hwnd);
+    if (!clip) {
+        wsprintfA(hintText, "Clipboard empty!");
+        hintActive = 1;
+        MessageBeep(MB_ICONWARNING);
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+    }
+    if (LoadFEN(clip)) {
+        wsprintfA(hintText, "FEN imported from clipboard!");
+        hintActive = 1;
+        MessageBeep(MB_OK);
+    } else {
+        wsprintfA(hintText, "Invalid FEN clipboard data!");
+        hintActive = 1;
+        MessageBeep(MB_ICONWARNING);
+    }
+    GlobalFree((HGLOBAL)clip);
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -2014,8 +2110,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_ESCAPE) { selX = -1; selY = -1; kbActive = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
             if (wParam == VK_RETURN || wParam == VK_SPACE) {
                 kbActive = 1;
-                LPARAM lp = MAKELPARAM(OX + kbX * TS + TS / 2, OY + kbY * TS + TS / 2);
-                SendMessage(hwnd, WM_LBUTTONDOWN, 0, lp);
+                HandleSquareClick(hwnd, kbX, kbY);
                 break;
             }
             if (wParam == 'R') {
@@ -2059,6 +2154,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'Y') { // REDO MOVE SKILL
                 RedoMove();
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'I') { // IMPORT FROM CLIPBOARD
+                ImportFromClipboard(hwnd);
             } else if (wParam == VK_F5 || wParam == 'S') { // QUICK SAVE STATE
                 if (SaveGameStateToFile()) {
                     wsprintfA(hintText, "Game State Saved (F5)!");
@@ -2166,60 +2263,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (mx >= 608 && mx <= 730) { SendMessage(hwnd, WM_KEYDOWN, 'E', 0); return 0; }
             }
 
-            if (gameOver) {
-                if (gameMode == 0 && winner == 1 && currentStage < 20) {
-                    currentStage++;
-                }
-                ResetGame();
-                InvalidateRect(hwnd, NULL, FALSE);
-                break;
-            }
-
-            if (aiMode && !whiteTurn) break;
-            
             int tx = (mx - OX) / TS;
             int ty = (my - OY) / TS;
-            
-            if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8) {
-                hintActive = 0; // Clear hint on click
-                if (selX == -1) {
-                    if (board[ty][tx] != 0) {
-                        int isWhite = board[ty][tx] <= 6;
-                        if ((whiteTurn && isWhite) || (!whiteTurn && !isWhite)) {
-                            selX = tx; selY = ty;
-                        }
-                    }
-                } else {
-                    if (selX == tx && selY == ty) {
-                        selX = -1; selY = -1;
-                    } else {
-                        int p = board[selY][selX];
-                        int isWhite = p <= 6;
-                        int dstP = board[ty][tx];
-                        int dstIsWhite = dstP <= 6;
-                        
-                        if (dstP != 0 && isWhite == dstIsWhite) {
-                            selX = tx; selY = ty;
-                        } else {
-                            if (IsValidMove(selX, selY, tx, ty, 0)) {
-                                if (!SimulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
-                                    int curSelX = selX; int curSelY = selY;
-                                    selX = -1; selY = -1;
-
-                                    TriggerMove(hwnd, curSelX, curSelY, tx, ty);
-
-                                    if (aiMode && !whiteTurn && !gameOver) {
-                                        SetTimer(hwnd, 1, 350, NULL);
-                                    }
-                                } else {
-                                    MessageBeep(MB_ICONWARNING);
-                                }
-                            }
-                        }
-                    }
-                }
-                InvalidateRect(hwnd, NULL, FALSE);
-            }
+            kbX = tx; kbY = ty; kbActive = 0;
+            HandleSquareClick(hwnd, tx, ty);
             break;
         }
         case WM_DESTROY:
